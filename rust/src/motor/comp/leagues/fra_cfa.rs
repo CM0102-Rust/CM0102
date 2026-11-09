@@ -307,12 +307,12 @@ pub(crate) unsafe extern "thiscall" fn fra_cfa_set_up_rules(this: usize) -> u32 
     let this = League(this);
     this.set_legs((2) as i16);
     this.set_match_category(2);
-    *((this.addr() + 0xc7) as *mut u8) = 2;
+    *((this.addr() + league::TIEBREAKS + 2) as *mut u8) = 2;
     this.set_win_points(3); // cqn4: the points per win in the French lower leagues
     this.set_draw_points(1);
     this.set_club_sides(1);
     *((this.addr() + league::TIEBREAKS) as *mut u8) = 4;
-    *((this.addr() + 0xc6) as *mut u8) = 1;
+    *((this.addr() + league::TIEBREAKS + 1) as *mut u8) = 1;
     this.set_promoted_count(0);
     this.set_promotion_playoff_count(0);
     this.set_relegation_playoff_count(0);
@@ -393,7 +393,7 @@ pub(crate) unsafe fn construct_group_league(this: League, ano: u32, p: &Backgrou
     this.set_year((ano as u16) as i16);
     this.set_stage_count(0);
     this.set_discipline_rule(0xff);
-    write_usize(this.addr() + 4, comp_record_of_key(p.competition));
+    write_usize(this.addr() + league::COMPETITION, comp_record_of_key(p.competition));
     this.set_stage_index(0xff);
     this.set_current_stage(0xffff_ffff);
     if exe::fracfa_set_up_rules(this) == 0 {
@@ -502,9 +502,9 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_cfa(this: usize, year: u32)
 pub(crate) unsafe fn compare_construct_group_league(name: &str, this: League, year: u32, p: &BackgroundLeague, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let ok = r == this.addr() && read_usize(this.addr()) == p.vtabela && (this.year() as u16) == year as u16
-        && this.discipline_rule() == 0xff && read_usize(this.addr() + 4) == comp_record_of_key(p.competition)
+        && this.discipline_rule() == 0xff && this.competition().addr() == comp_record_of_key(p.competition)
         && this.table() == 0;
-    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}, +0xb1 = {:#x}", name, this.addr(), r, read_usize(this.addr()), read_usize(this.addr() + 4), this.table()));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}, +0xb1 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.competition().addr(), this.table()));
     r
 }
 

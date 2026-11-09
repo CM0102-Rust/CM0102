@@ -17,8 +17,8 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_spa_lower(this: usize, 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_CONSTRUCT_SPA_LOWER);
     let r = o(this.addr(), year);
     let ok = r == this.addr() && read_usize(this.addr()) == 0x96fb1c && (this.year() as u16) == year as u16
-        && this.discipline_rule() == 0xff && read_usize(this.addr() + 4) == comp_record_of_key(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION);
-    SCOREBOARD.record(ok, || format!("construct_spa_lower({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}", this.addr(), r, read_usize(this.addr()), read_usize(this.addr() + 4)));
+        && this.discipline_rule() == 0xff && this.competition().addr() == comp_record_of_key(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION);
+    SCOREBOARD.record(ok, || format!("construct_spa_lower({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}", this.addr(), r, read_usize(this.addr()), this.competition().addr()));
     r
 }
 

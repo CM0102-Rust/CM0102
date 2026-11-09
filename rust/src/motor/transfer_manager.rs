@@ -2248,7 +2248,7 @@ pub(crate) unsafe extern "thiscall" fn transfer_manager_daily_update(this: usize
 /// pessoa antes da de 2 anos, o clube na nação [0x9cfa10] sem ser comunitária, e o caso pelo id do clube.
 pub(crate) unsafe fn meets_residency_naturalisation(s: Staff, p2: usize, p5: usize, p10: usize, community: unsafe extern "C" fn(usize, usize) -> u32) -> bool {
     let before = |d: usize| {
-        let (da, sa) = (read_i16(d + cm_date::YEAR) as u16, read_i16(s.addr() + 0x40) as u16);
+        let (da, sa) = (read_i16(d + cm_date::YEAR) as u16, (s.date_joined_club_year() as i16) as u16);
         da > sa || (da == sa && read_i16(d) > (s.date_joined_club() as i16))
     };
     if !before(p2) {
@@ -2927,7 +2927,7 @@ pub(crate) unsafe fn transfer_manager_date_is_after(a: usize, d: usize) -> bool 
 /// [pt] O nome (texto C em [pessoa+4]) contém `agulha` (0x945a60, strstr: cdecl(texto, agulha)) e o clube da oferta (+4 =
 /// id; nome em +4 do clube) é o de 0xa8eb48 ("Falkirk"; a comparação de bytes que a original faz em linha).
 pub(crate) unsafe fn is_falkirk_name_exception(p: Staff, agulha: usize, offer: usize) -> bool {
-    let name = read_usize(p.addr() + 4);
+    let name = p.first_name();
     if name == 0 {
         return false;
     }
@@ -3402,7 +3402,7 @@ pub(crate) unsafe extern "thiscall" fn check_squad_limits(this: usize, club: usi
                 let mut best = 1000000.0f64;
                 let mut chosen = 0usize;
                 for k in 0..0x32 {
-                    let p = read_usize(club.addr() + club::SQUAD + 4 * k);
+                    let p = club.squad(k);
                     if !staff_id_in_range(p) || exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p) != 0 {
                         continue;
                     }

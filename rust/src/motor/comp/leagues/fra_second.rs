@@ -49,7 +49,7 @@ pub(crate) unsafe fn construct_division_league(this: League, ano: u32, registro:
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.rules);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.table);
     exe::new_league(this);
-    write_usize(this.addr() + 4, registro);
+    write_usize(this.addr() + league::COMPETITION, registro);
     write_usize(this.addr(), p.vtabela);
     this.set_year((ano as u16) as i16);
     this.set_discipline_rule(p.discipline);
@@ -79,14 +79,14 @@ pub(crate) unsafe fn construct_division_league(this: League, ano: u32, registro:
     }
     let e = exe::crt_operator_new(0x5ce);
     let s = if e != 0 { exe::new_comp_stats(e, this) } else { 0 };
-    write_usize(this.addr() + 8, s);
+    this.set_comp_stats(s);
     if s == 0 {
         show_error_at(p.file, p.rows[4]);
         return this.addr();
     }
     exe::league_set_predicted_positions(this);
     if p.low {
-        let nacao = read_usize(read_usize(this.addr() + 4) + 0x5d);
+        let nacao = read_usize(this.competition().addr() + 0x5d);
         if *((nacao + nation::LEAGUE_SELECTED) as *const u8) & 4 == 0 { // cqm5: the Spanish lower division
             crate::comparison::branch("cqm_5 spanish lower division");
             let e = exe::crt_operator_new(0xee);
@@ -157,16 +157,16 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_second(this: usize, year: u
 pub(crate) unsafe fn compare_division_league_ctor(name: &str, this: League, year: u32, record: usize, p: &LeagueDivision, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtabela && (this.year() as u16) == year as u16
-        && read_usize(this.addr() + 4) == record && this.discipline_rule() == p.discipline;
-    if this.stage_index() == 0xff && read_usize(this.addr() + 8) != 0 {
+        && this.competition().addr() == record && this.discipline_rule() == p.discipline;
+    if this.stage_index() == 0xff && this.comp_stats() != 0 {
         ok = ok && this.stage_count() == 0 && this.stages() == 0;
         if p.low {
-            let nation = read_usize(read_usize(this.addr() + 4) + 0x5d);
+            let nation = read_usize(this.competition().addr() + 0x5d);
             let has = read_usize(this.addr() + 0xee) != 0;
             ok = ok && has == (*((nation + nation::LEAGUE_SELECTED) as *const u8) & 4 == 0);
         }
     }
-    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), read_usize(this.addr() + 8)));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.comp_stats()));
     r
 }
 

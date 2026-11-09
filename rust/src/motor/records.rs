@@ -43,7 +43,7 @@ impl City {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `city::GENDER_NAME` (+0x1e).
+    /// `city::GENDER_NAME` (+0x1e). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn gender_name(self) -> i8 {
         read_i8(self.0 + city::GENDER_NAME)
@@ -52,7 +52,7 @@ impl City {
     pub(crate) unsafe fn set_gender_name(self, v: i8) {
         write_i8(self.0 + city::GENDER_NAME, v)
     }
-    /// `city::NATION` (+0x1f).
+    /// `city::NATION` (+0x1f). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn nation(self) -> usize {
         read_usize(self.0 + city::NATION)
@@ -61,7 +61,7 @@ impl City {
     pub(crate) unsafe fn set_nation(self, v: usize) {
         write_usize(self.0 + city::NATION, v)
     }
-    /// `city::LATITUDE` (+0x23).
+    /// `city::LATITUDE` (+0x23). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn latitude(self) -> f64 {
         read_f64(self.0 + city::LATITUDE)
@@ -70,7 +70,7 @@ impl City {
     pub(crate) unsafe fn set_latitude(self, v: f64) {
         write_f64(self.0 + city::LATITUDE, v)
     }
-    /// `city::LONGITUDE` (+0x2b).
+    /// `city::LONGITUDE` (+0x2b). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn longitude(self) -> f64 {
         read_f64(self.0 + city::LONGITUDE)
@@ -79,7 +79,7 @@ impl City {
     pub(crate) unsafe fn set_longitude(self, v: f64) {
         write_f64(self.0 + city::LONGITUDE, v)
     }
-    /// `city::ATTRACTION` (+0x33).
+    /// `city::ATTRACTION` (+0x33). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn attraction(self) -> i8 {
         read_i8(self.0 + city::ATTRACTION)
@@ -88,7 +88,7 @@ impl City {
     pub(crate) unsafe fn set_attraction(self, v: i8) {
         write_i8(self.0 + city::ATTRACTION, v)
     }
-    /// `city::WEATHER` (+0x34).
+    /// `city::WEATHER` (+0x34). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn weather(self) -> i32 {
         read_i32(self.0 + city::WEATHER)
@@ -122,12 +122,12 @@ impl Club {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `club::NAME` (+0x4).
+    /// `club::NAME` (+0x4). Name: community.
     #[inline(always)]
     pub(crate) fn name_addr(self) -> usize {
         self.0 + club::NAME
     }
-    /// `club::GENDER_NAME` (+0x37).
+    /// `club::GENDER_NAME` (+0x37). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn gender_name(self) -> i8 {
         read_i8(self.0 + club::GENDER_NAME)
@@ -136,7 +136,7 @@ impl Club {
     pub(crate) unsafe fn set_gender_name(self, v: i8) {
         write_i8(self.0 + club::GENDER_NAME, v)
     }
-    /// `club::SHORT_NAME` (+0x38).
+    /// `club::SHORT_NAME` (+0x38). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn short_name(self) -> u8 {
         read_u8(self.0 + club::SHORT_NAME)
@@ -145,7 +145,7 @@ impl Club {
     pub(crate) unsafe fn set_short_name(self, v: u8) {
         write_u8(self.0 + club::SHORT_NAME, v)
     }
-    /// `club::SHORT_GENDER_NAME` (+0x52).
+    /// `club::SHORT_GENDER_NAME` (+0x52). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn short_gender_name(self) -> u8 {
         read_u8(self.0 + club::SHORT_GENDER_NAME)
@@ -154,7 +154,7 @@ impl Club {
     pub(crate) unsafe fn set_short_gender_name(self, v: u8) {
         write_u8(self.0 + club::SHORT_GENDER_NAME, v)
     }
-    /// `club::NATION` (+0x53).
+    /// `club::NATION` (+0x53). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn nation(self) -> Nation {
         Nation(read_usize(self.0 + club::NATION))
@@ -163,7 +163,7 @@ impl Club {
     pub(crate) unsafe fn set_nation(self, v: Nation) {
         write_usize(self.0 + club::NATION, v.0)
     }
-    /// `club::DIVISION` (+0x57).
+    /// `club::DIVISION` (+0x57). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn division(self) -> Competition {
         Competition(read_usize(self.0 + club::DIVISION))
@@ -172,7 +172,7 @@ impl Club {
     pub(crate) unsafe fn set_division(self, v: Competition) {
         write_usize(self.0 + club::DIVISION, v.0)
     }
-    /// `club::LAST_DIVISION` (+0x5b).
+    /// `club::LAST_DIVISION` (+0x5b). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn last_division(self) -> Competition {
         Competition(read_usize(self.0 + club::LAST_DIVISION))
@@ -181,7 +181,7 @@ impl Club {
     pub(crate) unsafe fn set_last_division(self, v: Competition) {
         write_usize(self.0 + club::LAST_DIVISION, v.0)
     }
-    /// `club::LAST_POSITION` (+0x5f).
+    /// `club::LAST_POSITION` (+0x5f). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn last_position(self) -> u8 {
         read_u8(self.0 + club::LAST_POSITION)
@@ -190,7 +190,7 @@ impl Club {
     pub(crate) unsafe fn set_last_position(self, v: u8) {
         write_u8(self.0 + club::LAST_POSITION, v)
     }
-    /// `club::RESERVE_DIVISION` (+0x60).
+    /// `club::RESERVE_DIVISION` (+0x60). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn reserve_division(self) -> Competition {
         Competition(read_usize(self.0 + club::RESERVE_DIVISION))
@@ -199,7 +199,7 @@ impl Club {
     pub(crate) unsafe fn set_reserve_division(self, v: Competition) {
         write_usize(self.0 + club::RESERVE_DIVISION, v.0)
     }
-    /// `club::PROFESSIONAL_STATUS` (+0x64).
+    /// `club::PROFESSIONAL_STATUS` (+0x64). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn professional_status(self) -> u8 {
         read_u8(self.0 + club::PROFESSIONAL_STATUS)
@@ -208,7 +208,7 @@ impl Club {
     pub(crate) unsafe fn set_professional_status(self, v: u8) {
         write_u8(self.0 + club::PROFESSIONAL_STATUS, v)
     }
-    /// `club::CASH` (+0x65).
+    /// `club::CASH` (+0x65). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn cash(self) -> i32 {
         read_i32(self.0 + club::CASH)
@@ -217,7 +217,7 @@ impl Club {
     pub(crate) unsafe fn set_cash(self, v: i32) {
         write_i32(self.0 + club::CASH, v)
     }
-    /// `club::STADIUM` (+0x69).
+    /// `club::STADIUM` (+0x69). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn stadium(self) -> Stadium {
         Stadium(read_usize(self.0 + club::STADIUM))
@@ -226,7 +226,7 @@ impl Club {
     pub(crate) unsafe fn set_stadium(self, v: Stadium) {
         write_usize(self.0 + club::STADIUM, v.0)
     }
-    /// `club::OWN_STADIUM` (+0x6d).
+    /// `club::OWN_STADIUM` (+0x6d). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn own_stadium(self) -> u8 {
         read_u8(self.0 + club::OWN_STADIUM)
@@ -235,7 +235,7 @@ impl Club {
     pub(crate) unsafe fn set_own_stadium(self, v: u8) {
         write_u8(self.0 + club::OWN_STADIUM, v)
     }
-    /// `club::MATCH_DAY` (+0x72).
+    /// `club::MATCH_DAY` (+0x72). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn match_day(self) -> u8 {
         read_u8(self.0 + club::MATCH_DAY)
@@ -244,7 +244,7 @@ impl Club {
     pub(crate) unsafe fn set_match_day(self, v: u8) {
         write_u8(self.0 + club::MATCH_DAY, v)
     }
-    /// `club::ATTENDANCE` (+0x73).
+    /// `club::ATTENDANCE` (+0x73). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn attendance(self) -> i32 {
         read_i32(self.0 + club::ATTENDANCE)
@@ -253,7 +253,7 @@ impl Club {
     pub(crate) unsafe fn set_attendance(self, v: i32) {
         write_i32(self.0 + club::ATTENDANCE, v)
     }
-    /// `club::MIN_ATTENDANCE` (+0x77).
+    /// `club::MIN_ATTENDANCE` (+0x77). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn min_attendance(self) -> i32 {
         read_i32(self.0 + club::MIN_ATTENDANCE)
@@ -262,7 +262,7 @@ impl Club {
     pub(crate) unsafe fn set_min_attendance(self, v: i32) {
         write_i32(self.0 + club::MIN_ATTENDANCE, v)
     }
-    /// `club::MAX_ATTENDANCE` (+0x7b).
+    /// `club::MAX_ATTENDANCE` (+0x7b). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn max_attendance(self) -> i32 {
         read_i32(self.0 + club::MAX_ATTENDANCE)
@@ -271,7 +271,7 @@ impl Club {
     pub(crate) unsafe fn set_max_attendance(self, v: i32) {
         write_i32(self.0 + club::MAX_ATTENDANCE, v)
     }
-    /// `club::TRAINING` (+0x7f).
+    /// `club::TRAINING` (+0x7f). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn training(self) -> i8 {
         read_i8(self.0 + club::TRAINING)
@@ -280,7 +280,7 @@ impl Club {
     pub(crate) unsafe fn set_training(self, v: i8) {
         write_i8(self.0 + club::TRAINING, v)
     }
-    /// `club::REPUTATION` (+0x80).
+    /// `club::REPUTATION` (+0x80). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn reputation(self) -> i16 {
         read_i16(self.0 + club::REPUTATION)
@@ -289,7 +289,7 @@ impl Club {
     pub(crate) unsafe fn set_reputation(self, v: i16) {
         write_i16(self.0 + club::REPUTATION, v)
     }
-    /// `club::PLC` (+0x82).
+    /// `club::PLC` (+0x82). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn plc(self) -> u8 {
         read_u8(self.0 + club::PLC)
@@ -298,7 +298,7 @@ impl Club {
     pub(crate) unsafe fn set_plc(self, v: u8) {
         write_u8(self.0 + club::PLC, v)
     }
-    /// `club::FORE_COLOUR1` (+0x83).
+    /// `club::FORE_COLOUR1` (+0x83). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn fore_colour1(self) -> usize {
         read_usize(self.0 + club::FORE_COLOUR1)
@@ -307,7 +307,7 @@ impl Club {
     pub(crate) unsafe fn set_fore_colour1(self, v: usize) {
         write_usize(self.0 + club::FORE_COLOUR1, v)
     }
-    /// `club::BACK_COLOUR1` (+0x87).
+    /// `club::BACK_COLOUR1` (+0x87). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn back_colour1(self) -> usize {
         read_usize(self.0 + club::BACK_COLOUR1)
@@ -316,7 +316,7 @@ impl Club {
     pub(crate) unsafe fn set_back_colour1(self, v: usize) {
         write_usize(self.0 + club::BACK_COLOUR1, v)
     }
-    /// `club::FORE_COLOUR2` (+0x8b).
+    /// `club::FORE_COLOUR2` (+0x8b). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn fore_colour2(self) -> usize {
         read_usize(self.0 + club::FORE_COLOUR2)
@@ -325,7 +325,7 @@ impl Club {
     pub(crate) unsafe fn set_fore_colour2(self, v: usize) {
         write_usize(self.0 + club::FORE_COLOUR2, v)
     }
-    /// `club::BACK_COLOUR2` (+0x8f).
+    /// `club::BACK_COLOUR2` (+0x8f). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn back_colour2(self) -> usize {
         read_usize(self.0 + club::BACK_COLOUR2)
@@ -334,7 +334,7 @@ impl Club {
     pub(crate) unsafe fn set_back_colour2(self, v: usize) {
         write_usize(self.0 + club::BACK_COLOUR2, v)
     }
-    /// `club::FORE_COLOUR3` (+0x93).
+    /// `club::FORE_COLOUR3` (+0x93). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn fore_colour3(self) -> usize {
         read_usize(self.0 + club::FORE_COLOUR3)
@@ -343,7 +343,7 @@ impl Club {
     pub(crate) unsafe fn set_fore_colour3(self, v: usize) {
         write_usize(self.0 + club::FORE_COLOUR3, v)
     }
-    /// `club::BACK_COLOUR3` (+0x97).
+    /// `club::BACK_COLOUR3` (+0x97). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn back_colour3(self) -> usize {
         read_usize(self.0 + club::BACK_COLOUR3)
@@ -352,7 +352,7 @@ impl Club {
     pub(crate) unsafe fn set_back_colour3(self, v: usize) {
         write_usize(self.0 + club::BACK_COLOUR3, v)
     }
-    /// `club::FAV_STAFF1` (+0x9b).
+    /// `club::FAV_STAFF1` (+0x9b). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn fav_staff1(self) -> i32 {
         read_i32(self.0 + club::FAV_STAFF1)
@@ -361,7 +361,7 @@ impl Club {
     pub(crate) unsafe fn set_fav_staff1(self, v: i32) {
         write_i32(self.0 + club::FAV_STAFF1, v)
     }
-    /// `club::DIS_STAFF1` (+0xa7).
+    /// `club::DIS_STAFF1` (+0xa7). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn dis_staff1(self) -> i32 {
         read_i32(self.0 + club::DIS_STAFF1)
@@ -370,7 +370,7 @@ impl Club {
     pub(crate) unsafe fn set_dis_staff1(self, v: i32) {
         write_i32(self.0 + club::DIS_STAFF1, v)
     }
-    /// `club::RIVAL1` (+0xb3).
+    /// `club::RIVAL1` (+0xb3). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn rival1(self) -> usize {
         read_usize(self.0 + club::RIVAL1)
@@ -379,7 +379,7 @@ impl Club {
     pub(crate) unsafe fn set_rival1(self, v: usize) {
         write_usize(self.0 + club::RIVAL1, v)
     }
-    /// `club::RIVAL2` (+0xb7).
+    /// `club::RIVAL2` (+0xb7). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn rival2(self) -> usize {
         read_usize(self.0 + club::RIVAL2)
@@ -388,7 +388,7 @@ impl Club {
     pub(crate) unsafe fn set_rival2(self, v: usize) {
         write_usize(self.0 + club::RIVAL2, v)
     }
-    /// `club::RIVAL3` (+0xbb).
+    /// `club::RIVAL3` (+0xbb). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn rival3(self) -> usize {
         read_usize(self.0 + club::RIVAL3)
@@ -397,7 +397,7 @@ impl Club {
     pub(crate) unsafe fn set_rival3(self, v: usize) {
         write_usize(self.0 + club::RIVAL3, v)
     }
-    /// `club::CHAIRMAN` (+0xbf).
+    /// `club::CHAIRMAN` (+0xbf). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn chairman(self) -> Staff {
         Staff(read_usize(self.0 + club::CHAIRMAN))
@@ -406,7 +406,7 @@ impl Club {
     pub(crate) unsafe fn set_chairman(self, v: Staff) {
         write_usize(self.0 + club::CHAIRMAN, v.0)
     }
-    /// `club::DIRECTORS` (+0xc3).
+    /// `club::DIRECTORS` (+0xc3). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn directors(self) -> u8 {
         read_u8(self.0 + club::DIRECTORS)
@@ -415,7 +415,7 @@ impl Club {
     pub(crate) unsafe fn set_directors(self, v: u8) {
         write_u8(self.0 + club::DIRECTORS, v)
     }
-    /// `club::MANAGER` (+0xcf).
+    /// `club::MANAGER` (+0xcf). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn manager(self) -> Staff {
         Staff(read_usize(self.0 + club::MANAGER))
@@ -424,7 +424,7 @@ impl Club {
     pub(crate) unsafe fn set_manager(self, v: Staff) {
         write_usize(self.0 + club::MANAGER, v.0)
     }
-    /// `club::ASSISTANT_MANAGER` (+0xd3).
+    /// `club::ASSISTANT_MANAGER` (+0xd3). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn assistant_manager(self) -> usize {
         read_usize(self.0 + club::ASSISTANT_MANAGER)
@@ -433,31 +433,43 @@ impl Club {
     pub(crate) unsafe fn set_assistant_manager(self, v: usize) {
         write_usize(self.0 + club::ASSISTANT_MANAGER, v)
     }
-    /// `club::SQUAD` (+0xd7).
+    /// `club::SQUAD`[i] (+0xd7, 50 x usize). Name: community.
     #[inline(always)]
-    pub(crate) fn squad_addr(self) -> usize {
-        self.0 + club::SQUAD
-    }
-    /// `club::COACHES` (+0x19f).
-    #[inline(always)]
-    pub(crate) unsafe fn coaches(self) -> usize {
-        read_usize(self.0 + club::COACHES)
+    pub(crate) unsafe fn squad(self, i: usize) -> usize {
+        read_usize(self.0 + club::SQUAD + i * 4)
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_coaches(self, v: usize) {
-        write_usize(self.0 + club::COACHES, v)
+    pub(crate) unsafe fn set_squad(self, i: usize, v: usize) {
+        write_usize(self.0 + club::SQUAD + i * 4, v)
     }
-    /// `club::SCOUTS` (+0x1b3).
+    /// `club::COACHES`[i] (+0x19f, 5 x usize). Name: community.
     #[inline(always)]
-    pub(crate) fn scouts_addr(self) -> usize {
-        self.0 + club::SCOUTS
+    pub(crate) unsafe fn coaches(self, i: usize) -> usize {
+        read_usize(self.0 + club::COACHES + i * 4)
     }
-    /// `club::PHYSIOS` (+0x1cf).
     #[inline(always)]
-    pub(crate) fn physios_addr(self) -> usize {
-        self.0 + club::PHYSIOS
+    pub(crate) unsafe fn set_coaches(self, i: usize, v: usize) {
+        write_usize(self.0 + club::COACHES + i * 4, v)
     }
-    /// `club::CONTINENTAL_COMP_ID` (+0x1db).
+    /// `club::SCOUTS`[i] (+0x1b3, 7 x usize). Name: community.
+    #[inline(always)]
+    pub(crate) unsafe fn scouts(self, i: usize) -> usize {
+        read_usize(self.0 + club::SCOUTS + i * 4)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_scouts(self, i: usize, v: usize) {
+        write_usize(self.0 + club::SCOUTS + i * 4, v)
+    }
+    /// `club::PHYSIOS`[i] (+0x1cf, 3 x usize). Name: community.
+    #[inline(always)]
+    pub(crate) unsafe fn physios(self, i: usize) -> usize {
+        read_usize(self.0 + club::PHYSIOS + i * 4)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_physios(self, i: usize, v: usize) {
+        write_usize(self.0 + club::PHYSIOS + i * 4, v)
+    }
+    /// `club::CONTINENTAL_COMP_ID` (+0x1db). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn continental_comp_id(self) -> u32 {
         read_u32(self.0 + club::CONTINENTAL_COMP_ID)
@@ -466,7 +478,7 @@ impl Club {
     pub(crate) unsafe fn set_continental_comp_id(self, v: u32) {
         write_u32(self.0 + club::CONTINENTAL_COMP_ID, v)
     }
-    /// `club::EURO_FLAG` (+0x1db).
+    /// `club::EURO_FLAG` (+0x1db). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn euro_flag(self) -> i32 {
         read_i32(self.0 + club::EURO_FLAG)
@@ -475,7 +487,7 @@ impl Club {
     pub(crate) unsafe fn set_euro_flag(self, v: i32) {
         write_i32(self.0 + club::EURO_FLAG, v)
     }
-    /// `club::EURO_SEEDING` (+0x1df).
+    /// `club::EURO_SEEDING` (+0x1df). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn euro_seeding(self) -> u8 {
         read_u8(self.0 + club::EURO_SEEDING)
@@ -484,12 +496,12 @@ impl Club {
     pub(crate) unsafe fn set_euro_seeding(self, v: u8) {
         write_u8(self.0 + club::EURO_SEEDING, v)
     }
-    /// `club::TEAM_SELECTED` (+0x1e0).
+    /// `club::TEAM_SELECTED` (+0x1e0). Name: community.
     #[inline(always)]
     pub(crate) fn team_selected_addr(self) -> usize {
         self.0 + club::TEAM_SELECTED
     }
-    /// `club::HAS_LINKED_CLUB` (+0x244).
+    /// `club::HAS_LINKED_CLUB` (+0x244). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn has_linked_club(self) -> u8 {
         read_u8(self.0 + club::HAS_LINKED_CLUB)
@@ -498,7 +510,7 @@ impl Club {
     pub(crate) unsafe fn set_has_linked_club(self, v: u8) {
         write_u8(self.0 + club::HAS_LINKED_CLUB, v)
     }
-    /// `club::SIZE` (+0x245).
+    /// `club::SIZE` (+0x245). Name: read.
     #[inline(always)]
     pub(crate) fn size_addr(self) -> usize {
         self.0 + club::SIZE
@@ -528,12 +540,12 @@ impl Competition {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `competition::NAME` (+0x4).
+    /// `competition::NAME` (+0x4). Name: community.
     #[inline(always)]
     pub(crate) fn name_addr(self) -> usize {
         self.0 + competition::NAME
     }
-    /// `competition::GENDER_NAME` (+0x37).
+    /// `competition::GENDER_NAME` (+0x37). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn gender_name(self) -> u8 {
         read_u8(self.0 + competition::GENDER_NAME)
@@ -542,12 +554,12 @@ impl Competition {
     pub(crate) unsafe fn set_gender_name(self, v: u8) {
         write_u8(self.0 + competition::GENDER_NAME, v)
     }
-    /// `competition::SHORT_NAME` (+0x38).
+    /// `competition::SHORT_NAME` (+0x38). Name: community.
     #[inline(always)]
     pub(crate) fn short_name_addr(self) -> usize {
         self.0 + competition::SHORT_NAME
     }
-    /// `competition::SHORT_GENDER_NAME` (+0x52).
+    /// `competition::SHORT_GENDER_NAME` (+0x52). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn short_gender_name(self) -> u8 {
         read_u8(self.0 + competition::SHORT_GENDER_NAME)
@@ -556,7 +568,7 @@ impl Competition {
     pub(crate) unsafe fn set_short_gender_name(self, v: u8) {
         write_u8(self.0 + competition::SHORT_GENDER_NAME, v)
     }
-    /// `competition::CONTINENT` (+0x59).
+    /// `competition::CONTINENT` (+0x59). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn continent(self) -> usize {
         read_usize(self.0 + competition::CONTINENT)
@@ -565,7 +577,7 @@ impl Competition {
     pub(crate) unsafe fn set_continent(self, v: usize) {
         write_usize(self.0 + competition::CONTINENT, v)
     }
-    /// `competition::NATION` (+0x5d).
+    /// `competition::NATION` (+0x5d). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn nation(self) -> usize {
         read_usize(self.0 + competition::NATION)
@@ -574,7 +586,7 @@ impl Competition {
     pub(crate) unsafe fn set_nation(self, v: usize) {
         write_usize(self.0 + competition::NATION, v)
     }
-    /// `competition::FOREGROUND_COLOUR` (+0x61).
+    /// `competition::FOREGROUND_COLOUR` (+0x61). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn foreground_colour(self) -> usize {
         read_usize(self.0 + competition::FOREGROUND_COLOUR)
@@ -583,7 +595,7 @@ impl Competition {
     pub(crate) unsafe fn set_foreground_colour(self, v: usize) {
         write_usize(self.0 + competition::FOREGROUND_COLOUR, v)
     }
-    /// `competition::BACKGROUND_COLOUR` (+0x65).
+    /// `competition::BACKGROUND_COLOUR` (+0x65). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn background_colour(self) -> usize {
         read_usize(self.0 + competition::BACKGROUND_COLOUR)
@@ -592,7 +604,7 @@ impl Competition {
     pub(crate) unsafe fn set_background_colour(self, v: usize) {
         write_usize(self.0 + competition::BACKGROUND_COLOUR, v)
     }
-    /// `competition::REPUTATION` (+0x69).
+    /// `competition::REPUTATION` (+0x69). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn reputation(self) -> i16 {
         read_i16(self.0 + competition::REPUTATION)
@@ -626,7 +638,7 @@ impl Contract {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `contract::CLUB` (+0x4).
+    /// `contract::CLUB` (+0x4). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn club(self) -> usize {
         read_usize(self.0 + contract::CLUB)
@@ -635,7 +647,7 @@ impl Contract {
     pub(crate) unsafe fn set_club(self, v: usize) {
         write_usize(self.0 + contract::CLUB, v)
     }
-    /// `contract::UNKNOWN` (+0x8).
+    /// `contract::UNKNOWN` (+0x8). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn unknown(self) -> u32 {
         read_u32(self.0 + contract::UNKNOWN)
@@ -644,7 +656,7 @@ impl Contract {
     pub(crate) unsafe fn set_unknown(self, v: u32) {
         write_u32(self.0 + contract::UNKNOWN, v)
     }
-    /// `contract::WAGE` (+0xc).
+    /// `contract::WAGE` (+0xc). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn wage(self) -> i32 {
         read_i32(self.0 + contract::WAGE)
@@ -653,7 +665,7 @@ impl Contract {
     pub(crate) unsafe fn set_wage(self, v: i32) {
         write_i32(self.0 + contract::WAGE, v)
     }
-    /// `contract::GOAL_BONUS` (+0x10).
+    /// `contract::GOAL_BONUS` (+0x10). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn goal_bonus(self) -> i32 {
         read_i32(self.0 + contract::GOAL_BONUS)
@@ -662,7 +674,7 @@ impl Contract {
     pub(crate) unsafe fn set_goal_bonus(self, v: i32) {
         write_i32(self.0 + contract::GOAL_BONUS, v)
     }
-    /// `contract::ASSIST_BONUS` (+0x14).
+    /// `contract::ASSIST_BONUS` (+0x14). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn assist_bonus(self) -> i32 {
         read_i32(self.0 + contract::ASSIST_BONUS)
@@ -671,7 +683,7 @@ impl Contract {
     pub(crate) unsafe fn set_assist_bonus(self, v: i32) {
         write_i32(self.0 + contract::ASSIST_BONUS, v)
     }
-    /// `contract::CLEAN_SHEET_BONUS` (+0x18).
+    /// `contract::CLEAN_SHEET_BONUS` (+0x18). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn clean_sheet_bonus(self) -> i32 {
         read_i32(self.0 + contract::CLEAN_SHEET_BONUS)
@@ -680,7 +692,7 @@ impl Contract {
     pub(crate) unsafe fn set_clean_sheet_bonus(self, v: i32) {
         write_i32(self.0 + contract::CLEAN_SHEET_BONUS, v)
     }
-    /// `contract::NON_PROMOTION_RC` (+0x1c).
+    /// `contract::NON_PROMOTION_RC` (+0x1c). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn non_promotion_rc(self) -> u8 {
         read_u8(self.0 + contract::NON_PROMOTION_RC)
@@ -689,7 +701,7 @@ impl Contract {
     pub(crate) unsafe fn set_non_promotion_rc(self, v: u8) {
         write_u8(self.0 + contract::NON_PROMOTION_RC, v)
     }
-    /// `contract::MINIMUM_FEE_RC` (+0x1d).
+    /// `contract::MINIMUM_FEE_RC` (+0x1d). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn minimum_fee_rc(self) -> u8 {
         read_u8(self.0 + contract::MINIMUM_FEE_RC)
@@ -698,7 +710,7 @@ impl Contract {
     pub(crate) unsafe fn set_minimum_fee_rc(self, v: u8) {
         write_u8(self.0 + contract::MINIMUM_FEE_RC, v)
     }
-    /// `contract::RELEGATION_RC` (+0x1f).
+    /// `contract::RELEGATION_RC` (+0x1f). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn relegation_rc(self) -> u8 {
         read_u8(self.0 + contract::RELEGATION_RC)
@@ -707,7 +719,7 @@ impl Contract {
     pub(crate) unsafe fn set_relegation_rc(self, v: u8) {
         write_u8(self.0 + contract::RELEGATION_RC, v)
     }
-    /// `contract::MANAGER_JOB_RC` (+0x20).
+    /// `contract::MANAGER_JOB_RC` (+0x20). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn manager_job_rc(self) -> u8 {
         read_u8(self.0 + contract::MANAGER_JOB_RC)
@@ -716,7 +728,7 @@ impl Contract {
     pub(crate) unsafe fn set_manager_job_rc(self, v: u8) {
         write_u8(self.0 + contract::MANAGER_JOB_RC, v)
     }
-    /// `contract::RELEASE_FEE` (+0x21).
+    /// `contract::RELEASE_FEE` (+0x21). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn release_fee(self) -> usize {
         read_usize(self.0 + contract::RELEASE_FEE)
@@ -725,7 +737,7 @@ impl Contract {
     pub(crate) unsafe fn set_release_fee(self, v: usize) {
         write_usize(self.0 + contract::RELEASE_FEE, v)
     }
-    /// `contract::DATE_STARTED` (+0x25).
+    /// `contract::DATE_STARTED` (+0x25). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn date_started(self) -> usize {
         read_usize(self.0 + contract::DATE_STARTED)
@@ -734,7 +746,7 @@ impl Contract {
     pub(crate) unsafe fn set_date_started(self, v: usize) {
         write_usize(self.0 + contract::DATE_STARTED, v)
     }
-    /// `contract::CONTRACT_EXPIRES` (+0x2d).
+    /// `contract::CONTRACT_EXPIRES` (+0x2d). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn contract_expires(self) -> i16 {
         read_i16(self.0 + contract::CONTRACT_EXPIRES)
@@ -743,7 +755,7 @@ impl Contract {
     pub(crate) unsafe fn set_contract_expires(self, v: i16) {
         write_i16(self.0 + contract::CONTRACT_EXPIRES, v)
     }
-    /// `contract::CONTRACT_EXPIRES_YEAR` (+0x2f).
+    /// `contract::CONTRACT_EXPIRES_YEAR` (+0x2f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn contract_expires_year(self) -> i16 {
         read_i16(self.0 + contract::CONTRACT_EXPIRES_YEAR)
@@ -752,7 +764,7 @@ impl Contract {
     pub(crate) unsafe fn set_contract_expires_year(self, v: i16) {
         write_i16(self.0 + contract::CONTRACT_EXPIRES_YEAR, v)
     }
-    /// `contract::CONTRACT_TYPE` (+0x35).
+    /// `contract::CONTRACT_TYPE` (+0x35). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn contract_type(self) -> u8 {
         read_u8(self.0 + contract::CONTRACT_TYPE)
@@ -761,7 +773,7 @@ impl Contract {
     pub(crate) unsafe fn set_contract_type(self, v: u8) {
         write_u8(self.0 + contract::CONTRACT_TYPE, v)
     }
-    /// `contract::PREVIOUS_WAGE` (+0x36).
+    /// `contract::PREVIOUS_WAGE` (+0x36). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn previous_wage(self) -> usize {
         read_usize(self.0 + contract::PREVIOUS_WAGE)
@@ -770,7 +782,7 @@ impl Contract {
     pub(crate) unsafe fn set_previous_wage(self, v: usize) {
         write_usize(self.0 + contract::PREVIOUS_WAGE, v)
     }
-    /// `contract::CLUB_APPEARANCES` (+0x3b).
+    /// `contract::CLUB_APPEARANCES` (+0x3b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_appearances(self) -> i16 {
         read_i16(self.0 + contract::CLUB_APPEARANCES)
@@ -779,7 +791,7 @@ impl Contract {
     pub(crate) unsafe fn set_club_appearances(self, v: i16) {
         write_i16(self.0 + contract::CLUB_APPEARANCES, v)
     }
-    /// `contract::HAPPINESS` (+0x3d).
+    /// `contract::HAPPINESS` (+0x3d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn happiness(self) -> i8 {
         read_i8(self.0 + contract::HAPPINESS)
@@ -788,7 +800,7 @@ impl Contract {
     pub(crate) unsafe fn set_happiness(self, v: i8) {
         write_i8(self.0 + contract::HAPPINESS, v)
     }
-    /// `contract::UNHAPPY_FLAG` (+0x3e).
+    /// `contract::UNHAPPY_FLAG` (+0x3e). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn unhappy_flag(self) -> i8 {
         read_i8(self.0 + contract::UNHAPPY_FLAG)
@@ -797,7 +809,7 @@ impl Contract {
     pub(crate) unsafe fn set_unhappy_flag(self, v: i8) {
         write_i8(self.0 + contract::UNHAPPY_FLAG, v)
     }
-    /// `contract::MATCHES_LEFT_OUT` (+0x3f).
+    /// `contract::MATCHES_LEFT_OUT` (+0x3f). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn matches_left_out(self) -> u8 {
         read_u8(self.0 + contract::MATCHES_LEFT_OUT)
@@ -806,7 +818,7 @@ impl Contract {
     pub(crate) unsafe fn set_matches_left_out(self, v: u8) {
         write_u8(self.0 + contract::MATCHES_LEFT_OUT, v)
     }
-    /// `contract::FLAGS` (+0x40).
+    /// `contract::FLAGS` (+0x40). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn flags(self) -> u32 {
         read_u32(self.0 + contract::FLAGS)
@@ -815,7 +827,7 @@ impl Contract {
     pub(crate) unsafe fn set_flags(self, v: u32) {
         write_u32(self.0 + contract::FLAGS, v)
     }
-    /// `contract::MORALE` (+0x44).
+    /// `contract::MORALE` (+0x44). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn morale(self) -> i8 {
         read_i8(self.0 + contract::MORALE)
@@ -824,7 +836,7 @@ impl Contract {
     pub(crate) unsafe fn set_morale(self, v: i8) {
         write_i8(self.0 + contract::MORALE, v)
     }
-    /// `contract::GRIEVANCES` (+0x45).
+    /// `contract::GRIEVANCES` (+0x45). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn grievances(self) -> u32 {
         read_u32(self.0 + contract::GRIEVANCES)
@@ -833,7 +845,7 @@ impl Contract {
     pub(crate) unsafe fn set_grievances(self, v: u32) {
         write_u32(self.0 + contract::GRIEVANCES, v)
     }
-    /// `contract::UNKNOWN18_3` (+0x46).
+    /// `contract::UNKNOWN18_3` (+0x46). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn unknown18_3(self) -> i16 {
         read_i16(self.0 + contract::UNKNOWN18_3)
@@ -842,7 +854,7 @@ impl Contract {
     pub(crate) unsafe fn set_unknown18_3(self, v: i16) {
         write_i16(self.0 + contract::UNKNOWN18_3, v)
     }
-    /// `contract::LEAVING_ON_BOSMAN` (+0x49).
+    /// `contract::LEAVING_ON_BOSMAN` (+0x49). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn leaving_on_bosman(self) -> u8 {
         read_u8(self.0 + contract::LEAVING_ON_BOSMAN)
@@ -851,7 +863,7 @@ impl Contract {
     pub(crate) unsafe fn set_leaving_on_bosman(self, v: u8) {
         write_u8(self.0 + contract::LEAVING_ON_BOSMAN, v)
     }
-    /// `contract::TRANSFER_ARRANGED_FOR` (+0x4a).
+    /// `contract::TRANSFER_ARRANGED_FOR` (+0x4a). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn transfer_arranged_for(self) -> usize {
         read_usize(self.0 + contract::TRANSFER_ARRANGED_FOR)
@@ -860,7 +872,7 @@ impl Contract {
     pub(crate) unsafe fn set_transfer_arranged_for(self, v: usize) {
         write_usize(self.0 + contract::TRANSFER_ARRANGED_FOR, v)
     }
-    /// `contract::TRANSFER_STATUS` (+0x4e).
+    /// `contract::TRANSFER_STATUS` (+0x4e). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn transfer_status(self) -> u8 {
         read_u8(self.0 + contract::TRANSFER_STATUS)
@@ -869,7 +881,7 @@ impl Contract {
     pub(crate) unsafe fn set_transfer_status(self, v: u8) {
         write_u8(self.0 + contract::TRANSFER_STATUS, v)
     }
-    /// `contract::SQUAD_STATUS` (+0x4f).
+    /// `contract::SQUAD_STATUS` (+0x4f). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn squad_status(self) -> u8 {
         read_u8(self.0 + contract::SQUAD_STATUS)
@@ -903,7 +915,7 @@ impl Nation {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `nation::SHORT_NAME` (+0x38).
+    /// `nation::SHORT_NAME` (+0x38). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn short_name(self) -> u8 {
         read_u8(self.0 + nation::SHORT_NAME)
@@ -912,7 +924,7 @@ impl Nation {
     pub(crate) unsafe fn set_short_name(self, v: u8) {
         write_u8(self.0 + nation::SHORT_NAME, v)
     }
-    /// `nation::SHORT_GENDER_NAME` (+0x52).
+    /// `nation::SHORT_GENDER_NAME` (+0x52). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn short_gender_name(self) -> u8 {
         read_u8(self.0 + nation::SHORT_GENDER_NAME)
@@ -921,7 +933,7 @@ impl Nation {
     pub(crate) unsafe fn set_short_gender_name(self, v: u8) {
         write_u8(self.0 + nation::SHORT_GENDER_NAME, v)
     }
-    /// `nation::THREE_LETTER_NAME` (+0x53).
+    /// `nation::THREE_LETTER_NAME` (+0x53). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn three_letter_name(self) -> u32 {
         read_u32(self.0 + nation::THREE_LETTER_NAME)
@@ -930,12 +942,12 @@ impl Nation {
     pub(crate) unsafe fn set_three_letter_name(self, v: u32) {
         write_u32(self.0 + nation::THREE_LETTER_NAME, v)
     }
-    /// `nation::NATIONALITY` (+0x57).
+    /// `nation::NATIONALITY` (+0x57). Name: community.
     #[inline(always)]
     pub(crate) fn nationality_addr(self) -> usize {
         self.0 + nation::NATIONALITY
     }
-    /// `nation::CONTINENT` (+0x71).
+    /// `nation::CONTINENT` (+0x71). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn continent(self) -> usize {
         read_usize(self.0 + nation::CONTINENT)
@@ -944,7 +956,7 @@ impl Nation {
     pub(crate) unsafe fn set_continent(self, v: usize) {
         write_usize(self.0 + nation::CONTINENT, v)
     }
-    /// `nation::REGION` (+0x75).
+    /// `nation::REGION` (+0x75). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn region(self) -> u8 {
         read_u8(self.0 + nation::REGION)
@@ -953,7 +965,7 @@ impl Nation {
     pub(crate) unsafe fn set_region(self, v: u8) {
         write_u8(self.0 + nation::REGION, v)
     }
-    /// `nation::ACTUAL_REGION` (+0x76).
+    /// `nation::ACTUAL_REGION` (+0x76). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn actual_region(self) -> u8 {
         read_u8(self.0 + nation::ACTUAL_REGION)
@@ -962,7 +974,7 @@ impl Nation {
     pub(crate) unsafe fn set_actual_region(self, v: u8) {
         write_u8(self.0 + nation::ACTUAL_REGION, v)
     }
-    /// `nation::FIRST_LANGUAGE` (+0x77).
+    /// `nation::FIRST_LANGUAGE` (+0x77). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn first_language(self) -> i8 {
         read_i8(self.0 + nation::FIRST_LANGUAGE)
@@ -971,7 +983,7 @@ impl Nation {
     pub(crate) unsafe fn set_first_language(self, v: i8) {
         write_i8(self.0 + nation::FIRST_LANGUAGE, v)
     }
-    /// `nation::SECOND_LANGUAGE` (+0x78).
+    /// `nation::SECOND_LANGUAGE` (+0x78). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn second_language(self) -> i8 {
         read_i8(self.0 + nation::SECOND_LANGUAGE)
@@ -980,7 +992,7 @@ impl Nation {
     pub(crate) unsafe fn set_second_language(self, v: i8) {
         write_i8(self.0 + nation::SECOND_LANGUAGE, v)
     }
-    /// `nation::THIRD_LANGUAGE` (+0x79).
+    /// `nation::THIRD_LANGUAGE` (+0x79). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn third_language(self) -> i8 {
         read_i8(self.0 + nation::THIRD_LANGUAGE)
@@ -989,7 +1001,7 @@ impl Nation {
     pub(crate) unsafe fn set_third_language(self, v: i8) {
         write_i8(self.0 + nation::THIRD_LANGUAGE, v)
     }
-    /// `nation::STATE_OF_DEVELOPMENT` (+0x7e).
+    /// `nation::STATE_OF_DEVELOPMENT` (+0x7e). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn state_of_development(self) -> u8 {
         read_u8(self.0 + nation::STATE_OF_DEVELOPMENT)
@@ -998,7 +1010,7 @@ impl Nation {
     pub(crate) unsafe fn set_state_of_development(self, v: u8) {
         write_u8(self.0 + nation::STATE_OF_DEVELOPMENT, v)
     }
-    /// `nation::GROUP_MEMBERSHIP` (+0x7f).
+    /// `nation::GROUP_MEMBERSHIP` (+0x7f). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn group_membership(self) -> u8 {
         read_u8(self.0 + nation::GROUP_MEMBERSHIP)
@@ -1007,7 +1019,7 @@ impl Nation {
     pub(crate) unsafe fn set_group_membership(self, v: u8) {
         write_u8(self.0 + nation::GROUP_MEMBERSHIP, v)
     }
-    /// `nation::NATIONAL_STADIUM` (+0x80).
+    /// `nation::NATIONAL_STADIUM` (+0x80). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn national_stadium(self) -> usize {
         read_usize(self.0 + nation::NATIONAL_STADIUM)
@@ -1016,7 +1028,7 @@ impl Nation {
     pub(crate) unsafe fn set_national_stadium(self, v: usize) {
         write_usize(self.0 + nation::NATIONAL_STADIUM, v)
     }
-    /// `nation::GAME_IMPORTANCE` (+0x84).
+    /// `nation::GAME_IMPORTANCE` (+0x84). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn game_importance(self) -> i8 {
         read_i8(self.0 + nation::GAME_IMPORTANCE)
@@ -1025,7 +1037,7 @@ impl Nation {
     pub(crate) unsafe fn set_game_importance(self, v: i8) {
         write_i8(self.0 + nation::GAME_IMPORTANCE, v)
     }
-    /// `nation::LEAGUE_STANDARD` (+0x85).
+    /// `nation::LEAGUE_STANDARD` (+0x85). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn league_standard(self) -> u8 {
         read_u8(self.0 + nation::LEAGUE_STANDARD)
@@ -1034,7 +1046,7 @@ impl Nation {
     pub(crate) unsafe fn set_league_standard(self, v: u8) {
         write_u8(self.0 + nation::LEAGUE_STANDARD, v)
     }
-    /// `nation::NUMBER_CLUBS` (+0x86).
+    /// `nation::NUMBER_CLUBS` (+0x86). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn number_clubs(self) -> i16 {
         read_i16(self.0 + nation::NUMBER_CLUBS)
@@ -1043,7 +1055,7 @@ impl Nation {
     pub(crate) unsafe fn set_number_clubs(self, v: i16) {
         write_i16(self.0 + nation::NUMBER_CLUBS, v)
     }
-    /// `nation::NUMBER_STAFF` (+0x88).
+    /// `nation::NUMBER_STAFF` (+0x88). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn number_staff(self) -> i32 {
         read_i32(self.0 + nation::NUMBER_STAFF)
@@ -1052,7 +1064,7 @@ impl Nation {
     pub(crate) unsafe fn set_number_staff(self, v: i32) {
         write_i32(self.0 + nation::NUMBER_STAFF, v)
     }
-    /// `nation::REPUTATION` (+0x8e).
+    /// `nation::REPUTATION` (+0x8e). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn reputation(self) -> i16 {
         read_i16(self.0 + nation::REPUTATION)
@@ -1061,7 +1073,7 @@ impl Nation {
     pub(crate) unsafe fn set_reputation(self, v: i16) {
         write_i16(self.0 + nation::REPUTATION, v)
     }
-    /// `nation::FOREGROUND_COLOUR1` (+0x90).
+    /// `nation::FOREGROUND_COLOUR1` (+0x90). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn foreground_colour1(self) -> usize {
         read_usize(self.0 + nation::FOREGROUND_COLOUR1)
@@ -1070,7 +1082,7 @@ impl Nation {
     pub(crate) unsafe fn set_foreground_colour1(self, v: usize) {
         write_usize(self.0 + nation::FOREGROUND_COLOUR1, v)
     }
-    /// `nation::BACKGROUND_COLOUR1` (+0x94).
+    /// `nation::BACKGROUND_COLOUR1` (+0x94). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn background_colour1(self) -> usize {
         read_usize(self.0 + nation::BACKGROUND_COLOUR1)
@@ -1079,7 +1091,7 @@ impl Nation {
     pub(crate) unsafe fn set_background_colour1(self, v: usize) {
         write_usize(self.0 + nation::BACKGROUND_COLOUR1, v)
     }
-    /// `nation::FIFACOEFFICIENT91` (+0xb0).
+    /// `nation::FIFACOEFFICIENT91` (+0xb0). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn fifacoefficient91(self) -> f64 {
         read_f64(self.0 + nation::FIFACOEFFICIENT91)
@@ -1088,7 +1100,7 @@ impl Nation {
     pub(crate) unsafe fn set_fifacoefficient91(self, v: f64) {
         write_f64(self.0 + nation::FIFACOEFFICIENT91, v)
     }
-    /// `nation::FIFACOEFFICIENT92` (+0xb8).
+    /// `nation::FIFACOEFFICIENT92` (+0xb8). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn fifacoefficient92(self) -> f64 {
         read_f64(self.0 + nation::FIFACOEFFICIENT92)
@@ -1097,7 +1109,7 @@ impl Nation {
     pub(crate) unsafe fn set_fifacoefficient92(self, v: f64) {
         write_f64(self.0 + nation::FIFACOEFFICIENT92, v)
     }
-    /// `nation::FIFACOEFFICIENT93` (+0xc0).
+    /// `nation::FIFACOEFFICIENT93` (+0xc0). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn fifacoefficient93(self) -> f64 {
         read_f64(self.0 + nation::FIFACOEFFICIENT93)
@@ -1106,7 +1118,7 @@ impl Nation {
     pub(crate) unsafe fn set_fifacoefficient93(self, v: f64) {
         write_f64(self.0 + nation::FIFACOEFFICIENT93, v)
     }
-    /// `nation::FIFACOEFFICIENT94` (+0xc8).
+    /// `nation::FIFACOEFFICIENT94` (+0xc8). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn fifacoefficient94(self) -> f64 {
         read_f64(self.0 + nation::FIFACOEFFICIENT94)
@@ -1115,7 +1127,7 @@ impl Nation {
     pub(crate) unsafe fn set_fifacoefficient94(self, v: f64) {
         write_f64(self.0 + nation::FIFACOEFFICIENT94, v)
     }
-    /// `nation::FIFACOEFFICIENT95` (+0xd0).
+    /// `nation::FIFACOEFFICIENT95` (+0xd0). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn fifacoefficient95(self) -> f64 {
         read_f64(self.0 + nation::FIFACOEFFICIENT95)
@@ -1124,7 +1136,7 @@ impl Nation {
     pub(crate) unsafe fn set_fifacoefficient95(self, v: f64) {
         write_f64(self.0 + nation::FIFACOEFFICIENT95, v)
     }
-    /// `nation::FIFACOEFFICIENT96` (+0xd8).
+    /// `nation::FIFACOEFFICIENT96` (+0xd8). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn fifacoefficient96(self) -> f64 {
         read_f64(self.0 + nation::FIFACOEFFICIENT96)
@@ -1133,7 +1145,7 @@ impl Nation {
     pub(crate) unsafe fn set_fifacoefficient96(self, v: f64) {
         write_f64(self.0 + nation::FIFACOEFFICIENT96, v)
     }
-    /// `nation::UEFACOEFFICIENT91` (+0xe0).
+    /// `nation::UEFACOEFFICIENT91` (+0xe0). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn uefacoefficient91(self) -> f64 {
         read_f64(self.0 + nation::UEFACOEFFICIENT91)
@@ -1142,7 +1154,7 @@ impl Nation {
     pub(crate) unsafe fn set_uefacoefficient91(self, v: f64) {
         write_f64(self.0 + nation::UEFACOEFFICIENT91, v)
     }
-    /// `nation::UEFACOEFFICIENT92` (+0xe8).
+    /// `nation::UEFACOEFFICIENT92` (+0xe8). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn uefacoefficient92(self) -> f64 {
         read_f64(self.0 + nation::UEFACOEFFICIENT92)
@@ -1151,7 +1163,7 @@ impl Nation {
     pub(crate) unsafe fn set_uefacoefficient92(self, v: f64) {
         write_f64(self.0 + nation::UEFACOEFFICIENT92, v)
     }
-    /// `nation::UEFACOEFFICIENT93` (+0xf0).
+    /// `nation::UEFACOEFFICIENT93` (+0xf0). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn uefacoefficient93(self) -> f64 {
         read_f64(self.0 + nation::UEFACOEFFICIENT93)
@@ -1160,7 +1172,7 @@ impl Nation {
     pub(crate) unsafe fn set_uefacoefficient93(self, v: f64) {
         write_f64(self.0 + nation::UEFACOEFFICIENT93, v)
     }
-    /// `nation::UEFACOEFFICIENT94` (+0xf8).
+    /// `nation::UEFACOEFFICIENT94` (+0xf8). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn uefacoefficient94(self) -> f64 {
         read_f64(self.0 + nation::UEFACOEFFICIENT94)
@@ -1169,7 +1181,7 @@ impl Nation {
     pub(crate) unsafe fn set_uefacoefficient94(self, v: f64) {
         write_f64(self.0 + nation::UEFACOEFFICIENT94, v)
     }
-    /// `nation::UEFACOEFFICIENT95` (+0x100).
+    /// `nation::UEFACOEFFICIENT95` (+0x100). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn uefacoefficient95(self) -> f64 {
         read_f64(self.0 + nation::UEFACOEFFICIENT95)
@@ -1178,7 +1190,7 @@ impl Nation {
     pub(crate) unsafe fn set_uefacoefficient95(self, v: f64) {
         write_f64(self.0 + nation::UEFACOEFFICIENT95, v)
     }
-    /// `nation::UEFACOEFFICIENT96` (+0x108).
+    /// `nation::UEFACOEFFICIENT96` (+0x108). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn uefacoefficient96(self) -> f64 {
         read_f64(self.0 + nation::UEFACOEFFICIENT96)
@@ -1187,7 +1199,7 @@ impl Nation {
     pub(crate) unsafe fn set_uefacoefficient96(self, v: f64) {
         write_f64(self.0 + nation::UEFACOEFFICIENT96, v)
     }
-    /// `nation::LEAGUE_SELECTED` (+0x11c).
+    /// `nation::LEAGUE_SELECTED` (+0x11c). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn league_selected(self) -> u8 {
         read_u8(self.0 + nation::LEAGUE_SELECTED)
@@ -1196,7 +1208,7 @@ impl Nation {
     pub(crate) unsafe fn set_league_selected(self, v: u8) {
         write_u8(self.0 + nation::LEAGUE_SELECTED, v)
     }
-    /// `nation::GAMES_PLAYED` (+0x121).
+    /// `nation::GAMES_PLAYED` (+0x121). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn games_played(self) -> u8 {
         read_u8(self.0 + nation::GAMES_PLAYED)
@@ -1205,7 +1217,7 @@ impl Nation {
     pub(crate) unsafe fn set_games_played(self, v: u8) {
         write_u8(self.0 + nation::GAMES_PLAYED, v)
     }
-    /// `nation::SIZE` (+0x122).
+    /// `nation::SIZE` (+0x122). Name: read.
     #[inline(always)]
     pub(crate) fn size_addr(self) -> usize {
         self.0 + nation::SIZE
@@ -1235,12 +1247,12 @@ impl Stadium {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `stadium::NAME` (+0x4).
+    /// `stadium::NAME` (+0x4). Name: community.
     #[inline(always)]
     pub(crate) fn name_addr(self) -> usize {
         self.0 + stadium::NAME
     }
-    /// `stadium::GENDER_NAME` (+0x37).
+    /// `stadium::GENDER_NAME` (+0x37). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn gender_name(self) -> u8 {
         read_u8(self.0 + stadium::GENDER_NAME)
@@ -1249,7 +1261,7 @@ impl Stadium {
     pub(crate) unsafe fn set_gender_name(self, v: u8) {
         write_u8(self.0 + stadium::GENDER_NAME, v)
     }
-    /// `stadium::CITY` (+0x38).
+    /// `stadium::CITY` (+0x38). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn city(self) -> usize {
         read_usize(self.0 + stadium::CITY)
@@ -1258,7 +1270,7 @@ impl Stadium {
     pub(crate) unsafe fn set_city(self, v: usize) {
         write_usize(self.0 + stadium::CITY, v)
     }
-    /// `stadium::CAPACITY` (+0x3c).
+    /// `stadium::CAPACITY` (+0x3c). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn capacity(self) -> i32 {
         read_i32(self.0 + stadium::CAPACITY)
@@ -1267,7 +1279,7 @@ impl Stadium {
     pub(crate) unsafe fn set_capacity(self, v: i32) {
         write_i32(self.0 + stadium::CAPACITY, v)
     }
-    /// `stadium::STADIUM_CAPACITY` (+0x3c).
+    /// `stadium::STADIUM_CAPACITY` (+0x3c). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn stadium_capacity(self) -> i32 {
         read_i32(self.0 + stadium::STADIUM_CAPACITY)
@@ -1276,7 +1288,7 @@ impl Stadium {
     pub(crate) unsafe fn set_stadium_capacity(self, v: i32) {
         write_i32(self.0 + stadium::STADIUM_CAPACITY, v)
     }
-    /// `stadium::SEATING_CAPACITY` (+0x40).
+    /// `stadium::SEATING_CAPACITY` (+0x40). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn seating_capacity(self) -> i32 {
         read_i32(self.0 + stadium::SEATING_CAPACITY)
@@ -1285,7 +1297,7 @@ impl Stadium {
     pub(crate) unsafe fn set_seating_capacity(self, v: i32) {
         write_i32(self.0 + stadium::SEATING_CAPACITY, v)
     }
-    /// `stadium::EXPANSION_CAPACITY` (+0x44).
+    /// `stadium::EXPANSION_CAPACITY` (+0x44). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn expansion_capacity(self) -> i32 {
         read_i32(self.0 + stadium::EXPANSION_CAPACITY)
@@ -1294,7 +1306,7 @@ impl Stadium {
     pub(crate) unsafe fn set_expansion_capacity(self, v: i32) {
         write_i32(self.0 + stadium::EXPANSION_CAPACITY, v)
     }
-    /// `stadium::NEARBY_STADIUM` (+0x48).
+    /// `stadium::NEARBY_STADIUM` (+0x48). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn nearby_stadium(self) -> usize {
         read_usize(self.0 + stadium::NEARBY_STADIUM)
@@ -1303,7 +1315,7 @@ impl Stadium {
     pub(crate) unsafe fn set_nearby_stadium(self, v: usize) {
         write_usize(self.0 + stadium::NEARBY_STADIUM, v)
     }
-    /// `stadium::COVERED` (+0x4c).
+    /// `stadium::COVERED` (+0x4c). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn covered(self) -> u8 {
         read_u8(self.0 + stadium::COVERED)
@@ -1312,7 +1324,7 @@ impl Stadium {
     pub(crate) unsafe fn set_covered(self, v: u8) {
         write_u8(self.0 + stadium::COVERED, v)
     }
-    /// `stadium::UNDER_SOIL_HEATING` (+0x4d).
+    /// `stadium::UNDER_SOIL_HEATING` (+0x4d). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn under_soil_heating(self) -> u8 {
         read_u8(self.0 + stadium::UNDER_SOIL_HEATING)
@@ -1346,7 +1358,7 @@ impl Staff {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `staff::FIRST_NAME` (+0x4).
+    /// `staff::FIRST_NAME` (+0x4). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn first_name(self) -> usize {
         read_usize(self.0 + staff::FIRST_NAME)
@@ -1355,7 +1367,7 @@ impl Staff {
     pub(crate) unsafe fn set_first_name(self, v: usize) {
         write_usize(self.0 + staff::FIRST_NAME, v)
     }
-    /// `staff::SECOND_NAME` (+0x8).
+    /// `staff::SECOND_NAME` (+0x8). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn second_name(self) -> usize {
         read_usize(self.0 + staff::SECOND_NAME)
@@ -1364,7 +1376,7 @@ impl Staff {
     pub(crate) unsafe fn set_second_name(self, v: usize) {
         write_usize(self.0 + staff::SECOND_NAME, v)
     }
-    /// `staff::COMMON_NAME` (+0xc).
+    /// `staff::COMMON_NAME` (+0xc). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn common_name(self) -> usize {
         read_usize(self.0 + staff::COMMON_NAME)
@@ -1373,7 +1385,7 @@ impl Staff {
     pub(crate) unsafe fn set_common_name(self, v: usize) {
         write_usize(self.0 + staff::COMMON_NAME, v)
     }
-    /// `staff::DATE_OF_BIRTH` (+0x10).
+    /// `staff::DATE_OF_BIRTH` (+0x10). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn date_of_birth(self) -> i16 {
         read_i16(self.0 + staff::DATE_OF_BIRTH)
@@ -1382,7 +1394,25 @@ impl Staff {
     pub(crate) unsafe fn set_date_of_birth(self, v: i16) {
         write_i16(self.0 + staff::DATE_OF_BIRTH, v)
     }
-    /// `staff::AGE` (+0x18).
+    /// `staff::DATE_OF_BIRTH_YEAR` (+0x12). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn date_of_birth_year(self) -> u16 {
+        read_u16(self.0 + staff::DATE_OF_BIRTH_YEAR)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_date_of_birth_year(self, v: u16) {
+        write_u16(self.0 + staff::DATE_OF_BIRTH_YEAR, v)
+    }
+    /// `staff::DATE_OF_BIRTH_LEAP_YEAR` (+0x14). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn date_of_birth_leap_year(self) -> usize {
+        read_usize(self.0 + staff::DATE_OF_BIRTH_LEAP_YEAR)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_date_of_birth_leap_year(self, v: usize) {
+        write_usize(self.0 + staff::DATE_OF_BIRTH_LEAP_YEAR, v)
+    }
+    /// `staff::AGE` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn age(self) -> i16 {
         read_i16(self.0 + staff::AGE)
@@ -1391,7 +1421,7 @@ impl Staff {
     pub(crate) unsafe fn set_age(self, v: i16) {
         write_i16(self.0 + staff::AGE, v)
     }
-    /// `staff::YEAR_OF_BIRTH` (+0x18).
+    /// `staff::YEAR_OF_BIRTH` (+0x18). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn year_of_birth(self) -> u16 {
         read_u16(self.0 + staff::YEAR_OF_BIRTH)
@@ -1400,7 +1430,7 @@ impl Staff {
     pub(crate) unsafe fn set_year_of_birth(self, v: u16) {
         write_u16(self.0 + staff::YEAR_OF_BIRTH, v)
     }
-    /// `staff::NATION` (+0x1a).
+    /// `staff::NATION` (+0x1a). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn nation(self) -> usize {
         read_usize(self.0 + staff::NATION)
@@ -1409,7 +1439,7 @@ impl Staff {
     pub(crate) unsafe fn set_nation(self, v: usize) {
         write_usize(self.0 + staff::NATION, v)
     }
-    /// `staff::SECOND_NATION` (+0x1e).
+    /// `staff::SECOND_NATION` (+0x1e). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn second_nation(self) -> usize {
         read_usize(self.0 + staff::SECOND_NATION)
@@ -1418,7 +1448,7 @@ impl Staff {
     pub(crate) unsafe fn set_second_nation(self, v: usize) {
         write_usize(self.0 + staff::SECOND_NATION, v)
     }
-    /// `staff::INT_APPS` (+0x22).
+    /// `staff::INT_APPS` (+0x22). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn int_apps(self) -> u8 {
         read_u8(self.0 + staff::INT_APPS)
@@ -1427,7 +1457,7 @@ impl Staff {
     pub(crate) unsafe fn set_int_apps(self, v: u8) {
         write_u8(self.0 + staff::INT_APPS, v)
     }
-    /// `staff::INT_GOALS` (+0x23).
+    /// `staff::INT_GOALS` (+0x23). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn int_goals(self) -> u8 {
         read_u8(self.0 + staff::INT_GOALS)
@@ -1436,7 +1466,7 @@ impl Staff {
     pub(crate) unsafe fn set_int_goals(self, v: u8) {
         write_u8(self.0 + staff::INT_GOALS, v)
     }
-    /// `staff::NATIONAL_JOB` (+0x24).
+    /// `staff::NATIONAL_JOB` (+0x24). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn national_job(self) -> usize {
         read_usize(self.0 + staff::NATIONAL_JOB)
@@ -1445,7 +1475,7 @@ impl Staff {
     pub(crate) unsafe fn set_national_job(self, v: usize) {
         write_usize(self.0 + staff::NATIONAL_JOB, v)
     }
-    /// `staff::JOB_FOR_NATION` (+0x28).
+    /// `staff::JOB_FOR_NATION` (+0x28). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn job_for_nation(self) -> u8 {
         read_u8(self.0 + staff::JOB_FOR_NATION)
@@ -1454,12 +1484,12 @@ impl Staff {
     pub(crate) unsafe fn set_job_for_nation(self, v: u8) {
         write_u8(self.0 + staff::JOB_FOR_NATION, v)
     }
-    /// `staff::DATE_JOINED_NATION` (+0x29).
+    /// `staff::DATE_JOINED_NATION` (+0x29). Name: community.
     #[inline(always)]
     pub(crate) fn date_joined_nation_addr(self) -> usize {
         self.0 + staff::DATE_JOINED_NATION
     }
-    /// `staff::CLUB_JOB` (+0x39).
+    /// `staff::CLUB_JOB` (+0x39). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn club_job(self) -> usize {
         read_usize(self.0 + staff::CLUB_JOB)
@@ -1468,7 +1498,7 @@ impl Staff {
     pub(crate) unsafe fn set_club_job(self, v: usize) {
         write_usize(self.0 + staff::CLUB_JOB, v)
     }
-    /// `staff::JOB_FOR_CLUB` (+0x3d).
+    /// `staff::JOB_FOR_CLUB` (+0x3d). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn job_for_club(self) -> u8 {
         read_u8(self.0 + staff::JOB_FOR_CLUB)
@@ -1477,7 +1507,7 @@ impl Staff {
     pub(crate) unsafe fn set_job_for_club(self, v: u8) {
         write_u8(self.0 + staff::JOB_FOR_CLUB, v)
     }
-    /// `staff::DATE_JOINED_CLUB` (+0x3e).
+    /// `staff::DATE_JOINED_CLUB` (+0x3e). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn date_joined_club(self) -> usize {
         read_usize(self.0 + staff::DATE_JOINED_CLUB)
@@ -1486,12 +1516,30 @@ impl Staff {
     pub(crate) unsafe fn set_date_joined_club(self, v: usize) {
         write_usize(self.0 + staff::DATE_JOINED_CLUB, v)
     }
-    /// `staff::DATE_EXPIRES_CLUB` (+0x46).
+    /// `staff::DATE_JOINED_CLUB_YEAR` (+0x40). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn date_joined_club_year(self) -> u16 {
+        read_u16(self.0 + staff::DATE_JOINED_CLUB_YEAR)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_date_joined_club_year(self, v: u16) {
+        write_u16(self.0 + staff::DATE_JOINED_CLUB_YEAR, v)
+    }
+    /// `staff::DATE_JOINED_CLUB_LEAP_YEAR` (+0x42). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn date_joined_club_leap_year(self) -> usize {
+        read_usize(self.0 + staff::DATE_JOINED_CLUB_LEAP_YEAR)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_date_joined_club_leap_year(self, v: usize) {
+        write_usize(self.0 + staff::DATE_JOINED_CLUB_LEAP_YEAR, v)
+    }
+    /// `staff::DATE_EXPIRES_CLUB` (+0x46). Name: community.
     #[inline(always)]
     pub(crate) fn date_expires_club_addr(self) -> usize {
         self.0 + staff::DATE_EXPIRES_CLUB
     }
-    /// `staff::WAGE` (+0x4e).
+    /// `staff::WAGE` (+0x4e). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn wage(self) -> usize {
         read_usize(self.0 + staff::WAGE)
@@ -1500,7 +1548,7 @@ impl Staff {
     pub(crate) unsafe fn set_wage(self, v: usize) {
         write_usize(self.0 + staff::WAGE, v)
     }
-    /// `staff::VALUE` (+0x52).
+    /// `staff::VALUE` (+0x52). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn value(self) -> usize {
         read_usize(self.0 + staff::VALUE)
@@ -1509,7 +1557,7 @@ impl Staff {
     pub(crate) unsafe fn set_value(self, v: usize) {
         write_usize(self.0 + staff::VALUE, v)
     }
-    /// `staff::ADAPTABILITY` (+0x56).
+    /// `staff::ADAPTABILITY` (+0x56). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn adaptability(self) -> i8 {
         read_i8(self.0 + staff::ADAPTABILITY)
@@ -1518,7 +1566,7 @@ impl Staff {
     pub(crate) unsafe fn set_adaptability(self, v: i8) {
         write_i8(self.0 + staff::ADAPTABILITY, v)
     }
-    /// `staff::AMBITION` (+0x57).
+    /// `staff::AMBITION` (+0x57). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn ambition(self) -> i8 {
         read_i8(self.0 + staff::AMBITION)
@@ -1527,7 +1575,7 @@ impl Staff {
     pub(crate) unsafe fn set_ambition(self, v: i8) {
         write_i8(self.0 + staff::AMBITION, v)
     }
-    /// `staff::DETERMINATION` (+0x58).
+    /// `staff::DETERMINATION` (+0x58). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn determination(self) -> i8 {
         read_i8(self.0 + staff::DETERMINATION)
@@ -1536,7 +1584,7 @@ impl Staff {
     pub(crate) unsafe fn set_determination(self, v: i8) {
         write_i8(self.0 + staff::DETERMINATION, v)
     }
-    /// `staff::LOYALTY` (+0x59).
+    /// `staff::LOYALTY` (+0x59). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn loyalty(self) -> i8 {
         read_i8(self.0 + staff::LOYALTY)
@@ -1545,7 +1593,7 @@ impl Staff {
     pub(crate) unsafe fn set_loyalty(self, v: i8) {
         write_i8(self.0 + staff::LOYALTY, v)
     }
-    /// `staff::PRESSURE` (+0x5a).
+    /// `staff::PRESSURE` (+0x5a). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn pressure(self) -> i8 {
         read_i8(self.0 + staff::PRESSURE)
@@ -1554,7 +1602,7 @@ impl Staff {
     pub(crate) unsafe fn set_pressure(self, v: i8) {
         write_i8(self.0 + staff::PRESSURE, v)
     }
-    /// `staff::PROFESSIONALISM` (+0x5b).
+    /// `staff::PROFESSIONALISM` (+0x5b). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn professionalism(self) -> i8 {
         read_i8(self.0 + staff::PROFESSIONALISM)
@@ -1563,7 +1611,7 @@ impl Staff {
     pub(crate) unsafe fn set_professionalism(self, v: i8) {
         write_i8(self.0 + staff::PROFESSIONALISM, v)
     }
-    /// `staff::SPORTSMANSHIP` (+0x5c).
+    /// `staff::SPORTSMANSHIP` (+0x5c). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn sportsmanship(self) -> i8 {
         read_i8(self.0 + staff::SPORTSMANSHIP)
@@ -1572,7 +1620,7 @@ impl Staff {
     pub(crate) unsafe fn set_sportsmanship(self, v: i8) {
         write_i8(self.0 + staff::SPORTSMANSHIP, v)
     }
-    /// `staff::TEMPERAMENT` (+0x5d).
+    /// `staff::TEMPERAMENT` (+0x5d). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn temperament(self) -> i8 {
         read_i8(self.0 + staff::TEMPERAMENT)
@@ -1581,7 +1629,7 @@ impl Staff {
     pub(crate) unsafe fn set_temperament(self, v: i8) {
         write_i8(self.0 + staff::TEMPERAMENT, v)
     }
-    /// `staff::PLAYING_SQUAD` (+0x5e).
+    /// `staff::PLAYING_SQUAD` (+0x5e). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn playing_squad(self) -> u8 {
         read_u8(self.0 + staff::PLAYING_SQUAD)
@@ -1590,7 +1638,7 @@ impl Staff {
     pub(crate) unsafe fn set_playing_squad(self, v: u8) {
         write_u8(self.0 + staff::PLAYING_SQUAD, v)
     }
-    /// `staff::CLASSIFICATION` (+0x5f).
+    /// `staff::CLASSIFICATION` (+0x5f). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn classification(self) -> u8 {
         read_u8(self.0 + staff::CLASSIFICATION)
@@ -1599,7 +1647,7 @@ impl Staff {
     pub(crate) unsafe fn set_classification(self, v: u8) {
         write_u8(self.0 + staff::CLASSIFICATION, v)
     }
-    /// `staff::PLAYER` (+0x61).
+    /// `staff::PLAYER` (+0x61). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn player(self) -> usize {
         read_usize(self.0 + staff::PLAYER)
@@ -1608,7 +1656,7 @@ impl Staff {
     pub(crate) unsafe fn set_player(self, v: usize) {
         write_usize(self.0 + staff::PLAYER, v)
     }
-    /// `staff::STAFF_PREFERENCES` (+0x65).
+    /// `staff::STAFF_PREFERENCES` (+0x65). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn staff_preferences(self) -> usize {
         read_usize(self.0 + staff::STAFF_PREFERENCES)
@@ -1617,7 +1665,7 @@ impl Staff {
     pub(crate) unsafe fn set_staff_preferences(self, v: usize) {
         write_usize(self.0 + staff::STAFF_PREFERENCES, v)
     }
-    /// `staff::NON_PLAYER` (+0x69).
+    /// `staff::NON_PLAYER` (+0x69). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn non_player(self) -> usize {
         read_usize(self.0 + staff::NON_PLAYER)
@@ -1626,7 +1674,7 @@ impl Staff {
     pub(crate) unsafe fn set_non_player(self, v: usize) {
         write_usize(self.0 + staff::NON_PLAYER, v)
     }
-    /// `staff::SQUAD_SELECTED_FOR` (+0x6d).
+    /// `staff::SQUAD_SELECTED_FOR` (+0x6d). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn squad_selected_for(self) -> u8 {
         read_u8(self.0 + staff::SQUAD_SELECTED_FOR)
@@ -1635,7 +1683,7 @@ impl Staff {
     pub(crate) unsafe fn set_squad_selected_for(self, v: u8) {
         write_u8(self.0 + staff::SQUAD_SELECTED_FOR, v)
     }
-    /// `staff::SIZE` (+0x6e).
+    /// `staff::SIZE` (+0x6e). Name: read.
     #[inline(always)]
     pub(crate) fn size_addr(self) -> usize {
         self.0 + staff::SIZE
@@ -1665,7 +1713,7 @@ impl BraNatThird {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `bra_nat_third::CLUB_LIST` (+0xee).
+    /// `bra_nat_third::CLUB_LIST` (+0xee). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_list(self) -> usize {
         read_usize(self.0 + bra_nat_third::CLUB_LIST)
@@ -1699,7 +1747,7 @@ impl ContractManagerFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `contract_manager_fields::CONTRACT_CAPACITY` (+0x4).
+    /// `contract_manager_fields::CONTRACT_CAPACITY` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn contract_capacity(self) -> usize {
         read_usize(self.0 + contract_manager_fields::CONTRACT_CAPACITY)
@@ -1708,7 +1756,7 @@ impl ContractManagerFields {
     pub(crate) unsafe fn set_contract_capacity(self, v: usize) {
         write_usize(self.0 + contract_manager_fields::CONTRACT_CAPACITY, v)
     }
-    /// `contract_manager_fields::CONTRACT_COUNT` (+0x8).
+    /// `contract_manager_fields::CONTRACT_COUNT` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn contract_count(self) -> usize {
         read_usize(self.0 + contract_manager_fields::CONTRACT_COUNT)
@@ -1717,7 +1765,7 @@ impl ContractManagerFields {
     pub(crate) unsafe fn set_contract_count(self, v: usize) {
         write_usize(self.0 + contract_manager_fields::CONTRACT_COUNT, v)
     }
-    /// `contract_manager_fields::DECISION_DATES` (+0xc).
+    /// `contract_manager_fields::DECISION_DATES` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn decision_dates(self) -> usize {
         read_usize(self.0 + contract_manager_fields::DECISION_DATES)
@@ -1726,7 +1774,7 @@ impl ContractManagerFields {
     pub(crate) unsafe fn set_decision_dates(self, v: usize) {
         write_usize(self.0 + contract_manager_fields::DECISION_DATES, v)
     }
-    /// `contract_manager_fields::DECISION_CAPACITY` (+0x10).
+    /// `contract_manager_fields::DECISION_CAPACITY` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn decision_capacity(self) -> usize {
         read_usize(self.0 + contract_manager_fields::DECISION_CAPACITY)
@@ -1735,7 +1783,7 @@ impl ContractManagerFields {
     pub(crate) unsafe fn set_decision_capacity(self, v: usize) {
         write_usize(self.0 + contract_manager_fields::DECISION_CAPACITY, v)
     }
-    /// `contract_manager_fields::DECISION_COUNT` (+0x14).
+    /// `contract_manager_fields::DECISION_COUNT` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn decision_count(self) -> usize {
         read_usize(self.0 + contract_manager_fields::DECISION_COUNT)
@@ -1744,7 +1792,7 @@ impl ContractManagerFields {
     pub(crate) unsafe fn set_decision_count(self, v: usize) {
         write_usize(self.0 + contract_manager_fields::DECISION_COUNT, v)
     }
-    /// `contract_manager_fields::DECISION_NEXT_INDEX` (+0x18).
+    /// `contract_manager_fields::DECISION_NEXT_INDEX` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn decision_next_index(self) -> i32 {
         read_i32(self.0 + contract_manager_fields::DECISION_NEXT_INDEX)
@@ -1753,7 +1801,7 @@ impl ContractManagerFields {
     pub(crate) unsafe fn set_decision_next_index(self, v: i32) {
         write_i32(self.0 + contract_manager_fields::DECISION_NEXT_INDEX, v)
     }
-    /// `contract_manager_fields::DECISIONS_ADDED` (+0x1c).
+    /// `contract_manager_fields::DECISIONS_ADDED` (+0x1c). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn decisions_added(self) -> usize {
         read_usize(self.0 + contract_manager_fields::DECISIONS_ADDED)
@@ -1762,7 +1810,7 @@ impl ContractManagerFields {
     pub(crate) unsafe fn set_decisions_added(self, v: usize) {
         write_usize(self.0 + contract_manager_fields::DECISIONS_ADDED, v)
     }
-    /// `contract_manager_fields::TALKS_RECORDS` (+0x28).
+    /// `contract_manager_fields::TALKS_RECORDS` (+0x28). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn talks_records(self) -> u32 {
         read_u32(self.0 + contract_manager_fields::TALKS_RECORDS)
@@ -1771,7 +1819,7 @@ impl ContractManagerFields {
     pub(crate) unsafe fn set_talks_records(self, v: u32) {
         write_u32(self.0 + contract_manager_fields::TALKS_RECORDS, v)
     }
-    /// `contract_manager_fields::TALKS_COUNT` (+0x2c).
+    /// `contract_manager_fields::TALKS_COUNT` (+0x2c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn talks_count(self) -> i32 {
         read_i32(self.0 + contract_manager_fields::TALKS_COUNT)
@@ -1780,7 +1828,7 @@ impl ContractManagerFields {
     pub(crate) unsafe fn set_talks_count(self, v: i32) {
         write_i32(self.0 + contract_manager_fields::TALKS_COUNT, v)
     }
-    /// `contract_manager_fields::CONTRACT_OFFERS` (+0x34).
+    /// `contract_manager_fields::CONTRACT_OFFERS` (+0x34). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn contract_offers(self) -> usize {
         read_usize(self.0 + contract_manager_fields::CONTRACT_OFFERS)
@@ -1789,7 +1837,7 @@ impl ContractManagerFields {
     pub(crate) unsafe fn set_contract_offers(self, v: usize) {
         write_usize(self.0 + contract_manager_fields::CONTRACT_OFFERS, v)
     }
-    /// `contract_manager_fields::HELD_OFFERS` (+0x38).
+    /// `contract_manager_fields::HELD_OFFERS` (+0x38). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn held_offers(self) -> usize {
         read_usize(self.0 + contract_manager_fields::HELD_OFFERS)
@@ -1823,7 +1871,7 @@ impl Cup {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `cup::STAGES` (+0xc).
+    /// `cup::STAGES` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stages(self) -> usize {
         read_usize(self.0 + cup::STAGES)
@@ -1832,7 +1880,7 @@ impl Cup {
     pub(crate) unsafe fn set_stages(self, v: usize) {
         write_usize(self.0 + cup::STAGES, v)
     }
-    /// `cup::ENTRANT_BOOK` (+0x14).
+    /// `cup::ENTRANT_BOOK` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn entrant_book(self) -> usize {
         read_usize(self.0 + cup::ENTRANT_BOOK)
@@ -1841,7 +1889,7 @@ impl Cup {
     pub(crate) unsafe fn set_entrant_book(self, v: usize) {
         write_usize(self.0 + cup::ENTRANT_BOOK, v)
     }
-    /// `cup::VENUE_STADIUM_ID` (+0x24).
+    /// `cup::VENUE_STADIUM_ID` (+0x24). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn venue_stadium_id(self) -> usize {
         read_usize(self.0 + cup::VENUE_STADIUM_ID)
@@ -1850,7 +1898,7 @@ impl Cup {
     pub(crate) unsafe fn set_venue_stadium_id(self, v: usize) {
         write_usize(self.0 + cup::VENUE_STADIUM_ID, v)
     }
-    /// `cup::PRIZE_FUND` (+0x28).
+    /// `cup::PRIZE_FUND` (+0x28). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn prize_fund(self) -> i32 {
         read_i32(self.0 + cup::PRIZE_FUND)
@@ -1859,7 +1907,7 @@ impl Cup {
     pub(crate) unsafe fn set_prize_fund(self, v: i32) {
         write_i32(self.0 + cup::PRIZE_FUND, v)
     }
-    /// `cup::STAGE_COUNT` (+0x2c).
+    /// `cup::STAGE_COUNT` (+0x2c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stage_count(self) -> usize {
         read_usize(self.0 + cup::STAGE_COUNT)
@@ -1868,7 +1916,7 @@ impl Cup {
     pub(crate) unsafe fn set_stage_count(self, v: usize) {
         write_usize(self.0 + cup::STAGE_COUNT, v)
     }
-    /// `cup::CURRENT_STAGE` (+0x30).
+    /// `cup::CURRENT_STAGE` (+0x30). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn current_stage(self) -> usize {
         read_usize(self.0 + cup::CURRENT_STAGE)
@@ -1877,7 +1925,7 @@ impl Cup {
     pub(crate) unsafe fn set_current_stage(self, v: usize) {
         write_usize(self.0 + cup::CURRENT_STAGE, v)
     }
-    /// `cup::ENTRANT_COUNT` (+0x36).
+    /// `cup::ENTRANT_COUNT` (+0x36). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn entrant_count(self) -> i16 {
         read_i16(self.0 + cup::ENTRANT_COUNT)
@@ -1886,7 +1934,7 @@ impl Cup {
     pub(crate) unsafe fn set_entrant_count(self, v: i16) {
         write_i16(self.0 + cup::ENTRANT_COUNT, v)
     }
-    /// `cup::ENTRANT_CAPACITY` (+0x38).
+    /// `cup::ENTRANT_CAPACITY` (+0x38). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn entrant_capacity(self) -> i16 {
         read_i16(self.0 + cup::ENTRANT_CAPACITY)
@@ -1895,7 +1943,7 @@ impl Cup {
     pub(crate) unsafe fn set_entrant_capacity(self, v: i16) {
         write_i16(self.0 + cup::ENTRANT_CAPACITY, v)
     }
-    /// `cup::STAGE_LABEL` (+0x3a).
+    /// `cup::STAGE_LABEL` (+0x3a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stage_label(self) -> i16 {
         read_i16(self.0 + cup::STAGE_LABEL)
@@ -1904,7 +1952,7 @@ impl Cup {
     pub(crate) unsafe fn set_stage_label(self, v: i16) {
         write_i16(self.0 + cup::STAGE_LABEL, v)
     }
-    /// `cup::ROUND_COUNT` (+0x3c).
+    /// `cup::ROUND_COUNT` (+0x3c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn round_count(self) -> i16 {
         read_i16(self.0 + cup::ROUND_COUNT)
@@ -1913,7 +1961,7 @@ impl Cup {
     pub(crate) unsafe fn set_round_count(self, v: i16) {
         write_i16(self.0 + cup::ROUND_COUNT, v)
     }
-    /// `cup::TEAM_COUNT` (+0x3e).
+    /// `cup::TEAM_COUNT` (+0x3e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn team_count(self) -> i16 {
         read_i16(self.0 + cup::TEAM_COUNT)
@@ -1922,7 +1970,7 @@ impl Cup {
     pub(crate) unsafe fn set_team_count(self, v: i16) {
         write_i16(self.0 + cup::TEAM_COUNT, v)
     }
-    /// `cup::YEAR` (+0x40).
+    /// `cup::YEAR` (+0x40). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn year(self) -> i16 {
         read_i16(self.0 + cup::YEAR)
@@ -1931,7 +1979,7 @@ impl Cup {
     pub(crate) unsafe fn set_year(self, v: i16) {
         write_i16(self.0 + cup::YEAR, v)
     }
-    /// `cup::CLUB_SIDES` (+0x42).
+    /// `cup::CLUB_SIDES` (+0x42). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_sides(self) -> u8 {
         read_u8(self.0 + cup::CLUB_SIDES)
@@ -1940,7 +1988,7 @@ impl Cup {
     pub(crate) unsafe fn set_club_sides(self, v: u8) {
         write_u8(self.0 + cup::CLUB_SIDES, v)
     }
-    /// `cup::COMP_TYPE` (+0x43).
+    /// `cup::COMP_TYPE` (+0x43). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn comp_type(self) -> u8 {
         read_u8(self.0 + cup::COMP_TYPE)
@@ -1949,7 +1997,7 @@ impl Cup {
     pub(crate) unsafe fn set_comp_type(self, v: u8) {
         write_u8(self.0 + cup::COMP_TYPE, v)
     }
-    /// `cup::STAGE_INDEX` (+0x44).
+    /// `cup::STAGE_INDEX` (+0x44). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stage_index(self) -> u8 {
         read_u8(self.0 + cup::STAGE_INDEX)
@@ -1958,7 +2006,7 @@ impl Cup {
     pub(crate) unsafe fn set_stage_index(self, v: u8) {
         write_u8(self.0 + cup::STAGE_INDEX, v)
     }
-    /// `cup::SEASON_SET_UP` (+0x45).
+    /// `cup::SEASON_SET_UP` (+0x45). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_set_up(self) -> usize {
         read_usize(self.0 + cup::SEASON_SET_UP)
@@ -1967,7 +2015,7 @@ impl Cup {
     pub(crate) unsafe fn set_season_set_up(self, v: usize) {
         write_usize(self.0 + cup::SEASON_SET_UP, v)
     }
-    /// `cup::SUBSTITUTES_NAMED` (+0x49).
+    /// `cup::SUBSTITUTES_NAMED` (+0x49). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn substitutes_named(self) -> u8 {
         read_u8(self.0 + cup::SUBSTITUTES_NAMED)
@@ -1976,7 +2024,7 @@ impl Cup {
     pub(crate) unsafe fn set_substitutes_named(self, v: u8) {
         write_u8(self.0 + cup::SUBSTITUTES_NAMED, v)
     }
-    /// `cup::SUBSTITUTIONS_ALLOWED` (+0x4a).
+    /// `cup::SUBSTITUTIONS_ALLOWED` (+0x4a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn substitutions_allowed(self) -> u8 {
         read_u8(self.0 + cup::SUBSTITUTIONS_ALLOWED)
@@ -1985,7 +2033,7 @@ impl Cup {
     pub(crate) unsafe fn set_substitutions_allowed(self, v: u8) {
         write_u8(self.0 + cup::SUBSTITUTIONS_ALLOWED, v)
     }
-    /// `cup::SEASON_CLOSED` (+0x4c).
+    /// `cup::SEASON_CLOSED` (+0x4c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_closed(self) -> usize {
         read_usize(self.0 + cup::SEASON_CLOSED)
@@ -1994,7 +2042,7 @@ impl Cup {
     pub(crate) unsafe fn set_season_closed(self, v: usize) {
         write_usize(self.0 + cup::SEASON_CLOSED, v)
     }
-    /// `cup::DISCIPLINE_INDEX` (+0x50).
+    /// `cup::DISCIPLINE_INDEX` (+0x50). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn discipline_index(self) -> u8 {
         read_u8(self.0 + cup::DISCIPLINE_INDEX)
@@ -2003,7 +2051,7 @@ impl Cup {
     pub(crate) unsafe fn set_discipline_index(self, v: u8) {
         write_u8(self.0 + cup::DISCIPLINE_INDEX, v)
     }
-    /// `cup::IMPORTANCE_BIAS` (+0x51).
+    /// `cup::IMPORTANCE_BIAS` (+0x51). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn importance_bias(self) -> u8 {
         read_u8(self.0 + cup::IMPORTANCE_BIAS)
@@ -2012,7 +2060,7 @@ impl Cup {
     pub(crate) unsafe fn set_importance_bias(self, v: u8) {
         write_u8(self.0 + cup::IMPORTANCE_BIAS, v)
     }
-    /// `cup::ROUND_TABLE` (+0xa3).
+    /// `cup::ROUND_TABLE` (+0xa3). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn round_table(self) -> usize {
         read_usize(self.0 + cup::ROUND_TABLE)
@@ -2021,7 +2069,7 @@ impl Cup {
     pub(crate) unsafe fn set_round_table(self, v: usize) {
         write_usize(self.0 + cup::ROUND_TABLE, v)
     }
-    /// `cup::TEAM_TABLE` (+0xa7).
+    /// `cup::TEAM_TABLE` (+0xa7). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn team_table(self) -> usize {
         read_usize(self.0 + cup::TEAM_TABLE)
@@ -2030,7 +2078,7 @@ impl Cup {
     pub(crate) unsafe fn set_team_table(self, v: usize) {
         write_usize(self.0 + cup::TEAM_TABLE, v)
     }
-    /// `cup::CURRENT_ROUND` (+0xab).
+    /// `cup::CURRENT_ROUND` (+0xab). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn current_round(self) -> u8 {
         read_u8(self.0 + cup::CURRENT_ROUND)
@@ -2039,7 +2087,7 @@ impl Cup {
     pub(crate) unsafe fn set_current_round(self, v: u8) {
         write_u8(self.0 + cup::CURRENT_ROUND, v)
     }
-    /// `cup::NEXT_DRAW_ROUND` (+0xac).
+    /// `cup::NEXT_DRAW_ROUND` (+0xac). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn next_draw_round(self) -> u8 {
         read_u8(self.0 + cup::NEXT_DRAW_ROUND)
@@ -2048,7 +2096,7 @@ impl Cup {
     pub(crate) unsafe fn set_next_draw_round(self, v: u8) {
         write_u8(self.0 + cup::NEXT_DRAW_ROUND, v)
     }
-    /// `cup::TIE_TABLES` (+0xad).
+    /// `cup::TIE_TABLES` (+0xad). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn tie_tables(self) -> usize {
         read_usize(self.0 + cup::TIE_TABLES)
@@ -2057,7 +2105,7 @@ impl Cup {
     pub(crate) unsafe fn set_tie_tables(self, v: usize) {
         write_usize(self.0 + cup::TIE_TABLES, v)
     }
-    /// `cup::RUN_BY_STAGES` (+0xb1).
+    /// `cup::RUN_BY_STAGES` (+0xb1). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn run_by_stages(self) -> u8 {
         read_u8(self.0 + cup::RUN_BY_STAGES)
@@ -2091,7 +2139,7 @@ impl EngAutoCup {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `eng_auto_cup::SELECTED_CLUBS` (+0xb2).
+    /// `eng_auto_cup::SELECTED_CLUBS` (+0xb2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn selected_clubs(self) -> usize {
         read_usize(self.0 + eng_auto_cup::SELECTED_CLUBS)
@@ -2100,7 +2148,7 @@ impl EngAutoCup {
     pub(crate) unsafe fn set_selected_clubs(self, v: usize) {
         write_usize(self.0 + eng_auto_cup::SELECTED_CLUBS, v)
     }
-    /// `eng_auto_cup::SELECTED_COUNT` (+0xb6).
+    /// `eng_auto_cup::SELECTED_COUNT` (+0xb6). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn selected_count(self) -> usize {
         read_usize(self.0 + eng_auto_cup::SELECTED_COUNT)
@@ -2134,7 +2182,7 @@ impl EngCcCup {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `eng_cc_cup::EUROPEAN_ENTRANT_COUNT` (+0xb2).
+    /// `eng_cc_cup::EUROPEAN_ENTRANT_COUNT` (+0xb2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn european_entrant_count(self) -> i8 {
         read_i8(self.0 + eng_cc_cup::EUROPEAN_ENTRANT_COUNT)
@@ -2168,7 +2216,7 @@ impl EngFaCup {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `eng_fa_cup::FIFTH_ROUND_QUESTION_ASKED` (+0xb2).
+    /// `eng_fa_cup::FIFTH_ROUND_QUESTION_ASKED` (+0xb2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fifth_round_question_asked(self) -> u8 {
         read_u8(self.0 + eng_fa_cup::FIFTH_ROUND_QUESTION_ASKED)
@@ -2177,7 +2225,7 @@ impl EngFaCup {
     pub(crate) unsafe fn set_fifth_round_question_asked(self, v: u8) {
         write_u8(self.0 + eng_fa_cup::FIFTH_ROUND_QUESTION_ASKED, v)
     }
-    /// `eng_fa_cup::EXEMPTION_COUNT` (+0xb3).
+    /// `eng_fa_cup::EXEMPTION_COUNT` (+0xb3). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn exemption_count(self) -> i8 {
         read_i8(self.0 + eng_fa_cup::EXEMPTION_COUNT)
@@ -2186,7 +2234,7 @@ impl EngFaCup {
     pub(crate) unsafe fn set_exemption_count(self, v: i8) {
         write_i8(self.0 + eng_fa_cup::EXEMPTION_COUNT, v)
     }
-    /// `eng_fa_cup::FIFTH_ROUND_ENTRY` (+0xb4).
+    /// `eng_fa_cup::FIFTH_ROUND_ENTRY` (+0xb4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fifth_round_entry(self) -> u8 {
         read_u8(self.0 + eng_fa_cup::FIFTH_ROUND_ENTRY)
@@ -2220,7 +2268,7 @@ impl FraFirst {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `fra_first::CFA_MARKER` (+0xee).
+    /// `fra_first::CFA_MARKER` (+0xee). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn cfa_marker(self) -> usize {
         read_usize(self.0 + fra_first::CFA_MARKER)
@@ -2229,7 +2277,7 @@ impl FraFirst {
     pub(crate) unsafe fn set_cfa_marker(self, v: usize) {
         write_usize(self.0 + fra_first::CFA_MARKER, v)
     }
-    /// `fra_first::LOWER_MARKER` (+0xf2).
+    /// `fra_first::LOWER_MARKER` (+0xf2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn lower_marker(self) -> usize {
         read_usize(self.0 + fra_first::LOWER_MARKER)
@@ -2263,12 +2311,12 @@ impl Friendly {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `friendly::PRESEASON_BASE_DATE` (+0xa7).
+    /// `friendly::PRESEASON_BASE_DATE` (+0xa7). Name: read.
     #[inline(always)]
     pub(crate) fn preseason_base_date_addr(self) -> usize {
         self.0 + friendly::PRESEASON_BASE_DATE
     }
-    /// `friendly::FIRST_TOURNAMENT_COMP_ID` (+0xaf).
+    /// `friendly::FIRST_TOURNAMENT_COMP_ID` (+0xaf). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn first_tournament_comp_id(self) -> i16 {
         read_i16(self.0 + friendly::FIRST_TOURNAMENT_COMP_ID)
@@ -2277,12 +2325,12 @@ impl Friendly {
     pub(crate) unsafe fn set_first_tournament_comp_id(self, v: i16) {
         write_i16(self.0 + friendly::FIRST_TOURNAMENT_COMP_ID, v)
     }
-    /// `friendly::TOURNAMENT_SLOTS` (+0xb1).
+    /// `friendly::TOURNAMENT_SLOTS` (+0xb1). Name: read.
     #[inline(always)]
     pub(crate) fn tournament_slots_addr(self) -> usize {
         self.0 + friendly::TOURNAMENT_SLOTS
     }
-    /// `friendly::FRIENDLY_MATCH_LIST` (+0x34c8).
+    /// `friendly::FRIENDLY_MATCH_LIST` (+0x34c8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn friendly_match_list(self) -> usize {
         read_usize(self.0 + friendly::FRIENDLY_MATCH_LIST)
@@ -2291,7 +2339,7 @@ impl Friendly {
     pub(crate) unsafe fn set_friendly_match_list(self, v: usize) {
         write_usize(self.0 + friendly::FRIENDLY_MATCH_LIST, v)
     }
-    /// `friendly::SCHEDULED_SLOT_LIST` (+0x34cc).
+    /// `friendly::SCHEDULED_SLOT_LIST` (+0x34cc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn scheduled_slot_list(self) -> usize {
         read_usize(self.0 + friendly::SCHEDULED_SLOT_LIST)
@@ -2300,7 +2348,7 @@ impl Friendly {
     pub(crate) unsafe fn set_scheduled_slot_list(self, v: usize) {
         write_usize(self.0 + friendly::SCHEDULED_SLOT_LIST, v)
     }
-    /// `friendly::PENDING_TOURNAMENT_LIST` (+0x34d0).
+    /// `friendly::PENDING_TOURNAMENT_LIST` (+0x34d0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pending_tournament_list(self) -> usize {
         read_usize(self.0 + friendly::PENDING_TOURNAMENT_LIST)
@@ -2309,7 +2357,7 @@ impl Friendly {
     pub(crate) unsafe fn set_pending_tournament_list(self, v: usize) {
         write_usize(self.0 + friendly::PENDING_TOURNAMENT_LIST, v)
     }
-    /// `friendly::REQUEST_REPLY_LIST` (+0x34d4).
+    /// `friendly::REQUEST_REPLY_LIST` (+0x34d4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn request_reply_list(self) -> usize {
         read_usize(self.0 + friendly::REQUEST_REPLY_LIST)
@@ -2318,7 +2366,7 @@ impl Friendly {
     pub(crate) unsafe fn set_request_reply_list(self, v: usize) {
         write_usize(self.0 + friendly::REQUEST_REPLY_LIST, v)
     }
-    /// `friendly::PLANNED_FRIENDLIES` (+0x34d8).
+    /// `friendly::PLANNED_FRIENDLIES` (+0x34d8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn planned_friendlies(self) -> usize {
         read_usize(self.0 + friendly::PLANNED_FRIENDLIES)
@@ -2327,7 +2375,7 @@ impl Friendly {
     pub(crate) unsafe fn set_planned_friendlies(self, v: usize) {
         write_usize(self.0 + friendly::PLANNED_FRIENDLIES, v)
     }
-    /// `friendly::PLANNED_NEXT_INDEX` (+0x34dc).
+    /// `friendly::PLANNED_NEXT_INDEX` (+0x34dc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn planned_next_index(self) -> usize {
         read_usize(self.0 + friendly::PLANNED_NEXT_INDEX)
@@ -2336,7 +2384,7 @@ impl Friendly {
     pub(crate) unsafe fn set_planned_next_index(self, v: usize) {
         write_usize(self.0 + friendly::PLANNED_NEXT_INDEX, v)
     }
-    /// `friendly::PLANNED_COUNT` (+0x34e0).
+    /// `friendly::PLANNED_COUNT` (+0x34e0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn planned_count(self) -> usize {
         read_usize(self.0 + friendly::PLANNED_COUNT)
@@ -2345,7 +2393,7 @@ impl Friendly {
     pub(crate) unsafe fn set_planned_count(self, v: usize) {
         write_usize(self.0 + friendly::PLANNED_COUNT, v)
     }
-    /// `friendly::PLANNED_CAPACITY` (+0x34e4).
+    /// `friendly::PLANNED_CAPACITY` (+0x34e4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn planned_capacity(self) -> usize {
         read_usize(self.0 + friendly::PLANNED_CAPACITY)
@@ -2354,7 +2402,7 @@ impl Friendly {
     pub(crate) unsafe fn set_planned_capacity(self, v: usize) {
         write_usize(self.0 + friendly::PLANNED_CAPACITY, v)
     }
-    /// `friendly::PRESEASON_PLAN_DAY_A` (+0x34e8).
+    /// `friendly::PRESEASON_PLAN_DAY_A` (+0x34e8). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn preseason_plan_day_a(self) -> u16 {
         read_u16(self.0 + friendly::PRESEASON_PLAN_DAY_A)
@@ -2363,7 +2411,7 @@ impl Friendly {
     pub(crate) unsafe fn set_preseason_plan_day_a(self, v: u16) {
         write_u16(self.0 + friendly::PRESEASON_PLAN_DAY_A, v)
     }
-    /// `friendly::PRESEASON_PLAN_DAY_B` (+0x34ea).
+    /// `friendly::PRESEASON_PLAN_DAY_B` (+0x34ea). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn preseason_plan_day_b(self) -> u16 {
         read_u16(self.0 + friendly::PRESEASON_PLAN_DAY_B)
@@ -2372,7 +2420,7 @@ impl Friendly {
     pub(crate) unsafe fn set_preseason_plan_day_b(self, v: u16) {
         write_u16(self.0 + friendly::PRESEASON_PLAN_DAY_B, v)
     }
-    /// `friendly::INTL_DATE_TABLE` (+0x34ec).
+    /// `friendly::INTL_DATE_TABLE` (+0x34ec). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn intl_date_table(self) -> usize {
         read_usize(self.0 + friendly::INTL_DATE_TABLE)
@@ -2381,7 +2429,7 @@ impl Friendly {
     pub(crate) unsafe fn set_intl_date_table(self, v: usize) {
         write_usize(self.0 + friendly::INTL_DATE_TABLE, v)
     }
-    /// `friendly::INTL_DATE_COUNT` (+0x34f0).
+    /// `friendly::INTL_DATE_COUNT` (+0x34f0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn intl_date_count(self) -> i32 {
         read_i32(self.0 + friendly::INTL_DATE_COUNT)
@@ -2390,7 +2438,7 @@ impl Friendly {
     pub(crate) unsafe fn set_intl_date_count(self, v: i32) {
         write_i32(self.0 + friendly::INTL_DATE_COUNT, v)
     }
-    /// `friendly::INTL_LAST_DAY_DONE` (+0x34f4).
+    /// `friendly::INTL_LAST_DAY_DONE` (+0x34f4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn intl_last_day_done(self) -> u16 {
         read_u16(self.0 + friendly::INTL_LAST_DAY_DONE)
@@ -2399,7 +2447,7 @@ impl Friendly {
     pub(crate) unsafe fn set_intl_last_day_done(self, v: u16) {
         write_u16(self.0 + friendly::INTL_LAST_DAY_DONE, v)
     }
-    /// `friendly::NATION_LISTS` (+0x34f6).
+    /// `friendly::NATION_LISTS` (+0x34f6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn nation_lists(self) -> usize {
         read_usize(self.0 + friendly::NATION_LISTS)
@@ -2408,7 +2456,7 @@ impl Friendly {
     pub(crate) unsafe fn set_nation_lists(self, v: usize) {
         write_usize(self.0 + friendly::NATION_LISTS, v)
     }
-    /// `friendly::SORTED_NATIONS` (+0x34fa).
+    /// `friendly::SORTED_NATIONS` (+0x34fa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn sorted_nations(self) -> usize {
         read_usize(self.0 + friendly::SORTED_NATIONS)
@@ -2417,7 +2465,7 @@ impl Friendly {
     pub(crate) unsafe fn set_sorted_nations(self, v: usize) {
         write_usize(self.0 + friendly::SORTED_NATIONS, v)
     }
-    /// `friendly::SORTED_NATION_COUNT` (+0x34fe).
+    /// `friendly::SORTED_NATION_COUNT` (+0x34fe). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn sorted_nation_count(self) -> i32 {
         read_i32(self.0 + friendly::SORTED_NATION_COUNT)
@@ -2426,7 +2474,7 @@ impl Friendly {
     pub(crate) unsafe fn set_sorted_nation_count(self, v: i32) {
         write_i32(self.0 + friendly::SORTED_NATION_COUNT, v)
     }
-    /// `friendly::BANNED_NATION_PAIRS` (+0x3502).
+    /// `friendly::BANNED_NATION_PAIRS` (+0x3502). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn banned_nation_pairs(self) -> usize {
         read_usize(self.0 + friendly::BANNED_NATION_PAIRS)
@@ -2435,7 +2483,7 @@ impl Friendly {
     pub(crate) unsafe fn set_banned_nation_pairs(self, v: usize) {
         write_usize(self.0 + friendly::BANNED_NATION_PAIRS, v)
     }
-    /// `friendly::BANNED_PAIR_COUNT` (+0x3506).
+    /// `friendly::BANNED_PAIR_COUNT` (+0x3506). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn banned_pair_count(self) -> u8 {
         read_u8(self.0 + friendly::BANNED_PAIR_COUNT)
@@ -2469,7 +2517,7 @@ impl InjuryFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `injury_fields::PHYSICAL_RECORDS` (+0x0).
+    /// `injury_fields::PHYSICAL_RECORDS` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn physical_records(self) -> i32 {
         read_i32(self.0 + injury_fields::PHYSICAL_RECORDS)
@@ -2478,7 +2526,7 @@ impl InjuryFields {
     pub(crate) unsafe fn set_physical_records(self, v: i32) {
         write_i32(self.0 + injury_fields::PHYSICAL_RECORDS, v)
     }
-    /// `injury_fields::INJURY_ENTRIES` (+0x4).
+    /// `injury_fields::INJURY_ENTRIES` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn injury_entries(self) -> usize {
         read_usize(self.0 + injury_fields::INJURY_ENTRIES)
@@ -2487,7 +2535,7 @@ impl InjuryFields {
     pub(crate) unsafe fn set_injury_entries(self, v: usize) {
         write_usize(self.0 + injury_fields::INJURY_ENTRIES, v)
     }
-    /// `injury_fields::INJURY_ENTRY_COUNT` (+0x8).
+    /// `injury_fields::INJURY_ENTRY_COUNT` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn injury_entry_count(self) -> i32 {
         read_i32(self.0 + injury_fields::INJURY_ENTRY_COUNT)
@@ -2496,7 +2544,7 @@ impl InjuryFields {
     pub(crate) unsafe fn set_injury_entry_count(self, v: i32) {
         write_i32(self.0 + injury_fields::INJURY_ENTRY_COUNT, v)
     }
-    /// `injury_fields::INJURY_HISTORY` (+0xc).
+    /// `injury_fields::INJURY_HISTORY` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn injury_history(self) -> usize {
         read_usize(self.0 + injury_fields::INJURY_HISTORY)
@@ -2505,7 +2553,7 @@ impl InjuryFields {
     pub(crate) unsafe fn set_injury_history(self, v: usize) {
         write_usize(self.0 + injury_fields::INJURY_HISTORY, v)
     }
-    /// `injury_fields::RECOVERY_NEWS_QUEUE` (+0x10).
+    /// `injury_fields::RECOVERY_NEWS_QUEUE` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn recovery_news_queue(self) -> usize {
         read_usize(self.0 + injury_fields::RECOVERY_NEWS_QUEUE)
@@ -2514,7 +2562,7 @@ impl InjuryFields {
     pub(crate) unsafe fn set_recovery_news_queue(self, v: usize) {
         write_usize(self.0 + injury_fields::RECOVERY_NEWS_QUEUE, v)
     }
-    /// `injury_fields::RECOVERY_NEWS_COUNT` (+0x18).
+    /// `injury_fields::RECOVERY_NEWS_COUNT` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn recovery_news_count(self) -> i32 {
         read_i32(self.0 + injury_fields::RECOVERY_NEWS_COUNT)
@@ -2523,7 +2571,7 @@ impl InjuryFields {
     pub(crate) unsafe fn set_recovery_news_count(self, v: i32) {
         write_i32(self.0 + injury_fields::RECOVERY_NEWS_COUNT, v)
     }
-    /// `injury_fields::OUTBREAKS` (+0x1c).
+    /// `injury_fields::OUTBREAKS` (+0x1c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn outbreaks(self) -> usize {
         read_usize(self.0 + injury_fields::OUTBREAKS)
@@ -2532,7 +2580,7 @@ impl InjuryFields {
     pub(crate) unsafe fn set_outbreaks(self, v: usize) {
         write_usize(self.0 + injury_fields::OUTBREAKS, v)
     }
-    /// `injury_fields::OUTBREAK_CAPACITY` (+0x20).
+    /// `injury_fields::OUTBREAK_CAPACITY` (+0x20). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn outbreak_capacity(self) -> i32 {
         read_i32(self.0 + injury_fields::OUTBREAK_CAPACITY)
@@ -2541,7 +2589,7 @@ impl InjuryFields {
     pub(crate) unsafe fn set_outbreak_capacity(self, v: i32) {
         write_i32(self.0 + injury_fields::OUTBREAK_CAPACITY, v)
     }
-    /// `injury_fields::OUTBREAK_COUNT` (+0x24).
+    /// `injury_fields::OUTBREAK_COUNT` (+0x24). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn outbreak_count(self) -> i32 {
         read_i32(self.0 + injury_fields::OUTBREAK_COUNT)
@@ -2550,7 +2598,7 @@ impl InjuryFields {
     pub(crate) unsafe fn set_outbreak_count(self, v: i32) {
         write_i32(self.0 + injury_fields::OUTBREAK_COUNT, v)
     }
-    /// `injury_fields::MATCH_HIT_LIST` (+0x28).
+    /// `injury_fields::MATCH_HIT_LIST` (+0x28). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn match_hit_list(self) -> i32 {
         read_i32(self.0 + injury_fields::MATCH_HIT_LIST)
@@ -2584,7 +2632,7 @@ impl IntertotoCup {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `intertoto_cup::WINNERS_SENT_TO_UEFA` (+0xb2).
+    /// `intertoto_cup::WINNERS_SENT_TO_UEFA` (+0xb2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn winners_sent_to_uefa(self) -> usize {
         read_usize(self.0 + intertoto_cup::WINNERS_SENT_TO_UEFA)
@@ -2618,7 +2666,25 @@ impl League {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `league::STAGES` (+0xc).
+    /// `league::COMPETITION` (+0x4). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn competition(self) -> Competition {
+        Competition(read_usize(self.0 + league::COMPETITION))
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_competition(self, v: Competition) {
+        write_usize(self.0 + league::COMPETITION, v.0)
+    }
+    /// `league::COMP_STATS` (+0x8). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn comp_stats(self) -> usize {
+        read_usize(self.0 + league::COMP_STATS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_comp_stats(self, v: usize) {
+        write_usize(self.0 + league::COMP_STATS, v)
+    }
+    /// `league::STAGES` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stages(self) -> usize {
         read_usize(self.0 + league::STAGES)
@@ -2627,7 +2693,7 @@ impl League {
     pub(crate) unsafe fn set_stages(self, v: usize) {
         write_usize(self.0 + league::STAGES, v)
     }
-    /// `league::ENTRANT_BOOK` (+0x14).
+    /// `league::ENTRANT_BOOK` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn entrant_book(self) -> usize {
         read_usize(self.0 + league::ENTRANT_BOOK)
@@ -2636,7 +2702,7 @@ impl League {
     pub(crate) unsafe fn set_entrant_book(self, v: usize) {
         write_usize(self.0 + league::ENTRANT_BOOK, v)
     }
-    /// `league::UPPER_DIVISION_ID` (+0x1c).
+    /// `league::UPPER_DIVISION_ID` (+0x1c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn upper_division_id(self) -> i32 {
         read_i32(self.0 + league::UPPER_DIVISION_ID)
@@ -2645,7 +2711,7 @@ impl League {
     pub(crate) unsafe fn set_upper_division_id(self, v: i32) {
         write_i32(self.0 + league::UPPER_DIVISION_ID, v)
     }
-    /// `league::LOWER_DIVISION_ID` (+0x20).
+    /// `league::LOWER_DIVISION_ID` (+0x20). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn lower_division_id(self) -> usize {
         read_usize(self.0 + league::LOWER_DIVISION_ID)
@@ -2654,7 +2720,7 @@ impl League {
     pub(crate) unsafe fn set_lower_division_id(self, v: usize) {
         write_usize(self.0 + league::LOWER_DIVISION_ID, v)
     }
-    /// `league::FIXED_STADIUM_ID` (+0x24).
+    /// `league::FIXED_STADIUM_ID` (+0x24). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn fixed_stadium_id(self) -> usize {
         read_usize(self.0 + league::FIXED_STADIUM_ID)
@@ -2663,7 +2729,7 @@ impl League {
     pub(crate) unsafe fn set_fixed_stadium_id(self, v: usize) {
         write_usize(self.0 + league::FIXED_STADIUM_ID, v)
     }
-    /// `league::PRIZE_FUND` (+0x28).
+    /// `league::PRIZE_FUND` (+0x28). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn prize_fund(self) -> i32 {
         read_i32(self.0 + league::PRIZE_FUND)
@@ -2672,7 +2738,7 @@ impl League {
     pub(crate) unsafe fn set_prize_fund(self, v: i32) {
         write_i32(self.0 + league::PRIZE_FUND, v)
     }
-    /// `league::STAGE_COUNT` (+0x2c).
+    /// `league::STAGE_COUNT` (+0x2c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stage_count(self) -> usize {
         read_usize(self.0 + league::STAGE_COUNT)
@@ -2681,7 +2747,7 @@ impl League {
     pub(crate) unsafe fn set_stage_count(self, v: usize) {
         write_usize(self.0 + league::STAGE_COUNT, v)
     }
-    /// `league::CURRENT_STAGE` (+0x30).
+    /// `league::CURRENT_STAGE` (+0x30). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn current_stage(self) -> usize {
         read_usize(self.0 + league::CURRENT_STAGE)
@@ -2690,7 +2756,7 @@ impl League {
     pub(crate) unsafe fn set_current_stage(self, v: usize) {
         write_usize(self.0 + league::CURRENT_STAGE, v)
     }
-    /// `league::ENTRANT_COUNT` (+0x36).
+    /// `league::ENTRANT_COUNT` (+0x36). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn entrant_count(self) -> i16 {
         read_i16(self.0 + league::ENTRANT_COUNT)
@@ -2699,7 +2765,7 @@ impl League {
     pub(crate) unsafe fn set_entrant_count(self, v: i16) {
         write_i16(self.0 + league::ENTRANT_COUNT, v)
     }
-    /// `league::ENTRANT_CAPACITY` (+0x38).
+    /// `league::ENTRANT_CAPACITY` (+0x38). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn entrant_capacity(self) -> i16 {
         read_i16(self.0 + league::ENTRANT_CAPACITY)
@@ -2708,7 +2774,7 @@ impl League {
     pub(crate) unsafe fn set_entrant_capacity(self, v: i16) {
         write_i16(self.0 + league::ENTRANT_CAPACITY, v)
     }
-    /// `league::STAGE_ID` (+0x3a).
+    /// `league::STAGE_ID` (+0x3a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stage_id(self) -> i16 {
         read_i16(self.0 + league::STAGE_ID)
@@ -2717,7 +2783,7 @@ impl League {
     pub(crate) unsafe fn set_stage_id(self, v: i16) {
         write_i16(self.0 + league::STAGE_ID, v)
     }
-    /// `league::LEGS` (+0x3c).
+    /// `league::LEGS` (+0x3c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn legs(self) -> i16 {
         read_i16(self.0 + league::LEGS)
@@ -2726,7 +2792,7 @@ impl League {
     pub(crate) unsafe fn set_legs(self, v: i16) {
         write_i16(self.0 + league::LEGS, v)
     }
-    /// `league::CLUB_COUNT` (+0x3e).
+    /// `league::CLUB_COUNT` (+0x3e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_count(self) -> i16 {
         read_i16(self.0 + league::CLUB_COUNT)
@@ -2735,7 +2801,7 @@ impl League {
     pub(crate) unsafe fn set_club_count(self, v: i16) {
         write_i16(self.0 + league::CLUB_COUNT, v)
     }
-    /// `league::YEAR` (+0x40).
+    /// `league::YEAR` (+0x40). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn year(self) -> i16 {
         read_i16(self.0 + league::YEAR)
@@ -2744,7 +2810,7 @@ impl League {
     pub(crate) unsafe fn set_year(self, v: i16) {
         write_i16(self.0 + league::YEAR, v)
     }
-    /// `league::CLUB_SIDES` (+0x42).
+    /// `league::CLUB_SIDES` (+0x42). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn club_sides(self) -> u8 {
         read_u8(self.0 + league::CLUB_SIDES)
@@ -2753,7 +2819,7 @@ impl League {
     pub(crate) unsafe fn set_club_sides(self, v: u8) {
         write_u8(self.0 + league::CLUB_SIDES, v)
     }
-    /// `league::COMP_TYPE` (+0x43).
+    /// `league::COMP_TYPE` (+0x43). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn comp_type(self) -> u8 {
         read_u8(self.0 + league::COMP_TYPE)
@@ -2762,7 +2828,7 @@ impl League {
     pub(crate) unsafe fn set_comp_type(self, v: u8) {
         write_u8(self.0 + league::COMP_TYPE, v)
     }
-    /// `league::STAGE_INDEX` (+0x44).
+    /// `league::STAGE_INDEX` (+0x44). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stage_index(self) -> u8 {
         read_u8(self.0 + league::STAGE_INDEX)
@@ -2771,7 +2837,7 @@ impl League {
     pub(crate) unsafe fn set_stage_index(self, v: u8) {
         write_u8(self.0 + league::STAGE_INDEX, v)
     }
-    /// `league::ACTIVE` (+0x45).
+    /// `league::ACTIVE` (+0x45). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn active(self) -> usize {
         read_usize(self.0 + league::ACTIVE)
@@ -2780,7 +2846,34 @@ impl League {
     pub(crate) unsafe fn set_active(self, v: usize) {
         write_usize(self.0 + league::ACTIVE, v)
     }
-    /// `league::SEASON_CLOSED` (+0x4c).
+    /// `league::SUBSTITUTES_NAMED` (+0x49). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn substitutes_named(self) -> u8 {
+        read_u8(self.0 + league::SUBSTITUTES_NAMED)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_substitutes_named(self, v: u8) {
+        write_u8(self.0 + league::SUBSTITUTES_NAMED, v)
+    }
+    /// `league::SUBSTITUTIONS_ALLOWED` (+0x4a). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn substitutions_allowed(self) -> u8 {
+        read_u8(self.0 + league::SUBSTITUTIONS_ALLOWED)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_substitutions_allowed(self, v: u8) {
+        write_u8(self.0 + league::SUBSTITUTIONS_ALLOWED, v)
+    }
+    /// `league::ENTRANTS_ARE_QUALIFIERS` (+0x4b). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn entrants_are_qualifiers(self) -> u8 {
+        read_u8(self.0 + league::ENTRANTS_ARE_QUALIFIERS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_entrants_are_qualifiers(self, v: u8) {
+        write_u8(self.0 + league::ENTRANTS_ARE_QUALIFIERS, v)
+    }
+    /// `league::SEASON_CLOSED` (+0x4c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_closed(self) -> usize {
         read_usize(self.0 + league::SEASON_CLOSED)
@@ -2789,7 +2882,7 @@ impl League {
     pub(crate) unsafe fn set_season_closed(self, v: usize) {
         write_usize(self.0 + league::SEASON_CLOSED, v)
     }
-    /// `league::DISCIPLINE_RULE` (+0x50).
+    /// `league::DISCIPLINE_RULE` (+0x50). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn discipline_rule(self) -> u8 {
         read_u8(self.0 + league::DISCIPLINE_RULE)
@@ -2798,7 +2891,7 @@ impl League {
     pub(crate) unsafe fn set_discipline_rule(self, v: u8) {
         write_u8(self.0 + league::DISCIPLINE_RULE, v)
     }
-    /// `league::IMPORTANCE` (+0x51).
+    /// `league::IMPORTANCE` (+0x51). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn importance(self) -> u8 {
         read_u8(self.0 + league::IMPORTANCE)
@@ -2807,7 +2900,7 @@ impl League {
     pub(crate) unsafe fn set_importance(self, v: u8) {
         write_u8(self.0 + league::IMPORTANCE, v)
     }
-    /// `league::SQUAD_FLAGS` (+0x52).
+    /// `league::SQUAD_FLAGS` (+0x52). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn squad_flags(self) -> u8 {
         read_u8(self.0 + league::SQUAD_FLAGS)
@@ -2816,7 +2909,7 @@ impl League {
     pub(crate) unsafe fn set_squad_flags(self, v: u8) {
         write_u8(self.0 + league::SQUAD_FLAGS, v)
     }
-    /// `league::CUSTOM_COMPARE` (+0xa3).
+    /// `league::CUSTOM_COMPARE` (+0xa3). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn custom_compare(self) -> usize {
         read_usize(self.0 + league::CUSTOM_COMPARE)
@@ -2825,7 +2918,7 @@ impl League {
     pub(crate) unsafe fn set_custom_compare(self, v: usize) {
         write_usize(self.0 + league::CUSTOM_COMPARE, v)
     }
-    /// `league::GAMES_PER_CLUB` (+0xa7).
+    /// `league::GAMES_PER_CLUB` (+0xa7). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn games_per_club(self) -> i16 {
         read_i16(self.0 + league::GAMES_PER_CLUB)
@@ -2834,7 +2927,7 @@ impl League {
     pub(crate) unsafe fn set_games_per_club(self, v: i16) {
         write_i16(self.0 + league::GAMES_PER_CLUB, v)
     }
-    /// `league::ROUND_COUNT` (+0xa9).
+    /// `league::ROUND_COUNT` (+0xa9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn round_count(self) -> i16 {
         read_i16(self.0 + league::ROUND_COUNT)
@@ -2843,7 +2936,7 @@ impl League {
     pub(crate) unsafe fn set_round_count(self, v: i16) {
         write_i16(self.0 + league::ROUND_COUNT, v)
     }
-    /// `league::MATCH_RULES` (+0xab).
+    /// `league::MATCH_RULES` (+0xab). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn match_rules(self) -> i16 {
         read_i16(self.0 + league::MATCH_RULES)
@@ -2852,7 +2945,7 @@ impl League {
     pub(crate) unsafe fn set_match_rules(self, v: i16) {
         write_i16(self.0 + league::MATCH_RULES, v)
     }
-    /// `league::TABLE_COLUMN` (+0xad).
+    /// `league::TABLE_COLUMN` (+0xad). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn table_column(self) -> usize {
         read_usize(self.0 + league::TABLE_COLUMN)
@@ -2861,7 +2954,7 @@ impl League {
     pub(crate) unsafe fn set_table_column(self, v: usize) {
         write_usize(self.0 + league::TABLE_COLUMN, v)
     }
-    /// `league::TABLE` (+0xb1).
+    /// `league::TABLE` (+0xb1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn table(self) -> usize {
         read_usize(self.0 + league::TABLE)
@@ -2870,7 +2963,7 @@ impl League {
     pub(crate) unsafe fn set_table(self, v: usize) {
         write_usize(self.0 + league::TABLE, v)
     }
-    /// `league::STOPPED` (+0xb5).
+    /// `league::STOPPED` (+0xb5). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn stopped(self) -> u8 {
         read_u8(self.0 + league::STOPPED)
@@ -2879,7 +2972,7 @@ impl League {
     pub(crate) unsafe fn set_stopped(self, v: u8) {
         write_u8(self.0 + league::STOPPED, v)
     }
-    /// `league::NEXT_DRAW_DAY` (+0xb6).
+    /// `league::NEXT_DRAW_DAY` (+0xb6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn next_draw_day(self) -> i16 {
         read_i16(self.0 + league::NEXT_DRAW_DAY)
@@ -2888,7 +2981,7 @@ impl League {
     pub(crate) unsafe fn set_next_draw_day(self, v: i16) {
         write_i16(self.0 + league::NEXT_DRAW_DAY, v)
     }
-    /// `league::NEXT_DRAW_YEAR_OFFSET` (+0xb8).
+    /// `league::NEXT_DRAW_YEAR_OFFSET` (+0xb8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn next_draw_year_offset(self) -> i16 {
         read_i16(self.0 + league::NEXT_DRAW_YEAR_OFFSET)
@@ -2897,7 +2990,7 @@ impl League {
     pub(crate) unsafe fn set_next_draw_year_offset(self, v: i16) {
         write_i16(self.0 + league::NEXT_DRAW_YEAR_OFFSET, v)
     }
-    /// `league::ROUND_DATES` (+0xba).
+    /// `league::ROUND_DATES` (+0xba). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn round_dates(self) -> usize {
         read_usize(self.0 + league::ROUND_DATES)
@@ -2906,7 +2999,7 @@ impl League {
     pub(crate) unsafe fn set_round_dates(self, v: usize) {
         write_usize(self.0 + league::ROUND_DATES, v)
     }
-    /// `league::PROMOTED_COUNT` (+0xbe).
+    /// `league::PROMOTED_COUNT` (+0xbe). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn promoted_count(self) -> u8 {
         read_u8(self.0 + league::PROMOTED_COUNT)
@@ -2915,7 +3008,7 @@ impl League {
     pub(crate) unsafe fn set_promoted_count(self, v: u8) {
         write_u8(self.0 + league::PROMOTED_COUNT, v)
     }
-    /// `league::PROMOTION_PLAYOFF_COUNT` (+0xbf).
+    /// `league::PROMOTION_PLAYOFF_COUNT` (+0xbf). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn promotion_playoff_count(self) -> u8 {
         read_u8(self.0 + league::PROMOTION_PLAYOFF_COUNT)
@@ -2924,7 +3017,7 @@ impl League {
     pub(crate) unsafe fn set_promotion_playoff_count(self, v: u8) {
         write_u8(self.0 + league::PROMOTION_PLAYOFF_COUNT, v)
     }
-    /// `league::RELEGATION_PLAYOFF_COUNT` (+0xc0).
+    /// `league::RELEGATION_PLAYOFF_COUNT` (+0xc0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn relegation_playoff_count(self) -> u8 {
         read_u8(self.0 + league::RELEGATION_PLAYOFF_COUNT)
@@ -2933,7 +3026,7 @@ impl League {
     pub(crate) unsafe fn set_relegation_playoff_count(self, v: u8) {
         write_u8(self.0 + league::RELEGATION_PLAYOFF_COUNT, v)
     }
-    /// `league::RELEGATED_COUNT` (+0xc1).
+    /// `league::RELEGATED_COUNT` (+0xc1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn relegated_count(self) -> u8 {
         read_u8(self.0 + league::RELEGATED_COUNT)
@@ -2942,7 +3035,7 @@ impl League {
     pub(crate) unsafe fn set_relegated_count(self, v: u8) {
         write_u8(self.0 + league::RELEGATED_COUNT, v)
     }
-    /// `league::WIN_POINTS` (+0xc2).
+    /// `league::WIN_POINTS` (+0xc2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn win_points(self) -> u8 {
         read_u8(self.0 + league::WIN_POINTS)
@@ -2951,7 +3044,7 @@ impl League {
     pub(crate) unsafe fn set_win_points(self, v: u8) {
         write_u8(self.0 + league::WIN_POINTS, v)
     }
-    /// `league::DRAW_POINTS` (+0xc3).
+    /// `league::DRAW_POINTS` (+0xc3). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn draw_points(self) -> u8 {
         read_u8(self.0 + league::DRAW_POINTS)
@@ -2960,7 +3053,7 @@ impl League {
     pub(crate) unsafe fn set_draw_points(self, v: u8) {
         write_u8(self.0 + league::DRAW_POINTS, v)
     }
-    /// `league::MATCH_CATEGORY` (+0xc4).
+    /// `league::MATCH_CATEGORY` (+0xc4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn match_category(self) -> u8 {
         read_u8(self.0 + league::MATCH_CATEGORY)
@@ -2969,7 +3062,7 @@ impl League {
     pub(crate) unsafe fn set_match_category(self, v: u8) {
         write_u8(self.0 + league::MATCH_CATEGORY, v)
     }
-    /// `league::TIEBREAKS` (+0xc5).
+    /// `league::TIEBREAKS` (+0xc5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn tiebreaks(self) -> i32 {
         read_i32(self.0 + league::TIEBREAKS)
@@ -2978,7 +3071,7 @@ impl League {
     pub(crate) unsafe fn set_tiebreaks(self, v: i32) {
         write_i32(self.0 + league::TIEBREAKS, v)
     }
-    /// `league::LAST_RESULT_DATE` (+0xc9).
+    /// `league::LAST_RESULT_DATE` (+0xc9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn last_result_date(self) -> i16 {
         read_i16(self.0 + league::LAST_RESULT_DATE)
@@ -2987,7 +3080,7 @@ impl League {
     pub(crate) unsafe fn set_last_result_date(self, v: i16) {
         write_i16(self.0 + league::LAST_RESULT_DATE, v)
     }
-    /// `league::LAST_UPDATE_DATE` (+0xd1).
+    /// `league::LAST_UPDATE_DATE` (+0xd1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn last_update_date(self) -> usize {
         read_usize(self.0 + league::LAST_UPDATE_DATE)
@@ -2996,7 +3089,7 @@ impl League {
     pub(crate) unsafe fn set_last_update_date(self, v: usize) {
         write_usize(self.0 + league::LAST_UPDATE_DATE, v)
     }
-    /// `league::LEAGUE_FLAGS` (+0xd9).
+    /// `league::LEAGUE_FLAGS` (+0xd9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn league_flags(self) -> i16 {
         read_i16(self.0 + league::LEAGUE_FLAGS)
@@ -3005,7 +3098,7 @@ impl League {
     pub(crate) unsafe fn set_league_flags(self, v: i16) {
         write_i16(self.0 + league::LEAGUE_FLAGS, v)
     }
-    /// `league::ROUND_DRAW_RULES` (+0xdb).
+    /// `league::ROUND_DRAW_RULES` (+0xdb). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn round_draw_rules(self) -> i16 {
         read_i16(self.0 + league::ROUND_DRAW_RULES)
@@ -3014,7 +3107,7 @@ impl League {
     pub(crate) unsafe fn set_round_draw_rules(self, v: i16) {
         write_i16(self.0 + league::ROUND_DRAW_RULES, v)
     }
-    /// `league::COMPLETE` (+0xdd).
+    /// `league::COMPLETE` (+0xdd). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn complete(self) -> usize {
         read_usize(self.0 + league::COMPLETE)
@@ -3023,7 +3116,7 @@ impl League {
     pub(crate) unsafe fn set_complete(self, v: usize) {
         write_usize(self.0 + league::COMPLETE, v)
     }
-    /// `league::PRIZE_MODE` (+0xe1).
+    /// `league::PRIZE_MODE` (+0xe1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn prize_mode(self) -> u8 {
         read_u8(self.0 + league::PRIZE_MODE)
@@ -3032,7 +3125,7 @@ impl League {
     pub(crate) unsafe fn set_prize_mode(self, v: u8) {
         write_u8(self.0 + league::PRIZE_MODE, v)
     }
-    /// `league::REQUIRED_CAPACITY` (+0xe2).
+    /// `league::REQUIRED_CAPACITY` (+0xe2). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn required_capacity(self) -> u16 {
         read_u16(self.0 + league::REQUIRED_CAPACITY)
@@ -3041,7 +3134,7 @@ impl League {
     pub(crate) unsafe fn set_required_capacity(self, v: u16) {
         write_u16(self.0 + league::REQUIRED_CAPACITY, v)
     }
-    /// `league::REQUIRED_SEATS` (+0xe4).
+    /// `league::REQUIRED_SEATS` (+0xe4). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn required_seats(self) -> u16 {
         read_u16(self.0 + league::REQUIRED_SEATS)
@@ -3050,7 +3143,7 @@ impl League {
     pub(crate) unsafe fn set_required_seats(self, v: u16) {
         write_u16(self.0 + league::REQUIRED_SEATS, v)
     }
-    /// `league::TIEBREAK_MATCHES` (+0xe6).
+    /// `league::TIEBREAK_MATCHES` (+0xe6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn tiebreak_matches(self) -> usize {
         read_usize(self.0 + league::TIEBREAK_MATCHES)
@@ -3059,7 +3152,7 @@ impl League {
     pub(crate) unsafe fn set_tiebreak_matches(self, v: usize) {
         write_usize(self.0 + league::TIEBREAK_MATCHES, v)
     }
-    /// `league::FIXED_FIXTURES` (+0xea).
+    /// `league::FIXED_FIXTURES` (+0xea). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fixed_fixtures(self) -> usize {
         read_usize(self.0 + league::FIXED_FIXTURES)
@@ -3093,7 +3186,7 @@ impl PlayerRegenFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `player_regen_fields::RETIREMENTS` (+0x4).
+    /// `player_regen_fields::RETIREMENTS` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn retirements(self) -> usize {
         read_usize(self.0 + player_regen_fields::RETIREMENTS)
@@ -3102,7 +3195,7 @@ impl PlayerRegenFields {
     pub(crate) unsafe fn set_retirements(self, v: usize) {
         write_usize(self.0 + player_regen_fields::RETIREMENTS, v)
     }
-    /// `player_regen_fields::RETIREMENT_COUNT` (+0x8).
+    /// `player_regen_fields::RETIREMENT_COUNT` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn retirement_count(self) -> usize {
         read_usize(self.0 + player_regen_fields::RETIREMENT_COUNT)
@@ -3111,7 +3204,7 @@ impl PlayerRegenFields {
     pub(crate) unsafe fn set_retirement_count(self, v: usize) {
         write_usize(self.0 + player_regen_fields::RETIREMENT_COUNT, v)
     }
-    /// `player_regen_fields::RETIREMENT_CAPACITY` (+0xc).
+    /// `player_regen_fields::RETIREMENT_CAPACITY` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn retirement_capacity(self) -> usize {
         read_usize(self.0 + player_regen_fields::RETIREMENT_CAPACITY)
@@ -3120,7 +3213,7 @@ impl PlayerRegenFields {
     pub(crate) unsafe fn set_retirement_capacity(self, v: usize) {
         write_usize(self.0 + player_regen_fields::RETIREMENT_CAPACITY, v)
     }
-    /// `player_regen_fields::REGEN_QUEUE` (+0x10).
+    /// `player_regen_fields::REGEN_QUEUE` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn regen_queue(self) -> usize {
         read_usize(self.0 + player_regen_fields::REGEN_QUEUE)
@@ -3129,7 +3222,7 @@ impl PlayerRegenFields {
     pub(crate) unsafe fn set_regen_queue(self, v: usize) {
         write_usize(self.0 + player_regen_fields::REGEN_QUEUE, v)
     }
-    /// `player_regen_fields::REGEN_QUEUE_COUNT` (+0x14).
+    /// `player_regen_fields::REGEN_QUEUE_COUNT` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn regen_queue_count(self) -> usize {
         read_usize(self.0 + player_regen_fields::REGEN_QUEUE_COUNT)
@@ -3138,7 +3231,7 @@ impl PlayerRegenFields {
     pub(crate) unsafe fn set_regen_queue_count(self, v: usize) {
         write_usize(self.0 + player_regen_fields::REGEN_QUEUE_COUNT, v)
     }
-    /// `player_regen_fields::REGEN_QUEUE_CAPACITY` (+0x18).
+    /// `player_regen_fields::REGEN_QUEUE_CAPACITY` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn regen_queue_capacity(self) -> usize {
         read_usize(self.0 + player_regen_fields::REGEN_QUEUE_CAPACITY)
@@ -3147,7 +3240,7 @@ impl PlayerRegenFields {
     pub(crate) unsafe fn set_regen_queue_capacity(self, v: usize) {
         write_usize(self.0 + player_regen_fields::REGEN_QUEUE_CAPACITY, v)
     }
-    /// `player_regen_fields::SPARE_NON_PLAYER_RECORDS` (+0x1c).
+    /// `player_regen_fields::SPARE_NON_PLAYER_RECORDS` (+0x1c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn spare_non_player_records(self) -> usize {
         read_usize(self.0 + player_regen_fields::SPARE_NON_PLAYER_RECORDS)
@@ -3156,7 +3249,7 @@ impl PlayerRegenFields {
     pub(crate) unsafe fn set_spare_non_player_records(self, v: usize) {
         write_usize(self.0 + player_regen_fields::SPARE_NON_PLAYER_RECORDS, v)
     }
-    /// `player_regen_fields::SPARE_NON_PLAYER_COUNT` (+0x20).
+    /// `player_regen_fields::SPARE_NON_PLAYER_COUNT` (+0x20). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn spare_non_player_count(self) -> usize {
         read_usize(self.0 + player_regen_fields::SPARE_NON_PLAYER_COUNT)
@@ -3165,7 +3258,7 @@ impl PlayerRegenFields {
     pub(crate) unsafe fn set_spare_non_player_count(self, v: usize) {
         write_usize(self.0 + player_regen_fields::SPARE_NON_PLAYER_COUNT, v)
     }
-    /// `player_regen_fields::SPARE_NON_PLAYER_CAPACITY` (+0x24).
+    /// `player_regen_fields::SPARE_NON_PLAYER_CAPACITY` (+0x24). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn spare_non_player_capacity(self) -> usize {
         read_usize(self.0 + player_regen_fields::SPARE_NON_PLAYER_CAPACITY)
@@ -3174,7 +3267,7 @@ impl PlayerRegenFields {
     pub(crate) unsafe fn set_spare_non_player_capacity(self, v: usize) {
         write_usize(self.0 + player_regen_fields::SPARE_NON_PLAYER_CAPACITY, v)
     }
-    /// `player_regen_fields::PLAYER_DATA_POOL` (+0x3c).
+    /// `player_regen_fields::PLAYER_DATA_POOL` (+0x3c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn player_data_pool(self) -> usize {
         read_usize(self.0 + player_regen_fields::PLAYER_DATA_POOL)
@@ -3183,7 +3276,7 @@ impl PlayerRegenFields {
     pub(crate) unsafe fn set_player_data_pool(self, v: usize) {
         write_usize(self.0 + player_regen_fields::PLAYER_DATA_POOL, v)
     }
-    /// `player_regen_fields::PLAYER_DATA_POOL_COUNT` (+0x40).
+    /// `player_regen_fields::PLAYER_DATA_POOL_COUNT` (+0x40). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn player_data_pool_count(self) -> usize {
         read_usize(self.0 + player_regen_fields::PLAYER_DATA_POOL_COUNT)
@@ -3192,7 +3285,7 @@ impl PlayerRegenFields {
     pub(crate) unsafe fn set_player_data_pool_count(self, v: usize) {
         write_usize(self.0 + player_regen_fields::PLAYER_DATA_POOL_COUNT, v)
     }
-    /// `player_regen_fields::PLAYER_DATA_POOL_CAPACITY` (+0x44).
+    /// `player_regen_fields::PLAYER_DATA_POOL_CAPACITY` (+0x44). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn player_data_pool_capacity(self) -> usize {
         read_usize(self.0 + player_regen_fields::PLAYER_DATA_POOL_CAPACITY)
@@ -3226,7 +3319,7 @@ impl PlayerSearchFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `player_search_fields::LIST_TYPE` (+0xa).
+    /// `player_search_fields::LIST_TYPE` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn list_type(self) -> u8 {
         read_u8(self.0 + player_search_fields::LIST_TYPE)
@@ -3235,7 +3328,7 @@ impl PlayerSearchFields {
     pub(crate) unsafe fn set_list_type(self, v: u8) {
         write_u8(self.0 + player_search_fields::LIST_TYPE, v)
     }
-    /// `player_search_fields::SCOUT_NAME_REF` (+0x174).
+    /// `player_search_fields::SCOUT_NAME_REF` (+0x174). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn scout_name_ref(self) -> usize {
         read_usize(self.0 + player_search_fields::SCOUT_NAME_REF)
@@ -3244,7 +3337,7 @@ impl PlayerSearchFields {
     pub(crate) unsafe fn set_scout_name_ref(self, v: usize) {
         write_usize(self.0 + player_search_fields::SCOUT_NAME_REF, v)
     }
-    /// `player_search_fields::SCOUT_ID` (+0x180).
+    /// `player_search_fields::SCOUT_ID` (+0x180). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn scout_id(self) -> usize {
         read_usize(self.0 + player_search_fields::SCOUT_ID)
@@ -3253,7 +3346,7 @@ impl PlayerSearchFields {
     pub(crate) unsafe fn set_scout_id(self, v: usize) {
         write_usize(self.0 + player_search_fields::SCOUT_ID, v)
     }
-    /// `player_search_fields::ASSIGNED_NATION` (+0x18c).
+    /// `player_search_fields::ASSIGNED_NATION` (+0x18c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn assigned_nation(self) -> usize {
         read_usize(self.0 + player_search_fields::ASSIGNED_NATION)
@@ -3262,7 +3355,7 @@ impl PlayerSearchFields {
     pub(crate) unsafe fn set_assigned_nation(self, v: usize) {
         write_usize(self.0 + player_search_fields::ASSIGNED_NATION, v)
     }
-    /// `player_search_fields::ASSIGNED_CLUB` (+0x190).
+    /// `player_search_fields::ASSIGNED_CLUB` (+0x190). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn assigned_club(self) -> usize {
         read_usize(self.0 + player_search_fields::ASSIGNED_CLUB)
@@ -3271,7 +3364,7 @@ impl PlayerSearchFields {
     pub(crate) unsafe fn set_assigned_club(self, v: usize) {
         write_usize(self.0 + player_search_fields::ASSIGNED_CLUB, v)
     }
-    /// `player_search_fields::ASSIGNED_REGION` (+0x194).
+    /// `player_search_fields::ASSIGNED_REGION` (+0x194). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn assigned_region(self) -> u8 {
         read_u8(self.0 + player_search_fields::ASSIGNED_REGION)
@@ -3280,7 +3373,7 @@ impl PlayerSearchFields {
     pub(crate) unsafe fn set_assigned_region(self, v: u8) {
         write_u8(self.0 + player_search_fields::ASSIGNED_REGION, v)
     }
-    /// `player_search_fields::ASSIGNED_COMP` (+0x195).
+    /// `player_search_fields::ASSIGNED_COMP` (+0x195). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn assigned_comp(self) -> i32 {
         read_i32(self.0 + player_search_fields::ASSIGNED_COMP)
@@ -3289,7 +3382,7 @@ impl PlayerSearchFields {
     pub(crate) unsafe fn set_assigned_comp(self, v: i32) {
         write_i32(self.0 + player_search_fields::ASSIGNED_COMP, v)
     }
-    /// `player_search_fields::ASSIGNED_BASE` (+0x199).
+    /// `player_search_fields::ASSIGNED_BASE` (+0x199). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn assigned_base(self) -> usize {
         read_usize(self.0 + player_search_fields::ASSIGNED_BASE)
@@ -3298,7 +3391,7 @@ impl PlayerSearchFields {
     pub(crate) unsafe fn set_assigned_base(self, v: usize) {
         write_usize(self.0 + player_search_fields::ASSIGNED_BASE, v)
     }
-    /// `player_search_fields::ASSIGNED_OPPONENT` (+0x19d).
+    /// `player_search_fields::ASSIGNED_OPPONENT` (+0x19d). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn assigned_opponent(self) -> usize {
         read_usize(self.0 + player_search_fields::ASSIGNED_OPPONENT)
@@ -3307,7 +3400,7 @@ impl PlayerSearchFields {
     pub(crate) unsafe fn set_assigned_opponent(self, v: usize) {
         write_usize(self.0 + player_search_fields::ASSIGNED_OPPONENT, v)
     }
-    /// `player_search_fields::SCOUTING_START_DATE` (+0x1a5).
+    /// `player_search_fields::SCOUTING_START_DATE` (+0x1a5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn scouting_start_date(self) -> i16 {
         read_i16(self.0 + player_search_fields::SCOUTING_START_DATE)
@@ -3316,7 +3409,7 @@ impl PlayerSearchFields {
     pub(crate) unsafe fn set_scouting_start_date(self, v: i16) {
         write_i16(self.0 + player_search_fields::SCOUTING_START_DATE, v)
     }
-    /// `player_search_fields::SCOUTING_START_YEAR` (+0x1a7).
+    /// `player_search_fields::SCOUTING_START_YEAR` (+0x1a7). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn scouting_start_year(self) -> i16 {
         read_i16(self.0 + player_search_fields::SCOUTING_START_YEAR)
@@ -3325,7 +3418,7 @@ impl PlayerSearchFields {
     pub(crate) unsafe fn set_scouting_start_year(self, v: i16) {
         write_i16(self.0 + player_search_fields::SCOUTING_START_YEAR, v)
     }
-    /// `player_search_fields::RESULTS` (+0x1ee).
+    /// `player_search_fields::RESULTS` (+0x1ee). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn results(self) -> usize {
         read_usize(self.0 + player_search_fields::RESULTS)
@@ -3334,7 +3427,7 @@ impl PlayerSearchFields {
     pub(crate) unsafe fn set_results(self, v: usize) {
         write_usize(self.0 + player_search_fields::RESULTS, v)
     }
-    /// `player_search_fields::RESULT_COUNT` (+0x1f6).
+    /// `player_search_fields::RESULT_COUNT` (+0x1f6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn result_count(self) -> usize {
         read_usize(self.0 + player_search_fields::RESULT_COUNT)
@@ -3368,7 +3461,7 @@ impl ShortlistManagerFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `shortlist_manager_fields::PAIRS_BY_CLUB` (+0x4).
+    /// `shortlist_manager_fields::PAIRS_BY_CLUB` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pairs_by_club(self) -> usize {
         read_usize(self.0 + shortlist_manager_fields::PAIRS_BY_CLUB)
@@ -3377,7 +3470,7 @@ impl ShortlistManagerFields {
     pub(crate) unsafe fn set_pairs_by_club(self, v: usize) {
         write_usize(self.0 + shortlist_manager_fields::PAIRS_BY_CLUB, v)
     }
-    /// `shortlist_manager_fields::PAIRS_BY_PERSON_CAPACITY` (+0x8).
+    /// `shortlist_manager_fields::PAIRS_BY_PERSON_CAPACITY` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pairs_by_person_capacity(self) -> i32 {
         read_i32(self.0 + shortlist_manager_fields::PAIRS_BY_PERSON_CAPACITY)
@@ -3386,7 +3479,7 @@ impl ShortlistManagerFields {
     pub(crate) unsafe fn set_pairs_by_person_capacity(self, v: i32) {
         write_i32(self.0 + shortlist_manager_fields::PAIRS_BY_PERSON_CAPACITY, v)
     }
-    /// `shortlist_manager_fields::PAIRS_BY_CLUB_CAPACITY` (+0xc).
+    /// `shortlist_manager_fields::PAIRS_BY_CLUB_CAPACITY` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pairs_by_club_capacity(self) -> i32 {
         read_i32(self.0 + shortlist_manager_fields::PAIRS_BY_CLUB_CAPACITY)
@@ -3395,7 +3488,7 @@ impl ShortlistManagerFields {
     pub(crate) unsafe fn set_pairs_by_club_capacity(self, v: i32) {
         write_i32(self.0 + shortlist_manager_fields::PAIRS_BY_CLUB_CAPACITY, v)
     }
-    /// `shortlist_manager_fields::PAIRS_BY_PERSON_COUNT` (+0x10).
+    /// `shortlist_manager_fields::PAIRS_BY_PERSON_COUNT` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pairs_by_person_count(self) -> i32 {
         read_i32(self.0 + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT)
@@ -3404,7 +3497,7 @@ impl ShortlistManagerFields {
     pub(crate) unsafe fn set_pairs_by_person_count(self, v: i32) {
         write_i32(self.0 + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT, v)
     }
-    /// `shortlist_manager_fields::PAIRS_BY_CLUB_COUNT` (+0x14).
+    /// `shortlist_manager_fields::PAIRS_BY_CLUB_COUNT` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pairs_by_club_count(self) -> i32 {
         read_i32(self.0 + shortlist_manager_fields::PAIRS_BY_CLUB_COUNT)
@@ -3413,22 +3506,22 @@ impl ShortlistManagerFields {
     pub(crate) unsafe fn set_pairs_by_club_count(self, v: i32) {
         write_i32(self.0 + shortlist_manager_fields::PAIRS_BY_CLUB_COUNT, v)
     }
-    /// `shortlist_manager_fields::POSITION_LISTS_BY_PERSON` (+0x18).
+    /// `shortlist_manager_fields::POSITION_LISTS_BY_PERSON` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) fn position_lists_by_person_addr(self) -> usize {
         self.0 + shortlist_manager_fields::POSITION_LISTS_BY_PERSON
     }
-    /// `shortlist_manager_fields::POSITION_LISTS_BY_KEY` (+0x58).
+    /// `shortlist_manager_fields::POSITION_LISTS_BY_KEY` (+0x58). Name: read.
     #[inline(always)]
     pub(crate) fn position_lists_by_key_addr(self) -> usize {
         self.0 + shortlist_manager_fields::POSITION_LISTS_BY_KEY
     }
-    /// `shortlist_manager_fields::POSITION_LIST_COUNTS` (+0x98).
+    /// `shortlist_manager_fields::POSITION_LIST_COUNTS` (+0x98). Name: read.
     #[inline(always)]
     pub(crate) fn position_list_counts_addr(self) -> usize {
         self.0 + shortlist_manager_fields::POSITION_LIST_COUNTS
     }
-    /// `shortlist_manager_fields::POSITION_LIST_CAPACITY` (+0xd8).
+    /// `shortlist_manager_fields::POSITION_LIST_CAPACITY` (+0xd8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn position_list_capacity(self) -> i32 {
         read_i32(self.0 + shortlist_manager_fields::POSITION_LIST_CAPACITY)
@@ -3437,7 +3530,7 @@ impl ShortlistManagerFields {
     pub(crate) unsafe fn set_position_list_capacity(self, v: i32) {
         write_i32(self.0 + shortlist_manager_fields::POSITION_LIST_CAPACITY, v)
     }
-    /// `shortlist_manager_fields::CLUB_SHORTLISTS` (+0xdc).
+    /// `shortlist_manager_fields::CLUB_SHORTLISTS` (+0xdc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_shortlists(self) -> usize {
         read_usize(self.0 + shortlist_manager_fields::CLUB_SHORTLISTS)
@@ -3471,7 +3564,7 @@ impl TransferManagerFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `transfer_manager_fields::OFFER_CAPACITY` (+0x4).
+    /// `transfer_manager_fields::OFFER_CAPACITY` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn offer_capacity(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::OFFER_CAPACITY)
@@ -3480,7 +3573,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_offer_capacity(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::OFFER_CAPACITY, v)
     }
-    /// `transfer_manager_fields::OFFER_COUNT` (+0x8).
+    /// `transfer_manager_fields::OFFER_COUNT` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn offer_count(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::OFFER_COUNT)
@@ -3489,7 +3582,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_offer_count(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::OFFER_COUNT, v)
     }
-    /// `transfer_manager_fields::NEGOTIATIONS` (+0xc).
+    /// `transfer_manager_fields::NEGOTIATIONS` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn negotiations(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::NEGOTIATIONS)
@@ -3498,7 +3591,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_negotiations(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::NEGOTIATIONS, v)
     }
-    /// `transfer_manager_fields::NEGOTIATION_CAPACITY` (+0x10).
+    /// `transfer_manager_fields::NEGOTIATION_CAPACITY` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn negotiation_capacity(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::NEGOTIATION_CAPACITY)
@@ -3507,7 +3600,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_negotiation_capacity(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::NEGOTIATION_CAPACITY, v)
     }
-    /// `transfer_manager_fields::NEGOTIATION_COUNT` (+0x14).
+    /// `transfer_manager_fields::NEGOTIATION_COUNT` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn negotiation_count(self) -> i32 {
         read_i32(self.0 + transfer_manager_fields::NEGOTIATION_COUNT)
@@ -3516,7 +3609,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_negotiation_count(self, v: i32) {
         write_i32(self.0 + transfer_manager_fields::NEGOTIATION_COUNT, v)
     }
-    /// `transfer_manager_fields::DAY_CURSOR` (+0x84c).
+    /// `transfer_manager_fields::DAY_CURSOR` (+0x84c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn day_cursor(self) -> u8 {
         read_u8(self.0 + transfer_manager_fields::DAY_CURSOR)
@@ -3525,7 +3618,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_day_cursor(self, v: u8) {
         write_u8(self.0 + transfer_manager_fields::DAY_CURSOR, v)
     }
-    /// `transfer_manager_fields::CURRENT_DATE` (+0x84d).
+    /// `transfer_manager_fields::CURRENT_DATE` (+0x84d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn current_date(self) -> i16 {
         read_i16(self.0 + transfer_manager_fields::CURRENT_DATE)
@@ -3534,7 +3627,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_current_date(self, v: i16) {
         write_i16(self.0 + transfer_manager_fields::CURRENT_DATE, v)
     }
-    /// `transfer_manager_fields::CURRENT_YEAR` (+0x84f).
+    /// `transfer_manager_fields::CURRENT_YEAR` (+0x84f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn current_year(self) -> i16 {
         read_i16(self.0 + transfer_manager_fields::CURRENT_YEAR)
@@ -3543,7 +3636,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_current_year(self, v: i16) {
         write_i16(self.0 + transfer_manager_fields::CURRENT_YEAR, v)
     }
-    /// `transfer_manager_fields::CURRENT_SLICE` (+0x855).
+    /// `transfer_manager_fields::CURRENT_SLICE` (+0x855). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn current_slice(self) -> u8 {
         read_u8(self.0 + transfer_manager_fields::CURRENT_SLICE)
@@ -3552,7 +3645,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_current_slice(self, v: u8) {
         write_u8(self.0 + transfer_manager_fields::CURRENT_SLICE, v)
     }
-    /// `transfer_manager_fields::SHORTLIST_MANAGER` (+0x856).
+    /// `transfer_manager_fields::SHORTLIST_MANAGER` (+0x856). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shortlist_manager(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::SHORTLIST_MANAGER)
@@ -3561,7 +3654,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_shortlist_manager(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::SHORTLIST_MANAGER, v)
     }
-    /// `transfer_manager_fields::NEXT_SERIAL` (+0x85a).
+    /// `transfer_manager_fields::NEXT_SERIAL` (+0x85a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn next_serial(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::NEXT_SERIAL)
@@ -3570,7 +3663,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_next_serial(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::NEXT_SERIAL, v)
     }
-    /// `transfer_manager_fields::LOWEST_FREE_SLOT` (+0x85e).
+    /// `transfer_manager_fields::LOWEST_FREE_SLOT` (+0x85e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn lowest_free_slot(self) -> i32 {
         read_i32(self.0 + transfer_manager_fields::LOWEST_FREE_SLOT)
@@ -3579,7 +3672,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_lowest_free_slot(self, v: i32) {
         write_i32(self.0 + transfer_manager_fields::LOWEST_FREE_SLOT, v)
     }
-    /// `transfer_manager_fields::PAST_TRANSFERS` (+0x862).
+    /// `transfer_manager_fields::PAST_TRANSFERS` (+0x862). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn past_transfers(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::PAST_TRANSFERS)
@@ -3588,7 +3681,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_past_transfers(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::PAST_TRANSFERS, v)
     }
-    /// `transfer_manager_fields::PAST_TRANSFER_COUNT` (+0x86a).
+    /// `transfer_manager_fields::PAST_TRANSFER_COUNT` (+0x86a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn past_transfer_count(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::PAST_TRANSFER_COUNT)
@@ -3597,7 +3690,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_past_transfer_count(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::PAST_TRANSFER_COUNT, v)
     }
-    /// `transfer_manager_fields::PERSON_FLAGS` (+0x86e).
+    /// `transfer_manager_fields::PERSON_FLAGS` (+0x86e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn person_flags(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::PERSON_FLAGS)
@@ -3606,12 +3699,12 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_person_flags(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::PERSON_FLAGS, v)
     }
-    /// `transfer_manager_fields::INSTALMENTS` (+0x872).
+    /// `transfer_manager_fields::INSTALMENTS` (+0x872). Name: read.
     #[inline(always)]
     pub(crate) fn instalments_addr(self) -> usize {
         self.0 + transfer_manager_fields::INSTALMENTS
     }
-    /// `transfer_manager_fields::INSTALMENTS_HEAD` (+0x874).
+    /// `transfer_manager_fields::INSTALMENTS_HEAD` (+0x874). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn instalments_head(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::INSTALMENTS_HEAD)
@@ -3620,7 +3713,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_instalments_head(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::INSTALMENTS_HEAD, v)
     }
-    /// `transfer_manager_fields::NEXT_SALE_PERCENTAGES` (+0x880).
+    /// `transfer_manager_fields::NEXT_SALE_PERCENTAGES` (+0x880). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn next_sale_percentages(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::NEXT_SALE_PERCENTAGES)
@@ -3629,7 +3722,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_next_sale_percentages(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::NEXT_SALE_PERCENTAGES, v)
     }
-    /// `transfer_manager_fields::NEXT_SALE_PERCENTAGE_COUNT` (+0x888).
+    /// `transfer_manager_fields::NEXT_SALE_PERCENTAGE_COUNT` (+0x888). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn next_sale_percentage_count(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::NEXT_SALE_PERCENTAGE_COUNT)
@@ -3638,7 +3731,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_next_sale_percentage_count(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::NEXT_SALE_PERCENTAGE_COUNT, v)
     }
-    /// `transfer_manager_fields::APPEARANCE_MONEY` (+0x88c).
+    /// `transfer_manager_fields::APPEARANCE_MONEY` (+0x88c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn appearance_money(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::APPEARANCE_MONEY)
@@ -3647,7 +3740,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_appearance_money(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::APPEARANCE_MONEY, v)
     }
-    /// `transfer_manager_fields::APPEARANCE_MONEY_COUNT` (+0x894).
+    /// `transfer_manager_fields::APPEARANCE_MONEY_COUNT` (+0x894). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn appearance_money_count(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::APPEARANCE_MONEY_COUNT)
@@ -3656,7 +3749,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_appearance_money_count(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::APPEARANCE_MONEY_COUNT, v)
     }
-    /// `transfer_manager_fields::INTERNATIONAL_APPEARANCE_MONEY` (+0x898).
+    /// `transfer_manager_fields::INTERNATIONAL_APPEARANCE_MONEY` (+0x898). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn international_appearance_money(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::INTERNATIONAL_APPEARANCE_MONEY)
@@ -3665,7 +3758,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_international_appearance_money(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::INTERNATIONAL_APPEARANCE_MONEY, v)
     }
-    /// `transfer_manager_fields::INTERNATIONAL_APPEARANCE_MONEY_COUNT` (+0x8a0).
+    /// `transfer_manager_fields::INTERNATIONAL_APPEARANCE_MONEY_COUNT` (+0x8a0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn international_appearance_money_count(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::INTERNATIONAL_APPEARANCE_MONEY_COUNT)
@@ -3674,7 +3767,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_international_appearance_money_count(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::INTERNATIONAL_APPEARANCE_MONEY_COUNT, v)
     }
-    /// `transfer_manager_fields::TRANSFER_WINDOWS` (+0x8a4).
+    /// `transfer_manager_fields::TRANSFER_WINDOWS` (+0x8a4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn transfer_windows(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::TRANSFER_WINDOWS)
@@ -3683,7 +3776,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_transfer_windows(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::TRANSFER_WINDOWS, v)
     }
-    /// `transfer_manager_fields::TRANSFER_WINDOW_COUNT` (+0x8a8).
+    /// `transfer_manager_fields::TRANSFER_WINDOW_COUNT` (+0x8a8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn transfer_window_count(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::TRANSFER_WINDOW_COUNT)
@@ -3692,7 +3785,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_transfer_window_count(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::TRANSFER_WINDOW_COUNT, v)
     }
-    /// `transfer_manager_fields::TRANSFER_RULES` (+0x8ac).
+    /// `transfer_manager_fields::TRANSFER_RULES` (+0x8ac). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn transfer_rules(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::TRANSFER_RULES)
@@ -3701,7 +3794,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_transfer_rules(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::TRANSFER_RULES, v)
     }
-    /// `transfer_manager_fields::FUTURE_TRANSFERS` (+0x920).
+    /// `transfer_manager_fields::FUTURE_TRANSFERS` (+0x920). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn future_transfers(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::FUTURE_TRANSFERS)
@@ -3710,7 +3803,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_future_transfers(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::FUTURE_TRANSFERS, v)
     }
-    /// `transfer_manager_fields::FUTURE_TRANSFER_COUNT` (+0x928).
+    /// `transfer_manager_fields::FUTURE_TRANSFER_COUNT` (+0x928). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn future_transfer_count(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::FUTURE_TRANSFER_COUNT)
@@ -3719,12 +3812,12 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_future_transfer_count(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::FUTURE_TRANSFER_COUNT, v)
     }
-    /// `transfer_manager_fields::FREE_TRANSFER_QUEUE` (+0x92c).
+    /// `transfer_manager_fields::FREE_TRANSFER_QUEUE` (+0x92c). Name: read.
     #[inline(always)]
     pub(crate) fn free_transfer_queue_addr(self) -> usize {
         self.0 + transfer_manager_fields::FREE_TRANSFER_QUEUE
     }
-    /// `transfer_manager_fields::FREE_TRANSFER_QUEUE_HEAD` (+0x92e).
+    /// `transfer_manager_fields::FREE_TRANSFER_QUEUE_HEAD` (+0x92e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn free_transfer_queue_head(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::FREE_TRANSFER_QUEUE_HEAD)
@@ -3733,7 +3826,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_free_transfer_queue_head(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::FREE_TRANSFER_QUEUE_HEAD, v)
     }
-    /// `transfer_manager_fields::FREE_TRANSFER_QUEUE_CURSOR` (+0x936).
+    /// `transfer_manager_fields::FREE_TRANSFER_QUEUE_CURSOR` (+0x936). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn free_transfer_queue_cursor(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::FREE_TRANSFER_QUEUE_CURSOR)
@@ -3742,7 +3835,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_free_transfer_queue_cursor(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::FREE_TRANSFER_QUEUE_CURSOR, v)
     }
-    /// `transfer_manager_fields::WORK_PERMITS` (+0x93a).
+    /// `transfer_manager_fields::WORK_PERMITS` (+0x93a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn work_permits(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::WORK_PERMITS)
@@ -3751,7 +3844,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_work_permits(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::WORK_PERMITS, v)
     }
-    /// `transfer_manager_fields::WORK_PERMIT_COUNT` (+0x93e).
+    /// `transfer_manager_fields::WORK_PERMIT_COUNT` (+0x93e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn work_permit_count(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::WORK_PERMIT_COUNT)
@@ -3760,7 +3853,7 @@ impl TransferManagerFields {
     pub(crate) unsafe fn set_work_permit_count(self, v: usize) {
         write_usize(self.0 + transfer_manager_fields::WORK_PERMIT_COUNT, v)
     }
-    /// `transfer_manager_fields::LOAN_NEGOTIATIONS` (+0x946).
+    /// `transfer_manager_fields::LOAN_NEGOTIATIONS` (+0x946). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn loan_negotiations(self) -> usize {
         read_usize(self.0 + transfer_manager_fields::LOAN_NEGOTIATIONS)
@@ -3794,7 +3887,7 @@ impl UefaCup {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `uefa_cup::PRELIMINARY_CLUB_COUNT` (+0xb2).
+    /// `uefa_cup::PRELIMINARY_CLUB_COUNT` (+0xb2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn preliminary_club_count(self) -> i8 {
         read_i8(self.0 + uefa_cup::PRELIMINARY_CLUB_COUNT)
@@ -3828,7 +3921,7 @@ impl Offer {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `offer::EXCHANGE_PLAYERS` (+0x4).
+    /// `offer::EXCHANGE_PLAYERS` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn exchange_players(self) -> usize {
         read_usize(self.0 + offer::EXCHANGE_PLAYERS)
@@ -3837,7 +3930,7 @@ impl Offer {
     pub(crate) unsafe fn set_exchange_players(self, v: usize) {
         write_usize(self.0 + offer::EXCHANGE_PLAYERS, v)
     }
-    /// `offer::BUYER_CLUB_ID` (+0x8).
+    /// `offer::BUYER_CLUB_ID` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn buyer_club_id(self) -> usize {
         read_usize(self.0 + offer::BUYER_CLUB_ID)
@@ -3846,7 +3939,7 @@ impl Offer {
     pub(crate) unsafe fn set_buyer_club_id(self, v: usize) {
         write_usize(self.0 + offer::BUYER_CLUB_ID, v)
     }
-    /// `offer::TARGET_STAFF_ID` (+0xc).
+    /// `offer::TARGET_STAFF_ID` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn target_staff_id(self) -> usize {
         read_usize(self.0 + offer::TARGET_STAFF_ID)
@@ -3855,7 +3948,7 @@ impl Offer {
     pub(crate) unsafe fn set_target_staff_id(self, v: usize) {
         write_usize(self.0 + offer::TARGET_STAFF_ID, v)
     }
-    /// `offer::TERMS_STATE` (+0x10).
+    /// `offer::TERMS_STATE` (+0x10). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn terms_state(self) -> u8 {
         read_u8(self.0 + offer::TERMS_STATE)
@@ -3864,7 +3957,7 @@ impl Offer {
     pub(crate) unsafe fn set_terms_state(self, v: u8) {
         write_u8(self.0 + offer::TERMS_STATE, v)
     }
-    /// `offer::JOB_TYPE` (+0x11).
+    /// `offer::JOB_TYPE` (+0x11). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn job_type(self) -> u8 {
         read_u8(self.0 + offer::JOB_TYPE)
@@ -3873,7 +3966,7 @@ impl Offer {
     pub(crate) unsafe fn set_job_type(self, v: u8) {
         write_u8(self.0 + offer::JOB_TYPE, v)
     }
-    /// `offer::DUE_DATE` (+0x12).
+    /// `offer::DUE_DATE` (+0x12). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn due_date(self) -> i16 {
         read_i16(self.0 + offer::DUE_DATE)
@@ -3882,7 +3975,7 @@ impl Offer {
     pub(crate) unsafe fn set_due_date(self, v: i16) {
         write_i16(self.0 + offer::DUE_DATE, v)
     }
-    /// `offer::DUE_YEAR` (+0x14).
+    /// `offer::DUE_YEAR` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn due_year(self) -> i16 {
         read_i16(self.0 + offer::DUE_YEAR)
@@ -3891,7 +3984,7 @@ impl Offer {
     pub(crate) unsafe fn set_due_year(self, v: i16) {
         write_i16(self.0 + offer::DUE_YEAR, v)
     }
-    /// `offer::DUE_SLICE` (+0x1a).
+    /// `offer::DUE_SLICE` (+0x1a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn due_slice(self) -> u8 {
         read_u8(self.0 + offer::DUE_SLICE)
@@ -3900,7 +3993,7 @@ impl Offer {
     pub(crate) unsafe fn set_due_slice(self, v: u8) {
         write_u8(self.0 + offer::DUE_SLICE, v)
     }
-    /// `offer::FEE` (+0x1b).
+    /// `offer::FEE` (+0x1b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fee(self) -> usize {
         read_usize(self.0 + offer::FEE)
@@ -3909,7 +4002,7 @@ impl Offer {
     pub(crate) unsafe fn set_fee(self, v: usize) {
         write_usize(self.0 + offer::FEE, v)
     }
-    /// `offer::OFFER_TYPE` (+0x1f).
+    /// `offer::OFFER_TYPE` (+0x1f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn offer_type(self) -> u8 {
         read_u8(self.0 + offer::OFFER_TYPE)
@@ -3918,7 +4011,7 @@ impl Offer {
     pub(crate) unsafe fn set_offer_type(self, v: u8) {
         write_u8(self.0 + offer::OFFER_TYPE, v)
     }
-    /// `offer::SLOT_INDEX` (+0x20).
+    /// `offer::SLOT_INDEX` (+0x20). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn slot_index(self) -> usize {
         read_usize(self.0 + offer::SLOT_INDEX)
@@ -3927,7 +4020,7 @@ impl Offer {
     pub(crate) unsafe fn set_slot_index(self, v: usize) {
         write_usize(self.0 + offer::SLOT_INDEX, v)
     }
-    /// `offer::SERIAL` (+0x24).
+    /// `offer::SERIAL` (+0x24). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn serial(self) -> usize {
         read_usize(self.0 + offer::SERIAL)
@@ -3936,7 +4029,7 @@ impl Offer {
     pub(crate) unsafe fn set_serial(self, v: usize) {
         write_usize(self.0 + offer::SERIAL, v)
     }
-    /// `offer::NEGOTIATION_INDEX` (+0x28).
+    /// `offer::NEGOTIATION_INDEX` (+0x28). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn negotiation_index(self) -> usize {
         read_usize(self.0 + offer::NEGOTIATION_INDEX)
@@ -3945,7 +4038,7 @@ impl Offer {
     pub(crate) unsafe fn set_negotiation_index(self, v: usize) {
         write_usize(self.0 + offer::NEGOTIATION_INDEX, v)
     }
-    /// `offer::STATUS` (+0x2c).
+    /// `offer::STATUS` (+0x2c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn status(self) -> u8 {
         read_u8(self.0 + offer::STATUS)
@@ -3954,7 +4047,7 @@ impl Offer {
     pub(crate) unsafe fn set_status(self, v: u8) {
         write_u8(self.0 + offer::STATUS, v)
     }
-    /// `offer::PLAYER_AWARE` (+0x2d).
+    /// `offer::PLAYER_AWARE` (+0x2d). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn player_aware(self) -> u8 {
         read_u8(self.0 + offer::PLAYER_AWARE)
@@ -3963,7 +4056,7 @@ impl Offer {
     pub(crate) unsafe fn set_player_aware(self, v: u8) {
         write_u8(self.0 + offer::PLAYER_AWARE, v)
     }
-    /// `offer::RESPONSE_ROUND` (+0x2e).
+    /// `offer::RESPONSE_ROUND` (+0x2e). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn response_round(self) -> u8 {
         read_u8(self.0 + offer::RESPONSE_ROUND)
@@ -3972,7 +4065,7 @@ impl Offer {
     pub(crate) unsafe fn set_response_round(self, v: u8) {
         write_u8(self.0 + offer::RESPONSE_ROUND, v)
     }
-    /// `offer::PRE_CONTRACT` (+0x2f).
+    /// `offer::PRE_CONTRACT` (+0x2f). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn pre_contract(self) -> u8 {
         read_u8(self.0 + offer::PRE_CONTRACT)
@@ -3981,7 +4074,7 @@ impl Offer {
     pub(crate) unsafe fn set_pre_contract(self, v: u8) {
         write_u8(self.0 + offer::PRE_CONTRACT, v)
     }
-    /// `offer::COMPLETION_TIMING` (+0x30).
+    /// `offer::COMPLETION_TIMING` (+0x30). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn completion_timing(self) -> u8 {
         read_u8(self.0 + offer::COMPLETION_TIMING)
@@ -3990,7 +4083,7 @@ impl Offer {
     pub(crate) unsafe fn set_completion_timing(self, v: u8) {
         write_u8(self.0 + offer::COMPLETION_TIMING, v)
     }
-    /// `offer::OFFER_KIND` (+0x31).
+    /// `offer::OFFER_KIND` (+0x31). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn offer_kind(self) -> usize {
         read_usize(self.0 + offer::OFFER_KIND)
@@ -3999,7 +4092,7 @@ impl Offer {
     pub(crate) unsafe fn set_offer_kind(self, v: usize) {
         write_usize(self.0 + offer::OFFER_KIND, v)
     }
-    /// `offer::APPEARANCE_FEE` (+0x35).
+    /// `offer::APPEARANCE_FEE` (+0x35). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn appearance_fee(self) -> usize {
         read_usize(self.0 + offer::APPEARANCE_FEE)
@@ -4008,7 +4101,7 @@ impl Offer {
     pub(crate) unsafe fn set_appearance_fee(self, v: usize) {
         write_usize(self.0 + offer::APPEARANCE_FEE, v)
     }
-    /// `offer::APPEARANCE_GAMES` (+0x39).
+    /// `offer::APPEARANCE_GAMES` (+0x39). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn appearance_games(self) -> u8 {
         read_u8(self.0 + offer::APPEARANCE_GAMES)
@@ -4017,7 +4110,7 @@ impl Offer {
     pub(crate) unsafe fn set_appearance_games(self, v: u8) {
         write_u8(self.0 + offer::APPEARANCE_GAMES, v)
     }
-    /// `offer::INTERNATIONAL_FEE` (+0x3a).
+    /// `offer::INTERNATIONAL_FEE` (+0x3a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn international_fee(self) -> usize {
         read_usize(self.0 + offer::INTERNATIONAL_FEE)
@@ -4026,7 +4119,7 @@ impl Offer {
     pub(crate) unsafe fn set_international_fee(self, v: usize) {
         write_usize(self.0 + offer::INTERNATIONAL_FEE, v)
     }
-    /// `offer::INTERNATIONAL_GAMES` (+0x3e).
+    /// `offer::INTERNATIONAL_GAMES` (+0x3e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn international_games(self) -> u8 {
         read_u8(self.0 + offer::INTERNATIONAL_GAMES)
@@ -4035,7 +4128,7 @@ impl Offer {
     pub(crate) unsafe fn set_international_games(self, v: u8) {
         write_u8(self.0 + offer::INTERNATIONAL_GAMES, v)
     }
-    /// `offer::SELL_ON_PERCENT` (+0x3f).
+    /// `offer::SELL_ON_PERCENT` (+0x3f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn sell_on_percent(self) -> u8 {
         read_u8(self.0 + offer::SELL_ON_PERCENT)
@@ -4044,7 +4137,7 @@ impl Offer {
     pub(crate) unsafe fn set_sell_on_percent(self, v: u8) {
         write_u8(self.0 + offer::SELL_ON_PERCENT, v)
     }
-    /// `offer::INSTALMENTS` (+0x40).
+    /// `offer::INSTALMENTS` (+0x40). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn instalments(self) -> u8 {
         read_u8(self.0 + offer::INSTALMENTS)
@@ -4078,7 +4171,7 @@ impl PlayerSheet {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `player_sheet::CURRENT_ABILITY` (+0x5).
+    /// `player_sheet::CURRENT_ABILITY` (+0x5). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn current_ability(self) -> i16 {
         read_i16(self.0 + player_sheet::CURRENT_ABILITY)
@@ -4087,7 +4180,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_current_ability(self, v: i16) {
         write_i16(self.0 + player_sheet::CURRENT_ABILITY, v)
     }
-    /// `player_sheet::POTENTIAL_ABILITY` (+0x7).
+    /// `player_sheet::POTENTIAL_ABILITY` (+0x7). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn potential_ability(self) -> i16 {
         read_i16(self.0 + player_sheet::POTENTIAL_ABILITY)
@@ -4096,7 +4189,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_potential_ability(self, v: i16) {
         write_i16(self.0 + player_sheet::POTENTIAL_ABILITY, v)
     }
-    /// `player_sheet::HOME_REPUTATION` (+0x9).
+    /// `player_sheet::HOME_REPUTATION` (+0x9). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn home_reputation(self) -> i16 {
         read_i16(self.0 + player_sheet::HOME_REPUTATION)
@@ -4105,7 +4198,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_home_reputation(self, v: i16) {
         write_i16(self.0 + player_sheet::HOME_REPUTATION, v)
     }
-    /// `player_sheet::CURRENT_REPUTATION` (+0xb).
+    /// `player_sheet::CURRENT_REPUTATION` (+0xb). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn current_reputation(self) -> i16 {
         read_i16(self.0 + player_sheet::CURRENT_REPUTATION)
@@ -4114,7 +4207,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_current_reputation(self, v: i16) {
         write_i16(self.0 + player_sheet::CURRENT_REPUTATION, v)
     }
-    /// `player_sheet::WORLD_REPUTATION` (+0xd).
+    /// `player_sheet::WORLD_REPUTATION` (+0xd). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn world_reputation(self) -> i16 {
         read_i16(self.0 + player_sheet::WORLD_REPUTATION)
@@ -4123,7 +4216,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_world_reputation(self, v: i16) {
         write_i16(self.0 + player_sheet::WORLD_REPUTATION, v)
     }
-    /// `player_sheet::GOALKEEPER` (+0xf).
+    /// `player_sheet::GOALKEEPER` (+0xf). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn goalkeeper(self) -> i8 {
         read_i8(self.0 + player_sheet::GOALKEEPER)
@@ -4132,7 +4225,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_goalkeeper(self, v: i8) {
         write_i8(self.0 + player_sheet::GOALKEEPER, v)
     }
-    /// `player_sheet::SWEEPER` (+0x10).
+    /// `player_sheet::SWEEPER` (+0x10). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn sweeper(self) -> i8 {
         read_i8(self.0 + player_sheet::SWEEPER)
@@ -4141,7 +4234,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_sweeper(self, v: i8) {
         write_i8(self.0 + player_sheet::SWEEPER, v)
     }
-    /// `player_sheet::DEFENDER` (+0x11).
+    /// `player_sheet::DEFENDER` (+0x11). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn defender(self) -> i8 {
         read_i8(self.0 + player_sheet::DEFENDER)
@@ -4150,7 +4243,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_defender(self, v: i8) {
         write_i8(self.0 + player_sheet::DEFENDER, v)
     }
-    /// `player_sheet::DEFENSIVE_MIDFIELDER` (+0x12).
+    /// `player_sheet::DEFENSIVE_MIDFIELDER` (+0x12). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn defensive_midfielder(self) -> i8 {
         read_i8(self.0 + player_sheet::DEFENSIVE_MIDFIELDER)
@@ -4159,7 +4252,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_defensive_midfielder(self, v: i8) {
         write_i8(self.0 + player_sheet::DEFENSIVE_MIDFIELDER, v)
     }
-    /// `player_sheet::MIDFIELDER` (+0x13).
+    /// `player_sheet::MIDFIELDER` (+0x13). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn midfielder(self) -> i8 {
         read_i8(self.0 + player_sheet::MIDFIELDER)
@@ -4168,7 +4261,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_midfielder(self, v: i8) {
         write_i8(self.0 + player_sheet::MIDFIELDER, v)
     }
-    /// `player_sheet::ATTACKING_MIDFIELDER` (+0x14).
+    /// `player_sheet::ATTACKING_MIDFIELDER` (+0x14). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn attacking_midfielder(self) -> i8 {
         read_i8(self.0 + player_sheet::ATTACKING_MIDFIELDER)
@@ -4177,7 +4270,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_attacking_midfielder(self, v: i8) {
         write_i8(self.0 + player_sheet::ATTACKING_MIDFIELDER, v)
     }
-    /// `player_sheet::ATTACKER` (+0x15).
+    /// `player_sheet::ATTACKER` (+0x15). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn attacker(self) -> i8 {
         read_i8(self.0 + player_sheet::ATTACKER)
@@ -4186,7 +4279,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_attacker(self, v: i8) {
         write_i8(self.0 + player_sheet::ATTACKER, v)
     }
-    /// `player_sheet::WING_BACK` (+0x16).
+    /// `player_sheet::WING_BACK` (+0x16). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn wing_back(self) -> i8 {
         read_i8(self.0 + player_sheet::WING_BACK)
@@ -4195,7 +4288,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_wing_back(self, v: i8) {
         write_i8(self.0 + player_sheet::WING_BACK, v)
     }
-    /// `player_sheet::RIGHT_SIDE` (+0x17).
+    /// `player_sheet::RIGHT_SIDE` (+0x17). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn right_side(self) -> i8 {
         read_i8(self.0 + player_sheet::RIGHT_SIDE)
@@ -4204,7 +4297,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_right_side(self, v: i8) {
         write_i8(self.0 + player_sheet::RIGHT_SIDE, v)
     }
-    /// `player_sheet::LEFT_SIDE` (+0x18).
+    /// `player_sheet::LEFT_SIDE` (+0x18). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn left_side(self) -> i8 {
         read_i8(self.0 + player_sheet::LEFT_SIDE)
@@ -4213,7 +4306,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_left_side(self, v: i8) {
         write_i8(self.0 + player_sheet::LEFT_SIDE, v)
     }
-    /// `player_sheet::CENTRAL` (+0x19).
+    /// `player_sheet::CENTRAL` (+0x19). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn central(self) -> i8 {
         read_i8(self.0 + player_sheet::CENTRAL)
@@ -4222,7 +4315,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_central(self, v: i8) {
         write_i8(self.0 + player_sheet::CENTRAL, v)
     }
-    /// `player_sheet::FREE_ROLE` (+0x1a).
+    /// `player_sheet::FREE_ROLE` (+0x1a). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn free_role(self) -> i8 {
         read_i8(self.0 + player_sheet::FREE_ROLE)
@@ -4231,7 +4324,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_free_role(self, v: i8) {
         write_i8(self.0 + player_sheet::FREE_ROLE, v)
     }
-    /// `player_sheet::ACCELERATION` (+0x1b).
+    /// `player_sheet::ACCELERATION` (+0x1b). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn acceleration(self) -> i8 {
         read_i8(self.0 + player_sheet::ACCELERATION)
@@ -4240,7 +4333,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_acceleration(self, v: i8) {
         write_i8(self.0 + player_sheet::ACCELERATION, v)
     }
-    /// `player_sheet::AGGRESSION` (+0x1c).
+    /// `player_sheet::AGGRESSION` (+0x1c). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn aggression(self) -> i8 {
         read_i8(self.0 + player_sheet::AGGRESSION)
@@ -4249,7 +4342,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_aggression(self, v: i8) {
         write_i8(self.0 + player_sheet::AGGRESSION, v)
     }
-    /// `player_sheet::AGILITY` (+0x1d).
+    /// `player_sheet::AGILITY` (+0x1d). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn agility(self) -> i8 {
         read_i8(self.0 + player_sheet::AGILITY)
@@ -4258,7 +4351,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_agility(self, v: i8) {
         write_i8(self.0 + player_sheet::AGILITY, v)
     }
-    /// `player_sheet::ANTICIPATION` (+0x1e).
+    /// `player_sheet::ANTICIPATION` (+0x1e). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn anticipation(self) -> i8 {
         read_i8(self.0 + player_sheet::ANTICIPATION)
@@ -4267,7 +4360,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_anticipation(self, v: i8) {
         write_i8(self.0 + player_sheet::ANTICIPATION, v)
     }
-    /// `player_sheet::BRAVERY` (+0x20).
+    /// `player_sheet::BRAVERY` (+0x20). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn bravery(self) -> i8 {
         read_i8(self.0 + player_sheet::BRAVERY)
@@ -4276,7 +4369,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_bravery(self, v: i8) {
         write_i8(self.0 + player_sheet::BRAVERY, v)
     }
-    /// `player_sheet::CONSISTENCY` (+0x21).
+    /// `player_sheet::CONSISTENCY` (+0x21). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn consistency(self) -> i8 {
         read_i8(self.0 + player_sheet::CONSISTENCY)
@@ -4285,7 +4378,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_consistency(self, v: i8) {
         write_i8(self.0 + player_sheet::CONSISTENCY, v)
     }
-    /// `player_sheet::CORNERS` (+0x22).
+    /// `player_sheet::CORNERS` (+0x22). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn corners(self) -> i8 {
         read_i8(self.0 + player_sheet::CORNERS)
@@ -4294,7 +4387,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_corners(self, v: i8) {
         write_i8(self.0 + player_sheet::CORNERS, v)
     }
-    /// `player_sheet::CROSSING` (+0x23).
+    /// `player_sheet::CROSSING` (+0x23). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn crossing(self) -> i8 {
         read_i8(self.0 + player_sheet::CROSSING)
@@ -4303,7 +4396,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_crossing(self, v: i8) {
         write_i8(self.0 + player_sheet::CROSSING, v)
     }
-    /// `player_sheet::DECISIONS` (+0x24).
+    /// `player_sheet::DECISIONS` (+0x24). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn decisions(self) -> i8 {
         read_i8(self.0 + player_sheet::DECISIONS)
@@ -4312,7 +4405,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_decisions(self, v: i8) {
         write_i8(self.0 + player_sheet::DECISIONS, v)
     }
-    /// `player_sheet::DIRTINESS` (+0x25).
+    /// `player_sheet::DIRTINESS` (+0x25). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn dirtiness(self) -> i8 {
         read_i8(self.0 + player_sheet::DIRTINESS)
@@ -4321,7 +4414,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_dirtiness(self, v: i8) {
         write_i8(self.0 + player_sheet::DIRTINESS, v)
     }
-    /// `player_sheet::DRIBBLING` (+0x26).
+    /// `player_sheet::DRIBBLING` (+0x26). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn dribbling(self) -> i8 {
         read_i8(self.0 + player_sheet::DRIBBLING)
@@ -4330,7 +4423,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_dribbling(self, v: i8) {
         write_i8(self.0 + player_sheet::DRIBBLING, v)
     }
-    /// `player_sheet::FINISHING` (+0x27).
+    /// `player_sheet::FINISHING` (+0x27). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn finishing(self) -> i8 {
         read_i8(self.0 + player_sheet::FINISHING)
@@ -4339,7 +4432,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_finishing(self, v: i8) {
         write_i8(self.0 + player_sheet::FINISHING, v)
     }
-    /// `player_sheet::FREE_KICKS` (+0x29).
+    /// `player_sheet::FREE_KICKS` (+0x29). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn free_kicks(self) -> i8 {
         read_i8(self.0 + player_sheet::FREE_KICKS)
@@ -4348,7 +4441,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_free_kicks(self, v: i8) {
         write_i8(self.0 + player_sheet::FREE_KICKS, v)
     }
-    /// `player_sheet::HANDLING` (+0x2a).
+    /// `player_sheet::HANDLING` (+0x2a). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn handling(self) -> u8 {
         read_u8(self.0 + player_sheet::HANDLING)
@@ -4357,7 +4450,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_handling(self, v: u8) {
         write_u8(self.0 + player_sheet::HANDLING, v)
     }
-    /// `player_sheet::HEADING` (+0x2b).
+    /// `player_sheet::HEADING` (+0x2b). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn heading(self) -> i8 {
         read_i8(self.0 + player_sheet::HEADING)
@@ -4366,7 +4459,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_heading(self, v: i8) {
         write_i8(self.0 + player_sheet::HEADING, v)
     }
-    /// `player_sheet::IMPORTANT_MATCHES` (+0x2c).
+    /// `player_sheet::IMPORTANT_MATCHES` (+0x2c). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn important_matches(self) -> i8 {
         read_i8(self.0 + player_sheet::IMPORTANT_MATCHES)
@@ -4375,7 +4468,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_important_matches(self, v: i8) {
         write_i8(self.0 + player_sheet::IMPORTANT_MATCHES, v)
     }
-    /// `player_sheet::INJURY_PRONENESS` (+0x2d).
+    /// `player_sheet::INJURY_PRONENESS` (+0x2d). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn injury_proneness(self) -> i8 {
         read_i8(self.0 + player_sheet::INJURY_PRONENESS)
@@ -4384,7 +4477,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_injury_proneness(self, v: i8) {
         write_i8(self.0 + player_sheet::INJURY_PRONENESS, v)
     }
-    /// `player_sheet::JUMPING` (+0x2e).
+    /// `player_sheet::JUMPING` (+0x2e). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn jumping(self) -> i8 {
         read_i8(self.0 + player_sheet::JUMPING)
@@ -4393,7 +4486,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_jumping(self, v: i8) {
         write_i8(self.0 + player_sheet::JUMPING, v)
     }
-    /// `player_sheet::LEADERSHIP` (+0x2f).
+    /// `player_sheet::LEADERSHIP` (+0x2f). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn leadership(self) -> i8 {
         read_i8(self.0 + player_sheet::LEADERSHIP)
@@ -4402,7 +4495,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_leadership(self, v: i8) {
         write_i8(self.0 + player_sheet::LEADERSHIP, v)
     }
-    /// `player_sheet::LEFT_FOOT` (+0x30).
+    /// `player_sheet::LEFT_FOOT` (+0x30). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn left_foot(self) -> i8 {
         read_i8(self.0 + player_sheet::LEFT_FOOT)
@@ -4411,7 +4504,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_left_foot(self, v: i8) {
         write_i8(self.0 + player_sheet::LEFT_FOOT, v)
     }
-    /// `player_sheet::LONG_SHOTS` (+0x31).
+    /// `player_sheet::LONG_SHOTS` (+0x31). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn long_shots(self) -> i8 {
         read_i8(self.0 + player_sheet::LONG_SHOTS)
@@ -4420,7 +4513,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_long_shots(self, v: i8) {
         write_i8(self.0 + player_sheet::LONG_SHOTS, v)
     }
-    /// `player_sheet::MARKING` (+0x32).
+    /// `player_sheet::MARKING` (+0x32). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn marking(self) -> i8 {
         read_i8(self.0 + player_sheet::MARKING)
@@ -4429,7 +4522,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_marking(self, v: i8) {
         write_i8(self.0 + player_sheet::MARKING, v)
     }
-    /// `player_sheet::MOVEMENT` (+0x33).
+    /// `player_sheet::MOVEMENT` (+0x33). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn movement(self) -> i8 {
         read_i8(self.0 + player_sheet::MOVEMENT)
@@ -4438,7 +4531,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_movement(self, v: i8) {
         write_i8(self.0 + player_sheet::MOVEMENT, v)
     }
-    /// `player_sheet::NATURAL_FITNESS` (+0x34).
+    /// `player_sheet::NATURAL_FITNESS` (+0x34). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn natural_fitness(self) -> i8 {
         read_i8(self.0 + player_sheet::NATURAL_FITNESS)
@@ -4447,7 +4540,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_natural_fitness(self, v: i8) {
         write_i8(self.0 + player_sheet::NATURAL_FITNESS, v)
     }
-    /// `player_sheet::ONE_ON_ONES` (+0x35).
+    /// `player_sheet::ONE_ON_ONES` (+0x35). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn one_on_ones(self) -> i8 {
         read_i8(self.0 + player_sheet::ONE_ON_ONES)
@@ -4456,7 +4549,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_one_on_ones(self, v: i8) {
         write_i8(self.0 + player_sheet::ONE_ON_ONES, v)
     }
-    /// `player_sheet::PLAYER_PACE` (+0x36).
+    /// `player_sheet::PLAYER_PACE` (+0x36). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn player_pace(self) -> i8 {
         read_i8(self.0 + player_sheet::PLAYER_PACE)
@@ -4465,7 +4558,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_player_pace(self, v: i8) {
         write_i8(self.0 + player_sheet::PLAYER_PACE, v)
     }
-    /// `player_sheet::PASSING` (+0x37).
+    /// `player_sheet::PASSING` (+0x37). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn passing(self) -> i8 {
         read_i8(self.0 + player_sheet::PASSING)
@@ -4474,7 +4567,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_passing(self, v: i8) {
         write_i8(self.0 + player_sheet::PASSING, v)
     }
-    /// `player_sheet::PENALTIES` (+0x38).
+    /// `player_sheet::PENALTIES` (+0x38). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn penalties(self) -> i8 {
         read_i8(self.0 + player_sheet::PENALTIES)
@@ -4483,7 +4576,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_penalties(self, v: i8) {
         write_i8(self.0 + player_sheet::PENALTIES, v)
     }
-    /// `player_sheet::POSITIONING` (+0x39).
+    /// `player_sheet::POSITIONING` (+0x39). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn positioning(self) -> i8 {
         read_i8(self.0 + player_sheet::POSITIONING)
@@ -4492,7 +4585,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_positioning(self, v: i8) {
         write_i8(self.0 + player_sheet::POSITIONING, v)
     }
-    /// `player_sheet::REFLEXES` (+0x3a).
+    /// `player_sheet::REFLEXES` (+0x3a). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn reflexes(self) -> u8 {
         read_u8(self.0 + player_sheet::REFLEXES)
@@ -4501,7 +4594,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_reflexes(self, v: u8) {
         write_u8(self.0 + player_sheet::REFLEXES, v)
     }
-    /// `player_sheet::RIGHT_FOOT` (+0x3b).
+    /// `player_sheet::RIGHT_FOOT` (+0x3b). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn right_foot(self) -> i8 {
         read_i8(self.0 + player_sheet::RIGHT_FOOT)
@@ -4510,7 +4603,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_right_foot(self, v: i8) {
         write_i8(self.0 + player_sheet::RIGHT_FOOT, v)
     }
-    /// `player_sheet::STAMINA` (+0x3c).
+    /// `player_sheet::STAMINA` (+0x3c). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn stamina(self) -> i8 {
         read_i8(self.0 + player_sheet::STAMINA)
@@ -4519,7 +4612,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_stamina(self, v: i8) {
         write_i8(self.0 + player_sheet::STAMINA, v)
     }
-    /// `player_sheet::STRENGTH` (+0x3d).
+    /// `player_sheet::STRENGTH` (+0x3d). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn strength(self) -> i8 {
         read_i8(self.0 + player_sheet::STRENGTH)
@@ -4528,7 +4621,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_strength(self, v: i8) {
         write_i8(self.0 + player_sheet::STRENGTH, v)
     }
-    /// `player_sheet::TACKLING` (+0x3e).
+    /// `player_sheet::TACKLING` (+0x3e). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn tackling(self) -> i8 {
         read_i8(self.0 + player_sheet::TACKLING)
@@ -4537,7 +4630,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_tackling(self, v: i8) {
         write_i8(self.0 + player_sheet::TACKLING, v)
     }
-    /// `player_sheet::TEAMWORK` (+0x3f).
+    /// `player_sheet::TEAMWORK` (+0x3f). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn teamwork(self) -> i8 {
         read_i8(self.0 + player_sheet::TEAMWORK)
@@ -4546,7 +4639,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_teamwork(self, v: i8) {
         write_i8(self.0 + player_sheet::TEAMWORK, v)
     }
-    /// `player_sheet::TECHNIQUE` (+0x40).
+    /// `player_sheet::TECHNIQUE` (+0x40). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn technique(self) -> i8 {
         read_i8(self.0 + player_sheet::TECHNIQUE)
@@ -4555,7 +4648,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_technique(self, v: i8) {
         write_i8(self.0 + player_sheet::TECHNIQUE, v)
     }
-    /// `player_sheet::THROW_INS` (+0x41).
+    /// `player_sheet::THROW_INS` (+0x41). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn throw_ins(self) -> i8 {
         read_i8(self.0 + player_sheet::THROW_INS)
@@ -4564,7 +4657,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_throw_ins(self, v: i8) {
         write_i8(self.0 + player_sheet::THROW_INS, v)
     }
-    /// `player_sheet::VERSATILITY` (+0x42).
+    /// `player_sheet::VERSATILITY` (+0x42). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn versatility(self) -> i8 {
         read_i8(self.0 + player_sheet::VERSATILITY)
@@ -4573,7 +4666,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_versatility(self, v: i8) {
         write_i8(self.0 + player_sheet::VERSATILITY, v)
     }
-    /// `player_sheet::VISION` (+0x43).
+    /// `player_sheet::VISION` (+0x43). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn vision(self) -> i8 {
         read_i8(self.0 + player_sheet::VISION)
@@ -4582,7 +4675,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_vision(self, v: i8) {
         write_i8(self.0 + player_sheet::VISION, v)
     }
-    /// `player_sheet::WORK_RATE` (+0x44).
+    /// `player_sheet::WORK_RATE` (+0x44). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn work_rate(self) -> i8 {
         read_i8(self.0 + player_sheet::WORK_RATE)
@@ -4591,7 +4684,7 @@ impl PlayerSheet {
     pub(crate) unsafe fn set_work_rate(self, v: i8) {
         write_i8(self.0 + player_sheet::WORK_RATE, v)
     }
-    /// `player_sheet::PLAYER_MORALE` (+0x45).
+    /// `player_sheet::PLAYER_MORALE` (+0x45). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn player_morale(self) -> i8 {
         read_i8(self.0 + player_sheet::PLAYER_MORALE)
@@ -4625,22 +4718,22 @@ impl Engine {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `engine::POSSESSION_WINDOW_LOW` (+0xa).
+    /// `engine::POSSESSION_WINDOW_LOW` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) fn possession_window_low_addr(self) -> usize {
         self.0 + engine::POSSESSION_WINDOW_LOW
     }
-    /// `engine::POSSESSION_WINDOW_MIDDLE` (+0x41).
+    /// `engine::POSSESSION_WINDOW_MIDDLE` (+0x41). Name: read.
     #[inline(always)]
     pub(crate) fn possession_window_middle_addr(self) -> usize {
         self.0 + engine::POSSESSION_WINDOW_MIDDLE
     }
-    /// `engine::POSSESSION_WINDOW_HIGH` (+0x78).
+    /// `engine::POSSESSION_WINDOW_HIGH` (+0x78). Name: read.
     #[inline(always)]
     pub(crate) fn possession_window_high_addr(self) -> usize {
         self.0 + engine::POSSESSION_WINDOW_HIGH
     }
-    /// `engine::SIDE_OUT_OF_POSITION` (+0xaf).
+    /// `engine::SIDE_OUT_OF_POSITION` (+0xaf). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn side_out_of_position(self) -> i16 {
         read_i16(self.0 + engine::SIDE_OUT_OF_POSITION)
@@ -4649,7 +4742,7 @@ impl Engine {
     pub(crate) unsafe fn set_side_out_of_position(self, v: i16) {
         write_i16(self.0 + engine::SIDE_OUT_OF_POSITION, v)
     }
-    /// `engine::PENDING_INCIDENTS` (+0xb1).
+    /// `engine::PENDING_INCIDENTS` (+0xb1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pending_incidents(self) -> usize {
         read_usize(self.0 + engine::PENDING_INCIDENTS)
@@ -4658,7 +4751,7 @@ impl Engine {
     pub(crate) unsafe fn set_pending_incidents(self, v: usize) {
         write_usize(self.0 + engine::PENDING_INCIDENTS, v)
     }
-    /// `engine::PENDING_INCIDENT_VICTIM` (+0xb5).
+    /// `engine::PENDING_INCIDENT_VICTIM` (+0xb5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pending_incident_victim(self) -> usize {
         read_usize(self.0 + engine::PENDING_INCIDENT_VICTIM)
@@ -4667,7 +4760,7 @@ impl Engine {
     pub(crate) unsafe fn set_pending_incident_victim(self, v: usize) {
         write_usize(self.0 + engine::PENDING_INCIDENT_VICTIM, v)
     }
-    /// `engine::PENDING_INCIDENT_SEVERITY` (+0xb9).
+    /// `engine::PENDING_INCIDENT_SEVERITY` (+0xb9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pending_incident_severity(self) -> i8 {
         read_i8(self.0 + engine::PENDING_INCIDENT_SEVERITY)
@@ -4676,7 +4769,7 @@ impl Engine {
     pub(crate) unsafe fn set_pending_incident_severity(self, v: i8) {
         write_i8(self.0 + engine::PENDING_INCIDENT_SEVERITY, v)
     }
-    /// `engine::PENDING_INCIDENT_PLAY` (+0xba).
+    /// `engine::PENDING_INCIDENT_PLAY` (+0xba). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn pending_incident_play(self) -> i8 {
         read_i8(self.0 + engine::PENDING_INCIDENT_PLAY)
@@ -4685,7 +4778,7 @@ impl Engine {
     pub(crate) unsafe fn set_pending_incident_play(self, v: i8) {
         write_i8(self.0 + engine::PENDING_INCIDENT_PLAY, v)
     }
-    /// `engine::PENDING_INCIDENT_REASON` (+0xbb).
+    /// `engine::PENDING_INCIDENT_REASON` (+0xbb). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pending_incident_reason(self) -> i8 {
         read_i8(self.0 + engine::PENDING_INCIDENT_REASON)
@@ -4694,7 +4787,7 @@ impl Engine {
     pub(crate) unsafe fn set_pending_incident_reason(self, v: i8) {
         write_i8(self.0 + engine::PENDING_INCIDENT_REASON, v)
     }
-    /// `engine::PENDING_INCIDENT_COUNT` (+0x1a3).
+    /// `engine::PENDING_INCIDENT_COUNT` (+0x1a3). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pending_incident_count(self) -> i8 {
         read_i8(self.0 + engine::PENDING_INCIDENT_COUNT)
@@ -4703,7 +4796,7 @@ impl Engine {
     pub(crate) unsafe fn set_pending_incident_count(self, v: i8) {
         write_i8(self.0 + engine::PENDING_INCIDENT_COUNT, v)
     }
-    /// `engine::SIDE_PLAYED_BALL` (+0x1a5).
+    /// `engine::SIDE_PLAYED_BALL` (+0x1a5). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn side_played_ball(self) -> i16 {
         read_i16(self.0 + engine::SIDE_PLAYED_BALL)
@@ -4712,7 +4805,7 @@ impl Engine {
     pub(crate) unsafe fn set_side_played_ball(self, v: i16) {
         write_i16(self.0 + engine::SIDE_PLAYED_BALL, v)
     }
-    /// `engine::SHOT_PENDING` (+0x1a7).
+    /// `engine::SHOT_PENDING` (+0x1a7). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn shot_pending(self) -> i8 {
         read_i8(self.0 + engine::SHOT_PENDING)
@@ -4721,7 +4814,7 @@ impl Engine {
     pub(crate) unsafe fn set_shot_pending(self, v: i8) {
         write_i8(self.0 + engine::SHOT_PENDING, v)
     }
-    /// `engine::GOLDEN_GOAL_SCORED` (+0x1a8).
+    /// `engine::GOLDEN_GOAL_SCORED` (+0x1a8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn golden_goal_scored(self) -> i8 {
         read_i8(self.0 + engine::GOLDEN_GOAL_SCORED)
@@ -4730,7 +4823,7 @@ impl Engine {
     pub(crate) unsafe fn set_golden_goal_scored(self, v: i8) {
         write_i8(self.0 + engine::GOLDEN_GOAL_SCORED, v)
     }
-    /// `engine::SIDE_STANCE` (+0x1ab).
+    /// `engine::SIDE_STANCE` (+0x1ab). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn side_stance(self) -> i16 {
         read_i16(self.0 + engine::SIDE_STANCE)
@@ -4739,7 +4832,7 @@ impl Engine {
     pub(crate) unsafe fn set_side_stance(self, v: i16) {
         write_i16(self.0 + engine::SIDE_STANCE, v)
     }
-    /// `engine::PENALTY_TAKER_ORDER` (+0x1af).
+    /// `engine::PENALTY_TAKER_ORDER` (+0x1af). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn penalty_taker_order(self) -> u8 {
         read_u8(self.0 + engine::PENALTY_TAKER_ORDER)
@@ -4748,7 +4841,7 @@ impl Engine {
     pub(crate) unsafe fn set_penalty_taker_order(self, v: u8) {
         write_u8(self.0 + engine::PENALTY_TAKER_ORDER, v)
     }
-    /// `engine::BALL_TRANSIT_TICKS` (+0x1c5).
+    /// `engine::BALL_TRANSIT_TICKS` (+0x1c5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn ball_transit_ticks(self) -> i8 {
         read_i8(self.0 + engine::BALL_TRANSIT_TICKS)
@@ -4757,7 +4850,7 @@ impl Engine {
     pub(crate) unsafe fn set_ball_transit_ticks(self, v: i8) {
         write_i8(self.0 + engine::BALL_TRANSIT_TICKS, v)
     }
-    /// `engine::TRANSIT_TARGET_X` (+0x1c6).
+    /// `engine::TRANSIT_TARGET_X` (+0x1c6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn transit_target_x(self) -> i8 {
         read_i8(self.0 + engine::TRANSIT_TARGET_X)
@@ -4766,7 +4859,7 @@ impl Engine {
     pub(crate) unsafe fn set_transit_target_x(self, v: i8) {
         write_i8(self.0 + engine::TRANSIT_TARGET_X, v)
     }
-    /// `engine::TRANSIT_TARGET_Y` (+0x1c7).
+    /// `engine::TRANSIT_TARGET_Y` (+0x1c7). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn transit_target_y(self) -> i8 {
         read_i8(self.0 + engine::TRANSIT_TARGET_Y)
@@ -4775,7 +4868,7 @@ impl Engine {
     pub(crate) unsafe fn set_transit_target_y(self, v: i8) {
         write_i8(self.0 + engine::TRANSIT_TARGET_Y, v)
     }
-    /// `engine::TRANSIT_ORIGIN_X` (+0x1c8).
+    /// `engine::TRANSIT_ORIGIN_X` (+0x1c8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn transit_origin_x(self) -> i8 {
         read_i8(self.0 + engine::TRANSIT_ORIGIN_X)
@@ -4784,7 +4877,7 @@ impl Engine {
     pub(crate) unsafe fn set_transit_origin_x(self, v: i8) {
         write_i8(self.0 + engine::TRANSIT_ORIGIN_X, v)
     }
-    /// `engine::TRANSIT_ORIGIN_Y` (+0x1c9).
+    /// `engine::TRANSIT_ORIGIN_Y` (+0x1c9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn transit_origin_y(self) -> i8 {
         read_i8(self.0 + engine::TRANSIT_ORIGIN_Y)
@@ -4793,7 +4886,7 @@ impl Engine {
     pub(crate) unsafe fn set_transit_origin_y(self, v: i8) {
         write_i8(self.0 + engine::TRANSIT_ORIGIN_Y, v)
     }
-    /// `engine::KICKOFF_ANNOUNCED` (+0x1ca).
+    /// `engine::KICKOFF_ANNOUNCED` (+0x1ca). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn kickoff_announced(self) -> i8 {
         read_i8(self.0 + engine::KICKOFF_ANNOUNCED)
@@ -4802,7 +4895,7 @@ impl Engine {
     pub(crate) unsafe fn set_kickoff_announced(self, v: i8) {
         write_i8(self.0 + engine::KICKOFF_ANNOUNCED, v)
     }
-    /// `engine::SIDE_SENT_OFF` (+0x1cb).
+    /// `engine::SIDE_SENT_OFF` (+0x1cb). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn side_sent_off(self) -> i16 {
         read_i16(self.0 + engine::SIDE_SENT_OFF)
@@ -4811,7 +4904,7 @@ impl Engine {
     pub(crate) unsafe fn set_side_sent_off(self, v: i16) {
         write_i16(self.0 + engine::SIDE_SENT_OFF, v)
     }
-    /// `engine::SHOT_REBOUND` (+0x1cd).
+    /// `engine::SHOT_REBOUND` (+0x1cd). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn shot_rebound(self) -> i8 {
         read_i8(self.0 + engine::SHOT_REBOUND)
@@ -4820,7 +4913,7 @@ impl Engine {
     pub(crate) unsafe fn set_shot_rebound(self, v: i8) {
         write_i8(self.0 + engine::SHOT_REBOUND, v)
     }
-    /// `engine::SIDE_STRENGTH` (+0x1ce).
+    /// `engine::SIDE_STRENGTH` (+0x1ce). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn side_strength(self) -> i32 {
         read_i32(self.0 + engine::SIDE_STRENGTH)
@@ -4829,7 +4922,7 @@ impl Engine {
     pub(crate) unsafe fn set_side_strength(self, v: i32) {
         write_i32(self.0 + engine::SIDE_STRENGTH, v)
     }
-    /// `engine::LAST_STANCE_CALL_TICK` (+0x1d2).
+    /// `engine::LAST_STANCE_CALL_TICK` (+0x1d2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn last_stance_call_tick(self) -> i32 {
         read_i32(self.0 + engine::LAST_STANCE_CALL_TICK)
@@ -4838,7 +4931,7 @@ impl Engine {
     pub(crate) unsafe fn set_last_stance_call_tick(self, v: i32) {
         write_i32(self.0 + engine::LAST_STANCE_CALL_TICK, v)
     }
-    /// `engine::SIDE_REPUTATION` (+0x1d6).
+    /// `engine::SIDE_REPUTATION` (+0x1d6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn side_reputation(self) -> i32 {
         read_i32(self.0 + engine::SIDE_REPUTATION)
@@ -4847,12 +4940,12 @@ impl Engine {
     pub(crate) unsafe fn set_side_reputation(self, v: i32) {
         write_i32(self.0 + engine::SIDE_REPUTATION, v)
     }
-    /// `engine::TEAM_STRENGTH` (+0x1da).
+    /// `engine::TEAM_STRENGTH` (+0x1da). Name: read.
     #[inline(always)]
     pub(crate) fn team_strength_addr(self) -> usize {
         self.0 + engine::TEAM_STRENGTH
     }
-    /// `engine::TEAM_STRENGTH_2` (+0x1de).
+    /// `engine::TEAM_STRENGTH_2` (+0x1de). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn team_strength_2(self) -> i32 {
         read_i32(self.0 + engine::TEAM_STRENGTH_2)
@@ -4861,12 +4954,12 @@ impl Engine {
     pub(crate) unsafe fn set_team_strength_2(self, v: i32) {
         write_i32(self.0 + engine::TEAM_STRENGTH_2, v)
     }
-    /// `engine::BALL_TIME_THIRD_1` (+0x1f6).
+    /// `engine::BALL_TIME_THIRD_1` (+0x1f6). Name: inferred.
     #[inline(always)]
     pub(crate) fn ball_time_third_1_addr(self) -> usize {
         self.0 + engine::BALL_TIME_THIRD_1
     }
-    /// `engine::ZONE_LOW_TICKS` (+0x1fc).
+    /// `engine::ZONE_LOW_TICKS` (+0x1fc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn zone_low_ticks(self) -> i16 {
         read_i16(self.0 + engine::ZONE_LOW_TICKS)
@@ -4875,7 +4968,7 @@ impl Engine {
     pub(crate) unsafe fn set_zone_low_ticks(self, v: i16) {
         write_i16(self.0 + engine::ZONE_LOW_TICKS, v)
     }
-    /// `engine::ZONE_LOW_WINDOW_TICKS` (+0x1fe).
+    /// `engine::ZONE_LOW_WINDOW_TICKS` (+0x1fe). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn zone_low_window_ticks(self) -> i16 {
         read_i16(self.0 + engine::ZONE_LOW_WINDOW_TICKS)
@@ -4884,12 +4977,12 @@ impl Engine {
     pub(crate) unsafe fn set_zone_low_window_ticks(self, v: i16) {
         write_i16(self.0 + engine::ZONE_LOW_WINDOW_TICKS, v)
     }
-    /// `engine::BALL_TIME_THIRD_2` (+0x200).
+    /// `engine::BALL_TIME_THIRD_2` (+0x200). Name: inferred.
     #[inline(always)]
     pub(crate) fn ball_time_third_2_addr(self) -> usize {
         self.0 + engine::BALL_TIME_THIRD_2
     }
-    /// `engine::ZONE_MIDDLE_TICKS` (+0x206).
+    /// `engine::ZONE_MIDDLE_TICKS` (+0x206). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn zone_middle_ticks(self) -> i16 {
         read_i16(self.0 + engine::ZONE_MIDDLE_TICKS)
@@ -4898,7 +4991,7 @@ impl Engine {
     pub(crate) unsafe fn set_zone_middle_ticks(self, v: i16) {
         write_i16(self.0 + engine::ZONE_MIDDLE_TICKS, v)
     }
-    /// `engine::ZONE_MIDDLE_WINDOW_TICKS` (+0x208).
+    /// `engine::ZONE_MIDDLE_WINDOW_TICKS` (+0x208). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn zone_middle_window_ticks(self) -> i16 {
         read_i16(self.0 + engine::ZONE_MIDDLE_WINDOW_TICKS)
@@ -4907,12 +5000,12 @@ impl Engine {
     pub(crate) unsafe fn set_zone_middle_window_ticks(self, v: i16) {
         write_i16(self.0 + engine::ZONE_MIDDLE_WINDOW_TICKS, v)
     }
-    /// `engine::BALL_TIME_THIRD_3` (+0x20a).
+    /// `engine::BALL_TIME_THIRD_3` (+0x20a). Name: inferred.
     #[inline(always)]
     pub(crate) fn ball_time_third_3_addr(self) -> usize {
         self.0 + engine::BALL_TIME_THIRD_3
     }
-    /// `engine::ZONE_HIGH_TICKS` (+0x210).
+    /// `engine::ZONE_HIGH_TICKS` (+0x210). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn zone_high_ticks(self) -> i16 {
         read_i16(self.0 + engine::ZONE_HIGH_TICKS)
@@ -4921,7 +5014,7 @@ impl Engine {
     pub(crate) unsafe fn set_zone_high_ticks(self, v: i16) {
         write_i16(self.0 + engine::ZONE_HIGH_TICKS, v)
     }
-    /// `engine::ZONE_HIGH_WINDOW_TICKS` (+0x212).
+    /// `engine::ZONE_HIGH_WINDOW_TICKS` (+0x212). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn zone_high_window_ticks(self) -> i16 {
         read_i16(self.0 + engine::ZONE_HIGH_WINDOW_TICKS)
@@ -4930,12 +5023,12 @@ impl Engine {
     pub(crate) unsafe fn set_zone_high_window_ticks(self, v: i16) {
         write_i16(self.0 + engine::ZONE_HIGH_WINDOW_TICKS, v)
     }
-    /// `engine::BALL_IN_PLAY_TIME` (+0x214).
+    /// `engine::BALL_IN_PLAY_TIME` (+0x214). Name: read.
     #[inline(always)]
     pub(crate) fn ball_in_play_time_addr(self) -> usize {
         self.0 + engine::BALL_IN_PLAY_TIME
     }
-    /// `engine::TOTAL_TICKS` (+0x21a).
+    /// `engine::TOTAL_TICKS` (+0x21a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn total_ticks(self) -> i16 {
         read_i16(self.0 + engine::TOTAL_TICKS)
@@ -4944,17 +5037,17 @@ impl Engine {
     pub(crate) unsafe fn set_total_ticks(self, v: i16) {
         write_i16(self.0 + engine::TOTAL_TICKS, v)
     }
-    /// `engine::GRID` (+0x215e).
+    /// `engine::GRID` (+0x215e). Name: read.
     #[inline(always)]
     pub(crate) fn grid_addr(self) -> usize {
         self.0 + engine::GRID
     }
-    /// `engine::ON_PITCH_PLAYERS` (+0x453a).
+    /// `engine::ON_PITCH_PLAYERS` (+0x453a). Name: read.
     #[inline(always)]
     pub(crate) fn on_pitch_players_addr(self) -> usize {
         self.0 + engine::ON_PITCH_PLAYERS
     }
-    /// `engine::ON_PITCH_COUNT` (+0x4592).
+    /// `engine::ON_PITCH_COUNT` (+0x4592). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn on_pitch_count(self) -> i16 {
         read_i16(self.0 + engine::ON_PITCH_COUNT)
@@ -4963,7 +5056,7 @@ impl Engine {
     pub(crate) unsafe fn set_on_pitch_count(self, v: i16) {
         write_i16(self.0 + engine::ON_PITCH_COUNT, v)
     }
-    /// `engine::WEATHER` (+0x4756).
+    /// `engine::WEATHER` (+0x4756). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn weather(self) -> i8 {
         read_i8(self.0 + engine::WEATHER)
@@ -4972,7 +5065,7 @@ impl Engine {
     pub(crate) unsafe fn set_weather(self, v: i8) {
         write_i8(self.0 + engine::WEATHER, v)
     }
-    /// `engine::PENDING_PLAY_KIND` (+0x475a).
+    /// `engine::PENDING_PLAY_KIND` (+0x475a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pending_play_kind(self) -> i8 {
         read_i8(self.0 + engine::PENDING_PLAY_KIND)
@@ -4981,7 +5074,7 @@ impl Engine {
     pub(crate) unsafe fn set_pending_play_kind(self, v: i8) {
         write_i8(self.0 + engine::PENDING_PLAY_KIND, v)
     }
-    /// `engine::PENDING_PLAY_X` (+0x475b).
+    /// `engine::PENDING_PLAY_X` (+0x475b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pending_play_x(self) -> i8 {
         read_i8(self.0 + engine::PENDING_PLAY_X)
@@ -4990,7 +5083,7 @@ impl Engine {
     pub(crate) unsafe fn set_pending_play_x(self, v: i8) {
         write_i8(self.0 + engine::PENDING_PLAY_X, v)
     }
-    /// `engine::PENDING_PLAY_Y` (+0x475c).
+    /// `engine::PENDING_PLAY_Y` (+0x475c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pending_play_y(self) -> i8 {
         read_i8(self.0 + engine::PENDING_PLAY_Y)
@@ -4999,7 +5092,7 @@ impl Engine {
     pub(crate) unsafe fn set_pending_play_y(self, v: i8) {
         write_i8(self.0 + engine::PENDING_PLAY_Y, v)
     }
-    /// `engine::PENDING_PLAY_REASON` (+0x475d).
+    /// `engine::PENDING_PLAY_REASON` (+0x475d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pending_play_reason(self) -> i8 {
         read_i8(self.0 + engine::PENDING_PLAY_REASON)
@@ -5008,7 +5101,7 @@ impl Engine {
     pub(crate) unsafe fn set_pending_play_reason(self, v: i8) {
         write_i8(self.0 + engine::PENDING_PLAY_REASON, v)
     }
-    /// `engine::PENDING_PLAY_SEVERITY` (+0x475e).
+    /// `engine::PENDING_PLAY_SEVERITY` (+0x475e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pending_play_severity(self) -> i8 {
         read_i8(self.0 + engine::PENDING_PLAY_SEVERITY)
@@ -5017,7 +5110,7 @@ impl Engine {
     pub(crate) unsafe fn set_pending_play_severity(self, v: i8) {
         write_i8(self.0 + engine::PENDING_PLAY_SEVERITY, v)
     }
-    /// `engine::PENDING_PLAY_CODE` (+0x475f).
+    /// `engine::PENDING_PLAY_CODE` (+0x475f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pending_play_code(self) -> u16 {
         read_u16(self.0 + engine::PENDING_PLAY_CODE)
@@ -5026,7 +5119,7 @@ impl Engine {
     pub(crate) unsafe fn set_pending_play_code(self, v: u16) {
         write_u16(self.0 + engine::PENDING_PLAY_CODE, v)
     }
-    /// `engine::PENDING_PLAY_OFFENDER` (+0x4761).
+    /// `engine::PENDING_PLAY_OFFENDER` (+0x4761). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pending_play_offender(self) -> usize {
         read_usize(self.0 + engine::PENDING_PLAY_OFFENDER)
@@ -5035,7 +5128,7 @@ impl Engine {
     pub(crate) unsafe fn set_pending_play_offender(self, v: usize) {
         write_usize(self.0 + engine::PENDING_PLAY_OFFENDER, v)
     }
-    /// `engine::PENDING_PLAY_VICTIM` (+0x4765).
+    /// `engine::PENDING_PLAY_VICTIM` (+0x4765). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pending_play_victim(self) -> usize {
         read_usize(self.0 + engine::PENDING_PLAY_VICTIM)
@@ -5044,7 +5137,7 @@ impl Engine {
     pub(crate) unsafe fn set_pending_play_victim(self, v: usize) {
         write_usize(self.0 + engine::PENDING_PLAY_VICTIM, v)
     }
-    /// `engine::PENDING_PLAY_SERIOUS` (+0x4769).
+    /// `engine::PENDING_PLAY_SERIOUS` (+0x4769). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pending_play_serious(self) -> u8 {
         read_u8(self.0 + engine::PENDING_PLAY_SERIOUS)
@@ -5053,12 +5146,12 @@ impl Engine {
     pub(crate) unsafe fn set_pending_play_serious(self, v: u8) {
         write_u8(self.0 + engine::PENDING_PLAY_SERIOUS, v)
     }
-    /// `engine::STANCE_FACTOR` (+0x476a).
+    /// `engine::STANCE_FACTOR` (+0x476a). Name: read.
     #[inline(always)]
     pub(crate) fn stance_factor_addr(self) -> usize {
         self.0 + engine::STANCE_FACTOR
     }
-    /// `engine::ADJUSTED_PLAYER_ID` (+0x477a).
+    /// `engine::ADJUSTED_PLAYER_ID` (+0x477a). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn adjusted_player_id(self) -> u32 {
         read_u32(self.0 + engine::ADJUSTED_PLAYER_ID)
@@ -5067,7 +5160,7 @@ impl Engine {
     pub(crate) unsafe fn set_adjusted_player_id(self, v: u32) {
         write_u32(self.0 + engine::ADJUSTED_PLAYER_ID, v)
     }
-    /// `engine::BALL_RECEIVER` (+0x477e).
+    /// `engine::BALL_RECEIVER` (+0x477e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn ball_receiver(self) -> usize {
         read_usize(self.0 + engine::BALL_RECEIVER)
@@ -5076,7 +5169,7 @@ impl Engine {
     pub(crate) unsafe fn set_ball_receiver(self, v: usize) {
         write_usize(self.0 + engine::BALL_RECEIVER, v)
     }
-    /// `engine::MOMENTUM_A` (+0x4782).
+    /// `engine::MOMENTUM_A` (+0x4782). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn momentum_a(self) -> i32 {
         read_i32(self.0 + engine::MOMENTUM_A)
@@ -5085,7 +5178,7 @@ impl Engine {
     pub(crate) unsafe fn set_momentum_a(self, v: i32) {
         write_i32(self.0 + engine::MOMENTUM_A, v)
     }
-    /// `engine::MOMENTUM_B` (+0x4786).
+    /// `engine::MOMENTUM_B` (+0x4786). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn momentum_b(self) -> i32 {
         read_i32(self.0 + engine::MOMENTUM_B)
@@ -5094,7 +5187,7 @@ impl Engine {
     pub(crate) unsafe fn set_momentum_b(self, v: i32) {
         write_i32(self.0 + engine::MOMENTUM_B, v)
     }
-    /// `engine::FOULED_PLAYER` (+0x478a).
+    /// `engine::FOULED_PLAYER` (+0x478a). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn fouled_player(self) -> usize {
         read_usize(self.0 + engine::FOULED_PLAYER)
@@ -5103,7 +5196,7 @@ impl Engine {
     pub(crate) unsafe fn set_fouled_player(self, v: usize) {
         write_usize(self.0 + engine::FOULED_PLAYER, v)
     }
-    /// `engine::EVENT_LIST` (+0x478e).
+    /// `engine::EVENT_LIST` (+0x478e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn event_list(self) -> usize {
         read_usize(self.0 + engine::EVENT_LIST)
@@ -5112,7 +5205,7 @@ impl Engine {
     pub(crate) unsafe fn set_event_list(self, v: usize) {
         write_usize(self.0 + engine::EVENT_LIST, v)
     }
-    /// `engine::MATCH` (+0x4792).
+    /// `engine::MATCH` (+0x4792). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn r#match(self) -> usize {
         read_usize(self.0 + engine::MATCH)
@@ -5121,17 +5214,17 @@ impl Engine {
     pub(crate) unsafe fn set_match(self, v: usize) {
         write_usize(self.0 + engine::MATCH, v)
     }
-    /// `engine::PLAYERS` (+0x4796).
+    /// `engine::PLAYERS` (+0x4796). Name: read.
     #[inline(always)]
     pub(crate) fn players_addr(self) -> usize {
         self.0 + engine::PLAYERS
     }
-    /// `engine::PLAYERS_SIDE1` (+0x6a6e).
+    /// `engine::PLAYERS_SIDE1` (+0x6a6e). Name: read.
     #[inline(always)]
     pub(crate) fn players_side1_addr(self) -> usize {
         self.0 + engine::PLAYERS_SIDE1
     }
-    /// `engine::POSSESSION_COUNTER` (+0x8d46).
+    /// `engine::POSSESSION_COUNTER` (+0x8d46). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn possession_counter(self) -> i16 {
         read_i16(self.0 + engine::POSSESSION_COUNTER)
@@ -5140,7 +5233,7 @@ impl Engine {
     pub(crate) unsafe fn set_possession_counter(self, v: i16) {
         write_i16(self.0 + engine::POSSESSION_COUNTER, v)
     }
-    /// `engine::STOPPAGE_ANNOUNCED` (+0x8d48).
+    /// `engine::STOPPAGE_ANNOUNCED` (+0x8d48). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stoppage_announced(self) -> i16 {
         read_i16(self.0 + engine::STOPPAGE_ANNOUNCED)
@@ -5149,7 +5242,7 @@ impl Engine {
     pub(crate) unsafe fn set_stoppage_announced(self, v: i16) {
         write_i16(self.0 + engine::STOPPAGE_ANNOUNCED, v)
     }
-    /// `engine::PASS_TYPE` (+0x8d4a).
+    /// `engine::PASS_TYPE` (+0x8d4a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pass_type(self) -> i16 {
         read_i16(self.0 + engine::PASS_TYPE)
@@ -5158,7 +5251,7 @@ impl Engine {
     pub(crate) unsafe fn set_pass_type(self, v: i16) {
         write_i16(self.0 + engine::PASS_TYPE, v)
     }
-    /// `engine::LAST_SHOT_MINUTE` (+0x8d4c).
+    /// `engine::LAST_SHOT_MINUTE` (+0x8d4c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn last_shot_minute(self) -> i16 {
         read_i16(self.0 + engine::LAST_SHOT_MINUTE)
@@ -5167,7 +5260,7 @@ impl Engine {
     pub(crate) unsafe fn set_last_shot_minute(self, v: i16) {
         write_i16(self.0 + engine::LAST_SHOT_MINUTE, v)
     }
-    /// `engine::LAST_SHOT_SIDE` (+0x8d4e).
+    /// `engine::LAST_SHOT_SIDE` (+0x8d4e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn last_shot_side(self) -> u8 {
         read_u8(self.0 + engine::LAST_SHOT_SIDE)
@@ -5176,7 +5269,7 @@ impl Engine {
     pub(crate) unsafe fn set_last_shot_side(self, v: u8) {
         write_u8(self.0 + engine::LAST_SHOT_SIDE, v)
     }
-    /// `engine::SIDE_KIT` (+0x8d4f).
+    /// `engine::SIDE_KIT` (+0x8d4f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn side_kit(self) -> i16 {
         read_i16(self.0 + engine::SIDE_KIT)
@@ -5185,7 +5278,7 @@ impl Engine {
     pub(crate) unsafe fn set_side_kit(self, v: i16) {
         write_i16(self.0 + engine::SIDE_KIT, v)
     }
-    /// `engine::POSSESSION_WINDOW_INDEX` (+0x8e9b).
+    /// `engine::POSSESSION_WINDOW_INDEX` (+0x8e9b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn possession_window_index(self) -> i8 {
         read_i8(self.0 + engine::POSSESSION_WINDOW_INDEX)
@@ -5194,7 +5287,7 @@ impl Engine {
     pub(crate) unsafe fn set_possession_window_index(self, v: i8) {
         write_i8(self.0 + engine::POSSESSION_WINDOW_INDEX, v)
     }
-    /// `engine::OWNS_COMMENTATOR` (+0x8e9d).
+    /// `engine::OWNS_COMMENTATOR` (+0x8e9d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn owns_commentator(self) -> u8 {
         read_u8(self.0 + engine::OWNS_COMMENTATOR)
@@ -5203,7 +5296,7 @@ impl Engine {
     pub(crate) unsafe fn set_owns_commentator(self, v: u8) {
         write_u8(self.0 + engine::OWNS_COMMENTATOR, v)
     }
-    /// `engine::SHOOTOUT_KICKING_SIDE` (+0x8e9e).
+    /// `engine::SHOOTOUT_KICKING_SIDE` (+0x8e9e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shootout_kicking_side(self) -> i8 {
         read_i8(self.0 + engine::SHOOTOUT_KICKING_SIDE)
@@ -5212,7 +5305,7 @@ impl Engine {
     pub(crate) unsafe fn set_shootout_kicking_side(self, v: i8) {
         write_i8(self.0 + engine::SHOOTOUT_KICKING_SIDE, v)
     }
-    /// `engine::SHOOTOUT_KICKS_TAKEN` (+0x8e9f).
+    /// `engine::SHOOTOUT_KICKS_TAKEN` (+0x8e9f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shootout_kicks_taken(self) -> i16 {
         read_i16(self.0 + engine::SHOOTOUT_KICKS_TAKEN)
@@ -5221,7 +5314,7 @@ impl Engine {
     pub(crate) unsafe fn set_shootout_kicks_taken(self, v: i16) {
         write_i16(self.0 + engine::SHOOTOUT_KICKS_TAKEN, v)
     }
-    /// `engine::SHOOTOUT_KICKS_LEFT` (+0x8ea1).
+    /// `engine::SHOOTOUT_KICKS_LEFT` (+0x8ea1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shootout_kicks_left(self) -> i16 {
         read_i16(self.0 + engine::SHOOTOUT_KICKS_LEFT)
@@ -5230,7 +5323,7 @@ impl Engine {
     pub(crate) unsafe fn set_shootout_kicks_left(self, v: i16) {
         write_i16(self.0 + engine::SHOOTOUT_KICKS_LEFT, v)
     }
-    /// `engine::SHOOTOUT_KICKS_LEFT_SIDE1` (+0x8ea2).
+    /// `engine::SHOOTOUT_KICKS_LEFT_SIDE1` (+0x8ea2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shootout_kicks_left_side1(self) -> i8 {
         read_i8(self.0 + engine::SHOOTOUT_KICKS_LEFT_SIDE1)
@@ -5239,7 +5332,7 @@ impl Engine {
     pub(crate) unsafe fn set_shootout_kicks_left_side1(self, v: i8) {
         write_i8(self.0 + engine::SHOOTOUT_KICKS_LEFT_SIDE1, v)
     }
-    /// `engine::SHOOTOUT_SUDDEN_DEATH` (+0x8ea3).
+    /// `engine::SHOOTOUT_SUDDEN_DEATH` (+0x8ea3). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shootout_sudden_death(self) -> i8 {
         read_i8(self.0 + engine::SHOOTOUT_SUDDEN_DEATH)
@@ -5248,7 +5341,7 @@ impl Engine {
     pub(crate) unsafe fn set_shootout_sudden_death(self, v: i8) {
         write_i8(self.0 + engine::SHOOTOUT_SUDDEN_DEATH, v)
     }
-    /// `engine::SAVED_COMMENTATOR_FLAG` (+0x8ea4).
+    /// `engine::SAVED_COMMENTATOR_FLAG` (+0x8ea4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn saved_commentator_flag(self) -> u8 {
         read_u8(self.0 + engine::SAVED_COMMENTATOR_FLAG)
@@ -5257,7 +5350,7 @@ impl Engine {
     pub(crate) unsafe fn set_saved_commentator_flag(self, v: u8) {
         write_u8(self.0 + engine::SAVED_COMMENTATOR_FLAG, v)
     }
-    /// `engine::MATCH_RUNNING` (+0x8ea5).
+    /// `engine::MATCH_RUNNING` (+0x8ea5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn match_running(self) -> i8 {
         read_i8(self.0 + engine::MATCH_RUNNING)
@@ -5266,7 +5359,7 @@ impl Engine {
     pub(crate) unsafe fn set_match_running(self, v: i8) {
         write_i8(self.0 + engine::MATCH_RUNNING, v)
     }
-    /// `engine::PASS_TARGET_Y` (+0x8ea6).
+    /// `engine::PASS_TARGET_Y` (+0x8ea6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pass_target_y(self) -> u8 {
         read_u8(self.0 + engine::PASS_TARGET_Y)
@@ -5275,7 +5368,7 @@ impl Engine {
     pub(crate) unsafe fn set_pass_target_y(self, v: u8) {
         write_u8(self.0 + engine::PASS_TARGET_Y, v)
     }
-    /// `engine::BALL_X` (+0x8ea7).
+    /// `engine::BALL_X` (+0x8ea7). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn ball_x(self) -> i8 {
         read_i8(self.0 + engine::BALL_X)
@@ -5284,7 +5377,7 @@ impl Engine {
     pub(crate) unsafe fn set_ball_x(self, v: i8) {
         write_i8(self.0 + engine::BALL_X, v)
     }
-    /// `engine::BALL_Y` (+0x8ea8).
+    /// `engine::BALL_Y` (+0x8ea8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn ball_y(self) -> i8 {
         read_i8(self.0 + engine::BALL_Y)
@@ -5293,7 +5386,7 @@ impl Engine {
     pub(crate) unsafe fn set_ball_y(self, v: i8) {
         write_i8(self.0 + engine::BALL_Y, v)
     }
-    /// `engine::BALL_HEIGHT` (+0x8ea9).
+    /// `engine::BALL_HEIGHT` (+0x8ea9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn ball_height(self) -> i8 {
         read_i8(self.0 + engine::BALL_HEIGHT)
@@ -5302,7 +5395,7 @@ impl Engine {
     pub(crate) unsafe fn set_ball_height(self, v: i8) {
         write_i8(self.0 + engine::BALL_HEIGHT, v)
     }
-    /// `engine::BALL_ROLL` (+0x8eaa).
+    /// `engine::BALL_ROLL` (+0x8eaa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn ball_roll(self) -> i8 {
         read_i8(self.0 + engine::BALL_ROLL)
@@ -5311,7 +5404,7 @@ impl Engine {
     pub(crate) unsafe fn set_ball_roll(self, v: i8) {
         write_i8(self.0 + engine::BALL_ROLL, v)
     }
-    /// `engine::LAST_POSSESSION_SIDE` (+0x8eab).
+    /// `engine::LAST_POSSESSION_SIDE` (+0x8eab). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn last_possession_side(self) -> i8 {
         read_i8(self.0 + engine::LAST_POSSESSION_SIDE)
@@ -5320,7 +5413,7 @@ impl Engine {
     pub(crate) unsafe fn set_last_possession_side(self, v: i8) {
         write_i8(self.0 + engine::LAST_POSSESSION_SIDE, v)
     }
-    /// `engine::GOALKEEPER_NEAREST` (+0x8eac).
+    /// `engine::GOALKEEPER_NEAREST` (+0x8eac). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn goalkeeper_nearest(self) -> i16 {
         read_i16(self.0 + engine::GOALKEEPER_NEAREST)
@@ -5329,7 +5422,7 @@ impl Engine {
     pub(crate) unsafe fn set_goalkeeper_nearest(self, v: i16) {
         write_i16(self.0 + engine::GOALKEEPER_NEAREST, v)
     }
-    /// `engine::GOALKEEPER_NEAREST_SIDE1` (+0x8ead).
+    /// `engine::GOALKEEPER_NEAREST_SIDE1` (+0x8ead). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn goalkeeper_nearest_side1(self) -> i8 {
         read_i8(self.0 + engine::GOALKEEPER_NEAREST_SIDE1)
@@ -5338,7 +5431,7 @@ impl Engine {
     pub(crate) unsafe fn set_goalkeeper_nearest_side1(self, v: i8) {
         write_i8(self.0 + engine::GOALKEEPER_NEAREST_SIDE1, v)
     }
-    /// `engine::POSSESSION_SIDE` (+0x8eae).
+    /// `engine::POSSESSION_SIDE` (+0x8eae). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn possession_side(self) -> i8 {
         read_i8(self.0 + engine::POSSESSION_SIDE)
@@ -5347,7 +5440,7 @@ impl Engine {
     pub(crate) unsafe fn set_possession_side(self, v: i8) {
         write_i8(self.0 + engine::POSSESSION_SIDE, v)
     }
-    /// `engine::OFFSIDE_LINE` (+0x8eaf).
+    /// `engine::OFFSIDE_LINE` (+0x8eaf). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn offside_line(self) -> i16 {
         read_i16(self.0 + engine::OFFSIDE_LINE)
@@ -5356,7 +5449,7 @@ impl Engine {
     pub(crate) unsafe fn set_offside_line(self, v: i16) {
         write_i16(self.0 + engine::OFFSIDE_LINE, v)
     }
-    /// `engine::OFFSIDE_LINE_SIDE1` (+0x8eb0).
+    /// `engine::OFFSIDE_LINE_SIDE1` (+0x8eb0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn offside_line_side1(self) -> i8 {
         read_i8(self.0 + engine::OFFSIDE_LINE_SIDE1)
@@ -5365,7 +5458,7 @@ impl Engine {
     pub(crate) unsafe fn set_offside_line_side1(self, v: i8) {
         write_i8(self.0 + engine::OFFSIDE_LINE_SIDE1, v)
     }
-    /// `engine::SET_PIECE_KIND` (+0x8eb1).
+    /// `engine::SET_PIECE_KIND` (+0x8eb1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn set_piece_kind(self) -> i8 {
         read_i8(self.0 + engine::SET_PIECE_KIND)
@@ -5374,7 +5467,7 @@ impl Engine {
     pub(crate) unsafe fn set_set_piece_kind(self, v: i8) {
         write_i8(self.0 + engine::SET_PIECE_KIND, v)
     }
-    /// `engine::RESTART_TYPE` (+0x8eb2).
+    /// `engine::RESTART_TYPE` (+0x8eb2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn restart_type(self) -> i8 {
         read_i8(self.0 + engine::RESTART_TYPE)
@@ -5383,7 +5476,7 @@ impl Engine {
     pub(crate) unsafe fn set_restart_type(self, v: i8) {
         write_i8(self.0 + engine::RESTART_TYPE, v)
     }
-    /// `engine::SHOOTOUT_STATE` (+0x8eb3).
+    /// `engine::SHOOTOUT_STATE` (+0x8eb3). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shootout_state(self) -> i8 {
         read_i8(self.0 + engine::SHOOTOUT_STATE)
@@ -5392,7 +5485,7 @@ impl Engine {
     pub(crate) unsafe fn set_shootout_state(self, v: i8) {
         write_i8(self.0 + engine::SHOOTOUT_STATE, v)
     }
-    /// `engine::PUNISHMENT_STATE` (+0x8eb4).
+    /// `engine::PUNISHMENT_STATE` (+0x8eb4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn punishment_state(self) -> i8 {
         read_i8(self.0 + engine::PUNISHMENT_STATE)
@@ -5401,7 +5494,7 @@ impl Engine {
     pub(crate) unsafe fn set_punishment_state(self, v: i8) {
         write_i8(self.0 + engine::PUNISHMENT_STATE, v)
     }
-    /// `engine::SUBSTITUTION_PENDING` (+0x8eb5).
+    /// `engine::SUBSTITUTION_PENDING` (+0x8eb5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn substitution_pending(self) -> i8 {
         read_i8(self.0 + engine::SUBSTITUTION_PENDING)
@@ -5410,7 +5503,7 @@ impl Engine {
     pub(crate) unsafe fn set_substitution_pending(self, v: i8) {
         write_i8(self.0 + engine::SUBSTITUTION_PENDING, v)
     }
-    /// `engine::NEXT_KICKOFF_SIDE` (+0x8eb6).
+    /// `engine::NEXT_KICKOFF_SIDE` (+0x8eb6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn next_kickoff_side(self) -> i8 {
         read_i8(self.0 + engine::NEXT_KICKOFF_SIDE)
@@ -5419,7 +5512,7 @@ impl Engine {
     pub(crate) unsafe fn set_next_kickoff_side(self, v: i8) {
         write_i8(self.0 + engine::NEXT_KICKOFF_SIDE, v)
     }
-    /// `engine::STOPPAGE_TIME` (+0x8eb7).
+    /// `engine::STOPPAGE_TIME` (+0x8eb7). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stoppage_time(self) -> i8 {
         read_i8(self.0 + engine::STOPPAGE_TIME)
@@ -5428,7 +5521,7 @@ impl Engine {
     pub(crate) unsafe fn set_stoppage_time(self, v: i8) {
         write_i8(self.0 + engine::STOPPAGE_TIME, v)
     }
-    /// `engine::ACTIVE_LIST_COUNT` (+0x8eb8).
+    /// `engine::ACTIVE_LIST_COUNT` (+0x8eb8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn active_list_count(self) -> i8 {
         read_i8(self.0 + engine::ACTIVE_LIST_COUNT)
@@ -5437,7 +5530,7 @@ impl Engine {
     pub(crate) unsafe fn set_active_list_count(self, v: i8) {
         write_i8(self.0 + engine::ACTIVE_LIST_COUNT, v)
     }
-    /// `engine::PASS_TARGET_X` (+0x8eb9).
+    /// `engine::PASS_TARGET_X` (+0x8eb9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pass_target_x(self) -> u8 {
         read_u8(self.0 + engine::PASS_TARGET_X)
@@ -5446,7 +5539,7 @@ impl Engine {
     pub(crate) unsafe fn set_pass_target_x(self, v: u8) {
         write_u8(self.0 + engine::PASS_TARGET_X, v)
     }
-    /// `engine::LIVE_MATCH` (+0x8ebb).
+    /// `engine::LIVE_MATCH` (+0x8ebb). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn live_match(self) -> i8 {
         read_i8(self.0 + engine::LIVE_MATCH)
@@ -5455,12 +5548,12 @@ impl Engine {
     pub(crate) unsafe fn set_live_match(self, v: i8) {
         write_i8(self.0 + engine::LIVE_MATCH, v)
     }
-    /// `engine::POSITION_TABLE` (+0x8ebc).
+    /// `engine::POSITION_TABLE` (+0x8ebc). Name: read.
     #[inline(always)]
     pub(crate) fn position_table_addr(self) -> usize {
         self.0 + engine::POSITION_TABLE
     }
-    /// `engine::POSITION_TABLE_SIDE1` (+0x8ec0).
+    /// `engine::POSITION_TABLE_SIDE1` (+0x8ec0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn position_table_side1(self) -> i32 {
         read_i32(self.0 + engine::POSITION_TABLE_SIDE1)
@@ -5469,12 +5562,12 @@ impl Engine {
     pub(crate) unsafe fn set_position_table_side1(self, v: i32) {
         write_i32(self.0 + engine::POSITION_TABLE_SIDE1, v)
     }
-    /// `engine::ARROW_TABLE` (+0x8ec4).
+    /// `engine::ARROW_TABLE` (+0x8ec4). Name: read.
     #[inline(always)]
     pub(crate) fn arrow_table_addr(self) -> usize {
         self.0 + engine::ARROW_TABLE
     }
-    /// `engine::ARROW_TABLE_SIDE1` (+0x8ec8).
+    /// `engine::ARROW_TABLE_SIDE1` (+0x8ec8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn arrow_table_side1(self) -> i32 {
         read_i32(self.0 + engine::ARROW_TABLE_SIDE1)
@@ -5483,7 +5576,7 @@ impl Engine {
     pub(crate) unsafe fn set_arrow_table_side1(self, v: i32) {
         write_i32(self.0 + engine::ARROW_TABLE_SIDE1, v)
     }
-    /// `engine::LAST_SUBSTITUTION_TICK` (+0x8ecc).
+    /// `engine::LAST_SUBSTITUTION_TICK` (+0x8ecc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn last_substitution_tick(self) -> i32 {
         read_i32(self.0 + engine::LAST_SUBSTITUTION_TICK)
@@ -5492,7 +5585,7 @@ impl Engine {
     pub(crate) unsafe fn set_last_substitution_tick(self, v: i32) {
         write_i32(self.0 + engine::LAST_SUBSTITUTION_TICK, v)
     }
-    /// `engine::CLOCK` (+0x8ed0).
+    /// `engine::CLOCK` (+0x8ed0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn clock(self) -> i16 {
         read_i16(self.0 + engine::CLOCK)
@@ -5501,7 +5594,7 @@ impl Engine {
     pub(crate) unsafe fn set_clock(self, v: i16) {
         write_i16(self.0 + engine::CLOCK, v)
     }
-    /// `engine::SUB_TICK` (+0x8ed2).
+    /// `engine::SUB_TICK` (+0x8ed2). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn sub_tick(self) -> i16 {
         read_i16(self.0 + engine::SUB_TICK)
@@ -5510,7 +5603,7 @@ impl Engine {
     pub(crate) unsafe fn set_sub_tick(self, v: i16) {
         write_i16(self.0 + engine::SUB_TICK, v)
     }
-    /// `engine::PERIOD_END` (+0x8ed4).
+    /// `engine::PERIOD_END` (+0x8ed4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn period_end(self) -> i16 {
         read_i16(self.0 + engine::PERIOD_END)
@@ -5519,7 +5612,7 @@ impl Engine {
     pub(crate) unsafe fn set_period_end(self, v: i16) {
         write_i16(self.0 + engine::PERIOD_END, v)
     }
-    /// `engine::PASS_POWER` (+0x8ed6).
+    /// `engine::PASS_POWER` (+0x8ed6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pass_power(self) -> u16 {
         read_u16(self.0 + engine::PASS_POWER)
@@ -5528,7 +5621,7 @@ impl Engine {
     pub(crate) unsafe fn set_pass_power(self, v: u16) {
         write_u16(self.0 + engine::PASS_POWER, v)
     }
-    /// `engine::BALL_DIRECTION` (+0x8ed8).
+    /// `engine::BALL_DIRECTION` (+0x8ed8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn ball_direction(self) -> u16 {
         read_u16(self.0 + engine::BALL_DIRECTION)
@@ -5537,7 +5630,7 @@ impl Engine {
     pub(crate) unsafe fn set_ball_direction(self, v: u16) {
         write_u16(self.0 + engine::BALL_DIRECTION, v)
     }
-    /// `engine::SHOOTOUT_TAKEN` (+0x8eda).
+    /// `engine::SHOOTOUT_TAKEN` (+0x8eda). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shootout_taken(self) -> u8 {
         read_u8(self.0 + engine::SHOOTOUT_TAKEN)
@@ -5546,7 +5639,7 @@ impl Engine {
     pub(crate) unsafe fn set_shootout_taken(self, v: u8) {
         write_u8(self.0 + engine::SHOOTOUT_TAKEN, v)
     }
-    /// `engine::COMMENTATOR` (+0x8f7a).
+    /// `engine::COMMENTATOR` (+0x8f7a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn commentator(self) -> usize {
         read_usize(self.0 + engine::COMMENTATOR)
@@ -5555,7 +5648,7 @@ impl Engine {
     pub(crate) unsafe fn set_commentator(self, v: usize) {
         write_usize(self.0 + engine::COMMENTATOR, v)
     }
-    /// `engine::ACTIVE_LIST` (+0x8f7e).
+    /// `engine::ACTIVE_LIST` (+0x8f7e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn active_list(self) -> usize {
         read_usize(self.0 + engine::ACTIVE_LIST)
@@ -5564,12 +5657,12 @@ impl Engine {
     pub(crate) unsafe fn set_active_list(self, v: usize) {
         write_usize(self.0 + engine::ACTIVE_LIST, v)
     }
-    /// `engine::MATCH_MANAGERS` (+0x9032).
+    /// `engine::MATCH_MANAGERS` (+0x9032). Name: read.
     #[inline(always)]
     pub(crate) fn match_managers_addr(self) -> usize {
         self.0 + engine::MATCH_MANAGERS
     }
-    /// `engine::SIDE0_MANAGER_HOME_REPUTATION` (+0x9034).
+    /// `engine::SIDE0_MANAGER_HOME_REPUTATION` (+0x9034). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn side0_manager_home_reputation(self) -> i16 {
         read_i16(self.0 + engine::SIDE0_MANAGER_HOME_REPUTATION)
@@ -5578,7 +5671,7 @@ impl Engine {
     pub(crate) unsafe fn set_side0_manager_home_reputation(self, v: i16) {
         write_i16(self.0 + engine::SIDE0_MANAGER_HOME_REPUTATION, v)
     }
-    /// `engine::SIDE0_MANAGER_WORLD_REPUTATION` (+0x9036).
+    /// `engine::SIDE0_MANAGER_WORLD_REPUTATION` (+0x9036). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn side0_manager_world_reputation(self) -> i16 {
         read_i16(self.0 + engine::SIDE0_MANAGER_WORLD_REPUTATION)
@@ -5587,7 +5680,7 @@ impl Engine {
     pub(crate) unsafe fn set_side0_manager_world_reputation(self, v: i16) {
         write_i16(self.0 + engine::SIDE0_MANAGER_WORLD_REPUTATION, v)
     }
-    /// `engine::SIDE0_MANAGER_SUBSTITUTIONS_LEFT` (+0x9049).
+    /// `engine::SIDE0_MANAGER_SUBSTITUTIONS_LEFT` (+0x9049). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn side0_manager_substitutions_left(self) -> i8 {
         read_i8(self.0 + engine::SIDE0_MANAGER_SUBSTITUTIONS_LEFT)
@@ -5596,7 +5689,7 @@ impl Engine {
     pub(crate) unsafe fn set_side0_manager_substitutions_left(self, v: i8) {
         write_i8(self.0 + engine::SIDE0_MANAGER_SUBSTITUTIONS_LEFT, v)
     }
-    /// `engine::SIDE0_MANAGER_TACTIC_SLOT` (+0x904b).
+    /// `engine::SIDE0_MANAGER_TACTIC_SLOT` (+0x904b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn side0_manager_tactic_slot(self) -> i8 {
         read_i8(self.0 + engine::SIDE0_MANAGER_TACTIC_SLOT)
@@ -5605,7 +5698,7 @@ impl Engine {
     pub(crate) unsafe fn set_side0_manager_tactic_slot(self, v: i8) {
         write_i8(self.0 + engine::SIDE0_MANAGER_TACTIC_SLOT, v)
     }
-    /// `engine::SIDE0_MANAGER` (+0x904d).
+    /// `engine::SIDE0_MANAGER` (+0x904d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn side0_manager(self) -> usize {
         read_usize(self.0 + engine::SIDE0_MANAGER)
@@ -5614,7 +5707,7 @@ impl Engine {
     pub(crate) unsafe fn set_side0_manager(self, v: usize) {
         write_usize(self.0 + engine::SIDE0_MANAGER, v)
     }
-    /// `engine::SIDE0_MANAGER_SHEET` (+0x9051).
+    /// `engine::SIDE0_MANAGER_SHEET` (+0x9051). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn side0_manager_sheet(self) -> i32 {
         read_i32(self.0 + engine::SIDE0_MANAGER_SHEET)
@@ -5623,7 +5716,7 @@ impl Engine {
     pub(crate) unsafe fn set_side0_manager_sheet(self, v: i32) {
         write_i32(self.0 + engine::SIDE0_MANAGER_SHEET, v)
     }
-    /// `engine::SIDE0_MANAGER_TACTICS` (+0x905d).
+    /// `engine::SIDE0_MANAGER_TACTICS` (+0x905d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn side0_manager_tactics(self) -> i32 {
         read_i32(self.0 + engine::SIDE0_MANAGER_TACTICS)
@@ -5632,17 +5725,17 @@ impl Engine {
     pub(crate) unsafe fn set_side0_manager_tactics(self, v: i32) {
         write_i32(self.0 + engine::SIDE0_MANAGER_TACTICS, v)
     }
-    /// `engine::MATCH_MANAGERS_SIDE1` (+0x9102).
+    /// `engine::MATCH_MANAGERS_SIDE1` (+0x9102). Name: read.
     #[inline(always)]
     pub(crate) fn match_managers_side1_addr(self) -> usize {
         self.0 + engine::MATCH_MANAGERS_SIDE1
     }
-    /// `engine::PITCH_CONDITION` (+0x91d2).
+    /// `engine::PITCH_CONDITION` (+0x91d2). Name: read.
     #[inline(always)]
     pub(crate) fn pitch_condition_addr(self) -> usize {
         self.0 + engine::PITCH_CONDITION
     }
-    /// `engine::ACTION_FIRST_PLAYER` (+0x91de).
+    /// `engine::ACTION_FIRST_PLAYER` (+0x91de). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn action_first_player(self) -> usize {
         read_usize(self.0 + engine::ACTION_FIRST_PLAYER)
@@ -5651,7 +5744,7 @@ impl Engine {
     pub(crate) unsafe fn set_action_first_player(self, v: usize) {
         write_usize(self.0 + engine::ACTION_FIRST_PLAYER, v)
     }
-    /// `engine::TACTICS` (+0x91e2).
+    /// `engine::TACTICS` (+0x91e2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn tactics(self) -> u8 {
         read_u8(self.0 + engine::TACTICS)
@@ -5660,17 +5753,17 @@ impl Engine {
     pub(crate) unsafe fn set_tactics(self, v: u8) {
         write_u8(self.0 + engine::TACTICS, v)
     }
-    /// `engine::POSITION_TABLE_DATA` (+0x930f).
+    /// `engine::POSITION_TABLE_DATA` (+0x930f). Name: read.
     #[inline(always)]
     pub(crate) fn position_table_data_addr(self) -> usize {
         self.0 + engine::POSITION_TABLE_DATA
     }
-    /// `engine::ARROW_TABLE_DATA` (+0x9330).
+    /// `engine::ARROW_TABLE_DATA` (+0x9330). Name: read.
     #[inline(always)]
     pub(crate) fn arrow_table_data_addr(self) -> usize {
         self.0 + engine::ARROW_TABLE_DATA
     }
-    /// `engine::TACTICS_FLAGS` (+0x9766).
+    /// `engine::TACTICS_FLAGS` (+0x9766). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn tactics_flags(self) -> u32 {
         read_u32(self.0 + engine::TACTICS_FLAGS)
@@ -5679,22 +5772,22 @@ impl Engine {
     pub(crate) unsafe fn set_tactics_flags(self, v: u32) {
         write_u32(self.0 + engine::TACTICS_FLAGS, v)
     }
-    /// `engine::FORMATION_TABLE_DATA` (+0x97cd).
+    /// `engine::FORMATION_TABLE_DATA` (+0x97cd). Name: read.
     #[inline(always)]
     pub(crate) fn formation_table_data_addr(self) -> usize {
         self.0 + engine::FORMATION_TABLE_DATA
     }
-    /// `engine::POSITION_TABLE_DATA_SIDE1` (+0xabf2).
+    /// `engine::POSITION_TABLE_DATA_SIDE1` (+0xabf2). Name: read.
     #[inline(always)]
     pub(crate) fn position_table_data_side1_addr(self) -> usize {
         self.0 + engine::POSITION_TABLE_DATA_SIDE1
     }
-    /// `engine::ARROW_TABLE_DATA_SIDE1` (+0xac13).
+    /// `engine::ARROW_TABLE_DATA_SIDE1` (+0xac13). Name: read.
     #[inline(always)]
     pub(crate) fn arrow_table_data_side1_addr(self) -> usize {
         self.0 + engine::ARROW_TABLE_DATA_SIDE1
     }
-    /// `engine::TACTICS_FLAGS_SIDE1` (+0xb049).
+    /// `engine::TACTICS_FLAGS_SIDE1` (+0xb049). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn tactics_flags_side1(self) -> u32 {
         read_u32(self.0 + engine::TACTICS_FLAGS_SIDE1)
@@ -5703,12 +5796,12 @@ impl Engine {
     pub(crate) unsafe fn set_tactics_flags_side1(self, v: u32) {
         write_u32(self.0 + engine::TACTICS_FLAGS_SIDE1, v)
     }
-    /// `engine::FORMATION_TABLE_DATA_SIDE1` (+0xb9f8).
+    /// `engine::FORMATION_TABLE_DATA_SIDE1` (+0xb9f8). Name: read.
     #[inline(always)]
     pub(crate) fn formation_table_data_side1_addr(self) -> usize {
         self.0 + engine::FORMATION_TABLE_DATA_SIDE1
     }
-    /// `engine::TACTICS_BACKUP` (+0xc3a8).
+    /// `engine::TACTICS_BACKUP` (+0xc3a8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn tactics_backup(self) -> u8 {
         read_u8(self.0 + engine::TACTICS_BACKUP)
@@ -5717,12 +5810,12 @@ impl Engine {
     pub(crate) unsafe fn set_tactics_backup(self, v: u8) {
         write_u8(self.0 + engine::TACTICS_BACKUP, v)
     }
-    /// `engine::FORMATION_TABLE` (+0xf56e).
+    /// `engine::FORMATION_TABLE` (+0xf56e). Name: read.
     #[inline(always)]
     pub(crate) fn formation_table_addr(self) -> usize {
         self.0 + engine::FORMATION_TABLE
     }
-    /// `engine::FORMATION_TABLE_SIDE1` (+0xf572).
+    /// `engine::FORMATION_TABLE_SIDE1` (+0xf572). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn formation_table_side1(self) -> i32 {
         read_i32(self.0 + engine::FORMATION_TABLE_SIDE1)
@@ -5731,7 +5824,7 @@ impl Engine {
     pub(crate) unsafe fn set_formation_table_side1(self, v: i32) {
         write_i32(self.0 + engine::FORMATION_TABLE_SIDE1, v)
     }
-    /// `engine::PASSER` (+0xf576).
+    /// `engine::PASSER` (+0xf576). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn passer(self) -> usize {
         read_usize(self.0 + engine::PASSER)
@@ -5740,7 +5833,7 @@ impl Engine {
     pub(crate) unsafe fn set_passer(self, v: usize) {
         write_usize(self.0 + engine::PASSER, v)
     }
-    /// `engine::SET_PIECE_TAKER` (+0xf57a).
+    /// `engine::SET_PIECE_TAKER` (+0xf57a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn set_piece_taker(self) -> usize {
         read_usize(self.0 + engine::SET_PIECE_TAKER)
@@ -5749,7 +5842,7 @@ impl Engine {
     pub(crate) unsafe fn set_set_piece_taker(self, v: usize) {
         write_usize(self.0 + engine::SET_PIECE_TAKER, v)
     }
-    /// `engine::BALL_HOLDER` (+0xf582).
+    /// `engine::BALL_HOLDER` (+0xf582). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn ball_holder(self) -> usize {
         read_usize(self.0 + engine::BALL_HOLDER)
@@ -5758,7 +5851,7 @@ impl Engine {
     pub(crate) unsafe fn set_ball_holder(self, v: usize) {
         write_usize(self.0 + engine::BALL_HOLDER, v)
     }
-    /// `engine::NEAREST_TO_BALL` (+0xf586).
+    /// `engine::NEAREST_TO_BALL` (+0xf586). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn nearest_to_ball(self) -> usize {
         read_usize(self.0 + engine::NEAREST_TO_BALL)
@@ -5767,7 +5860,7 @@ impl Engine {
     pub(crate) unsafe fn set_nearest_to_ball(self, v: usize) {
         write_usize(self.0 + engine::NEAREST_TO_BALL, v)
     }
-    /// `engine::NEAREST_TO_BALL_SIDE1` (+0xf58a).
+    /// `engine::NEAREST_TO_BALL_SIDE1` (+0xf58a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn nearest_to_ball_side1(self) -> usize {
         read_usize(self.0 + engine::NEAREST_TO_BALL_SIDE1)
@@ -5776,7 +5869,7 @@ impl Engine {
     pub(crate) unsafe fn set_nearest_to_ball_side1(self, v: usize) {
         write_usize(self.0 + engine::NEAREST_TO_BALL_SIDE1, v)
     }
-    /// `engine::LOWEST_Y_PLAYER` (+0xf58e).
+    /// `engine::LOWEST_Y_PLAYER` (+0xf58e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn lowest_y_player(self) -> usize {
         read_usize(self.0 + engine::LOWEST_Y_PLAYER)
@@ -5785,7 +5878,7 @@ impl Engine {
     pub(crate) unsafe fn set_lowest_y_player(self, v: usize) {
         write_usize(self.0 + engine::LOWEST_Y_PLAYER, v)
     }
-    /// `engine::LOWEST_Y_PLAYER_SIDE1` (+0xf592).
+    /// `engine::LOWEST_Y_PLAYER_SIDE1` (+0xf592). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn lowest_y_player_side1(self) -> usize {
         read_usize(self.0 + engine::LOWEST_Y_PLAYER_SIDE1)
@@ -5794,7 +5887,7 @@ impl Engine {
     pub(crate) unsafe fn set_lowest_y_player_side1(self, v: usize) {
         write_usize(self.0 + engine::LOWEST_Y_PLAYER_SIDE1, v)
     }
-    /// `engine::FURTHEST_FORWARD` (+0xf596).
+    /// `engine::FURTHEST_FORWARD` (+0xf596). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn furthest_forward(self) -> usize {
         read_usize(self.0 + engine::FURTHEST_FORWARD)
@@ -5803,7 +5896,7 @@ impl Engine {
     pub(crate) unsafe fn set_furthest_forward(self, v: usize) {
         write_usize(self.0 + engine::FURTHEST_FORWARD, v)
     }
-    /// `engine::FURTHEST_FORWARD_SIDE1` (+0xf59a).
+    /// `engine::FURTHEST_FORWARD_SIDE1` (+0xf59a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn furthest_forward_side1(self) -> usize {
         read_usize(self.0 + engine::FURTHEST_FORWARD_SIDE1)
@@ -5812,7 +5905,7 @@ impl Engine {
     pub(crate) unsafe fn set_furthest_forward_side1(self, v: usize) {
         write_usize(self.0 + engine::FURTHEST_FORWARD_SIDE1, v)
     }
-    /// `engine::GOALKEEPER` (+0xf59e).
+    /// `engine::GOALKEEPER` (+0xf59e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn goalkeeper(self) -> usize {
         read_usize(self.0 + engine::GOALKEEPER)
@@ -5821,7 +5914,7 @@ impl Engine {
     pub(crate) unsafe fn set_goalkeeper(self, v: usize) {
         write_usize(self.0 + engine::GOALKEEPER, v)
     }
-    /// `engine::GOALKEEPER_SIDE1` (+0xf5a2).
+    /// `engine::GOALKEEPER_SIDE1` (+0xf5a2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn goalkeeper_side1(self) -> usize {
         read_usize(self.0 + engine::GOALKEEPER_SIDE1)
@@ -5830,7 +5923,7 @@ impl Engine {
     pub(crate) unsafe fn set_goalkeeper_side1(self, v: usize) {
         write_usize(self.0 + engine::GOALKEEPER_SIDE1, v)
     }
-    /// `engine::ASSIST_CANDIDATE` (+0xf5a6).
+    /// `engine::ASSIST_CANDIDATE` (+0xf5a6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn assist_candidate(self) -> usize {
         read_usize(self.0 + engine::ASSIST_CANDIDATE)
@@ -5839,7 +5932,7 @@ impl Engine {
     pub(crate) unsafe fn set_assist_candidate(self, v: usize) {
         write_usize(self.0 + engine::ASSIST_CANDIDATE, v)
     }
-    /// `engine::PASS_RECEIVER` (+0xf5aa).
+    /// `engine::PASS_RECEIVER` (+0xf5aa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pass_receiver(self) -> usize {
         read_usize(self.0 + engine::PASS_RECEIVER)
@@ -5848,7 +5941,7 @@ impl Engine {
     pub(crate) unsafe fn set_pass_receiver(self, v: usize) {
         write_usize(self.0 + engine::PASS_RECEIVER, v)
     }
-    /// `engine::SHOT_BLOCKER` (+0xf5ae).
+    /// `engine::SHOT_BLOCKER` (+0xf5ae). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shot_blocker(self) -> usize {
         read_usize(self.0 + engine::SHOT_BLOCKER)
@@ -5857,12 +5950,12 @@ impl Engine {
     pub(crate) unsafe fn set_shot_blocker(self, v: usize) {
         write_usize(self.0 + engine::SHOT_BLOCKER, v)
     }
-    /// `engine::REFEREE` (+0xf5b2).
+    /// `engine::REFEREE` (+0xf5b2). Name: read.
     #[inline(always)]
     pub(crate) fn referee_addr(self) -> usize {
         self.0 + engine::REFEREE
     }
-    /// `engine::REFEREE_ID` (+0xf5b6).
+    /// `engine::REFEREE_ID` (+0xf5b6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn referee_id(self) -> usize {
         read_usize(self.0 + engine::REFEREE_ID)
@@ -5871,7 +5964,7 @@ impl Engine {
     pub(crate) unsafe fn set_referee_id(self, v: usize) {
         write_usize(self.0 + engine::REFEREE_ID, v)
     }
-    /// `engine::REFEREE_RATING` (+0xf5ba).
+    /// `engine::REFEREE_RATING` (+0xf5ba). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn referee_rating(self) -> i16 {
         read_i16(self.0 + engine::REFEREE_RATING)
@@ -5880,12 +5973,12 @@ impl Engine {
     pub(crate) unsafe fn set_referee_rating(self, v: i16) {
         write_i16(self.0 + engine::REFEREE_RATING, v)
     }
-    /// `engine::SIDE_STATS` (+0xf5bc).
+    /// `engine::SIDE_STATS` (+0xf5bc). Name: read.
     #[inline(always)]
     pub(crate) fn side_stats_addr(self) -> usize {
         self.0 + engine::SIDE_STATS
     }
-    /// `engine::SCORE` (+0xf5bd).
+    /// `engine::SCORE` (+0xf5bd). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn score(self) -> i8 {
         read_i8(self.0 + engine::SCORE)
@@ -5894,7 +5987,7 @@ impl Engine {
     pub(crate) unsafe fn set_score(self, v: i8) {
         write_i8(self.0 + engine::SCORE, v)
     }
-    /// `engine::SIDE_SUMMARY` (+0xf5c0).
+    /// `engine::SIDE_SUMMARY` (+0xf5c0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn side_summary(self) -> u8 {
         read_u8(self.0 + engine::SIDE_SUMMARY)
@@ -5903,7 +5996,7 @@ impl Engine {
     pub(crate) unsafe fn set_side_summary(self, v: u8) {
         write_u8(self.0 + engine::SIDE_SUMMARY, v)
     }
-    /// `engine::CORNER_GOALS` (+0xf5c3).
+    /// `engine::CORNER_GOALS` (+0xf5c3). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn corner_goals(self) -> u8 {
         read_u8(self.0 + engine::CORNER_GOALS)
@@ -5912,7 +6005,7 @@ impl Engine {
     pub(crate) unsafe fn set_corner_goals(self, v: u8) {
         write_u8(self.0 + engine::CORNER_GOALS, v)
     }
-    /// `engine::FREE_KICK_PLAY_GOALS` (+0xf5c4).
+    /// `engine::FREE_KICK_PLAY_GOALS` (+0xf5c4). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn free_kick_play_goals(self) -> u8 {
         read_u8(self.0 + engine::FREE_KICK_PLAY_GOALS)
@@ -5921,7 +6014,7 @@ impl Engine {
     pub(crate) unsafe fn set_free_kick_play_goals(self, v: u8) {
         write_u8(self.0 + engine::FREE_KICK_PLAY_GOALS, v)
     }
-    /// `engine::DIRECT_FREE_KICK_GOALS` (+0xf5c5).
+    /// `engine::DIRECT_FREE_KICK_GOALS` (+0xf5c5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn direct_free_kick_goals(self) -> u8 {
         read_u8(self.0 + engine::DIRECT_FREE_KICK_GOALS)
@@ -5930,7 +6023,7 @@ impl Engine {
     pub(crate) unsafe fn set_direct_free_kick_goals(self, v: u8) {
         write_u8(self.0 + engine::DIRECT_FREE_KICK_GOALS, v)
     }
-    /// `engine::SET_PIECES` (+0xf5c6).
+    /// `engine::SET_PIECES` (+0xf5c6). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn set_pieces(self) -> u8 {
         read_u8(self.0 + engine::SET_PIECES)
@@ -5939,7 +6032,7 @@ impl Engine {
     pub(crate) unsafe fn set_set_pieces(self, v: u8) {
         write_u8(self.0 + engine::SET_PIECES, v)
     }
-    /// `engine::CORNER_KICKS` (+0xf5c7).
+    /// `engine::CORNER_KICKS` (+0xf5c7). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn corner_kicks(self) -> u8 {
         read_u8(self.0 + engine::CORNER_KICKS)
@@ -5948,7 +6041,7 @@ impl Engine {
     pub(crate) unsafe fn set_corner_kicks(self, v: u8) {
         write_u8(self.0 + engine::CORNER_KICKS, v)
     }
-    /// `engine::THROW_INS` (+0xf5c8).
+    /// `engine::THROW_INS` (+0xf5c8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn throw_ins(self) -> u8 {
         read_u8(self.0 + engine::THROW_INS)
@@ -5957,7 +6050,7 @@ impl Engine {
     pub(crate) unsafe fn set_throw_ins(self, v: u8) {
         write_u8(self.0 + engine::THROW_INS, v)
     }
-    /// `engine::SIDE_FOUL_TALLY` (+0xf5c9).
+    /// `engine::SIDE_FOUL_TALLY` (+0xf5c9). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn side_foul_tally(self) -> u8 {
         read_u8(self.0 + engine::SIDE_FOUL_TALLY)
@@ -5966,7 +6059,7 @@ impl Engine {
     pub(crate) unsafe fn set_side_foul_tally(self, v: u8) {
         write_u8(self.0 + engine::SIDE_FOUL_TALLY, v)
     }
-    /// `engine::OFFSIDES` (+0xf5ca).
+    /// `engine::OFFSIDES` (+0xf5ca). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn offsides(self) -> u8 {
         read_u8(self.0 + engine::OFFSIDES)
@@ -5975,7 +6068,7 @@ impl Engine {
     pub(crate) unsafe fn set_offsides(self, v: u8) {
         write_u8(self.0 + engine::OFFSIDES, v)
     }
-    /// `engine::CARDS` (+0xf5cb).
+    /// `engine::CARDS` (+0xf5cb). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn cards(self) -> u8 {
         read_u8(self.0 + engine::CARDS)
@@ -5984,7 +6077,7 @@ impl Engine {
     pub(crate) unsafe fn set_cards(self, v: u8) {
         write_u8(self.0 + engine::CARDS, v)
     }
-    /// `engine::FOULS` (+0xf5cc).
+    /// `engine::FOULS` (+0xf5cc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fouls(self) -> u8 {
         read_u8(self.0 + engine::FOULS)
@@ -5993,7 +6086,7 @@ impl Engine {
     pub(crate) unsafe fn set_fouls(self, v: u8) {
         write_u8(self.0 + engine::FOULS, v)
     }
-    /// `engine::SCORE_SIDE1` (+0xf5f3).
+    /// `engine::SCORE_SIDE1` (+0xf5f3). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn score_side1(self) -> i8 {
         read_i8(self.0 + engine::SCORE_SIDE1)
@@ -6002,7 +6095,7 @@ impl Engine {
     pub(crate) unsafe fn set_score_side1(self, v: i8) {
         write_i8(self.0 + engine::SCORE_SIDE1, v)
     }
-    /// `engine::CARDS_SIDE1` (+0xf601).
+    /// `engine::CARDS_SIDE1` (+0xf601). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn cards_side1(self) -> u8 {
         read_u8(self.0 + engine::CARDS_SIDE1)
@@ -6011,7 +6104,7 @@ impl Engine {
     pub(crate) unsafe fn set_cards_side1(self, v: u8) {
         write_u8(self.0 + engine::CARDS_SIDE1, v)
     }
-    /// `engine::FOULS_SIDE1` (+0xf602).
+    /// `engine::FOULS_SIDE1` (+0xf602). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fouls_side1(self) -> u8 {
         read_u8(self.0 + engine::FOULS_SIDE1)
@@ -6020,7 +6113,7 @@ impl Engine {
     pub(crate) unsafe fn set_fouls_side1(self, v: u8) {
         write_u8(self.0 + engine::FOULS_SIDE1, v)
     }
-    /// `engine::TEMPO_ROLL_A` (+0xf628).
+    /// `engine::TEMPO_ROLL_A` (+0xf628). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn tempo_roll_a(self) -> i32 {
         read_i32(self.0 + engine::TEMPO_ROLL_A)
@@ -6029,7 +6122,7 @@ impl Engine {
     pub(crate) unsafe fn set_tempo_roll_a(self, v: i32) {
         write_i32(self.0 + engine::TEMPO_ROLL_A, v)
     }
-    /// `engine::TEMPO_ROLL_B` (+0xf62c).
+    /// `engine::TEMPO_ROLL_B` (+0xf62c). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn tempo_roll_b(self) -> i32 {
         read_i32(self.0 + engine::TEMPO_ROLL_B)
@@ -6038,7 +6131,7 @@ impl Engine {
     pub(crate) unsafe fn set_tempo_roll_b(self, v: i32) {
         write_i32(self.0 + engine::TEMPO_ROLL_B, v)
     }
-    /// `engine::TEMPO_GOALS_ROLL` (+0xf630).
+    /// `engine::TEMPO_GOALS_ROLL` (+0xf630). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn tempo_goals_roll(self) -> i32 {
         read_i32(self.0 + engine::TEMPO_GOALS_ROLL)
@@ -6047,7 +6140,7 @@ impl Engine {
     pub(crate) unsafe fn set_tempo_goals_roll(self, v: i32) {
         write_i32(self.0 + engine::TEMPO_GOALS_ROLL, v)
     }
-    /// `engine::ATTENDANCE` (+0xf634).
+    /// `engine::ATTENDANCE` (+0xf634). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn attendance(self) -> i32 {
         read_i32(self.0 + engine::ATTENDANCE)
@@ -6056,7 +6149,7 @@ impl Engine {
     pub(crate) unsafe fn set_attendance(self, v: i32) {
         write_i32(self.0 + engine::ATTENDANCE, v)
     }
-    /// `engine::ABANDON_MINUTE` (+0xf638).
+    /// `engine::ABANDON_MINUTE` (+0xf638). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn abandon_minute(self) -> i8 {
         read_i8(self.0 + engine::ABANDON_MINUTE)
@@ -6065,7 +6158,7 @@ impl Engine {
     pub(crate) unsafe fn set_abandon_minute(self, v: i8) {
         write_i8(self.0 + engine::ABANDON_MINUTE, v)
     }
-    /// `engine::INJURY_COUNT` (+0xf639).
+    /// `engine::INJURY_COUNT` (+0xf639). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn injury_count(self) -> i16 {
         read_i16(self.0 + engine::INJURY_COUNT)
@@ -6099,7 +6192,7 @@ impl MatchPlayer {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `match_player::SIDE_INDEX` (+0x0).
+    /// `match_player::SIDE_INDEX` (+0x0). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn side_index(self) -> u8 {
         read_u8(self.0 + match_player::SIDE_INDEX)
@@ -6108,7 +6201,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_side_index(self, v: u8) {
         write_u8(self.0 + match_player::SIDE_INDEX, v)
     }
-    /// `match_player::PASSES` (+0x1).
+    /// `match_player::PASSES` (+0x1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn passes(self) -> u8 {
         read_u8(self.0 + match_player::PASSES)
@@ -6117,7 +6210,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_passes(self, v: u8) {
         write_u8(self.0 + match_player::PASSES, v)
     }
-    /// `match_player::PASSES_COMPLETED` (+0x2).
+    /// `match_player::PASSES_COMPLETED` (+0x2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn passes_completed(self) -> u8 {
         read_u8(self.0 + match_player::PASSES_COMPLETED)
@@ -6126,7 +6219,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_passes_completed(self, v: u8) {
         write_u8(self.0 + match_player::PASSES_COMPLETED, v)
     }
-    /// `match_player::TACKLES` (+0x4).
+    /// `match_player::TACKLES` (+0x4). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn tackles(self) -> u8 {
         read_u8(self.0 + match_player::TACKLES)
@@ -6135,7 +6228,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_tackles(self, v: u8) {
         write_u8(self.0 + match_player::TACKLES, v)
     }
-    /// `match_player::TACKLES_WON` (+0x5).
+    /// `match_player::TACKLES_WON` (+0x5). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn tackles_won(self) -> u8 {
         read_u8(self.0 + match_player::TACKLES_WON)
@@ -6144,7 +6237,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_tackles_won(self, v: u8) {
         write_u8(self.0 + match_player::TACKLES_WON, v)
     }
-    /// `match_player::KEY_TACKLES` (+0x6).
+    /// `match_player::KEY_TACKLES` (+0x6). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn key_tackles(self) -> u8 {
         read_u8(self.0 + match_player::KEY_TACKLES)
@@ -6153,7 +6246,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_key_tackles(self, v: u8) {
         write_u8(self.0 + match_player::KEY_TACKLES, v)
     }
-    /// `match_player::CHALLENGES` (+0x7).
+    /// `match_player::CHALLENGES` (+0x7). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn challenges(self) -> u8 {
         read_u8(self.0 + match_player::CHALLENGES)
@@ -6162,7 +6255,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_challenges(self, v: u8) {
         write_u8(self.0 + match_player::CHALLENGES, v)
     }
-    /// `match_player::CHALLENGES_WON` (+0x8).
+    /// `match_player::CHALLENGES_WON` (+0x8). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn challenges_won(self) -> u8 {
         read_u8(self.0 + match_player::CHALLENGES_WON)
@@ -6171,7 +6264,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_challenges_won(self, v: u8) {
         write_u8(self.0 + match_player::CHALLENGES_WON, v)
     }
-    /// `match_player::KEY_CHALLENGES_WON` (+0x9).
+    /// `match_player::KEY_CHALLENGES_WON` (+0x9). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn key_challenges_won(self) -> u8 {
         read_u8(self.0 + match_player::KEY_CHALLENGES_WON)
@@ -6180,7 +6273,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_key_challenges_won(self, v: u8) {
         write_u8(self.0 + match_player::KEY_CHALLENGES_WON, v)
     }
-    /// `match_player::SHOTS` (+0xa).
+    /// `match_player::SHOTS` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shots(self) -> u8 {
         read_u8(self.0 + match_player::SHOTS)
@@ -6189,7 +6282,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_shots(self, v: u8) {
         write_u8(self.0 + match_player::SHOTS, v)
     }
-    /// `match_player::SHOTS_ON_TARGET` (+0xb).
+    /// `match_player::SHOTS_ON_TARGET` (+0xb). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shots_on_target(self) -> u8 {
         read_u8(self.0 + match_player::SHOTS_ON_TARGET)
@@ -6198,7 +6291,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_shots_on_target(self, v: u8) {
         write_u8(self.0 + match_player::SHOTS_ON_TARGET, v)
     }
-    /// `match_player::GOALS` (+0xc).
+    /// `match_player::GOALS` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn goals(self) -> i8 {
         read_i8(self.0 + match_player::GOALS)
@@ -6207,7 +6300,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_goals(self, v: i8) {
         write_i8(self.0 + match_player::GOALS, v)
     }
-    /// `match_player::PENALTIES_TAKEN` (+0xd).
+    /// `match_player::PENALTIES_TAKEN` (+0xd). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn penalties_taken(self) -> u8 {
         read_u8(self.0 + match_player::PENALTIES_TAKEN)
@@ -6216,7 +6309,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_penalties_taken(self, v: u8) {
         write_u8(self.0 + match_player::PENALTIES_TAKEN, v)
     }
-    /// `match_player::PENALTIES_SCORED` (+0xe).
+    /// `match_player::PENALTIES_SCORED` (+0xe). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn penalties_scored(self) -> i8 {
         read_i8(self.0 + match_player::PENALTIES_SCORED)
@@ -6225,7 +6318,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_penalties_scored(self, v: i8) {
         write_i8(self.0 + match_player::PENALTIES_SCORED, v)
     }
-    /// `match_player::GOALS_CONCEDED` (+0xf).
+    /// `match_player::GOALS_CONCEDED` (+0xf). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn goals_conceded(self) -> u8 {
         read_u8(self.0 + match_player::GOALS_CONCEDED)
@@ -6234,7 +6327,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_goals_conceded(self, v: u8) {
         write_u8(self.0 + match_player::GOALS_CONCEDED, v)
     }
-    /// `match_player::ASSISTS` (+0x10).
+    /// `match_player::ASSISTS` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn assists(self) -> u8 {
         read_u8(self.0 + match_player::ASSISTS)
@@ -6243,7 +6336,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_assists(self, v: u8) {
         write_u8(self.0 + match_player::ASSISTS, v)
     }
-    /// `match_player::DRIBBLES` (+0x11).
+    /// `match_player::DRIBBLES` (+0x11). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn dribbles(self) -> u8 {
         read_u8(self.0 + match_player::DRIBBLES)
@@ -6252,7 +6345,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_dribbles(self, v: u8) {
         write_u8(self.0 + match_player::DRIBBLES, v)
     }
-    /// `match_player::BALLS_CONTESTED` (+0x12).
+    /// `match_player::BALLS_CONTESTED` (+0x12). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn balls_contested(self) -> u8 {
         read_u8(self.0 + match_player::BALLS_CONTESTED)
@@ -6261,7 +6354,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_balls_contested(self, v: u8) {
         write_u8(self.0 + match_player::BALLS_CONTESTED, v)
     }
-    /// `match_player::OFFSIDES` (+0x13).
+    /// `match_player::OFFSIDES` (+0x13). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn offsides(self) -> u8 {
         read_u8(self.0 + match_player::OFFSIDES)
@@ -6270,7 +6363,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_offsides(self, v: u8) {
         write_u8(self.0 + match_player::OFFSIDES, v)
     }
-    /// `match_player::FOULS` (+0x14).
+    /// `match_player::FOULS` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fouls(self) -> u8 {
         read_u8(self.0 + match_player::FOULS)
@@ -6279,7 +6372,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_fouls(self, v: u8) {
         write_u8(self.0 + match_player::FOULS, v)
     }
-    /// `match_player::FOULS_SUFFERED` (+0x15).
+    /// `match_player::FOULS_SUFFERED` (+0x15). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fouls_suffered(self) -> u8 {
         read_u8(self.0 + match_player::FOULS_SUFFERED)
@@ -6288,7 +6381,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_fouls_suffered(self, v: u8) {
         write_u8(self.0 + match_player::FOULS_SUFFERED, v)
     }
-    /// `match_player::SENT_OFF` (+0x16).
+    /// `match_player::SENT_OFF` (+0x16). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn sent_off(self) -> u8 {
         read_u8(self.0 + match_player::SENT_OFF)
@@ -6297,7 +6390,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_sent_off(self, v: u8) {
         write_u8(self.0 + match_player::SENT_OFF, v)
     }
-    /// `match_player::MATCH_FORM` (+0x17).
+    /// `match_player::MATCH_FORM` (+0x17). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn match_form(self) -> i8 {
         read_i8(self.0 + match_player::MATCH_FORM)
@@ -6306,7 +6399,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_match_form(self, v: i8) {
         write_i8(self.0 + match_player::MATCH_FORM, v)
     }
-    /// `match_player::ACTION_ORDER` (+0x18).
+    /// `match_player::ACTION_ORDER` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn action_order(self) -> i8 {
         read_i8(self.0 + match_player::ACTION_ORDER)
@@ -6315,7 +6408,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_action_order(self, v: i8) {
         write_i8(self.0 + match_player::ACTION_ORDER, v)
     }
-    /// `match_player::POSITION` (+0x19).
+    /// `match_player::POSITION` (+0x19). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn position(self) -> i8 {
         read_i8(self.0 + match_player::POSITION)
@@ -6324,7 +6417,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_position(self, v: i8) {
         write_i8(self.0 + match_player::POSITION, v)
     }
-    /// `match_player::PREVIOUS_POSITION` (+0x1a).
+    /// `match_player::PREVIOUS_POSITION` (+0x1a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn previous_position(self) -> i8 {
         read_i8(self.0 + match_player::PREVIOUS_POSITION)
@@ -6333,7 +6426,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_previous_position(self, v: i8) {
         write_i8(self.0 + match_player::PREVIOUS_POSITION, v)
     }
-    /// `match_player::MATCH_GRADE` (+0x1b).
+    /// `match_player::MATCH_GRADE` (+0x1b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn match_grade(self) -> i8 {
         read_i8(self.0 + match_player::MATCH_GRADE)
@@ -6342,7 +6435,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_match_grade(self, v: i8) {
         write_i8(self.0 + match_player::MATCH_GRADE, v)
     }
-    /// `match_player::INJURY_FORCES_OFF` (+0x1c).
+    /// `match_player::INJURY_FORCES_OFF` (+0x1c). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn injury_forces_off(self) -> i8 {
         read_i8(self.0 + match_player::INJURY_FORCES_OFF)
@@ -6351,7 +6444,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_injury_forces_off(self, v: i8) {
         write_i8(self.0 + match_player::INJURY_FORCES_OFF, v)
     }
-    /// `match_player::INJURY_PENDING` (+0x1d).
+    /// `match_player::INJURY_PENDING` (+0x1d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn injury_pending(self) -> i8 {
         read_i8(self.0 + match_player::INJURY_PENDING)
@@ -6360,7 +6453,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_injury_pending(self, v: i8) {
         write_i8(self.0 + match_player::INJURY_PENDING, v)
     }
-    /// `match_player::SUBSTITUTED_OFF` (+0x1e).
+    /// `match_player::SUBSTITUTED_OFF` (+0x1e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn substituted_off(self) -> i8 {
         read_i8(self.0 + match_player::SUBSTITUTED_OFF)
@@ -6369,7 +6462,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_substituted_off(self, v: i8) {
         write_i8(self.0 + match_player::SUBSTITUTED_OFF, v)
     }
-    /// `match_player::MINUTE_ON` (+0x1f).
+    /// `match_player::MINUTE_ON` (+0x1f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn minute_on(self) -> i8 {
         read_i8(self.0 + match_player::MINUTE_ON)
@@ -6378,7 +6471,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_minute_on(self, v: i8) {
         write_i8(self.0 + match_player::MINUTE_ON, v)
     }
-    /// `match_player::MINUTE_OFF` (+0x20).
+    /// `match_player::MINUTE_OFF` (+0x20). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn minute_off(self) -> i8 {
         read_i8(self.0 + match_player::MINUTE_OFF)
@@ -6387,7 +6480,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_minute_off(self, v: i8) {
         write_i8(self.0 + match_player::MINUTE_OFF, v)
     }
-    /// `match_player::MINUTE_LEFT_PITCH` (+0x21).
+    /// `match_player::MINUTE_LEFT_PITCH` (+0x21). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn minute_left_pitch(self) -> i8 {
         read_i8(self.0 + match_player::MINUTE_LEFT_PITCH)
@@ -6396,7 +6489,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_minute_left_pitch(self, v: i8) {
         write_i8(self.0 + match_player::MINUTE_LEFT_PITCH, v)
     }
-    /// `match_player::INJURY_MINUTE` (+0x22).
+    /// `match_player::INJURY_MINUTE` (+0x22). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn injury_minute(self) -> i8 {
         read_i8(self.0 + match_player::INJURY_MINUTE)
@@ -6405,7 +6498,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_injury_minute(self, v: i8) {
         write_i8(self.0 + match_player::INJURY_MINUTE, v)
     }
-    /// `match_player::RED_CARDS` (+0x23).
+    /// `match_player::RED_CARDS` (+0x23). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn red_cards(self) -> i8 {
         read_i8(self.0 + match_player::RED_CARDS)
@@ -6414,7 +6507,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_red_cards(self, v: i8) {
         write_i8(self.0 + match_player::RED_CARDS, v)
     }
-    /// `match_player::YELLOW_CARDS` (+0x24).
+    /// `match_player::YELLOW_CARDS` (+0x24). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn yellow_cards(self) -> i8 {
         read_i8(self.0 + match_player::YELLOW_CARDS)
@@ -6423,7 +6516,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_yellow_cards(self, v: i8) {
         write_i8(self.0 + match_player::YELLOW_CARDS, v)
     }
-    /// `match_player::FIRST_CARD_CODE` (+0x25).
+    /// `match_player::FIRST_CARD_CODE` (+0x25). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn first_card_code(self) -> i8 {
         read_i8(self.0 + match_player::FIRST_CARD_CODE)
@@ -6432,7 +6525,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_first_card_code(self, v: i8) {
         write_i8(self.0 + match_player::FIRST_CARD_CODE, v)
     }
-    /// `match_player::SECOND_CARD_CODE` (+0x26).
+    /// `match_player::SECOND_CARD_CODE` (+0x26). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn second_card_code(self) -> i8 {
         read_i8(self.0 + match_player::SECOND_CARD_CODE)
@@ -6441,7 +6534,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_second_card_code(self, v: i8) {
         write_i8(self.0 + match_player::SECOND_CARD_CODE, v)
     }
-    /// `match_player::SIDE` (+0x27).
+    /// `match_player::SIDE` (+0x27). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn side(self) -> i8 {
         read_i8(self.0 + match_player::SIDE)
@@ -6450,7 +6543,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_side(self, v: i8) {
         write_i8(self.0 + match_player::SIDE, v)
     }
-    /// `match_player::CELL_SLOT` (+0x28).
+    /// `match_player::CELL_SLOT` (+0x28). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn cell_slot(self) -> i8 {
         read_i8(self.0 + match_player::CELL_SLOT)
@@ -6459,7 +6552,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_cell_slot(self, v: i8) {
         write_i8(self.0 + match_player::CELL_SLOT, v)
     }
-    /// `match_player::BUSY` (+0x2b).
+    /// `match_player::BUSY` (+0x2b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn busy(self) -> i8 {
         read_i8(self.0 + match_player::BUSY)
@@ -6468,7 +6561,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_busy(self, v: i8) {
         write_i8(self.0 + match_player::BUSY, v)
     }
-    /// `match_player::PREFERRED_FOOT` (+0x2c).
+    /// `match_player::PREFERRED_FOOT` (+0x2c). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn preferred_foot(self) -> i8 {
         read_i8(self.0 + match_player::PREFERRED_FOOT)
@@ -6477,7 +6570,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_preferred_foot(self, v: i8) {
         write_i8(self.0 + match_player::PREFERRED_FOOT, v)
     }
-    /// `match_player::COMMENTARY_ID` (+0x2e).
+    /// `match_player::COMMENTARY_ID` (+0x2e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn commentary_id(self) -> u8 {
         read_u8(self.0 + match_player::COMMENTARY_ID)
@@ -6486,7 +6579,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_commentary_id(self, v: u8) {
         write_u8(self.0 + match_player::COMMENTARY_ID, v)
     }
-    /// `match_player::MATCH_RATING` (+0x35).
+    /// `match_player::MATCH_RATING` (+0x35). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn match_rating(self) -> i16 {
         read_i16(self.0 + match_player::MATCH_RATING)
@@ -6495,7 +6588,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_match_rating(self, v: i16) {
         write_i16(self.0 + match_player::MATCH_RATING, v)
     }
-    /// `match_player::SHOT_QUALITY` (+0x39).
+    /// `match_player::SHOT_QUALITY` (+0x39). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shot_quality(self) -> i16 {
         read_i16(self.0 + match_player::SHOT_QUALITY)
@@ -6504,7 +6597,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_shot_quality(self, v: i16) {
         write_i16(self.0 + match_player::SHOT_QUALITY, v)
     }
-    /// `match_player::EFFECTIVE_ABILITY` (+0x3b).
+    /// `match_player::EFFECTIVE_ABILITY` (+0x3b). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn effective_ability(self) -> i16 {
         read_i16(self.0 + match_player::EFFECTIVE_ABILITY)
@@ -6513,7 +6606,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_effective_ability(self, v: i16) {
         write_i16(self.0 + match_player::EFFECTIVE_ABILITY, v)
     }
-    /// `match_player::GOAL_COUNTS` (+0x3d).
+    /// `match_player::GOAL_COUNTS` (+0x3d). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn goal_counts(self) -> i16 {
         read_i16(self.0 + match_player::GOAL_COUNTS)
@@ -6522,7 +6615,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_goal_counts(self, v: i16) {
         write_i16(self.0 + match_player::GOAL_COUNTS, v)
     }
-    /// `match_player::NEW_CURRENT_REPUTATION` (+0x47).
+    /// `match_player::NEW_CURRENT_REPUTATION` (+0x47). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn new_current_reputation(self) -> i16 {
         read_i16(self.0 + match_player::NEW_CURRENT_REPUTATION)
@@ -6531,7 +6624,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_new_current_reputation(self, v: i16) {
         write_i16(self.0 + match_player::NEW_CURRENT_REPUTATION, v)
     }
-    /// `match_player::NEW_HOME_REPUTATION` (+0x49).
+    /// `match_player::NEW_HOME_REPUTATION` (+0x49). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn new_home_reputation(self) -> i16 {
         read_i16(self.0 + match_player::NEW_HOME_REPUTATION)
@@ -6540,7 +6633,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_new_home_reputation(self, v: i16) {
         write_i16(self.0 + match_player::NEW_HOME_REPUTATION, v)
     }
-    /// `match_player::NEW_WORLD_REPUTATION` (+0x4b).
+    /// `match_player::NEW_WORLD_REPUTATION` (+0x4b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn new_world_reputation(self) -> i16 {
         read_i16(self.0 + match_player::NEW_WORLD_REPUTATION)
@@ -6549,7 +6642,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_new_world_reputation(self, v: i16) {
         write_i16(self.0 + match_player::NEW_WORLD_REPUTATION, v)
     }
-    /// `match_player::STAMINA` (+0x4d).
+    /// `match_player::STAMINA` (+0x4d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stamina(self) -> f32 {
         read_f32(self.0 + match_player::STAMINA)
@@ -6558,7 +6651,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_stamina(self, v: f32) {
         write_f32(self.0 + match_player::STAMINA, v)
     }
-    /// `match_player::STAMINA_CEILING` (+0x51).
+    /// `match_player::STAMINA_CEILING` (+0x51). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stamina_ceiling(self) -> u32 {
         read_u32(self.0 + match_player::STAMINA_CEILING)
@@ -6567,7 +6660,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_stamina_ceiling(self, v: u32) {
         write_u32(self.0 + match_player::STAMINA_CEILING, v)
     }
-    /// `match_player::INJURY_CULPRIT` (+0x55).
+    /// `match_player::INJURY_CULPRIT` (+0x55). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn injury_culprit(self) -> usize {
         read_usize(self.0 + match_player::INJURY_CULPRIT)
@@ -6576,7 +6669,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_injury_culprit(self, v: usize) {
         write_usize(self.0 + match_player::INJURY_CULPRIT, v)
     }
-    /// `match_player::STAMINA_BOOST` (+0x59).
+    /// `match_player::STAMINA_BOOST` (+0x59). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stamina_boost(self) -> f32 {
         read_f32(self.0 + match_player::STAMINA_BOOST)
@@ -6585,7 +6678,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_stamina_boost(self, v: f32) {
         write_f32(self.0 + match_player::STAMINA_BOOST, v)
     }
-    /// `match_player::STAFF` (+0x69).
+    /// `match_player::STAFF` (+0x69). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn staff(self) -> usize {
         read_usize(self.0 + match_player::STAFF)
@@ -6594,7 +6687,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_staff(self, v: usize) {
         write_usize(self.0 + match_player::STAFF, v)
     }
-    /// `match_player::PLAYER` (+0x6d).
+    /// `match_player::PLAYER` (+0x6d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn player(self) -> usize {
         read_usize(self.0 + match_player::PLAYER)
@@ -6603,7 +6696,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_player(self, v: usize) {
         write_usize(self.0 + match_player::PLAYER, v)
     }
-    /// `match_player::ACCELERATION` (+0x71).
+    /// `match_player::ACCELERATION` (+0x71). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn acceleration(self) -> f32 {
         read_f32(self.0 + match_player::ACCELERATION)
@@ -6612,7 +6705,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_acceleration(self, v: f32) {
         write_f32(self.0 + match_player::ACCELERATION, v)
     }
-    /// `match_player::AGGRESSION` (+0x75).
+    /// `match_player::AGGRESSION` (+0x75). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn aggression(self) -> f32 {
         read_f32(self.0 + match_player::AGGRESSION)
@@ -6621,7 +6714,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_aggression(self, v: f32) {
         write_f32(self.0 + match_player::AGGRESSION, v)
     }
-    /// `match_player::AGILITY` (+0x79).
+    /// `match_player::AGILITY` (+0x79). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn agility(self) -> f32 {
         read_f32(self.0 + match_player::AGILITY)
@@ -6630,7 +6723,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_agility(self, v: f32) {
         write_f32(self.0 + match_player::AGILITY, v)
     }
-    /// `match_player::ANTICIPATION` (+0x7d).
+    /// `match_player::ANTICIPATION` (+0x7d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn anticipation(self) -> f32 {
         read_f32(self.0 + match_player::ANTICIPATION)
@@ -6639,7 +6732,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_anticipation(self, v: f32) {
         write_f32(self.0 + match_player::ANTICIPATION, v)
     }
-    /// `match_player::BALANCE` (+0x81).
+    /// `match_player::BALANCE` (+0x81). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn balance(self) -> i32 {
         read_i32(self.0 + match_player::BALANCE)
@@ -6648,7 +6741,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_balance(self, v: i32) {
         write_i32(self.0 + match_player::BALANCE, v)
     }
-    /// `match_player::BRAVERY` (+0x85).
+    /// `match_player::BRAVERY` (+0x85). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn bravery(self) -> i32 {
         read_i32(self.0 + match_player::BRAVERY)
@@ -6657,7 +6750,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_bravery(self, v: i32) {
         write_i32(self.0 + match_player::BRAVERY, v)
     }
-    /// `match_player::CORNERS` (+0x89).
+    /// `match_player::CORNERS` (+0x89). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn corners(self) -> i32 {
         read_i32(self.0 + match_player::CORNERS)
@@ -6666,7 +6759,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_corners(self, v: i32) {
         write_i32(self.0 + match_player::CORNERS, v)
     }
-    /// `match_player::CROSSING` (+0x8d).
+    /// `match_player::CROSSING` (+0x8d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn crossing(self) -> f32 {
         read_f32(self.0 + match_player::CROSSING)
@@ -6675,7 +6768,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_crossing(self, v: f32) {
         write_f32(self.0 + match_player::CROSSING, v)
     }
-    /// `match_player::DECISIONS` (+0x91).
+    /// `match_player::DECISIONS` (+0x91). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn decisions(self) -> f32 {
         read_f32(self.0 + match_player::DECISIONS)
@@ -6684,7 +6777,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_decisions(self, v: f32) {
         write_f32(self.0 + match_player::DECISIONS, v)
     }
-    /// `match_player::DRIBBLING` (+0x95).
+    /// `match_player::DRIBBLING` (+0x95). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn dribbling(self) -> f32 {
         read_f32(self.0 + match_player::DRIBBLING)
@@ -6693,7 +6786,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_dribbling(self, v: f32) {
         write_f32(self.0 + match_player::DRIBBLING, v)
     }
-    /// `match_player::FINISHING` (+0x99).
+    /// `match_player::FINISHING` (+0x99). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn finishing(self) -> f32 {
         read_f32(self.0 + match_player::FINISHING)
@@ -6702,7 +6795,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_finishing(self, v: f32) {
         write_f32(self.0 + match_player::FINISHING, v)
     }
-    /// `match_player::FLAIR` (+0x9d).
+    /// `match_player::FLAIR` (+0x9d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn flair(self) -> f32 {
         read_f32(self.0 + match_player::FLAIR)
@@ -6711,7 +6804,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_flair(self, v: f32) {
         write_f32(self.0 + match_player::FLAIR, v)
     }
-    /// `match_player::FREE_KICKS` (+0xa1).
+    /// `match_player::FREE_KICKS` (+0xa1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn free_kicks(self) -> f32 {
         read_f32(self.0 + match_player::FREE_KICKS)
@@ -6720,7 +6813,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_free_kicks(self, v: f32) {
         write_f32(self.0 + match_player::FREE_KICKS, v)
     }
-    /// `match_player::HANDLING` (+0xa5).
+    /// `match_player::HANDLING` (+0xa5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn handling(self) -> f32 {
         read_f32(self.0 + match_player::HANDLING)
@@ -6729,7 +6822,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_handling(self, v: f32) {
         write_f32(self.0 + match_player::HANDLING, v)
     }
-    /// `match_player::HEADING` (+0xa9).
+    /// `match_player::HEADING` (+0xa9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn heading(self) -> f32 {
         read_f32(self.0 + match_player::HEADING)
@@ -6738,7 +6831,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_heading(self, v: f32) {
         write_f32(self.0 + match_player::HEADING, v)
     }
-    /// `match_player::JUMPING` (+0xad).
+    /// `match_player::JUMPING` (+0xad). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn jumping(self) -> f32 {
         read_f32(self.0 + match_player::JUMPING)
@@ -6747,7 +6840,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_jumping(self, v: f32) {
         write_f32(self.0 + match_player::JUMPING, v)
     }
-    /// `match_player::LONG_SHOTS` (+0xb1).
+    /// `match_player::LONG_SHOTS` (+0xb1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn long_shots(self) -> f32 {
         read_f32(self.0 + match_player::LONG_SHOTS)
@@ -6756,7 +6849,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_long_shots(self, v: f32) {
         write_f32(self.0 + match_player::LONG_SHOTS, v)
     }
-    /// `match_player::MARKING` (+0xb5).
+    /// `match_player::MARKING` (+0xb5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn marking(self) -> f32 {
         read_f32(self.0 + match_player::MARKING)
@@ -6765,7 +6858,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_marking(self, v: f32) {
         write_f32(self.0 + match_player::MARKING, v)
     }
-    /// `match_player::MOVEMENT` (+0xb9).
+    /// `match_player::MOVEMENT` (+0xb9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn movement(self) -> f32 {
         read_f32(self.0 + match_player::MOVEMENT)
@@ -6774,7 +6867,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_movement(self, v: f32) {
         write_f32(self.0 + match_player::MOVEMENT, v)
     }
-    /// `match_player::ONE_ON_ONES` (+0xbd).
+    /// `match_player::ONE_ON_ONES` (+0xbd). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn one_on_ones(self) -> i32 {
         read_i32(self.0 + match_player::ONE_ON_ONES)
@@ -6783,7 +6876,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_one_on_ones(self, v: i32) {
         write_i32(self.0 + match_player::ONE_ON_ONES, v)
     }
-    /// `match_player::PACE` (+0xc1).
+    /// `match_player::PACE` (+0xc1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pace(self) -> f32 {
         read_f32(self.0 + match_player::PACE)
@@ -6792,7 +6885,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_pace(self, v: f32) {
         write_f32(self.0 + match_player::PACE, v)
     }
-    /// `match_player::PASSING` (+0xc5).
+    /// `match_player::PASSING` (+0xc5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn passing(self) -> f32 {
         read_f32(self.0 + match_player::PASSING)
@@ -6801,7 +6894,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_passing(self, v: f32) {
         write_f32(self.0 + match_player::PASSING, v)
     }
-    /// `match_player::PENALTIES` (+0xc9).
+    /// `match_player::PENALTIES` (+0xc9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn penalties(self) -> i32 {
         read_i32(self.0 + match_player::PENALTIES)
@@ -6810,7 +6903,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_penalties(self, v: i32) {
         write_i32(self.0 + match_player::PENALTIES, v)
     }
-    /// `match_player::POSITIONING` (+0xcd).
+    /// `match_player::POSITIONING` (+0xcd). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn positioning(self) -> f32 {
         read_f32(self.0 + match_player::POSITIONING)
@@ -6819,7 +6912,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_positioning(self, v: f32) {
         write_f32(self.0 + match_player::POSITIONING, v)
     }
-    /// `match_player::REFLEXES` (+0xd1).
+    /// `match_player::REFLEXES` (+0xd1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn reflexes(self) -> f32 {
         read_f32(self.0 + match_player::REFLEXES)
@@ -6828,7 +6921,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_reflexes(self, v: f32) {
         write_f32(self.0 + match_player::REFLEXES, v)
     }
-    /// `match_player::STAMINA_ATTRIBUTE` (+0xd5).
+    /// `match_player::STAMINA_ATTRIBUTE` (+0xd5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stamina_attribute(self) -> f32 {
         read_f32(self.0 + match_player::STAMINA_ATTRIBUTE)
@@ -6837,7 +6930,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_stamina_attribute(self, v: f32) {
         write_f32(self.0 + match_player::STAMINA_ATTRIBUTE, v)
     }
-    /// `match_player::STRENGTH` (+0xd9).
+    /// `match_player::STRENGTH` (+0xd9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn strength(self) -> f32 {
         read_f32(self.0 + match_player::STRENGTH)
@@ -6846,7 +6939,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_strength(self, v: f32) {
         write_f32(self.0 + match_player::STRENGTH, v)
     }
-    /// `match_player::TACKLING` (+0xdd).
+    /// `match_player::TACKLING` (+0xdd). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn tackling(self) -> f32 {
         read_f32(self.0 + match_player::TACKLING)
@@ -6855,7 +6948,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_tackling(self, v: f32) {
         write_f32(self.0 + match_player::TACKLING, v)
     }
-    /// `match_player::TEAMWORK` (+0xe1).
+    /// `match_player::TEAMWORK` (+0xe1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn teamwork(self) -> f32 {
         read_f32(self.0 + match_player::TEAMWORK)
@@ -6864,7 +6957,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_teamwork(self, v: f32) {
         write_f32(self.0 + match_player::TEAMWORK, v)
     }
-    /// `match_player::TECHNIQUE` (+0xe5).
+    /// `match_player::TECHNIQUE` (+0xe5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn technique(self) -> f32 {
         read_f32(self.0 + match_player::TECHNIQUE)
@@ -6873,7 +6966,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_technique(self, v: f32) {
         write_f32(self.0 + match_player::TECHNIQUE, v)
     }
-    /// `match_player::THROW_INS` (+0xe9).
+    /// `match_player::THROW_INS` (+0xe9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn throw_ins(self) -> f32 {
         read_f32(self.0 + match_player::THROW_INS)
@@ -6882,7 +6975,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_throw_ins(self, v: f32) {
         write_f32(self.0 + match_player::THROW_INS, v)
     }
-    /// `match_player::VERSATILITY` (+0xed).
+    /// `match_player::VERSATILITY` (+0xed). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn versatility(self) -> f32 {
         read_f32(self.0 + match_player::VERSATILITY)
@@ -6891,7 +6984,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_versatility(self, v: f32) {
         write_f32(self.0 + match_player::VERSATILITY, v)
     }
-    /// `match_player::VISION` (+0xf1).
+    /// `match_player::VISION` (+0xf1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn vision(self) -> f32 {
         read_f32(self.0 + match_player::VISION)
@@ -6900,7 +6993,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_vision(self, v: f32) {
         write_f32(self.0 + match_player::VISION, v)
     }
-    /// `match_player::WORK_RATE` (+0xf5).
+    /// `match_player::WORK_RATE` (+0xf5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn work_rate(self) -> f32 {
         read_f32(self.0 + match_player::WORK_RATE)
@@ -6909,7 +7002,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_work_rate(self, v: f32) {
         write_f32(self.0 + match_player::WORK_RATE, v)
     }
-    /// `match_player::CLUB` (+0xf9).
+    /// `match_player::CLUB` (+0xf9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club(self) -> usize {
         read_usize(self.0 + match_player::CLUB)
@@ -6918,7 +7011,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_club(self, v: usize) {
         write_usize(self.0 + match_player::CLUB, v)
     }
-    /// `match_player::TACKLE_RATE_NARRATED` (+0xfd).
+    /// `match_player::TACKLE_RATE_NARRATED` (+0xfd). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn tackle_rate_narrated(self) -> i8 {
         read_i8(self.0 + match_player::TACKLE_RATE_NARRATED)
@@ -6927,7 +7020,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_tackle_rate_narrated(self, v: i8) {
         write_i8(self.0 + match_player::TACKLE_RATE_NARRATED, v)
     }
-    /// `match_player::ANGER` (+0xff).
+    /// `match_player::ANGER` (+0xff). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn anger(self) -> i8 {
         read_i8(self.0 + match_player::ANGER)
@@ -6936,7 +7029,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_anger(self, v: i8) {
         write_i8(self.0 + match_player::ANGER, v)
     }
-    /// `match_player::FRUSTRATION` (+0x100).
+    /// `match_player::FRUSTRATION` (+0x100). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn frustration(self) -> i8 {
         read_i8(self.0 + match_player::FRUSTRATION)
@@ -6945,7 +7038,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_frustration(self, v: i8) {
         write_i8(self.0 + match_player::FRUSTRATION, v)
     }
-    /// `match_player::MARKER_COUNT` (+0x101).
+    /// `match_player::MARKER_COUNT` (+0x101). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn marker_count(self) -> i8 {
         read_i8(self.0 + match_player::MARKER_COUNT)
@@ -6954,7 +7047,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_marker_count(self, v: i8) {
         write_i8(self.0 + match_player::MARKER_COUNT, v)
     }
-    /// `match_player::CELL_X` (+0x102).
+    /// `match_player::CELL_X` (+0x102). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn cell_x(self) -> i8 {
         read_i8(self.0 + match_player::CELL_X)
@@ -6963,7 +7056,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_cell_x(self, v: i8) {
         write_i8(self.0 + match_player::CELL_X, v)
     }
-    /// `match_player::CELL_Y` (+0x103).
+    /// `match_player::CELL_Y` (+0x103). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn cell_y(self) -> i8 {
         read_i8(self.0 + match_player::CELL_Y)
@@ -6972,7 +7065,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_cell_y(self, v: i8) {
         write_i8(self.0 + match_player::CELL_Y, v)
     }
-    /// `match_player::MOMENT_PACE` (+0x104).
+    /// `match_player::MOMENT_PACE` (+0x104). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn moment_pace(self) -> i8 {
         read_i8(self.0 + match_player::MOMENT_PACE)
@@ -6981,7 +7074,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_moment_pace(self, v: i8) {
         write_i8(self.0 + match_player::MOMENT_PACE, v)
     }
-    /// `match_player::MOMENT_ANTICIPATION` (+0x105).
+    /// `match_player::MOMENT_ANTICIPATION` (+0x105). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn moment_anticipation(self) -> i8 {
         read_i8(self.0 + match_player::MOMENT_ANTICIPATION)
@@ -6990,7 +7083,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_moment_anticipation(self, v: i8) {
         write_i8(self.0 + match_player::MOMENT_ANTICIPATION, v)
     }
-    /// `match_player::MOMENT_DECISIONS` (+0x106).
+    /// `match_player::MOMENT_DECISIONS` (+0x106). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn moment_decisions(self) -> i8 {
         read_i8(self.0 + match_player::MOMENT_DECISIONS)
@@ -6999,7 +7092,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_moment_decisions(self, v: i8) {
         write_i8(self.0 + match_player::MOMENT_DECISIONS, v)
     }
-    /// `match_player::MOMENT_MOVEMENT` (+0x107).
+    /// `match_player::MOMENT_MOVEMENT` (+0x107). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn moment_movement(self) -> i8 {
         read_i8(self.0 + match_player::MOMENT_MOVEMENT)
@@ -7008,7 +7101,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_moment_movement(self, v: i8) {
         write_i8(self.0 + match_player::MOMENT_MOVEMENT, v)
     }
-    /// `match_player::MOMENT_MARKING` (+0x108).
+    /// `match_player::MOMENT_MARKING` (+0x108). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn moment_marking(self) -> i8 {
         read_i8(self.0 + match_player::MOMENT_MARKING)
@@ -7017,7 +7110,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_moment_marking(self, v: i8) {
         write_i8(self.0 + match_player::MOMENT_MARKING, v)
     }
-    /// `match_player::MOMENT_FLAIR` (+0x109).
+    /// `match_player::MOMENT_FLAIR` (+0x109). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn moment_flair(self) -> i8 {
         read_i8(self.0 + match_player::MOMENT_FLAIR)
@@ -7026,7 +7119,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_moment_flair(self, v: i8) {
         write_i8(self.0 + match_player::MOMENT_FLAIR, v)
     }
-    /// `match_player::MOMENT_POSITIONING` (+0x10a).
+    /// `match_player::MOMENT_POSITIONING` (+0x10a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn moment_positioning(self) -> i8 {
         read_i8(self.0 + match_player::MOMENT_POSITIONING)
@@ -7035,7 +7128,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_moment_positioning(self, v: i8) {
         write_i8(self.0 + match_player::MOMENT_POSITIONING, v)
     }
-    /// `match_player::MOMENT_VISION` (+0x10b).
+    /// `match_player::MOMENT_VISION` (+0x10b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn moment_vision(self) -> i8 {
         read_i8(self.0 + match_player::MOMENT_VISION)
@@ -7044,7 +7137,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_moment_vision(self, v: i8) {
         write_i8(self.0 + match_player::MOMENT_VISION, v)
     }
-    /// `match_player::MOMENT_AGILITY` (+0x10c).
+    /// `match_player::MOMENT_AGILITY` (+0x10c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn moment_agility(self) -> i8 {
         read_i8(self.0 + match_player::MOMENT_AGILITY)
@@ -7053,7 +7146,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_moment_agility(self, v: i8) {
         write_i8(self.0 + match_player::MOMENT_AGILITY, v)
     }
-    /// `match_player::MOMENT_WORK_RATE` (+0x10d).
+    /// `match_player::MOMENT_WORK_RATE` (+0x10d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn moment_work_rate(self) -> i8 {
         read_i8(self.0 + match_player::MOMENT_WORK_RATE)
@@ -7062,7 +7155,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_moment_work_rate(self, v: i8) {
         write_i8(self.0 + match_player::MOMENT_WORK_RATE, v)
     }
-    /// `match_player::BASE_PACE` (+0x10e).
+    /// `match_player::BASE_PACE` (+0x10e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn base_pace(self) -> i8 {
         read_i8(self.0 + match_player::BASE_PACE)
@@ -7071,7 +7164,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_base_pace(self, v: i8) {
         write_i8(self.0 + match_player::BASE_PACE, v)
     }
-    /// `match_player::BASE_DECISIONS` (+0x10f).
+    /// `match_player::BASE_DECISIONS` (+0x10f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn base_decisions(self) -> i8 {
         read_i8(self.0 + match_player::BASE_DECISIONS)
@@ -7080,7 +7173,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_base_decisions(self, v: i8) {
         write_i8(self.0 + match_player::BASE_DECISIONS, v)
     }
-    /// `match_player::BASE_POSITIONING` (+0x110).
+    /// `match_player::BASE_POSITIONING` (+0x110). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn base_positioning(self) -> i8 {
         read_i8(self.0 + match_player::BASE_POSITIONING)
@@ -7089,7 +7182,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_base_positioning(self, v: i8) {
         write_i8(self.0 + match_player::BASE_POSITIONING, v)
     }
-    /// `match_player::BASE_MOVEMENT` (+0x111).
+    /// `match_player::BASE_MOVEMENT` (+0x111). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn base_movement(self) -> i8 {
         read_i8(self.0 + match_player::BASE_MOVEMENT)
@@ -7098,7 +7191,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_base_movement(self, v: i8) {
         write_i8(self.0 + match_player::BASE_MOVEMENT, v)
     }
-    /// `match_player::BASE_MARKING` (+0x112).
+    /// `match_player::BASE_MARKING` (+0x112). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn base_marking(self) -> i8 {
         read_i8(self.0 + match_player::BASE_MARKING)
@@ -7107,7 +7200,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_base_marking(self, v: i8) {
         write_i8(self.0 + match_player::BASE_MARKING, v)
     }
-    /// `match_player::BASE_FLAIR` (+0x113).
+    /// `match_player::BASE_FLAIR` (+0x113). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn base_flair(self) -> i8 {
         read_i8(self.0 + match_player::BASE_FLAIR)
@@ -7116,7 +7209,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_base_flair(self, v: i8) {
         write_i8(self.0 + match_player::BASE_FLAIR, v)
     }
-    /// `match_player::BASE_VISION` (+0x114).
+    /// `match_player::BASE_VISION` (+0x114). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn base_vision(self) -> i8 {
         read_i8(self.0 + match_player::BASE_VISION)
@@ -7125,7 +7218,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_base_vision(self, v: i8) {
         write_i8(self.0 + match_player::BASE_VISION, v)
     }
-    /// `match_player::BASE_ANTICIPATION` (+0x115).
+    /// `match_player::BASE_ANTICIPATION` (+0x115). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn base_anticipation(self) -> i8 {
         read_i8(self.0 + match_player::BASE_ANTICIPATION)
@@ -7134,7 +7227,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_base_anticipation(self, v: i8) {
         write_i8(self.0 + match_player::BASE_ANTICIPATION, v)
     }
-    /// `match_player::BASE_WORK_RATE` (+0x116).
+    /// `match_player::BASE_WORK_RATE` (+0x116). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn base_work_rate(self) -> i8 {
         read_i8(self.0 + match_player::BASE_WORK_RATE)
@@ -7143,7 +7236,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_base_work_rate(self, v: i8) {
         write_i8(self.0 + match_player::BASE_WORK_RATE, v)
     }
-    /// `match_player::BASE_AGILITY` (+0x117).
+    /// `match_player::BASE_AGILITY` (+0x117). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn base_agility(self) -> i8 {
         read_i8(self.0 + match_player::BASE_AGILITY)
@@ -7152,12 +7245,12 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_base_agility(self, v: i8) {
         write_i8(self.0 + match_player::BASE_AGILITY, v)
     }
-    /// `match_player::MOVE_SKILL` (+0x11a).
+    /// `match_player::MOVE_SKILL` (+0x11a). Name: read.
     #[inline(always)]
     pub(crate) fn move_skill_addr(self) -> usize {
         self.0 + match_player::MOVE_SKILL
     }
-    /// `match_player::ACTION` (+0x198).
+    /// `match_player::ACTION` (+0x198). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn action(self) -> u16 {
         read_u16(self.0 + match_player::ACTION)
@@ -7166,7 +7259,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_action(self, v: u16) {
         write_u16(self.0 + match_player::ACTION, v)
     }
-    /// `match_player::FACING` (+0x19a).
+    /// `match_player::FACING` (+0x19a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn facing(self) -> i16 {
         read_i16(self.0 + match_player::FACING)
@@ -7175,7 +7268,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_facing(self, v: i16) {
         write_i16(self.0 + match_player::FACING, v)
     }
-    /// `match_player::BALL_CONTROL` (+0x19c).
+    /// `match_player::BALL_CONTROL` (+0x19c). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn ball_control(self) -> i16 {
         read_i16(self.0 + match_player::BALL_CONTROL)
@@ -7184,7 +7277,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_ball_control(self, v: i16) {
         write_i16(self.0 + match_player::BALL_CONTROL, v)
     }
-    /// `match_player::ENGINE` (+0x19e).
+    /// `match_player::ENGINE` (+0x19e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn engine(self) -> usize {
         read_usize(self.0 + match_player::ENGINE)
@@ -7193,7 +7286,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_engine(self, v: usize) {
         write_usize(self.0 + match_player::ENGINE, v)
     }
-    /// `match_player::CONFIDENCE` (+0x1a2).
+    /// `match_player::CONFIDENCE` (+0x1a2). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn confidence(self) -> f32 {
         read_f32(self.0 + match_player::CONFIDENCE)
@@ -7202,7 +7295,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_confidence(self, v: f32) {
         write_f32(self.0 + match_player::CONFIDENCE, v)
     }
-    /// `match_player::LAST_FOULED_BY` (+0x1a6).
+    /// `match_player::LAST_FOULED_BY` (+0x1a6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn last_fouled_by(self) -> usize {
         read_usize(self.0 + match_player::LAST_FOULED_BY)
@@ -7211,7 +7304,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_last_fouled_by(self, v: usize) {
         write_usize(self.0 + match_player::LAST_FOULED_BY, v)
     }
-    /// `match_player::MARKING_TARGET` (+0x1aa).
+    /// `match_player::MARKING_TARGET` (+0x1aa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn marking_target(self) -> usize {
         read_usize(self.0 + match_player::MARKING_TARGET)
@@ -7220,7 +7313,7 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_marking_target(self, v: usize) {
         write_usize(self.0 + match_player::MARKING_TARGET, v)
     }
-    /// `match_player::MARKERS` (+0x1ae).
+    /// `match_player::MARKERS` (+0x1ae). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn markers(self) -> usize {
         read_usize(self.0 + match_player::MARKERS)
@@ -7254,7 +7347,7 @@ impl NonPlayer {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `non_player::CURRENT_ABILITY` (+0x4).
+    /// `non_player::CURRENT_ABILITY` (+0x4). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn current_ability(self) -> i16 {
         read_i16(self.0 + non_player::CURRENT_ABILITY)
@@ -7263,7 +7356,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_current_ability(self, v: i16) {
         write_i16(self.0 + non_player::CURRENT_ABILITY, v)
     }
-    /// `non_player::POTENTIAL_ABILITY` (+0x6).
+    /// `non_player::POTENTIAL_ABILITY` (+0x6). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn potential_ability(self) -> u16 {
         read_u16(self.0 + non_player::POTENTIAL_ABILITY)
@@ -7272,7 +7365,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_potential_ability(self, v: u16) {
         write_u16(self.0 + non_player::POTENTIAL_ABILITY, v)
     }
-    /// `non_player::HOME_REPUTATION` (+0x8).
+    /// `non_player::HOME_REPUTATION` (+0x8). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn home_reputation(self) -> i16 {
         read_i16(self.0 + non_player::HOME_REPUTATION)
@@ -7281,7 +7374,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_home_reputation(self, v: i16) {
         write_i16(self.0 + non_player::HOME_REPUTATION, v)
     }
-    /// `non_player::CURRENT_REPUTATION` (+0xa).
+    /// `non_player::CURRENT_REPUTATION` (+0xa). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn current_reputation(self) -> i16 {
         read_i16(self.0 + non_player::CURRENT_REPUTATION)
@@ -7290,7 +7383,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_current_reputation(self, v: i16) {
         write_i16(self.0 + non_player::CURRENT_REPUTATION, v)
     }
-    /// `non_player::WORLD_REPUTATION` (+0xc).
+    /// `non_player::WORLD_REPUTATION` (+0xc). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn world_reputation(self) -> i16 {
         read_i16(self.0 + non_player::WORLD_REPUTATION)
@@ -7299,7 +7392,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_world_reputation(self, v: i16) {
         write_i16(self.0 + non_player::WORLD_REPUTATION, v)
     }
-    /// `non_player::ATTACKING` (+0xe).
+    /// `non_player::ATTACKING` (+0xe). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn attacking(self) -> i8 {
         read_i8(self.0 + non_player::ATTACKING)
@@ -7308,7 +7401,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_attacking(self, v: i8) {
         write_i8(self.0 + non_player::ATTACKING, v)
     }
-    /// `non_player::BUSINESS` (+0xf).
+    /// `non_player::BUSINESS` (+0xf). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn business(self) -> u8 {
         read_u8(self.0 + non_player::BUSINESS)
@@ -7317,7 +7410,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_business(self, v: u8) {
         write_u8(self.0 + non_player::BUSINESS, v)
     }
-    /// `non_player::COACHING` (+0x10).
+    /// `non_player::COACHING` (+0x10). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn coaching(self) -> i8 {
         read_i8(self.0 + non_player::COACHING)
@@ -7326,7 +7419,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_coaching(self, v: i8) {
         write_i8(self.0 + non_player::COACHING, v)
     }
-    /// `non_player::COACHING_GKS` (+0x11).
+    /// `non_player::COACHING_GKS` (+0x11). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn coaching_gks(self) -> i8 {
         read_i8(self.0 + non_player::COACHING_GKS)
@@ -7335,7 +7428,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_coaching_gks(self, v: i8) {
         write_i8(self.0 + non_player::COACHING_GKS, v)
     }
-    /// `non_player::DIRECTNESS` (+0x13).
+    /// `non_player::DIRECTNESS` (+0x13). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn directness(self) -> i8 {
         read_i8(self.0 + non_player::DIRECTNESS)
@@ -7344,7 +7437,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_directness(self, v: i8) {
         write_i8(self.0 + non_player::DIRECTNESS, v)
     }
-    /// `non_player::DISCIPLINE` (+0x14).
+    /// `non_player::DISCIPLINE` (+0x14). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn discipline(self) -> u8 {
         read_u8(self.0 + non_player::DISCIPLINE)
@@ -7353,7 +7446,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_discipline(self, v: u8) {
         write_u8(self.0 + non_player::DISCIPLINE, v)
     }
-    /// `non_player::FREE_ROLES` (+0x15).
+    /// `non_player::FREE_ROLES` (+0x15). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn free_roles(self) -> i8 {
         read_i8(self.0 + non_player::FREE_ROLES)
@@ -7362,7 +7455,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_free_roles(self, v: i8) {
         write_i8(self.0 + non_player::FREE_ROLES, v)
     }
-    /// `non_player::INTERFERENCE` (+0x16).
+    /// `non_player::INTERFERENCE` (+0x16). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn interference(self) -> i8 {
         read_i8(self.0 + non_player::INTERFERENCE)
@@ -7371,7 +7464,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_interference(self, v: i8) {
         write_i8(self.0 + non_player::INTERFERENCE, v)
     }
-    /// `non_player::JUDGEMENT` (+0x17).
+    /// `non_player::JUDGEMENT` (+0x17). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn judgement(self) -> i8 {
         read_i8(self.0 + non_player::JUDGEMENT)
@@ -7380,7 +7473,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_judgement(self, v: i8) {
         write_i8(self.0 + non_player::JUDGEMENT, v)
     }
-    /// `non_player::JUDGING_POTENTIAL` (+0x18).
+    /// `non_player::JUDGING_POTENTIAL` (+0x18). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn judging_potential(self) -> i8 {
         read_i8(self.0 + non_player::JUDGING_POTENTIAL)
@@ -7389,7 +7482,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_judging_potential(self, v: i8) {
         write_i8(self.0 + non_player::JUDGING_POTENTIAL, v)
     }
-    /// `non_player::MAN_HANDLING` (+0x19).
+    /// `non_player::MAN_HANDLING` (+0x19). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn man_handling(self) -> u8 {
         read_u8(self.0 + non_player::MAN_HANDLING)
@@ -7398,7 +7491,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_man_handling(self, v: u8) {
         write_u8(self.0 + non_player::MAN_HANDLING, v)
     }
-    /// `non_player::MARKING` (+0x1a).
+    /// `non_player::MARKING` (+0x1a). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn marking(self) -> i8 {
         read_i8(self.0 + non_player::MARKING)
@@ -7407,7 +7500,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_marking(self, v: i8) {
         write_i8(self.0 + non_player::MARKING, v)
     }
-    /// `non_player::MOTIVATING` (+0x1b).
+    /// `non_player::MOTIVATING` (+0x1b). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn motivating(self) -> u8 {
         read_u8(self.0 + non_player::MOTIVATING)
@@ -7416,7 +7509,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_motivating(self, v: u8) {
         write_u8(self.0 + non_player::MOTIVATING, v)
     }
-    /// `non_player::OFFSIDE` (+0x1c).
+    /// `non_player::OFFSIDE` (+0x1c). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn offside(self) -> i8 {
         read_i8(self.0 + non_player::OFFSIDE)
@@ -7425,7 +7518,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_offside(self, v: i8) {
         write_i8(self.0 + non_player::OFFSIDE, v)
     }
-    /// `non_player::PATIENCE` (+0x1d).
+    /// `non_player::PATIENCE` (+0x1d). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn patience(self) -> u8 {
         read_u8(self.0 + non_player::PATIENCE)
@@ -7434,7 +7527,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_patience(self, v: u8) {
         write_u8(self.0 + non_player::PATIENCE, v)
     }
-    /// `non_player::PHYSIOTHERAPY` (+0x1e).
+    /// `non_player::PHYSIOTHERAPY` (+0x1e). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn physiotherapy(self) -> u8 {
         read_u8(self.0 + non_player::PHYSIOTHERAPY)
@@ -7443,7 +7536,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_physiotherapy(self, v: u8) {
         write_u8(self.0 + non_player::PHYSIOTHERAPY, v)
     }
-    /// `non_player::PRESSING` (+0x1f).
+    /// `non_player::PRESSING` (+0x1f). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn pressing(self) -> i8 {
         read_i8(self.0 + non_player::PRESSING)
@@ -7452,7 +7545,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_pressing(self, v: i8) {
         write_i8(self.0 + non_player::PRESSING, v)
     }
-    /// `non_player::RESOURCES` (+0x20).
+    /// `non_player::RESOURCES` (+0x20). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn resources(self) -> i8 {
         read_i8(self.0 + non_player::RESOURCES)
@@ -7461,7 +7554,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_resources(self, v: i8) {
         write_i8(self.0 + non_player::RESOURCES, v)
     }
-    /// `non_player::TACTICS` (+0x21).
+    /// `non_player::TACTICS` (+0x21). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn tactics(self) -> i8 {
         read_i8(self.0 + non_player::TACTICS)
@@ -7470,7 +7563,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_tactics(self, v: i8) {
         write_i8(self.0 + non_player::TACTICS, v)
     }
-    /// `non_player::YOUNGSTERS` (+0x22).
+    /// `non_player::YOUNGSTERS` (+0x22). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn youngsters(self) -> i8 {
         read_i8(self.0 + non_player::YOUNGSTERS)
@@ -7479,7 +7572,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_youngsters(self, v: i8) {
         write_i8(self.0 + non_player::YOUNGSTERS, v)
     }
-    /// `non_player::GOALKEEPER` (+0x23).
+    /// `non_player::GOALKEEPER` (+0x23). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn goalkeeper(self) -> i32 {
         read_i32(self.0 + non_player::GOALKEEPER)
@@ -7488,7 +7581,7 @@ impl NonPlayer {
     pub(crate) unsafe fn set_goalkeeper(self, v: i32) {
         write_i32(self.0 + non_player::GOALKEEPER, v)
     }
-    /// `non_player::FORMATION` (+0x43).
+    /// `non_player::FORMATION` (+0x43). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn formation(self) -> i8 {
         read_i8(self.0 + non_player::FORMATION)
@@ -7522,7 +7615,7 @@ impl Preferences {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `preferences::STAFF_FAVOURITE_CLUBS1` (+0x4).
+    /// `preferences::STAFF_FAVOURITE_CLUBS1` (+0x4). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn staff_favourite_clubs1(self) -> i32 {
         read_i32(self.0 + preferences::STAFF_FAVOURITE_CLUBS1)
@@ -7531,7 +7624,7 @@ impl Preferences {
     pub(crate) unsafe fn set_staff_favourite_clubs1(self, v: i32) {
         write_i32(self.0 + preferences::STAFF_FAVOURITE_CLUBS1, v)
     }
-    /// `preferences::STAFF_DISLIKED_CLUBS1` (+0x10).
+    /// `preferences::STAFF_DISLIKED_CLUBS1` (+0x10). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn staff_disliked_clubs1(self) -> u32 {
         read_u32(self.0 + preferences::STAFF_DISLIKED_CLUBS1)
@@ -7540,7 +7633,7 @@ impl Preferences {
     pub(crate) unsafe fn set_staff_disliked_clubs1(self, v: u32) {
         write_u32(self.0 + preferences::STAFF_DISLIKED_CLUBS1, v)
     }
-    /// `preferences::STAFF_DISLIKED_CLUBS2` (+0x14).
+    /// `preferences::STAFF_DISLIKED_CLUBS2` (+0x14). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn staff_disliked_clubs2(self) -> u32 {
         read_u32(self.0 + preferences::STAFF_DISLIKED_CLUBS2)
@@ -7549,7 +7642,7 @@ impl Preferences {
     pub(crate) unsafe fn set_staff_disliked_clubs2(self, v: u32) {
         write_u32(self.0 + preferences::STAFF_DISLIKED_CLUBS2, v)
     }
-    /// `preferences::STAFF_DISLIKED_CLUBS3` (+0x18).
+    /// `preferences::STAFF_DISLIKED_CLUBS3` (+0x18). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn staff_disliked_clubs3(self) -> u32 {
         read_u32(self.0 + preferences::STAFF_DISLIKED_CLUBS3)
@@ -7558,7 +7651,7 @@ impl Preferences {
     pub(crate) unsafe fn set_staff_disliked_clubs3(self, v: u32) {
         write_u32(self.0 + preferences::STAFF_DISLIKED_CLUBS3, v)
     }
-    /// `preferences::STAFF_FAVOURITE_STAFF1` (+0x1c).
+    /// `preferences::STAFF_FAVOURITE_STAFF1` (+0x1c). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn staff_favourite_staff1(self) -> i32 {
         read_i32(self.0 + preferences::STAFF_FAVOURITE_STAFF1)
@@ -7567,7 +7660,7 @@ impl Preferences {
     pub(crate) unsafe fn set_staff_favourite_staff1(self, v: i32) {
         write_i32(self.0 + preferences::STAFF_FAVOURITE_STAFF1, v)
     }
-    /// `preferences::STAFF_FAVOURITE_STAFF2` (+0x20).
+    /// `preferences::STAFF_FAVOURITE_STAFF2` (+0x20). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn staff_favourite_staff2(self) -> i32 {
         read_i32(self.0 + preferences::STAFF_FAVOURITE_STAFF2)
@@ -7576,7 +7669,7 @@ impl Preferences {
     pub(crate) unsafe fn set_staff_favourite_staff2(self, v: i32) {
         write_i32(self.0 + preferences::STAFF_FAVOURITE_STAFF2, v)
     }
-    /// `preferences::STAFF_DISLIKED_STAFF1` (+0x28).
+    /// `preferences::STAFF_DISLIKED_STAFF1` (+0x28). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn staff_disliked_staff1(self) -> i32 {
         read_i32(self.0 + preferences::STAFF_DISLIKED_STAFF1)
@@ -7610,7 +7703,7 @@ impl Fixture {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `fixture::COMP_ID` (+0x0).
+    /// `fixture::COMP_ID` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn comp_id(self) -> i32 {
         read_i32(self.0 + fixture::COMP_ID)
@@ -7619,7 +7712,7 @@ impl Fixture {
     pub(crate) unsafe fn set_comp_id(self, v: i32) {
         write_i32(self.0 + fixture::COMP_ID, v)
     }
-    /// `fixture::STADIUM_ID` (+0x4).
+    /// `fixture::STADIUM_ID` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stadium_id(self) -> usize {
         read_usize(self.0 + fixture::STADIUM_ID)
@@ -7628,7 +7721,7 @@ impl Fixture {
     pub(crate) unsafe fn set_stadium_id(self, v: usize) {
         write_usize(self.0 + fixture::STADIUM_ID, v)
     }
-    /// `fixture::MATCH_STATS_SLOT` (+0x8).
+    /// `fixture::MATCH_STATS_SLOT` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn match_stats_slot(self) -> usize {
         read_usize(self.0 + fixture::MATCH_STATS_SLOT)
@@ -7637,7 +7730,7 @@ impl Fixture {
     pub(crate) unsafe fn set_match_stats_slot(self, v: usize) {
         write_usize(self.0 + fixture::MATCH_STATS_SLOT, v)
     }
-    /// `fixture::HOME_CLUB_ID` (+0xc).
+    /// `fixture::HOME_CLUB_ID` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_club_id(self) -> usize {
         read_usize(self.0 + fixture::HOME_CLUB_ID)
@@ -7646,7 +7739,7 @@ impl Fixture {
     pub(crate) unsafe fn set_home_club_id(self, v: usize) {
         write_usize(self.0 + fixture::HOME_CLUB_ID, v)
     }
-    /// `fixture::AWAY_CLUB_ID` (+0x10).
+    /// `fixture::AWAY_CLUB_ID` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_club_id(self) -> usize {
         read_usize(self.0 + fixture::AWAY_CLUB_ID)
@@ -7655,7 +7748,7 @@ impl Fixture {
     pub(crate) unsafe fn set_away_club_id(self, v: usize) {
         write_usize(self.0 + fixture::AWAY_CLUB_ID, v)
     }
-    /// `fixture::COMPETITION` (+0x14).
+    /// `fixture::COMPETITION` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn competition(self) -> usize {
         read_usize(self.0 + fixture::COMPETITION)
@@ -7664,7 +7757,7 @@ impl Fixture {
     pub(crate) unsafe fn set_competition(self, v: usize) {
         write_usize(self.0 + fixture::COMPETITION, v)
     }
-    /// `fixture::STADIUM` (+0x18).
+    /// `fixture::STADIUM` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stadium(self) -> usize {
         read_usize(self.0 + fixture::STADIUM)
@@ -7673,7 +7766,7 @@ impl Fixture {
     pub(crate) unsafe fn set_stadium(self, v: usize) {
         write_usize(self.0 + fixture::STADIUM, v)
     }
-    /// `fixture::HOME_CLUB` (+0x1c).
+    /// `fixture::HOME_CLUB` (+0x1c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_club(self) -> usize {
         read_usize(self.0 + fixture::HOME_CLUB)
@@ -7682,7 +7775,7 @@ impl Fixture {
     pub(crate) unsafe fn set_home_club(self, v: usize) {
         write_usize(self.0 + fixture::HOME_CLUB, v)
     }
-    /// `fixture::AWAY_CLUB` (+0x20).
+    /// `fixture::AWAY_CLUB` (+0x20). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_club(self) -> usize {
         read_usize(self.0 + fixture::AWAY_CLUB)
@@ -7691,7 +7784,7 @@ impl Fixture {
     pub(crate) unsafe fn set_away_club(self, v: usize) {
         write_usize(self.0 + fixture::AWAY_CLUB, v)
     }
-    /// `fixture::NEXT_ROUND_YEAR` (+0x24).
+    /// `fixture::NEXT_ROUND_YEAR` (+0x24). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn next_round_year(self) -> u16 {
         read_u16(self.0 + fixture::NEXT_ROUND_YEAR)
@@ -7700,7 +7793,7 @@ impl Fixture {
     pub(crate) unsafe fn set_next_round_year(self, v: u16) {
         write_u16(self.0 + fixture::NEXT_ROUND_YEAR, v)
     }
-    /// `fixture::NEXT_ROUND_DAY` (+0x26).
+    /// `fixture::NEXT_ROUND_DAY` (+0x26). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn next_round_day(self) -> u16 {
         read_u16(self.0 + fixture::NEXT_ROUND_DAY)
@@ -7709,7 +7802,7 @@ impl Fixture {
     pub(crate) unsafe fn set_next_round_day(self, v: u16) {
         write_u16(self.0 + fixture::NEXT_ROUND_DAY, v)
     }
-    /// `fixture::YEAR` (+0x28).
+    /// `fixture::YEAR` (+0x28). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn year(self) -> u16 {
         read_u16(self.0 + fixture::YEAR)
@@ -7718,7 +7811,7 @@ impl Fixture {
     pub(crate) unsafe fn set_year(self, v: u16) {
         write_u16(self.0 + fixture::YEAR, v)
     }
-    /// `fixture::DAY` (+0x2a).
+    /// `fixture::DAY` (+0x2a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn day(self) -> u16 {
         read_u16(self.0 + fixture::DAY)
@@ -7727,7 +7820,7 @@ impl Fixture {
     pub(crate) unsafe fn set_day(self, v: u16) {
         write_u16(self.0 + fixture::DAY, v)
     }
-    /// `fixture::SEASON_YEAR` (+0x2c).
+    /// `fixture::SEASON_YEAR` (+0x2c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_year(self) -> u16 {
         read_u16(self.0 + fixture::SEASON_YEAR)
@@ -7736,7 +7829,7 @@ impl Fixture {
     pub(crate) unsafe fn set_season_year(self, v: u16) {
         write_u16(self.0 + fixture::SEASON_YEAR, v)
     }
-    /// `fixture::REFEREE` (+0x2e).
+    /// `fixture::REFEREE` (+0x2e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn referee(self) -> i16 {
         read_i16(self.0 + fixture::REFEREE)
@@ -7745,7 +7838,7 @@ impl Fixture {
     pub(crate) unsafe fn set_referee(self, v: i16) {
         write_i16(self.0 + fixture::REFEREE, v)
     }
-    /// `fixture::ROUND_NAME` (+0x30).
+    /// `fixture::ROUND_NAME` (+0x30). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn round_name(self) -> i16 {
         read_i16(self.0 + fixture::ROUND_NAME)
@@ -7754,7 +7847,7 @@ impl Fixture {
     pub(crate) unsafe fn set_round_name(self, v: i16) {
         write_i16(self.0 + fixture::ROUND_NAME, v)
     }
-    /// `fixture::ROUND_PREFIX` (+0x32).
+    /// `fixture::ROUND_PREFIX` (+0x32). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn round_prefix(self) -> i16 {
         read_i16(self.0 + fixture::ROUND_PREFIX)
@@ -7763,7 +7856,7 @@ impl Fixture {
     pub(crate) unsafe fn set_round_prefix(self, v: i16) {
         write_i16(self.0 + fixture::ROUND_PREFIX, v)
     }
-    /// `fixture::ROUND_NUMBER` (+0x34).
+    /// `fixture::ROUND_NUMBER` (+0x34). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn round_number(self) -> i16 {
         read_i16(self.0 + fixture::ROUND_NUMBER)
@@ -7772,7 +7865,7 @@ impl Fixture {
     pub(crate) unsafe fn set_round_number(self, v: i16) {
         write_i16(self.0 + fixture::ROUND_NUMBER, v)
     }
-    /// `fixture::ROUND_DRAW_RULES` (+0x36).
+    /// `fixture::ROUND_DRAW_RULES` (+0x36). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn round_draw_rules(self) -> u16 {
         read_u16(self.0 + fixture::ROUND_DRAW_RULES)
@@ -7781,7 +7874,7 @@ impl Fixture {
     pub(crate) unsafe fn set_round_draw_rules(self, v: u16) {
         write_u16(self.0 + fixture::ROUND_DRAW_RULES, v)
     }
-    /// `fixture::TIE_RULES` (+0x38).
+    /// `fixture::TIE_RULES` (+0x38). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn tie_rules(self) -> u16 {
         read_u16(self.0 + fixture::TIE_RULES)
@@ -7790,7 +7883,7 @@ impl Fixture {
     pub(crate) unsafe fn set_tie_rules(self, v: u16) {
         write_u16(self.0 + fixture::TIE_RULES, v)
     }
-    /// `fixture::CATEGORY` (+0x3a).
+    /// `fixture::CATEGORY` (+0x3a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn category(self) -> u8 {
         read_u8(self.0 + fixture::CATEGORY)
@@ -7799,7 +7892,7 @@ impl Fixture {
     pub(crate) unsafe fn set_category(self, v: u8) {
         write_u8(self.0 + fixture::CATEGORY, v)
     }
-    /// `fixture::STAGE` (+0x3b).
+    /// `fixture::STAGE` (+0x3b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stage(self) -> u8 {
         read_u8(self.0 + fixture::STAGE)
@@ -7808,7 +7901,7 @@ impl Fixture {
     pub(crate) unsafe fn set_stage(self, v: u8) {
         write_u8(self.0 + fixture::STAGE, v)
     }
-    /// `fixture::NEUTRAL_VENUE` (+0x3c).
+    /// `fixture::NEUTRAL_VENUE` (+0x3c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn neutral_venue(self) -> u8 {
         read_u8(self.0 + fixture::NEUTRAL_VENUE)
@@ -7817,7 +7910,7 @@ impl Fixture {
     pub(crate) unsafe fn set_neutral_venue(self, v: u8) {
         write_u8(self.0 + fixture::NEUTRAL_VENUE, v)
     }
-    /// `fixture::HOME_RESULT_MARK` (+0x3d).
+    /// `fixture::HOME_RESULT_MARK` (+0x3d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_result_mark(self) -> i8 {
         read_i8(self.0 + fixture::HOME_RESULT_MARK)
@@ -7826,7 +7919,7 @@ impl Fixture {
     pub(crate) unsafe fn set_home_result_mark(self, v: i8) {
         write_i8(self.0 + fixture::HOME_RESULT_MARK, v)
     }
-    /// `fixture::AWAY_RESULT_MARK` (+0x3e).
+    /// `fixture::AWAY_RESULT_MARK` (+0x3e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_result_mark(self) -> i8 {
         read_i8(self.0 + fixture::AWAY_RESULT_MARK)
@@ -7835,7 +7928,7 @@ impl Fixture {
     pub(crate) unsafe fn set_away_result_mark(self, v: i8) {
         write_i8(self.0 + fixture::AWAY_RESULT_MARK, v)
     }
-    /// `fixture::TIME_SLICE` (+0x3f).
+    /// `fixture::TIME_SLICE` (+0x3f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn time_slice(self) -> u8 {
         read_u8(self.0 + fixture::TIME_SLICE)
@@ -7844,7 +7937,7 @@ impl Fixture {
     pub(crate) unsafe fn set_time_slice(self, v: u8) {
         write_u8(self.0 + fixture::TIME_SLICE, v)
     }
-    /// `fixture::HOME_SIDE_MARK` (+0x40).
+    /// `fixture::HOME_SIDE_MARK` (+0x40). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn home_side_mark(self) -> u8 {
         read_u8(self.0 + fixture::HOME_SIDE_MARK)
@@ -7853,7 +7946,7 @@ impl Fixture {
     pub(crate) unsafe fn set_home_side_mark(self, v: u8) {
         write_u8(self.0 + fixture::HOME_SIDE_MARK, v)
     }
-    /// `fixture::AWAY_SIDE_MARK` (+0x41).
+    /// `fixture::AWAY_SIDE_MARK` (+0x41). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn away_side_mark(self) -> i8 {
         read_i8(self.0 + fixture::AWAY_SIDE_MARK)
@@ -7862,7 +7955,7 @@ impl Fixture {
     pub(crate) unsafe fn set_away_side_mark(self, v: i8) {
         write_i8(self.0 + fixture::AWAY_SIDE_MARK, v)
     }
-    /// `fixture::STAGE_INDEX` (+0x42).
+    /// `fixture::STAGE_INDEX` (+0x42). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stage_index(self) -> u8 {
         read_u8(self.0 + fixture::STAGE_INDEX)
@@ -7871,7 +7964,7 @@ impl Fixture {
     pub(crate) unsafe fn set_stage_index(self, v: u8) {
         write_u8(self.0 + fixture::STAGE_INDEX, v)
     }
-    /// `fixture::HOME_GOALS` (+0x43).
+    /// `fixture::HOME_GOALS` (+0x43). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_goals(self) -> i8 {
         read_i8(self.0 + fixture::HOME_GOALS)
@@ -7880,7 +7973,7 @@ impl Fixture {
     pub(crate) unsafe fn set_home_goals(self, v: i8) {
         write_i8(self.0 + fixture::HOME_GOALS, v)
     }
-    /// `fixture::AWAY_GOALS` (+0x44).
+    /// `fixture::AWAY_GOALS` (+0x44). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_goals(self) -> i8 {
         read_i8(self.0 + fixture::AWAY_GOALS)
@@ -7889,7 +7982,7 @@ impl Fixture {
     pub(crate) unsafe fn set_away_goals(self, v: i8) {
         write_i8(self.0 + fixture::AWAY_GOALS, v)
     }
-    /// `fixture::HOME_GOALS_HALF_TIME` (+0x45).
+    /// `fixture::HOME_GOALS_HALF_TIME` (+0x45). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_goals_half_time(self) -> u8 {
         read_u8(self.0 + fixture::HOME_GOALS_HALF_TIME)
@@ -7898,7 +7991,7 @@ impl Fixture {
     pub(crate) unsafe fn set_home_goals_half_time(self, v: u8) {
         write_u8(self.0 + fixture::HOME_GOALS_HALF_TIME, v)
     }
-    /// `fixture::AWAY_GOALS_HALF_TIME` (+0x46).
+    /// `fixture::AWAY_GOALS_HALF_TIME` (+0x46). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_goals_half_time(self) -> u8 {
         read_u8(self.0 + fixture::AWAY_GOALS_HALF_TIME)
@@ -7907,7 +8000,7 @@ impl Fixture {
     pub(crate) unsafe fn set_away_goals_half_time(self, v: u8) {
         write_u8(self.0 + fixture::AWAY_GOALS_HALF_TIME, v)
     }
-    /// `fixture::HOME_GOALS_EXTRA_TIME` (+0x47).
+    /// `fixture::HOME_GOALS_EXTRA_TIME` (+0x47). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_goals_extra_time(self) -> i8 {
         read_i8(self.0 + fixture::HOME_GOALS_EXTRA_TIME)
@@ -7916,7 +8009,7 @@ impl Fixture {
     pub(crate) unsafe fn set_home_goals_extra_time(self, v: i8) {
         write_i8(self.0 + fixture::HOME_GOALS_EXTRA_TIME, v)
     }
-    /// `fixture::AWAY_GOALS_EXTRA_TIME` (+0x48).
+    /// `fixture::AWAY_GOALS_EXTRA_TIME` (+0x48). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_goals_extra_time(self) -> i8 {
         read_i8(self.0 + fixture::AWAY_GOALS_EXTRA_TIME)
@@ -7925,7 +8018,7 @@ impl Fixture {
     pub(crate) unsafe fn set_away_goals_extra_time(self, v: i8) {
         write_i8(self.0 + fixture::AWAY_GOALS_EXTRA_TIME, v)
     }
-    /// `fixture::HOME_PENALTIES` (+0x49).
+    /// `fixture::HOME_PENALTIES` (+0x49). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_penalties(self) -> i8 {
         read_i8(self.0 + fixture::HOME_PENALTIES)
@@ -7934,7 +8027,7 @@ impl Fixture {
     pub(crate) unsafe fn set_home_penalties(self, v: i8) {
         write_i8(self.0 + fixture::HOME_PENALTIES, v)
     }
-    /// `fixture::AWAY_PENALTIES` (+0x4a).
+    /// `fixture::AWAY_PENALTIES` (+0x4a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_penalties(self) -> i8 {
         read_i8(self.0 + fixture::AWAY_PENALTIES)
@@ -7943,7 +8036,7 @@ impl Fixture {
     pub(crate) unsafe fn set_away_penalties(self, v: i8) {
         write_i8(self.0 + fixture::AWAY_PENALTIES, v)
     }
-    /// `fixture::HOME_AGGREGATE` (+0x4b).
+    /// `fixture::HOME_AGGREGATE` (+0x4b). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn home_aggregate(self) -> i8 {
         read_i8(self.0 + fixture::HOME_AGGREGATE)
@@ -7952,7 +8045,7 @@ impl Fixture {
     pub(crate) unsafe fn set_home_aggregate(self, v: i8) {
         write_i8(self.0 + fixture::HOME_AGGREGATE, v)
     }
-    /// `fixture::AWAY_AGGREGATE` (+0x4c).
+    /// `fixture::AWAY_AGGREGATE` (+0x4c). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn away_aggregate(self) -> i8 {
         read_i8(self.0 + fixture::AWAY_AGGREGATE)
@@ -7961,7 +8054,7 @@ impl Fixture {
     pub(crate) unsafe fn set_away_aggregate(self, v: i8) {
         write_i8(self.0 + fixture::AWAY_AGGREGATE, v)
     }
-    /// `fixture::SQUAD_RULES` (+0x4d).
+    /// `fixture::SQUAD_RULES` (+0x4d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn squad_rules(self) -> u16 {
         read_u16(self.0 + fixture::SQUAD_RULES)
@@ -7970,7 +8063,7 @@ impl Fixture {
     pub(crate) unsafe fn set_squad_rules(self, v: u16) {
         write_u16(self.0 + fixture::SQUAD_RULES, v)
     }
-    /// `fixture::FLAGS` (+0x4e).
+    /// `fixture::FLAGS` (+0x4e). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn flags(self) -> u8 {
         read_u8(self.0 + fixture::FLAGS)
@@ -8004,7 +8097,7 @@ impl MatchManager {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `match_manager::MANAGER_CURRENT_REPUTATION` (+0x0).
+    /// `match_manager::MANAGER_CURRENT_REPUTATION` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn manager_current_reputation(self) -> i16 {
         read_i16(self.0 + match_manager::MANAGER_CURRENT_REPUTATION)
@@ -8013,7 +8106,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_manager_current_reputation(self, v: i16) {
         write_i16(self.0 + match_manager::MANAGER_CURRENT_REPUTATION, v)
     }
-    /// `match_manager::MANAGER_HOME_REPUTATION` (+0x2).
+    /// `match_manager::MANAGER_HOME_REPUTATION` (+0x2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn manager_home_reputation(self) -> i16 {
         read_i16(self.0 + match_manager::MANAGER_HOME_REPUTATION)
@@ -8022,7 +8115,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_manager_home_reputation(self, v: i16) {
         write_i16(self.0 + match_manager::MANAGER_HOME_REPUTATION, v)
     }
-    /// `match_manager::MANAGER_WORLD_REPUTATION` (+0x4).
+    /// `match_manager::MANAGER_WORLD_REPUTATION` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn manager_world_reputation(self) -> i16 {
         read_i16(self.0 + match_manager::MANAGER_WORLD_REPUTATION)
@@ -8031,7 +8124,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_manager_world_reputation(self, v: i16) {
         write_i16(self.0 + match_manager::MANAGER_WORLD_REPUTATION, v)
     }
-    /// `match_manager::KEY_PLAYER_1` (+0x6).
+    /// `match_manager::KEY_PLAYER_1` (+0x6). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn key_player_1(self) -> i32 {
         read_i32(self.0 + match_manager::KEY_PLAYER_1)
@@ -8040,7 +8133,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_key_player_1(self, v: i32) {
         write_i32(self.0 + match_manager::KEY_PLAYER_1, v)
     }
-    /// `match_manager::KEY_PLAYER_2` (+0xa).
+    /// `match_manager::KEY_PLAYER_2` (+0xa). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn key_player_2(self) -> i32 {
         read_i32(self.0 + match_manager::KEY_PLAYER_2)
@@ -8049,7 +8142,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_key_player_2(self, v: i32) {
         write_i32(self.0 + match_manager::KEY_PLAYER_2, v)
     }
-    /// `match_manager::KEY_PLAYER_3` (+0xe).
+    /// `match_manager::KEY_PLAYER_3` (+0xe). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn key_player_3(self) -> i32 {
         read_i32(self.0 + match_manager::KEY_PLAYER_3)
@@ -8058,7 +8151,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_key_player_3(self, v: i32) {
         write_i32(self.0 + match_manager::KEY_PLAYER_3, v)
     }
-    /// `match_manager::ENGINE` (+0x12).
+    /// `match_manager::ENGINE` (+0x12). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn engine(self) -> usize {
         read_usize(self.0 + match_manager::ENGINE)
@@ -8067,7 +8160,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_engine(self, v: usize) {
         write_usize(self.0 + match_manager::ENGINE, v)
     }
-    /// `match_manager::SELECTION_FLAG` (+0x16).
+    /// `match_manager::SELECTION_FLAG` (+0x16). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn selection_flag(self) -> i8 {
         read_i8(self.0 + match_manager::SELECTION_FLAG)
@@ -8076,7 +8169,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_selection_flag(self, v: i8) {
         write_i8(self.0 + match_manager::SELECTION_FLAG, v)
     }
-    /// `match_manager::SUBSTITUTIONS_LEFT` (+0x17).
+    /// `match_manager::SUBSTITUTIONS_LEFT` (+0x17). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn substitutions_left(self) -> i8 {
         read_i8(self.0 + match_manager::SUBSTITUTIONS_LEFT)
@@ -8085,7 +8178,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_substitutions_left(self, v: i8) {
         write_i8(self.0 + match_manager::SUBSTITUTIONS_LEFT, v)
     }
-    /// `match_manager::SIDE` (+0x18).
+    /// `match_manager::SIDE` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn side(self) -> i8 {
         read_i8(self.0 + match_manager::SIDE)
@@ -8094,7 +8187,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_side(self, v: i8) {
         write_i8(self.0 + match_manager::SIDE, v)
     }
-    /// `match_manager::TACTIC_SLOT` (+0x19).
+    /// `match_manager::TACTIC_SLOT` (+0x19). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn tactic_slot(self) -> i8 {
         read_i8(self.0 + match_manager::TACTIC_SLOT)
@@ -8103,7 +8196,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_tactic_slot(self, v: i8) {
         write_i8(self.0 + match_manager::TACTIC_SLOT, v)
     }
-    /// `match_manager::SELECTION_MODE` (+0x1a).
+    /// `match_manager::SELECTION_MODE` (+0x1a). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn selection_mode(self) -> i8 {
         read_i8(self.0 + match_manager::SELECTION_MODE)
@@ -8112,7 +8205,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_selection_mode(self, v: i8) {
         write_i8(self.0 + match_manager::SELECTION_MODE, v)
     }
-    /// `match_manager::MANAGER` (+0x1b).
+    /// `match_manager::MANAGER` (+0x1b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn manager(self) -> usize {
         read_usize(self.0 + match_manager::MANAGER)
@@ -8121,7 +8214,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_manager(self, v: usize) {
         write_usize(self.0 + match_manager::MANAGER, v)
     }
-    /// `match_manager::MANAGER_SHEET` (+0x1f).
+    /// `match_manager::MANAGER_SHEET` (+0x1f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn manager_sheet(self) -> usize {
         read_usize(self.0 + match_manager::MANAGER_SHEET)
@@ -8130,7 +8223,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_manager_sheet(self, v: usize) {
         write_usize(self.0 + match_manager::MANAGER_SHEET, v)
     }
-    /// `match_manager::PLAYERS` (+0x23).
+    /// `match_manager::PLAYERS` (+0x23). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn players(self) -> usize {
         read_usize(self.0 + match_manager::PLAYERS)
@@ -8139,7 +8232,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_players(self, v: usize) {
         write_usize(self.0 + match_manager::PLAYERS, v)
     }
-    /// `match_manager::SQUAD_ROWS` (+0x27).
+    /// `match_manager::SQUAD_ROWS` (+0x27). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn squad_rows(self) -> i32 {
         read_i32(self.0 + match_manager::SQUAD_ROWS)
@@ -8148,7 +8241,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_squad_rows(self, v: i32) {
         write_i32(self.0 + match_manager::SQUAD_ROWS, v)
     }
-    /// `match_manager::TACTICS` (+0x2b).
+    /// `match_manager::TACTICS` (+0x2b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn tactics(self) -> usize {
         read_usize(self.0 + match_manager::TACTICS)
@@ -8157,7 +8250,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_tactics(self, v: usize) {
         write_usize(self.0 + match_manager::TACTICS, v)
     }
-    /// `match_manager::CLUB` (+0x2f).
+    /// `match_manager::CLUB` (+0x2f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club(self) -> usize {
         read_usize(self.0 + match_manager::CLUB)
@@ -8166,7 +8259,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_club(self, v: usize) {
         write_usize(self.0 + match_manager::CLUB, v)
     }
-    /// `match_manager::OPPONENT` (+0x33).
+    /// `match_manager::OPPONENT` (+0x33). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn opponent(self) -> i32 {
         read_i32(self.0 + match_manager::OPPONENT)
@@ -8175,7 +8268,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_opponent(self, v: i32) {
         write_i32(self.0 + match_manager::OPPONENT, v)
     }
-    /// `match_manager::FIXTURE` (+0x37).
+    /// `match_manager::FIXTURE` (+0x37). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fixture(self) -> usize {
         read_usize(self.0 + match_manager::FIXTURE)
@@ -8184,7 +8277,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_fixture(self, v: usize) {
         write_usize(self.0 + match_manager::FIXTURE, v)
     }
-    /// `match_manager::BEST_PLAYER` (+0x3b).
+    /// `match_manager::BEST_PLAYER` (+0x3b). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn best_player(self) -> usize {
         read_usize(self.0 + match_manager::BEST_PLAYER)
@@ -8193,7 +8286,7 @@ impl MatchManager {
     pub(crate) unsafe fn set_best_player(self, v: usize) {
         write_usize(self.0 + match_manager::BEST_PLAYER, v)
     }
-    /// `match_manager::TACTICS_ROW` (+0x3f).
+    /// `match_manager::TACTICS_ROW` (+0x3f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn tactics_row(self) -> u8 {
         read_u8(self.0 + match_manager::TACTICS_ROW)
@@ -8227,7 +8320,7 @@ impl Finance {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `finance::BALANCE` (+0x0).
+    /// `finance::BALANCE` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn balance(self) -> i64 {
         read_i64(self.0 + finance::BALANCE)
@@ -8236,7 +8329,7 @@ impl Finance {
     pub(crate) unsafe fn set_balance(self, v: i64) {
         write_i64(self.0 + finance::BALANCE, v)
     }
-    /// `finance::CLUB_ID` (+0x8).
+    /// `finance::CLUB_ID` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_id(self) -> usize {
         read_usize(self.0 + finance::CLUB_ID)
@@ -8245,7 +8338,7 @@ impl Finance {
     pub(crate) unsafe fn set_club_id(self, v: usize) {
         write_usize(self.0 + finance::CLUB_ID, v)
     }
-    /// `finance::WAGE_BILL` (+0xc).
+    /// `finance::WAGE_BILL` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn wage_bill(self) -> i32 {
         read_i32(self.0 + finance::WAGE_BILL)
@@ -8254,7 +8347,7 @@ impl Finance {
     pub(crate) unsafe fn set_wage_bill(self, v: i32) {
         write_i32(self.0 + finance::WAGE_BILL, v)
     }
-    /// `finance::HIGHEST_WAGE` (+0x10).
+    /// `finance::HIGHEST_WAGE` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn highest_wage(self) -> i32 {
         read_i32(self.0 + finance::HIGHEST_WAGE)
@@ -8263,7 +8356,7 @@ impl Finance {
     pub(crate) unsafe fn set_highest_wage(self, v: i32) {
         write_i32(self.0 + finance::HIGHEST_WAGE, v)
     }
-    /// `finance::WAGE_CEILING` (+0x14).
+    /// `finance::WAGE_CEILING` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn wage_ceiling(self) -> i32 {
         read_i32(self.0 + finance::WAGE_CEILING)
@@ -8272,7 +8365,7 @@ impl Finance {
     pub(crate) unsafe fn set_wage_ceiling(self, v: i32) {
         write_i32(self.0 + finance::WAGE_CEILING, v)
     }
-    /// `finance::SEASON_TICKETS_SOLD` (+0x18).
+    /// `finance::SEASON_TICKETS_SOLD` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_tickets_sold(self) -> i32 {
         read_i32(self.0 + finance::SEASON_TICKETS_SOLD)
@@ -8281,7 +8374,7 @@ impl Finance {
     pub(crate) unsafe fn set_season_tickets_sold(self, v: i32) {
         write_i32(self.0 + finance::SEASON_TICKETS_SOLD, v)
     }
-    /// `finance::INSTALMENT_BALANCE` (+0x1c).
+    /// `finance::INSTALMENT_BALANCE` (+0x1c). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn instalment_balance(self) -> i32 {
         read_i32(self.0 + finance::INSTALMENT_BALANCE)
@@ -8290,7 +8383,7 @@ impl Finance {
     pub(crate) unsafe fn set_instalment_balance(self, v: i32) {
         write_i32(self.0 + finance::INSTALMENT_BALANCE, v)
     }
-    /// `finance::MONTH_PLAYERS_BOUGHT` (+0x70).
+    /// `finance::MONTH_PLAYERS_BOUGHT` (+0x70). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn month_players_bought(self) -> i64 {
         read_i64(self.0 + finance::MONTH_PLAYERS_BOUGHT)
@@ -8299,7 +8392,7 @@ impl Finance {
     pub(crate) unsafe fn set_month_players_bought(self, v: i64) {
         write_i64(self.0 + finance::MONTH_PLAYERS_BOUGHT, v)
     }
-    /// `finance::MONTH_PLAYERS_SOLD` (+0x78).
+    /// `finance::MONTH_PLAYERS_SOLD` (+0x78). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn month_players_sold(self) -> i64 {
         read_i64(self.0 + finance::MONTH_PLAYERS_SOLD)
@@ -8308,7 +8401,7 @@ impl Finance {
     pub(crate) unsafe fn set_month_players_sold(self, v: i64) {
         write_i64(self.0 + finance::MONTH_PLAYERS_SOLD, v)
     }
-    /// `finance::MONTH_OTHER_COSTS` (+0x80).
+    /// `finance::MONTH_OTHER_COSTS` (+0x80). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn month_other_costs(self) -> i32 {
         read_i32(self.0 + finance::MONTH_OTHER_COSTS)
@@ -8317,7 +8410,7 @@ impl Finance {
     pub(crate) unsafe fn set_month_other_costs(self, v: i32) {
         write_i32(self.0 + finance::MONTH_OTHER_COSTS, v)
     }
-    /// `finance::MONTH_FINES` (+0x88).
+    /// `finance::MONTH_FINES` (+0x88). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn month_fines(self) -> i32 {
         read_i32(self.0 + finance::MONTH_FINES)
@@ -8326,7 +8419,7 @@ impl Finance {
     pub(crate) unsafe fn set_month_fines(self, v: i32) {
         write_i32(self.0 + finance::MONTH_FINES, v)
     }
-    /// `finance::MONTH_GROUND_COSTS` (+0x8c).
+    /// `finance::MONTH_GROUND_COSTS` (+0x8c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn month_ground_costs(self) -> i32 {
         read_i32(self.0 + finance::MONTH_GROUND_COSTS)
@@ -8335,7 +8428,7 @@ impl Finance {
     pub(crate) unsafe fn set_month_ground_costs(self, v: i32) {
         write_i32(self.0 + finance::MONTH_GROUND_COSTS, v)
     }
-    /// `finance::MONTH_WAGES` (+0x90).
+    /// `finance::MONTH_WAGES` (+0x90). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn month_wages(self) -> i32 {
         read_i32(self.0 + finance::MONTH_WAGES)
@@ -8344,7 +8437,7 @@ impl Finance {
     pub(crate) unsafe fn set_month_wages(self, v: i32) {
         write_i32(self.0 + finance::MONTH_WAGES, v)
     }
-    /// `finance::MONTH_DIVIDENDS` (+0x94).
+    /// `finance::MONTH_DIVIDENDS` (+0x94). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn month_dividends(self) -> i32 {
         read_i32(self.0 + finance::MONTH_DIVIDENDS)
@@ -8353,7 +8446,7 @@ impl Finance {
     pub(crate) unsafe fn set_month_dividends(self, v: i32) {
         write_i32(self.0 + finance::MONTH_DIVIDENDS, v)
     }
-    /// `finance::MONTH_BONUSES` (+0x98).
+    /// `finance::MONTH_BONUSES` (+0x98). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn month_bonuses(self) -> i32 {
         read_i32(self.0 + finance::MONTH_BONUSES)
@@ -8362,7 +8455,7 @@ impl Finance {
     pub(crate) unsafe fn set_month_bonuses(self, v: i32) {
         write_i32(self.0 + finance::MONTH_BONUSES, v)
     }
-    /// `finance::MONTH_SIGN_ON_FEES` (+0x9c).
+    /// `finance::MONTH_SIGN_ON_FEES` (+0x9c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn month_sign_on_fees(self) -> i32 {
         read_i32(self.0 + finance::MONTH_SIGN_ON_FEES)
@@ -8371,7 +8464,7 @@ impl Finance {
     pub(crate) unsafe fn set_month_sign_on_fees(self, v: i32) {
         write_i32(self.0 + finance::MONTH_SIGN_ON_FEES, v)
     }
-    /// `finance::MONTH_GATE_RECEIPTS` (+0xa0).
+    /// `finance::MONTH_GATE_RECEIPTS` (+0xa0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn month_gate_receipts(self) -> i32 {
         read_i32(self.0 + finance::MONTH_GATE_RECEIPTS)
@@ -8380,7 +8473,7 @@ impl Finance {
     pub(crate) unsafe fn set_month_gate_receipts(self, v: i32) {
         write_i32(self.0 + finance::MONTH_GATE_RECEIPTS, v)
     }
-    /// `finance::MONTH_PRIZE_MONEY` (+0xa8).
+    /// `finance::MONTH_PRIZE_MONEY` (+0xa8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn month_prize_money(self) -> i32 {
         read_i32(self.0 + finance::MONTH_PRIZE_MONEY)
@@ -8389,7 +8482,7 @@ impl Finance {
     pub(crate) unsafe fn set_month_prize_money(self, v: i32) {
         write_i32(self.0 + finance::MONTH_PRIZE_MONEY, v)
     }
-    /// `finance::MONTH_SEASON_TICKETS` (+0xac).
+    /// `finance::MONTH_SEASON_TICKETS` (+0xac). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn month_season_tickets(self) -> i32 {
         read_i32(self.0 + finance::MONTH_SEASON_TICKETS)
@@ -8398,7 +8491,7 @@ impl Finance {
     pub(crate) unsafe fn set_month_season_tickets(self, v: i32) {
         write_i32(self.0 + finance::MONTH_SEASON_TICKETS, v)
     }
-    /// `finance::MONTH_OTHER_INCOME` (+0xb4).
+    /// `finance::MONTH_OTHER_INCOME` (+0xb4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn month_other_income(self) -> i32 {
         read_i32(self.0 + finance::MONTH_OTHER_INCOME)
@@ -8407,7 +8500,7 @@ impl Finance {
     pub(crate) unsafe fn set_month_other_income(self, v: i32) {
         write_i32(self.0 + finance::MONTH_OTHER_INCOME, v)
     }
-    /// `finance::MONTH_TV_REVENUE` (+0xb8).
+    /// `finance::MONTH_TV_REVENUE` (+0xb8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn month_tv_revenue(self) -> i32 {
         read_i32(self.0 + finance::MONTH_TV_REVENUE)
@@ -8416,7 +8509,7 @@ impl Finance {
     pub(crate) unsafe fn set_month_tv_revenue(self, v: i32) {
         write_i32(self.0 + finance::MONTH_TV_REVENUE, v)
     }
-    /// `finance::MONTH_MERCHANDISING` (+0xbc).
+    /// `finance::MONTH_MERCHANDISING` (+0xbc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn month_merchandising(self) -> i32 {
         read_i32(self.0 + finance::MONTH_MERCHANDISING)
@@ -8425,12 +8518,12 @@ impl Finance {
     pub(crate) unsafe fn set_month_merchandising(self, v: i32) {
         write_i32(self.0 + finance::MONTH_MERCHANDISING, v)
     }
-    /// `finance::LAST_SEASON_TOTALS` (+0xc0).
+    /// `finance::LAST_SEASON_TOTALS` (+0xc0). Name: read.
     #[inline(always)]
     pub(crate) fn last_season_totals_addr(self) -> usize {
         self.0 + finance::LAST_SEASON_TOTALS
     }
-    /// `finance::SEASON_PLAYERS_BOUGHT` (+0x110).
+    /// `finance::SEASON_PLAYERS_BOUGHT` (+0x110). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_players_bought(self) -> i64 {
         read_i64(self.0 + finance::SEASON_PLAYERS_BOUGHT)
@@ -8439,7 +8532,7 @@ impl Finance {
     pub(crate) unsafe fn set_season_players_bought(self, v: i64) {
         write_i64(self.0 + finance::SEASON_PLAYERS_BOUGHT, v)
     }
-    /// `finance::SEASON_PLAYERS_SOLD` (+0x118).
+    /// `finance::SEASON_PLAYERS_SOLD` (+0x118). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_players_sold(self) -> i64 {
         read_i64(self.0 + finance::SEASON_PLAYERS_SOLD)
@@ -8448,7 +8541,7 @@ impl Finance {
     pub(crate) unsafe fn set_season_players_sold(self, v: i64) {
         write_i64(self.0 + finance::SEASON_PLAYERS_SOLD, v)
     }
-    /// `finance::SEASON_OTHER_COSTS` (+0x120).
+    /// `finance::SEASON_OTHER_COSTS` (+0x120). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_other_costs(self) -> i32 {
         read_i32(self.0 + finance::SEASON_OTHER_COSTS)
@@ -8457,7 +8550,7 @@ impl Finance {
     pub(crate) unsafe fn set_season_other_costs(self, v: i32) {
         write_i32(self.0 + finance::SEASON_OTHER_COSTS, v)
     }
-    /// `finance::SEASON_FINES` (+0x128).
+    /// `finance::SEASON_FINES` (+0x128). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_fines(self) -> i32 {
         read_i32(self.0 + finance::SEASON_FINES)
@@ -8466,7 +8559,7 @@ impl Finance {
     pub(crate) unsafe fn set_season_fines(self, v: i32) {
         write_i32(self.0 + finance::SEASON_FINES, v)
     }
-    /// `finance::SEASON_GROUND_COSTS` (+0x12c).
+    /// `finance::SEASON_GROUND_COSTS` (+0x12c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_ground_costs(self) -> i32 {
         read_i32(self.0 + finance::SEASON_GROUND_COSTS)
@@ -8475,7 +8568,7 @@ impl Finance {
     pub(crate) unsafe fn set_season_ground_costs(self, v: i32) {
         write_i32(self.0 + finance::SEASON_GROUND_COSTS, v)
     }
-    /// `finance::SEASON_WAGES` (+0x130).
+    /// `finance::SEASON_WAGES` (+0x130). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_wages(self) -> i32 {
         read_i32(self.0 + finance::SEASON_WAGES)
@@ -8484,7 +8577,7 @@ impl Finance {
     pub(crate) unsafe fn set_season_wages(self, v: i32) {
         write_i32(self.0 + finance::SEASON_WAGES, v)
     }
-    /// `finance::SEASON_DIVIDENDS` (+0x134).
+    /// `finance::SEASON_DIVIDENDS` (+0x134). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_dividends(self) -> i32 {
         read_i32(self.0 + finance::SEASON_DIVIDENDS)
@@ -8493,7 +8586,7 @@ impl Finance {
     pub(crate) unsafe fn set_season_dividends(self, v: i32) {
         write_i32(self.0 + finance::SEASON_DIVIDENDS, v)
     }
-    /// `finance::SEASON_BONUSES` (+0x138).
+    /// `finance::SEASON_BONUSES` (+0x138). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_bonuses(self) -> i32 {
         read_i32(self.0 + finance::SEASON_BONUSES)
@@ -8502,7 +8595,7 @@ impl Finance {
     pub(crate) unsafe fn set_season_bonuses(self, v: i32) {
         write_i32(self.0 + finance::SEASON_BONUSES, v)
     }
-    /// `finance::SEASON_SIGN_ON_FEES` (+0x13c).
+    /// `finance::SEASON_SIGN_ON_FEES` (+0x13c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_sign_on_fees(self) -> i32 {
         read_i32(self.0 + finance::SEASON_SIGN_ON_FEES)
@@ -8511,7 +8604,7 @@ impl Finance {
     pub(crate) unsafe fn set_season_sign_on_fees(self, v: i32) {
         write_i32(self.0 + finance::SEASON_SIGN_ON_FEES, v)
     }
-    /// `finance::SEASON_GATE_RECEIPTS` (+0x140).
+    /// `finance::SEASON_GATE_RECEIPTS` (+0x140). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_gate_receipts(self) -> i32 {
         read_i32(self.0 + finance::SEASON_GATE_RECEIPTS)
@@ -8520,7 +8613,7 @@ impl Finance {
     pub(crate) unsafe fn set_season_gate_receipts(self, v: i32) {
         write_i32(self.0 + finance::SEASON_GATE_RECEIPTS, v)
     }
-    /// `finance::SEASON_PRIZE_MONEY` (+0x148).
+    /// `finance::SEASON_PRIZE_MONEY` (+0x148). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_prize_money(self) -> i32 {
         read_i32(self.0 + finance::SEASON_PRIZE_MONEY)
@@ -8529,7 +8622,7 @@ impl Finance {
     pub(crate) unsafe fn set_season_prize_money(self, v: i32) {
         write_i32(self.0 + finance::SEASON_PRIZE_MONEY, v)
     }
-    /// `finance::SEASON_SEASON_TICKETS` (+0x14c).
+    /// `finance::SEASON_SEASON_TICKETS` (+0x14c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_season_tickets(self) -> i32 {
         read_i32(self.0 + finance::SEASON_SEASON_TICKETS)
@@ -8538,7 +8631,7 @@ impl Finance {
     pub(crate) unsafe fn set_season_season_tickets(self, v: i32) {
         write_i32(self.0 + finance::SEASON_SEASON_TICKETS, v)
     }
-    /// `finance::SEASON_OTHER_INCOME` (+0x154).
+    /// `finance::SEASON_OTHER_INCOME` (+0x154). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_other_income(self) -> i32 {
         read_i32(self.0 + finance::SEASON_OTHER_INCOME)
@@ -8547,7 +8640,7 @@ impl Finance {
     pub(crate) unsafe fn set_season_other_income(self, v: i32) {
         write_i32(self.0 + finance::SEASON_OTHER_INCOME, v)
     }
-    /// `finance::SEASON_TV_REVENUE` (+0x158).
+    /// `finance::SEASON_TV_REVENUE` (+0x158). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_tv_revenue(self) -> i32 {
         read_i32(self.0 + finance::SEASON_TV_REVENUE)
@@ -8556,7 +8649,7 @@ impl Finance {
     pub(crate) unsafe fn set_season_tv_revenue(self, v: i32) {
         write_i32(self.0 + finance::SEASON_TV_REVENUE, v)
     }
-    /// `finance::SEASON_MERCHANDISING` (+0x15c).
+    /// `finance::SEASON_MERCHANDISING` (+0x15c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_merchandising(self) -> i32 {
         read_i32(self.0 + finance::SEASON_MERCHANDISING)
@@ -8565,7 +8658,7 @@ impl Finance {
     pub(crate) unsafe fn set_season_merchandising(self, v: i32) {
         write_i32(self.0 + finance::SEASON_MERCHANDISING, v)
     }
-    /// `finance::SEASON_TICKET_RATIO` (+0x160).
+    /// `finance::SEASON_TICKET_RATIO` (+0x160). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_ticket_ratio(self) -> f32 {
         read_f32(self.0 + finance::SEASON_TICKET_RATIO)
@@ -8574,7 +8667,7 @@ impl Finance {
     pub(crate) unsafe fn set_season_ticket_ratio(self, v: f32) {
         write_f32(self.0 + finance::SEASON_TICKET_RATIO, v)
     }
-    /// `finance::SEASON_TICKET_STEP` (+0x164).
+    /// `finance::SEASON_TICKET_STEP` (+0x164). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_ticket_step(self) -> u8 {
         read_u8(self.0 + finance::SEASON_TICKET_STEP)
@@ -8583,7 +8676,7 @@ impl Finance {
     pub(crate) unsafe fn set_season_ticket_step(self, v: u8) {
         write_u8(self.0 + finance::SEASON_TICKET_STEP, v)
     }
-    /// `finance::CRISIS_STATE` (+0x165).
+    /// `finance::CRISIS_STATE` (+0x165). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn crisis_state(self) -> u8 {
         read_u8(self.0 + finance::CRISIS_STATE)
@@ -8592,7 +8685,7 @@ impl Finance {
     pub(crate) unsafe fn set_crisis_state(self, v: u8) {
         write_u8(self.0 + finance::CRISIS_STATE, v)
     }
-    /// `finance::SQUEEZE_COUNTER` (+0x166).
+    /// `finance::SQUEEZE_COUNTER` (+0x166). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn squeeze_counter(self) -> u8 {
         read_u8(self.0 + finance::SQUEEZE_COUNTER)
@@ -8626,7 +8719,7 @@ impl StadiumObj {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `stadium_obj::BOOKINGS` (+0x0).
+    /// `stadium_obj::BOOKINGS` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn bookings(self) -> i32 {
         read_i32(self.0 + stadium_obj::BOOKINGS)
@@ -8635,7 +8728,7 @@ impl StadiumObj {
     pub(crate) unsafe fn set_bookings(self, v: i32) {
         write_i32(self.0 + stadium_obj::BOOKINGS, v)
     }
-    /// `stadium_obj::BOOKING_COUNT` (+0x4).
+    /// `stadium_obj::BOOKING_COUNT` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn booking_count(self) -> usize {
         read_usize(self.0 + stadium_obj::BOOKING_COUNT)
@@ -8644,7 +8737,7 @@ impl StadiumObj {
     pub(crate) unsafe fn set_booking_count(self, v: usize) {
         write_usize(self.0 + stadium_obj::BOOKING_COUNT, v)
     }
-    /// `stadium_obj::BOOKING_CAPACITY` (+0x8).
+    /// `stadium_obj::BOOKING_CAPACITY` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn booking_capacity(self) -> usize {
         read_usize(self.0 + stadium_obj::BOOKING_CAPACITY)
@@ -8653,7 +8746,7 @@ impl StadiumObj {
     pub(crate) unsafe fn set_booking_capacity(self, v: usize) {
         write_usize(self.0 + stadium_obj::BOOKING_CAPACITY, v)
     }
-    /// `stadium_obj::VENUES` (+0xc).
+    /// `stadium_obj::VENUES` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn venues(self) -> usize {
         read_usize(self.0 + stadium_obj::VENUES)
@@ -8662,7 +8755,7 @@ impl StadiumObj {
     pub(crate) unsafe fn set_venues(self, v: usize) {
         write_usize(self.0 + stadium_obj::VENUES, v)
     }
-    /// `stadium_obj::VENUE_COUNT` (+0x10).
+    /// `stadium_obj::VENUE_COUNT` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn venue_count(self) -> usize {
         read_usize(self.0 + stadium_obj::VENUE_COUNT)
@@ -8671,7 +8764,7 @@ impl StadiumObj {
     pub(crate) unsafe fn set_venue_count(self, v: usize) {
         write_usize(self.0 + stadium_obj::VENUE_COUNT, v)
     }
-    /// `stadium_obj::VENUE_CAPACITY` (+0x14).
+    /// `stadium_obj::VENUE_CAPACITY` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn venue_capacity(self) -> i32 {
         read_i32(self.0 + stadium_obj::VENUE_CAPACITY)
@@ -8680,7 +8773,7 @@ impl StadiumObj {
     pub(crate) unsafe fn set_venue_capacity(self, v: i32) {
         write_i32(self.0 + stadium_obj::VENUE_CAPACITY, v)
     }
-    /// `stadium_obj::VENUE_SORT` (+0x18).
+    /// `stadium_obj::VENUE_SORT` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn venue_sort(self) -> u8 {
         read_u8(self.0 + stadium_obj::VENUE_SORT)
@@ -8714,12 +8807,12 @@ impl FixtureManager {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `fixture_manager::DAY_LISTS` (+0x0).
+    /// `fixture_manager::DAY_LISTS` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) fn day_lists_addr(self) -> usize {
         self.0 + fixture_manager::DAY_LISTS
     }
-    /// `fixture_manager::MOVED_NEWS_QUEUE` (+0x1128).
+    /// `fixture_manager::MOVED_NEWS_QUEUE` (+0x1128). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn moved_news_queue(self) -> usize {
         read_usize(self.0 + fixture_manager::MOVED_NEWS_QUEUE)
@@ -8728,7 +8821,7 @@ impl FixtureManager {
     pub(crate) unsafe fn set_moved_news_queue(self, v: usize) {
         write_usize(self.0 + fixture_manager::MOVED_NEWS_QUEUE, v)
     }
-    /// `fixture_manager::OTHER_YEAR` (+0x112c).
+    /// `fixture_manager::OTHER_YEAR` (+0x112c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn other_year(self) -> usize {
         read_usize(self.0 + fixture_manager::OTHER_YEAR)
@@ -8737,7 +8830,7 @@ impl FixtureManager {
     pub(crate) unsafe fn set_other_year(self, v: usize) {
         write_usize(self.0 + fixture_manager::OTHER_YEAR, v)
     }
-    /// `fixture_manager::YEAR` (+0x1130).
+    /// `fixture_manager::YEAR` (+0x1130). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn year(self) -> u16 {
         read_u16(self.0 + fixture_manager::YEAR)
@@ -8746,7 +8839,7 @@ impl FixtureManager {
     pub(crate) unsafe fn set_year(self, v: u16) {
         write_u16(self.0 + fixture_manager::YEAR, v)
     }
-    /// `fixture_manager::LEAP_YEAR` (+0x1132).
+    /// `fixture_manager::LEAP_YEAR` (+0x1132). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn leap_year(self) -> u8 {
         read_u8(self.0 + fixture_manager::LEAP_YEAR)
@@ -8755,7 +8848,7 @@ impl FixtureManager {
     pub(crate) unsafe fn set_leap_year(self, v: u8) {
         write_u8(self.0 + fixture_manager::LEAP_YEAR, v)
     }
-    /// `fixture_manager::FILE_NAME` (+0x1133).
+    /// `fixture_manager::FILE_NAME` (+0x1133). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn file_name(self) -> u8 {
         read_u8(self.0 + fixture_manager::FILE_NAME)
@@ -8764,7 +8857,7 @@ impl FixtureManager {
     pub(crate) unsafe fn set_file_name(self, v: u8) {
         write_u8(self.0 + fixture_manager::FILE_NAME, v)
     }
-    /// `fixture_manager::IS_PRIMARY` (+0x1183).
+    /// `fixture_manager::IS_PRIMARY` (+0x1183). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn is_primary(self) -> u8 {
         read_u8(self.0 + fixture_manager::IS_PRIMARY)
@@ -8798,12 +8891,12 @@ impl AgeRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `age_record::HOLDER_DATE` (+0x18).
+    /// `age_record::HOLDER_DATE` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) fn holder_date_addr(self) -> usize {
         self.0 + age_record::HOLDER_DATE
     }
-    /// `age_record::MATCH_DATE` (+0x20).
+    /// `age_record::MATCH_DATE` (+0x20). Name: read.
     #[inline(always)]
     pub(crate) fn match_date_addr(self) -> usize {
         self.0 + age_record::MATCH_DATE
@@ -8833,7 +8926,7 @@ impl AppearanceClause {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `appearance_clause::AMOUNT` (+0x4).
+    /// `appearance_clause::AMOUNT` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn amount(self) -> usize {
         read_usize(self.0 + appearance_clause::AMOUNT)
@@ -8842,7 +8935,7 @@ impl AppearanceClause {
     pub(crate) unsafe fn set_amount(self, v: usize) {
         write_usize(self.0 + appearance_clause::AMOUNT, v)
     }
-    /// `appearance_clause::GAMES` (+0x8).
+    /// `appearance_clause::GAMES` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn games(self) -> u8 {
         read_u8(self.0 + appearance_clause::GAMES)
@@ -8851,7 +8944,7 @@ impl AppearanceClause {
     pub(crate) unsafe fn set_games(self, v: u8) {
         write_u8(self.0 + appearance_clause::GAMES, v)
     }
-    /// `appearance_clause::CLUB_ID` (+0x9).
+    /// `appearance_clause::CLUB_ID` (+0x9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_id(self) -> usize {
         read_usize(self.0 + appearance_clause::CLUB_ID)
@@ -8885,7 +8978,7 @@ impl BanAppeal {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `ban_appeal::RESULT` (+0x4).
+    /// `ban_appeal::RESULT` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn result(self) -> u8 {
         read_u8(self.0 + ban_appeal::RESULT)
@@ -8894,12 +8987,12 @@ impl BanAppeal {
     pub(crate) unsafe fn set_result(self, v: u8) {
         write_u8(self.0 + ban_appeal::RESULT, v)
     }
-    /// `ban_appeal::DATE` (+0x5).
+    /// `ban_appeal::DATE` (+0x5). Name: read.
     #[inline(always)]
     pub(crate) fn date_addr(self) -> usize {
         self.0 + ban_appeal::DATE
     }
-    /// `ban_appeal::RULES` (+0xd).
+    /// `ban_appeal::RULES` (+0xd). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn rules(self) -> i32 {
         read_i32(self.0 + ban_appeal::RULES)
@@ -8933,7 +9026,7 @@ impl BanRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `ban_record::MATCHES` (+0x0).
+    /// `ban_record::MATCHES` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn matches(self) -> u8 {
         read_u8(self.0 + ban_record::MATCHES)
@@ -8942,7 +9035,7 @@ impl BanRecord {
     pub(crate) unsafe fn set_matches(self, v: u8) {
         write_u8(self.0 + ban_record::MATCHES, v)
     }
-    /// `ban_record::MATCHES_SERVED` (+0x1).
+    /// `ban_record::MATCHES_SERVED` (+0x1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn matches_served(self) -> u8 {
         read_u8(self.0 + ban_record::MATCHES_SERVED)
@@ -8951,7 +9044,7 @@ impl BanRecord {
     pub(crate) unsafe fn set_matches_served(self, v: u8) {
         write_u8(self.0 + ban_record::MATCHES_SERVED, v)
     }
-    /// `ban_record::DAYS` (+0x2).
+    /// `ban_record::DAYS` (+0x2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn days(self) -> i16 {
         read_i16(self.0 + ban_record::DAYS)
@@ -8960,7 +9053,7 @@ impl BanRecord {
     pub(crate) unsafe fn set_days(self, v: i16) {
         write_i16(self.0 + ban_record::DAYS, v)
     }
-    /// `ban_record::START_DATE` (+0x4).
+    /// `ban_record::START_DATE` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn start_date(self) -> i16 {
         read_i16(self.0 + ban_record::START_DATE)
@@ -8969,7 +9062,7 @@ impl BanRecord {
     pub(crate) unsafe fn set_start_date(self, v: i16) {
         write_i16(self.0 + ban_record::START_DATE, v)
     }
-    /// `ban_record::RULES` (+0xc).
+    /// `ban_record::RULES` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn rules(self) -> i32 {
         read_i32(self.0 + ban_record::RULES)
@@ -8978,7 +9071,7 @@ impl BanRecord {
     pub(crate) unsafe fn set_rules(self, v: i32) {
         write_i32(self.0 + ban_record::RULES, v)
     }
-    /// `ban_record::NATION_RULE` (+0xf).
+    /// `ban_record::NATION_RULE` (+0xf). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn nation_rule(self) -> u8 {
         read_u8(self.0 + ban_record::NATION_RULE)
@@ -8987,7 +9080,7 @@ impl BanRecord {
     pub(crate) unsafe fn set_nation_rule(self, v: u8) {
         write_u8(self.0 + ban_record::NATION_RULE, v)
     }
-    /// `ban_record::FLAGS` (+0x13).
+    /// `ban_record::FLAGS` (+0x13). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn flags(self) -> u8 {
         read_u8(self.0 + ban_record::FLAGS)
@@ -9021,7 +9114,7 @@ impl BanSlot {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `ban_slot::RULE` (+0x0).
+    /// `ban_slot::RULE` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn rule(self) -> u8 {
         read_u8(self.0 + ban_slot::RULE)
@@ -9030,7 +9123,7 @@ impl BanSlot {
     pub(crate) unsafe fn set_rule(self, v: u8) {
         write_u8(self.0 + ban_slot::RULE, v)
     }
-    /// `ban_slot::VALUE` (+0x1).
+    /// `ban_slot::VALUE` (+0x1). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn value(self) -> u32 {
         read_u32(self.0 + ban_slot::VALUE)
@@ -9064,7 +9157,7 @@ impl BoardRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `board_record::WEALTH_BAND` (+0x1).
+    /// `board_record::WEALTH_BAND` (+0x1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn wealth_band(self) -> u8 {
         read_u8(self.0 + board_record::WEALTH_BAND)
@@ -9073,7 +9166,7 @@ impl BoardRecord {
     pub(crate) unsafe fn set_wealth_band(self, v: u8) {
         write_u8(self.0 + board_record::WEALTH_BAND, v)
     }
-    /// `board_record::FLAGS` (+0x2).
+    /// `board_record::FLAGS` (+0x2). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn flags(self) -> u8 {
         read_u8(self.0 + board_record::FLAGS)
@@ -9082,7 +9175,7 @@ impl BoardRecord {
     pub(crate) unsafe fn set_flags(self, v: u8) {
         write_u8(self.0 + board_record::FLAGS, v)
     }
-    /// `board_record::CONFIDENCE` (+0x6).
+    /// `board_record::CONFIDENCE` (+0x6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn confidence(self) -> i16 {
         read_i16(self.0 + board_record::CONFIDENCE)
@@ -9091,7 +9184,7 @@ impl BoardRecord {
     pub(crate) unsafe fn set_confidence(self, v: i16) {
         write_i16(self.0 + board_record::CONFIDENCE, v)
     }
-    /// `board_record::CONFIDENCE_2` (+0x8).
+    /// `board_record::CONFIDENCE_2` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn confidence_2(self) -> i16 {
         read_i16(self.0 + board_record::CONFIDENCE_2)
@@ -9100,7 +9193,7 @@ impl BoardRecord {
     pub(crate) unsafe fn set_confidence_2(self, v: i16) {
         write_i16(self.0 + board_record::CONFIDENCE_2, v)
     }
-    /// `board_record::CONFIDENCE_3` (+0xa).
+    /// `board_record::CONFIDENCE_3` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn confidence_3(self) -> i16 {
         read_i16(self.0 + board_record::CONFIDENCE_3)
@@ -9109,7 +9202,7 @@ impl BoardRecord {
     pub(crate) unsafe fn set_confidence_3(self, v: i16) {
         write_i16(self.0 + board_record::CONFIDENCE_3, v)
     }
-    /// `board_record::CONFIDENCE_4` (+0xc).
+    /// `board_record::CONFIDENCE_4` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn confidence_4(self) -> i16 {
         read_i16(self.0 + board_record::CONFIDENCE_4)
@@ -9118,7 +9211,7 @@ impl BoardRecord {
     pub(crate) unsafe fn set_confidence_4(self, v: i16) {
         write_i16(self.0 + board_record::CONFIDENCE_4, v)
     }
-    /// `board_record::EXPECTATION_FLAGS` (+0xe).
+    /// `board_record::EXPECTATION_FLAGS` (+0xe). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn expectation_flags(self) -> i16 {
         read_i16(self.0 + board_record::EXPECTATION_FLAGS)
@@ -9127,7 +9220,7 @@ impl BoardRecord {
     pub(crate) unsafe fn set_expectation_flags(self, v: i16) {
         write_i16(self.0 + board_record::EXPECTATION_FLAGS, v)
     }
-    /// `board_record::LEAGUE_CONFIDENCE` (+0x12).
+    /// `board_record::LEAGUE_CONFIDENCE` (+0x12). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn league_confidence(self) -> i16 {
         read_i16(self.0 + board_record::LEAGUE_CONFIDENCE)
@@ -9136,7 +9229,7 @@ impl BoardRecord {
     pub(crate) unsafe fn set_league_confidence(self, v: i16) {
         write_i16(self.0 + board_record::LEAGUE_CONFIDENCE, v)
     }
-    /// `board_record::TRANSFER_MOOD` (+0x14).
+    /// `board_record::TRANSFER_MOOD` (+0x14). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn transfer_mood(self) -> i16 {
         read_i16(self.0 + board_record::TRANSFER_MOOD)
@@ -9145,7 +9238,7 @@ impl BoardRecord {
     pub(crate) unsafe fn set_transfer_mood(self, v: i16) {
         write_i16(self.0 + board_record::TRANSFER_MOOD, v)
     }
-    /// `board_record::FAVOURITES_MOOD` (+0x16).
+    /// `board_record::FAVOURITES_MOOD` (+0x16). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn favourites_mood(self) -> i16 {
         read_i16(self.0 + board_record::FAVOURITES_MOOD)
@@ -9154,7 +9247,7 @@ impl BoardRecord {
     pub(crate) unsafe fn set_favourites_mood(self, v: i16) {
         write_i16(self.0 + board_record::FAVOURITES_MOOD, v)
     }
-    /// `board_record::LAST_REVIEW_DATE` (+0x18).
+    /// `board_record::LAST_REVIEW_DATE` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn last_review_date(self) -> usize {
         read_usize(self.0 + board_record::LAST_REVIEW_DATE)
@@ -9163,7 +9256,7 @@ impl BoardRecord {
     pub(crate) unsafe fn set_last_review_date(self, v: usize) {
         write_usize(self.0 + board_record::LAST_REVIEW_DATE, v)
     }
-    /// `board_record::TARGET_POSITION` (+0x2c).
+    /// `board_record::TARGET_POSITION` (+0x2c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn target_position(self) -> u32 {
         read_u32(self.0 + board_record::TARGET_POSITION)
@@ -9172,7 +9265,7 @@ impl BoardRecord {
     pub(crate) unsafe fn set_target_position(self, v: u32) {
         write_u32(self.0 + board_record::TARGET_POSITION, v)
     }
-    /// `board_record::SPENDING` (+0x30).
+    /// `board_record::SPENDING` (+0x30). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn spending(self) -> f64 {
         read_f64(self.0 + board_record::SPENDING)
@@ -9181,7 +9274,7 @@ impl BoardRecord {
     pub(crate) unsafe fn set_spending(self, v: f64) {
         write_f64(self.0 + board_record::SPENDING, v)
     }
-    /// `board_record::SPENDING_CEILING` (+0x38).
+    /// `board_record::SPENDING_CEILING` (+0x38). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn spending_ceiling(self) -> f64 {
         read_f64(self.0 + board_record::SPENDING_CEILING)
@@ -9215,7 +9308,7 @@ impl CareerEntry {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `career_entry::CLUB_ID` (+0x2).
+    /// `career_entry::CLUB_ID` (+0x2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_id(self) -> usize {
         read_usize(self.0 + career_entry::CLUB_ID)
@@ -9224,7 +9317,7 @@ impl CareerEntry {
     pub(crate) unsafe fn set_club_id(self, v: usize) {
         write_usize(self.0 + career_entry::CLUB_ID, v)
     }
-    /// `career_entry::STATS` (+0x6).
+    /// `career_entry::STATS` (+0x6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stats(self) -> u8 {
         read_u8(self.0 + career_entry::STATS)
@@ -9233,7 +9326,7 @@ impl CareerEntry {
     pub(crate) unsafe fn set_stats(self, v: u8) {
         write_u8(self.0 + career_entry::STATS, v)
     }
-    /// `career_entry::STATS_SUB_APPEARANCES` (+0x7).
+    /// `career_entry::STATS_SUB_APPEARANCES` (+0x7). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stats_sub_appearances(self) -> u8 {
         read_u8(self.0 + career_entry::STATS_SUB_APPEARANCES)
@@ -9242,7 +9335,7 @@ impl CareerEntry {
     pub(crate) unsafe fn set_stats_sub_appearances(self, v: u8) {
         write_u8(self.0 + career_entry::STATS_SUB_APPEARANCES, v)
     }
-    /// `career_entry::STATS_GOALS` (+0x8).
+    /// `career_entry::STATS_GOALS` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stats_goals(self) -> u8 {
         read_u8(self.0 + career_entry::STATS_GOALS)
@@ -9251,7 +9344,7 @@ impl CareerEntry {
     pub(crate) unsafe fn set_stats_goals(self, v: u8) {
         write_u8(self.0 + career_entry::STATS_GOALS, v)
     }
-    /// `career_entry::STATS_RATING_TOTAL` (+0x14).
+    /// `career_entry::STATS_RATING_TOTAL` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stats_rating_total(self) -> u16 {
         read_u16(self.0 + career_entry::STATS_RATING_TOTAL)
@@ -9260,7 +9353,7 @@ impl CareerEntry {
     pub(crate) unsafe fn set_stats_rating_total(self, v: u16) {
         write_u16(self.0 + career_entry::STATS_RATING_TOTAL, v)
     }
-    /// `career_entry::TRANSFER_FEE` (+0x26).
+    /// `career_entry::TRANSFER_FEE` (+0x26). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn transfer_fee(self) -> i32 {
         read_i32(self.0 + career_entry::TRANSFER_FEE)
@@ -9269,7 +9362,7 @@ impl CareerEntry {
     pub(crate) unsafe fn set_transfer_fee(self, v: i32) {
         write_i32(self.0 + career_entry::TRANSFER_FEE, v)
     }
-    /// `career_entry::KIND` (+0x2a).
+    /// `career_entry::KIND` (+0x2a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn kind(self) -> u8 {
         read_u8(self.0 + career_entry::KIND)
@@ -9303,7 +9396,7 @@ impl ClubDisciplineRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `club_discipline_record::RED_CARDS` (+0x1).
+    /// `club_discipline_record::RED_CARDS` (+0x1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn red_cards(self) -> u8 {
         read_u8(self.0 + club_discipline_record::RED_CARDS)
@@ -9312,12 +9405,12 @@ impl ClubDisciplineRecord {
     pub(crate) unsafe fn set_red_cards(self, v: u8) {
         write_u8(self.0 + club_discipline_record::RED_CARDS, v)
     }
-    /// `club_discipline_record::HOLDER` (+0x2).
+    /// `club_discipline_record::HOLDER` (+0x2). Name: read.
     #[inline(always)]
     pub(crate) fn holder_addr(self) -> usize {
         self.0 + club_discipline_record::HOLDER
     }
-    /// `club_discipline_record::YEAR` (+0x1a).
+    /// `club_discipline_record::YEAR` (+0x1a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn year(self) -> u16 {
         read_u16(self.0 + club_discipline_record::YEAR)
@@ -9351,7 +9444,7 @@ impl ClubRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `club_record::BEST_POSITION_COMP` (+0x1).
+    /// `club_record::BEST_POSITION_COMP` (+0x1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn best_position_comp(self) -> usize {
         read_usize(self.0 + club_record::BEST_POSITION_COMP)
@@ -9360,7 +9453,7 @@ impl ClubRecord {
     pub(crate) unsafe fn set_best_position_comp(self, v: usize) {
         write_usize(self.0 + club_record::BEST_POSITION_COMP, v)
     }
-    /// `club_record::BEST_POSITION_YEAR` (+0x5).
+    /// `club_record::BEST_POSITION_YEAR` (+0x5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn best_position_year(self) -> u16 {
         read_u16(self.0 + club_record::BEST_POSITION_YEAR)
@@ -9369,7 +9462,7 @@ impl ClubRecord {
     pub(crate) unsafe fn set_best_position_year(self, v: u16) {
         write_u16(self.0 + club_record::BEST_POSITION_YEAR, v)
     }
-    /// `club_record::WORST_POSITION` (+0x7).
+    /// `club_record::WORST_POSITION` (+0x7). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn worst_position(self) -> u8 {
         read_u8(self.0 + club_record::WORST_POSITION)
@@ -9378,7 +9471,7 @@ impl ClubRecord {
     pub(crate) unsafe fn set_worst_position(self, v: u8) {
         write_u8(self.0 + club_record::WORST_POSITION, v)
     }
-    /// `club_record::WORST_POSITION_COMP` (+0x8).
+    /// `club_record::WORST_POSITION_COMP` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn worst_position_comp(self) -> usize {
         read_usize(self.0 + club_record::WORST_POSITION_COMP)
@@ -9387,7 +9480,7 @@ impl ClubRecord {
     pub(crate) unsafe fn set_worst_position_comp(self, v: usize) {
         write_usize(self.0 + club_record::WORST_POSITION_COMP, v)
     }
-    /// `club_record::WORST_POSITION_YEAR` (+0xc).
+    /// `club_record::WORST_POSITION_YEAR` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn worst_position_year(self) -> u16 {
         read_u16(self.0 + club_record::WORST_POSITION_YEAR)
@@ -9396,7 +9489,7 @@ impl ClubRecord {
     pub(crate) unsafe fn set_worst_position_year(self, v: u16) {
         write_u16(self.0 + club_record::WORST_POSITION_YEAR, v)
     }
-    /// `club_record::SEASON_RATING` (+0x1f1).
+    /// `club_record::SEASON_RATING` (+0x1f1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_rating(self) -> usize {
         read_usize(self.0 + club_record::SEASON_RATING)
@@ -9405,7 +9498,7 @@ impl ClubRecord {
     pub(crate) unsafe fn set_season_rating(self, v: usize) {
         write_usize(self.0 + club_record::SEASON_RATING, v)
     }
-    /// `club_record::SEASON_RATING_GAMES` (+0x20d).
+    /// `club_record::SEASON_RATING_GAMES` (+0x20d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_rating_games(self) -> u8 {
         read_u8(self.0 + club_record::SEASON_RATING_GAMES)
@@ -9414,7 +9507,7 @@ impl ClubRecord {
     pub(crate) unsafe fn set_season_rating_games(self, v: u8) {
         write_u8(self.0 + club_record::SEASON_RATING_GAMES, v)
     }
-    /// `club_record::SEASON_RATING_YEAR` (+0x20e).
+    /// `club_record::SEASON_RATING_YEAR` (+0x20e). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn season_rating_year(self) -> i16 {
         read_i16(self.0 + club_record::SEASON_RATING_YEAR)
@@ -9423,7 +9516,7 @@ impl ClubRecord {
     pub(crate) unsafe fn set_season_rating_year(self, v: i16) {
         write_i16(self.0 + club_record::SEASON_RATING_YEAR, v)
     }
-    /// `club_record::LEAGUE_APPEARANCES` (+0x247).
+    /// `club_record::LEAGUE_APPEARANCES` (+0x247). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn league_appearances(self) -> i16 {
         read_i16(self.0 + club_record::LEAGUE_APPEARANCES)
@@ -9432,7 +9525,7 @@ impl ClubRecord {
     pub(crate) unsafe fn set_league_appearances(self, v: i16) {
         write_i16(self.0 + club_record::LEAGUE_APPEARANCES, v)
     }
-    /// `club_record::LEAGUE_GOALS` (+0x261).
+    /// `club_record::LEAGUE_GOALS` (+0x261). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn league_goals(self) -> i16 {
         read_i16(self.0 + club_record::LEAGUE_GOALS)
@@ -9441,7 +9534,7 @@ impl ClubRecord {
     pub(crate) unsafe fn set_league_goals(self, v: i16) {
         write_i16(self.0 + club_record::LEAGUE_GOALS, v)
     }
-    /// `club_record::FEE_PAID` (+0x313).
+    /// `club_record::FEE_PAID` (+0x313). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fee_paid(self) -> i32 {
         read_i32(self.0 + club_record::FEE_PAID)
@@ -9450,12 +9543,12 @@ impl ClubRecord {
     pub(crate) unsafe fn set_fee_paid(self, v: i32) {
         write_i32(self.0 + club_record::FEE_PAID, v)
     }
-    /// `club_record::FEE_PAID_HOLDER` (+0x317).
+    /// `club_record::FEE_PAID_HOLDER` (+0x317). Name: read.
     #[inline(always)]
     pub(crate) fn fee_paid_holder_addr(self) -> usize {
         self.0 + club_record::FEE_PAID_HOLDER
     }
-    /// `club_record::FEE_PAID_OTHER_CLUB_ID` (+0x32f).
+    /// `club_record::FEE_PAID_OTHER_CLUB_ID` (+0x32f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fee_paid_other_club_id(self) -> usize {
         read_usize(self.0 + club_record::FEE_PAID_OTHER_CLUB_ID)
@@ -9464,12 +9557,12 @@ impl ClubRecord {
     pub(crate) unsafe fn set_fee_paid_other_club_id(self, v: usize) {
         write_usize(self.0 + club_record::FEE_PAID_OTHER_CLUB_ID, v)
     }
-    /// `club_record::FEE_PAID_DATE` (+0x333).
+    /// `club_record::FEE_PAID_DATE` (+0x333). Name: read.
     #[inline(always)]
     pub(crate) fn fee_paid_date_addr(self) -> usize {
         self.0 + club_record::FEE_PAID_DATE
     }
-    /// `club_record::FEE_PAID_FLAG` (+0x33b).
+    /// `club_record::FEE_PAID_FLAG` (+0x33b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fee_paid_flag(self) -> u8 {
         read_u8(self.0 + club_record::FEE_PAID_FLAG)
@@ -9478,7 +9571,7 @@ impl ClubRecord {
     pub(crate) unsafe fn set_fee_paid_flag(self, v: u8) {
         write_u8(self.0 + club_record::FEE_PAID_FLAG, v)
     }
-    /// `club_record::FEE_RECEIVED` (+0x33c).
+    /// `club_record::FEE_RECEIVED` (+0x33c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fee_received(self) -> i32 {
         read_i32(self.0 + club_record::FEE_RECEIVED)
@@ -9487,12 +9580,12 @@ impl ClubRecord {
     pub(crate) unsafe fn set_fee_received(self, v: i32) {
         write_i32(self.0 + club_record::FEE_RECEIVED, v)
     }
-    /// `club_record::FEE_RECEIVED_HOLDER` (+0x340).
+    /// `club_record::FEE_RECEIVED_HOLDER` (+0x340). Name: read.
     #[inline(always)]
     pub(crate) fn fee_received_holder_addr(self) -> usize {
         self.0 + club_record::FEE_RECEIVED_HOLDER
     }
-    /// `club_record::FEE_RECEIVED_OTHER_CLUB_ID` (+0x358).
+    /// `club_record::FEE_RECEIVED_OTHER_CLUB_ID` (+0x358). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fee_received_other_club_id(self) -> usize {
         read_usize(self.0 + club_record::FEE_RECEIVED_OTHER_CLUB_ID)
@@ -9501,12 +9594,12 @@ impl ClubRecord {
     pub(crate) unsafe fn set_fee_received_other_club_id(self, v: usize) {
         write_usize(self.0 + club_record::FEE_RECEIVED_OTHER_CLUB_ID, v)
     }
-    /// `club_record::FEE_RECEIVED_DATE` (+0x35c).
+    /// `club_record::FEE_RECEIVED_DATE` (+0x35c). Name: read.
     #[inline(always)]
     pub(crate) fn fee_received_date_addr(self) -> usize {
         self.0 + club_record::FEE_RECEIVED_DATE
     }
-    /// `club_record::FEE_RECEIVED_FLAG` (+0x364).
+    /// `club_record::FEE_RECEIVED_FLAG` (+0x364). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fee_received_flag(self) -> u8 {
         read_u8(self.0 + club_record::FEE_RECEIVED_FLAG)
@@ -9515,7 +9608,7 @@ impl ClubRecord {
     pub(crate) unsafe fn set_fee_received_flag(self, v: u8) {
         write_u8(self.0 + club_record::FEE_RECEIVED_FLAG, v)
     }
-    /// `club_record::TRANSFER_SPENDING` (+0x365).
+    /// `club_record::TRANSFER_SPENDING` (+0x365). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn transfer_spending(self) -> usize {
         read_usize(self.0 + club_record::TRANSFER_SPENDING)
@@ -9524,7 +9617,7 @@ impl ClubRecord {
     pub(crate) unsafe fn set_transfer_spending(self, v: usize) {
         write_usize(self.0 + club_record::TRANSFER_SPENDING, v)
     }
-    /// `club_record::TRANSFER_SPENDING_YEAR` (+0x369).
+    /// `club_record::TRANSFER_SPENDING_YEAR` (+0x369). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn transfer_spending_year(self) -> i16 {
         read_i16(self.0 + club_record::TRANSFER_SPENDING_YEAR)
@@ -9533,7 +9626,7 @@ impl ClubRecord {
     pub(crate) unsafe fn set_transfer_spending_year(self, v: i16) {
         write_i16(self.0 + club_record::TRANSFER_SPENDING_YEAR, v)
     }
-    /// `club_record::TRANSFER_INCOME` (+0x36b).
+    /// `club_record::TRANSFER_INCOME` (+0x36b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn transfer_income(self) -> usize {
         read_usize(self.0 + club_record::TRANSFER_INCOME)
@@ -9542,7 +9635,7 @@ impl ClubRecord {
     pub(crate) unsafe fn set_transfer_income(self, v: usize) {
         write_usize(self.0 + club_record::TRANSFER_INCOME, v)
     }
-    /// `club_record::TRANSFER_INCOME_YEAR` (+0x36f).
+    /// `club_record::TRANSFER_INCOME_YEAR` (+0x36f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn transfer_income_year(self) -> i16 {
         read_i16(self.0 + club_record::TRANSFER_INCOME_YEAR)
@@ -9551,7 +9644,7 @@ impl ClubRecord {
     pub(crate) unsafe fn set_transfer_income_year(self, v: i16) {
         write_i16(self.0 + club_record::TRANSFER_INCOME_YEAR, v)
     }
-    /// `club_record::FANS_PLAYER` (+0x371).
+    /// `club_record::FANS_PLAYER` (+0x371). Name: read.
     #[inline(always)]
     pub(crate) fn fans_player_addr(self) -> usize {
         self.0 + club_record::FANS_PLAYER
@@ -9581,7 +9674,7 @@ impl ClubRecordEntry {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `club_record_entry::SEASON_INDEX` (+0x4).
+    /// `club_record_entry::SEASON_INDEX` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_index(self) -> i32 {
         read_i32(self.0 + club_record_entry::SEASON_INDEX)
@@ -9590,7 +9683,7 @@ impl ClubRecordEntry {
     pub(crate) unsafe fn set_season_index(self, v: i32) {
         write_i32(self.0 + club_record_entry::SEASON_INDEX, v)
     }
-    /// `club_record_entry::SEASON_GAMES` (+0x10).
+    /// `club_record_entry::SEASON_GAMES` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_games(self) -> u8 {
         read_u8(self.0 + club_record_entry::SEASON_GAMES)
@@ -9599,7 +9692,7 @@ impl ClubRecordEntry {
     pub(crate) unsafe fn set_season_games(self, v: u8) {
         write_u8(self.0 + club_record_entry::SEASON_GAMES, v)
     }
-    /// `club_record_entry::SEASONS` (+0x68).
+    /// `club_record_entry::SEASONS` (+0x68). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn seasons(self) -> i16 {
         read_i16(self.0 + club_record_entry::SEASONS)
@@ -9633,7 +9726,7 @@ impl ClubRecordsFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `club_records_fields::ALL_TIME_RECORDS` (+0x4).
+    /// `club_records_fields::ALL_TIME_RECORDS` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn all_time_records(self) -> usize {
         read_usize(self.0 + club_records_fields::ALL_TIME_RECORDS)
@@ -9642,7 +9735,7 @@ impl ClubRecordsFields {
     pub(crate) unsafe fn set_all_time_records(self, v: usize) {
         write_usize(self.0 + club_records_fields::ALL_TIME_RECORDS, v)
     }
-    /// `club_records_fields::ALL_TIME_CAPACITY` (+0x8).
+    /// `club_records_fields::ALL_TIME_CAPACITY` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn all_time_capacity(self) -> usize {
         read_usize(self.0 + club_records_fields::ALL_TIME_CAPACITY)
@@ -9651,7 +9744,7 @@ impl ClubRecordsFields {
     pub(crate) unsafe fn set_all_time_capacity(self, v: usize) {
         write_usize(self.0 + club_records_fields::ALL_TIME_CAPACITY, v)
     }
-    /// `club_records_fields::ALL_TIME_COUNT` (+0xc).
+    /// `club_records_fields::ALL_TIME_COUNT` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn all_time_count(self) -> usize {
         read_usize(self.0 + club_records_fields::ALL_TIME_COUNT)
@@ -9660,7 +9753,7 @@ impl ClubRecordsFields {
     pub(crate) unsafe fn set_all_time_count(self, v: usize) {
         write_usize(self.0 + club_records_fields::ALL_TIME_COUNT, v)
     }
-    /// `club_records_fields::SEASON_RECORDS` (+0x10).
+    /// `club_records_fields::SEASON_RECORDS` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_records(self) -> usize {
         read_usize(self.0 + club_records_fields::SEASON_RECORDS)
@@ -9669,7 +9762,7 @@ impl ClubRecordsFields {
     pub(crate) unsafe fn set_season_records(self, v: usize) {
         write_usize(self.0 + club_records_fields::SEASON_RECORDS, v)
     }
-    /// `club_records_fields::SEASON_CAPACITY` (+0x14).
+    /// `club_records_fields::SEASON_CAPACITY` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_capacity(self) -> usize {
         read_usize(self.0 + club_records_fields::SEASON_CAPACITY)
@@ -9678,7 +9771,7 @@ impl ClubRecordsFields {
     pub(crate) unsafe fn set_season_capacity(self, v: usize) {
         write_usize(self.0 + club_records_fields::SEASON_CAPACITY, v)
     }
-    /// `club_records_fields::SEASON_COUNT` (+0x18).
+    /// `club_records_fields::SEASON_COUNT` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_count(self) -> usize {
         read_usize(self.0 + club_records_fields::SEASON_COUNT)
@@ -9687,7 +9780,7 @@ impl ClubRecordsFields {
     pub(crate) unsafe fn set_season_count(self, v: usize) {
         write_usize(self.0 + club_records_fields::SEASON_COUNT, v)
     }
-    /// `club_records_fields::CLUB_ENTRIES` (+0x1c).
+    /// `club_records_fields::CLUB_ENTRIES` (+0x1c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_entries(self) -> usize {
         read_usize(self.0 + club_records_fields::CLUB_ENTRIES)
@@ -9696,7 +9789,7 @@ impl ClubRecordsFields {
     pub(crate) unsafe fn set_club_entries(self, v: usize) {
         write_usize(self.0 + club_records_fields::CLUB_ENTRIES, v)
     }
-    /// `club_records_fields::NEWS_QUEUE` (+0x24).
+    /// `club_records_fields::NEWS_QUEUE` (+0x24). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn news_queue(self) -> usize {
         read_usize(self.0 + club_records_fields::NEWS_QUEUE)
@@ -9705,7 +9798,7 @@ impl ClubRecordsFields {
     pub(crate) unsafe fn set_news_queue(self, v: usize) {
         write_usize(self.0 + club_records_fields::NEWS_QUEUE, v)
     }
-    /// `club_records_fields::NEWS_QUEUE_CAPACITY` (+0x28).
+    /// `club_records_fields::NEWS_QUEUE_CAPACITY` (+0x28). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn news_queue_capacity(self) -> usize {
         read_usize(self.0 + club_records_fields::NEWS_QUEUE_CAPACITY)
@@ -9714,7 +9807,7 @@ impl ClubRecordsFields {
     pub(crate) unsafe fn set_news_queue_capacity(self, v: usize) {
         write_usize(self.0 + club_records_fields::NEWS_QUEUE_CAPACITY, v)
     }
-    /// `club_records_fields::NEWS_QUEUE_COUNT` (+0x2c).
+    /// `club_records_fields::NEWS_QUEUE_COUNT` (+0x2c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn news_queue_count(self) -> usize {
         read_usize(self.0 + club_records_fields::NEWS_QUEUE_COUNT)
@@ -9748,7 +9841,7 @@ impl ClubShortlist {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `club_shortlist::ACTIVE` (+0x4).
+    /// `club_shortlist::ACTIVE` (+0x4). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn active(self) -> u8 {
         read_u8(self.0 + club_shortlist::ACTIVE)
@@ -9757,7 +9850,7 @@ impl ClubShortlist {
     pub(crate) unsafe fn set_active(self, v: u8) {
         write_u8(self.0 + club_shortlist::ACTIVE, v)
     }
-    /// `club_shortlist::DAYS` (+0x8).
+    /// `club_shortlist::DAYS` (+0x8). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn days(self) -> u8 {
         read_u8(self.0 + club_shortlist::DAYS)
@@ -9791,7 +9884,7 @@ impl CommentaryQueue {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `commentary_queue::ACTIVE` (+0x5).
+    /// `commentary_queue::ACTIVE` (+0x5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn active(self) -> u8 {
         read_u8(self.0 + commentary_queue::ACTIVE)
@@ -9800,7 +9893,7 @@ impl CommentaryQueue {
     pub(crate) unsafe fn set_active(self, v: u8) {
         write_u8(self.0 + commentary_queue::ACTIVE, v)
     }
-    /// `commentary_queue::WRITE_POS` (+0x8).
+    /// `commentary_queue::WRITE_POS` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn write_pos(self) -> i16 {
         read_i16(self.0 + commentary_queue::WRITE_POS)
@@ -9809,7 +9902,7 @@ impl CommentaryQueue {
     pub(crate) unsafe fn set_write_pos(self, v: i16) {
         write_i16(self.0 + commentary_queue::WRITE_POS, v)
     }
-    /// `commentary_queue::SAVED_POS` (+0xa).
+    /// `commentary_queue::SAVED_POS` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn saved_pos(self) -> i16 {
         read_i16(self.0 + commentary_queue::SAVED_POS)
@@ -9818,7 +9911,7 @@ impl CommentaryQueue {
     pub(crate) unsafe fn set_saved_pos(self, v: i16) {
         write_i16(self.0 + commentary_queue::SAVED_POS, v)
     }
-    /// `commentary_queue::READ_POS` (+0xc).
+    /// `commentary_queue::READ_POS` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn read_pos(self) -> i16 {
         read_i16(self.0 + commentary_queue::READ_POS)
@@ -9827,32 +9920,32 @@ impl CommentaryQueue {
     pub(crate) unsafe fn set_read_pos(self, v: i16) {
         write_i16(self.0 + commentary_queue::READ_POS, v)
     }
-    /// `commentary_queue::SOUND_CHANNELS` (+0x10).
+    /// `commentary_queue::SOUND_CHANNELS` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) fn sound_channels_addr(self) -> usize {
         self.0 + commentary_queue::SOUND_CHANNELS
     }
-    /// `commentary_queue::LOOP_CHANNELS` (+0x20).
+    /// `commentary_queue::LOOP_CHANNELS` (+0x20). Name: inferred.
     #[inline(always)]
     pub(crate) fn loop_channels_addr(self) -> usize {
         self.0 + commentary_queue::LOOP_CHANNELS
     }
-    /// `commentary_queue::SLOTS` (+0x30).
+    /// `commentary_queue::SLOTS` (+0x30). Name: read.
     #[inline(always)]
     pub(crate) fn slots_addr(self) -> usize {
         self.0 + commentary_queue::SLOTS
     }
-    /// `commentary_queue::SLOT_RECORDS` (+0xd8).
+    /// `commentary_queue::SLOT_RECORDS` (+0xd8). Name: read.
     #[inline(always)]
     pub(crate) fn slot_records_addr(self) -> usize {
         self.0 + commentary_queue::SLOT_RECORDS
     }
-    /// `commentary_queue::SOUND_START_TIMES` (+0x2d6c).
+    /// `commentary_queue::SOUND_START_TIMES` (+0x2d6c). Name: read.
     #[inline(always)]
     pub(crate) fn sound_start_times_addr(self) -> usize {
         self.0 + commentary_queue::SOUND_START_TIMES
     }
-    /// `commentary_queue::SOUND_DURATION` (+0x2dac).
+    /// `commentary_queue::SOUND_DURATION` (+0x2dac). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn sound_duration(self) -> u32 {
         read_u32(self.0 + commentary_queue::SOUND_DURATION)
@@ -9861,7 +9954,7 @@ impl CommentaryQueue {
     pub(crate) unsafe fn set_sound_duration(self, v: u32) {
         write_u32(self.0 + commentary_queue::SOUND_DURATION, v)
     }
-    /// `commentary_queue::VOLUME` (+0x2db0).
+    /// `commentary_queue::VOLUME` (+0x2db0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn volume(self) -> u8 {
         read_u8(self.0 + commentary_queue::VOLUME)
@@ -9895,7 +9988,7 @@ impl CompStatsClub {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `comp_stats_club::DANGER_POSITION` (+0x72).
+    /// `comp_stats_club::DANGER_POSITION` (+0x72). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn danger_position(self) -> u8 {
         read_u8(self.0 + comp_stats_club::DANGER_POSITION)
@@ -9904,7 +9997,7 @@ impl CompStatsClub {
     pub(crate) unsafe fn set_danger_position(self, v: u8) {
         write_u8(self.0 + comp_stats_club::DANGER_POSITION, v)
     }
-    /// `comp_stats_club::CURRENT_POSITION` (+0x73).
+    /// `comp_stats_club::CURRENT_POSITION` (+0x73). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn current_position(self) -> u8 {
         read_u8(self.0 + comp_stats_club::CURRENT_POSITION)
@@ -9913,7 +10006,7 @@ impl CompStatsClub {
     pub(crate) unsafe fn set_current_position(self, v: u8) {
         write_u8(self.0 + comp_stats_club::CURRENT_POSITION, v)
     }
-    /// `comp_stats_club::BEST_POSITION` (+0x74).
+    /// `comp_stats_club::BEST_POSITION` (+0x74). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn best_position(self) -> u8 {
         read_u8(self.0 + comp_stats_club::BEST_POSITION)
@@ -9922,7 +10015,7 @@ impl CompStatsClub {
     pub(crate) unsafe fn set_best_position(self, v: u8) {
         write_u8(self.0 + comp_stats_club::BEST_POSITION, v)
     }
-    /// `comp_stats_club::WORST_POSITION` (+0x75).
+    /// `comp_stats_club::WORST_POSITION` (+0x75). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn worst_position(self) -> u8 {
         read_u8(self.0 + comp_stats_club::WORST_POSITION)
@@ -9956,7 +10049,7 @@ impl ContractOffer {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `contract_offer::CLUB_ID` (+0x4).
+    /// `contract_offer::CLUB_ID` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_id(self) -> usize {
         read_usize(self.0 + contract_offer::CLUB_ID)
@@ -9965,7 +10058,7 @@ impl ContractOffer {
     pub(crate) unsafe fn set_club_id(self, v: usize) {
         write_usize(self.0 + contract_offer::CLUB_ID, v)
     }
-    /// `contract_offer::CONTRACT_TYPE` (+0x35).
+    /// `contract_offer::CONTRACT_TYPE` (+0x35). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn contract_type(self) -> u8 {
         read_u8(self.0 + contract_offer::CONTRACT_TYPE)
@@ -9974,7 +10067,7 @@ impl ContractOffer {
     pub(crate) unsafe fn set_contract_type(self, v: u8) {
         write_u8(self.0 + contract_offer::CONTRACT_TYPE, v)
     }
-    /// `contract_offer::STATE` (+0x50).
+    /// `contract_offer::STATE` (+0x50). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn state(self) -> u8 {
         read_u8(self.0 + contract_offer::STATE)
@@ -9983,12 +10076,12 @@ impl ContractOffer {
     pub(crate) unsafe fn set_state(self, v: u8) {
         write_u8(self.0 + contract_offer::STATE, v)
     }
-    /// `contract_offer::OFFER_DATE` (+0x51).
+    /// `contract_offer::OFFER_DATE` (+0x51). Name: read.
     #[inline(always)]
     pub(crate) fn offer_date_addr(self) -> usize {
         self.0 + contract_offer::OFFER_DATE
     }
-    /// `contract_offer::TRANSFER_OFFER_SLOT` (+0x59).
+    /// `contract_offer::TRANSFER_OFFER_SLOT` (+0x59). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn transfer_offer_slot(self) -> usize {
         read_usize(self.0 + contract_offer::TRANSFER_OFFER_SLOT)
@@ -9997,7 +10090,7 @@ impl ContractOffer {
     pub(crate) unsafe fn set_transfer_offer_slot(self, v: usize) {
         write_usize(self.0 + contract_offer::TRANSFER_OFFER_SLOT, v)
     }
-    /// `contract_offer::TRANSFER_OFFER_SERIAL` (+0x5d).
+    /// `contract_offer::TRANSFER_OFFER_SERIAL` (+0x5d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn transfer_offer_serial(self) -> usize {
         read_usize(self.0 + contract_offer::TRANSFER_OFFER_SERIAL)
@@ -10006,7 +10099,7 @@ impl ContractOffer {
     pub(crate) unsafe fn set_transfer_offer_serial(self, v: usize) {
         write_usize(self.0 + contract_offer::TRANSFER_OFFER_SERIAL, v)
     }
-    /// `contract_offer::MARK` (+0x61).
+    /// `contract_offer::MARK` (+0x61). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn mark(self) -> u8 {
         read_u8(self.0 + contract_offer::MARK)
@@ -10015,7 +10108,7 @@ impl ContractOffer {
     pub(crate) unsafe fn set_mark(self, v: u8) {
         write_u8(self.0 + contract_offer::MARK, v)
     }
-    /// `contract_offer::DECISION_VALID` (+0x62).
+    /// `contract_offer::DECISION_VALID` (+0x62). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn decision_valid(self) -> u8 {
         read_u8(self.0 + contract_offer::DECISION_VALID)
@@ -10024,7 +10117,7 @@ impl ContractOffer {
     pub(crate) unsafe fn set_decision_valid(self, v: u8) {
         write_u8(self.0 + contract_offer::DECISION_VALID, v)
     }
-    /// `contract_offer::RESERVED_RECORD` (+0x63).
+    /// `contract_offer::RESERVED_RECORD` (+0x63). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn reserved_record(self) -> usize {
         read_usize(self.0 + contract_offer::RESERVED_RECORD)
@@ -10033,7 +10126,7 @@ impl ContractOffer {
     pub(crate) unsafe fn set_reserved_record(self, v: usize) {
         write_usize(self.0 + contract_offer::RESERVED_RECORD, v)
     }
-    /// `contract_offer::RESERVED_RECORD_ARG1` (+0x67).
+    /// `contract_offer::RESERVED_RECORD_ARG1` (+0x67). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn reserved_record_arg1(self) -> usize {
         read_usize(self.0 + contract_offer::RESERVED_RECORD_ARG1)
@@ -10042,7 +10135,7 @@ impl ContractOffer {
     pub(crate) unsafe fn set_reserved_record_arg1(self, v: usize) {
         write_usize(self.0 + contract_offer::RESERVED_RECORD_ARG1, v)
     }
-    /// `contract_offer::RESERVED_RECORD_ARG2` (+0x6b).
+    /// `contract_offer::RESERVED_RECORD_ARG2` (+0x6b). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn reserved_record_arg2(self) -> usize {
         read_usize(self.0 + contract_offer::RESERVED_RECORD_ARG2)
@@ -10076,7 +10169,7 @@ impl ContractTalks {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `contract_talks::CLUB_ID` (+0x4).
+    /// `contract_talks::CLUB_ID` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_id(self) -> u32 {
         read_u32(self.0 + contract_talks::CLUB_ID)
@@ -10085,7 +10178,7 @@ impl ContractTalks {
     pub(crate) unsafe fn set_club_id(self, v: u32) {
         write_u32(self.0 + contract_talks::CLUB_ID, v)
     }
-    /// `contract_talks::MANAGER_ID` (+0x8).
+    /// `contract_talks::MANAGER_ID` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn manager_id(self) -> u32 {
         read_u32(self.0 + contract_talks::MANAGER_ID)
@@ -10119,12 +10212,12 @@ impl CountRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `count_record::HOLDER` (+0x2).
+    /// `count_record::HOLDER` (+0x2). Name: read.
     #[inline(always)]
     pub(crate) fn holder_addr(self) -> usize {
         self.0 + count_record::HOLDER
     }
-    /// `count_record::HOLDER_DATE` (+0x12).
+    /// `count_record::HOLDER_DATE` (+0x12). Name: read.
     #[inline(always)]
     pub(crate) fn holder_date_addr(self) -> usize {
         self.0 + count_record::HOLDER_DATE
@@ -10154,7 +10247,7 @@ impl CupRound {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `cup_round::DAY` (+0x3).
+    /// `cup_round::DAY` (+0x3). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn day(self) -> i16 {
         read_i16(self.0 + cup_round::DAY)
@@ -10163,7 +10256,7 @@ impl CupRound {
     pub(crate) unsafe fn set_day(self, v: i16) {
         write_i16(self.0 + cup_round::DAY, v)
     }
-    /// `cup_round::YEAR_OFFSET` (+0x5).
+    /// `cup_round::YEAR_OFFSET` (+0x5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn year_offset(self) -> u8 {
         read_u8(self.0 + cup_round::YEAR_OFFSET)
@@ -10172,7 +10265,7 @@ impl CupRound {
     pub(crate) unsafe fn set_year_offset(self, v: u8) {
         write_u8(self.0 + cup_round::YEAR_OFFSET, v)
     }
-    /// `cup_round::TIME_SLICE` (+0x6).
+    /// `cup_round::TIME_SLICE` (+0x6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn time_slice(self) -> u8 {
         read_u8(self.0 + cup_round::TIME_SLICE)
@@ -10181,7 +10274,7 @@ impl CupRound {
     pub(crate) unsafe fn set_time_slice(self, v: u8) {
         write_u8(self.0 + cup_round::TIME_SLICE, v)
     }
-    /// `cup_round::ROUND_CODE` (+0x7).
+    /// `cup_round::ROUND_CODE` (+0x7). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn round_code(self) -> i16 {
         read_i16(self.0 + cup_round::ROUND_CODE)
@@ -10190,7 +10283,7 @@ impl CupRound {
     pub(crate) unsafe fn set_round_code(self, v: i16) {
         write_i16(self.0 + cup_round::ROUND_CODE, v)
     }
-    /// `cup_round::ROUND_NUMBER` (+0x9).
+    /// `cup_round::ROUND_NUMBER` (+0x9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn round_number(self) -> i16 {
         read_i16(self.0 + cup_round::ROUND_NUMBER)
@@ -10199,7 +10292,7 @@ impl CupRound {
     pub(crate) unsafe fn set_round_number(self, v: i16) {
         write_i16(self.0 + cup_round::ROUND_NUMBER, v)
     }
-    /// `cup_round::DRAW_RULES` (+0xb).
+    /// `cup_round::DRAW_RULES` (+0xb). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn draw_rules(self) -> i16 {
         read_i16(self.0 + cup_round::DRAW_RULES)
@@ -10208,7 +10301,7 @@ impl CupRound {
     pub(crate) unsafe fn set_draw_rules(self, v: i16) {
         write_i16(self.0 + cup_round::DRAW_RULES, v)
     }
-    /// `cup_round::TIE_RULES` (+0xd).
+    /// `cup_round::TIE_RULES` (+0xd). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn tie_rules(self) -> i16 {
         read_i16(self.0 + cup_round::TIE_RULES)
@@ -10217,7 +10310,7 @@ impl CupRound {
     pub(crate) unsafe fn set_tie_rules(self, v: i16) {
         write_i16(self.0 + cup_round::TIE_RULES, v)
     }
-    /// `cup_round::VENUE_VALUE` (+0x13).
+    /// `cup_round::VENUE_VALUE` (+0x13). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn venue_value(self) -> usize {
         read_usize(self.0 + cup_round::VENUE_VALUE)
@@ -10226,7 +10319,7 @@ impl CupRound {
     pub(crate) unsafe fn set_venue_value(self, v: usize) {
         write_usize(self.0 + cup_round::VENUE_VALUE, v)
     }
-    /// `cup_round::MATCH_CATEGORY` (+0x17).
+    /// `cup_round::MATCH_CATEGORY` (+0x17). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn match_category(self) -> u8 {
         read_u8(self.0 + cup_round::MATCH_CATEGORY)
@@ -10235,7 +10328,7 @@ impl CupRound {
     pub(crate) unsafe fn set_match_category(self, v: u8) {
         write_u8(self.0 + cup_round::MATCH_CATEGORY, v)
     }
-    /// `cup_round::TEAMS` (+0x18).
+    /// `cup_round::TEAMS` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn teams(self) -> i16 {
         read_i16(self.0 + cup_round::TEAMS)
@@ -10244,7 +10337,7 @@ impl CupRound {
     pub(crate) unsafe fn set_teams(self, v: i16) {
         write_i16(self.0 + cup_round::TEAMS, v)
     }
-    /// `cup_round::TIES` (+0x1a).
+    /// `cup_round::TIES` (+0x1a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn ties(self) -> i16 {
         read_i16(self.0 + cup_round::TIES)
@@ -10253,7 +10346,7 @@ impl CupRound {
     pub(crate) unsafe fn set_ties(self, v: i16) {
         write_i16(self.0 + cup_round::TIES, v)
     }
-    /// `cup_round::NEW_TEAMS` (+0x1c).
+    /// `cup_round::NEW_TEAMS` (+0x1c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn new_teams(self) -> i16 {
         read_i16(self.0 + cup_round::NEW_TEAMS)
@@ -10262,7 +10355,7 @@ impl CupRound {
     pub(crate) unsafe fn set_new_teams(self, v: i16) {
         write_i16(self.0 + cup_round::NEW_TEAMS, v)
     }
-    /// `cup_round::SINGLE_LEG_FLAG` (+0x20).
+    /// `cup_round::SINGLE_LEG_FLAG` (+0x20). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn single_leg_flag(self) -> u8 {
         read_u8(self.0 + cup_round::SINGLE_LEG_FLAG)
@@ -10271,7 +10364,7 @@ impl CupRound {
     pub(crate) unsafe fn set_single_leg_flag(self, v: u8) {
         write_u8(self.0 + cup_round::SINGLE_LEG_FLAG, v)
     }
-    /// `cup_round::LEGS` (+0x21).
+    /// `cup_round::LEGS` (+0x21). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn legs(self) -> u8 {
         read_u8(self.0 + cup_round::LEGS)
@@ -10280,7 +10373,7 @@ impl CupRound {
     pub(crate) unsafe fn set_legs(self, v: u8) {
         write_u8(self.0 + cup_round::LEGS, v)
     }
-    /// `cup_round::LEG_GAP_DAYS` (+0x22).
+    /// `cup_round::LEG_GAP_DAYS` (+0x22). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn leg_gap_days(self) -> u8 {
         read_u8(self.0 + cup_round::LEG_GAP_DAYS)
@@ -10289,7 +10382,7 @@ impl CupRound {
     pub(crate) unsafe fn set_leg_gap_days(self, v: u8) {
         write_u8(self.0 + cup_round::LEG_GAP_DAYS, v)
     }
-    /// `cup_round::SLOT_VENUE` (+0x23).
+    /// `cup_round::SLOT_VENUE` (+0x23). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn slot_venue(self) -> u32 {
         read_u32(self.0 + cup_round::SLOT_VENUE)
@@ -10298,7 +10391,7 @@ impl CupRound {
     pub(crate) unsafe fn set_slot_venue(self, v: u32) {
         write_u32(self.0 + cup_round::SLOT_VENUE, v)
     }
-    /// `cup_round::SLOT_WEEKDAY` (+0x27).
+    /// `cup_round::SLOT_WEEKDAY` (+0x27). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn slot_weekday(self) -> u8 {
         read_u8(self.0 + cup_round::SLOT_WEEKDAY)
@@ -10307,7 +10400,7 @@ impl CupRound {
     pub(crate) unsafe fn set_slot_weekday(self, v: u8) {
         write_u8(self.0 + cup_round::SLOT_WEEKDAY, v)
     }
-    /// `cup_round::SLOT_TIME_SLICE` (+0x28).
+    /// `cup_round::SLOT_TIME_SLICE` (+0x28). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn slot_time_slice(self) -> u8 {
         read_u8(self.0 + cup_round::SLOT_TIME_SLICE)
@@ -10316,7 +10409,7 @@ impl CupRound {
     pub(crate) unsafe fn set_slot_time_slice(self, v: u8) {
         write_u8(self.0 + cup_round::SLOT_TIME_SLICE, v)
     }
-    /// `cup_round::SLOT_CODE` (+0x29).
+    /// `cup_round::SLOT_CODE` (+0x29). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn slot_code(self) -> u8 {
         read_u8(self.0 + cup_round::SLOT_CODE)
@@ -10325,7 +10418,7 @@ impl CupRound {
     pub(crate) unsafe fn set_slot_code(self, v: u8) {
         write_u8(self.0 + cup_round::SLOT_CODE, v)
     }
-    /// `cup_round::WINNER_PRIZE` (+0x60).
+    /// `cup_round::WINNER_PRIZE` (+0x60). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn winner_prize(self) -> i32 {
         read_i32(self.0 + cup_round::WINNER_PRIZE)
@@ -10334,7 +10427,7 @@ impl CupRound {
     pub(crate) unsafe fn set_winner_prize(self, v: i32) {
         write_i32(self.0 + cup_round::WINNER_PRIZE, v)
     }
-    /// `cup_round::LOSER_PRIZE` (+0x64).
+    /// `cup_round::LOSER_PRIZE` (+0x64). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn loser_prize(self) -> i32 {
         read_i32(self.0 + cup_round::LOSER_PRIZE)
@@ -10368,7 +10461,7 @@ impl CupTie {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `cup_tie::HOME_TEAM` (+0x0).
+    /// `cup_tie::HOME_TEAM` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_team(self) -> i16 {
         read_i16(self.0 + cup_tie::HOME_TEAM)
@@ -10377,7 +10470,7 @@ impl CupTie {
     pub(crate) unsafe fn set_home_team(self, v: i16) {
         write_i16(self.0 + cup_tie::HOME_TEAM, v)
     }
-    /// `cup_tie::AWAY_TEAM` (+0x2).
+    /// `cup_tie::AWAY_TEAM` (+0x2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_team(self) -> i16 {
         read_i16(self.0 + cup_tie::AWAY_TEAM)
@@ -10386,7 +10479,7 @@ impl CupTie {
     pub(crate) unsafe fn set_away_team(self, v: i16) {
         write_i16(self.0 + cup_tie::AWAY_TEAM, v)
     }
-    /// `cup_tie::FEEDER_TIE` (+0x6).
+    /// `cup_tie::FEEDER_TIE` (+0x6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn feeder_tie(self) -> u16 {
         read_u16(self.0 + cup_tie::FEEDER_TIE)
@@ -10395,7 +10488,7 @@ impl CupTie {
     pub(crate) unsafe fn set_feeder_tie(self, v: u16) {
         write_u16(self.0 + cup_tie::FEEDER_TIE, v)
     }
-    /// `cup_tie::FEEDER_SIDE` (+0x8).
+    /// `cup_tie::FEEDER_SIDE` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn feeder_side(self) -> u16 {
         read_u16(self.0 + cup_tie::FEEDER_SIDE)
@@ -10404,7 +10497,7 @@ impl CupTie {
     pub(crate) unsafe fn set_feeder_side(self, v: u16) {
         write_u16(self.0 + cup_tie::FEEDER_SIDE, v)
     }
-    /// `cup_tie::HOME_LINK_TIE` (+0xa).
+    /// `cup_tie::HOME_LINK_TIE` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_link_tie(self) -> i16 {
         read_i16(self.0 + cup_tie::HOME_LINK_TIE)
@@ -10413,7 +10506,7 @@ impl CupTie {
     pub(crate) unsafe fn set_home_link_tie(self, v: i16) {
         write_i16(self.0 + cup_tie::HOME_LINK_TIE, v)
     }
-    /// `cup_tie::AWAY_LINK_TIE` (+0xc).
+    /// `cup_tie::AWAY_LINK_TIE` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_link_tie(self) -> i16 {
         read_i16(self.0 + cup_tie::AWAY_LINK_TIE)
@@ -10422,7 +10515,7 @@ impl CupTie {
     pub(crate) unsafe fn set_away_link_tie(self, v: i16) {
         write_i16(self.0 + cup_tie::AWAY_LINK_TIE, v)
     }
-    /// `cup_tie::HOME_LINK_ROUND` (+0xe).
+    /// `cup_tie::HOME_LINK_ROUND` (+0xe). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_link_round(self) -> i16 {
         read_i16(self.0 + cup_tie::HOME_LINK_ROUND)
@@ -10431,7 +10524,7 @@ impl CupTie {
     pub(crate) unsafe fn set_home_link_round(self, v: i16) {
         write_i16(self.0 + cup_tie::HOME_LINK_ROUND, v)
     }
-    /// `cup_tie::AWAY_LINK_ROUND` (+0x10).
+    /// `cup_tie::AWAY_LINK_ROUND` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_link_round(self) -> i16 {
         read_i16(self.0 + cup_tie::AWAY_LINK_ROUND)
@@ -10440,7 +10533,7 @@ impl CupTie {
     pub(crate) unsafe fn set_away_link_round(self, v: i16) {
         write_i16(self.0 + cup_tie::AWAY_LINK_ROUND, v)
     }
-    /// `cup_tie::FEEDER_ROUND` (+0x12).
+    /// `cup_tie::FEEDER_ROUND` (+0x12). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn feeder_round(self) -> u16 {
         read_u16(self.0 + cup_tie::FEEDER_ROUND)
@@ -10449,7 +10542,7 @@ impl CupTie {
     pub(crate) unsafe fn set_feeder_round(self, v: u16) {
         write_u16(self.0 + cup_tie::FEEDER_ROUND, v)
     }
-    /// `cup_tie::FIXTURE_STATE` (+0x34).
+    /// `cup_tie::FIXTURE_STATE` (+0x34). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fixture_state(self) -> u8 {
         read_u8(self.0 + cup_tie::FIXTURE_STATE)
@@ -10483,7 +10576,7 @@ impl DayCompetition {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `day_competition::COMP_ID` (+0x0).
+    /// `day_competition::COMP_ID` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn comp_id(self) -> i32 {
         read_i32(self.0 + day_competition::COMP_ID)
@@ -10492,7 +10585,7 @@ impl DayCompetition {
     pub(crate) unsafe fn set_comp_id(self, v: i32) {
         write_i32(self.0 + day_competition::COMP_ID, v)
     }
-    /// `day_competition::FIRST_MATCH` (+0x4).
+    /// `day_competition::FIRST_MATCH` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn first_match(self) -> i32 {
         read_i32(self.0 + day_competition::FIRST_MATCH)
@@ -10501,7 +10594,7 @@ impl DayCompetition {
     pub(crate) unsafe fn set_first_match(self, v: i32) {
         write_i32(self.0 + day_competition::FIRST_MATCH, v)
     }
-    /// `day_competition::LAST_MATCH` (+0x8).
+    /// `day_competition::LAST_MATCH` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn last_match(self) -> i32 {
         read_i32(self.0 + day_competition::LAST_MATCH)
@@ -10510,7 +10603,7 @@ impl DayCompetition {
     pub(crate) unsafe fn set_last_match(self, v: i32) {
         write_i32(self.0 + day_competition::LAST_MATCH, v)
     }
-    /// `day_competition::INTERESTING` (+0xc).
+    /// `day_competition::INTERESTING` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn interesting(self) -> usize {
         read_usize(self.0 + day_competition::INTERESTING)
@@ -10519,7 +10612,7 @@ impl DayCompetition {
     pub(crate) unsafe fn set_interesting(self, v: usize) {
         write_usize(self.0 + day_competition::INTERESTING, v)
     }
-    /// `day_competition::HAS_MARKED` (+0x10).
+    /// `day_competition::HAS_MARKED` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn has_marked(self) -> usize {
         read_usize(self.0 + day_competition::HAS_MARKED)
@@ -10528,7 +10621,7 @@ impl DayCompetition {
     pub(crate) unsafe fn set_has_marked(self, v: usize) {
         write_usize(self.0 + day_competition::HAS_MARKED, v)
     }
-    /// `day_competition::PANEL` (+0x14).
+    /// `day_competition::PANEL` (+0x14). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn panel(self) -> u8 {
         read_u8(self.0 + day_competition::PANEL)
@@ -10562,7 +10655,7 @@ impl DayGroup {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `day_group::FIRST_COMPETITION` (+0x4).
+    /// `day_group::FIRST_COMPETITION` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn first_competition(self) -> usize {
         read_usize(self.0 + day_group::FIRST_COMPETITION)
@@ -10571,7 +10664,7 @@ impl DayGroup {
     pub(crate) unsafe fn set_first_competition(self, v: usize) {
         write_usize(self.0 + day_group::FIRST_COMPETITION, v)
     }
-    /// `day_group::LAST_COMPETITION` (+0x8).
+    /// `day_group::LAST_COMPETITION` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn last_competition(self) -> i32 {
         read_i32(self.0 + day_group::LAST_COMPETITION)
@@ -10580,7 +10673,7 @@ impl DayGroup {
     pub(crate) unsafe fn set_last_competition(self, v: i32) {
         write_i32(self.0 + day_group::LAST_COMPETITION, v)
     }
-    /// `day_group::FIRST_MATCH` (+0xc).
+    /// `day_group::FIRST_MATCH` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn first_match(self) -> usize {
         read_usize(self.0 + day_group::FIRST_MATCH)
@@ -10589,7 +10682,7 @@ impl DayGroup {
     pub(crate) unsafe fn set_first_match(self, v: usize) {
         write_usize(self.0 + day_group::FIRST_MATCH, v)
     }
-    /// `day_group::LAST_MATCH` (+0x10).
+    /// `day_group::LAST_MATCH` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn last_match(self) -> usize {
         read_usize(self.0 + day_group::LAST_MATCH)
@@ -10598,7 +10691,7 @@ impl DayGroup {
     pub(crate) unsafe fn set_last_match(self, v: usize) {
         write_usize(self.0 + day_group::LAST_MATCH, v)
     }
-    /// `day_group::HAS_MARKED` (+0x14).
+    /// `day_group::HAS_MARKED` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn has_marked(self) -> i32 {
         read_i32(self.0 + day_group::HAS_MARKED)
@@ -10632,7 +10725,7 @@ impl DayMatch {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `day_match::FIXTURE` (+0x0).
+    /// `day_match::FIXTURE` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fixture(self) -> i32 {
         read_i32(self.0 + day_match::FIXTURE)
@@ -10641,7 +10734,7 @@ impl DayMatch {
     pub(crate) unsafe fn set_fixture(self, v: i32) {
         write_i32(self.0 + day_match::FIXTURE, v)
     }
-    /// `day_match::FIXTURE_COPY` (+0x4).
+    /// `day_match::FIXTURE_COPY` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fixture_copy(self) -> u8 {
         read_u8(self.0 + day_match::FIXTURE_COPY)
@@ -10650,7 +10743,7 @@ impl DayMatch {
     pub(crate) unsafe fn set_fixture_copy(self, v: u8) {
         write_u8(self.0 + day_match::FIXTURE_COPY, v)
     }
-    /// `day_match::COMPETITION` (+0x18).
+    /// `day_match::COMPETITION` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn competition(self) -> i32 {
         read_i32(self.0 + day_match::COMPETITION)
@@ -10659,7 +10752,7 @@ impl DayMatch {
     pub(crate) unsafe fn set_competition(self, v: i32) {
         write_i32(self.0 + day_match::COMPETITION, v)
     }
-    /// `day_match::HOME_CLUB` (+0x20).
+    /// `day_match::HOME_CLUB` (+0x20). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_club(self) -> i32 {
         read_i32(self.0 + day_match::HOME_CLUB)
@@ -10668,7 +10761,7 @@ impl DayMatch {
     pub(crate) unsafe fn set_home_club(self, v: i32) {
         write_i32(self.0 + day_match::HOME_CLUB, v)
     }
-    /// `day_match::AWAY_CLUB` (+0x24).
+    /// `day_match::AWAY_CLUB` (+0x24). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_club(self) -> i32 {
         read_i32(self.0 + day_match::AWAY_CLUB)
@@ -10677,7 +10770,7 @@ impl DayMatch {
     pub(crate) unsafe fn set_away_club(self, v: i32) {
         write_i32(self.0 + day_match::AWAY_CLUB, v)
     }
-    /// `day_match::HOME_SIDE_MARK` (+0x44).
+    /// `day_match::HOME_SIDE_MARK` (+0x44). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_side_mark(self) -> u8 {
         read_u8(self.0 + day_match::HOME_SIDE_MARK)
@@ -10686,7 +10779,7 @@ impl DayMatch {
     pub(crate) unsafe fn set_home_side_mark(self, v: u8) {
         write_u8(self.0 + day_match::HOME_SIDE_MARK, v)
     }
-    /// `day_match::AWAY_SIDE_MARK` (+0x45).
+    /// `day_match::AWAY_SIDE_MARK` (+0x45). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_side_mark(self) -> u8 {
         read_u8(self.0 + day_match::AWAY_SIDE_MARK)
@@ -10695,7 +10788,7 @@ impl DayMatch {
     pub(crate) unsafe fn set_away_side_mark(self, v: u8) {
         write_u8(self.0 + day_match::AWAY_SIDE_MARK, v)
     }
-    /// `day_match::HOME_GOALS` (+0x47).
+    /// `day_match::HOME_GOALS` (+0x47). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_goals(self) -> i8 {
         read_i8(self.0 + day_match::HOME_GOALS)
@@ -10704,7 +10797,7 @@ impl DayMatch {
     pub(crate) unsafe fn set_home_goals(self, v: i8) {
         write_i8(self.0 + day_match::HOME_GOALS, v)
     }
-    /// `day_match::AWAY_GOALS` (+0x48).
+    /// `day_match::AWAY_GOALS` (+0x48). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_goals(self) -> i8 {
         read_i8(self.0 + day_match::AWAY_GOALS)
@@ -10713,7 +10806,7 @@ impl DayMatch {
     pub(crate) unsafe fn set_away_goals(self, v: i8) {
         write_i8(self.0 + day_match::AWAY_GOALS, v)
     }
-    /// `day_match::HOME_AGGREGATE` (+0x4b).
+    /// `day_match::HOME_AGGREGATE` (+0x4b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_aggregate(self) -> i8 {
         read_i8(self.0 + day_match::HOME_AGGREGATE)
@@ -10722,7 +10815,7 @@ impl DayMatch {
     pub(crate) unsafe fn set_home_aggregate(self, v: i8) {
         write_i8(self.0 + day_match::HOME_AGGREGATE, v)
     }
-    /// `day_match::AWAY_AGGREGATE` (+0x4c).
+    /// `day_match::AWAY_AGGREGATE` (+0x4c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_aggregate(self) -> i8 {
         read_i8(self.0 + day_match::AWAY_AGGREGATE)
@@ -10731,7 +10824,7 @@ impl DayMatch {
     pub(crate) unsafe fn set_away_aggregate(self, v: i8) {
         write_i8(self.0 + day_match::AWAY_AGGREGATE, v)
     }
-    /// `day_match::MARKED` (+0x53).
+    /// `day_match::MARKED` (+0x53). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn marked(self) -> i32 {
         read_i32(self.0 + day_match::MARKED)
@@ -10740,7 +10833,7 @@ impl DayMatch {
     pub(crate) unsafe fn set_marked(self, v: i32) {
         write_i32(self.0 + day_match::MARKED, v)
     }
-    /// `day_match::ENGINE` (+0x57).
+    /// `day_match::ENGINE` (+0x57). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn engine(self) -> usize {
         read_usize(self.0 + day_match::ENGINE)
@@ -10749,7 +10842,7 @@ impl DayMatch {
     pub(crate) unsafe fn set_engine(self, v: usize) {
         write_usize(self.0 + day_match::ENGINE, v)
     }
-    /// `day_match::SCOREBOARD` (+0x5b).
+    /// `day_match::SCOREBOARD` (+0x5b). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn scoreboard(self) -> usize {
         read_usize(self.0 + day_match::SCOREBOARD)
@@ -10758,7 +10851,7 @@ impl DayMatch {
     pub(crate) unsafe fn set_scoreboard(self, v: usize) {
         write_usize(self.0 + day_match::SCOREBOARD, v)
     }
-    /// `day_match::SUMMARY` (+0x5f).
+    /// `day_match::SUMMARY` (+0x5f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn summary(self) -> usize {
         read_usize(self.0 + day_match::SUMMARY)
@@ -10767,7 +10860,7 @@ impl DayMatch {
     pub(crate) unsafe fn set_summary(self, v: usize) {
         write_usize(self.0 + day_match::SUMMARY, v)
     }
-    /// `day_match::DAY_COMPETITION` (+0x63).
+    /// `day_match::DAY_COMPETITION` (+0x63). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn day_competition(self) -> i32 {
         read_i32(self.0 + day_match::DAY_COMPETITION)
@@ -10776,7 +10869,7 @@ impl DayMatch {
     pub(crate) unsafe fn set_day_competition(self, v: i32) {
         write_i32(self.0 + day_match::DAY_COMPETITION, v)
     }
-    /// `day_match::STATE` (+0x67).
+    /// `day_match::STATE` (+0x67). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn state(self) -> u8 {
         read_u8(self.0 + day_match::STATE)
@@ -10810,7 +10903,7 @@ impl DecisionDate {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `decision_date::DATE` (+0x4).
+    /// `decision_date::DATE` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn date(self) -> i16 {
         read_i16(self.0 + decision_date::DATE)
@@ -10819,7 +10912,7 @@ impl DecisionDate {
     pub(crate) unsafe fn set_date(self, v: i16) {
         write_i16(self.0 + decision_date::DATE, v)
     }
-    /// `decision_date::SLICE` (+0xc).
+    /// `decision_date::SLICE` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn slice(self) -> u8 {
         read_u8(self.0 + decision_date::SLICE)
@@ -10828,7 +10921,7 @@ impl DecisionDate {
     pub(crate) unsafe fn set_slice(self, v: u8) {
         write_u8(self.0 + decision_date::SLICE, v)
     }
-    /// `decision_date::KIND` (+0xd).
+    /// `decision_date::KIND` (+0xd). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn kind(self) -> u8 {
         read_u8(self.0 + decision_date::KIND)
@@ -10862,7 +10955,7 @@ impl DisciplineFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `discipline_fields::RULING_BODIES` (+0x0).
+    /// `discipline_fields::RULING_BODIES` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn ruling_bodies(self) -> i32 {
         read_i32(self.0 + discipline_fields::RULING_BODIES)
@@ -10871,7 +10964,7 @@ impl DisciplineFields {
     pub(crate) unsafe fn set_ruling_bodies(self, v: i32) {
         write_i32(self.0 + discipline_fields::RULING_BODIES, v)
     }
-    /// `discipline_fields::BANS` (+0x4).
+    /// `discipline_fields::BANS` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn bans(self) -> usize {
         read_usize(self.0 + discipline_fields::BANS)
@@ -10880,7 +10973,7 @@ impl DisciplineFields {
     pub(crate) unsafe fn set_bans(self, v: usize) {
         write_usize(self.0 + discipline_fields::BANS, v)
     }
-    /// `discipline_fields::BAN_CAPACITY` (+0x8).
+    /// `discipline_fields::BAN_CAPACITY` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn ban_capacity(self) -> i16 {
         read_i16(self.0 + discipline_fields::BAN_CAPACITY)
@@ -10889,7 +10982,7 @@ impl DisciplineFields {
     pub(crate) unsafe fn set_ban_capacity(self, v: i16) {
         write_i16(self.0 + discipline_fields::BAN_CAPACITY, v)
     }
-    /// `discipline_fields::BAN_COUNT` (+0xa).
+    /// `discipline_fields::BAN_COUNT` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn ban_count(self) -> i16 {
         read_i16(self.0 + discipline_fields::BAN_COUNT)
@@ -10898,7 +10991,7 @@ impl DisciplineFields {
     pub(crate) unsafe fn set_ban_count(self, v: i16) {
         write_i16(self.0 + discipline_fields::BAN_COUNT, v)
     }
-    /// `discipline_fields::NATION_INDEX` (+0xc).
+    /// `discipline_fields::NATION_INDEX` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn nation_index(self) -> usize {
         read_usize(self.0 + discipline_fields::NATION_INDEX)
@@ -10907,7 +11000,7 @@ impl DisciplineFields {
     pub(crate) unsafe fn set_nation_index(self, v: usize) {
         write_usize(self.0 + discipline_fields::NATION_INDEX, v)
     }
-    /// `discipline_fields::NATION_INDEX_CAPACITY` (+0x10).
+    /// `discipline_fields::NATION_INDEX_CAPACITY` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn nation_index_capacity(self) -> i16 {
         read_i16(self.0 + discipline_fields::NATION_INDEX_CAPACITY)
@@ -10916,7 +11009,7 @@ impl DisciplineFields {
     pub(crate) unsafe fn set_nation_index_capacity(self, v: i16) {
         write_i16(self.0 + discipline_fields::NATION_INDEX_CAPACITY, v)
     }
-    /// `discipline_fields::NATION_INDEX_COUNT` (+0x12).
+    /// `discipline_fields::NATION_INDEX_COUNT` (+0x12). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn nation_index_count(self) -> i16 {
         read_i16(self.0 + discipline_fields::NATION_INDEX_COUNT)
@@ -10925,7 +11018,7 @@ impl DisciplineFields {
     pub(crate) unsafe fn set_nation_index_count(self, v: i16) {
         write_i16(self.0 + discipline_fields::NATION_INDEX_COUNT, v)
     }
-    /// `discipline_fields::PERSON_RECORDS` (+0x14).
+    /// `discipline_fields::PERSON_RECORDS` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn person_records(self) -> usize {
         read_usize(self.0 + discipline_fields::PERSON_RECORDS)
@@ -10934,7 +11027,7 @@ impl DisciplineFields {
     pub(crate) unsafe fn set_person_records(self, v: usize) {
         write_usize(self.0 + discipline_fields::PERSON_RECORDS, v)
     }
-    /// `discipline_fields::BAN_HISTORY` (+0x18).
+    /// `discipline_fields::BAN_HISTORY` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn ban_history(self) -> usize {
         read_usize(self.0 + discipline_fields::BAN_HISTORY)
@@ -10943,12 +11036,12 @@ impl DisciplineFields {
     pub(crate) unsafe fn set_ban_history(self, v: usize) {
         write_usize(self.0 + discipline_fields::BAN_HISTORY, v)
     }
-    /// `discipline_fields::HELD_BANS` (+0x1c).
+    /// `discipline_fields::HELD_BANS` (+0x1c). Name: read.
     #[inline(always)]
     pub(crate) fn held_bans_addr(self) -> usize {
         self.0 + discipline_fields::HELD_BANS
     }
-    /// `discipline_fields::HELD_BANS_HEAD` (+0x1e).
+    /// `discipline_fields::HELD_BANS_HEAD` (+0x1e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn held_bans_head(self) -> usize {
         read_usize(self.0 + discipline_fields::HELD_BANS_HEAD)
@@ -10982,7 +11075,7 @@ impl DisciplineRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `discipline_record::HISTORY_START` (+0x14).
+    /// `discipline_record::HISTORY_START` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn history_start(self) -> i32 {
         read_i32(self.0 + discipline_record::HISTORY_START)
@@ -10991,7 +11084,7 @@ impl DisciplineRecord {
     pub(crate) unsafe fn set_history_start(self, v: i32) {
         write_i32(self.0 + discipline_record::HISTORY_START, v)
     }
-    /// `discipline_record::HISTORY_LAST` (+0x18).
+    /// `discipline_record::HISTORY_LAST` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn history_last(self) -> i32 {
         read_i32(self.0 + discipline_record::HISTORY_LAST)
@@ -11000,7 +11093,7 @@ impl DisciplineRecord {
     pub(crate) unsafe fn set_history_last(self, v: i32) {
         write_i32(self.0 + discipline_record::HISTORY_LAST, v)
     }
-    /// `discipline_record::HELD_BAN_COUNT` (+0x1c).
+    /// `discipline_record::HELD_BAN_COUNT` (+0x1c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn held_ban_count(self) -> u8 {
         read_u8(self.0 + discipline_record::HELD_BAN_COUNT)
@@ -11034,7 +11127,7 @@ impl EnglishNameTables {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `english_name_tables::CLUB_COMP_COUNT` (+0x14).
+    /// `english_name_tables::CLUB_COMP_COUNT` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_comp_count(self) -> i32 {
         read_i32(self.0 + english_name_tables::CLUB_COMP_COUNT)
@@ -11043,7 +11136,7 @@ impl EnglishNameTables {
     pub(crate) unsafe fn set_club_comp_count(self, v: i32) {
         write_i32(self.0 + english_name_tables::CLUB_COMP_COUNT, v)
     }
-    /// `english_name_tables::CLUB_ROWS` (+0x20).
+    /// `english_name_tables::CLUB_ROWS` (+0x20). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_rows(self) -> usize {
         read_usize(self.0 + english_name_tables::CLUB_ROWS)
@@ -11052,7 +11145,7 @@ impl EnglishNameTables {
     pub(crate) unsafe fn set_club_rows(self, v: usize) {
         write_usize(self.0 + english_name_tables::CLUB_ROWS, v)
     }
-    /// `english_name_tables::NATION_COMP_ROWS` (+0x28).
+    /// `english_name_tables::NATION_COMP_ROWS` (+0x28). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn nation_comp_rows(self) -> usize {
         read_usize(self.0 + english_name_tables::NATION_COMP_ROWS)
@@ -11061,7 +11154,7 @@ impl EnglishNameTables {
     pub(crate) unsafe fn set_nation_comp_rows(self, v: usize) {
         write_usize(self.0 + english_name_tables::NATION_COMP_ROWS, v)
     }
-    /// `english_name_tables::NATION_ROWS` (+0x2c).
+    /// `english_name_tables::NATION_ROWS` (+0x2c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn nation_rows(self) -> usize {
         read_usize(self.0 + english_name_tables::NATION_ROWS)
@@ -11070,7 +11163,7 @@ impl EnglishNameTables {
     pub(crate) unsafe fn set_nation_rows(self, v: usize) {
         write_usize(self.0 + english_name_tables::NATION_ROWS, v)
     }
-    /// `english_name_tables::STADIUM_ROWS` (+0x34).
+    /// `english_name_tables::STADIUM_ROWS` (+0x34). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stadium_rows(self) -> usize {
         read_usize(self.0 + english_name_tables::STADIUM_ROWS)
@@ -11079,7 +11172,7 @@ impl EnglishNameTables {
     pub(crate) unsafe fn set_stadium_rows(self, v: usize) {
         write_usize(self.0 + english_name_tables::STADIUM_ROWS, v)
     }
-    /// `english_name_tables::CLUB_COMP_ROWS` (+0x38).
+    /// `english_name_tables::CLUB_COMP_ROWS` (+0x38). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_comp_rows(self) -> usize {
         read_usize(self.0 + english_name_tables::CLUB_COMP_ROWS)
@@ -11088,7 +11181,7 @@ impl EnglishNameTables {
     pub(crate) unsafe fn set_club_comp_rows(self, v: usize) {
         write_usize(self.0 + english_name_tables::CLUB_COMP_ROWS, v)
     }
-    /// `english_name_tables::STAFF_COMP_ROWS` (+0x3c).
+    /// `english_name_tables::STAFF_COMP_ROWS` (+0x3c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn staff_comp_rows(self) -> usize {
         read_usize(self.0 + english_name_tables::STAFF_COMP_ROWS)
@@ -11122,7 +11215,7 @@ impl EventType {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `event_type::VARIANTS` (+0x8).
+    /// `event_type::VARIANTS` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn variants(self) -> usize {
         read_usize(self.0 + event_type::VARIANTS)
@@ -11131,7 +11224,7 @@ impl EventType {
     pub(crate) unsafe fn set_variants(self, v: usize) {
         write_usize(self.0 + event_type::VARIANTS, v)
     }
-    /// `event_type::VARIANT_COUNT` (+0xc).
+    /// `event_type::VARIANT_COUNT` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn variant_count(self) -> i16 {
         read_i16(self.0 + event_type::VARIANT_COUNT)
@@ -11140,7 +11233,7 @@ impl EventType {
     pub(crate) unsafe fn set_variant_count(self, v: i16) {
         write_i16(self.0 + event_type::VARIANT_COUNT, v)
     }
-    /// `event_type::TOTAL_WEIGHT` (+0xe).
+    /// `event_type::TOTAL_WEIGHT` (+0xe). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn total_weight(self) -> i32 {
         read_i32(self.0 + event_type::TOTAL_WEIGHT)
@@ -11174,7 +11267,7 @@ impl ExchangePlayer {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `exchange_player::TERMS_STATE` (+0x4).
+    /// `exchange_player::TERMS_STATE` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn terms_state(self) -> u8 {
         read_u8(self.0 + exchange_player::TERMS_STATE)
@@ -11183,7 +11276,7 @@ impl ExchangePlayer {
     pub(crate) unsafe fn set_terms_state(self, v: u8) {
         write_u8(self.0 + exchange_player::TERMS_STATE, v)
     }
-    /// `exchange_player::JOB_TYPE` (+0x6).
+    /// `exchange_player::JOB_TYPE` (+0x6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn job_type(self) -> u8 {
         read_u8(self.0 + exchange_player::JOB_TYPE)
@@ -11217,7 +11310,7 @@ impl FansPlayerRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `fans_player_record::YEAR` (+0x18).
+    /// `fans_player_record::YEAR` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn year(self) -> u16 {
         read_u16(self.0 + fans_player_record::YEAR)
@@ -11251,7 +11344,7 @@ impl FreeTransferEntry {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `free_transfer_entry::REASON` (+0x4).
+    /// `free_transfer_entry::REASON` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn reason(self) -> u8 {
         read_u8(self.0 + free_transfer_entry::REASON)
@@ -11260,7 +11353,7 @@ impl FreeTransferEntry {
     pub(crate) unsafe fn set_reason(self, v: u8) {
         write_u8(self.0 + free_transfer_entry::REASON, v)
     }
-    /// `free_transfer_entry::COMPENSATION` (+0x5).
+    /// `free_transfer_entry::COMPENSATION` (+0x5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn compensation(self) -> usize {
         read_usize(self.0 + free_transfer_entry::COMPENSATION)
@@ -11294,12 +11387,12 @@ impl FriendlyMatch {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `friendly_match::DATE` (+0x0).
+    /// `friendly_match::DATE` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) fn date_addr(self) -> usize {
         self.0 + friendly_match::DATE
     }
-    /// `friendly_match::REQUESTING_CLUB` (+0xc).
+    /// `friendly_match::REQUESTING_CLUB` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn requesting_club(self) -> usize {
         read_usize(self.0 + friendly_match::REQUESTING_CLUB)
@@ -11308,7 +11401,7 @@ impl FriendlyMatch {
     pub(crate) unsafe fn set_requesting_club(self, v: usize) {
         write_usize(self.0 + friendly_match::REQUESTING_CLUB, v)
     }
-    /// `friendly_match::HOME_CLUB` (+0x10).
+    /// `friendly_match::HOME_CLUB` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_club(self) -> usize {
         read_usize(self.0 + friendly_match::HOME_CLUB)
@@ -11317,7 +11410,7 @@ impl FriendlyMatch {
     pub(crate) unsafe fn set_home_club(self, v: usize) {
         write_usize(self.0 + friendly_match::HOME_CLUB, v)
     }
-    /// `friendly_match::AWAY_CLUB` (+0x14).
+    /// `friendly_match::AWAY_CLUB` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_club(self) -> usize {
         read_usize(self.0 + friendly_match::AWAY_CLUB)
@@ -11326,7 +11419,7 @@ impl FriendlyMatch {
     pub(crate) unsafe fn set_away_club(self, v: usize) {
         write_usize(self.0 + friendly_match::AWAY_CLUB, v)
     }
-    /// `friendly_match::STATUS` (+0x18).
+    /// `friendly_match::STATUS` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn status(self) -> u8 {
         read_u8(self.0 + friendly_match::STATUS)
@@ -11360,7 +11453,7 @@ impl FutureTransfer {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `future_transfer::OFFER_SLOT` (+0x8).
+    /// `future_transfer::OFFER_SLOT` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn offer_slot(self) -> usize {
         read_usize(self.0 + future_transfer::OFFER_SLOT)
@@ -11394,17 +11487,17 @@ impl GoalsInMatchRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `goals_in_match_record::HOLDER` (+0x1).
+    /// `goals_in_match_record::HOLDER` (+0x1). Name: read.
     #[inline(always)]
     pub(crate) fn holder_addr(self) -> usize {
         self.0 + goals_in_match_record::HOLDER
     }
-    /// `goals_in_match_record::HOLDER_DATE` (+0x11).
+    /// `goals_in_match_record::HOLDER_DATE` (+0x11). Name: read.
     #[inline(always)]
     pub(crate) fn holder_date_addr(self) -> usize {
         self.0 + goals_in_match_record::HOLDER_DATE
     }
-    /// `goals_in_match_record::MATCH` (+0x19).
+    /// `goals_in_match_record::MATCH` (+0x19). Name: read.
     #[inline(always)]
     pub(crate) fn match_addr(self) -> usize {
         self.0 + goals_in_match_record::MATCH
@@ -11434,7 +11527,7 @@ impl HeldBan {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `held_ban::SLOT` (+0x4).
+    /// `held_ban::SLOT` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn slot(self) -> u8 {
         read_u8(self.0 + held_ban::SLOT)
@@ -11443,7 +11536,7 @@ impl HeldBan {
     pub(crate) unsafe fn set_slot(self, v: u8) {
         write_u8(self.0 + held_ban::SLOT, v)
     }
-    /// `held_ban::SLOT_DATA` (+0x5).
+    /// `held_ban::SLOT_DATA` (+0x5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn slot_data(self) -> usize {
         read_usize(self.0 + held_ban::SLOT_DATA)
@@ -11477,7 +11570,7 @@ impl HumanManagerSheet {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `human_manager_sheet::LIVE_MATCH` (+0xe2).
+    /// `human_manager_sheet::LIVE_MATCH` (+0xe2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn live_match(self) -> usize {
         read_usize(self.0 + human_manager_sheet::LIVE_MATCH)
@@ -11486,7 +11579,7 @@ impl HumanManagerSheet {
     pub(crate) unsafe fn set_live_match(self, v: usize) {
         write_usize(self.0 + human_manager_sheet::LIVE_MATCH, v)
     }
-    /// `human_manager_sheet::CLUB` (+0xe6).
+    /// `human_manager_sheet::CLUB` (+0xe6). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn club(self) -> usize {
         read_usize(self.0 + human_manager_sheet::CLUB)
@@ -11520,7 +11613,7 @@ impl IllnessOutbreak {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `illness_outbreak::CLUB_ID` (+0xd).
+    /// `illness_outbreak::CLUB_ID` (+0xd). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_id(self) -> i32 {
         read_i32(self.0 + illness_outbreak::CLUB_ID)
@@ -11554,7 +11647,7 @@ impl InjuryEntry {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `injury_entry::MATCH_MARK` (+0x1a).
+    /// `injury_entry::MATCH_MARK` (+0x1a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn match_mark(self) -> u8 {
         read_u8(self.0 + injury_entry::MATCH_MARK)
@@ -11563,7 +11656,7 @@ impl InjuryEntry {
     pub(crate) unsafe fn set_match_mark(self, v: u8) {
         write_u8(self.0 + injury_entry::MATCH_MARK, v)
     }
-    /// `injury_entry::DATE` (+0x20).
+    /// `injury_entry::DATE` (+0x20). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn date(self) -> i16 {
         read_i16(self.0 + injury_entry::DATE)
@@ -11572,7 +11665,7 @@ impl InjuryEntry {
     pub(crate) unsafe fn set_date(self, v: i16) {
         write_i16(self.0 + injury_entry::DATE, v)
     }
-    /// `injury_entry::DAYS_OUT` (+0x28).
+    /// `injury_entry::DAYS_OUT` (+0x28). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn days_out(self) -> i16 {
         read_i16(self.0 + injury_entry::DAYS_OUT)
@@ -11581,7 +11674,7 @@ impl InjuryEntry {
     pub(crate) unsafe fn set_days_out(self, v: i16) {
         write_i16(self.0 + injury_entry::DAYS_OUT, v)
     }
-    /// `injury_entry::TRAINING_RETURN_DAYS` (+0x2a).
+    /// `injury_entry::TRAINING_RETURN_DAYS` (+0x2a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn training_return_days(self) -> i16 {
         read_i16(self.0 + injury_entry::TRAINING_RETURN_DAYS)
@@ -11590,7 +11683,7 @@ impl InjuryEntry {
     pub(crate) unsafe fn set_training_return_days(self, v: i16) {
         write_i16(self.0 + injury_entry::TRAINING_RETURN_DAYS, v)
     }
-    /// `injury_entry::DAYS_LEFT` (+0x2c).
+    /// `injury_entry::DAYS_LEFT` (+0x2c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn days_left(self) -> i16 {
         read_i16(self.0 + injury_entry::DAYS_LEFT)
@@ -11599,7 +11692,7 @@ impl InjuryEntry {
     pub(crate) unsafe fn set_days_left(self, v: i16) {
         write_i16(self.0 + injury_entry::DAYS_LEFT, v)
     }
-    /// `injury_entry::TRAINING_DAYS_LEFT` (+0x2e).
+    /// `injury_entry::TRAINING_DAYS_LEFT` (+0x2e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn training_days_left(self) -> i16 {
         read_i16(self.0 + injury_entry::TRAINING_DAYS_LEFT)
@@ -11633,7 +11726,7 @@ impl Instalment {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `instalment::PAYING_CLUB_ID` (+0x4).
+    /// `instalment::PAYING_CLUB_ID` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn paying_club_id(self) -> usize {
         read_usize(self.0 + instalment::PAYING_CLUB_ID)
@@ -11642,7 +11735,7 @@ impl Instalment {
     pub(crate) unsafe fn set_paying_club_id(self, v: usize) {
         write_usize(self.0 + instalment::PAYING_CLUB_ID, v)
     }
-    /// `instalment::RECEIVING_CLUB_ID` (+0x8).
+    /// `instalment::RECEIVING_CLUB_ID` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn receiving_club_id(self) -> usize {
         read_usize(self.0 + instalment::RECEIVING_CLUB_ID)
@@ -11651,7 +11744,7 @@ impl Instalment {
     pub(crate) unsafe fn set_receiving_club_id(self, v: usize) {
         write_usize(self.0 + instalment::RECEIVING_CLUB_ID, v)
     }
-    /// `instalment::REMAINING` (+0xc).
+    /// `instalment::REMAINING` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn remaining(self) -> u8 {
         read_u8(self.0 + instalment::REMAINING)
@@ -11685,7 +11778,7 @@ impl IntlDateEntry {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `intl_date_entry::WEEK` (+0x0).
+    /// `intl_date_entry::WEEK` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn week(self) -> u8 {
         read_u8(self.0 + intl_date_entry::WEEK)
@@ -11694,7 +11787,7 @@ impl IntlDateEntry {
     pub(crate) unsafe fn set_week(self, v: u8) {
         write_u8(self.0 + intl_date_entry::WEEK, v)
     }
-    /// `intl_date_entry::WEEKDAY` (+0x1).
+    /// `intl_date_entry::WEEKDAY` (+0x1). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn weekday(self) -> u8 {
         read_u8(self.0 + intl_date_entry::WEEKDAY)
@@ -11703,7 +11796,7 @@ impl IntlDateEntry {
     pub(crate) unsafe fn set_weekday(self, v: u8) {
         write_u8(self.0 + intl_date_entry::WEEKDAY, v)
     }
-    /// `intl_date_entry::MONTH` (+0x2).
+    /// `intl_date_entry::MONTH` (+0x2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn month(self) -> u8 {
         read_u8(self.0 + intl_date_entry::MONTH)
@@ -11712,12 +11805,12 @@ impl IntlDateEntry {
     pub(crate) unsafe fn set_month(self, v: u8) {
         write_u8(self.0 + intl_date_entry::MONTH, v)
     }
-    /// `intl_date_entry::DATE` (+0x3).
+    /// `intl_date_entry::DATE` (+0x3). Name: read.
     #[inline(always)]
     pub(crate) fn date_addr(self) -> usize {
         self.0 + intl_date_entry::DATE
     }
-    /// `intl_date_entry::YEAR_OFFSET` (+0xb).
+    /// `intl_date_entry::YEAR_OFFSET` (+0xb). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn year_offset(self) -> u8 {
         read_u8(self.0 + intl_date_entry::YEAR_OFFSET)
@@ -11726,7 +11819,7 @@ impl IntlDateEntry {
     pub(crate) unsafe fn set_year_offset(self, v: u8) {
         write_u8(self.0 + intl_date_entry::YEAR_OFFSET, v)
     }
-    /// `intl_date_entry::CONTINENT_ID` (+0xc).
+    /// `intl_date_entry::CONTINENT_ID` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn continent_id(self) -> i32 {
         read_i32(self.0 + intl_date_entry::CONTINENT_ID)
@@ -11735,7 +11828,7 @@ impl IntlDateEntry {
     pub(crate) unsafe fn set_continent_id(self, v: i32) {
         write_i32(self.0 + intl_date_entry::CONTINENT_ID, v)
     }
-    /// `intl_date_entry::COMP_ID` (+0x10).
+    /// `intl_date_entry::COMP_ID` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn comp_id(self) -> i32 {
         read_i32(self.0 + intl_date_entry::COMP_ID)
@@ -11769,7 +11862,7 @@ impl JobVacancy {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `job_vacancy::CLUB_ID` (+0xe).
+    /// `job_vacancy::CLUB_ID` (+0xe). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_id(self) -> usize {
         read_usize(self.0 + job_vacancy::CLUB_ID)
@@ -11803,7 +11896,7 @@ impl KeyNationRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `key_nation_record::SEASON_END_DAY` (+0x15).
+    /// `key_nation_record::SEASON_END_DAY` (+0x15). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_end_day(self) -> u16 {
         read_u16(self.0 + key_nation_record::SEASON_END_DAY)
@@ -11812,7 +11905,7 @@ impl KeyNationRecord {
     pub(crate) unsafe fn set_season_end_day(self, v: u16) {
         write_u16(self.0 + key_nation_record::SEASON_END_DAY, v)
     }
-    /// `key_nation_record::SEASON_SPANS_YEAR` (+0x1d).
+    /// `key_nation_record::SEASON_SPANS_YEAR` (+0x1d). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn season_spans_year(self) -> u8 {
         read_u8(self.0 + key_nation_record::SEASON_SPANS_YEAR)
@@ -11846,7 +11939,7 @@ impl LanguageEntry {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `language_entry::LANGUAGE` (+0x4).
+    /// `language_entry::LANGUAGE` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn language(self) -> u8 {
         read_u8(self.0 + language_entry::LANGUAGE)
@@ -11855,7 +11948,7 @@ impl LanguageEntry {
     pub(crate) unsafe fn set_language(self, v: u8) {
         write_u8(self.0 + language_entry::LANGUAGE, v)
     }
-    /// `language_entry::FLUENCY` (+0x5).
+    /// `language_entry::FLUENCY` (+0x5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fluency(self) -> u8 {
         read_u8(self.0 + language_entry::FLUENCY)
@@ -11889,7 +11982,7 @@ impl LeagueProjection {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `league_projection::CLUB` (+0x0).
+    /// `league_projection::CLUB` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club(self) -> i32 {
         read_i32(self.0 + league_projection::CLUB)
@@ -11898,7 +11991,7 @@ impl LeagueProjection {
     pub(crate) unsafe fn set_club(self, v: i32) {
         write_i32(self.0 + league_projection::CLUB, v)
     }
-    /// `league_projection::POINTS_PER_GAME` (+0x4).
+    /// `league_projection::POINTS_PER_GAME` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn points_per_game(self) -> f32 {
         read_f32(self.0 + league_projection::POINTS_PER_GAME)
@@ -11907,7 +12000,7 @@ impl LeagueProjection {
     pub(crate) unsafe fn set_points_per_game(self, v: f32) {
         write_f32(self.0 + league_projection::POINTS_PER_GAME, v)
     }
-    /// `league_projection::POINTS` (+0x8).
+    /// `league_projection::POINTS` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn points(self) -> i16 {
         read_i16(self.0 + league_projection::POINTS)
@@ -11916,7 +12009,7 @@ impl LeagueProjection {
     pub(crate) unsafe fn set_points(self, v: i16) {
         write_i16(self.0 + league_projection::POINTS, v)
     }
-    /// `league_projection::PROJECTED_POINTS` (+0xa).
+    /// `league_projection::PROJECTED_POINTS` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn projected_points(self) -> i16 {
         read_i16(self.0 + league_projection::PROJECTED_POINTS)
@@ -11925,7 +12018,7 @@ impl LeagueProjection {
     pub(crate) unsafe fn set_projected_points(self, v: i16) {
         write_i16(self.0 + league_projection::PROJECTED_POINTS, v)
     }
-    /// `league_projection::PLAYED` (+0xc).
+    /// `league_projection::PLAYED` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn played(self) -> i16 {
         read_i16(self.0 + league_projection::PLAYED)
@@ -11959,7 +12052,7 @@ impl LeagueRoundDate {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `league_round_date::DAY` (+0x0).
+    /// `league_round_date::DAY` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn day(self) -> i16 {
         read_i16(self.0 + league_round_date::DAY)
@@ -11968,7 +12061,7 @@ impl LeagueRoundDate {
     pub(crate) unsafe fn set_day(self, v: i16) {
         write_i16(self.0 + league_round_date::DAY, v)
     }
-    /// `league_round_date::YEAR_OFFSET` (+0x2).
+    /// `league_round_date::YEAR_OFFSET` (+0x2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn year_offset(self) -> i16 {
         read_i16(self.0 + league_round_date::YEAR_OFFSET)
@@ -11977,7 +12070,7 @@ impl LeagueRoundDate {
     pub(crate) unsafe fn set_year_offset(self, v: i16) {
         write_i16(self.0 + league_round_date::YEAR_OFFSET, v)
     }
-    /// `league_round_date::TIME_SLICE` (+0x4).
+    /// `league_round_date::TIME_SLICE` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn time_slice(self) -> u8 {
         read_u8(self.0 + league_round_date::TIME_SLICE)
@@ -11986,7 +12079,7 @@ impl LeagueRoundDate {
     pub(crate) unsafe fn set_time_slice(self, v: u8) {
         write_u8(self.0 + league_round_date::TIME_SLICE, v)
     }
-    /// `league_round_date::TV_SLOT_DATA` (+0x5).
+    /// `league_round_date::TV_SLOT_DATA` (+0x5). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn tv_slot_data(self) -> usize {
         read_usize(self.0 + league_round_date::TV_SLOT_DATA)
@@ -11995,7 +12088,7 @@ impl LeagueRoundDate {
     pub(crate) unsafe fn set_tv_slot_data(self, v: usize) {
         write_usize(self.0 + league_round_date::TV_SLOT_DATA, v)
     }
-    /// `league_round_date::TV_SLOT_WEEKDAY` (+0x9).
+    /// `league_round_date::TV_SLOT_WEEKDAY` (+0x9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn tv_slot_weekday(self) -> u8 {
         read_u8(self.0 + league_round_date::TV_SLOT_WEEKDAY)
@@ -12004,7 +12097,7 @@ impl LeagueRoundDate {
     pub(crate) unsafe fn set_tv_slot_weekday(self, v: u8) {
         write_u8(self.0 + league_round_date::TV_SLOT_WEEKDAY, v)
     }
-    /// `league_round_date::TV_SLOT_TIME_SLICE` (+0xa).
+    /// `league_round_date::TV_SLOT_TIME_SLICE` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn tv_slot_time_slice(self) -> u8 {
         read_u8(self.0 + league_round_date::TV_SLOT_TIME_SLICE)
@@ -12013,7 +12106,7 @@ impl LeagueRoundDate {
     pub(crate) unsafe fn set_tv_slot_time_slice(self, v: u8) {
         write_u8(self.0 + league_round_date::TV_SLOT_TIME_SLICE, v)
     }
-    /// `league_round_date::TV_SLOT_KIND` (+0xb).
+    /// `league_round_date::TV_SLOT_KIND` (+0xb). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn tv_slot_kind(self) -> u8 {
         read_u8(self.0 + league_round_date::TV_SLOT_KIND)
@@ -12022,7 +12115,7 @@ impl LeagueRoundDate {
     pub(crate) unsafe fn set_tv_slot_kind(self, v: u8) {
         write_u8(self.0 + league_round_date::TV_SLOT_KIND, v)
     }
-    /// `league_round_date::VENUE_VALUE` (+0x3d).
+    /// `league_round_date::VENUE_VALUE` (+0x3d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn venue_value(self) -> i32 {
         read_i32(self.0 + league_round_date::VENUE_VALUE)
@@ -12056,7 +12149,7 @@ impl LeagueTableRow {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `league_table_row::POSITION` (+0x4).
+    /// `league_table_row::POSITION` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn position(self) -> i8 {
         read_i8(self.0 + league_table_row::POSITION)
@@ -12065,7 +12158,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_position(self, v: i8) {
         write_i8(self.0 + league_table_row::POSITION, v)
     }
-    /// `league_table_row::H2H_ENTRIES` (+0x5).
+    /// `league_table_row::H2H_ENTRIES` (+0x5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn h2h_entries(self) -> usize {
         read_usize(self.0 + league_table_row::H2H_ENTRIES)
@@ -12074,7 +12167,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_h2h_entries(self, v: usize) {
         write_usize(self.0 + league_table_row::H2H_ENTRIES, v)
     }
-    /// `league_table_row::POSITION_HISTORY` (+0x9).
+    /// `league_table_row::POSITION_HISTORY` (+0x9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn position_history(self) -> usize {
         read_usize(self.0 + league_table_row::POSITION_HISTORY)
@@ -12083,7 +12176,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_position_history(self, v: usize) {
         write_usize(self.0 + league_table_row::POSITION_HISTORY, v)
     }
-    /// `league_table_row::PLAYED` (+0x11).
+    /// `league_table_row::PLAYED` (+0x11). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn played(self) -> i8 {
         read_i8(self.0 + league_table_row::PLAYED)
@@ -12092,7 +12185,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_played(self, v: i8) {
         write_i8(self.0 + league_table_row::PLAYED, v)
     }
-    /// `league_table_row::WON` (+0x12).
+    /// `league_table_row::WON` (+0x12). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn won(self) -> i8 {
         read_i8(self.0 + league_table_row::WON)
@@ -12101,7 +12194,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_won(self, v: i8) {
         write_i8(self.0 + league_table_row::WON, v)
     }
-    /// `league_table_row::DRAWN` (+0x13).
+    /// `league_table_row::DRAWN` (+0x13). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn drawn(self) -> u8 {
         read_u8(self.0 + league_table_row::DRAWN)
@@ -12110,7 +12203,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_drawn(self, v: u8) {
         write_u8(self.0 + league_table_row::DRAWN, v)
     }
-    /// `league_table_row::LOST` (+0x14).
+    /// `league_table_row::LOST` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn lost(self) -> u8 {
         read_u8(self.0 + league_table_row::LOST)
@@ -12119,7 +12212,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_lost(self, v: u8) {
         write_u8(self.0 + league_table_row::LOST, v)
     }
-    /// `league_table_row::GOALS_FOR` (+0x15).
+    /// `league_table_row::GOALS_FOR` (+0x15). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn goals_for(self) -> i16 {
         read_i16(self.0 + league_table_row::GOALS_FOR)
@@ -12128,7 +12221,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_goals_for(self, v: i16) {
         write_i16(self.0 + league_table_row::GOALS_FOR, v)
     }
-    /// `league_table_row::GOALS_AGAINST` (+0x17).
+    /// `league_table_row::GOALS_AGAINST` (+0x17). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn goals_against(self) -> i16 {
         read_i16(self.0 + league_table_row::GOALS_AGAINST)
@@ -12137,7 +12230,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_goals_against(self, v: i16) {
         write_i16(self.0 + league_table_row::GOALS_AGAINST, v)
     }
-    /// `league_table_row::POINTS` (+0x19).
+    /// `league_table_row::POINTS` (+0x19). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn points(self) -> i16 {
         read_i16(self.0 + league_table_row::POINTS)
@@ -12146,7 +12239,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_points(self, v: i16) {
         write_i16(self.0 + league_table_row::POINTS, v)
     }
-    /// `league_table_row::HOME_PLAYED` (+0x1f).
+    /// `league_table_row::HOME_PLAYED` (+0x1f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_played(self) -> u8 {
         read_u8(self.0 + league_table_row::HOME_PLAYED)
@@ -12155,7 +12248,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_home_played(self, v: u8) {
         write_u8(self.0 + league_table_row::HOME_PLAYED, v)
     }
-    /// `league_table_row::HOME_WON` (+0x20).
+    /// `league_table_row::HOME_WON` (+0x20). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_won(self) -> u8 {
         read_u8(self.0 + league_table_row::HOME_WON)
@@ -12164,7 +12257,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_home_won(self, v: u8) {
         write_u8(self.0 + league_table_row::HOME_WON, v)
     }
-    /// `league_table_row::HOME_DRAWN` (+0x21).
+    /// `league_table_row::HOME_DRAWN` (+0x21). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_drawn(self) -> u8 {
         read_u8(self.0 + league_table_row::HOME_DRAWN)
@@ -12173,7 +12266,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_home_drawn(self, v: u8) {
         write_u8(self.0 + league_table_row::HOME_DRAWN, v)
     }
-    /// `league_table_row::HOME_LOST` (+0x22).
+    /// `league_table_row::HOME_LOST` (+0x22). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_lost(self) -> u8 {
         read_u8(self.0 + league_table_row::HOME_LOST)
@@ -12182,7 +12275,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_home_lost(self, v: u8) {
         write_u8(self.0 + league_table_row::HOME_LOST, v)
     }
-    /// `league_table_row::HOME_GOALS_FOR` (+0x23).
+    /// `league_table_row::HOME_GOALS_FOR` (+0x23). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_goals_for(self) -> i16 {
         read_i16(self.0 + league_table_row::HOME_GOALS_FOR)
@@ -12191,7 +12284,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_home_goals_for(self, v: i16) {
         write_i16(self.0 + league_table_row::HOME_GOALS_FOR, v)
     }
-    /// `league_table_row::HOME_GOALS_AGAINST` (+0x25).
+    /// `league_table_row::HOME_GOALS_AGAINST` (+0x25). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_goals_against(self) -> i16 {
         read_i16(self.0 + league_table_row::HOME_GOALS_AGAINST)
@@ -12200,7 +12293,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_home_goals_against(self, v: i16) {
         write_i16(self.0 + league_table_row::HOME_GOALS_AGAINST, v)
     }
-    /// `league_table_row::HOME_POINTS` (+0x27).
+    /// `league_table_row::HOME_POINTS` (+0x27). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_points(self) -> i16 {
         read_i16(self.0 + league_table_row::HOME_POINTS)
@@ -12209,7 +12302,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_home_points(self, v: i16) {
         write_i16(self.0 + league_table_row::HOME_POINTS, v)
     }
-    /// `league_table_row::AWAY_PLAYED` (+0x2d).
+    /// `league_table_row::AWAY_PLAYED` (+0x2d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_played(self) -> u8 {
         read_u8(self.0 + league_table_row::AWAY_PLAYED)
@@ -12218,7 +12311,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_away_played(self, v: u8) {
         write_u8(self.0 + league_table_row::AWAY_PLAYED, v)
     }
-    /// `league_table_row::AWAY_WON` (+0x2e).
+    /// `league_table_row::AWAY_WON` (+0x2e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_won(self) -> u8 {
         read_u8(self.0 + league_table_row::AWAY_WON)
@@ -12227,7 +12320,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_away_won(self, v: u8) {
         write_u8(self.0 + league_table_row::AWAY_WON, v)
     }
-    /// `league_table_row::AWAY_DRAWN` (+0x2f).
+    /// `league_table_row::AWAY_DRAWN` (+0x2f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_drawn(self) -> u8 {
         read_u8(self.0 + league_table_row::AWAY_DRAWN)
@@ -12236,7 +12329,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_away_drawn(self, v: u8) {
         write_u8(self.0 + league_table_row::AWAY_DRAWN, v)
     }
-    /// `league_table_row::AWAY_LOST` (+0x30).
+    /// `league_table_row::AWAY_LOST` (+0x30). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_lost(self) -> u8 {
         read_u8(self.0 + league_table_row::AWAY_LOST)
@@ -12245,7 +12338,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_away_lost(self, v: u8) {
         write_u8(self.0 + league_table_row::AWAY_LOST, v)
     }
-    /// `league_table_row::AWAY_GOALS_FOR` (+0x31).
+    /// `league_table_row::AWAY_GOALS_FOR` (+0x31). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_goals_for(self) -> i16 {
         read_i16(self.0 + league_table_row::AWAY_GOALS_FOR)
@@ -12254,7 +12347,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_away_goals_for(self, v: i16) {
         write_i16(self.0 + league_table_row::AWAY_GOALS_FOR, v)
     }
-    /// `league_table_row::AWAY_GOALS_AGAINST` (+0x33).
+    /// `league_table_row::AWAY_GOALS_AGAINST` (+0x33). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_goals_against(self) -> i16 {
         read_i16(self.0 + league_table_row::AWAY_GOALS_AGAINST)
@@ -12263,7 +12356,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_away_goals_against(self, v: i16) {
         write_i16(self.0 + league_table_row::AWAY_GOALS_AGAINST, v)
     }
-    /// `league_table_row::AWAY_POINTS` (+0x35).
+    /// `league_table_row::AWAY_POINTS` (+0x35). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_points(self) -> i16 {
         read_i16(self.0 + league_table_row::AWAY_POINTS)
@@ -12272,7 +12365,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_away_points(self, v: i16) {
         write_i16(self.0 + league_table_row::AWAY_POINTS, v)
     }
-    /// `league_table_row::STATUS` (+0x37).
+    /// `league_table_row::STATUS` (+0x37). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn status(self) -> u8 {
         read_u8(self.0 + league_table_row::STATUS)
@@ -12281,7 +12374,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_status(self, v: u8) {
         write_u8(self.0 + league_table_row::STATUS, v)
     }
-    /// `league_table_row::MARK` (+0x38).
+    /// `league_table_row::MARK` (+0x38). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn mark(self) -> u8 {
         read_u8(self.0 + league_table_row::MARK)
@@ -12290,7 +12383,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_mark(self, v: u8) {
         write_u8(self.0 + league_table_row::MARK, v)
     }
-    /// `league_table_row::BEST_POSSIBLE_POSITION` (+0x39).
+    /// `league_table_row::BEST_POSSIBLE_POSITION` (+0x39). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn best_possible_position(self) -> u8 {
         read_u8(self.0 + league_table_row::BEST_POSSIBLE_POSITION)
@@ -12299,7 +12392,7 @@ impl LeagueTableRow {
     pub(crate) unsafe fn set_best_possible_position(self, v: u8) {
         write_u8(self.0 + league_table_row::BEST_POSSIBLE_POSITION, v)
     }
-    /// `league_table_row::WORST_POSSIBLE_POSITION` (+0x3a).
+    /// `league_table_row::WORST_POSSIBLE_POSITION` (+0x3a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn worst_possible_position(self) -> u8 {
         read_u8(self.0 + league_table_row::WORST_POSSIBLE_POSITION)
@@ -12333,7 +12426,7 @@ impl LineupRow {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `lineup_row::PLAYER_ID` (+0x4).
+    /// `lineup_row::PLAYER_ID` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn player_id(self) -> usize {
         read_usize(self.0 + lineup_row::PLAYER_ID)
@@ -12342,7 +12435,7 @@ impl LineupRow {
     pub(crate) unsafe fn set_player_id(self, v: usize) {
         write_usize(self.0 + lineup_row::PLAYER_ID, v)
     }
-    /// `lineup_row::GOALS` (+0x21).
+    /// `lineup_row::GOALS` (+0x21). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn goals(self) -> u8 {
         read_u8(self.0 + lineup_row::GOALS)
@@ -12351,7 +12444,7 @@ impl LineupRow {
     pub(crate) unsafe fn set_goals(self, v: u8) {
         write_u8(self.0 + lineup_row::GOALS, v)
     }
-    /// `lineup_row::ENTRY_MINUTE` (+0x32).
+    /// `lineup_row::ENTRY_MINUTE` (+0x32). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn entry_minute(self) -> u8 {
         read_u8(self.0 + lineup_row::ENTRY_MINUTE)
@@ -12360,7 +12453,7 @@ impl LineupRow {
     pub(crate) unsafe fn set_entry_minute(self, v: u8) {
         write_u8(self.0 + lineup_row::ENTRY_MINUTE, v)
     }
-    /// `lineup_row::RATING` (+0x35).
+    /// `lineup_row::RATING` (+0x35). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn rating(self) -> u8 {
         read_u8(self.0 + lineup_row::RATING)
@@ -12394,7 +12487,7 @@ impl LiveMatch {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `live_match::SOURCE_FIXTURE` (+0x0).
+    /// `live_match::SOURCE_FIXTURE` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn source_fixture(self) -> i32 {
         read_i32(self.0 + live_match::SOURCE_FIXTURE)
@@ -12403,12 +12496,12 @@ impl LiveMatch {
     pub(crate) unsafe fn set_source_fixture(self, v: i32) {
         write_i32(self.0 + live_match::SOURCE_FIXTURE, v)
     }
-    /// `live_match::FIXTURE` (+0x4).
+    /// `live_match::FIXTURE` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) fn fixture_addr(self) -> usize {
         self.0 + live_match::FIXTURE
     }
-    /// `live_match::HOME_CLUB_ID` (+0x10).
+    /// `live_match::HOME_CLUB_ID` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_club_id(self) -> i32 {
         read_i32(self.0 + live_match::HOME_CLUB_ID)
@@ -12417,7 +12510,7 @@ impl LiveMatch {
     pub(crate) unsafe fn set_home_club_id(self, v: i32) {
         write_i32(self.0 + live_match::HOME_CLUB_ID, v)
     }
-    /// `live_match::COMPETITION` (+0x18).
+    /// `live_match::COMPETITION` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn competition(self) -> i32 {
         read_i32(self.0 + live_match::COMPETITION)
@@ -12426,7 +12519,7 @@ impl LiveMatch {
     pub(crate) unsafe fn set_competition(self, v: i32) {
         write_i32(self.0 + live_match::COMPETITION, v)
     }
-    /// `live_match::STADIUM` (+0x1c).
+    /// `live_match::STADIUM` (+0x1c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stadium(self) -> i32 {
         read_i32(self.0 + live_match::STADIUM)
@@ -12435,7 +12528,7 @@ impl LiveMatch {
     pub(crate) unsafe fn set_stadium(self, v: i32) {
         write_i32(self.0 + live_match::STADIUM, v)
     }
-    /// `live_match::HOME_CLUB` (+0x20).
+    /// `live_match::HOME_CLUB` (+0x20). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_club(self) -> i32 {
         read_i32(self.0 + live_match::HOME_CLUB)
@@ -12444,7 +12537,7 @@ impl LiveMatch {
     pub(crate) unsafe fn set_home_club(self, v: i32) {
         write_i32(self.0 + live_match::HOME_CLUB, v)
     }
-    /// `live_match::AWAY_CLUB` (+0x24).
+    /// `live_match::AWAY_CLUB` (+0x24). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_club(self) -> i32 {
         read_i32(self.0 + live_match::AWAY_CLUB)
@@ -12453,7 +12546,7 @@ impl LiveMatch {
     pub(crate) unsafe fn set_away_club(self, v: i32) {
         write_i32(self.0 + live_match::AWAY_CLUB, v)
     }
-    /// `live_match::HOME_SIDE_MARK` (+0x44).
+    /// `live_match::HOME_SIDE_MARK` (+0x44). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_side_mark(self) -> u8 {
         read_u8(self.0 + live_match::HOME_SIDE_MARK)
@@ -12462,7 +12555,7 @@ impl LiveMatch {
     pub(crate) unsafe fn set_home_side_mark(self, v: u8) {
         write_u8(self.0 + live_match::HOME_SIDE_MARK, v)
     }
-    /// `live_match::AWAY_SIDE_MARK` (+0x45).
+    /// `live_match::AWAY_SIDE_MARK` (+0x45). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_side_mark(self) -> u8 {
         read_u8(self.0 + live_match::AWAY_SIDE_MARK)
@@ -12471,7 +12564,7 @@ impl LiveMatch {
     pub(crate) unsafe fn set_away_side_mark(self, v: u8) {
         write_u8(self.0 + live_match::AWAY_SIDE_MARK, v)
     }
-    /// `live_match::STAGE_INDEX` (+0x46).
+    /// `live_match::STAGE_INDEX` (+0x46). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn stage_index(self) -> i8 {
         read_i8(self.0 + live_match::STAGE_INDEX)
@@ -12480,7 +12573,7 @@ impl LiveMatch {
     pub(crate) unsafe fn set_stage_index(self, v: i8) {
         write_i8(self.0 + live_match::STAGE_INDEX, v)
     }
-    /// `live_match::HOME_AGGREGATE` (+0x4f).
+    /// `live_match::HOME_AGGREGATE` (+0x4f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_aggregate(self) -> u8 {
         read_u8(self.0 + live_match::HOME_AGGREGATE)
@@ -12489,7 +12582,7 @@ impl LiveMatch {
     pub(crate) unsafe fn set_home_aggregate(self, v: u8) {
         write_u8(self.0 + live_match::HOME_AGGREGATE, v)
     }
-    /// `live_match::AWAY_AGGREGATE` (+0x50).
+    /// `live_match::AWAY_AGGREGATE` (+0x50). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_aggregate(self) -> u8 {
         read_u8(self.0 + live_match::AWAY_AGGREGATE)
@@ -12498,7 +12591,7 @@ impl LiveMatch {
     pub(crate) unsafe fn set_away_aggregate(self, v: u8) {
         write_u8(self.0 + live_match::AWAY_AGGREGATE, v)
     }
-    /// `live_match::ENGINE` (+0x57).
+    /// `live_match::ENGINE` (+0x57). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn engine(self) -> u32 {
         read_u32(self.0 + live_match::ENGINE)
@@ -12507,7 +12600,7 @@ impl LiveMatch {
     pub(crate) unsafe fn set_engine(self, v: u32) {
         write_u32(self.0 + live_match::ENGINE, v)
     }
-    /// `live_match::SPECTATORS` (+0x5b).
+    /// `live_match::SPECTATORS` (+0x5b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn spectators(self) -> usize {
         read_usize(self.0 + live_match::SPECTATORS)
@@ -12516,7 +12609,7 @@ impl LiveMatch {
     pub(crate) unsafe fn set_spectators(self, v: usize) {
         write_usize(self.0 + live_match::SPECTATORS, v)
     }
-    /// `live_match::RECORD` (+0x5f).
+    /// `live_match::RECORD` (+0x5f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn record(self) -> usize {
         read_usize(self.0 + live_match::RECORD)
@@ -12525,7 +12618,7 @@ impl LiveMatch {
     pub(crate) unsafe fn set_record(self, v: usize) {
         write_usize(self.0 + live_match::RECORD, v)
     }
-    /// `live_match::DAY_ENTRY` (+0x63).
+    /// `live_match::DAY_ENTRY` (+0x63). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn day_entry(self) -> usize {
         read_usize(self.0 + live_match::DAY_ENTRY)
@@ -12534,7 +12627,7 @@ impl LiveMatch {
     pub(crate) unsafe fn set_day_entry(self, v: usize) {
         write_usize(self.0 + live_match::DAY_ENTRY, v)
     }
-    /// `live_match::STATE` (+0x67).
+    /// `live_match::STATE` (+0x67). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn state(self) -> u8 {
         read_u8(self.0 + live_match::STATE)
@@ -12568,7 +12661,7 @@ impl Llist {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `llist::COUNT` (+0x0).
+    /// `llist::COUNT` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn count(self) -> i16 {
         read_i16(self.0 + llist::COUNT)
@@ -12577,7 +12670,7 @@ impl Llist {
     pub(crate) unsafe fn set_count(self, v: i16) {
         write_i16(self.0 + llist::COUNT, v)
     }
-    /// `llist::HEAD` (+0x2).
+    /// `llist::HEAD` (+0x2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn head(self) -> usize {
         read_usize(self.0 + llist::HEAD)
@@ -12586,7 +12679,7 @@ impl Llist {
     pub(crate) unsafe fn set_head(self, v: usize) {
         write_usize(self.0 + llist::HEAD, v)
     }
-    /// `llist::TAIL` (+0x6).
+    /// `llist::TAIL` (+0x6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn tail(self) -> usize {
         read_usize(self.0 + llist::TAIL)
@@ -12595,7 +12688,7 @@ impl Llist {
     pub(crate) unsafe fn set_tail(self, v: usize) {
         write_usize(self.0 + llist::TAIL, v)
     }
-    /// `llist::CURSOR` (+0xa).
+    /// `llist::CURSOR` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn cursor(self) -> usize {
         read_usize(self.0 + llist::CURSOR)
@@ -12629,7 +12722,7 @@ impl LlistNode {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `llist_node::DATA` (+0x0).
+    /// `llist_node::DATA` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn data(self) -> i32 {
         read_i32(self.0 + llist_node::DATA)
@@ -12638,7 +12731,7 @@ impl LlistNode {
     pub(crate) unsafe fn set_data(self, v: i32) {
         write_i32(self.0 + llist_node::DATA, v)
     }
-    /// `llist_node::DATA_SIZE` (+0x4).
+    /// `llist_node::DATA_SIZE` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn data_size(self) -> i16 {
         read_i16(self.0 + llist_node::DATA_SIZE)
@@ -12647,7 +12740,7 @@ impl LlistNode {
     pub(crate) unsafe fn set_data_size(self, v: i16) {
         write_i16(self.0 + llist_node::DATA_SIZE, v)
     }
-    /// `llist_node::NEXT` (+0x6).
+    /// `llist_node::NEXT` (+0x6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn next(self) -> usize {
         read_usize(self.0 + llist_node::NEXT)
@@ -12656,7 +12749,7 @@ impl LlistNode {
     pub(crate) unsafe fn set_next(self, v: usize) {
         write_usize(self.0 + llist_node::NEXT, v)
     }
-    /// `llist_node::PREV` (+0xa).
+    /// `llist_node::PREV` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn prev(self) -> usize {
         read_usize(self.0 + llist_node::PREV)
@@ -12690,7 +12783,7 @@ impl LoanNegotiation {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `loan_negotiation::CLUB_ID` (+0x4).
+    /// `loan_negotiation::CLUB_ID` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_id(self) -> usize {
         read_usize(self.0 + loan_negotiation::CLUB_ID)
@@ -12724,12 +12817,12 @@ impl ManOfMatchRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `man_of_match_record::HOLDER` (+0x1).
+    /// `man_of_match_record::HOLDER` (+0x1). Name: read.
     #[inline(always)]
     pub(crate) fn holder_addr(self) -> usize {
         self.0 + man_of_match_record::HOLDER
     }
-    /// `man_of_match_record::YEAR` (+0x19).
+    /// `man_of_match_record::YEAR` (+0x19). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn year(self) -> u16 {
         read_u16(self.0 + man_of_match_record::YEAR)
@@ -12763,7 +12856,7 @@ impl ManagerManagerFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `manager_manager_fields::BOARD_RECORDS` (+0x0).
+    /// `manager_manager_fields::BOARD_RECORDS` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn board_records(self) -> i32 {
         read_i32(self.0 + manager_manager_fields::BOARD_RECORDS)
@@ -12772,7 +12865,7 @@ impl ManagerManagerFields {
     pub(crate) unsafe fn set_board_records(self, v: i32) {
         write_i32(self.0 + manager_manager_fields::BOARD_RECORDS, v)
     }
-    /// `manager_manager_fields::DEPARTURE_LIST` (+0x4).
+    /// `manager_manager_fields::DEPARTURE_LIST` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn departure_list(self) -> usize {
         read_usize(self.0 + manager_manager_fields::DEPARTURE_LIST)
@@ -12781,7 +12874,7 @@ impl ManagerManagerFields {
     pub(crate) unsafe fn set_departure_list(self, v: usize) {
         write_usize(self.0 + manager_manager_fields::DEPARTURE_LIST, v)
     }
-    /// `manager_manager_fields::VACANCY_LIST` (+0x8).
+    /// `manager_manager_fields::VACANCY_LIST` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn vacancy_list(self) -> usize {
         read_usize(self.0 + manager_manager_fields::VACANCY_LIST)
@@ -12790,7 +12883,7 @@ impl ManagerManagerFields {
     pub(crate) unsafe fn set_vacancy_list(self, v: usize) {
         write_usize(self.0 + manager_manager_fields::VACANCY_LIST, v)
     }
-    /// `manager_manager_fields::ULTIMATUM_LIST` (+0x10).
+    /// `manager_manager_fields::ULTIMATUM_LIST` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn ultimatum_list(self) -> usize {
         read_usize(self.0 + manager_manager_fields::ULTIMATUM_LIST)
@@ -12799,7 +12892,7 @@ impl ManagerManagerFields {
     pub(crate) unsafe fn set_ultimatum_list(self, v: usize) {
         write_usize(self.0 + manager_manager_fields::ULTIMATUM_LIST, v)
     }
-    /// `manager_manager_fields::BAN_APPEAL_LIST` (+0x14).
+    /// `manager_manager_fields::BAN_APPEAL_LIST` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn ban_appeal_list(self) -> usize {
         read_usize(self.0 + manager_manager_fields::BAN_APPEAL_LIST)
@@ -12833,7 +12926,7 @@ impl ManagerRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `manager_record::BIGGEST_PURCHASE_DATE` (+0x10).
+    /// `manager_record::BIGGEST_PURCHASE_DATE` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn biggest_purchase_date(self) -> u8 {
         read_u8(self.0 + manager_record::BIGGEST_PURCHASE_DATE)
@@ -12842,7 +12935,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_biggest_purchase_date(self, v: u8) {
         write_u8(self.0 + manager_record::BIGGEST_PURCHASE_DATE, v)
     }
-    /// `manager_record::BIGGEST_PURCHASE_FEE` (+0x18).
+    /// `manager_record::BIGGEST_PURCHASE_FEE` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn biggest_purchase_fee(self) -> i32 {
         read_i32(self.0 + manager_record::BIGGEST_PURCHASE_FEE)
@@ -12851,7 +12944,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_biggest_purchase_fee(self, v: i32) {
         write_i32(self.0 + manager_record::BIGGEST_PURCHASE_FEE, v)
     }
-    /// `manager_record::BIGGEST_PURCHASE_SWAP` (+0x1c).
+    /// `manager_record::BIGGEST_PURCHASE_SWAP` (+0x1c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn biggest_purchase_swap(self) -> u8 {
         read_u8(self.0 + manager_record::BIGGEST_PURCHASE_SWAP)
@@ -12860,7 +12953,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_biggest_purchase_swap(self, v: u8) {
         write_u8(self.0 + manager_record::BIGGEST_PURCHASE_SWAP, v)
     }
-    /// `manager_record::BIGGEST_PURCHASE_SELLER` (+0x1d).
+    /// `manager_record::BIGGEST_PURCHASE_SELLER` (+0x1d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn biggest_purchase_seller(self) -> i32 {
         read_i32(self.0 + manager_record::BIGGEST_PURCHASE_SELLER)
@@ -12869,7 +12962,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_biggest_purchase_seller(self, v: i32) {
         write_i32(self.0 + manager_record::BIGGEST_PURCHASE_SELLER, v)
     }
-    /// `manager_record::BIGGEST_PURCHASE_BUYER` (+0x21).
+    /// `manager_record::BIGGEST_PURCHASE_BUYER` (+0x21). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn biggest_purchase_buyer(self) -> i32 {
         read_i32(self.0 + manager_record::BIGGEST_PURCHASE_BUYER)
@@ -12878,12 +12971,12 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_biggest_purchase_buyer(self, v: i32) {
         write_i32(self.0 + manager_record::BIGGEST_PURCHASE_BUYER, v)
     }
-    /// `manager_record::BIGGEST_SALE_PERSON` (+0x25).
+    /// `manager_record::BIGGEST_SALE_PERSON` (+0x25). Name: read.
     #[inline(always)]
     pub(crate) fn biggest_sale_person_addr(self) -> usize {
         self.0 + manager_record::BIGGEST_SALE_PERSON
     }
-    /// `manager_record::BIGGEST_SALE_DATE` (+0x35).
+    /// `manager_record::BIGGEST_SALE_DATE` (+0x35). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn biggest_sale_date(self) -> u8 {
         read_u8(self.0 + manager_record::BIGGEST_SALE_DATE)
@@ -12892,7 +12985,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_biggest_sale_date(self, v: u8) {
         write_u8(self.0 + manager_record::BIGGEST_SALE_DATE, v)
     }
-    /// `manager_record::BIGGEST_SALE_FEE` (+0x3d).
+    /// `manager_record::BIGGEST_SALE_FEE` (+0x3d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn biggest_sale_fee(self) -> i32 {
         read_i32(self.0 + manager_record::BIGGEST_SALE_FEE)
@@ -12901,7 +12994,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_biggest_sale_fee(self, v: i32) {
         write_i32(self.0 + manager_record::BIGGEST_SALE_FEE, v)
     }
-    /// `manager_record::BIGGEST_SALE_SWAP` (+0x41).
+    /// `manager_record::BIGGEST_SALE_SWAP` (+0x41). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn biggest_sale_swap(self) -> u8 {
         read_u8(self.0 + manager_record::BIGGEST_SALE_SWAP)
@@ -12910,7 +13003,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_biggest_sale_swap(self, v: u8) {
         write_u8(self.0 + manager_record::BIGGEST_SALE_SWAP, v)
     }
-    /// `manager_record::BIGGEST_SALE_SELLER` (+0x42).
+    /// `manager_record::BIGGEST_SALE_SELLER` (+0x42). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn biggest_sale_seller(self) -> i32 {
         read_i32(self.0 + manager_record::BIGGEST_SALE_SELLER)
@@ -12919,7 +13012,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_biggest_sale_seller(self, v: i32) {
         write_i32(self.0 + manager_record::BIGGEST_SALE_SELLER, v)
     }
-    /// `manager_record::BIGGEST_SALE_BUYER` (+0x46).
+    /// `manager_record::BIGGEST_SALE_BUYER` (+0x46). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn biggest_sale_buyer(self) -> i32 {
         read_i32(self.0 + manager_record::BIGGEST_SALE_BUYER)
@@ -12928,7 +13021,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_biggest_sale_buyer(self, v: i32) {
         write_i32(self.0 + manager_record::BIGGEST_SALE_BUYER, v)
     }
-    /// `manager_record::CURRENT_CLUB` (+0x4a).
+    /// `manager_record::CURRENT_CLUB` (+0x4a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn current_club(self) -> i32 {
         read_i32(self.0 + manager_record::CURRENT_CLUB)
@@ -12937,7 +13030,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_current_club(self, v: i32) {
         write_i32(self.0 + manager_record::CURRENT_CLUB, v)
     }
-    /// `manager_record::CURRENT_CLUB_SINCE` (+0x4e).
+    /// `manager_record::CURRENT_CLUB_SINCE` (+0x4e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn current_club_since(self) -> i16 {
         read_i16(self.0 + manager_record::CURRENT_CLUB_SINCE)
@@ -12946,7 +13039,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_current_club_since(self, v: i16) {
         write_i16(self.0 + manager_record::CURRENT_CLUB_SINCE, v)
     }
-    /// `manager_record::CURRENT_CLUB_SINCE_YEAR` (+0x50).
+    /// `manager_record::CURRENT_CLUB_SINCE_YEAR` (+0x50). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn current_club_since_year(self) -> i16 {
         read_i16(self.0 + manager_record::CURRENT_CLUB_SINCE_YEAR)
@@ -12955,7 +13048,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_current_club_since_year(self, v: i16) {
         write_i16(self.0 + manager_record::CURRENT_CLUB_SINCE_YEAR, v)
     }
-    /// `manager_record::CURRENT_CLUB_SINCE_HIGH` (+0x52).
+    /// `manager_record::CURRENT_CLUB_SINCE_HIGH` (+0x52). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn current_club_since_high(self) -> u32 {
         read_u32(self.0 + manager_record::CURRENT_CLUB_SINCE_HIGH)
@@ -12964,12 +13057,12 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_current_club_since_high(self, v: u32) {
         write_u32(self.0 + manager_record::CURRENT_CLUB_SINCE_HIGH, v)
     }
-    /// `manager_record::CURRENT_CLUB_END` (+0x56).
+    /// `manager_record::CURRENT_CLUB_END` (+0x56). Name: read.
     #[inline(always)]
     pub(crate) fn current_club_end_addr(self) -> usize {
         self.0 + manager_record::CURRENT_CLUB_END
     }
-    /// `manager_record::LONGEST_CLUB` (+0x5e).
+    /// `manager_record::LONGEST_CLUB` (+0x5e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn longest_club(self) -> i32 {
         read_i32(self.0 + manager_record::LONGEST_CLUB)
@@ -12978,7 +13071,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_longest_club(self, v: i32) {
         write_i32(self.0 + manager_record::LONGEST_CLUB, v)
     }
-    /// `manager_record::LONGEST_START` (+0x62).
+    /// `manager_record::LONGEST_START` (+0x62). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn longest_start(self) -> u32 {
         read_u32(self.0 + manager_record::LONGEST_START)
@@ -12987,7 +13080,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_longest_start(self, v: u32) {
         write_u32(self.0 + manager_record::LONGEST_START, v)
     }
-    /// `manager_record::LONGEST_START_HIGH` (+0x66).
+    /// `manager_record::LONGEST_START_HIGH` (+0x66). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn longest_start_high(self) -> u32 {
         read_u32(self.0 + manager_record::LONGEST_START_HIGH)
@@ -12996,12 +13089,12 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_longest_start_high(self, v: u32) {
         write_u32(self.0 + manager_record::LONGEST_START_HIGH, v)
     }
-    /// `manager_record::LONGEST_END` (+0x6a).
+    /// `manager_record::LONGEST_END` (+0x6a). Name: read.
     #[inline(always)]
     pub(crate) fn longest_end_addr(self) -> usize {
         self.0 + manager_record::LONGEST_END
     }
-    /// `manager_record::SHORTEST_CLUB` (+0x72).
+    /// `manager_record::SHORTEST_CLUB` (+0x72). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shortest_club(self) -> i32 {
         read_i32(self.0 + manager_record::SHORTEST_CLUB)
@@ -13010,7 +13103,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_shortest_club(self, v: i32) {
         write_i32(self.0 + manager_record::SHORTEST_CLUB, v)
     }
-    /// `manager_record::SHORTEST_START` (+0x76).
+    /// `manager_record::SHORTEST_START` (+0x76). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shortest_start(self) -> i16 {
         read_i16(self.0 + manager_record::SHORTEST_START)
@@ -13019,7 +13112,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_shortest_start(self, v: i16) {
         write_i16(self.0 + manager_record::SHORTEST_START, v)
     }
-    /// `manager_record::SHORTEST_START_YEAR` (+0x78).
+    /// `manager_record::SHORTEST_START_YEAR` (+0x78). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shortest_start_year(self) -> i16 {
         read_i16(self.0 + manager_record::SHORTEST_START_YEAR)
@@ -13028,7 +13121,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_shortest_start_year(self, v: i16) {
         write_i16(self.0 + manager_record::SHORTEST_START_YEAR, v)
     }
-    /// `manager_record::SHORTEST_START_HIGH` (+0x7a).
+    /// `manager_record::SHORTEST_START_HIGH` (+0x7a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shortest_start_high(self) -> u32 {
         read_u32(self.0 + manager_record::SHORTEST_START_HIGH)
@@ -13037,12 +13130,12 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_shortest_start_high(self, v: u32) {
         write_u32(self.0 + manager_record::SHORTEST_START_HIGH, v)
     }
-    /// `manager_record::SHORTEST_END` (+0x7e).
+    /// `manager_record::SHORTEST_END` (+0x7e). Name: read.
     #[inline(always)]
     pub(crate) fn shortest_end_addr(self) -> usize {
         self.0 + manager_record::SHORTEST_END
     }
-    /// `manager_record::OWNER` (+0x86).
+    /// `manager_record::OWNER` (+0x86). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn owner(self) -> u32 {
         read_u32(self.0 + manager_record::OWNER)
@@ -13051,7 +13144,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_owner(self, v: u32) {
         write_u32(self.0 + manager_record::OWNER, v)
     }
-    /// `manager_record::CUPS_WON` (+0x8a).
+    /// `manager_record::CUPS_WON` (+0x8a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn cups_won(self) -> i16 {
         read_i16(self.0 + manager_record::CUPS_WON)
@@ -13060,7 +13153,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_cups_won(self, v: i16) {
         write_i16(self.0 + manager_record::CUPS_WON, v)
     }
-    /// `manager_record::LEAGUES_WON` (+0x8c).
+    /// `manager_record::LEAGUES_WON` (+0x8c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn leagues_won(self) -> i16 {
         read_i16(self.0 + manager_record::LEAGUES_WON)
@@ -13069,7 +13162,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_leagues_won(self, v: i16) {
         write_i16(self.0 + manager_record::LEAGUES_WON, v)
     }
-    /// `manager_record::GAMES` (+0x8e).
+    /// `manager_record::GAMES` (+0x8e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn games(self) -> i16 {
         read_i16(self.0 + manager_record::GAMES)
@@ -13078,7 +13171,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_games(self, v: i16) {
         write_i16(self.0 + manager_record::GAMES, v)
     }
-    /// `manager_record::WINS` (+0x90).
+    /// `manager_record::WINS` (+0x90). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn wins(self) -> i16 {
         read_i16(self.0 + manager_record::WINS)
@@ -13087,7 +13180,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_wins(self, v: i16) {
         write_i16(self.0 + manager_record::WINS, v)
     }
-    /// `manager_record::DRAWS` (+0x92).
+    /// `manager_record::DRAWS` (+0x92). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn draws(self) -> i16 {
         read_i16(self.0 + manager_record::DRAWS)
@@ -13096,7 +13189,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_draws(self, v: i16) {
         write_i16(self.0 + manager_record::DRAWS, v)
     }
-    /// `manager_record::LOSSES` (+0x94).
+    /// `manager_record::LOSSES` (+0x94). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn losses(self) -> i16 {
         read_i16(self.0 + manager_record::LOSSES)
@@ -13105,7 +13198,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_losses(self, v: i16) {
         write_i16(self.0 + manager_record::LOSSES, v)
     }
-    /// `manager_record::GOALS_FOR` (+0x96).
+    /// `manager_record::GOALS_FOR` (+0x96). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn goals_for(self) -> i32 {
         read_i32(self.0 + manager_record::GOALS_FOR)
@@ -13114,7 +13207,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_goals_for(self, v: i32) {
         write_i32(self.0 + manager_record::GOALS_FOR, v)
     }
-    /// `manager_record::GOALS_AGAINST` (+0x9a).
+    /// `manager_record::GOALS_AGAINST` (+0x9a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn goals_against(self) -> i32 {
         read_i32(self.0 + manager_record::GOALS_AGAINST)
@@ -13123,7 +13216,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_goals_against(self, v: i32) {
         write_i32(self.0 + manager_record::GOALS_AGAINST, v)
     }
-    /// `manager_record::PLAYERS_BOUGHT` (+0xa0).
+    /// `manager_record::PLAYERS_BOUGHT` (+0xa0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn players_bought(self) -> i16 {
         read_i16(self.0 + manager_record::PLAYERS_BOUGHT)
@@ -13132,7 +13225,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_players_bought(self, v: i16) {
         write_i16(self.0 + manager_record::PLAYERS_BOUGHT, v)
     }
-    /// `manager_record::PLAYERS_SOLD` (+0xa2).
+    /// `manager_record::PLAYERS_SOLD` (+0xa2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn players_sold(self) -> i16 {
         read_i16(self.0 + manager_record::PLAYERS_SOLD)
@@ -13141,7 +13234,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_players_sold(self, v: i16) {
         write_i16(self.0 + manager_record::PLAYERS_SOLD, v)
     }
-    /// `manager_record::PURCHASES_TOTAL` (+0xa4).
+    /// `manager_record::PURCHASES_TOTAL` (+0xa4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn purchases_total(self) -> i64 {
         read_i64(self.0 + manager_record::PURCHASES_TOTAL)
@@ -13150,7 +13243,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_purchases_total(self, v: i64) {
         write_i64(self.0 + manager_record::PURCHASES_TOTAL, v)
     }
-    /// `manager_record::SALES_TOTAL` (+0xac).
+    /// `manager_record::SALES_TOTAL` (+0xac). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn sales_total(self) -> i64 {
         read_i64(self.0 + manager_record::SALES_TOTAL)
@@ -13159,7 +13252,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_sales_total(self, v: i64) {
         write_i64(self.0 + manager_record::SALES_TOTAL, v)
     }
-    /// `manager_record::CLUB_JOBS` (+0xb4).
+    /// `manager_record::CLUB_JOBS` (+0xb4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_jobs(self) -> u8 {
         read_u8(self.0 + manager_record::CLUB_JOBS)
@@ -13168,7 +13261,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_club_jobs(self, v: u8) {
         write_u8(self.0 + manager_record::CLUB_JOBS, v)
     }
-    /// `manager_record::NATIONAL_JOBS` (+0xb5).
+    /// `manager_record::NATIONAL_JOBS` (+0xb5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn national_jobs(self) -> u8 {
         read_u8(self.0 + manager_record::NATIONAL_JOBS)
@@ -13177,7 +13270,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_national_jobs(self, v: u8) {
         write_u8(self.0 + manager_record::NATIONAL_JOBS, v)
     }
-    /// `manager_record::YEAR_POINTS` (+0xb6).
+    /// `manager_record::YEAR_POINTS` (+0xb6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn year_points(self) -> i32 {
         read_i32(self.0 + manager_record::YEAR_POINTS)
@@ -13186,7 +13279,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_year_points(self, v: i32) {
         write_i32(self.0 + manager_record::YEAR_POINTS, v)
     }
-    /// `manager_record::SEASON_POINTS` (+0xba).
+    /// `manager_record::SEASON_POINTS` (+0xba). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_points(self) -> i32 {
         read_i32(self.0 + manager_record::SEASON_POINTS)
@@ -13195,7 +13288,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_season_points(self, v: i32) {
         write_i32(self.0 + manager_record::SEASON_POINTS, v)
     }
-    /// `manager_record::NATIONAL_SEASON_POINTS` (+0xbe).
+    /// `manager_record::NATIONAL_SEASON_POINTS` (+0xbe). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn national_season_points(self) -> i32 {
         read_i32(self.0 + manager_record::NATIONAL_SEASON_POINTS)
@@ -13204,7 +13297,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_national_season_points(self, v: i32) {
         write_i32(self.0 + manager_record::NATIONAL_SEASON_POINTS, v)
     }
-    /// `manager_record::SEASON_NATION` (+0xc2).
+    /// `manager_record::SEASON_NATION` (+0xc2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn season_nation(self) -> u32 {
         read_u32(self.0 + manager_record::SEASON_NATION)
@@ -13213,7 +13306,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_season_nation(self, v: u32) {
         write_u32(self.0 + manager_record::SEASON_NATION, v)
     }
-    /// `manager_record::NATIONAL_NATION` (+0xc6).
+    /// `manager_record::NATIONAL_NATION` (+0xc6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn national_nation(self) -> u32 {
         read_u32(self.0 + manager_record::NATIONAL_NATION)
@@ -13222,7 +13315,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_national_nation(self, v: u32) {
         write_u32(self.0 + manager_record::NATIONAL_NATION, v)
     }
-    /// `manager_record::MONTH_POINTS` (+0xca).
+    /// `manager_record::MONTH_POINTS` (+0xca). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn month_points(self) -> i32 {
         read_i32(self.0 + manager_record::MONTH_POINTS)
@@ -13231,7 +13324,7 @@ impl ManagerRecord {
     pub(crate) unsafe fn set_month_points(self, v: i32) {
         write_i32(self.0 + manager_record::MONTH_POINTS, v)
     }
-    /// `manager_record::MONTH_LEAGUE_POINTS` (+0xce).
+    /// `manager_record::MONTH_LEAGUE_POINTS` (+0xce). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn month_league_points(self) -> usize {
         read_usize(self.0 + manager_record::MONTH_LEAGUE_POINTS)
@@ -13265,7 +13358,7 @@ impl MatchDayFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `match_day_fields::MODE` (+0x0).
+    /// `match_day_fields::MODE` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn mode(self) -> u8 {
         read_u8(self.0 + match_day_fields::MODE)
@@ -13274,7 +13367,7 @@ impl MatchDayFields {
     pub(crate) unsafe fn set_mode(self, v: u8) {
         write_u8(self.0 + match_day_fields::MODE, v)
     }
-    /// `match_day_fields::GROUPS` (+0x1).
+    /// `match_day_fields::GROUPS` (+0x1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn groups(self) -> usize {
         read_usize(self.0 + match_day_fields::GROUPS)
@@ -13283,7 +13376,7 @@ impl MatchDayFields {
     pub(crate) unsafe fn set_groups(self, v: usize) {
         write_usize(self.0 + match_day_fields::GROUPS, v)
     }
-    /// `match_day_fields::GROUP_CAPACITY` (+0x5).
+    /// `match_day_fields::GROUP_CAPACITY` (+0x5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn group_capacity(self) -> i32 {
         read_i32(self.0 + match_day_fields::GROUP_CAPACITY)
@@ -13292,7 +13385,7 @@ impl MatchDayFields {
     pub(crate) unsafe fn set_group_capacity(self, v: i32) {
         write_i32(self.0 + match_day_fields::GROUP_CAPACITY, v)
     }
-    /// `match_day_fields::GROUP_COUNT` (+0x9).
+    /// `match_day_fields::GROUP_COUNT` (+0x9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn group_count(self) -> i32 {
         read_i32(self.0 + match_day_fields::GROUP_COUNT)
@@ -13301,7 +13394,7 @@ impl MatchDayFields {
     pub(crate) unsafe fn set_group_count(self, v: i32) {
         write_i32(self.0 + match_day_fields::GROUP_COUNT, v)
     }
-    /// `match_day_fields::COMPETITIONS` (+0xd).
+    /// `match_day_fields::COMPETITIONS` (+0xd). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn competitions(self) -> usize {
         read_usize(self.0 + match_day_fields::COMPETITIONS)
@@ -13310,7 +13403,7 @@ impl MatchDayFields {
     pub(crate) unsafe fn set_competitions(self, v: usize) {
         write_usize(self.0 + match_day_fields::COMPETITIONS, v)
     }
-    /// `match_day_fields::COMPETITION_CAPACITY` (+0x11).
+    /// `match_day_fields::COMPETITION_CAPACITY` (+0x11). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn competition_capacity(self) -> i32 {
         read_i32(self.0 + match_day_fields::COMPETITION_CAPACITY)
@@ -13319,7 +13412,7 @@ impl MatchDayFields {
     pub(crate) unsafe fn set_competition_capacity(self, v: i32) {
         write_i32(self.0 + match_day_fields::COMPETITION_CAPACITY, v)
     }
-    /// `match_day_fields::COMPETITION_COUNT` (+0x15).
+    /// `match_day_fields::COMPETITION_COUNT` (+0x15). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn competition_count(self) -> i32 {
         read_i32(self.0 + match_day_fields::COMPETITION_COUNT)
@@ -13328,7 +13421,7 @@ impl MatchDayFields {
     pub(crate) unsafe fn set_competition_count(self, v: i32) {
         write_i32(self.0 + match_day_fields::COMPETITION_COUNT, v)
     }
-    /// `match_day_fields::MATCHES` (+0x19).
+    /// `match_day_fields::MATCHES` (+0x19). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn matches(self) -> usize {
         read_usize(self.0 + match_day_fields::MATCHES)
@@ -13337,7 +13430,7 @@ impl MatchDayFields {
     pub(crate) unsafe fn set_matches(self, v: usize) {
         write_usize(self.0 + match_day_fields::MATCHES, v)
     }
-    /// `match_day_fields::MATCH_CAPACITY` (+0x1d).
+    /// `match_day_fields::MATCH_CAPACITY` (+0x1d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn match_capacity(self) -> i32 {
         read_i32(self.0 + match_day_fields::MATCH_CAPACITY)
@@ -13346,7 +13439,7 @@ impl MatchDayFields {
     pub(crate) unsafe fn set_match_capacity(self, v: i32) {
         write_i32(self.0 + match_day_fields::MATCH_CAPACITY, v)
     }
-    /// `match_day_fields::MATCH_COUNT` (+0x21).
+    /// `match_day_fields::MATCH_COUNT` (+0x21). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn match_count(self) -> i32 {
         read_i32(self.0 + match_day_fields::MATCH_COUNT)
@@ -13355,7 +13448,7 @@ impl MatchDayFields {
     pub(crate) unsafe fn set_match_count(self, v: i32) {
         write_i32(self.0 + match_day_fields::MATCH_COUNT, v)
     }
-    /// `match_day_fields::FINISHED_COUNT` (+0x25).
+    /// `match_day_fields::FINISHED_COUNT` (+0x25). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn finished_count(self) -> i32 {
         read_i32(self.0 + match_day_fields::FINISHED_COUNT)
@@ -13364,7 +13457,7 @@ impl MatchDayFields {
     pub(crate) unsafe fn set_finished_count(self, v: i32) {
         write_i32(self.0 + match_day_fields::FINISHED_COUNT, v)
     }
-    /// `match_day_fields::MARKED_GROUP_COUNT` (+0x29).
+    /// `match_day_fields::MARKED_GROUP_COUNT` (+0x29). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn marked_group_count(self) -> u8 {
         read_u8(self.0 + match_day_fields::MARKED_GROUP_COUNT)
@@ -13373,7 +13466,7 @@ impl MatchDayFields {
     pub(crate) unsafe fn set_marked_group_count(self, v: u8) {
         write_u8(self.0 + match_day_fields::MARKED_GROUP_COUNT, v)
     }
-    /// `match_day_fields::MARKED_COMPETITION_COUNT` (+0x2a).
+    /// `match_day_fields::MARKED_COMPETITION_COUNT` (+0x2a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn marked_competition_count(self) -> u8 {
         read_u8(self.0 + match_day_fields::MARKED_COMPETITION_COUNT)
@@ -13382,7 +13475,7 @@ impl MatchDayFields {
     pub(crate) unsafe fn set_marked_competition_count(self, v: u8) {
         write_u8(self.0 + match_day_fields::MARKED_COMPETITION_COUNT, v)
     }
-    /// `match_day_fields::HAS_INTEREST` (+0x2b).
+    /// `match_day_fields::HAS_INTEREST` (+0x2b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn has_interest(self) -> usize {
         read_usize(self.0 + match_day_fields::HAS_INTEREST)
@@ -13391,7 +13484,7 @@ impl MatchDayFields {
     pub(crate) unsafe fn set_has_interest(self, v: usize) {
         write_usize(self.0 + match_day_fields::HAS_INTEREST, v)
     }
-    /// `match_day_fields::CURRENT_MATCH` (+0x2f).
+    /// `match_day_fields::CURRENT_MATCH` (+0x2f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn current_match(self) -> i32 {
         read_i32(self.0 + match_day_fields::CURRENT_MATCH)
@@ -13400,7 +13493,7 @@ impl MatchDayFields {
     pub(crate) unsafe fn set_current_match(self, v: i32) {
         write_i32(self.0 + match_day_fields::CURRENT_MATCH, v)
     }
-    /// `match_day_fields::PASS` (+0x33).
+    /// `match_day_fields::PASS` (+0x33). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn pass(self) -> i8 {
         read_i8(self.0 + match_day_fields::PASS)
@@ -13409,7 +13502,7 @@ impl MatchDayFields {
     pub(crate) unsafe fn set_pass(self, v: i8) {
         write_i8(self.0 + match_day_fields::PASS, v)
     }
-    /// `match_day_fields::HUMAN_MATCH` (+0x34).
+    /// `match_day_fields::HUMAN_MATCH` (+0x34). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn human_match(self) -> usize {
         read_usize(self.0 + match_day_fields::HUMAN_MATCH)
@@ -13443,7 +13536,7 @@ impl MatchEventsFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `match_events_fields::COUNT` (+0x6).
+    /// `match_events_fields::COUNT` (+0x6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn count(self) -> i16 {
         read_i16(self.0 + match_events_fields::COUNT)
@@ -13452,12 +13545,12 @@ impl MatchEventsFields {
     pub(crate) unsafe fn set_count(self, v: i16) {
         write_i16(self.0 + match_events_fields::COUNT, v)
     }
-    /// `match_events_fields::ENTRIES` (+0x720).
+    /// `match_events_fields::ENTRIES` (+0x720). Name: read.
     #[inline(always)]
     pub(crate) fn entries_addr(self) -> usize {
         self.0 + match_events_fields::ENTRIES
     }
-    /// `match_events_fields::COMMENTARY_SPEED` (+0x2db0).
+    /// `match_events_fields::COMMENTARY_SPEED` (+0x2db0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn commentary_speed(self) -> u8 {
         read_u8(self.0 + match_events_fields::COMMENTARY_SPEED)
@@ -13491,7 +13584,7 @@ impl MatchRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `match_record::HOME_CLUB_ID` (+0x0).
+    /// `match_record::HOME_CLUB_ID` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_club_id(self) -> i32 {
         read_i32(self.0 + match_record::HOME_CLUB_ID)
@@ -13500,7 +13593,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_club_id(self, v: i32) {
         write_i32(self.0 + match_record::HOME_CLUB_ID, v)
     }
-    /// `match_record::AWAY_CLUB_ID` (+0x4).
+    /// `match_record::AWAY_CLUB_ID` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_club_id(self) -> i32 {
         read_i32(self.0 + match_record::AWAY_CLUB_ID)
@@ -13509,7 +13602,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_away_club_id(self, v: i32) {
         write_i32(self.0 + match_record::AWAY_CLUB_ID, v)
     }
-    /// `match_record::DAY` (+0x8).
+    /// `match_record::DAY` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn day(self) -> i16 {
         read_i16(self.0 + match_record::DAY)
@@ -13518,7 +13611,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_day(self, v: i16) {
         write_i16(self.0 + match_record::DAY, v)
     }
-    /// `match_record::YEAR` (+0xa).
+    /// `match_record::YEAR` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn year(self) -> i16 {
         read_i16(self.0 + match_record::YEAR)
@@ -13527,27 +13620,27 @@ impl MatchRecord {
     pub(crate) unsafe fn set_year(self, v: i16) {
         write_i16(self.0 + match_record::YEAR, v)
     }
-    /// `match_record::BALL_TIME_THIRD_1` (+0xc).
+    /// `match_record::BALL_TIME_THIRD_1` (+0xc). Name: inferred.
     #[inline(always)]
     pub(crate) fn ball_time_third_1_addr(self) -> usize {
         self.0 + match_record::BALL_TIME_THIRD_1
     }
-    /// `match_record::BALL_TIME_THIRD_2` (+0x16).
+    /// `match_record::BALL_TIME_THIRD_2` (+0x16). Name: inferred.
     #[inline(always)]
     pub(crate) fn ball_time_third_2_addr(self) -> usize {
         self.0 + match_record::BALL_TIME_THIRD_2
     }
-    /// `match_record::BALL_TIME_THIRD_3` (+0x20).
+    /// `match_record::BALL_TIME_THIRD_3` (+0x20). Name: inferred.
     #[inline(always)]
     pub(crate) fn ball_time_third_3_addr(self) -> usize {
         self.0 + match_record::BALL_TIME_THIRD_3
     }
-    /// `match_record::BALL_IN_PLAY_TIME` (+0x2a).
+    /// `match_record::BALL_IN_PLAY_TIME` (+0x2a). Name: read.
     #[inline(always)]
     pub(crate) fn ball_in_play_time_addr(self) -> usize {
         self.0 + match_record::BALL_IN_PLAY_TIME
     }
-    /// `match_record::ATTENDANCE` (+0x34).
+    /// `match_record::ATTENDANCE` (+0x34). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn attendance(self) -> u32 {
         read_u32(self.0 + match_record::ATTENDANCE)
@@ -13556,7 +13649,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_attendance(self, v: u32) {
         write_u32(self.0 + match_record::ATTENDANCE, v)
     }
-    /// `match_record::GATE_RECEIPTS` (+0x38).
+    /// `match_record::GATE_RECEIPTS` (+0x38). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn gate_receipts(self) -> i32 {
         read_i32(self.0 + match_record::GATE_RECEIPTS)
@@ -13565,7 +13658,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_gate_receipts(self, v: i32) {
         write_i32(self.0 + match_record::GATE_RECEIPTS, v)
     }
-    /// `match_record::MAN_OF_THE_MATCH_ID` (+0x3c).
+    /// `match_record::MAN_OF_THE_MATCH_ID` (+0x3c). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn man_of_the_match_id(self) -> u32 {
         read_u32(self.0 + match_record::MAN_OF_THE_MATCH_ID)
@@ -13574,7 +13667,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_man_of_the_match_id(self, v: u32) {
         write_u32(self.0 + match_record::MAN_OF_THE_MATCH_ID, v)
     }
-    /// `match_record::REFEREE_ID` (+0x40).
+    /// `match_record::REFEREE_ID` (+0x40). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn referee_id(self) -> i32 {
         read_i32(self.0 + match_record::REFEREE_ID)
@@ -13583,7 +13676,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_referee_id(self, v: i32) {
         write_i32(self.0 + match_record::REFEREE_ID, v)
     }
-    /// `match_record::NO_STATISTICS` (+0x4c).
+    /// `match_record::NO_STATISTICS` (+0x4c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn no_statistics(self) -> u8 {
         read_u8(self.0 + match_record::NO_STATISTICS)
@@ -13592,7 +13685,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_no_statistics(self, v: u8) {
         write_u8(self.0 + match_record::NO_STATISTICS, v)
     }
-    /// `match_record::MINUTE` (+0x4d).
+    /// `match_record::MINUTE` (+0x4d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn minute(self) -> i16 {
         read_i16(self.0 + match_record::MINUTE)
@@ -13601,7 +13694,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_minute(self, v: i16) {
         write_i16(self.0 + match_record::MINUTE, v)
     }
-    /// `match_record::PERIOD_END` (+0x4f).
+    /// `match_record::PERIOD_END` (+0x4f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn period_end(self) -> u16 {
         read_u16(self.0 + match_record::PERIOD_END)
@@ -13610,7 +13703,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_period_end(self, v: u16) {
         write_u16(self.0 + match_record::PERIOD_END, v)
     }
-    /// `match_record::SUB_TICK` (+0x51).
+    /// `match_record::SUB_TICK` (+0x51). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn sub_tick(self) -> i16 {
         read_i16(self.0 + match_record::SUB_TICK)
@@ -13619,7 +13712,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_sub_tick(self, v: i16) {
         write_i16(self.0 + match_record::SUB_TICK, v)
     }
-    /// `match_record::SHOOTOUT` (+0x53).
+    /// `match_record::SHOOTOUT` (+0x53). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shootout(self) -> u32 {
         read_u32(self.0 + match_record::SHOOTOUT)
@@ -13628,12 +13721,12 @@ impl MatchRecord {
     pub(crate) unsafe fn set_shootout(self, v: u32) {
         write_u32(self.0 + match_record::SHOOTOUT, v)
     }
-    /// `match_record::EVENTS` (+0x57).
+    /// `match_record::EVENTS` (+0x57). Name: read.
     #[inline(always)]
     pub(crate) fn events_addr(self) -> usize {
         self.0 + match_record::EVENTS
     }
-    /// `match_record::EVENT_PLAYER` (+0x58).
+    /// `match_record::EVENT_PLAYER` (+0x58). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn event_player(self) -> u8 {
         read_u8(self.0 + match_record::EVENT_PLAYER)
@@ -13642,7 +13735,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_event_player(self, v: u8) {
         write_u8(self.0 + match_record::EVENT_PLAYER, v)
     }
-    /// `match_record::EVENT_KIND` (+0x59).
+    /// `match_record::EVENT_KIND` (+0x59). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn event_kind(self) -> u8 {
         read_u8(self.0 + match_record::EVENT_KIND)
@@ -13651,7 +13744,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_event_kind(self, v: u8) {
         write_u8(self.0 + match_record::EVENT_KIND, v)
     }
-    /// `match_record::EVENT_MINUTE` (+0x5a).
+    /// `match_record::EVENT_MINUTE` (+0x5a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn event_minute(self) -> u8 {
         read_u8(self.0 + match_record::EVENT_MINUTE)
@@ -13660,12 +13753,12 @@ impl MatchRecord {
     pub(crate) unsafe fn set_event_minute(self, v: u8) {
         write_u8(self.0 + match_record::EVENT_MINUTE, v)
     }
-    /// `match_record::HOME_TEAM` (+0x11f).
+    /// `match_record::HOME_TEAM` (+0x11f). Name: read.
     #[inline(always)]
     pub(crate) fn home_team_addr(self) -> usize {
         self.0 + match_record::HOME_TEAM
     }
-    /// `match_record::HOME_SHOOTOUT_GOALS` (+0x120).
+    /// `match_record::HOME_SHOOTOUT_GOALS` (+0x120). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_shootout_goals(self) -> u8 {
         read_u8(self.0 + match_record::HOME_SHOOTOUT_GOALS)
@@ -13674,7 +13767,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_shootout_goals(self, v: u8) {
         write_u8(self.0 + match_record::HOME_SHOOTOUT_GOALS, v)
     }
-    /// `match_record::HOME_SHOTS` (+0x127).
+    /// `match_record::HOME_SHOTS` (+0x127). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_shots(self) -> u8 {
         read_u8(self.0 + match_record::HOME_SHOTS)
@@ -13683,7 +13776,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_shots(self, v: u8) {
         write_u8(self.0 + match_record::HOME_SHOTS, v)
     }
-    /// `match_record::HOME_SHOTS_ON_TARGET` (+0x128).
+    /// `match_record::HOME_SHOTS_ON_TARGET` (+0x128). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_shots_on_target(self) -> u8 {
         read_u8(self.0 + match_record::HOME_SHOTS_ON_TARGET)
@@ -13692,7 +13785,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_shots_on_target(self, v: u8) {
         write_u8(self.0 + match_record::HOME_SHOTS_ON_TARGET, v)
     }
-    /// `match_record::HOME_CORNERS` (+0x129).
+    /// `match_record::HOME_CORNERS` (+0x129). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_corners(self) -> u8 {
         read_u8(self.0 + match_record::HOME_CORNERS)
@@ -13701,7 +13794,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_corners(self, v: u8) {
         write_u8(self.0 + match_record::HOME_CORNERS, v)
     }
-    /// `match_record::HOME_FREE_KICKS` (+0x12a).
+    /// `match_record::HOME_FREE_KICKS` (+0x12a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_free_kicks(self) -> u8 {
         read_u8(self.0 + match_record::HOME_FREE_KICKS)
@@ -13710,7 +13803,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_free_kicks(self, v: u8) {
         write_u8(self.0 + match_record::HOME_FREE_KICKS, v)
     }
-    /// `match_record::HOME_THROW_INS` (+0x12b).
+    /// `match_record::HOME_THROW_INS` (+0x12b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_throw_ins(self) -> u8 {
         read_u8(self.0 + match_record::HOME_THROW_INS)
@@ -13719,7 +13812,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_throw_ins(self, v: u8) {
         write_u8(self.0 + match_record::HOME_THROW_INS, v)
     }
-    /// `match_record::HOME_FOULS` (+0x12c).
+    /// `match_record::HOME_FOULS` (+0x12c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_fouls(self) -> u8 {
         read_u8(self.0 + match_record::HOME_FOULS)
@@ -13728,7 +13821,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_fouls(self, v: u8) {
         write_u8(self.0 + match_record::HOME_FOULS, v)
     }
-    /// `match_record::HOME_OFFSIDES` (+0x12d).
+    /// `match_record::HOME_OFFSIDES` (+0x12d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_offsides(self) -> u8 {
         read_u8(self.0 + match_record::HOME_OFFSIDES)
@@ -13737,7 +13830,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_offsides(self, v: u8) {
         write_u8(self.0 + match_record::HOME_OFFSIDES, v)
     }
-    /// `match_record::HOME_YELLOW_CARDS` (+0x12e).
+    /// `match_record::HOME_YELLOW_CARDS` (+0x12e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_yellow_cards(self) -> u8 {
         read_u8(self.0 + match_record::HOME_YELLOW_CARDS)
@@ -13746,7 +13839,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_yellow_cards(self, v: u8) {
         write_u8(self.0 + match_record::HOME_YELLOW_CARDS, v)
     }
-    /// `match_record::HOME_RED_CARDS` (+0x12f).
+    /// `match_record::HOME_RED_CARDS` (+0x12f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_red_cards(self) -> u8 {
         read_u8(self.0 + match_record::HOME_RED_CARDS)
@@ -13755,7 +13848,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_red_cards(self, v: u8) {
         write_u8(self.0 + match_record::HOME_RED_CARDS, v)
     }
-    /// `match_record::HOME_PASSES` (+0x130).
+    /// `match_record::HOME_PASSES` (+0x130). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_passes(self) -> i16 {
         read_i16(self.0 + match_record::HOME_PASSES)
@@ -13764,7 +13857,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_passes(self, v: i16) {
         write_i16(self.0 + match_record::HOME_PASSES, v)
     }
-    /// `match_record::HOME_PASSES_COMPLETED` (+0x132).
+    /// `match_record::HOME_PASSES_COMPLETED` (+0x132). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_passes_completed(self) -> i16 {
         read_i16(self.0 + match_record::HOME_PASSES_COMPLETED)
@@ -13773,7 +13866,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_passes_completed(self, v: i16) {
         write_i16(self.0 + match_record::HOME_PASSES_COMPLETED, v)
     }
-    /// `match_record::HOME_TACKLES` (+0x134).
+    /// `match_record::HOME_TACKLES` (+0x134). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_tackles(self) -> i16 {
         read_i16(self.0 + match_record::HOME_TACKLES)
@@ -13782,7 +13875,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_tackles(self, v: i16) {
         write_i16(self.0 + match_record::HOME_TACKLES, v)
     }
-    /// `match_record::HOME_TACKLES_WON` (+0x136).
+    /// `match_record::HOME_TACKLES_WON` (+0x136). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_tackles_won(self) -> i16 {
         read_i16(self.0 + match_record::HOME_TACKLES_WON)
@@ -13791,7 +13884,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_tackles_won(self, v: i16) {
         write_i16(self.0 + match_record::HOME_TACKLES_WON, v)
     }
-    /// `match_record::HOME_HEADERS` (+0x138).
+    /// `match_record::HOME_HEADERS` (+0x138). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn home_headers(self) -> i16 {
         read_i16(self.0 + match_record::HOME_HEADERS)
@@ -13800,7 +13893,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_headers(self, v: i16) {
         write_i16(self.0 + match_record::HOME_HEADERS, v)
     }
-    /// `match_record::HOME_HEADERS_WON` (+0x13a).
+    /// `match_record::HOME_HEADERS_WON` (+0x13a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_headers_won(self) -> i16 {
         read_i16(self.0 + match_record::HOME_HEADERS_WON)
@@ -13809,12 +13902,12 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_headers_won(self, v: i16) {
         write_i16(self.0 + match_record::HOME_HEADERS_WON, v)
     }
-    /// `match_record::HOME_POSSESSION` (+0x13e).
+    /// `match_record::HOME_POSSESSION` (+0x13e). Name: read.
     #[inline(always)]
     pub(crate) fn home_possession_addr(self) -> usize {
         self.0 + match_record::HOME_POSSESSION
     }
-    /// `match_record::HOME_RECENT_POSSESSION` (+0x142).
+    /// `match_record::HOME_RECENT_POSSESSION` (+0x142). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn home_recent_possession(self) -> u8 {
         read_u8(self.0 + match_record::HOME_RECENT_POSSESSION)
@@ -13823,22 +13916,22 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_recent_possession(self, v: u8) {
         write_u8(self.0 + match_record::HOME_RECENT_POSSESSION, v)
     }
-    /// `match_record::HOME_ZONE_1` (+0x143).
+    /// `match_record::HOME_ZONE_1` (+0x143). Name: read.
     #[inline(always)]
     pub(crate) fn home_zone_1_addr(self) -> usize {
         self.0 + match_record::HOME_ZONE_1
     }
-    /// `match_record::HOME_ZONE_2` (+0x148).
+    /// `match_record::HOME_ZONE_2` (+0x148). Name: read.
     #[inline(always)]
     pub(crate) fn home_zone_2_addr(self) -> usize {
         self.0 + match_record::HOME_ZONE_2
     }
-    /// `match_record::HOME_ZONE_3` (+0x14d).
+    /// `match_record::HOME_ZONE_3` (+0x14d). Name: read.
     #[inline(always)]
     pub(crate) fn home_zone_3_addr(self) -> usize {
         self.0 + match_record::HOME_ZONE_3
     }
-    /// `match_record::HOME_KIT` (+0x152).
+    /// `match_record::HOME_KIT` (+0x152). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_kit(self) -> u8 {
         read_u8(self.0 + match_record::HOME_KIT)
@@ -13847,7 +13940,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_kit(self, v: u8) {
         write_u8(self.0 + match_record::HOME_KIT, v)
     }
-    /// `match_record::HOME_CAPTAIN` (+0x153).
+    /// `match_record::HOME_CAPTAIN` (+0x153). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_captain(self) -> u8 {
         read_u8(self.0 + match_record::HOME_CAPTAIN)
@@ -13856,7 +13949,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_captain(self, v: u8) {
         write_u8(self.0 + match_record::HOME_CAPTAIN, v)
     }
-    /// `match_record::HOME_MANAGER_CURRENT_REPUTATION` (+0x188).
+    /// `match_record::HOME_MANAGER_CURRENT_REPUTATION` (+0x188). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_manager_current_reputation(self) -> i16 {
         read_i16(self.0 + match_record::HOME_MANAGER_CURRENT_REPUTATION)
@@ -13865,7 +13958,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_manager_current_reputation(self, v: i16) {
         write_i16(self.0 + match_record::HOME_MANAGER_CURRENT_REPUTATION, v)
     }
-    /// `match_record::ROW_STAFF_ID` (+0x190).
+    /// `match_record::ROW_STAFF_ID` (+0x190). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn row_staff_id(self) -> i32 {
         read_i32(self.0 + match_record::ROW_STAFF_ID)
@@ -13874,7 +13967,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_row_staff_id(self, v: i32) {
         write_i32(self.0 + match_record::ROW_STAFF_ID, v)
     }
-    /// `match_record::ROW_PLAYER_ID` (+0x194).
+    /// `match_record::ROW_PLAYER_ID` (+0x194). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn row_player_id(self) -> u32 {
         read_u32(self.0 + match_record::ROW_PLAYER_ID)
@@ -13883,7 +13976,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_row_player_id(self, v: u32) {
         write_u32(self.0 + match_record::ROW_PLAYER_ID, v)
     }
-    /// `match_record::ROW_FIRST_NAME_ID` (+0x198).
+    /// `match_record::ROW_FIRST_NAME_ID` (+0x198). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn row_first_name_id(self) -> u32 {
         read_u32(self.0 + match_record::ROW_FIRST_NAME_ID)
@@ -13892,7 +13985,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_row_first_name_id(self, v: u32) {
         write_u32(self.0 + match_record::ROW_FIRST_NAME_ID, v)
     }
-    /// `match_record::ROW_SECOND_NAME_ID` (+0x19c).
+    /// `match_record::ROW_SECOND_NAME_ID` (+0x19c). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn row_second_name_id(self) -> u32 {
         read_u32(self.0 + match_record::ROW_SECOND_NAME_ID)
@@ -13901,7 +13994,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_row_second_name_id(self, v: u32) {
         write_u32(self.0 + match_record::ROW_SECOND_NAME_ID, v)
     }
-    /// `match_record::ROW_COMMON_NAME_ID` (+0x1a0).
+    /// `match_record::ROW_COMMON_NAME_ID` (+0x1a0). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn row_common_name_id(self) -> u32 {
         read_u32(self.0 + match_record::ROW_COMMON_NAME_ID)
@@ -13910,12 +14003,12 @@ impl MatchRecord {
     pub(crate) unsafe fn set_row_common_name_id(self, v: u32) {
         write_u32(self.0 + match_record::ROW_COMMON_NAME_ID, v)
     }
-    /// `match_record::ROW_DATE_OF_BIRTH` (+0x1a4).
+    /// `match_record::ROW_DATE_OF_BIRTH` (+0x1a4). Name: read.
     #[inline(always)]
     pub(crate) fn row_date_of_birth_addr(self) -> usize {
         self.0 + match_record::ROW_DATE_OF_BIRTH
     }
-    /// `match_record::ROW_POSITION` (+0x1ad).
+    /// `match_record::ROW_POSITION` (+0x1ad). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn row_position(self) -> u8 {
         read_u8(self.0 + match_record::ROW_POSITION)
@@ -13924,7 +14017,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_row_position(self, v: u8) {
         write_u8(self.0 + match_record::ROW_POSITION, v)
     }
-    /// `match_record::ROW_MINUTE_OFF` (+0x1c0).
+    /// `match_record::ROW_MINUTE_OFF` (+0x1c0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn row_minute_off(self) -> u8 {
         read_u8(self.0 + match_record::ROW_MINUTE_OFF)
@@ -13933,7 +14026,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_row_minute_off(self, v: u8) {
         write_u8(self.0 + match_record::ROW_MINUTE_OFF, v)
     }
-    /// `match_record::ROW_MINUTE_LEFT_PITCH` (+0x1c4).
+    /// `match_record::ROW_MINUTE_LEFT_PITCH` (+0x1c4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn row_minute_left_pitch(self) -> u8 {
         read_u8(self.0 + match_record::ROW_MINUTE_LEFT_PITCH)
@@ -13942,12 +14035,12 @@ impl MatchRecord {
     pub(crate) unsafe fn set_row_minute_left_pitch(self, v: u8) {
         write_u8(self.0 + match_record::ROW_MINUTE_LEFT_PITCH, v)
     }
-    /// `match_record::AWAY_TEAM` (+0x744).
+    /// `match_record::AWAY_TEAM` (+0x744). Name: read.
     #[inline(always)]
     pub(crate) fn away_team_addr(self) -> usize {
         self.0 + match_record::AWAY_TEAM
     }
-    /// `match_record::AWAY_SHOOTOUT_GOALS` (+0x745).
+    /// `match_record::AWAY_SHOOTOUT_GOALS` (+0x745). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_shootout_goals(self) -> u8 {
         read_u8(self.0 + match_record::AWAY_SHOOTOUT_GOALS)
@@ -13956,7 +14049,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_away_shootout_goals(self, v: u8) {
         write_u8(self.0 + match_record::AWAY_SHOOTOUT_GOALS, v)
     }
-    /// `match_record::AWAY_SHOTS` (+0x74c).
+    /// `match_record::AWAY_SHOTS` (+0x74c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_shots(self) -> u8 {
         read_u8(self.0 + match_record::AWAY_SHOTS)
@@ -13965,7 +14058,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_away_shots(self, v: u8) {
         write_u8(self.0 + match_record::AWAY_SHOTS, v)
     }
-    /// `match_record::AWAY_SHOTS_ON_TARGET` (+0x74d).
+    /// `match_record::AWAY_SHOTS_ON_TARGET` (+0x74d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_shots_on_target(self) -> u8 {
         read_u8(self.0 + match_record::AWAY_SHOTS_ON_TARGET)
@@ -13974,7 +14067,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_away_shots_on_target(self, v: u8) {
         write_u8(self.0 + match_record::AWAY_SHOTS_ON_TARGET, v)
     }
-    /// `match_record::AWAY_CORNERS` (+0x74e).
+    /// `match_record::AWAY_CORNERS` (+0x74e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_corners(self) -> u8 {
         read_u8(self.0 + match_record::AWAY_CORNERS)
@@ -13983,7 +14076,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_away_corners(self, v: u8) {
         write_u8(self.0 + match_record::AWAY_CORNERS, v)
     }
-    /// `match_record::AWAY_FREE_KICKS` (+0x74f).
+    /// `match_record::AWAY_FREE_KICKS` (+0x74f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_free_kicks(self) -> u8 {
         read_u8(self.0 + match_record::AWAY_FREE_KICKS)
@@ -13992,7 +14085,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_away_free_kicks(self, v: u8) {
         write_u8(self.0 + match_record::AWAY_FREE_KICKS, v)
     }
-    /// `match_record::AWAY_THROW_INS` (+0x750).
+    /// `match_record::AWAY_THROW_INS` (+0x750). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_throw_ins(self) -> u8 {
         read_u8(self.0 + match_record::AWAY_THROW_INS)
@@ -14001,7 +14094,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_away_throw_ins(self, v: u8) {
         write_u8(self.0 + match_record::AWAY_THROW_INS, v)
     }
-    /// `match_record::AWAY_FOULS` (+0x751).
+    /// `match_record::AWAY_FOULS` (+0x751). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_fouls(self) -> u8 {
         read_u8(self.0 + match_record::AWAY_FOULS)
@@ -14010,7 +14103,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_away_fouls(self, v: u8) {
         write_u8(self.0 + match_record::AWAY_FOULS, v)
     }
-    /// `match_record::AWAY_OFFSIDES` (+0x752).
+    /// `match_record::AWAY_OFFSIDES` (+0x752). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_offsides(self) -> u8 {
         read_u8(self.0 + match_record::AWAY_OFFSIDES)
@@ -14019,7 +14112,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_away_offsides(self, v: u8) {
         write_u8(self.0 + match_record::AWAY_OFFSIDES, v)
     }
-    /// `match_record::AWAY_YELLOW_CARDS` (+0x753).
+    /// `match_record::AWAY_YELLOW_CARDS` (+0x753). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_yellow_cards(self) -> u8 {
         read_u8(self.0 + match_record::AWAY_YELLOW_CARDS)
@@ -14028,7 +14121,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_away_yellow_cards(self, v: u8) {
         write_u8(self.0 + match_record::AWAY_YELLOW_CARDS, v)
     }
-    /// `match_record::AWAY_RED_CARDS` (+0x754).
+    /// `match_record::AWAY_RED_CARDS` (+0x754). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_red_cards(self) -> u8 {
         read_u8(self.0 + match_record::AWAY_RED_CARDS)
@@ -14037,7 +14130,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_away_red_cards(self, v: u8) {
         write_u8(self.0 + match_record::AWAY_RED_CARDS, v)
     }
-    /// `match_record::AWAY_PASSES` (+0x755).
+    /// `match_record::AWAY_PASSES` (+0x755). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_passes(self) -> i16 {
         read_i16(self.0 + match_record::AWAY_PASSES)
@@ -14046,7 +14139,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_away_passes(self, v: i16) {
         write_i16(self.0 + match_record::AWAY_PASSES, v)
     }
-    /// `match_record::AWAY_PASSES_COMPLETED` (+0x757).
+    /// `match_record::AWAY_PASSES_COMPLETED` (+0x757). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_passes_completed(self) -> i16 {
         read_i16(self.0 + match_record::AWAY_PASSES_COMPLETED)
@@ -14055,7 +14148,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_away_passes_completed(self, v: i16) {
         write_i16(self.0 + match_record::AWAY_PASSES_COMPLETED, v)
     }
-    /// `match_record::AWAY_TACKLES` (+0x759).
+    /// `match_record::AWAY_TACKLES` (+0x759). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_tackles(self) -> i16 {
         read_i16(self.0 + match_record::AWAY_TACKLES)
@@ -14064,7 +14157,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_away_tackles(self, v: i16) {
         write_i16(self.0 + match_record::AWAY_TACKLES, v)
     }
-    /// `match_record::AWAY_TACKLES_WON` (+0x75b).
+    /// `match_record::AWAY_TACKLES_WON` (+0x75b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_tackles_won(self) -> i16 {
         read_i16(self.0 + match_record::AWAY_TACKLES_WON)
@@ -14073,7 +14166,7 @@ impl MatchRecord {
     pub(crate) unsafe fn set_away_tackles_won(self, v: i16) {
         write_i16(self.0 + match_record::AWAY_TACKLES_WON, v)
     }
-    /// `match_record::AWAY_HEADERS` (+0x75d).
+    /// `match_record::AWAY_HEADERS` (+0x75d). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn away_headers(self) -> i16 {
         read_i16(self.0 + match_record::AWAY_HEADERS)
@@ -14082,12 +14175,12 @@ impl MatchRecord {
     pub(crate) unsafe fn set_away_headers(self, v: i16) {
         write_i16(self.0 + match_record::AWAY_HEADERS, v)
     }
-    /// `match_record::AWAY_POSSESSION` (+0x763).
+    /// `match_record::AWAY_POSSESSION` (+0x763). Name: read.
     #[inline(always)]
     pub(crate) fn away_possession_addr(self) -> usize {
         self.0 + match_record::AWAY_POSSESSION
     }
-    /// `match_record::AWAY_RECENT_POSSESSION` (+0x767).
+    /// `match_record::AWAY_RECENT_POSSESSION` (+0x767). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn away_recent_possession(self) -> u8 {
         read_u8(self.0 + match_record::AWAY_RECENT_POSSESSION)
@@ -14096,22 +14189,22 @@ impl MatchRecord {
     pub(crate) unsafe fn set_away_recent_possession(self, v: u8) {
         write_u8(self.0 + match_record::AWAY_RECENT_POSSESSION, v)
     }
-    /// `match_record::AWAY_ZONE_1` (+0x768).
+    /// `match_record::AWAY_ZONE_1` (+0x768). Name: read.
     #[inline(always)]
     pub(crate) fn away_zone_1_addr(self) -> usize {
         self.0 + match_record::AWAY_ZONE_1
     }
-    /// `match_record::AWAY_ZONE_2` (+0x76d).
+    /// `match_record::AWAY_ZONE_2` (+0x76d). Name: read.
     #[inline(always)]
     pub(crate) fn away_zone_2_addr(self) -> usize {
         self.0 + match_record::AWAY_ZONE_2
     }
-    /// `match_record::AWAY_ZONE_3` (+0x772).
+    /// `match_record::AWAY_ZONE_3` (+0x772). Name: read.
     #[inline(always)]
     pub(crate) fn away_zone_3_addr(self) -> usize {
         self.0 + match_record::AWAY_ZONE_3
     }
-    /// `match_record::AWAY_KIT` (+0x777).
+    /// `match_record::AWAY_KIT` (+0x777). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_kit(self) -> u8 {
         read_u8(self.0 + match_record::AWAY_KIT)
@@ -14120,12 +14213,12 @@ impl MatchRecord {
     pub(crate) unsafe fn set_away_kit(self, v: u8) {
         write_u8(self.0 + match_record::AWAY_KIT, v)
     }
-    /// `match_record::EVENT_LOG` (+0xd69).
+    /// `match_record::EVENT_LOG` (+0xd69). Name: read.
     #[inline(always)]
     pub(crate) fn event_log_addr(self) -> usize {
         self.0 + match_record::EVENT_LOG
     }
-    /// `match_record::WEATHER` (+0xd76).
+    /// `match_record::WEATHER` (+0xd76). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn weather(self) -> i32 {
         read_i32(self.0 + match_record::WEATHER)
@@ -14159,7 +14252,7 @@ impl MatchRecordRow {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `match_record_row::STAFF_ID` (+0x0).
+    /// `match_record_row::STAFF_ID` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn staff_id(self) -> i32 {
         read_i32(self.0 + match_record_row::STAFF_ID)
@@ -14168,7 +14261,7 @@ impl MatchRecordRow {
     pub(crate) unsafe fn set_staff_id(self, v: i32) {
         write_i32(self.0 + match_record_row::STAFF_ID, v)
     }
-    /// `match_record_row::PLAYER_ID` (+0x4).
+    /// `match_record_row::PLAYER_ID` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn player_id(self) -> u32 {
         read_u32(self.0 + match_record_row::PLAYER_ID)
@@ -14177,7 +14270,7 @@ impl MatchRecordRow {
     pub(crate) unsafe fn set_player_id(self, v: u32) {
         write_u32(self.0 + match_record_row::PLAYER_ID, v)
     }
-    /// `match_record_row::FIRST_NAME_ID` (+0x8).
+    /// `match_record_row::FIRST_NAME_ID` (+0x8). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn first_name_id(self) -> u32 {
         read_u32(self.0 + match_record_row::FIRST_NAME_ID)
@@ -14186,7 +14279,7 @@ impl MatchRecordRow {
     pub(crate) unsafe fn set_first_name_id(self, v: u32) {
         write_u32(self.0 + match_record_row::FIRST_NAME_ID, v)
     }
-    /// `match_record_row::SECOND_NAME_ID` (+0xc).
+    /// `match_record_row::SECOND_NAME_ID` (+0xc). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn second_name_id(self) -> u32 {
         read_u32(self.0 + match_record_row::SECOND_NAME_ID)
@@ -14195,7 +14288,7 @@ impl MatchRecordRow {
     pub(crate) unsafe fn set_second_name_id(self, v: u32) {
         write_u32(self.0 + match_record_row::SECOND_NAME_ID, v)
     }
-    /// `match_record_row::COMMON_NAME_ID` (+0x10).
+    /// `match_record_row::COMMON_NAME_ID` (+0x10). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn common_name_id(self) -> u32 {
         read_u32(self.0 + match_record_row::COMMON_NAME_ID)
@@ -14204,12 +14297,12 @@ impl MatchRecordRow {
     pub(crate) unsafe fn set_common_name_id(self, v: u32) {
         write_u32(self.0 + match_record_row::COMMON_NAME_ID, v)
     }
-    /// `match_record_row::DATE_OF_BIRTH` (+0x14).
+    /// `match_record_row::DATE_OF_BIRTH` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) fn date_of_birth_addr(self) -> usize {
         self.0 + match_record_row::DATE_OF_BIRTH
     }
-    /// `match_record_row::SHIRT_NUMBER` (+0x1c).
+    /// `match_record_row::SHIRT_NUMBER` (+0x1c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shirt_number(self) -> i8 {
         read_i8(self.0 + match_record_row::SHIRT_NUMBER)
@@ -14218,7 +14311,7 @@ impl MatchRecordRow {
     pub(crate) unsafe fn set_shirt_number(self, v: i8) {
         write_i8(self.0 + match_record_row::SHIRT_NUMBER, v)
     }
-    /// `match_record_row::POSITION` (+0x1d).
+    /// `match_record_row::POSITION` (+0x1d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn position(self) -> u8 {
         read_u8(self.0 + match_record_row::POSITION)
@@ -14227,7 +14320,7 @@ impl MatchRecordRow {
     pub(crate) unsafe fn set_position(self, v: u8) {
         write_u8(self.0 + match_record_row::POSITION, v)
     }
-    /// `match_record_row::PREVIOUS_POSITION` (+0x1e).
+    /// `match_record_row::PREVIOUS_POSITION` (+0x1e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn previous_position(self) -> u8 {
         read_u8(self.0 + match_record_row::PREVIOUS_POSITION)
@@ -14236,7 +14329,7 @@ impl MatchRecordRow {
     pub(crate) unsafe fn set_previous_position(self, v: u8) {
         write_u8(self.0 + match_record_row::PREVIOUS_POSITION, v)
     }
-    /// `match_record_row::GOALS` (+0x21).
+    /// `match_record_row::GOALS` (+0x21). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn goals(self) -> u8 {
         read_u8(self.0 + match_record_row::GOALS)
@@ -14245,7 +14338,7 @@ impl MatchRecordRow {
     pub(crate) unsafe fn set_goals(self, v: u8) {
         write_u8(self.0 + match_record_row::GOALS, v)
     }
-    /// `match_record_row::ASSISTS` (+0x27).
+    /// `match_record_row::ASSISTS` (+0x27). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn assists(self) -> u8 {
         read_u8(self.0 + match_record_row::ASSISTS)
@@ -14254,7 +14347,7 @@ impl MatchRecordRow {
     pub(crate) unsafe fn set_assists(self, v: u8) {
         write_u8(self.0 + match_record_row::ASSISTS, v)
     }
-    /// `match_record_row::YELLOW_CARDS` (+0x2c).
+    /// `match_record_row::YELLOW_CARDS` (+0x2c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn yellow_cards(self) -> u8 {
         read_u8(self.0 + match_record_row::YELLOW_CARDS)
@@ -14263,7 +14356,7 @@ impl MatchRecordRow {
     pub(crate) unsafe fn set_yellow_cards(self, v: u8) {
         write_u8(self.0 + match_record_row::YELLOW_CARDS, v)
     }
-    /// `match_record_row::RED_CARD` (+0x2d).
+    /// `match_record_row::RED_CARD` (+0x2d). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn red_card(self) -> u8 {
         read_u8(self.0 + match_record_row::RED_CARD)
@@ -14272,7 +14365,7 @@ impl MatchRecordRow {
     pub(crate) unsafe fn set_red_card(self, v: u8) {
         write_u8(self.0 + match_record_row::RED_CARD, v)
     }
-    /// `match_record_row::MINUTE_OFF` (+0x30).
+    /// `match_record_row::MINUTE_OFF` (+0x30). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn minute_off(self) -> i8 {
         read_i8(self.0 + match_record_row::MINUTE_OFF)
@@ -14281,7 +14374,7 @@ impl MatchRecordRow {
     pub(crate) unsafe fn set_minute_off(self, v: i8) {
         write_i8(self.0 + match_record_row::MINUTE_OFF, v)
     }
-    /// `match_record_row::MINUTE_ON` (+0x32).
+    /// `match_record_row::MINUTE_ON` (+0x32). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn minute_on(self) -> i8 {
         read_i8(self.0 + match_record_row::MINUTE_ON)
@@ -14290,7 +14383,7 @@ impl MatchRecordRow {
     pub(crate) unsafe fn set_minute_on(self, v: i8) {
         write_i8(self.0 + match_record_row::MINUTE_ON, v)
     }
-    /// `match_record_row::INJURY_MINUTE` (+0x33).
+    /// `match_record_row::INJURY_MINUTE` (+0x33). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn injury_minute(self) -> u8 {
         read_u8(self.0 + match_record_row::INJURY_MINUTE)
@@ -14299,7 +14392,7 @@ impl MatchRecordRow {
     pub(crate) unsafe fn set_injury_minute(self, v: u8) {
         write_u8(self.0 + match_record_row::INJURY_MINUTE, v)
     }
-    /// `match_record_row::MINUTE_LEFT_PITCH` (+0x34).
+    /// `match_record_row::MINUTE_LEFT_PITCH` (+0x34). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn minute_left_pitch(self) -> u8 {
         read_u8(self.0 + match_record_row::MINUTE_LEFT_PITCH)
@@ -14308,7 +14401,7 @@ impl MatchRecordRow {
     pub(crate) unsafe fn set_minute_left_pitch(self, v: u8) {
         write_u8(self.0 + match_record_row::MINUTE_LEFT_PITCH, v)
     }
-    /// `match_record_row::MATCH_GRADE` (+0x35).
+    /// `match_record_row::MATCH_GRADE` (+0x35). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn match_grade(self) -> u8 {
         read_u8(self.0 + match_record_row::MATCH_GRADE)
@@ -14342,7 +14435,7 @@ impl MatchRecordTeam {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `match_record_team::GOALS` (+0x0).
+    /// `match_record_team::GOALS` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn goals(self) -> u8 {
         read_u8(self.0 + match_record_team::GOALS)
@@ -14351,7 +14444,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_goals(self, v: u8) {
         write_u8(self.0 + match_record_team::GOALS, v)
     }
-    /// `match_record_team::SHOOTOUT_GOALS` (+0x1).
+    /// `match_record_team::SHOOTOUT_GOALS` (+0x1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shootout_goals(self) -> u8 {
         read_u8(self.0 + match_record_team::SHOOTOUT_GOALS)
@@ -14360,7 +14453,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_shootout_goals(self, v: u8) {
         write_u8(self.0 + match_record_team::SHOOTOUT_GOALS, v)
     }
-    /// `match_record_team::SHOTS` (+0x8).
+    /// `match_record_team::SHOTS` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shots(self) -> u8 {
         read_u8(self.0 + match_record_team::SHOTS)
@@ -14369,7 +14462,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_shots(self, v: u8) {
         write_u8(self.0 + match_record_team::SHOTS, v)
     }
-    /// `match_record_team::SHOTS_ON_TARGET` (+0x9).
+    /// `match_record_team::SHOTS_ON_TARGET` (+0x9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn shots_on_target(self) -> u8 {
         read_u8(self.0 + match_record_team::SHOTS_ON_TARGET)
@@ -14378,7 +14471,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_shots_on_target(self, v: u8) {
         write_u8(self.0 + match_record_team::SHOTS_ON_TARGET, v)
     }
-    /// `match_record_team::CORNERS` (+0xa).
+    /// `match_record_team::CORNERS` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn corners(self) -> u8 {
         read_u8(self.0 + match_record_team::CORNERS)
@@ -14387,7 +14480,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_corners(self, v: u8) {
         write_u8(self.0 + match_record_team::CORNERS, v)
     }
-    /// `match_record_team::FREE_KICKS` (+0xb).
+    /// `match_record_team::FREE_KICKS` (+0xb). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn free_kicks(self) -> u8 {
         read_u8(self.0 + match_record_team::FREE_KICKS)
@@ -14396,7 +14489,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_free_kicks(self, v: u8) {
         write_u8(self.0 + match_record_team::FREE_KICKS, v)
     }
-    /// `match_record_team::THROW_INS` (+0xc).
+    /// `match_record_team::THROW_INS` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn throw_ins(self) -> u8 {
         read_u8(self.0 + match_record_team::THROW_INS)
@@ -14405,7 +14498,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_throw_ins(self, v: u8) {
         write_u8(self.0 + match_record_team::THROW_INS, v)
     }
-    /// `match_record_team::FOULS` (+0xd).
+    /// `match_record_team::FOULS` (+0xd). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fouls(self) -> u8 {
         read_u8(self.0 + match_record_team::FOULS)
@@ -14414,7 +14507,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_fouls(self, v: u8) {
         write_u8(self.0 + match_record_team::FOULS, v)
     }
-    /// `match_record_team::OFFSIDES` (+0xe).
+    /// `match_record_team::OFFSIDES` (+0xe). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn offsides(self) -> u8 {
         read_u8(self.0 + match_record_team::OFFSIDES)
@@ -14423,7 +14516,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_offsides(self, v: u8) {
         write_u8(self.0 + match_record_team::OFFSIDES, v)
     }
-    /// `match_record_team::YELLOW_CARDS` (+0xf).
+    /// `match_record_team::YELLOW_CARDS` (+0xf). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn yellow_cards(self) -> u8 {
         read_u8(self.0 + match_record_team::YELLOW_CARDS)
@@ -14432,7 +14525,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_yellow_cards(self, v: u8) {
         write_u8(self.0 + match_record_team::YELLOW_CARDS, v)
     }
-    /// `match_record_team::RED_CARDS` (+0x10).
+    /// `match_record_team::RED_CARDS` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn red_cards(self) -> u8 {
         read_u8(self.0 + match_record_team::RED_CARDS)
@@ -14441,7 +14534,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_red_cards(self, v: u8) {
         write_u8(self.0 + match_record_team::RED_CARDS, v)
     }
-    /// `match_record_team::PASSES` (+0x11).
+    /// `match_record_team::PASSES` (+0x11). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn passes(self) -> i16 {
         read_i16(self.0 + match_record_team::PASSES)
@@ -14450,7 +14543,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_passes(self, v: i16) {
         write_i16(self.0 + match_record_team::PASSES, v)
     }
-    /// `match_record_team::PASSES_COMPLETED` (+0x13).
+    /// `match_record_team::PASSES_COMPLETED` (+0x13). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn passes_completed(self) -> i16 {
         read_i16(self.0 + match_record_team::PASSES_COMPLETED)
@@ -14459,7 +14552,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_passes_completed(self, v: i16) {
         write_i16(self.0 + match_record_team::PASSES_COMPLETED, v)
     }
-    /// `match_record_team::TACKLES` (+0x15).
+    /// `match_record_team::TACKLES` (+0x15). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn tackles(self) -> i16 {
         read_i16(self.0 + match_record_team::TACKLES)
@@ -14468,7 +14561,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_tackles(self, v: i16) {
         write_i16(self.0 + match_record_team::TACKLES, v)
     }
-    /// `match_record_team::TACKLES_WON` (+0x17).
+    /// `match_record_team::TACKLES_WON` (+0x17). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn tackles_won(self) -> i16 {
         read_i16(self.0 + match_record_team::TACKLES_WON)
@@ -14477,7 +14570,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_tackles_won(self, v: i16) {
         write_i16(self.0 + match_record_team::TACKLES_WON, v)
     }
-    /// `match_record_team::HEADERS` (+0x19).
+    /// `match_record_team::HEADERS` (+0x19). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn headers(self) -> i16 {
         read_i16(self.0 + match_record_team::HEADERS)
@@ -14486,7 +14579,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_headers(self, v: i16) {
         write_i16(self.0 + match_record_team::HEADERS, v)
     }
-    /// `match_record_team::HEADERS_WON` (+0x1b).
+    /// `match_record_team::HEADERS_WON` (+0x1b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn headers_won(self) -> i16 {
         read_i16(self.0 + match_record_team::HEADERS_WON)
@@ -14495,27 +14588,27 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_headers_won(self, v: i16) {
         write_i16(self.0 + match_record_team::HEADERS_WON, v)
     }
-    /// `match_record_team::POSSESSION` (+0x1f).
+    /// `match_record_team::POSSESSION` (+0x1f). Name: inferred.
     #[inline(always)]
     pub(crate) fn possession_addr(self) -> usize {
         self.0 + match_record_team::POSSESSION
     }
-    /// `match_record_team::ZONE_1` (+0x24).
+    /// `match_record_team::ZONE_1` (+0x24). Name: read.
     #[inline(always)]
     pub(crate) fn zone_1_addr(self) -> usize {
         self.0 + match_record_team::ZONE_1
     }
-    /// `match_record_team::ZONE_2` (+0x29).
+    /// `match_record_team::ZONE_2` (+0x29). Name: read.
     #[inline(always)]
     pub(crate) fn zone_2_addr(self) -> usize {
         self.0 + match_record_team::ZONE_2
     }
-    /// `match_record_team::ZONE_3` (+0x2e).
+    /// `match_record_team::ZONE_3` (+0x2e). Name: read.
     #[inline(always)]
     pub(crate) fn zone_3_addr(self) -> usize {
         self.0 + match_record_team::ZONE_3
     }
-    /// `match_record_team::KIT` (+0x33).
+    /// `match_record_team::KIT` (+0x33). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn kit(self) -> u8 {
         read_u8(self.0 + match_record_team::KIT)
@@ -14524,7 +14617,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_kit(self, v: u8) {
         write_u8(self.0 + match_record_team::KIT, v)
     }
-    /// `match_record_team::CAPTAIN` (+0x34).
+    /// `match_record_team::CAPTAIN` (+0x34). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn captain(self) -> u8 {
         read_u8(self.0 + match_record_team::CAPTAIN)
@@ -14533,17 +14626,17 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_captain(self, v: u8) {
         write_u8(self.0 + match_record_team::CAPTAIN, v)
     }
-    /// `match_record_team::FORMATION_X` (+0x35).
+    /// `match_record_team::FORMATION_X` (+0x35). Name: inferred.
     #[inline(always)]
     pub(crate) fn formation_x_addr(self) -> usize {
         self.0 + match_record_team::FORMATION_X
     }
-    /// `match_record_team::FORMATION_Y` (+0x4b).
+    /// `match_record_team::FORMATION_Y` (+0x4b). Name: inferred.
     #[inline(always)]
     pub(crate) fn formation_y_addr(self) -> usize {
         self.0 + match_record_team::FORMATION_Y
     }
-    /// `match_record_team::MANAGER_ID` (+0x65).
+    /// `match_record_team::MANAGER_ID` (+0x65). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn manager_id(self) -> i32 {
         read_i32(self.0 + match_record_team::MANAGER_ID)
@@ -14552,7 +14645,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_manager_id(self, v: i32) {
         write_i32(self.0 + match_record_team::MANAGER_ID, v)
     }
-    /// `match_record_team::MANAGER_CURRENT_REPUTATION` (+0x69).
+    /// `match_record_team::MANAGER_CURRENT_REPUTATION` (+0x69). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn manager_current_reputation(self) -> i16 {
         read_i16(self.0 + match_record_team::MANAGER_CURRENT_REPUTATION)
@@ -14561,7 +14654,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_manager_current_reputation(self, v: i16) {
         write_i16(self.0 + match_record_team::MANAGER_CURRENT_REPUTATION, v)
     }
-    /// `match_record_team::MANAGER_HOME_REPUTATION` (+0x6b).
+    /// `match_record_team::MANAGER_HOME_REPUTATION` (+0x6b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn manager_home_reputation(self) -> i16 {
         read_i16(self.0 + match_record_team::MANAGER_HOME_REPUTATION)
@@ -14570,7 +14663,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_manager_home_reputation(self, v: i16) {
         write_i16(self.0 + match_record_team::MANAGER_HOME_REPUTATION, v)
     }
-    /// `match_record_team::MANAGER_WORLD_REPUTATION` (+0x6d).
+    /// `match_record_team::MANAGER_WORLD_REPUTATION` (+0x6d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn manager_world_reputation(self) -> i16 {
         read_i16(self.0 + match_record_team::MANAGER_WORLD_REPUTATION)
@@ -14579,7 +14672,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_manager_world_reputation(self, v: i16) {
         write_i16(self.0 + match_record_team::MANAGER_WORLD_REPUTATION, v)
     }
-    /// `match_record_team::SIDE_REPUTATION` (+0x6f).
+    /// `match_record_team::SIDE_REPUTATION` (+0x6f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn side_reputation(self) -> i16 {
         read_i16(self.0 + match_record_team::SIDE_REPUTATION)
@@ -14588,7 +14681,7 @@ impl MatchRecordTeam {
     pub(crate) unsafe fn set_side_reputation(self, v: i16) {
         write_i16(self.0 + match_record_team::SIDE_REPUTATION, v)
     }
-    /// `match_record_team::ROWS` (+0x71).
+    /// `match_record_team::ROWS` (+0x71). Name: read.
     #[inline(always)]
     pub(crate) fn rows_addr(self) -> usize {
         self.0 + match_record_team::ROWS
@@ -14618,7 +14711,7 @@ impl MatchSpectators {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `match_spectators::UPDATE_FLAGS` (+0x0).
+    /// `match_spectators::UPDATE_FLAGS` (+0x0). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn update_flags(self) -> u8 {
         read_u8(self.0 + match_spectators::UPDATE_FLAGS)
@@ -14627,12 +14720,12 @@ impl MatchSpectators {
     pub(crate) unsafe fn set_update_flags(self, v: u8) {
         write_u8(self.0 + match_spectators::UPDATE_FLAGS, v)
     }
-    /// `match_spectators::HUMAN_MARKS` (+0xc5).
+    /// `match_spectators::HUMAN_MARKS` (+0xc5). Name: read.
     #[inline(always)]
     pub(crate) fn human_marks_addr(self) -> usize {
         self.0 + match_spectators::HUMAN_MARKS
     }
-    /// `match_spectators::COUNT` (+0x108).
+    /// `match_spectators::COUNT` (+0x108). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn count(self) -> u8 {
         read_u8(self.0 + match_spectators::COUNT)
@@ -14641,7 +14734,7 @@ impl MatchSpectators {
     pub(crate) unsafe fn set_count(self, v: u8) {
         write_u8(self.0 + match_spectators::COUNT, v)
     }
-    /// `match_spectators::CLOSED` (+0x119).
+    /// `match_spectators::CLOSED` (+0x119). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn closed(self) -> i32 {
         read_i32(self.0 + match_spectators::CLOSED)
@@ -14675,7 +14768,7 @@ impl MatchStats {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `match_stats::INDEX` (+0x0).
+    /// `match_stats::INDEX` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn index(self) -> i32 {
         read_i32(self.0 + match_stats::INDEX)
@@ -14684,7 +14777,7 @@ impl MatchStats {
     pub(crate) unsafe fn set_index(self, v: i32) {
         write_i32(self.0 + match_stats::INDEX, v)
     }
-    /// `match_stats::COUNT` (+0x4).
+    /// `match_stats::COUNT` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn count(self) -> i32 {
         read_i32(self.0 + match_stats::COUNT)
@@ -14693,12 +14786,12 @@ impl MatchStats {
     pub(crate) unsafe fn set_count(self, v: i32) {
         write_i32(self.0 + match_stats::COUNT, v)
     }
-    /// `match_stats::BUCKET_CURSORS` (+0x8).
+    /// `match_stats::BUCKET_CURSORS` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) fn bucket_cursors_addr(self) -> usize {
         self.0 + match_stats::BUCKET_CURSORS
     }
-    /// `match_stats::EVENT_FILE_NUMBER` (+0x18).
+    /// `match_stats::EVENT_FILE_NUMBER` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn event_file_number(self) -> i32 {
         read_i32(self.0 + match_stats::EVENT_FILE_NUMBER)
@@ -14707,7 +14800,7 @@ impl MatchStats {
     pub(crate) unsafe fn set_event_file_number(self, v: i32) {
         write_i32(self.0 + match_stats::EVENT_FILE_NUMBER, v)
     }
-    /// `match_stats::CAPACITY` (+0x1c).
+    /// `match_stats::CAPACITY` (+0x1c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn capacity(self) -> i32 {
         read_i32(self.0 + match_stats::CAPACITY)
@@ -14741,7 +14834,7 @@ impl MatchStatsEntry {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `match_stats_entry::HOME_CLUB_ID` (+0x0).
+    /// `match_stats_entry::HOME_CLUB_ID` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_club_id(self) -> i32 {
         read_i32(self.0 + match_stats_entry::HOME_CLUB_ID)
@@ -14750,7 +14843,7 @@ impl MatchStatsEntry {
     pub(crate) unsafe fn set_home_club_id(self, v: i32) {
         write_i32(self.0 + match_stats_entry::HOME_CLUB_ID, v)
     }
-    /// `match_stats_entry::AWAY_CLUB_ID` (+0x4).
+    /// `match_stats_entry::AWAY_CLUB_ID` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_club_id(self) -> i32 {
         read_i32(self.0 + match_stats_entry::AWAY_CLUB_ID)
@@ -14759,7 +14852,7 @@ impl MatchStatsEntry {
     pub(crate) unsafe fn set_away_club_id(self, v: i32) {
         write_i32(self.0 + match_stats_entry::AWAY_CLUB_ID, v)
     }
-    /// `match_stats_entry::DAY` (+0x8).
+    /// `match_stats_entry::DAY` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn day(self) -> u16 {
         read_u16(self.0 + match_stats_entry::DAY)
@@ -14768,7 +14861,7 @@ impl MatchStatsEntry {
     pub(crate) unsafe fn set_day(self, v: u16) {
         write_u16(self.0 + match_stats_entry::DAY, v)
     }
-    /// `match_stats_entry::YEAR` (+0xa).
+    /// `match_stats_entry::YEAR` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn year(self) -> u16 {
         read_u16(self.0 + match_stats_entry::YEAR)
@@ -14802,7 +14895,7 @@ impl MatchStatsRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `match_stats_record::MAN_OF_THE_MATCH_ID` (+0x3c).
+    /// `match_stats_record::MAN_OF_THE_MATCH_ID` (+0x3c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn man_of_the_match_id(self) -> usize {
         read_usize(self.0 + match_stats_record::MAN_OF_THE_MATCH_ID)
@@ -14811,7 +14904,7 @@ impl MatchStatsRecord {
     pub(crate) unsafe fn set_man_of_the_match_id(self, v: usize) {
         write_usize(self.0 + match_stats_record::MAN_OF_THE_MATCH_ID, v)
     }
-    /// `match_stats_record::DURATION` (+0x4d).
+    /// `match_stats_record::DURATION` (+0x4d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn duration(self) -> i16 {
         read_i16(self.0 + match_stats_record::DURATION)
@@ -14820,7 +14913,7 @@ impl MatchStatsRecord {
     pub(crate) unsafe fn set_duration(self, v: i16) {
         write_i16(self.0 + match_stats_record::DURATION, v)
     }
-    /// `match_stats_record::HOME_GOALS` (+0x11f).
+    /// `match_stats_record::HOME_GOALS` (+0x11f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_goals(self) -> u8 {
         read_u8(self.0 + match_stats_record::HOME_GOALS)
@@ -14829,17 +14922,17 @@ impl MatchStatsRecord {
     pub(crate) unsafe fn set_home_goals(self, v: u8) {
         write_u8(self.0 + match_stats_record::HOME_GOALS, v)
     }
-    /// `match_stats_record::HOME_LINEUP` (+0x190).
+    /// `match_stats_record::HOME_LINEUP` (+0x190). Name: read.
     #[inline(always)]
     pub(crate) fn home_lineup_addr(self) -> usize {
         self.0 + match_stats_record::HOME_LINEUP
     }
-    /// `match_stats_record::SIDE_SIZE` (+0x625).
+    /// `match_stats_record::SIDE_SIZE` (+0x625). Name: read.
     #[inline(always)]
     pub(crate) fn side_size_addr(self) -> usize {
         self.0 + match_stats_record::SIDE_SIZE
     }
-    /// `match_stats_record::AWAY_GOALS` (+0x744).
+    /// `match_stats_record::AWAY_GOALS` (+0x744). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_goals(self) -> u8 {
         read_u8(self.0 + match_stats_record::AWAY_GOALS)
@@ -14873,7 +14966,7 @@ impl MatchSummary {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `match_summary::SIDES` (+0x11f).
+    /// `match_summary::SIDES` (+0x11f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn sides(self) -> u8 {
         read_u8(self.0 + match_summary::SIDES)
@@ -14907,7 +15000,7 @@ impl MediaFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `media_fields::STORY_LOG` (+0x0).
+    /// `media_fields::STORY_LOG` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn story_log(self) -> i32 {
         read_i32(self.0 + media_fields::STORY_LOG)
@@ -14916,7 +15009,7 @@ impl MediaFields {
     pub(crate) unsafe fn set_story_log(self, v: i32) {
         write_i32(self.0 + media_fields::STORY_LOG, v)
     }
-    /// `media_fields::STORY_LOG_CAPACITY` (+0x4).
+    /// `media_fields::STORY_LOG_CAPACITY` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn story_log_capacity(self) -> usize {
         read_usize(self.0 + media_fields::STORY_LOG_CAPACITY)
@@ -14925,7 +15018,7 @@ impl MediaFields {
     pub(crate) unsafe fn set_story_log_capacity(self, v: usize) {
         write_usize(self.0 + media_fields::STORY_LOG_CAPACITY, v)
     }
-    /// `media_fields::STORY_LOG_COUNT` (+0x8).
+    /// `media_fields::STORY_LOG_COUNT` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn story_log_count(self) -> usize {
         read_usize(self.0 + media_fields::STORY_LOG_COUNT)
@@ -14934,7 +15027,7 @@ impl MediaFields {
     pub(crate) unsafe fn set_story_log_count(self, v: usize) {
         write_usize(self.0 + media_fields::STORY_LOG_COUNT, v)
     }
-    /// `media_fields::TRANSFER_INTERESTS` (+0xc).
+    /// `media_fields::TRANSFER_INTERESTS` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn transfer_interests(self) -> usize {
         read_usize(self.0 + media_fields::TRANSFER_INTERESTS)
@@ -14943,7 +15036,7 @@ impl MediaFields {
     pub(crate) unsafe fn set_transfer_interests(self, v: usize) {
         write_usize(self.0 + media_fields::TRANSFER_INTERESTS, v)
     }
-    /// `media_fields::INTEREST_CAPACITY` (+0x10).
+    /// `media_fields::INTEREST_CAPACITY` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn interest_capacity(self) -> usize {
         read_usize(self.0 + media_fields::INTEREST_CAPACITY)
@@ -14952,7 +15045,7 @@ impl MediaFields {
     pub(crate) unsafe fn set_interest_capacity(self, v: usize) {
         write_usize(self.0 + media_fields::INTEREST_CAPACITY, v)
     }
-    /// `media_fields::INTEREST_COUNT` (+0x14).
+    /// `media_fields::INTEREST_COUNT` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn interest_count(self) -> i32 {
         read_i32(self.0 + media_fields::INTEREST_COUNT)
@@ -14986,7 +15079,7 @@ impl NationIndexItem {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `nation_index_item::NATION_ID` (+0x4).
+    /// `nation_index_item::NATION_ID` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn nation_id(self) -> usize {
         read_usize(self.0 + nation_index_item::NATION_ID)
@@ -15020,7 +15113,7 @@ impl NationalSquadRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `national_squad_record::CURRENT_COMPETITION` (+0x4).
+    /// `national_squad_record::CURRENT_COMPETITION` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn current_competition(self) -> i32 {
         read_i32(self.0 + national_squad_record::CURRENT_COMPETITION)
@@ -15029,17 +15122,17 @@ impl NationalSquadRecord {
     pub(crate) unsafe fn set_current_competition(self, v: i32) {
         write_i32(self.0 + national_squad_record::CURRENT_COMPETITION, v)
     }
-    /// `national_squad_record::RESERVE_GROUPS` (+0xd).
+    /// `national_squad_record::RESERVE_GROUPS` (+0xd). Name: inferred.
     #[inline(always)]
     pub(crate) fn reserve_groups_addr(self) -> usize {
         self.0 + national_squad_record::RESERVE_GROUPS
     }
-    /// `national_squad_record::SQUAD_STAMP_DATE` (+0x32).
+    /// `national_squad_record::SQUAD_STAMP_DATE` (+0x32). Name: read.
     #[inline(always)]
     pub(crate) fn squad_stamp_date_addr(self) -> usize {
         self.0 + national_squad_record::SQUAD_STAMP_DATE
     }
-    /// `national_squad_record::SQUAD_DATE` (+0x3a).
+    /// `national_squad_record::SQUAD_DATE` (+0x3a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn squad_date(self) -> usize {
         read_usize(self.0 + national_squad_record::SQUAD_DATE)
@@ -15048,7 +15141,7 @@ impl NationalSquadRecord {
     pub(crate) unsafe fn set_squad_date(self, v: usize) {
         write_usize(self.0 + national_squad_record::SQUAD_DATE, v)
     }
-    /// `national_squad_record::CALLED_UP_MARK` (+0x43).
+    /// `national_squad_record::CALLED_UP_MARK` (+0x43). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn called_up_mark(self) -> u8 {
         read_u8(self.0 + national_squad_record::CALLED_UP_MARK)
@@ -15057,12 +15150,12 @@ impl NationalSquadRecord {
     pub(crate) unsafe fn set_called_up_mark(self, v: u8) {
         write_u8(self.0 + national_squad_record::CALLED_UP_MARK, v)
     }
-    /// `national_squad_record::B_SQUAD_DATE` (+0x4e).
+    /// `national_squad_record::B_SQUAD_DATE` (+0x4e). Name: read.
     #[inline(always)]
     pub(crate) fn b_squad_date_addr(self) -> usize {
         self.0 + national_squad_record::B_SQUAD_DATE
     }
-    /// `national_squad_record::U21_SQUAD_DATE` (+0x62).
+    /// `national_squad_record::U21_SQUAD_DATE` (+0x62). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn u21_squad_date(self) -> usize {
         read_usize(self.0 + national_squad_record::U21_SQUAD_DATE)
@@ -15071,7 +15164,7 @@ impl NationalSquadRecord {
     pub(crate) unsafe fn set_u21_squad_date(self, v: usize) {
         write_usize(self.0 + national_squad_record::U21_SQUAD_DATE, v)
     }
-    /// `national_squad_record::U21_CALLED_UP_MARK` (+0x6b).
+    /// `national_squad_record::U21_CALLED_UP_MARK` (+0x6b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn u21_called_up_mark(self) -> u8 {
         read_u8(self.0 + national_squad_record::U21_CALLED_UP_MARK)
@@ -15105,7 +15198,7 @@ impl NationalTeamsFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `national_teams_fields::CALL_UP_LIST` (+0x0).
+    /// `national_teams_fields::CALL_UP_LIST` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn call_up_list(self) -> i32 {
         read_i32(self.0 + national_teams_fields::CALL_UP_LIST)
@@ -15114,7 +15207,7 @@ impl NationalTeamsFields {
     pub(crate) unsafe fn set_call_up_list(self, v: i32) {
         write_i32(self.0 + national_teams_fields::CALL_UP_LIST, v)
     }
-    /// `national_teams_fields::NATION_RECORDS` (+0x4).
+    /// `national_teams_fields::NATION_RECORDS` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn nation_records(self) -> usize {
         read_usize(self.0 + national_teams_fields::NATION_RECORDS)
@@ -15123,7 +15216,7 @@ impl NationalTeamsFields {
     pub(crate) unsafe fn set_nation_records(self, v: usize) {
         write_usize(self.0 + national_teams_fields::NATION_RECORDS, v)
     }
-    /// `national_teams_fields::NEXT_COMPETITIONS` (+0x8).
+    /// `national_teams_fields::NEXT_COMPETITIONS` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn next_competitions(self) -> usize {
         read_usize(self.0 + national_teams_fields::NEXT_COMPETITIONS)
@@ -15132,12 +15225,12 @@ impl NationalTeamsFields {
     pub(crate) unsafe fn set_next_competitions(self, v: usize) {
         write_usize(self.0 + national_teams_fields::NEXT_COMPETITIONS, v)
     }
-    /// `national_teams_fields::RESERVE_POOLS` (+0xc).
+    /// `national_teams_fields::RESERVE_POOLS` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) fn reserve_pools_addr(self) -> usize {
         self.0 + national_teams_fields::RESERVE_POOLS
     }
-    /// `national_teams_fields::FIFA_RANKING` (+0x1c).
+    /// `national_teams_fields::FIFA_RANKING` (+0x1c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fifa_ranking(self) -> usize {
         read_usize(self.0 + national_teams_fields::FIFA_RANKING)
@@ -15146,7 +15239,7 @@ impl NationalTeamsFields {
     pub(crate) unsafe fn set_fifa_ranking(self, v: usize) {
         write_usize(self.0 + national_teams_fields::FIFA_RANKING, v)
     }
-    /// `national_teams_fields::CLUB_CALL_UP_RECORDS` (+0x20).
+    /// `national_teams_fields::CLUB_CALL_UP_RECORDS` (+0x20). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_call_up_records(self) -> usize {
         read_usize(self.0 + national_teams_fields::CLUB_CALL_UP_RECORDS)
@@ -15155,7 +15248,7 @@ impl NationalTeamsFields {
     pub(crate) unsafe fn set_club_call_up_records(self, v: usize) {
         write_usize(self.0 + national_teams_fields::CLUB_CALL_UP_RECORDS, v)
     }
-    /// `national_teams_fields::CLUB_MARKS` (+0x24).
+    /// `national_teams_fields::CLUB_MARKS` (+0x24). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_marks(self) -> usize {
         read_usize(self.0 + national_teams_fields::CLUB_MARKS)
@@ -15164,7 +15257,7 @@ impl NationalTeamsFields {
     pub(crate) unsafe fn set_club_marks(self, v: usize) {
         write_usize(self.0 + national_teams_fields::CLUB_MARKS, v)
     }
-    /// `national_teams_fields::NEW_QUALIFIERS` (+0x28).
+    /// `national_teams_fields::NEW_QUALIFIERS` (+0x28). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn new_qualifiers(self) -> i32 {
         read_i32(self.0 + national_teams_fields::NEW_QUALIFIERS)
@@ -15173,7 +15266,7 @@ impl NationalTeamsFields {
     pub(crate) unsafe fn set_new_qualifiers(self, v: i32) {
         write_i32(self.0 + national_teams_fields::NEW_QUALIFIERS, v)
     }
-    /// `national_teams_fields::OLYMPIC_NATION_MARKS` (+0x36).
+    /// `national_teams_fields::OLYMPIC_NATION_MARKS` (+0x36). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn olympic_nation_marks(self) -> usize {
         read_usize(self.0 + national_teams_fields::OLYMPIC_NATION_MARKS)
@@ -15207,7 +15300,7 @@ impl NewsFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `news_fields::SLOT_COUNT` (+0x4).
+    /// `news_fields::SLOT_COUNT` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn slot_count(self) -> i32 {
         read_i32(self.0 + news_fields::SLOT_COUNT)
@@ -15216,7 +15309,7 @@ impl NewsFields {
     pub(crate) unsafe fn set_slot_count(self, v: i32) {
         write_i32(self.0 + news_fields::SLOT_COUNT, v)
     }
-    /// `news_fields::HUMAN_INBOXES` (+0x8).
+    /// `news_fields::HUMAN_INBOXES` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn human_inboxes(self) -> usize {
         read_usize(self.0 + news_fields::HUMAN_INBOXES)
@@ -15225,7 +15318,7 @@ impl NewsFields {
     pub(crate) unsafe fn set_human_inboxes(self, v: usize) {
         write_usize(self.0 + news_fields::HUMAN_INBOXES, v)
     }
-    /// `news_fields::LAST_ID` (+0x10).
+    /// `news_fields::LAST_ID` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn last_id(self) -> usize {
         read_usize(self.0 + news_fields::LAST_ID)
@@ -15259,7 +15352,7 @@ impl NewsItem {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `news_item::IMPORTANT` (+0x4).
+    /// `news_item::IMPORTANT` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn important(self) -> u8 {
         read_u8(self.0 + news_item::IMPORTANT)
@@ -15268,7 +15361,7 @@ impl NewsItem {
     pub(crate) unsafe fn set_important(self, v: u8) {
         write_u8(self.0 + news_item::IMPORTANT, v)
     }
-    /// `news_item::DATA` (+0x5).
+    /// `news_item::DATA` (+0x5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn data(self) -> usize {
         read_usize(self.0 + news_item::DATA)
@@ -15277,7 +15370,7 @@ impl NewsItem {
     pub(crate) unsafe fn set_data(self, v: usize) {
         write_usize(self.0 + news_item::DATA, v)
     }
-    /// `news_item::TEXT_END` (+0xcc).
+    /// `news_item::TEXT_END` (+0xcc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn text_end(self) -> u8 {
         read_u8(self.0 + news_item::TEXT_END)
@@ -15286,12 +15379,12 @@ impl NewsItem {
     pub(crate) unsafe fn set_text_end(self, v: u8) {
         write_u8(self.0 + news_item::TEXT_END, v)
     }
-    /// `news_item::DATE` (+0xcd).
+    /// `news_item::DATE` (+0xcd). Name: read.
     #[inline(always)]
     pub(crate) fn date_addr(self) -> usize {
         self.0 + news_item::DATE
     }
-    /// `news_item::DAY_SLICE` (+0xd5).
+    /// `news_item::DAY_SLICE` (+0xd5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn day_slice(self) -> u8 {
         read_u8(self.0 + news_item::DAY_SLICE)
@@ -15300,7 +15393,7 @@ impl NewsItem {
     pub(crate) unsafe fn set_day_slice(self, v: u8) {
         write_u8(self.0 + news_item::DAY_SLICE, v)
     }
-    /// `news_item::ID` (+0xd6).
+    /// `news_item::ID` (+0xd6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn id(self) -> usize {
         read_usize(self.0 + news_item::ID)
@@ -15309,7 +15402,7 @@ impl NewsItem {
     pub(crate) unsafe fn set_id(self, v: usize) {
         write_usize(self.0 + news_item::ID, v)
     }
-    /// `news_item::READ` (+0xda).
+    /// `news_item::READ` (+0xda). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn read(self) -> usize {
         read_usize(self.0 + news_item::READ)
@@ -15318,7 +15411,7 @@ impl NewsItem {
     pub(crate) unsafe fn set_read(self, v: usize) {
         write_usize(self.0 + news_item::READ, v)
     }
-    /// `news_item::REACH` (+0xde).
+    /// `news_item::REACH` (+0xde). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn reach(self) -> u8 {
         read_u8(self.0 + news_item::REACH)
@@ -15352,7 +15445,7 @@ impl Official {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `official::BIRTH_DAY` (+0xc).
+    /// `official::BIRTH_DAY` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn birth_day(self) -> i16 {
         read_i16(self.0 + official::BIRTH_DAY)
@@ -15361,7 +15454,7 @@ impl Official {
     pub(crate) unsafe fn set_birth_day(self, v: i16) {
         write_i16(self.0 + official::BIRTH_DAY, v)
     }
-    /// `official::BIRTH_YEAR` (+0xe).
+    /// `official::BIRTH_YEAR` (+0xe). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn birth_year(self) -> i16 {
         read_i16(self.0 + official::BIRTH_YEAR)
@@ -15370,7 +15463,7 @@ impl Official {
     pub(crate) unsafe fn set_birth_year(self, v: i16) {
         write_i16(self.0 + official::BIRTH_YEAR, v)
     }
-    /// `official::NATION` (+0x16).
+    /// `official::NATION` (+0x16). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn nation(self) -> usize {
         read_usize(self.0 + official::NATION)
@@ -15379,7 +15472,7 @@ impl Official {
     pub(crate) unsafe fn set_nation(self, v: usize) {
         write_usize(self.0 + official::NATION, v)
     }
-    /// `official::CURRENT_ABILITY` (+0x1e).
+    /// `official::CURRENT_ABILITY` (+0x1e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn current_ability(self) -> i16 {
         read_i16(self.0 + official::CURRENT_ABILITY)
@@ -15388,7 +15481,7 @@ impl Official {
     pub(crate) unsafe fn set_current_ability(self, v: i16) {
         write_i16(self.0 + official::CURRENT_ABILITY, v)
     }
-    /// `official::POTENTIAL_ABILITY` (+0x20).
+    /// `official::POTENTIAL_ABILITY` (+0x20). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn potential_ability(self) -> i16 {
         read_i16(self.0 + official::POTENTIAL_ABILITY)
@@ -15397,7 +15490,7 @@ impl Official {
     pub(crate) unsafe fn set_potential_ability(self, v: i16) {
         write_i16(self.0 + official::POTENTIAL_ABILITY, v)
     }
-    /// `official::RATING` (+0x22).
+    /// `official::RATING` (+0x22). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn rating(self) -> i16 {
         read_i16(self.0 + official::RATING)
@@ -15431,7 +15524,7 @@ impl OfficialStats {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `official_stats::AVERAGE_GRADE` (+0x4).
+    /// `official_stats::AVERAGE_GRADE` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn average_grade(self) -> u32 {
         read_u32(self.0 + official_stats::AVERAGE_GRADE)
@@ -15440,7 +15533,7 @@ impl OfficialStats {
     pub(crate) unsafe fn set_average_grade(self, v: u32) {
         write_u32(self.0 + official_stats::AVERAGE_GRADE, v)
     }
-    /// `official_stats::FOULS` (+0x8).
+    /// `official_stats::FOULS` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fouls(self) -> u16 {
         read_u16(self.0 + official_stats::FOULS)
@@ -15449,7 +15542,7 @@ impl OfficialStats {
     pub(crate) unsafe fn set_fouls(self, v: u16) {
         write_u16(self.0 + official_stats::FOULS, v)
     }
-    /// `official_stats::GRADE_SUM` (+0xa).
+    /// `official_stats::GRADE_SUM` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn grade_sum(self) -> u16 {
         read_u16(self.0 + official_stats::GRADE_SUM)
@@ -15458,7 +15551,7 @@ impl OfficialStats {
     pub(crate) unsafe fn set_grade_sum(self, v: u16) {
         write_u16(self.0 + official_stats::GRADE_SUM, v)
     }
-    /// `official_stats::MATCHES` (+0xc).
+    /// `official_stats::MATCHES` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn matches(self) -> u16 {
         read_u16(self.0 + official_stats::MATCHES)
@@ -15467,7 +15560,7 @@ impl OfficialStats {
     pub(crate) unsafe fn set_matches(self, v: u16) {
         write_u16(self.0 + official_stats::MATCHES, v)
     }
-    /// `official_stats::CARDS` (+0xf).
+    /// `official_stats::CARDS` (+0xf). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn cards(self) -> u8 {
         read_u8(self.0 + official_stats::CARDS)
@@ -15476,7 +15569,7 @@ impl OfficialStats {
     pub(crate) unsafe fn set_cards(self, v: u8) {
         write_u8(self.0 + official_stats::CARDS, v)
     }
-    /// `official_stats::LAST_GRADE` (+0x10).
+    /// `official_stats::LAST_GRADE` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn last_grade(self) -> u8 {
         read_u8(self.0 + official_stats::LAST_GRADE)
@@ -15510,7 +15603,7 @@ impl OfficialsCompSlot {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `officials_comp_slot::FIRST` (+0x0).
+    /// `officials_comp_slot::FIRST` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn first(self) -> i32 {
         read_i32(self.0 + officials_comp_slot::FIRST)
@@ -15519,7 +15612,7 @@ impl OfficialsCompSlot {
     pub(crate) unsafe fn set_first(self, v: i32) {
         write_i32(self.0 + officials_comp_slot::FIRST, v)
     }
-    /// `officials_comp_slot::SHARE` (+0x4).
+    /// `officials_comp_slot::SHARE` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn share(self) -> i32 {
         read_i32(self.0 + officials_comp_slot::SHARE)
@@ -15528,7 +15621,7 @@ impl OfficialsCompSlot {
     pub(crate) unsafe fn set_share(self, v: i32) {
         write_i32(self.0 + officials_comp_slot::SHARE, v)
     }
-    /// `officials_comp_slot::REQUEST` (+0x8).
+    /// `officials_comp_slot::REQUEST` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn request(self) -> i32 {
         read_i32(self.0 + officials_comp_slot::REQUEST)
@@ -15537,7 +15630,7 @@ impl OfficialsCompSlot {
     pub(crate) unsafe fn set_request(self, v: i32) {
         write_i32(self.0 + officials_comp_slot::REQUEST, v)
     }
-    /// `officials_comp_slot::COMP_ID` (+0xc).
+    /// `officials_comp_slot::COMP_ID` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn comp_id(self) -> i32 {
         read_i32(self.0 + officials_comp_slot::COMP_ID)
@@ -15571,7 +15664,7 @@ impl OfficialsManagerFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `officials_manager_fields::GRADE_ROWS` (+0x0).
+    /// `officials_manager_fields::GRADE_ROWS` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn grade_rows(self) -> i32 {
         read_i32(self.0 + officials_manager_fields::GRADE_ROWS)
@@ -15580,7 +15673,7 @@ impl OfficialsManagerFields {
     pub(crate) unsafe fn set_grade_rows(self, v: i32) {
         write_i32(self.0 + officials_manager_fields::GRADE_ROWS, v)
     }
-    /// `officials_manager_fields::BUSY_COUNT` (+0x4).
+    /// `officials_manager_fields::BUSY_COUNT` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn busy_count(self) -> i32 {
         read_i32(self.0 + officials_manager_fields::BUSY_COUNT)
@@ -15589,7 +15682,7 @@ impl OfficialsManagerFields {
     pub(crate) unsafe fn set_busy_count(self, v: i32) {
         write_i32(self.0 + officials_manager_fields::BUSY_COUNT, v)
     }
-    /// `officials_manager_fields::BUSY_FLAGS` (+0x8).
+    /// `officials_manager_fields::BUSY_FLAGS` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn busy_flags(self) -> usize {
         read_usize(self.0 + officials_manager_fields::BUSY_FLAGS)
@@ -15598,7 +15691,7 @@ impl OfficialsManagerFields {
     pub(crate) unsafe fn set_busy_flags(self, v: usize) {
         write_usize(self.0 + officials_manager_fields::BUSY_FLAGS, v)
     }
-    /// `officials_manager_fields::NATION_BLOCKS` (+0xc).
+    /// `officials_manager_fields::NATION_BLOCKS` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn nation_blocks(self) -> usize {
         read_usize(self.0 + officials_manager_fields::NATION_BLOCKS)
@@ -15632,7 +15725,7 @@ impl OfficialsNationBlock {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `officials_nation_block::NATION` (+0x0).
+    /// `officials_nation_block::NATION` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn nation(self) -> i32 {
         read_i32(self.0 + officials_nation_block::NATION)
@@ -15641,7 +15734,7 @@ impl OfficialsNationBlock {
     pub(crate) unsafe fn set_nation(self, v: i32) {
         write_i32(self.0 + officials_nation_block::NATION, v)
     }
-    /// `officials_nation_block::REFEREE_COUNT` (+0x4).
+    /// `officials_nation_block::REFEREE_COUNT` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn referee_count(self) -> i32 {
         read_i32(self.0 + officials_nation_block::REFEREE_COUNT)
@@ -15650,7 +15743,7 @@ impl OfficialsNationBlock {
     pub(crate) unsafe fn set_referee_count(self, v: i32) {
         write_i32(self.0 + officials_nation_block::REFEREE_COUNT, v)
     }
-    /// `officials_nation_block::FIRST_REFEREE` (+0x8).
+    /// `officials_nation_block::FIRST_REFEREE` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn first_referee(self) -> i32 {
         read_i32(self.0 + officials_nation_block::FIRST_REFEREE)
@@ -15659,7 +15752,7 @@ impl OfficialsNationBlock {
     pub(crate) unsafe fn set_first_referee(self, v: i32) {
         write_i32(self.0 + officials_nation_block::FIRST_REFEREE, v)
     }
-    /// `officials_nation_block::DEMAND` (+0xc).
+    /// `officials_nation_block::DEMAND` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn demand(self) -> i32 {
         read_i32(self.0 + officials_nation_block::DEMAND)
@@ -15668,7 +15761,7 @@ impl OfficialsNationBlock {
     pub(crate) unsafe fn set_demand(self, v: i32) {
         write_i32(self.0 + officials_nation_block::DEMAND, v)
     }
-    /// `officials_nation_block::COMP_COUNT` (+0x10).
+    /// `officials_nation_block::COMP_COUNT` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn comp_count(self) -> i16 {
         read_i16(self.0 + officials_nation_block::COMP_COUNT)
@@ -15677,7 +15770,7 @@ impl OfficialsNationBlock {
     pub(crate) unsafe fn set_comp_count(self, v: i16) {
         write_i16(self.0 + officials_nation_block::COMP_COUNT, v)
     }
-    /// `officials_nation_block::COMP_SLOTS` (+0x12).
+    /// `officials_nation_block::COMP_SLOTS` (+0x12). Name: read.
     #[inline(always)]
     pub(crate) fn comp_slots_addr(self) -> usize {
         self.0 + officials_nation_block::COMP_SLOTS
@@ -15707,7 +15800,7 @@ impl PastTransfer {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `past_transfer::FIRST_NAME_ID` (+0x4).
+    /// `past_transfer::FIRST_NAME_ID` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn first_name_id(self) -> usize {
         read_usize(self.0 + past_transfer::FIRST_NAME_ID)
@@ -15716,7 +15809,7 @@ impl PastTransfer {
     pub(crate) unsafe fn set_first_name_id(self, v: usize) {
         write_usize(self.0 + past_transfer::FIRST_NAME_ID, v)
     }
-    /// `past_transfer::SECOND_NAME_ID` (+0x8).
+    /// `past_transfer::SECOND_NAME_ID` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn second_name_id(self) -> usize {
         read_usize(self.0 + past_transfer::SECOND_NAME_ID)
@@ -15725,7 +15818,7 @@ impl PastTransfer {
     pub(crate) unsafe fn set_second_name_id(self, v: usize) {
         write_usize(self.0 + past_transfer::SECOND_NAME_ID, v)
     }
-    /// `past_transfer::COMMON_NAME_ID` (+0xc).
+    /// `past_transfer::COMMON_NAME_ID` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn common_name_id(self) -> usize {
         read_usize(self.0 + past_transfer::COMMON_NAME_ID)
@@ -15734,7 +15827,7 @@ impl PastTransfer {
     pub(crate) unsafe fn set_common_name_id(self, v: usize) {
         write_usize(self.0 + past_transfer::COMMON_NAME_ID, v)
     }
-    /// `past_transfer::TO_CLUB_ID` (+0x10).
+    /// `past_transfer::TO_CLUB_ID` (+0x10). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn to_club_id(self) -> usize {
         read_usize(self.0 + past_transfer::TO_CLUB_ID)
@@ -15743,7 +15836,7 @@ impl PastTransfer {
     pub(crate) unsafe fn set_to_club_id(self, v: usize) {
         write_usize(self.0 + past_transfer::TO_CLUB_ID, v)
     }
-    /// `past_transfer::FROM_CLUB_ID` (+0x14).
+    /// `past_transfer::FROM_CLUB_ID` (+0x14). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn from_club_id(self) -> usize {
         read_usize(self.0 + past_transfer::FROM_CLUB_ID)
@@ -15752,7 +15845,7 @@ impl PastTransfer {
     pub(crate) unsafe fn set_from_club_id(self, v: usize) {
         write_usize(self.0 + past_transfer::FROM_CLUB_ID, v)
     }
-    /// `past_transfer::FEE` (+0x18).
+    /// `past_transfer::FEE` (+0x18). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn fee(self) -> usize {
         read_usize(self.0 + past_transfer::FEE)
@@ -15761,7 +15854,7 @@ impl PastTransfer {
     pub(crate) unsafe fn set_fee(self, v: usize) {
         write_usize(self.0 + past_transfer::FEE, v)
     }
-    /// `past_transfer::MOVE_TYPE` (+0x1c).
+    /// `past_transfer::MOVE_TYPE` (+0x1c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn move_type(self) -> u8 {
         read_u8(self.0 + past_transfer::MOVE_TYPE)
@@ -15770,7 +15863,7 @@ impl PastTransfer {
     pub(crate) unsafe fn set_move_type(self, v: u8) {
         write_u8(self.0 + past_transfer::MOVE_TYPE, v)
     }
-    /// `past_transfer::DATE` (+0x1d).
+    /// `past_transfer::DATE` (+0x1d). Name: read.
     #[inline(always)]
     pub(crate) fn date_addr(self) -> usize {
         self.0 + past_transfer::DATE
@@ -15800,7 +15893,7 @@ impl PersonTransferRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `person_transfer_record::OFFER_COUNT` (+0x1).
+    /// `person_transfer_record::OFFER_COUNT` (+0x1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn offer_count(self) -> u8 {
         read_u8(self.0 + person_transfer_record::OFFER_COUNT)
@@ -15809,7 +15902,7 @@ impl PersonTransferRecord {
     pub(crate) unsafe fn set_offer_count(self, v: u8) {
         write_u8(self.0 + person_transfer_record::OFFER_COUNT, v)
     }
-    /// `person_transfer_record::RECENT_INTERNATIONAL_BITS` (+0x3).
+    /// `person_transfer_record::RECENT_INTERNATIONAL_BITS` (+0x3). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn recent_international_bits(self) -> u16 {
         read_u16(self.0 + person_transfer_record::RECENT_INTERNATIONAL_BITS)
@@ -15818,7 +15911,7 @@ impl PersonTransferRecord {
     pub(crate) unsafe fn set_recent_international_bits(self, v: u16) {
         write_u16(self.0 + person_transfer_record::RECENT_INTERNATIONAL_BITS, v)
     }
-    /// `person_transfer_record::LAST_INTERNATIONAL_MATCH` (+0x5).
+    /// `person_transfer_record::LAST_INTERNATIONAL_MATCH` (+0x5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn last_international_match(self) -> i16 {
         read_i16(self.0 + person_transfer_record::LAST_INTERNATIONAL_MATCH)
@@ -15827,7 +15920,7 @@ impl PersonTransferRecord {
     pub(crate) unsafe fn set_last_international_match(self, v: i16) {
         write_i16(self.0 + person_transfer_record::LAST_INTERNATIONAL_MATCH, v)
     }
-    /// `person_transfer_record::INTERNATIONAL_APPS_AT_DEAL` (+0x7).
+    /// `person_transfer_record::INTERNATIONAL_APPS_AT_DEAL` (+0x7). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn international_apps_at_deal(self) -> u8 {
         read_u8(self.0 + person_transfer_record::INTERNATIONAL_APPS_AT_DEAL)
@@ -15861,7 +15954,7 @@ impl PhysicalRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `physical_record::CONDITION` (+0xa).
+    /// `physical_record::CONDITION` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn condition(self) -> i16 {
         read_i16(self.0 + physical_record::CONDITION)
@@ -15870,7 +15963,7 @@ impl PhysicalRecord {
     pub(crate) unsafe fn set_condition(self, v: i16) {
         write_i16(self.0 + physical_record::CONDITION, v)
     }
-    /// `physical_record::FATIGUE` (+0xc).
+    /// `physical_record::FATIGUE` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn fatigue(self) -> i16 {
         read_i16(self.0 + physical_record::FATIGUE)
@@ -15879,7 +15972,7 @@ impl PhysicalRecord {
     pub(crate) unsafe fn set_fatigue(self, v: i16) {
         write_i16(self.0 + physical_record::FATIGUE, v)
     }
-    /// `physical_record::CURRENT_INJURY` (+0xe).
+    /// `physical_record::CURRENT_INJURY` (+0xe). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn current_injury(self) -> i32 {
         read_i32(self.0 + physical_record::CURRENT_INJURY)
@@ -15888,7 +15981,7 @@ impl PhysicalRecord {
     pub(crate) unsafe fn set_current_injury(self, v: i32) {
         write_i32(self.0 + physical_record::CURRENT_INJURY, v)
     }
-    /// `physical_record::RECURRING_TYPE` (+0x12).
+    /// `physical_record::RECURRING_TYPE` (+0x12). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn recurring_type(self) -> u8 {
         read_u8(self.0 + physical_record::RECURRING_TYPE)
@@ -15897,7 +15990,7 @@ impl PhysicalRecord {
     pub(crate) unsafe fn set_recurring_type(self, v: u8) {
         write_u8(self.0 + physical_record::RECURRING_TYPE, v)
     }
-    /// `physical_record::RECURRENCE_GRADE` (+0x13).
+    /// `physical_record::RECURRENCE_GRADE` (+0x13). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn recurrence_grade(self) -> u8 {
         read_u8(self.0 + physical_record::RECURRENCE_GRADE)
@@ -15906,7 +15999,7 @@ impl PhysicalRecord {
     pub(crate) unsafe fn set_recurrence_grade(self, v: u8) {
         write_u8(self.0 + physical_record::RECURRENCE_GRADE, v)
     }
-    /// `physical_record::HISTORY_FIRST` (+0x14).
+    /// `physical_record::HISTORY_FIRST` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn history_first(self) -> i32 {
         read_i32(self.0 + physical_record::HISTORY_FIRST)
@@ -15915,7 +16008,7 @@ impl PhysicalRecord {
     pub(crate) unsafe fn set_history_first(self, v: i32) {
         write_i32(self.0 + physical_record::HISTORY_FIRST, v)
     }
-    /// `physical_record::HISTORY_LAST` (+0x18).
+    /// `physical_record::HISTORY_LAST` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn history_last(self) -> i32 {
         read_i32(self.0 + physical_record::HISTORY_LAST)
@@ -15924,7 +16017,7 @@ impl PhysicalRecord {
     pub(crate) unsafe fn set_history_last(self, v: i32) {
         write_i32(self.0 + physical_record::HISTORY_LAST, v)
     }
-    /// `physical_record::LAST_INJURY_TYPE` (+0x1d).
+    /// `physical_record::LAST_INJURY_TYPE` (+0x1d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn last_injury_type(self) -> u8 {
         read_u8(self.0 + physical_record::LAST_INJURY_TYPE)
@@ -15933,7 +16026,7 @@ impl PhysicalRecord {
     pub(crate) unsafe fn set_last_injury_type(self, v: u8) {
         write_u8(self.0 + physical_record::LAST_INJURY_TYPE, v)
     }
-    /// `physical_record::PRONENESS` (+0x1e).
+    /// `physical_record::PRONENESS` (+0x1e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn proneness(self) -> i8 {
         read_i8(self.0 + physical_record::PRONENESS)
@@ -15967,12 +16060,12 @@ impl PlannedFriendly {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `planned_friendly::DATE` (+0x0).
+    /// `planned_friendly::DATE` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) fn date_addr(self) -> usize {
         self.0 + planned_friendly::DATE
     }
-    /// `planned_friendly::HOST_CLUB_ID` (+0x8).
+    /// `planned_friendly::HOST_CLUB_ID` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn host_club_id(self) -> usize {
         read_usize(self.0 + planned_friendly::HOST_CLUB_ID)
@@ -15981,7 +16074,7 @@ impl PlannedFriendly {
     pub(crate) unsafe fn set_host_club_id(self, v: usize) {
         write_usize(self.0 + planned_friendly::HOST_CLUB_ID, v)
     }
-    /// `planned_friendly::HOME_CLUB_ID` (+0xc).
+    /// `planned_friendly::HOME_CLUB_ID` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_club_id(self) -> usize {
         read_usize(self.0 + planned_friendly::HOME_CLUB_ID)
@@ -15990,7 +16083,7 @@ impl PlannedFriendly {
     pub(crate) unsafe fn set_home_club_id(self, v: usize) {
         write_usize(self.0 + planned_friendly::HOME_CLUB_ID, v)
     }
-    /// `planned_friendly::AWAY_CLUB_ID` (+0x10).
+    /// `planned_friendly::AWAY_CLUB_ID` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn away_club_id(self) -> usize {
         read_usize(self.0 + planned_friendly::AWAY_CLUB_ID)
@@ -16024,7 +16117,7 @@ impl PlayerCategoryStats {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `player_category_stats::SUB_APPEARANCES` (+0x1).
+    /// `player_category_stats::SUB_APPEARANCES` (+0x1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn sub_appearances(self) -> u8 {
         read_u8(self.0 + player_category_stats::SUB_APPEARANCES)
@@ -16033,7 +16126,7 @@ impl PlayerCategoryStats {
     pub(crate) unsafe fn set_sub_appearances(self, v: u8) {
         write_u8(self.0 + player_category_stats::SUB_APPEARANCES, v)
     }
-    /// `player_category_stats::GOALS` (+0x2).
+    /// `player_category_stats::GOALS` (+0x2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn goals(self) -> u8 {
         read_u8(self.0 + player_category_stats::GOALS)
@@ -16042,7 +16135,7 @@ impl PlayerCategoryStats {
     pub(crate) unsafe fn set_goals(self, v: u8) {
         write_u8(self.0 + player_category_stats::GOALS, v)
     }
-    /// `player_category_stats::TEAM_GOALS_FOR` (+0x7).
+    /// `player_category_stats::TEAM_GOALS_FOR` (+0x7). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn team_goals_for(self) -> u8 {
         read_u8(self.0 + player_category_stats::TEAM_GOALS_FOR)
@@ -16051,7 +16144,7 @@ impl PlayerCategoryStats {
     pub(crate) unsafe fn set_team_goals_for(self, v: u8) {
         write_u8(self.0 + player_category_stats::TEAM_GOALS_FOR, v)
     }
-    /// `player_category_stats::TEAM_GOALS_AGAINST` (+0x8).
+    /// `player_category_stats::TEAM_GOALS_AGAINST` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn team_goals_against(self) -> u8 {
         read_u8(self.0 + player_category_stats::TEAM_GOALS_AGAINST)
@@ -16060,7 +16153,7 @@ impl PlayerCategoryStats {
     pub(crate) unsafe fn set_team_goals_against(self, v: u8) {
         write_u8(self.0 + player_category_stats::TEAM_GOALS_AGAINST, v)
     }
-    /// `player_category_stats::WINS` (+0x9).
+    /// `player_category_stats::WINS` (+0x9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn wins(self) -> u8 {
         read_u8(self.0 + player_category_stats::WINS)
@@ -16069,7 +16162,7 @@ impl PlayerCategoryStats {
     pub(crate) unsafe fn set_wins(self, v: u8) {
         write_u8(self.0 + player_category_stats::WINS, v)
     }
-    /// `player_category_stats::DEFEATS` (+0xa).
+    /// `player_category_stats::DEFEATS` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn defeats(self) -> u8 {
         read_u8(self.0 + player_category_stats::DEFEATS)
@@ -16078,7 +16171,7 @@ impl PlayerCategoryStats {
     pub(crate) unsafe fn set_defeats(self, v: u8) {
         write_u8(self.0 + player_category_stats::DEFEATS, v)
     }
-    /// `player_category_stats::MAN_OF_THE_MATCH` (+0xd).
+    /// `player_category_stats::MAN_OF_THE_MATCH` (+0xd). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn man_of_the_match(self) -> u8 {
         read_u8(self.0 + player_category_stats::MAN_OF_THE_MATCH)
@@ -16087,7 +16180,7 @@ impl PlayerCategoryStats {
     pub(crate) unsafe fn set_man_of_the_match(self, v: u8) {
         write_u8(self.0 + player_category_stats::MAN_OF_THE_MATCH, v)
     }
-    /// `player_category_stats::RATING_TOTAL` (+0xe).
+    /// `player_category_stats::RATING_TOTAL` (+0xe). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn rating_total(self) -> i16 {
         read_i16(self.0 + player_category_stats::RATING_TOTAL)
@@ -16096,7 +16189,7 @@ impl PlayerCategoryStats {
     pub(crate) unsafe fn set_rating_total(self, v: i16) {
         write_i16(self.0 + player_category_stats::RATING_TOTAL, v)
     }
-    /// `player_category_stats::MINUTES` (+0x1c).
+    /// `player_category_stats::MINUTES` (+0x1c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn minutes(self) -> i32 {
         read_i32(self.0 + player_category_stats::MINUTES)
@@ -16130,7 +16223,7 @@ impl PlayerStatsEntry {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `player_stats_entry::HISTORY_START` (+0x18).
+    /// `player_stats_entry::HISTORY_START` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn history_start(self) -> usize {
         read_usize(self.0 + player_stats_entry::HISTORY_START)
@@ -16139,7 +16232,7 @@ impl PlayerStatsEntry {
     pub(crate) unsafe fn set_history_start(self, v: usize) {
         write_usize(self.0 + player_stats_entry::HISTORY_START, v)
     }
-    /// `player_stats_entry::HISTORY_LAST` (+0x1c).
+    /// `player_stats_entry::HISTORY_LAST` (+0x1c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn history_last(self) -> usize {
         read_usize(self.0 + player_stats_entry::HISTORY_LAST)
@@ -16148,7 +16241,7 @@ impl PlayerStatsEntry {
     pub(crate) unsafe fn set_history_last(self, v: usize) {
         write_usize(self.0 + player_stats_entry::HISTORY_LAST, v)
     }
-    /// `player_stats_entry::CLUB_LEAGUE_GAMES` (+0x20).
+    /// `player_stats_entry::CLUB_LEAGUE_GAMES` (+0x20). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_league_games(self) -> u16 {
         read_u16(self.0 + player_stats_entry::CLUB_LEAGUE_GAMES)
@@ -16157,7 +16250,7 @@ impl PlayerStatsEntry {
     pub(crate) unsafe fn set_club_league_games(self, v: u16) {
         write_u16(self.0 + player_stats_entry::CLUB_LEAGUE_GAMES, v)
     }
-    /// `player_stats_entry::CLUB_LEAGUE_GOALS` (+0x22).
+    /// `player_stats_entry::CLUB_LEAGUE_GOALS` (+0x22). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_league_goals(self) -> u16 {
         read_u16(self.0 + player_stats_entry::CLUB_LEAGUE_GOALS)
@@ -16166,7 +16259,7 @@ impl PlayerStatsEntry {
     pub(crate) unsafe fn set_club_league_goals(self, v: u16) {
         write_u16(self.0 + player_stats_entry::CLUB_LEAGUE_GOALS, v)
     }
-    /// `player_stats_entry::RECENT_RATINGS` (+0x24).
+    /// `player_stats_entry::RECENT_RATINGS` (+0x24). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn recent_ratings(self) -> u8 {
         read_u8(self.0 + player_stats_entry::RECENT_RATINGS)
@@ -16175,7 +16268,7 @@ impl PlayerStatsEntry {
     pub(crate) unsafe fn set_recent_ratings(self, v: u8) {
         write_u8(self.0 + player_stats_entry::RECENT_RATINGS, v)
     }
-    /// `player_stats_entry::LAST_RATING` (+0x26).
+    /// `player_stats_entry::LAST_RATING` (+0x26). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn last_rating(self) -> u8 {
         read_u8(self.0 + player_stats_entry::LAST_RATING)
@@ -16209,7 +16302,7 @@ impl PlayerStatsFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `player_stats_fields::HISTORY_FILE` (+0x0).
+    /// `player_stats_fields::HISTORY_FILE` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn history_file(self) -> i32 {
         read_i32(self.0 + player_stats_fields::HISTORY_FILE)
@@ -16218,7 +16311,7 @@ impl PlayerStatsFields {
     pub(crate) unsafe fn set_history_file(self, v: i32) {
         write_i32(self.0 + player_stats_fields::HISTORY_FILE, v)
     }
-    /// `player_stats_fields::CATEGORY_RECORDS` (+0x4).
+    /// `player_stats_fields::CATEGORY_RECORDS` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn category_records(self) -> usize {
         read_usize(self.0 + player_stats_fields::CATEGORY_RECORDS)
@@ -16227,7 +16320,7 @@ impl PlayerStatsFields {
     pub(crate) unsafe fn set_category_records(self, v: usize) {
         write_usize(self.0 + player_stats_fields::CATEGORY_RECORDS, v)
     }
-    /// `player_stats_fields::CATEGORY_CAPACITY` (+0x8).
+    /// `player_stats_fields::CATEGORY_CAPACITY` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn category_capacity(self) -> usize {
         read_usize(self.0 + player_stats_fields::CATEGORY_CAPACITY)
@@ -16236,7 +16329,7 @@ impl PlayerStatsFields {
     pub(crate) unsafe fn set_category_capacity(self, v: usize) {
         write_usize(self.0 + player_stats_fields::CATEGORY_CAPACITY, v)
     }
-    /// `player_stats_fields::CATEGORY_COUNT` (+0xc).
+    /// `player_stats_fields::CATEGORY_COUNT` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn category_count(self) -> usize {
         read_usize(self.0 + player_stats_fields::CATEGORY_COUNT)
@@ -16245,7 +16338,7 @@ impl PlayerStatsFields {
     pub(crate) unsafe fn set_category_count(self, v: usize) {
         write_usize(self.0 + player_stats_fields::CATEGORY_COUNT, v)
     }
-    /// `player_stats_fields::RATING_SUM` (+0x10).
+    /// `player_stats_fields::RATING_SUM` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn rating_sum(self) -> f64 {
         read_f64(self.0 + player_stats_fields::RATING_SUM)
@@ -16254,7 +16347,7 @@ impl PlayerStatsFields {
     pub(crate) unsafe fn set_rating_sum(self, v: f64) {
         write_f64(self.0 + player_stats_fields::RATING_SUM, v)
     }
-    /// `player_stats_fields::RATED_COUNT` (+0x18).
+    /// `player_stats_fields::RATED_COUNT` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn rated_count(self) -> f64 {
         read_f64(self.0 + player_stats_fields::RATED_COUNT)
@@ -16263,7 +16356,7 @@ impl PlayerStatsFields {
     pub(crate) unsafe fn set_rated_count(self, v: f64) {
         write_f64(self.0 + player_stats_fields::RATED_COUNT, v)
     }
-    /// `player_stats_fields::FLAGGED_RATING_SUM` (+0x20).
+    /// `player_stats_fields::FLAGGED_RATING_SUM` (+0x20). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn flagged_rating_sum(self) -> f64 {
         read_f64(self.0 + player_stats_fields::FLAGGED_RATING_SUM)
@@ -16272,7 +16365,7 @@ impl PlayerStatsFields {
     pub(crate) unsafe fn set_flagged_rating_sum(self, v: f64) {
         write_f64(self.0 + player_stats_fields::FLAGGED_RATING_SUM, v)
     }
-    /// `player_stats_fields::FLAGGED_RATED_COUNT` (+0x28).
+    /// `player_stats_fields::FLAGGED_RATED_COUNT` (+0x28). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn flagged_rated_count(self) -> f64 {
         read_f64(self.0 + player_stats_fields::FLAGGED_RATED_COUNT)
@@ -16281,7 +16374,7 @@ impl PlayerStatsFields {
     pub(crate) unsafe fn set_flagged_rated_count(self, v: f64) {
         write_f64(self.0 + player_stats_fields::FLAGGED_RATED_COUNT, v)
     }
-    /// `player_stats_fields::PLAYER_ENTRIES` (+0x30).
+    /// `player_stats_fields::PLAYER_ENTRIES` (+0x30). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn player_entries(self) -> usize {
         read_usize(self.0 + player_stats_fields::PLAYER_ENTRIES)
@@ -16290,7 +16383,7 @@ impl PlayerStatsFields {
     pub(crate) unsafe fn set_player_entries(self, v: usize) {
         write_usize(self.0 + player_stats_fields::PLAYER_ENTRIES, v)
     }
-    /// `player_stats_fields::FREE_CATEGORY_COUNT` (+0x38).
+    /// `player_stats_fields::FREE_CATEGORY_COUNT` (+0x38). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn free_category_count(self) -> usize {
         read_usize(self.0 + player_stats_fields::FREE_CATEGORY_COUNT)
@@ -16299,7 +16392,7 @@ impl PlayerStatsFields {
     pub(crate) unsafe fn set_free_category_count(self, v: usize) {
         write_usize(self.0 + player_stats_fields::FREE_CATEGORY_COUNT, v)
     }
-    /// `player_stats_fields::LANGUAGES` (+0x3c).
+    /// `player_stats_fields::LANGUAGES` (+0x3c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn languages(self) -> usize {
         read_usize(self.0 + player_stats_fields::LANGUAGES)
@@ -16308,7 +16401,7 @@ impl PlayerStatsFields {
     pub(crate) unsafe fn set_languages(self, v: usize) {
         write_usize(self.0 + player_stats_fields::LANGUAGES, v)
     }
-    /// `player_stats_fields::LANGUAGE_CAPACITY` (+0x40).
+    /// `player_stats_fields::LANGUAGE_CAPACITY` (+0x40). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn language_capacity(self) -> usize {
         read_usize(self.0 + player_stats_fields::LANGUAGE_CAPACITY)
@@ -16317,7 +16410,7 @@ impl PlayerStatsFields {
     pub(crate) unsafe fn set_language_capacity(self, v: usize) {
         write_usize(self.0 + player_stats_fields::LANGUAGE_CAPACITY, v)
     }
-    /// `player_stats_fields::LANGUAGE_COUNT` (+0x44).
+    /// `player_stats_fields::LANGUAGE_COUNT` (+0x44). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn language_count(self) -> usize {
         read_usize(self.0 + player_stats_fields::LANGUAGE_COUNT)
@@ -16351,7 +16444,7 @@ impl PreseasonCandidate {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `preseason_candidate::CLUB_ID` (+0x0).
+    /// `preseason_candidate::CLUB_ID` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_id(self) -> i32 {
         read_i32(self.0 + preseason_candidate::CLUB_ID)
@@ -16360,7 +16453,7 @@ impl PreseasonCandidate {
     pub(crate) unsafe fn set_club_id(self, v: i32) {
         write_i32(self.0 + preseason_candidate::CLUB_ID, v)
     }
-    /// `preseason_candidate::REPUTATION_BAND` (+0x5).
+    /// `preseason_candidate::REPUTATION_BAND` (+0x5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn reputation_band(self) -> u8 {
         read_u8(self.0 + preseason_candidate::REPUTATION_BAND)
@@ -16369,7 +16462,7 @@ impl PreseasonCandidate {
     pub(crate) unsafe fn set_reputation_band(self, v: u8) {
         write_u8(self.0 + preseason_candidate::REPUTATION_BAND, v)
     }
-    /// `preseason_candidate::NATION_ID` (+0x6).
+    /// `preseason_candidate::NATION_ID` (+0x6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn nation_id(self) -> usize {
         read_usize(self.0 + preseason_candidate::NATION_ID)
@@ -16378,7 +16471,7 @@ impl PreseasonCandidate {
     pub(crate) unsafe fn set_nation_id(self, v: usize) {
         write_usize(self.0 + preseason_candidate::NATION_ID, v)
     }
-    /// `preseason_candidate::OPPONENTS` (+0xa).
+    /// `preseason_candidate::OPPONENTS` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn opponents(self) -> usize {
         read_usize(self.0 + preseason_candidate::OPPONENTS)
@@ -16387,7 +16480,7 @@ impl PreseasonCandidate {
     pub(crate) unsafe fn set_opponents(self, v: usize) {
         write_usize(self.0 + preseason_candidate::OPPONENTS, v)
     }
-    /// `preseason_candidate::WINDOW_START` (+0xe).
+    /// `preseason_candidate::WINDOW_START` (+0xe). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn window_start(self) -> i16 {
         read_i16(self.0 + preseason_candidate::WINDOW_START)
@@ -16396,7 +16489,7 @@ impl PreseasonCandidate {
     pub(crate) unsafe fn set_window_start(self, v: i16) {
         write_i16(self.0 + preseason_candidate::WINDOW_START, v)
     }
-    /// `preseason_candidate::WINDOW_END` (+0x10).
+    /// `preseason_candidate::WINDOW_END` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn window_end(self) -> i16 {
         read_i16(self.0 + preseason_candidate::WINDOW_END)
@@ -16405,7 +16498,7 @@ impl PreseasonCandidate {
     pub(crate) unsafe fn set_window_end(self, v: i16) {
         write_i16(self.0 + preseason_candidate::WINDOW_END, v)
     }
-    /// `preseason_candidate::PLANNED_DATES` (+0x12).
+    /// `preseason_candidate::PLANNED_DATES` (+0x12). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn planned_dates(self) -> usize {
         read_usize(self.0 + preseason_candidate::PLANNED_DATES)
@@ -16439,12 +16532,12 @@ impl RatingRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `rating_record::HOLDER` (+0x4).
+    /// `rating_record::HOLDER` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) fn holder_addr(self) -> usize {
         self.0 + rating_record::HOLDER
     }
-    /// `rating_record::GAMES` (+0x1c).
+    /// `rating_record::GAMES` (+0x1c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn games(self) -> u8 {
         read_u8(self.0 + rating_record::GAMES)
@@ -16453,7 +16546,7 @@ impl RatingRecord {
     pub(crate) unsafe fn set_games(self, v: u8) {
         write_u8(self.0 + rating_record::GAMES, v)
     }
-    /// `rating_record::YEAR` (+0x1d).
+    /// `rating_record::YEAR` (+0x1d). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn year(self) -> u16 {
         read_u16(self.0 + rating_record::YEAR)
@@ -16487,7 +16580,7 @@ impl RecordHolder {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `record_holder::DATE` (+0x10).
+    /// `record_holder::DATE` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) fn date_addr(self) -> usize {
         self.0 + record_holder::DATE
@@ -16517,7 +16610,7 @@ impl RecordNewsItem {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `record_news_item::RECORD_TYPE` (+0x4).
+    /// `record_news_item::RECORD_TYPE` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn record_type(self) -> u8 {
         read_u8(self.0 + record_news_item::RECORD_TYPE)
@@ -16526,7 +16619,7 @@ impl RecordNewsItem {
     pub(crate) unsafe fn set_record_type(self, v: u8) {
         write_u8(self.0 + record_news_item::RECORD_TYPE, v)
     }
-    /// `record_news_item::PERIOD` (+0x5).
+    /// `record_news_item::PERIOD` (+0x5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn period(self) -> u8 {
         read_u8(self.0 + record_news_item::PERIOD)
@@ -16560,7 +16653,7 @@ impl RegenPoolItem {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `regen_pool_item::NATION_ID` (+0x4).
+    /// `regen_pool_item::NATION_ID` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn nation_id(self) -> usize {
         read_usize(self.0 + regen_pool_item::NATION_ID)
@@ -16569,7 +16662,7 @@ impl RegenPoolItem {
     pub(crate) unsafe fn set_nation_id(self, v: usize) {
         write_usize(self.0 + regen_pool_item::NATION_ID, v)
     }
-    /// `regen_pool_item::SECOND_NATION_ID` (+0x8).
+    /// `regen_pool_item::SECOND_NATION_ID` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn second_nation_id(self) -> usize {
         read_usize(self.0 + regen_pool_item::SECOND_NATION_ID)
@@ -16578,7 +16671,7 @@ impl RegenPoolItem {
     pub(crate) unsafe fn set_second_nation_id(self, v: usize) {
         write_usize(self.0 + regen_pool_item::SECOND_NATION_ID, v)
     }
-    /// `regen_pool_item::STAFF_ID` (+0xc).
+    /// `regen_pool_item::STAFF_ID` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn staff_id(self) -> usize {
         read_usize(self.0 + regen_pool_item::STAFF_ID)
@@ -16612,7 +16705,7 @@ impl RegenQueueEntry {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `regen_queue_entry::REGEN_DATE` (+0x4).
+    /// `regen_queue_entry::REGEN_DATE` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn regen_date(self) -> u16 {
         read_u16(self.0 + regen_queue_entry::REGEN_DATE)
@@ -16621,7 +16714,7 @@ impl RegenQueueEntry {
     pub(crate) unsafe fn set_regen_date(self, v: u16) {
         write_u16(self.0 + regen_queue_entry::REGEN_DATE, v)
     }
-    /// `regen_queue_entry::REGEN_YEAR` (+0x6).
+    /// `regen_queue_entry::REGEN_YEAR` (+0x6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn regen_year(self) -> u16 {
         read_u16(self.0 + regen_queue_entry::REGEN_YEAR)
@@ -16655,7 +16748,7 @@ impl RetirementEntry {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `retirement_entry::CLUB_ID` (+0x4).
+    /// `retirement_entry::CLUB_ID` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_id(self) -> u32 {
         read_u32(self.0 + retirement_entry::CLUB_ID)
@@ -16664,7 +16757,7 @@ impl RetirementEntry {
     pub(crate) unsafe fn set_club_id(self, v: u32) {
         write_u32(self.0 + retirement_entry::CLUB_ID, v)
     }
-    /// `retirement_entry::ANNOUNCE_DATE` (+0x8).
+    /// `retirement_entry::ANNOUNCE_DATE` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn announce_date(self) -> u16 {
         read_u16(self.0 + retirement_entry::ANNOUNCE_DATE)
@@ -16673,7 +16766,7 @@ impl RetirementEntry {
     pub(crate) unsafe fn set_announce_date(self, v: u16) {
         write_u16(self.0 + retirement_entry::ANNOUNCE_DATE, v)
     }
-    /// `retirement_entry::ANNOUNCE_YEAR` (+0xa).
+    /// `retirement_entry::ANNOUNCE_YEAR` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn announce_year(self) -> u16 {
         read_u16(self.0 + retirement_entry::ANNOUNCE_YEAR)
@@ -16682,7 +16775,7 @@ impl RetirementEntry {
     pub(crate) unsafe fn set_announce_year(self, v: u16) {
         write_u16(self.0 + retirement_entry::ANNOUNCE_YEAR, v)
     }
-    /// `retirement_entry::RETIRE_DATE` (+0x10).
+    /// `retirement_entry::RETIRE_DATE` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn retire_date(self) -> u16 {
         read_u16(self.0 + retirement_entry::RETIRE_DATE)
@@ -16691,7 +16784,7 @@ impl RetirementEntry {
     pub(crate) unsafe fn set_retire_date(self, v: u16) {
         write_u16(self.0 + retirement_entry::RETIRE_DATE, v)
     }
-    /// `retirement_entry::RETIRE_YEAR` (+0x12).
+    /// `retirement_entry::RETIRE_YEAR` (+0x12). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn retire_year(self) -> u16 {
         read_u16(self.0 + retirement_entry::RETIRE_YEAR)
@@ -16700,7 +16793,7 @@ impl RetirementEntry {
     pub(crate) unsafe fn set_retire_year(self, v: u16) {
         write_u16(self.0 + retirement_entry::RETIRE_YEAR, v)
     }
-    /// `retirement_entry::REASON` (+0x18).
+    /// `retirement_entry::REASON` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn reason(self) -> u8 {
         read_u8(self.0 + retirement_entry::REASON)
@@ -16709,7 +16802,7 @@ impl RetirementEntry {
     pub(crate) unsafe fn set_reason(self, v: u8) {
         write_u8(self.0 + retirement_entry::REASON, v)
     }
-    /// `retirement_entry::ANNOUNCED` (+0x19).
+    /// `retirement_entry::ANNOUNCED` (+0x19). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn announced(self) -> u8 {
         read_u8(self.0 + retirement_entry::ANNOUNCED)
@@ -16718,7 +16811,7 @@ impl RetirementEntry {
     pub(crate) unsafe fn set_announced(self, v: u8) {
         write_u8(self.0 + retirement_entry::ANNOUNCED, v)
     }
-    /// `retirement_entry::SIZE` (+0x1a).
+    /// `retirement_entry::SIZE` (+0x1a). Name: read.
     #[inline(always)]
     pub(crate) fn size_addr(self) -> usize {
         self.0 + retirement_entry::SIZE
@@ -16748,7 +16841,7 @@ impl RulingBody {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `ruling_body::ENTRIES` (+0xb).
+    /// `ruling_body::ENTRIES` (+0xb). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn entries(self) -> usize {
         read_usize(self.0 + ruling_body::ENTRIES)
@@ -16757,7 +16850,7 @@ impl RulingBody {
     pub(crate) unsafe fn set_entries(self, v: usize) {
         write_usize(self.0 + ruling_body::ENTRIES, v)
     }
-    /// `ruling_body::ENTRY_CAPACITY` (+0xf).
+    /// `ruling_body::ENTRY_CAPACITY` (+0xf). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn entry_capacity(self) -> usize {
         read_usize(self.0 + ruling_body::ENTRY_CAPACITY)
@@ -16766,7 +16859,7 @@ impl RulingBody {
     pub(crate) unsafe fn set_entry_capacity(self, v: usize) {
         write_usize(self.0 + ruling_body::ENTRY_CAPACITY, v)
     }
-    /// `ruling_body::ENTRY_COUNT` (+0x13).
+    /// `ruling_body::ENTRY_COUNT` (+0x13). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn entry_count(self) -> usize {
         read_usize(self.0 + ruling_body::ENTRY_COUNT)
@@ -16775,7 +16868,7 @@ impl RulingBody {
     pub(crate) unsafe fn set_entry_count(self, v: usize) {
         write_usize(self.0 + ruling_body::ENTRY_COUNT, v)
     }
-    /// `ruling_body::NATION_ID` (+0x17).
+    /// `ruling_body::NATION_ID` (+0x17). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn nation_id(self) -> usize {
         read_usize(self.0 + ruling_body::NATION_ID)
@@ -16784,7 +16877,7 @@ impl RulingBody {
     pub(crate) unsafe fn set_nation_id(self, v: usize) {
         write_usize(self.0 + ruling_body::NATION_ID, v)
     }
-    /// `ruling_body::CONTINENT_ID` (+0x1b).
+    /// `ruling_body::CONTINENT_ID` (+0x1b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn continent_id(self) -> usize {
         read_usize(self.0 + ruling_body::CONTINENT_ID)
@@ -16818,7 +16911,7 @@ impl RulingBodyEntry {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `ruling_body_entry::PERSON_ID` (+0x0).
+    /// `ruling_body_entry::PERSON_ID` (+0x0). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn person_id(self) -> i32 {
         read_i32(self.0 + ruling_body_entry::PERSON_ID)
@@ -16827,7 +16920,7 @@ impl RulingBodyEntry {
     pub(crate) unsafe fn set_person_id(self, v: i32) {
         write_i32(self.0 + ruling_body_entry::PERSON_ID, v)
     }
-    /// `ruling_body_entry::BAN_INDEX` (+0x6).
+    /// `ruling_body_entry::BAN_INDEX` (+0x6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn ban_index(self) -> i16 {
         read_i16(self.0 + ruling_body_entry::BAN_INDEX)
@@ -16861,12 +16954,12 @@ impl RunRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `run_record::START_DATE` (+0x4).
+    /// `run_record::START_DATE` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) fn start_date_addr(self) -> usize {
         self.0 + run_record::START_DATE
     }
-    /// `run_record::END_DATE` (+0xc).
+    /// `run_record::END_DATE` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) fn end_date_addr(self) -> usize {
         self.0 + run_record::END_DATE
@@ -16896,7 +16989,7 @@ impl ScheduledFriendlySlot {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `scheduled_friendly_slot::DAY` (+0x0).
+    /// `scheduled_friendly_slot::DAY` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn day(self) -> i16 {
         read_i16(self.0 + scheduled_friendly_slot::DAY)
@@ -16905,7 +16998,7 @@ impl ScheduledFriendlySlot {
     pub(crate) unsafe fn set_day(self, v: i16) {
         write_i16(self.0 + scheduled_friendly_slot::DAY, v)
     }
-    /// `scheduled_friendly_slot::YEAR` (+0x2).
+    /// `scheduled_friendly_slot::YEAR` (+0x2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn year(self) -> u16 {
         read_u16(self.0 + scheduled_friendly_slot::YEAR)
@@ -16914,7 +17007,7 @@ impl ScheduledFriendlySlot {
     pub(crate) unsafe fn set_year(self, v: u16) {
         write_u16(self.0 + scheduled_friendly_slot::YEAR, v)
     }
-    /// `scheduled_friendly_slot::OPPONENT` (+0x10).
+    /// `scheduled_friendly_slot::OPPONENT` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn opponent(self) -> usize {
         read_usize(self.0 + scheduled_friendly_slot::OPPONENT)
@@ -16923,7 +17016,7 @@ impl ScheduledFriendlySlot {
     pub(crate) unsafe fn set_opponent(self, v: usize) {
         write_usize(self.0 + scheduled_friendly_slot::OPPONENT, v)
     }
-    /// `scheduled_friendly_slot::STATUS` (+0x18).
+    /// `scheduled_friendly_slot::STATUS` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn status(self) -> u8 {
         read_u8(self.0 + scheduled_friendly_slot::STATUS)
@@ -16957,17 +17050,17 @@ impl ScoutManagerFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `scout_manager_fields::EDIT_SESSIONS` (+0xc).
+    /// `scout_manager_fields::EDIT_SESSIONS` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) fn edit_sessions_addr(self) -> usize {
         self.0 + scout_manager_fields::EDIT_SESSIONS
     }
-    /// `scout_manager_fields::SELECTED_LISTS` (+0x4c).
+    /// `scout_manager_fields::SELECTED_LISTS` (+0x4c). Name: read.
     #[inline(always)]
     pub(crate) fn selected_lists_addr(self) -> usize {
         self.0 + scout_manager_fields::SELECTED_LISTS
     }
-    /// `scout_manager_fields::SCOUT_REQUESTS` (+0x5c).
+    /// `scout_manager_fields::SCOUT_REQUESTS` (+0x5c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn scout_requests(self) -> usize {
         read_usize(self.0 + scout_manager_fields::SCOUT_REQUESTS)
@@ -16976,7 +17069,7 @@ impl ScoutManagerFields {
     pub(crate) unsafe fn set_scout_requests(self, v: usize) {
         write_usize(self.0 + scout_manager_fields::SCOUT_REQUESTS, v)
     }
-    /// `scout_manager_fields::SCOUT_REQUEST_COUNT` (+0x64).
+    /// `scout_manager_fields::SCOUT_REQUEST_COUNT` (+0x64). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn scout_request_count(self) -> i32 {
         read_i32(self.0 + scout_manager_fields::SCOUT_REQUEST_COUNT)
@@ -17010,7 +17103,7 @@ impl ScoutReport {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `scout_report::PLAYER_ID` (+0x2b).
+    /// `scout_report::PLAYER_ID` (+0x2b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn player_id(self) -> usize {
         read_usize(self.0 + scout_report::PLAYER_ID)
@@ -17019,7 +17112,7 @@ impl ScoutReport {
     pub(crate) unsafe fn set_player_id(self, v: usize) {
         write_usize(self.0 + scout_report::PLAYER_ID, v)
     }
-    /// `scout_report::CLUB_ID` (+0x50).
+    /// `scout_report::CLUB_ID` (+0x50). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_id(self) -> usize {
         read_usize(self.0 + scout_report::CLUB_ID)
@@ -17053,7 +17146,7 @@ impl ScoutRequest {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `scout_request::PLAYER_ID` (+0x4).
+    /// `scout_request::PLAYER_ID` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn player_id(self) -> usize {
         read_usize(self.0 + scout_request::PLAYER_ID)
@@ -17062,7 +17155,7 @@ impl ScoutRequest {
     pub(crate) unsafe fn set_player_id(self, v: usize) {
         write_usize(self.0 + scout_request::PLAYER_ID, v)
     }
-    /// `scout_request::DATE` (+0x8).
+    /// `scout_request::DATE` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn date(self) -> i16 {
         read_i16(self.0 + scout_request::DATE)
@@ -17071,7 +17164,7 @@ impl ScoutRequest {
     pub(crate) unsafe fn set_date(self, v: i16) {
         write_i16(self.0 + scout_request::DATE, v)
     }
-    /// `scout_request::DATE_YEAR` (+0xa).
+    /// `scout_request::DATE_YEAR` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn date_year(self) -> u16 {
         read_u16(self.0 + scout_request::DATE_YEAR)
@@ -17080,7 +17173,7 @@ impl ScoutRequest {
     pub(crate) unsafe fn set_date_year(self, v: u16) {
         write_u16(self.0 + scout_request::DATE_YEAR, v)
     }
-    /// `scout_request::REPORT_COUNT` (+0x10).
+    /// `scout_request::REPORT_COUNT` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn report_count(self) -> u8 {
         read_u8(self.0 + scout_request::REPORT_COUNT)
@@ -17114,7 +17207,7 @@ impl SellOnClause {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `sell_on_clause::PAYING_CLUB_ID` (+0x1).
+    /// `sell_on_clause::PAYING_CLUB_ID` (+0x1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn paying_club_id(self) -> usize {
         read_usize(self.0 + sell_on_clause::PAYING_CLUB_ID)
@@ -17123,7 +17216,7 @@ impl SellOnClause {
     pub(crate) unsafe fn set_paying_club_id(self, v: usize) {
         write_usize(self.0 + sell_on_clause::PAYING_CLUB_ID, v)
     }
-    /// `sell_on_clause::RECEIVING_CLUB_ID` (+0x5).
+    /// `sell_on_clause::RECEIVING_CLUB_ID` (+0x5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn receiving_club_id(self) -> usize {
         read_usize(self.0 + sell_on_clause::RECEIVING_CLUB_ID)
@@ -17132,7 +17225,7 @@ impl SellOnClause {
     pub(crate) unsafe fn set_receiving_club_id(self, v: usize) {
         write_usize(self.0 + sell_on_clause::RECEIVING_CLUB_ID, v)
     }
-    /// `sell_on_clause::PERSON_ID` (+0x9).
+    /// `sell_on_clause::PERSON_ID` (+0x9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn person_id(self) -> usize {
         read_usize(self.0 + sell_on_clause::PERSON_ID)
@@ -17166,7 +17259,7 @@ impl ShortlistPair {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `shortlist_pair::CLUB_ID` (+0x4).
+    /// `shortlist_pair::CLUB_ID` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_id(self) -> usize {
         read_usize(self.0 + shortlist_pair::CLUB_ID)
@@ -17200,7 +17293,7 @@ impl ShortlistSlot {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `shortlist_slot::POSITION` (+0x1).
+    /// `shortlist_slot::POSITION` (+0x1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn position(self) -> i16 {
         read_i16(self.0 + shortlist_slot::POSITION)
@@ -17209,7 +17302,7 @@ impl ShortlistSlot {
     pub(crate) unsafe fn set_position(self, v: i16) {
         write_i16(self.0 + shortlist_slot::POSITION, v)
     }
-    /// `shortlist_slot::VALUATION` (+0x3).
+    /// `shortlist_slot::VALUATION` (+0x3). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn valuation(self) -> i32 {
         read_i32(self.0 + shortlist_slot::VALUATION)
@@ -17218,7 +17311,7 @@ impl ShortlistSlot {
     pub(crate) unsafe fn set_valuation(self, v: i32) {
         write_i32(self.0 + shortlist_slot::VALUATION, v)
     }
-    /// `shortlist_slot::PRICE` (+0xb).
+    /// `shortlist_slot::PRICE` (+0xb). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn price(self) -> i32 {
         read_i32(self.0 + shortlist_slot::PRICE)
@@ -17227,7 +17320,7 @@ impl ShortlistSlot {
     pub(crate) unsafe fn set_price(self, v: i32) {
         write_i32(self.0 + shortlist_slot::PRICE, v)
     }
-    /// `shortlist_slot::TARGET_STAFF_ID` (+0xf).
+    /// `shortlist_slot::TARGET_STAFF_ID` (+0xf). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn target_staff_id(self) -> usize {
         read_usize(self.0 + shortlist_slot::TARGET_STAFF_ID)
@@ -17236,7 +17329,7 @@ impl ShortlistSlot {
     pub(crate) unsafe fn set_target_staff_id(self, v: usize) {
         write_usize(self.0 + shortlist_slot::TARGET_STAFF_ID, v)
     }
-    /// `shortlist_slot::REPLACEMENT_STAFF_ID` (+0x13).
+    /// `shortlist_slot::REPLACEMENT_STAFF_ID` (+0x13). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn replacement_staff_id(self) -> u32 {
         read_u32(self.0 + shortlist_slot::REPLACEMENT_STAFF_ID)
@@ -17245,7 +17338,7 @@ impl ShortlistSlot {
     pub(crate) unsafe fn set_replacement_staff_id(self, v: u32) {
         write_u32(self.0 + shortlist_slot::REPLACEMENT_STAFF_ID, v)
     }
-    /// `shortlist_slot::OFFER_REF` (+0x17).
+    /// `shortlist_slot::OFFER_REF` (+0x17). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn offer_ref(self) -> i32 {
         read_i32(self.0 + shortlist_slot::OFFER_REF)
@@ -17254,12 +17347,12 @@ impl ShortlistSlot {
     pub(crate) unsafe fn set_offer_ref(self, v: i32) {
         write_i32(self.0 + shortlist_slot::OFFER_REF, v)
     }
-    /// `shortlist_slot::DATE` (+0x1b).
+    /// `shortlist_slot::DATE` (+0x1b). Name: read.
     #[inline(always)]
     pub(crate) fn date_addr(self) -> usize {
         self.0 + shortlist_slot::DATE
     }
-    /// `shortlist_slot::INDEX` (+0x23).
+    /// `shortlist_slot::INDEX` (+0x23). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn index(self) -> i8 {
         read_i8(self.0 + shortlist_slot::INDEX)
@@ -17268,7 +17361,7 @@ impl ShortlistSlot {
     pub(crate) unsafe fn set_index(self, v: i8) {
         write_i8(self.0 + shortlist_slot::INDEX, v)
     }
-    /// `shortlist_slot::FLAGS` (+0x24).
+    /// `shortlist_slot::FLAGS` (+0x24). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn flags(self) -> u8 {
         read_u8(self.0 + shortlist_slot::FLAGS)
@@ -17302,7 +17395,7 @@ impl StaffRecordsFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `staff_records_fields::PERSON_HISTORY_FILE` (+0x0).
+    /// `staff_records_fields::PERSON_HISTORY_FILE` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn person_history_file(self) -> i32 {
         read_i32(self.0 + staff_records_fields::PERSON_HISTORY_FILE)
@@ -17311,7 +17404,7 @@ impl StaffRecordsFields {
     pub(crate) unsafe fn set_person_history_file(self, v: i32) {
         write_i32(self.0 + staff_records_fields::PERSON_HISTORY_FILE, v)
     }
-    /// `staff_records_fields::CLUB_HISTORY_FILE` (+0x4).
+    /// `staff_records_fields::CLUB_HISTORY_FILE` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_history_file(self) -> usize {
         read_usize(self.0 + staff_records_fields::CLUB_HISTORY_FILE)
@@ -17320,7 +17413,7 @@ impl StaffRecordsFields {
     pub(crate) unsafe fn set_club_history_file(self, v: usize) {
         write_usize(self.0 + staff_records_fields::CLUB_HISTORY_FILE, v)
     }
-    /// `staff_records_fields::MANAGER_RECORDS` (+0x8).
+    /// `staff_records_fields::MANAGER_RECORDS` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn manager_records(self) -> usize {
         read_usize(self.0 + staff_records_fields::MANAGER_RECORDS)
@@ -17329,7 +17422,7 @@ impl StaffRecordsFields {
     pub(crate) unsafe fn set_manager_records(self, v: usize) {
         write_usize(self.0 + staff_records_fields::MANAGER_RECORDS, v)
     }
-    /// `staff_records_fields::PERSON_HISTORY_LISTS` (+0xc).
+    /// `staff_records_fields::PERSON_HISTORY_LISTS` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn person_history_lists(self) -> usize {
         read_usize(self.0 + staff_records_fields::PERSON_HISTORY_LISTS)
@@ -17338,7 +17431,7 @@ impl StaffRecordsFields {
     pub(crate) unsafe fn set_person_history_lists(self, v: usize) {
         write_usize(self.0 + staff_records_fields::PERSON_HISTORY_LISTS, v)
     }
-    /// `staff_records_fields::CLUB_HISTORY_LISTS` (+0x10).
+    /// `staff_records_fields::CLUB_HISTORY_LISTS` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_history_lists(self) -> usize {
         read_usize(self.0 + staff_records_fields::CLUB_HISTORY_LISTS)
@@ -17347,7 +17440,7 @@ impl StaffRecordsFields {
     pub(crate) unsafe fn set_club_history_lists(self, v: usize) {
         write_usize(self.0 + staff_records_fields::CLUB_HISTORY_LISTS, v)
     }
-    /// `staff_records_fields::CURRENT_MONTH` (+0x14).
+    /// `staff_records_fields::CURRENT_MONTH` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn current_month(self) -> i16 {
         read_i16(self.0 + staff_records_fields::CURRENT_MONTH)
@@ -17356,7 +17449,7 @@ impl StaffRecordsFields {
     pub(crate) unsafe fn set_current_month(self, v: i16) {
         write_i16(self.0 + staff_records_fields::CURRENT_MONTH, v)
     }
-    /// `staff_records_fields::CURRENT_YEAR` (+0x16).
+    /// `staff_records_fields::CURRENT_YEAR` (+0x16). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn current_year(self) -> i16 {
         read_i16(self.0 + staff_records_fields::CURRENT_YEAR)
@@ -17390,7 +17483,7 @@ impl StaffState {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `staff_state::INJURY_COUNTER` (+0xa).
+    /// `staff_state::INJURY_COUNTER` (+0xa). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn injury_counter(self) -> u8 {
         read_u8(self.0 + staff_state::INJURY_COUNTER)
@@ -17399,7 +17492,7 @@ impl StaffState {
     pub(crate) unsafe fn set_injury_counter(self, v: u8) {
         write_u8(self.0 + staff_state::INJURY_COUNTER, v)
     }
-    /// `staff_state::STATUS_FLAGS` (+0xb).
+    /// `staff_state::STATUS_FLAGS` (+0xb). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn status_flags(self) -> u8 {
         read_u8(self.0 + staff_state::STATUS_FLAGS)
@@ -17408,7 +17501,7 @@ impl StaffState {
     pub(crate) unsafe fn set_status_flags(self, v: u8) {
         write_u8(self.0 + staff_state::STATUS_FLAGS, v)
     }
-    /// `staff_state::FORMER_CLUB_ID` (+0xe).
+    /// `staff_state::FORMER_CLUB_ID` (+0xe). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn former_club_id(self) -> usize {
         read_usize(self.0 + staff_state::FORMER_CLUB_ID)
@@ -17417,7 +17510,7 @@ impl StaffState {
     pub(crate) unsafe fn set_former_club_id(self, v: usize) {
         write_usize(self.0 + staff_state::FORMER_CLUB_ID, v)
     }
-    /// `staff_state::FORMER_CLUB_WEIGHT` (+0x12).
+    /// `staff_state::FORMER_CLUB_WEIGHT` (+0x12). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn former_club_weight(self) -> u8 {
         read_u8(self.0 + staff_state::FORMER_CLUB_WEIGHT)
@@ -17451,12 +17544,12 @@ impl StoryLogEntry {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `story_log_entry::DATE` (+0x0).
+    /// `story_log_entry::DATE` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) fn date_addr(self) -> usize {
         self.0 + story_log_entry::DATE
     }
-    /// `story_log_entry::PERSON_A` (+0x8).
+    /// `story_log_entry::PERSON_A` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn person_a(self) -> i32 {
         read_i32(self.0 + story_log_entry::PERSON_A)
@@ -17465,7 +17558,7 @@ impl StoryLogEntry {
     pub(crate) unsafe fn set_person_a(self, v: i32) {
         write_i32(self.0 + story_log_entry::PERSON_A, v)
     }
-    /// `story_log_entry::PERSON_B` (+0xc).
+    /// `story_log_entry::PERSON_B` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn person_b(self) -> usize {
         read_usize(self.0 + story_log_entry::PERSON_B)
@@ -17474,7 +17567,7 @@ impl StoryLogEntry {
     pub(crate) unsafe fn set_person_b(self, v: usize) {
         write_usize(self.0 + story_log_entry::PERSON_B, v)
     }
-    /// `story_log_entry::RESPONSE` (+0x10).
+    /// `story_log_entry::RESPONSE` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn response(self) -> u8 {
         read_u8(self.0 + story_log_entry::RESPONSE)
@@ -17483,7 +17576,7 @@ impl StoryLogEntry {
     pub(crate) unsafe fn set_response(self, v: u8) {
         write_u8(self.0 + story_log_entry::RESPONSE, v)
     }
-    /// `story_log_entry::SUBTYPE` (+0x11).
+    /// `story_log_entry::SUBTYPE` (+0x11). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn subtype(self) -> i16 {
         read_i16(self.0 + story_log_entry::SUBTYPE)
@@ -17492,7 +17585,7 @@ impl StoryLogEntry {
     pub(crate) unsafe fn set_subtype(self, v: i16) {
         write_i16(self.0 + story_log_entry::SUBTYPE, v)
     }
-    /// `story_log_entry::TYPE` (+0x13).
+    /// `story_log_entry::TYPE` (+0x13). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn r#type(self) -> usize {
         read_usize(self.0 + story_log_entry::TYPE)
@@ -17526,7 +17619,7 @@ impl TacticsFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `tactics_fields::TACTIC_STATS` (+0x0).
+    /// `tactics_fields::TACTIC_STATS` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn tactic_stats(self) -> i32 {
         read_i32(self.0 + tactics_fields::TACTIC_STATS)
@@ -17535,12 +17628,12 @@ impl TacticsFields {
     pub(crate) unsafe fn set_tactic_stats(self, v: i32) {
         write_i32(self.0 + tactics_fields::TACTIC_STATS, v)
     }
-    /// `tactics_fields::UNDO_SLOTS` (+0x30).
+    /// `tactics_fields::UNDO_SLOTS` (+0x30). Name: read.
     #[inline(always)]
     pub(crate) fn undo_slots_addr(self) -> usize {
         self.0 + tactics_fields::UNDO_SLOTS
     }
-    /// `tactics_fields::FLAGS` (+0x584).
+    /// `tactics_fields::FLAGS` (+0x584). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn flags(self) -> u32 {
         read_u32(self.0 + tactics_fields::FLAGS)
@@ -17549,7 +17642,7 @@ impl TacticsFields {
     pub(crate) unsafe fn set_flags(self, v: u32) {
         write_u32(self.0 + tactics_fields::FLAGS, v)
     }
-    /// `tactics_fields::UNDO_COUNT` (+0x5f0).
+    /// `tactics_fields::UNDO_COUNT` (+0x5f0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn undo_count(self) -> u8 {
         read_u8(self.0 + tactics_fields::UNDO_COUNT)
@@ -17558,7 +17651,7 @@ impl TacticsFields {
     pub(crate) unsafe fn set_undo_count(self, v: u8) {
         write_u8(self.0 + tactics_fields::UNDO_COUNT, v)
     }
-    /// `tactics_fields::CUSTOM_TACTICS` (+0x5f1).
+    /// `tactics_fields::CUSTOM_TACTICS` (+0x5f1). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn custom_tactics(self) -> usize {
         read_usize(self.0 + tactics_fields::CUSTOM_TACTICS)
@@ -17567,7 +17660,7 @@ impl TacticsFields {
     pub(crate) unsafe fn set_custom_tactics(self, v: usize) {
         write_usize(self.0 + tactics_fields::CUSTOM_TACTICS, v)
     }
-    /// `tactics_fields::CUSTOM_TACTIC_COUNT` (+0x5f5).
+    /// `tactics_fields::CUSTOM_TACTIC_COUNT` (+0x5f5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn custom_tactic_count(self) -> i32 {
         read_i32(self.0 + tactics_fields::CUSTOM_TACTIC_COUNT)
@@ -17576,7 +17669,7 @@ impl TacticsFields {
     pub(crate) unsafe fn set_custom_tactic_count(self, v: i32) {
         write_i32(self.0 + tactics_fields::CUSTOM_TACTIC_COUNT, v)
     }
-    /// `tactics_fields::PRESET_TACTICS` (+0x5f9).
+    /// `tactics_fields::PRESET_TACTICS` (+0x5f9). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn preset_tactics(self) -> usize {
         read_usize(self.0 + tactics_fields::PRESET_TACTICS)
@@ -17585,7 +17678,7 @@ impl TacticsFields {
     pub(crate) unsafe fn set_preset_tactics(self, v: usize) {
         write_usize(self.0 + tactics_fields::PRESET_TACTICS, v)
     }
-    /// `tactics_fields::PRESET_TACTIC_COUNT` (+0x5fd).
+    /// `tactics_fields::PRESET_TACTIC_COUNT` (+0x5fd). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn preset_tactic_count(self) -> i32 {
         read_i32(self.0 + tactics_fields::PRESET_TACTIC_COUNT)
@@ -17594,7 +17687,7 @@ impl TacticsFields {
     pub(crate) unsafe fn set_preset_tactic_count(self, v: i32) {
         write_i32(self.0 + tactics_fields::PRESET_TACTIC_COUNT, v)
     }
-    /// `tactics_fields::ROWS` (+0x601).
+    /// `tactics_fields::ROWS` (+0x601). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn rows(self) -> usize {
         read_usize(self.0 + tactics_fields::ROWS)
@@ -17603,7 +17696,7 @@ impl TacticsFields {
     pub(crate) unsafe fn set_rows(self, v: usize) {
         write_usize(self.0 + tactics_fields::ROWS, v)
     }
-    /// `tactics_fields::ROW_COUNT` (+0x605).
+    /// `tactics_fields::ROW_COUNT` (+0x605). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn row_count(self) -> i32 {
         read_i32(self.0 + tactics_fields::ROW_COUNT)
@@ -17612,7 +17705,7 @@ impl TacticsFields {
     pub(crate) unsafe fn set_row_count(self, v: i32) {
         write_i32(self.0 + tactics_fields::ROW_COUNT, v)
     }
-    /// `tactics_fields::FORMATION` (+0x187b).
+    /// `tactics_fields::FORMATION` (+0x187b). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn formation(self) -> usize {
         read_usize(self.0 + tactics_fields::FORMATION)
@@ -17621,7 +17714,7 @@ impl TacticsFields {
     pub(crate) unsafe fn set_formation(self, v: usize) {
         write_usize(self.0 + tactics_fields::FORMATION, v)
     }
-    /// `tactics_fields::POSITION_MARKS` (+0x188b).
+    /// `tactics_fields::POSITION_MARKS` (+0x188b). Name: inferred.
     #[inline(always)]
     pub(crate) fn position_marks_addr(self) -> usize {
         self.0 + tactics_fields::POSITION_MARKS
@@ -17651,12 +17744,12 @@ impl TacticsRow {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `tactics_row::SELECTION` (+0x2).
+    /// `tactics_row::SELECTION` (+0x2). Name: read.
     #[inline(always)]
     pub(crate) fn selection_addr(self) -> usize {
         self.0 + tactics_row::SELECTION
     }
-    /// `tactics_row::CAPTAIN` (+0x52).
+    /// `tactics_row::CAPTAIN` (+0x52). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn captain(self) -> i32 {
         read_i32(self.0 + tactics_row::CAPTAIN)
@@ -17665,7 +17758,7 @@ impl TacticsRow {
     pub(crate) unsafe fn set_captain(self, v: i32) {
         write_i32(self.0 + tactics_row::CAPTAIN, v)
     }
-    /// `tactics_row::PLAYMAKER` (+0x56).
+    /// `tactics_row::PLAYMAKER` (+0x56). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn playmaker(self) -> u32 {
         read_u32(self.0 + tactics_row::PLAYMAKER)
@@ -17674,7 +17767,7 @@ impl TacticsRow {
     pub(crate) unsafe fn set_playmaker(self, v: u32) {
         write_u32(self.0 + tactics_row::PLAYMAKER, v)
     }
-    /// `tactics_row::SECOND_PLAYMAKER` (+0x5a).
+    /// `tactics_row::SECOND_PLAYMAKER` (+0x5a). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn second_playmaker(self) -> u32 {
         read_u32(self.0 + tactics_row::SECOND_PLAYMAKER)
@@ -17708,7 +17801,7 @@ impl TallyRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `tally_record::HOLDER_DATE` (+0x11).
+    /// `tally_record::HOLDER_DATE` (+0x11). Name: read.
     #[inline(always)]
     pub(crate) fn holder_date_addr(self) -> usize {
         self.0 + tally_record::HOLDER_DATE
@@ -17738,7 +17831,7 @@ impl TournamentSlot {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `tournament_slot::HOST` (+0x0).
+    /// `tournament_slot::HOST` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn host(self) -> i32 {
         read_i32(self.0 + tournament_slot::HOST)
@@ -17747,12 +17840,12 @@ impl TournamentSlot {
     pub(crate) unsafe fn set_host(self, v: i32) {
         write_i32(self.0 + tournament_slot::HOST, v)
     }
-    /// `tournament_slot::START_DATE` (+0x4).
+    /// `tournament_slot::START_DATE` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) fn start_date_addr(self) -> usize {
         self.0 + tournament_slot::START_DATE
     }
-    /// `tournament_slot::KIND` (+0xc).
+    /// `tournament_slot::KIND` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn kind(self) -> u8 {
         read_u8(self.0 + tournament_slot::KIND)
@@ -17761,12 +17854,12 @@ impl TournamentSlot {
     pub(crate) unsafe fn set_kind(self, v: u8) {
         write_u8(self.0 + tournament_slot::KIND, v)
     }
-    /// `tournament_slot::INVITED_CLUBS` (+0x15).
+    /// `tournament_slot::INVITED_CLUBS` (+0x15). Name: read.
     #[inline(always)]
     pub(crate) fn invited_clubs_addr(self) -> usize {
         self.0 + tournament_slot::INVITED_CLUBS
     }
-    /// `tournament_slot::INVITE_PENDING` (+0x25).
+    /// `tournament_slot::INVITE_PENDING` (+0x25). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn invite_pending(self) -> i32 {
         read_i32(self.0 + tournament_slot::INVITE_PENDING)
@@ -17775,7 +17868,7 @@ impl TournamentSlot {
     pub(crate) unsafe fn set_invite_pending(self, v: i32) {
         write_i32(self.0 + tournament_slot::INVITE_PENDING, v)
     }
-    /// `tournament_slot::IN_USE` (+0x29).
+    /// `tournament_slot::IN_USE` (+0x29). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn in_use(self) -> usize {
         read_usize(self.0 + tournament_slot::IN_USE)
@@ -17784,12 +17877,12 @@ impl TournamentSlot {
     pub(crate) unsafe fn set_in_use(self, v: usize) {
         write_usize(self.0 + tournament_slot::IN_USE, v)
     }
-    /// `tournament_slot::NAME` (+0x31).
+    /// `tournament_slot::NAME` (+0x31). Name: read.
     #[inline(always)]
     pub(crate) fn name_addr(self) -> usize {
         self.0 + tournament_slot::NAME
     }
-    /// `tournament_slot::SLOT_INDEX` (+0x64).
+    /// `tournament_slot::SLOT_INDEX` (+0x64). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn slot_index(self) -> u8 {
         read_u8(self.0 + tournament_slot::SLOT_INDEX)
@@ -17798,7 +17891,7 @@ impl TournamentSlot {
     pub(crate) unsafe fn set_slot_index(self, v: u8) {
         write_u8(self.0 + tournament_slot::SLOT_INDEX, v)
     }
-    /// `tournament_slot::COMPETITION` (+0x65).
+    /// `tournament_slot::COMPETITION` (+0x65). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn competition(self) -> usize {
         read_usize(self.0 + tournament_slot::COMPETITION)
@@ -17832,17 +17925,17 @@ impl TransferFeeRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `transfer_fee_record::HOLDER` (+0x4).
+    /// `transfer_fee_record::HOLDER` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) fn holder_addr(self) -> usize {
         self.0 + transfer_fee_record::HOLDER
     }
-    /// `transfer_fee_record::HOLDER_DATE` (+0x14).
+    /// `transfer_fee_record::HOLDER_DATE` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) fn holder_date_addr(self) -> usize {
         self.0 + transfer_fee_record::HOLDER_DATE
     }
-    /// `transfer_fee_record::OTHER_CLUB_ID` (+0x1c).
+    /// `transfer_fee_record::OTHER_CLUB_ID` (+0x1c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn other_club_id(self) -> usize {
         read_usize(self.0 + transfer_fee_record::OTHER_CLUB_ID)
@@ -17851,12 +17944,12 @@ impl TransferFeeRecord {
     pub(crate) unsafe fn set_other_club_id(self, v: usize) {
         write_usize(self.0 + transfer_fee_record::OTHER_CLUB_ID, v)
     }
-    /// `transfer_fee_record::DATE` (+0x20).
+    /// `transfer_fee_record::DATE` (+0x20). Name: read.
     #[inline(always)]
     pub(crate) fn date_addr(self) -> usize {
         self.0 + transfer_fee_record::DATE
     }
-    /// `transfer_fee_record::FLAG` (+0x28).
+    /// `transfer_fee_record::FLAG` (+0x28). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn flag(self) -> u8 {
         read_u8(self.0 + transfer_fee_record::FLAG)
@@ -17890,7 +17983,7 @@ impl TransferInterest {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `transfer_interest::PLAYER` (+0x0).
+    /// `transfer_interest::PLAYER` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn player(self) -> i32 {
         read_i32(self.0 + transfer_interest::PLAYER)
@@ -17899,7 +17992,7 @@ impl TransferInterest {
     pub(crate) unsafe fn set_player(self, v: i32) {
         write_i32(self.0 + transfer_interest::PLAYER, v)
     }
-    /// `transfer_interest::CLUB` (+0x4).
+    /// `transfer_interest::CLUB` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club(self) -> i32 {
         read_i32(self.0 + transfer_interest::CLUB)
@@ -17908,7 +18001,7 @@ impl TransferInterest {
     pub(crate) unsafe fn set_club(self, v: i32) {
         write_i32(self.0 + transfer_interest::CLUB, v)
     }
-    /// `transfer_interest::DATE` (+0x8).
+    /// `transfer_interest::DATE` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn date(self) -> i16 {
         read_i16(self.0 + transfer_interest::DATE)
@@ -17917,7 +18010,7 @@ impl TransferInterest {
     pub(crate) unsafe fn set_date(self, v: i16) {
         write_i16(self.0 + transfer_interest::DATE, v)
     }
-    /// `transfer_interest::DATE_YEAR` (+0xa).
+    /// `transfer_interest::DATE_YEAR` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn date_year(self) -> i16 {
         read_i16(self.0 + transfer_interest::DATE_YEAR)
@@ -17926,7 +18019,7 @@ impl TransferInterest {
     pub(crate) unsafe fn set_date_year(self, v: i16) {
         write_i16(self.0 + transfer_interest::DATE_YEAR, v)
     }
-    /// `transfer_interest::STATE` (+0x10).
+    /// `transfer_interest::STATE` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn state(self) -> u8 {
         read_u8(self.0 + transfer_interest::STATE)
@@ -17935,7 +18028,7 @@ impl TransferInterest {
     pub(crate) unsafe fn set_state(self, v: u8) {
         write_u8(self.0 + transfer_interest::STATE, v)
     }
-    /// `transfer_interest::VALUE` (+0x11).
+    /// `transfer_interest::VALUE` (+0x11). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn value(self) -> usize {
         read_usize(self.0 + transfer_interest::VALUE)
@@ -17944,7 +18037,7 @@ impl TransferInterest {
     pub(crate) unsafe fn set_value(self, v: usize) {
         write_usize(self.0 + transfer_interest::VALUE, v)
     }
-    /// `transfer_interest::RATING` (+0x15).
+    /// `transfer_interest::RATING` (+0x15). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn rating(self) -> i32 {
         read_i32(self.0 + transfer_interest::RATING)
@@ -17978,7 +18071,7 @@ impl TransferRules {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `transfer_rules::NATION_ID` (+0xa).
+    /// `transfer_rules::NATION_ID` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn nation_id(self) -> usize {
         read_usize(self.0 + transfer_rules::NATION_ID)
@@ -17987,7 +18080,7 @@ impl TransferRules {
     pub(crate) unsafe fn set_nation_id(self, v: usize) {
         write_usize(self.0 + transfer_rules::NATION_ID, v)
     }
-    /// `transfer_rules::CONTINENT_ID` (+0xe).
+    /// `transfer_rules::CONTINENT_ID` (+0xe). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn continent_id(self) -> usize {
         read_usize(self.0 + transfer_rules::CONTINENT_ID)
@@ -17996,7 +18089,7 @@ impl TransferRules {
     pub(crate) unsafe fn set_continent_id(self, v: usize) {
         write_usize(self.0 + transfer_rules::CONTINENT_ID, v)
     }
-    /// `transfer_rules::SCOPE` (+0x12).
+    /// `transfer_rules::SCOPE` (+0x12). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn scope(self) -> u8 {
         read_u8(self.0 + transfer_rules::SCOPE)
@@ -18030,7 +18123,7 @@ impl TransferWindow {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `transfer_window::MONTH` (+0x4).
+    /// `transfer_window::MONTH` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn month(self) -> u8 {
         read_u8(self.0 + transfer_window::MONTH)
@@ -18039,7 +18132,7 @@ impl TransferWindow {
     pub(crate) unsafe fn set_month(self, v: u8) {
         write_u8(self.0 + transfer_window::MONTH, v)
     }
-    /// `transfer_window::CLOSES` (+0x5).
+    /// `transfer_window::CLOSES` (+0x5). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn closes(self) -> u8 {
         read_u8(self.0 + transfer_window::CLOSES)
@@ -18073,7 +18166,7 @@ impl UndoSlot {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `undo_slot::TEAM` (+0x4).
+    /// `undo_slot::TEAM` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn team(self) -> usize {
         read_usize(self.0 + undo_slot::TEAM)
@@ -18082,7 +18175,7 @@ impl UndoSlot {
     pub(crate) unsafe fn set_team(self, v: usize) {
         write_usize(self.0 + undo_slot::TEAM, v)
     }
-    /// `undo_slot::IN_USE` (+0x8).
+    /// `undo_slot::IN_USE` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn in_use(self) -> u32 {
         read_u32(self.0 + undo_slot::IN_USE)
@@ -18116,7 +18209,7 @@ impl WorkPermit {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `work_permit::MATCHES_PLAYED` (+0x4).
+    /// `work_permit::MATCHES_PLAYED` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn matches_played(self) -> u16 {
         read_u16(self.0 + work_permit::MATCHES_PLAYED)
@@ -18125,7 +18218,7 @@ impl WorkPermit {
     pub(crate) unsafe fn set_matches_played(self, v: u16) {
         write_u16(self.0 + work_permit::MATCHES_PLAYED, v)
     }
-    /// `work_permit::MATCHES_MISSED` (+0x6).
+    /// `work_permit::MATCHES_MISSED` (+0x6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn matches_missed(self) -> u16 {
         read_u16(self.0 + work_permit::MATCHES_MISSED)
@@ -18134,7 +18227,7 @@ impl WorkPermit {
     pub(crate) unsafe fn set_matches_missed(self, v: u16) {
         write_u16(self.0 + work_permit::MATCHES_MISSED, v)
     }
-    /// `work_permit::YEAR` (+0x8).
+    /// `work_permit::YEAR` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn year(self) -> u16 {
         read_u16(self.0 + work_permit::YEAR)
@@ -18143,7 +18236,7 @@ impl WorkPermit {
     pub(crate) unsafe fn set_year(self, v: u16) {
         write_u16(self.0 + work_permit::YEAR, v)
     }
-    /// `work_permit::NATION_ID` (+0xa).
+    /// `work_permit::NATION_ID` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn nation_id(self) -> usize {
         read_usize(self.0 + work_permit::NATION_ID)
@@ -18177,7 +18270,7 @@ impl CmDate {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `cm_date::YEAR` (+0x2).
+    /// `cm_date::YEAR` (+0x2). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn year(self) -> i16 {
         read_i16(self.0 + cm_date::YEAR)
@@ -18186,7 +18279,7 @@ impl CmDate {
     pub(crate) unsafe fn set_year(self, v: i16) {
         write_i16(self.0 + cm_date::YEAR, v)
     }
-    /// `cm_date::LEAP_YEAR` (+0x4).
+    /// `cm_date::LEAP_YEAR` (+0x4). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn leap_year(self) -> usize {
         read_usize(self.0 + cm_date::LEAP_YEAR)
@@ -18220,7 +18313,7 @@ impl AfricanNations {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `african_nations::DRAWN_CLUBS` (+0xee).
+    /// `african_nations::DRAWN_CLUBS` (+0xee). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn drawn_clubs(self) -> usize {
         read_usize(self.0 + african_nations::DRAWN_CLUBS)
@@ -18229,7 +18322,7 @@ impl AfricanNations {
     pub(crate) unsafe fn set_drawn_clubs(self, v: usize) {
         write_usize(self.0 + african_nations::DRAWN_CLUBS, v)
     }
-    /// `african_nations::DRAWN_CLUB_COUNT` (+0xf2).
+    /// `african_nations::DRAWN_CLUB_COUNT` (+0xf2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn drawn_club_count(self) -> i16 {
         read_i16(self.0 + african_nations::DRAWN_CLUB_COUNT)
@@ -18263,7 +18356,7 @@ impl AwolFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `awol_fields::PERSON_FLAGS` (+0xc).
+    /// `awol_fields::PERSON_FLAGS` (+0xc). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn person_flags(self) -> usize {
         read_usize(self.0 + awol_fields::PERSON_FLAGS)
@@ -18297,7 +18390,7 @@ impl CompHistoryRow {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `comp_history_row::CHAMPION` (+0xa).
+    /// `comp_history_row::CHAMPION` (+0xa). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn champion(self) -> usize {
         read_usize(self.0 + comp_history_row::CHAMPION)
@@ -18306,7 +18399,7 @@ impl CompHistoryRow {
     pub(crate) unsafe fn set_champion(self, v: usize) {
         write_usize(self.0 + comp_history_row::CHAMPION, v)
     }
-    /// `comp_history_row::RUNNER_UP` (+0xe).
+    /// `comp_history_row::RUNNER_UP` (+0xe). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn runner_up(self) -> usize {
         read_usize(self.0 + comp_history_row::RUNNER_UP)
@@ -18315,7 +18408,7 @@ impl CompHistoryRow {
     pub(crate) unsafe fn set_runner_up(self, v: usize) {
         write_usize(self.0 + comp_history_row::RUNNER_UP, v)
     }
-    /// `comp_history_row::THIRD_PLACE` (+0x12).
+    /// `comp_history_row::THIRD_PLACE` (+0x12). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn third_place(self) -> usize {
         read_usize(self.0 + comp_history_row::THIRD_PLACE)
@@ -18324,7 +18417,7 @@ impl CompHistoryRow {
     pub(crate) unsafe fn set_third_place(self, v: usize) {
         write_usize(self.0 + comp_history_row::THIRD_PLACE, v)
     }
-    /// `comp_history_row::HOST` (+0x16).
+    /// `comp_history_row::HOST` (+0x16). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn host(self) -> usize {
         read_usize(self.0 + comp_history_row::HOST)
@@ -18358,7 +18451,7 @@ impl ConMercCup {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `con_merc_cup::DRAWN_CLUBS` (+0xee).
+    /// `con_merc_cup::DRAWN_CLUBS` (+0xee). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn drawn_clubs(self) -> usize {
         read_usize(self.0 + con_merc_cup::DRAWN_CLUBS)
@@ -18367,7 +18460,7 @@ impl ConMercCup {
     pub(crate) unsafe fn set_drawn_clubs(self, v: usize) {
         write_usize(self.0 + con_merc_cup::DRAWN_CLUBS, v)
     }
-    /// `con_merc_cup::DRAWN_CLUB_COUNT` (+0xf2).
+    /// `con_merc_cup::DRAWN_CLUB_COUNT` (+0xf2). Name: read.
     #[inline(always)]
     pub(crate) fn drawn_club_count_addr(self) -> usize {
         self.0 + con_merc_cup::DRAWN_CLUB_COUNT
@@ -18397,7 +18490,7 @@ impl ConmebolLiber {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `conmebol_liber::DRAWN_CLUBS` (+0xee).
+    /// `conmebol_liber::DRAWN_CLUBS` (+0xee). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn drawn_clubs(self) -> usize {
         read_usize(self.0 + conmebol_liber::DRAWN_CLUBS)
@@ -18406,7 +18499,7 @@ impl ConmebolLiber {
     pub(crate) unsafe fn set_drawn_clubs(self, v: usize) {
         write_usize(self.0 + conmebol_liber::DRAWN_CLUBS, v)
     }
-    /// `conmebol_liber::DRAWN_CLUB_COUNT` (+0xf2).
+    /// `conmebol_liber::DRAWN_CLUB_COUNT` (+0xf2). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn drawn_club_count(self) -> u32 {
         read_u32(self.0 + conmebol_liber::DRAWN_CLUB_COUNT)
@@ -18440,7 +18533,7 @@ impl ConmebolMerc {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `conmebol_merc::DRAWN_CLUBS` (+0xee).
+    /// `conmebol_merc::DRAWN_CLUBS` (+0xee). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn drawn_clubs(self) -> usize {
         read_usize(self.0 + conmebol_merc::DRAWN_CLUBS)
@@ -18449,7 +18542,7 @@ impl ConmebolMerc {
     pub(crate) unsafe fn set_drawn_clubs(self, v: usize) {
         write_usize(self.0 + conmebol_merc::DRAWN_CLUBS, v)
     }
-    /// `conmebol_merc::DRAWN_CLUB_COUNT` (+0xf2).
+    /// `conmebol_merc::DRAWN_CLUB_COUNT` (+0xf2). Name: inferred.
     #[inline(always)]
     pub(crate) fn drawn_club_count_addr(self) -> usize {
         self.0 + conmebol_merc::DRAWN_CLUB_COUNT
@@ -18479,7 +18572,7 @@ impl ConmebolSeeding {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `conmebol_seeding::LAST_SEASON_YEAR` (+0x6f).
+    /// `conmebol_seeding::LAST_SEASON_YEAR` (+0x6f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn last_season_year(self) -> i16 {
         read_i16(self.0 + conmebol_seeding::LAST_SEASON_YEAR)
@@ -18488,7 +18581,7 @@ impl ConmebolSeeding {
     pub(crate) unsafe fn set_last_season_year(self, v: i16) {
         write_i16(self.0 + conmebol_seeding::LAST_SEASON_YEAR, v)
     }
-    /// `conmebol_seeding::BRA_CHAMP_CUP_WINNER_ID` (+0x71).
+    /// `conmebol_seeding::BRA_CHAMP_CUP_WINNER_ID` (+0x71). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn bra_champ_cup_winner_id(self) -> i32 {
         read_i32(self.0 + conmebol_seeding::BRA_CHAMP_CUP_WINNER_ID)
@@ -18522,7 +18615,7 @@ impl EuroChampQual {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `euro_champ_qual::GROUP_FORMAT` (+0xf6).
+    /// `euro_champ_qual::GROUP_FORMAT` (+0xf6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn group_format(self) -> i8 {
         read_i8(self.0 + euro_champ_qual::GROUP_FORMAT)
@@ -18556,12 +18649,12 @@ impl FormationFields {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `formation_fields::SLOT_CELLS` (+0x12d).
+    /// `formation_fields::SLOT_CELLS` (+0x12d). Name: read.
     #[inline(always)]
     pub(crate) fn slot_cells_addr(self) -> usize {
         self.0 + formation_fields::SLOT_CELLS
     }
-    /// `formation_fields::FLAGS` (+0x584).
+    /// `formation_fields::FLAGS` (+0x584). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn flags(self) -> i32 {
         read_i32(self.0 + formation_fields::FLAGS)
@@ -18570,22 +18663,22 @@ impl FormationFields {
     pub(crate) unsafe fn set_flags(self, v: i32) {
         write_i32(self.0 + formation_fields::FLAGS, v)
     }
-    /// `formation_fields::MARKING_TYPES` (+0x5b4).
+    /// `formation_fields::MARKING_TYPES` (+0x5b4). Name: read.
     #[inline(always)]
     pub(crate) fn marking_types_addr(self) -> usize {
         self.0 + formation_fields::MARKING_TYPES
     }
-    /// `formation_fields::DESIGNATED_PEOPLE` (+0x5bf).
+    /// `formation_fields::DESIGNATED_PEOPLE` (+0x5bf). Name: read.
     #[inline(always)]
     pub(crate) fn designated_people_addr(self) -> usize {
         self.0 + formation_fields::DESIGNATED_PEOPLE
     }
-    /// `formation_fields::POSITION_LOOKUP` (+0x5eb).
+    /// `formation_fields::POSITION_LOOKUP` (+0x5eb). Name: read.
     #[inline(always)]
     pub(crate) fn position_lookup_addr(self) -> usize {
         self.0 + formation_fields::POSITION_LOOKUP
     }
-    /// `formation_fields::FORMATION_MASK` (+0x187b).
+    /// `formation_fields::FORMATION_MASK` (+0x187b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn formation_mask(self) -> i32 {
         read_i32(self.0 + formation_fields::FORMATION_MASK)
@@ -18594,7 +18687,7 @@ impl FormationFields {
     pub(crate) unsafe fn set_formation_mask(self, v: i32) {
         write_i32(self.0 + formation_fields::FORMATION_MASK, v)
     }
-    /// `formation_fields::CHANGED_FLAG` (+0x187f).
+    /// `formation_fields::CHANGED_FLAG` (+0x187f). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn changed_flag(self) -> i32 {
         read_i32(self.0 + formation_fields::CHANGED_FLAG)
@@ -18603,7 +18696,7 @@ impl FormationFields {
     pub(crate) unsafe fn set_changed_flag(self, v: i32) {
         write_i32(self.0 + formation_fields::CHANGED_FLAG, v)
     }
-    /// `formation_fields::PLAYER_INSTRUCTIONS` (+0x188b).
+    /// `formation_fields::PLAYER_INSTRUCTIONS` (+0x188b). Name: read.
     #[inline(always)]
     pub(crate) fn player_instructions_addr(self) -> usize {
         self.0 + formation_fields::PLAYER_INSTRUCTIONS
@@ -18633,7 +18726,7 @@ impl Goldcup {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `goldcup::DRAWN_CLUBS` (+0xee).
+    /// `goldcup::DRAWN_CLUBS` (+0xee). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn drawn_clubs(self) -> usize {
         read_usize(self.0 + goldcup::DRAWN_CLUBS)
@@ -18642,7 +18735,7 @@ impl Goldcup {
     pub(crate) unsafe fn set_drawn_clubs(self, v: usize) {
         write_usize(self.0 + goldcup::DRAWN_CLUBS, v)
     }
-    /// `goldcup::DRAWN_CLUB_COUNT` (+0xf2).
+    /// `goldcup::DRAWN_CLUB_COUNT` (+0xf2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn drawn_club_count(self) -> usize {
         read_usize(self.0 + goldcup::DRAWN_CLUB_COUNT)
@@ -18676,12 +18769,12 @@ impl GridCell {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `grid_cell::OCCUPANTS` (+0x0).
+    /// `grid_cell::OCCUPANTS` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) fn occupants_addr(self) -> usize {
         self.0 + grid_cell::OCCUPANTS
     }
-    /// `grid_cell::OCCUPANT_COUNT` (+0x58).
+    /// `grid_cell::OCCUPANT_COUNT` (+0x58). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn occupant_count(self) -> i16 {
         read_i16(self.0 + grid_cell::OCCUPANT_COUNT)
@@ -18715,7 +18808,7 @@ impl MatchIncident {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `match_incident::CLUB_ID` (+0x4).
+    /// `match_incident::CLUB_ID` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_id(self) -> usize {
         read_usize(self.0 + match_incident::CLUB_ID)
@@ -18724,7 +18817,7 @@ impl MatchIncident {
     pub(crate) unsafe fn set_club_id(self, v: usize) {
         write_usize(self.0 + match_incident::CLUB_ID, v)
     }
-    /// `match_incident::OUTCOME` (+0xe).
+    /// `match_incident::OUTCOME` (+0xe). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn outcome(self) -> u8 {
         read_u8(self.0 + match_incident::OUTCOME)
@@ -18733,7 +18826,7 @@ impl MatchIncident {
     pub(crate) unsafe fn set_outcome(self, v: u8) {
         write_u8(self.0 + match_incident::OUTCOME, v)
     }
-    /// `match_incident::RESPONDER_ID` (+0xf).
+    /// `match_incident::RESPONDER_ID` (+0xf). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn responder_id(self) -> u32 {
         read_u32(self.0 + match_incident::RESPONDER_ID)
@@ -18742,7 +18835,7 @@ impl MatchIncident {
     pub(crate) unsafe fn set_responder_id(self, v: u32) {
         write_u32(self.0 + match_incident::RESPONDER_ID, v)
     }
-    /// `match_incident::KIND` (+0x13).
+    /// `match_incident::KIND` (+0x13). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn kind(self) -> i16 {
         read_i16(self.0 + match_incident::KIND)
@@ -18751,7 +18844,7 @@ impl MatchIncident {
     pub(crate) unsafe fn set_kind(self, v: i16) {
         write_i16(self.0 + match_incident::KIND, v)
     }
-    /// `match_incident::OTHER_PERSON_ID` (+0x15).
+    /// `match_incident::OTHER_PERSON_ID` (+0x15). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn other_person_id(self) -> i32 {
         read_i32(self.0 + match_incident::OTHER_PERSON_ID)
@@ -18785,7 +18878,7 @@ impl NationClubBucket {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `nation_club_bucket::CLUB_COUNT` (+0xc8).
+    /// `nation_club_bucket::CLUB_COUNT` (+0xc8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_count(self) -> i32 {
         read_i32(self.0 + nation_club_bucket::CLUB_COUNT)
@@ -18794,7 +18887,7 @@ impl NationClubBucket {
     pub(crate) unsafe fn set_club_count(self, v: i32) {
         write_i32(self.0 + nation_club_bucket::CLUB_COUNT, v)
     }
-    /// `nation_club_bucket::WEAKEST_SLOT` (+0xcc).
+    /// `nation_club_bucket::WEAKEST_SLOT` (+0xcc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn weakest_slot(self) -> i32 {
         read_i32(self.0 + nation_club_bucket::WEAKEST_SLOT)
@@ -18828,7 +18921,7 @@ impl NationNameIndex {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `nation_name_index::FIRST_NAME_START` (+0x0).
+    /// `nation_name_index::FIRST_NAME_START` (+0x0). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn first_name_start(self) -> i32 {
         read_i32(self.0 + nation_name_index::FIRST_NAME_START)
@@ -18837,7 +18930,7 @@ impl NationNameIndex {
     pub(crate) unsafe fn set_first_name_start(self, v: i32) {
         write_i32(self.0 + nation_name_index::FIRST_NAME_START, v)
     }
-    /// `nation_name_index::SECOND_NAME_START` (+0x4).
+    /// `nation_name_index::SECOND_NAME_START` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn second_name_start(self) -> i32 {
         read_i32(self.0 + nation_name_index::SECOND_NAME_START)
@@ -18846,7 +18939,7 @@ impl NationNameIndex {
     pub(crate) unsafe fn set_second_name_start(self, v: i32) {
         write_i32(self.0 + nation_name_index::SECOND_NAME_START, v)
     }
-    /// `nation_name_index::COMMON_NAME_START` (+0x8).
+    /// `nation_name_index::COMMON_NAME_START` (+0x8). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn common_name_start(self) -> i32 {
         read_i32(self.0 + nation_name_index::COMMON_NAME_START)
@@ -18855,7 +18948,7 @@ impl NationNameIndex {
     pub(crate) unsafe fn set_common_name_start(self, v: i32) {
         write_i32(self.0 + nation_name_index::COMMON_NAME_START, v)
     }
-    /// `nation_name_index::FIRST_NAME_WEIGHT_SUM` (+0xc).
+    /// `nation_name_index::FIRST_NAME_WEIGHT_SUM` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn first_name_weight_sum(self) -> i32 {
         read_i32(self.0 + nation_name_index::FIRST_NAME_WEIGHT_SUM)
@@ -18864,7 +18957,7 @@ impl NationNameIndex {
     pub(crate) unsafe fn set_first_name_weight_sum(self, v: i32) {
         write_i32(self.0 + nation_name_index::FIRST_NAME_WEIGHT_SUM, v)
     }
-    /// `nation_name_index::SECOND_NAME_WEIGHT_SUM` (+0x10).
+    /// `nation_name_index::SECOND_NAME_WEIGHT_SUM` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn second_name_weight_sum(self) -> i32 {
         read_i32(self.0 + nation_name_index::SECOND_NAME_WEIGHT_SUM)
@@ -18873,7 +18966,7 @@ impl NationNameIndex {
     pub(crate) unsafe fn set_second_name_weight_sum(self, v: i32) {
         write_i32(self.0 + nation_name_index::SECOND_NAME_WEIGHT_SUM, v)
     }
-    /// `nation_name_index::COMMON_NAME_WEIGHT_SUM` (+0x14).
+    /// `nation_name_index::COMMON_NAME_WEIGHT_SUM` (+0x14). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn common_name_weight_sum(self) -> i32 {
         read_i32(self.0 + nation_name_index::COMMON_NAME_WEIGHT_SUM)
@@ -18882,7 +18975,7 @@ impl NationNameIndex {
     pub(crate) unsafe fn set_common_name_weight_sum(self, v: i32) {
         write_i32(self.0 + nation_name_index::COMMON_NAME_WEIGHT_SUM, v)
     }
-    /// `nation_name_index::FIRST_NAME_COUNT` (+0x18).
+    /// `nation_name_index::FIRST_NAME_COUNT` (+0x18). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn first_name_count(self) -> i32 {
         read_i32(self.0 + nation_name_index::FIRST_NAME_COUNT)
@@ -18891,7 +18984,7 @@ impl NationNameIndex {
     pub(crate) unsafe fn set_first_name_count(self, v: i32) {
         write_i32(self.0 + nation_name_index::FIRST_NAME_COUNT, v)
     }
-    /// `nation_name_index::SECOND_NAME_COUNT` (+0x1c).
+    /// `nation_name_index::SECOND_NAME_COUNT` (+0x1c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn second_name_count(self) -> i32 {
         read_i32(self.0 + nation_name_index::SECOND_NAME_COUNT)
@@ -18900,7 +18993,7 @@ impl NationNameIndex {
     pub(crate) unsafe fn set_second_name_count(self, v: i32) {
         write_i32(self.0 + nation_name_index::SECOND_NAME_COUNT, v)
     }
-    /// `nation_name_index::COMMON_NAME_COUNT` (+0x20).
+    /// `nation_name_index::COMMON_NAME_COUNT` (+0x20). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn common_name_count(self) -> i32 {
         read_i32(self.0 + nation_name_index::COMMON_NAME_COUNT)
@@ -18934,7 +19027,7 @@ impl OceaniaClubChamp {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `oceania_club_champ::DRAWN_CLUBS` (+0xee).
+    /// `oceania_club_champ::DRAWN_CLUBS` (+0xee). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn drawn_clubs(self) -> usize {
         read_usize(self.0 + oceania_club_champ::DRAWN_CLUBS)
@@ -18943,7 +19036,7 @@ impl OceaniaClubChamp {
     pub(crate) unsafe fn set_drawn_clubs(self, v: usize) {
         write_usize(self.0 + oceania_club_champ::DRAWN_CLUBS, v)
     }
-    /// `oceania_club_champ::DRAWN_CLUB_COUNT` (+0xf2).
+    /// `oceania_club_champ::DRAWN_CLUB_COUNT` (+0xf2). Name: inferred.
     #[inline(always)]
     pub(crate) fn drawn_club_count_addr(self) -> usize {
         self.0 + oceania_club_champ::DRAWN_CLUB_COUNT
@@ -18973,7 +19066,7 @@ impl UefaSeeding {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
-    /// `uefa_seeding::INTERTOTO_VOLUNTEERS` (+0x43b).
+    /// `uefa_seeding::INTERTOTO_VOLUNTEERS` (+0x43b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn intertoto_volunteers(self) -> u32 {
         read_u32(self.0 + uefa_seeding::INTERTOTO_VOLUNTEERS)
@@ -18982,7 +19075,7 @@ impl UefaSeeding {
     pub(crate) unsafe fn set_intertoto_volunteers(self, v: u32) {
         write_u32(self.0 + uefa_seeding::INTERTOTO_VOLUNTEERS, v)
     }
-    /// `uefa_seeding::CUP_FINALS` (+0x440).
+    /// `uefa_seeding::CUP_FINALS` (+0x440). Name: read.
     #[inline(always)]
     pub(crate) fn cup_finals_addr(self) -> usize {
         self.0 + uefa_seeding::CUP_FINALS

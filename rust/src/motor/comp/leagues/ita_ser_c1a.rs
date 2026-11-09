@@ -134,7 +134,7 @@ pub(crate) unsafe fn create_end_of_league_stages(this: League, file: usize, rows
     }
     let clubs = (this.promotion_playoff_count() as i8) as i16 as u16 as u32;
     let year = (this.year() as u16) as u32;
-    let record = read_usize(this.addr() + 4);
+    let record = this.competition().addr();
     let (mut rodadas, mut extra) = (0u32, 0u32);
     let gabarito = calendario(this.addr(), 0, &mut rodadas, &mut extra, 0);
     let positions: [u8; 4] = [4, 1, 3, 2]; // cql5: the play-off positions

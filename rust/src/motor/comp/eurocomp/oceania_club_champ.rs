@@ -37,8 +37,8 @@ pub(crate) unsafe fn selected_club(this: League, k: usize) -> usize {
 /// -> thiscall, ret 8), cuja devolução ela repassa.
 pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let this = League(this);
-    let day = read_i16(this.addr() + 0xb6) as u16;
-    let year = (read_i16(this.addr() + 0xb8) as u16).wrapping_add(this.year() as u16);
+    let day = this.next_draw_day() as u16;
+    let year = (this.next_draw_year_offset() as u16).wrapping_add(this.year() as u16);
     let day_of_today = core::ptr::read_unaligned(today as *const u16);
     let year_of_today = core::ptr::read_unaligned((today + 2) as *const u16);
     // simplification: in the loops before the draw and on errors the original returns only al (0 or 1; the rest of eax is leftover from the
@@ -162,18 +162,18 @@ pub(crate) unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 
             4,
             teams,
             1,
-            read_usize(this.addr() + 4),
+            this.competition().addr(),
             table,
             rodadas as u16 as u32,
-            (read_u8(this.addr() + 0xc2) as u32),
-            (read_u8(this.addr() + 0xc3) as u32),
-            (read_u8(this.addr() + 0xc4) as u32),
+            (this.win_points() as u32),
+            (this.draw_points() as u32),
+            (this.match_category() as u32),
             this.addr() + league::TIEBREAKS,
             this.addr() + league::PROMOTED_COUNT,
             this.year() as u16 as u32,
             0,
             id as u16 as u32,
-            (read_u8(this.addr() + 0x51) as u32),
+            (this.importance() as u32),
             2,
             0,
             this.league_flags() as u16 as u32,
@@ -453,7 +453,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this.addr(), 4, list, rodadas as u16 as u32, read_usize(this.addr() + 4), table, this.year() as u16 as u32, 1, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+        construct(p, this.addr(), 4, list, rodadas as u16 as u32, this.competition().addr(), table, this.year() as u16 as u32, 1, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
     };

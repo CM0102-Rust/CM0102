@@ -230,7 +230,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_club_manager(this: usize, 
     let mut sobra = 0u32;
     if exe::database_is_national_team(club) == 0 {
         for k in 0..50usize {
-            let p = Staff(read_usize(club.addr() + club::SQUAD + 4 * k));
+            let p = Staff(club.squad(k));
             if p.is_null() || p.player() == 0 {
                 continue;
             }
@@ -379,7 +379,7 @@ pub(crate) unsafe extern "thiscall" fn compare_manager_manager_remove_player_fro
         }
     }
     let r = o(this, person.addr(), club.addr());
-    let away = !(in_club || in_national_team) || (0..0x32usize).all(|k| read_usize(club.addr() + club::SQUAD + 4 * k) != person.addr());
+    let away = !(in_club || in_national_team) || (0..0x32usize).all(|k| club.squad(k) != person.addr());
     let ok = away && person.job_for_club() == f39 && person.club_job() == c39 && person.job_for_nation() == f28 && person.national_job() == c24;
     SCOREBOARD.record(ok, || format!("manager_manager_remove_player_from_squad(pessoa {:x}, clube {:x}): função {:x}/{:x} clube {:x}/{:x} (esperava {:x}/{:x} {:x}/{:x}), fora das vagas {}",
         read_usize(person.addr()), read_usize(club.addr()), person.job_for_club(), person.job_for_nation(), person.club_job(), person.national_job(), f39, f28, c39, c24, away));

@@ -830,7 +830,7 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
             let c = base.wrapping_add((read_u32(list + q * 4) as usize).wrapping_mul(club::SIZE));
             if read_u32(c + club::CONTINENTAL_COMP_ID) == u32::MAX {
                 let v = read_u8(c + club::LAST_POSITION) as i8;
-                if read_u32(c + club::LAST_DIVISION) == read_u32(league.addr() + 4) {
+                if read_u32(c + club::LAST_DIVISION) == (league.competition().addr() as u32) {
                     if v < level {
                         best = c;
                         level = v;
@@ -852,7 +852,7 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
     let n = news.as_mut_ptr() as usize;
     exe::new_newsitem(n, 0x17, 0);
     exe::newsitem_set_slot(n, (0) as u32 as i8, read_u32(best));
-    exe::news_send_to_division_managers(read_u32(G_NEWS) as usize, n, read_u32(league.addr() + 4) as usize);
+    exe::news_send_to_division_managers(read_u32(G_NEWS) as usize, n, (league.competition().addr() as u32) as usize);
     best
 }
 

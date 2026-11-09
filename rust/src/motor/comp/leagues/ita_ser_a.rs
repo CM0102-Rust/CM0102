@@ -304,7 +304,7 @@ pub(crate) unsafe fn serie_a_zones(league: League) -> [u8; 64] {
     let mut z = [0u8; 64];
     z[0] = 1;
     let (mut cl, mut uefa) = (0i8, 0i8);
-    exe::uefaseeding_get_nation_places(read_usize(G_UEFA_SEEDING), read_usize(read_usize(league.addr() + 4) + 0x5d), &mut cl, &mut uefa);
+    exe::uefaseeding_get_nation_places(read_usize(G_UEFA_SEEDING), read_usize(league.competition().addr() + 0x5d), &mut cl, &mut uefa);
     // simplification: the nation’s counts stay from 1 to 16 in the game; the copy ignores the bands that would fall outside the record.
     let cl = cl as i32;
     let uefa = uefa as i32;
@@ -604,7 +604,7 @@ pub(crate) unsafe fn construct_italian_division(this: League, ano: u32, registro
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.table);
     let fixos: unsafe extern "thiscall" fn(usize) = core::mem::transmute(p.fixed);
     exe::new_league(this);
-    write_usize(this.addr() + 4, registro);
+    write_usize(this.addr() + league::COMPETITION, registro);
     write_usize(this.addr(), p.vtabela);
     this.set_year((ano as u16) as i16);
     this.set_discipline_rule(0x11); // cqm4: the discipline rule of the Italian leagues
@@ -644,7 +644,7 @@ pub(crate) unsafe fn construct_italian_division(this: League, ano: u32, registro
     }
     let e = exe::crt_operator_new(0x5ce);
     let s = if e != 0 { exe::new_comp_stats(e, this) } else { 0 };
-    write_usize(this.addr() + 8, s);
+    this.set_comp_stats(s);
     if s == 0 {
         show_error_at(p.file, p.rows[4]);
         return this.addr();
@@ -714,14 +714,14 @@ pub(crate) unsafe extern "thiscall" fn construct_ita_ser_a(this: usize, year: u3
 pub(crate) unsafe fn compare_italian_constructor(name: &str, this: League, year: u32, record: usize, p: &ItalianDivision, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtabela && (this.year() as u16) == year as u16
-        && read_usize(this.addr() + 4) == record && this.discipline_rule() == 0x11;
-    if this.stage_index() == 0xff && read_usize(this.addr() + 8) != 0 {
+        && this.competition().addr() == record && this.discipline_rule() == 0x11;
+    if this.stage_index() == 0xff && this.comp_stats() != 0 {
         ok = ok && this.stage_count() == p.stages as usize && (this.stages() != 0) == (p.stages != 0);
         if p.series {
             ok = ok && *((this.addr() + 0xee) as *const u8) == 0;
         }
     }
-    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.stages(), read_usize(this.addr() + 8)));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.stages(), this.comp_stats()));
     r
 }
 

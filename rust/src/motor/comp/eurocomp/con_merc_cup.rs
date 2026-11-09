@@ -80,7 +80,7 @@ pub(crate) unsafe fn build_knockout_stage(this: League, teams: u32, stages: usiz
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this.addr(), teams, list, rodadas as u16 as u32, read_usize(this.addr() + 4), table, this.year() as u16 as u32, knockout, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+        construct(p, this.addr(), teams, list, rodadas as u16 as u32, this.competition().addr(), table, this.year() as u16 as u32, knockout, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
     };
@@ -125,7 +125,7 @@ pub(crate) unsafe fn con_merc_cup_compare_knockout_stage(name: &str, this: Leagu
     let (pl, ac) = (plan.clone(), found.clone());
     plan.sort_unstable();
     found.sort_unstable();
-    let same = plan == found && read_i16(stage + 0x3e) as usize == teams && read_usize(stage + 4) == read_usize(this.addr() + 4);
+    let same = plan == found && read_i16(stage + 0x3e) as usize == teams && read_usize(stage + 4) == this.competition().addr();
     SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this.addr(), pl, stage, ac, read_i16(stage + 0x3e)));
 }
 
@@ -377,8 +377,8 @@ pub(crate) unsafe fn con_merc_cup_drawn_club(this: League, k: usize) -> usize {
 pub(crate) unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let this = League(this);
     if this.active() == 0 && full != 0 {
-        let day = read_i16(this.addr() + 0xb6) as u16; // cqr12: the draw day
-        let year = (read_i16(this.addr() + 0xb8) as u16).wrapping_add(this.year() as u16);
+        let day = this.next_draw_day() as u16; // cqr12: the draw day
+        let year = (this.next_draw_year_offset() as u16).wrapping_add(this.year() as u16);
         if year == core::ptr::read_unaligned((today + 2) as *const u16) && day == core::ptr::read_unaligned(today as *const u16) {
             crate::comparison::branch("cqr_12 merconorte draw");
             exe::conmerccup_select_invited_clubs(this);
@@ -504,18 +504,18 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usi
             4,
             teams,
             this.legs() as u16 as u32,
-            read_usize(this.addr() + 4),
+            this.competition().addr(),
             table,
             rodadas as u16 as u32,
-            (read_u8(this.addr() + 0xc2) as u32),
-            (read_u8(this.addr() + 0xc3) as u32),
-            (read_u8(this.addr() + 0xc4) as u32),
+            (this.win_points() as u32),
+            (this.draw_points() as u32),
+            (this.match_category() as u32),
             this.addr() + league::TIEBREAKS,
             this.addr() + league::PROMOTED_COUNT,
             this.year() as u16 as u32,
             g as u32,
             id as u16 as u32,
-            (read_u8(this.addr() + 0x51) as u32),
+            (this.importance() as u32),
             2,
             0,
             this.league_flags() as u16 as u32,

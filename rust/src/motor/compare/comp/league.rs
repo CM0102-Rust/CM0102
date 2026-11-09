@@ -55,7 +55,7 @@ pub(crate) unsafe extern "thiscall" fn compare_move_fixtures_for_tv(this: usize,
     let l = list.as_mut_ptr() as usize;
     exe::new_llist(l);
     let n = (exe::fixture_manager_collect_comp_fixtures_on_day(read_usize(G_FIXTURE_MANAGER), read_i16(data + 2) as u16 as u32, read_i16(data) as u16 as u32, read_u8(e + 4) as u32,
-        read_usize(read_usize(this.addr() + 4)) as u32, u32::MAX, this.stage_index() as u32, l) as u32) as usize & 0xffff;
+        read_usize(this.competition().addr()) as u32, u32::MAX, this.stage_index() as u32, l) as u32) as usize & 0xffff;
     exe::drop_llist(l);
     o(this.addr(), data);
     let expected = if n == 0 { 0 } else { validas.min(n) };
@@ -325,7 +325,7 @@ pub(crate) unsafe extern "thiscall" fn compare_league_set_predicted_positions(le
     let league = League(league);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_LEAGUE_SET_PREDICTED_POSITIONS);
     let n = league.club_count() as i32;
-    if read_usize(league.addr() + 8) == 0 || n <= 0 {
+    if league.comp_stats() == 0 || n <= 0 {
         return o(league.addr()); // simplification: the box or nothing to sort, original only
     }
     let mut v: Vec<u32> = (0..n as usize).map(|i| read_usize(league.table() + 0x3b * i) as u32).collect();
@@ -338,7 +338,7 @@ pub(crate) unsafe extern "thiscall" fn compare_league_set_predicted_positions(le
             continue;
         }
         let p = (i as u8).wrapping_add(1);
-        let e = exe::comp_stats_find_club_entry(read_usize(league.addr() + 8), c as usize);
+        let e = exe::comp_stats_find_club_entry(league.comp_stats(), c as usize);
         if e == 0 || *((e + comp_stats_club::DANGER_POSITION) as *const u8) != p {
             erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if e == 0 { -1 } else { *((e + comp_stats_club::DANGER_POSITION) as *const u8) as i32 }));
         }

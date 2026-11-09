@@ -29,7 +29,7 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn ita_ser_c2a_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, _a4: u32, game: usize, _a6: u32) -> u32 {
     let this = League(this);
     let s = status as u8;
-    let comp = read_usize(this.addr() + 4);
+    let comp = this.competition().addr();
     let f = stage as u8;
     if f == 0xff {
         match s {

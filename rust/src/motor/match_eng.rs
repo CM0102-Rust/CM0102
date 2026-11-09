@@ -6612,7 +6612,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: usize, game: usize) {
             }
             // the end of the contract
             if random(f.temperament() as i32) == 0 && read_i8(f.player() + 0x25) > 0xf {
-                let d = exe::date_days_since(G_CURRENT_DATE, (f.date_joined_club() as u32), *((f.addr() + 0x42) as *const u32));
+                let d = exe::date_days_since(G_CURRENT_DATE, (f.date_joined_club() as u32), (f.date_joined_club_leap_year() as u32));
                 let r = random(200) + 0x32;
                 if d > r && form > 0x17 {
                     let g = read_i8(c + 0x3f);

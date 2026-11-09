@@ -340,7 +340,7 @@ pub(crate) unsafe fn eng_second_staff_records() -> usize {
 pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, left: usize, _a: u32, _b: u32) -> u32 {
     let this = League(this);
     let s = status as u8;
-    let comp = read_usize(this.addr() + 4);
+    let comp = this.competition().addr();
     if stage as u8 == 0xff {
         match s {
             5 => {

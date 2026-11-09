@@ -156,7 +156,7 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
     // 0x4cf6d0: push person; mov ecx, [0xae1050] -> thiscall, ret 4 (the loan contract)
     let mut n: i8 = 0;
     for k in 0..50usize {
-        let p = read_usize(club.addr() + club::SQUAD + 4 * k);
+        let p = club.squad(k);
         if p == 0 {
             continue;
         }

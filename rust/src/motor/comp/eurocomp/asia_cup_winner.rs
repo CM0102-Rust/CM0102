@@ -16,7 +16,7 @@ pub(crate) const AFRICAN_NATIONS_QUARTER_FINAL_SLOTS: [(i32, i32); 8] = [
 ///
 /// [pt] O clube da posição `p` do grupo `g` (pela 0x6826d0 League::get_table_row: push p; mov ecx, grupo -> thiscall, ret 4).
 pub(crate) unsafe fn group_table_club(this: League, g: i32, p: i32) -> usize {
-    let group = if g < 0 { this.addr() } else { read_usize(read_usize(this.addr() + 0xc) + g as usize * 4) };
+    let group = if g < 0 { this.addr() } else { read_usize(this.stages() + g as usize * 4) };
     read_usize(exe::league_get_table_row(group, p))
 }
 
@@ -64,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_knockout_stage(thi
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this.addr(), 8, list, rodadas as u16 as u32, read_usize(this.addr() + 4), table, this.year() as u16 as u32, 3, 4, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+        construct(p, this.addr(), 8, list, rodadas as u16 as u32, this.competition().addr(), table, this.year() as u16 as u32, 3, 4, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
     };

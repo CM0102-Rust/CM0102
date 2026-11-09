@@ -205,7 +205,7 @@ pub(crate) unsafe extern "thiscall" fn update_league_position_records(this: usiz
     if liga0.is_null() || liga0.stage_index() != 0xff {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_UPDATE_LEAGUE_POSITION_RECORDS)(this, liga0.addr(), always); // the boxes
     }
-    let comp = read_usize(read_usize(liga0.addr() + 4)) as i32;
+    let comp = read_usize(liga0.competition().addr()) as i32;
     for liga in league_stage_chain(liga0) {
         if !POSITION_RECORDS_DRY_RUN {
             exe::league_sort_table(liga, 0);
@@ -380,7 +380,7 @@ pub(crate) unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, clu
     while chosen == 0 {
         let minimum = ftol(games_of_club() as i32 as f64 * factor) as i16;
         for s in 0..50usize {
-            let p = Staff(read_usize(club.addr() + club::SQUAD + 4 * s));
+            let p = Staff(club.squad(s));
             if p.is_null() || read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) {
                 continue;
             }
@@ -660,7 +660,7 @@ pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, 
     write_usize(r + club_record::SEASON_RATING, 0xbf800000); // −1.0f
     let mut found = 0;
     for k in 0..50usize {
-        let p = Staff(read_usize(club.addr() + club::SQUAD + 4 * k));
+        let p = Staff(club.squad(k));
         if p.is_null() {
             continue;
         }

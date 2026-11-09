@@ -483,7 +483,7 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
     let club = Club(if k != 0 { read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + contract::CLUB).wrapping_mul(club::SIZE)) } else { 0 });
     if !club.is_null() {
         for v in 0..0x32usize {
-            let s = Staff(read_usize(club.addr() + club::SQUAD + v * 4));
+            let s = Staff(club.squad(v));
             if s.is_null() || s == person || s.player() == 0 {
                 continue;
             }

@@ -766,7 +766,7 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
     let mut days: i32 = 0;
     if read_u8(ln() + 2) & 1 == 0 && club.manager().addr() != 0 && manager_manager_is_national_team(club) == 0 {
         let manager = Staff(club.manager().addr());
-        days = exe::date_days_since(G_CURRENT_DATE, manager.date_joined_club() as u32, read_usize(manager.addr() + 0x42) as u32);
+        days = exe::date_days_since(G_CURRENT_DATE, manager.date_joined_club() as u32, manager.date_joined_club_leap_year() as u32);
         let presence = || {
             let bf = club.chairman().addr();
             if bf != 0 && read_usize(bf + 0x69) != 0 { Some(read_i8(read_usize(bf + 0x69) + 0x1d) as i32) } else { None }
@@ -1295,7 +1295,7 @@ pub(crate) unsafe extern "thiscall" fn add_job_vacancy(this: usize, club: usize,
     }
     if v.rd(6) == -1 {
         let ajudante = club.assistant_manager();
-        let list = club.coaches();
+        let list = club.coaches(0);
         if ajudante != 0 {
             v.d(6, read_i32(ajudante));
         } else if list != 0 {
@@ -1816,7 +1816,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
         if l != 0 && read_i16(l + injury_entry::DAYS_OUT) > 0x14 {
             let mut semeou = false;
             for k in 0..3usize {
-                let f = Staff(read_usize(club.addr() + club::PHYSIOS + k * 4));
+                let f = Staff(club.physios(k));
                 if f.is_null() || f.non_player() == 0 {
                     continue;
                 }
@@ -2555,7 +2555,7 @@ pub(crate) unsafe extern "thiscall" fn post_board_confidence_update_news(_this: 
     exe::newsitem_set_slot(n, 0, read_usize(club.addr()) as u32);
     let manager = Staff(club.manager().addr());
     let days = if !manager.is_null() {
-        let years = (*(G_CURRENT_DATE_YEAR as *const u16) as i32).wrapping_sub(core::ptr::read_unaligned((manager.addr() + 0x40) as *const u16) as i32);
+        let years = (*(G_CURRENT_DATE_YEAR as *const u16) as i32).wrapping_sub(manager.date_joined_club_year() as i32);
         years.wrapping_mul(365).wrapping_sub((manager.date_joined_club() as i16) as i32).wrapping_add(*(G_CURRENT_DATE as *const i16) as i32)
     } else {
         100
@@ -3413,7 +3413,7 @@ pub(crate) unsafe extern "thiscall" fn remove_club_manager(this: usize, club: us
         return;
     }
     for k in 0..50usize {
-        let p = Staff(read_usize(club.addr() + club::SQUAD + 4 * k));
+        let p = Staff(club.squad(k));
         if p.is_null() || p.player() == 0 {
             continue;
         }
@@ -3503,7 +3503,7 @@ pub(crate) unsafe extern "thiscall" fn review_national_team_performance(this: us
     if manager.is_null() || object() == 0 {
         return;
     }
-    let days = exe::date_days_since(G_CURRENT_DATE, (manager.date_joined_club()) as u32, (read_usize(manager.addr() + 0x42)) as u32);
+    let days = exe::date_days_since(G_CURRENT_DATE, (manager.date_joined_club()) as u32, (manager.date_joined_club_leap_year()) as u32);
     if days < 0x16d && read_i16(club_board_row(this, national_team) + 6) < 0x1964 {
         write_i16(club_board_row(this, national_team) + 6, 0x1964); // new manager
     }
@@ -3780,7 +3780,7 @@ pub(crate) unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, 
         exe::transfer_manager_cancel_club_offers(read_u32(G_TRANSFER_MANAGER) as usize, club);
         exe::shortlist_manager_rebuild_club_shortlist(read_u32(read_u32(G_TRANSFER_MANAGER) as usize + 0x856) as usize, club);
         for k in 0..0x32 {
-            let p = read_u32(club.addr() + club::SQUAD + 4 * k) as usize;
+            let p = (club.squad(k) as u32) as usize;
             if p != 0 {
                 exe::tactics_remove_player_from_selection(read_u32(G_TACTICS) as usize, club, p, 1, 1);
             }
@@ -3831,7 +3831,7 @@ pub(crate) unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32
     let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let mut queixosos = 0u8;
     for k in 0..0x32 {
-        let p = Staff(read_u32(club.addr() + club::SQUAD + 4 * k) as usize);
+        let p = Staff((club.squad(k) as u32) as usize);
         if !p.is_null() && (p.player() as u32) != 0 {
             let c = contract(read_u32(G_CONTRACT_MANAGER) as usize, p.addr(), club.addr());
             if c != 0 && read_u32(c + 0x45) & 0x1000_0000 != 0 {
@@ -3899,7 +3899,7 @@ pub(crate) unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32
     let manager = Staff((club.manager().addr() as u32) as usize);
     if !manager.is_null() {
         let days: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-        let d = days(G_CURRENT_DATE, (manager.date_joined_club() as u32), read_u32(manager.addr() + 0x42));
+        let d = days(G_CURRENT_DATE, (manager.date_joined_club() as u32), (manager.date_joined_club_leap_year() as u32));
         if d > random(0x7d0) + 0x3e8 {
             return 6;
         }
@@ -4242,7 +4242,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_board_ultimatum(this: usize, club
         if item != 0 && read_usize(club.addr()) == read_usize(item) {
             exe::llist_remove(read_usize(this + manager_manager_fields::ULTIMATUM_LIST), item);
             let manager = Staff(club.manager().addr());
-            if !manager.is_null() && days(G_CURRENT_DATE, manager.date_joined_club(), read_usize(manager.addr() + 0x42)) > 0x64 {
+            if !manager.is_null() && days(G_CURRENT_DATE, manager.date_joined_club(), manager.date_joined_club_leap_year()) > 0x64 {
                 crate::comparison::branch("cpo_1 ultimatum met");
                 let mut reg = [0u8; 8];
                 reg[0] = 1;

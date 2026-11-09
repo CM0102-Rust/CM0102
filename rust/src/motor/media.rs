@@ -243,7 +243,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
         // state 1: the AI owner may warn that it does not sell
         if read_u8(r + transfer_interest::STATE) == 1 && dono != 0 && media_is_human_club(dono, 1, 1) == 0 {
             let (rd, ra) = (read_i16(r + transfer_interest::DATE), read_i16(r + transfer_interest::DATE_YEAR) as u16);
-            let (pd, pa) = ((person.date_joined_club() as i16), read_i16(person.addr() + 0x40) as u16);
+            let (pd, pa) = ((person.date_joined_club() as i16), (person.date_joined_club_year() as i16) as u16);
             let after = ra > pa || (ra == pa && rd > pd);
             if after && vinc != 0 && read_u8(vinc + contract::LEAVING_ON_BOSMAN) == 0 && exe::staff_is_transfer_listed_or_requested(person, 0) == 0 {
                 let feliz = read_i8(vinc + 0x3d) as i32;
@@ -377,7 +377,7 @@ pub(crate) unsafe extern "thiscall" fn queue_trophy_praise_story(_this: usize, c
     write(n, 0xa, conf as u32);
     write(n, 0xb, (club.division().addr() == comp) as u32);
     let manager = Staff(club.manager().addr());
-    let days = exe::date_days_since(G_CURRENT_DATE, manager.date_joined_club() as u32, read_usize(manager.addr() + 0x42) as u32);
+    let days = exe::date_days_since(G_CURRENT_DATE, manager.date_joined_club() as u32, manager.date_joined_club_leap_year() as u32);
     write(n, 0xc, days as u32);
     if days < 0xb4 {
         return;
@@ -450,7 +450,7 @@ pub(crate) unsafe fn club_staff_vector(club: Club, call: &mut dyn FnMut(usize, u
     };
     v[52] = club.assistant_manager();
     for k in 0..5 {
-        v[53 + k] = read_usize(club.addr() + club::COACHES + 4 * k);
+        v[53 + k] = club.coaches(k);
     }
     v
 }
@@ -705,7 +705,7 @@ pub(crate) unsafe fn warn_position_rivals_with(player: Staff, club: Club, call: 
     let n = n as i32;
     let mut postou = false;
     for i in 0..50 {
-        let p = Staff(read_usize(club.addr() + club::SQUAD + 4 * i));
+        let p = Staff(club.squad(i));
         if p.is_null() || p.player() == 0 || p == player {
             continue;
         }
@@ -956,7 +956,7 @@ pub(crate) unsafe fn signing_celebration_or_stop(this: usize, p: Staff, club: Cl
 pub(crate) unsafe fn squad_spokesman(club: Club, p: Staff) -> usize {
     let (mut melhor, mut quem) = (0i32, 0usize);
     for j in 0..50usize {
-        let m = Staff(read_usize(club.addr() + club::SQUAD + 4 * j));
+        let m = Staff(club.squad(j));
         if m.is_null() || m.player() == 0 || m.addr() == p.addr() {
             continue;
         }
@@ -1077,7 +1077,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
     let days: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
     let category: unsafe extern "stdcall" fn(usize, usize) -> u8 = core::mem::transmute(FN_CONTRACT_MANAGER_GET_DESERVED_SQUAD_STATUS);
     for j in 0..50usize {
-        let m = read_usize(new.addr() + club::SQUAD + 4 * j);
+        let m = new.squad(j);
         if m == 0 || read_usize(m + staff::PLAYER) == 0 || m == p.addr() {
             continue;
         }
@@ -1182,7 +1182,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
     };
     let same = exe::club_count_squad_with_position_mask(old, natural_position_mask(p)) as i8 as i32;
     for j in 0..50usize {
-        let m = read_usize(old.addr() + club::SQUAD + 4 * j);
+        let m = old.squad(j);
         if m == 0 || read_usize(m + staff::PLAYER) == 0 || m == p.addr() {
             continue;
         }
@@ -1817,7 +1817,7 @@ pub(crate) unsafe extern "thiscall" fn adjust_board_confidence(_this: usize, clu
     b += 1;
     write(n, b, (!sujeito.is_null() && (sujeito.professionalism() as i32) > 0xe) as u32);
     b += 1;
-    let days = !sujeito.is_null() && exe::date_days_since(G_CURRENT_DATE, sujeito.date_joined_club() as u32, read_usize(sujeito.addr() + 0x42) as u32) > 0x5dc;
+    let days = !sujeito.is_null() && exe::date_days_since(G_CURRENT_DATE, sujeito.date_joined_club() as u32, sujeito.date_joined_club_leap_year() as u32) > 0x5dc;
     write(n, b, days as u32);
     b += 1;
     let caro = !sujeito.is_null() && value(read_usize(G_CONTRACT_MANAGER), sujeito.addr(), club.addr(), 0, u32::MAX, 0) > 0x44aa20;
@@ -1854,7 +1854,7 @@ pub(crate) unsafe fn news_item_fns() -> (unsafe extern "thiscall" fn(usize, u32,
 ///
 /// [pt] Os dias desde a chegada da pessoa (+0x3e/+0x42) até hoje (0x54cdb0 em 0xae2c90).
 pub(crate) unsafe fn days_since_arrival(p: Staff) -> i32 {
-    exe::date_days_since(G_CURRENT_DATE, p.date_joined_club() as u32, read_usize(p.addr() + 0x42) as u32)
+    exe::date_days_since(G_CURRENT_DATE, p.date_joined_club() as u32, p.date_joined_club_leap_year() as u32)
 }
 
 /// O sorteio da gratidão pelo tipo (índices da tabela de bytes 0x732fcc, saltos 0x732fb4): 0 os tipos 0, 6, 14 e 17; 1
@@ -2187,7 +2187,7 @@ pub(crate) unsafe extern "thiscall" fn rate_player_form_for_story(_this: usize, 
             _ => r + 0.25,
         },
         1 => {
-            let d = exe::date_days_since(G_CURRENT_DATE, player.date_joined_club() as u32, read_usize(player.addr() + 0x42) as u32);
+            let d = exe::date_days_since(G_CURRENT_DATE, player.date_joined_club() as u32, player.date_joined_club_leap_year() as u32);
             (200i32.wrapping_sub(d)) as f64 * 0.1f32 as f64 + rf as f64
         }
         2 => {

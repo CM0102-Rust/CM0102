@@ -128,7 +128,7 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_create_group_stage(this
 pub(crate) unsafe extern "thiscall" fn compare_world_cup_set_predicted_positions(this: usize) {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_WORLD_CUP_SET_PREDICTED_POSITIONS);
-    if read_usize(this.addr() + 8) == 0 || this.entrant_count() < 0x20 || this.entrant_book() == 0 {
+    if this.comp_stats() == 0 || this.entrant_count() < 0x20 || this.entrant_book() == 0 {
         return o(this.addr());
     }
     let n = this.entrant_count() as usize;
@@ -137,7 +137,7 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_set_predicted_positions
     o(this.addr());
     const FAIXAS: [u8; 32] = [1, 2, 3, 4, 5, 5, 5, 5, 9, 9, 9, 9, 9, 9, 9, 9, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19];
     let wrong = (0..32).find(|&k| {
-        let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this.addr() + 8), v[k]) } else { 0 };
+        let e = if v[k] != 0 { exe::comp_stats_find_club_entry(this.comp_stats(), v[k]) } else { 0 };
         e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != FAIXAS[k]
     });
     SCOREBOARD.record(wrong.is_none(), || format!("world_cup_set_predicted_positions: a posição prevista da vaga {:?} não bate", wrong));

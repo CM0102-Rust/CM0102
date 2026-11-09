@@ -64,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn compare_warn_squad_of_position_rival(this
     reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
     if !club.is_null() {
         for i in 0..50 {
-            let p = Staff(read_usize(club.addr() + club::SQUAD + 4 * i));
+            let p = Staff(club.squad(i));
             if !p.is_null() {
                 reg.push((p.addr() + staff::DETERMINATION, 6));
                 reg.extend(contract_region(p.addr(), club));

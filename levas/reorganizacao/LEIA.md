@@ -28,6 +28,24 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 6: confiança dos nomes e resíduos dos quatro registros
+
+- **Confiança dos nomes** (pedido do Lucas): `confianca_campos.py` classifica cada campo pela origem que o comentário do
+  `fields.rs` já diz: comunidade (leiautes dos editores, 247), conferido (`[verified: como]`, segunda fonte
+  independente, 9), lido (leitura do código com evidência, 1.334), inferido (`[inference]`, 142). Gera
+  `docs/CONFIANCA_DOS_CAMPOS.md`; cada método do `records.rs` traz o nível (`Name: community.`).
+- **Deslocamentos sem nome** usados sobre variáveis tipadas (30, 403 usos), conferidos por dois agentes: 17 já tinham
+  nome, 7 novos (`league::COMPETITION`, `COMP_STATS`, `ENTRANTS_ARE_QUALIFIERS`, mais dois da base `Comp` copiados do
+  `cup::`; as metades de ano das datas da pessoa), 6 são de subclasses (o mesmo deslocamento é outra coisa em cada tipo
+  de competição: ficam para quando as subclasses tiverem tipo). 306 hexadecimais crus viraram nomes; hexadecimais crus
+  sobre variáveis tipadas 209 → 107. Achado a conferir: o clube +0xff que o original lê é a vaga 10 do elenco, não o
+  técnico (+0xcf), talvez um defeito do original.
+- **Vetores:** `club.squad(i)`, `coaches(i)`, `scouts(i)`, `physios(i)` (o `TIEBREAKS` da liga é lido inteiro em outros
+  lugares e ficou escalar).
+
+`.addr()` fora dos invólucros 3.683 → 3.488. Prova: 7cc445c2 ×2, detector igual, comparação 0; as mutações mudadas
+compilam.
+
 ## Migração para os registros tipados, leva 5: a liga e a competição
 
 O pacote completo (variáveis, acessos, invólucros, assinaturas, propagação) para `league` e `competition`, agora também

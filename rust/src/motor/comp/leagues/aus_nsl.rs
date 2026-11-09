@@ -78,7 +78,7 @@ pub(crate) unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -
     let t = table(this.addr(), 0, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xee);
     let stage = if p != 0 {
-        construct(p, this.addr(), 6, clubs.as_ptr(), 1, read_usize(this.addr() + 4), t, rodadas as u16 as u32, this.win_points() as u32,
+        construct(p, this.addr(), 6, clubs.as_ptr(), 1, this.competition().addr(), t, rodadas as u16 as u32, this.win_points() as u32,
                   this.draw_points() as u32, this.match_category() as u32, this.addr() + league::TIEBREAKS, slots.as_ptr(), this.year() as u16 as u32, 0,
                   extra as u16 as u32, this.importance() as u32, 1, 0, this.league_flags() as u16 as u32, -1, 0, 2)
     } else {
@@ -138,7 +138,7 @@ pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
     let t = table(this.addr(), 1, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);
     let stage = if p != 0 {
-        construct(p, this.addr(), 2, list, rodadas as u16 as u32, read_usize(this.addr() + 4), t, this.year() as u16 as u32, 1, 1,
+        construct(p, this.addr(), 2, list, rodadas as u16 as u32, this.competition().addr(), t, this.year() as u16 as u32, 1, 1,
                   extra as u16 as u32, 0x14, 0, 0, 0, 0)
     } else {
         0

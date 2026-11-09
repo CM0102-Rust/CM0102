@@ -30,7 +30,7 @@ pub(crate) unsafe extern "thiscall" fn italy_rules_can_loan_player(this: usize, 
     // 0x4cf6d0: push person; mov ecx, [0xae1050] -> thiscall, ret 4
     let mut n: i8 = 0;
     for k in 0..50usize {
-        let p = read_usize(club.addr() + club::SQUAD + 4 * k);
+        let p = club.squad(k);
         if p == 0 || read_usize(p) as i32 >= read_usize(G_STAFF_COUNT) as i32 || exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p) == 0 {
             continue;
         }

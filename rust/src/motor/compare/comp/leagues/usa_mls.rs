@@ -48,7 +48,7 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_create_playoff_stage(this
     }
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_USA_MLS_CREATE_PLAYOFF_STAGE)(this.addr());
     let stage = read_usize(this.stages() + 8);
-    let same = stage != 0 && read_i16(stage + cup::TEAM_COUNT) == 8 && read_usize(stage + 4) == read_usize(this.addr() + 4) && {
+    let same = stage != 0 && read_i16(stage + cup::TEAM_COUNT) == 8 && read_usize(stage + 4) == this.competition().addr() && {
         let mut in_it = [0usize; 8];
         for (i, c) in in_it.iter_mut().enumerate() {
             *c = read_usize(read_usize(stage + cup::TEAM_TABLE) + 6 * i);
@@ -91,7 +91,7 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_create_final_stage(this: 
     let same = stage != 0 && n < 2 || stage != 0 && {
         let l = read_usize(stage + cup::TEAM_TABLE);
         let (x, y) = (read_usize(l), read_usize(l + 6));
-        read_i16(stage + cup::TEAM_COUNT) == 2 && read_usize(stage + 4) == read_usize(this.addr() + 4) && ((x, y) == (v[0], v[1]) || (x, y) == (v[1], v[0]))
+        read_i16(stage + cup::TEAM_COUNT) == 2 && read_usize(stage + 4) == this.competition().addr() && ((x, y) == (v[0], v[1]) || (x, y) == (v[1], v[0]))
     };
     SCOREBOARD.record(same, || format!("usa_mls_create_final_stage({:#x}) finalistas={:x?} n={} fase={:#x}", this.addr(), v, n, stage));
 }
@@ -165,7 +165,7 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_set_predicted_positions(t
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_USA_MLS_SET_PREDICTED_POSITIONS);
     let n = this.club_count() as usize;
-    if read_usize(this.addr() + 8) == 0 || n != 4 {
+    if this.comp_stats() == 0 || n != 4 {
         return o(this.addr());
     }
     let mut v = [0usize; 12];
@@ -180,7 +180,7 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_set_predicted_positions(t
     o(this.addr());
     const LUGARES: [u8; 12] = [1, 4, 7, 10, 1, 4, 7, 10, 1, 4, 7, 10];
     let wrong = (0..12).find(|&k| {
-        let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this.addr() + 8), v[k]) } else { 0 };
+        let e = if v[k] != 0 { exe::comp_stats_find_club_entry(this.comp_stats(), v[k]) } else { 0 };
         e == 0 || *((e + comp_stats_club::DANGER_POSITION) as *const u8) != LUGARES[k]
     });
     SCOREBOARD.record(wrong.is_none(), || format!("usa_mls_set_predicted_positions({:#x}): a posição da vaga {:?} não bate ({:x?})", this.addr(), wrong, v));
@@ -220,10 +220,10 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_update_staff_records_for_
 pub(crate) unsafe extern "thiscall" fn compare_usa_mls_add_result(this: usize, game: usize, stats: u32) -> u32 {
     let this = League(this);
     let mark = *((game + fixture::STAGE_INDEX) as *const i8);
-    let block = read_usize(this.addr() + 8);
+    let block = this.comp_stats();
     let esperada = if this.current_stage() == 1 { 1 } else if mark < 2 { -1 } else { mark };
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_USA_MLS_ADD_RESULT)(this.addr(), game, stats);
-    let (m, b) = (*((game + fixture::STAGE_INDEX) as *const i8), read_usize(this.addr() + 8));
+    let (m, b) = (*((game + fixture::STAGE_INDEX) as *const i8), this.comp_stats());
     SCOREBOARD.record(r == 1 && m == esperada && b == block, || format!("usa_mls_add_result({:x}, {:x}) devolveu {} marca {} x {} bloco {:x} x {:x}", this.addr(), game, r, m, esperada, b, block));
     r
 }

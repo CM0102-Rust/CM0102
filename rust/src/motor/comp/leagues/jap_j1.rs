@@ -61,7 +61,7 @@ pub(crate) unsafe extern "thiscall" fn create_championship_final_stage(this: usi
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this.addr(), 2, list, rodadas as u16 as u32, read_usize(this.addr() + 4), t, this.year() as u16 as u32, 2, 1, extra as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+        construct(p, this.addr(), 2, list, rodadas as u16 as u32, this.competition().addr(), t, this.year() as u16 as u32, 2, 1, extra as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
     };
@@ -121,7 +121,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
         exe::crt_free(l);
         core::ptr::write_unaligned((this.addr() + league::ROUND_DATES) as *mut usize, 0);
     }
-    let stats = read_usize(this.addr() + 8);
+    let stats = read_usize(this.addr() + league::COMP_STATS);
     if stats != 0 {
         exe::comp_stats_archive_season_and_reset(stats, 1);
     }
@@ -173,7 +173,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
     virtual_(read_usize(read_usize(G_COMP_OBJECT_TABLE) + 4 * read_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)), 8);
     virtual_(this.addr(), 0x5c);
     exe::league_set_club_season_expectations(this);
-    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this.addr() + 4)) as u32)
+    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this.addr() + league::COMPETITION)) as u32)
 }
 
 /// True if the club's division (+0x57) is non-null and its id equals the competition id in global g.

@@ -388,7 +388,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_post_call_up_news(this: us
     let mut news = [0u32; 0x38];
     let nt = news.as_mut_ptr() as usize;
     for idx in 1..=0x32usize {
-        let p = Staff(read_usize(national_team.addr() + club::SQUAD + (idx - 1) * 4));
+        let p = Staff(national_team.squad((idx - 1)));
         if p.is_null() || p.playing_squad() & mark == 0 || p.club_job() == 0 || exe::news_club_has_human_manager(read_usize(G_NEWS), p.club_job()) == 0 {
             continue;
         }
@@ -402,7 +402,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_post_call_up_news(this: us
         let club = p.club_job();
         n = n.wrapping_add(1);
         if idx < 0x32 {
-            let next = Staff(read_usize(national_team.addr() + club::SQUAD + idx * 4));
+            let next = Staff(national_team.squad(idx));
             if !next.is_null() && next.club_job() == club && next.playing_squad() & mark != 0 {
                 continue;
             }
@@ -2757,7 +2757,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_to_squad(_this: usize, nation:
     let kind = kind as u8;
     let team = Club(national_team_for_type(nation, kind));
     let squad: u32 = if kind == 0 || kind == 2 { 4 } else { 8 };
-    let slot = match (0..50usize).find(|&c| read_usize(team.addr() + club::SQUAD + 4 * c) == 0) {
+    let slot = match (0..50usize).find(|&c| team.squad(c) == 0) {
         Some(c) => team.addr() + club::SQUAD + 4 * c,
         None => return,
     };
@@ -2790,7 +2790,7 @@ pub(crate) unsafe fn squad_change_regions(team: Club, p: Staff) -> [(usize, usiz
 pub(crate) unsafe extern "thiscall" fn national_teams_remove_player_from_squad(_this: usize, nation: usize, kind: u32, p: usize) {
     let team = Club(national_team_for_type(nation, kind as u8));
     remove_from_tactics(team, p);
-    if let Some(c) = (0..50usize).find(|&c| read_usize(team.addr() + club::SQUAD + 4 * c) == p) {
+    if let Some(c) = (0..50usize).find(|&c| team.squad(c) == p) {
         core::ptr::write_unaligned((team.addr() + club::SQUAD + 4 * c) as *mut usize, 0);
         clear_national_call_up(Staff(p));
     }
@@ -3478,7 +3478,7 @@ pub(crate) unsafe extern "thiscall" fn record_club_call_ups(this: usize, team: u
     let mut previous = 0usize;
     let mut count: u8 = 0;
     for i in 0..0x32usize {
-        let s = Staff(read_usize(team.addr() + club::SQUAD + 4 * i));
+        let s = Staff(team.squad(i));
         if s.is_null() || read_usize(s.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
             continue;
         }

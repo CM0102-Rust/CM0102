@@ -181,8 +181,8 @@ pub(crate) unsafe extern "thiscall" fn goldcup_start_new_season(this: usize) {
         exe::crt_free(this.round_dates());
         this.set_round_dates(0);
     }
-    if read_usize(this.addr() + 8) != 0 {
-        exe::comp_stats_archive_season_and_reset(read_usize(this.addr() + 8), 1);
+    if this.comp_stats() != 0 {
+        exe::comp_stats_archive_season_and_reset(this.comp_stats(), 1);
     }
     if (this.current_stage() as i32) >= 0 {
         let mut i = 0i32;
@@ -253,8 +253,8 @@ pub(crate) unsafe fn drawn_team(this: League, k: usize) -> usize {
 /// devolução ela repassa.
 pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let this = League(this);
-    let day = read_i16(this.addr() + 0xb6) as u16; // cqr13: the draw day
-    let year = (read_i16(this.addr() + 0xb8) as u16).wrapping_add(this.year() as u16);
+    let day = this.next_draw_day() as u16; // cqr13: the draw day
+    let year = (this.next_draw_year_offset() as u16).wrapping_add(this.year() as u16);
     let day_of_today = core::ptr::read_unaligned(today as *const u16);
     let year_of_today = core::ptr::read_unaligned((today + 2) as *const u16);
     // simplification: in the two passes before the draw and on errors the original returns only al = 0 (the rest of eax is leftover from the
@@ -382,18 +382,18 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g
             4,
             teams,
             1,
-            read_usize(this.addr() + 4),
+            this.competition().addr(),
             table,
             rodadas as u16 as u32,
-            (read_u8(this.addr() + 0xc2) as u32),
-            (read_u8(this.addr() + 0xc3) as u32),
-            (read_u8(this.addr() + 0xc4) as u32),
+            (this.win_points() as u32),
+            (this.draw_points() as u32),
+            (this.match_category() as u32),
             this.addr() + league::TIEBREAKS,
             this.addr() + league::PROMOTED_COUNT,
             this.year() as u16 as u32,
             g as u32,
             id as u16 as u32,
-            (read_u8(this.addr() + 0x51) as u32),
+            (this.importance() as u32),
             4,
             0,
             this.league_flags() as u16 as u32,

@@ -1846,7 +1846,7 @@ pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
     let club = Club(read_usize(G_CLUB_TABLE).wrapping_add(read_usize(this.addr() + finance::CLUB_ID).wrapping_mul(club::SIZE)));
     let mut ocupadas: i8 = 0;
     for k in 0..50usize {
-        let p = read_usize(club.addr() + club::SQUAD + 4 * k);
+        let p = club.squad(k);
         if p == 0 {
             continue;
         }

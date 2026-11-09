@@ -68,7 +68,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
     exe::new_league(this);
     write_usize(this.addr(), 0x96aa24);
     this.set_year((year as u16) as i16);
-    write_usize(this.addr() + 4, record);
+    write_usize(this.addr() + league::COMPETITION, record);
     this.set_discipline_rule(0xc); // cqq6: the discipline of the French first division
     let m = new_marker_comp(0x96a994, KEY_CLUB_COMP_FRENCH_CFA);
     write_usize(this.addr() + fra_first::CFA_MARKER, m);
@@ -122,7 +122,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
     }
     let e = exe::crt_operator_new(0x5ce);
     let s = if e != 0 { exe::new_comp_stats(e, this) } else { 0 };
-    write_usize(this.addr() + 8, s);
+    this.set_comp_stats(s);
     if s == 0 {
         show_error_at(0x9ccb5c, 0x83);
         return this.addr();

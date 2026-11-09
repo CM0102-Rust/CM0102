@@ -35,12 +35,16 @@ def campos_do_registro(mod):
     """{FIELD: (method, type or record type, is_pointer)} from records.rs; type None = address only."""
     t = open(os.path.join(SRC, 'motor', 'records.rs'), encoding='utf-8').read()
     out, tipo = {}, None
-    for m in re.finditer(r'/// `%s::(\w+)` \(\+0x[0-9a-f]+\)\.\n\s*#\[inline\(always\)\]\n\s*pub\(crate\) (?:unsafe )?fn (r#)?(\w+)\(self\) -> (\w+)' % mod, t):
+    for m in re.finditer(r'/// `%s::(\w+)` \(\+0x[0-9a-f]+\)\.[^\n]*\n\s*#\[inline\(always\)\]\n\s*pub\(crate\) (?:unsafe )?fn (r#)?(\w+)\(self\) -> (\w+)' % mod, t):
         campo, nome, rt = m.group(1), m.group(3), m.group(4)
         if nome.endswith('_addr') and rt == 'usize':
             out[campo] = (nome, None, False)
         else:
             out[campo] = ((m.group(2) or '') + nome, rt, rt not in LARG)
+    vet = {}
+    for m in re.finditer(r'/// `%s::(\w+)`\[i\] \(\+0x[0-9a-f]+, \d+ x (\w+)\)\.[^\n]*\n\s*#\[inline\(always\)\]\n\s*pub\(crate\) (?:unsafe )?fn (\w+)\(self, i: usize\)' % mod, t):
+        vet[m.group(1)] = (m.group(3), m.group(2))
+    out['__vetores__'] = vet
     m = re.search(r'/// A `%s` record in the game' % mod, t)
     tipo = re.search(r'pub\(crate\) struct (\w+)\(', t[m.end():]).group(1)
     return tipo, out
@@ -75,6 +79,7 @@ class Conversor:
     def __init__(self, mod):
         self.mod = mod
         self.tipo, self.campos = campos_do_registro(mod)
+        self.vetores = self.campos.pop('__vetores__', {})
 
     def leitura(self, x, campo, t):
         if campo not in self.campos:
@@ -162,6 +167,40 @@ class Conversor:
             if novo and not any(a <= m.start() < b for a, b in ocupado):
                 edicoes.append((m.start(), fim, novo))
                 ocupado.append((m.start(), fim))
+        # arrays: read_T(x + mod::F + 4 * i) / write_T(x + mod::F + i * 4, v)  ->  x.squad(i) / x.set_squad(i, v)
+        LARG_EL = {'u8': 1, 'i8': 1, 'u16': 2, 'i16': 2, 'u32': 4, 'i32': 4, 'usize': 4}
+        for m in re.finditer(r'\b(read|write)_(u8|i8|u16|i16|u32|i32|usize)\(', mk):
+            if any(a <= m.start() < b for a, b in ocupado):
+                continue
+            args, fim = ie.args_da_chamada(mk, m.end() - 1)
+            if not args:
+                continue
+            a0 = re.fullmatch(r'\s*(%s)(?:\.addr\(\))?\s*\+\s*%s::([A-Z][A-Z0-9_]*)\s*\+\s*(.+?)\s*' % (nomes, self.mod), args[0])
+            if not a0 or a0.group(2) not in self.vetores:
+                continue
+            x, campo, idx, t = a0.group(1), a0.group(2), a0.group(3), m.group(2)
+            nome, et = self.vetores[campo]
+            tam = LARG_EL[et]
+            if tam == 1:
+                i = idx if re.fullmatch(r'[\w.()]+( as usize)?', idx) else None
+            else:
+                mm = re.fullmatch(r'%d\s*\*\s*(.+)|(.+?)\s*\*\s*%d' % (tam, tam), idx)
+                i = (mm.group(1) or mm.group(2)) if mm else None
+            if i is None or LARG_EL[t] != tam:
+                continue
+            i = s[mk.index(i, m.end()):mk.index(i, m.end()) + len(i)]
+            cast = '' if t == et else ' as %s' % t
+            if m.group(1) == 'read' and len(args) == 1:
+                novo = '%s.%s(%s)%s' % (x, nome, i, cast)
+                novo = '(%s)' % novo if cast else novo
+            elif m.group(1) == 'write' and len(args) == 2:
+                ini_v = m.end() + mk[m.end():fim].rindex(args[1])
+                v = s[ini_v:ini_v + len(args[1])].strip()
+                novo = '%s.set_%s(%s, %s)' % (x, nome, i, v if t == et else '(%s) as %s' % (v, et))
+            else:
+                continue
+            edicoes.append((m.start(), fim, novo))
+            ocupado.append((m.start(), fim))
         # core::ptr::read_unaligned((x + mod::F) as *const T)  and  core::ptr::write_unaligned((x + mod::F) as *mut T, v)
         for m in re.finditer(r'core::ptr::(read|write)_unaligned\(', mk):
             if any(a <= m.start() < b for a, b in ocupado):

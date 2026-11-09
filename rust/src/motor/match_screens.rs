@@ -1959,7 +1959,7 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
     let y = top + 0x28;
     let clubs = league.club_count();
     let (alto, n);
-    if clubs <= 8 && league.legs() > 0 && u(u(league.addr() + 4)) != u(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) {
+    if clubs <= 8 && league.legs() > 0 && u(u(league.addr() + league::COMPETITION)) != u(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) {
         let mut k = (clubs as u8).wrapping_add(1);
         if b8(league.addr() + league::PROMOTED_COUNT) != 0 || b8(league.addr() + league::LEAGUE_FLAGS) & 1 != 0 {
             k = k.wrapping_add(1);

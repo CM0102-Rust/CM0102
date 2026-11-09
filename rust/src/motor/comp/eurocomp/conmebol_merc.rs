@@ -54,8 +54,8 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
         virada(this.addr());
     }
     if this.active() == 0 && full != 0 {
-        let day = read_i16(this.addr() + 0xb6) as u16; // cqr11: the draw day
-        let year = (read_i16(this.addr() + 0xb8) as u16).wrapping_add(this.year() as u16);
+        let day = this.next_draw_day() as u16; // cqr11: the draw day
+        let year = (this.next_draw_year_offset() as u16).wrapping_add(this.year() as u16);
         if year == core::ptr::read_unaligned((today + 2) as *const u16) && day == core::ptr::read_unaligned(today as *const u16) {
             crate::comparison::branch("cqr_11 mercosul draw");
             exe::conmebolmerc_select_invited_clubs(this);
@@ -185,18 +185,18 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
             this.club_count() as u16 as u32,
             teams,
             this.legs() as u16 as u32,
-            read_usize(this.addr() + 4),
+            this.competition().addr(),
             table,
             rodadas as u16 as u32,
-            (read_u8(this.addr() + 0xc2) as u32),
-            (read_u8(this.addr() + 0xc3) as u32),
-            (read_u8(this.addr() + 0xc4) as u32),
+            (this.win_points() as u32),
+            (this.draw_points() as u32),
+            (this.match_category() as u32),
             this.addr() + league::TIEBREAKS,
             this.addr() + league::PROMOTED_COUNT,
             this.year() as u16 as u32,
             g as u32,
             id as u16 as u32,
-            (read_u8(this.addr() + 0x51) as u32),
+            (this.importance() as u32),
             2,
             0,
             this.league_flags() as u16 as u32,

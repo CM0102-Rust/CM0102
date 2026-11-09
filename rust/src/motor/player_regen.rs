@@ -183,7 +183,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
     let v = exe::database_get_empty_common_name(p.nation());
     p.set_common_name(v);
     call_thiscall_1(0x5fff30, read_usize(G_HUMAN_MANAGER), p);
-    write_i16(p.addr() + 0x40, read_i16(G_CURRENT_DATE_YEAR));
+    p.set_date_joined_club_year((read_i16(G_CURRENT_DATE_YEAR)) as u16);
     write_i16(p.addr() + staff::DATE_JOINED_CLUB, read_i16(G_CURRENT_DATE));
     p.set_club_job((0) as usize);
     p.set_national_job((0) as usize);
@@ -365,7 +365,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
             write_i16(f + player_sheet::WORLD_REPUTATION, mul_rdata_const(read_i16(f + player_sheet::WORLD_REPUTATION), 0x96a5d0));
         }
     }
-    write_i16(p.addr() + 0x12, read_i16(G_CURRENT_DATE_YEAR).wrapping_sub(age as i16)); // cqg7: the birth year
+    p.set_date_of_birth_year((read_i16(G_CURRENT_DATE_YEAR).wrapping_sub(age as i16)) as u16); // cqg7: the birth year
     let r = friendly_random(0x16d);
     p.set_date_of_birth(r as i16);
     let a = exe::database_get_staff_age(p, G_CURRENT_DATE as *const u16);
@@ -1250,7 +1250,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_youth_promotion_news(j: 
         if current != 0 {
             break;
         }
-        let t = if k == -1 { c.assistant_manager() } else { read_usize(c.addr() + club::COACHES + 4 * k as usize) };
+        let t = if k == -1 { c.assistant_manager() } else { c.coaches(k as usize) };
         if t != 0 {
             let r = friendly_random(0x9c4);
             let v = r.wrapping_add(c.reputation() as i32 / 2);
@@ -1303,7 +1303,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_youth_promotion_news(j: 
 ///
 /// [pt] A primeira vaga livre (dword 0) das 50 do elenco do clube (+0xd7); 0x32 sem vaga.
 pub(crate) unsafe fn first_free_squad_slot(club: Club) -> usize {
-    (0..0x32usize).find(|&k| read_i32(club.addr() + club::SQUAD + 4 * k) == 0).unwrap_or(0x32)
+    (0..0x32usize).find(|&k| (club.squad(k) as i32) == 0).unwrap_or(0x32)
 }
 
 /// Signs the regen for a club: the first free squad slot, the value, the contract end, the contract and the default
@@ -1343,7 +1343,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_sign_for_club(person: usize, 
     let month_of_end: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_CONTRACT_MANAGER_SEASON_END_MONTH);
     let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     crate::comparison::branch("cpv_9 regen signed");
-    write_i32(club.addr() + club::SQUAD + 4 * k, person.addr() as i32);
+    club.set_squad(k, (person.addr() as i32) as usize);
     person.set_club_job((club.addr() as i32) as usize);
     person.set_wage((0) as usize);
     let v = value(manager, person.addr(), club.addr(), 1, -1, 0);
@@ -1872,7 +1872,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
         }
         if age > 0x22 && person.club_job() == 0 {
             let days: unsafe extern "thiscall" fn(usize, u32, u32) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-            if days(G_CURRENT_DATE, person.date_joined_club() as u32, read_usize(person.addr() + 0x42) as u32) > 0x41 {
+            if days(G_CURRENT_DATE, person.date_joined_club() as u32, person.date_joined_club_leap_year() as u32) > 0x41 {
                 break 'm 1;
             }
         }
@@ -2348,7 +2348,7 @@ pub(crate) unsafe fn remove_from_team(p: Staff, field: usize) {
     exe::tactics_remove_player_from_selection(read_usize(G_TACTICS), read_usize(p.addr() + field), p, 0, 1);
     exe::tactics_remove_player_from_selection(read_usize(G_TACTICS), read_usize(p.addr() + field), p, 1, 1);
     let team = Club(read_usize(p.addr() + field));
-    if let Some(k) = (0..0x32usize).find(|&k| read_usize(team.addr() + club::SQUAD + 4 * k) == p.addr()) {
+    if let Some(k) = (0..0x32usize).find(|&k| team.squad(k) == p.addr()) {
         core::ptr::write_unaligned((team.addr() + club::SQUAD + 4 * k) as *mut usize, 0);
     }
 }
@@ -2848,7 +2848,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_check_unemployed_retirement(p
         if (person.club_job() as u32) != 0 || (person.national_job() as u32) != 0 {
             false
         } else {
-            let years = (*(G_CURRENT_DATE_YEAR as *const u16) as i32).wrapping_sub(*((person.addr() + 0x40) as *const u16) as i32);
+            let years = (*(G_CURRENT_DATE_YEAR as *const u16) as i32).wrapping_sub(person.date_joined_club_year() as i32);
             let days = years.wrapping_mul(365).wrapping_sub((person.date_joined_club() as i16) as i32).wrapping_add(*(G_CURRENT_DATE as *const i16) as i32);
             if days > 0x16d {
                 let rating = *(((person.player() as u32) as usize + 0xb) as *const i16) as i32;

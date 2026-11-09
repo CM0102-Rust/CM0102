@@ -16,7 +16,7 @@ pub(crate) unsafe extern "thiscall" fn group_decided(this: usize, club: usize, p
     if *((partida + fixture::STAGE_INDEX) as *const u8) != 0xff {
         return 0;
     }
-    if exe::comp_util_is_league_division(*(*((this.addr() + 4) as *const usize) as *const i32)) == 0 {
+    if exe::comp_util_is_league_division(*(this.competition().addr() as *const i32)) == 0 {
         return 0;
     }
     if (this.league_flags() as u8) & 1 == 0 || this.round_count() < 24 {
@@ -325,7 +325,7 @@ pub(crate) unsafe extern "thiscall" fn move_fixtures_for_tv(this: usize, data: u
     // simplification: the original pushes the year, the day, the slice and the type in registers with leftover in the high bytes; the
     // 0x5abd90 only reads the words and the bytes
     let n = (exe::fixture_manager_collect_comp_fixtures_on_day(read_usize(G_FIXTURE_MANAGER), read_i16(data + 2) as u16 as u32, read_i16(data) as u16 as u32, read_u8(e + 4) as u32,
-        read_usize(read_usize(this.addr() + 4)) as u32, u32::MAX, this.stage_index() as u32, l) as u32) & 0xffff;
+        read_usize(this.competition().addr()) as u32, u32::MAX, this.stage_index() as u32, l) as u32) & 0xffff;
     if n != 0 {
         let mut k = 0usize;
         let mut sort = false;
@@ -498,7 +498,7 @@ pub(crate) unsafe extern "thiscall" fn send_group_draw_news(this: usize) {
                         exe::date_operator_3d(p2, t2.as_mut_ptr() as usize, p3);
                     }
                 }
-                exe::newsitem_set_slot(news, 0, read_usize(read_usize(this.addr() + 4)) as u32);
+                exe::newsitem_set_slot(news, 0, read_usize(this.competition().addr()) as u32);
                 exe::newsitem_set_slot(news, 1, this.stage_id() as i32 as u32);
                 exe::newsitem_set_slot(news, 3, read_i16(p2) as i32 as u32);
                 exe::newsitem_set_slot(news, 4, read_i16(p2 + 2) as u16 as u32);
@@ -560,7 +560,7 @@ pub(crate) unsafe extern "thiscall" fn send_fixture_list_news(this: usize, list:
     let p0 = l0.as_mut_ptr() as usize;
     exe::new_llist(p0);
     let list = if this.stage_index() == 0xff || list == 0 { p0 } else { list };
-    if exe::comp_util_is_league_division((read_usize(read_usize(this.addr() + 4)) as u32) as i32) == 0 || this.stage_index() != 0xff {
+    if exe::comp_util_is_league_division((read_usize(this.competition().addr()) as u32) as i32) == 0 || this.stage_index() != 0xff {
         exe::drop_llist(p0);
         return;
     }
@@ -596,7 +596,7 @@ pub(crate) unsafe extern "thiscall" fn send_fixture_list_news(this: usize, list:
                     let search: unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u8, u32, u32, i32, i32, u32, i32, i32, i32,
                                                             i32, u32, usize, u32, u32, i32, u32) -> u32 =
                         core::mem::transmute(FN_FIXTURE_MANAGER_SCAN_FIXTURES);
-                    let found = search(read_usize(G_FIXTURE_MANAGER), &mut v_year, &mut v_day, &mut slice, 1, read_usize(read_usize(this.addr() + 4)) as u32, -1, -1,
+                    let found = search(read_usize(G_FIXTURE_MANAGER), &mut v_year, &mut v_day, &mut slice, 1, read_usize(this.competition().addr()) as u32, -1, -1,
                         read_usize(team(i)) as u32, -1, -1, -1, -1, 3, p2, 0, this.stage_index() as u32, -1, 1) as u16;
                     if found == 3 {
                         crate::comparison::branch("cqc_6 fixture list news");
@@ -604,7 +604,7 @@ pub(crate) unsafe extern "thiscall" fn send_fixture_list_news(this: usize, list:
                         let n = news.as_mut_ptr() as usize;
                         exe::new_newsitem(n, 0xd, 0);
                         let mut k: u8 = 3;
-                        exe::newsitem_set_slot(n, 0, read_usize(read_usize(this.addr() + 4)) as u32);
+                        exe::newsitem_set_slot(n, 0, read_usize(this.competition().addr()) as u32);
                         exe::newsitem_set_slot(n, 1, read_usize(team(i)) as u32);
                         exe::newsitem_set_slot(n, 2, this.year() as i32 as u32);
                         write_usize(p2 + llist::CURSOR, read_usize(p2 + llist::HEAD));
@@ -742,7 +742,7 @@ pub(crate) unsafe extern "thiscall" fn league_update_for_date(this: usize, data:
     }
     let table = this.table();
     if table != 0 && read_u8(table + league_table_row::PLAYED) == 0 && this.stage_index() == 0xff && full != 0 && !same_date(this.addr() + league::LAST_UPDATE_DATE, data) {
-        let c = read_usize(this.addr() + 4);
+        let c = this.competition().addr();
         if read_usize(c + competition::NATION) != 0 {
             let k = exe::key_nation_index_of_comp(c) as i8 as isize;
             let mut day = (read_i16((0xb63d75 + k * 72) as usize) as u16).wrapping_add(1);
@@ -793,7 +793,7 @@ pub(crate) unsafe extern "thiscall" fn league_update_for_date(this: usize, data:
                         h(this.addr());
                     } else if this.season_closed() == 0 {
                         exe::club_history_record_comp_season(read_usize(G_CLUB_HISTORY), this);
-                        if exe::comp_util_is_league_division((read_usize(read_usize(this.addr() + 4)) as u32) as i32) != 0 {
+                        if exe::comp_util_is_league_division((read_usize(this.competition().addr()) as u32) as i32) != 0 {
                             exe::club_records_update_league_position_records(read_usize(G_CLUB_RECORDS), this, 1);
                         }
                         if this.tiebreak_matches() != 0 {
@@ -801,18 +801,18 @@ pub(crate) unsafe extern "thiscall" fn league_update_for_date(this: usize, data:
                         }
                         let h: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(vtable_method(this, 0x30));
                         h(this.addr());
-                        if read_usize(this.addr() + 8) != 0 {
-                            exe::comp_stats_update_season_end_records(read_usize(this.addr() + 8));
+                        if this.comp_stats() != 0 {
+                            exe::comp_stats_update_season_end_records(this.comp_stats());
                         }
                         this.set_season_closed(1);
                     }
                 }
             }
-            if exe::comp_util_is_league_division((read_usize(read_usize(this.addr() + 4)) as u32) as i32) != 0 {
+            if exe::comp_util_is_league_division((read_usize(this.competition().addr()) as u32) as i32) != 0 {
                 exe::club_records_update_league_position_records(read_usize(G_CLUB_RECORDS), this, 0);
             }
-            if read_usize(this.addr() + 8) != 0 {
-                anexo(read_usize(this.addr() + 8));
+            if this.comp_stats() != 0 {
+                anexo(this.comp_stats());
             }
         }
     }
@@ -834,7 +834,7 @@ pub(crate) unsafe extern "thiscall" fn league_update_for_date(this: usize, data:
         let e = this.round_dates();
         // simplification: the original pushes the day and the year in registers with leftovers in the high bytes; 0x549ef0 only reads the words
         exe::new_date(pt, read_i16(e) as u16 as u32, read_i16(e + 2).wrapping_add(this.year()) as u16 as u32);
-        let c = read_usize(this.addr() + 4);
+        let c = this.competition().addr();
         let nation = if c != 0 && read_usize(c + competition::NATION) != 0 { read_usize(read_usize(c + competition::NATION)) } else { 0 };
         let has = c != 0 && read_usize(c + competition::NATION) != 0;
         let days = if has && nation == read_usize(KEY_NATION_ARGENTINA) {
@@ -959,7 +959,7 @@ pub(crate) unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
         i += 1;
     }
     exe::league_build_round_robin_grid(grid, n);
-    let c = read_usize(this.addr() + 4);
+    let c = this.competition().addr();
     if c == 0 || (read_usize(c) != read_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP) && read_usize(c) != read_usize(KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP)) {
         crate::comparison::branch("cqd_5 order drawn");
         exe::league_draw_team_order(this, n as u32); // cqd5: the order of the clubs
@@ -968,7 +968,7 @@ pub(crate) unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
     // +0x4e: leftover from its stack, which method 0x7c and 0x85c260 may fill) stay 0, a value the game produces
     let mut reg = [0u8; 0x60];
     let r = reg.as_mut_ptr() as usize;
-    let c = read_usize(this.addr() + 4);
+    let c = this.competition().addr();
     write_usize(r + fixture::COMPETITION, c);
     write_u16(r + fixture::ROUND_PREFIX, this.stage_id() as u16);
     write_usize(r, read_usize(c));
@@ -1040,7 +1040,7 @@ pub(crate) unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
         while j <= this.legs() as i32 * (n - 1) {
             // simplification: the original pushes the words +0x3e, +0x3c, +0xa9 and +0xd9 with leftovers in the high bytes; 0x68a030
             // only reads the words and the byte
-            round = exe::league_next_schedule_round(round, &mut step_towards, read_usize(read_usize(this.addr() + 4)) as u32, this.club_count() as u16 as u32,
+            round = exe::league_next_schedule_round(round, &mut step_towards, read_usize(this.competition().addr()) as u32, this.club_count() as u16 as u32,
                 this.legs() as u16 as u32, this.round_count() as u16 as u32, this.league_flags() as u16 as u32);
             let mut col = j % (n - 1);
             if col == 0 {
@@ -1139,14 +1139,14 @@ pub(crate) unsafe extern "thiscall" fn league_promote_and_relegate(ecx: usize, a
             let e = below.table() + i as usize * 0x3b;
             let s = read_u8(e + league_table_row::STATUS);
             if s != 5 && s != 0 {
-                exe::contract_manager_trigger_non_promotion_clauses(read_usize(G_CONTRACT_MANAGER), read_usize(e), read_usize(below.addr() + 4));
+                exe::contract_manager_trigger_non_promotion_clauses(read_usize(G_CONTRACT_MANAGER), read_usize(e), below.competition().addr());
             }
             i += 1;
         }
     }
     // the relegated club goes down to the lower competition and loses the human manager in a competition with no active registration
     let descer = |club: usize| {
-        let comp = read_usize(below.addr() + 4);
+        let comp = below.competition().addr();
         let old = read_usize(club + club::DIVISION);
         write_usize(club + club::LAST_DIVISION, old);
         write_usize(club + club::DIVISION, comp);
@@ -1174,7 +1174,7 @@ pub(crate) unsafe extern "thiscall" fn league_promote_and_relegate(ecx: usize, a
                 }
                 if j < n {
                     let le = below.table() + j as usize * 0x3b;
-                    exe::league_move_club_to_division(ecx, read_usize(le), read_usize(above.addr() + 4), 0);
+                    exe::league_move_club_to_division(ecx, read_usize(le), above.competition().addr(), 0);
                     descer(read_usize(ue));
                     desceram = desceram.wrapping_add(1);
                     subiram = subiram.wrapping_add(1);
@@ -1200,7 +1200,7 @@ pub(crate) unsafe extern "thiscall" fn league_promote_and_relegate(ecx: usize, a
             let le = below.table() + i as usize * 0x3b;
             let s = read_u8(le + league_table_row::STATUS);
             if s == 0 || s == 5 {
-                exe::league_move_club_to_division(ecx, read_usize(le), read_usize(above.addr() + 4), 0);
+                exe::league_move_club_to_division(ecx, read_usize(le), above.competition().addr(), 0);
                 subiram = subiram.wrapping_add(1);
                 write_u8(le + league_table_row::STATUS, 0xff);
             }
@@ -1506,7 +1506,7 @@ pub(crate) unsafe extern "thiscall" fn update_positions_and_status(this: usize) 
                     let mut high = high_row;
                     if !POSITIONS_STATUS_DRY_RUN {
                         crate::comparison::branch("cpz_3 relegation clauses");
-                        high = exe::contract_manager_trigger_relegation_clauses(read_usize(G_CONTRACT_MANAGER), read_usize(li), read_usize(this.addr() + 4)) & !0xff; // cpz3: the relegation clauses
+                        high = exe::contract_manager_trigger_relegation_clauses(read_usize(G_CONTRACT_MANAGER), read_usize(li), this.competition().addr()) & !0xff; // cpz3: the relegation clauses
                     }
                     let li = league_table_row(this, ii);
                     let s = read_u8(li + league_table_row::STATUS);
@@ -1552,9 +1552,9 @@ pub(crate) unsafe extern "thiscall" fn update_positions_and_status(this: usize) 
         let li = league_table_row(this, ii);
         let best = read_i8(li + league_table_row::BEST_POSSIBLE_POSITION);
         if best == read_i8(li + league_table_row::WORST_POSSIBLE_POSITION) && best < 9 && this.stage_index() == 0xff {
-            if exe::comp_util_is_league_division(read_i32(read_usize(this.addr() + 4))) != 0 && this.upper_division_id() == -1 {
+            if exe::comp_util_is_league_division(read_i32(this.competition().addr())) != 0 && this.upper_division_id() == -1 {
                 let slot = read_usize(G_CLUB_STATE_TABLE) + (read_i32(read_usize(li)) as usize).wrapping_mul(6);
-                let reg = Competition(read_usize(this.addr() + 4));
+                let reg = Competition(this.competition().addr());
                 let nation = reg.nation();
                 if read_i32(slot) == -1 && nation != 0 && read_i32(nation) != read_i32(KEY_NATION_SCOTLAND) {
                     let count = read_usize(nation + nation::CONTINENT);
@@ -1697,7 +1697,7 @@ pub(crate) unsafe extern "thiscall" fn pay_prize_money(league: usize) {
         if t == 0 {
             return show_error_at(0x9f15f4, 0x1df);
         }
-        let comp = read_usize(t.wrapping_add(read_usize(read_usize(league.addr() + 4)).wrapping_mul(4)));
+        let comp = read_usize(t.wrapping_add(read_usize(league.competition().addr()).wrapping_mul(4)));
         let pay: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(read_usize(read_usize(comp) + 0x6c));
         return pay(comp, league.addr());
     }
@@ -1797,10 +1797,10 @@ pub(crate) unsafe extern "thiscall" fn announce_team_status(league: usize, club:
     // reads the byte; the copy passes the high part zeroed
     let mut out: u32 = 0xff;
     let mut round = league.stage_id();
-    if exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), read_usize(league.addr() + 4)) != 0 {
+    if exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), league.competition().addr()) != 0 {
         return 0;
     }
-    let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(read_usize(league.addr() + 4)).wrapping_mul(4)));
+    let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(league.competition().addr()).wrapping_mul(4)));
     let virtual44: unsafe extern "thiscall" fn(usize, usize, u32, u32, *mut u32, u32, u32) -> i32 = core::mem::transmute(read_usize(read_usize(comp) + 0x44));
     let r = virtual44(comp, club.addr(), status, stage, &mut out, 0, 0);
     if r == -1 {
@@ -1815,7 +1815,7 @@ pub(crate) unsafe extern "thiscall" fn announce_team_status(league: usize, club:
     let n = local.as_mut_ptr() as usize;
     exe::new_newsitem(n, 0xc, 0);
     exe::newsitem_set_slot(n, 0, read_usize(club.addr()) as u32);
-    exe::newsitem_set_slot(n, 1, read_usize(read_usize(league.addr() + 4)) as u32);
+    exe::newsitem_set_slot(n, 1, read_usize(league.competition().addr()) as u32);
     exe::newsitem_set_slot(n, 2, stage as u8 as i8 as i32 as u32);
     exe::newsitem_set_slot(n, 3, status as u8 as i8 as i32 as u32);
     exe::newsitem_set_slot(n, 4, round as i32 as u32);
@@ -1824,12 +1824,12 @@ pub(crate) unsafe extern "thiscall" fn announce_team_status(league: usize, club:
     if out as u8 != 0xff {
         let nacao = club.nation().addr();
         let continent = if nacao != 0 { read_usize(nacao + nation::CONTINENT) } else { 0 };
-        exe::news_send_by_scope(news, n, club, read_usize(league.addr() + 4), nacao, continent, out);
+        exe::news_send_by_scope(news, n, club, league.competition().addr(), nacao, continent, out);
         return 1;
     }
     // the competition’s promotion (+0x1c) or relegation (+0x20) division, 0x6b records in [0xae23d0]
     let other = |desl: usize| {
-        let c = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(read_usize(league.addr() + 4)).wrapping_mul(4)));
+        let c = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(league.competition().addr()).wrapping_mul(4)));
         let e = read_usize(c + desl) as i32;
         if e != -1 {
             exe::news_send_to_division_managers(news, n, read_usize(G_CLUB_COMP_TABLE).wrapping_add((e as usize).wrapping_mul(0x6b)));
@@ -1838,23 +1838,23 @@ pub(crate) unsafe extern "thiscall" fn announce_team_status(league: usize, club:
     match status as u8 {
         5 => {
             if (league.upper_division_id() as usize) as i32 == -1 {
-                nation(news, n, read_usize(read_usize(league.addr() + 4) + 0x5d));
+                nation(news, n, read_usize(league.competition().addr() + 0x5d));
             } else {
-                exe::news_send_to_division_managers(news, n, read_usize(league.addr() + 4));
+                exe::news_send_to_division_managers(news, n, league.competition().addr());
             }
         }
         0 => {
-            exe::news_send_to_division_managers(news, n, read_usize(league.addr() + 4));
+            exe::news_send_to_division_managers(news, n, league.competition().addr());
             other(0x1c);
         }
         7 | 6 | 0xfe => {
             exe::news_send_to_club_manager(news, n, club);
         }
         1 | 2 => {
-            exe::news_send_to_division_managers(news, n, read_usize(league.addr() + 4));
+            exe::news_send_to_division_managers(news, n, league.competition().addr());
         }
         3 => {
-            exe::news_send_to_division_managers(news, n, read_usize(league.addr() + 4));
+            exe::news_send_to_division_managers(news, n, league.competition().addr());
             other(0x20);
         }
         _ => {}
@@ -1922,7 +1922,7 @@ pub(crate) unsafe extern "thiscall" fn league_add_result(league: usize, p: usize
     if league.stage_index() == 0xfe || read_usize(G_COMP_OBJECT_TABLE) == 0 {
         return 1;
     }
-    let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(read_usize(league.addr() + 4)).wrapping_mul(4)));
+    let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(league.competition().addr()).wrapping_mul(4)));
     if comp == 0 || read_usize(comp + 8) == 0 || game == 0 {
         return 1;
     }
@@ -2007,7 +2007,7 @@ pub(crate) unsafe extern "thiscall" fn copy_table(league: usize) -> usize {
 /// estatística (0x4a2540); solta o vetor (0x9452ca).
 pub(crate) unsafe extern "thiscall" fn league_set_predicted_positions(league: usize) {
     let league = League(league);
-    if read_usize(league.addr() + 8) == 0 {
+    if league.comp_stats() == 0 {
         return show_error_at(0x9f15f4, 0x189e);
     }
     let v = exe::crt_malloc(((league.club_count() as i32) << 2) as u32);
@@ -2025,7 +2025,7 @@ pub(crate) unsafe extern "thiscall" fn league_set_predicted_positions(league: us
         let c = read_usize(v + 4 * i as usize);
         if c != 0 {
             // simplification: the original pushes ecx with the position in the low byte (the rest is leftover); 0x4a2540 reads the byte
-            exe::comp_stats_set_club_final_position(read_usize(league.addr() + 8), c, (i as u8).wrapping_add(1) as u32);
+            exe::comp_stats_set_club_final_position(league.comp_stats(), c, (i as u8).wrapping_add(1) as u32);
         }
         i += 1;
     }
@@ -2326,7 +2326,7 @@ pub(crate) unsafe extern "thiscall" fn record_final_positions(this: usize) {
     let this = League(this);
     let mut i = 0i16;
     while i < this.club_count() {
-        let division = read_usize(this.addr() + 4);
+        let division = this.competition().addr();
         let c = Club(read_usize(this.table() + i as usize * TABLE_ROW_SIZE));
         if c.division().addr() == division {
             crate::comparison::branch("cpm_2 final position");
@@ -2380,7 +2380,7 @@ pub(crate) const RESULT_TABLE_ROW_SIZE: usize = 0x3b;
 pub(crate) unsafe extern "thiscall" fn apply_result_to_table(league: usize, p: usize, table: usize, n: u32, mark: u32, pts_home: *mut i16, pts_away: *mut i16) {
     let league = League(league);
     let mut pontuador = league.addr();
-    let id = read_usize(league.addr() + 4);
+    let id = league.competition().addr();
     if id != 0 && read_usize(G_COMP_OBJECT_TABLE) != 0 {
         let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(id).wrapping_mul(4)));
         if *((comp + 0x43) as *const u8) == 2 {
@@ -2577,13 +2577,13 @@ pub(crate) unsafe extern "thiscall" fn points_for_result(league: usize, club: us
     let won = |a: i8, b: i8| (club == casa && a > b) || (club == fora && a < b);
     let flags = (league.match_rules() as u8);
     let v = if read_i8(p + fixture::HOME_GOALS) != read_i8(p + fixture::AWAY_GOALS) {
-        if won(read_i8(p + fixture::HOME_GOALS), read_i8(p + fixture::AWAY_GOALS)) { read_u8(league.addr() + 0xc2) } else { 0 } // the points for a win
+        if won(read_i8(p + fixture::HOME_GOALS), read_i8(p + fixture::AWAY_GOALS)) { league.win_points() } else { 0 } // the points for a win
     } else if flags & 2 != 0 && read_i8(p + fixture::HOME_GOALS_EXTRA_TIME) != read_i8(p + fixture::AWAY_GOALS_EXTRA_TIME) {
-        if won(read_i8(p + fixture::HOME_GOALS_EXTRA_TIME), read_i8(p + fixture::AWAY_GOALS_EXTRA_TIME)) { read_u8(league.addr() + 0xc2) } else { 0 }
+        if won(read_i8(p + fixture::HOME_GOALS_EXTRA_TIME), read_i8(p + fixture::AWAY_GOALS_EXTRA_TIME)) { league.win_points() } else { 0 }
     } else if flags & 0x21 != 0 && read_i8(p + fixture::HOME_PENALTIES) != read_i8(p + fixture::AWAY_PENALTIES) {
-        if won(read_i8(p + fixture::HOME_PENALTIES), read_i8(p + fixture::AWAY_PENALTIES)) { read_u8(league.addr() + 0xc3) } else { 0 }
+        if won(read_i8(p + fixture::HOME_PENALTIES), read_i8(p + fixture::AWAY_PENALTIES)) { league.draw_points() } else { 0 }
     } else {
-        read_u8(league.addr() + 0xc3)
+        league.draw_points()
     };
     (p as u32 & 0xffff_ff00) | v as u32
 }
@@ -3074,7 +3074,7 @@ pub(crate) unsafe extern "thiscall" fn league_check_complete(league: usize, stag
             }
         }
         crate::comparison::branch("league complete: end of league");
-        let id = *(read_usize(league.addr() + 4) as *const u32);
+        let id = *(league.competition().addr() as *const u32);
         let mut prizes = true;
         if exe::comp_util_is_league_division((id) as i32) != 0 && league.round_count() > 8 {
             if league.tiebreak_matches() != 0 {
@@ -3209,24 +3209,24 @@ pub(crate) unsafe extern "thiscall" fn league_record_season_honours(league: usiz
     let runner_up = read_usize(table + 0x3b);
     let champion = Club(read_usize(table));
     let third = if league.club_count() > 2 { read_usize(table + 0x76) } else { 0 };
-    if champion.division().addr() == read_usize(league.addr() + 4) {
+    if champion.division().addr() == league.competition().addr() {
         let how_many = || (*(G_CLUB_COUNT as *const i32)).wrapping_sub(*(G_NATION_COUNT as *const i32));
         let mut k = 0i32;
         while k < how_many() {
             let p = (*(G_CLUB_TABLE as *const usize)).wrapping_add(0x245 * k as usize + 0x5b);
-            if read_usize(p) == read_usize(league.addr() + 4) {
+            if read_usize(p) == league.competition().addr() {
                 core::ptr::write_unaligned(p as *mut usize, 0); // the previous division
             }
             k += 1;
         }
     }
-    let comp = read_usize(league.addr() + 4);
+    let comp = league.competition().addr();
     let target = *((*(G_COMP_OBJECT_TABLE as *const usize)).wrapping_add(4 * *(comp as *const u32) as usize) as *const usize);
     let pede: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(target) + 0x88));
     let mut highlight = 0usize;
     if pede(target) != 0 {
         let (mut a, mut b) = (0i32, 0i32);
-        let q = (exe::hostcountry_find_hosts(*(G_HOST_COUNTRY as *const usize), (*(read_usize(league.addr() + 4) as *const u32)) as usize, league.year() as u16 as u32, &mut a, &mut b, 0) as u8);
+        let q = (exe::hostcountry_find_hosts(*(G_HOST_COUNTRY as *const usize), (*(league.competition().addr() as *const u32)) as usize, league.year() as u16 as u32, &mut a, &mut b, 0) as u8);
         let nation = |k: i32| (*(G_NATION_TABLE as *const usize)).wrapping_add(k.wrapping_mul(0x122) as usize);
         if q == 2 {
             highlight = if read_i16(nation(a) + 0x8e) < read_i16(nation(b) + 0x8e) { exe::database_get_national_team(nation(b)) } else { exe::database_get_national_team(nation(a)) };
@@ -3992,7 +3992,7 @@ pub(crate) unsafe extern "thiscall" fn draw_team_order(this: usize, clubs: i32) 
             i += 1;
         }
     } else {
-        if read_usize(read_usize(this.addr() + 4)) == read_usize(KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION) {
+        if read_usize(this.competition().addr()) == read_usize(KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION) {
             let (mut rangers, mut celtic): (i8, i8) = (-1, -1); // bl e [esp+0x17]
             let total = this.club_count();
             let mut c: i8 = 0;

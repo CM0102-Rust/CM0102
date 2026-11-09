@@ -765,7 +765,7 @@ pub(crate) unsafe fn clear_attr_vector(v: usize) {
 /// [pt] A idade da 0x535a80: byte do ano da data − byte do ano de nascimento (+0x12), menos 1 se o dia do ano de
 /// nascimento (+0x10) passa o da data.
 pub(crate) unsafe fn age_at_date(p: Staff, data: usize) -> i8 {
-    let a = (*((data + 2) as *const u8)).wrapping_sub(*((p.addr() + 0x12) as *const u8));
+    let a = (*((data + 2) as *const u8)).wrapping_sub((p.date_of_birth_year() as u8));
     let d = p.date_of_birth() as i32 - core::ptr::read_unaligned(data as *const i16) as i32;
     (if d > 0 { a.wrapping_sub(1) } else { a }) as i8
 }
@@ -2932,7 +2932,7 @@ pub(crate) unsafe fn favourite_colleague_score(person: Staff, club: Club, o: usi
     if nation != club.nation().addr() && o.nation() == nation {
         if read_usize(contract + contract::GRIEVANCES) & 0x20020 != 0 {
             n += 1750;
-        } else if exe::date_days_since(G_CURRENT_DATE, (person.date_joined_club()) as u32, (read_usize(person.addr() + 0x42)) as u32) < 350 && ((person.age() as i8) as i32) < 24 {
+        } else if exe::date_days_since(G_CURRENT_DATE, (person.date_joined_club()) as u32, (person.date_joined_club_leap_year()) as u32) < 350 && ((person.age() as i8) as i32) < 24 {
             n += 250;
         } else {
             n += 125;
@@ -2967,7 +2967,7 @@ pub(crate) unsafe extern "C" fn staff_is_best_favoured_candidate(person: usize, 
     if (person.loyalty() as i32) < r6 + 6 || (person.ambition() as i32) > 15 - r6 {
         return 0;
     }
-    if age(G_CURRENT_DATE, person.date_joined_club(), read_usize(person.addr() + 0x42)) < id % 28 + 14 {
+    if age(G_CURRENT_DATE, person.date_joined_club(), person.date_joined_club_leap_year()) < id % 28 + 14 {
         return 0;
     }
     let target = match favourite_colleague_score(person, club, candidate) {
@@ -2975,7 +2975,7 @@ pub(crate) unsafe extern "C" fn staff_is_best_favoured_candidate(person: usize, 
         None => return 0,
     };
     for k in 0..50 {
-        let o = read_usize(club.addr() + club::SQUAD + 4 * k);
+        let o = club.squad(k);
         if o == 0 {
             continue;
         }
@@ -3993,7 +3993,7 @@ pub(crate) unsafe extern "C" fn club_count_squad_with_position_mask(club: usize,
     let club = Club(club);
     let mut n = 0u8;
     for k in 0..50 {
-        let p = Staff(read_usize(club.addr() + club::SQUAD + 4 * k));
+        let p = Staff(club.squad(k));
         if !p.is_null() && p.player() != 0 && exe::staff_get_natural_position_mask(p) == mask { // the equal ones
             n = n.wrapping_add(1);
         }
@@ -4048,12 +4048,12 @@ pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(person: usize, clu
     if (person.loyalty() as i32) < r6 + 6 || person.ambition() as i32 > 15 - r6 {
         return 0;
     }
-    if age(G_CURRENT_DATE, person.date_joined_club(), read_usize(person.addr() + 0x42)) < id % 28 + 14 {
+    if age(G_CURRENT_DATE, person.date_joined_club(), person.date_joined_club_leap_year()) < id % 28 + 14 {
         return 0;
     }
     let (mut melhor, mut nota_melhor) = (0usize, -10000i32);
     for k in 0..50 {
-        let o = Staff(read_usize(club.addr() + club::SQUAD + 4 * k));
+        let o = Staff(club.squad(k));
         if o.is_null() || o.player() == 0 {
             continue;
         }
@@ -4122,7 +4122,7 @@ pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(person: usize, clu
         if nation != club.nation().addr() && o.nation() == nation {
             if read_usize(contract + contract::GRIEVANCES) & 0x20020 != 0 {
                 rating += 1750;
-            } else if age(G_CURRENT_DATE, person.date_joined_club(), read_usize(person.addr() + 0x42)) < 350 && (person.age() as i8) < 24 {
+            } else if age(G_CURRENT_DATE, person.date_joined_club(), person.date_joined_club_leap_year()) < 350 && (person.age() as i8) < 24 {
                 rating += 250;
             } else {
                 rating += 125;
@@ -4357,7 +4357,7 @@ pub(crate) unsafe extern "C" fn database_staff_matches_names(person: usize, name
         }
     }
     if data != 0 {
-        if read_u16(person.addr() + 0x12) != read_u16(data + 2) || (person.date_of_birth() as u16) != read_u16(data + 0) {
+        if person.date_of_birth_year() != read_u16(data + 2) || (person.date_of_birth() as u16) != read_u16(data + 0) {
             return 0; // another date of birth
         }
     }
@@ -4983,7 +4983,7 @@ pub(crate) unsafe extern "C" fn club_reputation_for_staff(club: usize, person: u
     let division = comp.reputation();
     let high = (division as i32).wrapping_mul(500);
     if !league.is_null() && high > rep as i32 {
-        let e = exe::comp_stats_find_club_entry(read_usize(league.addr() + 8), club);
+        let e = exe::comp_stats_find_club_entry(league.comp_stats(), club);
         if e == 0 {
             return 0;
         }
@@ -5771,7 +5771,7 @@ pub(crate) unsafe fn any_coach_missing_from_club() -> bool {
     while i < read_i32(G_STAFF_COUNT) {
         let s = Staff(read_usize(G_STAFF_TABLE) + i as usize * 110);
         let c = Club(s.club_job());
-        if s.job_for_club() == 8 && !c.is_null() && !(0..5).any(|j| read_usize(c.addr() + club::COACHES + 4 * j) == s.addr()) {
+        if s.job_for_club() == 8 && !c.is_null() && !(0..5).any(|j| c.coaches(j) == s.addr()) {
             return true;
         }
         i += 1;
@@ -9100,7 +9100,7 @@ pub(crate) unsafe extern "C" fn database_get_staff_age(person: usize, data: *con
         return original_fn::<unsafe extern "C" fn(usize, *const u16) -> u16>(IDX_DATABASE_GET_STAFF_AGE)(person.addr(), data);
     }
     let dia_nasc = person.date_of_birth() as i32;
-    let years = core::ptr::read_unaligned(data.add(1)).wrapping_sub(core::ptr::read_unaligned((person.addr() + 0x12) as *const u16));
+    let years = core::ptr::read_unaligned(data.add(1)).wrapping_sub(person.date_of_birth_year());
     if dia_nasc - core::ptr::read_unaligned(data as *const i16) as i32 > 0 {
         years.wrapping_sub(1) // has not had a birthday yet
     } else {

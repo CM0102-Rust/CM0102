@@ -25,7 +25,7 @@ pub(crate) unsafe extern "C" fn competition_counts(id: i32) -> u32 {
         return 0;
     }
     let first = Club(*(r as *const usize));
-    let target = *((c.addr() + 4) as *const i32);
+    let target = (c.competition().addr() as i32);
     ((first.division().addr() as i32) == target || (first.reserve_division().addr() as i32) == target) as u32
 }
 
@@ -456,11 +456,11 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
         return 0;
     }
     let league = League(read_usize((*(G_COMP_OBJECT_TABLE as *const usize)).wrapping_add(4 * *(a.division().addr() as *const u32) as usize)));
-    if league.is_null() || read_usize(league.addr() + 8) == 0 {
+    if league.is_null() || league.comp_stats() == 0 {
         return 0;
     }
-    let ea = exe::comp_stats_find_club_entry(read_usize(league.addr() + 8), a);
-    let eb = exe::comp_stats_find_club_entry(read_usize(league.addr() + 8), b);
+    let ea = exe::comp_stats_find_club_entry(league.comp_stats(), a);
+    let eb = exe::comp_stats_find_club_entry(league.comp_stats(), b);
     if ea == 0 || eb == 0 || league.current_stage() as i32 != -1 || league.comp_type() != 2 {
         return 0;
     }

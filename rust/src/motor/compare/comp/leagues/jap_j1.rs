@@ -33,7 +33,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_championship_final_stage(t
     let same = stage != 0 && {
         let l = read_usize(stage + cup::TEAM_TABLE);
         let (x, y) = (read_usize(l), read_usize(l + 6));
-        read_i16(stage + cup::TEAM_COUNT) == 2 && read_usize(stage + 4) == read_usize(this.addr() + 4) && ((x, y) == (a, b) || (x, y) == (b, a)) && this.current_stage() == 2
+        read_i16(stage + cup::TEAM_COUNT) == 2 && read_usize(stage + 4) == this.competition().addr() && ((x, y) == (a, b) || (x, y) == (b, a)) && this.current_stage() == 2
     };
     SCOREBOARD.record(same, || format!("create_championship_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this.addr(), a, b, stage, this.current_stage()));
 }

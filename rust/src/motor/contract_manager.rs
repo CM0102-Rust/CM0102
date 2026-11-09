@@ -243,7 +243,7 @@ pub(crate) unsafe extern "thiscall" fn sign_contract(this: usize, contract: usiz
             if nation != 0 && read_usize(nation) == read_usize(KEY_NATION_PORTUGAL) && exe::database_is_staff_eu_national(person, 0) == 0 {
                 let p = exe::date_sub_weeks(G_CURRENT_DATE, (tmp2.as_mut_ptr()) as *mut [u8; 8], 0x64);
                 let (dia, ano) = (read_i16(p), read_u16(p + cm_date::YEAR));
-                let after = ano > read_u16(person.addr() + 0x40) || (ano == read_u16(person.addr() + 0x40) && dia > (person.date_joined_club() as i16));
+                let after = ano > person.date_joined_club_year() || (ano == person.date_joined_club_year() && dia > (person.date_joined_club() as i16));
                 if after {
                     let first = person.nation();
                     if (first != 0 && read_usize(first) == read_usize(KEY_NATION_BRAZIL)) || exe::utils_random(3) == 0 {
@@ -488,7 +488,7 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_offer_contract(this: usi
     let mut year = read_i16(G_CURRENT_DATE_YEAR) as u16;
     let sheet = person.player();
     if sheet != 0 {
-        let days = exe::date_days_since(G_CURRENT_DATE, read_usize(person.addr() + staff::DATE_OF_BIRTH) as u32, read_usize(person.addr() + 0x14) as u32);
+        let days = exe::date_days_since(G_CURRENT_DATE, read_usize(person.addr() + staff::DATE_OF_BIRTH) as u32, person.date_of_birth_leap_year() as u32);
         let mut x = days as f64 * read_f64(rdata::F64_0_002739726027);
         if read_u8(sheet + player_sheet::GOALKEEPER) == 0x14 {
             x -= read_f64(rdata::F64_2);
@@ -2274,7 +2274,7 @@ pub(crate) unsafe extern "thiscall" fn end_loan(this: usize, person: usize) {
         set_squad_flags(person, 1);
         if !partner.is_null() {
             for k in 0..0x32 {
-                if read_u32(partner.addr() + club::SQUAD + 4 * k) as usize == person.addr() {
+                if (partner.squad(k) as u32) as usize == person.addr() {
                     person.set_club_job((partner.addr() as u32) as usize);
                 }
             }
@@ -2519,7 +2519,7 @@ pub(crate) unsafe fn match_morale_drop(person: Staff, club: Club, contract: usiz
     if person.addr() == (club.manager().addr() as u32) as usize || person.addr() == (club.assistant_manager() as u32) as usize || read_u8_volatile(person.addr() + staff::JOB_FOR_CLUB) != 0xb {
         return None;
     }
-    let a = contract_manager_days_since_date(person.addr() + staff::DATE_JOINED_CLUB, person.addr() + 0x40);
+    let a = contract_manager_days_since_date(person.addr() + staff::DATE_JOINED_CLUB, person.addr() + staff::DATE_JOINED_CLUB_YEAR);
     let b = contract_manager_days_since_date(contract + contract::CONTRACT_EXPIRES, contract + contract::CONTRACT_EXPIRES_YEAR);
     let age = read_u8_volatile(person.addr() + staff::AGE) as i8;
     let player = (person.player() as u32) as usize;

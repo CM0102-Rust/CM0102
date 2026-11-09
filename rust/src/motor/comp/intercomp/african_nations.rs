@@ -232,7 +232,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_create_group_stage(this: 
             4,
             teams,
             1,
-            read_usize(this.addr() + 4),
+            this.competition().addr(),
             table,
             rodadas as u16 as u32,
             (this.win_points() as u32),
@@ -381,7 +381,7 @@ pub(crate) unsafe fn african_nations_record_final_result(f: usize, club: usize, 
 /// +0x32, +0x30 e o mesmo peso; 1, 2 e 3, os registros de campeão, vice e terceiro. Devolve 0.
 pub(crate) unsafe fn national_tournament_staff_records(name: u8, this: League, club: usize, outcome: u32, stage: u32, game: usize, a6: u32, groups: i8) -> u32 {
     let (d, f) = (outcome as u8, stage as u8 as i8);
-    let comp = read_usize(this.addr() + 4);
+    let comp = this.competition().addr();
     if f < groups {
         if d == 6 {
             european_cup_add_qualified_record(club, comp, 0, 0x78, 0x19);

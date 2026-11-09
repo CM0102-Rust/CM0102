@@ -198,13 +198,13 @@ pub(crate) unsafe fn dressing_room_friction(p: Staff, club: Club, k: usize) {
         if j >= 0x32 {
             return;
         }
-        let q = read_usize(club.addr() + club::SQUAD + j * 4);
+        let q = club.squad(j);
         if q != p.addr() && q != 0 && is_disliked_by(q, p) != 0 {
             break;
         }
         j += 1;
     }
-    let q = read_usize(club.addr() + club::SQUAD + j * 4);
+    let q = club.squad(j);
     if q == 0 {
         return;
     }
@@ -315,7 +315,7 @@ pub(crate) unsafe fn player_vs_manager_check(p: Staff) {
     if club.is_null() {
         return;
     }
-    let k = game_contract_for_club(read_usize(club.addr() + 0xff), club);
+    let k = game_contract_for_club(club.squad(10), club);
     if k == 0 {
         return;
     }
@@ -364,7 +364,7 @@ pub(crate) unsafe fn player_vs_manager_check(p: Staff) {
 pub(crate) unsafe extern "C" fn game_check_club_dressing_room_unrest(club: usize) {
     let club = Club(club);
     for i in 0..0x32usize {
-        let p = Staff(read_usize(club.addr() + club::SQUAD + i * 4));
+        let p = Staff(club.squad(i));
         if p.is_null() {
             continue;
         }
@@ -482,7 +482,7 @@ pub(crate) unsafe fn contract_club_record(c: usize) -> usize {
 ///
 /// [pt] Dias desde a data de +0x3e da pessoa até hoje (0x54cdb0 sobre a data do jogo 0xae2c90, a outra por valor).
 pub(crate) unsafe fn days_since_staff_date(p: Staff) -> i32 {
-    exe::date_days_since(G_CURRENT_DATE, p.date_joined_club() as u32, read_usize(p.addr() + 0x42) as u32)
+    exe::date_days_since(G_CURRENT_DATE, p.date_joined_club() as u32, p.date_joined_club_leap_year() as u32)
 }
 
 /// Checks players missing training: n/250 consecutive people from a random one; a present player with training and

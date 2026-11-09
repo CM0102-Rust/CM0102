@@ -202,7 +202,7 @@ pub(crate) unsafe fn ita_cup_create_group_stage_cqr8_fase_do_grupo(this: League,
             this.club_count() as u16 as u32,
             teams,
             1,
-            read_usize(this.addr() + 4),
+            this.competition().addr(),
             table,
             rodadas as u16 as u32,
             this.win_points() as u32,
@@ -365,7 +365,7 @@ pub(crate) unsafe fn create_knockout_stage(this: League, n: u32, teams: usize, s
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this.addr(), n, teams, rodadas as u16 as u32, read_usize(this.addr() + 4), table, this.year() as u16 as u32, stage, 1, extra as u16 as u32, 0x14, 0, 0, 0, seeds)
+        construct(p, this.addr(), n, teams, rodadas as u16 as u32, this.competition().addr(), table, this.year() as u16 as u32, stage, 1, extra as u16 as u32, 0x14, 0, 0, 0, seeds)
     } else {
         0
     };
@@ -469,7 +469,7 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, i32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
             core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
-        construct(p, this.addr(), 0x10, 0, 0, read_usize(this.addr() + 4), 0, 0, this.win_points() as u32, this.draw_points() as u32, 0,
+        construct(p, this.addr(), 0x10, 0, 0, this.competition().addr(), 0, 0, this.win_points() as u32, this.draw_points() as u32, 0,
             tiebreak.as_ptr() as usize, this.addr() + league::PROMOTED_COUNT, this.year() as u16 as u32, -2, 0, 0, 1, 0, 2, -1, 0, 2)
     } else {
         0
@@ -1122,7 +1122,7 @@ pub(crate) unsafe fn set_cup_league_rules(this: League, g: &GroupStageRules, rou
 ///
 /// [pt] O plano: os campos que `set_cup_league_rules` grava, lidos depois da original.
 pub(crate) unsafe fn check_cup_league_rules(nome: &str, this: League, g: &GroupStageRules, r: u32) {
-    let lido = (this.win_points(), this.draw_points(), this.match_category(), [(this.tiebreaks() as u8), read_u8(this.addr() + 0xc6), read_u8(this.addr() + 0xc7), read_u8(this.addr() + 0xc8)], this.promoted_count(), [this.promotion_playoff_count(), this.relegation_playoff_count(), this.relegated_count()], this.club_sides(),
+    let lido = (this.win_points(), this.draw_points(), this.match_category(), [(this.tiebreaks() as u8), read_u8(this.addr() + league::TIEBREAKS + 1), read_u8(this.addr() + league::TIEBREAKS + 2), read_u8(this.addr() + league::TIEBREAKS + 3)], this.promoted_count(), [this.promotion_playoff_count(), this.relegation_playoff_count(), this.relegated_count()], this.club_sides(),
         this.upper_division_id(), (this.lower_division_id() as i32),
         this.legs());
     let previsto = (g.win, g.draw, g.category, g.tiebreak, g.slots, [0u8; 3], 1u8, -1i32, -1i32, 1i16);

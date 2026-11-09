@@ -57,7 +57,7 @@ pub(crate) unsafe fn bra_reg_pern_compare_knockout_from_table(name: &str, this: 
     let (pl, ac) = (plan.clone(), found.clone());
     plan.sort_unstable();
     found.sort_unstable();
-    let same = plan == found && read_i16(stage + cup::TEAM_COUNT) as usize == rows.len() && read_usize(stage + 4) == read_usize(this.addr() + 4) && this.current_stage() == 0;
+    let same = plan == found && read_i16(stage + cup::TEAM_COUNT) as usize == rows.len() && read_usize(stage + 4) == this.competition().addr() && this.current_stage() == 0;
     SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this.addr(), pl, stage, ac, read_i16(stage + cup::TEAM_COUNT)));
 }
 

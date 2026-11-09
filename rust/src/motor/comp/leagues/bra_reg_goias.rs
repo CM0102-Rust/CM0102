@@ -49,7 +49,7 @@ pub(crate) unsafe fn bra_reg_goias_construct_state_league(this: League, ano: u32
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.table);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.predicted);
     exe::new_league(this);
-    core::ptr::write_unaligned((this.addr() + 4) as *mut usize, registro);
+    core::ptr::write_unaligned((this.addr() + league::COMPETITION) as *mut usize, registro);
     core::ptr::write_unaligned(this.addr() as *mut usize, e.vtabela);
     core::ptr::write_unaligned((this.addr() + league::YEAR) as *mut u16, ano as u16);
     this.set_discipline_rule(disciplina);
@@ -81,7 +81,7 @@ pub(crate) unsafe fn bra_reg_goias_construct_state_league(this: League, ano: u32
     }
     let n = exe::crt_operator_new(0x5ce);
     let s = if n != 0 { exe::new_comp_stats(n, this) } else { 0 };
-    core::ptr::write_unaligned((this.addr() + 8) as *mut usize, s);
+    core::ptr::write_unaligned((this.addr() + league::COMP_STATS) as *mut usize, s);
     if s == 0 {
         show_error_at(e.file, e.rows[4]);
         return this.addr();
@@ -101,11 +101,11 @@ pub(crate) unsafe fn bra_reg_goias_construct_state_league(this: League, ano: u32
 pub(crate) unsafe fn bra_reg_goias_compare_state_league_ctor(name: &str, this: League, year: u32, record: usize, e: &BraRegGoiasStateChampionship, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this.addr() && read_usize(this.addr()) == e.vtabela && (this.year() as u16) == year as u16
-        && read_usize(this.addr() + 4) == record && this.discipline_rule() == 7;
-    if this.stage_index() == 0xff && read_usize(this.addr() + 8) != 0 {
+        && this.competition().addr() == record && this.discipline_rule() == 7;
+    if this.stage_index() == 0xff && this.comp_stats() != 0 {
         ok = ok && this.stage_count() == e.stages as usize && this.stages() != 0 && this.importance() == 0xf;
     }
-    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.stages(), read_usize(this.addr() + 8)));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.stages(), this.comp_stats()));
     r
 }
 

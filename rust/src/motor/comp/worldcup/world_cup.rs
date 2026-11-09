@@ -199,8 +199,8 @@ pub(crate) unsafe extern "thiscall" fn world_cup_update_for_date(this: usize, to
     if read_i16(this.addr() + 0x18e) as u16 == day && read_i16(this.addr() + 0x190) as i32 + this.year() as i32 == year && full != 0 {
         exe::worldcup_seed_teams(this);
     }
-    let day_of_draw = read_i16(this.addr() + 0xb6) as u16; // cqf4: the random draw day
-    if day_of_draw == day && read_i16(this.addr() + 0xb8) as i32 + this.year() as i32 == year && full != 0 && this.table() == 0 {
+    let day_of_draw = this.next_draw_day() as u16; // cqf4: the random draw day
+    if day_of_draw == day && this.next_draw_year_offset() as i32 + this.year() as i32 == year && full != 0 && this.table() == 0 {
         crate::comparison::branch("cqf_4 draw day");
         exe::worldcup_run_group_draw(this);
     }
@@ -329,7 +329,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize,
             this.club_count() as u16 as u32,
             teams,
             1,
-            read_usize(this.addr() + 4),
+            this.competition().addr(),
             table,
             rodadas as u16 as u32, // cqf5: the rounds (the dates, +0xa9 of the stage)
             this.win_points() as u32,
@@ -566,18 +566,18 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
         return;
     }
     let sedes: unsafe extern "thiscall" fn(usize, usize, u32, *mut i32, *mut i32, u32) -> u8 = core::mem::transmute(FN_HOSTCOUNTRY_FIND_HOSTS);
-    write_u8(this.addr() + 0x4b, 0);
-    if read_i16(this.addr() + 0x36) < 0x20 {
+    this.set_entrants_are_qualifiers(0);
+    if this.entrant_count() < 0x20 {
         show_error_at(0xad5888, 0x59e);
         let mut k = 0i32;
         let mut desloc = 0usize;
         if read_usize(G_NATION_COUNT) as i32 > 0 {
-            while read_i16(this.addr() + 0x36) < 0x20 {
+            while this.entrant_count() < 0x20 {
                 let mut j = 0i16;
                 let mut ja = false;
-                while j < read_i16(this.addr() + 0x36) {
+                while j < this.entrant_count() {
                     let c = exe::database_get_national_team(read_usize(G_NATION_TABLE).wrapping_add(desloc));
-                    if read_usize(read_usize(this.addr() + 0x14) + j as usize * 6) == c {
+                    if read_usize(this.entrant_book() + j as usize * 6) == c {
                         ja = true;
                         break;
                     }
@@ -585,8 +585,8 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
                 }
                 if !ja {
                     let c = exe::database_get_national_team(read_usize(G_NATION_TABLE).wrapping_add(desloc));
-                    write_usize(read_usize(this.addr() + 0x14) + read_i16(this.addr() + 0x36) as usize * 6, c);
-                    write_u16(this.addr() + 0x36, (read_i16(this.addr() + 0x36) as u16).wrapping_add(1));
+                    write_usize(this.entrant_book() + this.entrant_count() as usize * 6, c);
+                    this.set_entrant_count(((this.entrant_count() as u16).wrapping_add(1)) as i16);
                 }
                 k += 1;
                 desloc += 0x122;
@@ -596,7 +596,7 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
             }
         }
     }
-    exe::crt_qsort(read_usize(this.addr() + 0x14), read_i16(this.addr() + 0x36) as i32 as u32, 6, 0x4b07b0);
+    exe::crt_qsort(this.entrant_book(), this.entrant_count() as i32 as u32, 6, 0x4b07b0);
     // simplification: both outputs start at −1 (no venue); the original leaves them with the stack leftover when 0x5fa730 does not
     // finds the Cup (it only writes them when it finds it)
     let (mut a, mut b) = (-1i32, -1i32);
@@ -607,14 +607,14 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
     let mut fixed = 0i8;
     for i in 0..32usize {
         for (vaga, alvo) in [(0usize, detentor), (1, sede1), (2, sede2)] {
-            let t = read_usize(this.addr() + 0x14);
+            let t = this.entrant_book();
             let e = t + i * 6;
             if read_usize(e) == alvo {
                 let (c, w) = (read_usize(e), read_i16(e + 4) as u16);
                 let f = t + vaga * 6;
                 write_usize(e, read_usize(f));
                 write_u16(e + 4, read_i16(f + 4) as u16);
-                let t = read_usize(this.addr() + 0x14) + vaga * 6;
+                let t = this.entrant_book() + vaga * 6;
                 write_usize(t, c);
                 write_u16(t + 4, w);
                 if fixed < vaga as i8 + 1 {
@@ -630,14 +630,14 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
     if sede1 == detentor {
         n = 1;
     }
-    exe::crt_qsort(read_usize(this.addr() + 0x14) + n as i32 as usize * 6, (0x20 - n as i32) as u32, 6, 0x4b07b0);
+    exe::crt_qsort(this.entrant_book() + n as i32 as usize * 6, (0x20 - n as i32) as u32, 6, 0x4b07b0);
     for i in 0..0x20usize {
-        let club = Club(read_usize(read_usize(this.addr() + 0x14) + i * 6));
+        let club = Club(read_usize(this.entrant_book() + i * 6));
         let pot = this.addr() + 0xf2 + i * 5;
         write_usize(pot - 4, read_usize(club.addr()));
         if i < 8 {
             write_u8(pot, 0);
-            write_u8(read_usize(this.addr() + 0x14) + i * 6 + 4, 3);
+            write_u8(this.entrant_book() + i * 6 + 4, 3);
             continue;
         }
         let nation = club.nation().addr();
@@ -657,9 +657,9 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
             continue;
         };
         write_u8(pot, p);
-        write_u8(read_usize(this.addr() + 0x14) + i * 6 + 4, s);
+        write_u8(this.entrant_book() + i * 6 + 4, s);
     }
-    exe::crt_qsort(read_usize(this.addr() + 0x14) + 0x30, 0x18, 6, 0x92f660);
+    exe::crt_qsort(this.entrant_book() + 0x30, 0x18, 6, 0x92f660);
     exe::crt_qsort(this.addr() + 0x116, 0x18, 5, 0x92f660);
 }
 

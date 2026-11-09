@@ -133,7 +133,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_playoff_stage(this: usize)
     let t = table(this.addr(), 2, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);
     let stage = if p != 0 {
-        construct(p, this.addr(), 8, list, rodadas as u16 as u32, read_usize(this.addr() + 4), t, this.year() as u16 as u32, 2, 1,
+        construct(p, this.addr(), 8, list, rodadas as u16 as u32, this.competition().addr(), t, this.year() as u16 as u32, 2, 1,
                   extra as u16 as u32, 0x12, 1, 0, 0, 0)
     } else {
         0
@@ -192,7 +192,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
     let t = table(this.addr(), 3, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);
     let stage = if p != 0 {
-        construct(p, this.addr(), 2, list, rodadas as u16 as u32, read_usize(this.addr() + 4), t, this.year() as u16 as u32, 3, 1,
+        construct(p, this.addr(), 2, list, rodadas as u16 as u32, this.competition().addr(), t, this.year() as u16 as u32, 3, 1,
                   extra as u16 as u32, 0x14, 0, 0, 0, 0)
     } else {
         0
@@ -213,7 +213,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
 /// [pt] O código de divisão do clube `c` na MLS (usa_mls_get_club_division 0x909ec0: push c; call; add esp, 4 -> cdecl; a
 /// palavra baixa do eax: 0x413, 0x47b ou 0x414), se ele é da competição da liga (+0x57 do clube = +4 da liga).
 pub(crate) unsafe fn is_in_mls_division(this: League, c: Club, code: i16) -> bool {
-    c.division().addr() == read_usize(this.addr() + 4) && (exe::usa_mls_get_club_division(c) as u32) as u16 as i16 == code
+    c.division().addr() == this.competition().addr() && (exe::usa_mls_get_club_division(c) as u32) as u16 as i16 == code
 }
 
 /// Creates the MLS table (the first division, code 0x413): the four clubs of the competition with that division code,
@@ -314,7 +314,7 @@ pub(crate) unsafe fn create_division_stage(this: League, code: i16, k: u32, curr
     let t = table(this.addr(), -3, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xee);
     let stage = if p != 0 {
-        construct(p, this.addr(), this.club_count() as u16 as u32, v, this.legs() as u16 as u32, read_usize(this.addr() + 4), t, rodadas as u16 as u32,
+        construct(p, this.addr(), this.club_count() as u16 as u32, v, this.legs() as u16 as u32, this.competition().addr(), t, rodadas as u16 as u32,
                   read_u8(this.addr() + pv) as u32, this.draw_points() as u32, this.match_category() as u32, this.addr() + league::TIEBREAKS, this.addr() + league::PROMOTED_COUNT,
                   this.year() as u16 as u32, k, extra as u16 as u32, this.importance() as u32, 1, this.match_rules() as u16 as u32,
                   this.league_flags() as u16 as u32, this.games_per_club() as u16 as u32, 0, 2)
@@ -443,7 +443,7 @@ pub(crate) unsafe fn mls_start_new_season(this: League, year: i16) -> u32 {
         }
     }
     core::ptr::write_unaligned((this.addr() + league::CURRENT_STAGE) as *mut i32, -1);
-    let stats = read_usize(this.addr() + 8);
+    let stats = read_usize(this.addr() + league::COMP_STATS);
     if stats != 0 {
         exe::comp_stats_archive_season_and_reset(stats, 1);
     }
@@ -470,7 +470,7 @@ pub(crate) unsafe fn mls_start_new_season(this: League, year: i16) -> u32 {
     let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
     predicted(this.addr());
     exe::league_set_club_season_expectations(this);
-    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this.addr() + 4)) as u32) // cqs2: the renewal of the MLS referees
+    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this.addr() + league::COMPETITION)) as u32) // cqs2: the renewal of the MLS referees
 }
 
 /// The MLS turnover: clears the table, the schedule and the stages (the other two divisions, the play-off and the
@@ -507,7 +507,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_start_new_season(this: usize) -> 
 pub(crate) unsafe extern "thiscall" fn usa_mls_set_predicted_positions(this: usize) {
     let this = League(this);
     let n3 = this.club_count().wrapping_mul(3);
-    if read_usize(this.addr() + 8) == 0 {
+    if this.comp_stats() == 0 {
         return show_error_at(0xaa1fb4, 0x675);
     }
     let v = exe::crt_malloc(((n3 as i32) << 2) as u32);
@@ -531,7 +531,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_set_predicted_positions(this: usi
     exe::crt_qsort(v + 8 * n as usize, n as u32, 4, 0x4b07d0);
     let places: [u32; 12] = [1, 4, 7, 10, 1, 4, 7, 10, 1, 4, 7, 10]; // cqs2: the predicted positions of the three divisions
     for (k, p) in places.iter().enumerate() {
-        exe::comp_stats_set_club_final_position(read_usize(this.addr() + 8), read_usize(v + 4 * k), *p);
+        exe::comp_stats_set_club_final_position(this.comp_stats(), read_usize(v + 4 * k), *p);
     }
     crate::comparison::branch("cqs_2 expected positions");
     exe::crt_free(v);
@@ -678,8 +678,8 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_add_result(this: usize, game: usi
     if this.current_stage() != 1 {
         return 1;
     }
-    let stored = read_usize(this.addr() + 8);
-    *((this.addr() + 8) as *mut u32) = 0;
+    let stored = this.comp_stats();
+    this.set_comp_stats((0) as usize);
     *((game + 0x42) as *mut u8) = 0;
     let estagio = |k: usize| -> (usize, unsafe extern "thiscall" fn(usize, usize, u32) -> u32) {
         let e = read_usize(this.stages() + 4 * k);
@@ -691,7 +691,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_add_result(this: usize, game: usi
     let (e1, f1) = estagio(1);
     crate::comparison::branch("cqk_9 mls second conference");
     f1(e1, game, stats); // cqk9: the match in the second conference table
-    *((this.addr() + 8) as *mut u32) = stored as u32;
+    this.set_comp_stats((stored as u32) as usize);
     1
 }
 

@@ -27,8 +27,8 @@ pub(crate) unsafe fn conmebol_liber_drawn_club(this: League, k: usize) -> usize 
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let this = League(this);
     if this.active() == 0 && full != 0 {
-        let day = read_i16(this.addr() + 0xb6) as u16; // cqr10: the draw day
-        let year = (read_i16(this.addr() + 0xb8) as u16).wrapping_add(this.year() as u16);
+        let day = this.next_draw_day() as u16; // cqr10: the draw day
+        let year = (this.next_draw_year_offset() as u16).wrapping_add(this.year() as u16);
         if year == core::ptr::read_unaligned((today + 2) as *const u16) && day == core::ptr::read_unaligned(today as *const u16) {
             crate::comparison::branch("cqr_10 libertadores draw");
             exe::conmebolliber_select_qualified_clubs(this);
@@ -149,18 +149,18 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_group_stage(this: u
             this.club_count() as u16 as u32,
             teams,
             this.legs() as u16 as u32,
-            read_usize(this.addr() + 4),
+            this.competition().addr(),
             table,
             rodadas as u16 as u32,
-            (read_u8(this.addr() + 0xc2) as u32),
-            (read_u8(this.addr() + 0xc3) as u32),
-            (read_u8(this.addr() + 0xc4) as u32),
+            (this.win_points() as u32),
+            (this.draw_points() as u32),
+            (this.match_category() as u32),
             this.addr() + league::TIEBREAKS,
             this.addr() + league::PROMOTED_COUNT,
             this.year() as u16 as u32,
             g as u32,
             id as u16 as u32,
-            (read_u8(this.addr() + 0x51) as u32),
+            (this.importance() as u32),
             2,
             0,
             this.league_flags() as u16 as u32,
@@ -397,7 +397,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_select_qualified_clubs(thi
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, _a4: u32, game: usize, a6: u32) -> u32 {
     let this = League(this);
     let (d, f) = (outcome as u8, stage as u8 as i8);
-    let comp = read_usize(this.addr() + 4);
+    let comp = this.competition().addr();
     let final_ = |g: usize| {
         let h: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(g);
         h(eng_second_staff_records(), club, game, a6);

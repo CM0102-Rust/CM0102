@@ -174,6 +174,8 @@ pub(crate) mod staff {
     pub(crate) const SECOND_NAME: usize = 0x8; // 4 byte(s), int
     pub(crate) const COMMON_NAME: usize = 0xc; // 4 byte(s), int
     pub(crate) const DATE_OF_BIRTH: usize = 0x10; // 8 byte(s), TCMDate
+    pub(crate) const DATE_OF_BIRTH_YEAR: usize = 0x12; // 2 byte(s): year half of DATE_OF_BIRTH (TCMDate: day +0x10, year +0x12, leap-year dword +0x14) [verified: TCMDate layout and the age routines]
+    pub(crate) const DATE_OF_BIRTH_LEAP_YEAR: usize = 0x14; // 4 byte(s): second dword of DATE_OF_BIRTH (the TCMDate leap-year field, cm_date::LEAP_YEAR) [verified: TCMDate layout; passed with the first dword to the date routines]
     pub(crate) const AGE: usize = 0x18; // 2 byte(s): the age in years (read as i8): the year of birth from the file is replaced by the age at the game start (database setup)
     pub(crate) const YEAR_OF_BIRTH: usize = 0x18; // 2 byte(s), UInt16: the year of birth as stored in the file; database setup replaces it with the age (see AGE)
     pub(crate) const NATION: usize = 0x1a; // 4 byte(s), int
@@ -186,6 +188,8 @@ pub(crate) mod staff {
     pub(crate) const CLUB_JOB: usize = 0x39; // 4 byte(s), int
     pub(crate) const JOB_FOR_CLUB: usize = 0x3d; // 1 byte(s), byte
     pub(crate) const DATE_JOINED_CLUB: usize = 0x3e; // 8 byte(s), TCMDate
+    pub(crate) const DATE_JOINED_CLUB_YEAR: usize = 0x40; // 2 byte(s): year half of DATE_JOINED_CLUB (TCMDate at +0x3e: day +0x3e, year +0x40, leap-year dword +0x42) [verified: TCMDate layout and the contract routines]
+    pub(crate) const DATE_JOINED_CLUB_LEAP_YEAR: usize = 0x42; // 4 byte(s): second dword of DATE_JOINED_CLUB (the TCMDate leap-year field) [verified: TCMDate layout; passed with the first dword to the date routines]
     pub(crate) const DATE_EXPIRES_CLUB: usize = 0x46; // 8 byte(s), TCMDate
     pub(crate) const WAGE: usize = 0x4e; // 4 byte(s), int
     pub(crate) const VALUE: usize = 0x52; // 4 byte(s), int
@@ -338,6 +342,8 @@ pub(crate) mod intertoto_cup {
 /// Fields of the `league` objects (`this` in its routines), named from how the routines use them. [pt] Campos dos objetos `league`.
 #[allow(dead_code)]
 pub(crate) mod league {
+    pub(crate) const COMPETITION: usize = 0x4; // 4 byte(s): pointer to the competition database record (TComp; its +0 is the competition id); Comp base field [verified: League and Cup routines read [this+4] then [..+0] as the comp id]
+    pub(crate) const COMP_STATS: usize = 0x8; // 4 byte(s): pointer to the competition's Comp_Stats object (per-club season statistics), 0 = none; Comp base field [verified: comp_stats_find_club_entry callers pass [this+8]]
     pub(crate) const STAGES: usize = 0xc; // 4 byte(s): pointer to the array of extra stage objects (4 bytes each, STAGE_COUNT entries)
     pub(crate) const ENTRANT_BOOK: usize = 0x14; // 4 byte(s): Pointer to the entrant book, 6-byte entries (+0 club or nation, +4 class, +5 status); the World Cup keeps its qualified nations here (inherited from Comp, as cup ENTRANT_BOOK)
     pub(crate) const UPPER_DIVISION_ID: usize = 0x1c; // 4 byte(s): competition id of the division above (promotion target); -1 = none (top of the pyramid)
@@ -356,6 +362,9 @@ pub(crate) mod league {
     pub(crate) const COMP_TYPE: usize = 0x43; // 1 byte(s): competition type: 1 = cup, 2 = league
     pub(crate) const STAGE_INDEX: usize = 0x44; // 1 byte(s): index of this object as a stage of its parent; 0xff = the main competition itself, 0xfe = special stage
     pub(crate) const ACTIVE: usize = 0x45; // 4 byte(s): nonzero when the competition has clubs/is active; zero makes the day update, sort and completion checks skip [inference]
+    pub(crate) const SUBSTITUTES_NAMED: usize = 0x49; // 1 byte(s): number of substitutes named on the bench; Comp base field, as cup::SUBSTITUTES_NAMED [verified: same offset and use in League and Cup set-up]
+    pub(crate) const SUBSTITUTIONS_ALLOWED: usize = 0x4a; // 1 byte(s): number of substitutions allowed; Comp base field, as cup::SUBSTITUTIONS_ALLOWED [verified: same offset and use in League and Cup set-up]
+    pub(crate) const ENTRANTS_ARE_QUALIFIERS: usize = 0x4b; // 1 byte(s): 1 = the entrant book still holds the qualifiers (the schedule screen shows a 'Qualifiers' tab); Comp base field [verified: set by the qualifier set-ups, read by the schedule screen]
     pub(crate) const SEASON_CLOSED: usize = 0x4c; // 4 byte(s): set once the season-end history and records were written; cleared by start_new_season
     pub(crate) const DISCIPLINE_RULE: usize = 0x50; // 1 byte(s): discipline (suspension) rule set code (9 English, 0xc French, 0x11 Italian, 0x1a Spanish...)
     pub(crate) const IMPORTANCE: usize = 0x51; // 1 byte(s): competition importance (0xf for state leagues); match importance = (IMPORTANCE - 10) / 4 + 10

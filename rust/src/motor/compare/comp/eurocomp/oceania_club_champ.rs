@@ -133,7 +133,7 @@ pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_create_knockou
     let (pl, ac) = (plan.clone(), found.clone());
     plan.sort_unstable();
     found.sort_unstable();
-    let same = plan == found && read_i16(stage + cup::TEAM_COUNT) == 4 && read_usize(stage + 4) == read_usize(this.addr() + 4);
+    let same = plan == found && read_i16(stage + cup::TEAM_COUNT) == 4 && read_usize(stage + 4) == this.competition().addr();
     SCOREBOARD.record(same, || format!("oceania_club_champ_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this.addr(), pl, ac));
 }
 

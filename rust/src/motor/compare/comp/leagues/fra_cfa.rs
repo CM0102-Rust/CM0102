@@ -17,7 +17,7 @@ pub(crate) unsafe extern "thiscall" fn compare_fra_cfa_set_up_rules(this: usize)
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_CFA_SET_UP_RULES);
     let r = o(this.addr());
     let ok = r == 1 && (this.legs() as u16) == 2 && this.win_points() == 3 && this.draw_points() == 1 && this.match_category() == 2
-        && (this.tiebreaks() as u8) == 4 && read_u8(this.addr() + 0xc6) == 1 && read_u8(this.addr() + 0xc7) == 2 && this.club_sides() == 1 && this.promoted_count() == 0 && this.promotion_playoff_count() == 0 && this.relegation_playoff_count() == 0 && this.relegated_count() == 0
+        && (this.tiebreaks() as u8) == 4 && read_u8(this.addr() + league::TIEBREAKS + 1) == 1 && read_u8(this.addr() + league::TIEBREAKS + 2) == 2 && this.club_sides() == 1 && this.promoted_count() == 0 && this.promotion_playoff_count() == 0 && this.relegation_playoff_count() == 0 && this.relegated_count() == 0
         && (this.upper_division_id() as usize) == read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) && this.lower_division_id() == 0xffff_ffff
         && (this.league_flags() as u16) == 0x43;
     SCOREBOARD.record(ok, || format!("fra_cfa_set_up_rules({:#x}): devolveu {}, campos fora do esperado", this.addr(), r));

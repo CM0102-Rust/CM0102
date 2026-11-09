@@ -42,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_final_stage(this: us
     let t = table(this.addr(), 10, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);
     let stage = if p != 0 {
-        construct(p, this.addr(), 2, list.as_ptr(), rodadas as u16 as u32, read_usize(this.addr() + 4), t, this.year() as u16 as u32, 10, 1,
+        construct(p, this.addr(), 2, list.as_ptr(), rodadas as u16 as u32, this.competition().addr(), t, this.year() as u16 as u32, 10, 1,
                   extra as u16 as u32, 0x14, 0, 0, 0, 0)
     } else {
         0
@@ -99,7 +99,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
         exe::crt_free(l);
         core::ptr::write_unaligned((this.addr() + league::ROUND_DATES) as *mut usize, 0);
     }
-    let stats = read_usize(this.addr() + 8);
+    let stats = read_usize(this.addr() + league::COMP_STATS);
     if stats != 0 {
         exe::comp_stats_archive_season_and_reset(stats, 1);
     }
@@ -144,7 +144,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
     }
     let expectations: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
     expectations(this.addr());
-    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this.addr() + 4)) as u32); // cqs4: the renewal of the Serie C referees
+    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this.addr() + league::COMPETITION)) as u32); // cqs4: the renewal of the Serie C referees
     for g in 0..7 {
         exe::branatthird_create_group_stage(this, g);
     }
@@ -252,7 +252,7 @@ pub(crate) unsafe fn bra_nat_third_create_group_stage_cqs3_grupo(this: League, g
     }
     let p = exe::crt_operator_new(0xee);
     let stage = if p != 0 {
-        construct(p, this.addr(), 7, v, 2, read_usize(this.addr() + 4), t, rodadas as u16 as u32, read_u8(this.addr() + pv) as u32, this.draw_points() as u32,
+        construct(p, this.addr(), 7, v, 2, this.competition().addr(), t, rodadas as u16 as u32, read_u8(this.addr() + pv) as u32, this.draw_points() as u32,
                   this.match_category() as u32, this.addr() + league::TIEBREAKS, this.addr() + league::PROMOTED_COUNT, this.year() as u16 as u32, g, extra as u16 as u32,
                   this.importance() as u32, 1, 0, this.league_flags() as u16 as u32, -1, 0, 2)
     } else {
@@ -355,7 +355,7 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
     let t = table(this.addr(), 7, &mut rodadas, &mut extra, 0);
     let p = exe::crt_operator_new(0xb2);
     let stage = if p != 0 {
-        construct(p, this.addr(), 0x10, list, rodadas as u16 as u32, read_usize(this.addr() + 4), t, this.year() as u16 as u32, 7, 1,
+        construct(p, this.addr(), 0x10, list, rodadas as u16 as u32, this.competition().addr(), t, this.year() as u16 as u32, 7, 1,
                   extra as u16 as u32, 0x14, 0, 0, 0, 0)
     } else {
         0
@@ -423,7 +423,7 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
         let t = table(this.addr(), k, &mut rodadas, &mut extra, 0);
         let p = exe::crt_operator_new(0xee);
         let stage = if p != 0 {
-            construct(p, this.addr(), 4, v[4 * (k as usize - 8)..].as_ptr(), 2, read_usize(this.addr() + 4), t, rodadas as u16 as u32, 3, 1, 5,
+            construct(p, this.addr(), 4, v[4 * (k as usize - 8)..].as_ptr(), 2, this.competition().addr(), t, rodadas as u16 as u32, 3, 1, 5,
                       tiebreak.as_ptr(), slots.as_ptr(), this.year() as u16 as u32, k, extra as u16 as u32, 0x14, 1, 0, 2, -1, 0, 2)
         } else {
             0
@@ -484,7 +484,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -
         if (k as i8) >= 0x38 {
             break;
         }
-        if read_usize(club + club::DIVISION) == read_usize(this.addr() + 4) {
+        if read_usize(club + club::DIVISION) == this.competition().addr() {
             core::ptr::write_unaligned((read_usize(this.addr() + bra_nat_third::CLUB_LIST) + (k as i8 as isize as usize) * 4) as *mut usize, club);
             k = k.wrapping_add(1);
         }

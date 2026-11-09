@@ -79,7 +79,7 @@ pub(crate) unsafe extern "stdcall" fn compare_player_regen_sign_for_club(person:
         return r;
     }
     let c = exe::contract_manager_get_contract(read_i32(G_CONTRACT_MANAGER) as usize, person);
-    let ok = r == 1 && read_i32(club.addr() + club::SQUAD + 4 * k) == person.addr() as i32 && (person.club_job() as i32) == club.addr() as i32 && (c == 0 || *((c + 0x3a) as *const u8) == 0);
+    let ok = r == 1 && (club.squad(k) as i32) == person.addr() as i32 && (person.club_job() as i32) == club.addr() as i32 && (c == 0 || *((c + 0x3a) as *const u8) == 0);
     SCOREBOARD.record(ok, || format!("player_regen_sign_for_club({:x}, {:x}) vaga {} original={}", person.addr(), club.addr(), k, r));
     r
 }

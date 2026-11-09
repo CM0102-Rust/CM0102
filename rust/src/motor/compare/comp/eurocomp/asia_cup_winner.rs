@@ -24,7 +24,7 @@ pub(crate) unsafe extern "thiscall" fn compare_asia_cup_winner_create_knockout_s
     let (pl, ac) = (plan.clone(), found.clone());
     plan.sort_unstable();
     found.sort_unstable();
-    let same = plan == found && read_i16(stage + cup::TEAM_COUNT) == 8 && read_usize(stage + 4) == read_usize(this.addr() + 4) && this.current_stage() == 3;
+    let same = plan == found && read_i16(stage + cup::TEAM_COUNT) == 8 && read_usize(stage + 4) == this.competition().addr() && this.current_stage() == 3;
     SCOREBOARD.record(same, || format!("asia_cup_winner_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this.addr(), pl, ac));
 }
 

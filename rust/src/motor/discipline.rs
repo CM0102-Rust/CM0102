@@ -970,7 +970,7 @@ pub(crate) unsafe extern "thiscall" fn is_one_booking_from_ban(this: usize, pers
     if o == 0 {
         return 0;
     }
-    exe::rulingbody_check_one_booking_from_ban(o, read_usize(person) as u32, 0, 0, read_usize(comp.addr() + 4) as u32)
+    exe::rulingbody_check_one_booking_from_ban(o, read_usize(person) as u32, 0, 0, comp.competition().addr() as u32)
 }
 
 /// the penalty at the table row and column, if the type matches

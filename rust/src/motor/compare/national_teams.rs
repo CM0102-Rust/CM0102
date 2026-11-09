@@ -299,7 +299,7 @@ pub(crate) unsafe extern "thiscall" fn compare_withdraw_injured_player(this: usi
     }
     let plan = release_plan(this, p, days);
     let team = Club(national_team_for_type(club.nation().addr(), call_up_type(club, p)));
-    let estava = !team.is_null() && (0..50usize).any(|c| read_usize(team.addr() + club::SQUAD + 4 * c) == p.addr());
+    let estava = !team.is_null() && (0..50usize).any(|c| team.squad(c) == p.addr());
     let before = (club.addr(), p.job_for_nation());
     o(this, p.addr(), days);
     let after = (p.national_job(), p.job_for_nation());
@@ -510,7 +510,7 @@ pub(crate) unsafe extern "thiscall" fn compare_release_overage_u21_players(this:
         return o(this, nation);
     }
     let mut reg = vec![(nation_record_by_id(this, nation) + 0x6b, 1), (team.addr() + club::SQUAD, 200)];
-    reg.extend((0..50usize).map(|c| read_usize(team.addr() + club::SQUAD + 4 * c)).filter(|&p| p != 0).map(|p| (p + staff::NATIONAL_JOB, 0x3b)));
+    reg.extend((0..50usize).map(|c| team.squad(c)).filter(|&p| p != 0).map(|p| (p + staff::NATIONAL_JOB, 0x3b)));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, nation), || release_overage_u21_players(this, nation));
     SCOREBOARD.record(igual, || format!("release_overage_u21_players({:x}, {:x}) {:x?} x {:x?}", this, nation, mo, mr));
 }
@@ -669,18 +669,18 @@ pub(crate) unsafe extern "thiscall" fn compare_record_club_call_ups(this: usize,
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_RECORD_CLUB_CALL_UPS);
     if p != 0 && callup_array_full(this, team) {
         let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-        let mut expected: Vec<u32> = (0..0x32usize).map(|i| read_usize(team.addr() + club::SQUAD + 4 * i) as u32).collect();
+        let mut expected: Vec<u32> = (0..0x32usize).map(|i| team.squad(i) as u32).collect();
         // the CRT’s own qsort (the order of equals is its own), outside the original’s trace
         crate::rng::pause_trace(|| qsort(expected.as_mut_ptr() as usize, 0x32, 4, 0x778ef0));
         o(this, team.addr(), b, p);
-        let obtido: Vec<u32> = (0..0x32usize).map(|i| read_usize(team.addr() + club::SQUAD + 4 * i) as u32).collect();
+        let obtido: Vec<u32> = (0..0x32usize).map(|i| team.squad(i) as u32).collect();
         SCOREBOARD.record(obtido == expected, || format!("record_club_call_ups({:x}) elenco original={:x?} esperado={:x?}", team.addr(), obtido, expected));
         return;
     }
     let mut reg = vec![(team.addr() + club::SQUAD, 0xc8)];
     let mut vistos = Vec::new();
     for i in 0..0x32usize {
-        let s = Staff(read_usize(team.addr() + club::SQUAD + 4 * i));
+        let s = Staff(team.squad(i));
         if s.is_null() || read_usize(s.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
             continue;
         }

@@ -57,7 +57,7 @@ pub(crate) unsafe fn construct_english_division(this: League, year: u32, registr
     let set_up_rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.set_up_rules);
     let create_table: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.create_table);
     exe::new_league(this);
-    write_usize(this.addr() + 4, registro);
+    write_usize(this.addr() + league::COMPETITION, registro);
     write_usize(this.addr(), p.vtable);
     this.set_year((year as u16) as i16);
     this.set_discipline_rule(9); // cql6: the discipline rule of the English leagues
@@ -96,7 +96,7 @@ pub(crate) unsafe fn construct_english_division(this: League, year: u32, registr
     }
     let e = exe::crt_operator_new(0x5ce);
     let s = if e != 0 { exe::new_comp_stats(e, this) } else { 0 };
-    write_usize(this.addr() + 8, s);
+    this.set_comp_stats(s);
     if s == 0 {
         show_error_at(p.source_file, p.box_lines[4]);
         return this.addr();
@@ -162,14 +162,14 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_prm(this: usize, year: u32,
 pub(crate) unsafe fn compare_english_constructor(name: &str, this: League, year: u32, record: usize, p: &EnglishDivision, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtable && (this.year() as u16) == year as u16
-        && read_usize(this.addr() + 4) == record && this.discipline_rule() == 9;
+        && this.competition().addr() == record && this.discipline_rule() == 9;
     if let Some((c, s)) = p.stadium {
         ok = ok && this.required_capacity() == c && this.required_seats() == s;
     }
-    if this.stage_index() == 0xff && read_usize(this.addr() + 8) != 0 {
+    if this.stage_index() == 0xff && this.comp_stats() != 0 {
         ok = ok && this.stage_count() == p.extra_stages as usize && (this.stages() != 0) == (p.extra_stages != 0);
     }
-    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.stages(), read_usize(this.addr() + 8)));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.stages(), this.comp_stats()));
     r
 }
 

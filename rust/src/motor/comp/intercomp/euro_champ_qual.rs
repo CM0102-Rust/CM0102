@@ -24,7 +24,7 @@ use super::*;
 /// +0xba. Devolve 1.
 pub(crate) unsafe fn set_up_rules(this: League) -> u32 {
     this.set_win_points(3);
-    write_u8(this.addr() + 0x4a, 3);
+    write_u8(this.addr() + league::SUBSTITUTIONS_ALLOWED, 3);
     core::ptr::write_unaligned((this.addr() + league::LEGS) as *mut i16, 2); // cqs8: dois turnos
     this.set_draw_points(1);
     this.set_match_category(0xa);
@@ -36,7 +36,7 @@ pub(crate) unsafe fn set_up_rules(this: League) -> u32 {
     this.set_promotion_playoff_count(1);
     this.set_relegation_playoff_count(0);
     this.set_relegated_count(0);
-    write_u8(this.addr() + 0x49, 7);
+    write_u8(this.addr() + league::SUBSTITUTES_NAMED, 7);
     core::ptr::write_unaligned((this.addr() + league::GAMES_PER_CLUB) as *mut u16, 0xffff);
     let mut data = [0u32; 2];
     // simplification: the original pushes the year in ecx with the high 16 bits of the cup pointer; 0x549f70 reads the word

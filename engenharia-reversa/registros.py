@@ -19,6 +19,7 @@ R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(R, 'engenharia-reversa'))
 import larguras_campos as lc  # noqa: E402
 
+LARG_EL = {'u8': 1, 'i8': 1, 'u16': 2, 'i16': 2, 'u32': 4, 'i32': 4, 'usize': 4}
 SAIDA = os.path.join(R, 'rust', 'src', 'motor', 'records.rs')
 KEYWORDS = {'as', 'break', 'const', 'continue', 'crate', 'else', 'enum', 'extern', 'false', 'fn', 'for', 'if', 'impl', 'in',
             'let', 'loop', 'match', 'mod', 'move', 'mut', 'pub', 'ref', 'return', 'self', 'static', 'struct', 'super',
@@ -33,6 +34,16 @@ POINTERS = {
     ('club', 'DIVISION'): 'Competition',
     ('club', 'LAST_DIVISION'): 'Competition',
     ('club', 'RESERVE_DIVISION'): 'Competition',
+    ('league', 'COMPETITION'): 'Competition',
+}
+
+
+# array fields: (module, FIELD) -> (element type, element count); a method `x.squad(i)` / `x.set_squad(i, v)`
+ARRAYS = {
+    ('club', 'SQUAD'): ('usize', 50),
+    ('club', 'COACHES'): ('usize', 5),
+    ('club', 'SCOUTS'): ('usize', 7),
+    ('club', 'PHYSIOS'): ('usize', 3),
 }
 
 
@@ -73,7 +84,7 @@ def tipos_ja_gerados():
     if not os.path.exists(SAIDA):
         return out
     t = open(SAIDA, encoding='utf-8').read()
-    for m in re.finditer(r'/// `(\w+)::(\w+)` \(\+0x[0-9a-f]+\)\.\n\s*#\[inline\(always\)\]\n\s*pub\(crate\) (?:unsafe )?fn (?:r#)?(\w+)\(self\) -> (\w+)', t):
+    for m in re.finditer(r'/// `(\w+)::(\w+)` \(\+0x[0-9a-f]+\)\.[^\n]*\n\s*#\[inline\(always\)\]\n\s*pub\(crate\) (?:unsafe )?fn (?:r#)?(\w+)\(self\) -> (\w+)', t):
         if not (m.group(3).endswith('_addr') and m.group(4) == 'usize'):
             out[(m.group(1), m.group(2))] = m.group(4)
     return out
@@ -83,6 +94,8 @@ def main():
     cs = lc.campos()
     usos = usos_por_campo()
     fixos = tipos_ja_gerados()
+    import confianca_campos
+    niveis = confianca_campos.niveis_por_campo()  # how far to trust each name (docs/CONFIANCA_DOS_CAMPOS.md)
     mods = collections.OrderedDict()
     for (mod, c), (off, larg, doc_t) in cs.items():
         mods.setdefault(mod, []).append((c, off, larg, doc_t))
@@ -139,7 +152,16 @@ def main():
                     t = tipo_doc(larg, doc_t) or t
             elif larg:
                 t = tipo_doc(larg, doc_t)
-            L.append('    /// `%s::%s` (+%s).' % (mod, c, hex(off)))
+            if (mod, c) in ARRAYS:
+                et, n = ARRAYS[(mod, c)]
+                tam = LARG_EL[et]
+                L += ['    /// `%s::%s`[i] (+%s, %d x %s). Name: %s.' % (mod, c, hex(off), n, et, niveis.get((mod, c), 'read')),
+                      '    #[inline(always)]', '    pub(crate) unsafe fn %s(self, i: usize) -> %s {' % (nome, et),
+                      '        read_%s(self.0 + %s::%s + i * %d)' % (et, mod, c, tam), '    }',
+                      '    #[inline(always)]', '    pub(crate) unsafe fn set_%s(self, i: usize, v: %s) {' % (nome, et),
+                      '        write_%s(self.0 + %s::%s + i * %d, v)' % (et, mod, c, tam), '    }']
+                continue
+            L.append('    /// `%s::%s` (+%s). Name: %s.' % (mod, c, hex(off), niveis.get((mod, c), 'read')))
             if t is None:
                 L += ['    #[inline(always)]', '    pub(crate) fn %s_addr(self) -> usize {' % nome, '        self.0 + %s::%s' % (mod, c), '    }']
                 continue

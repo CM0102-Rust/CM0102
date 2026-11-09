@@ -400,7 +400,7 @@ pub(crate) unsafe fn create_playoff_stage(this: League, rows: [usize; 4], file: 
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
         let a10 = a10.unwrap_or(extra as u16 as u32);
-        construct(p, this.addr(), n as u16 as u32, list, rodadas as u16 as u32, read_usize(this.addr() + 4), t, this.year() as u16 as u32, 0, 1, a10, 0x14, 0, 0, 0, 0)
+        construct(p, this.addr(), n as u16 as u32, list, rodadas as u16 as u32, this.competition().addr(), t, this.year() as u16 as u32, 0, 1, a10, 0x14, 0, 0, 0, 0)
     } else {
         0
     };
@@ -458,7 +458,7 @@ pub(crate) unsafe fn compare_playoff_stage(name: &str, this: League, rows: [usiz
     let (mut x, mut y) = (plan, found);
     x.sort_unstable();
     y.sort_unstable();
-    let same = x == y && read_i16(stage + cup::TEAM_COUNT) == n && read_usize(stage + 4) == read_usize(this.addr() + 4);
+    let same = x == y && read_i16(stage + cup::TEAM_COUNT) == n && read_usize(stage + 4) == this.competition().addr();
     SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={} n={}", name, this.addr(), plan, stage, found, read_i16(stage + cup::TEAM_COUNT), n));
 }
 

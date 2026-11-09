@@ -2642,7 +2642,7 @@ pub(crate) unsafe extern "C" fn rate_player(person: usize, player: usize, club: 
     let a = if exe::database_is_national_team(club) != 0 {
         p.int_apps() as f64 * d8(0x96d520)
     } else {
-        exe::date_days_since(G_CURRENT_DATE, (p.date_joined_club() as u32), *((p.addr() + 0x42) as *const u32)) as f64
+        exe::date_days_since(G_CURRENT_DATE, (p.date_joined_club() as u32), (p.date_joined_club_leap_year() as u32)) as f64
     };
     let f = if a > d8(0x968908) { (a - d8(0x968908)) * d8(0x96a6b8) + d8(0x967890) } else { 1.0 };
     let base = read_i8(sheet + player_sheet::LEADERSHIP) as f64 * f - (enc * enc + d8(0x9688a0)) * d8(0x967880);
@@ -2969,7 +2969,7 @@ pub(crate) unsafe fn match_man_date_is_before(a: usize, b: usize) -> bool {
 ///
 /// [pt] Os dias desde a data de `p` (+0x3e) até hoje ([0xae2c90]), contando 365 por ano.
 pub(crate) unsafe fn match_man_days_since_date(p: Staff) -> i32 {
-    let years = *(G_CURRENT_DATE_YEAR as *const u16) as i32 - *((p.addr() + 0x40) as *const u16) as i32;
+    let years = *(G_CURRENT_DATE_YEAR as *const u16) as i32 - p.date_joined_club_year() as i32;
     years * 365 - (p.date_joined_club() as i16) as i32 + *(G_CURRENT_DATE as *const i16) as i32
 }
 
@@ -3240,7 +3240,7 @@ pub(crate) unsafe fn contract_adjust(p: Staff, f: usize, club: Club, contract: u
     let mul = |l: i32, k: f64| ftol(l as f64 * k);
     let owner = Club(p.club_job());
     if owner.is_null() {
-        if exe::date_days_since(G_CURRENT_DATE, (p.date_joined_club() as u32), *((p.addr() + 0x42) as *const u32)) > 0x3c {
+        if exe::date_days_since(G_CURRENT_DATE, (p.date_joined_club() as u32), (p.date_joined_club_leap_year() as u32)) > 0x3c {
             l4c = mul(l4c, read_f64(rdata::F64_0_75));
         }
     } else {

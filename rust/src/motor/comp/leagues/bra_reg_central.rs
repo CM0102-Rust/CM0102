@@ -91,7 +91,7 @@ pub(crate) unsafe fn record_state_league_stage(this: usize, club: usize, st: u8,
 /// campeão e o destino 5; os eliminados (2 ou -1), o registro de eliminação (0x86c000) com o peso da escala 0x4bf850
 /// (30 a 50 pela rodada do jogo em `rodadas`) e o destino -2. Devolve (linha gravada ou 0, destino).
 pub(crate) unsafe fn record_state_knockout(this: League, club: usize, st: u8, game: usize, rounds: u32, fazer: bool) -> (usize, u8) {
-    let comp = read_usize(this.addr() + 4);
+    let comp = this.competition().addr();
     let n = this.club_count() as i32;
     let mut i = 0i32;
     while i < n {

@@ -327,7 +327,7 @@ pub(crate) unsafe extern "thiscall" fn construct_spa_lower(this: usize, year: u3
     write_usize(this.addr(), 0x96fb1c);
     this.set_year((year as u16) as i16);
     this.set_discipline_rule(0xff);
-    write_usize(this.addr() + 4, comp_record_of_key(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION));
+    write_usize(this.addr() + league::COMPETITION, comp_record_of_key(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION));
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this.addr();
     }
@@ -467,7 +467,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
             if entra {
                 exe::league_init_table_row(this, k as u32, c, 0, 0);
                 k = k.wrapping_add(1);
-                write_usize(c + club::RESERVE_DIVISION, read_usize(this.addr() + 4));
+                write_usize(c + club::RESERVE_DIVISION, this.competition().addr());
             } else {
                 write_usize(c + club::RESERVE_DIVISION, 0);
             }
@@ -484,7 +484,7 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
         let c = list[j as usize];
         exe::league_init_table_row(this, k as u32, c, 0, 0);
         k = k.wrapping_add(1);
-        write_usize(c + club::RESERVE_DIVISION, read_usize(this.addr() + 4));
+        write_usize(c + club::RESERVE_DIVISION, this.competition().addr());
         j += 1;
     }
     (k as i8 as i16 == this.club_count()) as u32

@@ -14,7 +14,7 @@ use super::*;
 /// de participantes em +0xa7, 6 bytes cada); quantos em +0x3e.
 pub(crate) unsafe extern "thiscall" fn club_in_competition(this: usize, club: usize) -> u8 {
     let this = League(this);
-    let base = *((this.addr() + 4) as *const usize);
+    let base = this.competition().addr();
     let d = |p: usize, o: usize| *((p + o) as *const usize);
     let limit = (*(G_CLUB_COUNT as *const i32)).wrapping_sub(*(G_NATION_COUNT as *const i32));
     let nation = d(club, 0x53);
@@ -161,7 +161,7 @@ pub(crate) unsafe extern "thiscall" fn send_tv_rights_news(this: usize, club: us
     let p = n.as_mut_ptr() as usize;
     exe::new_newsitem(p, 0x1f, 0);
     exe::newsitem_set_slot(p, (0) as u32 as i8, read_usize(club) as u32);
-    exe::newsitem_set_slot(p, (1) as u32 as i8, read_usize(read_usize(this.addr() + 4)) as u32);
+    exe::newsitem_set_slot(p, (1) as u32 as i8, read_usize(this.competition().addr()) as u32);
     exe::newsitem_set_slot(p, (2) as u32 as i8, value);
     exe::newsitem_set_slot(p, (3) as u32 as i8, this.year() as i32 as u32);
     exe::news_send_to_club_manager(read_usize(G_NEWS), p, club);
@@ -596,7 +596,7 @@ pub(crate) unsafe fn add_club_callups(this: usize, c: usize, count: u8, d: *mut 
 /// vetor)? Então ela pode realocar.
 pub(crate) unsafe fn callup_array_full(this: usize, team: Club) -> bool {
     (0..0x32usize).any(|i| {
-        let s = Staff(read_usize(team.addr() + club::SQUAD + 4 * i));
+        let s = Staff(team.squad(i));
         if s.is_null() || read_usize(s.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 || s.club_job() == 0 {
             return false;
         }

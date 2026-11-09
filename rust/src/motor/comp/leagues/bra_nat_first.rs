@@ -42,7 +42,7 @@ pub(crate) unsafe fn create_play_off_stage(this: League, rows: &[usize; 4], file
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this.addr(), 4, list, rodadas as u16 as u32, read_usize(this.addr() + 4), t, this.year() as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+        construct(p, this.addr(), 4, list, rodadas as u16 as u32, this.competition().addr(), t, this.year() as u16 as u32, 0, 1, extra as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
     };
@@ -127,7 +127,7 @@ pub(crate) unsafe fn compare_play_off_stage(name: &str, this: League, rows: &[us
     let (pl, ac) = (plan.clone(), found.clone());
     plan.sort_unstable();
     found.sort_unstable();
-    let same = plan == found && read_i16(stage + cup::TEAM_COUNT) == 4 && read_usize(stage + 4) == read_usize(this.addr() + 4) && this.current_stage() == 0;
+    let same = plan == found && read_i16(stage + cup::TEAM_COUNT) == 4 && read_usize(stage + 4) == this.competition().addr() && this.current_stage() == 0;
     SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this.addr(), pl, stage, ac, read_i16(stage + cup::TEAM_COUNT)));
 }
 
@@ -172,7 +172,7 @@ pub(crate) unsafe fn rebuild_season(this: League, table: usize, file: usize, row
         exe::crt_free(l);
         core::ptr::write_unaligned((this.addr() + league::ROUND_DATES) as *mut usize, 0);
     }
-    let stats = read_usize(this.addr() + 8);
+    let stats = read_usize(this.addr() + league::COMP_STATS);
     if stats != 0 {
         exe::comp_stats_archive_season_and_reset(stats, 1);
     }
@@ -224,7 +224,7 @@ pub(crate) unsafe fn rebuild_season(this: League, table: usize, file: usize, row
 pub(crate) unsafe fn set_expectations_and_renew_officials(this: League) -> u32 {
     let expectations: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
     expectations(this.addr());
-    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this.addr() + 4)) as u32) // cqq8: os árbitros
+    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), this.competition().addr()) as u32) // cqq8: os árbitros
 }
 
 /// The season turnovers of the other fourteen competitions in Brazil, in the original routine's order.
@@ -619,7 +619,7 @@ pub(crate) unsafe fn serie_a_staff_records(this: usize, club: usize, status: u32
 /// [pt] A Série C (0x42eb00); como a da Série A.
 pub(crate) unsafe fn serie_c_staff_records(this: League, club: usize, status: u32, stage: u32, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (status as u8, stage as u8 as i8);
-    let comp = read_usize(this.addr() + 4);
+    let comp = this.competition().addr();
     if fa < 7 {
         // the groups
         if st == 6 && fazer {
@@ -691,7 +691,7 @@ pub(crate) unsafe fn serie_c_staff_records(this: League, club: usize, status: u3
 /// [pt] O Baiano (0x430210); como a da Série A. O clube vem da tabela (+0xb1, +0x3e linhas), não da 0x68ab70.
 pub(crate) unsafe fn baiano_staff_records(this: League, club: usize, status: u32, stage: u32, game: usize, fazer: bool) -> (u32, usize, u8) {
     let (st, fa) = (status as u8, stage as u8);
-    let comp = read_usize(this.addr() + 4);
+    let comp = this.competition().addr();
     if fa == 0xff {
         if st == 6 {
             if fazer {

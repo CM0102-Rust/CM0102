@@ -110,10 +110,10 @@ pub(crate) unsafe extern "thiscall" fn compare_allocate_squad_number(this: usize
 pub(crate) unsafe extern "thiscall" fn compare_assign_club_squad_numbers(this: usize, c: usize, keep: u32) {
     let c = Club(c);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_CLUB_SQUAD_NUMBERS);
-    let mut ps: Vec<usize> = (0..50).map(|k| read_u32(c.addr() + club::SQUAD + 4 * k) as usize).collect();
+    let mut ps: Vec<usize> = (0..50).map(|k| (c.squad(k) as u32) as usize).collect();
     let l = Club(exe::club_get_linked_b_team(c, (0) as *mut u32, 1));
     if !l.is_null() {
-        ps.extend((0..50).map(|k| read_u32(l.addr() + club::SQUAD + 4 * k) as usize));
+        ps.extend((0..50).map(|k| (l.squad(k) as u32) as usize));
     }
     let reg = squad_number_regions(&ps);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, c.addr(), keep), || assign_club_squad_numbers(this, c.addr(), keep));

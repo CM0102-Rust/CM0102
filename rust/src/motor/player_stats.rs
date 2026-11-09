@@ -220,7 +220,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
         } else if !mark {
             true
         } else {
-            exe::date_days_since(G_CURRENT_DATE, p.date_joined_club() as u32, read_usize(p.addr() + 0x42) as u32) < 0x16d
+            exe::date_days_since(G_CURRENT_DATE, p.date_joined_club() as u32, p.date_joined_club_leap_year() as u32) < 0x16d
         };
         if write {
             let no = career_history_node(club, None, value, 0x30 | kind); // cqh8: the empty node of the sixth category
@@ -1295,7 +1295,7 @@ pub(crate) unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, na
         let k = (exe::key_nation_index_of_club(club) as i8) as isize; // only al
         if (0xb63d60usize).wrapping_add((k * 72) as usize) == nation {
             for s in 0..50usize {
-                let p = Staff(read_usize(club.addr() + club::SQUAD + 4 * s));
+                let p = Staff(club.squad(s));
                 if p.is_null() || p.player() == 0 || read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) {
                     continue;
                 }

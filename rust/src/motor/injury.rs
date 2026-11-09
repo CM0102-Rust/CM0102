@@ -1094,7 +1094,7 @@ pub(crate) unsafe extern "thiscall" fn injury_post_injury_news(_this: usize, p: 
     exe::newsitem_set_slot(nw, 6, read_i16(l + 0x22) as u16 as u32);
     exe::newsitem_set_slot(nw, 7, read_i16(l + injury_entry::DAYS_OUT) as i32 as u32);
     exe::newsitem_set_slot(nw, 8, p.date_of_birth() as i32 as u32);
-    exe::newsitem_set_slot(nw, 9, read_i16(p.addr() + 0x12) as u16 as u32);
+    exe::newsitem_set_slot(nw, 9, (p.date_of_birth_year() as i16) as u16 as u32);
     if read_u8(l + injury_entry::MATCH_MARK) != 0xff {
         exe::newsitem_set_slot(nw, 0xa, read_usize(l + 0x12) as u32);
         exe::newsitem_set_slot(nw, 0xb, read_usize(l + 0x16) as u32);
@@ -1457,7 +1457,7 @@ pub(crate) unsafe extern "thiscall" fn post_due_recovery_news(this: usize) {
             continue;
         }
         for j in 0..50usize {
-            let p = read_usize(club.addr() + club::SQUAD + 4 * j);
+            let p = club.squad(j);
             if p == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
                 continue;
             }

@@ -1,7 +1,7 @@
 # Mutações da 283a leva (itens cqs_4, cqs_5, cqs_6, cqs_7, cqs_10, cqs_11, cqs_12, cqt_1, cqt_2, cqt_3, cqt_4, cqt_10, cqt_11). Uso: python mutacoes.py mutacoes\leva283.py --carreira 2002-06-01
 MUTACOES = [
     ('cqs4_final_trocada', '    list[0] = stage_leader(this, 8); // cqs4: the group A winner\n    list[1] = stage_leader(this, 9);\n', '    list[0] = stage_leader(this, 9); // mutacao: o campeao do grupo B primeiro\n    list[1] = stage_leader(this, 8);\n', 'cqs_4 final'),
-    ('cqs4_virada_sem_arbitros', '(exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this.addr() + 4)) as u32); // cqs4: the renewal of the Serie C referees', '// mutacao: sem a renovacao dos arbitros', 'cqs_4 serie c rollover'),
+    ('cqs4_virada_sem_arbitros', '(exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this.addr() + league::COMPETITION)) as u32); // cqs4: the renewal of the Serie C referees', '// mutacao: sem a renovacao dos arbitros', 'cqs_4 serie c rollover'),
     ('cqs4_previstas_sem_ordenar', 'exe::crt_qsort(read_usize(this + bra_nat_third::CLUB_LIST), 0x38, 4, 0x4b07d0); // cqs4: the list of the 56 by reputation', '// mutacao: sem ordenar pela reputacao', 'cqs_4 expected positions'),
     ('cqs5_rebaixado_nao_entra', 'push_section_club(this, &mut k, c); // cqs5: o rebaixado entra', '// mutacao: o rebaixado nao entra', 'cqs_5 relegated to the conference'),
     ('cqs5_chaves_sem_latitude', 'exe::crt_qsort(read_usize(this + eng_auto_cup::SELECTED_CLUBS), read_usize(this + eng_auto_cup::SELECTED_COUNT) as u32, 4, 0x53fd40); // cqs5: North and South by latitude', '// mutacao: sem a latitude', 'cqs_5 league trophy sections'),

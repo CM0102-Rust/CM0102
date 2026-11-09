@@ -29,6 +29,24 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 6: name reliability and the four records' residues
+
+- **Name reliability** (Lucas's request): `confianca_campos.py` classifies each field by the origin its `fields.rs`
+  comment already tells: community (the editors' layouts, 247), verified (`[verified: how]`, a second independent
+  source, 9), read (a reading of the code with evidence, 1,334), inferred (`[inference]`, 142). It writes
+  `docs/CONFIANCA_DOS_CAMPOS.en.md`; every method in `records.rs` carries the level (`Name: community.`).
+- **Unnamed offsets** used on typed variables (30, 403 uses), checked by two agents: 17 already had a name, 7 new
+  (`league::COMPETITION`, `COMP_STATS`, `ENTRANTS_ARE_QUALIFIERS`, two more from the `Comp` base copied from `cup::`;
+  the year halves of the person's dates), 6 belong to subclasses (the same offset is something else in each kind of
+  competition: they wait for the subclasses to have types). 306 raw hex offsets became names; raw hex on typed
+  variables 209 → 107. To check: the club +0xff the original reads is squad slot 10, not the manager (+0xcf), perhaps
+  an original defect.
+- **Arrays:** `club.squad(i)`, `coaches(i)`, `scouts(i)`, `physios(i)` (the league's `TIEBREAKS` is read whole
+  elsewhere and stays scalar).
+
+`.addr()` outside the wrappers 3,683 → 3,488. Proof: 7cc445c2 ×2, detector equal, comparison 0; the changed mutations
+compile.
+
 ## Migration to typed records, batch 5: the league and the competition
 
 The full package (variables, accesses, wrappers, signatures, propagation) for `league` and `competition`, now also on

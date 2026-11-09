@@ -49,7 +49,7 @@ pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: League, ano: u32, 
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.table);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.predicted);
     exe::new_league(this);
-    core::ptr::write_unaligned((this.addr() + 4) as *mut usize, registro);
+    core::ptr::write_unaligned((this.addr() + league::COMPETITION) as *mut usize, registro);
     core::ptr::write_unaligned(this.addr() as *mut usize, e.vtabela);
     core::ptr::write_unaligned((this.addr() + league::YEAR) as *mut u16, ano as u16);
     this.set_discipline_rule(disciplina);
@@ -81,7 +81,7 @@ pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: League, ano: u32, 
     }
     let n = exe::crt_operator_new(0x5ce);
     let s = if n != 0 { exe::new_comp_stats(n, this) } else { 0 };
-    core::ptr::write_unaligned((this.addr() + 8) as *mut usize, s);
+    core::ptr::write_unaligned((this.addr() + league::COMP_STATS) as *mut usize, s);
     if s == 0 {
         show_error_at(e.file, e.rows[4]);
         return this.addr();
@@ -101,11 +101,11 @@ pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: League, ano: u32, 
 pub(crate) unsafe fn bra_reg_rio_compare_state_league_ctor(name: &str, this: League, year: u32, record: usize, e: &BraRegRioStateChampionship, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this.addr() && read_usize(this.addr()) == e.vtabela && (this.year() as u16) == year as u16
-        && read_usize(this.addr() + 4) == record && this.discipline_rule() == 7;
-    if this.stage_index() == 0xff && read_usize(this.addr() + 8) != 0 {
+        && this.competition().addr() == record && this.discipline_rule() == 7;
+    if this.stage_index() == 0xff && this.comp_stats() != 0 {
         ok = ok && this.stage_count() == e.stages as usize && this.stages() != 0 && this.importance() == 0xf;
     }
-    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.stages(), read_usize(this.addr() + 8)));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.stages(), this.comp_stats()));
     r
 }
 
@@ -153,7 +153,7 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_rio(this: usize, year: 
 ///
 /// [pt] A reputação da competição de uma liga (+0x69 do registro +4, word).
 pub(crate) unsafe fn league_comp_reputation(league: League) -> i32 {
-    read_i16(read_usize(league.addr() + 4) + 0x69) as i32
+    read_i16(league.competition().addr() + 0x69) as i32
 }
 
 /// Raises a club's attendance (+0x73) to a floor that rises with reputation `r` and factor `f`, and raises the record
@@ -268,7 +268,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
     let cima = if league.upper_division_id() == -1 { 0 } else { read_usize(table_c + 4 * (league.upper_division_id() as usize)) };
     let low = if (league.lower_division_id() as i32) == -1 { 0 } else { read_usize(table_c + 4 * league.lower_division_id()) };
     let mut f = 1.0f64;
-    let reg = read_usize(league.addr() + 4);
+    let reg = league.competition().addr();
     if reg != 0 && read_usize(reg + 0x5d) != 0 {
         let n = read_usize(read_usize(reg + 0x5d));
         let em = |gs: &[usize]| gs.iter().any(|&g| n == read_usize(g));
@@ -289,7 +289,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
         v(league.addr())
     };
     let mut n = 0i32;
-    let t = exe::comp_stats_get_sorted_team_table(read_usize(league.addr() + 8), 1, &mut n, 1000);
+    let t = exe::comp_stats_get_sorted_team_table(league.comp_stats(), 1, &mut n, 1000);
     if t == 0 {
         return;
     }
@@ -312,7 +312,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
             add(ftol(val as f64 * f));
         } else if promotion() != 0 && pos as i32 <= (league.promoted_count() as i8) as i32 {
             if cima != 0 {
-                let mut a = read_i16(read_usize(cima + 4) + 0x69).wrapping_sub(read_i16(read_usize(league.addr() + 4) + 0x69));
+                let mut a = read_i16(read_usize(cima + 4) + 0x69).wrapping_sub(read_i16(league.competition().addr() + 0x69));
                 if a < 1 {
                     a = 1;
                 }
@@ -356,7 +356,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
             && pos as i32 > league.club_count() as i32 - (league.relegated_count() as i8) as i32
         {
             if low != 0 {
-                let mut a = read_i16(read_usize(low + 4) + 0x69).wrapping_sub(read_i16(read_usize(league.addr() + 4) + 0x69));
+                let mut a = read_i16(read_usize(low + 4) + 0x69).wrapping_sub(read_i16(league.competition().addr() + 0x69));
                 if a > -1 {
                     a = -1;
                 }
@@ -373,7 +373,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 crate::comparison::branch("cqt_4 attendance of relegated");
             }
         } else {
-            let r16 = read_i16(read_usize(league.addr() + 4) + 0x69);
+            let r16 = read_i16(league.competition().addr() + 0x69);
             let r = r16 as i32;
             let val = if d <= 0 && c.reputation() <= r16.wrapping_mul(500) {
                 r.wrapping_mul(d as i32).wrapping_mul(5)
@@ -461,7 +461,7 @@ pub(crate) unsafe fn create_half_season_stage(this: League, k: u32, file: usize,
     let id = 0x439 + (k as u8 != 0) as u32;
     let p = exe::crt_operator_new(0xee);
     let stage = if p != 0 {
-        construct(p, this.addr(), this.club_count() as u16 as u32, clubs, 1, read_usize(this.addr() + 4), 0, 0,
+        construct(p, this.addr(), this.club_count() as u16 as u32, clubs, 1, this.competition().addr(), 0, 0,
                   read_u8(this.addr() + pv) as u32,
                   this.draw_points() as u32, this.match_category() as u32, this.addr() + league::TIEBREAKS, slots.as_ptr(),
                   this.year() as u16 as u32, k, id, 0, 1, 0, 8, twenty, 0, 2)
@@ -543,7 +543,7 @@ pub(crate) unsafe fn start_new_season_two_halves(this: League, table: usize, fil
         exe::crt_free(l);
         core::ptr::write_unaligned((this.addr() + league::ROUND_DATES) as *mut usize, 0);
     }
-    let stats = read_usize(this.addr() + 8);
+    let stats = read_usize(this.addr() + league::COMP_STATS);
     if stats != 0 {
         exe::comp_stats_archive_season_and_reset(stats, 1);
     }
@@ -589,7 +589,7 @@ pub(crate) unsafe fn start_new_season_two_halves(this: League, table: usize, fil
     }
     let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
     predicted(this.addr());
-    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this.addr() + 4)) as u32)
+    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this.addr() + league::COMPETITION)) as u32)
 }
 
 /// Comparer for the season change: only the original runs; checks year +1, +0x2c = 3 and +0x30 = −1.
@@ -710,7 +710,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this.addr(), 2, list, rodadas as u16 as u32, read_usize(this.addr() + 4), t, this.year() as u16 as u32, 2, 1, extra as u16 as u32, 0x14, 0, 1, 0, seeds.as_ptr())
+        construct(p, this.addr(), 2, list, rodadas as u16 as u32, this.competition().addr(), t, this.year() as u16 as u32, 2, 1, extra as u16 as u32, 0x14, 0, 1, 0, seeds.as_ptr())
     } else {
         0
     };

@@ -379,7 +379,7 @@ pub(crate) unsafe fn is_150_days_since(t: Staff) -> bool {
     exe::date_sub_days(G_CURRENT_DATE, (&mut d) as *mut [u8; 8] as usize, 0x96);
     let day = i16::from_le_bytes([d[0], d[1]]);
     let year = u16::from_le_bytes([d[2], d[3]]);
-    let year_t = read_u16(t.addr() + 0x40);
+    let year_t = t.date_joined_club_year();
     year > year_t || (year == year_t && day > (t.date_joined_club() as i16))
 }
 
@@ -697,7 +697,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
             }
             f8 = v * k(0x9690a8);
         } else if d4 == 0 {
-            let dd =((read_u16(G_CURRENT_DATE_YEAR) as i32 - read_u16(p1.addr() + 0x40) as i32) * 365 - (p1.date_joined_club() as i16) as i32) + read_i16(G_CURRENT_DATE) as i32;
+            let dd =((read_u16(G_CURRENT_DATE_YEAR) as i32 - p1.date_joined_club_year() as i32) * 365 - (p1.date_joined_club() as i16) as i32) + read_i16(G_CURRENT_DATE) as i32;
             let mut x = dd.wrapping_mul(dd) as f64 * k(0x96f9b8);
             if k(0x96d6a0) < x {
                 x = k(0x96d6a0);
@@ -1219,7 +1219,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         if d4 == 0 {
             f8 *= k(0x968f98);
         } else if exe::staff_is_transfer_listed_or_requested(p1, 0) == 0 && exe::staff_is_loan_listed(p1, 0) == 0 && (c == 0 || read_u8(c + contract::LEAVING_ON_BOSMAN) == 0) {
-            let dd = ((read_u16(G_CURRENT_DATE_YEAR) as i32 - read_u16(p1.addr() + 0x40) as i32) * 365 - (p1.date_joined_club() as i16) as i32) + read_i16(G_CURRENT_DATE) as i32;
+            let dd = ((read_u16(G_CURRENT_DATE_YEAR) as i32 - p1.date_joined_club_year() as i32) * 365 - (p1.date_joined_club() as i16) as i32) + read_i16(G_CURRENT_DATE) as i32;
             let e: i32 = if p4b {
                 (20 - c1 as i32 / 5).wrapping_mul(dd)
             } else {
@@ -1999,7 +1999,7 @@ pub(crate) unsafe extern "thiscall" fn value_player_for_club(this: usize, club: 
                 }
             }
             for k in 0..7 {
-                let s = read_usize(club.addr() + club::SCOUTS + 4 * k);
+                let s = club.scouts(k);
                 if s == 0 || read_usize(s + staff::NON_PLAYER) == 0 {
                     continue;
                 }
@@ -3081,7 +3081,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_to_club_shortlists(this: usize
         let p = exe::date_sub_days(G_CURRENT_DATE, (t.as_mut_ptr()) as *mut u32 as usize, 200);
         let lo = read_usize(p) as u32;
         let (dia, ano) = (lo as u16 as i16, (lo >> 16) as u16);
-        let year_j = core::ptr::read_unaligned((player.addr() + 0x40) as *const u16);
+        let year_j = player.date_joined_club_year();
         let day_j = (player.date_joined_club() as i16);
         let recente = if ano != year_j { ano < year_j } else { dia < day_j };
         if recente {

@@ -14,12 +14,12 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_fra_first(this: usize, 
     let r = o(this.addr(), year, record);
     let marker = |m: usize, vt: usize, g: usize| m == 0 || (read_usize(m) == vt && read_usize(m + 4) == comp_record_of_key(g) && *((m + league::DISCIPLINE_RULE) as *const u8) == 0xff);
     let mut ok = r == this.addr() && read_usize(this.addr()) == 0x96aa24 && (this.year() as u16) == year as u16
-        && read_usize(this.addr() + 4) == record && this.discipline_rule() == 0xc
+        && this.competition().addr() == record && this.discipline_rule() == 0xc
         && marker(read_usize(this.addr() + 0xee), 0x96a994, KEY_CLUB_COMP_FRENCH_CFA) && marker(read_usize(this.addr() + 0xf2), 0x96a904, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION);
-    if this.stage_index() == 0xff && read_usize(this.addr() + 8) != 0 {
+    if this.stage_index() == 0xff && this.comp_stats() != 0 {
         ok = ok && this.stage_count() == 0 && this.stages() == 0;
     }
-    SCOREBOARD.record(ok, || format!("construct_fra_first({:#x}): devolveu {:#x}, vtable {:#x}, +0xee = {:#x}, +0xf2 = {:#x}, +8 = {:#x}", this.addr(), r, read_usize(this.addr()), read_usize(this.addr() + 0xee), read_usize(this.addr() + 0xf2), read_usize(this.addr() + 8)));
+    SCOREBOARD.record(ok, || format!("construct_fra_first({:#x}): devolveu {:#x}, vtable {:#x}, +0xee = {:#x}, +0xf2 = {:#x}, +8 = {:#x}", this.addr(), r, read_usize(this.addr()), read_usize(this.addr() + 0xee), read_usize(this.addr() + 0xf2), this.comp_stats()));
     r
 }
 
