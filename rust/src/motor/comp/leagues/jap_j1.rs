@@ -177,7 +177,8 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
 ///
 /// [pt] O clube é da divisão do global `g`: a divisão do clube (+0x57) não é nula e o id do registro (+0) é o do global.
 pub(crate) unsafe fn is_in_division(club: usize, g: usize) -> bool {
-    let comp = read_usize(club + club::DIVISION);
+    let club = Club(club);
+    let comp = club.division().addr();
     comp != 0 && read_usize(comp) == read_usize(g)
 }
 

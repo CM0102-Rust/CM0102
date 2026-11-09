@@ -16,6 +16,7 @@ use super::*;
 /// [[clube+0x69]+0x38] (sem eles: −1); os outros: os da lista [this] do tipo (+0xca) e da nação (+0xcf; −1 aceita
 /// qualquer). Até 20; nenhum: −1; senão o id (palavra +0, com sinal) de um deles por sorteio(n).
 pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, club: usize, kind: u32, nation: i32) -> i32 {
+    let club = Club(club);
     let mut t = kind as i8;
     if t == 1 {
         if exe::date_get_weekday(G_CURRENT_DATE) as i16 == 6 {
@@ -25,7 +26,7 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, club: usi
     let mut ids = [0i16; 20];
     let mut n = 0usize;
     if t == 2 || t == 4 {
-        let est = read_usize(club + club::STADIUM);
+        let est = club.stadium().addr();
         if est == 0 || read_usize(est + stadium::CITY) == 0 {
             return -1;
         }
@@ -40,7 +41,7 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, club: usi
             if p == 0 {
                 break;
             }
-            if read_u32(p + 0xcb) == read_u32(read_usize(read_usize(club + club::STADIUM) + 0x38)) { // cpz10: o comentarista local
+            if read_u32(p + 0xcb) == read_u32(read_usize(club.stadium().addr() + 0x38)) { // cpz10: o comentarista local
                 crate::comparison::branch("cpz_10 local commentator");
                 ids[n] = read_i16_as_i32(p) as i16;
                 n += 1;

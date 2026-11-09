@@ -1584,8 +1584,8 @@ pub(crate) unsafe fn punish_challenger_foul_injected(m: usize, e: usize, j: usiz
             let x = random(grav as i32);
             if x > random(0x14) {
                 let t = *((m + engine::MATCH) as *const usize);
-                let club = *((t + if read_i8(j + match_player::SIDE) != 0 { 0x20 } else { 0x1c }) as *const usize);
-                let k = *((club + club::NATION) as *const usize);
+                let club = Club(*((t + if read_i8(j + match_player::SIDE) != 0 { 0x20 } else { 0x1c }) as *const usize));
+                let k = club.nation().addr();
                 if k != 0 && read_i8(k + nation::FIRST_LANGUAGE) == 8 {
                     narrate(call, 0x20f5, 0, 0, u32::MAX);
                 }
@@ -2086,8 +2086,8 @@ pub(crate) unsafe fn punish_contester_foul_injected(j: usize, mut t: u8, card: u
             let a = random(grav as i8 as i32);
             if a > random(0x14) {
                 let partida = *((m + engine::MATCH) as *const usize);
-                let club = *((partida + if read_i8(j + match_player::SIDE) == 0 { 0x20 } else { 0x1c }) as *const usize);
-                let k = *((club + club::NATION) as *const usize);
+                let club = Club(*((partida + if read_i8(j + match_player::SIDE) == 0 { 0x20 } else { 0x1c }) as *const usize));
+                let k = club.nation().addr();
                 if k != 0 && read_i8(k + nation::FIRST_LANGUAGE) == 8 {
                     narrate(call, 0x20f5, 0, 0, u32::MAX);
                 }
@@ -2346,8 +2346,8 @@ pub(crate) unsafe fn contest_ball_injected(j: usize, strength: i16, kind_in: i8,
                     let a = random(grav as i8 as i32);
                     if a > random(0x14) {
                         let partida = *((m + engine::MATCH) as *const usize);
-                        let club = *((partida + if read_i8(j + match_player::SIDE) == 0 { 0x20 } else { 0x1c }) as *const usize);
-                        let k = *((club + club::NATION) as *const usize);
+                        let club = Club(*((partida + if read_i8(j + match_player::SIDE) == 0 { 0x20 } else { 0x1c }) as *const usize));
+                        let k = club.nation().addr();
                         if k != 0 && read_i8(k + nation::FIRST_LANGUAGE) == 8 {
                             narrate(call, 0x20f5, 0, 0, u32::MAX);
                         }
@@ -2741,8 +2741,8 @@ pub(crate) unsafe fn shoot_injected(j: usize, strength_in: i16, x_in: i8, y_in: 
                             let g = random(grav as i8 as i32);
                             if g > random(0x14) {
                                 let partida = *((m + engine::MATCH) as *const usize);
-                                let club = *((partida + if read_i8(j + match_player::SIDE) == 0 { 0x20 } else { 0x1c }) as *const usize);
-                                let k = *((club + club::NATION) as *const usize);
+                                let club = Club(*((partida + if read_i8(j + match_player::SIDE) == 0 { 0x20 } else { 0x1c }) as *const usize));
+                                let k = club.nation().addr();
                                 if k != 0 && read_i8(k + nation::FIRST_LANGUAGE) == 8 {
                                     narrate(call, 0x20f5, 0, 0, u32::MAX);
                                 }
@@ -4565,8 +4565,8 @@ pub(crate) unsafe fn punish_move_foul_injected(m: usize, e: usize, p: usize, mut
             let x = random(grav as i32);
             if x > random(0x14) {
                 let t = read_usize(m + engine::MATCH);
-                let club = read_usize(t + (if read_i8(e + match_player::SIDE) == 0 { 0x20 } else { 0x1c }));
-                let k = read_usize(club + club::NATION);
+                let club = Club(read_usize(t + (if read_i8(e + match_player::SIDE) == 0 { 0x20 } else { 0x1c })));
+                let k = club.nation().addr();
                 if k != 0 && read_i8(k + nation::FIRST_LANGUAGE) == 8 {
                     narrate(call, 0x20f5, 0, 0, u32::MAX);
                 }
@@ -6118,8 +6118,8 @@ pub(crate) unsafe fn pass_foul_injected(m: usize, e: usize, p: usize, mut kind: 
             let x = random(grav as i32);
             if x > random(0x14) {
                 let t = read_usize(m + engine::MATCH);
-                let club = read_usize(t + (if read_i8(e + match_player::SIDE) == 0 { 0x20 } else { 0x1c }));
-                let k = read_usize(club + club::NATION);
+                let club = Club(read_usize(t + (if read_i8(e + match_player::SIDE) == 0 { 0x20 } else { 0x1c })));
+                let k = club.nation().addr();
                 if k != 0 && read_i8(k + nation::FIRST_LANGUAGE) == 8 {
                     narrate(call, 0x20f5, 0, 0, u32::MAX);
                 }
@@ -8454,9 +8454,9 @@ pub(crate) unsafe extern "C" fn match_of_interest(p: usize) -> u32 {
         for s in 0..16 {
             let t = manager(s);
             if read_i8(t + staff::CLASSIFICATION) == 1 && u(t + staff::CLUB_JOB) != 0 && u(u(t + staff::CLUB_JOB) + 0x53) == u(comp() + 0x5d) {
-                let c1c = u(p + fixture::HOME_CLUB);
+                let c1c = Club(u(p + fixture::HOME_CLUB));
                 let cm = comp();
-                if u(c1c + club::DIVISION) != cm && u(c1c + club::RESERVE_DIVISION) != cm {
+                if u(c1c.addr() + club::DIVISION) != cm && u(c1c.addr() + club::RESERVE_DIVISION) != cm {
                     return 1;
                 }
                 let x = u(t + staff::CLUB_JOB);
@@ -9267,9 +9267,9 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     }
     let t = *((engine() + 0x4792) as *const usize);
     if l12f < 32 && t != 0 {
-        let c1c = *((t + fixture::HOME_CLUB) as *const usize);
-        if c1c != 0 {
-            let c57 = *((c1c + club::DIVISION) as *const usize);
+        let c1c = Club(*((t + fixture::HOME_CLUB) as *const usize));
+        if !c1c.is_null() {
+            let c57 = c1c.division().addr();
             if c57 != 0 && *((t + fixture::COMPETITION) as *const usize) == c57 {
                 let ax = (read_i16(c57 + competition::REPUTATION) as i32);
                 if ax < 5 {

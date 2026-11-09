@@ -38,8 +38,9 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_nation(nation: usize) -> u8 
 /// (+0x71), ou 3 (sem nação, 3). Pelas aposentadorias 0x7a7310, pelo adiamento pelo tempo 0x923630, pelos dias até a
 /// temporada 0x59b4c0, pelo contrato desejado 0x85fc50, pelo ano da temporada 0x669950 e outras. Sem contador.
 pub(crate) unsafe extern "C" fn key_nation_index_of_club(club: usize) -> u8 {
-    if exe::database_is_national_team(club) == 0 {
-        let nation = read_usize(club + club::NATION);
+    let club = Club(club);
+    if exe::database_is_national_team(club.addr()) == 0 {
+        let nation = club.nation().addr();
         if nation != 0 && *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0 {
             for k in 0..0x23usize {
                 if read_usize(G_LEAGUE_TABLE + 72 * k) == nation {
@@ -50,10 +51,10 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_club(club: usize) -> u8 {
             return 0;
         }
     }
-    if exe::database_is_national_team(club) != 0 {
+    if exe::database_is_national_team(club.addr()) != 0 {
         return 1;
     }
-    let nation = read_usize(club + club::NATION); // cpu1: the nation of the continent
+    let nation = club.nation().addr(); // cpu1: the nation of the continent
     for k in 0..0x23usize {
         if nation != 0 && read_usize(G_LEAGUE_WORLD_CUP_CONTINENT + 72 * k) == read_usize(nation + nation::CONTINENT) {
             return k as u8; // cpu1: the continent row
@@ -66,8 +67,9 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_club(club: usize) -> u8 {
 ///
 /// [pt] Se o clube cai na caixa "Error" da 0x669360 (não é seleção, nação escolhida fora da tabela).
 pub(crate) unsafe fn hits_key_nation_error(club: usize) -> bool {
-    let nation = read_usize(club + club::NATION);
-    exe::database_is_national_team(club) == 0
+    let club = Club(club);
+    let nation = club.nation().addr();
+    exe::database_is_national_team(club.addr()) == 0
         && nation != 0
         && *((nation + nation::LEAGUE_SELECTED) as *const u8) != 0
         && !(0..0x23usize).any(|k| read_usize(G_LEAGUE_TABLE + 72 * k) == nation)
@@ -142,9 +144,10 @@ pub(crate) unsafe fn write_date(dst: usize, day: i16, year: u16) {
 /// 0x62c680 e 0x62ce30, pelo mês do fim da temporada 0x4d45f0 e pela data da transferência 0x8cee70. TapeCall a cada
 /// jogador: sem contador.
 pub(crate) unsafe extern "C" fn key_nation_club_in_season(club: usize, start: usize, end: usize) -> u32 {
+    let club = Club(club);
     let mut row = G_LEAGUE_EUROPE_NATION;
     let mut c: i16 = 0x28;
-    let nation = read_usize(club + club::NATION);
+    let nation = club.nation().addr();
     if nation != 0 {
         if let Some(k) = (0..0x23usize).find(|&k| read_usize(G_LEAGUE_TABLE + 72 * k) == nation) {
             row = G_LEAGUE_TABLE + 72 * k;

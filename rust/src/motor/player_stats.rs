@@ -173,7 +173,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
         show_error_at(0xa78310, 0xf28);
         return 0;
     }
-    let club = read_usize(p + staff::CLUB_JOB);
+    let club = Club(read_usize(p + staff::CLUB_JOB));
     let f = read_usize(p + staff::PLAYER);
     if f == 0 {
         return 0;
@@ -186,7 +186,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
             continue;
         }
         let data = read_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add((id as isize * 0x20) as usize);
-        let no = career_history_node(club, Some(data), value, (((cat + 1) as u8) << 3) | kind); // cqh8: the category and the node type
+        let no = career_history_node(club.addr(), Some(data), value, (((cat + 1) as u8) << 3) | kind); // cqh8: the category and the node type
         crate::comparison::branch("cqh_8 archived category");
         append_history_node(this, reg, &no);
         if cat == 5 {
@@ -195,10 +195,10 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
         core::ptr::write_bytes(data as *mut u8, 0, 32); // cqh8: the category record zeroed
     }
     // no club nation (or outside the table) or within its season: the flag that asks for the 365 days
-    let mark = if club == 0 || read_usize(club + club::NATION) == 0 {
+    let mark = if club.is_null() || club.nation().addr() == 0 {
         true
     } else {
-        let k = ((exe::key_nation_index_of_nation(read_usize(club + club::NATION)) as u32) as i8);
+        let k = ((exe::key_nation_index_of_nation(club.nation().addr()) as u32) as i8);
         if !(0..0x23).contains(&k) {
             true
         } else {
@@ -222,7 +222,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
             exe::date_days_since(G_CURRENT_DATE, read_usize(p + staff::DATE_JOINED_CLUB) as u32, read_usize(p + 0x42) as u32) < 0x16d
         };
         if write {
-            let no = career_history_node(club, None, value, 0x30 | kind); // cqh8: the empty node of the sixth category
+            let no = career_history_node(club.addr(), None, value, 0x30 | kind); // cqh8: the empty node of the sixth category
             crate::comparison::branch("cqh_8 on empty");
             append_history_node(this, reg, &no);
         }
@@ -1088,15 +1088,16 @@ pub(crate) unsafe extern "thiscall" fn player_stats_reset_player(this: usize, pe
 /// 0x946464, comparação 0x7c6d40, registros de 6 bytes em [+0x3c], [+0x44] deles) pela chave {id, idioma}, o byte +5;
 /// sem a tabela ou sem o registro, 0. Os chamadores só leem o al.
 pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person: usize, club: usize, language: u32, by_contract: u32) -> u8 {
+    let club = Club(club);
     let language = language as u8;
     if person != 0 && read_usize(person) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
         return if read_u8(read_usize(person + staff::NATION) + 0x77) == language { 10 } else { 0 }; // the human manager
     }
     if by_contract != 0 {
-        let c = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club);
+        let c = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club.addr());
         if c != 0 {
-            let cp = read_usize(person + staff::CLUB_JOB);
-            if cp != 0 && read_usize(club + club::NATION) == read_usize(cp + club::NATION) {
+            let cp = Club(read_usize(person + staff::CLUB_JOB));
+            if !cp.is_null() && club.nation().addr() == cp.nation().addr() {
                 return read_u8(c + contract::SQUAD_STATUS) & 0xf;
             }
         }
@@ -1108,8 +1109,8 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
         let s = read_usize(person + staff::SECOND_NATION);
         s != 0 && read_u8(s + nation::FIRST_LANGUAGE) == l // the second nation
     };
-    if club != 0 {
-        let n = read_usize(club + club::NATION);
+    if !club.is_null() {
+        let n = club.nation().addr();
         if n != 0 && fala(read_u8(n + nation::FIRST_LANGUAGE)) {
             return 10;
         }
@@ -1281,18 +1282,18 @@ pub(crate) unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, na
     }
     let mut i = 0i32;
     while i < read_i32(G_CLUB_COUNT) {
-        let club = injury_club_by_index(i);
-        if injury_is_national_team(club) {
+        let club = Club(injury_club_by_index(i));
+        if injury_is_national_team(club.addr()) {
             break; // the first national team ends it
         }
-        let k = (exe::key_nation_index_of_club(club) as i8) as isize; // only al
+        let k = (exe::key_nation_index_of_club(club.addr()) as i8) as isize; // only al
         if (0xb63d60usize).wrapping_add((k * 72) as usize) == nation {
             for s in 0..50usize {
-                let p = read_usize(club + club::SQUAD + 4 * s);
+                let p = read_usize(club.addr() + club::SQUAD + 4 * s);
                 if p == 0 || read_usize(p + staff::PLAYER) == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
                     continue;
                 }
-                if exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p) == 0 || read_usize(p + staff::CLUB_JOB) == club {
+                if exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p) == 0 || read_usize(p + staff::CLUB_JOB) == club.addr() {
                     crate::comparison::branch("cpp_10 archive");
                     exe::playerstats_archive_player_stats(this, p, -1, 0, 0, -1, 0);
                 }

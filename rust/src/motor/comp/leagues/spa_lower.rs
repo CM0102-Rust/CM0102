@@ -298,7 +298,8 @@ pub(crate) unsafe fn comp_record_of_key(g: usize) -> usize {
 ///
 /// [pt] A competição do clube (+0x57, o id no +0) é a de id [g]?
 pub(crate) unsafe fn spa_lower_is_in_comp(c: usize, g: usize) -> bool {
-    let comp = read_usize(c + club::DIVISION);
+    let c = Club(c);
+    let comp = c.division().addr();
     comp != 0 && read_usize(comp) == read_usize(g)
 }
 
@@ -374,16 +375,16 @@ pub(crate) unsafe fn spanish_lower_candidates() -> Vec<usize> {
     let base = read_usize(G_CLUB_TABLE);
     let mut i: i16 = 0;
     while (i as i32) < n && v.len() < 100 {
-        let c = base + (i as u16 as usize) * club::SIZE;
-        let comp = read_usize(c + club::DIVISION);
-        let nation = read_usize(c + club::NATION);
+        let c = Club(base + (i as u16 as usize) * club::SIZE);
+        let comp = c.division().addr();
+        let nation = c.nation().addr();
         if comp != 0 && nation != 0 {
             let id = read_usize(comp);
             let group = [KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B1, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B2, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B3, KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B4].iter().any(|&g| id == read_usize(g));
             if group || (read_usize(nation) == read_usize(KEY_NATION_SPAIN) && id == read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)) {
                 let mut eh_a: u32 = 0;
-                if exe::club_get_linked_b_team(c, &mut eh_a, 1) == 0 {
-                    v.push(c);
+                if exe::club_get_linked_b_team(c.addr(), &mut eh_a, 1) == 0 {
+                    v.push(c.addr());
                 }
             }
         }
@@ -403,17 +404,17 @@ pub(crate) unsafe fn for_each_spanish_b_team(g: usize, k: &mut u8, rows: i16, mu
     let base = read_usize(G_CLUB_TABLE);
     let mut i: i16 = 0;
     while (i as i32) < n {
-        let c = base + (i as u16 as usize) * club::SIZE;
-        let comp = read_usize(c + club::DIVISION);
-        let nation = read_usize(c + club::NATION);
+        let c = Club(base + (i as u16 as usize) * club::SIZE);
+        let comp = c.division().addr();
+        let nation = c.nation().addr();
         if comp != 0 && nation != 0 && read_usize(nation) == read_usize(KEY_NATION_SPAIN) && read_usize(comp) != read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) && read_usize(comp) != read_usize(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION) {
             let mut eh_a: u32 = 0;
-            let p = exe::club_get_linked_b_team(c, &mut eh_a, 1);
-            let enters = p != 0 && eh_a == 0 && read_usize(p + club::DIVISION) != 0 && (*k as i8 as i16) < rows && read_usize(read_usize(p + club::DIVISION)) == read_usize(g);
+            let p = Club(exe::club_get_linked_b_team(c.addr(), &mut eh_a, 1));
+            let enters = !p.is_null() && eh_a == 0 && p.division().addr() != 0 && (*k as i8 as i16) < rows && read_usize(p.division().addr()) == read_usize(g);
             if enters {
                 *k = k.wrapping_add(1);
             }
-            por(c, enters);
+            por(c.addr(), enters);
         }
         i = i.wrapping_add(1);
     }

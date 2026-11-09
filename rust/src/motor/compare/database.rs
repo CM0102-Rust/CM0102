@@ -352,20 +352,22 @@ pub(crate) unsafe extern "C" fn compare_staff_get_opinion_link_staff(person: usi
 
 /// Comparer for `club_add_favoured_staff`.
 pub(crate) unsafe extern "C" fn compare_club_add_favoured_staff(club: usize, person: usize, force: u32) {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(IDX_CLUB_ADD_FAVOURED_STAFF);
-    let reg = preference_regions(if club != 0 { club + club::FAV_STAFF1 } else { 0 });
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(club, person, force),
-        || crate::rng::without_counting(|| club_add_favoured_staff(club, person, force)));
-    SCOREBOARD.record(igual, || format!("club_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", club, person, force, mo, mr));
+    let reg = preference_regions(if !club.is_null() { club.addr() + club::FAV_STAFF1 } else { 0 });
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(club.addr(), person, force),
+        || crate::rng::without_counting(|| club_add_favoured_staff(club.addr(), person, force)));
+    SCOREBOARD.record(igual, || format!("club_add_favoured_staff({:x}, {:x}, {}) {:x?} x {:x?}", club.addr(), person, force, mo, mr));
 }
 
 /// Comparer for `club_add_disliked_staff`.
 pub(crate) unsafe extern "C" fn compare_club_add_disliked_staff(club: usize, person: usize, force: u32) {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32)>(IDX_CLUB_ADD_DISLIKED_STAFF);
-    let reg = preference_regions(if club != 0 { club + club::FAV_STAFF1 } else { 0 });
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(club, person, force),
-        || crate::rng::without_counting(|| club_add_disliked_staff(club, person, force)));
-    SCOREBOARD.record(igual, || format!("club_add_disliked_staff({:x}, {:x}, {}) {:x?} x {:x?}", club, person, force, mo, mr));
+    let reg = preference_regions(if !club.is_null() { club.addr() + club::FAV_STAFF1 } else { 0 });
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(club.addr(), person, force),
+        || crate::rng::without_counting(|| club_add_disliked_staff(club.addr(), person, force)));
+    SCOREBOARD.record(igual, || format!("club_add_disliked_staff({:x}, {:x}, {}) {:x?} x {:x?}", club.addr(), person, force, mo, mr));
 }
 
 /// Comparer for `staff_add_favoured_staff`.
@@ -681,12 +683,13 @@ pub(crate) unsafe extern "C" fn compare_staff_remove_favoured_club(person: usize
 
 /// Comparer for `club_remove_favoured_staff`.
 pub(crate) unsafe extern "C" fn compare_club_remove_favoured_staff(club: usize, person: usize) -> usize {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_CLUB_REMOVE_FAVOURED_STAFF);
-    if club == 0 {
-        return o(club, person);
+    if club.is_null() {
+        return o(club.addr(), person);
     }
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(club + club::FAV_STAFF1, 12)], || o(club, person), || club_remove_favoured_staff(club, person));
-    SCOREBOARD.record(igual && r == n, || format!("club_remove_favoured_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", club, person, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(club.addr() + club::FAV_STAFF1, 12)], || o(club.addr(), person), || club_remove_favoured_staff(club.addr(), person));
+    SCOREBOARD.record(igual && r == n, || format!("club_remove_favoured_staff({:x}, {:x}) {:x}/{:x} {:x?} x {:x?}", club.addr(), person, r, n, mo, mr));
     r
 }
 
@@ -775,37 +778,40 @@ pub(crate) unsafe extern "C" fn compare_staff_remove_opinion_link(person: usize,
 
 /// Comparer for `database_get_club_assistant`.
 pub(crate) unsafe extern "C" fn compare_database_get_club_assistant(club: usize) -> usize {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_GET_CLUB_ASSISTANT);
-    if club == 0 {
-        return o(club); // message box: original only
+    if club.is_null() {
+        return o(club.addr()); // message box: original only
     }
     // the club’s +0x244 flag, which 0x540a50 clears when it rejects the partner
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(club + club::HAS_LINKED_CLUB, 1)], || o(club), || database_get_club_assistant(club));
-    SCOREBOARD.record(igual && r == n, || format!("database_get_club_assistant({:x}) original={:x} rust={:x} {:x?} x {:x?}", club, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(club.addr() + club::HAS_LINKED_CLUB, 1)], || o(club.addr()), || database_get_club_assistant(club.addr()));
+    SCOREBOARD.record(igual && r == n, || format!("database_get_club_assistant({:x}) original={:x} rust={:x} {:x?} x {:x?}", club.addr(), r, n, mo, mr));
     r
 }
 
 /// Comparer for `database_get_club_coaches`.
 pub(crate) unsafe extern "C" fn compare_database_get_club_coaches(club: usize, array: *mut usize) -> u32 {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "C" fn(usize, *mut usize) -> u32>(IDX_DATABASE_GET_CLUB_COACHES);
-    if club == 0 {
-        return o(club, array); // message box: original only
+    if club.is_null() {
+        return o(club.addr(), array); // message box: original only
     }
     // the club’s vector and flag +0x244, which 0x540a50 zeroes when it rejects the partner
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(array as usize, 20), (club + club::HAS_LINKED_CLUB, 1)],
-        || o(club, array), || database_get_club_coaches(club, array));
-    SCOREBOARD.record(igual && r == n, || format!("database_get_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", club, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(array as usize, 20), (club.addr() + club::HAS_LINKED_CLUB, 1)],
+        || o(club.addr(), array), || database_get_club_coaches(club.addr(), array));
+    SCOREBOARD.record(igual && r == n, || format!("database_get_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", club.addr(), r, n, mo, mr));
     r
 }
 
 /// Comparer for `database_count_club_coaches`.
 pub(crate) unsafe extern "C" fn compare_database_count_club_coaches(club: usize) -> u8 {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_DATABASE_COUNT_CLUB_COACHES);
-    if club == 0 {
-        return o(club); // message box: original only
+    if club.is_null() {
+        return o(club.addr()); // message box: original only
     }
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(club + club::HAS_LINKED_CLUB, 1)], || o(club), || database_count_club_coaches(club));
-    SCOREBOARD.record(igual && r == n, || format!("database_count_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", club, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(club.addr() + club::HAS_LINKED_CLUB, 1)], || o(club.addr()), || database_count_club_coaches(club.addr()));
+    SCOREBOARD.record(igual && r == n, || format!("database_count_club_coaches({:x}) original={} rust={} {:x?} x {:x?}", club.addr(), r, n, mo, mr));
     r
 }
 
@@ -1141,37 +1147,39 @@ pub(crate) unsafe extern "C" fn compare_database_build_nation_name_index() {
 
 /// Comparer for `database_remove_staff_from_club`.
 pub(crate) unsafe extern "C" fn compare_database_remove_staff_from_club(club: usize, person: usize, data: usize, disable: u32, como_jogador: u32) -> u32 {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(IDX_DATABASE_REMOVE_STAFF_FROM_CLUB);
-    if club == 0 || person == 0 {
-        return o(club, person, data, disable, como_jogador); // 0 or box: original only
+    if club.is_null() || person == 0 {
+        return o(club.addr(), person, data, disable, como_jogador); // 0 or box: original only
     }
     // the club, the person and, for the senior national team, the U21 (the only other place the routine zeroes)
-    let mut regions = vec![(club, 581), (person, 110)];
-    let (id, n, nacoes) = (*(club as *const i32), *(G_CLUB_COUNT as *const i32), *(G_NATION_COUNT as *const i32));
-    let nation = core::ptr::read_unaligned((club + club::NATION) as *const usize);
+    let mut regions = vec![(club.addr(), 581), (person, 110)];
+    let (id, n, nacoes) = (*(club.addr() as *const i32), *(G_CLUB_COUNT as *const i32), *(G_NATION_COUNT as *const i32));
+    let nation = core::ptr::read_unaligned((club.addr() + club::NATION) as *const usize);
     if id >= n.wrapping_sub(nacoes.wrapping_mul(2)) && id < n.wrapping_sub(nacoes) && nation != 0 {
         let s = exe::database_get_national_u21_team(nation);
-        if s != club {
+        if s != club.addr() {
             regions.push((s, 581));
         }
     }
-    let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(club, person, data, disable, como_jogador),
-        || database_remove_staff_from_club(club, person, data, disable, como_jogador));
+    let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(club.addr(), person, data, disable, como_jogador),
+        || database_remove_staff_from_club(club.addr(), person, data, disable, como_jogador));
     SCOREBOARD.record(igual && r == m, || format!("database_remove_staff_from_club({:x}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
-        club, person, data != 0, disable, r, m, mo, mr));
+        club.addr(), person, data != 0, disable, r, m, mo, mr));
     r
 }
 
 /// Comparer for `database_get_club_scouts`.
 pub(crate) unsafe extern "C" fn compare_database_get_club_scouts(club: usize, array: *mut usize) -> u32 {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "C" fn(usize, *mut usize) -> u32>(IDX_DATABASE_GET_CLUB_SCOUTS);
-    if club == 0 {
-        return o(club, array); // message box: original only
+    if club.is_null() {
+        return o(club.addr(), array); // message box: original only
     }
     // the club’s vector and flag +0x244, which 0x540a50 zeroes when it rejects the partner
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(array as usize, 28), (club + club::HAS_LINKED_CLUB, 1)],
-        || o(club, array), || database_get_club_scouts(club, array));
-    SCOREBOARD.record(igual && r == n, || format!("database_get_club_scouts({:x}) original={} rust={} {:x?} x {:x?}", club, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(array as usize, 28), (club.addr() + club::HAS_LINKED_CLUB, 1)],
+        || o(club.addr(), array), || database_get_club_scouts(club.addr(), array));
+    SCOREBOARD.record(igual && r == n, || format!("database_get_club_scouts({:x}) original={} rust={} {:x?} x {:x?}", club.addr(), r, n, mo, mr));
     r
 }
 
@@ -1259,27 +1267,29 @@ pub(crate) unsafe extern "C" fn compare_database_add_staff_to_club(club: usize, 
 
 /// Comparer for `database_count_club_squad`.
 pub(crate) unsafe extern "C" fn compare_database_count_club_squad(club: usize, mode: u32, filter: u32) -> u8 {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32) -> u8>(IDX_DATABASE_COUNT_CLUB_SQUAD);
-    if club == 0 {
-        return o(club, mode, filter); // message box: original only
+    if club.is_null() {
+        return o(club.addr(), mode, filter); // message box: original only
     }
     // 0x540a50 may zero the club’s +0x244; the filter writes the last contract to [0xae1080]
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(club + club::HAS_LINKED_CLUB, 1), (G_CONTRACT_LOOKUP_RESULT, 4)],
-        || o(club, mode, filter), || database_count_club_squad(club, mode, filter));
-    SCOREBOARD.record(igual && r == n, || format!("database_count_club_squad({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", club, mode as u8, filter, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(club.addr() + club::HAS_LINKED_CLUB, 1), (G_CONTRACT_LOOKUP_RESULT, 4)],
+        || o(club.addr(), mode, filter), || database_count_club_squad(club.addr(), mode, filter));
+    SCOREBOARD.record(igual && r == n, || format!("database_count_club_squad({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", club.addr(), mode as u8, filter, r, n, mo, mr));
     r
 }
 
 /// Comparer for `database_collect_club_squad`.
 pub(crate) unsafe extern "C" fn compare_database_collect_club_squad(club: usize, array: *mut usize, dobro: u32) -> u32 {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "C" fn(usize, *mut usize, u32) -> u32>(IDX_DATABASE_COLLECT_CLUB_SQUAD);
-    if club == 0 {
-        return o(club, array, dobro); // message box: original only
+    if club.is_null() {
+        return o(club.addr(), array, dobro); // message box: original only
     }
-    let regions = [(array as usize, if dobro != 0 { 400 } else { 200 }), (club + club::HAS_LINKED_CLUB, 1)];
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(club, array, dobro),
-        || database_collect_club_squad(club, array, dobro));
-    SCOREBOARD.record(igual && r == n, || format!("database_collect_club_squad({:x}, {}) original={} rust={} {:x?} x {:x?}", club, dobro, r, n, mo, mr));
+    let regions = [(array as usize, if dobro != 0 { 400 } else { 200 }), (club.addr() + club::HAS_LINKED_CLUB, 1)];
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(club.addr(), array, dobro),
+        || database_collect_club_squad(club.addr(), array, dobro));
+    SCOREBOARD.record(igual && r == n, || format!("database_collect_club_squad({:x}, {}) original={} rust={} {:x?} x {:x?}", club.addr(), dobro, r, n, mo, mr));
     r
 }
 
@@ -1407,15 +1417,16 @@ pub(crate) unsafe extern "C" fn compare_database_get_club_kit_colours(club: usiz
 
 /// Comparer for `database_get_club_manager`.
 pub(crate) unsafe extern "C" fn compare_database_get_club_manager(club: usize) -> usize {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_GET_CLUB_MANAGER);
-    if club == 0 {
-        return o(club); // message box: original only
+    if club.is_null() {
+        return o(club.addr()); // message box: original only
     }
     // 0x540a50 clears the club’s +0x244 flag when it rejects the partner (and the rejection repeats with it cleared):
     // the region is restored between the sides
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(club + club::HAS_LINKED_CLUB, 1)], || o(club),
-        || database_get_club_manager(club));
-    SCOREBOARD.record(igual && r == n, || format!("database_get_club_manager({:x}) original={:x} rust={:x} {:x?} x {:x?}", club, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(club.addr() + club::HAS_LINKED_CLUB, 1)], || o(club.addr()),
+        || database_get_club_manager(club.addr()));
+    SCOREBOARD.record(igual && r == n, || format!("database_get_club_manager({:x}) original={:x} rust={:x} {:x?} x {:x?}", club.addr(), r, n, mo, mr));
     r
 }
 
@@ -1552,14 +1563,15 @@ pub(crate) unsafe extern "C" fn compare_player_attribute_rating(player: usize, v
 
 /// Comparer for `database_club_has_reserve_squad`.
 pub(crate) unsafe extern "C" fn compare_database_club_has_reserve_squad(club: usize) -> u32 {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_DATABASE_CLUB_HAS_RESERVE_SQUAD);
-    if club == 0 {
-        return o(club); // message box: original only
+    if club.is_null() {
+        return o(club.addr()); // message box: original only
     }
     // 0x540a50 clears the club’s +0x244 mark when it refuses the partner: the region goes back between the sides
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(club + club::HAS_LINKED_CLUB, 1)], || o(club),
-        || database_club_has_reserve_squad(club));
-    SCOREBOARD.record(igual && r == n, || format!("database_club_has_reserve_squad({:x}) original={} rust={} {:x?} x {:x?}", club, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(club.addr() + club::HAS_LINKED_CLUB, 1)], || o(club.addr()),
+        || database_club_has_reserve_squad(club.addr()));
+    SCOREBOARD.record(igual && r == n, || format!("database_club_has_reserve_squad({:x}) original={} rust={} {:x?} x {:x?}", club.addr(), r, n, mo, mr));
     r
 }
 
@@ -1784,12 +1796,13 @@ pub(crate) unsafe extern "C" fn compare_database_global_9b5984() -> u32 {
 
 /// Comparer for `partner_club`.
 pub(crate) unsafe extern "C" fn compare_partner_club(club: usize, eh_a: *mut u32, active: u32) -> usize {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "C" fn(usize, *mut u32, u32) -> usize>(IDX_PARTNER_CLUB);
-    let mut reg: Vec<(usize, usize)> = vec![(club + club::HAS_LINKED_CLUB, 1)];
+    let mut reg: Vec<(usize, usize)> = vec![(club.addr() + club::HAS_LINKED_CLUB, 1)];
     if !eh_a.is_null() {
         reg.push((eh_a as usize, 4));
     }
-    let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(club, eh_a, active), || partner_club(club, eh_a, active));
+    let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(club.addr(), eh_a, active), || partner_club(club.addr(), eh_a, active));
     SCOREBOARD.record(igual && r == v, || format!("partner_club original={:x} {:x?} rust={:x} {:x?}", r, mo, v, mr));
     r
 }

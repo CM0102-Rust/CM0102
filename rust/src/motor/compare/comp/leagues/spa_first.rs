@@ -32,12 +32,12 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_first_create_table(this: usiz
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_FIRST_CREATE_TABLE);
     let (mut baixo, mut plano): (Vec<usize>, Vec<usize>) = (Vec::new(), Vec::new());
     for i in 0..(read_usize(G_CLUB_COUNT) as i32).max(0) as usize {
-        let club = read_usize(G_CLUB_TABLE) + i * club::SIZE;
-        let comp = read_usize(club + club::DIVISION);
+        let club = Club(read_usize(G_CLUB_TABLE) + i * club::SIZE);
+        let comp = club.division().addr();
         if comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION) {
-            baixo.push(club);
+            baixo.push(club.addr());
         } else if comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) && plano.len() < 0x14 {
-            plano.push(club);
+            plano.push(club.addr());
         }
     }
     let r = o(this);

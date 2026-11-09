@@ -407,11 +407,11 @@ pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &Backgroun
     let base_clubes = read_usize(G_CLUB_TABLE);
     let mut i: i32 = 0;
     while i < n {
-        let c = base_clubes + (i as usize) * club::SIZE;
-        let comp = read_usize(c + club::DIVISION);
+        let c = Club(base_clubes + (i as usize) * club::SIZE);
+        let comp = c.division().addr();
         let id = if comp != 0 { read_usize(comp) } else { 0 };
         if comp != 0 && p.all.iter().any(|&g| id == read_usize(g)) {
-            lista[k as usize] = c;
+            lista[k as usize] = c.addr();
             k += 1;
             if k == p.maximo {
                 break;
@@ -419,16 +419,16 @@ pub(crate) unsafe fn construct_group_league(this: usize, ano: u32, p: &Backgroun
         } else {
             let entra = match p.nation {
                 Some(g) => {
-                    let nacao = read_usize(c + club::NATION);
-                    nacao != 0 && read_usize(nacao) == read_usize(g) && read_usize(c + club::RESERVE_DIVISION) == 0 && comp != 0 && id == read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)
+                    let nacao = c.nation().addr();
+                    nacao != 0 && read_usize(nacao) == read_usize(g) && c.reserve_division().addr() == 0 && comp != 0 && id == read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)
                 }
                 None => {
-                    let reserva = read_usize(c + club::RESERVE_DIVISION);
+                    let reserva = c.reserve_division().addr();
                     comp != 0 && id == read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION) && reserva != 0 && read_usize(reserva) == read_usize(p.competition)
                 }
             };
             if entra && genericos < p.genericos { // cqn4: the maximum clubs of the generic division
-                lista[k as usize] = c;
+                lista[k as usize] = c.addr();
                 k += 1;
                 genericos += 1;
                 if k == p.maximo {
@@ -584,13 +584,13 @@ pub(crate) unsafe fn create_french_table(this: usize, clubs: usize, n: i16, file
     let mut k: u8 = 0;
     let mut i: i16 = 0;
     while i < read_i16(this + league::CLUB_COUNT) {
-        let club = read_usize(clubs + (i as usize) * 4);
-        let id = read_usize(read_usize(club + club::DIVISION));
+        let club = Club(read_usize(clubs + (i as usize) * 4));
+        let id = read_usize(club.division().addr());
         let mark = marcadas.iter().any(|&g| read_usize(g) == id) as u32; // cqk6: the mark of the higher-division clubs
         // simplification: the original pushes the row in ecx with the upper bits of the competition id; 0x687430 only reads the
         // byte.
         let row = k; // cqk6: row k receives the k-th club of the list
-        exe::league_init_table_row(this, row as u32, club, mark, 0);
+        exe::league_init_table_row(this, row as u32, club.addr(), mark, 0);
         k = k.wrapping_add(1);
         i = i.wrapping_add(1);
     }
@@ -618,9 +618,9 @@ pub(crate) unsafe extern "thiscall" fn fra_cfa_create_group_table(this: usize, c
 pub(crate) unsafe fn compare_french_table(name: &str, this: usize, clubs: usize, n: i16, marcadas: &[usize], original: impl FnOnce() -> u32) -> u32 {
     let plan: Vec<(usize, u8)> = (0..n as usize)
         .map(|i| {
-            let c = read_usize(clubs + i * 4);
-            let id = read_usize(read_usize(c + club::DIVISION));
-            (c, marcadas.iter().any(|&g| read_usize(g) == id) as u8)
+            let c = Club(read_usize(clubs + i * 4));
+            let id = read_usize(c.division().addr());
+            (c.addr(), marcadas.iter().any(|&g| read_usize(g) == id) as u8)
         })
         .collect();
     let r = original();

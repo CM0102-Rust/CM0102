@@ -13,20 +13,21 @@ use super::*;
 /// 0x540a50 podem zerá-la). Sem humano ou clube de seleção: lado a lado só na marca. Técnico fora dos 16 humanos
 /// (a 0x8b4cd0 mostra a caixa e a original escreveria no nulo): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_update_coach_assignments(this: usize, club: usize, tecnico: usize) {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_UPDATE_COACH_ASSIGNMENTS);
-    if club == 0 {
-        return o(this, club, tecnico);
+    if club.is_null() {
+        return o(this, club.addr(), tecnico);
     }
-    let mut reg = vec![(club + club::HAS_LINKED_CLUB, 1)];
-    if (tecnico != 0 || exe::human_manager_is_human_club(club, 1, (1) as u32, (0) as u32, 0) != 0) && exe::database_is_national_team(club) == 0 {
-        let manager = if tecnico == 0 { read_usize(club + club::MANAGER) } else { tecnico };
+    let mut reg = vec![(club.addr() + club::HAS_LINKED_CLUB, 1)];
+    if (tecnico != 0 || exe::human_manager_is_human_club(club.addr(), 1, (1) as u32, (0) as u32, 0) != 0) && exe::database_is_national_team(club.addr()) == 0 {
+        let manager = if tecnico == 0 { club.manager().addr() } else { tecnico };
         if manager == 0 || !(0..0x10).contains(&read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(manager)).wrapping_sub(1)) {
-            return o(this, club, tecnico);
+            return o(this, club.addr(), tecnico);
         }
         reg.push((this + 0x652d + 54 * read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(manager)).wrapping_sub(1) as usize, 54));
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, tecnico), || update_coach_assignments(this, club, tecnico));
-    SCOREBOARD.record(igual, || format!("update_coach_assignments(clube {:x}, tecnico {:x}) {:x?} x {:x?}", club, tecnico, mo.0, mr.0));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club.addr(), tecnico), || update_coach_assignments(this, club.addr(), tecnico));
+    SCOREBOARD.record(igual, || format!("update_coach_assignments(clube {:x}, tecnico {:x}) {:x?} x {:x?}", club.addr(), tecnico, mo.0, mr.0));
 }
 
 /// Comparer for `reassign_squad_schedules`.

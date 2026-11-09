@@ -94,10 +94,10 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
         write_u32(this, table as u32);
     }
     let p = month_ratings_staff_by_id(id);
-    let club = read_usize(p + staff::CLUB_JOB);
+    let club = Club(read_usize(p + staff::CLUB_JOB));
     let mut league = -1i32;
-    if club != 0 {
-        let l = read_usize(club + club::DIVISION);
+    if !club.is_null() {
+        let l = club.division().addr();
         if l != 0 {
             league = read_i32(l);
         }
@@ -156,9 +156,9 @@ pub(crate) unsafe extern "thiscall" fn find_best_player(this: usize, league: i32
             if league == -1 {
                 return r;
             }
-            let c = read_usize(month_ratings_staff_by_id(read_i32(r)) + 0x39);
-            if c != 0 {
-                let l = read_usize(c + club::DIVISION);
+            let c = Club(read_usize(month_ratings_staff_by_id(read_i32(r)) + 0x39));
+            if !c.is_null() {
+                let l = c.division().addr();
                 if l != 0 && read_i32(l) == league {
                     return r;
                 }

@@ -479,14 +479,14 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
     crate::comparison::branch("cpw_7 new case");
     let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     write_u32(G_CONTRACT_LOOKUP_RESULT, k as u32);
-    let club = if k != 0 { read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + contract::CLUB).wrapping_mul(club::SIZE)) } else { 0 };
-    if club != 0 {
+    let club = Club(if k != 0 { read_usize(G_CLUB_TABLE).wrapping_add(read_usize(k + contract::CLUB).wrapping_mul(club::SIZE)) } else { 0 });
+    if !club.is_null() {
         for v in 0..0x32usize {
-            let s = read_usize(club + club::SQUAD + v * 4);
+            let s = read_usize(club.addr() + club::SQUAD + v * 4);
             if s == 0 || s == person || read_usize(s + staff::PLAYER) == 0 {
                 continue;
             }
-            let ct = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club);
+            let ct = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club.addr());
             if ct == 0 {
                 continue;
             }
@@ -519,8 +519,8 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
             maybe_drop_attribute(read_usize(person + staff::PLAYER) + 0x44, false);
             close_awol_case(this, r);
             awol_miss_training(this, person);
-            if club != 0 && read_usize(person + staff::PLAYER) != 0 {
-                exe::media_create_player_media_story(read_usize(G_MEDIA), person, club, 8, 0, 0);
+            if !club.is_null() && read_usize(person + staff::PLAYER) != 0 {
+                exe::media_create_player_media_story(read_usize(G_MEDIA), person, club.addr(), 8, 0, 0);
             }
             return;
         }
@@ -671,8 +671,8 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
     }
     let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     write_u32(G_CONTRACT_LOOKUP_RESULT, k as u32);
-    let club = awol_club_of_contract(k);
-    if k == 0 || club == 0 {
+    let club = Club(awol_club_of_contract(k));
+    if k == 0 || club.is_null() {
         return;
     }
     let id = read_i32(person);
@@ -721,10 +721,10 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
     reg[4..12].copy_from_slice(core::slice::from_raw_parts(G_CURRENT_DATE as *const u8, 8));
     reg[12] = AWOL_RESIDUE_BYTE;
     exe::llist_add_tail(read_usize(this + 4), reg.as_ptr() as usize, 0xd);
-    if exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0 {
+    if exe::human_manager_is_human_club(club.addr(), 0, 1, 0, 0) != 0 {
         return;
     }
-    let manager = read_usize(club + club::MANAGER);
+    let manager = club.manager().addr();
     if manager == 0 {
         return;
     }

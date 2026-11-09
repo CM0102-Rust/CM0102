@@ -454,12 +454,12 @@ pub(crate) unsafe fn place_team_in_tie(cup: usize, r: i32, round: u32, e: usize,
 ///
 /// [pt] Os times `a` e `b` (índices em [copa + 0xa7]) têm clube e são da mesma nação (+0x53).
 pub(crate) unsafe fn teams_same_nation(cup: usize, a: i16, b: i16) -> bool {
-    let c1 = read_ptr(cup_team_entry(cup, a));
-    if c1 == 0 {
+    let c1 = Club(read_ptr(cup_team_entry(cup, a)));
+    if c1.is_null() {
         return false;
     }
-    let c2 = read_ptr(cup_team_entry(cup, b));
-    c2 != 0 && read_u32(c2 + club::NATION) == read_u32(c1 + club::NATION)
+    let c2 = Club(read_ptr(cup_team_entry(cup, b)));
+    !c2.is_null() && (c2.nation().addr() as u32) == (c1.nation().addr() as u32)
 }
 
 /// Advances the circular walk over a round's ties, switching to the second pass and then the rule fallback; false when
@@ -662,7 +662,7 @@ pub(crate) unsafe extern "thiscall" fn check_round_teams_for_nation(cup: usize, 
                 let mut free = false;
                 let mut m = false;
                 let home = read_i16(t);
-                let c0 = if home == -2 {
+                let c0 = Club(if home == -2 {
                     m = true;
                     free = true;
                     0
@@ -670,9 +670,9 @@ pub(crate) unsafe extern "thiscall" fn check_round_teams_for_nation(cup: usize, 
                     0
                 } else {
                     read_ptr(cup_team_entry(cup, home))
-                };
+                });
                 let away = read_i16(t + 2);
-                let c1 = if away == -2 {
+                let c1 = Club(if away == -2 {
                     if !(free && exe::utils_random(2) != 0) {
                         m = false;
                         free = true;
@@ -682,9 +682,9 @@ pub(crate) unsafe extern "thiscall" fn check_round_teams_for_nation(cup: usize, 
                     0
                 } else {
                     read_ptr(cup_team_entry(cup, away))
-                };
+                });
                 let same = club != 0 && rule
-                    && ((c0 != 0 && read_u32(club + club::NATION) == read_u32(c0 + club::NATION)) || (c1 != 0 && read_u32(club + club::NATION) == read_u32(c1 + club::NATION)));
+                    && ((!c0.is_null() && read_u32(club + club::NATION) == (c0.nation().addr() as u32)) || (!c1.is_null() && read_u32(club + club::NATION) == (c1.nation().addr() as u32)));
                 if !same && free {
                     side = Some(m);
                 }
@@ -1219,7 +1219,8 @@ pub(crate) unsafe extern "thiscall" fn draw_round(cup: usize, round: u32) -> u32
 ///
 /// [pt] O nível da divisão do clube: a palavra +0x69 da divisão (+0x57), ou 0 sem divisão.
 pub(crate) unsafe fn division_level(club: usize) -> i16 {
-    let d = read_usize(club + club::DIVISION);
+    let club = Club(club);
+    let d = club.division().addr();
     if d != 0 {
         read_i16(d + competition::REPUTATION)
     } else {
@@ -2358,7 +2359,8 @@ pub(crate) unsafe extern "C" fn cup_compare_entries_by_level_asc(a: usize, b: us
 /// [pt] Leva o byte +0x64 do clube (com sinal) até `valor`: para baixo (`baixar` ≠ 0) se está acima, para cima se está
 /// abaixo.
 pub(crate) unsafe fn cap_professional_status(club: usize, value: i8, baixar: u32) {
-    let p = (club + club::PROFESSIONAL_STATUS) as *mut i8;
+    let club = Club(club);
+    let p = (club.addr() + club::PROFESSIONAL_STATUS) as *mut i8;
     let muda = if baixar != 0 { *p > value } else { *p < value };
     if muda {
         crate::comparison::branch("cpp_13 division ceiling");
@@ -2878,6 +2880,7 @@ pub(crate) unsafe extern "thiscall" fn cup_match_importance(cup: usize, partida:
 /// ou fora: −1). Saída ≠ 0xff: a entrega pelo alcance (0x786090). Desfecho 1 na rodada 0x96 ou 3 na 0x8c (+0x30): à
 /// região da competição (0x786860); senão ao técnico do clube (0x7861e0). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: usize, outcome: u32, a3: u32, p: usize, a5: u32) -> u32 {
+    let club = Club(club);
     let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
     // simplification: the original writes only the output byte into a stack dword and pushes the dword; 0x786090 reads the byte
     let mut out: u32 = 0xff;
@@ -2886,7 +2889,7 @@ pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: us
     }
     let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(read_usize(cup + 4)).wrapping_mul(4)));
     let virtual44: unsafe extern "thiscall" fn(usize, usize, u32, u32, *mut u32, usize, u32) -> i32 = core::mem::transmute(read_usize(read_usize(comp) + 0x44));
-    let r = virtual44(comp, club, outcome, a3, &mut out, p, a5);
+    let r = virtual44(comp, club.addr(), outcome, a3, &mut out, p, a5);
     if r == -1 || p == 0 {
         return 0;
     }
@@ -2894,10 +2897,10 @@ pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: us
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     exe::new_newsitem(n, 0x10, 0);
-    exe::newsitem_set_slot(n, 0, read_usize(club) as u32);
+    exe::newsitem_set_slot(n, 0, read_usize(club.addr()) as u32);
     exe::newsitem_set_slot(n, 1, read_usize(read_usize(cup + 4)) as u32);
     exe::newsitem_set_slot(n, 2, outcome as u8 as i8 as i32 as u32);
-    exe::newsitem_set_slot(n, 3, exe::comp_util_classify_tie_result_for_news(club, p) as i8 as i32 as u32);
+    exe::newsitem_set_slot(n, 3, exe::comp_util_classify_tie_result_for_news(club.addr(), p) as i8 as i32 as u32);
     exe::newsitem_set_slot(n, 4, r as u32);
     // simplification: the cursor is a stack dword with 5 in the low byte (the rest is leftover); only the low byte counts
     let mut cursor = [5u8, 0, 0, 0];
@@ -2912,16 +2915,16 @@ pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: us
     exe::newsitem_set_slot(n, cursor[0] as i8, proxima as u32);
     let news = read_usize(G_NEWS);
     if out as u8 != 0xff {
-        let nation = read_usize(club + club::NATION);
+        let nation = club.nation().addr();
         let continent = if nation != 0 { read_usize(nation + nation::CONTINENT) } else { 0 };
-        exe::news_send_by_scope(news, n, club, read_usize(cup + 4), nation, continent, out);
+        exe::news_send_by_scope(news, n, club.addr(), read_usize(cup + 4), nation, continent, out);
         return 1;
     }
     let round = read_i16(p + fixture::ROUND_NAME);
     if (outcome as u8 == 1 && round == 0x96) || (outcome as u8 == 3 && round == 0x8c) {
         exe::news_send_to_comp_region(news, n, read_usize(cup + 4));
     } else {
-        exe::news_send_to_club_manager(news, n, club);
+        exe::news_send_to_club_manager(news, n, club.addr());
     }
     1
 }
@@ -3374,9 +3377,9 @@ pub(crate) unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
                     if read_usize(this + cup::VENUE_STADIUM_ID) as u32 != u32::MAX && v0 != 0xffff {
                         let away = read_i16(c + cup_tie::AWAY_TEAM);
                         if away != -1 {
-                            let club = read_usize(read_usize(this + cup::TEAM_TABLE) + (away as isize * 6) as usize);
-                            if club != 0 {
-                                let nation = read_usize(club + club::STADIUM);
+                            let club = Club(read_usize(read_usize(this + cup::TEAM_TABLE) + (away as isize * 6) as usize));
+                            if !club.is_null() {
+                                let nation = club.stadium().addr();
                                 if nation != 0 && read_usize(nation) == read_usize(this + cup::VENUE_STADIUM_ID) {
                                     write_u16(c, away as u16);
                                     write_u16(c + cup_tie::AWAY_TEAM, v0);

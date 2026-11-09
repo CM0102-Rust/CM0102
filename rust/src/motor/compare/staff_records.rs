@@ -5,14 +5,15 @@ use super::*;
 
 /// Comparer for `add_league_champions_record`.
 pub(crate) unsafe extern "thiscall" fn compare_add_league_champions_record(this: usize, club: usize, comp: usize) {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ADD_LEAGUE_CHAMPIONS_RECORD);
-    if club == 0 || comp == 0 || read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(4 * read_usize(comp))) == 0 {
-        return o(this, club, comp);
+    if club.is_null() || comp == 0 || read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(4 * read_usize(comp))) == 0 {
+        return o(this, club.addr(), comp);
     }
-    let t = read_usize(club + club::MANAGER);
-    let notes = if t != 0 && read_usize(t + staff::NON_PLAYER) != 0 { (read_usize(t + staff::NON_PLAYER) + 8, 6) } else { (club + club::REPUTATION, 2) };
-    compare_champion_update("add_league_champions_record", this, club, notes, true, || o(this, club, comp),
-        || add_league_champions_record(this, club, comp));
+    let t = club.manager().addr();
+    let notes = if t != 0 && read_usize(t + staff::NON_PLAYER) != 0 { (read_usize(t + staff::NON_PLAYER) + 8, 6) } else { (club.addr() + club::REPUTATION, 2) };
+    compare_champion_update("add_league_champions_record", this, club.addr(), notes, true, || o(this, club.addr(), comp),
+        || add_league_champions_record(this, club.addr(), comp));
 }
 
 /// Comparer for `add_cup_winners_record`.
@@ -76,25 +77,26 @@ pub(crate) unsafe extern "thiscall" fn compare_add_league_finish_records(this: u
 /// rejeitadas do clube +0x9b e os clubes favoritos e rejeitados da pessoa, preferências +0x65: +4..+0x18). Pessoa nula:
 /// só a original.
 pub(crate) unsafe extern "thiscall" fn compare_add_supporters_player_of_year_record(this: usize, person: usize, club: usize, a: u32, b: u32) {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_ADD_SUPPORTERS_PLAYER_OF_YEAR_RECORD);
-    if person == 0 || club == 0 {
-        return o(this, person, club, a, b);
+    if person == 0 || club.is_null() {
+        return o(this, person, club.addr(), a, b);
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.push((club + club::FAV_STAFF1, 0x18));
+    reg.push((club.addr() + club::FAV_STAFF1, 0x18));
     let pref = read_usize(person + staff::STAFF_PREFERENCES);
     if pref != 0 {
         reg.push((pref + preferences::STAFF_FAVOURITE_CLUBS1, 0x18));
     }
     let before = crate::comparison::MemorySnapshot::read(&reg);
     SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN = true;
-    crate::rng::pause_trace(|| crate::rng::without_counting(|| add_supporters_player_of_year_record(this, person, club, a, b)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| add_supporters_player_of_year_record(this, person, club.addr(), a, b)));
     SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&reg);
     before.write_back();
-    o(this, person, club, a, b);
+    o(this, person, club.addr(), a, b);
     let mo = crate::comparison::MemorySnapshot::read(&reg);
-    SCOREBOARD.record(mo == mr, || format!("add_supporters_player_of_year_record(pessoa {:#x}, clube {:#x}) original={:x?} rust={:x?}", person, club, mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("add_supporters_player_of_year_record(pessoa {:#x}, clube {:#x}) original={:x?} rust={:x?}", person, club.addr(), mo, mr));
 }
 
 /// Comparer for `add_cup_runners_up_record`.
@@ -194,17 +196,18 @@ pub(crate) unsafe extern "thiscall" fn compare_add_relegation_record(this: usize
 /// [pt] Comparador: lado a lado pelo registro de pontos do técnico (criado antes, como a original faria), a cópia sem o
 /// histórico em arquivo; sem clube ou sem técnico, só a original.
 pub(crate) unsafe extern "thiscall" fn compare_add_qualified_for_round_record(this: usize, club: usize, comp: usize, stage: u32, round: u32, weight: u32) {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(IDX_ADD_QUALIFIED_FOR_ROUND_RECORD);
-    if club == 0 || read_usize(club + club::MANAGER) == 0 {
-        return o(this, club, comp, stage, round, weight);
+    if club.is_null() || club.manager().addr() == 0 {
+        return o(this, club.addr(), comp, stage, round, weight);
     }
-    let r = exe::staff_records_get_manager_record(this, read_usize(club + club::MANAGER), 1);
+    let r = exe::staff_records_get_manager_record(this, club.manager().addr(), 1);
     if r == 0 {
-        return o(this, club, comp, stage, round, weight);
+        return o(this, club.addr(), comp, stage, round, weight);
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, club, comp, stage, round, weight),
-        || record_qualification(this, club, comp, stage, round, weight, false));
-    SCOREBOARD.record(igual, || format!("add_qualified_for_round_record(clube {:x}, peso {}) {:x?} x {:x?}", club, weight as u8 as i8, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, club.addr(), comp, stage, round, weight),
+        || record_qualification(this, club.addr(), comp, stage, round, weight, false));
+    SCOREBOARD.record(igual, || format!("add_qualified_for_round_record(clube {:x}, peso {}) {:x?} x {:x?}", club.addr(), weight as u8 as i8, mo, mr));
 }
 
 /// Comparer for `add_transfer_records`.

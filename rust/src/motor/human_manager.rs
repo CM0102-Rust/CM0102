@@ -81,8 +81,8 @@ pub(crate) unsafe extern "thiscall" fn manager_9a06(this: usize, person: usize, 
     }
     match person_and_human_record(this, person) {
         Some((p, r)) => {
-            let club = *((p + 0x24) as *const usize);
-            if club != 0 && *((*((club + club::NATION) as *const usize) + 0x88) as *const i32) < 400 {
+            let club = Club(*((p + 0x24) as *const usize));
+            if !club.is_null() && *((club.nation().addr() + 0x88) as *const i32) < 400 {
                 if !out.is_null() {
                     *out = 1;
                 }
@@ -461,14 +461,15 @@ pub(crate) unsafe extern "thiscall" fn get_saved_lineup(manager: usize, person: 
 /// se houver; senão, dos cinco da comissão (+0x19f) com dados (+0x69), o de maior reputação (+0xa,
 /// ficando o primeiro no empate); 0 se nenhum.
 pub(crate) unsafe extern "C" fn human_manager_get_stand_in_manager(club: usize) -> usize {
-    let auxiliar = core::ptr::read_unaligned((club + club::ASSISTANT_MANAGER) as *const usize);
+    let club = Club(club);
+    let auxiliar = core::ptr::read_unaligned((club.addr() + club::ASSISTANT_MANAGER) as *const usize);
     if auxiliar != 0 {
         return auxiliar;
     }
     let injury_word_0c = |p: usize| core::ptr::read_unaligned((core::ptr::read_unaligned((p + staff::NON_PLAYER) as *const usize) + 0xa) as *const i16);
     let mut best = 0usize;
     for k in 0..5 {
-        let c = core::ptr::read_unaligned((club + club::COACHES + k * 4) as *const usize);
+        let c = core::ptr::read_unaligned((club.addr() + club::COACHES + k * 4) as *const usize);
         if c == 0 || core::ptr::read_unaligned((c + staff::NON_PLAYER) as *const usize) == 0 {
             continue;
         }

@@ -15,9 +15,10 @@ pub(crate) unsafe extern "thiscall" fn compare_set_club_season_expectations(this
 /// [pt] Só a original (cláusulas de contrato e o técnico que sai não rodam duas vezes), conferindo o que ela grava: +0x57 =
 /// a divisão e +0x5b = a competição de antes.
 pub(crate) unsafe extern "thiscall" fn compare_relegate_club_to_division(this: usize, club: usize, division: usize, x: u32) {
-    let old = read_usize(club + club::DIVISION);
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_RELEGATE_CLUB_TO_DIVISION)(this, club, division, x);
-    SCOREBOARD.record(read_usize(club + club::DIVISION) == division && read_usize(club + club::LAST_DIVISION) == old, || format!("relegate_club_to_division: +0x57 {:#x} +0x5b {:#x}", read_usize(club + club::DIVISION), read_usize(club + club::LAST_DIVISION)));
+    let club = Club(club);
+    let old = club.division().addr();
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_RELEGATE_CLUB_TO_DIVISION)(this, club.addr(), division, x);
+    SCOREBOARD.record(club.division().addr() == division && club.last_division().addr() == old, || format!("relegate_club_to_division: +0x57 {:#x} +0x5b {:#x}", club.division().addr(), club.last_division().addr()));
 }
 
 /// Comparer for `move_fixtures_for_tv`.
@@ -393,20 +394,21 @@ pub(crate) unsafe extern "thiscall" fn compare_update_projected_positions(this: 
 /// total de rodadas, a situação do clube, os campos, os blocos zerados, os vetores presentes e, na última linha, os
 /// adversários de cada linha).
 pub(crate) unsafe extern "thiscall" fn compare_init_table_row(this: usize, i: u32, club: usize, mark: u32, rows: usize) {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, u32, usize)>(IDX_INIT_TABLE_ROW);
     let a7 = read_i16(this + league::GAMES_PER_CLUB);
     let n = read_i16(this + league::CLUB_COUNT);
     let a7_expected = if a7 == -1 && n > 0 { (n - 1).wrapping_mul(read_i16(this + league::LEGS)) } else { a7 };
-    let status = if club != 0 { read_u8(club + club::PROFESSIONAL_STATUS) } else { 0 };
+    let status = if !club.is_null() { club.professional_status() } else { 0 };
     let situacao_esperada = if status == 3 { 2 } else { status };
     let table = if rows == 0 { read_usize(this + league::TABLE) } else { rows };
     let confrontos = uses_head_to_head_rule(this);
-    o(this, i, club, mark, rows);
+    o(this, i, club.addr(), mark, rows);
     let idx = i as u8 as i8 as isize;
     let l = table.wrapping_add((idx * TABLE_ROW_SIZE as isize) as usize);
-    let mut ok = read_usize(l) == club && read_u8(l + league_table_row::POSITION) == i as u8 && read_u8(l + league_table_row::STATUS) == 0xff && read_u8(l + league_table_row::MARK) == mark as u8
+    let mut ok = read_usize(l) == club.addr() && read_u8(l + league_table_row::POSITION) == i as u8 && read_u8(l + league_table_row::STATUS) == 0xff && read_u8(l + league_table_row::MARK) == mark as u8
         && read_u8(l + league_table_row::BEST_POSSIBLE_POSITION) == 1 && read_u8(l + league_table_row::WORST_POSSIBLE_POSITION) == n as u8 && read_i16(this + league::GAMES_PER_CLUB) == a7_expected
-        && (club == 0 || read_u8(club + club::PROFESSIONAL_STATUS) == situacao_esperada)
+        && (club.is_null() || club.professional_status() == situacao_esperada)
         && (read_usize(l + league_table_row::POSITION_HISTORY) != 0) == (read_i16(this + league::LEGS) > 0) && (read_usize(l + league_table_row::H2H_ENTRIES) != 0) == confrontos;
     for k in 0..3 {
         let e = l + league_table_row::PLAYED + 14 * k;
@@ -425,7 +427,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init_table_row(this: usize, i: u3
         }
     }
     SCOREBOARD.record(ok, || format!("init_table_row(linha {}, clube {:x}, marca {}) clubes {}, rodadas {} (esperava {}), confrontos {} ({:x}), histórico {:x}",
-        idx, club, mark as u8, n, read_i16(this + league::GAMES_PER_CLUB), a7_expected, confrontos, read_usize(l + league_table_row::H2H_ENTRIES), read_usize(l + league_table_row::POSITION_HISTORY)));
+        idx, club.addr(), mark as u8, n, read_i16(this + league::GAMES_PER_CLUB), a7_expected, confrontos, read_usize(l + league_table_row::H2H_ENTRIES), read_usize(l + league_table_row::POSITION_HISTORY)));
 }
 
 /// Comparer for `league_get_club_array`.

@@ -66,12 +66,12 @@ pub(crate) unsafe extern "C" fn build_save_game_summary(summary: *mut u8) {
             continue;
         }
         exe::database_format_staff_name(p, (club_txt.sub(0x3c)) as *mut u8 as usize, 200, 1);
-        let club = core::ptr::read_unaligned((p + staff::CLUB_JOB) as *const usize);
+        let club = Club(core::ptr::read_unaligned((p + staff::CLUB_JOB) as *const usize));
         let nation_of = core::ptr::read_unaligned((p + staff::NATIONAL_JOB) as *const usize);
-        if club != 0 && nation_of != 0 {
-            translate(club_txt, 0x9c80f4, club + club::SHORT_NAME, nation_of + nation::SHORT_NAME);
-        } else if club != 0 {
-            copy_text(club_txt, (club + club::SHORT_NAME) as *const u8);
+        if !club.is_null() && nation_of != 0 {
+            translate(club_txt, 0x9c80f4, club.addr() + club::SHORT_NAME, nation_of + nation::SHORT_NAME);
+        } else if !club.is_null() {
+            copy_text(club_txt, (club.addr() + club::SHORT_NAME) as *const u8);
         } else if nation_of != 0 {
             copy_text(club_txt, (nation_of + nation::SHORT_NAME) as *const u8);
         } else {

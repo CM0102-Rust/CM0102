@@ -22,19 +22,20 @@ pub(crate) static mut DRY_RUN_STRAY_SCRATCH_DATE: bool = false;
 ///
 /// [pt] A reputação do clube (+0x80) sobe até peso × 500, no máximo 750 de uma vez (entre 1 e 10000; soma em 16 bits).
 pub(crate) unsafe fn raise_champion_reputation(club: usize, weight: i16, champion_of_league: bool) {
+    let club = Club(club);
     let target = (weight as i32).wrapping_mul(500);
-    let rep = read_i16(club + club::REPUTATION) as i32;
+    let rep = club.reputation() as i32;
     if rep < target {
         let foul = target - rep;
         let sum = if foul > 0x2ee { 0x2ee } else { foul }; // cqd13: the rise cap
-        let v = read_i16(club + club::REPUTATION).wrapping_add(sum as i16);
+        let v = club.reputation().wrapping_add(sum as i16);
         let v = if v < 1 { 1 } else if v > 10000 { 10000 } else { v };
         if champion_of_league {
             crate::comparison::branch("cqd_13 league winner injury_word_0c");
         } else {
             crate::comparison::branch("cqd_13 cup winner injury_word_0c");
         }
-        core::ptr::write_unaligned((club + club::REPUTATION) as *mut i16, v); // cqd13: the reputation of the champion
+        core::ptr::write_unaligned((club.addr() + club::REPUTATION) as *mut i16, v); // cqd13: the reputation of the champion
     }
 }
 
@@ -82,6 +83,7 @@ pub(crate) unsafe fn offer_renewal_if_due(club: usize, p: usize, k: usize) {
 /// [pt] Os históricos da entrada `e` para o técnico (já feito por quem chama), o presidente (+0xbf) e os 20 da escalação
 /// (+0x190 do lado, 0x49 bytes, −1 vazio; pessoas válidas e fora o técnico; nula: a caixa da linha 0x1010).
 pub(crate) unsafe fn add_lineup_histories(this: usize, club: usize, escalacao: usize, e: &[u8; 0x40]) {
+    let club = Club(club);
     for j in 0..0x14usize {
         let id = read_i32(escalacao + 0x49 * j);
         if id == -1 {
@@ -91,7 +93,7 @@ pub(crate) unsafe fn add_lineup_histories(this: usize, club: usize, escalacao: u
         if p != 0 && read_i32(p) >= read_i32(G_STAFF_COUNT) {
             continue;
         }
-        if p == read_usize(club + club::MANAGER) {
+        if p == club.manager().addr() {
             continue;
         }
         if p == 0 {
@@ -135,13 +137,14 @@ pub(crate) unsafe fn post_trophy_praise(club: usize, comp: usize, mark: u32) {
 /// [pt] As notas k1/k2 do técnico pela fase: na competição de fase 1 ([0xadadfc] + 4 × id, +0x42 = 1) 200 na terceira e 200
 /// na segunda se o técnico for estrangeiro (0x53d980 com a nação +0x53 e 1), senão 400.
 pub(crate) unsafe fn manager_rating_gains(t: usize, club: usize, id_comp: usize) -> (i32, i32) {
+    let club = Club(club);
     let c = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(4 * id_comp));
     if *((c + league::CLUB_SIDES) as *const i8) != 1 {
         (400, 400)
     } else {
         let estrangeiro: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
         // 0x53d980: 3 pushes; add esp, 0xc -> cdecl
-        (if estrangeiro(t, read_usize(club + club::NATION), 1) != 0 { 200 } else { 400 }, 200)
+        (if estrangeiro(t, club.nation().addr(), 1) != 0 { 200 } else { 400 }, 200)
     }
 }
 
@@ -177,7 +180,8 @@ pub(crate) unsafe fn manager_rating_gains(t: usize, club: usize, id_comp: usize)
 /// +10 e +50 no contrato. O histórico do clube (tipo 5); com a mídia ([0xb6b7c8]) e peso acima de 3, o elogio (0x75c390
 /// com 1) e, acima de 12, com 3.
 pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, club: usize, comp: usize) {
-    if club == 0 || comp == 0 {
+    let club = Club(club);
+    if club.is_null() || comp == 0 {
         return show_error_at(0xa83b78, 0x21c);
     }
     let obj = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(4 * read_usize(comp)));
@@ -185,13 +189,13 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
         return show_error_at(0xa83b78, 0x224);
     }
     let weight = read_i16(comp + competition::REPUTATION);
-    raise_champion_reputation(club, weight, true); // cqd13: the reputation of the league champion
-    if read_usize(club + club::DIVISION) != 0 {
-        let b = read_usize(club + club::STADIUM);
+    raise_champion_reputation(club.addr(), weight, true); // cqd13: the reputation of the league champion
+    if club.division().addr() != 0 {
+        let b = club.stadium().addr();
         if b != 0 {
-            let x = read_i32(club + club::MAX_ATTENDANCE);
-            if x < 150000 && x < read_i32(club + club::ATTENDANCE).wrapping_add(500) {
-                write_i32(club + club::MAX_ATTENDANCE, x.wrapping_add((weight as i32).wrapping_mul(20)));
+            let x = club.max_attendance();
+            if x < 150000 && x < club.attendance().wrapping_add(500) {
+                club.set_max_attendance(x.wrapping_add((weight as i32).wrapping_mul(20)));
             }
             let y = read_i32(b + stadium::EXPANSION_CAPACITY);
             if y < 120000 {
@@ -204,20 +208,20 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
     let mut e = history_entry();
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 5;
-    put_i32(&mut e, 8, read_i32(club));
+    put_i32(&mut e, 8, read_i32(club.addr()));
     put_i32(&mut e, 0xd, read_i32(comp));
-    let t = read_usize(club + club::MANAGER);
+    let t = club.manager().addr();
     if t != 0 {
         let np = read_usize(t + staff::NON_PLAYER);
         if np != 0 {
-            let (k1, k2) = manager_rating_gains(t, club, read_usize(comp));
+            let (k1, k2) = manager_rating_gains(t, club.addr(), read_usize(comp));
             raise_side_rating(np + non_player::CURRENT_REPUTATION, weight, 400);
             raise_side_rating(np + non_player::HOME_REPUTATION, weight, k1);
             raise_side_rating(np + non_player::WORLD_REPUTATION, weight, k2);
         }
         append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(t), &e);
         // 0x86f5b0: push 1; push manager; mov ecx, edi (the this) -> thiscall (ret 8)
-        let r = exe::staff_records_get_manager_record(this, read_usize(club + club::MANAGER), 1);
+        let r = exe::staff_records_get_manager_record(this, club.manager().addr(), 1);
         if r != 0 {
             core::ptr::write_unaligned((r + manager_record::LEAGUES_WON) as *mut i16, read_i16(r + manager_record::LEAGUES_WON).wrapping_add(1));
             let v = (weight as i32).wrapping_mul(5000);
@@ -226,16 +230,16 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
             write_i32(r + manager_record::SEASON_POINTS, read_i32(r + manager_record::SEASON_POINTS).wrapping_add(v));
         }
     }
-    let chairman = read_usize(club + club::CHAIRMAN);
+    let chairman = club.chairman().addr();
     if chairman != 0 {
         append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(chairman), &e);
     }
     // 0x7c1e30: push 6,5f; push 1; push 2; push player sheet; mov ecx, [0xb74350] -> thiscall (ret 0x10, x87); 0x544710: 3
     // pushes; add esp, 0xc -> cdecl; 0x4cf5f0: push club; push p; mov ecx, [0xae1050] -> thiscall (ret 8)
     for j in 0..50usize {
-        let p = read_usize(club + club::SQUAD + 4 * j);
-        if p == 0 || read_usize(p + staff::PLAYER) == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) || read_usize(p + staff::CLUB_JOB) != club
-            || p == read_usize(club + club::MANAGER)
+        let p = read_usize(club.addr() + club::SQUAD + 4 * j);
+        if p == 0 || read_usize(p + staff::PLAYER) == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) || read_usize(p + staff::CLUB_JOB) != club.addr()
+            || p == club.manager().addr()
         {
             continue;
         }
@@ -244,26 +248,26 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
             crate::comparison::branch("cqd_13 champion standout player");
             append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(p), &e);
             exe::staff_adjust_morale(p, 0x14, 1); // cqd13: the morale of the standout player
-            let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club);
+            let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club.addr());
             if k == 0 {
                 continue;
             }
             crate::comparison::branch("cqd_13 standout player contract");
             add_contract_morale(k, 100); // cqd13: the contract of the standout player
-            offer_renewal_if_due(club, p, k);
+            offer_renewal_if_due(club.addr(), p, k);
         } else {
             exe::staff_adjust_morale(p, 0xa, 1);
-            let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club);
+            let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club.addr());
             if k != 0 {
                 add_contract_morale(k, 50);
             }
         }
     }
-    add_club_history(this, club, 5, comp);
+    add_club_history(this, club.addr(), 5, comp);
     if read_usize(G_MEDIA) != 0 && weight > 3 {
-        post_trophy_praise(club, comp, 1);
+        post_trophy_praise(club.addr(), comp, 1);
         if weight > 12 {
-            post_trophy_praise(club, comp, 3);
+            post_trophy_praise(club.addr(), comp, 3);
         }
     }
 }
@@ -294,58 +298,59 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
 /// convocações da competição guardada (0x76d940) acabam (0x774f30); o histórico do clube (tipo 0); com a mídia e peso
 /// acima de 10, o elogio (0x75c390 com 1) e, com peso acima de 12 ou reputação abaixo de 2500, com 3.
 pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club: usize, game: usize, partida: usize) {
-    if club == 0 || game == 0 || partida == 0 {
+    let club = Club(club);
+    if club.is_null() || game == 0 || partida == 0 {
         return show_error_at(0xa83b78, 0x51e);
     }
     let comp = read_usize(game + fixture::COMPETITION);
     let weight = read_i16(comp + competition::REPUTATION);
-    raise_champion_reputation(club, weight, false);
+    raise_champion_reputation(club.addr(), weight, false);
     let mut e = history_entry();
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0;
-    put_i32(&mut e, 8, read_i32(club));
+    put_i32(&mut e, 8, read_i32(club.addr()));
     put_i32(&mut e, 0xd, read_i32(comp));
-    let t = read_usize(club + club::MANAGER);
+    let t = club.manager().addr();
     if t != 0 {
         if read_usize(t + staff::NON_PLAYER) != 0 {
-            let (k1, k2) = manager_rating_gains(t, club, read_usize(game));
-            let side = partida + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (read_usize(game + fixture::AWAY_CLUB) == club) as usize;
+            let (k1, k2) = manager_rating_gains(t, club.addr(), read_usize(game));
+            let side = partida + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (read_usize(game + fixture::AWAY_CLUB) == club.addr()) as usize;
             raise_side_rating(side, weight, 400);
             raise_side_rating(side + 2, weight, k1);
             raise_side_rating(side + 4, weight, k2);
         }
-        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(read_usize(club + club::MANAGER)), &e);
-        let r = exe::staff_records_get_manager_record(this, read_usize(club + club::MANAGER), 1);
+        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(club.manager().addr()), &e);
+        let r = exe::staff_records_get_manager_record(this, club.manager().addr(), 1);
         if r != 0 {
             core::ptr::write_unaligned((r + manager_record::CUPS_WON) as *mut i16, read_i16(r + manager_record::CUPS_WON).wrapping_add(1));
             // fild weight; fld 4.0; _CIpow (base in st1); fmul 0.5; ftol
             let v = ftol(game_pow(read_i16(comp + competition::REPUTATION) as f64, read_f64(rdata::F64_4)) * read_f64(rdata::F64_0_5)); // cqd13: the title weight;
             write_i32(r + manager_record::YEAR_POINTS, read_i32(r + manager_record::YEAR_POINTS).wrapping_add(v));
             write_i32(r + manager_record::MONTH_POINTS, read_i32(r + manager_record::MONTH_POINTS).wrapping_add(v));
-            if is_national_team(club) != 0 {
+            if is_national_team(club.addr()) != 0 {
                 write_i32(r + manager_record::NATIONAL_SEASON_POINTS, read_i32(r + manager_record::NATIONAL_SEASON_POINTS).wrapping_add(v));
             } else {
                 write_i32(r + manager_record::SEASON_POINTS, read_i32(r + manager_record::SEASON_POINTS).wrapping_add(v));
             }
         }
     }
-    let chairman = read_usize(club + club::CHAIRMAN);
+    let chairman = club.chairman().addr();
     if chairman != 0 {
         append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(chairman), &e);
     }
-    let escalacao = partida + match_record::ROW_STAFF_ID + 0x625 * (club != read_usize(game + fixture::HOME_CLUB)) as usize;
-    add_lineup_histories(this, club, escalacao, &e);
+    let escalacao = partida + match_record::ROW_STAFF_ID + 0x625 * (club.addr() != read_usize(game + fixture::HOME_CLUB)) as usize;
+    add_lineup_histories(this, club.addr(), escalacao, &e);
     for j in 0..50usize {
-        if (read_i16(comp + competition::REPUTATION) as i32).wrapping_mul(400) < read_i16(club + club::REPUTATION) as i32 {
+        if (read_i16(comp + competition::REPUTATION) as i32).wrapping_mul(400) < club.reputation() as i32 {
             break;
         }
-        let p = read_usize(club + club::SQUAD + 4 * j);
-        if p == 0 || read_usize(p + staff::PLAYER) == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) || p == read_usize(club + club::MANAGER) {
+        let p = read_usize(club.addr() + club::SQUAD + 4 * j);
+        if p == 0 || read_usize(p + staff::PLAYER) == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) || p == club.manager().addr() {
             continue;
         }
         crate::comparison::branch("cqd_13 cup winner squad");
         exe::staff_adjust_morale(p, 0xf, 1); // cqd13: the morale of the cup winner player
-        let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club);
+        let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club.addr());
         if k == 0 {
             continue;
         }
@@ -355,7 +360,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
         if s == 0 || (s > 3 && s != 5) {
             continue;
         }
-        offer_renewal_if_due(club, p, k);
+        offer_renewal_if_due(club.addr(), p, k);
     }
     // 0x76d940 and 0x774f30: push comp; mov ecx, [0xb74318] (0x76d940 does not read ecx and only compares the id; ret 4 in both)
     if exe::national_teams_is_finals_comp(read_usize(G_NATIONAL_TEAMS), read_usize(game + fixture::COMPETITION)) != 0 {
@@ -365,11 +370,11 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
             exe::nationalteams_end_duty_for_competition(read_usize(G_NATIONAL_TEAMS), read_usize(game + fixture::COMPETITION));
         }
     }
-    add_club_history(this, club, 0, comp);
+    add_club_history(this, club.addr(), 0, comp);
     if read_usize(G_MEDIA) != 0 && weight > 10 {
-        post_trophy_praise(club, comp, 1);
-        if read_i16(comp + competition::REPUTATION) > 12 || read_i16(club + club::REPUTATION) < 0x9c4 {
-            post_trophy_praise(club, comp, 3);
+        post_trophy_praise(club.addr(), comp, 1);
+        if read_i16(comp + competition::REPUTATION) > 12 || club.reputation() < 0x9c4 {
+            post_trophy_praise(club.addr(), comp, 3);
         }
     }
 }
@@ -403,8 +408,9 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
 /// faixa da 0x544710; a data estática fica fora quando o ensaio pulou, depois da última conta de dias da cópia, uma
 /// chamada da original que conta dias (DRY_RUN_STRAY_SCRATCH_DATE). Visto na ENG em maio de 2002 e na auditoria das 8 ligas.
 pub(crate) unsafe fn compare_champion_update(name: &str, this: usize, club: usize, notes: (usize, usize), league: bool, original: impl FnOnce(), copy: impl FnOnce()) {
-    let mut fixas: Vec<(usize, usize)> = vec![(club + club::REPUTATION, 2), (G_DAYS_SINCE_SCRATCH_DATE, 8), notes];
-    let t = read_usize(club + club::MANAGER);
+    let club = Club(club);
+    let mut fixas: Vec<(usize, usize)> = vec![(club.addr() + club::REPUTATION, 2), (G_DAYS_SINCE_SCRATCH_DATE, 8), notes];
+    let t = club.manager().addr();
     if t != 0 {
         let record: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_STAFF_RECORDS_GET_MANAGER_RECORD);
         let r = record(this, t, 1);
@@ -412,18 +418,18 @@ pub(crate) unsafe fn compare_champion_update(name: &str, this: usize, club: usiz
             fixas.push((r, 0xd2));
         }
     }
-    if league && read_usize(club + club::DIVISION) != 0 && read_usize(club + club::STADIUM) != 0 {
-        fixas.push((club + club::MAX_ATTENDANCE, 4));
-        fixas.push((read_usize(club + club::STADIUM) + 0x44, 4));
+    if league && club.division().addr() != 0 && club.stadium().addr() != 0 {
+        fixas.push((club.addr() + club::MAX_ATTENDANCE, 4));
+        fixas.push((club.stadium().addr() + 0x44, 4));
     }
     let mut contratos = Vec::new();
     let mut sheets = Vec::new(); // (morale from the record, contract or 0, previous morale), in squad order
     for j in 0..50usize {
-        let p = read_usize(club + club::SQUAD + 4 * j);
+        let p = read_usize(club.addr() + club::SQUAD + 4 * j);
         if p == 0 || read_usize(p + staff::PLAYER) == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) {
             continue;
         }
-        let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club);
+        let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club.addr());
         let m = read_usize(p + staff::PLAYER) + 0x45;
         sheets.push((m, k, *(m as *const i8)));
         if k != 0 {
@@ -462,7 +468,7 @@ pub(crate) unsafe fn compare_champion_update(name: &str, this: usize, club: usiz
     in_band &= sheets.iter().skip(cut + 1).all(band);
     let mo = crate::comparison::MemorySnapshot::read(&count);
     SCOREBOARD.record(mo == mr && in_band, || format!("{}(clube {:#x}) renovados {} (o primeiro na ficha {} de {}; fora da band: {}) original={:x?} rust={:x?}",
-        name, club, renovados.len(), cut, sheets.len(), !in_band, mo, mr));
+        name, club.addr(), renovados.len(), cut, sheets.len(), !in_band, mo, mr));
 }
 
 /// `Staff_Records::clear_human_manager_record(person)`: clears a human manager's record. Called by the human manager's
@@ -501,7 +507,8 @@ pub(crate) unsafe fn increment_i16(a: usize) {
 ///
 /// [pt] O registro de pontos do técnico do clube (+0xcf, lido sem conferir o clube; 0x86f5b0 com criar), ou 0 sem técnico.
 pub(crate) unsafe fn club_manager_record(this: usize, club: usize) -> usize {
-    let t = read_usize(club + club::MANAGER);
+    let club = Club(club);
+    let t = club.manager().addr();
     if t == 0 {
         return 0;
     }
@@ -528,10 +535,11 @@ pub(crate) unsafe fn side_match_points(m: usize, a: usize, b: usize, c: usize, d
 /// byte, com sinal) × (reputação do adversário / 500) × o peso da competição (+0x69 de [+0x14]) × (pontos + bônus) × 50,
 /// dividido por 100000 (divisões com sinal truncadas, como as multiplicações mágicas da original; produtos em 32 bits).
 pub(crate) unsafe fn match_rating_for_manager(p: usize, side: u32, out: &mut u32, opponent: usize, points: i32) -> i32 {
+    let opponent = Club(opponent);
     let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(4 * read_usize(p)));
     let i = (exe::comp_get_fixture_match_importance(comp, p, side, out as *mut u32) as u32) as u8 as i8 as i32;
     let x = i
-        .wrapping_mul(read_i16(opponent + club::REPUTATION) as i32 / 500)
+        .wrapping_mul(opponent.reputation() as i32 / 500)
         .wrapping_mul(read_i16(read_usize(p + fixture::COMPETITION) + 0x69) as i32)
         .wrapping_mul(points)
         .wrapping_mul(50);
@@ -670,10 +678,10 @@ pub(crate) unsafe extern "thiscall" fn add_league_finish_records(this: usize, le
     put_i32(&mut e, 0xd, read_i32(read_usize(league + 4)));
     let mut k: i16 = 0;
     while k < read_i16(league + league::CLUB_COUNT) {
-        let club = read_usize(exe::league_get_table_row(league, k as i32));
+        let club = Club(read_usize(exe::league_get_table_row(league, k as i32)));
         put_i32(&mut e, 0x15, k as i32 + 1);
-        put_i32(&mut e, 8, read_i32(club));
-        let t = read_usize(club + club::MANAGER);
+        put_i32(&mut e, 8, read_i32(club.addr()));
+        let t = club.manager().addr();
         if t != 0 {
             append_person_history_by_id(true, this, read_usize(t), &e);
         }
@@ -771,29 +779,30 @@ pub(crate) unsafe fn raise_side_rating(a: usize, weight: i16, k: i32) {
 /// −1 vazio; pessoas válidas e fora o técnico); no terceiro, as convocações acabam nas competições guardadas (0x76d940,
 /// 0x774f90 com os dois clubes); por fim o histórico do clube (tipo no +8, competição no +9).
 pub(crate) unsafe fn update_cup_placed_club(this: usize, club: usize, game: usize, partida: usize, kind: u8) {
+    let club = Club(club);
     let (limiar, teto, k, metade) = if kind == 1 { (500, 350, 300, 150) } else { (500, 200, 200, 100) };
     let comp = read_usize(game + fixture::COMPETITION);
     let weight = read_i16(comp + competition::REPUTATION);
     let target = (weight as i32).wrapping_mul(limiar); // cqa12: the reputation threshold
-    let rep = read_i16(club + club::REPUTATION) as i32;
+    let rep = club.reputation() as i32;
     if rep < target {
         let foul = target - rep;
         let sum = if foul > teto { teto } else { foul }; // cqa12: the rise cap
-        let v = read_i16(club + club::REPUTATION).wrapping_add(sum as i16);
+        let v = club.reputation().wrapping_add(sum as i16);
         let v = if v < 1 { 1 } else if v > 10000 { 10000 } else { v };
         if kind == 1 {
             crate::comparison::branch("cqa_12 runner-up injury_word_0c");
         } else {
             crate::comparison::branch("cqa_12 third place injury_word_0c");
         }
-        write_i16(club + club::REPUTATION, v); // cqa12: the reputation of the placed team
+        club.set_reputation(v); // cqa12: the reputation of the placed team
     }
     let mut e = history_entry();
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = kind;
-    put_i32(&mut e, 8, read_i32(club));
+    put_i32(&mut e, 8, read_i32(club.addr()));
     put_i32(&mut e, 0xd, read_i32(comp));
-    let t = read_usize(club + club::MANAGER);
+    let t = club.manager().addr();
     if t != 0 {
         if read_usize(t + staff::NON_PLAYER) != 0 {
             let c = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(4 * read_usize(game)));
@@ -801,20 +810,20 @@ pub(crate) unsafe fn update_cup_placed_club(this: usize, club: usize, game: usiz
                 (k, k)
             } else {
                 let estrangeiro: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
-                (if estrangeiro(t, read_usize(club + club::NATION), 1) != 0 { metade } else { k }, metade)
+                (if estrangeiro(t, club.nation().addr(), 1) != 0 { metade } else { k }, metade)
             };
-            let side = partida + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (read_usize(game + fixture::AWAY_CLUB) == club) as usize;
+            let side = partida + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (read_usize(game + fixture::AWAY_CLUB) == club.addr()) as usize;
             raise_side_rating(side, weight, k);
             raise_side_rating(side + 2, weight, k1);
             raise_side_rating(side + 4, weight, k2);
         }
         append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(t), &e);
     }
-    let chairman = read_usize(club + club::CHAIRMAN);
+    let chairman = club.chairman().addr();
     if chairman != 0 {
         append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(chairman), &e);
     }
-    let escalacao = partida + match_record::ROW_STAFF_ID + 0x625 * (club != read_usize(game + fixture::HOME_CLUB)) as usize;
+    let escalacao = partida + match_record::ROW_STAFF_ID + 0x625 * (club.addr() != read_usize(game + fixture::HOME_CLUB)) as usize;
     for j in 0..0x14usize {
         let id = read_i32(escalacao + 0x49 * j);
         if id == -1 {
@@ -824,7 +833,7 @@ pub(crate) unsafe fn update_cup_placed_club(this: usize, club: usize, game: usiz
         if p != 0 && read_i32(p) >= read_i32(G_STAFF_COUNT) {
             continue;
         }
-        if p == read_usize(club + club::MANAGER) {
+        if p == club.manager().addr() {
             continue;
         }
         if p == 0 {
@@ -844,7 +853,7 @@ pub(crate) unsafe fn update_cup_placed_club(this: usize, club: usize, game: usiz
     stamp_game_date(e2.as_mut_ptr());
     e2[8] = kind;
     put_i32(&mut e2, 9, read_i32(comp));
-    append_club_history_by_id(this, read_usize(club), &e2);
+    append_club_history_by_id(this, read_usize(club.addr()), &e2);
 }
 
 /// the cup runner-up: the club reputation rises up to weight × 500 (at most 350 at once), its side's three match
@@ -881,10 +890,11 @@ pub(crate) unsafe extern "thiscall" fn add_cup_third_place_record(this: usize, c
 /// [pt] Comparador em ensaio dos colocados: a cópia sem os históricos e sem acabar as convocações, e a original a partir do
 /// mesmo estado (a reputação do clube e as três notas do lado dele na partida). Nulos: só a original.
 pub(crate) unsafe fn compare_cup_placed(name: &str, club: usize, game: usize, partida: usize, original: impl FnOnce(), copy: impl FnOnce()) {
-    if club == 0 || game == 0 || partida == 0 {
+    let club = Club(club);
+    if club.is_null() || game == 0 || partida == 0 {
         return original();
     }
-    let reg = [(club + club::REPUTATION, 2), (partida + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (read_usize(game + fixture::AWAY_CLUB) == club) as usize, 6)];
+    let reg = [(club.addr() + club::REPUTATION, 2), (partida + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (read_usize(game + fixture::AWAY_CLUB) == club.addr()) as usize, 6)];
     let before = crate::comparison::MemorySnapshot::read(&reg);
     CUP_PLACED_CLUB_DRY_RUN = true;
     copy();
@@ -893,7 +903,7 @@ pub(crate) unsafe fn compare_cup_placed(name: &str, club: usize, game: usize, pa
     before.write_back();
     original();
     let mo = crate::comparison::MemorySnapshot::read(&reg);
-    SCOREBOARD.record(mo == mr, || format!("{}(clube {:#x}, jogo {:#x}) original={:x?} rust={:x?}", name, club, game, mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("{}(clube {:#x}, jogo {:#x}) original={:x?} rust={:x?}", name, club.addr(), game, mo, mr));
 }
 
 /// Copies date src into dst (`exe::date_operator_3d`).
@@ -938,11 +948,12 @@ pub(crate) unsafe fn days_between(a: usize, b: usize) -> i32 {
 /// (tipo 0x96: clube, contratado), do presidente do clube (+0xbf; tipo 0x97 com o técnico e as três chaves) e do clube
 /// (tipo 0x96 no +8, o técnico, as chaves e contratado). Técnico ou clube nulos: a caixa (linha 0x3b1).
 pub(crate) unsafe extern "thiscall" fn record_manager_job_change(this: usize, manager: usize, club: usize, contratado: u32) {
-    if club == 0 || manager == 0 {
+    let club = Club(club);
+    if club.is_null() || manager == 0 {
         return show_error_at(0xa83b78, 0x3b1);
     }
     let contratado = contratado as u8 as i8;
-    if is_national_team(club) == 0 {
+    if is_national_team(club.addr()) == 0 {
         let r = exe::staff_records_get_manager_record(this, manager, 1);
         if r != 0 {
             let today = G_CURRENT_DATE;
@@ -982,7 +993,7 @@ pub(crate) unsafe extern "thiscall" fn record_manager_job_change(this: usize, ma
             write_i32(r + manager_record::CURRENT_CLUB, -1);
             if contratado == 1 {
                 crate::comparison::branch("cqa_12 new spell");
-                write_i32(r + manager_record::CURRENT_CLUB, read_i32(club));
+                write_i32(r + manager_record::CURRENT_CLUB, read_i32(club.addr()));
                 staff_records_copy_date(r + manager_record::CURRENT_CLUB_SINCE, today);
                 let mut t = [0u8; 8];
                 let d = exe::date_date_549f70((t.as_mut_ptr()) as *mut [u16; 4], 0xd, 0xb, 0x7b7, u32::MAX);
@@ -999,24 +1010,24 @@ pub(crate) unsafe extern "thiscall" fn record_manager_job_change(this: usize, ma
     let mut e = history_entry();
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0x96;
-    put_i32(&mut e, 8, read_i32(club));
+    put_i32(&mut e, 8, read_i32(club.addr()));
     put_i32(&mut e, 0xd, contratado as i32);
     append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(manager), &e);
-    if read_usize(club + club::CHAIRMAN) != 0 {
+    if club.chairman().addr() != 0 {
         let mut e2 = history_entry();
         stamp_game_date(e2.as_mut_ptr());
         e2[0xc] = 0x97;
-        put_i32(&mut e2, 8, read_i32(club));
+        put_i32(&mut e2, 8, read_i32(club.addr()));
         put_i32(&mut e2, 0xd, contratado as i32);
         put_person_keys(&mut e2, 0x11, manager);
-        append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(read_usize(club + club::CHAIRMAN)), &e2);
+        append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(club.chairman().addr()), &e2);
     }
     let mut e3 = history_entry();
     stamp_game_date(e3.as_mut_ptr());
     e3[8] = 0x96;
     put_person_keys(&mut e3, 9, manager);
     put_i32(&mut e3, 0x19, contratado as i32);
-    append_club_history_by_id(this, read_usize(club), &e3);
+    append_club_history_by_id(this, read_usize(club.addr()), &e3);
 }
 
 /// `Staff_Records::add_team_of_year_record(person, club, award, a, b)`: the team of the year entry in the person's
@@ -1054,7 +1065,8 @@ pub(crate) unsafe extern "thiscall" fn add_team_of_year_record(this: usize, pers
 ///
 /// [pt] O registro de pontos do técnico do clube (+0xcf; 0x86f5b0 do [0xdd7f00], criando), ou 0 sem técnico.
 pub(crate) unsafe fn club_manager_record_global(club: usize) -> usize {
-    let manager = read_usize(club + club::MANAGER);
+    let club = Club(club);
+    let manager = club.manager().addr();
     if manager == 0 {
         return 0;
     }
@@ -1161,9 +1173,10 @@ pub(crate) unsafe fn person_history_entry(club: usize, kind: u8, comp: u32) -> [
 /// [pt] Os jogadores do elenco (50 vagas em +0xd7) que contam nos registros: com registro de jogador (+0x61), id abaixo de
 /// [0xae2364] e que não são o técnico.
 pub(crate) unsafe fn counted_squad_players(club: usize) -> impl Iterator<Item = usize> {
+    let club = Club(club);
     (0..50usize).filter_map(move |k| {
-        let p = read_usize(club + club::SQUAD + 4 * k);
-        if p == 0 || read_usize(p + staff::PLAYER) == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) || p == read_usize(club + club::MANAGER) {
+        let p = read_usize(club.addr() + club::SQUAD + 4 * k);
+        if p == 0 || read_usize(p + staff::PLAYER) == 0 || read_i32(p) >= read_i32(G_STAFF_COUNT) || p == club.manager().addr() {
             None
         } else {
             Some(p)
@@ -1219,21 +1232,22 @@ pub(crate) unsafe fn raise_promotion_rating(a: usize, x: i32, weight: i32) {
 ///
 /// [pt] O acesso; `gravar` falso só na cópia pelo comparador (sem os históricos em arquivo).
 pub(crate) unsafe fn apply_promotion(this: usize, club: usize, comp: usize, weight: u32, write: bool) {
-    if club == 0 || comp == 0 {
+    let club = Club(club);
+    if club.is_null() || comp == 0 {
         show_error_at(0xa83b78, 0x301);
         return;
     }
-    let e = person_history_entry(club, 8, read_usize(comp) as u32);
-    write_i16(club + club::REPUTATION, read_i16(club + club::REPUTATION).wrapping_add(500));
-    if read_i16(club + club::REPUTATION) > 0x2710 {
-        write_i16(club + club::REPUTATION, 0x2710);
+    let e = person_history_entry(club.addr(), 8, read_usize(comp) as u32);
+    club.set_reputation(club.reputation().wrapping_add(500));
+    if club.reputation() > 0x2710 {
+        club.set_reputation(0x2710);
     }
-    let v = read_i32(club + club::MAX_ATTENDANCE);
-    if v < 0x249f0 && v < read_i32(club + club::ATTENDANCE).wrapping_add(500) {
-        write_i32(club + club::MAX_ATTENDANCE, v.wrapping_add(read_i16(comp + competition::REPUTATION) as i32 * 10));
+    let v = club.max_attendance();
+    if v < 0x249f0 && v < club.attendance().wrapping_add(500) {
+        club.set_max_attendance(v.wrapping_add(read_i16(comp + competition::REPUTATION) as i32 * 10));
     }
-    if read_usize(club + club::MANAGER) != 0 {
-        let manager = read_usize(club + club::MANAGER);
+    if club.manager().addr() != 0 {
+        let manager = club.manager().addr();
         if read_usize(manager + staff::NON_PLAYER) != 0 {
             let object = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(comp).wrapping_mul(4)));
             let mut pela = comp;
@@ -1244,17 +1258,17 @@ pub(crate) unsafe fn apply_promotion(this: usize, club: usize, comp: usize, weig
             let (p1, p2) = if read_u8(object + league::CLUB_SIDES) as i8 != 1 {
                 (400, 400)
             } else {
-                (200, if exe::database_is_staff_foreign(manager, read_usize(club + club::NATION), 1) != 0 { 200 } else { 400 })
+                (200, if exe::database_is_staff_foreign(manager, club.nation().addr(), 1) != 0 { 200 } else { 400 })
             };
             let x = read_i16(pela + competition::REPUTATION) as i32;
-            let nj = || read_usize(read_usize(club + club::MANAGER) + 0x69);
+            let nj = || read_usize(club.manager().addr() + 0x69);
             crate::comparison::branch("cpq_3 manager promotion");
             raise_promotion_rating(nj() + 0xa, x, 400);
             raise_promotion_rating(nj() + 8, x, p2);
             raise_promotion_rating(nj() + 0xc, x, p1);
         }
-        append_person_history(write, this, read_usize(club + club::MANAGER), &e);
-        let r = exe::staff_records_get_manager_record(this, read_usize(club + club::MANAGER), 1);
+        append_person_history(write, this, club.manager().addr(), &e);
+        let r = exe::staff_records_get_manager_record(this, club.manager().addr(), 1);
         if r != 0 {
             let points = (read_i16(comp + competition::REPUTATION) as i32).wrapping_mul(weight as u8 as i8 as i32).wrapping_mul(2500) / 100;
             staff_records_add_i32(r + manager_record::YEAR_POINTS, points);
@@ -1262,12 +1276,12 @@ pub(crate) unsafe fn apply_promotion(this: usize, club: usize, comp: usize, weig
             staff_records_add_i32(r + manager_record::MONTH_POINTS, points);
         }
     }
-    if read_usize(club + club::CHAIRMAN) != 0 {
-        append_person_history(write, this, read_usize(club + club::CHAIRMAN), &e);
+    if club.chairman().addr() != 0 {
+        append_person_history(write, this, club.chairman().addr(), &e);
     }
-    for p in counted_squad_players(club) {
+    for p in counted_squad_players(club.addr()) {
         adjust_morale(p, 0xf);
-        let c = game_contract_for_club(p, club);
+        let c = game_contract_for_club(p, club.addr());
         if c == 0 {
             continue;
         }
@@ -1275,13 +1289,13 @@ pub(crate) unsafe fn apply_promotion(this: usize, club: usize, comp: usize, weig
         let s = v as i32 + 0x4b;
         *((c + 0x44) as *mut u8) = if s > 0x64 { 0x64 } else if s < -0x64 { 0x9c } else { v.wrapping_add(0x4b) as u8 };
         let kind = read_u8(c + contract::SQUAD_STATUS) >> 4;
-        if (kind == 0 || (kind > 3 && kind != 5)) || !will_renew_contract(club, p, c) {
+        if (kind == 0 || (kind > 3 && kind != 5)) || !will_renew_contract(club.addr(), p, c) {
             continue;
         }
         crate::comparison::branch("cpq_3 promotion renews");
         offer_renewal(p);
     }
-    append_club_history(write, this, club, 8, comp);
+    append_club_history(write, this, club.addr(), 8, comp);
 }
 
 /// `Staff_Records::add_promotion_record(club, comp, weight)`: records a promotion. SEH frame without a destructor.
@@ -1325,9 +1339,10 @@ pub(crate) unsafe extern "thiscall" fn add_promotion_record(this: usize, club: u
 /// reputações (+9..+0xe) de cada jogador do elenco e o vínculo (+0x44) do contrato dele. `None` se algum contrato vai a
 /// renovação (a 0x4cda70 faz a oferta: não roda duas vezes; no acesso os tipos 1, 2, 3 e 5, no rebaixamento 1 e 2).
 pub(crate) unsafe fn promotion_regions(this: usize, club: usize, promotion: bool) -> Option<Vec<(usize, usize)>> {
+    let club = Club(club);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.push((club, 0x245));
-    let manager = read_usize(club + club::MANAGER);
+    reg.push((club.addr(), 0x245));
+    let manager = club.manager().addr();
     if manager != 0 {
         if read_usize(manager + staff::NON_PLAYER) != 0 {
             reg.push((read_usize(manager + staff::NON_PLAYER), 0x10));
@@ -1339,14 +1354,14 @@ pub(crate) unsafe fn promotion_regions(this: usize, club: usize, promotion: bool
             }
         }
     }
-    for p in counted_squad_players(club) {
+    for p in counted_squad_players(club.addr()) {
         let j = read_usize(p + staff::PLAYER);
         reg.extend([(j + player_sheet::HOME_REPUTATION, 6), (j + player_sheet::PLAYER_MORALE, 1)]);
-        let c = game_contract_for_club(p, club);
+        let c = game_contract_for_club(p, club.addr());
         if c != 0 {
             let kind = read_u8(c + contract::SQUAD_STATUS) >> 4;
             let renova = if promotion { kind != 0 && (kind <= 3 || kind == 5) } else { kind == 1 || kind == 2 };
-            if renova && will_renew_contract(club, p, c) {
+            if renova && will_renew_contract(club.addr(), p, c) {
                 return None;
             }
             reg.push((c + 0x44, 1));
@@ -1376,34 +1391,35 @@ pub(crate) unsafe fn scale_player_reputations(j: usize, k: f64) {
 /// Relegation of a club: reputation −500 (min 750), manager ratings down, histories for manager, chairman and squad,
 /// squad reputations and morale.
 pub(crate) unsafe fn apply_relegation(this: usize, club: usize, comp: usize, write: bool) {
-    if club == 0 || comp == 0 {
+    let club = Club(club);
+    if club.is_null() || comp == 0 {
         show_error_at(0xa83b78, 0x476);
         return;
     }
-    let e = person_history_entry(club, 9, read_usize(comp) as u32);
-    write_i16(club + club::REPUTATION, read_i16(club + club::REPUTATION).wrapping_sub(500));
-    if read_i16(club + club::REPUTATION) < 0x2ee {
-        write_i16(club + club::REPUTATION, 0x2ee);
+    let e = person_history_entry(club.addr(), 9, read_usize(comp) as u32);
+    club.set_reputation(club.reputation().wrapping_sub(500));
+    if club.reputation() < 0x2ee {
+        club.set_reputation(0x2ee);
     }
-    if read_usize(club + club::MANAGER) != 0 {
-        let manager = read_usize(club + club::MANAGER);
+    if club.manager().addr() != 0 {
+        let manager = club.manager().addr();
         if read_usize(manager + staff::NON_PLAYER) != 0 {
-            let factor: i16 = if exe::database_is_staff_foreign(manager, read_usize(club + club::NATION), 1) != 0 { -8 } else { -16 };
-            let nj = || read_usize(read_usize(club + club::MANAGER) + 0x69);
+            let factor: i16 = if exe::database_is_staff_foreign(manager, club.nation().addr(), 1) != 0 { -8 } else { -16 };
+            let nj = || read_usize(club.manager().addr() + 0x69);
             let x = || read_i16(comp + competition::REPUTATION);
             crate::comparison::branch("cpq_3 manager relegation");
             add_rating_clamped(nj() + 0xa, x().wrapping_mul(-16));
             add_rating_clamped(nj() + 8, x().wrapping_mul(factor));
             add_rating_clamped(nj() + 0xc, x().wrapping_mul(-8));
         }
-        append_person_history(write, this, read_usize(club + club::MANAGER), &e);
+        append_person_history(write, this, club.manager().addr(), &e);
     }
-    if read_usize(club + club::CHAIRMAN) != 0 {
-        append_person_history(write, this, read_usize(club + club::CHAIRMAN), &e);
+    if club.chairman().addr() != 0 {
+        append_person_history(write, this, club.chairman().addr(), &e);
     }
-    for p in counted_squad_players(club) {
+    for p in counted_squad_players(club.addr()) {
         adjust_morale(p, -0xf);
-        let c = game_contract_for_club(p, club);
+        let c = game_contract_for_club(p, club.addr());
         if c == 0 {
             continue;
         }
@@ -1413,7 +1429,7 @@ pub(crate) unsafe fn apply_relegation(this: usize, club: usize, comp: usize, wri
                 if j != 0 {
                     scale_player_reputations(j, read_f64(rdata::F64_0_9)); // 0,9
                 }
-                if will_renew_contract(club, p, c) {
+                if will_renew_contract(club.addr(), p, c) {
                     crate::comparison::branch("cpq_3 relegation renews");
                     offer_renewal(p);
                 }
@@ -1426,7 +1442,7 @@ pub(crate) unsafe fn apply_relegation(this: usize, club: usize, comp: usize, wri
             _ => {}
         }
     }
-    append_club_history(write, this, club, 9, comp);
+    append_club_history(write, this, club.addr(), 9, comp);
 }
 
 /// `Staff_Records::add_relegation_record(club, comp)`: records a relegation. SEH frame without a destructor.
@@ -1452,18 +1468,19 @@ pub(crate) unsafe extern "thiscall" fn add_relegation_record(this: usize, club: 
 /// Qualification of a club: person history entry (type 3, stage, base round) for the manager and adds reputation² ×
 /// weight points to his record (national team or club totals).
 pub(crate) unsafe fn record_qualification(this: usize, club: usize, comp: usize, stage: u32, round: u32, weight: u32, write: bool) {
-    if club == 0 {
+    let club = Club(club);
+    if club.is_null() {
         show_error_at(0xa83b78, 0x703);
         return;
     }
-    let mut e = person_history_entry(club, 3, if comp != 0 { read_usize(comp) as u32 } else { u32::MAX });
+    let mut e = person_history_entry(club.addr(), 3, if comp != 0 { read_usize(comp) as u32 } else { u32::MAX });
     put_u32(&mut e, 0x11, stage as u16 as i16 as i32 as u32);
     put_u32(&mut e, 0x15, exe::comp_util_get_base_round_id(round) as u16 as i16 as i32 as u32);
-    if read_usize(club + club::MANAGER) == 0 {
+    if club.manager().addr() == 0 {
         return;
     }
-    append_person_history(write, this, read_usize(club + club::MANAGER), &e);
-    let r = exe::staff_records_get_manager_record(this, read_usize(club + club::MANAGER), 1);
+    append_person_history(write, this, club.manager().addr(), &e);
+    let r = exe::staff_records_get_manager_record(this, club.manager().addr(), 1);
     if r == 0 {
         return;
     }
@@ -1472,7 +1489,7 @@ pub(crate) unsafe fn record_qualification(this: usize, club: usize, comp: usize,
     let points = ftol(x * x * (weight as u8 as i8 as i32) as f64);
     staff_records_add_i32(r + manager_record::YEAR_POINTS, points);
     staff_records_add_i32(r + manager_record::MONTH_POINTS, points);
-    if exe::database_is_national_team(club) != 0 {
+    if exe::database_is_national_team(club.addr()) != 0 {
         crate::comparison::branch("cpq_3 qualified national team");
         staff_records_add_i32(r + manager_record::NATIONAL_SEASON_POINTS, points);
     } else {
@@ -1797,16 +1814,17 @@ pub(crate) unsafe fn end_national_duty(club: usize, comp: usize) {
 /// comp, fase, rodada, _)`: o histórico do técnico (+0xcf; tipo 4: clube, competição ou −1, a fase com sinal e a rodada
 /// base 0x4b0870) e o fim das convocações da seleção na competição guardada. Clube nulo: a caixa "Error" (linha 0x73b).
 pub(crate) unsafe extern "thiscall" fn add_knocked_out_record(this: usize, club: usize, comp: usize, stage: u32, round: u32, _x: u32) {
-    if club == 0 {
+    let club = Club(club);
+    if club.is_null() {
         return show_error_at(0xa83b78, 0x73b);
     }
     crate::comparison::branch("cpq_4 eliminated");
-    let mut e = stage_history_entry(club, 4, comp, stage);
+    let mut e = stage_history_entry(club.addr(), 4, comp, stage);
     put_i32(&mut e, 0x15, exe::comp_util_get_base_round_id(round) as u16 as i16 as i32);
-    if read_usize(club + club::MANAGER) != 0 {
-        append_person_history_by_id(true, this, read_usize(read_usize(club + club::MANAGER)), &e);
+    if club.manager().addr() != 0 {
+        append_person_history_by_id(true, this, read_usize(club.manager().addr()), &e);
     }
-    end_national_duty(club, comp);
+    end_national_duty(club.addr(), comp);
 }
 
 // simplification: the history goes to the file and the call-ups end (they do not run twice) and the copy without them does not touch
@@ -1822,15 +1840,16 @@ pub(crate) unsafe extern "thiscall" fn add_knocked_out_record(this: usize, club:
 /// clube, comp, fase, _)`: o histórico do técnico (tipo 7: clube, competição ou −1, a fase com sinal) e o fim das
 /// convocações da seleção na competição guardada. Clube nulo: a caixa "Error" (linha 0x768).
 pub(crate) unsafe extern "thiscall" fn add_failed_to_qualify_record(this: usize, club: usize, comp: usize, stage: u32, _x: u32) {
-    if club == 0 {
+    let club = Club(club);
+    if club.is_null() {
         return show_error_at(0xa83b78, 0x768);
     }
     crate::comparison::branch("cpq_4 not qualified");
-    let e = stage_history_entry(club, 7, comp, stage);
-    if read_usize(club + club::MANAGER) != 0 {
-        append_person_history_by_id(true, this, read_usize(read_usize(club + club::MANAGER)), &e);
+    let e = stage_history_entry(club.addr(), 7, comp, stage);
+    if club.manager().addr() != 0 {
+        append_person_history_by_id(true, this, read_usize(club.manager().addr()), &e);
     }
-    end_national_duty(club, comp);
+    end_national_duty(club.addr(), comp);
 }
 
 // simplification: like the elimination: original only.
@@ -1984,8 +2003,8 @@ pub(crate) unsafe extern "thiscall" fn find_manager_of_the_month(this: usize, in
     let mut best = 0usize;
     let mut k = 0i32;
     while k < read_i16(league + league::CLUB_COUNT) as i32 {
-        let club = read_usize(read_usize(league + league::TABLE).wrapping_add((k as usize).wrapping_mul(0x3b)));
-        let manager = read_usize(club + club::MANAGER);
+        let club = Club(read_usize(read_usize(league + league::TABLE).wrapping_add((k as usize).wrapping_mul(0x3b))));
+        let manager = club.manager().addr();
         if manager != 0 && read_usize(manager + staff::CLUB_JOB) != 0 {
             let mut d = [0u32; 2];
             let q = exe::date_sub_weeks(G_CURRENT_DATE, (d.as_mut_ptr()) as *mut [u8; 8], (2) as u32); // two weeks ago
@@ -2002,7 +2021,7 @@ pub(crate) unsafe extern "thiscall" fn find_manager_of_the_month(this: usize, in
                     if points > best_points { // the best of the month
                         crate::comparison::branch("cpo_3 best of the month");
                         best_points = points;
-                        best = read_usize(club + club::MANAGER);
+                        best = club.manager().addr();
                     }
                 }
             }
@@ -2116,9 +2135,9 @@ pub(crate) unsafe extern "thiscall" fn get_manager_record(this: usize, person: u
             write_u32(r + manager_record::SEASON_POINTS, 0);
         }
     }
-    let national_team = read_u32(person + staff::NATIONAL_JOB) as usize;
-    if national_team != 0 {
-        let nation = read_u32(national_team + club::NATION) as usize;
+    let national_team = Club(read_u32(person + staff::NATIONAL_JOB) as usize);
+    if !national_team.is_null() {
+        let nation = (national_team.nation().addr() as u32) as usize;
         if nation != 0 && read_u32(nation) != read_u32(r + manager_record::NATIONAL_NATION) {
             write_u32(r + manager_record::NATIONAL_NATION, read_u32(nation));
             write_u32(r + manager_record::NATIONAL_SEASON_POINTS, 0);
@@ -2196,17 +2215,17 @@ pub(crate) unsafe extern "thiscall" fn add_free_release_records(this: usize, per
     let mut e = history_entry();
     let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
-    let club = if c != 0 { read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + contract::CLUB).wrapping_mul(club::SIZE)) } else { 0 };
-    if club != 0 && read_usize(club + club::MANAGER) != 0 {
+    let club = Club(if c != 0 { read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + contract::CLUB).wrapping_mul(club::SIZE)) } else { 0 });
+    if !club.is_null() && club.manager().addr() != 0 {
         stamp_game_date(e.as_mut_ptr());
         e[0xc] = 0x68;
-        put_i32(&mut e, 8, read_i32(club));
+        put_i32(&mut e, 8, read_i32(club.addr()));
         put_person_keys(&mut e, 0xd, person);
-        append_person_history_by_id(true, this, read_usize(read_usize(club + club::MANAGER)), &e);
+        append_person_history_by_id(true, this, read_usize(club.manager().addr()), &e);
     }
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0x67;
-    put_i32(&mut e, 8, staff_records_id_or_minus_one(club));
+    put_i32(&mut e, 8, staff_records_id_or_minus_one(club.addr()));
     if person != 0 {
         append_person_history_by_id(true, this, read_usize(person), &e);
     } else {
@@ -2229,20 +2248,21 @@ pub(crate) unsafe extern "thiscall" fn add_free_release_records(this: usize, per
 /// de `de`); depois, na mesma entrada, o da pessoa (tipo 0x6a: o clube e o id de `de`), no arquivo (0x58e340). O clube
 /// é lido antes do teste da pessoa, como na original; pessoa nula: a caixa "Error" (linha 0x1010).
 pub(crate) unsafe extern "thiscall" fn add_loan_records(this: usize, person: usize, de: usize, club: usize) {
+    let club = Club(club);
     crate::comparison::branch("cps_9 loan");
     let mut e = history_entry();
-    if club != 0 && read_usize(club + club::MANAGER) != 0 {
-        let manager = read_usize(club + club::MANAGER);
+    if !club.is_null() && club.manager().addr() != 0 {
+        let manager = club.manager().addr();
         stamp_game_date(e.as_mut_ptr());
         e[0xc] = 0x69;
-        put_i32(&mut e, 8, read_i32(club));
+        put_i32(&mut e, 8, read_i32(club.addr()));
         put_person_keys(&mut e, 0xd, person);
         put_i32(&mut e, 0x1d, read_i32(de));
         append_person_history_by_id(true, this, read_usize(manager), &e);
     }
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0x6a;
-    put_i32(&mut e, 8, read_i32(club));
+    put_i32(&mut e, 8, read_i32(club.addr()));
     put_i32(&mut e, 0xd, read_i32(de));
     if person != 0 {
         append_person_history_by_id(true, this, read_usize(person), &e);

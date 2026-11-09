@@ -33,7 +33,7 @@ pub(crate) unsafe fn player_search_contract_club(person: usize) -> usize {
 /// 5/6 com a nota pelo +0x30) e a nota +0x15. Com o técnico do clube humano e as máscaras de atributos ligadas, o
 /// técnico passa a conhecer o jogador (0x5b09d0, que sorteia).
 pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(this: usize, game: usize, result: usize) {
-    let club_obs = friendly_club_by_id(read_usize(this));
+    let club_obs = Club(friendly_club_by_id(read_usize(this)));
     for i in 0..0x32usize {
         let v = this + 4 + i * 0x1a2;
         let id = read_i32(v);
@@ -75,8 +75,8 @@ pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(t
         if p != 0 && read_i32(p) >= read_i32(G_STAFF_COUNT) {
             continue;
         }
-        if read_usize(club_obs + club::MANAGER) != 0 && exe::human_manager_is_human_club(club_obs, 0, 1, 0, 0) != 0 && read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 {
-            let q = exe::fog_of_war_get_manager_map(read_usize(G_FOG_OF_WAR), read_usize(club_obs + club::MANAGER));
+        if club_obs.manager().addr() != 0 && exe::human_manager_is_human_club(club_obs.addr(), 0, 1, 0, 0) != 0 && read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 {
+            let q = exe::fog_of_war_get_manager_map(read_usize(G_FOG_OF_WAR), club_obs.manager().addr());
             if q != 0 {
                 exe::fog_of_war_map_raise_knowledge(q, p, 0);
             }
@@ -556,15 +556,16 @@ pub(crate) unsafe extern "thiscall" fn player_search_find_or_claim_player_slot(t
 /// 20) e a riqueza puxa (−2..2: × 0,909 ou − 1000, × 0,952 ou − 500, nada, × 1,0125 ou + 125, × 1,025 ou + 250).
 /// No mínimo 500. A base vai em `*base` (se não nulo). As contas de ponto flutuante em f64 (o x87 do jogo em 53 bits).
 pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize, base: *mut i32, forcada: *const i16) -> i32 {
-    let li = read_i32(club + club::CONTINENTAL_COMP_ID);
+    let club = Club(club);
+    let li = (club.continental_comp_id() as i32);
     let league = if li > -1 { (read_i32(G_CLUB_COMP_TABLE) as usize).wrapping_add((li as usize).wrapping_mul(0x6b)) } else { 0 };
-    let nation = read_i32(club + club::DIVISION) as usize;
+    let nation = (club.division().addr() as i32) as usize;
     let mut esi: i32;
     if !forcada.is_null() {
         esi = *forcada as i32;
     } else {
-        let rep = read_i16(club + club::REPUTATION) as i32;
-        let t = ftol(read_i32(club + club::MIN_ATTENDANCE) as f64 * read_f64(rdata::F64_0_43) - read_f64(rdata::F64_430)) as i16 as i32;
+        let rep = club.reputation() as i32;
+        let t = ftol(club.min_attendance() as f64 * read_f64(rdata::F64_0_43) - read_f64(rdata::F64_430)) as i16 as i32;
         let ebx = (if rep > t { rep } else if t > 10000 { 10000 } else { t }) as i16 as i32;
         let mut n = rep;
         let mut l = rep;
@@ -589,7 +590,7 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
         };
         esi = sum / 16; // cpu13: a base
     }
-    if *((club + club::PROFESSIONAL_STATUS) as *const u8) != 1 {
+    if club.professional_status() != 1 {
         esi /= 2;
     }
     let mut edi: i32 = if esi > 9000 {
@@ -605,12 +606,12 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
         ftol(esi as f64 * read_f64(rdata::F64_1_6) + read_f64(rdata::F64_5000))
     };
     if forcada.is_null() {
-        let squad = (exe::database_count_club_squad(club, 0, 0) as i8);
+        let squad = (exe::database_count_club_squad(club.addr(), 0, 0) as i8);
         let with_nation = |c: usize| c != 0 && read_i32((read_i32(G_COMP_OBJECT_TABLE) as usize).wrapping_add(read_i32(c) as usize * 4)) != 0;
         if squad < 16 && with_nation(nation) {
             edi /= 2;
         } else if squad < 20 && with_nation(nation) {
-            let fin = exe::financetable_get_club_finance(read_i32(G_FINANCE_TABLE) as usize, club);
+            let fin = exe::financetable_get_club_finance(read_i32(G_FINANCE_TABLE) as usize, club.addr());
             if fin != 0 {
                 match exe::finance_get_wealth_band(fin) as i8 {
                     -2 => edi /= 2,
@@ -619,7 +620,7 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
                 }
             }
         } else {
-            let nation = read_i32(club + club::DIVISION) as usize;
+            let nation = (club.division().addr() as i32) as usize;
             if with_nation(nation) {
                 let t2 = ftol(read_i16(nation + competition::REPUTATION) as i32 as f64 * read_f64(rdata::F64_1_35) + read_f64(rdata::F64_20)) as u8;
                 let foul = (squad as u8).wrapping_sub(t2) as i8;
@@ -628,7 +629,7 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
                     edi = ftol((v as f64 * read_f64(rdata::F64_0_05) + read_f64(rdata::F64_1)) * edi as f64);
                 }
             }
-            let fin = exe::financetable_get_club_finance(read_i32(G_FINANCE_TABLE) as usize, club);
+            let fin = exe::financetable_get_club_finance(read_i32(G_FINANCE_TABLE) as usize, club.addr());
             if fin != 0 {
                 let v = edi as f64;
                 match exe::finance_get_wealth_band(fin) as i8 {
@@ -724,8 +725,9 @@ pub(crate) unsafe extern "thiscall" fn get_scout(this: usize) -> usize {
 ///
 /// [pt] O técnico (+0xcf) de um clube rival passa nos sorteios (sorteio(+0x5c) = 0 e sorteio(+0x57) > 5)?
 pub(crate) unsafe fn rival_manager_passes_draws(c: usize) -> bool {
-    friendly_random(*((read_u32(c + club::MANAGER) as usize + 0x5c) as *const i8) as i32) == 0
-        && friendly_random(*((read_u32(c + club::MANAGER) as usize + 0x57) as *const i8) as i32) > 5
+    let c = Club(c);
+    friendly_random(*(((c.manager().addr() as u32) as usize + 0x5c) as *const i8) as i32) == 0
+        && friendly_random(*(((c.manager().addr() as u32) as usize + 0x57) as *const i8) as i32) > 5
 }
 
 // 0x53e990 only reads: compare the value
@@ -858,8 +860,8 @@ pub(crate) unsafe extern "thiscall" fn scout_covers_nation(this: usize, nation: 
     if read_u8(this + player_search_fields::LIST_TYPE) != 4 || person == 0 || nation == 0 {
         return 0;
     }
-    let club = read_usize(person + staff::CLUB_JOB);
-    if club == 0 {
+    let club = Club(read_usize(person + staff::CLUB_JOB));
+    if club.is_null() {
         return 0;
     }
     if exe::player_search_get_scout_assignment(this, this + player_search_fields::ASSIGNED_CLUB, this + player_search_fields::ASSIGNED_NATION, this + player_search_fields::ASSIGNED_REGION, this + player_search_fields::ASSIGNED_COMP, this + player_search_fields::ASSIGNED_BASE, this + player_search_fields::ASSIGNED_OPPONENT) != 0 {
@@ -881,7 +883,7 @@ pub(crate) unsafe extern "thiscall" fn scout_covers_nation(this: usize, nation: 
         }
         return 0;
     }
-    let nc = read_usize(club + club::NATION);
+    let nc = club.nation().addr();
     if read_u8(nc + nation::GROUP_MEMBERSHIP) == 2 && read_u8(nation + nation::GROUP_MEMBERSHIP) == 2 {
         return 1;
     }
@@ -893,6 +895,6 @@ pub(crate) unsafe extern "thiscall" fn scout_covers_nation(this: usize, nation: 
         crate::comparison::branch("cpn_7 scout nation");
         return 1; // the nation is not foreign for the scout
     }
-    (exe::scout_manager_can_club_scout_nation(read_usize(G_SCOUT_MANAGER), nation, club) != 0) as u32
+    (exe::scout_manager_can_club_scout_nation(read_usize(G_SCOUT_MANAGER), nation, club.addr()) != 0) as u32
 }
 

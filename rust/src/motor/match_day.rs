@@ -1195,6 +1195,7 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
 /// de 15, +0x57 acima de sorteio(5) + 10, +0xb da ficha abaixo de 4250 e 0x7c3a40 zero: 0x589bc0 e,
 /// sem 0x547d60, 0x547d90(pessoa, clube, 1), e fim.
 pub(crate) unsafe fn post_match_club_with(club: usize, other: usize, partida: usize, n: u32, t: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+    let club = Club(club);
     let ch = core::cell::RefCell::new(call);
     let out = |s: usize, c: usize, o: usize, n: i32| (ch.borrow_mut())(0x5896d0, 0, [s as u32, c as u32, o as u32, n as u32, 0]);
     let f589bc0 = |p: usize, c: usize| (ch.borrow_mut())(0x589bc0, 0, [p as u32, c as u32, 0, 0, 0]);
@@ -1207,23 +1208,23 @@ pub(crate) unsafe fn post_match_club_with(club: usize, other: usize, partida: us
     let read = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let w = |a: usize| core::ptr::read_unaligned(a as *const i16);
     let ub = |a: usize| *(a as *const u8);
-    if club == 0 || partida == 0 || other == 0 {
+    if club.is_null() || partida == 0 || other == 0 {
         // simplification: the original routine shows the “Error” box (match_day.cpp, lines 0xc45/0xc4a/0xc4f); no
         // happens in the game
         *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
         return;
     }
-    if g(club + club::MANAGER) == 0 {
+    if g(club.addr() + club::MANAGER) == 0 {
         return;
     }
-    if test_600a50(club, 0, 1, 0, 0) == 0 && w(club + club::REPUTATION) < 0x128e && random(100) != 0 {
+    if test_600a50(club.addr(), 0, 1, 0, 0) == 0 && w(club.addr() + club::REPUTATION) < 0x128e && random(100) != 0 {
         return;
     }
     crate::comparison::branch("club continues");
     let n = n as u8 as i8;
-    if test_6b7cf0(partida, club) != 0 && ub(partida + fixture::HOME_SIDE_MARK) != 0 && ub(partida + fixture::AWAY_SIDE_MARK) != 0 && away(club) == 0 {
+    if test_6b7cf0(partida, club.addr()) != 0 && ub(partida + fixture::HOME_SIDE_MARK) != 0 && ub(partida + fixture::AWAY_SIDE_MARK) != 0 && away(club.addr()) == 0 {
         for k in 0..50 {
-            let s = g(club + club::SQUAD + 4 * k);
+            let s = g(club.addr() + club::SQUAD + 4 * k);
             if s == 0 {
                 continue;
             }
@@ -1242,12 +1243,12 @@ pub(crate) unsafe fn post_match_club_with(club: usize, other: usize, partida: us
                 && random(n as i32) != 0
             {
                 crate::comparison::branch("club 5896d0");
-                out(s, club, other, n as i32);
+                out(s, club.addr(), other, n as i32);
                 return;
             }
         }
     }
-    let side = (read(club) != read(t)) as usize;
+    let side = (read(club.addr()) != read(t)) as usize;
     for k in 0..20 {
         let row = t + 0x625 * side + 0x1ce + k * 0x49;
         let id = read(row - 0x3e);
@@ -1262,7 +1263,7 @@ pub(crate) unsafe fn post_match_club_with(club: usize, other: usize, partida: us
         if c == 0 || read(c + 0x45) != 0 || ub(partida + fixture::HOME_SIDE_MARK) == 0 || ub(partida + fixture::AWAY_SIDE_MARK) == 0 {
             continue;
         }
-        if read(partida + fixture::COMPETITION) == 0 || read(partida + fixture::COMPETITION) != read(club + club::DIVISION) || away(club) != 0 || read_i8(p + staff::LOYALTY) <= 0xf {
+        if read(partida + fixture::COMPETITION) == 0 || read(partida + fixture::COMPETITION) != read(club.addr() + club::DIVISION) || away(club.addr()) != 0 || read_i8(p + staff::LOYALTY) <= 0xf {
             continue;
         }
         crate::comparison::branch("club youth");
@@ -1270,12 +1271,12 @@ pub(crate) unsafe fn post_match_club_with(club: usize, other: usize, partida: us
         if read_i8(p + staff::AMBITION) <= (r as u8).wrapping_add(10) as i8 || g(p + staff::PLAYER) == 0 || w(g(p + staff::PLAYER) + 0xb) >= 0x109a {
             continue;
         }
-        if test_7c3a40(g(G_PLAYER_STATS), p, club) == 0 {
+        if test_7c3a40(g(G_PLAYER_STATS), p, club.addr()) == 0 {
             crate::comparison::branch("club 589bc0");
-            f589bc0(p, club);
-            if (exe::staff_favours_club(p, club) as i32) == 0 {
+            f589bc0(p, club.addr());
+            if (exe::staff_favours_club(p, club.addr()) as i32) == 0 {
                 crate::comparison::branch("club 547d90");
-                f547d90(p, club, 1);
+                f547d90(p, club.addr(), 1);
             }
             return;
         }

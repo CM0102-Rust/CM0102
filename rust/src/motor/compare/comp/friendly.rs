@@ -265,9 +265,9 @@ pub(crate) unsafe extern "thiscall" fn compare_find_human_club_open_invitation(t
 pub(crate) unsafe extern "thiscall" fn compare_process_friendly_reply(this: usize, m: usize, force: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PROCESS_FRIENDLY_REPLY);
     LAST_FRIENDLY_REPLY = m;
-    let a = if m != 0 { read_usize(m + friendly_match::REQUESTING_CLUB) } else { 0 };
-    let other = if m != 0 { other_friendly_club(m) } else { 0 };
-    if a == 0 || (other != 0 && (read_usize(a + club::NATION) == 0 || read_usize(other + club::NATION) == 0)) {
+    let a = Club(if m != 0 { read_usize(m + friendly_match::REQUESTING_CLUB) } else { 0 });
+    let other = Club(if m != 0 { other_friendly_club(m) } else { 0 });
+    if a.is_null() || (!other.is_null() && (a.nation().addr() == 0 || other.nation().addr() == 0)) {
         return o(this, m, force); // simplification: with no requester or no nation, original only
     }
     let s = if friendly_needs_decision(m, force) { friendly_reply(m, false) } else { read_u8(m + friendly_match::STATUS) };

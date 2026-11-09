@@ -28,6 +28,18 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 1: o clube
+
+`engenharia-reversa/tipar_registros.py club`: numa função, a variável usada como `x + club::CAMPO` passa a ser um
+`Club` (parâmetro: `let x = Club(x);` no começo do corpo; `let x = e;` vira `let x = Club(e);`), os acessos viram
+métodos (`x.reputation()`, `x.set_own_stadium(1)`; ponteiro para outro registro: `x.stadium().addr()` por enquanto),
+`x == 0` vira `x.is_null()` e os outros usos, `x.addr()`. Ficam como estão as variáveis reatribuídas ou com vários
+`let` (107), os acessos com outra largura e os vetores (`club::SQUAD + v * 4`). 544 variáveis em 475 funções; 4
+funções voltaram ao texto de antes (não compilavam). Acessos crus ao clube 1.676 → 657; 881 métodos; o atrito: os
+`.addr()` onde o clube vai para uma função que ainda recebe `usize` (some quando ela receber o tipo). Prova: 7cc445c2
+×2, detector igual, comparação 0; as 83 mutações mudadas compilam (uma, `cpo_abrir_a_vaga`, tinha um apelido da rodada
+25 que escapou e foi consertada).
+
 ## Rodada 29: piloto dos registros tipados
 
 `engenharia-reversa/registros.py` gera `rust/src/motor/records.rs`: para cada objeto do `fields.rs` (162), um tipo

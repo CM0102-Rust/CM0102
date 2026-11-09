@@ -614,9 +614,9 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
         *pb(0x4c) = (*pb(0x4c)).wrapping_add(*pb(x));
     }
     // the home goal
-    let c1 = read_usize((pt()) + 0x1c);
-    if c1 != 0 && read_usize((pt()) + 0x14) == read_usize(c1 + club::DIVISION) && (*pb(0x43) as i32 + *pb(0x44) as i32) < 5 && *pb(0x43) == *pb(0x44) && random(4) == 0 {
-        let (r0, r1) = (*((c1 + club::REPUTATION) as *const i16) as i32, *((read_usize((pt()) + 0x20) + 0x80) as *const i16) as i32);
+    let c1 = Club(read_usize((pt()) + 0x1c));
+    if !c1.is_null() && read_usize((pt()) + 0x14) == c1.division().addr() && (*pb(0x43) as i32 + *pb(0x44) as i32) < 5 && *pb(0x43) == *pb(0x44) && random(4) == 0 {
+        let (r0, r1) = (c1.reputation() as i32, *((read_usize((pt()) + 0x20) + 0x80) as *const i16) as i32);
         let s = if r0 > r1 { Some(0) } else if r0 + 0xfa < r1 { Some(1) } else { None };
         if let Some(s) = s {
             crate::comparison::branch("quick simulation home goal");
@@ -671,9 +671,9 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
             let q = (p + match_player::MATCH_RATING) as *mut i16;
             if *(pt() as *const i32) == -2 && i < 11 {
                 crate::comparison::branch("quick simulation friendly rating");
-                let club = if s != 0 { read_usize((pt()) + 0x20) } else { read_usize((pt()) + 0x1c) };
+                let club = Club(if s != 0 { read_usize((pt()) + 0x20) } else { read_usize((pt()) + 0x1c) });
                 let a = (*((p + match_player::EFFECTIVE_ABILITY) as *const i16) as f64 - read_f64(rdata::F64_40)) * read_f64(rdata::F64_50);
-                let r = *((club + club::REPUTATION) as *const i16) as f64 * read_f64(rdata::F64_1_6) - read_f64(rdata::F64_6000);
+                let r = club.reputation() as f64 * read_f64(rdata::F64_1_6) - read_f64(rdata::F64_6000);
                 let v = ftol(((a - r) * read_f64(rdata::F64_2ENEG_05) + read_f64(rdata::F64_1)) * *q as f64) as i16;
                 *q = v.clamp(0xdac, 0x2ee0);
             }
@@ -775,23 +775,24 @@ pub(crate) unsafe extern "thiscall" fn row_person(this: usize, club: usize, whic
 /// (+0xcf) - 1, ou + 15 numa selecao (0x53b900), fora da faixa: a original (caixa de erro). Nos
 /// outros casos, o id do clube.
 pub(crate) unsafe extern "stdcall" fn tactics_row(club: usize, human: u32) -> i32 {
-    if exe::human_manager_is_human_club(club, 1, (1) as u32, (0) as u32, 0) != 0 && human != 0 {
-        if exe::club_is_national_team(club) != 0 {
+    let club = Club(club);
+    if exe::human_manager_is_human_club(club.addr(), 1, (1) as u32, (0) as u32, 0) != 0 && human != 0 {
+        if exe::club_is_national_team(club.addr()) != 0 {
             return -1;
         }
-        let manager = *((club + club::MANAGER) as *const usize);
+        let manager = club.manager().addr();
         if manager == 0 {
-            return original_fn::<unsafe extern "stdcall" fn(usize, u32) -> i32>(IDX_TACTICS_ROW)(club, human);
+            return original_fn::<unsafe extern "stdcall" fn(usize, u32) -> i32>(IDX_TACTICS_ROW)(club.addr(), human);
         }
         let clubs = *(G_CLUB_COUNT as *const i32);
         let base = (*(G_STAFF_COUNT as *const i32)).wrapping_sub(*(manager as *const i32));
-        let i = base.wrapping_add(if exe::database_is_national_team(club) != 0 { 0xf } else { -1 }).wrapping_add(clubs);
+        let i = base.wrapping_add(if exe::database_is_national_team(club.addr()) != 0 { 0xf } else { -1 }).wrapping_add(clubs);
         if i < 0 || i >= clubs.wrapping_add(0x20) {
-            return original_fn::<unsafe extern "stdcall" fn(usize, u32) -> i32>(IDX_TACTICS_ROW)(club, human);
+            return original_fn::<unsafe extern "stdcall" fn(usize, u32) -> i32>(IDX_TACTICS_ROW)(club.addr(), human);
         }
         return i;
     }
-    *(club as *const i32)
+    *(club.addr() as *const i32)
 }
 
 /// Returns byte `pos` (0..10) of the club's tactics row (index from 0x8982b0, for the human manager when `humano`) in
@@ -1294,18 +1295,19 @@ pub(crate) unsafe extern "thiscall" fn extra_tactic_slot(t: usize, club: usize, 
 /// abaixo da conta das táticas prontas ([this+0x5fd]) o bloco pronto ([this+0x5f9]), senão o próprio ([this+0x5f1],
 /// índice − conta); blocos de 0x18e3 bytes. Clube nulo: a original (caixa "Error", 0).
 pub(crate) unsafe extern "thiscall" fn get_club_tactic(this: usize, club: usize, team: u32) -> usize {
-    if club == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_CLUB_TACTIC)(this, club, team); // message box: original only
+    let club = Club(club);
+    if club.is_null() {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_CLUB_TACTIC)(this, club.addr(), team); // message box: original only
     }
-    if exe::human_manager_is_human_club(club, 1, (1) as u32, (0) as u32, 0) != 0 {
+    if exe::human_manager_is_human_club(club.addr(), 1, (1) as u32, (0) as u32, 0) != 0 {
         let manager = read_usize(G_HUMAN_MANAGER);
-        if exe::human_manager_is_on_holiday(manager, read_usize(club + club::MANAGER)) == 0 || exe::human_manager_get_holiday_option(manager, 2, read_usize(club + club::MANAGER)) != 0 {
+        if exe::human_manager_is_on_holiday(manager, club.manager().addr()) == 0 || exe::human_manager_get_holiday_option(manager, 2, club.manager().addr()) != 0 {
             crate::comparison::branch("cpx_8 human tactic");
-            exe::human_manager_select_tactic_slot(manager, (team) as i32, club, read_usize(club + club::MANAGER)); // cpx8: the slot by team
-            return exe::human_manager_get_active_tactic(manager, read_usize(club + club::MANAGER));
+            exe::human_manager_select_tactic_slot(manager, (team) as i32, club.addr(), club.manager().addr()); // cpx8: the slot by team
+            return exe::human_manager_get_active_tactic(manager, club.manager().addr());
         }
     }
-    let id = read_i32(club);
+    let id = read_i32(club.addr());
     let index = read_i16(read_usize(this + tactics_fields::ROWS).wrapping_add(id.wrapping_mul(0x91) as usize)) as i32;
     let prontas = read_i32(this + tactics_fields::PRESET_TACTIC_COUNT);
     if index < prontas { // cpx8: tática pronta ou própria
@@ -1394,11 +1396,12 @@ pub(crate) unsafe extern "thiscall" fn set_tactic_slot(t: usize, club: usize, sl
 /// (+0x61), ou, numa seleção (0x53b900), pessoa sem nação (+0x24) ou de outra nação (+0x53): a vaga
 /// vira −1 e devolve 0. `clube` nulo ou vaga fora: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, club: usize, slot: i8, human: u32) -> usize {
-    if club == 0 || !(0..=19).contains(&slot) {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> usize>(IDX_TACTIC_SLOT_PERSON)(t, club, slot, human);
+    let club = Club(club);
+    if club.is_null() || !(0..=19).contains(&slot) {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> usize>(IDX_TACTIC_SLOT_PERSON)(t, club.addr(), slot, human);
     }
     let tactics_row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let l = tactics_row(club, human);
+    let l = tactics_row(club.addr(), human);
     if l == -1 {
         return 0;
     }
@@ -1413,9 +1416,9 @@ pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, club: usize,
         core::ptr::write_unaligned(home, -1);
         return 0;
     }
-    if exe::database_is_national_team(club) != 0 {
+    if exe::database_is_national_team(club.addr()) != 0 {
         let nation = core::ptr::read_unaligned((p + staff::NATIONAL_JOB) as *const usize);
-        if nation == 0 || core::ptr::read_unaligned((nation + nation::THREE_LETTER_NAME) as *const u32) != core::ptr::read_unaligned((club + club::NATION) as *const u32) {
+        if nation == 0 || core::ptr::read_unaligned((nation + nation::THREE_LETTER_NAME) as *const u32) != core::ptr::read_unaligned((club.addr() + club::NATION) as *const u32) {
             core::ptr::write_unaligned(home, -1);
             return 0;
         }

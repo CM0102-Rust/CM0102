@@ -449,16 +449,17 @@ pub(crate) unsafe fn match_screens_error_box(row: u32) {
 /// [pt] O nome do time no texto 0xde1f64 do cabeçalho da partida: só o nome ("  %s") com `so_o_nome`;
 /// senão a seleção B ("'B'", 0x53b900) ou o time reserva ("Res.").
 pub(crate) unsafe fn format_match_team_name(team: usize, so_name: u8) {
+    let team = Club(team);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     if so_name != 0 {
-        format(0xde1f64, 0x987ff0, team + club::SHORT_NAME);
-    } else if exe::database_is_national_team(team) != 0 {
-        let c = *((team + club::GENDER_NAME) as *const i8) as i32;
-        text(0xde1f64, 0xa164a4, c, c, team + club::NAME);
+        format(0xde1f64, 0x987ff0, team.addr() + club::SHORT_NAME);
+    } else if exe::database_is_national_team(team.addr()) != 0 {
+        let c = team.gender_name() as i32;
+        text(0xde1f64, 0xa164a4, c, c, team.addr() + club::NAME);
     } else {
-        let c = *((team + club::SHORT_GENDER_NAME) as *const i8) as i32;
-        text(0xde1f64, 0xa16478, c, c, team + club::SHORT_NAME);
+        let c = (team.short_gender_name() as i8) as i32;
+        text(0xde1f64, 0xa16478, c, c, team.addr() + club::SHORT_NAME);
     }
 }
 
@@ -624,15 +625,15 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
 
     // the tactical buttons of both teams (the one of parameter 0x15 marked)
     for (k, side, param) in [(3usize, 0x20usize, 5u32), (4, 0x24, 6)] {
-        let t = rd(p + side);
-        let c = sx(t + club::SHORT_GENDER_NAME);
-        text(BUF, 0xa16428, c, c, t + club::SHORT_NAME);
-        let r = if t == p15 {
+        let t = Club(rd(p + side));
+        let c = sx(t.addr() + club::SHORT_GENDER_NAME);
+        text(BUF, 0xa16428, c, c, t.addr() + club::SHORT_NAME);
+        let r = if t.addr() == p15 {
             // for the second team the original pushes the colour over the team pointer (eax)
-            let colour = if k == 4 { colour_with_high_bits(t, G_GUI_COLOUR_PALE_GREY) } else { colour_word(G_GUI_COLOUR_PALE_GREY) };
-            cell(sm, clock, 0, k, 0x1061, 0, 0xc, 1, colour, BUF, 1, t)
+            let colour = if k == 4 { colour_with_high_bits(t.addr(), G_GUI_COLOUR_PALE_GREY) } else { colour_word(G_GUI_COLOUR_PALE_GREY) };
+            cell(sm, clock, 0, k, 0x1061, 0, 0xc, 1, colour, BUF, 1, t.addr())
         } else {
-            cell(sm, clock, 0, k, 0x1021, 0, 0xc, 1, colour_word(G_GUI_COLOUR_PALE_GREY), BUF, 1, t)
+            cell(sm, clock, 0, k, 0x1021, 0, 0xc, 1, colour_word(G_GUI_COLOUR_PALE_GREY), BUF, 1, t.addr())
         };
         write_item(param, r);
     }
@@ -680,8 +681,8 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
     set_match_tab_flags(&mut tabs, 2, 3, 3);
     text(match_tab_title(&mut tabs, 3), 0xa1637c);
     set_match_tab_flags(&mut tabs, 3, 3, 4);
-    let t1 = rd(p + live_match::HOME_CLUB);
-    text(match_tab_title(&mut tabs, 4), 0xa16364, sx(t1 + club::SHORT_GENDER_NAME), sx(t1 + club::SHORT_GENDER_NAME), t1 + club::SHORT_NAME);
+    let t1 = Club(rd(p + live_match::HOME_CLUB));
+    text(match_tab_title(&mut tabs, 4), 0xa16364, sx(t1.addr() + club::SHORT_GENDER_NAME), sx(t1.addr() + club::SHORT_GENDER_NAME), t1.addr() + club::SHORT_NAME);
     set_match_tab_flags(&mut tabs, 4, 3, 6);
     text(match_tab_title(&mut tabs, 5), 0xa16354);
     set_match_tab_flags(&mut tabs, 5, 3, 7);
@@ -723,8 +724,8 @@ pub(crate) unsafe extern "C" fn build_match_screen() {
             }
         }
     }
-    let t2 = rd(p + live_match::AWAY_CLUB);
-    text(match_tab_title(&mut tabs, n), 0xa16364, sx(t2 + club::SHORT_GENDER_NAME), sx(t2 + club::SHORT_GENDER_NAME), t2 + club::SHORT_NAME);
+    let t2 = Club(rd(p + live_match::AWAY_CLUB));
+    text(match_tab_title(&mut tabs, n), 0xa16364, sx(t2.addr() + club::SHORT_GENDER_NAME), sx(t2.addr() + club::SHORT_GENDER_NAME), t2.addr() + club::SHORT_NAME);
     set_match_tab_flags(&mut tabs, n, 3, 9);
     let (mut top, mut base) = (0x50i32, 0x221i32);
     let aba = aba as i8 as i32;
@@ -1282,13 +1283,13 @@ pub(crate) unsafe extern "C" fn build_match_details_screen() {
     set_match_tab_flags(&mut tabs, 2, 1, 3);
     text(match_tab_title(&mut tabs, 3), 0xa1637c);
     set_match_tab_flags(&mut tabs, 3, 1, 4);
-    let t1 = rd(reg + fixture::HOME_CLUB);
-    text(match_tab_title(&mut tabs, 4), 0xa16364, sx(t1 + club::SHORT_GENDER_NAME), sx(t1 + club::SHORT_GENDER_NAME), t1 + club::SHORT_NAME);
+    let t1 = Club(rd(reg + fixture::HOME_CLUB));
+    text(match_tab_title(&mut tabs, 4), 0xa16364, sx(t1.addr() + club::SHORT_GENDER_NAME), sx(t1.addr() + club::SHORT_GENDER_NAME), t1.addr() + club::SHORT_NAME);
     set_match_tab_flags(&mut tabs, 4, 1, 5);
     text(match_tab_title(&mut tabs, 5), 0xa16354);
     set_match_tab_flags(&mut tabs, 5, 1, 6);
-    let t2 = rd(reg + fixture::AWAY_CLUB);
-    text(match_tab_title(&mut tabs, 6), 0xa16364, sx(t2 + club::SHORT_GENDER_NAME), sx(t2 + club::SHORT_GENDER_NAME), t2 + club::SHORT_NAME);
+    let t2 = Club(rd(reg + fixture::AWAY_CLUB));
+    text(match_tab_title(&mut tabs, 6), 0xa16364, sx(t2.addr() + club::SHORT_GENDER_NAME), sx(t2.addr() + club::SHORT_GENDER_NAME), t2.addr() + club::SHORT_NAME);
     set_match_tab_flags(&mut tabs, 6, 1, 7);
     let (mut top, mut base) = (0x50i32, 0x221i32);
     let aba = aba as i8 as i32;
@@ -2032,14 +2033,14 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
             queue += 1;
         }
         let r = exe::league_get_table_row(local, i);
-        let club = u(r);
+        let club = Club(u(r));
         let nl = core::ptr::read_unaligned((league + league::CLUB_COUNT) as *const i16) as i32;
         if nl > 0 {
             let mut j = 0;
             loop {
                 let x = exe::league_get_table_row(league, j);
                 *((s + 0x38) as *mut usize) = x;
-                if club == u(x) {
+                if club.addr() == u(x) {
                     break;
                 }
                 j += 1;
@@ -2062,8 +2063,8 @@ pub(crate) unsafe extern "C" fn match_screens_draw_live_league_table(league: usi
         } else if agora > antes {
             row(current_human_display(), 0x40001, 0, 0, 0, 0, 1, queue, 1, colour_with_high_bits(ret, 0xaebdcc), 0, 0xc, 0, colour_word(G_GUI_COLOUR_RED), 0, 0, 0, 0, lst);
         }
-        let colour = if exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0 { colour_word(G_GUI_COLOUR_YELLOW) } else { colour_word(G_GUI_COLOUR_PALE_GREY) };
-        cell(sm, lst, 2, queue, 1, 0, 1, 3, colour, club + club::SHORT_NAME, 0x7d5, club);
+        let colour = if exe::human_manager_is_human_club(club.addr(), 0, 1, 0, 0) != 0 { colour_word(G_GUI_COLOUR_YELLOW) } else { colour_word(G_GUI_COLOUR_PALE_GREY) };
+        cell(sm, lst, 2, queue, 1, 0, 1, 3, colour, club.addr() + club::SHORT_NAME, 0x7d5, club.addr());
         let d = r + column.wrapping_mul(14);
         for (o, col) in [(0x11usize, 4usize), (0x12, 5), (0x13, 6), (0x14, 7)] {
             format(BUF, FORMAT_D, b8(d + o) as i8 as i32);
@@ -3129,13 +3130,13 @@ pub(crate) unsafe extern "C" fn refresh_latest_scores_rows() {
                         // the match row
                         let it = item(ebp, 0);
                         for (side, desvio) in [(0x1cusize, 0u32), (0x20, 4)] {
-                            let team = u(m4 + side);
-                            format(BUF, 0x987ff0, team + club::SHORT_NAME);
-                            let h = exe::human_manager_is_human_club(team, 0, 1, 0, 0);
+                            let team = Club(u(m4 + side));
+                            format(BUF, 0x987ff0, team.addr() + club::SHORT_NAME);
+                            let h = exe::human_manager_is_human_club(team.addr(), 0, 1, 0, 0);
                             exe::screenmanager_set_widget_text_colour(sm, it + desvio, if h != 0 { colour_word_u32(G_GUI_COLOUR_YELLOW) } else { colour_word_u32(0xaebde8) });
                             exe::screenmanager_set_widget_text(sm, it + desvio, BUF);
                             exe::screenmanager_set_widget_id(sm, it + desvio, if b(m4 + fixture::HOME_SIDE_MARK + desvio as usize / 4) != 0 { 0x7d5 } else { 0x7d6 });
-                            exe::screenmanager_set_widget_data(sm, it + desvio, team);
+                            exe::screenmanager_set_widget_data(sm, it + desvio, team.addr());
                             if desvio == 0 {
                                 match g1 {
                                     0xfe => text(BUF, 0x99c9e4, 0xad9c64),

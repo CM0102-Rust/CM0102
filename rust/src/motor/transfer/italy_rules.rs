@@ -13,12 +13,13 @@ use super::*;
 /// cinco divisões ([0x9cf578] a [0x9cf588]) com quatro jogadores emprestados de outros clubes (ids abaixo de
 /// [0xae2364], contrato de empréstimo 0x4cf6d0) não pode (0x25).
 pub(crate) unsafe extern "thiscall" fn italy_rules_can_loan_player(this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
+    let club = Club(club);
     // 0x8e8c40: push janela; push 0xae2c90; ecx = this -> thiscall, ret 8
     if exe::transfer_window_contains_date(this, G_CURRENT_DATE, read_usize(this + 4)) == 0 && exe::transfer_window_contains_date(this, G_CURRENT_DATE, read_usize(this + 4) + 0xc) == 0 {
         crate::comparison::branch("cqe_6 italy outside the window");
         return refuse_outside_window(this, msg, reason);
     }
-    let comp = read_usize(club + club::DIVISION);
+    let comp = club.division().addr();
     if comp == 0 {
         return 1;
     }
@@ -29,13 +30,13 @@ pub(crate) unsafe extern "thiscall" fn italy_rules_can_loan_player(this: usize, 
     // 0x4cf6d0: push person; mov ecx, [0xae1050] -> thiscall, ret 4
     let mut n: i8 = 0;
     for k in 0..50usize {
-        let p = read_usize(club + club::SQUAD + 4 * k);
+        let p = read_usize(club.addr() + club::SQUAD + 4 * k);
         if p == 0 || read_usize(p) as i32 >= read_usize(G_STAFF_COUNT) as i32 || exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p) == 0 {
             continue;
         }
         let cp = game_get_contract_and_store(p);
         let de = if cp != 0 { england_rules_club_of_contract(cp) } else { 0 };
-        if de != club {
+        if de != club.addr() {
             n = n.wrapping_add(1);
         }
     }
@@ -43,8 +44,8 @@ pub(crate) unsafe extern "thiscall" fn italy_rules_can_loan_player(this: usize, 
         crate::comparison::branch("cqe_6 italy four loaned out");
         if msg != 0 {
             let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-            let g = read_u8(club + club::SHORT_GENDER_NAME) as i8 as i32;
-            text(msg, 0x9ea9dc, g, g, club + club::SHORT_NAME);
+            let g = club.short_gender_name() as i8 as i32;
+            text(msg, 0x9ea9dc, g, g, club.addr() + club::SHORT_NAME);
         }
         if !reason.is_null() {
             *reason = 0x25;

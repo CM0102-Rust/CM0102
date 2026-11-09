@@ -57,9 +57,9 @@ pub(crate) unsafe extern "thiscall" fn compare_post_recovery_news(this: usize, p
     reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
     reg.push((physical_record_of_player(this, p), 31));
     reg.push((read_usize(G_STAFF_STATE_TABLE).wrapping_add((*(p as *const i32) as isize * 0x4f) as usize), 0x4f));
-    let club = read_usize(p + staff::CLUB_JOB);
-    if club != 0 && read_usize(club + club::MANAGER) != 0 {
-        reg.push((read_usize(club + club::MANAGER), 0x6e));
+    let club = Club(read_usize(p + staff::CLUB_JOB));
+    if !club.is_null() && club.manager().addr() != 0 {
+        reg.push((club.manager().addr(), 0x6e));
     }
     let before = crate::comparison::MemorySnapshot::read(&reg);
     RECOVERY_NEWS_DRY_RUN = true;

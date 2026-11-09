@@ -107,17 +107,18 @@ pub(crate) unsafe extern "thiscall" fn compare_allocate_squad_number(this: usize
 /// [pt] Lado a lado: o +0x3a dos contratos de quem está no elenco do clube e no do clube ligado (as únicas pessoas que a
 /// rotina e a 0x85a470 numeram) e a marca da caixa.
 pub(crate) unsafe extern "thiscall" fn compare_assign_club_squad_numbers(this: usize, c: usize, keep: u32) {
+    let c = Club(c);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_CLUB_SQUAD_NUMBERS);
-    let mut ps: Vec<usize> = (0..50).map(|k| read_u32(c + club::SQUAD + 4 * k) as usize).collect();
-    let l = exe::club_get_linked_b_team(c, (0) as *mut u32, 1);
-    if l != 0 {
-        ps.extend((0..50).map(|k| read_u32(l + club::SQUAD + 4 * k) as usize));
+    let mut ps: Vec<usize> = (0..50).map(|k| read_u32(c.addr() + club::SQUAD + 4 * k) as usize).collect();
+    let l = Club(exe::club_get_linked_b_team(c.addr(), (0) as *mut u32, 1));
+    if !l.is_null() {
+        ps.extend((0..50).map(|k| read_u32(l.addr() + club::SQUAD + 4 * k) as usize));
     }
     let reg = squad_number_regions(&ps);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, c, keep), || assign_club_squad_numbers(this, c, keep));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, c.addr(), keep), || assign_club_squad_numbers(this, c.addr(), keep));
     SCOREBOARD.record(igual, || {
         let d: Vec<String> = mo.0.iter().zip(mr.0.iter()).filter(|(a, b)| a.1 != b.1).take(12).map(|(a, b)| format!("{:x}: {:?}/{:?}", a.0, a.1, b.1)).collect();
-        format!("assign_club_squad_numbers(clube {:x}, manter {}): {}", c, keep, d.join(", "))
+        format!("assign_club_squad_numbers(clube {:x}, manter {}): {}", c.addr(), keep, d.join(", "))
     });
 }
 

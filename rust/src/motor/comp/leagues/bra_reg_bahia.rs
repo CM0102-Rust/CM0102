@@ -305,7 +305,8 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_advance_stage(this: usize) 
 /// [pt] O clube é do estadual do global `g`: a divisão reserva do clube (+0x60, ReserveDivision, que no Brasil guarda o
 /// estadual) não é nula e o id do registro (+0) é o do global.
 pub(crate) unsafe fn is_in_state_league(club: usize, g: usize) -> bool {
-    let comp = read_usize(club + club::RESERVE_DIVISION);
+    let club = Club(club);
+    let comp = club.reserve_division().addr();
     comp != 0 && read_usize(comp) == read_usize(g)
 }
 

@@ -101,9 +101,9 @@ pub(crate) unsafe extern "thiscall" fn compare_stadium_daily_update(this: usize,
     let nation = england_nation();
     regions[m] = (nation + nation::NATIONAL_STADIUM, 4);
     m += 1;
-    let s = nation_national_team(nation);
-    if s != 0 {
-        regions[m] = (s + club::STADIUM, 4);
+    let s = Club(nation_national_team(nation));
+    if !s.is_null() {
+        regions[m] = (s.addr() + club::STADIUM, 4);
         m += 1;
     }
     if read_usize(G_STADIUM_STASHED_VENUE_ID) as i32 != -1 {

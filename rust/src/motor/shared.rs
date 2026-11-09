@@ -227,8 +227,8 @@ pub(crate) unsafe fn play_with(j: usize, strength: i16, height: f32, style: i8, 
                     let a = random(grav as i8 as i32);
                     if a > random(0x14) {
                         let partida = *((m + engine::MATCH) as *const usize);
-                        let club = *((partida + if read_i8(j + match_player::SIDE) == 0 { 0x20 } else { 0x1c }) as *const usize);
-                        let k = *((club + club::NATION) as *const usize);
+                        let club = Club(*((partida + if read_i8(j + match_player::SIDE) == 0 { 0x20 } else { 0x1c }) as *const usize));
+                        let k = club.nation().addr();
                         if k != 0 && read_i8(k + 0x77) == 8 {
                             narrate(call, 0x20f5, 0, 0, u32::MAX);
                         }
@@ -397,7 +397,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
     let comp = if read(partida) > -1 { g(g(g(G_COMP_OBJECT_TABLE) + read(partida) as usize * 4) + 8) } else { 0 };
     let mut ja_34 = false;
     for lado in 0..2usize {
-        let club = club_of(read(t + 4 * lado));
+        let club = Club(club_of(read(t + 4 * lado)));
         let ts = t + lado * 0x625;
         let other = t + (lado == 0) as usize * 0x625;
         let scoreboard = |r: usize| ub(r + 0x120) + ub(r + 0x11f);
@@ -411,13 +411,13 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
             if g(p + staff::PLAYER) == 0 || (p != 0 && read(p) >= read(G_STAFF_COUNT)) {
                 continue;
             }
-            if comp != 0 && read(partida + 0x14) == read(club + club::DIVISION) && *((t + 0x4c) as *const u8) == 0 {
-                let c = contract(g(G_CONTRACT_MANAGER), p, club);
+            if comp != 0 && read(partida + 0x14) == read(club.addr() + club::DIVISION) && *((t + 0x4c) as *const u8) == 0 {
+                let c = contract(g(G_CONTRACT_MANAGER), p, club.addr());
                 let nota1 = exe::comp_stats_get_player_stat(comp, g(p + staff::PLAYER), 1);
                 let nota11 = exe::comp_stats_get_player_stat(comp, g(p + staff::PLAYER), 0x11);
                 if c != 0 && matches!(*((c + contract::SQUAD_STATUS) as *const u8) & 0xf0, 0x10 | 0x20 | 0x30) {
-                    let x = exe::shortlist_manager_find_club_shortlist_entry(g(g(G_TRANSFER_MANAGER) + 0x856), club, p, 0, 0);
-                    let passes = test_600a50(club, 0, 1, 0, 0) != 0 || (x != 0 && read(x + 0xf) == read(p));
+                    let x = exe::shortlist_manager_find_club_shortlist_entry(g(g(G_TRANSFER_MANAGER) + 0x856), club.addr(), p, 0, 0);
+                    let passes = test_600a50(club.addr(), 0, 1, 0, 0) != 0 || (x != 0 && read(x + 0xf) == read(p));
                     let d = w(ts + 0x18e) as f64;
                     if passes
                         && w(row + 3) > 0x1388
@@ -430,7 +430,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                         && average() - 0.2 < nota11
                     {
                         crate::comparison::branch("players news 0x11");
-                        news(g(G_MEDIA), p, club, 0x11, partida, 0);
+                        news(g(G_MEDIA), p, club.addr(), 0x11, partida, 0);
                     }
                 }
             }
@@ -442,7 +442,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                     let r = random(9);
                     if r as f64 * 0.1 + m + 0.5 < nota11 {
                         crate::comparison::branch("players news 0x34");
-                        news_34(g(G_MEDIA), p, club, 0x34, partida);
+                        news_34(g(G_MEDIA), p, club.addr(), 0x34, partida);
                         ja_34 = true;
                     }
                 }
@@ -455,7 +455,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
             if read(club_of(read(t)) + 0x53) == read(club_of(read(t + 4)) + 0x53) && *((row - 8) as *const u8) != 0 {
                 let v = exe::playerstats_get_stat(g(G_PLAYER_STATS), g(p + staff::PLAYER), 6, 0xb, 6.5);
                 let previous = g(p + staff::NATION);
-                let nation = g(club + club::NATION);
+                let nation = g(club.addr() + club::NATION);
                 let f = g(p + staff::PLAYER);
                 if !(v == 0.0 || v.is_nan())
                     && previous != 0
@@ -468,7 +468,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                     && (read_i8(p + staff::SPORTSMANSHIP) < 0xa || read_i8(p + staff::TEMPERAMENT) < 0xa)
                     && ((read(previous) == read(KEY_NATION_FRANCE) && random(3) == 0) || random(10) == 0)
                 {
-                    let c = contract(g(G_CONTRACT_MANAGER), p, club);
+                    let c = contract(g(G_CONTRACT_MANAGER), p, club.addr());
                     if c != 0 && exe::staff_contract_get_flags(c) & 0x20 == 0 {
                         crate::comparison::branch("players mark 0x20");
                         por_20(c, 0x20);
@@ -494,7 +494,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                 core::ptr::write_unaligned((f + 0xc) as *mut i16, w(f + 0xc).wrapping_add(dc));
             }
             for k in -1i32..5 {
-                let aux = if k == -1 { g(club + club::ASSISTANT_MANAGER) } else { g(club + club::COACHES + k as usize * 4) };
+                let aux = if k == -1 { g(club.addr() + club::ASSISTANT_MANAGER) } else { g(club.addr() + club::COACHES + k as usize * 4) };
                 if aux == 0 || aux == manager || g(aux + staff::NON_PLAYER) == 0 {
                     continue;
                 }
@@ -507,7 +507,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                 }
             }
         }
-        core::ptr::write_unaligned((club + club::REPUTATION) as *mut i16, w(ts + 0x18e));
+        core::ptr::write_unaligned((club.addr() + club::REPUTATION) as *mut i16, w(ts + 0x18e));
     }
 }
 

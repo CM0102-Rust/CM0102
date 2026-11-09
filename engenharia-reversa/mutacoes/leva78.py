@@ -4,7 +4,7 @@ MUTACOES = [
     ('c_107', "(id as usize).wrapping_mul(107)).wrapping_add(0x5d)", "(id as usize).wrapping_mul(108)).wrapping_add(0x5d)"),
     ('c_fase', "    if c == 0 || read_i8(c + league::COMP_TYPE) != 2 || *((c + league::CLUB_COUNT) as *const u16) == 0 {", "    if c == 0 || *((c + league::CLUB_COUNT) as *const u16) == 0 {"),
     ('c_rodadas', "    if c == 0 || read_i8(c + league::COMP_TYPE) != 2 || *((c + league::CLUB_COUNT) as *const u16) == 0 {", "    if c == 0 || read_i8(c + league::COMP_TYPE) != 2 {"),
-    ('c_60', "*((first + club::RESERVE_DIVISION) as *const i32) == target) as u32", "*((first + 0x5c) as *const i32) == target) as u32"),
+    ('c_60', "(first.reserve_division().addr() as i32) == target) as u32", "*((first.addr() + 0x5c) as *const i32) == target) as u32"),
     ('o_5f', "    v(*b) - v(*a)\n}", "    v(*a) - v(*b)\n}"),
     ('o_sinal5f', "*((p + 0x5f) as *const i8) as i32 };", "*((p + 0x5f) as *const u8) as i32 };"),
     ('o_80', "    *((*b + 0x80) as *const i16) as i32 - *((*a + 0x80) as *const i16) as i32\n}", "    *((*b + 0x80) as *const u16) as i32 - *((*a + 0x80) as *const i16) as i32\n}"),

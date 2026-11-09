@@ -329,7 +329,8 @@ pub(crate) unsafe fn day_of_year(day: u32, month: u32, year: u32) -> (u16, u16) 
 ///
 /// [pt] O jogo `x` está na liga de id [0x9cf590] por um dos clubes (+0x57 → +0).
 pub(crate) unsafe fn is_in_league(club: usize, id: i32) -> bool {
-    let l = read_usize(club + club::DIVISION);
+    let club = Club(club);
+    let l = club.division().addr();
     l != 0 && read_i32(l) == id
 }
 
@@ -469,14 +470,14 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
                     core::ptr::write_unaligned((l + 0xa) as *mut usize, read_usize(l + 2));
                     let mut x = exe::llist_get_next(l);
                     while x != 0 {
-                        let c1 = read_usize(x + 0x1c);
-                        let h = read_usize(game + fixture::HOME_CLUB);
-                        let a = read_usize(game + fixture::AWAY_CLUB);
-                        if c1 == 0 || h == 0 || a == 0 {
+                        let c1 = Club(read_usize(x + 0x1c));
+                        let h = Club(read_usize(game + fixture::HOME_CLUB));
+                        let a = Club(read_usize(game + fixture::AWAY_CLUB));
+                        if c1.is_null() || h.is_null() || a.is_null() {
                             // the box (line 0xcc8) and the end of the game: the original
                             return original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32, usize, usize, u32, usize, u32)>(IDX_COLLECT_DAY_CLASHES)(this, game, grav, list, nations, n, data, desloc);
                         }
-                        let c2 = read_usize(x + 0x20);
+                        let c2 = Club(read_usize(x + 0x20));
                         let (sx0, sx1, s0, s1b) = (read_u8(x + 0x40), read_u8(x + 0x41), read_u8(game + fixture::HOME_SIDE_MARK), read_u8(game + fixture::AWAY_SIDE_MARK));
                         if (c1 == h && sx0 == s0) || (c1 == a && sx0 == s1b) || (c2 == h && sx1 == s0) || (c2 == a && sx1 == s1b) {
                             crate::comparison::branch("cqc_3 same club in the same pot");
@@ -520,17 +521,17 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
                                 && abs_flag < 2
                                 && (read_u8(p) == 0 || read_u8(p) == 1)
                                 && (read_u8(game + fixture::CATEGORY) as i8) < 5
-                                && c1 == s1)
-                                || c1 == s2
-                                || c2 == s1
-                                || c2 == s2;
+                                && c1.addr() == s1)
+                                || c1.addr() == s2
+                                || c2.addr() == s1
+                                || c2.addr() == s2;
                             if national_teams {
-                                if (read_u16(h + club::REPUTATION) as i16 > 0x1388 || read_u16(a + club::REPUTATION) as i16 > 0x1388) && comp_clash_rule(game, game, x) != 0 {
+                                if ((h.reputation() as u16) as i16 > 0x1388 || (a.reputation() as u16) as i16 > 0x1388) && comp_clash_rule(game, game, x) != 0 {
                                     add_clash_by_type(grav, list, x, true);
                                 }
-                            } else if read_i32(x) == read_i32(KEY_CLUB_COMP_AMERICAN_MLS_ALL_STARS) && (is_in_league(h, read_i32(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE)) || is_in_league(a, read_i32(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE))) {
+                            } else if read_i32(x) == read_i32(KEY_CLUB_COMP_AMERICAN_MLS_ALL_STARS) && (is_in_league(h.addr(), read_i32(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE)) || is_in_league(a.addr(), read_i32(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE))) {
                                 *grav = 0x13;
-                            } else if read_i32(game) == read_i32(KEY_CLUB_COMP_AMERICAN_MLS_ALL_STARS) && (is_in_league(c1, read_i32(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE)) || is_in_league(c2, read_i32(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE))) {
+                            } else if read_i32(game) == read_i32(KEY_CLUB_COMP_AMERICAN_MLS_ALL_STARS) && (is_in_league(c1.addr(), read_i32(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE)) || is_in_league(c2.addr(), read_i32(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE))) {
                                 add_clash_by_type(grav, list, x, false);
                             } else if e_sel != 0
                                 && exe::national_teams_is_finals_comp(read_usize(G_NATIONAL_TEAMS), read_usize(game + fixture::COMPETITION)) == 0
@@ -538,9 +539,9 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
                                 && read_u8(p) != 0
                                 && read_u8(p) != 1
                             {
-                                let (nx1, nx2) = (read_usize(c1 + club::NATION), read_usize(c2 + club::NATION));
+                                let (nx1, nx2) = (c1.nation().addr(), c2.nation().addr());
                                 if (nx1 == n1 || nx2 == n1 || nx1 == n2 || nx2 == n2)
-                                    && (read_u16(c1 + club::REPUTATION) as i16 > 0x1388 || read_u16(c2 + club::REPUTATION) as i16 > 0x1388)
+                                    && ((c1.reputation() as u16) as i16 > 0x1388 || (c2.reputation() as u16) as i16 > 0x1388)
                                     && (read_u8(x + 0x3a) as i8) < 5
                                     && comp_clash_rule(x, x, game) != 0
                                 {
@@ -601,14 +602,14 @@ pub(crate) unsafe extern "thiscall" fn find_fixture_clashes(this: usize, game: u
     let key = exe::comp_active_key_nation_of_fixture(read_usize(game + fixture::COMPETITION), game) as i8;
     a[7] = key as u8;
     let mut n: usize = 8;
-    let home = read_usize(game + fixture::HOME_CLUB);
-    if home != 0 && read_usize(home + club::DIVISION) != 0 {
-        a[8] = exe::comp_active_key_nation_of_fixture(read_usize(home + club::DIVISION), 0);
+    let home = Club(read_usize(game + fixture::HOME_CLUB));
+    if !home.is_null() && home.division().addr() != 0 {
+        a[8] = exe::comp_active_key_nation_of_fixture(home.division().addr(), 0);
         n = 9;
     }
-    let away = read_usize(game + fixture::AWAY_CLUB);
-    if away != 0 && read_usize(away + club::DIVISION) != 0 {
-        a[n] = exe::comp_active_key_nation_of_fixture(read_usize(away + club::DIVISION), 0);
+    let away = Club(read_usize(game + fixture::AWAY_CLUB));
+    if !away.is_null() && away.division().addr() != 0 {
+        a[n] = exe::comp_active_key_nation_of_fixture(away.division().addr(), 0);
         n += 1;
     }
     if read_usize(game + fixture::STADIUM) != 0 {
@@ -965,16 +966,16 @@ pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, cle
         exe::fixture_manager_find_new_fixture_date(this, game);
     }
     let marks = read_u16(game + fixture::SQUAD_RULES);
-    let home = read_usize(game + fixture::HOME_CLUB);
+    let home = Club(read_usize(game + fixture::HOME_CLUB));
     let comp = read_usize(game + fixture::COMPETITION);
     if marks & 0x800 == 0
-        && (comp == read_usize(home + club::DIVISION) || comp == read_usize(home + club::RESERVE_DIVISION))
+        && (comp == home.division().addr() || comp == home.reserve_division().addr())
         && read_u16(game + fixture::ROUND_PREFIX) == 0
         && read_u16(game + fixture::ROUND_NAME) == 0
         && read_u8(game + fixture::STAGE) == 0xff
     {
         write_u16(game + fixture::SQUAD_RULES, marks | 0x800);
-        let preferido = read_u8(home + club::MATCH_DAY);
+        let preferido = home.match_day();
         if preferido != 0xff && (preferido == 5 || preferido == 6 || preferido == 4) {
             let mut d = [0u8; 8];
             date_from_day_year(&mut d, read_u16(game + fixture::DAY), read_u16(game + fixture::YEAR));
@@ -1616,8 +1617,8 @@ pub(crate) unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, ga
     let mut f1 = [0u8; 0x4f];
     let mut f2 = [0u8; 0x4f];
     for k in 0..2 {
-        let club = read_usize(game + if k == 0 { 0x1c } else { 0x20 });
-        let nation = read_usize(club + club::NATION);
+        let club = Club(read_usize(game + if k == 0 { 0x1c } else { 0x20 }));
+        let nation = club.nation().addr();
         if nation == 0 || *((nation + nation::LEAGUE_SELECTED) as *const u8) == 0 {
             continue;
         }
@@ -1628,7 +1629,7 @@ pub(crate) unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, ga
         let r = date_sub_days(r, u.as_mut_ptr(), 2);
         date_assign_ptr(d.as_mut_ptr(), r);
         list_clear(lp);
-        if find_club_fixtures_between(this, d.as_ptr(), d.as_ptr(), read_u32(club), lp) as u16 != 0 {
+        if find_club_fixtures_between(this, d.as_ptr(), d.as_ptr(), read_u32(club.addr()), lp) as u16 != 0 {
             copy_first_fixture(lp, &mut f1, &mut f2);
             if !fix_man_is_friendly_comp(read_u32(f1.as_ptr() as usize + 0x14)) {
                 crate::comparison::branch("cpz_8 match two days before");
@@ -1654,7 +1655,7 @@ pub(crate) unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, ga
         let r = fix_man_date_add_days(r, u.as_mut_ptr(), 2);
         date_assign_ptr(d.as_mut_ptr(), r);
         list_clear(lp);
-        if find_club_fixtures_between(this, d.as_ptr(), d.as_ptr(), read_u32(club), lp) as u16 == 0 {
+        if find_club_fixtures_between(this, d.as_ptr(), d.as_ptr(), read_u32(club.addr()), lp) as u16 == 0 {
             continue;
         }
         copy_first_fixture(lp, &mut f1, &mut f2);
@@ -2473,14 +2474,14 @@ pub(crate) unsafe extern "thiscall" fn add_away_trip_illness_risk(_this: usize, 
     if read_u8(nation + nation::STATE_OF_DEVELOPMENT) != 3 { // cps13: só o terceiro mundo
         return;
     }
-    let home = read_usize(f + fixture::HOME_CLUB);
-    if home != 0 && read_usize(home + club::NATION) != nation {
+    let home = Club(read_usize(f + fixture::HOME_CLUB));
+    if !home.is_null() && home.nation().addr() != nation {
         crate::comparison::branch("cps_13 home side illness");
         // the original pushes the year in the club’s eax and the day in the nation’s ecx (high halves of the pointers)
-        add_illness_risk_before_match(f, read_usize(f + fixture::HOME_CLUB_ID), read_usize(read_usize(read_usize(f + fixture::STADIUM) + 0x38) + 0x1f), nation as u32, home as u32);
+        add_illness_risk_before_match(f, read_usize(f + fixture::HOME_CLUB_ID), read_usize(read_usize(read_usize(f + fixture::STADIUM) + 0x38) + 0x1f), nation as u32, home.addr() as u32);
     }
-    let away = read_usize(f + fixture::AWAY_CLUB);
-    if away != 0 && read_usize(away + club::NATION) != read_usize(read_usize(read_usize(f + fixture::STADIUM) + 0x38) + 0x1f) {
+    let away = Club(read_usize(f + fixture::AWAY_CLUB));
+    if !away.is_null() && away.nation().addr() != read_usize(read_usize(read_usize(f + fixture::STADIUM) + 0x38) + 0x1f) {
         crate::comparison::branch("cps_13 away side illness");
         // the year in the stadium’s ecx and the day in the city’s edx
         let (e, c) = (read_usize(f + fixture::STADIUM), read_usize(read_usize(f + fixture::STADIUM) + 0x38));
@@ -2500,7 +2501,8 @@ pub(crate) unsafe extern "thiscall" fn add_away_trip_illness_risk(_this: usize, 
 /// para clube da Inglaterra ([0x9cf2e4]) ou do País de Gales ([0x9cf510]) (nação +0x53, id +0), o índice da nação-chave
 /// ativa da outra (os 35 registros de 72 bytes em 0xb63d60: +0 a nação, ativa em +0x11c, +0x14 o índice); senão 0xff.
 pub(crate) unsafe extern "C" fn fix_man_get_partner_key_nation_index(club: usize) -> u8 {
-    let nation = read_u32(club + club::NATION) as usize;
+    let club = Club(club);
+    let nation = (club.nation().addr() as u32) as usize;
     if nation == 0 {
         return 0xff;
     }

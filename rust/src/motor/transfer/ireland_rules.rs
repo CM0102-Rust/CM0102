@@ -25,24 +25,25 @@ pub(crate) unsafe extern "thiscall" fn construct_ireland_rules(this: usize, a1: 
 /// motivo)`: cinco empréstimos na temporada (a conta de 16 bytes em [[0xde1f54] + 0x91c]): 0x1e; com contrato, o
 /// clube que pede e o dono na mesma divisão (+0x57, sem conferir o nulo, como a original): 0x1d, com o nome da nação.
 pub(crate) unsafe extern "thiscall" fn ireland_rules_can_loan_player(this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
-    let count = read_usize(read_usize(G_TRANSFER_MANAGER) + 0x91c).wrapping_add(read_usize(club).wrapping_mul(16));
+    let club = Club(club);
+    let count = read_usize(read_usize(G_TRANSFER_MANAGER) + 0x91c).wrapping_add(read_usize(club.addr()).wrapping_mul(16));
     if read_u8(count) as i8 >= 5 {
         crate::comparison::branch("cqe_6 ireland five in the season");
         if msg != 0 {
             let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-            let g = read_u8(club + club::SHORT_GENDER_NAME) as i8 as i32;
-            text(msg, 0x9c4534, g, g, club + club::SHORT_NAME);
+            let g = club.short_gender_name() as i8 as i32;
+            text(msg, 0x9c4534, g, g, club.addr() + club::SHORT_NAME);
         }
         if !reason.is_null() {
             *reason = 0x1e;
         }
         return 0;
     }
-    let owner = match loan_owner_club(player) {
+    let owner = Club(match loan_owner_club(player) {
         None => return 1,
         Some(d) => d,
-    };
-    if read_usize(club + club::DIVISION) == read_usize(owner + club::DIVISION) {
+    });
+    if club.division().addr() == owner.division().addr() {
         crate::comparison::branch("cqe_6 ireland same division");
         return refuse_loan(msg, reason, 0x9ea168, read_usize(this + 0xa), 0x1d);
     }

@@ -51,15 +51,16 @@ pub(crate) unsafe extern "thiscall" fn compare_send_by_scope(this: usize, news: 
 /// [pt] Comparador: roda só a original (a entrega não pode rodar duas vezes) e confere o plano: o alcance zerado e, sem técnico
 /// humano, a devolução 0 (com humano, a entrega devolve 1 ou 0 sem memória).
 pub(crate) unsafe extern "thiscall" fn compare_send_to_club_manager(this: usize, news: usize, club: usize) -> u32 {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_CLUB_MANAGER);
-    if news == 0 || club == 0 {
-        return o(this, news, club);
+    if news == 0 || club.is_null() {
+        return o(this, news, club.addr());
     }
-    let manager = read_usize(club + club::MANAGER);
+    let manager = club.manager().addr();
     let human = manager != 0 && read_i32(manager) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10);
-    let r = o(this, news, club);
+    let r = o(this, news, club.addr());
     let ok = *((news + news_item::REACH) as *const u8) == 0 && (human || r == 0) && r <= 1;
-    SCOREBOARD.record(ok, || format!("send_to_club_manager(clube {:x}, técnico {:x}, humano {}) devolveu {}", club, manager, human, r));
+    SCOREBOARD.record(ok, || format!("send_to_club_manager(clube {:x}, técnico {:x}, humano {}) devolveu {}", club.addr(), manager, human, r));
     r
 }
 

@@ -54,12 +54,13 @@ pub(crate) unsafe fn refuse_loan(msg: usize, reason: *mut u16, formato: usize, r
 /// [pt] { 0x7f6650 } (thiscall, ret 0x10, scotland_rules.cpp): `SCOTLAND_RULES::can_loan_player(clube, jogador, mensagem,
 /// motivo)`: com contrato, o clube que pede e o dono na mesma divisão escocesa ([0x9cf5dc]) não podem (0x1d).
 pub(crate) unsafe extern "thiscall" fn scotland_rules_can_loan_player(_this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
-    let owner = match loan_owner_club(player) {
+    let club = Club(club);
+    let owner = Club(match loan_owner_club(player) {
         None => return 1,
         Some(d) => d,
-    };
-    let comp = read_usize(club + club::DIVISION);
-    if comp == read_usize(owner + club::DIVISION) && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION) {
+    });
+    let comp = club.division().addr();
+    if comp == owner.division().addr() && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION) {
         crate::comparison::branch("cqe_6 scotland same division");
         let r = read_usize(G_CLUB_COMP_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_SCOTTISH_PREMIER_DIVISION).wrapping_mul(0x6b));
         return refuse_loan(msg, reason, 0x9c4590, r, 0x1d);

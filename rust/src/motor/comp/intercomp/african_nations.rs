@@ -439,7 +439,8 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_staff_records_for_
 ///
 /// [pt] A competição atual da seleção acaba (0x775000 em [0xb74318]: push nação; mov ecx -> thiscall, ret 4).
 pub(crate) unsafe fn clear_national_team_competition(club: usize) {
-    exe::nationalteams_clear_current_competition(read_usize(G_NATIONAL_TEAMS), read_usize(club + club::NATION));
+    let club = Club(club);
+    exe::nationalteams_clear_current_competition(read_usize(G_NATIONAL_TEAMS), club.nation().addr());
 }
 
 // simplification: the records, the end of the national team’s competition and the World Cup place do not run twice. Original only;

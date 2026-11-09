@@ -53,8 +53,8 @@ pub(crate) unsafe extern "thiscall" fn roll_coefficients(this: usize) {
     exe::crt_qsort(this, count() as i32 as u32, 0x12, 0x905cb0);
     let mut i = 0i8;
     while i < count() {
-        let s = exe::database_get_national_team(read_u32(seeding_nation_entry(this, i as i32) + 4) as usize);
-        *((s + club::EURO_SEEDING) as *mut i8) = i;
+        let s = Club(exe::database_get_national_team(read_u32(seeding_nation_entry(this, i as i32) + 4) as usize));
+        s.set_euro_seeding((i) as u8);
         i += 1;
     }
 }
@@ -239,11 +239,11 @@ pub(crate) unsafe extern "thiscall" fn uefa_find_nth_unplaced_club_of_nation(_th
     let mut found = false;
     if p < last {
         loop {
-            let c = read_u32(p) as usize;
-            if without_slot != 0 && c != 0 && read_u32(c + club::CONTINENTAL_COMP_ID) != u32::MAX {
+            let c = Club(read_u32(p) as usize);
+            if without_slot != 0 && !c.is_null() && c.continental_comp_id() != u32::MAX {
                 crate::comparison::branch("cqi_1 already with a place");
                 p += 12; // cqi1: skips the club that already has a place
-            } else if without_human != 0 && c != 0 && exe::human_manager_is_human_club(c, 0, 1, 0, 0) != 0 {
+            } else if without_human != 0 && !c.is_null() && exe::human_manager_is_human_club(c.addr(), 0, 1, 0, 0) != 0 {
                 p += 12;
             } else {
                 if foul == 0 {
@@ -283,11 +283,12 @@ pub(crate) unsafe fn increment_byte(a: usize) {
 /// +0x1db = comp, +0x1df = fase e um clube a mais da nação `i` (+0x11). Devolve se ganhou. (O caso da nação sem entrada,
 /// −1, que a original procura pela nação do clube, não acontece: `i` vem sempre da volta pelas nações.)
 pub(crate) unsafe fn assign_comp_place(this: usize, c: usize, comp: u32, stage: u8, i: i32) -> bool {
-    if c == 0 || read_u32(c + club::NATION) == 0 || read_u32(c + club::CONTINENTAL_COMP_ID) != u32::MAX {
+    let c = Club(c);
+    if c.is_null() || (c.nation().addr() as u32) == 0 || c.continental_comp_id() != u32::MAX {
         return false;
     }
-    *((c + club::EURO_SEEDING) as *mut u8) = stage;
-    *((c + club::CONTINENTAL_COMP_ID) as *mut u32) = comp;
+    c.set_euro_seeding(stage);
+    c.set_continental_comp_id(comp);
     increment_byte(seeding_nation_entry(this, i) + 0x11);
     true
 }
@@ -399,11 +400,11 @@ pub(crate) unsafe fn club_regions() -> Vec<(usize, usize)> {
 pub(crate) unsafe extern "thiscall" fn assign_champions_league_places(this: usize, clubs: usize, count: u32) {
     let lc = read_u32(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE);
     let mut cap: [u8; 5] = [0, 0x10, 0x12, 0x13, 0x12];
-    let h = exe::comp_util_get_latest_placed_club((read_u32(G_CLUB_COMP_TABLE) as usize).wrapping_add(lc.wrapping_mul(0x6b) as usize), 0);
-    if h != 0 && read_u32(h + club::NATION) != 0 && read_u32(h + club::CONTINENTAL_COMP_ID) == u32::MAX {
-        *((h + club::EURO_SEEDING) as *mut u8) = 1;
-        *((h + club::CONTINENTAL_COMP_ID) as *mut u32) = lc;
-        let id = read_u32(read_u32(h + club::NATION) as usize);
+    let h = Club(exe::comp_util_get_latest_placed_club((read_u32(G_CLUB_COMP_TABLE) as usize).wrapping_add(lc.wrapping_mul(0x6b) as usize), 0));
+    if !h.is_null() && (h.nation().addr() as u32) != 0 && h.continental_comp_id() == u32::MAX {
+        h.set_euro_seeding(1);
+        h.set_continental_comp_id(lc);
+        let id = read_u32((h.nation().addr() as u32) as usize);
         let n = *((this + 0x438) as *const i8) as i32;
         let mut i = -1i32;
         for k in 0..n {
@@ -543,11 +544,12 @@ pub(crate) unsafe extern "thiscall" fn assign_intertoto_places(this: usize, club
 /// [pt] O clube `c` (com nação e ainda sem vaga) entra na Copa da UEFA na fase `fase`; um clube a mais da nação `r`. Devolve
 /// se entrou. (O caso da nação −1, que a original procura pela nação do clube, não acontece: `r` vem da volta.)
 pub(crate) unsafe fn enter_uefa_cup(this: usize, c: usize, stage: u8, r: i32, colocados: &mut i32) -> bool {
-    if read_u32(c + club::NATION) == 0 || read_u32(c + club::CONTINENTAL_COMP_ID) != u32::MAX {
+    let c = Club(c);
+    if (c.nation().addr() as u32) == 0 || c.continental_comp_id() != u32::MAX {
         return false;
     }
-    *((c + club::CONTINENTAL_COMP_ID) as *mut u32) = read_u32(KEY_CLUB_COMP_UEFA_CUP);
-    *((c + club::EURO_SEEDING) as *mut u8) = stage;
+    c.set_continental_comp_id(read_u32(KEY_CLUB_COMP_UEFA_CUP));
+    c.set_euro_seeding(stage);
     *colocados += 1;
     let p = seeding_nation_entry(this, r) + 0x11;
     *(p as *mut u8) = read_u8(p).wrapping_add(1);
@@ -584,12 +586,12 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
     let mut count_extra = 1i8;
     let mut colocados = 0i32;
     let mut nation_of_champion = 0usize;
-    let h = exe::comp_util_get_latest_placed_club((read_u32(G_CLUB_COMP_TABLE) as usize).wrapping_add(uc.wrapping_mul(0x6b) as usize), 0);
-    if h != 0 && read_u32(h + club::NATION) != 0 && read_u32(h + club::CONTINENTAL_COMP_ID) == u32::MAX {
-        *((h + club::EURO_SEEDING) as *mut u8) = 1;
-        *((h + club::CONTINENTAL_COMP_ID) as *mut u32) = uc;
+    let h = Club(exe::comp_util_get_latest_placed_club((read_u32(G_CLUB_COMP_TABLE) as usize).wrapping_add(uc.wrapping_mul(0x6b) as usize), 0));
+    if !h.is_null() && (h.nation().addr() as u32) != 0 && h.continental_comp_id() == u32::MAX {
+        h.set_euro_seeding(1);
+        h.set_continental_comp_id(uc);
         colocados = 1;
-        let id = read_u32(read_u32(h + club::NATION) as usize);
+        let id = read_u32((h.nation().addr() as u32) as usize);
         let mut i = -1i32;
         for k in 0..n8() as i32 {
             if read_u32(seeding_nation_entry(this, k)) == id {
@@ -599,7 +601,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
         }
         let p = seeding_nation_entry(this, i) + 0x11;
         *(p as *mut u8) = read_u8(p).wrapping_add(1);
-        nation_of_champion = read_u32(h + club::NATION) as usize;
+        nation_of_champion = (h.nation().addr() as u32) as usize;
     }
     let s1 = exe::utils_random(n8() as i32) as u8 as i8;
     let mut s2 = exe::utils_random(n8() as i32) as u8 as i8;

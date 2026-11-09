@@ -57,18 +57,19 @@ pub(crate) unsafe fn non_player_attribute_rating(f: usize, k: usize) -> i32 {
 /// 3 (+0x10) (chance + +0x12) / 2; 4 (+0x11) a chance (divisões truncadas para zero; a chance 0x544410), o byte com
 /// sinal dividido pelo divisor da quantidade de categorias marcadas (1,0 a 2,0, float), truncado e posto em 1..20.
 pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, club: usize, tecnico: usize) {
+    let club = Club(club);
     let human: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    if tecnico == 0 && human(club, 1, 1, 0, 0) == 0 {
+    if tecnico == 0 && human(club.addr(), 1, 1, 0, 0) == 0 {
         return;
     }
-    if exe::database_is_national_team(club) != 0 {
+    if exe::database_is_national_team(club.addr()) != 0 {
         return;
     }
-    let manager = if tecnico == 0 { read_usize(club + club::MANAGER) } else { tecnico };
+    let manager = if tecnico == 0 { club.manager().addr() } else { tecnico };
     let t = exe::training_manager_get_coach_assignments(this, manager);
-    let aux = exe::database_get_club_assistant(club);
+    let aux = exe::database_get_club_assistant(club.addr());
     let mut tr = [0usize; 5];
-    exe::database_get_club_coaches(club, tr.as_mut_ptr());
+    exe::database_get_club_coaches(club.addr(), tr.as_mut_ptr());
     let candidate = |k: i32| if k < 0 { aux } else { tr[k as usize] };
     for v in 0..6 {
         let e = t + 9 * v;
@@ -901,11 +902,12 @@ pub(crate) fn coach_average_divisor(n: i8) -> f64 {
 /// em +4 + categoria); com n treinadores de nota, a soma (16 bits) dividida pelo n-ésimo divisor e truncada (_ftol
 /// 0x945640), × 40/7 (0x970400) e truncada; abaixo de 50, 50. Quente no ramo do computador: sem contador ali.
 pub(crate) unsafe extern "thiscall" fn get_coaching_factor(this: usize, club: usize, category: i8) -> u32 {
+    let club = Club(club);
     let _ = this;
-    if club == 0 {
+    if club.is_null() {
         return 0;
     }
-    let t = read_usize(club + club::MANAGER);
+    let t = club.manager().addr();
     if t == 0 {
         crate::comparison::branch("cpt_8 without manager");
         return 100; // cpt8: no manager

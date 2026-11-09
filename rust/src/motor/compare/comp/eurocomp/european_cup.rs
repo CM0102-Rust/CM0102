@@ -123,6 +123,7 @@ pub(crate) unsafe extern "C" fn compare_european_cup_compare_phase2_draw_entries
 
 /// Comparer for `european_cup_update_staff_records_for_status`.
 pub(crate) unsafe extern "thiscall" fn compare_european_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, a: u32, game: usize, end: u32) -> u32 {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_EUROPEAN_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
     let (d, f) = (outcome as u8, stage as u8);
     // the original’s bands compare the stage byte as signed (0x80 to 0xfe count as stage 1)
@@ -135,11 +136,11 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_update_staff_records
     } else {
         false
     };
-    let before = if club != 0 { core::ptr::read_unaligned((club + club::CONTINENTAL_COMP_ID) as *const i32) } else { 0 };
-    let r = o(this, club, outcome, stage, a, game, end);
-    let after = if club != 0 { core::ptr::read_unaligned((club + club::CONTINENTAL_COMP_ID) as *const i32) } else { 0 };
-    let same = r == 0 && (club == 0 || after == if sai { -1 } else { before });
-    SCOREBOARD.record(same, || format!("european_cup_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} +0x1db {} -> {} sai={}", this, club, d, f, r, before, after, sai));
+    let before = if !club.is_null() { core::ptr::read_unaligned((club.addr() + club::CONTINENTAL_COMP_ID) as *const i32) } else { 0 };
+    let r = o(this, club.addr(), outcome, stage, a, game, end);
+    let after = if !club.is_null() { core::ptr::read_unaligned((club.addr() + club::CONTINENTAL_COMP_ID) as *const i32) } else { 0 };
+    let same = r == 0 && (club.is_null() || after == if sai { -1 } else { before });
+    SCOREBOARD.record(same, || format!("european_cup_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} +0x1db {} -> {} sai={}", this, club.addr(), d, f, r, before, after, sai));
     r
 }
 

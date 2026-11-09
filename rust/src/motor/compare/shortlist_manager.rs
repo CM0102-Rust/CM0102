@@ -74,14 +74,15 @@ pub(crate) unsafe extern "thiscall" fn compare_mark_player_under_offer(this: usi
 /// [pt] Comparador da 0x840d80: lado a lado na nota de saída e na devolução (o resto ela só lê). O técnico do clube sem a
 /// ficha +0x69 (a original sorteia uma): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_value_player_for_club(this: usize, club: usize, p: usize, slot: usize, out: *mut i32, minimum: i32, ceiling: u32) -> i32 {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut i32, i32, u32) -> i32>(IDX_VALUE_PLAYER_FOR_CLUB);
-    let obs = read_usize(club + club::MANAGER);
+    let obs = club.manager().addr();
     if obs != 0 && read_usize(obs + staff::NON_PLAYER) == 0 {
-        return o(this, club, p, slot, out, minimum, ceiling);
+        return o(this, club.addr(), p, slot, out, minimum, ceiling);
     }
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(out as usize, 4)], || o(this, club, p, slot, out, minimum, ceiling), || value_player_for_club(this, club, p, slot, out, minimum, ceiling));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(out as usize, 4)], || o(this, club.addr(), p, slot, out, minimum, ceiling), || value_player_for_club(this, club.addr(), p, slot, out, minimum, ceiling));
     SCOREBOARD.record(igual && r == n, || {
-        format!("value_player_for_club(clube {:x}, pessoa {:x}, vaga {:x}, mínimo {}, teto {}) original={} rust={} {:x?} x {:x?}", club, p, slot, minimum, ceiling, r, n, mo, mr)
+        format!("value_player_for_club(clube {:x}, pessoa {:x}, vaga {:x}, mínimo {}, teto {}) original={} rust={} {:x?} x {:x?}", club.addr(), p, slot, minimum, ceiling, r, n, mo, mr)
     });
     r
 }

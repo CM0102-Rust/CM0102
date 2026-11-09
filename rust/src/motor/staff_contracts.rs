@@ -101,6 +101,7 @@ pub(crate) unsafe extern "C" fn staff_contract_is_bonus_type_allowed(person: usi
 /// põe 4 em +0x4e, zera a felicidade (+0x3f) e +0x3e; com o clube e a nação dele (+0x53), o nível do idioma da nação
 /// (+0x77) para a pessoa (0x7c6830 em [0xb74350], sem o contrato; no máximo 10) nos 4 bits baixos de +0x4f.
 pub(crate) unsafe fn reset_contract_morale(this: usize, person: usize, club: usize) {
+    let club = Club(club);
     crate::comparison::branch("cpl_5 morale zeroed");
     write_u8(this + contract::MORALE, 0);
     write_u8(this + contract::TRANSFER_STATUS, 0);
@@ -110,8 +111,8 @@ pub(crate) unsafe fn reset_contract_morale(this: usize, person: usize, club: usi
     write_u8(this + contract::TRANSFER_STATUS, 4);
     write_u8(this + contract::MATCHES_LEFT_OUT, 0); // a felicidade
     write_u8(this + contract::UNHAPPY_FLAG, 0);
-    if club != 0 && read_usize(club + club::NATION) != 0 {
-        let r = exe::playerstats_get_language_fluency(read_usize(G_PLAYER_STATS), person, club, read_u8(read_usize(club + club::NATION) + 0x77) as u32, 0) as i8;
+    if !club.is_null() && club.nation().addr() != 0 {
+        let r = exe::playerstats_get_language_fluency(read_usize(G_PLAYER_STATS), person, club.addr(), read_u8(club.nation().addr() + 0x77) as u32, 0) as i8;
         let c = if r > 10 { 10 } else { r } as u8;
         let b = read_u8(this + contract::SQUAD_STATUS);
         write_u8(this + contract::SQUAD_STATUS, (b & 0xf0) | (c & 0xf));
@@ -545,13 +546,13 @@ pub(crate) unsafe extern "thiscall" fn construct_staff_contract(this: usize) -> 
 /// pelas notas se devolve 1.
 pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
     let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add((*(t as *const i32) as usize).wrapping_mul(staff::SIZE));
-    let club = (*(G_CLUB_TABLE as *const usize)).wrapping_add((*((t + contract::CLUB) as *const i32) as usize).wrapping_mul(club::SIZE));
+    let club = Club((*(G_CLUB_TABLE as *const usize)).wrapping_add((*((t + contract::CLUB) as *const i32) as usize).wrapping_mul(club::SIZE)));
     let u = |a: usize| core::ptr::read_unaligned(a as *const usize);
-    let manager = u(club + club::MANAGER);
+    let manager = u(club.addr() + club::MANAGER);
     if manager != 0 && p == manager {
         return 0;
     }
-    let auxiliar = u(club + club::ASSISTANT_MANAGER);
+    let auxiliar = u(club.addr() + club::ASSISTANT_MANAGER);
     if auxiliar != 0 && p == auxiliar {
         return 0;
     }

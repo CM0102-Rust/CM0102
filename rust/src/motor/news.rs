@@ -185,15 +185,16 @@ pub(crate) unsafe extern "thiscall" fn send_by_scope(this: usize, news: usize, c
 /// como clube (+0xde = 0) e a entrega (0x785d40) ao técnico do clube (+0xcf) se ele for humano (id entre as 16 últimas
 /// pessoas). Sem notícia ou sem clube: a caixa "Error" e 0; sem técnico ou técnico da máquina: 0.
 pub(crate) unsafe extern "thiscall" fn send_to_club_manager(this: usize, news: usize, club: usize) -> u32 {
+    let club = Club(club);
     if news == 0 {
         show_error_at(0xa693ec, 0x2026);
         return 0;
     }
-    if club == 0 {
+    if club.is_null() {
         show_error_at(0xa693ec, 0x202e);
         return 0;
     }
-    let manager = read_usize(club + club::MANAGER);
+    let manager = club.manager().addr();
     *((news + news_item::REACH) as *mut u8) = 0;
     if manager == 0 {
         return 0;
@@ -459,9 +460,9 @@ pub(crate) unsafe extern "thiscall" fn send_to_continent_managers(this: usize, n
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_CONTINENT_MANAGERS)(this, news, continent); // message box: original only
     }
     deliver_to_human_managers(this, news, 3, |p| {
-        let c = read_usize(p + staff::CLUB_JOB);
-        if c != 0 {
-            let n = read_usize(c + club::NATION);
+        let c = Club(read_usize(p + staff::CLUB_JOB));
+        if !c.is_null() {
+            let n = c.nation().addr();
             if n != 0 && read_usize(n + nation::CONTINENT) == continent { // the continent of the club’s nation
                 crate::comparison::branch("cpk_5 continent by club");
                 return true;
@@ -643,8 +644,8 @@ pub(crate) unsafe extern "thiscall" fn send_to_division_managers(this: usize, ne
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_DIVISION_MANAGERS)(this, news, division); // message box: original only
     }
     deliver_to_human_managers(this, news, 1, |p| {
-        let c = read_usize(p + staff::CLUB_JOB);
-        c != 0 && read_usize(c + club::DIVISION) == division // the club’s division
+        let c = Club(read_usize(p + staff::CLUB_JOB));
+        !c.is_null() && c.division().addr() == division // the club’s division
     }) as u32
 }
 
@@ -693,8 +694,8 @@ pub(crate) unsafe extern "thiscall" fn send_to_nation_club_managers(this: usize,
         if *((p + staff::CLASSIFICATION) as *const u8) != 1 {
             continue;
         }
-        let club = read_usize(p + staff::CLUB_JOB);
-        if club == 0 || read_usize(club + club::NATION) != nation {
+        let club = Club(read_usize(p + staff::CLUB_JOB));
+        if club.is_null() || club.nation().addr() != nation {
             continue;
         }
         if exe::news_deliver_to_manager(this, news, p, 0) == 0 {

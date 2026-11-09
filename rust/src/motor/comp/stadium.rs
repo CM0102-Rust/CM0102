@@ -68,6 +68,8 @@ pub(crate) unsafe fn call_stadium_compare(f: usize, a: usize, b: usize) -> i32 {
 /// (ou na competição [0x9cf76c] sem conferir) é reservada e devolvida. Sem nada: com nação, marcas sem 2 e com
 /// 4/8/0x20, o estádio nacional dela (+0x80); senão 0.
 pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: u32, cont: usize, nation: usize, data: usize, home: usize, away: usize, partida: usize) -> usize {
+    let home = Club(home);
+    let away = Club(away);
     let search: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let state = (this + stadium_obj::VENUE_SORT) as *mut u8;
     // the key: only the order field and +0xc (0) matter to the comparers
@@ -134,9 +136,9 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
                     count = false;
                     break 'vaga;
                 }
-                if home != 0 && away != 0 && !fin_prm_is_national_team(home) && (marks as i32) < 0x40 {
+                if !home.is_null() && !away.is_null() && !fin_prm_is_national_team(home.addr()) && (marks as i32) < 0x40 {
                     let s = read_usize(e + 0xc);
-                    if s == read_usize(home + club::STADIUM) || s == read_usize(away + club::STADIUM) {
+                    if s == home.stadium().addr() || s == away.stadium().addr() {
                         break 'vaga;
                     }
                 }
@@ -158,7 +160,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
                     if !is_stadium_free(this, read_usize(e + 0xc), data) {
                         break 'vaga;
                     }
-                    let n = exe::stadium_score_venue_for_fixture(this, read_usize(e + 0xc), marks, home, away, partida);
+                    let n = exe::stadium_score_venue_for_fixture(this, read_usize(e + 0xc), marks, home.addr(), away.addr(), partida);
                     if n > best {
                         best = n; // cqo1: a melhor nota
                         escolhida = e;
@@ -911,6 +913,8 @@ pub(crate) unsafe fn stadium_city_distance(a: usize, b: usize) -> i32 {
 /// - senão, com marcas & 4: a nota é sorteio(lugares).
 /// No fim, nota × (sorteio(100) × 0,004 + 0,8), truncada.
 pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est: usize, marks: u32, home: usize, away: usize, game: usize) -> i32 {
+    let home = Club(home);
+    let away = Club(away);
     let inglaterra = read_usize(G_NATION_TABLE).wrapping_add(read_usize(KEY_NATION_ENGLAND).wrapping_mul(nation::SIZE));
     if est == read_usize(inglaterra + nation::NATIONAL_STADIUM) && core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16) < 0x7d4 {
         return 0;
@@ -918,8 +922,8 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
     let m = marks as u8;
     let mut rating: i32 = 100000;
     if m & 8 != 0 {
-        let cc = read_usize(home + club::STADIUM);
-        let cf = read_usize(away + club::STADIUM);
+        let cc = home.stadium().addr();
+        let cf = away.stadium().addr();
         let (cidc, cidf) = (if cc != 0 { read_usize(cc + stadium::CITY) } else { 0 }, if cf != 0 { read_usize(cf + stadium::CITY) } else { 0 });
         let cide = read_usize(est + stadium::CITY);
         if cc != 0 && cidc != 0 && cf != 0 && cidf != 0 && cide != 0 && read_i32(est + stadium::CAPACITY) > 0x2710 {

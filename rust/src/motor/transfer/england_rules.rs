@@ -118,6 +118,7 @@ pub(crate) unsafe fn season_loans_entry(club: usize) -> usize {
 /// temporada (a tabela [[0xde1f54] + 0x91c]): 0x1e. Mais de um jogador de outro clube no elenco (as 50 vagas em +0xd7,
 /// contados só com o id do jogador abaixo de [0xae2364]): 0x26. Fora da janela (0x8e8e50): 9, com o adjetivo da nação.
 pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
+    let club = Club(club);
     // 0x66f4e0: the message text (push ...; push format; push destination; add esp, 0x14) -> variadic cdecl
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let c = game_get_contract_and_store(player);
@@ -125,9 +126,9 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
         return 1;
     }
     let c2 = game_get_contract_and_store(player);
-    let owner = if c2 != 0 { england_rules_club_of_contract(c2) } else { 0 };
-    let comp = read_usize(club + club::DIVISION);
-    if comp == read_usize(owner + club::DIVISION) && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) {
+    let owner = Club(if c2 != 0 { england_rules_club_of_contract(c2) } else { 0 });
+    let comp = club.division().addr();
+    if comp == owner.division().addr() && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) {
         crate::comparison::branch("cqe_5 same division");
         if msg != 0 {
             let id = read_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION);
@@ -140,12 +141,12 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
         }
         return 0;
     }
-    if read_u8(season_loans_entry(club)) as i8 >= 5 {
+    if read_u8(season_loans_entry(club.addr())) as i8 >= 5 {
         // cqe5: cinco na temporada
         crate::comparison::branch("cqe_5 five in the season");
         if msg != 0 {
-            let g = read_u8(club + club::SHORT_GENDER_NAME) as i8 as i32;
-            text(msg, 0x9c4534, g, g, club + club::SHORT_NAME);
+            let g = club.short_gender_name() as i8 as i32;
+            text(msg, 0x9c4534, g, g, club.addr() + club::SHORT_NAME);
         }
         if !reason.is_null() {
             *reason = 0x1e;
@@ -155,7 +156,7 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
     // 0x4cf6d0: push person; mov ecx, [0xae1050] -> thiscall, ret 4 (the loan contract)
     let mut n: i8 = 0;
     for k in 0..50usize {
-        let p = read_usize(club + club::SQUAD + 4 * k);
+        let p = read_usize(club.addr() + club::SQUAD + 4 * k);
         if p == 0 {
             continue;
         }
@@ -167,15 +168,15 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
         }
         let cp = game_get_contract_and_store(p);
         let de = if cp != 0 { england_rules_club_of_contract(cp) } else { 0 };
-        if de != club {
+        if de != club.addr() {
             n = n.wrapping_add(1);
         }
     }
     if n > 1 { // cqe5: dois ao mesmo tempo
         crate::comparison::branch("cqe_5 two at the same time");
         if msg != 0 {
-            let g = read_u8(club + club::SHORT_GENDER_NAME) as i8 as i32;
-            text(msg, 0x9c44d4, g, g, club + club::SHORT_NAME);
+            let g = club.short_gender_name() as i8 as i32;
+            text(msg, 0x9c44d4, g, g, club.addr() + club::SHORT_NAME);
         }
         if !reason.is_null() {
             *reason = 0x26;
@@ -207,11 +208,11 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
 /// conclui (0x8c9390): o clube da oferta (+8, índice em [0xae23b4]) da nação inglesa ([0x9cf2e4]) soma 1 na conta da
 /// temporada.
 pub(crate) unsafe extern "thiscall" fn record_loan(_this: usize, offer: usize) {
-    let club = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(offer + 8).wrapping_mul(club::SIZE));
-    let nation = read_usize(club + club::NATION);
+    let club = Club(read_usize(G_CLUB_TABLE).wrapping_add(read_usize(offer + 8).wrapping_mul(club::SIZE)));
+    let nation = club.nation().addr();
     if nation != 0 && read_usize(nation) == read_usize(KEY_NATION_ENGLAND) {
         crate::comparison::branch("cqe_5 loan counted");
-        let p = season_loans_entry(club);
+        let p = season_loans_entry(club.addr());
         *(p as *mut u8) = read_u8(p).wrapping_add(1); // cqe5: the season calculation
     }
 }
@@ -233,9 +234,9 @@ pub(crate) unsafe extern "thiscall" fn england_rules_daily_update(this: usize, d
     }
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 {
-        let club = read_usize(G_CLUB_TABLE).wrapping_add((i as usize).wrapping_mul(club::SIZE));
-        if read_usize(club + club::NATION) == read_usize(this + 0xa) {
-            *(season_loans_entry(club) as *mut u8) = 0;
+        let club = Club(read_usize(G_CLUB_TABLE).wrapping_add((i as usize).wrapping_mul(club::SIZE)));
+        if club.nation().addr() == read_usize(this + 0xa) {
+            *(season_loans_entry(club.addr()) as *mut u8) = 0;
         }
         i += 1;
     }

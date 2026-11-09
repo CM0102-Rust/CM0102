@@ -2,7 +2,7 @@
 MUTACOES = [
     ('cpu1_nacao_linha_seguinte', 'return k as u8; // cpu1: the row of the given nation', 'return (k + 1) as u8; // mutacao: a linha seguinte'),
     ('cpu1_clube_linha_seguinte', 'return k as u8; // cpu1: the row of the chosen nation', 'return (k + 1) as u8; // mutacao: a linha seguinte'),
-    ('cpu1_sem_conferir_a_escolha', 'let nation = read_usize(club + club::NATION); // cpu1: the nation of the continent', 'let nation = read_usize(club + 0x53); if let Some(k) = (0..0x23usize).find(|&k| nation != 0 && read_usize(0xb63d60 + 72 * k) == nation) { return k as u8; } // mutacao: sem conferir a escolha'),
+    ('cpu1_sem_conferir_a_escolha', 'let nation = club.nation().addr(); // cpu1: the nation of the continent', 'let nation = read_usize(club.addr() + 0x53); if let Some(k) = (0..0x23usize).find(|&k| nation != 0 && read_usize(0xb63d60 + 72 * k) == nation) { return k as u8; } // mutacao: sem conferir a escolha'),
     ('cpu2_fim_no_mesmo_ano', 'write_date(end, c, y.wrapping_add(1)); // cpu2: the end in the following year', 'write_date(end, c, y); // mutacao: o fim no mesmo ano'),
     ('cpu2_primavera_fora', 'return 1; // cpu2: before the end, within the season', 'return 0; // mutacao: antes do fim, fora'),
     ('cpu2_janela_na_temporada', 'return 0; // cpu2: between the end and the start, outside', 'return 1; // mutacao: entre o fim e o inicio, na temporada'),

@@ -4,7 +4,8 @@ use super::*;
 ///
 /// [pt] A nação do clube (+0x53).
 pub(crate) unsafe fn club_nation(club: usize) -> usize {
-    read_usize(club + club::NATION)
+    let club = Club(club);
+    club.nation().addr()
 }
 
 /// Draws the Champions League first group phase: the 32 clubs sorted by pot, same-nation partners in opposite halves,
@@ -819,7 +820,8 @@ pub(crate) unsafe fn european_cup_add_knocked_out_record(club: usize, comp: usiz
 ///
 /// [pt] O clube sai da competição europeia da temporada (+0x1db = −1).
 pub(crate) unsafe fn leave_euro_competition(club: usize) {
-    core::ptr::write_unaligned((club + club::CONTINENTAL_COMP_ID) as *mut i32, -1);
+    let club = Club(club);
+    core::ptr::write_unaligned((club.addr() + club::CONTINENTAL_COMP_ID) as *mut i32, -1);
 }
 
 /// Updates the staff records by outcome and stage: in qualifying, the qualified (`add_qualified_for_round_record`) or knocked-out (`add_knocked_out_record`)
@@ -1385,8 +1387,9 @@ pub(crate) unsafe extern "thiscall" fn process_fixture(this: usize, game: usize,
 /// [pt] A palavra do coeficiente da nação do clube: [0xde1f58] + 18 × (+0x1df da seleção 0x53b3d0 da nação +0x53) + 0xf,
 /// como a 0x9058b0 calcula; 0 sem tabela, sem nação ou sem seleção.
 pub(crate) unsafe fn nation_coefficient_word(club: usize) -> usize {
+    let club = Club(club);
     let table = read_usize(G_UEFA_SEEDING);
-    let nation = read_usize(club + club::NATION);
+    let nation = club.nation().addr();
     if table == 0 || nation == 0 {
         return 0;
     }

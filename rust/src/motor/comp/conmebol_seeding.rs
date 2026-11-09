@@ -5,11 +5,12 @@ use super::*;
 ///
 /// [pt] O clube `c` (não nulo e ainda sem vaga, +0x1db = −1) entra na Libertadores na fase `fase`. Devolve se entrou.
 pub(crate) unsafe fn enter_libertadores(c: usize, stage: u8) -> bool {
-    if c == 0 || read_u32(c + club::CONTINENTAL_COMP_ID) != u32::MAX {
+    let c = Club(c);
+    if c.is_null() || c.continental_comp_id() != u32::MAX {
         return false;
     }
-    *((c + club::CONTINENTAL_COMP_ID) as *mut u32) = read_u32(KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES);
-    *((c + club::EURO_SEEDING) as *mut u8) = stage;
+    c.set_continental_comp_id(read_u32(KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES));
+    c.set_euro_seeding(stage);
     true
 }
 
@@ -29,10 +30,10 @@ pub(crate) unsafe fn enter_libertadores(c: usize, stage: u8) -> bool {
 /// cota com os primeiros da tabela ainda sem vaga (0x4c6730(.., 1, 1, 0)), uma tentativa por vaga.
 pub(crate) unsafe extern "thiscall" fn assign_libertadores_places(this: usize, clubs: usize, count: u32) {
     let row = |key: usize| (read_u32(G_CLUB_COMP_TABLE) as usize).wrapping_add(read_u32(key).wrapping_mul(0x6b) as usize);
-    let h = exe::comp_util_get_latest_placed_club(row(KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES), 0);
-    if h != 0 && read_u32(h + club::CONTINENTAL_COMP_ID) == u32::MAX {
-        *((h + club::EURO_SEEDING) as *mut u8) = 1;
-        *((h + club::CONTINENTAL_COMP_ID) as *mut u32) = read_u32(KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES);
+    let h = Club(exe::comp_util_get_latest_placed_club(row(KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES), 0));
+    if !h.is_null() && h.continental_comp_id() == u32::MAX {
+        h.set_euro_seeding(1);
+        h.set_continental_comp_id(read_u32(KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES));
     } else {
         show_error_at(0x9a7ed8, 0x114);
     }
@@ -115,11 +116,11 @@ pub(crate) unsafe extern "thiscall" fn find_nth_unqualified_club_of_nation(_this
     let mut found = false;
     if p < last {
         loop {
-            let c = read_u32(p) as usize;
-            if without_slot != 0 && c != 0 && read_u32(c + club::CONTINENTAL_COMP_ID) != u32::MAX {
+            let c = Club(read_u32(p) as usize);
+            if without_slot != 0 && !c.is_null() && c.continental_comp_id() != u32::MAX {
                 crate::comparison::branch("cqj_1 already with a place");
                 p += 12; // cqj1: skips the club that already has a slot
-            } else if without_human != 0 && c != 0 && exe::human_manager_is_human_club(c, 0, 1, 0, 0) != 0 {
+            } else if without_human != 0 && !c.is_null() && exe::human_manager_is_human_club(c.addr(), 0, 1, 0, 0) != 0 {
                 p += 12;
             } else {
                 if foul == 0 {

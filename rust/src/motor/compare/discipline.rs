@@ -295,8 +295,8 @@ pub(crate) unsafe extern "thiscall" fn compare_discipline_set_slot(this: usize, 
 /// [pt] Comparador: lado a lado pelas 20 vagas (+0x1e0) do clube do jogador (a 0x7e85b0 e a 0x600a50 só leem).
 pub(crate) unsafe extern "thiscall" fn compare_is_player_suspended(this: usize, player: usize, comp: *const i32, extra: u32, partida: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32, usize) -> u32>(IDX_IS_PLAYER_SUSPENDED);
-    let club = if player != 0 { read_usize(player + staff::CLUB_JOB) } else { 0 };
-    let regions: &[(usize, usize)] = if club != 0 { &[(club + club::TEAM_SELECTED, 80)] } else { &[] };
+    let club = Club(if player != 0 { read_usize(player + staff::CLUB_JOB) } else { 0 });
+    let regions: &[(usize, usize)] = if !club.is_null() { &[(club.addr() + club::TEAM_SELECTED, 80)] } else { &[] };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(regions, || o(this, player, comp, extra, partida), || is_player_suspended(this, player, comp, extra, partida));
     SCOREBOARD.record(igual && r == n, || format!("is_player_suspended({:x}, {}) original={} rust={} {:x?} x {:x?}", player, *comp, r, n, mo, mr));
     r

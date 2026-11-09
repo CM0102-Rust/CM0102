@@ -191,9 +191,9 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_create_table(this: 
     let mut plan = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && plan.len() < 0x38 {
-        let club = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
-        if read_usize(club + club::DIVISION) == read_usize(this + 4) {
-            plan.push(club);
+        let club = Club(read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE);
+        if club.division().addr() == read_usize(this + 4) {
+            plan.push(club.addr());
         }
         i += 1;
     }

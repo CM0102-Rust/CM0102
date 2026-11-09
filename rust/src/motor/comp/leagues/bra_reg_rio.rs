@@ -168,22 +168,23 @@ pub(crate) unsafe fn league_comp_reputation(league: usize) -> i32 {
 /// 750 × (r − 4) × f + 1000 (a original compara com a parte inteira + 1000 e grava a conta com 1000 somado antes do
 /// truncamento). Abaixo dele, o público vai a ele e o recorde (+0x7b) sobe até ele.
 pub(crate) unsafe fn raise_attendance_floor(c: usize, r: i32, f: f64) {
+    let c = Club(c);
     let lim = if r < 5 {
         let lim = ftol((r.wrapping_mul(250)) as f64 * f);
-        if read_i32(c + club::ATTENDANCE) >= lim {
+        if c.attendance() >= lim {
             return;
         }
         lim
     } else {
         let x = (r.wrapping_sub(4).wrapping_mul(750)) as f64 * f;
-        if read_i32(c + club::ATTENDANCE) >= ftol(x).wrapping_add(1000) {
+        if c.attendance() >= ftol(x).wrapping_add(1000) {
             return;
         }
         ftol(x + 1000.0)
     };
-    write_i32(c + club::ATTENDANCE, lim);
-    if lim > read_i32(c + club::MAX_ATTENDANCE) {
-        write_i32(c + club::MAX_ATTENDANCE, lim);
+    c.set_attendance(lim);
+    if lim > c.max_attendance() {
+        c.set_max_attendance(lim);
     }
 }
 
@@ -191,10 +192,11 @@ pub(crate) unsafe fn raise_attendance_floor(c: usize, r: i32, f: f64) {
 ///
 /// [pt] O teto `lim` do público: acima dele, o público cai a ele e o mínimo (+0x77) desce até ele.
 pub(crate) unsafe fn cap_attendance(c: usize, lim: i32) {
-    if read_i32(c + club::ATTENDANCE) > lim {
-        write_i32(c + club::ATTENDANCE, lim);
-        if lim < read_i32(c + club::MIN_ATTENDANCE) {
-            write_i32(c + club::MIN_ATTENDANCE, lim);
+    let c = Club(c);
+    if c.attendance() > lim {
+        c.set_attendance(lim);
+        if lim < c.min_attendance() {
+            c.set_min_attendance(lim);
         }
     }
 }
@@ -295,11 +297,11 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
     let mut i = 0i32;
     while i < n {
         let e = t + 0x76 * i as usize;
-        let c = read_usize(G_CLUB_TABLE) + 0x245 * read_usize(e);
+        let c = Club(read_usize(G_CLUB_TABLE) + 0x245 * read_usize(e));
         let pos = *((e + 0x73) as *const u8);
         let prevista = *((e + 0x72) as *const u8);
-        let owner = *((c + club::OWN_STADIUM) as *const u8) != 0;
-        let add = |v: i32| write_i32(c + club::ATTENDANCE, read_i32(c + club::ATTENDANCE).wrapping_add(v));
+        let owner = c.own_stadium() != 0;
+        let add = |v: i32| c.set_attendance(c.attendance().wrapping_add(v));
         let d = (prevista as i16).wrapping_sub(pos as i16).wrapping_add(1);
         if pos == 1 && promotion() == 0 {
             let k = league_comp_reputation(league) + d.max(0) as i32;
@@ -315,14 +317,14 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 if a < 1 {
                     a = 1;
                 }
-                let v = ftol(read_i16(c + club::REPUTATION) as f64 * a as f64 * f * 0.1).max(100);
+                let v = ftol(c.reputation() as f64 * a as f64 * f * 0.1).max(100);
                 if owner {
                     let r = exe::utils_random(v);
                     add(r.wrapping_add(v));
                 } else {
                     add(v);
                 }
-                raise_attendance_floor(c, league_comp_reputation(cima), f);
+                raise_attendance_floor(c.addr(), league_comp_reputation(cima), f);
                 crate::comparison::branch("cqt_4 attendance of promoted");
             }
         } else if *((league + league::PROMOTION_PLAYOFF_COUNT) as *const i8) != 0 && pos as i32 <= *((league + league::PROMOTION_PLAYOFF_COUNT) as *const i8) as i32 {
@@ -348,8 +350,8 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
             }
             let games = *((e + 5) as *const u8);
             if games != 0 {
-                let val = (read_i32(e + 6) / games as i32).wrapping_add(read_i32(c + club::ATTENDANCE).wrapping_mul(4));
-                write_i32(c + club::ATTENDANCE, ftol(val as f64 * f * 0.2));
+                let val = (read_i32(e + 6) / games as i32).wrapping_add(c.attendance().wrapping_mul(4));
+                c.set_attendance(ftol(val as f64 * f * 0.2));
             }
         } else if relegation() != 0
             && pos as i32 > read_i16(league + league::CLUB_COUNT) as i32 - *((league + league::RELEGATED_COUNT) as *const i8) as i32
@@ -359,7 +361,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 if a > -1 {
                     a = -1;
                 }
-                let mut v = ftol(read_i16(c + club::REPUTATION) as f64 * a as f64 * f * 0.2).min(-100);
+                let mut v = ftol(c.reputation() as f64 * a as f64 * f * 0.2).min(-100);
                 if read_i32(low + 0x20) == -1 {
                     let r = exe::utils_random(0x2ee);
                     v = v.wrapping_mul(2).wrapping_sub(0xfa).wrapping_sub(r);
@@ -368,13 +370,13 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 add(r.wrapping_add(v));
                 let rb = league_comp_reputation(low);
                 let lim = if rb > 7 { ftol(rb.wrapping_mul(3000) as f64 * f) } else { ftol(rb.wrapping_mul(2000) as f64 * f) };
-                cap_attendance(c, lim);
+                cap_attendance(c.addr(), lim);
                 crate::comparison::branch("cqt_4 attendance of relegated");
             }
         } else {
             let r16 = read_i16(read_usize(league + 4) + 0x69);
             let r = r16 as i32;
-            let val = if d <= 0 && read_i16(c + club::REPUTATION) <= r16.wrapping_mul(500) {
+            let val = if d <= 0 && c.reputation() <= r16.wrapping_mul(500) {
                 r.wrapping_mul(d as i32).wrapping_mul(5)
             } else if owner {
                 r.wrapping_mul(d as i32).wrapping_mul(10)
@@ -385,23 +387,23 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
             add(exe::utils_random(v));
             let games = *((e + 5) as *const u8);
             if games != 0 {
-                let val = (read_i32(e + 6) / games as i32).wrapping_add(read_i32(c + club::ATTENDANCE).wrapping_mul(4));
-                write_i32(c + club::ATTENDANCE, ftol(val as f64 * 0.2)); // cqt4: the mix with the real attendance
+                let val = (read_i32(e + 6) / games as i32).wrapping_add(c.attendance().wrapping_mul(4));
+                c.set_attendance(ftol(val as f64 * 0.2)); // cqt4: the mix with the real attendance
             }
             crate::comparison::branch("cqt_4 attendance of mid-table");
-            raise_attendance_floor(c, league_comp_reputation(league), f);
+            raise_attendance_floor(c.addr(), league_comp_reputation(league), f);
             let r = league_comp_reputation(league);
             let ceiling = if r > 12 { r.wrapping_mul(5000) } else if r > 7 { r.wrapping_mul(3000) } else { r.wrapping_mul(2000) };
-            cap_attendance(c, ceiling);
+            cap_attendance(c.addr(), ceiling);
         }
-        if read_i32(c + club::ATTENDANCE) < 500 {
-            write_i32(c + club::ATTENDANCE, 500);
+        if c.attendance() < 500 {
+            c.set_attendance(500);
         }
-        let a = read_i32(c + club::ATTENDANCE);
-        if a < read_i32(c + club::MIN_ATTENDANCE) {
-            write_i32(c + club::ATTENDANCE, read_i32(c + club::MIN_ATTENDANCE));
-        } else if a > read_i32(c + club::MAX_ATTENDANCE) {
-            write_i32(c + club::ATTENDANCE, read_i32(c + club::MAX_ATTENDANCE));
+        let a = c.attendance();
+        if a < c.min_attendance() {
+            c.set_attendance(c.min_attendance());
+        } else if a > c.max_attendance() {
+            c.set_attendance(c.max_attendance());
         }
         i += 1;
     }

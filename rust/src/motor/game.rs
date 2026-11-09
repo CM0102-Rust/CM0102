@@ -193,18 +193,19 @@ pub(crate) unsafe fn is_disliked_by(target: usize, person: usize) -> u32 {
 /// (0x587c60) contra o técnico (+0xcf, tipo 0), o auxiliar (+0xd3, 1) ou outro (2) e a marca no vínculo `k` (0x867700
 /// com 0x2000, 0x1000 ou 0x800).
 pub(crate) unsafe fn dressing_room_friction(p: usize, club: usize, k: usize) {
+    let club = Club(club);
     let mut j = 0usize;
     loop {
         if j >= 0x32 {
             return;
         }
-        let q = read_usize(club + club::SQUAD + j * 4);
+        let q = read_usize(club.addr() + club::SQUAD + j * 4);
         if q != p && q != 0 && is_disliked_by(q, p) != 0 {
             break;
         }
         j += 1;
     }
-    let q = read_usize(club + club::SQUAD + j * 4);
+    let q = read_usize(club.addr() + club::SQUAD + j * 4);
     if q == 0 {
         return;
     }
@@ -212,9 +213,9 @@ pub(crate) unsafe fn dressing_room_friction(p: usize, club: usize, k: usize) {
         return;
     }
     crate::comparison::branch("cps_5 friction with the manager");
-    let (tipo, marca) = if q == read_usize(club + club::MANAGER) {
+    let (tipo, marca) = if q == club.manager().addr() {
         (0, 0x2000)
-    } else if q == read_usize(club + club::ASSISTANT_MANAGER) {
+    } else if q == club.assistant_manager() {
         (1, 0x1000)
     } else {
         (2, 0x800)
@@ -311,11 +312,11 @@ pub(crate) unsafe fn player_vs_manager_check(p: usize) {
     if c == 0 {
         return;
     }
-    let club = game_club_of_contract(c);
-    if club == 0 {
+    let club = Club(game_club_of_contract(c));
+    if club.is_null() {
         return;
     }
-    let k = game_contract_for_club(read_usize(club + 0xff), club);
+    let k = game_contract_for_club(read_usize(club.addr() + 0xff), club.addr());
     if k == 0 {
         return;
     }
@@ -339,7 +340,7 @@ pub(crate) unsafe fn player_vs_manager_check(p: usize) {
         }
     }
     let rep = read_i16(read_usize(p + staff::PLAYER) + 0xb);
-    if rep > 0x1194 && rep > read_i16(club + club::REPUTATION) {
+    if rep > 0x1194 && rep > club.reputation() {
         e -= 5;
     }
     if friendly_random(e) >= 1 {
@@ -348,7 +349,7 @@ pub(crate) unsafe fn player_vs_manager_check(p: usize) {
     if read_usize(p + staff::STAFF_PREFERENCES) == 0 {
         return;
     }
-    dressing_room_friction(p, club, k);
+    dressing_room_friction(p, club.addr(), k);
 }
 
 // simplification: rolls and touches the preferences (0x547a10, 0x547af0, 0x547c10, 0x547c50), quarrel and complaint: original only;
@@ -362,19 +363,20 @@ pub(crate) unsafe fn player_vs_manager_check(p: usize) {
 /// vagas) com vínculo com o clube (0x4cf5f0) e preferências (+0x65) passa pelo atrito com o técnico (o primeiro colega
 /// de quem não gosta; a queixa só com dia % 14 + id = 0). Pelas relações do elenco (0x5d6d10) nos dias múltiplos de 50.
 pub(crate) unsafe extern "C" fn game_check_club_dressing_room_unrest(club: usize) {
+    let club = Club(club);
     for i in 0..0x32usize {
-        let p = read_usize(club + club::SQUAD + i * 4);
+        let p = read_usize(club.addr() + club::SQUAD + i * 4);
         if p == 0 {
             continue;
         }
-        let k = game_contract_for_club(p, club);
+        let k = game_contract_for_club(p, club.addr());
         if k == 0 {
             continue;
         }
         if read_usize(p + staff::STAFF_PREFERENCES) == 0 {
             continue;
         }
-        dressing_room_friction(p, club, k);
+        dressing_room_friction(p, club.addr(), k);
     }
 }
 

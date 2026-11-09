@@ -24,9 +24,9 @@ pub(crate) unsafe extern "C" fn competition_counts(id: i32) -> u32 {
     if r == 0 {
         return 0;
     }
-    let first = *(r as *const usize);
+    let first = Club(*(r as *const usize));
     let target = *((c + 4) as *const i32);
-    (*((first + club::DIVISION) as *const i32) == target || *((first + club::RESERVE_DIVISION) as *const i32) == target) as u32
+    ((first.division().addr() as i32) == target || (first.reserve_division().addr() as i32) == target) as u32
 }
 
 /// qsort comparator: orders records by the signed byte at +0x5f, descending (second minus first; a null pointer counts
@@ -281,34 +281,35 @@ pub(crate) unsafe fn set_final_positions_by_round(this: usize, v: *const u32, wr
 /// (+0x53), 2 se é a do adversário, senão 3. Clube: o campo é o estádio do clube e não o do adversário, 1; dos dois,
 /// 1 para o mandante e 2 para o outro; só do adversário, 2; de nenhum, 3. Quem chama lê só o al.
 pub(crate) unsafe extern "C" fn comp_util_get_fixture_venue_side(club: usize, game: usize) -> u8 {
+    let club = Club(club);
     let field = read_u32(game + fixture::STADIUM);
     let home = read_ptr(game + fixture::HOME_CLUB);
     if field == 0 {
         if read_u32(home + club::STADIUM) == 0 {
             return 3;
         }
-        return if club != home { 2 } else { 1 };
+        return if club.addr() != home { 2 } else { 1 };
     }
-    if exe::database_is_national_team(club) != 0 {
+    if exe::database_is_national_team(club.addr()) != 0 {
         let nation = read_ptr(field as usize + 0x38);
-        if nation != 0 && read_u32(nation + city::NATION) == read_u32(club + club::NATION) {
+        if nation != 0 && read_u32(nation + city::NATION) == (club.nation().addr() as u32) {
             return 1;
         }
         let home = read_ptr(game + fixture::HOME_CLUB);
-        let other = if home == club { read_ptr(game + fixture::AWAY_CLUB) } else { home };
+        let other = if home == club.addr() { read_ptr(game + fixture::AWAY_CLUB) } else { home };
         if nation != 0 && read_u32(nation + city::NATION) == read_u32(other + club::NATION) {
             return 2;
         }
         return 3;
     }
     let home = read_ptr(game + fixture::HOME_CLUB);
-    let other = if home == club { read_ptr(game + fixture::AWAY_CLUB) } else { home };
+    let other = if home == club.addr() { read_ptr(game + fixture::AWAY_CLUB) } else { home };
     let field = read_u32(game + fixture::STADIUM);
-    if field != read_u32(club + club::STADIUM) {
+    if field != (club.stadium().addr() as u32) {
         return if field != read_u32(other + club::STADIUM) { 3 } else { 2 };
     }
     if field == read_u32(other + club::STADIUM) {
-        return if club != home { 2 } else { 1 }; // the same stadium for both
+        return if club.addr() != home { 2 } else { 1 }; // the same stadium for both
     }
     crate::comparison::branch("cpq_12 at home");
     1 // the club’s stadium
@@ -444,20 +445,22 @@ pub(crate) unsafe fn league_stats_rating(e: usize, b73: f64) -> f64 {
 /// + +0xbe + +0xbf, e o mesmo cruzamento do +0x74); senão 0. Devolve só `al`. Sem SEH, sem sorteio; a virtual +0x98
 /// é chamada até três vezes, como na original.
 pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usize) -> u8 {
-    let comp = read_usize(a + club::DIVISION);
-    if comp == 0 || comp != read_usize(b + club::DIVISION) {
+    let b = Club(b);
+    let a = Club(a);
+    let comp = a.division().addr();
+    if comp == 0 || comp != b.division().addr() {
         return 0;
     }
     let smaller: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
     if smaller(comp) != 0 {
         return 0;
     }
-    let league = read_usize((*(G_COMP_OBJECT_TABLE as *const usize)).wrapping_add(4 * *(read_usize(a + club::DIVISION) as *const u32) as usize));
+    let league = read_usize((*(G_COMP_OBJECT_TABLE as *const usize)).wrapping_add(4 * *(a.division().addr() as *const u32) as usize));
     if league == 0 || read_usize(league + 8) == 0 {
         return 0;
     }
-    let ea = exe::comp_stats_find_club_entry(read_usize(league + 8), a);
-    let eb = exe::comp_stats_find_club_entry(read_usize(league + 8), b);
+    let ea = exe::comp_stats_find_club_entry(read_usize(league + 8), a.addr());
+    let eb = exe::comp_stats_find_club_entry(read_usize(league + 8), b.addr());
     if ea == 0 || eb == 0 || read_usize(league + league::CURRENT_STAGE) as i32 != -1 || read_u8(league + league::COMP_TYPE) != 2 {
         return 0;
     }
@@ -523,25 +526,26 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
 /// −10.000.000. Sem SEH, sem sorteio próprio. A original empurra o número de jogadores como dword com só o byte de
 /// baixo gravado (o resto é sobra de pilha); a 0x6e2000 só lê o byte, e a cópia passa o byte estendido.
 pub(crate) unsafe extern "C" fn comp_util_get_club_strength_score(club: usize) -> i32 {
-    if club == 0 {
+    let club = Club(club);
+    if club.is_null() {
         return -10_000_000;
     }
     let finances = *(G_FINANCE_TABLE as *const usize);
     let mut strength: i32 = 0;
     if finances == 0 {
-        strength = core::ptr::read_unaligned((club + club::CASH) as *const i32) / 400;
+        strength = core::ptr::read_unaligned((club.addr() + club::CASH) as *const i32) / 400;
     } else {
-        let f = exe::financetable_get_club_finance(finances, club);
+        let f = exe::financetable_get_club_finance(finances, club.addr());
         if f != 0 {
             strength = (core::ptr::read_unaligned(f as *const i64) / 300) as i32;
         }
     }
-    strength = strength.wrapping_add((core::ptr::read_unaligned((club + club::REPUTATION) as *const i16) as i32) << 4); // the reputation
+    strength = strength.wrapping_add((core::ptr::read_unaligned((club.addr() + club::REPUTATION) as *const i16) as i32) << 4); // the reputation
     let mut squad = [0usize; 50];
     let mut players = [0usize; 50];
     let mut escalados = [0usize; 15];
     let codes: [u16; 15] = [1, 0x804, 0x84, 0x204, 0x204, 0x204, 0x810, 0x90, 0x210, 0x210, 0x210, 0x40, 0x40, 0x40, 0x40];
-    exe::database_collect_club_squad(club, squad.as_mut_ptr(), 0);
+    exe::database_collect_club_squad(club.addr(), squad.as_mut_ptr(), 0);
     let mut k: i8 = 0;
     for &p in squad.iter() {
         if p != 0 && read_usize(p + staff::PLAYER) != 0 {
@@ -550,10 +554,10 @@ pub(crate) unsafe extern "C" fn comp_util_get_club_strength_score(club: usize) -
         }
     }
     let pick: AssignPositionsFn = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
-    pick(players.as_ptr() as usize, k as u8 as u32, codes.as_ptr() as usize, 0xf, 0, escalados.as_mut_ptr() as usize, 0x840, club, 0, 0, 0, 0, 0, 0, 0);
+    pick(players.as_ptr() as usize, k as u8 as u32, codes.as_ptr() as usize, 0xf, 0, escalados.as_mut_ptr() as usize, 0x840, club.addr(), 0, 0, 0, 0, 0, 0, 0);
     for (j, &p) in escalados.iter().enumerate() {
         if p != 0 {
-            strength = strength.wrapping_add(exe::match_man_score_player_for_selection(p, codes[j] as u32, 0x840, club, -1, 0));
+            strength = strength.wrapping_add(exe::match_man_score_player_for_selection(p, codes[j] as u32, 0x840, club.addr(), -1, 0));
         }
     }
     strength
@@ -669,10 +673,10 @@ pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(news: usi
 /// 1 goleada, 2 e 3 vitórias contra mais fortes, 4 comum, 5 e 7 derrotas para mais fracos, 6
 /// zebra. Só o al é fiel (quem chama usa al).
 pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(club: usize, partida: usize) -> u8 {
-    let home = *((partida + fixture::HOME_CLUB) as *const usize);
-    let away = *((partida + fixture::AWAY_CLUB) as *const usize);
-    let h = (core::ptr::read_unaligned((home + club::REPUTATION) as *const i16) as i32 / 500) as i8 as i32;
-    let a = (core::ptr::read_unaligned((away + club::REPUTATION) as *const i16) as i32 / 500) as i8 as i32;
+    let home = Club(*((partida + fixture::HOME_CLUB) as *const usize));
+    let away = Club(*((partida + fixture::AWAY_CLUB) as *const usize));
+    let h = (core::ptr::read_unaligned((home.addr() + club::REPUTATION) as *const i16) as i32 / 500) as i8 as i32;
+    let a = (core::ptr::read_unaligned((away.addr() + club::REPUTATION) as *const i16) as i32 / 500) as i8 as i32;
     let (g1, g2) = if read_u8(partida + fixture::HOME_AGGREGATE) != 0xff {
         (read_u8(partida + fixture::HOME_AGGREGATE), read_u8(partida + fixture::AWAY_AGGREGATE))
     } else if read_u8(partida + fixture::HOME_GOALS_EXTRA_TIME) != 0xff {
@@ -682,8 +686,8 @@ pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(club: usi
     };
     let m = g1.wrapping_sub(g2) as i8;
     // from the club’s point of view: `eu` and `ele` the reputations, `vitoria` the margin in its favour
-    let (eu, ele) = if club == home { (h, a) } else { (a, h) };
-    let win = if club == home { m } else { m.wrapping_neg() };
+    let (eu, ele) = if club == home.addr() { (h, a) } else { (a, h) };
+    let win = if club == home.addr() { m } else { m.wrapping_neg() };
     if win == 0 {
         if eu < ele - 16 || eu - 15 > ele {
             return 6;
@@ -700,7 +704,7 @@ pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(club: usi
         return if eu - 11 <= ele { 4 } else { 7 };
     }
     // the upset: the home side tolerates 8 / 7, the away side 13 / 7 difference in a win by 1 or 2
-    let (z1, z2) = if club == home { (8, 2) } else { (13, 7) };
+    let (z1, z2) = if club == home.addr() { (8, 2) } else { (13, 7) };
     if win > 0 {
         if (win < 3 && eu < ele - z1) || (win > 2 && eu < ele - z2) {
             return 6;

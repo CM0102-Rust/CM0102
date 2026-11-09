@@ -29,6 +29,18 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 1: the club
+
+`engenharia-reversa/tipar_registros.py club`: in a function, the variable used as `x + club::FIELD` becomes a `Club`
+(a parameter: `let x = Club(x);` at the top of the body; `let x = e;` becomes `let x = Club(e);`), the accesses become
+methods (`x.reputation()`, `x.set_own_stadium(1)`; a pointer to another record: `x.stadium().addr()` for now),
+`x == 0` becomes `x.is_null()` and the other uses `x.addr()`. Left as they are: variables reassigned or with several
+`let` (107), accesses with another width and arrays (`club::SQUAD + v * 4`). 544 variables in 475 functions; 4
+functions went back to their previous text (they did not compile). Raw club accesses 1,676 → 657; 881 methods; the
+friction: the `.addr()` where the club goes to a function that still takes `usize` (gone once it takes the type).
+Proof: 7cc445c2 ×2, detector equal, comparison 0; the 83 changed mutations compile (one, `cpo_abrir_a_vaga`, had an
+alias from round 25 that had slipped through and was fixed).
+
 ## Round 29: typed records pilot
 
 `engenharia-reversa/registros.py` generates `rust/src/motor/records.rs`: for each object in `fields.rs` (162), a

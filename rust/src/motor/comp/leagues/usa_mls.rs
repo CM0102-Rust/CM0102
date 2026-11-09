@@ -210,7 +210,8 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
 /// [pt] O código de divisão do clube `c` na MLS (usa_mls_get_club_division 0x909ec0: push c; call; add esp, 4 -> cdecl; a
 /// palavra baixa do eax: 0x413, 0x47b ou 0x414), se ele é da competição da liga (+0x57 do clube = +4 da liga).
 pub(crate) unsafe fn is_in_mls_division(this: usize, c: usize, code: i16) -> bool {
-    read_usize(c + club::DIVISION) == read_usize(this + 4) && (exe::usa_mls_get_club_division(c) as u32) as u16 as i16 == code
+    let c = Club(c);
+    c.division().addr() == read_usize(this + 4) && (exe::usa_mls_get_club_division(c.addr()) as u32) as u16 as i16 == code
 }
 
 /// Creates the MLS table (the first division, code 0x413): the four clubs of the competition with that division code,
@@ -703,11 +704,12 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_add_result(this: usize, game: usi
 /// San Jose e Chicago (0x9d03a8, 0x9d03a0, 0x9d039c, 0x9d0398, 0x9d038c, 0x9d037c); 0 para clube cuja liga (+0x57) não
 /// é a MLS (chave 0x9cf590); clube da MLS fora dos doze: a caixa "Error" (a original).
 pub(crate) unsafe extern "C" fn usa_mls_get_club_all_star_conference(club: usize) -> u16 {
-    let nation = read_usize(club + club::DIVISION);
+    let club = Club(club);
+    let nation = club.division().addr();
     if nation == 0 || read_usize(nation) != read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) {
         return 0;
     }
-    let id = read_usize(club);
+    let id = read_usize(club.addr());
     const LESTE: [usize; 6] = [0x9d0390, 0x9d0394, 0x9d0388, 0x9d0384, 0x9d03a4, 0x9d0380];
     const OESTE: [usize; 6] = [0x9d03a8, 0x9d03a0, 0x9d039c, 0x9d0398, 0x9d038c, 0x9d037c];
     if LESTE.iter().any(|&k| read_usize(k) == id) {
@@ -717,7 +719,7 @@ pub(crate) unsafe extern "C" fn usa_mls_get_club_all_star_conference(club: usize
     if OESTE.iter().any(|&k| read_usize(k) == id) {
         return 0x414;
     }
-    original_fn::<unsafe extern "C" fn(usize) -> u16>(IDX_USA_MLS_GET_CLUB_ALL_STAR_CONFERENCE)(club)
+    original_fn::<unsafe extern "C" fn(usize) -> u16>(IDX_USA_MLS_GET_CLUB_ALL_STAR_CONFERENCE)(club.addr())
 }
 
 /// MLS: 32 games per team (+0xa7; four round robins in +0x3c); win 3, draw 1; tie-break by goal difference, goals

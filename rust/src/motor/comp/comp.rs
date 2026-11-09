@@ -102,10 +102,11 @@ pub(crate) unsafe fn finalize_league_table(league: usize) {
 /// rodada, 7 o tipo; com a partida, 5 o adversário e 6 se o clube venceu (+0x3d/+0x3e o vencedor nos pênaltis
 /// [inferência], senão +0x4b/+0x4c, senão +0x43/+0x44 o placar); sem ela −1 e 0. Entregue a ele (0x7861e0).
 pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: usize, lo: u32, hi: i32, position: u32, round: u32, partida: usize, kind: u32) {
-    if !club_has_human_manager(club) {
+    let club = Club(club);
+    if !club_has_human_manager(club.addr()) {
         return;
     }
-    let minimum = *((club + club::REPUTATION) as *const i16) as i64 * 50;
+    let minimum = club.reputation() as i64 * 50;
     let value = ((hi as i64) << 32) | lo as i64;
     if value < minimum {
         return;
@@ -116,13 +117,13 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: 
     exe::new_newsitem(p, 0x1a, 0);
     exe::newsitem_set_slot(p, (0) as u32 as i8, read_usize(read_usize(this + 4)) as u32);
     exe::newsitem_set_slot(p, (1) as u32 as i8, lo);
-    exe::newsitem_set_slot(p, (2) as u32 as i8, read_usize(club) as u32);
+    exe::newsitem_set_slot(p, (2) as u32 as i8, read_usize(club.addr()) as u32);
     exe::newsitem_set_slot(p, (3) as u32 as i8, position as u8 as i8 as i32 as u32);
     exe::newsitem_set_slot(p, (4) as u32 as i8, round as u16 as i16 as i32 as u32);
     exe::newsitem_set_slot(p, (7) as u32 as i8, kind as u8 as i8 as i32 as u32);
     let b = |a: usize| *(a as *const i8);
     let won = if partida != 0 {
-        if read_usize(partida + fixture::HOME_CLUB) == club {
+        if read_usize(partida + fixture::HOME_CLUB) == club.addr() {
             exe::newsitem_set_slot(p, (5) as u32 as i8, read_usize(read_usize(partida + fixture::AWAY_CLUB)) as u32);
             b(partida + fixture::HOME_RESULT_MARK) != 0 || b(partida + fixture::HOME_AGGREGATE) > b(partida + fixture::AWAY_AGGREGATE) || b(partida + fixture::HOME_GOALS) > b(partida + fixture::AWAY_GOALS)
         } else {
@@ -134,7 +135,7 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: 
         false
     };
     exe::newsitem_set_slot(p, (6) as u32 as i8, won as u32);
-    exe::news_send_to_club_manager(read_usize(G_NEWS), p, club);
+    exe::news_send_to_club_manager(read_usize(G_NEWS), p, club.addr());
 }
 
 // simplification: delivers the news (allocates); original only. The copy takes the branch.
@@ -458,7 +459,8 @@ pub(crate) unsafe fn find_key_nation_index(nation: usize) -> Option<i8> {
 /// nação do clube (+0x53) entre as nações-chave ativas; sem nação ou fora da tabela, 0 para uma seleção (0x53b900) e 3
 /// para um clube. Devolve só `al` (os chamadores gravam o byte).
 pub(crate) unsafe extern "C" fn comp_active_key_nation_of_club(club: usize) -> u8 {
-    let nation = core::ptr::read_unaligned((club + club::NATION) as *const usize);
+    let club = Club(club);
+    let nation = core::ptr::read_unaligned((club.addr() + club::NATION) as *const usize);
     if nation != 0 {
         if let Some(k) = find_key_nation_index(nation) {
             crate::comparison::branch("cqb_12 club key nation");
@@ -466,7 +468,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_club(club: usize) -> u
         }
     }
     // 0x53b900: push club; add esp, 4 -> cdecl
-    if exe::database_is_national_team(club) != 0 {
+    if exe::database_is_national_team(club.addr()) != 0 {
         return 0;
     }
     crate::comparison::branch("cqb_12 club without key nation");
@@ -522,12 +524,13 @@ pub(crate) unsafe extern "C" fn comp_key_nation_entry_from_active_index(active: 
 /// +5 quantas), se o clube conta: id dentro dos [0xae235c] − 2 × [0xae2350] registros, com nação (+0x53) marcada
 /// (+0x11c) e que não é a de [0x9cf260].
 pub(crate) unsafe fn club_callup_record(this: usize, c: usize) -> Option<usize> {
+    let c = Club(c);
     let n = (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
-    let id = read_usize(c) as i32;
+    let id = read_usize(c.addr()) as i32;
     if id >= n || id < 0 {
         return None;
     }
-    let nation = read_usize(c + club::NATION);
+    let nation = c.nation().addr();
     if nation == 0 || *((nation + nation::LEAGUE_SELECTED) as *const u8) == 0 || read_usize(nation) == read_usize(KEY_NATION_BRAZIL) {
         return None;
     }
@@ -587,8 +590,9 @@ pub(crate) unsafe fn add_club_callups(this: usize, c: usize, count: u8, d: *mut 
 /// [pt] O registro de algum clube que a 0x7771c0 pode somar está com o vetor cheio (capacidade = quantas, inclusive sem
 /// vetor)? Então ela pode realocar.
 pub(crate) unsafe fn callup_array_full(this: usize, team: usize) -> bool {
+    let team = Club(team);
     (0..0x32usize).any(|i| {
-        let s = read_usize(team + club::SQUAD + 4 * i);
+        let s = read_usize(team.addr() + club::SQUAD + 4 * i);
         if s == 0 || read_usize(s) as i32 >= read_usize(G_STAFF_COUNT) as i32 || read_usize(s + staff::CLUB_JOB) == 0 {
             return false;
         }
@@ -661,15 +665,15 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, p
             if exe::database_is_national_team(read_usize(partida + fixture::HOME_CLUB)) != 0 || exe::database_is_national_team(read_usize(partida + fixture::AWAY_CLUB)) != 0 {
                 return 1;
             }
-            let home = read_usize(partida + fixture::HOME_CLUB);
-            let a = read_usize(home + club::NATION);
+            let home = Club(read_usize(partida + fixture::HOME_CLUB));
+            let a = home.nation().addr();
             if a != read_usize(read_usize(partida + fixture::AWAY_CLUB) + 0x53) || *((a + nation::LEAGUE_SELECTED) as *const u8) == 0 {
                 return 3;
             }
             if let Some(k) = row(a) {
                 return *((0xb63d74 + 72 * k) as *const u8); // cpt3: the friendly’s nation
             }
-            return if exe::database_is_national_team(home) != 0 { 0 } else { 3 };
+            return if exe::database_is_national_team(home.addr()) != 0 { 0 } else { 3 };
         }
     }
     if read_usize(comp + competition::NATION) != 0 {

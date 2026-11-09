@@ -57,11 +57,11 @@ pub(crate) unsafe extern "thiscall" fn know_person(this: usize, person: usize, f
 pub(crate) unsafe extern "stdcall" fn fog_after_match(partida: usize, data: usize) {
     let n = || *(G_STAFF_COUNT as *const i32);
     for lado in 0..2usize {
-        let club = *((partida + if lado == 0 { 0x20 } else { 0x1c }) as *const usize);
-        if exe::human_manager_is_human_club(club, 0, (1) as u32, (0) as u32, 0) == 0 {
+        let club = Club(*((partida + if lado == 0 { 0x20 } else { 0x1c }) as *const usize));
+        if exe::human_manager_is_human_club(club.addr(), 0, (1) as u32, (0) as u32, 0) == 0 {
             continue;
         }
-        let q = *((club + club::MANAGER) as *const usize);
+        let q = club.manager().addr();
         if q == 0 {
             continue;
         }

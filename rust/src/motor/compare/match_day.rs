@@ -122,9 +122,9 @@ pub(crate) unsafe extern "C" fn compare_post_match_players(partida: usize, t: us
     let read = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     for lado in 0..2usize {
-        let club = (g(G_CLUB_TABLE) as isize + read(t + 4 * lado) as isize * 0x245) as usize;
+        let club = Club((g(G_CLUB_TABLE) as isize + read(t + 4 * lado) as isize * 0x245) as usize);
         let ts = t + lado * 0x625;
-        reg.push((club + club::REPUTATION, 2));
+        reg.push((club.addr() + club::REPUTATION, 2));
         for k in 0..20usize {
             let id = read(ts + 0x1c5 + k * 0x49 - 0x35);
             if id == -1 {
@@ -134,14 +134,14 @@ pub(crate) unsafe extern "C" fn compare_post_match_players(partida: usize, t: us
             let f = g(p + staff::PLAYER);
             if f != 0 {
                 reg.extend([(f + 0x45, 1), (f + 9, 6)]);
-                reg.extend(contract_flags_region(p, club));
+                reg.extend(contract_flags_region(p, club.addr()));
             }
         }
         let id = read(ts + 0x184);
         if id > -1 {
             let manager = (g(G_STAFF_TABLE) as isize + id as isize * 0x6e) as usize;
             let mut sheets = vec![g(manager + staff::NON_PLAYER)];
-            for a in [g(club + club::ASSISTANT_MANAGER), g(club + club::COACHES), g(club + 0x1a3), g(club + 0x1a7), g(club + 0x1ab), g(club + 0x1af)] {
+            for a in [g(club.addr() + club::ASSISTANT_MANAGER), g(club.addr() + club::COACHES), g(club.addr() + 0x1a3), g(club.addr() + 0x1a7), g(club.addr() + 0x1ab), g(club.addr() + 0x1af)] {
                 if a != 0 {
                     sheets.push(g(a + 0x69));
                 }

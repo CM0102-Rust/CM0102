@@ -224,13 +224,14 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_add_result(this: usize, g
 ///
 /// [pt] Comparador: a devolução (só lê; o caso de erro fica com a original sozinha).
 pub(crate) unsafe extern "C" fn compare_usa_mls_get_club_all_star_conference(club: usize) -> u16 {
-    let r = original_fn::<unsafe extern "C" fn(usize) -> u16>(IDX_USA_MLS_GET_CLUB_ALL_STAR_CONFERENCE)(club);
-    let nation = read_usize(club + club::DIVISION);
+    let club = Club(club);
+    let r = original_fn::<unsafe extern "C" fn(usize) -> u16>(IDX_USA_MLS_GET_CLUB_ALL_STAR_CONFERENCE)(club.addr());
+    let nation = club.division().addr();
     if nation != 0 && read_usize(nation) == read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && r == 0 {
         return r; // the error case (the box has already been shown in the original)
     }
-    let n = usa_mls_get_club_all_star_conference(club);
-    SCOREBOARD.record(r == n, || format!("usa_mls_get_club_all_star_conference({:x}) original={:x} rust={:x}", club, r, n));
+    let n = usa_mls_get_club_all_star_conference(club.addr());
+    SCOREBOARD.record(r == n, || format!("usa_mls_get_club_all_star_conference({:x}) original={:x} rust={:x}", club.addr(), r, n));
     r
 }
 

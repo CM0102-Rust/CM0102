@@ -597,11 +597,11 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                         let two = t(pos + 2) == b'2';
                         let home = b(6) != 0;
                         let id = if two == home { *(ctx as *const usize) } else { *((ctx + 4) as *const usize) };
-                        let club = (*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(club::SIZE));
+                        let club = Club((*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(club::SIZE)));
                         prefixo(pos, &mut pre);
                         sufixo(pos + 2, &mut suf);
-                        let g = *((club + club::SHORT_GENDER_NAME) as *const u8) as u32;
-                        let r = exe::langlib_apply_grammar_modifier(club + club::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g);
+                        let g = club.short_gender_name() as u32;
+                        let r = exe::langlib_apply_grammar_modifier(club.addr() + club::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g);
                         if t(pos + 2) == b'C' || t(pos + 2) == b'c' {
                             em_maiusculas(out, r);
                         } else {
@@ -917,11 +917,11 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                             let two = t(pos + 2) == b'2';
                             let home = b(6) != 0;
                             let id = if two == home { *(ctx as *const usize) } else { *((ctx + 4) as *const usize) };
-                            let club = (*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(club::SIZE));
+                            let club = Club((*(G_CLUB_TABLE as *const usize)).wrapping_add(id.wrapping_mul(club::SIZE)));
                             prefixo(pos, &mut pre);
                             sufixo(pos + 2, &mut suf);
-                            let g = *((club + club::SHORT_GENDER_NAME) as *const u8) as u32;
-                            let r = exe::langlib_apply_grammar_modifier(club + club::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g);
+                            let g = club.short_gender_name() as u32;
+                            let r = exe::langlib_apply_grammar_modifier(club.addr() + club::SHORT_NAME, pre.as_ptr(), suf.as_ptr(), g, g);
                             if t(pos + 2) == b'C' || t(pos + 2) == b'c' {
                                 em_maiusculas(out, r);
                             } else {

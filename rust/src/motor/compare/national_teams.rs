@@ -292,14 +292,14 @@ pub(crate) unsafe extern "thiscall" fn compare_format_squad_label(this: usize, k
 /// sai delas (+0x24 zerado pela 0x7762f0). Sem clube (a caixa): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_withdraw_injured_player(this: usize, p: usize, days: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_WITHDRAW_INJURED_PLAYER);
-    let club = read_usize(p + staff::NATIONAL_JOB);
-    if (days as u16 as i16) < 0xe || club == 0 {
+    let club = Club(read_usize(p + staff::NATIONAL_JOB));
+    if (days as u16 as i16) < 0xe || club.is_null() {
         return o(this, p, days);
     }
     let plan = release_plan(this, p, days);
-    let team = national_team_for_type(read_usize(club + club::NATION), call_up_type(club, p));
-    let estava = team != 0 && (0..50usize).any(|c| read_usize(team + club::SQUAD + 4 * c) == p);
-    let before = (club, read_u8(p + staff::JOB_FOR_NATION));
+    let team = Club(national_team_for_type(club.nation().addr(), call_up_type(club.addr(), p)));
+    let estava = !team.is_null() && (0..50usize).any(|c| read_usize(team.addr() + club::SQUAD + 4 * c) == p);
+    let before = (club.addr(), read_u8(p + staff::JOB_FOR_NATION));
     o(this, p, days);
     let after = (read_usize(p + staff::NATIONAL_JOB), read_u8(p + staff::JOB_FOR_NATION));
     let ok = match plan {
@@ -504,12 +504,12 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_remove_player_from
 /// só a original.
 pub(crate) unsafe extern "thiscall" fn compare_release_overage_u21_players(this: usize, nation: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_RELEASE_OVERAGE_U21_PLAYERS);
-    let team = exe::database_get_national_u21_team(nation);
-    if team == 0 {
+    let team = Club(exe::database_get_national_u21_team(nation));
+    if team.is_null() {
         return o(this, nation);
     }
-    let mut reg = vec![(nation_record_by_id(this, nation) + 0x6b, 1), (team + club::SQUAD, 200)];
-    reg.extend((0..50usize).map(|c| read_usize(team + club::SQUAD + 4 * c)).filter(|&p| p != 0).map(|p| (p + staff::NATIONAL_JOB, 0x3b)));
+    let mut reg = vec![(nation_record_by_id(this, nation) + 0x6b, 1), (team.addr() + club::SQUAD, 200)];
+    reg.extend((0..50usize).map(|c| read_usize(team.addr() + club::SQUAD + 4 * c)).filter(|&p| p != 0).map(|p| (p + staff::NATIONAL_JOB, 0x3b)));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, nation), || release_overage_u21_players(this, nation));
     SCOREBOARD.record(igual, || format!("release_overage_u21_players({:x}, {:x}) {:x?} x {:x?}", this, nation, mo, mr));
 }
@@ -663,21 +663,22 @@ pub(crate) unsafe extern "stdcall" fn compare_national_team_ages(comp: usize, ki
 /// no vetor de entradas inteiro (capacidade × 9). Quando algum vetor pode crescer (0x945667 solta o velho; não roda
 /// duas vezes): só a original, conferindo depois o elenco ordenado pelo clube (o mesmo qsort sobre uma cópia, antes).
 pub(crate) unsafe extern "thiscall" fn compare_record_club_call_ups(this: usize, team: usize, b: u32, p: usize) {
+    let team = Club(team);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_RECORD_CLUB_CALL_UPS);
-    if p != 0 && callup_array_full(this, team) {
+    if p != 0 && callup_array_full(this, team.addr()) {
         let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
-        let mut expected: Vec<u32> = (0..0x32usize).map(|i| read_usize(team + club::SQUAD + 4 * i) as u32).collect();
+        let mut expected: Vec<u32> = (0..0x32usize).map(|i| read_usize(team.addr() + club::SQUAD + 4 * i) as u32).collect();
         // the CRT’s own qsort (the order of equals is its own), outside the original’s trace
         crate::rng::pause_trace(|| qsort(expected.as_mut_ptr() as usize, 0x32, 4, 0x778ef0));
-        o(this, team, b, p);
-        let obtido: Vec<u32> = (0..0x32usize).map(|i| read_usize(team + club::SQUAD + 4 * i) as u32).collect();
-        SCOREBOARD.record(obtido == expected, || format!("record_club_call_ups({:x}) elenco original={:x?} esperado={:x?}", team, obtido, expected));
+        o(this, team.addr(), b, p);
+        let obtido: Vec<u32> = (0..0x32usize).map(|i| read_usize(team.addr() + club::SQUAD + 4 * i) as u32).collect();
+        SCOREBOARD.record(obtido == expected, || format!("record_club_call_ups({:x}) elenco original={:x?} esperado={:x?}", team.addr(), obtido, expected));
         return;
     }
-    let mut reg = vec![(team + club::SQUAD, 0xc8)];
+    let mut reg = vec![(team.addr() + club::SQUAD, 0xc8)];
     let mut vistos = Vec::new();
     for i in 0..0x32usize {
-        let s = read_usize(team + club::SQUAD + 4 * i);
+        let s = read_usize(team.addr() + club::SQUAD + 4 * i);
         if s == 0 || read_usize(s) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
             continue;
         }
@@ -694,8 +695,8 @@ pub(crate) unsafe extern "thiscall" fn compare_record_club_call_ups(this: usize,
             }
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, team, b, p), || record_club_call_ups(this, team, b, p));
-    SCOREBOARD.record(igual, || format!("record_club_call_ups({:x}, b {}, partida {:x}) {:x?} x {:x?}", team, b, p, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, team.addr(), b, p), || record_club_call_ups(this, team.addr(), b, p));
+    SCOREBOARD.record(igual, || format!("record_club_call_ups({:x}, b {}, partida {:x}) {:x?} x {:x?}", team.addr(), b, p, mo, mr));
 }
 
 /// Comparer for `set_person_44`.

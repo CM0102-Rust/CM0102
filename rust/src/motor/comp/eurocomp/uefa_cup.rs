@@ -188,13 +188,14 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, 
 /// vice ou eliminado) o clube sai da competição europeia (+0x1db = −1); depois os registros da base (0x519890: os seis
 /// argumentos como chegaram, o desfecho como dword; mov ecx, this -> thiscall, ret 0x18), cuja devolução sai.
 pub(crate) unsafe extern "thiscall" fn uefa_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, a3: u32, a4: u32, game: usize, a6: u32) -> u32 {
+    let club = Club(club);
     let d = outcome as u8;
     if d == 1 || d == 2 || d == 0xff {
         if d == 0xff {
             crate::comparison::branch("cqi_10 dropped into uefa");
         }
-        core::ptr::write_unaligned((club + club::CONTINENTAL_COMP_ID) as *mut i32, -1); // cqi10: whoever finishes in the UEFA leaves the European competition
+        core::ptr::write_unaligned((club.addr() + club::CONTINENTAL_COMP_ID) as *mut i32, -1); // cqi10: whoever finishes in the UEFA leaves the European competition
     }
-    exe::cup_update_staff_records_for_status(this, club, outcome, a3, a4, game, a6)
+    exe::cup_update_staff_records_for_status(this, club.addr(), outcome, a3, a4, game, a6)
 }
 

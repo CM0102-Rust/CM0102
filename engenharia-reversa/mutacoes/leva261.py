@@ -1,6 +1,6 @@
 # Mutações da 261a leva (itens cpx_13, cpy_1, cpy_2, cpy_3, cpy_4, cpy_5, cpy_6, cpy_8, cpy_9, cpy_10, cpy_11, cpy_12, cpy_13). Uso: python mutacoes.py mutacoes\leva261.py --carreira 2002-06-01
 MUTACOES = [
-    ('cpx13_sem_elenco', 'exe::nationalteams_select_squad(this, read_usize(club + club::NATION), kind, G_CURRENT_DATE, p, 0); // cpx13: o elenco', 'let _ = (kind, p); // mutacao: sem pedir elenco', 'cpx_13 squad requested'),
+    ('cpx13_sem_elenco', 'exe::nationalteams_select_squad(this, club.nation().addr(), kind, G_CURRENT_DATE, p, 0); // cpx13: o elenco', 'let _ = (kind, p); // mutacao: sem pedir elenco', 'cpx_13 squad requested'),
     ('cpx13_elenco_de_60_dias', 'if d <= 0xe && read_u8(base + 0x11) != 0 && extra() {', 'if d <= 60 && read_u8(base + 0x11) != 0 && extra() { // mutacao: o elenco vale 60 dias', 'cpx_13 squad requested'),
     ('cpx13_janela_de_uma_semana', 'let q = exe::date_sub_weeks((game.as_mut_ptr()) as usize, (r.as_mut_ptr()) as *mut [u8; 8], 2); // cpx13: a janela', 'let q = exe::date_sub_weeks((game.as_mut_ptr()) as usize, (r.as_mut_ptr()) as *mut [u8; 8], 1); // mutacao: a janela de uma semana', 'cpx_13 squad requested'),
     ('cpy1_conta_alvo_sem_lance', '            continue; // cpy1: a target without a bid does not count', '            // mutacao: o alvo sem lance conta', 'cpy_1 target without bid'),
@@ -11,7 +11,7 @@ MUTACOES = [
     ('cpy2_bloqueio_de_120_dias', '                block_slot_for_person(v, entry, person, contract, 0x54c5b0, 0xe); // cpy2: the 14-day block', '                block_slot_for_person(v, entry, person, contract, 0x54c5b0, 0x78); // mutacao: 120 dias', 'cpy_2 14-day block'),
     ('cpy3_verba_de_titular_por_tres', '                        Some(a * 2) // cpy3: the budget of the starter slot', '                        Some(a * 3) // mutacao: abertas x 3', 'cpy_3 funds for the starter slot'),
     ('cpy3_sem_reducao_pela_sobra', '                write_i32(v + 7, e.wrapping_sub(x)); // cpy3: the slot reduction by the surplus', '                let _ = (e, x); // mutacao: sem a reducao', 'cpy_3 reduction by surplus'),
-    ('cpy3_vaga_sem_preencher', '            exe::shortlist_manager_fill_shortlist_slot(this, v, club, (0) as usize); // cpy3: the slot is filled', '            // mutacao: a vaga fica sem alvo', 'cpy_3 slot filled'),
+    ('cpy3_vaga_sem_preencher', '            exe::shortlist_manager_fill_shortlist_slot(this, v, club.addr(), (0) as usize); // cpy3: the slot is filled', '            // mutacao: a vaga fica sem alvo', 'cpy_3 slot filled'),
     ('cpy4_sem_marcar_amistosos', '    exe::friendly_arrange_international_friendlies(this, first, how_many); // cpy4: schedule the friendlies of the date', '    let _ = (first, how_many); // mutacao: os amistosos nao sao marcados', 'cpy_4 friendlies scheduled'),
     ('cpy4_onze_semanas', '    exe::date_add_weeks(G_CURRENT_DATE, &mut lim, 0xc); // cpy4: hoje + 12 semanas', '    exe::date_add_weeks(G_CURRENT_DATE, &mut lim, 0xb); // mutacao: hoje + 11 semanas', 'cpy_4 friendlies scheduled'),
     ('cpy4_nacoes_sem_ordem', '        exe::crt_qsort(read_usize(this + friendly::SORTED_NATIONS), read_usize(this + friendly::SORTED_NATION_COUNT) as u32, 4, 0x5cc5f0); // cpy4: the nations by reputation', '        // mutacao: as nacoes ficam fora da ordem de reputacao', 'cpy_4 year rollover'),

@@ -62,18 +62,19 @@ pub(crate) unsafe extern "thiscall" fn compare_fin_prm_end_season_for_nation(thi
 /// máquina elas não deixam nada além do sorteio(2) da recusa, que as duas rodadas fazem. Só a original: o técnico
 /// humano (a notícia entra na caixa dele) e o estádio dividido (mexe noutro clube e nas finanças dele).
 pub(crate) unsafe extern "thiscall" fn compare_season_end_club_update(this: usize, club: usize) {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEASON_END_CLUB_UPDATE);
-    if club == 0 || exe::database_is_national_team(club) != 0 || fin_prm_has_human_manager(club) {
-        return o(this, club);
+    if club.is_null() || exe::database_is_national_team(club.addr()) != 0 || fin_prm_has_human_manager(club.addr()) {
+        return o(this, club.addr());
     }
     let mut a = 0u32;
-    let fin = finance_of_parent_club(this, club, &mut a);
-    let stadium = read_usize(club + club::STADIUM);
-    if fin == 0 || (stadium != 0 && read_u8(club + club::OWN_STADIUM) == 0 && read_usize(club + club::DIVISION) != 0 && read_i32(fin) > 0x2160ec0) {
-        return o(this, club); // simplification: the stadium purchase may touch the owner; original only
+    let fin = finance_of_parent_club(this, club.addr(), &mut a);
+    let stadium = club.stadium().addr();
+    if fin == 0 || (stadium != 0 && club.own_stadium() == 0 && club.division().addr() != 0 && read_i32(fin) > 0x2160ec0) {
+        return o(this, club.addr()); // simplification: the stadium purchase may touch the owner; original only
     }
-    let own = read_usize(this).wrapping_add((read_i32(club) as u32).wrapping_mul(0x167) as usize);
-    let mut reg = vec![(fin, 0x167), (club, 0x245), (board_requests_row(club), 0x49)];
+    let own = read_usize(this).wrapping_add((read_i32(club.addr()) as u32).wrapping_mul(0x167) as usize);
+    let mut reg = vec![(fin, 0x167), (club.addr(), 0x245), (board_requests_row(club.addr()), 0x49)];
     if own != fin {
         reg.push((own, 0x167));
     }
@@ -81,8 +82,8 @@ pub(crate) unsafe extern "thiscall" fn compare_season_end_club_update(this: usiz
         reg.push((stadium, 0x4e));
     }
     reg.extend(crate::rng::STATE_REGIONS);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club), || crate::rng::without_counting(|| season_end_club_update(this, club)));
-    SCOREBOARD.record(igual, || format!("season_end_club_update(clube {:x}) original={:x?} rust={:x?}", club, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club.addr()), || crate::rng::without_counting(|| season_end_club_update(this, club.addr())));
+    SCOREBOARD.record(igual, || format!("season_end_club_update(clube {:x}) original={:x?} rust={:x?}", club.addr(), mo, mr));
 }
 
 /// Comparer for `news_dividend`.
@@ -184,19 +185,20 @@ pub(crate) unsafe extern "thiscall" fn compare_pay_league_fine(this: usize, valu
 
 /// Comparer for `try_finance_boost_event`.
 pub(crate) unsafe extern "thiscall" fn compare_try_finance_boost_event(this: usize, club: usize, fin: usize) -> u32 {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_TRY_FINANCE_BOOST_EVENT);
-    let presence = if club != 0 { read_usize(club + club::CHAIRMAN) } else { 0 };
+    let presence = if !club.is_null() { club.chairman().addr() } else { 0 };
     let sheet = if presence != 0 { read_usize(presence + staff::NON_PLAYER) } else { 0 };
-    if club == 0 || fin == 0 {
-        return o(this, club, fin); // simplification: without a club or without finances, original only
+    if club.is_null() || fin == 0 {
+        return o(this, club.addr(), fin); // simplification: without a club or without finances, original only
     }
-    let mut extras = vec![(club + club::PLC, 1)];
+    let mut extras = vec![(club.addr() + club::PLC, 1)];
     let mut check = Vec::new();
     if sheet != 0 {
         extras.push((sheet + player_sheet::BRAVERY, 1)); // the record’s +0x20 drops on every event with it
         check.push(1);
     }
-    compare_rare_finance_event("try_finance_boost_event", fin, &extras, &check, || o(this, club, fin), || try_finance_boost_event(this, club, fin))
+    compare_rare_finance_event("try_finance_boost_event", fin, &extras, &check, || o(this, club.addr(), fin), || try_finance_boost_event(this, club.addr(), fin))
 }
 
 /// Comparer for `try_board_takeover`.
@@ -322,12 +324,12 @@ pub(crate) unsafe extern "thiscall" fn compare_add_weekly_merchandising_income(t
 /// (clube nulo: só a original).
 pub(crate) unsafe extern "thiscall" fn compare_sell_season_tickets(this: usize, apply: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_SELL_SEASON_TICKETS);
-    let club = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(this + 8).wrapping_mul(club::SIZE));
-    if club == 0 {
+    let club = Club(read_usize(G_CLUB_TABLE).wrapping_add(read_usize(this + 8).wrapping_mul(club::SIZE)));
+    if club.is_null() {
         return o(this, apply);
     }
     let mut regions = vec![(this, 0x167)];
-    let est = read_usize(club + club::STADIUM);
+    let est = club.stadium().addr();
     if est != 0 {
         regions.push((est + stadium::STADIUM_CAPACITY, 4));
     }
@@ -340,10 +342,11 @@ pub(crate) unsafe extern "thiscall" fn compare_sell_season_tickets(this: usize, 
 ///
 /// [pt] Comparador: lado a lado no nível do centro de treino (+0x7f) e no registro de finanças do clube.
 pub(crate) unsafe extern "thiscall" fn compare_upgrade_training_facilities(this: usize, club: usize) {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_UPGRADE_TRAINING_FACILITIES);
-    let regions = [(club + club::TRAINING, 1), (fin_prm_club_finance(this, club), 0x167)];
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, club), || upgrade_training_facilities(this, club));
-    SCOREBOARD.record(igual, || format!("upgrade_training_facilities(clube {:#x}) original={:x?} rust={:x?}", club, mo, mr));
+    let regions = [(club.addr() + club::TRAINING, 1), (fin_prm_club_finance(this, club.addr()), 0x167)];
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, club.addr()), || upgrade_training_facilities(this, club.addr()));
+    SCOREBOARD.record(igual, || format!("upgrade_training_facilities(clube {:#x}) original={:x?} rust={:x?}", club.addr(), mo, mr));
 }
 
 /// Comparer for `process_club_finance_events`.

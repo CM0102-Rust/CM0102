@@ -30,13 +30,14 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_trophy_praise_story(this: u
 /// sorteador, [0xae1080], as seis pessoas do clube (+0x9b, a 0x547940), o contrato do jogador e, de cada pessoa do
 /// vetor, as preferências (+0x1c..+0x33), o +0x58..+0x5d e o contrato no clube (+0 a +0x4f).
 pub(crate) unsafe extern "thiscall" fn compare_apply_squad_reaction_to_player_story(this: usize, topic: u32, player: usize, club: usize, ids: usize, n: u32) {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, u32)>(IDX_APPLY_SQUAD_REACTION_TO_PLAYER_STORY);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
-    if club != 0 && player != 0 {
-        reg.push((club + club::FAV_STAFF1, 24));
-        reg.extend(contract_region(player, club));
-        for &p in club_staff_vector(club, &mut |r, t, a| dispatch_post_match_call(r, t, a)).iter().take(57) {
+    if !club.is_null() && player != 0 {
+        reg.push((club.addr() + club::FAV_STAFF1, 24));
+        reg.extend(contract_region(player, club.addr()));
+        for &p in club_staff_vector(club.addr(), &mut |r, t, a| dispatch_post_match_call(r, t, a)).iter().take(57) {
             if p == 0 {
                 continue;
             }
@@ -45,11 +46,11 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_squad_reaction_to_player_st
                 reg.push((pref + preferences::STAFF_FAVOURITE_STAFF1, 24));
             }
             reg.push((p + staff::DETERMINATION, 6));
-            reg.extend(contract_region(p, club));
+            reg.extend(contract_region(p, club.addr()));
         }
     }
-    compare_pos("apply_squad_reaction_to_player_story", reg, || o(this, topic, player, club, ids, n),
-        |chamar| squad_reaction_to_story_with(topic, player, club, ids, n, chamar));
+    compare_pos("apply_squad_reaction_to_player_story", reg, || o(this, topic, player, club.addr(), ids, n),
+        |chamar| squad_reaction_to_story_with(topic, player, club.addr(), ids, n, chamar));
 }
 
 /// Comparer for `warn_squad_of_position_rival`.
@@ -57,19 +58,20 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_squad_reaction_to_player_st
 /// [pt] Comparador: pela fita das portas do pós-jogo (a história 0x72c1f0 e a marca 0x867560 rodam só na original). Regiões:
 /// o sorteador, [0xae1080] e, de cada um dos 50 do elenco, o +0x58..+0x5d e o contrato no clube (+0 a +0x4f).
 pub(crate) unsafe extern "thiscall" fn compare_warn_squad_of_position_rival(this: usize, player: usize, club: usize, a: u32, b: u32) {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_WARN_SQUAD_OF_POSITION_RIVAL);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
-    if club != 0 {
+    if !club.is_null() {
         for i in 0..50 {
-            let p = read_usize(club + club::SQUAD + 4 * i);
+            let p = read_usize(club.addr() + club::SQUAD + 4 * i);
             if p != 0 {
                 reg.push((p + staff::DETERMINATION, 6));
-                reg.extend(contract_region(p, club));
+                reg.extend(contract_region(p, club.addr()));
             }
         }
     }
-    compare_pos("warn_squad_of_position_rival", reg, || o(this, player, club, a, b), |chamar| warn_position_rivals_with(player, club, chamar));
+    compare_pos("warn_squad_of_position_rival", reg, || o(this, player, club.addr(), a, b), |chamar| warn_position_rivals_with(player, club.addr(), chamar));
 }
 
 /// Comparer for `media_format_response_option_label`.

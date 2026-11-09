@@ -626,15 +626,15 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
     }
     exe::crt_qsort(read_usize(this + 0x14) + n as i32 as usize * 6, (0x20 - n as i32) as u32, 6, 0x4b07b0);
     for i in 0..0x20usize {
-        let club = read_usize(read_usize(this + 0x14) + i * 6);
+        let club = Club(read_usize(read_usize(this + 0x14) + i * 6));
         let pot = this + 0xf2 + i * 5;
-        write_usize(pot - 4, read_usize(club));
+        write_usize(pot - 4, read_usize(club.addr()));
         if i < 8 {
             write_u8(pot, 0);
             write_u8(read_usize(this + 0x14) + i * 6 + 4, 3);
             continue;
         }
-        let nation = read_usize(club + club::NATION);
+        let nation = club.nation().addr();
         let count = if nation != 0 { read_usize(nation + nation::CONTINENT) } else { 0 };
         if count == 0 {
             show_error_at(0xad5888, 0x61e);

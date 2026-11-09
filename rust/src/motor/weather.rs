@@ -250,13 +250,13 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
         }
     }
     if cid == 0 {
-        let home = read_usize(game + fixture::HOME_CLUB);
-        if home != 0 {
-            let c = read_usize(home + club::STADIUM);
+        let home = Club(read_usize(game + fixture::HOME_CLUB));
+        if !home.is_null() {
+            let c = home.stadium().addr();
             if c != 0 && read_usize(c + stadium::CITY) != 0 {
                 cid = read_usize(c + stadium::CITY);
             } else {
-                let n = read_usize(home + club::NATION);
+                let n = home.nation().addr();
                 if n != 0 && read_usize(n + 0x7a) != 0 {
                     cid = read_usize(n + 0x7a);
                 }

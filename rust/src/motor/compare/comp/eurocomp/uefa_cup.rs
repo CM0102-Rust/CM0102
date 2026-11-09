@@ -50,15 +50,16 @@ pub(crate) unsafe extern "thiscall" fn compare_uefa_cup_create_round_table(this:
 
 /// Comparer for `uefa_cup_update_staff_records_for_status`.
 pub(crate) unsafe extern "thiscall" fn compare_uefa_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, a3: u32, a4: u32, game: usize, a6: u32) -> u32 {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_UEFA_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
-    if club == 0 {
-        return o(this, club, outcome, a3, a4, game, a6);
+    if club.is_null() {
+        return o(this, club.addr(), outcome, a3, a4, game, a6);
     }
     let d = outcome as u8;
-    let before = read_usize(club + club::CONTINENTAL_COMP_ID);
+    let before = (club.continental_comp_id() as usize);
     let predicted = if d == 1 || d == 2 || d == 0xff { 0xffff_ffff } else { before };
-    let r = o(this, club, outcome, a3, a4, game, a6);
-    let after = read_usize(club + club::CONTINENTAL_COMP_ID);
-    SCOREBOARD.record(r == 0 && after == predicted, || format!("uefa_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", club, d, before, after, predicted, r));
+    let r = o(this, club.addr(), outcome, a3, a4, game, a6);
+    let after = (club.continental_comp_id() as usize);
+    SCOREBOARD.record(r == 0 && after == predicted, || format!("uefa_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", club.addr(), d, before, after, predicted, r));
     r
 }

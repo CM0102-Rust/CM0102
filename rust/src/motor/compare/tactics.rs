@@ -204,20 +204,21 @@ pub(crate) unsafe extern "thiscall" fn compare_extra_tactic_slot(t: usize, club:
 /// [pt] Comparador: lado a lado pela devolução e, havendo técnico humano no clube, pelo byte da vaga ativa dele (a 0x5fbe20
 /// grava). Clube nulo (caixa): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_get_club_tactic(this: usize, club: usize, team: u32) -> usize {
+    let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_CLUB_TACTIC);
-    if club == 0 {
-        return o(this, club, team);
+    if club.is_null() {
+        return o(this, club.addr(), team);
     }
     let manager = read_usize(G_HUMAN_MANAGER);
-    let t = read_usize(club + club::MANAGER);
+    let t = club.manager().addr();
     let mut reg = Vec::new();
     if manager != 0 && t != 0 {
         if let Some(k) = human_manager_human_manager_index(manager, t) {
             reg.push((human_manager_record_at(manager, k) + 0x9a69, 1));
         }
     }
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, team), || get_club_tactic(this, club, team));
-    SCOREBOARD.record(igual && r == n, || format!("get_club_tactic(clube {:#x}, time {}) original={:#x} {:x?} rust={:#x} {:x?}", club, team, r, mo, n, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club.addr(), team), || get_club_tactic(this, club.addr(), team));
+    SCOREBOARD.record(igual && r == n, || format!("get_club_tactic(clube {:#x}, time {}) original={:#x} {:x?} rust={:#x} {:x?}", club.addr(), team, r, mo, n, mr));
     r
 }
 

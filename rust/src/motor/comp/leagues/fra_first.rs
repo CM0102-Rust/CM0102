@@ -1061,10 +1061,10 @@ pub(crate) unsafe fn fra_first_compare_league_table(name: &str, this: usize, n: 
     let mut plan: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && (plan.len() as i16) < n {
-        let club = read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE;
-        let comp = read_usize(club + club::DIVISION);
+        let club = Club(read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE);
+        let comp = club.division().addr();
         if comp != 0 && read_usize(comp) == read_usize(g) {
-            plan.push(club);
+            plan.push(club.addr());
         }
         i += 1;
     }

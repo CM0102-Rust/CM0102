@@ -29,11 +29,11 @@ pub(crate) unsafe extern "stdcall" fn compare_fog_after_match(partida: usize, da
     let n = *(G_STAFF_COUNT as *const i32);
     let mut reg: Vec<(usize, usize)> = Vec::new();
     for lado in 0..2usize {
-        let club = *((partida + fixture::AWAY_CLUB - 4 * lado) as *const usize);
-        if exe::human_manager_is_human_club(club, 0, (1) as u32, (0) as u32, 0) == 0 || *((club + club::MANAGER) as *const usize) == 0 {
+        let club = Club(*((partida + fixture::AWAY_CLUB - 4 * lado) as *const usize));
+        if exe::human_manager_is_human_club(club.addr(), 0, (1) as u32, (0) as u32, 0) == 0 || club.manager().addr() == 0 {
             continue;
         }
-        let q = *((club + club::MANAGER) as *const usize);
+        let q = club.manager().addr();
         let obj = *((*(G_FOG_OF_WAR as *const usize)).wrapping_add((n.wrapping_sub(*(q as *const i32)) as usize).wrapping_mul(4)).wrapping_sub(4) as *const usize);
         if obj == 0 {
             continue;

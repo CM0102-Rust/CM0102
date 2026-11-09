@@ -355,7 +355,8 @@ pub(crate) unsafe fn nation_officials_block(this: usize, nation: i32) -> usize {
 ///
 /// [pt] O id da nação do clube (+0x53, ponteiro) ou, sem nação, `sem`.
 pub(crate) unsafe fn officials_manager_club_nation_id(club: usize) -> Option<i32> {
-    let n = read_usize(club + club::NATION);
+    let club = Club(club);
+    let n = club.nation().addr();
     if n != 0 { Some(read_i32(n)) } else { None }
 }
 
@@ -389,7 +390,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
         return 0xffff_ff00;
     }
     let nations = read_i32(G_NATION_COUNT);
-    let home = read_usize(game + fixture::HOME_CLUB);
+    let home = Club(read_usize(game + fixture::HOME_CLUB));
     let away = read_usize(game + fixture::AWAY_CLUB);
     let comp = read_usize(game + fixture::COMPETITION);
     let band_of_nation = |nacao: i32| {
@@ -397,15 +398,15 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
         (read_i32(b + officials_nation_block::FIRST_REFEREE), read_i32(b + officials_nation_block::REFEREE_COUNT))
     };
     let (ini, n) = if comp == 0 {
-        band_of_nation(officials_manager_club_nation_id(home).unwrap_or_else(|| random(nations)))
+        band_of_nation(officials_manager_club_nation_id(home.addr()).unwrap_or_else(|| random(nations)))
     } else {
         let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
         if friendly(read_usize(G_FRIENDLY), comp) != 0 {
-            band_of_nation(read_i32(read_usize(home + club::NATION))) // like the original, without checking the nation
+            band_of_nation(read_i32(home.nation().addr())) // like the original, without checking the nation
         } else {
             let c = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_i32(comp).wrapping_mul(4) as usize));
             if c == 0 {
-                band_of_nation(officials_manager_club_nation_id(home).unwrap_or_else(|| random(nations)))
+                band_of_nation(officials_manager_club_nation_id(home.addr()).unwrap_or_else(|| random(nations)))
             } else {
                 let kind = read_u8(c + cup::CLUB_SIDES) as i8;
                 if kind == 2 || kind == 4 {
@@ -415,7 +416,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                     };
                     let continent = if read_usize(comp + competition::CONTINENT) != 0 {
                         read_i32(read_usize(comp + competition::CONTINENT))
-                    } else if let Some(k) = continent_of(home) {
+                    } else if let Some(k) = continent_of(home.addr()) {
                         k
                     } else if let Some(k) = continent_of(away) {
                         k
@@ -428,7 +429,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                         let nation = read_usize(G_NATION_TABLE).wrapping_add(k.wrapping_mul(0x122) as usize);
                         let cont = read_usize(nation + nation::CONTINENT);
                         if cont != 0 && read_i32(cont) == continent
-                            && officials_manager_club_nation_id(home) != Some(read_i32(nation))
+                            && officials_manager_club_nation_id(home.addr()) != Some(read_i32(nation))
                             && officials_manager_club_nation_id(away) != Some(read_i32(nation))
                         {
                             break;
@@ -448,7 +449,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                 } else {
                     let nacao = if read_usize(comp + competition::NATION) != 0 {
                         read_i32(read_usize(comp + competition::NATION))
-                    } else if let Some(k) = officials_manager_club_nation_id(home) {
+                    } else if let Some(k) = officials_manager_club_nation_id(home.addr()) {
                         k
                     } else if let Some(k) = officials_manager_club_nation_id(away) {
                         k

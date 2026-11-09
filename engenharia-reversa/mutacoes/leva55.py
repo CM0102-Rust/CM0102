@@ -3,7 +3,7 @@ MUTACOES = [
     ('j_nulo', "    let st = *((p + staff::NON_PLAYER) as *const usize);\n    if st == 0 {\n        return;", "    let st = *((p + staff::NON_PLAYER) as *const usize);\n    if st == 0 && p == 1 {\n        return;"),
     ('j_22', "    let n_home = ceiling(casa, 22).wrapping_sub(level as i16);", "    let n_home = ceiling(casa, 21).wrapping_sub(level as i16);"),
     ('j_5d', "(comp != 0 && *((comp + competition::NATION) as *const usize) == club_p)", "(comp != 0 && *((comp + competition::CONTINENT) as *const usize) == club_p)"),
-    ('j_53', "|| *((my + club::NATION) as *const usize) == club_p {", "|| *((other + club::NATION) as *const usize) == club_p {"),
+    ('j_53', "|| my.nation().addr() == club_p {", "|| other.nation().addr() == club_p {"),
     ('j_4', "        if (x as i16) < 4 { 4 } else { x as i16 }", "        if (x as i16) < 5 { 5 } else { x as i16 }"),
     ('j_fmundo', "    } else if read_i8(partida + fixture::CATEGORY) == 8 {\n        f_mundo = 1;", "    } else if read_i8(partida + fixture::CATEGORY) == 8 {\n        f_mundo = 2;"),
     ('j_1_3', "    let dif = (value as f64 - global_stats_ratio(alt != 0)) * read_f32(rdata::F32_1_299999952) as f64;", "    let dif = (value as f64 - global_stats_ratio(alt != 0)) * read_f64(rdata::F64_0_5);"),
