@@ -1635,7 +1635,7 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: Staff, club: us
     }
     let gt = read_usize(G_TRANSFER_MANAGER);
     if gt != 0 {
-        if exe::date_days_since(G_CURRENT_DATE, (k.date_started()) as u32, (read_usize(k.addr() + 0x29)) as u32) > 0x12c {
+        if exe::date_days_since(G_CURRENT_DATE, (k.date_started()) as u32, (read_usize(k.addr() + contract::DATE_STARTED + 4)) as u32) > 0x12c {
             let x = exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), contract_club_except_type5(p), p, 0, 0);
             if x != 0 && read_usize(x + 0xf) == read_usize(p.addr()) {
                 crate::comparison::branch("cpv_13 renewal");
@@ -1643,7 +1643,7 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: Staff, club: us
             }
         }
     }
-    if read_usize(k.addr() + 0x45) != 0 {
+    if (k.grievances() as usize) != 0 {
         return;
     }
     let v59 = (p.loyalty() as u8) as i8;
@@ -3016,26 +3016,26 @@ pub(crate) unsafe extern "thiscall" fn find_tour_opponent(this: usize, club: usi
 /// Sem SEH, sem caixa, sem locais.
 pub(crate) unsafe extern "thiscall" fn find_friendly_match(this: usize, data: usize, club: usize) -> usize {
     let u = |a: usize| core::ptr::read_unaligned(a as *const usize);
-    let l = u(this + friendly::FRIENDLY_MATCH_LIST);
+    let l = read_usize(this + friendly::FRIENDLY_MATCH_LIST);
     if l == 0 {
         return 0;
     }
-    core::ptr::write_unaligned((l + llist::CURSOR) as *mut usize, u(l + llist::HEAD));
+    core::ptr::write_unaligned((l + llist::CURSOR) as *mut usize, read_usize(l + llist::HEAD));
     let mut stored = 0;
     let mut a = exe::llist_get_next(l);
     while a != 0 {
-        let of_club = u(a + friendly_match::REQUESTING_CLUB) == club; // the friendly’s club
+        let of_club = read_usize(a + friendly_match::REQUESTING_CLUB) == club; // the friendly’s club
         if data != 0 {
             if exe::date_operator_3d_3d(a, u(data) as u32, u(data + 4) as u32) != 0 && of_club {
-                if stored != 0 || (u(a + friendly_match::HOME_CLUB) != 0 && u(a + friendly_match::AWAY_CLUB) != 0) {
+                if stored != 0 || (read_usize(a + friendly_match::HOME_CLUB) != 0 && read_usize(a + friendly_match::AWAY_CLUB) != 0) {
                     return a;
                 }
                 stored = a;
             }
-        } else if of_club && (u(a + friendly_match::HOME_CLUB) == 0 || u(a + friendly_match::AWAY_CLUB) == 0) && u(a + 8) != 0 {
+        } else if of_club && (read_usize(a + friendly_match::HOME_CLUB) == 0 || read_usize(a + friendly_match::AWAY_CLUB) == 0) && u(a + 8) != 0 {
             return a;
         }
-        a = exe::llist_get_next(u(this + friendly::FRIENDLY_MATCH_LIST));
+        a = exe::llist_get_next(read_usize(this + friendly::FRIENDLY_MATCH_LIST));
     }
     stored
 }

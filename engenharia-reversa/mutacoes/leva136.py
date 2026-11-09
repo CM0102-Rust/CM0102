@@ -5,7 +5,7 @@ MUTACOES = [
     ('c_ao_gol', "(chance as f64) < 2.0 || exe::cm3_match_engine_is_path_ahead_clear(m, j, 0) != 0", "(chance as f64) < 2.1 || exe::cm3_match_engine_is_path_ahead_clear(m, j, 0) != 0"),
     ('c_cabeca', "&& random(in_own as i32 * 500 + 100 + read_i8(", "&& random(in_own as i32 * 500 + 101 + read_i8(", "shot header"),
     ('c_doze', "&& strength as i32 > (20 - j.moment_agility() as i32) * 7", "&& strength as i32 > (20 - j.moment_agility() as i32) * 8", "shot 0xc from distance"),
-    ('c_volei', "if random(v as i32) > r1 { (*((j.addr() + 0x176) as *mut i16), 0x2e) }", "if random(v as i32) >= r1 { (*((j.addr() + 0x176) as *mut i16), 0x2e) }"),
+    ('c_volei', "if random(v as i32) > r1 { (*((j.addr() + match_player::MOVE_SKILL + 2 * 46) as *mut i16), 0x2e) }", "if random(v as i32) >= r1 { (*((j.addr() + match_player::MOVE_SKILL + 2 * 46) as *mut i16), 0x2e) }"),
     ('c_3b', "&& (chance as f64) < 1.41", "&& (chance as f64) < 1.4"),
     ('c_nota', "let rating_shot = (s1 - s2 - s3 + random(strength as i32)) as i16;", "let rating_shot = (s1 - s2 - s3 + random(strength as i32) + 1) as i16;"),
     ('c_falta', "if random(ftol(chance as f64 * 5.0 + 2.0)) == 0 {", "if random(ftol(chance as f64 * 5.0 + 3.0)) == 0 {", "shot foul recorded"),

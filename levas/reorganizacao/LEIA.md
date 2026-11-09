@@ -28,6 +28,20 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 11: incrementos, operações compostas, leitoras e nomes lidos
+
+- O conversor reconhece os auxiliares de incremento de uma linha pelo formato (sete: `add_to_i32`, `fin_prm_add_i32`,
+  `add_u8_at`...): `add_to_i32(x + F, v)` → `x.set_f(x.f().wrapping_add(v))`; as operações compostas `*((x + F) as *mut T)
+  += v` (e `-=`, `|=`, `&=`, `^=`) → `x.set_f(x.f().wrapping_add(v))`; e o `--fechos` expande as closures genéricas de
+  leitura (`let e = |a| read_unaligned(a as *const T)`) quando o argumento é um campo.
+- Os deslocamentos sem nome dos nove registros (53, sem os 6 de subclasse já vistos) lidos por três agentes: 11 nomes
+  novos (no jogador na partida `SPACE_ON_BALL`, `CONSISTENCY_ROLL`, `INCONSISTENCY_SWING`, `WEAK_FOOT_DEFICIT`,
+  `OWN_CLUB_FEELING`, `MATCH_TEMPER`, `KEY_PASSES`, `DEBUT`, `POSITION_ADJUSTMENT`; no contrato `DATE_STARTED_YEAR`,
+  `SQUAD_NUMBER`), cada um com a confiança: onde os dois leitores concordaram, conferido; onde divergiram (+0x31), inferido.
+  Os elementos do vetor `MOVE_SKILL` viram `p.move_skill(k)`. `aplicar_nomes_lidos.py` aplica os vereditos.
+- Hexadecimais crus sobre variáveis tipadas 262 → 107; campos crus via `.addr()` 741 → 625; `.addr()` fora dos
+  invólucros 5.041 → 4.735. Prova: 7cc445c2 ×2, detector igual, comparação 0; as 22 mutações mudadas compilam.
+
 ## Migração para os registros tipados, leva 10: as closures
 
 `tipar_registros.py --closures Tipo,..`: uma closure local cujo parâmetro `usize` é usado como um registro (`let zero =

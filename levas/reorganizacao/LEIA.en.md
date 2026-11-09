@@ -29,6 +29,20 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 11: increments, compound assignments, readers and read names
+
+- The converter recognises the one-line add helpers by their shape (seven: `add_to_i32`, `fin_prm_add_i32`,
+  `add_u8_at`...): `add_to_i32(x + F, v)` → `x.set_f(x.f().wrapping_add(v))`; compound assignments `*((x + F) as *mut T)
+  += v` (and `-=`, `|=`, `&=`, `^=`) → `x.set_f(x.f().wrapping_add(v))`; and `--fechos` expands the generic read
+  closures (`let e = |a| read_unaligned(a as *const T)`) when the argument is a field.
+- The unnamed offsets of the nine records (53, without the 6 subclass ones already seen) read by three agents: 11 new
+  names (in the match player `SPACE_ON_BALL`, `CONSISTENCY_ROLL`, `INCONSISTENCY_SWING`, `WEAK_FOOT_DEFICIT`,
+  `OWN_CLUB_FEELING`, `MATCH_TEMPER`, `KEY_PASSES`, `DEBUT`, `POSITION_ADJUSTMENT`; in the contract `DATE_STARTED_YEAR`,
+  `SQUAD_NUMBER`), each with its reliability: where the two readers agreed, verified; where they disagreed (+0x31),
+  inferred. The `MOVE_SKILL` array elements become `p.move_skill(k)`. `aplicar_nomes_lidos.py` applies the verdicts.
+- Raw hex on typed variables 262 → 107; raw fields via `.addr()` 741 → 625; `.addr()` outside the wrappers
+  5,041 → 4,735. Proof: 7cc445c2 ×2, detector equal, comparison 0; the 22 changed mutations compile.
+
 ## Migration to typed records, batch 10: the closures
 
 `tipar_registros.py --closures Type,..`: a local closure whose `usize` parameter is used as a record (`let zero =

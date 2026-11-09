@@ -1,6 +1,6 @@
 # Mutacoes da leva71 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva71.py --jogo 2001-08-15
 MUTACOES = [
-    ('e_base', "    let base = (*((c.addr() + 0x29) as *const i16) as i32 - 1000) * 3 - r1;", "    let base = (*((c.addr() + 0x29) as *const i16) as i32 - 1000) * 3 - r1 + 1;"),
+    ('e_base', "    let base = (c.space_on_ball() as i32 - 1000) * 3 - r1;", "    let base = (c.space_on_ball() as i32 - 1000) * 3 - r1 + 1;"),
     ('e_v34', "        let mut v34 = ftol(read_f32(rdata::F32_5000) as f64 - d58 as f64 * d58 as f64 * read_f32(rdata::F32_NEG_50) as f64);", "        let mut v34 = ftol(read_f32(rdata::F32_5000) as f64 - d58 as f64 * d58 as f64 * read_f32(rdata::F32_50) as f64);"),
     ('e_cerco', "        v1c = v1c.wrapping_add((5 - n_i) * 400);", "        v1c = v1c.wrapping_add((5 - n_i) * 401);"),
     ('e_pow', "            v1c = v1c.wrapping_add(ftol(game_pow((3 - n_i) as f64, read_f64(rdata::F64_3)) * read_f64(rdata::F64_100)));", "            v1c = v1c.wrapping_add(ftol(game_pow(read_f64(rdata::F64_3), (3 - n_i) as f64) * read_f64(rdata::F64_100)));"),

@@ -10,9 +10,9 @@ MUTACOES = [
     ('cpa_confronto_titulo', '            return 1; // title race', '            return 3; // mutacao: a zona no lugar do titulo'),
     ('cpa_forca_reputacao', '    strength = strength.wrapping_add((club.reputation() as i32) << 4); // the reputation', '    strength = strength.wrapping_add((core::ptr::read_unaligned((club.addr() + 0x80) as *const i16) as i32) << 3); // mutacao: metade'),
     ('cpa_colocado_lugar', '    read_usize(p + [0xa, 0xe, 0x12][place as usize]) // champion, runner-up, third', '    read_usize(p + [0xe, 0xa, 0x12][place as usize]) // mutacao: campeao e vice trocados'),
-    ('cpc_amistoso_do_clube', 'let of_club = u(a + friendly_match::REQUESTING_CLUB) == club; // the friendly’s club', 'let of_club = u(a + friendly_match::REQUESTING_CLUB) != club; // mutacao: outro clube'),
+    ('cpc_amistoso_do_clube', 'let of_club = read_usize(a + friendly_match::REQUESTING_CLUB) == club; // the friendly’s club', 'let of_club = read_usize(a + friendly_match::REQUESTING_CLUB) != club; // mutacao: outro clube'),
     ('cpc_lista_da_data', 'exe::fixture_manager_get_fixture_list(*(G_FIXTURE_MANAGER as *const usize), year, day, slice, group) // the match manager', 'exe::fixture_manager_get_fixture_list(*(0xae2a58 as *const usize), year, day, (slice + 1) % 3, group) // mutacao: a fatia seguinte'),
-    ('cpc_proxima_competicao', '(comp == -1 || comp == read_i32(f.addr() + 0)) // the competition', '(comp == -1 || comp != read_i32(f.addr() + 0)) // mutacao: a competicao trocada'),
+    ('cpc_proxima_competicao', '(comp == -1 || comp == f.comp_id()) // the competition', '(comp == -1 || comp != f.comp_id()) // mutacao: a competicao trocada'),
     ('cpc_estadio_em_uso', 'if e != 0 && e == stadium { // the match stadium', 'if e != 0 && e != stadium { // mutacao: outro estadio'),
     ('cpc_data_amistoso', '(exe::date_set(this + 3, high | b(1), month, year, (week) as i32) as u32) // the date with the given year', '(exe::date_set(this + 3, high | b(1), month, year.wrapping_add(1), (week) as i32) as u32) // mutacao: o ano seguinte'),
 ]

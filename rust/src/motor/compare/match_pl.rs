@@ -173,7 +173,7 @@ pub(crate) unsafe extern "thiscall" fn compare_release_ball(this: usize) {
     let this = MatchPlayer(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_RELEASE_BALL);
     let m = this.engine();
-    let reg = [(m + engine::MOMENTUM_B, 4), (m + engine::POSSESSION_SIDE, 1), (m + engine::BALL_HOLDER, 4), (m + engine::SHOT_PENDING, 1), (this.addr() + 0x29, 2), (this.addr() + match_player::BALL_CONTROL, 2)];
+    let reg = [(m + engine::MOMENTUM_B, 4), (m + engine::POSSESSION_SIDE, 1), (m + engine::BALL_HOLDER, 4), (m + engine::SHOT_PENDING, 1), (this.addr() + match_player::SPACE_ON_BALL, 2), (this.addr() + match_player::BALL_CONTROL, 2)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr()), || release_ball(this.addr()));
     SCOREBOARD.record(igual, || format!("release_ball original={:x?} rust={:x?}", mo, mr));
 }
@@ -230,7 +230,7 @@ pub(crate) unsafe extern "thiscall" fn compare_take_ball(this: usize) {
             let p = MatchPlayer(*((m + campo) as *const usize));
             if !p.is_null() && p != this {
                 reg.push((p.addr(), 0x40));
-                reg.push((p.addr() + 0x190, 0x10));
+                reg.push((p.addr() + match_player::MOVE_SKILL + 2 * 59, 0x10));
                 let mp = p.engine();
                 if mp != 0 && mp != m {
                     engine(mp, &mut reg);

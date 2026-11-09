@@ -502,7 +502,7 @@ pub(crate) unsafe extern "thiscall" fn is_watching_fixture(this: usize, partida:
     let same = partida.time_slice() == read_u8(r + 0x9b13)
         && partida.day() == read_u16(r + 0x9afe)
         && partida.year() == read_u16(r + 0x9afc)
-        && read_u32(partida.addr() + 0) == read_u32(r + 0x9ad4)
+        && (partida.comp_id() as u32) == read_u32(r + 0x9ad4)
         && (partida.round_number() as u16) == read_u16(r + 0x9b08)
         && (partida.home_club_id() as u32) == read_u32(r + 0x9ae0)
         && (partida.away_club_id() as u32) == read_u32(r + 0x9ae4);

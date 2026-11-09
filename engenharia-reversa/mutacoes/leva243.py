@@ -21,5 +21,5 @@ MUTACOES = [
     ('cph_dias_fim', '(exe::date_days_since(this.addr() + contract::CONTRACT_EXPIRES, read_u32(G_CURRENT_DATE), read_u32(G_CURRENT_DATE_LEAP)) as u32) // the contract end date', '(exe::date_days_since(this.addr() + contract::DATE_STARTED, read_u32(0xae2c90), read_u32(0xae2c94)) as u32) // mutacao: a data de inicio'),
     ('cph_queixas_zero', 'this.set_grievances(0); // the complaints', '*((this.addr() + contract::GRIEVANCES) as *mut u8) = 0; // mutacao: so o byte baixo'),
     ('cph_retirada_moral', 'this.set_morale((read_u8(pessoa + staff::PROFESSIONALISM).wrapping_add(read_u8(pessoa + staff::LOYALTY)).wrapping_add(5)) as i8);', 'this.set_morale((read_u8(pessoa + staff::PROFESSIONALISM).wrapping_add(read_u8(pessoa + staff::LOYALTY)).wrapping_add(4)) as i8); // mutacao'),
-    ('cph_retirada_felicidade', '*((this.addr() + 0x3d) as *mut u8) = 15; // the minimum happiness', '*((this.addr() + 0x3d) as *mut u8) = 14; // mutacao: 14'),
+    ('cph_retirada_felicidade', 'this.set_happiness((15) as i8); // the minimum happiness', '*((this.addr() + 0x3d) as *mut u8) = 14; // mutacao: 14'),
 ]

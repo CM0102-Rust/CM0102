@@ -2,7 +2,7 @@
 MUTACOES = [
     ('j_forma', "as i32) as f64 * 0.002 + 1.5;", "as i32) as f64 * 0.003 + 1.5;"),
     ('j_teto', "    } else if form > 4.0 {\n        form = 4.0;", "    } else if form > 3.0 {\n        form = 3.0;"),
-    ('j_44', "        c = *((r.addr() + 0x44) as *const i8) as f64 * 0.013333333333333334 + 0.5;", "        c = *((r.addr() + 0x44) as *const u8) as f64 * 0.013333333333333334 + 0.5;"),
+    ('j_44', "        c = r.morale() as f64 * 0.013333333333333334 + 0.5;", "        c = *((r.addr() + 0x44) as *const u8) as f64 * 0.013333333333333334 + 0.5;"),
     ('j_tipo6', "            6 => c - 15.0,", "            6 => c - 16.0,"),
     ('j_tipo1', "            1 => c + 2.5,", "            1 => c + 2.0,"),
     ('j_75', "        (person.int_apps() as i8) as u8 as f64 * 75.0", "        (person.int_apps() as i8) as u8 as f64 * 70.0"),

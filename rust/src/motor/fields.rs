@@ -94,10 +94,12 @@ pub(crate) mod contract {
     pub(crate) const MANAGER_JOB_RC: usize = 0x20; // 1 byte(s), byte
     pub(crate) const RELEASE_FEE: usize = 0x21; // 4 byte(s), int
     pub(crate) const DATE_STARTED: usize = 0x25; // 8 byte(s), TCMDate
+    pub(crate) const DATE_STARTED_YEAR: usize = 0x27; // 2 byte(s): Year half of DATE_STARTED (TCMDate at +0x25: day +0x25, year +0x27), same pattern as CONTRACT_EXPIRES_YEAR [verified: sign_contract 0x4cf720 compares (+0x25 day, +0x27 year) against CONTRACT_EXPIRES (+0x2d day, +0x2f year); database_is_staff_foreign 0x53d980 compares +0x27 with]
     pub(crate) const CONTRACT_EXPIRES: usize = 0x2d; // 8 byte(s), TCMDate
     pub(crate) const CONTRACT_EXPIRES_YEAR: usize = 0x2f; // 2 byte(s): Year half of CONTRACT_EXPIRES
     pub(crate) const CONTRACT_TYPE: usize = 0x35; // 1 byte(s), byte
     pub(crate) const PREVIOUS_WAGE: usize = 0x36; // 4 byte(s): Copy of the wage taken when the contract is set up [inference]
+    pub(crate) const SQUAD_NUMBER: usize = 0x3a; // 1 byte(s): Shirt (squad) number of the person at the contract's club, -50..50 (negative at clubs without a human manager) [verified: SQUAD_MANAGER::get_squad_number 0x85a760 returns the contract's (or loan contract's) +0x3a and set_squad_number writes it after a -50..50 check (comp/squad_mana]
     pub(crate) const CLUB_APPEARANCES: usize = 0x3b; // 2 byte(s): Games for the club under this contract (zeroed on signing; clause counts)
     pub(crate) const HAPPINESS: usize = 0x3d; // 1 byte(s): Signed happiness -100..100: set from the squad role (1->75, 2->50, 3->40), moved by minutes played after each match
     pub(crate) const UNHAPPY_FLAG: usize = 0x3e; // 1 byte(s): Byte cleared when a transfer request is withdrawn or morale is reset [inference]
@@ -771,6 +773,7 @@ pub(crate) mod match_player {
     pub(crate) const SIDE_INDEX: usize = 0x0; // 1 byte(s): player's index within his side's block of 20 (-1 empty); marks shootout takers [inference]
     pub(crate) const PASSES: usize = 0x1; // 1 byte(s): passes made (incremented by each pass, taken back when the pass ends offside)
     pub(crate) const PASSES_COMPLETED: usize = 0x2; // 1 byte(s): passes that reached a team-mate (credited to the passer when the team-mate takes the ball)
+    pub(crate) const KEY_PASSES: usize = 0x3; // 1 byte(s): key passes: passes that set up a shot or goal (incremented on the assist candidate, with +rating and engine momentum)
     pub(crate) const TACKLES: usize = 0x4; // 1 byte(s): tackles attempted [inference]
     pub(crate) const TACKLES_WON: usize = 0x5; // 1 byte(s): tackles/challenges won [inference]
     pub(crate) const KEY_TACKLES: usize = 0x6; // 1 byte(s): tackles won near his own goal or behind the defensive line (+300 rating) [inference]
@@ -808,10 +811,16 @@ pub(crate) mod match_player {
     pub(crate) const SECOND_CARD_CODE: usize = 0x26; // 1 byte(s): code of his second card (reason; 9 for a red)
     pub(crate) const SIDE: usize = 0x27; // 1 byte(s): side in the match (0 home, 1 away)
     pub(crate) const CELL_SLOT: usize = 0x28; // 1 byte(s): his index in the occupancy list of the grid cell he stands on (-1 none)
+    pub(crate) const SPACE_ON_BALL: usize = 0x29; // 2 byte(s): space/time on the ball while he holds it: set in dribble from the nearest opponent's distance (or negative by pressure, 350 in mode 4, 200 for a high ball) then +70; zeroed when he takes or releases the ball
     pub(crate) const BUSY: usize = 0x2b; // 1 byte(s): busy/down counter: >0 means occupied (on the ground, just played) and not available
     pub(crate) const PREFERRED_FOOT: usize = 0x2c; // 1 byte(s): foot used when the angle needs no particular one (0 left, 1 right) [inference]
+    pub(crate) const WEAK_FOOT_DEFICIT: usize = 0x2d; // 1 byte(s): 20 minus the rating of his weaker foot (set in setup with PREFERRED_FOOT); penalises actions with the other foot [verified: MATCH_PLAYER::setup 0x6eaea0 at 0x6eb41a: if player LEFT_FOOT(+0x30) > RIGHT_FOOT(+0x3b) then +0x2c=0 and +0x2d=20-right, else +0x2c=1 and +0x2d=20-left; choose]
     pub(crate) const COMMENTARY_ID: usize = 0x2e; // 1 byte(s): player identifier passed to the commentary events (with SIDE)
+    pub(crate) const DEBUT: usize = 0x30; // 1 byte(s): 1 = this match is his debut (no caps for the national side / no appearances for the club); selects the debut-goal commentaries
+    pub(crate) const MATCH_TEMPER: usize = 0x31; // 2 byte(s): temper/discipline word: 0 at setup, +10 if his club favours him, -20 if it dislikes him, -10 against a rival club; drops with each foul he commits (-3..-200 by severity) and -10 when he injures someone; random(v) < -10 triggers the agitation comments and confidence swings; feeds the moment attributes in update_attributes [inference]
+    pub(crate) const OWN_CLUB_FEELING: usize = 0x33; // 2 byte(s): Motivation from his own club: 10, +30 if the club favours him, -10 if it dislikes him, +5 if his club is one of the opponent's rivals
     pub(crate) const MATCH_RATING: usize = 0x35; // 2 byte(s): performance word (code calls it disposition): starts at 6100, rises with good play, drops with fouls and cards [inference]
+    pub(crate) const POSITION_ADJUSTMENT: usize = 0x37; // 2 byte(s): positional/form adjustment word: penalties from the tactical tables A and B against his position ratings plus (MATCH_FORM/2 - 10), scaled by versatility; added to the base bytes and the 63 MOVE_SKILL words
     pub(crate) const SHOT_QUALITY: usize = 0x39; // 2 byte(s): quality part of the last shot value
     pub(crate) const EFFECTIVE_ABILITY: usize = 0x3b; // 2 byte(s): match ability word (current ability adjusted by morale, captain, contract) [inference]
     pub(crate) const GOAL_COUNTS: usize = 0x3d; // 10 byte(s): five i16 goal tallies (+0x3d..+0x45), incremented with each goal and undone when it is disallowed; read by the scorer milestone commentaries 0x200a..0x2012 [inference: career/season counts]
@@ -885,6 +894,8 @@ pub(crate) mod match_player {
     pub(crate) const BASE_ANTICIPATION: usize = 0x115; // 1 byte(s): base for MOMENT_ANTICIPATION, from match anticipation (+0x7d)
     pub(crate) const BASE_WORK_RATE: usize = 0x116; // 1 byte(s): base for MOMENT_WORK_RATE, from match work rate (+0xf5)
     pub(crate) const BASE_AGILITY: usize = 0x117; // 1 byte(s): base for MOMENT_AGILITY, from match agility (+0x79)
+    pub(crate) const CONSISTENCY_ROLL: usize = 0x118; // 1 byte(s): per-match roll random(20) drawn at setup; compared with consistency (player +0x21) + contract modifier to decide an off-day penalty (OFF_DAY_PENALTY at +0x119, random of (30 - consistency) x 2) and scales effective ability by (MATCH_FORM-10) [verified: two independent readings agree: random(20) drawn in MATCH_PLAYER::setup 0x6eb509, compared with consistency in update_attributes 0x6ec010]
+    pub(crate) const INCONSISTENCY_SWING: usize = 0x119; // 1 byte(s): Per-match random size of his form swing: random(35-consistency) for a goalkeeper (+0xf == 20), else random(2*(30-consistency)); applied in update_attributes when the per-match roll +0x118 (random(20)) crosses the threshold [verified: two independent readings agree: written next to +0x118 in setup from consistency, used by update_attributes 0x6ec010 as an off-day swing]
     pub(crate) const MOVE_SKILL: usize = 0x11a; // 126 byte(s): i16 skill word per move code (+0x11a + 2 x move, 63 words)
     pub(crate) const ACTION: usize = 0x198; // 2 byte(s): current action/move code
     pub(crate) const FACING: usize = 0x19a; // 2 byte(s): facing direction in degrees

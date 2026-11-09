@@ -1851,7 +1851,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
         if age > 0x21 {
             if c2.is_null() {
                 lim = lim.wrapping_sub(1);
-            } else if read_usize(c2.addr() + 0x45) != 0
+            } else if (c2.grievances() as usize) != 0
                 && (read_i8(j + player_sheet::ATTACKER) == 0x14 || read_i8(j + player_sheet::ATTACKING_MIDFIELDER) == 0x14 || c2.squad_status() & 0xf0 == 0x70)
             {
                 lim = lim.wrapping_sub(1);
@@ -1859,7 +1859,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
         }
         if person.club_job() != 0 && !c2.is_null() {
             let x = person.loyalty() as i32;
-            if ((c2.wage() as usize) as i32) > (x + 10).wrapping_mul(750) && read_u16(c2.addr() + 0x2f) > read_u16(G_CURRENT_DATE_YEAR) {
+            if ((c2.wage() as usize) as i32) > (x + 10).wrapping_mul(750) && (c2.contract_expires_year() as u16) > read_u16(G_CURRENT_DATE_YEAR) {
                 lim = lim.wrapping_sub(1);
                 if x < 6 {
                     lim = lim.wrapping_sub(1);

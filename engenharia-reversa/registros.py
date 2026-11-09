@@ -44,6 +44,7 @@ ARRAYS = {
     ('club', 'COACHES'): ('usize', 5),
     ('club', 'SCOUTS'): ('usize', 7),
     ('club', 'PHYSIOS'): ('usize', 3),
+    ('match_player', 'MOVE_SKILL'): ('i16', 63),
 }
 
 

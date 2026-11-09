@@ -75,6 +75,25 @@ def fim_da_expressao(s, i):
     return -1
 
 
+SOMAS = None
+
+
+def somas():
+    """{name: type} of the one-line helpers `fn f(a: usize, v: T) { write a = read a .wrapping_add(v) }`."""
+    global SOMAS
+    if SOMAS is None:
+        SOMAS = {}
+        for raiz, _, fs in os.walk(SRC):
+            for f in fs:
+                if f.endswith('.rs'):
+                    t = open(os.path.join(raiz, f), encoding='utf-8').read()
+                    for m in re.finditer(r'fn (\w+)\(a: usize, v: (\w+)\) \{\n([^}]*)\n\}', t):
+                        corpo = m.group(3)
+                        if 'wrapping_add(v)' in corpo and ('a as *mut %s' % m.group(2)) in corpo and corpo.count(';') == 1:
+                            SOMAS[m.group(1)] = m.group(2)
+    return SOMAS
+
+
 class Conversor:
     def __init__(self, mod):
         self.mod = mod
@@ -199,6 +218,49 @@ class Conversor:
                 novo = '%s.set_%s(%s, %s)' % (x, nome, i, v if t == et else '(%s) as %s' % (v, et))
             else:
                 continue
+            edicoes.append((m.start(), fim, novo))
+            ocupado.append((m.start(), fim))
+        # add helpers: add_to_i32(x + mod::F, v)  ->  x.set_f(x.f().wrapping_add(v))
+        for nome_soma, ts in somas().items():
+            for m in re.finditer(r'(?<![\w.:])%s\(' % re.escape(nome_soma), mk):
+                if any(a <= m.start() < b for a, b in ocupado):
+                    continue
+                args, fim = ie.args_da_chamada(mk, m.end() - 1)
+                if not args or len(args) != 2:
+                    continue
+                a0 = re.fullmatch(r'\s*(%s)(?:\.addr\(\))?\s*\+\s*%s::([A-Z][A-Z0-9_]*)\s*' % (nomes, self.mod), args[0])
+                if not a0 or a0.group(2) not in self.campos:
+                    continue
+                x, campo = a0.group(1), a0.group(2)
+                nome, ft, ptr = self.campos[campo]
+                if ft != ts or ptr:
+                    continue
+                ini_v = m.end() + mk[m.end():fim].rindex(args[1])
+                v = self.converter_trecho(s[ini_v:ini_v + len(args[1])].strip(), xs, so_acessos)
+                novo = '%s.set_%s(%s.%s().wrapping_add(%s))' % (x, nome.replace('r#', ''), x, nome, v)
+                edicoes[:] = [e for e in edicoes if not (m.start() <= e[0] and e[1] <= fim)]
+                ocupado[:] = [o for o in ocupado if not (m.start() <= o[0] and o[1] <= fim)]
+                edicoes.append((m.start(), fim, novo))
+                ocupado.append((m.start(), fim))
+        # compound assignment: *((x + mod::F) as *mut T) += v;  ->  x.set_f(x.f().wrapping_add(v));
+        OPS = {'+': '.wrapping_add(%s)', '-': '.wrapping_sub(%s)', '|': ' | %s', '&': ' & %s', '^': ' ^ %s'}
+        for m in re.finditer(r'\*\(\(\s*(%s)(?:\.addr\(\))?\s*\+\s*%s::([A-Z][A-Z0-9_]*)\s*\)\s*as\s*\*mut\s+(\w+)\)\s*([-+|&^])=\s*' % (nomes, self.mod), mk):
+            if any(a <= m.start() < b for a, b in ocupado):
+                continue
+            x, campo, t, op = m.group(1), m.group(2), m.group(3), m.group(4)
+            if campo not in self.campos:
+                continue
+            nome, ft, ptr = self.campos[campo]
+            if ft != t or ptr:
+                continue
+            fim = fim_da_expressao(mk, m.end())
+            if fim < 0:
+                continue
+            v = self.converter_trecho(s[m.end():fim].strip(), xs, so_acessos)
+            v = v if re.fullmatch(r'[\w.()]+', v) else '(%s)' % v
+            novo = '%s.set_%s(%s.%s()%s)' % (x, nome.replace('r#', ''), x, nome, OPS[op] % v)
+            edicoes[:] = [e for e in edicoes if not (m.start() <= e[0] and e[1] <= fim)]
+            ocupado[:] = [o for o in ocupado if not (m.start() <= o[0] and o[1] <= fim)]
             edicoes.append((m.start(), fim, novo))
             ocupado.append((m.start(), fim))
         # core::ptr::read_unaligned((x + mod::F) as *const T)  and  core::ptr::write_unaligned((x + mod::F) as *mut T, v)
@@ -563,14 +625,23 @@ def acessos(mod, grava):
         gravar_mutacoes(trocas_mut)
 
 
+LEITORA = re.compile(r'^([ \t]*)let (\w+) = \|(\w+): usize\| (?:core::ptr::read_unaligned\(\3 as \*const (\w+)\)|\*\(\3 as \*const (\w+)\)|read_(\w+)\(\3\));[ \t]*\n', re.M)
 FECHO = re.compile(r'^([ \t]*)let (\w+) = \|(\w+): usize, (\w+): usize\| \(\3 \+ \4\) as \*(mut|const) (\w+);[ \t]*\n', re.M)
 
 
 def expandir_fechos_trecho(s, defs):
-    """`NAME(a, b)` -> `((a + b) as *mut T)` for the pointer closures in defs {NAME: (kind, T)}."""
+    """`NAME(a, b)` -> `((a + b) as *mut T)` for the pointer closures in defs {NAME: (kind, T)}; for the read
+    closures {NAME: ('read', T)}, `NAME(e)` -> `read_T(e)` when e is a field address (`x.addr() + mod::F`)."""
     mk = mascara(s)
     ed = []
     for nome, (kind, t) in defs.items():
+        if kind == 'read':
+            for m in re.finditer(r'(?<![\w.:])%s\(' % re.escape(nome), mk):
+                args, fim = ie.args_da_chamada(mk, m.end() - 1)
+                if not args or len(args) != 1 or not re.fullmatch(r'\s*[a-z_]\w*(?:\.addr\(\))?\s*\+\s*[a-z_]+::[A-Z]\w*\s*', args[0]):
+                    continue
+                ed.append((m.start(), fim, 'read_%s(%s)' % (t, s[m.end():fim - 1].strip())))
+            continue
         for m in re.finditer(r'(?<![\w.:])%s\(' % re.escape(nome), mk):
             args, fim = ie.args_da_chamada(mk, m.end() - 1)
             if not args or len(args) != 2:
@@ -601,6 +672,10 @@ def expandir_fechos(grava):
             for _, a, b in mover_rotinas.blocos(t):
                 bloco = t[a:b]
                 defs = {m.group(2): (m.group(5), m.group(6)) for m in FECHO.finditer(bloco)}
+                for m in LEITORA.finditer(bloco):
+                    tl_ = m.group(4) or m.group(5) or m.group(6)
+                    if tl_ in ('u8', 'i8', 'u16', 'i16', 'u32', 'i32', 'usize', 'f32', 'f64'):
+                        defs[m.group(2)] = ('read', tl_)
                 # only closures defined once in the block (no shadowing)
                 defs = {k: v for k, v in defs.items() if len(re.findall(r'\blet %s\b' % re.escape(k), bloco)) == 1}
                 if not defs:

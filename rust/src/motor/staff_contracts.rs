@@ -169,11 +169,11 @@ pub(crate) unsafe extern "thiscall" fn init_from_current_contract(this: usize, p
     let b = (this.contract_type() & 0xc6) | 6;
     this.set_previous_wage((this.wage() as usize));
     this.set_contract_type(b);
-    write_u8(this.addr() + 0x3a, 0);
+    this.set_squad_number(0);
     this.set_leaving_on_bosman(0);
     this.set_transfer_arranged_for(usize::MAX);
     reset_contract_morale(this, person, Club(club));
-    core::ptr::write_unaligned((this.addr() + 0x3b) as *mut u16, 0);
+    this.set_club_appearances((0) as i16);
     for k in 0x1c..=0x20 {
         write_u8(this.addr() + k, 0);
     }
@@ -350,13 +350,13 @@ pub(crate) unsafe extern "thiscall" fn check_transfer_request_withdrawal(this: u
     let this = Contract(this);
     let Some(pessoa) = should_withdraw_transfer_request(this) else { return };
     exe::contract_manager_post_transfer_request_withdrawn_news(read_u32(G_CONTRACT_MANAGER) as usize, this, ctx);
-    *((this.addr() + contract::TRANSFER_STATUS) as *mut u8) &= 0xf7; // o pedido retirado
+    this.set_transfer_status(this.transfer_status() & 0xf7); // o pedido retirado
     this.set_morale((read_u8(pessoa + staff::PROFESSIONALISM).wrapping_add(read_u8(pessoa + staff::LOYALTY)).wrapping_add(5)) as i8);
     if (this.unhappy_flag() as u8) != 0 {
         this.set_unhappy_flag((0) as i8);
     }
-    if (read_u8(this.addr() + 0x3d) as i8) < 15 {
-        *((this.addr() + 0x3d) as *mut u8) = 15; // the minimum happiness
+    if ((this.happiness() as u8) as i8) < 15 {
+        this.set_happiness((15) as i8); // the minimum happiness
     }
     for bit in [0x10u32, 1, 4, 8, 0x100, 0x80, 0x10000] {
         let q = this.grievances();
@@ -396,13 +396,13 @@ pub(crate) unsafe extern "thiscall" fn set_flags(c: usize, marks: u32) {
         // simplification: the ”Error” box (before any write): the whole original
         return original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_SET_FLAGS)(c.addr(), marks);
     }
-    write_u32(c.addr() + 0x40, read_usize(c.addr() + 0x40) as u32 | marks);
+    c.set_flags((c.flags() as usize) as u32 | marks);
     let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add((read_i32(c.addr()) as usize).wrapping_mul(staff::SIZE)));
     let function = person.job_for_club();
     if function == 0xc || function == 0xd || function == 0xf {
         return;
     }
-    let morale = read_u8(c.addr() + 0x44) as i8;
+    let morale = (c.morale() as u8) as i8;
     if morale == 0 || morale < 0 || c.leaving_on_bosman() != 0 {
         return;
     }
@@ -533,7 +533,7 @@ pub(crate) unsafe extern "thiscall" fn construct_staff_contract(this: usize) -> 
     this.set_club((u32::MAX) as usize);
     this.set_transfer_arranged_for((u32::MAX) as usize);
     this.set_leaving_on_bosman(0);
-    core::ptr::write_unaligned((this.addr() + 0x3b) as *mut u16, 0);
+    this.set_club_appearances((0) as i16);
     this.set_transfer_status(0);
     this.set_flags(0);
     this.set_grievances(0);
@@ -562,21 +562,21 @@ pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
     let p = Staff((*(G_STAFF_TABLE as *const usize)).wrapping_add((*(t.addr() as *const i32) as usize).wrapping_mul(staff::SIZE)));
     let club = Club((*(G_CLUB_TABLE as *const usize)).wrapping_add(((t.club() as i32) as usize).wrapping_mul(club::SIZE)));
     let u = |a: usize| core::ptr::read_unaligned(a as *const usize);
-    let manager = u(club.addr() + club::MANAGER);
+    let manager = club.manager().addr();
     if manager != 0 && p.addr() == manager {
         return 0;
     }
-    let auxiliar = u(club.addr() + club::ASSISTANT_MANAGER);
+    let auxiliar = club.assistant_manager();
     if auxiliar != 0 && p.addr() == auxiliar {
         return 0;
     }
-    let funcoes = u(t.addr() + 0x45) as u32;
+    let funcoes = u(t.addr() + contract::GRIEVANCES) as u32;
     if funcoes == 0 {
         return 0;
     }
     let b = |o: usize| *((p.addr() + o) as *const i8);
     let (b59, b5a, b5b, b5d) = (b(staff::LOYALTY), b(staff::PRESSURE), b(staff::PROFESSIONALISM), b(staff::TEMPERAMENT));
-    let b44 = *((t.addr() + 0x44) as *const i8);
+    let b44 = t.morale();
     let mut rating = ((*(p.addr() as *const i32) % 7) as u8).wrapping_add(b59 as u8).wrapping_add(b5a as u8).wrapping_add(b5b as u8);
     if b5a == 1 {
         rating = rating.wrapping_sub(2);
@@ -601,7 +601,7 @@ pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
     } else if b44 > 0 {
         rating = rating.wrapping_add(2);
     }
-    let sheet = u(p.addr() + staff::PLAYER);
+    let sheet = p.player();
     if sheet != 0 {
         let rep = core::ptr::read_unaligned((sheet + player_sheet::CURRENT_REPUTATION) as *const i16);
         if rep > 0x1c52 {
@@ -610,7 +610,7 @@ pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
             rating = rating.wrapping_sub(3);
         }
     }
-    let tecnica = *((t.addr() + 0x40) as *const u32) & 8 != 0;
+    let tecnica = t.flags() & 8 != 0;
     let m1 = funcoes & 0x1000002;
     let mut k = 0u8;
     for bits in [0x20000u32, 0x40000, 0x1000002, 0x200600, 0x2840, 0x14] {

@@ -458,8 +458,8 @@ pub(crate) unsafe fn pay_dividend(this: usize, club: Club, fin: Finance) {
         }
     }
     crate::comparison::branch("cqc_1 dividend");
-    add_to_i32(fin.addr() + finance::MONTH_DIVIDENDS, v);
-    add_to_i32(fin.addr() + finance::SEASON_DIVIDENDS, v);
+    fin.set_month_dividends(fin.month_dividends().wrapping_add(v));
+    fin.set_season_dividends(fin.season_dividends().wrapping_add(v));
     core::ptr::write_unaligned(fin.addr() as *mut i64, balance(fin).wrapping_sub(v as i64)); // cqc1: the dividend leaves the balance
     exe::finance_post_dividend_news(this, club, v);
 }
@@ -1470,8 +1470,8 @@ pub(crate) unsafe extern "thiscall" fn calc_gate_receipts(table: usize, partida:
 /// 0x6a9e60): soma o valor às multas do ano (+0x128) e do mês (+0x88) e o tira do saldo.
 pub(crate) unsafe extern "thiscall" fn pay_league_fine(this: usize, value: i32) {
     let this = Finance(this);
-    fin_prm_add_i32(this.addr() + finance::SEASON_FINES, value);
-    fin_prm_add_i32(this.addr() + finance::MONTH_FINES, value);
+    this.set_season_fines(this.season_fines().wrapping_add(value));
+    this.set_month_fines(this.month_fines().wrapping_add(value));
     add_to_balance(this, -(value as i64));
 }
 
@@ -1479,15 +1479,15 @@ pub(crate) unsafe extern "thiscall" fn pay_league_fine(this: usize, value: i32) 
 ///
 /// [pt] O saldo (i64 em +0) separado em (baixo, alto), como a original o lê em dois dwords.
 pub(crate) unsafe fn balance_halves(fin: Finance) -> (u32, i32) {
-    (core::ptr::read_unaligned(fin.addr() as *const u32), core::ptr::read_unaligned((fin.addr() + 4) as *const i32))
+    (core::ptr::read_unaligned(fin.addr() as *const u32), core::ptr::read_unaligned((fin.addr() + finance::BALANCE + 4) as *const i32))
 }
 
 /// Adds v to finance fields +0x154 and +0xb4 and to the i64 balance.
 ///
 /// [pt] O valor entra em +0x154, +0xb4 e no saldo (estendido com sinal).
 pub(crate) unsafe fn credit_income(fin: Finance, v: i32) {
-    add_to_i32(fin.addr() + finance::SEASON_OTHER_INCOME, v);
-    add_to_i32(fin.addr() + finance::MONTH_OTHER_INCOME, v);
+    fin.set_season_other_income(fin.season_other_income().wrapping_add(v));
+    fin.set_month_other_income(fin.month_other_income().wrapping_add(v));
     credit_balance(fin, v);
 }
 
@@ -1770,8 +1770,8 @@ pub(crate) unsafe extern "thiscall" fn try_board_takeover(this: usize, club: usi
             v = (balance_halves(fin).0 as i32).wrapping_neg();
         }
     }
-    add_to_i32(fin.addr() + finance::MONTH_OTHER_INCOME, v);
-    add_to_i32(fin.addr() + finance::SEASON_OTHER_INCOME, v);
+    fin.set_month_other_income(fin.month_other_income().wrapping_add(v));
+    fin.set_season_other_income(fin.season_other_income().wrapping_add(v));
     credit_balance(fin, v);
     let budget = transfer_budget(fin);
     if with_sheet && !RARE_FINANCE_EVENT_DRY_RUN {
@@ -1814,8 +1814,8 @@ pub(crate) unsafe extern "thiscall" fn try_board_takeover(this: usize, club: usi
 /// outros custos do ano (+0x120) e do mês (+0x80) e o tira do saldo.
 pub(crate) unsafe extern "thiscall" fn pay_other_costs(this: usize, value: i32) {
     let this = Finance(this);
-    add_to_i32(this.addr() + finance::SEASON_OTHER_COSTS, value);
-    add_to_i32(this.addr() + finance::MONTH_OTHER_COSTS, value);
+    this.set_season_other_costs(this.season_other_costs().wrapping_add(value));
+    this.set_month_other_costs(this.month_other_costs().wrapping_add(value));
     add_to_balance(this, -(value as i64));
 }
 
@@ -2051,8 +2051,8 @@ pub(crate) fn i64_from_halves(low: u32, high: u32) -> i64 {
 pub(crate) unsafe extern "thiscall" fn add_players_sold(this: usize, low: u32, high: u32) {
     let this = Finance(this);
     let v = i64_from_halves(low, high);
-    fin_prm_add_i64(this.addr() + finance::MONTH_PLAYERS_SOLD, v);
-    fin_prm_add_i64(this.addr() + finance::SEASON_PLAYERS_SOLD, v);
+    this.set_month_players_sold(this.month_players_sold().wrapping_add(v));
+    this.set_season_players_sold(this.season_players_sold().wrapping_add(v));
     if v != 0 {
         crate::comparison::branch("cpz_12 sale received"); // only a nonzero value changes the balance
     }
@@ -2073,8 +2073,8 @@ pub(crate) unsafe extern "thiscall" fn add_players_sold(this: usize, low: u32, h
 pub(crate) unsafe extern "thiscall" fn pay_players_bought(this: usize, low: u32, high: u32) {
     let this = Finance(this);
     let v = i64_from_halves(low, high);
-    fin_prm_add_i64(this.addr() + finance::MONTH_PLAYERS_BOUGHT, v);
-    fin_prm_add_i64(this.addr() + finance::SEASON_PLAYERS_BOUGHT, v);
+    this.set_month_players_bought(this.month_players_bought().wrapping_add(v));
+    this.set_season_players_bought(this.season_players_bought().wrapping_add(v));
     if v != 0 {
         crate::comparison::branch("cpz_12 purchase paid"); // only a nonzero value changes the balance
     }
@@ -2093,8 +2093,8 @@ pub(crate) unsafe extern "thiscall" fn pay_players_bought(this: usize, low: u32,
 /// tira do saldo (estendido com sinal).
 pub(crate) unsafe extern "thiscall" fn pay_sign_on_fee(this: usize, value: i32) {
     let this = Finance(this);
-    fin_prm_add_i32(this.addr() + finance::SEASON_SIGN_ON_FEES, value);
-    fin_prm_add_i32(this.addr() + finance::MONTH_SIGN_ON_FEES, value);
+    this.set_season_sign_on_fees(this.season_sign_on_fees().wrapping_add(value));
+    this.set_month_sign_on_fees(this.month_sign_on_fees().wrapping_add(value));
     if value != 0 {
         crate::comparison::branch("cpz_12 signing-on fees paid"); // only a nonzero value changes the balance
     }
@@ -2121,8 +2121,8 @@ pub(crate) unsafe fn add_to_balance(fin: Finance, v: i64) {
 /// 0x682e10) e pelas honras da temporada: soma o valor aos prêmios do ano (+0x148) e do mês (+0xa8) e ao saldo.
 pub(crate) unsafe extern "thiscall" fn add_prize_money(this: usize, value: i32) {
     let this = Finance(this);
-    fin_prm_add_i32(this.addr() + finance::SEASON_PRIZE_MONEY, value);
-    fin_prm_add_i32(this.addr() + finance::MONTH_PRIZE_MONEY, value);
+    this.set_season_prize_money(this.season_prize_money().wrapping_add(value));
+    this.set_month_prize_money(this.month_prize_money().wrapping_add(value));
     if value != 0 {
         crate::comparison::branch("cpz_13 prize received"); // only a nonzero value changes the balance
     }
@@ -2141,8 +2141,8 @@ pub(crate) unsafe extern "thiscall" fn add_prize_money(this: usize, value: i32) 
 /// (+0x158) e do mês (+0xb8) e ao saldo.
 pub(crate) unsafe extern "thiscall" fn add_tv_revenue(this: usize, value: i32) {
     let this = Finance(this);
-    fin_prm_add_i32(this.addr() + finance::SEASON_TV_REVENUE, value);
-    fin_prm_add_i32(this.addr() + finance::MONTH_TV_REVENUE, value);
+    this.set_season_tv_revenue(this.season_tv_revenue().wrapping_add(value));
+    this.set_month_tv_revenue(this.month_tv_revenue().wrapping_add(value));
     if value != 0 {
         crate::comparison::branch("cpz_13 TV money received"); // only a nonzero value changes the balance
     }
@@ -2158,8 +2158,8 @@ pub(crate) unsafe extern "thiscall" fn add_tv_revenue(this: usize, value: i32) {
 /// (+0x130) e do mês (+0x90) e o tira do saldo.
 pub(crate) unsafe extern "thiscall" fn pay_wages(this: usize, value: i32) {
     let this = Finance(this);
-    fin_prm_add_i32(this.addr() + finance::SEASON_WAGES, value);
-    fin_prm_add_i32(this.addr() + finance::MONTH_WAGES, value);
+    this.set_season_wages(this.season_wages().wrapping_add(value));
+    this.set_month_wages(this.month_wages().wrapping_add(value));
     if value != 0 {
         crate::comparison::branch("cpz_13 wages paid"); // only a nonzero value changes the balance
     }
@@ -2356,16 +2356,16 @@ pub(crate) unsafe extern "thiscall" fn sell_season_tickets(this: usize, apply: i
         income = ftol(income as f64 * read_f64(factor));
     }
     if apply != 0 { // cpv5: the ticket revenue
-        add_to_i32(this.addr() + finance::MONTH_SEASON_TICKETS, income);
-        add_to_i32(this.addr() + finance::SEASON_SEASON_TICKETS, income);
+        this.set_month_season_tickets(this.month_season_tickets().wrapping_add(income));
+        this.set_season_season_tickets(this.season_season_tickets().wrapping_add(income));
         add_i32_to_balance(this.addr(), income);
     }
     let r1 = friendly_random(rep);
     let r2 = friendly_random(rep); // cpv5: the second shop random draw
     let k = r1.wrapping_add(r2).wrapping_add(1);
     let v = ftol((k as f64 * read_f64(rdata::F64_0_001) + read_f64(rdata::F64_1)) * new as f64);
-    add_to_i32(this.addr() + finance::SEASON_MERCHANDISING, v);
-    add_to_i32(this.addr() + finance::MONTH_MERCHANDISING, v);
+    this.set_season_merchandising(this.season_merchandising().wrapping_add(v));
+    this.set_month_merchandising(this.month_merchandising().wrapping_add(v));
     add_i32_to_balance(this.addr(), v);
 }
 
@@ -2600,7 +2600,7 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
                     if owner == club.addr() && !ct.is_null() {
                         let v = exe::contract_manager_calc_player_value(read_usize(G_CONTRACT_MANAGER), j, owner, 0, -1, 1);
                         if v < read_i32(j + staff::VALUE) {
-                            *((ct.addr() + contract::TRANSFER_STATUS) as *mut u8) |= 4;
+                            ct.set_transfer_status(ct.transfer_status() | 4);
                             core::ptr::write_unaligned((j + staff::VALUE) as *mut i32, v);
                         }
                     }
@@ -2784,8 +2784,8 @@ pub(crate) unsafe extern "thiscall" fn try_board_debt_payment(this: usize, club:
     } else {
         rep.wrapping_mul(300)
     };
-    add_to_i32(fin.addr() + finance::SEASON_OTHER_INCOME, value);
-    add_to_i32(fin.addr() + finance::MONTH_OTHER_INCOME, value);
+    fin.set_season_other_income(fin.season_other_income().wrapping_add(value));
+    fin.set_month_other_income(fin.month_other_income().wrapping_add(value));
     credit_balance(fin, value);
     post_finance_boost_news(this, club, value, 0, 4);
     1
@@ -2903,8 +2903,8 @@ pub(crate) unsafe extern "thiscall" fn try_cash_injection(this: usize, club: usi
             value = 0x3d0900 + greater;
         }
     }
-    add_to_i32(fin.addr() + finance::SEASON_OTHER_INCOME, value);
-    add_to_i32(fin.addr() + finance::MONTH_OTHER_INCOME, value);
+    fin.set_season_other_income(fin.season_other_income().wrapping_add(value));
+    fin.set_month_other_income(fin.month_other_income().wrapping_add(value));
     credit_balance(fin, value);
     let budget = transfer_budget(fin);
     post_finance_boost_news(this, club, value, budget, 3);

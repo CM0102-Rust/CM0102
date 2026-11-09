@@ -172,7 +172,7 @@ pub(crate) unsafe fn add_year_award(this: usize, p: Staff, club: usize, prize: u
         return;
     }
     if read_usize(G_TRANSFER_MANAGER) != 0 {
-        if exe::date_days_since(G_CURRENT_DATE, (k.date_started()) as u32, (read_usize(k.addr() + 0x29)) as u32) > 0x12c { // cpy10: mais de 300 dias
+        if exe::date_days_since(G_CURRENT_DATE, (k.date_started()) as u32, (read_usize(k.addr() + contract::DATE_STARTED + 4)) as u32) > 0x12c { // cpy10: mais de 300 dias
             let owner = contract_club_except_type5(p);
             let x = exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), owner, p, 0, 0);
             if x != 0 && read_usize(x + 0xf) == read_usize(p.addr()) {
@@ -185,7 +185,7 @@ pub(crate) unsafe fn add_year_award(this: usize, p: Staff, club: usize, prize: u
         crate::comparison::branch("cpy_10 without credit");
         return; // cpy10: só o creditado
     }
-    if read_usize(k.addr() + 0x45) != 0 {
+    if (k.grievances() as usize) != 0 {
         return;
     }
     let v59 = (p.loyalty() as u8) as i8;

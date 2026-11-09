@@ -2256,7 +2256,7 @@ pub(crate) unsafe fn list_next_item(l: usize) -> usize {
 /// (+0x34, curto com sinal) e os dois clubes (cada um o mandante +0xc ou o visitante +0x10).
 pub(crate) unsafe fn fixture_matches_next_filter(f: Fixture, comp: i32, stage: i32, clube_a: i32, club_b: i32) -> bool {
     let club = |c: i32| c == -1 || c == (f.home_club_id() as i32) || c == (f.away_club_id() as i32);
-    (comp == -1 || comp == read_i32(f.addr() + 0)) // the competition
+    (comp == -1 || comp == f.comp_id()) // the competition
         && (stage == -1 || stage == f.round_number() as i32)
         && club(clube_a)
         && club(club_b)

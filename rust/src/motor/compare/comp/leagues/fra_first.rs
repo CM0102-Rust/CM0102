@@ -12,7 +12,7 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_fra_first(this: usize, 
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_FRA_FIRST);
     let r = o(this.addr(), year, record);
-    let marker = |m: League, vt: usize, g: usize| m.is_null() || (read_usize(m.addr()) == vt && read_usize(m.addr() + 4) == comp_record_of_key(g) && m.discipline_rule() == 0xff);
+    let marker = |m: League, vt: usize, g: usize| m.is_null() || (read_usize(m.addr()) == vt && m.competition().addr() == comp_record_of_key(g) && m.discipline_rule() == 0xff);
     let mut ok = r == this.addr() && read_usize(this.addr()) == 0x96aa24 && (this.year() as u16) == year as u16
         && this.competition().addr() == record && this.discipline_rule() == 0xc
         && marker(League(read_usize(this.addr() + 0xee)), 0x96a994, KEY_CLUB_COMP_FRENCH_CFA) && marker(League(read_usize(this.addr() + 0xf2)), 0x96a904, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION);

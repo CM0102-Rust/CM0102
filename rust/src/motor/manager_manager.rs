@@ -4892,7 +4892,7 @@ pub(crate) unsafe extern "thiscall" fn is_staff_suitable_for_job(_this: usize, p
             return 0;
         }
     }
-    let time = |p: Staff| exe::date_days_since(G_CURRENT_DATE, (p.date_joined_club() as u32), read_u32(p.addr() + 0x42));
+    let time = |p: Staff| exe::date_days_since(G_CURRENT_DATE, (p.date_joined_club() as u32), (p.date_joined_club_leap_year() as u32));
     let limit = |p: Staff| (read_u8_volatile(p.addr() + staff::LOYALTY) as i8 as i32 + 0x15) * 10;
     if read_u8_volatile(person.addr() + staff::JOB_FOR_CLUB) == 0xb {
         let player = (person.player() as u32) as usize;

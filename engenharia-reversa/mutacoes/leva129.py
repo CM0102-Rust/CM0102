@@ -4,7 +4,7 @@ MUTACOES = [
     ('j_ataque', "        1 => random(400),\n        2 => random(500),", "        1 => random(401),\n        2 => random(500),"),
     ('j_altura', "attack = ftol(attack as i16 as f64 / st);", "attack = ftol(attack as i16 as f64 / (st + 0.1));"),
     ('j_proprio', "if random(attack as i16 as i32 + 100) != 0 {\n            return 0;\n        }\n        crate::comparison::branch(\"play ball on own side\")", "if random(attack as i16 as i32 + 101) != 0 {\n            return 0;\n        }\n        crate::comparison::branch(\"play ball on own side\")", "play ball on own side"),
-    ('j_cabeca', "((*((j.addr() + 0x164) as *mut i16)).wrapping_shl(1), 0x25)", "(*((j.addr() + 0x164) as *mut i16), 0x25)", "play header"),
+    ('j_cabeca', "((*((j.addr() + match_player::MOVE_SKILL + 2 * 37) as *mut i16)).wrapping_shl(1), 0x25)", "(*((j.addr() + match_player::MOVE_SKILL + 2 * 37) as *mut i16), 0x25)", "play header"),
     ('j_forte', "valor = ftol(valor as f64 * 0.85) as i16;", "valor = ftol(valor as f64 * 0.86) as i16;", "play strong"),
     ('j_nota', "let rating = (v - strength as i32 / 3 - attack) as i16;", "let rating = (v - strength as i32 / 2 - attack) as i16;"),
     ('j_baixa', "crate::comparison::branch(\"play very low rating\");\n        j.set_busy((((j.busy() as u8)).wrapping_add(random(2) as u8)) as i8);", "crate::comparison::branch(\"play very low rating\");\n        j.set_busy((((j.busy() as u8)).wrapping_add(random(3) as u8)) as i8);", "play very low rating"),

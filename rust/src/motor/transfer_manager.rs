@@ -1470,7 +1470,7 @@ pub(crate) unsafe extern "thiscall" fn post_offer_made_news(this: usize, o: usiz
     if read_u8(o + offer::PRE_CONTRACT) != 0 && seller != 0 && exe::database_is_player_job(read_u8(target + staff::JOB_FOR_CLUB) as i8) != 0 {
         let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), target));
         if !c.is_null() {
-            let (ha, ca) = (read_i16(G_CURRENT_DATE_YEAR) as u16, read_i16(c.addr() + 0x2f) as u16);
+            let (ha, ca) = (read_i16(G_CURRENT_DATE_YEAR) as u16, c.contract_expires_year() as u16);
             if ha < ca || (ha == ca && read_i16(G_CURRENT_DATE) < c.contract_expires()) {
                 g(0xc, c.contract_expires() as i32 as u32);
                 g(0xd, ca as u32);
@@ -2934,7 +2934,7 @@ pub(crate) unsafe fn is_falkirk_name_exception(p: Staff, agulha: usize, offer: C
     if exe::crt_strstr(name, agulha) == 0 || offer.is_null() {
         return false;
     }
-    let mut a = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(offer.addr() + 4).wrapping_mul(club::SIZE)) + 4;
+    let mut a = read_usize(G_CLUB_TABLE).wrapping_add(offer.club().wrapping_mul(club::SIZE)) + 4;
     let mut b = 0xa8eb48usize;
     loop {
         let (x, y) = (read_u8(a), read_u8(b));
@@ -4573,7 +4573,7 @@ pub(crate) unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o:
             && exe::awol_is_player_awol(read_usize(G_AWOL), p, 0) == 0
         {
             exe::awol_start_absence(read_usize(G_AWOL), p, buyer, 1);
-            let strength = read_i8_as_i32(c2.addr() + 0x44);
+            let strength = (c2.morale() as i32);
             let r1 = random(0xc8);
             let r2 = random(0x190);
             if strength.wrapping_sub(r1).wrapping_add(r2) < -150 {
@@ -4919,10 +4919,10 @@ pub(crate) unsafe extern "thiscall" fn post_transfer_completed_news(this: usize,
         let c = Contract(contract_of_staff(p.addr()));
         let year = read_i16(G_CURRENT_DATE_YEAR) as u16;
         let vem = !c.is_null()
-            && (year < read_i16(c.addr() + 0x2f) as u16 || (year == read_i16(c.addr() + 0x2f) as u16 && read_i16(G_CURRENT_DATE) < c.contract_expires()));
+            && (year < c.contract_expires_year() as u16 || (year == c.contract_expires_year() as u16 && read_i16(G_CURRENT_DATE) < c.contract_expires()));
         if vem {
             exe::newsitem_set_slot(nt, 10, c.contract_expires() as i32 as u32);
-            exe::newsitem_set_slot(nt, 11, read_i16(c.addr() + 0x2f) as u16 as u32);
+            exe::newsitem_set_slot(nt, 11, c.contract_expires_year() as u16 as u32);
         } else {
             exe::newsitem_set_slot(nt, 10, 0);
             exe::newsitem_set_slot(nt, 11, 0);

@@ -1190,7 +1190,7 @@ pub(crate) unsafe fn will_renew_contract(club: Club, p: usize, c: Contract) -> b
         return false;
     }
     let days: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(FN_DATE_DAYS_SINCE);
-    if days(G_CURRENT_DATE, c.date_started(), read_usize(c.addr() + 0x29)) <= 0x12c {
+    if days(G_CURRENT_DATE, c.date_started(), read_usize(c.addr() + contract::DATE_STARTED + 4)) <= 0x12c {
         return false;
     }
     let e = exe::shortlist_manager_find_club_shortlist_entry(read_usize(gt + transfer_manager_fields::SHORTLIST_MANAGER), club, p, 0, 0);
@@ -1279,9 +1279,9 @@ pub(crate) unsafe fn apply_promotion(this: usize, club: Club, comp: Competition,
         if c.is_null() {
             continue;
         }
-        let v = read_u8(c.addr() + 0x44) as i8;
+        let v = (c.morale() as u8) as i8;
         let s = v as i32 + 0x4b;
-        *((c.addr() + 0x44) as *mut u8) = if s > 0x64 { 0x64 } else if s < -0x64 { 0x9c } else { v.wrapping_add(0x4b) as u8 };
+        c.set_morale((if s > 0x64 { 0x64 } else if s < -0x64 { 0x9c } else { v.wrapping_add(0x4b) as u8 }) as i8);
         let kind = c.squad_status() >> 4;
         if (kind == 0 || (kind > 3 && kind != 5)) || !will_renew_contract(club, p, c) {
             continue;
@@ -1357,7 +1357,7 @@ pub(crate) unsafe fn promotion_regions(this: usize, club: Club, promotion: bool)
             if renova && will_renew_contract(club, p, c) {
                 return None;
             }
-            reg.push((c.addr() + 0x44, 1));
+            reg.push((c.addr() + contract::MORALE, 1));
         }
     }
     Some(reg)

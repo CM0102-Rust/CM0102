@@ -127,10 +127,10 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: 
     let won = if !partida.is_null() {
         if partida.home_club() == club.addr() {
             exe::newsitem_set_slot(p, (5) as u32 as i8, read_usize(partida.away_club()) as u32);
-            b(partida.addr() + fixture::HOME_RESULT_MARK) != 0 || b(partida.addr() + fixture::HOME_AGGREGATE) > b(partida.addr() + fixture::AWAY_AGGREGATE) || b(partida.addr() + fixture::HOME_GOALS) > b(partida.addr() + fixture::AWAY_GOALS)
+            partida.home_result_mark() != 0 || partida.home_aggregate() > partida.away_aggregate() || partida.home_goals() > partida.away_goals()
         } else {
             exe::newsitem_set_slot(p, (5) as u32 as i8, read_usize(partida.home_club()) as u32);
-            b(partida.addr() + fixture::AWAY_RESULT_MARK) != 0 || b(partida.addr() + fixture::HOME_AGGREGATE) < b(partida.addr() + fixture::AWAY_AGGREGATE) || b(partida.addr() + fixture::HOME_GOALS) < b(partida.addr() + fixture::AWAY_GOALS)
+            partida.away_result_mark() != 0 || partida.home_aggregate() < partida.away_aggregate() || partida.home_goals() < partida.away_goals()
         }
     } else {
         exe::newsitem_set_slot(p, (5) as u32 as i8, u32::MAX);
@@ -490,10 +490,10 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_club(club: usize) -> u
 /// tabela, 3. Devolve só `al`.
 pub(crate) unsafe extern "C" fn comp_active_key_nation_of_stadium(stadium: usize) -> u8 {
     let u = |a: usize| core::ptr::read_unaligned(a as *const usize);
-    if stadium == 0 || u(stadium + stadium::CITY) == 0 || u(u(stadium + stadium::CITY) + 0x1f) == 0 {
+    if stadium == 0 || read_usize(stadium + stadium::CITY) == 0 || u(read_usize(stadium + stadium::CITY) + 0x1f) == 0 {
         return 3;
     }
-    match find_key_nation_index(u(u(stadium + stadium::CITY) + 0x1f)) {
+    match find_key_nation_index(u(read_usize(stadium + stadium::CITY) + 0x1f)) {
         Some(k) => {
             crate::comparison::branch("cqb_12 stadium key nation");
             *((key_nation_entry(k) + 0x14) as *const u8) // cqb12: the active index of the stadium’s nation

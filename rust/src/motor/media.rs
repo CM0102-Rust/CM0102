@@ -711,10 +711,10 @@ pub(crate) unsafe fn warn_position_rivals_with(player: Staff, club: Club, call: 
         }
         // cqb8: 0x4cf5f0 is a tape unit (direct and from inside 0x544520; 0x62c400 reaches 0x600a50)
         let c = Contract(call(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB, read_usize(G_CONTRACT_MANAGER), [p.addr() as u32, club.addr() as u32, 0, 0, 0]) as usize);
-        if c.is_null() || p.player() == 0 || read_i8(c.addr() + 0x3d) <= 0 {
+        if c.is_null() || p.player() == 0 || c.happiness() <= 0 {
             continue;
         }
-        if replay_inner_tape_calls(call, || exe::injury_get_player_injury_status(read_usize(G_INJURY), player)) == 2 || read_usize(c.addr() + 0x45) & 0x101 != 0
+        if replay_inner_tape_calls(call, || exe::injury_get_player_injury_status(read_usize(G_INJURY), player)) == 2 || (c.grievances() as usize) & 0x101 != 0
             || replay_inner_tape_calls(call, || exe::staff_is_transfer_listed_or_requested(p, club)) != 0
         {
             continue;
@@ -885,13 +885,13 @@ pub(crate) unsafe fn would_request_transfer(c: Contract, marks: u32) -> bool {
             return false;
         }
     }
-    if read_i8_as_i32(c.addr() + 0x44) < 0 || c.leaving_on_bosman() != 0 {
+    if (c.morale() as i32) < 0 || c.leaving_on_bosman() != 0 {
         return false;
     }
-    let before = read_usize(c.addr() + 0x45);
-    core::ptr::write_unaligned((c.addr() + 0x45) as *mut usize, before | marks as usize);
+    let before = (c.grievances() as usize);
+    c.set_grievances((before | marks as usize) as u32);
     let exit = exe::staff_contract_wants_to_leave(c) != 0;
-    core::ptr::write_unaligned((c.addr() + 0x45) as *mut usize, before);
+    c.set_grievances((before) as u32);
     if !exit {
         return false;
     }
@@ -2799,13 +2799,13 @@ pub(crate) unsafe extern "thiscall" fn pick_former_international_pundit(_this: u
                 break 0;
             }
             let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add((r as usize).wrapping_mul(110));
-            if *((p + staff::AGE) as *const i8) < 0x25 || *((p + staff::INT_APPS) as *const u8) < 0x32 || u(p + staff::NON_PLAYER) == 0 {
+            if *((p + staff::AGE) as *const i8) < 0x25 || *((p + staff::INT_APPS) as *const u8) < 0x32 || read_usize(p + staff::NON_PLAYER) == 0 {
                 continue;
             }
-            if u(p + staff::PLAYER) != 0 && u(p + staff::CLUB_JOB) != 0 {
+            if read_usize(p + staff::PLAYER) != 0 && read_usize(p + staff::CLUB_JOB) != 0 {
                 continue;
             }
-            if u(club.addr() + club::MANAGER) == p {
+            if club.manager().addr() == p {
                 continue;
             }
             break p;
@@ -2813,22 +2813,22 @@ pub(crate) unsafe extern "thiscall" fn pick_former_international_pundit(_this: u
         if p == 0 {
             continue;
         }
-        let nation = u(p + staff::NATION);
+        let nation = read_usize(p + staff::NATION);
         let mut weight = exe::utils_random(injury_word_0c(Nation(nation)).wrapping_mul(*((p + staff::INT_APPS) as *const u8) as i32));
         let same_nation = if subject.is_null() {
-            if nation != u(club.addr() + club::NATION) {
+            if nation != club.nation().addr() {
                 continue;
             }
             true
         } else {
-            nation == u(subject.addr() + staff::NATION)
+            nation == subject.nation()
         };
         if same_nation {
             weight = weight.wrapping_add(weight);
         } else {
             let cut = exe::utils_random(100).wrapping_add(0x1964);
             if injury_word_0c(Nation(nation)) < cut
-                || core::ptr::read_unaligned((u(p + staff::NON_PLAYER) + 0xc) as *const i16) < 0x1770
+                || core::ptr::read_unaligned((read_usize(p + staff::NON_PLAYER) + 0xc) as *const i16) < 0x1770
                 || exe::staff_is_disliked_by(subject, p) != 0
             {
                 continue;
@@ -2898,7 +2898,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
         if t == 0x10 || t == 0x20 {
             return 1;
         }
-        if t == 0x30 && read_i8_as_i32(contract.addr() + 0x3f) > 1 {
+        if t == 0x30 && ((contract.matches_left_out() as i8) as i32) > 1 {
             return 1;
         }
         if read_i16(player.player() + 0xb) < 0x1482 && ch(0x14) > 0xf {
@@ -2958,7 +2958,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
         if exe::staff_is_transfer_listed_or_requested(player, club) != 0 {
             return 2;
         }
-        let b = read_i8_as_i32(contract.addr() + 0x3d);
+        let b = (contract.happiness() as i32);
         if b <= exe::utils_random(100) {
             return 3;
         }

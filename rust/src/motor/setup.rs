@@ -579,9 +579,9 @@ pub(crate) unsafe fn undo_holiday_managers() {
             f(u(g), s.addr());
         }
         s.set_classification(0);
-        *(u(s.addr() + staff::FIRST_NAME) as *mut u8) = 0;
-        *(u(s.addr() + staff::SECOND_NAME) as *mut u8) = 0;
-        *(u(s.addr() + staff::COMMON_NAME) as *mut u8) = 0;
+        *(s.first_name() as *mut u8) = 0;
+        *(s.second_name() as *mut u8) = 0;
+        *(s.common_name() as *mut u8) = 0;
         exe::date_set(s.addr() + staff::DATE_OF_BIRTH, 1, 0, 0x7ae, -1);
         s.set_age((0x7ae) as i16);
         s.set_national_job((0) as usize);

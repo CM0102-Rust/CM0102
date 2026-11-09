@@ -2747,7 +2747,7 @@ pub(crate) unsafe fn remove_from_tactics(team: Club, p: usize) {
 pub(crate) unsafe fn clear_national_call_up(p: Staff) {
     p.set_national_job(0);
     p.set_job_for_nation(0); // the call-up mark
-    *((p.addr() + staff::PLAYING_SQUAD) as *mut u8) &= 3;
+    p.set_playing_squad(p.playing_squad() & 3);
 }
 
 /// the first of the 50 free squad slots of the team (+0xd7; type 0/1 the senior team, else the under-21) takes the
@@ -3234,22 +3234,22 @@ pub(crate) unsafe extern "C" fn compare_by_club(a: usize, b: usize) -> i32 {
 pub(crate) unsafe extern "thiscall" fn national_teams_remove_player(this: usize, player: usize) {
     let player = Staff(player);
     let u = |p: usize| core::ptr::read_unaligned(p as *const usize);
-    let nation = u(player.addr() + staff::NATION);
-    if nation == 0 || u(player.addr() + staff::PLAYER) == 0 {
+    let nation = player.nation();
+    if nation == 0 || player.player() == 0 {
         return;
     }
     let level: unsafe extern "stdcall" fn(usize, *const i16, u8) -> u8 = core::mem::transmute(FN_NATIONAL_TEAMS_GET_POSITION_GROUP);
-    let reg = u(this + national_teams_fields::NATION_RECORDS).wrapping_add((*(nation as *const u32) as usize).wrapping_mul(110));
+    let reg = read_usize(this + national_teams_fields::NATION_RECORDS).wrapping_add((*(nation as *const u32) as usize).wrapping_mul(110));
     let n = level(player.addr(), reg as *const i16, 0) as i8 as isize;
     let field = |o: isize| (reg as isize).wrapping_add(n * 4 + o) as usize;
-    if core::ptr::read_unaligned(field(0xf) as *const i16) < core::ptr::read_unaligned((u(player.addr() + staff::PLAYER) + 9) as *const i16) {
+    if core::ptr::read_unaligned(field(0xf) as *const i16) < core::ptr::read_unaligned((player.player() + 9) as *const i16) {
         let mut start = u(reg + 8) as i32;
         for k in 0..n.max(0) as usize {
             start = start.wrapping_add(*((reg + 0xe + 4 * k) as *const u8) as i32);
         }
         let size = field(0xd) as *mut u8;
         let end = start.wrapping_add(*size as i32);
-        let list = |i: i32| (u(this + national_teams_fields::RESERVE_POOLS) as isize).wrapping_add(i as isize * 4) as *mut usize;
+        let list = |i: i32| (read_usize(this + national_teams_fields::RESERVE_POOLS) as isize).wrapping_add(i as isize * 4) as *mut usize;
         let mut i = start;
         while i < end {
             if core::ptr::read_unaligned(list(i)) == player.addr() {
@@ -3260,7 +3260,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_remove_player(this: usize,
             i += 1;
         }
     }
-    let national_team = Club(u(player.addr() + staff::NATIONAL_JOB));
+    let national_team = Club(player.national_job());
     if national_team.is_null() {
         return;
     }
@@ -3268,7 +3268,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_remove_player(this: usize,
         core::ptr::write_unaligned((national_team.addr() + club::SQUAD + 4 * k) as *mut usize, 0);
     }
     player.set_national_job(0);
-    *((player.addr() + staff::PLAYING_SQUAD) as *mut u8) &= 3;
+    player.set_playing_squad(player.playing_squad() & 3);
 }
 
 /// Addresses of the 50 call-up slots (+0xd7) of the nation's main team and U21/B team.

@@ -19,9 +19,9 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | Nível | Campos |
 |---|---|
 | comunidade | 247 |
-| conferido | 9 |
-| lido | 1334 |
-| inferido | 142 |
+| conferido | 14 |
+| lido | 1339 |
+| inferido | 143 |
 
 ## Por registro
 
@@ -53,7 +53,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `conmebol_liber` | 0 | 0 | 1 | 1 |
 | `conmebol_merc` | 0 | 0 | 1 | 1 |
 | `conmebol_seeding` | 0 | 0 | 2 | 0 |
-| `contract` | 19 | 0 | 6 | 3 |
+| `contract` | 19 | 2 | 6 | 3 |
 | `contract_manager_fields` | 0 | 0 | 10 | 1 |
 | `contract_offer` | 0 | 0 | 8 | 3 |
 | `contract_talks` | 0 | 0 | 2 | 0 |
@@ -115,7 +115,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `match_events_fields` | 0 | 0 | 3 | 0 |
 | `match_incident` | 0 | 0 | 5 | 0 |
 | `match_manager` | 0 | 0 | 15 | 7 |
-| `match_player` | 0 | 0 | 105 | 21 |
+| `match_player` | 0 | 3 | 110 | 22 |
 | `match_record` | 0 | 0 | 68 | 11 |
 | `match_record_row` | 0 | 0 | 14 | 4 |
 | `match_record_team` | 0 | 0 | 27 | 4 |
@@ -251,6 +251,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `match_player::INJURY_FORCES_OFF` | +0x1c | 1 byte(s): set when his pending injury forces him off: the substitution pass removes him from the pitch; stamina recovery skips the injury cap while set [inference] |
 | `match_player::RED_CARDS` | +0x23 | 1 byte(s): incremented when he leaves the pitch (player_left_pitch); added to YELLOW_CARDS for his card total and to the side summary cards [inference: sendings-off] |
 | `match_player::PREFERRED_FOOT` | +0x2c | 1 byte(s): foot used when the angle needs no particular one (0 left, 1 right) [inference] |
+| `match_player::MATCH_TEMPER` | +0x31 | 2 byte(s): temper/discipline word: 0 at setup, +10 if his club favours him, -20 if it dislikes him, -10 against a rival club; drops with each foul he commits (-3..-200 by severity) and -10 when he injures someone; random(v) < -10 triggers the agitation comments and confidence swings; feeds the moment attributes in update_attributes [inference] |
 | `match_player::MATCH_RATING` | +0x35 | 2 byte(s): performance word (code calls it disposition): starts at 6100, rises with good play, drops with fouls and cards [inference] |
 | `match_player::EFFECTIVE_ABILITY` | +0x3b | 2 byte(s): match ability word (current ability adjusted by morale, captain, contract) [inference] |
 | `match_player::GOAL_COUNTS` | +0x3d | 10 byte(s): five i16 goal tallies (+0x3d..+0x45), incremented with each goal and undone when it is disallowed; read by the scorer milestone commentaries 0x200a..0x2012 [inference: career/season counts] |

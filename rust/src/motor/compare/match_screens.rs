@@ -100,12 +100,12 @@ pub(crate) unsafe extern "C" fn compare_build_match_screen() {
     let p = get_screen_param(0);
     if p != 0 && get_screen_param(1) as u8 != 1 {
         let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
-        let espectadores = rd(p + live_match::SPECTATORS);
+        let espectadores = read_usize(p + live_match::SPECTATORS);
         extra.push(((espectadores as isize + 0xc5 + *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize * 4) as usize, 4));
         extra.push((espectadores + match_spectators::COUNT, 1));
-        let pm = rd(p + live_match::ENGINE);
-        if pm != 0 && rd(pm + engine::COMMENTATOR) != 0 {
-            extra.push((rd(pm + engine::COMMENTATOR) + 0x2db0, 1));
+        let pm = read_usize(p + live_match::ENGINE);
+        if pm != 0 && read_usize(pm + engine::COMMENTATOR) != 0 {
+            extra.push((read_usize(pm + engine::COMMENTATOR) + 0x2db0, 1));
         }
     }
     compare_montagem_da_partida("build_match_screen", &extra, || o(), || build_match_screen());

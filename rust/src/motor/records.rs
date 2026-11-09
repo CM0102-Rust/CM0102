@@ -746,6 +746,15 @@ impl Contract {
     pub(crate) unsafe fn set_date_started(self, v: usize) {
         write_usize(self.0 + contract::DATE_STARTED, v)
     }
+    /// `contract::DATE_STARTED_YEAR` (+0x27). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn date_started_year(self) -> u16 {
+        read_u16(self.0 + contract::DATE_STARTED_YEAR)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_date_started_year(self, v: u16) {
+        write_u16(self.0 + contract::DATE_STARTED_YEAR, v)
+    }
     /// `contract::CONTRACT_EXPIRES` (+0x2d). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn contract_expires(self) -> i16 {
@@ -781,6 +790,15 @@ impl Contract {
     #[inline(always)]
     pub(crate) unsafe fn set_previous_wage(self, v: usize) {
         write_usize(self.0 + contract::PREVIOUS_WAGE, v)
+    }
+    /// `contract::SQUAD_NUMBER` (+0x3a). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn squad_number(self) -> u8 {
+        read_u8(self.0 + contract::SQUAD_NUMBER)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_squad_number(self, v: u8) {
+        write_u8(self.0 + contract::SQUAD_NUMBER, v)
     }
     /// `contract::CLUB_APPEARANCES` (+0x3b). Name: read.
     #[inline(always)]
@@ -5659,8 +5677,12 @@ impl Engine {
     }
     /// `engine::MATCH_MANAGERS` (+0x9032). Name: read.
     #[inline(always)]
-    pub(crate) fn match_managers_addr(self) -> usize {
-        self.0 + engine::MATCH_MANAGERS
+    pub(crate) unsafe fn match_managers(self) -> u16 {
+        read_u16(self.0 + engine::MATCH_MANAGERS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_match_managers(self, v: u16) {
+        write_u16(self.0 + engine::MATCH_MANAGERS, v)
     }
     /// `engine::SIDE0_MANAGER_HOME_REPUTATION` (+0x9034). Name: read.
     #[inline(always)]
@@ -6219,6 +6241,15 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_passes_completed(self, v: u8) {
         write_u8(self.0 + match_player::PASSES_COMPLETED, v)
     }
+    /// `match_player::KEY_PASSES` (+0x3). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn key_passes(self) -> u8 {
+        read_u8(self.0 + match_player::KEY_PASSES)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_key_passes(self, v: u8) {
+        write_u8(self.0 + match_player::KEY_PASSES, v)
+    }
     /// `match_player::TACKLES` (+0x4). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn tackles(self) -> u8 {
@@ -6552,6 +6583,15 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_cell_slot(self, v: i8) {
         write_i8(self.0 + match_player::CELL_SLOT, v)
     }
+    /// `match_player::SPACE_ON_BALL` (+0x29). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn space_on_ball(self) -> i16 {
+        read_i16(self.0 + match_player::SPACE_ON_BALL)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_space_on_ball(self, v: i16) {
+        write_i16(self.0 + match_player::SPACE_ON_BALL, v)
+    }
     /// `match_player::BUSY` (+0x2b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn busy(self) -> i8 {
@@ -6570,6 +6610,15 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_preferred_foot(self, v: i8) {
         write_i8(self.0 + match_player::PREFERRED_FOOT, v)
     }
+    /// `match_player::WEAK_FOOT_DEFICIT` (+0x2d). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn weak_foot_deficit(self) -> i8 {
+        read_i8(self.0 + match_player::WEAK_FOOT_DEFICIT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_weak_foot_deficit(self, v: i8) {
+        write_i8(self.0 + match_player::WEAK_FOOT_DEFICIT, v)
+    }
     /// `match_player::COMMENTARY_ID` (+0x2e). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn commentary_id(self) -> u8 {
@@ -6579,6 +6628,33 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_commentary_id(self, v: u8) {
         write_u8(self.0 + match_player::COMMENTARY_ID, v)
     }
+    /// `match_player::DEBUT` (+0x30). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn debut(self) -> i8 {
+        read_i8(self.0 + match_player::DEBUT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_debut(self, v: i8) {
+        write_i8(self.0 + match_player::DEBUT, v)
+    }
+    /// `match_player::MATCH_TEMPER` (+0x31). Name: inferred.
+    #[inline(always)]
+    pub(crate) unsafe fn match_temper(self) -> i16 {
+        read_i16(self.0 + match_player::MATCH_TEMPER)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_match_temper(self, v: i16) {
+        write_i16(self.0 + match_player::MATCH_TEMPER, v)
+    }
+    /// `match_player::OWN_CLUB_FEELING` (+0x33). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn own_club_feeling(self) -> i16 {
+        read_i16(self.0 + match_player::OWN_CLUB_FEELING)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_own_club_feeling(self, v: i16) {
+        write_i16(self.0 + match_player::OWN_CLUB_FEELING, v)
+    }
     /// `match_player::MATCH_RATING` (+0x35). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn match_rating(self) -> i16 {
@@ -6587,6 +6663,15 @@ impl MatchPlayer {
     #[inline(always)]
     pub(crate) unsafe fn set_match_rating(self, v: i16) {
         write_i16(self.0 + match_player::MATCH_RATING, v)
+    }
+    /// `match_player::POSITION_ADJUSTMENT` (+0x37). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn position_adjustment(self) -> i16 {
+        read_i16(self.0 + match_player::POSITION_ADJUSTMENT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_position_adjustment(self, v: i16) {
+        write_i16(self.0 + match_player::POSITION_ADJUSTMENT, v)
     }
     /// `match_player::SHOT_QUALITY` (+0x39). Name: read.
     #[inline(always)]
@@ -7245,10 +7330,32 @@ impl MatchPlayer {
     pub(crate) unsafe fn set_base_agility(self, v: i8) {
         write_i8(self.0 + match_player::BASE_AGILITY, v)
     }
-    /// `match_player::MOVE_SKILL` (+0x11a). Name: read.
+    /// `match_player::CONSISTENCY_ROLL` (+0x118). Name: verified.
     #[inline(always)]
-    pub(crate) fn move_skill_addr(self) -> usize {
-        self.0 + match_player::MOVE_SKILL
+    pub(crate) unsafe fn consistency_roll(self) -> i8 {
+        read_i8(self.0 + match_player::CONSISTENCY_ROLL)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_consistency_roll(self, v: i8) {
+        write_i8(self.0 + match_player::CONSISTENCY_ROLL, v)
+    }
+    /// `match_player::INCONSISTENCY_SWING` (+0x119). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn inconsistency_swing(self) -> i8 {
+        read_i8(self.0 + match_player::INCONSISTENCY_SWING)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_inconsistency_swing(self, v: i8) {
+        write_i8(self.0 + match_player::INCONSISTENCY_SWING, v)
+    }
+    /// `match_player::MOVE_SKILL`[i] (+0x11a, 63 x i16). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn move_skill(self, i: usize) -> i16 {
+        read_i16(self.0 + match_player::MOVE_SKILL + i * 2)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_move_skill(self, i: usize, v: i16) {
+        write_i16(self.0 + match_player::MOVE_SKILL + i * 2, v)
     }
     /// `match_player::ACTION` (+0x198). Name: read.
     #[inline(always)]
@@ -12498,8 +12605,12 @@ impl LiveMatch {
     }
     /// `live_match::FIXTURE` (+0x4). Name: read.
     #[inline(always)]
-    pub(crate) fn fixture_addr(self) -> usize {
-        self.0 + live_match::FIXTURE
+    pub(crate) unsafe fn fixture(self) -> usize {
+        read_usize(self.0 + live_match::FIXTURE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_fixture(self, v: usize) {
+        write_usize(self.0 + live_match::FIXTURE, v)
     }
     /// `live_match::HOME_CLUB_ID` (+0x10). Name: read.
     #[inline(always)]
@@ -13723,8 +13834,12 @@ impl MatchRecord {
     }
     /// `match_record::EVENTS` (+0x57). Name: read.
     #[inline(always)]
-    pub(crate) fn events_addr(self) -> usize {
-        self.0 + match_record::EVENTS
+    pub(crate) unsafe fn events(self) -> u8 {
+        read_u8(self.0 + match_record::EVENTS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_events(self, v: u8) {
+        write_u8(self.0 + match_record::EVENTS, v)
     }
     /// `match_record::EVENT_PLAYER` (+0x58). Name: read.
     #[inline(always)]
@@ -13755,8 +13870,12 @@ impl MatchRecord {
     }
     /// `match_record::HOME_TEAM` (+0x11f). Name: read.
     #[inline(always)]
-    pub(crate) fn home_team_addr(self) -> usize {
-        self.0 + match_record::HOME_TEAM
+    pub(crate) unsafe fn home_team(self) -> u8 {
+        read_u8(self.0 + match_record::HOME_TEAM)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_home_team(self, v: u8) {
+        write_u8(self.0 + match_record::HOME_TEAM, v)
     }
     /// `match_record::HOME_SHOOTOUT_GOALS` (+0x120). Name: read.
     #[inline(always)]
@@ -14037,8 +14156,12 @@ impl MatchRecord {
     }
     /// `match_record::AWAY_TEAM` (+0x744). Name: read.
     #[inline(always)]
-    pub(crate) fn away_team_addr(self) -> usize {
-        self.0 + match_record::AWAY_TEAM
+    pub(crate) unsafe fn away_team(self) -> u8 {
+        read_u8(self.0 + match_record::AWAY_TEAM)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_away_team(self, v: u8) {
+        write_u8(self.0 + match_record::AWAY_TEAM, v)
     }
     /// `match_record::AWAY_SHOOTOUT_GOALS` (+0x745). Name: read.
     #[inline(always)]
@@ -15227,8 +15350,12 @@ impl NationalTeamsFields {
     }
     /// `national_teams_fields::RESERVE_POOLS` (+0xc). Name: read.
     #[inline(always)]
-    pub(crate) fn reserve_pools_addr(self) -> usize {
-        self.0 + national_teams_fields::RESERVE_POOLS
+    pub(crate) unsafe fn reserve_pools(self) -> usize {
+        read_usize(self.0 + national_teams_fields::RESERVE_POOLS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_reserve_pools(self, v: usize) {
+        write_usize(self.0 + national_teams_fields::RESERVE_POOLS, v)
     }
     /// `national_teams_fields::FIFA_RANKING` (+0x1c). Name: read.
     #[inline(always)]

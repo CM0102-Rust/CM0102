@@ -587,24 +587,24 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_remove_player(this
     let player = Staff(player);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_NATIONAL_TEAMS_REMOVE_PLAYER);
     let u = |p: usize| core::ptr::read_unaligned(p as *const usize);
-    let nation = u(player.addr() + staff::NATION);
-    if nation == 0 || u(player.addr() + staff::PLAYER) == 0 {
+    let nation = player.nation();
+    if nation == 0 || player.player() == 0 {
         return o(this, player.addr());
     }
     // the regions: the player, the nation record, the level band in the list and the national team (the level,
     // 0x76d810, only reads)
-    let reg = u(this + national_teams_fields::NATION_RECORDS).wrapping_add((*(nation as *const u32) as usize).wrapping_mul(110));
+    let reg = read_usize(this + national_teams_fields::NATION_RECORDS).wrapping_add((*(nation as *const u32) as usize).wrapping_mul(110));
     let n = exe::national_teams_get_position_group(player, (reg as *const i16) as usize, (0) as u32) as i8 as isize;
     let mut regions = [(player.addr(), 110), (reg, 110), (player.addr(), 0), (player.addr(), 0)];
     if (0..=3).contains(&n) {
         let start = (0..n as usize).fold(u(reg + 8) as i32, |s, k| s.wrapping_add(*((reg + 0xe + 4 * k) as *const u8) as i32));
         let size = *((reg + national_squad_record::RESERVE_GROUPS + 4 * n as usize) as *const u8) as usize;
         if start >= 0 && size > 0 {
-            regions[2] = (u(this + national_teams_fields::RESERVE_POOLS) + 4 * start as usize, 4 * size);
+            regions[2] = (read_usize(this + national_teams_fields::RESERVE_POOLS) + 4 * start as usize, 4 * size);
         }
     }
-    if u(player.addr() + staff::NATIONAL_JOB) != 0 {
-        regions[3] = (u(player.addr() + staff::NATIONAL_JOB) + 0xd7, 200);
+    if player.national_job() != 0 {
+        regions[3] = (player.national_job() + 0xd7, 200);
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, player.addr()), || national_teams_remove_player(this, player.addr()));
     SCOREBOARD.record(igual, || format!("national_teams_remove_player(nivel {}) {:x?} x {:x?}", n, mo, mr));
