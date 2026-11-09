@@ -315,6 +315,7 @@ pub(crate) unsafe fn player_vs_manager_check(p: Staff) {
     if club.is_null() {
         return;
     }
+    // original defect, reproduced: the contract of squad slot 10, not the player's own (docs/DEFEITOS_DO_ORIGINAL.md)
     let k = game_contract_for_club(club.squad(10), club);
     if k == 0 {
         return;
