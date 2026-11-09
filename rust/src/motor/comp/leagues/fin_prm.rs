@@ -170,155 +170,159 @@ pub(crate) unsafe extern "thiscall" fn fin_prm_end_season_for_nation(this: usize
 /// tabela; push clube -> thiscall, ret 4; notícia 8), senão a recusa; e o dividendo (+0x94, +0x134, saldo; notícia
 /// 0x59fe10: ecx = tabela; 2 pushes -> thiscall, ret 8) pela reputação, pelo saldo e pelo presidente (+0xbf), com
 /// sorteio(501) nos dois ramos maiores.
-pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club: usize) {
-    if club == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEASON_END_CLUB_UPDATE)(this, club); // a caixa
+pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club_addr: usize) {
+    if club_addr == 0 {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEASON_END_CLUB_UPDATE)(this, club_addr); // a caixa
     }
-    if exe::database_is_national_team(club) != 0 {
+    let club = Club(club_addr);
+    if exe::database_is_national_team(club.addr()) != 0 {
         return;
     }
     let mut local = 0u32; // the original’s [esp + 0x20] (the owner’s 0x540a50 and the average attendance)
     let mut a = 0u32;
-    let fin = finance_of_parent_club(this, club, &mut a);
-    if fin == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEASON_END_CLUB_UPDATE)(this, club); // a caixa
+    let fin = Finance(finance_of_parent_club(this, club.addr(), &mut a));
+    if fin.is_null() {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEASON_END_CLUB_UPDATE)(this, club.addr()); // a caixa
     }
-    let mut goal_difference = read_i32(fin);
-    let mut aviso = false;
-    let stadium = read_usize(club + club::STADIUM);
-    'obras: {
-        if stadium == 0 {
-            break 'obras;
+    // the original reads only the low dword of the 64-bit balance
+    let mut cash = fin.balance() as i32;
+    let mut asked = false;
+    let stadium = club.stadium();
+    'works: {
+        if stadium.is_null() {
+            break 'works;
         }
-        if read_u8(club + club::OWN_STADIUM) == 0 && read_usize(club + club::DIVISION) != 0 {
-            if goal_difference <= 0x2160ec0 {
-                break 'obras;
+        if club.own_stadium() == 0 && !club.division().is_null() {
+            // a tenant club buys the ground from the club that owns it
+            if cash <= 0x2160ec0 {
+                break 'works;
             }
-            let mut owner = 0usize;
-            let mut other = read_usize(G_CLUB_TABLE);
+            let mut owner = Club(0);
+            let mut other = Club(read_usize(G_CLUB_TABLE));
             let mut k = 0i32;
             while k < read_i32(G_CLUB_COUNT) {
-                if other != club && read_usize(other + club::STADIUM) == stadium && read_u8(other + club::OWN_STADIUM) != 0 {
+                if other != club && other.stadium() == stadium && other.own_stadium() != 0 {
                     owner = other;
                     break;
                 }
                 k += 1;
-                other += 0x245;
+                other = Club(other.addr() + club::SIZE);
             }
-            let f2 = if owner != 0 { finance_of_parent_club(this, owner, &mut local) } else { 0 };
-            if owner == 0 || f2 == 0 {
-                *((club + club::OWN_STADIUM) as *mut u8) = 1;
-                charge_expense(fin, 0x8c, 0x12c, 20_000_000);
-                post_works_news(this, club, read_i32(read_usize(club + club::STADIUM)), 4);
-            } else if read_u8(f2 + 0x165) == 1 || read_u8(f2 + 0x165) == 2 {
-                *((club + club::OWN_STADIUM) as *mut u8) = 1;
-                *((owner + club::OWN_STADIUM) as *mut u8) = 0;
-                charge_expense(fin, 0x8c, 0x12c, 20_000_000);
-                add_to_i32(f2 + 0xb4, 20_000_000);
-                add_to_i32(f2 + 0x154, 20_000_000);
-                core::ptr::write_unaligned(f2 as *mut i64, balance(f2).wrapping_add(20_000_000));
-                post_works_news(this, club, read_i32(read_usize(club + club::STADIUM)), 4);
-                post_works_news(this, owner, read_i32(read_usize(club + club::STADIUM)), 5);
+            let owner_fin = if !owner.is_null() { Finance(finance_of_parent_club(this, owner.addr(), &mut local)) } else { Finance(0) };
+            if owner.is_null() || owner_fin.is_null() {
+                club.set_own_stadium(1);
+                charge_expense(fin.addr(), finance::MONTH_GROUND_COSTS, finance::SEASON_GROUND_COSTS, 20_000_000);
+                post_works_news(this, club.addr(), read_i32(club.stadium().addr()), 4);
+            } else if owner_fin.crisis_state() == 1 || owner_fin.crisis_state() == 2 {
+                club.set_own_stadium(1);
+                owner.set_own_stadium(0);
+                charge_expense(fin.addr(), finance::MONTH_GROUND_COSTS, finance::SEASON_GROUND_COSTS, 20_000_000);
+                owner_fin.set_month_other_income(owner_fin.month_other_income().wrapping_add(20_000_000));
+                owner_fin.set_season_other_income(owner_fin.season_other_income().wrapping_add(20_000_000));
+                owner_fin.set_balance(owner_fin.balance().wrapping_add(20_000_000));
+                post_works_news(this, club.addr(), read_i32(club.stadium().addr()), 4);
+                post_works_news(this, owner.addr(), read_i32(club.stadium().addr()), 5);
             }
-            break 'obras;
+            break 'works;
         }
-        if read_u8(club + club::OWN_STADIUM) == 0 || read_usize(club + club::DIVISION) == 0 {
-            break 'obras;
+        if club.own_stadium() == 0 || club.division().is_null() {
+            break 'works;
         }
-        let aperto = read_u8(fin + 0x166) as i8;
-        if goal_difference > 0xb71b0 && aperto > 10 {
-            let v = 10i32.wrapping_sub((aperto as i32).wrapping_mul(10000));
-            add_to_i32(fin + 0x12c, v);
-            goal_difference = goal_difference.wrapping_sub(v);
-            add_to_i32(fin + 0x8c, v);
-            core::ptr::write_unaligned(fin as *mut i64, balance(fin).wrapping_sub(v as i64));
+        let squeeze = fin.squeeze_counter() as i8;
+        if cash > 0xb71b0 && squeeze > 10 {
+            let v = 10i32.wrapping_sub((squeeze as i32).wrapping_mul(10000));
+            fin.set_season_ground_costs(fin.season_ground_costs().wrapping_add(v));
+            cash = cash.wrapping_sub(v);
+            fin.set_month_ground_costs(fin.month_ground_costs().wrapping_add(v));
+            fin.set_balance(fin.balance().wrapping_sub(v as i64));
         }
-        upgrade_ai_training_ground(this, club, goal_difference);
-        let pedidos = board_requests_row(club) + 2;
-        if read_u8(pedidos) & 0x40 != 0 && fin_prm_is_human_club(club) != 0 {
-            aviso = true;
-            *(pedidos as *mut u8) &= 0xbf;
+        upgrade_ai_training_ground(this, club.addr(), cash);
+        let requests = board_requests_row(club.addr()) + 2;
+        if read_u8(requests) & 0x40 != 0 && fin_prm_is_human_club(club.addr()) != 0 {
+            asked = true;
+            *(requests as *mut u8) &= 0xbf;
         }
-        let est = read_usize(club + club::STADIUM);
-        if est != 0 {
-            if goal_difference > 0x10b0760 && read_i16(club + club::REPUTATION) > 0x1d4c && read_i32(est + stadium::CAPACITY) > 0x61a8 && read_u8(est + stadium::UNDER_SOIL_HEATING) == 0 {
-                *((est + stadium::UNDER_SOIL_HEATING) as *mut u8) = 1;
-                charge_expense(fin, 0x8c, 0x12c, 1_500_000);
-                post_works_news(this, club, read_i32(read_usize(club + club::STADIUM)), 6);
-                break 'obras;
+        let ground = club.stadium();
+        if !ground.is_null() {
+            if cash > 0x10b0760 && club.reputation() > 0x1d4c && ground.capacity() > 0x61a8 && ground.under_soil_heating() == 0 {
+                ground.set_under_soil_heating(1);
+                charge_expense(fin.addr(), finance::MONTH_GROUND_COSTS, finance::SEASON_GROUND_COSTS, 1_500_000);
+                post_works_news(this, club.addr(), read_i32(club.stadium().addr()), 6);
+                break 'works;
             }
-            if goal_difference > 0x47868c0 && read_i16(club + club::REPUTATION) > 0x2422 && read_i32(est + stadium::CAPACITY) > 0xe09c && read_u8(club + club::TRAINING) == 0x14 && read_u8(est + stadium::COVERED) == 0 {
-                *((est + stadium::COVERED) as *mut u8) = 1;
-                charge_expense(fin, 0x8c, 0x12c, 7_500_000);
-                break 'obras;
+            if cash > 0x47868c0 && club.reputation() > 0x2422 && ground.capacity() > 0xe09c && club.training() as u8 == 0x14 && ground.covered() == 0 {
+                ground.set_covered(1);
+                charge_expense(fin.addr(), finance::MONTH_GROUND_COSTS, finance::SEASON_GROUND_COSTS, 7_500_000);
+                break 'works;
             }
         }
-        let can = goal_difference > 0x501bd0 || (fin_prm_is_human_club(club) != 0 && goal_difference.wrapping_add((read_i16(club + club::REPUTATION) as i32).wrapping_mul(1000)) > 0x501bd0);
+        let can = cash > 0x501bd0 || (fin_prm_is_human_club(club.addr()) != 0 && cash.wrapping_add((club.reputation() as i32).wrapping_mul(1000)) > 0x501bd0);
         if !can {
-            if aviso {
-                post_works_refused_news(this, club, 2, -1);
+            if asked {
+                post_works_refused_news(this, club.addr(), 2, -1);
             }
-            break 'obras;
+            break 'works;
         }
-        let league = read_usize(club + club::DIVISION);
-        if league != 0 {
-            let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(league).wrapping_mul(4)));
+        let league = club.division();
+        if !league.is_null() {
+            let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(league.addr()).wrapping_mul(4)));
             if comp != 0 && read_usize(comp + 8) != 0 {
-                let l = exe::comp_stats_find_club_entry(read_usize(comp + 8), club);
+                let l = exe::comp_stats_find_club_entry(read_usize(comp + 8), club.addr());
                 if l != 0 && read_u8(l + 5) != 0 {
                     local = read_i32(l + 6).wrapping_div(read_u8(l + 5) as i32) as u32;
                 }
             }
         }
-        let est = read_usize(club + club::STADIUM);
-        let cap = read_i32(est + stadium::CAPACITY);
+        let ground = club.stadium();
+        let cap = ground.capacity();
         if cap > 0x1e848 {
-            break 'obras;
+            break 'works;
         }
-        let rep = read_i16(club + club::REPUTATION);
-        let expandir = aviso
+        let rep = club.reputation();
+        let expand = asked
             || (cap as f64 * read_f64(rdata::F64_0_92)) < (local as i16 as i32) as f64
             || (rep.wrapping_mul(2) as i32 > cap && rep > 0x109a);
-        if !expandir {
-            if friendly_random(0x14).wrapping_add(5) >= read_i16(read_usize(club + club::DIVISION) + 0x69) as i32 {
-                break 'obras;
+        if !expand {
+            if friendly_random(0x14).wrapping_add(5) >= club.division().reputation() as i32 {
+                break 'works;
             }
-            let est = read_usize(club + club::STADIUM);
-            let free = read_i32(est + stadium::CAPACITY).wrapping_sub(read_i32(est + stadium::SEATING_CAPACITY));
+            let ground = club.stadium();
+            let free = ground.capacity().wrapping_sub(ground.seating_capacity());
             if free <= 0 {
-                break 'obras;
+                break 'works;
             }
-            let t = ftol(goal_difference as f64 * read_f64(rdata::F64_0_2));
+            let t = ftol(cash as f64 * read_f64(rdata::F64_0_2));
             let mut v = ((t / 75) as i16 as i32 / 500) as i16 as i32 * 500;
             if v >= free {
                 v = free;
             }
             if (v as i16) < 0x1f4 {
-                if read_i32(est + stadium::CAPACITY) >= 0x7530 {
-                    break 'obras;
+                if ground.capacity() >= 0x7530 {
+                    break 'works;
                 }
-                add_to_i32(est + stadium::EXPANSION_CAPACITY, 0x5dc);
-                post_works_refused_news(this, club, 2, 2);
-                break 'obras;
+                ground.set_expansion_capacity(ground.expansion_capacity().wrapping_add(0x5dc));
+                post_works_refused_news(this, club.addr(), 2, 2);
+                break 'works;
             }
             let v = v as i16 as i32;
-            add_to_i32(est + stadium::CAPACITY, v);
-            add_to_i32(read_usize(club + club::STADIUM) + 0x40, v);
+            ground.set_capacity(ground.capacity().wrapping_add(v));
+            let s = club.stadium();
+            s.set_seating_capacity(s.seating_capacity().wrapping_add(v));
             crate::comparison::branch("cqc_1 seats");
-            charge_expense(fin, 0x8c, 0x12c, (v / 1000 + 1).wrapping_mul(50000).wrapping_add(v.wrapping_mul(75))); // cqc1: os lugares sentados
-            post_works_news(this, club, v, 3);
-            break 'obras;
+            charge_expense(fin.addr(), finance::MONTH_GROUND_COSTS, finance::SEASON_GROUND_COSTS, (v / 1000 + 1).wrapping_mul(50000).wrapping_add(v.wrapping_mul(75))); // cqc1: os lugares sentados
+            post_works_news(this, club.addr(), v, 3);
+            break 'works;
         }
-        let tipo1 = read_u8(club + club::PROFESSIONAL_STATUS) == 1;
-        let base = if goal_difference > 0x1312d00 {
-            if tipo1 { 16000 } else { 21000 }
-        } else if tipo1 {
-            ftol(goal_difference as f64 * read_f64(rdata::F64_0_1)) / 125
+        let amateur = club.professional_status() == 1;
+        let base = if cash > 0x1312d00 {
+            if amateur { 16000 } else { 21000 }
+        } else if amateur {
+            ftol(cash as f64 * read_f64(rdata::F64_0_1)) / 125
         } else {
-            ftol(goal_difference as f64 * read_f64(rdata::F64_0_2)) / 50
+            ftol(cash as f64 * read_f64(rdata::F64_0_2)) / 50
         };
         let lim = (base as i16 as i32) / 500 * 500;
-        let ceiling = read_i32(est + stadium::EXPANSION_CAPACITY);
+        let ceiling = ground.expansion_capacity();
         let mut v = lim;
         if (lim as i16 as i32).wrapping_add(cap) > ceiling {
             let dif = ceiling.wrapping_sub(cap);
@@ -334,35 +338,36 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club:
         }
         if (n as i16) < 0x3e8 {
             if cap < 0x7530 {
-                add_to_i32(est + stadium::EXPANSION_CAPACITY, 0x5dc);
+                ground.set_expansion_capacity(ground.expansion_capacity().wrapping_add(0x5dc));
             }
-            if aviso {
-                post_works_refused_news(this, club, 2, 2);
+            if asked {
+                post_works_refused_news(this, club.addr(), 2, 2);
             }
-            break 'obras;
+            break 'works;
         }
         let n = n as i16 as i32;
-        core::ptr::write_unaligned((est + stadium::CAPACITY) as *mut i32, n.wrapping_add(cap));
-        if tipo1 {
-            add_to_i32(read_usize(club + club::STADIUM) + 0x40, n);
-            charge_expense(fin, 0x8c, 0x12c, (n / 1000 + 1).wrapping_mul(6000).wrapping_add(n).wrapping_mul(125));
-            post_works_news(this, club, n, 1);
+        ground.set_capacity(n.wrapping_add(cap));
+        if amateur {
+            let s = club.stadium();
+            s.set_seating_capacity(s.seating_capacity().wrapping_add(n));
+            charge_expense(fin.addr(), finance::MONTH_GROUND_COSTS, finance::SEASON_GROUND_COSTS, (n / 1000 + 1).wrapping_mul(6000).wrapping_add(n).wrapping_mul(125));
+            post_works_news(this, club.addr(), n, 1);
         } else {
-            charge_expense(fin, 0x8c, 0x12c, n.wrapping_add((n / 1000 + 1).wrapping_mul(1000)).wrapping_mul(50));
-            post_works_news(this, club, n, 2);
+            charge_expense(fin.addr(), finance::MONTH_GROUND_COSTS, finance::SEASON_GROUND_COSTS, n.wrapping_add((n / 1000 + 1).wrapping_mul(1000)).wrapping_mul(50));
+            post_works_news(this, club.addr(), n, 2);
         }
     }
-    let pedidos = board_requests_row(club) + 2;
-    if read_u8(pedidos) & 0x80 != 0 {
-        if goal_difference > (500 - read_i16(club + club::REPUTATION) as i32).wrapping_mul(500) {
-            exe::financetable_upgrade_training_facilities(this, club);
-            post_works_news(this, club, -1, 8);
+    let requests = board_requests_row(club.addr()) + 2;
+    if read_u8(requests) & 0x80 != 0 {
+        if cash > (500 - club.reputation() as i32).wrapping_mul(500) {
+            exe::financetable_upgrade_training_facilities(this, club.addr());
+            post_works_news(this, club.addr(), -1, 8);
         } else {
-            post_works_refused_news(this, club, 8, -1);
+            post_works_refused_news(this, club.addr(), 8, -1);
         }
-        *((board_requests_row(club) + 2) as *mut u8) &= 0x7f;
+        *((board_requests_row(club.addr()) + 2) as *mut u8) &= 0x7f;
     }
-    pay_dividend(this, club, fin);
+    pay_dividend(this, club.addr(), fin.addr());
 }
 
 /// End-of-season training ground upgrade for AI clubs (part of `season_end_club_update`): raises club::TRAINING by chance and
@@ -479,11 +484,6 @@ pub(crate) unsafe extern "thiscall" fn news_dividend(_this: usize, club: usize, 
     exe::newsitem_set_slot(p, 1, value as u32);
     exe::newsitem_set_slot(p, 2, read_u8(club + club::PLC) as i8 as i32 as u32);
     exe::news_send_to_club_manager(read_usize(G_NEWS), p, club);
-}
-
-/// Reads the i64 at address a.
-pub(crate) unsafe fn read_i64(a: usize) -> i64 {
-    core::ptr::read_unaligned(a as *const i64)
 }
 
 /// Multiplies v by the exe double constant at k and truncates (_ftol).

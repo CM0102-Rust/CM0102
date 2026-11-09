@@ -3222,6 +3222,9 @@ pub(crate) use self::rdata_consts::*;
 #[path = "motor/record_utils.rs"]
 pub(crate) mod record_utils;
 pub(crate) use self::record_utils::*;
+#[path = "motor/records.rs"]
+pub(crate) mod records;
+pub(crate) use self::records::*;
 #[path = "motor/ruling_body/ruling_body.rs"]
 pub(crate) mod ruling_body_ruling_body;
 pub(crate) use self::ruling_body_ruling_body::*;

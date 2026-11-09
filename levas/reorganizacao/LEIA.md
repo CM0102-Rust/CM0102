@@ -28,6 +28,17 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Rodada 29: piloto dos registros tipados
+
+`engenharia-reversa/registros.py` gera `rust/src/motor/records.rs`: para cada objeto do `fields.rs` (162), um tipo
+ponteiro `#[repr(transparent)]` (`Club(usize)`, a mesma ABI do endereço cru) com um método de leitura e um de escrita
+por campo (1.576 com tipo), no tipo que o código já usa naquele campo (o que a rodada 28 conferiu contra o original).
+Campos que apontam para outro registro devolvem o tipo dele (`club.stadium()` é um `Stadium`; a tabela `POINTERS`).
+Piloto numa função, `season_end_club_update` (fin_prm.rs, as obras do estádio): leituras e escritas cruas 62 → 20,
+deslocamentos `+ 0x` 11 → 1, conversões de ponteiro 10 → 2, nomes certos (`cash` em vez de `goal_difference`;
+`'works`); o atrito: 39 `.addr()` para passar o clube aos auxiliares que ainda recebem `usize` (somem quando eles
+recebem `Club`). Prova: 7cc445c2 ×2, detector igual, comparação 0.
+
 ## Rodada 28: o conferidor automático das assinaturas e das larguras
 
 A rodada 27 só pegou as funções declaradas de jeitos diferentes; uma declarada errada do mesmo jeito em todo lugar

@@ -29,6 +29,17 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Round 29: typed records pilot
+
+`engenharia-reversa/registros.py` generates `rust/src/motor/records.rs`: for each object in `fields.rs` (162), a
+`#[repr(transparent)]` pointer type (`Club(usize)`, the same ABI as the raw address) with one getter and one setter per
+field (1,576 typed), in the type the code already uses at that field (what round 28 checked against the original).
+Fields pointing to another record return its type (`club.stadium()` is a `Stadium`; the `POINTERS` table). Pilot on
+one function, `season_end_club_update` (fin_prm.rs, the stadium works): raw reads and writes 62 → 20, `+ 0x` offsets
+11 → 1, pointer casts 10 → 2, right names (`cash` instead of `goal_difference`; `'works`); the friction: 39 `.addr()`
+to pass the club to helpers that still take `usize` (they go when those take `Club`). Proof: 7cc445c2 ×2, detector
+equal, comparison 0.
+
 ## Round 28: the automatic checker of signatures and field widths
 
 Round 27 only caught the functions declared in different ways; one declared wrong in the same way everywhere slipped
