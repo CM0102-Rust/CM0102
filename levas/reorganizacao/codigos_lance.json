@@ -1,0 +1,460 @@
+{
+ "move_codes": {
+  "enum_name": "moves",
+  "rust_type": "i8",
+  "values": {
+   "1": {
+    "name": "GOALKEEPER_CATCH",
+    "meaning": "goalkeeper catches/claims the ball (keeper rating word, same formula as 0)",
+    "confidence": "verified",
+    "evidence": "0x6f5c30 contest: keeper on a high ball (height 4, or 3 in 3/4); event 0x1fe2 GOALIE_CATCH_BALL; foul text 0x1ff1/0x2104 FOUL_GOALIE_CATCH_BALL (0x70ec80, 0x6c9cd0); referee 0x6cfca0 case 1 (1 in 10000)"
+   },
+   "3": {
+    "name": "SHOT_HEADER",
+    "meaning": "header at goal (heading word)",
+    "confidence": "verified",
+    "evidence": "0x700bd0: ball height 4 in shooting range -> 3; sound 0x1f92 EVENT_SHOT_HEADER / 0x1fb8 from angle"
+   },
+   "5": {
+    "name": "SHOT_BICYCLE_KICK",
+    "meaning": "overhead/bicycle kick (agility, flair, technique, balance)",
+    "confidence": "verified",
+    "evidence": "0x700bd0: high ball out of shooting range -> 5, +flair*30-400 at height 4; sound 0x1f91 EVENT_SHOT_BICYCLE_KICK"
+   },
+   "6": {
+    "name": "CROSS",
+    "meaning": "cross (crossing word; commentated with the high-cross events like 8)",
+    "confidence": "read",
+    "evidence": "0x6fad40 case 6|8|0x5e -> 0x20b9..0x20c4 CROSS_HIGH_*; 0x6c6a30 accepts request 6 like 8; no caller of 6 found"
+   },
+   "7": {
+    "name": "CROSS_LOW",
+    "meaning": "low cross (rating favours a short receiver: 3000 - jumping*100)",
+    "confidence": "verified",
+    "evidence": "0x6c6a30 v50; 0x6fad40 case 7 -> 0x20c5..0x20d0 CROSS_LOW_*, 0x21e4 LAYS_BALL_OFF"
+   },
+   "8": {
+    "name": "CROSS_HIGH",
+    "meaning": "high cross (rating grows with the receiver jumping)",
+    "confidence": "verified",
+    "evidence": "0x6c6a30 v4c (jumping*100+500); 0x6fad40 -> CROSS_HIGH_* events"
+   },
+   "9": {
+    "name": "LONG_BALL",
+    "meaning": "long ball upfield or clearance ((passing+200)/2)",
+    "confidence": "verified",
+    "evidence": "0x6fa490 long_ball kind 9; 0x6fad40 case 9 -> 0x2157 LONG_BALL, 0x1f70 CLEAR_BALL, 0x210e CLEARS_BALL_BEHIND; 0x7109f0 sets action 9 before 0x6fa490"
+   },
+   "11": {
+    "name": "PASS_SHORT",
+    "meaning": "short pass to feet, distance <= 2 ((2*passing+200)/3)",
+    "confidence": "verified",
+    "evidence": "0x6c6a30 kind 0xb (d<=2, height<3); 0x6fad40 -> 0x1f69 ATTEMPT_PASS_FLOOR, 0x2021 SQUARE_PASS_IN_AREA, 0x214a PASS_BACK_TO_KEEPER"
+   },
+   "12": {
+    "name": "HIGH_KICK",
+    "meaning": "kick at the ball with the foot raised: shot at a bouncing/high ball, or a defender kicking at a high ball (technique^2)",
+    "confidence": "verified",
+    "evidence": "fouls 0x1ff4/0x2107 FOUL_FOOT_TOO_HIGH (0x70ec80, 0x6c9cd0); 0x6c87e0 gives it to the defender against a diving header (0x3b) and a shot at height>=2 (0x6d); 0x6f6c00 picks it at ball height 2..4; referee \"hard\" code in 0x6cfca0"
+   },
+   "13": {
+    "name": "GROUND_KICK",
+    "meaning": "kick at a ball on the ground in the shooter routine (technique)",
+    "confidence": "read",
+    "evidence": "0x6f6c00: ball height 0/1 -> 0xd; 0x6c87e0 answers kinds 0xc..0xe with a block tackle"
+   },
+   "15": {
+    "name": "TURN",
+    "meaning": "turn with the ball (technique, agility, balance, strength)",
+    "confidence": "verified",
+    "evidence": "0x7109f0 \"turns towards goal\": move_to(..,0xf) + action 0xf; 0x6f09f0 reads +0x138 for 0xf and narrates 0x1f48 EVENT_TURN / 0x1f49 TURN_OPPONENT"
+   },
+   "16": {
+    "name": "HOLD_BALL",
+    "meaning": "hold up / shield the ball (technique, balance, strength)",
+    "confidence": "verified",
+    "evidence": "0x7109f0 hold_ball then action 0x10; 0x70ec80 uses move_skill(16) as the holder's attack against the tackle; 0x6c87e0 kind 0x10 -> tackle 0x21"
+   },
+   "17": {
+    "name": "RUN_WITH_BALL",
+    "meaning": "start a run with the ball / take on (technique^2, technique, acceleration)",
+    "confidence": "read",
+    "evidence": "0x7109f0 move_to(..,0x11) when the previous action is not 0x11/0x12; 0x6f09f0 reads +0x13c, narrates 0x1f4a RUN_PAST_OPPONENT, 0x20d1..0x20d3; 0x6c87e0 kind 0x11 adds pace*acceleration"
+   },
+   "18": {
+    "name": "RUN_WITH_BALL_AGAIN",
+    "meaning": "keep running with the ball (pace, dribbling)",
+    "confidence": "read",
+    "evidence": "0x7109f0 move_to(..,0x12) when the previous action was 0x11/0x12; 0x6f09f0 reads +0x13e and narrates 0x1f4c RUN_WITH_BALL_AGAIN; 0x6c87e0 kind 0x12 adds pace^2"
+   },
+   "19": {
+    "name": "SLIDE_TACKLE",
+    "meaning": "sliding tackle on a player running with the ball (pace^2, balance, anticipation, tackling^2)",
+    "confidence": "verified",
+    "evidence": "0x6c87e0: answer to kinds 0x11/0x12; events 0x1fee FOUL_SLIDE_TACKLE, 0x1f62 PERFECT_SLIDE_TACKLE, 0x2101; 0x6f56c0 higher fatigue (19|33); ball spills below 400"
+   },
+   "21": {
+    "name": "JUMP_FOR_BALL",
+    "meaning": "jump for a high ball (jumping^2)",
+    "confidence": "verified",
+    "evidence": "0x6c87e0 answer to 0x15/0x25/0x2e/0x38; 0x6f5c30 non-keeper on a height-4 ball; events 0x1ff0 FOUL_JUMPFORBALL, 0x1f5d WINS_JUMPFORBALL, 0x2164; 0x6c9cd0 calls 0x6c87e0 with 0x15"
+   },
+   "22": {
+    "name": "SHOT_LOW_DRIVE",
+    "meaning": "low drive (finishing)",
+    "confidence": "verified",
+    "evidence": "0x700bd0 height 0 default 0x16; sound 0x1f86 EVENT_SHOT_LOW_DRIVE; keeper word 0x168 (a3=0) in 0x702050"
+   },
+   "23": {
+    "name": "SHOT_HIGH_DRIVE",
+    "meaning": "fierce high drive (finishing)",
+    "confidence": "verified",
+    "evidence": "0x700bd0 height 0 (+0x148 roll); sound 0x1f99 EVENT_SHOT_HIGH_DRIVE; keeper word 0x16a (a3=1)"
+   },
+   "24": {
+    "name": "SHOT_VOLLEY",
+    "meaning": "volley (technique^2, finishing)",
+    "confidence": "verified",
+    "evidence": "0x700bd0 heights 2/3; sound 0x1f93 EVENT_SHOT_VOLLEY"
+   },
+   "25": {
+    "name": "SHOT_HALF_VOLLEY",
+    "meaning": "half volley (technique, finishing)",
+    "confidence": "verified",
+    "evidence": "0x700bd0 height 1; sound 0x1f96 EVENT_SHOT_HALF_VOLLEY"
+   },
+   "26": {
+    "name": "SHOT_CHIP",
+    "meaning": "chip (technique^2*2, finishing, passing)",
+    "confidence": "verified",
+    "evidence": "0x700bd0 height 0 (+vision); sound 0x1f89 EVENT_SHOT_CHIP; 0x700420 special case 26 (output 4)"
+   },
+   "27": {
+    "name": "SHOT_LOB",
+    "meaning": "lob (same formula as 26)",
+    "confidence": "verified",
+    "evidence": "0x700bd0 heights 1..3; sound 0x1f8b EVENT_SHOT_LOB; 0x700420 special case 27"
+   },
+   "28": {
+    "name": "SHOT_BANANA",
+    "meaning": "curling shot from distance >= 1.5 (flair^2, finishing, technique, passing)",
+    "confidence": "verified",
+    "evidence": "0x700bd0 height 0, dist>=1.5; sound 0x1f8d EVENT_SHOT_BANANA"
+   },
+   "29": {
+    "name": "SHOT_HOPE",
+    "meaning": "speculative effort (strength, finishing)",
+    "confidence": "verified",
+    "evidence": "0x700bd0 heights 0/1; sound 0x1f8e EVENT_SHOT_HOPE"
+   },
+   "30": {
+    "name": "PASS_LONG_HIGH",
+    "meaning": "long high pass, distance 4..limit (passing^2)",
+    "confidence": "verified",
+    "evidence": "0x6c6a30 kind 0x1e; 0x6fad40 -> 0x1f6a ATTEMPT_PASS_LONG_HIGH, 0x214c"
+   },
+   "31": {
+    "name": "PASS_CHIP",
+    "meaning": "chipped pass, distance 1.5..3 (technique^2, passing)",
+    "confidence": "verified",
+    "evidence": "0x6c6a30 kind 0x1f; 0x6fad40 -> 0x1f67 ATTEMPT_PASS_CHIP"
+   },
+   "33": {
+    "name": "TACKLE",
+    "meaning": "tackle on a player turning or holding the ball (balance, anticipation, tackling^2); commentated as a slide tackle",
+    "confidence": "verified",
+    "evidence": "0x6c87e0 answer to 0xf/0x10/0x67; same events as 19 (0x1fee, 0x1f62, 0x2101); ball spills below 250"
+   },
+   "34": {
+    "name": "BLOCK_TACKLE",
+    "meaning": "block tackle against a kick, pass or shot (tackling^2)",
+    "confidence": "verified",
+    "evidence": "0x6c87e0 answer to 0xc..0xe, 0x6c, 0x6d; events 0x1ff2 FOUL_BLOCK_TACKLE, 0x2150 WINS_BLOCK_TACKLE, 0x2105"
+   },
+   "36": {
+    "name": "INTERCEPT",
+    "meaning": "intercept a loose or passed ball (anticipation, agility)",
+    "confidence": "read",
+    "evidence": "0x6f5c30/0x70dfd0: non-keeper on a ball below height 4; success narrates 0x1f5f GOOD_INTERCEPT (shared with 21); 0x6f56c0 fatigue group 21|36|46"
+   },
+   "37": {
+    "name": "HANDBALL",
+    "meaning": "handles the ball (fixed skill 200; rare: random(100 + 500*in box + 200*staff+0x5c) == 0)",
+    "confidence": "verified",
+    "evidence": "0x6e9540 decide_foul: 0x25 called 19 in 20, keeper in own box exempt; 0x6c9cd0 narrates 0x1fe8 EVENT_HAND_BALL with no victim; 0x6c87e0 jump contest may become 0x25; in the 0x6cb650 undisputed set"
+   },
+   "39": {
+    "name": "GOALKEEPER_SAVE_LOW",
+    "meaning": "keeper save against a low shot ((bl^2 + handling + agility)/3)",
+    "confidence": "verified",
+    "evidence": "0x700420 picks +0x168 when a3=0; 0x702050 a3=0 for 0x16/0x39; shot outcome a3=0 for ball height <= 3"
+   },
+   "40": {
+    "name": "GOALKEEPER_SAVE_HIGH",
+    "meaning": "keeper save against a high shot (same formula)",
+    "confidence": "verified",
+    "evidence": "0x700420 picks +0x16a when a3=1; 0x702050 a3=1 for 0x17/0x1a/0x1b; ball height > 3"
+   },
+   "41": {
+    "name": "GOALKEEPER_SMOTHER",
+    "meaning": "keeper dives at the feet / smothers (bravery, bl^2, handling)",
+    "confidence": "verified",
+    "evidence": "0x6f5c30/0x70d690 keeper in own box; events 0x1fef FOUL_GOALIE_SMOTHER_AT_FEET, 0x1f61 PERFECT_GOALIE_SMOTHER_AT_FEET, 0x2102; referee case 0x29 (1 in 100, card 7)"
+   },
+   "42": {
+    "name": "FOUL_SHIRT_TUG",
+    "meaning": "holds back the opponent (deliberate foul)",
+    "confidence": "verified",
+    "evidence": "0x6c87e0 deliberate-foul alternatives; events 0x1feb FOUL_SHIRT_TUG, 0x20fe; 0x6cfca0 case 0x2a (likely foul); 0x6cb650 undisputed"
+   },
+   "43": {
+    "name": "FOUL_OBSTRUCT",
+    "meaning": "obstructs the opponent",
+    "confidence": "verified",
+    "evidence": "0x6c87e0 alternatives; events 0x1fec FOUL_OBSTRUCT, 0x20ff, 0x1f64 PERFECT_OBSTRUCT; 0x6cfca0 case 0x2b"
+   },
+   "44": {
+    "name": "FOUL_TWO_FOOTED_TACKLE",
+    "meaning": "two-footed tackle (serious foul, card 10)",
+    "confidence": "verified",
+    "evidence": "0x6c87e0 second alternative; events 0x1fed, 0x2100; 0x6cfca0 case 0x2c; 0x21d9 PLAY_ACTING with advantage"
+   },
+   "45": {
+    "name": "FOUL_TRIP",
+    "meaning": "trips the opponent (weak 19/33/34 become 45 half the time)",
+    "confidence": "verified",
+    "evidence": "0x70d690; 0x6c87e0 alternatives; events 0x1fea FOUL_TRIP, 0x20fd; 0x6cfca0 case 0x2d"
+   },
+   "46": {
+    "name": "PUSH",
+    "meaning": "pushes the opponent ((2*strength + 400)/2)",
+    "confidence": "verified",
+    "evidence": "0x6c87e0 alternatives and jump answer; 0x6f6c00 in the air; events 0x1ff3 FOUL_PUSH_OPPONENT, 0x2106; 0x6cfca0 case 0x2e"
+   },
+   "47": {
+    "name": "ELBOW",
+    "meaning": "elbows the opponent (violent conduct, card 5)",
+    "confidence": "verified",
+    "evidence": "0x716630 start_fight: 0x2f with 0x20e5 PLAYER_ELBOWS_OPPONENT; 0x6c87e0 1-in-5 alternative in the jump; 0x21da PLAY_ACTING_ELBOW; 0x6cfca0 case 0x2f"
+   },
+   "48": {
+    "name": "PUNCH",
+    "meaning": "punches the opponent (violent conduct, card 11)",
+    "confidence": "read",
+    "evidence": "0x716630 start_fight: 0x30 with 0x20e1 PLAYER_PUNCHES_OPPONENT; 0x6cfca0 case 0x30"
+   },
+   "49": {
+    "name": "HEADBUTT",
+    "meaning": "headbutts the opponent (violent conduct, card 11)",
+    "confidence": "read",
+    "evidence": "0x716630 start_fight: 0x31 with 0x20e3 PLAYER_HEADBUTTS_OPPONENT; 0x6cfca0 case 0x31 (-200 disposition)"
+   },
+   "50": {
+    "name": "KICK_OPPONENT",
+    "meaning": "kicks the opponent (violent conduct, card 11)",
+    "confidence": "verified",
+    "evidence": "0x716630 start_fight: 0x32 with 0x20e4 PLAYER_KICKS_OPPONENT; 0x6c87e0 alternative against a diving header; 0x6cfca0 case 0x32"
+   },
+   "51": {
+    "name": "PENALTY",
+    "meaning": "penalty kick ((penalties + 200)/2)",
+    "confidence": "verified",
+    "evidence": "0x7109f0 restart 5 -> 0x33; 0x700bd0 sound 0x1f7f EVENT_TAKE_PENALTY; 0x700420 case 0x33"
+   },
+   "52": {
+    "name": "CORNER",
+    "meaning": "corner kick (corners^2)",
+    "confidence": "verified",
+    "evidence": "0x7109f0 restart 3 -> 0x34 aimed at the goal line; 0x6fad40 -> 0x1f80 TAKE_CORNER, 0x2130 TAKE_SHORT_CORNER"
+   },
+   "53": {
+    "name": "FREE_KICK_SHOT",
+    "meaning": "direct free kick at goal (free kicks^2)",
+    "confidence": "verified",
+    "evidence": "0x7109f0 restart 6 near goal -> 0x35; 0x700bd0 sounds 0x1faf/0x1fbd/0x21bd free-kick events"
+   },
+   "54": {
+    "name": "THROW_IN",
+    "meaning": "throw-in (throw-ins)",
+    "confidence": "verified",
+    "evidence": "0x7109f0 restart 2 -> 0x36 from the touchline; 0x6c6a30 range by throw_ins; 0x6fa250 no offside for 0x36; 0x6fad40 -> 0x1f7b TAKE_THROW_IN"
+   },
+   "55": {
+    "name": "FREE_KICK_PASS",
+    "meaning": "free kick played as a pass (free kicks^2 word)",
+    "confidence": "verified",
+    "evidence": "0x7109f0 restart 6/7 -> 0x37; 0x6fad40 -> 0x1f7d TAKE_FREE_KICK, 0x21bc"
+   },
+   "56": {
+    "name": "BODY_CHALLENGE",
+    "meaning": "physical challenge with the body (balance^2, strength^2); fouls commentated as a push",
+    "confidence": "inferred",
+    "evidence": "0x6f6c00 narrates 0x1ff3 for 0x38; 0x6c87e0 treats 0x38 like a jump (0x15); 0x6cfca0 groups it with 0x15; no setter found"
+   },
+   "57": {
+    "name": "SHOT_DIVING_HEADER",
+    "meaning": "diving header at goal (heading; agility penalty)",
+    "confidence": "verified",
+    "evidence": "0x700bd0: action 0x3b -> kind 0x39; sound 0x1f9c EVENT_SHOT_DIVING_HEADER"
+   },
+   "58": {
+    "name": "SHOT_MADE_SURE",
+    "meaning": "finish when the keeper does not cover ((2*finishing + 300)/5 + ball control)",
+    "confidence": "verified",
+    "evidence": "0x700bd0 keeper-cover test -> 0x3a; sound 0x1f9d EVENT_SHOT_MADE_SURE"
+   },
+   "59": {
+    "name": "DIVING_HEADER",
+    "meaning": "go for a diving header (bravery^2, agility^2)",
+    "confidence": "verified",
+    "evidence": "0x6f6e72/0x6f6c00 heights 2/3 -> 0x3b; action 0x3b forces the shot (0x7109f0), made 0x39 by 0x700bd0; 0x6c87e0 answers 0x3b with 0xc/0x32"
+   },
+   "60": {
+    "name": "PASS_LONG_MID",
+    "meaning": "long pass at mid height, distance 3..4 (passing^2)",
+    "confidence": "verified",
+    "evidence": "0x6c6a30 kind 0x3c; 0x6fad40 -> 0x1f6b ATTEMPT_PASS_LONG_MID"
+   },
+   "61": {
+    "name": "HEADED_PASS",
+    "meaning": "headed pass on a high ball, distance <= 2 (heading)",
+    "confidence": "verified",
+    "evidence": "0x6c6a30 kind 0x3d (height 4); 0x6fad40 -> 0x1f6d HEADER_PASS, 0x20b5.. HEADED_PASS_*, 0x2148, 0x21d5"
+   },
+   "62": {
+    "name": "GOALKEEPER_CLEARANCE",
+    "meaning": "keeper kicks the held ball upfield ((passing + 200)/2)",
+    "confidence": "verified",
+    "evidence": "0x6fa490 kind 0x3e when +0x8ea9 == -1 (held); 0x6fad40 -> 0x2134 GOALKEEPER_CLEARANCE_FROM_HELD"
+   },
+   "90": {
+    "name": "GOAL_KICK",
+    "meaning": "goal kick (beyond the 63 words; rated by +0x156)",
+    "confidence": "verified",
+    "evidence": "0x7109f0 restart 4 -> 0x5a; 0x6fad40 -> 0x1f7e TAKE_GOAL_KICK"
+   },
+   "91": {
+    "name": "HEAD_CLEAR",
+    "meaning": "headed clearance (rated by +0x194)",
+    "confidence": "verified",
+    "evidence": "0x6fa490 kind 0x5b; 0x6fad40 -> 0x1f6f HEAD_CLEAR, 0x210d"
+   },
+   "92": {
+    "name": "HEAD_IT",
+    "meaning": "header on (rated by +0x194)",
+    "confidence": "verified",
+    "evidence": "0x6fa490 kind 0x5c; 0x6fad40 -> 0x1f71 HEAD_IT"
+   },
+   "93": {
+    "name": "PASS_IT",
+    "meaning": "plain pass upfield (rated by +0x130)",
+    "confidence": "verified",
+    "evidence": "0x6fa490 kind 0x5d; 0x6fad40 -> 0x1f72 PASS_IT"
+   },
+   "94": {
+    "name": "CROSS_INTO_AREA",
+    "meaning": "cross from near the goal line (rated by +0x12a)",
+    "confidence": "verified",
+    "evidence": "0x6fa490 kind 0x5e; 0x6fad40 case 6|8|0x5e CROSS_HIGH_* events"
+   },
+   "95": {
+    "name": "SQUARE_UP",
+    "meaning": "squares up to the opponent",
+    "confidence": "read",
+    "evidence": "0x716630: 0x5f with 0x210b PLAYER_SQUARES_UP_TO_OPPONENT; 0x6cfca0 case 0x5f"
+   },
+   "96": {
+    "name": "SHOVE",
+    "meaning": "shoves the opponent in the chest",
+    "confidence": "read",
+    "evidence": "0x716630: 0x60 with 0x20e2 PLAYER_PUSHES_OPPONENT; 0x6cfca0 case 0x60; undisputed"
+   },
+   "97": {
+    "name": "SPIT",
+    "meaning": "spits at the opponent",
+    "confidence": "read",
+    "evidence": "0x716630: 0x61 with 0x2108 PLAYER_SPITS_AT_OPPONENT; 0x6cfca0 case 0x61 (+20 severity); undisputed"
+   },
+   "108": {
+    "name": "PASS",
+    "meaning": "pass to a teammate (action; opposition kind)",
+    "confidence": "verified",
+    "evidence": "0x7109f0 sets action 0x6c before 0x6fa250; 0x6fb4f4 calls 0x6c87e0 with 0x6c"
+   },
+   "109": {
+    "name": "SHOT",
+    "meaning": "shot (action; opposition kind)",
+    "confidence": "verified",
+    "evidence": "0x702050 writes action 0x6d; 0x70248f calls 0x6c87e0 with 0x6d"
+   }
+  },
+  "note": "One code space shared by MOVE_SKILL (63 i16 words at +0x11a), MatchPlayer.action (+0x198) and the kinds passed to execute_pass, shot_value, opposition_challenge and referee_check_foul; codes >= 63 have no skill word. Texts: Data/events_eng.cfg, event id = commentary code - 8000. Unnamed in 0..62: 0 (keeper rating, same as 1), 2, 4 (heading words), 10, 14, 20, 32, 35, 38 (no setter or text found). Correction: the Rust port calls 0x25 a header (\"cabeca\", \"shot header\", \"play header\"); it is the handball."
+ },
+ "match_player_action": {
+  "enum_name": "moves",
+  "rust_type": "u16",
+  "values": {
+   "2": {
+    "name": "HEADER_2",
+    "meaning": "prior action = move code 2 (a heading word); dribble then prefers to carry the ball",
+    "confidence": "inferred",
+    "evidence": "0x7109f0 tests it only; no writer found"
+   },
+   "9": {
+    "name": "LONG_BALL",
+    "meaning": "move code 9: long ball",
+    "confidence": "verified",
+    "evidence": "0x7109f0 writes 9 before 0x6fa490; see move 9"
+   },
+   "15": {
+    "name": "TURN",
+    "meaning": "move code 15",
+    "confidence": "verified",
+    "evidence": "0x7109f0 writes 0xf with move_to(0xf); 0x6f09f0 narrates 0x1f48/0x1f49"
+   },
+   "16": {
+    "name": "HOLD_BALL",
+    "meaning": "move code 16",
+    "confidence": "verified",
+    "evidence": "0x7109f0 writes 0x10 after hold_ball; 0x70ec80 skips its commentary for action 0x10; 0x6c87e0 kind 0x10"
+   },
+   "17": {
+    "name": "RUN_WITH_BALL",
+    "meaning": "move code 17",
+    "confidence": "read",
+    "evidence": "0x7109f0 writes 0x11 with move_to(0x11)"
+   },
+   "18": {
+    "name": "RUN_WITH_BALL_AGAIN",
+    "meaning": "move code 18 (continues a 0x11/0x12 run)",
+    "confidence": "read",
+    "evidence": "0x7109f0 writes 0x12 when the previous action is 0x11/0x12; 0x6f09f0 narrates 0x1f4c RUN_WITH_BALL_AGAIN"
+   },
+   "59": {
+    "name": "DIVING_HEADER",
+    "meaning": "move code 59: a diving header is under way, the next touch must be a shot",
+    "confidence": "verified",
+    "evidence": "0x6f6c00 set_action(lance); 0x7109f0 forces action 3 (shoot); 0x700bd0 turns it into shot 0x39"
+   },
+   "108": {
+    "name": "PASS",
+    "meaning": "pass played (0x6c)",
+    "confidence": "verified",
+    "evidence": "0x7109f0 writes 0x6c before play_pass_to; 0x6c87e0 kind 0x6c"
+   },
+   "111": {
+    "name": "TURN_ONLY",
+    "meaning": "without the ball and not facing the target: only turns this tick",
+    "confidence": "read",
+    "evidence": "0x6f09f0 writes 0x6f after aim_set_facing_direction and returns"
+   },
+   "123": {
+    "name": "WON_HEADER",
+    "meaning": "won the aerial duel in the shooter routine (height-4 header with a challenger)",
+    "confidence": "read",
+    "evidence": "0x6f6c00 writes 0x7b after 0x2164/0x21cb/0x214f/0x1f5d (WINS_JUMPFORBALL)"
+   }
+  },
+  "note": "The action field holds move codes (0x6f6c00 does set_action(lance)): same enum as move_codes. 110 (0x6e, a marker's action tested in match_eng.rs:5036) not named: no immediate writer found."
+ }
+}

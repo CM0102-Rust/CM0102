@@ -8,7 +8,7 @@ use super::*;
 /// 4 conforme a linha de fundo e o lado que tocou por ultimo; 0x8eae: o lado que repoe), narra
 /// (0x1f76/0x1f75/0x1f77) e devolve 1. Bola em campo, 0.
 pub(crate) unsafe fn ball_out_with(this: Engine, side_b: u8, call: AddEventCall) -> u8 {
-    if this.restart_type() != 0 {
+    if this.restart_type() != restart::OPEN_PLAY {
         return 1;
     }
     if this.possession_side() != -1 {
@@ -134,14 +134,14 @@ pub(crate) unsafe fn play_with(j: MatchPlayer, strength: i16, height: f32, style
     // the move and the attribute
     let em_area = in_the_box();
     let choose = || -> (i16, i16) {
-        if m.ball_height() == 4 {
-            if exe::cm3_match_engine_get_player_position(m, j) == 1 { (*((j.addr() + match_player::MOVE_SKILL + 2 * 1) as *mut i16), 1) } else { (*((j.addr() + match_player::MOVE_SKILL + 2 * 21) as *mut i16), 0x15) }
+        if m.ball_height() == ball_height::IN_THE_AIR {
+            if exe::cm3_match_engine_get_player_position(m, j) == 1 { (j.move_skill(moves::GOALKEEPER_CATCH), 1) } else { (j.move_skill(moves::JUMP_FOR_BALL), 0x15) }
         } else if exe::cm3_match_engine_get_player_position(m, j) != 1 {
-            (*((j.addr() + match_player::MOVE_SKILL + 2 * 36) as *mut i16), 0x24)
-        } else if m.ball_height() == 3 && random(4) != 0 {
-            (*((j.addr() + match_player::MOVE_SKILL + 2 * 1) as *mut i16), 1)
+            (j.move_skill(moves::INTERCEPT), 0x24)
+        } else if m.ball_height() == ball_height::CHEST_HEIGHT && random(4) != 0 {
+            (j.move_skill(moves::GOALKEEPER_CATCH), 1)
         } else {
-            (*((j.addr() + match_player::MOVE_SKILL + 2 * 41) as *mut i16), 0x29)
+            (j.move_skill(moves::GOALKEEPER_SMOTHER), 0x29)
         }
     };
     let (mut valor, lance) = if em_area && exe::cm3_match_engine_get_player_position(m, j) == 1 {
@@ -151,8 +151,8 @@ pub(crate) unsafe fn play_with(j: MatchPlayer, strength: i16, height: f32, style
         if random(em_area as i32 * 500 + 100 + ficha5c * 200) != 0 {
             choose()
         } else {
-            crate::comparison::branch("play header");
-            ((*((j.addr() + match_player::MOVE_SKILL + 2 * 37) as *mut i16)).wrapping_shl(1), 0x25)
+            crate::comparison::branch("play handball");
+            ((j.move_skill(moves::HANDBALL)).wrapping_shl(1), 0x25)
         }
     };
     if strong != 0 {
@@ -194,7 +194,7 @@ pub(crate) unsafe fn play_with(j: MatchPlayer, strength: i16, height: f32, style
             let sound: u32;
             if t == 7 {
                 sound = 0x1f79;
-                m.set_restart_type((7) as i8);
+                m.set_restart_type(restart::INDIRECT_FREE_KICK);
             } else if in_the_box() {
                 if colour == -1 {
                     match random(4) {
@@ -205,12 +205,12 @@ pub(crate) unsafe fn play_with(j: MatchPlayer, strength: i16, height: f32, style
                 }
                 crate::comparison::branch("play penalty");
                 sound = 0x1f7a;
-                m.set_restart_type((5) as i8);
+                m.set_restart_type(restart::PENALTY);
                 m.set_fouled_player(0);
                 j.set_match_rating((j.match_rating()).wrapping_sub(500));
             } else {
                 sound = 0x1f79;
-                m.set_restart_type((6) as i8);
+                m.set_restart_type(restart::FREE_KICK);
             }
             m.set_ball_x(((j.cell_x() as u8)) as i8);
             m.set_ball_y(((j.cell_y() as u8)) as i8);

@@ -1756,7 +1756,7 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
     if u(pl, 0x115) != 0 {
         mark(0x10);
     }
-    if (engine.restart_type() as u8) != 0 {
+    if (engine.restart_type() as u8) != restart::OPEN_PLAY as u8 {
         mark(0x80);
     }
     let r = u(p, day_match::SUMMARY);

@@ -263,6 +263,37 @@ class Conversor:
             ocupado[:] = [o for o in ocupado if not (m.start() <= o[0] and o[1] <= fim)]
             edicoes.append((m.start(), fim, novo))
             ocupado.append((m.start(), fim))
+        # arrays by pointer: *((x + mod::F + 2 * i) as *mut T)  ->  x.f(i)  (and `= v;` -> x.set_f(i, v))
+        for m in re.finditer(r'\*\(\(\s*(%s)(?:\.addr\(\))?\s*\+\s*%s::([A-Z][A-Z0-9_]*)\s*\+\s*([^()]+?)\s*\)\s*as\s*\*(?:const|mut)\s+(\w+)\)' % (nomes, self.mod), mk):
+            if any(a <= m.start() < b for a, b in ocupado) or m.group(2) not in self.vetores:
+                continue
+            x, campo, idx, t = m.group(1), m.group(2), m.group(3), m.group(4)
+            nome, et = self.vetores[campo]
+            tam = LARG_EL[et]
+            if tam == 1:
+                i = idx if re.fullmatch(r'[\w.]+( as usize)?', idx) else None
+            else:
+                mm = re.fullmatch(r'%d\s*\*\s*(.+)|(.+?)\s*\*\s*%d' % (tam, tam), idx)
+                i = (mm.group(1) or mm.group(2)) if mm else None
+            if i is None or LARG_EL.get(t) != tam:
+                continue
+            depois = mk[m.end():]
+            if re.match(r'\s*(\+|-|\*|/|&|\||\^|<<|>>)=', depois):
+                continue
+            atr = re.match(r'\s*=(?!=)\s*', depois)
+            if atr:
+                fim = fim_da_expressao(mk, m.end() + atr.end())
+                if fim < 0:
+                    continue
+                v = self.converter_trecho(s[m.end() + atr.end():fim].strip(), xs, so_acessos)
+                novo = '%s.set_%s(%s, %s)' % (x, nome, i.strip(), v if t == et else '(%s) as %s' % (v, et))
+                edicoes.append((m.start(), fim, novo))
+                ocupado.append((m.start(), fim))
+            else:
+                novo = '%s.%s(%s)' % (x, nome, i.strip())
+                novo = novo if t == et else '(%s as %s)' % (novo, t)
+                edicoes.append((m.start(), m.end(), novo))
+                ocupado.append((m.start(), m.end()))
         # core::ptr::read_unaligned((x + mod::F) as *const T)  and  core::ptr::write_unaligned((x + mod::F) as *mut T, v)
         for m in re.finditer(r'core::ptr::(read|write)_unaligned\(', mk):
             if any(a <= m.start() < b for a, b in ocupado):

@@ -28,6 +28,22 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 13: os números mágicos do motor
+
+Dois agentes leram no original os valores dos campos com cara de enumeração do motor e do jogador na partida e os
+códigos de lance (o índice do `MOVE_SKILL`), confirmando pelos textos da narração (`events_eng.cfg`: o número do evento
+é o código de narração menos 8000): 98 constantes em `rust/src/motor/match_codes.rs`, geradas pelo
+`aplicar_codigos.py` a partir de `levas/reorganizacao/codigos_motor.json` e `codigos_lance.json`, cada uma com o
+significado e a confiança (`restart::THROW_IN`, `ball_height::HELD_BY_GOALKEEPER`, `shootout::PENALTIES_KICKS`,
+`period::FIRST_HALF_END = 495`, `moves::SLIDE_TACKLE`...); o `action` do jogador guarda o próprio código de lance e usa o
+mesmo módulo. 182 literais viraram nomes (`m.restart_type() == restart::OPEN_PLAY`). Também: a leitura e a escrita de
+elemento de vetor por ponteiro (`*((j + match_player::MOVE_SKILL + 2 * 12) as *mut i16)` → `j.move_skill(12)`).
+
+Nomes errados que a leitura achou na cópia, corrigidos: o código 37 é a mão na bola, não a cabeçada (a variável
+`cabeca` → `handball`; rótulos "shot header"/"play header" → "shot handball"/"play handball"); no cobrador da bola
+parada, os rótulos dos casos 2 (lateral) e 4 (tiro de meta) estavam trocados ("dribble throw_in without teammate",
+"dribble goal_kick drawn"). Prova: 7cc445c2 ×2, detector igual, comparação 0; as 14 mutações mudadas compilam.
+
 ## Migração para os registros tipados, leva 12: o motor de partidas (`Engine`)
 
 A leva 12 combinada (subclasses da liga e restos) foi trocada, a pedido do Lucas depois do balanço, pelo motor de

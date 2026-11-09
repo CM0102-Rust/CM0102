@@ -33,7 +33,7 @@ pub(crate) unsafe extern "thiscall" fn init_strictness(this: usize, engine: u32,
 pub(crate) unsafe extern "thiscall" fn move_counts(this: usize) -> u8 {
     let this = Engine(this);
     let p = this.pending_play_offender();
-    if this.pending_play_kind() == 0 || p == 0 {
+    if this.pending_play_kind() == pending_play::NONE || p == 0 {
         return 0;
     }
     let l = read_i8(p + 0x27);
@@ -143,7 +143,7 @@ pub(crate) unsafe extern "thiscall" fn punish_foul(this: usize, j: usize, kind: 
     let engine = Engine(*(this as *const usize));
     count_foul(engine, j);
     j.set_fouls((j.fouls()).wrapping_add(1));
-    if *kind != 1 || engine.shootout_state() != 0 {
+    if *kind != 1 || engine.shootout_state() != shootout::NONE {
         return;
     }
     let d = (j.addr() + match_player::MATCH_RATING) as *mut i16;
@@ -198,7 +198,7 @@ pub(crate) unsafe extern "thiscall" fn punish_move(this: usize, j: usize, other:
             *weight = 1.25;
             count_foul(engine, j);
         }
-        1 if engine.shootout_state() == 0 => {
+        1 if engine.shootout_state() == shootout::NONE => {
             count_foul(engine, j);
             if flag != 0 {
                 let r = random(0xbb8) as i16;

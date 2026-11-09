@@ -1,7 +1,7 @@
 # Mutacoes da leva144 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva144.py --carreira 2002-06-01 --confirmar 2001-10-01
 MUTACOES = [
-    ('c_canto', "x = if read_i8(m + engine::BALL_X) == 0 { random(4) as i8 } else { 8 - random(4) as i8 };", "x = if read_i8(m + engine::BALL_X) == 0 { random(4) as i8 } else { 7 - random(4) as i8 };", "dribble corner without teammate"),
-    ('c_lateral', "x = 7 - random(7) as i8;", "x = 6 - random(7) as i8;", "dribble throw_in drawn"),
+    ('c_canto', "x = if read_i8(m + engine::BALL_X) == 0 { random(4) as i8 } else { 8 - random(4) as i8 };", "x = if read_i8(m + engine::BALL_X) == 0 { random(4) as i8 } else { 7 - random(4) as i8 };", "dribble throw_in without teammate"),
+    ('c_lateral', "x = 7 - random(7) as i8;", "x = 6 - random(7) as i8;", "dribble goal_kick drawn"),
     ('c_falta', "y = if side == 0 { read_i8(m + engine::OFFSIDE_LINE).wrapping_sub(2) }", "y = if side == 0 { read_i8(m + engine::OFFSIDE_LINE).wrapping_sub(3) }", "dribble foul in the box"),
     ('c_penalti', "let a4 = if random(100) == 0 { 5 } else { 1 };", "let a4 = if random(100) == 0 { 4 } else { 1 };", "dribble penalty"),
     ('c_pressao', "l58 = ftol(-(k as f64 * read_f64(rdata::F64_0_75)));", "l58 = ftol(-(k as f64 * read_f64(rdata::F64_0_75) * 1.1));"),
@@ -18,7 +18,7 @@ MUTACOES = [
     ('c_fundo', "l10 = l10.wrapping_add((p.moment_flair() as i32 - 20) * 100);", "l10 = l10.wrapping_add((p.moment_flair() as i32 - 21) * 100);"),
     ('c_drible', "{ bl * 500 } else { bl * 325 } - r);", "{ bl * 500 } else { bl * 326 } - r);"),
     ('c_quatro', "let k = (20 - p.moment_decisions() as i32) * 50;", "let k = (20 - p.moment_decisions() as i32) * 51;"),
-    ('c_acao', "action = if random(if (p.action() as i16) != 0x10 { 2 } else { 10 }) != 0 { 4 } else { 2 };", "action = if random(if (p.action() as i16) != 0x10 { 3 } else { 10 }) != 0 { 4 } else { 2 };"),
+    ('c_acao', "action = if random(if (p.action() as i16) != moves::HOLD_BALL as i16 { 2 } else { 10 }) != 0 { 4 } else { 2 };", "action = if random(if (p.action() as i16) != moves::HOLD_BALL as i16 { 3 } else { 10 }) != 0 { 4 } else { 2 };"),
     ('c_vira', "if y0() < 9 { y0() + 3 } else { 0xb }", "if y0() < 9 { y0() + 2 } else { 0xb }", "dribble turns towards goal"),
     ('c_tabela', "(p.space_on_ball() as i32 / 3 + 0x113) as i16);", "(p.space_on_ball() as i32 / 3 + 0x114) as i16);", "dribble one-two returned"),
     ('c_narra', "call(FN_MATCH_EVENTS_ADD_EVENT, read_usize(m + engine::COMMENTATOR), [0x1f44,", "call(FN_MATCH_EVENTS_ADD_EVENT, read_usize(m + engine::COMMENTATOR), [0x1f45,"),

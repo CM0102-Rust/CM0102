@@ -4136,7 +4136,7 @@ pub(crate) unsafe fn injury_history_penalty_2c(p: Staff, l4c: i32) -> i32 {
 /// -2000); em campo, os minutos jogados (minuto - +0x1f) abaixo de 60 x 40.
 pub(crate) unsafe fn match_fatigue_offset(reg: MatchPlayer, goalkeeper: i32) -> i32 {
     let m = Engine(reg.engine());
-    let human = if m.period_end() == 0x1ef {
+    let human = if m.period_end() == period::FIRST_HALF_END {
         true
     } else {
         let side = reg.side();

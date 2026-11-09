@@ -1,8 +1,8 @@
 # Mutacoes da leva125 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva125.py --jogo 2001-10-01
 MUTACOES = [
-    ('f_vazio', "        return 0;\n    }\n    if (m.restart_type() as u8) != 0 {", "        return 1;\n    }\n    if (m.restart_type() as u8) != 0 {"),
+    ('f_vazio', "        return 0;\n    }\n    if (m.restart_type() as u8) != restart::OPEN_PLAY as u8 {", "        return 1;\n    }\n    if (m.restart_type() as u8) != restart::OPEN_PLAY as u8 {"),
     ('f_marcada', "(aqui < marcada && side == 1)", "(aqui <= marcada && side == 1)"),
-    ('f_oito', "        m.set_restart_type((7) as i8);\n        m.set_possession_side((zero(MatchPlayer(j)) as u8) as i8);", "        m.set_restart_type((6) as i8);\n        m.set_possession_side((zero(MatchPlayer(j)) as u8) as i8);"),
+    ('f_oito', "        m.set_restart_type(restart::INDIRECT_FREE_KICK);\n        m.set_possession_side((zero(MatchPlayer(j)) as u8) as i8);", "        m.set_restart_type((6) as i8);\n        m.set_possession_side((zero(MatchPlayer(j)) as u8) as i8);"),
     ('f_codigo', "0x2d => 0x20fd,", "0x2d => 0x20fc,"),
     ('f_cartao', "6 if !sofreu => 0x1ff5,", "6 if !sofreu => 0x1ff6,"),
     ('f_area', "read_i8(m.pending_play_offender() + 0x27) == 1 { (10..=11).contains(&y) }", "read_i8(m.pending_play_offender() + 0x27) == 1 { (9..=11).contains(&y) }"),

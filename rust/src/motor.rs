@@ -3168,6 +3168,9 @@ pub(crate) use self::main::*;
 #[path = "motor/manager_manager.rs"]
 pub(crate) mod manager_manager;
 pub(crate) use self::manager_manager::*;
+#[path = "motor/match_codes.rs"]
+pub(crate) mod match_codes;
+pub(crate) use self::match_codes::*;
 #[path = "motor/match_day.rs"]
 pub(crate) mod match_day;
 pub(crate) use self::match_day::*;

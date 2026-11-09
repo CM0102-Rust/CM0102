@@ -7,6 +7,6 @@ MUTACOES = [
     ('p_teto0', "            recuperar(0);", "            recuperar(1);"),
     ('p_saida', "        m.set_next_kickoff_side((a == 0) as i8);", "        m.set_next_kickoff_side(a);"),
     ('p_placar', "            *tb(fixture::AWAY_GOALS) = m.score_side1();\n            let rule", "            *tb(fixture::AWAY_GOALS) = m.score();\n            let rule"),
-    ('p_fim', "                call(FN_CM3_MATCH_ENGINE_REBUILD_TEAM_MATCH_STATS, m.addr(), [0, 0, 0, 0, 0]);\n                m.set_period_end(0);\n                return 4;", "                call(FN_CM3_MATCH_ENGINE_REBUILD_TEAM_MATCH_STATS, m.addr(), [0, 0, 0, 0, 0]);\n                m.set_period_end(1);\n                return 4;"),
-    ('p_ordem', "                m.set_period_end(0);\n                classificar(c);", "                classificar(c);\n                m.set_period_end(0);"),
+    ('p_fim', "                call(FN_CM3_MATCH_ENGINE_REBUILD_TEAM_MATCH_STATS, m.addr(), [0, 0, 0, 0, 0]);\n                m.set_period_end(period::OVER_IN_NORMAL_TIME);\n                return 4;", "                call(FN_CM3_MATCH_ENGINE_REBUILD_TEAM_MATCH_STATS, m.addr(), [0, 0, 0, 0, 0]);\n                m.set_period_end(1);\n                return 4;"),
+    ('p_ordem', "                m.set_period_end(period::OVER_IN_NORMAL_TIME);\n                classificar(c);", "                classificar(c);\n                m.set_period_end(period::OVER_IN_NORMAL_TIME);"),
 ]

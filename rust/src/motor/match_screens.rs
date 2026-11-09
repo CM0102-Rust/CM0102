@@ -1009,7 +1009,7 @@ pub(crate) unsafe extern "C" fn handle_match_screen_input(item: u32) -> i32 {
     };
 
     if let Some(target) = target {
-        if get_screen_param(7) == 0 && (pm.restart_type() as u8) != 0 {
+        if get_screen_param(7) == 0 && (pm.restart_type() as u8) != restart::OPEN_PLAY as u8 {
             // opens the team’s tactics
             let mut side: u32 = 0;
             if exe::human_manager_is_human_club(target, 0, 1, 0, 0) != 0 {

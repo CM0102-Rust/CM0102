@@ -21,5 +21,5 @@ MUTACOES = [
     ('m_penalti', "if random(read_i8(e.staff() + 0x5a) as i32 + 6) == 0 {", "if random(read_i8(e.staff() + 0x5a) as i32 + 7) == 0 {", "movement penalty"),
     ('m_acao', "            narrate(call, 0x1f4c, u32::MAX);", "            narrate(call, 0x1f4d, u32::MAX);"),
     ('m_2173', "if strong && random(ftol(p.dribbling() as f64)) < random(0x1e) { 0x2173 } else { 0x1f4a }", "if strong && random(ftol(p.dribbling() as f64)) < random(0x1f) { 0x2173 } else { 0x1f4a }"),
-    ('m_so_vira', "        p.set_action((0x6f) as u16);\n        return;", "        p.set_action((0x70) as u16);\n        return;", "movement only turns"),
+    ('m_so_vira', "        p.set_action(moves::TURN_ONLY as u16);\n        return;", "        p.set_action((0x70) as u16);\n        return;", "movement only turns"),
 ]
