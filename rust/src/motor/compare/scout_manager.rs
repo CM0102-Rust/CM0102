@@ -263,7 +263,7 @@ pub(crate) unsafe extern "thiscall" fn compare_sync_scout_lists(this: usize, man
     }
     let mut regions = Vec::new();
     for i in 0..10u8 {
-        let l = get_search(this, i, m);
+        let l = get_search(this, i, Staff(m));
         if l != 0 {
             regions.push((l, 0x2b0usize));
         }

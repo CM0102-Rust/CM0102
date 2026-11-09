@@ -4919,7 +4919,7 @@ pub(crate) unsafe extern "C" fn club_squad_strength_band(club: usize, other: usi
 ///
 /// [pt] O clube do contrato da `pessoa` como a 0x545e90 o acha: o contrato pela 0x4cf5a0 (this = [0xae1050]), gravado
 /// em [0xae1080] como na original; com contrato, o clube de id +4 na tabela [0xae23b4] (581 bytes); sem: 0.
-pub(crate) unsafe fn database_club_of_contract(person: usize) -> usize {
+pub(crate) unsafe fn database_club_of_contract(person: Staff) -> usize {
     let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
     if c == 0 {
@@ -4932,14 +4932,14 @@ pub(crate) unsafe fn database_club_of_contract(person: usize) -> usize {
 ///
 /// [pt] +500 se o `clube` está entre os três clubes favoritos da pessoa (preferências +4/+8/+0xc), −500 se entre os três
 /// rejeitados (+0x10/+0x14/+0x18), senão 0; sem preferências: 0.
-pub(crate) unsafe fn club_preference_bonus(club: usize, person: Staff) -> i32 {
+pub(crate) unsafe fn club_preference_bonus(club: Club, person: Staff) -> i32 {
     let pref = person.staff_preferences();
     if pref == 0 {
         return 0;
     }
-    if (0..3).any(|k| read_usize(pref + preferences::STAFF_FAVOURITE_CLUBS1 + 4 * k) == club) {
+    if (0..3).any(|k| read_usize(pref + preferences::STAFF_FAVOURITE_CLUBS1 + 4 * k) == club.addr()) {
         500
-    } else if (0..3).any(|k| read_usize(pref + preferences::STAFF_DISLIKED_CLUBS1 + 4 * k) == club) {
+    } else if (0..3).any(|k| read_usize(pref + preferences::STAFF_DISLIKED_CLUBS1 + 4 * k) == club.addr()) {
         -500
     } else {
         0
@@ -5009,10 +5009,10 @@ pub(crate) unsafe extern "C" fn club_reputation_for_staff(club: usize, person: u
             v = ((20 - games) as f64 * w + games as f64 * v) * read_f64(rdata::F64_0_05);
         }
         let mut bonus = 0;
-        if !person.is_null() && person.player() != 0 && database_club_of_contract(person.addr()) == club.addr() {
+        if !person.is_null() && person.player() != 0 && database_club_of_contract(person) == club.addr() {
             let m = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), person.player(), 6, 0x14, v as f32);
             v = (m + v) * read_f64(rdata::F64_0_5);
-            bonus = club_preference_bonus(club.addr(), person);
+            bonus = club_preference_bonus(club, person);
         }
         let mut x = v * read_f64(rdata::F64_14) - read_f64(rdata::F64_18); // o peso entre 0 e 10;
         let (baixo, teto) = (read_f64(rdata::F64_0), read_f64(rdata::F64_10));
@@ -5031,11 +5031,11 @@ pub(crate) unsafe extern "C" fn club_reputation_for_staff(club: usize, person: u
     if !person.is_null() {
         eax = person.player();
         if eax != 0 {
-            eax = database_club_of_contract(person.addr());
+            eax = database_club_of_contract(person);
             if eax == club.addr() {
                 eax = person.staff_preferences();
                 if eax != 0 {
-                    bonus = club_preference_bonus(club.addr(), person); // the person’s clubs
+                    bonus = club_preference_bonus(club, person); // the person’s clubs
                 }
             }
         }
@@ -6624,7 +6624,7 @@ pub(crate) unsafe extern "C" fn compare_staff_by_player_ability_desc(a: usize, b
 ///
 /// [pt] TRAINING_MANAGER::remove_or_restore_training_progress (0x8b3640, thiscall com o gerente [0xde1f44]): tira
 /// (`devolver` = 0) ou devolve (1) o progresso do treino dos atributos da `pessoa`. Sem gerente, nada.
-pub(crate) unsafe fn remove_or_restore_training(person: usize, devolver: u32) {
+pub(crate) unsafe fn remove_or_restore_training(person: Staff, devolver: u32) {
     let manager = *(G_TRAINING_MANAGER as *const usize);
     if manager != 0 {
         exe::training_manager_remove_or_restore_training_progress(manager, person, devolver);
@@ -6741,7 +6741,7 @@ pub(crate) unsafe fn rebalance_attr_vector(v: *mut u8, start: i8, end: i8, playe
 /// Fills the player's attribute vector (`database_player_to_attribute_vector`) and returns the group ends (sides end, weighted end).
 ///
 /// [pt] O vetor de atributos do `jogador` (0x53a610) com os fins de grupo (lados, posições, ponderados).
-pub(crate) unsafe fn player_attr_vector(player: usize, person: usize, v: *mut u8) -> (u8, u8) {
+pub(crate) unsafe fn player_attr_vector(player: usize, person: Staff, v: *mut u8) -> (u8, u8) {
     let (mut lados, mut posicoes, mut ponderados) = (0u8, 0u8, 0u8);
     exe::database_player_to_attribute_vector(player, person, v as usize, &mut lados, &mut posicoes, &mut ponderados);
     (lados, ponderados)
@@ -6776,7 +6776,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_physical_attributes(perso
     if player == 0 {
         return;
     }
-    remove_or_restore_training(person.addr(), 0);
+    remove_or_restore_training(person, 0);
     let b = |d: usize| *((player + d) as *const i8) as i32;
     let f = |x: i32, k: usize| ftol(x as f64 * read_f64(k));
     let smaller = b(player_sheet::RIGHT_FOOT).min(b(player_sheet::LEFT_FOOT));
@@ -6802,7 +6802,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_physical_attributes(perso
         c.copy_from_slice(&[0x81, 0xff, 0x81]);
     }
     let v = array.as_mut_ptr();
-    let (lados, ponderados) = player_attr_vector(player, person.addr(), v);
+    let (lados, ponderados) = player_attr_vector(player, person, v);
     rebalance_attr_vector(v, (lados as i8).wrapping_add(2), ponderados as i8, player, target, &[0x1e, 0x18],
         |x| 2 * x as i32);
     (exe::database_attribute_vector_to_player(player, person, v as usize) as u32);
@@ -6813,7 +6813,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_physical_attributes(perso
             *((player + off) as *mut u8) = (*((player + off) as *const u8)).wrapping_sub(third);
         }
     }
-    remove_or_restore_training(person.addr(), 1);
+    remove_or_restore_training(person, 1);
 }
 
 /// A second name (60-byte row in [0xae23f4]) by weight.
@@ -6875,17 +6875,17 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_attributes(person: usize)
     if player == 0 {
         return;
     }
-    remove_or_restore_training(person.addr(), 0);
+    remove_or_restore_training(person, 0);
     let mut array = [0u8; 63 * 3];
     let v = array.as_mut_ptr();
-    let (lados, ponderados) = player_attr_vector(player, person.addr(), v);
+    let (lados, ponderados) = player_attr_vector(player, person, v);
     rebalance_attr_vector(v, (lados as i8).wrapping_add(2), ponderados as i8, player, -20, &[],
         |x| ftol(x as f64 * read_f64(rdata::F64_1_75)));
     (exe::database_attribute_vector_to_player(player, person, v as usize) as u32);
     if *((player + player_sheet::GOALKEEPER) as *const i8) >= 0xf {
         subtract_mean_2a_3a(player);
     }
-    remove_or_restore_training(person.addr(), 1);
+    remove_or_restore_training(person, 1);
 }
 
 /// Competition record (107 bytes) in club_comp.dat / nation_comp.dat version 1 (104 in the file): `(deslocamento,
@@ -7619,11 +7619,11 @@ pub(crate) unsafe extern "C" fn database_club_has_room_for_job(club: usize, job:
 /// Puts the person in the first empty of the n club slots at clube+d; false if none.
 ///
 /// [pt] Põe a `pessoa` na primeira das `n` casas vazias a partir de `clube + d`; false se não há.
-pub(crate) unsafe fn fill_club_slot(club: usize, d: usize, n: usize, person: usize) -> bool {
+pub(crate) unsafe fn fill_club_slot(club: usize, d: usize, n: usize, person: Staff) -> bool {
     let home = |i: usize| (club + d + 4 * i) as *mut usize;
     match (0..n).find(|&i| core::ptr::read_unaligned(home(i)) == 0) {
         Some(i) => {
-            core::ptr::write_unaligned(home(i), person);
+            core::ptr::write_unaligned(home(i), person.addr());
             true
         }
         None => false,
@@ -7689,7 +7689,7 @@ pub(crate) unsafe extern "C" fn database_add_staff_to_club(club: usize, person: 
             }
         }
     }
-    let ocupar = |d: usize, n: usize| fill_club_slot(club, d, n, person.addr());
+    let ocupar = |d: usize, n: usize| fill_club_slot(club, d, n, person);
     let unica = |d: usize| {
         let p = (club + d) as *mut usize;
         if core::ptr::read_unaligned(p) != 0 {

@@ -329,7 +329,7 @@ pub(crate) unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
 /// [pt] A nota da torcida para o jogador `p` do clube pela estatística `st` (0x452da0): média (+0xe com sinal / jogos +0)
 /// + 0,025 × +2 + 1/60 × +6; o clube gosta dele (0x547790) +0,2, não gosta (0x5477d0) −2 (guardada); ele gosta do
 /// clube (0x547d60) +0,2, não gosta (0x547d30) −1,5 (só na comparação).
-pub(crate) unsafe fn fan_rating(p: usize, club: usize, st: usize) -> f64 {
+pub(crate) unsafe fn fan_rating(p: Staff, club: Club, st: usize) -> f64 {
     let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_FAVOURS_CLUB);
     let average = read_i16(st + player_category_stats::RATING_TOTAL) as i32 as f64 / read_u8(st) as i32 as f64;
     let mut rating = average + read_u8(st + player_category_stats::GOALS) as i32 as f64 * read_f64(rdata::F64_0_025);
@@ -340,7 +340,7 @@ pub(crate) unsafe fn fan_rating(p: usize, club: usize, st: usize) -> f64 {
     } else if exe::club_dislikes_staff(p, club) != 0 {
         rating = rating - read_f64(rdata::F64_2);
     }
-    if gosta(p, club) != 0 {
+    if gosta(p.addr(), club.addr()) != 0 {
         rating + read_f64(rdata::F64_0_2)
     } else if exe::staff_dislikes_club(p, club) != 0 {
         rating - read_f64(rdata::F64_1_5)
@@ -395,7 +395,7 @@ pub(crate) unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, clu
             if (games as i16) < minimum || games == 0 {
                 continue;
             }
-            let rating = fan_rating(p.addr(), club.addr(), st);
+            let rating = fan_rating(p, club, st);
             if rating > best {
                 best = rating;
                 chosen = p.addr();

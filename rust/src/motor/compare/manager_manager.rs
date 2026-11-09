@@ -51,7 +51,7 @@ pub(crate) unsafe extern "thiscall" fn compare_board_named_players_after_match(t
     let mut regions = crate::rng::STATE_REGIONS.to_vec();
     regions.push((G_CONTRACT_LOOKUP_RESULT, 4));
     if club != 0 {
-        regions.push((club_board_row(this, club), 0x49));
+        regions.push((club_board_row(this, Club(club)), 0x49));
     }
     if !ids.is_null() {
         regions.push((ids as usize, 12));
@@ -111,7 +111,7 @@ pub(crate) unsafe extern "thiscall" fn compare_check_board_transfer_veto(this: u
         // ecx = [0xb63d28]; push person -> thiscall, ret 4 (as in 0x62edfc); checks id and record inside
         exe::injury_update_player_fitness(read_usize(G_INJURY), j);
     }
-    let regions = [(club_board_row(this, club), 0x49), (G_CONTRACT_LOOKUP_RESULT, 4), (0xde1f5c, 8), (0xad6c30, 4)];
+    let regions = [(club_board_row(this, Club(club)), 0x49), (G_CONTRACT_LOOKUP_RESULT, 4), (0xde1f5c, 8), (0xad6c30, 4)];
     let (r, n, _, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, j, club, value, comprando),
         || crate::rng::without_counting(|| check_board_transfer_veto(this, j, club, value, comprando)));
     let partes = if BOARD_VETO_SEEDED_RAND { 3 } else { 4 };
@@ -136,7 +136,7 @@ pub(crate) unsafe extern "stdcall" fn compare_news_board_ultimatum_text(news: us
 /// Comparer for `post_manager_under_pressure_news`.
 pub(crate) unsafe extern "thiscall" fn compare_post_manager_under_pressure_news(this: usize, club: usize, kind: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_POST_MANAGER_UNDER_PRESSURE_NEWS);
-    let regions = if club != 0 { vec![(board_row_of(this, club), 0x49)] } else { Vec::new() };
+    let regions = if club != 0 { vec![(board_row_of(this, Club(club)), 0x49)] } else { Vec::new() };
     compare_manager_news("post_manager_under_pressure_news", regions, || o(this, club, kind), || post_manager_under_pressure_news(this, club, kind));
 }
 
@@ -241,7 +241,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_club_manager(this: usize, 
             }
         }
     }
-    let conf = read_i16(club_board_row(this, club.addr()) + 6);
+    let conf = read_i16(club_board_row(this, club) + 6);
     SCOREBOARD.record(sobra == 0 && (keep != 0 || conf == 0xdac), || {
         format!("remove_club_manager(clube {:x}, tipo {}, manter {}) marcas que sobraram {:#x}, confiança {}", club.addr(), kind as u8, keep, sobra, conf)
     });

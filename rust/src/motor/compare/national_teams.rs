@@ -298,7 +298,7 @@ pub(crate) unsafe extern "thiscall" fn compare_withdraw_injured_player(this: usi
         return o(this, p.addr(), days);
     }
     let plan = release_plan(this, p, days);
-    let team = Club(national_team_for_type(club.nation().addr(), call_up_type(club.addr(), p)));
+    let team = Club(national_team_for_type(club.nation().addr(), call_up_type(club, p)));
     let estava = !team.is_null() && (0..50usize).any(|c| read_usize(team.addr() + club::SQUAD + 4 * c) == p.addr());
     let before = (club.addr(), p.job_for_nation());
     o(this, p.addr(), days);

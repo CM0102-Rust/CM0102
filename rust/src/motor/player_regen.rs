@@ -3,16 +3,16 @@ use super::*;
 /// Calls a one-argument thiscall routine by address (the person clean-up routines).
 ///
 /// [pt] Uma chamada thiscall de um argumento pelo endereço (as rotinas de limpeza da pessoa).
-pub(crate) unsafe fn call_thiscall_1(routine: usize, this: usize, a: usize) {
+pub(crate) unsafe fn call_thiscall_1(routine: usize, this: usize, a: Staff) {
     let f: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(routine);
-    f(this, a);
+    f(this, a.addr());
 }
 
 /// Pointer to byte k of the person's 79-byte state record ([0xae2d0c] + 0x4f x id).
 ///
 /// [pt] O byte `k` do registro de 79 bytes da pessoa ([0xae2d0c] + 0x4f × id).
-pub(crate) unsafe fn staff_state_byte(p: usize, k: usize) -> *mut u8 {
-    (read_usize(G_STAFF_STATE_TABLE) as isize + read_i32(p) as isize * 0x4f + k as isize) as *mut u8
+pub(crate) unsafe fn staff_state_byte(p: Staff, k: usize) -> *mut u8 {
+    (read_usize(G_STAFF_STATE_TABLE) as isize + read_i32(p.addr()) as isize * 0x4f + k as isize) as *mut u8
 }
 
 /// Integer times an .rdata double constant, truncated (_ftol) to 16 bits.
@@ -117,44 +117,44 @@ pub(crate) unsafe fn cap_current_ability(f: usize, ceiling: i16, n: i32) {
 /// reputações até 1250 e +0xd = 1. No fim, os atributos normalizados (0x538ec0, 0x538bc0).
 pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p: usize) {
     let p = Staff(p);
-    let mark = staff_state_byte(p.addr(), staff_state::STATUS_FLAGS);
+    let mark = staff_state_byte(p, staff_state::STATUS_FLAGS);
     let b = *mark;
     if b & 0x30 == 0 || p.club_job() != 0 {
         *mark = b & 0xcf;
         return;
     }
-    call_thiscall_1(0x775ba0, read_usize(G_NATIONAL_TEAMS), p.addr());
+    call_thiscall_1(0x775ba0, read_usize(G_NATIONAL_TEAMS), p);
     let bench = read_usize(this + player_regen_fields::PLAYER_DATA_POOL);
     let (ficha_id, nacao_id, nacao2_id) = (read_i32(bench), read_i32(bench + regen_pool_item::NATION_ID), read_i32(bench + regen_pool_item::SECOND_NATION_ID));
     exe::player_regen_remove_player_data_from_pool(this, ficha_id);
     p.set_classification(2);
     core::ptr::write_unaligned((p.addr() + staff::PLAYER) as *mut usize, read_usize(G_PLAYER_DATA_TABLE).wrapping_add((ficha_id as isize * 0x46) as usize));
-    *staff_state_byte(p.addr(), staff_state::STATUS_FLAGS) |= 0x40;
-    *staff_state_byte(p.addr(), 0xd) = 0;
-    *staff_state_byte(p.addr(), 0xc) &= 0xfd;
-    *staff_state_byte(p.addr(), staff_state::STATUS_FLAGS) &= 0x7f;
-    *staff_state_byte(p.addr(), 0xc) &= 0xfe;
-    *staff_state_byte(p.addr(), 9) = 0x9c;
+    *staff_state_byte(p, staff_state::STATUS_FLAGS) |= 0x40;
+    *staff_state_byte(p, 0xd) = 0;
+    *staff_state_byte(p, 0xc) &= 0xfd;
+    *staff_state_byte(p, staff_state::STATUS_FLAGS) &= 0x7f;
+    *staff_state_byte(p, 0xc) &= 0xfe;
+    *staff_state_byte(p, 9) = 0x9c;
     if read_usize(G_FOG_OF_WAR) != 0 && *(G_ATTRIBUTE_MASKING_ENABLED as *const u8) != 0 {
-        call_thiscall_1(0x5afd00, read_usize(G_FOG_OF_WAR), p.addr());
+        call_thiscall_1(0x5afd00, read_usize(G_FOG_OF_WAR), p);
     }
-    call_thiscall_1(0x7c6650, read_usize(G_PLAYER_STATS), p.addr());
-    call_thiscall_1(0x86fb80, read_usize(G_STAFF_RECORDS), p.addr());
-    call_thiscall_1(0x55e1d0, read_usize(G_DISCIPLINE), p.addr());
-    call_thiscall_1(0x631f90, read_usize(G_INJURY), p.addr());
-    call_thiscall_1(0x56a090, read_usize(G_DISPUTE), p.addr());
-    call_thiscall_1(0x556830, read_usize(G_DISCIPLINE), read_usize(p.addr()));
-    call_thiscall_1(0x62bfa0, read_usize(G_INJURY), read_usize(p.addr()));
-    call_thiscall_1(0x4d0b50, read_usize(G_CONTRACT_MANAGER), p.addr());
-    call_thiscall_1(0x4d0bd0, read_usize(G_CONTRACT_MANAGER), p.addr());
+    call_thiscall_1(0x7c6650, read_usize(G_PLAYER_STATS), p);
+    call_thiscall_1(0x86fb80, read_usize(G_STAFF_RECORDS), p);
+    call_thiscall_1(0x55e1d0, read_usize(G_DISCIPLINE), p);
+    call_thiscall_1(0x631f90, read_usize(G_INJURY), p);
+    call_thiscall_1(0x56a090, read_usize(G_DISPUTE), p);
+    call_thiscall_1(0x556830, read_usize(G_DISCIPLINE), Staff(read_usize(p.addr())));
+    call_thiscall_1(0x62bfa0, read_usize(G_INJURY), Staff(read_usize(p.addr())));
+    call_thiscall_1(0x4d0b50, read_usize(G_CONTRACT_MANAGER), p);
+    call_thiscall_1(0x4d0bd0, read_usize(G_CONTRACT_MANAGER), p);
     p.set_int_apps(0);
     p.set_int_goals(0);
     if p.non_player() != 0 {
         core::ptr::write_unaligned((p.addr() + staff::NON_PLAYER) as *mut u32, 0);
     }
-    *staff_state_byte(p.addr(), staff_state::STATUS_FLAGS) &= 0xf0;
-    *staff_state_byte(p.addr(), 8) = 0;
-    *staff_state_byte(p.addr(), 9) = 0x9c;
+    *staff_state_byte(p, staff_state::STATUS_FLAGS) &= 0xf0;
+    *staff_state_byte(p, 8) = 0;
+    *staff_state_byte(p, 9) = 0x9c;
     let nations = read_usize(G_NATION_TABLE);
     let nation = nations.wrapping_add((nacao_id as isize * 0x122) as usize);
     core::ptr::write_unaligned((p.addr() + staff::NATION) as *mut usize, nation);
@@ -182,7 +182,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
     core::ptr::write_unaligned((p.addr() + staff::SECOND_NAME) as *mut usize, v);
     let v = exe::database_get_empty_common_name(p.nation());
     core::ptr::write_unaligned((p.addr() + staff::COMMON_NAME) as *mut usize, v);
-    call_thiscall_1(0x5fff30, read_usize(G_HUMAN_MANAGER), p.addr());
+    call_thiscall_1(0x5fff30, read_usize(G_HUMAN_MANAGER), p);
     write_i16(p.addr() + 0x40, read_i16(G_CURRENT_DATE_YEAR));
     write_i16(p.addr() + staff::DATE_JOINED_CLUB, read_i16(G_CURRENT_DATE));
     core::ptr::write_unaligned((p.addr() + staff::CLUB_JOB) as *mut u32, 0);
@@ -205,7 +205,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
     }
     p.set_job_for_club(0xb);
     p.set_job_for_nation(0xb);
-    *staff_state_byte(p.addr(), staff_state::STATUS_FLAGS) &= 0xcf;
+    *staff_state_byte(p, staff_state::STATUS_FLAGS) &= 0xcf;
     let f = p.player();
     let nation = p.nation();
     let age: i8;
@@ -1538,7 +1538,7 @@ pub(crate) unsafe extern "thiscall" fn has_spare_non_player_record(this: usize) 
 ///
 /// [pt] O contrato da pessoa (0x4cf5a0, guardado em [0xae1080]) e, pelo clube dele (registro de 0x245 bytes pelo +4; sem
 /// contrato, 0), o contrato da pessoa com esse clube (0x4cf5f0), que a rotina devolve.
-pub(crate) unsafe fn contract_with_current_club(person: usize) -> usize {
+pub(crate) unsafe fn contract_with_current_club(person: Staff) -> usize {
     let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
     let club = if c != 0 { read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + contract::CLUB).wrapping_mul(club::SIZE)) } else { 0 };
@@ -1736,7 +1736,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_initial_retirement(_th
     if person.club_job() == 0 {
         return 0;
     }
-    let c2 = contract_with_current_club(person.addr());
+    let c2 = contract_with_current_club(person);
     let status = contract_status(c2);
     let age = (person.age() as i8);
     let j = person.player();
@@ -1833,7 +1833,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_initial_retirement(_th
 /// datas (sem nação-chave válida, set_dates_no_key_nation); devolve 1.
 pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usize, person: usize, out: usize) -> u8 {
     let person = Staff(person);
-    let c2 = contract_with_current_club(person.addr());
+    let c2 = contract_with_current_club(person);
     let status = contract_status(c2);
     let age = (person.age() as i8);
     let j = person.player();
@@ -2084,11 +2084,11 @@ pub(crate) unsafe extern "thiscall" fn find_new_retirements(this: usize) {
 /// pode ser dirigido (0x544820), a vaga abre (0x69ba50); 6 auxiliar (+0xd3); 8 e 15 as cinco de +0x19f, depois da
 /// distribuição dos treinadores do clube humano (0x600a50 com 1, 1; 0x8b2880 com 0); 9 as sete de +0x1b3 e, no
 /// clube humano, +`campo` = 0 e as listas dos olheiros do técnico (0x7f7270); 10 as três de +0x1cf.
-pub(crate) unsafe fn leave_job_slot(person: usize, c: Club, job: i8, field: usize) {
+pub(crate) unsafe fn leave_job_slot(person: Staff, c: Club, job: i8, field: usize) {
     let clear = |base: usize, n: usize| {
         for k in 0..n {
             let a = c.addr() + base + 4 * k;
-            if read_usize(a) == person {
+            if read_usize(a) == person.addr() {
                 zero_dword(a);
             }
         }
@@ -2100,11 +2100,11 @@ pub(crate) unsafe fn leave_job_slot(person: usize, c: Club, job: i8, field: usiz
         1 => zero_dword(c.addr() + club::CHAIRMAN),
         2 => clear(0xc3, 3),
         5 | 12 => {
-            if c.manager().addr() != person {
+            if c.manager().addr() != person.addr() {
                 return;
             }
             crate::comparison::branch("cpr_9 manager");
-            if job == 5 && (read_usize(person) as i32) >= (read_usize(G_STAFF_COUNT) as i32).wrapping_sub(0x10) {
+            if job == 5 && (read_usize(person.addr()) as i32) >= (read_usize(G_STAFF_COUNT) as i32).wrapping_sub(0x10) {
                 exe::transfer_manager_cancel_club_offers(read_usize(G_TRANSFER_MANAGER), c);
             }
             exe::manager_manager_remove_club_manager(read_usize(G_MANAGER_MANAGER), c, 3, 0, 0);
@@ -2123,7 +2123,7 @@ pub(crate) unsafe fn leave_job_slot(person: usize, c: Club, job: i8, field: usiz
         9 => {
             clear(0x1b3, 7);
             if human() {
-                zero_dword(person + field);
+                zero_dword(person.addr() + field);
                 let lists: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_SCOUT_MANAGER_SYNC_SCOUT_LISTS);
                 lists(read_usize(G_SCOUT_MANAGER), c.manager().addr());
             }
@@ -2144,12 +2144,12 @@ pub(crate) unsafe extern "stdcall" fn player_regen_retire_from_non_playing_staff
     let person = Staff(person);
     let c = person.club_job();
     if c != 0 {
-        leave_job_slot(person.addr(), Club(c), (person.job_for_club() as i8), 0x39);
+        leave_job_slot(person, Club(c), (person.job_for_club() as i8), 0x39);
         zero_dword(person.addr() + staff::CLUB_JOB);
     }
     let s = person.national_job();
     if s != 0 {
-        leave_job_slot(person.addr(), Club(s), (person.job_for_nation() as i8), 0x24);
+        leave_job_slot(person, Club(s), (person.job_for_nation() as i8), 0x24);
         zero_dword(person.addr() + staff::NATIONAL_JOB);
     }
     person.set_job_for_club(0);
@@ -2344,11 +2344,11 @@ pub(crate) unsafe extern "C" fn player_regen_compare_queue_entries(a: usize, b: 
 /// [pt] Tira a pessoa `p` do time em `p + campo` (+0x39 o clube, +0x24 a seleção): a tática (0x896c60 de [0xde1d08], com 0
 /// e depois com 1 no 3º argumento) e a primeira das 50 vagas (+0xd7) com ela, que esvazia. O time é relido depois de
 /// cada chamada, como na original.
-pub(crate) unsafe fn remove_from_team(p: usize, field: usize) {
-    exe::tactics_remove_player_from_selection(read_usize(G_TACTICS), read_usize(p + field), p, 0, 1);
-    exe::tactics_remove_player_from_selection(read_usize(G_TACTICS), read_usize(p + field), p, 1, 1);
-    let team = Club(read_usize(p + field));
-    if let Some(k) = (0..0x32usize).find(|&k| read_usize(team.addr() + club::SQUAD + 4 * k) == p) {
+pub(crate) unsafe fn remove_from_team(p: Staff, field: usize) {
+    exe::tactics_remove_player_from_selection(read_usize(G_TACTICS), read_usize(p.addr() + field), p, 0, 1);
+    exe::tactics_remove_player_from_selection(read_usize(G_TACTICS), read_usize(p.addr() + field), p, 1, 1);
+    let team = Club(read_usize(p.addr() + field));
+    if let Some(k) = (0..0x32usize).find(|&k| read_usize(team.addr() + club::SQUAD + 4 * k) == p.addr()) {
         core::ptr::write_unaligned((team.addr() + club::SQUAD + 4 * k) as *mut usize, 0);
     }
 }
@@ -2382,10 +2382,10 @@ pub(crate) unsafe fn format_already_retired(p: Staff) {
 pub(crate) unsafe extern "stdcall" fn retire_from_playing_staff(p: usize) {
     let p = Staff(p);
     if p.club_job() != 0 {
-        remove_from_team(p.addr(), 0x39);
+        remove_from_team(p, 0x39);
     }
     if p.national_job() != 0 {
-        remove_from_team(p.addr(), 0x24);
+        remove_from_team(p, 0x24);
     }
     let stays_in_club = match (p.job_for_club() as i8) as i32 {
         0 => false,
@@ -2803,7 +2803,7 @@ pub(crate) unsafe extern "thiscall" fn remove_retirement(this: usize, key: usize
 /// Is the person on the shortlist (`is_on_shortlist` on the shortlist manager [[0xde1f54]+0x856], no club)?
 ///
 /// [pt] Está na lista de observados (0x842080 no gerente da lista [[0xde1f54]+0x856], sem clube)?
-pub(crate) unsafe fn player_regen_is_on_shortlist(person: usize) -> bool {
+pub(crate) unsafe fn player_regen_is_on_shortlist(person: Staff) -> bool {
     exe::shortlist_manager_is_on_shortlist(read_u32(read_u32(G_TRANSFER_MANAGER) as usize + 0x856) as usize, person, 0) != 0
 }
 
@@ -2827,7 +2827,7 @@ pub(crate) unsafe fn player_regen_is_on_shortlist(person: usize) -> bool {
 pub(crate) unsafe extern "stdcall" fn player_regen_check_unemployed_retirement(person: usize, out: usize) -> u8 {
     let person = Staff(person);
     let mut without_record = false;
-    if player_regen_is_on_shortlist(person.addr()) {
+    if player_regen_is_on_shortlist(person) {
         return 0;
     }
     let manager = (person.non_player() as u32) as usize;
@@ -2842,7 +2842,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_check_unemployed_retirement(p
     } else if (person.player() as u32) == 0 {
         false
     } else {
-        if player_regen_is_on_shortlist(person.addr()) {
+        if player_regen_is_on_shortlist(person) {
             return 0;
         }
         if (person.club_job() as u32) != 0 || (person.national_job() as u32) != 0 {

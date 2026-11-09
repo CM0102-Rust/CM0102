@@ -106,10 +106,10 @@ pub(crate) static mut ARCHIVE_STATS_CLUB_ID: i32 = -1;
 ///
 /// [pt] O nó do histórico (0x2b bytes montados na pilha): +0 o ano da temporada do clube (0x669950), +2 o clube (−1 sem),
 /// +6 os 32 bytes da categoria, +0x26 o valor, +0x2a o tipo (3 bits) e a categoria × 8.
-pub(crate) unsafe fn career_history_node(club: usize, data: Option<usize>, value: u32, mark: u8) -> [u8; 0x2b] {
+pub(crate) unsafe fn career_history_node(club: Club, data: Option<usize>, value: u32, mark: u8) -> [u8; 0x2b] {
     let mut r = [0u8; 0x2b];
     r[0..2].copy_from_slice(&exe::key_nation_get_club_season_year(club).to_le_bytes());
-    let id = if club == 0 { 0xffff_ffffu32 } else { read_usize(club) as u32 };
+    let id = if club.is_null() { 0xffff_ffffu32 } else { read_usize(club.addr()) as u32 };
     r[2..6].copy_from_slice(&id.to_le_bytes());
     if let Some(d) = data {
         core::ptr::copy_nonoverlapping(d as *const u8, r.as_mut_ptr().add(6), 32);
@@ -187,7 +187,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
             continue;
         }
         let data = read_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add((id as isize * 0x20) as usize);
-        let no = career_history_node(club.addr(), Some(data), value, (((cat + 1) as u8) << 3) | kind); // cqh8: the category and the node type
+        let no = career_history_node(club, Some(data), value, (((cat + 1) as u8) << 3) | kind); // cqh8: the category and the node type
         crate::comparison::branch("cqh_8 archived category");
         append_history_node(this, reg, &no);
         if cat == 5 {
@@ -223,7 +223,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
             exe::date_days_since(G_CURRENT_DATE, p.date_joined_club() as u32, read_usize(p.addr() + 0x42) as u32) < 0x16d
         };
         if write {
-            let no = career_history_node(club.addr(), None, value, 0x30 | kind); // cqh8: the empty node of the sixth category
+            let no = career_history_node(club, None, value, 0x30 | kind); // cqh8: the empty node of the sixth category
             crate::comparison::branch("cqh_8 on empty");
             append_history_node(this, reg, &no);
         }
@@ -1289,7 +1289,7 @@ pub(crate) unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, na
     let mut i = 0i32;
     while i < read_i32(G_CLUB_COUNT) {
         let club = Club(injury_club_by_index(i));
-        if injury_is_national_team(club.addr()) {
+        if injury_is_national_team(club) {
             break; // the first national team ends it
         }
         let k = (exe::key_nation_index_of_club(club) as i8) as isize; // only al

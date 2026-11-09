@@ -16,6 +16,6 @@ MUTACOES = [
     ('i_forma', "            if form < 0x17 {\n                let m1", "            if form < 0x18 {\n                let m1", "prematch form down"),
     ('i_alta', "            } else if form > 0x20 {", "            } else if form > 0x1f {", "prematch form up"),
     ('i_contrato', "                let r = random(200) + 0x32;", "                let r = random(200) + 0x33;", "prematch end of contract"),
-    ('i_insatisfeito', "                push_prematch_event(m, f.addr(), club.addr(), 0, 0, k as u8, 0x13);", "                push_prematch_event(m, f.addr(), club.addr(), 0, 0, k as u8, 0x14);", "prematch unhappy"),
+    ('i_insatisfeito', "                push_prematch_event(m, f, club, 0, 0, k as u8, 0x13);", "                push_prematch_event(m, f, club, 0, 0, k as u8, 0x14);", "prematch unhappy"),
     ('i_marcador', "    *w(engine::LAST_SHOT_MINUTE) = 0xffff;", "    *w(engine::LAST_SHOT_MINUTE) = 0;"),
 ]

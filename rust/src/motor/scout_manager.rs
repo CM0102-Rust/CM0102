@@ -1039,7 +1039,7 @@ pub(crate) unsafe extern "thiscall" fn sync_scout_lists(this: usize, manager: us
     }
     let club = m.club_job();
     for i in 0..10u8 {
-        let l = get_search(this, i, m.addr());
+        let l = get_search(this, i, m);
         if l == 0 || read_u8(l + 0xa) != 4 {
             continue;
         }
@@ -1062,7 +1062,7 @@ pub(crate) unsafe extern "thiscall" fn sync_scout_lists(this: usize, manager: us
             let mut free: i8 = -1;
             let mut has = false;
             for i in 0..10u8 {
-                let l = get_search(this, i, m.addr());
+                let l = get_search(this, i, m);
                 if l == 0 || read_u8(l + 0xa) != 4 {
                     continue;
                 }
@@ -1076,7 +1076,7 @@ pub(crate) unsafe extern "thiscall" fn sync_scout_lists(this: usize, manager: us
             }
             if !has && free > -1 {
                 crate::comparison::branch("cqa_6 scout in the free list");
-                set_search_scout(get_search(this, free as u8, m.addr()), s);
+                set_search_scout(get_search(this, free as u8, m), s);
             }
         }
     }

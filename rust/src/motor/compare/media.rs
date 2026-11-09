@@ -36,7 +36,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_squad_reaction_to_player_st
     reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
     if !club.is_null() && player != 0 {
         reg.push((club.addr() + club::FAV_STAFF1, 24));
-        reg.extend(contract_region(player, club.addr()));
+        reg.extend(contract_region(player, club));
         for &p in club_staff_vector(club, &mut |r, t, a| dispatch_post_match_call(r, t, a)).iter().take(57) {
             if p == 0 {
                 continue;
@@ -46,7 +46,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_squad_reaction_to_player_st
                 reg.push((pref + preferences::STAFF_FAVOURITE_STAFF1, 24));
             }
             reg.push((p + staff::DETERMINATION, 6));
-            reg.extend(contract_region(p, club.addr()));
+            reg.extend(contract_region(p, club));
         }
     }
     compare_pos("apply_squad_reaction_to_player_story", reg, || o(this, topic, player, club.addr(), ids, n),
@@ -67,7 +67,7 @@ pub(crate) unsafe extern "thiscall" fn compare_warn_squad_of_position_rival(this
             let p = Staff(read_usize(club.addr() + club::SQUAD + 4 * i));
             if !p.is_null() {
                 reg.push((p.addr() + staff::DETERMINATION, 6));
-                reg.extend(contract_region(p.addr(), club.addr()));
+                reg.extend(contract_region(p.addr(), club));
             }
         }
     }
@@ -113,7 +113,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_transfer_squad_reactions(
         if m == 0 {
             return;
         }
-        let c = media_contract_for_club(m, club);
+        let c = media_contract_for_club(m, Club(club));
         if c != 0 {
             reg.push((c, 0x50));
         }
@@ -184,12 +184,12 @@ pub(crate) unsafe extern "thiscall" fn compare_adjust_supporter_confidence(this:
     if club == 0 {
         return o(this, club, sujeito, topic, target, variant);
     }
-    let p = manager_manager_row(club) + 8;
+    let p = manager_manager_row(Club(club)) + 8;
     let before = read_i16(p);
     let v = fan_confidence_change(Club(club), target);
     let expected = before.wrapping_add(v).clamp(1, 10000);
     o(this, club, sujeito, topic, target, variant);
-    let after = read_i16(manager_manager_row(club) + 8);
+    let after = read_i16(manager_manager_row(Club(club)) + 8);
     SCOREBOARD.record(after == expected, || format!("adjust_supporter_confidence(clube {:x}, alvo {}) {} + {} = {} x original {}", club, target as i16, before, v, expected, after));
 }
 
@@ -201,12 +201,12 @@ pub(crate) unsafe extern "thiscall" fn compare_adjust_board_confidence(this: usi
     if club == 0 {
         return o(this, club, sujeito, topic, target, variant, sexto);
     }
-    let p = manager_manager_row(club) + 6;
+    let p = manager_manager_row(Club(club)) + 6;
     let before = read_i16(p);
     let v = board_confidence_change(Club(club), target);
     let expected = before.wrapping_add(v).clamp(1, 10000);
     o(this, club, sujeito, topic, target, variant, sexto);
-    let after = read_i16(manager_manager_row(club) + 6);
+    let after = read_i16(manager_manager_row(Club(club)) + 6);
     SCOREBOARD.record(after == expected, || format!("adjust_board_confidence(clube {:x}, alvo {}) {} + {} = {} x original {}", club, target as i32, before, v, expected, after));
 }
 

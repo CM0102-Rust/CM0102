@@ -24,7 +24,7 @@ pub(crate) unsafe extern "thiscall" fn compare_england_rules_can_loan_player(thi
 pub(crate) unsafe extern "thiscall" fn compare_record_loan(this: usize, offer: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_RECORD_LOAN);
     let club = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(offer + 8).wrapping_mul(club::SIZE));
-    let regions = [(season_loans_entry(club), 1usize)];
+    let regions = [(season_loans_entry(Club(club)), 1usize)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, offer), || record_loan(this, offer));
     SCOREBOARD.record(igual, || format!("record_loan(oferta {:#x}) original={:x?} rust={:x?}", offer, mo, mr));
 }

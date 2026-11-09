@@ -2,7 +2,7 @@ r"""Compiles, one by one, the mutations whose text changed since a commit (09/11
 code also edits the mutation lists, and a replacement that names something gone (an alias, a closure) only fails
 when the mutation test runs, hours later. Each changed mutation is applied to the bench copy's source, `cargo check`
 runs, and the source is put back. Sync the bench first (`bancada.py sincronizar K`).
-Usage: python compilar_mutacoes.py [--desde COMMIT (default HEAD)] [--bancada K (default 3)]
+Usage: python compilar_mutacoes.py [--desde COMMIT (default HEAD) | --lista FILE.json] [--bancada K (default 3)]
 [pt] Compila uma a uma, numa bancada, as mutações cujo texto mudou desde um commit (aplica, `cargo check`, desfaz).
 """
 import os
@@ -41,6 +41,24 @@ def main():
         finally:
             os.chdir(cwd)
         alvo += [(f, m) for m in ms if antes.get((f, m[0])) != m]
+    if '--lista' in sys.argv:
+        # an explicit list (JSON [[file, mutation name, ...], ...]): e.g. mutations whose replacement calls a function
+        # whose signature changed, though their own text did not change
+        import json
+        pedidas = {(os.path.join('engenharia-reversa', 'mutacoes', x[0]).replace(os.sep, '/'), x[1]) for x in json.load(open(arg('--lista', ''), encoding='utf-8'))}
+        alvo = []
+        for f in sorted(os.listdir(pasta)):
+            if not f.endswith('.py'):
+                continue
+            cwd = os.getcwd()
+            os.chdir(os.path.join(R, 'engenharia-reversa'))
+            try:
+                ms = runpy.run_path(os.path.join(pasta, f)).get('MUTACOES', [])
+            except Exception:
+                ms = []
+            finally:
+                os.chdir(cwd)
+            alvo += [('engenharia-reversa/mutacoes/' + f, m) for m in ms if ('engenharia-reversa/mutacoes/' + f, m[0]) in pedidas]
     print(len(alvo), 'mutações mudadas', flush=True)
     src = [os.path.join(dp, y) for dp, _, x in os.walk(os.path.join(banco, 'rust', 'src')) for y in x if y.endswith('.rs')]
     ruins = 0

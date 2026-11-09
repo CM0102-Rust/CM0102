@@ -21,7 +21,7 @@ MUTACOES = [
     ('cpx9_vaga_fica', '            write_u32(slot, u32::MAX); // cpx9: the place stays empty', '            let _ = slot; // mutacao: a vaga fica com a pessoa', 'cpx_9 tirou titular'),
     ('cpx9_so_titulares', '    for k in 0..20usize { // cpx9: the line-up slots', '    for k in 0..11usize { // mutacao: so os titulares', 'cpx_9 tirou reserva'),
     ('cpx9_so_reservas', '    for k in 0..20usize { // cpx9: the line-up slots', '    for k in 11..20usize { // mutacao: so os reservas', 'cpx_9 tirou titular'),
-    ('cpx10_sem_data', '    exe::date_operator_3d(board_row_of(this, club.addr()) + 0x18, data.as_mut_ptr() as usize, G_CURRENT_DATE); // cpx10: the news date in the row', '    let _ = data; // mutacao: sem a data', 'cpx_10 data da pressao'),
+    ('cpx10_sem_data', '    exe::date_operator_3d(board_row_of(this, club) + 0x18, data.as_mut_ptr() as usize, G_CURRENT_DATE); // cpx10: the news date in the row', '    let _ = data; // mutacao: sem a data', 'cpx_10 data da pressao'),
     ('cpx10_boato_sem_sorteio', '    let mut boato = friendly_random(10); // cpx10: the rumour random draw', '    let mut boato = 0; // mutacao: sem o sorteio', 'cpx_10 rumour draw'),
     ('cpx10_limite_400', '    let reason: i8 = if (read_i16(l + board_record::CONFIDENCE_2) as i32) < read_i16(l + board_record::CONFIDENCE) as i32 - 500 /* cpx10: o limit pela avaliação +8 */ && {', '    let reason: i8 = if (read_i16(l + board_record::CONFIDENCE_2) as i32) < read_i16(l + board_record::CONFIDENCE) as i32 - 400 /* mutacao: o limit a 400 */ && {', 'cpx_10 reason by evaluation'),
     ('cpx11_sem_premio', 'exe::finance_add_prize_money(fin, value); // cpx11: o prêmio', 'let _ = fin; // mutacao: sem premio', 'cpx_11 bonus paid'),

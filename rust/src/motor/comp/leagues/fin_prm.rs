@@ -12,7 +12,7 @@ pub(crate) unsafe fn charge_expense(fin: usize, month: usize, year: usize, v: i3
 /// Calls FN_HUMAN_MANAGER_IS_HUMAN_CLUB (`exe::human_manager_is_human_club`) with (club, 0, 1, 0, 0).
 ///
 /// [pt] O clube humano (0x600a50: 5 pushes; add esp, 0x14 -> cdecl(clube, 0, 1, 0, 0)).
-pub(crate) unsafe fn fin_prm_is_human_club(club: usize) -> u32 {
+pub(crate) unsafe fn fin_prm_is_human_club(club: Club) -> u32 {
     exe::human_manager_is_human_club(club, 0, 1, 0, 0)
 }
 
@@ -21,9 +21,9 @@ pub(crate) unsafe fn fin_prm_is_human_club(club: usize) -> u32 {
 ///
 /// [pt] O registro de finanças do clube (0x167 bytes) pelo parceiro: 0x540a50 (3 pushes; add esp, 0xc -> cdecl(clube, &a,
 /// 1)); o parceiro quando ele existe e o clube é o B (a = 0). `a` é a local da original (a 0x540a50 a grava).
-pub(crate) unsafe fn finance_of_parent_club(this: usize, club: usize, a: &mut u32) -> usize {
+pub(crate) unsafe fn finance_of_parent_club(this: usize, club: Club, a: &mut u32) -> usize {
     let p = exe::club_get_linked_b_team(club, a, 1);
-    let c = if p != 0 && *a == 0 { p } else { club };
+    let c = if p != 0 && *a == 0 { p } else { club.addr() };
     read_usize(this).wrapping_add((read_i32(c) as u32).wrapping_mul(0x167) as usize)
 }
 
@@ -31,7 +31,7 @@ pub(crate) unsafe fn finance_of_parent_club(this: usize, club: usize, a: &mut u3
 ///
 /// [pt] A notícia das obras e do treino (0x59ffb0: ecx = tabela; 3 pushes (tipo, valor, clube); sem add esp -> thiscall,
 /// ret 0xc).
-pub(crate) unsafe fn post_works_news(this: usize, club: usize, value: i32, kind: i32) {
+pub(crate) unsafe fn post_works_news(this: usize, club: Club, value: i32, kind: i32) {
     exe::finance_post_stadium_works_news(this, club, value, kind);
 }
 
@@ -39,7 +39,7 @@ pub(crate) unsafe fn post_works_news(this: usize, club: usize, value: i32, kind:
 ///
 /// [pt] A notícia da obra recusada (0x59fae0: ecx = tabela; 3 pushes; sem add esp -> thiscall, ret 0xc; sorteia 2 fora do
 /// motivo 2).
-pub(crate) unsafe fn post_works_refused_news(this: usize, club: usize, subject: i32, reason: i32) {
+pub(crate) unsafe fn post_works_refused_news(this: usize, club: Club, subject: i32, reason: i32) {
     exe::finance_post_works_cancelled_news(this, club, subject, reason);
 }
 
@@ -48,8 +48,8 @@ pub(crate) unsafe fn post_works_refused_news(this: usize, club: usize, subject: 
 ///
 /// [pt] A linha do clube na tabela dos técnicos ([[0xb67a44]] + id × 0x49); o byte +2 tem os pedidos à diretoria (bit 6:
 /// estádio; bit 7: centro de treino).
-pub(crate) unsafe fn board_requests_row(club: usize) -> usize {
-    read_usize(read_usize(G_MANAGER_MANAGER)).wrapping_add((read_i32(club) as u32).wrapping_mul(0x49) as usize)
+pub(crate) unsafe fn board_requests_row(club: Club) -> usize {
+    read_usize(read_usize(G_MANAGER_MANAGER)).wrapping_add((read_i32(club.addr()) as u32).wrapping_mul(0x49) as usize)
 }
 
 /// True if the club's manager (club::MANAGER) is one of the 16 human managers.
@@ -180,7 +180,7 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club_
     }
     let mut local = 0u32; // the original’s [esp + 0x20] (the owner’s 0x540a50 and the average attendance)
     let mut a = 0u32;
-    let fin = Finance(finance_of_parent_club(this, club.addr(), &mut a));
+    let fin = Finance(finance_of_parent_club(this, club, &mut a));
     if fin.is_null() {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEASON_END_CLUB_UPDATE)(this, club.addr()); // a caixa
     }
@@ -208,11 +208,11 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club_
                 k += 1;
                 other = Club(other.addr() + club::SIZE);
             }
-            let owner_fin = if !owner.is_null() { Finance(finance_of_parent_club(this, owner.addr(), &mut local)) } else { Finance(0) };
+            let owner_fin = if !owner.is_null() { Finance(finance_of_parent_club(this, owner, &mut local)) } else { Finance(0) };
             if owner.is_null() || owner_fin.is_null() {
                 club.set_own_stadium(1);
                 charge_expense(fin.addr(), finance::MONTH_GROUND_COSTS, finance::SEASON_GROUND_COSTS, 20_000_000);
-                post_works_news(this, club.addr(), read_i32(club.stadium().addr()), 4);
+                post_works_news(this, club, read_i32(club.stadium().addr()), 4);
             } else if owner_fin.crisis_state() == 1 || owner_fin.crisis_state() == 2 {
                 club.set_own_stadium(1);
                 owner.set_own_stadium(0);
@@ -220,8 +220,8 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club_
                 owner_fin.set_month_other_income(owner_fin.month_other_income().wrapping_add(20_000_000));
                 owner_fin.set_season_other_income(owner_fin.season_other_income().wrapping_add(20_000_000));
                 owner_fin.set_balance(owner_fin.balance().wrapping_add(20_000_000));
-                post_works_news(this, club.addr(), read_i32(club.stadium().addr()), 4);
-                post_works_news(this, owner.addr(), read_i32(club.stadium().addr()), 5);
+                post_works_news(this, club, read_i32(club.stadium().addr()), 4);
+                post_works_news(this, owner, read_i32(club.stadium().addr()), 5);
             }
             break 'works;
         }
@@ -237,8 +237,8 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club_
             fin.set_balance(fin.balance().wrapping_sub(v as i64));
         }
         upgrade_ai_training_ground(this, club, cash);
-        let requests = board_requests_row(club.addr()) + 2;
-        if read_u8(requests) & 0x40 != 0 && fin_prm_is_human_club(club.addr()) != 0 {
+        let requests = board_requests_row(club) + 2;
+        if read_u8(requests) & 0x40 != 0 && fin_prm_is_human_club(club) != 0 {
             asked = true;
             *(requests as *mut u8) &= 0xbf;
         }
@@ -247,7 +247,7 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club_
             if cash > 0x10b0760 && club.reputation() > 0x1d4c && ground.capacity() > 0x61a8 && ground.under_soil_heating() == 0 {
                 ground.set_under_soil_heating(1);
                 charge_expense(fin.addr(), finance::MONTH_GROUND_COSTS, finance::SEASON_GROUND_COSTS, 1_500_000);
-                post_works_news(this, club.addr(), read_i32(club.stadium().addr()), 6);
+                post_works_news(this, club, read_i32(club.stadium().addr()), 6);
                 break 'works;
             }
             if cash > 0x47868c0 && club.reputation() > 0x2422 && ground.capacity() > 0xe09c && club.training() as u8 == 0x14 && ground.covered() == 0 {
@@ -256,10 +256,10 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club_
                 break 'works;
             }
         }
-        let can = cash > 0x501bd0 || (fin_prm_is_human_club(club.addr()) != 0 && cash.wrapping_add((club.reputation() as i32).wrapping_mul(1000)) > 0x501bd0);
+        let can = cash > 0x501bd0 || (fin_prm_is_human_club(club) != 0 && cash.wrapping_add((club.reputation() as i32).wrapping_mul(1000)) > 0x501bd0);
         if !can {
             if asked {
-                post_works_refused_news(this, club.addr(), 2, -1);
+                post_works_refused_news(this, club, 2, -1);
             }
             break 'works;
         }
@@ -301,7 +301,7 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club_
                     break 'works;
                 }
                 ground.set_expansion_capacity(ground.expansion_capacity().wrapping_add(0x5dc));
-                post_works_refused_news(this, club.addr(), 2, 2);
+                post_works_refused_news(this, club, 2, 2);
                 break 'works;
             }
             let v = v as i16 as i32;
@@ -310,7 +310,7 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club_
             s.set_seating_capacity(s.seating_capacity().wrapping_add(v));
             crate::comparison::branch("cqc_1 seats");
             charge_expense(fin.addr(), finance::MONTH_GROUND_COSTS, finance::SEASON_GROUND_COSTS, (v / 1000 + 1).wrapping_mul(50000).wrapping_add(v.wrapping_mul(75))); // cqc1: os lugares sentados
-            post_works_news(this, club.addr(), v, 3);
+            post_works_news(this, club, v, 3);
             break 'works;
         }
         let amateur = club.professional_status() == 1;
@@ -341,7 +341,7 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club_
                 ground.set_expansion_capacity(ground.expansion_capacity().wrapping_add(0x5dc));
             }
             if asked {
-                post_works_refused_news(this, club.addr(), 2, 2);
+                post_works_refused_news(this, club, 2, 2);
             }
             break 'works;
         }
@@ -351,21 +351,21 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club_
             let s = club.stadium();
             s.set_seating_capacity(s.seating_capacity().wrapping_add(n));
             charge_expense(fin.addr(), finance::MONTH_GROUND_COSTS, finance::SEASON_GROUND_COSTS, (n / 1000 + 1).wrapping_mul(6000).wrapping_add(n).wrapping_mul(125));
-            post_works_news(this, club.addr(), n, 1);
+            post_works_news(this, club, n, 1);
         } else {
             charge_expense(fin.addr(), finance::MONTH_GROUND_COSTS, finance::SEASON_GROUND_COSTS, n.wrapping_add((n / 1000 + 1).wrapping_mul(1000)).wrapping_mul(50));
-            post_works_news(this, club.addr(), n, 2);
+            post_works_news(this, club, n, 2);
         }
     }
-    let requests = board_requests_row(club.addr()) + 2;
+    let requests = board_requests_row(club) + 2;
     if read_u8(requests) & 0x80 != 0 {
         if cash > (500 - club.reputation() as i32).wrapping_mul(500) {
             exe::financetable_upgrade_training_facilities(this, club);
-            post_works_news(this, club.addr(), -1, 8);
+            post_works_news(this, club, -1, 8);
         } else {
-            post_works_refused_news(this, club.addr(), 8, -1);
+            post_works_refused_news(this, club, 8, -1);
         }
-        *((board_requests_row(club.addr()) + 2) as *mut u8) &= 0x7f;
+        *((board_requests_row(club) + 2) as *mut u8) &= 0x7f;
     }
     pay_dividend(this, club, fin.addr());
 }
@@ -380,7 +380,7 @@ pub(crate) unsafe fn upgrade_ai_training_ground(this: usize, club: Club, goal_di
     if manager.is_null() || club.reputation() == 0 || (club.training() as u8) as i8 >= 0x14 || manager.non_player() == 0 {
         return;
     }
-    if fin_prm_is_human_club(club.addr()) != 0 {
+    if fin_prm_is_human_club(club) != 0 {
         return;
     }
     let q = ((club.reputation() as i32) / 500) as i8 as i32 + 8;
@@ -497,7 +497,7 @@ pub(crate) unsafe fn mul_exe_f64(v: i32, k: usize) -> i32 {
 /// Calls FN_HUMAN_MANAGER_IS_HUMAN_CLUB (`exe::human_manager_is_human_club`) with (club, a, 1, 0, 0) (passes argument a as the second parameter).
 ///
 /// [pt] O clube humano (0x600a50: 5 pushes; add esp, 0x14 -> cdecl(clube, a, 1, 0, 0)).
-pub(crate) unsafe fn is_human_club_with(club: usize, a: u32) -> u32 {
+pub(crate) unsafe fn is_human_club_with(club: Club, a: u32) -> u32 {
     exe::human_manager_is_human_club(club, a, 1, 0, 0)
 }
 
@@ -511,7 +511,7 @@ pub(crate) unsafe fn fin_prm_is_national_team(club: usize) -> bool {
 /// Person's contract wage via CONTRACT_MANAGER (`contract_value`, FN_CONTRACT_MANAGER_GET_WAGE), signed.
 ///
 /// [pt] O valor do contrato da pessoa (0x4d0c20: mov ecx, [0xae1050]; push pessoa -> thiscall, ret 4), com sinal.
-pub(crate) unsafe fn contract_wage(person: usize) -> i32 {
+pub(crate) unsafe fn contract_wage(person: Staff) -> i32 {
     exe::contract_manager_get_wage(read_usize(G_CONTRACT_MANAGER), person) as i32
 }
 
@@ -663,7 +663,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
     if (di as i16) > 0xd2 {
         di = 0xd2;
     }
-    let human = is_human_club_with(club.addr(), 0);
+    let human = is_human_club_with(club, 0);
     if human != 0 && job == 0xff {
         contract = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club);
         if contract != 0 {
@@ -675,7 +675,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
     if !person.is_null() {
         r = 0;
         if person.club_job() == club.addr() {
-            r = contract_wage(person.addr());
+            r = contract_wage(person);
             let t = read_i32(fin + finance::WAGE_CEILING).wrapping_mul(2);
             if r > t {
                 r = t;
@@ -794,12 +794,12 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
     if !person.is_null() {
         let repf = rep as i32 as f64;
         let t = repf * repf * factor * read_f64(rdata::F64_0_0001) + read_i32(fin + finance::HIGHEST_WAGE) as f64;
-        let v = contract_wage(person.addr());
+        let v = contract_wage(person);
         s = if (v as f64) < t {
             crate::comparison::branch("cqc_2 ceiling by injury_word_0c");
             ftol(repf * repf * factor * read_f64(rdata::F64_0_0001) + read_i32(fin + finance::HIGHEST_WAGE) as f64) // cqc2: reputation squared;
         } else {
-            contract_wage(person.addr())
+            contract_wage(person)
         };
         let np = person.player();
         let c = job as i8;
@@ -809,18 +809,18 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
                 let bf = b20 as f64;
                 let lim = bf * read_f64(rdata::F64_0_8);
                 if (r as f64) < lim {
-                    r = if is_human_club_with(club.addr(), 0) == 0 && np2() != 0 && read_i16(np2() + 0xb) > 0x1c52 { ftol(bf * read_f64(rdata::F64_0_9)) } else { ftol(lim) };
+                    r = if is_human_club_with(club, 0) == 0 && np2() != 0 && read_i16(np2() + 0xb) > 0x1c52 { ftol(bf * read_f64(rdata::F64_0_9)) } else { ftol(lim) };
                 }
             } else if c == 2 {
                 let lim = b20 as f64 * read_f64(rdata::F64_0_9);
                 if (r as f64) < lim {
-                    r = if is_human_club_with(club.addr(), 0) == 0 && np2() != 0 && read_i16(np2() + 0xb) > 0x1e46 { b20 } else { ftol(lim) };
+                    r = if is_human_club_with(club, 0) == 0 && np2() != 0 && read_i16(np2() + 0xb) > 0x1e46 { b20 } else { ftol(lim) };
                 }
             } else if r < b20 {
                 r = b20;
             }
         }
-        if is_human_club_with(club.addr(), 0) != 0 {
+        if is_human_club_with(club, 0) != 0 {
             let np = person.player();
             if np != 0 {
                 let ceiling = human_manager_wage_cap(person, np, job as i8);
@@ -935,11 +935,11 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
             match c {
                 1 => s = mul_exe_f64(s, 0x968928),
                 2 => {
-                    if is_human_club_with(club.addr(), 1) == 0 && read_i16(np + player_sheet::CURRENT_REPUTATION) > 0x1a5e {
+                    if is_human_club_with(club, 1) == 0 && read_i16(np + player_sheet::CURRENT_REPUTATION) > 0x1a5e {
                         s = mul_exe_f64(s, 0x968928);
                     } else {
                         s = ftol(s as f64);
-                        let ok = is_human_club_with(club.addr(), 1) != 0 || {
+                        let ok = is_human_club_with(club, 1) != 0 || {
                             let np = person.player();
                             np != 0 && read_i16(np + player_sheet::CURRENT_REPUTATION) < 0x1e46
                         };
@@ -949,7 +949,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
                     }
                 }
                 3 => {
-                    if is_human_club_with(club.addr(), 1) == 0 && read_i16(np + player_sheet::CURRENT_REPUTATION) > 0x1a5e {
+                    if is_human_club_with(club, 1) == 0 && read_i16(np + player_sheet::CURRENT_REPUTATION) > 0x1a5e {
                         s = mul_exe_f64(s, 0x968928);
                     } else {
                         s = mul_exe_f64(s, 0x9689d0);
@@ -959,7 +959,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
                     }
                 }
                 4 => {
-                    let k = if is_human_club_with(club.addr(), 1) == 0 && read_i16(np + player_sheet::CURRENT_REPUTATION) > 0x1a5e { 0x9689d0 } else { 0x969040 };
+                    let k = if is_human_club_with(club, 1) == 0 && read_i16(np + player_sheet::CURRENT_REPUTATION) > 0x1a5e { 0x9689d0 } else { 0x969040 };
                     s = mul_exe_f64(s, k);
                     if s > 0x927c {
                         s = 0x927c;
@@ -1648,7 +1648,7 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
         if club.plc() == 0 && club.reputation() > 0x128e && friendly_random(4) == 0
             && (!with_sheet || (nation != 0 && read_i32(nation) != read_i32(KEY_NATION_ITALY)))
         {
-            post_finance_boost_news(this, club.addr(), value, budget as u32, 7);
+            post_finance_boost_news(this, club, value, budget as u32, 7);
             club.set_plc(1);
             kind = 7;
         } else {
@@ -1656,7 +1656,7 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
         }
     }
     if kind != 7 {
-        post_finance_boost_news(this, club.addr(), value, budget as u32, kind);
+        post_finance_boost_news(this, club, value, budget as u32, kind);
     }
     if with_sheet {
         let f = read_usize(club.chairman().addr() + 0x69);
@@ -1796,7 +1796,7 @@ pub(crate) unsafe extern "thiscall" fn try_board_takeover(this: usize, club: usi
             }
         }
     }
-    post_finance_boost_news(this, club.addr(), v, budget, 2);
+    post_finance_boost_news(this, club, v, budget, 2);
     *((fin + finance::CRISIS_STATE) as *mut u8) = 0;
     1
 }
@@ -2168,8 +2168,8 @@ pub(crate) unsafe fn add_i32_to_balance(fin: usize, v: i32) {
 /// Returns the club's finance record (0x167 bytes) in FinanceTable this: [this] + club id × 0x167.
 ///
 /// [pt] O registro de finanças (0x167 bytes) do clube na tabela `this` (FinanceTable), pelo id (+0) do clube.
-pub(crate) unsafe fn fin_prm_club_finance(this: usize, club: usize) -> usize {
-    read_usize(this).wrapping_add((read_usize(club) as u32).wrapping_mul(0x167) as usize)
+pub(crate) unsafe fn fin_prm_club_finance(this: usize, club: Club) -> usize {
+    read_usize(this).wrapping_add((read_usize(club.addr()) as u32).wrapping_mul(0x167) as usize)
 }
 
 /// Adds the weekly merchandising income: attendance × reputation × factor (by the stadium of the +0xbf club or by
@@ -2222,7 +2222,7 @@ pub(crate) unsafe extern "thiscall" fn add_weekly_merchandising_income(this: usi
     crate::comparison::branch("cpv_5 merchandising");
     let r = friendly_random(0xb); // cpv5: the merchandising random draw
     let v = ftol((r + 0x5f).wrapping_mul(base) as f64 * read_f64(rdata::F64_0_01));
-    let fin = fin_prm_club_finance(this, club.addr());
+    let fin = fin_prm_club_finance(this, club);
     add_to_i32(fin + 0x15c, v);
     add_to_i32(fin + 0xbc, v);
     add_i32_to_balance(fin, v);
@@ -2357,7 +2357,7 @@ pub(crate) unsafe extern "thiscall" fn sell_season_tickets(this: usize, apply: i
 /// Charges a works cost to the club's finance record (+0x8c, +0x12c and minus the balance).
 ///
 /// [pt] O custo da obra (+0x8c e +0x12c, menos no saldo) no registro de finanças do clube.
-pub(crate) unsafe fn charge_works_cost(this: usize, club: usize, cost: i32) {
+pub(crate) unsafe fn charge_works_cost(this: usize, club: Club, cost: i32) {
     let fin = fin_prm_club_finance(this, club);
     add_to_i32(fin + 0x12c, cost);
     add_to_i32(fin + 0x8c, cost);
@@ -2386,7 +2386,7 @@ pub(crate) unsafe extern "thiscall" fn upgrade_training_facilities(this: usize, 
     let level = (club.addr() + club::TRAINING) as *mut i8;
     let cost = (*level as i32).wrapping_mul(50000).wrapping_add(75000);
     *level = if *level < 0x13 { (*level).wrapping_add(2) } else { (*level).wrapping_add(1) };
-    charge_works_cost(this, club.addr(), cost);
+    charge_works_cost(this, club, cost);
     let n = *level;
     let rep = club.reputation();
     let second = if n < 0x14 && rep > 0x203a {
@@ -2413,7 +2413,7 @@ pub(crate) unsafe extern "thiscall" fn upgrade_training_facilities(this: usize, 
         None
     };
     if let Some(c) = second {
-        charge_works_cost(this, club.addr(), c);
+        charge_works_cost(this, club, c);
     }
     if *level > 0x14 {
         *level = 0x14;
@@ -2440,9 +2440,9 @@ pub(crate) unsafe fn wealth_band(fin: usize) -> i8 {
 /// Calls a weekly finance event routine (thiscall(table, club, finance)); returns 1 if it happened.
 ///
 /// [pt] Um evento da semana (0x59e050, 0x59dd40, 0x59e5a0, 0x59e940): thiscall(tabela, clube, finanças), 1 se aconteceu.
-pub(crate) unsafe fn run_weekly_event(routine: usize, this: usize, club: usize, fin: usize) -> u32 {
+pub(crate) unsafe fn run_weekly_event(routine: usize, this: usize, club: Club, fin: usize) -> u32 {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(routine);
-    f(this, club, fin)
+    f(this, club.addr(), fin)
 }
 
 /// The comparer's dry run: the copy runs without the news item (`exe::finance_post_finance_boost_news`) and without the funding (0x598800), which
@@ -2455,7 +2455,7 @@ pub(crate) static mut RARE_FINANCE_EVENT_DRY_RUN: bool = false;
 /// Posts the finance event news (FN_FINANCE_POST_FINANCE_BOOST_NEWS); nothing in rehearsal.
 ///
 /// [pt] A notícia do evento (0x59f300: thiscall(tabela, clube, valor, verba, tipo), ret 0x10); no ensaio, nada.
-pub(crate) unsafe fn post_finance_boost_news(this: usize, club: usize, value: i32, budget: u32, kind: u32) {
+pub(crate) unsafe fn post_finance_boost_news(this: usize, club: Club, value: i32, budget: u32, kind: u32) {
     if RARE_FINANCE_EVENT_DRY_RUN {
         return;
     }
@@ -2476,14 +2476,14 @@ pub(crate) unsafe fn transfer_budget(fin: usize) -> u32 {
 /// Posts the end-of-crisis news (`exe::finance_post_receivers_appeased_news`, receivers appeased) for the club id.
 ///
 /// [pt] O fim da semana do clube no estado de crise (0x5a02f0: thiscall(tabela, id)).
-pub(crate) unsafe fn post_receivers_appeased(this: usize, club: usize) {
-    exe::finance_post_receivers_appeased_news(this, read_usize(club) as u32);
+pub(crate) unsafe fn post_receivers_appeased(this: usize, club: Club) {
+    exe::finance_post_receivers_appeased_news(this, read_usize(club.addr()) as u32);
 }
 
 /// Resets the finance state (+0x165) to 0 from 1 or 2; from 1 (crisis) posts the end-of-crisis news first.
 ///
 /// [pt] O estado (+0x165) volta a 0; se era 1 (crise), a notícia do fim da crise (0x5a02f0) antes.
-pub(crate) unsafe fn leave_crisis(this: usize, club: usize, fin: usize) {
+pub(crate) unsafe fn leave_crisis(this: usize, club: Club, fin: usize) {
     let s = read_u8(fin + finance::CRISIS_STATE);
     if s == 1 {
         post_receivers_appeased(this, club);
@@ -2546,7 +2546,7 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
             let s = read_u8(fin + 0x165);
             if s != 2 {
                 if s == 1 {
-                    post_receivers_appeased(this, club.addr());
+                    post_receivers_appeased(this, club);
                 }
                 *((fin + 0x165) as *mut u8) = 2;
             }
@@ -2557,8 +2557,8 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
                 *aperto = (*aperto).wrapping_add(1);
             }
             decay_training_ground(club);
-            if run_weekly_event(0x59dd40, this, club.addr(), fin) == 0 && run_weekly_event(0x59e5a0, this, club.addr(), fin) == 0 {
-                run_weekly_event(0x59e940, this, club.addr(), fin);
+            if run_weekly_event(0x59dd40, this, club, fin) == 0 && run_weekly_event(0x59e5a0, this, club, fin) == 0 {
+                run_weekly_event(0x59e940, this, club, fin);
             }
         }
         -2 => {
@@ -2595,8 +2595,8 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
             if week == 0 {
                 return;
             }
-            if run_weekly_event(0x59e940, this, club.addr(), fin) == 0 && run_weekly_event(0x59e5a0, this, club.addr(), fin) == 0 {
-                run_weekly_event(0x59e050, this, club.addr(), fin);
+            if run_weekly_event(0x59e940, this, club, fin) == 0 && run_weekly_event(0x59e5a0, this, club, fin) == 0 {
+                run_weekly_event(0x59e050, this, club, fin);
             }
             decay_training_ground(club);
             if club.own_stadium() != 0 {
@@ -2604,19 +2604,19 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
             }
         }
         1 => {
-            leave_crisis(this, club.addr(), fin);
+            leave_crisis(this, club, fin);
             if week == 0 {
                 return;
             }
             if *aperto > 0 {
                 *aperto -= 1;
             }
-            if run_weekly_event(0x59e050, this, club.addr(), fin) == 0 && run_weekly_event(0x59dd40, this, club.addr(), fin) == 0 {
-                run_weekly_event(0x59e5a0, this, club.addr(), fin);
+            if run_weekly_event(0x59e050, this, club, fin) == 0 && run_weekly_event(0x59dd40, this, club, fin) == 0 {
+                run_weekly_event(0x59e5a0, this, club, fin);
             }
         }
         2 => {
-            leave_crisis(this, club.addr(), fin);
+            leave_crisis(this, club, fin);
             if week == 0 {
                 return;
             }
@@ -2625,7 +2625,7 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
             }
         }
         _ => {
-            leave_crisis(this, club.addr(), fin);
+            leave_crisis(this, club, fin);
             if week == 0 {
                 return;
             }
@@ -2633,9 +2633,9 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
                 *aperto -= 1;
             }
             crate::comparison::branch("cpv_6 boost in band 0");
-            let ok = run_weekly_event(0x59e050, this, club.addr(), fin) != 0; // cpv6: the boost in band 0
-            if !ok && run_weekly_event(0x59dd40, this, club.addr(), fin) == 0 {
-                run_weekly_event(0x59e5a0, this, club.addr(), fin);
+            let ok = run_weekly_event(0x59e050, this, club, fin) != 0; // cpv6: the boost in band 0
+            if !ok && run_weekly_event(0x59dd40, this, club, fin) == 0 {
+                run_weekly_event(0x59e5a0, this, club, fin);
             }
         }
     }
@@ -2771,7 +2771,7 @@ pub(crate) unsafe extern "thiscall" fn try_board_debt_payment(this: usize, club:
     add_to_i32(fin + finance::SEASON_OTHER_INCOME, value);
     add_to_i32(fin + finance::MONTH_OTHER_INCOME, value);
     credit_balance(fin, value);
-    post_finance_boost_news(this, club.addr(), value, 0, 4);
+    post_finance_boost_news(this, club, value, 0, 4);
     1
 }
 
@@ -2890,7 +2890,7 @@ pub(crate) unsafe extern "thiscall" fn try_cash_injection(this: usize, club: usi
     add_to_i32(fin + finance::MONTH_OTHER_INCOME, value);
     credit_balance(fin, value);
     let budget = transfer_budget(fin);
-    post_finance_boost_news(this, club.addr(), value, budget, 3);
+    post_finance_boost_news(this, club, value, budget, 3);
     *((fin + finance::CRISIS_STATE) as *mut u8) = 0;
     1
 }

@@ -486,7 +486,7 @@ pub(crate) unsafe extern "thiscall" fn compare_free_transfer_staff(this: usize, 
         && read_usize(r + past_transfer::FROM_CLUB_ID) as u32 == if club != 0 { read_usize(club) as u32 } else { u32::MAX }
         && read_u8(r + past_transfer::MOVE_TYPE) == if so_record != 0 { 5 } else { 3 };
     if so_record == 0 {
-        ok = ok && get_contract_unstored(p.addr()) == 0 && p.value() == 0 && p.squad_selected_for() == 0;
+        ok = ok && get_contract_unstored(p) == 0 && p.value() == 0 && p.squad_selected_for() == 0;
     }
     SCOREBOARD.record(ok, || format!("free_transfer_staff(pessoa {}, clube {:x}, só registro {}): conta {} -> {}, registro {:x?}", read_usize(p.addr()), club, so_record,
         n, read_usize(this + transfer_manager_fields::PAST_TRANSFER_COUNT), core::slice::from_raw_parts(r as *const u8, 0x1d)));

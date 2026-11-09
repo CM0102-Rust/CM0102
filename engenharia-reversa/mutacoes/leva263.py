@@ -12,7 +12,7 @@ MUTACOES = [
     ('cqa4_vice_como_campeao', 'cup_record_final_result(0x86b0b0, club, game, final_); // cqa4: the runner-up record', 'cup_record_final_result(0x86a800, club, game, final_); // mutacao: o vice com o registro de campeao', 'cqa_4 runner-up'),
     ('cqa4_campeao_como_vice', 'cup_record_final_result(0x86a800, club, game, final_); // cqa4: the champion record', 'cup_record_final_result(0x86b0b0, club, game, final_); // mutacao: o campeao com o registro de vice', 'cqa_4 champion'),
     ('cqa4_campeao_como_terceiro', 'cup_record_final_result(0x86a800, club, game, final_); // cqa4: the champion record', 'cup_record_final_result(0x86b710, club, game, final_); // mutacao: o campeao com o registro de terceiro', 'cqa_4 champion'),
-    ('cqa5_vendedor_sem_troca_sem_vaga', 'return 1; // cqa5: the seller without an exchange has a slot', 'return fail_with_reason(club.addr(), o, reason, 4); // mutacao: o vendedor sem troca nao tem vaga', 'cqa_5 seller without exchange'),
+    ('cqa5_vendedor_sem_troca_sem_vaga', 'return 1; // cqa5: the seller without an exchange has a slot', 'return fail_with_reason(club, o, reason, 4); // mutacao: o vendedor sem troca nao tem vaga', 'cqa_5 seller without exchange'),
     ('cqa5_elenco_conta_dois', '*n = n.wrapping_add(1); // cqa5: each squad member counts', '*n = n.wrapping_add(2); // mutacao: cada um do elenco conta dois', 'cqa_5 counts the squad'),
     ('cqa5_jogador_da_oferta_nao_conta', 'n = n.wrapping_add(1); // cqa5: the offer player counts', 'n = n.wrapping_add(0); // mutacao: o jogador da oferta nao conta', 'cqa_5 squad full'),
     ('cqa6_busca_vazia_tem_todos', 'return 0; // cqa6: without results, it is not there', 'return 1; // mutacao: sem resultados, esta', 'cqa_6 empty search'),

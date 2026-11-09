@@ -1970,7 +1970,7 @@ pub(crate) unsafe fn injury_club_by_index(i: i32) -> usize {
 }
 
 /// Calls Database is_national_team for the club.
-pub(crate) unsafe fn injury_is_national_team(club: usize) -> bool {
+pub(crate) unsafe fn injury_is_national_team(club: Club) -> bool {
     exe::database_is_national_team(club) != 0
 }
 
@@ -1994,7 +1994,7 @@ pub(crate) unsafe fn outbreak_takes_hold(kind: u8, club_i: i32) -> bool {
     } else if friendly_random(4) == 0 { // 1 in 4 is left out
         return false;
     }
-    !injury_is_national_team(injury_club_by_index(club_i))
+    !injury_is_national_team(Club(injury_club_by_index(club_i)))
 }
 
 /// Stores an illness outbreak (date, type, club, fixture) if it takes hold (type 4 never; type 3 with 1 in 15, the
@@ -2108,7 +2108,7 @@ pub(crate) unsafe extern "thiscall" fn spread_illness_outbreaks(this: usize) {
             if let Some(mut how_many) = how_many {
                 crate::comparison::branch("cpp_8 spread");
                 let club = Club(injury_club_by_index(read_i32(read_usize(this + injury_fields::OUTBREAKS).wrapping_add(off) + 9)));
-                if !injury_is_national_team(club.addr()) {
+                if !injury_is_national_team(club) {
                     let mut t = 0;
                     while t < 0x14 && (how_many as i8) > 0 {
                         let slot = friendly_random(0x32) as i8 as isize;
@@ -2198,7 +2198,7 @@ pub(crate) unsafe fn injury_club_count_without_nations() -> i32 {
 /// [pt] Os dias de pré-temporada que contam na forma inicial: dentro da temporada da nação do clube (0x669bd0), 0; fora,
 /// os dias do começo dela até hoje (0x54cdb0 sobre a primeira data): acima de 80, 40; de 41 a 80, 80 − dias (no byte,
 /// com sinal); senão os dias.
-pub(crate) unsafe fn preseason_days(club: usize, start: &mut [u32; 2], end: &mut [u32; 2]) -> i32 {
+pub(crate) unsafe fn preseason_days(club: Club, start: &mut [u32; 2], end: &mut [u32; 2]) -> i32 {
     if exe::key_nation_club_in_season(club, (start.as_mut_ptr()) as *mut u32 as usize, (end.as_mut_ptr()) as *mut u32 as usize) != 0 {
         return 0;
     }
@@ -2236,7 +2236,7 @@ pub(crate) unsafe extern "thiscall" fn init_squad_fitness(this: usize) {
     let mut i = 0i32;
     while i < injury_club_count_without_nations() {
         let club = Club(base.wrapping_add((i as usize).wrapping_mul(club::SIZE)));
-        let days = preseason_days(club.addr(), &mut start, &mut end);
+        let days = preseason_days(club, &mut start, &mut end);
         for s in 0..50usize {
             let slot = club.addr() + club::SQUAD + 4 * s;
             let p = Staff(read_usize(slot));
@@ -2341,7 +2341,7 @@ pub(crate) unsafe extern "thiscall" fn init_records(this: usize) {
 /// nação sem +0x71 ou os dois clubes de 0x9d00a4/0x9d00a8. Nação com +0x11c: só com +0x80 até 2 e divisão (+0x57);
 /// sem: com divisão.
 pub(crate) unsafe fn injury_youth_list_nation(club: Club) -> usize {
-    if injury_is_national_team(club.addr()) {
+    if injury_is_national_team(club) {
         return 0;
     }
     let nation = club.nation().addr();
@@ -2742,10 +2742,10 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
                 l38 = t - f;
                 l3c = (e - s) - l38;
                 l34 = f - l3c;
-                end_injury(this, person.addr());
+                end_injury(this, person);
             } else {
                 l38 = t;
-                end_injury(this, person.addr());
+                end_injury(this, person);
             }
         }
     } else {

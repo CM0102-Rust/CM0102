@@ -6102,10 +6102,10 @@ pub(crate) unsafe fn cell_angle_degrees(i: i32, j: i32) -> u16 {
 ///
 /// [pt] Monta e poe na lista de eventos (+0x478e, 0x68d0d0) o evento de pre-jogo de 0x19 bytes: a ficha,
 /// o clube, as bandeiras, o titular, o lado (ou a vaga), o codigo e -1 nos campos livres.
-pub(crate) unsafe fn push_prematch_event(m: usize, sheet: usize, club: usize, bandeiras: u32, titular: u8, side: u8, code: u16) {
+pub(crate) unsafe fn push_prematch_event(m: usize, sheet: Staff, club: Club, bandeiras: u32, titular: u8, side: u8, code: u16) {
     let mut ev = [0u8; 0x19];
-    ev[0..4].copy_from_slice(&*(sheet as *const [u8; 4]));
-    ev[4..8].copy_from_slice(&*(club as *const [u8; 4]));
+    ev[0..4].copy_from_slice(&*(sheet.addr() as *const [u8; 4]));
+    ev[4..8].copy_from_slice(&*(club.addr() as *const [u8; 4]));
     ev[8..0xc].copy_from_slice(&bandeiras.to_le_bytes());
     ev[0xc] = titular;
     ev[0xd] = side;
@@ -6465,7 +6465,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: usize, game: usize) {
             let marked = flags & 0x40 != 0 || *((c + 0x45) as *const u32) & 0x2000000 != 0;
             if marked && a != 0 && ((d & a) == d || (bb & a) != bb) {
                 crate::comparison::branch("prematch unhappy");
-                push_prematch_event(m, f.addr(), club.addr(), 0, 0, k as u8, 0x13);
+                push_prematch_event(m, f, club, 0, 0, k as u8, 0x13);
             } else if (f.job_for_club() as i8) != 0xc && a != 0 && (d & a) != d && (bb & a) != bb {
                 let s: i16 = if a == 1 {
                     6
@@ -6534,7 +6534,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: usize, game: usize) {
                     }
                     if p > 5 && (p as i32) > random(0x1e) {
                         crate::comparison::branch("prematch unhappy with position");
-                        push_prematch_event(m, f.addr(), club.addr(), 0x40, 0, k as u8, 0x13);
+                        push_prematch_event(m, f, club, 0x40, 0, k as u8, 0x13);
                     }
                 }
             }
@@ -6545,7 +6545,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: usize, game: usize) {
                 let x = random(read_i16((read_usize(j + match_player::PLAYER)) + 0xb) as i32);
                 if random(club.reputation() as i32) < x && *((c + 0x45) as *const u32) & 0x2f7a0b != 0 {
                     crate::comparison::branch("prematch interest");
-                    push_prematch_event(m, f.addr(), club.addr(), *((c + 0x45) as *const u32), titular_da_vaga(j), lado as u8, 0x1e);
+                    push_prematch_event(m, f, club, *((c + 0x45) as *const u32), titular_da_vaga(j), lado as u8, 0x1e);
                 }
             }
             // a forma
@@ -6594,7 +6594,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: usize, game: usize) {
                     && (m2 as f64) < index()
                 {
                     crate::comparison::branch("prematch form down");
-                    push_prematch_event(m, f.addr(), club.addr(), *((c + 0x45) as *const u32), titular_da_vaga(j), lado as u8, 5);
+                    push_prematch_event(m, f, club, *((c + 0x45) as *const u32), titular_da_vaga(j), lado as u8, 5);
                 }
             } else if form > 0x20 {
                 let m1 = average(sheet_average, sheet_61, 6, 1, 6.5) as f32;
@@ -6606,7 +6606,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: usize, game: usize) {
                     }
                     if m2 < index() - read_f64(rdata::F64_1) + z {
                         crate::comparison::branch("prematch form up");
-                        push_prematch_event(m, f.addr(), club.addr(), *((c + 0x45) as *const u32), titular_da_vaga(j), lado as u8, 4);
+                        push_prematch_event(m, f, club, *((c + 0x45) as *const u32), titular_da_vaga(j), lado as u8, 4);
                     }
                 }
             }
@@ -6618,7 +6618,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: usize, game: usize) {
                     let g = read_i8(c + 0x3f);
                     if (g as i32) > random(4) + 2 {
                         crate::comparison::branch("prematch end of contract");
-                        push_prematch_event(m, f.addr(), club.addr(), *((c + 0x45) as *const u32), titular_da_vaga(j), lado as u8, 6);
+                        push_prematch_event(m, f, club, *((c + 0x45) as *const u32), titular_da_vaga(j), lado as u8, 6);
                     }
                 }
             }

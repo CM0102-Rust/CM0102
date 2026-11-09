@@ -68,13 +68,13 @@ pub(crate) unsafe extern "thiscall" fn compare_season_end_club_update(this: usiz
         return o(this, club.addr());
     }
     let mut a = 0u32;
-    let fin = finance_of_parent_club(this, club.addr(), &mut a);
+    let fin = finance_of_parent_club(this, club, &mut a);
     let stadium = club.stadium().addr();
     if fin == 0 || (stadium != 0 && club.own_stadium() == 0 && club.division().addr() != 0 && read_i32(fin) > 0x2160ec0) {
         return o(this, club.addr()); // simplification: the stadium purchase may touch the owner; original only
     }
     let own = read_usize(this).wrapping_add((read_i32(club.addr()) as u32).wrapping_mul(0x167) as usize);
-    let mut reg = vec![(fin, 0x167), (club.addr(), 0x245), (board_requests_row(club.addr()), 0x49)];
+    let mut reg = vec![(fin, 0x167), (club.addr(), 0x245), (board_requests_row(club), 0x49)];
     if own != fin {
         reg.push((own, 0x167));
     }
@@ -312,7 +312,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pay_wages(this: usize, value: i32
 /// [pt] Comparador: lado a lado no registro de finanças do clube e no estado do sorteio.
 pub(crate) unsafe extern "thiscall" fn compare_add_weekly_merchandising_income(this: usize, club: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_WEEKLY_MERCHANDISING_INCOME);
-    let mut regions = vec![(fin_prm_club_finance(this, club), 0x167)];
+    let mut regions = vec![(fin_prm_club_finance(this, Club(club)), 0x167)];
     regions.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, club), || crate::rng::without_counting(|| add_weekly_merchandising_income(this, club)));
     SCOREBOARD.record(igual, || format!("add_weekly_merchandising_income(clube {:#x}) original={:x?} rust={:x?}", club, mo, mr));
@@ -344,7 +344,7 @@ pub(crate) unsafe extern "thiscall" fn compare_sell_season_tickets(this: usize, 
 pub(crate) unsafe extern "thiscall" fn compare_upgrade_training_facilities(this: usize, club: usize) {
     let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_UPGRADE_TRAINING_FACILITIES);
-    let regions = [(club.addr() + club::TRAINING, 1), (fin_prm_club_finance(this, club.addr()), 0x167)];
+    let regions = [(club.addr() + club::TRAINING, 1), (fin_prm_club_finance(this, club), 0x167)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, club.addr()), || upgrade_training_facilities(this, club.addr()));
     SCOREBOARD.record(igual, || format!("upgrade_training_facilities(clube {:#x}) original={:x?} rust={:x?}", club.addr(), mo, mr));
 }

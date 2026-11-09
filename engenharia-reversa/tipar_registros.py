@@ -311,6 +311,14 @@ def assinaturas(tipo, grava):
     print('%d funções passam a receber %s' % (len(trocadas), tipo))
     if not grava:
         return
+    ajustar_pelo_compilador([tipo])
+
+
+def ajustar_pelo_compilador(tipos):
+    """Builds and fixes, until it compiles, the calls the type changes broke: `expected Club, found usize` (an argument
+    `y.addr()` becomes `y`, any other `Club(..)`) and `expected usize, found Club` (`x` becomes `x.addr()`)."""
+    import json as js
+    import subprocess
     for volta in range(40):
         r = subprocess.run(['cargo', 'build', '--release', '--message-format=json'], cwd=os.path.join(R, 'rust'),
                            capture_output=True, text=True, encoding='utf-8', errors='replace')
@@ -324,35 +332,133 @@ def assinaturas(tipo, grava):
                 erros.append(d['message'])
         if not erros:
             print('compila (volta %d)' % volta)
-            return
+            return True
         edicoes = collections.defaultdict(list)
-        voltar = set()
         for e in erros:
-            sp = next((s for s in e['spans'] if s['is_primary']), None)
+            # the span to fix is the one whose label says the mismatch (for an argument the primary span can be the
+            # called function's name)
+            sp = next((x for x in e['spans'] if 'expected `' in (x.get('label') or '') and 'found' in (x.get('label') or '')), None) \
+                or next((x for x in e['spans'] if x['is_primary']), None)
             if not sp:
                 continue
             arq = os.path.normpath(os.path.join(R, 'rust', sp['file_name']))
-            txt = e['message'] + ' ' + ' '.join((s.get('label') or '') for s in e['spans'])
-            if ('expected `%s`, found `usize`' % tipo) in txt or ('expected `%s`, found integer' % tipo) in txt:
-                edicoes[arq].append((sp['byte_start'], sp['byte_end']))
-            elif 'fn(' in txt or 'fn item' in txt:
-                voltar.add((arq, sp['line_start']))
-            else:
-                print('erro não tratado:', sp['file_name'], sp['line_start'], e['message'][:120])
+            txt = e['message'] + ' ' + (sp.get('label') or '')
+            feito = False
+            for tipo in tipos:
+                if ('expected `%s`, found `usize`' % tipo) in txt or ('expected `%s`, found integer' % tipo) in txt:
+                    edicoes[arq].append((sp['byte_start'], sp['byte_end'], 'para_tipo', tipo))
+                    feito = True
+                    break
+                if ('expected `usize`, found `%s`' % tipo) in txt:
+                    edicoes[arq].append((sp['byte_start'], sp['byte_end'], 'para_usize', tipo))
+                    feito = True
+                    break
+            if not feito:
+                print('erro não tratado:', sp['file_name'], sp['line_start'], e['message'][:140])
         n = 0
         for arq, spans in edicoes.items():
             b = open(arq, 'rb').read()
-            for a_, b_ in sorted(set(spans), reverse=True):
-                s = b[a_:b_].decode('utf-8')
-                novo = s[:-len('.addr()')] if re.fullmatch(r'[a-z_][a-z0-9_]*\.addr\(\)', s) else '%s(%s)' % (tipo, s)
+            for a_, b_, kind, tipo in sorted(set(spans), reverse=True):
+                x = b[a_:b_].decode('utf-8')
+                if kind == 'para_tipo':
+                    novo = x[:-len('.addr()')] if re.fullmatch(r'[a-z_][a-z0-9_]*\.addr\(\)', x) else '%s(%s)' % (tipo, x)
+                else:
+                    novo = '%s.addr()' % x if re.fullmatch(r'[a-z_][a-z0-9_]*', x) else '(%s).addr()' % x
                 b = b[:a_] + novo.encode('utf-8') + b[b_:]
                 n += 1
             open(arq, 'wb').write(b)
-        if voltar:
-            print('usadas como ponteiro de função (voltar à mão):', sorted(voltar)[:10])
-        print('volta %d: %d erros, %d argumentos ajustados' % (volta, len(erros), n))
+        print('volta %d: %d erros, %d ajustes' % (volta, len(erros), n))
         if n == 0:
-            sys.exit('parou: erros que a ferramenta não trata')
+            print('parou: erros que a ferramenta não trata')
+            return False
+    return False
+
+
+def propagar(tipos, grava):
+    """Our functions that take a `usize` parameter that most callers fill with a typed record (`f(club.addr())`) take
+    the type, even when they only pass it on; the body is converted like a typed variable and the callers are fixed by
+    the compiler. Repeats until no function is left (each round types new calls). Functions used as values
+    (callbacks, tables), `extern` ones and reassigned parameters stay."""
+    mods = {}
+    t_rec = open(os.path.join(SRC, 'motor', 'records.rs'), encoding='utf-8').read()
+    for m in re.finditer(r'/// A `(\w+)` record in the game.*\n(?:.*\n){0,3}pub\(crate\) struct (\w+)\(', t_rec):
+        if m.group(2) in tipos:
+            mods[m.group(2)] = m.group(1)
+    conv = {t: Conversor(m) for t, m in mods.items()}
+    nomes_t = '|'.join(tipos)
+    for rodada in range(10):
+        fontes = {}
+        for raiz, _, fs in os.walk(SRC):
+            for f in fs:
+                if f.endswith('.rs') and f not in ('records.rs', 'exe_calls.rs', 'mem.rs', 'fields.rs'):
+                    q = os.path.join(raiz, f)
+                    fontes[q] = open(q, encoding='utf-8').read()
+        tudo = '\n'.join(mascara(t) for t in fontes.values())
+        defs = {}
+        for q, t in fontes.items():
+            for nome, a, b in mover_rotinas.blocos(t):
+                mk = mascara(t[a:b])
+                m = re.search(r'^(?:pub\(crate\) )?unsafe fn (\w+)\(', mk, re.M)
+                if not m or m.group(1) != nome:
+                    continue
+                args, fim = ie.args_da_chamada(mk, m.end() - 1)
+                defs[nome] = (q, a, b, [x.split(':')[0].strip() for x in (args or [])], [x.split(':', 1)[1].strip() if ':' in x else '' for x in (args or [])])
+        # used as a value somewhere (not called): stays
+        # one pass: every identifier that appears without a call (and not as `fn name`)
+        soltos = {m.group(1) for m in re.finditer(r'(?<![\w.:])(?<!fn )([a-z_][a-z0-9_]*)\b(?!\s*\()(?!\s*::)', tudo)}
+        valor = {n for n in defs if n in soltos}
+        votos = collections.defaultdict(lambda: collections.Counter())
+        for q, t in fontes.items():
+            for nome, a, b in mover_rotinas.blocos(t):
+                mk = mascara(t[a:b])
+                tipadas = {}
+                for m in re.finditer(r'(?<![\w.])([a-z_][a-z0-9_]*)\s*:\s*(%s)\b' % nomes_t, mk):
+                    tipadas[m.group(1)] = m.group(2)
+                for m in re.finditer(r'\blet\s+([a-z_][a-z0-9_]*)\s*=\s*(%s)\(' % nomes_t, mk):
+                    tipadas[m.group(1)] = m.group(2)
+                for m in re.finditer(r'(?<![\w.:])(\w+)\(', mk):
+                    if m.group(1) not in defs or m.group(1) in valor:
+                        continue
+                    args, _ = ie.args_da_chamada(mk, m.end() - 1)
+                    for k, x in enumerate(args or []):
+                        mm = re.fullmatch(r'\s*([a-z_][a-z0-9_]*)\.addr\(\)\s*', x)
+                        votos[(m.group(1), k)][tipadas.get(mm.group(1), '-') if mm else '-'] += 1
+        cand = {}
+        for (nome, k), c in votos.items():
+            q, a, b, ps, ts = defs[nome]
+            if k >= len(ps) or ts[k] != 'usize':
+                continue
+            top, n = max(((t, v) for t, v in c.items() if t != '-'), key=lambda tv: tv[1], default=('-', 0))
+            if top == '-' or n * 2 < sum(c.values()):
+                continue
+            x = ps[k]
+            corpo = mascara(fontes[q][a:b])
+            if re.search(r'(?<![\w.])%s\s*(\+|-|\*|/|&|\||\^)?=(?!=)' % re.escape(x), corpo) or re.search(r'\blet\s+(mut\s+)?%s\b' % re.escape(x), corpo):
+                continue
+            cand.setdefault(nome, []).append((k, x, top))
+        print('rodada %d: %d funções, %d parâmetros' % (rodada, len(cand), sum(len(v) for v in cand.values())))
+        if not cand or not grava:
+            return
+        por_arq = collections.defaultdict(list)
+        for nome, ks in cand.items():
+            por_arq[defs[nome][0]].append((nome, ks))
+        for q, lista in por_arq.items():
+            t = fontes[q]
+            for nome, ks in sorted(lista, key=lambda v: -defs[v[0]][1]):
+                _, a, b, ps, ts = defs[nome]
+                bloco = t[a:b]
+                mk = mascara(bloco)
+                i = mk.index('fn %s(' % nome) + len('fn %s' % nome)
+                args, fim = ie.args_da_chamada(mk, i)
+                cab, corpo = bloco[:fim], bloco[fim:]
+                for k, x, tipo in ks:
+                    cab = re.sub(r'(?<![\w.])%s\s*:\s*usize\b' % re.escape(x), '%s: %s' % (x, tipo), cab, count=1)
+                    corpo = conv[tipo].converter_trecho(corpo, {x})
+                t = t[:a] + cab + corpo + t[b:]
+            open(q, 'w', encoding='utf-8').write(t)
+        if not ajustar_pelo_compilador(list(tipos)):
+            return
+        tirar_addr_exe(True)
 
 
 def acessos(mod, grava):
@@ -435,6 +541,8 @@ def gravar_mutacoes(trocas_mut):
 
 
 def main():
+    if '--propagar' in sys.argv:
+        return propagar(sys.argv[sys.argv.index('--propagar') + 1].split(','), '--gravar' in sys.argv)
     if '--acessos' in sys.argv:
         return acessos(sys.argv[sys.argv.index('--acessos') + 1], '--gravar' in sys.argv)
     if '--assinaturas' in sys.argv:

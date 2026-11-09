@@ -255,7 +255,7 @@ pub(crate) unsafe fn training_entry_of_staff(this: usize, p: Staff) -> usize {
 ///
 /// [pt] O contrato da pessoa (CONTRACT_MANAGER 0x4cf5a0, thiscall no gerente [0xae1050]), guardado em [0xae1080] como a
 /// original faz a cada consulta.
-pub(crate) unsafe fn training_manager_get_contract_stored(p: usize) -> usize {
+pub(crate) unsafe fn training_manager_get_contract_stored(p: Staff) -> usize {
     let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
     c
@@ -345,10 +345,10 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
     }
     let mark = (e + 5) as *mut u8;
     if *mark & 0x20 == 0 {
-        let c = training_manager_get_contract_stored(p.addr());
-        if c != 0 && training_manager_club_of_contract(c) != 0 && read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p.addr())) + 0xcf) != 0
-            && is_human_manager_id(read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p.addr())) + 0xcf)) {
-            let manager = read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p.addr())) + 0xcf);
+        let c = training_manager_get_contract_stored(p);
+        if c != 0 && training_manager_club_of_contract(c) != 0 && read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf) != 0
+            && is_human_manager_id(read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf)) {
+            let manager = read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf);
             *mark |= 0x20;
             let (mut goleiro, mut geral) = (-1i8, -1i8);
             for k in 0..10i8 {
@@ -377,9 +377,9 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
         return;
     }
     if *mark & 0x20 != 0 {
-        let c = training_manager_get_contract_stored(p.addr());
-        let ainda = c != 0 && training_manager_club_of_contract(c) != 0 && read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p.addr())) + 0xcf) != 0
-            && is_human_manager_id(read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p.addr())) + 0xcf));
+        let c = training_manager_get_contract_stored(p);
+        let ainda = c != 0 && training_manager_club_of_contract(c) != 0 && read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf) != 0
+            && is_human_manager_id(read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf));
         if !ainda {
             crate::comparison::branch("cqd_8 left the human club");
             *mark &= 0xdf;
@@ -414,7 +414,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
         // 0x8b41d0 leem o byte
         let lv = (exe::training_schedule_get_category_level(prog, k as u32) as u32) as u8 as i8;
         let base = (lv as i16).wrapping_mul(2).wrapping_add(0x3c); // cqd8: the level weight
-        let club = training_manager_club_of_contract(training_manager_get_contract_stored(p.addr()));
+        let club = training_manager_club_of_contract(training_manager_get_contract_stored(p));
         let fa = exe::training_manager_get_coaching_factor(this, club, k as u32) as u16 as i16 as i32;
         let x = base.wrapping_add(((fa - 100) / 5) as i16);
         let weight: i16 = if x < 0 { 0 } else if x > 200 { 200 } else { x };
@@ -558,9 +558,9 @@ pub(crate) unsafe extern "thiscall" fn get_player_schedule(this: usize, p: usize
         show_error_at(0xa8ccd0, 0x6ad);
         return 0;
     }
-    let c = training_manager_get_contract_stored(p.addr());
+    let c = training_manager_get_contract_stored(p);
     if c != 0 && training_manager_club_of_contract(c) != 0 {
-        let manager = read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p.addr())) + 0xcf);
+        let manager = read_usize(training_manager_club_of_contract(training_manager_get_contract_stored(p)) + 0xcf);
         if manager != 0 && is_human_manager_id(manager) {
             if exe::injury_get_player_injury_status(read_usize(G_INJURY), p) == 2 {
                 let k = read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(manager)).wrapping_sub(1);
@@ -614,7 +614,7 @@ pub(crate) unsafe fn training_nibble(e: usize, k: usize) -> i8 {
 }
 
 /// TRAINING_MANAGER apply_training_progress(person, deltas).
-pub(crate) unsafe fn training_manager_apply_training_progress(this: usize, p: usize, d: &[i8; 8]) {
+pub(crate) unsafe fn training_manager_apply_training_progress(this: usize, p: Staff, d: &[i8; 8]) {
     exe::training_manager_apply_training_progress(this, p, d.as_ptr());
 }
 
@@ -661,7 +661,7 @@ pub(crate) unsafe extern "thiscall" fn remove_or_restore_training_progress(this:
             d[k] = training_nibble(e, k).wrapping_neg();
         }
     }
-    training_manager_apply_training_progress(this, p.addr(), &d);
+    training_manager_apply_training_progress(this, p, &d);
 }
 
 /// `TRAINING_MANAGER::get_training_attribute_change(person, attribute)`, called by the training screen (0x8b8184): how
@@ -686,13 +686,13 @@ pub(crate) unsafe extern "thiscall" fn get_training_attribute_change(this: usize
     for k in 0..5 {
         d[k] = training_nibble(e, k).wrapping_neg();
     }
-    training_manager_apply_training_progress(this, p.addr(), &d);
+    training_manager_apply_training_progress(this, p, &d);
     let sem = (exe::staff_get_player_attribute(p, attribute) as u8);
     let mut v = [0i8; 8];
     for k in 0..5 {
         v[k] = d[k].wrapping_neg();
     }
-    training_manager_apply_training_progress(this, p.addr(), &v);
+    training_manager_apply_training_progress(this, p, &v);
     before.wrapping_sub(sem)
 }
 

@@ -28,6 +28,18 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 4: a propagação (clube e pessoa)
+
+`tipar_registros.py --propagar Club,Staff`: uma função nossa com um parâmetro `usize` que a maioria das chamadas
+preenche com um registro tipado (`f(club.addr())`) passa a receber o tipo, mesmo quando só o repassa; o corpo é
+convertido como uma variável tipada, e as chamadas, pelo compilador (`ajustar_pelo_compilador`: o trecho do erro é o
+do rótulo "expected .., found .." e não o principal, que pode ser o nome da função chamada). Repete até não sobrar
+função: 120 + 5 funções em duas rodadas, 515 ajustes. `.addr()` fora dos invólucros 2.875 → 2.503; 321 parâmetros
+tipados. O que sobra: acessos a vetores e de outra largura (`club::SQUAD + v * 4`, ~450), leituras em deslocamentos
+sem nome (~450) e closures locais que recebem `usize` (~230). `compilar_mutacoes.py --lista` compila uma lista dada:
+as 20 mutações cujo texto de troca chama uma função que passou a receber o tipo (uma corrigida). Prova: 7cc445c2 ×2,
+detector igual, comparação 0.
+
 ## Migração para os registros tipados, leva 3: a pessoa (`Staff`)
 
 O padrão completo numa leva: `tipar_registros.py staff` (532 variáveis em 479 funções), `--exe` (633 `.addr()` tirados

@@ -1582,9 +1582,9 @@ pub(crate) unsafe extern "thiscall" fn build_nation_list(this: usize) {
 ///
 /// [pt] O clube do contrato do jogador (0x4cf5a0, guardado em [0xae1080]; registros de 0x245 bytes), ou 0 sem contrato ou
 /// com o contrato do tipo 5 (+0x35 & 0x3f).
-pub(crate) unsafe fn contract_club_except_type5(p: usize) -> usize {
+pub(crate) unsafe fn contract_club_except_type5(p: Staff) -> usize {
     let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
-    let c = contract(read_usize(G_CONTRACT_MANAGER), p);
+    let c = contract(read_usize(G_CONTRACT_MANAGER), p.addr());
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
     if c == 0 || read_u8(c + contract::CONTRACT_TYPE) & 0x3f == 5 {
         0
@@ -1608,7 +1608,7 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: Staff, club: us
     append_person_history_by_id(write, this, read_usize(p.addr()), &e);
     let (t3d, t28) = (p.job_for_club(), p.job_for_nation());
     if t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc {
-        let r = staff_records_manager_record(this, p.addr());
+        let r = staff_records_manager_record(this, p);
         if r != 0 {
             crate::comparison::branch("cpv_13 manager award");
             let a = (r + 0x9e) as *mut u16;
@@ -1627,14 +1627,14 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: Staff, club: us
     if read_usize(G_CLUB_TABLE).wrapping_add(read_usize(c + contract::CLUB).wrapping_mul(club::SIZE)) == 0 {
         return;
     }
-    let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, contract_club_except_type5(p.addr()));
+    let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, contract_club_except_type5(p));
     if k == 0 {
         return;
     }
     let gt = read_usize(G_TRANSFER_MANAGER);
     if gt != 0 {
         if exe::date_days_since(G_CURRENT_DATE, (read_usize(k + contract::DATE_STARTED)) as u32, (read_usize(k + 0x29)) as u32) > 0x12c {
-            let x = exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), contract_club_except_type5(p.addr()), p, 0, 0);
+            let x = exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), contract_club_except_type5(p), p, 0, 0);
             if x != 0 && read_usize(x + 0xf) == read_usize(p.addr()) {
                 crate::comparison::branch("cpv_13 renewal");
                 offer_renewal(p.addr());
@@ -2791,8 +2791,8 @@ pub(crate) unsafe fn excluded_by_intertoto(this: usize, op: Club) -> bool {
 /// True if the clubs are rivals (+0xb3/+0xb7/+0xbb, either direction).
 ///
 /// [pt] Os clubes são rivais (+0xb3, +0xb7, +0xbb, nos dois sentidos)?
-pub(crate) unsafe fn are_rival_clubs(a: usize, b: usize) -> bool {
-    [0xb3usize, 0xb7, 0xbb].iter().any(|&o| a == read_usize(b + o) || b == read_usize(a + o))
+pub(crate) unsafe fn are_rival_clubs(a: Club, b: Club) -> bool {
+    [0xb3usize, 0xb7, 0xbb].iter().any(|&o| a.addr() == read_usize(b.addr() + o) || b.addr() == read_usize(a.addr() + o))
 }
 
 /// True if the clubs' nations (+0x53) are rivals (+0x110/+0x114/+0x118, either direction).
@@ -2876,7 +2876,7 @@ pub(crate) unsafe extern "thiscall" fn find_friendly_opponent(this: usize, club:
             if fc != -1 && fcl != -1 && (fc > read_i16(club + preseason_candidate::WINDOW_END) || fcl > read_i16(c + preseason_candidate::WINDOW_END)) {
                 break 'proximo;
             }
-            if are_rival_clubs(cp.addr(), op.addr()) || (are_rival_nations(cp.addr(), op) && friendly_random(2) == 0) {
+            if are_rival_clubs(cp, op) || (are_rival_nations(cp.addr(), op) && friendly_random(2) == 0) {
                 break 'proximo;
             }
             if cp.division().addr() == op.division().addr() {
@@ -2976,7 +2976,7 @@ pub(crate) unsafe extern "thiscall" fn find_tour_opponent(this: usize, club: usi
             if read_i8(c + 5) > band_max as i8 || excluded_by_intertoto(this, op) || cp == op || already_opponent(c, club) {
                 break 'proximo;
             }
-            if are_rival_clubs(cp.addr(), op.addr()) || (are_rival_nations(cp.addr(), op) && friendly_random(2) == 0) {
+            if are_rival_clubs(cp, op) || (are_rival_nations(cp.addr(), op) && friendly_random(2) == 0) {
                 break 'proximo;
             }
             if cp.division().addr() == op.division().addr() {

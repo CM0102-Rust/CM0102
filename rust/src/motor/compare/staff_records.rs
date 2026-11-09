@@ -231,7 +231,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_transfer_records(this: usize,
     }
     for (clube, cargo) in [(comprador, read_u8(t + offer::JOB_TYPE)), (vendedor, read_u8(pessoa + staff::JOB_FOR_CLUB))] {
         if clube != 0 && read_usize(clube + club::MANAGER) != 0 && staff_records_is_player_job(cargo) {
-            let r = staff_records_manager_record(this, read_usize(clube + club::MANAGER));
+            let r = staff_records_manager_record(this, Staff(read_usize(clube + club::MANAGER)));
             if r != 0 {
                 reg.push((r, 0xd2));
             }
@@ -415,7 +415,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_year_award_record(this: usize
         crate::comparison::branch("add_year_award_record player");
         return o(this, p.addr(), club, prize, a4, a5, credito);
     }
-    let r = staff_records_manager_record(this, p.addr());
+    let r = staff_records_manager_record(this, p);
     if r == 0 {
         return o(this, p.addr(), club, prize, a4, a5, credito);
     }
@@ -451,7 +451,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_month_award_record(this: usiz
         crate::comparison::branch("add_month_award_record player");
         return o(this, p.addr(), club, prize, a4, a5);
     }
-    let r = staff_records_manager_record(this, p.addr());
+    let r = staff_records_manager_record(this, p);
     if r == 0 {
         return o(this, p.addr(), club, prize, a4, a5);
     }

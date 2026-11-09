@@ -1523,7 +1523,7 @@ pub(crate) unsafe extern "thiscall" fn select_squads_for_fixture(this: usize, p:
 ///
 /// [pt] O clube do contrato da pessoa (0x4cf5a0 de [0xae1050], gravado em [0xae1080]; clube +4 em [0xae23b4], 0x245
 /// bytes), ou 0.
-pub(crate) unsafe fn club_of_person_contract(person: usize) -> usize {
+pub(crate) unsafe fn club_of_person_contract(person: Staff) -> usize {
     let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
     if c == 0 {
@@ -1555,10 +1555,10 @@ pub(crate) unsafe extern "stdcall" fn national_teams_post_player_called_up_news(
     let human: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
     let c39 = player.club_job();
     if c39 == 0 || human(c39) == 0 {
-        if club_of_person_contract(player.addr()) == 0 {
+        if club_of_person_contract(player) == 0 {
             return;
         }
-        if human(club_of_person_contract(player.addr())) == 0 {
+        if human(club_of_person_contract(player)) == 0 {
             return;
         }
     }
@@ -1589,10 +1589,10 @@ pub(crate) unsafe extern "stdcall" fn national_teams_post_player_called_up_news(
     if c39 != 0 && !CALLED_UP_NEWS_DRY_RUN {
         exe::news_send_to_club_manager(news, n, c39);
     }
-    if club_of_person_contract(player.addr()) == player.club_job() {
+    if club_of_person_contract(player) == player.club_job() {
         return;
     }
-    let c = club_of_person_contract(player.addr());
+    let c = club_of_person_contract(player);
     if !CALLED_UP_NEWS_DRY_RUN {
         exe::news_send_to_club_manager(news, n, c);
     }
@@ -1847,7 +1847,7 @@ pub(crate) unsafe fn nation_record(this: usize, nation: usize) -> usize {
 ///
 /// [pt] O tipo de convocação do jogador no clube da seleção `clube`: 2 no segundo conjunto de seleções (0x5409b0), senão o
 /// bit 3 das marcas de elenco (+0x5e).
-pub(crate) unsafe fn call_up_type(club: usize, p: Staff) -> u8 {
+pub(crate) unsafe fn call_up_type(club: Club, p: Staff) -> u8 {
     if exe::club_is_national_team(club) != 0 {
         2
     } else {
@@ -1882,7 +1882,7 @@ pub(crate) unsafe fn set_news_injury_severity(n: usize, p: usize) {
 /// Club of the player's contract (`exe::contract_manager_get_contract`, cached in [0xae1080]; 0x245-byte records), or 0.
 ///
 /// [pt] O clube do contrato do jogador (0x4cf5a0, guardado em [0xae1080]; registros de 0x245 bytes), ou 0.
-pub(crate) unsafe fn club_of_player_contract(p: usize) -> usize {
+pub(crate) unsafe fn club_of_player_contract(p: Staff) -> usize {
     let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
     if c == 0 {
@@ -1929,7 +1929,7 @@ pub(crate) unsafe extern "thiscall" fn withdraw_injured_player(this: usize, p: u
     let rec = nation_record(this, nation);
     // simplification: the original pushes the local’s dword with the type only in the low byte (the others are stack leftovers); the
     // calls read only the byte
-    let kind = call_up_type(club.addr(), p);
+    let kind = call_up_type(club, p);
     let inj = exe::injury_get_player_injury(read_usize(G_INJURY), p);
     if inj != 0 && read_u8(inj) == 0x51 {
         crate::comparison::branch("cpv_11 illness");
@@ -1997,7 +1997,7 @@ pub(crate) unsafe fn release_plan(this: usize, p: Staff, days: u32) -> u8 {
         return 0;
     }
     let club = Club(p.national_job());
-    let kind = call_up_type(club.addr(), p);
+    let kind = call_up_type(club, p);
     let inj = exe::injury_get_player_injury(read_usize(G_INJURY), p);
     if inj != 0 && read_u8(inj) == 0x51 {
         return 1;
@@ -2042,10 +2042,10 @@ pub(crate) unsafe extern "thiscall" fn national_teams_post_player_withdrawn_news
     let p = Staff(p);
     let human: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
     if p.club_job() == 0 || human(p.club_job()) == 0 {
-        if club_of_player_contract(p.addr()) == 0 {
+        if club_of_player_contract(p) == 0 {
             return;
         }
-        if human(club_of_player_contract(p.addr())) == 0 {
+        if human(club_of_player_contract(p)) == 0 {
             return;
         }
     }
@@ -2066,8 +2066,8 @@ pub(crate) unsafe extern "thiscall" fn national_teams_post_player_withdrawn_news
     if p.club_job() != 0 {
         exe::news_send_to_club_manager(news, n, p.club_job());
     }
-    if club_of_player_contract(p.addr()) != p.club_job() {
-        exe::news_send_to_club_manager(news, n, club_of_player_contract(p.addr()));
+    if club_of_player_contract(p) != p.club_job() {
+        exe::news_send_to_club_manager(news, n, club_of_player_contract(p));
     }
 }
 
@@ -2730,7 +2730,7 @@ pub(crate) unsafe fn national_team_for_type(nation: usize, kind: u8) -> usize {
 ///
 /// [pt] Tira a pessoa `p` da tática do time (0x896c60 de [0xde1d08], com 1 e com 0 no 3º argumento), como as originais
 /// fazem antes de esvaziar a vaga.
-pub(crate) unsafe fn remove_from_tactics(team: usize, p: usize) {
+pub(crate) unsafe fn remove_from_tactics(team: Club, p: usize) {
     exe::tactics_remove_player_from_selection(*(G_TACTICS as *const usize), team, p, 1, 1);
     exe::tactics_remove_player_from_selection(*(G_TACTICS as *const usize), team, p, 0, 1);
 }
@@ -2789,7 +2789,7 @@ pub(crate) unsafe fn squad_change_regions(team: Club, p: Staff) -> [(usize, usiz
 /// pessoa (+0x24, +0x28, +0x5e & 3). Sem SEH, sem sorteio, sem locais; caixa só com time ou pessoa nulos (0x896c60).
 pub(crate) unsafe extern "thiscall" fn national_teams_remove_player_from_squad(_this: usize, nation: usize, kind: u32, p: usize) {
     let team = Club(national_team_for_type(nation, kind as u8));
-    remove_from_tactics(team.addr(), p);
+    remove_from_tactics(team, p);
     if let Some(c) = (0..50usize).find(|&c| read_usize(team.addr() + club::SQUAD + 4 * c) == p) {
         core::ptr::write_unaligned((team.addr() + club::SQUAD + 4 * c) as *mut usize, 0);
         clear_national_call_up(Staff(p));
@@ -2827,7 +2827,7 @@ pub(crate) unsafe extern "thiscall" fn release_overage_u21_players(this: usize, 
         let slot = team.addr() + club::SQUAD + 4 * c;
         let p = Staff(read_usize(slot));
         if !p.is_null() && (p.age() as i8) > 0x15 { // over 21 years old
-            remove_from_tactics(team.addr(), p.addr());
+            remove_from_tactics(team, p.addr());
             clear_national_call_up(p);
             core::ptr::write_unaligned(slot as *mut usize, 0);
         }

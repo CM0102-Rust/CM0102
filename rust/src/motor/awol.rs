@@ -324,7 +324,7 @@ pub(crate) unsafe fn close_awol_case(this: usize, r: usize) {
 }
 
 /// Calls AWOL miss_training for a person.
-pub(crate) unsafe fn awol_miss_training(this: usize, person: usize) {
+pub(crate) unsafe fn awol_miss_training(this: usize, person: Staff) {
     exe::awol_miss_training(this, person);
 }
 
@@ -470,7 +470,7 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
                 maybe_drop_attribute(person.addr() + staff::PROFESSIONALISM, true);
                 maybe_drop_attribute(person.addr() + staff::TEMPERAMENT, true);
                 close_awol_case(this, r);
-                awol_miss_training(this, person.addr());
+                awol_miss_training(this, person);
                 return;
             }
         }
@@ -519,7 +519,7 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
             maybe_drop_attribute(person.addr() + staff::PROFESSIONALISM, false);
             maybe_drop_attribute(person.player() + 0x44, false);
             close_awol_case(this, r);
-            awol_miss_training(this, person.addr());
+            awol_miss_training(this, person);
             if !club.is_null() && person.player() != 0 {
                 exe::media_create_player_media_story(read_usize(G_MEDIA), person, club, 8, 0, 0);
             }

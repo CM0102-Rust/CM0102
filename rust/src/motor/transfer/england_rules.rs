@@ -96,8 +96,8 @@ pub(crate) unsafe fn england_rules_club_of_contract(c: usize) -> usize {
 ///
 /// [pt] A entrada de 16 bytes do clube na tabela dos empréstimos da temporada ([[0xde1f54] + 0x91c] + id do clube que pega emprestado × 16, o byte +0
 /// é a conta).
-pub(crate) unsafe fn season_loans_entry(club: usize) -> usize {
-    read_usize(read_usize(G_TRANSFER_MANAGER) + 0x91c).wrapping_add(read_usize(club).wrapping_mul(16))
+pub(crate) unsafe fn season_loans_entry(club: Club) -> usize {
+    read_usize(read_usize(G_TRANSFER_MANAGER) + 0x91c).wrapping_add(read_usize(club.addr()).wrapping_mul(16))
 }
 
 /// Decides whether an English loan is allowed: refuses (0, with the message and the reason) between clubs of the same
@@ -141,7 +141,7 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
         }
         return 0;
     }
-    if read_u8(season_loans_entry(club.addr())) as i8 >= 5 {
+    if read_u8(season_loans_entry(club)) as i8 >= 5 {
         // cqe5: cinco na temporada
         crate::comparison::branch("cqe_5 five in the season");
         if msg != 0 {
@@ -212,7 +212,7 @@ pub(crate) unsafe extern "thiscall" fn record_loan(_this: usize, offer: usize) {
     let nation = club.nation().addr();
     if nation != 0 && read_usize(nation) == read_usize(KEY_NATION_ENGLAND) {
         crate::comparison::branch("cqe_5 loan counted");
-        let p = season_loans_entry(club.addr());
+        let p = season_loans_entry(club);
         *(p as *mut u8) = read_u8(p).wrapping_add(1); // cqe5: the season calculation
     }
 }
@@ -236,7 +236,7 @@ pub(crate) unsafe extern "thiscall" fn england_rules_daily_update(this: usize, d
     while i < read_usize(G_CLUB_COUNT) as i32 {
         let club = Club(read_usize(G_CLUB_TABLE).wrapping_add((i as usize).wrapping_mul(club::SIZE)));
         if club.nation().addr() == read_usize(this + 0xa) {
-            *(season_loans_entry(club.addr()) as *mut u8) = 0;
+            *(season_loans_entry(club) as *mut u8) = 0;
         }
         i += 1;
     }

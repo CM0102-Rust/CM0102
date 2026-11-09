@@ -460,8 +460,8 @@ pub(crate) unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pe
         current as u32
     };
     exe::staff_contract_set_to_desired_contract(l, person, friendly_club_by_id(read_usize(this + contract::CLUB)), -1, status, 0xb, 0, 0);
-    let v1 = calc_contract_value(this, person.addr(), l) as f32;
-    let v2 = calc_contract_value(l, person.addr(), l) as f64;
+    let v1 = calc_contract_value(this, person, l) as f32;
+    let v2 = calc_contract_value(l, person, l) as f64;
     let mut ratio = if v2 == read_f32(rdata::F32_0) as f64 {
         read_f32(rdata::F32_0) as f64
     } else {

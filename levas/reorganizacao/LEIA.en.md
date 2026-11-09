@@ -29,6 +29,17 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 4: propagation (club and person)
+
+`tipar_registros.py --propagar Club,Staff`: a function of ours with a `usize` parameter that most calls fill with a
+typed record (`f(club.addr())`) takes the type, even when it only passes it on; the body is converted like a typed
+variable, and the calls by the compiler (`ajustar_pelo_compilador`: the span to fix is the one labelled "expected ..,
+found ..", not the primary one, which can be the called function's name). Repeats until no function is left: 120 + 5
+functions in two rounds, 515 fixes. `.addr()` outside the wrappers 2,875 → 2,503; 321 typed parameters. What is left:
+array and other-width accesses (`club::SQUAD + v * 4`, ~450), reads at unnamed offsets (~450) and local closures
+taking `usize` (~230). `compilar_mutacoes.py --lista` compiles a given list: the 20 mutations whose replacement calls a
+function that now takes the type (one fixed). Proof: 7cc445c2 ×2, detector equal, comparison 0.
+
 ## Migration to typed records, batch 3: the person (`Staff`)
 
 The full pattern in one batch: `tipar_registros.py staff` (532 variables in 479 functions), `--exe` (633 `.addr()`

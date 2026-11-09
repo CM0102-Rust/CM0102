@@ -3,7 +3,7 @@ use super::*;
 /// Person -> club of their contract (stored in G_CONTRACT_LOOKUP_RESULT), or 0.
 ///
 /// [pt] O clube do contrato da pessoa (0x4cf5a0, guardado em [0xae1080]) ou 0.
-pub(crate) unsafe fn player_search_contract_club(person: usize) -> usize {
+pub(crate) unsafe fn player_search_contract_club(person: Staff) -> usize {
     // 0x4cf5a0: push person; mov ecx, [0xae1050] -> thiscall, ret 4
     let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, c);
@@ -366,7 +366,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
             if !p.is_null() && read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) {
                 continue;
             }
-            if player_search_contract_club(p.addr()) == club_scout || p.player() == 0 {
+            if player_search_contract_club(p) == club_scout || p.player() == 0 {
                 continue;
             }
             if read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 {
@@ -469,7 +469,7 @@ pub(crate) unsafe extern "thiscall" fn contains_player(this: usize, person: usiz
 /// SCOUT_MANAGER get_search(i, manager).
 ///
 /// [pt] A busca `i` (0..9) do técnico `m` (0x7f6cd0: thiscall(gerência, i, técnico), ret 8; lê só o byte do índice).
-pub(crate) unsafe fn get_search(this: usize, i: u8, m: usize) -> usize {
+pub(crate) unsafe fn get_search(this: usize, i: u8, m: Staff) -> usize {
     exe::scout_manager_get_search(this, i as u32, m)
 }
 
