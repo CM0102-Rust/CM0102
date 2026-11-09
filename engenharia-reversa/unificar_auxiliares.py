@@ -21,7 +21,8 @@ PREFIXO = re.compile(r'^c[a-z]{2}\d+[a-z]?_|^c[a-z]{2}_|^d[a-z]{1,2}\d*[a-z]?_')
 
 def main():
     s = open(os.path.join(SRC, 'motor.rs'), encoding='utf-8').read()
-    portadas = set(re.findall(r'(\w+) as \*const', s[s.index('let rust: [usize; N] = ['):]))
+    import tabela_motor
+    portadas = set(tabela_motor.nomes_rust(s))
     arquivos = {}
     for d, _, fs in os.walk(os.path.join(SRC, 'motor')):
         for f in fs:

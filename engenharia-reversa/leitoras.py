@@ -27,7 +27,7 @@ def ja_desviadas():
     src_d = open(os.path.join(RAIZ, 'rust', 'src', 'date.rs'), encoding='utf-8').read()
     desligadas = set()  # DESLIGADAS saiu em 08/11/2026 (vazia desde 31/10)
     # só as tabelas instaladas no modo original (as portas da comparação, PROLOGOS_POS e PROLOGO_*, ficam fora)
-    blocos = [re.search(r'const PROLOGOS: \[.*?\n\];', src, re.S).group(0)]
+    blocos = [re.search(r'routines! \{.*?\n\}', src, re.S).group(0)]
     todas = {int(x, 16) for x in re.findall(r'address: (0x[0-9a-f]+)', ''.join(blocos) + src_d)}
     # o sorteio e a data têm desvio próprio fora das tabelas
     todas |= {0x90cfc0}

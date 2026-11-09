@@ -45,19 +45,13 @@ p = os.path.join(aqui, '..', '..', 'rust', 'src', 'motor.rs')
 s = open(p, encoding='utf-8').read()
 ROTINAS = {rotinas!r}
 BASE = {base}
-m = re.search(r'\];\nconst N: usize = (\d+);', s)
+m = re.search(r'\n\}}\nconst N: usize = (\d+);', s)
 assert m and int(m.group(1)) == BASE, ('o motor.rs mudou desde a materialização', m and m.group(1), BASE)
-pro = ''.join('    Prologue {{ address: %#x, bytes: &[%s] }},\n' % (e, ', '.join('0x%02x' % b for b in bs)) for _, e, bs in ROTINAS)
-s = s[:m.start()] + pro + '];\nconst N: usize = %d;' % (BASE + len(ROTINAS)) + s[m.end():]
-fins = [x.start() for x in re.finditer(r' as \*const \(\) as usize,\n    \];', s)]
-assert len(fins) == 2, fins
-for k, prefixo in ((1, 'compare_'), (0, '')):
-    i = fins[k] + len(' as *const () as usize,\n')
-    s = s[:i] + ''.join('        %s%s as *const () as usize,\n' % (prefixo, a) for a, _, _ in ROTINAS) + s[i:]
-anc = '\n    ];\n    for i in 0..N {{'
-assert s.count(anc) == 1
-s = s.replace(anc, ' ' + ' '.join('"motor_%s",' % a for a, _, _ in ROTINAS) + anc)
-anc = 'compare_value!(compare_criterio_da_comissao, criterio_da_comissao, 357, () -> u32);\n'
+# one line per routine in `routines! {{ .. }}` (rust/src/motor.rs; read by engenharia-reversa/tabela_motor.py)
+linhas = ''.join('\n    Prologue {{ address: %#x, bytes: &[%s] }} => %s, compare_%s, "motor_%s";' % (e, ', '.join('0x%02x' % b for b in bs), a, a, a)
+                 for a, e, bs in ROTINAS)
+s = s[:m.start()] + linhas + '\n}}\nconst N: usize = %d;' % (BASE + len(ROTINAS)) + s[m.end():]
+anc = 'compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);\n'
 assert s.count(anc) == 1
 s = s.replace(anc, anc + '\n' + open(os.path.join(aqui, 'codigo.rs'), encoding='utf-8').read().strip('\n') + '\n')
 open(p, 'w', encoding='utf-8').write(s)
@@ -151,7 +145,7 @@ def materializar(nomes, n, base, antes):
 
 def estado():
     s = open(os.path.join(R, 'rust', 'src', 'motor.rs'), encoding='utf-8').read()
-    base = int(re.search(r'\];\nconst N: usize = (\d+);', s).group(1))
+    base = int(re.search(r'\n\}\nconst N: usize = (\d+);', s).group(1))
     leia = open(os.path.join(R, 'README.md'), encoding='utf-8').read()
     n, total = map(int, re.search(r'\*\*Estado:\*\* (\d+) levas, (\d+) rotinas', leia).groups())
     return n, total, base
@@ -180,7 +174,7 @@ def main():
         tmp = tempfile.mkdtemp()
         shutil.copytree(os.path.join(R, 'rust', 'src'), os.path.join(tmp, 'rust', 'src'))
         m = texto_do_motor(tmp)
-        base = int(re.search(r'\];\nconst N: usize = (\d+);', m).group(1))
+        base = int(re.search(r'\n\}\nconst N: usize = (\d+);', m).group(1))
         # o exe de trabalho (1920x1080) é o cm0102.exe com patches (resolucao.py): rotina alterada nele não
         # se porta igual à original (187a: a 0x5e5cd0, altura da fonte, salta para um trecho novo)
         # a rotina vai do começo até o próximo início de função do docs/mapa_funcoes.csv (o mapa às vezes junta

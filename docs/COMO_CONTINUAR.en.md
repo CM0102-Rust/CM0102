@@ -20,7 +20,7 @@ A batch gathers queue items (up to 13 items of 3 routines since 2026-10-29: `ITE
    - the routine, with the comment `/// { 0xENDERECO } (arquivo.cpp): o que faz`;
    - the `Prologue` (initial bytes copied to the trampoline: whole instructions and no relative jump; `prologos.py` checks);
    - the comparator `compare_*` (runs original and Rust from the same state and compares the memory regions the routine may touch, plus the random draw state);
-   - the entries in the `rust`, `comp` and `nomes` arrays of `instalar` (same order as `PROLOGOS`; `N` = total);
+   - one line per routine in the `routines!` table of `motor.rs` (`Prologue { address, bytes } => routine, comparer, "label";`, which builds `PROLOGOS` and the lists of `instalar`; `N` = total; the tools read the table through `tabela_motor.py`);
    - the case in the `autoteste` (synthetic inputs, including limits and edge cases, without falling into the original's error paths, which open a message box).
    - Internal calls to other routines go **through the game's address** (`transmute(0x...)`), so that in the comparison they pass through the already proven hooks.
 4. **Prove** (the four criteria of `ROTINAS.md`):

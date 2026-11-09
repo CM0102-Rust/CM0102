@@ -6,9 +6,9 @@
 //! first bytes of the original (`PROLOGOS`, one `Prologue { address, bytes }` per routine) and the hash of the whole
 //! routine (`signatures.rs`): if the exe was changed there (another patch), the routine stays original.
 //!
-//! The four tables in `instalar` are aligned by position: entry `i` of `PROLOGOS` is the original address, entry `i`
-//! of the `rust` list is our copy, entry `i` of the `comparar` list is its comparer, entry `i` of the names is its
-//! label. `original_fn::<F>(IDX_<NAME>)` calls the original routine (through the bytes saved before the jump); the
+//! Each hooked routine is one line of the `routines!` table below: the original address and first bytes, our copy, its
+//! comparer and its log label (`Prologue { .. } => rust_fn, compare_fn, "label";`); the macro builds PROLOGOS and the
+//! lists `instalar` uses, so they cannot drift apart. `original_fn::<F>(IDX_<NAME>)` calls the original routine (through the bytes saved before the jump); the
 //! `IDX_` constants are generated from the table by build.rs.
 //!
 //! # How to read a routine file
@@ -33,2197 +33,2217 @@
 //!
 //! [pt] As rotinas do jogo reescritas em Rust e como elas substituem as originais. A DLL desvia o começo de cada rotina
 //! original para a cópia em Rust (`detours.rs`), depois de conferir os primeiros bytes (`PROLOGOS`) e o hash da rotina
-//! inteira (`signatures.rs`). As quatro tabelas de `instalar` andam juntas pela posição; `original_fn::<F>(IDX_<NOME>)` chama a original
+//! inteira (`signatures.rs`). Cada rotina desviada é uma linha da tabela `routines!` (endereço e primeiros bytes, cópia, comparador, rótulo); `original_fn::<F>(IDX_<NOME>)` chama a original
 //! `i`. Cada arquivo de `motor/` tem as rotinas do arquivo de origem do jogo de mesmo nome; o vocabulário está acima.
 
 use crate::comparison::{Scoreboard, TestRng};
 use crate::detours::{self, Prologue};
 use crate::registro::linha;
 
-const PROLOGOS: [Prologue; N] = [
+/// Builds the tables of the hooked routines from one line per routine (the four used to be separate arrays aligned
+/// only by position): `Prologue { .. } => rust_fn, comparer_fn, "label";`. Generates PROLOGOS (the address and the
+/// expected first bytes, checked before hooking), `rust_table()` and `compare_table()` (the Rust copy and the comparer
+/// of each routine, as addresses) and NAMES (the label in the log). Read by the tools through
+/// engenharia-reversa/tabela_motor.py.
+///
+/// [pt] As tabelas das rotinas desviadas, uma linha por rotina (eram quatro listas alinhadas só pela posição).
+macro_rules! routines {
+    ($( $p:expr => $r:path, $c:path, $n:literal; )*) => {
+        const PROLOGOS: [Prologue; N] = [$($p),*];
+        fn rust_table() -> [usize; N] {
+            [$($r as *const () as usize),*]
+        }
+        fn compare_table() -> [usize; N] {
+            [$($c as *const () as usize),*]
+        }
+        const NAMES: [&str; N] = [$($n),*];
+    };
+}
+
+routines! {
     // 0x6c38c0: mov edx, dword ptr [esp + 4]; mov al, byte ptr [edx + 0x19]
-    Prologue { address: 0x6c38c0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x8a, 0x42, 0x19] },
+    Prologue { address: 0x6c38c0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x8a, 0x42, 0x19] } => table_a, compare_table_a, "motor_tabela_a";
     // 0x6c38f0: mov edx, dword ptr [esp + 4]; mov al, byte ptr [edx + 0x19]
-    Prologue { address: 0x6c38f0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x8a, 0x42, 0x19] },
+    Prologue { address: 0x6c38f0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x8a, 0x42, 0x19] } => table_b, compare_table_b, "motor_tabela_b";
     // 0x6c4180: cmp byte ptr [esp + 4], 1
-    Prologue { address: 0x6c4180, bytes: &[0x80, 0x7c, 0x24, 0x04, 0x01] },
+    Prologue { address: 0x6c4180, bytes: &[0x80, 0x7c, 0x24, 0x04, 0x01] } => side_difference, compare_diferenca, "motor_diferenca_lado";
     // 0x6cb960: mov al, byte ptr [esp + 4]; cmp al, 1
-    Prologue { address: 0x6cb960, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x3c, 0x01] },
+    Prologue { address: 0x6cb960, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x3c, 0x01] } => band, compare_band, "motor_faixa";
     // 0x6cb6c0: mov al, byte ptr [esp + 0xc]; mov dl, byte ptr [esp + 4]
-    Prologue { address: 0x6cb6c0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x8a, 0x54, 0x24, 0x04] },
+    Prologue { address: 0x6cb6c0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x8a, 0x54, 0x24, 0x04] } => by_difference, compare_by_difference, "motor_por_diferenca";
     // 0x6cb930: mov al, byte ptr [esp + 4]; cmp al, 1
-    Prologue { address: 0x6cb930, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x3c, 0x01] },
+    Prologue { address: 0x6cb930, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x3c, 0x01] } => limit, compare_limit, "motor_limite";
     // 0x70dfa0: mov al, byte ptr [ecx + 0x27]; mov dl, 6
-    Prologue { address: 0x70dfa0, bytes: &[0x8a, 0x41, 0x27, 0xb2, 0x06] },
+    Prologue { address: 0x70dfa0, bytes: &[0x8a, 0x41, 0x27, 0xb2, 0x06] } => player_condition, compare_condicao, "motor_condicao_jogador";
     // 0x717410: mov eax, ecx; mov ecx, dword ptr [eax + 0x19e]
-    Prologue { address: 0x717410, bytes: &[0x8b, 0xc1, 0x8b, 0x88, 0x9e, 0x01, 0x00, 0x00] },
+    Prologue { address: 0x717410, bytes: &[0x8b, 0xc1, 0x8b, 0x88, 0x9e, 0x01, 0x00, 0x00] } => player_table, compare_player_table, "motor_tabela_do_jogador";
     // 0x6c4130: push ebx; push esi; mov esi, ecx; mov ecx, dword ptr [esp + 0xc]
-    Prologue { address: 0x6c4130, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x8b, 0x4c, 0x24, 0x0c] },
+    Prologue { address: 0x6c4130, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x8b, 0x4c, 0x24, 0x0c] } => player_difference, compare_player_difference, "motor_diferenca_jogador";
     // 0x6cfda0: push esi; mov esi, dword ptr [esp + 8]
-    Prologue { address: 0x6cfda0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
+    Prologue { address: 0x6cfda0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => side_byte, compare_side_byte, "motor_byte_do_lado";
     // 0x70df40: mov al, byte ptr [ecx + 0x27]; cmp al, 1
-    Prologue { address: 0x70df40, bytes: &[0x8a, 0x41, 0x27, 0x3c, 0x01] },
+    Prologue { address: 0x70df40, bytes: &[0x8a, 0x41, 0x27, 0x3c, 0x01] } => player_limit, compare_player_limit, "motor_limite_jogador";
     // 0x6f5b20: mov al, byte ptr [esp + 4]; cmp al, 1
-    Prologue { address: 0x6f5b20, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x3c, 0x01] },
+    Prologue { address: 0x6f5b20, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x3c, 0x01] } => player_band, compare_player_band, "motor_faixa_jogador";
     // 0x5b57c0: movsx eax, byte ptr [esp + 4]
-    Prologue { address: 0x5b57c0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
+    Prologue { address: 0x5b57c0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] } => position_byte, compare_position_byte, "motor_byte_da_posicao";
     // 0x6f4600: push esi; mov esi, ecx; mov al, byte ptr [esi + 0x19]
-    Prologue { address: 0x6f4600, bytes: &[0x56, 0x8b, 0xf1, 0x8a, 0x46, 0x19] },
+    Prologue { address: 0x6f4600, bytes: &[0x56, 0x8b, 0xf1, 0x8a, 0x46, 0x19] } => field_by_position, compare_field_by_position, "motor_campo_pela_posicao";
     // 0x6bce20: push esi; mov esi, ecx; mov ecx, dword ptr [esp + 8]
-    Prologue { address: 0x6bce20, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x4c, 0x24, 0x08] },
+    Prologue { address: 0x6bce20, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x4c, 0x24, 0x08] } => can_choose, compare_can_choose, "motor_pode_escolher";
     // 0x6f4920: mov dl, byte ptr [esp + 0x10]; push ebx
-    Prologue { address: 0x6f4920, bytes: &[0x8a, 0x54, 0x24, 0x10, 0x53] },
+    Prologue { address: 0x6f4920, bytes: &[0x8a, 0x54, 0x24, 0x10, 0x53] } => aim_set_facing_direction, compare_aim_set_facing_direction, "motor_apontar";
     // 0x6f56c0: mov ax, word ptr [esp + 8]
-    Prologue { address: 0x6f56c0, bytes: &[0x66, 0x8b, 0x44, 0x24, 0x08] },
+    Prologue { address: 0x6f56c0, bytes: &[0x66, 0x8b, 0x44, 0x24, 0x08] } => tire_fatigue, compare_tire_fatigue, "motor_desgastar";
     // 0x6fa140: mov al, byte ptr [esp + 4]; mov dl, byte ptr [ecx + 0x102]
-    Prologue { address: 0x6fa140, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x8a, 0x91, 0x02, 0x01, 0x00, 0x00] },
+    Prologue { address: 0x6fa140, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x8a, 0x91, 0x02, 0x01, 0x00, 0x00] } => facing, compare_facing, "motor_virado_para";
     // 0x6cd330: sub esp, 8; push ebx; mov ebx, dword ptr [esp + 0x14]
-    Prologue { address: 0x6cd330, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8b, 0x5c, 0x24, 0x14] },
+    Prologue { address: 0x6cd330, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8b, 0x5c, 0x24, 0x14] } => search_on_side, compare_search_on_side_recording, "motor_procurar_no_lado";
     // 0x6cb9b0: push ebx; push esi; mov esi, dword ptr [esp + 0xc]
-    Prologue { address: 0x6cb9b0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
+    Prologue { address: 0x6cb9b0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => reaches, compare_reaches, "motor_alcanca";
     // 0x713e90: push ebx; mov ebx, dword ptr [esp + 0x20]
-    Prologue { address: 0x713e90, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x20] },
+    Prologue { address: 0x713e90, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x20] } => classify_move, compare_classificar, "motor_classificar_lance";
     // 0x6f09b0: movsx eax, byte ptr [ecx + 0x103]
-    Prologue { address: 0x6f09b0, bytes: &[0x0f, 0xbe, 0x81, 0x03, 0x01, 0x00, 0x00] },
+    Prologue { address: 0x6f09b0, bytes: &[0x0f, 0xbe, 0x81, 0x03, 0x01, 0x00, 0x00] } => distance_to_point, compare_distance_to_point, "motor_distancia_ao_ponto";
     // 0x6fa1e0: mov al, byte ptr [ecx + 0x27]; push esi; test al, al
-    Prologue { address: 0x6fa1e0, bytes: &[0x8a, 0x41, 0x27, 0x56, 0x84, 0xc0] },
+    Prologue { address: 0x6fa1e0, bytes: &[0x8a, 0x41, 0x27, 0x56, 0x84, 0xc0] } => distance_to_goal, compare_distance_to_goal, "motor_distancia_ao_gol";
     // 0x6cb780: push ebx; push ebp; push esi; push edi; mov edi, dword ptr [esp + 0x14]
-    Prologue { address: 0x6cb780, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] },
+    Prologue { address: 0x6cb780, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] } => closest_to_goal, compare_mais_perto, "motor_mais_perto_do_gol";
     // 0x6cbc00: sub esp, 0xc; movsx eax, byte ptr [esp + 0x18]
-    Prologue { address: 0x6cbc00, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x44, 0x24, 0x18] },
+    Prologue { address: 0x6cbc00, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x44, 0x24, 0x18] } => players_in_line, compare_na_linha, "motor_jogadores_na_linha";
     // 0x6f9f90: push ebx; push ebp; push esi; mov esi, ecx
-    Prologue { address: 0x6f9f90, bytes: &[0x53, 0x55, 0x56, 0x8b, 0xf1] },
+    Prologue { address: 0x6f9f90, bytes: &[0x53, 0x55, 0x56, 0x8b, 0xf1] } => can_play, compare_consegue, "motor_consegue_jogar";
     // 0x6f4650: mov al, byte ptr [ecx + 0x27]; test al, al
-    Prologue { address: 0x6f4650, bytes: &[0x8a, 0x41, 0x27, 0x84, 0xc0] },
+    Prologue { address: 0x6f4650, bytes: &[0x8a, 0x41, 0x27, 0x84, 0xc0] } => in_the_box, compare_in_the_box, "motor_na_area";
     // 0x5b5270: movsx edx, byte ptr [esp + 4]
-    Prologue { address: 0x5b5270, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
+    Prologue { address: 0x5b5270, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] } => position_marks, compare_marcas, "motor_marcas_da_posicao";
     // 0x716270: push esi; mov esi, ecx; mov al, byte ptr [esi + 0x19]
-    Prologue { address: 0x716270, bytes: &[0x56, 0x8b, 0xf1, 0x8a, 0x46, 0x19] },
+    Prologue { address: 0x716270, bytes: &[0x56, 0x8b, 0xf1, 0x8a, 0x46, 0x19] } => attacking_role, compare_papel_ataque, "motor_papel_no_ataque";
     // 0x716310: push esi; mov esi, ecx; mov ecx, dword ptr [esi + 0x19e]
-    Prologue { address: 0x716310, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x8e, 0x9e, 0x01, 0x00, 0x00] },
+    Prologue { address: 0x716310, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x8e, 0x9e, 0x01, 0x00, 0x00] } => defending_role, compare_papel_defesa, "motor_papel_na_defesa";
     // 0x6c2be0: sub esp, 8; push ebx; push ebp
-    Prologue { address: 0x6c2be0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
+    Prologue { address: 0x6c2be0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] } => position_place_players, compare_position_place_players, "motor_posicionar";
     // 0x6c3aa0: push ebx; push esi; push edi; mov edi, ecx
-    Prologue { address: 0x6c3aa0, bytes: &[0x53, 0x56, 0x57, 0x8b, 0xf9] },
+    Prologue { address: 0x6c3aa0, bytes: &[0x53, 0x56, 0x57, 0x8b, 0xf9] } => defensive_lines, compare_linhas, "motor_linhas_defensivas";
     // 0x6f4aa0: sub esp, 0x10; push ebx; push esi
-    Prologue { address: 0x6f4aa0, bytes: &[0x83, 0xec, 0x10, 0x53, 0x56] },
+    Prologue { address: 0x6f4aa0, bytes: &[0x83, 0xec, 0x10, 0x53, 0x56] } => update_player, compare_atualizar, "motor_atualizar_jogador";
     // 0x6f44a0: push esi; mov esi, ecx; push edi; fld dword ptr [esi + 0x4d]
-    Prologue { address: 0x6f44a0, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0xd9, 0x46, 0x4d] },
+    Prologue { address: 0x6f44a0, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0xd9, 0x46, 0x4d] } => draw_moment, compare_momento, "motor_sortear_momento";
     // 0x6ce110: mov eax, dword ptr [ecx + 0xf59e]
-    Prologue { address: 0x6ce110, bytes: &[0x8b, 0x81, 0x9e, 0xf5, 0x00, 0x00] },
+    Prologue { address: 0x6ce110, bytes: &[0x8b, 0x81, 0x9e, 0xf5, 0x00, 0x00] } => hold_position_one, compare_posicao_um, "motor_manter_posicao_um";
     // 0x6bd5b0: push ebx; push esi; mov esi, dword ptr [esp + 0xc]
-    Prologue { address: 0x6bd5b0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
+    Prologue { address: 0x6bd5b0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => clear_path, compare_caminho, "motor_caminho_livre";
     // 0x6cbad0: push ebx; push ebp; push esi; push edi; mov edi, dword ptr [esp + 0x14]
-    Prologue { address: 0x6cbad0, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] },
+    Prologue { address: 0x6cbad0, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] } => space_ahead, compare_espaco, "motor_espaco_a_frente";
     // 0x6cb910: mov al, byte ptr [esp + 4]; cmp al, 2
-    Prologue { address: 0x6cb910, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x3c, 0x02] },
+    Prologue { address: 0x6cb910, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x3c, 0x02] } => off_centre, compare_off_centre, "motor_fora_do_meio";
     // 0x6cb700: push ecx; push ebx; mov bl, byte ptr [esp + 0x10]
-    Prologue { address: 0x6cb700, bytes: &[0x51, 0x53, 0x8a, 0x5c, 0x24, 0x10] },
+    Prologue { address: 0x6cb700, bytes: &[0x51, 0x53, 0x8a, 0x5c, 0x24, 0x10] } => beyond_the_line, compare_alem, "motor_alem_da_linha";
     // 0x6cc4e0: movsx eax, byte ptr [esp + 4]
-    Prologue { address: 0x6cc4e0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
+    Prologue { address: 0x6cc4e0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] } => distance_between, compare_distance_between, "motor_distancia_entre";
     // batch 12: match state accessors (match_pl.cpp, 0x700320..0x700410)
-    Prologue { address: 0x700320, bytes: &[0x8a, 0x81, 0xa7, 0x8e, 0x00, 0x00] },
-    Prologue { address: 0x700330, bytes: &[0x8a, 0x81, 0xa8, 0x8e, 0x00, 0x00] },
-    Prologue { address: 0x700340, bytes: &[0x8a, 0x81, 0xa9, 0x8e, 0x00, 0x00] },
-    Prologue { address: 0x700380, bytes: &[0x8a, 0x81, 0xaa, 0x8e, 0x00, 0x00] },
-    Prologue { address: 0x700400, bytes: &[0x8a, 0x81, 0xb2, 0x8e, 0x00, 0x00] },
-    Prologue { address: 0x700350, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x88, 0x81, 0xa9, 0x8e, 0x00, 0x00] },
-    Prologue { address: 0x700360, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x88, 0x81, 0xa7, 0x8e, 0x00, 0x00] },
-    Prologue { address: 0x700370, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x88, 0x81, 0xa8, 0x8e, 0x00, 0x00] },
-    Prologue { address: 0x700390, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x88, 0x81, 0xaa, 0x8e, 0x00, 0x00] },
-    Prologue { address: 0x7003a0, bytes: &[0x66, 0x8b, 0x44, 0x24, 0x04] },
-    Prologue { address: 0x700410, bytes: &[0x8b, 0x81, 0x7a, 0x8f, 0x00, 0x00] },
-    Prologue { address: 0x7003b0, bytes: &[0x8a, 0x54, 0x24, 0x04, 0x80, 0xfa, 0xff] },
-    Prologue { address: 0x714c60, bytes: &[0x8a, 0x91, 0x01, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x6cd660, bytes: &[0x53, 0x55, 0x56, 0x8b, 0xf1] },
+    Prologue { address: 0x700320, bytes: &[0x8a, 0x81, 0xa7, 0x8e, 0x00, 0x00] } => ler_8ea7, compare_ler_8ea7, "motor_ler_8ea7";
+    Prologue { address: 0x700330, bytes: &[0x8a, 0x81, 0xa8, 0x8e, 0x00, 0x00] } => ler_8ea8, compare_ler_8ea8, "motor_ler_8ea8";
+    Prologue { address: 0x700340, bytes: &[0x8a, 0x81, 0xa9, 0x8e, 0x00, 0x00] } => ler_8ea9, compare_ler_8ea9, "motor_ler_8ea9";
+    Prologue { address: 0x700380, bytes: &[0x8a, 0x81, 0xaa, 0x8e, 0x00, 0x00] } => ler_8eaa, compare_ler_8eaa, "motor_ler_8eaa";
+    Prologue { address: 0x700400, bytes: &[0x8a, 0x81, 0xb2, 0x8e, 0x00, 0x00] } => ler_8eb2, compare_ler_8eb2, "motor_ler_8eb2";
+    Prologue { address: 0x700350, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x88, 0x81, 0xa9, 0x8e, 0x00, 0x00] } => gravar_8ea9, compare_gravar_8ea9, "motor_gravar_8ea9";
+    Prologue { address: 0x700360, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x88, 0x81, 0xa7, 0x8e, 0x00, 0x00] } => gravar_8ea7, compare_gravar_8ea7, "motor_gravar_8ea7";
+    Prologue { address: 0x700370, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x88, 0x81, 0xa8, 0x8e, 0x00, 0x00] } => gravar_8ea8, compare_gravar_8ea8, "motor_gravar_8ea8";
+    Prologue { address: 0x700390, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x88, 0x81, 0xaa, 0x8e, 0x00, 0x00] } => gravar_8eaa, compare_gravar_8eaa, "motor_gravar_8eaa";
+    Prologue { address: 0x7003a0, bytes: &[0x66, 0x8b, 0x44, 0x24, 0x04] } => write_8ed8, compare_write_8ed8, "motor_gravar_8ed8";
+    Prologue { address: 0x700410, bytes: &[0x8b, 0x81, 0x7a, 0x8f, 0x00, 0x00] } => read_8f7a, compare_read_8f7a, "motor_ler_8f7a";
+    Prologue { address: 0x7003b0, bytes: &[0x8a, 0x54, 0x24, 0x04, 0x80, 0xfa, 0xff] } => record_possession, compare_posse, "motor_registrar_posse";
+    Prologue { address: 0x714c60, bytes: &[0x8a, 0x91, 0x01, 0x01, 0x00, 0x00] } => in_list, compare_in_list, "motor_na_lista";
+    Prologue { address: 0x6cd660, bytes: &[0x53, 0x55, 0x56, 0x8b, 0xf1] } => store_extremes, compare_extremos, "motor_guardar_extremos";
     // batch 13
-    Prologue { address: 0x6cbbb0, bytes: &[0x56, 0x0f, 0xbe, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x6cb650, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
-    Prologue { address: 0x6cd5f0, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] },
-    Prologue { address: 0x6d4280, bytes: &[0x8b, 0x81, 0x92, 0x47, 0x00, 0x00] },
-    Prologue { address: 0x6bd6b0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x53] },
-    Prologue { address: 0x6c3010, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] },
-    Prologue { address: 0x6c3a00, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
-    Prologue { address: 0x6c3950, bytes: &[0x51, 0x0f, 0xbe, 0x54, 0x24, 0x08] },
+    Prologue { address: 0x6cbbb0, bytes: &[0x56, 0x0f, 0xbe, 0x74, 0x24, 0x08] } => count_active, compare_count_active, "motor_contar_ativos";
+    Prologue { address: 0x6cb650, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] } => special_code, compare_special_code, "motor_codigo_especial";
+    Prologue { address: 0x6cd5f0, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] } => behind_the_extreme, compare_atras, "motor_atras_do_extremo";
+    Prologue { address: 0x6d4280, bytes: &[0x8b, 0x81, 0x92, 0x47, 0x00, 0x00] } => no_match, compare_no_match, "motor_sem_partida";
+    Prologue { address: 0x6bd6b0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x53] } => pressure_in_box, compare_pressao_area, "motor_pressao_na_area";
+    Prologue { address: 0x6c3010, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] } => nearest_to_point, compare_mais_proximo, "motor_mais_proximo_do_ponto";
+    Prologue { address: 0x6c3a00, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] } => pressure_at_point, compare_pressao_ponto, "motor_pressao_no_ponto";
+    Prologue { address: 0x6c3950, bytes: &[0x51, 0x0f, 0xbe, 0x54, 0x24, 0x08] } => smallest_distance, compare_smallest_distance, "motor_menor_distancia";
     // batch 14
-    Prologue { address: 0x6c06b0, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
-    Prologue { address: 0x6c07a0, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
-    Prologue { address: 0x6c0a70, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
-    Prologue { address: 0x6c2750, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x54, 0x24, 0x10] },
+    Prologue { address: 0x6c06b0, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] } => split_a, compare_split_a, "motor_repartir_a";
+    Prologue { address: 0x6c07a0, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] } => split_b, compare_split_b, "motor_repartir_b";
+    Prologue { address: 0x6c0a70, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] } => split_c, compare_split_c, "motor_repartir_c";
+    Prologue { address: 0x6c2750, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x54, 0x24, 0x10] } => choose_by_role, compare_escolher, "motor_escolher_por_papel";
     // batch 15
-    Prologue { address: 0x6f4a30, bytes: &[0x66, 0x8b, 0x81, 0x9a, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x6ce0f0, bytes: &[0x8a, 0x54, 0x24, 0x04, 0x33, 0xc0] },
-    Prologue { address: 0x70df20, bytes: &[0x8a, 0x81, 0x02, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x7103c0, bytes: &[0x8b, 0x81, 0x9e, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x6bba50, bytes: &[0x8a, 0x81, 0x5a, 0x47, 0x00, 0x00] },
-    Prologue { address: 0x6c2fe0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
-    Prologue { address: 0x6c3920, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x8a, 0x42, 0x1a] },
-    Prologue { address: 0x6d4250, bytes: &[0x66, 0x8b, 0x81, 0xd4, 0x8e, 0x00, 0x00] },
-    Prologue { address: 0x6f4a40, bytes: &[0x8a, 0x41, 0x27, 0x84, 0xc0] },
-    Prologue { address: 0x6f4a70, bytes: &[0x8a, 0x41, 0x27, 0x84, 0xc0] },
-    Prologue { address: 0x70a890, bytes: &[0x66, 0x8b, 0x44, 0x24, 0x04] },
-    Prologue { address: 0x70a8c0, bytes: &[0x66, 0x8b, 0x44, 0x24, 0x04] },
-    Prologue { address: 0x70df70, bytes: &[0x8a, 0x41, 0x27, 0x3c, 0x01] },
-    Prologue { address: 0x6bba10, bytes: &[0x83, 0xc8, 0xff, 0x33, 0xd2] },
-    Prologue { address: 0x6cf710, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
+    Prologue { address: 0x6f4a30, bytes: &[0x66, 0x8b, 0x81, 0x9a, 0x01, 0x00, 0x00] } => direction, compare_direction, "motor_direcao";
+    Prologue { address: 0x6ce0f0, bytes: &[0x8a, 0x54, 0x24, 0x04, 0x33, 0xc0] } => clear_stored, compare_clear_stored, "motor_zerar_guardado";
+    Prologue { address: 0x70df20, bytes: &[0x8a, 0x81, 0x02, 0x01, 0x00, 0x00] } => x_off_centre, compare_x_fora, "motor_x_fora_do_meio";
+    Prologue { address: 0x7103c0, bytes: &[0x8b, 0x81, 0x9e, 0x01, 0x00, 0x00] } => is_the_stored, compare_is_the_stored, "motor_e_o_guardado";
+    Prologue { address: 0x6bba50, bytes: &[0x8a, 0x81, 0x5a, 0x47, 0x00, 0x00] } => side_of_move, compare_side_of_move, "motor_lado_do_lance";
+    Prologue { address: 0x6c2fe0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] } => player_in_block, compare_player_in_block, "motor_jogador_no_bloco";
+    Prologue { address: 0x6c3920, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x8a, 0x42, 0x1a] } => table_a_1a, compare_table_a_1a, "motor_tabela_a_1a";
+    Prologue { address: 0x6d4250, bytes: &[0x66, 0x8b, 0x81, 0xd4, 0x8e, 0x00, 0x00] } => marked_moment, compare_marked_moment, "motor_momento_marcado";
+    Prologue { address: 0x6f4a40, bytes: &[0x8a, 0x41, 0x27, 0x84, 0xc0] } => side_state, compare_side_state, "motor_estado_do_lado";
+    Prologue { address: 0x6f4a70, bytes: &[0x8a, 0x41, 0x27, 0x84, 0xc0] } => opponent_state, compare_opponent_state, "motor_estado_do_adversario";
+    Prologue { address: 0x70a890, bytes: &[0x66, 0x8b, 0x44, 0x24, 0x04] } => write_19c, compare_write_19c, "motor_gravar_19c";
+    Prologue { address: 0x70a8c0, bytes: &[0x66, 0x8b, 0x44, 0x24, 0x04] } => set_piece_code, compare_set_piece_code, "motor_codigo_de_bola_parada";
+    Prologue { address: 0x70df70, bytes: &[0x8a, 0x41, 0x27, 0x3c, 0x01] } => near_goal, compare_near_goal, "motor_perto_do_gol";
+    Prologue { address: 0x6bba10, bytes: &[0x83, 0xc8, 0xff, 0x33, 0xd2] } => clear_move, compare_clear_move, "motor_limpar_lance";
+    Prologue { address: 0x6cf710, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] } => add_disposition, compare_add_disposition, "motor_somar_disposicao";
     // batch 16
-    Prologue { address: 0x6c0890, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
-    Prologue { address: 0x6c0980, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
-    Prologue { address: 0x6c0b70, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
-    Prologue { address: 0x6bb9a0, bytes: &[0x8b, 0x81, 0x61, 0x47, 0x00, 0x00] },
-    Prologue { address: 0x714ca0, bytes: &[0x8a, 0x91, 0x01, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x6cdd00, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56, 0x57] },
-    Prologue { address: 0x70d630, bytes: &[0x8a, 0x41, 0x27, 0x56, 0xf6, 0xd8] },
+    Prologue { address: 0x6c0890, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] } => split_d, compare_split_d, "motor_repartir_d";
+    Prologue { address: 0x6c0980, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] } => split_e, compare_split_e, "motor_repartir_e";
+    Prologue { address: 0x6c0b70, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] } => split_f, compare_split_f, "motor_repartir_f";
+    Prologue { address: 0x6bb9a0, bytes: &[0x8b, 0x81, 0x61, 0x47, 0x00, 0x00] } => record_move, compare_record_move, "motor_registrar_lance";
+    Prologue { address: 0x714ca0, bytes: &[0x8a, 0x91, 0x01, 0x01, 0x00, 0x00] } => remove_from_list, compare_remove_from_list, "motor_remover_da_lista";
+    Prologue { address: 0x6cdd00, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56, 0x57] } => take_the_field, compare_take_the_field, "motor_entrar_em_campo";
+    Prologue { address: 0x70d630, bytes: &[0x8a, 0x41, 0x27, 0x56, 0xf6, 0xd8] } => in_danger, compare_in_danger, "motor_em_perigo";
     // batch 17
-    Prologue { address: 0x6bba80, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x33, 0xdb] },
-    Prologue { address: 0x6c41b0, bytes: &[0x8a, 0x54, 0x24, 0x04, 0x53] },
-    Prologue { address: 0x713d90, bytes: &[0x51, 0x53, 0x8b, 0x5c, 0x24, 0x0c] },
+    Prologue { address: 0x6bba80, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x33, 0xdb] } => check_move, compare_check_move, "motor_conferir_lance";
+    Prologue { address: 0x6c41b0, bytes: &[0x8a, 0x54, 0x24, 0x04, 0x53] } => clear_path_to, compare_clear_path, "motor_caminho_livre_ate";
+    Prologue { address: 0x713d90, bytes: &[0x51, 0x53, 0x8b, 0x5c, 0x24, 0x0c] } => reaches_the_point, compare_reaches_the_point, "motor_alcanca_o_ponto";
     // batch 18
-    Prologue { address: 0x6d0f80, bytes: &[0x83, 0xec, 0x20, 0x8b, 0x81, 0x92, 0x47, 0x00, 0x00] },
-    Prologue { address: 0x6c2880, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x54, 0x24, 0x10] },
-    Prologue { address: 0x6c2a40, bytes: &[0x8a, 0x81, 0xae, 0x8e, 0x00, 0x00] },
+    Prologue { address: 0x6d0f80, bytes: &[0x83, 0xec, 0x20, 0x8b, 0x81, 0x92, 0x47, 0x00, 0x00] } => choose_standout, compare_choose_standout, "motor_escolher_destaque";
+    Prologue { address: 0x6c2880, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x54, 0x24, 0x10] } => choose_by_role_b, compare_choose_by_role_b, "motor_escolher_por_papel_b";
+    Prologue { address: 0x6c2a40, bytes: &[0x8a, 0x81, 0xae, 0x8e, 0x00, 0x00] } => formation_square, compare_formation_square, "motor_casa_da_formacao";
     // batch 19
-    Prologue { address: 0x6ce9c0, bytes: &[0x83, 0xec, 0x10, 0x8a, 0x44, 0x24, 0x14] },
-    Prologue { address: 0x6c2050, bytes: &[0x83, 0xec, 0x10, 0x0f, 0xbe, 0x54, 0x24, 0x14] },
+    Prologue { address: 0x6ce9c0, bytes: &[0x83, 0xec, 0x10, 0x8a, 0x44, 0x24, 0x14] } => compute_percentages, compare_compute_percentages, "motor_calcular_percentuais";
+    Prologue { address: 0x6c2050, bytes: &[0x83, 0xec, 0x10, 0x0f, 0xbe, 0x54, 0x24, 0x14] } => choose_by_role_c, compare_choose_by_role_c, "motor_escolher_por_papel_c";
     // batch 20
-    Prologue { address: 0x716450, bytes: &[0xd9, 0x44, 0x24, 0x04, 0xd8, 0x89, 0xa2, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x7165b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
-    Prologue { address: 0x6bb8d0, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] },
-    Prologue { address: 0x6bb950, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] },
-    Prologue { address: 0x6c2310, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x54, 0x24, 0x10] },
+    Prologue { address: 0x716450, bytes: &[0xd9, 0x44, 0x24, 0x04, 0xd8, 0x89, 0xa2, 0x01, 0x00, 0x00] } => apply_factor, compare_apply_factor, "motor_aplicar_fator";
+    Prologue { address: 0x7165b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => value_by_condition, compare_value_by_condition, "motor_valor_pela_condicao";
+    Prologue { address: 0x6bb8d0, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] } => apply_to_team, compare_apply_to_team, "motor_aplicar_ao_time";
+    Prologue { address: 0x6bb950, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] } => apply_to_side, compare_apply_to_side, "motor_aplicar_ao_lado";
+    Prologue { address: 0x6c2310, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x54, 0x24, 0x10] } => choose_by_condition, compare_choose_by_condition, "motor_escolher_pela_condicao";
     // batch 21 (routines with no file in the map, called by the engine)
-    Prologue { address: 0x717400, bytes: &[0x66, 0x8b, 0x81, 0xbc, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x7160d0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x8a, 0x51, 0x2b] },
-    Prologue { address: 0x7160e0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x88, 0x41, 0x2b] },
-    Prologue { address: 0x717430, bytes: &[0x8b, 0xc1, 0x8b, 0x88, 0x9e, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x717450, bytes: &[0x8b, 0xc1, 0x8b, 0x88, 0x9e, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x715f30, bytes: &[0x8b, 0xc1, 0x8b, 0x88, 0x9e, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x7163c0, bytes: &[0x8a, 0x41, 0x19, 0x50, 0x0f, 0xbe, 0x41, 0x27] },
-    Prologue { address: 0x7163f0, bytes: &[0x0f, 0xbe, 0x41, 0x27, 0x56] },
-    Prologue { address: 0x70def0, bytes: &[0x8a, 0x41, 0x27, 0x84, 0xc0] },
-    Prologue { address: 0x717c70, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x8e, 0x9e, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x6f0970, bytes: &[0x8b, 0x91, 0x9e, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x6e1cd0, bytes: &[0x8b, 0x41, 0x23, 0x8b, 0x54, 0x24, 0x04] },
-    Prologue { address: 0x6d5cd0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x25, 0xff, 0x7f, 0x00, 0x00] },
+    Prologue { address: 0x717400, bytes: &[0x66, 0x8b, 0x81, 0xbc, 0x01, 0x00, 0x00] } => read_1bc, compare_read_1bc, "motor_ler_1bc";
+    Prologue { address: 0x7160d0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x8a, 0x51, 0x2b] } => add_2b, compare_add_2b, "motor_somar_2b";
+    Prologue { address: 0x7160e0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x88, 0x41, 0x2b] } => write_2b, compare_write_2b, "motor_gravar_2b";
+    Prologue { address: 0x717430, bytes: &[0x8b, 0xc1, 0x8b, 0x88, 0x9e, 0x01, 0x00, 0x00] } => player_table_a_1a, compare_player_table_a_1a, "motor_tabela_a_1a_do_jogador";
+    Prologue { address: 0x717450, bytes: &[0x8b, 0xc1, 0x8b, 0x88, 0x9e, 0x01, 0x00, 0x00] } => player_table_b, compare_player_table_b, "motor_tabela_b_do_jogador";
+    Prologue { address: 0x715f30, bytes: &[0x8b, 0xc1, 0x8b, 0x88, 0x9e, 0x01, 0x00, 0x00] } => difference_of_player, compare_difference_of_player, "motor_diferenca_do_jogador";
+    Prologue { address: 0x7163c0, bytes: &[0x8a, 0x41, 0x19, 0x50, 0x0f, 0xbe, 0x41, 0x27] } => player_marks_rot, compare_player_marks_rot, "motor_marcas_do_jogador_rot";
+    Prologue { address: 0x7163f0, bytes: &[0x0f, 0xbe, 0x41, 0x27, 0x56] } => mark_800000, compare_mark_800000, "motor_marca_800000";
+    Prologue { address: 0x70def0, bytes: &[0x8a, 0x41, 0x27, 0x84, 0xc0] } => near_own_goal, compare_near_own_goal, "motor_perto_do_proprio_gol";
+    Prologue { address: 0x717c70, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x8e, 0x9e, 0x01, 0x00, 0x00] } => role_880, compare_role_880, "motor_papel_880";
+    Prologue { address: 0x6f0970, bytes: &[0x8b, 0x91, 0x9e, 0x01, 0x00, 0x00] } => release_ball, compare_release_ball, "motor_soltar_bola";
+    Prologue { address: 0x6e1cd0, bytes: &[0x8b, 0x41, 0x23, 0x8b, 0x54, 0x24, 0x04] } => player_by_record, compare_player_by_record, "motor_jogador_pela_ficha";
+    Prologue { address: 0x6d5cd0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x25, 0xff, 0x7f, 0x00, 0x00] } => code_byte, compare_code_byte, "motor_byte_do_codigo";
     // batch 22
-    Prologue { address: 0x715f50, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x8e, 0x9e, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x7172d0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8a, 0x5c, 0x24, 0x10] },
+    Prologue { address: 0x715f50, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x8e, 0x9e, 0x01, 0x00, 0x00] } => adjusted_rating, compare_adjusted_rating, "motor_nota_ajustada";
+    Prologue { address: 0x7172d0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8a, 0x5c, 0x24, 0x10] } => adjust_17, compare_adjust_17, "motor_ajustar_17";
     // batch 23
-    Prologue { address: 0x6f0630, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x33, 0xdb] },
+    Prologue { address: 0x6f0630, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x33, 0xdb] } => take_ball, compare_take_ball, "motor_pegar_bola";
     // batch 24
-    Prologue { address: 0x6e9470, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x6bab90, bytes: &[0x8a, 0x81, 0x5a, 0x47, 0x00, 0x00] },
-    Prologue { address: 0x6e9540, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] },
+    Prologue { address: 0x6e9470, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] } => init_strictness, compare_init_strictness, "motor_iniciar_rigor";
+    Prologue { address: 0x6bab90, bytes: &[0x8a, 0x81, 0x5a, 0x47, 0x00, 0x00] } => move_counts, compare_move_counts, "motor_lance_valendo";
+    Prologue { address: 0x6e9540, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] } => decide_foul, compare_decide_foul, "engine_decide_foul";
     // batch 25
-    Prologue { address: 0x6e9630, bytes: &[0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x10] },
-    Prologue { address: 0x6ea4e0, bytes: &[0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x10] },
+    Prologue { address: 0x6e9630, bytes: &[0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x10] } => punish_foul, compare_punish_foul, "engine_punish_foul";
+    Prologue { address: 0x6ea4e0, bytes: &[0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x10] } => punish_move, compare_punish_move, "engine_punish_move";
     // batch 26
-    Prologue { address: 0x6cfca0, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x8b, 0x54, 0x24, 0x0c] },
-    Prologue { address: 0x6cfcd0, bytes: &[0x8b, 0x44, 0x24, 0x20, 0x8b, 0x54, 0x24, 0x1c] },
-    Prologue { address: 0x6cfd10, bytes: &[0x8b, 0x44, 0x24, 0x18, 0x8b, 0x54, 0x24, 0x14] },
+    Prologue { address: 0x6cfca0, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x8b, 0x54, 0x24, 0x0c] } => engine_decide_foul, compare_engine_decide_foul, "motor_motor_decidir_falta";
+    Prologue { address: 0x6cfcd0, bytes: &[0x8b, 0x44, 0x24, 0x20, 0x8b, 0x54, 0x24, 0x1c] } => engine_punish_move, compare_engine_punish_move, "motor_motor_punir_lance";
+    Prologue { address: 0x6cfd10, bytes: &[0x8b, 0x44, 0x24, 0x18, 0x8b, 0x54, 0x24, 0x14] } => engine_punish_foul, compare_engine_punish_foul, "motor_motor_punir_falta";
     // batch 27
-    Prologue { address: 0x6ea760, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6cfd70, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x8b, 0x54, 0x24, 0x0c] },
+    Prologue { address: 0x6ea760, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => look_for_offside, compare_look_for_offside, "engine_look_for_offside";
+    Prologue { address: 0x6cfd70, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x8b, 0x54, 0x24, 0x0c] } => engine_look_for_offside, compare_engine_look_for_offside, "motor_motor_procurar_impedimento";
     // batch 28
-    Prologue { address: 0x6eab60, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x6cfd40, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x8b, 0x54, 0x24, 0x0c] },
+    Prologue { address: 0x6eab60, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => card_by_severity, compare_card_by_severity, "engine_card_by_severity";
+    Prologue { address: 0x6cfd40, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x8b, 0x54, 0x24, 0x0c] } => engine_card_by_severity, compare_engine_card_by_severity, "motor_motor_cartao_pela_gravidade";
     // batch 29
-    Prologue { address: 0x6c23f0, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x54, 0x24, 0x10] },
+    Prologue { address: 0x6c23f0, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x54, 0x24, 0x10] } => choose_by_role_e, compare_choose_by_role_e, "motor_escolher_por_papel_e";
     // batch 30
-    Prologue { address: 0x6cf750, bytes: &[0x66, 0x8b, 0x81, 0xd4, 0x8e, 0x00, 0x00] },
+    Prologue { address: 0x6cf750, bytes: &[0x66, 0x8b, 0x81, 0xd4, 0x8e, 0x00, 0x00] } => possession_statistic, compare_possession_statistic, "motor_estatistica_de_posse";
     // batch 31
-    Prologue { address: 0x6ce460, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55, 0x56, 0x57] },
+    Prologue { address: 0x6ce460, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55, 0x56, 0x57] } => match_summary, compare_match_summary, "motor_resumo_da_partida";
     // batch 32
-    Prologue { address: 0x6c30e0, bytes: &[0x51, 0x0f, 0xbe, 0x54, 0x24, 0x08] },
+    Prologue { address: 0x6c30e0, bytes: &[0x51, 0x0f, 0xbe, 0x54, 0x24, 0x08] } => closest_on_side, compare_closest_on_side, "motor_mais_perto_no_lado";
     // batch 33
-    Prologue { address: 0x700420, bytes: &[0x8b, 0x44, 0x24, 0x18, 0x83, 0xec, 0x08] },
+    Prologue { address: 0x700420, bytes: &[0x8b, 0x44, 0x24, 0x18, 0x83, 0xec, 0x08] } => goalkeeper_save, compare_goalkeeper_save, "motor_defesa_do_goleiro";
     // batch 34
-    Prologue { address: 0x6f46b0, bytes: &[0x8a, 0x81, 0x02, 0x01, 0x00, 0x00] },
+    Prologue { address: 0x6f46b0, bytes: &[0x8a, 0x81, 0x02, 0x01, 0x00, 0x00] } => move_to, compare_move_to, "motor_mover_para";
     // batch 35
-    Prologue { address: 0x6bce80, bytes: &[0x83, 0xec, 0x2c, 0x55, 0x8b, 0x6c, 0x24, 0x34] },
+    Prologue { address: 0x6bce80, bytes: &[0x83, 0xec, 0x2c, 0x55, 0x8b, 0x6c, 0x24, 0x34] } => choose_square, compare_choose_square, "motor_escolher_casa";
     // batch 36
-    Prologue { address: 0x70d690, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
+    Prologue { address: 0x70d690, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] } => control_of_move, compare_control_of_move, "motor_dominio_do_lance";
     // batch 37
-    Prologue { address: 0x6ccb60, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x14] },
+    Prologue { address: 0x6ccb60, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x14] } => trace_move, compare_trace_move, "motor_tracar_lance";
     // batch 38 (match_day.cpp)
-    Prologue { address: 0x6b59a0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6b7cf0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologue { address: 0x6b59a0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => has_match, compare_has_match, "motor_tem_jogo";
+    Prologue { address: 0x6b7cf0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => won_the_match, compare_won_the_match, "motor_venceu_o_jogo";
     // batch 39 (commentary: wrappers of 0x6d6f70)
-    Prologue { address: 0x7002f0, bytes: &[0x8b, 0x44, 0x24, 0x14, 0x8b, 0x54, 0x24, 0x10] },
-    Prologue { address: 0x70a860, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x8b, 0x54, 0x24, 0x0c] },
+    Prologue { address: 0x7002f0, bytes: &[0x8b, 0x44, 0x24, 0x14, 0x8b, 0x54, 0x24, 0x10] } => commentary_a, compare_commentary_a, "motor_comentario_a";
+    Prologue { address: 0x70a860, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x8b, 0x54, 0x24, 0x0c] } => commentary_b, compare_commentary_b, "motor_comentario_b";
     // batch 40
-    Prologue { address: 0x6cd490, bytes: &[0x56, 0x8b, 0xf1, 0x8a, 0x86, 0xb2, 0x8e, 0x00, 0x00] },
+    Prologue { address: 0x6cd490, bytes: &[0x56, 0x8b, 0xf1, 0x8a, 0x86, 0xb2, 0x8e, 0x00, 0x00] } => ball_out, compare_ball_out, "motor_bola_fora";
     // batch 41 (large routine trial)
-    Prologue { address: 0x700bd0, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] },
+    Prologue { address: 0x700bd0, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] } => shot_value, compare_shot_value, "motor_valor_do_chute";
     // batch 42 (large integrating routine)
-    Prologue { address: 0x6c0c60, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] },
+    Prologue { address: 0x6c0c60, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] } => team_strength, compare_team_strength, "motor_forca_do_time";
     // batch 43
-    Prologue { address: 0x6c51e0, bytes: &[0x83, 0xec, 0x24, 0x53, 0x55, 0x8b, 0xe9] },
+    Prologue { address: 0x6c51e0, bytes: &[0x83, 0xec, 0x24, 0x53, 0x55, 0x8b, 0xe9] } => kick_off, compare_kick_off, "motor_pontape_inicial";
     // batch 44
-    Prologue { address: 0x6bbe40, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x86, 0x82, 0xf5, 0x00, 0x00] },
+    Prologue { address: 0x6bbe40, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x86, 0x82, 0xf5, 0x00, 0x00] } => roll_ball, compare_roll_ball, "motor_rolar_bola";
     // batch 45
-    Prologue { address: 0x7164b0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x53] },
+    Prologue { address: 0x7164b0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x53] } => condition_test, compare_condition_test, "motor_teste_de_condicao";
     // batch 46
-    Prologue { address: 0x547810, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x85, 0xc9] },
-    Prologue { address: 0x547840, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x85, 0xc9] },
-    Prologue { address: 0x5b5910, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x33, 0xd2] },
+    Prologue { address: 0x547810, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x85, 0xc9] } => likes, compare_likes, "motor_gosta_de";
+    Prologue { address: 0x547840, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x85, 0xc9] } => dislikes, compare_dislikes, "motor_nao_gosta_de";
+    Prologue { address: 0x5b5910, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x33, 0xd2] } => mark_position, compare_mark_position, "motor_marcar_posicao";
     // batch 47
-    Prologue { address: 0x6d1770, bytes: &[0x81, 0xec, 0x34, 0x04, 0x00, 0x00] },
+    Prologue { address: 0x6d1770, bytes: &[0x81, 0xec, 0x34, 0x04, 0x00, 0x00] } => fine_positions, compare_fine_positions, "motor_posicoes_finas";
     // batch 48 (leaves of other modules called by the engine)
-    Prologue { address: 0x4b0850, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x3d, 0xe8, 0x03, 0x00, 0x00] },
-    Prologue { address: 0x5c6710, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x51, 0x04] },
-    Prologue { address: 0x4cf5a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
-    Prologue { address: 0x53b900, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologue { address: 0x4b0850, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x3d, 0xe8, 0x03, 0x00, 0x00] } => units_digit, compare_units_digit, "motor_unidades";
+    Prologue { address: 0x5c6710, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x51, 0x04] } => is_friendly, compare_is_friendly, "motor_e_amistoso";
+    Prologue { address: 0x4cf5a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => contract_of, compare_contract_of, "motor_contrato_de";
+    Prologue { address: 0x53b900, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => is_national_team, compare_is_national_team, "motor_e_selecao";
     // batch 49 (human_manager.cpp and formation.cpp)
-    Prologue { address: 0x5fd210, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5fd480, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5b5a60, bytes: &[0x0f, 0xbf, 0x44, 0x24, 0x04, 0x3d, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5b73a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
+    Prologue { address: 0x5fd210, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => manager_9a01, compare_manager_9a01, "motor_tecnico_9a01";
+    Prologue { address: 0x5fd480, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => manager_9a05, compare_manager_9a05, "motor_tecnico_9a05";
+    Prologue { address: 0x5b5a60, bytes: &[0x0f, 0xbf, 0x44, 0x24, 0x04, 0x3d, 0x08, 0x02, 0x00, 0x00] } => square_bit, compare_square_bit, "motor_bit_da_casa";
+    Prologue { address: 0x5b73a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => split_mask, compare_split_mask, "motor_separar_mascara";
     // batch 50
-    Prologue { address: 0x5409b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6ce310, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x0c] },
+    Prologue { address: 0x5409b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => is_second_national_team, compare_is_second_national_team, "motor_e_segunda_selecao";
+    Prologue { address: 0x6ce310, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x0c] } => aggregate_score, compare_aggregate_score, "motor_placar_agregado";
     // batch 51
-    Prologue { address: 0x6d4330, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x8a, 0x5c, 0x24, 0x14] },
+    Prologue { address: 0x6d4330, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x8a, 0x5c, 0x24, 0x14] } => direct_marker, compare_direct_marker, "motor_marcador_direto";
     // batch 52
-    Prologue { address: 0x6cdd50, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
+    Prologue { address: 0x6cdd50, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => take_off_pitch, compare_take_off_pitch, "motor_tirar_de_campo";
     // batch 53
-    Prologue { address: 0x6bbf60, bytes: &[0x83, 0xec, 0x10, 0x53, 0x55] },
+    Prologue { address: 0x6bbf60, bytes: &[0x83, 0xec, 0x10, 0x53, 0x55] } => individual_marking, compare_individual_marking, "motor_marcacao_individual";
     // batch 54
-    Prologue { address: 0x6d3de0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x83, 0xec, 0x0c] },
+    Prologue { address: 0x6d3de0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x83, 0xec, 0x0c] } => new_reputation, compare_new_reputation, "motor_nova_reputacao";
     // batch 55
-    Prologue { address: 0x6d3610, bytes: &[0x83, 0xec, 0x3c, 0xb8, 0x02, 0x00, 0x00, 0x00] },
+    Prologue { address: 0x6d3610, bytes: &[0x83, 0xec, 0x3c, 0xb8, 0x02, 0x00, 0x00, 0x00] } => player_reputation, compare_player_reputation, "motor_reputacao_do_jogador";
     // batch 56
-    Prologue { address: 0x6ceb90, bytes: &[0x81, 0xec, 0x24, 0x02, 0x00, 0x00] },
+    Prologue { address: 0x6ceb90, bytes: &[0x81, 0xec, 0x24, 0x02, 0x00, 0x00] } => choose_taker, compare_choose_taker, "motor_escolher_cobrador";
     // batch 57
-    Prologue { address: 0x6c4290, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6c4470, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6c50d0, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] },
+    Prologue { address: 0x6c4290, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] } => throw_in, compare_throw_in, "motor_lateral";
+    Prologue { address: 0x6c4470, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] } => corner, compare_corner, "motor_escanteio";
+    Prologue { address: 0x6c50d0, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] } => penalty, compare_penalty, "motor_penalti";
     // batch 58
-    Prologue { address: 0x5b5290, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6d10a0, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] },
+    Prologue { address: 0x5b5290, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => set_square, compare_set_square, "motor_gravar_casa";
+    Prologue { address: 0x6d10a0, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] } => mark_stars, compare_mark_stars, "motor_marcar_craques";
     // batch 59
-    Prologue { address: 0x5b58e0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
-    Prologue { address: 0x7160f0, bytes: &[0x53, 0x55, 0x56, 0x8b, 0xf1] },
-    Prologue { address: 0x53b3d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x53b4f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6bc030, bytes: &[0x83, 0xec, 0x54, 0x53, 0x55] },
-    Prologue { address: 0x5fe040, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5fd6b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x600a50, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6d42a0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x8b, 0x86, 0x92, 0x47, 0x00, 0x00] },
-    Prologue { address: 0x8982b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x898040, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6be520, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55] },
-    Prologue { address: 0x6bd760, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] },
-    Prologue { address: 0x897590, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x897760, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x897dc0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x48db80, bytes: &[0x83, 0xec, 0x0c, 0xa1, 0x5c, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x76d940, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
-    Prologue { address: 0x6e9820, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] },
-    Prologue { address: 0x6c6a30, bytes: &[0x83, 0xec, 0x7c, 0x56, 0x8b, 0xf1] },
-    Prologue { address: 0x6cfc60, bytes: &[0x8b, 0x44, 0x24, 0x1c, 0x8b, 0x54, 0x24, 0x18] },
-    Prologue { address: 0x5fea50, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x547d30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
-    Prologue { address: 0x547d60, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
-    Prologue { address: 0x540a50, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4cf5f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53, 0x55, 0x56] },
-    Prologue { address: 0x53ce90, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x85, 0xc0] },
-    Prologue { address: 0x544410, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x0f, 0xbe, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x5b09d0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56] },
-    Prologue { address: 0x5afe00, bytes: &[0x51, 0x53, 0x55, 0x8b, 0x6c, 0x24, 0x10] },
-    Prologue { address: 0x849ce0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x91, 0xdc, 0x00, 0x00, 0x00] },
+    Prologue { address: 0x5b58e0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] } => designated_for_position, compare_designated_for_position, "motor_designado_da_posicao";
+    Prologue { address: 0x7160f0, bytes: &[0x53, 0x55, 0x56, 0x8b, 0xf1] } => designated_marked, compare_designated_marked, "motor_marcado_designado";
+    Prologue { address: 0x53b3d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => main_national_team, compare_main_national_team, "motor_selecao_principal";
+    Prologue { address: 0x53b4f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => b_national_team, compare_b_national_team, "motor_selecao_b";
+    Prologue { address: 0x6bc030, bytes: &[0x83, 0xec, 0x54, 0x53, 0x55] } => who_to_mark, compare_who_to_mark, "motor_quem_marcar";
+    Prologue { address: 0x5fe040, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => manager_9ace, compare_manager_9ace, "motor_tecnico_9ace";
+    Prologue { address: 0x5fd6b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => manager_9a06, compare_manager_9a06, "motor_tecnico_9a06";
+    Prologue { address: 0x600a50, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => human_club, compare_human_club, "motor_clube_humano";
+    Prologue { address: 0x6d42a0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x8b, 0x86, 0x92, 0x47, 0x00, 0x00] } => side_under_control, compare_side_under_control, "motor_lado_sob_controle";
+    Prologue { address: 0x8982b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => tactics_row, compare_tactics_row, "motor_linha_tatica";
+    Prologue { address: 0x898040, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => tactics_byte, compare_tactics_byte, "motor_byte_tatico";
+    Prologue { address: 0x6be520, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55] } => penalty_order, compare_penalty_order, "motor_ordem_dos_penaltis";
+    Prologue { address: 0x6bd760, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] } => player_order, compare_player_order, "motor_ordem_dos_jogadores";
+    Prologue { address: 0x897590, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => marked_slot, compare_marked_slot, "motor_vaga_marcada";
+    Prologue { address: 0x897760, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => mark_slot, compare_mark_slot, "motor_marcar_vaga";
+    Prologue { address: 0x897dc0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => row_person, compare_row_person, "motor_pessoa_da_linha";
+    Prologue { address: 0x48db80, bytes: &[0x83, 0xec, 0x0c, 0xa1, 0x5c, 0x23, 0xae, 0x00] } => club_in_competition, compare_club_in_competition, "motor_clube_na_competicao";
+    Prologue { address: 0x76d940, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => special_club, compare_special_club, "motor_clube_especial";
+    Prologue { address: 0x6e9820, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] } => foul_decision, compare_foul_decision, "motor_decisao_da_falta";
+    Prologue { address: 0x6c6a30, bytes: &[0x83, 0xec, 0x7c, 0x56, 0x8b, 0xf1] } => choose_teammate, compare_choose_teammate, "motor_escolher_companheiro";
+    Prologue { address: 0x6cfc60, bytes: &[0x8b, 0x44, 0x24, 0x1c, 0x8b, 0x54, 0x24, 0x18] } => foul_in_engine, compare_foul_in_engine, "motor_falta_no_motor";
+    Prologue { address: 0x5fea50, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => manager_9b23, compare_manager_9b23, "motor_tecnico_9b23";
+    Prologue { address: 0x547d30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => dislikes_club, compare_dislikes_club, "motor_nao_gosta_do_clube";
+    Prologue { address: 0x547d60, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => likes_club, compare_likes_club, "motor_gosta_do_clube";
+    Prologue { address: 0x540a50, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => partner_club, compare_partner_club, "motor_clube_parceiro";
+    Prologue { address: 0x4cf5f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53, 0x55, 0x56] } => contract_with_club, compare_contract_with_club, "motor_contrato_com_clube";
+    Prologue { address: 0x53ce90, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x85, 0xc0] } => contract_level, compare_contract_level, "motor_nivel_do_contrato";
+    Prologue { address: 0x544410, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x0f, 0xbe, 0x54, 0x24, 0x08] } => chance_to_know, compare_chance_to_know, "motor_chance_de_conhecer";
+    Prologue { address: 0x5b09d0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56] } => know_person, compare_know_person, "motor_conhecer_pessoa";
+    Prologue { address: 0x5afe00, bytes: &[0x51, 0x53, 0x55, 0x8b, 0x6c, 0x24, 0x10] } => fog_after_match, compare_fog_after_match, "motor_nevoa_apos_partida";
+    Prologue { address: 0x849ce0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x91, 0xdc, 0x00, 0x00, 0x00] } => shortlist_entry, compare_shortlist_entry, "motor_entrada_da_lista";
     // 4 bytes of routine (mov + ret) and the first alignment nop: the ret runs before the jump back
-    Prologue { address: 0x8676f0, bytes: &[0x8b, 0x41, 0x40, 0xc3, 0x90] },
-    Prologue { address: 0x68d1b0, bytes: &[0x8b, 0x51, 0x0a, 0x85, 0xd2] },
-    Prologue { address: 0x62c3d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x15, 0x64, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x4b0870, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x33, 0xd2] },
-    Prologue { address: 0x7e6f20, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
-    Prologue { address: 0x6d59b0, bytes: &[0x53, 0x55, 0x8b, 0x6c, 0x24, 0x0c] },
-    Prologue { address: 0x6d5a10, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] },
-    Prologue { address: 0x4b0700, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0xb0, 0xf6, 0x9c, 0x00] },
-    Prologue { address: 0x4b0780, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] },
-    Prologue { address: 0x4b07b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x08] },
-    Prologue { address: 0x4b07d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x4b0810, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x6ebd70, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x5afd00, bytes: &[0x55, 0x8b, 0x6c, 0x24, 0x08] },
-    Prologue { address: 0x5afde0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
-    Prologue { address: 0x5b2e80, bytes: &[0x51, 0x8b, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x5b2f10, bytes: &[0x66, 0x8b, 0x54, 0x24, 0x04] },
-    Prologue { address: 0x5b5960, bytes: &[0x56, 0x8d, 0x81, 0xb4, 0x05, 0x00, 0x00] },
-    Prologue { address: 0x5b59a0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] },
-    Prologue { address: 0x5b2ae0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4bff70, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x66, 0x85, 0xc0] },
-    Prologue { address: 0x53b610, bytes: &[0x8a, 0x4c, 0x24, 0x04, 0x33, 0xc0] },
-    Prologue { address: 0x53b620, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x3c, 0x0b] },
-    Prologue { address: 0x76d780, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x50] },
-    Prologue { address: 0x76d7b0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] },
-    Prologue { address: 0x76d7e0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] },
-    Prologue { address: 0x53a5b0, bytes: &[0xa1, 0xb4, 0x59, 0x9b, 0x00] },
-    Prologue { address: 0x76c0f0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] },
-    Prologue { address: 0x76e010, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] },
-    Prologue { address: 0x76e040, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] },
-    Prologue { address: 0x76e070, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x535920, bytes: &[0xa1, 0x84, 0x59, 0x9b, 0x00] },
-    Prologue { address: 0x7751e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
-    Prologue { address: 0x7754c0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x775520, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x775790, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x776380, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x777590, bytes: &[0x83, 0xec, 0x08, 0x8d, 0x44, 0x24, 0x00] },
-    Prologue { address: 0x6ec010, bytes: &[0x83, 0xec, 0x54, 0x53, 0x55] },
-    Prologue { address: 0x6eecb0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
-    Prologue { address: 0x6bbb60, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] },
+    Prologue { address: 0x8676f0, bytes: &[0x8b, 0x41, 0x40, 0xc3, 0x90] } => contract_flags, compare_contract_flags, "motor_bandeiras_do_contrato";
+    Prologue { address: 0x68d1b0, bytes: &[0x8b, 0x51, 0x0a, 0x85, 0xd2] } => next_list_item, compare_next_list_item, "motor_proximo_da_lista";
+    Prologue { address: 0x62c3d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x15, 0x64, 0x23, 0xae, 0x00] } => word_0c, compare_word_0c, "motor_palavra_0c";
+    Prologue { address: 0x4b0870, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x33, 0xd2] } => round_below_1000, compare_round_below_1000, "motor_arredondar_abaixo_de_1000";
+    Prologue { address: 0x7e6f20, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => group_nation, compare_group_nation, "motor_nacao_do_grupo";
+    Prologue { address: 0x6d59b0, bytes: &[0x53, 0x55, 0x8b, 0x6c, 0x24, 0x0c] } => how_many_mark, compare_how_many_mark, "motor_quantos_marcam";
+    Prologue { address: 0x6d5a10, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] } => who_marks, compare_who_marks, "motor_quem_marca";
+    Prologue { address: 0x4b0700, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0xb0, 0xf6, 0x9c, 0x00] } => competition_counts, compare_competition_counts, "motor_competicao_conta";
+    Prologue { address: 0x4b0780, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] } => order_by_5f, compare_order_by_5f, "motor_ordem_por_5f";
+    Prologue { address: 0x4b07b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x08] } => order_by_80, compare_order_by_80, "motor_ordem_por_80";
+    Prologue { address: 0x4b07d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => order_by_80_desc, compare_order_by_80_desc, "motor_ordem_por_80_desc";
+    Prologue { address: 0x4b0810, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => order_by_80_asc, compare_order_by_80_asc, "motor_ordem_por_80_cresc";
+    Prologue { address: 0x6ebd70, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => player_rating, compare_player_rating, "motor_nota_do_jogador";
+    Prologue { address: 0x5afd00, bytes: &[0x55, 0x8b, 0x6c, 0x24, 0x08] } => forget_person, compare_forget_person, "motor_esquecer_pessoa";
+    Prologue { address: 0x5afde0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => manager_table, compare_manager_table, "motor_quadro_do_tecnico";
+    Prologue { address: 0x5b2e80, bytes: &[0x51, 0x8b, 0x54, 0x24, 0x08] } => sector_slot_taken, compare_sector_slot_taken, "motor_casa_do_setor_ocupada";
+    Prologue { address: 0x5b2f10, bytes: &[0x66, 0x8b, 0x54, 0x24, 0x04] } => slot_of_code, compare_slot_of_code, "motor_vaga_da_casa";
+    Prologue { address: 0x5b5960, bytes: &[0x56, 0x8d, 0x81, 0xb4, 0x05, 0x00, 0x00] } => clear_assigned, compare_clear_assigned, "motor_limpar_designados";
+    Prologue { address: 0x5b59a0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] } => formation_mask, compare_formation_mask, "motor_mascara_da_formacao";
+    Prologue { address: 0x5b2ae0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => slot_code, compare_slot_code, "motor_casa_da_vaga";
+    Prologue { address: 0x4bff70, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x66, 0x85, 0xc0] } => competition_criterion, compare_competition_criterion, "motor_criterio_da_competicao";
+    Prologue { address: 0x53b610, bytes: &[0x8a, 0x4c, 0x24, 0x04, 0x33, 0xc0] } => type_not_11, compare_type_not_11, "motor_tipo_nao_11";
+    Prologue { address: 0x53b620, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x3c, 0x0b] } => type_11_to_15, compare_type_11_to_15, "motor_tipo_11_a_15";
+    Prologue { address: 0x76d780, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x50] } => national_side_class, compare_national_side_class, "motor_classe_da_selecao";
+    Prologue { address: 0x76d7b0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] } => read_person_mark, compare_read_person_mark, "motor_ler_marca_da_pessoa";
+    Prologue { address: 0x76d7e0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] } => clear_person_mark, compare_clear_person_mark, "motor_zerar_marca_da_pessoa";
+    Prologue { address: 0x53a5b0, bytes: &[0xa1, 0xb4, 0x59, 0x9b, 0x00] } => free_record, compare_free_record, "motor_registro_livre";
+    Prologue { address: 0x76c0f0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] } => set_person_44, compare_set_person_44, "motor_ligar_44_da_pessoa";
+    Prologue { address: 0x76e010, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] } => person_byte_44, compare_person_byte_44, "motor_byte_44_da_pessoa";
+    Prologue { address: 0x76e040, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] } => person_field_3a, compare_person_field_3a, "motor_campo_3a_da_pessoa";
+    Prologue { address: 0x76e070, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => class_by_national_side, compare_class_by_national_side, "motor_classe_pela_selecao";
+    Prologue { address: 0x535920, bytes: &[0xa1, 0x84, 0x59, 0x9b, 0x00] } => database_global_9b5984, compare_database_global_9b5984, "motor_global_9b5984";
+    Prologue { address: 0x7751e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => person_competition, compare_person_competition, "motor_competicao_da_pessoa";
+    Prologue { address: 0x7754c0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => national_side_byte_42, compare_national_side_byte_42, "motor_byte_42_da_selecao";
+    Prologue { address: 0x775520, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => national_side_byte_43, compare_national_side_byte_43, "motor_byte_43_da_selecao";
+    Prologue { address: 0x775790, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => national_or_special, compare_national_or_special, "motor_selecao_ou_especial";
+    Prologue { address: 0x776380, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => dislikes_national_side, compare_dislikes_national_side, "motor_nao_gosta_da_selecao";
+    Prologue { address: 0x777590, bytes: &[0x83, 0xec, 0x08, 0x8d, 0x44, 0x24, 0x00] } => copy_date_and_mark, compare_copy_date_and_mark, "motor_copiar_data_e_marca";
+    Prologue { address: 0x6ec010, bytes: &[0x83, 0xec, 0x54, 0x53, 0x55] } => update_attributes, compare_update_attributes, "motor_atualizar_atributos";
+    Prologue { address: 0x6eecb0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] } => match_performance, compare_match_performance, "motor_desempenho_na_partida";
+    Prologue { address: 0x6bbb60, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] } => side_strength, compare_side_strength, "motor_forca_do_lado";
     // these two end in a relative instruction, rebuilt in the trampoline (RELATIVAS in detours.rs)
-    Prologue { address: 0x714d00, bytes: &[0x80, 0x79, 0x27, 0x01, 0x75, 0x15] },
-    Prologue { address: 0x6f55c0, bytes: &[0x51, 0x56, 0x8b, 0xf1, 0xe8, 0xd7, 0xee, 0xff, 0xff] },
-    Prologue { address: 0x6b61e0, bytes: &[0x53, 0x8b, 0x15, 0x68, 0xf6, 0x9c, 0x00] },
-    Prologue { address: 0x6854a0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x53, 0x55] },
-    Prologue { address: 0x6be120, bytes: &[0x83, 0xec, 0x10, 0x53, 0x56] },
-    Prologue { address: 0x6cd3d0, bytes: &[0x83, 0xec, 0x08, 0x8b, 0x44, 0x24, 0x10] },
-    Prologue { address: 0x6cc070, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x44, 0x24, 0x18] },
-    Prologue { address: 0x6cc540, bytes: &[0x83, 0xec, 0x14, 0x8a, 0x44, 0x24, 0x24] },
-    Prologue { address: 0x6f5b80, bytes: &[0x51, 0x8a, 0x51, 0x27, 0x8a, 0x81, 0x03, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x6c4ec0, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6c4820, bytes: &[0x81, 0xec, 0x1c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x713fc0, bytes: &[0x81, 0xec, 0x24, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x714d40, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x7103e0, bytes: &[0x83, 0xec, 0x14, 0x53, 0x56] },
-    Prologue { address: 0x6fa250, bytes: &[0x53, 0x55, 0x8b, 0x44, 0x24, 0x18] },
-    Prologue { address: 0x6fa490, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] },
-    Prologue { address: 0x6cd770, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0x8b, 0x8e, 0x82, 0xf5, 0x00, 0x00] },
-    Prologue { address: 0x70d430, bytes: &[0x66, 0x81, 0x7c, 0x24, 0x04, 0xe8, 0x03] },
-    Prologue { address: 0x6f5810, bytes: &[0x83, 0xec, 0x08, 0x56, 0x8b, 0xf1] },
-    Prologue { address: 0x6bd930, bytes: &[0x51, 0x53, 0x55, 0x56, 0x8b, 0xf1] },
-    Prologue { address: 0x6bcbd0, bytes: &[0x83, 0xec, 0x28, 0x53, 0x8b, 0x5c, 0x24, 0x34] },
-    Prologue { address: 0x6c87e0, bytes: &[0x81, 0xec, 0x3c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6d26b0, bytes: &[0x83, 0xec, 0x34, 0xb8, 0x01, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x6d47e0, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x62ec00, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
-    Prologue { address: 0x62ece0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x6cfe10, bytes: &[0x83, 0xec, 0x18, 0x53, 0x55] },
-    Prologue { address: 0x6e1cf0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x6e1a40, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] },
-    Prologue { address: 0x6e1940, bytes: &[0x83, 0xec, 0x0c, 0x8a, 0x44, 0x24, 0x14] },
-    Prologue { address: 0x6cda20, bytes: &[0x51, 0x8a, 0x44, 0x24, 0x0c] },
-    Prologue { address: 0x6e1aa0, bytes: &[0x81, 0xec, 0x04, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x6e1090, bytes: &[0x81, 0xec, 0xc4, 0x04, 0x00, 0x00] },
-    Prologue { address: 0x6e2000, bytes: &[0x81, 0xec, 0x24, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x6df460, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x6e0230, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x6ddab0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x6e0d00, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6e0df0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] },
-    Prologue { address: 0x6e0fe0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] },
-    Prologue { address: 0x6dbb80, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56] },
-    Prologue { address: 0x6dbb10, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x46, 0x2f] },
-    Prologue { address: 0x6d0b60, bytes: &[0x83, 0xec, 0x28, 0x53, 0x55] },
-    Prologue { address: 0x6d1210, bytes: &[0x83, 0xec, 0x10, 0x56, 0x8b, 0xf1] },
-    Prologue { address: 0x6be710, bytes: &[0x83, 0xec, 0x18, 0x53, 0x56] },
-    Prologue { address: 0x6bac40, bytes: &[0x83, 0xec, 0x08, 0x55, 0x56] },
-    Prologue { address: 0x70ec80, bytes: &[0x83, 0xec, 0x28, 0x53, 0x55] },
-    Prologue { address: 0x6c9cd0, bytes: &[0x83, 0xec, 0x4c, 0x8a, 0x44, 0x24, 0x50] },
-    Prologue { address: 0x6f5c30, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x70dfd0, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6b74a0, bytes: &[0xa1, 0xc8, 0x7d, 0xb6, 0x00] },
-    Prologue { address: 0x6b6cc0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x6b79a0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6b66a0, bytes: &[0xa1, 0x04, 0x57, 0xa1, 0x00] },
-    Prologue { address: 0x6b5040, bytes: &[0x83, 0xec, 0x1c, 0x53, 0x8b, 0xd9] },
-    Prologue { address: 0x6c54a0, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6f6c00, bytes: &[0x83, 0xec, 0x3c, 0x53, 0x55] },
-    Prologue { address: 0x6d4a20, bytes: &[0x83, 0xec, 0x08, 0x56, 0x8b, 0xf1] },
-    Prologue { address: 0x79ce10, bytes: &[0x8b, 0x11, 0x56, 0x85, 0xd2] },
-    Prologue { address: 0x897990, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x896fe0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6b6570, bytes: &[0x0f, 0xbf, 0x44, 0x24, 0x04] },
-    Prologue { address: 0x547790, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x85, 0xc9] },
-    Prologue { address: 0x5477d0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x85, 0xc9] },
-    Prologue { address: 0x6d1cc0, bytes: &[0x83, 0xec, 0x44, 0x53, 0x55] },
-    Prologue { address: 0x8983f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8984d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6beeb0, bytes: &[0x83, 0xec, 0x38, 0x53, 0x55] },
-    Prologue { address: 0x6d0980, bytes: &[0x51, 0x57, 0x8b, 0xf9, 0xc7, 0x44, 0x24, 0x04, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x62be00, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x717470, bytes: &[0x6a, 0xff, 0x68, 0x90, 0xd4, 0x95, 0x00] },
-    Prologue { address: 0x70c040, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x70a910, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6f09f0, bytes: &[0x81, 0xec, 0x5c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7109f0, bytes: &[0x6a, 0xff, 0x68, 0x6b, 0xd4, 0x95, 0x00] },
-    Prologue { address: 0x6b98c0, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6fad40, bytes: &[0x81, 0xec, 0x6c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6d5950, bytes: &[0x51, 0x8d, 0x44, 0x24, 0x02] },
-    Prologue { address: 0x6d5a70, bytes: &[0x53, 0x56, 0x57, 0x8b, 0xf9] },
-    Prologue { address: 0x702050, bytes: &[0x81, 0xec, 0x84, 0x06, 0x00, 0x00] },
-    Prologue { address: 0x6b7e50, bytes: &[0x6a, 0xff, 0x68, 0x0c, 0xd3, 0x95, 0x00] },
-    Prologue { address: 0x6b7f20, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x6b97a0, bytes: &[0x6a, 0xff, 0x68, 0xda, 0xd3, 0x95, 0x00] },
-    Prologue { address: 0x6db500, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6b4190, bytes: &[0x83, 0xec, 0x08, 0x55, 0x56] },
-    Prologue { address: 0x6b42a0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8b, 0xd9] },
-    Prologue { address: 0x6dbc50, bytes: &[0x6a, 0xff, 0x68, 0x52, 0xd4, 0x95, 0x00] },
-    Prologue { address: 0x6b5a70, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x6b5ce0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x6b5f00, bytes: &[0x81, 0xec, 0x58, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6b4360, bytes: &[0x6a, 0xff, 0x68, 0xdc, 0xd1, 0x95, 0x00] },
-    Prologue { address: 0x6b3c10, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x714d30, bytes: &[0x8a, 0x41, 0x27, 0xc3, 0x90] },
-    Prologue { address: 0x6d8c70, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] },
-    Prologue { address: 0x6d98b0, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6d9c40, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6b55c0, bytes: &[0x51, 0x53, 0x8b, 0x5c, 0x24, 0x0c] },
-    Prologue { address: 0x6d9e50, bytes: &[0x81, 0xec, 0x0c, 0x06, 0x00, 0x00] },
-    Prologue { address: 0x6d8d10, bytes: &[0xb8, 0xd8, 0x1b, 0x00, 0x00] },
-    Prologue { address: 0x6b5260, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x6d7b00, bytes: &[0xb8, 0x18, 0x26, 0x00, 0x00] },
-    Prologue { address: 0x9326e0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x933080, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x933170, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x5b7d20, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5b7e60, bytes: &[0x8a, 0x44, 0x24, 0x08, 0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5b8960, bytes: &[0x81, 0xec, 0x04, 0x0e, 0x00, 0x00] },
-    Prologue { address: 0x7c2150, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7c1950, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5b8dc0, bytes: &[0x81, 0xec, 0x04, 0x0e, 0x00, 0x00] },
-    Prologue { address: 0x844300, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x83bd00, bytes: &[0x0f, 0xbf, 0x44, 0x24, 0x04] },
-    Prologue { address: 0x866f60, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55] },
-    Prologue { address: 0x896a90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8968f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8967d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5b3c70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5b50d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x452fe0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x68a030, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x8b, 0x0d, 0xe8, 0xf6, 0x9c, 0x00] },
-    Prologue { address: 0x68a1c0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5af180, bytes: &[0xa1, 0x5c, 0x2a, 0xae, 0x00] },
-    Prologue { address: 0x897ee0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x76d430, bytes: &[0x8b, 0x54, 0x24, 0x0c, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5fdd30, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7f6cd0, bytes: &[0x8a, 0x54, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x600c90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4ca470, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x53] },
-    Prologue { address: 0x6d58f0, bytes: &[0x8a, 0x81, 0xa8, 0x8e, 0x00, 0x00] },
-    Prologue { address: 0x6d5930, bytes: &[0x8a, 0x81, 0x38, 0xf6, 0x00, 0x00] },
-    Prologue { address: 0x6d5af0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x84, 0xc0] },
-    Prologue { address: 0x6d5b20, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x84, 0xc0] },
-    Prologue { address: 0x6e9460, bytes: &[0x8b, 0xc1, 0xc7, 0x00, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x6ebd60, bytes: &[0xc7, 0x81, 0x9e, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x6d5d00, bytes: &[0x66, 0x8b, 0x41, 0x08, 0x66, 0x85, 0xc0] },
-    Prologue { address: 0x6d5bf0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x83, 0xc8, 0xff] },
-    Prologue { address: 0x6d5b50, bytes: &[0x53, 0x56, 0x57, 0xbe, 0x90, 0x87, 0xb6, 0x00] },
-    Prologue { address: 0x6b6510, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x6bd840, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] },
-    Prologue { address: 0x6d5d80, bytes: &[0x51, 0x53, 0x56, 0x6a, 0x03] },
-    Prologue { address: 0x6d60b0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
-    Prologue { address: 0x6d4b70, bytes: &[0x6a, 0xff, 0x68, 0x00, 0xd4, 0x95, 0x00] },
-    Prologue { address: 0x6eada0, bytes: &[0x8b, 0xc1, 0x83, 0xca, 0xff] },
-    Prologue { address: 0x6d78b0, bytes: &[0x51, 0x8b, 0xd1, 0x55, 0x56] },
-    Prologue { address: 0x6db2d0, bytes: &[0x8a, 0x44, 0x24, 0x18, 0x81, 0xec, 0x58, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6e86d0, bytes: &[0x51, 0x8b, 0x15, 0x20, 0x71, 0xdd, 0x00] },
-    Prologue { address: 0x6e8910, bytes: &[0x81, 0xec, 0x70, 0x04, 0x00, 0x00] },
-    Prologue { address: 0x6e6340, bytes: &[0x83, 0xec, 0x50, 0x53, 0x55] },
-    Prologue { address: 0x6e2f20, bytes: &[0x83, 0xec, 0x50, 0x53, 0x8b, 0x5c, 0x24, 0x58] },
-    Prologue { address: 0x69fc60, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4cf6d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
-    Prologue { address: 0x62c2f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53] },
-    Prologue { address: 0x896570, bytes: &[0x66, 0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7c6930, bytes: &[0x53, 0x55, 0x8b, 0x6c, 0x24, 0x0c] },
-    Prologue { address: 0x785790, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x62bd10, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x8c1870, bytes: &[0x8b, 0x81, 0x2e, 0x09, 0x00, 0x00] },
-    Prologue { address: 0x55cae0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] },
-    Prologue { address: 0x7a7eb0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x15, 0x0c, 0x2d, 0xae, 0x00] },
-    Prologue { address: 0x684790, bytes: &[0x8a, 0x81, 0xbe, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x6826d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8d, 0x14, 0xc5, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5d5a60, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x84, 0xc0] },
-    Prologue { address: 0x4d0c20, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
-    Prologue { address: 0x76d810, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x84, 0xc0] },
-    Prologue { address: 0x4cc9e0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] },
-    Prologue { address: 0x4cca30, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0x8b, 0x46, 0x34] },
-    Prologue { address: 0x8d0d90, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x8a, 0x41, 0x2c] },
-    Prologue { address: 0x725a70, bytes: &[0x8b, 0x4c, 0x24, 0x08, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x71b120, bytes: &[0x56, 0x6a, 0x2d, 0xb9, 0x50, 0x44, 0xb7, 0x00] },
-    Prologue { address: 0x727f00, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x735780, bytes: &[0x56, 0x8b, 0x71, 0x08, 0x33, 0xd2] },
-    Prologue { address: 0x735840, bytes: &[0x56, 0x8b, 0x71, 0x08, 0x33, 0xd2] },
-    Prologue { address: 0x5221f0, bytes: &[0x8a, 0x51, 0x51, 0x53, 0x8a, 0x59, 0x3c] },
-    Prologue { address: 0x71b1b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x71b300, bytes: &[0x83, 0xec, 0x08, 0x6a, 0x0e] },
-    Prologue { address: 0x71b3d0, bytes: &[0xa1, 0x84, 0x7c, 0xb7, 0x00] },
-    Prologue { address: 0x71b4a0, bytes: &[0x6a, 0x00, 0x68, 0x70, 0xc1, 0x71, 0x00] },
-    Prologue { address: 0x71bdc0, bytes: &[0x51, 0xa1, 0x84, 0x7c, 0xb7, 0x00] },
-    Prologue { address: 0x71c170, bytes: &[0x56, 0x6a, 0x2d, 0xb9, 0x50, 0x44, 0xb7, 0x00] },
-    Prologue { address: 0x556210, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x10] },
-    Prologue { address: 0x556240, bytes: &[0x53, 0x55, 0x8b, 0x6c, 0x24, 0x0c] },
-    Prologue { address: 0x55cb20, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] },
-    Prologue { address: 0x8c5410, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x10] },
-    Prologue { address: 0x8c5430, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x10] },
-    Prologue { address: 0x8c61e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x51, 0x04] },
-    Prologue { address: 0x718aa0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x725860, bytes: &[0x51, 0x53, 0x56, 0x57, 0x6a, 0x11] },
-    Prologue { address: 0x722dc0, bytes: &[0x53, 0x56, 0x6a, 0x00, 0xb9, 0x50, 0x44, 0xb7, 0x00] },
-    Prologue { address: 0x723d20, bytes: &[0x83, 0xec, 0x24, 0x53, 0x55] },
-    Prologue { address: 0x7febb0, bytes: &[0x0f, 0xbf, 0x81, 0x2a, 0x38, 0x00, 0x00] },
-    Prologue { address: 0x839590, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
-    Prologue { address: 0x5d5ab0, bytes: &[0x8b, 0x81, 0x56, 0x08, 0x00, 0x00] },
-    Prologue { address: 0x5d5ac0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x89, 0x1d, 0x65, 0x00, 0x00] },
-    Prologue { address: 0x62c660, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x00] },
-    Prologue { address: 0x5c2990, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x5cb9b0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x8a, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x86fc20, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x57] },
-    Prologue { address: 0x4d0bd0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x84aeb0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x600e90, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x8c5450, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] },
-    Prologue { address: 0x8ce920, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x53] },
-    Prologue { address: 0x55cb60, bytes: &[0x53, 0x55, 0x8b, 0x51, 0x14] },
-    Prologue { address: 0x7a7ed0, bytes: &[0x8b, 0x41, 0x04, 0x8b, 0x49, 0x08] },
-    Prologue { address: 0x5ca030, bytes: &[0xa1, 0xfc, 0xad, 0xad, 0x00] },
-    Prologue { address: 0x785830, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8cb4f0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x53] },
-    Prologue { address: 0x8cb590, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x53] },
-    Prologue { address: 0x8cb630, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x53] },
-    Prologue { address: 0x7a82b0, bytes: &[0x8b, 0x51, 0x20, 0x53, 0x33, 0xc0] },
-    Prologue { address: 0x7a8470, bytes: &[0x8b, 0x51, 0x40, 0x53, 0x33, 0xc0] },
-    Prologue { address: 0x682f70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7c1a60, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7ae640, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7ae6e0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6834f0, bytes: &[0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x10] },
-    Prologue { address: 0x6869a0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x85, 0xc0] },
-    Prologue { address: 0x8c1f80, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5fdc30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5fed50, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7ae570, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x717cc0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x718930, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x727e20, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7c47b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x729500, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x729bd0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x71dd70, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53] },
-    Prologue { address: 0x71df00, bytes: &[0x83, 0xec, 0x08, 0x56, 0x57] },
-    Prologue { address: 0x728e90, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x53] },
-    Prologue { address: 0x725ca0, bytes: &[0x83, 0xec, 0x44, 0x53, 0x55] },
-    Prologue { address: 0x725f70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x727c30, bytes: &[0x53, 0x55, 0x56, 0x57, 0x6a, 0x00] },
-    Prologue { address: 0x7217a0, bytes: &[0x83, 0xec, 0x34, 0x53, 0x56] },
-    Prologue { address: 0x722ed0, bytes: &[0x81, 0xec, 0x0c, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x71e040, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x0c] },
-    Prologue { address: 0x71e750, bytes: &[0x6a, 0xff, 0x68, 0x5b, 0xd5, 0x95, 0x00] },
-    Prologue { address: 0x720320, bytes: &[0x6a, 0xff, 0x68, 0x7b, 0xd5, 0x95, 0x00] },
-    Prologue { address: 0x723350, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0xd5, 0x95, 0x00] },
-    Prologue { address: 0x71f500, bytes: &[0xa0, 0xb4, 0xb7, 0xb6, 0x00] },
-    Prologue { address: 0x721000, bytes: &[0x6a, 0xff, 0x68, 0x9e, 0xd5, 0x95, 0x00] },
-    Prologue { address: 0x717db0, bytes: &[0x81, 0xec, 0x9c, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x721cd0, bytes: &[0x81, 0xec, 0x18, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x724520, bytes: &[0x81, 0xec, 0x3c, 0x04, 0x00, 0x00] },
-    Prologue { address: 0x727fb0, bytes: &[0x83, 0xec, 0x44, 0x53, 0x56] },
-    Prologue { address: 0x729600, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7293f0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x729820, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7260f0, bytes: &[0x6a, 0xff, 0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x72aa80, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x72adf0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x403350, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x402ac0, bytes: &[0x66, 0x83, 0x7c, 0x24, 0x38, 0xff] },
-    Prologue { address: 0x402e70, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x718e90, bytes: &[0x6a, 0xff, 0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x71a240, bytes: &[0xa1, 0x84, 0x7c, 0xb7, 0x00] },
-    Prologue { address: 0x71b630, bytes: &[0x6a, 0xff, 0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x71d9e0, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0xd5, 0x95, 0x00] },
-    Prologue { address: 0x71c270, bytes: &[0x6a, 0xff, 0x68, 0x1b, 0xd5, 0x95, 0x00] },
-    Prologue { address: 0x7280e0, bytes: &[0x6a, 0xff, 0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x7357c0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53, 0x55] },
-    Prologue { address: 0x62d140, bytes: &[0x51, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x18] },
-    Prologue { address: 0x785670, bytes: &[0x8b, 0x01, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x76c060, bytes: &[0x51, 0x53, 0x55, 0x32, 0xc0] },
-    Prologue { address: 0x8972c0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x72b810, bytes: &[0x51, 0x53, 0x55, 0x8b, 0x6c, 0x24, 0x14] },
-    Prologue { address: 0x521d60, bytes: &[0x55, 0x8b, 0x6c, 0x24, 0x08] },
-    Prologue { address: 0x519c90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5c4680, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x08] },
-    Prologue { address: 0x8c6db0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x8c16b0, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8c5fc0, bytes: &[0x83, 0xec, 0x0c, 0x8b, 0x44, 0x24, 0x10] },
-    Prologue { address: 0x775ba0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56, 0x57] },
-    Prologue { address: 0x5af2f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
-    Prologue { address: 0x84b230, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x0c] },
-    Prologue { address: 0x8c5cf0, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x08] },
-    Prologue { address: 0x83bf40, bytes: &[0x56, 0x8b, 0x91, 0xdc, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x4afeb0, bytes: &[0x53, 0x55, 0x8b, 0x6c, 0x24, 0x14] },
-    Prologue { address: 0x729ff0, bytes: &[0xa0, 0xc4, 0xb7, 0xb6, 0x00] },
-    Prologue { address: 0x72b160, bytes: &[0x8b, 0x54, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x7c6bf0, bytes: &[0x83, 0xec, 0x08, 0x56, 0x8b, 0xf1] },
-    Prologue { address: 0x8ced40, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] },
-    Prologue { address: 0x8c5e40, bytes: &[0x51, 0x53, 0x55, 0x8b, 0x6c, 0x24, 0x10] },
-    Prologue { address: 0x786fe0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x786d30, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7875e0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x521e60, bytes: &[0x8b, 0x4c, 0x24, 0x14, 0x8b, 0x44, 0x24, 0x18] },
-    Prologue { address: 0x521eb0, bytes: &[0x8b, 0x4c, 0x24, 0x14, 0x8b, 0x44, 0x24, 0x18] },
-    Prologue { address: 0x5c64e0, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0x8b, 0x7c, 0x24, 0x0c] },
-    Prologue { address: 0x683210, bytes: &[0x51, 0x53, 0x8b, 0x1d, 0xfc, 0x79, 0xb6, 0x00] },
-    Prologue { address: 0x6844b0, bytes: &[0x8b, 0x4c, 0x24, 0x08, 0x83, 0xec, 0x10] },
-    Prologue { address: 0x68a4d0, bytes: &[0x0f, 0xbf, 0x81, 0xa9, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x4b0010, bytes: &[0x53, 0x55, 0x8b, 0x6c, 0x24, 0x14] },
-    Prologue { address: 0x4b0890, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x10] },
-    Prologue { address: 0x521f10, bytes: &[0x66, 0x8b, 0x4c, 0x24, 0x0c] },
-    Prologue { address: 0x5b7160, bytes: &[0x83, 0xec, 0x48, 0x53, 0x55] },
-    Prologue { address: 0x7ad220, bytes: &[0x53, 0x55, 0x8b, 0x6c, 0x24, 0x0c] },
-    Prologue { address: 0x5fe290, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6b6970, bytes: &[0x6a, 0xff, 0x68, 0x8c, 0xd2, 0x95, 0x00] },
-    Prologue { address: 0x729e30, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0xd6, 0x95, 0x00] },
-    Prologue { address: 0x6847b0, bytes: &[0x8a, 0x91, 0xc1, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x68a160, bytes: &[0x8b, 0x4c, 0x24, 0x14, 0x8b, 0x44, 0x24, 0x18] },
-    Prologue { address: 0x68a3e0, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x10] },
-    Prologue { address: 0x448490, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x83, 0xec, 0x08] },
-    Prologue { address: 0x448110, bytes: &[0x83, 0xec, 0x08, 0x8d, 0x44, 0x24, 0x00] },
-    Prologue { address: 0x448170, bytes: &[0x83, 0xec, 0x08, 0x8d, 0x54, 0x24, 0x00] },
-    Prologue { address: 0x5fe420, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x600740, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7a8780, bytes: &[0x83, 0xec, 0x08, 0x56, 0x57] },
-    Prologue { address: 0x729000, bytes: &[0x6a, 0xff, 0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x7293c0, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x06] },
-    Prologue { address: 0x933a00, bytes: &[0x51, 0x53, 0x55, 0x8b, 0x6c, 0x24, 0x14] },
-    Prologue { address: 0x9331c0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x933860, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x933610, bytes: &[0x81, 0xec, 0x20, 0x04, 0x00, 0x00] },
-    Prologue { address: 0x933320, bytes: &[0x81, 0xec, 0x14, 0x03, 0x00, 0x00] },
-    Prologue { address: 0x90cd50, bytes: &[0xb8, 0x1c, 0x68, 0x00, 0x00] },
-    Prologue { address: 0x932c30, bytes: &[0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x1c] },
-    Prologue { address: 0x932e10, bytes: &[0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x1c] },
-    Prologue { address: 0x932b00, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x838e10, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x839290, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x838eb0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x8395b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x839760, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x591f80, bytes: &[0x83, 0xec, 0x70, 0x8b, 0x44, 0x24, 0x74] },
-    Prologue { address: 0x524d30, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x8b, 0x4c, 0x24, 0x08] },
-    Prologue { address: 0x524d10, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x8b, 0x4c, 0x24, 0x04] },
-    Prologue { address: 0x82ff40, bytes: &[0x53, 0xb9, 0x50, 0x44, 0xb7, 0x00] },
-    Prologue { address: 0x827110, bytes: &[0x81, 0xec, 0x00, 0x08, 0x00, 0x00] },
-    Prologue { address: 0x82e430, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x82a9c0, bytes: &[0x6a, 0xff, 0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5408c0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x5407e0, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x56] },
-    Prologue { address: 0x53d980, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x83, 0xec, 0x10] },
-    Prologue { address: 0x53ab90, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x544670, bytes: &[0x80, 0x3d, 0x3c, 0x23, 0xae, 0x00, 0x01] },
-    Prologue { address: 0x53d740, bytes: &[0x8b, 0x44, 0x24, 0x04, 0xb1, 0x02] },
-    Prologue { address: 0x544520, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x543540, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5431e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x540780, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x53a610, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0xba, 0x3f, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5446d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0xe4, 0xf2, 0x9c, 0x00] },
-    Prologue { address: 0x53d7f0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x85, 0xc9] },
-    Prologue { address: 0x5444a0, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] },
-    Prologue { address: 0x544590, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x544600, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x544380, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x0f, 0xbe, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x542740, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x539c60, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] },
-    Prologue { address: 0x53a1b0, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] },
-    Prologue { address: 0x53dba0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x53b640, bytes: &[0x66, 0xa1, 0xf0, 0xbd, 0xae, 0x00] },
-    Prologue { address: 0x53ca90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x545880, bytes: &[0x6a, 0xff, 0x68, 0xfb, 0x79, 0x95, 0x00] },
-    Prologue { address: 0x544710, bytes: &[0x8a, 0x4c, 0x24, 0x08, 0x84, 0xc9] },
-    Prologue { address: 0x53a8b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x0c] },
-    Prologue { address: 0x540980, bytes: &[0x8a, 0x4c, 0x24, 0x08, 0x8b, 0x44, 0x24, 0x04] },
-    Prologue { address: 0x53c590, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x541f90, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x544820, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x53a980, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x8b, 0x4c, 0x24, 0x04] },
-    Prologue { address: 0x53aa10, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x8b, 0x4c, 0x24, 0x04] },
-    Prologue { address: 0x539490, bytes: &[0x81, 0xec, 0x6c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x540520, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0xe4, 0xf1, 0x9c, 0x00] },
-    Prologue { address: 0x540490, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] },
-    Prologue { address: 0x543fd0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x545a60, bytes: &[0x8b, 0x4c, 0x24, 0x08, 0x0c, 0xff] },
-    Prologue { address: 0x543f30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5442f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x0f, 0xbe, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x539b90, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x08] },
-    Prologue { address: 0x53b7c0, bytes: &[0x66, 0xa1, 0x84, 0x31, 0xae, 0x00] },
-    Prologue { address: 0x53b9a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x53bd10, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6146b0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x60ba80, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0xa4, 0x00, 0x9d, 0x00] },
-    Prologue { address: 0x60d810, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x60efd0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x6115e0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x54d5e0, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x54d740, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x54d8a0, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x54da00, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x54e780, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x54fd60, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x550230, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x550380, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5504d0, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5505c0, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x550710, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x550860, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x54db50, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x54feb0, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x54e880, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x54f030, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x54e630, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x54fc10, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x54d6e0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x54d840, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x54d9a0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x54daf0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x54e5d0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x54e720, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x54efd0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x54fbb0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x54fd00, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x54fe50, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x5501d0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x550320, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x550470, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x5506b0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x550800, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x550950, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x54d580, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x8b, 0x4c, 0x24, 0x04] },
-    Prologue { address: 0x54d5b0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x8b, 0x4c, 0x24, 0x04] },
-    Prologue { address: 0x527ee0, bytes: &[0xa1, 0xcc, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x527f20, bytes: &[0xa1, 0xe4, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x527f60, bytes: &[0xa1, 0x7c, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x540020, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] },
-    Prologue { address: 0x5402f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] },
-    Prologue { address: 0x549c30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] },
-    Prologue { address: 0x538ec0, bytes: &[0x81, 0xec, 0x78, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x53a0e0, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x08] },
-    Prologue { address: 0x538bc0, bytes: &[0x81, 0xec, 0x74, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x54dc90, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x14] },
-    Prologue { address: 0x54e9a0, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x53] },
-    Prologue { address: 0x54f150, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x53] },
-    Prologue { address: 0x54ffd0, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x53] },
-    Prologue { address: 0x5453f0, bytes: &[0x6a, 0xff, 0x68, 0x5b, 0x79, 0x95, 0x00] },
-    Prologue { address: 0x545770, bytes: &[0x6a, 0xff, 0x68, 0xdb, 0x79, 0x95, 0x00] },
-    Prologue { address: 0x541e60, bytes: &[0xa1, 0x5c, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x544970, bytes: &[0x83, 0xec, 0x10, 0xa1, 0x5c, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x539750, bytes: &[0xa1, 0x50, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x53c190, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x53cd60, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x547770, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
-    Prologue { address: 0x549e50, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
-    Prologue { address: 0x549ea0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
-    Prologue { address: 0x549c90, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x85, 0xd2] },
-    Prologue { address: 0x549cf0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x549d60, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x85, 0xc9] },
-    Prologue { address: 0x53cb80, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x53cc30, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x53c8d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5454c0, bytes: &[0x6a, 0xff, 0x68, 0x7b, 0x79, 0x95, 0x00] },
-    Prologue { address: 0x5455a0, bytes: &[0x6a, 0xff, 0x68, 0x9b, 0x79, 0x95, 0x00] },
-    Prologue { address: 0x5456a0, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0x79, 0x95, 0x00] },
-    Prologue { address: 0x545990, bytes: &[0x6a, 0xff, 0x68, 0x1b, 0x7a, 0x95, 0x00] },
-    Prologue { address: 0x535930, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
-    Prologue { address: 0x544f30, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x46, 0x20] },
-    Prologue { address: 0x527240, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5267c0, bytes: &[0x81, 0xec, 0x28, 0x06, 0x00, 0x00] },
-    Prologue { address: 0x539ae0, bytes: &[0x8b, 0x0d, 0x7c, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x5315a0, bytes: &[0x81, 0xec, 0x04, 0x06, 0x00, 0x00] },
-    Prologue { address: 0x53db40, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x84, 0xc0] },
-    Prologue { address: 0x549100, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x549200, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x5492c0, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x5493c0, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x549470, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x55] },
-    Prologue { address: 0x549850, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x5494d0, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x5495b0, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x549690, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x549770, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x549940, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x549a30, bytes: &[0x81, 0xec, 0xcc, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x545e90, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
-    Prologue { address: 0x547c90, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x32, 0xc0] },
-    Prologue { address: 0x547ce0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x32, 0xc0] },
-    Prologue { address: 0x547f50, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x33, 0xd2] },
-    Prologue { address: 0x547bd0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x33, 0xd2] },
-    Prologue { address: 0x547c10, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x33, 0xd2] },
-    Prologue { address: 0x547c50, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x33, 0xd2] },
-    Prologue { address: 0x548090, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x56] },
-    Prologue { address: 0x547870, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x547940, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x547a10, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] },
-    Prologue { address: 0x547e70, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] },
-    Prologue { address: 0x547f90, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x5480f0, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x56] },
-    Prologue { address: 0x5481a0, bytes: &[0x51, 0x8b, 0x4c, 0x24, 0x08] },
-    Prologue { address: 0x548150, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53] },
-    Prologue { address: 0x548da0, bytes: &[0x83, 0xec, 0x10, 0x53, 0x8b, 0x5c, 0x24, 0x18] },
-    Prologue { address: 0x5487b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
-    Prologue { address: 0x5487d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
-    Prologue { address: 0x53d900, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0x1c, 0xf4, 0x9c, 0x00] },
-    Prologue { address: 0x53d940, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0xd0, 0xf4, 0x9c, 0x00] },
-    Prologue { address: 0x53ac40, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
-    Prologue { address: 0x540340, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x540080, bytes: &[0x81, 0xec, 0xa0, 0x0f, 0x00, 0x00] },
-    Prologue { address: 0x540270, bytes: &[0x81, 0xec, 0xa0, 0x0f, 0x00, 0x00] },
-    Prologue { address: 0x53e990, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x53fd40, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x53fe50, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x53e140, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x53eab0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5482f0, bytes: &[0x53, 0x57, 0x8b, 0x7c, 0x24, 0x10] },
-    Prologue { address: 0x5461b0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5465a0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x548810, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8b, 0x5c, 0x24, 0x10] },
-    Prologue { address: 0x546ab0, bytes: &[0x83, 0xec, 0x0c, 0x8b, 0x44, 0x24, 0x14] },
-    Prologue { address: 0x5470d0, bytes: &[0x83, 0xec, 0x0c, 0x8b, 0x44, 0x24, 0x14] },
-    Prologue { address: 0x53c9b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5448c0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x544c70, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x543280, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x543440, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x543b10, bytes: &[0x8a, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x53ff60, bytes: &[0x81, 0xec, 0xa0, 0x0f, 0x00, 0x00] },
-    Prologue { address: 0x53ffe0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] },
-    Prologue { address: 0x53d7d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x40, 0x53] },
-    Prologue { address: 0x545dc0, bytes: &[0xb0, 0x01, 0xb9, 0x04, 0x21, 0xae, 0x00] },
-    Prologue { address: 0x545e00, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x90, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x549dd0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x33, 0xc0] },
-    Prologue { address: 0x53e2e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x53ad00, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
-    Prologue { address: 0x53cee0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
-    Prologue { address: 0x542100, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5428a0, bytes: &[0x8a, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x53ee50, bytes: &[0xb8, 0xa4, 0x11, 0x00, 0x00] },
-    Prologue { address: 0x616f20, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6177f0, bytes: &[0x55, 0x8b, 0x6c, 0x24, 0x0c] },
-    Prologue { address: 0x601a40, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x603834, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x535a80, bytes: &[0x81, 0xec, 0x40, 0x0e, 0x00, 0x00] },
-    Prologue { address: 0x6181d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x55] },
-    Prologue { address: 0x6827d0, bytes: &[0x83, 0xec, 0x4c, 0x53, 0x55] },
-    Prologue { address: 0x682b30, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x687970, bytes: &[0x51, 0x53, 0x55, 0x8b, 0x6c, 0x24, 0x10] },
-    Prologue { address: 0x689ad0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] },
-    Prologue { address: 0x683010, bytes: &[0xa1, 0x38, 0x2a, 0xae, 0x00] },
-    Prologue { address: 0x684640, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55] },
-    Prologue { address: 0x4afce0, bytes: &[0xa1, 0x7c, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x4b02e0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x4c0720, bytes: &[0x81, 0xec, 0xf0, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x4afd80, bytes: &[0x81, 0xec, 0x1c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5c88f0, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0xf9] },
-    Prologue { address: 0x5ae6a0, bytes: &[0x8b, 0x54, 0x24, 0x0c, 0x8b, 0x44, 0x24, 0x04] },
-    Prologue { address: 0x5ac920, bytes: &[0x83, 0xec, 0x14, 0x8b, 0x44, 0x24, 0x18] },
-    Prologue { address: 0x5ae870, bytes: &[0x83, 0xec, 0x14, 0x8b, 0x44, 0x24, 0x18] },
-    Prologue { address: 0x5cbdd0, bytes: &[0x66, 0x0f, 0xbe, 0x01, 0x8b, 0x54, 0x24, 0x04] },
-    Prologue { address: 0x774f30, bytes: &[0x83, 0xec, 0x08, 0x56, 0x57] },
-    Prologue { address: 0x774f90, bytes: &[0x83, 0xec, 0x08, 0x56, 0x57] },
-    Prologue { address: 0x7774b0, bytes: &[0xa1, 0x50, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x776250, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8a, 0x5c, 0x24, 0x14] },
-    Prologue { address: 0x7762f0, bytes: &[0x8a, 0x44, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x76d880, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x775000, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x775070, bytes: &[0x51, 0xa1, 0x50, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x775f90, bytes: &[0x83, 0xec, 0x18, 0x8b, 0x44, 0x24, 0x28] },
-    Prologue { address: 0x76abf0, bytes: &[0x83, 0xec, 0x28, 0xa1, 0x50, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x778ed0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x08] },
-    Prologue { address: 0x778ef0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x5c4cb0, bytes: &[0x83, 0xec, 0x1c, 0x89, 0x4c, 0x24, 0x00] },
-    Prologue { address: 0x5c5040, bytes: &[0x83, 0xec, 0x20, 0x8b, 0x44, 0x24, 0x24] },
-    Prologue { address: 0x685f60, bytes: &[0x83, 0xec, 0x0c, 0x8b, 0xd1] },
-    Prologue { address: 0x68aad0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x53] },
-    Prologue { address: 0x683410, bytes: &[0xa1, 0xfc, 0x79, 0xb6, 0x00] },
-    Prologue { address: 0x685cf0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x68ab70, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x10] },
-    Prologue { address: 0x68abd0, bytes: &[0x53, 0x56, 0x8b, 0xb1, 0xb1, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x448230, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] },
-    Prologue { address: 0x4484d0, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] },
-    Prologue { address: 0x448500, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] },
-    Prologue { address: 0x448530, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x4485b0, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] },
-    Prologue { address: 0x450c60, bytes: &[0x56, 0x8b, 0xf1, 0x8d, 0x4e, 0x11] },
-    Prologue { address: 0x450d30, bytes: &[0x56, 0x8b, 0xf1, 0x8d, 0x4e, 0x12] },
-    Prologue { address: 0x448550, bytes: &[0x83, 0xec, 0x08, 0x56, 0x57] },
-    Prologue { address: 0x451570, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] },
-    Prologue { address: 0x786010, bytes: &[0x83, 0xec, 0x08, 0xba, 0x32, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x8cb940, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x83, 0xec, 0x08] },
-    Prologue { address: 0x8cbf40, bytes: &[0x83, 0xec, 0x08, 0x8d, 0x44, 0x24, 0x00] },
-    Prologue { address: 0x7a8b70, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x83, 0xec, 0x08] },
-    Prologue { address: 0x842080, bytes: &[0x8b, 0x01, 0x83, 0xec, 0x08] },
-    Prologue { address: 0x7a6e60, bytes: &[0x51, 0xa1, 0x64, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x556c70, bytes: &[0x83, 0xec, 0x08, 0x55, 0x56] },
-    Prologue { address: 0x8626e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x62c510, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x85fa00, bytes: &[0xa1, 0x94, 0x2c, 0xae, 0x00] },
-    Prologue { address: 0x867520, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x06] },
-    Prologue { address: 0x867240, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0x8b, 0x06] },
-    Prologue { address: 0x4cbb60, bytes: &[0x51, 0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x14] },
-    Prologue { address: 0x4cc0b0, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] },
-    Prologue { address: 0x4cc0f0, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] },
-    Prologue { address: 0x4cc810, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
-    Prologue { address: 0x4cb0a0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x10] },
-    Prologue { address: 0x4ca1c0, bytes: &[0x51, 0x8b, 0xc1, 0x53, 0x33, 0xdb] },
-    Prologue { address: 0x7549b0, bytes: &[0x51, 0x8b, 0xc1, 0x33, 0xd2] },
-    Prologue { address: 0x7f8ee0, bytes: &[0x83, 0xec, 0x1c, 0x53, 0x8b, 0xd9] },
-    Prologue { address: 0x5fff30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x83, 0xec, 0x24] },
-    Prologue { address: 0x7a8690, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x53] },
-    Prologue { address: 0x7a8050, bytes: &[0xa1, 0x54, 0x1f, 0xde, 0x00] },
-    Prologue { address: 0x8c7470, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x8c7330, bytes: &[0x51, 0x55, 0x56, 0x8b, 0xf1] },
-    Prologue { address: 0x7ae950, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x86, 0x80, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x690c30, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x53] },
-    Prologue { address: 0x450d40, bytes: &[0x56, 0x8b, 0xf1, 0x8d, 0x4e, 0x10] },
-    Prologue { address: 0x72b940, bytes: &[0x83, 0xec, 0x50, 0x53, 0x56] },
-    Prologue { address: 0x4485d0, bytes: &[0x6a, 0xff, 0x68, 0x5b, 0x54, 0x95, 0x00] },
-    Prologue { address: 0x448620, bytes: &[0x6a, 0xff, 0x68, 0x7b, 0x54, 0x95, 0x00] },
-    Prologue { address: 0x448670, bytes: &[0x6a, 0xff, 0x68, 0x9b, 0x54, 0x95, 0x00] },
-    Prologue { address: 0x450ad0, bytes: &[0x6a, 0xff, 0x68, 0x9b, 0x56, 0x95, 0x00] },
-    Prologue { address: 0x450b20, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0x56, 0x95, 0x00] },
-    Prologue { address: 0x450b70, bytes: &[0x6a, 0xff, 0x68, 0xdb, 0x56, 0x95, 0x00] },
-    Prologue { address: 0x450bc0, bytes: &[0x6a, 0xff, 0x68, 0xfb, 0x56, 0x95, 0x00] },
-    Prologue { address: 0x450c10, bytes: &[0x6a, 0xff, 0x68, 0x1b, 0x57, 0x95, 0x00] },
-    Prologue { address: 0x450c70, bytes: &[0x6a, 0xff, 0x68, 0x43, 0x57, 0x95, 0x00] },
-    Prologue { address: 0x8e05a0, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] },
-    Prologue { address: 0x8d0530, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x0c] },
-    Prologue { address: 0x5d5a20, bytes: &[0xdd, 0x44, 0x24, 0x04, 0xdd, 0x44, 0x24, 0x0c] },
-    Prologue { address: 0x4cf560, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x46, 0x38] },
-    Prologue { address: 0x5563f0, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8cb6d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x786520, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7aefd0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x521e00, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0x8a, 0x86, 0xb1, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x450cd0, bytes: &[0x6a, 0xff, 0x68, 0x63, 0x57, 0x95, 0x00] },
-    Prologue { address: 0x8c7260, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x83, 0xec, 0x10] },
-    Prologue { address: 0x84b180, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x5567d0, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] },
-    Prologue { address: 0x4ccbf0, bytes: &[0x56, 0x57, 0x8b, 0xf9, 0x8b, 0x47, 0x34] },
-    Prologue { address: 0x4cc930, bytes: &[0x56, 0x57, 0x8b, 0xf9, 0x8b, 0x47, 0x34] },
-    Prologue { address: 0x786780, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7862d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7863f0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4486c0, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] },
-    Prologue { address: 0x62c590, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x8cf7e0, bytes: &[0x83, 0xec, 0x2c, 0x33, 0xc0] },
-    Prologue { address: 0x5fe8d0, bytes: &[0x51, 0x53, 0x55, 0x56, 0x33, 0xdb] },
-    Prologue { address: 0x7f9690, bytes: &[0x51, 0x53, 0x8b, 0x5c, 0x24, 0x10] },
-    Prologue { address: 0x7ae8a0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x83, 0xcb, 0xff] },
-    Prologue { address: 0x6951e0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x55ca00, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x8420e0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8b, 0x5c, 0x24, 0x10] },
-    Prologue { address: 0x8cc930, bytes: &[0x51, 0x53, 0x8b, 0xd9, 0x8b, 0x4c, 0x24, 0x0c] },
-    Prologue { address: 0x452710, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4528d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x452cb0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7a81a0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7a8510, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7a87d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4cd030, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x8b, 0x5c, 0x24, 0x14] },
-    Prologue { address: 0x4cca70, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x53] },
-    Prologue { address: 0x55d270, bytes: &[0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x10] },
-    Prologue { address: 0x8d2fa0, bytes: &[0x8b, 0x15, 0x84, 0xf6, 0x9c, 0x00] },
-    Prologue { address: 0x8cf5e0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
-    Prologue { address: 0x5c6740, bytes: &[0x6a, 0xff, 0x68, 0xf8, 0xa0, 0x95, 0x00] },
-    Prologue { address: 0x786640, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x786860, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x784eb0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x785a20, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x74ae60, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x7f9190, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7c6830, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56] },
-    Prologue { address: 0x86fb80, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5b2ba0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x1c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8cdc90, bytes: &[0x6a, 0xff, 0x68, 0x18, 0x3f, 0x96, 0x00] },
-    Prologue { address: 0x8cdd80, bytes: &[0x6a, 0xff, 0x68, 0x38, 0x3f, 0x96, 0x00] },
-    Prologue { address: 0x8cd150, bytes: &[0x6a, 0xff, 0x68, 0xd8, 0x3e, 0x96, 0x00] },
-    Prologue { address: 0x8cde70, bytes: &[0x6a, 0xff, 0x68, 0x58, 0x3f, 0x96, 0x00] },
-    Prologue { address: 0x8d0a70, bytes: &[0x6a, 0xff, 0x68, 0x5b, 0x40, 0x96, 0x00] },
-    Prologue { address: 0x8cdb80, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x8cb810, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8c7070, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8cac40, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4c79a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4c7950, bytes: &[0x56, 0x8b, 0xf1, 0x6a, 0x01] },
-    Prologue { address: 0x4cd6d0, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x866ee0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x33, 0xdb] },
-    Prologue { address: 0x85e590, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x867d30, bytes: &[0x56, 0x57, 0x8b, 0xf9, 0x8a, 0x47, 0x35] },
-    Prologue { address: 0x757a50, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x757c70, bytes: &[0x83, 0xec, 0x24, 0x53, 0x8b, 0xd9] },
-    Prologue { address: 0x757da0, bytes: &[0x83, 0xec, 0x20, 0x55, 0x56] },
-    Prologue { address: 0x754740, bytes: &[0x81, 0xec, 0x24, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x757ea0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x757ee0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x51c020, bytes: &[0x81, 0xec, 0xe8, 0x05, 0x00, 0x00] },
-    Prologue { address: 0x51f2f0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x51ebc0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x687430, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x687a20, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x68aa30, bytes: &[0x53, 0x33, 0xdb, 0x66, 0x39, 0x59, 0x3e] },
-    Prologue { address: 0x6830b0, bytes: &[0x8b, 0x0d, 0xf0, 0x7e, 0xdd, 0x00] },
-    Prologue { address: 0x4afb40, bytes: &[0x56, 0x57, 0x0f, 0xbf, 0x74, 0x24, 0x10] },
-    Prologue { address: 0x4afbd0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x556e90, bytes: &[0x83, 0xec, 0x10, 0x0f, 0xbe, 0x44, 0x24, 0x18] },
-    Prologue { address: 0x556d00, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x55e1d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x62e500, bytes: &[0x83, 0xec, 0x10, 0x53, 0x55] },
-    Prologue { address: 0x631f90, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x62bfa0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
-    Prologue { address: 0x448ad0, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x0c] },
-    Prologue { address: 0x448cb0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x452a90, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5c29b0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5c45a0, bytes: &[0x6a, 0xff, 0x68, 0x00, 0xa0, 0x95, 0x00] },
-    Prologue { address: 0x5c4b60, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x786090, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x18] },
-    Prologue { address: 0x7861e0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x785d40, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7874b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x787350, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7858c0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x736720, bytes: &[0x83, 0xec, 0x10, 0x55, 0x8b, 0x6c, 0x24, 0x1c] },
-    Prologue { address: 0x74af60, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x53] },
-    Prologue { address: 0x786960, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7aace0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x7ad0e0, bytes: &[0x83, 0xec, 0x14, 0x89, 0x4c, 0x24, 0x10] },
-    Prologue { address: 0x7ad590, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x69d060, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x69c540, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
-    Prologue { address: 0x8c6220, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x849f00, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] },
-    Prologue { address: 0x849d60, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
-    Prologue { address: 0x844660, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8b, 0x5c, 0x24, 0x14] },
-    Prologue { address: 0x7b7490, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55] },
-    Prologue { address: 0x5c87b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5cc2d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x696570, bytes: &[0x83, 0xec, 0x08, 0x89, 0x4c, 0x24, 0x00] },
-    Prologue { address: 0x6978f0, bytes: &[0x51, 0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] },
-    Prologue { address: 0x6ac470, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56] },
-    Prologue { address: 0x4d0b50, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x4cf4a0, bytes: &[0x55, 0x56, 0x57, 0x8b, 0xf9] },
-    Prologue { address: 0x4d45f0, bytes: &[0x6a, 0xff, 0x68, 0x40, 0x6e, 0x95, 0x00] },
-    Prologue { address: 0x86dda0, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] },
-    Prologue { address: 0x86d6e0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x53] },
-    Prologue { address: 0x86f950, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x69b650, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x690730, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x690890, bytes: &[0x8b, 0x0d, 0x50, 0x10, 0xae, 0x00] },
-    Prologue { address: 0x77bbe0, bytes: &[0x6a, 0xff, 0x68, 0xfe, 0xe0, 0x95, 0x00] },
-    Prologue { address: 0x738340, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x7386f0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x735870, bytes: &[0x51, 0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x14] },
-    Prologue { address: 0x787140, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x786b70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x732c80, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x743370, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x743a50, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x839e60, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x83a780, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] },
-    Prologue { address: 0x842180, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] },
-    Prologue { address: 0x8423f0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x84af00, bytes: &[0x8b, 0x0d, 0x50, 0x10, 0xae, 0x00] },
-    Prologue { address: 0x8d0590, bytes: &[0x83, 0xec, 0x10, 0x32, 0xd2] },
-    Prologue { address: 0x8cc5b0, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8caee0, bytes: &[0x83, 0xec, 0x0c, 0xa1, 0x5c, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x8d0f60, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x556940, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x556270, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x556570, bytes: &[0x83, 0xec, 0x20, 0x53, 0x55] },
-    Prologue { address: 0x7c6a30, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7c6ca0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56] },
-    Prologue { address: 0x7c6650, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x775220, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7775c0, bytes: &[0xa1, 0x50, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x556830, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
-    Prologue { address: 0x4dc910, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] },
-    Prologue { address: 0x4cd9c0, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0xf9] },
-    Prologue { address: 0x4ca300, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4d01e0, bytes: &[0x6a, 0xff, 0x68, 0x1b, 0x6e, 0x95, 0x00] },
-    Prologue { address: 0x4d07e0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4cbd20, bytes: &[0x51, 0x53, 0x8b, 0x5c, 0x24, 0x10] },
-    Prologue { address: 0x694c80, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
-    Prologue { address: 0x69b350, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] },
-    Prologue { address: 0x86f5b0, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x69f810, bytes: &[0x55, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x4cb990, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
-    Prologue { address: 0x4cb250, bytes: &[0x83, 0xec, 0x08, 0x56, 0x57] },
-    Prologue { address: 0x83c090, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x08] },
-    Prologue { address: 0x83a730, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] },
-    Prologue { address: 0x842b00, bytes: &[0x6a, 0xff, 0x68, 0xdb, 0x24, 0x96, 0x00] },
-    Prologue { address: 0x842c00, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] },
-    Prologue { address: 0x842320, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] },
-    Prologue { address: 0x8cb340, bytes: &[0x83, 0xec, 0x10, 0x53, 0x55] },
-    Prologue { address: 0x8c36b0, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x4c, 0x24, 0x08] },
-    Prologue { address: 0x8c6ae0, bytes: &[0x6a, 0xff, 0x68, 0x18, 0x3d, 0x96, 0x00] },
-    Prologue { address: 0x8c8740, bytes: &[0x6a, 0xff, 0x68, 0xce, 0x3d, 0x96, 0x00] },
-    Prologue { address: 0x62e820, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x62e9e0, bytes: &[0x6a, 0xff, 0x68, 0x88, 0xb1, 0x95, 0x00] },
-    Prologue { address: 0x62ce30, bytes: &[0x6a, 0xff, 0x68, 0x20, 0xb1, 0x95, 0x00] },
-    Prologue { address: 0x62a920, bytes: &[0x6a, 0xff, 0x68, 0x90, 0xb0, 0x95, 0x00] },
-    Prologue { address: 0x62cf70, bytes: &[0x81, 0xec, 0x1c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7acfc0, bytes: &[0x6a, 0xff, 0x68, 0x6b, 0xf2, 0x95, 0x00] },
-    Prologue { address: 0x452da0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x7c1350, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x448760, bytes: &[0x83, 0xec, 0x10, 0x53, 0x8b, 0x5c, 0x24, 0x18] },
-    Prologue { address: 0x5cc3e0, bytes: &[0x51, 0x8a, 0x81, 0x06, 0x35, 0x00, 0x00] },
-    Prologue { address: 0x5cc5f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x08] },
-    Prologue { address: 0x5cc610, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x776fc0, bytes: &[0x6a, 0xff, 0x68, 0x48, 0xdf, 0x95, 0x00] },
-    Prologue { address: 0x778e90, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x7779b0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x83, 0xec, 0x08] },
-    Prologue { address: 0x522190, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x5221c0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x68a980, bytes: &[0x56, 0x57, 0x8b, 0xf9, 0x33, 0xf6] },
-    Prologue { address: 0x69aba0, bytes: &[0x83, 0xec, 0x08, 0xa1, 0xcc, 0x6e, 0xdd, 0x00] },
-    Prologue { address: 0x6ac560, bytes: &[0x6a, 0xff, 0x68, 0x88, 0xd0, 0x95, 0x00] },
-    Prologue { address: 0x69b790, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
-    Prologue { address: 0x6a5610, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
-    Prologue { address: 0x69eb50, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x690b70, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x09] },
-    Prologue { address: 0x869480, bytes: &[0x6a, 0xff, 0x68, 0x96, 0x2b, 0x96, 0x00] },
-    Prologue { address: 0x86a1c0, bytes: &[0x6a, 0xff, 0x68, 0x06, 0x2c, 0x96, 0x00] },
-    Prologue { address: 0x86bdd0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x86cd70, bytes: &[0x6a, 0xff, 0x68, 0x5b, 0x2d, 0x96, 0x00] },
-    Prologue { address: 0x86c000, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x86c1d0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x8cee70, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8cf0e0, bytes: &[0x6a, 0xff, 0x68, 0xa8, 0x3f, 0x96, 0x00] },
-    Prologue { address: 0x8d0bb0, bytes: &[0x6a, 0xff, 0x68, 0x90, 0x40, 0x96, 0x00] },
-    Prologue { address: 0x8d0780, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0x40, 0x96, 0x00] },
-    Prologue { address: 0x8ca8a0, bytes: &[0x83, 0xec, 0x18, 0x53, 0x55] },
-    Prologue { address: 0x8cd240, bytes: &[0x6a, 0xff, 0x68, 0x00, 0x3f, 0x96, 0x00] },
-    Prologue { address: 0x8c7e20, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x8c38b0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x8c1e40, bytes: &[0x6a, 0xff, 0x68, 0xc8, 0x3b, 0x96, 0x00] },
-    Prologue { address: 0x8c44e0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x8bed60, bytes: &[0x6a, 0xff, 0x68, 0xc3, 0x3a, 0x96, 0x00] },
-    Prologue { address: 0x8cbbe0, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7a7150, bytes: &[0x83, 0xec, 0x08, 0x56, 0x8b, 0x74, 0x24, 0x10] },
-    Prologue { address: 0x7ae2a0, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] },
-    Prologue { address: 0x7ae240, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x7c3920, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7c5d80, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7ae350, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x51e220, bytes: &[0x81, 0xec, 0x28, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x522610, bytes: &[0x83, 0xec, 0x14, 0x56, 0x57] },
-    Prologue { address: 0x4bf850, bytes: &[0x66, 0x8b, 0x4c, 0x24, 0x10] },
-    Prologue { address: 0x4afa80, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x4afba0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x7f8d70, bytes: &[0x6a, 0xff, 0x68, 0xfb, 0x0f, 0x96, 0x00] },
-    Prologue { address: 0x896e90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x897bb0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8cf6b0, bytes: &[0x51, 0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x18] },
-    Prologue { address: 0x8cf880, bytes: &[0x83, 0xec, 0x0c, 0x55, 0x8b, 0x6c, 0x24, 0x18] },
-    Prologue { address: 0x8c7560, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8ce990, bytes: &[0x6a, 0xff, 0x68, 0x78, 0x3f, 0x96, 0x00] },
-    Prologue { address: 0x8c2060, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8c1780, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8cca10, bytes: &[0x6a, 0xff, 0x68, 0x98, 0x3e, 0x96, 0x00] },
-    Prologue { address: 0x8cbf70, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] },
-    Prologue { address: 0x8cb9a0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8c6100, bytes: &[0x51, 0x55, 0x56, 0x8b, 0xf1] },
-    Prologue { address: 0x8c47d0, bytes: &[0x6a, 0xff, 0x68, 0x88, 0x3c, 0x96, 0x00] },
-    Prologue { address: 0x8caaf0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x68f130, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x6abef0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5fe700, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x7a79c0, bytes: &[0x83, 0xec, 0x0c, 0x57, 0x8b, 0x7c, 0x24, 0x14] },
-    Prologue { address: 0x7a7310, bytes: &[0x83, 0xec, 0x14, 0x8b, 0x0d, 0x50, 0x10, 0xae, 0x00] },
-    Prologue { address: 0x7a58f0, bytes: &[0x6a, 0xff, 0x68, 0x88, 0xf1, 0x95, 0x00] },
-    Prologue { address: 0x7a5790, bytes: &[0x6a, 0xff, 0x68, 0x58, 0xf1, 0x95, 0x00] },
-    Prologue { address: 0x7aaeb0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x86d800, bytes: &[0x6a, 0xff, 0x68, 0x7b, 0x2d, 0x96, 0x00] },
-    Prologue { address: 0x62c400, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4cd230, bytes: &[0x6a, 0xff, 0x68, 0x50, 0x6d, 0x95, 0x00] },
-    Prologue { address: 0x86fab0, bytes: &[0x6a, 0xff, 0x68, 0x08, 0x2e, 0x96, 0x00] },
-    Prologue { address: 0x68ac40, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55, 0x56] },
-    Prologue { address: 0x68afb0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x08] },
-    Prologue { address: 0x68afd0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x5acbe0, bytes: &[0x81, 0xec, 0x24, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5abd90, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5ae6d0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5c6b70, bytes: &[0x6a, 0xff, 0x68, 0x31, 0xa1, 0x95, 0x00] },
-    Prologue { address: 0x522910, bytes: &[0x56, 0x66, 0x8b, 0x71, 0x3e] },
-    Prologue { address: 0x5af5b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53] },
-    Prologue { address: 0x4d8610, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x4cbb20, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x3c, 0x0b] },
-    Prologue { address: 0x4cb960, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x8a, 0x41, 0x3d] },
-    Prologue { address: 0x8c6e60, bytes: &[0x6a, 0xff, 0x68, 0x68, 0x3d, 0x96, 0x00] },
-    Prologue { address: 0x8c3e50, bytes: &[0x8a, 0x44, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x8d0ea0, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] },
-    Prologue { address: 0x8c18c0, bytes: &[0x6a, 0xff, 0x68, 0xb0, 0x3b, 0x96, 0x00] },
-    Prologue { address: 0x8cf470, bytes: &[0x6a, 0xff, 0x68, 0xd6, 0x3f, 0x96, 0x00] },
-    Prologue { address: 0x8c72d0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] },
-    Prologue { address: 0x8c8fd0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x8c5560, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] },
-    Prologue { address: 0x8c54c0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x5d6d10, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55, 0x56] },
-    Prologue { address: 0x5d7190, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55, 0x56] },
-    Prologue { address: 0x5ce0b0, bytes: &[0x83, 0xec, 0x1c, 0xa1, 0x5c, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x5d6aa0, bytes: &[0x51, 0x8b, 0x0d, 0x64, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x5ce060, bytes: &[0xa1, 0xf8, 0xad, 0xad, 0x00] },
-    Prologue { address: 0x5cdde0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x85, 0xd2] },
-    Prologue { address: 0x85b820, bytes: &[0x83, 0xec, 0x14, 0x53, 0x8b, 0x5c, 0x24, 0x1c] },
-    Prologue { address: 0x85de20, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x85ddb0, bytes: &[0x83, 0xec, 0x14, 0x56, 0x8b, 0xf1] },
-    Prologue { address: 0x7f9720, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x8b, 0x5c, 0x24, 0x14] },
-    Prologue { address: 0x7f7490, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x86cc50, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0x2d, 0x96, 0x00] },
-    Prologue { address: 0x7c3d20, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x86da20, bytes: &[0x6a, 0xff, 0x68, 0x9b, 0x2d, 0x96, 0x00] },
-    Prologue { address: 0x632040, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x7c3bb0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x86c730, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x870220, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] },
-    Prologue { address: 0x5ac7a0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5ab230, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5abc30, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5c2ae0, bytes: &[0x6a, 0xff, 0x68, 0x10, 0x9e, 0x95, 0x00] },
-    Prologue { address: 0x5c6f00, bytes: &[0x6a, 0xff, 0x68, 0x5c, 0xa1, 0x95, 0x00] },
-    Prologue { address: 0x5c4380, bytes: &[0x6a, 0xff, 0x68, 0xe4, 0x9f, 0x95, 0x00] },
-    Prologue { address: 0x51f890, bytes: &[0x6a, 0xff, 0x68, 0x98, 0x77, 0x95, 0x00] },
-    Prologue { address: 0x51c800, bytes: &[0x6a, 0xff, 0x68, 0xd9, 0x76, 0x95, 0x00] },
-    Prologue { address: 0x5ab3c0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x58d710, bytes: &[0x8b, 0x54, 0x24, 0x0c, 0x53] },
-    Prologue { address: 0x58d460, bytes: &[0x83, 0xec, 0x18, 0x53, 0x8b, 0x5c, 0x24, 0x20] },
-    Prologue { address: 0x58e220, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x58dea0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x58e190, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x58dfc0, bytes: &[0x83, 0xec, 0x1c, 0xa1, 0x50, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x48dd70, bytes: &[0x8b, 0x0d, 0x74, 0x2c, 0xae, 0x00] },
-    Prologue { address: 0x669a10, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x669ae0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x669470, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x58d610, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x58e240, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x922ee0, bytes: &[0x51, 0x56, 0x57, 0x8b, 0xf9] },
-    Prologue { address: 0x922c40, bytes: &[0x81, 0xec, 0xd0, 0x07, 0x00, 0x00] },
-    Prologue { address: 0x922d20, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0xe0, 0x0a, 0x00, 0x00] },
-    Prologue { address: 0x5d5f20, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x5d6250, bytes: &[0x66, 0x8b, 0x44, 0x24, 0x04] },
-    Prologue { address: 0x5d61d0, bytes: &[0x66, 0x0f, 0xbe, 0x4c, 0x24, 0x04] },
-    Prologue { address: 0x85da00, bytes: &[0x83, 0xec, 0x0c, 0xa1, 0xe4, 0xf2, 0x9c, 0x00] },
-    Prologue { address: 0x85d8a0, bytes: &[0x83, 0xec, 0x10, 0x8b, 0x4c, 0x24, 0x14] },
-    Prologue { address: 0x922810, bytes: &[0x81, 0xec, 0xf0, 0x05, 0x00, 0x00] },
-    Prologue { address: 0x8b41d0, bytes: &[0x83, 0xec, 0x18, 0x8b, 0x44, 0x24, 0x1c] },
-    Prologue { address: 0x8b4cd0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8b4f60, bytes: &[0x51, 0x53, 0x56, 0x57, 0x8b, 0xf9] },
-    Prologue { address: 0x8b2be0, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8b4b20, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8b4db0, bytes: &[0x51, 0x8b, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x8b1730, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x7a6e30, bytes: &[0x8b, 0x41, 0x1c, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x62ed30, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x5c2460, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5c27a0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5c2d40, bytes: &[0x6a, 0xff, 0x68, 0x4e, 0x9e, 0x95, 0x00] },
-    Prologue { address: 0x5c4040, bytes: &[0x6a, 0xff, 0x68, 0x9e, 0x9f, 0x95, 0x00] },
-    Prologue { address: 0x5c5270, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x5c5290, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x5223a0, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4c08f0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4a2540, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x669340, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x32, 0xc0] },
-    Prologue { address: 0x669360, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x669950, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x669bd0, bytes: &[0x6a, 0xff, 0x68, 0x58, 0xc6, 0x95, 0x00] },
-    Prologue { address: 0x6695c0, bytes: &[0xa1, 0x08, 0x2d, 0xae, 0x00] },
-    Prologue { address: 0x669600, bytes: &[0xa1, 0x08, 0x2d, 0xae, 0x00] },
-    Prologue { address: 0x7c1e30, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7c6d40, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x7c6d90, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x867b50, bytes: &[0x8a, 0x51, 0x1c, 0xb0, 0x02] },
-    Prologue { address: 0x868210, bytes: &[0x6a, 0xff, 0x68, 0x08, 0x2b, 0x96, 0x00] },
-    Prologue { address: 0x867aa0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x40, 0x61] },
-    Prologue { address: 0x923630, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x5a0590, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x85e380, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] },
-    Prologue { address: 0x923010, bytes: &[0x51, 0x53, 0x55, 0x8b, 0xe9] },
-    Prologue { address: 0x9232c0, bytes: &[0x0f, 0xbe, 0x4c, 0x24, 0x04] },
-    Prologue { address: 0x923970, bytes: &[0x8b, 0x4c, 0x24, 0x08, 0x53] },
-    Prologue { address: 0x5986b0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x8b, 0x15, 0xb4, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x5d6220, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] },
-    Prologue { address: 0x85e350, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x48, 0x0c] },
-    Prologue { address: 0x8b3d40, bytes: &[0x81, 0xec, 0x0c, 0x0c, 0x00, 0x00] },
-    Prologue { address: 0x8b4e50, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
-    Prologue { address: 0x8b3930, bytes: &[0x8b, 0x54, 0x24, 0x04, 0xa1, 0x64, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x8b3c50, bytes: &[0xa1, 0x6c, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x7a8350, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7a6e20, bytes: &[0x8b, 0x41, 0x20, 0x85, 0xc0] },
-    Prologue { address: 0x7e8e10, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
-    Prologue { address: 0x7e7ed0, bytes: &[0x83, 0xec, 0x08, 0x56, 0x8b, 0xf1] },
-    Prologue { address: 0x7e9050, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5b3560, bytes: &[0x81, 0xec, 0x80, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5b3460, bytes: &[0x8a, 0x54, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5b57d0, bytes: &[0x8a, 0x44, 0x24, 0x08, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x686a70, bytes: &[0x81, 0xec, 0x68, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x521790, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5219b0, bytes: &[0x8b, 0x54, 0x24, 0x0c, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7bca90, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8b, 0x5c, 0x24, 0x10] },
-    Prologue { address: 0x7bd830, bytes: &[0x8a, 0x54, 0x24, 0x04, 0x8a, 0x81, 0xa1, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x7bd870, bytes: &[0x8a, 0x81, 0xa1, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x8c2f50, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55] },
-    Prologue { address: 0x8d76d0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x8e1780, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x8c28c0, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6a4c40, bytes: &[0x6a, 0xff, 0x68, 0x6b, 0xce, 0x95, 0x00] },
-    Prologue { address: 0x6a4a20, bytes: &[0x6a, 0xff, 0x68, 0x4b, 0xce, 0x95, 0x00] },
-    Prologue { address: 0x8c4e10, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x83, 0xec, 0x0c] },
-    Prologue { address: 0x6a44a0, bytes: &[0x6a, 0xff, 0x68, 0x2b, 0xce, 0x95, 0x00] },
-    Prologue { address: 0x6a5d10, bytes: &[0x6a, 0xff, 0x68, 0xeb, 0xce, 0x95, 0x00] },
-    Prologue { address: 0x8be9d0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x69fd50, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x8d8310, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x59b7e0, bytes: &[0x51, 0x53, 0x56, 0x8b, 0x74, 0x24, 0x10] },
-    Prologue { address: 0x599a20, bytes: &[0x83, 0xec, 0x14, 0x8b, 0x15, 0xb4, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x59b630, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] },
-    Prologue { address: 0x59ed70, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x59dd40, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x59e5a0, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55] },
-    Prologue { address: 0x597db0, bytes: &[0x83, 0xec, 0x18, 0x8b, 0x41, 0x08] },
-    Prologue { address: 0x599960, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x91, 0x38, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x598340, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
-    Prologue { address: 0x62c080, bytes: &[0x83, 0xec, 0x20, 0x53, 0x55] },
-    Prologue { address: 0x62bf60, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0x8b, 0x46, 0x28] },
-    Prologue { address: 0x631550, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0x28, 0x3d, 0xb6, 0x00] },
-    Prologue { address: 0x7a6f10, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x7a7f20, bytes: &[0x6a, 0xff, 0x68, 0xf0, 0xf1, 0x95, 0x00] },
-    Prologue { address: 0x7aa340, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x62e700, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x72bbf0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x787630, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x775cd0, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x76f7d0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x7701f0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x76db00, bytes: &[0x6a, 0xff, 0x68, 0xdb, 0xdd, 0x95, 0x00] },
-    Prologue { address: 0x76da80, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x5c57d0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x53] },
-    Prologue { address: 0x86c8c0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5c52d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x66, 0x8b, 0x80, 0x80, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5c74d0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
-    Prologue { address: 0x866620, bytes: &[0x6a, 0xff, 0x68, 0x90, 0x2a, 0x96, 0x00] },
-    Prologue { address: 0x4d9f80, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x4d9460, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x8c3310, bytes: &[0x6a, 0xff, 0x68, 0x10, 0x3c, 0x96, 0x00] },
-    Prologue { address: 0x8c34e0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
-    Prologue { address: 0x8c91e0, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] },
-    Prologue { address: 0x842740, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x4d6790, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x4d6d70, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x4cc490, bytes: &[0x6a, 0xff, 0x68, 0x29, 0x6d, 0x95, 0x00] },
-    Prologue { address: 0x4ccb30, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0xf9] },
-    Prologue { address: 0x4ce450, bytes: &[0x6a, 0xff, 0x68, 0x88, 0x6d, 0x95, 0x00] },
-    Prologue { address: 0x767ee0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x53] },
-    Prologue { address: 0x767fa0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x768130, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55] },
-    Prologue { address: 0x767150, bytes: &[0x56, 0x57, 0x8b, 0xf9, 0x8b, 0x47, 0x09] },
-    Prologue { address: 0x7671c0, bytes: &[0x51, 0x53, 0x8b, 0x5c, 0x24, 0x14] },
-    Prologue { address: 0x412f00, bytes: &[0x53, 0x55, 0x8b, 0x4c, 0x24, 0x1c] },
-    Prologue { address: 0x62c680, bytes: &[0x6a, 0xff, 0x68, 0xf8, 0xb0, 0x95, 0x00] },
-    Prologue { address: 0x690bd0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x09] },
-    Prologue { address: 0x69f7c0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x62b7b0, bytes: &[0x83, 0xec, 0x1c, 0x53, 0x8b, 0xd9] },
-    Prologue { address: 0x62e010, bytes: &[0x6a, 0xff, 0x68, 0x68, 0xb1, 0x95, 0x00] },
-    Prologue { address: 0x55d360, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x7a65d0, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x757f30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x66, 0x81, 0xb8, 0x80, 0x00, 0x00, 0x00, 0x6a, 0x18] },
-    Prologue { address: 0x757fa0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x48, 0x61] },
-    Prologue { address: 0x685d30, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x687710, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x68a850, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x76b600, bytes: &[0x83, 0xec, 0x60, 0x56, 0x57] },
-    Prologue { address: 0x775610, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x48d410, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x8b, 0xc1] },
-    Prologue { address: 0x7771c0, bytes: &[0x6a, 0xff, 0x68, 0x6b, 0xdf, 0x95, 0x00] },
-    Prologue { address: 0x48e190, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x48d200, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4190d0, bytes: &[0x83, 0xec, 0x1c, 0x53, 0x55] },
-    Prologue { address: 0x418ff0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x419070, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] },
-    Prologue { address: 0x41a360, bytes: &[0x6a, 0xff, 0x68, 0xe8, 0x3e, 0x95, 0x00] },
-    Prologue { address: 0x419710, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] },
-    Prologue { address: 0x867560, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8bf680, bytes: &[0x51, 0x53, 0x8b, 0x5c, 0x24, 0x0c] },
-    Prologue { address: 0x8bfcb0, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] },
-    Prologue { address: 0x8d5170, bytes: &[0x6a, 0xff, 0x68, 0x2b, 0x43, 0x96, 0x00] },
-    Prologue { address: 0x8c1290, bytes: &[0x83, 0xec, 0x20, 0x53, 0x8b, 0x5c, 0x24, 0x28] },
-    Prologue { address: 0x8de790, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x8db8a0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x8c9390, bytes: &[0x51, 0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x14] },
-    Prologue { address: 0x8dbef0, bytes: &[0x6a, 0xff, 0x68, 0x5b, 0x45, 0x96, 0x00] },
-    Prologue { address: 0x8e05d0, bytes: &[0x6a, 0xff, 0x68, 0x9b, 0x46, 0x96, 0x00] },
-    Prologue { address: 0x8bf400, bytes: &[0x6a, 0xff, 0x68, 0x28, 0x3b, 0x96, 0x00] },
-    Prologue { address: 0x4da590, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x8dda90, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x896660, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5fbe20, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5fbd00, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x896c60, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8973e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x897250, bytes: &[0x8a, 0x81, 0xf0, 0x05, 0x00, 0x00] },
-    Prologue { address: 0x6a0e70, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x6a1b00, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x6a2e00, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x682e10, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x686940, bytes: &[0x8a, 0x44, 0x24, 0x08, 0x3c, 0x05] },
-    Prologue { address: 0x686670, bytes: &[0x6a, 0xff, 0x68, 0x8b, 0xca, 0x95, 0x00] },
-    Prologue { address: 0x7c0d70, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x447430, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x448e30, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x76bab0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x76fd10, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x519690, bytes: &[0x6a, 0xff, 0x68, 0xdb, 0x75, 0x95, 0x00] },
-    Prologue { address: 0x844540, bytes: &[0x83, 0xec, 0x14, 0x53, 0x8b, 0x5c, 0x24, 0x1c] },
-    Prologue { address: 0x844280, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0x50, 0x10, 0xae, 0x00] },
-    Prologue { address: 0x8442d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0x50, 0x10, 0xae, 0x00] },
-    Prologue { address: 0x843e10, bytes: &[0x6a, 0xff, 0x68, 0x18, 0x25, 0x96, 0x00] },
-    Prologue { address: 0x8442b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0x50, 0x10, 0xae, 0x00] },
-    Prologue { address: 0x84b1f0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x83b6e0, bytes: &[0x83, 0xec, 0x2c, 0x53, 0x55] },
-    Prologue { address: 0x84b4d0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7fc150, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5cbb00, bytes: &[0x6a, 0xff, 0x68, 0xa0, 0xa3, 0x95, 0x00] },
-    Prologue { address: 0x7f6e30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7f6f20, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x584fa0, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x584990, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5851d0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x583b10, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x586c00, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] },
-    Prologue { address: 0x48e360, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x0f, 0xbf, 0x48, 0x30] },
-    Prologue { address: 0x79c7b0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55, 0x56] },
-    Prologue { address: 0x79bf40, bytes: &[0x8b, 0x51, 0x04, 0x33, 0xc0] },
-    Prologue { address: 0x79cee0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x79c5c0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x79caa0, bytes: &[0x8b, 0x0d, 0x90, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x79c530, bytes: &[0x83, 0xec, 0x08, 0x56, 0x57] },
-    Prologue { address: 0x86c390, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x7e4a30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7e4b00, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8c39f0, bytes: &[0x81, 0xec, 0xc8, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x8cad90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8da5e0, bytes: &[0x6a, 0xff, 0x68, 0x96, 0x44, 0x96, 0x00] },
-    Prologue { address: 0x696b10, bytes: &[0x83, 0xec, 0x14, 0x8a, 0x44, 0x24, 0x24] },
-    Prologue { address: 0x6ac700, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x6ac880, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8c1af0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5fd2f0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8d7cd0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x573080, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x576a70, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5783c0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x576c50, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x53] },
-    Prologue { address: 0x573260, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] },
-    Prologue { address: 0x578660, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] },
-    Prologue { address: 0x684cd0, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x572ff0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x5769e0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x584ae0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x53] },
-    Prologue { address: 0x586330, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x586660, bytes: &[0x8a, 0x44, 0x24, 0x08, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x896290, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x8976a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x897880, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7757d0, bytes: &[0x6a, 0xff, 0x68, 0xf0, 0xde, 0x95, 0x00] },
-    Prologue { address: 0x76d9b0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] },
-    Prologue { address: 0x775580, bytes: &[0x53, 0x55, 0x8b, 0xe9, 0x32, 0xdb] },
-    Prologue { address: 0x7e4750, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x7e4920, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7e56d0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5ae9d0, bytes: &[0x6a, 0xff, 0x68, 0x46, 0x98, 0x95, 0x00] },
-    Prologue { address: 0x5abb10, bytes: &[0x6a, 0xff, 0x68, 0x40, 0x97, 0x95, 0x00] },
-    Prologue { address: 0x5aac70, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x41add0, bytes: &[0x6a, 0xff, 0x68, 0x36, 0x3f, 0x95, 0x00] },
-    Prologue { address: 0x5a74b0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5a7f20, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x7dab90, bytes: &[0xb8, 0x94, 0x10, 0x00, 0x00] },
-    Prologue { address: 0x7dad20, bytes: &[0x53, 0x55, 0x56, 0x8b, 0xf1] },
-    Prologue { address: 0x758de0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x598370, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55, 0x56] },
-    Prologue { address: 0x59cf50, bytes: &[0xa1, 0x5c, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x59b4c0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x599800, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x599890, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x5998e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x91, 0x3c, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x5999a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x91, 0x48, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x5987c0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x91, 0x58, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x599920, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x91, 0x30, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x522240, bytes: &[0x83, 0xec, 0x08, 0x8b, 0x44, 0x24, 0x0c] },
-    Prologue { address: 0x51e870, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x83, 0xec, 0x08] },
-    Prologue { address: 0x521b30, bytes: &[0x66, 0x8b, 0x41, 0x3c, 0x53] },
-    Prologue { address: 0x5c5f40, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0xa0, 0x95, 0x00] },
-    Prologue { address: 0x5c5570, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5ca3e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x51c410, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x4bffc0, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x81, 0xec, 0xc8, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x522360, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x48, 0x57] },
-    Prologue { address: 0x519890, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] },
-    Prologue { address: 0x519a90, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] },
-    Prologue { address: 0x519fc0, bytes: &[0x83, 0xec, 0x10, 0x53, 0x55] },
-    Prologue { address: 0x8bfa30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x55] },
-    Prologue { address: 0x8cd450, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8d0dd0, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] },
-    Prologue { address: 0x7af600, bytes: &[0x6a, 0xff, 0x68, 0x86, 0xf3, 0x95, 0x00] },
-    Prologue { address: 0x7f7270, bytes: &[0x81, 0xec, 0x30, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7bd700, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x840d80, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x7f8610, bytes: &[0x0f, 0xbf, 0x05, 0x7a, 0x7c, 0xb7, 0x00] },
-    Prologue { address: 0x8d0f00, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] },
-    Prologue { address: 0x4ca6d0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x4cc2d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x48, 0x61] },
-    Prologue { address: 0x4cc2e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x48, 0x61] },
-    Prologue { address: 0x4d0c60, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x4cc3a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x4cc130, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6aaee0, bytes: &[0x81, 0xec, 0xdc, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x6ab670, bytes: &[0x6a, 0xff, 0x68, 0x1b, 0xd0, 0x95, 0x00] },
-    Prologue { address: 0x6ab2d0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x64, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x868830, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] },
-    Prologue { address: 0x86a070, bytes: &[0x6a, 0xff, 0x68, 0xdb, 0x2b, 0x96, 0x00] },
-    Prologue { address: 0x86dc30, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0x2d, 0x96, 0x00] },
-    Prologue { address: 0x86b0b0, bytes: &[0x6a, 0xff, 0x68, 0x46, 0x2c, 0x96, 0x00] },
-    Prologue { address: 0x86b710, bytes: &[0x6a, 0xff, 0x68, 0x66, 0x2c, 0x96, 0x00] },
-    Prologue { address: 0x869aa0, bytes: &[0x6a, 0xff, 0x68, 0xc1, 0x2b, 0x96, 0x00] },
-    Prologue { address: 0x758200, bytes: &[0x83, 0xec, 0x18, 0x53, 0x55] },
-    Prologue { address: 0x75b6e0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x75cfc0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x59a5d0, bytes: &[0x81, 0xec, 0x1c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x59af40, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x599850, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x91, 0x28, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x59e050, bytes: &[0x51, 0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x14] },
-    Prologue { address: 0x59e940, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x5999e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x91, 0x20, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x5ca4f0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5cc510, bytes: &[0x51, 0x66, 0xa1, 0x92, 0x2c, 0xae, 0x00] },
-    Prologue { address: 0x5c6830, bytes: &[0x0f, 0xbf, 0x05, 0x7a, 0x7c, 0xb7, 0x00] },
-    Prologue { address: 0x5c4770, bytes: &[0x81, 0xec, 0x50, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5c6e00, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56, 0x57] },
-    Prologue { address: 0x5c68b0, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0x8b, 0x86, 0xc8, 0x34, 0x00, 0x00] },
-    Prologue { address: 0x62d250, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x62dca0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x418f60, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x8e4f20, bytes: &[0x6a, 0xff, 0x68, 0xab, 0x48, 0x96, 0x00] },
-    Prologue { address: 0x8cb0f0, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] },
-    Prologue { address: 0x8db3a0, bytes: &[0x6a, 0xff, 0x68, 0xdb, 0x44, 0x96, 0x00] },
-    Prologue { address: 0x8c7950, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] },
-    Prologue { address: 0x8c5800, bytes: &[0x8b, 0x0d, 0x50, 0x10, 0xae, 0x00] },
-    Prologue { address: 0x8c6200, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x51, 0x10] },
-    Prologue { address: 0x755340, bytes: &[0x81, 0xec, 0xf4, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x758010, bytes: &[0x83, 0xec, 0x10, 0x53, 0x57] },
-    Prologue { address: 0x735160, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x85, 0xc0] },
-    Prologue { address: 0x557120, bytes: &[0x6a, 0xff, 0x68, 0xc8, 0x7c, 0x95, 0x00] },
-    Prologue { address: 0x557000, bytes: &[0x53, 0x55, 0x8b, 0x5c, 0x24, 0x0c] },
-    Prologue { address: 0x55d3c0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x68d1f0, bytes: &[0x8b, 0xc1, 0x53, 0x55, 0x56] },
-    Prologue { address: 0x68d080, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x46, 0x02] },
-    Prologue { address: 0x68d2e0, bytes: &[0x8b, 0x41, 0x0a, 0x85, 0xc0] },
-    Prologue { address: 0x51d2d0, bytes: &[0x81, 0xec, 0x2c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x51d9f0, bytes: &[0x81, 0xec, 0x30, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x518780, bytes: &[0xc6, 0x81, 0xb1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x48dee0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] },
-    Prologue { address: 0x48df40, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53] },
-    Prologue { address: 0x48dcd0, bytes: &[0x8a, 0x54, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5ae380, bytes: &[0x6a, 0xff, 0x68, 0x16, 0x98, 0x95, 0x00] },
-    Prologue { address: 0x5aee40, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x15, 0x5c, 0x2a, 0xae, 0x00] },
-    Prologue { address: 0x5aee60, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x15, 0x5c, 0x2a, 0xae, 0x00] },
-    Prologue { address: 0x59b3b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x59b2a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x859cc0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x905510, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4c6b70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5fb320, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x443f50, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x79bb80, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x84c680, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5af040, bytes: &[0xa1, 0x5c, 0x2a, 0xae, 0x00] },
-    Prologue { address: 0x5aee90, bytes: &[0xa1, 0x5c, 0x2a, 0xae, 0x00] },
-    Prologue { address: 0x5af4a0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x59cdd0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x59cfa0, bytes: &[0x81, 0xec, 0x1c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x59fe10, bytes: &[0x6a, 0xff, 0x68, 0x2b, 0x91, 0x95, 0x00] },
-    Prologue { address: 0x5968d0, bytes: &[0x83, 0xec, 0x34, 0x53, 0x56] },
-    Prologue { address: 0x59ffb0, bytes: &[0x6a, 0xff, 0x68, 0x6b, 0x91, 0x95, 0x00] },
-    Prologue { address: 0x59fae0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5adba0, bytes: &[0x6a, 0xff, 0x68, 0xeb, 0x97, 0x95, 0x00] },
-    Prologue { address: 0x5ad780, bytes: &[0x6a, 0xff, 0x68, 0xc9, 0x97, 0x95, 0x00] },
-    Prologue { address: 0x5af390, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5ab510, bytes: &[0x6a, 0xff, 0x68, 0x07, 0x97, 0x95, 0x00] },
-    Prologue { address: 0x5aa680, bytes: &[0x6a, 0xff, 0x68, 0x24, 0x96, 0x95, 0x00] },
-    Prologue { address: 0x5aa2d0, bytes: &[0x6a, 0xff, 0x68, 0xea, 0x95, 0x95, 0x00] },
-    Prologue { address: 0x51cb90, bytes: &[0x6a, 0xff, 0x68, 0x11, 0x77, 0x95, 0x00] },
-    Prologue { address: 0x522950, bytes: &[0x6a, 0xff, 0x68, 0xfb, 0x77, 0x95, 0x00] },
-    Prologue { address: 0x8c6bc0, bytes: &[0x6a, 0xff, 0x68, 0x48, 0x3d, 0x96, 0x00] },
-    Prologue { address: 0x51ebe0, bytes: &[0x6a, 0xff, 0x68, 0x5a, 0x77, 0x95, 0x00] },
-    Prologue { address: 0x8c41c0, bytes: &[0x6a, 0xff, 0x68, 0x68, 0x3c, 0x96, 0x00] },
-    Prologue { address: 0x8c7690, bytes: &[0x51, 0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x14] },
-    Prologue { address: 0x695240, bytes: &[0x83, 0xec, 0x2c, 0x8b, 0x44, 0x24, 0x3c] },
-    Prologue { address: 0x6a5fa0, bytes: &[0x6a, 0xff, 0x68, 0x16, 0xcf, 0x95, 0x00] },
-    Prologue { address: 0x6a5a60, bytes: &[0x6a, 0xff, 0x68, 0xcb, 0xce, 0x95, 0x00] },
-    Prologue { address: 0x6a3770, bytes: &[0x83, 0xec, 0x10, 0x53, 0x55, 0x56] },
-    Prologue { address: 0x69ba50, bytes: &[0x6a, 0xff, 0x68, 0xa0, 0xcc, 0x95, 0x00] },
-    Prologue { address: 0x6a0540, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x754a30, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0xd8, 0x95, 0x00] },
-    Prologue { address: 0x587600, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x75c390, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5cbdf0, bytes: &[0x6a, 0xff, 0x68, 0xc6, 0xa3, 0x95, 0x00] },
-    Prologue { address: 0x5ca090, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5ca290, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x76b100, bytes: &[0x6a, 0xff, 0x68, 0x08, 0xdd, 0x95, 0x00] },
-    Prologue { address: 0x7f8420, bytes: &[0x0f, 0xbf, 0x05, 0x7a, 0x7c, 0xb7, 0x00] },
-    Prologue { address: 0x7f8500, bytes: &[0x0f, 0xbf, 0x05, 0x7a, 0x7c, 0xb7, 0x00] },
-    Prologue { address: 0x76c120, bytes: &[0x6a, 0xff, 0x68, 0x7a, 0xdd, 0x95, 0x00] },
-    Prologue { address: 0x7f8c00, bytes: &[0x6a, 0xff, 0x68, 0xd8, 0x0f, 0x96, 0x00] },
-    Prologue { address: 0x7f6be0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7f6af0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8c5880, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x8c63a0, bytes: &[0x6a, 0xff, 0x68, 0x00, 0x3d, 0x96, 0x00] },
-    Prologue { address: 0x8cfc90, bytes: &[0x6a, 0xff, 0x68, 0xf8, 0x3f, 0x96, 0x00] },
-    Prologue { address: 0x8c0080, bytes: &[0x6a, 0xff, 0x68, 0x48, 0x3b, 0x96, 0x00] },
-    Prologue { address: 0x8d3090, bytes: &[0x6a, 0xff, 0x68, 0xc6, 0x42, 0x96, 0x00] },
-    Prologue { address: 0x8d0040, bytes: &[0x6a, 0xff, 0x68, 0x1b, 0x40, 0x96, 0x00] },
-    Prologue { address: 0x6847c0, bytes: &[0x6a, 0xff, 0x68, 0x21, 0xca, 0x95, 0x00] },
-    Prologue { address: 0x6835c0, bytes: &[0x6a, 0xff, 0x68, 0x81, 0xc9, 0x95, 0x00] },
-    Prologue { address: 0x689c80, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5aaf00, bytes: &[0x6a, 0xff, 0x68, 0x70, 0x96, 0x95, 0x00] },
-    Prologue { address: 0x5abf10, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5ac3b0, bytes: &[0x81, 0xec, 0x54, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x518790, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x48d2b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x48cec0, bytes: &[0x81, 0xec, 0x00, 0x04, 0x00, 0x00] },
-    Prologue { address: 0x8b1750, bytes: &[0x81, 0xec, 0x34, 0x04, 0x00, 0x00] },
-    Prologue { address: 0x8b39f0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8b4f50, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] },
-    Prologue { address: 0x8b3640, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8b37c0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8b4770, bytes: &[0x0f, 0xbf, 0x44, 0x24, 0x08] },
-    Prologue { address: 0x7a59e0, bytes: &[0x6a, 0xff, 0x68, 0xa8, 0xf1, 0x95, 0x00] },
-    Prologue { address: 0x7a92e0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x7a8ba0, bytes: &[0x6a, 0xff, 0x68, 0x0b, 0xf2, 0x95, 0x00] },
-    Prologue { address: 0x4196a0, bytes: &[0x55, 0x8b, 0x6c, 0x24, 0x08] },
-    Prologue { address: 0x4197c0, bytes: &[0x55, 0x8b, 0x6c, 0x24, 0x08] },
-    Prologue { address: 0x41a630, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x84b6f0, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x14] },
-    Prologue { address: 0x83b6c0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] },
-    Prologue { address: 0x84b580, bytes: &[0x6a, 0xff, 0x68, 0xe8, 0x25, 0x96, 0x00] },
-    Prologue { address: 0x868c50, bytes: &[0x6a, 0xff, 0x68, 0x76, 0x2b, 0x96, 0x00] },
-    Prologue { address: 0x86a800, bytes: &[0x6a, 0xff, 0x68, 0x26, 0x2c, 0x96, 0x00] },
-    Prologue { address: 0x86fc70, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x15, 0x64, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x8c8090, bytes: &[0x6a, 0xff, 0x68, 0xab, 0x3d, 0x96, 0x00] },
-    Prologue { address: 0x8bee50, bytes: &[0x6a, 0xff, 0x68, 0xee, 0x3a, 0x96, 0x00] },
-    Prologue { address: 0x8c8860, bytes: &[0x6a, 0xff, 0x68, 0x07, 0x3e, 0x96, 0x00] },
-    Prologue { address: 0x4ccca0, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x84a020, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x846920, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x85e410, bytes: &[0x6a, 0xff, 0x68, 0xeb, 0x29, 0x96, 0x00] },
-    Prologue { address: 0x579d60, bytes: &[0x83, 0xec, 0x6c, 0x55, 0x56] },
-    Prologue { address: 0x579fd0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x15, 0xb4, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x57a020, bytes: &[0x83, 0xec, 0x08, 0x56, 0x6a, 0xff] },
-    Prologue { address: 0x579c70, bytes: &[0x6a, 0xff, 0x68, 0x08, 0x87, 0x95, 0x00] },
-    Prologue { address: 0x7f6650, bytes: &[0x8b, 0x0d, 0x50, 0x10, 0xae, 0x00] },
-    Prologue { address: 0x7f6530, bytes: &[0x56, 0x57, 0xb9, 0x90, 0x2c, 0xae, 0x00] },
-    Prologue { address: 0x661770, bytes: &[0x83, 0xec, 0x64, 0x55, 0x56] },
-    Prologue { address: 0x63c3d0, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] },
-    Prologue { address: 0x859630, bytes: &[0x83, 0xec, 0x64, 0x56, 0x57] },
-    Prologue { address: 0x685640, bytes: &[0x6a, 0xff, 0x68, 0x72, 0xca, 0x95, 0x00] },
-    Prologue { address: 0x684230, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x683ee0, bytes: &[0x6a, 0xff, 0x68, 0xbc, 0xc9, 0x95, 0x00] },
-    Prologue { address: 0x8be300, bytes: &[0x6a, 0xff, 0x68, 0x6a, 0x3a, 0x96, 0x00] },
-    Prologue { address: 0x8c0660, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x55] },
-    Prologue { address: 0x8c2180, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x4d71b0, bytes: &[0x6a, 0xff, 0x68, 0x16, 0x6f, 0x95, 0x00] },
-    Prologue { address: 0x4cda70, bytes: &[0x6a, 0xff, 0x68, 0x68, 0x6d, 0x95, 0x00] },
-    Prologue { address: 0x92e940, bytes: &[0x81, 0xec, 0x1c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x92e7f0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x92f1a0, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x0c] },
-    Prologue { address: 0x92d0f0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x92d540, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x92f680, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x92c290, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x92e740, bytes: &[0x66, 0x8b, 0x41, 0x36, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x92f230, bytes: &[0x81, 0xec, 0x1c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8b2880, bytes: &[0x83, 0xec, 0x34, 0x53, 0x56] },
-    Prologue { address: 0x8b2470, bytes: &[0x81, 0xec, 0xd0, 0x04, 0x00, 0x00] },
-    Prologue { address: 0x8b2230, bytes: &[0x56, 0x57, 0x8b, 0xf1, 0xbf, 0xa7, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x7c3e40, bytes: &[0x81, 0xec, 0x48, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7c6e30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7c6de0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x7a32e0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x630ee0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x630c50, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7b5be0, bytes: &[0x6a, 0xff, 0x68, 0x68, 0xf5, 0x95, 0x00] },
-    Prologue { address: 0x7bd310, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7706c0, bytes: &[0x6a, 0xff, 0x68, 0xa6, 0xde, 0x95, 0x00] },
-    Prologue { address: 0x76e0b0, bytes: &[0x6a, 0xff, 0x68, 0xfb, 0xdd, 0x95, 0x00] },
-    Prologue { address: 0x76d560, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0xdd, 0x95, 0x00] },
-    Prologue { address: 0x7f8750, bytes: &[0x6a, 0xff, 0x68, 0xbe, 0x0f, 0x96, 0x00] },
-    Prologue { address: 0x7f9890, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7f9a60, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0x10, 0x96, 0x00] },
-    Prologue { address: 0x4cf720, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7abac0, bytes: &[0x83, 0xec, 0x08, 0x56, 0x8b, 0x74, 0x24, 0x10] },
-    Prologue { address: 0x56a090, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] },
-    Prologue { address: 0x5b5d10, bytes: &[0x81, 0xec, 0x08, 0x04, 0x00, 0x00] },
-    Prologue { address: 0x43f2d0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x8b, 0xc8] },
-    Prologue { address: 0x43f300, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x8b, 0xc8] },
-    Prologue { address: 0x79bf60, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x79d410, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] },
-    Prologue { address: 0x5c6570, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5cb9e0, bytes: &[0x6a, 0xff, 0x68, 0x80, 0xa3, 0x95, 0x00] },
-    Prologue { address: 0x5c8260, bytes: &[0x6a, 0xff, 0x68, 0x77, 0xa2, 0x95, 0x00] },
-    Prologue { address: 0x79d4e0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x79d480, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] },
-    Prologue { address: 0x7c5fe0, bytes: &[0x81, 0xec, 0x3c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7a50f0, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x14] },
-    Prologue { address: 0x7a5090, bytes: &[0x55, 0x8b, 0x6c, 0x24, 0x0c] },
-    Prologue { address: 0x7a3140, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x585290, bytes: &[0x6a, 0xff, 0x68, 0xde, 0x8a, 0x95, 0x00] },
-    Prologue { address: 0x586f60, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x8b, 0x54, 0x24, 0x04] },
-    Prologue { address: 0x586900, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x585ab0, bytes: &[0x6a, 0xff, 0x68, 0xfe, 0x8a, 0x95, 0x00] },
-    Prologue { address: 0x5871e0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] },
-    Prologue { address: 0x4b01d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x3d, 0xe8, 0x03, 0x00, 0x00] },
-    Prologue { address: 0x583c50, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x68aa80, bytes: &[0xa1, 0x44, 0x7a, 0xb6, 0x00] },
-    Prologue { address: 0x6831a0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] },
-    Prologue { address: 0x48ce10, bytes: &[0x56, 0x8b, 0xf1, 0x83, 0x7e, 0x1c, 0xff] },
-    Prologue { address: 0x48e1c0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x48cc70, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55] },
-    Prologue { address: 0x903b50, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x903cc0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x9050d0, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbf, 0x44, 0x24, 0x14] },
-    Prologue { address: 0x904040, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x904210, bytes: &[0x81, 0xec, 0x64, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x904e30, bytes: &[0x83, 0xec, 0x10, 0x53, 0x55] },
-    Prologue { address: 0x904580, bytes: &[0x81, 0xec, 0x48, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x903890, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0x52, 0x96, 0x00] },
-    Prologue { address: 0x9035a0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x4c6430, bytes: &[0xa1, 0x3c, 0xf6, 0x9c, 0x00] },
-    Prologue { address: 0x4c6730, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbf, 0x44, 0x24, 0x14] },
-    Prologue { address: 0x4c6890, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] },
-    Prologue { address: 0x4c6280, bytes: &[0xa1, 0x5c, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x4c61b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4c6960, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x10] },
-    Prologue { address: 0x5fa730, bytes: &[0x8b, 0x01, 0x53, 0x55, 0x56] },
-    Prologue { address: 0x5fa7d0, bytes: &[0x8b, 0x01, 0x56, 0x66, 0x8b, 0x71, 0x04] },
-    Prologue { address: 0x5fa850, bytes: &[0x6a, 0xff, 0x68, 0x78, 0xaf, 0x95, 0x00] },
-    Prologue { address: 0x579b30, bytes: &[0x6a, 0xff, 0x68, 0xeb, 0x86, 0x95, 0x00] },
-    Prologue { address: 0x90b940, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0x55, 0x96, 0x00] },
-    Prologue { address: 0x412c80, bytes: &[0x6a, 0xff, 0x68, 0x1b, 0x3b, 0x95, 0x00] },
-    Prologue { address: 0x859470, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6613f0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5c15e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x43f0e0, bytes: &[0x6a, 0xff, 0x68, 0xdb, 0x4e, 0x95, 0x00] },
-    Prologue { address: 0x5dffe0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7f6390, bytes: &[0x6a, 0xff, 0x68, 0xeb, 0x0e, 0x96, 0x00] },
-    Prologue { address: 0x633d40, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x633c10, bytes: &[0x8a, 0x44, 0x24, 0x08, 0x53] },
-    Prologue { address: 0x9030e0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x8b, 0x54, 0x24, 0x04] },
-    Prologue { address: 0x4c11a0, bytes: &[0x81, 0xec, 0xa0, 0x09, 0x00, 0x00] },
-    Prologue { address: 0x4c1620, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4c15f0, bytes: &[0x56, 0x8b, 0xf1, 0x6a, 0x00] },
-    Prologue { address: 0x63f350, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb0, 0x04] },
-    Prologue { address: 0x63d6e0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb0, 0x04] },
-    Prologue { address: 0x426230, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb0, 0x03] },
-    Prologue { address: 0x401ba0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] },
-    Prologue { address: 0x5e13b0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] },
-    Prologue { address: 0x91e840, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] },
-    Prologue { address: 0x4c3890, bytes: &[0x6a, 0xff, 0x68, 0x78, 0x6a, 0x95, 0x00] },
-    Prologue { address: 0x4c1ed0, bytes: &[0x6a, 0xff, 0x68, 0xc8, 0x69, 0x95, 0x00] },
-    Prologue { address: 0x7979b0, bytes: &[0x6a, 0xff, 0x68, 0xe8, 0xea, 0x95, 0x00] },
-    Prologue { address: 0x9191e0, bytes: &[0x6a, 0xff, 0x68, 0x98, 0x59, 0x96, 0x00] },
-    Prologue { address: 0x921040, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x912eb0, bytes: &[0x6a, 0xff, 0x68, 0x48, 0x57, 0x96, 0x00] },
-    Prologue { address: 0x5e12d0, bytes: &[0x6a, 0xff, 0x68, 0x68, 0xa8, 0x95, 0x00] },
-    Prologue { address: 0x401ab0, bytes: &[0x6a, 0xff, 0x68, 0xd8, 0x34, 0x95, 0x00] },
-    Prologue { address: 0x91ecf0, bytes: &[0x6a, 0xff, 0x68, 0xf8, 0x5a, 0x96, 0x00] },
-    Prologue { address: 0x4c3f40, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4c4080, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] },
-    Prologue { address: 0x4c3a80, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x401e10, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x4019c0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x401b90, bytes: &[0x8b, 0x41, 0x0c, 0x8b, 0x48, 0x0c] },
-    Prologue { address: 0x42a5a0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xbb, 0x01, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x42cb70, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xbb, 0x01, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x42de50, bytes: &[0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x430ff0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x33, 0xc0] },
-    Prologue { address: 0x4322d0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x33, 0xc0] },
-    Prologue { address: 0x43bc70, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x437fc0, bytes: &[0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x439430, bytes: &[0x56, 0x8b, 0xf1, 0x33, 0xc0] },
-    Prologue { address: 0x43a600, bytes: &[0x56, 0x8b, 0xf1, 0x33, 0xc0] },
-    Prologue { address: 0x433640, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x33, 0xc0] },
-    Prologue { address: 0x663620, bytes: &[0x56, 0x8b, 0xf1, 0xb9, 0x02, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x665140, bytes: &[0x56, 0x8b, 0xf1, 0xb2, 0x03] },
-    Prologue { address: 0x411ce0, bytes: &[0x56, 0x8b, 0xf1, 0x33, 0xc0] },
-    Prologue { address: 0x908660, bytes: &[0xb2, 0x02, 0xb8, 0x01, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x432970, bytes: &[0x8b, 0x41, 0x0c, 0x8b, 0x08] },
-    Prologue { address: 0x408eb0, bytes: &[0x8b, 0x41, 0x0c, 0x8b, 0x08] },
-    Prologue { address: 0x42abc0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] },
-    Prologue { address: 0x42eb00, bytes: &[0x51, 0x8a, 0x44, 0x24, 0x10] },
-    Prologue { address: 0x430210, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x53] },
-    Prologue { address: 0x4314e0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x53] },
-    Prologue { address: 0x434d90, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x53] },
-    Prologue { address: 0x411980, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x3c, 0xff] },
-    Prologue { address: 0x4350d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] },
-    Prologue { address: 0x909dd0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] },
-    Prologue { address: 0x42e100, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] },
-    Prologue { address: 0x908200, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] },
-    Prologue { address: 0x9099d0, bytes: &[0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] },
-    Prologue { address: 0x90a000, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x574b70, bytes: &[0x56, 0x8b, 0xf1, 0xb9, 0x02, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x572d90, bytes: &[0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x576780, bytes: &[0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5780c0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb0, 0x03] },
-    Prologue { address: 0x574a20, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x576630, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x577f70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x572bf0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x641640, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xbb, 0x01, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x6468a0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xbb, 0x01, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x64b770, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb2, 0x03] },
-    Prologue { address: 0x64f920, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x641510, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x646780, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x64b670, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x64f820, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5bc410, bytes: &[0x56, 0x8b, 0xf1, 0xb9, 0x02, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5bf0a0, bytes: &[0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5c0700, bytes: &[0x56, 0x8b, 0xf1, 0xb9, 0x02, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5bc2b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5bef10, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5c05d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x84fdf0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] },
-    Prologue { address: 0x855cc0, bytes: &[0x56, 0x8b, 0xf1, 0xb9, 0x02, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x853790, bytes: &[0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x84fc70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x654180, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x53] },
-    Prologue { address: 0x850880, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] },
-    Prologue { address: 0x5b9fa0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5be230, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x64bd80, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] },
-    Prologue { address: 0x64ff40, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] },
-    Prologue { address: 0x56c570, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x56f320, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x56d640, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5ba3f0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5bcc40, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x84d220, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5bf5d0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x858960, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x666020, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x56ccc0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x56b3c0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x56d780, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5baa50, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5bd160, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5bf770, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x858aa0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x666160, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x90a400, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x56caf0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x570550, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x90a900, bytes: &[0x6a, 0xff, 0x68, 0xa8, 0x54, 0x96, 0x00] },
-    Prologue { address: 0x665640, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x661ff0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x90b170, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x665a00, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x90b530, bytes: &[0x81, 0xec, 0x98, 0x03, 0x00, 0x00] },
-    Prologue { address: 0x6624f0, bytes: &[0x81, 0xec, 0xc8, 0x04, 0x00, 0x00] },
-    Prologue { address: 0x85a760, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] },
-    Prologue { address: 0x85add0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x85a850, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x85a470, bytes: &[0x81, 0xec, 0x08, 0x01, 0x00, 0x00] },
-    Prologue { address: 0x859fe0, bytes: &[0x81, 0xec, 0x90, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x859dc0, bytes: &[0x55, 0x8b, 0xe9, 0x57, 0x33, 0xff] },
-    Prologue { address: 0x859e20, bytes: &[0x81, 0xec, 0xd8, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x85aae0, bytes: &[0x81, 0xec, 0x9c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5f9690, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0xaf, 0x95, 0x00] },
-    Prologue { address: 0x518500, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0x75, 0x95, 0x00] },
-    Prologue { address: 0x63c210, bytes: &[0x6a, 0xff, 0x68, 0xab, 0xb7, 0x95, 0x00] },
-    Prologue { address: 0x7944f0, bytes: &[0x6a, 0xff, 0x68, 0x2b, 0xe9, 0x95, 0x00] },
-    Prologue { address: 0x7936d0, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0xe7, 0x95, 0x00] },
-    Prologue { address: 0x90f080, bytes: &[0x6a, 0xff, 0x68, 0x4b, 0x56, 0x96, 0x00] },
-    Prologue { address: 0x9020a0, bytes: &[0x6a, 0xff, 0x68, 0xab, 0x51, 0x96, 0x00] },
-    Prologue { address: 0x7cd830, bytes: &[0x6a, 0xff, 0x68, 0xab, 0xf9, 0x95, 0x00] },
-    Prologue { address: 0x5a9950, bytes: &[0x6a, 0xff, 0x68, 0x4b, 0x95, 0x95, 0x00] },
-    Prologue { address: 0x40a620, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7d3df0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x66e630, bytes: &[0x6a, 0xff, 0x68, 0x9b, 0xc8, 0x95, 0x00] },
-    Prologue { address: 0x5ecf20, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x7ec7e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x424c00, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x85a9b0, bytes: &[0x83, 0xec, 0x10, 0x8a, 0x44, 0x24, 0x14] },
-    Prologue { address: 0x58dd50, bytes: &[0xa1, 0x50, 0x23, 0xae, 0x00] },
-    Prologue { address: 0x85dfc0, bytes: &[0x81, 0xec, 0x30, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x42a480, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x42ca70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x42dc90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x42fd10, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x430ef0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4321d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x433540, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x434810, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x435d80, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x436d90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x437ec0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x439330, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x43a500, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x43bb70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x43cc40, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6634e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x665030, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x411b70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x430050, bytes: &[0x6a, 0xff, 0x68, 0x2e, 0x46, 0x95, 0x00] },
-    Prologue { address: 0x4360c0, bytes: &[0x6a, 0xff, 0x68, 0x7e, 0x48, 0x95, 0x00] },
-    Prologue { address: 0x4370d0, bytes: &[0x6a, 0xff, 0x68, 0xee, 0x48, 0x95, 0x00] },
-    Prologue { address: 0x439710, bytes: &[0x6a, 0xff, 0x68, 0xee, 0x49, 0x95, 0x00] },
-    Prologue { address: 0x43bf50, bytes: &[0x6a, 0xff, 0x68, 0xee, 0x4a, 0x95, 0x00] },
-    Prologue { address: 0x43cf80, bytes: &[0x6a, 0xff, 0x68, 0x5e, 0x4b, 0x95, 0x00] },
-    Prologue { address: 0x4325b0, bytes: &[0x6a, 0xff, 0x68, 0x0e, 0x47, 0x95, 0x00] },
-    Prologue { address: 0x4312d0, bytes: &[0x6a, 0xff, 0x68, 0x9e, 0x46, 0x95, 0x00] },
-    Prologue { address: 0x433930, bytes: &[0x6a, 0xff, 0x68, 0x7e, 0x47, 0x95, 0x00] },
-    Prologue { address: 0x642880, bytes: &[0x83, 0xec, 0x1c, 0x8b, 0x44, 0x24, 0x20] },
-    Prologue { address: 0x647050, bytes: &[0x83, 0xec, 0x18, 0xb0, 0x02] },
-    Prologue { address: 0x6471a0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] },
-    Prologue { address: 0x641dc0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x83, 0xec, 0x3c] },
-    Prologue { address: 0x64b9e0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x64ba70, bytes: &[0x6a, 0xff, 0x68, 0xec, 0xba, 0x95, 0x00] },
-    Prologue { address: 0x64fba0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x64fc30, bytes: &[0x6a, 0xff, 0x68, 0x8c, 0xbb, 0x95, 0x00] },
-    Prologue { address: 0x578330, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x573380, bytes: &[0x6a, 0xff, 0x68, 0xc9, 0x83, 0x95, 0x00] },
-    Prologue { address: 0x571680, bytes: &[0x6a, 0xff, 0x68, 0x59, 0x83, 0x95, 0x00] },
-    Prologue { address: 0x5754a0, bytes: &[0x6a, 0xff, 0x68, 0x19, 0x84, 0x95, 0x00] },
-    Prologue { address: 0x576dd0, bytes: &[0x6a, 0xff, 0x68, 0x89, 0x84, 0x95, 0x00] },
-    Prologue { address: 0x6406d0, bytes: &[0x6a, 0xff, 0x68, 0x59, 0xb9, 0x95, 0x00] },
-    Prologue { address: 0x645810, bytes: &[0x6a, 0xff, 0x68, 0x09, 0xba, 0x95, 0x00] },
-    Prologue { address: 0x64aa70, bytes: &[0x6a, 0xff, 0x68, 0x99, 0xba, 0x95, 0x00] },
-    Prologue { address: 0x64ec20, bytes: &[0x6a, 0xff, 0x68, 0x39, 0xbb, 0x95, 0x00] },
-    Prologue { address: 0x5be330, bytes: &[0x6a, 0xff, 0x68, 0x89, 0x9a, 0x95, 0x00] },
-    Prologue { address: 0x5bfb40, bytes: &[0x6a, 0xff, 0x68, 0x29, 0x9b, 0x95, 0x00] },
-    Prologue { address: 0x8539a0, bytes: &[0x6a, 0xff, 0x68, 0x59, 0x27, 0x96, 0x00] },
-    Prologue { address: 0x84e130, bytes: &[0x6a, 0xff, 0x68, 0xa7, 0x26, 0x96, 0x00] },
-    Prologue { address: 0x851020, bytes: &[0x6a, 0xff, 0x68, 0x0b, 0x27, 0x96, 0x00] },
-    Prologue { address: 0x855b40, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x8533d0, bytes: &[0x81, 0xec, 0x9c, 0x03, 0x00, 0x00] },
-    Prologue { address: 0x5ba0a0, bytes: &[0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5b91c0, bytes: &[0x6a, 0xff, 0x68, 0xab, 0x98, 0x95, 0x00] },
-    Prologue { address: 0x5bd600, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0x9a, 0x95, 0x00] },
-    Prologue { address: 0x5b9460, bytes: &[0x6a, 0xff, 0x68, 0xc8, 0x98, 0x95, 0x00] },
-    Prologue { address: 0x5bd870, bytes: &[0x6a, 0xff, 0x68, 0x58, 0x9a, 0x95, 0x00] },
-    Prologue { address: 0x642a70, bytes: &[0x6a, 0xff, 0x68, 0xde, 0xb9, 0x95, 0x00] },
-    Prologue { address: 0x647230, bytes: &[0x6a, 0xff, 0x68, 0x6e, 0xba, 0x95, 0x00] },
-    Prologue { address: 0x64be90, bytes: &[0x6a, 0xff, 0x68, 0x0e, 0xbb, 0x95, 0x00] },
-    Prologue { address: 0x650100, bytes: &[0x6a, 0xff, 0x68, 0xae, 0xbb, 0x95, 0x00] },
-    Prologue { address: 0x5bb540, bytes: &[0xb8, 0x01, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5bb550, bytes: &[0xb8, 0x01, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x85c260, bytes: &[0x6a, 0xff, 0x68, 0xd1, 0x29, 0x96, 0x00] },
-    Prologue { address: 0x85c800, bytes: &[0x83, 0xec, 0x18, 0x53, 0x55] },
-    Prologue { address: 0x85cba0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x5bfe30, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5be620, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5bd920, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5b9510, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x64ad80, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x64ef30, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6409b0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x645af0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5bb690, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x434ae0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x434b70, bytes: &[0x6a, 0xff, 0x68, 0xee, 0x47, 0x95, 0x00] },
-    Prologue { address: 0x434ed0, bytes: &[0x56, 0x8b, 0xf1, 0x83, 0x7e, 0x30, 0x02] },
-    Prologue { address: 0x438230, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x4382c0, bytes: &[0x6a, 0xff, 0x68, 0x5e, 0x49, 0x95, 0x00] },
-    Prologue { address: 0x4384e0, bytes: &[0x56, 0x8b, 0xf1, 0x83, 0x7e, 0x30, 0x02] },
-    Prologue { address: 0x43a870, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x43a900, bytes: &[0x6a, 0xff, 0x68, 0x5e, 0x4a, 0x95, 0x00] },
-    Prologue { address: 0x43ad20, bytes: &[0x56, 0x8b, 0xf1, 0x83, 0x7e, 0x30, 0x02] },
-    Prologue { address: 0x63ec50, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x63cf90, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x65f920, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x63c890, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x63faf0, bytes: &[0x81, 0xec, 0x8c, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x63dfe0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x65fa60, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x427700, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x427c20, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x427ec0, bytes: &[0x56, 0x8b, 0xf1, 0x6a, 0x00] },
-    Prologue { address: 0x4c31c0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4c4930, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4c5850, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5757a0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5770e0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x571980, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x573660, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x84e450, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x42fe10, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x42ffc0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x431090, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x431240, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x432370, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x432520, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x4336f0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4338a0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x435e80, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x436030, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x436e90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x437040, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x4394d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x439680, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x43bd10, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x43bec0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x43cd40, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x43cef0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x853c90, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x851260, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5bb160, bytes: &[0x6a, 0xff, 0x68, 0x81, 0x99, 0x95, 0x00] },
-    Prologue { address: 0x42a950, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x42a9e0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x42cdd0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x42ce60, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x42a640, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x42ae90, bytes: &[0xa1, 0xfc, 0xad, 0xad, 0x00] },
-    Prologue { address: 0x42cc10, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6639c0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x663a50, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x6636d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5f9970, bytes: &[0x6a, 0xff, 0x68, 0x5b, 0xaf, 0x95, 0x00] },
-    Prologue { address: 0x5faec0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5fb160, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x689c20, bytes: &[0x53, 0x8b, 0xd9, 0x57, 0x8b, 0x43, 0x1c] },
-    Prologue { address: 0x48e3e0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x48ea40, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x425c10, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4c1960, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x57a3c0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x410910, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x40ae90, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x40cf90, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x56ade0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5e0900, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4012e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x58b560, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x633300, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x92b770, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x632340, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4c0f00, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x9025c0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6336c0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x633f70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x57a500, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x410a50, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x63c9d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x797230, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x40b620, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x40d4d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x43afa0, bytes: &[0x6a, 0xff, 0x68, 0x7e, 0x4a, 0x95, 0x00] },
-    Prologue { address: 0x4351b0, bytes: &[0x6a, 0xff, 0x68, 0x0e, 0x48, 0x95, 0x00] },
-    Prologue { address: 0x438760, bytes: &[0x6a, 0xff, 0x68, 0x7e, 0x49, 0x95, 0x00] },
-    Prologue { address: 0x663c20, bytes: &[0x6a, 0xff, 0x68, 0x5e, 0xc1, 0x95, 0x00] },
-    Prologue { address: 0x43a6a0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x434910, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x438060, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x411f70, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x412010, bytes: &[0x6a, 0xff, 0x68, 0x1e, 0x3a, 0x95, 0x00] },
-    Prologue { address: 0x4121c0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x909400, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x9094c0, bytes: &[0x6a, 0xff, 0x68, 0x1e, 0x54, 0x96, 0x00] },
-    Prologue { address: 0x9097d0, bytes: &[0x6a, 0xff, 0x68, 0x3e, 0x54, 0x96, 0x00] },
-    Prologue { address: 0x427d10, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x662950, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x665bc0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x6664e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x90b790, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x90a760, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x90a540, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4c4410, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4c37a0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4c3b10, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x4c5c90, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4c4e60, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4c51d0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x4c2c90, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4c1de0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x4c2140, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x5e2120, bytes: &[0x6a, 0xff, 0x68, 0xe6, 0xa8, 0x95, 0x00] },
-    Prologue { address: 0x5e11e0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5e16b0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x908560, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x908fc0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x9091e0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x908e00, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x909bb0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x909a40, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x42ee80, bytes: &[0x6a, 0xff, 0x68, 0xbe, 0x45, 0x95, 0x00] },
-    Prologue { address: 0x42e430, bytes: &[0x6a, 0xff, 0x68, 0x4e, 0x45, 0x95, 0x00] },
-    Prologue { address: 0x42e700, bytes: &[0x6a, 0xff, 0x68, 0x7c, 0x45, 0x95, 0x00] },
-    Prologue { address: 0x42e980, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x42def0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x42f0a0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x56b730, bytes: &[0x81, 0xec, 0x80, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x56bab0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x56bc50, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x56bce0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x56c010, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x522e00, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0x78, 0x95, 0x00] },
-    Prologue { address: 0x523300, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x86, 0xa7, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x4c3d10, bytes: &[0x6a, 0xff, 0x68, 0xbe, 0x6a, 0x95, 0x00] },
-    Prologue { address: 0x4c2330, bytes: &[0x6a, 0xff, 0x68, 0x0e, 0x6a, 0x95, 0x00] },
-    Prologue { address: 0x4c20b0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x4c2560, bytes: &[0x81, 0xec, 0x24, 0x04, 0x00, 0x00] },
-    Prologue { address: 0x4c5140, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x5e1620, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x5e1cd0, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5e2340, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x5e1530, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x42f2d0, bytes: &[0x6a, 0xff, 0x68, 0xe9, 0x45, 0x95, 0x00] },
-    Prologue { address: 0x4304b0, bytes: &[0x6a, 0xff, 0x68, 0x59, 0x46, 0x95, 0x00] },
-    Prologue { address: 0x4317c0, bytes: &[0x6a, 0xff, 0x68, 0xc9, 0x46, 0x95, 0x00] },
-    Prologue { address: 0x432b50, bytes: &[0x6a, 0xff, 0x68, 0x39, 0x47, 0x95, 0x00] },
-    Prologue { address: 0x433d50, bytes: &[0x6a, 0xff, 0x68, 0xa9, 0x47, 0x95, 0x00] },
-    Prologue { address: 0x435340, bytes: &[0x6a, 0xff, 0x68, 0x39, 0x48, 0x95, 0x00] },
-    Prologue { address: 0x4363f0, bytes: &[0x6a, 0xff, 0x68, 0xa9, 0x48, 0x95, 0x00] },
-    Prologue { address: 0x437400, bytes: &[0x6a, 0xff, 0x68, 0x19, 0x49, 0x95, 0x00] },
-    Prologue { address: 0x4388f0, bytes: &[0x6a, 0xff, 0x68, 0xa9, 0x49, 0x95, 0x00] },
-    Prologue { address: 0x439a40, bytes: &[0x6a, 0xff, 0x68, 0x19, 0x4a, 0x95, 0x00] },
-    Prologue { address: 0x43b130, bytes: &[0x6a, 0xff, 0x68, 0xa9, 0x4a, 0x95, 0x00] },
-    Prologue { address: 0x43c280, bytes: &[0x6a, 0xff, 0x68, 0x19, 0x4b, 0x95, 0x00] },
-    Prologue { address: 0x5d6280, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] },
-    Prologue { address: 0x797b40, bytes: &[0x6a, 0xff, 0x68, 0x16, 0xeb, 0x95, 0x00] },
-    Prologue { address: 0x7978c0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x797e80, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x798220, bytes: &[0x81, 0xec, 0xfc, 0x03, 0x00, 0x00] },
-    Prologue { address: 0x797df0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x798050, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x40c070, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x40c110, bytes: &[0x6a, 0xff, 0x68, 0xcc, 0x37, 0x95, 0x00] },
-    Prologue { address: 0x40c3d0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x4025a0, bytes: &[0x6a, 0xff, 0x68, 0x46, 0x35, 0x95, 0x00] },
-    Prologue { address: 0x4022c0, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x401ea0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x402090, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x40dfa0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x40e030, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x63f250, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x63d5e0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x63f5b0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x63d950, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] },
-    Prologue { address: 0x63f640, bytes: &[0x6a, 0xff, 0x68, 0x0e, 0xb9, 0x95, 0x00] },
-    Prologue { address: 0x63d9e0, bytes: &[0x6a, 0xff, 0x68, 0x6e, 0xb8, 0x95, 0x00] },
-    Prologue { address: 0x63f870, bytes: &[0x6a, 0xff, 0x68, 0x2e, 0xb9, 0x95, 0x00] },
-    Prologue { address: 0x63dc10, bytes: &[0x6a, 0xff, 0x68, 0x9c, 0xb8, 0x95, 0x00] },
-    Prologue { address: 0x57e8f0, bytes: &[0x6a, 0xff, 0x68, 0xa8, 0x88, 0x95, 0x00] },
-    Prologue { address: 0x57d9d0, bytes: &[0x0f, 0xbe, 0x81, 0xf6, 0x00, 0x00, 0x00] },
-    Prologue { address: 0x580b50, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] },
-    Prologue { address: 0x57e7e0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x902b90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x84d740, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] },
-    Prologue { address: 0x584ad0, bytes: &[0x8b, 0x41, 0x0c, 0x8b, 0x48, 0x30] },
-    Prologue { address: 0x5e93e0, bytes: &[0x8b, 0x41, 0x0c, 0x8b, 0x48, 0x28] },
-    Prologue { address: 0x637750, bytes: &[0x8b, 0x41, 0x0c, 0x8b, 0x48, 0x1c] },
-    Prologue { address: 0x63d770, bytes: &[0x8b, 0x41, 0x0c, 0x8b, 0x48, 0x3c] },
-];
+    Prologue { address: 0x714d00, bytes: &[0x80, 0x79, 0x27, 0x01, 0x75, 0x15] } => ball_in_attack, compare_ball_in_attack, "motor_bola_no_ataque";
+    Prologue { address: 0x6f55c0, bytes: &[0x51, 0x56, 0x8b, 0xf1, 0xe8, 0xd7, 0xee, 0xff, 0xff] } => evolve_moment, compare_evolve_moment, "motor_evoluir_momento";
+    Prologue { address: 0x6b61e0, bytes: &[0x53, 0x8b, 0x15, 0x68, 0xf6, 0x9c, 0x00] } => match_of_interest, compare_match_of_interest, "motor_partida_de_interesse";
+    Prologue { address: 0x6854a0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x53, 0x55] } => group_decided, compare_group_decided, "motor_grupo_decidido";
+    Prologue { address: 0x6be120, bytes: &[0x83, 0xec, 0x10, 0x53, 0x56] } => narrate_qualification, compare_narrate_qualification, "motor_narrar_classificacao";
+    Prologue { address: 0x6cd3d0, bytes: &[0x83, 0xec, 0x08, 0x8b, 0x44, 0x24, 0x10] } => look_for_play, compare_look_for_play, "motor_procurar_jogada";
+    Prologue { address: 0x6cc070, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x44, 0x24, 0x18] } => players_on_path, compare_players_on_path, "motor_jogadores_no_trajeto";
+    Prologue { address: 0x6cc540, bytes: &[0x83, 0xec, 0x14, 0x8a, 0x44, 0x24, 0x24] } => intercept, compare_intercept, "motor_interceptar";
+    Prologue { address: 0x6f5b80, bytes: &[0x51, 0x8a, 0x51, 0x27, 0x8a, 0x81, 0x03, 0x01, 0x00, 0x00] } => advance_row, compare_advance_row, "motor_avancar_linha";
+    Prologue { address: 0x6c4ec0, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] } => line_up_kickoff, compare_line_up_kickoff, "motor_arrumar_saida";
+    Prologue { address: 0x6c4820, bytes: &[0x81, 0xec, 0x1c, 0x02, 0x00, 0x00] } => line_up_set_piece, compare_line_up_set_piece, "motor_arrumar_bola_parada";
+    Prologue { address: 0x713fc0, bytes: &[0x81, 0xec, 0x24, 0x02, 0x00, 0x00] } => decide_off_ball, compare_decide_off_ball, "motor_decidir_sem_bola";
+    Prologue { address: 0x714d40, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => move_off_ball, compare_move_off_ball, "motor_mover_sem_bola";
+    Prologue { address: 0x7103e0, bytes: &[0x83, 0xec, 0x14, 0x53, 0x56] } => decide_player, compare_decide_player, "motor_decidir_jogador";
+    Prologue { address: 0x6fa250, bytes: &[0x53, 0x55, 0x8b, 0x44, 0x24, 0x18] } => pass_ball, compare_pass_ball, "motor_passar";
+    Prologue { address: 0x6fa490, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] } => long_ball, compare_long_ball, "motor_lancar";
+    Prologue { address: 0x6cd770, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0x8b, 0x8e, 0x82, 0xf5, 0x00, 0x00] } => deflect_ball, compare_deflect_ball, "motor_desviar_bola";
+    Prologue { address: 0x70d430, bytes: &[0x66, 0x81, 0x7c, 0x24, 0x04, 0xe8, 0x03] } => save_shot, compare_save_shot, "motor_defender";
+    Prologue { address: 0x6f5810, bytes: &[0x83, 0xec, 0x08, 0x56, 0x8b, 0xf1] } => recover_stamina, compare_recover_stamina, "motor_recuperar_folego";
+    Prologue { address: 0x6bd930, bytes: &[0x51, 0x53, 0x55, 0x56, 0x8b, 0xf1] } => period_completed, compare_period_completed, "motor_periodo_encerrado";
+    Prologue { address: 0x6bcbd0, bytes: &[0x83, 0xec, 0x28, 0x53, 0x8b, 0x5c, 0x24, 0x34] } => pressure, compare_pressure, "motor_pressao";
+    Prologue { address: 0x6c87e0, bytes: &[0x81, 0xec, 0x3c, 0x02, 0x00, 0x00] } => opposition_challenge, compare_opposition_challenge, "motor_desafio_adversario";
+    Prologue { address: 0x6d26b0, bytes: &[0x83, 0xec, 0x34, 0xb8, 0x01, 0x00, 0x00, 0x00] } => develop_player, compare_develop_player, "motor_evoluir_jogador";
+    Prologue { address: 0x6d47e0, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] } => kit, compare_kit, "motor_uniforme";
+    Prologue { address: 0x62ec00, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] } => injury_severity, compare_injury_severity, "motor_gravidade_da_lesao";
+    Prologue { address: 0x62ece0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] } => injury_grade, compare_injury_grade, "motor_grau_da_lesao";
+    Prologue { address: 0x6cfe10, bytes: &[0x83, 0xec, 0x18, 0x53, 0x55] } => tackle_injury, compare_tackle_injury, "motor_lesao_na_dividida";
+    Prologue { address: 0x6e1cf0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => rate_player, compare_rate_player, "motor_avaliar_jogador";
+    Prologue { address: 0x6e1a40, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] } => best_rated, compare_best_rated, "motor_melhor_avaliado";
+    Prologue { address: 0x6e1940, bytes: &[0x83, 0xec, 0x0c, 0x8a, 0x44, 0x24, 0x14] } => best_in_list, compare_best_in_list, "motor_melhor_da_lista";
+    Prologue { address: 0x6cda20, bytes: &[0x51, 0x8a, 0x44, 0x24, 0x0c] } => player_left, compare_player_left, "motor_jogador_saiu";
+    Prologue { address: 0x6e1aa0, bytes: &[0x81, 0xec, 0x04, 0x01, 0x00, 0x00] } => redo_team, compare_redo_team, "motor_refazer_time";
+    Prologue { address: 0x6e1090, bytes: &[0x81, 0xec, 0xc4, 0x04, 0x00, 0x00] } => substitute, compare_substitute, "motor_substituir";
+    Prologue { address: 0x6e2000, bytes: &[0x81, 0xec, 0x24, 0x01, 0x00, 0x00] } => pick, compare_pick, "motor_escalar";
+    Prologue { address: 0x6df460, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => stance, compare_stance, "motor_postura";
+    Prologue { address: 0x6e0230, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => choose_formation, compare_choose_formation, "motor_escolher_formacao";
+    Prologue { address: 0x6ddab0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => instructions, compare_instructions, "motor_instrucoes";
+    Prologue { address: 0x6e0d00, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => put_in_place, compare_put_in_place, "motor_colocar_na_vaga";
+    Prologue { address: 0x6e0df0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] } => order_by_table, compare_order_by_table, "motor_ordem_por_tabela";
+    Prologue { address: 0x6e0fe0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] } => order_by_condition, compare_order_by_condition, "motor_ordem_por_condicao";
+    Prologue { address: 0x6dbb80, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56] } => starters, compare_starters, "motor_titulares";
+    Prologue { address: 0x6dbb10, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x46, 0x2f] } => store_tactic, compare_store_tactic, "motor_guardar_tatica";
+    Prologue { address: 0x6d0b60, bytes: &[0x83, 0xec, 0x28, 0x53, 0x55] } => apply_substitutions, compare_apply_substitutions, "motor_aplicar_trocas";
+    Prologue { address: 0x6d1210, bytes: &[0x83, 0xec, 0x10, 0x56, 0x8b, 0xf1] } => punishments, compare_punishments, "motor_punicoes";
+    Prologue { address: 0x6be710, bytes: &[0x83, 0xec, 0x18, 0x53, 0x56] } => penalties, compare_penalties, "motor_penaltis";
+    Prologue { address: 0x6bac40, bytes: &[0x83, 0xec, 0x08, 0x55, 0x56] } => apply_foul, compare_apply_foul, "motor_aplicar_falta";
+    Prologue { address: 0x70ec80, bytes: &[0x83, 0xec, 0x28, 0x53, 0x55] } => tackle, compare_tackle, "motor_dividida";
+    Prologue { address: 0x6c9cd0, bytes: &[0x83, 0xec, 0x4c, 0x8a, 0x44, 0x24, 0x50] } => contest, compare_contest, "motor_disputa";
+    Prologue { address: 0x6f5c30, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] } => respond, respond_hook, "motor_responder";
+    Prologue { address: 0x70dfd0, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] } => play, gate_try_block_shot, "motor_jogada";
+    Prologue { address: 0x6b74a0, bytes: &[0xa1, 0xc8, 0x7d, 0xb6, 0x00] } => post_match_events, compare_post_match_events, "motor_eventos_do_pos_jogo";
+    Prologue { address: 0x6b6cc0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => post_match_players, compare_post_match_players, "motor_jogadores_do_pos_jogo";
+    Prologue { address: 0x6b79a0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => post_match_club, compare_post_match_club, "motor_clube_do_pos_jogo";
+    Prologue { address: 0x6b66a0, bytes: &[0xa1, 0x04, 0x57, 0xa1, 0x00] } => match_without_human, compare_match_without_human, "motor_partida_sem_humano";
+    Prologue { address: 0x6b5040, bytes: &[0x83, 0xec, 0x1c, 0x53, 0x8b, 0xd9] } => match_day_interest, compare_match_day_interest, "motor_interesse_do_dia";
+    Prologue { address: 0x6c54a0, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] } => restart_play, compare_restart_play, "motor_reiniciar_lance";
+    Prologue { address: 0x6f6c00, bytes: &[0x83, 0xec, 0x3c, 0x53, 0x55] } => shot, compare_shot, "motor_chute";
+    Prologue { address: 0x6d4a20, bytes: &[0x83, 0xec, 0x08, 0x56, 0x8b, 0xf1] } => referee_grade, compare_referee_grade, "motor_nota_do_arbitro";
+    Prologue { address: 0x79ce10, bytes: &[0x8b, 0x11, 0x56, 0x85, 0xd2] } => record_referee_grade, compare_record_referee_grade, "motor_registrar_nota_do_arbitro";
+    Prologue { address: 0x897990, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => stored_taker, compare_stored_taker, "motor_batedor_guardado";
+    Prologue { address: 0x896fe0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => store_instructions, compare_store_instructions, "motor_guardar_instrucoes";
+    Prologue { address: 0x6b6570, bytes: &[0x0f, 0xbf, 0x44, 0x24, 0x04] } => competition_number, compare_competition_number, "motor_numero_da_competicao";
+    Prologue { address: 0x547790, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x85, 0xc9] } => favourite_of, compare_favourite_of, "motor_favorito_de";
+    Prologue { address: 0x5477d0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x85, 0xc9] } => rejected_by, compare_rejected_by, "motor_rejeitado_por";
+    Prologue { address: 0x6d1cc0, bytes: &[0x83, 0xec, 0x44, 0x53, 0x55] } => match_wrap_up, compare_match_wrap_up, "motor_fechamento";
+    Prologue { address: 0x8983f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => read_tactics_row, compare_read_tactics_row, "motor_ler_linha_tatica";
+    Prologue { address: 0x8984d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => write_tactics_row, compare_write_tactics_row, "motor_gravar_linha_tatica";
+    Prologue { address: 0x6beeb0, bytes: &[0x83, 0xec, 0x38, 0x53, 0x55] } => quick_simulation, compare_quick_simulation, "motor_simulacao_rapida";
+    Prologue { address: 0x6d0980, bytes: &[0x51, 0x57, 0x8b, 0xf9, 0xc7, 0x44, 0x24, 0x04, 0x00, 0x00, 0x00, 0x00] } => injure, compare_injure, "motor_lesionar";
+    Prologue { address: 0x62be00, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => register_injury, compare_register_injury, "motor_registrar_lesao";
+    Prologue { address: 0x717470, bytes: &[0x6a, 0xff, 0x68, 0x90, 0xd4, 0x95, 0x00] } => player_highlight, compare_player_highlight, "motor_destaque_do_jogador";
+    Prologue { address: 0x70c040, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] } => shot_outcome, compare_shot_outcome, "motor_desfecho_do_chute";
+    Prologue { address: 0x70a910, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] } => shot_on_goal, compare_shot_on_goal, "motor_chute_a_gol";
+    Prologue { address: 0x6f09f0, bytes: &[0x81, 0xec, 0x5c, 0x02, 0x00, 0x00] } => player_move, compare_mover, "motor_mover";
+    Prologue { address: 0x7109f0, bytes: &[0x6a, 0xff, 0x68, 0x6b, 0xd4, 0x95, 0x00] } => dribble, compare_dribble, "motor_conduzir";
+    Prologue { address: 0x6b98c0, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => engine_loop, compare_engine_loop, "motor_laco";
+    Prologue { address: 0x6fad40, bytes: &[0x81, 0xec, 0x6c, 0x02, 0x00, 0x00] } => execute_pass, compare_execute_pass, "motor_executar_passe";
+    Prologue { address: 0x6d5950, bytes: &[0x51, 0x8d, 0x44, 0x24, 0x02] } => behind_on_aggregate, compare_behind_on_aggregate, "motor_atras_no_agregado";
+    Prologue { address: 0x6d5a70, bytes: &[0x53, 0x56, 0x57, 0x8b, 0xf9] } => free_teammate, compare_free_teammate, "motor_companheiro_livre";
+    Prologue { address: 0x702050, bytes: &[0x81, 0xec, 0x84, 0x06, 0x00, 0x00] } => shoot, compare_shoot, "motor_chutar";
+    Prologue { address: 0x6b7e50, bytes: &[0x6a, 0xff, 0x68, 0x0c, 0xd3, 0x95, 0x00] } => build_engine, compare_build_engine, "motor_construir";
+    Prologue { address: 0x6b7f20, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => prepare_match, compare_prepare_match, "motor_preparar_partida";
+    Prologue { address: 0x6b97a0, bytes: &[0x6a, 0xff, 0x68, 0xda, 0xd3, 0x95, 0x00] } => destroy_engine, compare_destroy_engine, "motor_destruir";
+    Prologue { address: 0x6db500, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => select_side, compare_select_side, "motor_escalar_lado";
+    Prologue { address: 0x6b4190, bytes: &[0x83, 0xec, 0x08, 0x55, 0x56] } => end_day, compare_end_day, "motor_encerrar_dia";
+    Prologue { address: 0x6b42a0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8b, 0xd9] } => pick_day_match, compare_pick_day_match, "motor_escolher_partida_do_dia";
+    Prologue { address: 0x6dbc50, bytes: &[0x6a, 0xff, 0x68, 0x52, 0xd4, 0x95, 0x00] } => select_automatically, compare_select_automatically, "motor_escalar_automatico";
+    Prologue { address: 0x6b5a70, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => start_next_match, compare_start_next_match, "motor_iniciar_proxima_partida";
+    Prologue { address: 0x6b5ce0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => step_day_match, compare_step_day_match, "motor_andar_partida_do_dia";
+    Prologue { address: 0x6b5f00, bytes: &[0x81, 0xec, 0x58, 0x02, 0x00, 0x00] } => close_day_match, compare_close_day_match, "motor_fechar_partida_do_dia";
+    Prologue { address: 0x6b4360, bytes: &[0x6a, 0xff, 0x68, 0xdc, 0xd1, 0x95, 0x00] } => play_the_day, compare_play_the_day, "motor_jogar_o_dia";
+    Prologue { address: 0x6b3c10, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => set_up_the_day, compare_set_up_the_day, "motor_montar_o_dia";
+    Prologue { address: 0x714d30, bytes: &[0x8a, 0x41, 0x27, 0xc3, 0x90] } => player_side, compare_player_side, "motor_lado_do_jogador";
+    Prologue { address: 0x6d8c70, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] } => sounds_finished, compare_sounds_finished, "motor_sons_terminados";
+    Prologue { address: 0x6d98b0, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] } => record_events, compare_record_events, "motor_gravar_eventos";
+    Prologue { address: 0x6d9c40, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => read_events, compare_read_events, "motor_ler_eventos";
+    Prologue { address: 0x6b55c0, bytes: &[0x51, 0x53, 0x8b, 0x5c, 0x24, 0x0c] } => network_step, compare_network_step, "motor_passo_em_rede";
+    Prologue { address: 0x6d9e50, bytes: &[0x81, 0xec, 0x0c, 0x06, 0x00, 0x00] } => read_events_cfg, compare_read_events_cfg, "motor_ler_eventos_cfg";
+    Prologue { address: 0x6d8d10, bytes: &[0xb8, 0xd8, 0x1b, 0x00, 0x00] } => event_text, compare_event_text, "motor_texto_do_evento";
+    Prologue { address: 0x6b5260, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => confirm_network_match, compare_confirm_network_match, "motor_confirmar_partida_em_rede";
+    Prologue { address: 0x6d7b00, bytes: &[0xb8, 0x18, 0x26, 0x00, 0x00] } => commentate_on_panel, compare_commentate_on_panel, "motor_narrar_no_painel";
+    Prologue { address: 0x9326e0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => abrir_no_conteiner, compare_abrir_no_conteiner, "motor_abrir_no_conteiner";
+    Prologue { address: 0x933080, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => buscar_no_conteiner, compare_buscar_no_conteiner, "motor_buscar_no_conteiner";
+    Prologue { address: 0x933170, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => posicao_no_conteiner, compare_posicao_no_conteiner, "motor_posicao_no_conteiner";
+    Prologue { address: 0x5b7d20, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => position_mask, compare_position_mask, "motor_mascara_de_posicoes";
+    Prologue { address: 0x5b7e60, bytes: &[0x8a, 0x44, 0x24, 0x08, 0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => pitch_cell, compare_pitch_cell, "motor_casa_no_campo";
+    Prologue { address: 0x5b8960, bytes: &[0x81, 0xec, 0x04, 0x0e, 0x00, 0x00] } => slots_without_conflict, compare_slots_without_conflict, "motor_vagas_sem_conflito";
+    Prologue { address: 0x7c2150, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => player_statistic, compare_player_statistic, "motor_estatistica_do_jogador";
+    Prologue { address: 0x7c1950, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => ratings_average, compare_ratings_average, "motor_media_das_notas";
+    Prologue { address: 0x5b8dc0, bytes: &[0x81, 0xec, 0x04, 0x0e, 0x00, 0x00] } => centre_backs_without_conflict, compare_centre_backs_without_conflict, "motor_zagueiros_sem_conflito";
+    Prologue { address: 0x844300, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => shortlist_slot_fits, compare_shortlist_slot_fits, "motor_serve_para_a_vaga";
+    Prologue { address: 0x83bd00, bytes: &[0x0f, 0xbf, 0x44, 0x24, 0x04] } => position_code, compare_position_code, "motor_codigo_da_posicao";
+    Prologue { address: 0x866f60, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55] } => staff_criterion, compare_staff_criterion, "motor_criterio_da_comissao";
+    Prologue { address: 0x896a90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => set_tactic_slot, compare_set_tactic_slot, "motor_gravar_vaga_tatica";
+    Prologue { address: 0x8968f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => tactic_slot_person, compare_tactic_slot_person, "motor_pessoa_da_vaga_tatica";
+    Prologue { address: 0x8967d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => set_tactic_formation, compare_set_tactic_formation, "motor_gravar_formacao_tatica";
+    Prologue { address: 0x5b3c70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => stored_cell, compare_stored_cell, "motor_casa_guardada";
+    Prologue { address: 0x5b50d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => set_formation_flag, compare_set_formation_flag, "motor_ligar_marca_da_formacao";
+    Prologue { address: 0x452fe0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => reset_records, compare_reset_records, "motor_reiniciar_recordes";
+    Prologue { address: 0x68a030, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x8b, 0x0d, 0xe8, 0xf6, 0x9c, 0x00] } => rotate_round, compare_rotate_round, "motor_girar_rodada";
+    Prologue { address: 0x68a1c0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => store_round_match, compare_store_round_match, "motor_registrar_jogo_da_rodada";
+    Prologue { address: 0x5af180, bytes: &[0xa1, 0x5c, 0x2a, 0xae, 0x00] } => mark_calendar_year, compare_mark_calendar_year, "motor_marcar_ano_no_calendario";
+    Prologue { address: 0x897ee0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => extra_tactic_slot, compare_extra_tactic_slot, "motor_vaga_extra_tatica";
+    Prologue { address: 0x76d430, bytes: &[0x8b, 0x54, 0x24, 0x0c, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => national_team_ages, compare_national_team_ages, "motor_idades_da_selecao";
+    Prologue { address: 0x5fdd30, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => set_human_field, compare_set_human_field, "motor_gravar_dado_do_humano";
+    Prologue { address: 0x7f6cd0, bytes: &[0x8a, 0x54, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => scout_record, compare_scout_record, "motor_registro_do_observador";
+    Prologue { address: 0x600c90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => human_runs_club, compare_human_runs_club, "motor_humano_manda_no_clube";
+    Prologue { address: 0x4ca470, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x53] } => contract_category, compare_contract_category, "motor_categoria_do_contrato";
+    Prologue { address: 0x6d58f0, bytes: &[0x8a, 0x81, 0xa8, 0x8e, 0x00, 0x00] } => ball_goal_end, compare_ball_goal_end, "motor_bola_na_area";
+    Prologue { address: 0x6d5930, bytes: &[0x8a, 0x81, 0x38, 0xf6, 0x00, 0x00] } => match_abandoned, compare_match_abandoned, "motor_partida_abandonada";
+    Prologue { address: 0x6d5af0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x84, 0xc0] } => side_slots_without_conflict, compare_side_slots_without_conflict, "motor_vagas_do_lado_sem_conflito";
+    Prologue { address: 0x6d5b20, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x84, 0xc0] } => side_centre_backs_without_conflict, compare_side_centre_backs_without_conflict, "motor_zagueiros_do_lado_sem_conflito";
+    Prologue { address: 0x6e9460, bytes: &[0x8b, 0xc1, 0xc7, 0x00, 0x00, 0x00, 0x00, 0x00] } => construct_referee, compare_construct_referee, "motor_construir_arbitro";
+    Prologue { address: 0x6ebd60, bytes: &[0xc7, 0x81, 0x9e, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] } => destroy_match_player, compare_destroy_match_player, "motor_destruir_jogador_da_partida";
+    Prologue { address: 0x6d5d00, bytes: &[0x66, 0x8b, 0x41, 0x08, 0x66, 0x85, 0xc0] } => event_at_front, compare_event_at_front, "motor_evento_na_frente";
+    Prologue { address: 0x6d5bf0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x83, 0xc8, 0xff] } => construct_commentary_queue, compare_construct_commentary_queue, "motor_construir_fila_da_narracao";
+    Prologue { address: 0x6d5b50, bytes: &[0x53, 0x56, 0x57, 0xbe, 0x90, 0x87, 0xb6, 0x00] } => free_event_tables, compare_free_event_tables, "motor_liberar_tabelas_de_eventos";
+    Prologue { address: 0x6b6510, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => day_match_order, compare_day_match_order, "motor_ordem_das_partidas_do_dia";
+    Prologue { address: 0x6bd840, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] } => action_order, compare_action_order, "motor_ordem_de_acao";
+    Prologue { address: 0x6d5d80, bytes: &[0x51, 0x53, 0x56, 0x6a, 0x03] } => event_variant, compare_event_variant, "motor_variante_do_evento";
+    Prologue { address: 0x6d60b0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] } => combine_with_previous, compare_combine_with_previous, "motor_combinar_com_o_anterior";
+    Prologue { address: 0x6d4b70, bytes: &[0x6a, 0xff, 0x68, 0x00, 0xd4, 0x95, 0x00] } => context_commentary, compare_context_commentary, "motor_comentario_de_contexto";
+    Prologue { address: 0x6eada0, bytes: &[0x8b, 0xc1, 0x83, 0xca, 0xff] } => construct_match_player, compare_construct_match_player, "motor_construir_jogador_da_partida";
+    Prologue { address: 0x6d78b0, bytes: &[0x51, 0x8b, 0xd1, 0x55, 0x56] } => next_event, compare_next_event, "motor_proximo_evento";
+    Prologue { address: 0x6db2d0, bytes: &[0x8a, 0x44, 0x24, 0x18, 0x81, 0xec, 0x58, 0x02, 0x00, 0x00] } => commentary_player_name, compare_commentary_player_name, "motor_nome_do_jogador_na_narracao";
+    Prologue { address: 0x6e86d0, bytes: &[0x51, 0x8b, 0x15, 0x20, 0x71, 0xdd, 0x00] } => perceived_ability, compare_perceived_ability, "motor_habilidade_vista";
+    Prologue { address: 0x6e8910, bytes: &[0x81, 0xec, 0x70, 0x04, 0x00, 0x00] } => apply_squad_rule, compare_apply_squad_rule, "motor_cumprir_regra_do_elenco";
+    Prologue { address: 0x6e6340, bytes: &[0x83, 0xec, 0x50, 0x53, 0x55] } => off_match_score, compare_off_match_score, "motor_nota_fora_da_partida";
+    Prologue { address: 0x6e2f20, bytes: &[0x83, 0xec, 0x50, 0x53, 0x8b, 0x5c, 0x24, 0x58] } => lineup_slot_score, compare_lineup_slot_score, "motor_nota_para_a_vaga";
+    Prologue { address: 0x69fc60, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => person_in_list, compare_person_in_list, "motor_pessoa_na_lista";
+    Prologue { address: 0x4cf6d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => contract_record, compare_contract_record, "motor_ficha_de_contrato";
+    Prologue { address: 0x62c2f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53] } => daily_wear, compare_daily_wear, "motor_desgaste_diario";
+    Prologue { address: 0x896570, bytes: &[0x66, 0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => formation_record, compare_formation_record, "motor_registro_da_formacao";
+    Prologue { address: 0x7c6930, bytes: &[0x53, 0x55, 0x8b, 0x6c, 0x24, 0x0c] } => competition_weight, compare_competition_weight, "motor_peso_da_competicao";
+    Prologue { address: 0x785790, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => set_news_field, compare_set_news_field, "motor_gravar_dado_da_noticia";
+    Prologue { address: 0x62bd10, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] } => recover_injury, compare_recover_injury, "motor_recuperar_lesao";
+    Prologue { address: 0x8c1870, bytes: &[0x8b, 0x81, 0x2e, 0x09, 0x00, 0x00] } => person_in_transfer_list, compare_person_in_transfer_list, "motor_pessoa_na_lista_de_transferencias";
+    Prologue { address: 0x55cae0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] } => table_penalty, compare_table_penalty, "motor_punicao_da_tabela";
+    Prologue { address: 0x7a7eb0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x15, 0x0c, 0x2d, 0xae, 0x00] } => record_bits, compare_record_bits, "motor_bits_do_registro";
+    Prologue { address: 0x684790, bytes: &[0x8a, 0x81, 0xbe, 0x00, 0x00, 0x00] } => competition_flagged, compare_competition_flagged, "motor_competicao_marcada";
+    Prologue { address: 0x6826d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8d, 0x14, 0xc5, 0x00, 0x00, 0x00, 0x00] } => league_record, compare_league_record, "motor_registro_da_liga";
+    Prologue { address: 0x5d5a60, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x84, 0xc0] } => game_average, compare_game_average, "motor_media_do_jogo";
+    Prologue { address: 0x4d0c20, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => contract_value, compare_contract_value, "motor_valor_do_contrato";
+    Prologue { address: 0x76d810, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x84, 0xc0] } => national_team_level, compare_national_team_level, "motor_nivel_para_a_selecao";
+    Prologue { address: 0x4cc9e0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] } => contract_offer, compare_contract_offer, "motor_oferta_de_contrato";
+    Prologue { address: 0x4cca30, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0x8b, 0x46, 0x34] } => agreed_contract_offer, compare_agreed_contract_offer, "motor_oferta_acertada";
+    Prologue { address: 0x8d0d90, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x8a, 0x41, 0x2c] } => transfer_offer_closed, compare_transfer_offer_closed, "motor_oferta_fechada";
+    Prologue { address: 0x725a70, bytes: &[0x8b, 0x4c, 0x24, 0x08, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => match_control_label, compare_match_control_label, "motor_rotulo_do_controle";
+    Prologue { address: 0x71b120, bytes: &[0x56, 0x6a, 0x2d, 0xb9, 0x50, 0x44, 0xb7, 0x00] } => close_match_screen, compare_close_match_screen, "motor_fechar_tela_da_partida";
+    Prologue { address: 0x727f00, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => open_waiting_screen, compare_open_waiting_screen, "motor_abrir_tela_de_espera";
+    Prologue { address: 0x735780, bytes: &[0x56, 0x8b, 0x71, 0x08, 0x33, 0xd2] } => story_with_response_two, compare_story_with_response_two, "motor_noticia_com_resposta_2";
+    Prologue { address: 0x735840, bytes: &[0x56, 0x8b, 0x71, 0x08, 0x33, 0xd2] } => has_story, compare_has_story, "motor_tem_noticia";
+    Prologue { address: 0x5221f0, bytes: &[0x8a, 0x51, 0x51, 0x53, 0x8a, 0x59, 0x3c] } => cup_match_importance, compare_cup_match_importance, "motor_importancia_da_partida";
+    Prologue { address: 0x71b1b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => open_latest_scores, compare_open_latest_scores, "motor_abrir_ultimos_placares";
+    Prologue { address: 0x71b300, bytes: &[0x83, 0xec, 0x08, 0x6a, 0x0e] } => build_latest_scores, compare_build_latest_scores, "motor_montar_ultimos_placares";
+    Prologue { address: 0x71b3d0, bytes: &[0xa1, 0x84, 0x7c, 0xb7, 0x00] } => latest_scores_input, compare_latest_scores_input, "motor_responder_ultimos_placares";
+    Prologue { address: 0x71b4a0, bytes: &[0x6a, 0x00, 0x68, 0x70, 0xc1, 0x71, 0x00] } => open_match_details, compare_open_match_details, "motor_abrir_detalhes_da_partida";
+    Prologue { address: 0x71bdc0, bytes: &[0x51, 0xa1, 0x84, 0x7c, 0xb7, 0x00] } => match_details_input, compare_match_details_input, "motor_responder_detalhes_da_partida";
+    Prologue { address: 0x71c170, bytes: &[0x56, 0x6a, 0x2d, 0xb9, 0x50, 0x44, 0xb7, 0x00] } => close_match_details, compare_close_match_details, "motor_fechar_detalhes_da_partida";
+    Prologue { address: 0x556210, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x10] } => discipline_new_season, compare_discipline_new_season, "motor_disciplina_temporada_nova";
+    Prologue { address: 0x556240, bytes: &[0x53, 0x55, 0x8b, 0x6c, 0x24, 0x0c] } => discipline_daily_update, compare_discipline_daily_update, "motor_disciplina_do_dia";
+    Prologue { address: 0x55cb20, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x08] } => discipline_set_slot, compare_discipline_set_slot, "motor_disciplina_gravar_vaga";
+    Prologue { address: 0x8c5410, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x10] } => set_agreed_contract_flag, compare_set_agreed_contract_flag, "motor_marcar_contrato_acertado";
+    Prologue { address: 0x8c5430, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x10] } => clear_agreed_contract_flag, compare_clear_agreed_contract_flag, "motor_desmarcar_contrato_acertado";
+    Prologue { address: 0x8c61e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x51, 0x04] } => offer_slot, compare_offer_slot, "motor_vaga_da_oferta";
+    Prologue { address: 0x718aa0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => open_match_screen, compare_open_match_screen, "motor_abrir_tela_da_partida";
+    Prologue { address: 0x725860, bytes: &[0x51, 0x53, 0x56, 0x57, 0x6a, 0x11] } => match_screens_handle_latest_scores_cycle, compare_match_screens_handle_latest_scores_cycle, "motor_responder_ultimos_placares_da_partida";
+    Prologue { address: 0x722dc0, bytes: &[0x53, 0x56, 0x6a, 0x00, 0xb9, 0x50, 0x44, 0xb7, 0x00] } => handle_team_stats_input, compare_handle_team_stats_input, "motor_responder_estatisticas_do_time";
+    Prologue { address: 0x723d20, bytes: &[0x83, 0xec, 0x24, 0x53, 0x55] } => draw_latest_scores_panel, compare_draw_latest_scores_panel, "motor_painel_dos_ultimos_placares";
+    Prologue { address: 0x7febb0, bytes: &[0x0f, 0xbf, 0x81, 0x2a, 0x38, 0x00, 0x00] } => is_forward_unavailable, compare_is_forward_unavailable, "motor_sem_tela_seguinte";
+    Prologue { address: 0x839590, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => get_heading_colour, compare_get_heading_colour, "motor_cor_do_titulo";
+    Prologue { address: 0x5d5ab0, bytes: &[0x8b, 0x81, 0x56, 0x08, 0x00, 0x00] } => transfer_manager_get_shortlist_manager, compare_transfer_manager_get_shortlist_manager, "motor_lista_de_observados";
+    Prologue { address: 0x5d5ac0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x89, 0x1d, 0x65, 0x00, 0x00] } => training_manager_get_player_entry, compare_training_manager_get_player_entry, "motor_entrada_do_treino";
+    Prologue { address: 0x62c660, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x00] } => set_training_load, compare_set_training_load, "motor_gravar_carga_de_treino";
+    Prologue { address: 0x5c2990, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] } => is_own_comp_record, compare_is_own_comp_record, "motor_e_competicao_do_amistoso";
+    Prologue { address: 0x5cb9b0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x8a, 0x54, 0x24, 0x08] } => friendly_international_date_set, compare_friendly_international_date_set, "motor_preencher_data_internacional";
+    Prologue { address: 0x86fc20, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x57] } => clear_manager_record, compare_clear_manager_record, "motor_limpar_registro_de_tecnico";
+    Prologue { address: 0x4d0bd0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] } => remove_loan_contract, compare_remove_loan_contract, "motor_tirar_contrato_de_emprestimo";
+    Prologue { address: 0x84aeb0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] } => clear_bid_markers_for_player, compare_clear_bid_markers_for_player, "motor_desmarcar_lances_pelo_jogador";
+    Prologue { address: 0x600e90, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => human_manager_get_stand_in_manager, compare_human_manager_get_stand_in_manager, "motor_tecnico_substituto";
+    Prologue { address: 0x8c5450, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] } => get_agreed_contract_club, compare_get_agreed_contract_club, "motor_clube_do_contrato_acertado";
+    Prologue { address: 0x8ce920, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x53] } => record_international_appearance, compare_record_international_appearance, "motor_registrar_jogo_pela_selecao";
+    Prologue { address: 0x55cb60, bytes: &[0x53, 0x55, 0x8b, 0x51, 0x14] } => find_held_ban, compare_find_held_ban, "motor_punicao_guardada";
+    Prologue { address: 0x7a7ed0, bytes: &[0x8b, 0x41, 0x04, 0x8b, 0x49, 0x08] } => find_retirement_entry, compare_find_retirement_entry, "motor_entrada_da_aposentadoria";
+    Prologue { address: 0x5ca030, bytes: &[0xa1, 0xfc, 0xad, 0xad, 0x00] } => register_comp_objects, compare_register_comp_objects, "motor_registrar_competicoes_do_amistoso";
+    Prologue { address: 0x785830, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_slot, compare_get_slot, "motor_vaga_da_noticia";
+    Prologue { address: 0x8cb4f0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x53] } => remove_next_sale_percentage, compare_remove_next_sale_percentage, "motor_tirar_percentual_da_proxima_venda";
+    Prologue { address: 0x8cb590, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x53] } => remove_first_team_appearance_money, compare_remove_first_team_appearance_money, "motor_tirar_bonus_por_jogo";
+    Prologue { address: 0x8cb630, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x53] } => remove_international_team_appearance_money, compare_remove_international_team_appearance_money, "motor_tirar_bonus_pela_selecao";
+    Prologue { address: 0x7a82b0, bytes: &[0x8b, 0x51, 0x20, 0x53, 0x33, 0xc0] } => remove_spare_non_player_record, compare_remove_spare_non_player_record, "motor_tirar_reserva_de_tecnico";
+    Prologue { address: 0x7a8470, bytes: &[0x8b, 0x51, 0x40, 0x53, 0x33, 0xc0] } => remove_player_data_from_pool, compare_remove_player_data_from_pool, "motor_tirar_jogador_do_banco";
+    Prologue { address: 0x682f70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => calc_prize_fund, compare_calc_prize_fund, "motor_premio_da_liga";
+    Prologue { address: 0x7c1a60, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => get_last_match_rating, compare_get_last_match_rating, "motor_ultima_nota_do_jogador";
+    Prologue { address: 0x7ae640, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => set_slot_index, compare_set_slot_index, "motor_vaga_da_busca";
+    Prologue { address: 0x7ae6e0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => set_list_type, compare_set_list_type, "motor_tipo_da_lista_da_busca";
+    Prologue { address: 0x6834f0, bytes: &[0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x10] } => league_compare_h2h_rows, compare_league_compare_h2h_rows, "motor_ordem_do_confronto";
+    Prologue { address: 0x6869a0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x85, 0xc0] } => update_head_to_head, compare_update_head_to_head, "motor_atualizar_confronto_direto";
+    Prologue { address: 0x8c1f80, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => note_terms_offered_to_main_player, compare_note_terms_offered_to_main_player, "motor_marcar_termos_oferecidos";
+    Prologue { address: 0x5fdc30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_holiday_stamp, compare_get_holiday_stamp, "motor_hora_das_ferias";
+    Prologue { address: 0x5fed50, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_saved_lineup, compare_get_saved_lineup, "motor_escalacao_guardada";
+    Prologue { address: 0x7ae570, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => set_manager, compare_set_manager, "motor_tecnico_da_busca";
+    Prologue { address: 0x717cc0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => open_day_fixtures_screen, compare_open_day_fixtures_screen, "motor_abrir_jogos_do_dia";
+    Prologue { address: 0x718930, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => handle_day_fixtures_input, compare_handle_day_fixtures_input, "motor_responder_jogos_do_dia";
+    Prologue { address: 0x727e20, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => match_screens_find_best_rated_starter_slot, compare_match_screens_find_best_rated_starter_slot, "motor_vaga_do_mais_bem_avaliado";
+    Prologue { address: 0x7c47b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => get_club_league_stat, compare_get_club_league_stat, "motor_estatistica_da_liga_do_jogador";
+    Prologue { address: 0x729500, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fixture_entry_matches, compare_fixture_entry_matches, "motor_entrada_do_jogo_bate";
+    Prologue { address: 0x729bd0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => match_stats_get_record_bucket, compare_match_stats_get_record_bucket, "motor_balde_do_registro";
+    Prologue { address: 0x71dd70, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53] } => match_team_block_assign, compare_match_team_block_assign, "motor_atribuir_bloco_do_time";
+    Prologue { address: 0x71df00, bytes: &[0x83, 0xec, 0x08, 0x56, 0x57] } => match_player_row_assign, compare_match_player_row_assign, "motor_atribuir_linha_do_jogador";
+    Prologue { address: 0x728e90, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x53] } => match_screens_tally_live_score, compare_match_screens_tally_live_score, "motor_contar_placar_ao_vivo";
+    Prologue { address: 0x725ca0, bytes: &[0x83, 0xec, 0x44, 0x53, 0x55] } => match_screens_handle_continue_command, compare_match_screens_handle_continue_command, "motor_responder_continuar_da_partida";
+    Prologue { address: 0x725f70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => match_screens_open_team_selection, compare_match_screens_open_team_selection, "motor_abrir_escalacao_da_partida";
+    Prologue { address: 0x727c30, bytes: &[0x53, 0x55, 0x56, 0x57, 0x6a, 0x00] } => match_screens_handle_team_selection_input, compare_match_screens_handle_team_selection_input, "motor_responder_escalacao_da_partida";
+    Prologue { address: 0x7217a0, bytes: &[0x83, 0xec, 0x34, 0x53, 0x56] } => draw_team_stats_panel, compare_draw_team_stats_panel, "motor_painel_das_estatisticas_do_time";
+    Prologue { address: 0x722ed0, bytes: &[0x81, 0xec, 0x0c, 0x01, 0x00, 0x00] } => draw_player_ratings_panel, compare_draw_player_ratings_panel, "motor_painel_das_notas_dos_jogadores";
+    Prologue { address: 0x71e040, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x0c] } => draw_match_stats_panel, compare_draw_match_stats_panel, "motor_painel_das_estatisticas_da_partida";
+    Prologue { address: 0x71e750, bytes: &[0x6a, 0xff, 0x68, 0x5b, 0xd5, 0x95, 0x00] } => refresh_match_stats_values, compare_refresh_match_stats_values, "motor_valores_das_estatisticas_da_partida";
+    Prologue { address: 0x720320, bytes: &[0x6a, 0xff, 0x68, 0x7b, 0xd5, 0x95, 0x00] } => refresh_action_zones_values, compare_refresh_action_zones_values, "motor_valores_das_zonas_de_acao";
+    Prologue { address: 0x723350, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0xd5, 0x95, 0x00] } => refresh_player_ratings_rows, compare_refresh_player_ratings_rows, "motor_valores_das_notas_dos_jogadores";
+    Prologue { address: 0x71f500, bytes: &[0xa0, 0xb4, 0xb7, 0xb6, 0x00] } => draw_action_zones_panel, compare_draw_action_zones_panel, "motor_painel_das_zonas_de_acao";
+    Prologue { address: 0x721000, bytes: &[0x6a, 0xff, 0x68, 0x9e, 0xd5, 0x95, 0x00] } => draw_match_report_panel, compare_draw_match_report_panel, "motor_painel_do_relatorio_da_partida";
+    Prologue { address: 0x717db0, bytes: &[0x81, 0xec, 0x9c, 0x00, 0x00, 0x00] } => build_day_fixtures_screen, compare_build_day_fixtures_screen, "motor_montar_jogos_do_dia";
+    Prologue { address: 0x721cd0, bytes: &[0x81, 0xec, 0x18, 0x01, 0x00, 0x00] } => fill_team_stats_rows, compare_fill_team_stats_rows, "motor_preencher_estatisticas_do_time";
+    Prologue { address: 0x724520, bytes: &[0x81, 0xec, 0x3c, 0x04, 0x00, 0x00] } => refresh_latest_scores_rows, compare_refresh_latest_scores_rows, "motor_atualizar_ultimos_placares";
+    Prologue { address: 0x727fb0, bytes: &[0x83, 0xec, 0x44, 0x53, 0x56] } => match_screens_handle_waiting_screen, compare_match_screens_handle_waiting_screen, "motor_esperar_os_outros_jogadores";
+    Prologue { address: 0x729600, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => read_match_record, compare_read_match_record, "motor_ler_registro_da_partida";
+    Prologue { address: 0x7293f0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => match_screens_record_match, compare_match_screens_record_match, "motor_registrar_partida";
+    Prologue { address: 0x729820, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => write_match_record, compare_write_match_record, "motor_gravar_registro_da_partida";
+    Prologue { address: 0x7260f0, bytes: &[0x6a, 0xff, 0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => match_screens_draw_team_selection, compare_match_screens_draw_team_selection, "motor_desenhar_conferencia_da_escalacao";
+    Prologue { address: 0x72aa80, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => match_screens_load, compare_match_screens_load, "motor_carregar_estatisticas_da_partida";
+    Prologue { address: 0x72adf0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => match_screens_save, compare_match_screens_save, "motor_salvar_estatisticas_da_partida";
+    Prologue { address: 0x403350, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] } => area_layout, compare_area_layout, "motor_organizar_area";
+    Prologue { address: 0x402ac0, bytes: &[0x66, 0x83, 0x7c, 0x24, 0x38, 0xff] } => init, compare_init, "motor_iniciar_area";
+    Prologue { address: 0x402e70, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => draw, compare_draw, "motor_desenhar_area";
+    Prologue { address: 0x718e90, bytes: &[0x6a, 0xff, 0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => build_match_screen, compare_build_match_screen, "motor_montar_tela_da_partida";
+    Prologue { address: 0x71a240, bytes: &[0xa1, 0x84, 0x7c, 0xb7, 0x00] } => handle_match_screen_input, compare_handle_match_screen_input, "motor_responder_tela_da_partida";
+    Prologue { address: 0x71b630, bytes: &[0x6a, 0xff, 0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => build_match_details_screen, compare_build_match_details_screen, "motor_montar_detalhes_da_partida";
+    Prologue { address: 0x71d9e0, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0xd5, 0x95, 0x00] } => refresh_possession_bar, compare_refresh_possession_bar, "motor_atualizar_barra_da_posse";
+    Prologue { address: 0x71c270, bytes: &[0x6a, 0xff, 0x68, 0x1b, 0xd5, 0x95, 0x00] } => draw_match_overview_panel, compare_draw_match_overview_panel, "motor_painel_da_visao_geral_da_partida";
+    Prologue { address: 0x7280e0, bytes: &[0x6a, 0xff, 0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => match_screens_draw_live_league_table, compare_match_screens_draw_live_league_table, "motor_tabela_da_liga_ao_vivo";
+    Prologue { address: 0x7357c0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53, 0x55] } => get_finable_story_kind, compare_get_finable_story_kind, "motor_historia_punivel_do_jogador";
+    Prologue { address: 0x62d140, bytes: &[0x51, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x18] } => choose_injury_type, compare_choose_injury_type, "motor_escolher_tipo_de_lesao";
+    Prologue { address: 0x785670, bytes: &[0x8b, 0x01, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_category, compare_get_category, "motor_categoria_da_noticia";
+    Prologue { address: 0x76c060, bytes: &[0x51, 0x53, 0x55, 0x32, 0xc0] } => national_teams_remove_duplicate_squad_entries, compare_national_teams_remove_duplicate_squad_entries, "motor_apagar_repetidos_das_convocacoes";
+    Prologue { address: 0x8972c0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => find_selection_slot, compare_find_selection_slot, "motor_vaga_do_escalado";
+    Prologue { address: 0x72b810, bytes: &[0x51, 0x53, 0x55, 0x8b, 0x6c, 0x24, 0x14] } => pick_former_international_pundit, compare_pick_former_international_pundit, "motor_escolher_comentarista";
+    Prologue { address: 0x521d60, bytes: &[0x55, 0x8b, 0x6c, 0x24, 0x08] } => apply_round_rules_to_match, compare_apply_round_rules_to_match, "motor_regras_da_rodada_no_jogo";
+    Prologue { address: 0x519c90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => find_tree_slot_for_fixture, compare_find_tree_slot_for_fixture, "motor_chave_do_jogo_na_copa";
+    Prologue { address: 0x5c4680, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x08] } => pick_tour_nation, compare_pick_tour_nation, "motor_pais_da_excursao";
+    Prologue { address: 0x8c6db0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => transfer_manager_close_offer_contract_offers, compare_transfer_manager_close_offer_contract_offers, "motor_fechar_propostas_da_oferta";
+    Prologue { address: 0x8c16b0, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] } => queue_free_transfer, compare_queue_free_transfer, "motor_enfileirar_transferencia_livre";
+    Prologue { address: 0x8c5fc0, bytes: &[0x83, 0xec, 0x0c, 0x8b, 0x44, 0x24, 0x10] } => get_exchange_negotiations_for_player, compare_get_exchange_negotiations_for_player, "motor_negociacoes_de_troca_do_jogador";
+    Prologue { address: 0x775ba0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56, 0x57] } => national_teams_remove_player, compare_national_teams_remove_player, "motor_tirar_jogador_da_selecao";
+    Prologue { address: 0x5af2f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => get_time_slice, compare_get_time_slice, "motor_faixa_do_horario";
+    Prologue { address: 0x84b230, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x0c] } => shortlist_manager_max_fee_for_squad_status, compare_shortlist_manager_max_fee_for_squad_status, "motor_teto_da_observacao";
+    Prologue { address: 0x8c5cf0, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x08] } => get_offers_for_player, compare_get_offers_for_player, "motor_ofertas_pelo_jogador";
+    Prologue { address: 0x83bf40, bytes: &[0x56, 0x8b, 0x91, 0xdc, 0x00, 0x00, 0x00] } => update_club_target_reputation, compare_update_club_target_reputation, "motor_reputacao_alvo_do_clube";
+    Prologue { address: 0x4afeb0, bytes: &[0x53, 0x55, 0x8b, 0x6c, 0x24, 0x14] } => comp_util_write_fixture_to_news_slots, compare_comp_util_write_fixture_to_news_slots, "motor_gravar_jogo_na_noticia";
+    Prologue { address: 0x729ff0, bytes: &[0xa0, 0xc4, 0xb7, 0xb6, 0x00] } => fill_match_record, compare_fill_match_record, "motor_preencher_registro_da_partida";
+    Prologue { address: 0x72b160, bytes: &[0x8b, 0x54, 0x24, 0x08, 0x56] } => match_stats_compare_events, compare_match_stats_compare_events, "motor_ordem_dos_eventos";
+    Prologue { address: 0x7c6bf0, bytes: &[0x83, 0xec, 0x08, 0x56, 0x8b, 0xf1] } => remove_language, compare_remove_language, "motor_tirar_idioma_do_jogador";
+    Prologue { address: 0x8ced40, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] } => can_sign_player, compare_can_sign_player, "motor_pode_contratar_jogador";
+    Prologue { address: 0x8c5e40, bytes: &[0x51, 0x53, 0x55, 0x8b, 0x6c, 0x24, 0x10] } => get_exchange_offers_for_player, compare_get_exchange_offers_for_player, "motor_trocas_oferecendo_o_jogador";
+    Prologue { address: 0x786fe0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => count_unread, compare_count_unread, "motor_noticias_nao_lidas";
+    Prologue { address: 0x786d30, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => set_item_slot, compare_set_item_slot, "motor_gravar_marca_da_noticia";
+    Prologue { address: 0x7875e0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => news_club_has_human_manager, compare_news_club_has_human_manager, "motor_clube_de_tecnico_humano";
+    Prologue { address: 0x521e60, bytes: &[0x8b, 0x4c, 0x24, 0x14, 0x8b, 0x44, 0x24, 0x18] } => cup_set_round_draw_date, compare_cup_set_round_draw_date, "motor_data_do_sorteio_da_rodada";
+    Prologue { address: 0x521eb0, bytes: &[0x8b, 0x4c, 0x24, 0x14, 0x8b, 0x44, 0x24, 0x18] } => cup_set_round_match_date, compare_cup_set_round_match_date, "motor_data_do_jogo_da_rodada";
+    Prologue { address: 0x5c64e0, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0x8b, 0x7c, 0x24, 0x0c] } => remove_club_from_ai_plans, compare_remove_club_from_ai_plans, "motor_tirar_clube_dos_amistosos";
+    Prologue { address: 0x683210, bytes: &[0x51, 0x53, 0x8b, 0x1d, 0xfc, 0x79, 0xb6, 0x00] } => league_compare_table_rows, compare_league_compare_table_rows, "motor_ordem_das_linhas_da_tabela";
+    Prologue { address: 0x6844b0, bytes: &[0x8b, 0x4c, 0x24, 0x08, 0x83, 0xec, 0x10] } => league_build_round_robin_grid, compare_league_build_round_robin_grid, "motor_montar_grade_de_turnos";
+    Prologue { address: 0x68a4d0, bytes: &[0x0f, 0xbf, 0x81, 0xa9, 0x00, 0x00, 0x00] } => final_day_margin_needed, compare_final_day_margin_needed, "motor_margem_do_ultimo_dia";
+    Prologue { address: 0x4b0010, bytes: &[0x53, 0x55, 0x8b, 0x6c, 0x24, 0x14] } => comp_util_read_fixture_from_news_slots, compare_comp_util_read_fixture_from_news_slots, "motor_partida_das_vagas_da_noticia";
+    Prologue { address: 0x4b0890, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x10] } => comp_util_classify_tie_result_for_news, compare_comp_util_classify_tie_result_for_news, "motor_resultado_da_eliminatoria_na_noticia";
+    Prologue { address: 0x521f10, bytes: &[0x66, 0x8b, 0x4c, 0x24, 0x0c] } => cup_set_round_match_day, compare_cup_set_round_match_day, "motor_dia_da_rodada_da_copa";
+    Prologue { address: 0x5b7160, bytes: &[0x83, 0xec, 0x48, 0x53, 0x55] } => build_position_lookup, compare_build_position_lookup, "motor_mapa_de_casas_da_formacao";
+    Prologue { address: 0x7ad220, bytes: &[0x53, 0x55, 0x8b, 0x6c, 0x24, 0x0c] } => player_regen_score_club_for_player, compare_player_regen_score_club_for_player, "motor_nota_do_clube_para_o_jovem";
+    Prologue { address: 0x5fe290, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => is_watching_fixture, compare_is_watching_fixture, "motor_partida_assistida_pelo_humano";
+    Prologue { address: 0x6b6970, bytes: &[0x6a, 0xff, 0x68, 0x8c, 0xd2, 0x95, 0x00] } => match_day_drop_viewer_and_finish_match, compare_match_day_drop_viewer_and_finish_match, "motor_largar_partida_assistida";
+    Prologue { address: 0x729e30, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0xd6, 0x95, 0x00] } => find_record_fixture, compare_find_record_fixture, "motor_ficha_do_registro";
+    Prologue { address: 0x6847b0, bytes: &[0x8a, 0x91, 0xc1, 0x00, 0x00, 0x00] } => has_relegation, compare_has_relegation, "motor_liga_tem_rebaixamento";
+    Prologue { address: 0x68a160, bytes: &[0x8b, 0x4c, 0x24, 0x14, 0x8b, 0x44, 0x24, 0x18] } => league_round_set_date, compare_league_round_set_date, "motor_data_da_rodada_da_liga";
+    Prologue { address: 0x68a3e0, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x10] } => get_match_importance, compare_get_match_importance, "motor_importancia_do_jogo_da_liga";
+    Prologue { address: 0x448490, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x83, 0xec, 0x08] } => record_holder_assign, compare_record_holder_assign, "motor_copiar_recordista";
+    Prologue { address: 0x448110, bytes: &[0x83, 0xec, 0x08, 0x8d, 0x44, 0x24, 0x00] } => match_record_assign, compare_match_record_assign, "motor_copiar_registro_de_partida";
+    Prologue { address: 0x448170, bytes: &[0x83, 0xec, 0x08, 0x8d, 0x54, 0x24, 0x00] } => run_record_assign, compare_run_record_assign, "motor_copiar_registro_de_sequencia";
+    Prologue { address: 0x5fe420, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => is_fixture_watched, compare_is_fixture_watched, "motor_humano_assiste_a_partida";
+    Prologue { address: 0x600740, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] } => has_nickname, compare_has_nickname, "motor_humano_deu_apelido";
+    Prologue { address: 0x7a8780, bytes: &[0x83, 0xec, 0x08, 0x56, 0x57] } => retire_record_assign, compare_retire_record_assign, "motor_copiar_aposentadoria_pendente";
+    Prologue { address: 0x729000, bytes: &[0x6a, 0xff, 0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => construct_match_stats, compare_construct_match_stats, "motor_montar_estatisticas_da_partida";
+    Prologue { address: 0x7293c0, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x06] } => destroy_match_stats, compare_destroy_match_stats, "motor_desmontar_estatisticas_da_partida";
+    Prologue { address: 0x933a00, bytes: &[0x51, 0x53, 0x55, 0x8b, 0x6c, 0x24, 0x14] } => zipdir_match_filename_pattern, compare_zipdir_match_filename_pattern, "motor_casar_nome_com_padrao";
+    Prologue { address: 0x9331c0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => zget_archive_id, compare_zget_archive_id, "motor_id_do_conteiner";
+    Prologue { address: 0x933860, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => zget_matching_size, compare_zget_matching_size, "motor_tamanho_dos_itens_do_padrao";
+    Prologue { address: 0x933610, bytes: &[0x81, 0xec, 0x20, 0x04, 0x00, 0x00] } => zadd_matching_files, compare_zadd_matching_files, "motor_empacotar_no_conteiner";
+    Prologue { address: 0x933320, bytes: &[0x81, 0xec, 0x14, 0x03, 0x00, 0x00] } => zextract_matching_files, compare_zextract_matching_files, "motor_desempacotar_do_conteiner";
+    Prologue { address: 0x90cd50, bytes: &[0xb8, 0x1c, 0x68, 0x00, 0x00] } => utils_clear_temp_folder, compare_utils_clear_temp_folder, "motor_limpar_pasta_temporaria";
+    Prologue { address: 0x932c30, bytes: &[0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x1c] } => zipdir_zread, compare_zipdir_zread, "motor_ler_do_conteiner";
+    Prologue { address: 0x932e10, bytes: &[0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x1c] } => zipdir_zwrite, compare_zipdir_zwrite, "motor_gravar_no_conteiner";
+    Prologue { address: 0x932b00, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => zclose, compare_zclose, "motor_fechar_conteiner";
+    Prologue { address: 0x838e10, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => check_saved_game_file, compare_check_saved_game_file, "motor_filtro_do_jogo_salvo";
+    Prologue { address: 0x839290, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => check_quick_start_file, compare_check_quick_start_file, "motor_filtro_do_inicio_rapido";
+    Prologue { address: 0x838eb0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => valid_saved_game_version, compare_valid_saved_game_version, "motor_versao_do_jogo_salvo_valida";
+    Prologue { address: 0x8395b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => save_fifa_transfer_rules, compare_save_fifa_transfer_rules, "motor_gravar_regras_fifa";
+    Prologue { address: 0x839760, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => load_fifa_transfer_rules, compare_load_fifa_transfer_rules, "motor_carregar_regras_fifa";
+    Prologue { address: 0x591f80, bytes: &[0x83, 0xec, 0x70, 0x8b, 0x44, 0x24, 0x74] } => build_save_game_summary, compare_build_save_game_summary, "motor_montar_resumo_do_save";
+    Prologue { address: 0x524d30, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x8b, 0x4c, 0x24, 0x08] } => save_database_for_game, compare_save_database_for_game, "motor_gravar_banco_no_save";
+    Prologue { address: 0x524d10, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x8b, 0x4c, 0x24, 0x04] } => load_database_from_stream, compare_load_database_from_stream, "motor_carregar_banco_do_save";
+    Prologue { address: 0x82ff40, bytes: &[0x53, 0xb9, 0x50, 0x44, 0xb7, 0x00] } => free_game_data, compare_free_game_data, "motor_liberar_dados_do_jogo";
+    Prologue { address: 0x827110, bytes: &[0x81, 0xec, 0x00, 0x08, 0x00, 0x00] } => create_game_from_setup_file, compare_create_game_from_setup_file, "motor_criar_jogo_pela_configuracao";
+    Prologue { address: 0x82e430, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => save_game_data, compare_save_game_data, "motor_gravar_jogo";
+    Prologue { address: 0x82a9c0, bytes: &[0x6a, 0xff, 0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => load_game_data, compare_load_game_data, "motor_carregar_jogo";
+    Prologue { address: 0x5408c0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x0c] } => database_get_reputation_scope, compare_database_get_reputation_scope, "motor_escopo_da_reputacao";
+    Prologue { address: 0x5407e0, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x56] } => database_get_staff_reputation_for_viewer, compare_database_get_staff_reputation_for_viewer, "motor_reputacao_vista_por";
+    Prologue { address: 0x53d980, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x83, 0xec, 0x10] } => database_is_staff_foreign, compare_database_is_staff_foreign, "motor_pessoa_e_estrangeira";
+    Prologue { address: 0x53ab90, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => database_get_staff_age, compare_database_get_staff_age, "motor_idade_da_pessoa";
+    Prologue { address: 0x544670, bytes: &[0x80, 0x3d, 0x3c, 0x23, 0xae, 0x00, 0x01] } => nation_allows_free_transfers, compare_nation_allows_free_transfers, "motor_nacao_com_transferencia_livre";
+    Prologue { address: 0x53d740, bytes: &[0x8b, 0x44, 0x24, 0x04, 0xb1, 0x02] } => database_is_staff_eu_national, compare_database_is_staff_eu_national, "motor_pessoa_e_comunitaria";
+    Prologue { address: 0x544520, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => staff_is_transfer_listed_or_requested, compare_staff_is_transfer_listed_or_requested, "motor_pessoa_listada_para_transferencia";
+    Prologue { address: 0x543540, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => staff_compute_player_attribute, compare_staff_compute_player_attribute, "motor_atributo_calculado_do_jogador";
+    Prologue { address: 0x5431e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => staff_get_player_attribute, compare_staff_get_player_attribute, "motor_atributo_da_pessoa";
+    Prologue { address: 0x540780, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] } => database_compare_comp_history_rows, compare_database_compare_comp_history_rows, "motor_ordem_do_historico_de_competicao";
+    Prologue { address: 0x53a610, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0xba, 0x3f, 0x00, 0x00, 0x00] } => database_player_to_attribute_vector, compare_database_player_to_attribute_vector, "motor_vetor_de_atributos_do_jogador";
+    Prologue { address: 0x5446d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0xe4, 0xf2, 0x9c, 0x00] } => nation_is_uk_or_ireland, compare_nation_is_uk_or_ireland, "motor_nacao_britanica_ou_irlanda";
+    Prologue { address: 0x53d7f0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x85, 0xc9] } => database_is_basque_club, compare_database_is_basque_club, "motor_clube_basco";
+    Prologue { address: 0x5444a0, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] } => staff_is_transfer_listed, compare_staff_is_transfer_listed, "motor_pessoa_listada_pelo_clube";
+    Prologue { address: 0x544590, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => staff_is_loan_listed, compare_staff_is_loan_listed, "motor_pessoa_listada_para_emprestimo";
+    Prologue { address: 0x544600, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => staff_is_listed_by_request, compare_staff_is_listed_by_request, "motor_pessoa_listada_a_pedido";
+    Prologue { address: 0x544380, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x0f, 0xbe, 0x54, 0x24, 0x08] } => player_attribute_rating, compare_player_attribute_rating, "motor_nota_relativa_do_atributo";
+    Prologue { address: 0x542740, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => database_club_has_reserve_squad, compare_database_club_has_reserve_squad, "motor_clube_pode_ter_reservas";
+    Prologue { address: 0x539c60, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] } => database_pick_first_name_for_nation, compare_database_pick_first_name_for_nation, "motor_primeiro_nome_da_nacao";
+    Prologue { address: 0x53a1b0, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] } => database_pick_second_name_for_nation, compare_database_pick_second_name_for_nation, "motor_segundo_nome_da_nacao";
+    Prologue { address: 0x53dba0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => database_format_staff_name, compare_database_format_staff_name, "motor_formatar_nome_da_pessoa";
+    Prologue { address: 0x53b640, bytes: &[0x66, 0xa1, 0xf0, 0xbd, 0xae, 0x00] } => database_get_club_kit_colours, compare_database_get_club_kit_colours, "motor_cores_do_uniforme_do_clube";
+    Prologue { address: 0x53ca90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => database_get_club_manager, compare_database_get_club_manager, "motor_tecnico_do_clube_ou_selecao";
+    Prologue { address: 0x545880, bytes: &[0x6a, 0xff, 0x68, 0xfb, 0x79, 0x95, 0x00] } => club_get_english_name, compare_club_get_english_name, "motor_nome_ingles_do_clube";
+    Prologue { address: 0x544710, bytes: &[0x8a, 0x4c, 0x24, 0x08, 0x84, 0xc9] } => staff_adjust_morale, compare_staff_adjust_morale, "motor_ajustar_moral_da_pessoa";
+    Prologue { address: 0x53a8b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x0c] } => database_non_player_to_attribute_vector, compare_database_non_player_to_attribute_vector, "motor_vetor_de_atributos_do_nao_jogador";
+    Prologue { address: 0x540980, bytes: &[0x8a, 0x4c, 0x24, 0x08, 0x8b, 0x44, 0x24, 0x04] } => staff_set_squad_flags, compare_staff_set_squad_flags, "motor_marcar_elenco_da_pessoa";
+    Prologue { address: 0x53c590, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] } => database_count_club_squad, compare_database_count_club_squad, "motor_contar_elenco_do_clube";
+    Prologue { address: 0x541f90, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => database_collect_club_squad, compare_database_collect_club_squad, "motor_reunir_elenco_do_clube";
+    Prologue { address: 0x544820, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => club_can_be_managed, compare_club_can_be_managed, "motor_clube_pode_ser_dirigido";
+    Prologue { address: 0x53a980, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x8b, 0x4c, 0x24, 0x04] } => database_vector_to_non_player, compare_database_vector_to_non_player, "motor_vetor_para_o_nao_jogador";
+    Prologue { address: 0x53aa10, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x8b, 0x4c, 0x24, 0x04] } => database_vector_to_player, compare_database_vector_to_player, "motor_vetor_para_o_jogador";
+    Prologue { address: 0x539490, bytes: &[0x81, 0xec, 0x6c, 0x02, 0x00, 0x00] } => staff_normalise_non_player_attributes, compare_staff_normalise_non_player_attributes, "motor_normalizar_atributos_do_nao_jogador";
+    Prologue { address: 0x540520, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0xe4, 0xf1, 0x9c, 0x00] } => database_get_colour_family, compare_database_get_colour_family, "motor_familia_da_cor";
+    Prologue { address: 0x540490, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] } => database_colours_clash, compare_database_colours_clash, "motor_cores_se_confundem";
+    Prologue { address: 0x543fd0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => staff_compute_non_player_attribute, compare_staff_compute_non_player_attribute, "motor_atributo_calculado_do_nao_jogador";
+    Prologue { address: 0x545a60, bytes: &[0x8b, 0x4c, 0x24, 0x08, 0x0c, 0xff] } => get_adjective_form_index, compare_get_adjective_form_index, "motor_forma_do_adjetivo";
+    Prologue { address: 0x543f30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => staff_get_non_player_attribute, compare_staff_get_non_player_attribute, "motor_atributo_do_nao_jogador";
+    Prologue { address: 0x5442f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x0f, 0xbe, 0x54, 0x24, 0x08] } => player_attribute_rating_with_scaled_ability, compare_player_attribute_rating_with_scaled_ability, "motor_nota_relativa_com_habilidade_reduzida";
+    Prologue { address: 0x539b90, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x08] } => database_pick_first_name_by_weight, compare_database_pick_first_name_by_weight, "motor_primeiro_nome_pelo_peso";
+    Prologue { address: 0x53b7c0, bytes: &[0x66, 0xa1, 0x84, 0x31, 0xae, 0x00] } => database_get_comp_colours, compare_database_get_comp_colours, "motor_cores_da_competicao";
+    Prologue { address: 0x53b9a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => database_club_has_room_for_job, compare_database_club_has_room_for_job, "motor_clube_tem_vaga_para_cargo";
+    Prologue { address: 0x53bd10, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => database_add_staff_to_club, compare_database_add_staff_to_club, "motor_incluir_pessoa_no_clube";
+    Prologue { address: 0x6146b0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => match_club_key_id, compare_match_club_key_id, "motor_casar_chave_de_clube";
+    Prologue { address: 0x60ba80, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0xa4, 0x00, 0x9d, 0x00] } => remap_club_key_id, compare_remap_club_key_id, "motor_remapear_chave_de_clube";
+    Prologue { address: 0x60d810, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => match_nation_key_id, compare_match_nation_key_id, "motor_casar_chave_de_nacao";
+    Prologue { address: 0x60efd0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => match_club_comp_key_id, compare_match_club_comp_key_id, "motor_casar_chave_de_competicao_de_clube";
+    Prologue { address: 0x6115e0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => match_staff_comp_key_id, compare_match_staff_comp_key_id, "motor_casar_chave_de_competicao_de_pessoa";
+    Prologue { address: 0x54d5e0, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => db_files_read_continents, compare_db_files_read_continents, "motor_ler_continentes";
+    Prologue { address: 0x54d740, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => db_files_read_nations, compare_db_files_read_nations, "motor_ler_nacoes";
+    Prologue { address: 0x54d8a0, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => db_files_read_cities, compare_db_files_read_cities, "motor_ler_cidades";
+    Prologue { address: 0x54da00, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => db_files_read_stadiums, compare_db_files_read_stadiums, "motor_ler_estadios";
+    Prologue { address: 0x54e780, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => db_files_read_staff_v1, compare_db_files_read_staff_v1, "motor_ler_pessoas_157";
+    Prologue { address: 0x54fd60, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => db_files_read_staff_history, compare_db_files_read_staff_history, "motor_ler_historico_de_pessoas";
+    Prologue { address: 0x550230, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => db_files_read_comp_history, compare_db_files_read_comp_history, "motor_ler_historicos_de_competicao";
+    Prologue { address: 0x550380, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => db_files_read_staff_comps, compare_db_files_read_staff_comps, "motor_ler_competicoes_de_pessoal";
+    Prologue { address: 0x5504d0, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => db_files_read_staff_comp_history, compare_db_files_read_staff_comp_history, "motor_ler_historico_de_competicoes_de_pessoal";
+    Prologue { address: 0x5505c0, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => db_files_read_officials, compare_db_files_read_officials, "motor_ler_arbitros";
+    Prologue { address: 0x550710, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => db_files_read_colours, compare_db_files_read_colours, "motor_ler_cores";
+    Prologue { address: 0x550860, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => db_files_read_names, compare_db_files_read_names, "motor_ler_nomes";
+    Prologue { address: 0x54db50, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => db_files_read_clubs, compare_db_files_read_clubs, "motor_ler_clubes";
+    Prologue { address: 0x54feb0, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => db_files_read_comps, compare_db_files_read_comps, "motor_ler_competicoes";
+    Prologue { address: 0x54e880, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => db_files_read_players, compare_db_files_read_players, "motor_ler_nao_jogadores";
+    Prologue { address: 0x54f030, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => db_files_read_non_players, compare_db_files_read_non_players, "motor_ler_jogadores";
+    Prologue { address: 0x54e630, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => db_files_read_staff, compare_db_files_read_staff, "motor_ler_pessoas_110";
+    Prologue { address: 0x54fc10, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => db_files_read_staff_extra, compare_db_files_read_staff_extra, "motor_ler_preferencias";
+    Prologue { address: 0x54d6e0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] } => db_files_write_continents, compare_db_files_write_continents, "motor_gravar_continentes";
+    Prologue { address: 0x54d840, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] } => db_files_write_nations, compare_db_files_write_nations, "motor_gravar_nacoes";
+    Prologue { address: 0x54d9a0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] } => db_files_write_cities, compare_db_files_write_cities, "motor_gravar_cidades";
+    Prologue { address: 0x54daf0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] } => db_files_write_stadiums, compare_db_files_write_stadiums, "motor_gravar_estadios";
+    Prologue { address: 0x54e5d0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] } => db_files_write_clubs, compare_db_files_write_clubs, "motor_gravar_clubes";
+    Prologue { address: 0x54e720, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] } => db_files_write_staff, compare_db_files_write_staff, "motor_gravar_pessoas_110";
+    Prologue { address: 0x54efd0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] } => db_files_write_players, compare_db_files_write_players, "motor_gravar_nao_jogadores";
+    Prologue { address: 0x54fbb0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] } => db_files_write_non_players, compare_db_files_write_non_players, "motor_gravar_jogadores";
+    Prologue { address: 0x54fd00, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] } => db_files_write_staff_extra, compare_db_files_write_staff_extra, "motor_gravar_preferencias";
+    Prologue { address: 0x54fe50, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] } => db_files_write_staff_history, compare_db_files_write_staff_history, "motor_gravar_historico_de_pessoas";
+    Prologue { address: 0x5501d0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] } => db_files_write_comps, compare_db_files_write_comps, "motor_gravar_competicoes";
+    Prologue { address: 0x550320, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] } => db_files_write_comp_history, compare_db_files_write_comp_history, "motor_gravar_historicos_de_competicao";
+    Prologue { address: 0x550470, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] } => db_files_write_staff_comps, compare_db_files_write_staff_comps, "motor_gravar_competicoes_de_pessoal";
+    Prologue { address: 0x5506b0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] } => db_files_write_officials, compare_db_files_write_officials, "motor_gravar_arbitros";
+    Prologue { address: 0x550800, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] } => db_files_write_records_0x3a, compare_db_files_write_records_0x3a, "motor_gravar_registros_58";
+    Prologue { address: 0x550950, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] } => db_files_write_or_read_records_0x3c, compare_db_files_write_or_read_records_0x3c, "motor_gravar_nomes";
+    Prologue { address: 0x54d580, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x8b, 0x4c, 0x24, 0x04] } => db_files_open_for_read, compare_db_files_open_for_read, "motor_abrir_arquivo_do_banco";
+    Prologue { address: 0x54d5b0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x8b, 0x4c, 0x24, 0x04] } => db_files_open_for_write, compare_db_files_open_for_write, "motor_criar_arquivo_do_banco";
+    Prologue { address: 0x527ee0, bytes: &[0xa1, 0xcc, 0x23, 0xae, 0x00] } => database_free_staff_history_table, compare_database_free_staff_history_table, "motor_liberar_historico_de_pessoas";
+    Prologue { address: 0x527f20, bytes: &[0xa1, 0xe4, 0x23, 0xae, 0x00] } => database_free_staff_comp_history_table, compare_database_free_staff_comp_history_table, "motor_liberar_historico_de_premios";
+    Prologue { address: 0x527f60, bytes: &[0xa1, 0x7c, 0x23, 0xae, 0x00] } => database_grow_comp_history_table, compare_database_grow_comp_history_table, "motor_crescer_historico_de_competicoes";
+    Prologue { address: 0x540020, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] } => qsort_comparator_club_ids_by_reputation, compare_qsort_comparator_club_ids_by_reputation, "motor_ordem_dos_clubes_pela_reputacao";
+    Prologue { address: 0x5402f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] } => qsort_comparator_squad_by_player_0xb, compare_qsort_comparator_squad_by_player_0xb, "motor_ordem_do_elenco_pela_habilidade";
+    Prologue { address: 0x549c30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] } => compare_staff_by_player_ability_desc, compare_compare_staff_by_player_ability_desc, "motor_ordem_do_elenco_pela_habilidade_atual";
+    Prologue { address: 0x538ec0, bytes: &[0x81, 0xec, 0x78, 0x02, 0x00, 0x00] } => staff_normalise_player_physical_attributes, compare_staff_normalise_player_physical_attributes, "motor_normalizar_atributos_fisicos_do_jogador";
+    Prologue { address: 0x53a0e0, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x08] } => database_pick_second_name_by_weight, compare_database_pick_second_name_by_weight, "motor_segundo_nome_pelo_peso";
+    Prologue { address: 0x538bc0, bytes: &[0x81, 0xec, 0x74, 0x02, 0x00, 0x00] } => staff_normalise_player_attributes, compare_staff_normalise_player_attributes, "motor_normalizar_atributos_do_jogador";
+    Prologue { address: 0x54dc90, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x14] } => db_files_read_clubs_v1, compare_db_files_read_clubs_v1, "motor_ler_clubes_v1";
+    Prologue { address: 0x54e9a0, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x53] } => db_files_read_players_v1, compare_db_files_read_players_v1, "motor_ler_nao_jogadores_v1";
+    Prologue { address: 0x54f150, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x53] } => db_files_read_non_players_v1, compare_db_files_read_non_players_v1, "motor_ler_jogadores_v1";
+    Prologue { address: 0x54ffd0, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x53] } => db_files_read_comps_v1, compare_db_files_read_comps_v1, "motor_ler_competicoes_v1";
+    Prologue { address: 0x5453f0, bytes: &[0x6a, 0xff, 0x68, 0x5b, 0x79, 0x95, 0x00] } => nation_get_english_name, compare_nation_get_english_name, "motor_nome_ingles_da_nacao";
+    Prologue { address: 0x545770, bytes: &[0x6a, 0xff, 0x68, 0xdb, 0x79, 0x95, 0x00] } => club_get_english_short_name, compare_club_get_english_short_name, "motor_nome_curto_ingles_do_clube";
+    Prologue { address: 0x541e60, bytes: &[0xa1, 0x5c, 0x23, 0xae, 0x00] } => database_trim_senior_and_b_team_squads, compare_database_trim_senior_and_b_team_squads, "motor_cortar_elencos_de_a_e_b";
+    Prologue { address: 0x544970, bytes: &[0x83, 0xec, 0x10, 0xa1, 0x5c, 0x23, 0xae, 0x00] } => database_merge_b_team_staff, compare_database_merge_b_team_staff, "motor_juntar_o_time_b_ao_a";
+    Prologue { address: 0x539750, bytes: &[0xa1, 0x50, 0x23, 0xae, 0x00] } => database_build_nation_name_index, compare_database_build_nation_name_index, "motor_montar_indice_de_nomes";
+    Prologue { address: 0x53c190, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => database_remove_staff_from_club, compare_database_remove_staff_from_club, "motor_tirar_pessoa_do_clube";
+    Prologue { address: 0x53cd60, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => database_get_club_scouts, compare_database_get_club_scouts, "motor_olheiros_do_clube";
+    Prologue { address: 0x547770, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => club_is_in_season, compare_club_is_in_season, "motor_clube_em_temporada";
+    Prologue { address: 0x549e50, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => club_is_in_major_nation, compare_club_is_in_major_nation, "motor_clube_em_nacao_grande";
+    Prologue { address: 0x549ea0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => nation_is_major_nation, compare_nation_is_major_nation, "motor_nacao_grande";
+    Prologue { address: 0x549c90, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x85, 0xd2] } => staff_clear_opinion_links, compare_staff_clear_opinion_links, "motor_limpar_vinculos_de_opiniao";
+    Prologue { address: 0x549cf0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] } => staff_add_opinion_link, compare_staff_add_opinion_link, "motor_juntar_vinculo_de_opiniao";
+    Prologue { address: 0x549d60, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x85, 0xc9] } => staff_remove_opinion_link, compare_staff_remove_opinion_link, "motor_tirar_vinculo_de_opiniao";
+    Prologue { address: 0x53cb80, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => database_get_club_assistant, compare_database_get_club_assistant, "motor_auxiliar_do_clube";
+    Prologue { address: 0x53cc30, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => database_get_club_coaches, compare_database_get_club_coaches, "motor_treinadores_do_clube";
+    Prologue { address: 0x53c8d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => database_count_club_coaches, compare_database_count_club_coaches, "motor_contar_treinadores_do_clube";
+    Prologue { address: 0x5454c0, bytes: &[0x6a, 0xff, 0x68, 0x7b, 0x79, 0x95, 0x00] } => nation_get_english_three_letter_name, compare_nation_get_english_three_letter_name, "motor_sigla_inglesa_da_nacao";
+    Prologue { address: 0x5455a0, bytes: &[0x6a, 0xff, 0x68, 0x9b, 0x79, 0x95, 0x00] } => comp_get_english_name, compare_comp_get_english_name, "motor_nome_ingles_da_competicao";
+    Prologue { address: 0x5456a0, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0x79, 0x95, 0x00] } => staff_comp_get_english_name, compare_staff_comp_get_english_name, "motor_nome_ingles_da_competicao_de_pessoal";
+    Prologue { address: 0x545990, bytes: &[0x6a, 0xff, 0x68, 0x1b, 0x7a, 0x95, 0x00] } => stadium_get_english_name, compare_stadium_get_english_name, "motor_nome_ingles_do_estadio";
+    Prologue { address: 0x535930, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => database_language_file_exists, compare_database_language_file_exists, "motor_arquivo_do_idioma_existe";
+    Prologue { address: 0x544f30, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x46, 0x20] } => eng_lng_free_tables, compare_eng_lng_free_tables, "motor_liberar_tabelas_em_ingles";
+    Prologue { address: 0x527240, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] } => database_generate_extra_non_playing_staff, compare_database_generate_extra_non_playing_staff, "motor_gerar_comissao_extra";
+    Prologue { address: 0x5267c0, bytes: &[0x81, 0xec, 0x28, 0x06, 0x00, 0x00] } => database_trim_club_table, compare_database_trim_club_table, "motor_cortar_tabela_de_clubes";
+    Prologue { address: 0x539ae0, bytes: &[0x8b, 0x0d, 0x7c, 0x23, 0xae, 0x00] } => database_prune_comp_history_table, compare_database_prune_comp_history_table, "motor_podar_historico_de_competicoes";
+    Prologue { address: 0x5315a0, bytes: &[0x81, 0xec, 0x04, 0x06, 0x00, 0x00] } => resolve_database_indexes, compare_resolve_database_indexes, "motor_resolver_indices_do_banco";
+    Prologue { address: 0x53db40, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x84, 0xc0] } => database_sort_clubs_by_reputation, compare_database_sort_clubs_by_reputation, "motor_ordenar_clubes_pela_reputacao";
+    Prologue { address: 0x549100, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => club_has_enough_defenders, compare_club_has_enough_defenders, "motor_clube_tem_defensores";
+    Prologue { address: 0x549200, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => club_has_enough_midfielders, compare_club_has_enough_midfielders, "motor_clube_tem_meias";
+    Prologue { address: 0x5492c0, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => club_has_enough_strikers, compare_club_has_enough_strikers, "motor_clube_tem_atacantes";
+    Prologue { address: 0x5493c0, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => club_has_enough_hard_workers, compare_club_has_enough_hard_workers, "motor_clube_tem_esforcados";
+    Prologue { address: 0x549470, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x55] } => club_has_fit_goalkeeper, compare_club_has_fit_goalkeeper, "motor_clube_tem_goleiro";
+    Prologue { address: 0x549850, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => club_has_ball_winning_midfielders, compare_club_has_ball_winning_midfielders, "motor_clube_tem_meias_que_roubam";
+    Prologue { address: 0x5494d0, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => club_lacks_aerial_strikers, compare_club_lacks_aerial_strikers, "motor_faltam_atacantes_pelo_alto";
+    Prologue { address: 0x5495b0, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => club_lacks_aerial_defenders, compare_club_lacks_aerial_defenders, "motor_faltam_zagueiros_pelo_alto";
+    Prologue { address: 0x549690, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => club_lacks_fast_defenders, compare_club_lacks_fast_defenders, "motor_faltam_zagueiros_rapidos";
+    Prologue { address: 0x549770, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => club_has_fast_striker, compare_club_has_fast_striker, "motor_clube_tem_atacante_rapido";
+    Prologue { address: 0x549940, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => club_has_two_creative_midfielders, compare_club_has_two_creative_midfielders, "motor_clube_tem_meias_criativos";
+    Prologue { address: 0x549a30, bytes: &[0x81, 0xec, 0xcc, 0x00, 0x00, 0x00] } => club_squad_strength_band, compare_club_squad_strength_band, "motor_faixa_de_forca_do_elenco";
+    Prologue { address: 0x545e90, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] } => club_reputation_for_staff, compare_club_reputation_for_staff, "motor_reputacao_do_clube_para_pessoa";
+    Prologue { address: 0x547c90, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x32, 0xc0] } => staff_count_disliked_staff_at_club, compare_staff_count_disliked_staff_at_club, "motor_contar_rejeitados_no_clube";
+    Prologue { address: 0x547ce0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x32, 0xc0] } => staff_count_favoured_staff_at_club, compare_staff_count_favoured_staff_at_club, "motor_contar_favoritos_no_clube";
+    Prologue { address: 0x547f50, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x33, 0xd2] } => staff_remove_favoured_club, compare_staff_remove_favoured_club, "motor_tirar_clube_favorito";
+    Prologue { address: 0x547bd0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x33, 0xd2] } => club_remove_favoured_staff, compare_club_remove_favoured_staff, "motor_clube_tirar_pessoa_favorita";
+    Prologue { address: 0x547c10, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x33, 0xd2] } => staff_remove_favoured_staff, compare_staff_remove_favoured_staff, "motor_tirar_pessoa_favorita";
+    Prologue { address: 0x547c50, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x33, 0xd2] } => staff_remove_disliked_staff, compare_staff_remove_disliked_staff, "motor_tirar_pessoa_rejeitada";
+    Prologue { address: 0x548090, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x56] } => staff_get_favoured_staff, compare_staff_get_favoured_staff, "motor_pessoas_favoritas";
+    Prologue { address: 0x547870, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => club_add_favoured_staff, compare_club_add_favoured_staff, "motor_clube_acrescentar_pessoa_favorita";
+    Prologue { address: 0x547940, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => club_add_disliked_staff, compare_club_add_disliked_staff, "motor_clube_acrescentar_pessoa_rejeitada";
+    Prologue { address: 0x547a10, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] } => staff_add_favoured_staff, compare_staff_add_favoured_staff, "motor_acrescentar_pessoa_favorita";
+    Prologue { address: 0x547e70, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] } => staff_add_disliked_club, compare_staff_add_disliked_club, "motor_acrescentar_clube_rejeitado";
+    Prologue { address: 0x547f90, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => staff_fade_staff_relationships, compare_staff_fade_staff_relationships, "motor_esmaecer_relacoes";
+    Prologue { address: 0x5480f0, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x56] } => staff_get_disliked_staff, compare_staff_get_disliked_staff, "motor_pessoas_rejeitadas";
+    Prologue { address: 0x5481a0, bytes: &[0x51, 0x8b, 0x4c, 0x24, 0x08] } => staff_get_natural_position_mask, compare_staff_get_natural_position_mask, "motor_mascara_da_posicao_natural";
+    Prologue { address: 0x548150, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53] } => club_count_squad_with_position_mask, compare_club_count_squad_with_position_mask, "motor_contar_elenco_com_mascara";
+    Prologue { address: 0x548da0, bytes: &[0x83, 0xec, 0x10, 0x53, 0x8b, 0x5c, 0x24, 0x18] } => staff_pick_favoured_team_mate, compare_staff_pick_favoured_team_mate, "motor_escolher_companheiro_favorito";
+    Prologue { address: 0x5487b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => club_nation_is_not_argentina, compare_club_nation_is_not_argentina, "motor_clube_fora_da_argentina";
+    Prologue { address: 0x5487d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => club_nation_not_argentina_france_croatia, compare_club_nation_not_argentina_france_croatia, "motor_clube_fora_de_argentina_franca_croacia";
+    Prologue { address: 0x53d900, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0x1c, 0xf4, 0x9c, 0x00] } => database_is_melanesian_nation, compare_database_is_melanesian_nation, "motor_nacao_da_melanesia";
+    Prologue { address: 0x53d940, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0xd0, 0xf4, 0x9c, 0x00] } => database_is_polynesian_nation, compare_database_is_polynesian_nation, "motor_nacao_da_polinesia";
+    Prologue { address: 0x53ac40, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] } => database_get_coaching_job_name, compare_database_get_coaching_job_name, "motor_nome_do_cargo_de_treino";
+    Prologue { address: 0x540340, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => database_format_years_between_dates, compare_database_format_years_between_dates, "motor_anos_entre_datas_em_texto";
+    Prologue { address: 0x540080, bytes: &[0x81, 0xec, 0xa0, 0x0f, 0x00, 0x00] } => database_compare_clubs_by_short_name, compare_database_compare_clubs_by_short_name, "motor_ordem_dos_clubes_pelo_nome_curto";
+    Prologue { address: 0x540270, bytes: &[0x81, 0xec, 0xa0, 0x0f, 0x00, 0x00] } => database_compare_staff_by_full_name, compare_database_compare_staff_by_full_name, "motor_ordem_das_pessoas_pelo_nome_completo";
+    Prologue { address: 0x53e990, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => database_staff_matches_names, compare_database_staff_matches_names, "motor_pessoa_confere_com_os_nomes";
+    Prologue { address: 0x53fd40, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => database_compare_clubs_by_latitude, compare_database_compare_clubs_by_latitude, "motor_ordem_dos_clubes_pela_latitude";
+    Prologue { address: 0x53fe50, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => database_compare_clubs_by_longitude, compare_database_compare_clubs_by_longitude, "motor_ordem_dos_clubes_pela_longitude";
+    Prologue { address: 0x53e140, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => database_format_name_from_ids, compare_database_format_name_from_ids, "motor_nome_por_ids";
+    Prologue { address: 0x53eab0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => database_format_official_name, compare_database_format_official_name, "motor_nome_oficial";
+    Prologue { address: 0x5482f0, bytes: &[0x53, 0x57, 0x8b, 0x7c, 0x24, 0x10] } => position_mask_get_text, compare_position_mask_get_text, "motor_texto_da_mascara_da_posicao";
+    Prologue { address: 0x5461b0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => write_position_name, compare_write_position_name, "motor_nome_da_posicao";
+    Prologue { address: 0x5465a0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => write_player_description, compare_write_player_description, "motor_descricao_do_jogador";
+    Prologue { address: 0x548810, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8b, 0x5c, 0x24, 0x10] } => staff_is_best_favoured_candidate, compare_staff_is_best_favoured_candidate, "motor_melhor_candidato_a_favorito";
+    Prologue { address: 0x546ab0, bytes: &[0x83, 0xec, 0x0c, 0x8b, 0x44, 0x24, 0x14] } => staff_get_player_strength_flags, compare_staff_get_player_strength_flags, "motor_forcas_do_jogador";
+    Prologue { address: 0x5470d0, bytes: &[0x83, 0xec, 0x0c, 0x8b, 0x44, 0x24, 0x14] } => staff_get_player_weakness_flags, compare_staff_get_player_weakness_flags, "motor_fraquezas_do_jogador";
+    Prologue { address: 0x53c9b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => database_count_club_physios, compare_database_count_club_physios, "motor_contar_fisioterapeutas";
+    Prologue { address: 0x5448c0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => club_is_b_team, compare_club_is_b_team, "motor_clube_e_time_b";
+    Prologue { address: 0x544c70, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => club_collect_non_playing_staff, compare_club_collect_non_playing_staff, "motor_pessoas_fora_do_elenco";
+    Prologue { address: 0x543280, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] } => staff_is_player_attribute_visible, compare_staff_is_player_attribute_visible, "motor_atributo_visivel";
+    Prologue { address: 0x543440, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => staff_get_player_attribute_for_viewer, compare_staff_get_player_attribute_for_viewer, "motor_atributo_para_quem_ve";
+    Prologue { address: 0x543b10, bytes: &[0x8a, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => database_get_non_player_attribute_name, compare_database_get_non_player_attribute_name, "motor_nome_do_atributo_de_tecnico";
+    Prologue { address: 0x53ff60, bytes: &[0x81, 0xec, 0xa0, 0x0f, 0x00, 0x00] } => database_compare_staff_by_surname, compare_database_compare_staff_by_surname, "motor_ordem_das_pessoas_pelo_sobrenome";
+    Prologue { address: 0x53ffe0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] } => database_compare_clubs_by_reputation, compare_database_compare_clubs_by_reputation, "motor_ordem_dos_ponteiros_de_clube_pela_reputacao";
+    Prologue { address: 0x53d7d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x40, 0x53] } => database_club_nation_is_eec, compare_database_club_nation_is_eec, "motor_nacao_do_clube_na_cee";
+    Prologue { address: 0x545dc0, bytes: &[0xb0, 0x01, 0xb9, 0x04, 0x21, 0xae, 0x00] } => get_regions_sorted_by_name, compare_get_regions_sorted_by_name, "motor_regioes_pelo_nome";
+    Prologue { address: 0x545e00, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x90, 0x01, 0x00, 0x00] } => compare_region_names, compare_compare_region_names, "motor_ordem_das_regioes_pelo_nome";
+    Prologue { address: 0x549dd0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x33, 0xc0] } => staff_get_opinion_link_staff, compare_staff_get_opinion_link_staff, "motor_pessoa_da_opiniao";
+    Prologue { address: 0x53e2e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => database_format_name_from_strings, compare_database_format_name_from_strings, "motor_nome_pelos_textos";
+    Prologue { address: 0x53ad00, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] } => database_get_job_name, compare_database_get_job_name, "motor_nome_do_cargo";
+    Prologue { address: 0x53cee0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] } => database_get_language_name, compare_database_get_language_name, "motor_nome_do_idioma";
+    Prologue { address: 0x542100, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => club_get_national_team_name, compare_club_get_national_team_name, "motor_nome_da_selecao";
+    Prologue { address: 0x5428a0, bytes: &[0x8a, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => database_get_player_attribute_name, compare_database_get_player_attribute_name, "motor_nome_do_atributo_do_jogador";
+    Prologue { address: 0x53ee50, bytes: &[0xb8, 0xa4, 0x11, 0x00, 0x00] } => database_format_player_positions, compare_database_format_player_positions, "motor_texto_das_posicoes";
+    Prologue { address: 0x616f20, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_region_name, compare_get_region_name, "motor_nome_da_regiao";
+    Prologue { address: 0x6177f0, bytes: &[0x55, 0x8b, 0x6c, 0x24, 0x0c] } => get_continent_adjective, compare_get_continent_adjective, "motor_adjetivo_do_continente";
+    Prologue { address: 0x601a40, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] } => set_key_ids, compare_set_key_ids, "motor_definir_chaves_fixas";
+    Prologue { address: 0x603834, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] } => set_key_ids_1080, compare_set_key_ids_1080, "motor_definir_chaves_fixas_1080";
+    Prologue { address: 0x535a80, bytes: &[0x81, 0xec, 0x40, 0x0e, 0x00, 0x00] } => database_player_initialisation, compare_database_player_initialisation, "motor_inicializar_jogadores";
+    Prologue { address: 0x6181d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x55] } => nation_get_nationality_adjective, compare_nation_get_nationality_adjective, "motor_adjetivo_da_nacao";
+    Prologue { address: 0x6827d0, bytes: &[0x83, 0xec, 0x4c, 0x53, 0x55] } => sort_table, compare_sort_table, "motor_ordenar_tabela_da_liga";
+    Prologue { address: 0x682b30, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => build_h2h_table, compare_build_h2h_table, "motor_mini_tabela_do_confronto";
+    Prologue { address: 0x687970, bytes: &[0x51, 0x53, 0x55, 0x8b, 0x6c, 0x24, 0x10] } => free_table, compare_free_table, "motor_liberar_tabela_da_liga";
+    Prologue { address: 0x689ad0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] } => league_check_complete, compare_league_check_complete, "motor_liga_completa";
+    Prologue { address: 0x683010, bytes: &[0xa1, 0x38, 0x2a, 0xae, 0x00] } => pay_tv_rights, compare_pay_tv_rights, "motor_pagar_direitos_de_tv";
+    Prologue { address: 0x684640, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55] } => league_record_season_honours, compare_league_record_season_honours, "motor_registrar_honras_da_temporada";
+    Prologue { address: 0x4afce0, bytes: &[0xa1, 0x7c, 0x23, 0xae, 0x00] } => comp_util_add_history_record, compare_comp_util_add_history_record, "motor_acrescentar_ao_historico";
+    Prologue { address: 0x4b02e0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => comp_util_get_league_clash_type, compare_comp_util_get_league_clash_type, "motor_tipo_de_confronto_na_liga";
+    Prologue { address: 0x4c0720, bytes: &[0x81, 0xec, 0xf0, 0x01, 0x00, 0x00] } => comp_util_get_club_strength_score, compare_comp_util_get_club_strength_score, "motor_forca_do_clube";
+    Prologue { address: 0x4afd80, bytes: &[0x81, 0xec, 0x1c, 0x02, 0x00, 0x00] } => comp_util_get_latest_placed_club, compare_comp_util_get_latest_placed_club, "motor_clube_colocado_mais_recente";
+    Prologue { address: 0x5c88f0, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0xf9] } => find_friendly_match, compare_find_friendly_match, "motor_amistoso_do_clube";
+    Prologue { address: 0x5ae6a0, bytes: &[0x8b, 0x54, 0x24, 0x0c, 0x8b, 0x44, 0x24, 0x04] } => get_fixture_list_for_date, compare_get_fixture_list_for_date, "motor_lista_da_data";
+    Prologue { address: 0x5ac920, bytes: &[0x83, 0xec, 0x14, 0x8b, 0x44, 0x24, 0x18] } => find_next_fixture, compare_find_next_fixture, "motor_proxima_partida";
+    Prologue { address: 0x5ae870, bytes: &[0x83, 0xec, 0x14, 0x8b, 0x44, 0x24, 0x18] } => is_stadium_in_use, compare_is_stadium_in_use, "motor_estadio_em_uso";
+    Prologue { address: 0x5cbdd0, bytes: &[0x66, 0x0f, 0xbe, 0x01, 0x8b, 0x54, 0x24, 0x04] } => friendly_international_date_resolve, compare_friendly_international_date_resolve, "motor_data_do_amistoso_internacional";
+    Prologue { address: 0x774f30, bytes: &[0x83, 0xec, 0x08, 0x56, 0x57] } => end_duty_for_competition, compare_end_duty_for_competition, "motor_encerrar_convocacoes_da_competicao";
+    Prologue { address: 0x774f90, bytes: &[0x83, 0xec, 0x08, 0x56, 0x57] } => end_duty_for_nation_in_competition, compare_end_duty_for_nation_in_competition, "motor_encerrar_convocacoes_da_nacao";
+    Prologue { address: 0x7774b0, bytes: &[0xa1, 0x50, 0x23, 0xae, 0x00] } => prune_club_call_up_records, compare_prune_club_call_up_records, "motor_podar_registros_de_convocacao";
+    Prologue { address: 0x776250, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8a, 0x5c, 0x24, 0x14] } => add_player_to_squad, compare_add_player_to_squad, "motor_por_no_elenco_da_selecao";
+    Prologue { address: 0x7762f0, bytes: &[0x8a, 0x44, 0x24, 0x08, 0x56] } => national_teams_remove_player_from_squad, compare_national_teams_remove_player_from_squad, "motor_tirar_do_elenco_da_selecao";
+    Prologue { address: 0x76d880, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => release_overage_u21_players, compare_release_overage_u21_players, "motor_dispensar_acima_da_idade_do_sub21";
+    Prologue { address: 0x775000, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] } => clear_current_competition, compare_clear_current_competition, "motor_limpar_competicao_atual";
+    Prologue { address: 0x775070, bytes: &[0x51, 0xa1, 0x50, 0x23, 0xae, 0x00] } => release_competitions_of_continent, compare_release_competitions_of_continent, "motor_liberar_competicoes_do_continente";
+    Prologue { address: 0x775f90, bytes: &[0x83, 0xec, 0x18, 0x8b, 0x44, 0x24, 0x28] } => call_up_replacement, compare_call_up_replacement, "motor_convocar_substituto";
+    Prologue { address: 0x76abf0, bytes: &[0x83, 0xec, 0x28, 0xa1, 0x50, 0x23, 0xae, 0x00] } => build_selection_pools, compare_build_selection_pools, "motor_montar_reservas_das_selecoes";
+    Prologue { address: 0x778ed0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x08] } => compare_by_rating, compare_compare_by_rating, "motor_ordem_das_reservas";
+    Prologue { address: 0x778ef0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] } => compare_by_club, compare_compare_by_club, "motor_ordem_pelo_clube";
+    Prologue { address: 0x5c4cb0, bytes: &[0x83, 0xec, 0x1c, 0x89, 0x4c, 0x24, 0x00] } => find_friendly_opponent, compare_find_friendly_opponent, "motor_adversario_do_amistoso";
+    Prologue { address: 0x5c5040, bytes: &[0x83, 0xec, 0x20, 0x8b, 0x44, 0x24, 0x24] } => find_tour_opponent, compare_find_tour_opponent, "motor_adversario_da_excursao";
+    Prologue { address: 0x685f60, bytes: &[0x83, 0xec, 0x0c, 0x8b, 0xd1] } => apply_result_to_table, compare_apply_result_to_table, "motor_aplicar_resultado_na_tabela";
+    Prologue { address: 0x68aad0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x53] } => points_for_result, compare_points_for_result, "motor_pontos_do_resultado";
+    Prologue { address: 0x683410, bytes: &[0xa1, 0xfc, 0x79, 0xb6, 0x00] } => league_compare_table_rows_h2h, compare_league_compare_table_rows_h2h, "motor_ordem_pela_posicao_do_confronto";
+    Prologue { address: 0x685cf0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] } => league_compare_dates, compare_league_compare_dates, "motor_ordem_das_datas_da_liga";
+    Prologue { address: 0x68ab70, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x10] } => find_club_row, compare_find_club_row, "motor_linha_do_clube";
+    Prologue { address: 0x68abd0, bytes: &[0x53, 0x56, 0x8b, 0xb1, 0xb1, 0x00, 0x00, 0x00] } => contains_club, compare_contains_club, "motor_liga_tem_o_clube";
+    Prologue { address: 0x448230, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] } => rating_record_assign, compare_rating_record_assign, "motor_copiar_recorde_de_nota";
+    Prologue { address: 0x4484d0, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] } => man_of_match_record_assign, compare_man_of_match_record_assign, "motor_copiar_recorde_de_melhor_em_campo";
+    Prologue { address: 0x448500, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] } => discipline_record_assign, compare_discipline_record_assign, "motor_copiar_recorde_de_disciplina";
+    Prologue { address: 0x448530, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] } => count_record_assign, compare_count_record_assign, "motor_copiar_recorde_de_contagem";
+    Prologue { address: 0x4485b0, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] } => fans_player_record_assign, compare_fans_player_record_assign, "motor_copiar_recorde_do_torcedor";
+    Prologue { address: 0x450c60, bytes: &[0x56, 0x8b, 0xf1, 0x8d, 0x4e, 0x11] } => tally_record_construct, compare_tally_record_construct, "motor_construir_recorde_de_ocorrencias";
+    Prologue { address: 0x450d30, bytes: &[0x56, 0x8b, 0xf1, 0x8d, 0x4e, 0x12] } => count_record_construct, compare_count_record_construct, "motor_construir_recorde_de_contagem";
+    Prologue { address: 0x448550, bytes: &[0x83, 0xec, 0x08, 0x56, 0x57] } => transfer_fee_record_assign, compare_transfer_fee_record_assign, "motor_copiar_recorde_de_valor";
+    Prologue { address: 0x451570, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] } => goals_in_match_record_assign, compare_goals_in_match_record_assign, "motor_copiar_recorde_de_gols_na_partida";
+    Prologue { address: 0x786010, bytes: &[0x83, 0xec, 0x08, 0xba, 0x32, 0x00, 0x00, 0x00] } => news_operator, compare_news_operator, "motor_copiar_noticia";
+    Prologue { address: 0x8cb940, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x83, 0xec, 0x08] } => past_transfer_copy_construct, compare_past_transfer_copy_construct, "motor_copiar_transferencia_passada";
+    Prologue { address: 0x8cbf40, bytes: &[0x83, 0xec, 0x08, 0x8d, 0x44, 0x24, 0x00] } => future_transfer_assign, compare_future_transfer_assign, "motor_copiar_transferencia_futura";
+    Prologue { address: 0x7a8b70, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x83, 0xec, 0x08] } => regen_queue_entry_assign, compare_regen_queue_entry_assign, "motor_copiar_entrada_da_fila_de_regens";
+    Prologue { address: 0x842080, bytes: &[0x8b, 0x01, 0x83, 0xec, 0x08] } => is_on_shortlist, compare_is_on_shortlist, "motor_esta_na_lista_de_observados";
+    Prologue { address: 0x7a6e60, bytes: &[0x51, 0xa1, 0x64, 0x23, 0xae, 0x00] } => player_regen_pick_staff_for_non_player_data, compare_player_regen_pick_staff_for_non_player_data, "motor_escolher_doador_de_dados";
+    Prologue { address: 0x556c70, bytes: &[0x83, 0xec, 0x08, 0x55, 0x56] } => discipline_operator, compare_discipline_operator, "motor_copiar_registro_de_suspensao";
+    Prologue { address: 0x8626e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] } => set_default_wage, compare_set_default_wage, "motor_salario_padrao_do_contrato";
+    Prologue { address: 0x62c510, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => get_match_condition, compare_get_match_condition, "motor_condicao_de_jogo_do_jogador";
+    Prologue { address: 0x85fa00, bytes: &[0xa1, 0x94, 0x2c, 0xae, 0x00] } => days_to_end_date, compare_days_to_end_date, "motor_dias_ate_o_fim_do_contrato";
+    Prologue { address: 0x867520, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x06] } => clear_all_grievances, compare_clear_all_grievances, "motor_limpar_todas_as_queixas";
+    Prologue { address: 0x867240, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0x8b, 0x06] } => check_transfer_request_withdrawal, compare_check_transfer_request_withdrawal, "motor_conferir_retirada_do_pedido";
+    Prologue { address: 0x4cbb60, bytes: &[0x51, 0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x14] } => get_squad_placement, compare_get_squad_placement, "motor_lugar_no_elenco";
+    Prologue { address: 0x4cc0b0, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] } => move_to_first_team, compare_move_to_first_team, "motor_subir_para_o_principal";
+    Prologue { address: 0x4cc0f0, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] } => move_to_reserves, compare_move_to_reserves, "motor_descer_para_os_reservas";
+    Prologue { address: 0x4cc810, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] } => contract_manager_operator, compare_contract_manager_operator, "motor_copiar_contrato_de_pessoal";
+    Prologue { address: 0x4cb0a0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x10] } => contract_manager_raise_match_morale, compare_contract_manager_raise_match_morale, "motor_subir_moral_pela_partida";
+    Prologue { address: 0x4ca1c0, bytes: &[0x51, 0x8b, 0xc1, 0x53, 0x33, 0xdb] } => remove_talks_records, compare_remove_talks_records, "motor_tirar_conversas_de_contrato";
+    Prologue { address: 0x7549b0, bytes: &[0x51, 0x8b, 0xc1, 0x33, 0xd2] } => remove_transfer_interest, compare_remove_transfer_interest, "motor_tirar_interesses_de_transferencia";
+    Prologue { address: 0x7f8ee0, bytes: &[0x83, 0xec, 0x1c, 0x53, 0x8b, 0xd9] } => remove_scout_request, compare_remove_scout_request, "motor_tirar_pedido_de_observacao";
+    Prologue { address: 0x5fff30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x83, 0xec, 0x24] } => remove_nickname_from_all, compare_remove_nickname_from_all, "motor_tirar_apelido_de_todos";
+    Prologue { address: 0x7a8690, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x53] } => remove_retirement, compare_remove_retirement, "motor_tirar_aposentadoria_pendente";
+    Prologue { address: 0x7a8050, bytes: &[0xa1, 0x54, 0x1f, 0xde, 0x00] } => player_regen_check_unemployed_retirement, compare_player_regen_check_unemployed_retirement, "motor_aposentadoria_do_desempregado";
+    Prologue { address: 0x8c7470, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => transfer_manager_offer_needs_work_permit, compare_transfer_manager_offer_needs_work_permit, "motor_oferta_precisa_de_permissao";
+    Prologue { address: 0x8c7330, bytes: &[0x51, 0x55, 0x56, 0x8b, 0xf1] } => update_work_permits, compare_update_work_permits, "motor_atualizar_permissoes_de_trabalho";
+    Prologue { address: 0x7ae950, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x86, 0x80, 0x01, 0x00, 0x00] } => get_scout, compare_get_scout, "motor_olheiro_da_busca";
+    Prologue { address: 0x690c30, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x53] } => get_current_run, compare_get_current_run, "motor_sequencia_atual_do_clube";
+    Prologue { address: 0x450d40, bytes: &[0x56, 0x8b, 0xf1, 0x8d, 0x4e, 0x10] } => record_holder_construct, compare_record_holder_construct, "motor_construir_recordista";
+    Prologue { address: 0x72b940, bytes: &[0x83, 0xec, 0x50, 0x53, 0x56] } => pick_rival_manager_id, compare_pick_rival_manager_id, "motor_tecnico_rival_para_comentar";
+    Prologue { address: 0x4485d0, bytes: &[0x6a, 0xff, 0x68, 0x5b, 0x54, 0x95, 0x00] } => transfer_fee_record_construct, compare_transfer_fee_record_construct, "motor_construir_recorde_de_valor_pago";
+    Prologue { address: 0x448620, bytes: &[0x6a, 0xff, 0x68, 0x7b, 0x54, 0x95, 0x00] } => transfer_fee_record_construct_2, compare_transfer_fee_record_construct_2, "motor_construir_recorde_de_valor_recebido";
+    Prologue { address: 0x448670, bytes: &[0x6a, 0xff, 0x68, 0x9b, 0x54, 0x95, 0x00] } => run_record_construct, compare_run_record_construct, "motor_construir_recorde_de_sequencia";
+    Prologue { address: 0x450ad0, bytes: &[0x6a, 0xff, 0x68, 0x9b, 0x56, 0x95, 0x00] } => won_run_record_construct, compare_won_run_record_construct, "motor_construir_recorde_de_vitorias_seguidas";
+    Prologue { address: 0x450b20, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0x56, 0x95, 0x00] } => lost_run_record_construct, compare_lost_run_record_construct, "motor_construir_recorde_de_derrotas_seguidas";
+    Prologue { address: 0x450b70, bytes: &[0x6a, 0xff, 0x68, 0xdb, 0x56, 0x95, 0x00] } => unbeaten_run_record_construct, compare_unbeaten_run_record_construct, "motor_construir_recorde_de_invencibilidade";
+    Prologue { address: 0x450bc0, bytes: &[0x6a, 0xff, 0x68, 0xfb, 0x56, 0x95, 0x00] } => winless_run_record_construct, compare_winless_run_record_construct, "motor_construir_recorde_sem_vencer";
+    Prologue { address: 0x450c10, bytes: &[0x6a, 0xff, 0x68, 0x1b, 0x57, 0x95, 0x00] } => goals_in_match_record_construct, compare_goals_in_match_record_construct, "motor_construir_recorde_de_gols_na_partida";
+    Prologue { address: 0x450c70, bytes: &[0x6a, 0xff, 0x68, 0x43, 0x57, 0x95, 0x00] } => youngest_player_record_construct, compare_youngest_player_record_construct, "motor_construir_recorde_do_mais_novo";
+    Prologue { address: 0x8e05a0, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] } => write_deadline_news_text, compare_write_deadline_news_text, "motor_texto_do_fim_do_prazo";
+    Prologue { address: 0x8d0530, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x0c] } => can_end_loan, compare_can_end_loan, "motor_pode_encerrar_emprestimo";
+    Prologue { address: 0x5d5a20, bytes: &[0xdd, 0x44, 0x24, 0x04, 0xdd, 0x44, 0x24, 0x0c] } => pow_double, compare_pow_double, "motor_pow_do_game";
+    Prologue { address: 0x4cf560, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x46, 0x38] } => remove_held_offers, compare_remove_held_offers, "motor_tirar_ofertas_guardadas";
+    Prologue { address: 0x5563f0, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => hold_bans_for_loan, compare_hold_bans_for_loan, "motor_guardar_suspensoes_do_emprestado";
+    Prologue { address: 0x8cb6d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fill_vacated_staff_job, compare_fill_vacated_staff_job, "motor_preencher_vaga_da_comissao";
+    Prologue { address: 0x786520, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => send_to_nation_club_managers, compare_send_to_nation_club_managers, "motor_noticia_para_os_tecnicos_da_nacao";
+    Prologue { address: 0x7aefd0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_scout_assignment, compare_get_scout_assignment, "motor_missao_do_olheiro";
+    Prologue { address: 0x521e00, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0x8a, 0x86, 0xb1, 0x00, 0x00, 0x00] } => cup_check_complete, compare_cup_check_complete, "motor_copa_completa";
+    Prologue { address: 0x450cd0, bytes: &[0x6a, 0xff, 0x68, 0x63, 0x57, 0x95, 0x00] } => oldest_player_record_construct, compare_oldest_player_record_construct, "motor_construir_recorde_do_mais_velho";
+    Prologue { address: 0x8c7260, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x83, 0xec, 0x10] } => find_work_permit, compare_find_work_permit, "motor_permissao_de_trabalho_de";
+    Prologue { address: 0x84b180, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => passes_work_permit_check, compare_passes_work_permit_check, "motor_passa_na_permissao";
+    Prologue { address: 0x5567d0, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] } => drop_held_bans, compare_drop_held_bans, "motor_soltar_suspensoes_guardadas";
+    Prologue { address: 0x4ccbf0, bytes: &[0x56, 0x57, 0x8b, 0xf9, 0x8b, 0x47, 0x34] } => remove_pending_offers_for_staff, compare_remove_pending_offers_for_staff, "motor_tirar_ofertas_pendentes";
+    Prologue { address: 0x4cc930, bytes: &[0x56, 0x57, 0x8b, 0xf9, 0x8b, 0x47, 0x34] } => schedule_decision_for_transfer, compare_schedule_decision_for_transfer, "motor_marcar_decisao_da_transferencia";
+    Prologue { address: 0x786780, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => send_to_all_managers, compare_send_to_all_managers, "motor_noticia_para_todos_os_tecnicos";
+    Prologue { address: 0x7862d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => send_to_division_managers, compare_send_to_division_managers, "motor_noticia_para_os_tecnicos_da_divisao";
+    Prologue { address: 0x7863f0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => send_to_nation_managers, compare_send_to_nation_managers, "motor_noticia_para_os_tecnicos_do_pais";
+    Prologue { address: 0x4486c0, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] } => offer_breaks_fee_record, compare_offer_breaks_fee_record, "motor_oferta_bate_o_recorde";
+    Prologue { address: 0x62c590, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => get_condition, compare_get_condition, "motor_condicao_do_jogador";
+    Prologue { address: 0x8cf7e0, bytes: &[0x83, 0xec, 0x2c, 0x33, 0xc0] } => get_selection_limit, compare_get_selection_limit, "motor_limite_de_escalacao";
+    Prologue { address: 0x5fe8d0, bytes: &[0x51, 0x53, 0x55, 0x56, 0x33, 0xdb] } => clear_invalid_watched_fixtures, compare_clear_invalid_watched_fixtures, "motor_limpar_partidas_assistidas";
+    Prologue { address: 0x7f9690, bytes: &[0x51, 0x53, 0x8b, 0x5c, 0x24, 0x10] } => collect_club_scout_targets, compare_collect_club_scout_targets, "motor_alvos_dos_olheiros_do_clube";
+    Prologue { address: 0x7ae8a0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x83, 0xcb, 0xff] } => set_scout, compare_set_scout, "motor_trocar_olheiro_da_busca";
+    Prologue { address: 0x6951e0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => update_board_after_fixture, compare_update_board_after_fixture, "motor_diretoria_depois_da_partida";
+    Prologue { address: 0x55ca00, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => process_match, compare_process_match, "motor_disciplina_da_partida";
+    Prologue { address: 0x8420e0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8b, 0x5c, 0x24, 0x10] } => collect_club_shortlist_entries, compare_collect_club_shortlist_entries, "motor_entradas_do_clube_na_shortlist";
+    Prologue { address: 0x8cc930, bytes: &[0x51, 0x53, 0x8b, 0xd9, 0x8b, 0x4c, 0x24, 0x0c] } => find_highest_offer_for_player, compare_find_highest_offer_for_player, "motor_maior_oferta_pelo_jogador";
+    Prologue { address: 0x452710, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_all_time_record, compare_get_all_time_record, "motor_recordes_de_sempre";
+    Prologue { address: 0x4528d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_season_record, compare_get_season_record, "motor_recordes_da_temporada";
+    Prologue { address: 0x452cb0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => queue_record_news, compare_queue_record_news, "motor_guardar_noticia_de_recorde";
+    Prologue { address: 0x7a81a0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => add_spare_non_player_record, compare_add_spare_non_player_record, "motor_acrescentar_reserva_de_tecnico";
+    Prologue { address: 0x7a8510, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => add_retirement, compare_add_retirement, "motor_acrescentar_aposentadoria";
+    Prologue { address: 0x7a87d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => queue_staff_for_regen, compare_queue_staff_for_regen, "motor_guardar_vaga_para_regen";
+    Prologue { address: 0x4cd030, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x8b, 0x5c, 0x24, 0x14] } => trigger_relegation_clauses, compare_trigger_relegation_clauses, "motor_acionar_clausulas_de_rebaixamento";
+    Prologue { address: 0x4cca70, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x53] } => remove_contract_offer, compare_remove_contract_offer, "motor_tirar_oferta_de_contrato";
+    Prologue { address: 0x55d270, bytes: &[0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x10] } => is_player_suspended, compare_is_player_suspended, "motor_esta_suspenso";
+    Prologue { address: 0x8d2fa0, bytes: &[0x8b, 0x15, 0x84, 0xf6, 0x9c, 0x00] } => get_fixture_rules_scope, compare_get_fixture_rules_scope, "motor_escopo_das_regras_da_partida";
+    Prologue { address: 0x8cf5e0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] } => get_ineligibility_code, compare_get_ineligibility_code, "motor_codigo_de_inelegibilidade";
+    Prologue { address: 0x5c6740, bytes: &[0x6a, 0xff, 0x68, 0xf8, 0xa0, 0x95, 0x00] } => find_scheduled_friendly_slot, compare_find_scheduled_friendly_slot, "motor_vaga_do_amistoso";
+    Prologue { address: 0x786640, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => send_to_continent_managers, compare_send_to_continent_managers, "motor_noticia_para_os_tecnicos_do_continente";
+    Prologue { address: 0x786860, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => send_to_comp_region, compare_send_to_comp_region, "motor_noticia_para_a_regiao_da_competicao";
+    Prologue { address: 0x784eb0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => is_important_for, compare_is_important_for, "motor_noticia_importante_para_a_pessoa";
+    Prologue { address: 0x785a20, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_slot_string, compare_get_slot_string, "motor_texto_do_dado_da_noticia";
+    Prologue { address: 0x74ae60, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_financial_trouble_news, compare_post_financial_trouble_news, "motor_noticia_de_apuro_financeiro";
+    Prologue { address: 0x7f9190, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => can_club_scout_nation, compare_can_club_scout_nation, "motor_olheiros_cobrem_a_nacao";
+    Prologue { address: 0x7c6830, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56] } => get_language_fluency, compare_get_language_fluency, "motor_fluencia_no_idioma";
+    Prologue { address: 0x86fb80, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => rewind_staff_history, compare_rewind_staff_history, "motor_recomecar_historico_da_pessoa";
+    Prologue { address: 0x5b2ba0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x1c, 0x02, 0x00, 0x00] } => set_slot_position, compare_set_slot_position, "motor_posicao_na_formacao";
+    Prologue { address: 0x8cdc90, bytes: &[0x6a, 0xff, 0x68, 0x18, 0x3f, 0x96, 0x00] } => club_has_offer_for_player, compare_club_has_offer_for_player, "motor_clube_tem_oferta_pelo_jogador";
+    Prologue { address: 0x8cdd80, bytes: &[0x6a, 0xff, 0x68, 0x38, 0x3f, 0x96, 0x00] } => find_club_offer_for_player, compare_find_club_offer_for_player, "motor_oferta_do_clube_pelo_jogador";
+    Prologue { address: 0x8cd150, bytes: &[0x6a, 0xff, 0x68, 0xd8, 0x3e, 0x96, 0x00] } => player_has_pending_offer, compare_player_has_pending_offer, "motor_jogador_com_oferta_pendente";
+    Prologue { address: 0x8cde70, bytes: &[0x6a, 0xff, 0x68, 0x58, 0x3f, 0x96, 0x00] } => is_player_under_offer, compare_is_player_under_offer, "motor_jogador_sob_oferta";
+    Prologue { address: 0x8d0a70, bytes: &[0x6a, 0xff, 0x68, 0x5b, 0x40, 0x96, 0x00] } => player_club_uses_bosman, compare_player_club_uses_bosman, "motor_clube_do_jogador_com_lei_bosman";
+    Prologue { address: 0x8cdb80, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => check_board_veto, compare_check_board_veto, "motor_veto_da_diretoria_na_oferta";
+    Prologue { address: 0x8cb810, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => add_past_transfer, compare_add_past_transfer, "motor_guardar_transferencia_passada";
+    Prologue { address: 0x8c7070, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => add_work_permit, compare_add_work_permit, "motor_dar_permissao_de_trabalho";
+    Prologue { address: 0x8cac40, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => add_first_team_appearance_money, compare_add_first_team_appearance_money, "motor_guardar_premio_por_jogo_no_time";
+    Prologue { address: 0x4c79a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_free_staff_contract_space, compare_get_free_staff_contract_space, "motor_vaga_livre_de_contrato";
+    Prologue { address: 0x4c7950, bytes: &[0x56, 0x8b, 0xf1, 0x6a, 0x01] } => add_staff_contract, compare_add_staff_contract, "motor_acrescentar_contrato_da_pessoa";
+    Prologue { address: 0x4cd6d0, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => add_decision_date, compare_add_decision_date, "motor_acrescentar_data_de_decisao";
+    Prologue { address: 0x866ee0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x33, 0xdb] } => reset_morale_state, compare_reset_morale_state, "motor_zerar_moral_do_contrato";
+    Prologue { address: 0x85e590, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => init_from_current_contract, compare_init_from_current_contract, "motor_contrato_pelo_atual";
+    Prologue { address: 0x867d30, bytes: &[0x56, 0x57, 0x8b, 0xf9, 0x8a, 0x47, 0x35] } => get_expiry_band, compare_get_expiry_band, "motor_faixa_do_vencimento";
+    Prologue { address: 0x757a50, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => log_story, compare_log_story, "motor_registrar_historia_da_midia";
+    Prologue { address: 0x757c70, bytes: &[0x83, 0xec, 0x24, 0x53, 0x8b, 0xd9] } => expire_story_log, compare_expire_story_log, "motor_expirar_historias_da_midia";
+    Prologue { address: 0x757da0, bytes: &[0x83, 0xec, 0x20, 0x55, 0x56] } => has_logged_story, compare_has_logged_story, "motor_historia_ja_registrada";
+    Prologue { address: 0x754740, bytes: &[0x81, 0xec, 0x24, 0x02, 0x00, 0x00] } => add_transfer_interest, compare_add_transfer_interest, "motor_acrescentar_interesse_de_transferencia";
+    Prologue { address: 0x757ea0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] } => compare_id_pair_keys, compare_compare_id_pair_keys, "motor_ordem_das_chaves_de_ids";
+    Prologue { address: 0x757ee0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] } => compare_story_log_records, compare_compare_story_log_records, "motor_ordem_das_historias";
+    Prologue { address: 0x51c020, bytes: &[0x81, 0xec, 0xe8, 0x05, 0x00, 0x00] } => decide_fixture_winner, compare_decide_fixture_winner, "motor_decidir_jogo_da_copa";
+    Prologue { address: 0x51f2f0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => decide_tie_winner, compare_decide_tie_winner, "motor_decidir_confronto_da_copa";
+    Prologue { address: 0x51ebc0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => cup_compare_draw_entries_by_seed, compare_cup_compare_draw_entries_by_seed, "motor_ordem_dos_cabecas_de_chave";
+    Prologue { address: 0x687430, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => init_table_row, compare_init_table_row, "motor_iniciar_linha_da_tabela";
+    Prologue { address: 0x687a20, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => league_get_club_array, compare_league_get_club_array, "motor_vetor_dos_clubes_da_liga";
+    Prologue { address: 0x68aa30, bytes: &[0x53, 0x33, 0xdb, 0x66, 0x39, 0x59, 0x3e] } => record_final_positions, compare_record_final_positions, "motor_gravar_posicoes_finais_da_liga";
+    Prologue { address: 0x6830b0, bytes: &[0x8b, 0x0d, 0xf0, 0x7e, 0xdd, 0x00] } => move_club_to_division, compare_move_club_to_division, "motor_mudar_clube_de_divisao";
+    Prologue { address: 0x4afb40, bytes: &[0x56, 0x57, 0x0f, 0xbf, 0x74, 0x24, 0x10] } => comp_util_shuffle_pointer_array, compare_comp_util_shuffle_pointer_array, "motor_embaralhar_ponteiros";
+    Prologue { address: 0x4afbd0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => comp_util_sort_and_shuffle_top_clubs, compare_comp_util_sort_and_shuffle_top_clubs, "motor_ordenar_e_embaralhar_os_melhores";
+    Prologue { address: 0x556e90, bytes: &[0x83, 0xec, 0x10, 0x0f, 0xbe, 0x44, 0x24, 0x18] } => update_ban_progress, compare_update_ban_progress, "motor_contar_jogo_da_suspensao";
+    Prologue { address: 0x556d00, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] } => release_ban, compare_release_ban, "motor_soltar_suspensao";
+    Prologue { address: 0x55e1d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => clear_ban_history, compare_clear_ban_history, "motor_apagar_historico_de_suspensoes";
+    Prologue { address: 0x62e500, bytes: &[0x83, 0xec, 0x10, 0x53, 0x55] } => roll_recurring_injury, compare_roll_recurring_injury, "motor_sortear_lesao_recorrente";
+    Prologue { address: 0x631f90, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => reset_player_history, compare_reset_player_history, "motor_recomecar_historico_de_lesoes";
+    Prologue { address: 0x62bfa0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] } => injury_reset_player, compare_injury_reset_player, "motor_reiniciar_fisico_do_jogador";
+    Prologue { address: 0x448ad0, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x0c] } => add_transfer_totals, compare_add_transfer_totals, "motor_somar_totais_de_transferencia";
+    Prologue { address: 0x448cb0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => club_records_update_career_records, compare_club_records_update_career_records, "motor_recordes_de_carreira_no_clube";
+    Prologue { address: 0x452a90, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] } => update_season_rating_record, compare_update_season_rating_record, "motor_recorde_de_nota_da_temporada";
+    Prologue { address: 0x5c29b0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => is_comp_current_on_date, compare_is_comp_current_on_date, "motor_competicao_na_data_do_amistoso";
+    Prologue { address: 0x5c45a0, bytes: &[0x6a, 0xff, 0x68, 0x00, 0xa0, 0x95, 0x00] } => candidate_has_nearby_date, compare_candidate_has_nearby_date, "motor_amistoso_perto_da_data";
+    Prologue { address: 0x5c4b60, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => add_planned_friendly, compare_add_planned_friendly, "motor_acrescentar_amistoso_planejado";
+    Prologue { address: 0x786090, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x18] } => send_by_scope, compare_send_by_scope, "motor_noticia_pelo_alcance";
+    Prologue { address: 0x7861e0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => send_to_club_manager, compare_send_to_club_manager, "motor_noticia_ao_tecnico_do_clube";
+    Prologue { address: 0x785d40, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => deliver_to_manager, compare_deliver_to_manager, "motor_entregar_noticia_ao_tecnico";
+    Prologue { address: 0x7874b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => auto_respond_all, compare_auto_respond_all, "motor_responder_todas_as_noticias";
+    Prologue { address: 0x787350, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => has_urgent_items, compare_has_urgent_items, "motor_tecnico_tem_noticia_pendente";
+    Prologue { address: 0x7858c0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => set_slot_string, compare_set_slot_string, "motor_gravar_texto_na_noticia";
+    Prologue { address: 0x736720, bytes: &[0x83, 0xec, 0x10, 0x55, 0x8b, 0x6c, 0x24, 0x1c] } => rate_player_form_for_story, compare_rate_player_form_for_story, "motor_nota_do_jogador_para_a_historia";
+    Prologue { address: 0x74af60, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x53] } => write_financial_trouble_news_text, compare_write_financial_trouble_news_text, "motor_texto_da_crise_financeira";
+    Prologue { address: 0x786960, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => get_inbox_items, compare_get_inbox_items, "motor_noticias_da_caixa";
+    Prologue { address: 0x7aace0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => retire_from_playing_staff, compare_retire_from_playing_staff, "motor_aposentar_do_elenco";
+    Prologue { address: 0x7ad0e0, bytes: &[0x83, 0xec, 0x14, 0x89, 0x4c, 0x24, 0x10] } => pick_best_club_for_player, compare_pick_best_club_for_player, "motor_melhor_clube_para_o_jovem";
+    Prologue { address: 0x7ad590, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] } => pick_club_from_nation_list, compare_pick_club_from_nation_list, "motor_clube_da_nacao_para_o_jovem";
+    Prologue { address: 0x69d060, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => fix_missing_jobs, compare_fix_missing_jobs, "motor_abrir_vagas_que_faltam";
+    Prologue { address: 0x69c540, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] } => best_manager_candidate_score, compare_best_manager_candidate_score, "motor_melhor_nota_de_candidato_a_tecnico";
+    Prologue { address: 0x8c6220, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => schedule_offer, compare_schedule_offer, "motor_agendar_oferta";
+    Prologue { address: 0x849f00, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] } => get_squad_status_for_club, compare_get_squad_status_for_club, "motor_estatuto_no_elenco_pelo_clube";
+    Prologue { address: 0x849d60, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] } => shortlist_manager_estimate_squad_status, compare_shortlist_manager_estimate_squad_status, "motor_estimar_estatuto_no_elenco";
+    Prologue { address: 0x844660, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8b, 0x5c, 0x24, 0x14] } => shortlist_manager_release_club_slot_targets, compare_shortlist_manager_release_club_slot_targets, "motor_liberar_alvos_da_lista_do_clube";
+    Prologue { address: 0x7b7490, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55] } => scout_covers_nation, compare_scout_covers_nation, "motor_busca_cobre_a_nacao";
+    Prologue { address: 0x5c87b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => remove_friendly_match, compare_remove_friendly_match, "motor_tirar_amistoso_marcado";
+    Prologue { address: 0x5cc2d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => init_banned_nation_pairs, compare_init_banned_nation_pairs, "motor_iniciar_pares_proibidos_de_amistoso";
+    Prologue { address: 0x696570, bytes: &[0x83, 0xec, 0x08, 0x89, 0x4c, 0x24, 0x00] } => assess_transfer_deal, compare_assess_transfer_deal, "motor_avaliar_o_negocio_da_transferencia";
+    Prologue { address: 0x6978f0, bytes: &[0x51, 0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] } => apply_transfer_confidence_changes, compare_apply_transfer_confidence_changes, "motor_confianca_da_diretoria_na_transferencia";
+    Prologue { address: 0x6ac470, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56] } => resolve_board_ultimatum, compare_resolve_board_ultimatum, "motor_resolver_o_ultimato_da_diretoria";
+    Prologue { address: 0x4d0b50, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => remove_contract, compare_remove_contract, "motor_tirar_o_contrato_principal";
+    Prologue { address: 0x4cf4a0, bytes: &[0x55, 0x56, 0x57, 0x8b, 0xf9] } => resubmit_held_offers, compare_resubmit_held_offers, "motor_reenviar_ofertas_guardadas";
+    Prologue { address: 0x4d45f0, bytes: &[0x6a, 0xff, 0x68, 0x40, 0x6e, 0x95, 0x00] } => contract_manager_season_end_month, compare_contract_manager_season_end_month, "motor_mes_do_fim_da_temporada_do_clube";
+    Prologue { address: 0x86dda0, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] } => staff_records_daily_update, compare_staff_records_daily_update, "motor_pontos_dos_tecnicos_no_dia";
+    Prologue { address: 0x86d6e0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x53] } => staff_records_end_season_for_nation, compare_staff_records_end_season_for_nation, "motor_pontos_dos_tecnicos_no_fim_da_competicao";
+    Prologue { address: 0x86f950, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] } => find_manager_of_the_month, compare_find_manager_of_the_month, "motor_tecnico_do_mes_na_liga";
+    Prologue { address: 0x69b650, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => process_pending_departures, compare_process_pending_departures, "motor_saidas_pendentes_dos_tecnicos";
+    Prologue { address: 0x690730, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => manager_manager_remove_player_from_squad, compare_manager_manager_remove_player_from_squad, "motor_tirar_jogador_do_elenco_do_clube";
+    Prologue { address: 0x690890, bytes: &[0x8b, 0x0d, 0x50, 0x10, 0xae, 0x00] } => remove_staff_from_club, compare_remove_staff_from_club, "motor_tirar_pessoa_do_cargo_no_clube";
+    Prologue { address: 0x77bbe0, bytes: &[0x6a, 0xff, 0x68, 0xfe, 0xe0, 0x95, 0x00] } => construct_news_item, compare_construct_news_item, "motor_construir_noticia";
+    Prologue { address: 0x738340, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => adjust_supporter_confidence, compare_adjust_supporter_confidence, "motor_ajustar_confianca_da_torcida";
+    Prologue { address: 0x7386f0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => adjust_board_confidence, compare_adjust_board_confidence, "motor_ajustar_confianca_da_diretoria";
+    Prologue { address: 0x735870, bytes: &[0x51, 0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x14] } => pick_ai_manager_response, compare_pick_ai_manager_response, "motor_resposta_do_tecnico_da_maquina";
+    Prologue { address: 0x787140, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => mark_item_read, compare_mark_item_read, "motor_marcar_noticia_lida";
+    Prologue { address: 0x786b70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => find_item_by_id, compare_find_item_by_id, "motor_achar_noticia_pelo_id";
+    Prologue { address: 0x732c80, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => queue_player_gratitude_news, compare_queue_player_gratitude_news, "motor_noticia_de_gratidao_do_jogador";
+    Prologue { address: 0x743370, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_player_backing_request_news, compare_post_player_backing_request_news, "motor_noticia_de_pedido_de_apoio";
+    Prologue { address: 0x743a50, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_player_criticism_reaction_news, compare_post_player_criticism_reaction_news, "motor_noticia_de_reacao_a_critica";
+    Prologue { address: 0x839e60, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => build_position_lists, compare_build_position_lists, "motor_montar_listas_de_posicao";
+    Prologue { address: 0x83a780, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] } => sort_position_lists, compare_sort_position_lists, "motor_ordenar_listas_de_posicao";
+    Prologue { address: 0x842180, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] } => collect_interested_clubs, compare_collect_interested_clubs, "motor_clubes_interessados_no_jogador";
+    Prologue { address: 0x8423f0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => add_shortlist_entry, compare_add_shortlist_entry, "motor_acrescentar_na_lista_de_observacao";
+    Prologue { address: 0x84af00, bytes: &[0x8b, 0x0d, 0x50, 0x10, 0xae, 0x00] } => shortlist_manager_predict_selling_club_response, compare_shortlist_manager_predict_selling_club_response, "motor_prever_resposta_do_vendedor";
+    Prologue { address: 0x8d0590, bytes: &[0x83, 0xec, 0x10, 0x32, 0xd2] } => transfer_manager_get_loan_period, compare_transfer_manager_get_loan_period, "motor_periodo_do_emprestimo";
+    Prologue { address: 0x8cc5b0, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] } => get_offer_response_delay, compare_get_offer_response_delay, "motor_prazo_da_resposta_a_oferta";
+    Prologue { address: 0x8caee0, bytes: &[0x83, 0xec, 0x0c, 0xa1, 0x5c, 0x23, 0xae, 0x00] } => pay_transfer_instalments, compare_pay_transfer_instalments, "motor_pagar_prestacoes_das_transferencias";
+    Prologue { address: 0x8d0f60, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => remove_offer, compare_remove_offer, "motor_tirar_oferta_de_transferencia";
+    Prologue { address: 0x556940, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => add_ban, compare_add_ban, "motor_acrescentar_suspensao";
+    Prologue { address: 0x556270, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => clear_bans_invalid_for_club, compare_clear_bans_invalid_for_club, "motor_tirar_suspensoes_de_fora_do_clube";
+    Prologue { address: 0x556570, bytes: &[0x83, 0xec, 0x20, 0x53, 0x55] } => restore_held_bans, compare_restore_held_bans, "motor_restaurar_suspensoes_guardadas";
+    Prologue { address: 0x7c6a30, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => add_language, compare_add_language, "motor_acrescentar_idioma";
+    Prologue { address: 0x7c6ca0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56] } => improve_language, compare_improve_language, "motor_melhorar_idioma";
+    Prologue { address: 0x7c6650, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => player_stats_reset_player, compare_player_stats_reset_player, "motor_zerar_estatisticas_do_jogador";
+    Prologue { address: 0x775220, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => set_current_competition, compare_set_current_competition, "motor_definir_competicao_da_selecao";
+    Prologue { address: 0x7775c0, bytes: &[0xa1, 0x50, 0x23, 0xae, 0x00] } => mark_clubs_with_fixtures, compare_mark_clubs_with_fixtures, "motor_marcar_clubes_com_jogo";
+    Prologue { address: 0x556830, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] } => discipline_remove_player, compare_discipline_remove_player, "motor_tirar_jogador_da_disciplina";
+    Prologue { address: 0x4dc910, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] } => compare_decision_dates, compare_compare_decision_dates, "motor_comparar_datas_de_decisao";
+    Prologue { address: 0x4cd9c0, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0xf9] } => process_due_decision_dates, compare_process_due_decision_dates, "motor_decidir_as_datas_vencidas";
+    Prologue { address: 0x4ca300, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => get_current_contract_offers, compare_get_current_contract_offers, "motor_ofertas_de_contrato_do_clube";
+    Prologue { address: 0x4d01e0, bytes: &[0x6a, 0xff, 0x68, 0x1b, 0x6e, 0x95, 0x00] } => sign_loan_contract, compare_sign_loan_contract, "motor_assinar_contrato_de_emprestimo";
+    Prologue { address: 0x4d07e0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => end_loan, compare_end_loan, "motor_encerrar_o_emprestimo";
+    Prologue { address: 0x4cbd20, bytes: &[0x51, 0x53, 0x8b, 0x5c, 0x24, 0x10] } => toggle_squad_placement, compare_toggle_squad_placement, "motor_trocar_lugar_no_elenco";
+    Prologue { address: 0x694c80, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] } => reset_board_for_new_manager, compare_reset_board_for_new_manager, "motor_diretoria_do_tecnico_novo";
+    Prologue { address: 0x69b350, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] } => get_departure_reason, compare_get_departure_reason, "motor_motivo_da_saida_do_tecnico";
+    Prologue { address: 0x86f5b0, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => get_manager_record, compare_get_manager_record, "motor_registro_do_tecnico";
+    Prologue { address: 0x69f810, bytes: &[0x55, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => is_staff_suitable_for_job, compare_is_staff_suitable_for_job, "motor_serve_para_o_cargo";
+    Prologue { address: 0x4cb990, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] } => staff_can_take_job, compare_staff_can_take_job, "motor_pode_assumir_o_cargo";
+    Prologue { address: 0x4cb250, bytes: &[0x83, 0xec, 0x08, 0x56, 0x57] } => contract_manager_lower_match_morale, compare_contract_manager_lower_match_morale, "motor_baixar_moral_pela_partida";
+    Prologue { address: 0x83c090, bytes: &[0x51, 0x8b, 0x44, 0x24, 0x08] } => shortlist_set_up_formation_slots, compare_shortlist_set_up_formation_slots, "motor_montar_vagas_da_formacao";
+    Prologue { address: 0x83a730, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] } => update_club_shortlist, compare_update_club_shortlist, "motor_refazer_lista_do_clube";
+    Prologue { address: 0x842b00, bytes: &[0x6a, 0xff, 0x68, 0xdb, 0x24, 0x96, 0x00] } => suspend_clubs_shortlisting_player, compare_suspend_clubs_shortlisting_player, "motor_suspender_clubes_que_miram_o_jogador";
+    Prologue { address: 0x842c00, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] } => add_player_to_club_shortlists, compare_add_player_to_club_shortlists, "motor_por_jogador_nas_listas_dos_clubes";
+    Prologue { address: 0x842320, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] } => transfer_list_player, compare_transfer_list_player, "motor_por_jogador_a_venda";
+    Prologue { address: 0x8cb340, bytes: &[0x83, 0xec, 0x10, 0x53, 0x55] } => pay_appearance_money, compare_pay_appearance_money, "motor_pagar_premio_por_jogos";
+    Prologue { address: 0x8c36b0, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x4c, 0x24, 0x08] } => club_rejects_offer, compare_club_rejects_offer, "motor_clube_recusa_a_oferta";
+    Prologue { address: 0x8c6ae0, bytes: &[0x6a, 0xff, 0x68, 0x18, 0x3d, 0x96, 0x00] } => detach_offer_players, compare_detach_offer_players, "motor_soltar_jogadores_da_oferta";
+    Prologue { address: 0x8c8740, bytes: &[0x6a, 0xff, 0x68, 0xce, 0x3d, 0x96, 0x00] } => build_cash_offer_option, compare_build_cash_offer_option, "motor_montar_oferta_em_dinheiro";
+    Prologue { address: 0x62e820, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => add_illness_outbreak, compare_add_illness_outbreak, "motor_acrescentar_surto_de_doenca";
+    Prologue { address: 0x62e9e0, bytes: &[0x6a, 0xff, 0x68, 0x88, 0xb1, 0x95, 0x00] } => spread_illness_outbreaks, compare_spread_illness_outbreaks, "motor_espalhar_surtos_de_doenca";
+    Prologue { address: 0x62ce30, bytes: &[0x6a, 0xff, 0x68, 0x20, 0xb1, 0x95, 0x00] } => injury_player_in_close_season, compare_injury_player_in_close_season, "motor_jogador_fora_da_temporada";
+    Prologue { address: 0x62a920, bytes: &[0x6a, 0xff, 0x68, 0x90, 0xb0, 0x95, 0x00] } => init_squad_fitness, compare_init_squad_fitness, "motor_forma_inicial_dos_elencos";
+    Prologue { address: 0x62cf70, bytes: &[0x81, 0xec, 0x1c, 0x02, 0x00, 0x00] } => init_records, compare_init_records, "motor_registros_iniciais_de_lesao";
+    Prologue { address: 0x7acfc0, bytes: &[0x6a, 0xff, 0x68, 0x6b, 0xf2, 0x95, 0x00] } => build_nation_club_lists, compare_build_nation_club_lists, "motor_listas_de_clubes_por_nacao";
+    Prologue { address: 0x452da0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => pick_fans_player_of_year, compare_pick_fans_player_of_year, "motor_jogador_do_ano_da_torcida";
+    Prologue { address: 0x7c1350, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] } => end_season_for_key_nation, compare_end_season_for_key_nation, "motor_arquivar_estatisticas_da_nacao";
+    Prologue { address: 0x448760, bytes: &[0x83, 0xec, 0x10, 0x53, 0x8b, 0x5c, 0x24, 0x18] } => update_transfer_fee_records, compare_update_transfer_fee_records, "motor_recordes_de_valor_de_transferencia";
+    Prologue { address: 0x5cc3e0, bytes: &[0x51, 0x8a, 0x81, 0x06, 0x35, 0x00, 0x00] } => is_banned_nation_pair, compare_is_banned_nation_pair, "motor_par_de_nacoes_sem_amistoso";
+    Prologue { address: 0x5cc5f0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x08] } => compare_nations_by_reputation_desc, compare_compare_nations_by_reputation_desc, "motor_ordem_das_nacoes_pela_reputacao";
+    Prologue { address: 0x5cc610, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] } => compare_fixture_records_by_date, compare_compare_fixture_records_by_date, "motor_ordem_dos_amistosos_pela_data";
+    Prologue { address: 0x776fc0, bytes: &[0x6a, 0xff, 0x68, 0x48, 0xdf, 0x95, 0x00] } => can_schedule_club_fixture, compare_can_schedule_club_fixture, "motor_pode_marcar_jogo_do_clube";
+    Prologue { address: 0x778e90, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x0c] } => compare_call_up_records_by_date, compare_compare_call_up_records_by_date, "motor_ordem_das_convocacoes_pela_data";
+    Prologue { address: 0x7779b0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x83, 0xec, 0x08] } => add_qualified_nation, compare_add_qualified_nation, "motor_acrescentar_nacao_classificada";
+    Prologue { address: 0x522190, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => cup_compare_entries_by_level_desc, compare_cup_compare_entries_by_level_desc, "motor_ordem_dos_cabecas_de_chave_decrescente";
+    Prologue { address: 0x5221c0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => cup_compare_entries_by_level_asc, compare_cup_compare_entries_by_level_asc, "motor_ordem_dos_cabecas_de_chave_crescente";
+    Prologue { address: 0x68a980, bytes: &[0x56, 0x57, 0x8b, 0xf9, 0x33, 0xf6] } => limit_club_division_tier, compare_limit_club_division_tier, "motor_teto_da_divisao_dos_clubes";
+    Prologue { address: 0x69aba0, bytes: &[0x83, 0xec, 0x08, 0xa1, 0xcc, 0x6e, 0xdd, 0x00] } => consider_sacking_manager, compare_consider_sacking_manager, "motor_pensar_em_demitir_o_tecnico";
+    Prologue { address: 0x6ac560, bytes: &[0x6a, 0xff, 0x68, 0x88, 0xd0, 0x95, 0x00] } => issue_board_ultimatum, compare_issue_board_ultimatum, "motor_dar_o_ultimato_da_diretoria";
+    Prologue { address: 0x69b790, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] } => remove_club_manager, compare_remove_club_manager, "motor_tirar_o_tecnico_do_cargo";
+    Prologue { address: 0x6a5610, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] } => review_national_team_performance, compare_review_national_team_performance, "motor_avaliar_a_selecao_na_competicao";
+    Prologue { address: 0x69eb50, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => is_club_in_financial_trouble, compare_is_club_in_financial_trouble, "motor_clube_em_apuro_financeiro";
+    Prologue { address: 0x690b70, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x09] } => get_board_confidence_band, compare_get_board_confidence_band, "motor_faixa_da_confianca_da_diretoria";
+    Prologue { address: 0x869480, bytes: &[0x6a, 0xff, 0x68, 0x96, 0x2b, 0x96, 0x00] } => add_promotion_record, compare_add_promotion_record, "motor_registrar_o_acesso";
+    Prologue { address: 0x86a1c0, bytes: &[0x6a, 0xff, 0x68, 0x06, 0x2c, 0x96, 0x00] } => add_relegation_record, compare_add_relegation_record, "motor_registrar_o_rebaixamento";
+    Prologue { address: 0x86bdd0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => add_qualified_for_round_record, compare_add_qualified_for_round_record, "motor_registrar_a_classificacao_na_fase";
+    Prologue { address: 0x86cd70, bytes: &[0x6a, 0xff, 0x68, 0x5b, 0x2d, 0x96, 0x00] } => add_transfer_records, compare_add_transfer_records, "motor_registrar_a_transferencia";
+    Prologue { address: 0x86c000, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => add_knocked_out_record, compare_add_knocked_out_record, "motor_registrar_a_eliminacao";
+    Prologue { address: 0x86c1d0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => add_failed_to_qualify_record, compare_add_failed_to_qualify_record, "motor_registrar_a_nao_classificacao";
+    Prologue { address: 0x8cee70, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => transfer_manager_get_offer_completion_date, compare_transfer_manager_get_offer_completion_date, "motor_data_de_conclusao_da_oferta";
+    Prologue { address: 0x8cf0e0, bytes: &[0x6a, 0xff, 0x68, 0xa8, 0x3f, 0x96, 0x00] } => find_next_allowed_transfer_date, compare_find_next_allowed_transfer_date, "motor_primeiro_dia_permitido_da_oferta";
+    Prologue { address: 0x8d0bb0, bytes: &[0x6a, 0xff, 0x68, 0x90, 0x40, 0x96, 0x00] } => transfer_manager_get_next_window_dates, compare_transfer_manager_get_next_window_dates, "motor_janela_fixa_de_transferencias";
+    Prologue { address: 0x8d0780, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0x40, 0x96, 0x00] } => transfer_manager_calc_compensation_fee, compare_transfer_manager_calc_compensation_fee, "motor_compensacao_pela_pessoa";
+    Prologue { address: 0x8ca8a0, bytes: &[0x83, 0xec, 0x18, 0x53, 0x55] } => pay_fee_and_record_clauses, compare_pay_fee_and_record_clauses, "motor_pagar_transferencia_e_clausulas";
+    Prologue { address: 0x8cd240, bytes: &[0x6a, 0xff, 0x68, 0x00, 0x3f, 0x96, 0x00] } => transfer_manager_selling_club_must_accept, compare_transfer_manager_selling_club_must_accept, "motor_clube_vendedor_deve_aceitar";
+    Prologue { address: 0x8c7e20, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => update_work_permit_on_move, compare_update_work_permit_on_move, "motor_permissao_de_trabalho_na_mudanca";
+    Prologue { address: 0x8c38b0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => complete_accepted_contract_offer, compare_complete_accepted_contract_offer, "motor_concluir_oferta_de_contrato_aceita";
+    Prologue { address: 0x8c1e40, bytes: &[0x6a, 0xff, 0x68, 0xc8, 0x3b, 0x96, 0x00] } => offer_contract_to_offer_player, compare_offer_contract_to_offer_player, "motor_oferecer_contrato_ao_jogador_da_oferta";
+    Prologue { address: 0x8c44e0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => collapse_offer, compare_collapse_offer, "motor_desfazer_oferta";
+    Prologue { address: 0x8bed60, bytes: &[0x6a, 0xff, 0x68, 0xc3, 0x3a, 0x96, 0x00] } => make_loan_offer, compare_make_loan_offer, "motor_fazer_oferta_de_emprestimo";
+    Prologue { address: 0x8cbbe0, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] } => process_due_future_transfers, compare_process_due_future_transfers, "motor_concluir_transferencias_futuras";
+    Prologue { address: 0x7a7150, bytes: &[0x83, 0xec, 0x08, 0x56, 0x8b, 0x74, 0x24, 0x10] } => player_regen_score_non_player_candidate, compare_player_regen_score_non_player_candidate, "motor_nota_do_doador_de_dados";
+    Prologue { address: 0x7ae2a0, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] } => player_regen_compare_retirements, compare_player_regen_compare_retirements, "motor_ordem_das_aposentadorias";
+    Prologue { address: 0x7ae240, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => player_regen_compare_queue_entries, compare_player_regen_compare_queue_entries, "motor_ordem_da_fila_de_regens";
+    Prologue { address: 0x7c3920, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_category_record, compare_get_category_record, "motor_registro_da_categoria";
+    Prologue { address: 0x7c5d80, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => create_stats, compare_create_stats, "motor_criar_estatisticas";
+    Prologue { address: 0x7ae350, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] } => is_retirement_pending, compare_is_retirement_pending, "motor_aposentadoria_marcada";
+    Prologue { address: 0x51e220, bytes: &[0x81, 0xec, 0x28, 0x02, 0x00, 0x00] } => randomize_round_teams, compare_randomize_round_teams, "motor_copa_sortear_times_da_rodada";
+    Prologue { address: 0x522610, bytes: &[0x83, 0xec, 0x14, 0x56, 0x57] } => separate_shared_stadium_ties, compare_separate_shared_stadium_ties, "motor_copa_separar_estadio_compartilhado";
+    Prologue { address: 0x4bf850, bytes: &[0x66, 0x8b, 0x4c, 0x24, 0x10] } => comp_util_scale_by_round, compare_comp_util_scale_by_round, "motor_escala_pela_rodada";
+    Prologue { address: 0x4afa80, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x0c] } => comp_util_get_fixture_venue_side, compare_comp_util_get_fixture_venue_side, "motor_lado_do_jogo_para_o_clube";
+    Prologue { address: 0x4afba0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => compare_nation_coefficients_desc, compare_compare_nation_coefficients_desc, "motor_ordem_dos_coeficientes_das_nacoes";
+    Prologue { address: 0x7f8d70, bytes: &[0x6a, 0xff, 0x68, 0xfb, 0x0f, 0x96, 0x00] } => has_scout_request, compare_has_scout_request, "motor_pedido_de_observacao";
+    Prologue { address: 0x896e90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => clear_selection_slot, compare_clear_selection_slot, "motor_limpar_vaga_da_escalacao";
+    Prologue { address: 0x897bb0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => set_set_piece_taker, compare_set_set_piece_taker, "motor_marcar_batedor_de_bola_parada";
+    Prologue { address: 0x8cf6b0, bytes: &[0x51, 0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x18] } => fill_squad_restrictions, compare_fill_squad_restrictions, "motor_restricoes_da_partida";
+    Prologue { address: 0x8cf880, bytes: &[0x83, 0xec, 0x0c, 0x55, 0x8b, 0x6c, 0x24, 0x18] } => transfer_manager_check_matchday_squad_limit, compare_transfer_manager_check_matchday_squad_limit, "motor_limite_do_banco_do_dia";
+    Prologue { address: 0x8c7560, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => player_needs_work_permit, compare_player_needs_work_permit, "motor_precisa_de_permissao_de_trabalho";
+    Prologue { address: 0x8ce990, bytes: &[0x6a, 0xff, 0x68, 0x78, 0x3f, 0x96, 0x00] } => can_club_bid_for_player, compare_can_club_bid_for_player, "motor_clube_pode_chegar_ao_jogador";
+    Prologue { address: 0x8c2060, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => note_terms_offered_to_exchange_player, compare_note_terms_offered_to_exchange_player, "motor_termos_ao_jogador_da_troca";
+    Prologue { address: 0x8c1780, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => count_club_free_transfer_queue, compare_count_club_free_transfer_queue, "motor_fila_livre_do_clube";
+    Prologue { address: 0x8cca10, bytes: &[0x6a, 0xff, 0x68, 0x98, 0x3e, 0x96, 0x00] } => get_future_transfer, compare_get_future_transfer, "motor_transferencia_futura_do_jogador";
+    Prologue { address: 0x8cbf70, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] } => remove_future_transfer, compare_remove_future_transfer, "motor_tirar_transferencia_futura";
+    Prologue { address: 0x8cb9a0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => add_future_transfer, compare_add_future_transfer, "motor_acrescentar_transferencia_futura";
+    Prologue { address: 0x8c6100, bytes: &[0x51, 0x55, 0x56, 0x8b, 0xf1] } => get_open_offers_for_club_players, compare_get_open_offers_for_club_players, "motor_ofertas_abertas_pelos_jogadores_do_clube";
+    Prologue { address: 0x8c47d0, bytes: &[0x6a, 0xff, 0x68, 0x88, 0x3c, 0x96, 0x00] } => collapse_offers_for_player, compare_collapse_offers_for_player, "motor_desfazer_ofertas_pelo_jogador";
+    Prologue { address: 0x8caaf0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => add_next_sale_percentage, compare_add_next_sale_percentage, "motor_guardar_percentual_da_proxima_venda";
+    Prologue { address: 0x68f130, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => init_club_board_records, compare_init_club_board_records, "motor_iniciar_diretorias_dos_clubes";
+    Prologue { address: 0x6abef0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => process_ban_appeals, compare_process_ban_appeals, "motor_apelacoes_de_suspensao";
+    Prologue { address: 0x5fe700, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => can_watch_fixture, compare_can_watch_fixture, "motor_pode_ver_a_partida";
+    Prologue { address: 0x7a79c0, bytes: &[0x83, 0xec, 0x0c, 0x57, 0x8b, 0x7c, 0x24, 0x14] } => player_regen_check_initial_retirement, compare_player_regen_check_initial_retirement, "motor_aposentadoria_no_inicio";
+    Prologue { address: 0x7a7310, bytes: &[0x83, 0xec, 0x14, 0x8b, 0x0d, 0x50, 0x10, 0xae, 0x00] } => player_regen_check_retirement, compare_player_regen_check_retirement, "motor_aposentadoria_por_idade";
+    Prologue { address: 0x7a58f0, bytes: &[0x6a, 0xff, 0x68, 0x88, 0xf1, 0x95, 0x00] } => build_initial_retirement_list, compare_build_initial_retirement_list, "motor_lista_inicial_de_aposentadorias";
+    Prologue { address: 0x7a5790, bytes: &[0x6a, 0xff, 0x68, 0x58, 0xf1, 0x95, 0x00] } => find_new_retirements, compare_find_new_retirements, "motor_novas_aposentadorias";
+    Prologue { address: 0x7aaeb0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => player_regen_retire_from_non_playing_staff, compare_player_regen_retire_from_non_playing_staff, "motor_sair_dos_cargos";
+    Prologue { address: 0x86d800, bytes: &[0x6a, 0xff, 0x68, 0x7b, 0x2d, 0x96, 0x00] } => add_free_release_records, compare_add_free_release_records, "motor_registrar_a_liberacao";
+    Prologue { address: 0x62c400, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => get_player_injury_status, compare_get_player_injury_status, "motor_estado_da_lesao";
+    Prologue { address: 0x4cd230, bytes: &[0x6a, 0xff, 0x68, 0x50, 0x6d, 0x95, 0x00] } => schedule_offer_decision, compare_schedule_offer_decision, "motor_marcar_decisao_da_oferta";
+    Prologue { address: 0x86fab0, bytes: &[0x6a, 0xff, 0x68, 0x08, 0x2e, 0x96, 0x00] } => get_manager_of_year_candidates, compare_get_manager_of_year_candidates, "motor_candidatos_a_tecnico_do_ano";
+    Prologue { address: 0x68ac40, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55, 0x56] } => update_projected_positions, compare_update_projected_positions, "motor_projetar_posicoes_da_liga";
+    Prologue { address: 0x68afb0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x08] } => compare_projection_by_reputation_desc, compare_compare_projection_by_reputation_desc, "motor_ordem_da_projecao_pela_reputacao";
+    Prologue { address: 0x68afd0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => compare_projection_by_points_desc, compare_compare_projection_by_points_desc, "motor_ordem_da_projecao_pelos_pontos";
+    Prologue { address: 0x5acbe0, bytes: &[0x81, 0xec, 0x24, 0x02, 0x00, 0x00] } => find_fixtures, compare_find_fixtures, "motor_achar_jogos_do_calendario";
+    Prologue { address: 0x5abd90, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => collect_comp_fixtures_on_day, compare_collect_comp_fixtures_on_day, "motor_jogos_da_competicao_no_dia";
+    Prologue { address: 0x5ae6d0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => fix_man_comp_has_fixture_on_date, compare_fix_man_comp_has_fixture_on_date, "motor_competicao_tem_jogo_na_data";
+    Prologue { address: 0x5c6b70, bytes: &[0x6a, 0xff, 0x68, 0x31, 0xa1, 0x95, 0x00] } => friendly_is_club_free_on_date, compare_friendly_is_club_free_on_date, "motor_clube_livre_na_data";
+    Prologue { address: 0x522910, bytes: &[0x56, 0x66, 0x8b, 0x71, 0x3e] } => has_club, compare_has_club, "motor_copa_tem_o_clube";
+    Prologue { address: 0x5af5b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53] } => fix_man_get_partner_key_nation_index, compare_fix_man_get_partner_key_nation_index, "motor_nacao_parceira_do_clube";
+    Prologue { address: 0x4d8610, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => handle_transfer_request, compare_handle_transfer_request, "motor_pedido_de_transferencia";
+    Prologue { address: 0x4cbb20, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x3c, 0x0b] } => is_contract_staff_job, compare_is_contract_staff_job, "motor_cargo_com_contrato";
+    Prologue { address: 0x4cb960, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x8a, 0x41, 0x3d] } => staff_is_not_board_member, compare_staff_is_not_board_member, "motor_fora_da_diretoria";
+    Prologue { address: 0x8c6e60, bytes: &[0x6a, 0xff, 0x68, 0x68, 0x3d, 0x96, 0x00] } => init_work_permits, compare_init_work_permits, "motor_iniciar_permissoes_de_trabalho";
+    Prologue { address: 0x8c3e50, bytes: &[0x8a, 0x44, 0x24, 0x08, 0x56] } => get_clause_count, compare_get_clause_count, "motor_contagem_da_clausula";
+    Prologue { address: 0x8d0ea0, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] } => find_first_team_appearance_money, compare_find_first_team_appearance_money, "motor_premio_por_jogo_do_jogador";
+    Prologue { address: 0x8c18c0, bytes: &[0x6a, 0xff, 0x68, 0xb0, 0x3b, 0x96, 0x00] } => process_free_transfer_queue, compare_process_free_transfer_queue, "motor_fila_da_transferencia_livre";
+    Prologue { address: 0x8cf470, bytes: &[0x6a, 0xff, 0x68, 0xd6, 0x3f, 0x96, 0x00] } => find_next_window_open_date, compare_find_next_window_open_date, "motor_proxima_janela_aberta";
+    Prologue { address: 0x8c72d0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] } => find_negotiated_loan_contract, compare_find_negotiated_loan_contract, "motor_emprestimo_negociado";
+    Prologue { address: 0x8c8fd0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => build_clause_offer_option, compare_build_clause_offer_option, "motor_oferta_com_clausula";
+    Prologue { address: 0x8c5560, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] } => transfer_manager_is_rejection_reason_valid, compare_transfer_manager_is_rejection_reason_valid, "motor_motivo_da_recusa_vale";
+    Prologue { address: 0x8c54c0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] } => transfer_manager_get_squad_status_reason, compare_transfer_manager_get_squad_status_reason, "motor_motivo_pelo_status_no_elenco";
+    Prologue { address: 0x5d6d10, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55, 0x56] } => game_update_squad_relationships, compare_game_update_squad_relationships, "motor_relacoes_do_elenco";
+    Prologue { address: 0x5d7190, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55, 0x56] } => game_check_club_dressing_room_unrest, compare_game_check_club_dressing_room_unrest, "motor_atrito_com_o_tecnico";
+    Prologue { address: 0x5ce0b0, bytes: &[0x83, 0xec, 0x1c, 0xa1, 0x5c, 0x23, 0xae, 0x00] } => game_spread_squad_morale_by_leadership, compare_game_spread_squad_morale_by_leadership, "motor_moral_pela_lideranca";
+    Prologue { address: 0x5d6aa0, bytes: &[0x51, 0x8b, 0x0d, 0x64, 0x23, 0xae, 0x00] } => game_check_players_missing_training, compare_game_check_players_missing_training, "motor_faltas_ao_treino";
+    Prologue { address: 0x5ce060, bytes: &[0xa1, 0xf8, 0xad, 0xad, 0x00] } => game_update_comps_for_date, compare_game_update_comps_for_date, "motor_competicoes_do_dia";
+    Prologue { address: 0x5cdde0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x85, 0xd2] } => manager_manager_adjust_board_confidence, compare_manager_manager_adjust_board_confidence, "motor_mudar_confianca_da_diretoria";
+    Prologue { address: 0x85b820, bytes: &[0x83, 0xec, 0x14, 0x53, 0x8b, 0x5c, 0x24, 0x1c] } => stadium_daily_update, compare_stadium_daily_update, "motor_estadios_do_dia";
+    Prologue { address: 0x85de20, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => add_booking, compare_add_booking, "motor_reservar_estadio";
+    Prologue { address: 0x85ddb0, bytes: &[0x83, 0xec, 0x14, 0x56, 0x8b, 0xf1] } => is_stadium_free_on_date, compare_is_stadium_free_on_date, "motor_estadio_livre_na_data";
+    Prologue { address: 0x7f9720, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x8b, 0x5c, 0x24, 0x14] } => fixture_has_scouted_player, compare_fixture_has_scouted_player, "motor_jogo_com_observado";
+    Prologue { address: 0x7f7490, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => is_player_shortlisted, compare_is_player_shortlisted, "motor_na_lista_do_olheiro";
+    Prologue { address: 0x86cc50, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0x2d, 0x96, 0x00] } => add_first_cap_record, compare_add_first_cap_record, "motor_registrar_a_primeira_convocacao";
+    Prologue { address: 0x7c3d20, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => player_stats_get_career_goals, compare_player_stats_get_career_goals, "motor_gols_na_carreira";
+    Prologue { address: 0x86da20, bytes: &[0x6a, 0xff, 0x68, 0x9b, 0x2d, 0x96, 0x00] } => add_loan_records, compare_add_loan_records, "motor_registrar_o_emprestimo";
+    Prologue { address: 0x632040, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] } => injury_compare_entry_dates, compare_injury_compare_entry_dates, "motor_ordem_da_volta_aos_treinos";
+    Prologue { address: 0x7c3bb0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => player_stats_get_goals_for_club, compare_player_stats_get_goals_for_club, "motor_gols_pelo_clube";
+    Prologue { address: 0x86c730, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => add_team_of_year_record, compare_add_team_of_year_record, "motor_registrar_a_selecao_do_ano";
+    Prologue { address: 0x870220, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] } => staff_records_compare_clubs_by_manager_points, compare_staff_records_compare_clubs_by_manager_points, "motor_ordem_pelos_pontos_do_tecnico";
+    Prologue { address: 0x5ac7a0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => find_stored_fixture, compare_find_stored_fixture, "motor_jogo_guardado_igual";
+    Prologue { address: 0x5ab230, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => insert_fixture, compare_insert_fixture, "motor_guardar_jogo_no_calendario";
+    Prologue { address: 0x5abc30, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => remove_fixture, compare_remove_fixture, "motor_tirar_jogo_do_calendario";
+    Prologue { address: 0x5c2ae0, bytes: &[0x6a, 0xff, 0x68, 0x10, 0x9e, 0x95, 0x00] } => create_due_planned_friendlies, compare_create_due_planned_friendlies, "motor_criar_amistosos_planejados";
+    Prologue { address: 0x5c6f00, bytes: &[0x6a, 0xff, 0x68, 0x5c, 0xa1, 0x95, 0x00] } => add_friendly_match, compare_add_friendly_match, "motor_acrescentar_amistoso";
+    Prologue { address: 0x5c4380, bytes: &[0x6a, 0xff, 0x68, 0xe4, 0x9f, 0x95, 0x00] } => plan_friendly_on_free_date, compare_plan_friendly_on_free_date, "motor_planejar_amistoso_em_data_livre";
+    Prologue { address: 0x51f890, bytes: &[0x6a, 0xff, 0x68, 0x98, 0x77, 0x95, 0x00] } => cup_update_for_date, compare_cup_update_for_date, "motor_atualizar_copa_no_dia";
+    Prologue { address: 0x51c800, bytes: &[0x6a, 0xff, 0x68, 0xd9, 0x76, 0x95, 0x00] } => set_up_round, compare_set_up_round, "motor_montar_rodada_da_copa";
+    Prologue { address: 0x5ab3c0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => add_away_trip_illness_risk, compare_add_away_trip_illness_risk, "motor_risco_de_doenca_na_viagem";
+    Prologue { address: 0x58d710, bytes: &[0x8b, 0x54, 0x24, 0x0c, 0x53] } => count_results_in_period, compare_count_results_in_period, "motor_jogos_da_selecao_no_periodo";
+    Prologue { address: 0x58d460, bytes: &[0x83, 0xec, 0x18, 0x53, 0x8b, 0x5c, 0x24, 0x20] } => update_rankings, compare_update_rankings, "motor_atualizar_ranking_da_fifa";
+    Prologue { address: 0x58e220, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => compare_result_points_desc, compare_compare_result_points_desc, "motor_ordem_dos_resultados_por_pontos";
+    Prologue { address: 0x58dea0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => append_result, compare_append_result, "motor_resultado_no_historico";
+    Prologue { address: 0x58e190, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] } => get_nation_strength_tier, compare_get_nation_strength_tier, "motor_faixa_da_selecao";
+    Prologue { address: 0x58dfc0, bytes: &[0x83, 0xec, 0x1c, 0xa1, 0x50, 0x23, 0xae, 0x00] } => recalculate_scores, compare_recalculate_scores, "motor_pontuacoes_do_ranking";
+    Prologue { address: 0x48dd70, bytes: &[0x8b, 0x0d, 0x74, 0x2c, 0xae, 0x00] } => comp_active_key_nation_of_fixture, compare_comp_active_key_nation_of_fixture, "motor_nacao_chave_do_jogo";
+    Prologue { address: 0x669a10, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => key_nation_is_world_cup_comp, compare_key_nation_is_world_cup_comp, "motor_e_copa_do_mundo";
+    Prologue { address: 0x669ae0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => key_nation_is_international_comp, compare_key_nation_is_international_comp, "motor_e_torneio_internacional";
+    Prologue { address: 0x669470, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => key_nation_index_of_comp, compare_key_nation_index_of_comp, "motor_indice_da_nacao_chave";
+    Prologue { address: 0x58d610, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => collect_ranked_order, compare_collect_ranked_order, "motor_ordem_do_ranking";
+    Prologue { address: 0x58e240, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => compare_ranking_score_desc, compare_compare_ranking_score_desc, "motor_ordem_das_pontuacoes";
+    Prologue { address: 0x922ee0, bytes: &[0x51, 0x56, 0x57, 0x8b, 0xf9] } => update_city_weather, compare_update_city_weather, "motor_tempo_das_cidades";
+    Prologue { address: 0x922c40, bytes: &[0x81, 0xec, 0xd0, 0x07, 0x00, 0x00] } => read_region, compare_read_region, "motor_ler_regiao_do_clima";
+    Prologue { address: 0x922d20, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0xe0, 0x0a, 0x00, 0x00] } => read_region_period, compare_read_region_period, "motor_ler_periodo_do_clima";
+    Prologue { address: 0x5d5f20, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => game_update_nation_coefficients, compare_game_update_nation_coefficients, "motor_coeficientes_das_nacoes";
+    Prologue { address: 0x5d6250, bytes: &[0x66, 0x8b, 0x44, 0x24, 0x04] } => is_player_regen_day, compare_is_player_regen_day, "motor_dia_das_aposentadorias";
+    Prologue { address: 0x5d61d0, bytes: &[0x66, 0x0f, 0xbe, 0x4c, 0x24, 0x04] } => clamp_char_sum, compare_clamp_char_sum, "motor_soma_presa";
+    Prologue { address: 0x85da00, bytes: &[0x83, 0xec, 0x0c, 0xa1, 0xe4, 0xf2, 0x9c, 0x00] } => score_venue_for_fixture, compare_score_venue_for_fixture, "motor_nota_do_estadio_neutro";
+    Prologue { address: 0x85d8a0, bytes: &[0x83, 0xec, 0x10, 0x8b, 0x4c, 0x24, 0x14] } => get_travel_distance_factor, compare_get_travel_distance_factor, "motor_fator_da_distancia";
+    Prologue { address: 0x922810, bytes: &[0x81, 0xec, 0xf0, 0x05, 0x00, 0x00] } => load_config, compare_load_config, "motor_ler_o_clima";
+    Prologue { address: 0x8b41d0, bytes: &[0x83, 0xec, 0x18, 0x8b, 0x44, 0x24, 0x1c] } => get_coaching_factor, compare_get_coaching_factor, "motor_fator_do_treinador";
+    Prologue { address: 0x8b4cd0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_coach_assignments, compare_get_coach_assignments, "motor_comissao_do_humano";
+    Prologue { address: 0x8b4f60, bytes: &[0x51, 0x53, 0x56, 0x57, 0x8b, 0xf9] } => get_training_load, compare_get_training_load, "motor_carga_do_programa";
+    Prologue { address: 0x8b2be0, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] } => apply_training_progress, compare_apply_training_progress, "motor_aplicar_o_progresso";
+    Prologue { address: 0x8b4b20, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => find_position_training, compare_find_position_training, "motor_achar_o_treino_de_posicao";
+    Prologue { address: 0x8b4db0, bytes: &[0x51, 0x8b, 0x54, 0x24, 0x08] } => has_fast_position_training, compare_has_fast_position_training, "motor_aprende_depressa";
+    Prologue { address: 0x8b1730, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] } => advance_week_counter, compare_advance_week_counter, "motor_avancar_a_semana";
+    Prologue { address: 0x7a6e30, bytes: &[0x8b, 0x41, 0x1c, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => take_spare_non_player_record, compare_take_spare_non_player_record, "motor_tirar_a_ficha_reservada";
+    Prologue { address: 0x62ed30, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] } => get_recurring_injury_type, compare_get_recurring_injury_type, "motor_lesao_que_volta";
+    Prologue { address: 0x5c2460, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => friendly_update_for_date, compare_friendly_update_for_date, "motor_atualizar_amistosos_do_dia";
+    Prologue { address: 0x5c27a0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => plan_ai_preseason_friendlies, compare_plan_ai_preseason_friendlies, "motor_planejar_pre_temporada_da_ia";
+    Prologue { address: 0x5c2d40, bytes: &[0x6a, 0xff, 0x68, 0x4e, 0x9e, 0x95, 0x00] } => set_preseason_windows, compare_set_preseason_windows, "motor_janelas_da_pre_temporada";
+    Prologue { address: 0x5c4040, bytes: &[0x6a, 0xff, 0x68, 0x9e, 0x9f, 0x95, 0x00] } => schedule_tour_matches, compare_schedule_tour_matches, "motor_marcar_jogos_da_excursao";
+    Prologue { address: 0x5c5270, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => compare_friendly_candidates_by_band, compare_compare_friendly_candidates_by_band, "motor_ordem_pela_faixa";
+    Prologue { address: 0x5c5290, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => compare_friendly_candidate_ptrs_by_nation, compare_compare_friendly_candidate_ptrs_by_nation, "motor_ordem_pela_nacao_e_faixa";
+    Prologue { address: 0x5223a0, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => cup_rank_teams, compare_cup_rank_teams, "motor_posicoes_previstas_da_copa";
+    Prologue { address: 0x4c08f0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => comp_util_sort_clubs_by_strength, compare_comp_util_sort_clubs_by_strength, "motor_ordenar_clubes_pela_forca";
+    Prologue { address: 0x4a2540, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => set_club_final_position, compare_set_club_final_position, "motor_gravar_posicao_do_clube";
+    Prologue { address: 0x669340, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x32, 0xc0] } => key_nation_index_of_nation, compare_key_nation_index_of_nation, "motor_linha_da_nacao";
+    Prologue { address: 0x669360, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => key_nation_index_of_club, compare_key_nation_index_of_club, "motor_linha_da_nacao_do_clube";
+    Prologue { address: 0x669950, bytes: &[0x51, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => key_nation_get_club_season_year, compare_key_nation_get_club_season_year, "motor_ano_da_temporada_do_clube";
+    Prologue { address: 0x669bd0, bytes: &[0x6a, 0xff, 0x68, 0x58, 0xc6, 0x95, 0x00] } => key_nation_club_in_season, compare_key_nation_club_in_season, "motor_clube_na_temporada";
+    Prologue { address: 0x6695c0, bytes: &[0xa1, 0x08, 0x2d, 0xae, 0x00] } => key_nation_get_main_continent, compare_key_nation_get_main_continent, "motor_continente_principal";
+    Prologue { address: 0x669600, bytes: &[0xa1, 0x08, 0x2d, 0xae, 0x00] } => key_nation_get_main_nation, compare_key_nation_get_main_nation, "motor_nacao_principal";
+    Prologue { address: 0x7c1e30, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] } => get_stat, compare_get_stat, "motor_estatistica_da_categoria";
+    Prologue { address: 0x7c6d40, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] } => player_stats_compare_language_entries, compare_player_stats_compare_language_entries, "motor_ordem_dos_idiomas";
+    Prologue { address: 0x7c6d90, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => player_stats_compare_history_by_club, compare_player_stats_compare_history_by_club, "motor_ordem_da_historia_por_clube";
+    Prologue { address: 0x867b50, bytes: &[0x8a, 0x51, 0x1c, 0xb0, 0x02] } => has_active_release_clause, compare_has_active_release_clause, "motor_clausula_de_rescisao_ativa";
+    Prologue { address: 0x868210, bytes: &[0x6a, 0xff, 0x68, 0x08, 0x2b, 0x96, 0x00] } => check_fifa_protected_period, compare_check_fifa_protected_period, "motor_periodo_protegido";
+    Prologue { address: 0x867aa0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x40, 0x61] } => staff_contract_is_bonus_type_allowed, compare_staff_contract_is_bonus_type_allowed, "motor_tipo_de_bonus_permitido";
+    Prologue { address: 0x923630, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => check_postponement, compare_check_postponement, "motor_adiar_pelo_clima";
+    Prologue { address: 0x5a0590, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => get_club_finance, compare_get_club_finance, "motor_financas_do_clube";
+    Prologue { address: 0x85e380, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] } => stadium_compare_bookings, compare_stadium_compare_bookings, "motor_ordem_das_reservas_do_estadio";
+    Prologue { address: 0x923010, bytes: &[0x51, 0x53, 0x55, 0x8b, 0xe9] } => get_match_weather, compare_get_match_weather, "motor_clima_da_partida";
+    Prologue { address: 0x9232c0, bytes: &[0x0f, 0xbe, 0x4c, 0x24, 0x04] } => get_temperature, compare_get_temperature, "motor_temperatura_do_jogo";
+    Prologue { address: 0x923970, bytes: &[0x8b, 0x4c, 0x24, 0x08, 0x53] } => get_pitch_condition, compare_get_pitch_condition, "motor_gramado_do_jogo";
+    Prologue { address: 0x5986b0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x8b, 0x15, 0xb4, 0x23, 0xae, 0x00] } => get_wealth_band, compare_get_wealth_band, "motor_faixa_de_riqueza";
+    Prologue { address: 0x5d6220, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] } => compare_players_by_ability, compare_compare_players_by_ability, "motor_ordem_por_habilidade";
+    Prologue { address: 0x85e350, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x48, 0x0c] } => stadium_compare_venues_by_capacity, compare_stadium_compare_venues_by_capacity, "motor_ordem_pela_capacidade";
+    Prologue { address: 0x8b3d40, bytes: &[0x81, 0xec, 0x0c, 0x0c, 0x00, 0x00] } => set_default_schedules, compare_set_default_schedules, "motor_programas_padrao";
+    Prologue { address: 0x8b4e50, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] } => set_type, compare_set_type, "motor_tipo_do_programa";
+    Prologue { address: 0x8b3930, bytes: &[0x8b, 0x54, 0x24, 0x04, 0xa1, 0x64, 0x23, 0xae, 0x00] } => get_manager_schedule, compare_get_manager_schedule, "motor_programa_do_humano";
+    Prologue { address: 0x8b3c50, bytes: &[0xa1, 0x6c, 0x23, 0xae, 0x00] } => init_player_entries, compare_init_player_entries, "motor_fichas_de_treino_iniciais";
+    Prologue { address: 0x7a8350, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => add_player_data_to_pool, compare_add_player_data_to_pool, "motor_guardar_jogador_no_banco";
+    Prologue { address: 0x7a6e20, bytes: &[0x8b, 0x41, 0x20, 0x85, 0xc0] } => has_spare_non_player_record, compare_has_spare_non_player_record, "motor_tem_reserva_de_tecnico";
+    Prologue { address: 0x7e8e10, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] } => make_points_ban, compare_make_points_ban, "motor_suspensao_do_vermelho";
+    Prologue { address: 0x7e7ed0, bytes: &[0x83, 0xec, 0x08, 0x56, 0x8b, 0xf1] } => ruling_body_start_new_season, compare_ruling_body_start_new_season, "motor_nova_temporada_do_orgao";
+    Prologue { address: 0x7e9050, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => compact_entries, compare_compact_entries, "motor_compactar_disciplina_do_orgao";
+    Prologue { address: 0x5b3560, bytes: &[0x81, 0xec, 0x80, 0x02, 0x00, 0x00] } => set_slot_coordinate, compare_set_slot_coordinate, "motor_coordenada_da_casa";
+    Prologue { address: 0x5b3460, bytes: &[0x8a, 0x54, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => check_duplicate_position, compare_check_duplicate_position, "motor_posicao_repetida_na_formacao";
+    Prologue { address: 0x5b57d0, bytes: &[0x8a, 0x44, 0x24, 0x08, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => set_marking_type, compare_set_marking_type, "motor_tipo_de_marcacao";
+    Prologue { address: 0x686a70, bytes: &[0x81, 0xec, 0x68, 0x02, 0x00, 0x00] } => draw_team_order, compare_draw_team_order, "motor_sortear_ordem_dos_clubes";
+    Prologue { address: 0x521790, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_fixture_side_teams, compare_get_fixture_side_teams, "motor_clubes_do_lado_do_jogo";
+    Prologue { address: 0x5219b0, bytes: &[0x8b, 0x54, 0x24, 0x0c, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => collect_possible_teams, compare_collect_possible_teams, "motor_clubes_possiveis_do_jogo";
+    Prologue { address: 0x7bca90, bytes: &[0x83, 0xec, 0x08, 0x53, 0x8b, 0x5c, 0x24, 0x10] } => player_search_get_club_target_rating, compare_player_search_get_club_target_rating, "motor_nota_alvo_do_clube";
+    Prologue { address: 0x7bd830, bytes: &[0x8a, 0x54, 0x24, 0x04, 0x8a, 0x81, 0xa1, 0x01, 0x00, 0x00] } => player_search_slot_get_match_entry, compare_player_search_slot_get_match_entry, "motor_jogo_do_historico";
+    Prologue { address: 0x7bd870, bytes: &[0x8a, 0x81, 0xa1, 0x01, 0x00, 0x00] } => player_search_slot_sum_goals, compare_player_search_slot_sum_goals, "motor_gols_do_historico";
+    Prologue { address: 0x8c2f50, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55] } => advance_offer_to_club_approval, compare_advance_offer_to_club_approval, "motor_passar_a_oferta_aos_clubes";
+    Prologue { address: 0x8d76d0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_offer_accepted_news, compare_post_offer_accepted_news, "motor_noticia_da_oferta_aceita";
+    Prologue { address: 0x8e1780, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_loan_offer_news, compare_post_loan_offer_news, "motor_noticia_do_emprestimo_oferecido";
+    Prologue { address: 0x8c28c0, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] } => handle_player_rejected_terms, compare_handle_player_rejected_terms, "motor_recusa_dos_termos";
+    Prologue { address: 0x6a4c40, bytes: &[0x6a, 0xff, 0x68, 0x6b, 0xce, 0x95, 0x00] } => post_board_confidence_update_news, compare_post_board_confidence_update_news, "motor_noticia_da_confianca_da_diretoria";
+    Prologue { address: 0x6a4a20, bytes: &[0x6a, 0xff, 0x68, 0x4b, 0xce, 0x95, 0x00] } => post_board_expectations_news, compare_post_board_expectations_news, "motor_noticia_das_expectativas_da_diretoria";
+    Prologue { address: 0x8c4e10, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x83, 0xec, 0x0c] } => hold_offers_at_window_close, compare_hold_offers_at_window_close, "motor_ofertas_em_espera_na_janela";
+    Prologue { address: 0x6a44a0, bytes: &[0x6a, 0xff, 0x68, 0x2b, 0xce, 0x95, 0x00] } => post_fa_expectations_news, compare_post_fa_expectations_news, "motor_noticia_das_expectativas_da_federacao";
+    Prologue { address: 0x6a5d10, bytes: &[0x6a, 0xff, 0x68, 0xeb, 0xce, 0x95, 0x00] } => post_supporter_protest_news, compare_post_supporter_protest_news, "motor_noticia_do_protesto_da_torcida";
+    Prologue { address: 0x8be9d0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => add_transfer_negotiation, compare_add_transfer_negotiation, "motor_guardar_a_negociacao";
+    Prologue { address: 0x69fd50, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_job_rumour_news, compare_post_job_rumour_news, "motor_noticia_do_boato_do_tecnico";
+    Prologue { address: 0x8d8310, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_player_rejects_move_news, compare_post_player_rejects_move_news, "motor_noticia_da_recusa_em_se_mudar";
+    Prologue { address: 0x59b7e0, bytes: &[0x51, 0x53, 0x56, 0x8b, 0x74, 0x24, 0x10] } => add_weekly_merchandising_income, compare_add_weekly_merchandising_income, "motor_receita_do_merchandising";
+    Prologue { address: 0x599a20, bytes: &[0x83, 0xec, 0x14, 0x8b, 0x15, 0xb4, 0x23, 0xae, 0x00] } => sell_season_tickets, compare_sell_season_tickets, "motor_ingressos_da_temporada";
+    Prologue { address: 0x59b630, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] } => upgrade_training_facilities, compare_upgrade_training_facilities, "motor_melhorar_o_centro_de_treino";
+    Prologue { address: 0x59ed70, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => process_club_finance_events, compare_process_club_finance_events, "motor_eventos_financeiros_da_semana";
+    Prologue { address: 0x59dd40, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => try_board_debt_payment, compare_try_board_debt_payment, "motor_diretoria_paga_a_divida";
+    Prologue { address: 0x59e5a0, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55] } => try_cash_injection, compare_try_cash_injection, "motor_injecao_de_dinheiro";
+    Prologue { address: 0x597db0, bytes: &[0x83, 0xec, 0x18, 0x8b, 0x41, 0x08] } => get_max_staff_wage, compare_get_max_staff_wage, "motor_teto_salarial_do_pessoal";
+    Prologue { address: 0x599960, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x91, 0x38, 0x01, 0x00, 0x00] } => pay_bonuses, compare_pay_bonuses, "motor_pagar_os_bonus";
+    Prologue { address: 0x598340, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] } => adjust_max_wage, compare_adjust_max_wage, "motor_ajustar_o_teto_salarial";
+    Prologue { address: 0x62c080, bytes: &[0x83, 0xec, 0x20, 0x53, 0x55] } => apply_match_effects, compare_apply_match_effects, "motor_efeitos_fisicos_da_partida";
+    Prologue { address: 0x62bf60, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0x8b, 0x46, 0x28] } => find_match_injury, compare_find_match_injury, "motor_batida_do_jogador";
+    Prologue { address: 0x631550, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0x28, 0x3d, 0xb6, 0x00] } => is_player_on_holiday, compare_is_player_on_holiday, "motor_jogador_de_ferias";
+    Prologue { address: 0x7a6f10, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => player_regen_sign_for_club, compare_player_regen_sign_for_club, "motor_contratar_o_regen";
+    Prologue { address: 0x7a7f20, bytes: &[0x6a, 0xff, 0x68, 0xf0, 0xf1, 0x95, 0x00] } => schedule_injury_retirement, compare_schedule_injury_retirement, "motor_aposentar_pela_lesao";
+    Prologue { address: 0x7aa340, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => player_regen_post_retirement_announcement_news, compare_player_regen_post_retirement_announcement_news, "motor_noticia_da_aposentadoria_anunciada";
+    Prologue { address: 0x62e700, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => end_player_injury, compare_end_player_injury, "motor_fim_da_lesao";
+    Prologue { address: 0x72bbf0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => media_queue_player_apology_news, compare_media_queue_player_apology_news, "motor_noticia_do_pedido_de_desculpas";
+    Prologue { address: 0x787630, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => clear_inbox, compare_clear_inbox, "motor_esvaziar_caixa_de_entrada";
+    Prologue { address: 0x775cd0, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => withdraw_injured_player, compare_withdraw_injured_player, "motor_tirar_convocado_machucado";
+    Prologue { address: 0x76f7d0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => national_teams_post_player_withdrawn_news, compare_national_teams_post_player_withdrawn_news, "motor_noticia_da_saida_do_convocado";
+    Prologue { address: 0x7701f0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => national_teams_post_replacement_needed_news, compare_national_teams_post_replacement_needed_news, "motor_noticia_do_pedido_de_substituto";
+    Prologue { address: 0x76db00, bytes: &[0x6a, 0xff, 0x68, 0xdb, 0xdd, 0x95, 0x00] } => national_teams_can_change_squad, compare_national_teams_can_change_squad, "motor_pode_mudar_a_convocacao";
+    Prologue { address: 0x76da80, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => national_teams_player_in_squad, compare_national_teams_player_in_squad, "motor_esta_na_convocacao";
+    Prologue { address: 0x5c57d0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x53] } => schedule_assign_opponent, compare_schedule_assign_opponent, "motor_marcar_adversario_do_amistoso";
+    Prologue { address: 0x86c8c0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => add_month_award_record, compare_add_month_award_record, "motor_registrar_premio_do_mes";
+    Prologue { address: 0x5c52d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x66, 0x8b, 0x80, 0x80, 0x00, 0x00, 0x00] } => friendly_club_reputation_tier, compare_friendly_club_reputation_tier, "motor_faixa_de_reputacao_do_amistoso";
+    Prologue { address: 0x5c74d0, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] } => friendly_get_rest_days_for_kind, compare_friendly_get_rest_days_for_kind, "motor_folga_do_amistoso";
+    Prologue { address: 0x866620, bytes: &[0x6a, 0xff, 0x68, 0x90, 0x2a, 0x96, 0x00] } => get_contract_satisfaction, compare_get_contract_satisfaction, "motor_satisfacao_com_o_contrato";
+    Prologue { address: 0x4d9f80, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_wants_new_contract_news, compare_post_wants_new_contract_news, "motor_noticia_quer_contrato_novo";
+    Prologue { address: 0x4d9460, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_transfer_request_withdrawn_news, compare_post_transfer_request_withdrawn_news, "motor_noticia_pedido_de_transferencia_retirado";
+    Prologue { address: 0x8c3310, bytes: &[0x6a, 0xff, 0x68, 0x10, 0x3c, 0x96, 0x00] } => confirm_offer_by_club, compare_confirm_offer_by_club, "motor_confirmar_oferta_pelo_clube";
+    Prologue { address: 0x8c34e0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] } => try_complete_offer, compare_try_complete_offer, "motor_tentar_concluir_oferta";
+    Prologue { address: 0x8c91e0, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] } => settle_previous_transfer_clauses, compare_settle_previous_transfer_clauses, "motor_acertar_clausulas_anteriores";
+    Prologue { address: 0x842740, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => try_loan_offer_for_player, compare_try_loan_offer_for_player, "motor_tentar_emprestimo_pelo_jogador";
+    Prologue { address: 0x4d6790, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_contract_expiry_news, compare_post_contract_expiry_news, "motor_noticia_contrato_acabando";
+    Prologue { address: 0x4d6d70, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_bosman_departure_news, compare_post_bosman_departure_news, "motor_noticia_saida_pela_lei_bosman";
+    Prologue { address: 0x4cc490, bytes: &[0x6a, 0xff, 0x68, 0x29, 0x6d, 0x95, 0x00] } => add_contract_offer, compare_add_contract_offer, "motor_acrescentar_oferta_de_contrato";
+    Prologue { address: 0x4ccb30, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0xf9] } => remove_contract_offer_for_transfer, compare_remove_contract_offer_for_transfer, "motor_tirar_oferta_de_contrato_da_vaga";
+    Prologue { address: 0x4ce450, bytes: &[0x6a, 0xff, 0x68, 0x88, 0x6d, 0x95, 0x00] } => contract_manager_lowest_wage_demand, compare_contract_manager_lowest_wage_demand, "motor_menor_salario_pedido";
+    Prologue { address: 0x767ee0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x53] } => record_match_ratings, compare_record_match_ratings, "motor_guardar_notas_da_partida";
+    Prologue { address: 0x767fa0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => add_player_rating, compare_add_player_rating, "motor_nota_do_jogador_no_mes";
+    Prologue { address: 0x768130, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55] } => find_best_player, compare_find_best_player, "motor_melhor_do_mes";
+    Prologue { address: 0x767150, bytes: &[0x56, 0x57, 0x8b, 0xf9, 0x8b, 0x47, 0x09] } => award_best_rated_player, compare_award_best_rated_player, "motor_premiar_o_melhor_do_mes";
+    Prologue { address: 0x7671c0, bytes: &[0x51, 0x53, 0x8b, 0x5c, 0x24, 0x14] } => set_winner, compare_set_winner, "motor_gravar_vencedor_do_mes";
+    Prologue { address: 0x412f00, bytes: &[0x53, 0x55, 0x8b, 0x4c, 0x24, 0x1c] } => award_raise_winner_reputation, compare_award_raise_winner_reputation, "motor_reputacao_do_premiado";
+    Prologue { address: 0x62c680, bytes: &[0x6a, 0xff, 0x68, 0xf8, 0xb0, 0x95, 0x00] } => update_player_fitness, compare_update_player_fitness, "motor_fisico_do_dia";
+    Prologue { address: 0x690bd0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x09] } => get_league_confidence_band, compare_get_league_confidence_band, "motor_faixa_da_confianca_na_liga";
+    Prologue { address: 0x69f7c0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x56] } => set_board_ratings, compare_set_board_ratings, "motor_gravar_notas_da_diretoria";
+    Prologue { address: 0x62b7b0, bytes: &[0x83, 0xec, 0x1c, 0x53, 0x8b, 0xd9] } => injury_daily_update, compare_injury_daily_update, "motor_dia_das_lesoes";
+    Prologue { address: 0x62e010, bytes: &[0x6a, 0xff, 0x68, 0x68, 0xb1, 0x95, 0x00] } => post_due_recovery_news, compare_post_due_recovery_news, "motor_noticias_de_volta_aos_treinos";
+    Prologue { address: 0x55d360, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => is_one_booking_from_ban, compare_is_one_booking_from_ban, "motor_um_cartao_da_suspensao";
+    Prologue { address: 0x7a65d0, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => process_regen_queue, compare_process_regen_queue, "motor_fila_de_regens";
+    Prologue { address: 0x757f30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x66, 0x81, 0xb8, 0x80, 0x00, 0x00, 0x00, 0x6a, 0x18] } => media_pick_outlet_type_for_club, compare_media_pick_outlet_type_for_club, "motor_veiculo_pelo_clube";
+    Prologue { address: 0x757fa0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x48, 0x61] } => media_pick_outlet_type_for_person, compare_media_pick_outlet_type_for_person, "motor_veiculo_pela_pessoa";
+    Prologue { address: 0x685d30, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => league_add_result, compare_league_add_result, "motor_somar_resultado_na_liga";
+    Prologue { address: 0x687710, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => copy_table, compare_copy_table, "motor_copiar_tabela_da_liga";
+    Prologue { address: 0x68a850, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => league_set_predicted_positions, compare_league_set_predicted_positions, "motor_posicoes_previstas_da_liga";
+    Prologue { address: 0x76b600, bytes: &[0x83, 0xec, 0x60, 0x56, 0x57] } => record_international_result, compare_record_international_result, "motor_resultado_entre_selecoes";
+    Prologue { address: 0x775610, bytes: &[0x8b, 0x44, 0x24, 0x10, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => format_squad_label, compare_format_squad_label, "motor_nome_do_elenco_da_selecao";
+    Prologue { address: 0x48d410, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x8b, 0xc1] } => are_round_fixtures_known, compare_are_round_fixtures_known, "motor_rodada_com_jogos_conhecidos";
+    Prologue { address: 0x7771c0, bytes: &[0x6a, 0xff, 0x68, 0x6b, 0xdf, 0x95, 0x00] } => record_club_call_ups, compare_record_club_call_ups, "motor_registrar_convocados_por_clube";
+    Prologue { address: 0x48e190, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] } => get_fixture_match_importance, compare_get_fixture_match_importance, "motor_importancia_do_jogo_na_competicao";
+    Prologue { address: 0x48d200, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_stage, compare_get_stage, "motor_fase_da_competicao";
+    Prologue { address: 0x4190d0, bytes: &[0x83, 0xec, 0x1c, 0x53, 0x55] } => awol_daily_update, compare_awol_daily_update, "motor_faltas_do_dia";
+    Prologue { address: 0x418ff0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => has_missed_training, compare_has_missed_training, "motor_teve_falta_ao_treino";
+    Prologue { address: 0x419070, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] } => has_fitness_incident, compare_has_fitness_incident, "motor_teve_incidente_de_forma";
+    Prologue { address: 0x41a360, bytes: &[0x6a, 0xff, 0x68, 0xe8, 0x3e, 0x95, 0x00] } => miss_training, compare_miss_training, "motor_marcar_falta_ao_treino";
+    Prologue { address: 0x419710, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] } => end_absence, compare_end_absence, "motor_fim_da_ausencia";
+    Prologue { address: 0x867560, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => set_flags, compare_set_flags, "motor_marcas_do_contrato";
+    Prologue { address: 0x8bf680, bytes: &[0x51, 0x53, 0x8b, 0x5c, 0x24, 0x0c] } => reject_transfer_offer, compare_reject_transfer_offer, "motor_recusar_oferta_de_transferencia";
+    Prologue { address: 0x8bfcb0, bytes: &[0x51, 0x53, 0x55, 0x56, 0x57] } => withdraw_transfer_offer, compare_withdraw_transfer_offer, "motor_retirar_oferta_de_transferencia";
+    Prologue { address: 0x8d5170, bytes: &[0x6a, 0xff, 0x68, 0x2b, 0x43, 0x96, 0x00] } => post_offer_rejected_news, compare_post_offer_rejected_news, "motor_noticia_oferta_recusada";
+    Prologue { address: 0x8c1290, bytes: &[0x83, 0xec, 0x20, 0x53, 0x8b, 0x5c, 0x24, 0x28] } => unsettle_player_after_bid, compare_unsettle_player_after_bid, "motor_desassossegar_pelo_lance";
+    Prologue { address: 0x8de790, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_offer_collapsed_news, compare_post_offer_collapsed_news, "motor_noticia_oferta_desfeita";
+    Prologue { address: 0x8db8a0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_appearance_money_news, compare_post_appearance_money_news, "motor_noticia_premio_por_jogos";
+    Prologue { address: 0x8c9390, bytes: &[0x51, 0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x14] } => finalise_transfer, compare_finalise_transfer, "motor_efetivar_transferencia";
+    Prologue { address: 0x8dbef0, bytes: &[0x6a, 0xff, 0x68, 0x5b, 0x45, 0x96, 0x00] } => post_transfer_completed_news, compare_post_transfer_completed_news, "motor_noticia_transferencia_concluida";
+    Prologue { address: 0x8e05d0, bytes: &[0x6a, 0xff, 0x68, 0x9b, 0x46, 0x96, 0x00] } => post_transfer_agreed_news, compare_post_transfer_agreed_news, "motor_noticia_transferencia_acertada";
+    Prologue { address: 0x8bf400, bytes: &[0x6a, 0xff, 0x68, 0x28, 0x3b, 0x96, 0x00] } => add_config_loan, compare_add_config_loan, "motor_emprestimo_da_configuracao";
+    Prologue { address: 0x4da590, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_contract_end_news, compare_post_contract_end_news, "motor_noticia_fim_do_contrato";
+    Prologue { address: 0x8dda90, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_transfer_delay_request_news, compare_post_transfer_delay_request_news, "motor_noticia_pedido_de_adiamento";
+    Prologue { address: 0x896660, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_club_tactic, compare_get_club_tactic, "motor_tatica_do_clube";
+    Prologue { address: 0x5fbe20, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => select_tactic_slot, compare_select_tactic_slot, "motor_escolher_vaga_de_tatica";
+    Prologue { address: 0x5fbd00, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_active_tactic, compare_get_active_tactic, "motor_tatica_ativa_do_humano";
+    Prologue { address: 0x896c60, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] } => remove_player_from_selection, compare_remove_player_from_selection, "motor_tirar_da_escalacao";
+    Prologue { address: 0x8973e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => swap_selection_slots, compare_swap_selection_slots, "motor_trocar_vagas_da_escalacao";
+    Prologue { address: 0x897250, bytes: &[0x8a, 0x81, 0xf0, 0x05, 0x00, 0x00] } => has_selection_undo, compare_has_selection_undo, "motor_tem_copia_da_escalacao";
+    Prologue { address: 0x6a0e70, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_manager_under_pressure_news, compare_post_manager_under_pressure_news, "motor_noticia_da_pressao";
+    Prologue { address: 0x6a1b00, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_manager_departure_news, compare_post_manager_departure_news, "motor_noticia_da_saida_do_tecnico";
+    Prologue { address: 0x6a2e00, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_manager_appointment_news, compare_post_manager_appointment_news, "motor_noticia_do_tecnico_novo";
+    Prologue { address: 0x682e10, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => pay_prize_money, compare_pay_prize_money, "motor_pagar_premios_da_liga";
+    Prologue { address: 0x686940, bytes: &[0x8a, 0x44, 0x24, 0x08, 0x3c, 0x05] } => league_update_staff_records_for_status, compare_league_update_staff_records_for_status, "motor_registros_pela_situacao_na_liga";
+    Prologue { address: 0x686670, bytes: &[0x6a, 0xff, 0x68, 0x8b, 0xca, 0x95, 0x00] } => announce_team_status, compare_announce_team_status, "motor_anunciar_situacao_na_liga";
+    Prologue { address: 0x7c0d70, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => player_stats_record_match, compare_player_stats_record_match, "motor_registrar_partida_nas_estatisticas";
+    Prologue { address: 0x447430, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] } => update_league_position_records, compare_update_league_position_records, "motor_recordes_de_posicao_na_liga";
+    Prologue { address: 0x448e30, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => send_record_news, compare_send_record_news, "motor_noticias_de_recordes";
+    Prologue { address: 0x76bab0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => select_squads_for_fixture, compare_select_squads_for_fixture, "motor_convocar_selecoes_para_o_jogo";
+    Prologue { address: 0x76fd10, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => national_teams_post_player_called_up_news, compare_national_teams_post_player_called_up_news, "motor_noticia_do_convocado";
+    Prologue { address: 0x519690, bytes: &[0x6a, 0xff, 0x68, 0xdb, 0x75, 0x95, 0x00] } => add_team_result_news, compare_add_team_result_news, "motor_noticia_do_desfecho_na_copa";
+    Prologue { address: 0x844540, bytes: &[0x83, 0xec, 0x14, 0x53, 0x8b, 0x5c, 0x24, 0x1c] } => count_slots_with_bids, compare_count_slots_with_bids, "motor_contar_vagas_com_lance";
+    Prologue { address: 0x844280, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0x50, 0x10, 0xae, 0x00] } => shortlist_manager_remove_from_transfer_list, compare_shortlist_manager_remove_from_transfer_list, "motor_tirar_da_lista_de_transferencias";
+    Prologue { address: 0x8442d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0x50, 0x10, 0xae, 0x00] } => shortlist_manager_remove_from_loan_list, compare_shortlist_manager_remove_from_loan_list, "motor_tirar_da_lista_de_emprestimos";
+    Prologue { address: 0x843e10, bytes: &[0x6a, 0xff, 0x68, 0x18, 0x25, 0x96, 0x00] } => update_staff_status, compare_update_staff_status, "motor_situacao_na_lista_de_observacao";
+    Prologue { address: 0x8442b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x0d, 0x50, 0x10, 0xae, 0x00] } => shortlist_manager_add_to_loan_list, compare_shortlist_manager_add_to_loan_list, "motor_por_na_lista_de_emprestimos";
+    Prologue { address: 0x84b1f0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] } => shortlist_manager_max_fee_for_player_status, compare_shortlist_manager_max_fee_for_player_status, "motor_teto_de_preco_pelo_estatuto";
+    Prologue { address: 0x83b6e0, bytes: &[0x83, 0xec, 0x2c, 0x53, 0x55] } => allocate_transfer_budget, compare_allocate_transfer_budget, "motor_distribuir_verba_de_transferencias";
+    Prologue { address: 0x84b4d0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => shortlist_manager_squad_status_allowed, compare_shortlist_manager_squad_status_allowed, "motor_estatuto_permitido";
+    Prologue { address: 0x7fc150, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => scout_manager_write_list_name, compare_scout_manager_write_list_name, "motor_nome_da_lista_do_olheiro";
+    Prologue { address: 0x5cbb00, bytes: &[0x6a, 0xff, 0x68, 0xa0, 0xa3, 0x95, 0x00] } => update_international_friendlies, compare_update_international_friendlies, "motor_amistosos_internacionais_do_dia";
+    Prologue { address: 0x7f6e30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_selected_list, compare_get_selected_list, "motor_lista_escolhida_do_tecnico";
+    Prologue { address: 0x7f6f20, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => set_selected_list, compare_set_selected_list, "motor_escolher_lista_do_tecnico";
+    Prologue { address: 0x584fa0, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] } => european_cup_collect_entrants, compare_european_cup_collect_entrants, "motor_inscritos_da_liga_dos_campeoes";
+    Prologue { address: 0x584990, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => build_qualifying_entry_table, compare_build_qualifying_entry_table, "motor_tabela_da_qualificacao_da_liga_dos_campeoes";
+    Prologue { address: 0x5851d0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => european_cup_advance_stage, compare_european_cup_advance_stage, "motor_proxima_fase_da_liga_dos_campeoes";
+    Prologue { address: 0x583b10, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => process_fixture, compare_process_fixture, "motor_processar_jogo_da_liga_dos_campeoes";
+    Prologue { address: 0x586c00, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => european_cup_set_club_progress, compare_european_cup_set_club_progress, "motor_progresso_do_clube_na_liga_dos_campeoes";
+    Prologue { address: 0x48e360, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x0f, 0xbf, 0x48, 0x30] } => counts_for_fixture_clash, compare_counts_for_fixture_clash, "motor_conta_para_conflito_de_datas";
+    Prologue { address: 0x79c7b0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55, 0x56] } => choose_match_official, compare_choose_match_official, "motor_escolher_arbitro_da_partida";
+    Prologue { address: 0x79bf40, bytes: &[0x8b, 0x51, 0x04, 0x33, 0xc0] } => clear_busy_flags, compare_clear_busy_flags, "motor_limpar_arbitros_ocupados";
+    Prologue { address: 0x79cee0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => renew_officials, compare_renew_officials, "motor_renovar_arbitros";
+    Prologue { address: 0x79c5c0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => officials_manager_add_random_officials, compare_officials_manager_add_random_officials, "motor_arbitros_sorteados";
+    Prologue { address: 0x79caa0, bytes: &[0x8b, 0x0d, 0x90, 0x23, 0xae, 0x00] } => officials_manager_validate_officials, compare_officials_manager_validate_officials, "motor_validar_arbitros";
+    Prologue { address: 0x79c530, bytes: &[0x83, 0xec, 0x08, 0x56, 0x57] } => officials_manager_operator, compare_officials_manager_operator, "motor_copiar_ficha_de_arbitro";
+    Prologue { address: 0x86c390, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => add_year_award_record, compare_add_year_award_record, "motor_registrar_premio_do_ano";
+    Prologue { address: 0x7e4a30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => match_record_is_bigger_win, compare_match_record_is_bigger_win, "motor_vitoria_maior";
+    Prologue { address: 0x7e4b00, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => match_record_is_bigger_defeat, compare_match_record_is_bigger_defeat, "motor_derrota_maior";
+    Prologue { address: 0x8c39f0, bytes: &[0x81, 0xec, 0xc8, 0x01, 0x00, 0x00] } => update_appearance_clauses_after_match, compare_update_appearance_clauses_after_match, "motor_jogos_das_permissoes_e_clausulas";
+    Prologue { address: 0x8cad90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => add_international_team_appearance_money, compare_add_international_team_appearance_money, "motor_guardar_premio_por_jogos_na_selecao";
+    Prologue { address: 0x8da5e0, bytes: &[0x6a, 0xff, 0x68, 0x96, 0x44, 0x96, 0x00] } => post_transfer_finalised_news, compare_post_transfer_finalised_news, "motor_noticia_transferencia_finalizada";
+    Prologue { address: 0x696b10, bytes: &[0x83, 0xec, 0x14, 0x8a, 0x44, 0x24, 0x24] } => check_board_transfer_veto, compare_check_board_transfer_veto, "motor_veto_dos_fisios_e_da_diretoria";
+    Prologue { address: 0x6ac700, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_board_ultimatum_news, compare_post_board_ultimatum_news, "motor_noticia_do_ultimato";
+    Prologue { address: 0x6ac880, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => news_board_ultimatum_text, compare_news_board_ultimatum_text, "motor_texto_do_ultimato";
+    Prologue { address: 0x8c1af0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => free_transfer_staff, compare_free_transfer_staff, "motor_liberar_sem_custo";
+    Prologue { address: 0x5fd2f0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => set_on_holiday, compare_set_on_holiday, "motor_ferias_do_humano";
+    Prologue { address: 0x8d7cd0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_contract_talks_news, compare_post_contract_talks_news, "motor_noticia_conversa_de_contrato";
+    Prologue { address: 0x573080, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => eng_first_create_playoff_stage, compare_eng_first_create_playoff_stage, "motor_mata_mata_da_first";
+    Prologue { address: 0x576a70, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => eng_second_create_play_off_stage, compare_eng_second_create_play_off_stage, "motor_mata_mata_da_second";
+    Prologue { address: 0x5783c0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => eng_third_create_play_off_stage, compare_eng_third_create_play_off_stage, "motor_mata_mata_da_third";
+    Prologue { address: 0x576c50, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x53] } => eng_second_update_staff_records_for_status, compare_eng_second_update_staff_records_for_status, "motor_registros_pela_situacao_inglesa";
+    Prologue { address: 0x573260, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => eng_first_set_club_progress, compare_eng_first_set_club_progress, "motor_situacao_na_first";
+    Prologue { address: 0x578660, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => eng_third_set_club_progress, compare_eng_third_set_club_progress, "motor_situacao_na_third";
+    Prologue { address: 0x684cd0, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] } => update_positions_and_status, compare_update_positions_and_status, "motor_posicoes_e_situacao_na_liga";
+    Prologue { address: 0x572ff0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => eng_first_advance_stage, compare_eng_first_advance_stage, "motor_fase_seguinte_da_first";
+    Prologue { address: 0x5769e0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => eng_second_advance_stage, compare_eng_second_advance_stage, "motor_fase_seguinte_da_second";
+    Prologue { address: 0x584ae0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x53] } => european_cup_update_staff_records_for_status, compare_european_cup_update_staff_records_for_status, "motor_registros_da_liga_dos_campeoes";
+    Prologue { address: 0x586330, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => draw_quarter_finals, compare_draw_quarter_finals, "motor_sorteio_das_quartas";
+    Prologue { address: 0x586660, bytes: &[0x8a, 0x44, 0x24, 0x08, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => european_cup_collect_club_list, compare_european_cup_collect_club_list, "motor_clubes_da_liga_dos_campeoes";
+    Prologue { address: 0x896290, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => record_tactic_result, compare_record_tactic_result, "motor_registrar_resultado_da_tatica";
+    Prologue { address: 0x8976a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_captain, compare_get_captain, "motor_capitao_guardado";
+    Prologue { address: 0x897880, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => set_captain, compare_set_captain, "motor_escolher_capitao";
+    Prologue { address: 0x7757d0, bytes: &[0x6a, 0xff, 0x68, 0xf0, 0xde, 0x95, 0x00] } => get_international_duty_club, compare_get_international_duty_club, "motor_selecao_que_tem_o_jogador";
+    Prologue { address: 0x76d9b0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x56] } => national_teams_player_is_eligible, compare_national_teams_player_is_eligible, "motor_jogador_serve_a_selecao";
+    Prologue { address: 0x775580, bytes: &[0x53, 0x55, 0x8b, 0xe9, 0x32, 0xdb] } => collect_duty_competitions, compare_collect_duty_competitions, "motor_juntar_competicoes_das_convocacoes";
+    Prologue { address: 0x7e4750, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => fill_match_record_from_fixture, compare_fill_match_record_from_fixture, "motor_registro_da_partida_pelo_clube";
+    Prologue { address: 0x7e4920, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => fill_staff_name_ref, compare_fill_staff_name_ref, "motor_referencia_ao_nome";
+    Prologue { address: 0x7e56d0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => match_record_result_code, compare_match_record_result_code, "motor_codigo_do_resultado";
+    Prologue { address: 0x5ae9d0, bytes: &[0x6a, 0xff, 0x68, 0x46, 0x98, 0x95, 0x00] } => move_nearby_club_fixtures, compare_move_nearby_club_fixtures, "motor_mover_jogos_vizinhos_do_clube";
+    Prologue { address: 0x5abb10, bytes: &[0x6a, 0xff, 0x68, 0x40, 0x97, 0x95, 0x00] } => reschedule_club_fixtures_near_date, compare_reschedule_club_fixtures_near_date, "motor_remarcar_jogos_perto_da_data";
+    Prologue { address: 0x5aac70, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => queue_fixture_moved_news, compare_queue_fixture_moved_news, "motor_noticia_do_jogo_remarcado";
+    Prologue { address: 0x41add0, bytes: &[0x6a, 0xff, 0x68, 0x36, 0x3f, 0x95, 0x00] } => report_poor_fitness, compare_report_poor_fitness, "motor_incidente_de_forma";
+    Prologue { address: 0x5a74b0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_fine_reaction_news, compare_post_fine_reaction_news, "motor_noticia_reacao_a_multa";
+    Prologue { address: 0x5a7f20, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_coach_fine_feedback_news, compare_post_coach_fine_feedback_news, "motor_noticia_retorno_do_treinador";
+    Prologue { address: 0x7dab90, bytes: &[0xb8, 0x94, 0x10, 0x00, 0x00] } => pick_random_pundit, compare_pick_random_pundit, "motor_sortear_comentarista";
+    Prologue { address: 0x7dad20, bytes: &[0x53, 0x55, 0x56, 0x8b, 0xf1] } => get_pundit_name, compare_get_pundit_name, "motor_nome_do_veiculo";
+    Prologue { address: 0x758de0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => queue_manager_fa_complaint_story, compare_queue_manager_fa_complaint_story, "motor_noticia_queixa_a_federacao";
+    Prologue { address: 0x598370, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55, 0x56] } => update_wage_bill, compare_update_wage_bill, "motor_folha_salarial_do_clube";
+    Prologue { address: 0x59cf50, bytes: &[0xa1, 0x5c, 0x23, 0xae, 0x00] } => refresh_all_wage_bills, compare_refresh_all_wage_bills, "motor_refazer_todas_as_folhas";
+    Prologue { address: 0x59b4c0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => finance_get_days_to_season_start, compare_finance_get_days_to_season_start, "motor_dias_ate_a_temporada";
+    Prologue { address: 0x599800, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => add_players_sold, compare_add_players_sold, "motor_receber_venda_de_jogador";
+    Prologue { address: 0x599890, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => pay_players_bought, compare_pay_players_bought, "motor_pagar_compra_de_jogador";
+    Prologue { address: 0x5998e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x91, 0x3c, 0x01, 0x00, 0x00] } => pay_sign_on_fee, compare_pay_sign_on_fee, "motor_pagar_luvas";
+    Prologue { address: 0x5999a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x91, 0x48, 0x01, 0x00, 0x00] } => add_prize_money, compare_add_prize_money, "motor_receber_premio_em_dinheiro";
+    Prologue { address: 0x5987c0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x91, 0x58, 0x01, 0x00, 0x00] } => add_tv_revenue, compare_add_tv_revenue, "motor_receber_direitos_de_tv";
+    Prologue { address: 0x599920, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x91, 0x30, 0x01, 0x00, 0x00] } => pay_wages, compare_pay_wages, "motor_pagar_salarios";
+    Prologue { address: 0x522240, bytes: &[0x83, 0xec, 0x08, 0x8b, 0x44, 0x24, 0x0c] } => pay_round_prize_money, compare_pay_round_prize_money, "motor_copa_premio_da_rodada";
+    Prologue { address: 0x51e870, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x83, 0xec, 0x08] } => set_home_teams_for_round, compare_set_home_teams_for_round, "motor_copa_mandantes_da_rodada";
+    Prologue { address: 0x521b30, bytes: &[0x66, 0x8b, 0x41, 0x3c, 0x53] } => record_team_progress, compare_record_team_progress, "motor_copa_progresso_do_time";
+    Prologue { address: 0x5c5f40, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0xa0, 0x95, 0x00] } => process_friendly_reply, compare_process_friendly_reply, "motor_amistoso_responder_pedido";
+    Prologue { address: 0x5c5570, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => send_friendly_request, compare_send_friendly_request, "motor_amistoso_enviar_pedido";
+    Prologue { address: 0x5ca3e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => build_nation_list, compare_build_nation_list, "motor_amistoso_lista_das_nacoes";
+    Prologue { address: 0x51c410, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => draw_round, compare_draw_round, "motor_copa_sortear_rodada";
+    Prologue { address: 0x4bffc0, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x81, 0xec, 0xc8, 0x02, 0x00, 0x00] } => comp_util_format_stage_round_name, compare_comp_util_format_stage_round_name, "motor_nome_da_fase_e_rodada";
+    Prologue { address: 0x522360, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x48, 0x57] } => club_in_higher_division, compare_club_in_higher_division, "motor_clube_da_divisao_mais_alta";
+    Prologue { address: 0x519890, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] } => cup_update_staff_records_for_status, compare_cup_update_staff_records_for_status, "motor_copa_registros_pelo_desfecho";
+    Prologue { address: 0x519a90, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] } => cup_record_season_honours, compare_cup_record_season_honours, "motor_copa_honras_da_temporada";
+    Prologue { address: 0x519fc0, bytes: &[0x83, 0xec, 0x10, 0x53, 0x55] } => register_semi_final_losers_for_uefa, compare_register_semi_final_losers_for_uefa, "motor_copa_semifinalistas_para_a_uefa";
+    Prologue { address: 0x8bfa30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x55] } => reject_loan_offer, compare_reject_loan_offer, "motor_recusar_oferta_de_emprestimo";
+    Prologue { address: 0x8cd450, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] } => check_squad_limits, compare_check_squad_limits, "motor_vaga_no_elenco_para_a_oferta";
+    Prologue { address: 0x8d0dd0, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] } => find_next_sale_percentage, compare_find_next_sale_percentage, "motor_percentual_da_proxima_venda_achado";
+    Prologue { address: 0x7af600, bytes: &[0x6a, 0xff, 0x68, 0x86, 0xf3, 0x95, 0x00] } => contains_player, compare_contains_player, "motor_jogador_na_busca";
+    Prologue { address: 0x7f7270, bytes: &[0x81, 0xec, 0x30, 0x02, 0x00, 0x00] } => sync_scout_lists, compare_sync_scout_lists, "motor_sincronizar_listas_dos_olheiros";
+    Prologue { address: 0x7bd700, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => player_search_find_or_claim_player_slot, compare_player_search_find_or_claim_player_slot, "motor_vaga_do_jogador_observado";
+    Prologue { address: 0x840d80, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => value_player_for_club, compare_value_player_for_club, "motor_valor_do_jogador_para_o_clube";
+    Prologue { address: 0x7f8610, bytes: &[0x0f, 0xbf, 0x05, 0x7a, 0x7c, 0xb7, 0x00] } => find_club_search_entry, compare_find_club_search_entry, "motor_entrada_do_jogador_na_busca_do_clube";
+    Prologue { address: 0x8d0f00, bytes: &[0x83, 0xec, 0x10, 0x56, 0x57] } => find_international_appearance_money, compare_find_international_appearance_money, "motor_premio_de_jogos_na_selecao_achado";
+    Prologue { address: 0x4ca6d0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => update_after_match, compare_update_after_match, "motor_contratos_depois_do_jogo";
+    Prologue { address: 0x4cc2d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x48, 0x61] } => contract_manager_get_player_morale, compare_contract_manager_get_player_morale, "motor_moral_da_ficha";
+    Prologue { address: 0x4cc2e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x48, 0x61] } => contract_manager_write_morale_text, compare_contract_manager_write_morale_text, "motor_texto_da_moral";
+    Prologue { address: 0x4d0c60, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => calc_player_value, compare_calc_player_value, "motor_valor_do_jogador";
+    Prologue { address: 0x4cc3a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => contract_manager_write_morale_comparison_text, compare_contract_manager_write_morale_comparison_text, "motor_diferenca_de_moral_em_texto";
+    Prologue { address: 0x4cc130, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_squad_flags_for_club, compare_get_squad_flags_for_club, "motor_marcas_de_elenco_para_a_tela";
+    Prologue { address: 0x6aaee0, bytes: &[0x81, 0xec, 0xdc, 0x00, 0x00, 0x00] } => board_named_players_after_match, compare_board_named_players_after_match, "motor_jogadores_que_a_diretoria_cita";
+    Prologue { address: 0x6ab670, bytes: &[0x6a, 0xff, 0x68, 0x1b, 0xd0, 0x95, 0x00] } => get_player_match_rating_verdict, compare_get_player_match_rating_verdict, "motor_veredito_da_nota_na_partida";
+    Prologue { address: 0x6ab2d0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x64, 0x02, 0x00, 0x00] } => build_board_player_performance_text, compare_build_board_player_performance_text, "motor_texto_da_diretoria_sobre_os_jogadores";
+    Prologue { address: 0x868830, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] } => record_match_result, compare_record_match_result, "motor_resultado_nos_registros_dos_tecnicos";
+    Prologue { address: 0x86a070, bytes: &[0x6a, 0xff, 0x68, 0xdb, 0x2b, 0x96, 0x00] } => add_league_finish_records, compare_add_league_finish_records, "motor_posicoes_no_fim_da_liga";
+    Prologue { address: 0x86dc30, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0x2d, 0x96, 0x00] } => add_supporters_player_of_year_record, compare_add_supporters_player_of_year_record, "motor_jogador_do_ano_da_torcida_no_registro";
+    Prologue { address: 0x86b0b0, bytes: &[0x6a, 0xff, 0x68, 0x46, 0x2c, 0x96, 0x00] } => add_cup_runners_up_record, compare_add_cup_runners_up_record, "motor_vice_da_copa_nos_registros";
+    Prologue { address: 0x86b710, bytes: &[0x6a, 0xff, 0x68, 0x66, 0x2c, 0x96, 0x00] } => add_cup_third_place_record, compare_add_cup_third_place_record, "motor_terceiro_da_copa_nos_registros";
+    Prologue { address: 0x869aa0, bytes: &[0x6a, 0xff, 0x68, 0xc1, 0x2b, 0x96, 0x00] } => record_manager_job_change, compare_record_manager_job_change, "motor_troca_de_tecnico_nos_registros";
+    Prologue { address: 0x758200, bytes: &[0x83, 0xec, 0x18, 0x53, 0x55] } => process_transfer_squad_reactions, compare_process_transfer_squad_reactions, "motor_reacoes_dos_elencos_a_transferencia";
+    Prologue { address: 0x75b6e0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => queue_signing_celebration_story, compare_queue_signing_celebration_story, "motor_noticia_da_comemoracao_da_contratacao";
+    Prologue { address: 0x75cfc0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => queue_sale_unrest_story, compare_queue_sale_unrest_story, "motor_noticia_do_companheiro_desassossegado";
+    Prologue { address: 0x59a5d0, bytes: &[0x81, 0xec, 0x1c, 0x02, 0x00, 0x00] } => process_match_income, compare_process_match_income, "motor_renda_da_partida";
+    Prologue { address: 0x59af40, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => calc_gate_receipts, compare_calc_gate_receipts, "motor_renda_do_estadio";
+    Prologue { address: 0x599850, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x91, 0x28, 0x01, 0x00, 0x00] } => pay_league_fine, compare_pay_league_fine, "motor_pagar_multa_da_liga";
+    Prologue { address: 0x59e050, bytes: &[0x51, 0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x14] } => try_finance_boost_event, compare_try_finance_boost_event, "motor_impulso_das_financas";
+    Prologue { address: 0x59e940, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => try_board_takeover, compare_try_board_takeover, "motor_troca_do_presidente";
+    Prologue { address: 0x5999e0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x91, 0x20, 0x01, 0x00, 0x00] } => pay_other_costs, compare_pay_other_costs, "motor_pagar_outros_custos";
+    Prologue { address: 0x5ca4f0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => build_international_date_table, compare_build_international_date_table, "motor_tabela_das_datas_internacionais";
+    Prologue { address: 0x5cc510, bytes: &[0x51, 0x66, 0xa1, 0x92, 0x2c, 0xae, 0x00] } => resolve_international_dates, compare_resolve_international_dates, "motor_resolver_datas_internacionais";
+    Prologue { address: 0x5c6830, bytes: &[0x0f, 0xbf, 0x05, 0x7a, 0x7c, 0xb7, 0x00] } => find_human_club_tournament, compare_find_human_club_tournament, "motor_torneio_do_clube_humano";
+    Prologue { address: 0x5c4770, bytes: &[0x81, 0xec, 0x50, 0x02, 0x00, 0x00] } => plan_club_friendlies, compare_plan_club_friendlies, "motor_amistosos_dos_clubes";
+    Prologue { address: 0x5c6e00, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56, 0x57] } => add_tournament, compare_add_tournament, "motor_acrescentar_torneio";
+    Prologue { address: 0x5c68b0, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0x8b, 0x86, 0xc8, 0x34, 0x00, 0x00] } => find_human_club_open_invitation, compare_find_human_club_open_invitation, "motor_convite_aberto_do_clube_humano";
+    Prologue { address: 0x62d250, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] } => add_injury, compare_add_injury, "motor_lesao_nova";
+    Prologue { address: 0x62dca0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => injury_post_injury_news, compare_injury_post_injury_news, "motor_noticia_da_lesao";
+    Prologue { address: 0x418f60, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => is_player_awol, compare_is_player_awol, "motor_ausente_sem_licenca";
+    Prologue { address: 0x8e4f20, bytes: &[0x6a, 0xff, 0x68, 0xab, 0x48, 0x96, 0x00] } => pay_former_club_fee_cuts, compare_pay_former_club_fee_cuts, "motor_parte_dos_clubes_anteriores";
+    Prologue { address: 0x8cb0f0, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] } => pay_next_sale_percentage, compare_pay_next_sale_percentage, "motor_percentual_da_proxima_venda_pago";
+    Prologue { address: 0x8db3a0, bytes: &[0x6a, 0xff, 0x68, 0xdb, 0x44, 0x96, 0x00] } => post_sale_percentage_news, compare_post_sale_percentage_news, "motor_noticia_do_percentual_da_venda";
+    Prologue { address: 0x8c7950, bytes: &[0x83, 0xec, 0x14, 0x53, 0x55] } => is_work_permit_granted, compare_is_work_permit_granted, "motor_permissao_concedida";
+    Prologue { address: 0x8c5800, bytes: &[0x8b, 0x0d, 0x50, 0x10, 0xae, 0x00] } => transfer_manager_get_squad_status_for_reason, compare_transfer_manager_get_squad_status_for_reason, "motor_estatuto_pelo_motivo";
+    Prologue { address: 0x8c6200, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x51, 0x10] } => get_negotiation_slot, compare_get_negotiation_slot, "motor_vaga_da_negociacao";
+    Prologue { address: 0x755340, bytes: &[0x81, 0xec, 0xf4, 0x00, 0x00, 0x00] } => apply_squad_reaction_to_player_story, compare_apply_squad_reaction_to_player_story, "motor_reacao_do_elenco_a_historia";
+    Prologue { address: 0x758010, bytes: &[0x83, 0xec, 0x10, 0x53, 0x57] } => warn_squad_of_position_rival, compare_warn_squad_of_position_rival, "motor_aviso_ao_rival_de_posicao";
+    Prologue { address: 0x735160, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x85, 0xc0] } => media_format_response_option_label, compare_media_format_response_option_label, "motor_rotulo_da_resposta_da_midia";
+    Prologue { address: 0x557120, bytes: &[0x6a, 0xff, 0x68, 0xc8, 0x7c, 0x95, 0x00] } => serve_international_bans, compare_serve_international_bans, "motor_cumprir_suspensoes_internacionais";
+    Prologue { address: 0x557000, bytes: &[0x53, 0x55, 0x8b, 0x5c, 0x24, 0x0c] } => apply_appeal_result, compare_apply_appeal_result, "motor_recurso_da_suspensao";
+    Prologue { address: 0x55d3c0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] } => get_slot_text, compare_get_slot_text, "motor_texto_da_vaga_da_suspensao";
+    Prologue { address: 0x68d1f0, bytes: &[0x8b, 0xc1, 0x53, 0x55, 0x56] } => manager_manager_remove, compare_manager_manager_remove, "motor_tirar_da_lista";
+    Prologue { address: 0x68d080, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x46, 0x02] } => manager_manager_clear, compare_manager_manager_clear, "motor_esvaziar_lista";
+    Prologue { address: 0x68d2e0, bytes: &[0x8b, 0x41, 0x0a, 0x85, 0xc0] } => get_current, compare_get_current, "motor_item_do_cursor";
+    Prologue { address: 0x51d2d0, bytes: &[0x81, 0xec, 0x2c, 0x02, 0x00, 0x00] } => sort_round_teams, compare_sort_round_teams, "motor_copa_sortear_pela_semente";
+    Prologue { address: 0x51d9f0, bytes: &[0x81, 0xec, 0x30, 0x02, 0x00, 0x00] } => check_round_teams_for_nation, compare_check_round_teams_for_nation, "motor_copa_sortear_separando_nacoes";
+    Prologue { address: 0x518780, bytes: &[0xc6, 0x81, 0xb1, 0x00, 0x00, 0x00, 0x00] } => cup_start_new_season, compare_cup_start_new_season, "motor_copa_comeco_da_temporada";
+    Prologue { address: 0x48dee0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => comp_active_key_nation_of_club, compare_comp_active_key_nation_of_club, "motor_nacao_chave_do_clube";
+    Prologue { address: 0x48df40, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x53] } => comp_active_key_nation_of_stadium, compare_comp_active_key_nation_of_stadium, "motor_nacao_chave_do_estadio";
+    Prologue { address: 0x48dcd0, bytes: &[0x8a, 0x54, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => comp_key_nation_entry_from_active_index, compare_comp_key_nation_entry_from_active_index, "motor_entrada_da_nacao_chave_ativa";
+    Prologue { address: 0x5ae380, bytes: &[0x6a, 0xff, 0x68, 0x16, 0x98, 0x95, 0x00] } => resolve_same_day_clash, compare_resolve_same_day_clash, "motor_conflito_de_jogos_no_mesmo_dia";
+    Prologue { address: 0x5aee40, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x15, 0x5c, 0x2a, 0xae, 0x00] } => get_club_first_fixture_year, compare_get_club_first_fixture_year, "motor_primeiro_ano_com_jogos";
+    Prologue { address: 0x5aee60, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x15, 0x5c, 0x2a, 0xae, 0x00] } => get_club_last_fixture_year, compare_get_club_last_fixture_year, "motor_ultimo_ano_com_jogos";
+    Prologue { address: 0x59b3b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => save_finance_dat, compare_save_finance_dat, "motor_gravar_financas";
+    Prologue { address: 0x59b2a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => load_from_save, compare_load_from_save, "motor_carregar_financas";
+    Prologue { address: 0x859cc0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => squad_manager_save, compare_squad_manager_save, "motor_gravar_gerente_de_elencos";
+    Prologue { address: 0x905510, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => uefa_seeding_save_to_temp_file, compare_uefa_seeding_save_to_temp_file, "motor_gravar_sementes_da_uefa";
+    Prologue { address: 0x4c6b70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => conmebol_seeding_save_to_temp_file, compare_conmebol_seeding_save_to_temp_file, "motor_gravar_sementes_da_conmebol";
+    Prologue { address: 0x5fb320, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => save_temp_file, compare_save_temp_file, "motor_gravar_paises_anfitrioes";
+    Prologue { address: 0x443f50, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => club_history_save, compare_club_history_save, "motor_gravar_historico_dos_clubes";
+    Prologue { address: 0x79bb80, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => save_official_stats, compare_save_official_stats, "motor_gravar_estatisticas_dos_arbitros";
+    Prologue { address: 0x84c680, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => simulated_stats_save, compare_simulated_stats_save, "motor_gravar_estatisticas_simuladas";
+    Prologue { address: 0x5af040, bytes: &[0xa1, 0x5c, 0x2a, 0xae, 0x00] } => fix_man_save_club_dates, compare_fix_man_save_club_dates, "motor_gravar_datas_dos_clubes";
+    Prologue { address: 0x5aee90, bytes: &[0xa1, 0x5c, 0x2a, 0xae, 0x00] } => fix_man_load_club_dates, compare_fix_man_load_club_dates, "motor_carregar_datas_dos_clubes";
+    Prologue { address: 0x5af4a0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => fix_man_save_fixture_leg_checks, compare_fix_man_save_fixture_leg_checks, "motor_gravar_conferencia_das_pernas";
+    Prologue { address: 0x59cdd0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => fin_prm_end_season_for_nation, compare_fin_prm_end_season_for_nation, "motor_fim_de_temporada_da_nacao";
+    Prologue { address: 0x59cfa0, bytes: &[0x81, 0xec, 0x1c, 0x02, 0x00, 0x00] } => season_end_club_update, compare_season_end_club_update, "motor_fim_de_temporada_do_clube";
+    Prologue { address: 0x59fe10, bytes: &[0x6a, 0xff, 0x68, 0x2b, 0x91, 0x95, 0x00] } => news_dividend, compare_news_dividend, "motor_noticia_do_dividendo";
+    Prologue { address: 0x5968d0, bytes: &[0x83, 0xec, 0x34, 0x53, 0x56] } => get_max_wage, compare_get_max_wage, "motor_teto_salarial";
+    Prologue { address: 0x59ffb0, bytes: &[0x6a, 0xff, 0x68, 0x6b, 0x91, 0x95, 0x00] } => news_ground_works, compare_news_ground_works, "motor_noticia_das_obras";
+    Prologue { address: 0x59fae0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => news_request_refused, compare_news_request_refused, "motor_noticia_da_obra_recusada";
+    Prologue { address: 0x5adba0, bytes: &[0x6a, 0xff, 0x68, 0xeb, 0x97, 0x95, 0x00] } => collect_day_clashes, compare_collect_day_clashes, "motor_conflitos_do_dia";
+    Prologue { address: 0x5ad780, bytes: &[0x6a, 0xff, 0x68, 0xc9, 0x97, 0x95, 0x00] } => find_fixture_clashes, compare_find_fixture_clashes, "motor_conflitos_do_jogo";
+    Prologue { address: 0x5af390, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] } => fix_man_load_fixture_leg_checks, compare_fix_man_load_fixture_leg_checks, "motor_carregar_conferencia_das_pernas";
+    Prologue { address: 0x5ab510, bytes: &[0x6a, 0xff, 0x68, 0x07, 0x97, 0x95, 0x00] } => find_new_fixture_date, compare_find_new_fixture_date, "motor_nova_data_do_jogo";
+    Prologue { address: 0x5aa680, bytes: &[0x6a, 0xff, 0x68, 0x24, 0x96, 0x95, 0x00] } => add_fixture, compare_add_fixture, "motor_jogo_no_calendario";
+    Prologue { address: 0x5aa2d0, bytes: &[0x6a, 0xff, 0x68, 0xea, 0x95, 0x95, 0x00] } => set_year, compare_set_year, "motor_ano_do_calendario";
+    Prologue { address: 0x51cb90, bytes: &[0x6a, 0xff, 0x68, 0x11, 0x77, 0x95, 0x00] } => create_tie_fixtures, compare_create_tie_fixtures, "motor_copa_criar_jogos_do_confronto";
+    Prologue { address: 0x522950, bytes: &[0x6a, 0xff, 0x68, 0xfb, 0x77, 0x95, 0x00] } => post_draw_news, compare_post_draw_news, "motor_copa_noticia_do_confronto_pendente";
+    Prologue { address: 0x8c6bc0, bytes: &[0x6a, 0xff, 0x68, 0x48, 0x3d, 0x96, 0x00] } => update_transfer_window_news, compare_update_transfer_window_news, "motor_janelas_avisos_do_dia";
+    Prologue { address: 0x51ebe0, bytes: &[0x6a, 0xff, 0x68, 0x5a, 0x77, 0x95, 0x00] } => move_round_fixtures_to_set_dates, compare_move_round_fixtures_to_set_dates, "motor_copa_levar_jogos_as_datas";
+    Prologue { address: 0x8c41c0, bytes: &[0x6a, 0xff, 0x68, 0x68, 0x3c, 0x96, 0x00] } => remove_exchange_player, compare_remove_exchange_player, "motor_tirar_jogador_da_troca";
+    Prologue { address: 0x8c7690, bytes: &[0x51, 0x53, 0x55, 0x56, 0x8b, 0x74, 0x24, 0x14] } => check_offer_work_permits, compare_check_offer_work_permits, "motor_permissoes_da_oferta";
+    Prologue { address: 0x695240, bytes: &[0x83, 0xec, 0x2c, 0x8b, 0x44, 0x24, 0x3c] } => update_board_confidence_after_match, compare_update_board_confidence_after_match, "motor_confianca_depois_da_partida";
+    Prologue { address: 0x6a5fa0, bytes: &[0x6a, 0xff, 0x68, 0x16, 0xcf, 0x95, 0x00] } => post_board_match_reaction_news, compare_post_board_match_reaction_news, "motor_noticia_da_reacao_da_diretoria";
+    Prologue { address: 0x6a5a60, bytes: &[0x6a, 0xff, 0x68, 0xcb, 0xce, 0x95, 0x00] } => post_fa_performance_news, compare_post_fa_performance_news, "motor_noticia_da_avaliacao_da_federacao";
+    Prologue { address: 0x6a3770, bytes: &[0x83, 0xec, 0x10, 0x53, 0x55, 0x56] } => set_season_expectations, compare_set_season_expectations, "motor_expectativas_da_temporada";
+    Prologue { address: 0x69ba50, bytes: &[0x6a, 0xff, 0x68, 0xa0, 0xcc, 0x95, 0x00] } => add_job_vacancy, compare_add_job_vacancy, "motor_vaga_de_tecnico";
+    Prologue { address: 0x6a0540, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_job_offer_news, compare_post_job_offer_news, "motor_noticia_da_oferta_de_emprego";
+    Prologue { address: 0x754a30, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0xd8, 0x95, 0x00] } => process_transfer_interest, compare_process_transfer_interest, "motor_boatos_de_transferencia";
+    Prologue { address: 0x587600, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => news_create_not_for_sale_story, compare_news_create_not_for_sale_story, "motor_noticia_nao_vende";
+    Prologue { address: 0x75c390, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => queue_trophy_praise_story, compare_queue_trophy_praise_story, "motor_noticia_do_titulo";
+    Prologue { address: 0x5cbdf0, bytes: &[0x6a, 0xff, 0x68, 0xc6, 0xa3, 0x95, 0x00] } => arrange_international_friendlies, compare_arrange_international_friendlies, "motor_amistosos_entre_selecoes";
+    Prologue { address: 0x5ca090, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => friendly_check_match_invitation, compare_friendly_check_match_invitation, "motor_convite_de_amistoso_valido";
+    Prologue { address: 0x5ca290, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => friendly_check_tournament_invitation, compare_friendly_check_tournament_invitation, "motor_convite_de_torneio_valido";
+    Prologue { address: 0x76b100, bytes: &[0x6a, 0xff, 0x68, 0x08, 0xdd, 0x95, 0x00] } => national_teams_daily_update, compare_national_teams_daily_update, "motor_dia_das_selecoes";
+    Prologue { address: 0x7f8420, bytes: &[0x0f, 0xbf, 0x05, 0x7a, 0x7c, 0xb7, 0x00] } => current_search_has_no_club, compare_current_search_has_no_club, "motor_busca_atual_sem_clube";
+    Prologue { address: 0x7f8500, bytes: &[0x0f, 0xbf, 0x05, 0x7a, 0x7c, 0xb7, 0x00] } => is_club_in_session_searches, compare_is_club_in_session_searches, "motor_clube_nas_buscas_da_sessao";
+    Prologue { address: 0x76c120, bytes: &[0x6a, 0xff, 0x68, 0x7a, 0xdd, 0x95, 0x00] } => select_squad, compare_select_squad, "motor_escolher_elenco_da_selecao";
+    Prologue { address: 0x7f8c00, bytes: &[0x6a, 0xff, 0x68, 0xd8, 0x0f, 0x96, 0x00] } => scout_manager_scout_match, compare_scout_manager_scout_match, "motor_olheiros_na_partida";
+    Prologue { address: 0x7f6be0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_edit_session, compare_get_edit_session, "motor_sessao_de_edicao";
+    Prologue { address: 0x7f6af0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => set_edit_session, compare_set_edit_session, "motor_escolher_sessao_de_edicao";
+    Prologue { address: 0x8c5880, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => transfer_manager_daily_update, compare_transfer_manager_daily_update, "motor_dia_das_transferencias";
+    Prologue { address: 0x8c63a0, bytes: &[0x6a, 0xff, 0x68, 0x00, 0x3d, 0x96, 0x00] } => process_due_offer, compare_process_due_offer, "motor_processar_oferta_vencida";
+    Prologue { address: 0x8cfc90, bytes: &[0x6a, 0xff, 0x68, 0xf8, 0x3f, 0x96, 0x00] } => check_offer_restrictions, compare_check_offer_restrictions, "motor_restricoes_da_oferta";
+    Prologue { address: 0x8c0080, bytes: &[0x6a, 0xff, 0x68, 0x48, 0x3b, 0x96, 0x00] } => accept_transfer_bid, compare_accept_transfer_bid, "motor_aceitar_lance";
+    Prologue { address: 0x8d3090, bytes: &[0x6a, 0xff, 0x68, 0xc6, 0x42, 0x96, 0x00] } => post_offer_made_news, compare_post_offer_made_news, "motor_noticia_da_oferta_feita";
+    Prologue { address: 0x8d0040, bytes: &[0x6a, 0xff, 0x68, 0x1b, 0x40, 0x96, 0x00] } => transfer_manager_can_loan_player, compare_transfer_manager_can_loan_player, "motor_pode_emprestar";
+    Prologue { address: 0x6847c0, bytes: &[0x6a, 0xff, 0x68, 0x21, 0xca, 0x95, 0x00] } => league_update_for_date, compare_league_update_for_date, "motor_liga_dia";
+    Prologue { address: 0x6835c0, bytes: &[0x6a, 0xff, 0x68, 0x81, 0xc9, 0x95, 0x00] } => create_fixtures, compare_create_fixtures, "motor_liga_criar_tabela";
+    Prologue { address: 0x689c80, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => league_promote_and_relegate, compare_league_promote_and_relegate, "motor_liga_promover_e_rebaixar";
+    Prologue { address: 0x5aaf00, bytes: &[0x6a, 0xff, 0x68, 0x70, 0x96, 0x95, 0x00] } => fix_man_daily_update, compare_fix_man_daily_update, "motor_calendario_dia";
+    Prologue { address: 0x5abf10, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => get_fixture_list, compare_get_fixture_list, "motor_calendario_lista";
+    Prologue { address: 0x5ac3b0, bytes: &[0x81, 0xec, 0x54, 0x02, 0x00, 0x00] } => load_fixtures, compare_load_fixtures, "motor_calendario_carregar_ano";
+    Prologue { address: 0x518790, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] } => map_fixture_tree, compare_map_fixture_tree, "motor_copa_arvore_dos_confrontos";
+    Prologue { address: 0x48d2b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_first_stage_of_group, compare_get_first_stage_of_group, "motor_competicao_primeira_fase_do_grupo";
+    Prologue { address: 0x48cec0, bytes: &[0x81, 0xec, 0x00, 0x04, 0x00, 0x00] } => get_current_stage, compare_get_current_stage, "motor_competicao_fase_atual";
+    Prologue { address: 0x8b1750, bytes: &[0x81, 0xec, 0x34, 0x04, 0x00, 0x00] } => update_player_training, compare_update_player_training, "motor_atualizar_o_treino_do_jogador";
+    Prologue { address: 0x8b39f0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => get_player_schedule, compare_get_player_schedule, "motor_programa_de_treino_do_jogador";
+    Prologue { address: 0x8b4f50, bytes: &[0x0f, 0xbe, 0x44, 0x24, 0x04] } => get_category_level, compare_get_category_level, "motor_nivel_da_categoria_do_programa";
+    Prologue { address: 0x8b3640, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => remove_or_restore_training_progress, compare_remove_or_restore_training_progress, "motor_tirar_ou_devolver_o_progresso";
+    Prologue { address: 0x8b37c0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => get_training_attribute_change, compare_get_training_attribute_change, "motor_mudanca_do_atributo_pelo_treino";
+    Prologue { address: 0x8b4770, bytes: &[0x0f, 0xbf, 0x44, 0x24, 0x08] } => get_position_aptitude, compare_get_position_aptitude, "motor_aptidao_para_a_posicao";
+    Prologue { address: 0x7a59e0, bytes: &[0x6a, 0xff, 0x68, 0xa8, 0xf1, 0x95, 0x00] } => process_retirements, compare_process_retirements, "motor_aposentadorias_do_dia";
+    Prologue { address: 0x7a92e0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => player_regen_post_retirement_news, compare_player_regen_post_retirement_news, "motor_noticia_da_aposentadoria";
+    Prologue { address: 0x7a8ba0, bytes: &[0x6a, 0xff, 0x68, 0x0b, 0xf2, 0x95, 0x00] } => player_regen_post_youth_promotion_news, compare_player_regen_post_youth_promotion_news, "motor_noticia_do_jovem_promovido";
+    Prologue { address: 0x4196a0, bytes: &[0x55, 0x8b, 0x6c, 0x24, 0x08] } => clear_awol, compare_clear_awol, "motor_limpar_ausencia";
+    Prologue { address: 0x4197c0, bytes: &[0x55, 0x8b, 0x6c, 0x24, 0x08] } => clear_missed_training, compare_clear_missed_training, "motor_limpar_falta_ao_treino";
+    Prologue { address: 0x41a630, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => awol_post_missed_training_news, compare_awol_post_missed_training_news, "motor_noticia_da_falta_ao_treino";
+    Prologue { address: 0x84b6f0, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x14] } => shortlist_manager_is_compensation_deal, compare_shortlist_manager_is_compensation_deal, "motor_troca_com_compensacao";
+    Prologue { address: 0x83b6c0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] } => shortlist_compare_slots_by_index, compare_shortlist_compare_slots_by_index, "motor_ordem_das_vagas";
+    Prologue { address: 0x84b580, bytes: &[0x6a, 0xff, 0x68, 0xe8, 0x25, 0x96, 0x00] } => mark_player_under_offer, compare_mark_player_under_offer, "motor_marcar_sob_oferta";
+    Prologue { address: 0x868c50, bytes: &[0x6a, 0xff, 0x68, 0x76, 0x2b, 0x96, 0x00] } => add_league_champions_record, compare_add_league_champions_record, "motor_campeao_da_liga_nos_registros";
+    Prologue { address: 0x86a800, bytes: &[0x6a, 0xff, 0x68, 0x26, 0x2c, 0x96, 0x00] } => add_cup_winners_record, compare_add_cup_winners_record, "motor_campeao_da_copa_nos_registros";
+    Prologue { address: 0x86fc70, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x15, 0x64, 0x23, 0xae, 0x00] } => clear_human_manager_record, compare_clear_human_manager_record, "motor_limpar_registro_do_humano";
+    Prologue { address: 0x8c8090, bytes: &[0x6a, 0xff, 0x68, 0xab, 0x3d, 0x96, 0x00] } => ai_respond_to_bid, compare_ai_respond_to_bid, "motor_resposta_da_ia_ao_lance";
+    Prologue { address: 0x8bee50, bytes: &[0x6a, 0xff, 0x68, 0xee, 0x3a, 0x96, 0x00] } => add_loan_negotiation, compare_add_loan_negotiation, "motor_negociacao_de_emprestimo";
+    Prologue { address: 0x8c8860, bytes: &[0x6a, 0xff, 0x68, 0x07, 0x3e, 0x96, 0x00] } => make_exchange_option, compare_make_exchange_option, "motor_opcao_de_troca";
+    Prologue { address: 0x4ccca0, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] } => schedule_loan_end, compare_schedule_loan_end, "motor_agendar_fim_do_emprestimo";
+    Prologue { address: 0x84a020, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => make_club_bids, compare_make_club_bids, "motor_lances_do_clube";
+    Prologue { address: 0x846920, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => staff_interest_in_joining_club, compare_staff_interest_in_joining_club, "motor_cqe4_interesse";
+    Prologue { address: 0x85e410, bytes: &[0x6a, 0xff, 0x68, 0xeb, 0x29, 0x96, 0x00] } => construct_staff_contract, compare_construct_staff_contract, "motor_cqe4_construir_contrato";
+    Prologue { address: 0x579d60, bytes: &[0x83, 0xec, 0x6c, 0x55, 0x56] } => england_rules_can_loan_player, compare_england_rules_can_loan_player, "motor_cqe5_pode_emprestar";
+    Prologue { address: 0x579fd0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x15, 0xb4, 0x23, 0xae, 0x00] } => record_loan, compare_record_loan, "motor_cqe5_registrar_emprestimo";
+    Prologue { address: 0x57a020, bytes: &[0x83, 0xec, 0x08, 0x56, 0x6a, 0xff] } => england_rules_daily_update, compare_england_rules_daily_update, "motor_cqe5_dia_das_regras";
+    Prologue { address: 0x579c70, bytes: &[0x6a, 0xff, 0x68, 0x08, 0x87, 0x95, 0x00] } => england_rules_get_loan_period, compare_england_rules_get_loan_period, "motor_cqe6_periodo_inglaterra";
+    Prologue { address: 0x7f6650, bytes: &[0x8b, 0x0d, 0x50, 0x10, 0xae, 0x00] } => scotland_rules_can_loan_player, compare_scotland_rules_can_loan_player, "motor_cqe6_pode_emprestar_escocia";
+    Prologue { address: 0x7f6530, bytes: &[0x56, 0x57, 0xb9, 0x90, 0x2c, 0xae, 0x00] } => scotland_rules_get_loan_period, compare_scotland_rules_get_loan_period, "motor_cqe6_periodo_escocia";
+    Prologue { address: 0x661770, bytes: &[0x83, 0xec, 0x64, 0x55, 0x56] } => italy_rules_can_loan_player, compare_italy_rules_can_loan_player, "motor_cqe6_pode_emprestar_italia";
+    Prologue { address: 0x63c3d0, bytes: &[0x53, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] } => ireland_rules_can_loan_player, compare_ireland_rules_can_loan_player, "motor_cqe6_pode_emprestar_irlanda";
+    Prologue { address: 0x859630, bytes: &[0x83, 0xec, 0x64, 0x56, 0x57] } => spain_rules_can_loan_player, compare_spain_rules_can_loan_player, "motor_cqe6_pode_emprestar_espanha";
+    Prologue { address: 0x685640, bytes: &[0x6a, 0xff, 0x68, 0x72, 0xca, 0x95, 0x00] } => move_fixtures_for_tv, compare_move_fixtures_for_tv, "motor_liga_jogos_para_a_tv";
+    Prologue { address: 0x684230, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => send_group_draw_news, compare_send_group_draw_news, "motor_liga_noticia_dos_grupos";
+    Prologue { address: 0x683ee0, bytes: &[0x6a, 0xff, 0x68, 0xbc, 0xc9, 0x95, 0x00] } => send_fixture_list_news, compare_send_fixture_list_news, "motor_liga_noticia_da_tabela";
+    Prologue { address: 0x8be300, bytes: &[0x6a, 0xff, 0x68, 0x6a, 0x3a, 0x96, 0x00] } => add_transfer_offer, compare_add_transfer_offer, "motor_por_oferta_de_transferencia";
+    Prologue { address: 0x8c0660, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x55] } => accept_loan_offer, compare_accept_loan_offer, "motor_aceitar_emprestimo";
+    Prologue { address: 0x8c2180, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => handle_player_accepted_terms, compare_handle_player_accepted_terms, "motor_termos_aceitos";
+    Prologue { address: 0x4d71b0, bytes: &[0x6a, 0xff, 0x68, 0x16, 0x6f, 0x95, 0x00] } => post_transfer_listed_news, compare_post_transfer_listed_news, "motor_noticia_de_jogador_listado";
+    Prologue { address: 0x4cda70, bytes: &[0x6a, 0xff, 0x68, 0x68, 0x6d, 0x95, 0x00] } => contract_manager_offer_contract, compare_contract_manager_offer_contract, "motor_contrato_oferecido";
+    Prologue { address: 0x92e940, bytes: &[0x81, 0xec, 0x1c, 0x02, 0x00, 0x00] } => draw_groups, compare_draw_groups, "motor_mundial_sortear_grupos";
+    Prologue { address: 0x92e7f0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => run_group_draw, compare_run_group_draw, "motor_mundial_sorteio_dos_grupos";
+    Prologue { address: 0x92f1a0, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x0c] } => world_cup_update_for_date, compare_world_cup_update_for_date, "motor_mundial_dia";
+    Prologue { address: 0x92d0f0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => world_cup_create_group_table, compare_world_cup_create_group_table, "motor_mundial_tabela_do_grupo_um";
+    Prologue { address: 0x92d540, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => world_cup_create_group_stage, compare_world_cup_create_group_stage, "motor_mundial_fase_do_grupo";
+    Prologue { address: 0x92f680, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => world_cup_set_predicted_positions, compare_world_cup_set_predicted_positions, "motor_mundial_posicoes_previstas";
+    Prologue { address: 0x92c290, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => world_cup_create_schedule, compare_world_cup_create_schedule, "motor_mundial_rodadas_da_fase";
+    Prologue { address: 0x92e740, bytes: &[0x66, 0x8b, 0x41, 0x36, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => add_qualified_team, compare_add_qualified_team, "motor_mundial_nacao_classificada";
+    Prologue { address: 0x92f230, bytes: &[0x81, 0xec, 0x1c, 0x02, 0x00, 0x00] } => seed_teams, compare_seed_teams, "motor_mundial_cabecas_de_chave";
+    Prologue { address: 0x8b2880, bytes: &[0x83, 0xec, 0x34, 0x53, 0x56] } => update_coach_assignments, compare_update_coach_assignments, "motor_distribuir_os_treinadores";
+    Prologue { address: 0x8b2470, bytes: &[0x81, 0xec, 0xd0, 0x04, 0x00, 0x00] } => reassign_squad_schedules, compare_reassign_squad_schedules, "motor_trocar_os_programas_do_elenco";
+    Prologue { address: 0x8b2230, bytes: &[0x56, 0x57, 0x8b, 0xf1, 0xbf, 0xa7, 0x00, 0x00, 0x00] } => training_manager_cpp_0x8b2230, compare_training_manager_cpp_0x8b2230, "motor_nomes_padrao_dos_programas";
+    Prologue { address: 0x7c3e40, bytes: &[0x81, 0xec, 0x48, 0x02, 0x00, 0x00] } => build_career_history, compare_build_career_history, "motor_historico_da_carreira";
+    Prologue { address: 0x7c6e30, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => player_stats_years_since_at_club, compare_player_stats_years_since_at_club, "motor_anos_desde_o_clube";
+    Prologue { address: 0x7c6de0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => player_stats_compare_history_by_staff, compare_player_stats_compare_history_by_staff, "motor_ordem_do_historico_por_pessoa";
+    Prologue { address: 0x7a32e0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => player_setup_injury_from_name, compare_player_setup_injury_from_name, "motor_lesao_pelo_nome";
+    Prologue { address: 0x630ee0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_recovery_news, compare_post_recovery_news, "motor_noticia_da_volta_aos_treinos";
+    Prologue { address: 0x630c50, bytes: &[0x8b, 0x44, 0x24, 0x0c, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => injury_get_category_name, compare_injury_get_category_name, "motor_nome_da_categoria_da_lesao";
+    Prologue { address: 0x7b5be0, bytes: &[0x6a, 0xff, 0x68, 0x68, 0xf5, 0x95, 0x00] } => player_search_scout_match, compare_player_search_scout_match, "motor_cqf10_olheiro_no_jogo";
+    Prologue { address: 0x7bd310, bytes: &[0x81, 0xec, 0x14, 0x02, 0x00, 0x00] } => player_search_record_scouted_club_match, compare_player_search_record_scouted_club_match, "motor_cqf10_historico_do_clube_observado";
+    Prologue { address: 0x7706c0, bytes: &[0x6a, 0xff, 0x68, 0xa6, 0xde, 0x95, 0x00] } => send_club_international_report_news, compare_send_club_international_report_news, "motor_cqf11_relatorio_da_selecao";
+    Prologue { address: 0x76e0b0, bytes: &[0x6a, 0xff, 0x68, 0xfb, 0xdd, 0x95, 0x00] } => national_teams_post_call_up_news, compare_national_teams_post_call_up_news, "motor_cqf11_noticia_da_convocacao";
+    Prologue { address: 0x76d560, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0xdd, 0x95, 0x00] } => national_teams_collect_fixture_opponents, compare_national_teams_collect_fixture_opponents, "motor_cqf11_adversarios_da_selecao";
+    Prologue { address: 0x7f8750, bytes: &[0x6a, 0xff, 0x68, 0xbe, 0x0f, 0x96, 0x00] } => scout_manager_daily_update, compare_scout_manager_daily_update, "motor_cqf12_olheiros_do_dia";
+    Prologue { address: 0x7f9890, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => send_scout_reports, compare_send_scout_reports, "motor_cqf12_relatorios_dos_olheiros";
+    Prologue { address: 0x7f9a60, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0x10, 0x96, 0x00] } => send_scout_report_news, compare_send_scout_report_news, "motor_cqf12_noticia_do_relatorio";
+    Prologue { address: 0x4cf720, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] } => sign_contract, compare_sign_contract, "motor_assinar_contrato";
+    Prologue { address: 0x7abac0, bytes: &[0x83, 0xec, 0x08, 0x56, 0x8b, 0x74, 0x24, 0x10] } => regenerate_as_youth_player, compare_regenerate_as_youth_player, "motor_refazer_como_jovem";
+    Prologue { address: 0x56a090, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] } => remove_dispute, compare_remove_dispute, "motor_tirar_da_disputa";
+    Prologue { address: 0x5b5d10, bytes: &[0x81, 0xec, 0x08, 0x04, 0x00, 0x00] } => load_from_disk, compare_load_from_disk, "motor_ler_formacao_do_disco";
+    Prologue { address: 0x43f2d0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x8b, 0xc8] } => swap_bytes_16_array, compare_swap_bytes_16_array, "motor_trocar_bytes_das_palavras";
+    Prologue { address: 0x43f300, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x8b, 0xc8] } => swap_bytes_32_array, compare_swap_bytes_32_array, "motor_trocar_bytes_dos_dwords";
+    Prologue { address: 0x79bf60, bytes: &[0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] } => set_up_officials, compare_set_up_officials, "motor_montar_os_arbitros";
+    Prologue { address: 0x79d410, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x4c, 0x24, 0x08] } => officials_manager_compare_comp_level, compare_officials_manager_compare_comp_level, "motor_ordem_das_vagas_de_competicao";
+    Prologue { address: 0x5c6570, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => on_friendly_fixture_cancelled, compare_on_friendly_fixture_cancelled, "motor_cqg10_amistoso_cancelado";
+    Prologue { address: 0x5cb9e0, bytes: &[0x6a, 0xff, 0x68, 0x80, 0xa3, 0x95, 0x00] } => friendly_cancel_national_fixture, compare_friendly_cancel_national_fixture, "motor_cqg10_jogo_da_selecao_cancelado";
+    Prologue { address: 0x5c8260, bytes: &[0x6a, 0xff, 0x68, 0x77, 0xa2, 0x95, 0x00] } => cancel_tournament, compare_cancel_tournament, "motor_cqg10_torneio_cancelado";
+    Prologue { address: 0x79d4e0, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] } => officials_manager_compare_nation_then_quality_desc, compare_officials_manager_compare_nation_then_quality_desc, "motor_ordem_dos_arbitros_decrescente";
+    Prologue { address: 0x79d480, bytes: &[0x8b, 0x54, 0x24, 0x04, 0x56] } => officials_manager_compare_nation_then_quality_asc, compare_officials_manager_compare_nation_then_quality_asc, "motor_ordem_dos_arbitros_crescente";
+    Prologue { address: 0x7c5fe0, bytes: &[0x81, 0xec, 0x3c, 0x02, 0x00, 0x00] } => archive_player_stats, compare_archive_player_stats, "motor_arquivar_estatisticas";
+    Prologue { address: 0x7a50f0, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x14] } => player_setup_find_staff, compare_player_setup_find_staff, "motor_pessoa_pelo_nome";
+    Prologue { address: 0x7a5090, bytes: &[0x55, 0x8b, 0x6c, 0x24, 0x0c] } => player_setup_read_quoted_token, compare_player_setup_read_quoted_token, "motor_texto_entre_aspas";
+    Prologue { address: 0x7a3140, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => player_setup_type_from_name, compare_player_setup_type_from_name, "motor_tipo_da_linha";
+    Prologue { address: 0x585290, bytes: &[0x6a, 0xff, 0x68, 0xde, 0x8a, 0x95, 0x00] } => draw_phase1_groups, compare_draw_phase1_groups, "motor_campeoes_sortear_grupos";
+    Prologue { address: 0x586f60, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x8b, 0x54, 0x24, 0x04] } => european_cup_compare_clubs_by_seed, compare_european_cup_compare_clubs_by_seed, "motor_campeoes_ordem_dos_potes";
+    Prologue { address: 0x586900, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] } => european_cup_rank_teams, compare_european_cup_rank_teams, "motor_campeoes_posicoes_previstas";
+    Prologue { address: 0x585ab0, bytes: &[0x6a, 0xff, 0x68, 0xfe, 0x8a, 0x95, 0x00] } => draw_phase2_groups, compare_draw_phase2_groups, "motor_campeoes_sortear_segunda_fase";
+    Prologue { address: 0x5871e0, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x8b, 0x54, 0x24, 0x08] } => european_cup_compare_phase2_draw_entries, compare_european_cup_compare_phase2_draw_entries, "motor_campeoes_ordem_da_segunda_fase";
+    Prologue { address: 0x4b01d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x3d, 0xe8, 0x03, 0x00, 0x00] } => comp_util_get_parent_stage_id, compare_comp_util_get_parent_stage_id, "motor_grupo_da_fase";
+    Prologue { address: 0x583c50, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => european_cup_create_round_table, compare_european_cup_create_round_table, "motor_campeoes_rodadas_da_fase";
+    Prologue { address: 0x68aa80, bytes: &[0xa1, 0x44, 0x7a, 0xb6, 0x00] } => set_club_season_expectations, compare_set_club_season_expectations, "motor_liga_expectativas_da_temporada";
+    Prologue { address: 0x6831a0, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => relegate_club_to_division, compare_relegate_club_to_division, "motor_liga_rebaixar_clube";
+    Prologue { address: 0x48ce10, bytes: &[0x56, 0x8b, 0xf1, 0x83, 0x7e, 0x1c, 0xff] } => all_stages_complete, compare_all_stages_complete, "motor_competicao_todas_completas";
+    Prologue { address: 0x48e1c0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => comp_collect_club_list, compare_comp_collect_club_list, "motor_competicao_lista_de_clubes";
+    Prologue { address: 0x48cc70, bytes: &[0x83, 0xec, 0x0c, 0x53, 0x55] } => find_club_progress, compare_find_club_progress, "motor_competicao_progresso_do_clube";
+    Prologue { address: 0x903b50, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => roll_coefficients, compare_roll_coefficients, "motor_uefa_rodar_coeficientes";
+    Prologue { address: 0x903cc0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => set_place_counts, compare_set_place_counts, "motor_uefa_vagas_por_nacao";
+    Prologue { address: 0x9050d0, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbf, 0x44, 0x24, 0x14] } => uefa_find_nth_unplaced_club_of_nation, compare_uefa_find_nth_unplaced_club_of_nation, "motor_uefa_enesimo_clube_da_nacao";
+    Prologue { address: 0x904040, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => collect_european_clubs, compare_collect_european_clubs, "motor_uefa_juntar_clubes_europeus";
+    Prologue { address: 0x904210, bytes: &[0x81, 0xec, 0x64, 0x02, 0x00, 0x00] } => assign_champions_league_places, compare_assign_champions_league_places, "motor_uefa_vagas_liga_dos_campeoes";
+    Prologue { address: 0x904e30, bytes: &[0x83, 0xec, 0x10, 0x53, 0x55] } => assign_intertoto_places, compare_assign_intertoto_places, "motor_uefa_vagas_intertoto";
+    Prologue { address: 0x904580, bytes: &[0x81, 0xec, 0x48, 0x02, 0x00, 0x00] } => assign_uefa_cup_places, compare_assign_uefa_cup_places, "motor_uefa_vagas_copa_da_uefa";
+    Prologue { address: 0x903890, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0x52, 0x96, 0x00] } => pick_english_intertoto_club, compare_pick_english_intertoto_club, "motor_uefa_voluntario_ingles";
+    Prologue { address: 0x9035a0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => update_season, compare_update_season, "motor_uefa_virada_da_classificacao";
+    Prologue { address: 0x4c6430, bytes: &[0xa1, 0x3c, 0xf6, 0x9c, 0x00] } => assign_libertadores_places, compare_assign_libertadores_places, "motor_conmebol_vagas_libertadores";
+    Prologue { address: 0x4c6730, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbf, 0x44, 0x24, 0x14] } => find_nth_unqualified_club_of_nation, compare_find_nth_unqualified_club_of_nation, "motor_conmebol_enesimo_clube_da_nacao";
+    Prologue { address: 0x4c6890, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => is_mercosur_invited_club, compare_is_mercosur_invited_club, "motor_conmebol_convidado_da_mercosul";
+    Prologue { address: 0x4c6280, bytes: &[0xa1, 0x5c, 0x23, 0xae, 0x00] } => collect_conmebol_clubs, compare_collect_conmebol_clubs, "motor_conmebol_juntar_clubes";
+    Prologue { address: 0x4c61b0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => update_for_new_season, compare_update_for_new_season, "motor_conmebol_virada_do_ano";
+    Prologue { address: 0x4c6960, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x10] } => set_bra_champ_cup_winner, compare_set_bra_champ_cup_winner, "motor_conmebol_campeao_dos_campeoes";
+    Prologue { address: 0x5fa730, bytes: &[0x8b, 0x01, 0x53, 0x55, 0x56] } => find_hosts, compare_find_hosts, "motor_sede_da_edicao";
+    Prologue { address: 0x5fa7d0, bytes: &[0x8b, 0x01, 0x56, 0x66, 0x8b, 0x71, 0x04] } => find_next_hosts, compare_find_next_hosts, "motor_proxima_sede";
+    Prologue { address: 0x5fa850, bytes: &[0x6a, 0xff, 0x68, 0x78, 0xaf, 0x95, 0x00] } => host_country_daily_update, compare_host_country_daily_update, "motor_calendario_das_sedes";
+    Prologue { address: 0x579b30, bytes: &[0x6a, 0xff, 0x68, 0xeb, 0x86, 0x95, 0x00] } => construct_england_rules, compare_construct_england_rules, "motor_regras_inglaterra";
+    Prologue { address: 0x90b940, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0x55, 0x96, 0x00] } => construct_usa_rules, compare_construct_usa_rules, "motor_regras_eua";
+    Prologue { address: 0x412c80, bytes: &[0x6a, 0xff, 0x68, 0x1b, 0x3b, 0x95, 0x00] } => australia_rules, compare_australia_rules, "motor_regras_australia";
+    Prologue { address: 0x859470, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => spain_rules_init_transfer_windows, compare_spain_rules_init_transfer_windows, "motor_janelas_espanha";
+    Prologue { address: 0x6613f0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => italy_rules_init_transfer_windows, compare_italy_rules_init_transfer_windows, "motor_janelas_italia";
+    Prologue { address: 0x5c15e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => france_rules_init_transfer_windows, compare_france_rules_init_transfer_windows, "motor_janelas_franca";
+    Prologue { address: 0x43f0e0, bytes: &[0x6a, 0xff, 0x68, 0xdb, 0x4e, 0x95, 0x00] } => construct_brazil_rules, compare_construct_brazil_rules, "motor_regras_brasil";
+    Prologue { address: 0x5dffe0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => germany_rules_init_transfer_windows, compare_germany_rules_init_transfer_windows, "motor_janelas_alemanha";
+    Prologue { address: 0x7f6390, bytes: &[0x6a, 0xff, 0x68, 0xeb, 0x0e, 0x96, 0x00] } => construct_scotland_rules, compare_construct_scotland_rules, "motor_regras_escocia";
+    Prologue { address: 0x633d40, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => intertoto_cup_update_for_date, compare_intertoto_cup_update_for_date, "motor_cqi10_intertoto_dia";
+    Prologue { address: 0x633c10, bytes: &[0x8a, 0x44, 0x24, 0x08, 0x53] } => intertoto_cup_update_staff_records_for_status, compare_intertoto_cup_update_staff_records_for_status, "motor_cqi10_intertoto_registros";
+    Prologue { address: 0x9030e0, bytes: &[0x8b, 0x44, 0x24, 0x08, 0x8b, 0x54, 0x24, 0x04] } => uefa_cup_update_staff_records_for_status, compare_uefa_cup_update_staff_records_for_status, "motor_cqi10_uefa_registros";
+    Prologue { address: 0x4c11a0, bytes: &[0x81, 0xec, 0xa0, 0x09, 0x00, 0x00] } => con_champ_select_qualified_clubs, compare_con_champ_select_qualified_clubs, "motor_cqi11_concacaf_classificados";
+    Prologue { address: 0x4c1620, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => con_champ_update_for_date, compare_con_champ_update_for_date, "motor_cqi11_concacaf_dia";
+    Prologue { address: 0x4c15f0, bytes: &[0x56, 0x8b, 0xf1, 0x6a, 0x00] } => con_champ_set_up_rounds, compare_con_champ_set_up_rounds, "motor_cqi11_concacaf_rodadas";
+    Prologue { address: 0x63f350, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb0, 0x04] } => ita_cup_set_up_rules, compare_ita_cup_set_up_rules, "motor_cqi12_copa_italia_regras";
+    Prologue { address: 0x63d6e0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb0, 0x04] } => ita_c_cup_set_up_rules, compare_ita_c_cup_set_up_rules, "motor_cqi12_copa_c_regras";
+    Prologue { address: 0x426230, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb0, 0x03] } => bra_champ_cup_set_up_rules, compare_bra_champ_cup_set_up_rules, "motor_cqi12_copa_dos_campeoes_regras";
+    Prologue { address: 0x401ba0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] } => african_nations_update_staff_records_for_status, compare_african_nations_update_staff_records_for_status, "motor_cqj10_copa_africana_registros";
+    Prologue { address: 0x5e13b0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] } => goldcup_update_staff_records_for_status, compare_goldcup_update_staff_records_for_status, "motor_cqj10_copa_america_registros";
+    Prologue { address: 0x91e840, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] } => wc_oceania_league_update_staff_records_for_status, compare_wc_oceania_league_update_staff_records_for_status, "motor_cqj10_eliminatoria_oceania_registros";
+    Prologue { address: 0x4c3890, bytes: &[0x6a, 0xff, 0x68, 0x78, 0x6a, 0x95, 0x00] } => conmebol_liber_set_up_rules, compare_conmebol_liber_set_up_rules, "motor_cqj11_libertadores_regras";
+    Prologue { address: 0x4c1ed0, bytes: &[0x6a, 0xff, 0x68, 0xc8, 0x69, 0x95, 0x00] } => con_merc_cup_set_up_rules, compare_con_merc_cup_set_up_rules, "motor_cqj11_merconorte_regras";
+    Prologue { address: 0x7979b0, bytes: &[0x6a, 0xff, 0x68, 0xe8, 0xea, 0x95, 0x00] } => oceania_club_champ_set_up_rules, compare_oceania_club_champ_set_up_rules, "motor_cqj11_oceania_clubes_regras";
+    Prologue { address: 0x9191e0, bytes: &[0x6a, 0xff, 0x68, 0x98, 0x59, 0x96, 0x00] } => wc_europe_league_set_up_rules, compare_wc_europe_league_set_up_rules, "motor_cqj12_eliminatoria_europa_regras";
+    Prologue { address: 0x921040, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => wc_south_american_league_set_up_rules, compare_wc_south_american_league_set_up_rules, "motor_cqj12_eliminatoria_sul_americana_regras";
+    Prologue { address: 0x912eb0, bytes: &[0x6a, 0xff, 0x68, 0x48, 0x57, 0x96, 0x00] } => wc_asia_league_set_up_rules, compare_wc_asia_league_set_up_rules, "motor_cqj12_eliminatoria_asia_regras";
+    Prologue { address: 0x5e12d0, bytes: &[0x6a, 0xff, 0x68, 0x68, 0xa8, 0x95, 0x00] } => goldcup_set_up_rules, compare_goldcup_set_up_rules, "motor_cqk10_copa_america_regras";
+    Prologue { address: 0x401ab0, bytes: &[0x6a, 0xff, 0x68, 0xd8, 0x34, 0x95, 0x00] } => african_nations_set_up_rules, compare_african_nations_set_up_rules, "motor_cqk10_copa_africana_regras";
+    Prologue { address: 0x91ecf0, bytes: &[0x6a, 0xff, 0x68, 0xf8, 0x5a, 0x96, 0x00] } => wc_oceania_league_set_up_rules, compare_wc_oceania_league_set_up_rules, "motor_cqk10_eliminatoria_oceania_regras";
+    Prologue { address: 0x4c3f40, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => conmebol_liber_select_qualified_clubs, compare_conmebol_liber_select_qualified_clubs, "motor_cqk11_libertadores_classificados";
+    Prologue { address: 0x4c4080, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] } => conmebol_liber_update_staff_records_for_status, compare_conmebol_liber_update_staff_records_for_status, "motor_cqk11_libertadores_registros";
+    Prologue { address: 0x4c3a80, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => conmebol_liber_advance_stage, compare_conmebol_liber_advance_stage, "motor_cqk11_libertadores_fase_seguinte";
+    Prologue { address: 0x401e10, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => african_nations_advance_stage, compare_african_nations_advance_stage, "motor_cqk12_africana_fase_seguinte";
+    Prologue { address: 0x4019c0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => init_group_a_table, compare_init_group_a_table, "motor_cqk12_africana_grupo_a";
+    Prologue { address: 0x401b90, bytes: &[0x8b, 0x41, 0x0c, 0x8b, 0x48, 0x0c] } => african_nations_record_season_honours, compare_african_nations_record_season_honours, "motor_cqk12_africana_historico";
+    Prologue { address: 0x42a5a0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xbb, 0x01, 0x00, 0x00, 0x00] } => bra_nat_first_set_up_rules, compare_bra_nat_first_set_up_rules, "motor_cqi7_regras_da_serie_a";
+    Prologue { address: 0x42cb70, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xbb, 0x01, 0x00, 0x00, 0x00] } => bra_nat_second_set_up_rules, compare_bra_nat_second_set_up_rules, "motor_cqi7_regras_da_serie_b";
+    Prologue { address: 0x42de50, bytes: &[0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] } => bra_nat_third_set_up_rules, compare_bra_nat_third_set_up_rules, "motor_cqi7_regras_da_serie_c";
+    Prologue { address: 0x430ff0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x33, 0xc0] } => bra_reg_central_set_up_rules, compare_bra_reg_central_set_up_rules, "motor_cqi8_regras_do_centro_oeste";
+    Prologue { address: 0x4322d0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x33, 0xc0] } => bra_reg_gaucho_set_up_rules, compare_bra_reg_gaucho_set_up_rules, "motor_cqi8_regras_do_gaucho";
+    Prologue { address: 0x43bc70, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] } => bra_reg_santa_set_up_rules, compare_bra_reg_santa_set_up_rules, "motor_cqi8_regras_do_catarinense";
+    Prologue { address: 0x437fc0, bytes: &[0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] } => bra_reg_parana_set_up_rules, compare_bra_reg_parana_set_up_rules, "motor_cqi9_regras_do_paranaense";
+    Prologue { address: 0x439430, bytes: &[0x56, 0x8b, 0xf1, 0x33, 0xc0] } => bra_reg_pern_set_up_rules, compare_bra_reg_pern_set_up_rules, "motor_cqi9_regras_do_pernambucano";
+    Prologue { address: 0x43a600, bytes: &[0x56, 0x8b, 0xf1, 0x33, 0xc0] } => bra_reg_rio_set_up_rules, compare_bra_reg_rio_set_up_rules, "motor_cqi9_regras_do_carioca";
+    Prologue { address: 0x433640, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x33, 0xc0] } => bra_reg_goias_set_up_rules, compare_bra_reg_goias_set_up_rules, "motor_cqj7_regras_do_goiano";
+    Prologue { address: 0x663620, bytes: &[0x56, 0x8b, 0xf1, 0xb9, 0x02, 0x00, 0x00, 0x00] } => jap_j1_set_up_rules, compare_jap_j1_set_up_rules, "motor_cqj7_regras_da_j1";
+    Prologue { address: 0x665140, bytes: &[0x56, 0x8b, 0xf1, 0xb2, 0x03] } => jap_j2_set_up_rules, compare_jap_j2_set_up_rules, "motor_cqj7_regras_da_j2";
+    Prologue { address: 0x411ce0, bytes: &[0x56, 0x8b, 0xf1, 0x33, 0xc0] } => aus_nsl_set_up_rules, compare_aus_nsl_set_up_rules, "motor_cqj8_regras_da_nsl";
+    Prologue { address: 0x908660, bytes: &[0xb2, 0x02, 0xb8, 0x01, 0x00, 0x00, 0x00] } => usa_mls_set_up_rules, compare_usa_mls_set_up_rules, "motor_cqj8_regras_da_mls";
+    Prologue { address: 0x432970, bytes: &[0x8b, 0x41, 0x0c, 0x8b, 0x08] } => bra_reg_gaucho_record_season_honours, compare_bra_reg_gaucho_record_season_honours, "motor_cqj8_historico_do_estadual";
+    Prologue { address: 0x408eb0, bytes: &[0x8b, 0x41, 0x0c, 0x8b, 0x08] } => arg_second_record_season_honours, compare_arg_second_record_season_honours, "motor_cqj8_historico_do_primeiro_estagio";
+    Prologue { address: 0x42abc0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] } => bra_nat_first_update_staff_records_for_status, compare_bra_nat_first_update_staff_records_for_status, "motor_cqj9_destino_na_serie_a";
+    Prologue { address: 0x42eb00, bytes: &[0x51, 0x8a, 0x44, 0x24, 0x10] } => bra_nat_third_update_staff_records_for_status, compare_bra_nat_third_update_staff_records_for_status, "motor_cqj9_destino_na_serie_c";
+    Prologue { address: 0x430210, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x53] } => bra_reg_bahia_update_staff_records_for_status, compare_bra_reg_bahia_update_staff_records_for_status, "motor_cqj9_destino_no_baiano";
+    Prologue { address: 0x4314e0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x53] } => bra_reg_central_update_staff_records_for_status, compare_bra_reg_central_update_staff_records_for_status, "motor_cqk7_destino_no_centro_oeste";
+    Prologue { address: 0x434d90, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x53] } => bra_reg_minas_gerais_update_staff_records_for_status, compare_bra_reg_minas_gerais_update_staff_records_for_status, "motor_cqk7_destino_no_mineiro";
+    Prologue { address: 0x411980, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x3c, 0xff] } => aus_nsl_update_staff_records_for_status, compare_aus_nsl_update_staff_records_for_status, "motor_cqk7_destino_na_nsl";
+    Prologue { address: 0x4350d0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => bra_reg_minas_gerais_set_club_progress, compare_bra_reg_minas_gerais_set_club_progress, "motor_cqk8_progresso_no_mineiro";
+    Prologue { address: 0x909dd0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => usa_mls_set_club_progress, compare_usa_mls_set_club_progress, "motor_cqk8_progresso_na_mls";
+    Prologue { address: 0x42e100, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => bra_nat_third_set_club_progress, compare_bra_nat_third_set_club_progress, "motor_cqk8_progresso_na_serie_c";
+    Prologue { address: 0x908200, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x56] } => usa_mls_update_staff_records_for_status, compare_usa_mls_update_staff_records_for_status, "motor_cqk9_destino_na_mls";
+    Prologue { address: 0x9099d0, bytes: &[0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x10] } => usa_mls_add_result, compare_usa_mls_add_result, "motor_cqk9_resultado_na_mls";
+    Prologue { address: 0x90a000, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => usa_mls_get_club_all_star_conference, compare_usa_mls_get_club_all_star_conference, "motor_cqk9_conferencia_das_estrelas";
+    Prologue { address: 0x574b70, bytes: &[0x56, 0x8b, 0xf1, 0xb9, 0x02, 0x00, 0x00, 0x00] } => eng_prm_set_up_rules, compare_eng_prm_set_up_rules, "motor_regras_da_premier";
+    Prologue { address: 0x572d90, bytes: &[0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] } => eng_first_set_up_rules, compare_eng_first_set_up_rules, "motor_regras_da_first";
+    Prologue { address: 0x576780, bytes: &[0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] } => eng_second_set_up_rules, compare_eng_second_set_up_rules, "motor_regras_da_second";
+    Prologue { address: 0x5780c0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb0, 0x03] } => eng_third_set_up_rules, compare_eng_third_set_up_rules, "motor_regras_da_third";
+    Prologue { address: 0x574a20, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => eng_prm_create_table, compare_eng_prm_create_table, "motor_tabela_da_premier";
+    Prologue { address: 0x576630, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => eng_second_create_table, compare_eng_second_create_table, "motor_tabela_da_second";
+    Prologue { address: 0x577f70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => eng_third_create_table, compare_eng_third_create_table, "motor_tabela_da_third";
+    Prologue { address: 0x572bf0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => eng_first_create_table, compare_eng_first_create_table, "motor_tabela_da_first";
+    Prologue { address: 0x641640, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xbb, 0x01, 0x00, 0x00, 0x00] } => ita_ser_a_set_up_rules, compare_ita_ser_a_set_up_rules, "motor_regras_da_serie_a";
+    Prologue { address: 0x6468a0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xbb, 0x01, 0x00, 0x00, 0x00] } => ita_ser_b_set_up_rules, compare_ita_ser_b_set_up_rules, "motor_regras_da_serie_b";
+    Prologue { address: 0x64b770, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb2, 0x03] } => ita_ser_c1a_set_up_rules, compare_ita_ser_c1a_set_up_rules, "motor_regras_da_c1a";
+    Prologue { address: 0x64f920, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] } => ita_ser_c1b_set_up_rules, compare_ita_ser_c1b_set_up_rules, "motor_regras_da_c1b";
+    Prologue { address: 0x641510, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => ita_ser_a_create_table, compare_ita_ser_a_create_table, "motor_tabela_da_serie_a";
+    Prologue { address: 0x646780, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => ita_ser_b_create_table, compare_ita_ser_b_create_table, "motor_tabela_da_serie_b";
+    Prologue { address: 0x64b670, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => ita_ser_c1a_create_table, compare_ita_ser_c1a_create_table, "motor_tabela_da_c1a";
+    Prologue { address: 0x64f820, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => ita_ser_c1b_create_table, compare_ita_ser_c1b_create_table, "motor_tabela_da_c1b";
+    Prologue { address: 0x5bc410, bytes: &[0x56, 0x8b, 0xf1, 0xb9, 0x02, 0x00, 0x00, 0x00] } => fra_first_set_up_rules, compare_fra_first_set_up_rules, "motor_regras_da_franca_1";
+    Prologue { address: 0x5bf0a0, bytes: &[0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] } => fra_second_set_up_rules, compare_fra_second_set_up_rules, "motor_regras_da_franca_2";
+    Prologue { address: 0x5c0700, bytes: &[0x56, 0x8b, 0xf1, 0xb9, 0x02, 0x00, 0x00, 0x00] } => fra_third_set_up_rules, compare_fra_third_set_up_rules, "motor_regras_da_franca_3";
+    Prologue { address: 0x5bc2b0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fra_first_create_table, compare_fra_first_create_table, "motor_tabela_da_franca_1";
+    Prologue { address: 0x5bef10, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fra_second_create_table, compare_fra_second_create_table, "motor_tabela_da_franca_2";
+    Prologue { address: 0x5c05d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fra_third_create_table, compare_fra_third_create_table, "motor_tabela_da_franca_3";
+    Prologue { address: 0x84fdf0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] } => spa_first_set_up_rules, compare_spa_first_set_up_rules, "motor_regras_da_primera";
+    Prologue { address: 0x855cc0, bytes: &[0x56, 0x8b, 0xf1, 0xb9, 0x02, 0x00, 0x00, 0x00] } => spa_second_set_up_rules, compare_spa_second_set_up_rules, "motor_regras_da_segunda";
+    Prologue { address: 0x853790, bytes: &[0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] } => spa_lower_set_up_rules, compare_spa_lower_set_up_rules, "motor_regras_da_divisao_de_baixo";
+    Prologue { address: 0x84fc70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => spa_first_create_table, compare_spa_first_create_table, "motor_tabela_da_primera";
+    Prologue { address: 0x654180, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x53] } => ita_ser_c2a_update_staff_records_for_status, compare_ita_ser_c2a_update_staff_records_for_status, "motor_registros_pela_situacao_na_c2a";
+    Prologue { address: 0x850880, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => spa_first_set_club_progress, compare_spa_first_set_club_progress, "motor_situacao_na_primera";
+    Prologue { address: 0x5b9fa0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fra_cfa_create_group_table, compare_fra_cfa_create_group_table, "motor_tabela_do_grupo_da_cfa";
+    Prologue { address: 0x5be230, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fra_lower_create_table, compare_fra_lower_create_table, "motor_tabela_da_divisao_de_baixo_francesa";
+    Prologue { address: 0x64bd80, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => ita_ser_c1a_set_club_progress, compare_ita_ser_c1a_set_club_progress, "motor_situacao_na_c1a";
+    Prologue { address: 0x64ff40, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => ita_ser_c1b_set_club_progress, compare_ita_ser_c1b_set_club_progress, "motor_situacao_na_c1b";
+    Prologue { address: 0x56c570, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => eng_cc_cup_create_round_table, compare_eng_cc_cup_create_round_table, "motor_cql10_copa_da_liga_tabela";
+    Prologue { address: 0x56f320, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => eng_fa_cup_create_round_table, compare_eng_fa_cup_create_round_table, "motor_cql10_copa_da_inglaterra_tabela";
+    Prologue { address: 0x56d640, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => eng_charity_create_round_table, compare_eng_charity_create_round_table, "motor_cql10_supercopa_tabela";
+    Prologue { address: 0x5ba3f0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fra_cup_create_round_table, compare_fra_cup_create_round_table, "motor_cql11_copa_da_franca_tabela";
+    Prologue { address: 0x5bcc40, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fra_lge_cup_create_round_table, compare_fra_lge_cup_create_round_table, "motor_cql11_copa_da_liga_francesa_tabela";
+    Prologue { address: 0x84d220, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => spa_cup_create_round_table, compare_spa_cup_create_round_table, "motor_cql11_copa_do_rei_tabela";
+    Prologue { address: 0x5bf5d0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x0c, 0x02, 0x00, 0x00] } => fra_super_create_round_table, compare_fra_super_create_round_table, "motor_cql12_supercopa_da_franca_tabela";
+    Prologue { address: 0x858960, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => spa_super_create_round_table, compare_spa_super_create_round_table, "motor_cql12_supercopa_da_espanha_tabela";
+    Prologue { address: 0x666020, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => jap_super_create_round_table, compare_jap_super_create_round_table, "motor_cql12_supercopa_do_japao_tabela";
+    Prologue { address: 0x56ccc0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => eng_cc_cup_collect_entrants, compare_eng_cc_cup_collect_entrants, "motor_cqm10_copa_da_liga_inscritos";
+    Prologue { address: 0x56b3c0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => eng_auto_cup_collect_entrants, compare_eng_auto_cup_collect_entrants, "motor_cqm10_trofeu_inscritos";
+    Prologue { address: 0x56d780, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => eng_charity_select_teams, compare_eng_charity_select_teams, "motor_cqm10_supercopa_clubes";
+    Prologue { address: 0x5baa50, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => fra_cup_collect_entrants, compare_fra_cup_collect_entrants, "motor_cqm11_copa_da_franca_inscritos";
+    Prologue { address: 0x5bd160, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => fra_lge_cup_collect_entrants, compare_fra_lge_cup_collect_entrants, "motor_cqm11_copa_da_liga_inscritos";
+    Prologue { address: 0x5bf770, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fra_super_select_teams, compare_fra_super_select_teams, "motor_cqm11_supercopa_clubes";
+    Prologue { address: 0x858aa0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => spa_super_select_teams, compare_spa_super_select_teams, "motor_cqm12_supercopa_da_espanha_clubes";
+    Prologue { address: 0x666160, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => jap_super_select_teams, compare_jap_super_select_teams, "motor_cqm12_supercopa_do_japao_clubes";
+    Prologue { address: 0x90a400, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => usa_mls_all_stars_create_round_table, compare_usa_mls_all_stars_create_round_table, "motor_cqm12_jogo_das_estrelas_tabela";
+    Prologue { address: 0x56caf0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => eng_cc_cup_update_for_date, compare_eng_cc_cup_update_for_date, "motor_cqn10_copa_da_liga_dia";
+    Prologue { address: 0x570550, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => eng_fa_cup_update_for_date, compare_eng_fa_cup_update_for_date, "motor_cqn10_copa_da_inglaterra_dia";
+    Prologue { address: 0x90a900, bytes: &[0x6a, 0xff, 0x68, 0xa8, 0x54, 0x96, 0x00] } => usa_mls_all_stars_update_for_date, compare_usa_mls_all_stars_update_for_date, "motor_cqn10_jogo_das_estrelas_dia";
+    Prologue { address: 0x665640, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => jap_j_cup_create_round_table, compare_jap_j_cup_create_round_table, "motor_cqn11_copa_da_liga_japonesa_tabela";
+    Prologue { address: 0x661ff0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => jap_emp_cup_create_round_table, compare_jap_emp_cup_create_round_table, "motor_cqn11_copa_do_imperador_tabela";
+    Prologue { address: 0x90b170, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => usa_open_cup_create_round_table, compare_usa_open_cup_create_round_table, "motor_cqn11_copa_dos_eua_tabela";
+    Prologue { address: 0x665a00, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => jap_j_cup_collect_entrants, compare_jap_j_cup_collect_entrants, "motor_cqn12_copa_da_liga_inscritos";
+    Prologue { address: 0x90b530, bytes: &[0x81, 0xec, 0x98, 0x03, 0x00, 0x00] } => usa_open_cup_collect_entrants, compare_usa_open_cup_collect_entrants, "motor_cqn12_copa_dos_eua_inscritos";
+    Prologue { address: 0x6624f0, bytes: &[0x81, 0xec, 0xc8, 0x04, 0x00, 0x00] } => jap_emp_cup_collect_entrants, compare_jap_emp_cup_collect_entrants, "motor_cqn12_copa_do_imperador_inscritos";
+    Prologue { address: 0x85a760, bytes: &[0x53, 0x8b, 0x5c, 0x24, 0x08] } => get_squad_number, compare_get_squad_number, "motor_numero_de_camisa";
+    Prologue { address: 0x85add0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => club_uses_squad_numbers, compare_club_uses_squad_numbers, "motor_clube_usa_numeros";
+    Prologue { address: 0x85a850, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => set_squad_number, compare_set_squad_number, "motor_gravar_numero_de_camisa";
+    Prologue { address: 0x85a470, bytes: &[0x81, 0xec, 0x08, 0x01, 0x00, 0x00] } => allocate_squad_number, compare_allocate_squad_number, "motor_dar_numero_de_camisa";
+    Prologue { address: 0x859fe0, bytes: &[0x81, 0xec, 0x90, 0x02, 0x00, 0x00] } => assign_club_squad_numbers, compare_assign_club_squad_numbers, "motor_numerar_elenco";
+    Prologue { address: 0x859dc0, bytes: &[0x55, 0x8b, 0xe9, 0x57, 0x33, 0xff] } => init_new_game, compare_init_new_game, "motor_numerar_no_comeco";
+    Prologue { address: 0x859e20, bytes: &[0x81, 0xec, 0xd8, 0x00, 0x00, 0x00] } => assign_league_squad_numbers, compare_assign_league_squad_numbers, "motor_numerar_liga";
+    Prologue { address: 0x85aae0, bytes: &[0x81, 0xec, 0x9c, 0x02, 0x00, 0x00] } => select_euro_registered_players, compare_select_euro_registered_players, "motor_inscrever_na_europa";
+    Prologue { address: 0x5f9690, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0xaf, 0x95, 0x00] } => construct_holland_rules, compare_construct_holland_rules, "motor_regras_holanda";
+    Prologue { address: 0x518500, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0x75, 0x95, 0x00] } => construct_croatia_rules, compare_construct_croatia_rules, "motor_regras_croacia";
+    Prologue { address: 0x63c210, bytes: &[0x6a, 0xff, 0x68, 0xab, 0xb7, 0x95, 0x00] } => construct_ireland_rules, compare_construct_ireland_rules, "motor_regras_irlanda";
+    Prologue { address: 0x7944f0, bytes: &[0x6a, 0xff, 0x68, 0x2b, 0xe9, 0x95, 0x00] } => construct_norway_rules, compare_construct_norway_rules, "motor_regras_noruega";
+    Prologue { address: 0x7936d0, bytes: &[0x6a, 0xff, 0x68, 0xbb, 0xe7, 0x95, 0x00] } => construct_northern_ireland_rules, compare_construct_northern_ireland_rules, "motor_regras_irlanda_do_norte";
+    Prologue { address: 0x90f080, bytes: &[0x6a, 0xff, 0x68, 0x4b, 0x56, 0x96, 0x00] } => construct_wales_rules, compare_construct_wales_rules, "motor_regras_pais_de_gales";
+    Prologue { address: 0x9020a0, bytes: &[0x6a, 0xff, 0x68, 0xab, 0x51, 0x96, 0x00] } => construct_turkey_rules, compare_construct_turkey_rules, "motor_regras_turquia";
+    Prologue { address: 0x7cd830, bytes: &[0x6a, 0xff, 0x68, 0xab, 0xf9, 0x95, 0x00] } => construct_poland_rules, compare_construct_poland_rules, "motor_regras_polonia";
+    Prologue { address: 0x5a9950, bytes: &[0x6a, 0xff, 0x68, 0x4b, 0x95, 0x95, 0x00] } => construct_finland_rules, compare_construct_finland_rules, "motor_regras_finlandia";
+    Prologue { address: 0x40a620, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => argentina_rules_init_transfer_windows, compare_argentina_rules_init_transfer_windows, "motor_janelas_argentina";
+    Prologue { address: 0x7d3df0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => portugal_rules_init_transfer_windows, compare_portugal_rules_init_transfer_windows, "motor_janelas_portugal";
+    Prologue { address: 0x66e630, bytes: &[0x6a, 0xff, 0x68, 0x9b, 0xc8, 0x95, 0x00] } => construct_korea_rules, compare_construct_korea_rules, "motor_regras_coreia";
+    Prologue { address: 0x5ecf20, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => greece_rules_init_transfer_windows, compare_greece_rules_init_transfer_windows, "motor_janelas_grecia";
+    Prologue { address: 0x7ec7e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => russia_rules_init_transfer_windows, compare_russia_rules_init_transfer_windows, "motor_janelas_russia";
+    Prologue { address: 0x424c00, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => belgium_rules_init_transfer_windows, compare_belgium_rules_init_transfer_windows, "motor_janelas_belgica";
+    Prologue { address: 0x85a9b0, bytes: &[0x83, 0xec, 0x10, 0x8a, 0x44, 0x24, 0x14] } => process_euro_registration, compare_process_euro_registration, "motor_inscricao_europeia";
+    Prologue { address: 0x58dd50, bytes: &[0xa1, 0x50, 0x23, 0xae, 0x00] } => create_default_table, compare_create_default_table, "motor_ranking_fifa_inicial";
+    Prologue { address: 0x85dfc0, bytes: &[0x81, 0xec, 0x30, 0x02, 0x00, 0x00] } => build_venue_list, compare_build_venue_list, "motor_lista_de_estadios_neutros";
+    Prologue { address: 0x42a480, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_nat_first_create_table, compare_bra_nat_first_create_table, "motor_cql7_tabela_da_serie_a";
+    Prologue { address: 0x42ca70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_nat_second_create_table, compare_bra_nat_second_create_table, "motor_cql7_tabela_da_serie_b";
+    Prologue { address: 0x42dc90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_nat_third_create_table, compare_bra_nat_third_create_table, "motor_cql7_tabela_da_serie_c";
+    Prologue { address: 0x42fd10, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_bahia_create_table, compare_bra_reg_bahia_create_table, "motor_cql8_tabela_do_baiano";
+    Prologue { address: 0x430ef0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_central_load_region_clubs, compare_bra_reg_central_load_region_clubs, "motor_cql8_tabela_do_centro_oeste";
+    Prologue { address: 0x4321d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_gaucho_load_region_clubs, compare_bra_reg_gaucho_load_region_clubs, "motor_cql8_tabela_do_gaucho";
+    Prologue { address: 0x433540, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_goias_create_table, compare_bra_reg_goias_create_table, "motor_cql9_tabela_do_goiano";
+    Prologue { address: 0x434810, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_minas_gerais_create_table, compare_bra_reg_minas_gerais_create_table, "motor_cql9_tabela_do_mineiro";
+    Prologue { address: 0x435d80, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_north_create_table, compare_bra_reg_north_create_table, "motor_cql9_tabela_do_norte";
+    Prologue { address: 0x436d90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_northeast_create_table, compare_bra_reg_northeast_create_table, "motor_cqm7_tabela_do_nordeste";
+    Prologue { address: 0x437ec0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_parana_create_table, compare_bra_reg_parana_create_table, "motor_cqm7_tabela_do_paranaense";
+    Prologue { address: 0x439330, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_pern_create_table, compare_bra_reg_pern_create_table, "motor_cqm7_tabela_do_pernambucano";
+    Prologue { address: 0x43a500, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_rio_create_table, compare_bra_reg_rio_create_table, "motor_cqm8_tabela_do_carioca";
+    Prologue { address: 0x43bb70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_santa_create_table, compare_bra_reg_santa_create_table, "motor_cqm8_tabela_do_catarinense";
+    Prologue { address: 0x43cc40, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_sp_create_table, compare_bra_reg_sp_create_table, "motor_cqm8_tabela_do_paulista";
+    Prologue { address: 0x6634e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => jap_j1_create_table, compare_jap_j1_create_table, "motor_cqm9_tabela_da_j1";
+    Prologue { address: 0x665030, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => jap_j2_create_table, compare_jap_j2_create_table, "motor_cqm9_tabela_da_j2";
+    Prologue { address: 0x411b70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => aus_nsl_create_table, compare_aus_nsl_create_table, "motor_cqm9_tabela_da_nsl";
+    Prologue { address: 0x430050, bytes: &[0x6a, 0xff, 0x68, 0x2e, 0x46, 0x95, 0x00] } => bra_reg_bahia_create_semi_final_stage, compare_bra_reg_bahia_create_semi_final_stage, "motor_cqn7_mata_mata_do_baiano";
+    Prologue { address: 0x4360c0, bytes: &[0x6a, 0xff, 0x68, 0x7e, 0x48, 0x95, 0x00] } => bra_reg_north_create_semi_final_stage, compare_bra_reg_north_create_semi_final_stage, "motor_cqn7_mata_mata_do_norte";
+    Prologue { address: 0x4370d0, bytes: &[0x6a, 0xff, 0x68, 0xee, 0x48, 0x95, 0x00] } => bra_reg_northeast_create_semi_final_stage, compare_bra_reg_northeast_create_semi_final_stage, "motor_cqn7_mata_mata_do_nordeste";
+    Prologue { address: 0x439710, bytes: &[0x6a, 0xff, 0x68, 0xee, 0x49, 0x95, 0x00] } => bra_reg_pern_create_semi_final_stage, compare_bra_reg_pern_create_semi_final_stage, "motor_cqn8_mata_mata_do_pernambucano";
+    Prologue { address: 0x43bf50, bytes: &[0x6a, 0xff, 0x68, 0xee, 0x4a, 0x95, 0x00] } => bra_reg_santa_create_semi_final_stage, compare_bra_reg_santa_create_semi_final_stage, "motor_cqn8_mata_mata_do_catarinense";
+    Prologue { address: 0x43cf80, bytes: &[0x6a, 0xff, 0x68, 0x5e, 0x4b, 0x95, 0x00] } => bra_reg_sp_create_semi_final_stage, compare_bra_reg_sp_create_semi_final_stage, "motor_cqn8_mata_mata_do_paulista";
+    Prologue { address: 0x4325b0, bytes: &[0x6a, 0xff, 0x68, 0x0e, 0x47, 0x95, 0x00] } => bra_reg_gaucho_create_knockout_stage, compare_bra_reg_gaucho_create_knockout_stage, "motor_cqn9_mata_mata_do_gaucho";
+    Prologue { address: 0x4312d0, bytes: &[0x6a, 0xff, 0x68, 0x9e, 0x46, 0x95, 0x00] } => bra_reg_central_create_knockout_stage, compare_bra_reg_central_create_knockout_stage, "motor_cqn9_mata_mata_do_centro_oeste";
+    Prologue { address: 0x433930, bytes: &[0x6a, 0xff, 0x68, 0x7e, 0x47, 0x95, 0x00] } => bra_reg_goias_create_knockout_stage, compare_bra_reg_goias_create_knockout_stage, "motor_cqn9_mata_mata_do_goiano";
+    Prologue { address: 0x642880, bytes: &[0x83, 0xec, 0x1c, 0x8b, 0x44, 0x24, 0x20] } => ita_ser_a_update_for_date, compare_ita_ser_a_update_for_date, "motor_desempate_da_serie_a";
+    Prologue { address: 0x647050, bytes: &[0x83, 0xec, 0x18, 0xb0, 0x02] } => ita_ser_b_update_for_date, compare_ita_ser_b_update_for_date, "motor_desempate_da_serie_b";
+    Prologue { address: 0x6471a0, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x57] } => ita_league_sort_clubs_level_on_points, compare_ita_league_sort_clubs_level_on_points, "motor_ordem_dos_empatados_na_italia";
+    Prologue { address: 0x641dc0, bytes: &[0x8a, 0x44, 0x24, 0x0c, 0x83, 0xec, 0x3c] } => ita_ser_a_update_staff_records_for_status, compare_ita_ser_a_update_staff_records_for_status, "motor_resultado_do_desempate_da_serie_a";
+    Prologue { address: 0x64b9e0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => ita_ser_c1a_advance_stage, compare_ita_ser_c1a_advance_stage, "motor_fase_seguinte_da_c1a";
+    Prologue { address: 0x64ba70, bytes: &[0x6a, 0xff, 0x68, 0xec, 0xba, 0x95, 0x00] } => create_playoff_stages, compare_create_playoff_stages, "motor_fases_do_fim_da_c1a";
+    Prologue { address: 0x64fba0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => ita_ser_c1b_advance_stage, compare_ita_ser_c1b_advance_stage, "motor_fase_seguinte_da_c1b";
+    Prologue { address: 0x64fc30, bytes: &[0x6a, 0xff, 0x68, 0x8c, 0xbb, 0x95, 0x00] } => create_play_off_stages, compare_create_play_off_stages, "motor_fases_do_fim_da_c1b";
+    Prologue { address: 0x578330, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => eng_third_advance_stage, compare_eng_third_advance_stage, "motor_fase_seguinte_da_third";
+    Prologue { address: 0x573380, bytes: &[0x6a, 0xff, 0x68, 0xc9, 0x83, 0x95, 0x00] } => construct_eng_prm, compare_construct_eng_prm, "motor_construir_premier";
+    Prologue { address: 0x571680, bytes: &[0x6a, 0xff, 0x68, 0x59, 0x83, 0x95, 0x00] } => construct_eng_first, compare_construct_eng_first, "motor_construir_first";
+    Prologue { address: 0x5754a0, bytes: &[0x6a, 0xff, 0x68, 0x19, 0x84, 0x95, 0x00] } => construct_eng_second, compare_construct_eng_second, "motor_construir_second";
+    Prologue { address: 0x576dd0, bytes: &[0x6a, 0xff, 0x68, 0x89, 0x84, 0x95, 0x00] } => construct_eng_third, compare_construct_eng_third, "motor_construir_third";
+    Prologue { address: 0x6406d0, bytes: &[0x6a, 0xff, 0x68, 0x59, 0xb9, 0x95, 0x00] } => construct_ita_ser_a, compare_construct_ita_ser_a, "motor_construir_serie_a";
+    Prologue { address: 0x645810, bytes: &[0x6a, 0xff, 0x68, 0x09, 0xba, 0x95, 0x00] } => construct_ita_ser_b, compare_construct_ita_ser_b, "motor_construir_serie_b";
+    Prologue { address: 0x64aa70, bytes: &[0x6a, 0xff, 0x68, 0x99, 0xba, 0x95, 0x00] } => construct_ita_ser_c1a, compare_construct_ita_ser_c1a, "motor_construir_c1a";
+    Prologue { address: 0x64ec20, bytes: &[0x6a, 0xff, 0x68, 0x39, 0xbb, 0x95, 0x00] } => construct_ita_ser_c1b, compare_construct_ita_ser_c1b, "motor_construir_c1b";
+    Prologue { address: 0x5be330, bytes: &[0x6a, 0xff, 0x68, 0x89, 0x9a, 0x95, 0x00] } => construct_fra_second, compare_construct_fra_second, "motor_construir_franca_2";
+    Prologue { address: 0x5bfb40, bytes: &[0x6a, 0xff, 0x68, 0x29, 0x9b, 0x95, 0x00] } => construct_fra_third, compare_construct_fra_third, "motor_construir_franca_3";
+    Prologue { address: 0x8539a0, bytes: &[0x6a, 0xff, 0x68, 0x59, 0x27, 0x96, 0x00] } => construct_spa_second, compare_construct_spa_second, "motor_construir_segunda";
+    Prologue { address: 0x84e130, bytes: &[0x6a, 0xff, 0x68, 0xa7, 0x26, 0x96, 0x00] } => construct_spa_first, compare_construct_spa_first, "motor_construir_primera";
+    Prologue { address: 0x851020, bytes: &[0x6a, 0xff, 0x68, 0x0b, 0x27, 0x96, 0x00] } => construct_spa_lower, compare_construct_spa_lower, "motor_construir_divisao_de_baixo_espanhola";
+    Prologue { address: 0x855b40, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => spa_second_create_table, compare_spa_second_create_table, "motor_tabela_da_segunda";
+    Prologue { address: 0x8533d0, bytes: &[0x81, 0xec, 0x9c, 0x03, 0x00, 0x00] } => spa_lower_create_table, compare_spa_lower_create_table, "motor_tabela_da_divisao_de_baixo_espanhola";
+    Prologue { address: 0x5ba0a0, bytes: &[0x56, 0x8b, 0xf1, 0xb8, 0x02, 0x00, 0x00, 0x00] } => fra_cfa_set_up_rules, compare_fra_cfa_set_up_rules, "motor_regras_da_cfa";
+    Prologue { address: 0x5b91c0, bytes: &[0x6a, 0xff, 0x68, 0xab, 0x98, 0x95, 0x00] } => construct_fra_cfa, compare_construct_fra_cfa, "motor_construir_cfa";
+    Prologue { address: 0x5bd600, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0x9a, 0x95, 0x00] } => construct_fra_lower, compare_construct_fra_lower, "motor_construir_divisao_de_baixo_francesa";
+    Prologue { address: 0x5b9460, bytes: &[0x6a, 0xff, 0x68, 0xc8, 0x98, 0x95, 0x00] } => destroy_fra_cfa, compare_destroy_fra_cfa, "motor_destruir_cfa";
+    Prologue { address: 0x5bd870, bytes: &[0x6a, 0xff, 0x68, 0x58, 0x9a, 0x95, 0x00] } => destroy_fra_lower, compare_destroy_fra_lower, "motor_destruir_divisao_de_baixo_francesa";
+    Prologue { address: 0x642a70, bytes: &[0x6a, 0xff, 0x68, 0xde, 0xb9, 0x95, 0x00] } => create_fixed_fixtures, compare_create_fixed_fixtures, "motor_calendario_fixo_da_serie_a";
+    Prologue { address: 0x647230, bytes: &[0x6a, 0xff, 0x68, 0x6e, 0xba, 0x95, 0x00] } => ita_ser_b_set_up_fixed_fixtures, compare_ita_ser_b_set_up_fixed_fixtures, "motor_calendario_fixo_da_serie_b";
+    Prologue { address: 0x64be90, bytes: &[0x6a, 0xff, 0x68, 0x0e, 0xbb, 0x95, 0x00] } => ita_ser_c1a_set_up_fixed_fixtures, compare_ita_ser_c1a_set_up_fixed_fixtures, "motor_calendario_fixo_da_c1a";
+    Prologue { address: 0x650100, bytes: &[0x6a, 0xff, 0x68, 0xae, 0xbb, 0x95, 0x00] } => ita_ser_c1b_set_up_fixed_fixtures, compare_ita_ser_c1b_set_up_fixed_fixtures, "motor_calendario_fixo_da_c1b";
+    Prologue { address: 0x5bb540, bytes: &[0xb8, 0x01, 0x00, 0x00, 0x00] } => stub_return_one_ret8, compare_stub_return_one_ret8, "motor_toco_um_com_dois";
+    Prologue { address: 0x5bb550, bytes: &[0xb8, 0x01, 0x00, 0x00, 0x00] } => stub_return_one_ret4, compare_stub_return_one_ret4, "motor_toco_um_com_um";
+    Prologue { address: 0x85c260, bytes: &[0x6a, 0xff, 0x68, 0xd1, 0x29, 0x96, 0x00] } => set_fixture_venue, compare_set_fixture_venue, "motor_estadio_da_partida";
+    Prologue { address: 0x85c800, bytes: &[0x83, 0xec, 0x18, 0x53, 0x55] } => find_available_venue, compare_find_available_venue, "motor_estadio_neutro";
+    Prologue { address: 0x85cba0, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => calculate_match_attendance, compare_calculate_match_attendance, "motor_publico_do_jogo";
+    Prologue { address: 0x5bfe30, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fra_third_create_schedule, compare_fra_third_create_schedule, "motor_calendario_da_terceira_francesa";
+    Prologue { address: 0x5be620, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fra_second_create_schedule, compare_fra_second_create_schedule, "motor_calendario_da_segunda_francesa";
+    Prologue { address: 0x5bd920, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fra_lower_create_schedule, compare_fra_lower_create_schedule, "motor_calendario_da_divisao_de_baixo_francesa";
+    Prologue { address: 0x5b9510, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fra_cfa_create_schedule, compare_fra_cfa_create_schedule, "motor_calendario_da_cfa";
+    Prologue { address: 0x64ad80, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => ita_ser_c1a_create_schedule, compare_ita_ser_c1a_create_schedule, "motor_calendario_da_c1_a";
+    Prologue { address: 0x64ef30, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => ita_ser_c1b_create_schedule, compare_ita_ser_c1b_create_schedule, "motor_calendario_da_c1_b";
+    Prologue { address: 0x6409b0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => ita_ser_a_create_schedule, compare_ita_ser_a_create_schedule, "motor_calendario_da_serie_a";
+    Prologue { address: 0x645af0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => ita_ser_b_create_schedule, compare_ita_ser_b_create_schedule, "motor_calendario_da_serie_b";
+    Prologue { address: 0x5bb690, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fra_first_create_schedule, compare_fra_first_create_schedule, "motor_calendario_da_primeira_francesa";
+    Prologue { address: 0x434ae0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => bra_reg_minas_gerais_advance_stage, compare_bra_reg_minas_gerais_advance_stage, "motor_cqo7_fase_seguinte_do_mineiro";
+    Prologue { address: 0x434b70, bytes: &[0x6a, 0xff, 0x68, 0xee, 0x47, 0x95, 0x00] } => bra_reg_minas_gerais_create_final_stage, compare_bra_reg_minas_gerais_create_final_stage, "motor_cqo7_final_do_mineiro";
+    Prologue { address: 0x434ed0, bytes: &[0x56, 0x8b, 0xf1, 0x83, 0x7e, 0x30, 0x02] } => bra_reg_minas_gerais_record_season_honours, compare_bra_reg_minas_gerais_record_season_honours, "motor_cqo7_fim_da_temporada_do_mineiro";
+    Prologue { address: 0x438230, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => bra_reg_parana_advance_stage, compare_bra_reg_parana_advance_stage, "motor_cqo8_fase_seguinte_do_paranaense";
+    Prologue { address: 0x4382c0, bytes: &[0x6a, 0xff, 0x68, 0x5e, 0x49, 0x95, 0x00] } => bra_reg_parana_create_final_stage, compare_bra_reg_parana_create_final_stage, "motor_cqo8_final_do_paranaense";
+    Prologue { address: 0x4384e0, bytes: &[0x56, 0x8b, 0xf1, 0x83, 0x7e, 0x30, 0x02] } => bra_reg_parana_record_season_honours, compare_bra_reg_parana_record_season_honours, "motor_cqo8_fim_da_temporada_do_paranaense";
+    Prologue { address: 0x43a870, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => bra_reg_rio_advance_stage, compare_bra_reg_rio_advance_stage, "motor_cqo9_fase_seguinte_do_carioca";
+    Prologue { address: 0x43a900, bytes: &[0x6a, 0xff, 0x68, 0x5e, 0x4a, 0x95, 0x00] } => bra_reg_rio_create_final_stage, compare_bra_reg_rio_create_final_stage, "motor_cqo9_final_do_carioca";
+    Prologue { address: 0x43ad20, bytes: &[0x56, 0x8b, 0xf1, 0x83, 0x7e, 0x30, 0x02] } => bra_reg_rio_record_season_honours, compare_bra_reg_rio_record_season_honours, "motor_cqo9_fim_da_temporada_do_carioca";
+    Prologue { address: 0x63ec50, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => ita_cup_create_schedule, compare_ita_cup_create_schedule, "motor_cqo10_copa_da_italia_tabela";
+    Prologue { address: 0x63cf90, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => ita_c_cup_create_schedule, compare_ita_c_cup_create_schedule, "motor_cqo10_copa_c_tabela";
+    Prologue { address: 0x65f920, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => ita_super_create_round_table, compare_ita_super_create_round_table, "motor_cqo10_supercopa_tabela";
+    Prologue { address: 0x63c890, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => ita_c1_super_create_round_table, compare_ita_c1_super_create_round_table, "motor_cqo10_supercopa_c1_tabela";
+    Prologue { address: 0x63faf0, bytes: &[0x81, 0xec, 0x8c, 0x02, 0x00, 0x00] } => ita_cup_select_entrants, compare_ita_cup_select_entrants, "motor_cqo11_copa_da_italia_inscritos";
+    Prologue { address: 0x63dfe0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => ita_c_cup_select_entrants, compare_ita_c_cup_select_entrants, "motor_cqo11_copa_c_inscritos";
+    Prologue { address: 0x65fa60, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => ita_super_init_team_list, compare_ita_super_init_team_list, "motor_cqo11_supercopa_clubes";
+    Prologue { address: 0x427700, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_cup_create_round_table, compare_bra_cup_create_round_table, "motor_cqo12_copa_do_brasil_tabela";
+    Prologue { address: 0x427c20, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_cup_build_team_table, compare_bra_cup_build_team_table, "motor_cqo12_times_da_copa";
+    Prologue { address: 0x427ec0, bytes: &[0x56, 0x8b, 0xf1, 0x6a, 0x00] } => bra_cup_set_up_rounds, compare_bra_cup_set_up_rounds, "motor_cqo12_regras_da_copa";
+    Prologue { address: 0x4c31c0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => conmebol_liber_create_schedule, compare_conmebol_liber_create_schedule, "motor_cqo13_libertadores_tabela";
+    Prologue { address: 0x4c4930, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => conmebol_merc_create_schedule, compare_conmebol_merc_create_schedule, "motor_cqo13_mercosul_tabela";
+    Prologue { address: 0x4c5850, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => conmebol_merc_select_invited_clubs, compare_conmebol_merc_select_invited_clubs, "motor_cqo13_mercosul_convidados";
+    Prologue { address: 0x5757a0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => eng_second_create_schedule, compare_eng_second_create_schedule, "motor_calendario_da_segunda_inglesa";
+    Prologue { address: 0x5770e0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => eng_third_create_schedule, compare_eng_third_create_schedule, "motor_calendario_da_terceira_inglesa";
+    Prologue { address: 0x571980, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => eng_first_create_schedule, compare_eng_first_create_schedule, "motor_calendario_da_primeira_inglesa";
+    Prologue { address: 0x573660, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => eng_prm_create_schedule, compare_eng_prm_create_schedule, "motor_calendario_da_premiership";
+    Prologue { address: 0x84e450, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => spa_first_create_schedule, compare_spa_first_create_schedule, "motor_calendario_da_primera";
+    Prologue { address: 0x42fe10, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_bahia_start_new_season, compare_bra_reg_bahia_start_new_season, "motor_cqp7_virada_do_baiano";
+    Prologue { address: 0x42ffc0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => bra_reg_bahia_advance_stage, compare_bra_reg_bahia_advance_stage, "motor_cqp7_fase_seguinte_do_baiano";
+    Prologue { address: 0x431090, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_central_start_new_season, compare_bra_reg_central_start_new_season, "motor_cqp7_virada_do_centro_oeste";
+    Prologue { address: 0x431240, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => bra_reg_central_advance_stage, compare_bra_reg_central_advance_stage, "motor_cqp7_fase_seguinte_do_centro_oeste";
+    Prologue { address: 0x432370, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_gaucho_start_new_season, compare_bra_reg_gaucho_start_new_season, "motor_cqp7_virada_do_gaucho";
+    Prologue { address: 0x432520, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => bra_reg_gaucho_advance_stage, compare_bra_reg_gaucho_advance_stage, "motor_cqp7_fase_seguinte_do_gaucho";
+    Prologue { address: 0x4336f0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_goias_start_new_season, compare_bra_reg_goias_start_new_season, "motor_cqp8_virada_do_goiano";
+    Prologue { address: 0x4338a0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => bra_reg_goias_advance_stage, compare_bra_reg_goias_advance_stage, "motor_cqp8_fase_seguinte_do_goiano";
+    Prologue { address: 0x435e80, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_north_start_new_season, compare_bra_reg_north_start_new_season, "motor_cqp8_virada_do_norte";
+    Prologue { address: 0x436030, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => bra_reg_north_advance_stage, compare_bra_reg_north_advance_stage, "motor_cqp8_fase_seguinte_do_norte";
+    Prologue { address: 0x436e90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_northeast_start_new_season, compare_bra_reg_northeast_start_new_season, "motor_cqp8_virada_do_nordeste";
+    Prologue { address: 0x437040, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => bra_reg_northeast_advance_stage, compare_bra_reg_northeast_advance_stage, "motor_cqp8_fase_seguinte_do_nordeste";
+    Prologue { address: 0x4394d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_pern_start_new_season, compare_bra_reg_pern_start_new_season, "motor_cqp9_virada_do_pernambucano";
+    Prologue { address: 0x439680, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => bra_reg_pern_advance_stage, compare_bra_reg_pern_advance_stage, "motor_cqp9_fase_seguinte_do_pernambucano";
+    Prologue { address: 0x43bd10, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_santa_start_new_season, compare_bra_reg_santa_start_new_season, "motor_cqp9_virada_do_catarinense";
+    Prologue { address: 0x43bec0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => bra_reg_santa_advance_stage, compare_bra_reg_santa_advance_stage, "motor_cqp9_fase_seguinte_do_catarinense";
+    Prologue { address: 0x43cd40, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_sp_start_new_season, compare_bra_reg_sp_start_new_season, "motor_cqp9_virada_do_paulista";
+    Prologue { address: 0x43cef0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => bra_reg_sp_advance_stage, compare_bra_reg_sp_advance_stage, "motor_cqp9_fase_seguinte_do_paulista";
+    Prologue { address: 0x853c90, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => spa_second_create_schedule, compare_spa_second_create_schedule, "motor_calendario_da_segunda_espanhola";
+    Prologue { address: 0x851260, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => spa_lower_create_schedule, compare_spa_lower_create_schedule, "motor_calendario_da_divisao_de_baixo_espanhola";
+    Prologue { address: 0x5bb160, bytes: &[0x6a, 0xff, 0x68, 0x81, 0x99, 0x95, 0x00] } => construct_fra_first, compare_construct_fra_first, "motor_construir_primeira_francesa";
+    Prologue { address: 0x42a950, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => bra_nat_first_advance_stage, compare_bra_nat_first_advance_stage, "motor_cqq7_fase_seguinte_da_serie_a";
+    Prologue { address: 0x42a9e0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => bra_nat_first_create_play_off_stage, compare_bra_nat_first_create_play_off_stage, "motor_cqq7_play_off_da_serie_a";
+    Prologue { address: 0x42cdd0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => bra_nat_second_advance_stage, compare_bra_nat_second_advance_stage, "motor_cqq7_fase_seguinte_da_serie_b";
+    Prologue { address: 0x42ce60, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => bra_nat_second_create_play_off_stage, compare_bra_nat_second_create_play_off_stage, "motor_cqq7_play_off_da_serie_b";
+    Prologue { address: 0x42a640, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_nat_first_start_new_season, compare_bra_nat_first_start_new_season, "motor_cqq8_virada_da_serie_a";
+    Prologue { address: 0x42ae90, bytes: &[0xa1, 0xfc, 0xad, 0xad, 0x00] } => bra_nat_first_process_promotion_relegation_chain, compare_bra_nat_first_process_promotion_relegation_chain, "motor_cqq8_acesso_e_rebaixamento";
+    Prologue { address: 0x42cc10, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_nat_second_start_new_season, compare_bra_nat_second_start_new_season, "motor_cqq8_virada_da_serie_b";
+    Prologue { address: 0x6639c0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => jap_j1_advance_stage, compare_jap_j1_advance_stage, "motor_cqq9_fase_seguinte_da_j1";
+    Prologue { address: 0x663a50, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_championship_final_stage, compare_create_championship_final_stage, "motor_cqq9_final_da_j1";
+    Prologue { address: 0x6636d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => jap_j1_start_new_season, compare_jap_j1_start_new_season, "motor_cqq9_virada_da_j1";
+    Prologue { address: 0x5f9970, bytes: &[0x6a, 0xff, 0x68, 0x5b, 0xaf, 0x95, 0x00] } => init_default_table, compare_init_default_table, "motor_tabela_das_sedes";
+    Prologue { address: 0x5faec0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => post_host_news, compare_post_host_news, "motor_noticia_das_sedes";
+    Prologue { address: 0x5fb160, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => load_temp_file, compare_load_temp_file, "motor_carregar_sedes";
+    Prologue { address: 0x689c20, bytes: &[0x53, 0x8b, 0xd9, 0x57, 0x8b, 0x43, 0x1c] } => league_process_promotion_relegation_chain, compare_league_process_promotion_relegation_chain, "motor_cadeia_de_acessos";
+    Prologue { address: 0x48e3e0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => send_prize_money_news, compare_send_prize_money_news, "motor_noticia_do_premio";
+    Prologue { address: 0x48ea40, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => send_tv_rights_news, compare_send_tv_rights_news, "motor_noticia_da_tv";
+    Prologue { address: 0x425c10, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_champ_cup_create_schedule, compare_bra_champ_cup_create_schedule, "motor_cqp10_copa_dos_campeoes_tabela";
+    Prologue { address: 0x4c1960, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => con_merc_cup_create_schedule, compare_con_merc_cup_create_schedule, "motor_cqp10_merconorte_tabela";
+    Prologue { address: 0x57a3c0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => eur_super_cup_create_round_table, compare_eur_super_cup_create_round_table, "motor_cqp10_supercopa_europeia_tabela";
+    Prologue { address: 0x410910, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => asia_super_cup_create_round_table, compare_asia_super_cup_create_round_table, "motor_cqp10_supercopa_asiatica_tabela";
+    Prologue { address: 0x40ae90, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => asia_club_champ_create_round_table, compare_asia_club_champ_create_round_table, "motor_cqp11_asia_clubes_tabela";
+    Prologue { address: 0x40cf90, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => asia_cup_winner_create_round_table, compare_asia_cup_winner_create_round_table, "motor_cqp11_asia_recopa_tabela";
+    Prologue { address: 0x56ade0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => eng_auto_cup_create_round_table, compare_eng_auto_cup_create_round_table, "motor_cqp11_trofeu_tabela";
+    Prologue { address: 0x5e0900, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => goldcup_create_schedule, compare_goldcup_create_schedule, "motor_cqp12_copa_america_tabela";
+    Prologue { address: 0x4012e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => african_nations_create_schedule, compare_african_nations_create_schedule, "motor_cqp12_africana_tabela";
+    Prologue { address: 0x58b560, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => fifa_confed_create_schedule, compare_fifa_confed_create_schedule, "motor_cqp12_confed_tabela";
+    Prologue { address: 0x633300, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => intertoto_cup_create_round_table, compare_intertoto_cup_create_round_table, "motor_cqp13_intertoto_tabela";
+    Prologue { address: 0x92b770, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => world_club_cup_create_round_table, compare_world_club_cup_create_round_table, "motor_cqp13_intercontinental_tabela";
+    Prologue { address: 0x632340, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => inter_amer_cup_create_round_table, compare_inter_amer_cup_create_round_table, "motor_cqp13_interamericana_tabela";
+    Prologue { address: 0x4c0f00, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => con_champ_create_round_table, compare_con_champ_create_round_table, "motor_cqp13_concacaf_tabela";
+    Prologue { address: 0x9025c0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => uefa_cup_create_round_table, compare_uefa_cup_create_round_table, "motor_cqq10_uefa_tabela";
+    Prologue { address: 0x6336c0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => intertoto_cup_collect_entrants, compare_intertoto_cup_collect_entrants, "motor_cqq10_intertoto_inscritos";
+    Prologue { address: 0x633f70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => intertoto_cup_collect_club_list, compare_intertoto_cup_collect_club_list, "motor_cqq10_intertoto_lista";
+    Prologue { address: 0x57a500, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => eur_super_cup_select_teams, compare_eur_super_cup_select_teams, "motor_cqq11_europeia_clubes";
+    Prologue { address: 0x410a50, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => asia_super_cup_select_teams, compare_asia_super_cup_select_teams, "motor_cqq11_asiatica_clubes";
+    Prologue { address: 0x63c9d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => ita_c1_super_init_team_list, compare_ita_c1_super_init_team_list, "motor_cqq11_c1_vagas";
+    Prologue { address: 0x797230, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => oceania_club_champ_create_schedule, compare_oceania_club_champ_create_schedule, "motor_cqq12_oceania_tabela";
+    Prologue { address: 0x40b620, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => asia_club_champ_build_team_table, compare_asia_club_champ_build_team_table, "motor_cqq12_asia_clubes_times";
+    Prologue { address: 0x40d4d0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => create_team_entries, compare_create_team_entries, "motor_cqq12_asia_recopa_times";
+    Prologue { address: 0x43afa0, bytes: &[0x6a, 0xff, 0x68, 0x7e, 0x4a, 0x95, 0x00] } => bra_reg_rio_create_half_season_stage, compare_bra_reg_rio_create_half_season_stage, "motor_cqr1_turno_do_carioca";
+    Prologue { address: 0x4351b0, bytes: &[0x6a, 0xff, 0x68, 0x0e, 0x48, 0x95, 0x00] } => bra_reg_minas_gerais_create_half_season_stage, compare_bra_reg_minas_gerais_create_half_season_stage, "motor_cqr1_turno_do_mineiro";
+    Prologue { address: 0x438760, bytes: &[0x6a, 0xff, 0x68, 0x7e, 0x49, 0x95, 0x00] } => create_half_stage, compare_create_half_stage, "motor_cqr1_turno_do_paranaense";
+    Prologue { address: 0x663c20, bytes: &[0x6a, 0xff, 0x68, 0x5e, 0xc1, 0x95, 0x00] } => jap_j1_create_half_season_stage, compare_jap_j1_create_half_season_stage, "motor_cqr1_turno_da_j1";
+    Prologue { address: 0x43a6a0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_rio_start_new_season, compare_bra_reg_rio_start_new_season, "motor_cqr2_virada_do_carioca";
+    Prologue { address: 0x434910, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_minas_gerais_start_new_season, compare_bra_reg_minas_gerais_start_new_season, "motor_cqr2_virada_do_mineiro";
+    Prologue { address: 0x438060, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_reg_parana_start_new_season, compare_bra_reg_parana_start_new_season, "motor_cqr2_virada_do_paranaense";
+    Prologue { address: 0x411f70, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => aus_nsl_advance_stage, compare_aus_nsl_advance_stage, "motor_cqr3_fase_seguinte_da_nsl";
+    Prologue { address: 0x412010, bytes: &[0x6a, 0xff, 0x68, 0x1e, 0x3a, 0x95, 0x00] } => create_finals_series_stage, compare_create_finals_series_stage, "motor_cqr3_serie_final_da_nsl";
+    Prologue { address: 0x4121c0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_grand_final_stage, compare_create_grand_final_stage, "motor_cqr3_grande_final_da_nsl";
+    Prologue { address: 0x909400, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => usa_mls_advance_stage, compare_usa_mls_advance_stage, "motor_cqr4_fase_seguinte_da_mls";
+    Prologue { address: 0x9094c0, bytes: &[0x6a, 0xff, 0x68, 0x1e, 0x54, 0x96, 0x00] } => usa_mls_create_playoff_stage, compare_usa_mls_create_playoff_stage, "motor_cqr4_play_off_da_mls";
+    Prologue { address: 0x9097d0, bytes: &[0x6a, 0xff, 0x68, 0x3e, 0x54, 0x96, 0x00] } => usa_mls_create_final_stage, compare_usa_mls_create_final_stage, "motor_cqr4_final_da_mls";
+    Prologue { address: 0x427d10, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_cup_start_new_season, compare_bra_cup_start_new_season, "motor_cqr5_virada_copa_do_brasil";
+    Prologue { address: 0x662950, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => jap_emp_cup_start_new_season, compare_jap_emp_cup_start_new_season, "motor_cqr5_virada_copa_do_imperador";
+    Prologue { address: 0x665bc0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => jap_j_cup_start_new_season, compare_jap_j_cup_start_new_season, "motor_cqr5_virada_copa_da_liga_japonesa";
+    Prologue { address: 0x6664e0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => jap_super_start_new_season, compare_jap_super_start_new_season, "motor_cqr6_virada_supercopa_japonesa";
+    Prologue { address: 0x90b790, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => usa_open_cup_start_new_season, compare_usa_open_cup_start_new_season, "motor_cqr6_virada_copa_dos_eua";
+    Prologue { address: 0x90a760, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => usa_mls_all_stars_start_new_season_90a760, compare_usa_mls_all_stars_start_new_season_90a760, "motor_cqr6_virada_jogo_das_estrelas";
+    Prologue { address: 0x90a540, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => set_up_teams, compare_set_up_teams, "motor_cqr6_times_do_jogo_das_estrelas";
+    Prologue { address: 0x4c4410, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => conmebol_liber_update_for_date, compare_conmebol_liber_update_for_date, "motor_cqr10_libertadores_dia";
+    Prologue { address: 0x4c37a0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => build_first_group_table, compare_build_first_group_table, "motor_cqr10_libertadores_primeiro_grupo";
+    Prologue { address: 0x4c3b10, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => conmebol_liber_create_group_stage, compare_conmebol_liber_create_group_stage, "motor_cqr10_libertadores_grupo";
+    Prologue { address: 0x4c5c90, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => conmebol_merc_update_for_date, compare_conmebol_merc_update_for_date, "motor_cqr11_mercosul_dia";
+    Prologue { address: 0x4c4e60, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => conmebol_merc_create_first_group_table, compare_conmebol_merc_create_first_group_table, "motor_cqr11_mercosul_primeiro_grupo";
+    Prologue { address: 0x4c51d0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => conmebol_merc_create_group_stage, compare_conmebol_merc_create_group_stage, "motor_cqr11_mercosul_grupo";
+    Prologue { address: 0x4c2c90, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => con_merc_cup_update_for_date, compare_con_merc_cup_update_for_date, "motor_cqr12_merconorte_dia";
+    Prologue { address: 0x4c1de0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => con_merc_cup_create_first_group_table, compare_con_merc_cup_create_first_group_table, "motor_cqr12_merconorte_primeiro_grupo";
+    Prologue { address: 0x4c2140, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => con_merc_cup_create_group_stage, compare_con_merc_cup_create_group_stage, "motor_cqr12_merconorte_grupo";
+    Prologue { address: 0x5e2120, bytes: &[0x6a, 0xff, 0x68, 0xe6, 0xa8, 0x95, 0x00] } => goldcup_update_for_date, compare_goldcup_update_for_date, "motor_cqr13_copa_america_dia";
+    Prologue { address: 0x5e11e0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => goldcup_create_group_table, compare_goldcup_create_group_table, "motor_cqr13_copa_america_primeiro_grupo";
+    Prologue { address: 0x5e16b0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => goldcup_create_group_stage, compare_goldcup_create_group_stage, "motor_cqr13_copa_america_grupo";
+    Prologue { address: 0x908560, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => usa_mls_create_table, compare_usa_mls_create_table, "motor_cqs1_tabela_da_mls";
+    Prologue { address: 0x908fc0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_second_division_stage, compare_create_second_division_stage, "motor_cqs1_segunda_divisao_da_mls";
+    Prologue { address: 0x9091e0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_third_division_stage, compare_create_third_division_stage, "motor_cqs1_terceira_divisao_da_mls";
+    Prologue { address: 0x908e00, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => usa_mls_start_new_season, compare_usa_mls_start_new_season, "motor_cqs2_virada_da_mls";
+    Prologue { address: 0x909bb0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => usa_mls_set_predicted_positions, compare_usa_mls_set_predicted_positions, "motor_cqs2_posicoes_previstas_da_mls";
+    Prologue { address: 0x909a40, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => usa_mls_get_club_array, compare_usa_mls_get_club_array, "motor_cqs2_clubes_da_mls";
+    Prologue { address: 0x42ee80, bytes: &[0x6a, 0xff, 0x68, 0xbe, 0x45, 0x95, 0x00] } => bra_nat_third_create_group_stage, compare_bra_nat_third_create_group_stage, "motor_cqs3_grupo_da_serie_c";
+    Prologue { address: 0x42e430, bytes: &[0x6a, 0xff, 0x68, 0x4e, 0x45, 0x95, 0x00] } => create_second_round_stage, compare_create_second_round_stage, "motor_cqs3_segunda_fase_da_serie_c";
+    Prologue { address: 0x42e700, bytes: &[0x6a, 0xff, 0x68, 0x7c, 0x45, 0x95, 0x00] } => create_third_round_groups, compare_create_third_round_groups, "motor_cqs3_terceira_fase_da_serie_c";
+    Prologue { address: 0x42e980, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => bra_nat_third_create_final_stage, compare_bra_nat_third_create_final_stage, "motor_cqs4_final_da_serie_c";
+    Prologue { address: 0x42def0, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => bra_nat_third_start_new_season, compare_bra_nat_third_start_new_season, "motor_cqs4_virada_da_serie_c";
+    Prologue { address: 0x42f0a0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => bra_nat_third_set_predicted_positions, compare_bra_nat_third_set_predicted_positions, "motor_cqs4_posicoes_previstas_da_serie_c";
+    Prologue { address: 0x56b730, bytes: &[0x81, 0xec, 0x80, 0x02, 0x00, 0x00] } => select_section_clubs, compare_select_section_clubs, "motor_cqs5_trofeu_clubes";
+    Prologue { address: 0x56bab0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_section_stage, compare_create_section_stage, "motor_cqs5_trofeu_fase_das_chaves";
+    Prologue { address: 0x56bc50, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => eng_auto_cup_advance_stage, compare_eng_auto_cup_advance_stage, "motor_cqs5_trofeu_fase_seguinte";
+    Prologue { address: 0x56bce0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => eng_auto_cup_create_final_stage, compare_eng_auto_cup_create_final_stage, "motor_cqs6_trofeu_final";
+    Prologue { address: 0x56c010, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => eng_auto_cup_rank_teams, compare_eng_auto_cup_rank_teams, "motor_cqs6_trofeu_classificacao";
+    Prologue { address: 0x522e00, bytes: &[0x6a, 0xff, 0x68, 0x3b, 0x78, 0x95, 0x00] } => construct_cup_stage, compare_construct_cup_stage, "motor_cqs7_fase_de_copa";
+    Prologue { address: 0x523300, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x86, 0xa7, 0x00, 0x00, 0x00] } => destroy_cup_stage, compare_destroy_cup_stage, "motor_cqs7_fim_da_fase_de_copa";
+    Prologue { address: 0x4c3d10, bytes: &[0x6a, 0xff, 0x68, 0xbe, 0x6a, 0x95, 0x00] } => conmebol_liber_create_knockout_stage, compare_conmebol_liber_create_knockout_stage, "motor_cqs10_libertadores_mata_mata";
+    Prologue { address: 0x4c2330, bytes: &[0x6a, 0xff, 0x68, 0x0e, 0x6a, 0x95, 0x00] } => con_merc_cup_create_semi_final_stage, compare_con_merc_cup_create_semi_final_stage, "motor_cqs10_merconorte_semifinais";
+    Prologue { address: 0x4c20b0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => con_merc_cup_advance_stage, compare_con_merc_cup_advance_stage, "motor_cqs10_merconorte_fase_seguinte";
+    Prologue { address: 0x4c2560, bytes: &[0x81, 0xec, 0x24, 0x04, 0x00, 0x00] } => con_merc_cup_select_invited_clubs, compare_con_merc_cup_select_invited_clubs, "motor_cqs11_merconorte_convidados";
+    Prologue { address: 0x4c5140, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => conmebol_merc_advance_stage, compare_conmebol_merc_advance_stage, "motor_cqs11_mercosul_fase_seguinte";
+    Prologue { address: 0x5e1620, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => goldcup_advance_stage, compare_goldcup_advance_stage, "motor_cqs11_copa_america_fase_seguinte";
+    Prologue { address: 0x5e1cd0, bytes: &[0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => set_up_team_list, compare_set_up_team_list, "motor_cqs12_copa_america_selecoes";
+    Prologue { address: 0x5e2340, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => goldcup_set_predicted_positions, compare_goldcup_set_predicted_positions, "motor_cqs12_copa_america_previstas";
+    Prologue { address: 0x5e1530, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => goldcup_start_new_season, compare_goldcup_start_new_season, "motor_cqs12_copa_america_temporada_nova";
+    Prologue { address: 0x42f2d0, bytes: &[0x6a, 0xff, 0x68, 0xe9, 0x45, 0x95, 0x00] } => construct_bra_reg_bahia, compare_construct_bra_reg_bahia, "motor_cqt1_construir_baiano";
+    Prologue { address: 0x4304b0, bytes: &[0x6a, 0xff, 0x68, 0x59, 0x46, 0x95, 0x00] } => construct_bra_reg_central, compare_construct_bra_reg_central, "motor_cqt1_construir_centro_oeste";
+    Prologue { address: 0x4317c0, bytes: &[0x6a, 0xff, 0x68, 0xc9, 0x46, 0x95, 0x00] } => construct_bra_reg_gaucho, compare_construct_bra_reg_gaucho, "motor_cqt1_construir_gaucho";
+    Prologue { address: 0x432b50, bytes: &[0x6a, 0xff, 0x68, 0x39, 0x47, 0x95, 0x00] } => construct_bra_reg_goias, compare_construct_bra_reg_goias, "motor_cqt2_construir_goiano";
+    Prologue { address: 0x433d50, bytes: &[0x6a, 0xff, 0x68, 0xa9, 0x47, 0x95, 0x00] } => construct_bra_reg_minas_gerais, compare_construct_bra_reg_minas_gerais, "motor_cqt2_construir_mineiro";
+    Prologue { address: 0x435340, bytes: &[0x6a, 0xff, 0x68, 0x39, 0x48, 0x95, 0x00] } => construct_bra_reg_north, compare_construct_bra_reg_north, "motor_cqt2_construir_norte";
+    Prologue { address: 0x4363f0, bytes: &[0x6a, 0xff, 0x68, 0xa9, 0x48, 0x95, 0x00] } => construct_bra_reg_northeast, compare_construct_bra_reg_northeast, "motor_cqt3_construir_nordeste";
+    Prologue { address: 0x437400, bytes: &[0x6a, 0xff, 0x68, 0x19, 0x49, 0x95, 0x00] } => construct_bra_reg_parana, compare_construct_bra_reg_parana, "motor_cqt3_construir_paranaense";
+    Prologue { address: 0x4388f0, bytes: &[0x6a, 0xff, 0x68, 0xa9, 0x49, 0x95, 0x00] } => construct_bra_reg_pern, compare_construct_bra_reg_pern, "motor_cqt3_construir_pernambucano";
+    Prologue { address: 0x439a40, bytes: &[0x6a, 0xff, 0x68, 0x19, 0x4a, 0x95, 0x00] } => construct_bra_reg_rio, compare_construct_bra_reg_rio, "motor_cqt4_construir_carioca";
+    Prologue { address: 0x43b130, bytes: &[0x6a, 0xff, 0x68, 0xa9, 0x4a, 0x95, 0x00] } => construct_bra_reg_santa, compare_construct_bra_reg_santa, "motor_cqt4_construir_catarinense";
+    Prologue { address: 0x43c280, bytes: &[0x6a, 0xff, 0x68, 0x19, 0x4b, 0x95, 0x00] } => construct_bra_reg_sp, compare_construct_bra_reg_sp, "motor_cqt4_construir_paulista";
+    Prologue { address: 0x5d6280, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => cqt4_atualizar_media_de_publico, compare_cqt4_atualizar_media_de_publico, "motor_cqt4_atualizar_media_de_publico";
+    Prologue { address: 0x797b40, bytes: &[0x6a, 0xff, 0x68, 0x16, 0xeb, 0x95, 0x00] } => oceania_club_champ_update_for_date, compare_oceania_club_champ_update_for_date, "motor_cqt10_oceania_dia";
+    Prologue { address: 0x7978c0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => create_group_a_table, compare_create_group_a_table, "motor_cqt10_oceania_grupo_a";
+    Prologue { address: 0x797e80, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_group_b_stage, compare_create_group_b_stage, "motor_cqt10_oceania_grupo_b";
+    Prologue { address: 0x798220, bytes: &[0x81, 0xec, 0xfc, 0x03, 0x00, 0x00] } => oceania_club_champ_select_qualified_clubs, compare_oceania_club_champ_select_qualified_clubs, "motor_cqt11_oceania_clubes";
+    Prologue { address: 0x797df0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => oceania_club_champ_advance_stage, compare_oceania_club_champ_advance_stage, "motor_cqt11_oceania_fase_seguinte";
+    Prologue { address: 0x798050, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => oceania_club_champ_create_knockout_stage, compare_oceania_club_champ_create_knockout_stage, "motor_cqt11_oceania_semifinais";
+    Prologue { address: 0x40c070, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => asia_club_champ_advance_stage, compare_asia_club_champ_advance_stage, "motor_cqt12_asia_fase_seguinte";
+    Prologue { address: 0x40c110, bytes: &[0x6a, 0xff, 0x68, 0xcc, 0x37, 0x95, 0x00] } => create_group_stages, compare_create_group_stages, "motor_cqt12_asia_grupos";
+    Prologue { address: 0x40c3d0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => asia_club_champ_create_semi_final_stage, compare_asia_club_champ_create_semi_final_stage, "motor_cqt12_asia_semifinais";
+    Prologue { address: 0x4025a0, bytes: &[0x6a, 0xff, 0x68, 0x46, 0x35, 0x95, 0x00] } => african_nations_update_for_date, compare_african_nations_update_for_date, "motor_cqs13_africana_dia";
+    Prologue { address: 0x4022c0, bytes: &[0x81, 0xec, 0x18, 0x02, 0x00, 0x00] } => draw_finalists, compare_draw_finalists, "motor_cqs13_africana_sorteio";
+    Prologue { address: 0x401ea0, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => african_nations_create_group_stage, compare_african_nations_create_group_stage, "motor_cqs13_africana_grupo";
+    Prologue { address: 0x402090, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => asia_cup_winner_create_knockout_stage, compare_asia_cup_winner_create_knockout_stage, "motor_cqt13_africana_quartas";
+    Prologue { address: 0x40dfa0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => asia_cup_winner_advance_stage, compare_asia_cup_winner_advance_stage, "motor_cqt13_recopa_asiatica_fase_seguinte";
+    Prologue { address: 0x40e030, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_finals_stage, compare_create_finals_stage, "motor_cqt13_recopa_asiatica_finais";
+    Prologue { address: 0x63f250, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => ita_cup_create_first_group_table, compare_ita_cup_create_first_group_table, "motor_cqr7_copa_da_italia_grupo_um";
+    Prologue { address: 0x63d5e0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => init_first_group, compare_init_first_group, "motor_cqr7_copa_da_serie_c_grupo_um";
+    Prologue { address: 0x63f5b0, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => ita_cup_advance_stage, compare_ita_cup_advance_stage, "motor_cqr7_copa_da_italia_fase_seguinte";
+    Prologue { address: 0x63d950, bytes: &[0x8b, 0x51, 0x2c, 0x8b, 0x41, 0x30] } => ita_cup_advance_stage_63d950, compare_ita_cup_advance_stage_63d950, "motor_cqr7_copa_da_serie_c_fase_seguinte";
+    Prologue { address: 0x63f640, bytes: &[0x6a, 0xff, 0x68, 0x0e, 0xb9, 0x95, 0x00] } => ita_cup_create_group_stage, compare_ita_cup_create_group_stage, "motor_cqr8_copa_da_italia_grupo";
+    Prologue { address: 0x63d9e0, bytes: &[0x6a, 0xff, 0x68, 0x6e, 0xb8, 0x95, 0x00] } => ita_cup_create_group_stage_63d9e0, compare_ita_cup_create_group_stage_63d9e0, "motor_cqr8_copa_da_serie_c_grupo";
+    Prologue { address: 0x63f870, bytes: &[0x6a, 0xff, 0x68, 0x2e, 0xb9, 0x95, 0x00] } => ita_cup_create_knockout_stage, compare_ita_cup_create_knockout_stage, "motor_cqr9_copa_da_italia_mata_mata";
+    Prologue { address: 0x63dc10, bytes: &[0x6a, 0xff, 0x68, 0x9c, 0xb8, 0x95, 0x00] } => ita_cup_create_knockout_stage_63dc10, compare_ita_cup_create_knockout_stage_63dc10, "motor_cqr9_copa_da_serie_c_mata_mata";
+    Prologue { address: 0x57e8f0, bytes: &[0x6a, 0xff, 0x68, 0xa8, 0x88, 0x95, 0x00] } => euro_champ_qual_set_up_rules, compare_euro_champ_qual_set_up_rules, "motor_cqs8_eurocopa_regras";
+    Prologue { address: 0x57d9d0, bytes: &[0x0f, 0xbe, 0x81, 0xf6, 0x00, 0x00, 0x00] } => get_group_team_count, compare_get_group_team_count, "motor_cqs8_eurocopa_tamanho_do_grupo";
+    Prologue { address: 0x580b50, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x8b, 0x49, 0x08] } => get_qualification_status, compare_get_qualification_status, "motor_cqs8_eurocopa_situacao";
+    Prologue { address: 0x57e7e0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => init_group_one_table, compare_init_group_one_table, "motor_cqs8_eurocopa_grupo_um";
+    Prologue { address: 0x902b90, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => build_entrants, compare_build_entrants, "motor_cqs9_uefa_inscritos";
+    Prologue { address: 0x84d740, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => spa_cup_update_for_date, compare_spa_cup_update_for_date, "motor_cqt5_copa_do_rei_dia";
+    Prologue { address: 0x584ad0, bytes: &[0x8b, 0x41, 0x0c, 0x8b, 0x48, 0x30] } => spa_cup_record_season_honours, compare_spa_cup_record_season_honours, "motor_cqt5_historico_liga_dos_campeoes";
+    Prologue { address: 0x5e93e0, bytes: &[0x8b, 0x41, 0x0c, 0x8b, 0x48, 0x28] } => spa_cup_record_season_honours_5e93e0, compare_spa_cup_record_season_honours_5e93e0, "motor_cqt5_historico_copa_da_grecia";
+    Prologue { address: 0x637750, bytes: &[0x8b, 0x41, 0x0c, 0x8b, 0x48, 0x1c] } => spa_cup_record_season_honours_637750, compare_spa_cup_record_season_honours_637750, "motor_cqt5_historico_copa_da_liga_irlandesa";
+    Prologue { address: 0x63d770, bytes: &[0x8b, 0x41, 0x0c, 0x8b, 0x48, 0x3c] } => spa_cup_record_season_honours_63d770, compare_spa_cup_record_season_honours_63d770, "motor_cqt5_historico_copa_da_serie_c";
+}
 const N: usize = 2092;
 include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position of each routine (build.rs)
 
@@ -3865,4307 +3885,9 @@ pub unsafe fn instalar(comparando: bool) {
             GET_PLAYER_INJURY_TRAMPOLINE = t;
         }
     }
-    let rust: [usize; N] = [
-        table_a as *const () as usize,
-        table_b as *const () as usize,
-        side_difference as *const () as usize,
-        band as *const () as usize,
-        by_difference as *const () as usize,
-        limit as *const () as usize,
-        player_condition as *const () as usize,
-        player_table as *const () as usize,
-        player_difference as *const () as usize,
-        side_byte as *const () as usize,
-        player_limit as *const () as usize,
-        player_band as *const () as usize,
-        position_byte as *const () as usize,
-        field_by_position as *const () as usize,
-        can_choose as *const () as usize,
-        aim_set_facing_direction as *const () as usize,
-        tire_fatigue as *const () as usize,
-        facing as *const () as usize,
-        search_on_side as *const () as usize,
-        reaches as *const () as usize,
-        classify_move as *const () as usize,
-        distance_to_point as *const () as usize,
-        distance_to_goal as *const () as usize,
-        closest_to_goal as *const () as usize,
-        players_in_line as *const () as usize,
-        can_play as *const () as usize,
-        in_the_box as *const () as usize,
-        position_marks as *const () as usize,
-        attacking_role as *const () as usize,
-        defending_role as *const () as usize,
-        position_place_players as *const () as usize,
-        defensive_lines as *const () as usize,
-        update_player as *const () as usize,
-        draw_moment as *const () as usize,
-        hold_position_one as *const () as usize,
-        clear_path as *const () as usize,
-        space_ahead as *const () as usize,
-        off_centre as *const () as usize,
-        beyond_the_line as *const () as usize,
-        distance_between as *const () as usize,
-        ler_8ea7 as *const () as usize,
-        ler_8ea8 as *const () as usize,
-        ler_8ea9 as *const () as usize,
-        ler_8eaa as *const () as usize,
-        ler_8eb2 as *const () as usize,
-        gravar_8ea9 as *const () as usize,
-        gravar_8ea7 as *const () as usize,
-        gravar_8ea8 as *const () as usize,
-        gravar_8eaa as *const () as usize,
-        write_8ed8 as *const () as usize,
-        read_8f7a as *const () as usize,
-        record_possession as *const () as usize,
-        in_list as *const () as usize,
-        store_extremes as *const () as usize,
-        count_active as *const () as usize,
-        special_code as *const () as usize,
-        behind_the_extreme as *const () as usize,
-        no_match as *const () as usize,
-        pressure_in_box as *const () as usize,
-        nearest_to_point as *const () as usize,
-        pressure_at_point as *const () as usize,
-        smallest_distance as *const () as usize,
-        split_a as *const () as usize,
-        split_b as *const () as usize,
-        split_c as *const () as usize,
-        choose_by_role as *const () as usize,
-        direction as *const () as usize,
-        clear_stored as *const () as usize,
-        x_off_centre as *const () as usize,
-        is_the_stored as *const () as usize,
-        side_of_move as *const () as usize,
-        player_in_block as *const () as usize,
-        table_a_1a as *const () as usize,
-        marked_moment as *const () as usize,
-        side_state as *const () as usize,
-        opponent_state as *const () as usize,
-        write_19c as *const () as usize,
-        set_piece_code as *const () as usize,
-        near_goal as *const () as usize,
-        clear_move as *const () as usize,
-        add_disposition as *const () as usize,
-        split_d as *const () as usize,
-        split_e as *const () as usize,
-        split_f as *const () as usize,
-        record_move as *const () as usize,
-        remove_from_list as *const () as usize,
-        take_the_field as *const () as usize,
-        in_danger as *const () as usize,
-        check_move as *const () as usize,
-        clear_path_to as *const () as usize,
-        reaches_the_point as *const () as usize,
-        choose_standout as *const () as usize,
-        choose_by_role_b as *const () as usize,
-        formation_square as *const () as usize,
-        compute_percentages as *const () as usize,
-        choose_by_role_c as *const () as usize,
-        apply_factor as *const () as usize,
-        value_by_condition as *const () as usize,
-        apply_to_team as *const () as usize,
-        apply_to_side as *const () as usize,
-        choose_by_condition as *const () as usize,
-        read_1bc as *const () as usize,
-        add_2b as *const () as usize,
-        write_2b as *const () as usize,
-        player_table_a_1a as *const () as usize,
-        player_table_b as *const () as usize,
-        difference_of_player as *const () as usize,
-        player_marks_rot as *const () as usize,
-        mark_800000 as *const () as usize,
-        near_own_goal as *const () as usize,
-        role_880 as *const () as usize,
-        release_ball as *const () as usize,
-        player_by_record as *const () as usize,
-        code_byte as *const () as usize,
-        adjusted_rating as *const () as usize,
-        adjust_17 as *const () as usize,
-        take_ball as *const () as usize,
-        init_strictness as *const () as usize,
-        move_counts as *const () as usize,
-        decide_foul as *const () as usize,
-        punish_foul as *const () as usize,
-        punish_move as *const () as usize,
-        engine_decide_foul as *const () as usize,
-        engine_punish_move as *const () as usize,
-        engine_punish_foul as *const () as usize,
-        look_for_offside as *const () as usize,
-        engine_look_for_offside as *const () as usize,
-        card_by_severity as *const () as usize,
-        engine_card_by_severity as *const () as usize,
-        choose_by_role_e as *const () as usize,
-        possession_statistic as *const () as usize,
-        match_summary as *const () as usize,
-        closest_on_side as *const () as usize,
-        goalkeeper_save as *const () as usize,
-        move_to as *const () as usize,
-        choose_square as *const () as usize,
-        control_of_move as *const () as usize,
-        trace_move as *const () as usize,
-        has_match as *const () as usize,
-        won_the_match as *const () as usize,
-        commentary_a as *const () as usize,
-        commentary_b as *const () as usize,
-        ball_out as *const () as usize,
-        shot_value as *const () as usize,
-        team_strength as *const () as usize,
-        kick_off as *const () as usize,
-        roll_ball as *const () as usize,
-        condition_test as *const () as usize,
-        likes as *const () as usize,
-        dislikes as *const () as usize,
-        mark_position as *const () as usize,
-        fine_positions as *const () as usize,
-        units_digit as *const () as usize,
-        is_friendly as *const () as usize,
-        contract_of as *const () as usize,
-        is_national_team as *const () as usize,
-        manager_9a01 as *const () as usize,
-        manager_9a05 as *const () as usize,
-        square_bit as *const () as usize,
-        split_mask as *const () as usize,
-        is_second_national_team as *const () as usize,
-        aggregate_score as *const () as usize,
-        direct_marker as *const () as usize,
-        take_off_pitch as *const () as usize,
-        individual_marking as *const () as usize,
-        new_reputation as *const () as usize,
-        player_reputation as *const () as usize,
-        choose_taker as *const () as usize,
-        throw_in as *const () as usize,
-        corner as *const () as usize,
-        penalty as *const () as usize,
-        set_square as *const () as usize,
-        mark_stars as *const () as usize,
-        designated_for_position as *const () as usize,
-        designated_marked as *const () as usize,
-        main_national_team as *const () as usize,
-        b_national_team as *const () as usize,
-        who_to_mark as *const () as usize,
-        manager_9ace as *const () as usize,
-        manager_9a06 as *const () as usize,
-        human_club as *const () as usize,
-        side_under_control as *const () as usize,
-        tactics_row as *const () as usize,
-        tactics_byte as *const () as usize,
-        penalty_order as *const () as usize,
-        player_order as *const () as usize,
-        marked_slot as *const () as usize,
-        mark_slot as *const () as usize,
-        row_person as *const () as usize,
-        club_in_competition as *const () as usize,
-        special_club as *const () as usize,
-        foul_decision as *const () as usize,
-        choose_teammate as *const () as usize,
-        foul_in_engine as *const () as usize,
-        manager_9b23 as *const () as usize,
-        dislikes_club as *const () as usize,
-        likes_club as *const () as usize,
-        partner_club as *const () as usize,
-        contract_with_club as *const () as usize,
-        contract_level as *const () as usize,
-        chance_to_know as *const () as usize,
-        know_person as *const () as usize,
-        fog_after_match as *const () as usize,
-        shortlist_entry as *const () as usize,
-        contract_flags as *const () as usize,
-        next_list_item as *const () as usize,
-        word_0c as *const () as usize,
-        round_below_1000 as *const () as usize,
-        group_nation as *const () as usize,
-        how_many_mark as *const () as usize,
-        who_marks as *const () as usize,
-        competition_counts as *const () as usize,
-        order_by_5f as *const () as usize,
-        order_by_80 as *const () as usize,
-        order_by_80_desc as *const () as usize,
-        order_by_80_asc as *const () as usize,
-        player_rating as *const () as usize,
-        forget_person as *const () as usize,
-        manager_table as *const () as usize,
-        sector_slot_taken as *const () as usize,
-        slot_of_code as *const () as usize,
-        clear_assigned as *const () as usize,
-        formation_mask as *const () as usize,
-        slot_code as *const () as usize,
-        competition_criterion as *const () as usize,
-        type_not_11 as *const () as usize,
-        type_11_to_15 as *const () as usize,
-        national_side_class as *const () as usize,
-        read_person_mark as *const () as usize,
-        clear_person_mark as *const () as usize,
-        free_record as *const () as usize,
-        set_person_44 as *const () as usize,
-        person_byte_44 as *const () as usize,
-        person_field_3a as *const () as usize,
-        class_by_national_side as *const () as usize,
-        database_global_9b5984 as *const () as usize,
-        person_competition as *const () as usize,
-        national_side_byte_42 as *const () as usize,
-        national_side_byte_43 as *const () as usize,
-        national_or_special as *const () as usize,
-        dislikes_national_side as *const () as usize,
-        copy_date_and_mark as *const () as usize,
-        update_attributes as *const () as usize,
-        match_performance as *const () as usize,
-        side_strength as *const () as usize,
-        ball_in_attack as *const () as usize,
-        evolve_moment as *const () as usize,
-        match_of_interest as *const () as usize,
-        group_decided as *const () as usize,
-        narrate_qualification as *const () as usize,
-        look_for_play as *const () as usize,
-        players_on_path as *const () as usize,
-        intercept as *const () as usize,
-        advance_row as *const () as usize,
-        line_up_kickoff as *const () as usize,
-        line_up_set_piece as *const () as usize,
-        decide_off_ball as *const () as usize,
-        move_off_ball as *const () as usize,
-        decide_player as *const () as usize,
-        pass_ball as *const () as usize,
-        long_ball as *const () as usize,
-        deflect_ball as *const () as usize,
-        save_shot as *const () as usize,
-        recover_stamina as *const () as usize,
-        period_completed as *const () as usize,
-        pressure as *const () as usize,
-        opposition_challenge as *const () as usize,
-        develop_player as *const () as usize,
-        kit as *const () as usize,
-        injury_severity as *const () as usize,
-        injury_grade as *const () as usize,
-        tackle_injury as *const () as usize,
-        rate_player as *const () as usize,
-        best_rated as *const () as usize,
-        best_in_list as *const () as usize,
-        player_left as *const () as usize,
-        redo_team as *const () as usize,
-        substitute as *const () as usize,
-        pick as *const () as usize,
-        stance as *const () as usize,
-        choose_formation as *const () as usize,
-        instructions as *const () as usize,
-        put_in_place as *const () as usize,
-        order_by_table as *const () as usize,
-        order_by_condition as *const () as usize,
-        starters as *const () as usize,
-        store_tactic as *const () as usize,
-        apply_substitutions as *const () as usize,
-        punishments as *const () as usize,
-        penalties as *const () as usize,
-        apply_foul as *const () as usize,
-        tackle as *const () as usize,
-        contest as *const () as usize,
-        respond as *const () as usize,
-        play as *const () as usize,
-        post_match_events as *const () as usize,
-        post_match_players as *const () as usize,
-        post_match_club as *const () as usize,
-        match_without_human as *const () as usize,
-        match_day_interest as *const () as usize,
-        restart_play as *const () as usize,
-        shot as *const () as usize,
-        referee_grade as *const () as usize,
-        record_referee_grade as *const () as usize,
-        stored_taker as *const () as usize,
-        store_instructions as *const () as usize,
-        competition_number as *const () as usize,
-        favourite_of as *const () as usize,
-        rejected_by as *const () as usize,
-        match_wrap_up as *const () as usize,
-        read_tactics_row as *const () as usize,
-        write_tactics_row as *const () as usize,
-        quick_simulation as *const () as usize,
-        injure as *const () as usize,
-        register_injury as *const () as usize,
-        player_highlight as *const () as usize,
-        shot_outcome as *const () as usize,
-        shot_on_goal as *const () as usize,
-        player_move as *const () as usize,
-        dribble as *const () as usize,
-        engine_loop as *const () as usize,
-        execute_pass as *const () as usize,
-        behind_on_aggregate as *const () as usize,
-        free_teammate as *const () as usize,
-        shoot as *const () as usize,
-        build_engine as *const () as usize,
-        prepare_match as *const () as usize,
-        destroy_engine as *const () as usize,
-        select_side as *const () as usize,
-        end_day as *const () as usize,
-        pick_day_match as *const () as usize,
-        select_automatically as *const () as usize,
-        start_next_match as *const () as usize,
-        step_day_match as *const () as usize,
-        close_day_match as *const () as usize,
-        play_the_day as *const () as usize,
-        set_up_the_day as *const () as usize,
-        player_side as *const () as usize,
-        sounds_finished as *const () as usize,
-        record_events as *const () as usize,
-        read_events as *const () as usize,
-        network_step as *const () as usize,
-        read_events_cfg as *const () as usize,
-        event_text as *const () as usize,
-        confirm_network_match as *const () as usize,
-        commentate_on_panel as *const () as usize,
-        abrir_no_conteiner as *const () as usize,
-        buscar_no_conteiner as *const () as usize,
-        posicao_no_conteiner as *const () as usize,
-        position_mask as *const () as usize,
-        pitch_cell as *const () as usize,
-        slots_without_conflict as *const () as usize,
-        player_statistic as *const () as usize,
-        ratings_average as *const () as usize,
-        centre_backs_without_conflict as *const () as usize,
-        shortlist_slot_fits as *const () as usize,
-        position_code as *const () as usize,
-        staff_criterion as *const () as usize,
-        set_tactic_slot as *const () as usize,
-        tactic_slot_person as *const () as usize,
-        set_tactic_formation as *const () as usize,
-        stored_cell as *const () as usize,
-        set_formation_flag as *const () as usize,
-        reset_records as *const () as usize,
-        rotate_round as *const () as usize,
-        store_round_match as *const () as usize,
-        mark_calendar_year as *const () as usize,
-        extra_tactic_slot as *const () as usize,
-        national_team_ages as *const () as usize,
-        set_human_field as *const () as usize,
-        scout_record as *const () as usize,
-        human_runs_club as *const () as usize,
-        contract_category as *const () as usize,
-        ball_goal_end as *const () as usize,
-        match_abandoned as *const () as usize,
-        side_slots_without_conflict as *const () as usize,
-        side_centre_backs_without_conflict as *const () as usize,
-        construct_referee as *const () as usize,
-        destroy_match_player as *const () as usize,
-        event_at_front as *const () as usize,
-        construct_commentary_queue as *const () as usize,
-        free_event_tables as *const () as usize,
-        day_match_order as *const () as usize,
-        action_order as *const () as usize,
-        event_variant as *const () as usize,
-        combine_with_previous as *const () as usize,
-        context_commentary as *const () as usize,
-        construct_match_player as *const () as usize,
-        next_event as *const () as usize,
-        commentary_player_name as *const () as usize,
-        perceived_ability as *const () as usize,
-        apply_squad_rule as *const () as usize,
-        off_match_score as *const () as usize,
-        lineup_slot_score as *const () as usize,
-        person_in_list as *const () as usize,
-        contract_record as *const () as usize,
-        daily_wear as *const () as usize,
-        formation_record as *const () as usize,
-        competition_weight as *const () as usize,
-        set_news_field as *const () as usize,
-        recover_injury as *const () as usize,
-        person_in_transfer_list as *const () as usize,
-        table_penalty as *const () as usize,
-        record_bits as *const () as usize,
-        competition_flagged as *const () as usize,
-        league_record as *const () as usize,
-        game_average as *const () as usize,
-        contract_value as *const () as usize,
-        national_team_level as *const () as usize,
-        contract_offer as *const () as usize,
-        agreed_contract_offer as *const () as usize,
-        transfer_offer_closed as *const () as usize,
-        match_control_label as *const () as usize,
-        close_match_screen as *const () as usize,
-        open_waiting_screen as *const () as usize,
-        story_with_response_two as *const () as usize,
-        has_story as *const () as usize,
-        cup_match_importance as *const () as usize,
-        open_latest_scores as *const () as usize,
-        build_latest_scores as *const () as usize,
-        latest_scores_input as *const () as usize,
-        open_match_details as *const () as usize,
-        match_details_input as *const () as usize,
-        close_match_details as *const () as usize,
-        discipline_new_season as *const () as usize,
-        discipline_daily_update as *const () as usize,
-        discipline_set_slot as *const () as usize,
-        set_agreed_contract_flag as *const () as usize,
-        clear_agreed_contract_flag as *const () as usize,
-        offer_slot as *const () as usize,
-        open_match_screen as *const () as usize,
-        match_screens_handle_latest_scores_cycle as *const () as usize,
-        handle_team_stats_input as *const () as usize,
-        draw_latest_scores_panel as *const () as usize,
-        is_forward_unavailable as *const () as usize,
-        get_heading_colour as *const () as usize,
-        transfer_manager_get_shortlist_manager as *const () as usize,
-        training_manager_get_player_entry as *const () as usize,
-        set_training_load as *const () as usize,
-        is_own_comp_record as *const () as usize,
-        friendly_international_date_set as *const () as usize,
-        clear_manager_record as *const () as usize,
-        remove_loan_contract as *const () as usize,
-        clear_bid_markers_for_player as *const () as usize,
-        human_manager_get_stand_in_manager as *const () as usize,
-        get_agreed_contract_club as *const () as usize,
-        record_international_appearance as *const () as usize,
-        find_held_ban as *const () as usize,
-        find_retirement_entry as *const () as usize,
-        register_comp_objects as *const () as usize,
-        get_slot as *const () as usize,
-        remove_next_sale_percentage as *const () as usize,
-        remove_first_team_appearance_money as *const () as usize,
-        remove_international_team_appearance_money as *const () as usize,
-        remove_spare_non_player_record as *const () as usize,
-        remove_player_data_from_pool as *const () as usize,
-        calc_prize_fund as *const () as usize,
-        get_last_match_rating as *const () as usize,
-        set_slot_index as *const () as usize,
-        set_list_type as *const () as usize,
-        league_compare_h2h_rows as *const () as usize,
-        update_head_to_head as *const () as usize,
-        note_terms_offered_to_main_player as *const () as usize,
-        get_holiday_stamp as *const () as usize,
-        get_saved_lineup as *const () as usize,
-        set_manager as *const () as usize,
-        open_day_fixtures_screen as *const () as usize,
-        handle_day_fixtures_input as *const () as usize,
-        match_screens_find_best_rated_starter_slot as *const () as usize,
-        get_club_league_stat as *const () as usize,
-        fixture_entry_matches as *const () as usize,
-        match_stats_get_record_bucket as *const () as usize,
-        match_team_block_assign as *const () as usize,
-        match_player_row_assign as *const () as usize,
-        match_screens_tally_live_score as *const () as usize,
-        match_screens_handle_continue_command as *const () as usize,
-        match_screens_open_team_selection as *const () as usize,
-        match_screens_handle_team_selection_input as *const () as usize,
-        draw_team_stats_panel as *const () as usize,
-        draw_player_ratings_panel as *const () as usize,
-        draw_match_stats_panel as *const () as usize,
-        refresh_match_stats_values as *const () as usize,
-        refresh_action_zones_values as *const () as usize,
-        refresh_player_ratings_rows as *const () as usize,
-        draw_action_zones_panel as *const () as usize,
-        draw_match_report_panel as *const () as usize,
-        build_day_fixtures_screen as *const () as usize,
-        fill_team_stats_rows as *const () as usize,
-        refresh_latest_scores_rows as *const () as usize,
-        match_screens_handle_waiting_screen as *const () as usize,
-        read_match_record as *const () as usize,
-        match_screens_record_match as *const () as usize,
-        write_match_record as *const () as usize,
-        match_screens_draw_team_selection as *const () as usize,
-        match_screens_load as *const () as usize,
-        match_screens_save as *const () as usize,
-        area_layout as *const () as usize,
-        init as *const () as usize,
-        draw as *const () as usize,
-        build_match_screen as *const () as usize,
-        handle_match_screen_input as *const () as usize,
-        build_match_details_screen as *const () as usize,
-        refresh_possession_bar as *const () as usize,
-        draw_match_overview_panel as *const () as usize,
-        match_screens_draw_live_league_table as *const () as usize,
-        get_finable_story_kind as *const () as usize,
-        choose_injury_type as *const () as usize,
-        get_category as *const () as usize,
-        national_teams_remove_duplicate_squad_entries as *const () as usize,
-        find_selection_slot as *const () as usize,
-        pick_former_international_pundit as *const () as usize,
-        apply_round_rules_to_match as *const () as usize,
-        find_tree_slot_for_fixture as *const () as usize,
-        pick_tour_nation as *const () as usize,
-        transfer_manager_close_offer_contract_offers as *const () as usize,
-        queue_free_transfer as *const () as usize,
-        get_exchange_negotiations_for_player as *const () as usize,
-        national_teams_remove_player as *const () as usize,
-        get_time_slice as *const () as usize,
-        shortlist_manager_max_fee_for_squad_status as *const () as usize,
-        get_offers_for_player as *const () as usize,
-        update_club_target_reputation as *const () as usize,
-        comp_util_write_fixture_to_news_slots as *const () as usize,
-        fill_match_record as *const () as usize,
-        match_stats_compare_events as *const () as usize,
-        remove_language as *const () as usize,
-        can_sign_player as *const () as usize,
-        get_exchange_offers_for_player as *const () as usize,
-        count_unread as *const () as usize,
-        set_item_slot as *const () as usize,
-        news_club_has_human_manager as *const () as usize,
-        cup_set_round_draw_date as *const () as usize,
-        cup_set_round_match_date as *const () as usize,
-        remove_club_from_ai_plans as *const () as usize,
-        league_compare_table_rows as *const () as usize,
-        league_build_round_robin_grid as *const () as usize,
-        final_day_margin_needed as *const () as usize,
-        comp_util_read_fixture_from_news_slots as *const () as usize,
-        comp_util_classify_tie_result_for_news as *const () as usize,
-        cup_set_round_match_day as *const () as usize,
-        build_position_lookup as *const () as usize,
-        player_regen_score_club_for_player as *const () as usize,
-        is_watching_fixture as *const () as usize,
-        match_day_drop_viewer_and_finish_match as *const () as usize,
-        find_record_fixture as *const () as usize,
-        has_relegation as *const () as usize,
-        league_round_set_date as *const () as usize,
-        get_match_importance as *const () as usize,
-        record_holder_assign as *const () as usize,
-        match_record_assign as *const () as usize,
-        run_record_assign as *const () as usize,
-        is_fixture_watched as *const () as usize,
-        has_nickname as *const () as usize,
-        retire_record_assign as *const () as usize,
-        construct_match_stats as *const () as usize,
-        destroy_match_stats as *const () as usize,
-        zipdir_match_filename_pattern as *const () as usize,
-        zget_archive_id as *const () as usize,
-        zget_matching_size as *const () as usize,
-        zadd_matching_files as *const () as usize,
-        zextract_matching_files as *const () as usize,
-        utils_clear_temp_folder as *const () as usize,
-        zipdir_zread as *const () as usize,
-        zipdir_zwrite as *const () as usize,
-        zclose as *const () as usize,
-        check_saved_game_file as *const () as usize,
-        check_quick_start_file as *const () as usize,
-        valid_saved_game_version as *const () as usize,
-        save_fifa_transfer_rules as *const () as usize,
-        load_fifa_transfer_rules as *const () as usize,
-        build_save_game_summary as *const () as usize,
-        save_database_for_game as *const () as usize,
-        load_database_from_stream as *const () as usize,
-        free_game_data as *const () as usize,
-        create_game_from_setup_file as *const () as usize,
-        save_game_data as *const () as usize,
-        load_game_data as *const () as usize,
-        database_get_reputation_scope as *const () as usize,
-        database_get_staff_reputation_for_viewer as *const () as usize,
-        database_is_staff_foreign as *const () as usize,
-        database_get_staff_age as *const () as usize,
-        nation_allows_free_transfers as *const () as usize,
-        database_is_staff_eu_national as *const () as usize,
-        staff_is_transfer_listed_or_requested as *const () as usize,
-        staff_compute_player_attribute as *const () as usize,
-        staff_get_player_attribute as *const () as usize,
-        database_compare_comp_history_rows as *const () as usize,
-        database_player_to_attribute_vector as *const () as usize,
-        nation_is_uk_or_ireland as *const () as usize,
-        database_is_basque_club as *const () as usize,
-        staff_is_transfer_listed as *const () as usize,
-        staff_is_loan_listed as *const () as usize,
-        staff_is_listed_by_request as *const () as usize,
-        player_attribute_rating as *const () as usize,
-        database_club_has_reserve_squad as *const () as usize,
-        database_pick_first_name_for_nation as *const () as usize,
-        database_pick_second_name_for_nation as *const () as usize,
-        database_format_staff_name as *const () as usize,
-        database_get_club_kit_colours as *const () as usize,
-        database_get_club_manager as *const () as usize,
-        club_get_english_name as *const () as usize,
-        staff_adjust_morale as *const () as usize,
-        database_non_player_to_attribute_vector as *const () as usize,
-        staff_set_squad_flags as *const () as usize,
-        database_count_club_squad as *const () as usize,
-        database_collect_club_squad as *const () as usize,
-        club_can_be_managed as *const () as usize,
-        database_vector_to_non_player as *const () as usize,
-        database_vector_to_player as *const () as usize,
-        staff_normalise_non_player_attributes as *const () as usize,
-        database_get_colour_family as *const () as usize,
-        database_colours_clash as *const () as usize,
-        staff_compute_non_player_attribute as *const () as usize,
-        get_adjective_form_index as *const () as usize,
-        staff_get_non_player_attribute as *const () as usize,
-        player_attribute_rating_with_scaled_ability as *const () as usize,
-        database_pick_first_name_by_weight as *const () as usize,
-        database_get_comp_colours as *const () as usize,
-        database_club_has_room_for_job as *const () as usize,
-        database_add_staff_to_club as *const () as usize,
-        match_club_key_id as *const () as usize,
-        remap_club_key_id as *const () as usize,
-        match_nation_key_id as *const () as usize,
-        match_club_comp_key_id as *const () as usize,
-        match_staff_comp_key_id as *const () as usize,
-        db_files_read_continents as *const () as usize,
-        db_files_read_nations as *const () as usize,
-        db_files_read_cities as *const () as usize,
-        db_files_read_stadiums as *const () as usize,
-        db_files_read_staff_v1 as *const () as usize,
-        db_files_read_staff_history as *const () as usize,
-        db_files_read_comp_history as *const () as usize,
-        db_files_read_staff_comps as *const () as usize,
-        db_files_read_staff_comp_history as *const () as usize,
-        db_files_read_officials as *const () as usize,
-        db_files_read_colours as *const () as usize,
-        db_files_read_names as *const () as usize,
-        db_files_read_clubs as *const () as usize,
-        db_files_read_comps as *const () as usize,
-        db_files_read_players as *const () as usize,
-        db_files_read_non_players as *const () as usize,
-        db_files_read_staff as *const () as usize,
-        db_files_read_staff_extra as *const () as usize,
-        db_files_write_continents as *const () as usize,
-        db_files_write_nations as *const () as usize,
-        db_files_write_cities as *const () as usize,
-        db_files_write_stadiums as *const () as usize,
-        db_files_write_clubs as *const () as usize,
-        db_files_write_staff as *const () as usize,
-        db_files_write_players as *const () as usize,
-        db_files_write_non_players as *const () as usize,
-        db_files_write_staff_extra as *const () as usize,
-        db_files_write_staff_history as *const () as usize,
-        db_files_write_comps as *const () as usize,
-        db_files_write_comp_history as *const () as usize,
-        db_files_write_staff_comps as *const () as usize,
-        db_files_write_officials as *const () as usize,
-        db_files_write_records_0x3a as *const () as usize,
-        db_files_write_or_read_records_0x3c as *const () as usize,
-        db_files_open_for_read as *const () as usize,
-        db_files_open_for_write as *const () as usize,
-        database_free_staff_history_table as *const () as usize,
-        database_free_staff_comp_history_table as *const () as usize,
-        database_grow_comp_history_table as *const () as usize,
-        qsort_comparator_club_ids_by_reputation as *const () as usize,
-        qsort_comparator_squad_by_player_0xb as *const () as usize,
-        compare_staff_by_player_ability_desc as *const () as usize,
-        staff_normalise_player_physical_attributes as *const () as usize,
-        database_pick_second_name_by_weight as *const () as usize,
-        staff_normalise_player_attributes as *const () as usize,
-        db_files_read_clubs_v1 as *const () as usize,
-        db_files_read_players_v1 as *const () as usize,
-        db_files_read_non_players_v1 as *const () as usize,
-        db_files_read_comps_v1 as *const () as usize,
-        nation_get_english_name as *const () as usize,
-        club_get_english_short_name as *const () as usize,
-        database_trim_senior_and_b_team_squads as *const () as usize,
-        database_merge_b_team_staff as *const () as usize,
-        database_build_nation_name_index as *const () as usize,
-        database_remove_staff_from_club as *const () as usize,
-        database_get_club_scouts as *const () as usize,
-        club_is_in_season as *const () as usize,
-        club_is_in_major_nation as *const () as usize,
-        nation_is_major_nation as *const () as usize,
-        staff_clear_opinion_links as *const () as usize,
-        staff_add_opinion_link as *const () as usize,
-        staff_remove_opinion_link as *const () as usize,
-        database_get_club_assistant as *const () as usize,
-        database_get_club_coaches as *const () as usize,
-        database_count_club_coaches as *const () as usize,
-        nation_get_english_three_letter_name as *const () as usize,
-        comp_get_english_name as *const () as usize,
-        staff_comp_get_english_name as *const () as usize,
-        stadium_get_english_name as *const () as usize,
-        database_language_file_exists as *const () as usize,
-        eng_lng_free_tables as *const () as usize,
-        database_generate_extra_non_playing_staff as *const () as usize,
-        database_trim_club_table as *const () as usize,
-        database_prune_comp_history_table as *const () as usize,
-        resolve_database_indexes as *const () as usize,
-        database_sort_clubs_by_reputation as *const () as usize,
-        club_has_enough_defenders as *const () as usize,
-        club_has_enough_midfielders as *const () as usize,
-        club_has_enough_strikers as *const () as usize,
-        club_has_enough_hard_workers as *const () as usize,
-        club_has_fit_goalkeeper as *const () as usize,
-        club_has_ball_winning_midfielders as *const () as usize,
-        club_lacks_aerial_strikers as *const () as usize,
-        club_lacks_aerial_defenders as *const () as usize,
-        club_lacks_fast_defenders as *const () as usize,
-        club_has_fast_striker as *const () as usize,
-        club_has_two_creative_midfielders as *const () as usize,
-        club_squad_strength_band as *const () as usize,
-        club_reputation_for_staff as *const () as usize,
-        staff_count_disliked_staff_at_club as *const () as usize,
-        staff_count_favoured_staff_at_club as *const () as usize,
-        staff_remove_favoured_club as *const () as usize,
-        club_remove_favoured_staff as *const () as usize,
-        staff_remove_favoured_staff as *const () as usize,
-        staff_remove_disliked_staff as *const () as usize,
-        staff_get_favoured_staff as *const () as usize,
-        club_add_favoured_staff as *const () as usize,
-        club_add_disliked_staff as *const () as usize,
-        staff_add_favoured_staff as *const () as usize,
-        staff_add_disliked_club as *const () as usize,
-        staff_fade_staff_relationships as *const () as usize,
-        staff_get_disliked_staff as *const () as usize,
-        staff_get_natural_position_mask as *const () as usize,
-        club_count_squad_with_position_mask as *const () as usize,
-        staff_pick_favoured_team_mate as *const () as usize,
-        club_nation_is_not_argentina as *const () as usize,
-        club_nation_not_argentina_france_croatia as *const () as usize,
-        database_is_melanesian_nation as *const () as usize,
-        database_is_polynesian_nation as *const () as usize,
-        database_get_coaching_job_name as *const () as usize,
-        database_format_years_between_dates as *const () as usize,
-        database_compare_clubs_by_short_name as *const () as usize,
-        database_compare_staff_by_full_name as *const () as usize,
-        database_staff_matches_names as *const () as usize,
-        database_compare_clubs_by_latitude as *const () as usize,
-        database_compare_clubs_by_longitude as *const () as usize,
-        database_format_name_from_ids as *const () as usize,
-        database_format_official_name as *const () as usize,
-        position_mask_get_text as *const () as usize,
-        write_position_name as *const () as usize,
-        write_player_description as *const () as usize,
-        staff_is_best_favoured_candidate as *const () as usize,
-        staff_get_player_strength_flags as *const () as usize,
-        staff_get_player_weakness_flags as *const () as usize,
-        database_count_club_physios as *const () as usize,
-        club_is_b_team as *const () as usize,
-        club_collect_non_playing_staff as *const () as usize,
-        staff_is_player_attribute_visible as *const () as usize,
-        staff_get_player_attribute_for_viewer as *const () as usize,
-        database_get_non_player_attribute_name as *const () as usize,
-        database_compare_staff_by_surname as *const () as usize,
-        database_compare_clubs_by_reputation as *const () as usize,
-        database_club_nation_is_eec as *const () as usize,
-        get_regions_sorted_by_name as *const () as usize,
-        compare_region_names as *const () as usize,
-        staff_get_opinion_link_staff as *const () as usize,
-        database_format_name_from_strings as *const () as usize,
-        database_get_job_name as *const () as usize,
-        database_get_language_name as *const () as usize,
-        club_get_national_team_name as *const () as usize,
-        database_get_player_attribute_name as *const () as usize,
-        database_format_player_positions as *const () as usize,
-        get_region_name as *const () as usize,
-        get_continent_adjective as *const () as usize,
-        set_key_ids as *const () as usize,
-        set_key_ids_1080 as *const () as usize,
-        database_player_initialisation as *const () as usize,
-        nation_get_nationality_adjective as *const () as usize,
-        sort_table as *const () as usize,
-        build_h2h_table as *const () as usize,
-        free_table as *const () as usize,
-        league_check_complete as *const () as usize,
-        pay_tv_rights as *const () as usize,
-        league_record_season_honours as *const () as usize,
-        comp_util_add_history_record as *const () as usize,
-        comp_util_get_league_clash_type as *const () as usize,
-        comp_util_get_club_strength_score as *const () as usize,
-        comp_util_get_latest_placed_club as *const () as usize,
-        find_friendly_match as *const () as usize,
-        get_fixture_list_for_date as *const () as usize,
-        find_next_fixture as *const () as usize,
-        is_stadium_in_use as *const () as usize,
-        friendly_international_date_resolve as *const () as usize,
-        end_duty_for_competition as *const () as usize,
-        end_duty_for_nation_in_competition as *const () as usize,
-        prune_club_call_up_records as *const () as usize,
-        add_player_to_squad as *const () as usize,
-        national_teams_remove_player_from_squad as *const () as usize,
-        release_overage_u21_players as *const () as usize,
-        clear_current_competition as *const () as usize,
-        release_competitions_of_continent as *const () as usize,
-        call_up_replacement as *const () as usize,
-        build_selection_pools as *const () as usize,
-        compare_by_rating as *const () as usize,
-        compare_by_club as *const () as usize,
-        find_friendly_opponent as *const () as usize,
-        find_tour_opponent as *const () as usize,
-        apply_result_to_table as *const () as usize,
-        points_for_result as *const () as usize,
-        league_compare_table_rows_h2h as *const () as usize,
-        league_compare_dates as *const () as usize,
-        find_club_row as *const () as usize,
-        contains_club as *const () as usize,
-        rating_record_assign as *const () as usize,
-        man_of_match_record_assign as *const () as usize,
-        discipline_record_assign as *const () as usize,
-        count_record_assign as *const () as usize,
-        fans_player_record_assign as *const () as usize,
-        tally_record_construct as *const () as usize,
-        count_record_construct as *const () as usize,
-        transfer_fee_record_assign as *const () as usize,
-        goals_in_match_record_assign as *const () as usize,
-        news_operator as *const () as usize,
-        past_transfer_copy_construct as *const () as usize,
-        future_transfer_assign as *const () as usize,
-        regen_queue_entry_assign as *const () as usize,
-        is_on_shortlist as *const () as usize,
-        player_regen_pick_staff_for_non_player_data as *const () as usize,
-        discipline_operator as *const () as usize,
-        set_default_wage as *const () as usize,
-        get_match_condition as *const () as usize,
-        days_to_end_date as *const () as usize,
-        clear_all_grievances as *const () as usize,
-        check_transfer_request_withdrawal as *const () as usize,
-        get_squad_placement as *const () as usize,
-        move_to_first_team as *const () as usize,
-        move_to_reserves as *const () as usize,
-        contract_manager_operator as *const () as usize,
-        contract_manager_raise_match_morale as *const () as usize,
-        remove_talks_records as *const () as usize,
-        remove_transfer_interest as *const () as usize,
-        remove_scout_request as *const () as usize,
-        remove_nickname_from_all as *const () as usize,
-        remove_retirement as *const () as usize,
-        player_regen_check_unemployed_retirement as *const () as usize,
-        transfer_manager_offer_needs_work_permit as *const () as usize,
-        update_work_permits as *const () as usize,
-        get_scout as *const () as usize,
-        get_current_run as *const () as usize,
-        record_holder_construct as *const () as usize,
-        pick_rival_manager_id as *const () as usize,
-        transfer_fee_record_construct as *const () as usize,
-        transfer_fee_record_construct_2 as *const () as usize,
-        run_record_construct as *const () as usize,
-        won_run_record_construct as *const () as usize,
-        lost_run_record_construct as *const () as usize,
-        unbeaten_run_record_construct as *const () as usize,
-        winless_run_record_construct as *const () as usize,
-        goals_in_match_record_construct as *const () as usize,
-        youngest_player_record_construct as *const () as usize,
-        write_deadline_news_text as *const () as usize,
-        can_end_loan as *const () as usize,
-        pow_double as *const () as usize,
-        remove_held_offers as *const () as usize,
-        hold_bans_for_loan as *const () as usize,
-        fill_vacated_staff_job as *const () as usize,
-        send_to_nation_club_managers as *const () as usize,
-        get_scout_assignment as *const () as usize,
-        cup_check_complete as *const () as usize,
-        oldest_player_record_construct as *const () as usize,
-        find_work_permit as *const () as usize,
-        passes_work_permit_check as *const () as usize,
-        drop_held_bans as *const () as usize,
-        remove_pending_offers_for_staff as *const () as usize,
-        schedule_decision_for_transfer as *const () as usize,
-        send_to_all_managers as *const () as usize,
-        send_to_division_managers as *const () as usize,
-        send_to_nation_managers as *const () as usize,
-        offer_breaks_fee_record as *const () as usize,
-        get_condition as *const () as usize,
-        get_selection_limit as *const () as usize,
-        clear_invalid_watched_fixtures as *const () as usize,
-        collect_club_scout_targets as *const () as usize,
-        set_scout as *const () as usize,
-        update_board_after_fixture as *const () as usize,
-        process_match as *const () as usize,
-        collect_club_shortlist_entries as *const () as usize,
-        find_highest_offer_for_player as *const () as usize,
-        get_all_time_record as *const () as usize,
-        get_season_record as *const () as usize,
-        queue_record_news as *const () as usize,
-        add_spare_non_player_record as *const () as usize,
-        add_retirement as *const () as usize,
-        queue_staff_for_regen as *const () as usize,
-        trigger_relegation_clauses as *const () as usize,
-        remove_contract_offer as *const () as usize,
-        is_player_suspended as *const () as usize,
-        get_fixture_rules_scope as *const () as usize,
-        get_ineligibility_code as *const () as usize,
-        find_scheduled_friendly_slot as *const () as usize,
-        send_to_continent_managers as *const () as usize,
-        send_to_comp_region as *const () as usize,
-        is_important_for as *const () as usize,
-        get_slot_string as *const () as usize,
-        post_financial_trouble_news as *const () as usize,
-        can_club_scout_nation as *const () as usize,
-        get_language_fluency as *const () as usize,
-        rewind_staff_history as *const () as usize,
-        set_slot_position as *const () as usize,
-        club_has_offer_for_player as *const () as usize,
-        find_club_offer_for_player as *const () as usize,
-        player_has_pending_offer as *const () as usize,
-        is_player_under_offer as *const () as usize,
-        player_club_uses_bosman as *const () as usize,
-        check_board_veto as *const () as usize,
-        add_past_transfer as *const () as usize,
-        add_work_permit as *const () as usize,
-        add_first_team_appearance_money as *const () as usize,
-        get_free_staff_contract_space as *const () as usize,
-        add_staff_contract as *const () as usize,
-        add_decision_date as *const () as usize,
-        reset_morale_state as *const () as usize,
-        init_from_current_contract as *const () as usize,
-        get_expiry_band as *const () as usize,
-        log_story as *const () as usize,
-        expire_story_log as *const () as usize,
-        has_logged_story as *const () as usize,
-        add_transfer_interest as *const () as usize,
-        compare_id_pair_keys as *const () as usize,
-        compare_story_log_records as *const () as usize,
-        decide_fixture_winner as *const () as usize,
-        decide_tie_winner as *const () as usize,
-        cup_compare_draw_entries_by_seed as *const () as usize,
-        init_table_row as *const () as usize,
-        league_get_club_array as *const () as usize,
-        record_final_positions as *const () as usize,
-        move_club_to_division as *const () as usize,
-        comp_util_shuffle_pointer_array as *const () as usize,
-        comp_util_sort_and_shuffle_top_clubs as *const () as usize,
-        update_ban_progress as *const () as usize,
-        release_ban as *const () as usize,
-        clear_ban_history as *const () as usize,
-        roll_recurring_injury as *const () as usize,
-        reset_player_history as *const () as usize,
-        injury_reset_player as *const () as usize,
-        add_transfer_totals as *const () as usize,
-        club_records_update_career_records as *const () as usize,
-        update_season_rating_record as *const () as usize,
-        is_comp_current_on_date as *const () as usize,
-        candidate_has_nearby_date as *const () as usize,
-        add_planned_friendly as *const () as usize,
-        send_by_scope as *const () as usize,
-        send_to_club_manager as *const () as usize,
-        deliver_to_manager as *const () as usize,
-        auto_respond_all as *const () as usize,
-        has_urgent_items as *const () as usize,
-        set_slot_string as *const () as usize,
-        rate_player_form_for_story as *const () as usize,
-        write_financial_trouble_news_text as *const () as usize,
-        get_inbox_items as *const () as usize,
-        retire_from_playing_staff as *const () as usize,
-        pick_best_club_for_player as *const () as usize,
-        pick_club_from_nation_list as *const () as usize,
-        fix_missing_jobs as *const () as usize,
-        best_manager_candidate_score as *const () as usize,
-        schedule_offer as *const () as usize,
-        get_squad_status_for_club as *const () as usize,
-        shortlist_manager_estimate_squad_status as *const () as usize,
-        shortlist_manager_release_club_slot_targets as *const () as usize,
-        scout_covers_nation as *const () as usize,
-        remove_friendly_match as *const () as usize,
-        init_banned_nation_pairs as *const () as usize,
-        assess_transfer_deal as *const () as usize,
-        apply_transfer_confidence_changes as *const () as usize,
-        resolve_board_ultimatum as *const () as usize,
-        remove_contract as *const () as usize,
-        resubmit_held_offers as *const () as usize,
-        contract_manager_season_end_month as *const () as usize,
-        staff_records_daily_update as *const () as usize,
-        staff_records_end_season_for_nation as *const () as usize,
-        find_manager_of_the_month as *const () as usize,
-        process_pending_departures as *const () as usize,
-        manager_manager_remove_player_from_squad as *const () as usize,
-        remove_staff_from_club as *const () as usize,
-        construct_news_item as *const () as usize,
-        adjust_supporter_confidence as *const () as usize,
-        adjust_board_confidence as *const () as usize,
-        pick_ai_manager_response as *const () as usize,
-        mark_item_read as *const () as usize,
-        find_item_by_id as *const () as usize,
-        queue_player_gratitude_news as *const () as usize,
-        post_player_backing_request_news as *const () as usize,
-        post_player_criticism_reaction_news as *const () as usize,
-        build_position_lists as *const () as usize,
-        sort_position_lists as *const () as usize,
-        collect_interested_clubs as *const () as usize,
-        add_shortlist_entry as *const () as usize,
-        shortlist_manager_predict_selling_club_response as *const () as usize,
-        transfer_manager_get_loan_period as *const () as usize,
-        get_offer_response_delay as *const () as usize,
-        pay_transfer_instalments as *const () as usize,
-        remove_offer as *const () as usize,
-        add_ban as *const () as usize,
-        clear_bans_invalid_for_club as *const () as usize,
-        restore_held_bans as *const () as usize,
-        add_language as *const () as usize,
-        improve_language as *const () as usize,
-        player_stats_reset_player as *const () as usize,
-        set_current_competition as *const () as usize,
-        mark_clubs_with_fixtures as *const () as usize,
-        discipline_remove_player as *const () as usize,
-        compare_decision_dates as *const () as usize,
-        process_due_decision_dates as *const () as usize,
-        get_current_contract_offers as *const () as usize,
-        sign_loan_contract as *const () as usize,
-        end_loan as *const () as usize,
-        toggle_squad_placement as *const () as usize,
-        reset_board_for_new_manager as *const () as usize,
-        get_departure_reason as *const () as usize,
-        get_manager_record as *const () as usize,
-        is_staff_suitable_for_job as *const () as usize,
-        staff_can_take_job as *const () as usize,
-        contract_manager_lower_match_morale as *const () as usize,
-        shortlist_set_up_formation_slots as *const () as usize,
-        update_club_shortlist as *const () as usize,
-        suspend_clubs_shortlisting_player as *const () as usize,
-        add_player_to_club_shortlists as *const () as usize,
-        transfer_list_player as *const () as usize,
-        pay_appearance_money as *const () as usize,
-        club_rejects_offer as *const () as usize,
-        detach_offer_players as *const () as usize,
-        build_cash_offer_option as *const () as usize,
-        add_illness_outbreak as *const () as usize,
-        spread_illness_outbreaks as *const () as usize,
-        injury_player_in_close_season as *const () as usize,
-        init_squad_fitness as *const () as usize,
-        init_records as *const () as usize,
-        build_nation_club_lists as *const () as usize,
-        pick_fans_player_of_year as *const () as usize,
-        end_season_for_key_nation as *const () as usize,
-        update_transfer_fee_records as *const () as usize,
-        is_banned_nation_pair as *const () as usize,
-        compare_nations_by_reputation_desc as *const () as usize,
-        compare_fixture_records_by_date as *const () as usize,
-        can_schedule_club_fixture as *const () as usize,
-        compare_call_up_records_by_date as *const () as usize,
-        add_qualified_nation as *const () as usize,
-        cup_compare_entries_by_level_desc as *const () as usize,
-        cup_compare_entries_by_level_asc as *const () as usize,
-        limit_club_division_tier as *const () as usize,
-        consider_sacking_manager as *const () as usize,
-        issue_board_ultimatum as *const () as usize,
-        remove_club_manager as *const () as usize,
-        review_national_team_performance as *const () as usize,
-        is_club_in_financial_trouble as *const () as usize,
-        get_board_confidence_band as *const () as usize,
-        add_promotion_record as *const () as usize,
-        add_relegation_record as *const () as usize,
-        add_qualified_for_round_record as *const () as usize,
-        add_transfer_records as *const () as usize,
-        add_knocked_out_record as *const () as usize,
-        add_failed_to_qualify_record as *const () as usize,
-        transfer_manager_get_offer_completion_date as *const () as usize,
-        find_next_allowed_transfer_date as *const () as usize,
-        transfer_manager_get_next_window_dates as *const () as usize,
-        transfer_manager_calc_compensation_fee as *const () as usize,
-        pay_fee_and_record_clauses as *const () as usize,
-        transfer_manager_selling_club_must_accept as *const () as usize,
-        update_work_permit_on_move as *const () as usize,
-        complete_accepted_contract_offer as *const () as usize,
-        offer_contract_to_offer_player as *const () as usize,
-        collapse_offer as *const () as usize,
-        make_loan_offer as *const () as usize,
-        process_due_future_transfers as *const () as usize,
-        player_regen_score_non_player_candidate as *const () as usize,
-        player_regen_compare_retirements as *const () as usize,
-        player_regen_compare_queue_entries as *const () as usize,
-        get_category_record as *const () as usize,
-        create_stats as *const () as usize,
-        is_retirement_pending as *const () as usize,
-        randomize_round_teams as *const () as usize,
-        separate_shared_stadium_ties as *const () as usize,
-        comp_util_scale_by_round as *const () as usize,
-        comp_util_get_fixture_venue_side as *const () as usize,
-        compare_nation_coefficients_desc as *const () as usize,
-        has_scout_request as *const () as usize,
-        clear_selection_slot as *const () as usize,
-        set_set_piece_taker as *const () as usize,
-        fill_squad_restrictions as *const () as usize,
-        transfer_manager_check_matchday_squad_limit as *const () as usize,
-        player_needs_work_permit as *const () as usize,
-        can_club_bid_for_player as *const () as usize,
-        note_terms_offered_to_exchange_player as *const () as usize,
-        count_club_free_transfer_queue as *const () as usize,
-        get_future_transfer as *const () as usize,
-        remove_future_transfer as *const () as usize,
-        add_future_transfer as *const () as usize,
-        get_open_offers_for_club_players as *const () as usize,
-        collapse_offers_for_player as *const () as usize,
-        add_next_sale_percentage as *const () as usize,
-        init_club_board_records as *const () as usize,
-        process_ban_appeals as *const () as usize,
-        can_watch_fixture as *const () as usize,
-        player_regen_check_initial_retirement as *const () as usize,
-        player_regen_check_retirement as *const () as usize,
-        build_initial_retirement_list as *const () as usize,
-        find_new_retirements as *const () as usize,
-        player_regen_retire_from_non_playing_staff as *const () as usize,
-        add_free_release_records as *const () as usize,
-        get_player_injury_status as *const () as usize,
-        schedule_offer_decision as *const () as usize,
-        get_manager_of_year_candidates as *const () as usize,
-        update_projected_positions as *const () as usize,
-        compare_projection_by_reputation_desc as *const () as usize,
-        compare_projection_by_points_desc as *const () as usize,
-        find_fixtures as *const () as usize,
-        collect_comp_fixtures_on_day as *const () as usize,
-        fix_man_comp_has_fixture_on_date as *const () as usize,
-        friendly_is_club_free_on_date as *const () as usize,
-        has_club as *const () as usize,
-        fix_man_get_partner_key_nation_index as *const () as usize,
-        handle_transfer_request as *const () as usize,
-        is_contract_staff_job as *const () as usize,
-        staff_is_not_board_member as *const () as usize,
-        init_work_permits as *const () as usize,
-        get_clause_count as *const () as usize,
-        find_first_team_appearance_money as *const () as usize,
-        process_free_transfer_queue as *const () as usize,
-        find_next_window_open_date as *const () as usize,
-        find_negotiated_loan_contract as *const () as usize,
-        build_clause_offer_option as *const () as usize,
-        transfer_manager_is_rejection_reason_valid as *const () as usize,
-        transfer_manager_get_squad_status_reason as *const () as usize,
-        game_update_squad_relationships as *const () as usize,
-        game_check_club_dressing_room_unrest as *const () as usize,
-        game_spread_squad_morale_by_leadership as *const () as usize,
-        game_check_players_missing_training as *const () as usize,
-        game_update_comps_for_date as *const () as usize,
-        manager_manager_adjust_board_confidence as *const () as usize,
-        stadium_daily_update as *const () as usize,
-        add_booking as *const () as usize,
-        is_stadium_free_on_date as *const () as usize,
-        fixture_has_scouted_player as *const () as usize,
-        is_player_shortlisted as *const () as usize,
-        add_first_cap_record as *const () as usize,
-        player_stats_get_career_goals as *const () as usize,
-        add_loan_records as *const () as usize,
-        injury_compare_entry_dates as *const () as usize,
-        player_stats_get_goals_for_club as *const () as usize,
-        add_team_of_year_record as *const () as usize,
-        staff_records_compare_clubs_by_manager_points as *const () as usize,
-        find_stored_fixture as *const () as usize,
-        insert_fixture as *const () as usize,
-        remove_fixture as *const () as usize,
-        create_due_planned_friendlies as *const () as usize,
-        add_friendly_match as *const () as usize,
-        plan_friendly_on_free_date as *const () as usize,
-        cup_update_for_date as *const () as usize,
-        set_up_round as *const () as usize,
-        add_away_trip_illness_risk as *const () as usize,
-        count_results_in_period as *const () as usize,
-        update_rankings as *const () as usize,
-        compare_result_points_desc as *const () as usize,
-        append_result as *const () as usize,
-        get_nation_strength_tier as *const () as usize,
-        recalculate_scores as *const () as usize,
-        comp_active_key_nation_of_fixture as *const () as usize,
-        key_nation_is_world_cup_comp as *const () as usize,
-        key_nation_is_international_comp as *const () as usize,
-        key_nation_index_of_comp as *const () as usize,
-        collect_ranked_order as *const () as usize,
-        compare_ranking_score_desc as *const () as usize,
-        update_city_weather as *const () as usize,
-        read_region as *const () as usize,
-        read_region_period as *const () as usize,
-        game_update_nation_coefficients as *const () as usize,
-        is_player_regen_day as *const () as usize,
-        clamp_char_sum as *const () as usize,
-        score_venue_for_fixture as *const () as usize,
-        get_travel_distance_factor as *const () as usize,
-        load_config as *const () as usize,
-        get_coaching_factor as *const () as usize,
-        get_coach_assignments as *const () as usize,
-        get_training_load as *const () as usize,
-        apply_training_progress as *const () as usize,
-        find_position_training as *const () as usize,
-        has_fast_position_training as *const () as usize,
-        advance_week_counter as *const () as usize,
-        take_spare_non_player_record as *const () as usize,
-        get_recurring_injury_type as *const () as usize,
-        friendly_update_for_date as *const () as usize,
-        plan_ai_preseason_friendlies as *const () as usize,
-        set_preseason_windows as *const () as usize,
-        schedule_tour_matches as *const () as usize,
-        compare_friendly_candidates_by_band as *const () as usize,
-        compare_friendly_candidate_ptrs_by_nation as *const () as usize,
-        cup_rank_teams as *const () as usize,
-        comp_util_sort_clubs_by_strength as *const () as usize,
-        set_club_final_position as *const () as usize,
-        key_nation_index_of_nation as *const () as usize,
-        key_nation_index_of_club as *const () as usize,
-        key_nation_get_club_season_year as *const () as usize,
-        key_nation_club_in_season as *const () as usize,
-        key_nation_get_main_continent as *const () as usize,
-        key_nation_get_main_nation as *const () as usize,
-        get_stat as *const () as usize,
-        player_stats_compare_language_entries as *const () as usize,
-        player_stats_compare_history_by_club as *const () as usize,
-        has_active_release_clause as *const () as usize,
-        check_fifa_protected_period as *const () as usize,
-        staff_contract_is_bonus_type_allowed as *const () as usize,
-        check_postponement as *const () as usize,
-        get_club_finance as *const () as usize,
-        stadium_compare_bookings as *const () as usize,
-        get_match_weather as *const () as usize,
-        get_temperature as *const () as usize,
-        get_pitch_condition as *const () as usize,
-        get_wealth_band as *const () as usize,
-        compare_players_by_ability as *const () as usize,
-        stadium_compare_venues_by_capacity as *const () as usize,
-        set_default_schedules as *const () as usize,
-        set_type as *const () as usize,
-        get_manager_schedule as *const () as usize,
-        init_player_entries as *const () as usize,
-        add_player_data_to_pool as *const () as usize,
-        has_spare_non_player_record as *const () as usize,
-        make_points_ban as *const () as usize,
-        ruling_body_start_new_season as *const () as usize,
-        compact_entries as *const () as usize,
-        set_slot_coordinate as *const () as usize,
-        check_duplicate_position as *const () as usize,
-        set_marking_type as *const () as usize,
-        draw_team_order as *const () as usize,
-        get_fixture_side_teams as *const () as usize,
-        collect_possible_teams as *const () as usize,
-        player_search_get_club_target_rating as *const () as usize,
-        player_search_slot_get_match_entry as *const () as usize,
-        player_search_slot_sum_goals as *const () as usize,
-        advance_offer_to_club_approval as *const () as usize,
-        post_offer_accepted_news as *const () as usize,
-        post_loan_offer_news as *const () as usize,
-        handle_player_rejected_terms as *const () as usize,
-        post_board_confidence_update_news as *const () as usize,
-        post_board_expectations_news as *const () as usize,
-        hold_offers_at_window_close as *const () as usize,
-        post_fa_expectations_news as *const () as usize,
-        post_supporter_protest_news as *const () as usize,
-        add_transfer_negotiation as *const () as usize,
-        post_job_rumour_news as *const () as usize,
-        post_player_rejects_move_news as *const () as usize,
-        add_weekly_merchandising_income as *const () as usize,
-        sell_season_tickets as *const () as usize,
-        upgrade_training_facilities as *const () as usize,
-        process_club_finance_events as *const () as usize,
-        try_board_debt_payment as *const () as usize,
-        try_cash_injection as *const () as usize,
-        get_max_staff_wage as *const () as usize,
-        pay_bonuses as *const () as usize,
-        adjust_max_wage as *const () as usize,
-        apply_match_effects as *const () as usize,
-        find_match_injury as *const () as usize,
-        is_player_on_holiday as *const () as usize,
-        player_regen_sign_for_club as *const () as usize,
-        schedule_injury_retirement as *const () as usize,
-        player_regen_post_retirement_announcement_news as *const () as usize,
-        end_player_injury as *const () as usize,
-        media_queue_player_apology_news as *const () as usize,
-        clear_inbox as *const () as usize,
-        withdraw_injured_player as *const () as usize,
-        national_teams_post_player_withdrawn_news as *const () as usize,
-        national_teams_post_replacement_needed_news as *const () as usize,
-        national_teams_can_change_squad as *const () as usize,
-        national_teams_player_in_squad as *const () as usize,
-        schedule_assign_opponent as *const () as usize,
-        add_month_award_record as *const () as usize,
-        friendly_club_reputation_tier as *const () as usize,
-        friendly_get_rest_days_for_kind as *const () as usize,
-        get_contract_satisfaction as *const () as usize,
-        post_wants_new_contract_news as *const () as usize,
-        post_transfer_request_withdrawn_news as *const () as usize,
-        confirm_offer_by_club as *const () as usize,
-        try_complete_offer as *const () as usize,
-        settle_previous_transfer_clauses as *const () as usize,
-        try_loan_offer_for_player as *const () as usize,
-        post_contract_expiry_news as *const () as usize,
-        post_bosman_departure_news as *const () as usize,
-        add_contract_offer as *const () as usize,
-        remove_contract_offer_for_transfer as *const () as usize,
-        contract_manager_lowest_wage_demand as *const () as usize,
-        record_match_ratings as *const () as usize,
-        add_player_rating as *const () as usize,
-        find_best_player as *const () as usize,
-        award_best_rated_player as *const () as usize,
-        set_winner as *const () as usize,
-        award_raise_winner_reputation as *const () as usize,
-        update_player_fitness as *const () as usize,
-        get_league_confidence_band as *const () as usize,
-        set_board_ratings as *const () as usize,
-        injury_daily_update as *const () as usize,
-        post_due_recovery_news as *const () as usize,
-        is_one_booking_from_ban as *const () as usize,
-        process_regen_queue as *const () as usize,
-        media_pick_outlet_type_for_club as *const () as usize,
-        media_pick_outlet_type_for_person as *const () as usize,
-        league_add_result as *const () as usize,
-        copy_table as *const () as usize,
-        league_set_predicted_positions as *const () as usize,
-        record_international_result as *const () as usize,
-        format_squad_label as *const () as usize,
-        are_round_fixtures_known as *const () as usize,
-        record_club_call_ups as *const () as usize,
-        get_fixture_match_importance as *const () as usize,
-        get_stage as *const () as usize,
-        awol_daily_update as *const () as usize,
-        has_missed_training as *const () as usize,
-        has_fitness_incident as *const () as usize,
-        miss_training as *const () as usize,
-        end_absence as *const () as usize,
-        set_flags as *const () as usize,
-        reject_transfer_offer as *const () as usize,
-        withdraw_transfer_offer as *const () as usize,
-        post_offer_rejected_news as *const () as usize,
-        unsettle_player_after_bid as *const () as usize,
-        post_offer_collapsed_news as *const () as usize,
-        post_appearance_money_news as *const () as usize,
-        finalise_transfer as *const () as usize,
-        post_transfer_completed_news as *const () as usize,
-        post_transfer_agreed_news as *const () as usize,
-        add_config_loan as *const () as usize,
-        post_contract_end_news as *const () as usize,
-        post_transfer_delay_request_news as *const () as usize,
-        get_club_tactic as *const () as usize,
-        select_tactic_slot as *const () as usize,
-        get_active_tactic as *const () as usize,
-        remove_player_from_selection as *const () as usize,
-        swap_selection_slots as *const () as usize,
-        has_selection_undo as *const () as usize,
-        post_manager_under_pressure_news as *const () as usize,
-        post_manager_departure_news as *const () as usize,
-        post_manager_appointment_news as *const () as usize,
-        pay_prize_money as *const () as usize,
-        league_update_staff_records_for_status as *const () as usize,
-        announce_team_status as *const () as usize,
-        player_stats_record_match as *const () as usize,
-        update_league_position_records as *const () as usize,
-        send_record_news as *const () as usize,
-        select_squads_for_fixture as *const () as usize,
-        national_teams_post_player_called_up_news as *const () as usize,
-        add_team_result_news as *const () as usize,
-        count_slots_with_bids as *const () as usize,
-        shortlist_manager_remove_from_transfer_list as *const () as usize,
-        shortlist_manager_remove_from_loan_list as *const () as usize,
-        update_staff_status as *const () as usize,
-        shortlist_manager_add_to_loan_list as *const () as usize,
-        shortlist_manager_max_fee_for_player_status as *const () as usize,
-        allocate_transfer_budget as *const () as usize,
-        shortlist_manager_squad_status_allowed as *const () as usize,
-        scout_manager_write_list_name as *const () as usize,
-        update_international_friendlies as *const () as usize,
-        get_selected_list as *const () as usize,
-        set_selected_list as *const () as usize,
-        european_cup_collect_entrants as *const () as usize,
-        build_qualifying_entry_table as *const () as usize,
-        european_cup_advance_stage as *const () as usize,
-        process_fixture as *const () as usize,
-        european_cup_set_club_progress as *const () as usize,
-        counts_for_fixture_clash as *const () as usize,
-        choose_match_official as *const () as usize,
-        clear_busy_flags as *const () as usize,
-        renew_officials as *const () as usize,
-        officials_manager_add_random_officials as *const () as usize,
-        officials_manager_validate_officials as *const () as usize,
-        officials_manager_operator as *const () as usize,
-        add_year_award_record as *const () as usize,
-        match_record_is_bigger_win as *const () as usize,
-        match_record_is_bigger_defeat as *const () as usize,
-        update_appearance_clauses_after_match as *const () as usize,
-        add_international_team_appearance_money as *const () as usize,
-        post_transfer_finalised_news as *const () as usize,
-        check_board_transfer_veto as *const () as usize,
-        post_board_ultimatum_news as *const () as usize,
-        news_board_ultimatum_text as *const () as usize,
-        free_transfer_staff as *const () as usize,
-        set_on_holiday as *const () as usize,
-        post_contract_talks_news as *const () as usize,
-        eng_first_create_playoff_stage as *const () as usize,
-        eng_second_create_play_off_stage as *const () as usize,
-        eng_third_create_play_off_stage as *const () as usize,
-        eng_second_update_staff_records_for_status as *const () as usize,
-        eng_first_set_club_progress as *const () as usize,
-        eng_third_set_club_progress as *const () as usize,
-        update_positions_and_status as *const () as usize,
-        eng_first_advance_stage as *const () as usize,
-        eng_second_advance_stage as *const () as usize,
-        european_cup_update_staff_records_for_status as *const () as usize,
-        draw_quarter_finals as *const () as usize,
-        european_cup_collect_club_list as *const () as usize,
-        record_tactic_result as *const () as usize,
-        get_captain as *const () as usize,
-        set_captain as *const () as usize,
-        get_international_duty_club as *const () as usize,
-        national_teams_player_is_eligible as *const () as usize,
-        collect_duty_competitions as *const () as usize,
-        fill_match_record_from_fixture as *const () as usize,
-        fill_staff_name_ref as *const () as usize,
-        match_record_result_code as *const () as usize,
-        move_nearby_club_fixtures as *const () as usize,
-        reschedule_club_fixtures_near_date as *const () as usize,
-        queue_fixture_moved_news as *const () as usize,
-        report_poor_fitness as *const () as usize,
-        post_fine_reaction_news as *const () as usize,
-        post_coach_fine_feedback_news as *const () as usize,
-        pick_random_pundit as *const () as usize,
-        get_pundit_name as *const () as usize,
-        queue_manager_fa_complaint_story as *const () as usize,
-        update_wage_bill as *const () as usize,
-        refresh_all_wage_bills as *const () as usize,
-        finance_get_days_to_season_start as *const () as usize,
-        add_players_sold as *const () as usize,
-        pay_players_bought as *const () as usize,
-        pay_sign_on_fee as *const () as usize,
-        add_prize_money as *const () as usize,
-        add_tv_revenue as *const () as usize,
-        pay_wages as *const () as usize,
-        pay_round_prize_money as *const () as usize,
-        set_home_teams_for_round as *const () as usize,
-        record_team_progress as *const () as usize,
-        process_friendly_reply as *const () as usize,
-        send_friendly_request as *const () as usize,
-        build_nation_list as *const () as usize,
-        draw_round as *const () as usize,
-        comp_util_format_stage_round_name as *const () as usize,
-        club_in_higher_division as *const () as usize,
-        cup_update_staff_records_for_status as *const () as usize,
-        cup_record_season_honours as *const () as usize,
-        register_semi_final_losers_for_uefa as *const () as usize,
-        reject_loan_offer as *const () as usize,
-        check_squad_limits as *const () as usize,
-        find_next_sale_percentage as *const () as usize,
-        contains_player as *const () as usize,
-        sync_scout_lists as *const () as usize,
-        player_search_find_or_claim_player_slot as *const () as usize,
-        value_player_for_club as *const () as usize,
-        find_club_search_entry as *const () as usize,
-        find_international_appearance_money as *const () as usize,
-        update_after_match as *const () as usize,
-        contract_manager_get_player_morale as *const () as usize,
-        contract_manager_write_morale_text as *const () as usize,
-        calc_player_value as *const () as usize,
-        contract_manager_write_morale_comparison_text as *const () as usize,
-        get_squad_flags_for_club as *const () as usize,
-        board_named_players_after_match as *const () as usize,
-        get_player_match_rating_verdict as *const () as usize,
-        build_board_player_performance_text as *const () as usize,
-        record_match_result as *const () as usize,
-        add_league_finish_records as *const () as usize,
-        add_supporters_player_of_year_record as *const () as usize,
-        add_cup_runners_up_record as *const () as usize,
-        add_cup_third_place_record as *const () as usize,
-        record_manager_job_change as *const () as usize,
-        process_transfer_squad_reactions as *const () as usize,
-        queue_signing_celebration_story as *const () as usize,
-        queue_sale_unrest_story as *const () as usize,
-        process_match_income as *const () as usize,
-        calc_gate_receipts as *const () as usize,
-        pay_league_fine as *const () as usize,
-        try_finance_boost_event as *const () as usize,
-        try_board_takeover as *const () as usize,
-        pay_other_costs as *const () as usize,
-        build_international_date_table as *const () as usize,
-        resolve_international_dates as *const () as usize,
-        find_human_club_tournament as *const () as usize,
-        plan_club_friendlies as *const () as usize,
-        add_tournament as *const () as usize,
-        find_human_club_open_invitation as *const () as usize,
-        add_injury as *const () as usize,
-        injury_post_injury_news as *const () as usize,
-        is_player_awol as *const () as usize,
-        pay_former_club_fee_cuts as *const () as usize,
-        pay_next_sale_percentage as *const () as usize,
-        post_sale_percentage_news as *const () as usize,
-        is_work_permit_granted as *const () as usize,
-        transfer_manager_get_squad_status_for_reason as *const () as usize,
-        get_negotiation_slot as *const () as usize,
-        apply_squad_reaction_to_player_story as *const () as usize,
-        warn_squad_of_position_rival as *const () as usize,
-        media_format_response_option_label as *const () as usize,
-        serve_international_bans as *const () as usize,
-        apply_appeal_result as *const () as usize,
-        get_slot_text as *const () as usize,
-        manager_manager_remove as *const () as usize,
-        manager_manager_clear as *const () as usize,
-        get_current as *const () as usize,
-        sort_round_teams as *const () as usize,
-        check_round_teams_for_nation as *const () as usize,
-        cup_start_new_season as *const () as usize,
-        comp_active_key_nation_of_club as *const () as usize,
-        comp_active_key_nation_of_stadium as *const () as usize,
-        comp_key_nation_entry_from_active_index as *const () as usize,
-        resolve_same_day_clash as *const () as usize,
-        get_club_first_fixture_year as *const () as usize,
-        get_club_last_fixture_year as *const () as usize,
-        save_finance_dat as *const () as usize,
-        load_from_save as *const () as usize,
-        squad_manager_save as *const () as usize,
-        uefa_seeding_save_to_temp_file as *const () as usize,
-        conmebol_seeding_save_to_temp_file as *const () as usize,
-        save_temp_file as *const () as usize,
-        club_history_save as *const () as usize,
-        save_official_stats as *const () as usize,
-        simulated_stats_save as *const () as usize,
-        fix_man_save_club_dates as *const () as usize,
-        fix_man_load_club_dates as *const () as usize,
-        fix_man_save_fixture_leg_checks as *const () as usize,
-        fin_prm_end_season_for_nation as *const () as usize,
-        season_end_club_update as *const () as usize,
-        news_dividend as *const () as usize,
-        get_max_wage as *const () as usize,
-        news_ground_works as *const () as usize,
-        news_request_refused as *const () as usize,
-        collect_day_clashes as *const () as usize,
-        find_fixture_clashes as *const () as usize,
-        fix_man_load_fixture_leg_checks as *const () as usize,
-        find_new_fixture_date as *const () as usize,
-        add_fixture as *const () as usize,
-        set_year as *const () as usize,
-        create_tie_fixtures as *const () as usize,
-        post_draw_news as *const () as usize,
-        update_transfer_window_news as *const () as usize,
-        move_round_fixtures_to_set_dates as *const () as usize,
-        remove_exchange_player as *const () as usize,
-        check_offer_work_permits as *const () as usize,
-        update_board_confidence_after_match as *const () as usize,
-        post_board_match_reaction_news as *const () as usize,
-        post_fa_performance_news as *const () as usize,
-        set_season_expectations as *const () as usize,
-        add_job_vacancy as *const () as usize,
-        post_job_offer_news as *const () as usize,
-        process_transfer_interest as *const () as usize,
-        news_create_not_for_sale_story as *const () as usize,
-        queue_trophy_praise_story as *const () as usize,
-        arrange_international_friendlies as *const () as usize,
-        friendly_check_match_invitation as *const () as usize,
-        friendly_check_tournament_invitation as *const () as usize,
-        national_teams_daily_update as *const () as usize,
-        current_search_has_no_club as *const () as usize,
-        is_club_in_session_searches as *const () as usize,
-        select_squad as *const () as usize,
-        scout_manager_scout_match as *const () as usize,
-        get_edit_session as *const () as usize,
-        set_edit_session as *const () as usize,
-        transfer_manager_daily_update as *const () as usize,
-        process_due_offer as *const () as usize,
-        check_offer_restrictions as *const () as usize,
-        accept_transfer_bid as *const () as usize,
-        post_offer_made_news as *const () as usize,
-        transfer_manager_can_loan_player as *const () as usize,
-        league_update_for_date as *const () as usize,
-        create_fixtures as *const () as usize,
-        league_promote_and_relegate as *const () as usize,
-        fix_man_daily_update as *const () as usize,
-        get_fixture_list as *const () as usize,
-        load_fixtures as *const () as usize,
-        map_fixture_tree as *const () as usize,
-        get_first_stage_of_group as *const () as usize,
-        get_current_stage as *const () as usize,
-        update_player_training as *const () as usize,
-        get_player_schedule as *const () as usize,
-        get_category_level as *const () as usize,
-        remove_or_restore_training_progress as *const () as usize,
-        get_training_attribute_change as *const () as usize,
-        get_position_aptitude as *const () as usize,
-        process_retirements as *const () as usize,
-        player_regen_post_retirement_news as *const () as usize,
-        player_regen_post_youth_promotion_news as *const () as usize,
-        clear_awol as *const () as usize,
-        clear_missed_training as *const () as usize,
-        awol_post_missed_training_news as *const () as usize,
-        shortlist_manager_is_compensation_deal as *const () as usize,
-        shortlist_compare_slots_by_index as *const () as usize,
-        mark_player_under_offer as *const () as usize,
-        add_league_champions_record as *const () as usize,
-        add_cup_winners_record as *const () as usize,
-        clear_human_manager_record as *const () as usize,
-        ai_respond_to_bid as *const () as usize,
-        add_loan_negotiation as *const () as usize,
-        make_exchange_option as *const () as usize,
-        schedule_loan_end as *const () as usize,
-        make_club_bids as *const () as usize,
-        staff_interest_in_joining_club as *const () as usize,
-        construct_staff_contract as *const () as usize,
-        england_rules_can_loan_player as *const () as usize,
-        record_loan as *const () as usize,
-        england_rules_daily_update as *const () as usize,
-        england_rules_get_loan_period as *const () as usize,
-        scotland_rules_can_loan_player as *const () as usize,
-        scotland_rules_get_loan_period as *const () as usize,
-        italy_rules_can_loan_player as *const () as usize,
-        ireland_rules_can_loan_player as *const () as usize,
-        spain_rules_can_loan_player as *const () as usize,
-        move_fixtures_for_tv as *const () as usize,
-        send_group_draw_news as *const () as usize,
-        send_fixture_list_news as *const () as usize,
-        add_transfer_offer as *const () as usize,
-        accept_loan_offer as *const () as usize,
-        handle_player_accepted_terms as *const () as usize,
-        post_transfer_listed_news as *const () as usize,
-        contract_manager_offer_contract as *const () as usize,
-        draw_groups as *const () as usize,
-        run_group_draw as *const () as usize,
-        world_cup_update_for_date as *const () as usize,
-        world_cup_create_group_table as *const () as usize,
-        world_cup_create_group_stage as *const () as usize,
-        world_cup_set_predicted_positions as *const () as usize,
-        world_cup_create_schedule as *const () as usize,
-        add_qualified_team as *const () as usize,
-        seed_teams as *const () as usize,
-        update_coach_assignments as *const () as usize,
-        reassign_squad_schedules as *const () as usize,
-        training_manager_cpp_0x8b2230 as *const () as usize,
-        build_career_history as *const () as usize,
-        player_stats_years_since_at_club as *const () as usize,
-        player_stats_compare_history_by_staff as *const () as usize,
-        player_setup_injury_from_name as *const () as usize,
-        post_recovery_news as *const () as usize,
-        injury_get_category_name as *const () as usize,
-        player_search_scout_match as *const () as usize,
-        player_search_record_scouted_club_match as *const () as usize,
-        send_club_international_report_news as *const () as usize,
-        national_teams_post_call_up_news as *const () as usize,
-        national_teams_collect_fixture_opponents as *const () as usize,
-        scout_manager_daily_update as *const () as usize,
-        send_scout_reports as *const () as usize,
-        send_scout_report_news as *const () as usize,
-        sign_contract as *const () as usize,
-        regenerate_as_youth_player as *const () as usize,
-        remove_dispute as *const () as usize,
-        load_from_disk as *const () as usize,
-        swap_bytes_16_array as *const () as usize,
-        swap_bytes_32_array as *const () as usize,
-        set_up_officials as *const () as usize,
-        officials_manager_compare_comp_level as *const () as usize,
-        on_friendly_fixture_cancelled as *const () as usize,
-        friendly_cancel_national_fixture as *const () as usize,
-        cancel_tournament as *const () as usize,
-        officials_manager_compare_nation_then_quality_desc as *const () as usize,
-        officials_manager_compare_nation_then_quality_asc as *const () as usize,
-        archive_player_stats as *const () as usize,
-        player_setup_find_staff as *const () as usize,
-        player_setup_read_quoted_token as *const () as usize,
-        player_setup_type_from_name as *const () as usize,
-        draw_phase1_groups as *const () as usize,
-        european_cup_compare_clubs_by_seed as *const () as usize,
-        european_cup_rank_teams as *const () as usize,
-        draw_phase2_groups as *const () as usize,
-        european_cup_compare_phase2_draw_entries as *const () as usize,
-        comp_util_get_parent_stage_id as *const () as usize,
-        european_cup_create_round_table as *const () as usize,
-        set_club_season_expectations as *const () as usize,
-        relegate_club_to_division as *const () as usize,
-        all_stages_complete as *const () as usize,
-        comp_collect_club_list as *const () as usize,
-        find_club_progress as *const () as usize,
-        roll_coefficients as *const () as usize,
-        set_place_counts as *const () as usize,
-        uefa_find_nth_unplaced_club_of_nation as *const () as usize,
-        collect_european_clubs as *const () as usize,
-        assign_champions_league_places as *const () as usize,
-        assign_intertoto_places as *const () as usize,
-        assign_uefa_cup_places as *const () as usize,
-        pick_english_intertoto_club as *const () as usize,
-        update_season as *const () as usize,
-        assign_libertadores_places as *const () as usize,
-        find_nth_unqualified_club_of_nation as *const () as usize,
-        is_mercosur_invited_club as *const () as usize,
-        collect_conmebol_clubs as *const () as usize,
-        update_for_new_season as *const () as usize,
-        set_bra_champ_cup_winner as *const () as usize,
-        find_hosts as *const () as usize,
-        find_next_hosts as *const () as usize,
-        host_country_daily_update as *const () as usize,
-        construct_england_rules as *const () as usize,
-        construct_usa_rules as *const () as usize,
-        australia_rules as *const () as usize,
-        spain_rules_init_transfer_windows as *const () as usize,
-        italy_rules_init_transfer_windows as *const () as usize,
-        france_rules_init_transfer_windows as *const () as usize,
-        construct_brazil_rules as *const () as usize,
-        germany_rules_init_transfer_windows as *const () as usize,
-        construct_scotland_rules as *const () as usize,
-        intertoto_cup_update_for_date as *const () as usize,
-        intertoto_cup_update_staff_records_for_status as *const () as usize,
-        uefa_cup_update_staff_records_for_status as *const () as usize,
-        con_champ_select_qualified_clubs as *const () as usize,
-        con_champ_update_for_date as *const () as usize,
-        con_champ_set_up_rounds as *const () as usize,
-        ita_cup_set_up_rules as *const () as usize,
-        ita_c_cup_set_up_rules as *const () as usize,
-        bra_champ_cup_set_up_rules as *const () as usize,
-        african_nations_update_staff_records_for_status as *const () as usize,
-        goldcup_update_staff_records_for_status as *const () as usize,
-        wc_oceania_league_update_staff_records_for_status as *const () as usize,
-        conmebol_liber_set_up_rules as *const () as usize,
-        con_merc_cup_set_up_rules as *const () as usize,
-        oceania_club_champ_set_up_rules as *const () as usize,
-        wc_europe_league_set_up_rules as *const () as usize,
-        wc_south_american_league_set_up_rules as *const () as usize,
-        wc_asia_league_set_up_rules as *const () as usize,
-        goldcup_set_up_rules as *const () as usize,
-        african_nations_set_up_rules as *const () as usize,
-        wc_oceania_league_set_up_rules as *const () as usize,
-        conmebol_liber_select_qualified_clubs as *const () as usize,
-        conmebol_liber_update_staff_records_for_status as *const () as usize,
-        conmebol_liber_advance_stage as *const () as usize,
-        african_nations_advance_stage as *const () as usize,
-        init_group_a_table as *const () as usize,
-        african_nations_record_season_honours as *const () as usize,
-        bra_nat_first_set_up_rules as *const () as usize,
-        bra_nat_second_set_up_rules as *const () as usize,
-        bra_nat_third_set_up_rules as *const () as usize,
-        bra_reg_central_set_up_rules as *const () as usize,
-        bra_reg_gaucho_set_up_rules as *const () as usize,
-        bra_reg_santa_set_up_rules as *const () as usize,
-        bra_reg_parana_set_up_rules as *const () as usize,
-        bra_reg_pern_set_up_rules as *const () as usize,
-        bra_reg_rio_set_up_rules as *const () as usize,
-        bra_reg_goias_set_up_rules as *const () as usize,
-        jap_j1_set_up_rules as *const () as usize,
-        jap_j2_set_up_rules as *const () as usize,
-        aus_nsl_set_up_rules as *const () as usize,
-        usa_mls_set_up_rules as *const () as usize,
-        bra_reg_gaucho_record_season_honours as *const () as usize,
-        arg_second_record_season_honours as *const () as usize,
-        bra_nat_first_update_staff_records_for_status as *const () as usize,
-        bra_nat_third_update_staff_records_for_status as *const () as usize,
-        bra_reg_bahia_update_staff_records_for_status as *const () as usize,
-        bra_reg_central_update_staff_records_for_status as *const () as usize,
-        bra_reg_minas_gerais_update_staff_records_for_status as *const () as usize,
-        aus_nsl_update_staff_records_for_status as *const () as usize,
-        bra_reg_minas_gerais_set_club_progress as *const () as usize,
-        usa_mls_set_club_progress as *const () as usize,
-        bra_nat_third_set_club_progress as *const () as usize,
-        usa_mls_update_staff_records_for_status as *const () as usize,
-        usa_mls_add_result as *const () as usize,
-        usa_mls_get_club_all_star_conference as *const () as usize,
-        eng_prm_set_up_rules as *const () as usize,
-        eng_first_set_up_rules as *const () as usize,
-        eng_second_set_up_rules as *const () as usize,
-        eng_third_set_up_rules as *const () as usize,
-        eng_prm_create_table as *const () as usize,
-        eng_second_create_table as *const () as usize,
-        eng_third_create_table as *const () as usize,
-        eng_first_create_table as *const () as usize,
-        ita_ser_a_set_up_rules as *const () as usize,
-        ita_ser_b_set_up_rules as *const () as usize,
-        ita_ser_c1a_set_up_rules as *const () as usize,
-        ita_ser_c1b_set_up_rules as *const () as usize,
-        ita_ser_a_create_table as *const () as usize,
-        ita_ser_b_create_table as *const () as usize,
-        ita_ser_c1a_create_table as *const () as usize,
-        ita_ser_c1b_create_table as *const () as usize,
-        fra_first_set_up_rules as *const () as usize,
-        fra_second_set_up_rules as *const () as usize,
-        fra_third_set_up_rules as *const () as usize,
-        fra_first_create_table as *const () as usize,
-        fra_second_create_table as *const () as usize,
-        fra_third_create_table as *const () as usize,
-        spa_first_set_up_rules as *const () as usize,
-        spa_second_set_up_rules as *const () as usize,
-        spa_lower_set_up_rules as *const () as usize,
-        spa_first_create_table as *const () as usize,
-        ita_ser_c2a_update_staff_records_for_status as *const () as usize,
-        spa_first_set_club_progress as *const () as usize,
-        fra_cfa_create_group_table as *const () as usize,
-        fra_lower_create_table as *const () as usize,
-        ita_ser_c1a_set_club_progress as *const () as usize,
-        ita_ser_c1b_set_club_progress as *const () as usize,
-        eng_cc_cup_create_round_table as *const () as usize,
-        eng_fa_cup_create_round_table as *const () as usize,
-        eng_charity_create_round_table as *const () as usize,
-        fra_cup_create_round_table as *const () as usize,
-        fra_lge_cup_create_round_table as *const () as usize,
-        spa_cup_create_round_table as *const () as usize,
-        fra_super_create_round_table as *const () as usize,
-        spa_super_create_round_table as *const () as usize,
-        jap_super_create_round_table as *const () as usize,
-        eng_cc_cup_collect_entrants as *const () as usize,
-        eng_auto_cup_collect_entrants as *const () as usize,
-        eng_charity_select_teams as *const () as usize,
-        fra_cup_collect_entrants as *const () as usize,
-        fra_lge_cup_collect_entrants as *const () as usize,
-        fra_super_select_teams as *const () as usize,
-        spa_super_select_teams as *const () as usize,
-        jap_super_select_teams as *const () as usize,
-        usa_mls_all_stars_create_round_table as *const () as usize,
-        eng_cc_cup_update_for_date as *const () as usize,
-        eng_fa_cup_update_for_date as *const () as usize,
-        usa_mls_all_stars_update_for_date as *const () as usize,
-        jap_j_cup_create_round_table as *const () as usize,
-        jap_emp_cup_create_round_table as *const () as usize,
-        usa_open_cup_create_round_table as *const () as usize,
-        jap_j_cup_collect_entrants as *const () as usize,
-        usa_open_cup_collect_entrants as *const () as usize,
-        jap_emp_cup_collect_entrants as *const () as usize,
-        get_squad_number as *const () as usize,
-        club_uses_squad_numbers as *const () as usize,
-        set_squad_number as *const () as usize,
-        allocate_squad_number as *const () as usize,
-        assign_club_squad_numbers as *const () as usize,
-        init_new_game as *const () as usize,
-        assign_league_squad_numbers as *const () as usize,
-        select_euro_registered_players as *const () as usize,
-        construct_holland_rules as *const () as usize,
-        construct_croatia_rules as *const () as usize,
-        construct_ireland_rules as *const () as usize,
-        construct_norway_rules as *const () as usize,
-        construct_northern_ireland_rules as *const () as usize,
-        construct_wales_rules as *const () as usize,
-        construct_turkey_rules as *const () as usize,
-        construct_poland_rules as *const () as usize,
-        construct_finland_rules as *const () as usize,
-        argentina_rules_init_transfer_windows as *const () as usize,
-        portugal_rules_init_transfer_windows as *const () as usize,
-        construct_korea_rules as *const () as usize,
-        greece_rules_init_transfer_windows as *const () as usize,
-        russia_rules_init_transfer_windows as *const () as usize,
-        belgium_rules_init_transfer_windows as *const () as usize,
-        process_euro_registration as *const () as usize,
-        create_default_table as *const () as usize,
-        build_venue_list as *const () as usize,
-        bra_nat_first_create_table as *const () as usize,
-        bra_nat_second_create_table as *const () as usize,
-        bra_nat_third_create_table as *const () as usize,
-        bra_reg_bahia_create_table as *const () as usize,
-        bra_reg_central_load_region_clubs as *const () as usize,
-        bra_reg_gaucho_load_region_clubs as *const () as usize,
-        bra_reg_goias_create_table as *const () as usize,
-        bra_reg_minas_gerais_create_table as *const () as usize,
-        bra_reg_north_create_table as *const () as usize,
-        bra_reg_northeast_create_table as *const () as usize,
-        bra_reg_parana_create_table as *const () as usize,
-        bra_reg_pern_create_table as *const () as usize,
-        bra_reg_rio_create_table as *const () as usize,
-        bra_reg_santa_create_table as *const () as usize,
-        bra_reg_sp_create_table as *const () as usize,
-        jap_j1_create_table as *const () as usize,
-        jap_j2_create_table as *const () as usize,
-        aus_nsl_create_table as *const () as usize,
-        bra_reg_bahia_create_semi_final_stage as *const () as usize,
-        bra_reg_north_create_semi_final_stage as *const () as usize,
-        bra_reg_northeast_create_semi_final_stage as *const () as usize,
-        bra_reg_pern_create_semi_final_stage as *const () as usize,
-        bra_reg_santa_create_semi_final_stage as *const () as usize,
-        bra_reg_sp_create_semi_final_stage as *const () as usize,
-        bra_reg_gaucho_create_knockout_stage as *const () as usize,
-        bra_reg_central_create_knockout_stage as *const () as usize,
-        bra_reg_goias_create_knockout_stage as *const () as usize,
-        ita_ser_a_update_for_date as *const () as usize,
-        ita_ser_b_update_for_date as *const () as usize,
-        ita_league_sort_clubs_level_on_points as *const () as usize,
-        ita_ser_a_update_staff_records_for_status as *const () as usize,
-        ita_ser_c1a_advance_stage as *const () as usize,
-        create_playoff_stages as *const () as usize,
-        ita_ser_c1b_advance_stage as *const () as usize,
-        create_play_off_stages as *const () as usize,
-        eng_third_advance_stage as *const () as usize,
-        construct_eng_prm as *const () as usize,
-        construct_eng_first as *const () as usize,
-        construct_eng_second as *const () as usize,
-        construct_eng_third as *const () as usize,
-        construct_ita_ser_a as *const () as usize,
-        construct_ita_ser_b as *const () as usize,
-        construct_ita_ser_c1a as *const () as usize,
-        construct_ita_ser_c1b as *const () as usize,
-        construct_fra_second as *const () as usize,
-        construct_fra_third as *const () as usize,
-        construct_spa_second as *const () as usize,
-        construct_spa_first as *const () as usize,
-        construct_spa_lower as *const () as usize,
-        spa_second_create_table as *const () as usize,
-        spa_lower_create_table as *const () as usize,
-        fra_cfa_set_up_rules as *const () as usize,
-        construct_fra_cfa as *const () as usize,
-        construct_fra_lower as *const () as usize,
-        destroy_fra_cfa as *const () as usize,
-        destroy_fra_lower as *const () as usize,
-        create_fixed_fixtures as *const () as usize,
-        ita_ser_b_set_up_fixed_fixtures as *const () as usize,
-        ita_ser_c1a_set_up_fixed_fixtures as *const () as usize,
-        ita_ser_c1b_set_up_fixed_fixtures as *const () as usize,
-        stub_return_one_ret8 as *const () as usize,
-        stub_return_one_ret4 as *const () as usize,
-        set_fixture_venue as *const () as usize,
-        find_available_venue as *const () as usize,
-        calculate_match_attendance as *const () as usize,
-        fra_third_create_schedule as *const () as usize,
-        fra_second_create_schedule as *const () as usize,
-        fra_lower_create_schedule as *const () as usize,
-        fra_cfa_create_schedule as *const () as usize,
-        ita_ser_c1a_create_schedule as *const () as usize,
-        ita_ser_c1b_create_schedule as *const () as usize,
-        ita_ser_a_create_schedule as *const () as usize,
-        ita_ser_b_create_schedule as *const () as usize,
-        fra_first_create_schedule as *const () as usize,
-        bra_reg_minas_gerais_advance_stage as *const () as usize,
-        bra_reg_minas_gerais_create_final_stage as *const () as usize,
-        bra_reg_minas_gerais_record_season_honours as *const () as usize,
-        bra_reg_parana_advance_stage as *const () as usize,
-        bra_reg_parana_create_final_stage as *const () as usize,
-        bra_reg_parana_record_season_honours as *const () as usize,
-        bra_reg_rio_advance_stage as *const () as usize,
-        bra_reg_rio_create_final_stage as *const () as usize,
-        bra_reg_rio_record_season_honours as *const () as usize,
-        ita_cup_create_schedule as *const () as usize,
-        ita_c_cup_create_schedule as *const () as usize,
-        ita_super_create_round_table as *const () as usize,
-        ita_c1_super_create_round_table as *const () as usize,
-        ita_cup_select_entrants as *const () as usize,
-        ita_c_cup_select_entrants as *const () as usize,
-        ita_super_init_team_list as *const () as usize,
-        bra_cup_create_round_table as *const () as usize,
-        bra_cup_build_team_table as *const () as usize,
-        bra_cup_set_up_rounds as *const () as usize,
-        conmebol_liber_create_schedule as *const () as usize,
-        conmebol_merc_create_schedule as *const () as usize,
-        conmebol_merc_select_invited_clubs as *const () as usize,
-        eng_second_create_schedule as *const () as usize,
-        eng_third_create_schedule as *const () as usize,
-        eng_first_create_schedule as *const () as usize,
-        eng_prm_create_schedule as *const () as usize,
-        spa_first_create_schedule as *const () as usize,
-        bra_reg_bahia_start_new_season as *const () as usize,
-        bra_reg_bahia_advance_stage as *const () as usize,
-        bra_reg_central_start_new_season as *const () as usize,
-        bra_reg_central_advance_stage as *const () as usize,
-        bra_reg_gaucho_start_new_season as *const () as usize,
-        bra_reg_gaucho_advance_stage as *const () as usize,
-        bra_reg_goias_start_new_season as *const () as usize,
-        bra_reg_goias_advance_stage as *const () as usize,
-        bra_reg_north_start_new_season as *const () as usize,
-        bra_reg_north_advance_stage as *const () as usize,
-        bra_reg_northeast_start_new_season as *const () as usize,
-        bra_reg_northeast_advance_stage as *const () as usize,
-        bra_reg_pern_start_new_season as *const () as usize,
-        bra_reg_pern_advance_stage as *const () as usize,
-        bra_reg_santa_start_new_season as *const () as usize,
-        bra_reg_santa_advance_stage as *const () as usize,
-        bra_reg_sp_start_new_season as *const () as usize,
-        bra_reg_sp_advance_stage as *const () as usize,
-        spa_second_create_schedule as *const () as usize,
-        spa_lower_create_schedule as *const () as usize,
-        construct_fra_first as *const () as usize,
-        bra_nat_first_advance_stage as *const () as usize,
-        bra_nat_first_create_play_off_stage as *const () as usize,
-        bra_nat_second_advance_stage as *const () as usize,
-        bra_nat_second_create_play_off_stage as *const () as usize,
-        bra_nat_first_start_new_season as *const () as usize,
-        bra_nat_first_process_promotion_relegation_chain as *const () as usize,
-        bra_nat_second_start_new_season as *const () as usize,
-        jap_j1_advance_stage as *const () as usize,
-        create_championship_final_stage as *const () as usize,
-        jap_j1_start_new_season as *const () as usize,
-        init_default_table as *const () as usize,
-        post_host_news as *const () as usize,
-        load_temp_file as *const () as usize,
-        league_process_promotion_relegation_chain as *const () as usize,
-        send_prize_money_news as *const () as usize,
-        send_tv_rights_news as *const () as usize,
-        bra_champ_cup_create_schedule as *const () as usize,
-        con_merc_cup_create_schedule as *const () as usize,
-        eur_super_cup_create_round_table as *const () as usize,
-        asia_super_cup_create_round_table as *const () as usize,
-        asia_club_champ_create_round_table as *const () as usize,
-        asia_cup_winner_create_round_table as *const () as usize,
-        eng_auto_cup_create_round_table as *const () as usize,
-        goldcup_create_schedule as *const () as usize,
-        african_nations_create_schedule as *const () as usize,
-        fifa_confed_create_schedule as *const () as usize,
-        intertoto_cup_create_round_table as *const () as usize,
-        world_club_cup_create_round_table as *const () as usize,
-        inter_amer_cup_create_round_table as *const () as usize,
-        con_champ_create_round_table as *const () as usize,
-        uefa_cup_create_round_table as *const () as usize,
-        intertoto_cup_collect_entrants as *const () as usize,
-        intertoto_cup_collect_club_list as *const () as usize,
-        eur_super_cup_select_teams as *const () as usize,
-        asia_super_cup_select_teams as *const () as usize,
-        ita_c1_super_init_team_list as *const () as usize,
-        oceania_club_champ_create_schedule as *const () as usize,
-        asia_club_champ_build_team_table as *const () as usize,
-        create_team_entries as *const () as usize,
-        bra_reg_rio_create_half_season_stage as *const () as usize,
-        bra_reg_minas_gerais_create_half_season_stage as *const () as usize,
-        create_half_stage as *const () as usize,
-        jap_j1_create_half_season_stage as *const () as usize,
-        bra_reg_rio_start_new_season as *const () as usize,
-        bra_reg_minas_gerais_start_new_season as *const () as usize,
-        bra_reg_parana_start_new_season as *const () as usize,
-        aus_nsl_advance_stage as *const () as usize,
-        create_finals_series_stage as *const () as usize,
-        create_grand_final_stage as *const () as usize,
-        usa_mls_advance_stage as *const () as usize,
-        usa_mls_create_playoff_stage as *const () as usize,
-        usa_mls_create_final_stage as *const () as usize,
-        bra_cup_start_new_season as *const () as usize,
-        jap_emp_cup_start_new_season as *const () as usize,
-        jap_j_cup_start_new_season as *const () as usize,
-        jap_super_start_new_season as *const () as usize,
-        usa_open_cup_start_new_season as *const () as usize,
-        usa_mls_all_stars_start_new_season_90a760 as *const () as usize,
-        set_up_teams as *const () as usize,
-        conmebol_liber_update_for_date as *const () as usize,
-        build_first_group_table as *const () as usize,
-        conmebol_liber_create_group_stage as *const () as usize,
-        conmebol_merc_update_for_date as *const () as usize,
-        conmebol_merc_create_first_group_table as *const () as usize,
-        conmebol_merc_create_group_stage as *const () as usize,
-        con_merc_cup_update_for_date as *const () as usize,
-        con_merc_cup_create_first_group_table as *const () as usize,
-        con_merc_cup_create_group_stage as *const () as usize,
-        goldcup_update_for_date as *const () as usize,
-        goldcup_create_group_table as *const () as usize,
-        goldcup_create_group_stage as *const () as usize,
-        usa_mls_create_table as *const () as usize,
-        create_second_division_stage as *const () as usize,
-        create_third_division_stage as *const () as usize,
-        usa_mls_start_new_season as *const () as usize,
-        usa_mls_set_predicted_positions as *const () as usize,
-        usa_mls_get_club_array as *const () as usize,
-        bra_nat_third_create_group_stage as *const () as usize,
-        create_second_round_stage as *const () as usize,
-        create_third_round_groups as *const () as usize,
-        bra_nat_third_create_final_stage as *const () as usize,
-        bra_nat_third_start_new_season as *const () as usize,
-        bra_nat_third_set_predicted_positions as *const () as usize,
-        select_section_clubs as *const () as usize,
-        create_section_stage as *const () as usize,
-        eng_auto_cup_advance_stage as *const () as usize,
-        eng_auto_cup_create_final_stage as *const () as usize,
-        eng_auto_cup_rank_teams as *const () as usize,
-        construct_cup_stage as *const () as usize,
-        destroy_cup_stage as *const () as usize,
-        conmebol_liber_create_knockout_stage as *const () as usize,
-        con_merc_cup_create_semi_final_stage as *const () as usize,
-        con_merc_cup_advance_stage as *const () as usize,
-        con_merc_cup_select_invited_clubs as *const () as usize,
-        conmebol_merc_advance_stage as *const () as usize,
-        goldcup_advance_stage as *const () as usize,
-        set_up_team_list as *const () as usize,
-        goldcup_set_predicted_positions as *const () as usize,
-        goldcup_start_new_season as *const () as usize,
-        construct_bra_reg_bahia as *const () as usize,
-        construct_bra_reg_central as *const () as usize,
-        construct_bra_reg_gaucho as *const () as usize,
-        construct_bra_reg_goias as *const () as usize,
-        construct_bra_reg_minas_gerais as *const () as usize,
-        construct_bra_reg_north as *const () as usize,
-        construct_bra_reg_northeast as *const () as usize,
-        construct_bra_reg_parana as *const () as usize,
-        construct_bra_reg_pern as *const () as usize,
-        construct_bra_reg_rio as *const () as usize,
-        construct_bra_reg_santa as *const () as usize,
-        construct_bra_reg_sp as *const () as usize,
-        cqt4_atualizar_media_de_publico as *const () as usize,
-        oceania_club_champ_update_for_date as *const () as usize,
-        create_group_a_table as *const () as usize,
-        create_group_b_stage as *const () as usize,
-        oceania_club_champ_select_qualified_clubs as *const () as usize,
-        oceania_club_champ_advance_stage as *const () as usize,
-        oceania_club_champ_create_knockout_stage as *const () as usize,
-        asia_club_champ_advance_stage as *const () as usize,
-        create_group_stages as *const () as usize,
-        asia_club_champ_create_semi_final_stage as *const () as usize,
-        african_nations_update_for_date as *const () as usize,
-        draw_finalists as *const () as usize,
-        african_nations_create_group_stage as *const () as usize,
-        asia_cup_winner_create_knockout_stage as *const () as usize,
-        asia_cup_winner_advance_stage as *const () as usize,
-        create_finals_stage as *const () as usize,
-        ita_cup_create_first_group_table as *const () as usize,
-        init_first_group as *const () as usize,
-        ita_cup_advance_stage as *const () as usize,
-        ita_cup_advance_stage_63d950 as *const () as usize,
-        ita_cup_create_group_stage as *const () as usize,
-        ita_cup_create_group_stage_63d9e0 as *const () as usize,
-        ita_cup_create_knockout_stage as *const () as usize,
-        ita_cup_create_knockout_stage_63dc10 as *const () as usize,
-        euro_champ_qual_set_up_rules as *const () as usize,
-        get_group_team_count as *const () as usize,
-        get_qualification_status as *const () as usize,
-        init_group_one_table as *const () as usize,
-        build_entrants as *const () as usize,
-        spa_cup_update_for_date as *const () as usize,
-        spa_cup_record_season_honours as *const () as usize,
-        spa_cup_record_season_honours_5e93e0 as *const () as usize,
-        spa_cup_record_season_honours_637750 as *const () as usize,
-        spa_cup_record_season_honours_63d770 as *const () as usize,
-    ];
-    let comp: [usize; N] = [
-        compare_table_a as *const () as usize,
-        compare_table_b as *const () as usize,
-        compare_diferenca as *const () as usize,
-        compare_band as *const () as usize,
-        compare_by_difference as *const () as usize,
-        compare_limit as *const () as usize,
-        compare_condicao as *const () as usize,
-        compare_player_table as *const () as usize,
-        compare_player_difference as *const () as usize,
-        compare_side_byte as *const () as usize,
-        compare_player_limit as *const () as usize,
-        compare_player_band as *const () as usize,
-        compare_position_byte as *const () as usize,
-        compare_field_by_position as *const () as usize,
-        compare_can_choose as *const () as usize,
-        compare_aim_set_facing_direction as *const () as usize,
-        compare_tire_fatigue as *const () as usize,
-        compare_facing as *const () as usize,
-        compare_search_on_side_recording as *const () as usize,
-        compare_reaches as *const () as usize,
-        compare_classificar as *const () as usize,
-        compare_distance_to_point as *const () as usize,
-        compare_distance_to_goal as *const () as usize,
-        compare_mais_perto as *const () as usize,
-        compare_na_linha as *const () as usize,
-        compare_consegue as *const () as usize,
-        compare_in_the_box as *const () as usize,
-        compare_marcas as *const () as usize,
-        compare_papel_ataque as *const () as usize,
-        compare_papel_defesa as *const () as usize,
-        compare_position_place_players as *const () as usize,
-        compare_linhas as *const () as usize,
-        compare_atualizar as *const () as usize,
-        compare_momento as *const () as usize,
-        compare_posicao_um as *const () as usize,
-        compare_caminho as *const () as usize,
-        compare_espaco as *const () as usize,
-        compare_off_centre as *const () as usize,
-        compare_alem as *const () as usize,
-        compare_distance_between as *const () as usize,
-        compare_ler_8ea7 as *const () as usize,
-        compare_ler_8ea8 as *const () as usize,
-        compare_ler_8ea9 as *const () as usize,
-        compare_ler_8eaa as *const () as usize,
-        compare_ler_8eb2 as *const () as usize,
-        compare_gravar_8ea9 as *const () as usize,
-        compare_gravar_8ea7 as *const () as usize,
-        compare_gravar_8ea8 as *const () as usize,
-        compare_gravar_8eaa as *const () as usize,
-        compare_write_8ed8 as *const () as usize,
-        compare_read_8f7a as *const () as usize,
-        compare_posse as *const () as usize,
-        compare_in_list as *const () as usize,
-        compare_extremos as *const () as usize,
-        compare_count_active as *const () as usize,
-        compare_special_code as *const () as usize,
-        compare_atras as *const () as usize,
-        compare_no_match as *const () as usize,
-        compare_pressao_area as *const () as usize,
-        compare_mais_proximo as *const () as usize,
-        compare_pressao_ponto as *const () as usize,
-        compare_smallest_distance as *const () as usize,
-        compare_split_a as *const () as usize,
-        compare_split_b as *const () as usize,
-        compare_split_c as *const () as usize,
-        compare_escolher as *const () as usize,
-        compare_direction as *const () as usize,
-        compare_clear_stored as *const () as usize,
-        compare_x_fora as *const () as usize,
-        compare_is_the_stored as *const () as usize,
-        compare_side_of_move as *const () as usize,
-        compare_player_in_block as *const () as usize,
-        compare_table_a_1a as *const () as usize,
-        compare_marked_moment as *const () as usize,
-        compare_side_state as *const () as usize,
-        compare_opponent_state as *const () as usize,
-        compare_write_19c as *const () as usize,
-        compare_set_piece_code as *const () as usize,
-        compare_near_goal as *const () as usize,
-        compare_clear_move as *const () as usize,
-        compare_add_disposition as *const () as usize,
-        compare_split_d as *const () as usize,
-        compare_split_e as *const () as usize,
-        compare_split_f as *const () as usize,
-        compare_record_move as *const () as usize,
-        compare_remove_from_list as *const () as usize,
-        compare_take_the_field as *const () as usize,
-        compare_in_danger as *const () as usize,
-        compare_check_move as *const () as usize,
-        compare_clear_path as *const () as usize,
-        compare_reaches_the_point as *const () as usize,
-        compare_choose_standout as *const () as usize,
-        compare_choose_by_role_b as *const () as usize,
-        compare_formation_square as *const () as usize,
-        compare_compute_percentages as *const () as usize,
-        compare_choose_by_role_c as *const () as usize,
-        compare_apply_factor as *const () as usize,
-        compare_value_by_condition as *const () as usize,
-        compare_apply_to_team as *const () as usize,
-        compare_apply_to_side as *const () as usize,
-        compare_choose_by_condition as *const () as usize,
-        compare_read_1bc as *const () as usize,
-        compare_add_2b as *const () as usize,
-        compare_write_2b as *const () as usize,
-        compare_player_table_a_1a as *const () as usize,
-        compare_player_table_b as *const () as usize,
-        compare_difference_of_player as *const () as usize,
-        compare_player_marks_rot as *const () as usize,
-        compare_mark_800000 as *const () as usize,
-        compare_near_own_goal as *const () as usize,
-        compare_role_880 as *const () as usize,
-        compare_release_ball as *const () as usize,
-        compare_player_by_record as *const () as usize,
-        compare_code_byte as *const () as usize,
-        compare_adjusted_rating as *const () as usize,
-        compare_adjust_17 as *const () as usize,
-        compare_take_ball as *const () as usize,
-        compare_init_strictness as *const () as usize,
-        compare_move_counts as *const () as usize,
-        compare_decide_foul as *const () as usize,
-        compare_punish_foul as *const () as usize,
-        compare_punish_move as *const () as usize,
-        compare_engine_decide_foul as *const () as usize,
-        compare_engine_punish_move as *const () as usize,
-        compare_engine_punish_foul as *const () as usize,
-        compare_look_for_offside as *const () as usize,
-        compare_engine_look_for_offside as *const () as usize,
-        compare_card_by_severity as *const () as usize,
-        compare_engine_card_by_severity as *const () as usize,
-        compare_choose_by_role_e as *const () as usize,
-        compare_possession_statistic as *const () as usize,
-        compare_match_summary as *const () as usize,
-        compare_closest_on_side as *const () as usize,
-        compare_goalkeeper_save as *const () as usize,
-        compare_move_to as *const () as usize,
-        compare_choose_square as *const () as usize,
-        compare_control_of_move as *const () as usize,
-        compare_trace_move as *const () as usize,
-        compare_has_match as *const () as usize,
-        compare_won_the_match as *const () as usize,
-        compare_commentary_a as *const () as usize,
-        compare_commentary_b as *const () as usize,
-        compare_ball_out as *const () as usize,
-        compare_shot_value as *const () as usize,
-        compare_team_strength as *const () as usize,
-        compare_kick_off as *const () as usize,
-        compare_roll_ball as *const () as usize,
-        compare_condition_test as *const () as usize,
-        compare_likes as *const () as usize,
-        compare_dislikes as *const () as usize,
-        compare_mark_position as *const () as usize,
-        compare_fine_positions as *const () as usize,
-        compare_units_digit as *const () as usize,
-        compare_is_friendly as *const () as usize,
-        compare_contract_of as *const () as usize,
-        compare_is_national_team as *const () as usize,
-        compare_manager_9a01 as *const () as usize,
-        compare_manager_9a05 as *const () as usize,
-        compare_square_bit as *const () as usize,
-        compare_split_mask as *const () as usize,
-        compare_is_second_national_team as *const () as usize,
-        compare_aggregate_score as *const () as usize,
-        compare_direct_marker as *const () as usize,
-        compare_take_off_pitch as *const () as usize,
-        compare_individual_marking as *const () as usize,
-        compare_new_reputation as *const () as usize,
-        compare_player_reputation as *const () as usize,
-        compare_choose_taker as *const () as usize,
-        compare_throw_in as *const () as usize,
-        compare_corner as *const () as usize,
-        compare_penalty as *const () as usize,
-        compare_set_square as *const () as usize,
-        compare_mark_stars as *const () as usize,
-        compare_designated_for_position as *const () as usize,
-        compare_designated_marked as *const () as usize,
-        compare_main_national_team as *const () as usize,
-        compare_b_national_team as *const () as usize,
-        compare_who_to_mark as *const () as usize,
-        compare_manager_9ace as *const () as usize,
-        compare_manager_9a06 as *const () as usize,
-        compare_human_club as *const () as usize,
-        compare_side_under_control as *const () as usize,
-        compare_tactics_row as *const () as usize,
-        compare_tactics_byte as *const () as usize,
-        compare_penalty_order as *const () as usize,
-        compare_player_order as *const () as usize,
-        compare_marked_slot as *const () as usize,
-        compare_mark_slot as *const () as usize,
-        compare_row_person as *const () as usize,
-        compare_club_in_competition as *const () as usize,
-        compare_special_club as *const () as usize,
-        compare_foul_decision as *const () as usize,
-        compare_choose_teammate as *const () as usize,
-        compare_foul_in_engine as *const () as usize,
-        compare_manager_9b23 as *const () as usize,
-        compare_dislikes_club as *const () as usize,
-        compare_likes_club as *const () as usize,
-        compare_partner_club as *const () as usize,
-        compare_contract_with_club as *const () as usize,
-        compare_contract_level as *const () as usize,
-        compare_chance_to_know as *const () as usize,
-        compare_know_person as *const () as usize,
-        compare_fog_after_match as *const () as usize,
-        compare_shortlist_entry as *const () as usize,
-        compare_contract_flags as *const () as usize,
-        compare_next_list_item as *const () as usize,
-        compare_word_0c as *const () as usize,
-        compare_round_below_1000 as *const () as usize,
-        compare_group_nation as *const () as usize,
-        compare_how_many_mark as *const () as usize,
-        compare_who_marks as *const () as usize,
-        compare_competition_counts as *const () as usize,
-        compare_order_by_5f as *const () as usize,
-        compare_order_by_80 as *const () as usize,
-        compare_order_by_80_desc as *const () as usize,
-        compare_order_by_80_asc as *const () as usize,
-        compare_player_rating as *const () as usize,
-        compare_forget_person as *const () as usize,
-        compare_manager_table as *const () as usize,
-        compare_sector_slot_taken as *const () as usize,
-        compare_slot_of_code as *const () as usize,
-        compare_clear_assigned as *const () as usize,
-        compare_formation_mask as *const () as usize,
-        compare_slot_code as *const () as usize,
-        compare_competition_criterion as *const () as usize,
-        compare_type_not_11 as *const () as usize,
-        compare_type_11_to_15 as *const () as usize,
-        compare_national_side_class as *const () as usize,
-        compare_read_person_mark as *const () as usize,
-        compare_clear_person_mark as *const () as usize,
-        compare_free_record as *const () as usize,
-        compare_set_person_44 as *const () as usize,
-        compare_person_byte_44 as *const () as usize,
-        compare_person_field_3a as *const () as usize,
-        compare_class_by_national_side as *const () as usize,
-        compare_database_global_9b5984 as *const () as usize,
-        compare_person_competition as *const () as usize,
-        compare_national_side_byte_42 as *const () as usize,
-        compare_national_side_byte_43 as *const () as usize,
-        compare_national_or_special as *const () as usize,
-        compare_dislikes_national_side as *const () as usize,
-        compare_copy_date_and_mark as *const () as usize,
-        compare_update_attributes as *const () as usize,
-        compare_match_performance as *const () as usize,
-        compare_side_strength as *const () as usize,
-        compare_ball_in_attack as *const () as usize,
-        compare_evolve_moment as *const () as usize,
-        compare_match_of_interest as *const () as usize,
-        compare_group_decided as *const () as usize,
-        compare_narrate_qualification as *const () as usize,
-        compare_look_for_play as *const () as usize,
-        compare_players_on_path as *const () as usize,
-        compare_intercept as *const () as usize,
-        compare_advance_row as *const () as usize,
-        compare_line_up_kickoff as *const () as usize,
-        compare_line_up_set_piece as *const () as usize,
-        compare_decide_off_ball as *const () as usize,
-        compare_move_off_ball as *const () as usize,
-        compare_decide_player as *const () as usize,
-        compare_pass_ball as *const () as usize,
-        compare_long_ball as *const () as usize,
-        compare_deflect_ball as *const () as usize,
-        compare_save_shot as *const () as usize,
-        compare_recover_stamina as *const () as usize,
-        compare_period_completed as *const () as usize,
-        compare_pressure as *const () as usize,
-        compare_opposition_challenge as *const () as usize,
-        compare_develop_player as *const () as usize,
-        compare_kit as *const () as usize,
-        compare_injury_severity as *const () as usize,
-        compare_injury_grade as *const () as usize,
-        compare_tackle_injury as *const () as usize,
-        compare_rate_player as *const () as usize,
-        compare_best_rated as *const () as usize,
-        compare_best_in_list as *const () as usize,
-        compare_player_left as *const () as usize,
-        compare_redo_team as *const () as usize,
-        compare_substitute as *const () as usize,
-        compare_pick as *const () as usize,
-        compare_stance as *const () as usize,
-        compare_choose_formation as *const () as usize,
-        compare_instructions as *const () as usize,
-        compare_put_in_place as *const () as usize,
-        compare_order_by_table as *const () as usize,
-        compare_order_by_condition as *const () as usize,
-        compare_starters as *const () as usize,
-        compare_store_tactic as *const () as usize,
-        compare_apply_substitutions as *const () as usize,
-        compare_punishments as *const () as usize,
-        compare_penalties as *const () as usize,
-        compare_apply_foul as *const () as usize,
-        compare_tackle as *const () as usize,
-        compare_contest as *const () as usize,
-        respond_hook as *const () as usize,
-        gate_try_block_shot as *const () as usize,
-        compare_post_match_events as *const () as usize,
-        compare_post_match_players as *const () as usize,
-        compare_post_match_club as *const () as usize,
-        compare_match_without_human as *const () as usize,
-        compare_match_day_interest as *const () as usize,
-        compare_restart_play as *const () as usize,
-        compare_shot as *const () as usize,
-        compare_referee_grade as *const () as usize,
-        compare_record_referee_grade as *const () as usize,
-        compare_stored_taker as *const () as usize,
-        compare_store_instructions as *const () as usize,
-        compare_competition_number as *const () as usize,
-        compare_favourite_of as *const () as usize,
-        compare_rejected_by as *const () as usize,
-        compare_match_wrap_up as *const () as usize,
-        compare_read_tactics_row as *const () as usize,
-        compare_write_tactics_row as *const () as usize,
-        compare_quick_simulation as *const () as usize,
-        compare_injure as *const () as usize,
-        compare_register_injury as *const () as usize,
-        compare_player_highlight as *const () as usize,
-        compare_shot_outcome as *const () as usize,
-        compare_shot_on_goal as *const () as usize,
-        compare_mover as *const () as usize,
-        compare_dribble as *const () as usize,
-        compare_engine_loop as *const () as usize,
-        compare_execute_pass as *const () as usize,
-        compare_behind_on_aggregate as *const () as usize,
-        compare_free_teammate as *const () as usize,
-        compare_shoot as *const () as usize,
-        compare_build_engine as *const () as usize,
-        compare_prepare_match as *const () as usize,
-        compare_destroy_engine as *const () as usize,
-        compare_select_side as *const () as usize,
-        compare_end_day as *const () as usize,
-        compare_pick_day_match as *const () as usize,
-        compare_select_automatically as *const () as usize,
-        compare_start_next_match as *const () as usize,
-        compare_step_day_match as *const () as usize,
-        compare_close_day_match as *const () as usize,
-        compare_play_the_day as *const () as usize,
-        compare_set_up_the_day as *const () as usize,
-        compare_player_side as *const () as usize,
-        compare_sounds_finished as *const () as usize,
-        compare_record_events as *const () as usize,
-        compare_read_events as *const () as usize,
-        compare_network_step as *const () as usize,
-        compare_read_events_cfg as *const () as usize,
-        compare_event_text as *const () as usize,
-        compare_confirm_network_match as *const () as usize,
-        compare_commentate_on_panel as *const () as usize,
-        compare_abrir_no_conteiner as *const () as usize,
-        compare_buscar_no_conteiner as *const () as usize,
-        compare_posicao_no_conteiner as *const () as usize,
-        compare_position_mask as *const () as usize,
-        compare_pitch_cell as *const () as usize,
-        compare_slots_without_conflict as *const () as usize,
-        compare_player_statistic as *const () as usize,
-        compare_ratings_average as *const () as usize,
-        compare_centre_backs_without_conflict as *const () as usize,
-        compare_shortlist_slot_fits as *const () as usize,
-        compare_position_code as *const () as usize,
-        compare_staff_criterion as *const () as usize,
-        compare_set_tactic_slot as *const () as usize,
-        compare_tactic_slot_person as *const () as usize,
-        compare_set_tactic_formation as *const () as usize,
-        compare_stored_cell as *const () as usize,
-        compare_set_formation_flag as *const () as usize,
-        compare_reset_records as *const () as usize,
-        compare_rotate_round as *const () as usize,
-        compare_store_round_match as *const () as usize,
-        compare_mark_calendar_year as *const () as usize,
-        compare_extra_tactic_slot as *const () as usize,
-        compare_national_team_ages as *const () as usize,
-        compare_set_human_field as *const () as usize,
-        compare_scout_record as *const () as usize,
-        compare_human_runs_club as *const () as usize,
-        compare_contract_category as *const () as usize,
-        compare_ball_goal_end as *const () as usize,
-        compare_match_abandoned as *const () as usize,
-        compare_side_slots_without_conflict as *const () as usize,
-        compare_side_centre_backs_without_conflict as *const () as usize,
-        compare_construct_referee as *const () as usize,
-        compare_destroy_match_player as *const () as usize,
-        compare_event_at_front as *const () as usize,
-        compare_construct_commentary_queue as *const () as usize,
-        compare_free_event_tables as *const () as usize,
-        compare_day_match_order as *const () as usize,
-        compare_action_order as *const () as usize,
-        compare_event_variant as *const () as usize,
-        compare_combine_with_previous as *const () as usize,
-        compare_context_commentary as *const () as usize,
-        compare_construct_match_player as *const () as usize,
-        compare_next_event as *const () as usize,
-        compare_commentary_player_name as *const () as usize,
-        compare_perceived_ability as *const () as usize,
-        compare_apply_squad_rule as *const () as usize,
-        compare_off_match_score as *const () as usize,
-        compare_lineup_slot_score as *const () as usize,
-        compare_person_in_list as *const () as usize,
-        compare_contract_record as *const () as usize,
-        compare_daily_wear as *const () as usize,
-        compare_formation_record as *const () as usize,
-        compare_competition_weight as *const () as usize,
-        compare_set_news_field as *const () as usize,
-        compare_recover_injury as *const () as usize,
-        compare_person_in_transfer_list as *const () as usize,
-        compare_table_penalty as *const () as usize,
-        compare_record_bits as *const () as usize,
-        compare_competition_flagged as *const () as usize,
-        compare_league_record as *const () as usize,
-        compare_game_average as *const () as usize,
-        compare_contract_value as *const () as usize,
-        compare_national_team_level as *const () as usize,
-        compare_contract_offer as *const () as usize,
-        compare_agreed_contract_offer as *const () as usize,
-        compare_transfer_offer_closed as *const () as usize,
-        compare_match_control_label as *const () as usize,
-        compare_close_match_screen as *const () as usize,
-        compare_open_waiting_screen as *const () as usize,
-        compare_story_with_response_two as *const () as usize,
-        compare_has_story as *const () as usize,
-        compare_cup_match_importance as *const () as usize,
-        compare_open_latest_scores as *const () as usize,
-        compare_build_latest_scores as *const () as usize,
-        compare_latest_scores_input as *const () as usize,
-        compare_open_match_details as *const () as usize,
-        compare_match_details_input as *const () as usize,
-        compare_close_match_details as *const () as usize,
-        compare_discipline_new_season as *const () as usize,
-        compare_discipline_daily_update as *const () as usize,
-        compare_discipline_set_slot as *const () as usize,
-        compare_set_agreed_contract_flag as *const () as usize,
-        compare_clear_agreed_contract_flag as *const () as usize,
-        compare_offer_slot as *const () as usize,
-        compare_open_match_screen as *const () as usize,
-        compare_match_screens_handle_latest_scores_cycle as *const () as usize,
-        compare_handle_team_stats_input as *const () as usize,
-        compare_draw_latest_scores_panel as *const () as usize,
-        compare_is_forward_unavailable as *const () as usize,
-        compare_get_heading_colour as *const () as usize,
-        compare_transfer_manager_get_shortlist_manager as *const () as usize,
-        compare_training_manager_get_player_entry as *const () as usize,
-        compare_set_training_load as *const () as usize,
-        compare_is_own_comp_record as *const () as usize,
-        compare_friendly_international_date_set as *const () as usize,
-        compare_clear_manager_record as *const () as usize,
-        compare_remove_loan_contract as *const () as usize,
-        compare_clear_bid_markers_for_player as *const () as usize,
-        compare_human_manager_get_stand_in_manager as *const () as usize,
-        compare_get_agreed_contract_club as *const () as usize,
-        compare_record_international_appearance as *const () as usize,
-        compare_find_held_ban as *const () as usize,
-        compare_find_retirement_entry as *const () as usize,
-        compare_register_comp_objects as *const () as usize,
-        compare_get_slot as *const () as usize,
-        compare_remove_next_sale_percentage as *const () as usize,
-        compare_remove_first_team_appearance_money as *const () as usize,
-        compare_remove_international_team_appearance_money as *const () as usize,
-        compare_remove_spare_non_player_record as *const () as usize,
-        compare_remove_player_data_from_pool as *const () as usize,
-        compare_calc_prize_fund as *const () as usize,
-        compare_get_last_match_rating as *const () as usize,
-        compare_set_slot_index as *const () as usize,
-        compare_set_list_type as *const () as usize,
-        compare_league_compare_h2h_rows as *const () as usize,
-        compare_update_head_to_head as *const () as usize,
-        compare_note_terms_offered_to_main_player as *const () as usize,
-        compare_get_holiday_stamp as *const () as usize,
-        compare_get_saved_lineup as *const () as usize,
-        compare_set_manager as *const () as usize,
-        compare_open_day_fixtures_screen as *const () as usize,
-        compare_handle_day_fixtures_input as *const () as usize,
-        compare_match_screens_find_best_rated_starter_slot as *const () as usize,
-        compare_get_club_league_stat as *const () as usize,
-        compare_fixture_entry_matches as *const () as usize,
-        compare_match_stats_get_record_bucket as *const () as usize,
-        compare_match_team_block_assign as *const () as usize,
-        compare_match_player_row_assign as *const () as usize,
-        compare_match_screens_tally_live_score as *const () as usize,
-        compare_match_screens_handle_continue_command as *const () as usize,
-        compare_match_screens_open_team_selection as *const () as usize,
-        compare_match_screens_handle_team_selection_input as *const () as usize,
-        compare_draw_team_stats_panel as *const () as usize,
-        compare_draw_player_ratings_panel as *const () as usize,
-        compare_draw_match_stats_panel as *const () as usize,
-        compare_refresh_match_stats_values as *const () as usize,
-        compare_refresh_action_zones_values as *const () as usize,
-        compare_refresh_player_ratings_rows as *const () as usize,
-        compare_draw_action_zones_panel as *const () as usize,
-        compare_draw_match_report_panel as *const () as usize,
-        compare_build_day_fixtures_screen as *const () as usize,
-        compare_fill_team_stats_rows as *const () as usize,
-        compare_refresh_latest_scores_rows as *const () as usize,
-        compare_match_screens_handle_waiting_screen as *const () as usize,
-        compare_read_match_record as *const () as usize,
-        compare_match_screens_record_match as *const () as usize,
-        compare_write_match_record as *const () as usize,
-        compare_match_screens_draw_team_selection as *const () as usize,
-        compare_match_screens_load as *const () as usize,
-        compare_match_screens_save as *const () as usize,
-        compare_area_layout as *const () as usize,
-        compare_init as *const () as usize,
-        compare_draw as *const () as usize,
-        compare_build_match_screen as *const () as usize,
-        compare_handle_match_screen_input as *const () as usize,
-        compare_build_match_details_screen as *const () as usize,
-        compare_refresh_possession_bar as *const () as usize,
-        compare_draw_match_overview_panel as *const () as usize,
-        compare_match_screens_draw_live_league_table as *const () as usize,
-        compare_get_finable_story_kind as *const () as usize,
-        compare_choose_injury_type as *const () as usize,
-        compare_get_category as *const () as usize,
-        compare_national_teams_remove_duplicate_squad_entries as *const () as usize,
-        compare_find_selection_slot as *const () as usize,
-        compare_pick_former_international_pundit as *const () as usize,
-        compare_apply_round_rules_to_match as *const () as usize,
-        compare_find_tree_slot_for_fixture as *const () as usize,
-        compare_pick_tour_nation as *const () as usize,
-        compare_transfer_manager_close_offer_contract_offers as *const () as usize,
-        compare_queue_free_transfer as *const () as usize,
-        compare_get_exchange_negotiations_for_player as *const () as usize,
-        compare_national_teams_remove_player as *const () as usize,
-        compare_get_time_slice as *const () as usize,
-        compare_shortlist_manager_max_fee_for_squad_status as *const () as usize,
-        compare_get_offers_for_player as *const () as usize,
-        compare_update_club_target_reputation as *const () as usize,
-        compare_comp_util_write_fixture_to_news_slots as *const () as usize,
-        compare_fill_match_record as *const () as usize,
-        compare_match_stats_compare_events as *const () as usize,
-        compare_remove_language as *const () as usize,
-        compare_can_sign_player as *const () as usize,
-        compare_get_exchange_offers_for_player as *const () as usize,
-        compare_count_unread as *const () as usize,
-        compare_set_item_slot as *const () as usize,
-        compare_news_club_has_human_manager as *const () as usize,
-        compare_cup_set_round_draw_date as *const () as usize,
-        compare_cup_set_round_match_date as *const () as usize,
-        compare_remove_club_from_ai_plans as *const () as usize,
-        compare_league_compare_table_rows as *const () as usize,
-        compare_league_build_round_robin_grid as *const () as usize,
-        compare_final_day_margin_needed as *const () as usize,
-        compare_comp_util_read_fixture_from_news_slots as *const () as usize,
-        compare_comp_util_classify_tie_result_for_news as *const () as usize,
-        compare_cup_set_round_match_day as *const () as usize,
-        compare_build_position_lookup as *const () as usize,
-        compare_player_regen_score_club_for_player as *const () as usize,
-        compare_is_watching_fixture as *const () as usize,
-        compare_match_day_drop_viewer_and_finish_match as *const () as usize,
-        compare_find_record_fixture as *const () as usize,
-        compare_has_relegation as *const () as usize,
-        compare_league_round_set_date as *const () as usize,
-        compare_get_match_importance as *const () as usize,
-        compare_record_holder_assign as *const () as usize,
-        compare_match_record_assign as *const () as usize,
-        compare_run_record_assign as *const () as usize,
-        compare_is_fixture_watched as *const () as usize,
-        compare_has_nickname as *const () as usize,
-        compare_retire_record_assign as *const () as usize,
-        compare_construct_match_stats as *const () as usize,
-        compare_destroy_match_stats as *const () as usize,
-        compare_zipdir_match_filename_pattern as *const () as usize,
-        compare_zget_archive_id as *const () as usize,
-        compare_zget_matching_size as *const () as usize,
-        compare_zadd_matching_files as *const () as usize,
-        compare_zextract_matching_files as *const () as usize,
-        compare_utils_clear_temp_folder as *const () as usize,
-        compare_zipdir_zread as *const () as usize,
-        compare_zipdir_zwrite as *const () as usize,
-        compare_zclose as *const () as usize,
-        compare_check_saved_game_file as *const () as usize,
-        compare_check_quick_start_file as *const () as usize,
-        compare_valid_saved_game_version as *const () as usize,
-        compare_save_fifa_transfer_rules as *const () as usize,
-        compare_load_fifa_transfer_rules as *const () as usize,
-        compare_build_save_game_summary as *const () as usize,
-        compare_save_database_for_game as *const () as usize,
-        compare_load_database_from_stream as *const () as usize,
-        compare_free_game_data as *const () as usize,
-        compare_create_game_from_setup_file as *const () as usize,
-        compare_save_game_data as *const () as usize,
-        compare_load_game_data as *const () as usize,
-        compare_database_get_reputation_scope as *const () as usize,
-        compare_database_get_staff_reputation_for_viewer as *const () as usize,
-        compare_database_is_staff_foreign as *const () as usize,
-        compare_database_get_staff_age as *const () as usize,
-        compare_nation_allows_free_transfers as *const () as usize,
-        compare_database_is_staff_eu_national as *const () as usize,
-        compare_staff_is_transfer_listed_or_requested as *const () as usize,
-        compare_staff_compute_player_attribute as *const () as usize,
-        compare_staff_get_player_attribute as *const () as usize,
-        compare_database_compare_comp_history_rows as *const () as usize,
-        compare_database_player_to_attribute_vector as *const () as usize,
-        compare_nation_is_uk_or_ireland as *const () as usize,
-        compare_database_is_basque_club as *const () as usize,
-        compare_staff_is_transfer_listed as *const () as usize,
-        compare_staff_is_loan_listed as *const () as usize,
-        compare_staff_is_listed_by_request as *const () as usize,
-        compare_player_attribute_rating as *const () as usize,
-        compare_database_club_has_reserve_squad as *const () as usize,
-        compare_database_pick_first_name_for_nation as *const () as usize,
-        compare_database_pick_second_name_for_nation as *const () as usize,
-        compare_database_format_staff_name as *const () as usize,
-        compare_database_get_club_kit_colours as *const () as usize,
-        compare_database_get_club_manager as *const () as usize,
-        compare_club_get_english_name as *const () as usize,
-        compare_staff_adjust_morale as *const () as usize,
-        compare_database_non_player_to_attribute_vector as *const () as usize,
-        compare_staff_set_squad_flags as *const () as usize,
-        compare_database_count_club_squad as *const () as usize,
-        compare_database_collect_club_squad as *const () as usize,
-        compare_club_can_be_managed as *const () as usize,
-        compare_database_vector_to_non_player as *const () as usize,
-        compare_database_vector_to_player as *const () as usize,
-        compare_staff_normalise_non_player_attributes as *const () as usize,
-        compare_database_get_colour_family as *const () as usize,
-        compare_database_colours_clash as *const () as usize,
-        compare_staff_compute_non_player_attribute as *const () as usize,
-        compare_get_adjective_form_index as *const () as usize,
-        compare_staff_get_non_player_attribute as *const () as usize,
-        compare_player_attribute_rating_with_scaled_ability as *const () as usize,
-        compare_database_pick_first_name_by_weight as *const () as usize,
-        compare_database_get_comp_colours as *const () as usize,
-        compare_database_club_has_room_for_job as *const () as usize,
-        compare_database_add_staff_to_club as *const () as usize,
-        compare_match_club_key_id as *const () as usize,
-        compare_remap_club_key_id as *const () as usize,
-        compare_match_nation_key_id as *const () as usize,
-        compare_match_club_comp_key_id as *const () as usize,
-        compare_match_staff_comp_key_id as *const () as usize,
-        compare_db_files_read_continents as *const () as usize,
-        compare_db_files_read_nations as *const () as usize,
-        compare_db_files_read_cities as *const () as usize,
-        compare_db_files_read_stadiums as *const () as usize,
-        compare_db_files_read_staff_v1 as *const () as usize,
-        compare_db_files_read_staff_history as *const () as usize,
-        compare_db_files_read_comp_history as *const () as usize,
-        compare_db_files_read_staff_comps as *const () as usize,
-        compare_db_files_read_staff_comp_history as *const () as usize,
-        compare_db_files_read_officials as *const () as usize,
-        compare_db_files_read_colours as *const () as usize,
-        compare_db_files_read_names as *const () as usize,
-        compare_db_files_read_clubs as *const () as usize,
-        compare_db_files_read_comps as *const () as usize,
-        compare_db_files_read_players as *const () as usize,
-        compare_db_files_read_non_players as *const () as usize,
-        compare_db_files_read_staff as *const () as usize,
-        compare_db_files_read_staff_extra as *const () as usize,
-        compare_db_files_write_continents as *const () as usize,
-        compare_db_files_write_nations as *const () as usize,
-        compare_db_files_write_cities as *const () as usize,
-        compare_db_files_write_stadiums as *const () as usize,
-        compare_db_files_write_clubs as *const () as usize,
-        compare_db_files_write_staff as *const () as usize,
-        compare_db_files_write_players as *const () as usize,
-        compare_db_files_write_non_players as *const () as usize,
-        compare_db_files_write_staff_extra as *const () as usize,
-        compare_db_files_write_staff_history as *const () as usize,
-        compare_db_files_write_comps as *const () as usize,
-        compare_db_files_write_comp_history as *const () as usize,
-        compare_db_files_write_staff_comps as *const () as usize,
-        compare_db_files_write_officials as *const () as usize,
-        compare_db_files_write_records_0x3a as *const () as usize,
-        compare_db_files_write_or_read_records_0x3c as *const () as usize,
-        compare_db_files_open_for_read as *const () as usize,
-        compare_db_files_open_for_write as *const () as usize,
-        compare_database_free_staff_history_table as *const () as usize,
-        compare_database_free_staff_comp_history_table as *const () as usize,
-        compare_database_grow_comp_history_table as *const () as usize,
-        compare_qsort_comparator_club_ids_by_reputation as *const () as usize,
-        compare_qsort_comparator_squad_by_player_0xb as *const () as usize,
-        compare_compare_staff_by_player_ability_desc as *const () as usize,
-        compare_staff_normalise_player_physical_attributes as *const () as usize,
-        compare_database_pick_second_name_by_weight as *const () as usize,
-        compare_staff_normalise_player_attributes as *const () as usize,
-        compare_db_files_read_clubs_v1 as *const () as usize,
-        compare_db_files_read_players_v1 as *const () as usize,
-        compare_db_files_read_non_players_v1 as *const () as usize,
-        compare_db_files_read_comps_v1 as *const () as usize,
-        compare_nation_get_english_name as *const () as usize,
-        compare_club_get_english_short_name as *const () as usize,
-        compare_database_trim_senior_and_b_team_squads as *const () as usize,
-        compare_database_merge_b_team_staff as *const () as usize,
-        compare_database_build_nation_name_index as *const () as usize,
-        compare_database_remove_staff_from_club as *const () as usize,
-        compare_database_get_club_scouts as *const () as usize,
-        compare_club_is_in_season as *const () as usize,
-        compare_club_is_in_major_nation as *const () as usize,
-        compare_nation_is_major_nation as *const () as usize,
-        compare_staff_clear_opinion_links as *const () as usize,
-        compare_staff_add_opinion_link as *const () as usize,
-        compare_staff_remove_opinion_link as *const () as usize,
-        compare_database_get_club_assistant as *const () as usize,
-        compare_database_get_club_coaches as *const () as usize,
-        compare_database_count_club_coaches as *const () as usize,
-        compare_nation_get_english_three_letter_name as *const () as usize,
-        compare_comp_get_english_name as *const () as usize,
-        compare_staff_comp_get_english_name as *const () as usize,
-        compare_stadium_get_english_name as *const () as usize,
-        compare_database_language_file_exists as *const () as usize,
-        compare_eng_lng_free_tables as *const () as usize,
-        compare_database_generate_extra_non_playing_staff as *const () as usize,
-        compare_database_trim_club_table as *const () as usize,
-        compare_database_prune_comp_history_table as *const () as usize,
-        compare_resolve_database_indexes as *const () as usize,
-        compare_database_sort_clubs_by_reputation as *const () as usize,
-        compare_club_has_enough_defenders as *const () as usize,
-        compare_club_has_enough_midfielders as *const () as usize,
-        compare_club_has_enough_strikers as *const () as usize,
-        compare_club_has_enough_hard_workers as *const () as usize,
-        compare_club_has_fit_goalkeeper as *const () as usize,
-        compare_club_has_ball_winning_midfielders as *const () as usize,
-        compare_club_lacks_aerial_strikers as *const () as usize,
-        compare_club_lacks_aerial_defenders as *const () as usize,
-        compare_club_lacks_fast_defenders as *const () as usize,
-        compare_club_has_fast_striker as *const () as usize,
-        compare_club_has_two_creative_midfielders as *const () as usize,
-        compare_club_squad_strength_band as *const () as usize,
-        compare_club_reputation_for_staff as *const () as usize,
-        compare_staff_count_disliked_staff_at_club as *const () as usize,
-        compare_staff_count_favoured_staff_at_club as *const () as usize,
-        compare_staff_remove_favoured_club as *const () as usize,
-        compare_club_remove_favoured_staff as *const () as usize,
-        compare_staff_remove_favoured_staff as *const () as usize,
-        compare_staff_remove_disliked_staff as *const () as usize,
-        compare_staff_get_favoured_staff as *const () as usize,
-        compare_club_add_favoured_staff as *const () as usize,
-        compare_club_add_disliked_staff as *const () as usize,
-        compare_staff_add_favoured_staff as *const () as usize,
-        compare_staff_add_disliked_club as *const () as usize,
-        compare_staff_fade_staff_relationships as *const () as usize,
-        compare_staff_get_disliked_staff as *const () as usize,
-        compare_staff_get_natural_position_mask as *const () as usize,
-        compare_club_count_squad_with_position_mask as *const () as usize,
-        compare_staff_pick_favoured_team_mate as *const () as usize,
-        compare_club_nation_is_not_argentina as *const () as usize,
-        compare_club_nation_not_argentina_france_croatia as *const () as usize,
-        compare_database_is_melanesian_nation as *const () as usize,
-        compare_database_is_polynesian_nation as *const () as usize,
-        compare_database_get_coaching_job_name as *const () as usize,
-        compare_database_format_years_between_dates as *const () as usize,
-        compare_database_compare_clubs_by_short_name as *const () as usize,
-        compare_database_compare_staff_by_full_name as *const () as usize,
-        compare_database_staff_matches_names as *const () as usize,
-        compare_database_compare_clubs_by_latitude as *const () as usize,
-        compare_database_compare_clubs_by_longitude as *const () as usize,
-        compare_database_format_name_from_ids as *const () as usize,
-        compare_database_format_official_name as *const () as usize,
-        compare_position_mask_get_text as *const () as usize,
-        compare_write_position_name as *const () as usize,
-        compare_write_player_description as *const () as usize,
-        compare_staff_is_best_favoured_candidate as *const () as usize,
-        compare_staff_get_player_strength_flags as *const () as usize,
-        compare_staff_get_player_weakness_flags as *const () as usize,
-        compare_database_count_club_physios as *const () as usize,
-        compare_club_is_b_team as *const () as usize,
-        compare_club_collect_non_playing_staff as *const () as usize,
-        compare_staff_is_player_attribute_visible as *const () as usize,
-        compare_staff_get_player_attribute_for_viewer as *const () as usize,
-        compare_database_get_non_player_attribute_name as *const () as usize,
-        compare_database_compare_staff_by_surname as *const () as usize,
-        compare_database_compare_clubs_by_reputation as *const () as usize,
-        compare_database_club_nation_is_eec as *const () as usize,
-        compare_get_regions_sorted_by_name as *const () as usize,
-        compare_compare_region_names as *const () as usize,
-        compare_staff_get_opinion_link_staff as *const () as usize,
-        compare_database_format_name_from_strings as *const () as usize,
-        compare_database_get_job_name as *const () as usize,
-        compare_database_get_language_name as *const () as usize,
-        compare_club_get_national_team_name as *const () as usize,
-        compare_database_get_player_attribute_name as *const () as usize,
-        compare_database_format_player_positions as *const () as usize,
-        compare_get_region_name as *const () as usize,
-        compare_get_continent_adjective as *const () as usize,
-        compare_set_key_ids as *const () as usize,
-        compare_set_key_ids_1080 as *const () as usize,
-        compare_database_player_initialisation as *const () as usize,
-        compare_nation_get_nationality_adjective as *const () as usize,
-        compare_sort_table as *const () as usize,
-        compare_build_h2h_table as *const () as usize,
-        compare_free_table as *const () as usize,
-        compare_league_check_complete as *const () as usize,
-        compare_pay_tv_rights as *const () as usize,
-        compare_league_record_season_honours as *const () as usize,
-        compare_comp_util_add_history_record as *const () as usize,
-        compare_comp_util_get_league_clash_type as *const () as usize,
-        compare_comp_util_get_club_strength_score as *const () as usize,
-        compare_comp_util_get_latest_placed_club as *const () as usize,
-        compare_find_friendly_match as *const () as usize,
-        compare_get_fixture_list_for_date as *const () as usize,
-        compare_find_next_fixture as *const () as usize,
-        compare_is_stadium_in_use as *const () as usize,
-        compare_friendly_international_date_resolve as *const () as usize,
-        compare_end_duty_for_competition as *const () as usize,
-        compare_end_duty_for_nation_in_competition as *const () as usize,
-        compare_prune_club_call_up_records as *const () as usize,
-        compare_add_player_to_squad as *const () as usize,
-        compare_national_teams_remove_player_from_squad as *const () as usize,
-        compare_release_overage_u21_players as *const () as usize,
-        compare_clear_current_competition as *const () as usize,
-        compare_release_competitions_of_continent as *const () as usize,
-        compare_call_up_replacement as *const () as usize,
-        compare_build_selection_pools as *const () as usize,
-        compare_compare_by_rating as *const () as usize,
-        compare_compare_by_club as *const () as usize,
-        compare_find_friendly_opponent as *const () as usize,
-        compare_find_tour_opponent as *const () as usize,
-        compare_apply_result_to_table as *const () as usize,
-        compare_points_for_result as *const () as usize,
-        compare_league_compare_table_rows_h2h as *const () as usize,
-        compare_league_compare_dates as *const () as usize,
-        compare_find_club_row as *const () as usize,
-        compare_contains_club as *const () as usize,
-        compare_rating_record_assign as *const () as usize,
-        compare_man_of_match_record_assign as *const () as usize,
-        compare_discipline_record_assign as *const () as usize,
-        compare_count_record_assign as *const () as usize,
-        compare_fans_player_record_assign as *const () as usize,
-        compare_tally_record_construct as *const () as usize,
-        compare_count_record_construct as *const () as usize,
-        compare_transfer_fee_record_assign as *const () as usize,
-        compare_goals_in_match_record_assign as *const () as usize,
-        compare_news_operator as *const () as usize,
-        compare_past_transfer_copy_construct as *const () as usize,
-        compare_future_transfer_assign as *const () as usize,
-        compare_regen_queue_entry_assign as *const () as usize,
-        compare_is_on_shortlist as *const () as usize,
-        compare_player_regen_pick_staff_for_non_player_data as *const () as usize,
-        compare_discipline_operator as *const () as usize,
-        compare_set_default_wage as *const () as usize,
-        compare_get_match_condition as *const () as usize,
-        compare_days_to_end_date as *const () as usize,
-        compare_clear_all_grievances as *const () as usize,
-        compare_check_transfer_request_withdrawal as *const () as usize,
-        compare_get_squad_placement as *const () as usize,
-        compare_move_to_first_team as *const () as usize,
-        compare_move_to_reserves as *const () as usize,
-        compare_contract_manager_operator as *const () as usize,
-        compare_contract_manager_raise_match_morale as *const () as usize,
-        compare_remove_talks_records as *const () as usize,
-        compare_remove_transfer_interest as *const () as usize,
-        compare_remove_scout_request as *const () as usize,
-        compare_remove_nickname_from_all as *const () as usize,
-        compare_remove_retirement as *const () as usize,
-        compare_player_regen_check_unemployed_retirement as *const () as usize,
-        compare_transfer_manager_offer_needs_work_permit as *const () as usize,
-        compare_update_work_permits as *const () as usize,
-        compare_get_scout as *const () as usize,
-        compare_get_current_run as *const () as usize,
-        compare_record_holder_construct as *const () as usize,
-        compare_pick_rival_manager_id as *const () as usize,
-        compare_transfer_fee_record_construct as *const () as usize,
-        compare_transfer_fee_record_construct_2 as *const () as usize,
-        compare_run_record_construct as *const () as usize,
-        compare_won_run_record_construct as *const () as usize,
-        compare_lost_run_record_construct as *const () as usize,
-        compare_unbeaten_run_record_construct as *const () as usize,
-        compare_winless_run_record_construct as *const () as usize,
-        compare_goals_in_match_record_construct as *const () as usize,
-        compare_youngest_player_record_construct as *const () as usize,
-        compare_write_deadline_news_text as *const () as usize,
-        compare_can_end_loan as *const () as usize,
-        compare_pow_double as *const () as usize,
-        compare_remove_held_offers as *const () as usize,
-        compare_hold_bans_for_loan as *const () as usize,
-        compare_fill_vacated_staff_job as *const () as usize,
-        compare_send_to_nation_club_managers as *const () as usize,
-        compare_get_scout_assignment as *const () as usize,
-        compare_cup_check_complete as *const () as usize,
-        compare_oldest_player_record_construct as *const () as usize,
-        compare_find_work_permit as *const () as usize,
-        compare_passes_work_permit_check as *const () as usize,
-        compare_drop_held_bans as *const () as usize,
-        compare_remove_pending_offers_for_staff as *const () as usize,
-        compare_schedule_decision_for_transfer as *const () as usize,
-        compare_send_to_all_managers as *const () as usize,
-        compare_send_to_division_managers as *const () as usize,
-        compare_send_to_nation_managers as *const () as usize,
-        compare_offer_breaks_fee_record as *const () as usize,
-        compare_get_condition as *const () as usize,
-        compare_get_selection_limit as *const () as usize,
-        compare_clear_invalid_watched_fixtures as *const () as usize,
-        compare_collect_club_scout_targets as *const () as usize,
-        compare_set_scout as *const () as usize,
-        compare_update_board_after_fixture as *const () as usize,
-        compare_process_match as *const () as usize,
-        compare_collect_club_shortlist_entries as *const () as usize,
-        compare_find_highest_offer_for_player as *const () as usize,
-        compare_get_all_time_record as *const () as usize,
-        compare_get_season_record as *const () as usize,
-        compare_queue_record_news as *const () as usize,
-        compare_add_spare_non_player_record as *const () as usize,
-        compare_add_retirement as *const () as usize,
-        compare_queue_staff_for_regen as *const () as usize,
-        compare_trigger_relegation_clauses as *const () as usize,
-        compare_remove_contract_offer as *const () as usize,
-        compare_is_player_suspended as *const () as usize,
-        compare_get_fixture_rules_scope as *const () as usize,
-        compare_get_ineligibility_code as *const () as usize,
-        compare_find_scheduled_friendly_slot as *const () as usize,
-        compare_send_to_continent_managers as *const () as usize,
-        compare_send_to_comp_region as *const () as usize,
-        compare_is_important_for as *const () as usize,
-        compare_get_slot_string as *const () as usize,
-        compare_post_financial_trouble_news as *const () as usize,
-        compare_can_club_scout_nation as *const () as usize,
-        compare_get_language_fluency as *const () as usize,
-        compare_rewind_staff_history as *const () as usize,
-        compare_set_slot_position as *const () as usize,
-        compare_club_has_offer_for_player as *const () as usize,
-        compare_find_club_offer_for_player as *const () as usize,
-        compare_player_has_pending_offer as *const () as usize,
-        compare_is_player_under_offer as *const () as usize,
-        compare_player_club_uses_bosman as *const () as usize,
-        compare_check_board_veto as *const () as usize,
-        compare_add_past_transfer as *const () as usize,
-        compare_add_work_permit as *const () as usize,
-        compare_add_first_team_appearance_money as *const () as usize,
-        compare_get_free_staff_contract_space as *const () as usize,
-        compare_add_staff_contract as *const () as usize,
-        compare_add_decision_date as *const () as usize,
-        compare_reset_morale_state as *const () as usize,
-        compare_init_from_current_contract as *const () as usize,
-        compare_get_expiry_band as *const () as usize,
-        compare_log_story as *const () as usize,
-        compare_expire_story_log as *const () as usize,
-        compare_has_logged_story as *const () as usize,
-        compare_add_transfer_interest as *const () as usize,
-        compare_compare_id_pair_keys as *const () as usize,
-        compare_compare_story_log_records as *const () as usize,
-        compare_decide_fixture_winner as *const () as usize,
-        compare_decide_tie_winner as *const () as usize,
-        compare_cup_compare_draw_entries_by_seed as *const () as usize,
-        compare_init_table_row as *const () as usize,
-        compare_league_get_club_array as *const () as usize,
-        compare_record_final_positions as *const () as usize,
-        compare_move_club_to_division as *const () as usize,
-        compare_comp_util_shuffle_pointer_array as *const () as usize,
-        compare_comp_util_sort_and_shuffle_top_clubs as *const () as usize,
-        compare_update_ban_progress as *const () as usize,
-        compare_release_ban as *const () as usize,
-        compare_clear_ban_history as *const () as usize,
-        compare_roll_recurring_injury as *const () as usize,
-        compare_reset_player_history as *const () as usize,
-        compare_injury_reset_player as *const () as usize,
-        compare_add_transfer_totals as *const () as usize,
-        compare_club_records_update_career_records as *const () as usize,
-        compare_update_season_rating_record as *const () as usize,
-        compare_is_comp_current_on_date as *const () as usize,
-        compare_candidate_has_nearby_date as *const () as usize,
-        compare_add_planned_friendly as *const () as usize,
-        compare_send_by_scope as *const () as usize,
-        compare_send_to_club_manager as *const () as usize,
-        compare_deliver_to_manager as *const () as usize,
-        compare_auto_respond_all as *const () as usize,
-        compare_has_urgent_items as *const () as usize,
-        compare_set_slot_string as *const () as usize,
-        compare_rate_player_form_for_story as *const () as usize,
-        compare_write_financial_trouble_news_text as *const () as usize,
-        compare_get_inbox_items as *const () as usize,
-        compare_retire_from_playing_staff as *const () as usize,
-        compare_pick_best_club_for_player as *const () as usize,
-        compare_pick_club_from_nation_list as *const () as usize,
-        compare_fix_missing_jobs as *const () as usize,
-        compare_best_manager_candidate_score as *const () as usize,
-        compare_schedule_offer as *const () as usize,
-        compare_get_squad_status_for_club as *const () as usize,
-        compare_shortlist_manager_estimate_squad_status as *const () as usize,
-        compare_shortlist_manager_release_club_slot_targets as *const () as usize,
-        compare_scout_covers_nation as *const () as usize,
-        compare_remove_friendly_match as *const () as usize,
-        compare_init_banned_nation_pairs as *const () as usize,
-        compare_assess_transfer_deal as *const () as usize,
-        compare_apply_transfer_confidence_changes as *const () as usize,
-        compare_resolve_board_ultimatum as *const () as usize,
-        compare_remove_contract as *const () as usize,
-        compare_resubmit_held_offers as *const () as usize,
-        compare_contract_manager_season_end_month as *const () as usize,
-        compare_staff_records_daily_update as *const () as usize,
-        compare_staff_records_end_season_for_nation as *const () as usize,
-        compare_find_manager_of_the_month as *const () as usize,
-        compare_process_pending_departures as *const () as usize,
-        compare_manager_manager_remove_player_from_squad as *const () as usize,
-        compare_remove_staff_from_club as *const () as usize,
-        compare_construct_news_item as *const () as usize,
-        compare_adjust_supporter_confidence as *const () as usize,
-        compare_adjust_board_confidence as *const () as usize,
-        compare_pick_ai_manager_response as *const () as usize,
-        compare_mark_item_read as *const () as usize,
-        compare_find_item_by_id as *const () as usize,
-        compare_queue_player_gratitude_news as *const () as usize,
-        compare_post_player_backing_request_news as *const () as usize,
-        compare_post_player_criticism_reaction_news as *const () as usize,
-        compare_build_position_lists as *const () as usize,
-        compare_sort_position_lists as *const () as usize,
-        compare_collect_interested_clubs as *const () as usize,
-        compare_add_shortlist_entry as *const () as usize,
-        compare_shortlist_manager_predict_selling_club_response as *const () as usize,
-        compare_transfer_manager_get_loan_period as *const () as usize,
-        compare_get_offer_response_delay as *const () as usize,
-        compare_pay_transfer_instalments as *const () as usize,
-        compare_remove_offer as *const () as usize,
-        compare_add_ban as *const () as usize,
-        compare_clear_bans_invalid_for_club as *const () as usize,
-        compare_restore_held_bans as *const () as usize,
-        compare_add_language as *const () as usize,
-        compare_improve_language as *const () as usize,
-        compare_player_stats_reset_player as *const () as usize,
-        compare_set_current_competition as *const () as usize,
-        compare_mark_clubs_with_fixtures as *const () as usize,
-        compare_discipline_remove_player as *const () as usize,
-        compare_compare_decision_dates as *const () as usize,
-        compare_process_due_decision_dates as *const () as usize,
-        compare_get_current_contract_offers as *const () as usize,
-        compare_sign_loan_contract as *const () as usize,
-        compare_end_loan as *const () as usize,
-        compare_toggle_squad_placement as *const () as usize,
-        compare_reset_board_for_new_manager as *const () as usize,
-        compare_get_departure_reason as *const () as usize,
-        compare_get_manager_record as *const () as usize,
-        compare_is_staff_suitable_for_job as *const () as usize,
-        compare_staff_can_take_job as *const () as usize,
-        compare_contract_manager_lower_match_morale as *const () as usize,
-        compare_shortlist_set_up_formation_slots as *const () as usize,
-        compare_update_club_shortlist as *const () as usize,
-        compare_suspend_clubs_shortlisting_player as *const () as usize,
-        compare_add_player_to_club_shortlists as *const () as usize,
-        compare_transfer_list_player as *const () as usize,
-        compare_pay_appearance_money as *const () as usize,
-        compare_club_rejects_offer as *const () as usize,
-        compare_detach_offer_players as *const () as usize,
-        compare_build_cash_offer_option as *const () as usize,
-        compare_add_illness_outbreak as *const () as usize,
-        compare_spread_illness_outbreaks as *const () as usize,
-        compare_injury_player_in_close_season as *const () as usize,
-        compare_init_squad_fitness as *const () as usize,
-        compare_init_records as *const () as usize,
-        compare_build_nation_club_lists as *const () as usize,
-        compare_pick_fans_player_of_year as *const () as usize,
-        compare_end_season_for_key_nation as *const () as usize,
-        compare_update_transfer_fee_records as *const () as usize,
-        compare_is_banned_nation_pair as *const () as usize,
-        compare_compare_nations_by_reputation_desc as *const () as usize,
-        compare_compare_fixture_records_by_date as *const () as usize,
-        compare_can_schedule_club_fixture as *const () as usize,
-        compare_compare_call_up_records_by_date as *const () as usize,
-        compare_add_qualified_nation as *const () as usize,
-        compare_cup_compare_entries_by_level_desc as *const () as usize,
-        compare_cup_compare_entries_by_level_asc as *const () as usize,
-        compare_limit_club_division_tier as *const () as usize,
-        compare_consider_sacking_manager as *const () as usize,
-        compare_issue_board_ultimatum as *const () as usize,
-        compare_remove_club_manager as *const () as usize,
-        compare_review_national_team_performance as *const () as usize,
-        compare_is_club_in_financial_trouble as *const () as usize,
-        compare_get_board_confidence_band as *const () as usize,
-        compare_add_promotion_record as *const () as usize,
-        compare_add_relegation_record as *const () as usize,
-        compare_add_qualified_for_round_record as *const () as usize,
-        compare_add_transfer_records as *const () as usize,
-        compare_add_knocked_out_record as *const () as usize,
-        compare_add_failed_to_qualify_record as *const () as usize,
-        compare_transfer_manager_get_offer_completion_date as *const () as usize,
-        compare_find_next_allowed_transfer_date as *const () as usize,
-        compare_transfer_manager_get_next_window_dates as *const () as usize,
-        compare_transfer_manager_calc_compensation_fee as *const () as usize,
-        compare_pay_fee_and_record_clauses as *const () as usize,
-        compare_transfer_manager_selling_club_must_accept as *const () as usize,
-        compare_update_work_permit_on_move as *const () as usize,
-        compare_complete_accepted_contract_offer as *const () as usize,
-        compare_offer_contract_to_offer_player as *const () as usize,
-        compare_collapse_offer as *const () as usize,
-        compare_make_loan_offer as *const () as usize,
-        compare_process_due_future_transfers as *const () as usize,
-        compare_player_regen_score_non_player_candidate as *const () as usize,
-        compare_player_regen_compare_retirements as *const () as usize,
-        compare_player_regen_compare_queue_entries as *const () as usize,
-        compare_get_category_record as *const () as usize,
-        compare_create_stats as *const () as usize,
-        compare_is_retirement_pending as *const () as usize,
-        compare_randomize_round_teams as *const () as usize,
-        compare_separate_shared_stadium_ties as *const () as usize,
-        compare_comp_util_scale_by_round as *const () as usize,
-        compare_comp_util_get_fixture_venue_side as *const () as usize,
-        compare_compare_nation_coefficients_desc as *const () as usize,
-        compare_has_scout_request as *const () as usize,
-        compare_clear_selection_slot as *const () as usize,
-        compare_set_set_piece_taker as *const () as usize,
-        compare_fill_squad_restrictions as *const () as usize,
-        compare_transfer_manager_check_matchday_squad_limit as *const () as usize,
-        compare_player_needs_work_permit as *const () as usize,
-        compare_can_club_bid_for_player as *const () as usize,
-        compare_note_terms_offered_to_exchange_player as *const () as usize,
-        compare_count_club_free_transfer_queue as *const () as usize,
-        compare_get_future_transfer as *const () as usize,
-        compare_remove_future_transfer as *const () as usize,
-        compare_add_future_transfer as *const () as usize,
-        compare_get_open_offers_for_club_players as *const () as usize,
-        compare_collapse_offers_for_player as *const () as usize,
-        compare_add_next_sale_percentage as *const () as usize,
-        compare_init_club_board_records as *const () as usize,
-        compare_process_ban_appeals as *const () as usize,
-        compare_can_watch_fixture as *const () as usize,
-        compare_player_regen_check_initial_retirement as *const () as usize,
-        compare_player_regen_check_retirement as *const () as usize,
-        compare_build_initial_retirement_list as *const () as usize,
-        compare_find_new_retirements as *const () as usize,
-        compare_player_regen_retire_from_non_playing_staff as *const () as usize,
-        compare_add_free_release_records as *const () as usize,
-        compare_get_player_injury_status as *const () as usize,
-        compare_schedule_offer_decision as *const () as usize,
-        compare_get_manager_of_year_candidates as *const () as usize,
-        compare_update_projected_positions as *const () as usize,
-        compare_compare_projection_by_reputation_desc as *const () as usize,
-        compare_compare_projection_by_points_desc as *const () as usize,
-        compare_find_fixtures as *const () as usize,
-        compare_collect_comp_fixtures_on_day as *const () as usize,
-        compare_fix_man_comp_has_fixture_on_date as *const () as usize,
-        compare_friendly_is_club_free_on_date as *const () as usize,
-        compare_has_club as *const () as usize,
-        compare_fix_man_get_partner_key_nation_index as *const () as usize,
-        compare_handle_transfer_request as *const () as usize,
-        compare_is_contract_staff_job as *const () as usize,
-        compare_staff_is_not_board_member as *const () as usize,
-        compare_init_work_permits as *const () as usize,
-        compare_get_clause_count as *const () as usize,
-        compare_find_first_team_appearance_money as *const () as usize,
-        compare_process_free_transfer_queue as *const () as usize,
-        compare_find_next_window_open_date as *const () as usize,
-        compare_find_negotiated_loan_contract as *const () as usize,
-        compare_build_clause_offer_option as *const () as usize,
-        compare_transfer_manager_is_rejection_reason_valid as *const () as usize,
-        compare_transfer_manager_get_squad_status_reason as *const () as usize,
-        compare_game_update_squad_relationships as *const () as usize,
-        compare_game_check_club_dressing_room_unrest as *const () as usize,
-        compare_game_spread_squad_morale_by_leadership as *const () as usize,
-        compare_game_check_players_missing_training as *const () as usize,
-        compare_game_update_comps_for_date as *const () as usize,
-        compare_manager_manager_adjust_board_confidence as *const () as usize,
-        compare_stadium_daily_update as *const () as usize,
-        compare_add_booking as *const () as usize,
-        compare_is_stadium_free_on_date as *const () as usize,
-        compare_fixture_has_scouted_player as *const () as usize,
-        compare_is_player_shortlisted as *const () as usize,
-        compare_add_first_cap_record as *const () as usize,
-        compare_player_stats_get_career_goals as *const () as usize,
-        compare_add_loan_records as *const () as usize,
-        compare_injury_compare_entry_dates as *const () as usize,
-        compare_player_stats_get_goals_for_club as *const () as usize,
-        compare_add_team_of_year_record as *const () as usize,
-        compare_staff_records_compare_clubs_by_manager_points as *const () as usize,
-        compare_find_stored_fixture as *const () as usize,
-        compare_insert_fixture as *const () as usize,
-        compare_remove_fixture as *const () as usize,
-        compare_create_due_planned_friendlies as *const () as usize,
-        compare_add_friendly_match as *const () as usize,
-        compare_plan_friendly_on_free_date as *const () as usize,
-        compare_cup_update_for_date as *const () as usize,
-        compare_set_up_round as *const () as usize,
-        compare_add_away_trip_illness_risk as *const () as usize,
-        compare_count_results_in_period as *const () as usize,
-        compare_update_rankings as *const () as usize,
-        compare_compare_result_points_desc as *const () as usize,
-        compare_append_result as *const () as usize,
-        compare_get_nation_strength_tier as *const () as usize,
-        compare_recalculate_scores as *const () as usize,
-        compare_comp_active_key_nation_of_fixture as *const () as usize,
-        compare_key_nation_is_world_cup_comp as *const () as usize,
-        compare_key_nation_is_international_comp as *const () as usize,
-        compare_key_nation_index_of_comp as *const () as usize,
-        compare_collect_ranked_order as *const () as usize,
-        compare_compare_ranking_score_desc as *const () as usize,
-        compare_update_city_weather as *const () as usize,
-        compare_read_region as *const () as usize,
-        compare_read_region_period as *const () as usize,
-        compare_game_update_nation_coefficients as *const () as usize,
-        compare_is_player_regen_day as *const () as usize,
-        compare_clamp_char_sum as *const () as usize,
-        compare_score_venue_for_fixture as *const () as usize,
-        compare_get_travel_distance_factor as *const () as usize,
-        compare_load_config as *const () as usize,
-        compare_get_coaching_factor as *const () as usize,
-        compare_get_coach_assignments as *const () as usize,
-        compare_get_training_load as *const () as usize,
-        compare_apply_training_progress as *const () as usize,
-        compare_find_position_training as *const () as usize,
-        compare_has_fast_position_training as *const () as usize,
-        compare_advance_week_counter as *const () as usize,
-        compare_take_spare_non_player_record as *const () as usize,
-        compare_get_recurring_injury_type as *const () as usize,
-        compare_friendly_update_for_date as *const () as usize,
-        compare_plan_ai_preseason_friendlies as *const () as usize,
-        compare_set_preseason_windows as *const () as usize,
-        compare_schedule_tour_matches as *const () as usize,
-        compare_compare_friendly_candidates_by_band as *const () as usize,
-        compare_compare_friendly_candidate_ptrs_by_nation as *const () as usize,
-        compare_cup_rank_teams as *const () as usize,
-        compare_comp_util_sort_clubs_by_strength as *const () as usize,
-        compare_set_club_final_position as *const () as usize,
-        compare_key_nation_index_of_nation as *const () as usize,
-        compare_key_nation_index_of_club as *const () as usize,
-        compare_key_nation_get_club_season_year as *const () as usize,
-        compare_key_nation_club_in_season as *const () as usize,
-        compare_key_nation_get_main_continent as *const () as usize,
-        compare_key_nation_get_main_nation as *const () as usize,
-        compare_get_stat as *const () as usize,
-        compare_player_stats_compare_language_entries as *const () as usize,
-        compare_player_stats_compare_history_by_club as *const () as usize,
-        compare_has_active_release_clause as *const () as usize,
-        compare_check_fifa_protected_period as *const () as usize,
-        compare_staff_contract_is_bonus_type_allowed as *const () as usize,
-        compare_check_postponement as *const () as usize,
-        compare_get_club_finance as *const () as usize,
-        compare_stadium_compare_bookings as *const () as usize,
-        compare_get_match_weather as *const () as usize,
-        compare_get_temperature as *const () as usize,
-        compare_get_pitch_condition as *const () as usize,
-        compare_get_wealth_band as *const () as usize,
-        compare_compare_players_by_ability as *const () as usize,
-        compare_stadium_compare_venues_by_capacity as *const () as usize,
-        compare_set_default_schedules as *const () as usize,
-        compare_set_type as *const () as usize,
-        compare_get_manager_schedule as *const () as usize,
-        compare_init_player_entries as *const () as usize,
-        compare_add_player_data_to_pool as *const () as usize,
-        compare_has_spare_non_player_record as *const () as usize,
-        compare_make_points_ban as *const () as usize,
-        compare_ruling_body_start_new_season as *const () as usize,
-        compare_compact_entries as *const () as usize,
-        compare_set_slot_coordinate as *const () as usize,
-        compare_check_duplicate_position as *const () as usize,
-        compare_set_marking_type as *const () as usize,
-        compare_draw_team_order as *const () as usize,
-        compare_get_fixture_side_teams as *const () as usize,
-        compare_collect_possible_teams as *const () as usize,
-        compare_player_search_get_club_target_rating as *const () as usize,
-        compare_player_search_slot_get_match_entry as *const () as usize,
-        compare_player_search_slot_sum_goals as *const () as usize,
-        compare_advance_offer_to_club_approval as *const () as usize,
-        compare_post_offer_accepted_news as *const () as usize,
-        compare_post_loan_offer_news as *const () as usize,
-        compare_handle_player_rejected_terms as *const () as usize,
-        compare_post_board_confidence_update_news as *const () as usize,
-        compare_post_board_expectations_news as *const () as usize,
-        compare_hold_offers_at_window_close as *const () as usize,
-        compare_post_fa_expectations_news as *const () as usize,
-        compare_post_supporter_protest_news as *const () as usize,
-        compare_add_transfer_negotiation as *const () as usize,
-        compare_post_job_rumour_news as *const () as usize,
-        compare_post_player_rejects_move_news as *const () as usize,
-        compare_add_weekly_merchandising_income as *const () as usize,
-        compare_sell_season_tickets as *const () as usize,
-        compare_upgrade_training_facilities as *const () as usize,
-        compare_process_club_finance_events as *const () as usize,
-        compare_try_board_debt_payment as *const () as usize,
-        compare_try_cash_injection as *const () as usize,
-        compare_get_max_staff_wage as *const () as usize,
-        compare_pay_bonuses as *const () as usize,
-        compare_adjust_max_wage as *const () as usize,
-        compare_apply_match_effects as *const () as usize,
-        compare_find_match_injury as *const () as usize,
-        compare_is_player_on_holiday as *const () as usize,
-        compare_player_regen_sign_for_club as *const () as usize,
-        compare_schedule_injury_retirement as *const () as usize,
-        compare_player_regen_post_retirement_announcement_news as *const () as usize,
-        compare_end_player_injury as *const () as usize,
-        compare_media_queue_player_apology_news as *const () as usize,
-        compare_clear_inbox as *const () as usize,
-        compare_withdraw_injured_player as *const () as usize,
-        compare_national_teams_post_player_withdrawn_news as *const () as usize,
-        compare_national_teams_post_replacement_needed_news as *const () as usize,
-        compare_national_teams_can_change_squad as *const () as usize,
-        compare_national_teams_player_in_squad as *const () as usize,
-        compare_schedule_assign_opponent as *const () as usize,
-        compare_add_month_award_record as *const () as usize,
-        compare_friendly_club_reputation_tier as *const () as usize,
-        compare_friendly_get_rest_days_for_kind as *const () as usize,
-        compare_get_contract_satisfaction as *const () as usize,
-        compare_post_wants_new_contract_news as *const () as usize,
-        compare_post_transfer_request_withdrawn_news as *const () as usize,
-        compare_confirm_offer_by_club as *const () as usize,
-        compare_try_complete_offer as *const () as usize,
-        compare_settle_previous_transfer_clauses as *const () as usize,
-        compare_try_loan_offer_for_player as *const () as usize,
-        compare_post_contract_expiry_news as *const () as usize,
-        compare_post_bosman_departure_news as *const () as usize,
-        compare_add_contract_offer as *const () as usize,
-        compare_remove_contract_offer_for_transfer as *const () as usize,
-        compare_contract_manager_lowest_wage_demand as *const () as usize,
-        compare_record_match_ratings as *const () as usize,
-        compare_add_player_rating as *const () as usize,
-        compare_find_best_player as *const () as usize,
-        compare_award_best_rated_player as *const () as usize,
-        compare_set_winner as *const () as usize,
-        compare_award_raise_winner_reputation as *const () as usize,
-        compare_update_player_fitness as *const () as usize,
-        compare_get_league_confidence_band as *const () as usize,
-        compare_set_board_ratings as *const () as usize,
-        compare_injury_daily_update as *const () as usize,
-        compare_post_due_recovery_news as *const () as usize,
-        compare_is_one_booking_from_ban as *const () as usize,
-        compare_process_regen_queue as *const () as usize,
-        compare_media_pick_outlet_type_for_club as *const () as usize,
-        compare_media_pick_outlet_type_for_person as *const () as usize,
-        compare_league_add_result as *const () as usize,
-        compare_copy_table as *const () as usize,
-        compare_league_set_predicted_positions as *const () as usize,
-        compare_record_international_result as *const () as usize,
-        compare_format_squad_label as *const () as usize,
-        compare_are_round_fixtures_known as *const () as usize,
-        compare_record_club_call_ups as *const () as usize,
-        compare_get_fixture_match_importance as *const () as usize,
-        compare_get_stage as *const () as usize,
-        compare_awol_daily_update as *const () as usize,
-        compare_has_missed_training as *const () as usize,
-        compare_has_fitness_incident as *const () as usize,
-        compare_miss_training as *const () as usize,
-        compare_end_absence as *const () as usize,
-        compare_set_flags as *const () as usize,
-        compare_reject_transfer_offer as *const () as usize,
-        compare_withdraw_transfer_offer as *const () as usize,
-        compare_post_offer_rejected_news as *const () as usize,
-        compare_unsettle_player_after_bid as *const () as usize,
-        compare_post_offer_collapsed_news as *const () as usize,
-        compare_post_appearance_money_news as *const () as usize,
-        compare_finalise_transfer as *const () as usize,
-        compare_post_transfer_completed_news as *const () as usize,
-        compare_post_transfer_agreed_news as *const () as usize,
-        compare_add_config_loan as *const () as usize,
-        compare_post_contract_end_news as *const () as usize,
-        compare_post_transfer_delay_request_news as *const () as usize,
-        compare_get_club_tactic as *const () as usize,
-        compare_select_tactic_slot as *const () as usize,
-        compare_get_active_tactic as *const () as usize,
-        compare_remove_player_from_selection as *const () as usize,
-        compare_swap_selection_slots as *const () as usize,
-        compare_has_selection_undo as *const () as usize,
-        compare_post_manager_under_pressure_news as *const () as usize,
-        compare_post_manager_departure_news as *const () as usize,
-        compare_post_manager_appointment_news as *const () as usize,
-        compare_pay_prize_money as *const () as usize,
-        compare_league_update_staff_records_for_status as *const () as usize,
-        compare_announce_team_status as *const () as usize,
-        compare_player_stats_record_match as *const () as usize,
-        compare_update_league_position_records as *const () as usize,
-        compare_send_record_news as *const () as usize,
-        compare_select_squads_for_fixture as *const () as usize,
-        compare_national_teams_post_player_called_up_news as *const () as usize,
-        compare_add_team_result_news as *const () as usize,
-        compare_count_slots_with_bids as *const () as usize,
-        compare_shortlist_manager_remove_from_transfer_list as *const () as usize,
-        compare_shortlist_manager_remove_from_loan_list as *const () as usize,
-        compare_update_staff_status as *const () as usize,
-        compare_shortlist_manager_add_to_loan_list as *const () as usize,
-        compare_shortlist_manager_max_fee_for_player_status as *const () as usize,
-        compare_allocate_transfer_budget as *const () as usize,
-        compare_shortlist_manager_squad_status_allowed as *const () as usize,
-        compare_scout_manager_write_list_name as *const () as usize,
-        compare_update_international_friendlies as *const () as usize,
-        compare_get_selected_list as *const () as usize,
-        compare_set_selected_list as *const () as usize,
-        compare_european_cup_collect_entrants as *const () as usize,
-        compare_build_qualifying_entry_table as *const () as usize,
-        compare_european_cup_advance_stage as *const () as usize,
-        compare_process_fixture as *const () as usize,
-        compare_european_cup_set_club_progress as *const () as usize,
-        compare_counts_for_fixture_clash as *const () as usize,
-        compare_choose_match_official as *const () as usize,
-        compare_clear_busy_flags as *const () as usize,
-        compare_renew_officials as *const () as usize,
-        compare_officials_manager_add_random_officials as *const () as usize,
-        compare_officials_manager_validate_officials as *const () as usize,
-        compare_officials_manager_operator as *const () as usize,
-        compare_add_year_award_record as *const () as usize,
-        compare_match_record_is_bigger_win as *const () as usize,
-        compare_match_record_is_bigger_defeat as *const () as usize,
-        compare_update_appearance_clauses_after_match as *const () as usize,
-        compare_add_international_team_appearance_money as *const () as usize,
-        compare_post_transfer_finalised_news as *const () as usize,
-        compare_check_board_transfer_veto as *const () as usize,
-        compare_post_board_ultimatum_news as *const () as usize,
-        compare_news_board_ultimatum_text as *const () as usize,
-        compare_free_transfer_staff as *const () as usize,
-        compare_set_on_holiday as *const () as usize,
-        compare_post_contract_talks_news as *const () as usize,
-        compare_eng_first_create_playoff_stage as *const () as usize,
-        compare_eng_second_create_play_off_stage as *const () as usize,
-        compare_eng_third_create_play_off_stage as *const () as usize,
-        compare_eng_second_update_staff_records_for_status as *const () as usize,
-        compare_eng_first_set_club_progress as *const () as usize,
-        compare_eng_third_set_club_progress as *const () as usize,
-        compare_update_positions_and_status as *const () as usize,
-        compare_eng_first_advance_stage as *const () as usize,
-        compare_eng_second_advance_stage as *const () as usize,
-        compare_european_cup_update_staff_records_for_status as *const () as usize,
-        compare_draw_quarter_finals as *const () as usize,
-        compare_european_cup_collect_club_list as *const () as usize,
-        compare_record_tactic_result as *const () as usize,
-        compare_get_captain as *const () as usize,
-        compare_set_captain as *const () as usize,
-        compare_get_international_duty_club as *const () as usize,
-        compare_national_teams_player_is_eligible as *const () as usize,
-        compare_collect_duty_competitions as *const () as usize,
-        compare_fill_match_record_from_fixture as *const () as usize,
-        compare_fill_staff_name_ref as *const () as usize,
-        compare_match_record_result_code as *const () as usize,
-        compare_move_nearby_club_fixtures as *const () as usize,
-        compare_reschedule_club_fixtures_near_date as *const () as usize,
-        compare_queue_fixture_moved_news as *const () as usize,
-        compare_report_poor_fitness as *const () as usize,
-        compare_post_fine_reaction_news as *const () as usize,
-        compare_post_coach_fine_feedback_news as *const () as usize,
-        compare_pick_random_pundit as *const () as usize,
-        compare_get_pundit_name as *const () as usize,
-        compare_queue_manager_fa_complaint_story as *const () as usize,
-        compare_update_wage_bill as *const () as usize,
-        compare_refresh_all_wage_bills as *const () as usize,
-        compare_finance_get_days_to_season_start as *const () as usize,
-        compare_add_players_sold as *const () as usize,
-        compare_pay_players_bought as *const () as usize,
-        compare_pay_sign_on_fee as *const () as usize,
-        compare_add_prize_money as *const () as usize,
-        compare_add_tv_revenue as *const () as usize,
-        compare_pay_wages as *const () as usize,
-        compare_pay_round_prize_money as *const () as usize,
-        compare_set_home_teams_for_round as *const () as usize,
-        compare_record_team_progress as *const () as usize,
-        compare_process_friendly_reply as *const () as usize,
-        compare_send_friendly_request as *const () as usize,
-        compare_build_nation_list as *const () as usize,
-        compare_draw_round as *const () as usize,
-        compare_comp_util_format_stage_round_name as *const () as usize,
-        compare_club_in_higher_division as *const () as usize,
-        compare_cup_update_staff_records_for_status as *const () as usize,
-        compare_cup_record_season_honours as *const () as usize,
-        compare_register_semi_final_losers_for_uefa as *const () as usize,
-        compare_reject_loan_offer as *const () as usize,
-        compare_check_squad_limits as *const () as usize,
-        compare_find_next_sale_percentage as *const () as usize,
-        compare_contains_player as *const () as usize,
-        compare_sync_scout_lists as *const () as usize,
-        compare_player_search_find_or_claim_player_slot as *const () as usize,
-        compare_value_player_for_club as *const () as usize,
-        compare_find_club_search_entry as *const () as usize,
-        compare_find_international_appearance_money as *const () as usize,
-        compare_update_after_match as *const () as usize,
-        compare_contract_manager_get_player_morale as *const () as usize,
-        compare_contract_manager_write_morale_text as *const () as usize,
-        compare_calc_player_value as *const () as usize,
-        compare_contract_manager_write_morale_comparison_text as *const () as usize,
-        compare_get_squad_flags_for_club as *const () as usize,
-        compare_board_named_players_after_match as *const () as usize,
-        compare_get_player_match_rating_verdict as *const () as usize,
-        compare_build_board_player_performance_text as *const () as usize,
-        compare_record_match_result as *const () as usize,
-        compare_add_league_finish_records as *const () as usize,
-        compare_add_supporters_player_of_year_record as *const () as usize,
-        compare_add_cup_runners_up_record as *const () as usize,
-        compare_add_cup_third_place_record as *const () as usize,
-        compare_record_manager_job_change as *const () as usize,
-        compare_process_transfer_squad_reactions as *const () as usize,
-        compare_queue_signing_celebration_story as *const () as usize,
-        compare_queue_sale_unrest_story as *const () as usize,
-        compare_process_match_income as *const () as usize,
-        compare_calc_gate_receipts as *const () as usize,
-        compare_pay_league_fine as *const () as usize,
-        compare_try_finance_boost_event as *const () as usize,
-        compare_try_board_takeover as *const () as usize,
-        compare_pay_other_costs as *const () as usize,
-        compare_build_international_date_table as *const () as usize,
-        compare_resolve_international_dates as *const () as usize,
-        compare_find_human_club_tournament as *const () as usize,
-        compare_plan_club_friendlies as *const () as usize,
-        compare_add_tournament as *const () as usize,
-        compare_find_human_club_open_invitation as *const () as usize,
-        compare_add_injury as *const () as usize,
-        compare_injury_post_injury_news as *const () as usize,
-        compare_is_player_awol as *const () as usize,
-        compare_pay_former_club_fee_cuts as *const () as usize,
-        compare_pay_next_sale_percentage as *const () as usize,
-        compare_post_sale_percentage_news as *const () as usize,
-        compare_is_work_permit_granted as *const () as usize,
-        compare_transfer_manager_get_squad_status_for_reason as *const () as usize,
-        compare_get_negotiation_slot as *const () as usize,
-        compare_apply_squad_reaction_to_player_story as *const () as usize,
-        compare_warn_squad_of_position_rival as *const () as usize,
-        compare_media_format_response_option_label as *const () as usize,
-        compare_serve_international_bans as *const () as usize,
-        compare_apply_appeal_result as *const () as usize,
-        compare_get_slot_text as *const () as usize,
-        compare_manager_manager_remove as *const () as usize,
-        compare_manager_manager_clear as *const () as usize,
-        compare_get_current as *const () as usize,
-        compare_sort_round_teams as *const () as usize,
-        compare_check_round_teams_for_nation as *const () as usize,
-        compare_cup_start_new_season as *const () as usize,
-        compare_comp_active_key_nation_of_club as *const () as usize,
-        compare_comp_active_key_nation_of_stadium as *const () as usize,
-        compare_comp_key_nation_entry_from_active_index as *const () as usize,
-        compare_resolve_same_day_clash as *const () as usize,
-        compare_get_club_first_fixture_year as *const () as usize,
-        compare_get_club_last_fixture_year as *const () as usize,
-        compare_save_finance_dat as *const () as usize,
-        compare_load_from_save as *const () as usize,
-        compare_squad_manager_save as *const () as usize,
-        compare_uefa_seeding_save_to_temp_file as *const () as usize,
-        compare_conmebol_seeding_save_to_temp_file as *const () as usize,
-        compare_save_temp_file as *const () as usize,
-        compare_club_history_save as *const () as usize,
-        compare_save_official_stats as *const () as usize,
-        compare_simulated_stats_save as *const () as usize,
-        compare_fix_man_save_club_dates as *const () as usize,
-        compare_fix_man_load_club_dates as *const () as usize,
-        compare_fix_man_save_fixture_leg_checks as *const () as usize,
-        compare_fin_prm_end_season_for_nation as *const () as usize,
-        compare_season_end_club_update as *const () as usize,
-        compare_news_dividend as *const () as usize,
-        compare_get_max_wage as *const () as usize,
-        compare_news_ground_works as *const () as usize,
-        compare_news_request_refused as *const () as usize,
-        compare_collect_day_clashes as *const () as usize,
-        compare_find_fixture_clashes as *const () as usize,
-        compare_fix_man_load_fixture_leg_checks as *const () as usize,
-        compare_find_new_fixture_date as *const () as usize,
-        compare_add_fixture as *const () as usize,
-        compare_set_year as *const () as usize,
-        compare_create_tie_fixtures as *const () as usize,
-        compare_post_draw_news as *const () as usize,
-        compare_update_transfer_window_news as *const () as usize,
-        compare_move_round_fixtures_to_set_dates as *const () as usize,
-        compare_remove_exchange_player as *const () as usize,
-        compare_check_offer_work_permits as *const () as usize,
-        compare_update_board_confidence_after_match as *const () as usize,
-        compare_post_board_match_reaction_news as *const () as usize,
-        compare_post_fa_performance_news as *const () as usize,
-        compare_set_season_expectations as *const () as usize,
-        compare_add_job_vacancy as *const () as usize,
-        compare_post_job_offer_news as *const () as usize,
-        compare_process_transfer_interest as *const () as usize,
-        compare_news_create_not_for_sale_story as *const () as usize,
-        compare_queue_trophy_praise_story as *const () as usize,
-        compare_arrange_international_friendlies as *const () as usize,
-        compare_friendly_check_match_invitation as *const () as usize,
-        compare_friendly_check_tournament_invitation as *const () as usize,
-        compare_national_teams_daily_update as *const () as usize,
-        compare_current_search_has_no_club as *const () as usize,
-        compare_is_club_in_session_searches as *const () as usize,
-        compare_select_squad as *const () as usize,
-        compare_scout_manager_scout_match as *const () as usize,
-        compare_get_edit_session as *const () as usize,
-        compare_set_edit_session as *const () as usize,
-        compare_transfer_manager_daily_update as *const () as usize,
-        compare_process_due_offer as *const () as usize,
-        compare_check_offer_restrictions as *const () as usize,
-        compare_accept_transfer_bid as *const () as usize,
-        compare_post_offer_made_news as *const () as usize,
-        compare_transfer_manager_can_loan_player as *const () as usize,
-        compare_league_update_for_date as *const () as usize,
-        compare_create_fixtures as *const () as usize,
-        compare_league_promote_and_relegate as *const () as usize,
-        compare_fix_man_daily_update as *const () as usize,
-        compare_get_fixture_list as *const () as usize,
-        compare_load_fixtures as *const () as usize,
-        compare_map_fixture_tree as *const () as usize,
-        compare_get_first_stage_of_group as *const () as usize,
-        compare_get_current_stage as *const () as usize,
-        compare_update_player_training as *const () as usize,
-        compare_get_player_schedule as *const () as usize,
-        compare_get_category_level as *const () as usize,
-        compare_remove_or_restore_training_progress as *const () as usize,
-        compare_get_training_attribute_change as *const () as usize,
-        compare_get_position_aptitude as *const () as usize,
-        compare_process_retirements as *const () as usize,
-        compare_player_regen_post_retirement_news as *const () as usize,
-        compare_player_regen_post_youth_promotion_news as *const () as usize,
-        compare_clear_awol as *const () as usize,
-        compare_clear_missed_training as *const () as usize,
-        compare_awol_post_missed_training_news as *const () as usize,
-        compare_shortlist_manager_is_compensation_deal as *const () as usize,
-        compare_shortlist_compare_slots_by_index as *const () as usize,
-        compare_mark_player_under_offer as *const () as usize,
-        compare_add_league_champions_record as *const () as usize,
-        compare_add_cup_winners_record as *const () as usize,
-        compare_clear_human_manager_record as *const () as usize,
-        compare_ai_respond_to_bid as *const () as usize,
-        compare_add_loan_negotiation as *const () as usize,
-        compare_make_exchange_option as *const () as usize,
-        compare_schedule_loan_end as *const () as usize,
-        compare_make_club_bids as *const () as usize,
-        compare_staff_interest_in_joining_club as *const () as usize,
-        compare_construct_staff_contract as *const () as usize,
-        compare_england_rules_can_loan_player as *const () as usize,
-        compare_record_loan as *const () as usize,
-        compare_england_rules_daily_update as *const () as usize,
-        compare_england_rules_get_loan_period as *const () as usize,
-        compare_scotland_rules_can_loan_player as *const () as usize,
-        compare_scotland_rules_get_loan_period as *const () as usize,
-        compare_italy_rules_can_loan_player as *const () as usize,
-        compare_ireland_rules_can_loan_player as *const () as usize,
-        compare_spain_rules_can_loan_player as *const () as usize,
-        compare_move_fixtures_for_tv as *const () as usize,
-        compare_send_group_draw_news as *const () as usize,
-        compare_send_fixture_list_news as *const () as usize,
-        compare_add_transfer_offer as *const () as usize,
-        compare_accept_loan_offer as *const () as usize,
-        compare_handle_player_accepted_terms as *const () as usize,
-        compare_post_transfer_listed_news as *const () as usize,
-        compare_contract_manager_offer_contract as *const () as usize,
-        compare_draw_groups as *const () as usize,
-        compare_run_group_draw as *const () as usize,
-        compare_world_cup_update_for_date as *const () as usize,
-        compare_world_cup_create_group_table as *const () as usize,
-        compare_world_cup_create_group_stage as *const () as usize,
-        compare_world_cup_set_predicted_positions as *const () as usize,
-        compare_world_cup_create_schedule as *const () as usize,
-        compare_add_qualified_team as *const () as usize,
-        compare_seed_teams as *const () as usize,
-        compare_update_coach_assignments as *const () as usize,
-        compare_reassign_squad_schedules as *const () as usize,
-        compare_training_manager_cpp_0x8b2230 as *const () as usize,
-        compare_build_career_history as *const () as usize,
-        compare_player_stats_years_since_at_club as *const () as usize,
-        compare_player_stats_compare_history_by_staff as *const () as usize,
-        compare_player_setup_injury_from_name as *const () as usize,
-        compare_post_recovery_news as *const () as usize,
-        compare_injury_get_category_name as *const () as usize,
-        compare_player_search_scout_match as *const () as usize,
-        compare_player_search_record_scouted_club_match as *const () as usize,
-        compare_send_club_international_report_news as *const () as usize,
-        compare_national_teams_post_call_up_news as *const () as usize,
-        compare_national_teams_collect_fixture_opponents as *const () as usize,
-        compare_scout_manager_daily_update as *const () as usize,
-        compare_send_scout_reports as *const () as usize,
-        compare_send_scout_report_news as *const () as usize,
-        compare_sign_contract as *const () as usize,
-        compare_regenerate_as_youth_player as *const () as usize,
-        compare_remove_dispute as *const () as usize,
-        compare_load_from_disk as *const () as usize,
-        compare_swap_bytes_16_array as *const () as usize,
-        compare_swap_bytes_32_array as *const () as usize,
-        compare_set_up_officials as *const () as usize,
-        compare_officials_manager_compare_comp_level as *const () as usize,
-        compare_on_friendly_fixture_cancelled as *const () as usize,
-        compare_friendly_cancel_national_fixture as *const () as usize,
-        compare_cancel_tournament as *const () as usize,
-        compare_officials_manager_compare_nation_then_quality_desc as *const () as usize,
-        compare_officials_manager_compare_nation_then_quality_asc as *const () as usize,
-        compare_archive_player_stats as *const () as usize,
-        compare_player_setup_find_staff as *const () as usize,
-        compare_player_setup_read_quoted_token as *const () as usize,
-        compare_player_setup_type_from_name as *const () as usize,
-        compare_draw_phase1_groups as *const () as usize,
-        compare_european_cup_compare_clubs_by_seed as *const () as usize,
-        compare_european_cup_rank_teams as *const () as usize,
-        compare_draw_phase2_groups as *const () as usize,
-        compare_european_cup_compare_phase2_draw_entries as *const () as usize,
-        compare_comp_util_get_parent_stage_id as *const () as usize,
-        compare_european_cup_create_round_table as *const () as usize,
-        compare_set_club_season_expectations as *const () as usize,
-        compare_relegate_club_to_division as *const () as usize,
-        compare_all_stages_complete as *const () as usize,
-        compare_comp_collect_club_list as *const () as usize,
-        compare_find_club_progress as *const () as usize,
-        compare_roll_coefficients as *const () as usize,
-        compare_set_place_counts as *const () as usize,
-        compare_uefa_find_nth_unplaced_club_of_nation as *const () as usize,
-        compare_collect_european_clubs as *const () as usize,
-        compare_assign_champions_league_places as *const () as usize,
-        compare_assign_intertoto_places as *const () as usize,
-        compare_assign_uefa_cup_places as *const () as usize,
-        compare_pick_english_intertoto_club as *const () as usize,
-        compare_update_season as *const () as usize,
-        compare_assign_libertadores_places as *const () as usize,
-        compare_find_nth_unqualified_club_of_nation as *const () as usize,
-        compare_is_mercosur_invited_club as *const () as usize,
-        compare_collect_conmebol_clubs as *const () as usize,
-        compare_update_for_new_season as *const () as usize,
-        compare_set_bra_champ_cup_winner as *const () as usize,
-        compare_find_hosts as *const () as usize,
-        compare_find_next_hosts as *const () as usize,
-        compare_host_country_daily_update as *const () as usize,
-        compare_construct_england_rules as *const () as usize,
-        compare_construct_usa_rules as *const () as usize,
-        compare_australia_rules as *const () as usize,
-        compare_spain_rules_init_transfer_windows as *const () as usize,
-        compare_italy_rules_init_transfer_windows as *const () as usize,
-        compare_france_rules_init_transfer_windows as *const () as usize,
-        compare_construct_brazil_rules as *const () as usize,
-        compare_germany_rules_init_transfer_windows as *const () as usize,
-        compare_construct_scotland_rules as *const () as usize,
-        compare_intertoto_cup_update_for_date as *const () as usize,
-        compare_intertoto_cup_update_staff_records_for_status as *const () as usize,
-        compare_uefa_cup_update_staff_records_for_status as *const () as usize,
-        compare_con_champ_select_qualified_clubs as *const () as usize,
-        compare_con_champ_update_for_date as *const () as usize,
-        compare_con_champ_set_up_rounds as *const () as usize,
-        compare_ita_cup_set_up_rules as *const () as usize,
-        compare_ita_c_cup_set_up_rules as *const () as usize,
-        compare_bra_champ_cup_set_up_rules as *const () as usize,
-        compare_african_nations_update_staff_records_for_status as *const () as usize,
-        compare_goldcup_update_staff_records_for_status as *const () as usize,
-        compare_wc_oceania_league_update_staff_records_for_status as *const () as usize,
-        compare_conmebol_liber_set_up_rules as *const () as usize,
-        compare_con_merc_cup_set_up_rules as *const () as usize,
-        compare_oceania_club_champ_set_up_rules as *const () as usize,
-        compare_wc_europe_league_set_up_rules as *const () as usize,
-        compare_wc_south_american_league_set_up_rules as *const () as usize,
-        compare_wc_asia_league_set_up_rules as *const () as usize,
-        compare_goldcup_set_up_rules as *const () as usize,
-        compare_african_nations_set_up_rules as *const () as usize,
-        compare_wc_oceania_league_set_up_rules as *const () as usize,
-        compare_conmebol_liber_select_qualified_clubs as *const () as usize,
-        compare_conmebol_liber_update_staff_records_for_status as *const () as usize,
-        compare_conmebol_liber_advance_stage as *const () as usize,
-        compare_african_nations_advance_stage as *const () as usize,
-        compare_init_group_a_table as *const () as usize,
-        compare_african_nations_record_season_honours as *const () as usize,
-        compare_bra_nat_first_set_up_rules as *const () as usize,
-        compare_bra_nat_second_set_up_rules as *const () as usize,
-        compare_bra_nat_third_set_up_rules as *const () as usize,
-        compare_bra_reg_central_set_up_rules as *const () as usize,
-        compare_bra_reg_gaucho_set_up_rules as *const () as usize,
-        compare_bra_reg_santa_set_up_rules as *const () as usize,
-        compare_bra_reg_parana_set_up_rules as *const () as usize,
-        compare_bra_reg_pern_set_up_rules as *const () as usize,
-        compare_bra_reg_rio_set_up_rules as *const () as usize,
-        compare_bra_reg_goias_set_up_rules as *const () as usize,
-        compare_jap_j1_set_up_rules as *const () as usize,
-        compare_jap_j2_set_up_rules as *const () as usize,
-        compare_aus_nsl_set_up_rules as *const () as usize,
-        compare_usa_mls_set_up_rules as *const () as usize,
-        compare_bra_reg_gaucho_record_season_honours as *const () as usize,
-        compare_arg_second_record_season_honours as *const () as usize,
-        compare_bra_nat_first_update_staff_records_for_status as *const () as usize,
-        compare_bra_nat_third_update_staff_records_for_status as *const () as usize,
-        compare_bra_reg_bahia_update_staff_records_for_status as *const () as usize,
-        compare_bra_reg_central_update_staff_records_for_status as *const () as usize,
-        compare_bra_reg_minas_gerais_update_staff_records_for_status as *const () as usize,
-        compare_aus_nsl_update_staff_records_for_status as *const () as usize,
-        compare_bra_reg_minas_gerais_set_club_progress as *const () as usize,
-        compare_usa_mls_set_club_progress as *const () as usize,
-        compare_bra_nat_third_set_club_progress as *const () as usize,
-        compare_usa_mls_update_staff_records_for_status as *const () as usize,
-        compare_usa_mls_add_result as *const () as usize,
-        compare_usa_mls_get_club_all_star_conference as *const () as usize,
-        compare_eng_prm_set_up_rules as *const () as usize,
-        compare_eng_first_set_up_rules as *const () as usize,
-        compare_eng_second_set_up_rules as *const () as usize,
-        compare_eng_third_set_up_rules as *const () as usize,
-        compare_eng_prm_create_table as *const () as usize,
-        compare_eng_second_create_table as *const () as usize,
-        compare_eng_third_create_table as *const () as usize,
-        compare_eng_first_create_table as *const () as usize,
-        compare_ita_ser_a_set_up_rules as *const () as usize,
-        compare_ita_ser_b_set_up_rules as *const () as usize,
-        compare_ita_ser_c1a_set_up_rules as *const () as usize,
-        compare_ita_ser_c1b_set_up_rules as *const () as usize,
-        compare_ita_ser_a_create_table as *const () as usize,
-        compare_ita_ser_b_create_table as *const () as usize,
-        compare_ita_ser_c1a_create_table as *const () as usize,
-        compare_ita_ser_c1b_create_table as *const () as usize,
-        compare_fra_first_set_up_rules as *const () as usize,
-        compare_fra_second_set_up_rules as *const () as usize,
-        compare_fra_third_set_up_rules as *const () as usize,
-        compare_fra_first_create_table as *const () as usize,
-        compare_fra_second_create_table as *const () as usize,
-        compare_fra_third_create_table as *const () as usize,
-        compare_spa_first_set_up_rules as *const () as usize,
-        compare_spa_second_set_up_rules as *const () as usize,
-        compare_spa_lower_set_up_rules as *const () as usize,
-        compare_spa_first_create_table as *const () as usize,
-        compare_ita_ser_c2a_update_staff_records_for_status as *const () as usize,
-        compare_spa_first_set_club_progress as *const () as usize,
-        compare_fra_cfa_create_group_table as *const () as usize,
-        compare_fra_lower_create_table as *const () as usize,
-        compare_ita_ser_c1a_set_club_progress as *const () as usize,
-        compare_ita_ser_c1b_set_club_progress as *const () as usize,
-        compare_eng_cc_cup_create_round_table as *const () as usize,
-        compare_eng_fa_cup_create_round_table as *const () as usize,
-        compare_eng_charity_create_round_table as *const () as usize,
-        compare_fra_cup_create_round_table as *const () as usize,
-        compare_fra_lge_cup_create_round_table as *const () as usize,
-        compare_spa_cup_create_round_table as *const () as usize,
-        compare_fra_super_create_round_table as *const () as usize,
-        compare_spa_super_create_round_table as *const () as usize,
-        compare_jap_super_create_round_table as *const () as usize,
-        compare_eng_cc_cup_collect_entrants as *const () as usize,
-        compare_eng_auto_cup_collect_entrants as *const () as usize,
-        compare_eng_charity_select_teams as *const () as usize,
-        compare_fra_cup_collect_entrants as *const () as usize,
-        compare_fra_lge_cup_collect_entrants as *const () as usize,
-        compare_fra_super_select_teams as *const () as usize,
-        compare_spa_super_select_teams as *const () as usize,
-        compare_jap_super_select_teams as *const () as usize,
-        compare_usa_mls_all_stars_create_round_table as *const () as usize,
-        compare_eng_cc_cup_update_for_date as *const () as usize,
-        compare_eng_fa_cup_update_for_date as *const () as usize,
-        compare_usa_mls_all_stars_update_for_date as *const () as usize,
-        compare_jap_j_cup_create_round_table as *const () as usize,
-        compare_jap_emp_cup_create_round_table as *const () as usize,
-        compare_usa_open_cup_create_round_table as *const () as usize,
-        compare_jap_j_cup_collect_entrants as *const () as usize,
-        compare_usa_open_cup_collect_entrants as *const () as usize,
-        compare_jap_emp_cup_collect_entrants as *const () as usize,
-        compare_get_squad_number as *const () as usize,
-        compare_club_uses_squad_numbers as *const () as usize,
-        compare_set_squad_number as *const () as usize,
-        compare_allocate_squad_number as *const () as usize,
-        compare_assign_club_squad_numbers as *const () as usize,
-        compare_init_new_game as *const () as usize,
-        compare_assign_league_squad_numbers as *const () as usize,
-        compare_select_euro_registered_players as *const () as usize,
-        compare_construct_holland_rules as *const () as usize,
-        compare_construct_croatia_rules as *const () as usize,
-        compare_construct_ireland_rules as *const () as usize,
-        compare_construct_norway_rules as *const () as usize,
-        compare_construct_northern_ireland_rules as *const () as usize,
-        compare_construct_wales_rules as *const () as usize,
-        compare_construct_turkey_rules as *const () as usize,
-        compare_construct_poland_rules as *const () as usize,
-        compare_construct_finland_rules as *const () as usize,
-        compare_argentina_rules_init_transfer_windows as *const () as usize,
-        compare_portugal_rules_init_transfer_windows as *const () as usize,
-        compare_construct_korea_rules as *const () as usize,
-        compare_greece_rules_init_transfer_windows as *const () as usize,
-        compare_russia_rules_init_transfer_windows as *const () as usize,
-        compare_belgium_rules_init_transfer_windows as *const () as usize,
-        compare_process_euro_registration as *const () as usize,
-        compare_create_default_table as *const () as usize,
-        compare_build_venue_list as *const () as usize,
-        compare_bra_nat_first_create_table as *const () as usize,
-        compare_bra_nat_second_create_table as *const () as usize,
-        compare_bra_nat_third_create_table as *const () as usize,
-        compare_bra_reg_bahia_create_table as *const () as usize,
-        compare_bra_reg_central_load_region_clubs as *const () as usize,
-        compare_bra_reg_gaucho_load_region_clubs as *const () as usize,
-        compare_bra_reg_goias_create_table as *const () as usize,
-        compare_bra_reg_minas_gerais_create_table as *const () as usize,
-        compare_bra_reg_north_create_table as *const () as usize,
-        compare_bra_reg_northeast_create_table as *const () as usize,
-        compare_bra_reg_parana_create_table as *const () as usize,
-        compare_bra_reg_pern_create_table as *const () as usize,
-        compare_bra_reg_rio_create_table as *const () as usize,
-        compare_bra_reg_santa_create_table as *const () as usize,
-        compare_bra_reg_sp_create_table as *const () as usize,
-        compare_jap_j1_create_table as *const () as usize,
-        compare_jap_j2_create_table as *const () as usize,
-        compare_aus_nsl_create_table as *const () as usize,
-        compare_bra_reg_bahia_create_semi_final_stage as *const () as usize,
-        compare_bra_reg_north_create_semi_final_stage as *const () as usize,
-        compare_bra_reg_northeast_create_semi_final_stage as *const () as usize,
-        compare_bra_reg_pern_create_semi_final_stage as *const () as usize,
-        compare_bra_reg_santa_create_semi_final_stage as *const () as usize,
-        compare_bra_reg_sp_create_semi_final_stage as *const () as usize,
-        compare_bra_reg_gaucho_create_knockout_stage as *const () as usize,
-        compare_bra_reg_central_create_knockout_stage as *const () as usize,
-        compare_bra_reg_goias_create_knockout_stage as *const () as usize,
-        compare_ita_ser_a_update_for_date as *const () as usize,
-        compare_ita_ser_b_update_for_date as *const () as usize,
-        compare_ita_league_sort_clubs_level_on_points as *const () as usize,
-        compare_ita_ser_a_update_staff_records_for_status as *const () as usize,
-        compare_ita_ser_c1a_advance_stage as *const () as usize,
-        compare_create_playoff_stages as *const () as usize,
-        compare_ita_ser_c1b_advance_stage as *const () as usize,
-        compare_create_play_off_stages as *const () as usize,
-        compare_eng_third_advance_stage as *const () as usize,
-        compare_construct_eng_prm as *const () as usize,
-        compare_construct_eng_first as *const () as usize,
-        compare_construct_eng_second as *const () as usize,
-        compare_construct_eng_third as *const () as usize,
-        compare_construct_ita_ser_a as *const () as usize,
-        compare_construct_ita_ser_b as *const () as usize,
-        compare_construct_ita_ser_c1a as *const () as usize,
-        compare_construct_ita_ser_c1b as *const () as usize,
-        compare_construct_fra_second as *const () as usize,
-        compare_construct_fra_third as *const () as usize,
-        compare_construct_spa_second as *const () as usize,
-        compare_construct_spa_first as *const () as usize,
-        compare_construct_spa_lower as *const () as usize,
-        compare_spa_second_create_table as *const () as usize,
-        compare_spa_lower_create_table as *const () as usize,
-        compare_fra_cfa_set_up_rules as *const () as usize,
-        compare_construct_fra_cfa as *const () as usize,
-        compare_construct_fra_lower as *const () as usize,
-        compare_destroy_fra_cfa as *const () as usize,
-        compare_destroy_fra_lower as *const () as usize,
-        compare_create_fixed_fixtures as *const () as usize,
-        compare_ita_ser_b_set_up_fixed_fixtures as *const () as usize,
-        compare_ita_ser_c1a_set_up_fixed_fixtures as *const () as usize,
-        compare_ita_ser_c1b_set_up_fixed_fixtures as *const () as usize,
-        compare_stub_return_one_ret8 as *const () as usize,
-        compare_stub_return_one_ret4 as *const () as usize,
-        compare_set_fixture_venue as *const () as usize,
-        compare_find_available_venue as *const () as usize,
-        compare_calculate_match_attendance as *const () as usize,
-        compare_fra_third_create_schedule as *const () as usize,
-        compare_fra_second_create_schedule as *const () as usize,
-        compare_fra_lower_create_schedule as *const () as usize,
-        compare_fra_cfa_create_schedule as *const () as usize,
-        compare_ita_ser_c1a_create_schedule as *const () as usize,
-        compare_ita_ser_c1b_create_schedule as *const () as usize,
-        compare_ita_ser_a_create_schedule as *const () as usize,
-        compare_ita_ser_b_create_schedule as *const () as usize,
-        compare_fra_first_create_schedule as *const () as usize,
-        compare_bra_reg_minas_gerais_advance_stage as *const () as usize,
-        compare_bra_reg_minas_gerais_create_final_stage as *const () as usize,
-        compare_bra_reg_minas_gerais_record_season_honours as *const () as usize,
-        compare_bra_reg_parana_advance_stage as *const () as usize,
-        compare_bra_reg_parana_create_final_stage as *const () as usize,
-        compare_bra_reg_parana_record_season_honours as *const () as usize,
-        compare_bra_reg_rio_advance_stage as *const () as usize,
-        compare_bra_reg_rio_create_final_stage as *const () as usize,
-        compare_bra_reg_rio_record_season_honours as *const () as usize,
-        compare_ita_cup_create_schedule as *const () as usize,
-        compare_ita_c_cup_create_schedule as *const () as usize,
-        compare_ita_super_create_round_table as *const () as usize,
-        compare_ita_c1_super_create_round_table as *const () as usize,
-        compare_ita_cup_select_entrants as *const () as usize,
-        compare_ita_c_cup_select_entrants as *const () as usize,
-        compare_ita_super_init_team_list as *const () as usize,
-        compare_bra_cup_create_round_table as *const () as usize,
-        compare_bra_cup_build_team_table as *const () as usize,
-        compare_bra_cup_set_up_rounds as *const () as usize,
-        compare_conmebol_liber_create_schedule as *const () as usize,
-        compare_conmebol_merc_create_schedule as *const () as usize,
-        compare_conmebol_merc_select_invited_clubs as *const () as usize,
-        compare_eng_second_create_schedule as *const () as usize,
-        compare_eng_third_create_schedule as *const () as usize,
-        compare_eng_first_create_schedule as *const () as usize,
-        compare_eng_prm_create_schedule as *const () as usize,
-        compare_spa_first_create_schedule as *const () as usize,
-        compare_bra_reg_bahia_start_new_season as *const () as usize,
-        compare_bra_reg_bahia_advance_stage as *const () as usize,
-        compare_bra_reg_central_start_new_season as *const () as usize,
-        compare_bra_reg_central_advance_stage as *const () as usize,
-        compare_bra_reg_gaucho_start_new_season as *const () as usize,
-        compare_bra_reg_gaucho_advance_stage as *const () as usize,
-        compare_bra_reg_goias_start_new_season as *const () as usize,
-        compare_bra_reg_goias_advance_stage as *const () as usize,
-        compare_bra_reg_north_start_new_season as *const () as usize,
-        compare_bra_reg_north_advance_stage as *const () as usize,
-        compare_bra_reg_northeast_start_new_season as *const () as usize,
-        compare_bra_reg_northeast_advance_stage as *const () as usize,
-        compare_bra_reg_pern_start_new_season as *const () as usize,
-        compare_bra_reg_pern_advance_stage as *const () as usize,
-        compare_bra_reg_santa_start_new_season as *const () as usize,
-        compare_bra_reg_santa_advance_stage as *const () as usize,
-        compare_bra_reg_sp_start_new_season as *const () as usize,
-        compare_bra_reg_sp_advance_stage as *const () as usize,
-        compare_spa_second_create_schedule as *const () as usize,
-        compare_spa_lower_create_schedule as *const () as usize,
-        compare_construct_fra_first as *const () as usize,
-        compare_bra_nat_first_advance_stage as *const () as usize,
-        compare_bra_nat_first_create_play_off_stage as *const () as usize,
-        compare_bra_nat_second_advance_stage as *const () as usize,
-        compare_bra_nat_second_create_play_off_stage as *const () as usize,
-        compare_bra_nat_first_start_new_season as *const () as usize,
-        compare_bra_nat_first_process_promotion_relegation_chain as *const () as usize,
-        compare_bra_nat_second_start_new_season as *const () as usize,
-        compare_jap_j1_advance_stage as *const () as usize,
-        compare_create_championship_final_stage as *const () as usize,
-        compare_jap_j1_start_new_season as *const () as usize,
-        compare_init_default_table as *const () as usize,
-        compare_post_host_news as *const () as usize,
-        compare_load_temp_file as *const () as usize,
-        compare_league_process_promotion_relegation_chain as *const () as usize,
-        compare_send_prize_money_news as *const () as usize,
-        compare_send_tv_rights_news as *const () as usize,
-        compare_bra_champ_cup_create_schedule as *const () as usize,
-        compare_con_merc_cup_create_schedule as *const () as usize,
-        compare_eur_super_cup_create_round_table as *const () as usize,
-        compare_asia_super_cup_create_round_table as *const () as usize,
-        compare_asia_club_champ_create_round_table as *const () as usize,
-        compare_asia_cup_winner_create_round_table as *const () as usize,
-        compare_eng_auto_cup_create_round_table as *const () as usize,
-        compare_goldcup_create_schedule as *const () as usize,
-        compare_african_nations_create_schedule as *const () as usize,
-        compare_fifa_confed_create_schedule as *const () as usize,
-        compare_intertoto_cup_create_round_table as *const () as usize,
-        compare_world_club_cup_create_round_table as *const () as usize,
-        compare_inter_amer_cup_create_round_table as *const () as usize,
-        compare_con_champ_create_round_table as *const () as usize,
-        compare_uefa_cup_create_round_table as *const () as usize,
-        compare_intertoto_cup_collect_entrants as *const () as usize,
-        compare_intertoto_cup_collect_club_list as *const () as usize,
-        compare_eur_super_cup_select_teams as *const () as usize,
-        compare_asia_super_cup_select_teams as *const () as usize,
-        compare_ita_c1_super_init_team_list as *const () as usize,
-        compare_oceania_club_champ_create_schedule as *const () as usize,
-        compare_asia_club_champ_build_team_table as *const () as usize,
-        compare_create_team_entries as *const () as usize,
-        compare_bra_reg_rio_create_half_season_stage as *const () as usize,
-        compare_bra_reg_minas_gerais_create_half_season_stage as *const () as usize,
-        compare_create_half_stage as *const () as usize,
-        compare_jap_j1_create_half_season_stage as *const () as usize,
-        compare_bra_reg_rio_start_new_season as *const () as usize,
-        compare_bra_reg_minas_gerais_start_new_season as *const () as usize,
-        compare_bra_reg_parana_start_new_season as *const () as usize,
-        compare_aus_nsl_advance_stage as *const () as usize,
-        compare_create_finals_series_stage as *const () as usize,
-        compare_create_grand_final_stage as *const () as usize,
-        compare_usa_mls_advance_stage as *const () as usize,
-        compare_usa_mls_create_playoff_stage as *const () as usize,
-        compare_usa_mls_create_final_stage as *const () as usize,
-        compare_bra_cup_start_new_season as *const () as usize,
-        compare_jap_emp_cup_start_new_season as *const () as usize,
-        compare_jap_j_cup_start_new_season as *const () as usize,
-        compare_jap_super_start_new_season as *const () as usize,
-        compare_usa_open_cup_start_new_season as *const () as usize,
-        compare_usa_mls_all_stars_start_new_season_90a760 as *const () as usize,
-        compare_set_up_teams as *const () as usize,
-        compare_conmebol_liber_update_for_date as *const () as usize,
-        compare_build_first_group_table as *const () as usize,
-        compare_conmebol_liber_create_group_stage as *const () as usize,
-        compare_conmebol_merc_update_for_date as *const () as usize,
-        compare_conmebol_merc_create_first_group_table as *const () as usize,
-        compare_conmebol_merc_create_group_stage as *const () as usize,
-        compare_con_merc_cup_update_for_date as *const () as usize,
-        compare_con_merc_cup_create_first_group_table as *const () as usize,
-        compare_con_merc_cup_create_group_stage as *const () as usize,
-        compare_goldcup_update_for_date as *const () as usize,
-        compare_goldcup_create_group_table as *const () as usize,
-        compare_goldcup_create_group_stage as *const () as usize,
-        compare_usa_mls_create_table as *const () as usize,
-        compare_create_second_division_stage as *const () as usize,
-        compare_create_third_division_stage as *const () as usize,
-        compare_usa_mls_start_new_season as *const () as usize,
-        compare_usa_mls_set_predicted_positions as *const () as usize,
-        compare_usa_mls_get_club_array as *const () as usize,
-        compare_bra_nat_third_create_group_stage as *const () as usize,
-        compare_create_second_round_stage as *const () as usize,
-        compare_create_third_round_groups as *const () as usize,
-        compare_bra_nat_third_create_final_stage as *const () as usize,
-        compare_bra_nat_third_start_new_season as *const () as usize,
-        compare_bra_nat_third_set_predicted_positions as *const () as usize,
-        compare_select_section_clubs as *const () as usize,
-        compare_create_section_stage as *const () as usize,
-        compare_eng_auto_cup_advance_stage as *const () as usize,
-        compare_eng_auto_cup_create_final_stage as *const () as usize,
-        compare_eng_auto_cup_rank_teams as *const () as usize,
-        compare_construct_cup_stage as *const () as usize,
-        compare_destroy_cup_stage as *const () as usize,
-        compare_conmebol_liber_create_knockout_stage as *const () as usize,
-        compare_con_merc_cup_create_semi_final_stage as *const () as usize,
-        compare_con_merc_cup_advance_stage as *const () as usize,
-        compare_con_merc_cup_select_invited_clubs as *const () as usize,
-        compare_conmebol_merc_advance_stage as *const () as usize,
-        compare_goldcup_advance_stage as *const () as usize,
-        compare_set_up_team_list as *const () as usize,
-        compare_goldcup_set_predicted_positions as *const () as usize,
-        compare_goldcup_start_new_season as *const () as usize,
-        compare_construct_bra_reg_bahia as *const () as usize,
-        compare_construct_bra_reg_central as *const () as usize,
-        compare_construct_bra_reg_gaucho as *const () as usize,
-        compare_construct_bra_reg_goias as *const () as usize,
-        compare_construct_bra_reg_minas_gerais as *const () as usize,
-        compare_construct_bra_reg_north as *const () as usize,
-        compare_construct_bra_reg_northeast as *const () as usize,
-        compare_construct_bra_reg_parana as *const () as usize,
-        compare_construct_bra_reg_pern as *const () as usize,
-        compare_construct_bra_reg_rio as *const () as usize,
-        compare_construct_bra_reg_santa as *const () as usize,
-        compare_construct_bra_reg_sp as *const () as usize,
-        compare_cqt4_atualizar_media_de_publico as *const () as usize,
-        compare_oceania_club_champ_update_for_date as *const () as usize,
-        compare_create_group_a_table as *const () as usize,
-        compare_create_group_b_stage as *const () as usize,
-        compare_oceania_club_champ_select_qualified_clubs as *const () as usize,
-        compare_oceania_club_champ_advance_stage as *const () as usize,
-        compare_oceania_club_champ_create_knockout_stage as *const () as usize,
-        compare_asia_club_champ_advance_stage as *const () as usize,
-        compare_create_group_stages as *const () as usize,
-        compare_asia_club_champ_create_semi_final_stage as *const () as usize,
-        compare_african_nations_update_for_date as *const () as usize,
-        compare_draw_finalists as *const () as usize,
-        compare_african_nations_create_group_stage as *const () as usize,
-        compare_asia_cup_winner_create_knockout_stage as *const () as usize,
-        compare_asia_cup_winner_advance_stage as *const () as usize,
-        compare_create_finals_stage as *const () as usize,
-        compare_ita_cup_create_first_group_table as *const () as usize,
-        compare_init_first_group as *const () as usize,
-        compare_ita_cup_advance_stage as *const () as usize,
-        compare_ita_cup_advance_stage_63d950 as *const () as usize,
-        compare_ita_cup_create_group_stage as *const () as usize,
-        compare_ita_cup_create_group_stage_63d9e0 as *const () as usize,
-        compare_ita_cup_create_knockout_stage as *const () as usize,
-        compare_ita_cup_create_knockout_stage_63dc10 as *const () as usize,
-        compare_euro_champ_qual_set_up_rules as *const () as usize,
-        compare_get_group_team_count as *const () as usize,
-        compare_get_qualification_status as *const () as usize,
-        compare_init_group_one_table as *const () as usize,
-        compare_build_entrants as *const () as usize,
-        compare_spa_cup_update_for_date as *const () as usize,
-        compare_spa_cup_record_season_honours as *const () as usize,
-        compare_spa_cup_record_season_honours_5e93e0 as *const () as usize,
-        compare_spa_cup_record_season_honours_637750 as *const () as usize,
-        compare_spa_cup_record_season_honours_63d770 as *const () as usize,
-    ];
-    let nomes = [
-        "motor_tabela_a", "motor_tabela_b", "motor_diferenca_lado", "motor_faixa", "motor_por_diferenca", "motor_limite",
-        "motor_condicao_jogador", "motor_tabela_do_jogador", "motor_diferenca_jogador", "motor_byte_do_lado",
-        "motor_limite_jogador", "motor_faixa_jogador", "motor_byte_da_posicao", "motor_campo_pela_posicao",
-        "motor_pode_escolher", "motor_apontar", "motor_desgastar", "motor_virado_para", "motor_procurar_no_lado",
-        "motor_alcanca", "motor_classificar_lance", "motor_distancia_ao_ponto", "motor_distancia_ao_gol",
-        "motor_mais_perto_do_gol", "motor_jogadores_na_linha", "motor_consegue_jogar", "motor_na_area",
-        "motor_marcas_da_posicao", "motor_papel_no_ataque", "motor_papel_na_defesa", "motor_posicionar",
-        "motor_linhas_defensivas", "motor_atualizar_jogador",
-        "motor_sortear_momento", "motor_manter_posicao_um", "motor_caminho_livre", "motor_espaco_a_frente",
-        "motor_fora_do_meio", "motor_alem_da_linha", "motor_distancia_entre",
-        "motor_ler_8ea7", "motor_ler_8ea8", "motor_ler_8ea9", "motor_ler_8eaa", "motor_ler_8eb2", "motor_gravar_8ea9",
-        "motor_gravar_8ea7", "motor_gravar_8ea8", "motor_gravar_8eaa", "motor_gravar_8ed8", "motor_ler_8f7a",
-        "motor_registrar_posse", "motor_na_lista", "motor_guardar_extremos",
-        "motor_contar_ativos", "motor_codigo_especial", "motor_atras_do_extremo", "motor_sem_partida",
-        "motor_pressao_na_area", "motor_mais_proximo_do_ponto", "motor_pressao_no_ponto", "motor_menor_distancia",
-        "motor_repartir_a", "motor_repartir_b", "motor_repartir_c", "motor_escolher_por_papel",
-        "motor_direcao", "motor_zerar_guardado", "motor_x_fora_do_meio", "motor_e_o_guardado", "motor_lado_do_lance", "motor_jogador_no_bloco", "motor_tabela_a_1a", "motor_momento_marcado", "motor_estado_do_lado", "motor_estado_do_adversario", "motor_gravar_19c", "motor_codigo_de_bola_parada", "motor_perto_do_gol", "motor_limpar_lance", "motor_somar_disposicao",
-        "motor_repartir_d", "motor_repartir_e", "motor_repartir_f", "motor_registrar_lance", "motor_remover_da_lista", "motor_entrar_em_campo", "motor_em_perigo",
-        "motor_conferir_lance", "motor_caminho_livre_ate", "motor_alcanca_o_ponto",
-        "motor_escolher_destaque", "motor_escolher_por_papel_b", "motor_casa_da_formacao",
-        "motor_calcular_percentuais", "motor_escolher_por_papel_c",
-        "motor_aplicar_fator", "motor_valor_pela_condicao", "motor_aplicar_ao_time", "motor_aplicar_ao_lado", "motor_escolher_pela_condicao",
-        "motor_ler_1bc", "motor_somar_2b", "motor_gravar_2b", "motor_tabela_a_1a_do_jogador", "motor_tabela_b_do_jogador", "motor_diferenca_do_jogador", "motor_marcas_do_jogador_rot", "motor_marca_800000", "motor_perto_do_proprio_gol", "motor_papel_880", "motor_soltar_bola", "motor_jogador_pela_ficha", "motor_byte_do_codigo",
-        "motor_nota_ajustada", "motor_ajustar_17",
-        "motor_pegar_bola",
-        "motor_iniciar_rigor", "motor_lance_valendo", "engine_decide_foul",
-        "engine_punish_foul", "engine_punish_move",
-        "motor_motor_decidir_falta", "motor_motor_punir_lance", "motor_motor_punir_falta",
-        "engine_look_for_offside", "motor_motor_procurar_impedimento",
-        "engine_card_by_severity", "motor_motor_cartao_pela_gravidade",
-        "motor_escolher_por_papel_e",
-        "motor_estatistica_de_posse",
-        "motor_resumo_da_partida",
-        "motor_mais_perto_no_lado",
-        "motor_defesa_do_goleiro",
-        "motor_mover_para",
-        "motor_escolher_casa",
-        "motor_dominio_do_lance",
-        "motor_tracar_lance",
-        "motor_tem_jogo", "motor_venceu_o_jogo",
-        "motor_comentario_a", "motor_comentario_b",
-        "motor_bola_fora",
-        "motor_valor_do_chute",
-        "motor_forca_do_time",
-        "motor_pontape_inicial",
-        "motor_rolar_bola",
-        "motor_teste_de_condicao",
-        "motor_gosta_de", "motor_nao_gosta_de", "motor_marcar_posicao",
-        "motor_posicoes_finas",
-        "motor_unidades", "motor_e_amistoso", "motor_contrato_de", "motor_e_selecao",
-        "motor_tecnico_9a01", "motor_tecnico_9a05", "motor_bit_da_casa", "motor_separar_mascara",
-        "motor_e_segunda_selecao", "motor_placar_agregado",
-        "motor_marcador_direto",
-        "motor_tirar_de_campo",
-        "motor_marcacao_individual",
-        "motor_nova_reputacao",
-        "motor_reputacao_do_jogador",
-        "motor_escolher_cobrador",
-        "motor_lateral",
-        "motor_escanteio",
-        "motor_penalti",
-        "motor_gravar_casa",
-        "motor_marcar_craques",
-        "motor_designado_da_posicao",
-        "motor_marcado_designado",
-        "motor_selecao_principal", "motor_selecao_b",
-        "motor_quem_marcar",
-        "motor_tecnico_9ace", "motor_tecnico_9a06",
-        "motor_clube_humano",
-        "motor_lado_sob_controle",
-        "motor_linha_tatica", "motor_byte_tatico",
-        "motor_ordem_dos_penaltis",
-        "motor_ordem_dos_jogadores",
-        "motor_vaga_marcada", "motor_marcar_vaga", "motor_pessoa_da_linha",
-        "motor_clube_na_competicao", "motor_clube_especial",
-        "motor_decisao_da_falta",
-        "motor_escolher_companheiro",
-        "motor_falta_no_motor", "motor_tecnico_9b23", "motor_nao_gosta_do_clube", "motor_gosta_do_clube",
-        "motor_clube_parceiro",
-        "motor_contrato_com_clube", "motor_nivel_do_contrato",
-        "motor_chance_de_conhecer", "motor_conhecer_pessoa", "motor_nevoa_apos_partida",
-        "motor_entrada_da_lista", "motor_bandeiras_do_contrato",
-        "motor_proximo_da_lista", "motor_palavra_0c", "motor_arredondar_abaixo_de_1000", "motor_nacao_do_grupo",
-        "motor_quantos_marcam", "motor_quem_marca",
-        "motor_competicao_conta", "motor_ordem_por_5f", "motor_ordem_por_80", "motor_ordem_por_80_desc", "motor_ordem_por_80_cresc",
-        "motor_nota_do_jogador",
-        "motor_esquecer_pessoa", "motor_quadro_do_tecnico", "motor_casa_do_setor_ocupada", "motor_vaga_da_casa",
-        "motor_limpar_designados", "motor_mascara_da_formacao",
-        "motor_casa_da_vaga", "motor_criterio_da_competicao",
-        "motor_tipo_nao_11", "motor_tipo_11_a_15", "motor_classe_da_selecao", "motor_ler_marca_da_pessoa",
-        "motor_zerar_marca_da_pessoa", "motor_registro_livre",
-        "motor_ligar_44_da_pessoa", "motor_byte_44_da_pessoa", "motor_campo_3a_da_pessoa", "motor_classe_pela_selecao",
-        "motor_global_9b5984",
-        "motor_competicao_da_pessoa", "motor_byte_42_da_selecao", "motor_byte_43_da_selecao", "motor_selecao_ou_especial",
-        "motor_nao_gosta_da_selecao", "motor_copiar_data_e_marca",
-        "motor_atualizar_atributos",
-        "motor_desempenho_na_partida",
-        "motor_forca_do_lado",
-        "motor_bola_no_ataque", "motor_evoluir_momento", "motor_partida_de_interesse",
-        "motor_grupo_decidido", "motor_narrar_classificacao", "motor_procurar_jogada", "motor_jogadores_no_trajeto",
-        "motor_interceptar", "motor_avancar_linha", "motor_arrumar_saida", "motor_arrumar_bola_parada",
-        "motor_decidir_sem_bola", "motor_mover_sem_bola",
-        "motor_decidir_jogador", "motor_passar", "motor_lancar",
-        "motor_desviar_bola", "motor_defender", "motor_recuperar_folego", "motor_periodo_encerrado",
-        "motor_pressao", "motor_desafio_adversario", "motor_evoluir_jogador", "motor_uniforme",
-        "motor_gravidade_da_lesao", "motor_grau_da_lesao", "motor_lesao_na_dividida",
-        "motor_avaliar_jogador", "motor_melhor_avaliado", "motor_melhor_da_lista",
-        "motor_jogador_saiu", "motor_refazer_time", "motor_substituir",
-        "motor_escalar", "motor_postura", "motor_escolher_formacao", "motor_instrucoes",
-        "motor_colocar_na_vaga", "motor_ordem_por_tabela", "motor_ordem_por_condicao", "motor_titulares", "motor_guardar_tatica",
-        "motor_aplicar_trocas", "motor_punicoes", "motor_penaltis", "motor_aplicar_falta", "motor_dividida", "motor_disputa", "motor_responder", "motor_jogada", "motor_eventos_do_pos_jogo", "motor_jogadores_do_pos_jogo", "motor_clube_do_pos_jogo", "motor_partida_sem_humano", "motor_interesse_do_dia", "motor_reiniciar_lance", "motor_chute", "motor_nota_do_arbitro", "motor_registrar_nota_do_arbitro", "motor_batedor_guardado", "motor_guardar_instrucoes", "motor_numero_da_competicao", "motor_favorito_de", "motor_rejeitado_por", "motor_fechamento", "motor_ler_linha_tatica", "motor_gravar_linha_tatica", "motor_simulacao_rapida", "motor_lesionar", "motor_registrar_lesao", "motor_destaque_do_jogador", "motor_desfecho_do_chute", "motor_chute_a_gol", "motor_mover", "motor_conduzir", "motor_laco", "motor_executar_passe", "motor_atras_no_agregado", "motor_companheiro_livre", "motor_chutar", "motor_construir", "motor_preparar_partida", "motor_destruir", "motor_escalar_lado", "motor_encerrar_dia", "motor_escolher_partida_do_dia", "motor_escalar_automatico", "motor_iniciar_proxima_partida", "motor_andar_partida_do_dia", "motor_fechar_partida_do_dia", "motor_jogar_o_dia", "motor_montar_o_dia", "motor_lado_do_jogador", "motor_sons_terminados", "motor_gravar_eventos", "motor_ler_eventos", "motor_passo_em_rede", "motor_ler_eventos_cfg", "motor_texto_do_evento", "motor_confirmar_partida_em_rede", "motor_narrar_no_painel", "motor_abrir_no_conteiner", "motor_buscar_no_conteiner", "motor_posicao_no_conteiner", "motor_mascara_de_posicoes", "motor_casa_no_campo", "motor_vagas_sem_conflito", "motor_estatistica_do_jogador", "motor_media_das_notas", "motor_zagueiros_sem_conflito", "motor_serve_para_a_vaga", "motor_codigo_da_posicao", "motor_criterio_da_comissao", "motor_gravar_vaga_tatica", "motor_pessoa_da_vaga_tatica", "motor_gravar_formacao_tatica", "motor_casa_guardada", "motor_ligar_marca_da_formacao", "motor_reiniciar_recordes", "motor_girar_rodada", "motor_registrar_jogo_da_rodada", "motor_marcar_ano_no_calendario", "motor_vaga_extra_tatica", "motor_idades_da_selecao", "motor_gravar_dado_do_humano", "motor_registro_do_observador", "motor_humano_manda_no_clube", "motor_categoria_do_contrato", "motor_bola_na_area", "motor_partida_abandonada", "motor_vagas_do_lado_sem_conflito", "motor_zagueiros_do_lado_sem_conflito", "motor_construir_arbitro", "motor_destruir_jogador_da_partida", "motor_evento_na_frente", "motor_construir_fila_da_narracao", "motor_liberar_tabelas_de_eventos", "motor_ordem_das_partidas_do_dia", "motor_ordem_de_acao", "motor_variante_do_evento", "motor_combinar_com_o_anterior", "motor_comentario_de_contexto", "motor_construir_jogador_da_partida", "motor_proximo_evento", "motor_nome_do_jogador_na_narracao", "motor_habilidade_vista", "motor_cumprir_regra_do_elenco", "motor_nota_fora_da_partida", "motor_nota_para_a_vaga", "motor_pessoa_na_lista", "motor_ficha_de_contrato", "motor_desgaste_diario", "motor_registro_da_formacao", "motor_peso_da_competicao", "motor_gravar_dado_da_noticia", "motor_recuperar_lesao", "motor_pessoa_na_lista_de_transferencias", "motor_punicao_da_tabela", "motor_bits_do_registro", "motor_competicao_marcada", "motor_registro_da_liga", "motor_media_do_jogo", "motor_valor_do_contrato", "motor_nivel_para_a_selecao", "motor_oferta_de_contrato", "motor_oferta_acertada", "motor_oferta_fechada", "motor_rotulo_do_controle", "motor_fechar_tela_da_partida", "motor_abrir_tela_de_espera", "motor_noticia_com_resposta_2", "motor_tem_noticia", "motor_importancia_da_partida", "motor_abrir_ultimos_placares", "motor_montar_ultimos_placares", "motor_responder_ultimos_placares", "motor_abrir_detalhes_da_partida", "motor_responder_detalhes_da_partida", "motor_fechar_detalhes_da_partida", "motor_disciplina_temporada_nova", "motor_disciplina_do_dia", "motor_disciplina_gravar_vaga", "motor_marcar_contrato_acertado", "motor_desmarcar_contrato_acertado", "motor_vaga_da_oferta", "motor_abrir_tela_da_partida", "motor_responder_ultimos_placares_da_partida", "motor_responder_estatisticas_do_time", "motor_painel_dos_ultimos_placares", "motor_sem_tela_seguinte", "motor_cor_do_titulo", "motor_lista_de_observados", "motor_entrada_do_treino", "motor_gravar_carga_de_treino", "motor_e_competicao_do_amistoso", "motor_preencher_data_internacional", "motor_limpar_registro_de_tecnico", "motor_tirar_contrato_de_emprestimo", "motor_desmarcar_lances_pelo_jogador", "motor_tecnico_substituto", "motor_clube_do_contrato_acertado", "motor_registrar_jogo_pela_selecao", "motor_punicao_guardada", "motor_entrada_da_aposentadoria", "motor_registrar_competicoes_do_amistoso", "motor_vaga_da_noticia", "motor_tirar_percentual_da_proxima_venda", "motor_tirar_bonus_por_jogo", "motor_tirar_bonus_pela_selecao", "motor_tirar_reserva_de_tecnico", "motor_tirar_jogador_do_banco", "motor_premio_da_liga", "motor_ultima_nota_do_jogador", "motor_vaga_da_busca", "motor_tipo_da_lista_da_busca", "motor_ordem_do_confronto", "motor_atualizar_confronto_direto", "motor_marcar_termos_oferecidos", "motor_hora_das_ferias", "motor_escalacao_guardada", "motor_tecnico_da_busca", "motor_abrir_jogos_do_dia", "motor_responder_jogos_do_dia", "motor_vaga_do_mais_bem_avaliado", "motor_estatistica_da_liga_do_jogador", "motor_entrada_do_jogo_bate", "motor_balde_do_registro", "motor_atribuir_bloco_do_time", "motor_atribuir_linha_do_jogador", "motor_contar_placar_ao_vivo", "motor_responder_continuar_da_partida", "motor_abrir_escalacao_da_partida", "motor_responder_escalacao_da_partida", "motor_painel_das_estatisticas_do_time", "motor_painel_das_notas_dos_jogadores", "motor_painel_das_estatisticas_da_partida", "motor_valores_das_estatisticas_da_partida", "motor_valores_das_zonas_de_acao", "motor_valores_das_notas_dos_jogadores", "motor_painel_das_zonas_de_acao", "motor_painel_do_relatorio_da_partida", "motor_montar_jogos_do_dia", "motor_preencher_estatisticas_do_time", "motor_atualizar_ultimos_placares", "motor_esperar_os_outros_jogadores", "motor_ler_registro_da_partida", "motor_registrar_partida", "motor_gravar_registro_da_partida", "motor_desenhar_conferencia_da_escalacao", "motor_carregar_estatisticas_da_partida", "motor_salvar_estatisticas_da_partida", "motor_organizar_area", "motor_iniciar_area", "motor_desenhar_area", "motor_montar_tela_da_partida", "motor_responder_tela_da_partida", "motor_montar_detalhes_da_partida", "motor_atualizar_barra_da_posse", "motor_painel_da_visao_geral_da_partida", "motor_tabela_da_liga_ao_vivo", "motor_historia_punivel_do_jogador", "motor_escolher_tipo_de_lesao", "motor_categoria_da_noticia", "motor_apagar_repetidos_das_convocacoes", "motor_vaga_do_escalado", "motor_escolher_comentarista", "motor_regras_da_rodada_no_jogo", "motor_chave_do_jogo_na_copa", "motor_pais_da_excursao", "motor_fechar_propostas_da_oferta", "motor_enfileirar_transferencia_livre", "motor_negociacoes_de_troca_do_jogador", "motor_tirar_jogador_da_selecao", "motor_faixa_do_horario", "motor_teto_da_observacao", "motor_ofertas_pelo_jogador", "motor_reputacao_alvo_do_clube", "motor_gravar_jogo_na_noticia", "motor_preencher_registro_da_partida", "motor_ordem_dos_eventos", "motor_tirar_idioma_do_jogador", "motor_pode_contratar_jogador", "motor_trocas_oferecendo_o_jogador", "motor_noticias_nao_lidas", "motor_gravar_marca_da_noticia", "motor_clube_de_tecnico_humano", "motor_data_do_sorteio_da_rodada", "motor_data_do_jogo_da_rodada", "motor_tirar_clube_dos_amistosos", "motor_ordem_das_linhas_da_tabela", "motor_montar_grade_de_turnos", "motor_margem_do_ultimo_dia", "motor_partida_das_vagas_da_noticia", "motor_resultado_da_eliminatoria_na_noticia", "motor_dia_da_rodada_da_copa", "motor_mapa_de_casas_da_formacao", "motor_nota_do_clube_para_o_jovem", "motor_partida_assistida_pelo_humano", "motor_largar_partida_assistida", "motor_ficha_do_registro", "motor_liga_tem_rebaixamento", "motor_data_da_rodada_da_liga", "motor_importancia_do_jogo_da_liga", "motor_copiar_recordista", "motor_copiar_registro_de_partida", "motor_copiar_registro_de_sequencia", "motor_humano_assiste_a_partida", "motor_humano_deu_apelido", "motor_copiar_aposentadoria_pendente", "motor_montar_estatisticas_da_partida", "motor_desmontar_estatisticas_da_partida", "motor_casar_nome_com_padrao", "motor_id_do_conteiner", "motor_tamanho_dos_itens_do_padrao", "motor_empacotar_no_conteiner", "motor_desempacotar_do_conteiner", "motor_limpar_pasta_temporaria", "motor_ler_do_conteiner", "motor_gravar_no_conteiner", "motor_fechar_conteiner", "motor_filtro_do_jogo_salvo", "motor_filtro_do_inicio_rapido", "motor_versao_do_jogo_salvo_valida", "motor_gravar_regras_fifa", "motor_carregar_regras_fifa", "motor_montar_resumo_do_save", "motor_gravar_banco_no_save", "motor_carregar_banco_do_save", "motor_liberar_dados_do_jogo", "motor_criar_jogo_pela_configuracao", "motor_gravar_jogo", "motor_carregar_jogo", "motor_escopo_da_reputacao", "motor_reputacao_vista_por", "motor_pessoa_e_estrangeira", "motor_idade_da_pessoa", "motor_nacao_com_transferencia_livre", "motor_pessoa_e_comunitaria", "motor_pessoa_listada_para_transferencia", "motor_atributo_calculado_do_jogador", "motor_atributo_da_pessoa", "motor_ordem_do_historico_de_competicao", "motor_vetor_de_atributos_do_jogador", "motor_nacao_britanica_ou_irlanda", "motor_clube_basco", "motor_pessoa_listada_pelo_clube", "motor_pessoa_listada_para_emprestimo", "motor_pessoa_listada_a_pedido", "motor_nota_relativa_do_atributo", "motor_clube_pode_ter_reservas", "motor_primeiro_nome_da_nacao", "motor_segundo_nome_da_nacao", "motor_formatar_nome_da_pessoa", "motor_cores_do_uniforme_do_clube", "motor_tecnico_do_clube_ou_selecao", "motor_nome_ingles_do_clube", "motor_ajustar_moral_da_pessoa", "motor_vetor_de_atributos_do_nao_jogador", "motor_marcar_elenco_da_pessoa", "motor_contar_elenco_do_clube", "motor_reunir_elenco_do_clube", "motor_clube_pode_ser_dirigido", "motor_vetor_para_o_nao_jogador", "motor_vetor_para_o_jogador", "motor_normalizar_atributos_do_nao_jogador", "motor_familia_da_cor", "motor_cores_se_confundem", "motor_atributo_calculado_do_nao_jogador", "motor_forma_do_adjetivo", "motor_atributo_do_nao_jogador", "motor_nota_relativa_com_habilidade_reduzida", "motor_primeiro_nome_pelo_peso", "motor_cores_da_competicao", "motor_clube_tem_vaga_para_cargo", "motor_incluir_pessoa_no_clube", "motor_casar_chave_de_clube", "motor_remapear_chave_de_clube", "motor_casar_chave_de_nacao", "motor_casar_chave_de_competicao_de_clube", "motor_casar_chave_de_competicao_de_pessoa", "motor_ler_continentes", "motor_ler_nacoes", "motor_ler_cidades", "motor_ler_estadios", "motor_ler_pessoas_157", "motor_ler_historico_de_pessoas", "motor_ler_historicos_de_competicao", "motor_ler_competicoes_de_pessoal", "motor_ler_historico_de_competicoes_de_pessoal", "motor_ler_arbitros", "motor_ler_cores", "motor_ler_nomes", "motor_ler_clubes", "motor_ler_competicoes", "motor_ler_nao_jogadores", "motor_ler_jogadores", "motor_ler_pessoas_110", "motor_ler_preferencias", "motor_gravar_continentes", "motor_gravar_nacoes", "motor_gravar_cidades", "motor_gravar_estadios", "motor_gravar_clubes", "motor_gravar_pessoas_110", "motor_gravar_nao_jogadores", "motor_gravar_jogadores", "motor_gravar_preferencias", "motor_gravar_historico_de_pessoas", "motor_gravar_competicoes", "motor_gravar_historicos_de_competicao", "motor_gravar_competicoes_de_pessoal", "motor_gravar_arbitros", "motor_gravar_registros_58", "motor_gravar_nomes", "motor_abrir_arquivo_do_banco", "motor_criar_arquivo_do_banco", "motor_liberar_historico_de_pessoas", "motor_liberar_historico_de_premios", "motor_crescer_historico_de_competicoes", "motor_ordem_dos_clubes_pela_reputacao", "motor_ordem_do_elenco_pela_habilidade", "motor_ordem_do_elenco_pela_habilidade_atual", "motor_normalizar_atributos_fisicos_do_jogador", "motor_segundo_nome_pelo_peso", "motor_normalizar_atributos_do_jogador", "motor_ler_clubes_v1", "motor_ler_nao_jogadores_v1", "motor_ler_jogadores_v1", "motor_ler_competicoes_v1", "motor_nome_ingles_da_nacao", "motor_nome_curto_ingles_do_clube", "motor_cortar_elencos_de_a_e_b", "motor_juntar_o_time_b_ao_a", "motor_montar_indice_de_nomes", "motor_tirar_pessoa_do_clube", "motor_olheiros_do_clube", "motor_clube_em_temporada", "motor_clube_em_nacao_grande", "motor_nacao_grande", "motor_limpar_vinculos_de_opiniao", "motor_juntar_vinculo_de_opiniao", "motor_tirar_vinculo_de_opiniao", "motor_auxiliar_do_clube", "motor_treinadores_do_clube", "motor_contar_treinadores_do_clube", "motor_sigla_inglesa_da_nacao", "motor_nome_ingles_da_competicao", "motor_nome_ingles_da_competicao_de_pessoal", "motor_nome_ingles_do_estadio", "motor_arquivo_do_idioma_existe", "motor_liberar_tabelas_em_ingles", "motor_gerar_comissao_extra", "motor_cortar_tabela_de_clubes", "motor_podar_historico_de_competicoes", "motor_resolver_indices_do_banco", "motor_ordenar_clubes_pela_reputacao", "motor_clube_tem_defensores", "motor_clube_tem_meias", "motor_clube_tem_atacantes", "motor_clube_tem_esforcados", "motor_clube_tem_goleiro", "motor_clube_tem_meias_que_roubam", "motor_faltam_atacantes_pelo_alto", "motor_faltam_zagueiros_pelo_alto", "motor_faltam_zagueiros_rapidos", "motor_clube_tem_atacante_rapido", "motor_clube_tem_meias_criativos", "motor_faixa_de_forca_do_elenco", "motor_reputacao_do_clube_para_pessoa", "motor_contar_rejeitados_no_clube", "motor_contar_favoritos_no_clube", "motor_tirar_clube_favorito", "motor_clube_tirar_pessoa_favorita", "motor_tirar_pessoa_favorita", "motor_tirar_pessoa_rejeitada", "motor_pessoas_favoritas", "motor_clube_acrescentar_pessoa_favorita", "motor_clube_acrescentar_pessoa_rejeitada", "motor_acrescentar_pessoa_favorita", "motor_acrescentar_clube_rejeitado", "motor_esmaecer_relacoes", "motor_pessoas_rejeitadas", "motor_mascara_da_posicao_natural", "motor_contar_elenco_com_mascara", "motor_escolher_companheiro_favorito", "motor_clube_fora_da_argentina", "motor_clube_fora_de_argentina_franca_croacia", "motor_nacao_da_melanesia", "motor_nacao_da_polinesia", "motor_nome_do_cargo_de_treino", "motor_anos_entre_datas_em_texto", "motor_ordem_dos_clubes_pelo_nome_curto", "motor_ordem_das_pessoas_pelo_nome_completo", "motor_pessoa_confere_com_os_nomes", "motor_ordem_dos_clubes_pela_latitude", "motor_ordem_dos_clubes_pela_longitude", "motor_nome_por_ids", "motor_nome_oficial", "motor_texto_da_mascara_da_posicao", "motor_nome_da_posicao", "motor_descricao_do_jogador", "motor_melhor_candidato_a_favorito", "motor_forcas_do_jogador", "motor_fraquezas_do_jogador", "motor_contar_fisioterapeutas", "motor_clube_e_time_b", "motor_pessoas_fora_do_elenco", "motor_atributo_visivel", "motor_atributo_para_quem_ve", "motor_nome_do_atributo_de_tecnico", "motor_ordem_das_pessoas_pelo_sobrenome", "motor_ordem_dos_ponteiros_de_clube_pela_reputacao", "motor_nacao_do_clube_na_cee", "motor_regioes_pelo_nome", "motor_ordem_das_regioes_pelo_nome", "motor_pessoa_da_opiniao", "motor_nome_pelos_textos", "motor_nome_do_cargo", "motor_nome_do_idioma", "motor_nome_da_selecao", "motor_nome_do_atributo_do_jogador", "motor_texto_das_posicoes", "motor_nome_da_regiao", "motor_adjetivo_do_continente", "motor_definir_chaves_fixas", "motor_definir_chaves_fixas_1080", "motor_inicializar_jogadores", "motor_adjetivo_da_nacao", "motor_ordenar_tabela_da_liga", "motor_mini_tabela_do_confronto", "motor_liberar_tabela_da_liga", "motor_liga_completa", "motor_pagar_direitos_de_tv", "motor_registrar_honras_da_temporada", "motor_acrescentar_ao_historico", "motor_tipo_de_confronto_na_liga", "motor_forca_do_clube", "motor_clube_colocado_mais_recente", "motor_amistoso_do_clube", "motor_lista_da_data", "motor_proxima_partida", "motor_estadio_em_uso", "motor_data_do_amistoso_internacional", "motor_encerrar_convocacoes_da_competicao", "motor_encerrar_convocacoes_da_nacao", "motor_podar_registros_de_convocacao", "motor_por_no_elenco_da_selecao", "motor_tirar_do_elenco_da_selecao", "motor_dispensar_acima_da_idade_do_sub21", "motor_limpar_competicao_atual", "motor_liberar_competicoes_do_continente", "motor_convocar_substituto", "motor_montar_reservas_das_selecoes", "motor_ordem_das_reservas", "motor_ordem_pelo_clube", "motor_adversario_do_amistoso", "motor_adversario_da_excursao", "motor_aplicar_resultado_na_tabela", "motor_pontos_do_resultado", "motor_ordem_pela_posicao_do_confronto", "motor_ordem_das_datas_da_liga", "motor_linha_do_clube", "motor_liga_tem_o_clube", "motor_copiar_recorde_de_nota", "motor_copiar_recorde_de_melhor_em_campo", "motor_copiar_recorde_de_disciplina", "motor_copiar_recorde_de_contagem", "motor_copiar_recorde_do_torcedor", "motor_construir_recorde_de_ocorrencias", "motor_construir_recorde_de_contagem", "motor_copiar_recorde_de_valor", "motor_copiar_recorde_de_gols_na_partida", "motor_copiar_noticia", "motor_copiar_transferencia_passada", "motor_copiar_transferencia_futura", "motor_copiar_entrada_da_fila_de_regens", "motor_esta_na_lista_de_observados", "motor_escolher_doador_de_dados", "motor_copiar_registro_de_suspensao", "motor_salario_padrao_do_contrato", "motor_condicao_de_jogo_do_jogador", "motor_dias_ate_o_fim_do_contrato", "motor_limpar_todas_as_queixas", "motor_conferir_retirada_do_pedido", "motor_lugar_no_elenco", "motor_subir_para_o_principal", "motor_descer_para_os_reservas", "motor_copiar_contrato_de_pessoal", "motor_subir_moral_pela_partida", "motor_tirar_conversas_de_contrato", "motor_tirar_interesses_de_transferencia", "motor_tirar_pedido_de_observacao", "motor_tirar_apelido_de_todos", "motor_tirar_aposentadoria_pendente", "motor_aposentadoria_do_desempregado", "motor_oferta_precisa_de_permissao", "motor_atualizar_permissoes_de_trabalho", "motor_olheiro_da_busca", "motor_sequencia_atual_do_clube", "motor_construir_recordista", "motor_tecnico_rival_para_comentar", "motor_construir_recorde_de_valor_pago", "motor_construir_recorde_de_valor_recebido", "motor_construir_recorde_de_sequencia", "motor_construir_recorde_de_vitorias_seguidas", "motor_construir_recorde_de_derrotas_seguidas", "motor_construir_recorde_de_invencibilidade", "motor_construir_recorde_sem_vencer", "motor_construir_recorde_de_gols_na_partida", "motor_construir_recorde_do_mais_novo", "motor_texto_do_fim_do_prazo", "motor_pode_encerrar_emprestimo", "motor_pow_do_game", "motor_tirar_ofertas_guardadas", "motor_guardar_suspensoes_do_emprestado", "motor_preencher_vaga_da_comissao", "motor_noticia_para_os_tecnicos_da_nacao", "motor_missao_do_olheiro", "motor_copa_completa", "motor_construir_recorde_do_mais_velho", "motor_permissao_de_trabalho_de", "motor_passa_na_permissao", "motor_soltar_suspensoes_guardadas", "motor_tirar_ofertas_pendentes", "motor_marcar_decisao_da_transferencia", "motor_noticia_para_todos_os_tecnicos", "motor_noticia_para_os_tecnicos_da_divisao", "motor_noticia_para_os_tecnicos_do_pais", "motor_oferta_bate_o_recorde", "motor_condicao_do_jogador", "motor_limite_de_escalacao", "motor_limpar_partidas_assistidas", "motor_alvos_dos_olheiros_do_clube", "motor_trocar_olheiro_da_busca", "motor_diretoria_depois_da_partida", "motor_disciplina_da_partida", "motor_entradas_do_clube_na_shortlist", "motor_maior_oferta_pelo_jogador", "motor_recordes_de_sempre", "motor_recordes_da_temporada", "motor_guardar_noticia_de_recorde", "motor_acrescentar_reserva_de_tecnico", "motor_acrescentar_aposentadoria", "motor_guardar_vaga_para_regen", "motor_acionar_clausulas_de_rebaixamento", "motor_tirar_oferta_de_contrato", "motor_esta_suspenso", "motor_escopo_das_regras_da_partida", "motor_codigo_de_inelegibilidade", "motor_vaga_do_amistoso", "motor_noticia_para_os_tecnicos_do_continente", "motor_noticia_para_a_regiao_da_competicao", "motor_noticia_importante_para_a_pessoa", "motor_texto_do_dado_da_noticia", "motor_noticia_de_apuro_financeiro", "motor_olheiros_cobrem_a_nacao", "motor_fluencia_no_idioma", "motor_recomecar_historico_da_pessoa", "motor_posicao_na_formacao", "motor_clube_tem_oferta_pelo_jogador", "motor_oferta_do_clube_pelo_jogador", "motor_jogador_com_oferta_pendente", "motor_jogador_sob_oferta", "motor_clube_do_jogador_com_lei_bosman", "motor_veto_da_diretoria_na_oferta", "motor_guardar_transferencia_passada", "motor_dar_permissao_de_trabalho", "motor_guardar_premio_por_jogo_no_time", "motor_vaga_livre_de_contrato", "motor_acrescentar_contrato_da_pessoa", "motor_acrescentar_data_de_decisao", "motor_zerar_moral_do_contrato", "motor_contrato_pelo_atual", "motor_faixa_do_vencimento", "motor_registrar_historia_da_midia", "motor_expirar_historias_da_midia", "motor_historia_ja_registrada", "motor_acrescentar_interesse_de_transferencia", "motor_ordem_das_chaves_de_ids", "motor_ordem_das_historias", "motor_decidir_jogo_da_copa", "motor_decidir_confronto_da_copa", "motor_ordem_dos_cabecas_de_chave", "motor_iniciar_linha_da_tabela", "motor_vetor_dos_clubes_da_liga", "motor_gravar_posicoes_finais_da_liga", "motor_mudar_clube_de_divisao", "motor_embaralhar_ponteiros", "motor_ordenar_e_embaralhar_os_melhores", "motor_contar_jogo_da_suspensao", "motor_soltar_suspensao", "motor_apagar_historico_de_suspensoes", "motor_sortear_lesao_recorrente", "motor_recomecar_historico_de_lesoes", "motor_reiniciar_fisico_do_jogador", "motor_somar_totais_de_transferencia", "motor_recordes_de_carreira_no_clube", "motor_recorde_de_nota_da_temporada", "motor_competicao_na_data_do_amistoso", "motor_amistoso_perto_da_data", "motor_acrescentar_amistoso_planejado", "motor_noticia_pelo_alcance", "motor_noticia_ao_tecnico_do_clube", "motor_entregar_noticia_ao_tecnico", "motor_responder_todas_as_noticias", "motor_tecnico_tem_noticia_pendente", "motor_gravar_texto_na_noticia", "motor_nota_do_jogador_para_a_historia", "motor_texto_da_crise_financeira", "motor_noticias_da_caixa", "motor_aposentar_do_elenco", "motor_melhor_clube_para_o_jovem", "motor_clube_da_nacao_para_o_jovem", "motor_abrir_vagas_que_faltam", "motor_melhor_nota_de_candidato_a_tecnico", "motor_agendar_oferta", "motor_estatuto_no_elenco_pelo_clube", "motor_estimar_estatuto_no_elenco", "motor_liberar_alvos_da_lista_do_clube", "motor_busca_cobre_a_nacao", "motor_tirar_amistoso_marcado", "motor_iniciar_pares_proibidos_de_amistoso", "motor_avaliar_o_negocio_da_transferencia", "motor_confianca_da_diretoria_na_transferencia", "motor_resolver_o_ultimato_da_diretoria", "motor_tirar_o_contrato_principal", "motor_reenviar_ofertas_guardadas", "motor_mes_do_fim_da_temporada_do_clube", "motor_pontos_dos_tecnicos_no_dia", "motor_pontos_dos_tecnicos_no_fim_da_competicao", "motor_tecnico_do_mes_na_liga", "motor_saidas_pendentes_dos_tecnicos", "motor_tirar_jogador_do_elenco_do_clube", "motor_tirar_pessoa_do_cargo_no_clube", "motor_construir_noticia", "motor_ajustar_confianca_da_torcida", "motor_ajustar_confianca_da_diretoria", "motor_resposta_do_tecnico_da_maquina", "motor_marcar_noticia_lida", "motor_achar_noticia_pelo_id", "motor_noticia_de_gratidao_do_jogador", "motor_noticia_de_pedido_de_apoio", "motor_noticia_de_reacao_a_critica", "motor_montar_listas_de_posicao", "motor_ordenar_listas_de_posicao", "motor_clubes_interessados_no_jogador", "motor_acrescentar_na_lista_de_observacao", "motor_prever_resposta_do_vendedor", "motor_periodo_do_emprestimo", "motor_prazo_da_resposta_a_oferta", "motor_pagar_prestacoes_das_transferencias", "motor_tirar_oferta_de_transferencia", "motor_acrescentar_suspensao", "motor_tirar_suspensoes_de_fora_do_clube", "motor_restaurar_suspensoes_guardadas", "motor_acrescentar_idioma", "motor_melhorar_idioma", "motor_zerar_estatisticas_do_jogador", "motor_definir_competicao_da_selecao", "motor_marcar_clubes_com_jogo", "motor_tirar_jogador_da_disciplina", "motor_comparar_datas_de_decisao", "motor_decidir_as_datas_vencidas", "motor_ofertas_de_contrato_do_clube", "motor_assinar_contrato_de_emprestimo", "motor_encerrar_o_emprestimo", "motor_trocar_lugar_no_elenco", "motor_diretoria_do_tecnico_novo", "motor_motivo_da_saida_do_tecnico", "motor_registro_do_tecnico", "motor_serve_para_o_cargo", "motor_pode_assumir_o_cargo", "motor_baixar_moral_pela_partida", "motor_montar_vagas_da_formacao", "motor_refazer_lista_do_clube", "motor_suspender_clubes_que_miram_o_jogador", "motor_por_jogador_nas_listas_dos_clubes", "motor_por_jogador_a_venda", "motor_pagar_premio_por_jogos", "motor_clube_recusa_a_oferta", "motor_soltar_jogadores_da_oferta", "motor_montar_oferta_em_dinheiro", "motor_acrescentar_surto_de_doenca", "motor_espalhar_surtos_de_doenca", "motor_jogador_fora_da_temporada", "motor_forma_inicial_dos_elencos", "motor_registros_iniciais_de_lesao", "motor_listas_de_clubes_por_nacao", "motor_jogador_do_ano_da_torcida", "motor_arquivar_estatisticas_da_nacao", "motor_recordes_de_valor_de_transferencia", "motor_par_de_nacoes_sem_amistoso", "motor_ordem_das_nacoes_pela_reputacao", "motor_ordem_dos_amistosos_pela_data", "motor_pode_marcar_jogo_do_clube", "motor_ordem_das_convocacoes_pela_data", "motor_acrescentar_nacao_classificada", "motor_ordem_dos_cabecas_de_chave_decrescente", "motor_ordem_dos_cabecas_de_chave_crescente", "motor_teto_da_divisao_dos_clubes", "motor_pensar_em_demitir_o_tecnico", "motor_dar_o_ultimato_da_diretoria", "motor_tirar_o_tecnico_do_cargo", "motor_avaliar_a_selecao_na_competicao", "motor_clube_em_apuro_financeiro", "motor_faixa_da_confianca_da_diretoria", "motor_registrar_o_acesso", "motor_registrar_o_rebaixamento", "motor_registrar_a_classificacao_na_fase", "motor_registrar_a_transferencia", "motor_registrar_a_eliminacao", "motor_registrar_a_nao_classificacao", "motor_data_de_conclusao_da_oferta", "motor_primeiro_dia_permitido_da_oferta", "motor_janela_fixa_de_transferencias", "motor_compensacao_pela_pessoa", "motor_pagar_transferencia_e_clausulas", "motor_clube_vendedor_deve_aceitar", "motor_permissao_de_trabalho_na_mudanca", "motor_concluir_oferta_de_contrato_aceita", "motor_oferecer_contrato_ao_jogador_da_oferta", "motor_desfazer_oferta", "motor_fazer_oferta_de_emprestimo", "motor_concluir_transferencias_futuras", "motor_nota_do_doador_de_dados", "motor_ordem_das_aposentadorias", "motor_ordem_da_fila_de_regens", "motor_registro_da_categoria", "motor_criar_estatisticas", "motor_aposentadoria_marcada", "motor_copa_sortear_times_da_rodada", "motor_copa_separar_estadio_compartilhado", "motor_escala_pela_rodada", "motor_lado_do_jogo_para_o_clube", "motor_ordem_dos_coeficientes_das_nacoes", "motor_pedido_de_observacao", "motor_limpar_vaga_da_escalacao", "motor_marcar_batedor_de_bola_parada", "motor_restricoes_da_partida", "motor_limite_do_banco_do_dia", "motor_precisa_de_permissao_de_trabalho", "motor_clube_pode_chegar_ao_jogador", "motor_termos_ao_jogador_da_troca", "motor_fila_livre_do_clube", "motor_transferencia_futura_do_jogador", "motor_tirar_transferencia_futura", "motor_acrescentar_transferencia_futura", "motor_ofertas_abertas_pelos_jogadores_do_clube", "motor_desfazer_ofertas_pelo_jogador", "motor_guardar_percentual_da_proxima_venda", "motor_iniciar_diretorias_dos_clubes", "motor_apelacoes_de_suspensao", "motor_pode_ver_a_partida", "motor_aposentadoria_no_inicio", "motor_aposentadoria_por_idade", "motor_lista_inicial_de_aposentadorias", "motor_novas_aposentadorias", "motor_sair_dos_cargos", "motor_registrar_a_liberacao", "motor_estado_da_lesao", "motor_marcar_decisao_da_oferta", "motor_candidatos_a_tecnico_do_ano", "motor_projetar_posicoes_da_liga", "motor_ordem_da_projecao_pela_reputacao", "motor_ordem_da_projecao_pelos_pontos", "motor_achar_jogos_do_calendario", "motor_jogos_da_competicao_no_dia", "motor_competicao_tem_jogo_na_data", "motor_clube_livre_na_data", "motor_copa_tem_o_clube", "motor_nacao_parceira_do_clube", "motor_pedido_de_transferencia", "motor_cargo_com_contrato", "motor_fora_da_diretoria", "motor_iniciar_permissoes_de_trabalho", "motor_contagem_da_clausula", "motor_premio_por_jogo_do_jogador", "motor_fila_da_transferencia_livre", "motor_proxima_janela_aberta", "motor_emprestimo_negociado", "motor_oferta_com_clausula", "motor_motivo_da_recusa_vale", "motor_motivo_pelo_status_no_elenco", "motor_relacoes_do_elenco", "motor_atrito_com_o_tecnico", "motor_moral_pela_lideranca", "motor_faltas_ao_treino", "motor_competicoes_do_dia", "motor_mudar_confianca_da_diretoria", "motor_estadios_do_dia", "motor_reservar_estadio", "motor_estadio_livre_na_data", "motor_jogo_com_observado", "motor_na_lista_do_olheiro", "motor_registrar_a_primeira_convocacao", "motor_gols_na_carreira", "motor_registrar_o_emprestimo", "motor_ordem_da_volta_aos_treinos", "motor_gols_pelo_clube", "motor_registrar_a_selecao_do_ano", "motor_ordem_pelos_pontos_do_tecnico", "motor_jogo_guardado_igual", "motor_guardar_jogo_no_calendario", "motor_tirar_jogo_do_calendario", "motor_criar_amistosos_planejados", "motor_acrescentar_amistoso", "motor_planejar_amistoso_em_data_livre", "motor_atualizar_copa_no_dia", "motor_montar_rodada_da_copa", "motor_risco_de_doenca_na_viagem", "motor_jogos_da_selecao_no_periodo", "motor_atualizar_ranking_da_fifa", "motor_ordem_dos_resultados_por_pontos", "motor_resultado_no_historico", "motor_faixa_da_selecao", "motor_pontuacoes_do_ranking", "motor_nacao_chave_do_jogo", "motor_e_copa_do_mundo", "motor_e_torneio_internacional", "motor_indice_da_nacao_chave", "motor_ordem_do_ranking", "motor_ordem_das_pontuacoes", "motor_tempo_das_cidades", "motor_ler_regiao_do_clima", "motor_ler_periodo_do_clima", "motor_coeficientes_das_nacoes", "motor_dia_das_aposentadorias", "motor_soma_presa", "motor_nota_do_estadio_neutro", "motor_fator_da_distancia", "motor_ler_o_clima", "motor_fator_do_treinador", "motor_comissao_do_humano", "motor_carga_do_programa", "motor_aplicar_o_progresso", "motor_achar_o_treino_de_posicao", "motor_aprende_depressa", "motor_avancar_a_semana", "motor_tirar_a_ficha_reservada", "motor_lesao_que_volta", "motor_atualizar_amistosos_do_dia", "motor_planejar_pre_temporada_da_ia", "motor_janelas_da_pre_temporada", "motor_marcar_jogos_da_excursao", "motor_ordem_pela_faixa", "motor_ordem_pela_nacao_e_faixa", "motor_posicoes_previstas_da_copa", "motor_ordenar_clubes_pela_forca", "motor_gravar_posicao_do_clube", "motor_linha_da_nacao", "motor_linha_da_nacao_do_clube", "motor_ano_da_temporada_do_clube", "motor_clube_na_temporada", "motor_continente_principal", "motor_nacao_principal", "motor_estatistica_da_categoria", "motor_ordem_dos_idiomas", "motor_ordem_da_historia_por_clube", "motor_clausula_de_rescisao_ativa", "motor_periodo_protegido", "motor_tipo_de_bonus_permitido", "motor_adiar_pelo_clima", "motor_financas_do_clube", "motor_ordem_das_reservas_do_estadio", "motor_clima_da_partida", "motor_temperatura_do_jogo", "motor_gramado_do_jogo", "motor_faixa_de_riqueza", "motor_ordem_por_habilidade", "motor_ordem_pela_capacidade", "motor_programas_padrao", "motor_tipo_do_programa", "motor_programa_do_humano", "motor_fichas_de_treino_iniciais", "motor_guardar_jogador_no_banco", "motor_tem_reserva_de_tecnico", "motor_suspensao_do_vermelho", "motor_nova_temporada_do_orgao", "motor_compactar_disciplina_do_orgao", "motor_coordenada_da_casa", "motor_posicao_repetida_na_formacao", "motor_tipo_de_marcacao", "motor_sortear_ordem_dos_clubes", "motor_clubes_do_lado_do_jogo", "motor_clubes_possiveis_do_jogo", "motor_nota_alvo_do_clube", "motor_jogo_do_historico", "motor_gols_do_historico", "motor_passar_a_oferta_aos_clubes", "motor_noticia_da_oferta_aceita", "motor_noticia_do_emprestimo_oferecido", "motor_recusa_dos_termos", "motor_noticia_da_confianca_da_diretoria", "motor_noticia_das_expectativas_da_diretoria", "motor_ofertas_em_espera_na_janela", "motor_noticia_das_expectativas_da_federacao", "motor_noticia_do_protesto_da_torcida", "motor_guardar_a_negociacao", "motor_noticia_do_boato_do_tecnico", "motor_noticia_da_recusa_em_se_mudar", "motor_receita_do_merchandising", "motor_ingressos_da_temporada", "motor_melhorar_o_centro_de_treino", "motor_eventos_financeiros_da_semana", "motor_diretoria_paga_a_divida", "motor_injecao_de_dinheiro", "motor_teto_salarial_do_pessoal", "motor_pagar_os_bonus", "motor_ajustar_o_teto_salarial", "motor_efeitos_fisicos_da_partida", "motor_batida_do_jogador", "motor_jogador_de_ferias", "motor_contratar_o_regen", "motor_aposentar_pela_lesao", "motor_noticia_da_aposentadoria_anunciada", "motor_fim_da_lesao", "motor_noticia_do_pedido_de_desculpas", "motor_esvaziar_caixa_de_entrada", "motor_tirar_convocado_machucado", "motor_noticia_da_saida_do_convocado", "motor_noticia_do_pedido_de_substituto", "motor_pode_mudar_a_convocacao", "motor_esta_na_convocacao", "motor_marcar_adversario_do_amistoso", "motor_registrar_premio_do_mes", "motor_faixa_de_reputacao_do_amistoso", "motor_folga_do_amistoso", "motor_satisfacao_com_o_contrato", "motor_noticia_quer_contrato_novo", "motor_noticia_pedido_de_transferencia_retirado", "motor_confirmar_oferta_pelo_clube", "motor_tentar_concluir_oferta", "motor_acertar_clausulas_anteriores", "motor_tentar_emprestimo_pelo_jogador", "motor_noticia_contrato_acabando", "motor_noticia_saida_pela_lei_bosman", "motor_acrescentar_oferta_de_contrato", "motor_tirar_oferta_de_contrato_da_vaga", "motor_menor_salario_pedido", "motor_guardar_notas_da_partida", "motor_nota_do_jogador_no_mes", "motor_melhor_do_mes", "motor_premiar_o_melhor_do_mes", "motor_gravar_vencedor_do_mes", "motor_reputacao_do_premiado", "motor_fisico_do_dia", "motor_faixa_da_confianca_na_liga", "motor_gravar_notas_da_diretoria", "motor_dia_das_lesoes", "motor_noticias_de_volta_aos_treinos", "motor_um_cartao_da_suspensao", "motor_fila_de_regens", "motor_veiculo_pelo_clube", "motor_veiculo_pela_pessoa", "motor_somar_resultado_na_liga", "motor_copiar_tabela_da_liga", "motor_posicoes_previstas_da_liga", "motor_resultado_entre_selecoes", "motor_nome_do_elenco_da_selecao", "motor_rodada_com_jogos_conhecidos", "motor_registrar_convocados_por_clube", "motor_importancia_do_jogo_na_competicao", "motor_fase_da_competicao", "motor_faltas_do_dia", "motor_teve_falta_ao_treino", "motor_teve_incidente_de_forma", "motor_marcar_falta_ao_treino", "motor_fim_da_ausencia", "motor_marcas_do_contrato", "motor_recusar_oferta_de_transferencia", "motor_retirar_oferta_de_transferencia", "motor_noticia_oferta_recusada", "motor_desassossegar_pelo_lance", "motor_noticia_oferta_desfeita", "motor_noticia_premio_por_jogos", "motor_efetivar_transferencia", "motor_noticia_transferencia_concluida", "motor_noticia_transferencia_acertada", "motor_emprestimo_da_configuracao", "motor_noticia_fim_do_contrato", "motor_noticia_pedido_de_adiamento", "motor_tatica_do_clube", "motor_escolher_vaga_de_tatica", "motor_tatica_ativa_do_humano", "motor_tirar_da_escalacao", "motor_trocar_vagas_da_escalacao", "motor_tem_copia_da_escalacao", "motor_noticia_da_pressao", "motor_noticia_da_saida_do_tecnico", "motor_noticia_do_tecnico_novo", "motor_pagar_premios_da_liga", "motor_registros_pela_situacao_na_liga", "motor_anunciar_situacao_na_liga", "motor_registrar_partida_nas_estatisticas", "motor_recordes_de_posicao_na_liga", "motor_noticias_de_recordes", "motor_convocar_selecoes_para_o_jogo", "motor_noticia_do_convocado", "motor_noticia_do_desfecho_na_copa", "motor_contar_vagas_com_lance", "motor_tirar_da_lista_de_transferencias", "motor_tirar_da_lista_de_emprestimos", "motor_situacao_na_lista_de_observacao", "motor_por_na_lista_de_emprestimos", "motor_teto_de_preco_pelo_estatuto", "motor_distribuir_verba_de_transferencias", "motor_estatuto_permitido", "motor_nome_da_lista_do_olheiro", "motor_amistosos_internacionais_do_dia", "motor_lista_escolhida_do_tecnico", "motor_escolher_lista_do_tecnico", "motor_inscritos_da_liga_dos_campeoes", "motor_tabela_da_qualificacao_da_liga_dos_campeoes", "motor_proxima_fase_da_liga_dos_campeoes", "motor_processar_jogo_da_liga_dos_campeoes", "motor_progresso_do_clube_na_liga_dos_campeoes", "motor_conta_para_conflito_de_datas", "motor_escolher_arbitro_da_partida", "motor_limpar_arbitros_ocupados", "motor_renovar_arbitros", "motor_arbitros_sorteados", "motor_validar_arbitros", "motor_copiar_ficha_de_arbitro", "motor_registrar_premio_do_ano", "motor_vitoria_maior", "motor_derrota_maior", "motor_jogos_das_permissoes_e_clausulas", "motor_guardar_premio_por_jogos_na_selecao", "motor_noticia_transferencia_finalizada", "motor_veto_dos_fisios_e_da_diretoria", "motor_noticia_do_ultimato", "motor_texto_do_ultimato", "motor_liberar_sem_custo", "motor_ferias_do_humano", "motor_noticia_conversa_de_contrato", "motor_mata_mata_da_first", "motor_mata_mata_da_second", "motor_mata_mata_da_third", "motor_registros_pela_situacao_inglesa", "motor_situacao_na_first", "motor_situacao_na_third", "motor_posicoes_e_situacao_na_liga", "motor_fase_seguinte_da_first", "motor_fase_seguinte_da_second", "motor_registros_da_liga_dos_campeoes", "motor_sorteio_das_quartas", "motor_clubes_da_liga_dos_campeoes", "motor_registrar_resultado_da_tatica", "motor_capitao_guardado", "motor_escolher_capitao", "motor_selecao_que_tem_o_jogador", "motor_jogador_serve_a_selecao", "motor_juntar_competicoes_das_convocacoes", "motor_registro_da_partida_pelo_clube", "motor_referencia_ao_nome", "motor_codigo_do_resultado", "motor_mover_jogos_vizinhos_do_clube", "motor_remarcar_jogos_perto_da_data", "motor_noticia_do_jogo_remarcado", "motor_incidente_de_forma", "motor_noticia_reacao_a_multa", "motor_noticia_retorno_do_treinador", "motor_sortear_comentarista", "motor_nome_do_veiculo", "motor_noticia_queixa_a_federacao", "motor_folha_salarial_do_clube", "motor_refazer_todas_as_folhas", "motor_dias_ate_a_temporada", "motor_receber_venda_de_jogador", "motor_pagar_compra_de_jogador", "motor_pagar_luvas", "motor_receber_premio_em_dinheiro", "motor_receber_direitos_de_tv", "motor_pagar_salarios", "motor_copa_premio_da_rodada", "motor_copa_mandantes_da_rodada", "motor_copa_progresso_do_time", "motor_amistoso_responder_pedido", "motor_amistoso_enviar_pedido", "motor_amistoso_lista_das_nacoes", "motor_copa_sortear_rodada", "motor_nome_da_fase_e_rodada", "motor_clube_da_divisao_mais_alta", "motor_copa_registros_pelo_desfecho", "motor_copa_honras_da_temporada", "motor_copa_semifinalistas_para_a_uefa", "motor_recusar_oferta_de_emprestimo", "motor_vaga_no_elenco_para_a_oferta", "motor_percentual_da_proxima_venda_achado", "motor_jogador_na_busca", "motor_sincronizar_listas_dos_olheiros", "motor_vaga_do_jogador_observado", "motor_valor_do_jogador_para_o_clube", "motor_entrada_do_jogador_na_busca_do_clube", "motor_premio_de_jogos_na_selecao_achado", "motor_contratos_depois_do_jogo", "motor_moral_da_ficha", "motor_texto_da_moral", "motor_valor_do_jogador", "motor_diferenca_de_moral_em_texto", "motor_marcas_de_elenco_para_a_tela", "motor_jogadores_que_a_diretoria_cita", "motor_veredito_da_nota_na_partida", "motor_texto_da_diretoria_sobre_os_jogadores", "motor_resultado_nos_registros_dos_tecnicos", "motor_posicoes_no_fim_da_liga", "motor_jogador_do_ano_da_torcida_no_registro", "motor_vice_da_copa_nos_registros", "motor_terceiro_da_copa_nos_registros", "motor_troca_de_tecnico_nos_registros", "motor_reacoes_dos_elencos_a_transferencia", "motor_noticia_da_comemoracao_da_contratacao", "motor_noticia_do_companheiro_desassossegado", "motor_renda_da_partida", "motor_renda_do_estadio", "motor_pagar_multa_da_liga", "motor_impulso_das_financas", "motor_troca_do_presidente", "motor_pagar_outros_custos", "motor_tabela_das_datas_internacionais", "motor_resolver_datas_internacionais", "motor_torneio_do_clube_humano", "motor_amistosos_dos_clubes", "motor_acrescentar_torneio", "motor_convite_aberto_do_clube_humano", "motor_lesao_nova", "motor_noticia_da_lesao", "motor_ausente_sem_licenca", "motor_parte_dos_clubes_anteriores", "motor_percentual_da_proxima_venda_pago", "motor_noticia_do_percentual_da_venda", "motor_permissao_concedida", "motor_estatuto_pelo_motivo", "motor_vaga_da_negociacao", "motor_reacao_do_elenco_a_historia", "motor_aviso_ao_rival_de_posicao", "motor_rotulo_da_resposta_da_midia", "motor_cumprir_suspensoes_internacionais", "motor_recurso_da_suspensao", "motor_texto_da_vaga_da_suspensao", "motor_tirar_da_lista", "motor_esvaziar_lista", "motor_item_do_cursor", "motor_copa_sortear_pela_semente", "motor_copa_sortear_separando_nacoes", "motor_copa_comeco_da_temporada", "motor_nacao_chave_do_clube", "motor_nacao_chave_do_estadio", "motor_entrada_da_nacao_chave_ativa", "motor_conflito_de_jogos_no_mesmo_dia", "motor_primeiro_ano_com_jogos", "motor_ultimo_ano_com_jogos", "motor_gravar_financas", "motor_carregar_financas", "motor_gravar_gerente_de_elencos", "motor_gravar_sementes_da_uefa", "motor_gravar_sementes_da_conmebol", "motor_gravar_paises_anfitrioes", "motor_gravar_historico_dos_clubes", "motor_gravar_estatisticas_dos_arbitros", "motor_gravar_estatisticas_simuladas", "motor_gravar_datas_dos_clubes", "motor_carregar_datas_dos_clubes", "motor_gravar_conferencia_das_pernas", "motor_fim_de_temporada_da_nacao", "motor_fim_de_temporada_do_clube", "motor_noticia_do_dividendo", "motor_teto_salarial", "motor_noticia_das_obras", "motor_noticia_da_obra_recusada", "motor_conflitos_do_dia", "motor_conflitos_do_jogo", "motor_carregar_conferencia_das_pernas", "motor_nova_data_do_jogo", "motor_jogo_no_calendario", "motor_ano_do_calendario", "motor_copa_criar_jogos_do_confronto", "motor_copa_noticia_do_confronto_pendente", "motor_janelas_avisos_do_dia", "motor_copa_levar_jogos_as_datas", "motor_tirar_jogador_da_troca", "motor_permissoes_da_oferta", "motor_confianca_depois_da_partida", "motor_noticia_da_reacao_da_diretoria", "motor_noticia_da_avaliacao_da_federacao", "motor_expectativas_da_temporada", "motor_vaga_de_tecnico", "motor_noticia_da_oferta_de_emprego", "motor_boatos_de_transferencia", "motor_noticia_nao_vende", "motor_noticia_do_titulo", "motor_amistosos_entre_selecoes", "motor_convite_de_amistoso_valido", "motor_convite_de_torneio_valido", "motor_dia_das_selecoes", "motor_busca_atual_sem_clube", "motor_clube_nas_buscas_da_sessao", "motor_escolher_elenco_da_selecao", "motor_olheiros_na_partida", "motor_sessao_de_edicao", "motor_escolher_sessao_de_edicao", "motor_dia_das_transferencias", "motor_processar_oferta_vencida", "motor_restricoes_da_oferta", "motor_aceitar_lance", "motor_noticia_da_oferta_feita", "motor_pode_emprestar", "motor_liga_dia", "motor_liga_criar_tabela", "motor_liga_promover_e_rebaixar", "motor_calendario_dia", "motor_calendario_lista", "motor_calendario_carregar_ano", "motor_copa_arvore_dos_confrontos", "motor_competicao_primeira_fase_do_grupo", "motor_competicao_fase_atual", "motor_atualizar_o_treino_do_jogador", "motor_programa_de_treino_do_jogador", "motor_nivel_da_categoria_do_programa", "motor_tirar_ou_devolver_o_progresso", "motor_mudanca_do_atributo_pelo_treino", "motor_aptidao_para_a_posicao", "motor_aposentadorias_do_dia", "motor_noticia_da_aposentadoria", "motor_noticia_do_jovem_promovido", "motor_limpar_ausencia", "motor_limpar_falta_ao_treino", "motor_noticia_da_falta_ao_treino", "motor_troca_com_compensacao", "motor_ordem_das_vagas", "motor_marcar_sob_oferta", "motor_campeao_da_liga_nos_registros", "motor_campeao_da_copa_nos_registros", "motor_limpar_registro_do_humano", "motor_resposta_da_ia_ao_lance", "motor_negociacao_de_emprestimo", "motor_opcao_de_troca", "motor_agendar_fim_do_emprestimo", "motor_lances_do_clube", "motor_cqe4_interesse", "motor_cqe4_construir_contrato", "motor_cqe5_pode_emprestar", "motor_cqe5_registrar_emprestimo", "motor_cqe5_dia_das_regras", "motor_cqe6_periodo_inglaterra", "motor_cqe6_pode_emprestar_escocia", "motor_cqe6_periodo_escocia", "motor_cqe6_pode_emprestar_italia", "motor_cqe6_pode_emprestar_irlanda", "motor_cqe6_pode_emprestar_espanha", "motor_liga_jogos_para_a_tv", "motor_liga_noticia_dos_grupos", "motor_liga_noticia_da_tabela", "motor_por_oferta_de_transferencia", "motor_aceitar_emprestimo", "motor_termos_aceitos", "motor_noticia_de_jogador_listado", "motor_contrato_oferecido", "motor_mundial_sortear_grupos", "motor_mundial_sorteio_dos_grupos", "motor_mundial_dia", "motor_mundial_tabela_do_grupo_um", "motor_mundial_fase_do_grupo", "motor_mundial_posicoes_previstas", "motor_mundial_rodadas_da_fase", "motor_mundial_nacao_classificada", "motor_mundial_cabecas_de_chave", "motor_distribuir_os_treinadores", "motor_trocar_os_programas_do_elenco", "motor_nomes_padrao_dos_programas", "motor_historico_da_carreira", "motor_anos_desde_o_clube", "motor_ordem_do_historico_por_pessoa", "motor_lesao_pelo_nome", "motor_noticia_da_volta_aos_treinos", "motor_nome_da_categoria_da_lesao", "motor_cqf10_olheiro_no_jogo", "motor_cqf10_historico_do_clube_observado", "motor_cqf11_relatorio_da_selecao", "motor_cqf11_noticia_da_convocacao", "motor_cqf11_adversarios_da_selecao", "motor_cqf12_olheiros_do_dia", "motor_cqf12_relatorios_dos_olheiros", "motor_cqf12_noticia_do_relatorio", "motor_assinar_contrato", "motor_refazer_como_jovem", "motor_tirar_da_disputa", "motor_ler_formacao_do_disco", "motor_trocar_bytes_das_palavras", "motor_trocar_bytes_dos_dwords", "motor_montar_os_arbitros", "motor_ordem_das_vagas_de_competicao", "motor_cqg10_amistoso_cancelado", "motor_cqg10_jogo_da_selecao_cancelado", "motor_cqg10_torneio_cancelado", "motor_ordem_dos_arbitros_decrescente", "motor_ordem_dos_arbitros_crescente", "motor_arquivar_estatisticas", "motor_pessoa_pelo_nome", "motor_texto_entre_aspas", "motor_tipo_da_linha", "motor_campeoes_sortear_grupos", "motor_campeoes_ordem_dos_potes", "motor_campeoes_posicoes_previstas", "motor_campeoes_sortear_segunda_fase", "motor_campeoes_ordem_da_segunda_fase", "motor_grupo_da_fase", "motor_campeoes_rodadas_da_fase", "motor_liga_expectativas_da_temporada", "motor_liga_rebaixar_clube", "motor_competicao_todas_completas", "motor_competicao_lista_de_clubes", "motor_competicao_progresso_do_clube", "motor_uefa_rodar_coeficientes", "motor_uefa_vagas_por_nacao", "motor_uefa_enesimo_clube_da_nacao", "motor_uefa_juntar_clubes_europeus", "motor_uefa_vagas_liga_dos_campeoes", "motor_uefa_vagas_intertoto", "motor_uefa_vagas_copa_da_uefa", "motor_uefa_voluntario_ingles", "motor_uefa_virada_da_classificacao", "motor_conmebol_vagas_libertadores", "motor_conmebol_enesimo_clube_da_nacao", "motor_conmebol_convidado_da_mercosul", "motor_conmebol_juntar_clubes", "motor_conmebol_virada_do_ano", "motor_conmebol_campeao_dos_campeoes", "motor_sede_da_edicao", "motor_proxima_sede", "motor_calendario_das_sedes", "motor_regras_inglaterra", "motor_regras_eua", "motor_regras_australia", "motor_janelas_espanha", "motor_janelas_italia", "motor_janelas_franca", "motor_regras_brasil", "motor_janelas_alemanha", "motor_regras_escocia", "motor_cqi10_intertoto_dia", "motor_cqi10_intertoto_registros", "motor_cqi10_uefa_registros", "motor_cqi11_concacaf_classificados", "motor_cqi11_concacaf_dia", "motor_cqi11_concacaf_rodadas", "motor_cqi12_copa_italia_regras", "motor_cqi12_copa_c_regras", "motor_cqi12_copa_dos_campeoes_regras", "motor_cqj10_copa_africana_registros", "motor_cqj10_copa_america_registros", "motor_cqj10_eliminatoria_oceania_registros", "motor_cqj11_libertadores_regras", "motor_cqj11_merconorte_regras", "motor_cqj11_oceania_clubes_regras", "motor_cqj12_eliminatoria_europa_regras", "motor_cqj12_eliminatoria_sul_americana_regras", "motor_cqj12_eliminatoria_asia_regras", "motor_cqk10_copa_america_regras", "motor_cqk10_copa_africana_regras", "motor_cqk10_eliminatoria_oceania_regras", "motor_cqk11_libertadores_classificados", "motor_cqk11_libertadores_registros", "motor_cqk11_libertadores_fase_seguinte", "motor_cqk12_africana_fase_seguinte", "motor_cqk12_africana_grupo_a", "motor_cqk12_africana_historico", "motor_cqi7_regras_da_serie_a", "motor_cqi7_regras_da_serie_b", "motor_cqi7_regras_da_serie_c", "motor_cqi8_regras_do_centro_oeste", "motor_cqi8_regras_do_gaucho", "motor_cqi8_regras_do_catarinense", "motor_cqi9_regras_do_paranaense", "motor_cqi9_regras_do_pernambucano", "motor_cqi9_regras_do_carioca", "motor_cqj7_regras_do_goiano", "motor_cqj7_regras_da_j1", "motor_cqj7_regras_da_j2", "motor_cqj8_regras_da_nsl", "motor_cqj8_regras_da_mls", "motor_cqj8_historico_do_estadual", "motor_cqj8_historico_do_primeiro_estagio", "motor_cqj9_destino_na_serie_a", "motor_cqj9_destino_na_serie_c", "motor_cqj9_destino_no_baiano", "motor_cqk7_destino_no_centro_oeste", "motor_cqk7_destino_no_mineiro", "motor_cqk7_destino_na_nsl", "motor_cqk8_progresso_no_mineiro", "motor_cqk8_progresso_na_mls", "motor_cqk8_progresso_na_serie_c", "motor_cqk9_destino_na_mls", "motor_cqk9_resultado_na_mls", "motor_cqk9_conferencia_das_estrelas", "motor_regras_da_premier", "motor_regras_da_first", "motor_regras_da_second", "motor_regras_da_third", "motor_tabela_da_premier", "motor_tabela_da_second", "motor_tabela_da_third", "motor_tabela_da_first", "motor_regras_da_serie_a", "motor_regras_da_serie_b", "motor_regras_da_c1a", "motor_regras_da_c1b", "motor_tabela_da_serie_a", "motor_tabela_da_serie_b", "motor_tabela_da_c1a", "motor_tabela_da_c1b", "motor_regras_da_franca_1", "motor_regras_da_franca_2", "motor_regras_da_franca_3", "motor_tabela_da_franca_1", "motor_tabela_da_franca_2", "motor_tabela_da_franca_3", "motor_regras_da_primera", "motor_regras_da_segunda", "motor_regras_da_divisao_de_baixo", "motor_tabela_da_primera", "motor_registros_pela_situacao_na_c2a", "motor_situacao_na_primera", "motor_tabela_do_grupo_da_cfa", "motor_tabela_da_divisao_de_baixo_francesa", "motor_situacao_na_c1a", "motor_situacao_na_c1b", "motor_cql10_copa_da_liga_tabela", "motor_cql10_copa_da_inglaterra_tabela", "motor_cql10_supercopa_tabela", "motor_cql11_copa_da_franca_tabela", "motor_cql11_copa_da_liga_francesa_tabela", "motor_cql11_copa_do_rei_tabela", "motor_cql12_supercopa_da_franca_tabela", "motor_cql12_supercopa_da_espanha_tabela", "motor_cql12_supercopa_do_japao_tabela", "motor_cqm10_copa_da_liga_inscritos", "motor_cqm10_trofeu_inscritos", "motor_cqm10_supercopa_clubes", "motor_cqm11_copa_da_franca_inscritos", "motor_cqm11_copa_da_liga_inscritos", "motor_cqm11_supercopa_clubes", "motor_cqm12_supercopa_da_espanha_clubes", "motor_cqm12_supercopa_do_japao_clubes", "motor_cqm12_jogo_das_estrelas_tabela", "motor_cqn10_copa_da_liga_dia", "motor_cqn10_copa_da_inglaterra_dia", "motor_cqn10_jogo_das_estrelas_dia", "motor_cqn11_copa_da_liga_japonesa_tabela", "motor_cqn11_copa_do_imperador_tabela", "motor_cqn11_copa_dos_eua_tabela", "motor_cqn12_copa_da_liga_inscritos", "motor_cqn12_copa_dos_eua_inscritos", "motor_cqn12_copa_do_imperador_inscritos", "motor_numero_de_camisa", "motor_clube_usa_numeros", "motor_gravar_numero_de_camisa", "motor_dar_numero_de_camisa", "motor_numerar_elenco", "motor_numerar_no_comeco", "motor_numerar_liga", "motor_inscrever_na_europa", "motor_regras_holanda", "motor_regras_croacia", "motor_regras_irlanda", "motor_regras_noruega", "motor_regras_irlanda_do_norte", "motor_regras_pais_de_gales", "motor_regras_turquia", "motor_regras_polonia", "motor_regras_finlandia", "motor_janelas_argentina", "motor_janelas_portugal", "motor_regras_coreia", "motor_janelas_grecia", "motor_janelas_russia", "motor_janelas_belgica", "motor_inscricao_europeia", "motor_ranking_fifa_inicial", "motor_lista_de_estadios_neutros", "motor_cql7_tabela_da_serie_a", "motor_cql7_tabela_da_serie_b", "motor_cql7_tabela_da_serie_c", "motor_cql8_tabela_do_baiano", "motor_cql8_tabela_do_centro_oeste", "motor_cql8_tabela_do_gaucho", "motor_cql9_tabela_do_goiano", "motor_cql9_tabela_do_mineiro", "motor_cql9_tabela_do_norte", "motor_cqm7_tabela_do_nordeste", "motor_cqm7_tabela_do_paranaense", "motor_cqm7_tabela_do_pernambucano", "motor_cqm8_tabela_do_carioca", "motor_cqm8_tabela_do_catarinense", "motor_cqm8_tabela_do_paulista", "motor_cqm9_tabela_da_j1", "motor_cqm9_tabela_da_j2", "motor_cqm9_tabela_da_nsl", "motor_cqn7_mata_mata_do_baiano", "motor_cqn7_mata_mata_do_norte", "motor_cqn7_mata_mata_do_nordeste", "motor_cqn8_mata_mata_do_pernambucano", "motor_cqn8_mata_mata_do_catarinense", "motor_cqn8_mata_mata_do_paulista", "motor_cqn9_mata_mata_do_gaucho", "motor_cqn9_mata_mata_do_centro_oeste", "motor_cqn9_mata_mata_do_goiano", "motor_desempate_da_serie_a", "motor_desempate_da_serie_b", "motor_ordem_dos_empatados_na_italia", "motor_resultado_do_desempate_da_serie_a", "motor_fase_seguinte_da_c1a", "motor_fases_do_fim_da_c1a", "motor_fase_seguinte_da_c1b", "motor_fases_do_fim_da_c1b", "motor_fase_seguinte_da_third", "motor_construir_premier", "motor_construir_first", "motor_construir_second", "motor_construir_third", "motor_construir_serie_a", "motor_construir_serie_b", "motor_construir_c1a", "motor_construir_c1b", "motor_construir_franca_2", "motor_construir_franca_3", "motor_construir_segunda", "motor_construir_primera", "motor_construir_divisao_de_baixo_espanhola", "motor_tabela_da_segunda", "motor_tabela_da_divisao_de_baixo_espanhola", "motor_regras_da_cfa", "motor_construir_cfa", "motor_construir_divisao_de_baixo_francesa", "motor_destruir_cfa", "motor_destruir_divisao_de_baixo_francesa", "motor_calendario_fixo_da_serie_a", "motor_calendario_fixo_da_serie_b", "motor_calendario_fixo_da_c1a", "motor_calendario_fixo_da_c1b", "motor_toco_um_com_dois", "motor_toco_um_com_um", "motor_estadio_da_partida", "motor_estadio_neutro", "motor_publico_do_jogo", "motor_calendario_da_terceira_francesa", "motor_calendario_da_segunda_francesa", "motor_calendario_da_divisao_de_baixo_francesa", "motor_calendario_da_cfa", "motor_calendario_da_c1_a", "motor_calendario_da_c1_b", "motor_calendario_da_serie_a", "motor_calendario_da_serie_b", "motor_calendario_da_primeira_francesa", "motor_cqo7_fase_seguinte_do_mineiro", "motor_cqo7_final_do_mineiro", "motor_cqo7_fim_da_temporada_do_mineiro", "motor_cqo8_fase_seguinte_do_paranaense", "motor_cqo8_final_do_paranaense", "motor_cqo8_fim_da_temporada_do_paranaense", "motor_cqo9_fase_seguinte_do_carioca", "motor_cqo9_final_do_carioca", "motor_cqo9_fim_da_temporada_do_carioca", "motor_cqo10_copa_da_italia_tabela", "motor_cqo10_copa_c_tabela", "motor_cqo10_supercopa_tabela", "motor_cqo10_supercopa_c1_tabela", "motor_cqo11_copa_da_italia_inscritos", "motor_cqo11_copa_c_inscritos", "motor_cqo11_supercopa_clubes", "motor_cqo12_copa_do_brasil_tabela", "motor_cqo12_times_da_copa", "motor_cqo12_regras_da_copa", "motor_cqo13_libertadores_tabela", "motor_cqo13_mercosul_tabela", "motor_cqo13_mercosul_convidados", "motor_calendario_da_segunda_inglesa", "motor_calendario_da_terceira_inglesa", "motor_calendario_da_primeira_inglesa", "motor_calendario_da_premiership", "motor_calendario_da_primera", "motor_cqp7_virada_do_baiano", "motor_cqp7_fase_seguinte_do_baiano", "motor_cqp7_virada_do_centro_oeste", "motor_cqp7_fase_seguinte_do_centro_oeste", "motor_cqp7_virada_do_gaucho", "motor_cqp7_fase_seguinte_do_gaucho", "motor_cqp8_virada_do_goiano", "motor_cqp8_fase_seguinte_do_goiano", "motor_cqp8_virada_do_norte", "motor_cqp8_fase_seguinte_do_norte", "motor_cqp8_virada_do_nordeste", "motor_cqp8_fase_seguinte_do_nordeste", "motor_cqp9_virada_do_pernambucano", "motor_cqp9_fase_seguinte_do_pernambucano", "motor_cqp9_virada_do_catarinense", "motor_cqp9_fase_seguinte_do_catarinense", "motor_cqp9_virada_do_paulista", "motor_cqp9_fase_seguinte_do_paulista", "motor_calendario_da_segunda_espanhola", "motor_calendario_da_divisao_de_baixo_espanhola", "motor_construir_primeira_francesa", "motor_cqq7_fase_seguinte_da_serie_a", "motor_cqq7_play_off_da_serie_a", "motor_cqq7_fase_seguinte_da_serie_b", "motor_cqq7_play_off_da_serie_b", "motor_cqq8_virada_da_serie_a", "motor_cqq8_acesso_e_rebaixamento", "motor_cqq8_virada_da_serie_b", "motor_cqq9_fase_seguinte_da_j1", "motor_cqq9_final_da_j1", "motor_cqq9_virada_da_j1", "motor_tabela_das_sedes", "motor_noticia_das_sedes", "motor_carregar_sedes", "motor_cadeia_de_acessos", "motor_noticia_do_premio", "motor_noticia_da_tv", "motor_cqp10_copa_dos_campeoes_tabela", "motor_cqp10_merconorte_tabela", "motor_cqp10_supercopa_europeia_tabela", "motor_cqp10_supercopa_asiatica_tabela", "motor_cqp11_asia_clubes_tabela", "motor_cqp11_asia_recopa_tabela", "motor_cqp11_trofeu_tabela", "motor_cqp12_copa_america_tabela", "motor_cqp12_africana_tabela", "motor_cqp12_confed_tabela", "motor_cqp13_intertoto_tabela", "motor_cqp13_intercontinental_tabela", "motor_cqp13_interamericana_tabela", "motor_cqp13_concacaf_tabela", "motor_cqq10_uefa_tabela", "motor_cqq10_intertoto_inscritos", "motor_cqq10_intertoto_lista", "motor_cqq11_europeia_clubes", "motor_cqq11_asiatica_clubes", "motor_cqq11_c1_vagas", "motor_cqq12_oceania_tabela", "motor_cqq12_asia_clubes_times", "motor_cqq12_asia_recopa_times", "motor_cqr1_turno_do_carioca", "motor_cqr1_turno_do_mineiro", "motor_cqr1_turno_do_paranaense", "motor_cqr1_turno_da_j1", "motor_cqr2_virada_do_carioca", "motor_cqr2_virada_do_mineiro", "motor_cqr2_virada_do_paranaense", "motor_cqr3_fase_seguinte_da_nsl", "motor_cqr3_serie_final_da_nsl", "motor_cqr3_grande_final_da_nsl", "motor_cqr4_fase_seguinte_da_mls", "motor_cqr4_play_off_da_mls", "motor_cqr4_final_da_mls", "motor_cqr5_virada_copa_do_brasil", "motor_cqr5_virada_copa_do_imperador", "motor_cqr5_virada_copa_da_liga_japonesa", "motor_cqr6_virada_supercopa_japonesa", "motor_cqr6_virada_copa_dos_eua", "motor_cqr6_virada_jogo_das_estrelas", "motor_cqr6_times_do_jogo_das_estrelas", "motor_cqr10_libertadores_dia", "motor_cqr10_libertadores_primeiro_grupo", "motor_cqr10_libertadores_grupo", "motor_cqr11_mercosul_dia", "motor_cqr11_mercosul_primeiro_grupo", "motor_cqr11_mercosul_grupo", "motor_cqr12_merconorte_dia", "motor_cqr12_merconorte_primeiro_grupo", "motor_cqr12_merconorte_grupo", "motor_cqr13_copa_america_dia", "motor_cqr13_copa_america_primeiro_grupo", "motor_cqr13_copa_america_grupo", "motor_cqs1_tabela_da_mls", "motor_cqs1_segunda_divisao_da_mls", "motor_cqs1_terceira_divisao_da_mls", "motor_cqs2_virada_da_mls", "motor_cqs2_posicoes_previstas_da_mls", "motor_cqs2_clubes_da_mls", "motor_cqs3_grupo_da_serie_c", "motor_cqs3_segunda_fase_da_serie_c", "motor_cqs3_terceira_fase_da_serie_c", "motor_cqs4_final_da_serie_c", "motor_cqs4_virada_da_serie_c", "motor_cqs4_posicoes_previstas_da_serie_c", "motor_cqs5_trofeu_clubes", "motor_cqs5_trofeu_fase_das_chaves", "motor_cqs5_trofeu_fase_seguinte", "motor_cqs6_trofeu_final", "motor_cqs6_trofeu_classificacao", "motor_cqs7_fase_de_copa", "motor_cqs7_fim_da_fase_de_copa", "motor_cqs10_libertadores_mata_mata", "motor_cqs10_merconorte_semifinais", "motor_cqs10_merconorte_fase_seguinte", "motor_cqs11_merconorte_convidados", "motor_cqs11_mercosul_fase_seguinte", "motor_cqs11_copa_america_fase_seguinte", "motor_cqs12_copa_america_selecoes", "motor_cqs12_copa_america_previstas", "motor_cqs12_copa_america_temporada_nova", "motor_cqt1_construir_baiano", "motor_cqt1_construir_centro_oeste", "motor_cqt1_construir_gaucho", "motor_cqt2_construir_goiano", "motor_cqt2_construir_mineiro", "motor_cqt2_construir_norte", "motor_cqt3_construir_nordeste", "motor_cqt3_construir_paranaense", "motor_cqt3_construir_pernambucano", "motor_cqt4_construir_carioca", "motor_cqt4_construir_catarinense", "motor_cqt4_construir_paulista", "motor_cqt4_atualizar_media_de_publico", "motor_cqt10_oceania_dia", "motor_cqt10_oceania_grupo_a", "motor_cqt10_oceania_grupo_b", "motor_cqt11_oceania_clubes", "motor_cqt11_oceania_fase_seguinte", "motor_cqt11_oceania_semifinais", "motor_cqt12_asia_fase_seguinte", "motor_cqt12_asia_grupos", "motor_cqt12_asia_semifinais", "motor_cqs13_africana_dia", "motor_cqs13_africana_sorteio", "motor_cqs13_africana_grupo", "motor_cqt13_africana_quartas", "motor_cqt13_recopa_asiatica_fase_seguinte", "motor_cqt13_recopa_asiatica_finais", "motor_cqr7_copa_da_italia_grupo_um", "motor_cqr7_copa_da_serie_c_grupo_um", "motor_cqr7_copa_da_italia_fase_seguinte", "motor_cqr7_copa_da_serie_c_fase_seguinte", "motor_cqr8_copa_da_italia_grupo", "motor_cqr8_copa_da_serie_c_grupo", "motor_cqr9_copa_da_italia_mata_mata", "motor_cqr9_copa_da_serie_c_mata_mata", "motor_cqs8_eurocopa_regras", "motor_cqs8_eurocopa_tamanho_do_grupo", "motor_cqs8_eurocopa_situacao", "motor_cqs8_eurocopa_grupo_um", "motor_cqs9_uefa_inscritos", "motor_cqt5_copa_do_rei_dia", "motor_cqt5_historico_liga_dos_campeoes", "motor_cqt5_historico_copa_da_grecia", "motor_cqt5_historico_copa_da_liga_irlandesa", "motor_cqt5_historico_copa_da_serie_c",
-    ];
+    let rust = rust_table();
+    let comp = compare_table();
+    let nomes = NAMES;
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
             // the original through the same pass-through detour as original mode (same private stack)

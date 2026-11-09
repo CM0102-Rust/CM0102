@@ -18,7 +18,7 @@ Uma leva junta itens da fila (até 13 itens de 3 rotinas desde 29/10/2026: `ITEN
    - a rotina, com comentário `/// { 0xENDERECO } (arquivo.cpp): o que faz`;
    - o `Prologue` (bytes iniciais copiados para o trampolim: instruções inteiras e sem salto relativo; `prologos.py` confere);
    - o comparador `compare_*` (roda original e Rust a partir do mesmo estado e compara as regiões de memória que a rotina pode tocar, mais o estado do sorteio);
-   - as entradas nos vetores `rust`, `comp` e `nomes` de `instalar` (mesma ordem do `PROLOGOS`; `N` = total);
+   - uma linha por rotina na tabela `routines!` do `motor.rs` (`Prologue { address, bytes } => rotina, comparador, "rótulo";`, que gera o `PROLOGOS` e as listas de `instalar`; `N` = total; as ferramentas leem a tabela pelo `tabela_motor.py`);
    - o caso no `autoteste` (entradas sintéticas, inclusive limites e casos extremos, sem cair nos caminhos de erro do original, que abrem caixa de mensagem).
    - Chamadas internas a outras rotinas vão **pelo endereço do jogo** (`transmute(0x...)`), para que na comparação passem pelos desvios já provados.
 4. **Provar** (os quatro critérios de `ROTINAS.md`):

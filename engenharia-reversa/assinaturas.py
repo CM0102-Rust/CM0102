@@ -41,9 +41,8 @@ def leitor(caminho):
 def prologos():
     """{início: bytes do prólogo} da tabela PROLOGOS do motor.rs."""
     m = open(os.path.join(R, 'rust', 'src', 'motor.rs'), encoding='utf-8').read()
-    i = m.index('const PROLOGOS:')
-    return {int(a, 16): bytes(int(x, 16) for x in b.split(','))
-            for a, b in re.findall(r'address:\s*0x([0-9a-f]+), bytes: &\[([^\]]*)\]', m[i:m.index('\n];', i)])}
+    import tabela_motor
+    return {a: bytes(bs) for a, bs, _, _, _ in tabela_motor.rotinas(m)}
 
 
 def chamadas_para(ler, alvo):

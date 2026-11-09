@@ -20,13 +20,14 @@ fn main() {
     let motor = raiz.join("src").join("motor.rs");
     println!("cargo:rerun-if-changed={}", motor.display());
     let s = std::fs::read_to_string(&motor).unwrap();
-    let i = s.find("let rust: [usize; N] = [").expect("rust list in motor.rs");
-    let fim = i + s[i..].find("];").unwrap();
+    // one line per routine in `routines! { .. }`: `Prologue { .. } => rust_fn, comparer_fn, "label";`
+    let i = s.find("routines! {").expect("routines! table in motor.rs");
+    let fim = i + s[i..].find("\n}").unwrap();
     let mut saida = String::new();
     let mut k = 0usize;
-    for linha in s[i..fim].lines().skip(1) {
-        let l = linha.trim();
-        if let Some(nome) = l.strip_suffix(" as *const () as usize,") {
+    for linha in s[i..fim].lines() {
+        if let Some(depois) = linha.split(" } => ").nth(1) {
+            let nome = depois.split(',').next().unwrap().trim();
             saida.push_str(&format!("pub(crate) const IDX_{}: usize = {};\n", nome.to_uppercase(), k));
             k += 1;
         }

@@ -47,8 +47,8 @@ def fontes():
 def main():
     orig = cabecalhos.originais()
     s = open(os.path.join(SRC, 'motor.rs'), encoding='utf-8').read()
-    i = s.index('let rust: [usize; N] = [')
-    nomes = re.findall(r'^\s+(\w+) as \*const \(\) as usize,$', s[i:s.index('];', i)], re.M)
+    import tabela_motor
+    nomes = tabela_motor.nomes_rust(s)
     ja = {}
     if os.path.exists(NOMES):
         ja = {r['pt']: r['en'] for r in csv.DictReader(open(NOMES, encoding='utf-8'))}
