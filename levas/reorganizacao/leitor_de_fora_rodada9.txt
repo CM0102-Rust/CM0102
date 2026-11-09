@@ -1,0 +1,20 @@
+Leitor de fora, rodada 9 (08/11/2026, noite). Veredito: claramente melhor; os problemas agora estão concentrados.
+~4.500 `+ 0x..` crus no código contra ~20.700 campos com nome; 3.277 transmute (1.328 dentro dos invólucros; ~1.950 fora,
+202 das 314 FN_ ainda transmutadas já têm invólucro); 8.655 chamadas exe::; 1.568 usos de rdata::; 95 closures de
+acesso; 852 endereços literais do exe no código (callbacks, t(0x70dfa0) x73, tabelas LoadStep); ~19.600 hex nos docs em
+inglês (~9.000 `+0x`).
+Português: motor.rs (instalar, instalar_passagem, autoteste, PROLOGOS, SEM_ROTINAS, os 2.087 rótulos "motor_..."); ~28
+nomes de função (compare_diferenca...); setup.rs LoadStep::Objeto; registro::linha; locais (partida x627, melhor,
+valor...); variáveis CM_*; ~103 rótulos passados por parâmetro; ~530 mensagens de comparador; ~250 marcas de mutação.
+Os 8 obstáculos: 1. as tabelas paralelas do motor.rs (uma macro routine! por rotina); 2. ~1.950 transmute fora, 202
+redundantes; 3. três dialetos de acesso (mem.rs, byte(p, off) x3.872, read_f32_at/read_f64_at x1.584; 3.600 derefs
+crus; 1.049 read_unaligned); 4. ids mágicos (tipos de notícia, códigos de narração, linhas de caixa, venues); 5. docs em
+inglês que transcrevem a desmontagem; 6. os rótulos e nomes da infraestrutura em português; 7. deslocamentos crus nos
+docs; 8. 12.690 unsafe e 130 static mut sem SAFETY nem tipos de registro.
+Inconsistente: build.rs fala orig::<F>; motor.rs instalar x date.rs install; nomes rdata como F32_0_05000000075_AT_96D61C
+e F64_2; 7 invólucros at_<endereço>; ManagerVacancy com métodos b/d/rd/w/rw; rng.rs STATE_REGIONS com endereços crus.
+Bom: README.en e o cabeçalho do motor.rs; a árvore por .cpp; Original: em toda rotina; fields.rs; rdata com
+compatibilidade; compare/ em paralelo; detours.rs, date.rs, rng.rs e comparison.rs limpos.
+Estimativa: um desenvolvedor Rust motivado consegue ler uma rotina e corrigi-la; contribuir com segurança ainda é
+difícil (acrescentar um desvio mexe em quatro tabelas alinhadas; o português que sobra está onde se depura). Legível
+para quem faz engenharia reversa: sim. Acessível a um contribuidor Rust comum: ainda não; os itens 1 a 3 mudam isso.
