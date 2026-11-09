@@ -27,7 +27,7 @@ MUTACOES = [
     ('cpr11_reputacao_invertida', 'rb - ra // the club with the highest reputation first', 'ra - rb // mutacao: a menor primeiro', 'cpr_11 projecao pela reputacao'),
     ('cpr11_pontos_invertidos', 'read_i16(b + league_projection::PROJECTED_POINTS) as i32 - read_i16(a + league_projection::PROJECTED_POINTS) as i32 // most points first', 'read_i16(a + league_projection::PROJECTED_POINTS) as i32 - read_i16(b + league_projection::PROJECTED_POINTS) as i32 // mutacao: os menos primeiro'),
     ('cpr11_normal_acima', 'normal = (normal & !0xff) | (k as u8).wrapping_add(1) as u32; // the position in normal form', 'normal = (normal & !0xff) | (k as u8).wrapping_add(2) as u32; // mutacao: uma abaixo', 'cpr_11 projection'),
-    ('cpr12_so_em_casa', 'if club != home && club != read_u32(f + fixture::AWAY_CLUB_ID) {', 'if club != home { // mutacao: so em casa'),
+    ('cpr12_so_em_casa', 'if club != home && club != (f.away_club_id() as u32) {', 'if club != home { // mutacao: so em casa'),
     ('cpr12_janela_curta', '(ano as u16 == ano1 as u16 && dia as u16 > dia1 as u16)', '(ano as u16 == ano1 as u16 && dia as u16 >= dia1 as u16) /* mutacao: sem o ultimo dia */'),
     ('cpr12_qualquer_rodada', 'ok = false; // another round', '// mutacao: a rodada nao filtra', 'cpr_12 round match'),
     ('cpr13_um_jogo_livre', 'if n as u16 != 0 {', 'if n as u16 > 1 { // mutacao: um jogo nao ocupa', 'cpr_13 busy'),

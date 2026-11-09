@@ -28,6 +28,14 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 7: a partida (`Fixture`)
+
+O pacote completo para `fixture`: 184 variáveis em 182 funções, 75 `.addr()` tirados dos invólucros, 31 funções recebem
+`Fixture` (67 chamadas ajustadas) e a propagação, mais 7. Acessos crus à partida 1.307 → 365 (o resto usa como base uma
+expressão, não uma variável). `.addr()` fora dos invólucros 3.488 → 3.815. Antes: o achado da leva 6 investigado e
+registrado em `docs/DEFEITOS_DO_ORIGINAL.md` (o atrito diário usa o contrato da vaga 10 do elenco, não o do jogador).
+Prova: 7cc445c2 ×2, detector igual, comparação 0; as 43 mutações mudadas e as 4 em risco pela `Fixture` compilam.
+
 ## Migração para os registros tipados, leva 6: confiança dos nomes e resíduos dos quatro registros
 
 - **Confiança dos nomes** (pedido do Lucas): `confianca_campos.py` classifica cada campo pela origem que o comentário do

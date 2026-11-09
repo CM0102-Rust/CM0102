@@ -281,9 +281,10 @@ pub(crate) unsafe fn set_final_positions_by_round(this: usize, v: *const u32, wr
 /// (+0x53), 2 se é a do adversário, senão 3. Clube: o campo é o estádio do clube e não o do adversário, 1; dos dois,
 /// 1 para o mandante e 2 para o outro; só do adversário, 2; de nenhum, 3. Quem chama lê só o al.
 pub(crate) unsafe extern "C" fn comp_util_get_fixture_venue_side(club: usize, game: usize) -> u8 {
+    let game = Fixture(game);
     let club = Club(club);
-    let field = read_u32(game + fixture::STADIUM);
-    let home = read_ptr(game + fixture::HOME_CLUB);
+    let field = (game.stadium() as u32);
+    let home = read_ptr(game.addr() + fixture::HOME_CLUB);
     if field == 0 {
         if read_u32(home + club::STADIUM) == 0 {
             return 3;
@@ -295,16 +296,16 @@ pub(crate) unsafe extern "C" fn comp_util_get_fixture_venue_side(club: usize, ga
         if nation != 0 && read_u32(nation + city::NATION) == (club.nation().addr() as u32) {
             return 1;
         }
-        let home = read_ptr(game + fixture::HOME_CLUB);
-        let other = if home == club.addr() { read_ptr(game + fixture::AWAY_CLUB) } else { home };
+        let home = read_ptr(game.addr() + fixture::HOME_CLUB);
+        let other = if home == club.addr() { read_ptr(game.addr() + fixture::AWAY_CLUB) } else { home };
         if nation != 0 && read_u32(nation + city::NATION) == read_u32(other + club::NATION) {
             return 2;
         }
         return 3;
     }
-    let home = read_ptr(game + fixture::HOME_CLUB);
-    let other = if home == club.addr() { read_ptr(game + fixture::AWAY_CLUB) } else { home };
-    let field = read_u32(game + fixture::STADIUM);
+    let home = read_ptr(game.addr() + fixture::HOME_CLUB);
+    let other = if home == club.addr() { read_ptr(game.addr() + fixture::AWAY_CLUB) } else { home };
+    let field = (game.stadium() as u32);
     if field != (club.stadium().addr() as u32) {
         return if field != read_u32(other + club::STADIUM) { 3 } else { 2 };
     }
@@ -673,16 +674,17 @@ pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(news: usi
 /// 1 goleada, 2 e 3 vitórias contra mais fortes, 4 comum, 5 e 7 derrotas para mais fracos, 6
 /// zebra. Só o al é fiel (quem chama usa al).
 pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(club: usize, partida: usize) -> u8 {
-    let home = Club(*((partida + fixture::HOME_CLUB) as *const usize));
-    let away = Club(*((partida + fixture::AWAY_CLUB) as *const usize));
+    let partida = Fixture(partida);
+    let home = Club(partida.home_club());
+    let away = Club(partida.away_club());
     let h = (home.reputation() as i32 / 500) as i8 as i32;
     let a = (away.reputation() as i32 / 500) as i8 as i32;
-    let (g1, g2) = if read_u8(partida + fixture::HOME_AGGREGATE) != 0xff {
-        (read_u8(partida + fixture::HOME_AGGREGATE), read_u8(partida + fixture::AWAY_AGGREGATE))
-    } else if read_u8(partida + fixture::HOME_GOALS_EXTRA_TIME) != 0xff {
-        (read_u8(partida + fixture::HOME_GOALS_EXTRA_TIME), read_u8(partida + fixture::AWAY_GOALS_EXTRA_TIME))
+    let (g1, g2) = if (partida.home_aggregate() as u8) != 0xff {
+        ((partida.home_aggregate() as u8), (partida.away_aggregate() as u8))
+    } else if (partida.home_goals_extra_time() as u8) != 0xff {
+        ((partida.home_goals_extra_time() as u8), (partida.away_goals_extra_time() as u8))
     } else {
-        (read_u8(partida + fixture::HOME_GOALS), read_u8(partida + fixture::AWAY_GOALS))
+        ((partida.home_goals() as u8), (partida.away_goals() as u8))
     };
     let m = g1.wrapping_sub(g2) as i8;
     // from the club’s point of view: `eu` and `ele` the reputations, `vitoria` the margin in its favour

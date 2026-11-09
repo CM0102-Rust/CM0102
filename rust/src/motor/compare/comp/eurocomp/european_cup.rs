@@ -277,30 +277,31 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_advance_stage(this: 
 /// finanças não entram (a base paga o prêmio da rodada da copa nos mesmos campos, 0x51a2fe); o prêmio segue o ramo do
 /// placar que os pontos do coeficiente já conferem. Sem clube, nação, seleção ou finanças: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_process_fixture(this: usize, game: usize, arg: u32) {
+    let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PROCESS_FIXTURE);
-    let (a, b) = if game != 0 { (read_usize(game + fixture::HOME_CLUB), read_usize(game + fixture::AWAY_CLUB)) } else { (0, 0) };
+    let (a, b) = if !game.is_null() { (game.home_club(), game.away_club()) } else { (0, 0) };
     if a == 0 || b == 0 {
-        return o(this, game, arg); // simplification: without a club, original only
+        return o(this, game.addr(), arg); // simplification: without a club, original only
     }
     let (ca, cb) = (nation_coefficient_word(Club(a)), nation_coefficient_word(Club(b)));
     let (fa, fb) = (european_cup_club_finance(a), european_cup_club_finance(b));
     if ca == 0 || cb == 0 || fa == 0 || fb == 0 {
-        return o(this, game, arg); // simplification: without nation, national team or finances, original only (crashes the same way)
+        return o(this, game.addr(), arg); // simplification: without nation, national team or finances, original only (crashes the same way)
     }
     let check = [(ca, 2), (cb, 2)];
     let before = crate::comparison::MemorySnapshot::read(&[(ca, 2), (cb, 2), (fa, 0x167), (fb, 0x167)]);
     let stage = read_i32(this + cup::CURRENT_STAGE);
     EUROPEAN_CUP_FIXTURE_DRY_RUN = true;
-    crate::rng::pause_trace(|| crate::rng::without_counting(|| process_fixture(this, game, arg)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| process_fixture(this, game.addr(), arg)));
     EUROPEAN_CUP_FIXTURE_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&check);
     before.write_back();
-    o(this, game, arg);
+    o(this, game.addr(), arg);
     if read_i32(this + cup::CURRENT_STAGE) != stage {
         return; // simplification: the stage advanced in the database and the draw added coefficient: no comparison
     }
     let mo = crate::comparison::MemorySnapshot::read(&check);
-    SCOREBOARD.record(mo == mr, || format!("process_fixture(jogo {:x}) original={:x?} rust={:x?}", game, mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("process_fixture(jogo {:x}) original={:x?} rust={:x?}", game.addr(), mo, mr));
 }
 
 /// Comparer for `european_cup_set_club_progress`.

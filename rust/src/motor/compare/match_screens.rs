@@ -511,11 +511,12 @@ pub(crate) unsafe extern "thiscall" fn compare_match_player_row_assign(this: usi
 
 /// Comparer for `match_screens_tally_live_score`.
 pub(crate) unsafe extern "C" fn compare_match_screens_tally_live_score(partida: usize, index: u32, res: usize) {
+    let res = Fixture(res);
     let o = original_fn::<unsafe extern "C" fn(usize, u32, usize)>(IDX_MATCH_SCREENS_TALLY_LIVE_SCORE);
-    if res == 0 {
-        return o(partida, index, res);
+    if res.is_null() {
+        return o(partida, index, res.addr());
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(res + fixture::HOME_GOALS, 0xa)], || o(partida, index, res), || match_screens_tally_live_score(partida, index, res));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(res.addr() + fixture::HOME_GOALS, 0xa)], || o(partida, index, res.addr()), || match_screens_tally_live_score(partida, index, res.addr()));
     SCOREBOARD.record(igual, || format!("match_screens_tally_live_score(partida {:#x}, indice {}): {:02x?} / {:02x?}", partida, index, mo.0, mr.0));
 }
 

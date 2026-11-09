@@ -32,15 +32,16 @@ pub(crate) unsafe extern "thiscall" fn has_match(this: usize, club: u32, so_mark
 /// senao pela prorrogacao (0x47/0x48), senao pelo tempo normal (0x43/0x44); placar -1 nao conta.
 /// Jogo ou clube nulo, ou clube fora do jogo: o original mostra uma caixa de erro e devolve 0.
 pub(crate) unsafe extern "C" fn won_the_match(game: usize, club: u32) -> u8 {
-    if game == 0 || club == 0 {
+    let game = Fixture(game);
+    if game.is_null() || club == 0 {
         return 0;
     }
-    let home = *((game + fixture::HOME_CLUB) as *const u32) == club;
-    if !home && *((game + fixture::AWAY_CLUB) as *const u32) != club {
+    let home = (game.home_club() as u32) == club;
+    if !home && (game.away_club() as u32) != club {
         return 0;
     }
     for (a, b) in [(0x49, 0x4a), (0x47, 0x48), (0x43, 0x44)] {
-        let (pa, pb) = (read_i8(game + a), read_i8(game + b));
+        let (pa, pb) = (read_i8(game.addr() + a), read_i8(game.addr() + b));
         if pa > -1 {
             return (if home { pa > pb } else { pa < pb }) as u8;
         }
@@ -360,23 +361,23 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
         show_error_at(0xa15708, 0x73f);
         return 0;
     }
-    let game = u(p, 0);
-    core::ptr::copy((p + day_match::FIXTURE_COPY) as *const u8, game as *mut u8, 0x4f);
+    let game = Fixture(u(p, 0));
+    core::ptr::copy((p + day_match::FIXTURE_COPY) as *const u8, game.addr() as *mut u8, 0x4f);
     let summary = u(p, day_match::SUMMARY);
     let mut round = [0u8; 4];
     let competition = |id: i32| *((u(G_COMP_OBJECT_TABLE, 0) as isize + 4 * id as isize) as *const usize);
-    if u(game, fixture::COMPETITION) != 0 {
+    if u(game.addr(), fixture::COMPETITION) != 0 {
         crate::comparison::branch("close with competition");
         for k in 0..2 {
-            let c = u(game, fixture::AWAY_CLUB);
+            let c = u(game.addr(), fixture::AWAY_CLUB);
             if c == 0 || exe::human_manager_is_human_club(c, 0, 1, 0, 0) == 0 || u(c, club::DIVISION) == 0 {
                 continue;
             }
             let id = *(u(c, club::DIVISION) as *const i32);
-            if id != *(game as *const i32) {
+            if id != *(game.addr() as *const i32) {
                 continue;
             }
-            let comp = competition(*(u(game, fixture::COMPETITION) as *const i32));
+            let comp = competition(*(u(game.addr(), fixture::COMPETITION) as *const i32));
             if comp == 0 || u(comp, 8) == 0 {
                 continue;
             }
@@ -395,13 +396,13 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
             }
             let w = core::ptr::read_unaligned(copia.as_ptr().add(0x4d) as *const u16) & 0xcfff;
             core::ptr::write_unaligned(copia.as_mut_ptr().add(0x4d) as *mut u16, w);
-            exe::weather_post_abandoned_news(u(G_WEATHER, 0), p + day_match::FIXTURE_COPY, ((*((game + fixture::SQUAD_RULES) as *const u16) >> 12) & 3) as u32);
+            exe::weather_post_abandoned_news(u(G_WEATHER, 0), p + day_match::FIXTURE_COPY, ((game.squad_rules() >> 12) & 3) as u32);
             exe::fixture_manager_find_new_fixture_date(u(G_FIXTURE_MANAGER, 0), (copia.as_mut_ptr()) as *mut u8 as usize);
             exe::fixture_manager_add_fixture(u(G_FIXTURE_MANAGER, 0), (copia.as_mut_ptr()) as *mut u8 as usize, 1);
         } else {
-            let c = competition(*(game as *const i32));
+            let c = competition(*(game.addr() as *const i32));
             let metodo: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(u(u(c, 0), 4));
-            metodo(c, game, summary);
+            metodo(c, game.addr(), summary);
             crate::comparison::branch("close competition method");
         }
     }
@@ -410,7 +411,7 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
     exe::match_day_process_player_incidents(game);
     let two = |this: usize, f: usize| {
         let g: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(f);
-        g(this, game, summary);
+        g(this, game.addr(), summary);
     };
     two(u(G_CONTRACT_MANAGER, 0), 0x4ca6d0);
     two(u(G_DISCIPLINE, 0), 0x55ca00);
@@ -421,7 +422,7 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
     if read_i8(p + day_match::HOME_GOALS) == -3 {
         return 1;
     }
-    if *(game as *const u32) != *(KEY_CLUB_COMP_RESERVE as *const u32) {
+    if *(game.addr() as *const u32) != *(KEY_CLUB_COMP_RESERVE as *const u32) {
         let h = u(G_RESERVE_COMP, 0);
         two(h, u(u(h, 0), 4));
         crate::comparison::branch("close story");
@@ -431,8 +432,8 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> 
     }
     let club: unsafe extern "C" fn(usize, usize, usize, u32, usize) = core::mem::transmute(FN_MATCH_DAY_POST_PLAYER_REACTION_NEWS);
     // simplification: the round goes as a dword with the high bytes zeroed; the original passes stack leftovers in them (read as a byte)
-    club(u(game, fixture::HOME_CLUB), u(game, fixture::AWAY_CLUB), game, round[0] as u32, summary);
-    club(u(game, fixture::AWAY_CLUB), u(game, fixture::HOME_CLUB), game, round[1] as u32, summary);
+    club(u(game.addr(), fixture::HOME_CLUB), u(game.addr(), fixture::AWAY_CLUB), game.addr(), round[0] as u32, summary);
+    club(u(game.addr(), fixture::AWAY_CLUB), u(game.addr(), fixture::HOME_CLUB), game.addr(), round[1] as u32, summary);
     1
 }
 
@@ -1085,6 +1086,7 @@ pub(crate) unsafe fn human_national_team_marks() -> Vec<usize> {
 /// 0x48dd70 (pela tabela em 0xb63d74): 0 ou 1 da 0; nas 3 a 7 com a selecao da competicao marcada, 0;
 /// vaga de humano com +0x11c bit 2, 0. No fim: 1 se a 0x7f9720 der 0.
 pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
+    let partida = Fixture(partida);
     let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> i32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let g = |a: usize| *(a as *const usize);
     let read = |a: usize| core::ptr::read_unaligned(a as *const i32);
@@ -1099,7 +1101,7 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
     if g(G_INTERACTIVE_MODE_FLAG) == 0 {
         return 1;
     }
-    let (c1, c2) = (g(partida + fixture::HOME_CLUB), g(partida + fixture::AWAY_CLUB));
+    let (c1, c2) = (g(partida.addr() + fixture::HOME_CLUB), g(partida.addr() + fixture::AWAY_CLUB));
     if human(c1, 1, 1, 0, 0) != 0 || human(c2, 1, 1, 0, 0) != 0 {
         crate::comparison::branch("no human human club on the pitch");
         return 0;
@@ -1111,7 +1113,7 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
         }
     }
     let final_ = || (exe::scout_manager_fixture_has_scouted_player(g(G_SCOUT_MANAGER), partida) == 0) as u32;
-    let comp = read(partida);
+    let comp = read(partida.addr());
     if comp == read(KEY_CLUB_COMP_FIFA_CLUB_WORLD_CHAMPIONSHIP) || comp == read(KEY_CLUB_COMP_WORLD_CLUB_CUP) {
         return 0;
     }
@@ -1139,11 +1141,11 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
             }
         }
     }
-    if ((exe::database_is_national_team(c2) as i32) == 0 && (exe::friendly_is_own_comp_record(g(G_FRIENDLY), (read(partida + fixture::COMPETITION) as u32) as usize) as i32) != 0) || comp == read(KEY_CLUB_COMP_INTER_TOTO_CUP) {
+    if ((exe::database_is_national_team(c2) as i32) == 0 && (exe::friendly_is_own_comp_record(g(G_FRIENDLY), (read(partida.addr() + fixture::COMPETITION) as u32) as usize) as i32) != 0) || comp == read(KEY_CLUB_COMP_INTER_TOTO_CUP) {
         crate::comparison::branch("no human by injury_word_0c");
         return if w(c2 + club::REPUTATION) + w(c1 + club::REPUTATION) > 0x2ee0 { 0 } else { final_() };
     }
-    let mut x = (exe::comp_active_key_nation_of_fixture((read(partida + fixture::COMPETITION) as u32) as u32 as usize, partida) as u32) as u8;
+    let mut x = (exe::comp_active_key_nation_of_fixture((read(partida.addr() + fixture::COMPETITION) as u32) as u32 as usize, partida) as u32) as u8;
     if let Some(k) = (0xb63d74usize..G_KEY_NATION_ACTIVE_SLOT_LOOP_END).step_by(0x48).position(|e| *(e as *const u8) == x) {
         x = k as u8;
     }
@@ -1151,7 +1153,7 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
         return 0;
     }
     if matches!(x, 3..=7) {
-        let q = g(g(partida + fixture::COMPETITION) + 0x59);
+        let q = g(g(partida.addr() + fixture::COMPETITION) + 0x59);
         if q != 0 && *((0xb67a58 + g(q)) as *const u8) != 0 {
             crate::comparison::branch("no human national team marked");
             return 0;
@@ -1194,7 +1196,7 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
 /// partida da competicao do clube (+0x14 = +0x57, com +0x40/+0x41), o clube nao fora, +0x59 acima
 /// de 15, +0x57 acima de sorteio(5) + 10, +0xb da ficha abaixo de 4250 e 0x7c3a40 zero: 0x589bc0 e,
 /// sem 0x547d60, 0x547d90(pessoa, clube, 1), e fim.
-pub(crate) unsafe fn post_match_club_with(club: Club, other: usize, partida: usize, n: u32, t: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn post_match_club_with(club: Club, other: usize, partida: Fixture, n: u32, t: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let ch = core::cell::RefCell::new(call);
     let out = |s: usize, c: usize, o: usize, n: i32| (ch.borrow_mut())(0x5896d0, 0, [s as u32, c as u32, o as u32, n as u32, 0]);
     let f589bc0 = |p: usize, c: usize| (ch.borrow_mut())(0x589bc0, 0, [p as u32, c as u32, 0, 0, 0]);
@@ -1207,7 +1209,7 @@ pub(crate) unsafe fn post_match_club_with(club: Club, other: usize, partida: usi
     let read = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let w = |a: usize| core::ptr::read_unaligned(a as *const i16);
     let ub = |a: usize| *(a as *const u8);
-    if club.is_null() || partida == 0 || other == 0 {
+    if club.is_null() || partida.is_null() || other == 0 {
         // simplification: the original routine shows the “Error” box (match_day.cpp, lines 0xc45/0xc4a/0xc4f); no
         // happens in the game
         *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
@@ -1221,7 +1223,7 @@ pub(crate) unsafe fn post_match_club_with(club: Club, other: usize, partida: usi
     }
     crate::comparison::branch("club continues");
     let n = n as u8 as i8;
-    if test_6b7cf0(partida, club.addr()) != 0 && ub(partida + fixture::HOME_SIDE_MARK) != 0 && ub(partida + fixture::AWAY_SIDE_MARK) != 0 && away(club.addr()) == 0 {
+    if test_6b7cf0(partida.addr(), club.addr()) != 0 && ub(partida.addr() + fixture::HOME_SIDE_MARK) != 0 && ub(partida.addr() + fixture::AWAY_SIDE_MARK) != 0 && away(club.addr()) == 0 {
         for k in 0..50 {
             let s = g(club.addr() + club::SQUAD + 4 * k);
             if s == 0 {
@@ -1259,10 +1261,10 @@ pub(crate) unsafe fn post_match_club_with(club: Club, other: usize, partida: usi
             continue;
         }
         let c = exe::contract_manager_get_contract(g(G_CONTRACT_MANAGER), p);
-        if c == 0 || read(c + 0x45) != 0 || ub(partida + fixture::HOME_SIDE_MARK) == 0 || ub(partida + fixture::AWAY_SIDE_MARK) == 0 {
+        if c == 0 || read(c + 0x45) != 0 || ub(partida.addr() + fixture::HOME_SIDE_MARK) == 0 || ub(partida.addr() + fixture::AWAY_SIDE_MARK) == 0 {
             continue;
         }
-        if read(partida + fixture::COMPETITION) == 0 || read(partida + fixture::COMPETITION) != read(club.addr() + club::DIVISION) || away(club.addr()) != 0 || read_i8(p + staff::LOYALTY) <= 0xf {
+        if read(partida.addr() + fixture::COMPETITION) == 0 || read(partida.addr() + fixture::COMPETITION) != read(club.addr() + club::DIVISION) || away(club.addr()) != 0 || read_i8(p + staff::LOYALTY) <= 0xf {
             continue;
         }
         crate::comparison::branch("club youth");
@@ -1287,7 +1289,7 @@ pub(crate) unsafe fn post_match_club_with(club: Club, other: usize, partida: usi
 ///
 /// [pt] { 0x6b74a0 }: ver `post_match_events_injected`.
 pub(crate) unsafe extern "C" fn post_match_events(partida: usize) {
-    post_match_events_injected(partida, &mut |r, t, a| dispatch_post_match_call(r, t, a))
+    post_match_events_injected(Fixture(partida), &mut |r, t, a| dispatch_post_match_call(r, t, a))
 }
 
 /// After a match: updates the players and staff of team `t` in fixture `partida` (form and ratings copied to the player
@@ -1304,7 +1306,7 @@ pub(crate) unsafe extern "C" fn post_match_players(partida: usize, t: usize) {
 ///
 /// [pt] { 0x6b79a0 }: ver `post_match_club_with`.
 pub(crate) unsafe extern "C" fn post_match_club(club: usize, other: usize, partida: usize, n: u32, t: usize) {
-    post_match_club_with(Club(club), other, partida, n, t, &mut |r, tt, a| dispatch_post_match_call(r, tt, a))
+    post_match_club_with(Club(club), other, Fixture(partida), n, t, &mut |r, tt, a| dispatch_post_match_call(r, tt, a))
 }
 
 /// Calls one of the post-match routines with effects by game address, with the right convention and argument count.

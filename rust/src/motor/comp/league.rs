@@ -12,8 +12,9 @@ use super::*;
 /// na frente (+4 zero) e nenhum outro alcanca-lo com os jogos que faltam (+0xa7 - +0x11 vezes os
 /// pontos por vitoria +0xc2, contra os pontos +0x19). A copia volta (0x687970).
 pub(crate) unsafe extern "thiscall" fn group_decided(this: usize, club: usize, partida: usize) -> u32 {
+    let partida = Fixture(partida);
     let this = League(this);
-    if *((partida + fixture::STAGE_INDEX) as *const u8) != 0xff {
+    if partida.stage_index() != 0xff {
         return 0;
     }
     if exe::comp_util_is_league_division(*(this.competition().addr() as *const i32)) == 0 {
@@ -869,26 +870,26 @@ pub(crate) unsafe extern "thiscall" fn league_update_for_date(this: usize, data:
 /// 0xc), a data (+0x28 ano + o da liga, +0x2a dia) e a fatia (+0x3f) da entrada `off` da tabela das datas (+0xba), os
 /// bits 0..1 de +0x4e zerados e o bit 3 na última rodada (+0x34 = +0xa9 − 1; ou com `tipo4`, data do tipo 4), e o jogo
 /// vai ao calendário (0x5aa680: push 1; push &jogo; mov ecx, [0xae2a58] -> thiscall, ret 8).
-pub(crate) unsafe fn add_league_fixture(this: League, r: usize, ea: usize, eb: usize, off: usize, tipo4: bool) {
+pub(crate) unsafe fn add_league_fixture(this: League, r: Fixture, ea: usize, eb: usize, off: usize, tipo4: bool) {
     let stadium: unsafe extern "thiscall" fn(usize, u32, usize, u32) = core::mem::transmute(FN_STADIUM_SET_FIXTURE_VENUE);
     let (ea, eb) = (ea, eb); // cqd5: the home and away sides
     let (ca, cb) = (read_usize(ea), read_usize(eb));
-    write_usize(r + fixture::HOME_CLUB, ca);
-    write_usize(r + fixture::AWAY_CLUB, cb);
-    write_u8(r + fixture::HOME_SIDE_MARK, (read_u8(ea + league_table_row::MARK) == 0) as u8);
-    write_u8(r + fixture::AWAY_SIDE_MARK, (read_u8(eb + league_table_row::MARK) == 0) as u8);
-    write_usize(r + fixture::HOME_CLUB_ID, if ca != 0 { read_usize(ca) } else { u32::MAX as usize });
-    write_usize(r + fixture::AWAY_CLUB_ID, if cb != 0 { read_usize(cb) } else { u32::MAX as usize });
-    stadium(read_usize(G_STADIUM), read_usize(this.round_dates() + off + 0x3d) as u32, r, this.fixed_stadium_id() as u32);
+    r.set_home_club(ca);
+    r.set_away_club(cb);
+    r.set_home_side_mark((read_u8(ea + league_table_row::MARK) == 0) as u8);
+    r.set_away_side_mark(((read_u8(eb + league_table_row::MARK) == 0) as u8) as i8);
+    r.set_home_club_id(if ca != 0 { read_usize(ca) } else { u32::MAX as usize });
+    r.set_away_club_id(if cb != 0 { read_usize(cb) } else { u32::MAX as usize });
+    stadium(read_usize(G_STADIUM), read_usize(this.round_dates() + off + 0x3d) as u32, r.addr(), this.fixed_stadium_id() as u32);
     let e = this.round_dates() + off;
-    write_u16(r + fixture::YEAR, read_i16(e + league_round_date::YEAR_OFFSET).wrapping_add(this.year()) as u16);
-    write_u16(r + fixture::DAY, read_i16(e) as u16);
-    write_u8(r + fixture::TIME_SLICE, read_u8(e + league_round_date::TIME_SLICE));
-    write_u16(r + fixture::SQUAD_RULES, read_i16(r + fixture::SQUAD_RULES) as u16 & 0xfcff);
-    if read_i16(r + fixture::ROUND_NUMBER) as i32 == this.round_count() as i32 - 1 || (tipo4 && read_u8(e + league_round_date::TV_SLOT_KIND) == 4) {
-        write_u8(r + fixture::FLAGS, read_u8(r + fixture::FLAGS) | 8);
+    r.set_year(read_i16(e + league_round_date::YEAR_OFFSET).wrapping_add(this.year()) as u16);
+    r.set_day(read_i16(e) as u16);
+    r.set_time_slice(read_u8(e + league_round_date::TIME_SLICE));
+    r.set_squad_rules((r.squad_rules() as i16) as u16 & 0xfcff);
+    if r.round_number() as i32 == this.round_count() as i32 - 1 || (tipo4 && read_u8(e + league_round_date::TV_SLOT_KIND) == 4) {
+        r.set_flags(r.flags() | 8);
     } else {
-        write_u16(r + fixture::SQUAD_RULES, read_i16(r + fixture::SQUAD_RULES) as u16 & 0xf7ff);
+        r.set_squad_rules((r.squad_rules() as i16) as u16 & 0xf7ff);
     }
     crate::comparison::branch("cqd_5 fixture list match");
     exe::fixture_manager_add_fixture(read_usize(G_FIXTURE_MANAGER), r, 1);
@@ -967,33 +968,33 @@ pub(crate) unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
     // the match record; the bytes the original does not write (+4..+7, +0x18, +0x2e, +0x39, +0x4d and the high bits of
     // +0x4e: leftover from its stack, which method 0x7c and 0x85c260 may fill) stay 0, a value the game produces
     let mut reg = [0u8; 0x60];
-    let r = reg.as_mut_ptr() as usize;
+    let r = Fixture(reg.as_mut_ptr() as usize);
     let c = this.competition().addr();
-    write_usize(r + fixture::COMPETITION, c);
-    write_u16(r + fixture::ROUND_PREFIX, this.stage_id() as u16);
-    write_usize(r, read_usize(c));
-    write_u16(r + fixture::SEASON_YEAR, this.year() as u16);
-    write_u16(r + fixture::TIE_RULES, this.match_rules() as u16);
-    write_u16(r + fixture::SQUAD_RULES, read_i16(r + fixture::SQUAD_RULES) as u16 & 0xfbff);
-    write_u8(r + fixture::CATEGORY, this.match_category());
-    write_u16(r + fixture::ROUND_DRAW_RULES, this.round_draw_rules() as u16);
-    write_u16(r + fixture::ROUND_NAME, 0);
+    r.set_competition(c);
+    r.set_round_prefix((this.stage_id() as u16) as i16);
+    write_usize(r.addr(), read_usize(c));
+    r.set_season_year(this.year() as u16);
+    r.set_tie_rules(this.match_rules() as u16);
+    r.set_squad_rules((r.squad_rules() as i16) as u16 & 0xfbff);
+    r.set_category(this.match_category());
+    r.set_round_draw_rules(this.round_draw_rules() as u16);
+    r.set_round_name((0) as i16);
     for k in 0x43..=0x4cusize {
-        write_u8(r + k, 0xff);
+        write_u8(r.addr() + k, 0xff);
     }
-    write_usize(r + fixture::MATCH_STATS_SLOT, u32::MAX as usize);
-    write_u8(r + fixture::STAGE_INDEX, this.stage_index());
-    write_u8(r + fixture::HOME_RESULT_MARK, 0);
-    write_u8(r + fixture::AWAY_RESULT_MARK, 0);
-    write_u8(r + fixture::STAGE, 0xff);
+    r.set_match_stats_slot(u32::MAX as usize);
+    r.set_stage_index(this.stage_index());
+    r.set_home_result_mark((0) as i8);
+    r.set_away_result_mark((0) as i8);
+    r.set_stage(0xff);
     let prepare: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(vtable_method(this, 0x7c));
-    prepare(this.addr(), r);
+    prepare(this.addr(), r.addr());
     let ult = this.round_dates().wrapping_add((this.round_count() as i32 * 0x41) as usize);
     // simplification: the original pushes the day and the year with leftover in the high bytes; 0x549ef0 only reads the words
     let yy = exe::new_date(py, read_i16(ult - 0x41) as u16 as u32, read_i16(ult - 0x3f).wrapping_add(this.year()) as u16 as u32);
     exe::date_operator_3d(px, pz, yy);
-    write_u16(r + fixture::NEXT_ROUND_DAY, read_i16(px) as u16);
-    write_u16(r + fixture::NEXT_ROUND_YEAR, read_i16(px + 2) as u16);
+    r.set_next_round_day(read_i16(px) as u16);
+    r.set_next_round_year(read_i16(px + 2) as u16);
     let list = this.fixed_fixtures();
     if list != 0 && this.year() as i32 == read_i16(list + 2) as u16 as i32 {
         let mut k = 0i32;
@@ -1006,7 +1007,7 @@ pub(crate) unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
                 if i >= half {
                     break;
                 }
-                write_u16(r + fixture::ROUND_NUMBER, k as u16);
+                r.set_round_number((k as u16) as i16);
                 let e = this.fixed_fixtures() + ((half * k + i) as usize) * 0x10;
                 let (mut ia, mut ib) = (-1i32, -1i32);
                 if teams > 0 {
@@ -1046,7 +1047,7 @@ pub(crate) unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
             if col == 0 {
                 col = n - 1;
             }
-            write_u16(r + fixture::ROUND_NUMBER, round as u16);
+            r.set_round_number((round as u16) as i16);
             if this.club_count() >= 1 {
                 let mut i = 0i32;
                 loop {
@@ -1894,23 +1895,24 @@ pub(crate) static mut LEAGUE_ADD_RESULT_DRY_RUN: bool = false;
 /// tabela +0xb1 com as +0x3e linhas, marcando) e, fora das fases 0xfe, com a competição ([0xadadfc] pelo id de +4) e a
 /// estatística dela (+8) e com o jogo: 0x49f570 com os pontos dos dois; devolve 1. Partida nula: a caixa e −1.
 pub(crate) unsafe extern "thiscall" fn league_add_result(league: usize, p: usize, game: usize) -> i32 {
+    let p = Fixture(p);
     let league = League(league);
-    if p == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(IDX_LEAGUE_ADD_RESULT)(league.addr(), p, game);
+    if p.is_null() {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(IDX_LEAGUE_ADD_RESULT)(league.addr(), p.addr(), game);
     }
     let mut local = [0u8; 8];
     exe::date_operator_3d(league.addr() + league::LAST_RESULT_DATE, (local.as_mut_ptr()) as *mut u8 as usize, G_CURRENT_DATE);
     let stage_of_league = league.stage_index();
-    let stage = *((p + fixture::STAGE_INDEX) as *const u8);
+    let stage = p.stage_index();
     if stage_of_league == 0xff && stage != 0xff {
         let k = stage as i8 as i32;
         if k > league.current_stage() as i32 || k < 0 {
             // the stage’s message boxes outside the range (lines 0xc8e and 0xc8f): the original (the date is already written, the same)
-            return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(IDX_LEAGUE_ADD_RESULT)(league.addr(), p, game);
+            return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(IDX_LEAGUE_ADD_RESULT)(league.addr(), p.addr(), game);
         }
         let filha = read_usize(league.stages().wrapping_add(4 * k as usize));
         let add: unsafe extern "thiscall" fn(usize, usize, usize) -> i32 = core::mem::transmute(read_usize(read_usize(filha) + 4));
-        return add(filha, p, game);
+        return add(filha, p.addr(), game);
     }
     if stage_of_league != stage && stage_of_league != 0xfe {
         return 0;
@@ -2378,6 +2380,7 @@ pub(crate) const RESULT_TABLE_ROW_SIZE: usize = 0x3b;
 /// (+0x19) em `pts_casa`/`pts_fora` (0 sem a linha). Com confrontos na primeira linha (+5), acha o adversário em cada
 /// uma e soma o confronto (0x6869a0). Sem SEH, sem sorteio, sem caixa, locais todas gravadas antes de lidas.
 pub(crate) unsafe extern "thiscall" fn apply_result_to_table(league: usize, p: usize, table: usize, n: u32, mark: u32, pts_home: *mut i16, pts_away: *mut i16) {
+    let p = Fixture(p);
     let league = League(league);
     let mut pontuador = league.addr();
     let id = league.competition().addr();
@@ -2394,9 +2397,9 @@ pub(crate) unsafe extern "thiscall" fn apply_result_to_table(league: usize, p: u
     if n > 0 {
         loop {
             let c = read_usize(row(k));
-            if c == read_usize(p + fixture::HOME_CLUB) {
+            if c == p.home_club() {
                 casa = k;
-            } else if c == read_usize(p + fixture::AWAY_CLUB) {
+            } else if c == p.away_club() {
                 fora = k;
             } else if casa != -1 && fora != -1 {
                 break;
@@ -2407,31 +2410,31 @@ pub(crate) unsafe extern "thiscall" fn apply_result_to_table(league: usize, p: u
             }
         }
     }
-    let noventa = || *((p + fixture::HOME_GOALS_EXTRA_TIME) as *const u8) != 0xff;
+    let noventa = || (p.home_goals_extra_time() as u8) != 0xff;
     if casa > -1 {
         let r = row(casa);
         increment_u8(r + league_table_row::HOME_PLAYED);
-        let (pro, contra) = if noventa() { (read_i8(p + fixture::HOME_GOALS_EXTRA_TIME), read_i8(p + fixture::AWAY_GOALS_EXTRA_TIME)) } else { (read_i8(p + fixture::HOME_GOALS), read_i8(p + fixture::AWAY_GOALS)) };
+        let (pro, contra) = if noventa() { (p.home_goals_extra_time(), p.away_goals_extra_time()) } else { (p.home_goals(), p.away_goals()) };
         league_add_i16(r + league_table_row::HOME_GOALS_FOR, pro as i16);
         league_add_i16(r + league_table_row::HOME_GOALS_AGAINST, contra as i16);
     }
     if fora > -1 {
         let r = row(fora);
         increment_u8(r + league_table_row::AWAY_PLAYED);
-        let (pro, contra) = if noventa() { (read_i8(p + fixture::AWAY_GOALS_EXTRA_TIME), read_i8(p + fixture::HOME_GOALS_EXTRA_TIME)) } else { (read_i8(p + fixture::AWAY_GOALS), read_i8(p + fixture::HOME_GOALS)) };
+        let (pro, contra) = if noventa() { (p.away_goals_extra_time(), p.home_goals_extra_time()) } else { (p.away_goals(), p.home_goals()) };
         league_add_i16(r + league_table_row::AWAY_GOALS_FOR, pro as i16);
         league_add_i16(r + league_table_row::AWAY_GOALS_AGAINST, contra as i16);
     }
     let points = |club: usize| -> i16 {
         let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(read_usize(read_usize(pontuador) + 0x90));
-        f(pontuador, club, p) as u8 as i8 as i16
+        f(pontuador, club, p.addr()) as u8 as i8 as i16
     };
     // home team wins: its +0x20 and points (+0x27), defeat (+0x30) for the away team; loses: +0x22 and +0x2e with the points (+0x35)
     let wins_home = |win: usize| {
         if casa > -1 {
             let r = row(casa);
             increment_u8(r + win);
-            league_add_i16(r + league_table_row::HOME_POINTS, points(read_usize(p + fixture::HOME_CLUB))); // the home team’s points
+            league_add_i16(r + league_table_row::HOME_POINTS, points(p.home_club())); // the home team’s points
         }
         if fora > -1 {
             increment_u8(row(fora) + 0x30);
@@ -2444,35 +2447,35 @@ pub(crate) unsafe extern "thiscall" fn apply_result_to_table(league: usize, p: u
         if fora > -1 {
             let r = row(fora);
             increment_u8(r + win);
-            league_add_i16(r + league_table_row::AWAY_POINTS, points(read_usize(p + fixture::AWAY_CLUB)));
+            league_add_i16(r + league_table_row::AWAY_POINTS, points(p.away_club()));
         }
     };
-    let (gc, gf) = (read_i8(p + fixture::HOME_GOALS), read_i8(p + fixture::AWAY_GOALS));
-    let flags = core::ptr::read_unaligned((p + fixture::TIE_RULES) as *const u16);
-    let penalties = if *((p + fixture::TIE_RULES) as *const u8) & 0x20 != 0 { 5u8 } else { 4 };
+    let (gc, gf) = (p.home_goals(), p.away_goals());
+    let flags = p.tie_rules();
+    let penalties = if (p.tie_rules() as u8) & 0x20 != 0 { 5u8 } else { 4 };
     if gc > gf {
         wins_home(0x20);
     } else if gc < gf {
         wins_away(0x2e);
-    } else if flags & 2 != 0 && read_i8(p + fixture::HOME_GOALS_EXTRA_TIME) > read_i8(p + fixture::AWAY_GOALS_EXTRA_TIME) {
+    } else if flags & 2 != 0 && p.home_goals_extra_time() > p.away_goals_extra_time() {
         wins_home(0x20);
         if mark != 0 {
-            *((p + fixture::HOME_RESULT_MARK) as *mut u8) = 3;
+            p.set_home_result_mark((3) as i8);
         }
-    } else if flags & 2 != 0 && read_i8(p + fixture::HOME_GOALS_EXTRA_TIME) < read_i8(p + fixture::AWAY_GOALS_EXTRA_TIME) {
+    } else if flags & 2 != 0 && p.home_goals_extra_time() < p.away_goals_extra_time() {
         wins_away(0x2e);
         if mark != 0 {
-            *((p + fixture::AWAY_RESULT_MARK) as *mut u8) = 3;
+            p.set_away_result_mark((3) as i8);
         }
-    } else if flags & 0x21 != 0 && read_i8(p + fixture::HOME_PENALTIES) > read_i8(p + fixture::AWAY_PENALTIES) {
+    } else if flags & 0x21 != 0 && p.home_penalties() > p.away_penalties() {
         wins_home(0x21);
         if mark != 0 {
-            *((p + fixture::HOME_RESULT_MARK) as *mut u8) = penalties;
+            p.set_home_result_mark((penalties) as i8);
         }
-    } else if flags & 0x21 != 0 && read_i8(p + fixture::HOME_PENALTIES) < read_i8(p + fixture::AWAY_PENALTIES) {
+    } else if flags & 0x21 != 0 && p.home_penalties() < p.away_penalties() {
         wins_away(0x2f);
         if mark != 0 {
-            *((p + fixture::AWAY_RESULT_MARK) as *mut u8) = penalties;
+            p.set_away_result_mark((penalties) as i8);
         }
     } else if flags & 0x21 == 0 {
         let empate = (league.draw_points() as i8) as i16; // o empate puro
@@ -2508,13 +2511,13 @@ pub(crate) unsafe extern "thiscall" fn apply_result_to_table(league: usize, p: u
         let mut k: i16 = 0;
         if m > 0 {
             loop {
-                if casa > -1 && entry(casa, k) == read_usize(p + fixture::AWAY_CLUB) {
+                if casa > -1 && entry(casa, k) == p.away_club() {
                     ia = k as i32;
                     if ib > -1 {
                         break;
                     }
                 }
-                if fora > -1 && entry(fora, k) == read_usize(p + fixture::HOME_CLUB) {
+                if fora > -1 && entry(fora, k) == p.home_club() {
                     ib = k as i32;
                     if ia > -1 {
                         break;
@@ -2536,9 +2539,9 @@ pub(crate) unsafe extern "thiscall" fn apply_result_to_table(league: usize, p: u
 ///
 /// [pt] As regiões da 0x685f60: as `n` linhas, os confrontos de cada linha ((n − 1) entradas de 14, se a primeira os tem),
 /// +0x3d/+0x3e da partida e os dois pontos devolvidos.
-pub(crate) unsafe fn result_update_regions(p: usize, table: usize, n: u32, pts_home: *mut i16, pts_away: *mut i16) -> Vec<(usize, usize)> {
+pub(crate) unsafe fn result_update_regions(p: Fixture, table: usize, n: u32, pts_home: *mut i16, pts_away: *mut i16) -> Vec<(usize, usize)> {
     let n = (n as i16).max(0) as usize;
-    let mut reg = vec![(p + fixture::HOME_RESULT_MARK, 2)];
+    let mut reg = vec![(p.addr() + fixture::HOME_RESULT_MARK, 2)];
     if table != 0 && n > 0 {
         reg.push((table, RESULT_TABLE_ROW_SIZE * n));
         if read_usize(table + 5) != 0 && n > 1 {
@@ -2572,20 +2575,21 @@ pub(crate) unsafe fn result_update_regions(p: usize, table: usize, n: u32, pts_h
 /// prorrogação (+0xab bit 2, +0x47/+0x48, os de vitória), pelos pênaltis (bits 0x21, +0x49/+0x4a: os de empate +0xc3
 /// a quem venceu, 0 a quem perdeu) ou os de empate. Só o al é escrito: os 3 bytes altos do eax são os da partida.
 pub(crate) unsafe extern "thiscall" fn points_for_result(league: usize, club: usize, p: usize) -> u32 {
+    let p = Fixture(p);
     let league = League(league);
-    let (casa, fora) = (read_usize(p + fixture::HOME_CLUB), read_usize(p + fixture::AWAY_CLUB));
+    let (casa, fora) = (p.home_club(), p.away_club());
     let won = |a: i8, b: i8| (club == casa && a > b) || (club == fora && a < b);
     let flags = (league.match_rules() as u8);
-    let v = if read_i8(p + fixture::HOME_GOALS) != read_i8(p + fixture::AWAY_GOALS) {
-        if won(read_i8(p + fixture::HOME_GOALS), read_i8(p + fixture::AWAY_GOALS)) { league.win_points() } else { 0 } // the points for a win
-    } else if flags & 2 != 0 && read_i8(p + fixture::HOME_GOALS_EXTRA_TIME) != read_i8(p + fixture::AWAY_GOALS_EXTRA_TIME) {
-        if won(read_i8(p + fixture::HOME_GOALS_EXTRA_TIME), read_i8(p + fixture::AWAY_GOALS_EXTRA_TIME)) { league.win_points() } else { 0 }
-    } else if flags & 0x21 != 0 && read_i8(p + fixture::HOME_PENALTIES) != read_i8(p + fixture::AWAY_PENALTIES) {
-        if won(read_i8(p + fixture::HOME_PENALTIES), read_i8(p + fixture::AWAY_PENALTIES)) { league.draw_points() } else { 0 }
+    let v = if p.home_goals() != p.away_goals() {
+        if won(p.home_goals(), p.away_goals()) { league.win_points() } else { 0 } // the points for a win
+    } else if flags & 2 != 0 && p.home_goals_extra_time() != p.away_goals_extra_time() {
+        if won(p.home_goals_extra_time(), p.away_goals_extra_time()) { league.win_points() } else { 0 }
+    } else if flags & 0x21 != 0 && p.home_penalties() != p.away_penalties() {
+        if won(p.home_penalties(), p.away_penalties()) { league.draw_points() } else { 0 }
     } else {
         league.draw_points()
     };
-    (p as u32 & 0xffff_ff00) | v as u32
+    (p.addr() as u32 & 0xffff_ff00) | v as u32
 }
 
 compare_value!(compare_points_for_result, points_for_result, IDX_POINTS_FOR_RESULT, (clube: usize, p: usize) -> u32);
@@ -3312,9 +3316,10 @@ pub(crate) unsafe extern "C" fn league_round_set_date(rounds: usize, i: u32, day
 /// com +0x34 da partida abaixo de 3; senão, linha sem marca (+0x37 = 0xff), +1 e a margem do último
 /// dia (0x68a4d0, que pode trocar a importância) em `saida`. Só o al é devolvido (quem chama usa al).
 pub(crate) unsafe extern "thiscall" fn get_match_importance(league: usize, partida: usize, side: u32, out: *mut u8) -> u8 {
+    let partida = Fixture(partida);
     let league = League(league);
     *out = 0xff;
-    let club = *((partida + if side as u8 == 0 { 0x1c } else { 0x20 }) as *const usize);
+    let club = *((partida.addr() + if side as u8 == 0 { 0x1c } else { 0x20 }) as *const usize);
     let mut imp = (((league.importance() as i8) as i32 - 10) / 4) as u8;
     imp = imp.wrapping_add(10); // base importance
     let clubs = league.club_count();
@@ -3333,7 +3338,7 @@ pub(crate) unsafe extern "thiscall" fn get_match_importance(league: usize, parti
     if league.round_count() <= 10 {
         return imp;
     }
-    if core::ptr::read_unaligned((partida + fixture::ROUND_NUMBER) as *const i16) < 3 {
+    if partida.round_number() < 3 {
         return imp.wrapping_add(1);
     }
     let r = row(i);

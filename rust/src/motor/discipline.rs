@@ -1003,18 +1003,19 @@ pub(crate) unsafe extern "thiscall" fn table_penalty(t: usize, row: i32, column:
 /// com +0x14) ou na competição [0x9cf684]: o tribunal da liga (+0x57) do mandante (+0x1c, com 1, 0, 0) e o do
 /// visitante (+0x20, com 0, 1, 0). Devolve o que o primeiro tribunal devolve (os outros caminhos, 0; ninguém lê).
 pub(crate) unsafe extern "thiscall" fn process_match(this: usize, partida: usize, result: u32) -> u32 {
-    let id = read_usize(partida) as i32;
+    let partida = Fixture(partida);
+    let id = read_usize(partida.addr()) as i32;
     if id > -1 {
         if let Some(b) = comp_tribunal(this, id) {
             return (exe::rulingbody_process_match(b, partida, result, 1, 1, 1) as u32);
         }
     }
     let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-    if friendly(read_usize(G_FRIENDLY), read_usize(partida + fixture::COMPETITION)) == 0 && read_usize(partida) != read_usize(KEY_CLUB_COMP_RESERVE) {
+    if friendly(read_usize(G_FRIENDLY), partida.competition()) == 0 && read_usize(partida.addr()) != read_usize(KEY_CLUB_COMP_RESERVE) {
         return 0;
     }
     for (lado, a, b) in [(0x1cusize, 1u32, 0u32), (0x20, 0, 1)] {
-        let league = read_usize(read_usize(partida + lado) + 0x57);
+        let league = read_usize(read_usize(partida.addr() + lado) + 0x57);
         if league == 0 {
             continue;
         }

@@ -19,17 +19,17 @@ pub(crate) unsafe fn cup_has_human_manager(club: usize) -> bool {
 /// local -> thiscall, ret 8) que não estiver depois de hoje ([0xae2c90]: ano sem sinal, dia com sinal) passa a amanhã
 /// (0x54c5b0: push 1; push saída; mov ecx, 0xae2c90 -> thiscall(data, saída, n), ret 8); e a partida vai ao calendário
 /// (0x5aa680: push 1; push &partida; ecx = [0xae2a58] -> thiscall, ret 8).
-pub(crate) unsafe fn add_fixture_to_calendar(p: usize) {
+pub(crate) unsafe fn add_fixture_to_calendar(p: Fixture) {
     let (mut t, mut saida) = ([0u8; 8], [0u8; 8]);
-    let f = exe::new_date(t.as_mut_ptr() as usize, read_usize(p + fixture::DAY) as u32, read_usize(p + fixture::YEAR) as u32);
+    let f = exe::new_date(t.as_mut_ptr() as usize, read_usize(p.addr() + fixture::DAY) as u32, read_usize(p.addr() + fixture::YEAR) as u32);
     let (hd, ha) = (read_i16(G_CURRENT_DATE), read_i16(G_CURRENT_DATE_YEAR) as u16);
     let fa = read_i16(f + 2) as u16;
     let before = ha < fa || (ha == fa && hd < read_i16(f));
     if !before {
         let s = saida.as_mut_ptr() as usize;
         exe::date_add_days(G_CURRENT_DATE, s, 1);
-        write_u16(p + fixture::DAY, read_i16(s) as u16);
-        write_u16(p + fixture::YEAR, read_i16(s + 2) as u16);
+        p.set_day(read_i16(s) as u16);
+        p.set_year(read_i16(s + 2) as u16);
     }
     exe::fixture_manager_add_fixture(read_usize(G_FIXTURE_MANAGER), p, 1);
 }
@@ -117,76 +117,76 @@ pub(crate) unsafe extern "thiscall" fn create_tie_fixtures(this: usize, round: u
         return 1;
     }
     let mut buf = [0u8; 0x50];
-    let p = buf.as_mut_ptr() as usize;
+    let p = Fixture(buf.as_mut_ptr() as usize);
     let comp = read_usize(this + 4);
     if comp != 0 {
-        write_usize(p + fixture::COMPETITION, comp);
-        write_usize(p, read_usize(comp));
+        p.set_competition(comp);
+        write_usize(p.addr(), read_usize(comp));
     } else {
-        write_usize(p, usize::MAX);
-        write_usize(p + fixture::COMPETITION, 0);
+        write_usize(p.addr(), usize::MAX);
+        p.set_competition(0);
     }
-    write_u16(p + fixture::SEASON_YEAR, read_i16(this + cup::YEAR) as u16);
-    write_u16(p + fixture::ROUND_PREFIX, read_i16(this + cup::STAGE_LABEL) as u16);
+    p.set_season_year(read_i16(this + cup::YEAR) as u16);
+    p.set_round_prefix((read_i16(this + cup::STAGE_LABEL) as u16) as i16);
     let e = round_entry(this, ri);
     let mut code = read_i16(e + cup_round::ROUND_CODE);
     if read_u8(e + cup_round::LEGS) == 2 {
         code = code.wrapping_add(3);
     }
-    write_u16(p + fixture::ROUND_NAME, code as u16);
-    write_u16(p + fixture::ROUND_NUMBER, read_i16(e + cup_round::ROUND_NUMBER) as u16);
-    write_u8(p + fixture::CATEGORY, read_u8(e + cup_round::MATCH_CATEGORY));
-    write_u16(p + fixture::ROUND_DRAW_RULES, read_i16(e + cup_round::DRAW_RULES) as u16);
+    p.set_round_name((code as u16) as i16);
+    p.set_round_number((read_i16(e + cup_round::ROUND_NUMBER) as u16) as i16);
+    p.set_category(read_u8(e + cup_round::MATCH_CATEGORY));
+    p.set_round_draw_rules(read_i16(e + cup_round::DRAW_RULES) as u16);
     // simplification: the original does and 0xf4ff on the word +0x4d of a meaningless local (the +0x4d and bits 2, 4..7 of
     // +0x4e keep the stack leftovers) and does not write +4, +0x18, +0x2e, +0x2f, +0x3c before the stadium: here, zero
-    write_u16(p + fixture::TIE_RULES, read_i16(e + cup_round::TIE_RULES) as u16);
+    p.set_tie_rules(read_i16(e + cup_round::TIE_RULES) as u16);
     for x in [0x43usize, 0x44, 0x4b, 0x4c, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a] {
-        write_u8(p + x, 0xff);
+        write_u8(p.addr() + x, 0xff);
     }
-    write_usize(p + fixture::MATCH_STATS_SLOT, usize::MAX);
-    write_u8(p + fixture::STAGE_INDEX, read_u8(this + cup::STAGE_INDEX));
-    write_u8(p + fixture::HOME_RESULT_MARK, 0);
-    write_u8(p + fixture::AWAY_RESULT_MARK, 0);
-    write_u8(p + fixture::STAGE, 0xff);
-    write_u8(p + fixture::HOME_SIDE_MARK, 1);
-    write_u8(p + fixture::AWAY_SIDE_MARK, 1);
-    if (read_u8(e + cup_round::LEGS) as i8) < 2 && read_i16(p + fixture::TIE_RULES) as u16 & 0x800 != 0 {
+    p.set_match_stats_slot(usize::MAX);
+    p.set_stage_index(read_u8(this + cup::STAGE_INDEX));
+    p.set_home_result_mark((0) as i8);
+    p.set_away_result_mark((0) as i8);
+    p.set_stage(0xff);
+    p.set_home_side_mark(1);
+    p.set_away_side_mark((1) as i8);
+    if (read_u8(e + cup_round::LEGS) as i8) < 2 && (p.tie_rules() as i16) as u16 & 0x800 != 0 {
         let nc = read_u8(cup_team_entry(this, read_i16(t)) + 4) as i8;
         let nf = read_u8(cup_team_entry(this, read_i16(t + cup_tie::AWAY_TEAM)) + 4) as i8;
-        write_u16(p + fixture::TIE_RULES, if nc >= nf { 0x1000 } else { 0x800 });
+        p.set_tie_rules(if nc >= nf { 0x1000 } else { 0x800 });
     }
     let virtual_7c: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(read_usize(read_usize(this) + 0x7c));
-    virtual_7c(this, p);
+    virtual_7c(this, p.addr());
     let e = round_entry(this, ri);
     if (read_u8(e + cup_round::LEGS) as i8) < 2 && (read_u8(e + cup_round::SINGLE_LEG_FLAG) as i8) > 0 {
-        write_u8(p + fixture::FLAGS, read_u8(p + fixture::FLAGS) | 4);
+        p.set_flags(p.flags() | 4);
     } else {
-        write_u8(p + fixture::FLAGS, read_u8(p + fixture::FLAGS) & !4);
+        p.set_flags(p.flags() & !4);
     }
     let t = tie_of_round(this, ri, k as i16 as i32);
     let (lc, lf) = (read_i16(t), read_i16(t + cup_tie::AWAY_TEAM)); // cqc5: the first-leg sides
     let home = read_usize(cup_team_entry(this, lc));
-    write_usize(p + fixture::HOME_CLUB, home);
-    write_usize(p + fixture::HOME_CLUB_ID, if home != 0 { read_usize(home) } else { usize::MAX });
+    p.set_home_club(home);
+    p.set_home_club_id(if home != 0 { read_usize(home) } else { usize::MAX });
     let away = read_usize(cup_team_entry(this, lf));
-    write_usize(p + fixture::AWAY_CLUB, away);
-    write_usize(p + fixture::AWAY_CLUB_ID, if away != 0 { read_usize(away) } else { usize::MAX });
+    p.set_away_club(away);
+    p.set_away_club_id(if away != 0 { read_usize(away) } else { usize::MAX });
     let year_cup = read_i16(this + cup::YEAR);
-    write_u16(p + fixture::YEAR, (read_u8(e + cup_round::YEAR_OFFSET) as i8 as i16).wrapping_add(year_cup) as u16);
-    write_u16(p + fixture::DAY, read_i16(e + cup_round::DAY) as u16); // cqc5: the first-leg day
-    write_u8(p + fixture::TIME_SLICE, read_u8(e + cup_round::TIME_SLICE));
+    p.set_year((read_u8(e + cup_round::YEAR_OFFSET) as i8 as i16).wrapping_add(year_cup) as u16);
+    p.set_day(read_i16(e + cup_round::DAY) as u16); // cqc5: the first-leg day
+    p.set_time_slice(read_u8(e + cup_round::TIME_SLICE));
     if ri < read_i16(this + cup::ROUND_COUNT) as i32 - 1 {
-        write_u16(p + fixture::NEXT_ROUND_DAY, read_i16(e + 0x6b) as u16);
-        write_u16(p + fixture::NEXT_ROUND_YEAR, (read_u8(e + 0x6d) as i8 as i16).wrapping_add(read_i16(this + cup::YEAR)) as u16);
+        p.set_next_round_day(read_i16(e + 0x6b) as u16);
+        p.set_next_round_year((read_u8(e + 0x6d) as i8 as i16).wrapping_add(read_i16(this + cup::YEAR)) as u16);
     } else {
-        write_u16(p + fixture::NEXT_ROUND_DAY, 0);
-        write_u16(p + fixture::NEXT_ROUND_YEAR, 0);
+        p.set_next_round_day(0);
+        p.set_next_round_year(0);
     }
     let stadium: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_STADIUM_SET_FIXTURE_VENUE);
-    stadium(read_usize(G_STADIUM), read_usize(e + cup_round::VENUE_VALUE), p, read_usize(this + cup::VENUE_STADIUM_ID));
+    stadium(read_usize(G_STADIUM), read_usize(e + cup_round::VENUE_VALUE), p.addr(), read_usize(this + cup::VENUE_STADIUM_ID));
     crate::comparison::branch("cqc_5 tie match");
     add_fixture_to_calendar(p);
-    let (home, away) = (read_usize(p + fixture::HOME_CLUB), read_usize(p + fixture::AWAY_CLUB));
+    let (home, away) = (p.home_club(), p.away_club());
     if (cup_has_human_manager(home) || cup_has_human_manager(away)) && read_i16(round_entry(this, ri) + 0xd) as u16 & 0x100 == 0 {
         let mut news = [0u32; 0x38];
         let n = news.as_mut_ptr() as usize;
@@ -195,15 +195,15 @@ pub(crate) unsafe extern "thiscall" fn create_tie_fixtures(this: usize, round: u
         exe::newsitem_set_slot(n, 1, read_i16(this + cup::STAGE_LABEL) as i32 as u32);
         exe::newsitem_set_slot(n, 2, read_i16(round_entry(this, ri) + 7) as i32 as u32);
         exe::newsitem_set_slot(n, 5, (read_u8(round_entry(this, ri) + 0x21) == 2) as u32);
-        exe::newsitem_set_slot(n, 6, read_usize(p + fixture::STADIUM_ID) as u32);
-        exe::newsitem_set_slot(n, 7, read_i16(p + fixture::DAY) as u16 as u32);
-        exe::newsitem_set_slot(n, 8, read_i16(p + fixture::YEAR) as u16 as u32);
+        exe::newsitem_set_slot(n, 6, p.stadium_id() as u32);
+        exe::newsitem_set_slot(n, 7, (p.day() as i16) as u16 as u32);
+        exe::newsitem_set_slot(n, 8, (p.year() as i16) as u16 as u32);
         if cup_has_human_manager(home) {
-            exe::newsitem_set_slot(n, 3, read_usize(p + fixture::HOME_CLUB_ID) as u32);
-            exe::newsitem_set_slot(n, 4, read_usize(p + fixture::AWAY_CLUB_ID) as u32);
+            exe::newsitem_set_slot(n, 3, p.home_club_id() as u32);
+            exe::newsitem_set_slot(n, 4, p.away_club_id() as u32);
         } else {
-            exe::newsitem_set_slot(n, 3, read_usize(p + fixture::AWAY_CLUB_ID) as u32);
-            exe::newsitem_set_slot(n, 4, read_usize(p + fixture::HOME_CLUB_ID) as u32);
+            exe::newsitem_set_slot(n, 3, p.away_club_id() as u32);
+            exe::newsitem_set_slot(n, 4, p.home_club_id() as u32);
         }
         exe::news_send_to_club_manager(read_usize(G_NEWS), n, home);
         exe::news_send_to_club_manager(read_usize(G_NEWS), n, away);
@@ -214,11 +214,11 @@ pub(crate) unsafe extern "thiscall" fn create_tie_fixtures(this: usize, round: u
     }
     crate::comparison::branch("cqc_5 return leg");
     if (read_u8(e + cup_round::SINGLE_LEG_FLAG) as i8) < 1 {
-        write_u8(p + fixture::FLAGS, read_u8(p + fixture::FLAGS) & !4);
+        p.set_flags(p.flags() & !4);
     } else {
-        write_u8(p + fixture::FLAGS, read_u8(p + fixture::FLAGS) | 4);
+        p.set_flags(p.flags() | 4);
     }
-    write_u16(p + fixture::ROUND_NAME, read_i16(e + cup_round::ROUND_CODE).wrapping_add(4) as u16);
+    p.set_round_name((read_i16(e + cup_round::ROUND_CODE).wrapping_add(4) as u16) as i16);
     let week: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_DATE_GET_WEEKDAY);
     let (mut a, mut s, mut c, mut x) = ([0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8]);
     let pa = a.as_mut_ptr() as usize;
@@ -227,19 +227,19 @@ pub(crate) unsafe extern "thiscall" fn create_tie_fixtures(this: usize, round: u
     exe::new_date(pa, read_i16(e + cup_round::DAY) as u16 as u32, (read_u8(e + cup_round::YEAR_OFFSET) as i8 as i16).wrapping_add(read_i16(this + cup::YEAR)) as u16 as u32);
     let r = exe::date_add_days(pa, s.as_mut_ptr() as usize, read_u8(e + cup_round::LEG_GAP_DAYS) as u32);
     exe::date_operator_3d(pa, c.as_mut_ptr() as usize, r);
-    write_u16(p + fixture::YEAR, read_i16(pa + 2) as u16);
-    write_u16(p + fixture::DAY, read_i16(pa) as u16);
+    p.set_year(read_i16(pa + 2) as u16);
+    p.set_day(read_i16(pa) as u16);
     let day = exe::new_date(x.as_mut_ptr() as usize, read_usize(pa) as u32, read_usize(pa + 2) as u32);
     let sd = week(day) as i16;
-    write_u8(p + fixture::TIME_SLICE, if sd == 5 || sd == 6 { 1 } else { 2 });
-    let (c1, c2, i1, i2) = (read_usize(p + fixture::HOME_CLUB), read_usize(p + fixture::AWAY_CLUB), read_usize(p + fixture::HOME_CLUB_ID), read_usize(p + fixture::AWAY_CLUB_ID)); // cqc5: the second-leg sides
-    write_u8(p + fixture::FLAGS, read_u8(p + fixture::FLAGS) & 0xf4);
-    write_usize(p + fixture::AWAY_CLUB, c1);
-    write_usize(p + fixture::HOME_CLUB_ID, i2);
-    write_usize(p + fixture::AWAY_CLUB_ID, i1);
-    write_usize(p + fixture::HOME_CLUB, c2);
+    p.set_time_slice(if sd == 5 || sd == 6 { 1 } else { 2 });
+    let (c1, c2, i1, i2) = (p.home_club(), p.away_club(), p.home_club_id(), p.away_club_id()); // cqc5: the second-leg sides
+    p.set_flags(p.flags() & 0xf4);
+    p.set_away_club(c1);
+    p.set_home_club_id(i2);
+    p.set_away_club_id(i1);
+    p.set_home_club(c2);
     let e = round_entry(this, ri);
-    stadium(read_usize(G_STADIUM), read_usize(e + cup_round::VENUE_VALUE), p, read_usize(this + cup::VENUE_STADIUM_ID));
+    stadium(read_usize(G_STADIUM), read_usize(e + cup_round::VENUE_VALUE), p.addr(), read_usize(this + cup::VENUE_STADIUM_ID));
     add_fixture_to_calendar(p);
     1
 }
@@ -751,7 +751,7 @@ pub(crate) static mut ROUND_PRIZE_MONEY_DRY_RUN: bool = false;
 ///
 /// [pt] A notícia do prêmio (Comp 0x48e3e0: 7 pushes; ecx = a copa; sem add esp -> thiscall(copa, clube, valor, alto do
 /// valor, −1, rodada seguinte, partida, desfecho), ret 0x1c); no ensaio, nada.
-pub(crate) unsafe fn send_prize_news(cup: usize, club: usize, value: i32, next: u32, partida: usize, outcome: u8) {
+pub(crate) unsafe fn send_prize_news(cup: usize, club: usize, value: i32, next: u32, partida: Fixture, outcome: u8) {
     if ROUND_PRIZE_MONEY_DRY_RUN {
         return;
     }
@@ -814,13 +814,14 @@ pub(crate) unsafe fn round_prizes(cup: usize, r: i32, count: bool) -> Option<(i3
 /// 0x8c, sobre os 16 bits altos do ponteiro da rodada, como a original deixa no ebp) e o dinheiro (0x5999a0 nas
 /// finanças 0x5a0590); o perdedor só o dinheiro; o fundo perde os dois.
 pub(crate) unsafe extern "thiscall" fn pay_round_prize_money(cup: usize, winner: usize, loser: usize, round: u32, partida: usize) {
+    let partida = Fixture(partida);
     let r = round as i16 as i32;
     let (ao_vencedor, ao_perdedor) = match round_prizes(cup, r, true) {
         Some(p) => p,
-        None => return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, usize)>(IDX_PAY_ROUND_PRIZE_MONEY)(cup, winner, loser, round, partida), // simplification: the original crashes on the division; let it crash there
+        None => return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, usize)>(IDX_PAY_ROUND_PRIZE_MONEY)(cup, winner, loser, round, partida.addr()), // simplification: the original crashes on the division; let it crash there
     };
     let mut outcome = read_u8(winner + 5);
-    if read_i16(partida + fixture::ROUND_NAME) == 0x136 && outcome == 1 {
+    if partida.round_name() == 0x136 && outcome == 1 {
         outcome = 3;
     }
     let e = round_record(cup, r);
@@ -1309,9 +1310,9 @@ pub(crate) unsafe fn wins_uefa_cup_place(comp: Competition, club: usize) -> bool
 ///
 /// [pt] Os registros de final (0x86a800 campeão, 0x86b0b0 vice, 0x86b710 terceiro: push final; push jogo; push clube;
 /// ecx = [0xdd7f00]; sem add esp -> thiscall(registros, clube, jogo, final), ret 0xc).
-pub(crate) unsafe fn cup_record_final_result(f: usize, club: usize, game: usize, final_: u32) {
+pub(crate) unsafe fn cup_record_final_result(f: usize, club: usize, game: Fixture, final_: u32) {
     let g: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(f);
-    g(read_usize(G_STAFF_RECORDS), club, game, final_);
+    g(read_usize(G_STAFF_RECORDS), club, game.addr(), final_);
 }
 
 /// Updates the staff records by the club's outcome in the cup: the winners record (and the UEFA Cup place through the
@@ -1339,7 +1340,8 @@ pub(crate) unsafe fn cup_record_final_result(f: usize, club: usize, game: usize,
 /// 0xff: a eliminação (0x86c000) com o peso rodada × 99 / rodadas + 1. Os registros de fase levam os dwords que a
 /// original empurra: a palavra do jogo (+0x32, +0x30) ou da rodada (+7) sobre os 16 bits altos do registrador.
 pub(crate) unsafe extern "thiscall" fn cup_update_staff_records_for_status(cup: usize, club: usize, outcome: u32, a3: u32, a4: u32, game: usize, final_: u32) -> u32 {
-    if read_u8(game + fixture::CATEGORY) == 1 || read_usize(cup + cup::STAGE_COUNT) != 0 || read_u8(cup + cup::STAGE_INDEX) != 0xff {
+    let game = Fixture(game);
+    if game.category() == 1 || read_usize(cup + cup::STAGE_COUNT) != 0 || read_u8(cup + cup::STAGE_INDEX) != 0xff {
         return 0;
     }
     let comp = read_usize(cup + 4);
@@ -1357,7 +1359,7 @@ pub(crate) unsafe extern "thiscall" fn cup_update_staff_records_for_status(cup: 
         }
         3 => cup_record_final_result(0x86b710, club, game, final_),
         0 => {
-            let r = read_i16(game + fixture::ROUND_NUMBER);
+            let r = game.round_number();
             let n = read_i16(cup + cup::ROUND_COUNT);
             let next = r.wrapping_add(1);
             if next >= n {
@@ -1369,26 +1371,26 @@ pub(crate) unsafe extern "thiscall" fn cup_update_staff_records_for_status(cup: 
             }
             let div = n as i32 - 1;
             if div == 0 {
-                return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(cup, club, outcome, a3, a4, game, final_); // simplification: the original falls into the division
+                return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(cup, club, outcome, a3, a4, game.addr(), final_); // simplification: the original falls into the division
             }
             let q = (r as i32 * 99) / div;
             let weight = (q as u32 & !0xff) | (q as u8).wrapping_add(1) as u32; // inc al
-            let stage = (game as u32 & 0xffff_0000) | core::ptr::read_unaligned((game + fixture::ROUND_PREFIX) as *const u16) as u32; // mov cx, [ecx+0x32]
+            let stage = (game.addr() as u32 & 0xffff_0000) | (game.round_prefix() as u16) as u32; // mov cx, [ecx+0x32]
             let round = (read_usize(cup + cup::ROUND_TABLE) as u32 & 0xffff_0000) | w7 as u32; // mov di, [edi+...+7]
             // push weight; push round; push stage; push comp; push club; ecx = [0xdd7f00] -> thiscall, ret 0x14
             let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD);
             f(read_usize(G_STAFF_RECORDS), club, comp, stage, round, weight);
         }
         0xff => {
-            let r = read_i16(game + fixture::ROUND_NUMBER) as i32;
+            let r = game.round_number() as i32;
             let n = read_i16(cup + cup::ROUND_COUNT) as i32;
             if n == 0 {
-                return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(cup, club, outcome, a3, a4, game, final_); // simplification: the original falls into the division
+                return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(cup, club, outcome, a3, a4, game.addr(), final_); // simplification: the original falls into the division
             }
             let (q, resto) = ((r * 99) / n, (r * 99) % n);
             let weight = (q as u32 & !0xff) | (q as u8).wrapping_add(1) as u32;
-            let stage = (weight & 0xffff_0000) | core::ptr::read_unaligned((game + fixture::ROUND_PREFIX) as *const u16) as u32; // mov ax, [ecx+0x32]
-            let round = (resto as u32 & 0xffff_0000) | core::ptr::read_unaligned((game + fixture::ROUND_NAME) as *const u16) as u32; // mov dx, [ecx+0x30]
+            let stage = (weight & 0xffff_0000) | (game.round_prefix() as u16) as u32; // mov ax, [ecx+0x32]
+            let round = (resto as u32 & 0xffff_0000) | (game.round_name() as u16) as u32; // mov dx, [ecx+0x30]
             // push weight; push round; push stage; push comp; push club; ecx = [0xdd7f00] -> thiscall, ret 0x14
             let f: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_KNOCKED_OUT_RECORD);
             f(read_usize(G_STAFF_RECORDS), club, comp, stage, round, weight);
@@ -2000,8 +2002,8 @@ pub(crate) unsafe extern "thiscall" fn set_up_round(this: usize, round: u32) -> 
 /// [pt] Põe o risco de doença (0x62e820 de [0xb63d28], tipo 3) na véspera da data do jogo `f` (+0x2a o dia, +0x28 o ano;
 /// 0x549ef0, 0x54c8e0, 0x417c10) para o clube `id` com a nação do estádio. `alto_dia`/`alto_ano`: as metades altas dos
 /// dwords que a original empurra à 0x549ef0.
-pub(crate) unsafe fn add_illness_risk_before_match(f: usize, id: usize, nation: usize, high_day: u32, high_year: u32) {
-    let mut d = make_date((high_day & 0xffff_0000) | read_u16(f + fixture::DAY) as u32, (high_year & 0xffff_0000) | read_u16(f + fixture::YEAR) as u32);
+pub(crate) unsafe fn add_illness_risk_before_match(f: Fixture, id: usize, nation: usize, high_day: u32, high_year: u32) {
+    let mut d = make_date((high_day & 0xffff_0000) | f.day() as u32, (high_year & 0xffff_0000) | f.year() as u32);
     let (mut vespera, mut copia) = ([0u8; 8], [0u8; 8]);
     let p = exe::date_sub_days((&mut d) as *mut [u8; 8] as usize, (&mut vespera) as *mut [u8; 8] as usize, 1);
     exe::date_operator_3d((&mut d) as *mut [u8; 8] as usize, (&mut copia) as *mut [u8; 8] as usize, p);
@@ -2375,100 +2377,100 @@ pub(crate) unsafe fn cap_professional_status(club: Club, value: i8, baixar: u32)
 /// [pt] O corpo da 0x51c020: `Some(lado)`, ou `None` no empate também nos pênaltis com a regra deles (a original mostra a
 /// caixa "Error" com a linha 0x97e e segue para W.O. e pontos): quem chama roda a original inteira, que refaz o único
 /// que já foi gravado (+0x3d/+0x3e = 1 com o bit 0x10, idempotente).
-pub(crate) unsafe fn fixture_winner_side(this: usize, f: usize) -> Option<u32> {
-    let fl = read_i16(f + fixture::TIE_RULES) as u16;
+pub(crate) unsafe fn fixture_winner_side(this: usize, f: Fixture) -> Option<u32> {
+    let fl = (f.tie_rules() as i16) as u16;
     if fl & 0x10 != 0 {
-        write_i8(f + fixture::HOME_RESULT_MARK, 1);
-        write_i8(f + fixture::AWAY_RESULT_MARK, 1);
+        f.set_home_result_mark(1);
+        f.set_away_result_mark(1);
     }
-    let (g1, g2) = (read_i8(f + fixture::HOME_GOALS), read_i8(f + fixture::AWAY_GOALS));
+    let (g1, g2) = (f.home_goals(), f.away_goals());
     if g1 > g2 {
-        if read_i8(f + fixture::HOME_RESULT_MARK) == 1 {
-            write_i8(f + fixture::HOME_RESULT_MARK, 2);
+        if f.home_result_mark() == 1 {
+            f.set_home_result_mark(2);
         }
         if fl & 0x2000 != 0 {
-            write_i8(f + fixture::HOME_RESULT_MARK, read_i8(f + fixture::HOME_RESULT_MARK).wrapping_sub(3));
+            f.set_home_result_mark(f.home_result_mark().wrapping_sub(3));
         }
         return Some(1);
     }
     if g1 < g2 {
-        if read_i8(f + fixture::AWAY_RESULT_MARK) == 1 {
-            write_i8(f + fixture::AWAY_RESULT_MARK, 2);
+        if f.away_result_mark() == 1 {
+            f.set_away_result_mark(2);
         }
         if fl & 0x2000 != 0 {
-            write_i8(f + fixture::AWAY_RESULT_MARK, read_i8(f + fixture::AWAY_RESULT_MARK).wrapping_sub(3));
+            f.set_away_result_mark(f.away_result_mark().wrapping_sub(3));
         }
         return Some(2);
     }
     if fl & 2 != 0 {
-        let (a1, a2) = (read_i8(f + fixture::HOME_GOALS_EXTRA_TIME), read_i8(f + fixture::AWAY_GOALS_EXTRA_TIME));
+        let (a1, a2) = (f.home_goals_extra_time(), f.away_goals_extra_time());
         if a1 > a2 {
             crate::comparison::branch("cpm_1 match in extra time");
-            let c = read_i8(f + fixture::HOME_RESULT_MARK);
+            let c = f.home_result_mark();
             if c == 1 {
-                write_i8(f + fixture::HOME_RESULT_MARK, 2);
+                f.set_home_result_mark(2);
             } else if fl & 0x2000 != 0 {
-                write_i8(f + fixture::HOME_RESULT_MARK, c.wrapping_sub(3));
+                f.set_home_result_mark(c.wrapping_sub(3));
             } else {
-                write_i8(f + fixture::HOME_RESULT_MARK, 3);
+                f.set_home_result_mark(3);
             }
             return Some(1); // the home team in extra time
         }
         if a1 < a2 {
-            let c = read_i8(f + fixture::AWAY_RESULT_MARK);
+            let c = f.away_result_mark();
             if c == 1 {
-                write_i8(f + fixture::AWAY_RESULT_MARK, 2);
+                f.set_away_result_mark(2);
             } else if fl & 0x2000 != 0 {
-                write_i8(f + fixture::AWAY_RESULT_MARK, c.wrapping_sub(3));
+                f.set_away_result_mark(c.wrapping_sub(3));
             } else {
-                write_i8(f + fixture::AWAY_RESULT_MARK, 3);
+                f.set_away_result_mark(3);
             }
             return Some(2); // the away team in extra time
         }
     }
     if fl & 0x21 != 0 {
-        let (p1, p2) = (read_i8(f + fixture::HOME_PENALTIES), read_i8(f + fixture::AWAY_PENALTIES));
+        let (p1, p2) = (f.home_penalties(), f.away_penalties());
         // the penalty code: 4, or 5 without bit 1 of the rule (not al; and al, 1; or al, 4)
         let penalties = ((!(fl as u8)) & 1 | 4) as i8;
         if p1 > p2 {
-            let c = read_i8(f + fixture::HOME_RESULT_MARK);
+            let c = f.home_result_mark();
             if c == 1 {
-                write_i8(f + fixture::HOME_RESULT_MARK, 2);
+                f.set_home_result_mark(2);
             } else if fl & 0x2000 != 0 {
-                write_i8(f + fixture::HOME_RESULT_MARK, c.wrapping_sub(3));
+                f.set_home_result_mark(c.wrapping_sub(3));
             } else {
-                write_i8(f + fixture::HOME_RESULT_MARK, penalties);
+                f.set_home_result_mark(penalties);
             }
             return Some(1);
         }
         if p1 < p2 {
-            let c = read_i8(f + fixture::AWAY_RESULT_MARK);
+            let c = f.away_result_mark();
             if c == 1 {
-                write_i8(f + fixture::AWAY_RESULT_MARK, 2);
+                f.set_away_result_mark(2);
             } else if fl & 0x2000 != 0 {
-                write_i8(f + fixture::AWAY_RESULT_MARK, c.wrapping_sub(3));
+                f.set_away_result_mark(c.wrapping_sub(3));
             } else {
-                write_i8(f + fixture::AWAY_RESULT_MARK, penalties);
+                f.set_away_result_mark(penalties);
             }
             return Some(2);
         }
         return None; // draw in the penalties: the original’s box
     }
     if fl & 0x800 != 0 {
-        write_i8(f + fixture::HOME_RESULT_MARK, 8); // Walkover in favour of the home team
+        f.set_home_result_mark(8); // Walkover in favour of the home team
         return Some(1);
     }
     if fl & 0x1000 != 0 {
-        write_i8(f + fixture::AWAY_RESULT_MARK, 8);
+        f.set_away_result_mark(8);
         return Some(2);
     }
     if fl & 0x2000 == 0 {
         return Some(0);
     }
-    let a = read_i8(f + fixture::HOME_RESULT_MARK).wrapping_sub(1);
-    let c = read_i8(f + fixture::AWAY_RESULT_MARK).wrapping_sub(1);
-    write_i8(f + fixture::HOME_RESULT_MARK, a);
-    write_i8(f + fixture::AWAY_RESULT_MARK, c);
+    let a = f.home_result_mark().wrapping_sub(1);
+    let c = f.away_result_mark().wrapping_sub(1);
+    f.set_home_result_mark(a);
+    f.set_away_result_mark(c);
     if a < c {
         return Some(1);
     }
@@ -2480,7 +2482,7 @@ pub(crate) unsafe fn fixture_winner_side(this: usize, f: usize) -> Option<u32> {
     if n <= 0 {
         return Some(2);
     }
-    let (c1, c2) = (read_usize(f + fixture::HOME_CLUB), read_usize(f + fixture::AWAY_CLUB));
+    let (c1, c2) = (f.home_club(), f.away_club());
     let (mut s1, mut s2) = (0i8, 0i8);
     let t = read_usize(this + cup::TEAM_TABLE);
     for k in 0..n as usize {
@@ -2513,7 +2515,7 @@ pub(crate) unsafe fn fixture_winner_side(this: usize, f: usize) -> Option<u32> {
 /// Jogo nulo ou empate nos pênaltis: a original (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn decide_fixture_winner(this: usize, game: usize) -> u32 {
     if game != 0 {
-        if let Some(r) = fixture_winner_side(this, game) {
+        if let Some(r) = fixture_winner_side(this, Fixture(game)) {
             return r;
         }
     }
@@ -2524,9 +2526,9 @@ pub(crate) unsafe extern "thiscall" fn decide_fixture_winner(this: usize, game: 
 ///
 /// [pt] O corpo da 0x51f2f0: `None` no empate nos pênaltis com a regra deles (a original mostra a caixa "Error" com a linha
 /// 0x11d1 e devolve 4; nada foi gravado antes).
-pub(crate) unsafe fn tie_winner_side(conf: usize, j: usize) -> Option<u32> {
+pub(crate) unsafe fn tie_winner_side(conf: usize, j: Fixture) -> Option<u32> {
     let t = |k: usize| read_i8(conf + k);
-    let fl = read_i16(j + fixture::TIE_RULES) as u16;
+    let fl = (j.tie_rules() as i16) as u16;
     if t(0x33) as u8 != 1 {
         // first leg (or single match) of the tie: 3
         if fl & 0x10 != 0 {
@@ -2537,17 +2539,17 @@ pub(crate) unsafe fn tie_winner_side(conf: usize, j: usize) -> Option<u32> {
             } else {
                 t(0x1a) > t(0x1b)
             };
-            write_i8(j + if lado1 { 0x3d } else { 0x3e }, 1);
+            write_i8(j.addr() + if lado1 { 0x3d } else { 0x3e }, 1);
         } else if fl & 0x2000 != 0 {
             let pairs = [(0x14, 0x15), (0x18, 0x19), (0x1a, 0x1b)];
             match pairs.iter().find(|p| t(p.0) != t(p.1)) {
                 Some(&(a, b)) => {
                     let side = if t(a) > t(b) { 0x3d } else { 0x3e };
-                    write_i8(j + side, read_i8(j + side).wrapping_sub(3));
+                    write_i8(j.addr() + side, read_i8(j.addr() + side).wrapping_sub(3));
                 }
                 None => {
-                    write_i8(j + fixture::HOME_RESULT_MARK, read_i8(j + fixture::HOME_RESULT_MARK).wrapping_sub(1));
-                    write_i8(j + fixture::AWAY_RESULT_MARK, read_i8(j + fixture::AWAY_RESULT_MARK).wrapping_sub(1));
+                    j.set_home_result_mark(j.home_result_mark().wrapping_sub(1));
+                    j.set_away_result_mark(j.away_result_mark().wrapping_sub(1));
                 }
             }
         }
@@ -2574,33 +2576,33 @@ pub(crate) unsafe fn tie_winner_side(conf: usize, j: usize) -> Option<u32> {
             t(0x24) > t(0x25)
         };
         if side_return == side_first_leg {
-            write_i8(j + fixture::HOME_RESULT_MARK, 1);
-            write_i8(j + fixture::AWAY_RESULT_MARK, 1);
+            j.set_home_result_mark(1);
+            j.set_away_result_mark(1);
             return Some(4);
         }
         if side_return {
-            write_i8(j + fixture::AWAY_RESULT_MARK, 2);
+            j.set_away_result_mark(2);
             return Some(2);
         }
-        write_i8(j + fixture::HOME_RESULT_MARK, 2);
+        j.set_home_result_mark(2);
         return Some(1);
     }
     if fl & 0x2000 != 0 {
         let pairs = [(0x43, 0x44), (0x47, 0x48), (0x49, 0x4a)];
-        match pairs.iter().find(|p| read_i8(j + p.0) != read_i8(j + p.1)) {
+        match pairs.iter().find(|p| read_i8(j.addr() + p.0) != read_i8(j.addr() + p.1)) {
             Some(&(a, b)) => {
-                let side = if read_i8(j + a) > read_i8(j + b) { 0x3d } else { 0x3e };
-                write_i8(j + side, read_i8(j + side).wrapping_sub(3));
+                let side = if read_i8(j.addr() + a) > read_i8(j.addr() + b) { 0x3d } else { 0x3e };
+                write_i8(j.addr() + side, read_i8(j.addr() + side).wrapping_sub(3));
             }
             None => {
-                write_i8(j + fixture::HOME_RESULT_MARK, read_i8(j + fixture::HOME_RESULT_MARK).wrapping_sub(1));
-                write_i8(j + fixture::AWAY_RESULT_MARK, read_i8(j + fixture::AWAY_RESULT_MARK).wrapping_sub(1));
+                j.set_home_result_mark(j.home_result_mark().wrapping_sub(1));
+                j.set_away_result_mark(j.away_result_mark().wrapping_sub(1));
             }
         }
-        if read_i8(j + fixture::HOME_RESULT_MARK) < -5 {
+        if j.home_result_mark() < -5 {
             return Some(1);
         }
-        return Some(if read_i8(j + fixture::AWAY_RESULT_MARK) >= -5 { 4 } else { 2 });
+        return Some(if j.away_result_mark() >= -5 { 4 } else { 2 });
     }
     if tot1 > tot2 {
         return Some(2); // agregado
@@ -2610,32 +2612,32 @@ pub(crate) unsafe fn tie_winner_side(conf: usize, j: usize) -> Option<u32> {
     }
     crate::comparison::branch("cpm_1 tie level on aggregate");
     if fl & 0x800 != 0 {
-        write_i8(j + fixture::HOME_RESULT_MARK, 8);
+        j.set_home_result_mark(8);
         return Some(1);
     }
     if fl & 0x1000 != 0 {
-        write_i8(j + fixture::AWAY_RESULT_MARK, 8);
+        j.set_away_result_mark(8);
         return Some(2);
     }
     if fl & 2 != 0 && t(0x22) as u8 != 0xff {
         if fl & 0x4000 != 0 && (t(0x22) as i32 + t(0x15) as i32) == (t(0x23) as i32 + t(0x14) as i32) {
             if t(0x23) > t(0x15) {
-                write_i8(j + fixture::AWAY_RESULT_MARK, 6);
+                j.set_away_result_mark(6);
                 return Some(2);
             }
             if t(0x23) < t(0x15) {
-                write_i8(j + fixture::HOME_RESULT_MARK, 6);
+                j.set_home_result_mark(6);
                 return Some(1);
             }
         }
         let x = t(0x23) as i32 - t(0x1f) as i32;
         let y = t(0x22) as i32 - t(0x1e) as i32;
         if y > x {
-            write_i8(j + fixture::HOME_RESULT_MARK, 3);
+            j.set_home_result_mark(3);
             return Some(1);
         }
         if y < x {
-            write_i8(j + fixture::AWAY_RESULT_MARK, 3);
+            j.set_away_result_mark(3);
             return Some(2);
         }
     }
@@ -2643,11 +2645,11 @@ pub(crate) unsafe fn tie_winner_side(conf: usize, j: usize) -> Option<u32> {
         // away goals (the second-leg away team, +0x15, against the first-leg one, +0x1f)
         let away = t(0x1f) as i16;
         if volta2 < away {
-            write_i8(j + fixture::AWAY_RESULT_MARK, 6);
+            j.set_away_result_mark(6);
             return Some(2);
         }
         if volta2 > away {
-            write_i8(j + fixture::HOME_RESULT_MARK, 6);
+            j.set_home_result_mark(6);
             return Some(1);
         }
     }
@@ -2657,11 +2659,11 @@ pub(crate) unsafe fn tie_winner_side(conf: usize, j: usize) -> Option<u32> {
     let (p1, p2) = (t(0x24), t(0x25));
     let code = if fl & 1 != 0 { 4 } else { 5 };
     if p2 < p1 {
-        write_i8(j + fixture::HOME_RESULT_MARK, code);
+        j.set_home_result_mark(code);
         return Some(1);
     }
     if p2 > p1 {
-        write_i8(j + fixture::AWAY_RESULT_MARK, code);
+        j.set_away_result_mark(code);
         return Some(2);
     }
     None
@@ -2691,7 +2693,7 @@ pub(crate) unsafe fn tie_winner_side(conf: usize, j: usize) -> Option<u32> {
 /// código 4 com o bit 1, senão 5); nada decidido: 4. Pontos (0x10) e regra 0x2000 têm os ramos próprios. Empate nos
 /// pênaltis: a original (caixa "Error", 4).
 pub(crate) unsafe extern "thiscall" fn decide_tie_winner(this: usize, tie: usize, game: usize) -> u32 {
-    match tie_winner_side(tie, game) {
+    match tie_winner_side(tie, Fixture(game)) {
         Some(r) => r,
         None => original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_DECIDE_TIE_WINNER)(this, tie, game),
     }
@@ -2786,8 +2788,9 @@ pub(crate) unsafe fn team_slot(cup: usize, v: i16) -> usize {
 /// nível (byte +4 da vaga, com sinal) dos dois lados da chave `chave` decide: mandante menor tira 0x800 e
 /// põe 0x1000; maior mantém 0x800; igual tira 0x800 e põe 1.
 pub(crate) unsafe extern "thiscall" fn apply_round_rules_to_match(cup: usize, game: usize, key: i32) {
-    let r = *((game + fixture::ROUND_NUMBER) as *const i16) as i32;
-    let marks = (game + fixture::TIE_RULES) as *mut u16;
+    let game = Fixture(game);
+    let r = game.round_number() as i32;
+    let marks = (game.addr() + fixture::TIE_RULES) as *mut u16;
     let m = core::ptr::read_unaligned(marks) | core::ptr::read_unaligned((cup_cup_round(cup, r) + 0xf) as *const u16);
     core::ptr::write_unaligned(marks, m);
     if m & 0x800 == 0 {
@@ -2810,12 +2813,13 @@ pub(crate) unsafe extern "thiscall" fn apply_round_rules_to_match(cup: usize, ga
 /// mandante do jogo (+0xc), olhando os dois lados de cada chave (53 bytes; vaga negativa é vazia); -1 se
 /// nenhuma. O número de chaves é a palavra +0x1a da rodada. Jogo nulo: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn find_tree_slot_for_fixture(cup: usize, game: usize) -> i32 {
-    if game == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> i32>(IDX_FIND_TREE_SLOT_FOR_FIXTURE)(cup, game);
+    let game = Fixture(game);
+    if game.is_null() {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> i32>(IDX_FIND_TREE_SLOT_FOR_FIXTURE)(cup, game.addr());
     }
-    let r = *((game + fixture::ROUND_NUMBER) as *const i16) as i32;
+    let r = game.round_number() as i32;
     let n = core::ptr::read_unaligned((cup_cup_round(cup, r) + 0x1a) as *const i16) as i32;
-    let home = *((game + fixture::HOME_CLUB_ID) as *const usize);
+    let home = game.home_club_id();
     for i in 0..n {
         let row = bracket_row(cup, r, i);
         for o in [0, 2] {
@@ -2839,13 +2843,14 @@ pub(crate) unsafe extern "thiscall" fn find_tree_slot_for_fixture(cup: usize, ga
 /// partida menos +0x3c mais +0x51 da copa, pelo menos 1) e em `margem` a diferença do placar da ida
 /// (+0x4b/+0x4c, 0xff sem ida) para o lado `segundo`, mais 1 (0xff abaixo de 1). Devolve só `al`.
 pub(crate) unsafe extern "thiscall" fn cup_match_importance(cup: usize, partida: usize, second: u8, margin: *mut u8) -> u8 {
-    let mut al = read_u8(partida + fixture::ROUND_NUMBER).wrapping_sub(read_u8(cup + cup::ROUND_COUNT)).wrapping_add(read_u8(cup + cup::IMPORTANCE_BIAS));
+    let partida = Fixture(partida);
+    let mut al = (partida.round_number() as u8).wrapping_sub(read_u8(cup + cup::ROUND_COUNT)).wrapping_add(read_u8(cup + cup::IMPORTANCE_BIAS));
     if (al as i8) < 1 {
         al = 1;
     }
-    let first_leg = read_u8(partida + fixture::HOME_AGGREGATE);
+    let first_leg = (partida.home_aggregate() as u8);
     if first_leg != 0xff {
-        let volta = read_u8(partida + fixture::AWAY_AGGREGATE);
+        let volta = (partida.away_aggregate() as u8);
         *margin = if second == 0 { volta.wrapping_sub(first_leg) } else { first_leg.wrapping_sub(volta) }.wrapping_add(1);
         if (*margin as i8) < 1 {
             *margin = 0xff;
@@ -2878,6 +2883,7 @@ pub(crate) unsafe extern "thiscall" fn cup_match_importance(cup: usize, partida:
 /// ou fora: −1). Saída ≠ 0xff: a entrega pelo alcance (0x786090). Desfecho 1 na rodada 0x96 ou 3 na 0x8c (+0x30): à
 /// região da competição (0x786860); senão ao técnico do clube (0x7861e0). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: usize, outcome: u32, a3: u32, p: usize, a5: u32) -> u32 {
+    let p = Fixture(p);
     let club = Club(club);
     let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
     // simplification: the original writes only the output byte into a stack dword and pushes the dword; 0x786090 reads the byte
@@ -2887,8 +2893,8 @@ pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: us
     }
     let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(read_usize(cup + 4)).wrapping_mul(4)));
     let virtual44: unsafe extern "thiscall" fn(usize, usize, u32, u32, *mut u32, usize, u32) -> i32 = core::mem::transmute(read_usize(read_usize(comp) + 0x44));
-    let r = virtual44(comp, club.addr(), outcome, a3, &mut out, p, a5);
-    if r == -1 || p == 0 {
+    let r = virtual44(comp, club.addr(), outcome, a3, &mut out, p.addr(), a5);
+    if r == -1 || p.is_null() {
         return 0;
     }
     crate::comparison::branch("cpx_13 outcome news");
@@ -2903,7 +2909,7 @@ pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: us
     // simplification: the cursor is a stack dword with 5 in the low byte (the rest is leftover); only the low byte counts
     let mut cursor = [5u8, 0, 0, 0];
     exe::comp_util_write_fixture_to_news_slots(p, n, cursor.as_mut_ptr());
-    let k = read_i16(p + fixture::ROUND_NUMBER) as i32;
+    let k = p.round_number() as i32;
     let proxima = if k < read_i16(cup + cup::ROUND_COUNT) as i32 - 1 {
         let v = read_i16(read_usize(cup + cup::ROUND_TABLE).wrapping_add((k as usize).wrapping_mul(0x68)) + 0x6f);
         if v != 0x8c { v as i32 } else { -1 }
@@ -2918,7 +2924,7 @@ pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: us
         exe::news_send_by_scope(news, n, club, read_usize(cup + 4), nation, continent, out);
         return 1;
     }
-    let round = read_i16(p + fixture::ROUND_NAME);
+    let round = p.round_name();
     if (outcome as u8 == 1 && round == 0x96) || (outcome as u8 == 3 && round == 0x8c) {
         exe::news_send_to_comp_region(news, n, read_usize(cup + 4));
     } else {
@@ -3031,9 +3037,9 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
                 let e = cup_round_entry(this, round);
                 if j < 0x38 && read_u8(e + j + 0x29) != 0xff {
                     let mut buf = [0u8; 0x50];
-                    let r = buf.as_mut_ptr() as usize;
-                    core::ptr::copy_nonoverlapping(f as *const u8, r as *mut u8, 0x4f);
-                    if fixture_on_round_date(this, e, f) {
+                    let r = Fixture(buf.as_mut_ptr() as usize);
+                    core::ptr::copy_nonoverlapping(f as *const u8, r.addr() as *mut u8, 0x4f);
+                    if fixture_on_round_date(this, e, Fixture(f)) {
                         let p = exe::crt_operator_new(8);
                         let dp = if p != 0 { exe::new_date(p, read_i16(f + fixture::DAY) as u16 as u32, read_i16(f + fixture::YEAR) as u16 as u32) } else { 0 };
                         let mut t = [0u8; 8];
@@ -3045,30 +3051,30 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
                             let mut noticia2 = [0u32; 0x38];
                             let n2 = noticia2.as_mut_ptr() as usize;
                             exe::new_newsitem(n2, 3, 0);
-                            exe::newsitem_set_slot(n2, 0, read_usize(r + fixture::HOME_CLUB_ID) as u32);
-                            exe::newsitem_set_slot(n2, 1, read_usize(r + fixture::AWAY_CLUB_ID) as u32);
-                            exe::newsitem_set_slot(n2, 2, read_usize(r) as u32);
-                            exe::newsitem_set_slot(n2, 3, read_i16(r + fixture::ROUND_PREFIX) as i32 as u32);
-                            exe::newsitem_set_slot(n2, 4, read_i16(r + fixture::ROUND_NAME) as i32 as u32);
-                            exe::newsitem_set_slot(n2, 5, read_i16(r + fixture::DAY) as u16 as u32);
-                            exe::newsitem_set_slot(n2, 6, read_i16(r + fixture::YEAR) as u16 as u32);
-                            exe::newsitem_set_slot(n2, 7, read_u8(r + fixture::TIME_SLICE) as u32);
+                            exe::newsitem_set_slot(n2, 0, r.home_club_id() as u32);
+                            exe::newsitem_set_slot(n2, 1, r.away_club_id() as u32);
+                            exe::newsitem_set_slot(n2, 2, read_usize(r.addr()) as u32);
+                            exe::newsitem_set_slot(n2, 3, r.round_prefix() as i32 as u32);
+                            exe::newsitem_set_slot(n2, 4, r.round_name() as i32 as u32);
+                            exe::newsitem_set_slot(n2, 5, (r.day() as i16) as u16 as u32);
+                            exe::newsitem_set_slot(n2, 6, (r.year() as i16) as u16 as u32);
+                            exe::newsitem_set_slot(n2, 7, r.time_slice() as u32);
                             exe::newsitem_set_slot(n2, 8, read_i16(pt) as i32 as u32);
                             exe::newsitem_set_slot(n2, 9, read_i16(pt + 2) as u16 as u32);
                             exe::newsitem_set_slot(n2, 10, read_u8(cup_round_entry(this, round) + j + 0x28) as i8 as i32 as u32);
                             exe::newsitem_set_slot(n2, 11, read_u8(cup_round_entry(this, round) + j + 0x29) as i8 as i32 as u32);
-                            exe::news_send_to_club_manager(read_usize(G_NEWS), n2, read_usize(r + fixture::HOME_CLUB));
-                            exe::news_send_to_club_manager(read_usize(G_NEWS), n2, read_usize(r + fixture::AWAY_CLUB));
+                            exe::news_send_to_club_manager(read_usize(G_NEWS), n2, r.home_club());
+                            exe::news_send_to_club_manager(read_usize(G_NEWS), n2, r.away_club());
                         }
                         exe::fixture_manager_remove_fixture(read_usize(G_FIXTURE_MANAGER), r);
                         crate::comparison::branch("cqc_7 match moved to the date");
-                        write_u16(r + fixture::DAY, read_i16(pt) as u16); // cqc7: o dia marcado
-                        write_u16(r + fixture::YEAR, read_i16(pt + 2) as u16);
+                        r.set_day(read_i16(pt) as u16); // cqc7: o dia marcado
+                        r.set_year(read_i16(pt + 2) as u16);
                         let v = cup_round_entry(this, round) + j;
-                        write_u8(r + fixture::TIME_SLICE, read_u8(v + 0x28)); // cqc7: a fatia marcada
-                        write_u8(r + fixture::STAGE, read_u8(v + 0x29));
+                        r.set_time_slice(read_u8(v + 0x28)); // cqc7: a fatia marcada
+                        r.set_stage(read_u8(v + 0x29));
                         let stadium: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_STADIUM_SET_FIXTURE_VENUE);
-                        stadium(read_usize(G_STADIUM), read_usize(cup_round_entry(this, round) + j + 0x23), r, read_usize(this + cup::VENUE_STADIUM_ID));
+                        stadium(read_usize(G_STADIUM), read_usize(cup_round_entry(this, round) + j + 0x23), r.addr(), read_usize(this + cup::VENUE_STADIUM_ID));
                         exe::fixture_manager_add_fixture(read_usize(G_FIXTURE_MANAGER), r, 1);
                         if dp != 0 {
                             exe::crt_operator_delete(dp);
@@ -3079,8 +3085,8 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
                         }
                         write_u8(cup_round_entry(this, round) + j + 0x29, 0xff);
                     }
-                    news_of_game(read_usize(r + fixture::HOME_CLUB), read_usize(r + fixture::AWAY_CLUB), read_usize(r + fixture::HOME_CLUB_ID), read_usize(r + fixture::AWAY_CLUB_ID), read_usize(r + fixture::STADIUM_ID),
-                        read_i16(r + fixture::DAY) as u16, read_i16(r + fixture::YEAR) as u16);
+                    news_of_game(r.home_club(), r.away_club(), r.home_club_id(), r.away_club_id(), r.stadium_id(),
+                        (r.day() as i16) as u16, (r.year() as i16) as u16);
                     j += 7;
                 } else {
                     news_of_game(read_usize(f + fixture::HOME_CLUB), read_usize(f + fixture::AWAY_CLUB), read_usize(f + fixture::HOME_CLUB_ID), read_usize(f + fixture::AWAY_CLUB_ID), read_usize(f + fixture::STADIUM_ID),

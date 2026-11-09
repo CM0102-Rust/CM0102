@@ -385,13 +385,14 @@ pub(crate) unsafe fn officials_manager_club_nation_id(club: Club) -> Option<i32>
 /// árbitro em [this+8]): o seguinte da faixa, dando a volta; todos ocupados, o sorteado. Grava o índice (palavra) e
 /// devolve 1 no al (o resto do eax com o índice, como a original).
 pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: usize, out: usize) -> u32 {
-    if read_i32(game) == -2 {
+    let game = Fixture(game);
+    if read_i32(game.addr()) == -2 {
         return 0xffff_ff00;
     }
     let nations = read_i32(G_NATION_COUNT);
-    let home = Club(read_usize(game + fixture::HOME_CLUB));
-    let away = read_usize(game + fixture::AWAY_CLUB);
-    let comp = Competition(read_usize(game + fixture::COMPETITION));
+    let home = Club(game.home_club());
+    let away = game.away_club();
+    let comp = Competition(game.competition());
     let band_of_nation = |nacao: i32| {
         let b = nation_officials_block(this, nacao);
         (read_i32(b + officials_nation_block::FIRST_REFEREE), read_i32(b + officials_nation_block::REFEREE_COUNT))

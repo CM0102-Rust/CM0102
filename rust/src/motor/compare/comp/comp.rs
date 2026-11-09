@@ -153,9 +153,10 @@ pub(crate) unsafe extern "thiscall" fn compare_are_round_fixtures_known(this: us
 
 /// Comparer for `counts_for_fixture_clash`.
 pub(crate) unsafe extern "thiscall" fn compare_counts_for_fixture_clash(this: usize, game: usize, other: usize) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_COUNTS_FOR_FIXTURE_CLASH)(this, game, other);
-    let n = counts_for_fixture_clash(this, game, other);
-    SCOREBOARD.record(r == n, || format!("counts_for_fixture_clash(rodada {}) original={} rust={}", read_i16(game + fixture::ROUND_NAME), r, n));
+    let game = Fixture(game);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_COUNTS_FOR_FIXTURE_CLASH)(this, game.addr(), other);
+    let n = counts_for_fixture_clash(this, game.addr(), other);
+    SCOREBOARD.record(r == n, || format!("counts_for_fixture_clash(rodada {}) original={} rust={}", game.round_name(), r, n));
     r
 }
 

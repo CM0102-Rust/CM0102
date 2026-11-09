@@ -37,22 +37,22 @@ pub(crate) unsafe fn player_category_record(this: usize, player: usize, cat: u8)
 /// ([0x9cf684], [0x9cf798], [0x9cf794]) ou o clube do lado sem a marca +0x40 (mandante) / +0x41 (visitante): 1. Pelo
 /// tipo (+0x42) da competição ([0xadadfc] pelo id +0): 4 → 5, 2 → 4, 1 → 2 se ela conta (0x4b0700), senão 3. Sem a
 /// competição ou outro tipo: a caixa (linhas 0x103a, 0x105d; só com `avisar`), `erro` e 2.
-pub(crate) unsafe fn match_stats_category(p: usize, side: i32, warn: bool, error: &mut bool) -> u8 {
-    let club = read_usize(p + if side == 0 { 0x1c } else { 0x20 });
-    if exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), read_usize(p + fixture::COMPETITION)) != 0 {
-        return if exe::database_is_national_team(read_usize(p + fixture::HOME_CLUB)) != 0 { 5 } else { 1 };
+pub(crate) unsafe fn match_stats_category(p: Fixture, side: i32, warn: bool, error: &mut bool) -> u8 {
+    let club = read_usize(p.addr() + if side == 0 { 0x1c } else { 0x20 });
+    if exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), p.competition()) != 0 {
+        return if exe::database_is_national_team(p.home_club()) != 0 { 5 } else { 1 };
     }
-    let id = read_usize(read_usize(p + fixture::COMPETITION));
+    let id = read_usize(p.competition());
     if id == read_usize(KEY_CLUB_COMP_RESERVE) || id == read_usize(KEY_CLUB_COMP_UNDER_21_INTERNATIONAL) || id == read_usize(KEY_CLUB_COMP_B_INTERNATIONAL) {
         return 1;
     }
-    if club == read_usize(p + fixture::HOME_CLUB) && read_u8(p + fixture::HOME_SIDE_MARK) == 0 {
+    if club == p.home_club() && p.home_side_mark() == 0 {
         return 1;
     }
-    if club == read_usize(p + fixture::AWAY_CLUB) && read_u8(p + fixture::AWAY_SIDE_MARK) == 0 {
+    if club == p.away_club() && (p.away_side_mark() as u8) == 0 {
         return 1;
     }
-    let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(p).wrapping_mul(4)));
+    let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(4)));
     if comp == 0 {
         *error = true;
         if warn {
@@ -67,7 +67,7 @@ pub(crate) unsafe fn match_stats_category(p: usize, side: i32, warn: bool, error
             if warn {
                 crate::comparison::branch("cpx_12 league category");
             }
-            if exe::comp_util_is_league_division(read_usize(p) as i32) != 0 { 2 } else { 3 } // cpx12: the league category
+            if exe::comp_util_is_league_division(read_usize(p.addr()) as i32) != 0 { 2 } else { 3 } // cpx12: the league category
         }
         _ => {
             *error = true;

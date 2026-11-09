@@ -45,16 +45,17 @@ pub(crate) unsafe fn postpone_if_draw_nonzero(n: i32) -> u8 {
 /// graus, estádio descoberto (+0x4d) de até 20000 lugares: sorteio por lugares e mandante (+0x64), zero = 9; chuva 8
 /// (até 15000 lugares) e 9 (pelo vento 4 e por 10000 lugares): uma cadeia de sorteios que devolve 0, 5 ou 6.
 pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usize) -> u8 {
-    let est = read_usize(game + fixture::STADIUM);
-    if est == 0 || read_usize(est + stadium::CITY) == 0 || read_usize(est + stadium::CAPACITY) == 0 || read_usize(game + fixture::COMPETITION) == 0 {
+    let game = Fixture(game);
+    let est = game.stadium();
+    if est == 0 || read_usize(est + stadium::CITY) == 0 || read_usize(est + stadium::CAPACITY) == 0 || game.competition() == 0 {
         return 0;
     }
-    let home = read_usize(game + fixture::HOME_CLUB);
+    let home = game.home_club();
     if read_usize(home + club::DIVISION) == 0 {
         return 0;
     }
     let k: i8 = if home != 0 { (exe::key_nation_index_of_club(home) as i8) } else { -1 };
-    if read_usize(game + fixture::COMPETITION) != read_usize(home + club::DIVISION) || read_u8(est + stadium::COVERED) != 0 {
+    if game.competition() != read_usize(home + club::DIVISION) || read_u8(est + stadium::COVERED) != 0 {
         return 0;
     }
     if (0..0x23).contains(&k) {
@@ -71,7 +72,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
             return 0;
         }
     }
-    if read_u8(game + fixture::TIME_SLICE) == 2 { // cpu5: the night slice
+    if game.time_slice() == 2 { // cpu5: the night slice
         let fin = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), home);
         if fin != 0 {
             let f = exe::finance_get_wealth_band(fin) as i8;
@@ -90,12 +91,12 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
     }
     // simplification: the original writes the weather into the slot of its own argument; if the weather is not written (no regions), what remains are the
     // bytes of the game pointer, as here.
-    let mut cl = game as u32;
+    let mut cl = game.addr() as u32;
     exe::weather_get_match_weather(this, &mut cl as *mut u32 as usize, game);
     let [vento, chuva, temp, _] = cl.to_le_bytes();
     let temp = temp as i8;
-    let est = read_usize(game + fixture::STADIUM);
-    let home = read_usize(game + fixture::HOME_CLUB);
+    let est = game.stadium();
+    let home = game.home_club();
     match chuva {
         5 => {
             if !(1..0xe).contains(&temp) || read_u8(est + stadium::UNDER_SOIL_HEATING) != 0 {
@@ -239,18 +240,19 @@ pub(crate) unsafe fn weather_region(this: usize, city: usize) -> Option<usize> {
 /// Sem cidade: saida[3], [0] e [1] = 0 e a faixa 2. saida[2] = a temperatura (0x9232c0); abaixo de zero, a chuva vira
 /// neve/gelo: 1 → 6, 2 e 3 → 6/7/8 e 5 → 8/7/9 pelo vento da cidade 0/1/outro.
 pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8, game: usize) {
+    let game = Fixture(game);
     if read_usize(this) == 0 || read_usize(this + 8) == 0 {
         return;
     }
     let mut cid = 0usize;
-    if game != 0 {
-        let est = read_usize(game + fixture::STADIUM);
+    if !game.is_null() {
+        let est = game.stadium();
         if est != 0 {
             cid = read_usize(est + stadium::CITY);
         }
     }
     if cid == 0 {
-        let home = Club(read_usize(game + fixture::HOME_CLUB));
+        let home = Club(game.home_club());
         if !home.is_null() {
             let c = home.stadium().addr();
             if c != 0 && read_usize(c + stadium::CITY) != 0 {
@@ -284,8 +286,8 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
     } else {
         *s.add(3) = 0;
     }
-    let day = if game != 0 {
-        core::ptr::read_unaligned((game + fixture::DAY) as *const i16)
+    let day = if !game.is_null() {
+        (game.day() as i16)
     } else {
         core::ptr::read_unaligned(G_CURRENT_DATE as *const i16)
     };
@@ -395,9 +397,10 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
 /// x % 7 + 7; 3: x % 8 + 14; 4: x % 7 + 22; 5: x % 6 + 29; 6: x % 6 + 35; outra: −100. Jogo da fatia da noite (+0x3f = 2):
 /// abaixo de 10, − 2; senão × 0,8 truncado. (Lê +0x3f do jogo mesmo sem jogo, como a original.)
 pub(crate) unsafe extern "thiscall" fn get_temperature(_this: usize, band: u32, game: usize) -> u8 {
+    let game = Fixture(game);
     let f = band as u8 as i8 as i32;
-    let d: i32 = if game != 0 {
-        core::ptr::read_unaligned((game + fixture::DAY) as *const u16) as i32
+    let d: i32 = if !game.is_null() {
+        game.day() as i32
     } else {
         core::ptr::read_unaligned(G_CURRENT_DATE as *const i16) as i32
     };
@@ -412,7 +415,7 @@ pub(crate) unsafe extern "thiscall" fn get_temperature(_this: usize, band: u32, 
         6 => (x % 6 + 0x23) as i8,
         _ => -100,
     };
-    if *((game + fixture::TIME_SLICE) as *const u8) == 2 {
+    if game.time_slice() == 2 {
         if t < 10 {
             return (t as u8).wrapping_sub(2);
         }

@@ -326,7 +326,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_stats_record_match(this: u
             vec![2, 3, 6]
         } else {
             let mut error = false;
-            let c = match_stats_category(p, lado as i32, false, &mut error);
+            let c = match_stats_category(Fixture(p), lado as i32, false, &mut error);
             if error {
                 return o(this, p, game); // simplification: the box, original only
             }

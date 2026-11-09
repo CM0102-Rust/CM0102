@@ -57,9 +57,10 @@ pub(crate) unsafe extern "thiscall" fn compare_contract_manager_offer_contract(t
 /// antes de qualquer sorteio: os bônus que cada clube paga (+0x138 das finanças soma o total previsto pelas mesmas
 /// regras da cópia, calculado antes). A cópia é provada pelos ramos e pelas mutações na carreira.
 pub(crate) unsafe extern "thiscall" fn compare_update_after_match(this: usize, game: usize, summary: usize) {
+    let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_UPDATE_AFTER_MATCH);
-    if read_i8(game + fixture::HOME_SIDE_MARK) == 0 || read_i8(game + fixture::AWAY_SIDE_MARK) == 0 {
-        return o(this, game, summary);
+    if (game.home_side_mark() as i8) == 0 || game.away_side_mark() == 0 {
+        return o(this, game.addr(), summary);
     }
     let mut plan: [(usize, i32, i32); 2] = [(0, 0, 0); 2];
     let mut eh_a = 0u32;
@@ -85,11 +86,11 @@ pub(crate) unsafe extern "thiscall" fn compare_update_after_match(this: usize, g
             *pl = (fin, read_i32(fin + finance::SEASON_BONUSES), total);
         }
     }
-    o(this, game, summary);
+    o(this, game.addr(), summary);
     for &(fin, antes, total) in &plan {
         if fin != 0 {
             let pago = read_i32(fin + finance::SEASON_BONUSES).wrapping_sub(antes);
-            SCOREBOARD.record(pago == total, || format!("update_after_match(jogo {:x}) bônus de fin {:x}: original {} previsto {}", game, fin, pago, total));
+            SCOREBOARD.record(pago == total, || format!("update_after_match(jogo {:x}) bônus de fin {:x}: original {} previsto {}", game.addr(), fin, pago, total));
         }
     }
 }

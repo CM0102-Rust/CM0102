@@ -1373,8 +1373,8 @@ pub(crate) unsafe fn starters_with(c: usize, call: &mut dyn FnMut(usize, usize, 
         let pos = k as u8 as u32;
         let p = exe::tactics_get_selected_player(read_usize(G_TACTICS + 0), read_usize(c + match_manager::CLUB), pos, read_i8(c + match_manager::TACTIC_SLOT) as i32);
         if p != 0 && exe::injury_get_player_injury_status(read_usize(G_INJURY + 0), p) != 2 {
-            let game = read_usize(c + match_manager::FIXTURE);
-            let free = *(game as *const i32) == -2 || exe::discipline_is_player_banned(read_usize(G_DISCIPLINE + 0), p, read_usize(game + fixture::COMPETITION), 1, 0) == 0;
+            let game = Fixture(read_usize(c + match_manager::FIXTURE));
+            let free = *(game.addr() as *const i32) == -2 || exe::discipline_is_player_banned(read_usize(G_DISCIPLINE + 0), p, game.competition(), 1, 0) == 0;
             if free && exe::nationalteams_get_international_duty_club(read_usize(G_NATIONAL_TEAMS + 0), p, G_CURRENT_DATE, read_usize(c + match_manager::CLUB), 0, 0) == 0 && call(FN_MATCH_MAN_PLACE_PLAYER_IN_TEAM, c, [pos, p as u32, pos, 0, 0]) as u8 != 0 {
                 n = n.wrapping_add(1);
             }
@@ -1460,7 +1460,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
     let capitao: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(FN_TACTICS_SET_CAPTAIN_FROM_SLOT);
 
     let club = u(t, match_manager::CLUB);
-    let game = u(t, match_manager::FIXTURE);
+    let game = Fixture(u(t, match_manager::FIXTURE));
     let m = u(t, match_manager::ENGINE);
     let side = read_i8(t + match_manager::SIDE) as isize;
     let weight_of_side = || *(((m as isize) + 0x1ad + side) as *const i8);
@@ -1481,7 +1481,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
     *tb(match_manager::SELECTION_FLAG) = 0;
 
     // outside the human: weighs today’s match against the next one in the list (save players for the more important one?)
-    if read_i8(t + match_manager::TACTIC_SLOT) == 0 && h16(club, club::REPUTATION) >= 0x1770 && *(game as *const i32) != -2 && exe::human_manager_is_human_club(club, 0, 1, 0, 0) == 0 && exe::database_is_national_team(club) == 0 && strong > 0x1e {
+    if read_i8(t + match_manager::TACTIC_SLOT) == 0 && h16(club, club::REPUTATION) >= 0x1770 && *(game.addr() as *const i32) != -2 && exe::human_manager_is_human_club(club, 0, 1, 0, 0) == 0 && exe::database_is_national_team(club) == 0 && strong > 0x1e {
         exe::date_add_days(G_CURRENT_DATE, f + 0xa4, 1);
         exe::date_add_days(G_CURRENT_DATE, f + 0x40, 7);
         let r = (exe::fixture_manager_find_fixtures(u(G_FIXTURE_MANAGER, 0), rd(0xa4), rd(0xa6), rd(0x40), rd(0x42), *(club as *const u32), f + 0x80, u32::MAX, 0xffff_fffe, 1) as u32);
@@ -1491,16 +1491,16 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
                 let c = if *(comp as *const u32) == *(KEY_CLUB_COMP_INTER_TOTO_CUP as *const u32) { u(G_CLUB_COMP_TABLE, 0) + u(KEY_CLUB_COMP_UEFA_CUP, 0).wrapping_mul(0x6b) } else { comp };
                 (h16(c, 0x69) as i32 * 333).wrapping_add(h16(rival, club::REPUTATION) as i32 / 3)
             };
-            let comp = u(game, fixture::COMPETITION);
+            let comp = u(game.addr(), fixture::COMPETITION);
             let id = *(comp as *const u32);
             let mut l14 = weight(comp, other);
             if id != *(KEY_CLUB_COMP_INTER_TOTO_CUP as *const u32) {
-                if read_i8(game + fixture::CATEGORY) == 8 {
-                    let k = *((game + fixture::ROUND_NAME) as *const u16);
+                if (game.category() as i8) == 8 {
+                    let k = (game.round_name() as u16);
                     if read_i8(t + match_manager::SIDE) == 1 || (0x78..=0x7c).contains(&k) || (0x82..=0x87).contains(&k) || (0x96..=0x9b).contains(&k) {
                         *tb(match_manager::SELECTION_FLAG) = 1;
                     }
-                } else if id == *(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE as *const u32) && read_i8(game + fixture::STAGE_INDEX) == -1 {
+                } else if id == *(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE as *const u32) && (game.stage_index() as i8) == -1 {
                     *tb(match_manager::SELECTION_FLAG) = 1;
                 }
             }
@@ -1518,7 +1518,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
                 esi = ftol(l14 as f64 * read_f64(rdata::F64_1_5));
                 l14 = esi;
             }
-            if exe::comp_is_club_still_in_contention(competition(*(game as *const i32)), club) == 0 {
+            if exe::comp_is_club_still_in_contention(competition(*(game.addr() as *const i32)), club) == 0 {
                 *tb(match_manager::SELECTION_FLAG) = 0;
                 let tec = Staff(u(t, match_manager::MANAGER));
                 l14 = if !tec.is_null() { ftol(tec.sportsmanship() as f64 * read_f64(rdata::F64_0_04) * l14 as f64) } else { esi / 2 };
@@ -1547,7 +1547,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
                 }
                 if exe::comp_is_club_still_in_contention(competition(*(x as *const i32)), club) == 0 {
                     l18 = esi / 3;
-                } else if exe::comp_util_is_league_division(*(game as *const i32)) != 0 && (read_i8(x + 0x3a) == 8 || read_i8(x + 0x3a) == 7) && *(x as *const i32) > -1 {
+                } else if exe::comp_util_is_league_division(*(game.addr() as *const i32)) != 0 && (read_i8(x + 0x3a) == 8 || read_i8(x + 0x3a) == 7) && *(x as *const i32) > -1 {
                     let c = competition(*(x as *const i32));
                     if c != 0 && u(c, 8) != 0 {
                         let r = exe::comp_stats_find_club_entry(u(c, 8), club);
@@ -1631,7 +1631,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
                 continue;
             }
             if read_i8(p + 0x18) < 0x10 {
-                let c = u(game, fixture::COMPETITION);
+                let c = u(game.addr(), fixture::COMPETITION);
                 if c != 0 && h16(c, 0x69) > 10 {
                     continue;
                 }
@@ -1640,18 +1640,18 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
                 continue;
             }
             if read_i8(t + match_manager::TACTIC_SLOT) != 0 {
-                if *(game as *const i32) != -2 && exe::discipline_is_player_banned(u(G_DISCIPLINE, 0), p, u(game, fixture::COMPETITION), 1, 0) != 0 {
+                if *(game.addr() as *const i32) != -2 && exe::discipline_is_player_banned(u(G_DISCIPLINE, 0), p, u(game.addr(), fixture::COMPETITION), 1, 0) != 0 {
                     continue;
                 }
             } else if x != 0 {
-                if u(game, fixture::COMPETITION) != u(x, 0x14) && exe::discipline_is_player_banned(u(G_DISCIPLINE, 0), p, u(x, 0x14), 1, 0) != 0 {
+                if u(game.addr(), fixture::COMPETITION) != u(x, 0x14) && exe::discipline_is_player_banned(u(G_DISCIPLINE, 0), p, u(x, 0x14), 1, 0) != 0 {
                     continue;
                 }
                 if exe::transfer_manager_get_ineligibility_code(u(G_TRANSFER_MANAGER, 0), p, x) != 0 || exe::nationalteams_get_international_duty_club(u(G_NATIONAL_TEAMS, 0), p, f + 0x38, club, 0, 0) != 0 {
                     continue;
                 }
             }
-            let day = if *(game as *const u32) == *(KEY_CLUB_COMP_RESERVE as *const u32) { f + 0xac } else { G_CURRENT_DATE };
+            let day = if *(game.addr() as *const u32) == *(KEY_CLUB_COMP_RESERVE as *const u32) { f + 0xac } else { G_CURRENT_DATE };
             if exe::nationalteams_get_international_duty_club(u(G_NATIONAL_TEAMS, 0), p, day, club, 0, 0) != 0 || emprestado_fora(p) {
                 continue;
             }
@@ -1697,7 +1697,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
             continue;
         }
         if read_i8(t + match_manager::TACTIC_SLOT) == 0 && read_i8(p + 0x18) < 0x10 {
-            let c = u(game, fixture::COMPETITION);
+            let c = u(game.addr(), fixture::COMPETITION);
             if c != 0 && h16(c, 0x69) > 10 {
                 continue;
             }
@@ -1740,9 +1740,9 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
             mark_se(p);
             continue;
         }
-        let away = (*(game as *const i32) != -2 && exe::discipline_is_player_banned(u(G_DISCIPLINE, 0), p, u(game, fixture::COMPETITION), 1, 0) != 0)
+        let away = (*(game.addr() as *const i32) != -2 && exe::discipline_is_player_banned(u(G_DISCIPLINE, 0), p, u(game.addr(), fixture::COMPETITION), 1, 0) != 0)
             || exe::nationalteams_get_international_duty_club(u(G_NATIONAL_TEAMS, 0), p, G_CURRENT_DATE, club, 0, 0) != 0
-            || (*(game as *const i32) != -2 && exe::transfer_manager_get_ineligibility_code(u(G_TRANSFER_MANAGER, 0), p, game) != 0)
+            || (*(game.addr() as *const i32) != -2 && exe::transfer_manager_get_ineligibility_code(u(G_TRANSFER_MANAGER, 0), p, game) != 0)
             || emprestado_fora(p);
         if away {
             mark_se(p);
@@ -1773,7 +1773,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
         mask = (mask | 0x20100) ^ 0x80000;
     } else {
         let dif = || h16(club, club::REPUTATION) as i32 - h16(other, club::REPUTATION) as i32;
-        let a = read_i8(game + fixture::CATEGORY);
+        let a = (game.category() as i8);
         let mut done = false;
         if a == 1 || a == 9 {
             let lim = exe::utils_random(2000).wrapping_add(exe::utils_random(-4000));
@@ -1790,7 +1790,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
                     mask |= 0x10000;
                 }
             } else {
-                let j0 = *(game as *const i32);
+                let j0 = *(game.addr() as *const i32);
                 if read_i8(t + match_manager::SELECTION_MODE) != 3 || (j0 > -1 && competition(j0) != 0 && exe::comp_is_club_still_in_contention(competition(j0), club) == 0) {
                     mask = (mask | 0x100) ^ 0x80000;
                 } else if exe::database_is_national_team(club) == 0 {
@@ -1928,9 +1928,9 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
     }
 
     // the rotation (0x8cf880 points out who rests; 0x6e8910 re-evaluates), at most two rounds
-    if *(game as *const i32) != -2 {
+    if *(game.addr() as *const i32) != -2 {
         *b(0x2e) = 0;
-        let mut r = rodizio(u(G_TRANSFER_MANAGER, 0), club, game, 0, f + 0x14c, 2, f + 0x78);
+        let mut r = rodizio(u(G_TRANSFER_MANAGER, 0), club, game.addr(), 0, f + 0x14c, 2, f + 0x78);
         while r != 0 && *b(0x2e) != 2 {
             let nb = *b(0x13);
             *b(0x2e) = (*b(0x2e)).wrapping_add(1);
@@ -1968,7 +1968,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
             if w != 0 {
                 exe::crt_free(w);
             }
-            r = rodizio(u(G_TRANSFER_MANAGER, 0), club, game, 0, f + 0x14c, 2, f + 0x78);
+            r = rodizio(u(G_TRANSFER_MANAGER, 0), club, game.addr(), 0, f + 0x14c, 2, f + 0x78);
         }
     }
     if mode as u8 == 1 {
@@ -2184,10 +2184,10 @@ pub(crate) unsafe fn substitute_with(c: usize, goalkeeper: u8, call: &mut dyn Fn
         mark[i] = exe::formation_get_player_instructions(read_usize(c + match_manager::TACTICS), pos[i]);
         bpos[i] = exe::formation_get_marking_type(read_usize(c + match_manager::TACTICS), pos[i]);
     }
-    let comp = read_usize(c + match_manager::FIXTURE);
+    let comp = Fixture(read_usize(c + match_manager::FIXTURE));
     // the substitutes come right after the slots (the rest of the sorted list is left out)
     let mut n1 = slots;
-    let limit = (*((comp + fixture::SQUAD_RULES) as *const u8) & 0xf) as i32 + 0xb;
+    let limit = ((comp.squad_rules() as u8) & 0xf) as i32 + 0xb;
     if limit > 0xb {
         let mut p = read_usize(c + match_manager::PLAYERS) + 0x132a;
         let mut k = 0xb;
@@ -2212,7 +2212,7 @@ pub(crate) unsafe fn substitute_with(c: usize, goalkeeper: u8, call: &mut dyn Fn
         mode = (mode | 0x20100) ^ 0x80000;
     } else {
         let mut done = false;
-        if matches!(read_i8(comp + fixture::CATEGORY), 1 | 9) {
+        if matches!((comp.category() as i8), 1 | 9) {
             let r = random(0x7d0).wrapping_add(random(-4000));
             if strength(match_manager::CLUB) - strength(match_manager::OPPONENT) > r {
                 mode |= 0x100;
@@ -2227,7 +2227,7 @@ pub(crate) unsafe fn substitute_with(c: usize, goalkeeper: u8, call: &mut dyn Fn
             } else if read_i8(c + match_manager::SELECTION_MODE) != 3 {
                 false
             } else {
-                let id = *(comp as *const i32);
+                let id = *(comp.addr() as *const i32);
                 id <= -1 || exe::comp_is_club_still_in_contention(*((*(G_COMP_OBJECT_TABLE as *const usize) + id as usize * 4) as *const usize), club) != 0
             };
             if check_national_team {
@@ -4300,6 +4300,7 @@ pub(crate) unsafe fn holiday_selection_bonus(p: Staff, club: Club, holiday: usiz
 /// clube. Devolve quantos foram escalados; em `*vagas`, o tamanho do time.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn select_side(t: usize, m: usize, tecnico: usize, rows: usize, players: usize, side: u32, club: usize, other: usize, game: usize, slots: *mut i8) -> i8 {
+    let game = Fixture(game);
     let b = |o: usize| (t + o) as *mut u8;
     let d = |o: usize| (t + o) as *mut usize;
     let u = |q: usize, o: usize| *((q + o) as *const usize);
@@ -4330,14 +4331,14 @@ pub(crate) unsafe extern "thiscall" fn select_side(t: usize, m: usize, tecnico: 
     *d(match_manager::SQUAD_ROWS) = rows;
     *d(match_manager::CLUB) = club;
     *d(match_manager::ENGINE) = m;
-    *d(match_manager::FIXTURE) = game;
+    *d(match_manager::FIXTURE) = game.addr();
     *d(match_manager::BEST_PLAYER) = 0;
     *d(match_manager::KEY_PLAYER_3) = 0;
     *d(match_manager::KEY_PLAYER_2) = 0;
     *d(6) = 0;
     *d(match_manager::TACTICS) = m + engine::TACTICS + (side as u8 as i8 as isize * 0x18e3) as usize;
     *d(match_manager::OPPONENT) = other;
-    let home = (club == u(game, fixture::HOME_CLUB) && read_i8(game + fixture::HOME_SIDE_MARK) == 0) || (club == u(game, fixture::AWAY_CLUB) && read_i8(game + fixture::AWAY_SIDE_MARK) == 0);
+    let home = (club == u(game.addr(), fixture::HOME_CLUB) && (game.home_side_mark() as i8) == 0) || (club == u(game.addr(), fixture::AWAY_CLUB) && game.away_side_mark() == 0);
     if home {
         *b(match_manager::TACTIC_SLOT) = 1;
         *b(match_manager::SELECTION_MODE) = 0;
@@ -4378,7 +4379,7 @@ pub(crate) unsafe extern "thiscall" fn select_side(t: usize, m: usize, tecnico: 
         } else {
             starters(t) as i8
         };
-        *slots = ((*((game + fixture::SQUAD_RULES) as *const u8) & 0xf) + 0xb) as i8;
+        *slots = (((game.squad_rules() as u8) & 0xf) + 0xb) as i8;
     } else {
         let x = *d(match_manager::MANAGER);
         if x != 0 {
@@ -4392,7 +4393,7 @@ pub(crate) unsafe extern "thiscall" fn select_side(t: usize, m: usize, tecnico: 
         }
         n = exe::match_man_pick_team(t, other, 2);
         *slots = 0;
-        let total = (*((game + fixture::SQUAD_RULES) as *const u8) & 0xf) + 0xb;
+        let total = ((game.squad_rules() as u8) & 0xf) + 0xb;
         let mut k = 0u8;
         while (k as i8) < total as i8 {
             let p = u(players + k as usize * 0x1be, 0x69);
@@ -4402,7 +4403,7 @@ pub(crate) unsafe extern "thiscall" fn select_side(t: usize, m: usize, tecnico: 
             k += 1;
         }
     }
-    let bench = (*((game + fixture::SQUAD_RULES) as *const u8) >> 4) & 0xf;
+    let bench = ((game.squad_rules() as u8) >> 4) & 0xf;
     let sobra = (n as u8).wrapping_sub(0xb) as i8;
     let r = if bench as i8 >= sobra { sobra } else { bench as i8 };
     *b(match_manager::SUBSTITUTIONS_LEFT) = if r <= 0 { 0 } else if (bench as i8) < sobra { bench } else { sobra as u8 };

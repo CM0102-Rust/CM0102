@@ -492,19 +492,20 @@ pub(crate) unsafe extern "C" fn human_manager_get_stand_in_manager(club: usize) 
 /// (+0), +0x34 e os dois lados (+0xc, +0x10). Partida nula ou humano fora da faixa: a original (caixa
 /// de erro e 0).
 pub(crate) unsafe extern "thiscall" fn is_watching_fixture(this: usize, partida: usize, human: usize) -> u32 {
+    let partida = Fixture(partida);
     let r = match formation_watched_match_record(this, human) {
-        Err(()) => return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_WATCHING_FIXTURE)(this, partida, human),
-        Ok(_) if partida == 0 => return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_WATCHING_FIXTURE)(this, partida, human),
+        Err(()) => return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_WATCHING_FIXTURE)(this, partida.addr(), human),
+        Ok(_) if partida.is_null() => return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_WATCHING_FIXTURE)(this, partida.addr(), human),
         Ok(0) => return 0,
         Ok(r) => r,
     };
-    let same = read_u8(partida + fixture::TIME_SLICE) == read_u8(r + 0x9b13)
-        && read_u16(partida + fixture::DAY) == read_u16(r + 0x9afe)
-        && read_u16(partida + fixture::YEAR) == read_u16(r + 0x9afc)
-        && read_u32(partida + 0) == read_u32(r + 0x9ad4)
-        && read_u16(partida + fixture::ROUND_NUMBER) == read_u16(r + 0x9b08)
-        && read_u32(partida + fixture::HOME_CLUB_ID) == read_u32(r + 0x9ae0)
-        && read_u32(partida + fixture::AWAY_CLUB_ID) == read_u32(r + 0x9ae4);
+    let same = partida.time_slice() == read_u8(r + 0x9b13)
+        && partida.day() == read_u16(r + 0x9afe)
+        && partida.year() == read_u16(r + 0x9afc)
+        && read_u32(partida.addr() + 0) == read_u32(r + 0x9ad4)
+        && (partida.round_number() as u16) == read_u16(r + 0x9b08)
+        && (partida.home_club_id() as u32) == read_u32(r + 0x9ae0)
+        && (partida.away_club_id() as u32) == read_u32(r + 0x9ae4);
     if same { 1 } else { 0 } // another match
 }
 
@@ -528,7 +529,8 @@ pub(crate) unsafe extern "thiscall" fn is_watching_fixture(this: usize, partida:
 /// Senão 0. Partida nula: a caixa "Error" (0x707) e 0. Pela limpeza das partidas assistidas (0x5fe8d0) e pela escolha
 /// da partida (0x5fe500).
 pub(crate) unsafe extern "thiscall" fn can_watch_fixture(this: usize, partida: usize, human: usize) -> u32 {
-    if partida == 0 {
+    let partida = Fixture(partida);
+    if partida.is_null() {
         show_error_at(0x9cf11c, 0x707);
         return 0;
     }
@@ -539,22 +541,22 @@ pub(crate) unsafe extern "thiscall" fn can_watch_fixture(this: usize, partida: u
             return 0;
         }
     }
-    if read_u8(partida + fixture::HOME_GOALS) as i8 > -1 {
+    if (partida.home_goals() as u8) as i8 > -1 {
         return 0;
     }
     let dele = |p: usize| manager_manager_is_human_club(read_usize(p + 0x1c), read_u8(p + 0x40), human) != 0
         || manager_manager_is_human_club(read_usize(p + 0x20), read_u8(p + 0x41), human) != 0;
-    if dele(partida) {
+    if dele(partida.addr()) {
         return 0;
     }
     let list_of: unsafe extern "stdcall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_FIX_MAN_GET_FIXTURE_LIST_FOR_DATE);
     let mut group = 0u8;
     while (group as i8) < read_u8(G_KEY_NATION_ACTIVE_COUNT) as i8 {
         let mut d = [0u8; 8];
-        let data = exe::new_date(d.as_mut_ptr() as usize, read_i16(partida + fixture::DAY) as u16 as u32, read_i16(partida + fixture::YEAR) as u16 as u32);
+        let data = exe::new_date(d.as_mut_ptr() as usize, (partida.day() as i16) as u16 as u32, (partida.year() as i16) as u16 as u32);
         // simplification: the original pushes the group as a whole word (the upper bytes are stack leftover); 0x5ae6a0
         // passes the type (char) on and 0x5abf10 reads only the byte.
-        let list = list_of(data, read_u8(partida + fixture::TIME_SLICE) as u32, group as u32);
+        let list = list_of(data, partida.time_slice() as u32, group as u32);
         if list != 0 {
             write_u32(list + 0xa, read_usize(list + 2) as u32);
             let mut p = exe::llist_get_next(list);

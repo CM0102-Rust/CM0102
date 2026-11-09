@@ -19,7 +19,8 @@ use super::*;
 /// jogo; mandante (+0x1c): +0x15 o +0x10 do jogo e o placar (+0x19 pró, +0x1a contra) pelo da prorrogação (+0x47/+0x48)
 /// se ele não for negativo, senão o normal (+0x43/+0x44); visitante: +0x15 o +0xc e o placar ao contrário. Devolve 1.
 pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(game: usize, club: usize, out: usize) -> u32 {
-    if game == 0 {
+    let game = Fixture(game);
+    if game.is_null() {
         show_error_at(0xa7a088, 0x29);
         return 0;
     }
@@ -34,34 +35,34 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(game: usize, club
     let side: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_FIXTURE_VENUE_SIDE);
     let (mut t0, mut t1) = ([0u8; 8], [0u8; 8]);
     let (p0, p1) = (t0.as_mut_ptr() as usize, t1.as_mut_ptr() as usize);
-    let d = exe::new_date(p0, read_u16(game + fixture::DAY) as u32, read_u16(game + fixture::YEAR) as u32);
+    let d = exe::new_date(p0, game.day() as u32, game.year() as u32);
     exe::date_operator_3d(out, p1, d);
     let s = |o: usize| (out + o) as *mut u8;
-    core::ptr::write_unaligned(s(8) as *mut u32, read_u32(game));
-    core::ptr::write_unaligned(s(0xc) as *mut u16, read_u16(game + fixture::ROUND_PREFIX));
-    core::ptr::write_unaligned(s(0xe) as *mut u16, read_u16(game + fixture::ROUND_NAME));
-    *s(0x10) = side(club, game);
+    core::ptr::write_unaligned(s(8) as *mut u32, read_u32(game.addr()));
+    core::ptr::write_unaligned(s(0xc) as *mut u16, (game.round_prefix() as u16));
+    core::ptr::write_unaligned(s(0xe) as *mut u16, (game.round_name() as u16));
+    *s(0x10) = side(club, game.addr());
     core::ptr::write_unaligned(s(0x11) as *mut u32, read_u32(club));
-    core::ptr::write_unaligned(s(0x1b) as *mut u32, read_u32(game + fixture::MATCH_STATS_SLOT));
-    if club as u32 == read_u32(game + fixture::HOME_CLUB) { // cpz7: the club is the home team
-        core::ptr::write_unaligned(s(0x15) as *mut u32, read_u32(game + fixture::AWAY_CLUB_ID));
-        if read_u8(game + fixture::HOME_GOALS_EXTRA_TIME) as i8 > -1 {
-            *s(0x19) = read_u8(game + fixture::HOME_GOALS_EXTRA_TIME);
-            *s(0x1a) = read_u8(game + fixture::AWAY_GOALS_EXTRA_TIME);
+    core::ptr::write_unaligned(s(0x1b) as *mut u32, (game.match_stats_slot() as u32));
+    if club as u32 == (game.home_club() as u32) { // cpz7: the club is the home team
+        core::ptr::write_unaligned(s(0x15) as *mut u32, (game.away_club_id() as u32));
+        if (game.home_goals_extra_time() as u8) as i8 > -1 {
+            *s(0x19) = (game.home_goals_extra_time() as u8);
+            *s(0x1a) = (game.away_goals_extra_time() as u8);
         } else {
             crate::comparison::branch("cpz_7 home side score");
-            *s(0x19) = read_u8(game + fixture::HOME_GOALS); // cpz7: the home team goals
-            *s(0x1a) = read_u8(game + fixture::AWAY_GOALS);
+            *s(0x19) = (game.home_goals() as u8); // cpz7: the home team goals
+            *s(0x1a) = (game.away_goals() as u8);
         }
     } else {
-        core::ptr::write_unaligned(s(0x15) as *mut u32, read_u32(game + fixture::HOME_CLUB_ID));
-        if read_u8(game + fixture::AWAY_GOALS_EXTRA_TIME) as i8 > -1 {
-            *s(0x19) = read_u8(game + fixture::AWAY_GOALS_EXTRA_TIME);
-            *s(0x1a) = read_u8(game + fixture::HOME_GOALS_EXTRA_TIME);
+        core::ptr::write_unaligned(s(0x15) as *mut u32, (game.home_club_id() as u32));
+        if (game.away_goals_extra_time() as u8) as i8 > -1 {
+            *s(0x19) = (game.away_goals_extra_time() as u8);
+            *s(0x1a) = (game.home_goals_extra_time() as u8);
         } else {
             crate::comparison::branch("cpz_7 away side score");
-            *s(0x19) = read_u8(game + fixture::AWAY_GOALS);
-            *s(0x1a) = read_u8(game + fixture::HOME_GOALS); // cpz7: the goals conceded by the away team
+            *s(0x19) = (game.away_goals() as u8);
+            *s(0x1a) = (game.home_goals() as u8); // cpz7: the goals conceded by the away team
         }
     }
     1

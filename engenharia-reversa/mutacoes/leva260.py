@@ -29,5 +29,5 @@ MUTACOES = [
     ('cpx11_lider_sem_premio', 'exe::finance_add_prize_money(fin, value); // cpx11: o prêmio', 'if i != 0 { exe::finance_add_prize_money(fin, value); } // mutacao: o lider sem premio', 'cpx_11 bonus paid'),
     ('cpx12_sem_nota', 'add_u16_at(r + player_category_stats::RATING_TOTAL, rating as u16); // cpx12: a nota', '// mutacao: a nota fora da soma', 'cpx_12 match recorded'),
     ('cpx12_sem_jogo', 'add_u8_at(r, 1); // cpx12: the match', '// mutacao: o jogo fora da conta', 'cpx_12 match recorded'),
-    ('cpx12_categorias_da_liga_trocadas', 'if exe::comp_util_is_league_division(read_usize(p) as i32) != 0 { 2 } else { 3 } // cpx12: the league category', 'if exe::comp_util_is_league_division(read_usize(p) as i32) != 0 { 3 } else { 2 } // mutacao: as categorias da liga trocadas', 'cpx_12 league category'),
+    ('cpx12_categorias_da_liga_trocadas', 'if exe::comp_util_is_league_division(read_usize(p.addr()) as i32) != 0 { 2 } else { 3 } // cpx12: the league category', 'if exe::comp_util_is_league_division(read_usize(p.addr()) as i32) != 0 { 3 } else { 2 } // mutacao: as categorias da liga trocadas', 'cpx_12 league category'),
 ]

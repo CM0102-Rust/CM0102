@@ -500,6 +500,7 @@ pub(crate) unsafe extern "thiscall" fn is_club_in_session_searches(this: usize, 
 /// partida (0x7b5be0, os relatórios na lista local). O vetor sai (0x9452ca). Por fim os relatórios vão (0x7f9890) e a
 /// lista é destruída. Devolve 1.
 pub(crate) unsafe extern "thiscall" fn scout_manager_scout_match(this: usize, p: usize, result: usize) -> u32 {
+    let p = Fixture(p);
     // calloc: push 4; push 0xa; add esp, 8 -> cdecl (10, 4); random draw: push 0xa; add esp, 4 -> cdecl; free: cdecl;
     // 0x7f6cd0: push pessoa; push qual; mov ecx, [this] -> thiscall ret 8; 0x7ae9c0: 5 pushes; mov ecx, registro ->
     // thiscall ret 0x14; 0x7b5be0: push &list; push result; push match; mov ecx, record -> thiscall ret 0xc;
@@ -526,9 +527,9 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_scout_match(this: usize, p:
             // simplification: the original pushes the dword with the observer byte and stack leftover above; 0x7f6cd0 reads the
             // byte
             let r = exe::scout_manager_get_search(this, q as u8 as u32, person);
-            if read_usize(r + 0x19d) != 0 && *((p + fixture::HOME_SIDE_MARK) as *const u8) != 0 && *((p + fixture::AWAY_SIDE_MARK) as *const u8) != 0 {
+            if read_usize(r + 0x19d) != 0 && p.home_side_mark() != 0 && (p.away_side_mark() as u8) != 0 {
                 let club = person.club_job();
-                if read_usize(p + fixture::HOME_CLUB) == club || read_usize(p + fixture::AWAY_CLUB) == club {
+                if p.home_club() == club || p.away_club() == club {
                     exe::player_search_start_scout_assignment(r, u32::MAX, u32::MAX, u32::MAX, 0, 1);
                 }
             }
@@ -760,8 +761,9 @@ pub(crate) unsafe extern "thiscall" fn set_selected_list(this: usize, list: u32,
 /// nem lesionada (0x62c400 = 2), nem suspensa (0x55d270), nem impedida (0x7757d0), e que ainda não jogou (0x8cf5e0
 /// = 0), dá 1. Senão 0.
 pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, partida: usize) -> u32 {
-    let (c1, c2) = (read_usize(partida + fixture::HOME_CLUB), read_usize(partida + fixture::AWAY_CLUB));
-    if read_i32(partida) < 0 {
+    let partida = Fixture(partida);
+    let (c1, c2) = (partida.home_club(), partida.away_club());
+    if read_i32(partida.addr()) < 0 {
         crate::comparison::branch("cps_8 negative competition");
         return 0; // cps8: negative competition
     }
@@ -769,7 +771,7 @@ pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, p
     let mut e = exe::llist_get_next(G_SCOUT_CLUB_TABLE_LIST);
     while e != 0 {
         let v = read_usize(e);
-        if read_usize(partida + fixture::HOME_CLUB_ID) == v || read_usize(partida + fixture::AWAY_CLUB_ID) == v {
+        if partida.home_club_id() == v || partida.away_club_id() == v {
             return 1;
         }
         e = exe::llist_get_next(G_SCOUT_CLUB_TABLE_LIST);
@@ -800,7 +802,7 @@ pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, p
         if exe::injury_get_player_injury_status(read_usize(G_INJURY), p) == 2 {
             continue;
         }
-        if exe::discipline_is_player_banned(read_usize(G_DISCIPLINE), p, read_usize(partida + fixture::COMPETITION), 1, 0) != 0 {
+        if exe::discipline_is_player_banned(read_usize(G_DISCIPLINE), p, partida.competition(), 1, 0) != 0 {
             continue;
         }
         if exe::nationalteams_get_international_duty_club(read_usize(G_NATIONAL_TEAMS), p, G_CURRENT_DATE, x, 0, 0) != 0 {

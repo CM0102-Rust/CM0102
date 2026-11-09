@@ -12,8 +12,8 @@ pub(crate) unsafe extern "thiscall" fn compare_restart_play(m: usize) {
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
+    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
     }
     let write = RECORD_RESTART.swap(true, Relaxed);
@@ -161,8 +161,8 @@ pub(crate) unsafe fn compare_play(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, 
     let m = *((p + match_player::ENGINE) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
+    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
     }
     let write = RECORD_716.swap(true, Relaxed);
@@ -281,9 +281,9 @@ pub(crate) unsafe extern "thiscall" fn compare_quick_simulation(m: usize) {
     // may change the captain) and the match record (scores and aggregate)
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = *((m + engine::MATCH) as *const usize);
-    reg.push((t, 0x50));
-    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
+    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    reg.push((t.addr(), 0x50));
+    for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
     }
     let write = RECORD_716.swap(true, std::sync::atomic::Ordering::Relaxed);
@@ -482,8 +482,8 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_substitutions(m: usize) {
     // clubs (the captain at +0x52, which the substitution changes)
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
+    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
     }
     let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(m), |chamar| {
@@ -509,8 +509,8 @@ pub(crate) unsafe extern "thiscall" fn compare_punishments(m: usize, first: usiz
     // the whole engine, the random state, the error, 0xae1080 and the tactics row of both clubs (the captain)
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
+    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
     }
     RECORD_716.store(true, std::sync::atomic::Ordering::Relaxed);
@@ -537,8 +537,8 @@ pub(crate) unsafe extern "thiscall" fn compare_penalties(m: usize, mode: u32) {
     }
     // the whole engine, the random roll, the error, the commentator (+0x8f7a points outside) and the match score
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    let game = *((m + engine::MATCH) as *const usize);
-    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (*((m + engine::COMMENTATOR) as *const usize), 1), (game + fixture::HOME_PENALTIES, 2)]);
+    let game = Fixture(*((m + engine::MATCH) as *const usize));
+    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (*((m + engine::COMMENTATOR) as *const usize), 1), (game.addr() + fixture::HOME_PENALTIES, 2)]);
     let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(m, mode), |chamar| {
         penalty_shootout_step_with(m, mode, &mut |rotina, this, args| {
             let mask = match rotina {
@@ -564,8 +564,8 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_foul(m: usize) -> u8 {
     // pode trocar o capitao)
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
+    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
     }
     let kind = read_i8(m + engine::PENDING_PLAY_KIND);
@@ -597,8 +597,8 @@ pub(crate) unsafe extern "thiscall" fn compare_contest(m: usize, x: u32, y: u32)
     // pode trocar o capitao)
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
+    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
     }
     let write = RECORD_716.swap(true, std::sync::atomic::Ordering::Relaxed);
@@ -645,8 +645,8 @@ pub(crate) unsafe extern "thiscall" fn compare_player_left(m: usize, j: usize, j
     // before the compared one checks whether the player who left was the captain
     let taticas = *(G_TACTICS as *const usize);
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
+    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    for clube in [t.home_club(), t.away_club()] {
         for humano in 0..2u32 {
             let l = if clube == 0 { -1 } else { row(clube, humano) };
             if l != -1 {
@@ -775,9 +775,9 @@ pub(crate) unsafe extern "thiscall" fn compare_period_completed(m: usize) -> u8 
     if is_recording_top_level() {
         return o(m);
     }
-    let t = *((m + engine::MATCH) as *const usize);
+    let t = Fixture(*((m + engine::MATCH) as *const usize));
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m + 0x1a0, 0x30), (m + engine::GRID, 0x8f00 - 0x215e), (m + engine::FORMATION_TABLE, 0xd8), (t + fixture::TIE_RULES, 0x18)]);
+    reg.extend([(m + 0x1a0, 0x30), (m + engine::GRID, 0x8f00 - 0x215e), (m + engine::FORMATION_TABLE, 0xd8), (t.addr() + fixture::TIE_RULES, 0x18)]);
     let (r, n, igual, sequencia, k) = compare_com_fita(reg, || o(m), |chamar| {
         period_completed_with(m, &mut |rotina, this, args| {
             chamar(rotina, this, args, match rotina {

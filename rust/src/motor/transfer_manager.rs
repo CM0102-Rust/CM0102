@@ -1797,11 +1797,11 @@ pub(crate) unsafe fn collect_round_fixtures(cup: usize, data: usize, round: u32,
 ///
 /// [pt] O jogo `f` está na data marcada da rodada: dia (+0x2a, sem sinal) = +3 da rodada, ano (+0x28) = +5 + o da copa
 /// (+0x40), fatia (+0x3f) = +6 e o tipo (+0x42) da liga.
-pub(crate) unsafe fn fixture_on_round_date(cup: usize, e: usize, f: usize) -> bool {
-    read_i16(f + fixture::DAY) as u16 as i32 == read_i16(e + 3) as i32
-        && read_i16(f + fixture::YEAR) as u16 as i32 == read_u8(e + 5) as i8 as i32 + read_i16(cup + cup::YEAR) as i32
-        && read_u8(f + fixture::TIME_SLICE) as i32 == read_u8(e + 6) as i8 as i32
-        && read_u8(f + fixture::STAGE_INDEX) == read_u8(cup + cup::STAGE_INDEX)
+pub(crate) unsafe fn fixture_on_round_date(cup: usize, e: usize, f: Fixture) -> bool {
+    (f.day() as i16) as u16 as i32 == read_i16(e + 3) as i32
+        && (f.year() as i16) as u16 as i32 == read_u8(e + 5) as i8 as i32 + read_i16(cup + cup::YEAR) as i32
+        && f.time_slice() as i32 == read_u8(e + 6) as i8 as i32
+        && f.stage_index() == read_u8(cup + cup::STAGE_INDEX)
 }
 
 /// Removes the player from the offer's part-exchange list (or from his other offers), his value goes to the price, the
@@ -3597,15 +3597,16 @@ pub(crate) unsafe fn pay_appearance_money_unless_dry_run(this: usize, p: usize, 
 /// (0x55d270), convocação (0x7757d0) nem inelegibilidade (0x8cf5e0), e não emprestados por outro clube (0x4cf6d0 com o
 /// contrato guardado em [0xae1080]), somam uma falta (+6).
 pub(crate) unsafe extern "thiscall" fn update_appearance_clauses_after_match(this: usize, game: usize, partida: usize) {
+    let game = Fixture(game);
     // simplification: the original’s local squad (esp+0x110) is not filled on the national team side and keeps whatever the stack had
     // (the one from the other side or garbage); here it starts zeroed (empty slot, which the game also produces) and passes from one side to the other
     let mut squad = [0usize; 50];
     let mut side: i8 = 0;
     while side < 2 {
-        let club = read_usize(game + if side == 0 { 0x1c } else { 0x20 });
-        let comp = read_usize(game + fixture::COMPETITION);
-        let away = comp == 0 || exe::database_is_national_team(read_usize(game + fixture::HOME_CLUB)) != 0 || exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), comp) != 0;
-        let contando = (!away && read_u8(game + fixture::HOME_SIDE_MARK + side as usize) != 0) || read_usize(game) as i32 == -2;
+        let club = read_usize(game.addr() + if side == 0 { 0x1c } else { 0x20 });
+        let comp = game.competition();
+        let away = comp == 0 || exe::database_is_national_team(game.home_club()) != 0 || exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), comp) != 0;
+        let contando = (!away && read_u8(game.addr() + fixture::HOME_SIDE_MARK + side as usize) != 0) || read_usize(game.addr()) as i32 == -2;
         let mask: u8 = if exe::database_is_national_team(club) != 0 {
             4
         } else {
@@ -3680,14 +3681,14 @@ pub(crate) unsafe extern "thiscall" fn update_appearance_clauses_after_match(thi
                 if p == 0 || exe::injury_get_player_injury_status(read_usize(G_INJURY), p) != 0 {
                     continue;
                 }
-                let comp = read_usize(game + fixture::COMPETITION);
+                let comp = game.competition();
                 if comp != 0 && exe::discipline_is_player_banned(read_usize(G_DISCIPLINE), p, comp, 1, 0) != 0 {
                     continue;
                 }
                 if (exe::nationalteams_get_international_duty_club(read_usize(G_NATIONAL_TEAMS), p, G_CURRENT_DATE, club, (0) as u32, (0) as u32) as usize) != 0 {
                     continue;
                 }
-                if read_usize(game + fixture::COMPETITION) != 0 && exe::transfer_manager_get_ineligibility_code(this, p, game) != 0 {
+                if game.competition() != 0 && exe::transfer_manager_get_ineligibility_code(this, p, game) != 0 {
                     continue;
                 }
                 if exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p) != 0 {
@@ -6357,6 +6358,7 @@ pub(crate) unsafe extern "thiscall" fn fill_squad_restrictions(this: usize, part
 /// ou passa da idade (+0x18, tipo 3): +2 (titulares) ou +3 (as outras) e +4 (todas). A conta vai a `saida`; passando da
 /// quantidade, 1 e, com `msg`, o aviso (0x66f4e0) pelo tipo, pela conta e pela quantidade.
 pub(crate) unsafe extern "thiscall" fn transfer_manager_check_matchday_squad_limit(this: usize, club: usize, partida: usize, msg: usize, players: usize, not_used: u32, out: usize) -> u32 {
+    let partida = Fixture(partida);
     let club = Club(club);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let mut l = [0u8; 6];
@@ -6365,15 +6367,15 @@ pub(crate) unsafe extern "thiscall" fn transfer_manager_check_matchday_squad_lim
     if kind == 0 {
         return 0;
     }
-    let human = ((club.addr() == read_usize(partida + fixture::HOME_CLUB) && read_u8(partida + fixture::HOME_SIDE_MARK) == 0) || (club.addr() == read_usize(partida + fixture::AWAY_CLUB) && read_u8(partida + fixture::AWAY_SIDE_MARK) == 0)) as u32;
+    let human = ((club.addr() == partida.home_club() && partida.home_side_mark() == 0) || (club.addr() == partida.away_club() && (partida.away_side_mark() as u8) == 0)) as u32;
     if kind == 1 {
         crate::comparison::branch("cpr_1 count non-EU players");
     }
     let mut k: i8 = 0;
-    while k < ((read_u8(partida + fixture::SQUAD_RULES) & 0xf).wrapping_add(0xb)) as i8 {
+    while k < (((partida.squad_rules() as u8) & 0xf).wrapping_add(0xb)) as i8 {
         let p = Staff(if players == 0 {
             // simplification: the original pushes the match pair with the low byte replaced by the slot (0x8968f0 reads the byte)
-            exe::tactics_get_selected_player(read_usize(G_TACTICS), club, ((partida & !0xff) | k as u8 as usize) as u32, (human) as i32)
+            exe::tactics_get_selected_player(read_usize(G_TACTICS), club, ((partida.addr() & !0xff) | k as u8 as usize) as u32, (human) as i32)
         } else {
             read_usize(players + (k as isize * 4) as usize)
         });
@@ -8858,9 +8860,10 @@ pub(crate) unsafe fn vector_contains_record(v: usize, n: usize, size: usize, tar
 /// da competição (0x669470, com sinal): a nação da tabela 0xb63d60 (72 bytes cada), o continente da competição (+0x59)
 /// e tipo 4 (chaves 0 e 1), 2 (3 a 7) ou 1.
 pub(crate) unsafe extern "thiscall" fn get_fixture_rules_scope(_this: usize, partida: usize, kind: *mut u8, nation: *mut usize, continent: *mut usize) {
-    let comp = read_usize(partida + fixture::COMPETITION);
+    let partida = Fixture(partida);
+    let comp = partida.competition();
     if read_usize(comp) == read_usize(KEY_CLUB_COMP_RESERVE) {
-        let n = read_usize(read_usize(partida + fixture::HOME_CLUB) + 0x53);
+        let n = read_usize(partida.home_club() + 0x53);
         *nation = n;
         *continent = if n != 0 { read_usize(n + nation::CONTINENT) } else { 0 };
         *kind = 1;
@@ -8874,7 +8877,7 @@ pub(crate) unsafe extern "thiscall" fn get_fixture_rules_scope(_this: usize, par
     }
     let k = exe::key_nation_index_of_comp(comp) as i8;
     *nation = read_usize((0xb63d60isize + k as isize * 72) as usize);
-    *continent = read_usize(read_usize(partida + fixture::COMPETITION) + 0x59);
+    *continent = read_usize(partida.competition() + 0x59);
     *kind = match k {
         0 | 1 => 4,
         3..=7 => 2,
@@ -8901,8 +8904,9 @@ pub(crate) unsafe extern "thiscall" fn get_fixture_rules_scope(_this: usize, par
 /// 28 regras de +0x8ac do continente (+0xe, tipo 2) ou da nação (+0xa) com o mesmo tipo (+0x12) responde (virtual
 /// +0x18 com jogador e partida). Nenhuma: 0.
 pub(crate) unsafe extern "thiscall" fn get_ineligibility_code(this: usize, player: usize, partida: usize) -> u8 {
-    if partida != 0 {
-        if exe::database_is_national_team(read_usize(partida + fixture::HOME_CLUB)) == 0 {
+    let partida = Fixture(partida);
+    if !partida.is_null() {
+        if exe::database_is_national_team(partida.home_club()) == 0 {
             if exe::awol_is_player_awol(read_usize(G_AWOL), player, 0) != 0 {
                 return 9;
             }
@@ -8923,7 +8927,7 @@ pub(crate) unsafe extern "thiscall" fn get_ineligibility_code(this: usize, playe
         if home {
             crate::comparison::branch("cpk_4 match rule");
             let respond: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(read_usize(read_usize(r) + 0x18));
-            return respond(r, player, partida);
+            return respond(r, player, partida.addr());
         }
     }
     0

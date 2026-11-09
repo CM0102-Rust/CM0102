@@ -33,6 +33,7 @@ pub(crate) unsafe fn player_search_contract_club(person: Staff) -> usize {
 /// 5/6 com a nota pelo +0x30) e a nota +0x15. Com o técnico do clube humano e as máscaras de atributos ligadas, o
 /// técnico passa a conhecer o jogador (0x5b09d0, que sorteia).
 pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(this: usize, game: usize, result: usize) {
+    let game = Fixture(game);
     let club_obs = Club(friendly_club_by_id(read_usize(this)));
     for i in 0..0x32usize {
         let v = this + 4 + i * 0x1a2;
@@ -54,10 +55,10 @@ pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(t
         *((v + 0x1a1) as *mut u8) = 0;
     }
     // the club’s side: 0 if it is the match’s +0xc (the opponent is +0x10), otherwise 1 (opponent +0xc)
-    let (lado, adversario): (i8, u32) = if read_usize(game + fixture::HOME_CLUB_ID) == read_usize(this) {
-        (0, read_usize(game + fixture::AWAY_CLUB_ID) as u32)
+    let (lado, adversario): (i8, u32) = if game.home_club_id() == read_usize(this) {
+        (0, game.away_club_id() as u32)
     } else {
-        (1, read_usize(game + fixture::HOME_CLUB_ID) as u32)
+        (1, game.home_club_id() as u32)
     };
     // 0x600a50: 5 pushes (club, 0, 1, 0, 0); add esp, 0x14 -> cdecl; 0x5afde0: push manager; mov ecx, [0xae2a60] ->
     // thiscall; 0x5b09d0: push 0; push player; mov ecx, eax -> thiscall, ret 8; 0x7bd700: push 1; push player; mov ecx,
@@ -104,16 +105,16 @@ pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(t
         let por = |o: usize, v: u8| *((l + o) as *mut u8) = v;
         por(0x17, read_u8(e + 0x27));
         por(0x18, read_u8(e + 0x22));
-        core::ptr::write_unaligned((l + 6) as *mut u16, read_i16(game + fixture::DAY) as u16);
-        core::ptr::write_unaligned((l + 8) as *mut u16, read_i16(game + fixture::YEAR) as u16);
+        core::ptr::write_unaligned((l + 6) as *mut u16, (game.day() as i16) as u16);
+        core::ptr::write_unaligned((l + 8) as *mut u16, (game.year() as i16) as u16);
         por(0x16, read_u8(e + 0x21));
         por(0x1b, read_u8(e + 0x35));
         por(0x1a, read_u8(e + 0x2d));
         por(0x19, read_u8(e + 0x2c));
         let (m, n) = if lado == 0 { (0x43, 0x44) } else { (0x44, 0x43) };
-        por(0xe, read_u8(game + m));
-        por(0xf, read_u8(game + n));
-        core::ptr::write_unaligned((l + 0x10) as *mut u32, read_usize(game + fixture::MATCH_STATS_SLOT) as u32);
+        por(0xe, read_u8(game.addr() + m));
+        por(0xf, read_u8(game.addr() + n));
+        core::ptr::write_unaligned((l + 0x10) as *mut u32, game.match_stats_slot() as u32);
         por(0x14, exe::comp_util_get_fixture_venue_side(friendly_club_by_id(read_usize(this)), game) as u8);
         for t in 0..10 {
             por(0x1c + t, read_u8(e + 0x3e + t));
@@ -127,7 +128,7 @@ pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(t
         por(0x2c, read_u8(e + 0x23));
         por(0x2d, read_u8(e + 0x24));
         por(0x2e, 0);
-        let adv = if read_usize(game) == read_usize(KEY_CLUB_COMP_RESERVE) { adversario.wrapping_neg() } else { adversario };
+        let adv = if read_usize(game.addr()) == read_usize(KEY_CLUB_COMP_RESERVE) { adversario.wrapping_neg() } else { adversario };
         core::ptr::write_unaligned((l + 0xa) as *mut u32, adv);
         if j < 0xb {
             por(0x2e, 1);
@@ -205,27 +206,27 @@ pub(crate) unsafe extern "thiscall" fn player_search_scout_match(this: usize, ga
     let mut list = [0u8; 16];
     let l = list.as_mut_ptr() as usize;
     exe::new_llist(l);
-    let r = scout_match_body(this, game, result, out, l);
+    let r = scout_match_body(this, Fixture(game), result, out, l);
     exe::drop_llist(l);
     r
 }
 
 /// Body of player_search_scout_match over a built local list: checks the scout/search and produces scouting reports for
 /// the match.
-pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, out: usize, l: usize) -> u32 {
-    if game == 0 || result == 0 {
+pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize, out: usize, l: usize) -> u32 {
+    if game.is_null() || result == 0 {
         show_error_at(0xa701b0, 0xef1);
         return 0;
     }
     let owner = staff_records_staff_by_id(read_usize(this));
     // the nation of the match’s competition (+0x18 → +0x38 → +0x1f) or the home club’s (+0x1c → +0x53)
     let mut nation = 0usize;
-    let t = read_usize(game + fixture::STADIUM);
+    let t = game.stadium();
     if t != 0 && read_usize(t + stadium::CITY) != 0 && read_usize(read_usize(t + stadium::CITY) + 0x1f) != 0 {
         nation = read_usize(read_usize(t + stadium::CITY) + 0x1f);
     }
     if nation == 0 {
-        nation = read_usize(read_usize(game + fixture::HOME_CLUB) + 0x53);
+        nation = read_usize(game.home_club() + 0x53);
     }
     if read_u8(this + player_search_fields::LIST_TYPE) != 4 {
         return 0;
@@ -243,7 +244,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
         return 0;
     }
     let acompanhado = read_i32(this + player_search_fields::ASSIGNED_CLUB);
-    if acompanhado > -1 && read_usize(this + 0x170) != 0 && (read_i32(game + fixture::HOME_CLUB_ID) == acompanhado || read_i32(game + fixture::AWAY_CLUB_ID) == acompanhado) {
+    if acompanhado > -1 && read_usize(this + 0x170) != 0 && ((game.home_club_id() as i32) == acompanhado || (game.away_club_id() as i32) == acompanhado) {
         if !SCOUT_MATCH_DRY_RUN {
             crate::comparison::branch("cqf_10 club history");
             // 0x7bd310: push resultado; push jogo; mov ecx, [this+0x170] -> thiscall, ret 8
@@ -263,7 +264,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
         return 0;
     }
     let target = read_i32(this + player_search_fields::ASSIGNED_COMP);
-    let of_target = target > -1 && read_i32(game) == target;
+    let of_target = target > -1 && read_i32(game.addr()) == target;
     if !of_target {
         // 0x7b7490: push nation; mov ecx, this -> thiscall, ret 4
         if exe::player_search_scout_covers_nation(this, nation) == 0 {
@@ -286,7 +287,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
             loop {
                 let item = Staff(exe::llist_get_next(l));
                 if !item.is_null() {
-                    let (m, v) = (read_usize(game + fixture::HOME_CLUB), read_usize(game + fixture::AWAY_CLUB));
+                    let (m, v) = (game.home_club(), game.away_club());
                     let c39 = item.club_job();
                     let c24 = item.national_job();
                     if c39 == m || c39 == v || c24 == m || c24 == v {
@@ -378,7 +379,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
             let pediu = request(read_usize(G_SCOUT_MANAGER), p.addr(), club_scout, 0);
             if pediu == 0 {
                 let target = read_i32(this + player_search_fields::ASSIGNED_COMP);
-                if !(target != -1 && read_i32(game) == target) && exe::database_get_staff_reputation_for_viewer(p, scout, 0) >= 0xfa0 { // cqf10: perceived reputation
+                if !(target != -1 && read_i32(game.addr()) == target) && exe::database_get_staff_reputation_for_viewer(p, scout, 0) >= 0xfa0 { // cqf10: perceived reputation
                     continue;
                 }
             }
@@ -401,7 +402,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: usize, result: usize, o
                 continue;
             }
             let target = read_i32(this + player_search_fields::ASSIGNED_COMP);
-            let mode: u32 = if target > -1 && target == read_i32(game) {
+            let mode: u32 = if target > -1 && target == read_i32(game.addr()) {
                 0
             } else if pediu != 0 {
                 1

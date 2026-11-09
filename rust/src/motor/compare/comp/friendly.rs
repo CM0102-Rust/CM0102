@@ -9,14 +9,15 @@ use super::*;
 /// roda. Antes, a cópia acha a vaga do amistoso (0x5c6740, só leitura); depois a vaga tem de estar livre (+0x10 = 0 e
 /// +0x18 = 0).
 pub(crate) unsafe extern "thiscall" fn compare_on_friendly_fixture_cancelled(this: usize, game: usize, who: usize) {
+    let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ON_FRIENDLY_FIXTURE_CANCELLED);
     let mut slot = 0usize;
-    if read_usize(game + fixture::COMPETITION) == read_usize(this + 4) && read_usize(this + friendly::SCHEDULED_SLOT_LIST) != 0 {
-        slot = exe::friendly_find_scheduled_friendly_slot(this, replace_low_word(read_usize(game + fixture::HOME_CLUB), read_i16(game + fixture::DAY)), replace_low_word(read_usize(game + fixture::COMPETITION), read_i16(game + fixture::YEAR)), (read_usize(game + fixture::AWAY_CLUB) as u32) as usize, (read_usize(game + fixture::HOME_CLUB) as u32) as usize);
+    if game.competition() == read_usize(this + 4) && read_usize(this + friendly::SCHEDULED_SLOT_LIST) != 0 {
+        slot = exe::friendly_find_scheduled_friendly_slot(this, replace_low_word(game.home_club(), (game.day() as i16)), replace_low_word(game.competition(), (game.year() as i16)), (game.away_club() as u32) as usize, (game.home_club() as u32) as usize);
     }
-    o(this, game, who);
+    o(this, game.addr(), who);
     let free = slot == 0 || (read_usize(slot + scheduled_friendly_slot::OPPONENT) == 0 && read_u8(slot + scheduled_friendly_slot::STATUS) == 0);
-    SCOREBOARD.record(free, || format!("on_friendly_fixture_cancelled(jogo {:#x}) a vaga {:#x} não ficou livre", game, slot));
+    SCOREBOARD.record(free, || format!("on_friendly_fixture_cancelled(jogo {:#x}) a vaga {:#x} não ficou livre", game.addr(), slot));
 }
 
 /// Comparer for `friendly_cancel_national_fixture`.

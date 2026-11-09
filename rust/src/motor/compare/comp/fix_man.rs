@@ -65,22 +65,23 @@ pub(crate) unsafe extern "thiscall" fn compare_load_fixtures(this: usize) {
 /// própria) e a original a partir do mesmo estado; confere a gravidade e os nós novos no fim da lista (os 0x4f bytes de
 /// cada jogo, na ordem). As listas dos dias (0x5abf10) têm o cursor refeito nas duas.
 pub(crate) unsafe extern "thiscall" fn compare_collect_day_clashes(this: usize, game: usize, grav: *mut i32, list: usize, nations: usize, n: u32, data: usize, desloc: u32) {
+    let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32, usize, usize, u32, usize, u32)>(IDX_COLLECT_DAY_CLASHES);
-    if game == 0 || list == 0 || grav.is_null() || read_usize(game + fixture::HOME_CLUB) == 0 || read_usize(game + fixture::AWAY_CLUB) == 0 {
-        return o(this, game, grav, list, nations, n, data, desloc);
+    if game.is_null() || list == 0 || grav.is_null() || game.home_club() == 0 || game.away_club() == 0 {
+        return o(this, game.addr(), grav, list, nations, n, data, desloc);
     }
     let mut g = *grav;
     DAY_CLASHES_APPENDED.clear();
     DAY_CLASHES_DRY_RUN = true;
-    collect_day_clashes(this, game, &mut g, list, nations, n, data, desloc);
+    collect_day_clashes(this, game.addr(), &mut g, list, nations, n, data, desloc);
     DAY_CLASHES_DRY_RUN = false;
     let expected = fixtures_bytes(&DAY_CLASHES_APPENDED);
     let ne = DAY_CLASHES_APPENDED.len();
     let before = fix_man_list_items(list);
-    o(this, game, grav, list, nations, n, data, desloc);
+    o(this, game.addr(), grav, list, nations, n, data, desloc);
     let after = fix_man_list_items(list);
     let same = *grav == g && after.len() == before.len() + ne && after[..before.len()] == before[..] && fixtures_bytes(&after[before.len()..]) == expected;
-    SCOREBOARD.record(same, || format!("collect_day_clashes(jogo {:x}, desloc {}) gravidade original={} rust={}, jogos novos original={} rust={}", game, desloc as u8 as i8, *grav, g, after.len().saturating_sub(before.len()), ne));
+    SCOREBOARD.record(same, || format!("collect_day_clashes(jogo {:x}, desloc {}) gravidade original={} rust={}, jogos novos original={} rust={}", game.addr(), desloc as u8 as i8, *grav, g, after.len().saturating_sub(before.len()), ne));
 }
 
 /// Comparer for `find_fixture_clashes`.
@@ -128,14 +129,15 @@ pub(crate) unsafe extern "C" fn compare_fix_man_load_fixture_leg_checks() {
 /// [pt] O comparador da nova data: lado a lado no jogo (0x4f bytes); os conflitos de dentro (0x5ad780) criam e destroem a
 /// lista deles. Só a original quando o jogo entra na lista de conferência das pernas (aloca o nó).
 pub(crate) unsafe extern "thiscall" fn compare_find_new_fixture_date(this: usize, game: usize) {
+    let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_FIND_NEW_FIXTURE_DATE);
     // the window box without a date (+0x24, type 2) would appear twice: original only
-    if game == 0 || matches!(exe::comp_util_get_round_variant(read_u16(game + fixture::ROUND_NAME) as i16 as i32), 3 | 4) || (read_u8(game + fixture::CATEGORY) == 2 && read_u16(game + fixture::NEXT_ROUND_YEAR) == 0) {
-        return o(this, game);
+    if game.is_null() || matches!(exe::comp_util_get_round_variant((game.round_name() as u16) as i16 as i32), 3 | 4) || (game.category() == 2 && game.next_round_year() == 0) {
+        return o(this, game.addr());
     }
-    let reg = [(game, 0x4f)];
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, game), || find_new_fixture_date(this, game));
-    SCOREBOARD.record(igual, || format!("find_new_fixture_date(jogo {:x}) original={:x?} rust={:x?}", game, mo, mr));
+    let reg = [(game.addr(), 0x4f)];
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, game.addr()), || find_new_fixture_date(this, game.addr()));
+    SCOREBOARD.record(igual, || format!("find_new_fixture_date(jogo {:x}) original={:x?} rust={:x?}", game.addr(), mo, mr));
 }
 
 /// Comparer for `add_fixture`.

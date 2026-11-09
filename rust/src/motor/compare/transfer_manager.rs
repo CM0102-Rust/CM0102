@@ -422,26 +422,27 @@ pub(crate) unsafe extern "thiscall" fn compare_find_next_sale_percentage(this: u
 /// de trabalho; os jogos (+4) e as faltas (+6) têm de bater. Seleção em casa: o elenco local da original começa com o
 /// lixo da pilha, só a original roda. Os prêmios se provam pela própria 0x8cb340 (comparada) e pela carreira.
 pub(crate) unsafe extern "thiscall" fn compare_update_appearance_clauses_after_match(this: usize, game: usize, partida: usize) {
+    let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_UPDATE_APPEARANCE_CLAUSES_AFTER_MATCH);
     let v = read_usize(this + transfer_manager_fields::WORK_PERMITS);
     let n = read_usize(this + transfer_manager_fields::WORK_PERMIT_COUNT) as i32;
-    if exe::database_is_national_team(read_usize(game + fixture::HOME_CLUB)) != 0 || v == 0 || n <= 0 {
-        return o(this, game, partida); // simplification: original only (stack garbage or no permissions)
+    if exe::database_is_national_team(game.home_club()) != 0 || v == 0 || n <= 0 {
+        return o(this, game.addr(), partida); // simplification: original only (stack garbage or no permissions)
     }
     let regions = [(v, n as usize * 0xe)];
     let before = crate::comparison::MemorySnapshot::read(&regions);
     APPEARANCE_CLAUSES_DRY_RUN = true;
-    crate::rng::pause_trace(|| crate::rng::without_counting(|| update_appearance_clauses_after_match(this, game, partida)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| update_appearance_clauses_after_match(this, game.addr(), partida)));
     APPEARANCE_CLAUSES_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
-    o(this, game, partida);
+    o(this, game.addr(), partida);
     // the original does not reallocate the vector (the awards touch other vectors)
     let mo = crate::comparison::MemorySnapshot::read(&regions);
     SCOREBOARD.record(mo == mr, || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let dif: Vec<usize> = (0..a.len()).filter(|&i| a[i] != b[i]).take(16).collect();
-        format!("update_appearance_clauses_after_match(jogo {:x}) permissões diferentes nos bytes {:x?}", game, dif)
+        format!("update_appearance_clauses_after_match(jogo {:x}) permissões diferentes nos bytes {:x?}", game.addr(), dif)
     });
 }
 

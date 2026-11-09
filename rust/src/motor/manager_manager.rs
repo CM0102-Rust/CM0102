@@ -27,32 +27,32 @@ pub(crate) unsafe fn manager_manager_is_national_team(c: Club) -> u32 {
 /// é seleção, senão 0,05; não jogada (+0x40) 0,1; na liga do mandante 1 com o fator 0,06 × (+0x69 da liga) + 0,27;
 /// senão 1 − |500 × (+0x69) − reputação| / 15000, × 1,25 na copa (+0x3a = 8) e pela fase (+0x30: 0x78 × 1,25, 0x82
 /// × 1,5, 0x8c × 0,75, 0x96 e 0xa0 × 2).
-pub(crate) unsafe fn match_weight(club: Club, partida: usize, factor: &mut f64) -> f64 {
-    let comp = Competition(read_usize(partida + fixture::COMPETITION));
+pub(crate) unsafe fn match_weight(club: Club, partida: Fixture, factor: &mut f64) -> f64 {
+    let comp = Competition(partida.competition());
     if comp.is_null() {
         return read_f64(rdata::F64_0_01);
     }
-    let obj = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((read_i32(partida) as usize).wrapping_mul(4)));
+    let obj = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((read_i32(partida.addr()) as usize).wrapping_mul(4)));
     if exe::comp_is_club_still_in_contention(obj, club) == 0 {
         return read_f64(rdata::F64_0_2);
     }
     let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
     if friendly(read_usize(G_FRIENDLY), comp.addr()) != 0 {
-        return if manager_manager_is_national_team(Club(read_usize(partida + fixture::HOME_CLUB))) != 0 { read_f64(rdata::F64_0_67) } else { read_f64(rdata::F64_0_05) };
+        return if manager_manager_is_national_team(Club(partida.home_club())) != 0 { read_f64(rdata::F64_0_67) } else { read_f64(rdata::F64_0_05) };
     }
-    if read_u8(partida + fixture::HOME_SIDE_MARK) == 0 {
+    if partida.home_side_mark() == 0 {
         return read_f64(rdata::F64_0_1);
     }
-    if comp.addr() == read_usize(read_usize(partida + fixture::HOME_CLUB) + 0x57) {
+    if comp.addr() == read_usize(partida.home_club() + 0x57) {
         *factor = comp.reputation() as i32 as f64 * read_f64(rdata::F64_0_06) + read_f64(rdata::F64_0_27);
         return read_f64(rdata::F64_1);
     }
     let x = (comp.reputation() as i32).wrapping_mul(500).wrapping_sub(club.reputation() as i32);
     let mut p = read_f64(rdata::F64_1) - (x as f64).abs() * read_f64(rdata::F64_6_666666667ENEG_05);
-    if read_u8(partida + fixture::CATEGORY) == 8 {
+    if partida.category() == 8 {
         p *= read_f64(rdata::F64_1_25);
     }
-    match read_i16(partida + fixture::ROUND_NAME) as u16 {
+    match partida.round_name() as u16 {
         0x78 => p *= read_f64(rdata::F64_1_25),
         0x82 => p *= read_f64(rdata::F64_1_5),
         0x8c => p *= read_f64(rdata::F64_0_75),
@@ -137,13 +137,14 @@ pub(crate) unsafe fn lineup_rating(game: usize, e: usize, k: i32, rating: usize,
 /// 0x7a7eb0 no negativo), entre 1 e 10000; pisos pela fase e pela força da competição; o protesto da torcida (0x6a5d10);
 /// na liga ou no negativo, pensar em demitir (0x69aba0, 1 na derrota); senão sai da lista dos ultimatos (0x68d1f0).
 pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this: usize, club: usize, partida: usize, game: usize, home: u32) {
+    let partida = Fixture(partida);
     let club = Club(club);
-    let other = Club(if home != 0 { read_usize(partida + fixture::AWAY_CLUB) } else { read_usize(partida + fixture::HOME_CLUB) });
+    let other = Club(if home != 0 { partida.away_club() } else { partida.home_club() });
     let vis = home == 0;
     let mut factor: f64 = 0.5;
     let mut weight = match_weight(club, partida, &mut factor);
     // the contest (by the match’s national team +0x18)
-    let ev = read_usize(partida + fixture::STADIUM);
+    let ev = partida.stadium();
     let city = |p: usize| p != 0 && read_usize(p + 0x38) != 0;
     let mut aj: i32 = 0;
     if manager_manager_is_national_team(club) != 0 {
@@ -256,14 +257,14 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
             s2 = s2.wrapping_add((rep as i32).wrapping_mul(al as i32));
         }
         // simplification: with nobody selected the original adds the match pointer (the leftover ecx): reproduced
-        let m = if s1 != 0 { s2.wrapping_div(s1) } else { partida as i32 };
+        let m = if s1 != 0 { s2.wrapping_div(s1) } else { partida.addr() as i32 };
         let x = (club.reputation() as i32).wrapping_sub((other.reputation() as i32).wrapping_add(m) / 2);
         c = limitar(x / -40);
         aj = aj.wrapping_add(c);
     }
     // the score: A and B (the ratings of whoever the club is), C and D (the aggregate), as the original stores them
-    let p8 = |o: usize| read_i8(partida + o) as i32;
-    let (a, b, cc, dd) = if read_i8(partida + fixture::HOME_GOALS_EXTRA_TIME) > -1 {
+    let p8 = |o: usize| read_i8(partida.addr() + o) as i32;
+    let (a, b, cc, dd) = if partida.home_goals_extra_time() > -1 {
         if home != 0 { (p8(fixture::HOME_GOALS_EXTRA_TIME), p8(fixture::AWAY_GOALS_EXTRA_TIME), p8(fixture::HOME_AGGREGATE), p8(fixture::AWAY_AGGREGATE)) } else { (p8(fixture::AWAY_GOALS_EXTRA_TIME), p8(fixture::HOME_GOALS_EXTRA_TIME), p8(fixture::AWAY_AGGREGATE), p8(fixture::HOME_AGGREGATE)) }
     } else if home != 0 {
         (p8(fixture::HOME_GOALS), p8(fixture::AWAY_GOALS), p8(fixture::HOME_AGGREGATE), p8(fixture::AWAY_AGGREGATE))
@@ -279,7 +280,7 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
     } else if a < b {
         aj = aj.wrapping_add((20 - c16 / 10).wrapping_mul(a - b));
         fl = 0x1000;
-        let comp = read_usize(partida + fixture::COMPETITION);
+        let comp = partida.competition();
         let mut end = false;
         if comp != 0 && exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), comp) == 0 {
             let dif = b - a;
@@ -309,21 +310,21 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
         }
     } else {
         fl = 0x400;
-        if read_u8(partida + fixture::CATEGORY) == 8 {
-            let f = read_i16(partida + fixture::ROUND_PREFIX) as i32;
+        if partida.category() == 8 {
+            let f = partida.round_prefix() as i32;
             if (0x41f..=0x426).contains(&f) && vis {
                 aj = aj.wrapping_add(0xf);
             }
-            let s = (read_i16(partida + fixture::ROUND_NAME) as i32).wrapping_sub(0x7b);
+            let s = (partida.round_name() as i32).wrapping_sub(0x7b);
             if (0..=0x1f).contains(&s) && matches!(s, 0 | 1 | 10 | 11 | 30 | 31) {
                 aj = aj.wrapping_add(if vis { a.wrapping_mul(10) } else { b.wrapping_mul(-5) });
             }
         }
     }
     // o agregado
-    let g4b = read_i8(partida + fixture::HOME_AGGREGATE);
+    let g4b = partida.home_aggregate();
     if g4b != -1 {
-        let g4c = read_i8(partida + fixture::AWAY_AGGREGATE);
+        let g4c = partida.away_aggregate();
         // (mark, adjustment) per side
         let more = |fl: &mut u32, aj: &mut i32, n: i32| {
             *fl |= 0x200;
@@ -338,14 +339,14 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
         } else if g4b < g4c {
             if home == 0 { more(&mut fl, &mut aj, 20) } else { minus(&mut fl, &mut aj, 20) }
         } else {
-            let (g49, g4a) = (read_i8(partida + fixture::HOME_PENALTIES), read_i8(partida + fixture::AWAY_PENALTIES));
+            let (g49, g4a) = (partida.home_penalties(), partida.away_penalties());
             if g49 > g4a {
                 if home != 0 { more(&mut fl, &mut aj, 10) } else { minus(&mut fl, &mut aj, 10) }
             } else if g49 < g4a {
                 if home == 0 { more(&mut fl, &mut aj, 10) } else { minus(&mut fl, &mut aj, 10) }
-            } else if read_u8(partida + fixture::TIE_RULES) & 4 == 0 {
-                let x = g4b as i32 - read_i8(partida + fixture::HOME_GOALS) as i32;
-                let away = x > read_i8(partida + fixture::AWAY_GOALS) as i32;
+            } else if (partida.tie_rules() as u8) & 4 == 0 {
+                let x = g4b as i32 - partida.home_goals() as i32;
+                let away = x > partida.away_goals() as i32;
                 if away == (home != 0) { minus(&mut fl, &mut aj, 15) } else { more(&mut fl, &mut aj, 15) }
             }
         }
@@ -398,7 +399,7 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
         let s = manager_manager_is_national_team(club);
         if s != 0 { weight + weight } else { weight }
     };
-    if read_u8(partida + fixture::CATEGORY) == 8 {
+    if partida.category() == 8 {
         if read_u8(board_row(this, club) + 0xf) & 4 != 0 { // a palavra +0xe & 0x400
             mult = mult + mult;
             if (aj as i16) < 0 {
@@ -442,12 +443,12 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
         fl |= 0x10;
     }
     // the text and the news of the reaction
-    let marks = read_i16(partida + fixture::TIE_RULES) as u16;
+    let marks = (partida.tie_rules() as i16) as u16;
     if marks & 0x2810 == 0 {
         let text: unsafe extern "thiscall" fn(usize, usize, usize, usize, i32, usize, i32, i32, u32, u32, u32, u32, u32, u32, u32, u32) -> u32 =
             core::mem::transmute(FN_MANAGER_MANAGER_BUILD_BOARD_MATCH_REACTION_TEXT);
         let human: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_CLUB_HAS_HUMAN_MANAGER);
-        if text(this, club.addr(), other.addr(), read_usize(partida + fixture::COMPETITION), fl as i16 as i32, 0xad9c64, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0) != 0
+        if text(this, club.addr(), other.addr(), partida.competition(), fl as i16 as i32, 0xad9c64, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0) != 0
             && human(read_usize(G_NEWS), club.addr()) != 0
         {
             let c6 = conf6();
@@ -465,13 +466,13 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
                 fl ^= 0x28;
             }
             let lim = ((vis as u16).wrapping_mul(0x4e2)).wrapping_add(other.reputation() as u16).wrapping_add(0x1f4) as i16;
-            if fl & 7 == 0 || club.reputation() >= lim || read_i8(partida + fixture::HOME_GOALS) != read_i8(partida + fixture::AWAY_GOALS) {
+            if fl & 7 == 0 || club.reputation() >= lim || partida.home_goals() != partida.away_goals() {
                 exe::manager_manager_post_board_match_reaction_news(this, club, other, partida, fl, a, b, cc, dd);
             }
         }
     }
     // media story 0x3d
-    let marks = read_i16(partida + fixture::TIE_RULES) as u16;
+    let marks = (partida.tie_rules() as i16) as u16;
     if fl & 0xa00 == 0 && marks & 0x2810 == 0 && exe::club_can_be_managed(club) != 0 {
         let s = aj as i16 as i32;
         let oito = || read_i16(board_row(this, club) + 8) as i32;
@@ -492,9 +493,9 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
         }
     }
     // story 0x5c: the club in danger in the league
-    let id = read_i32(partida);
-    if id > -1 && id == (club.continental_comp_id() as i32) && id != read_i32(KEY_CLUB_COMP_INTER_TOTO_CUP) && read_u8(partida + fixture::CATEGORY) == 8
-        && (read_i16(partida + fixture::ROUND_NAME) as i32 / 10) * 10 != 0x96
+    let id = read_i32(partida.addr());
+    if id > -1 && id == (club.continental_comp_id() as i32) && id != read_i32(KEY_CLUB_COMP_INTER_TOTO_CUP) && partida.category() == 8
+        && (partida.round_name() as i32 / 10) * 10 != 0x96
     {
         let co = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((id as usize).wrapping_mul(4)));
         if co != 0 && read_usize(co + 8) != 0 {
@@ -537,13 +538,13 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
             write_i16(l, v);
         }
     };
-    let comp = read_usize(partida + fixture::COMPETITION);
+    let comp = partida.competition();
     if (aj as i16) > 0 && club.manager().addr() != 0 {
         if comp != 0 {
             let n = read_i16(comp + competition::REPUTATION);
             if n > 5 {
                 let rep = club.reputation();
-                let stage = read_i16(partida + fixture::ROUND_NAME) as u16;
+                let stage = partida.round_name() as u16;
                 if (n as i32) * 500 > rep as i32 {
                     if stage == 0x82 || stage == 0x78 {
                         floor(6, 0x1964);
@@ -551,20 +552,20 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
                     } else if stage == 0x96 {
                         floor(6, 0x2134);
                         floor(8, 0x2134);
-                    } else if comp != club.division().addr() && (rep < 0xea6 || read_u8(partida + fixture::CATEGORY) == 8) {
+                    } else if comp != club.division().addr() && (rep < 0xea6 || partida.category() == 8) {
                         floor(6, 0x10b3);
                         floor(8, 0x1964);
                     }
                 } else if stage == 0x82 || stage == 0x96 {
                     floor(6, 0x1964);
                     floor(8, 0x1964);
-                } else if comp != club.division().addr() && (stage == 0x78 || read_u8(partida + fixture::CATEGORY) == 8) {
+                } else if comp != club.division().addr() && (stage == 0x78 || partida.category() == 8) {
                     floor(6, 0x10b3);
                     floor(8, 0x10b3);
                 }
             }
         }
-    } else if (aj as i16) < 0 && comp != 0 && read_i16(partida + fixture::ROUND_NAME) == 0x96 && read_u8(partida + fixture::CATEGORY) == 5 {
+    } else if (aj as i16) < 0 && comp != 0 && partida.round_name() == 0x96 && partida.category() == 5 {
         let l = board_row(this, club);
         if read_u8(l + 0xe) & 4 != 0 {
             if read_i16(l + 6) > 0x10b3 {
@@ -583,8 +584,8 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
     if club.manager().addr() != 0 && (aj as i16) < -0x4b && read_i16(board_row(this, club) + 8) < 0xbb8 {
         exe::manager_manager_post_supporter_protest_news(this, club);
     }
-    if read_usize(partida + fixture::COMPETITION) == club.division().addr() || (aj as i16) < 0 {
-        if read_i16(partida + fixture::ROUND_NAME) != 0xa0 {
+    if partida.competition() == club.division().addr() || (aj as i16) < 0 {
+        if partida.round_name() != 0xa0 {
             exe::manager_manager_consider_sacking_manager(this, club, (a < b) as u32);
         }
         return;
@@ -627,7 +628,8 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
 /// (0x7e4de0); entregue ao técnico do clube (0x7861e0).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn post_board_match_reaction_news(this: usize, club: usize, other: usize, partida: usize, marks: u32, a: i32, b: i32, c: i32, d: i32) {
-    if club == 0 || other == 0 || partida == 0 || read_usize(partida + fixture::COMPETITION) == 0 {
+    let partida = Fixture(partida);
+    if club == 0 || other == 0 || partida.is_null() || partida.competition() == 0 {
         return;
     }
     let citados: unsafe extern "thiscall" fn(usize, usize, usize, *mut i32, usize, *mut u8, *mut u8, *mut u8, *mut u8, *mut u8, *mut u8) -> u8 =
@@ -644,12 +646,12 @@ pub(crate) unsafe extern "thiscall" fn post_board_match_reaction_news(this: usiz
     let mut k: u8 = 0;
     exe::date_date_54a110(r);
     let mut ids = [-1i32; 3];
-    for v in [marks as i16 as i32 as u32, read_usize(club) as u32, read_usize(other) as u32, a as u32, b as u32, c as u32, d as u32, read_usize(partida + fixture::MATCH_STATS_SLOT) as u32] {
+    for v in [marks as i16 as i32 as u32, read_usize(club) as u32, read_usize(other) as u32, a as u32, b as u32, c as u32, d as u32, partida.match_stats_slot() as u32] {
         exe::newsitem_set_slot(n, k as i8, v);
         k = k.wrapping_add(1);
     }
     let mut loss = (a > b) as u8;
-    citados(this, partida, club, ids.as_mut_ptr(), read_usize(partida + fixture::MATCH_STATS_SLOT), &mut loss, &mut m1, &mut m2, &mut m3, &mut m4, &mut m5);
+    citados(this, partida.addr(), club, ids.as_mut_ptr(), partida.match_stats_slot(), &mut loss, &mut m1, &mut m2, &mut m3, &mut m4, &mut m5);
     for v in ids {
         exe::newsitem_set_slot(n, k as i8, v as u32);
         k = k.wrapping_add(1);
@@ -661,7 +663,7 @@ pub(crate) unsafe extern "thiscall" fn post_board_match_reaction_news(this: usiz
         exe::newsitem_set_slot(n, k as i8, v as i8 as i32 as u32);
         k = k.wrapping_add(1);
     }
-    record(partida, club, r);
+    record(partida.addr(), club, r);
     exe::write_match_record_to_news(r, n, &mut k);
     exe::news_send_to_club_manager(read_usize(G_NEWS), n, club);
 }
@@ -1534,6 +1536,7 @@ pub(crate) unsafe extern "thiscall" fn post_job_offer_news(_this: usize, person:
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn board_named_players_after_match(this: usize, game: usize, club: usize, ids: *mut i32, partida: u32, elogio: *const u8,
                                                          a6: *mut u8, a7: *mut u8, a8: *mut u8, a9: *mut u8, a10: *mut u8) -> u8 {
+    let game = Fixture(game);
     let club = Club(club);
     if !ids.is_null() {
         for k in 0..3 {
@@ -1558,7 +1561,7 @@ pub(crate) unsafe extern "thiscall" fn board_named_players_after_match(this: usi
     *a7 = 0;
     *a8 = 0;
     *a9 = 0;
-    let comp = read_usize(game + fixture::COMPETITION);
+    let comp = game.competition();
     if comp != 0 && club.division().addr() == comp {
         *a10 = 1;
         let div = club.division().addr();
@@ -4737,11 +4740,12 @@ pub(crate) unsafe fn vacancy_schedule_plan(this: usize, days: u8, slices: u8) ->
 /// jogo)`: partida jogada (+0 ≠ −2, +0x40 ≠ 0): a confiança da diretoria de cada lado com técnico (+0xcf) muda pela
 /// 0x695240 (mandante +0x1c com 1, visitante +0x20 com 0).
 pub(crate) unsafe extern "thiscall" fn update_board_after_fixture(this: usize, partida: usize, game: usize) {
-    if read_usize(partida) as i32 == -2 || *((partida + fixture::HOME_SIDE_MARK) as *const u8) == 0 {
+    let partida = Fixture(partida);
+    if read_usize(partida.addr()) as i32 == -2 || partida.home_side_mark() == 0 {
         return;
     }
     for (lado, mandante) in [(0x1cusize, 1u32), (0x20, 0)] {
-        let club = Club(read_usize(partida + lado));
+        let club = Club(read_usize(partida.addr() + lado));
         if club.manager().addr() != 0 { // the side has a manager
             exe::manager_manager_update_board_after_match(this, club, partida, game, mandante);
         }

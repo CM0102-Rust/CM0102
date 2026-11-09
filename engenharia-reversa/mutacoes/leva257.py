@@ -13,7 +13,7 @@ MUTACOES = [
     ('cpu4_sem_regras_livre', 'return 1; // cpu4: without the new rules', 'return 0; // mutacao: sem as regras novas, livre'),
     ('cpu4_periodo_de_dois_anos', 'let limit: u8 = if (exe::database_get_staff_age(person, d as *const u16)) < 0x1c { 3 } else { 2 }; // cpu4: the period by age', 'let limit: u8 = { exe::database_get_staff_age(person, d as *const u16); 2 }; // mutacao: sempre 2 anos'),
     ('cpu5_sem_rolagem_das_financas', '            if friendly_random(n) == 0 { // cpu5: the finances roll', '            if n < 0 { // mutacao: sem o sorteio', 'cpu_5 finances rollover'),
-    ('cpu5_fatia_errada', '    if read_u8(game + fixture::TIME_SLICE) == 2 { // cpu5: the night slice', '    if read_u8(game + fixture::TIME_SLICE) != 2 { // mutacao: a fatia errada', 'cpu_5 finances rollover'),
+    ('cpu5_fatia_errada', '    if game.time_slice() == 2 { // cpu5: the night slice', '    if game.time_slice() != 2 { // mutacao: a fatia errada', 'cpu_5 finances rollover'),
     ('cpu5_chuva_sem_sorteio', '            if friendly_random(n) != 0 { // cpu5: the heavy rain random draw', '            if n != 0 { // mutacao: sem o sorteio', 'cpu_5 heavy rain'),
     ('cpu6_vento_fraco_moderado', '            1 // cpu6: o vento fraco', '            2 // mutacao: moderado', 'cpu_6 light wind'),
     ('cpu6_vento_moderado_forte', '            2 // cpu6: o vento moderado', '            3 // mutacao: forte', 'cpu_6 moderate wind'),

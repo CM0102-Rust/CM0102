@@ -1323,7 +1323,7 @@ pub(crate) static mut EUROPEAN_CUP_FIXTURE_DRY_RUN: bool = false;
 /// Sends the prize money news (Comp `send_prize_money_news`); nothing in dry run.
 ///
 /// [pt] A notícia do prêmio (Comp 0x48e3e0: thiscall(this, clube, valor, 0, −1, 0, jogo, −2), ret 0x1c); no ensaio, nada.
-pub(crate) unsafe fn european_cup_send_prize_money_news(this: usize, club: usize, value: u32, game: usize) {
+pub(crate) unsafe fn european_cup_send_prize_money_news(this: usize, club: usize, value: u32, game: Fixture) {
     if EUROPEAN_CUP_FIXTURE_DRY_RUN {
         return;
     }
@@ -1341,25 +1341,26 @@ pub(crate) unsafe fn european_cup_send_prize_money_news(this: usize, club: usize
 /// 200 mil ao vencedor ou 100 mil a cada um no empate (0x5a0590 + 0x5999a0), com a notícia do prêmio (0x48e3e0;
 /// no empate, as duas somas antes das duas notícias). Depois a base da copa (0x51a150 com o jogo e `arg`).
 pub(crate) unsafe extern "thiscall" fn process_fixture(this: usize, game: usize, arg: u32) {
-    let (ga, gb) = if read_u8(game + fixture::HOME_GOALS_EXTRA_TIME) != 0xff {
-        (read_u8(game + fixture::HOME_GOALS_EXTRA_TIME) as i8, read_u8(game + fixture::AWAY_GOALS_EXTRA_TIME) as i8)
+    let game = Fixture(game);
+    let (ga, gb) = if (game.home_goals_extra_time() as u8) != 0xff {
+        ((game.home_goals_extra_time() as u8) as i8, (game.away_goals_extra_time() as u8) as i8)
     } else {
-        (read_u8(game + fixture::HOME_GOALS) as i8, read_u8(game + fixture::AWAY_GOALS) as i8)
+        ((game.home_goals() as u8) as i8, (game.away_goals() as u8) as i8)
     };
-    let (a, b) = (read_usize(game + fixture::HOME_CLUB), read_usize(game + fixture::AWAY_CLUB));
+    let (a, b) = (game.home_club(), game.away_club());
     let (vencedor, perdedor) = if ga > gb {
         add_uefa_coefficient(read_usize(a + 0x53), 2);
-        (read_usize(game + fixture::HOME_CLUB), read_usize(game + fixture::AWAY_CLUB))
+        (game.home_club(), game.away_club())
     } else if ga < gb {
         add_uefa_coefficient(read_usize(b + 0x53), 2);
-        (read_usize(game + fixture::AWAY_CLUB), read_usize(game + fixture::HOME_CLUB))
+        (game.away_club(), game.home_club())
     } else {
         add_uefa_coefficient(read_usize(a + 0x53), 1);
-        add_uefa_coefficient(read_usize(read_usize(game + fixture::AWAY_CLUB) + 0x53), 1);
+        add_uefa_coefficient(read_usize(game.away_club() + 0x53), 1);
         (0, 0)
     };
     let _ = perdedor;
-    let stage = read_u8(game + fixture::STAGE_INDEX) as i8;
+    let stage = game.stage_index() as i8;
     if stage > -1 && stage < 0xc {
         if vencedor != 0 {
             crate::comparison::branch("cpy_6 win bonus");
@@ -1367,10 +1368,10 @@ pub(crate) unsafe extern "thiscall" fn process_fixture(this: usize, game: usize,
             european_cup_send_prize_money_news(this, vencedor, 0x30d40, game);
         } else {
             crate::comparison::branch("cpy_6 draw bonus");
-            european_cup_add_prize_money(european_cup_club_finance(read_usize(game + fixture::HOME_CLUB)), 0x186a0); // cpy6: the home side’s draw prize
-            european_cup_add_prize_money(european_cup_club_finance(read_usize(game + fixture::AWAY_CLUB)), 0x186a0);
-            european_cup_send_prize_money_news(this, read_usize(game + fixture::HOME_CLUB), 0x186a0, game);
-            european_cup_send_prize_money_news(this, read_usize(game + fixture::AWAY_CLUB), 0x186a0, game);
+            european_cup_add_prize_money(european_cup_club_finance(game.home_club()), 0x186a0); // cpy6: the home side’s draw prize
+            european_cup_add_prize_money(european_cup_club_finance(game.away_club()), 0x186a0);
+            european_cup_send_prize_money_news(this, game.home_club(), 0x186a0, game);
+            european_cup_send_prize_money_news(this, game.away_club(), 0x186a0, game);
         }
     }
     if EUROPEAN_CUP_FIXTURE_DRY_RUN {

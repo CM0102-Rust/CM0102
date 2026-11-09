@@ -38,5 +38,5 @@ MUTACOES = [
     ('cqb12_clube_de_fora_0', '    3 // cqb12: club outside the key nations', '    0 // mutacao: clube de fora na primeira nacao-chave', 'cqb_12 club without key nation'),
     ('cqb13_alvo_mais_1', '    exe::date_get_nearest_weekday((&mut a) as *mut [u8; 8] as usize, target, (&mut b) as *mut [u8; 8] as usize); // cqb13: the target weekday', '    exe::date_get_nearest_weekday((&mut a) as *mut [u8; 8] as usize, target % 7 + 1, (&mut b) as *mut [u8; 8] as usize); // mutacao: um dia a frente', 'cqb_13 target day'),
     ('cqb13_prioridade_invertida', '    let new_wins = pn > pv // cqb13: a prioridade maior fica', '    let new_wins = pn < pv // mutacao: a prioridade menor fica', 'cqb_13 target day'),
-    ('cqb13_ja_jogado', '    let sai_old = new_wins && *((v + fixture::HOME_GOALS) as *const u8) == 0xff; // cqb13: the one in the list not yet played', '    let sai_old = new_wins && *((v + fixture::HOME_GOALS) as *const u8) != 0xff; // mutacao: so o ja jogado sai', 'cqb_13 new one wins'),
+    ('cqb13_ja_jogado', '    let sai_old = new_wins && (v.home_goals() as u8) == 0xff; // cqb13: the one in the list not yet played', '    let sai_old = new_wins && (v.home_goals() as u8) != 0xff; // mutacao: so o ja jogado sai', 'cqb_13 new one wins'),
 ]

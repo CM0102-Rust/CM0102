@@ -12,8 +12,8 @@ pub(crate) unsafe extern "thiscall" fn compare_shot(j: usize, strength: u32, x: 
     let m = *((j + match_player::ENGINE) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
+    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
     }
     let write = RECORD_716.swap(true, std::sync::atomic::Ordering::Relaxed);
@@ -337,8 +337,8 @@ pub(crate) unsafe extern "thiscall" fn compare_tackle(j: usize, strong: u32) {
     // pode trocar o capitao)
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
+    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
     }
     let write = RECORD_716.swap(true, std::sync::atomic::Ordering::Relaxed);

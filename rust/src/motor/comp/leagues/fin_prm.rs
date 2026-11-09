@@ -1158,8 +1158,8 @@ pub(crate) unsafe extern "thiscall" fn load_from_save(this: usize, save: usize) 
 /// original o acha sem a 0x5a0590: o clube parceiro (0x540a50: 3 pushes; add esp, 0xc -> cdecl(clube, &a, 1)) se ele
 /// existe e o clube é o B (a = 0), e [tabela] + id × 0x167. Some(0) sem clube; None se for seleção (0x53b900: push;
 /// add esp, 4 -> cdecl): a original sai sem fazer nada.
-pub(crate) unsafe fn match_club_finance(table: usize, partida: usize, field: usize) -> Option<usize> {
-    let club = read_usize(partida + field);
+pub(crate) unsafe fn match_club_finance(table: usize, partida: Fixture, field: usize) -> Option<usize> {
+    let club = read_usize(partida.addr() + field);
     if club == 0 {
         return Some(0);
     }
@@ -1212,8 +1212,9 @@ pub(crate) fn div_trunc(a: i32, b: i32) -> i32 {
 /// +0xa0, saldo) e, com estádio próprio (+0x6d, +0x69), a manutenção ((sorteio(15) + 1) × 0,01 + 0,85) × o +0x3c do
 /// estádio (+0x12c, +0x8c, menos no saldo). Fora dela: metade de cada um para os dois.
 pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partida: usize, result: usize) {
-    if result == 0 || partida == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_PROCESS_MATCH_INCOME)(table, partida, result); // a caixa
+    let partida = Fixture(partida);
+    if result == 0 || partida.is_null() {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_PROCESS_MATCH_INCOME)(table, partida.addr(), result); // a caixa
     }
     let Some(mandante) = match_club_finance(table, partida, 0x1c) else { return };
     let Some(visitante) = match_club_finance(table, partida, 0x20) else { return };
@@ -1225,13 +1226,13 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
         crate::comparison::branch("cqb_1 paying attendance");
         tv = ftol((q as f64 + read_f64(rdata::F64_1_75)) * publico as f64); // cqb1: TV by attendance (1,75);
     }
-    let home = read_usize(partida + fixture::HOME_CLUB);
-    let away = Club(read_usize(partida + fixture::AWAY_CLUB));
+    let home = partida.home_club();
+    let away = Club(partida.away_club());
     let mut cost; // the original’s ebp
     if read_u8(home + club::PROFESSIONAL_STATUS) != 1 && away.professional_status() != 1 {
         cost = ftol(publico as f64 * read_f64(rdata::F64_0_25));
     } else {
-        let est = read_usize(partida + fixture::STADIUM);
+        let est = partida.stadium();
         let x = if est == 0 {
             let k = if publico > 20000 {
                 0x96a6a0
@@ -1257,11 +1258,11 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
             cap as f64 * read_f64(k)
         };
         cost = ftol(x);
-        if read_u8(partida + fixture::HOME_SIDE_MARK) != 0 && cost < 500 {
+        if partida.home_side_mark() != 0 && cost < 500 {
             cost = 500;
         }
     }
-    let home = read_usize(partida + fixture::HOME_CLUB);
+    let home = partida.home_club();
     let mut gastos; // the original’s [esp+0x10] (starts with the attendance)
     if read_u8(home + club::PROFESSIONAL_STATUS) == 1 {
         let rep = read_i16(home + club::REPUTATION);
@@ -1284,7 +1285,7 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
         gastos = ftol((r2 as f64 + r1f as f64) + publico as f64);
     }
     let mut dinheiro = 0i32; // the original’s [esp+0x1c]
-    let kind_ok = match (read_u8(partida + fixture::STAGE) as i8 as i32).wrapping_add(1) as u32 {
+    let kind_ok = match (partida.stage() as i8 as i32).wrapping_add(1) as u32 {
         1 => {
             dinheiro = 25000;
             true
@@ -1300,7 +1301,7 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
         _ => false, // 0 (stage −1) and outside the table: by type
     };
     if !kind_ok {
-        let t = read_u8(partida + fixture::CATEGORY);
+        let t = partida.category();
         if t == 8 || t == 7 {
             let sum = read_i16(home + club::REPUTATION) as i32 + away.reputation() as i32;
             dinheiro = if sum > 10000 {
@@ -1311,7 +1312,7 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
                 75000
             };
         } else if t == 6 || t == 4 {
-            let w = read_i16(read_usize(partida + fixture::COMPETITION) + 0x69);
+            let w = read_i16(partida.competition() + 0x69);
             let m = if w > 5 { w as i32 } else { 5 };
             dinheiro = div_trunc(m.wrapping_mul(if t == 6 { 125000 } else { 25000 }), 20);
         }
@@ -1344,13 +1345,13 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
         fin_prm_add_i32(fin + b, v);
         add_to_balance(fin, v as i64);
     };
-    if read_u8(partida + fixture::NEUTRAL_VENUE) == 0 && read_usize(read_usize(partida + fixture::HOME_CLUB) + 0x57) == read_usize(partida + fixture::COMPETITION) {
+    if partida.neutral_venue() == 0 && read_usize(partida.home_club() + 0x57) == partida.competition() {
         let x = dinheiro as f64;
         add(mandante, 0x158, 0xb8, ftol(x * read_f64(rdata::F64_0_75)));
         add(visitante, 0x158, 0xb8, ftol(x * read_f64(rdata::F64_0_25)));
         crate::comparison::branch("cqb_1 net to the home side");
         add(mandante, 0x140, 0xa0, liquido); // cqb1: o líquido ao mandante
-        let home = read_usize(partida + fixture::HOME_CLUB);
+        let home = partida.home_club();
         let est = read_usize(home + club::STADIUM);
         if read_u8(home + club::OWN_STADIUM) != 0 && est != 0 {
             let base = read_i32(est + stadium::CAPACITY);
@@ -1394,19 +1395,20 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
 /// nação (+0x7e: 2 → /4; 3 → /10), × 1,25 na liga de 0x9cf570 ou pelos clubes de 0x9d0250 (1,5), 0x9d0110 e 0x9d024c
 /// (1,3), 0x9d0248 (0,75) e 0x9d0244 (0,9), e × 1,2 na nação de 0x9cf314.
 pub(crate) unsafe extern "thiscall" fn calc_gate_receipts(table: usize, partida: usize, attendance: i32) -> i32 {
-    if partida == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize, i32) -> i32>(IDX_CALC_GATE_RECEIPTS)(table, partida, attendance); // a caixa
+    let partida = Fixture(partida);
+    if partida.is_null() {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize, i32) -> i32>(IDX_CALC_GATE_RECEIPTS)(table, partida.addr(), attendance); // a caixa
     }
     if attendance == 0 {
         return 0;
     }
     let Some(fin) = match_club_finance(table, partida, 0x1c) else { return 0 };
-    let comp = Competition(read_usize(partida + fixture::COMPETITION));
+    let comp = Competition(partida.competition());
     let mut v: i32;
-    if read_u8(partida + fixture::NEUTRAL_VENUE) != 0 && !comp.is_null() {
+    if partida.neutral_venue() != 0 && !comp.is_null() {
         v = (comp.reputation() as i32).wrapping_add(8).wrapping_mul(attendance);
     } else {
-        let home = read_usize(partida + fixture::HOME_CLUB);
+        let home = partida.home_club();
         crate::comparison::branch("cqb_1 price by injury_word_0c");
         let price = div_trunc(read_i16(home + club::REPUTATION) as i32, 500); // cqb1: the price by reputation
         let friendly = !comp.is_null() && {
@@ -1414,7 +1416,7 @@ pub(crate) unsafe extern "thiscall" fn calc_gate_receipts(table: usize, partida:
         };
         if comp.is_null() || friendly {
             v = ftol(price as f64 * read_f64(rdata::F64_0_5) * attendance as f64);
-        } else if read_u8(home + club::PROFESSIONAL_STATUS) == 1 || read_u8(read_usize(partida + fixture::AWAY_CLUB) + 0x64) == 1 {
+        } else if read_u8(home + club::PROFESSIONAL_STATUS) == 1 || read_u8(partida.away_club() + 0x64) == 1 {
             v = price.wrapping_add(4).wrapping_mul(attendance);
         } else {
             v = price.wrapping_add(3).wrapping_mul(attendance);
@@ -1424,7 +1426,7 @@ pub(crate) unsafe extern "thiscall" fn calc_gate_receipts(table: usize, partida:
             v = ftol(v as f64 - desconto * v as f64);
         }
     }
-    let home = read_usize(partida + fixture::HOME_CLUB);
+    let home = partida.home_club();
     let nation = read_usize(home + club::NATION);
     let kind = if nation != 0 { read_u8(nation + nation::STATE_OF_DEVELOPMENT) as i8 } else { 3 };
     if kind == 2 {

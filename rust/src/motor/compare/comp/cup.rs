@@ -273,15 +273,16 @@ pub(crate) unsafe extern "thiscall" fn compare_club_in_higher_division(this: usi
 /// não podem rodar duas vezes). O plano, feito antes: o estado do clube (+0 do registro de 6 bytes) passa à Copa da
 /// UEFA quando o campeão ganha a vaga; senão não muda. Sem clube: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_cup_update_staff_records_for_status(cup: usize, club: usize, outcome: u32, a3: u32, a4: u32, game: usize, final_: u32) -> u32 {
+    let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
-    if club == 0 || game == 0 {
-        return o(cup, club, outcome, a3, a4, game, final_); // simplification: without a club or match, original only
+    if club == 0 || game.is_null() {
+        return o(cup, club, outcome, a3, a4, game.addr(), final_); // simplification: without a club or match, original only
     }
     let state = club_state_record(club);
     let before = read_i32(state);
-    let predicted = if read_u8(game + fixture::CATEGORY) != 1 && read_usize(cup + cup::STAGE_COUNT) == 0 && read_u8(cup + cup::STAGE_INDEX) == 0xff && outcome as u8 == 1
+    let predicted = if game.category() != 1 && read_usize(cup + cup::STAGE_COUNT) == 0 && read_u8(cup + cup::STAGE_INDEX) == 0xff && outcome as u8 == 1
         && wins_uefa_cup_place(Competition(read_usize(cup + 4)), club) { read_i32(KEY_CLUB_COMP_UEFA_CUP) } else { before };
-    let r = o(cup, club, outcome, a3, a4, game, final_);
+    let r = o(cup, club, outcome, a3, a4, game.addr(), final_);
     let after = read_i32(state);
     SCOREBOARD.record(r == 0 && after == predicted, || format!("cup_update_staff_records_for_status(desfecho {}) estado {:x} -> {:x}, previsto {:x}, devolveu {}", outcome as u8, before, after, predicted, r));
     r
@@ -439,15 +440,16 @@ pub(crate) unsafe extern "C" fn compare_cup_compare_entries_by_level_asc(a: usiz
 /// [pt] Comparador: lado a lado pelos códigos (+0x3d/+0x3e) e pelo lado devolvido; jogo nulo ou empate nos pênaltis (a
 /// caixa): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_decide_fixture_winner(this: usize, game: usize) -> u32 {
+    let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_DECIDE_FIXTURE_WINNER);
-    if game == 0 {
-        return o(this, game);
+    if game.is_null() {
+        return o(this, game.addr());
     }
-    let reg = [(game + fixture::HOME_RESULT_MARK, 2)];
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || Some(o(this, game)), || fixture_winner_side(this, game));
+    let reg = [(game.addr() + fixture::HOME_RESULT_MARK, 2)];
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || Some(o(this, game.addr())), || fixture_winner_side(this, game));
     let r = r.unwrap_or(0);
     if let Some(n) = n {
-        SCOREBOARD.record(igual && r == n, || format!("decide_fixture_winner(regra {:x}) original={} rust={} {:x?} x {:x?}", read_i16(game + fixture::TIE_RULES) as u16, r, n, mo, mr));
+        SCOREBOARD.record(igual && r == n, || format!("decide_fixture_winner(regra {:x}) original={} rust={} {:x?} x {:x?}", (game.tie_rules() as i16) as u16, r, n, mo, mr));
     }
     r
 }
@@ -457,13 +459,14 @@ pub(crate) unsafe extern "thiscall" fn compare_decide_fixture_winner(this: usize
 /// [pt] Comparador: lado a lado pelos códigos (+0x3d/+0x3e) e pelo lado devolvido; empate nos pênaltis (a caixa): só a
 /// original.
 pub(crate) unsafe extern "thiscall" fn compare_decide_tie_winner(this: usize, tie: usize, game: usize) -> u32 {
+    let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_DECIDE_TIE_WINNER);
-    let reg = [(game + fixture::HOME_RESULT_MARK, 2)];
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || Some(o(this, tie, game)), || tie_winner_side(tie, game));
+    let reg = [(game.addr() + fixture::HOME_RESULT_MARK, 2)];
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || Some(o(this, tie, game.addr())), || tie_winner_side(tie, game));
     let r = r.unwrap_or(0);
     if let Some(n) = n {
         SCOREBOARD.record(igual && r == n, || format!("decide_tie_winner(regra {:x}, jogo {}) original={} rust={} {:x?} x {:x?}",
-            read_i16(game + fixture::TIE_RULES) as u16, read_i8(tie + 0x33), r, n, mo, mr));
+            (game.tie_rules() as i16) as u16, read_i8(tie + 0x33), r, n, mo, mr));
     }
     r
 }
@@ -500,9 +503,10 @@ pub(crate) unsafe extern "C" fn compare_cup_set_round_match_date(rounds: usize, 
 
 /// Comparer for `apply_round_rules_to_match`.
 pub(crate) unsafe extern "thiscall" fn compare_apply_round_rules_to_match(cup: usize, game: usize, key: i32) {
+    let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32)>(IDX_APPLY_ROUND_RULES_TO_MATCH);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(game + fixture::TIE_RULES, 2)], || o(cup, game, key),
-        || apply_round_rules_to_match(cup, game, key));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(game.addr() + fixture::TIE_RULES, 2)], || o(cup, game.addr(), key),
+        || apply_round_rules_to_match(cup, game.addr(), key));
     SCOREBOARD.record(igual, || format!("apply_round_rules_to_match(chave {}) {:x?} x {:x?}", key, mo, mr));
 }
 
@@ -576,7 +580,7 @@ pub(crate) unsafe extern "thiscall" fn compare_move_round_fixtures_to_set_dates(
         let mut f = exe::llist_get_next(l);
         while f != 0 {
             if read_u8(this + cup::STAGE_INDEX) == read_u8(f + fixture::STAGE_INDEX) && j < 0x38 && expected[j / 7] != 0xff {
-                if fixture_on_round_date(this, e, f) {
+                if fixture_on_round_date(this, e, Fixture(f)) {
                     expected[j / 7] = 0xff;
                 }
                 j += 7;

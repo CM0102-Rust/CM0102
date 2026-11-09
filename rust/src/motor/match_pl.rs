@@ -814,8 +814,8 @@ pub(crate) unsafe extern "thiscall" fn table_a_1a(this: usize, player: usize) ->
 /// byte 0x38 da partida (0x4792) ligado.
 pub(crate) unsafe extern "thiscall" fn marked_moment(this: usize) -> u32 {
     let m = *((this + engine::PERIOD_END) as *const u16);
-    let partida = *((this + engine::MATCH) as *const usize);
-    (m != 0x1ef && m != 0x3de && read_i8(partida + fixture::TIE_RULES) as u8 & 0x80 != 0) as u32
+    let partida = Fixture(*((this + engine::MATCH) as *const usize));
+    (m != 0x1ef && m != 0x3de && (partida.tie_rules() as i8) as u8 & 0x80 != 0) as u32
 }
 
 /// Returns the state byte of the match player's own side (engine `engine::SCORE` for side 0, `engine::SCORE_SIDE1` otherwise).
@@ -3440,8 +3440,8 @@ pub(crate) unsafe fn compare_shot_outcome_inner(p: usize, f: f32) {
     let m = *((p + match_player::ENGINE) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
+    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
     }
     let write = RECORD_716.swap(true, Relaxed);
@@ -4841,8 +4841,8 @@ pub(crate) unsafe fn compare_player_move(p: usize, a1: u32, a2: u32, a3: u32, a4
     let m = *((p + match_player::ENGINE) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
+    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
     }
     let write = RECORD_716.swap(true, Relaxed);
@@ -4879,8 +4879,8 @@ pub(crate) unsafe fn compare_shot_on_goal_inner(p: usize, f: f32) {
     let m = *((p + match_player::ENGINE) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
-    let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
+    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
     }
     let write = RECORD_716.swap(true, Relaxed);
@@ -6801,8 +6801,8 @@ pub(crate) unsafe fn compare_execute_pass_inner(p: usize, x: u32, y: u32, kind: 
     let m = *((p + match_player::ENGINE) as *const usize);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4), (out as usize, 1)]);
-    let t = *((m + engine::MATCH) as *const usize);
-    for clube in [*((t + fixture::HOME_CLUB) as *const usize), *((t + fixture::AWAY_CLUB) as *const usize)] {
+    let t = Fixture(*((m + engine::MATCH) as *const usize));
+    for clube in [t.home_club(), t.away_club()] {
         reg.extend(club_rows(clube));
     }
     let write = RECORD_716.swap(true, Relaxed);
@@ -6869,7 +6869,7 @@ pub(crate) unsafe fn compare_execute_pass_inner(p: usize, x: u32, y: u32, kind: 
 /// do clube em [[0xb67a44]] (linhas de 0x49 bytes); senao -75 em +0xa e +0xc (entre 1 e 10000).
 /// Os outros: por sorteio(+0x5a) < sorteio(15, 8 ou 6 pela idade +0x18 e +0x5b) o 0x40000, e a
 /// noticia com o tipo.
-pub(crate) unsafe fn post_match_events_injected(partida: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn post_match_events_injected(partida: Fixture, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     // those that touch the database go through `chamar` (in Rust mode the game routine; in comparison, the tape)
     let ch = core::cell::RefCell::new(call);
     let duas = |n: usize, a: usize, b: usize, p: usize| (ch.borrow_mut())(0x759610, n, [a as u32, b as u32, p as u32, 0, 0]);
@@ -6909,18 +6909,18 @@ pub(crate) unsafe fn post_match_events_injected(partida: usize, call: &mut dyn F
         }
         k += 1;
         let club = (*(G_CLUB_TABLE as *const usize) as isize + read(ev + 4) as isize * 0x245) as usize;
-        if (club != *((partida + fixture::HOME_CLUB) as *const usize) && club != *((partida + fixture::AWAY_CLUB) as *const usize)) || away(club) != 0 {
+        if (club != partida.home_club() && club != partida.away_club()) || away(club) != 0 {
             continue;
         }
         let kind = core::ptr::read_unaligned((ev + 0x13) as *const u16);
         match kind {
             0x82 => {
                 crate::comparison::branch("events 0x82");
-                duas(noticias(), person(read(ev)), person(read(ev + 0x15)), partida);
+                duas(noticias(), person(read(ev)), person(read(ev + 0x15)), partida.addr());
             }
             0x0b => {
                 crate::comparison::branch("events 0x0b");
-                kind_0b(person(read(ev)), club, partida);
+                kind_0b(person(read(ev)), club, partida.addr());
             }
             _ => {
                 let p = person(read(ev));
@@ -6947,7 +6947,7 @@ pub(crate) unsafe fn post_match_events_injected(partida: usize, call: &mut dyn F
                             }
                         } else {
                             crate::comparison::branch("events 0x13 news");
-                            news(noticias(), p, club, 0x13, partida, 0);
+                            news(noticias(), p, club, 0x13, partida.addr(), 0);
                             if c45(c) & 0x2000000 == 0 {
                                 por(c, 0x2000000, 0);
                             }
@@ -6966,7 +6966,7 @@ pub(crate) unsafe fn post_match_events_injected(partida: usize, call: &mut dyn F
                             let sheet = *((p + staff::PLAYER) as *const usize);
                             if core::ptr::read_unaligned((sheet + player_sheet::CURRENT_REPUTATION) as *const i16) as i32 > r {
                                 crate::comparison::branch("events 0x0a news");
-                                news(noticias(), p, club, 0xa, partida, 0);
+                                news(noticias(), p, club, 0xa, partida.addr(), 0);
                             }
                         }
                     }
@@ -6976,7 +6976,7 @@ pub(crate) unsafe fn post_match_events_injected(partida: usize, call: &mut dyn F
                         if a < random(10) {
                             por(c, 0x40000, 0);
                         }
-                        kind_1e(noticias(), ev, partida);
+                        kind_1e(noticias(), ev, partida.addr());
                         let r = test_600a50(club, 1, 1, 0, 0);
                         let t = *((club + club::MANAGER) as *const usize);
                         if r == 0 && t != 0 && *((t + staff::NON_PLAYER) as *const usize) != 0 && read_i8(*((t + staff::NON_PLAYER) as *const usize) + 0x14) > 0xf {
@@ -7005,7 +7005,7 @@ pub(crate) unsafe fn post_match_events_injected(partida: usize, call: &mut dyn F
                         if a < b {
                             por(c, 0x40000, 0);
                         }
-                        news(noticias(), p, club, kind as u32, partida, 0);
+                        news(noticias(), p, club, kind as u32, partida.addr(), 0);
                     }
                 }
             }
@@ -8421,15 +8421,16 @@ pub(crate) unsafe extern "thiscall" fn evolve_moment(this: usize) {
 /// com nacao (+0x5d): clube do tecnico da mesma nacao e um dos dois clubes fora da divisao dela;
 /// senao pelas selecoes dos tecnicos ou pela competicao continental do grupo (0xae23a4, 0xc6 bytes).
 pub(crate) unsafe extern "C" fn match_of_interest(p: usize) -> u32 {
+    let p = Fixture(p);
     let g = |a: usize| *(a as *const i32);
-    let comp = || *((p + fixture::COMPETITION) as *const usize);
+    let comp = || p.competition();
     let id = *(comp() as *const i32);
     let of_group: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
     let object = || *((*(G_COMP_OBJECT_TABLE as *const usize)).wrapping_add((*(comp() as *const i32) as usize).wrapping_mul(4)) as *const usize);
     let manager = |s: i32| (*(G_STAFF_TABLE as *const usize)).wrapping_add(((g(G_STAFF_COUNT) - s - 1) as usize).wrapping_mul(110));
     let u = |a: usize| *(a as *const usize);
     if id == g(KEY_CLUB_COMP_FRIENDLY) || id == g(KEY_CLUB_COMP_RESERVE) {
-        let sel = |o: usize| exe::database_is_national_team(u(p + o)) != 0 && *((u(u(p + o) + 0x53) + 0x11c) as *const u8) != 0;
+        let sel = |o: usize| exe::database_is_national_team(u(p.addr() + o)) != 0 && *((u(u(p.addr() + o) + 0x53) + 0x11c) as *const u8) != 0;
         return (sel(fixture::HOME_CLUB) || sel(fixture::AWAY_CLUB)) as u32;
     }
     if id == g(KEY_CLUB_COMP_B_INTERNATIONAL) || id == g(KEY_CLUB_COMP_UNDER_21_INTERNATIONAL) {
@@ -8444,7 +8445,7 @@ pub(crate) unsafe extern "C" fn match_of_interest(p: usize) -> u32 {
         }
         return 0;
     }
-    if id == g(KEY_CLUB_COMP_INTER_TOTO_CUP) && (exe::comp_util_get_base_round_id((*((p + fixture::ROUND_NAME) as *const u16) as i32) as u32) as i32) as i16 != 150 {
+    if id == g(KEY_CLUB_COMP_INTER_TOTO_CUP) && (exe::comp_util_get_base_round_id(((p.round_name() as u16) as i32) as u32) as i32) as i16 != 150 {
         return 0;
     }
     if u(comp() + 0x5d) != 0 {
@@ -8454,7 +8455,7 @@ pub(crate) unsafe extern "C" fn match_of_interest(p: usize) -> u32 {
         for s in 0..16 {
             let t = manager(s);
             if read_i8(t + staff::CLASSIFICATION) == 1 && u(t + staff::CLUB_JOB) != 0 && u(u(t + staff::CLUB_JOB) + 0x53) == u(comp() + 0x5d) {
-                let c1c = Club(u(p + fixture::HOME_CLUB));
+                let c1c = Club(u(p.addr() + fixture::HOME_CLUB));
                 let cm = comp();
                 if u(c1c.addr() + club::DIVISION) != cm && u(c1c.addr() + club::RESERVE_DIVISION) != cm {
                     return 1;

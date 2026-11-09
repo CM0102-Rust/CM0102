@@ -47,7 +47,7 @@ pub(crate) unsafe extern "C" fn compare_compare_result_points_desc(a: usize, b: 
 pub(crate) unsafe extern "thiscall" fn compare_append_result(this: usize, nation: usize, points: u32, partida: usize) {
     let e = ranking_entry(this, nation);
     let (conta, cap) = (read_i16(e + 0xa), read_i16(e + 8));
-    let (mes, ano) = match_month_year(partida);
+    let (mes, ano) = match_month_year(Fixture(partida));
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_APPEND_RESULT)(this, nation, points, partida);
     let p = read_usize(e + 4).wrapping_add(conta as isize as usize * 5);
     let cap_n = if conta == cap { cap.wrapping_add(5) } else { cap };

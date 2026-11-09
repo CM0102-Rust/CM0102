@@ -644,8 +644,8 @@ pub(crate) unsafe fn add_clamped_100(a: usize, delta: i32) {
 /// Returns (this side's club, other club) of a match from +0x1c home / +0x20 away.
 ///
 /// [pt] Os dois clubes do jogo (+0x1c mandante, +0x20 visitante): o do lado e o outro.
-pub(crate) unsafe fn match_clubs_by_side(game: usize, side: usize) -> (usize, usize) {
-    if side == 0 { (read_usize(game + fixture::HOME_CLUB), read_usize(game + fixture::AWAY_CLUB)) } else { (read_usize(game + fixture::AWAY_CLUB), read_usize(game + fixture::HOME_CLUB)) }
+pub(crate) unsafe fn match_clubs_by_side(game: Fixture, side: usize) -> (usize, usize) {
+    if side == 0 { (game.home_club(), game.away_club()) } else { (game.away_club(), game.home_club()) }
 }
 
 /// True when match byte +0x3a = 1 and the other club's reputation (+0x80) is below max(own rep × constant, own rep +
@@ -653,8 +653,8 @@ pub(crate) unsafe fn match_clubs_by_side(game: usize, side: usize) -> (usize, us
 ///
 /// [pt] Com o byte +0x3a do jogo = 1, o lado fica de fora quando a reputação do outro clube (+0x80) fica abaixo do maior
 /// entre a dele × [0x968928] e a dele + 1500 (x87 em dupla, como a original).
-pub(crate) unsafe fn skip_side_by_reputation(game: usize, side: usize) -> bool {
-    if read_i8(game + fixture::CATEGORY) != 1 {
+pub(crate) unsafe fn skip_side_by_reputation(game: Fixture, side: usize) -> bool {
+    if (game.category() as i8) != 1 {
         return false;
     }
     let (meu, outro) = match_clubs_by_side(game, side);
@@ -692,10 +692,10 @@ pub(crate) unsafe fn staff_of_summary_slot(slot: usize) -> Option<usize> {
 /// [pt] Os três bônus do contrato pela vaga (Finance::pay_bonuses 0x599960): +0x21 × +0x10, +0x27 × +0x14 e, com a palavra
 /// do resumo = 1 e +0x22, +0x27 × +0x18 (a original usa o +0x27 de novo); cada um só com o byte e o valor positivos.
 /// Sem bônus no amistoso (0x5c6710), no jogo da competição [0x9cf684] e nos contratos de tipo 5 e 6.
-pub(crate) unsafe fn match_bonuses_for_slot(game: usize, contract: usize, slot: usize, word: i16) -> [Option<i32>; 3] {
+pub(crate) unsafe fn match_bonuses_for_slot(game: Fixture, contract: usize, slot: usize, word: i16) -> [Option<i32>; 3] {
     let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-    let comp = read_usize(game + fixture::COMPETITION);
-    if comp != 0 && (friendly(read_usize(G_FRIENDLY), comp) != 0 || read_usize(game) == read_usize(KEY_CLUB_COMP_RESERVE)) {
+    let comp = game.competition();
+    if comp != 0 && (friendly(read_usize(G_FRIENDLY), comp) != 0 || read_usize(game.addr()) == read_usize(KEY_CLUB_COMP_RESERVE)) {
         return [None; 3];
     }
     let kind = *((contract + contract::CONTRACT_TYPE) as *const u8) & 0x3f;
@@ -745,12 +745,13 @@ pub(crate) unsafe fn match_bonuses_for_slot(game: usize, contract: usize, slot: 
 /// nem empréstimo) evolui (0x6d26b0 com a nota média [0xb74350] − 1), +0x3e conta e, a partir de 8 (14 com parceiro),
 /// fora do humano e do parceiro, sai do principal (0x4cbb60 2 ou 4 → 0x4cbd20); a felicidade cai 8 e a moral cai.
 pub(crate) unsafe extern "thiscall" fn update_after_match(this: usize, game: usize, summary: usize) {
-    if read_i8(game + fixture::HOME_SIDE_MARK) == 0 || read_i8(game + fixture::AWAY_SIDE_MARK) == 0 {
+    let game = Fixture(game);
+    if (game.home_side_mark() as i8) == 0 || game.away_side_mark() == 0 {
         return;
     }
     // the original sets ecx = this before 0x4cb0a0 (stdcall in the Rust copy): thiscall with 3 on the stack serves both
-    let (c47, c48) = (read_i8(game + fixture::HOME_GOALS_EXTRA_TIME), read_i8(game + fixture::AWAY_GOALS_EXTRA_TIME));
-    let (a, b) = if c47 == -1 { (read_i8(game + fixture::HOME_GOALS), read_i8(game + fixture::AWAY_GOALS)) } else { (c47, c48) };
+    let (c47, c48) = (game.home_goals_extra_time(), game.away_goals_extra_time());
+    let (a, b) = if c47 == -1 { (game.home_goals(), game.away_goals()) } else { (c47, c48) };
     let won = [(a > b) as u32, (a < b) as u32];
     let mut list = [[0usize; 50]; 2];
     for (lado, l) in list.iter_mut().enumerate() {
@@ -816,7 +817,7 @@ pub(crate) unsafe extern "thiscall" fn update_after_match(this: usize, game: usi
                     };
                 }
             }
-            if exe::database_is_national_team(club) == 0 && (read_i32(game) < 0 || exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), read_usize(game + fixture::COMPETITION)) == 0) {
+            if exe::database_is_national_team(club) == 0 && (read_i32(game.addr()) < 0 || exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), game.competition()) == 0) {
                 let testa = k >= 11 || !(minutos > 0x1e || read_i8(slot + 0x1f) != 0 || read_i8(slot + 0x20) < 0x46);
                 let mal = testa && {
                     crate::comparison::branch("cqa_8 tests the morale");
@@ -877,7 +878,7 @@ pub(crate) unsafe extern "thiscall" fn update_after_match(this: usize, game: usi
             if contract == 0 {
                 continue;
             }
-            if read_i32(game) != -2 && exe::discipline_is_player_banned(read_usize(G_DISCIPLINE), person, read_usize(game + fixture::COMPETITION), 1, 0) != 0 {
+            if read_i32(game.addr()) != -2 && exe::discipline_is_player_banned(read_usize(G_DISCIPLINE), person, game.competition(), 1, 0) != 0 {
                 continue;
             }
             if exe::injury_get_player_injury_status(read_usize(G_INJURY), person) != 0 || exe::nationalteams_get_international_duty_club(read_usize(G_NATIONAL_TEAMS), person, G_CURRENT_DATE, club, 0, 0) != 0 {

@@ -79,6 +79,7 @@ pub(crate) unsafe fn compare_pos(name: &str, reg: Vec<(usize, usize)>, original:
 
 /// Comparer for `post_match_events`.
 pub(crate) unsafe extern "C" fn compare_post_match_events(partida: usize) {
+    let partida = Fixture(partida);
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_POST_MATCH_EVENTS);
     // the list cursor, the two clubs’ rows in [[0xb67a44]] and the flags of the events’ contracts
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
@@ -96,7 +97,7 @@ pub(crate) unsafe extern "C" fn compare_post_match_events(partida: usize) {
                 break;
             }
             let club = (*(G_CLUB_TABLE as *const usize) as isize + core::ptr::read_unaligned((ev + 4) as *const i32) as isize * 0x245) as usize;
-            if club == *((partida + fixture::HOME_CLUB) as *const usize) || club == *((partida + fixture::AWAY_CLUB) as *const usize) {
+            if club == partida.home_club() || club == partida.away_club() {
                 reg.extend(contract_flags_region(person(core::ptr::read_unaligned(ev as *const i32)), club));
             }
         }
@@ -104,13 +105,13 @@ pub(crate) unsafe extern "C" fn compare_post_match_events(partida: usize) {
     let table = *(G_MANAGER_MANAGER as *const usize);
     if table != 0 {
         for o in [0x1c, 0x20] {
-            let club = *((partida + o) as *const usize);
+            let club = *((partida.addr() + o) as *const usize);
             if club != 0 {
                 reg.push(((*(table as *const usize) as isize + *(club as *const i32) as isize * 0x49) as usize, 0x49));
             }
         }
     }
-    compare_pos("post_match_events", reg, || o(partida), |chamar| post_match_events_injected(partida, chamar));
+    compare_pos("post_match_events", reg, || o(partida.addr()), |chamar| post_match_events_injected(partida, chamar));
 }
 
 /// Comparer for `post_match_players`.
@@ -159,7 +160,7 @@ pub(crate) unsafe extern "C" fn compare_post_match_club(club: usize, other: usiz
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, usize)>(IDX_POST_MATCH_CLUB);
     // the copy does not write to the database: only the calls and the random rolls
     let reg = crate::rng::STATE_REGIONS.to_vec();
-    compare_pos("post_match_club", reg, || o(club, other, partida, n, t), |chamar| post_match_club_with(Club(club), other, partida, n, t, chamar));
+    compare_pos("post_match_club", reg, || o(club, other, partida, n, t), |chamar| post_match_club_with(Club(club), other, Fixture(partida), n, t, chamar));
 }
 
 /// Comparer for `match_day_drop_viewer_and_finish_match`.

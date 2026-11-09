@@ -858,13 +858,14 @@ pub(crate) fn at_least_one(x: i16) -> f64 {
 /// = r·g·q²·q, +0x20 = r·r·h (a ordem das contas do x87). A escolha da formação do computador (0x6e0230) lê +2 e as
 /// três razões. Devolve 1.
 pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, game: usize) -> u32 {
-    if game == 0 {
+    let game = Fixture(game);
+    if game.is_null() {
         show_error_at(0xa8b908, 0x1f9);
         return 0;
     }
     let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     for k in 0..2 {
-        let c = read_usize(game + fixture::HOME_CLUB + 4 * k);
+        let c = read_usize(game.addr() + fixture::HOME_CLUB + 4 * k);
         if c != 0 && human(c, 0, 1, 0, 0) != 0 {
             return 0;
         }
@@ -873,7 +874,7 @@ pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, game: u
     let pr = reg.as_mut_ptr() as usize;
     exe::date_date_54a110(pr);
     for k in 0..2 {
-        let c = read_usize(game + fixture::HOME_CLUB + 4 * k);
+        let c = read_usize(game.addr() + fixture::HOME_CLUB + 4 * k);
         if c == 0 {
             show_error_at(0xa8b908, 0x20a);
             continue;

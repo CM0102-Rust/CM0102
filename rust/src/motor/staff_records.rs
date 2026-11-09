@@ -296,11 +296,12 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
 /// convocações da competição guardada (0x76d940) acabam (0x774f30); o histórico do clube (tipo 0); com a mídia e peso
 /// acima de 10, o elogio (0x75c390 com 1) e, com peso acima de 12 ou reputação abaixo de 2500, com 3.
 pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club: usize, game: usize, partida: usize) {
+    let game = Fixture(game);
     let club = Club(club);
-    if club.is_null() || game == 0 || partida == 0 {
+    if club.is_null() || game.is_null() || partida == 0 {
         return show_error_at(0xa83b78, 0x51e);
     }
-    let comp = Competition(read_usize(game + fixture::COMPETITION));
+    let comp = Competition(game.competition());
     let weight = comp.reputation();
     raise_champion_reputation(club, weight, false);
     let mut e = history_entry();
@@ -311,8 +312,8 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
     let t = Staff(club.manager().addr());
     if !t.is_null() {
         if t.non_player() != 0 {
-            let (k1, k2) = manager_rating_gains(t, club, read_usize(game));
-            let side = partida + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (read_usize(game + fixture::AWAY_CLUB) == club.addr()) as usize;
+            let (k1, k2) = manager_rating_gains(t, club, read_usize(game.addr()));
+            let side = partida + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (game.away_club() == club.addr()) as usize;
             raise_side_rating(side, weight, 400);
             raise_side_rating(side + 2, weight, k1);
             raise_side_rating(side + 4, weight, k2);
@@ -336,7 +337,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
     if chairman != 0 {
         append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(chairman), &e);
     }
-    let escalacao = partida + match_record::ROW_STAFF_ID + 0x625 * (club.addr() != read_usize(game + fixture::HOME_CLUB)) as usize;
+    let escalacao = partida + match_record::ROW_STAFF_ID + 0x625 * (club.addr() != game.home_club()) as usize;
     add_lineup_histories(this, club, escalacao, &e);
     for j in 0..50usize {
         if (comp.reputation() as i32).wrapping_mul(400) < club.reputation() as i32 {
@@ -361,11 +362,11 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
         offer_renewal_if_due(club, p, k);
     }
     // 0x76d940 and 0x774f30: push comp; mov ecx, [0xb74318] (0x76d940 does not read ecx and only compares the id; ret 4 in both)
-    if exe::national_teams_is_finals_comp(read_usize(G_NATIONAL_TEAMS), read_usize(game + fixture::COMPETITION)) != 0 {
+    if exe::national_teams_is_finals_comp(read_usize(G_NATIONAL_TEAMS), game.competition()) != 0 {
         if STAFF_HISTORY_DRY_RUN {
             DRY_RUN_STRAY_SCRATCH_DATE = true;
         } else {
-            exe::nationalteams_end_duty_for_competition(read_usize(G_NATIONAL_TEAMS), read_usize(game + fixture::COMPETITION));
+            exe::nationalteams_end_duty_for_competition(read_usize(G_NATIONAL_TEAMS), game.competition());
         }
     }
     add_club_history(this, club, 0, comp);
@@ -530,12 +531,12 @@ pub(crate) unsafe fn side_match_points(m: usize, a: usize, b: usize, c: usize, d
 /// [pt] A nota do jogo para o técnico: a importância (0x48e190 da competição do jogo, com `lado` e a saída em `saida`; só o
 /// byte, com sinal) × (reputação do adversário / 500) × o peso da competição (+0x69 de [+0x14]) × (pontos + bônus) × 50,
 /// dividido por 100000 (divisões com sinal truncadas, como as multiplicações mágicas da original; produtos em 32 bits).
-pub(crate) unsafe fn match_rating_for_manager(p: usize, side: u32, out: &mut u32, opponent: Club, points: i32) -> i32 {
-    let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(4 * read_usize(p)));
+pub(crate) unsafe fn match_rating_for_manager(p: Fixture, side: u32, out: &mut u32, opponent: Club, points: i32) -> i32 {
+    let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(4 * read_usize(p.addr())));
     let i = (exe::comp_get_fixture_match_importance(comp, p, side, out as *mut u32) as u32) as u8 as i8 as i32;
     let x = i
         .wrapping_mul(opponent.reputation() as i32 / 500)
-        .wrapping_mul(read_i16(read_usize(p + fixture::COMPETITION) + 0x69) as i32)
+        .wrapping_mul(read_i16(p.competition() + 0x69) as i32)
         .wrapping_mul(points)
         .wrapping_mul(50);
     x / 100000
@@ -565,10 +566,11 @@ pub(crate) unsafe fn match_rating_for_manager(p: usize, side: u32, out: &mut u32
 /// para os pontos do mês (+0xce); na seleção (0x53b900) para +0xbe, senão +0xba. Defeito da original, reproduzido: no
 /// visitante, +0xbe/+0xba recebem o [esp+0x10] da rotina, que é a nota do mandante (ou o bônus dele, sem registro).
 pub(crate) unsafe extern "thiscall" fn record_match_result(this: usize, p: usize, m: usize) {
-    if *((p + fixture::CATEGORY) as *const u8) == 1 {
+    let p = Fixture(p);
+    if p.category() == 1 {
         return;
     }
-    let (casa, fora) = (read_usize(p + fixture::HOME_CLUB), read_usize(p + fixture::AWAY_CLUB));
+    let (casa, fora) = (p.home_club(), p.away_club());
     let a = club_manager_record(this, Club(casa));
     let v = club_manager_record(this, Club(fora));
     if a != 0 {
@@ -577,10 +579,10 @@ pub(crate) unsafe extern "thiscall" fn record_match_result(this: usize, p: usize
     if v != 0 {
         increment_i16(v + manager_record::GAMES);
     }
-    let (ga, gv) = if *((p + fixture::HOME_GOALS_EXTRA_TIME) as *const u8) == 0xff {
-        (read_i8_as_i32(p + fixture::HOME_GOALS), read_i8_as_i32(p + fixture::AWAY_GOALS))
+    let (ga, gv) = if (p.home_goals_extra_time() as u8) == 0xff {
+        ((p.home_goals() as i32), (p.away_goals() as i32))
     } else {
-        (read_i8_as_i32(p + fixture::HOME_GOALS_EXTRA_TIME), read_i8_as_i32(p + fixture::AWAY_GOALS_EXTRA_TIME))
+        ((p.home_goals_extra_time() as i32), (p.away_goals_extra_time() as i32))
     };
     if a != 0 {
         add_to_i32(a + manager_record::GOALS_FOR, ga);
@@ -619,9 +621,9 @@ pub(crate) unsafe extern "thiscall" fn record_match_result(this: usize, p: usize
         }
     }
     // the output of 0x48e190 goes in the slot of the original’s `jogo` argument, which starts with the match itself
-    let mut out = p as u32;
+    let mut out = p.addr() as u32;
     let mut stored = ba; // the original’s [esp+0x10]: the home side’s bonus, then its rating
-    let comp = read_usize(p + fixture::COMPETITION);
+    let comp = p.competition();
     if a != 0 {
         crate::comparison::branch("cqa_11 home side rating");
         let q = match_rating_for_manager(p, 0, &mut out, Club(fora), side_match_points(m, 0x11f, 0x128, 0x127, 0x129).wrapping_add(ba));
@@ -775,9 +777,9 @@ pub(crate) unsafe fn raise_side_rating(a: usize, weight: i16, k: i32) {
 /// tipo, id do clube, competição): do técnico, do presidente (+0xbf) e dos 20 da escalação do lado (+0x190, 0x49 bytes,
 /// −1 vazio; pessoas válidas e fora o técnico); no terceiro, as convocações acabam nas competições guardadas (0x76d940,
 /// 0x774f90 com os dois clubes); por fim o histórico do clube (tipo no +8, competição no +9).
-pub(crate) unsafe fn update_cup_placed_club(this: usize, club: Club, game: usize, partida: usize, kind: u8) {
+pub(crate) unsafe fn update_cup_placed_club(this: usize, club: Club, game: Fixture, partida: usize, kind: u8) {
     let (limiar, teto, k, metade) = if kind == 1 { (500, 350, 300, 150) } else { (500, 200, 200, 100) };
-    let comp = Competition(read_usize(game + fixture::COMPETITION));
+    let comp = Competition(game.competition());
     let weight = comp.reputation();
     let target = (weight as i32).wrapping_mul(limiar); // cqa12: the reputation threshold
     let rep = club.reputation() as i32;
@@ -801,14 +803,14 @@ pub(crate) unsafe fn update_cup_placed_club(this: usize, club: Club, game: usize
     let t = Staff(club.manager().addr());
     if !t.is_null() {
         if t.non_player() != 0 {
-            let c = League(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(4 * read_usize(game))));
+            let c = League(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(4 * read_usize(game.addr()))));
             let (k1, k2) = if (c.club_sides() as i8) != 1 {
                 (k, k)
             } else {
                 let estrangeiro: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
                 (if estrangeiro(t.addr(), club.nation().addr(), 1) != 0 { metade } else { k }, metade)
             };
-            let side = partida + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (read_usize(game + fixture::AWAY_CLUB) == club.addr()) as usize;
+            let side = partida + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (game.away_club() == club.addr()) as usize;
             raise_side_rating(side, weight, k);
             raise_side_rating(side + 2, weight, k1);
             raise_side_rating(side + 4, weight, k2);
@@ -819,7 +821,7 @@ pub(crate) unsafe fn update_cup_placed_club(this: usize, club: Club, game: usize
     if chairman != 0 {
         append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(chairman), &e);
     }
-    let escalacao = partida + match_record::ROW_STAFF_ID + 0x625 * (club.addr() != read_usize(game + fixture::HOME_CLUB)) as usize;
+    let escalacao = partida + match_record::ROW_STAFF_ID + 0x625 * (club.addr() != game.home_club()) as usize;
     for j in 0..0x14usize {
         let id = read_i32(escalacao + 0x49 * j);
         if id == -1 {
@@ -840,9 +842,9 @@ pub(crate) unsafe fn update_cup_placed_club(this: usize, club: Club, game: usize
     }
     if kind == 2 && !CUP_PLACED_CLUB_DRY_RUN {
         let stored: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_IS_FINALS_COMP);
-        if stored(read_usize(game + fixture::COMPETITION)) != 0 {
-            exe::nationalteams_end_duty_for_nation_in_competition(read_usize(G_NATIONAL_TEAMS), read_usize(game + fixture::HOME_CLUB), read_usize(game + fixture::COMPETITION));
-            exe::nationalteams_end_duty_for_nation_in_competition(read_usize(G_NATIONAL_TEAMS), read_usize(game + fixture::AWAY_CLUB), read_usize(game + fixture::COMPETITION));
+        if stored(game.competition()) != 0 {
+            exe::nationalteams_end_duty_for_nation_in_competition(read_usize(G_NATIONAL_TEAMS), game.home_club(), game.competition());
+            exe::nationalteams_end_duty_for_nation_in_competition(read_usize(G_NATIONAL_TEAMS), game.away_club(), game.competition());
         }
     }
     let mut e2 = history_entry();
@@ -863,7 +865,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_runners_up_record(this: usize, cl
     if club == 0 || game == 0 || partida == 0 {
         return show_error_at(0xa83b78, 0x5f6);
     }
-    update_cup_placed_club(this, Club(club), game, partida, 1);
+    update_cup_placed_club(this, Club(club), Fixture(game), partida, 1);
 }
 
 /// the cup third place: the same with weight × 200 (at most 200) and smaller ratings; ends the call-ups in the stored
@@ -877,7 +879,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_third_place_record(this: usize, c
     if club == 0 || game == 0 || partida == 0 {
         return show_error_at(0xa83b78, 0x67b);
     }
-    update_cup_placed_club(this, Club(club), game, partida, 2);
+    update_cup_placed_club(this, Club(club), Fixture(game), partida, 2);
 }
 
 /// Rehearsal comparer for cup runner-up/third: copy without histories vs original from the same state, comparing club
@@ -885,11 +887,11 @@ pub(crate) unsafe extern "thiscall" fn add_cup_third_place_record(this: usize, c
 ///
 /// [pt] Comparador em ensaio dos colocados: a cópia sem os históricos e sem acabar as convocações, e a original a partir do
 /// mesmo estado (a reputação do clube e as três notas do lado dele na partida). Nulos: só a original.
-pub(crate) unsafe fn compare_cup_placed(name: &str, club: Club, game: usize, partida: usize, original: impl FnOnce(), copy: impl FnOnce()) {
-    if club.is_null() || game == 0 || partida == 0 {
+pub(crate) unsafe fn compare_cup_placed(name: &str, club: Club, game: Fixture, partida: usize, original: impl FnOnce(), copy: impl FnOnce()) {
+    if club.is_null() || game.is_null() || partida == 0 {
         return original();
     }
-    let reg = [(club.addr() + club::REPUTATION, 2), (partida + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (read_usize(game + fixture::AWAY_CLUB) == club.addr()) as usize, 6)];
+    let reg = [(club.addr() + club::REPUTATION, 2), (partida + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (game.away_club() == club.addr()) as usize, 6)];
     let before = crate::comparison::MemorySnapshot::read(&reg);
     CUP_PLACED_CLUB_DRY_RUN = true;
     copy();
@@ -898,7 +900,7 @@ pub(crate) unsafe fn compare_cup_placed(name: &str, club: Club, game: usize, par
     before.write_back();
     original();
     let mo = crate::comparison::MemorySnapshot::read(&reg);
-    SCOREBOARD.record(mo == mr, || format!("{}(clube {:#x}, jogo {:#x}) original={:x?} rust={:x?}", name, club.addr(), game, mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("{}(clube {:#x}, jogo {:#x}) original={:x?} rust={:x?}", name, club.addr(), game.addr(), mo, mr));
 }
 
 /// Copies date src into dst (`exe::date_operator_3d`).

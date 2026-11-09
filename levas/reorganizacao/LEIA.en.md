@@ -29,6 +29,15 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 7: the fixture (`Fixture`)
+
+The full package for `fixture`: 184 variables in 182 functions, 75 `.addr()` removed from the wrappers, 31 functions
+take `Fixture` (67 calls fixed) and propagation, 7 more. Raw fixture accesses 1,307 → 365 (the rest use an expression
+as base, not a variable). `.addr()` outside the wrappers 3,488 → 3,815. Before it: batch 6's finding investigated and
+recorded in `docs/DEFEITOS_DO_ORIGINAL.en.md` (the daily friction uses the contract of squad slot 10, not the
+player's). Proof: 7cc445c2 ×2, detector equal, comparison 0; the 43 changed mutations and the 4 at risk from `Fixture`
+compile.
+
 ## Migration to typed records, batch 6: name reliability and the four records' residues
 
 - **Name reliability** (Lucas's request): `confianca_campos.py` classifies each field by the origin its `fields.rs`

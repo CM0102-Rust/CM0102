@@ -120,7 +120,7 @@ pub(crate) unsafe extern "thiscall" fn compare_select_squad(this: usize, nation:
     let mut cand = [0usize; 200];
     let mut cursor = 0usize;
     let (n, codigos) = crate::rng::pause_trace(|| crate::rng::without_counting(|| {
-        let n = collect_squad_candidates(this, nation, t, data, p, elenco, reg, reputation_limits(nation, p), &mut cand, &mut cursor);
+        let n = collect_squad_candidates(this, nation, t, data, p, elenco, reg, reputation_limits(nation, Fixture(p)), &mut cand, &mut cursor);
         (n, squad_position_codes(size))
     }));
     sorteio.write_back();
@@ -200,20 +200,21 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_duty_competitions(this: u
 /// a +0x6c: marcas de hoje, datas dos elencos e marcas de convocado). Se a cópia pediu algum elenco (0x76c120 aloca e
 /// mexe nos elencos), a comparação não vale e fica a original; senão os registros têm de bater.
 pub(crate) unsafe extern "thiscall" fn compare_select_squads_for_fixture(this: usize, p: usize) {
+    let p = Fixture(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SELECT_SQUADS_FOR_FIXTURE);
-    let regions = [(club_nation_record(this, Club(read_usize(p + fixture::HOME_CLUB))) + 0x32, 0x3a), (club_nation_record(this, Club(read_usize(p + fixture::AWAY_CLUB))) + 0x32, 0x3a)];
+    let regions = [(club_nation_record(this, Club(p.home_club())) + 0x32, 0x3a), (club_nation_record(this, Club(p.away_club())) + 0x32, 0x3a)];
     let before = crate::comparison::MemorySnapshot::read(&regions);
-    o(this, p);
+    o(this, p.addr());
     let mo = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
     SELECT_SQUADS_DRY_RUN = true;
     SELECT_SQUADS_REQUESTED_SQUAD = false;
-    crate::rng::pause_trace(|| select_squads_for_fixture(this, p));
+    crate::rng::pause_trace(|| select_squads_for_fixture(this, p.addr()));
     SELECT_SQUADS_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     mo.write_back();
     if !SELECT_SQUADS_REQUESTED_SQUAD {
-        SCOREBOARD.record(mo == mr, || format!("select_squads_for_fixture({:x}, {:x}) original={:x?} rust={:x?}", this, p, mo, mr));
+        SCOREBOARD.record(mo == mr, || format!("select_squads_for_fixture({:x}, {:x}) original={:x?} rust={:x?}", this, p.addr(), mo, mr));
     }
 }
 
@@ -247,20 +248,21 @@ pub(crate) unsafe extern "stdcall" fn compare_national_teams_post_player_called_
 /// alocam, vão para o arquivo ou gravam fora) e a original a partir do mesmo estado, conferidos nas regiões que a
 /// rotina grava por conta própria (caps_update_regions). Fora de jogo entre seleções: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_record_international_result(this: usize, p: usize, m: usize) {
+    let p = Fixture(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RECORD_INTERNATIONAL_RESULT);
-    if exe::database_is_national_team(read_usize(p + fixture::HOME_CLUB)) == 0 || exe::database_is_national_team(read_usize(p + fixture::AWAY_CLUB)) == 0 {
-        return o(this, p, m); // simplification: writes nothing, original only
+    if exe::database_is_national_team(p.home_club()) == 0 || exe::database_is_national_team(p.away_club()) == 0 {
+        return o(this, p.addr(), m); // simplification: writes nothing, original only
     }
     let regions = caps_update_regions(this, p, m);
     let before = crate::comparison::MemorySnapshot::read(&regions);
     INTERNATIONAL_RESULT_DRY_RUN = true;
-    crate::rng::pause_trace(|| crate::rng::without_counting(|| record_international_result(this, p, m)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| record_international_result(this, p.addr(), m)));
     INTERNATIONAL_RESULT_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
-    o(this, p, m);
+    o(this, p.addr(), m);
     let mo = crate::comparison::MemorySnapshot::read(&regions);
-    SCOREBOARD.record(mo == mr, || format!("record_international_result(partida {:x}, resumo {:x}) original={:x?} rust={:x?}", p, m, mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("record_international_result(partida {:x}, resumo {:x}) original={:x?} rust={:x?}", p.addr(), m, mo, mr));
 }
 
 /// Comparer for `format_squad_label`.

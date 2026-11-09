@@ -18,13 +18,14 @@ pub(crate) unsafe extern "thiscall" fn compare_add_league_champions_record(this:
 
 /// Comparer for `add_cup_winners_record`.
 pub(crate) unsafe extern "thiscall" fn compare_add_cup_winners_record(this: usize, club: usize, game: usize, partida: usize) {
+    let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ADD_CUP_WINNERS_RECORD);
-    if club == 0 || game == 0 || partida == 0 {
-        return o(this, club, game, partida);
+    if club == 0 || game.is_null() || partida == 0 {
+        return o(this, club, game.addr(), partida);
     }
-    let notes = (partida + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (read_usize(game + fixture::AWAY_CLUB) == club) as usize, 6);
-    compare_champion_update("add_cup_winners_record", this, Club(club), notes, false, || o(this, club, game, partida),
-        || add_cup_winners_record(this, club, game, partida));
+    let notes = (partida + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (game.away_club() == club) as usize, 6);
+    compare_champion_update("add_cup_winners_record", this, Club(club), notes, false, || o(this, club, game.addr(), partida),
+        || add_cup_winners_record(this, club, game.addr(), partida));
 }
 
 /// Comparer for `clear_human_manager_record`.
@@ -50,20 +51,21 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_human_manager_record(this: 
 /// [pt] Comparador lado a lado nos dois registros (0xd2 bytes), criados antes pela 0x86f5b0 como a original faria (a segunda
 /// chamada acha o mesmo registro). Jogo não disputado: só a original (não cria nada).
 pub(crate) unsafe extern "thiscall" fn compare_record_match_result(this: usize, p: usize, m: usize) {
+    let p = Fixture(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RECORD_MATCH_RESULT);
-    if *((p + fixture::CATEGORY) as *const u8) == 1 {
-        return o(this, p, m);
+    if p.category() == 1 {
+        return o(this, p.addr(), m);
     }
-    let a = club_manager_record(this, Club(read_usize(p + fixture::HOME_CLUB)));
-    let v = club_manager_record(this, Club(read_usize(p + fixture::AWAY_CLUB)));
+    let a = club_manager_record(this, Club(p.home_club()));
+    let v = club_manager_record(this, Club(p.away_club()));
     let mut reg = Vec::new();
     for r in [a, v] {
         if r != 0 {
             reg.push((r, 0xd2));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, p, m), || record_match_result(this, p, m));
-    SCOREBOARD.record(igual, || format!("record_match_result(jogo {:#x}) original={:x?} rust={:x?}", p, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, p.addr(), m), || record_match_result(this, p.addr(), m));
+    SCOREBOARD.record(igual, || format!("record_match_result(jogo {:#x}) original={:x?} rust={:x?}", p.addr(), mo, mr));
 }
 
 /// Comparer for `add_league_finish_records`.
@@ -103,14 +105,14 @@ pub(crate) unsafe extern "thiscall" fn compare_add_supporters_player_of_year_rec
 /// Comparer for `add_cup_runners_up_record`.
 pub(crate) unsafe extern "thiscall" fn compare_add_cup_runners_up_record(this: usize, club: usize, game: usize, partida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ADD_CUP_RUNNERS_UP_RECORD);
-    compare_cup_placed("add_cup_runners_up_record", Club(club), game, partida, || o(this, club, game, partida),
+    compare_cup_placed("add_cup_runners_up_record", Club(club), Fixture(game), partida, || o(this, club, game, partida),
         || add_cup_runners_up_record(this, club, game, partida))
 }
 
 /// Comparer for `add_cup_third_place_record`.
 pub(crate) unsafe extern "thiscall" fn compare_add_cup_third_place_record(this: usize, club: usize, game: usize, partida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ADD_CUP_THIRD_PLACE_RECORD);
-    compare_cup_placed("add_cup_third_place_record", Club(club), game, partida, || o(this, club, game, partida),
+    compare_cup_placed("add_cup_third_place_record", Club(club), Fixture(game), partida, || o(this, club, game, partida),
         || add_cup_third_place_record(this, club, game, partida))
 }
 

@@ -41,19 +41,20 @@ pub(crate) unsafe extern "thiscall" fn compare_set_fixture_venue(this: usize, ma
 /// [pt] Lado a lado (a cópia sem contar os sorteios) pelo estado do sorteador, pela saída, pelos lugares do estádio (que
 /// ela pode subir para 1.500) e pela devolução.
 pub(crate) unsafe extern "thiscall" fn compare_calculate_match_attendance(this: usize, game: usize, out: *mut i32) -> i32 {
+    let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> i32>(IDX_CALCULATE_MATCH_ATTENDANCE);
-    if game == 0 {
-        return o(this, game, out);
+    if game.is_null() {
+        return o(this, game.addr(), out);
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     if !out.is_null() {
         reg.push((out as usize, 12));
     }
-    if read_usize(game + fixture::STADIUM) != 0 {
-        reg.push((read_usize(game + fixture::STADIUM) + 0x3c, 4));
+    if game.stadium() != 0 {
+        reg.push((game.stadium() + 0x3c, 4));
     }
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, game, out), || crate::rng::without_counting(|| calculate_match_attendance(this, game, out)));
-    SCOREBOARD.record(igual && r == n, || format!("calculate_match_attendance(comp {:x}, tipo {}): original {} rust {} {:x?} x {:x?}", read_usize(game), read_u8(game + fixture::CATEGORY), r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, game.addr(), out), || crate::rng::without_counting(|| calculate_match_attendance(this, game.addr(), out)));
+    SCOREBOARD.record(igual && r == n, || format!("calculate_match_attendance(comp {:x}, tipo {}): original {} rust {} {:x?} x {:x?}", read_usize(game.addr()), game.category(), r, n, mo, mr));
     r
 }
 

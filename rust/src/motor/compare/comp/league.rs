@@ -239,23 +239,24 @@ pub(crate) unsafe extern "thiscall" fn compare_announce_team_status(league: usiz
 /// partir do mesmo estado: a data em +0xc9, as linhas da tabela com os confrontos (as regiões da 0x685f60), o +0x3d/+0x3e
 /// da partida e a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_league_add_result(league: usize, p: usize, game: usize) -> i32 {
+    let p = Fixture(p);
     let league = League(league);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(IDX_LEAGUE_ADD_RESULT);
-    if p == 0 || (league.stage_index() == 0xff && *((p + fixture::STAGE_INDEX) as *const u8) != 0xff) {
-        return o(league.addr(), p, game); // simplification: the box or the stage, original only
+    if p.is_null() || (league.stage_index() == 0xff && p.stage_index() != 0xff) {
+        return o(league.addr(), p.addr(), game); // simplification: the box or the stage, original only
     }
     let n = league.club_count() as u16 as u32;
     let mut regions = vec![(league.addr() + league::LAST_RESULT_DATE, 8)];
     regions.extend(result_update_regions(p, league.table(), n, core::ptr::null_mut(), core::ptr::null_mut()));
     let before = crate::comparison::MemorySnapshot::read(&regions);
     LEAGUE_ADD_RESULT_DRY_RUN = true;
-    let rr = crate::rng::pause_trace(|| crate::rng::without_counting(|| league_add_result(league.addr(), p, game)));
+    let rr = crate::rng::pause_trace(|| crate::rng::without_counting(|| league_add_result(league.addr(), p.addr(), game)));
     LEAGUE_ADD_RESULT_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
-    let ro = o(league.addr(), p, game);
+    let ro = o(league.addr(), p.addr(), game);
     let mo = crate::comparison::MemorySnapshot::read(&regions);
-    SCOREBOARD.record(ro == rr && mo == mr, || format!("league_add_result({:x}, partida {:x}) original={} {:x?} rust={} {:x?}", league.addr(), p, ro, mo, rr, mr));
+    SCOREBOARD.record(ro == rr && mo == mr, || format!("league_add_result({:x}, partida {:x}) original={} {:x?} rust={} {:x?}", league.addr(), p.addr(), ro, mo, rr, mr));
     ro
 }
 
@@ -470,7 +471,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_final_positions(this: usiz
 /// Comparer for `apply_result_to_table`.
 pub(crate) unsafe extern "thiscall" fn compare_apply_result_to_table(league: usize, p: usize, table: usize, n: u32, mark: u32, pts_home: *mut i16, pts_away: *mut i16) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, *mut i16, *mut i16)>(IDX_APPLY_RESULT_TO_TABLE);
-    let reg = result_update_regions(p, table, n, pts_home, pts_away);
+    let reg = result_update_regions(Fixture(p), table, n, pts_home, pts_away);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(league, p, table, n, mark, pts_home, pts_away),
         || apply_result_to_table(league, p, table, n, mark, pts_home, pts_away));
     SCOREBOARD.record(igual, || format!("apply_result_to_table({:x}, partida {:x}, {:x}, n {}, marcar {}) {:x?} x {:x?}",

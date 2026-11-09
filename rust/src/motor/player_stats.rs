@@ -1178,7 +1178,7 @@ pub(crate) unsafe extern "thiscall" fn player_stats_record_match(this: usize, p:
     for lado in 0..2usize {
         if !simulado {
             let mut error = false;
-            cat = match_stats_category(p, lado as i32, true, &mut error);
+            cat = match_stats_category(Fixture(p), lado as i32, true, &mut error);
         }
         let gf = game + match_stats_record::SIDE_SIZE * lado + 0x11f;
         let gc = game + match_stats_record::AWAY_GOALS - 0x625 * lado;

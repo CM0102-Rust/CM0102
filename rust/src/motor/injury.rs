@@ -779,17 +779,18 @@ pub(crate) unsafe fn return_to_training_days(kind: i8, days: i16) -> i16 {
 /// (0x775cd0), +0x1c = 0, a recaída (0x62e500), a contagem das recaídas (de duas: aposentadoria 0x7a7f20 por sorteio),
 /// a aposentadoria pela idade e pela volta ao treino longa e o surto (0x62e820) nos tipos 0, 1 e 2. Devolve a vaga.
 pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, retroativa: u32, p: usize, game: usize, surto: u32, news: u32, rec_arg: u32, so_recorrencia: u32) -> i32 {
+    let game = Fixture(game);
     let p = Staff(p);
     let kind = kind_arg as u8 as i8;
     let original = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, usize, usize, u32, u32, u32, u32) -> i32>(IDX_ADD_INJURY);
     if p.is_null() {
-        return original(this, kind_arg, retroativa, p.addr(), game, surto, news, rec_arg, so_recorrencia); // the message box: original only
+        return original(this, kind_arg, retroativa, p.addr(), game.addr(), surto, news, rec_arg, so_recorrencia); // the message box: original only
     }
     if read_usize(p.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
         return -1;
     }
     if p.player() == 0 || !(0..0x52).contains(&kind) {
-        return original(this, kind_arg, retroativa, p.addr(), game, surto, news, rec_arg, so_recorrencia); // the boxes: original only
+        return original(this, kind_arg, retroativa, p.addr(), game.addr(), surto, news, rec_arg, so_recorrencia); // the boxes: original only
     }
     exe::injury_update_player_fitness(this, p);
     if read_usize(G_TRAINING_MANAGER) != 0 {
@@ -868,13 +869,13 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
     let off = slot as usize * 0x30;
     *((read_usize(this + injury_fields::INJURY_ENTRIES) + off) as *mut u8) = kind as u8;
     let mut of_match = false;
-    if game != 0 {
+    if !game.is_null() {
         for k in 0..50usize {
-            let mut club = read_usize(game + fixture::HOME_CLUB);
+            let mut club = game.home_club();
             let found = if read_usize(club + club::SQUAD + 4 * k) == p.addr() {
                 true
-            } else if read_usize(read_usize(game + fixture::AWAY_CLUB) + 0xd7 + 4 * k) == p.addr() {
-                club = read_usize(game + fixture::AWAY_CLUB);
+            } else if read_usize(game.away_club() + 0xd7 + 4 * k) == p.addr() {
+                club = game.away_club();
                 true
             } else {
                 false
@@ -1644,6 +1645,7 @@ pub(crate) unsafe fn slot_rhythm_level(partida: usize, slot: usize) -> i8 {
 /// mais) tem a gravidade por +5 (acima de 95: 2; de 66: 1; de 51: 0; senão a da batida anterior) e o tipo da lesão
 /// (0x62d140); tipo válido: fim da lesão atual (0x62e700) e a lesão nova (0x62d250 com o jogo, ou 0 no jogo −2).
 pub(crate) unsafe extern "thiscall" fn apply_match_effects(this: usize, game: usize, partida: usize) {
+    let game = Fixture(game);
     // simplification: the severity is a local of the original that carries over from one hit to the next; with no hit above 51 before,
     // the original reads a stack leftover and the copy uses 0 (the comparer leaves every match with a clash to the original).
     let mut severity: i8 = 0;
@@ -1664,7 +1666,7 @@ pub(crate) unsafe extern "thiscall" fn apply_match_effects(this: usize, game: us
             // simplification: the original adds the whole ecx: the level in the low 16, the upper 16 of 10000 − condition
             let mut v = (c / 100).wrapping_add(((c as u32 & 0xffff_0000) | level as i16 as u16 as u32) as i32); // cpv8: o ritmo
             crate::comparison::branch("cpv_8 pace");
-            if read_i8(game + fixture::HOME_SIDE_MARK) == 0 {
+            if (game.home_side_mark() as i8) == 0 {
                 crate::comparison::branch("cpv_8 half");
                 v = (v as i16 as i32) / 2; // cpv8: without the match mark, half
             } else if read_i8(pessoa + staff::AGE) as i32 > exe::utils_random(3) + 0x21 {
@@ -1698,7 +1700,7 @@ pub(crate) unsafe extern "thiscall" fn apply_match_effects(this: usize, game: us
                     if (t as i8) >= 0 {
                         crate::comparison::branch("cpv_8 collision becomes injury");
                         exe::injury_end_player_injury(this, pessoa, 0);
-                        let j = if read_i32(game) == -2 { 0 } else { game };
+                        let j = if read_i32(game.addr()) == -2 { 0 } else { game.addr() };
                         exe::injury_add_injury(this, t as u32, 0, pessoa, j as u32, 1, -1, 0, 0);
                     }
                 }

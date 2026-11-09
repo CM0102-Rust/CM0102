@@ -143,20 +143,21 @@ pub(crate) unsafe extern "thiscall" fn compare_load_from_save(this: usize, save:
 /// [pt] Comparador da 0x59a5d0: lado a lado nos dois registros de finanças e no estado do sorteio (os sorteios de 10, dos
 /// gastos e da manutenção). Sem resultado, sem partida, sem um dos clubes ou com seleção: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_process_match_income(table: usize, partida: usize, result: usize) {
+    let partida = Fixture(partida);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_PROCESS_MATCH_INCOME);
-    if result == 0 || partida == 0 || read_usize(partida + fixture::HOME_CLUB) == 0 || read_usize(partida + fixture::AWAY_CLUB) == 0 {
-        return o(table, partida, result);
+    if result == 0 || partida.is_null() || partida.home_club() == 0 || partida.away_club() == 0 {
+        return o(table, partida.addr(), result);
     }
     let (Some(fm), Some(fv)) = (match_club_finance(table, partida, 0x1c), match_club_finance(table, partida, 0x20)) else {
-        return o(table, partida, result); // national team: the original does nothing
+        return o(table, partida.addr(), result); // national team: the original does nothing
     };
     if fm == fv {
-        return o(table, partida, result); // simplification: the same record on both sides, original only
+        return o(table, partida.addr(), result); // simplification: the same record on both sides, original only
     }
     let mut reg = vec![(fm, 0x167), (fv, 0x167)];
     reg.extend(crate::rng::STATE_REGIONS);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(table, partida, result), || crate::rng::without_counting(|| process_match_income(table, partida, result)));
-    SCOREBOARD.record(igual, || format!("process_match_income(partida {:x}) original={:x?} rust={:x?}", partida, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(table, partida.addr(), result), || crate::rng::without_counting(|| process_match_income(table, partida.addr(), result)));
+    SCOREBOARD.record(igual, || format!("process_match_income(partida {:x}) original={:x?} rust={:x?}", partida.addr(), mo, mr));
 }
 
 /// Comparer for `calc_gate_receipts`.

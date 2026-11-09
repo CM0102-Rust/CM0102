@@ -218,13 +218,14 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_update_staff_records_for_
 /// [pt] Comparador: só a original (simplification: o resultado entra nas tabelas; não roda duas vezes), com o plano: a devolução
 /// 1, a marca +0x42 do jogo (1 no estágio 1; senão -1 se estava abaixo de 2) e o bloco +8 devolvido.
 pub(crate) unsafe extern "thiscall" fn compare_usa_mls_add_result(this: usize, game: usize, stats: u32) -> u32 {
+    let game = Fixture(game);
     let this = League(this);
-    let mark = *((game + fixture::STAGE_INDEX) as *const i8);
+    let mark = (game.stage_index() as i8);
     let block = this.comp_stats();
     let esperada = if this.current_stage() == 1 { 1 } else if mark < 2 { -1 } else { mark };
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_USA_MLS_ADD_RESULT)(this.addr(), game, stats);
-    let (m, b) = (*((game + fixture::STAGE_INDEX) as *const i8), this.comp_stats());
-    SCOREBOARD.record(r == 1 && m == esperada && b == block, || format!("usa_mls_add_result({:x}, {:x}) devolveu {} marca {} x {} bloco {:x} x {:x}", this.addr(), game, r, m, esperada, b, block));
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_USA_MLS_ADD_RESULT)(this.addr(), game.addr(), stats);
+    let (m, b) = ((game.stage_index() as i8), this.comp_stats());
+    SCOREBOARD.record(r == 1 && m == esperada && b == block, || format!("usa_mls_add_result({:x}, {:x}) devolveu {} marca {} x {} bloco {:x} x {:x}", this.addr(), game.addr(), r, m, esperada, b, block));
     r
 }
 

@@ -648,17 +648,17 @@ pub(crate) unsafe extern "thiscall" fn aggregate_score(this: usize, side_b: i8, 
     };
     *este = read_i8(this + engine::SCORE);
     *outro = read_i8(this + engine::SCORE_SIDE1);
-    let partida = *((this + engine::MATCH) as *const usize);
-    if exe::comp_util_get_round_variant(*((partida + fixture::ROUND_NAME) as *const i16) as i32) == 3 {
+    let partida = Fixture(*((this + engine::MATCH) as *const usize));
+    if exe::comp_util_get_round_variant(partida.round_name() as i32) == 3 {
         *fase3 = 1;
     }
-    let first_leg_home = read_i8(partida + fixture::HOME_AGGREGATE);
+    let first_leg_home = partida.home_aggregate();
     if first_leg_home != -1 {
         *este = (*este).wrapping_add(first_leg_home);
-        *outro = (*outro).wrapping_add(read_i8(partida + fixture::AWAY_AGGREGATE));
+        *outro = (*outro).wrapping_add(partida.away_aggregate());
         *first_leg = 1;
         if *este as i32 + bonus_este as i32 == *outro as i32 + bonus_outro as i32 {
-            let f = *((partida + fixture::TIE_RULES) as *const u16);
+            let f = partida.tie_rules();
             let time_ok = f & 0x4000 == 0 || *((this + engine::PERIOD_END) as *const i16) > 0x3de;
             if f & 4 == 0 && time_ok {
                 let goals_away = *((this + engine::SCORE_SIDE1) as *const u8) as i32;
