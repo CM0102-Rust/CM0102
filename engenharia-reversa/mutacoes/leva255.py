@@ -13,7 +13,7 @@ MUTACOES = [
     ('cps4_selecao_0_9', 'write_usize(o + offer::FEE, offer_value_times(Offer(o), 0.8)); // cps4: the bonus value in the national team', 'write_usize(o + offer::FEE, offer_value_times(Offer(o), 0.9)); // mutacao: 0,9', 'cps_4 national team bonus'),
     ('cps4_time_0_9', 'write_usize(o + offer::FEE, offer_value_times(Offer(o), 0.8)); // cps4: the bonus value in the team', 'write_usize(o + offer::FEE, offer_value_times(Offer(o), 0.9)); // mutacao: 0,9', 'cps_4 team bonus'),
     ('cps5_moral_sem_sorteio', '                let r2 = friendly_random(m / 12); // cps5: the morale part', '                let r2 = m / 24; // mutacao: sem o sorteio', 'cps_5 drawn morale'),
-    ('cps5_desconto_sem_sorteio', '    if friendly_random(p.loyalty() as i32) == 0 { // cps5: the first discount', '    if p.loyalty() as i32 < 10 { // mutacao: sem o sorteio', 'cps_5 drawn manager'),
+    ('cps5_desconto_sem_sorteio', '    if friendly_random(p.loyalty() as i32) == 0 { // cps5: the first discount', '    if (p.loyalty() as i32) < 10 { // mutacao: sem o sorteio', 'cps_5 drawn manager'),
     ('cps5_moral_sobe_dois', '                        morale(p, 1, 1); // cps5: sobe o moral', '                        morale(p, 2, 1); // mutacao', 'cps_5 morale rises'),
     ('cps6_primeira_sem_sorteio', '    let r = friendly_random(n - q - 1); // cps6: the first person', '    let r = (n - q - 1) / 2; // mutacao: sem o sorteio', 'cps_6 absences of the day'),
     ('cps6_soma_sem_sorteio', '            if friendly_random(s as i8 as i32) == 0 { // cps6: the random draw of the sum', '            if s == 0 { // mutacao: sem o sorteio', 'cps_6 absence by sum'),

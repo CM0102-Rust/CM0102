@@ -29,6 +29,15 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 33: the compiler's own fixes
+
+`cargo fix` applies the compiler's 975 suggestions (unnecessary parentheses, unused imports and `mut`): warnings go from
+1,021 to 46 (what is left are values the faithful port assigns and never reads, and the borrowed `static mut`).
+`espacos_do_cargo_fix.py` removes the spaces it leaves where it dropped parentheses (`x as u8 ;`), only on changed lines.
+Both run at the end of `padronizar.sh`, so new batches enter without those warnings. 29 mutation anchors followed (2 by
+hand) and one replacement that no longer compiled (`(x as i32) < 10`). Proof: aa7e9c95 ×2 (the same as batch 32),
+detector equal, comparison 0.
+
 ## Readability batch 32: one safety contract, the engine's flags as atomics (decision (a))
 
 `estaticos_atomicos.py`: the engine's 71 file-level scalar `static mut` (dry-run flags, trampolines) become atomics with

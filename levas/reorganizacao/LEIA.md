@@ -28,6 +28,15 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 33 da legibilidade: as correções do próprio compilador
+
+`cargo fix` aplica as 975 sugestões do compilador (parênteses desnecessários, importações e `mut` sem uso): os avisos
+caem de 1.021 para 46 (o que sobra são valores que o porte fiel atribui e não lê, e os `static mut` emprestados).
+`espacos_do_cargo_fix.py` tira os espaços que ele deixa onde tirou parênteses (`x as u8 ;`), só nas linhas mudadas. Os
+dois rodam no fim do `padronizar.sh`, então as levas novas entram sem esses avisos. 29 âncoras de mutação seguidas (2 à
+mão) e uma troca que deixou de compilar (`(x as i32) < 10`). Prova: aa7e9c95 ×2 (a mesma da leva 32), detector igual,
+comparação 0.
+
 ## Leva 32 da legibilidade: um contrato de segurança, as flags do motor atômicas (decisão (a))
 
 `estaticos_atomicos.py`: os 71 `static mut` escalares de arquivo do motor (flags de ensaio, trampolins) viram atômicos
