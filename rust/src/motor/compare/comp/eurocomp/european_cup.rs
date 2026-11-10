@@ -279,12 +279,12 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_advance_stage(this: 
 pub(crate) unsafe extern "thiscall" fn compare_process_fixture(this: usize, game: usize, arg: u32) {
     let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PROCESS_FIXTURE);
-    let (a, b) = if !game.is_null() { (game.home_club(), game.away_club()) } else { (0, 0) };
-    if a == 0 || b == 0 {
+    let (a, b) = if !game.is_null() { (game.home_club(), game.away_club()) } else { (Club(0), Club(0)) };
+    if a == Club(0) || b == Club(0) {
         return o(this, game.addr(), arg); // simplification: without a club, original only
     }
-    let (ca, cb) = (nation_coefficient_word(Club(a)), nation_coefficient_word(Club(b)));
-    let (fa, fb) = (european_cup_club_finance(a), european_cup_club_finance(b));
+    let (ca, cb) = (nation_coefficient_word(Club(a.addr())), nation_coefficient_word(Club(b.addr())));
+    let (fa, fb) = (european_cup_club_finance(a.addr()), european_cup_club_finance(b.addr()));
     if ca == 0 || cb == 0 || fa == 0 || fb == 0 {
         return o(this, game.addr(), arg); // simplification: without nation, national team or finances, original only (crashes the same way)
     }

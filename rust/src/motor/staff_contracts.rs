@@ -114,7 +114,7 @@ pub(crate) unsafe fn reset_contract_morale(this: Contract, person: usize, club: 
     this.set_matches_left_out(0); // a felicidade
     this.set_unhappy_flag((0) as i8);
     if !club.is_null() && club.nation().addr() != 0 {
-        let r = exe::playerstats_get_language_fluency(read_usize(G_PLAYER_STATS), person, club, read_u8(club.nation().addr() + 0x77) as u32, 0) as i8;
+        let r = exe::playerstats_get_language_fluency(read_usize(G_PLAYER_STATS), person, club, (club.nation().first_language() as u8) as u32, 0) as i8;
         let c = if r > 10 { 10 } else { r } as u8;
         let b = this.squad_status();
         this.set_squad_status((b & 0xf0) | (c & 0xf));
@@ -570,7 +570,7 @@ pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
     if auxiliar != 0 && p.addr() == auxiliar {
         return 0;
     }
-    let funcoes = read_usize(t.addr() + contract::GRIEVANCES) as u32;
+    let funcoes = (t.grievances() as usize) as u32;
     if funcoes == 0 {
         return 0;
     }

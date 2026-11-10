@@ -28,7 +28,7 @@ pub(crate) fn replace_low_word(d: usize, a: i16) -> u32 {
 pub(crate) unsafe extern "thiscall" fn on_friendly_fixture_cancelled(this: usize, game: usize, who: usize) {
     let game = Fixture(game);
     let comp = game.competition();
-    if comp == read_usize(this + 4) {
+    if comp == Competition(read_usize(this + 4)) {
         crate::comparison::branch("cqg_10 cancelled friendly news");
         // 0x77bbe0: push 0; push 8; lea ecx -> thiscall; 0x785790: push v; push k; lea ecx -> thiscall, ret 8; 0x7861e0:
         // push club; push &news; mov ecx, [0xb7431c] -> thiscall, ret 8
@@ -40,15 +40,15 @@ pub(crate) unsafe extern "thiscall" fn on_friendly_fixture_cancelled(this: usize
         exe::newsitem_set_slot(nt, (2) as u32 as i8, game.day() as u32);
         exe::newsitem_set_slot(nt, (3) as u32 as i8, game.year() as u32);
         let m = game.home_club();
-        if who != m {
+        if who != m.addr() {
             exe::news_send_to_club_manager(read_usize(G_NEWS), nt, m);
         }
         let v = game.away_club();
-        if who != v {
+        if who != v.addr() {
             exe::news_send_to_club_manager(read_usize(G_NEWS), nt, v);
         }
     } else if this.wrapping_add(0xb1) != 0 {
-        let k = read_u8(comp).wrapping_sub(read_u8(this + friendly::FIRST_TOURNAMENT_COMP_ID)) as i8 as isize;
+        let k = read_u8(comp.addr()).wrapping_sub(read_u8(this + friendly::FIRST_TOURNAMENT_COMP_ID)) as i8 as isize;
         let tournament = (this + friendly::TOURNAMENT_SLOTS).wrapping_add((k * 0x69) as usize);
         if read_usize(tournament) != 0 && tournament != 0 {
             crate::comparison::branch("cqg_10 tournament cancelled");
@@ -56,10 +56,10 @@ pub(crate) unsafe extern "thiscall" fn on_friendly_fixture_cancelled(this: usize
             exe::friendly_cancel_tournament(this, tournament, 0);
         }
     }
-    if game.competition() == read_usize(this + 4) && read_usize(this + friendly::SCHEDULED_SLOT_LIST) != 0 {
+    if game.competition() == Competition(read_usize(this + 4)) && read_usize(this + friendly::SCHEDULED_SLOT_LIST) != 0 {
         // 0x5c6740: push +0x1c; push +0x20; push (dx = +0x28); push (ax = +0x2a); mov ecx, this -> thiscall, ret 0x10;
         // the registers carry in the high words what they already had (the pointer +0x14 and the +0x1c)
-        let v = exe::friendly_find_scheduled_friendly_slot(this, replace_low_word(game.home_club(), (game.day() as i16)), replace_low_word(game.competition(), (game.year() as i16)), (game.away_club() as u32) as usize, (game.home_club() as u32) as usize);
+        let v = exe::friendly_find_scheduled_friendly_slot(this, replace_low_word((game.home_club()).addr(), (game.day() as i16)), replace_low_word((game.competition()).addr(), (game.year() as i16)), (game.away_club().addr() as u32) as usize, (game.home_club().addr() as u32) as usize);
         if v != 0 {
             crate::comparison::branch("cqg_10 friendly slot free");
             core::ptr::write_unaligned((v + scheduled_friendly_slot::OPPONENT) as *mut u32, 0); // cqg10: the place stays free
@@ -103,14 +103,14 @@ pub(crate) unsafe extern "thiscall" fn friendly_cancel_national_fixture(this: us
     let mark = (game.squad_rules() as i16) as u16 & 0x300;
     let who = if mark == 0x100 {
         game.home_club()
-    } else if mark == 0x200 {
-        exe::database_get_national_u21_team(read_usize(game.home_club() + 0x53))
+    } else { Club(if mark == 0x200 {
+        exe::database_get_national_u21_team(read_usize((game.home_club()).addr() + 0x53))
     } else {
         0
-    };
-    if who != 0 && read_usize(who) as i32 != -1 {
+    }) };
+    if who != Club(0) && read_usize(who.addr()) as i32 != -1 {
         crate::comparison::branch("cqg_10 national team match the day before");
-        let id = read_usize(who) as u32;
+        let id = read_usize(who.addr()) as u32;
         let (mut d0, mut d1, mut d2) = ([0u8; 8], [0u8; 8], [0u8; 8]);
         let (p0, p1, p2) = (d0.as_mut_ptr() as usize, d1.as_mut_ptr() as usize, d2.as_mut_ptr() as usize);
         exe::new_date(p0, game.day() as u32, game.year() as u32);
@@ -225,7 +225,7 @@ pub(crate) unsafe extern "thiscall" fn cancel_tournament(this: usize, tournament
                 let r = Fixture(exe::fixture_manager_find_stored_fixture(read_usize(G_FIXTURE_MANAGER), j));
                 if !r.is_null() {
                     r.set_stage_index(0xff);
-                    r.set_competition(read_usize(this + 4));
+                    r.set_competition(Competition(read_usize(this + 4)));
                     core::ptr::write_unaligned(r.addr() as *mut usize, read_usize(KEY_CLUB_COMP_FRIENDLY));
                 }
             } else {
@@ -351,12 +351,12 @@ impl FriendlyComparerTrial {
 /// uma vai à lista (pela id) da outra: a de casa recebe a de fora, depois o contrário (0x68d0d0 com 4: thiscall na
 /// lista). No ensaio, só o registro.
 pub(crate) unsafe fn link_fixture_nations(this: usize, p: Fixture, usadas: usize, ens: Option<&mut FriendlyComparerTrial>) {
-    let na = read_usize(p.home_club() + 0x53);
+    let na = read_usize((p.home_club()).addr() + 0x53);
     if na == 0 {
         return;
     }
     let a = read_usize(na) as u32;
-    let nb = read_usize(p.away_club() + 0x53);
+    let nb = read_usize((p.away_club()).addr() + 0x53);
     if nb == 0 {
         return;
     }
@@ -658,7 +658,7 @@ pub(crate) unsafe extern "thiscall" fn friendly_check_match_invitation(this: usi
             games(read_usize(G_FIXTURE_MANAGER), day, year, day, year, read_usize(a) as u32, list, u32::MAX, 0xffff_fffe, u32::MAX);
             core::ptr::write_unaligned((list + llist::CURSOR) as *mut usize, read_usize(list + llist::HEAD));
             let p = Fixture(exe::llist_get_next(list));
-            let msg = if !p.is_null() && p.home_club() == a && p.away_club() == b {
+            let msg = if !p.is_null() && p.home_club() == Club(a) && p.away_club() == Club(b) {
                 0x9cd168 // "This match has been arranged."
             } else {
                 0x9cd148 // "This match has been cancelled."
@@ -977,13 +977,13 @@ pub(crate) unsafe extern "thiscall" fn find_human_club_tournament(this: usize) -
         return 0;
     }
     let club = manager.club_job();
-    if club == 0 {
+    if club == Club(0) {
         return 0;
     }
     for i in 0..0x7fusize {
         let t = this + 0x69 * i + 0xb1;
         let host = read_usize(t);
-        if host != 0 && host == club && read_usize(t + tournament_slot::IN_USE) != 0 {
+        if host != 0 && host == club.addr() && read_usize(t + tournament_slot::IN_USE) != 0 {
             return t;
         }
     }
@@ -1212,7 +1212,7 @@ pub(crate) unsafe extern "thiscall" fn find_human_club_open_invitation(this: usi
         return 0;
     }
     let club = manager.club_job();
-    if club == 0 {
+    if club == Club(0) {
         return 0;
     }
     core::ptr::write_unaligned((list + llist::CURSOR) as *mut usize, read_usize(list + llist::HEAD));
@@ -1221,7 +1221,7 @@ pub(crate) unsafe extern "thiscall" fn find_human_club_open_invitation(this: usi
         if m == 0 {
             return 0;
         }
-        if read_usize(m + friendly_match::REQUESTING_CLUB) == club && read_usize(m + 8) != 0 {
+        if read_usize(m + friendly_match::REQUESTING_CLUB) == club.addr() && read_usize(m + 8) != 0 {
             return m;
         }
     }
@@ -1389,7 +1389,7 @@ pub(crate) unsafe extern "thiscall" fn process_friendly_reply(this: usize, m: us
         let (c2, c3) = (read_usize(m + friendly_match::HOME_CLUB), read_usize(m + friendly_match::AWAY_CLUB));
         let stadium = read_usize(c2 + club::STADIUM);
         write_usize(pp.addr(), read_usize(comp));
-        pp.set_competition(comp);
+        pp.set_competition(Competition(comp));
         pp.set_stadium(stadium);
         pp.set_stadium_id(if stadium != 0 { read_usize(stadium) } else { usize::MAX });
         let sel = exe::database_is_national_team(c2); // push c2; add esp, 4 -> cdecl
@@ -1401,9 +1401,9 @@ pub(crate) unsafe extern "thiscall" fn process_friendly_reply(this: usize, m: us
             p[k] = 0xff;
         }
         pp.set_match_stats_slot(usize::MAX);
-        pp.set_home_club(c2); // cqa2: the friendly’s home side
+        pp.set_home_club(Club(c2)); // cqa2: the friendly’s home side
         pp.set_home_club_id(read_usize(c2));
-        pp.set_away_club(c3);
+        pp.set_away_club(Club(c3));
         pp.set_away_club_id(read_usize(c3));
         p[0x2a..0x2c].copy_from_slice(&core::ptr::read_unaligned(m as *const u16).to_le_bytes());
         p[0x28..0x2a].copy_from_slice(&core::ptr::read_unaligned((m + 2) as *const u16).to_le_bytes());

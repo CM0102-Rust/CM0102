@@ -15,7 +15,7 @@ pub(crate) unsafe fn ball_out_with(this: Engine, side_b: u8, call: AddEventCall)
         this.set_possession_side(-1);
     }
     let owner = this.ball_holder();
-    if owner != 0 {
+    if owner != MatchPlayer(0) {
         exe::match_player_release_possession(owner);
     }
     let (x, y) = (this.ball_x(), this.ball_y());
@@ -84,7 +84,7 @@ pub(crate) unsafe fn ball_out_with(this: Engine, side_b: u8, call: AddEventCall)
 pub(crate) unsafe fn play_with(j: MatchPlayer, strength: i16, height: f32, style: i8, strong: u8, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
     let special: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(FN_IS_UNDISPUTED_ACTION_CODE);
     let zero = |p: usize| (read_i8(p + 0x27) == 0) as u32;
-    let m = Engine(j.engine());
+    let m = Engine((j.engine()).addr());
     // the commentary’s seventh argument goes in the high part of the code (see `dispatch_tackle_calls`)
     let narrar7 = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, a3: u32, a4: u32, a5: u32, a7: i8| {
         call(FN_MATCH_EVENTS_ADD_EVENT, m.commentator(), [code | (a7 as u8 as u32) << 16, m.addr() as u32, a3, a4, a5]);
@@ -97,7 +97,7 @@ pub(crate) unsafe fn play_with(j: MatchPlayer, strength: i16, height: f32, style
     let espirra = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, spread: i32, shooter: usize| {
         call(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, m.addr(), [((j.cell_x() as u8) as u32), ((j.cell_y() as u8) as u32), (spread as u8 as u32) | ((j.side() as u8) as u32) << 8, 0, shooter as u32]);
     };
-    if exe::cm3_match_engine_get_goalkeeper(m, j.side()) == j.addr() || m.ball_holder() == j.addr() {
+    if exe::cm3_match_engine_get_goalkeeper(m, j.side()) == j.addr() || m.ball_holder() == j {
         return 0;
     }
     if m.possession_side() != j.side() && j.moment_work_rate() == 0 {
@@ -147,7 +147,7 @@ pub(crate) unsafe fn play_with(j: MatchPlayer, strength: i16, height: f32, style
     let (mut valor, lance) = if em_area && exe::cm3_match_engine_get_player_position(m, j) == 1 {
         choose()
     } else {
-        let ficha5c = read_i8(j.staff() + 0x5c) as i32;
+        let ficha5c = read_i8((j.staff()).addr() + 0x5c) as i32;
         if random(em_area as i32 * 500 + 100 + ficha5c * 200) != 0 {
             choose()
         } else {
@@ -215,7 +215,7 @@ pub(crate) unsafe fn play_with(j: MatchPlayer, strength: i16, height: f32, style
             m.set_ball_x(((j.cell_x() as u8)) as i8);
             m.set_ball_y(((j.cell_y() as u8)) as i8);
             m.set_possession_side((zero(j.addr()) as u8) as i8);
-            m.set_ball_holder((0) as usize);
+            m.set_ball_holder(MatchPlayer((0) as usize));
             if sound == 0x1f7a {
                 narrate(call, 0x1f7a, u32::MAX, zero(j.addr()), u32::MAX);
             }

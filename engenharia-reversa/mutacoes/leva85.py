@@ -9,7 +9,7 @@ MUTACOES = [
     ('a_pos', "            } else if x & 0x40 != 0 {\n                5", "            } else if x & 0x40 != 0 {\n                4"),
     ('a_l18', "            l1c = (l18 as f64 * q(0x968fa0)) as f32;", "            l1c = (l1c as f64 * q(0x968fa0)) as f32;"),
     ('a_cl', "            cl = cl.min(18);", "            cl = cl.min(17);"),
-    ('a_sorte50', "if c45() & 0x40000 != 0 && (read_i8(p + staff::PRESSURE) as i32) + l12f < random(50) {", "if c45() & 0x40000 != 0 && (read_i8(p + staff::PRESSURE) as i32) + l12f < random(40) {"),
+    ('a_sorte50', "if c45() & 0x40000 != 0 && (p.pressure() as i32) + l12f < random(50) {", "if c45() & 0x40000 != 0 && (p.pressure() as i32) + l12f < random(40) {"),
     ('a_gosta', "    if exe::staff_favours_club(person(), club_side()) != 0 {\n        wr(0xf5, (this.work_rate() as f64) + f(0x968990));", "    if exe::staff_favours_club(person(), club_side()) != 0 {\n        wr(0xf5, (this.work_rate() as f64) + f(0x96b008));"),
     ('a_hist', "                let r = e as f64 * f(0x96d664) / c0c as f64;", "                let r = e as f64 * f(0x969078) / c0c as f64;"),
     ('a_3b', "    *p3b = ftol(*p3b as f64 * q(0x968968) + q(0x96d6e0)) as i16;", "    *p3b = ftol(*p3b as f64 * q(0x968968) + q(0x968e08)) as i16;"),

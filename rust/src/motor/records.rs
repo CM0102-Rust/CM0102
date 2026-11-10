@@ -106,6 +106,12 @@ impl Addr for City {
     }
 }
 
+impl core::fmt::LowerHex for City {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `club` record in the game's memory (fields in `fields::club`). [pt] Um registro `club` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -524,6 +530,12 @@ impl Addr for Club {
     }
 }
 
+impl core::fmt::LowerHex for Club {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `competition` record in the game's memory (fields in `fields::competition`). [pt] Um registro `competition` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -579,12 +591,12 @@ impl Competition {
     }
     /// `competition::NATION` (+0x5d). Name: community.
     #[inline(always)]
-    pub(crate) unsafe fn nation(self) -> usize {
-        read_usize(self.0 + competition::NATION)
+    pub(crate) unsafe fn nation(self) -> Nation {
+        Nation(read_usize(self.0 + competition::NATION))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_nation(self, v: usize) {
-        write_usize(self.0 + competition::NATION, v)
+    pub(crate) unsafe fn set_nation(self, v: Nation) {
+        write_usize(self.0 + competition::NATION, v.0)
     }
     /// `competition::FOREGROUND_COLOUR` (+0x61). Name: community.
     #[inline(always)]
@@ -619,6 +631,12 @@ impl Addr for Competition {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for Competition {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -914,6 +932,12 @@ impl Addr for Contract {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for Contract {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -1249,6 +1273,12 @@ impl Addr for Nation {
     }
 }
 
+impl core::fmt::LowerHex for Nation {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `stadium` record in the game's memory (fields in `fields::stadium`). [pt] Um registro `stadium` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -1360,6 +1390,12 @@ impl Addr for Stadium {
     }
 }
 
+impl core::fmt::LowerHex for Stadium {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `staff` record in the game's memory (fields in `fields::staff`). [pt] Um registro `staff` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -1450,21 +1486,21 @@ impl Staff {
     }
     /// `staff::NATION` (+0x1a). Name: community.
     #[inline(always)]
-    pub(crate) unsafe fn nation(self) -> usize {
-        read_usize(self.0 + staff::NATION)
+    pub(crate) unsafe fn nation(self) -> Nation {
+        Nation(read_usize(self.0 + staff::NATION))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_nation(self, v: usize) {
-        write_usize(self.0 + staff::NATION, v)
+    pub(crate) unsafe fn set_nation(self, v: Nation) {
+        write_usize(self.0 + staff::NATION, v.0)
     }
     /// `staff::SECOND_NATION` (+0x1e). Name: community.
     #[inline(always)]
-    pub(crate) unsafe fn second_nation(self) -> usize {
-        read_usize(self.0 + staff::SECOND_NATION)
+    pub(crate) unsafe fn second_nation(self) -> Nation {
+        Nation(read_usize(self.0 + staff::SECOND_NATION))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_second_nation(self, v: usize) {
-        write_usize(self.0 + staff::SECOND_NATION, v)
+    pub(crate) unsafe fn set_second_nation(self, v: Nation) {
+        write_usize(self.0 + staff::SECOND_NATION, v.0)
     }
     /// `staff::INT_APPS` (+0x22). Name: community.
     #[inline(always)]
@@ -1486,12 +1522,12 @@ impl Staff {
     }
     /// `staff::NATIONAL_JOB` (+0x24). Name: community.
     #[inline(always)]
-    pub(crate) unsafe fn national_job(self) -> usize {
-        read_usize(self.0 + staff::NATIONAL_JOB)
+    pub(crate) unsafe fn national_job(self) -> Club {
+        Club(read_usize(self.0 + staff::NATIONAL_JOB))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_national_job(self, v: usize) {
-        write_usize(self.0 + staff::NATIONAL_JOB, v)
+    pub(crate) unsafe fn set_national_job(self, v: Club) {
+        write_usize(self.0 + staff::NATIONAL_JOB, v.0)
     }
     /// `staff::JOB_FOR_NATION` (+0x28). Name: community.
     #[inline(always)]
@@ -1509,12 +1545,12 @@ impl Staff {
     }
     /// `staff::CLUB_JOB` (+0x39). Name: community.
     #[inline(always)]
-    pub(crate) unsafe fn club_job(self) -> usize {
-        read_usize(self.0 + staff::CLUB_JOB)
+    pub(crate) unsafe fn club_job(self) -> Club {
+        Club(read_usize(self.0 + staff::CLUB_JOB))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_club_job(self, v: usize) {
-        write_usize(self.0 + staff::CLUB_JOB, v)
+    pub(crate) unsafe fn set_club_job(self, v: Club) {
+        write_usize(self.0 + staff::CLUB_JOB, v.0)
     }
     /// `staff::JOB_FOR_CLUB` (+0x3d). Name: community.
     #[inline(always)]
@@ -1715,6 +1751,12 @@ impl Addr for Staff {
     }
 }
 
+impl core::fmt::LowerHex for Staff {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `bra_nat_third` record in the game's memory (fields in `fields::bra_nat_third`). [pt] Um registro `bra_nat_third` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -1746,6 +1788,12 @@ impl Addr for BraNatThird {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for BraNatThird {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -1870,6 +1918,12 @@ impl Addr for ContractManagerFields {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for ContractManagerFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -2141,6 +2195,12 @@ impl Addr for Cup {
     }
 }
 
+impl core::fmt::LowerHex for Cup {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `eng_auto_cup` record in the game's memory (fields in `fields::eng_auto_cup`). [pt] Um registro `eng_auto_cup` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -2184,6 +2244,12 @@ impl Addr for EngAutoCup {
     }
 }
 
+impl core::fmt::LowerHex for EngAutoCup {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `eng_cc_cup` record in the game's memory (fields in `fields::eng_cc_cup`). [pt] Um registro `eng_cc_cup` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -2215,6 +2281,12 @@ impl Addr for EngCcCup {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for EngCcCup {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -2270,6 +2342,12 @@ impl Addr for EngFaCup {
     }
 }
 
+impl core::fmt::LowerHex for EngFaCup {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `fra_first` record in the game's memory (fields in `fields::fra_first`). [pt] Um registro `fra_first` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -2310,6 +2388,12 @@ impl Addr for FraFirst {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for FraFirst {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -2519,6 +2603,12 @@ impl Addr for Friendly {
     }
 }
 
+impl core::fmt::LowerHex for Friendly {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `injury_fields` record in the game's memory (fields in `fields::injury_fields`). [pt] Um registro `injury_fields` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -2634,6 +2724,12 @@ impl Addr for InjuryFields {
     }
 }
 
+impl core::fmt::LowerHex for InjuryFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `intertoto_cup` record in the game's memory (fields in `fields::intertoto_cup`). [pt] Um registro `intertoto_cup` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -2665,6 +2761,12 @@ impl Addr for IntertotoCup {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for IntertotoCup {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -3188,6 +3290,12 @@ impl Addr for League {
     }
 }
 
+impl core::fmt::LowerHex for League {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `player_regen_fields` record in the game's memory (fields in `fields::player_regen_fields`). [pt] Um registro `player_regen_fields` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -3318,6 +3426,12 @@ impl Addr for PlayerRegenFields {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for PlayerRegenFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -3463,6 +3577,12 @@ impl Addr for PlayerSearchFields {
     }
 }
 
+impl core::fmt::LowerHex for PlayerSearchFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `shortlist_manager_fields` record in the game's memory (fields in `fields::shortlist_manager_fields`). [pt] Um registro `shortlist_manager_fields` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -3563,6 +3683,12 @@ impl Addr for ShortlistManagerFields {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for ShortlistManagerFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -3889,6 +4015,12 @@ impl Addr for TransferManagerFields {
     }
 }
 
+impl core::fmt::LowerHex for TransferManagerFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `uefa_cup` record in the game's memory (fields in `fields::uefa_cup`). [pt] Um registro `uefa_cup` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -3920,6 +4052,12 @@ impl Addr for UefaCup {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for UefaCup {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -4170,6 +4308,12 @@ impl Addr for Offer {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for Offer {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -4720,6 +4864,12 @@ impl Addr for PlayerSheet {
     }
 }
 
+impl core::fmt::LowerHex for PlayerSheet {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `engine` record in the game's memory (fields in `fields::engine`). [pt] Um registro `engine` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -5139,12 +5289,12 @@ impl Engine {
     }
     /// `engine::PENDING_PLAY_OFFENDER` (+0x4761). Name: read.
     #[inline(always)]
-    pub(crate) unsafe fn pending_play_offender(self) -> usize {
-        read_usize(self.0 + engine::PENDING_PLAY_OFFENDER)
+    pub(crate) unsafe fn pending_play_offender(self) -> MatchPlayer {
+        MatchPlayer(read_usize(self.0 + engine::PENDING_PLAY_OFFENDER))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_pending_play_offender(self, v: usize) {
-        write_usize(self.0 + engine::PENDING_PLAY_OFFENDER, v)
+    pub(crate) unsafe fn set_pending_play_offender(self, v: MatchPlayer) {
+        write_usize(self.0 + engine::PENDING_PLAY_OFFENDER, v.0)
     }
     /// `engine::PENDING_PLAY_VICTIM` (+0x4765). Name: read.
     #[inline(always)]
@@ -5166,8 +5316,12 @@ impl Engine {
     }
     /// `engine::STANCE_FACTOR` (+0x476a). Name: read.
     #[inline(always)]
-    pub(crate) fn stance_factor_addr(self) -> usize {
-        self.0 + engine::STANCE_FACTOR
+    pub(crate) unsafe fn stance_factor(self) -> u32 {
+        read_u32(self.0 + engine::STANCE_FACTOR)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_stance_factor(self, v: u32) {
+        write_u32(self.0 + engine::STANCE_FACTOR, v)
     }
     /// `engine::ADJUSTED_PLAYER_ID` (+0x477a). Name: inferred.
     #[inline(always)]
@@ -5568,8 +5722,12 @@ impl Engine {
     }
     /// `engine::POSITION_TABLE` (+0x8ebc). Name: read.
     #[inline(always)]
-    pub(crate) fn position_table_addr(self) -> usize {
-        self.0 + engine::POSITION_TABLE
+    pub(crate) unsafe fn position_table(self) -> u32 {
+        read_u32(self.0 + engine::POSITION_TABLE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_position_table(self, v: u32) {
+        write_u32(self.0 + engine::POSITION_TABLE, v)
     }
     /// `engine::POSITION_TABLE_SIDE1` (+0x8ec0). Name: read.
     #[inline(always)]
@@ -5582,8 +5740,12 @@ impl Engine {
     }
     /// `engine::ARROW_TABLE` (+0x8ec4). Name: read.
     #[inline(always)]
-    pub(crate) fn arrow_table_addr(self) -> usize {
-        self.0 + engine::ARROW_TABLE
+    pub(crate) unsafe fn arrow_table(self) -> u32 {
+        read_u32(self.0 + engine::ARROW_TABLE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_arrow_table(self, v: u32) {
+        write_u32(self.0 + engine::ARROW_TABLE, v)
     }
     /// `engine::ARROW_TABLE_SIDE1` (+0x8ec8). Name: read.
     #[inline(always)]
@@ -5722,12 +5884,12 @@ impl Engine {
     }
     /// `engine::SIDE0_MANAGER` (+0x904d). Name: read.
     #[inline(always)]
-    pub(crate) unsafe fn side0_manager(self) -> usize {
-        read_usize(self.0 + engine::SIDE0_MANAGER)
+    pub(crate) unsafe fn side0_manager(self) -> Staff {
+        Staff(read_usize(self.0 + engine::SIDE0_MANAGER))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_side0_manager(self, v: usize) {
-        write_usize(self.0 + engine::SIDE0_MANAGER, v)
+    pub(crate) unsafe fn set_side0_manager(self, v: Staff) {
+        write_usize(self.0 + engine::SIDE0_MANAGER, v.0)
     }
     /// `engine::SIDE0_MANAGER_SHEET` (+0x9051). Name: read.
     #[inline(always)]
@@ -5754,8 +5916,12 @@ impl Engine {
     }
     /// `engine::PITCH_CONDITION` (+0x91d2). Name: read.
     #[inline(always)]
-    pub(crate) fn pitch_condition_addr(self) -> usize {
-        self.0 + engine::PITCH_CONDITION
+    pub(crate) unsafe fn pitch_condition(self) -> u32 {
+        read_u32(self.0 + engine::PITCH_CONDITION)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_pitch_condition(self, v: u32) {
+        write_u32(self.0 + engine::PITCH_CONDITION, v)
     }
     /// `engine::ACTION_FIRST_PLAYER` (+0x91de). Name: read.
     #[inline(always)]
@@ -5834,8 +6000,12 @@ impl Engine {
     }
     /// `engine::FORMATION_TABLE` (+0xf56e). Name: read.
     #[inline(always)]
-    pub(crate) fn formation_table_addr(self) -> usize {
-        self.0 + engine::FORMATION_TABLE
+    pub(crate) unsafe fn formation_table(self) -> u32 {
+        read_u32(self.0 + engine::FORMATION_TABLE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_formation_table(self, v: u32) {
+        write_u32(self.0 + engine::FORMATION_TABLE, v)
     }
     /// `engine::FORMATION_TABLE_SIDE1` (+0xf572). Name: read.
     #[inline(always)]
@@ -5866,12 +6036,12 @@ impl Engine {
     }
     /// `engine::BALL_HOLDER` (+0xf582). Name: read.
     #[inline(always)]
-    pub(crate) unsafe fn ball_holder(self) -> usize {
-        read_usize(self.0 + engine::BALL_HOLDER)
+    pub(crate) unsafe fn ball_holder(self) -> MatchPlayer {
+        MatchPlayer(read_usize(self.0 + engine::BALL_HOLDER))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_ball_holder(self, v: usize) {
-        write_usize(self.0 + engine::BALL_HOLDER, v)
+    pub(crate) unsafe fn set_ball_holder(self, v: MatchPlayer) {
+        write_usize(self.0 + engine::BALL_HOLDER, v.0)
     }
     /// `engine::NEAREST_TO_BALL` (+0xf586). Name: read.
     #[inline(always)]
@@ -5997,8 +6167,12 @@ impl Engine {
     }
     /// `engine::SIDE_STATS` (+0xf5bc). Name: read.
     #[inline(always)]
-    pub(crate) fn side_stats_addr(self) -> usize {
-        self.0 + engine::SIDE_STATS
+    pub(crate) unsafe fn side_stats(self) -> u8 {
+        read_u8(self.0 + engine::SIDE_STATS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_side_stats(self, v: u8) {
+        write_u8(self.0 + engine::SIDE_STATS, v)
     }
     /// `engine::SCORE` (+0xf5bd). Name: read.
     #[inline(always)]
@@ -6195,6 +6369,12 @@ impl Addr for Engine {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for Engine {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -6765,12 +6945,12 @@ impl MatchPlayer {
     }
     /// `match_player::STAFF` (+0x69). Name: read.
     #[inline(always)]
-    pub(crate) unsafe fn staff(self) -> usize {
-        read_usize(self.0 + match_player::STAFF)
+    pub(crate) unsafe fn staff(self) -> Staff {
+        Staff(read_usize(self.0 + match_player::STAFF))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_staff(self, v: usize) {
-        write_usize(self.0 + match_player::STAFF, v)
+    pub(crate) unsafe fn set_staff(self, v: Staff) {
+        write_usize(self.0 + match_player::STAFF, v.0)
     }
     /// `match_player::PLAYER` (+0x6d). Name: read.
     #[inline(always)]
@@ -7386,12 +7566,12 @@ impl MatchPlayer {
     }
     /// `match_player::ENGINE` (+0x19e). Name: read.
     #[inline(always)]
-    pub(crate) unsafe fn engine(self) -> usize {
-        read_usize(self.0 + match_player::ENGINE)
+    pub(crate) unsafe fn engine(self) -> Engine {
+        Engine(read_usize(self.0 + match_player::ENGINE))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_engine(self, v: usize) {
-        write_usize(self.0 + match_player::ENGINE, v)
+    pub(crate) unsafe fn set_engine(self, v: Engine) {
+        write_usize(self.0 + match_player::ENGINE, v.0)
     }
     /// `match_player::CONFIDENCE` (+0x1a2). Name: inferred.
     #[inline(always)]
@@ -7413,12 +7593,12 @@ impl MatchPlayer {
     }
     /// `match_player::MARKING_TARGET` (+0x1aa). Name: read.
     #[inline(always)]
-    pub(crate) unsafe fn marking_target(self) -> usize {
-        read_usize(self.0 + match_player::MARKING_TARGET)
+    pub(crate) unsafe fn marking_target(self) -> MatchPlayer {
+        MatchPlayer(read_usize(self.0 + match_player::MARKING_TARGET))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_marking_target(self, v: usize) {
-        write_usize(self.0 + match_player::MARKING_TARGET, v)
+    pub(crate) unsafe fn set_marking_target(self, v: MatchPlayer) {
+        write_usize(self.0 + match_player::MARKING_TARGET, v.0)
     }
     /// `match_player::MARKERS` (+0x1ae). Name: read.
     #[inline(always)]
@@ -7435,6 +7615,12 @@ impl Addr for MatchPlayer {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for MatchPlayer {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -7706,6 +7892,12 @@ impl Addr for NonPlayer {
     }
 }
 
+impl core::fmt::LowerHex for NonPlayer {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `preferences` record in the game's memory (fields in `fields::preferences`). [pt] Um registro `preferences` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -7794,6 +7986,12 @@ impl Addr for Preferences {
     }
 }
 
+impl core::fmt::LowerHex for Preferences {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `fixture` record in the game's memory (fields in `fields::fixture`). [pt] Um registro `fixture` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -7857,12 +8055,12 @@ impl Fixture {
     }
     /// `fixture::COMPETITION` (+0x14). Name: read.
     #[inline(always)]
-    pub(crate) unsafe fn competition(self) -> usize {
-        read_usize(self.0 + fixture::COMPETITION)
+    pub(crate) unsafe fn competition(self) -> Competition {
+        Competition(read_usize(self.0 + fixture::COMPETITION))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_competition(self, v: usize) {
-        write_usize(self.0 + fixture::COMPETITION, v)
+    pub(crate) unsafe fn set_competition(self, v: Competition) {
+        write_usize(self.0 + fixture::COMPETITION, v.0)
     }
     /// `fixture::STADIUM` (+0x18). Name: read.
     #[inline(always)]
@@ -7875,21 +8073,21 @@ impl Fixture {
     }
     /// `fixture::HOME_CLUB` (+0x1c). Name: read.
     #[inline(always)]
-    pub(crate) unsafe fn home_club(self) -> usize {
-        read_usize(self.0 + fixture::HOME_CLUB)
+    pub(crate) unsafe fn home_club(self) -> Club {
+        Club(read_usize(self.0 + fixture::HOME_CLUB))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_home_club(self, v: usize) {
-        write_usize(self.0 + fixture::HOME_CLUB, v)
+    pub(crate) unsafe fn set_home_club(self, v: Club) {
+        write_usize(self.0 + fixture::HOME_CLUB, v.0)
     }
     /// `fixture::AWAY_CLUB` (+0x20). Name: read.
     #[inline(always)]
-    pub(crate) unsafe fn away_club(self) -> usize {
-        read_usize(self.0 + fixture::AWAY_CLUB)
+    pub(crate) unsafe fn away_club(self) -> Club {
+        Club(read_usize(self.0 + fixture::AWAY_CLUB))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_away_club(self, v: usize) {
-        write_usize(self.0 + fixture::AWAY_CLUB, v)
+    pub(crate) unsafe fn set_away_club(self, v: Club) {
+        write_usize(self.0 + fixture::AWAY_CLUB, v.0)
     }
     /// `fixture::NEXT_ROUND_YEAR` (+0x24). Name: read.
     #[inline(always)]
@@ -8188,6 +8386,12 @@ impl Addr for Fixture {
     }
 }
 
+impl core::fmt::LowerHex for Fixture {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `match_manager` record in the game's memory (fields in `fields::match_manager`). [pt] Um registro `match_manager` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -8408,6 +8612,12 @@ impl Addr for MatchManager {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for MatchManager {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -8810,6 +9020,12 @@ impl Addr for Finance {
     }
 }
 
+impl core::fmt::LowerHex for Finance {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `stadium_obj` record in the game's memory (fields in `fields::stadium_obj`). [pt] Um registro `stadium_obj` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -8898,6 +9114,12 @@ impl Addr for StadiumObj {
     }
 }
 
+impl core::fmt::LowerHex for StadiumObj {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `fixture_manager` record in the game's memory (fields in `fields::fixture_manager`). [pt] Um registro `fixture_manager` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -8982,6 +9204,12 @@ impl Addr for FixtureManager {
     }
 }
 
+impl core::fmt::LowerHex for FixtureManager {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `age_record` record in the game's memory (fields in `fields::age_record`). [pt] Um registro `age_record` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -9014,6 +9242,12 @@ impl Addr for AgeRecord {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for AgeRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -9069,6 +9303,12 @@ impl Addr for AppearanceClause {
     }
 }
 
+impl core::fmt::LowerHex for AppearanceClause {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `ban_appeal` record in the game's memory (fields in `fields::ban_appeal`). [pt] Um registro `ban_appeal` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -9114,6 +9354,12 @@ impl Addr for BanAppeal {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for BanAppeal {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -9205,6 +9451,12 @@ impl Addr for BanRecord {
     }
 }
 
+impl core::fmt::LowerHex for BanRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `ban_slot` record in the game's memory (fields in `fields::ban_slot`). [pt] Um registro `ban_slot` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -9245,6 +9497,12 @@ impl Addr for BanSlot {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for BanSlot {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -9399,6 +9657,12 @@ impl Addr for BoardRecord {
     }
 }
 
+impl core::fmt::LowerHex for BoardRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `career_entry` record in the game's memory (fields in `fields::career_entry`). [pt] Um registro `career_entry` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -9487,6 +9751,12 @@ impl Addr for CareerEntry {
     }
 }
 
+impl core::fmt::LowerHex for CareerEntry {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `club_discipline_record` record in the game's memory (fields in `fields::club_discipline_record`). [pt] Um registro `club_discipline_record` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -9532,6 +9802,12 @@ impl Addr for ClubDisciplineRecord {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for ClubDisciplineRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -9765,6 +10041,12 @@ impl Addr for ClubRecord {
     }
 }
 
+impl core::fmt::LowerHex for ClubRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `club_record_entry` record in the game's memory (fields in `fields::club_record_entry`). [pt] Um registro `club_record_entry` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -9814,6 +10096,12 @@ impl Addr for ClubRecordEntry {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for ClubRecordEntry {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -9932,6 +10220,12 @@ impl Addr for ClubRecordsFields {
     }
 }
 
+impl core::fmt::LowerHex for ClubRecordsFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `club_shortlist` record in the game's memory (fields in `fields::club_shortlist`). [pt] Um registro `club_shortlist` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -9972,6 +10266,12 @@ impl Addr for ClubShortlist {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for ClubShortlist {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -10079,6 +10379,12 @@ impl Addr for CommentaryQueue {
     }
 }
 
+impl core::fmt::LowerHex for CommentaryQueue {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `comp_stats_club` record in the game's memory (fields in `fields::comp_stats_club`). [pt] Um registro `comp_stats_club` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -10137,6 +10443,12 @@ impl Addr for CompStatsClub {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for CompStatsClub {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -10260,6 +10572,12 @@ impl Addr for ContractOffer {
     }
 }
 
+impl core::fmt::LowerHex for ContractOffer {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `contract_talks` record in the game's memory (fields in `fields::contract_talks`). [pt] Um registro `contract_talks` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -10303,6 +10621,12 @@ impl Addr for ContractTalks {
     }
 }
 
+impl core::fmt::LowerHex for ContractTalks {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `count_record` record in the game's memory (fields in `fields::count_record`). [pt] Um registro `count_record` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -10335,6 +10659,12 @@ impl Addr for CountRecord {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for CountRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -10552,6 +10882,12 @@ impl Addr for CupRound {
     }
 }
 
+impl core::fmt::LowerHex for CupRound {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `cup_tie` record in the game's memory (fields in `fields::cup_tie`). [pt] Um registro `cup_tie` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -10667,6 +11003,12 @@ impl Addr for CupTie {
     }
 }
 
+impl core::fmt::LowerHex for CupTie {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `day_competition` record in the game's memory (fields in `fields::day_competition`). [pt] Um registro `day_competition` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -10746,6 +11088,12 @@ impl Addr for DayCompetition {
     }
 }
 
+impl core::fmt::LowerHex for DayCompetition {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `day_group` record in the game's memory (fields in `fields::day_group`). [pt] Um registro `day_group` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -10813,6 +11161,12 @@ impl Addr for DayGroup {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for DayGroup {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -10994,6 +11348,12 @@ impl Addr for DayMatch {
     }
 }
 
+impl core::fmt::LowerHex for DayMatch {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `decision_date` record in the game's memory (fields in `fields::decision_date`). [pt] Um registro `decision_date` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -11043,6 +11403,12 @@ impl Addr for DecisionDate {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for DecisionDate {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -11166,6 +11532,12 @@ impl Addr for DisciplineFields {
     }
 }
 
+impl core::fmt::LowerHex for DisciplineFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `discipline_record` record in the game's memory (fields in `fields::discipline_record`). [pt] Um registro `discipline_record` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -11215,6 +11587,12 @@ impl Addr for DisciplineRecord {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for DisciplineRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -11306,6 +11684,12 @@ impl Addr for EnglishNameTables {
     }
 }
 
+impl core::fmt::LowerHex for EnglishNameTables {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `event_type` record in the game's memory (fields in `fields::event_type`). [pt] Um registro `event_type` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -11358,6 +11742,12 @@ impl Addr for EventType {
     }
 }
 
+impl core::fmt::LowerHex for EventType {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `exchange_player` record in the game's memory (fields in `fields::exchange_player`). [pt] Um registro `exchange_player` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -11401,6 +11791,12 @@ impl Addr for ExchangePlayer {
     }
 }
 
+impl core::fmt::LowerHex for ExchangePlayer {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `fans_player_record` record in the game's memory (fields in `fields::fans_player_record`). [pt] Um registro `fans_player_record` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -11432,6 +11828,12 @@ impl Addr for FansPlayerRecord {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for FansPlayerRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -11475,6 +11877,12 @@ impl Addr for FreeTransferEntry {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for FreeTransferEntry {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -11544,6 +11952,12 @@ impl Addr for FriendlyMatch {
     }
 }
 
+impl core::fmt::LowerHex for FriendlyMatch {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `future_transfer` record in the game's memory (fields in `fields::future_transfer`). [pt] Um registro `future_transfer` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -11575,6 +11989,12 @@ impl Addr for FutureTransfer {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for FutureTransfer {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -11615,6 +12035,12 @@ impl Addr for GoalsInMatchRecord {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for GoalsInMatchRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -11661,6 +12087,12 @@ impl Addr for HeldBan {
     }
 }
 
+impl core::fmt::LowerHex for HeldBan {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `human_manager_sheet` record in the game's memory (fields in `fields::human_manager_sheet`). [pt] Um registro `human_manager_sheet` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -11704,6 +12136,12 @@ impl Addr for HumanManagerSheet {
     }
 }
 
+impl core::fmt::LowerHex for HumanManagerSheet {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `illness_outbreak` record in the game's memory (fields in `fields::illness_outbreak`). [pt] Um registro `illness_outbreak` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -11735,6 +12173,12 @@ impl Addr for IllnessOutbreak {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for IllnessOutbreak {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -11817,6 +12261,12 @@ impl Addr for InjuryEntry {
     }
 }
 
+impl core::fmt::LowerHex for InjuryEntry {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `instalment` record in the game's memory (fields in `fields::instalment`). [pt] Um registro `instalment` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -11866,6 +12316,12 @@ impl Addr for Instalment {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for Instalment {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -11953,6 +12409,12 @@ impl Addr for IntlDateEntry {
     }
 }
 
+impl core::fmt::LowerHex for IntlDateEntry {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `job_vacancy` record in the game's memory (fields in `fields::job_vacancy`). [pt] Um registro `job_vacancy` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -11984,6 +12446,12 @@ impl Addr for JobVacancy {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for JobVacancy {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -12030,6 +12498,12 @@ impl Addr for KeyNationRecord {
     }
 }
 
+impl core::fmt::LowerHex for KeyNationRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `language_entry` record in the game's memory (fields in `fields::language_entry`). [pt] Um registro `language_entry` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -12070,6 +12544,12 @@ impl Addr for LanguageEntry {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for LanguageEntry {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -12140,6 +12620,12 @@ impl Addr for LeagueProjection {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for LeagueProjection {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -12237,6 +12723,12 @@ impl Addr for LeagueRoundDate {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for LeagueRoundDate {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -12517,6 +13009,12 @@ impl Addr for LeagueTableRow {
     }
 }
 
+impl core::fmt::LowerHex for LeagueTableRow {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `lineup_row` record in the game's memory (fields in `fields::lineup_row`). [pt] Um registro `lineup_row` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -12575,6 +13073,12 @@ impl Addr for LineupRow {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for LineupRow {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -12756,6 +13260,12 @@ impl Addr for LiveMatch {
     }
 }
 
+impl core::fmt::LowerHex for LiveMatch {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `llist` record in the game's memory (fields in `fields::llist`). [pt] Um registro `llist` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -12814,6 +13324,12 @@ impl Addr for Llist {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for Llist {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -12878,6 +13394,12 @@ impl Addr for LlistNode {
     }
 }
 
+impl core::fmt::LowerHex for LlistNode {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `loan_negotiation` record in the game's memory (fields in `fields::loan_negotiation`). [pt] Um registro `loan_negotiation` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -12909,6 +13431,12 @@ impl Addr for LoanNegotiation {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for LoanNegotiation {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -12948,6 +13476,12 @@ impl Addr for ManOfMatchRecord {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for ManOfMatchRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -13018,6 +13552,12 @@ impl Addr for ManagerManagerFields {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for ManagerManagerFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -13453,6 +13993,12 @@ impl Addr for ManagerRecord {
     }
 }
 
+impl core::fmt::LowerHex for ManagerRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `match_day_fields` record in the game's memory (fields in `fields::match_day_fields`). [pt] Um registro `match_day_fields` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -13631,6 +14177,12 @@ impl Addr for MatchDayFields {
     }
 }
 
+impl core::fmt::LowerHex for MatchDayFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `match_events_fields` record in the game's memory (fields in `fields::match_events_fields`). [pt] Um registro `match_events_fields` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -13676,6 +14228,12 @@ impl Addr for MatchEventsFields {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for MatchEventsFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -14359,6 +14917,12 @@ impl Addr for MatchRecord {
     }
 }
 
+impl core::fmt::LowerHex for MatchRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `match_record_row` record in the game's memory (fields in `fields::match_record_row`). [pt] Um registro `match_record_row` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -14539,6 +15103,12 @@ impl Addr for MatchRecordRow {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for MatchRecordRow {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -14818,6 +15388,12 @@ impl Addr for MatchRecordTeam {
     }
 }
 
+impl core::fmt::LowerHex for MatchRecordTeam {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `match_spectators` record in the game's memory (fields in `fields::match_spectators`). [pt] Um registro `match_spectators` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -14872,6 +15448,12 @@ impl Addr for MatchSpectators {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for MatchSpectators {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -14941,6 +15523,12 @@ impl Addr for MatchStats {
     }
 }
 
+impl core::fmt::LowerHex for MatchStats {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `match_stats_entry` record in the game's memory (fields in `fields::match_stats_entry`). [pt] Um registro `match_stats_entry` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -14999,6 +15587,12 @@ impl Addr for MatchStatsEntry {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for MatchStatsEntry {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -15073,6 +15667,12 @@ impl Addr for MatchStatsRecord {
     }
 }
 
+impl core::fmt::LowerHex for MatchStatsRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `match_summary` record in the game's memory (fields in `fields::match_summary`). [pt] Um registro `match_summary` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -15104,6 +15704,12 @@ impl Addr for MatchSummary {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for MatchSummary {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -15186,6 +15792,12 @@ impl Addr for MediaFields {
     }
 }
 
+impl core::fmt::LowerHex for MediaFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `nation_index_item` record in the game's memory (fields in `fields::nation_index_item`). [pt] Um registro `nation_index_item` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -15217,6 +15829,12 @@ impl Addr for NationIndexItem {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for NationIndexItem {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -15302,6 +15920,12 @@ impl Addr for NationalSquadRecord {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for NationalSquadRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -15411,6 +16035,12 @@ impl Addr for NationalTeamsFields {
     }
 }
 
+impl core::fmt::LowerHex for NationalTeamsFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `news_fields` record in the game's memory (fields in `fields::news_fields`). [pt] Um registro `news_fields` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -15460,6 +16090,12 @@ impl Addr for NewsFields {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for NewsFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -15556,6 +16192,12 @@ impl Addr for NewsItem {
     }
 }
 
+impl core::fmt::LowerHex for NewsItem {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `official` record in the game's memory (fields in `fields::official`). [pt] Um registro `official` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -15632,6 +16274,12 @@ impl Addr for Official {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for Official {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -15714,6 +16362,12 @@ impl Addr for OfficialStats {
     }
 }
 
+impl core::fmt::LowerHex for OfficialStats {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `officials_comp_slot` record in the game's memory (fields in `fields::officials_comp_slot`). [pt] Um registro `officials_comp_slot` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -15775,6 +16429,12 @@ impl Addr for OfficialsCompSlot {
     }
 }
 
+impl core::fmt::LowerHex for OfficialsCompSlot {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `officials_manager_fields` record in the game's memory (fields in `fields::officials_manager_fields`). [pt] Um registro `officials_manager_fields` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -15833,6 +16493,12 @@ impl Addr for OfficialsManagerFields {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for OfficialsManagerFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -15908,6 +16574,12 @@ impl Addr for OfficialsNationBlock {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for OfficialsNationBlock {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -16004,6 +16676,12 @@ impl Addr for PastTransfer {
     }
 }
 
+impl core::fmt::LowerHex for PastTransfer {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `person_transfer_record` record in the game's memory (fields in `fields::person_transfer_record`). [pt] Um registro `person_transfer_record` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -16062,6 +16740,12 @@ impl Addr for PersonTransferRecord {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for PersonTransferRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -16171,6 +16855,12 @@ impl Addr for PhysicalRecord {
     }
 }
 
+impl core::fmt::LowerHex for PhysicalRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `planned_friendly` record in the game's memory (fields in `fields::planned_friendly`). [pt] Um registro `planned_friendly` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -16225,6 +16915,12 @@ impl Addr for PlannedFriendly {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for PlannedFriendly {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -16334,6 +17030,12 @@ impl Addr for PlayerCategoryStats {
     }
 }
 
+impl core::fmt::LowerHex for PlayerCategoryStats {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `player_stats_entry` record in the game's memory (fields in `fields::player_stats_entry`). [pt] Um registro `player_stats_entry` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -16410,6 +17112,12 @@ impl Addr for PlayerStatsEntry {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for PlayerStatsEntry {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -16555,6 +17263,12 @@ impl Addr for PlayerStatsFields {
     }
 }
 
+impl core::fmt::LowerHex for PlayerStatsFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `preseason_candidate` record in the game's memory (fields in `fields::preseason_candidate`). [pt] Um registro `preseason_candidate` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -16643,6 +17357,12 @@ impl Addr for PreseasonCandidate {
     }
 }
 
+impl core::fmt::LowerHex for PreseasonCandidate {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `rating_record` record in the game's memory (fields in `fields::rating_record`). [pt] Um registro `rating_record` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -16691,6 +17411,12 @@ impl Addr for RatingRecord {
     }
 }
 
+impl core::fmt::LowerHex for RatingRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `record_holder` record in the game's memory (fields in `fields::record_holder`). [pt] Um registro `record_holder` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -16718,6 +17444,12 @@ impl Addr for RecordHolder {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for RecordHolder {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -16761,6 +17493,12 @@ impl Addr for RecordNewsItem {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for RecordNewsItem {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -16816,6 +17554,12 @@ impl Addr for RegenPoolItem {
     }
 }
 
+impl core::fmt::LowerHex for RegenPoolItem {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `regen_queue_entry` record in the game's memory (fields in `fields::regen_queue_entry`). [pt] Um registro `regen_queue_entry` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -16856,6 +17600,12 @@ impl Addr for RegenQueueEntry {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for RegenQueueEntry {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -16952,6 +17702,12 @@ impl Addr for RetirementEntry {
     }
 }
 
+impl core::fmt::LowerHex for RetirementEntry {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `ruling_body` record in the game's memory (fields in `fields::ruling_body`). [pt] Um registro `ruling_body` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17022,6 +17778,12 @@ impl Addr for RulingBody {
     }
 }
 
+impl core::fmt::LowerHex for RulingBody {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `ruling_body_entry` record in the game's memory (fields in `fields::ruling_body_entry`). [pt] Um registro `ruling_body_entry` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17065,6 +17827,12 @@ impl Addr for RulingBodyEntry {
     }
 }
 
+impl core::fmt::LowerHex for RulingBodyEntry {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `run_record` record in the game's memory (fields in `fields::run_record`). [pt] Um registro `run_record` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17097,6 +17865,12 @@ impl Addr for RunRecord {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for RunRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -17161,6 +17935,12 @@ impl Addr for ScheduledFriendlySlot {
     }
 }
 
+impl core::fmt::LowerHex for ScheduledFriendlySlot {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `scout_manager_fields` record in the game's memory (fields in `fields::scout_manager_fields`). [pt] Um registro `scout_manager_fields` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17214,6 +17994,12 @@ impl Addr for ScoutManagerFields {
     }
 }
 
+impl core::fmt::LowerHex for ScoutManagerFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `scout_report` record in the game's memory (fields in `fields::scout_report`). [pt] Um registro `scout_report` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17254,6 +18040,12 @@ impl Addr for ScoutReport {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for ScoutReport {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -17318,6 +18110,12 @@ impl Addr for ScoutRequest {
     }
 }
 
+impl core::fmt::LowerHex for ScoutRequest {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `sell_on_clause` record in the game's memory (fields in `fields::sell_on_clause`). [pt] Um registro `sell_on_clause` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17370,6 +18168,12 @@ impl Addr for SellOnClause {
     }
 }
 
+impl core::fmt::LowerHex for SellOnClause {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `shortlist_pair` record in the game's memory (fields in `fields::shortlist_pair`). [pt] Um registro `shortlist_pair` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17401,6 +18205,12 @@ impl Addr for ShortlistPair {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for ShortlistPair {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -17506,6 +18316,12 @@ impl Addr for ShortlistSlot {
     }
 }
 
+impl core::fmt::LowerHex for ShortlistSlot {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `staff_records_fields` record in the game's memory (fields in `fields::staff_records_fields`). [pt] Um registro `staff_records_fields` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17594,6 +18410,12 @@ impl Addr for StaffRecordsFields {
     }
 }
 
+impl core::fmt::LowerHex for StaffRecordsFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `staff_state` record in the game's memory (fields in `fields::staff_state`). [pt] Um registro `staff_state` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17652,6 +18474,12 @@ impl Addr for StaffState {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for StaffState {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -17727,6 +18555,12 @@ impl Addr for StoryLogEntry {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for StoryLogEntry {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -17855,6 +18689,12 @@ impl Addr for TacticsFields {
     }
 }
 
+impl core::fmt::LowerHex for TacticsFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `tactics_row` record in the game's memory (fields in `fields::tactics_row`). [pt] Um registro `tactics_row` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17912,6 +18752,12 @@ impl Addr for TacticsRow {
     }
 }
 
+impl core::fmt::LowerHex for TacticsRow {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `tally_record` record in the game's memory (fields in `fields::tally_record`). [pt] Um registro `tally_record` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -17939,6 +18785,12 @@ impl Addr for TallyRecord {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for TallyRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -18036,6 +18888,12 @@ impl Addr for TournamentSlot {
     }
 }
 
+impl core::fmt::LowerHex for TournamentSlot {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `transfer_fee_record` record in the game's memory (fields in `fields::transfer_fee_record`). [pt] Um registro `transfer_fee_record` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -18091,6 +18949,12 @@ impl Addr for TransferFeeRecord {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for TransferFeeRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -18182,6 +19046,12 @@ impl Addr for TransferInterest {
     }
 }
 
+impl core::fmt::LowerHex for TransferInterest {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `transfer_rules` record in the game's memory (fields in `fields::transfer_rules`). [pt] Um registro `transfer_rules` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -18234,6 +19104,12 @@ impl Addr for TransferRules {
     }
 }
 
+impl core::fmt::LowerHex for TransferRules {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `transfer_window` record in the game's memory (fields in `fields::transfer_window`). [pt] Um registro `transfer_window` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -18277,6 +19153,12 @@ impl Addr for TransferWindow {
     }
 }
 
+impl core::fmt::LowerHex for TransferWindow {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `undo_slot` record in the game's memory (fields in `fields::undo_slot`). [pt] Um registro `undo_slot` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -18317,6 +19199,12 @@ impl Addr for UndoSlot {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for UndoSlot {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -18381,6 +19269,12 @@ impl Addr for WorkPermit {
     }
 }
 
+impl core::fmt::LowerHex for WorkPermit {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `cm_date` record in the game's memory (fields in `fields::cm_date`). [pt] Um registro `cm_date` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -18421,6 +19315,12 @@ impl Addr for CmDate {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for CmDate {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -18467,6 +19367,12 @@ impl Addr for AfricanNations {
     }
 }
 
+impl core::fmt::LowerHex for AfricanNations {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `awol_fields` record in the game's memory (fields in `fields::awol_fields`). [pt] Um registro `awol_fields` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -18498,6 +19404,12 @@ impl Addr for AwolFields {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for AwolFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -18562,6 +19474,12 @@ impl Addr for CompHistoryRow {
     }
 }
 
+impl core::fmt::LowerHex for CompHistoryRow {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `con_merc_cup` record in the game's memory (fields in `fields::con_merc_cup`). [pt] Um registro `con_merc_cup` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -18598,6 +19516,12 @@ impl Addr for ConMercCup {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for ConMercCup {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -18644,6 +19568,12 @@ impl Addr for ConmebolLiber {
     }
 }
 
+impl core::fmt::LowerHex for ConmebolLiber {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `conmebol_merc` record in the game's memory (fields in `fields::conmebol_merc`). [pt] Um registro `conmebol_merc` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -18680,6 +19610,12 @@ impl Addr for ConmebolMerc {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for ConmebolMerc {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -18726,6 +19662,12 @@ impl Addr for ConmebolSeeding {
     }
 }
 
+impl core::fmt::LowerHex for ConmebolSeeding {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `euro_champ_qual` record in the game's memory (fields in `fields::euro_champ_qual`). [pt] Um registro `euro_champ_qual` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -18757,6 +19699,12 @@ impl Addr for EuroChampQual {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for EuroChampQual {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -18837,6 +19785,12 @@ impl Addr for FormationFields {
     }
 }
 
+impl core::fmt::LowerHex for FormationFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `goldcup` record in the game's memory (fields in `fields::goldcup`). [pt] Um registro `goldcup` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -18880,6 +19834,12 @@ impl Addr for Goldcup {
     }
 }
 
+impl core::fmt::LowerHex for Goldcup {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `grid_cell` record in the game's memory (fields in `fields::grid_cell`). [pt] Um registro `grid_cell` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -18916,6 +19876,12 @@ impl Addr for GridCell {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for GridCell {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -18989,6 +19955,12 @@ impl Addr for MatchIncident {
     }
 }
 
+impl core::fmt::LowerHex for MatchIncident {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `nation_club_bucket` record in the game's memory (fields in `fields::nation_club_bucket`). [pt] Um registro `nation_club_bucket` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -19029,6 +20001,12 @@ impl Addr for NationClubBucket {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for NationClubBucket {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
@@ -19138,6 +20116,12 @@ impl Addr for NationNameIndex {
     }
 }
 
+impl core::fmt::LowerHex for NationNameIndex {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `oceania_club_champ` record in the game's memory (fields in `fields::oceania_club_champ`). [pt] Um registro `oceania_club_champ` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -19177,6 +20161,12 @@ impl Addr for OceaniaClubChamp {
     }
 }
 
+impl core::fmt::LowerHex for OceaniaClubChamp {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
 /// A `uefa_seeding` record in the game's memory (fields in `fields::uefa_seeding`). [pt] Um registro `uefa_seeding` na memória do jogo.
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -19213,6 +20203,12 @@ impl Addr for UefaSeeding {
     #[inline(always)]
     fn addr(self) -> usize {
         self.0
+    }
+}
+
+impl core::fmt::LowerHex for UefaSeeding {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 

@@ -15,7 +15,7 @@ pub(crate) unsafe extern "thiscall" fn compare_restart_play(m: usize) {
     reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = Fixture(m.r#match());
     for clube in [t.home_club(), t.away_club()] {
-        reg.extend(club_rows(clube));
+        reg.extend(club_rows(clube.addr()));
     }
     let write = RECORD_RESTART.swap(true, Relaxed);
     let a7 = RECORD_A7.swap(true, Relaxed);
@@ -159,12 +159,12 @@ pub(crate) unsafe fn compare_com_fita<R>(reg: Vec<(usize, usize)>, original: imp
 /// Comparer for `play`.
 pub(crate) unsafe fn compare_play(p: MatchPlayer, a1: u32, a2: u32, a3: u32, a4: u32, rodar: &dyn Fn() -> u32) -> u8 {
     use std::sync::atomic::Ordering::Relaxed;
-    let m = Engine(p.engine());
+    let m = Engine((p.engine()).addr());
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = Fixture(m.r#match());
     for clube in [t.home_club(), t.away_club()] {
-        reg.extend(club_rows(clube));
+        reg.extend(club_rows(clube.addr()));
     }
     let write = RECORD_716.swap(true, Relaxed);
     let a7 = RECORD_A7.swap(true, Relaxed);
@@ -287,7 +287,7 @@ pub(crate) unsafe extern "thiscall" fn compare_quick_simulation(m: usize) {
     let t = Fixture(m.r#match());
     reg.push((t.addr(), 0x50));
     for clube in [t.home_club(), t.away_club()] {
-        reg.extend(club_rows(clube));
+        reg.extend(club_rows(clube.addr()));
     }
     let write = RECORD_716.swap(true, std::sync::atomic::Ordering::Relaxed);
     let (_, _, igual, sequencia, k) = compare_com_fita(reg, || {
@@ -492,7 +492,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_substitutions(m: usize) {
     reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = Fixture(m.r#match());
     for clube in [t.home_club(), t.away_club()] {
-        reg.extend(club_rows(clube));
+        reg.extend(club_rows(clube.addr()));
     }
     let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(m.addr()), |chamar| {
         apply_substitutions_with(m, &mut |rotina, this, args| {
@@ -520,7 +520,7 @@ pub(crate) unsafe extern "thiscall" fn compare_punishments(m: usize, first: usiz
     reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = Fixture(m.r#match());
     for clube in [t.home_club(), t.away_club()] {
-        reg.extend(club_rows(clube));
+        reg.extend(club_rows(clube.addr()));
     }
     RECORD_716.store(true, std::sync::atomic::Ordering::Relaxed);
     let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(m.addr(), first), |chamar| {
@@ -577,7 +577,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_foul(m: usize) -> u8 {
     reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = Fixture(m.r#match());
     for clube in [t.home_club(), t.away_club()] {
-        reg.extend(club_rows(clube));
+        reg.extend(club_rows(clube.addr()));
     }
     let kind = m.pending_play_kind();
     RECORD_716.store(true, std::sync::atomic::Ordering::Relaxed);
@@ -611,7 +611,7 @@ pub(crate) unsafe extern "thiscall" fn compare_contest(m: usize, x: u32, y: u32)
     reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = Fixture(m.r#match());
     for clube in [t.home_club(), t.away_club()] {
-        reg.extend(club_rows(clube));
+        reg.extend(club_rows(clube.addr()));
     }
     let write = RECORD_716.swap(true, std::sync::atomic::Ordering::Relaxed);
     let (r, rr, igual, sequencia, k) = compare_com_fita(reg, || o(m.addr(), x, y), |chamar| {
@@ -661,7 +661,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_left(m: usize, j: usize, j
     let t = Fixture(m.r#match());
     for clube in [t.home_club(), t.away_club()] {
         for humano in 0..2u32 {
-            let l = if clube == 0 { -1 } else { row(clube, humano) };
+            let l = if clube == Club(0) { -1 } else { row(clube.addr(), humano) };
             if l != -1 {
                 reg.push(((*((taticas + tactics_fields::ROWS) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)) + 0x52, 4));
             }

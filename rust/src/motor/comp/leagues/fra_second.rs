@@ -86,7 +86,7 @@ pub(crate) unsafe fn construct_division_league(this: League, ano: u32, registro:
     }
     exe::league_set_predicted_positions(this);
     if p.low {
-        let nacao = Nation(read_usize(this.competition().addr() + 0x5d));
+        let nacao = Nation(this.competition().nation().addr());
         if nacao.league_selected() & 4 == 0 { // cqm5: the Spanish lower division
             crate::comparison::branch("cqm_5 spanish lower division");
             let e = exe::crt_operator_new(0xee);
@@ -161,7 +161,7 @@ pub(crate) unsafe fn compare_division_league_ctor(name: &str, this: League, year
     if this.stage_index() == 0xff && this.comp_stats() != 0 {
         ok = ok && this.stage_count() == 0 && this.stages() == 0;
         if p.low {
-            let nation = Nation(read_usize(this.competition().addr() + 0x5d));
+            let nation = Nation(this.competition().nation().addr());
             let has = read_usize(this.addr() + 0xee) != 0;
             ok = ok && has == (nation.league_selected() & 4 == 0);
         }

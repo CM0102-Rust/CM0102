@@ -99,7 +99,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_career_history(this: usize,
 pub(crate) unsafe extern "stdcall" fn compare_player_stats_years_since_at_club(p: usize, club: usize) -> i16 {
     let p = Staff(p);
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> i16>(IDX_PLAYER_STATS_YEARS_SINCE_AT_CLUB);
-    if p.is_null() || club == 0 || (read_i32(p.addr()) < read_i32(G_STAFF_COUNT) && p.club_job() != club && p.player() == 0) {
+    if p.is_null() || club == 0 || (read_i32(p.addr()) < read_i32(G_STAFF_COUNT) && p.club_job() != Club(club) && p.player() == 0) {
         return o(p.addr(), club);
     }
     let r = o(p.addr(), club);

@@ -2,7 +2,7 @@
 MUTACOES = [
     ('cqb1_tv_menor', 'tv = ftol((q as f64 + read_f64(rdata::F64_1_75)) * publico as f64);', 'tv = ftol((q as f64 + read_f64(rdata::F64_1_25)) * publico as f64);', 'cqb_1 paying attendance'),
     ('cqb1_liquido_pela_metade', 'add(mandante, 0x140, 0xa0, liquido); // cqb1: o líquido ao mandante', 'add(mandante, 0x140, 0xa0, liquido / 2); // mutacao: o liquido pela metade', 'cqb_1 net to the home side'),
-    ('cqb1_preco_por_400', 'let price = div_trunc(read_i16(home + club::REPUTATION) as i32, 500); // cqb1: the price by reputation', 'let price = div_trunc(read_i16(home + club::REPUTATION) as i32, 400); // mutacao: por 400', 'cqb_1 preco pela reputacao'),
+    ('cqb1_preco_por_400', 'let price = div_trunc(home.reputation() as i32, 500); // cqb1: the price by reputation', 'let price = div_trunc(home.reputation() as i32, 400); // mutacao: por 400', 'cqb_1 preco pela reputacao'),
     ('cqb2_divisor_maior', 'read_f64(rdata::F64_0_0075)', 'read_f64(rdata::F64_0_1)', 'cqb_2 divisor da faixa 0 baixa'),
     ('cqb2_sorteio_a_mais_com_ficha', 'let r1 = friendly_random(ftol(read_f64(rdata::F64_30) / div));', 'let r1 = { friendly_random(5); friendly_random(ftol(read_f64(rdata::F64_30) / div)) };', 'cqb_2 with the record'),
     ('cqb2_sorteio_a_mais_sem_ficha', 'let r = friendly_random(ftol(read_f64(rdata::F64_15000) / div)); // cqb2: the random draw without the player sheet', 'let r = { friendly_random(5); friendly_random(ftol(read_f64(rdata::F64_15000) / div)) }; // mutacao: um sorteio a mais', 'cqb_2 without the record'),

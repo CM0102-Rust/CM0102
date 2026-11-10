@@ -70,10 +70,10 @@ pub(crate) unsafe extern "thiscall" fn compare_write_tactics_row(this: usize, cl
 pub(crate) unsafe extern "thiscall" fn compare_record_tactic_result(this: usize, game: usize) -> u32 {
     let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_RECORD_TACTIC_RESULT);
-    if game.is_null() || game.home_club() == 0 || game.away_club() == 0 {
+    if game.is_null() || game.home_club() == Club(0) || game.away_club() == Club(0) {
         return o(this, game.addr());
     }
-    let reg = [(tactic_stats_row(this, game.home_club()), 0x28), (tactic_stats_row(this, game.away_club()), 0x28)];
+    let reg = [(tactic_stats_row(this, (game.home_club()).addr()), 0x28), (tactic_stats_row(this, (game.away_club()).addr()), 0x28)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, game.addr()), || record_tactic_result(this, game.addr()));
     SCOREBOARD.record(igual && r == n, || format!("record_tactic_result(jogo {:x}) original={} rust={} {:x?} x {:x?}", game.addr(), r, n, mo, mr));
     r

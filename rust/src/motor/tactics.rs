@@ -41,7 +41,7 @@ pub(crate) unsafe extern "thiscall" fn stored_taker(this: usize, club: usize, ki
         *cell = -1;
         return 0;
     }
-    if person.club_job() == club {
+    if person.club_job() == Club(club) {
         crate::comparison::branch("taker of the club");
         return person.addr();
     }
@@ -1413,7 +1413,7 @@ pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, club: usize,
         return 0;
     }
     if exe::database_is_national_team(club) != 0 {
-        let nation = Nation(p.national_job());
+        let nation = Nation((p.national_job()).addr());
         if nation.is_null() || nation.three_letter_name() != (club.nation().addr() as u32) {
             core::ptr::write_unaligned(home, -1);
             return 0;

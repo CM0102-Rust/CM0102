@@ -43,7 +43,7 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(game: usize, club
     *((out + 0x10) as *mut u8) = side(club, game.addr());
     core::ptr::write_unaligned(((out + 0x11) as *mut u8) as *mut u32, read_u32(club));
     core::ptr::write_unaligned(((out + 0x1b) as *mut u8) as *mut u32, (game.match_stats_slot() as u32));
-    if club as u32 == (game.home_club() as u32) { // cpz7: the club is the home team
+    if club as u32 == (game.home_club().addr() as u32) { // cpz7: the club is the home team
         core::ptr::write_unaligned(((out + 0x15) as *mut u8) as *mut u32, (game.away_club_id() as u32));
         if (game.home_goals_extra_time() as u8) as i8 > -1 {
             *((out + 0x19) as *mut u8) = (game.home_goals_extra_time() as u8);

@@ -11,5 +11,5 @@ MUTACOES = [
     ('e_tipo1e', "                    rating = v30b;\n                    kind = 0x1e;", "                    rating = v30b + 1;\n                    kind = 0x1e;"),
     ('e_movimento', "                    tx = x78;\n                    ty = y77;\n                    moveu = 1;", "                    tx = x78;\n                    ty = y77;\n                    moveu = 2;"),
     ('e_gosta', "                base = base.wrapping_add(1000);\n            }\n        }", "                base = base.wrapping_add(999);\n            }\n        }"),
-    ('e_preferido', "        if sheet_p == exe::tactics_get_playmaker(table, clube_p, 0, (marca_p == 0) as u32) {\n            v1c = v1c.wrapping_add(1000);", "        if sheet_p == exe::tactics_get_playmaker(table, clube_p, 0, (marca_p == 0) as u32) {\n            v1c = v1c.wrapping_add(900);"),
+    ('e_preferido', "        if sheet_p == Staff(exe::tactics_get_playmaker(table, clube_p, 0, (marca_p == 0) as u32)) {\n            v1c = v1c.wrapping_add(1000);", "        if sheet_p == Staff(exe::tactics_get_playmaker(table, clube_p, 0, (marca_p == 0) as u32)) {\n            v1c = v1c.wrapping_add(900);"),
 ]

@@ -209,7 +209,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
             for q in 0..16i32 {
                 let h = Staff(read_usize(G_STAFF_TABLE).wrapping_add(((total - 1 - q) as usize).wrapping_mul(staff::SIZE)));
                 let hc = h.club_job();
-                if h.classification() == 0 || hc == 0 {
+                if h.classification() == 0 || hc == Club(0) {
                     continue;
                 }
                 for &id in ids.iter().take(c) {
@@ -218,10 +218,10 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
                     }
                     let ci = Club(month_award_club_by_id(id));
                     let hc = h.club_job();
-                    let junto = ci.division().addr() == read_usize(hc + club::DIVISION)
-                        || (ci.nation().addr() == read_usize(hc + club::NATION) && (ci.reputation() as i32 - 0xbb8) > read_i16(hc + club::REPUTATION) as i32);
+                    let junto = ci.division().addr() == hc.division().addr()
+                        || (ci.nation().addr() == hc.nation().addr() && (ci.reputation() as i32 - 0xbb8) > hc.reputation() as i32);
                     if junto {
-                        add_unique_recipient(&mut dest, &mut nd, hc);
+                        add_unique_recipient(&mut dest, &mut nd, hc.addr());
                     }
                 }
             }
@@ -1318,10 +1318,10 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
 pub(crate) unsafe extern "thiscall" fn queue_signing_celebration_story(this: usize, p: usize, club: usize, kind: u32, a: u32, porta_voz: usize) {
     let p = Staff(p);
     let club = Club(club);
-    if p.is_null() || p.nation() == 0 {
+    if p.is_null() || p.nation() == Nation(0) {
         return;
     }
-    let current = Club(p.club_job());
+    let current = Club((p.club_job()).addr());
     if current.is_null() || current.manager().addr() == 0 || current.stadium().addr() == 0 || p.player() == 0 {
         return;
     }
@@ -1336,7 +1336,7 @@ pub(crate) unsafe extern "thiscall" fn queue_signing_celebration_story(this: usi
     for k in 1..4usize {
         exe::newsitem_set_slot(nt, k as i8, read_usize(read_usize(p.addr() + staff::FIRST_NAME * k) + 0x33) as u32);
     }
-    exe::newsitem_set_slot(nt, 4, read_usize(p.club_job()) as u32);
+    exe::newsitem_set_slot(nt, 4, read_usize((p.club_job()).addr()) as u32);
     exe::newsitem_set_slot(nt, 5, friendly_random(2) as u32);
     let v = exe::media_pick_outlet_type_for_person(p);
     exe::newsitem_set_slot(nt, 6, v);
@@ -1346,7 +1346,7 @@ pub(crate) unsafe extern "thiscall" fn queue_signing_celebration_story(this: usi
     exe::newsitem_set_slot(nt, 9, kind as u8 as i8 as i32 as u32);
     let mut r = 0u32;
     if exe::human_manager_is_human_club(p.club_job(), 0, 1, 0, 0) == 0 {
-        r = exe::media_pick_ai_manager_response(this, read_usize(p.club_job() + 0xcf), p, 0x82);
+        r = exe::media_pick_ai_manager_response(this, read_usize((p.club_job()).addr() + 0xcf), p, 0x82);
     }
     exe::newsitem_set_slot(nt, 10, r);
     let mut k: i8 = 0xb;
@@ -1358,7 +1358,7 @@ pub(crate) unsafe extern "thiscall" fn queue_signing_celebration_story(this: usi
         k = 0xf;
     }
     exe::newsitem_set_slot(nt, k, (club.reputation() > 0x1c52) as u32);
-    let t = read_usize(p.club_job() + 0xcf);
+    let t = read_usize((p.club_job()).addr() + 0xcf);
     exe::newsitem_set_slot(nt, k + 1, read_usize(t) as u32);
     for j in 1..4usize {
         exe::newsitem_set_slot(nt, k + 1 + j as i8, read_usize(read_usize(t + 4 * j) + 0x33) as u32);
@@ -1461,7 +1461,7 @@ pub(crate) unsafe fn rebuilt_coach_rating(person: Staff, v: i16, factor: Option<
 /// vezes 0x969040, auxiliar do mesmo jeito.
 pub(crate) unsafe fn place_coach_at_ai_club(s: Staff) {
     let club = s.club_job();
-    if club == 0 {
+    if club == Club(0) {
         return;
     }
     if exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 {
@@ -1469,12 +1469,12 @@ pub(crate) unsafe fn place_coach_at_ai_club(s: Staff) {
     }
     let rep = |k: usize| {
         let f = read_i16(s.player() + 0xb) as f64;
-        let c = read_i16(s.club_job() + 0x80) as f64 * read_f64(k);
+        let c = read_i16((s.club_job()).addr() + 0x80) as f64 * read_f64(k);
         c > f
     };
     if rep(0x968968) && (exe::database_count_club_coaches(s.club_job()) as i8) < 5 {
         for k in 0..5usize {
-            let v = s.club_job() + 0x19f + 4 * k;
+            let v = (s.club_job()).addr() + 0x19f + 4 * k;
             if read_usize(v) == 0 {
                 core::ptr::write_unaligned(v as *mut usize, s.addr());
                 s.set_job_for_club(0xf);
@@ -1483,14 +1483,14 @@ pub(crate) unsafe fn place_coach_at_ai_club(s: Staff) {
         if s.job_for_club() == 0xf || exe::database_get_club_assistant(s.club_job()) != 0 {
             return;
         }
-        core::ptr::write_unaligned((s.club_job() + 0xd3) as *mut usize, s.addr());
+        core::ptr::write_unaligned(((s.club_job()).addr() + 0xd3) as *mut usize, s.addr());
         s.set_job_for_club(0xd);
         return;
     }
     if !rep(0x969040) || exe::database_get_club_assistant(s.club_job()) != 0 {
         return;
     }
-    core::ptr::write_unaligned((s.club_job() + 0xd3) as *mut usize, s.addr());
+    core::ptr::write_unaligned(((s.club_job()).addr() + 0xd3) as *mut usize, s.addr());
     s.set_job_for_club(0xd);
 }
 
@@ -2649,7 +2649,7 @@ pub(crate) unsafe extern "thiscall" fn remove_transfer_interest(this: usize, per
 /// [pt] o tipo da história da imprensa sobre o jogador quando é de indisciplina, senão 0
 pub(crate) unsafe extern "thiscall" fn get_finable_story_kind(average: usize, player: usize) -> u16 {
     let player = Staff(player);
-    if player.is_null() || (player.club_job() as u32) == 0 {
+    if player.is_null() || (player.club_job().addr() as u32) == 0 {
         return 0;
     }
     let n = *((average + 8) as *const i32);
@@ -2821,7 +2821,7 @@ pub(crate) unsafe extern "thiscall" fn pick_former_international_pundit(_this: u
             }
             true
         } else {
-            nation == subject.nation()
+            nation == (subject.nation()).addr()
         };
         if same_nation {
             weight = weight.wrapping_add(weight);
@@ -2876,9 +2876,9 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
         return 3;
     }
     let mut club = manager.club_job();
-    if club == 0 {
+    if club == Club(0) {
         club = manager.national_job();
-        if club == 0 {
+        if club == Club(0) {
             return 3;
         }
     }
@@ -3136,7 +3136,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             let x = exe::utils_random(read_i8_as_i32(f() + 0x1d) + (manager.loyalty() as i32));
             let y = exe::utils_random(0x96);
             if x > y {
-                if read_i16(player.player() + 0xb) as i32 <= read_i16(club + club::REPUTATION) as i32 + 0x1f4 {
+                if read_i16(player.player() + 0xb) as i32 <= club.reputation() as i32 + 0x1f4 {
                     return 2;
                 }
                 let x = exe::utils_random(read_i8_as_i32(f() + 0x14));

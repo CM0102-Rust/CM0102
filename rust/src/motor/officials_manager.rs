@@ -180,10 +180,10 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
             continue;
         }
         let nation = comp.nation();
-        if nation == 0 {
+        if nation == Nation(0) {
             continue;
         }
-        let b = blocos.wrapping_add((read_i32(nation) as isize * 0x102) as usize);
+        let b = blocos.wrapping_add((read_i32(nation.addr()) as isize * 0x102) as usize);
         let v = b.wrapping_add((read_i16(b + officials_nation_block::COMP_COUNT) as isize * 0x10) as usize);
         write_u32(v + 0x1e, k as u32);
         let request = read_i16(read_usize(read_usize(G_COMP_OBJECT_TABLE) + 4 * k as usize) + 0x3e) as i32 / 2 + 0xa; // cqg9: the slot request
@@ -388,9 +388,9 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
         return 0xffff_ff00;
     }
     let nations = read_i32(G_NATION_COUNT);
-    let home = Club(game.home_club());
+    let home = Club((game.home_club()).addr());
     let away = game.away_club();
-    let comp = Competition(game.competition());
+    let comp = Competition((game.competition()).addr());
     let band_of_nation = |nacao: i32| {
         let b = nation_officials_block(this, nacao);
         (read_i32(b + officials_nation_block::FIRST_REFEREE), read_i32(b + officials_nation_block::REFEREE_COUNT))
@@ -416,7 +416,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                         read_i32(comp.continent())
                     } else if let Some(k) = continent_of(home) {
                         k
-                    } else if let Some(k) = continent_of(Club(away)) {
+                    } else if let Some(k) = continent_of(Club(away.addr())) {
                         k
                     } else {
                         random(read_i32(G_CONTINENT_COUNT))
@@ -428,7 +428,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                         let cont = read_usize(nation + nation::CONTINENT);
                         if cont != 0 && read_i32(cont) == continent
                             && officials_manager_club_nation_id(home) != Some(read_i32(nation))
-                            && officials_manager_club_nation_id(Club(away)) != Some(read_i32(nation))
+                            && officials_manager_club_nation_id(Club(away.addr())) != Some(read_i32(nation))
                         {
                             break;
                         }
@@ -445,11 +445,11 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                     crate::comparison::branch("cpy_8 neutral referee");
                     (read_i32(b + officials_nation_block::FIRST_REFEREE).wrapping_sub(ftol(count * -0.75)), ftol(count * 0.25)) // cpy8: the top quarter
                 } else {
-                    let nacao = if comp.nation() != 0 {
-                        read_i32(comp.nation())
+                    let nacao = if comp.nation() != Nation(0) {
+                        read_i32((comp.nation()).addr())
                     } else if let Some(k) = officials_manager_club_nation_id(home) {
                         k
-                    } else if let Some(k) = officials_manager_club_nation_id(Club(away)) {
+                    } else if let Some(k) = officials_manager_club_nation_id(Club(away.addr())) {
                         k
                     } else {
                         random(nations)
@@ -555,7 +555,7 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
     if exe::comp_util_is_league_division(read_i32(comp.addr())) == 0 {
         return 0;
     }
-    let nacao = if comp.nation() != 0 { read_i32(comp.nation()) } else { random(read_i32(G_NATION_COUNT)) };
+    let nacao = if comp.nation() != Nation(0) { read_i32((comp.nation()).addr()) } else { random(read_i32(G_NATION_COUNT)) };
     let b = nation_officials_block(this, nacao);
     let mut band = None;
     for f in 0..read_i16(b + officials_nation_block::COMP_COUNT).max(0) as usize {

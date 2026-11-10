@@ -220,7 +220,7 @@ pub(crate) unsafe fn ruling_body_covers_club(body: usize, club: Club) -> bool {
         if club.is_null() || club.nation().addr() == 0 {
             return false;
         }
-        let c = read_usize(club.nation().addr() + 0x71);
+        let c = club.nation().continent();
         return c != 0 && read_usize(c) as u32 == continent;
     }
     !club.is_null() && club.nation().addr() != 0 && read_usize(club.nation().addr()) as u32 == nation
@@ -363,7 +363,7 @@ pub(crate) unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize)
     let item = read_usize(this + discipline_fields::NATION_INDEX).wrapping_add((n as i32 as usize).wrapping_mul(8));
     write_u32(item, id);
     let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)));
-    write_u32(item + nation_index_item::NATION_ID, read_usize(person.nation()) as u32); // the nation
+    write_u32(item + nation_index_item::NATION_ID, read_usize((person.nation()).addr()) as u32); // the nation
     write_u16(this + discipline_fields::NATION_INDEX_COUNT, n.wrapping_add(1) as u16);
     exe::crt_qsort(read_usize(this + discipline_fields::NATION_INDEX), (read_i16(this + discipline_fields::NATION_INDEX_COUNT) as i32) as u32, 8, 0x55e5f0);
 }
@@ -592,7 +592,7 @@ pub(crate) unsafe fn ruling_body_entry(body: usize, id: u32) -> usize {
 /// (0x946464 com 0x55e5f0) pela nação (+0x1a) e, sem achar, pela segunda nação (+0x1e, se houver). 0 sem achar.
 pub(crate) unsafe fn find_in_nation_index(this: usize, id: u32) -> usize {
     let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)));
-    let mut key = [id, read_usize(person.nation()) as u32];
+    let mut key = [id, read_usize((person.nation()).addr()) as u32];
     let e = exe::crt_bsearch((key.as_ptr()) as usize, read_usize(this + discipline_fields::NATION_INDEX), (read_i16(this + discipline_fields::NATION_INDEX_COUNT) as i32) as u32, 8, 0x55e5f0);
     if e != 0 {
         return e;
@@ -875,7 +875,7 @@ pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: 
         return 0;
     }
     crate::comparison::branch("cpk_3 suspended by the competition");
-    let club = Club(player.club_job());
+    let club = Club((player.club_job()).addr());
     if !club.is_null() {
         if exe::human_manager_is_human_club(club, 0, 1, (0) as u32, 0) != 0 {
             if let Some(s) = (0..20).map(|k| club.addr() + club::TEAM_SELECTED + k * 4).find(|&s| read_usize(s) == player.addr()) {
@@ -1011,7 +1011,7 @@ pub(crate) unsafe extern "thiscall" fn process_match(this: usize, partida: usize
         }
     }
     let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-    if friendly(read_usize(G_FRIENDLY), partida.competition()) == 0 && read_usize(partida.addr()) != read_usize(KEY_CLUB_COMP_RESERVE) {
+    if friendly(read_usize(G_FRIENDLY), (partida.competition()).addr()) == 0 && read_usize(partida.addr()) != read_usize(KEY_CLUB_COMP_RESERVE) {
         return 0;
     }
     for (lado, a, b) in [(0x1cusize, 1u32, 0u32), (0x20, 0, 1)] {

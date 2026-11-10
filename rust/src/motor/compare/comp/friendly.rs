@@ -12,8 +12,8 @@ pub(crate) unsafe extern "thiscall" fn compare_on_friendly_fixture_cancelled(thi
     let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ON_FRIENDLY_FIXTURE_CANCELLED);
     let mut slot = 0usize;
-    if game.competition() == read_usize(this + 4) && read_usize(this + friendly::SCHEDULED_SLOT_LIST) != 0 {
-        slot = exe::friendly_find_scheduled_friendly_slot(this, replace_low_word(game.home_club(), (game.day() as i16)), replace_low_word(game.competition(), (game.year() as i16)), (game.away_club() as u32) as usize, (game.home_club() as u32) as usize);
+    if game.competition() == Competition(read_usize(this + 4)) && read_usize(this + friendly::SCHEDULED_SLOT_LIST) != 0 {
+        slot = exe::friendly_find_scheduled_friendly_slot(this, replace_low_word((game.home_club()).addr(), (game.day() as i16)), replace_low_word((game.competition()).addr(), (game.year() as i16)), (game.away_club().addr() as u32) as usize, (game.home_club().addr() as u32) as usize);
     }
     o(this, game.addr(), who);
     let free = slot == 0 || (read_usize(slot + scheduled_friendly_slot::OPPONENT) == 0 && read_u8(slot + scheduled_friendly_slot::STATUS) == 0);

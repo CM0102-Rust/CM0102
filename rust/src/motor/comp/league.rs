@@ -874,8 +874,8 @@ pub(crate) unsafe fn add_league_fixture(this: League, r: Fixture, ea: usize, eb:
     let stadium: unsafe extern "thiscall" fn(usize, u32, usize, u32) = core::mem::transmute(FN_STADIUM_SET_FIXTURE_VENUE);
     let (ea, eb) = (ea, eb); // cqd5: the home and away sides
     let (ca, cb) = (read_usize(ea), read_usize(eb));
-    r.set_home_club(ca);
-    r.set_away_club(cb);
+    r.set_home_club(Club(ca));
+    r.set_away_club(Club(cb));
     r.set_home_side_mark((read_u8(ea + league_table_row::MARK) == 0) as u8);
     r.set_away_side_mark(((read_u8(eb + league_table_row::MARK) == 0) as u8) as i8);
     r.set_home_club_id(if ca != 0 { read_usize(ca) } else { u32::MAX as usize });
@@ -970,7 +970,7 @@ pub(crate) unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
     let mut reg = [0u8; 0x60];
     let r = Fixture(reg.as_mut_ptr() as usize);
     let c = this.competition().addr();
-    r.set_competition(c);
+    r.set_competition(Competition(c));
     r.set_round_prefix((this.stage_id() as u16) as i16);
     write_usize(r.addr(), read_usize(c));
     r.set_season_year(this.year() as u16);
@@ -1556,7 +1556,7 @@ pub(crate) unsafe extern "thiscall" fn update_positions_and_status(this: usize) 
             if exe::comp_util_is_league_division(read_i32(this.competition().addr())) != 0 && this.upper_division_id() == -1 {
                 let slot = read_usize(G_CLUB_STATE_TABLE) + (read_i32(read_usize(li)) as usize).wrapping_mul(6);
                 let reg = Competition(this.competition().addr());
-                let nation = Nation(reg.nation());
+                let nation = Nation((reg.nation()).addr());
                 if read_i32(slot) == -1 && !nation.is_null() && read_i32(nation.addr()) != read_i32(KEY_NATION_SCOTLAND) {
                     let count = nation.continent();
                     if count != 0 && read_i32(count) == read_i32(KEY_CONTINENT_EUROPE) {
@@ -1839,7 +1839,7 @@ pub(crate) unsafe extern "thiscall" fn announce_team_status(league: usize, club:
     match status as u8 {
         5 => {
             if (league.upper_division_id() as usize) as i32 == -1 {
-                nation(news, n, read_usize(league.competition().addr() + 0x5d));
+                nation(news, n, league.competition().nation().addr());
             } else {
                 exe::news_send_to_division_managers(news, n, league.competition().addr());
             }
@@ -2397,9 +2397,9 @@ pub(crate) unsafe extern "thiscall" fn apply_result_to_table(league: usize, p: u
     if n > 0 {
         loop {
             let c = read_usize(row(k));
-            if c == p.home_club() {
+            if c == (p.home_club()).addr() {
                 casa = k;
-            } else if c == p.away_club() {
+            } else if c == (p.away_club()).addr() {
                 fora = k;
             } else if casa != -1 && fora != -1 {
                 break;
@@ -2434,7 +2434,7 @@ pub(crate) unsafe extern "thiscall" fn apply_result_to_table(league: usize, p: u
         if casa > -1 {
             let r = row(casa);
             increment_u8(r + win);
-            league_add_i16(r + league_table_row::HOME_POINTS, points(p.home_club())); // the home team’s points
+            league_add_i16(r + league_table_row::HOME_POINTS, points((p.home_club()).addr())); // the home team’s points
         }
         if fora > -1 {
             increment_u8(row(fora) + 0x30);
@@ -2447,7 +2447,7 @@ pub(crate) unsafe extern "thiscall" fn apply_result_to_table(league: usize, p: u
         if fora > -1 {
             let r = row(fora);
             increment_u8(r + win);
-            league_add_i16(r + league_table_row::AWAY_POINTS, points(p.away_club()));
+            league_add_i16(r + league_table_row::AWAY_POINTS, points((p.away_club()).addr()));
         }
     };
     let (gc, gf) = (p.home_goals(), p.away_goals());
@@ -2511,13 +2511,13 @@ pub(crate) unsafe extern "thiscall" fn apply_result_to_table(league: usize, p: u
         let mut k: i16 = 0;
         if m > 0 {
             loop {
-                if casa > -1 && entry(casa, k) == p.away_club() {
+                if casa > -1 && entry(casa, k) == (p.away_club()).addr() {
                     ia = k as i32;
                     if ib > -1 {
                         break;
                     }
                 }
-                if fora > -1 && entry(fora, k) == p.home_club() {
+                if fora > -1 && entry(fora, k) == (p.home_club()).addr() {
                     ib = k as i32;
                     if ia > -1 {
                         break;
@@ -2578,7 +2578,7 @@ pub(crate) unsafe extern "thiscall" fn points_for_result(league: usize, club: us
     let p = Fixture(p);
     let league = League(league);
     let (casa, fora) = (p.home_club(), p.away_club());
-    let won = |a: i8, b: i8| (club == casa && a > b) || (club == fora && a < b);
+    let won = |a: i8, b: i8| (club == casa.addr() && a > b) || (club == fora.addr() && a < b);
     let flags = (league.match_rules() as u8);
     let v = if p.home_goals() != p.away_goals() {
         if won(p.home_goals(), p.away_goals()) { league.win_points() } else { 0 } // the points for a win

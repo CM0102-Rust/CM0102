@@ -511,15 +511,47 @@ def ajustar_pelo_compilador(tipos):
                     edicoes[arq].append((sp['byte_start'], sp['byte_end'], 'para_usize', tipo))
                     feito = True
                     break
+            if not feito and 'non-primitive cast' in e['message'] and any(('records::%s' % t_) in e['message'] for t_ in tipos):
+                # `club as u32` -> `club.addr() as u32`
+                edicoes[arq].append((sp['byte_start'], sp['byte_end'], 'cast', ''))
+                feito = True
+            if not feito and ('cannot add' in e['message'] or 'binary operation' in e['message'] or 'cannot subtract' in e['message']):
+                # `x.club() + 0xcf`: the typed operand gets .addr()
+                for x in e['spans']:
+                    lab = x.get('label') or ''
+                    if any(re.fullmatch(r'(records::)?%s' % t_, lab.strip()) for t_ in tipos):
+                        edicoes[os.path.normpath(os.path.join(R, 'rust', x['file_name']))].append((x['byte_start'], x['byte_end'], 'para_usize', ''))
+                        feito = True
+                        break
             if not feito:
                 print('erro não tratado:', sp['file_name'], sp['line_start'], e['message'][:140])
         n = 0
         for arq, spans in edicoes.items():
             b = open(arq, 'rb').read()
-            for a_, b_, kind, tipo in sorted(set(spans), reverse=True):
+            # only edits that do not overlap one another in this pass (the innermost win; the outer one comes back next
+            # pass with the new text)
+            todos = sorted(set(spans))
+            livres = [e for e in todos if not any(o is not e and o[0] < e[1] and e[0] < o[1] and (o[1] - o[0]) < (e[1] - e[0]) for o in todos)]
+            usados = []
+            for e in sorted(livres, key=lambda e: e[1] - e[0]):
+                if not any(u[0] < e[1] and e[0] < u[1] for u in usados):
+                    usados.append(e)
+            for a_, b_, kind, tipo in sorted(usados, reverse=True):
                 x = b[a_:b_].decode('utf-8')
-                if kind == 'para_tipo':
-                    novo = x[:-len('.addr()')] if re.fullmatch(r'[a-z_][a-z0-9_]*\.addr\(\)', x) else '%s(%s)' % (tipo, x)
+                if kind == 'cast':
+                    mm = re.fullmatch(r'(\(?)(.+?)\s+as\s+([^()]+?)(\)?)', x, re.S)
+                    if not mm:
+                        continue
+                    base = mm.group(2)
+                    base = base + '.addr()' if re.fullmatch(r'[\w.()]+', base) else '(%s).addr()' % base
+                    novo = '%s%s as %s%s' % (mm.group(1), base, mm.group(3), mm.group(4))
+                elif kind == 'para_tipo':
+                    if re.fullmatch(r'[a-z_][a-z0-9_]*\.addr\(\)', x):
+                        novo = x[:-len('.addr()')]
+                    elif x.lstrip().startswith('if '):
+                        novo = '{ %s(%s) }' % (tipo, x)  # `else if ..` keeps its block
+                    else:
+                        novo = '%s(%s)' % (tipo, x)
                 else:
                     novo = '%s.addr()' % x if re.fullmatch(r'[a-z_][a-z0-9_]*', x) else '(%s).addr()' % x
                 b = b[:a_] + novo.encode('utf-8') + b[b_:]
@@ -806,6 +838,88 @@ def tipar_closures(tipos, grava):
         tirar_addr_exe(True)
 
 
+def cadeias(grava):
+    """Accesses through a typed pointer field (`person.club_job().addr() + 0xcf`): the chain's type comes from the
+    getters' return types in records.rs; a raw offset that is exactly one field of that record becomes its name, and
+    the access becomes a method (`person.club_job().manager()`)."""
+    import ponteiros_registros as pr
+    tipo_mod, ret, _ = pr.registros()
+    tipos = '|'.join(sorted(tipo_mod, key=len, reverse=True))
+    # offset -> field name per module (only exact, unique starts)
+    import larguras_campos as lc
+    por_off = collections.defaultdict(dict)
+    for (mod, c), (off, larg, doc) in lc.campos().items():
+        por_off[mod].setdefault(off, []).append(c)
+    convs = {}
+    mutacoes = carregar_mutacoes()
+    trocas_mut, n_hex, n_fn = {}, 0, 0
+    for raiz, _, fs in os.walk(SRC):
+        for f in fs:
+            p = os.path.join(raiz, f)
+            if not f.endswith('.rs') or f in ('records.rs', 'fields.rs', 'exe_calls.rs', 'mem.rs'):
+                continue
+            t = open(p, encoding='utf-8').read()
+            tl.ANTES[p] = t
+            partes, pos = [], 0
+            for _, a, b in mover_rotinas.blocos(t):
+                bloco = t[a:b]
+                mk = mascara(bloco)
+                tip = {}
+                for m in re.finditer(r'(?<![\w.])([a-z_][a-z0-9_]*)\s*:\s*(%s)\b' % tipos, mk):
+                    tip[m.group(1)] = m.group(2)
+                for m in re.finditer(r'\blet\s+([a-z_][a-z0-9_]*)\s*=\s*(%s)\(' % tipos, mk):
+                    tip[m.group(1)] = m.group(2)
+                if not tip:
+                    continue
+                cad = {}  # chain text -> type
+                for m in re.finditer(r'(?<![\w.])((%s)(?:\.[a-z_0-9]+\(\))+)\.addr\(\)\s*\+' % '|'.join(map(re.escape, tip)), mk):
+                    chain = m.group(1)
+                    partes_c = chain.split('.')
+                    tp = tip[partes_c[0]]
+                    for meth in partes_c[1:]:
+                        tp = ret.get((tp, meth[:-2]))
+                        if tp is None:
+                            break
+                    if tp in tipo_mod:
+                        cad[chain] = tp
+                if not cad:
+                    continue
+                novo = bloco
+                # raw offsets -> field names
+                for chain, tp in cad.items():
+                    mod = tipo_mod[tp]
+                    def nomear(mm, mod=mod):
+                        nomes_off = por_off[mod].get(int(mm.group(2), 0), [])
+                        if len(nomes_off) != 1:
+                            return mm.group(0)
+                        return '%s%s::%s' % (mm.group(1), mod, nomes_off[0])
+                    novo2 = re.sub(r'(%s\.addr\(\)\s*\+\s*)(0x[0-9a-f]+|\d+)\b(?!\s*\*)' % re.escape(chain), nomear, novo)
+                    n_hex += novo2 != novo
+                    novo = novo2
+                # accesses -> methods, per module
+                por_mod = collections.defaultdict(set)
+                for chain, tp in cad.items():
+                    por_mod[tipo_mod[tp]].add(chain)
+                for mod, chains in por_mod.items():
+                    if mod not in convs:
+                        convs[mod] = Conversor(mod)
+                    novo = convs[mod].converter_trecho(novo, chains, True)
+                if novo == bloco:
+                    continue
+                n_fn += 1
+                for lista, mu in mutacoes:
+                    if bloco.count(mu[1]) == 1:
+                        trocas_mut[(lista, mu[0])] = (mu, (lambda s, cad=cad: s))
+                partes += [t[pos:a], novo]
+                pos = b
+            partes.append(t[pos:])
+            if grava and ''.join(partes) != t:
+                open(p, 'w', encoding='utf-8').write(''.join(partes))
+    print('%d funções com cadeias convertidas' % n_fn)
+    if grava:
+        tl.voltar_funcoes_com_erro(trocas_mut)
+
+
 def carregar_mutacoes():
     mutacoes = []
     pasta = os.path.join(R, 'engenharia-reversa', 'mutacoes')
@@ -849,6 +963,10 @@ def gravar_mutacoes(trocas_mut):
 
 
 def main():
+    if '--cadeias' in sys.argv:
+        return cadeias('--gravar' in sys.argv)
+    if '--ajustar' in sys.argv:
+        return ajustar_pelo_compilador(sys.argv[sys.argv.index('--ajustar') + 1].split(','))
     if '--closures' in sys.argv:
         return tipar_closures(sys.argv[sys.argv.index('--closures') + 1].split(','), '--gravar' in sys.argv)
     if '--fechos' in sys.argv:

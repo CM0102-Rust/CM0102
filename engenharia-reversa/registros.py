@@ -38,6 +38,13 @@ POINTERS = {
 }
 
 
+# and the ones found by ponteiros_registros.py from how the code uses the value (levas/reorganizacao/ponteiros.json)
+_PJ = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'levas', 'reorganizacao', 'ponteiros.json')
+if os.path.exists(_PJ):
+    import json as _json
+    for _k, _v in _json.load(open(_PJ, encoding='utf-8')).items():
+        POINTERS.setdefault(tuple(_k.split('::')), _v['type'])
+
 # array fields: (module, FIELD) -> (element type, element count); a method `x.squad(i)` / `x.set_squad(i, v)`
 ARRAYS = {
     ('club', 'SQUAD'): ('usize', 50),
@@ -137,6 +144,7 @@ def main():
               '    #[inline(always)]', '    pub(crate) fn addr(self) -> usize {', '        self.0', '    }',
               '    #[inline(always)]', '    pub(crate) fn is_null(self) -> bool {', '        self.0 == 0', '    }']
         trait_impl = ['impl Addr for %s {' % tipo, '    #[inline(always)]', '    fn addr(self) -> usize {', '        self.0', '    }', '}', '']
+        trait_impl += ['impl core::fmt::LowerHex for %s {' % tipo, '    fn fmt(&self, f: &mut core::fmt::Formatter<\'_>) -> core::fmt::Result {', '        core::fmt::LowerHex::fmt(&self.0, f)', '    }', '}', '']
         for c, off, larg, doc_t in campos:
             nome = c.lower()
             fn = 'r#' + nome if nome in KEYWORDS else nome

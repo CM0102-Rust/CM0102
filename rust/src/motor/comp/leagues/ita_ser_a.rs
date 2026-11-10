@@ -304,7 +304,7 @@ pub(crate) unsafe fn serie_a_zones(league: League) -> [u8; 64] {
     let mut z = [0u8; 64];
     z[0] = 1;
     let (mut cl, mut uefa) = (0i8, 0i8);
-    exe::uefaseeding_get_nation_places(read_usize(G_UEFA_SEEDING), read_usize(league.competition().addr() + 0x5d), &mut cl, &mut uefa);
+    exe::uefaseeding_get_nation_places(read_usize(G_UEFA_SEEDING), league.competition().nation().addr(), &mut cl, &mut uefa);
     // simplification: the nation’s counts stay from 1 to 16 in the game; the copy ignores the bands that would fall outside the record.
     let cl = cl as i32;
     let uefa = uefa as i32;

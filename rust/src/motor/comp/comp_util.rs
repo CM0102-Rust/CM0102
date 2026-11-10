@@ -675,8 +675,8 @@ pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(news: usi
 /// zebra. Só o al é fiel (quem chama usa al).
 pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(club: usize, partida: usize) -> u8 {
     let partida = Fixture(partida);
-    let home = Club(partida.home_club());
-    let away = Club(partida.away_club());
+    let home = Club((partida.home_club()).addr());
+    let away = Club((partida.away_club()).addr());
     let h = (home.reputation() as i32 / 500) as i8 as i32;
     let a = (away.reputation() as i32 / 500) as i8 as i32;
     let (g1, g2) = if (partida.home_aggregate() as u8) != 0xff {

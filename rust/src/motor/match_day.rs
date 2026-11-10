@@ -36,8 +36,8 @@ pub(crate) unsafe extern "C" fn won_the_match(game: usize, club: u32) -> u8 {
     if game.is_null() || club == 0 {
         return 0;
     }
-    let home = (game.home_club() as u32) == club;
-    if !home && (game.away_club() as u32) != club {
+    let home = (game.home_club().addr() as u32) == club;
+    if !home && (game.away_club().addr() as u32) != club {
         return 0;
     }
     for (a, b) in [(0x49, 0x4a), (0x47, 0x48), (0x43, 0x44)] {
@@ -1007,7 +1007,7 @@ pub(crate) unsafe extern "thiscall" fn match_day_interest(d: usize) -> u32 {
                     let pe = Staff((g(G_STAFF_TABLE) as isize + (read(G_STAFF_COUNT) + k - 16) as isize * 0x6e) as usize);
                     let club = pe.club_job();
                     let other = pe.national_job();
-                    if (club != 0 && exe::comp_includes_club(object, club) != 0) || (other != 0 && exe::comp_includes_club(object, other) != 0) {
+                    if (club != Club(0) && exe::comp_includes_club(object, club) != 0) || (other != Club(0) && exe::comp_includes_club(object, other) != 0) {
                         crate::comparison::branch("interest human in the competition");
                         pr(comp + day_competition::INTERESTING, 1);
                         pr(d + match_day_fields::HAS_INTEREST, 1);
@@ -1100,7 +1100,7 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
         return 1;
     }
     let (c1, c2) = (partida.home_club(), partida.away_club());
-    if human(c1, 1, 1, 0, 0) != 0 || human(c2, 1, 1, 0, 0) != 0 {
+    if human(c1.addr(), 1, 1, 0, 0) != 0 || human(c2.addr(), 1, 1, 0, 0) != 0 {
         crate::comparison::branch("no human human club on the pitch");
         return 0;
     }
@@ -1123,7 +1123,7 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
             }
         }
     }
-    if comp == read(KEY_CLUB_COMP_RESERVE) && human(c1, 1, 1, 0, 0) == 0 && human(c2, 1, 1, 0, 0) == 0 {
+    if comp == read(KEY_CLUB_COMP_RESERVE) && human(c1.addr(), 1, 1, 0, 0) == 0 && human(c2.addr(), 1, 1, 0, 0) == 0 {
         crate::comparison::branch("no human direct competition");
         return final_();
     }
@@ -1131,19 +1131,19 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
     let base = g(G_STAFF_TABLE);
     for k in 0..16isize {
         let pe = Staff((base as isize + (read(G_STAFF_COUNT) as isize - 1 - k) * 0x6e) as usize);
-        if !pe.is_null() && pe.classification() == 1 && pe.club_job() != 0 {
-            let nation = read(pe.club_job() + 0x57);
-            if nation == read_i32(c1 + club::DIVISION) || nation == read_i32(c2 + club::DIVISION) {
+        if !pe.is_null() && pe.classification() == 1 && pe.club_job() != Club(0) {
+            let nation = read((pe.club_job()).addr() + 0x57);
+            if nation == (c1.division().addr() as i32) || nation == (c2.division().addr() as i32) {
                 crate::comparison::branch("no human nation manager");
                 return 0;
             }
         }
     }
-    if ((exe::database_is_national_team(c2) as i32) == 0 && (exe::friendly_is_own_comp_record(g(G_FRIENDLY), ((partida.competition() as i32) as u32) as usize) as i32) != 0) || comp == read(KEY_CLUB_COMP_INTER_TOTO_CUP) {
+    if ((exe::database_is_national_team(c2) as i32) == 0 && (exe::friendly_is_own_comp_record(g(G_FRIENDLY), ((partida.competition().addr() as i32) as u32) as usize) as i32) != 0) || comp == read(KEY_CLUB_COMP_INTER_TOTO_CUP) {
         crate::comparison::branch("no human by injury_word_0c");
-        return if w(c2 + club::REPUTATION) + w(c1 + club::REPUTATION) > 0x2ee0 { 0 } else { final_() };
+        return if w(c2.addr() + club::REPUTATION) + w(c1.addr() + club::REPUTATION) > 0x2ee0 { 0 } else { final_() };
     }
-    let mut x = (exe::comp_active_key_nation_of_fixture(((partida.competition() as i32) as u32) as u32 as usize, partida) as u32) as u8;
+    let mut x = (exe::comp_active_key_nation_of_fixture(((partida.competition().addr() as i32) as u32) as u32 as usize, partida) as u32) as u8;
     if let Some(k) = (0xb63d74usize..G_KEY_NATION_ACTIVE_SLOT_LOOP_END).step_by(0x48).position(|e| *(e as *const u8) == x) {
         x = k as u8;
     }
@@ -1151,7 +1151,7 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
         return 0;
     }
     if matches!(x, 3..=7) {
-        let q = g(partida.competition() + 0x59);
+        let q = g((partida.competition()).addr() + 0x59);
         if q != 0 && *((0xb67a58 + g(q)) as *const u8) != 0 {
             crate::comparison::branch("no human national team marked");
             return 0;
@@ -1262,7 +1262,7 @@ pub(crate) unsafe fn post_match_club_with(club: Club, other: usize, partida: Fix
         if c == 0 || read(c + 0x45) != 0 || partida.home_side_mark() == 0 || (partida.away_side_mark() as u8) == 0 {
             continue;
         }
-        if (partida.competition() as i32) == 0 || (partida.competition() as i32) != (club.division().addr() as i32) || away(club.addr()) != 0 || read_i8(p + staff::LOYALTY) <= 0xf {
+        if (partida.competition().addr() as i32) == 0 || (partida.competition().addr() as i32) != (club.division().addr() as i32) || away(club.addr()) != 0 || read_i8(p + staff::LOYALTY) <= 0xf {
             continue;
         }
         crate::comparison::branch("club youth");

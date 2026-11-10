@@ -226,7 +226,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
         nation = read_usize(read_usize(t + stadium::CITY) + 0x1f);
     }
     if nation == 0 {
-        nation = read_usize(game.home_club() + 0x53);
+        nation = read_usize((game.home_club()).addr() + 0x53);
     }
     if read_u8(this + player_search_fields::LIST_TYPE) != 4 {
         return 0;
@@ -297,7 +297,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
                             let mut k = 0usize;
                             while free {
                                 let id = read_i32(result + 0x190 + side as usize * 0x625 + k);
-                                if id != -1 && request(read_usize(G_SCOUT_MANAGER), staff_records_staff_by_id(id as usize), scout.club_job(), 1) != 0 {
+                                if id != -1 && request(read_usize(G_SCOUT_MANAGER), staff_records_staff_by_id(id as usize), (scout.club_job()).addr(), 1) != 0 {
                                     free = false;
                                 }
                                 k += 0x49;
@@ -367,7 +367,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
             if !p.is_null() && read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) {
                 continue;
             }
-            if player_search_contract_club(p) == club_scout || p.player() == 0 {
+            if player_search_contract_club(p) == club_scout.addr() || p.player() == 0 {
                 continue;
             }
             if read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 {
@@ -376,7 +376,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
                     exe::fog_of_war_map_raise_knowledge(q, p, scout);
                 }
             }
-            let pediu = request(read_usize(G_SCOUT_MANAGER), p.addr(), club_scout, 0);
+            let pediu = request(read_usize(G_SCOUT_MANAGER), p.addr(), club_scout.addr(), 0);
             if pediu == 0 {
                 let target = read_i32(this + player_search_fields::ASSIGNED_COMP);
                 if !(target != -1 && read_i32(game.addr()) == target) && exe::database_get_staff_reputation_for_viewer(p, scout, 0) >= 0xfa0 { // cqf10: perceived reputation

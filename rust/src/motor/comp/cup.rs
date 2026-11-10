@@ -120,11 +120,11 @@ pub(crate) unsafe extern "thiscall" fn create_tie_fixtures(this: usize, round: u
     let p = Fixture(buf.as_mut_ptr() as usize);
     let comp = read_usize(this + 4);
     if comp != 0 {
-        p.set_competition(comp);
+        p.set_competition(Competition(comp));
         write_usize(p.addr(), read_usize(comp));
     } else {
         write_usize(p.addr(), usize::MAX);
-        p.set_competition(0);
+        p.set_competition(Competition(0));
     }
     p.set_season_year(read_i16(this + cup::YEAR) as u16);
     p.set_round_prefix((read_i16(this + cup::STAGE_LABEL) as u16) as i16);
@@ -166,10 +166,10 @@ pub(crate) unsafe extern "thiscall" fn create_tie_fixtures(this: usize, round: u
     let t = tie_of_round(this, ri, k as i16 as i32);
     let (lc, lf) = (read_i16(t), read_i16(t + cup_tie::AWAY_TEAM)); // cqc5: the first-leg sides
     let home = read_usize(cup_team_entry(this, lc));
-    p.set_home_club(home);
+    p.set_home_club(Club(home));
     p.set_home_club_id(if home != 0 { read_usize(home) } else { usize::MAX });
     let away = read_usize(cup_team_entry(this, lf));
-    p.set_away_club(away);
+    p.set_away_club(Club(away));
     p.set_away_club_id(if away != 0 { read_usize(away) } else { usize::MAX });
     let year_cup = read_i16(this + cup::YEAR);
     p.set_year((read_u8(e + cup_round::YEAR_OFFSET) as i8 as i16).wrapping_add(year_cup) as u16);
@@ -187,7 +187,7 @@ pub(crate) unsafe extern "thiscall" fn create_tie_fixtures(this: usize, round: u
     crate::comparison::branch("cqc_5 tie match");
     add_fixture_to_calendar(p);
     let (home, away) = (p.home_club(), p.away_club());
-    if (cup_has_human_manager(home) || cup_has_human_manager(away)) && read_i16(round_entry(this, ri) + 0xd) as u16 & 0x100 == 0 {
+    if (cup_has_human_manager(home.addr()) || cup_has_human_manager(away.addr())) && read_i16(round_entry(this, ri) + 0xd) as u16 & 0x100 == 0 {
         let mut news = [0u32; 0x38];
         let n = news.as_mut_ptr() as usize;
         exe::new_newsitem(n, 0x14, 0);
@@ -198,7 +198,7 @@ pub(crate) unsafe extern "thiscall" fn create_tie_fixtures(this: usize, round: u
         exe::newsitem_set_slot(n, 6, p.stadium_id() as u32);
         exe::newsitem_set_slot(n, 7, (p.day() as i16) as u16 as u32);
         exe::newsitem_set_slot(n, 8, (p.year() as i16) as u16 as u32);
-        if cup_has_human_manager(home) {
+        if cup_has_human_manager(home.addr()) {
             exe::newsitem_set_slot(n, 3, p.home_club_id() as u32);
             exe::newsitem_set_slot(n, 4, p.away_club_id() as u32);
         } else {
@@ -1292,7 +1292,7 @@ pub(crate) unsafe fn wins_uefa_cup_place(comp: Competition, club: usize) -> bool
     if read_i32(comp.addr()) == read_i32(KEY_CLUB_COMP_ENGLISH_LEAGUE_CUP) {
         return true;
     }
-    let nation = Nation(comp.nation());
+    let nation = Nation((comp.nation()).addr());
     if nation.is_null() {
         return false;
     }
@@ -2487,10 +2487,10 @@ pub(crate) unsafe fn fixture_winner_side(this: usize, f: Fixture) -> Option<u32>
     let t = read_usize(this + cup::TEAM_TABLE);
     for k in 0..n as usize {
         let e = t + 6 * k;
-        if read_usize(e) == c1 {
+        if read_usize(e) == c1.addr() {
             s1 = read_i8(e + 4);
         }
-        if read_usize(e) == c2 {
+        if read_usize(e) == c2.addr() {
             s2 = read_i8(e + 4);
         }
     }
@@ -3085,7 +3085,7 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
                         }
                         write_u8(cup_round_entry(this, round) + j + 0x29, 0xff);
                     }
-                    news_of_game(r.home_club(), r.away_club(), r.home_club_id(), r.away_club_id(), r.stadium_id(),
+                    news_of_game((r.home_club()).addr(), (r.away_club()).addr(), r.home_club_id(), r.away_club_id(), r.stadium_id(),
                         (r.day() as i16) as u16, (r.year() as i16) as u16);
                     j += 7;
                 } else {

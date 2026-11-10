@@ -1349,29 +1349,29 @@ pub(crate) unsafe extern "thiscall" fn process_fixture(this: usize, game: usize,
     };
     let (a, b) = (game.home_club(), game.away_club());
     let (vencedor, perdedor) = if ga > gb {
-        add_uefa_coefficient(read_usize(a + 0x53), 2);
+        add_uefa_coefficient(read_usize(a.addr() + 0x53), 2);
         (game.home_club(), game.away_club())
     } else if ga < gb {
-        add_uefa_coefficient(read_usize(b + 0x53), 2);
+        add_uefa_coefficient(read_usize(b.addr() + 0x53), 2);
         (game.away_club(), game.home_club())
     } else {
-        add_uefa_coefficient(read_usize(a + 0x53), 1);
-        add_uefa_coefficient(read_usize(game.away_club() + 0x53), 1);
-        (0, 0)
+        add_uefa_coefficient(read_usize(a.addr() + 0x53), 1);
+        add_uefa_coefficient(read_usize((game.away_club()).addr() + 0x53), 1);
+        (Club(0), Club(0))
     };
     let _ = perdedor;
     let stage = game.stage_index() as i8;
     if stage > -1 && stage < 0xc {
-        if vencedor != 0 {
+        if vencedor != Club(0) {
             crate::comparison::branch("cpy_6 win bonus");
-            european_cup_add_prize_money(european_cup_club_finance(vencedor), 0x30d40); // cpy6: the win prize
-            european_cup_send_prize_money_news(this, vencedor, 0x30d40, game);
+            european_cup_add_prize_money(european_cup_club_finance(vencedor.addr()), 0x30d40); // cpy6: the win prize
+            european_cup_send_prize_money_news(this, vencedor.addr(), 0x30d40, game);
         } else {
             crate::comparison::branch("cpy_6 draw bonus");
-            european_cup_add_prize_money(european_cup_club_finance(game.home_club()), 0x186a0); // cpy6: the home side’s draw prize
-            european_cup_add_prize_money(european_cup_club_finance(game.away_club()), 0x186a0);
-            european_cup_send_prize_money_news(this, game.home_club(), 0x186a0, game);
-            european_cup_send_prize_money_news(this, game.away_club(), 0x186a0, game);
+            european_cup_add_prize_money(european_cup_club_finance((game.home_club()).addr()), 0x186a0); // cpy6: the home side’s draw prize
+            european_cup_add_prize_money(european_cup_club_finance((game.away_club()).addr()), 0x186a0);
+            european_cup_send_prize_money_news(this, (game.home_club()).addr(), 0x186a0, game);
+            european_cup_send_prize_money_news(this, (game.away_club()).addr(), 0x186a0, game);
         }
     }
     if EUROPEAN_CUP_FIXTURE_DRY_RUN {

@@ -41,7 +41,7 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, club: usi
             if p == 0 {
                 break;
             }
-            if read_u32(p + 0xcb) == read_u32(read_usize(club.stadium().addr() + 0x38)) { // cpz10: o comentarista local
+            if read_u32(p + 0xcb) == read_u32(club.stadium().city()) { // cpz10: o comentarista local
                 crate::comparison::branch("cpz_10 local commentator");
                 ids[n] = read_i16_as_i32(p) as i16;
                 n += 1;

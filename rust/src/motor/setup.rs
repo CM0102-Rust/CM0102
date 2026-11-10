@@ -584,8 +584,8 @@ pub(crate) unsafe fn undo_holiday_managers() {
         *(s.common_name() as *mut u8) = 0;
         exe::date_set(s.addr() + staff::DATE_OF_BIRTH, 1, 0, 0x7ae, -1);
         s.set_age((0x7ae) as i16);
-        s.set_national_job((0) as usize);
-        s.set_club_job((0) as usize);
+        s.set_national_job(Club((0) as usize));
+        s.set_club_job(Club((0) as usize));
         exe::screenmanager_remove_manager_record(G_SCREEN_MANAGER, s, -1);
     }
 }

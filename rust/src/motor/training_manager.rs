@@ -457,7 +457,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
             laps = 1;
         }
         let sheet: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-        contract_of_club = sheet(read_usize(G_CONTRACT_MANAGER), p.addr(), p.club_job() as u32);
+        contract_of_club = sheet(read_usize(G_CONTRACT_MANAGER), p.addr(), p.club_job().addr() as u32);
     }
     let mut acabou = false;
     if npos > 0 {

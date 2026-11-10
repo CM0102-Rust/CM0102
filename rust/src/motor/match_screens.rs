@@ -273,7 +273,7 @@ pub(crate) unsafe extern "thiscall" fn fill_match_record(stats: usize, m: usize,
         }
         pd(tm + 0x61, d(f + 0xc92c));
         let g = Engine(m.addr() + 0xd0 * t);
-        let tecnico = (g.side0_manager() as u32) as usize;
+        let tecnico = (g.side0_manager().addr() as u32) as usize;
         let last = if tecnico != 0 {
             pd(tm + match_record_team::MANAGER_ID, d(tecnico));
             pw(tm + match_record_team::MANAGER_CURRENT_REPUTATION, g.match_managers());
@@ -2308,7 +2308,7 @@ pub(crate) unsafe extern "C" fn match_screens_draw_team_selection() {
             }
         }
         if exe::transfer_manager_player_needs_work_permit(g(G_TRANSFER_MANAGER), p, club, 0) != 0
-            && *(competition() as *const i32) != *(KEY_CLUB_COMP_RESERVE as *const i32)
+            && *(competition().addr() as *const i32) != *(KEY_CLUB_COMP_RESERVE as *const i32)
             && exe::friendly_is_friendly_competition(g(G_FRIENDLY), competition()) == 0
         {
             por(&mut sem_visto, p);
@@ -3106,7 +3106,7 @@ pub(crate) unsafe extern "C" fn refresh_latest_scores_rows() {
                                 exe::screenmanager_set_widget_text_colour(sm, it, colour_word_u32(G_GUI_COLOUR_YELLOW));
                                 exe::screenmanager_set_widget_text(sm, it, BUF);
                                 exe::screenmanager_set_widget_id(sm, it, 0x7e5);
-                                let key = ((*(comp as *const u32) << 11 | (w32 as u16 as u32 & 0x7ff)) << 11) | (w30 as u16 as u32 & 0x7ff);
+                                let key = ((*(comp.addr() as *const u32) << 11 | (w32 as u16 as u32 & 0x7ff)) << 11) | (w30 as u16 as u32 & 0x7ff);
                                 exe::screenmanager_set_widget_data(sm, it, key as usize);
                             } else {
                                 exe::screenmanager_set_widget_rect(sm, it, (0x7d) as i32, (0) as i32, x, (0) as i32);
@@ -3952,7 +3952,7 @@ pub(crate) unsafe extern "C" fn build_day_fixtures_screen() {
             }
             let width = width as usize;
             if exe::comp_is_reserve_or_minor_comp(*(G_RESERVE_COMP as *const usize), comp) == 0 {
-                let base_id = *(fx.competition() as *const u32);
+                let base_id = *(fx.competition().addr() as *const u32);
                 let id = (((base_id << 11) | (w32 as u32 & 0x7ff)) << 11) | (w30 as u32 & 0x7ff);
                 row(current_human_display(), 2, 0x73, 0, width, 0, 0, k as usize, 1, 0, 0, 1, 3, colour_with_high_bits(id as usize, G_GUI_COLOUR_YELLOW), BUF, 0, 0x7e5, id as usize, table);
             } else {
@@ -5015,7 +5015,7 @@ pub(crate) unsafe extern "stdcall" fn match_stats_get_record_bucket(game: usize,
         if game.home_side_mark() == 0 {
             return 2;
         }
-        let v = core::ptr::read_unaligned((game.home_club() + 0x80) as *const i16);
+        let v = core::ptr::read_unaligned(((game.home_club()).addr() + 0x80) as *const i16);
         return if v as i32 * 2 >= 10000 || v >= 0x157c { 0 } else { 2 };
     }
     // simplification: the two byte tables of the jumps are read from the exe itself (the hook only replaces the start of the routine)
@@ -5030,7 +5030,7 @@ pub(crate) unsafe extern "stdcall" fn match_stats_get_record_bucket(game: usize,
             }
             match table(0x729d94, c) {
                 0 => 0,
-                1 => (core::ptr::read_unaligned((game.competition() + 0x69) as *const i16) <= 0xc) as u8,
+                1 => (core::ptr::read_unaligned(((game.competition()).addr() + 0x69) as *const i16) <= 0xc) as u8,
                 _ => 1,
             }
         }
@@ -5042,7 +5042,7 @@ pub(crate) unsafe extern "stdcall" fn match_stats_get_record_bucket(game: usize,
             if c as u32 > 0x23 { 1 } else { (table(0x729d64, c) != 0) as u8 }
         }
         _ => {
-            let n = *((game.competition() + 0x69) as *const i8);
+            let n = *(((game.competition()).addr() + 0x69) as *const i8);
             if n > 0xd { 1 } else { (n <= 6) as u8 + 2 }
         }
     }
@@ -5393,7 +5393,7 @@ pub(crate) unsafe extern "C" fn match_details_input(item: u32) -> i32 {
             let e = record(current_human_display());
             if id_ou_default(core::ptr::read_unaligned((e + 0xba966) as *const u16)) == 2 {
                 let club = core::ptr::read_unaligned((e + 0xba9a6) as *const usize);
-                let mark = if club == p1f.home_club() { p1f.home_side_mark() } else { (p1f.away_side_mark() as u8) };
+                let mark = if club == (p1f.home_club()).addr() { p1f.home_side_mark() } else { (p1f.away_side_mark() as u8) };
                 exe::tactics_screen_open(club, (mark == 0) as u32, (0) as usize, 0, (v1e) as i32, 0);
                 return -4;
             }

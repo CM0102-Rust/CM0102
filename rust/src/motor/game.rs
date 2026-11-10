@@ -387,7 +387,7 @@ pub(crate) unsafe extern "C" fn game_check_club_dressing_room_unrest(club: usize
 ///
 /// [pt] A pessoa conta para a liderança do clube: id válido (< [0xae2364]), contrato com o clube (+0x39) e ficha de jogador.
 pub(crate) unsafe fn is_club_squad_player(p: Staff, club: usize) -> bool {
-    !p.is_null() && (read_usize(p.addr()) as i32) < read_usize(G_STAFF_COUNT) as i32 && p.club_job() == club && p.player() != 0
+    !p.is_null() && (read_usize(p.addr()) as i32) < read_usize(G_STAFF_COUNT) as i32 && p.club_job() == Club(club) && p.player() != 0
 }
 
 /// Spreads morale through the squads by leadership: one club in seven each day (not national teams): the squad's

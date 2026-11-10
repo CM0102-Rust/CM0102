@@ -202,7 +202,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_duty_competitions(this: u
 pub(crate) unsafe extern "thiscall" fn compare_select_squads_for_fixture(this: usize, p: usize) {
     let p = Fixture(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SELECT_SQUADS_FOR_FIXTURE);
-    let regions = [(club_nation_record(this, Club(p.home_club())) + 0x32, 0x3a), (club_nation_record(this, Club(p.away_club())) + 0x32, 0x3a)];
+    let regions = [(club_nation_record(this, Club((p.home_club()).addr())) + 0x32, 0x3a), (club_nation_record(this, Club((p.away_club()).addr())) + 0x32, 0x3a)];
     let before = crate::comparison::MemorySnapshot::read(&regions);
     o(this, p.addr());
     let mo = crate::comparison::MemorySnapshot::read(&regions);
@@ -295,19 +295,19 @@ pub(crate) unsafe extern "thiscall" fn compare_format_squad_label(this: usize, k
 pub(crate) unsafe extern "thiscall" fn compare_withdraw_injured_player(this: usize, p: usize, days: u32) {
     let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_WITHDRAW_INJURED_PLAYER);
-    let club = Club(p.national_job());
+    let club = Club((p.national_job()).addr());
     if (days as u16 as i16) < 0xe || club.is_null() {
         return o(this, p.addr(), days);
     }
     let plan = release_plan(this, p, days);
     let team = Club(national_team_for_type(club.nation().addr(), call_up_type(club, p)));
     let estava = !team.is_null() && (0..50usize).any(|c| team.squad(c) == p.addr());
-    let before = (club.addr(), p.job_for_nation());
+    let before = (club, p.job_for_nation());
     o(this, p.addr(), days);
     let after = (p.national_job(), p.job_for_nation());
     let ok = match plan {
         0 => after == before,
-        _ => !estava || after.0 == 0,
+        _ => !estava || after.0 == Club(0),
     };
     SCOREBOARD.record(ok, || format!("withdraw_injured_player({:x}, {}) plano {} estava {} antes {:x?} depois {:x?}", p.addr(), days as u16 as i16, plan, estava, before, after));
 }
@@ -588,12 +588,12 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_remove_player(this
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_NATIONAL_TEAMS_REMOVE_PLAYER);
     let u = |p: usize| core::ptr::read_unaligned(p as *const usize);
     let nation = player.nation();
-    if nation == 0 || player.player() == 0 {
+    if nation == Nation(0) || player.player() == 0 {
         return o(this, player.addr());
     }
     // the regions: the player, the nation record, the level band in the list and the national team (the level,
     // 0x76d810, only reads)
-    let reg = read_usize(this + national_teams_fields::NATION_RECORDS).wrapping_add((*(nation as *const u32) as usize).wrapping_mul(110));
+    let reg = read_usize(this + national_teams_fields::NATION_RECORDS).wrapping_add((*(nation.addr() as *const u32) as usize).wrapping_mul(110));
     let n = exe::national_teams_get_position_group(player, (reg as *const i16) as usize, (0) as u32) as i8 as isize;
     let mut regions = [(player.addr(), 110), (reg, 110), (player.addr(), 0), (player.addr(), 0)];
     if (0..=3).contains(&n) {
@@ -603,8 +603,8 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_remove_player(this
             regions[2] = (read_usize(this + national_teams_fields::RESERVE_POOLS) + 4 * start as usize, 4 * size);
         }
     }
-    if player.national_job() != 0 {
-        regions[3] = (player.national_job() + 0xd7, 200);
+    if player.national_job() != Club(0) {
+        regions[3] = ((player.national_job()).addr() + 0xd7, 200);
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, player.addr()), || national_teams_remove_player(this, player.addr()));
     SCOREBOARD.record(igual, || format!("national_teams_remove_player(nivel {}) {:x?} x {:x?}", n, mo, mr));
@@ -687,11 +687,11 @@ pub(crate) unsafe extern "thiscall" fn compare_record_club_call_ups(this: usize,
             continue;
         }
         let c = s.club_job();
-        if c == 0 || vistos.contains(&c) {
+        if c == Club(0) || vistos.contains(&c) {
             continue;
         }
         vistos.push(c);
-        if let Some(rec) = club_callup_record(this, Club(c)) {
+        if let Some(rec) = club_callup_record(this, Club(c.addr())) {
             reg.push((rec, 6));
             let cap = *((rec + 4) as *const i8);
             if read_usize(rec) != 0 && cap > 0 {

@@ -106,7 +106,7 @@ pub(crate) unsafe fn injure_with(m: Engine, kind: u32, chance: u32, p: MatchPlay
     }
     let (mut t, mut g) = (kind as u8, chance as u8);
     if t as i8 > -1 {
-        register_injury_with(*(G_INJURY as *const usize), p.staff(), &mut t, &mut g, call);
+        register_injury_with(*(G_INJURY as *const usize), (p.staff()).addr(), &mut t, &mut g, call);
     }
     p.set_injury_culprit(o);
     if o != 0 {
@@ -223,7 +223,7 @@ pub(crate) unsafe fn compare_injure_with_tape(m: usize, kind: u32, chance: u32, 
 /// 0x757da0 nos ultimos 7 ou 30 dias, datas da 0x54c8e0); os demais da faixa, sim.
 pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> u32 {
     let p = MatchPlayer(p);
-    let m = Engine(p.engine());
+    let m = Engine((p.engine()).addr());
     let today = G_CURRENT_DATE;
     let (mut d7, mut d30) = ([0u8; 8], [0u8; 8]);
     exe::date_sub_days(today, (&mut d7) as *mut [u8; 8] as usize, 7);
@@ -237,7 +237,7 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
         return 0;
     }
     let sheet = p.staff();
-    if sheet != 0 && *(sheet as *const i32) >= *(G_STAFF_COUNT as *const i32) {
+    if sheet != Staff(0) && *(sheet.addr() as *const i32) >= *(G_STAFF_COUNT as *const i32) {
         return 0;
     }
     let atuacao = p.match_rating() as i32;
@@ -249,18 +249,18 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
     let common = || b(0xc) == 0 && b(0x10) == 0 && b(0x17) <= 8 && (b(3) as u8) <= 2 && atuacao <= limit(in_field);
     let search = |cod: u32, data: &[u8; 8]| {
         let f: unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, *const [u8; 8]) -> u32 = core::mem::transmute(FN_MEDIA_HAS_LOGGED_STORY);
-        f(*(G_MEDIA as *const usize), sheet, p.club(), -1, cod, data) != 0
+        f(*(G_MEDIA as *const usize), sheet.addr(), p.club(), -1, cod, data) != 0
     };
     let algum = |de: u32, ate: u32, data: &[u8; 8]| (de..=ate).any(|k| search(k as u16 as u32, data));
     let r = match c {
         0x219e => common() && (algum(0, 0x1d, &d7) || algum(0x1e, 0x27, &d7)),
         0x219f => atuacao >= random(0x7d0) + 0x1b58 && algum(0, 0x1d, &d7),
         0x21a0 => {
-            if exe::date_days_since(today, *((sheet + player_sheet::TACKLING) as *const u32), *((sheet + player_sheet::VERSATILITY) as *const u32)) < 0x5a || atuacao <= random(0x7d0) + 0x1b58 {
+            if exe::date_days_since(today, *((sheet.addr() + player_sheet::TACKLING) as *const u32), *((sheet.addr() + player_sheet::VERSATILITY) as *const u32)) < 0x5a || atuacao <= random(0x7d0) + 0x1b58 {
                 false
             } else {
                 let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_MEDIA_HAS_RESPONSE_TWO_FOR_PLAYER);
-                f(*(G_MEDIA as *const usize), sheet) != 0
+                f(*(G_MEDIA as *const usize), sheet.addr()) != 0
             }
         }
         0x21a1 | 0x21a2 => {
@@ -871,16 +871,16 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
     if !game.is_null() {
         for k in 0..50usize {
             let mut club = game.home_club();
-            let found = if read_usize(club + club::SQUAD + 4 * k) == p.addr() {
+            let found = if club.squad(k) == p.addr() {
                 true
-            } else if read_usize(game.away_club() + 0xd7 + 4 * k) == p.addr() {
+            } else if read_usize((game.away_club()).addr() + 0xd7 + 4 * k) == p.addr() {
                 club = game.away_club();
                 true
             } else {
                 false
             };
             if found {
-                if club != 0 {
+                if club != Club(0) {
                     exe::fill_match_record_from_fixture(game, club, read_usize(this + injury_fields::INJURY_ENTRIES) + off + 1);
                     of_match = true;
                 }
@@ -893,9 +893,9 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
     }
     // o melhor fisioterapeuta
     let mut best: i8 = 0;
-    if p.club_job() != 0 {
+    if p.club_job() != Club(0) {
         for k in 0..3usize {
-            let f = Staff(read_usize(p.club_job() + 0x1cf + 4 * k));
+            let f = Staff(read_usize((p.club_job()).addr() + 0x1cf + 4 * k));
             if f.is_null() {
                 continue;
             }
@@ -904,7 +904,7 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
                 continue;
             }
             if exe::non_player_attribute_rating(np, read_u8(np + non_player::PHYSIOTHERAPY) as i8) as i8 > best {
-                let np = read_usize(read_usize(p.club_job() + 0x1cf + 4 * k) + 0x69);
+                let np = read_usize(read_usize((p.club_job()).addr() + 0x1cf + 4 * k) + 0x69);
                 best = exe::non_player_attribute_rating(np, read_u8(np + non_player::PHYSIOTHERAPY) as i8) as i8;
             }
         }
@@ -950,11 +950,11 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
     }
     if retroativa == 0 {
         let club = p.club_job();
-        if club != 0 {
+        if club != Club(0) {
             if exe::human_manager_is_human_club(club, 0, (1) as u32, (0) as u32, 0) == 0 && days >= 100 {
                 if exe::staff_is_transfer_listed(p, 0) == 0 && read_usize(G_TRANSFER_MANAGER) != 0 {
                     let tm = read_usize(G_TRANSFER_MANAGER);
-                    let m = read_usize(read_usize(tm + transfer_manager_fields::SHORTLIST_MANAGER) + 0xdc).wrapping_add(read_usize(p.club_job()).wrapping_mul(9)) + 8;
+                    let m = read_usize(read_usize(tm + transfer_manager_fields::SHORTLIST_MANAGER) + 0xdc).wrapping_add(read_usize((p.club_job()).addr()).wrapping_mul(9)) + 8;
                     *(m as *mut u8) = 100;
                 }
             }
@@ -996,7 +996,7 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
             *((physical_record(this, read_usize(p.addr())) + 0x13) as *mut u8) = rec as u8;
         }
     }
-    if p.national_job() != 0 && read_usize(G_NATIONAL_TEAMS) != 0 {
+    if p.national_job() != Club(0) && read_usize(G_NATIONAL_TEAMS) != 0 {
         exe::nationalteams_withdraw_injured_player(read_usize(G_NATIONAL_TEAMS), p, read_i16(read_usize(this + injury_fields::INJURY_ENTRIES) + off + 0x28) as u16 as u32);
     }
     *((physical_record(this, read_usize(p.addr())) + 0x1c) as *mut u8) = 0;
@@ -1035,8 +1035,8 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
     }
     if surto != 0 && (kind == 1 || kind == 0 || kind == 2) {
         let club = p.club_job();
-        if club != 0 {
-            exe::injury_add_illness_outbreak(this, (G_CURRENT_DATE) as usize as *mut [u8; 8], kind_arg, (read_usize(club) as i32) as i32 as usize, 0);
+        if club != Club(0) {
+            exe::injury_add_illness_outbreak(this, (G_CURRENT_DATE) as usize as *mut [u8; 8], kind_arg, (read_usize(club.addr()) as i32) as i32 as usize, 0);
         }
     }
     slot
@@ -1077,8 +1077,8 @@ pub(crate) unsafe extern "thiscall" fn injury_post_injury_news(_this: usize, p: 
         n = exe::transfer_manager_collect_player_news_recipients(tm, p, 0x5a, clubs.as_mut_ptr(), 0x1e) as i8;
     }
     let sel = p.national_job();
-    if sel != 0 && (0..0x1e).contains(&n) {
-        clubs[n as usize] = sel;
+    if sel != Club(0) && (0..0x1e).contains(&n) {
+        clubs[n as usize] = sel.addr();
         n += 1;
     }
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
@@ -1106,7 +1106,7 @@ pub(crate) unsafe extern "thiscall" fn injury_post_injury_news(_this: usize, p: 
     }
     exe::newsitem_set_slot(nw, 0xd, arg);
     let club = p.club_job();
-    exe::newsitem_set_slot(nw, 0xe, if club != 0 { read_usize(club) as u32 } else { u32::MAX });
+    exe::newsitem_set_slot(nw, 0xe, if club != Club(0) { read_usize(club.addr()) as u32 } else { u32::MAX });
     exe::newsitem_set_slot(nw, 0xf, 0x420e9);
     let mut mark: u8 = 0x10;
     exe::write_match_record_to_news(l + 1, nw, &mut mark);
@@ -1124,7 +1124,7 @@ pub(crate) unsafe extern "thiscall" fn injury_post_injury_news(_this: usize, p: 
         }
         return;
     }
-    if p.club_job() == 0 {
+    if p.club_job() == Club(0) {
         return;
     }
     if exe::news_club_has_human_manager(news, p.club_job()) == 0 {
@@ -1134,13 +1134,13 @@ pub(crate) unsafe extern "thiscall" fn injury_post_injury_news(_this: usize, p: 
     let c = injury_main_contract_stored(p.addr());
     if c != 0 && injury_club_of_contract(c) != 0 {
         let x = injury_club_of_contract(injury_main_contract_stored(p.addr()));
-        if x != p.club_job() {
+        if x != (p.club_job()).addr() {
             let y = injury_club_of_contract(injury_main_contract_stored(p.addr()));
             exe::news_send_to_club_manager(read_usize(G_NEWS), nw, y);
         }
     }
     let sel = p.national_job();
-    if sel != 0 {
+    if sel != Club(0) {
         exe::news_send_to_club_manager(read_usize(G_NEWS), nw, sel);
     }
 }
@@ -1452,7 +1452,7 @@ pub(crate) unsafe extern "thiscall" fn post_due_recovery_news(this: usize) {
     for k in 0..0x10i32 {
         let n = read_i32(G_STAFF_COUNT);
         let s = Staff(read_usize(G_STAFF_TABLE).wrapping_add(((n - k - 1) as u32).wrapping_mul(0x6e) as usize));
-        let club = Club(s.club_job());
+        let club = Club((s.club_job()).addr());
         if club.is_null() {
             continue;
         }
@@ -1812,7 +1812,7 @@ pub(crate) unsafe extern "thiscall" fn end_player_injury(this: usize, person: us
         let history: unsafe extern "thiscall" fn(usize, usize, usize, *const u8) -> usize = core::mem::transmute(FN_FILE_LLIST_ADD_NODE);
         history(read_i32(this + injury_fields::INJURY_HISTORY) as usize, r + physical_record::HISTORY_FIRST, r + physical_record::HISTORY_LAST, e as *const u8);
     }
-    let club = (person.club_job() as i32) as usize;
+    let club = (person.club_job().addr() as i32) as usize;
     if news != 0 && club != 0 {
         let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
         if human(club, 0, 1, 0, 0) != 0 {
@@ -2164,7 +2164,7 @@ pub(crate) unsafe extern "stdcall" fn injury_player_in_close_season(person: usiz
         return 1;
     }
     let mut convocado = false;
-    let national_team = Club(person.national_job());
+    let national_team = Club((person.national_job()).addr());
     if !national_team.is_null() {
         let k = exe::national_teams_get_squad_slot(national_team, (person.playing_squad() & 8) as u32);
         // simplification: the original pushes the argument’s dword with only the low byte replaced by al; 0x76e040 reads only the byte
@@ -2173,7 +2173,7 @@ pub(crate) unsafe extern "stdcall" fn injury_player_in_close_season(person: usiz
         let (ano, ano_h) = ((lo >> 16) as u16, read_i16(G_CURRENT_DATE_YEAR) as u16);
         convocado = ano > ano_h || (ano == ano_h && (lo as u16 as i16) > read_i16(G_CURRENT_DATE));
     }
-    let club = Club(person.club_job());
+    let club = Club((person.club_job()).addr());
     if club.is_null() || convocado || (club.continental_comp_id() as i32) != -1 {
         return 0;
     }
@@ -2252,10 +2252,10 @@ pub(crate) unsafe extern "thiscall" fn init_squad_fitness(this: usize) {
                 let r = read_usize(this).wrapping_add((read_i32(p.addr()) as usize).wrapping_mul(31));
                 core::ptr::write_unaligned((r + 8) as *mut u16, (10000 - v * 75) as u16); // a forma inicial
             } else {
-                if p.club_job() == club.addr() {
+                if p.club_job() == club {
                     match p.job_for_club() {
                         0xb => {
-                            p.set_club_job(0);
+                            p.set_club_job(Club(0));
                             p.set_job_for_club(8);
                         }
                         0xf => *((p.addr() + staff::JOB_FOR_CLUB) as *mut u8) = 8,
@@ -2751,7 +2751,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
         }
     } else {
         l38 = t;
-        let national_team = Club(person.national_job());
+        let national_team = Club((person.national_job()).addr());
         let mut ocupado = false;
         if !national_team.is_null() {
             let k = exe::national_teams_get_squad_slot(national_team, (person.playing_squad() & 8) as u32);
@@ -2767,11 +2767,11 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
             };
         }
         let club = person.club_job();
-        if club != 0 && !ocupado {
-            if club != read_usize(G_FITNESS_UPDATE_CACHED_CLUB) || read_u16(G_FITNESS_UPDATE_CACHE_DATE_YEAR) != read_u16(G_CURRENT_DATE_YEAR) || read_i16(G_FITNESS_UPDATE_CACHE_DATE) != read_i16(G_CURRENT_DATE) {
+        if club != Club(0) && !ocupado {
+            if club != Club(read_usize(G_FITNESS_UPDATE_CACHED_CLUB)) || read_u16(G_FITNESS_UPDATE_CACHE_DATE_YEAR) != read_u16(G_CURRENT_DATE_YEAR) || read_i16(G_FITNESS_UPDATE_CACHE_DATE) != read_i16(G_CURRENT_DATE) {
                 let r = exe::key_nation_club_in_season(club, G_FITNESS_UPDATE_SEASON_START_DATE, G_FITNESS_UPDATE_SEASON_END_DATE);
                 *(G_FITNESS_UPDATE_CACHED_SEASON_FLAG as *mut u32) = (r == 0) as u32;
-                *(G_FITNESS_UPDATE_CACHED_CLUB as *mut usize) = person.club_job();
+                *(G_FITNESS_UPDATE_CACHED_CLUB as *mut usize) = (person.club_job()).addr();
                 manager_manager_copy_date(G_FITNESS_UPDATE_CACHE_DATE, G_CURRENT_DATE);
             }
             if read_i32(G_FITNESS_UPDATE_CACHED_SEASON_FLAG) != 0 {

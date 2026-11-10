@@ -286,7 +286,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_inbox(this: usize, manager:
         return o(this, manager.addr());
     }
     let caixa = (read_i32(this + news_fields::HUMAN_INBOXES) as u32).wrapping_add((h as u32).wrapping_mul(12)) as usize;
-    if (manager.club_job() as i32) != 0 || (manager.national_job() as i32) != 0 {
+    if (manager.club_job().addr() as i32) != 0 || (manager.national_job().addr() as i32) != 0 {
         o(this, manager.addr());
         let first = read_i32(caixa);
         let news = news_box_regions(this, caixa);

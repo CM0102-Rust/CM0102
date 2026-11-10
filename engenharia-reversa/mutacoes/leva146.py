@@ -23,6 +23,6 @@ MUTACOES = [
     ('p_cai', "|| (bl2 < 4 && wp(0x19c) as i32 > random(200));", "|| (bl2 < 4 && wp(0x19c) as i32 > random(250));"),
     ('p_posse', "        if *o > 0 {\n            *o = (*o).wrapping_sub(10);", "        if *o > 0 {\n            *o = (*o).wrapping_sub(9);"),
     ('p_forca', "let strength = if l44 > -100 { l44 as i32 } else { -100 };", "let strength = if l44 > -90 { l44 as i32 } else { -90 };"),
-    ('p_transito', "*((m + engine::BALL_TRANSIT_TICKS) as *mut u8) = ftol((d as f64 + d as f64) / k + read_f64(rdata::F64_0_5)) as u8;", "*((m + engine::BALL_TRANSIT_TICKS) as *mut u8) = ftol((d as f64 + d as f64) / k + read_f64(rdata::F64_0_5) + 1.0) as u8;"),
+    ('p_transito', "*((m.addr() + engine::BALL_TRANSIT_TICKS) as *mut u8) = ftol((d as f64 + d as f64) / k + read_f64(rdata::F64_0_5)) as u8;", "*((m.addr() + engine::BALL_TRANSIT_TICKS) as *mut u8) = ftol((d as f64 + d as f64) / k + read_f64(rdata::F64_0_5) + 1.0) as u8;"),
     ('p_grupo', "[0x2026, 0x2027, 0x2028, 0x2023, 0x2024, 0x2022, 0x2025],", "[0x2026, 0x2027, 0x2028, 0x2023, 0x2024, 0x2023, 0x2025],"),
 ]

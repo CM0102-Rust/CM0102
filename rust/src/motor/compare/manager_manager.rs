@@ -299,8 +299,8 @@ pub(crate) unsafe extern "thiscall" fn compare_assess_transfer_deal(this: usize,
     let buyer = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(transf + 8).wrapping_mul(club::SIZE));
     reg.push((board_row_at(this, read_usize(buyer)) + 0x38, 8));
     let seller = person.club_job();
-    if seller != 0 {
-        reg.push((board_row_at(this, read_usize(seller)) + 0x38, 8));
+    if seller != Club(0) {
+        reg.push((board_row_at(this, read_usize(seller.addr())) + 0x38, 8));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, transf, f1, f2),
         || crate::rng::without_counting(|| assess_transfer_deal(this, transf, f1, f2)));
@@ -316,7 +316,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_transfer_confidence_changes
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add(read_usize(transf + offer::TARGET_STAFF_ID).wrapping_mul(staff::SIZE)));
     reg.push((board_row_at(this, read_usize(transf + 8)), 0x49));
-    let seller = Club(person.club_job());
+    let seller = Club((person.club_job()).addr());
     if !seller.is_null() {
         reg.push((board_row_at(this, read_usize(seller.addr())), 0x49));
         let pref = staff_preferences(Staff(seller.chairman().addr()));
@@ -360,22 +360,22 @@ pub(crate) unsafe extern "thiscall" fn compare_manager_manager_remove_player_fro
     let person = Staff(person);
     let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(IDX_MANAGER_MANAGER_REMOVE_PLAYER_FROM_SQUAD);
-    let in_club = person.club_job() == club.addr();
-    let in_national_team = person.national_job() == club.addr();
+    let in_club = person.club_job() == club;
+    let in_national_team = person.national_job() == club;
     let (mut f39, mut c39) = (person.job_for_club(), person.club_job());
     let (mut f28, mut c24) = (person.job_for_nation(), person.national_job());
     if in_club {
         let (f, fica) = role_after_leaving(f39);
         f39 = f;
         if !fica {
-            c39 = 0;
+            c39 = Club(0);
         }
     }
-    if c24 == club.addr() {
+    if c24 == club {
         let (f, fica) = role_after_leaving(f28);
         f28 = f;
         if !fica {
-            c24 = 0;
+            c24 = Club(0);
         }
     }
     let r = o(this, person.addr(), club.addr());

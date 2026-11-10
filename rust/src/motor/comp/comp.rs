@@ -125,11 +125,11 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: 
     exe::newsitem_set_slot(p, (7) as u32 as i8, kind as u8 as i8 as i32 as u32);
     let b = |a: usize| *(a as *const i8);
     let won = if !partida.is_null() {
-        if partida.home_club() == club.addr() {
-            exe::newsitem_set_slot(p, (5) as u32 as i8, read_usize(partida.away_club()) as u32);
+        if partida.home_club() == club {
+            exe::newsitem_set_slot(p, (5) as u32 as i8, read_usize((partida.away_club()).addr()) as u32);
             partida.home_result_mark() != 0 || partida.home_aggregate() > partida.away_aggregate() || partida.home_goals() > partida.away_goals()
         } else {
-            exe::newsitem_set_slot(p, (5) as u32 as i8, read_usize(partida.home_club()) as u32);
+            exe::newsitem_set_slot(p, (5) as u32 as i8, read_usize((partida.home_club()).addr()) as u32);
             partida.away_result_mark() != 0 || partida.home_aggregate() < partida.away_aggregate() || partida.home_goals() < partida.away_goals()
         }
     } else {
@@ -598,10 +598,10 @@ pub(crate) unsafe fn add_club_callups(this: usize, c: usize, count: u8, d: *mut 
 pub(crate) unsafe fn callup_array_full(this: usize, team: Club) -> bool {
     (0..0x32usize).any(|i| {
         let s = Staff(team.squad(i));
-        if s.is_null() || read_usize(s.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 || s.club_job() == 0 {
+        if s.is_null() || read_usize(s.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 || s.club_job() == Club(0) {
             return false;
         }
-        match club_callup_record(this, Club(s.club_job())) {
+        match club_callup_record(this, Club((s.club_job()).addr())) {
             Some(rec) => *((rec + 4) as *const i8) == *((rec + 5) as *const i8),
             None => false,
         }
@@ -670,13 +670,13 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, p
     let reservas = read_usize(KEY_CLUB_COMP_RESERVE);
     if (exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), comp) != 0 || read_usize(comp.addr()) == reservas) && !partida.is_null() {
         let pc = partida.competition();
-        if pc == read_usize(read_usize(G_FRIENDLY) + 4) || read_usize(pc) == reservas {
+        if pc == Competition(read_usize(read_usize(G_FRIENDLY) + 4)) || read_usize(pc.addr()) == reservas {
             if exe::database_is_national_team(partida.home_club()) != 0 || exe::database_is_national_team(partida.away_club()) != 0 {
                 return 1;
             }
-            let home = Club(partida.home_club());
+            let home = Club((partida.home_club()).addr());
             let a = Nation(home.nation().addr());
-            if a.addr() != read_usize(partida.away_club() + 0x53) || a.league_selected() == 0 {
+            if a.addr() != read_usize((partida.away_club()).addr() + 0x53) || a.league_selected() == 0 {
                 return 3;
             }
             if let Some(k) = row(a.addr()) {
@@ -685,8 +685,8 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, p
             return if exe::database_is_national_team(home) != 0 { 0 } else { 3 };
         }
     }
-    if comp.nation() != 0 {
-        return match row(nation) {
+    if comp.nation() != Nation(0) {
+        return match row(nation.addr()) {
             Some(k) => *((0xb63d74 + 72 * k) as *const u8), // cpt3: the competition’s key nation
             None => 3,
         };

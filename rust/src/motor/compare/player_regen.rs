@@ -79,7 +79,7 @@ pub(crate) unsafe extern "stdcall" fn compare_player_regen_sign_for_club(person:
         return r;
     }
     let c = exe::contract_manager_get_contract(read_i32(G_CONTRACT_MANAGER) as usize, person);
-    let ok = r == 1 && (club.squad(k) as i32) == person.addr() as i32 && (person.club_job() as i32) == club.addr() as i32 && (c == 0 || *((c + 0x3a) as *const u8) == 0);
+    let ok = r == 1 && (club.squad(k) as i32) == person.addr() as i32 && (person.club_job().addr() as i32) == club.addr() as i32 && (c == 0 || *((c + 0x3a) as *const u8) == 0);
     SCOREBOARD.record(ok, || format!("player_regen_sign_for_club({:x}, {:x}) vaga {} original={}", person.addr(), club.addr(), k, r));
     r
 }
@@ -249,7 +249,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pick_club_from_nation_list(this: 
     let player = Staff(player);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_PICK_CLUB_FROM_NATION_LIST);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    for n in [read_usize(player.nation()), read_usize(KEY_NATION_ENGLAND)] {
+    for n in [read_usize((player.nation()).addr()), read_usize(KEY_NATION_ENGLAND)] {
         let l = nation_club_list(this, n);
         if l != 0 {
             reg.push((l + llist::CURSOR, 4));
@@ -299,8 +299,8 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_staff_for_regen(this: usize
     let np = person.non_player();
     let jp = person.player();
     let nation = person.nation();
-    let reserve = (np != 0).then(|| (read_usize(np) as u32, (nation != 0).then(|| read_usize(nation) as u32), read_usize(person.addr()) as u32));
-    let bench = (jp != 0).then(|| (read_usize(jp) as u32, read_usize(nation) as u32, read_usize(person.addr()) as u32));
+    let reserve = (np != 0).then(|| (read_usize(np) as u32, (nation != Nation(0)).then(|| read_usize(nation.addr()) as u32), read_usize(person.addr()) as u32));
+    let bench = (jp != 0).then(|| (read_usize(jp) as u32, read_usize(nation.addr()) as u32, read_usize(person.addr()) as u32));
     o(this, entry);
     let queue = read_usize(this + player_regen_fields::REGEN_QUEUE).wrapping_add(n1.wrapping_mul(12));
     let mut ok = read_usize(this + player_regen_fields::REGEN_QUEUE_COUNT) == n1 + 1 && read_usize(queue) as i32 == id && read_usize(queue + regen_queue_entry::REGEN_DATE) as u32 == datas;

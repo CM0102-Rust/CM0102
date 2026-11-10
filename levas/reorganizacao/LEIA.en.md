@@ -29,6 +29,19 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 14: typed pointer fields (outside reader, round 10, item 1)
+
+`ponteiros_registros.py` finds, from how the code uses it, which record each field that returned `usize` points to (the
+base of another record, wrapped in a type): 14 fields (`staff::CLUB_JOB` → `Club`, `match_player::ENGINE` → `Engine`,
+`fixture::HOME_CLUB` → `Club`, `staff::NATION` → `Nation`, `engine::PENDING_PLAY_OFFENDER` → `MatchPlayer`...), in
+`levas/reorganizacao/ponteiros.json`, read by `registros.py`. The compiler drove ~1,570 fixes (`--ajustar`, which now
+also handles `Club + 0x..` and `club as u32`, applies only non-overlapping edits per pass and writes `else { T(if ..) }`
+for `else if`); the new `--cadeias` step converts accesses through the typed chain (`person.club_job().manager()`).
+Records implement `LowerHex` (the logs' `{:x}` keeps working). Typed chains 376 → 471; raw reads 19,118 → 18,924. Side
+effect: `.addr()` went up (5,259 → 6,215), where the typed value goes into something that still wants `usize`
+(functions and comparisons); the current propagation only recognises a variable's `x.addr()`, not a chain's.
+Mutations: 13 replacements fixed; 12 anchors followed by hand. Proof: 7cc445c2 ×2, detector equal, comparison 0.
+
 ## Migration to typed records, batch 13: the match engine's magic numbers
 
 Two agents read in the original the values of the enum-like fields of the engine and the match player and the move

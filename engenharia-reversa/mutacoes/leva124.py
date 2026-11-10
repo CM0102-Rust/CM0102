@@ -5,7 +5,7 @@ MUTACOES = [
     ('n_forca', "            let mut strength = (0xc8 - r.wrapping_mul(restam + 4)) << 1;", "            let mut strength = (0xc8 - r.wrapping_mul(restam + 3)) << 1;"),
     ('n_precisa', "                Some(2.25)", "                Some(2.5)"),
     ('n_direcao', "                j.set_ball_control(c.clamp(-0xc8, 0xc8));", "                j.set_ball_control(c.clamp(-0xc7, 0xc8));"),
-    ('n_reacao', "                    if n >= 4 || defendeu != 0 || m.ball_holder() != j.addr() {", "                    if n >= 3 || defendeu != 0 || m.ball_holder() != j.addr() {"),
+    ('n_reacao', "                    if n >= 4 || defendeu != 0 || m.ball_holder() != j {", "                    if n >= 3 || defendeu != 0 || m.ball_holder() != j {"),
     ('n_fim', "                m.set_shootout_state((if mode as u8 == 4 { 3 } else { 6 }) as i8);", "                m.set_shootout_state((if mode as u8 == 4 { 6 } else { 3 }) as i8);"),
-    ('n_placar', "            game.set_away_penalties((*((m.addr() + 0xf5f2) as *mut u8)) as i8);", "            game.set_away_penalties((*((m.addr() + engine::SIDE_STATS) as *mut u8)) as i8);"),
+    ('n_placar', "            game.set_away_penalties((*((m.addr() + 0xf5f2) as *mut u8)) as i8);", "            game.set_away_penalties((m.side_stats()) as i8);"),
 ]

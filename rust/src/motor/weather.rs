@@ -47,15 +47,15 @@ pub(crate) unsafe fn postpone_if_draw_nonzero(n: i32) -> u8 {
 pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usize) -> u8 {
     let game = Fixture(game);
     let est = game.stadium();
-    if est == 0 || read_usize(est + stadium::CITY) == 0 || read_usize(est + stadium::CAPACITY) == 0 || game.competition() == 0 {
+    if est == 0 || read_usize(est + stadium::CITY) == 0 || read_usize(est + stadium::CAPACITY) == 0 || game.competition() == Competition(0) {
         return 0;
     }
     let home = game.home_club();
-    if read_usize(home + club::DIVISION) == 0 {
+    if home.division().addr() == 0 {
         return 0;
     }
-    let k: i8 = if home != 0 { (exe::key_nation_index_of_club(home) as i8) } else { -1 };
-    if game.competition() != read_usize(home + club::DIVISION) || read_u8(est + stadium::COVERED) != 0 {
+    let k: i8 = if home != Club(0) { (exe::key_nation_index_of_club(home) as i8) } else { -1 };
+    if game.competition() != Competition(home.division().addr()) || read_u8(est + stadium::COVERED) != 0 {
         return 0;
     }
     if (0..0x23).contains(&k) {
@@ -106,7 +106,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
             if cap > 0x4e20 {
                 return 0;
             }
-            let mandante = read_u8(home + club::PROFESSIONAL_STATUS) == 1;
+            let mandante = home.professional_status() == 1;
             let n = if cap > 0x30d4 {
                 0xfa
             } else if cap > 0x1388 {
@@ -131,7 +131,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
             if cap > 0x3a98 {
                 return 0;
             }
-            let mandante = read_u8(home + club::PROFESSIONAL_STATUS) == 1;
+            let mandante = home.professional_status() == 1;
             if cap > 0x1d4c && mandante {
                 if friendly_random(4) != 0 {
                     return 5;
@@ -252,7 +252,7 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
         }
     }
     if cid == 0 {
-        let home = Club(game.home_club());
+        let home = Club((game.home_club()).addr());
         if !home.is_null() {
             let c = home.stadium().addr();
             if c != 0 && read_usize(c + stadium::CITY) != 0 {

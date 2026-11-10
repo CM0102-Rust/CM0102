@@ -23,7 +23,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_cup_winners_record(this: usiz
     if club == 0 || game.is_null() || partida == 0 {
         return o(this, club, game.addr(), partida);
     }
-    let notes = (partida + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (game.away_club() == club) as usize, 6);
+    let notes = (partida + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (game.away_club() == Club(club)) as usize, 6);
     compare_champion_update("add_cup_winners_record", this, Club(club), notes, false, || o(this, club, game.addr(), partida),
         || add_cup_winners_record(this, club, game.addr(), partida));
 }
@@ -56,8 +56,8 @@ pub(crate) unsafe extern "thiscall" fn compare_record_match_result(this: usize, 
     if p.category() == 1 {
         return o(this, p.addr(), m);
     }
-    let a = club_manager_record(this, Club(p.home_club()));
-    let v = club_manager_record(this, Club(p.away_club()));
+    let a = club_manager_record(this, Club((p.home_club()).addr()));
+    let v = club_manager_record(this, Club((p.away_club()).addr()));
     let mut reg = Vec::new();
     for r in [a, v] {
         if r != 0 {

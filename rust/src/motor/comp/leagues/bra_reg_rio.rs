@@ -153,7 +153,7 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_rio(this: usize, year: 
 ///
 /// [pt] A reputação da competição de uma liga (+0x69 do registro +4, word).
 pub(crate) unsafe fn league_comp_reputation(league: League) -> i32 {
-    read_i16(league.competition().addr() + 0x69) as i32
+    league.competition().reputation() as i32
 }
 
 /// Raises a club's attendance (+0x73) to a floor that rises with reputation `r` and factor `f`, and raises the record
@@ -312,7 +312,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
             add(ftol(val as f64 * f));
         } else if promotion() != 0 && pos as i32 <= (league.promoted_count() as i8) as i32 {
             if cima != 0 {
-                let mut a = read_i16(read_usize(cima + 4) + 0x69).wrapping_sub(read_i16(league.competition().addr() + 0x69));
+                let mut a = read_i16(read_usize(cima + 4) + 0x69).wrapping_sub(league.competition().reputation());
                 if a < 1 {
                     a = 1;
                 }
@@ -356,7 +356,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
             && pos as i32 > league.club_count() as i32 - (league.relegated_count() as i8) as i32
         {
             if low != 0 {
-                let mut a = read_i16(read_usize(low + 4) + 0x69).wrapping_sub(read_i16(league.competition().addr() + 0x69));
+                let mut a = read_i16(read_usize(low + 4) + 0x69).wrapping_sub(league.competition().reputation());
                 if a > -1 {
                     a = -1;
                 }
@@ -373,7 +373,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 crate::comparison::branch("cqt_4 attendance of relegated");
             }
         } else {
-            let r16 = read_i16(league.competition().addr() + 0x69);
+            let r16 = league.competition().reputation();
             let r = r16 as i32;
             let val = if d <= 0 && c.reputation() <= r16.wrapping_mul(500) {
                 r.wrapping_mul(d as i32).wrapping_mul(5)

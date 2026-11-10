@@ -28,6 +28,19 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 14: os campos-ponteiro tipados (leitor de fora, rodada 10, item 1)
+
+`ponteiros_registros.py` descobre, pelo uso no código, para que registro aponta cada campo que devolvia `usize`
+(base de outro registro, embrulhado num tipo): 14 campos (`staff::CLUB_JOB` → `Club`, `match_player::ENGINE` →
+`Engine`, `fixture::HOME_CLUB` → `Club`, `staff::NATION` → `Nation`, `engine::PENDING_PLAY_OFFENDER` → `MatchPlayer`...),
+em `levas/reorganizacao/ponteiros.json`, que o `registros.py` lê. O compilador guiou ~1.570 ajustes (`--ajustar`, que
+agora trata também `Club + 0x..` e `club as u32`, só aplica edições que não se sobrepõem num passo e põe `else { T(if ..) }`
+no `else if`); o passo novo `--cadeias` converte os acessos pela cadeia tipada (`person.club_job().manager()`). Os
+registros ganham `LowerHex` (o `{:x}` dos logs continua). Cadeias tipadas 376 → 471; leituras cruas 19.118 → 18.924.
+Efeito colateral: o `.addr()` subiu (5.259 → 6.215), onde o valor tipado vai para algo que ainda pede `usize` (funções
+e comparações); a propagação atual só reconhece `x.addr()` de variável, não de cadeia. Mutações: 13 textos de troca
+acertados; 12 âncoras seguidas à mão. Prova: 7cc445c2 ×2, detector igual, comparação 0.
+
 ## Migração para os registros tipados, leva 13: os números mágicos do motor
 
 Dois agentes leram no original os valores dos campos com cara de enumeração do motor e do jogador na partida e os

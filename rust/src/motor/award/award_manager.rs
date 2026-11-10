@@ -37,7 +37,7 @@ pub(crate) unsafe extern "C" fn award_raise_winner_reputation(person: usize, clu
         if read_i16(p + player_sheet::WORLD_REPUTATION) <= world { // cpw6: o piso mundial
             write_i16(p + player_sheet::WORLD_REPUTATION, world);
         }
-        if !club.is_null() && club.nation().addr() == person.nation() { // cpw6: the club of the player’s nation
+        if !club.is_null() && club.nation().addr() == (person.nation()).addr() { // cpw6: the club of the player’s nation
             add_to_word(p + player_sheet::HOME_REPUTATION, ftol(nation as i32 as f64 * read_f64(rdata::F64_0_1)));
             clamp_word(p + player_sheet::HOME_REPUTATION, nation);
         } else {
@@ -65,7 +65,7 @@ pub(crate) unsafe extern "C" fn award_raise_winner_reputation(person: usize, clu
     if read_i16(np + non_player::WORLD_REPUTATION) <= world {
         write_i16(np + non_player::WORLD_REPUTATION, world);
     }
-    if !club.is_null() && club.nation().addr() == person.nation() {
+    if !club.is_null() && club.nation().addr() == (person.nation()).addr() {
         if read_i16(np + non_player::HOME_REPUTATION) <= nation {
             write_i16(np + non_player::HOME_REPUTATION, nation);
         }

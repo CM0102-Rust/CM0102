@@ -145,7 +145,7 @@ pub(crate) unsafe extern "thiscall" fn compare_load_from_save(this: usize, save:
 pub(crate) unsafe extern "thiscall" fn compare_process_match_income(table: usize, partida: usize, result: usize) {
     let partida = Fixture(partida);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_PROCESS_MATCH_INCOME);
-    if result == 0 || partida.is_null() || partida.home_club() == 0 || partida.away_club() == 0 {
+    if result == 0 || partida.is_null() || partida.home_club() == Club(0) || partida.away_club() == Club(0) {
         return o(table, partida.addr(), result);
     }
     let (Some(fm), Some(fv)) = (match_club_finance(table, partida, 0x1c), match_club_finance(table, partida, 0x20)) else {

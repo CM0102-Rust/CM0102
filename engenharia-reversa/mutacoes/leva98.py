@@ -7,5 +7,5 @@ MUTACOES = [
     ('p_posse', "            *other = (*other).wrapping_sub(10);", "            *other = (*other).wrapping_sub(9);"),
     ('p_80', "        let r = random(0x50);", "        let r = random(0x51);"),
     ('p_8eb2', "                *((m() + 0x8eb2) as *mut i8) = 7;", "                *((m() + 0x8eb2) as *mut i8) = 6;"),
-    ('p_completo', "    if read_i8(mm + engine::RESTART_TYPE) != 0 || full == 0 {", "    if read_i8(mm + engine::RESTART_TYPE) != 0 || full == 1 {"),
+    ('p_completo', "    if mm.restart_type() != 0 || full == 0 {", "    if mm.restart_type() != 0 || full == 1 {"),
 ]

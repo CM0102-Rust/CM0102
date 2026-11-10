@@ -5,8 +5,8 @@ MUTACOES = [
     ('d_4', "    if exe::formation_get_marking_type(formation, this.position()) & 4 == 0 {\n        return 0;", "    if exe::formation_get_marking_type(formation, this.position()) & 1 == 0 {\n        return 0;"),
     ('d_ativo', ".find(|&q| read_i8(q + match_player::POSITION) >= 0 && *((q + match_player::STAFF) as *const usize) == sheet)", ".find(|&q| *((q + match_player::STAFF) as *const usize) == sheet)"),
     ('d_10', "    if exe::formation_get_marking_type(formation, this.position()) & 0x10 == 0 {\n        return target.addr();", "    if exe::formation_get_marking_type(formation, this.position()) & 0x20 == 0 {\n        return target.addr();"),
-    ('d_aa5d', "*((engine + 0xaa5d + 0x18e3 * o) as *const u32) & 0x1000_0000 != 0", "*((engine + 0xaa5d + 0x18e3 * o) as *const u32) & 0x2000_0000 != 0"),
-    ('d_af', "|| read_i8(engine + o + 0xaf) > 1;", "|| read_i8(engine + o + 0xaf) > 2;"),
+    ('d_aa5d', "*((engine.addr() + 0xaa5d + 0x18e3 * o) as *const u32) & 0x1000_0000 != 0", "*((engine.addr() + 0xaa5d + 0x18e3 * o) as *const u32) & 0x2000_0000 != 0"),
+    ('d_af', "|| read_i8(engine.addr() + o + 0xaf) > 1;", "|| read_i8(engine.addr() + o + 0xaf) > 2;"),
     ('d_40', "    if b == a || b & 0x40 != 0 || this.moment_decisions() == 0 {", "    if b == a || this.moment_decisions() == 0 {"),
     ('d_ab', "    if b == a || b & 0x40 != 0 ||", "    if b & 0x40 != 0 ||"),
 ]

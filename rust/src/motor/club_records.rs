@@ -42,14 +42,14 @@ pub(crate) unsafe fn match_stats_category(p: Fixture, side: i32, warn: bool, err
     if exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), p.competition()) != 0 {
         return if exe::database_is_national_team(p.home_club()) != 0 { 5 } else { 1 };
     }
-    let id = read_usize(p.competition());
+    let id = read_usize((p.competition()).addr());
     if id == read_usize(KEY_CLUB_COMP_RESERVE) || id == read_usize(KEY_CLUB_COMP_UNDER_21_INTERNATIONAL) || id == read_usize(KEY_CLUB_COMP_B_INTERNATIONAL) {
         return 1;
     }
-    if club == p.home_club() && p.home_side_mark() == 0 {
+    if club == (p.home_club()).addr() && p.home_side_mark() == 0 {
         return 1;
     }
-    if club == p.away_club() && (p.away_side_mark() as u8) == 0 {
+    if club == (p.away_club()).addr() && (p.away_side_mark() as u8) == 0 {
         return 1;
     }
     let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(4)));
@@ -385,7 +385,7 @@ pub(crate) unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, clu
                 continue;
             }
             let player = p.player();
-            if player == 0 || p.club_job() != club.addr() {
+            if player == 0 || p.club_job() != club {
                 continue;
             }
             let st = exe::playerstats_get_category_record(read_usize(G_PLAYER_STATS), player, 6);
@@ -668,7 +668,7 @@ pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, 
         if est == 0 || read_usize(p.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
             continue;
         }
-        if p.club_job() != club.addr() && p.club_job() != exe::club_get_linked_b_team(club, (0) as *mut u32, 1) {
+        if p.club_job() != club && p.club_job() != Club(exe::club_get_linked_b_team(club, (0) as *mut u32, 1)) {
             continue;
         }
         let reg = exe::playerstats_get_category_record(read_usize(G_PLAYER_STATS), est, 6);

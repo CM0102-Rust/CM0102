@@ -297,7 +297,7 @@ pub(crate) unsafe extern "thiscall" fn compare_discipline_set_slot(this: usize, 
 pub(crate) unsafe extern "thiscall" fn compare_is_player_suspended(this: usize, player: usize, comp: *const i32, extra: u32, partida: usize) -> u32 {
     let player = Staff(player);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32, usize) -> u32>(IDX_IS_PLAYER_SUSPENDED);
-    let club = Club(if !player.is_null() { player.club_job() } else { 0 });
+    let club = Club(if !player.is_null() { (player.club_job()).addr() } else { 0 });
     let regions: &[(usize, usize)] = if !club.is_null() { &[(club.addr() + club::TEAM_SELECTED, 80)] } else { &[] };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(regions, || o(this, player.addr(), comp, extra, partida), || is_player_suspended(this, player.addr(), comp, extra, partida));
     SCOREBOARD.record(igual && r == n, || format!("is_player_suspended({:x}, {}) original={} rust={} {:x?} x {:x?}", player.addr(), *comp, r, n, mo, mr));
