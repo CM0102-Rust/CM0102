@@ -567,7 +567,7 @@ pub(crate) unsafe fn compare_phase_table(name: &str, stage: u32, f: Option<Goldc
         Some(f) => f,
         None => {
             let a = o();
-            SCOREBOARD.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
+            SCOREBOARD.record(a == 0, || format!("{}(stage {}) returned {:#x}", name, stage as u8 as i8, a));
             return a;
         }
     };
@@ -581,7 +581,7 @@ pub(crate) unsafe fn compare_phase_table(name: &str, stage: u32, f: Option<Goldc
     if b != 0 {
         exe::crt_free(b);
     }
-    SCOREBOARD.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
+    SCOREBOARD.record(igual && outs && table, || format!("{}(stage {}): saídas {} ({} x {}) table {}", name, stage as u8 as i8, outs, *rounds, r2, table));
     a
 }
 

@@ -39,7 +39,7 @@ pub(crate) unsafe extern "thiscall" fn compare_contract_manager_offer_contract(t
     };
     let same = same || (sem_sobra(&mo) == sem_sobra(&mr) && mo.0[1..] == mr.0[1..]);
     SCOREBOARD.record(same && r == n, || format!(
-        "contract_manager_offer_contract(pessoa {:#x}, clube {:#x}, vaga {}, fator {}, modo {}): original {} rust {}, memória {:x?} x {:x?}",
+        "contract_manager_offer_contract(person {:#x}, club {:#x}, slot {}, factor {}, mode {}): original {} rust {}, memória {:x?} x {:x?}",
         person, club, slot, factor, mode, r, n, mo, mr));
     r
 }
@@ -90,7 +90,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_after_match(this: usize, g
     for &(fin, antes, total) in &plan {
         if fin != 0 {
             let pago = read_i32(fin + finance::SEASON_BONUSES).wrapping_sub(antes);
-            SCOREBOARD.record(pago == total, || format!("update_after_match(jogo {:x}) bônus de fin {:x}: original {} previsto {}", game.addr(), fin, pago, total));
+            SCOREBOARD.record(pago == total, || format!("update_after_match(game {:x}) bônus of fin {:x}: original {} predicted {}", game.addr(), fin, pago, total));
         }
     }
 }
@@ -126,7 +126,7 @@ pub(crate) unsafe extern "thiscall" fn compare_calc_player_value(this: usize, pe
     let regions = player_value_regions();
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(this, person, club, mode, ability, x),
         || crate::rng::without_counting(|| calc_player_value(this, person, club, mode, ability, x)));
-    SCOREBOARD.record(igual && r == n, || format!("calc_player_value(pessoa {:x}, clube {:x}, modo {}, hab {}) original={} rust={} {:x?} x {:x?}", person, club, mode as u8, ability as i16, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("calc_player_value(person {:x}, club {:x}, mode {}, hab {}) original={} rust={} {:x?} x {:x?}", person, club, mode as u8, ability as i16, r, n, mo, mr));
     r
 }
 
@@ -234,7 +234,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_contract_offer(this: usize, t
         }
         mo == mr && new != 0 && core::slice::from_raw_parts(new as *const u8, 0x63) == &record[..0x63]
     };
-    SCOREBOARD.record(same, || format!("add_contract_offer(pessoa {:#x}, clube {:#x}, vaga {}, atualizada {}) original={:x?} rust={:x?}", id, club, slot, item != 0, mo, mr));
+    SCOREBOARD.record(same, || format!("add_contract_offer(person {:#x}, club {:#x}, slot {}, atualizada {}) original={:x?} rust={:x?}", id, club, slot, item != 0, mo, mr));
 }
 
 /// Comparer for `remove_contract_offer_for_transfer`.
@@ -262,7 +262,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_contract_offer_for_transfe
     o(this, person, slot);
     let after = read_u8(contract_offer_counter(person));
     let expected = if found { before.wrapping_sub(1) } else { before };
-    SCOREBOARD.record(after == expected, || format!("remove_contract_offer_for_transfer(pessoa {:#x}, vaga {}) achou {} contador {} -> {}", read_usize(person), slot, found, before, after));
+    SCOREBOARD.record(after == expected, || format!("remove_contract_offer_for_transfer(person {:#x}, slot {}) found {} counter {} -> {}", read_usize(person), slot, found, before, after));
 }
 
 /// Comparer for `contract_manager_lowest_wage_demand`.
@@ -274,7 +274,7 @@ pub(crate) unsafe extern "stdcall" fn compare_contract_manager_lowest_wage_deman
     let mut regions = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize)];
     regions.extend(crate::rng::STATE_REGIONS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(person, club), || crate::rng::without_counting(|| contract_manager_lowest_wage_demand(person, club)));
-    SCOREBOARD.record(igual && r == n, || format!("contract_manager_lowest_wage_demand(pessoa {:#x}) original={} {:x?} rust={} {:x?}", read_usize(person), r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("contract_manager_lowest_wage_demand(person {:#x}) original={} {:x?} rust={} {:x?}", read_usize(person), r, mo, n, mr));
     r
 }
 
@@ -300,7 +300,7 @@ pub(crate) unsafe extern "stdcall" fn compare_staff_is_not_board_member(person: 
     let person = Staff(person);
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_STAFF_IS_NOT_BOARD_MEMBER)(person.addr());
     let n = staff_is_not_board_member(person.addr());
-    SCOREBOARD.record(r == n, || format!("staff_is_not_board_member(pessoa {}, cargo {}) original={} rust={}", read_usize(person.addr()), person.job_for_club(), r, n));
+    SCOREBOARD.record(r == n, || format!("staff_is_not_board_member(person {}, job {}) original={} rust={}", read_usize(person.addr()), person.job_for_club(), r, n));
     r
 }
 
@@ -345,7 +345,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_due_decision_dates(this: 
         reg.push(((read_u32(this + contract_manager_fields::DECISION_DATES) as usize).wrapping_add((i0 as usize).wrapping_mul(14)), ((i - i0) as usize) * 14));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, data, slice), || process_due_decision_dates(this, data, slice));
-    SCOREBOARD.record(igual, || format!("process_due_decision_dates(fatia {}) {:x?} x {:x?}", slice as u8 as i8, mo, mr));
+    SCOREBOARD.record(igual, || format!("process_due_decision_dates(slice {}) {:x?} x {:x?}", slice as u8 as i8, mo, mr));
 }
 
 /// Comparer for `get_current_contract_offers`.
@@ -372,7 +372,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_current_contract_offers(this:
     let array = read_u32(out) as usize;
     let k = plan.len() / 111;
     let ok = r as usize == k && (k == 0 || core::slice::from_raw_parts(array as *const u8, k * 111) == &plan[..]);
-    SCOREBOARD.record(ok, || format!("get_current_contract_offers(clube {:x}) original {} ofertas, plano {}", club, r, k));
+    SCOREBOARD.record(ok, || format!("get_current_contract_offers(club {:x}) original {} offers, plan {}", club, r, k));
     r
 }
 
@@ -398,7 +398,7 @@ pub(crate) unsafe extern "thiscall" fn compare_toggle_squad_placement(this: usiz
 pub(crate) unsafe extern "stdcall" fn compare_staff_can_take_job(job: u32, person: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(u32, usize) -> u32>(IDX_STAFF_CAN_TAKE_JOB)(job, person);
     let n = staff_can_take_job(job, person);
-    SCOREBOARD.record(r == n, || format!("staff_can_take_job(cargo {}, pessoa {:x}) original={} rust={}", job as u8 as i8, person, r, n));
+    SCOREBOARD.record(r == n, || format!("staff_can_take_job(job {}, person {:x}) original={} rust={}", job as u8 as i8, person, r, n));
     r
 }
 
@@ -422,7 +422,7 @@ pub(crate) unsafe extern "thiscall" fn compare_contract_manager_lower_match_mora
     o(this, person, club, contract.addr());
     let after = read_u8_volatile(contract.addr() + contract::MORALE) as i8;
     let expected = plan.map_or(before, |m| lowered_morale(before, m));
-    SCOREBOARD.record(after == expected, || format!("contract_manager_lower_match_morale(queda {:?}) moral {} -> original {} plano {}", plan, before, after, expected));
+    SCOREBOARD.record(after == expected, || format!("contract_manager_lower_match_morale(queda {:?}) morale {} -> original {} plan {}", plan, before, after, expected));
 }
 
 /// Comparer for `remove_contract`.
@@ -439,7 +439,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_contract(this: usize, pers
     let e = read_usize(this).wrapping_add((index as usize).wrapping_mul(0x50));
     let reg = [(slot, 4), (e, 8)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, person), || remove_contract(this, person));
-    SCOREBOARD.record(igual, || format!("remove_contract(pessoa {:x}, contrato {}) {:x?} x {:x?}", read_usize(person), index, mo, mr));
+    SCOREBOARD.record(igual, || format!("remove_contract(person {:x}, contract {}) {:x?} x {:x?}", read_usize(person), index, mo, mr));
 }
 
 /// Comparer for `resubmit_held_offers`.
@@ -463,7 +463,7 @@ pub(crate) unsafe extern "thiscall" fn compare_resubmit_held_offers(this: usize,
         item = exe::llist_get_next(list);
     }
     let r = o(this, id);
-    SCOREBOARD.record(r == expected, || format!("resubmit_held_offers(id {:x}) devolveu {}, esperava {}", id, r, expected));
+    SCOREBOARD.record(r == expected, || format!("resubmit_held_offers(id {:x}) returned {}, esperava {}", id, r, expected));
     r
 }
 
@@ -497,7 +497,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_free_staff_contract_space(thi
     }
     let (er, en, ecap) = if free >= 0 { (free, n, cap) } else { (n as i32, n.wrapping_add(1), if n == cap { cap.wrapping_add(200) } else { cap }) };
     SCOREBOARD.record(r == er && read_usize(this + contract_manager_fields::CONTRACT_COUNT) == en && read_usize(this + contract_manager_fields::CONTRACT_CAPACITY) == ecap, || {
-        format!("get_free_staff_contract_space({}) devolveu {} (esperava {}), conta {} -> {} (esperava {}), capacidade {} -> {} (esperava {})",
+        format!("get_free_staff_contract_space({}) returned {} (esperava {}), count {} -> {} (esperava {}), capacity {} -> {} (esperava {})",
             so_in_end, r, er, n, read_usize(this + contract_manager_fields::CONTRACT_COUNT), en, cap, read_usize(this + contract_manager_fields::CONTRACT_CAPACITY), ecap)
     });
     r
@@ -516,7 +516,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_staff_contract(this: usize, p
     let on = read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(0x4f)));
     let in_contract = read_usize(read_usize(this).wrapping_add(n.wrapping_mul(0x50)));
     SCOREBOARD.record(on == n && in_contract == id && read_usize(this + contract_manager_fields::CONTRACT_COUNT) == n.wrapping_add(1), || {
-        format!("add_staff_contract(pessoa {}, valor {}) vaga {} (esperava {}), id no contrato {}, conta {} -> {}",
+        format!("add_staff_contract(person {}, value {}) slot {} (esperava {}), id in the contract {}, count {} -> {}",
             id, value, on, n, in_contract, n, read_usize(this + contract_manager_fields::CONTRACT_COUNT))
     });
     r
@@ -541,7 +541,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_decision_date(this: usize, pe
     }
     certo &= read_usize(e(k)) == id && data_of(k) == d && *((e(k) + 0xc) as *const u8) == slice as u8 && *((e(k) + 0xd) as *const u8) == kind as u8;
     SCOREBOARD.record(certo, || {
-        format!("add_decision_date(pessoa {}, fatia {}, tipo {}) conta {} -> {} (esperava {}), lembretes {:?}, entradas {:?}",
+        format!("add_decision_date(person {}, slice {}, kind {}) count {} -> {} (esperava {}), lembretes {:?}, entries {:?}",
             id, slice as u8, kind as u8, n, read_usize(this + contract_manager_fields::DECISION_COUNT), n + k + 1, &lembretes[..k],
             (0..=k).map(|j| core::ptr::read_unaligned(e(j) as *const [u8; 14])).collect::<Vec<_>>())
     });
@@ -560,7 +560,7 @@ pub(crate) unsafe extern "thiscall" fn compare_trigger_relegation_clauses(this: 
     }
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_TRIGGER_RELEGATION_CLAUSES)(this, club, league);
     let away: Vec<usize> = alvos.iter().copied().filter(|&x| read_u8(x + contract::RELEGATION_RC) != 2).collect();
-    SCOREBOARD.record(away.is_empty(), || format!("trigger_relegation_clauses({:x}) {} contratos, sem acionar {:x?}", club, alvos.len(), away));
+    SCOREBOARD.record(away.is_empty(), || format!("trigger_relegation_clauses({:x}) {} contracts, without acionar {:x?}", club, alvos.len(), away));
 }
 
 /// Comparador: a lista esperada (sem a primeira oferta da pessoa ao clube) e as pendentes antes; a original tira (e
@@ -576,7 +576,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_contract_offer(this: usize
     let pendentes = if target.is_some() { (*n).wrapping_sub(1) } else { *n };
     original_fn::<unsafe extern "thiscall" fn(usize, *const u32, *const u32)>(IDX_REMOVE_CONTRACT_OFFER)(this, person, club);
     let after = list_items_capped(l);
-    SCOREBOARD.record(after == expected && *n == pendentes, || format!("remove_contract_offer({}, {}) itens {} (esperava {}), pendentes {} (esperava {})", *person, *club, after.len(), expected.len(), *n, pendentes));
+    SCOREBOARD.record(after == expected && *n == pendentes, || format!("remove_contract_offer({}, {}) items {} (esperava {}), pendentes {} (esperava {})", *person, *club, after.len(), expected.len(), *n, pendentes));
 }
 
 /// Comparer for `remove_pending_offers_for_staff`.
@@ -600,7 +600,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_pending_offers_for_staff(t
     }
     original_fn::<unsafe extern "thiscall" fn(usize, *const u32)>(IDX_REMOVE_PENDING_OFFERS_FOR_STAFF)(this, person);
     let after = list_items_capped(l);
-    SCOREBOARD.record(after == expected && *p == left, || format!("remove_pending_offers_for_staff({}) itens {} -> {} (esperava {}), pendentes {} (esperava {})", *person, before.len(), after.len(), expected.len(), *p, left));
+    SCOREBOARD.record(after == expected && *p == left, || format!("remove_pending_offers_for_staff({}) items {} -> {} (esperava {}), pendentes {} (esperava {})", *person, before.len(), after.len(), expected.len(), *p, left));
 }
 
 /// Comparer for `schedule_decision_for_transfer`.
@@ -612,7 +612,7 @@ pub(crate) unsafe extern "thiscall" fn compare_schedule_decision_for_transfer(th
     let n = ability_above_club_reputation(Offer(offer));
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SCHEDULE_DECISION_FOR_TRANSFER)(this, offer);
     let marked = target.map_or(true, |e| read_u8(e + contract_offer::DECISION_VALID) == 1);
-    SCOREBOARD.record(marked && r == n, || format!("schedule_decision_for_transfer({:x}) alvo {:x?} marcada={} original={} rust={}", offer, target, marked, r, n));
+    SCOREBOARD.record(marked && r == n, || format!("schedule_decision_for_transfer({:x}) target {:x?} marked={} original={} rust={}", offer, target, marked, r, n));
     r
 }
 
@@ -626,7 +626,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_held_offers(this: usize, p
     let expected: Vec<usize> = before.iter().copied().filter(|&e| read_usize(e) as u32 != person).collect();
     original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_REMOVE_HELD_OFFERS)(this, person);
     let after: Vec<usize> = if l != 0 { list_items_capped(l) } else { Vec::new() };
-    SCOREBOARD.record(after == expected, || format!("remove_held_offers({:x}) {} itens, esperava {}, ficaram {}", person, before.len(), expected.len(), after.len()));
+    SCOREBOARD.record(after == expected, || format!("remove_held_offers({:x}) {} items, esperava {}, ficaram {}", person, before.len(), expected.len(), after.len()));
 }
 
 /// Comparer for `get_squad_placement`.
@@ -719,7 +719,7 @@ pub(crate) unsafe extern "thiscall" fn compare_schedule_offer_decision(this: usi
     reg.push((read_usize(this + contract_manager_fields::DECISION_DATES), read_usize(this + contract_manager_fields::DECISION_COUNT).wrapping_mul(14)));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, id, slot),
         || crate::rng::without_counting(|| schedule_offer_decision(this, id, slot)));
-    SCOREBOARD.record(igual, || format!("schedule_offer_decision(id {}, vaga {}) {:x?} x {:x?}", id, slot, mo, mr));
+    SCOREBOARD.record(igual, || format!("schedule_offer_decision(id {}, slot {}) {:x?} x {:x?}", id, slot, mo, mr));
 }
 
 /// Comparer for `contract_category`.

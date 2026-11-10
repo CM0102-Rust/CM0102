@@ -18,7 +18,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_club_finance(this: usize, clu
     }
     let r = o(this, club);
     let n = get_club_finance(this, club);
-    SCOREBOARD.record(r == n, || format!("get_club_finance(clube {:#x}) original={:#x} rust={:#x}", club, r, n));
+    SCOREBOARD.record(r == n, || format!("get_club_finance(club {:#x}) original={:#x} rust={:#x}", club, r, n));
     r
 }
 
@@ -29,7 +29,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_match_weather(this: usize, s:
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut u8, usize)>(IDX_GET_MATCH_WEATHER);
     let regions = [(s as usize, 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(this, s, game), || get_match_weather(this, s, game));
-    SCOREBOARD.record(igual, || format!("get_match_weather(jogo {:#x}) {:x?} x {:x?}", game, mo.0, mr.0));
+    SCOREBOARD.record(igual, || format!("get_match_weather(game {:#x}) {:x?} x {:x?}", game, mo.0, mr.0));
 }
 
 /// Comparer for `get_temperature`.
@@ -38,7 +38,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_match_weather(this: usize, s:
 pub(crate) unsafe extern "thiscall" fn compare_get_temperature(this: usize, band: u32, game: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> u8>(IDX_GET_TEMPERATURE)(this, band, game);
     let n = get_temperature(this, band, game);
-    SCOREBOARD.record(r == n, || format!("get_temperature(band {}, jogo {:#x}) original={} rust={}", band as u8 as i8, game, r as i8, n as i8));
+    SCOREBOARD.record(r == n, || format!("get_temperature(band {}, game {:#x}) original={} rust={}", band as u8 as i8, game, r as i8, n as i8));
     r
 }
 
@@ -48,7 +48,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_temperature(this: usize, band
 pub(crate) unsafe extern "thiscall" fn compare_get_pitch_condition(this: usize, clima: *const u8, game: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, *const u8, usize) -> u8>(IDX_GET_PITCH_CONDITION)(this, clima, game);
     let n = get_pitch_condition(this, clima, game);
-    SCOREBOARD.record(r == n, || format!("get_pitch_condition(clima {:x?}, jogo {:#x}) original={:#x} rust={:#x}", core::slice::from_raw_parts(clima, 4), game, r, n));
+    SCOREBOARD.record(r == n, || format!("get_pitch_condition(clima {:x?}, game {:#x}) original={:#x} rust={:#x}", core::slice::from_raw_parts(clima, 4), game, r, n));
     r
 }
 

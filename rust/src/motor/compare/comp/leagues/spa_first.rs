@@ -53,7 +53,7 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_first_create_table(this: usiz
             same = same && this.prize_mode() == 1 && this.prize_fund() == exe::league_calc_prize_fund(this, 0x3d090);
         }
     }
-    SCOREBOARD.record(same, || format!("spa_first_create_table({:#x}) original={} baixo={} plano={:x?} tabela={:x?}", this.addr(), r, baixo.len(), plano, found));
+    SCOREBOARD.record(same, || format!("spa_first_create_table({:#x}) original={} low={} plan={:x?} table={:x?}", this.addr(), r, baixo.len(), plano, found));
     r
 }
 

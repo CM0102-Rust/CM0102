@@ -137,7 +137,7 @@ pub(crate) unsafe fn compare_toggle_mark_and_unlist(this: usize, person: usize, 
     o(this, person);
     let after = llist_items(l);
     let mark_ok = marca.map_or(true, |(p, m)| read_u8(p) == m);
-    SCOREBOARD.record(mark_ok && after == fica, || format!("{}(pessoa {:#x}) marca plano {:x?} agora {:x?}; lista plano {:x?} agora {:x?}",
+    SCOREBOARD.record(mark_ok && after == fica, || format!("{}(person {:#x}) mark plan {:x?} now {:x?}; list plan {:x?} now {:x?}",
         name, person, marca, marca.map(|(p, _)| read_u8(p)), fica, after));
 }
 

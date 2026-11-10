@@ -3411,7 +3411,7 @@ unsafe extern "thiscall" fn compare_take_the_field(this: usize, j: usize) -> u8 
     let n = *((this as isize + 0x4592 + l) as *const i8) as isize;
     let reg = [(j.addr() + match_player::CELL_SLOT, 1), (j.addr() + match_player::CELL_X, 2), ((this as isize + 0x4592 + l) as usize, 1), ((this as isize + 0x453a + 4 * (n + 11 * l)) as usize, 4)];
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this, j.addr()), || take_the_field(this, j.addr()));
-    SCOREBOARD.record(igual && r == x, || format!("take_the_field(lado {}, n {}) original={} {:x?} rust={} {:x?}", l, n, r, mo, x, mr));
+    SCOREBOARD.record(igual && r == x, || format!("take_the_field(side {}, n {}) original={} {:x?} rust={} {:x?}", l, n, r, mo, x, mr));
     r
 }
 compare_value!(compare_in_danger, in_danger, IDX_IN_DANGER, () -> u8);
@@ -3437,7 +3437,7 @@ unsafe extern "thiscall" fn compare_formation_square(this: usize, j: usize, x: *
     let j = MatchPlayer(j);
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(IDX_FORMATION_SQUARE);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(x as usize, 1), (y as usize, 1)], || f(this.addr(), j.addr(), x, y), || formation_square(this.addr(), j.addr(), x, y));
-    SCOREBOARD.record(igual, || format!("formation_square(8eae {}, lado {}, pos {}) original={:x?} rust={:x?}", this.possession_side(), j.side(), j.position(), mo, mr));
+    SCOREBOARD.record(igual, || format!("formation_square(8eae {}, side {}, pos {}) original={:x?} rust={:x?}", this.possession_side(), j.side(), j.position(), mo, mr));
 }
 
 unsafe extern "thiscall" fn compare_compute_percentages(this: usize, i: i8) {
@@ -3655,7 +3655,7 @@ unsafe extern "thiscall" fn compare_trace_move(this: usize, x0: i8, y0: i8, x1: 
             n
         },
     );
-    SCOREBOARD.record(igual && r == n && sequencia.get(), || format!("trace_move({} {} -> {} {}, cod {}) original={} rust={} seq={} {:x?} {:x?}", x0, y0, x1, y1, codigo, r, n, sequencia.get(), mo, mr));
+    SCOREBOARD.record(igual && r == n && sequencia.get(), || format!("trace_move({} {} -> {} {}, code {}) original={} rust={} seq={} {:x?} {:x?}", x0, y0, x1, y1, codigo, r, n, sequencia.get(), mo, mr));
     r
 }
 
@@ -3774,7 +3774,7 @@ unsafe extern "thiscall" fn compare_shot_value(this: usize, tipo: *mut i8, som: 
     reg.extend(crate::rng::STATE_REGIONS);
     let t0 = *tipo;
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr(), tipo, som), || crate::rng::without_counting(|| shot_value(this.addr(), tipo, som)));
-    SCOREBOARD.record(igual && r == n, || format!("shot_value(tipo {}) original={} {:x?} rust={} {:x?}", t0, r as i16, mo, n as i16, mr));
+    SCOREBOARD.record(igual && r == n, || format!("shot_value(kind {}) original={} {:x?} rust={} {:x?}", t0, r as i16, mo, n as i16, mr));
     r
 }
 

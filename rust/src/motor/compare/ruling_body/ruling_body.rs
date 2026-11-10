@@ -10,7 +10,7 @@ pub(crate) unsafe extern "thiscall" fn compare_make_points_ban(this: usize, r: u
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_MAKE_POINTS_BAN);
     let regions = [(r, 0x70)];
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, r, j, by_games), || make_points_ban(this, r, j, by_games));
-    SCOREBOARD.record(igual && a == b, || format!("make_points_ban(jogador {:x}, por_jogos {}) original={} rust={} {:x?} x {:x?}", read_usize(j), by_games, a, b, mo, mr));
+    SCOREBOARD.record(igual && a == b, || format!("make_points_ban(player {:x}, por_jogos {}) original={} rust={} {:x?} x {:x?}", read_usize(j), by_games, a, b, mo, mr));
     a
 }
 
@@ -37,6 +37,6 @@ pub(crate) unsafe extern "thiscall" fn compare_compact_entries(this: usize) {
     let p = read_usize(this + ruling_body::ENTRIES);
     let equal = p != 0 && core::slice::from_raw_parts(p as *const u8, expected.len()) == &expected[..];
     SCOREBOARD.record(read_usize(this + ruling_body::ENTRY_COUNT) as u32 == n && read_usize(this + ruling_body::ENTRY_CAPACITY) as u32 == n + 100 && equal, || {
-        format!("compact_entries: conta {} (esperava {}), capacidade {}, entradas iguais {}", read_usize(this + ruling_body::ENTRY_COUNT), n, read_usize(this + ruling_body::ENTRY_CAPACITY), equal)
+        format!("compact_entries: count {} (esperava {}), capacity {}, entries equal {}", read_usize(this + ruling_body::ENTRY_COUNT), n, read_usize(this + ruling_body::ENTRY_CAPACITY), equal)
     });
 }

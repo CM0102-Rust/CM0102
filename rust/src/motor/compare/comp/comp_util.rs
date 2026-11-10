@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_club_final_position(this: usi
     let before = exe::comp_stats_find_club_entry(this, club);
     let r = o(this, club, pos);
     let same = r != 0 && (before == 0 || r == before) && *((r + comp_stats_club::DANGER_POSITION) as *const u8) == pos as u8;
-    SCOREBOARD.record(same, || format!("set_club_final_position(clube {:x}, {}) antes={:x} original={:x}", club, pos as u8, before, r));
+    SCOREBOARD.record(same, || format!("set_club_final_position(club {:x}, {}) before={:x} original={:x}", club, pos as u8, before, r));
     r
 }
 
@@ -43,7 +43,7 @@ pub(crate) unsafe extern "C" fn compare_comp_util_get_fixture_venue_side(club: u
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_COMP_UTIL_GET_FIXTURE_VENUE_SIDE);
     let r = o(club, game);
     let n = comp_util_get_fixture_venue_side(club, game);
-    SCOREBOARD.record(r == n, || format!("comp_util_get_fixture_venue_side(clube {:x}, jogo {:x}) original={} rust={}", club, game, r, n));
+    SCOREBOARD.record(r == n, || format!("comp_util_get_fixture_venue_side(club {:x}, game {:x}) original={} rust={}", club, game, r, n));
     r
 }
 

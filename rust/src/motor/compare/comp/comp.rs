@@ -34,7 +34,7 @@ pub(crate) unsafe extern "thiscall" fn compare_comp_collect_club_list(this: usiz
     if l2 != 0 {
         exe::crt_free(l2);
     }
-    SCOREBOARD.record(igual && mesmas, || format!("comp_collect_club_list: conta original={} rust={}", a, b));
+    SCOREBOARD.record(igual && mesmas, || format!("comp_collect_club_list: count original={} rust={}", a, b));
     a
 }
 
@@ -109,7 +109,7 @@ pub(crate) unsafe extern "C" fn compare_comp_key_nation_entry_from_active_index(
 pub(crate) unsafe extern "thiscall" fn compare_get_fixture_match_importance(this: usize, p: usize, a: u32, b: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(IDX_GET_FIXTURE_MATCH_IMPORTANCE)(this, p, a, b);
     let n = get_fixture_match_importance(this, p, a, b);
-    SCOREBOARD.record(r == n, || format!("get_fixture_match_importance({:x}, partida {:x}, {}, {}) original={} rust={}", this, p, a, b, r, n));
+    SCOREBOARD.record(r == n, || format!("get_fixture_match_importance({:x}, match {:x}, {}, {}) original={} rust={}", this, p, a, b, r, n));
     r
 }
 
@@ -132,7 +132,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_stage(this: usize, k: i32) ->
 pub(crate) unsafe extern "C" fn compare_comp_active_key_nation_of_fixture(comp: usize, partida: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_COMP_ACTIVE_KEY_NATION_OF_FIXTURE)(comp, partida);
     let n = comp_active_key_nation_of_fixture(comp, partida);
-    SCOREBOARD.record(r == n, || format!("comp_active_key_nation_of_fixture(competição {}, partida {:x}) original={} rust={}", read_usize(comp) as i32, partida, r, n));
+    SCOREBOARD.record(r == n, || format!("comp_active_key_nation_of_fixture(competição {}, match {:x}) original={} rust={}", read_usize(comp) as i32, partida, r, n));
     r
 }
 
@@ -156,7 +156,7 @@ pub(crate) unsafe extern "thiscall" fn compare_counts_for_fixture_clash(this: us
     let game = Fixture(game);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_COUNTS_FOR_FIXTURE_CLASH)(this, game.addr(), other);
     let n = counts_for_fixture_clash(this, game.addr(), other);
-    SCOREBOARD.record(r == n, || format!("counts_for_fixture_clash(rodada {}) original={} rust={}", game.round_name(), r, n));
+    SCOREBOARD.record(r == n, || format!("counts_for_fixture_clash(round {}) original={} rust={}", game.round_name(), r, n));
     r
 }
 

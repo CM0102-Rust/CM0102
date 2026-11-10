@@ -19,7 +19,7 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_fra_first(this: usize, 
     if this.stage_index() == 0xff && this.comp_stats() != 0 {
         ok = ok && this.stage_count() == 0 && this.stages() == 0;
     }
-    SCOREBOARD.record(ok, || format!("construct_fra_first({:#x}): devolveu {:#x}, vtable {:#x}, +0xee = {:#x}, +0xf2 = {:#x}, +8 = {:#x}", this.addr(), r, read_usize(this.addr()), read_usize(this.addr() + 0xee), read_usize(this.addr() + 0xf2), this.comp_stats()));
+    SCOREBOARD.record(ok, || format!("construct_fra_first({:#x}): returned {:#x}, vtable {:#x}, +0xee = {:#x}, +0xf2 = {:#x}, +8 = {:#x}", this.addr(), r, read_usize(this.addr()), read_usize(this.addr() + 0xee), read_usize(this.addr() + 0xf2), this.comp_stats()));
     r
 }
 

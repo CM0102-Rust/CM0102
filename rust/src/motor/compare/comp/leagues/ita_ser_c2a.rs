@@ -38,6 +38,6 @@ pub(crate) unsafe extern "thiscall" fn compare_ita_ser_c2a_update_staff_records_
     }
     let r = o(this.addr(), club, status, stage, a4, game, a6);
     let same = r == 0 && plan.map_or(true, |(l, v)| read_u8(l + league_table_row::STATUS) == v);
-    SCOREBOARD.record(same, || format!("ita_ser_c2a_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} plano={:x?}", this.addr(), club, s, f, r, plan));
+    SCOREBOARD.record(same, || format!("ita_ser_c2a_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} plan={:x?}", this.addr(), club, s, f, r, plan));
     r
 }

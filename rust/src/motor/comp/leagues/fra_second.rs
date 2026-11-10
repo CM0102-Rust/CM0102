@@ -166,7 +166,7 @@ pub(crate) unsafe fn compare_division_league_ctor(name: &str, this: League, year
             ok = ok && has == (nation.league_selected() & 4 == 0);
         }
     }
-    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.comp_stats()));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): returned {:#x}, vtable {:#x}, +0x2c = {}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.comp_stats()));
     r
 }
 

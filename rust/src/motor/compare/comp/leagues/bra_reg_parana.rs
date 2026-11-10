@@ -20,7 +20,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_parana_advance_stage(this
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_PARANA_ADVANCE_STAGE)(this.addr());
     let after = this.current_stage() as i32;
     let same = if last { after == before } else if before + 1 == 2 { after == 2 || after == 1 } else { after == before + 1 };
-    SCOREBOARD.record(same, || format!("bra_reg_parana_advance_stage({:#x}) antes={} depois={}", this.addr(), before, after));
+    SCOREBOARD.record(same, || format!("bra_reg_parana_advance_stage({:#x}) before={} after={}", this.addr(), before, after));
 }
 
 /// Comparer for `bra_reg_parana_create_final_stage`.

@@ -21,7 +21,7 @@ pub(crate) unsafe extern "thiscall" fn compare_staff_interest_in_joining_club(th
         regions.push((p6 as usize, 4));
     }
     let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, p1, p2, p3, p4, p5, p6), || staff_interest_in_joining_club(this, p1, p2, p3, p4, p5, p6));
-    SCOREBOARD.record(igual && ro.to_bits() == rr.to_bits(), || format!("staff_interest_in_joining_club(pessoa {:#x}, clube {:#x}, {}, {}, {}) original={} {:x?} rust={} {:x?}", p1, p2, p3, p4 as u8, p5 as u8, ro, mo, rr, mr));
+    SCOREBOARD.record(igual && ro.to_bits() == rr.to_bits(), || format!("staff_interest_in_joining_club(person {:#x}, club {:#x}, {}, {}, {}) original={} {:x?} rust={} {:x?}", p1, p2, p3, p4 as u8, p5 as u8, ro, mo, rr, mr));
     ro
 }
 
@@ -33,7 +33,7 @@ pub(crate) unsafe extern "thiscall" fn compare_shortlist_manager_is_compensation
     let reg = [(taxa as usize, 4)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, slot, contract, club, taxa),
         || shortlist_manager_is_compensation_deal(this, slot, contract, club, taxa));
-    SCOREBOARD.record(igual && r == n, || format!("shortlist_manager_is_compensation_deal(vaga {:#x}, contrato {:#x}, clube {:#x}) original={} rust={} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == n, || format!("shortlist_manager_is_compensation_deal(slot {:#x}, contract {:#x}, club {:#x}) original={} rust={} {:x?} x {:x?}",
         slot, contract, club, r, n, mo, mr));
     r
 }
@@ -66,7 +66,7 @@ pub(crate) unsafe extern "thiscall" fn compare_mark_player_under_offer(this: usi
     }
     let ((), (), igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, player, buyer, swap.addr()),
         || mark_player_under_offer(this, player, buyer, swap.addr()));
-    SCOREBOARD.record(igual, || format!("mark_player_under_offer(jogador {:#x}, comprador {:#x}, troca {:#x}) {:x?} x {:x?}",
+    SCOREBOARD.record(igual, || format!("mark_player_under_offer(player {:#x}, buyer {:#x}, swap {:#x}) {:x?} x {:x?}",
         player, buyer, swap.addr(), mo, mr));
 }
 
@@ -83,7 +83,7 @@ pub(crate) unsafe extern "thiscall" fn compare_value_player_for_club(this: usize
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(out as usize, 4)], || o(this, club.addr(), p, slot, out, minimum, ceiling), || value_player_for_club(this, club.addr(), p, slot, out, minimum, ceiling));
     SCOREBOARD.record(igual && r == n, || {
-        format!("value_player_for_club(clube {:x}, pessoa {:x}, vaga {:x}, mínimo {}, teto {}) original={} rust={} {:x?} x {:x?}", club.addr(), p, slot, minimum, ceiling, r, n, mo, mr)
+        format!("value_player_for_club(club {:x}, person {:x}, slot {:x}, mínimo {}, ceiling {}) original={} rust={} {:x?} x {:x?}", club.addr(), p, slot, minimum, ceiling, r, n, mo, mr)
     });
     r
 }
@@ -96,7 +96,7 @@ pub(crate) unsafe extern "thiscall" fn compare_count_slots_with_bids(this: usize
     let mut reg = SHORTLIST_MANAGER_DATE_STATICS.to_vec();
     reg.push((read_usize(shortlist_club_entry(this, club)), 40 * 0x25));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, position), || count_slots_with_bids(this, club, position));
-    SCOREBOARD.record(igual && r == n, || format!("count_slots_with_bids(clube {:x}, posicao {}) original={} rust={} {:x?} x {:x?}", club, position as i8, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("count_slots_with_bids(club {:x}, position {}) original={} rust={} {:x?} x {:x?}", club, position as i8, r, n, mo, mr));
     r
 }
 
@@ -108,7 +108,7 @@ pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_remove_from_tran
     let c = Contract((contract_of_staff(person)).addr());
     let reg = if !c.is_null() { vec![(c.addr() + contract::TRANSFER_STATUS, 1)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(person), || shortlist_manager_remove_from_transfer_list(person));
-    SCOREBOARD.record(igual && r == n, || format!("shortlist_manager_remove_from_transfer_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", person, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("shortlist_manager_remove_from_transfer_list(person {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", person, r, n, mo, mr));
     r
 }
 
@@ -120,7 +120,7 @@ pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_remove_from_loan
     let c = Contract((contract_of_staff(person)).addr());
     let reg = if !c.is_null() { vec![(c.addr() + contract::TRANSFER_STATUS, 1)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(person), || shortlist_manager_remove_from_loan_list(person));
-    SCOREBOARD.record(igual && r == n, || format!("shortlist_manager_remove_from_loan_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", person, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("shortlist_manager_remove_from_loan_list(person {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", person, r, n, mo, mr));
     r
 }
 
@@ -157,7 +157,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_staff_status(this: usize, 
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, person, club, event, kind),
         || update_staff_status(this, person, club, event, kind));
-    SCOREBOARD.record(igual && r == n, || format!("update_staff_status(pessoa {:x}, clube {:x}, evento {}, tipo {}) original={} rust={} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == n, || format!("update_staff_status(person {:x}, club {:x}, event {}, kind {}) original={} rust={} {:x?} x {:x?}",
         person, club, event as u8, kind as u8, r, n, mo, mr));
     r
 }
@@ -170,7 +170,7 @@ pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_add_to_loan_list
     let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
     let reg = if !c.is_null() { vec![(c.addr() + contract::TRANSFER_STATUS, 1)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(person), || shortlist_manager_add_to_loan_list(person));
-    SCOREBOARD.record(igual && r == n, || format!("shortlist_manager_add_to_loan_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", person, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("shortlist_manager_add_to_loan_list(person {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", person, r, n, mo, mr));
     r
 }
 
@@ -181,7 +181,7 @@ pub(crate) unsafe extern "thiscall" fn compare_shortlist_manager_max_fee_for_pla
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> i32>(IDX_SHORTLIST_MANAGER_MAX_FEE_FOR_PLAYER_STATUS);
     let r = o(this, club, person, status);
     let n = shortlist_manager_max_fee_for_player_status(this, club, person, status);
-    SCOREBOARD.record(r == n, || format!("shortlist_manager_max_fee_for_player_status(clube {:x}, pessoa {:x}, estatuto {}) original={} rust={}", club, person, status as i8, r, n));
+    SCOREBOARD.record(r == n, || format!("shortlist_manager_max_fee_for_player_status(club {:x}, person {:x}, status {}) original={} rust={}", club, person, status as i8, r, n));
     r
 }
 
@@ -201,7 +201,7 @@ pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_squad_status_all
     }
     let r = o(person.addr(), status);
     let n = shortlist_manager_squad_status_allowed(person.addr(), status);
-    SCOREBOARD.record(r == n, || format!("shortlist_manager_squad_status_allowed(pessoa {:x}, estatuto {}) original={} rust={}", person.addr(), status as i8, r, n));
+    SCOREBOARD.record(r == n, || format!("shortlist_manager_squad_status_allowed(person {:x}, status {}) original={} rust={}", person.addr(), status as i8, r, n));
     r
 }
 
@@ -210,7 +210,7 @@ pub(crate) unsafe extern "stdcall" fn compare_shortlist_set_up_formation_slots(e
     let o = original_fn::<unsafe extern "stdcall" fn(usize)>(IDX_SHORTLIST_SET_UP_FORMATION_SLOTS);
     let reg = [(read_usize(entry), 40 * 0x25)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(entry), || shortlist_set_up_formation_slots(entry));
-    SCOREBOARD.record(igual, || format!("shortlist_set_up_formation_slots(formacao {}) primeira diferença {:x?}", read_i8(entry + 7), first_memory_diff(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("shortlist_set_up_formation_slots(formation {}) first diferença {:x?}", read_i8(entry + 7), first_memory_diff(&mo, &mr)));
 }
 
 /// Comparer for `update_club_shortlist`.
@@ -244,7 +244,7 @@ pub(crate) unsafe extern "thiscall" fn compare_suspend_clubs_shortlisting_player
     exe::drop_llist(list);
     exe::crt_operator_delete(list);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, player, clear), || suspend_clubs_shortlisting_player(this, player, clear));
-    SCOREBOARD.record(igual, || format!("suspend_clubs_shortlisting_player(jogador {:x}, limpar {}, {} regiões) primeira diferença {:x?}", read_usize(player), clear, reg.len(), first_memory_diff(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("suspend_clubs_shortlisting_player(player {:x}, clear {}, {} regiões) first diferença {:x?}", read_usize(player), clear, reg.len(), first_memory_diff(&mo, &mr)));
 }
 
 /// Comparer for `add_player_to_club_shortlists`.
@@ -263,7 +263,7 @@ pub(crate) unsafe extern "thiscall" fn compare_transfer_list_player(this: usize,
     if mark {
         let c = Contract((get_contract(player)).addr());
         let ok = !c.is_null() && c.transfer_status() & 1 != 0 && c.squad_status() & 0xf0 == 0x70;
-        SCOREBOARD.record(ok, || format!("transfer_list_player(jogador {:x}) contrato {:x} sem a marca de à venda", read_usize(player), c.addr()));
+        SCOREBOARD.record(ok, || format!("transfer_list_player(player {:x}) contract {:x} without a mark de à venda", read_usize(player), c.addr()));
     }
 }
 
@@ -285,7 +285,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_position_lists(this: usize,
             }
         }
     }
-    SCOREBOARD.record(bad.is_none(), || format!("build_position_lists: vaga e entrada {:?}", bad));
+    SCOREBOARD.record(bad.is_none(), || format!("build_position_lists: slot and entry {:?}", bad));
 }
 
 /// Comparador: lado a lado pelos 32 vetores (12 bytes por entrada) e por [0xae1080].
@@ -339,7 +339,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_shortlist_entry(this: usize, 
     let found = exe::crt_bsearch((key.as_ptr()) as usize, read_usize(this), read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT) as u32, 8, 0x757ea0) != 0;
     let ok = read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT) == d0 && read_i32(this + shortlist_manager_fields::PAIRS_BY_CLUB_COUNT) == d1 && read_u8(r) == expected && (found || club == 0);
     SCOREBOARD.record(ok, || {
-        format!("add_shortlist_entry({:#x}, {:#x}) tinha={} contas {}/{} -> {}/{} nibble {:#x} -> {:#x} (esperado {:#x})",
+        format!("add_shortlist_entry({:#x}, {:#x}) tinha={} contas {}/{} -> {}/{} nibble {:#x} -> {:#x} (expected {:#x})",
             person, club, tinha, n0, n1, read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT), read_i32(this + shortlist_manager_fields::PAIRS_BY_CLUB_COUNT), nib, read_u8(r), expected)
     });
 }
@@ -428,7 +428,7 @@ pub(crate) unsafe extern "thiscall" fn compare_try_loan_offer_for_player(this: u
         -3 => r == -1,
         _ => r != -1,
     };
-    SCOREBOARD.record(same, || format!("try_loan_offer_for_player(jogador {:#x}, clube {:#x}) original={} {:x?} rust={} {:x?}", read_usize(player), read_usize(club), r, mo, n, mr));
+    SCOREBOARD.record(same, || format!("try_loan_offer_for_player(player {:#x}, club {:#x}) original={} {:x?} rust={} {:x?}", read_usize(player), read_usize(club), r, mo, n, mr));
     r
 }
 
@@ -449,14 +449,14 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_club_shortlist_entries(th
     let before = list_items_capped(list).len();
     original_fn::<unsafe extern "thiscall" fn(usize, *const u32, usize)>(IDX_COLLECT_CLUB_SHORTLIST_ENTRIES)(this, club, list);
     let new: Vec<[u8; 8]> = list_items_capped(list).iter().skip(before).map(|&i| core::ptr::read_unaligned(i as *const [u8; 8])).collect();
-    SCOREBOARD.record(new == expected, || format!("collect_club_shortlist_entries({}) original {} itens, rust {}", *club, new.len(), expected.len()));
+    SCOREBOARD.record(new == expected, || format!("collect_club_shortlist_entries({}) original {} items, rust {}", *club, new.len(), expected.len()));
 }
 
 /// Comparer for `shortlist_manager_max_fee_for_squad_status`.
 pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_max_fee_for_squad_status(club: usize, positions: u32, kind: u32) -> i32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, u32, u32) -> i32>(IDX_SHORTLIST_MANAGER_MAX_FEE_FOR_SQUAD_STATUS)(club, positions, kind);
     let n = shortlist_manager_max_fee_for_squad_status(club, positions, kind);
-    SCOREBOARD.record(r == n, || format!("shortlist_manager_max_fee_for_squad_status(tipo {}) original={} rust={}", kind as i8, r, n));
+    SCOREBOARD.record(r == n, || format!("shortlist_manager_max_fee_for_squad_status(kind {}) original={} rust={}", kind as i8, r, n));
     r
 }
 

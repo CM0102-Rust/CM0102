@@ -20,7 +20,7 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_update_for_date(thi
             && stages != 0
             && (0..4).all(|g| read_usize(stages + g * 4) != 0)
             && this.current_stage() == 3;
-        SCOREBOARD.record(ok, || format!("conmebol_merc_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this.addr(), this.active(), this.current_stage() as i32));
+        SCOREBOARD.record(ok, || format!("conmebol_merc_update_for_date({:#x}): o draw não montou the groups (+0x45 {}, +0x30 {})", this.addr(), this.active(), this.current_stage() as i32));
     }
     r
 }
@@ -43,7 +43,7 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_create_first_group_
         }
     }
     let same = r == 1 && this.club_count() == 4 && t != 0 && (0..4).all(|i| read[i] == (predicted[i], i as u8));
-    SCOREBOARD.record(same, || format!("conmebol_merc_create_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this.addr(), r, read, predicted));
+    SCOREBOARD.record(same, || format!("conmebol_merc_create_first_group_table({:#x}) returned {} rows {:x?} predicted {:x?}", this.addr(), r, read, predicted));
     r
 }
 
@@ -64,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_create_group_stage(
         a.sort_unstable();
         plan.sort_unstable();
         let ok = !f.is_null() && this.current_stage() as i32 == g && f.club_count() == 4 && f.year() == this.year() && a == plan;
-        SCOREBOARD.record(ok, || format!("conmebol_merc_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plan, a));
+        SCOREBOARD.record(ok, || format!("conmebol_merc_create_group_stage({}): a stage não bate with o plan ({:x?} read {:x?})", g, plan, a));
     }
     r
 }
@@ -108,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_select_invited_club
     if lr != 0 && lr != lo {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("conmebol_merc_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", this, a, b, igual, list, k));
+    SCOREBOARD.record(igual && a == b && list, || format!("conmebol_merc_select_invited_clubs({:#x}) returned {} x {} memória {} list {} ({} bytes)", this, a, b, igual, list, k));
     a
 }
 

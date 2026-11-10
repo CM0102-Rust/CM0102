@@ -17,7 +17,7 @@ pub(crate) unsafe extern "thiscall" fn compare_stored_taker(this: usize, club: u
         reg.push((read_usize(this + tactics_fields::ROWS).wrapping_add(k as usize * 0x91 + 0x5e + (l as i32 + t as i32 * 2) as usize * 4), 4));
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, kind, side, human), || stored_taker(this, club, kind, side, human));
-    SCOREBOARD.record(igual && r == n, || format!("stored_taker(tipo {} lado {}) original={:#x} rust={:#x} {:x?} x {:x?}", t, l, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("stored_taker(kind {} side {}) original={:#x} rust={:#x} {:x?} x {:x?}", t, l, r, n, mo, mr));
     r
 }
 
@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn compare_store_instructions(this: usize, c
         reg.push((read_usize(this + tactics_fields::ROWS).wrapping_add(k as usize * 0x91 + 2), 80));
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, person, usar, volta), || store_instructions(this, club, person, usar, volta));
-    SCOREBOARD.record(igual && r == n, || format!("store_instructions(usar {} volta {}) original={} rust={} {:x?} x {:x?}", usar, volta, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("store_instructions(usar {} return {}) original={} rust={} {:x?} x {:x?}", usar, volta, r, n, mo, mr));
     r
 }
 
@@ -47,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn compare_read_tactics_row(this: usize, clu
     }
     let reg = tactics_row_regions(this, club, target as usize, human);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, target, human), || read_tactics_row(this, club, target, human));
-    SCOREBOARD.record(igual && r == n, || format!("read_tactics_row(humano {}) original={} rust={} {:x?} x {:x?}", human, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("read_tactics_row(human {}) original={} rust={} {:x?} x {:x?}", human, r, n, mo, mr));
     r
 }
 
@@ -59,7 +59,7 @@ pub(crate) unsafe extern "thiscall" fn compare_write_tactics_row(this: usize, cl
     }
     let reg = tactics_row_regions(this, club, source as usize, human);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, source, human), || write_tactics_row(this, club, source, human));
-    SCOREBOARD.record(igual && r == n, || format!("write_tactics_row(humano {}) original={} rust={} {:x?} x {:x?}", human, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("write_tactics_row(human {}) original={} rust={} {:x?} x {:x?}", human, r, n, mo, mr));
     r
 }
 
@@ -75,7 +75,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_tactic_result(this: usize,
     }
     let reg = [(tactic_stats_row(this, game.home_club()), 0x28), (tactic_stats_row(this, game.away_club()), 0x28)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, game.addr()), || record_tactic_result(this, game.addr()));
-    SCOREBOARD.record(igual && r == n, || format!("record_tactic_result(jogo {:x}) original={} rust={} {:x?} x {:x?}", game.addr(), r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("record_tactic_result(game {:x}) original={} rust={} {:x?} x {:x?}", game.addr(), r, n, mo, mr));
     r
 }
 
@@ -89,7 +89,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_captain(this: usize, club: us
     }
     let r = o(this, club, team);
     let n = get_captain(this, club, team);
-    SCOREBOARD.record(r == n, || format!("get_captain(clube {:x}, time {}) original={:x} rust={:x}", club, team, r, n));
+    SCOREBOARD.record(r == n, || format!("get_captain(club {:x}, team {}) original={:x} rust={:x}", club, team, r, n));
     r
 }
 
@@ -108,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_captain(this: usize, club: us
     }
     let p = read_usize(this + tactics_fields::ROWS).wrapping_add((k as isize * 0x91) as usize) + 0x52;
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(p, 4)], || o(this, club, person, team), || set_captain(this, club, person, team));
-    SCOREBOARD.record(igual && r == n, || format!("set_captain(clube {:x}, time {}) original={} rust={} {:x?} x {:x?}", club, team, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("set_captain(club {:x}, team {}) original={} rust={} {:x?} x {:x?}", club, team, r, n, mo, mr));
     r
 }
 
@@ -123,7 +123,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_player_from_selection(this
     }
     let reg = lineup_regions(this, club, team);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, person, team, papeis), || remove_player_from_selection(this, club, person, team, papeis));
-    SCOREBOARD.record(igual && r == n, || format!("remove_player_from_selection(clube {:#x}, pessoa {:#x}, time {}, papeis {}) original={} {:x?} rust={} {:x?}", club, person, team, papeis, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("remove_player_from_selection(club {:#x}, person {:#x}, team {}, papeis {}) original={} {:x?} rust={} {:x?}", club, person, team, papeis, r, mo, n, mr));
     r
 }
 
@@ -139,7 +139,7 @@ pub(crate) unsafe extern "thiscall" fn compare_swap_selection_slots(this: usize,
     }
     let reg = lineup_regions(this, club, team);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, a, b, team), || swap_selection_slots(this, club, a, b, team));
-    SCOREBOARD.record(igual && r == n, || format!("swap_selection_slots(clube {:#x}, {}, {}, time {}) original={} {:x?} rust={} {:x?}", club, va, vb, team, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("swap_selection_slots(club {:#x}, {}, {}, team {}) original={} {:x?} rust={} {:x?}", club, va, vb, team, r, mo, n, mr));
     r
 }
 
@@ -149,7 +149,7 @@ pub(crate) unsafe extern "thiscall" fn compare_swap_selection_slots(this: usize,
 pub(crate) unsafe extern "thiscall" fn compare_has_selection_undo(this: usize, club: usize, team: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_HAS_SELECTION_UNDO)(this, club, team);
     let n = has_selection_undo(this, club, team);
-    SCOREBOARD.record(r == n, || format!("has_selection_undo(clube {:#x}, time {}) original={} rust={}", club, team, r, n));
+    SCOREBOARD.record(r == n, || format!("has_selection_undo(club {:#x}, team {}) original={} rust={}", club, team, r, n));
     r
 }
 
@@ -169,7 +169,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_selection_slot(this: usize,
         reg.push((tactics_cell(this, k, 2), 20 * 4));
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, slot, team), || clear_selection_slot(this, club, slot, team));
-    SCOREBOARD.record(igual && r == n, || format!("clear_selection_slot(vaga {}, time {}) original={} rust={} {:x?} x {:x?}", v, team, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("clear_selection_slot(slot {}, team {}) original={} rust={} {:x?} x {:x?}", v, team, r, n, mo, mr));
     r
 }
 
@@ -187,7 +187,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_set_piece_taker(this: usize, 
     let reg = if k != -1 { vec![(tactics_cell(this, k, 0x5e), 10 * 4)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, role, choice, person, team),
         || set_set_piece_taker(this, club, role, choice, person, team));
-    SCOREBOARD.record(igual && r == n, || format!("set_set_piece_taker(papel {}, escolha {}, pessoa {:x}) original={} rust={} {:x?} x {:x?}", p, e, person, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("set_set_piece_taker(role {}, choice {}, person {:x}) original={} rust={} {:x?} x {:x?}", p, e, person, r, n, mo, mr));
     r
 }
 
@@ -219,7 +219,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_club_tactic(this: usize, club
         }
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club.addr(), team), || get_club_tactic(this, club.addr(), team));
-    SCOREBOARD.record(igual && r == n, || format!("get_club_tactic(clube {:#x}, time {}) original={:#x} {:x?} rust={:#x} {:x?}", club.addr(), team, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("get_club_tactic(club {:#x}, team {}) original={:#x} {:x?} rust={:#x} {:x?}", club.addr(), team, r, mo, n, mr));
     r
 }
 
@@ -230,7 +230,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_selection_slot(tactic: usize
         return r;
     }
     let n = find_selection_slot(tactic, club, person, team);
-    SCOREBOARD.record(r == n, || format!("find_selection_slot(time {}) original={} rust={}", team, r, n));
+    SCOREBOARD.record(r == n, || format!("find_selection_slot(team {}) original={} rust={}", team, r, n));
     r
 }
 

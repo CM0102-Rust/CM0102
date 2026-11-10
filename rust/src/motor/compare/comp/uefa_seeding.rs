@@ -50,7 +50,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_european_clubs(this: usiz
     if t2 != 0 {
         exe::crt_free(t2);
     }
-    SCOREBOARD.record(igual && table, || format!("collect_european_clubs: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, table, memory_diff_addresses(&mo, &mr)));
+    SCOREBOARD.record(igual && table, || format!("collect_european_clubs: {} e {} clubs, table {}, diferenças em {:x?}", n, m, table, memory_diff_addresses(&mo, &mr)));
     a
 }
 

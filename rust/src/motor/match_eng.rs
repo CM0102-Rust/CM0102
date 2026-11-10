@@ -6032,7 +6032,7 @@ pub(crate) unsafe fn compare_shoot_tape(p: MatchPlayer, a1: u32, a2: u32, a3: u3
     );
     RECORD_A7.store(a7, Relaxed);
     RECORD_716.store(write, Relaxed);
-    SCOREBOARD.record(igual && sequencia, || format!("shoot(tipo {:#x}, modo {}) {} chamadas: {}", a1 as u8, a4 as u8, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia, || format!("shoot(kind {:#x}, mode {}) {} chamadas: {}", a1 as u8, a4 as u8, k, tape_detail()));
 }
 
 /// the engine constructor (the player, tactics and tactical line vectors through the runtime vector constructor

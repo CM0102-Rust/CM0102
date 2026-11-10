@@ -34,7 +34,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_phase1_groups(this: usize) {
     }
     vistos.sort_unstable();
     ok = ok && vistos == plan;
-    SCOREBOARD.record(ok, || format!("draw_phase1_groups: as fases não têm os 32 clubes do plano (+0x30 = {})", this.current_stage() as i32));
+    SCOREBOARD.record(ok, || format!("draw_phase1_groups: as stages não têm os 32 clubs of the plan (+0x30 = {})", this.current_stage() as i32));
 }
 
 /// Comparer for `european_cup_compare_clubs_by_seed`.
@@ -111,7 +111,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_phase2_groups(this: usize, a
     }
     vistos.sort_unstable();
     ok = ok && vistos == plan;
-    SCOREBOARD.record(ok, || format!("draw_phase2_groups: as fases não têm os 16 classificados (+0x30 = {})", this.current_stage() as i32));
+    SCOREBOARD.record(ok, || format!("draw_phase2_groups: as stages não têm os 16 classificados (+0x30 = {})", this.current_stage() as i32));
 }
 
 /// Comparer for `european_cup_compare_phase2_draw_entries`.
@@ -162,7 +162,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_quarter_finals(this: usize) 
     o(this.addr());
     let stage = Cup(read_usize(this.stages() + 0x30));
     if stage.is_null() {
-        SCOREBOARD.record(false, || format!("draw_quarter_finals({:#x}) sem fase", this.addr()));
+        SCOREBOARD.record(false, || format!("draw_quarter_finals({:#x}) without stage", this.addr()));
         return;
     }
     let list = stage.team_table();
@@ -172,7 +172,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_quarter_finals(this: usize) 
     expected.sort_unstable();
     let left = away.iter().all(|&c| read_i32(c + club::EURO_FLAG) == -1);
     let same = found == expected && left && stage.team_count() == 8 && (this.current_stage() as i32) == 0xc;
-    SCOREBOARD.record(same, || format!("draw_quarter_finals({:#x}) esperado={:x?} lista={:x?} saiu={} +0x30={}", this.addr(), expected, found, left, (this.current_stage() as i32)));
+    SCOREBOARD.record(same, || format!("draw_quarter_finals({:#x}) expected={:x?} list={:x?} left={} +0x30={}", this.addr(), expected, found, left, (this.current_stage() as i32)));
 }
 
 /// Comparer for `european_cup_collect_club_list`.
@@ -204,12 +204,12 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_collect_club_list(th
     let r = o(this.addr(), out, kind);
     let v = read_usize(out);
     if v == 0 {
-        SCOREBOARD.record(r as u16 == 0, || format!("european_cup_collect_club_list({:#x}, {}) sem lista original={:#x}", this.addr(), t, r));
+        SCOREBOARD.record(r as u16 == 0, || format!("european_cup_collect_club_list({:#x}, {}) without list original={:#x}", this.addr(), t, r));
         return r;
     }
     let list = core::slice::from_raw_parts(v as *const usize, (n.max(0) as usize).min(71));
     let same = r as u16 as i16 == n && list == &plan[..list.len()];
-    SCOREBOARD.record(same, || format!("european_cup_collect_club_list({:#x}, {}) original={:#x} rust={} lista={:x?} plano={:x?}", this.addr(), t, r, n, list, &plan[..list.len()]));
+    SCOREBOARD.record(same, || format!("european_cup_collect_club_list({:#x}, {}) original={:#x} rust={} list={:x?} plan={:x?}", this.addr(), t, r, n, list, &plan[..list.len()]));
     r
 }
 
@@ -227,7 +227,7 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_collect_entrants(thi
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_EUROPEAN_CUP_COLLECT_ENTRANTS)(this.addr());
     let t = this.entrant_book();
     if t == 0 {
-        SCOREBOARD.record(r == 0, || format!("european_cup_collect_entrants({:x}) sem lista original={}", this.addr(), r));
+        SCOREBOARD.record(r == 0, || format!("european_cup_collect_entrants({:x}) without list original={}", this.addr(), r));
         return r;
     }
     let mut v = core::slice::from_raw_parts(t as *const u8, 0x47 * 6).to_vec();
@@ -250,13 +250,13 @@ pub(crate) unsafe extern "thiscall" fn compare_build_qualifying_entry_table(this
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BUILD_QUALIFYING_ENTRY_TABLE)(this.addr());
     let t = this.team_table();
     if t == 0 || this.team_count() != 0x37 {
-        SCOREBOARD.record(r == -1 && t == 0, || format!("build_qualifying_entry_table({:x}) original={} tabela={:x} +0x3e={}", this.addr(), r, t, this.team_count()));
+        SCOREBOARD.record(r == -1 && t == 0, || format!("build_qualifying_entry_table({:x}) original={} table={:x} +0x3e={}", this.addr(), r, t, this.team_count()));
         return r;
     }
     let mut v = core::slice::from_raw_parts(t as *const u8, 0x14a).to_vec();
     fill_qualifying_table(this, v.as_mut_ptr() as usize);
     let same = r == 1 && v[..] == *core::slice::from_raw_parts(t as *const u8, 0x14a);
-    SCOREBOARD.record(same, || format!("build_qualifying_entry_table({:x}) original={} tabela={:x?}", this.addr(), r, &v[..]));
+    SCOREBOARD.record(same, || format!("build_qualifying_entry_table({:x}) original={} table={:x?}", this.addr(), r, &v[..]));
     r
 }
 
@@ -309,7 +309,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_fixture(this: usize, game
         return; // simplification: the stage advanced in the database and the draw added coefficient: no comparison
     }
     let mo = crate::comparison::MemorySnapshot::read(&check);
-    SCOREBOARD.record(mo == mr, || format!("process_fixture(jogo {:x}) original={:x?} rust={:x?}", game.addr(), mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("process_fixture(game {:x}) original={:x?} rust={:x?}", game.addr(), mo, mr));
 }
 
 /// Comparer for `european_cup_set_club_progress`.
@@ -327,7 +327,7 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_set_club_progress(th
         || o(this, club, stage, p1, p2, p3),
         || european_cup_set_club_progress(this, club, stage, p1, p2, p3),
     );
-    SCOREBOARD.record(igual, || format!("european_cup_set_club_progress(fase {} {} {} {}) original={:x?} rust={:x?}", stage as u8 as i8, p1 as u8, p2 as u8, p3 as u8, mo, mr));
+    SCOREBOARD.record(igual, || format!("european_cup_set_club_progress(stage {} {} {} {}) original={:x?} rust={:x?}", stage as u8 as i8, p1 as u8, p2 as u8, p3 as u8, mo, mr));
 }
 
 /// Comparer for `european_cup_create_round_table`.
@@ -358,6 +358,6 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_create_round_table(t
     if b != 0 {
         exe::crt_free(b);
     }
-    SCOREBOARD.record(igual && outs && table, || format!("european_cup_create_round_table({}): saídas {} tabela {}", f, outs, table));
+    SCOREBOARD.record(igual && outs && table, || format!("european_cup_create_round_table({}): saídas {} table {}", f, outs, table));
     a
 }

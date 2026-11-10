@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_up_team_list(this: usize) -> 
     if lr != 0 && lr != lo {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("set_up_team_list({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("set_up_team_list({:#x}) returned {} x {} memória {} list {}", this, a, b, igual, list));
     a
 }
 
@@ -49,7 +49,7 @@ pub(crate) unsafe extern "thiscall" fn compare_goldcup_set_predicted_positions(t
         let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this + 8), v[k]) } else { 0 };
         e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) as u32 != COPA_AMERICA_PREDICTED_PLACES[k]
     });
-    SCOREBOARD.record(wrong.is_none(), || format!("goldcup_set_predicted_positions: a posição prevista da vaga {:?} não bate", wrong));
+    SCOREBOARD.record(wrong.is_none(), || format!("goldcup_set_predicted_positions: a posição prevista of the slot {:?} não bate", wrong));
 }
 
 /// Comparer for `goldcup_start_new_season`.
@@ -59,7 +59,7 @@ pub(crate) unsafe extern "thiscall" fn compare_goldcup_start_new_season(this: us
     let year = this.year();
     o(this.addr());
     let ok = this.year() == year.wrapping_add(2) && this.active() == 0 && this.current_stage() as i32 == -1 && this.season_closed() == 0;
-    SCOREBOARD.record(ok, || format!("goldcup_start_new_season({:#x}): ano {} -> {}, +0x45 {}, +0x30 {}", this.addr(), year, this.year(), this.active(), this.current_stage() as i32));
+    SCOREBOARD.record(ok, || format!("goldcup_start_new_season({:#x}): year {} -> {}, +0x45 {}, +0x30 {}", this.addr(), year, this.year(), this.active(), this.current_stage() as i32));
 }
 
 /// Comparer for `goldcup_update_for_date`.
@@ -80,7 +80,7 @@ pub(crate) unsafe extern "thiscall" fn compare_goldcup_update_for_date(this: usi
             && stages != 0
             && (0..2).all(|g| read_usize(stages + g * 4) != 0)
             && this.current_stage() == 1;
-        SCOREBOARD.record(ok, || format!("goldcup_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this.addr(), this.active(), this.current_stage() as i32));
+        SCOREBOARD.record(ok, || format!("goldcup_update_for_date({:#x}): o draw não montou the groups (+0x45 {}, +0x30 {})", this.addr(), this.active(), this.current_stage() as i32));
     }
     r
 }
@@ -103,7 +103,7 @@ pub(crate) unsafe extern "thiscall" fn compare_goldcup_create_group_table(this: 
         }
     }
     let same = r == 1 && this.club_count() == 4 && t != 0 && (0..4).all(|i| read[i] == (predicted[i], i as u8));
-    SCOREBOARD.record(same, || format!("goldcup_create_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this.addr(), r, read, predicted));
+    SCOREBOARD.record(same, || format!("goldcup_create_group_table({:#x}) returned {} rows {:x?} predicted {:x?}", this.addr(), r, read, predicted));
     r
 }
 
@@ -124,7 +124,7 @@ pub(crate) unsafe extern "thiscall" fn compare_goldcup_create_group_stage(this: 
         a.sort_unstable();
         plan.sort_unstable();
         let ok = !f.is_null() && this.current_stage() as i32 == g && f.club_count() == 4 && f.year() == this.year() && a == plan;
-        SCOREBOARD.record(ok, || format!("goldcup_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plan, a));
+        SCOREBOARD.record(ok, || format!("goldcup_create_group_stage({}): a stage não bate with o plan ({:x?} read {:x?})", g, plan, a));
     }
     r
 }
@@ -151,6 +151,6 @@ pub(crate) unsafe extern "thiscall" fn compare_goldcup_advance_stage(this: usize
 /// Comparer for `goldcup_update_staff_records_for_status`.
 pub(crate) unsafe extern "thiscall" fn compare_goldcup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, a4: u32, game: usize, a6: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_GOLDCUP_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, outcome, stage, a4, game, a6);
-    SCOREBOARD.record(r == 0, || format!("goldcup_update_staff_records_for_status({:#x}, {}, {}) devolveu {}", club, outcome as u8, stage as u8, r));
+    SCOREBOARD.record(r == 0, || format!("goldcup_update_staff_records_for_status({:#x}, {}, {}) returned {}", club, outcome as u8, stage as u8, r));
     r
 }

@@ -3440,7 +3440,7 @@ pub(crate) unsafe fn compare_placement_toggle(i: usize, name: &str, this: usize,
         return o(this, person, club);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(this, person, club), || toggle_placement_if_in(this, person, club, of));
-    SCOREBOARD.record(igual && r == n, || format!("{}({:x}, {:x}) lugar {} original={} rust={} {:x?} x {:x?}", name, person, club, l, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("{}({:x}, {:x}) place {} original={} rust={} {:x?} x {:x?}", name, person, club, l, r, n, mo, mr));
     r
 }
 

@@ -29,7 +29,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_groups(this: usize) -> usize
     if b != 0 {
         exe::crt_free(b);
     }
-    SCOREBOARD.record(igual && same, || format!("draw_groups: memória igual={} lista igual={}", igual, same));
+    SCOREBOARD.record(igual && same, || format!("draw_groups: memória equal={} list equal={}", igual, same));
     a
 }
 
@@ -43,7 +43,7 @@ pub(crate) unsafe extern "thiscall" fn compare_run_group_draw(this: usize) {
     if this.active() == 1 {
         let stages = this.stages();
         let ok = stages != 0 && (0..7).all(|g| read_usize(stages + g * 4) != 0) && this.current_stage() == 6;
-        SCOREBOARD.record(ok, || format!("run_group_draw: fases dos grupos ou +0x30 ({}) fora do esperado", this.current_stage() as i32));
+        SCOREBOARD.record(ok, || format!("run_group_draw: stages of the groups ou +0x30 ({}) away of the expected", this.current_stage() as i32));
     }
 }
 
@@ -59,7 +59,7 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_update_for_date(this: u
     let draws = this.next_draw_day() as u16 == day && this.next_draw_year_offset() as i32 + this.year() as i32 == year && full != 0 && this.table() == 0;
     let r = o(this.addr(), today, full);
     if draws {
-        SCOREBOARD.record(this.table() != 0 && this.active() == 1, || format!("world_cup_update_for_date: dia do sorteio sem a tabela (+0xb1 = {:#x}, +0x45 = {})", this.table(), this.active()));
+        SCOREBOARD.record(this.table() != 0 && this.active() == 1, || format!("world_cup_update_for_date: day of the draw without a table (+0xb1 = {:#x}, +0x45 = {})", this.table(), this.active()));
     }
     r
 }
@@ -76,7 +76,7 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_create_group_table(this
     if r == 1 {
         let t = this.table();
         let ok = this.club_count() == 4 && plan.iter().enumerate().all(|(k, &c)| read_usize(t + k * 0x3b) == c);
-        SCOREBOARD.record(ok, || format!("world_cup_create_group_table: as linhas não têm os clubes do grupo 1 ({:x?})", plan));
+        SCOREBOARD.record(ok, || format!("world_cup_create_group_table: as rows não têm the clubs of the group 1 ({:x?})", plan));
     }
     r
 }
@@ -111,7 +111,7 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_create_group_stage(this
                 b.sort_unstable();
                 a == b
             });
-        SCOREBOARD.record(ok, || format!("world_cup_create_group_stage({}): a fase não bate com o plano ({:x?})", g, plan));
+        SCOREBOARD.record(ok, || format!("world_cup_create_group_stage({}): a stage não bate with o plan ({:x?})", g, plan));
     }
     r
 }
@@ -140,7 +140,7 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_set_predicted_positions
         let e = if v[k] != 0 { exe::comp_stats_find_club_entry(this.comp_stats(), v[k]) } else { 0 };
         e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != FAIXAS[k]
     });
-    SCOREBOARD.record(wrong.is_none(), || format!("world_cup_set_predicted_positions: a posição prevista da vaga {:?} não bate", wrong));
+    SCOREBOARD.record(wrong.is_none(), || format!("world_cup_set_predicted_positions: a posição prevista of the slot {:?} não bate", wrong));
 }
 
 /// Comparer for `world_cup_create_schedule`.
@@ -171,7 +171,7 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_create_schedule(this: u
     if b != 0 {
         exe::crt_free(b);
     }
-    SCOREBOARD.record(igual && outs && table, || format!("world_cup_create_schedule({}): saídas {} tabela {}", stage as u8 as i8, outs, table));
+    SCOREBOARD.record(igual && outs && table, || format!("world_cup_create_schedule({}): saídas {} table {}", stage as u8 as i8, outs, table));
     a
 }
 

@@ -20,7 +20,7 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_update_for_date(th
             && stages != 0
             && (0..7).all(|g| read_usize(stages + g * 4) != 0)
             && this.current_stage() == 6;
-        SCOREBOARD.record(ok, || format!("conmebol_liber_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this.addr(), this.active(), this.current_stage() as i32));
+        SCOREBOARD.record(ok, || format!("conmebol_liber_update_for_date({:#x}): o draw não montou the groups (+0x45 {}, +0x30 {})", this.addr(), this.active(), this.current_stage() as i32));
     }
     r
 }
@@ -43,7 +43,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_first_group_table(this: usi
         }
     }
     let same = r == 1 && this.club_count() == 4 && t != 0 && (0..4).all(|i| read[i] == (predicted[i], i as u8));
-    SCOREBOARD.record(same, || format!("build_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this.addr(), r, read, predicted));
+    SCOREBOARD.record(same, || format!("build_first_group_table({:#x}) returned {} rows {:x?} predicted {:x?}", this.addr(), r, read, predicted));
     r
 }
 
@@ -64,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_create_group_stage
         a.sort_unstable();
         plan.sort_unstable();
         let ok = !f.is_null() && this.current_stage() as i32 == g && f.club_count() == 4 && f.year() == this.year() && a == plan;
-        SCOREBOARD.record(ok, || format!("conmebol_liber_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plan, a));
+        SCOREBOARD.record(ok, || format!("conmebol_liber_create_group_stage({}): a stage não bate with o plan ({:x?} read {:x?})", g, plan, a));
     }
     r
 }
@@ -109,7 +109,7 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_select_qualified_c
     write_u32(this + conmebol_liber::DRAWN_CLUBS, la as u32);
     write_u32(this + conmebol_liber::DRAWN_CLUB_COUNT, 0x20);
     depois.write_back();
-    SCOREBOARD.record(r == rr && a == b && same_state, || format!("conmebol_liber_select_qualified_clubs({:#x}) devolveu {} x {} estado igual {} original {:x?} rust {:x?}", this, r, rr, same_state, a, b));
+    SCOREBOARD.record(r == rr && a == b && same_state, || format!("conmebol_liber_select_qualified_clubs({:#x}) returned {} x {} state equal {} original {:x?} rust {:x?}", this, r, rr, same_state, a, b));
     r
 }
 
@@ -126,7 +126,7 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_update_staff_recor
     }
     let r = o(this, club, outcome, stage, a4, game, a6);
     let same = r == 0 && (!title || read_usize(slot) == club);
-    SCOREBOARD.record(same, || format!("conmebol_liber_update_staff_records_for_status({:#x}, {}, {}) devolveu {} titulo={} vaga {:#x}", club, outcome as u8, stage as u8, r, title, slot));
+    SCOREBOARD.record(same, || format!("conmebol_liber_update_staff_records_for_status({:#x}, {}, {}) returned {} title={} slot {:#x}", club, outcome as u8, stage as u8, r, title, slot));
     r
 }
 
@@ -140,7 +140,7 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_advance_stage(this
     }
     o(this.addr());
     let after = this.current_stage() as i32;
-    SCOREBOARD.record(after == f + 1, || format!("conmebol_liber_advance_stage({:#x}) fase {} -> {}", this.addr(), f, after));
+    SCOREBOARD.record(after == f + 1, || format!("conmebol_liber_advance_stage({:#x}) stage {} -> {}", this.addr(), f, after));
 }
 
 /// Comparer for `conmebol_liber_create_schedule`.

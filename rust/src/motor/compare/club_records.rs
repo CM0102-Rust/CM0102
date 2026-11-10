@@ -87,7 +87,7 @@ pub(crate) unsafe extern "thiscall" fn compare_send_record_news(this: usize) -> 
 pub(crate) unsafe extern "thiscall" fn compare_pick_fans_player_of_year(this: usize, club: usize, record: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_PICK_FANS_PLAYER_OF_YEAR);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(record + club_record::FANS_PLAYER, 0x18)], || o(this, club, record), || pick_fans_player_of_year(this, club, record));
-    SCOREBOARD.record(igual && r == n, || format!("pick_fans_player_of_year(clube {:x}) original={} {:x?} rust={} {:x?}", read_usize(club), r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("pick_fans_player_of_year(club {:x}) original={} {:x?} rust={} {:x?}", read_usize(club), r, mo, n, mr));
     r
 }
 
@@ -110,7 +110,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_transfer_fee_records(this:
     let seller = if !contract.is_null() { injury_club_by_index((contract.club() as i32)) } else { Club(0) };
     if seller.is_null() {
         let r = o(this, t.addr());
-        SCOREBOARD.record(r == 1 && read_usize(G_CONTRACT_LOOKUP_RESULT) == 0, || format!("update_transfer_fee_records sem vendedor: {} [G_CONTRACT_LOOKUP_RESULT]={:x}", r, read_usize(G_CONTRACT_LOOKUP_RESULT)));
+        SCOREBOARD.record(r == 1 && read_usize(G_CONTRACT_LOOKUP_RESULT) == 0, || format!("update_transfer_fee_records without seller: {} [G_CONTRACT_LOOKUP_RESULT]={:x}", r, read_usize(G_CONTRACT_LOOKUP_RESULT)));
         return r;
     }
     let records = || [exe::club_records_get_season_record(this, buyer, 1), exe::club_records_get_all_time_record(this, buyer, 1), exe::club_records_get_season_record(this, seller, 1), exe::club_records_get_all_time_record(this, seller, 1)];
@@ -146,7 +146,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_transfer_fee_records(this:
                  (read_i32(rg[2] + 0x33c), read_usize(rg[2] + 0x358)), (read_i32(rg[3] + 0x33c), read_usize(rg[3] + 0x358))];
     let queue_now = read_i32(this + club_records_fields::NEWS_QUEUE_COUNT);
     SCOREBOARD.record(r == 1 && now == plan && queue_now == queue && read_usize(G_CONTRACT_LOOKUP_RESULT) == contract.addr(), || {
-        format!("update_transfer_fee_records(valor {}) plano {:x?} fila {} x {:x?} fila {}", value, plan, queue, now, queue_now)
+        format!("update_transfer_fee_records(value {}) plan {:x?} queue {} x {:x?} queue {}", value, plan, queue, now, queue_now)
     });
     r
 }
@@ -250,7 +250,7 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_record_news(this: usize, id
     let item = read_usize(this + club_records_fields::NEWS_QUEUE).wrapping_add(n.wrapping_mul(6));
     let (gid, gtipo) = (read_u32(item), read_u8(item + record_news_item::RECORD_TYPE));
     SCOREBOARD.record(r == 1 && read_usize(this + club_records_fields::NEWS_QUEUE_COUNT) == n.wrapping_add(1) && gid == id && gtipo == kind as u8, || {
-        format!("queue_record_news({}, {}) devolveu {}, conta {} -> {}, item ({}, {})", id, kind as u8, r, n, read_usize(this + club_records_fields::NEWS_QUEUE_COUNT), gid, gtipo)
+        format!("queue_record_news({}, {}) returned {}, count {} -> {}, item ({}, {})", id, kind as u8, r, n, read_usize(this + club_records_fields::NEWS_QUEUE_COUNT), gid, gtipo)
     });
     r
 }

@@ -15,7 +15,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_available_venue(this: usize,
     let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&r[..m], || o(this, marks, count, nation, data, home, away, partida), || {
         crate::rng::without_counting(|| find_available_venue(this, marks, count, nation, data, home, away, partida))
     });
-    SCOREBOARD.record(igual && ro == rr, || format!("find_available_venue(marcas {:x}, nacao {:x}, cont {:x}): original {:x} rust {:x} {:x?} x {:x?}", marks, nation, count, ro, rr, mo, mr));
+    SCOREBOARD.record(igual && ro == rr, || format!("find_available_venue(marks {:x}, nation {:x}, count {:x}): original {:x} rust {:x} {:x?} x {:x?}", marks, nation, count, ro, rr, mo, mr));
     ro
 }
 
@@ -33,7 +33,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_fixture_venue(this: usize, ma
         return o(this, marks, partida, stadium);
     };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&r[..m], || o(this, marks, partida, stadium), || crate::rng::without_counting(|| set_fixture_venue(this, marks, partida, stadium)));
-    SCOREBOARD.record(igual, || format!("set_fixture_venue(marcas {:x}, comp {:x}): {:x?} x {:x?}", marks, read_usize(partida), mo, mr));
+    SCOREBOARD.record(igual, || format!("set_fixture_venue(marks {:x}, comp {:x}): {:x?} x {:x?}", marks, read_usize(partida), mo, mr));
 }
 
 /// Comparer for `calculate_match_attendance`.
@@ -54,7 +54,7 @@ pub(crate) unsafe extern "thiscall" fn compare_calculate_match_attendance(this: 
         reg.push((game.stadium() + 0x3c, 4));
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, game.addr(), out), || crate::rng::without_counting(|| calculate_match_attendance(this, game.addr(), out)));
-    SCOREBOARD.record(igual && r == n, || format!("calculate_match_attendance(comp {:x}, tipo {}): original {} rust {} {:x?} x {:x?}", read_usize(game.addr()), game.category(), r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("calculate_match_attendance(comp {:x}, kind {}): original {} rust {} {:x?} x {:x?}", read_usize(game.addr()), game.category(), r, n, mo, mr));
     r
 }
 
@@ -69,7 +69,7 @@ pub(crate) unsafe extern "thiscall" fn compare_score_venue_for_fixture(this: usi
 pub(crate) unsafe extern "thiscall" fn compare_get_travel_distance_factor(this: usize, game: usize, cid_est: usize, cid_club: usize, base: f64) -> f64 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, f64) -> f64>(IDX_GET_TRAVEL_DISTANCE_FACTOR)(this, game, cid_est, cid_club, base);
     let n = get_travel_distance_factor(this, game, cid_est, cid_club, base);
-    SCOREBOARD.record(r.to_bits() == n.to_bits(), || format!("get_travel_distance_factor(jogo {:x}, base {}) {} x {}", game, base, r, n));
+    SCOREBOARD.record(r.to_bits() == n.to_bits(), || format!("get_travel_distance_factor(game {:x}, base {}) {} x {}", game, base, r, n));
     r
 }
 
@@ -112,7 +112,7 @@ pub(crate) unsafe extern "thiscall" fn compare_stadium_daily_update(this: usize,
         m += 1;
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions[..m], || o(this, today), || stadium_daily_update(this, today));
-    SCOREBOARD.record(igual, || format!("stadium_daily_update(dia {}, ano {}) {:x?} x {:x?}", read_u16(today) as i16, read_u16(today + 2), mo, mr));
+    SCOREBOARD.record(igual, || format!("stadium_daily_update(day {}, year {}) {:x?} x {:x?}", read_u16(today) as i16, read_u16(today + 2), mo, mr));
 }
 
 /// Comparer for `add_booking`.
@@ -127,7 +127,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_booking(this: usize, stadium:
     }
     let regions = [(this, 0xc), (read_usize(this), (n + 1) * 12)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, stadium, data), || add_booking(this, stadium, data));
-    SCOREBOARD.record(igual, || format!("add_booking(estadio {:x}, reservas {}) {:x?} x {:x?}", stadium, n, mo, mr));
+    SCOREBOARD.record(igual, || format!("add_booking(stadium {:x}, reservas {}) {:x?} x {:x?}", stadium, n, mo, mr));
 }
 
 /// Comparer for `is_stadium_free_on_date`.
@@ -136,7 +136,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_booking(this: usize, stadium:
 pub(crate) unsafe extern "thiscall" fn compare_is_stadium_free_on_date(this: usize, stadium: usize, data: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_STADIUM_FREE_ON_DATE)(this, stadium, data);
     let n = is_stadium_free_on_date(this, stadium, data);
-    SCOREBOARD.record(r == n, || format!("is_stadium_free_on_date(estadio {:x}) original={} rust={}", stadium, r, n));
+    SCOREBOARD.record(r == n, || format!("is_stadium_free_on_date(stadium {:x}) original={} rust={}", stadium, r, n));
     r
 }
 
@@ -184,7 +184,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_venue_list(this: usize) {
     if lb != 0 {
         exe::crt_free(lb);
     }
-    SCOREBOARD.record(fields && lists, || format!("build_venue_list: campos {} listas {} (contas {} e {})", fields, lists, read_u32(this + stadium_obj::VENUE_COUNT) as i32, read_u32(r + stadium_obj::VENUE_COUNT) as i32));
+    SCOREBOARD.record(fields && lists, || format!("build_venue_list: fields {} lists {} (contas {} e {})", fields, lists, read_u32(this + stadium_obj::VENUE_COUNT) as i32, read_u32(r + stadium_obj::VENUE_COUNT) as i32));
 }
 
 /// Comparer for `stadium_compare_venues_by_capacity`.

@@ -41,7 +41,7 @@ pub(crate) unsafe extern "thiscall" fn compare_fin_prm_end_season_for_nation(thi
     if let Some(k) = last {
         let f = read_usize(this) + k * 0x167 + 0x110;
         let cleared = core::slice::from_raw_parts(f as *const u8, 0x50).iter().all(|&x| x == 0);
-        SCOREBOARD.record(cleared, || format!("fin_prm_end_season_for_nation(entrada {:#x}) clube {} sem zerar os totais do ano", entry, k));
+        SCOREBOARD.record(cleared, || format!("fin_prm_end_season_for_nation(entry {:#x}) club {} without clear the totais of the year", entry, k));
     }
 }
 
@@ -83,7 +83,7 @@ pub(crate) unsafe extern "thiscall" fn compare_season_end_club_update(this: usiz
     }
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club.addr()), || crate::rng::without_counting(|| season_end_club_update(this, club.addr())));
-    SCOREBOARD.record(igual, || format!("season_end_club_update(clube {:x}) original={:x?} rust={:x?}", club.addr(), mo, mr));
+    SCOREBOARD.record(igual, || format!("season_end_club_update(club {:x}) original={:x?} rust={:x?}", club.addr(), mo, mr));
 }
 
 /// Comparer for `news_dividend`.
@@ -100,7 +100,7 @@ pub(crate) unsafe extern "thiscall" fn compare_news_dividend(this: usize, club: 
 pub(crate) unsafe extern "thiscall" fn compare_get_max_wage(fin: usize, person: usize, job: u32) -> i32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> i32>(IDX_GET_MAX_WAGE)(fin, person, job);
     let n = get_max_wage(fin, person, job);
-    SCOREBOARD.record(r == n, || format!("get_max_wage(fin {:x}, pessoa {:x}, cargo {}) original={} rust={}", fin, person, job as u8 as i8, r, n));
+    SCOREBOARD.record(r == n, || format!("get_max_wage(fin {:x}, person {:x}, job {}) original={} rust={}", fin, person, job as u8 as i8, r, n));
     r
 }
 
@@ -157,7 +157,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_match_income(table: usize
     let mut reg = vec![(fm, 0x167), (fv, 0x167)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(table, partida.addr(), result), || crate::rng::without_counting(|| process_match_income(table, partida.addr(), result)));
-    SCOREBOARD.record(igual, || format!("process_match_income(partida {:x}) original={:x?} rust={:x?}", partida.addr(), mo, mr));
+    SCOREBOARD.record(igual, || format!("process_match_income(match {:x}) original={:x?} rust={:x?}", partida.addr(), mo, mr));
 }
 
 /// Comparer for `calc_gate_receipts`.
@@ -171,7 +171,7 @@ pub(crate) unsafe extern "thiscall" fn compare_calc_gate_receipts(table: usize, 
     }
     let r = o(table, partida, attendance);
     let n = calc_gate_receipts(table, partida, attendance);
-    SCOREBOARD.record(r == n, || format!("calc_gate_receipts(partida {:x}, publico {}) original={} rust={}", partida, attendance, r, n));
+    SCOREBOARD.record(r == n, || format!("calc_gate_receipts(match {:x}, attendance {}) original={} rust={}", partida, attendance, r, n));
     r
 }
 
@@ -181,7 +181,7 @@ pub(crate) unsafe extern "thiscall" fn compare_calc_gate_receipts(table: usize, 
 pub(crate) unsafe extern "thiscall" fn compare_pay_league_fine(this: usize, value: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_PAY_LEAGUE_FINE);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, value), || pay_league_fine(this, value));
-    SCOREBOARD.record(igual, || format!("pay_league_fine(valor {}) original={:x?} rust={:x?}", value, mo, mr));
+    SCOREBOARD.record(igual, || format!("pay_league_fine(value {}) original={:x?} rust={:x?}", value, mo, mr));
 }
 
 /// Comparer for `try_finance_boost_event`.
@@ -217,7 +217,7 @@ pub(crate) unsafe extern "thiscall" fn compare_try_board_takeover(this: usize, c
 pub(crate) unsafe extern "thiscall" fn compare_pay_other_costs(this: usize, value: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_PAY_OTHER_COSTS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0x167)], || o(this, value), || pay_other_costs(this, value));
-    SCOREBOARD.record(igual, || format!("pay_other_costs(valor {}) original={:x?} rust={:x?}", value, mo, mr));
+    SCOREBOARD.record(igual, || format!("pay_other_costs(value {}) original={:x?} rust={:x?}", value, mo, mr));
 }
 
 /// Comparer for `update_wage_bill`.
@@ -251,7 +251,7 @@ pub(crate) unsafe extern "thiscall" fn compare_finance_get_days_to_season_start(
         return o(this, club, passed);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(passed as usize, 4), (G_DAYS_SINCE_SCRATCH_DATE, 8)], || o(this, club, passed), || finance_get_days_to_season_start(this, club, passed));
-    SCOREBOARD.record(igual && r == n, || format!("finance_get_days_to_season_start(clube {:#x}) original={} {:x?} rust={} {:x?}", club, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("finance_get_days_to_season_start(club {:#x}) original={} {:x?} rust={} {:x?}", club, r, mo, n, mr));
     r
 }
 
@@ -317,7 +317,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_weekly_merchandising_income(t
     let mut regions = vec![(fin_prm_club_finance(this, Club(club)), 0x167)];
     regions.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, club), || crate::rng::without_counting(|| add_weekly_merchandising_income(this, club)));
-    SCOREBOARD.record(igual, || format!("add_weekly_merchandising_income(clube {:#x}) original={:x?} rust={:x?}", club, mo, mr));
+    SCOREBOARD.record(igual, || format!("add_weekly_merchandising_income(club {:#x}) original={:x?} rust={:x?}", club, mo, mr));
 }
 
 /// Comparer for `sell_season_tickets`.
@@ -348,7 +348,7 @@ pub(crate) unsafe extern "thiscall" fn compare_upgrade_training_facilities(this:
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_UPGRADE_TRAINING_FACILITIES);
     let regions = [(club.addr() + club::TRAINING, 1), (fin_prm_club_finance(this, club), 0x167)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, club.addr()), || upgrade_training_facilities(this, club.addr()));
-    SCOREBOARD.record(igual, || format!("upgrade_training_facilities(clube {:#x}) original={:x?} rust={:x?}", club.addr(), mo, mr));
+    SCOREBOARD.record(igual, || format!("upgrade_training_facilities(club {:#x}) original={:x?} rust={:x?}", club.addr(), mo, mr));
 }
 
 /// Comparer for `process_club_finance_events`.
@@ -374,7 +374,7 @@ pub(crate) unsafe extern "thiscall" fn compare_try_cash_injection(this: usize, c
 pub(crate) unsafe extern "thiscall" fn compare_get_max_staff_wage(this: usize, job: i8) -> i32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> i32>(IDX_GET_MAX_STAFF_WAGE)(this, job);
     let n = get_max_staff_wage(this, job);
-    SCOREBOARD.record(r == n, || format!("get_max_staff_wage(fin {:#x}, cargo {}) original={} rust={}", this, job, r, n));
+    SCOREBOARD.record(r == n, || format!("get_max_staff_wage(fin {:#x}, job {}) original={} rust={}", this, job, r, n));
     r
 }
 
@@ -401,6 +401,6 @@ pub(crate) unsafe extern "thiscall" fn compare_adjust_max_wage(this: usize, perc
 pub(crate) unsafe extern "thiscall" fn compare_get_wealth_band(this: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_GET_WEALTH_BAND)(this);
     let n = get_wealth_band(this);
-    SCOREBOARD.record(r == n, || format!("get_wealth_band(financas {:#x}) original={} rust={}", this, r as i8, n as i8));
+    SCOREBOARD.record(r == n, || format!("get_wealth_band(finances {:#x}) original={} rust={}", this, r as i8, n as i8));
     r
 }

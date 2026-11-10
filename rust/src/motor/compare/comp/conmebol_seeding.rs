@@ -18,9 +18,9 @@ pub(crate) unsafe extern "thiscall" fn compare_assign_libertadores_places(this: 
             }
             let (q, k) = ((a - base) / 0x245, (a - base) % 0x245);
             let (x, y) = (mo.0[0].1[a - base], mr.0[0].1[a - base]);
-            format!("clube {} +{:x}: {:02x}/{:02x}", q, k, x, y)
+            format!("club {} +{:x}: {:02x}/{:02x}", q, k, x, y)
         }).collect();
-        format!("assign_libertadores_places (ano {}): {}", read_u16(G_CURRENT_DATE_YEAR), l.join(", "))
+        format!("assign_libertadores_places (year {}): {}", read_u16(G_CURRENT_DATE_YEAR), l.join(", "))
     });
 }
 
@@ -61,7 +61,7 @@ pub(crate) unsafe extern "stdcall" fn compare_collect_conmebol_clubs(out: *mut u
     if t2 != 0 {
         exe::crt_free(t2);
     }
-    SCOREBOARD.record(igual && table, || format!("collect_conmebol_clubs: {} e {} clubes, tabela {}, diferenças em {:x?}", n, m, table, memory_diff_addresses(&mo, &mr)));
+    SCOREBOARD.record(igual && table, || format!("collect_conmebol_clubs: {} e {} clubs, table {}, diferenças em {:x?}", n, m, table, memory_diff_addresses(&mo, &mr)));
     a
 }
 

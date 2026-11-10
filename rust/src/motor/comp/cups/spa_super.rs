@@ -111,7 +111,7 @@ pub(crate) unsafe fn compare_team_list(name: &str, this: Cup, o: impl FnOnce() -
     if lr != 0 && lr != lo {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {}", name, this.addr(), a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) returned {} x {} memória {} list {}", name, this.addr(), a, b, igual, list));
     a
 }
 

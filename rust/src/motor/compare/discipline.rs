@@ -35,10 +35,10 @@ pub(crate) unsafe extern "thiscall" fn compare_serve_international_bans(this: us
         let (jogos, contador, dias) = (read_u8(s), read_u8(s + ban_record::MATCHES_SERVED), read_i16(s + ban_record::DAYS));
         let ok = if j.cumprida { jogos == 0xff && dias == -1 } else { contador == j.counter.unwrap_or(*before) };
         if !ok && error.is_none() {
-            error = Some(format!("pessoa {} contador {} (esperava {:?}, antes {}), cumprida={} suspensão {:#x}/{}", id, contador, j.counter, before, j.cumprida, jogos, dias));
+            error = Some(format!("person {} counter {} (esperava {:?}, before {}), served={} suspensão {:#x}/{}", id, contador, j.counter, before, j.cumprida, jogos, dias));
         }
     }
-    SCOREBOARD.record(error.is_none(), || format!("serve_international_bans(time {:#x}, {} pessoas): {}", team, plan.len(), error.clone().unwrap_or_default()));
+    SCOREBOARD.record(error.is_none(), || format!("serve_international_bans(team {:#x}, {} persons): {}", team, plan.len(), error.clone().unwrap_or_default()));
 }
 
 /// Comparer for `apply_appeal_result`.
@@ -55,7 +55,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_appeal_result(this: usize, 
     let s = r.suspensao;
     let (jogos, dias) = (read_u8(s), read_i16(s + ban_record::DAYS));
     let ok = if r.solta { jogos == 0xff && dias == -1 } else { jogos == r.games && dias == r.days };
-    SCOREBOARD.record(ok, || format!("apply_appeal_result({}, regra {}) jogos {:#x} dias {} (esperava {:#x}/{}, solta={})", id, rule as i8, jogos, dias, r.games, r.days, r.solta));
+    SCOREBOARD.record(ok, || format!("apply_appeal_result({}, rule {}) games {:#x} days {} (esperava {:#x}/{}, solta={})", id, rule as i8, jogos, dias, r.games, r.days, r.solta));
 }
 
 /// Comparer for `get_slot_text`.
@@ -70,7 +70,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_slot_text(this: usize, person
     }
     let r = o(this, person, slot, out, size);
     let n = get_slot_text(this, person, slot, out, size);
-    SCOREBOARD.record(r == n, || format!("get_slot_text(pessoa {:#x}, vaga {}) original={} rust={}", person, slot as i8, r, n));
+    SCOREBOARD.record(r == n, || format!("get_slot_text(person {:#x}, slot {}) original={} rust={}", person, slot as i8, r, n));
     r
 }
 
@@ -95,7 +95,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_ban(this: usize, id: u32, ban
         SuspensionPlan::Estender { s, games: jogos, days: dias } => {
             let ok = read_u8(s) == jogos && read_i16(s + ban_record::DAYS) == dias && *((s + ban_record::FLAGS) as *const u8) & 1 == 1
                 && *((ban + ban_record::FLAGS) as *const u8) & 1 == 1;
-            (ok, format!("estender: jogos {} (esperava {}), dias {} (esperava {})", read_u8(s), jogos, read_i16(s + ban_record::DAYS), dias))
+            (ok, format!("estender: games {} (esperava {}), days {} (esperava {})", read_u8(s), jogos, read_i16(s + ban_record::DAYS), dias))
         }
         SuspensionPlan::Nova { slot: vaga, count: conta } => {
             let s = read_usize(this + discipline_fields::BANS).wrapping_add((vaga as i32 as usize).wrapping_mul(20));
@@ -110,7 +110,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_ban(this: usize, id: u32, ban
             if rules[3] != 0xff {
                 ok &= read_i16(this + discipline_fields::NATION_INDEX_COUNT) == index.wrapping_add(1);
             }
-            (ok, format!("nova: vaga {} conta {} (esperava {}), índice {} (antes {})", vaga, read_i16(this + discipline_fields::BAN_COUNT), conta, read_i16(this + discipline_fields::NATION_INDEX_COUNT), index))
+            (ok, format!("new: slot {} count {} (esperava {}), índice {} (before {})", vaga, read_i16(this + discipline_fields::BAN_COUNT), conta, read_i16(this + discipline_fields::NATION_INDEX_COUNT), index))
         }
     };
     SCOREBOARD.record(ok, || format!("add_ban({}) {}", id, detalhe));
@@ -160,7 +160,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_bans_invalid_for_club(this:
             None => *v == before[k * 5..k * 5 + 5],
         };
     }
-    SCOREBOARD.record(ok, || format!("clear_bans_invalid_for_club({}) plano {:x?} antes {:02x?} depois {:02x?}", id, plan, before, after));
+    SCOREBOARD.record(ok, || format!("clear_bans_invalid_for_club({}) plan {:x?} before {:02x?} after {:02x?}", id, plan, before, after));
 }
 
 /// Comparer for `restore_held_bans`.
@@ -194,7 +194,7 @@ pub(crate) unsafe extern "thiscall" fn compare_restore_held_bans(this: usize, pe
     }
     expected[0x1c] = p.rest;
     ok &= after == expected;
-    SCOREBOARD.record(ok, || format!("restore_held_bans({}) clube {:x} esperado {:02x?} depois {:02x?}", id, p.club, expected, after));
+    SCOREBOARD.record(ok, || format!("restore_held_bans({}) club {:x} expected {:02x?} after {:02x?}", id, p.club, expected, after));
 }
 
 /// Comparer for `update_ban_progress`.
@@ -216,7 +216,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_ban_progress(this: usize, 
         contador == j.counter.unwrap_or(before)
     };
     SCOREBOARD.record(ok, || {
-        format!("update_ban_progress({}, {}, {}) contador {} (esperava {:?}, antes {}), cumprida={} suspensão {:#x}/{} entrada {}",
+        format!("update_ban_progress({}, {}, {}) counter {} (esperava {:?}, before {}), served={} suspensão {:#x}/{} entry {}",
             id, rule as u8, count, contador, j.counter, before, j.cumprida, jogos, dias, read_i16(j.entry + ruling_body_entry::BAN_INDEX))
     });
 }
@@ -323,7 +323,7 @@ pub(crate) unsafe extern "thiscall" fn compare_drop_held_bans(this: usize, perso
     }
     original_fn::<unsafe extern "thiscall" fn(usize, *const u32)>(IDX_DROP_HELD_BANS)(this, person);
     let after = list_items_capped(l);
-    SCOREBOARD.record(after == expected && *n == left, || format!("drop_held_bans({}) itens {} -> {} (esperava {}), contador {} (esperava {})", *person, before.len(), after.len(), expected.len(), *n, left));
+    SCOREBOARD.record(after == expected && *n == left, || format!("drop_held_bans({}) items {} -> {} (esperava {}), counter {} (esperava {})", *person, before.len(), after.len(), expected.len(), *n, left));
 }
 
 /// Comparer for `hold_bans_for_loan`.
@@ -343,14 +343,14 @@ pub(crate) unsafe extern "thiscall" fn compare_hold_bans_for_loan(this: usize, p
     expected[0x1c] = expected[0x1c].wrapping_add(vagas.len() as u8);
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_HOLD_BANS_FOR_LOAN)(this, player);
     let after = core::slice::from_raw_parts(reg as *const u8, 29).to_vec();
-    SCOREBOARD.record(after == expected, || format!("hold_bans_for_loan({:x}) vagas {:?} {:x?} x {:x?}", player, vagas, after, expected));
+    SCOREBOARD.record(after == expected, || format!("hold_bans_for_loan({:x}) slots {:?} {:x?} x {:x?}", player, vagas, after, expected));
 }
 
 /// Comparer for `is_one_booking_from_ban`.
 pub(crate) unsafe extern "thiscall" fn compare_is_one_booking_from_ban(this: usize, person: usize, competition: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_ONE_BOOKING_FROM_BAN)(this, person, competition);
     let n = is_one_booking_from_ban(this, person, competition);
-    SCOREBOARD.record(r == n, || format!("is_one_booking_from_ban(pessoa {:x}, competicao {:x}) original={:x} rust={:x}", person, competition, r, n));
+    SCOREBOARD.record(r == n, || format!("is_one_booking_from_ban(person {:x}, competition {:x}) original={:x} rust={:x}", person, competition, r, n));
     r
 }
 
@@ -383,7 +383,7 @@ pub(crate) unsafe extern "thiscall" fn compare_discipline_remove_player(this: us
     core::ptr::copy_nonoverlapping(r as *const u8, after.as_mut_ptr(), 29);
     let ok = after[..0x1c].iter().all(|&b| b == 0xff) && after[0x1c] == 0
         && entries.iter().all(|&e| read_usize(e) as u32 == 0xffff_ffff);
-    SCOREBOARD.record(ok, || format!("discipline_remove_player({}) registro {:02x?} entradas {:x?}", id, after, entries));
+    SCOREBOARD.record(ok, || format!("discipline_remove_player({}) record {:02x?} entries {:x?}", id, after, entries));
 }
 
 /// Comparer for `find_held_ban`.

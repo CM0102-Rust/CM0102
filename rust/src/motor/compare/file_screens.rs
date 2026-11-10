@@ -12,6 +12,6 @@ pub(crate) unsafe extern "C" fn compare_build_save_game_summary(summary: *mut u8
     SCOREBOARD.record(mo.0[0] == mr.0[0], || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let k = (0..a.len()).find(|&k| a[k] != b[k]).unwrap_or(0);
-        format!("build_save_game_summary: primeira diferença em +{:#x}: {:#04x} x {:#04x}", k, a[k], b[k])
+        format!("build_save_game_summary: first diferença em +{:#x}: {:#04x} x {:#04x}", k, a[k], b[k])
     });
 }

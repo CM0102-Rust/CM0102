@@ -18,7 +18,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_create_final_stage(
         let (x, y) = (read_usize(l), read_usize(l + 6));
         stage.team_count() == 2 && this.current_stage() == 10 && ((x, y) == (a, b) || (x, y) == (b, a))
     };
-    SCOREBOARD.record(same, || format!("bra_nat_third_create_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x}", this.addr(), a, b, stage.addr()));
+    SCOREBOARD.record(same, || format!("bra_nat_third_create_final_stage({:#x}) campeoes={:#x},{:#x} stage={:#x}", this.addr(), a, b, stage.addr()));
 }
 
 /// Comparer for `bra_nat_third_start_new_season`.
@@ -36,7 +36,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_start_new_season(th
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_THIRD_START_NEW_SEASON)(this.addr());
     let after = this.year();
     let same = after == before.wrapping_add(1) && read_usize(this.addr() + 0xee) == 0 && (0..7).all(|g| read_usize(this.stages() + 4 * g) != 0);
-    SCOREBOARD.record(same, || format!("bra_nat_third_start_new_season({:#x}) ano antes={} depois={} +0xee={:#x}", this.addr(), before, after, read_usize(this.addr() + 0xee)));
+    SCOREBOARD.record(same, || format!("bra_nat_third_start_new_season({:#x}) year before={} after={} +0xee={:#x}", this.addr(), before, after, read_usize(this.addr() + 0xee)));
     r
 }
 
@@ -66,7 +66,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_set_predicted_posit
         let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this + 8), v[k]) } else { 0 };
         read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + 4 * k) != v[k] || e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != place_for_index(k)
     });
-    SCOREBOARD.record(wrong.is_none(), || format!("bra_nat_third_set_predicted_positions({:#x}): a vaga {:?} não bate", this, wrong));
+    SCOREBOARD.record(wrong.is_none(), || format!("bra_nat_third_set_predicted_positions({:#x}): a slot {:?} não bate", this, wrong));
 }
 
 /// Comparer for `bra_nat_third_create_group_stage` (comparison mode: see the header of motor.rs): the comparer of one
@@ -98,7 +98,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_create_group_stage(
         in_it.sort_unstable();
         a == in_it
     };
-    SCOREBOARD.record(same, || format!("bra_nat_third_create_group_stage({:#x}, {}) fase={:#x} plano={:x?}", this.addr(), k, stage.addr(), plan));
+    SCOREBOARD.record(same, || format!("bra_nat_third_create_group_stage({:#x}, {}) stage={:#x} plan={:x?}", this.addr(), k, stage.addr(), plan));
 }
 
 /// Comparer for `create_second_round_stage`.
@@ -145,7 +145,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_second_round_stage(this: u
         b.sort_unstable();
         a == b
     };
-    SCOREBOARD.record(same, || format!("create_second_round_stage({:#x}) fase={:#x} plano={:x?}", this.addr(), stage.addr(), plan));
+    SCOREBOARD.record(same, || format!("create_second_round_stage({:#x}) stage={:#x} plan={:x?}", this.addr(), stage.addr(), plan));
 }
 
 /// Comparer for `create_third_round_groups`.
@@ -179,7 +179,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_third_round_groups(this: u
         in_it.sort_unstable();
         p == in_it
     };
-    SCOREBOARD.record(same, || format!("create_third_round_groups({:#x}) n={} plano={:x?}", this.addr(), n, plan));
+    SCOREBOARD.record(same, || format!("create_third_round_groups({:#x}) n={} plan={:x?}", this.addr(), n, plan));
 }
 
 /// Comparer for `bra_nat_third_create_table` (the Série C; comparison mode: see the header of motor.rs).
@@ -215,7 +215,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_create_table(this: 
         b.sort_unstable();
         same = rows_ok && a == b;
     }
-    SCOREBOARD.record(same, || format!("bra_nat_third_create_table({:#x}) original={} plano={:x?} lista={:x?}", this.addr(), r, plan, drawn));
+    SCOREBOARD.record(same, || format!("bra_nat_third_create_table({:#x}) original={} plan={:x?} list={:x?}", this.addr(), r, plan, drawn));
     r
 }
 
@@ -239,7 +239,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_update_staff_record
     let (n, l, dest) = serie_c_staff_records(League(this), club, status, stage, false);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_BRA_NAT_THIRD_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, status, stage, a4, a5, a6);
     let written = if l == 0 { dest } else { read_u8(l + league_table_row::STATUS) };
-    SCOREBOARD.record(r == n && written == dest, || format!("bra_nat_third_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, club, status as u8 as i8, stage as u8 as i8, r as i32, n as i32, written as i8, dest as i8));
+    SCOREBOARD.record(r == n && written == dest, || format!("bra_nat_third_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} target {} x {}", this, club, status as u8 as i8, stage as u8 as i8, r as i32, n as i32, written as i8, dest as i8));
     r
 }
 

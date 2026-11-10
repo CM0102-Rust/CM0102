@@ -22,7 +22,7 @@ pub(crate) unsafe extern "thiscall" fn compare_fix_man_daily_update(this: usize)
     let queue = read_usize(this + fixture_manager::MOVED_NEWS_QUEUE);
     let after = read_i16(G_FIXTURE_LEGS_LIST);
     SCOREBOARD.record((havia == 0 || queue == 0) && (before == 0 || after == 0),
-        || format!("fix_man_daily_update: fila das notícias {:x} -> {:x}, conferências {} -> {}", havia, queue, before, after));
+        || format!("fix_man_daily_update: queue das notícias {:x} -> {:x}, conferências {} -> {}", havia, queue, before, after));
 }
 
 /// Comparer for `get_fixture_list`.
@@ -38,7 +38,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_fixture_list(this: usize, yea
     }
     let r = o(this, year, day, slice, kind);
     let n = get_fixture_list(this, year, day, slice, kind);
-    SCOREBOARD.record(r == n, || format!("get_fixture_list(ano {} dia {} fatia {} tipo {}): original={:x} rust={:x}",
+    SCOREBOARD.record(r == n, || format!("get_fixture_list(year {} day {} slice {} kind {}): original={:x} rust={:x}",
         year as u16, day as u16, slice as u8, kind as u8 as i8, r, n));
     r
 }
@@ -52,7 +52,7 @@ pub(crate) unsafe extern "thiscall" fn compare_load_fixtures(this: usize) {
     let expected = format!("fixtures_{}.tmp", read_i16(this + fixture_manager::YEAR) as u16);
     let s = core::slice::from_raw_parts((this + fixture_manager::FILE_NAME) as *const u8, expected.len() + 1);
     SCOREBOARD.record(&s[..expected.len()] == expected.as_bytes() && s[expected.len()] == 0,
-        || format!("load_fixtures: nome {:?} (esperado {})", s, expected));
+        || format!("load_fixtures: name {:?} (expected {})", s, expected));
 }
 
 /// Comparer for `collect_day_clashes`.
@@ -81,7 +81,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_day_clashes(this: usize, 
     o(this, game.addr(), grav, list, nations, n, data, desloc);
     let after = fix_man_list_items(list);
     let same = *grav == g && after.len() == before.len() + ne && after[..before.len()] == before[..] && fixtures_bytes(&after[before.len()..]) == expected;
-    SCOREBOARD.record(same, || format!("collect_day_clashes(jogo {:x}, desloc {}) gravidade original={} rust={}, jogos novos original={} rust={}", game.addr(), desloc as u8 as i8, *grav, g, after.len().saturating_sub(before.len()), ne));
+    SCOREBOARD.record(same, || format!("collect_day_clashes(game {:x}, desloc {}) severity original={} rust={}, games new original={} rust={}", game.addr(), desloc as u8 as i8, *grav, g, after.len().saturating_sub(before.len()), ne));
 }
 
 /// Comparer for `find_fixture_clashes`.
@@ -108,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_fixture_clashes(this: usize,
     let nr = find_fixture_clashes(this, game, &mut gr, two_days);
     let (lo, lr) = (fixtures_bytes(&fix_man_list_items(r)), fixtures_bytes(&fix_man_list_items(nr)));
     let same = (r == 0) == (nr == 0) && go == gr && lo == lr;
-    SCOREBOARD.record(same, || format!("find_fixture_clashes(jogo {:x}) original={:x} saida={} jogos={} rust={:x} saida={} jogos={}", game, r, go, lo.len() / 0x4f, nr, gr, lr.len() / 0x4f));
+    SCOREBOARD.record(same, || format!("find_fixture_clashes(game {:x}) original={:x} out={} games={} rust={:x} out={} games={}", game, r, go, lo.len() / 0x4f, nr, gr, lr.len() / 0x4f));
     if nr != 0 {
         exe::drop_llist(nr);
         exe::crt_operator_delete(nr);
@@ -137,7 +137,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_new_fixture_date(this: usize
     }
     let reg = [(game.addr(), 0x4f)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, game.addr()), || find_new_fixture_date(this, game.addr()));
-    SCOREBOARD.record(igual, || format!("find_new_fixture_date(jogo {:x}) original={:x?} rust={:x?}", game.addr(), mo, mr));
+    SCOREBOARD.record(igual, || format!("find_new_fixture_date(game {:x}) original={:x?} rust={:x?}", game.addr(), mo, mr));
 }
 
 /// Comparer for `add_fixture`.
@@ -211,7 +211,7 @@ pub(crate) unsafe extern "thiscall" fn compare_resolve_same_day_clash(this: usiz
     before.write_back();
     let r = o(this, game, conflitos);
     let mo = crate::comparison::MemorySnapshot::read(&reg);
-    SCOREBOARD.record(mo == mr && (r == 0 || r == 1), || format!("resolve_same_day_clash(jogo {:#x}) devolveu {}, cursor da lista {:x?} x {:x?}", game, r, mo, mr));
+    SCOREBOARD.record(mo == mr && (r == 0 || r == 1), || format!("resolve_same_day_clash(game {:#x}) returned {}, cursor of the list {:x?} x {:x?}", game, r, mo, mr));
     r
 }
 
@@ -243,7 +243,7 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_fixture_moved_news(this: us
     if target != 0 {
         let regions = [(this + fixture_manager::MOVED_NEWS_QUEUE, 4), (l, 0xe), (target, 0xdf)];
         let (_, _, same, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, f, causa, old), || queue_fixture_moved_news(this, f, causa, old));
-        SCOREBOARD.record(same, || format!("queue_fixture_moved_news(jogo {:#x}, na fila) original={:x?} rust={:x?}", f, mo, mr));
+        SCOREBOARD.record(same, || format!("queue_fixture_moved_news(game {:#x}, na queue) original={:x?} rust={:x?}", f, mo, mr));
         return;
     }
     let mut regions = vec![(this + fixture_manager::MOVED_NEWS_QUEUE, 4)];
@@ -266,7 +266,7 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_fixture_moved_news(this: us
         && read_usize(read_usize(l2 + 6)) != 0
         && core::slice::from_raw_parts(read_usize(read_usize(l2 + 6)) as *const u8, 0xde)
             == core::slice::from_raw_parts(core::ptr::addr_of!(FIXTURE_MOVED_NEWS_BUILT) as *const u8, 0xde);
-    SCOREBOARD.record(same, || format!("queue_fixture_moved_news(jogo {:#x}, nova) montada={} conta {} -> {}", f, built, count, if l2 != 0 { read_i16_as_i32(l2) } else { -1 }));
+    SCOREBOARD.record(same, || format!("queue_fixture_moved_news(game {:#x}, new) built={} count {} -> {}", f, built, count, if l2 != 0 { read_i16_as_i32(l2) } else { -1 }));
 }
 
 /// Comparer for `find_stored_fixture`.
@@ -276,7 +276,7 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_fixture_moved_news(this: us
 pub(crate) unsafe extern "thiscall" fn compare_find_stored_fixture(this: usize, f: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_FIND_STORED_FIXTURE)(this, f);
     let n = find_stored_fixture(this, f);
-    SCOREBOARD.record(r == n, || format!("find_stored_fixture(jogo {:x}) original={:x} rust={:x}", f, r, n));
+    SCOREBOARD.record(r == n, || format!("find_stored_fixture(game {:x}) original={:x} rust={:x}", f, r, n));
     r
 }
 
@@ -295,7 +295,7 @@ pub(crate) unsafe extern "thiscall" fn compare_insert_fixture(this: usize, f: us
     let tail = read_usize(l + 6);
     let same = read_u16(l) == count.wrapping_add(1) && tail != 0
         && core::slice::from_raw_parts(read_usize(tail) as *const u8, 0x4f) == core::slice::from_raw_parts(f as *const u8, 0x4f);
-    SCOREBOARD.record(same, || format!("insert_fixture(jogo {:x}) conta antes={} depois={}", f, count, read_u16(l)));
+    SCOREBOARD.record(same, || format!("insert_fixture(game {:x}) count before={} after={}", f, count, read_u16(l)));
 }
 
 /// Comparer for `remove_fixture`.
@@ -319,7 +319,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_fixture(this: usize, f: us
     let r = o(this, f);
     let expected = has as u32;
     let same = r == expected && read_u16(l) == count.wrapping_sub(expected as u16);
-    SCOREBOARD.record(same, || format!("remove_fixture(jogo {:x}) original={} esperado={} conta antes={} depois={}",
+    SCOREBOARD.record(same, || format!("remove_fixture(game {:x}) original={} expected={} count before={} after={}",
         f, r, expected, count, read_u16(l)));
     r
 }
@@ -335,7 +335,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_fixtures(this: usize, dia0: 
     if list == 0 {
         let r = o(this, dia0, ano0, dia1, ano1, club, 0, comp, kind, side);
         let n = find_fixtures(this, dia0, ano0, dia1, ano1, club, 0, comp, kind, side);
-        SCOREBOARD.record(r as u16 == n as u16, || format!("find_fixtures({}/{} a {}/{}, clube {}, comp {}, tipo {:x}, lado {:x}) original={} rust={}",
+        SCOREBOARD.record(r as u16 == n as u16, || format!("find_fixtures({}/{} a {}/{}, club {}, comp {}, kind {:x}, side {:x}) original={} rust={}",
             dia0 as u16, ano0 as u16, dia1 as u16, ano1 as u16, club as i32, comp as i32, kind as u8, side as u8, r as u16, n as u16));
         return r;
     }
@@ -343,7 +343,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_fixtures(this: usize, dia0: 
     let r = o(this, dia0, ano0, dia1, ano1, club, list, comp, kind, side);
     let (n, iguais) = run_with_temp_list(list, conta, cauda,
         |p| find_fixtures(this, dia0, ano0, dia1, ano1, club, p, comp, kind, side));
-    SCOREBOARD.record(iguais && r as u16 == n as u16, || format!("find_fixtures({}/{} a {}/{}, clube {}, comp {}, tipo {:x}, lado {:x}, com lista) original={} rust={} itens iguais {}",
+    SCOREBOARD.record(iguais && r as u16 == n as u16, || format!("find_fixtures({}/{} a {}/{}, club {}, comp {}, kind {:x}, side {:x}, with list) original={} rust={} items equal {}",
         dia0 as u16, ano0 as u16, dia1 as u16, ano1 as u16, club as i32, comp as i32, kind as u8, side as u8, r as u16, n as u16, iguais));
     r
 }
@@ -359,7 +359,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_comp_fixtures_on_day(this
     let r = o(this, year, day, slice, comp, round, kind, list);
     let (n, iguais) = run_with_temp_list(list, conta, cauda,
         |p| collect_comp_fixtures_on_day(this, year, day, slice, comp, round, kind, p));
-    SCOREBOARD.record(iguais && r as u16 == n as u16, || format!("collect_comp_fixtures_on_day({}/{} fatia {}, comp {}, rodada {}, tipo {:x}) original={} rust={} itens iguais {}",
+    SCOREBOARD.record(iguais && r as u16 == n as u16, || format!("collect_comp_fixtures_on_day({}/{} slice {}, comp {}, round {}, kind {:x}) original={} rust={} items equal {}",
         day as u16, year as u16, slice as u8, comp as i32, round as i32, kind as u8, r as u16, n as u16, iguais));
     r
 }
@@ -370,7 +370,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_comp_fixtures_on_day(this
 pub(crate) unsafe extern "stdcall" fn compare_fix_man_comp_has_fixture_on_date(data: usize, comp: u32) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, u32) -> u8>(IDX_FIX_MAN_COMP_HAS_FIXTURE_ON_DATE)(data, comp);
     let n = fix_man_comp_has_fixture_on_date(data, comp);
-    SCOREBOARD.record(r == n, || format!("fix_man_comp_has_fixture_on_date(data {:x}, comp {}) original={} rust={}", data, comp as i32, r, n));
+    SCOREBOARD.record(r == n, || format!("fix_man_comp_has_fixture_on_date(date {:x}, comp {}) original={} rust={}", data, comp as i32, r, n));
     r
 }
 
@@ -383,7 +383,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_next_fixture(this: usize, pa
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg,
         || o(this, pano, pdia, pfatia, adiante, comp, stage, club, club_b, a9, a10, a11),
         || find_next_fixture(this, pano, pdia, pfatia, adiante, comp, stage, club, club_b, a9, a10, a11));
-    SCOREBOARD.record(igual && r == n, || format!("find_next_fixture(cursor {:?}, adiante {}, comp {}, fase {}, clubes {:x} {:x}) original={:x} rust={:x} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == n, || format!("find_next_fixture(cursor {:?}, adiante {}, comp {}, stage {}, clubs {:x} {:x}) original={:x} rust={:x} {:x?} x {:x?}",
         before, adiante, comp, stage, club, club_b, r, n, mo, mr));
     r
 }
@@ -392,7 +392,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_next_fixture(this: usize, pa
 pub(crate) unsafe extern "thiscall" fn compare_get_time_slice(this: usize, comp: usize, day: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(IDX_GET_TIME_SLICE)(this, comp, day);
     let n = get_time_slice(this, comp, day);
-    SCOREBOARD.record(r == n, || format!("get_time_slice(dia {}) original={} rust={}", day as i16, r, n));
+    SCOREBOARD.record(r == n, || format!("get_time_slice(day {}) original={} rust={}", day as i16, r, n));
     r
 }
 
@@ -415,7 +415,7 @@ pub(crate) unsafe extern "C" fn compare_fix_man_get_partner_key_nation_index(clu
 pub(crate) unsafe extern "stdcall" fn compare_get_fixture_list_for_date(data: usize, slice: u32, group: u32) -> usize {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, u32, u32) -> usize>(IDX_GET_FIXTURE_LIST_FOR_DATE)(data, slice, group);
     let n = get_fixture_list_for_date(data, slice, group);
-    SCOREBOARD.record(r == n, || format!("get_fixture_list_for_date({:x}, fatia {}, grupo {}) original={:x} rust={:x}", data, slice, group, r, n));
+    SCOREBOARD.record(r == n, || format!("get_fixture_list_for_date({:x}, slice {}, group {}) original={:x} rust={:x}", data, slice, group, r, n));
     r
 }
 

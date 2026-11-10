@@ -72,7 +72,7 @@ pub(crate) unsafe extern "C" fn compare_database_format_name_from_strings(name: 
     let n = (size as u16 as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, n)], || o(name, surname, common, text, size, form),
         || database_format_name_from_strings(name, surname, common, text, size, form));
-    SCOREBOARD.record(igual && r == x, || format!("database_format_name_from_strings(forma {}) original={} rust={} {:x?} x {:x?}", form as u8, r, x, mo, mr));
+    SCOREBOARD.record(igual && r == x, || format!("database_format_name_from_strings(form {}) original={} rust={} {:x?} x {:x?}", form as u8, r, x, mo, mr));
     r
 }
 
@@ -106,7 +106,7 @@ pub(crate) unsafe extern "C" fn compare_club_get_national_team_name(club: usize,
     let n = (size as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, n)], || o(club, variant, text, size, form, aspas),
         || club_get_national_team_name(club, variant, text, size, form, aspas));
-    SCOREBOARD.record(igual && r == x, || format!("club_get_national_team_name({:x}, {}, forma {}, {}) original={} rust={} {:x?} x {:x?}", club, variant, f, aspas, r, x, mo, mr));
+    SCOREBOARD.record(igual && r == x, || format!("club_get_national_team_name({:x}, {}, form {}, {}) original={} rust={} {:x?} x {:x?}", club, variant, f, aspas, r, x, mo, mr));
     r
 }
 
@@ -136,7 +136,7 @@ pub(crate) unsafe extern "C" fn compare_database_format_player_positions(player:
     let reg = [(text, n), (player.addr() + player_sheet::GOALKEEPER, 12), (0xde1f64, 64)];
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(player.addr(), text, size, form),
         || database_format_player_positions(player.addr(), text, size, form));
-    SCOREBOARD.record(igual && r == x, || format!("database_format_player_positions({:x}, forma {}) original={} rust={} {:x?} x {:x?}", player.addr(), form as u8, r, x, mo, mr));
+    SCOREBOARD.record(igual && r == x, || format!("database_format_player_positions({:x}, form {}) original={} rust={} {:x?} x {:x?}", player.addr(), form as u8, r, x, mo, mr));
     r
 }
 
@@ -150,7 +150,7 @@ pub(crate) unsafe extern "C" fn compare_database_format_name_from_ids(name: i32,
     let n = (size as u16 as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, n)], || o(name, surname, common, text, size, form, person),
         || database_format_name_from_ids(name, surname, common, text, size, form, person));
-    SCOREBOARD.record(igual && r == x, || format!("database_format_name_from_ids({}, {}, {}, forma {}, pessoa {}) original={} rust={} {:x?} x {:x?}", name, surname, common, form, person, r, x, mo, mr));
+    SCOREBOARD.record(igual && r == x, || format!("database_format_name_from_ids({}, {}, {}, form {}, person {}) original={} rust={} {:x?} x {:x?}", name, surname, common, form, person, r, x, mo, mr));
     r
 }
 
@@ -163,7 +163,7 @@ pub(crate) unsafe extern "C" fn compare_database_format_official_name(oficial: u
     let n = (size as u16 as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, n)], || o(oficial, text, size, form),
         || database_format_official_name(oficial, text, size, form));
-    SCOREBOARD.record(igual && r == x, || format!("database_format_official_name({:x}, forma {}) original={} rust={} {:x?} x {:x?}", oficial, form as u8, r, x, mo, mr));
+    SCOREBOARD.record(igual && r == x, || format!("database_format_official_name({:x}, form {}) original={} rust={} {:x?} x {:x?}", oficial, form as u8, r, x, mo, mr));
     r
 }
 
@@ -838,7 +838,7 @@ pub(crate) unsafe fn compare_nome_em_ingles(name: &str, x: usize, o: unsafe exte
     }
     let a = o(x);
     let b = r(x);
-    SCOREBOARD.record(a == b, || format!("{}({:x}) idioma {} original={:x} rust={:x}", name, x, language, a, b));
+    SCOREBOARD.record(a == b, || format!("{}({:x}) language {} original={:x} rust={:x}", name, x, language, a, b));
     a
 }
 
@@ -866,7 +866,7 @@ pub(crate) unsafe extern "C" fn compare_stadium_get_english_name(stadium: usize)
     }
     let r = o(stadium);
     let n = stadium_get_english_name(stadium);
-    SCOREBOARD.record(r == n, || format!("stadium_get_english_name({:x}) idioma {} original={:x} rust={:x}", stadium, language, r, n));
+    SCOREBOARD.record(r == n, || format!("stadium_get_english_name({:x}) language {} original={:x} rust={:x}", stadium, language, r, n));
     r
 }
 
@@ -875,7 +875,7 @@ pub(crate) unsafe extern "C" fn compare_stadium_get_english_name(stadium: usize)
 pub(crate) unsafe extern "C" fn compare_database_language_file_exists(language: i32) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(i32) -> i32>(IDX_DATABASE_LANGUAGE_FILE_EXISTS);
     let (r, x, igual, _, _) = crate::comparison::side_by_side(&[(0xde279c, 0x104)], || o(language), || database_language_file_exists(language));
-    SCOREBOARD.record(igual && r == x, || format!("database_language_file_exists({}) original={} rust={} caminho igual {}", language, r, x, igual));
+    SCOREBOARD.record(igual && r == x, || format!("database_language_file_exists({}) original={} rust={} path equal {}", language, r, x, igual));
     r
 }
 
@@ -1072,7 +1072,7 @@ pub(crate) unsafe extern "C" fn compare_nation_get_english_name(nation: usize) -
     }
     let r = o(nation);
     let n = nation_get_english_name(nation);
-    SCOREBOARD.record(r == n, || format!("nation_get_english_name({:x}) idioma {} original={:x} rust={:x}", nation, language, r, n));
+    SCOREBOARD.record(r == n, || format!("nation_get_english_name({:x}) language {} original={:x} rust={:x}", nation, language, r, n));
     r
 }
 
@@ -1085,7 +1085,7 @@ pub(crate) unsafe extern "C" fn compare_club_get_english_short_name(club: usize)
     }
     let r = o(club);
     let n = club_get_english_short_name(club);
-    SCOREBOARD.record(r == n, || format!("club_get_english_short_name({:x}) idioma {} original={:x} rust={:x}", club, language, r, n));
+    SCOREBOARD.record(r == n, || format!("club_get_english_short_name({:x}) language {} original={:x} rust={:x}", club, language, r, n));
     r
 }
 
@@ -1145,7 +1145,7 @@ pub(crate) unsafe extern "C" fn compare_database_build_nation_name_index() {
     let onde = original.iter().zip(copy).position(|(a, b)| a != b);
     SCOREBOARD.record(onde.is_none(), || {
         let k = onde.unwrap_or(0) & !3;
-        format!("database_build_nation_name_index: diverge na nação {} +{:#x} original={} rust={}", k / 0x24, k % 0x24,
+        format!("database_build_nation_name_index: diverge in the nação {} +{:#x} original={} rust={}", k / 0x24, k % 0x24,
             read_i32(t + k), read_i32(r + k))
     });
     write_usize(G_NATION_NAME_INDEX_TABLE, t);
@@ -1194,7 +1194,7 @@ pub(crate) unsafe extern "C" fn compare_get_adjective_form_index(index: u32, lan
     let o = original_fn::<unsafe extern "C" fn(u32, u32) -> u8>(IDX_GET_ADJECTIVE_FORM_INDEX);
     let r = o(index, language);
     let n = get_adjective_form_index(index, language);
-    SCOREBOARD.record(r == n, || format!("get_adjective_form_index({}, idioma {}) original={} rust={}", index as u8 as i8, language, r, n));
+    SCOREBOARD.record(r == n, || format!("get_adjective_form_index({}, language {}) original={} rust={}", index as u8 as i8, language, r, n));
     r
 }
 
@@ -1409,7 +1409,7 @@ pub(crate) unsafe extern "C" fn compare_database_format_staff_name(person: usize
     // the destination has at least 0x69 bytes (the routine requires it); 0x600740 and 0x6005e0 only read
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(target, 0x69)], || o(person, target, size, style),
         || database_format_staff_name(person, target, size, style));
-    SCOREBOARD.record(igual && r == n, || format!("database_format_staff_name({:x}, estilo {}) original={} rust={} {:x?} x {:x?}", person, style as u8, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("database_format_staff_name({:x}, style {}) original={} rust={} {:x?} x {:x?}", person, style as u8, r, n, mo, mr));
     r
 }
 
@@ -1449,7 +1449,7 @@ pub(crate) unsafe extern "C" fn compare_club_get_english_name(club: usize) -> us
     }
     let r = o(club);
     let n = club_get_english_name(club);
-    SCOREBOARD.record(r == n, || format!("club_get_english_name({:x}) idioma {} original={:x} rust={:x}", club, language, r, n));
+    SCOREBOARD.record(r == n, || format!("club_get_english_name({:x}) language {} original={:x} rust={:x}", club, language, r, n));
     r
 }
 

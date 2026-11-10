@@ -4418,7 +4418,7 @@ pub(crate) unsafe fn compare_reject_withdraw(name: &str, this: TransferManagerFi
     for k in regions.len() - nos.len()..regions.len() {
         same &= a[k].1[4] == b[k].1[4];
     }
-    SCOREBOARD.record(same, || format!("{}(oferta {:#x}) original={:x?} rust={:x?}", name, o.addr(), mo, mr));
+    SCOREBOARD.record(same, || format!("{}(offer {:#x}) original={:x?} rust={:x?}", name, o.addr(), mo, mr));
 }
 
 /// Sends the 0xfa1 news of a rejected or withdrawn offer, with the reason, to the interested human clubs.

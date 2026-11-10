@@ -60,7 +60,7 @@ pub(crate) unsafe extern "thiscall" fn compare_move_fixtures_for_tv(this: usize,
     o(this.addr(), data);
     let expected = if n == 0 { 0 } else { validas.min(n) };
     let movidas = (0..block).filter(|k| read_u8(e + k * 7 + 0xb) == 0xff).count();
-    SCOREBOARD.record(movidas == expected, || format!("move_fixtures_for_tv(data {:x}) vagas {} válidas {} jogos {}: movidas {} (esperado {})",
+    SCOREBOARD.record(movidas == expected, || format!("move_fixtures_for_tv(date {:x}) slots {} válidas {} games {}: movidas {} (expected {})",
         data, block, validas, n, movidas, expected));
 }
 
@@ -95,7 +95,7 @@ pub(crate) unsafe extern "thiscall" fn compare_league_update_for_date(this: usiz
     let parada = this.stopped() != 0 || this.active() == 0;
     let r = o(this.addr(), data, full);
     let ok = if parada { r as u8 == 0 } else { r as u8 == 1 && (full == 0 || same_date(this.addr() + league::LAST_UPDATE_DATE, data)) };
-    SCOREBOARD.record(ok, || format!("league_update_for_date(completo {}): parada {} devolveu {} +0xd1 {:x} data {:x}",
+    SCOREBOARD.record(ok, || format!("league_update_for_date(full {}): stopped {} returned {} +0xd1 {:x} date {:x}",
         full, parada, r as u8, this.last_update_date(), read_usize(data)));
     r
 }
@@ -116,7 +116,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_fixtures(this: usize) -> u
     let own = list != 0 && this.year() as i32 == read_i16(list + 2) as u16 as i32;
     let r = o(this.addr());
     let ok = !(own && r == 1) || this.fixed_fixtures() == 0;
-    SCOREBOARD.record(ok, || format!("create_fixtures: lista própria {} devolveu {} +0xea {:x}", own, r, this.fixed_fixtures()));
+    SCOREBOARD.record(ok, || format!("create_fixtures: list própria {} returned {} +0xea {:x}", own, r, this.fixed_fixtures()));
     r
 }
 
@@ -256,7 +256,7 @@ pub(crate) unsafe extern "thiscall" fn compare_league_add_result(league: usize, 
     before.write_back();
     let ro = o(league.addr(), p.addr(), game);
     let mo = crate::comparison::MemorySnapshot::read(&regions);
-    SCOREBOARD.record(ro == rr && mo == mr, || format!("league_add_result({:x}, partida {:x}) original={} {:x?} rust={} {:x?}", league.addr(), p.addr(), ro, mo, rr, mr));
+    SCOREBOARD.record(ro == rr && mo == mr, || format!("league_add_result({:x}, match {:x}) original={} {:x?} rust={} {:x?}", league.addr(), p.addr(), ro, mo, rr, mr));
     ro
 }
 
@@ -281,7 +281,7 @@ pub(crate) unsafe extern "thiscall" fn compare_copy_table(league: usize) -> usiz
     let c = o(league.addr());
     let mut erros = Vec::new();
     if league.games_per_club() != a7 {
-        erros.push(format!("+0xa7 {} esperado {}", league.games_per_club(), a7));
+        erros.push(format!("+0xa7 {} expected {}", league.games_per_club(), a7));
     }
     if c != 0 {
         let (h2h, forma) = (read_usize(table + 5) != 0, read_usize(table + 9) != 0);
@@ -293,7 +293,7 @@ pub(crate) unsafe extern "thiscall" fn compare_copy_table(league: usize) -> usiz
                     continue;
                 }
                 if read_u8(lt + b) != read_u8(lc + b) {
-                    erros.push(format!("linha {} +{:#x}", i, b));
+                    erros.push(format!("row {} +{:#x}", i, b));
                     break;
                 }
             }
@@ -302,14 +302,14 @@ pub(crate) unsafe extern "thiscall" fn compare_copy_table(league: usize) -> usiz
                 b != 0 && core::slice::from_raw_parts(a as *const u8, t) == core::slice::from_raw_parts(b as *const u8, t)
             };
             if h2h && n > 1 && !equal(5, 14 * (n - 1)) {
-                erros.push(format!("linha {} confrontos", i));
+                erros.push(format!("row {} confrontos", i));
             }
             if forma && a7 > 0 && !equal(9, a7 as usize) {
-                erros.push(format!("linha {} forma", i));
+                erros.push(format!("row {} form", i));
             }
         }
     }
-    SCOREBOARD.record(c != 0 && erros.is_empty(), || format!("copy_table({:x}) n {} copia {:x}: {}", league.addr(), n, c, erros.join("; ")));
+    SCOREBOARD.record(c != 0 && erros.is_empty(), || format!("copy_table({:x}) n {} copy {:x}: {}", league.addr(), n, c, erros.join("; ")));
     c
 }
 
@@ -341,10 +341,10 @@ pub(crate) unsafe extern "thiscall" fn compare_league_set_predicted_positions(le
         let p = (i as u8).wrapping_add(1);
         let e = exe::comp_stats_find_club_entry(league.comp_stats(), c as usize);
         if e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != p {
-            erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if e == 0 { -1 } else { read_u8(e + comp_stats_club::DANGER_POSITION) as i32 }));
+            erros.push(format!("club {:x} expected {} got {}", c, p, if e == 0 { -1 } else { read_u8(e + comp_stats_club::DANGER_POSITION) as i32 }));
         }
     }
-    SCOREBOARD.record(erros.is_empty(), || format!("league_set_predicted_positions({:x}) {} clubes: {}", league.addr(), n, erros.join("; ")));
+    SCOREBOARD.record(erros.is_empty(), || format!("league_set_predicted_positions({:x}) {} clubs: {}", league.addr(), n, erros.join("; ")));
 }
 
 /// Comparer for `compare_projection_by_reputation_desc`.
@@ -388,7 +388,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_projected_positions(this: 
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(reg + comp_stats_club::CURRENT_POSITION, 3)], || o(this, club),
         || update_projected_positions(this, club));
-    SCOREBOARD.record(igual && r == n, || format!("update_projected_positions(liga {:x}, clube {:x}) original={} rust={} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == n, || format!("update_projected_positions(league {:x}, club {:x}) original={} rust={} {:x?} x {:x?}",
         this, club, r, n, mo, mr));
     r
 }
@@ -436,7 +436,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init_table_row(this: usize, i: u3
             ok &= outros.enumerate().all(|(k, j)| read_usize(p + 14 * k) == read_usize(table + j * TABLE_ROW_SIZE));
         }
     }
-    SCOREBOARD.record(ok, || format!("init_table_row(linha {}, clube {:x}, marca {}) clubes {}, rodadas {} (esperava {}), confrontos {} ({:x}), histórico {:x}",
+    SCOREBOARD.record(ok, || format!("init_table_row(row {}, club {:x}, mark {}) clubs {}, rounds {} (esperava {}), confrontos {} ({:x}), histórico {:x}",
         idx, club.addr(), mark as u8, n, this.games_per_club(), a7_expected, confrontos, l.h2h_entries(), l.position_history()));
 }
 
@@ -452,7 +452,7 @@ pub(crate) unsafe extern "thiscall" fn compare_league_get_club_array(this: usize
     }
     let count = this.club_count();
     let ok = *n == count && (0..count.max(0) as usize).all(|i| read_usize(p + 4 * i) == read_usize(this.table() + i * TABLE_ROW_SIZE));
-    SCOREBOARD.record(ok, || format!("league_get_club_array conta {} (tabela {})", *n, count));
+    SCOREBOARD.record(ok, || format!("league_get_club_array count {} (table {})", *n, count));
 }
 
 /// Comparer for `record_final_positions`.
@@ -474,7 +474,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_result_to_table(league: usi
     let reg = result_update_regions(Fixture(p), table, n, pts_home, pts_away);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(league, p, table, n, mark, pts_home, pts_away),
         || apply_result_to_table(league, p, table, n, mark, pts_home, pts_away));
-    SCOREBOARD.record(igual, || format!("apply_result_to_table({:x}, partida {:x}, {:x}, n {}, marcar {}) {:x?} x {:x?}",
+    SCOREBOARD.record(igual, || format!("apply_result_to_table({:x}, match {:x}, {:x}, n {}, mark {}) {:x?} x {:x?}",
         league, p, table, n as i16, mark, mo, mr));
 }
 
@@ -706,7 +706,7 @@ pub(crate) unsafe extern "thiscall" fn compare_limit_club_division_tier(this: us
     let reg: Vec<(usize, usize)> = (0..n.max(0) as usize).map(|i| (read_usize(table + i * 0x3b) + 0x64, 1)).collect();
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr(), value, away, inside, baixar),
         || limit_club_division_tier(this.addr(), value, away, inside, baixar));
-    SCOREBOARD.record(igual, || format!("limit_club_division_tier(valor {}, fora {:x}, dentro {:x}, baixar {}) {:x?} x {:x?}",
+    SCOREBOARD.record(igual, || format!("limit_club_division_tier(value {}, away {:x}, inside {:x}, baixar {}) {:x?} x {:x?}",
         value as u8 as i8, away as u8, inside as u8, baixar, mo, mr));
 }
 

@@ -38,7 +38,7 @@ pub(crate) unsafe extern "thiscall" fn compare_awol_post_missed_training_news(th
     };
     *core::ptr::addr_of_mut!(AWOL_NEWS_TAPE) = None;
     let target = AWOL_NEWS_DESTINATION;
-    SCOREBOARD.record(!falhou && k <= n, || format!("awol_post_missed_training_news(jogador {:#x}, clube {:#x}) tape_lock de {} sorteios, o ensaio usou {} (n diferente: {}), destino {:x?}",
+    SCOREBOARD.record(!falhou && k <= n, || format!("awol_post_missed_training_news(player {:#x}, club {:#x}) tape_lock de {} sorteios, o dry run usou {} (n different: {}), target {:x?}",
         player, club, n, k, falhou, target));
 }
 
@@ -61,7 +61,7 @@ pub(crate) unsafe extern "thiscall" fn compare_has_missed_training(this: usize, 
         }
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(this, person), || has_missed_training(this, person));
-    SCOREBOARD.record(igual && r as u8 == n as u8, || format!("has_missed_training(pessoa {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", person, r, mo, n, mr));
+    SCOREBOARD.record(igual && r as u8 == n as u8, || format!("has_missed_training(person {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", person, r, mo, n, mr));
     r
 }
 
@@ -73,7 +73,7 @@ pub(crate) unsafe extern "thiscall" fn compare_has_fitness_incident(this: usize,
     let l = Llist(read_usize(this + 8));
     let regions: Vec<(usize, usize)> = if !l.is_null() { vec![(l.addr() + llist::CURSOR, 4)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, person), || has_fitness_incident(this, person));
-    SCOREBOARD.record(igual && r as u8 == n as u8, || format!("has_fitness_incident(pessoa {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", person, r, mo, n, mr));
+    SCOREBOARD.record(igual && r as u8 == n as u8, || format!("has_fitness_incident(person {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", person, r, mo, n, mr));
     r
 }
 
@@ -112,7 +112,7 @@ pub(crate) unsafe extern "thiscall" fn compare_miss_training(this: usize, person
     let mo = crate::comparison::MemorySnapshot::read(&regions);
     let r = if new & 2 != 0 { 2 } else if new & 1 != 0 { 1 } else { 0 };
     let same = (r == n || (n == 1 && b0 & 1 != 0)) && (n != 0 || mo == mr);
-    SCOREBOARD.record(same, || format!("miss_training(pessoa {:#x}) original={} {:x?} rust={} {:x?}", person.addr(), r, mo, n, mr));
+    SCOREBOARD.record(same, || format!("miss_training(person {:#x}) original={} {:x?} rust={} {:x?}", person.addr(), r, mo, n, mr));
 }
 
 /// Comparer for `end_absence`.
@@ -137,7 +137,7 @@ pub(crate) unsafe extern "thiscall" fn compare_end_absence(this: usize, r: usize
     o(this, r);
     let mo = crate::comparison::MemorySnapshot::read(&regions);
     let same = mo.0[0] == mr.0[0] && (news || mo.0[1] == mr.0[1]);
-    SCOREBOARD.record(same, || format!("end_absence(marca {:#x}) original={:x?} rust={:x?}", m, mo, mr));
+    SCOREBOARD.record(same, || format!("end_absence(mark {:#x}) original={:x?} rust={:x?}", m, mo, mr));
 }
 
 /// Comparer for `report_poor_fitness`.
@@ -164,7 +164,7 @@ pub(crate) unsafe extern "thiscall" fn compare_report_poor_fitness(this: usize, 
     let in_the = if tail != 0 { read_usize(tail + 6) } else { read_usize(l + 2) };
     let data = if in_the != 0 { read_usize(in_the) } else { 0 };
     let same = data != 0 && core::slice::from_raw_parts(data as *const u8, 0x10) == plan;
-    SCOREBOARD.record(same, || format!("report_poor_fitness(jogador {:#x}, clube {:#x}) plano={:x?} lista: no {:#x} dados {:#x}", player, club, plan, in_the, data));
+    SCOREBOARD.record(same, || format!("report_poor_fitness(player {:#x}, club {:#x}) plan={:x?} list: no {:#x} data {:#x}", player, club, plan, in_the, data));
 }
 
 /// Comparer for `is_player_awol`.
@@ -180,6 +180,6 @@ pub(crate) unsafe extern "thiscall" fn compare_is_player_awol(this: usize, p: us
         }
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(this, p, so_read), || is_player_awol(this, p, so_read));
-    SCOREBOARD.record(igual && r as u8 == n as u8, || format!("is_player_awol(pessoa {:#x}, so_ler {}) original={} {:x?} rust={} {:x?}", p, so_read, r as u8, mo, n as u8, mr));
+    SCOREBOARD.record(igual && r as u8 == n as u8, || format!("is_player_awol(person {:#x}, so_ler {}) original={} {:x?} rust={} {:x?}", p, so_read, r as u8, mo, n as u8, mr));
     r
 }

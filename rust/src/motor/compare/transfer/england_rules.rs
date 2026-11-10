@@ -26,7 +26,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_loan(this: usize, offer: u
     let club = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(offer + 8).wrapping_mul(club::SIZE));
     let regions = [(season_loans_entry(Club(club)), 1usize)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, offer), || record_loan(this, offer));
-    SCOREBOARD.record(igual, || format!("record_loan(oferta {:#x}) original={:x?} rust={:x?}", offer, mo, mr));
+    SCOREBOARD.record(igual, || format!("record_loan(offer {:#x}) original={:x?} rust={:x?}", offer, mo, mr));
 }
 
 /// Comparer for `england_rules_daily_update`.
@@ -44,7 +44,7 @@ pub(crate) unsafe extern "thiscall" fn compare_england_rules_daily_update(this: 
     let n = (read_usize(G_CLUB_COUNT) as i32).max(0) as usize;
     let regions = [(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x91c), n * 16)];
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&regions, || o(this, data), || england_rules_daily_update(this, data));
-    SCOREBOARD.record(igual, || format!("england_rules_daily_update(regras {:#x}) tabela diverge", this));
+    SCOREBOARD.record(igual, || format!("england_rules_daily_update(rules {:#x}) table diverge", this));
 }
 
 /// Comparer for `england_rules_get_loan_period`.
@@ -54,5 +54,5 @@ pub(crate) unsafe extern "thiscall" fn compare_england_rules_get_loan_period(thi
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, *mut i8, *mut i16, *mut i8, *mut i16, usize)>(IDX_ENGLAND_RULES_GET_LOAN_PERIOD);
     let regions = [(start_month as usize, 1usize), (start_year as usize, 2), (end_month as usize, 1), (end_year as usize, 2), (G_CONTRACT_LOOKUP_RESULT, 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, club, a2, start_month, start_year, end_month, end_year, player), || england_rules_get_loan_period(this, club, a2, start_month, start_year, end_month, end_year, player));
-    SCOREBOARD.record(igual, || format!("england_rules_get_loan_period(regras {:#x}, clube {:#x}, jogador {:#x}) original={:x?} rust={:x?}", this, club, player, mo, mr));
+    SCOREBOARD.record(igual, || format!("england_rules_get_loan_period(rules {:#x}, club {:#x}, player {:#x}) original={:x?} rust={:x?}", this, club, player, mo, mr));
 }

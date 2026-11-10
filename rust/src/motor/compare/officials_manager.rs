@@ -11,7 +11,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_referee_grade(this: usize,
     }
     let reg = official_record_region(this, *(r as *const i32));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, r), || record_referee_grade(this, r));
-    SCOREBOARD.record(igual, || format!("record_referee_grade(nota {}) {:x?} x {:x?}", *r.add(6), mo, mr));
+    SCOREBOARD.record(igual, || format!("record_referee_grade(rating {}) {:x?} x {:x?}", *r.add(6), mo, mr));
 }
 
 /// Comparer for `set_up_officials`.
@@ -21,7 +21,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_referee_grade(this: usize,
 pub(crate) unsafe extern "thiscall" fn compare_set_up_officials(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SET_UP_OFFICIALS)(this);
     SCOREBOARD.record(read_usize(this + officials_manager_fields::NATION_BLOCKS) != 0 && read_i32(this + officials_manager_fields::BUSY_COUNT) == read_i32(G_OFFICIAL_COUNT) && read_usize(this + officials_manager_fields::BUSY_FLAGS) != 0,
-        || format!("set_up_officials: blocos {:x}, conta {} x {}", read_usize(this + officials_manager_fields::NATION_BLOCKS), read_i32(this + officials_manager_fields::BUSY_COUNT), read_i32(G_OFFICIAL_COUNT)));
+        || format!("set_up_officials: blocos {:x}, count {} x {}", read_usize(this + officials_manager_fields::NATION_BLOCKS), read_i32(this + officials_manager_fields::BUSY_COUNT), read_i32(G_OFFICIAL_COUNT)));
 }
 
 /// Comparer for `officials_manager_compare_comp_level`.
@@ -63,7 +63,7 @@ pub(crate) unsafe extern "thiscall" fn compare_choose_match_official(this: usize
     reg.push((out, 2));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, game, out),
         || crate::rng::without_counting(|| choose_match_official(this, game, out)));
-    SCOREBOARD.record(igual && r == n, || format!("choose_match_official(jogo {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", game, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("choose_match_official(game {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", game, r, mo, n, mr));
     r
 }
 
@@ -75,7 +75,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_busy_flags(this: usize) -> 
     let n = read_i32(this + officials_manager_fields::BUSY_COUNT);
     let reg = if n > 0 && read_usize(this + officials_manager_fields::BUSY_FLAGS) != 0 { vec![(read_usize(this + officials_manager_fields::BUSY_FLAGS), n as usize)] } else { Vec::new() };
     let (r, m, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this), || clear_busy_flags(this));
-    SCOREBOARD.record(igual && r == m, || format!("clear_busy_flags(conta {}) original={} rust={} memoria igual {}", n, r, m, igual));
+    SCOREBOARD.record(igual && r == m, || format!("clear_busy_flags(count {}) original={} rust={} memory equal {}", n, r, m, igual));
     r
 }
 
@@ -145,7 +145,7 @@ pub(crate) unsafe extern "thiscall" fn compare_officials_manager_add_random_offi
         }
     }
     let same = estado_orig == state_rust && total == before.wrapping_add(count) && missing.is_empty();
-    SCOREBOARD.record(same, || format!("officials_manager_add_random_officials(conta {}, nacao {:#x}) total {} (antes {}), sorteio igual {}, fichas da copia ausentes {:?}",
+    SCOREBOARD.record(same, || format!("officials_manager_add_random_officials(count {}, nation {:#x}) total {} (before {}), draw equal {}, sheets of the copy ausentes {:?}",
         count, nation.addr(), total, before, estado_orig == state_rust, missing));
 }
 
@@ -164,7 +164,7 @@ pub(crate) unsafe extern "C" fn compare_officials_manager_validate_officials() {
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("officials_manager_validate_officials ({} fichas) diferencas em {:x?}", total, dif)
+        format!("officials_manager_validate_officials ({} sheets) diferencas em {:x?}", total, dif)
     });
 }
 

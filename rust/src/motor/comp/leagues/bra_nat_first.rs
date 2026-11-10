@@ -119,7 +119,7 @@ pub(crate) unsafe fn compare_play_off_stage(name: &str, this: League, rows: &[us
     original();
     let stage = Cup(read_usize(this.stages()));
     if stage.is_null() {
-        SCOREBOARD.record(false, || format!("{}({:#x}) sem fase", name, this.addr()));
+        SCOREBOARD.record(false, || format!("{}({:#x}) without stage", name, this.addr()));
         return;
     }
     let list = stage.team_table();
@@ -128,7 +128,7 @@ pub(crate) unsafe fn compare_play_off_stage(name: &str, this: League, rows: &[us
     plan.sort_unstable();
     found.sort_unstable();
     let same = plan == found && stage.team_count() == 4 && read_usize(stage.addr() + 4) == this.competition().addr() && this.current_stage() == 0;
-    SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this.addr(), pl, stage.addr(), ac, stage.team_count()));
+    SCOREBOARD.record(same, || format!("{}({:#x}) plan={:x?} stage={:#x} list={:x?} +0x3e={}", name, this.addr(), pl, stage.addr(), ac, stage.team_count()));
 }
 
 /// Competition object whose id is in global `global` (table G_COMP_OBJECT_TABLE).
@@ -421,7 +421,7 @@ pub(crate) unsafe fn compare_division_table(name: &str, this: League, n: i16, g:
         found = (0..plan.len()).map(|k| read_usize(t + k * 0x3b)).collect();
         same = found == plan;
     }
-    SCOREBOARD.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this.addr(), r, plan, found));
+    SCOREBOARD.record(same, || format!("{}({:#x}) original={} plan={:x?} table={:x?}", name, this.addr(), r, plan, found));
     r
 }
 

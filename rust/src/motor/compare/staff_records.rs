@@ -44,7 +44,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_human_manager_record(this: 
     };
     let ((), (), igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, person),
         || clear_human_manager_record(this, person));
-    SCOREBOARD.record(igual, || format!("clear_human_manager_record(pessoa {:#x}) {:x?} x {:x?}", person, mo, mr));
+    SCOREBOARD.record(igual, || format!("clear_human_manager_record(person {:#x}) {:x?} x {:x?}", person, mo, mr));
 }
 
 /// Comparer for `record_match_result`.
@@ -66,7 +66,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_match_result(this: usize, 
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, p.addr(), m), || record_match_result(this, p.addr(), m));
-    SCOREBOARD.record(igual, || format!("record_match_result(jogo {:#x}) original={:x?} rust={:x?}", p.addr(), mo, mr));
+    SCOREBOARD.record(igual, || format!("record_match_result(game {:#x}) original={:x?} rust={:x?}", p.addr(), mo, mr));
 }
 
 /// Comparer for `add_league_finish_records`.
@@ -100,7 +100,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_supporters_player_of_year_rec
     before.write_back();
     o(this, person.addr(), club.addr(), a, b);
     let mo = crate::comparison::MemorySnapshot::read(&reg);
-    SCOREBOARD.record(mo == mr, || format!("add_supporters_player_of_year_record(pessoa {:#x}, clube {:#x}) original={:x?} rust={:x?}", person.addr(), club.addr(), mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("add_supporters_player_of_year_record(person {:#x}, club {:#x}) original={:x?} rust={:x?}", person.addr(), club.addr(), mo, mr));
 }
 
 /// Comparer for `add_cup_runners_up_record`.
@@ -148,7 +148,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_manager_job_change(this: u
     before.write_back();
     o(this, manager, club, signed);
     let mo = crate::comparison::MemorySnapshot::read(&reg);
-    SCOREBOARD.record(mo == mr, || format!("record_manager_job_change(tecnico {:#x}, clube {:#x}, {}) original={:x?} rust={:x?}", manager, club, signed as u8, mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("record_manager_job_change(manager {:#x}, club {:#x}, {}) original={:x?} rust={:x?}", manager, club, signed as u8, mo, mr));
 }
 
 /// Comparer for `add_team_of_year_record`.
@@ -160,7 +160,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_team_of_year_record(this: usi
 pub(crate) unsafe extern "C" fn compare_staff_records_compare_clubs_by_manager_points(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_STAFF_RECORDS_COMPARE_CLUBS_BY_MANAGER_POINTS)(a, b);
     let n = staff_records_compare_clubs_by_manager_points(a, b);
-    SCOREBOARD.record(r == n, || format!("staff_records_compare_clubs_by_manager_points(clubes {:x}, {:x}) original={} rust={}", read_usize(a), read_usize(b), r, n));
+    SCOREBOARD.record(r == n, || format!("staff_records_compare_clubs_by_manager_points(clubs {:x}, {:x}) original={} rust={}", read_usize(a), read_usize(b), r, n));
     r
 }
 
@@ -177,7 +177,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_promotion_record(this: usize,
     };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, comp, weight),
         || crate::rng::without_counting(|| apply_promotion(this, Club(club), Competition(comp), weight, false)));
-    SCOREBOARD.record(igual, || format!("add_promotion_record(clube {:x}, peso {}) {:x?} x {:x?}", club, weight as u8 as i8, mo, mr));
+    SCOREBOARD.record(igual, || format!("add_promotion_record(club {:x}, weight {}) {:x?} x {:x?}", club, weight as u8 as i8, mo, mr));
 }
 
 /// Comparer for `add_relegation_record`.
@@ -192,7 +192,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_relegation_record(this: usize
     };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, comp),
         || crate::rng::without_counting(|| apply_relegation(this, Club(club), Competition(comp), false)));
-    SCOREBOARD.record(igual, || format!("add_relegation_record(clube {:x}) {:x?} x {:x?}", club, mo, mr));
+    SCOREBOARD.record(igual, || format!("add_relegation_record(club {:x}) {:x?} x {:x?}", club, mo, mr));
 }
 
 /// Comparer for `add_qualified_for_round_record`.
@@ -211,7 +211,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_qualified_for_round_record(th
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, club.addr(), comp, stage, round, weight),
         || record_qualification(this, club, Competition(comp), stage, round, weight, false));
-    SCOREBOARD.record(igual, || format!("add_qualified_for_round_record(clube {:x}, peso {}) {:x?} x {:x?}", club.addr(), weight as u8 as i8, mo, mr));
+    SCOREBOARD.record(igual, || format!("add_qualified_for_round_record(club {:x}, weight {}) {:x?} x {:x?}", club.addr(), weight as u8 as i8, mo, mr));
 }
 
 /// Comparer for `add_transfer_records`.
@@ -243,7 +243,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_transfer_records(this: usize,
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, t.addr()),
         || crate::rng::without_counting(|| record_transfer(this, t, false)));
-    SCOREBOARD.record(igual, || format!("add_transfer_records(pessoa {:x}) {:x?} x {:x?}", pessoa, mo, mr));
+    SCOREBOARD.record(igual, || format!("add_transfer_records(person {:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }
 
 /// Comparer for `add_knocked_out_record`.
@@ -279,7 +279,7 @@ pub(crate) unsafe extern "thiscall" fn compare_staff_records_daily_update(this: 
         }
         ok &= certo;
     }
-    SCOREBOARD.record(ok, || format!("staff_records_daily_update(mês {}, ano {}) virada {} ano novo {}: registro {} não zerado", m, a, turned, year, first));
+    SCOREBOARD.record(ok, || format!("staff_records_daily_update(mês {}, year {}) turned {} year new {}: record {} não cleared", m, a, turned, year, first));
 }
 
 /// Comparer for `staff_records_end_season_for_nation`.
@@ -317,7 +317,7 @@ pub(crate) unsafe extern "thiscall" fn compare_staff_records_end_season_for_nati
         let s = manager_record_at(this, k) + 0xba;
         plan[k as usize] != (read_usize(s), read_usize(s + 4), read_i32(s + 8), read_i32(s + 0xc))
     });
-    SCOREBOARD.record(wrong.is_none(), || format!("staff_records_end_season_for_nation(competição {}) registro {:?} difere do plano", id, wrong));
+    SCOREBOARD.record(wrong.is_none(), || format!("staff_records_end_season_for_nation(competição {}) record {:?} difere of the plan", id, wrong));
 }
 
 /// Comparer for `find_manager_of_the_month`.
@@ -370,7 +370,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_manager_record(this: usize, p
         }
     }
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, person.addr(), create), || get_manager_record(this, person.addr(), create));
-    SCOREBOARD.record(igual && a == b, || format!("get_manager_record(pessoa {:x}, criar {}) original={:x} rust={:x} {:x?} x {:x?}", person.addr(), create, a, b, mo, mr));
+    SCOREBOARD.record(igual && a == b, || format!("get_manager_record(person {:x}, create {}) original={:x} rust={:x} {:x?} x {:x?}", person.addr(), create, a, b, mo, mr));
     a
 }
 

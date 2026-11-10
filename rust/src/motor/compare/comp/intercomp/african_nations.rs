@@ -21,7 +21,7 @@ pub(crate) unsafe extern "thiscall" fn compare_african_nations_update_for_date(t
             && stages != 0
             && (0..3).all(|g| read_usize(stages + g * 4) != 0)
             && this.current_stage() == 2;
-        SCOREBOARD.record(ok, || format!("african_nations_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this.addr(), this.active(), this.current_stage() as i32));
+        SCOREBOARD.record(ok, || format!("african_nations_update_for_date({:#x}): o draw não montou the groups (+0x45 {}, +0x30 {})", this.addr(), this.active(), this.current_stage() as i32));
     }
     r
 }
@@ -60,7 +60,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_finalists(this: usize) -> u3
     if lr != 0 && lr != lo {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("draw_finalists({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("draw_finalists({:#x}) returned {} x {} memória {} list {}", this, a, b, igual, list));
     a
 }
 
@@ -81,7 +81,7 @@ pub(crate) unsafe extern "thiscall" fn compare_african_nations_create_group_stag
         a.sort_unstable();
         plan.sort_unstable();
         let ok = !f.is_null() && this.current_stage() as i32 == g && f.club_count() == 4 && f.year() == this.year() && a == plan;
-        SCOREBOARD.record(ok, || format!("african_nations_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plan, a));
+        SCOREBOARD.record(ok, || format!("african_nations_create_group_stage({}): a stage não bate with o plan ({:x?} read {:x?})", g, plan, a));
     }
     r
 }
@@ -96,7 +96,7 @@ pub(crate) unsafe extern "thiscall" fn compare_african_nations_advance_stage(thi
     }
     o(this.addr());
     let after = this.current_stage() as i32;
-    SCOREBOARD.record(after == f + 1, || format!("african_nations_advance_stage({:#x}) fase {} -> {}", this.addr(), f, after));
+    SCOREBOARD.record(after == f + 1, || format!("african_nations_advance_stage({:#x}) stage {} -> {}", this.addr(), f, after));
 }
 
 /// Comparer for `init_group_a_table`.
@@ -117,7 +117,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init_group_a_table(this: usize) -
         }
     }
     let same = r == 1 && this.club_count() == 4 && t != 0 && (0..4).all(|i| read[i] == (predicted[i], i as u8));
-    SCOREBOARD.record(same, || format!("init_group_a_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this.addr(), r, read, predicted));
+    SCOREBOARD.record(same, || format!("init_group_a_table({:#x}) returned {} rows {:x?} predicted {:x?}", this.addr(), r, read, predicted));
     r
 }
 
@@ -129,7 +129,7 @@ pub(crate) unsafe extern "thiscall" fn compare_african_nations_record_season_hon
 /// Comparer for `african_nations_update_staff_records_for_status`.
 pub(crate) unsafe extern "thiscall" fn compare_african_nations_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, a4: u32, game: usize, a6: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_AFRICAN_NATIONS_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, outcome, stage, a4, game, a6);
-    SCOREBOARD.record(r == 0, || format!("african_nations_update_staff_records_for_status({:#x}, {}, {}) devolveu {}", club, outcome as u8, stage as u8, r));
+    SCOREBOARD.record(r == 0, || format!("african_nations_update_staff_records_for_status({:#x}, {}, {}) returned {}", club, outcome as u8, stage as u8, r));
     r
 }
 

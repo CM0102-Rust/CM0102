@@ -87,7 +87,7 @@ pub(crate) unsafe fn compare_cup_new_season(name: &str, this: Cup, original: imp
     let before = this.year();
     let r = original();
     let after = this.year();
-    SCOREBOARD.record(after == before.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", name, this.addr(), before, after));
+    SCOREBOARD.record(after == before.wrapping_add(1), || format!("{}({:#x}) year before={} after={}", name, this.addr(), before, after));
     r
 }
 

@@ -388,7 +388,7 @@ pub(crate) unsafe fn compare_division_stage(name: &str, this: League, code: i16,
         b[..n].sort_unstable();
         a[..n] == b[..n]
     };
-    SCOREBOARD.record(same, || format!("{}({:#x}) fase={:#x} n={} plano={:x?}", name, this.addr(), stage.addr(), n, plan));
+    SCOREBOARD.record(same, || format!("{}({:#x}) stage={:#x} n={} plan={:x?}", name, this.addr(), stage.addr(), n, plan));
 }
 
 /// `UsaMls::start_new_season()` (`0x908e00`, thiscall, ret 0, `usa_mls.cpp`): the MLS season rollover.

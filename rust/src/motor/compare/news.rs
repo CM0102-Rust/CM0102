@@ -18,7 +18,7 @@ pub(crate) unsafe extern "thiscall" fn compare_mark_item_read(this: usize, manag
         (0xde1f64, 0x7d0),
     ];
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&regions, || o(this, manager, id, sincronizar), || mark_item_read(this, manager, id, sincronizar));
-    SCOREBOARD.record(igual && r == n, || format!("mark_item_read(id {}, sincronizar {}) original={} rust={} memoria igual {}", id, sincronizar, r, n, igual));
+    SCOREBOARD.record(igual && r == n, || format!("mark_item_read(id {}, sincronizar {}) original={} rust={} memory equal {}", id, sincronizar, r, n, igual));
     r
 }
 
@@ -42,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_item_by_id(this: usize, mana
 pub(crate) unsafe extern "thiscall" fn compare_send_by_scope(this: usize, news: usize, club: usize, competition: usize, nation: usize, continent: usize, reach: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, u32) -> u32>(IDX_SEND_BY_SCOPE)(this, news, club, competition, nation, continent, reach);
     let away = !(0..=5).contains(&(reach as u8 as i8));
-    SCOREBOARD.record(!away || r == 0, || format!("send_by_scope alcance {} devolveu {}", reach as u8 as i8, r));
+    SCOREBOARD.record(!away || r == 0, || format!("send_by_scope reach {} returned {}", reach as u8 as i8, r));
     r
 }
 
@@ -60,7 +60,7 @@ pub(crate) unsafe extern "thiscall" fn compare_send_to_club_manager(this: usize,
     let human = manager != 0 && read_i32(manager) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10);
     let r = o(this, news, club.addr());
     let ok = read_u8(news + news_item::REACH) == 0 && (human || r == 0) && r <= 1;
-    SCOREBOARD.record(ok, || format!("send_to_club_manager(clube {:x}, técnico {:x}, humano {}) devolveu {}", club.addr(), manager, human, r));
+    SCOREBOARD.record(ok, || format!("send_to_club_manager(club {:x}, técnico {:x}, human {}) returned {}", club.addr(), manager, human, r));
     r
 }
 
@@ -101,7 +101,7 @@ pub(crate) unsafe extern "thiscall" fn compare_deliver_to_manager(this: usize, n
     let responde = !repetida && (read_i16(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG) != 0 || exe::human_manager_is_on_holiday(read_usize(G_HUMAN_MANAGER), manager) != 0);
     let r = o(this, news, manager, free);
     if r == 0 {
-        SCOREBOARD.record(new, || format!("deliver_to_manager devolveu 0 sem anel novo")); // only without memory
+        SCOREBOARD.record(new, || format!("deliver_to_manager returned 0 without anel new")); // only without memory
         return r;
     }
     let extra = if responde { (read_i32(e + 4) - prox).rem_euclid(0x64) } else { 0 };
@@ -111,7 +111,7 @@ pub(crate) unsafe extern "thiscall" fn compare_deliver_to_manager(this: usize, n
         && (read_usize(this + news_fields::LAST_ID) == contador_depois || (extra > 0 && read_usize(this + news_fields::LAST_ID) > contador_depois))
         && read_usize(news + news_item::ID) == id && read_usize(news + news_item::READ) == 0
         && (repetida || read_usize(slot + news_item::ID) == id);
-    SCOREBOARD.record(ok, || format!("deliver_to_manager(humano {}) id {} (esperava {}), anel {}/{}/{} (esperava {}/{}/{}), repetida {}",
+    SCOREBOARD.record(ok, || format!("deliver_to_manager(human {}) id {} (esperava {}), anel {}/{}/{} (esperava {}/{}/{}), repeated {}",
         idx, read_usize(news + news_item::ID), id, read_i32(e), read_i32(e + 4), read_i32(e + 8), inicio, prox, conta_depois, repetida));
     r
 }
@@ -123,7 +123,7 @@ pub(crate) unsafe extern "thiscall" fn compare_deliver_to_manager(this: usize, n
 pub(crate) unsafe extern "thiscall" fn compare_auto_respond_all(this: usize, manager: usize, club: usize) -> u32 {
     let human = manager != 0 && read_i32(manager).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10) >= 0;
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_AUTO_RESPOND_ALL)(this, manager, club);
-    SCOREBOARD.record(r == human as u32, || format!("auto_respond_all(técnico {:x}, humano {}) devolveu {}", manager, human, r));
+    SCOREBOARD.record(r == human as u32, || format!("auto_respond_all(técnico {:x}, human {}) returned {}", manager, human, r));
     r
 }
 
@@ -154,7 +154,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_slot_string(this: usize, fiel
         reg.push((next as usize, 1));
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, field, text, next), || set_slot_string(this, field, text, next));
-    SCOREBOARD.record(igual && r == n, || format!("set_slot_string(campo {}) {:x?} x {:x?}", field as u8 as i8, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("set_slot_string(field {}) {:x?} x {:x?}", field as u8 as i8, mo, mr));
     r
 }
 
@@ -183,7 +183,7 @@ pub(crate) unsafe extern "thiscall" fn compare_is_important_for(news: usize, per
         return r;
     }
     let n = is_important_for(news, person);
-    SCOREBOARD.record(r == n, || format!("is_important_for(tipo {:#x}, {:x}) original={} rust={}", t, person, r, n));
+    SCOREBOARD.record(r == n, || format!("is_important_for(kind {:#x}, {:x}) original={} rust={}", t, person, r, n));
     r
 }
 
@@ -239,7 +239,7 @@ pub(crate) unsafe extern "thiscall" fn compare_count_unread(news: usize, manager
     };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(entry + 8, 4)], || o(news, manager, category),
         || count_unread(news, manager, category));
-    SCOREBOARD.record(igual && r == n, || format!("count_unread(categoria {}) original={} rust={} {:x?} x {:x?}", category as u8, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("count_unread(category {}) original={} rust={} {:x?} x {:x?}", category as u8, r, n, mo, mr));
     r
 }
 
@@ -258,7 +258,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_item_slot(news: usize, manage
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(news, manager, id, slot, value, copy),
         || set_item_slot(news, manager, id, slot, value, copy));
-    SCOREBOARD.record(igual && r == n, || format!("set_item_slot(vaga {}) original={} rust={} {:x?} x {:x?}", slot, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("set_item_slot(slot {}) original={} rust={} {:x?} x {:x?}", slot, r, n, mo, mr));
     r
 }
 
@@ -292,7 +292,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_inbox(this: usize, manager:
         let news = news_box_regions(this, caixa);
         let ok = read_i32(caixa + 4) == first && read_i32(caixa + 8) == 0
             && news[1..].iter().all(|&(n, _)| read_i32(n) == 0 && read_i32(n + 4) == 1);
-        SCOREBOARD.record(ok, || format!("clear_inbox({:x}) plano: caixa {:x?}", manager.addr(), (first, read_i32(caixa + 4), read_i32(caixa + 8))));
+        SCOREBOARD.record(ok, || format!("clear_inbox({:x}) plan: box {:x?}", manager.addr(), (first, read_i32(caixa + 4), read_i32(caixa + 8))));
         return;
     }
     let reg = news_box_regions(this, caixa);
@@ -306,7 +306,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_inbox(this: usize, manager:
 pub(crate) unsafe extern "thiscall" fn compare_construct_news_item(this: usize, kind: u32, importante: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> usize>(IDX_CONSTRUCT_NEWS_ITEM);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(this, 0xde)], || o(this, kind, importante), || construct_news_item(this, kind, importante));
-    SCOREBOARD.record(igual && r == n, || format!("construct_news_item(tipo {:#x}, {}) {:x?} x {:x?}", kind, importante as u8, mo.0[0].1, mr.0[0].1));
+    SCOREBOARD.record(igual && r == n, || format!("construct_news_item(kind {:#x}, {}) {:x?} x {:x?}", kind, importante as u8, mo.0[0].1, mr.0[0].1));
     r
 }
 
@@ -345,7 +345,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_inbox_items(this: usize, mana
     } else {
         r == 0 || (*count as usize == ids.len() && ids.iter().enumerate().all(|(i, &id)| read_usize(r + i * MEDIA_NEWS_ITEM_SIZE + 0xd6) == id))
     };
-    SCOREBOARD.record(ok, || format!("get_inbox_items(categoria {}) {} notícias, esperava {:?}", category as u8, if r == 0 { 0 } else { *count }, ids));
+    SCOREBOARD.record(ok, || format!("get_inbox_items(category {}) {} notícias, esperava {:?}", category as u8, if r == 0 { 0 } else { *count }, ids));
     r
 }
 

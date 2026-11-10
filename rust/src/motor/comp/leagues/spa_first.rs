@@ -102,7 +102,7 @@ pub(crate) unsafe fn compare_league_round_table(name: &str, stage: u32, rounds: 
     if b != 0 {
         exe::crt_free(b);
     }
-    SCOREBOARD.record(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
+    SCOREBOARD.record(igual && outs && table, || format!("{}(stage {}): saídas {} table {}", name, stage as u8 as i8, outs, table));
     a
 }
 

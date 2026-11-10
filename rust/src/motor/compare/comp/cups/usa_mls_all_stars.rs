@@ -47,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_up_teams(this: usize) -> i32 
     if lr != 0 && lr != lo {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("set_up_teams({:#x}) devolveu {} x {} memória {} lista {}", this.addr(), a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("set_up_teams({:#x}) returned {} x {} memória {} list {}", this.addr(), a, b, igual, list));
     a
 }
 
@@ -69,7 +69,7 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_all_stars_create_round_ta
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_USA_MLS_ALL_STARS_CREATE_ROUND_TABLE);
     if stage as u8 != 0xff {
         let a = o(this, stage, rounds, extra, out);
-        SCOREBOARD.record(a == 0, || format!("usa_mls_all_stars_create_round_table(fase {}) devolveu {:#x}", stage as u8 as i8, a));
+        SCOREBOARD.record(a == 0, || format!("usa_mls_all_stars_create_round_table(stage {}) returned {:#x}", stage as u8 as i8, a));
         return a;
     }
     let (mut r2, mut e2) = (*rounds, *extra);
@@ -82,6 +82,6 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_all_stars_create_round_ta
     if b != 0 {
         exe::crt_free(b);
     }
-    SCOREBOARD.record(igual && outs && table, || format!("usa_mls_all_stars_create_round_table: saídas {} tabela {}", outs, table));
+    SCOREBOARD.record(igual && outs && table, || format!("usa_mls_all_stars_create_round_table: saídas {} table {}", outs, table));
     a
 }

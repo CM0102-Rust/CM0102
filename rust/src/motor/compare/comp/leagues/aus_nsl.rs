@@ -10,7 +10,7 @@ pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_advance_stage(this: usize
     let last = before >= (this.stage_count() as i32).wrapping_sub(1);
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_AUS_NSL_ADVANCE_STAGE)(this.addr());
     let after = this.current_stage() as i32;
-    SCOREBOARD.record(after == if last { before } else { before + 1 }, || format!("aus_nsl_advance_stage({:#x}) antes={} depois={}", this.addr(), before, after));
+    SCOREBOARD.record(after == if last { before } else { before + 1 }, || format!("aus_nsl_advance_stage({:#x}) before={} after={}", this.addr(), before, after));
 }
 
 /// Comparer for `create_finals_series_stage`.
@@ -42,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_finals_series_stage(this: 
         b.sort_unstable();
         a == b
     };
-    SCOREBOARD.record(same, || format!("create_finals_series_stage({:#x}) r={} fase={:#x} seis={:x?}", this.addr(), r, stage.addr(), six));
+    SCOREBOARD.record(same, || format!("create_finals_series_stage({:#x}) r={} stage={:#x} six={:x?}", this.addr(), r, stage.addr(), six));
     r
 }
 
@@ -68,7 +68,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_grand_final_stage(this: us
         let (x, y) = (read_usize(l), read_usize(l + 6));
         stage.team_count() == 2 && read_usize(stage.addr() + 4) == this.competition().addr() && ((x, y) == (a, b) || (x, y) == (b, a))
     };
-    SCOREBOARD.record(same, || format!("create_grand_final_stage({:#x}) finalistas={:#x},{:#x} fase={:#x}", this.addr(), a, b, stage.addr()));
+    SCOREBOARD.record(same, || format!("create_grand_final_stage({:#x}) finalistas={:#x},{:#x} stage={:#x}", this.addr(), a, b, stage.addr()));
 }
 
 /// Comparer for `aus_nsl_set_up_rules`.

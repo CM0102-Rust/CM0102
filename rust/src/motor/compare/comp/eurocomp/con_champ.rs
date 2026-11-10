@@ -29,7 +29,7 @@ pub(crate) unsafe extern "thiscall" fn compare_con_champ_select_qualified_clubs(
         regions.push((history, read_usize(G_CLUB_COMP_HISTORY_COUNT).wrapping_mul(0x1a)));
     }
     let (r, rr, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this.addr()), || crate::rng::without_counting(|| con_champ_select_qualified_clubs(this.addr())));
-    SCOREBOARD.record(igual && r == rr, || format!("con_champ_select_qualified_clubs({:#x}) listas {:?} original={:x?} rust={:x?}", this.addr(), l.n, mo, mr));
+    SCOREBOARD.record(igual && r == rr, || format!("con_champ_select_qualified_clubs({:#x}) lists {:?} original={:x?} rust={:x?}", this.addr(), l.n, mo, mr));
     r
 }
 
@@ -44,7 +44,7 @@ pub(crate) unsafe extern "thiscall" fn compare_con_champ_update_for_date(this: u
     let n = this.team_count();
     let r = o(this.addr(), today, stage);
     let same = if seleciona { this.team_count() == 8 } else { this.team_count() == n };
-    SCOREBOARD.record(same, || format!("con_champ_update_for_date({:#x}, fase {}) seleciona={} times {} -> {}", this.addr(), stage, seleciona, n, this.team_count()));
+    SCOREBOARD.record(same, || format!("con_champ_update_for_date({:#x}, stage {}) seleciona={} teams {} -> {}", this.addr(), stage, seleciona, n, this.team_count()));
     r
 }
 
@@ -52,7 +52,7 @@ pub(crate) unsafe extern "thiscall" fn compare_con_champ_update_for_date(this: u
 pub(crate) unsafe extern "thiscall" fn compare_con_champ_set_up_rounds(this: usize) -> u32 {
     let this = Cup(this);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_CHAMP_SET_UP_ROUNDS)(this.addr());
-    SCOREBOARD.record(r == 1 && (this.prize_fund() as usize) == 0x1e8480, || format!("con_champ_set_up_rounds({:#x}) devolveu {} prêmios {}", this.addr(), r, (this.prize_fund() as usize)));
+    SCOREBOARD.record(r == 1 && (this.prize_fund() as usize) == 0x1e8480, || format!("con_champ_set_up_rounds({:#x}) returned {} prêmios {}", this.addr(), r, (this.prize_fund() as usize)));
     r
 }
 
@@ -68,7 +68,7 @@ pub(crate) unsafe extern "thiscall" fn compare_con_champ_create_round_table(this
             let e = a + r * 0x68 + 0x23;
             read_u32(e) == 0 && core::slice::from_raw_parts((e + 4) as *const u8, 3) == [0xff, 0xff, 0xff]
         });
-        SCOREBOARD.record(ok, || format!("con_champ_create_round_table: o dia 0 dos confrontos da original difere"));
+        SCOREBOARD.record(ok, || format!("con_champ_create_round_table: o day 0 of the confrontos of the original difere"));
     }
     a
 }

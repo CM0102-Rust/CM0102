@@ -24,7 +24,7 @@ pub(crate) unsafe extern "C" fn compare_cqt4_atualizar_media_de_publico(league: 
     let mut regions = vec![(read_usize(G_CLUB_TABLE), read_usize(G_CLUB_COUNT) * club::SIZE)];
     regions.extend_from_slice(&crate::rng::STATE_REGIONS);
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&regions, || o(league), || crate::rng::without_counting(|| cqt4_atualizar_media_de_publico(league)));
-    SCOREBOARD.record(igual, || format!("cqt4_atualizar_media_de_publico({:#x}): o público dos clubes não bate", league));
+    SCOREBOARD.record(igual, || format!("cqt4_atualizar_media_de_publico({:#x}): o público of the clubs não bate", league));
 }
 
 /// Comparer for `bra_reg_rio_create_half_season_stage`.
@@ -57,7 +57,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_rio_advance_stage(this: u
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_REG_RIO_ADVANCE_STAGE)(this.addr());
     let after = this.current_stage() as i32;
     let same = if last { after == before } else if before + 1 == 2 { after == 2 || after == 1 } else { after == before + 1 };
-    SCOREBOARD.record(same, || format!("bra_reg_rio_advance_stage({:#x}) antes={} depois={}", this.addr(), before, after));
+    SCOREBOARD.record(same, || format!("bra_reg_rio_advance_stage({:#x}) before={} after={}", this.addr(), before, after));
 }
 
 /// Comparer for `bra_reg_rio_create_final_stage`.

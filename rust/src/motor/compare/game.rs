@@ -36,7 +36,7 @@ pub(crate) unsafe extern "C" fn compare_game_update_nation_coefficients() {
         let na = base + k * 0x122;
         let g = nation_coefficient_history(Nation(na));
         if (0..6).any(|j| g[j].to_bits() != h[j].to_bits()) || read_u8(na + 0x121) != *mark {
-            error = Some(format!("nação {} ({:x}): {:?}/{} x plano {:?}/{}", k, na, g, read_u8(na + 0x121), h, mark));
+            error = Some(format!("nação {} ({:x}): {:?}/{} x plan {:?}/{}", k, na, g, read_u8(na + 0x121), h, mark));
             break;
         }
     }
@@ -101,7 +101,7 @@ pub(crate) unsafe extern "thiscall" fn compare_manager_manager_adjust_board_conf
     }
     let c = board_confidence_ptr(this, club);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(c, 2)], || o(this, club, delta), || manager_manager_adjust_board_confidence(this, club, delta));
-    SCOREBOARD.record(igual, || format!("manager_manager_adjust_board_confidence(clube {:x}, {}) {:x?} x {:x?}", club, delta as i32, mo, mr));
+    SCOREBOARD.record(igual, || format!("manager_manager_adjust_board_confidence(club {:x}, {}) {:x?} x {:x?}", club, delta as i32, mo, mr));
 }
 
 /// Comparer for `transfer_manager_get_shortlist_manager`.

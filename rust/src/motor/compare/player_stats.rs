@@ -49,7 +49,7 @@ pub(crate) unsafe extern "thiscall" fn compare_archive_player_stats(this: usize,
     before.write_back();
     let r = o(this, p.addr(), value, loan, end, club_id, other);
     let mo = crate::comparison::MemorySnapshot::read(&regions);
-    SCOREBOARD.record(r == n && mo == mr, || format!("archive_player_stats(pessoa {:x}, valor {}, clube {}) original={} rust={} {:x?} x {:x?}",
+    SCOREBOARD.record(r == n && mo == mr, || format!("archive_player_stats(person {:x}, value {}, club {}) original={} rust={} {:x?} x {:x?}",
         p.addr(), value as i32, club_id as i32, r, n, mo.0, mr.0));
     r
 }
@@ -85,7 +85,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_career_history(this: usize,
         let dif = (0..k).find(|&i| {
             r == 0 || t == 0 || core::slice::from_raw_parts((r + i * HISTORY_ENTRY_SIZE) as *const u8, HISTORY_ENTRY_SIZE) != core::slice::from_raw_parts((t + i * HISTORY_ENTRY_SIZE) as *const u8, HISTORY_ENTRY_SIZE)
         });
-        format!("build_career_history(pessoa {:x}) conta original={} rust={}, primeira entrada diferente {:?}", p.addr(), *count, n, dif)
+        format!("build_career_history(person {:x}) count original={} rust={}, first entry different {:?}", p.addr(), *count, n, dif)
     });
     if t != 0 {
         exe::crt_free(t);
@@ -104,7 +104,7 @@ pub(crate) unsafe extern "stdcall" fn compare_player_stats_years_since_at_club(p
     }
     let r = o(p.addr(), club);
     let n = player_stats_years_since_at_club(p.addr(), club);
-    SCOREBOARD.record(r == n, || format!("player_stats_years_since_at_club(pessoa {:x}, clube {:x}) original={} rust={}", p.addr(), club, r, n));
+    SCOREBOARD.record(r == n, || format!("player_stats_years_since_at_club(person {:x}, club {:x}) original={} rust={}", p.addr(), club, r, n));
     r
 }
 
@@ -135,7 +135,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_stat(this: usize, player: usi
     let r = o(this, player, category, which, default);
     let n = get_stat(this, player, category, which, default);
     SCOREBOARD.record(r.to_bits() == n.to_bits(), || {
-        format!("get_stat(jogador {}, categoria {}, qual {}, padrão {}) original={} rust={}", read_usize(player) as i32, c, which as u8, default, r, n)
+        format!("get_stat(player {}, category {}, which {}, padrão {}) original={} rust={}", read_usize(player) as i32, c, which as u8, default, r, n)
     });
     r
 }
@@ -167,7 +167,7 @@ pub(crate) unsafe extern "stdcall" fn compare_player_stats_get_career_goals(pers
     }
     let r = o(person.addr());
     let n = player_stats_get_career_goals(person.addr());
-    SCOREBOARD.record(r == n, || format!("player_stats_get_career_goals(pessoa {:x}) original={} rust={}", person.addr(), r, n));
+    SCOREBOARD.record(r == n, || format!("player_stats_get_career_goals(person {:x}) original={} rust={}", person.addr(), r, n));
     r
 }
 
@@ -220,7 +220,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_stats(this: usize, player:
     let expected = read_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add((indice as usize) << 5);
     let cleared = current != -1 || (0..0x20).all(|k| read_u8(r + k) == 0);
     let same = r == expected && read_usize(slot) as i32 == indice && read_usize(this + player_stats_fields::CATEGORY_COUNT) == n2 && read_usize(this + player_stats_fields::FREE_CATEGORY_COUNT) == soltos2 && cleared;
-    SCOREBOARD.record(same, || format!("create_stats({:x}, {:x}, {}) original={:x} plano={:x} índice {} x {} conta {} x {} soltos {} x {} zerado={}",
+    SCOREBOARD.record(same, || format!("create_stats({:x}, {:x}, {}) original={:x} plan={:x} índice {} x {} count {} x {} soltos {} x {} cleared={}",
         this, player, category as u8 as i8, r, expected, read_usize(slot) as i32, indice, read_usize(this + player_stats_fields::CATEGORY_COUNT), n2, read_usize(this + player_stats_fields::FREE_CATEGORY_COUNT), soltos2, cleared));
     r
 }
@@ -250,7 +250,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_language(this: usize, person:
     if ok {
         ok = if sort == 0 { e(n) == new } else { (0..count).any(|i| e(i) == new) };
     }
-    SCOREBOARD.record(ok, || format!("add_language({:?}, ordenar {}) conta {} (esperava {}) capacidade {} (esperava {})",
+    SCOREBOARD.record(ok, || format!("add_language({:?}, sort {}) count {} (esperava {}) capacity {} (esperava {})",
         new, sort, count, n.wrapping_add(1), read_usize(this + player_stats_fields::LANGUAGE_CAPACITY), cap));
 }
 
@@ -266,7 +266,7 @@ pub(crate) unsafe extern "thiscall" fn compare_improve_language(this: usize, per
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r, 6)],
         || o(this, person, language, raise, sort), || improve_language(this, person, language, raise, sort));
-    SCOREBOARD.record(igual, || format!("improve_language({}, idioma {}, +{}) {:x?} x {:x?}", read_usize(person), language as u8, raise as u8, mo, mr));
+    SCOREBOARD.record(igual, || format!("improve_language({}, language {}, +{}) {:x?} x {:x?}", read_usize(person), language as u8, raise as u8, mo, mr));
 }
 
 /// Comparer for `player_stats_reset_player`.
@@ -364,7 +364,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_stats_record_match(this: u
 /// (1, ou 0 sem nação).
 pub(crate) unsafe extern "thiscall" fn compare_end_season_for_key_nation(this: usize, nation: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_END_SEASON_FOR_KEY_NATION)(this, nation);
-    SCOREBOARD.record(r == (nation != 0) as u32, || format!("end_season_for_key_nation({:x}) devolveu {}", nation, r));
+    SCOREBOARD.record(r == (nation != 0) as u32, || format!("end_season_for_key_nation({:x}) returned {}", nation, r));
     r
 }
 
@@ -378,7 +378,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_language(stats: usize, she
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(stats + player_stats_fields::LANGUAGE_COUNT, 4), (table, count as usize * 6)],
         || o(stats, sheet, language), || remove_language(stats, sheet, language));
-    SCOREBOARD.record(igual, || format!("remove_language({}) contagem {:x?} x {:x?}", language, mo.0[0].1, mr.0[0].1));
+    SCOREBOARD.record(igual, || format!("remove_language({}) count {:x?} x {:x?}", language, mo.0[0].1, mr.0[0].1));
 }
 
 /// Comparer for `get_club_league_stat`.
@@ -414,7 +414,7 @@ pub(crate) unsafe extern "stdcall" fn compare_player_stats_get_goals_for_club(pe
     }
     let r = o(person.addr(), club);
     let n = player_stats_get_goals_for_club(person.addr(), club);
-    SCOREBOARD.record(r == n, || format!("player_stats_get_goals_for_club(pessoa {:x}, clube {:x}) original={} rust={}", person.addr(), club, r, n));
+    SCOREBOARD.record(r == n, || format!("player_stats_get_goals_for_club(person {:x}, club {:x}) original={} rust={}", person.addr(), club, r, n));
     r
 }
 

@@ -451,9 +451,9 @@ pub(crate) unsafe fn compare_league_day(name: &str, this: League, full: u32, fai
     if full != 0 && stages == 0 {
         if this.stage_count() != 0 {
             let z = faixas();
-            SCOREBOARD.record(tie_on_zone_boundary(this, &z) && this.stages() != 0, || format!("{}({:#x}): fase do desempate sem empate na fronteira (+0xc = {:#x})", name, this.addr(), this.stages()));
+            SCOREBOARD.record(tie_on_zone_boundary(this, &z) && this.stages() != 0, || format!("{}({:#x}): stage of the tiebreak without draw in the fronteira (+0xc = {:#x})", name, this.addr(), this.stages()));
         } else {
-            SCOREBOARD.record(!(this.complete() != 0 && this.tiebreak_matches() != 0), || format!("{}({:#x}): o fim da temporada ficou pendente (+0xdd e +0xe6 ligados)", name, this.addr()));
+            SCOREBOARD.record(!(this.complete() != 0 && this.tiebreak_matches() != 0), || format!("{}({:#x}): o end of the season ficou pendente (+0xdd e +0xe6 ligados)", name, this.addr()));
         }
     }
     r
@@ -720,7 +720,7 @@ pub(crate) unsafe fn compare_italian_constructor(name: &str, this: League, year:
             ok = ok && *((this.addr() + 0xee) as *const u8) == 0;
         }
     }
-    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.stages(), this.comp_stats()));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): returned {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.stages(), this.comp_stats()));
     r
 }
 

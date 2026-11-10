@@ -43,7 +43,7 @@ pub(crate) unsafe extern "thiscall" fn compare_reset_morale_state(this: usize, p
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RESET_MORALE_STATE);
     let regions = morale_reset_regions(this, read_usize(this));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, person, club), || reset_morale_state(this, person, club));
-    SCOREBOARD.record(igual, || format!("reset_morale_state(pessoa {}) {:x?} x {:x?}", read_usize(person), mo, mr));
+    SCOREBOARD.record(igual, || format!("reset_morale_state(person {}) {:x?} x {:x?}", read_usize(person), mo, mr));
 }
 
 /// Comparer for `init_from_current_contract`.
@@ -60,7 +60,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init_from_current_contract(this: 
         || o(this, person, club, end, percentage, without_promotion, multa),
         || init_from_current_contract(this, person, club, end, percentage, without_promotion, multa));
     SCOREBOARD.record(igual, || {
-        format!("init_from_current_contract(pessoa {}, percentage {}, {}, {}) {:x?} x {:x?}", read_usize(person), percentage as u8 as i8, without_promotion as u8, multa as u8, mo, mr)
+        format!("init_from_current_contract(person {}, percentage {}, {}, {}) {:x?} x {:x?}", read_usize(person), percentage as u8 as i8, without_promotion as u8, multa as u8, mo, mr)
     });
 }
 
@@ -70,7 +70,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init_from_current_contract(this: 
 pub(crate) unsafe extern "thiscall" fn compare_get_expiry_band(this: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_GET_EXPIRY_BAND)(this);
     let n = get_expiry_band(this);
-    SCOREBOARD.record(r == n, || format!("get_expiry_band(pessoa {}) original={} rust={}", read_usize(this), r, n));
+    SCOREBOARD.record(r == n, || format!("get_expiry_band(person {}) original={} rust={}", read_usize(this), r, n));
     r
 }
 
@@ -147,7 +147,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_contract_satisfaction(this: u
         || crate::rng::without_counting(|| get_contract_satisfaction(this, person)),
     );
     SCOREBOARD.record(igual && r == n, || {
-        format!("get_contract_satisfaction(pessoa {:#x}) original={} {:x?} rust={} {:x?}", if person != 0 { read_usize(person) } else { 0 }, r, mo, n, mr)
+        format!("get_contract_satisfaction(person {:#x}) original={} {:x?} rust={} {:x?}", if person != 0 { read_usize(person) } else { 0 }, r, mo, n, mr)
     });
     r
 }

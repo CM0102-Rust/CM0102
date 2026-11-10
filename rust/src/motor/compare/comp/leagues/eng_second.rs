@@ -54,7 +54,7 @@ pub(crate) unsafe extern "thiscall" fn compare_eng_second_update_staff_records_f
             Some((row, v, marca)) => read_u8(row + league_table_row::STATUS) == v && (!marca || read_u8(left) == 1),
             None => true,
         };
-    SCOREBOARD.record(same, || format!("eng_second_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} plano={:x?}", this.addr(), club, s, stage as u8, r, plan));
+    SCOREBOARD.record(same, || format!("eng_second_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} plan={:x?}", this.addr(), club, s, stage as u8, r, plan));
     r
 }
 

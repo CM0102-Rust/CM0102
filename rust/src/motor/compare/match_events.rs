@@ -19,7 +19,7 @@ pub(crate) unsafe extern "thiscall" fn compare_read_events(e: usize, desc: *cons
     let n = (*desc.add(1) as usize).min(0x10000);
     let reg = [(e + 6, 2), (e + 0x720, 0xe * n)];
     let (r, rr, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(e, desc), || read_events(e, desc));
-    SCOREBOARD.record(igual && r == rr, || format!("read_events(pos {} n {} numero {} humano {}) original={} rust={} {:x?} x {:x?}", *desc, *desc.add(1), *desc.add(2), *(desc.add(3) as *const u8), r, rr, mo, mr));
+    SCOREBOARD.record(igual && r == rr, || format!("read_events(pos {} n {} number {} human {}) original={} rust={} {:x?} x {:x?}", *desc, *desc.add(1), *desc.add(2), *(desc.add(3) as *const u8), r, rr, mo, mr));
     r
 }
 
@@ -39,7 +39,7 @@ pub(crate) unsafe extern "stdcall" fn compare_event_text(ev: usize, ctx: usize, 
     }
     let reg = [(ev + 2, 2), (0xb67ea0, 0x400), (0xb67dd8, 0xc8)];
     let (r, rr, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(ev, ctx, comp, variant) as u32, || event_text(ev, ctx, comp, variant) as u32);
-    SCOREBOARD.record(igual && r == rr, || format!("event_text(codigo {:#x} variante {}) original={:#x} rust={:#x} {:x?} x {:x?}", read_u16(ev), variant, r, rr, mo, mr));
+    SCOREBOARD.record(igual && r == rr, || format!("event_text(code {:#x} variant {}) original={:#x} rust={:#x} {:x?} x {:x?}", read_u16(ev), variant, r, rr, mo, mr));
     r as usize
 }
 

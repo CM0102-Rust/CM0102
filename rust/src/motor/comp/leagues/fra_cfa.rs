@@ -90,7 +90,7 @@ pub(crate) unsafe fn compare_cfa_schedule(name: &str, stage: u32, rounds: *mut i
     if b != 0 {
         exe::crt_free(b);
     }
-    SCOREBOARD.record(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
+    SCOREBOARD.record(igual && outs && table, || format!("{}(stage {}): saídas {} table {}", name, stage as u8 as i8, outs, table));
     a
 }
 
@@ -124,7 +124,7 @@ pub(crate) unsafe fn compare_c1_schedule(name: &str, stage: u32, rounds: *mut i1
     if b != 0 {
         exe::crt_free(b);
     }
-    SCOREBOARD.record(igual && outs && table, || format!("{}(fase {}): saídas {} tabela {}", name, stage as u8 as i8, outs, table));
+    SCOREBOARD.record(igual && outs && table, || format!("{}(stage {}): saídas {} table {}", name, stage as u8 as i8, outs, table));
     a
 }
 
@@ -503,7 +503,7 @@ pub(crate) unsafe fn compare_construct_group_league(name: &str, this: League, ye
     let ok = r == this.addr() && read_usize(this.addr()) == p.vtabela && (this.year() as u16) == year as u16
         && this.discipline_rule() == 0xff && this.competition().addr() == comp_record_of_key(p.competition)
         && this.table() == 0;
-    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}, +0xb1 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.competition().addr(), this.table()));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): returned {:#x}, vtable {:#x}, +4 = {:#x}, +0xb1 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.competition().addr(), this.table()));
     r
 }
 
@@ -631,7 +631,7 @@ pub(crate) unsafe fn compare_french_table(name: &str, this: League, clubs: usize
         found = (0..n as usize).map(|k| (read_usize(t + k * 0x3b), read_u8(t + k * 0x3b + 0x38))).collect();
         same = found == plan;
     }
-    SCOREBOARD.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this.addr(), r, plan, found));
+    SCOREBOARD.record(same, || format!("{}({:#x}) original={} plan={:x?} table={:x?}", name, this.addr(), r, plan, found));
     r
 }
 

@@ -23,7 +23,7 @@ pub(crate) unsafe extern "thiscall" fn compare_ita_ser_a_update_staff_records_fo
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_ITA_SER_A_UPDATE_STAFF_RECORDS_FOR_STATUS);
     let r = o(this, club, status, stage, a4, game, a6);
     if stage as u8 != 0xff && status as u8 != 1 {
-        SCOREBOARD.record(r == 0xffff_ffff, || format!("ita_ser_a_update_staff_records_for_status: devolveu {:#x}", r));
+        SCOREBOARD.record(r == 0xffff_ffff, || format!("ita_ser_a_update_staff_records_for_status: returned {:#x}", r));
     }
     r
 }

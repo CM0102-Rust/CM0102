@@ -14,7 +14,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_active_tactic(this: usize, ma
     }
     let r = o(this, manager);
     let n = get_active_tactic(this, manager);
-    SCOREBOARD.record(r == n, || format!("get_active_tactic(tecnico {:#x}) original={:#x} rust={:#x}", manager, r, n));
+    SCOREBOARD.record(r == n, || format!("get_active_tactic(manager {:#x}) original={:#x} rust={:#x}", manager, r, n));
     r
 }
 
@@ -30,7 +30,7 @@ pub(crate) unsafe extern "thiscall" fn compare_select_tactic_slot(this: usize, r
     };
     let reg = [(human_manager_record_at(this, k) + 0x9a69, 1)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, reserve, club, manager), || select_tactic_slot(this, reserve, club, manager));
-    SCOREBOARD.record(igual, || format!("select_tactic_slot(reserva {}, clube {:#x}, tecnico {:#x}) {:x?} x {:x?}", reserve, club, manager, mo, mr));
+    SCOREBOARD.record(igual, || format!("select_tactic_slot(reserve {}, club {:#x}, manager {:#x}) {:x?} x {:x?}", reserve, club, manager, mo, mr));
 }
 
 /// Comparer for `clear_invalid_watched_fixtures`.
@@ -121,7 +121,7 @@ pub(crate) unsafe extern "thiscall" fn compare_can_watch_fixture(this: usize, pa
         return r;
     }
     let n = can_watch_fixture(this, partida, human);
-    SCOREBOARD.record(r == n, || format!("can_watch_fixture(partida {:x}, humano {:x}) original={} rust={}", partida, human, r, n));
+    SCOREBOARD.record(r == n, || format!("can_watch_fixture(match {:x}, human {:x}) original={} rust={}", partida, human, r, n));
     r
 }
 
@@ -187,7 +187,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_on_holiday(this: usize, holid
     let expected = conta + if holiday != 0 && antes == 0 { 1 } else if holiday == 0 && antes != 0 { -1 } else { 0 };
     o(this, holiday, manager);
     let (depois, conta2) = (read_usize(mark) as u32, read_usize(this + 0xc) as i32);
-    SCOREBOARD.record(depois == holiday && conta2 == expected, || format!("set_on_holiday({}, técnico {:x}): marca {:x} -> {:x}, conta {} -> {} (esperava {})", holiday, t, antes, depois, conta, conta2, expected));
+    SCOREBOARD.record(depois == holiday && conta2 == expected, || format!("set_on_holiday({}, técnico {:x}): mark {:x} -> {:x}, count {} -> {} (esperava {})", holiday, t, antes, depois, conta, conta2, expected));
 }
 
 /// Comparer for `square_bit`.

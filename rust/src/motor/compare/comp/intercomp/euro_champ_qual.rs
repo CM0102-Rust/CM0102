@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn compare_euro_champ_qual_set_up_rules(this
     if tr != 0 && tr != to {
         exe::crt_free(tr);
     }
-    SCOREBOARD.record(igual && a == b && table, || format!("euro_champ_qual_set_up_rules({:#x}) devolveu {} x {} memória {} tabela {}", this.addr(), a, b, igual, table));
+    SCOREBOARD.record(igual && a == b && table, || format!("euro_champ_qual_set_up_rules({:#x}) returned {} x {} memória {} table {}", this.addr(), a, b, igual, table));
     a
 }
 
@@ -44,7 +44,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_group_team_count(this: usize,
         return r; // simplification: the unknown format shows the message box: original only
     }
     let n = group_team_count(this, g);
-    SCOREBOARD.record(r == n, || format!("get_group_team_count(formato {}, grupo {}) original={} rust={}", read_i8(this + euro_champ_qual::GROUP_FORMAT), g as u8, r, n));
+    SCOREBOARD.record(r == n, || format!("get_group_team_count(formato {}, group {}) original={} rust={}", read_i8(this + euro_champ_qual::GROUP_FORMAT), g as u8, r, n));
     r
 }
 
@@ -76,6 +76,6 @@ pub(crate) unsafe extern "thiscall" fn compare_init_group_one_table(this: usize)
     let t = this.table();
     let ok = r == 1 && this.club_count() == n && this.games_per_club() == (n - 1).wrapping_mul(this.legs()) && t != 0
         && plan.iter().enumerate().all(|(k, &c)| read_usize(t + k * 0x3b) == c);
-    SCOREBOARD.record(ok, || format!("init_group_one_table({:#x}) devolveu {}; plano {:x?}", this.addr(), r, plan));
+    SCOREBOARD.record(ok, || format!("init_group_one_table({:#x}) returned {}; plan {:x?}", this.addr(), r, plan));
     r
 }

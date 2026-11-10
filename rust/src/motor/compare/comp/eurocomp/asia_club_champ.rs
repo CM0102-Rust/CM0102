@@ -12,7 +12,7 @@ pub(crate) unsafe extern "thiscall" fn compare_asia_club_champ_advance_stage(thi
     o(this.addr());
     let after = this.current_stage() as i32;
     let expected = if last { f } else if f + 1 == 1 { 2 } else { f + 1 };
-    SCOREBOARD.record(after == expected, || format!("asia_club_champ_advance_stage({:#x}) fase {} -> {}", this.addr(), f, after));
+    SCOREBOARD.record(after == expected, || format!("asia_club_champ_advance_stage({:#x}) stage {} -> {}", this.addr(), f, after));
 }
 
 /// Comparer for `create_group_stages`.
@@ -37,7 +37,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_group_stages(this: usize) 
         a == b
     };
     let ok = checks(1, &v[..4]) && checks(2, &v[4..]) && this.current_stage() == 2;
-    SCOREBOARD.record(ok, || format!("create_group_stages({:#x}): os grupos não batem com os vivos {:x?}", this.addr(), v));
+    SCOREBOARD.record(ok, || format!("create_group_stages({:#x}): os groups não batem with the vivos {:x?}", this.addr(), v));
 }
 
 /// Comparer for `asia_club_champ_create_semi_final_stage`.
@@ -52,7 +52,7 @@ pub(crate) unsafe extern "thiscall" fn compare_asia_club_champ_create_semi_final
     o(this.addr());
     let stage = Cup(read_usize(this.stages() + 0xc));
     if stage.is_null() {
-        SCOREBOARD.record(false, || format!("asia_club_champ_create_semi_final_stage({:#x}) sem fase", this.addr()));
+        SCOREBOARD.record(false, || format!("asia_club_champ_create_semi_final_stage({:#x}) without stage", this.addr()));
         return;
     }
     let list = stage.team_table();
@@ -61,7 +61,7 @@ pub(crate) unsafe extern "thiscall" fn compare_asia_club_champ_create_semi_final
     plan.sort_unstable();
     found.sort_unstable();
     let same = plan == found && stage.team_count() == 4 && read_usize(stage.addr() + 4) == read_usize(this.addr() + 4);
-    SCOREBOARD.record(same, || format!("asia_club_champ_create_semi_final_stage({:#x}) plano={:x?} lista={:x?}", this.addr(), pl, ac));
+    SCOREBOARD.record(same, || format!("asia_club_champ_create_semi_final_stage({:#x}) plan={:x?} list={:x?}", this.addr(), pl, ac));
 }
 
 /// Comparer for `asia_club_champ_create_round_table`.

@@ -2358,7 +2358,7 @@ pub(crate) unsafe extern "C" fn compare_nation_get_nationality_adjective(nation:
     let n = ((size as u16 as i16).max(1) as usize).min(128);
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, n)], || o(nation, text, size, gender),
         || nation_get_nationality_adjective(nation, text, size, gender));
-    SCOREBOARD.record(igual && r == x, || format!("nation_get_nationality_adjective({:x}, tamanho {}, genero {}) original={} rust={} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == x, || format!("nation_get_nationality_adjective({:x}, size {}, gender {}) original={} rust={} {:x?} x {:x?}",
         nation, size as u16 as i16, gender as u8, r, x, mo, mr));
     r
 }
@@ -2395,7 +2395,7 @@ pub(crate) unsafe extern "C" fn compare_get_region_name(region: u32, text: usize
     // the first 100 bytes (the minimum size accepted)
     let (x, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, 100)], || o(region, text, size, form),
         || get_region_name(region, text, size, form));
-    SCOREBOARD.record(igual && x == n, || format!("get_region_name({}, forma {}) original={} rust={} {:x?} x {:x?}", r, form as u8, x, n, mo, mr));
+    SCOREBOARD.record(igual && x == n, || format!("get_region_name({}, form {}) original={} rust={} {:x?} x {:x?}", r, form as u8, x, n, mo, mr));
     x
 }
 
@@ -2408,7 +2408,7 @@ pub(crate) unsafe extern "C" fn compare_get_continent_adjective(continent: usize
     // the first 50 bytes (the minimum accepted size)
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(text, 50)], || o(continent, text, size, form),
         || get_continent_adjective(continent, text, size, form));
-    SCOREBOARD.record(igual && r == n, || format!("get_continent_adjective({:x}, forma {}) original={} rust={} {:x?} x {:x?}", continent, form as u8, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("get_continent_adjective({:x}, form {}) original={} rust={} {:x?} x {:x?}", continent, form as u8, r, n, mo, mr));
     r
 }
 

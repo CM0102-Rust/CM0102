@@ -446,7 +446,7 @@ pub(crate) unsafe fn compare_playoff_stage(name: &str, this: League, rows: [usiz
     original();
     let stage = Cup(read_usize(this.stages()));
     if stage.is_null() {
-        SCOREBOARD.record(false, || format!("{}({:#x}) sem fase", name, this.addr()));
+        SCOREBOARD.record(false, || format!("{}({:#x}) without stage", name, this.addr()));
         return;
     }
     let list = stage.team_table();
@@ -458,7 +458,7 @@ pub(crate) unsafe fn compare_playoff_stage(name: &str, this: League, rows: [usiz
     x.sort_unstable();
     y.sort_unstable();
     let same = x == y && stage.team_count() == n && read_usize(stage.addr() + 4) == this.competition().addr();
-    SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={} n={}", name, this.addr(), plan, stage.addr(), found, stage.team_count(), n));
+    SCOREBOARD.record(same, || format!("{}({:#x}) plan={:x?} stage={:#x} list={:x?} +0x3e={} n={}", name, this.addr(), plan, stage.addr(), found, stage.team_count(), n));
 }
 
 /// at the last stage (+0x30 >= +0x2c - 1) the error box (line 0x2ce); otherwise +0x30 + 1 and, on reaching 0, the

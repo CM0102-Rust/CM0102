@@ -8,6 +8,6 @@ pub(crate) unsafe extern "system" fn compare_transfer_offer_closed(o: usize) -> 
     let o = Offer(o);
     let r = original_fn::<unsafe extern "system" fn(usize) -> u32>(IDX_TRANSFER_OFFER_CLOSED)(o.addr());
     let n = transfer_offer_closed(o.addr());
-    SCOREBOARD.record(r == n, || format!("transfer_offer_closed(estado {:#x}, {:#x}) original={} rust={}", o.status(), o.response_round(), r, n));
+    SCOREBOARD.record(r == n, || format!("transfer_offer_closed(state {:#x}, {:#x}) original={} rust={}", o.status(), o.response_round(), r, n));
     r
 }

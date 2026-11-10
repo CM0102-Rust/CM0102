@@ -49,6 +49,6 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_second_create_table(this: usi
             ok = ok && read_usize(l.addr()) == c && (!b || l.status() == 0xfc);
         }
     }
-    SCOREBOARD.record(ok, || format!("spa_second_create_table({:#x}): devolveu {}, plano {:x?}", this.addr(), r, plan));
+    SCOREBOARD.record(ok, || format!("spa_second_create_table({:#x}): returned {}, plan {:x?}", this.addr(), r, plan));
     r
 }

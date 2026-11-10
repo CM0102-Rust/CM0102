@@ -23,7 +23,7 @@ pub(crate) unsafe extern "thiscall" fn compare_table_a(this: usize, j: usize) ->
     let j = MatchPlayer(j);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u16>(IDX_TABLE_A)(this, j.addr());
     let n = table_a(this, j.addr());
-    SCOREBOARD.record(r == n, || format!("table_a(pos {}, lado {}) original={} rust={}", j.position(), j.side(), r, n));
+    SCOREBOARD.record(r == n, || format!("table_a(pos {}, side {}) original={} rust={}", j.position(), j.side(), r, n));
     r
 }
 
@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn compare_table_b(this: usize, j: usize) ->
     let j = MatchPlayer(j);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u16>(IDX_TABLE_B)(this, j.addr());
     let n = table_b(this, j.addr());
-    SCOREBOARD.record(r == n, || format!("table_b(pos {}, lado {}) original={} rust={}", j.position(), j.side(), r, n));
+    SCOREBOARD.record(r == n, || format!("table_b(pos {}, side {}) original={} rust={}", j.position(), j.side(), r, n));
     r
 }
 
@@ -73,7 +73,7 @@ pub(crate) unsafe extern "thiscall" fn compare_condicao(this: usize) -> u8 {
     let this = MatchPlayer(this);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_PLAYER_CONDITION)(this.addr());
     let n = player_condition(this.addr());
-    SCOREBOARD.record(r == n, || format!("player_condition(lado {}, v {}) original={} rust={}", this.side(), this.cell_y(), r, n));
+    SCOREBOARD.record(r == n, || format!("player_condition(side {}, v {}) original={} rust={}", this.side(), this.cell_y(), r, n));
     r
 }
 
@@ -82,7 +82,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_table(j: usize) -> u16 {
     let j = MatchPlayer(j);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u16>(IDX_PLAYER_TABLE)(j.addr());
     let n = player_table(j.addr());
-    SCOREBOARD.record(r == n, || format!("player_table(motor {:#x}) original={} rust={}", j.engine(), r, n));
+    SCOREBOARD.record(r == n, || format!("player_table(engine {:#x}) original={} rust={}", j.engine(), r, n));
     r
 }
 
@@ -91,7 +91,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_difference(this: usize, j:
     let j = MatchPlayer(j);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_PLAYER_DIFFERENCE)(this, j.addr());
     let n = player_difference(this, j.addr());
-    SCOREBOARD.record(r == n, || format!("player_difference(lado {}, v {}) original={} rust={}", side_of_player(j), j.cell_y(), r, n));
+    SCOREBOARD.record(r == n, || format!("player_difference(side {}, v {}) original={} rust={}", side_of_player(j), j.cell_y(), r, n));
     r
 }
 
@@ -99,7 +99,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_difference(this: usize, j:
 pub(crate) unsafe extern "thiscall" fn compare_side_byte(this: usize, j: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_SIDE_BYTE)(this, j);
     let n = side_byte(this, j);
-    SCOREBOARD.record(r == n, || format!("side_byte(lado {}) original={} rust={}", side_of_player(MatchPlayer(j)), r, n));
+    SCOREBOARD.record(r == n, || format!("side_byte(side {}) original={} rust={}", side_of_player(MatchPlayer(j)), r, n));
     r
 }
 
@@ -108,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_limit(this: usize) -> u8 {
     let this = MatchPlayer(this);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_PLAYER_LIMIT)(this.addr());
     let n = player_limit(this.addr());
-    SCOREBOARD.record(r == n, || format!("player_limit(lado {}, v {}) original={} rust={}", side_of_player(this), this.cell_y(), r, n));
+    SCOREBOARD.record(r == n, || format!("player_limit(side {}, v {}) original={} rust={}", side_of_player(this), this.cell_y(), r, n));
     r
 }
 
@@ -134,7 +134,7 @@ pub(crate) unsafe extern "thiscall" fn compare_field_by_position(this: usize) ->
     let this = MatchPlayer(this);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_FIELD_BY_POSITION)(this.addr());
     let n = field_by_position(this.addr());
-    SCOREBOARD.record(r == n, || format!("field_by_position(lado {}, pos {}) original={} rust={}", side_of_player(this), this.position(), r, n));
+    SCOREBOARD.record(r == n, || format!("field_by_position(side {}, pos {}) original={} rust={}", side_of_player(this), this.position(), r, n));
     r
 }
 
@@ -204,7 +204,7 @@ pub(crate) unsafe fn compare_respond(p: MatchPlayer, a: u32, b: u32, c: u32, d: 
         })
     });
     RECORD_716.store(write, Relaxed);
-    SCOREBOARD.record(igual && sequencia && r == rr, || format!("respond(tipo {}, forca {}) original={} rust={} {} chamadas: {}", b as i8, a as i16, r, rr, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia && r == rr, || format!("respond(kind {}, strength {}) original={} rust={} {} chamadas: {}", b as i8, a as i16, r, rr, k, tape_detail()));
     r
 }
 
@@ -231,7 +231,7 @@ pub(crate) unsafe extern "thiscall" fn compare_procurar(this: usize, side: i8, g
     });
     RECORD_6F5C30.store(write, Relaxed);
     SCOREBOARD.record(igual && sequencia && r == n, || {
-        format!("search_on_side(lado {}, modo {}, {} chamadas) original={} rust={}: {}", side, mode, k, r, n, tape_detail())
+        format!("search_on_side(side {}, mode {}, {} chamadas) original={} rust={}: {}", side, mode, k, r, n, tape_detail())
     });
     r
 }
@@ -241,7 +241,7 @@ pub(crate) unsafe extern "stdcall" fn compare_reaches(j: usize, b: i8, c: i8) ->
     let j = MatchPlayer(j);
     let r = original_fn::<unsafe extern "stdcall" fn(usize, i8, i8) -> u8>(IDX_REACHES)(j.addr(), b, c);
     let n = reaches(j.addr(), b, c);
-    SCOREBOARD.record(r == n, || format!("reaches(lado {}, x {}, y {}, {}, {}) original={} rust={}", side_of_player(j), j.cell_x(), j.cell_y(), b, c, r, n));
+    SCOREBOARD.record(r == n, || format!("reaches(side {}, x {}, y {}, {}, {}) original={} rust={}", side_of_player(j), j.cell_x(), j.cell_y(), b, c, r, n));
     r
 }
 
@@ -267,7 +267,7 @@ pub(crate) unsafe extern "thiscall" fn compare_distance_to_point(this: usize, a:
 pub(crate) unsafe extern "thiscall" fn compare_distance_to_goal(this: usize) -> f32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> f32>(IDX_DISTANCE_TO_GOAL)(this);
     let n = distance_to_goal(this);
-    SCOREBOARD.record(r.to_bits() == n.to_bits(), || format!("distance_to_goal(lado {}) original={} rust={}", side_of_player(MatchPlayer(this)), r, n));
+    SCOREBOARD.record(r.to_bits() == n.to_bits(), || format!("distance_to_goal(side {}) original={} rust={}", side_of_player(MatchPlayer(this)), r, n));
     r
 }
 
@@ -275,7 +275,7 @@ pub(crate) unsafe extern "thiscall" fn compare_distance_to_goal(this: usize) -> 
 pub(crate) unsafe extern "thiscall" fn compare_mais_perto(this: usize, j: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_CLOSEST_TO_GOAL)(this, j);
     let n = closest_to_goal(this, j);
-    SCOREBOARD.record(r == n, || format!("closest_to_goal(lado {}) original={} rust={}", side_of_player(MatchPlayer(j)), r, n));
+    SCOREBOARD.record(r == n, || format!("closest_to_goal(side {}) original={} rust={}", side_of_player(MatchPlayer(j)), r, n));
     r
 }
 
@@ -311,7 +311,7 @@ pub(crate) unsafe extern "thiscall" fn compare_in_the_box(this: usize) -> u8 {
     let this = MatchPlayer(this);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_IN_THE_BOX)(this.addr());
     let n = in_the_box(this.addr());
-    SCOREBOARD.record(r == n, || format!("in_the_box(lado {}, x {}, y {}) original={} rust={}", side_of_player(this), this.cell_x(), this.cell_y(), r, n));
+    SCOREBOARD.record(r == n, || format!("in_the_box(side {}, x {}, y {}) original={} rust={}", side_of_player(this), this.cell_x(), this.cell_y(), r, n));
     r
 }
 
@@ -328,7 +328,7 @@ pub(crate) unsafe extern "thiscall" fn compare_papel_ataque(j: usize) -> u8 {
     let j = MatchPlayer(j);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_ATTACKING_ROLE)(j.addr());
     let n = attacking_role(j.addr());
-    SCOREBOARD.record(r == n, || format!("attacking_role(lado {}, pos {}) original={} rust={}", side_of_player(j), j.position(), r, n));
+    SCOREBOARD.record(r == n, || format!("attacking_role(side {}, pos {}) original={} rust={}", side_of_player(j), j.position(), r, n));
     r
 }
 
@@ -337,7 +337,7 @@ pub(crate) unsafe extern "thiscall" fn compare_papel_defesa(j: usize) -> u8 {
     let j = MatchPlayer(j);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_DEFENDING_ROLE)(j.addr());
     let n = defending_role(j.addr());
-    SCOREBOARD.record(r == n, || format!("defending_role(lado {}, pos {}) original={} rust={}", side_of_player(j), j.position(), r, n));
+    SCOREBOARD.record(r == n, || format!("defending_role(side {}, pos {}) original={} rust={}", side_of_player(j), j.position(), r, n));
     r
 }
 
@@ -348,7 +348,7 @@ pub(crate) unsafe extern "thiscall" fn compare_position_place_players(this: usiz
     let f = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i8, *mut i8, u32)>(IDX_POSITION_PLACE_PLAYERS);
     let regions = [(sx as usize, 1), (sy as usize, 1)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || f(this.addr(), j.addr(), sx, sy, a4), || position_place_players(this.addr(), j.addr(), sx, sy, a4));
-    SCOREBOARD.record(igual, || format!("position_place_players(lado {}, pos {}, bola {} {}) original={:x?} rust={:x?}", side_of_player(j), j.position(), this.ball_x(), this.ball_y(), mo, mr));
+    SCOREBOARD.record(igual, || format!("position_place_players(side {}, pos {}, ball {} {}) original={:x?} rust={:x?}", side_of_player(j), j.position(), this.ball_x(), this.ball_y(), mo, mr));
 }
 
 /// Comparer for `linhas`.
@@ -370,7 +370,7 @@ pub(crate) unsafe extern "thiscall" fn compare_atualizar(this: usize) {
     regions.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) =
         crate::comparison::side_by_side(&regions, || f(this.addr()), || crate::rng::without_counting(|| update_player(this.addr())));
-    SCOREBOARD.record(igual, || format!("update_player(papel {:#x}) original={:x?} rust={:x?}", engine_player_role(this.engine().addr(), this), mo, mr));
+    SCOREBOARD.record(igual, || format!("update_player(role {:#x}) original={:x?} rust={:x?}", engine_player_role(this.engine().addr(), this), mo, mr));
 }
 
 /// Comparer for `momento`.
@@ -392,7 +392,7 @@ pub(crate) unsafe extern "thiscall" fn compare_posicao_um(this: usize, l: i8) ->
         regions.push((this.player((k / 20), ((k % 20)) as usize).addr() + 0x19, 2));
     }
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&regions, || f(this.addr(), l), || hold_position_one(this.addr(), l));
-    SCOREBOARD.record(igual && r == n, || format!("hold_position_one({}) original={:#x} rust={:#x} memoria igual={}", l, r, n, igual));
+    SCOREBOARD.record(igual && r == n, || format!("hold_position_one({}) original={:#x} rust={:#x} memory equal={}", l, r, n, igual));
     r
 }
 
@@ -401,7 +401,7 @@ pub(crate) unsafe extern "thiscall" fn compare_caminho(this: usize, j: usize, ig
     let j = MatchPlayer(j);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8) -> u8>(IDX_CLEAR_PATH)(this, j.addr(), ig);
     let n = clear_path(this, j.addr(), ig);
-    SCOREBOARD.record(r == n, || format!("clear_path(lado {}, {} {}, {}) original={} rust={}", side_of_player(j), j.cell_x(), j.cell_y(), ig, r, n));
+    SCOREBOARD.record(r == n, || format!("clear_path(side {}, {} {}, {}) original={} rust={}", side_of_player(j), j.cell_x(), j.cell_y(), ig, r, n));
     r
 }
 
@@ -410,7 +410,7 @@ pub(crate) unsafe extern "thiscall" fn compare_espaco(this: usize, j: usize) -> 
     let j = MatchPlayer(j);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_SPACE_AHEAD)(this, j.addr());
     let n = space_ahead(this, j.addr());
-    SCOREBOARD.record(r == n, || format!("space_ahead(lado {}, {} {}) original={} rust={}", side_of_player(j), j.cell_x(), j.cell_y(), r, n));
+    SCOREBOARD.record(r == n, || format!("space_ahead(side {}, {} {}) original={} rust={}", side_of_player(j), j.cell_x(), j.cell_y(), r, n));
     r
 }
 
@@ -494,7 +494,7 @@ pub(crate) unsafe extern "thiscall" fn compare_atras(this: usize, j: usize) -> u
     let j = MatchPlayer(j);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_BEHIND_THE_EXTREME)(this, j.addr());
     let n = behind_the_extreme(this, j.addr());
-    SCOREBOARD.record(r == n, || format!("behind_the_extreme(lado {}, y {}) original={} rust={}", side_of_player(j), j.cell_y(), r, n));
+    SCOREBOARD.record(r == n, || format!("behind_the_extreme(side {}, y {}) original={} rust={}", side_of_player(j), j.cell_y(), r, n));
     r
 }
 

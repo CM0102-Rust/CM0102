@@ -33,7 +33,7 @@ pub(crate) unsafe extern "thiscall" fn compare_shot(j: usize, strength: u32, x: 
         })
     });
     RECORD_716.store(write, std::sync::atomic::Ordering::Relaxed);
-    SCOREBOARD.record(igual && sequencia, || format!("shot(forca {}, alvo {} {}) {} chamadas: {}", strength as i16, x as i8, y as i8, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia, || format!("shot(strength {}, target {} {}) {} chamadas: {}", strength as i16, x as i8, y as i8, k, tape_detail()));
 }
 
 /// Comparer for `shot_outcome`.
@@ -241,7 +241,7 @@ pub(crate) unsafe extern "thiscall" fn compare_take_ball(this: usize) {
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr()), || take_ball(this.addr()));
-    SCOREBOARD.record(igual, || format!("take_ball(lado {}, {} {}) original={:x?} rust={:x?}", side_of_player(this), this.cell_x(), this.cell_y(), mo, mr));
+    SCOREBOARD.record(igual, || format!("take_ball(side {}, {} {}) original={:x?} rust={:x?}", side_of_player(this), this.cell_x(), this.cell_y(), mo, mr));
 }
 
 /// Comparer for `move_to`.
@@ -372,7 +372,7 @@ pub(crate) unsafe extern "thiscall" fn compare_tackle(j: usize, strong: u32) {
         })
     });
     RECORD_716.store(write, std::sync::atomic::Ordering::Relaxed);
-    SCOREBOARD.record(igual && sequencia, || format!("tackle(forte {}) {} chamadas: {}", strong as u8, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia, || format!("tackle(strong {}) {} chamadas: {}", strong as u8, k, tape_detail()));
 }
 
 /// Comparer for `recover_stamina`.
@@ -381,7 +381,7 @@ pub(crate) unsafe extern "thiscall" fn compare_recover_stamina(j: usize, ceiling
     let f = original_fn::<unsafe extern "thiscall" fn(usize, u8)>(IDX_RECOVER_STAMINA);
     let regions = [(j.addr() + match_player::STAMINA, 8)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || f(j.addr(), ceiling), || recover_stamina(j.addr(), ceiling));
-    SCOREBOARD.record(igual, || format!("recover_stamina(teto {}) original={:x?} rust={:x?}", ceiling, mo, mr));
+    SCOREBOARD.record(igual, || format!("recover_stamina(ceiling {}) original={:x?} rust={:x?}", ceiling, mo, mr));
 }
 
 /// Comparer for `save_shot`.
@@ -399,7 +399,7 @@ pub(crate) unsafe extern "thiscall" fn compare_save_shot(j: usize, strength: i16
             chamar(rotina, this, args, if rotina == 0x6d6f70 { [0xffff, u32::MAX, 0xff, 0xff, 0xff] } else { [0xff, 0xff, 0xffff, 0xff, u32::MAX] })
         })
     });
-    SCOREBOARD.record(igual && sequencia && r == n, || format!("save_shot(forca {}) original={} rust={} {} chamadas: {}", strength, r, n, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia && r == n, || format!("save_shot(strength {}) original={} rust={} {} chamadas: {}", strength, r, n, k, tape_detail()));
     r
 }
 
@@ -426,7 +426,7 @@ pub(crate) unsafe extern "thiscall" fn compare_long_ball(j: usize, mode: i8, ref
             chamar(rotina, this, args, mask)
         })
     });
-    SCOREBOARD.record(igual && sequencia, || format!("long_ball(modo {} refinar {}) {} chamadas: {}", mode, refinar, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia, || format!("long_ball(mode {} refinar {}) {} chamadas: {}", mode, refinar, k, tape_detail()));
 }
 
 /// Comparer for `pass_ball`.
@@ -451,7 +451,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pass_ball(j: usize, kind: u8, rec
             chamar(rotina, this, args, mask)
         })
     });
-    SCOREBOARD.record(igual && sequencia, || format!("pass_ball(tipo {:#x}) {} chamadas: {}", kind, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia, || format!("pass_ball(kind {:#x}) {} chamadas: {}", kind, k, tape_detail()));
 }
 
 /// Comparer for `decide_player`.
@@ -472,7 +472,7 @@ pub(crate) unsafe extern "thiscall" fn compare_decide_player(j: usize) {
     let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(j.addr()), |chamar| {
         player_decide_injected(j, &mut |rotina, this, args| chamar(rotina, this, args, if rotina == 0x713fc0 { [u32::MAX, 0, 0, 0, 0] } else { [0; 5] }))
     });
-    SCOREBOARD.record(igual && sequencia, || format!("decide_player acao {:#x} {} chamadas", j.action(), k));
+    SCOREBOARD.record(igual && sequencia, || format!("decide_player action {:#x} {} chamadas", j.action(), k));
 }
 
 /// Comparer for `move_off_ball`.
@@ -504,7 +504,7 @@ pub(crate) unsafe extern "thiscall" fn compare_move_off_ball(j: usize) {
             chamar(rotina, this, args, mask)
         })
     });
-    SCOREBOARD.record(igual && sequencia, || format!("move_off_ball acao {:#x} {} chamadas", j.action(), k));
+    SCOREBOARD.record(igual && sequencia, || format!("move_off_ball action {:#x} {} chamadas", j.action(), k));
 }
 
 /// Comparer for `decide_off_ball`.
@@ -533,7 +533,7 @@ pub(crate) unsafe extern "thiscall" fn compare_decide_off_ball(j: usize, a: u32)
             chamar(rotina, j.addr(), args, mask)
         })
     });
-    SCOREBOARD.record(igual && sequencia && k == 1, || format!("decide_off_ball acao {:#x} {} chamadas: {}", j.action(), k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia && k == 1, || format!("decide_off_ball action {:#x} {} chamadas: {}", j.action(), k, tape_detail()));
 }
 
 /// Comparer for `advance_row`.

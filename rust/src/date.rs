@@ -405,14 +405,14 @@ fn regions(objects: &[usize]) -> Regions {
 unsafe extern "thiscall" fn compare_default(this: *mut Data) -> *mut Data {
     let f: unsafe extern "thiscall" fn(*mut Data) -> *mut Data = original_fn(0);
     let (r, rr, equal, mo, mr) = side_by_side(&regions(&[this as usize]), || f(this), || default_date(this));
-    SCOREBOARD.record(equal && r == rr, || format!("padrao original={:x?} rust={:x?}", mo, mr));
+    SCOREBOARD.record(equal && r == rr, || format!("default original={:x?} rust={:x?}", mo, mr));
     r
 }
 
 unsafe extern "thiscall" fn compare_new(this: *mut Data, day: u32, year: u32) -> *mut Data {
     let f: unsafe extern "thiscall" fn(*mut Data, u32, u32) -> *mut Data = original_fn(1);
     let (r, rr, equal, mo, mr) = side_by_side(&regions(&[this as usize]), || f(this, day, year), || new_date(this, day, year));
-    SCOREBOARD.record(equal && r == rr, || format!("nova({:#x}, {:#x}) original={:x?} rust={:x?}", day, year, mo, mr));
+    SCOREBOARD.record(equal && r == rr, || format!("new({:#x}, {:#x}) original={:x?} rust={:x?}", day, year, mo, mr));
     r
 }
 
@@ -420,7 +420,7 @@ unsafe extern "thiscall" fn compare_weekday(this: *const Data) -> i32 {
     let f: unsafe extern "thiscall" fn(*const Data) -> i32 = original_fn(2);
     let r = f(this);
     let ours = weekday(this);
-    SCOREBOARD.record(r == ours, || format!("semana({:?}) original={} rust={}", *this, r, ours));
+    SCOREBOARD.record(r == ours, || format!("week({:?}) original={} rust={}", *this, r, ours));
     r
 }
 
@@ -428,7 +428,7 @@ unsafe extern "thiscall" fn compare_copy(this: *mut Data, ret: *mut Data, src: *
     let f: unsafe extern "thiscall" fn(*mut Data, *mut Data, *const Data) -> *mut Data = original_fn(3);
     let reg = regions(&[this as usize, ret as usize, src as usize]);
     let (r, rr, equal, mo, mr) = side_by_side(&reg, || f(this, ret, src), || copia(this, ret, src));
-    SCOREBOARD.record(equal && r == rr, || format!("copia original={:x?} rust={:x?}", mo, mr));
+    SCOREBOARD.record(equal && r == rr, || format!("copy original={:x?} rust={:x?}", mo, mr));
     r
 }
 
@@ -453,7 +453,7 @@ unsafe extern "thiscall" fn compare_adjust(this: *const Data, target: u32, dest:
     let reg = regions(&[this as usize, dest as usize]);
     // The return value is the address of a temporary on the stack: it is not compared.
     let (r, _, equal, mo, mr) = side_by_side(&reg, || f(this, target, dest), || adjust_week(this, target, dest));
-    SCOREBOARD.record(equal, || format!("ajustar_semana({:#x}) original={:x?} rust={:x?}", target, mo, mr));
+    SCOREBOARD.record(equal, || format!("adjust_week({:#x}) original={:x?} rust={:x?}", target, mo, mr));
     r
 }
 

@@ -145,7 +145,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_transfer_squad_reactions(
     let mo = crate::comparison::MemorySnapshot::read(&reg);
     SCOREBOARD.record(mo == mr, || {
         let dif: Vec<usize> = mo.0.iter().zip(mr.0.iter()).flat_map(|(a, b)| (0..a.1.len()).filter(move |&i| a.1[i] != b.1[i]).map(move |i| a.0 + i)).take(16).collect();
-        format!("process_transfer_squad_reactions(jogador {:#x}, novo {:#x}, velho {:#x}) diferencas em {:x?}", p.addr(), new, old, dif)
+        format!("process_transfer_squad_reactions(player {:#x}, new {:#x}, old {:#x}) diferencas em {:x?}", p.addr(), new, old, dif)
     });
 }
 
@@ -163,7 +163,7 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_sale_unrest_story(this: usi
 pub(crate) unsafe extern "C" fn compare_media_pick_outlet_type_for_club(club: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_MEDIA_PICK_OUTLET_TYPE_FOR_CLUB);
     let (r, n, igual, _, _) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(club), || crate::rng::without_counting(|| media_pick_outlet_type_for_club(club)));
-    SCOREBOARD.record(igual && r == n, || format!("media_pick_outlet_type_for_club({:x}) original={} rust={} sorteio igual={}", club, r, n, igual));
+    SCOREBOARD.record(igual && r == n, || format!("media_pick_outlet_type_for_club({:x}) original={} rust={} draw equal={}", club, r, n, igual));
     r
 }
 
@@ -171,7 +171,7 @@ pub(crate) unsafe extern "C" fn compare_media_pick_outlet_type_for_club(club: us
 pub(crate) unsafe extern "C" fn compare_media_pick_outlet_type_for_person(person: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_MEDIA_PICK_OUTLET_TYPE_FOR_PERSON);
     let (r, n, igual, _, _) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(person), || crate::rng::without_counting(|| media_pick_outlet_type_for_person(person)));
-    SCOREBOARD.record(igual && r == n, || format!("media_pick_outlet_type_for_person({:x}) original={} rust={} sorteio igual={}", person, r, n, igual));
+    SCOREBOARD.record(igual && r == n, || format!("media_pick_outlet_type_for_person({:x}) original={} rust={} draw equal={}", person, r, n, igual));
     r
 }
 
@@ -190,7 +190,7 @@ pub(crate) unsafe extern "thiscall" fn compare_adjust_supporter_confidence(this:
     let expected = before.wrapping_add(v).clamp(1, 10000);
     o(this, club, sujeito, topic, target, variant);
     let after = read_i16(manager_manager_row(Club(club)) + 8);
-    SCOREBOARD.record(after == expected, || format!("adjust_supporter_confidence(clube {:x}, alvo {}) {} + {} = {} x original {}", club, target as i16, before, v, expected, after));
+    SCOREBOARD.record(after == expected, || format!("adjust_supporter_confidence(club {:x}, target {}) {} + {} = {} x original {}", club, target as i16, before, v, expected, after));
 }
 
 /// Comparer for `adjust_board_confidence`.
@@ -207,7 +207,7 @@ pub(crate) unsafe extern "thiscall" fn compare_adjust_board_confidence(this: usi
     let expected = before.wrapping_add(v).clamp(1, 10000);
     o(this, club, sujeito, topic, target, variant, sexto);
     let after = read_i16(manager_manager_row(Club(club)) + 6);
-    SCOREBOARD.record(after == expected, || format!("adjust_board_confidence(clube {:x}, alvo {}) {} + {} = {} x original {}", club, target as i32, before, v, expected, after));
+    SCOREBOARD.record(after == expected, || format!("adjust_board_confidence(club {:x}, target {}) {} + {} = {} x original {}", club, target as i32, before, v, expected, after));
 }
 
 /// Comparer for `queue_player_gratitude_news`.
@@ -240,7 +240,7 @@ pub(crate) unsafe extern "thiscall" fn compare_rate_player_form_for_story(this: 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, f32) -> f64>(IDX_RATE_PLAYER_FORM_FOR_STORY)(this, player, club, contract, kind, mode, weight);
     let n = rate_player_form_for_story(this, player, club, contract, kind, mode, weight);
     SCOREBOARD.record(o.to_bits() == n.to_bits() || (o.is_nan() && n.is_nan()),
-        || format!("rate_player_form_for_story(tipo {}, modo {}, peso {}) {} x {}", kind as u16 as i16, mode as u8, weight, o, n));
+        || format!("rate_player_form_for_story(kind {}, mode {}, weight {}) {} x {}", kind as u16 as i16, mode as u8, weight, o, n));
     o
 }
 
@@ -266,7 +266,7 @@ pub(crate) unsafe extern "thiscall" fn compare_log_story(this: usize, a: usize, 
         core::slice::from_raw_parts(read_usize(this).wrapping_add(k * 0x17) as *const u8, 0x17) == &expected[..]
     });
     SCOREBOARD.record(m == n.wrapping_add(1) && found, || {
-        format!("log_story(tipo {:#x}, subtipo {}) conta {} -> {}, esperado {:x?} achou {}", kind, subtype as u8 as i8, n, m, expected, found)
+        format!("log_story(kind {:#x}, subtype {}) count {} -> {}, expected {:x?} found {}", kind, subtype as u8 as i8, n, m, expected, found)
     });
 }
 
@@ -293,7 +293,7 @@ pub(crate) unsafe extern "thiscall" fn compare_expire_story_log(this: usize) {
 pub(crate) unsafe extern "thiscall" fn compare_has_logged_story(this: usize, a: usize, b: usize, kind: u32, subtype: u32, desde: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> u32>(IDX_HAS_LOGGED_STORY)(this, a, b, kind, subtype, desde);
     let n = has_logged_story(this, a, b, kind, subtype, desde);
-    SCOREBOARD.record(r == n, || format!("has_logged_story(tipo {:#x}, subtipo {}, desde {}) original={} rust={}", kind, subtype as u16 as i16, desde != 0, r, n));
+    SCOREBOARD.record(r == n, || format!("has_logged_story(kind {:#x}, subtype {}, desde {}) original={} rust={}", kind, subtype as u16 as i16, desde != 0, r, n));
     r
 }
 
@@ -313,7 +313,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_transfer_interest(this: usize
             core::slice::from_raw_parts(read_usize(this + media_fields::TRANSFER_INTERESTS).wrapping_add(k * 0x19) as *const u8, 0x19) == &e[..]
         }),
     };
-    SCOREBOARD.record(ok, || format!("add_transfer_interest(valor {}, avaliacao {}) conta {} -> {}, esperado {:x?}", value, avaliacao, n, m, expected));
+    SCOREBOARD.record(ok, || format!("add_transfer_interest(value {}, rating {}) count {} -> {}, expected {:x?}", value, avaliacao, n, m, expected));
 }
 
 /// Comparer for `compare_id_pair_keys`.
@@ -405,7 +405,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pick_ai_manager_response(this: us
         || o(this, manager.addr(), player, kind),
         || crate::rng::without_counting(|| pick_ai_manager_response(this, manager.addr(), player, kind)),
     );
-    SCOREBOARD.record(igual && r == n, || format!("pick_ai_manager_response(tipo {:#x}) original={} rust={} {:x?} x {:x?}", kind as i16, r, n, mo.0, mr.0));
+    SCOREBOARD.record(igual && r == n, || format!("pick_ai_manager_response(kind {:#x}) original={} rust={} {:x?} x {:x?}", kind as i16, r, n, mo.0, mr.0));
     r
 }
 

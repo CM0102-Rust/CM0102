@@ -22,7 +22,7 @@ pub(crate) unsafe extern "thiscall" fn compare_regenerate_as_youth_player(this: 
 pub(crate) unsafe extern "C" fn compare_player_setup_find_staff(first: usize, common: usize, second: usize, club: usize, in_squad: u32) -> usize {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, usize, usize, u32) -> usize>(IDX_PLAYER_SETUP_FIND_STAFF)(first, common, second, club, in_squad);
     let n = player_setup_find_staff(first, common, second, club, in_squad);
-    SCOREBOARD.record(r == n, || format!("player_setup_find_staff(clube {:x}, elenco {}) original={:x} rust={:x}", club, in_squad as u8, r, n));
+    SCOREBOARD.record(r == n, || format!("player_setup_find_staff(club {:x}, squad {}) original={:x} rust={:x}", club, in_squad as u8, r, n));
     r
 }
 
@@ -75,12 +75,12 @@ pub(crate) unsafe extern "stdcall" fn compare_player_regen_sign_for_club(person:
     let k = first_free_squad_slot(club);
     let r = o(person.addr(), club.addr());
     if k == 0x32 {
-        SCOREBOARD.record(r == 0, || format!("player_regen_sign_for_club({:x}, {:x}) sem vaga original={}", person.addr(), club.addr(), r));
+        SCOREBOARD.record(r == 0, || format!("player_regen_sign_for_club({:x}, {:x}) without slot original={}", person.addr(), club.addr(), r));
         return r;
     }
     let c = exe::contract_manager_get_contract(read_i32(G_CONTRACT_MANAGER) as usize, person);
     let ok = r == 1 && (club.squad(k) as i32) == person.addr() as i32 && (person.club_job().addr() as i32) == club.addr() as i32 && (c == 0 || read_u8(c + 0x3a) == 0);
-    SCOREBOARD.record(ok, || format!("player_regen_sign_for_club({:x}, {:x}) vaga {} original={}", person.addr(), club.addr(), k, r));
+    SCOREBOARD.record(ok, || format!("player_regen_sign_for_club({:x}, {:x}) slot {} original={}", person.addr(), club.addr(), k, r));
     r
 }
 
@@ -120,7 +120,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_player_data_to_pool(this: usi
     let item = read_usize(this + player_regen_fields::PLAYER_DATA_POOL).wrapping_add(n << 4);
     let g = [read_usize(item) as u32, read_usize(item + regen_pool_item::NATION_ID) as u32, read_usize(item + regen_pool_item::SECOND_NATION_ID) as u32];
     SCOREBOARD.record(read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT) == n.wrapping_add(1) && g == [id, nation, second], || {
-        format!("add_player_data_to_pool({}, {}, {}) conta {} -> {}, item {:?} (id {})", person, nation, second, n, read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT), g, id)
+        format!("add_player_data_to_pool({}, {}, {}) count {} -> {}, item {:?} (id {})", person, nation, second, n, read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT), g, id)
     });
 }
 
@@ -141,7 +141,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_regen_check_initial_retire
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(IDX_PLAYER_REGEN_CHECK_INITIAL_RETIREMENT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&retirement_decision_regions(out), || o(this, person, out),
         || crate::rng::without_counting(|| player_regen_check_initial_retirement(this, person, out)));
-    SCOREBOARD.record(igual && r == n, || format!("player_regen_check_initial_retirement(pessoa {:x}) original={} rust={} {:x?} x {:x?}", person, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("player_regen_check_initial_retirement(person {:x}) original={} rust={} {:x?} x {:x?}", person, r, n, mo, mr));
     r
 }
 
@@ -150,7 +150,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_regen_check_retirement(thi
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(IDX_PLAYER_REGEN_CHECK_RETIREMENT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&retirement_decision_regions(out), || o(this, person, out),
         || crate::rng::without_counting(|| player_regen_check_retirement(this, person, out)));
-    SCOREBOARD.record(igual && r == n, || format!("player_regen_check_retirement(pessoa {:x}) original={} rust={} {:x?} x {:x?}", person, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("player_regen_check_retirement(person {:x}) original={} rust={} {:x?} x {:x?}", person, r, n, mo, mr));
     r
 }
 
@@ -176,7 +176,7 @@ pub(crate) unsafe extern "stdcall" fn compare_player_regen_retire_from_non_playi
     let mut reg = job_exit_regions(Staff(person));
     reg.retain(|r| r.0 != 0);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(person), || player_regen_retire_from_non_playing_staff(person));
-    SCOREBOARD.record(igual, || format!("player_regen_retire_from_non_playing_staff(pessoa {:x}) {:x?} x {:x?}", person, mo, mr));
+    SCOREBOARD.record(igual, || format!("player_regen_retire_from_non_playing_staff(person {:x}) {:x?} x {:x?}", person, mo, mr));
 }
 
 /// Comparer for `player_regen_score_non_player_candidate`.
@@ -227,7 +227,7 @@ pub(crate) unsafe extern "stdcall" fn compare_retire_from_playing_staff(p: usize
     }
     let (antes_clube, antes_cargo) = (p.club_job(), (p.job_for_club() as i8));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(p.addr()), || retire_from_playing_staff(p.addr()));
-    SCOREBOARD.record(igual, || format!("retire_from_playing_staff(id {}, clube {:x}, cargo {}) {:x?} x {:x?}", read_usize(p.addr()), antes_clube, antes_cargo, mo, mr));
+    SCOREBOARD.record(igual, || format!("retire_from_playing_staff(id {}, club {:x}, job {}) {:x?} x {:x?}", read_usize(p.addr()), antes_clube, antes_cargo, mo, mr));
 }
 
 /// Comparer for `pick_best_club_for_player`.
@@ -267,7 +267,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_spare_non_player_record(this:
     let item = read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS).wrapping_add(n << 4);
     let g = [read_usize(item) as u32, read_usize(item + regen_pool_item::NATION_ID) as u32, read_usize(item + regen_pool_item::SECOND_NATION_ID) as u32];
     SCOREBOARD.record(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT) == n.wrapping_add(1) && g == [id, nation, second], || {
-        format!("add_spare_non_player_record({}, {}, {}) conta {} -> {}, item {:?}", id, nation, second, n, read_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT), g)
+        format!("add_spare_non_player_record({}, {}, {}) count {} -> {}, item {:?}", id, nation, second, n, read_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT), g)
     });
 }
 
@@ -279,7 +279,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_retirement(this: usize, r: us
     let item = read_usize(this + player_regen_fields::RETIREMENTS).wrapping_add(n.wrapping_mul(26));
     let g = retirement_entry_fields(item);
     SCOREBOARD.record(read_usize(this + player_regen_fields::RETIREMENT_COUNT) == n.wrapping_add(1) && g == expected, || {
-        format!("add_retirement conta {} -> {}, item {:x?} (esperava {:x?})", n, read_usize(this + player_regen_fields::RETIREMENT_COUNT), g, expected)
+        format!("add_retirement count {} -> {}, item {:x?} (esperava {:x?})", n, read_usize(this + player_regen_fields::RETIREMENT_COUNT), g, expected)
     });
 }
 
@@ -317,7 +317,7 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_staff_for_regen(this: usize
         ok &= read_usize(i) as u32 == bid && read_usize(i + regen_pool_item::NATION_ID) as u32 == bnac && read_usize(i + regen_pool_item::STAFF_ID) as u32 == bp;
     }
     SCOREBOARD.record(ok, || {
-        format!("queue_staff_for_regen({}) contas {} {} {} -> {} {} {}, reserva {:?}, banco {:?}", id, n1, n2, n3,
+        format!("queue_staff_for_regen({}) contas {} {} {} -> {} {} {}, reserve {:?}, bench {:?}", id, n1, n2, n3,
             read_usize(this + player_regen_fields::REGEN_QUEUE_COUNT), read_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT), read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT), reserve, bench)
     });
 }
@@ -391,7 +391,7 @@ pub(crate) unsafe extern "stdcall" fn compare_player_regen_score_club_for_player
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, i8) -> i32>(IDX_PLAYER_REGEN_SCORE_CLUB_FOR_PLAYER);
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&crate::rng::STATE_REGIONS,
         || o(player, club, squad), || crate::rng::without_counting(|| player_regen_score_club_for_player(player, club, squad)));
-    SCOREBOARD.record(igual && r == n, || format!("player_regen_score_club_for_player(elenco {}) original={} rust={} sorteio igual={}", squad, r, n, igual));
+    SCOREBOARD.record(igual && r == n, || format!("player_regen_score_club_for_player(squad {}) original={} rust={} draw equal={}", squad, r, n, igual));
     r
 }
 
@@ -434,7 +434,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_nation_club_lists(this: usi
         let ids: Vec<usize> = if l != 0 { list_items_capped(l).into_iter().map(|e| read_usize(e)).collect() } else { Vec::new() };
         l != 0 && ids != plan[k]
     });
-    SCOREBOARD.record(wrong.is_none(), || format!("build_nation_club_lists: a lista da nação {:?} difere do plano", wrong));
+    SCOREBOARD.record(wrong.is_none(), || format!("build_nation_club_lists: a list of the nação {:?} difere of the plan", wrong));
 }
 
 /// Comparer for `process_regen_queue` (comparison mode: see the header of motor.rs): `0x7abac0` (the young regen)
@@ -473,7 +473,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_regen_queue(this: usize) 
     }
     if k == 0 {
         let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this, 0x44)], || o(this), || process_regen_queue(this));
-        SCOREBOARD.record(igual, || format!("process_regen_queue({:x}) sem vencidas {:x?} x {:x?}", this, mo, mr));
+        SCOREBOARD.record(igual, || format!("process_regen_queue({:x}) without vencidas {:x?} x {:x?}", this, mo, mr));
         return;
     }
     // the regen (0x7abac0) may put new entries in the queue (on save load, 4 expired out of 10 and the count dropped only 1)

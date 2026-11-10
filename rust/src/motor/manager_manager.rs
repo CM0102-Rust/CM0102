@@ -2208,7 +2208,7 @@ pub(crate) unsafe fn compare_manager_news(name: &str, regions: Vec<(usize, usize
         }
     }
     let same = mo == mr && ro.len() >= rr.len() && ro[..rr.len()] == rr[..] && news_same && (alcance != 0 || entregues == 0);
-    SCOREBOARD.record(same, || format!("{} original {:x?} sorteios {:?} rust {:x?} sorteios {:?}; alcance {} entregues {} noticia igual {}", name, mo, ro, mr, rr, alcance, entregues, news_same));
+    SCOREBOARD.record(same, || format!("{} original {:x?} sorteios {:?} rust {:x?} sorteios {:?}; reach {} entregues {} news equal {}", name, mo, ro, mr, rr, alcance, entregues, news_same));
 }
 
 /// Posts the 0x1777 news with the manager, the club and the chairman; the reason by the board ratings below confidence

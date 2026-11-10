@@ -22,7 +22,7 @@ pub(crate) unsafe extern "stdcall" fn compare_post_fine_reaction_news(player: us
     let mo = crate::comparison::MemorySnapshot::read(&regions);
     let montaria = FINE_NEWS_WOULD_BUILD;
     let same = if montaria { mo.0[0].1 == mr.0[0].1 } else { mo == mr };
-    SCOREBOARD.record(same, || format!("post_fine_reaction_news(jogador {:#x}) montaria={} original={:x?} rust={:x?}", player, montaria, mo, mr));
+    SCOREBOARD.record(same, || format!("post_fine_reaction_news(player {:#x}) montaria={} original={:x?} rust={:x?}", player, montaria, mo, mr));
 }
 
 /// Comparer for `post_coach_fine_feedback_news`.

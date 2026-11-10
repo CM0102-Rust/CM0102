@@ -34,7 +34,7 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_cup_stage(this: usize, 
             b.sort_unstable();
             a == b
         };
-    SCOREBOARD.record(ok, || format!("construct_cup_stage({:#x}) n={} rodadas={} ano={}", this.addr(), n as u16 as i16, rounds as u16 as i16, year as u16));
+    SCOREBOARD.record(ok, || format!("construct_cup_stage({:#x}) n={} rounds={} year={}", this.addr(), n as u16 as i16, rounds as u16 as i16, year as u16));
     r
 }
 

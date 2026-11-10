@@ -485,7 +485,7 @@ pub(crate) unsafe fn compare_half_season_stage(name: &str, this: League, k: u32,
     let kk = k as u8 as i8 as i32;
     let stage = League(read_usize(this.stages() + 4 * kk as usize));
     let same = !stage.is_null() && this.current_stage() as i32 == kk && stage.club_count() == this.club_count();
-    SCOREBOARD.record(same, || format!("{}({:#x}, {}) fase={:#x} +0x30={}", name, this.addr(), kk, stage.addr(), this.current_stage() as i32));
+    SCOREBOARD.record(same, || format!("{}({:#x}, {}) stage={:#x} +0x30={}", name, this.addr(), kk, stage.addr(), this.current_stage() as i32));
 }
 
 /// One half of the Rio state league: when the first game of a half is processed, it builds that half's round-robin
@@ -601,7 +601,7 @@ pub(crate) unsafe fn compare_new_season(name: &str, this: League, original: impl
     let r = original();
     let after = this.year();
     let same = after == before.wrapping_add(1) && this.stage_count() == 3 && this.current_stage() as i32 == -1;
-    SCOREBOARD.record(same, || format!("{}({:#x}) ano antes={} depois={} +0x2c={} +0x30={}", name, this.addr(), before, after, this.stage_count(), this.current_stage() as i32));
+    SCOREBOARD.record(same, || format!("{}({:#x}) year before={} after={} +0x2c={} +0x30={}", name, this.addr(), before, after, this.stage_count(), this.current_stage() as i32));
     r
 }
 

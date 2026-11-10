@@ -13,7 +13,7 @@ pub(crate) unsafe extern "C" fn compare_fill_match_record_from_fixture(game: usi
         return o(game, club, out);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(out, 0x1f)], || o(game, club, out), || fill_match_record_from_fixture(game, club, out));
-    SCOREBOARD.record(igual && r == n, || format!("fill_match_record_from_fixture(jogo {:x}, clube {:x}) original={} rust={} {:x?} x {:x?}", game, club, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("fill_match_record_from_fixture(game {:x}, club {:x}) original={} rust={} {:x?} x {:x?}", game, club, r, n, mo, mr));
     r
 }
 
@@ -26,7 +26,7 @@ pub(crate) unsafe extern "C" fn compare_fill_staff_name_ref(person: usize, out: 
         return o(person, out);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(out, 0x18)], || o(person, out), || fill_staff_name_ref(person, out));
-    SCOREBOARD.record(igual && r == n, || format!("fill_staff_name_ref(pessoa {:x}) original={} rust={} {:x?} x {:x?}", person, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("fill_staff_name_ref(person {:x}) original={} rust={} {:x?} x {:x?}", person, r, n, mo, mr));
     r
 }
 
@@ -40,7 +40,7 @@ pub(crate) unsafe extern "C" fn compare_match_record_result_code(record: usize) 
     }
     let r = o(record);
     let n = match_record_result_code(record);
-    SCOREBOARD.record(r == n, || format!("match_record_result_code(registro {:x}) original={} rust={}", record, r as i8, n as i8));
+    SCOREBOARD.record(r == n, || format!("match_record_result_code(record {:x}) original={} rust={}", record, r as i8, n as i8));
     r
 }
 

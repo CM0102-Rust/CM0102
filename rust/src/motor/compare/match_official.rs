@@ -46,7 +46,7 @@ pub(crate) unsafe extern "thiscall" fn compare_punish_foul(this: usize, j: usize
     let reg = card_regions(read_usize(this), j, kind, weight);
     let t0 = *kind;
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, kind, x, sev, flag, weight), || crate::rng::without_counting(|| punish_foul(this, j, kind, x, sev, flag, weight)));
-    SCOREBOARD.record(igual, || format!("punish_foul(tipo {}, sev {}, flag {}) original={:x?} rust={:x?}", t0, sev, flag, mo, mr));
+    SCOREBOARD.record(igual, || format!("punish_foul(kind {}, sev {}, flag {}) original={:x?} rust={:x?}", t0, sev, flag, mo, mr));
 }
 
 /// Comparer for `punish_move`.
@@ -56,7 +56,7 @@ pub(crate) unsafe extern "thiscall" fn compare_punish_move(this: usize, j: usize
     reg.push((other + 0x15, 1));
     let t0 = *kind;
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, other, kind, x, sev, flag, weight, send_off), || crate::rng::without_counting(|| punish_move(this, j, other, kind, x, sev, flag, weight, send_off)));
-    SCOREBOARD.record(igual, || format!("punish_move(tipo {}, sev {}, flag {}) original={:x?} rust={:x?}", t0, sev, flag, mo, mr));
+    SCOREBOARD.record(igual, || format!("punish_move(kind {}, sev {}, flag {}) original={:x?} rust={:x?}", t0, sev, flag, mo, mr));
 }
 
 /// Comparer for `foul_decision`.
@@ -80,7 +80,7 @@ pub(crate) unsafe extern "thiscall" fn compare_foul_decision(
     SCOREBOARD.record(igual && r == v, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("foul_decision(tipo {:#x}) original={} rust={} diferencas em {:x?}", kind, r, v, dif)
+        format!("foul_decision(kind {:#x}) original={} rust={} diferencas em {:x?}", kind, r, v, dif)
     });
     r
 }

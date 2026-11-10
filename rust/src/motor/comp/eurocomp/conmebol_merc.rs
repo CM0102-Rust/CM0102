@@ -317,7 +317,7 @@ pub(crate) unsafe fn compare_south_american_cup_schedule(name: &str, stage: u32,
     if f > limit {
         // simplification: above the knockout neither of the two writes anything; the outputs may not even exist
         let a = o();
-        SCOREBOARD.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, f, a));
+        SCOREBOARD.record(a == 0, || format!("{}(stage {}) returned {:#x}", name, f, a));
         return a;
     }
     let (mut r2, mut e2) = (*rounds, *extra);
@@ -338,7 +338,7 @@ pub(crate) unsafe fn compare_south_american_cup_schedule(name: &str, stage: u32,
     if b != 0 {
         exe::crt_free(b);
     }
-    SCOREBOARD.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, f, outs, *rounds, r2, table));
+    SCOREBOARD.record(igual && outs && table, || format!("{}(stage {}): saídas {} ({} x {}) table {}", name, f, outs, *rounds, r2, table));
     a
 }
 

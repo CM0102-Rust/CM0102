@@ -46,7 +46,7 @@ pub(crate) unsafe fn compare_transfer_rules_ctor(name: &str, this: usize, o: imp
     if jb != 0 {
         exe::crt_free(jb);
     }
-    SCOREBOARD.record(fields && windows, || format!("{}: campos {} janelas {}", name, fields, windows));
+    SCOREBOARD.record(fields && windows, || format!("{}: fields {} windows {}", name, fields, windows));
 }
 
 /// England's transfer window: from 2 June (moved to the Monday [inference]) to 26 March (moved to the Thursday

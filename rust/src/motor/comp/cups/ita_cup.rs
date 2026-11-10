@@ -57,7 +57,7 @@ pub(crate) unsafe fn compare_first_group_table(name: &str, this: League, n: i16,
     let t = this.table();
     let ok = r == 1 && this.club_count() == n && t != 0
         && plan.iter().enumerate().all(|(k, &c)| read_usize(t + k * 0x3b) == c && read_usize(read_usize(this.addr() + 0xee) + k * 4) == 0);
-    SCOREBOARD.record(ok, || format!("{}({:#x}) devolveu {}; plano {:x?}", name, this.addr(), r, plan));
+    SCOREBOARD.record(ok, || format!("{}({:#x}) returned {}; plan {:x?}", name, this.addr(), r, plan));
     r
 }
 
@@ -277,7 +277,7 @@ pub(crate) unsafe fn compare_group_stage(name: &str, this: League, g: u32, origi
                 a == b
             });
     }
-    SCOREBOARD.record(ok, || format!("{}({:#x}, {}) devolveu {}; plano {:x?}", name, this.addr(), g, r, plan));
+    SCOREBOARD.record(ok, || format!("{}({:#x}, {}) returned {}; plan {:x?}", name, this.addr(), g, r, plan));
     r
 }
 
@@ -948,7 +948,7 @@ pub(crate) unsafe fn compare_select_entrants(name: &str, this: usize, o: impl Fn
     if lr != 0 && lr != lo {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} {:x?} x {:x?} lista {} ({} bytes) {:x?} x {:x?}", name, this, a, b, igual, mo, mr, list, k, vo, vr));
+    SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) returned {} x {} memória {} {:x?} x {:x?} list {} ({} bytes) {:x?} x {:x?}", name, this, a, b, igual, mo, mr, list, k, vo, vr));
     a
 }
 

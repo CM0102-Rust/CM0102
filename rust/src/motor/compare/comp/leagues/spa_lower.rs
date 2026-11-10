@@ -18,7 +18,7 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_spa_lower(this: usize, 
     let r = o(this.addr(), year);
     let ok = r == this.addr() && read_usize(this.addr()) == 0x96fb1c && (this.year() as u16) == year as u16
         && this.discipline_rule() == 0xff && this.competition().addr() == comp_record_of_key(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION);
-    SCOREBOARD.record(ok, || format!("construct_spa_lower({:#x}): devolveu {:#x}, vtable {:#x}, +4 = {:#x}", this.addr(), r, read_usize(this.addr()), this.competition().addr()));
+    SCOREBOARD.record(ok, || format!("construct_spa_lower({:#x}): returned {:#x}, vtable {:#x}, +4 = {:#x}", this.addr(), r, read_usize(this.addr()), this.competition().addr()));
     r
 }
 
@@ -54,7 +54,7 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_lower_create_table(this: usiz
             ok = ok && read_usize(t + i * 0x3b) == c;
         }
     }
-    SCOREBOARD.record(ok, || format!("spa_lower_create_table({:#x}): devolveu {}, plano {:x?}, tabela {:x?}", this.addr(), r, plan,
+    SCOREBOARD.record(ok, || format!("spa_lower_create_table({:#x}): returned {}, plan {:x?}, table {:x?}", this.addr(), r, plan,
         (0..plan.len()).map(|i| if t != 0 { read_usize(t + i * 0x3b) } else { 0 }).collect::<Vec<_>>()));
     r
 }

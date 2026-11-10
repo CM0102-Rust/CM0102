@@ -51,7 +51,7 @@ pub(crate) unsafe extern "thiscall" fn compare_select_section_clubs(this: usize)
     if lr != 0 && lr != lo {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("select_section_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("select_section_clubs({:#x}) returned {} x {} memória {} list {}", this, a, b, igual, list));
     a
 }
 
@@ -63,7 +63,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_section_stage(this: usize)
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_SECTION_STAGE);
     o(this.addr());
     let f = read_usize(this.stages());
-    SCOREBOARD.record(f != 0 && this.current_stage() == 0, || format!("create_section_stage({:#x}) fase {:#x} +0x30 {}", this.addr(), f, this.current_stage() as i32));
+    SCOREBOARD.record(f != 0 && this.current_stage() == 0, || format!("create_section_stage({:#x}) stage {:#x} +0x30 {}", this.addr(), f, this.current_stage() as i32));
 }
 
 /// Comparer for `eng_auto_cup_advance_stage`.
@@ -76,7 +76,7 @@ pub(crate) unsafe extern "thiscall" fn compare_eng_auto_cup_advance_stage(this: 
     let last = before >= (this.stage_count() as i32).wrapping_sub(1);
     o(this.addr());
     let after = this.current_stage() as i32;
-    SCOREBOARD.record(after == if last { before } else { before + 1 }, || format!("eng_auto_cup_advance_stage({:#x}) fase {} -> {}", this.addr(), before, after));
+    SCOREBOARD.record(after == if last { before } else { before + 1 }, || format!("eng_auto_cup_advance_stage({:#x}) stage {} -> {}", this.addr(), before, after));
 }
 
 /// Comparer for `eng_auto_cup_create_final_stage`.
@@ -88,7 +88,7 @@ pub(crate) unsafe extern "thiscall" fn compare_eng_auto_cup_create_final_stage(t
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_AUTO_CUP_CREATE_FINAL_STAGE);
     o(this.addr());
     let f = read_usize(this.stages() + 4);
-    SCOREBOARD.record(f != 0, || format!("eng_auto_cup_create_final_stage({:#x}) sem a fase da final", this.addr()));
+    SCOREBOARD.record(f != 0, || format!("eng_auto_cup_create_final_stage({:#x}) without a stage of the final", this.addr()));
 }
 
 /// Comparer for `eng_auto_cup_rank_teams`.

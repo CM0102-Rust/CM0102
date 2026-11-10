@@ -17,7 +17,7 @@ pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_advance_stage(this: 
     let last = f >= (this.stage_count() as i32).wrapping_sub(1);
     o(this.addr());
     let after = this.current_stage() as i32;
-    SCOREBOARD.record(after == if last { f } else { f + 1 }, || format!("con_merc_cup_advance_stage({:#x}) fase {} -> {}", this.addr(), f, after));
+    SCOREBOARD.record(after == if last { f } else { f + 1 }, || format!("con_merc_cup_advance_stage({:#x}) stage {} -> {}", this.addr(), f, after));
 }
 
 /// Comparer for `con_merc_cup_select_invited_clubs`.
@@ -56,7 +56,7 @@ pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_select_invited_clubs
     if lr != 0 && lr != lo {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("con_merc_cup_select_invited_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("con_merc_cup_select_invited_clubs({:#x}) returned {} x {} memória {} list {}", this, a, b, igual, list));
     a
 }
 
@@ -77,7 +77,7 @@ pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_update_for_date(this
             && stages != 0
             && (0..3).all(|g| read_usize(stages + g * 4) != 0)
             && this.current_stage() == 2;
-        SCOREBOARD.record(ok, || format!("con_merc_cup_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this.addr(), this.active(), this.current_stage() as i32));
+        SCOREBOARD.record(ok, || format!("con_merc_cup_update_for_date({:#x}): o draw não montou the groups (+0x45 {}, +0x30 {})", this.addr(), this.active(), this.current_stage() as i32));
     }
     r
 }
@@ -100,7 +100,7 @@ pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_create_first_group_t
         }
     }
     let same = r == 1 && this.club_count() == 4 && t != 0 && (0..4).all(|i| read[i] == (predicted[i], i as u8));
-    SCOREBOARD.record(same, || format!("con_merc_cup_create_first_group_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this.addr(), r, read, predicted));
+    SCOREBOARD.record(same, || format!("con_merc_cup_create_first_group_table({:#x}) returned {} rows {:x?} predicted {:x?}", this.addr(), r, read, predicted));
     r
 }
 
@@ -121,7 +121,7 @@ pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_create_group_stage(t
         a.sort_unstable();
         plan.sort_unstable();
         let ok = !f.is_null() && this.current_stage() as i32 == g && f.club_count() == 4 && f.year() == this.year() && a == plan;
-        SCOREBOARD.record(ok, || format!("con_merc_cup_create_group_stage({}): a fase não bate com o plano ({:x?} lidos {:x?})", g, plan, a));
+        SCOREBOARD.record(ok, || format!("con_merc_cup_create_group_stage({}): a stage não bate with o plan ({:x?} read {:x?})", g, plan, a));
     }
     r
 }

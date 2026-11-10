@@ -36,7 +36,7 @@ pub(crate) unsafe extern "thiscall" fn compare_send_club_international_report_ne
     for k in 0..q {
         *squad.add(k) = after[k];
     }
-    SCOREBOARD.record(!falhou && k == n && after == after_r, || format!("send_club_international_report_news(clube {:#x}, jogo {:#x}, conta {}) tape_lock de {} sorteios, ensaio usou {} (n diferente: {}); elenco original {:x?} copia {:x?}",
+    SCOREBOARD.record(!falhou && k == n && after == after_r, || format!("send_club_international_report_news(club {:#x}, game {:#x}, count {}) tape_lock de {} sorteios, dry run usou {} (n different: {}); squad original {:x?} copy {:x?}",
         club, game, q, n, k, falhou, after, after_r));
 }
 
@@ -66,7 +66,7 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_collect_fixture_op
     let plan = (*core::ptr::addr_of_mut!(FIXTURE_OPPONENTS_PLAN)).take().unwrap_or_default();
     let r = o(this, national_team, game);
     let now = list_item_values(r);
-    SCOREBOARD.record(now == plan, || format!("national_teams_collect_fixture_opponents(seleção {:#x}, jogo {:#x}) plano {:x?} original {:x?}", national_team, game, plan, now));
+    SCOREBOARD.record(now == plan, || format!("national_teams_collect_fixture_opponents(seleção {:#x}, game {:#x}) plan {:x?} original {:x?}", national_team, game, plan, now));
     r
 }
 
@@ -134,7 +134,7 @@ pub(crate) unsafe extern "thiscall" fn compare_select_squad(this: usize, nation:
     let same = a[1] as u8 == n && a[2] == mode && a[3] as usize == elenco && code.len() == size as usize
         && list[..] == cand[..n1.min(200)] && code[..lim] == codigos[..lim];
     SCOREBOARD.record(same, || format!(
-        "select_squad(nação {:x}, tipo {}, tam {}) original: n {} modo {:#x} time {:x} lista {:x?} códigos {:x?}; rust: n {} modo {:#x} time {:x} lista {:x?} códigos {:x?}",
+        "select_squad(nação {:x}, kind {}, size {}) original: n {} mode {:#x} team {:x} list {:x?} códigos {:x?}; rust: n {} mode {:#x} team {:x} list {:x?} códigos {:x?}",
         nation, t, size, a[1] as u8, a[2], a[3], list, code, n, mode, elenco, &cand[..(n as i8).max(0) as usize], &codigos[..size as usize]));
 }
 
@@ -149,7 +149,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_international_duty_club(this:
     let reg = if comentario != 0 { &regions[..] } else { &regions[..1] };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(reg,|| o(this, player, data, club, comentario, opponent),
         || get_international_duty_club(this, player, data, club, comentario, opponent));
-    SCOREBOARD.record(igual && r == n, || format!("get_international_duty_club(jogador {:x}, data {:x}, clube {:x}, adversario {:x}) original={:x} rust={:x} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == n, || format!("get_international_duty_club(player {:x}, date {:x}, club {:x}, opponent {:x}) original={:x} rust={:x} {:x?} x {:x?}",
         player, data, club, opponent, r, n, mo, mr));
     r
 }
@@ -160,7 +160,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_international_duty_club(this:
 pub(crate) unsafe extern "stdcall" fn compare_national_teams_player_is_eligible(player: usize, manager: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u32>(IDX_NATIONAL_TEAMS_PLAYER_IS_ELIGIBLE)(player, manager);
     let n = national_teams_player_is_eligible(player, manager);
-    SCOREBOARD.record(r == n, || format!("national_teams_player_is_eligible(jogador {:x}, tecnico {:x}) original={} rust={}", player, manager, r, n));
+    SCOREBOARD.record(r == n, || format!("national_teams_player_is_eligible(player {:x}, manager {:x}) original={} rust={}", player, manager, r, n));
     r
 }
 
@@ -170,7 +170,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_duty_competitions(this: u
     let conv = read_usize(this);
     if conv == 0 || out == 0 {
         let r = o(this, out);
-        SCOREBOARD.record(r == 0, || format!("collect_duty_competitions(saida {:x}) sem lista original={}", out, r));
+        SCOREBOARD.record(r == 0, || format!("collect_duty_competitions(out {:x}) without list original={}", out, r));
         return r;
     }
     let mut has: Vec<usize> = national_teams_list_items(out).iter().map(|&x| read_usize(x)).collect();
@@ -184,7 +184,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_duty_competitions(this: u
     let r = o(this, out);
     let after: Vec<usize> = national_teams_list_items(out).iter().map(|&x| read_usize(x)).collect();
     let same = r == (has.len() - before) as u8 && after == has;
-    SCOREBOARD.record(same, || format!("collect_duty_competitions(saida {:x}) original={} plano={:x?} depois={:x?}", out, r, has, after));
+    SCOREBOARD.record(same, || format!("collect_duty_competitions(out {:x}) original={} plan={:x?} after={:x?}", out, r, has, after));
     r
 }
 
@@ -262,7 +262,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_international_result(this:
     before.write_back();
     o(this, p.addr(), m);
     let mo = crate::comparison::MemorySnapshot::read(&regions);
-    SCOREBOARD.record(mo == mr, || format!("record_international_result(partida {:x}, resumo {:x}) original={:x?} rust={:x?}", p.addr(), m, mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("record_international_result(match {:x}, summary {:x}) original={:x?} rust={:x?}", p.addr(), m, mo, mr));
 }
 
 /// Comparer for `format_squad_label`.
@@ -309,7 +309,7 @@ pub(crate) unsafe extern "thiscall" fn compare_withdraw_injured_player(this: usi
         0 => after == before,
         _ => !estava || after.0 == Club(0),
     };
-    SCOREBOARD.record(ok, || format!("withdraw_injured_player({:x}, {}) plano {} estava {} antes {:x?} depois {:x?}", p.addr(), days as u16 as i16, plan, estava, before, after));
+    SCOREBOARD.record(ok, || format!("withdraw_injured_player({:x}, {}) plan {} estava {} before {:x?} after {:x?}", p.addr(), days as u16 as i16, plan, estava, before, after));
 }
 
 /// Comparer for `national_teams_post_player_withdrawn_news`.
@@ -391,7 +391,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_qualified_nation(this: usize,
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ADD_QUALIFIED_NATION)(this, nation, stage_final);
     let after = read_i16(this + national_teams_fields::NEW_QUALIFIERS) as i32;
     let expected = before + (nation != 0 && stage_final != 0) as i32;
-    SCOREBOARD.record(after == expected, || format!("add_qualified_nation({:x}, {:x}) conta {} -> {}", nation, stage_final, before, after));
+    SCOREBOARD.record(after == expected, || format!("add_qualified_nation({:x}, {:x}) count {} -> {}", nation, stage_final, before, after));
 }
 
 /// Comparer for `set_current_competition`.
@@ -408,7 +408,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_current_competition(this: usi
     o(this, nation, comp);
     let (atual2, fila2) = (read_usize(p.slot) as u32, read_usize(p.queue) as u32);
     let ok = atual2 == p.new.unwrap_or(atual) && fila2 == p.in_queue.unwrap_or(fila);
-    SCOREBOARD.record(ok, || format!("set_current_competition(nação {}, comp {}) atual {:#x} -> {:#x} (esperava {:x?}), fila {:#x} -> {:#x} (esperava {:x?})",
+    SCOREBOARD.record(ok, || format!("set_current_competition(nação {}, comp {}) current {:#x} -> {:#x} (esperava {:x?}), queue {:#x} -> {:#x} (esperava {:x?})",
         read_usize(nation), read_usize(comp), atual, atual2, p.new, fila, fila2, p.in_queue));
 }
 
@@ -426,7 +426,7 @@ pub(crate) unsafe extern "thiscall" fn compare_mark_clubs_with_fixtures(this: us
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let dif: Vec<(usize, u8, u8)> = (0..a.len()).filter(|&i| a[i] != b[i]).take(16).map(|i| (i, a[i], b[i])).collect();
-        format!("mark_clubs_with_fixtures({:x}) clube, original, rust: {:?}", read_u32(data), dif)
+        format!("mark_clubs_with_fixtures({:x}) club, original, rust: {:?}", read_u32(data), dif)
     });
 }
 
@@ -607,7 +607,7 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_remove_player(this
         regions[3] = (player.national_job().addr() + club::SQUAD, 200);
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, player.addr()), || national_teams_remove_player(this, player.addr()));
-    SCOREBOARD.record(igual, || format!("national_teams_remove_player(nivel {}) {:x?} x {:x?}", n, mo, mr));
+    SCOREBOARD.record(igual, || format!("national_teams_remove_player(level {}) {:x?} x {:x?}", n, mo, mr));
 }
 
 /// Comparer for `national_teams_remove_duplicate_squad_entries`.
@@ -644,7 +644,7 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_daily_update(this:
     let before = count_items_on_day(this, day);
     o(this, today);
     let sobra = count_items_on_day(this, day);
-    SCOREBOARD.record(sobra == 0, || format!("national_teams_daily_update(dia {}) itens do dia antes {} depois {}", day, before, sobra));
+    SCOREBOARD.record(sobra == 0, || format!("national_teams_daily_update(day {}) items of the day before {} after {}", day, before, sobra));
 }
 
 /// Comparer for `national_team_ages`.
@@ -676,7 +676,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_club_call_ups(this: usize,
         crate::rng::pause_trace(|| qsort(expected.as_mut_ptr() as usize, 0x32, 4, 0x778ef0));
         o(this, team.addr(), b, p);
         let got: Vec<u32> = (0..0x32usize).map(|i| team.squad(i) as u32).collect();
-        SCOREBOARD.record(got == expected, || format!("record_club_call_ups({:x}) elenco original={:x?} esperado={:x?}", team.addr(), got, expected));
+        SCOREBOARD.record(got == expected, || format!("record_club_call_ups({:x}) squad original={:x?} expected={:x?}", team.addr(), got, expected));
         return;
     }
     let mut reg = vec![(team.addr() + club::SQUAD, 0xc8)];
@@ -700,7 +700,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_club_call_ups(this: usize,
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, team.addr(), b, p), || record_club_call_ups(this, team.addr(), b, p));
-    SCOREBOARD.record(igual, || format!("record_club_call_ups({:x}, b {}, partida {:x}) {:x?} x {:x?}", team.addr(), b, p, mo, mr));
+    SCOREBOARD.record(igual, || format!("record_club_call_ups({:x}, b {}, match {:x}) {:x?} x {:x?}", team.addr(), b, p, mo, mr));
 }
 
 /// Comparer for `set_person_44`.

@@ -21,7 +21,7 @@ pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_update_for_dat
             && stages != 0
             && read_usize(stages) != 0
             && this.current_stage() == 0;
-        SCOREBOARD.record(ok, || format!("oceania_club_champ_update_for_date({:#x}): o sorteio não montou os grupos (+0x45 {}, +0x30 {})", this.addr(), this.active(), this.current_stage() as i32));
+        SCOREBOARD.record(ok, || format!("oceania_club_champ_update_for_date({:#x}): o draw não montou the groups (+0x45 {}, +0x30 {})", this.addr(), this.active(), this.current_stage() as i32));
     }
     r
 }
@@ -44,7 +44,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_group_a_table(this: usize)
         }
     }
     let same = r == 1 && this.club_count() == 4 && t != 0 && (0..4).all(|i| read[i] == (predicted[i], i as u8));
-    SCOREBOARD.record(same, || format!("create_group_a_table({:#x}) devolveu {} linhas {:x?} previstas {:x?}", this.addr(), r, read, predicted));
+    SCOREBOARD.record(same, || format!("create_group_a_table({:#x}) returned {} rows {:x?} predicted {:x?}", this.addr(), r, read, predicted));
     r
 }
 
@@ -65,7 +65,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_group_b_stage(this: usize)
         a.sort_unstable();
         plan.sort_unstable();
         let ok = !f.is_null() && this.current_stage() == 0 && f.club_count() == 4 && f.year() == this.year() && a == plan;
-        SCOREBOARD.record(ok, || format!("create_group_b_stage: a fase não bate com o plano ({:x?} lidos {:x?})", plan, a));
+        SCOREBOARD.record(ok, || format!("create_group_b_stage: a stage não bate with o plan ({:x?} read {:x?})", plan, a));
     }
     r
 }
@@ -99,7 +99,7 @@ pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_select_qualifi
     if lr != 0 && lr != lo {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("oceania_club_champ_select_qualified_clubs({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("oceania_club_champ_select_qualified_clubs({:#x}) returned {} x {} memória {} list {}", this, a, b, igual, list));
     a
 }
 
@@ -111,7 +111,7 @@ pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_advance_stage(
     let last = f >= (this.stage_count() as i32).wrapping_sub(1);
     o(this.addr());
     let after = this.current_stage() as i32;
-    SCOREBOARD.record(after == if last { f } else { f + 1 }, || format!("oceania_club_champ_advance_stage({:#x}) fase {} -> {}", this.addr(), f, after));
+    SCOREBOARD.record(after == if last { f } else { f + 1 }, || format!("oceania_club_champ_advance_stage({:#x}) stage {} -> {}", this.addr(), f, after));
 }
 
 /// Comparer for `oceania_club_champ_create_knockout_stage`.
@@ -125,7 +125,7 @@ pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_create_knockou
     o(this.addr());
     let stage = Cup(read_usize(this.stages() + 4));
     if stage.is_null() {
-        SCOREBOARD.record(false, || format!("oceania_club_champ_create_knockout_stage({:#x}) sem fase", this.addr()));
+        SCOREBOARD.record(false, || format!("oceania_club_champ_create_knockout_stage({:#x}) without stage", this.addr()));
         return;
     }
     let list = stage.team_table();
@@ -134,7 +134,7 @@ pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_create_knockou
     plan.sort_unstable();
     found.sort_unstable();
     let same = plan == found && stage.team_count() == 4 && read_usize(stage.addr() + 4) == this.competition().addr();
-    SCOREBOARD.record(same, || format!("oceania_club_champ_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this.addr(), pl, ac));
+    SCOREBOARD.record(same, || format!("oceania_club_champ_create_knockout_stage({:#x}) plan={:x?} list={:x?}", this.addr(), pl, ac));
 }
 
 /// Comparer for `oceania_club_champ_create_schedule`.

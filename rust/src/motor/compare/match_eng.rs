@@ -31,7 +31,7 @@ pub(crate) unsafe extern "thiscall" fn compare_restart_play(m: usize) {
     });
     RECORD_A7.store(a7, Relaxed);
     RECORD_RESTART.store(write, Relaxed);
-    SCOREBOARD.record(igual && sequencia, || format!("restart_play(modo {}) {} chamadas: {}", (m.restart_type() as u8), k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia, || format!("restart_play(mode {}) {} chamadas: {}", (m.restart_type() as u8), k, tape_detail()));
 }
 
 /// Comparer for `engine_loop`.
@@ -87,7 +87,7 @@ pub(crate) unsafe fn compare_com_fita<R>(reg: Vec<(usize, usize)>, original: imp
                         let now = crate::comparison::MemorySnapshot::read(&reg);
                         if now != *antes && sequencia.get() {
                             let difs: Vec<String> = antes.0.iter().zip(now.0.iter()).filter(|(x, y)| x != y).map(|(x, y)| format!("{:#x}: {:x?} x {:x?}", x.0, x.1, y.1)).collect();
-                            *TAPE_DETAIL.lock().unwrap_or_else(|e| e.into_inner()) = format!("estado antes de {:#x} difere: {}", rotina, difs.join("; ").chars().take(300).collect::<String>());
+                            *TAPE_DETAIL.lock().unwrap_or_else(|e| e.into_inner()) = format!("state before de {:#x} difere: {}", rotina, difs.join("; ").chars().take(300).collect::<String>());
                             sequencia.set(false);
                         }
                         depois.write_back();
@@ -95,14 +95,14 @@ pub(crate) unsafe fn compare_com_fita<R>(reg: Vec<(usize, usize)>, original: imp
                             match REQUESTED_BUFFERS.lock().unwrap_or_else(|e| e.into_inner()).take() {
                                 Some((ent, sai)) => {
                                     if read_buffers(&ent) != vetores.0 && sequencia.get() {
-                                        *TAPE_DETAIL.lock().unwrap_or_else(|e| e.into_inner()) = format!("entradas de {:#x} diferem", rotina);
+                                        *TAPE_DETAIL.lock().unwrap_or_else(|e| e.into_inner()) = format!("entries de {:#x} diferem", rotina);
                                         sequencia.set(false);
                                     }
                                     write_buffers(&sai, &vetores.1);
                                 }
                                 None => {
                                     if sequencia.get() {
-                                        *TAPE_DETAIL.lock().unwrap_or_else(|e| e.into_inner()) = format!("vetores de {:#x} nao pedidos", rotina);
+                                        *TAPE_DETAIL.lock().unwrap_or_else(|e| e.into_inner()) = format!("vetores de {:#x} not pedidos", rotina);
                                     }
                                     sequencia.set(false);
                                 }
@@ -113,7 +113,7 @@ pub(crate) unsafe fn compare_com_fita<R>(reg: Vec<(usize, usize)>, original: imp
                     outra => {
                         if sequencia.get() {
                             *TAPE_DETAIL.lock().unwrap_or_else(|e| e.into_inner()) =
-                                format!("gravada {:x?} pedida ({:#x}, {:#x}, {:x?})", outra.map(|c| (c.0, c.1, c.2, c.3)), rotina, this, a);
+                                format!("written {:x?} requested ({:#x}, {:#x}, {:x?})", outra.map(|c| (c.0, c.1, c.2, c.3)), rotina, this, a);
                         }
                         sequencia.set(false);
                         0
@@ -123,7 +123,7 @@ pub(crate) unsafe fn compare_com_fita<R>(reg: Vec<(usize, usize)>, original: imp
             rastros.borrow_mut().1 = rr;
             if let Some(c) = prox.next() {
                 if sequencia.get() {
-                    *TAPE_DETAIL.lock().unwrap_or_else(|e| e.into_inner()) = format!("sobrou a gravada {:x?}", (c.0, c.1, c.2, c.3));
+                    *TAPE_DETAIL.lock().unwrap_or_else(|e| e.into_inner()) = format!("sobrou a written {:x?}", (c.0, c.1, c.2, c.3));
                 }
                 sequencia.set(false);
             }
@@ -142,7 +142,7 @@ pub(crate) unsafe fn compare_com_fita<R>(reg: Vec<(usize, usize)>, original: imp
         if sequencia.get() {
             d.clear();
         }
-        d.push_str(&format!(" memoria {}", difs.join("; ").chars().take(300).collect::<String>()));
+        d.push_str(&format!(" memory {}", difs.join("; ").chars().take(300).collect::<String>()));
     }
     if !igual || !sequencia.get() {
         let (ro, rr) = &*rastros.borrow();
@@ -182,7 +182,7 @@ pub(crate) unsafe fn compare_play(p: MatchPlayer, a1: u32, a2: u32, a3: u32, a4:
     });
     RECORD_A7.store(a7, Relaxed);
     RECORD_716.store(write, Relaxed);
-    SCOREBOARD.record(igual && sequencia && r == rr, || format!("play(forca {}, estilo {}, forte {}) original={} rust={} {} chamadas: {}", a1 as i16, a3 as i8, a4 as u8, r, rr, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia && r == rr, || format!("play(strength {}, style {}, strong {}) original={} rust={} {} chamadas: {}", a1 as i16, a3 as i8, a4 as u8, r, rr, k, tape_detail()));
     r
 }
 
@@ -475,7 +475,7 @@ pub(crate) unsafe extern "thiscall" fn compare_intercept(this: usize, x: i8, y: 
         let mut play = |p: usize, a: [u32; 4]| chamar(FN_MATCH_PLAYER_TRY_BLOCK_SHOT, p, [a[0], a[1], a[2], a[3], 0], ARG_MASK_70DFD0) as u8;
         find_interception_with(this, x, y, a3, goal, a5, a6, &mut |lado, grupo, v, a3, a5, a6| try_side_block_with(this, lado, grupo, v, a3, 1, a5, a6, &mut play))
     });
-    SCOREBOARD.record(igual && sequencia && r == n, || format!("intercept({}, {} gol {}) original={} rust={} ({} jogadas)", x, y, goal, r, n, k));
+    SCOREBOARD.record(igual && sequencia && r == n, || format!("intercept({}, {} goal {}) original={} rust={} ({} jogadas)", x, y, goal, r, n, k));
     r
 }
 
@@ -561,7 +561,7 @@ pub(crate) unsafe extern "thiscall" fn compare_penalties(m: usize, mode: u32) {
             chamar(rotina, this, args, mask)
         })
     });
-    SCOREBOARD.record(igual && sequencia, || format!("penalties(estado {}) {} chamadas: {}", m.shootout_state(), k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia, || format!("penalties(state {}) {} chamadas: {}", m.shootout_state(), k, tape_detail()));
 }
 
 /// Comparer for `apply_foul`.
@@ -593,7 +593,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_foul(m: usize) -> u8 {
         })
     });
     RECORD_716.store(false, std::sync::atomic::Ordering::Relaxed);
-    SCOREBOARD.record(igual && sequencia && r == rr, || format!("apply_foul(tipo {}) original={} rust={} {} chamadas: {}", kind, r, rr, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia && r == rr, || format!("apply_foul(kind {}) original={} rust={} {} chamadas: {}", kind, r, rr, k, tape_detail()));
     r
 }
 
@@ -634,7 +634,7 @@ pub(crate) unsafe extern "thiscall" fn compare_contest(m: usize, x: u32, y: u32)
         // the original read stack garbage as an advantage (see `tackle_contest_with`): counts the part
         let n = CONTEST_STACK_GARBAGE.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
         if n <= 20 || n.is_power_of_two() {
-            linha(&format!("motor: LIXO_DE_PILHA contest({}, {}) vantagem sem resposta do juiz ({} ate agora): {}", x as i8, y as i8, n, tape_detail()));
+            linha(&format!("engine: LIXO_DE_PILHA contest({}, {}) advantage without reply of the juiz ({} ate now): {}", x as i8, y as i8, n, tape_detail()));
         }
         SCOREBOARD.record(true, String::new);
         return r;
@@ -700,14 +700,14 @@ pub(crate) unsafe extern "thiscall" fn compare_tackle_injury(m: usize, a: usize,
             chamar(rotina, this, args, if rotina == 0x62ed70 { [u32::MAX, 0, 0, 0, 0] } else { [0xff, 0xff, u32::MAX, u32::MAX, 0] })
         })
     });
-    SCOREBOARD.record(igual && sequencia, || format!("tackle_injury(lances {}, {} direto {}) {} chamadas: {}", kind as i16, kind_b as i16, direct as u8, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia, || format!("tackle_injury(lances {}, {} direct {}) {} chamadas: {}", kind as i16, kind_b as i16, direct as u8, k, tape_detail()));
 }
 
 /// Comparer for `kit`.
 pub(crate) unsafe extern "C" fn compare_kit(club: usize, other: usize, any: u32) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_KIT)(club, other, any);
     let n = kit(club, other, any);
-    SCOREBOARD.record(r == n, || format!("kit(qualquer {}) original={} rust={}", any as u8, r, n));
+    SCOREBOARD.record(r == n, || format!("kit(any {}) original={} rust={}", any as u8, r, n));
     r
 }
 
@@ -733,7 +733,7 @@ pub(crate) unsafe extern "C" fn compare_develop_player(jm: usize, person: usize,
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(jm, person.addr(), club, rep, comp, rating, average_b, strong), || {
         crate::rng::without_counting(|| develop_player(jm, person.addr(), club, rep, comp, rating, average_b, strong))
     });
-    SCOREBOARD.record(igual, || format!("develop_player(nota {} jogo {}) original={:x?} rust={:x?}", rating, jm != 0, mo, mr));
+    SCOREBOARD.record(igual, || format!("develop_player(rating {} game {}) original={:x?} rust={:x?}", rating, jm != 0, mo, mr));
 }
 
 /// Comparer for `opposition_challenge`.
@@ -758,7 +758,7 @@ pub(crate) unsafe extern "thiscall" fn compare_opposition_challenge(m: usize, at
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg[..47], || o(m, atacante, side, kind, a, b, rating, lance, risky, free), || {
         crate::rng::without_counting(|| opposition_challenge(m, atacante, side, kind, a, b, rating, lance, risky, free))
     });
-    SCOREBOARD.record(igual && r == n, || format!("opposition_challenge(tipo {:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", kind, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("opposition_challenge(kind {:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", kind, r, n, mo, mr));
     r
 }
 
@@ -779,7 +779,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pressure(m: usize, j: usize, out:
             chamar(FN_LLIST_ADD_TAIL, taped_pressure_list_addr(l, 0x1be), [p as u32, 0x1be, 0, 0, 0], [u32::MAX; 5]);
         })
     });
-    SCOREBOARD.record(igual && sequencia && r == n, || format!("pressure(lista) original={} rust={} {} copias: {}", r, n, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia && r == n, || format!("pressure(list) original={} rust={} {} copias: {}", r, n, k, tape_detail()));
     r
 }
 
@@ -802,7 +802,7 @@ pub(crate) unsafe extern "thiscall" fn compare_period_completed(m: usize) -> u8 
             })
         })
     });
-    SCOREBOARD.record(igual && sequencia && r == n, || format!("period_completed(periodo {:#x}) original={} rust={} {} chamadas: {}", m.period_end(), r, n, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia && r == n, || format!("period_completed(period {:#x}) original={} rust={} {} chamadas: {}", m.period_end(), r, n, k, tape_detail()));
     r
 }
 
@@ -825,7 +825,7 @@ pub(crate) unsafe extern "thiscall" fn compare_deflect_ball(this: usize, x: i8, 
             chamar(rotina, alvo, args, if rotina == 0x6cd490 { [0xff, 0, 0, 0, 0] } else { [u32::MAX, 0, 0, 0, 0] })
         })
     });
-    SCOREBOARD.record(igual && sequencia, || format!("deflect_ball({}, {} espalhar {} lado {}) {} chamadas: {}", x, y, spread, side, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia, || format!("deflect_ball({}, {} spread {} side {}) {} chamadas: {}", x, y, spread, side, k, tape_detail()));
 }
 
 /// Comparer for `line_up_set_piece`.
@@ -845,7 +845,7 @@ pub(crate) unsafe extern "thiscall" fn compare_line_up_set_piece(this: usize) {
     reg.extend([(this.addr() + 0x1a0, 0x30), (this.addr() + engine::GRID, 0x8f00 - 0x215e), (this.addr() + engine::FORMATION_TABLE, 0x90)]);
     let side_b = this.possession_side();
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this.addr()), || crate::rng::without_counting(|| line_up_set_piece(this.addr())));
-    SCOREBOARD.record(igual, || format!("line_up_set_piece(lado {})", side_b));
+    SCOREBOARD.record(igual, || format!("line_up_set_piece(side {})", side_b));
 }
 
 /// Comparer for `line_up_kickoff`.
@@ -866,7 +866,7 @@ pub(crate) unsafe extern "thiscall" fn compare_line_up_kickoff(this: usize) {
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(this.addr() + 0x1a0, 0x30), (this.addr() + engine::GRID, 0x8f00 - 0x215e), (this.addr() + engine::FORMATION_TABLE, 0x48)]);
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this.addr()), || crate::rng::without_counting(|| line_up_kickoff(this.addr())));
-    SCOREBOARD.record(igual, || format!("line_up_kickoff(lado {})", this.possession_side()));
+    SCOREBOARD.record(igual, || format!("line_up_kickoff(side {})", this.possession_side()));
 }
 
 /// Comparer for `look_for_play`.
@@ -892,7 +892,7 @@ pub(crate) unsafe extern "thiscall" fn compare_look_for_play(this: usize, side: 
         || o(this.addr(), side, group, a3, a4, mode, a6, a7),
         |chamar| try_side_block_with(this, side, group, a3, a4, mode, a6, a7, &mut |p, a| chamar(FN_MATCH_PLAYER_TRY_BLOCK_SHOT, p, [a[0], a[1], a[2], a[3], 0], ARG_MASK_70DFD0) as u8),
     );
-    SCOREBOARD.record(igual && sequencia && r == n, || format!("look_for_play({} modo {}) original={} rust={} ({} jogadas)", side, mode, r, n, k));
+    SCOREBOARD.record(igual && sequencia && r == n, || format!("look_for_play({} mode {}) original={} rust={} ({} jogadas)", side, mode, r, n, k));
     r
 }
 
@@ -910,7 +910,7 @@ pub(crate) unsafe extern "thiscall" fn compare_choose_teammate(
         || o(m.addr(), bx, by, kind, moveu, x, y, best, request),
         || crate::rng::without_counting(|| choose_teammate(m.addr(), bx, by, kind, moveu, x, y, best, request)),
     );
-    SCOREBOARD.record(igual && r == v, || format!("choose_teammate(pedido {:#x}) original={:x} {:x?} rust={:x} {:x?}", request, r, mo, v, mr));
+    SCOREBOARD.record(igual && r == v, || format!("choose_teammate(request {:#x}) original={:x} {:x?} rust={:x} {:x?}", request, r, mo, v, mr));
     r
 }
 
@@ -987,7 +987,7 @@ pub(crate) unsafe extern "C" fn compare_new_reputation(this: usize, side: i8, va
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, side, value, alt, bonus), || new_reputation(this, side, value, alt, bonus));
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
-        format!("new_reputation lado {} valor {} alt {} bonus {}: {:?} x {:?}", side, value, alt, bonus, &a[0x1d6..0x1da], &b[0x1d6..0x1da])
+        format!("new_reputation side {} value {} alt {} bonus {}: {:?} x {:?}", side, value, alt, bonus, &a[0x1d6..0x1da], &b[0x1d6..0x1da])
     });
 }
 
@@ -1003,7 +1003,7 @@ pub(crate) unsafe extern "C" fn compare_player_reputation(reg: usize, my: usize,
     }
     let regions = [(reg, 6)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(reg, my, other, partida, value, alt, bonus), || player_reputation(reg, my, other, partida, value, alt, bonus));
-    SCOREBOARD.record(igual, || format!("player_reputation valor {} alt {} bonus {}: {:?} x {:?}", value, alt, bonus, mo.0[0].1, mr.0[0].1));
+    SCOREBOARD.record(igual, || format!("player_reputation value {} alt {} bonus {}: {:?} x {:?}", value, alt, bonus, mo.0[0].1, mr.0[0].1));
 }
 
 /// Comparer for `choose_taker`.
@@ -1019,7 +1019,7 @@ pub(crate) unsafe extern "thiscall" fn compare_choose_taker(this: usize, side: i
     SCOREBOARD.record(igual && r == n, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("choose_taker(lado {}, tipo {}) original={:x} rust={:x}, diferencas em {:x?}", side, kind, r, n, dif)
+        format!("choose_taker(side {}, kind {}) original={:x} rust={:x}, diferencas em {:x?}", side, kind, r, n, dif)
     });
     r
 }

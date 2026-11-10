@@ -497,7 +497,7 @@ pub(crate) unsafe extern "C" fn compare_match_screens_handle_team_selection_inpu
 pub(crate) unsafe extern "thiscall" fn compare_match_team_block_assign(this: usize, src: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_MATCH_TEAM_BLOCK_ASSIGN);
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&[(this, 0x625)], || o(this, src), || match_team_block_assign(this, src));
-    SCOREBOARD.record(igual && r == n, || format!("match_team_block_assign({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
+    SCOREBOARD.record(igual && r == n, || format!("match_team_block_assign({:#x} <- {:#x}): equal {} returns {:#x}/{:#x}", this, src, igual, r, n));
     r
 }
 
@@ -505,7 +505,7 @@ pub(crate) unsafe extern "thiscall" fn compare_match_team_block_assign(this: usi
 pub(crate) unsafe extern "thiscall" fn compare_match_player_row_assign(this: usize, src: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_MATCH_PLAYER_ROW_ASSIGN);
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&[(this, 0x49)], || o(this, src), || match_player_row_assign(this, src));
-    SCOREBOARD.record(igual && r == n, || format!("match_player_row_assign({:#x} <- {:#x}): igual {} devolve {:#x}/{:#x}", this, src, igual, r, n));
+    SCOREBOARD.record(igual && r == n, || format!("match_player_row_assign({:#x} <- {:#x}): equal {} returns {:#x}/{:#x}", this, src, igual, r, n));
     r
 }
 
@@ -517,7 +517,7 @@ pub(crate) unsafe extern "C" fn compare_match_screens_tally_live_score(partida: 
         return o(partida, index, res.addr());
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(res.addr() + fixture::HOME_GOALS, 0xa)], || o(partida, index, res.addr()), || match_screens_tally_live_score(partida, index, res.addr()));
-    SCOREBOARD.record(igual, || format!("match_screens_tally_live_score(partida {:#x}, indice {}): {:02x?} / {:02x?}", partida, index, mo.0, mr.0));
+    SCOREBOARD.record(igual, || format!("match_screens_tally_live_score(match {:#x}, index {}): {:02x?} / {:02x?}", partida, index, mo.0, mr.0));
 }
 
 /// Comparer for `fixture_entry_matches`.
@@ -659,7 +659,7 @@ pub(crate) unsafe extern "C" fn compare_match_control_label(state: u8, m: usize,
     }
     let reg = [(out as usize, size.min(0x100) as usize), (marks as usize, 4)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(state, m, out, size, marks), || match_control_label(state, m, out, size, marks));
-    SCOREBOARD.record(igual && r == n, || format!("match_control_label(estado {}) original={} rust={} {:x?} x {:x?}", state, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("match_control_label(state {}) original={} rust={} {:x?} x {:x?}", state, r, n, mo, mr));
     r
 }
 

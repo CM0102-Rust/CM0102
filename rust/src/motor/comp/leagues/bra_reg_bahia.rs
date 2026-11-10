@@ -263,7 +263,7 @@ pub(crate) unsafe fn compare_state_league_new_season(name: &str, this: League, o
     let before = this.year();
     let r = original();
     let after = this.year();
-    SCOREBOARD.record(after == before.wrapping_add(1), || format!("{}({:#x}) ano antes={} depois={}", name, this.addr(), before, after));
+    SCOREBOARD.record(after == before.wrapping_add(1), || format!("{}({:#x}) year before={} after={}", name, this.addr(), before, after));
     r
 }
 
@@ -276,7 +276,7 @@ pub(crate) unsafe fn compare_state_league_advance_stage(name: &str, this: League
     let last = before >= (this.stage_count() as i32).wrapping_sub(1);
     original();
     let after = this.current_stage() as i32;
-    SCOREBOARD.record(after == if last { before } else { before + 1 }, || format!("{}({:#x}) antes={} depois={}", name, this.addr(), before, after));
+    SCOREBOARD.record(after == if last { before } else { before + 1 }, || format!("{}({:#x}) before={} after={}", name, this.addr(), before, after));
 }
 
 /// The Bahia turnover: archives the season in the statistics, clears the previous table and stages, moves to the next

@@ -18,7 +18,7 @@ pub(crate) unsafe extern "thiscall" fn compare_on_friendly_fixture_cancelled(thi
     }
     o(this.addr(), game.addr(), who);
     let free = slot == 0 || (read_usize(slot + scheduled_friendly_slot::OPPONENT) == 0 && read_u8(slot + scheduled_friendly_slot::STATUS) == 0);
-    SCOREBOARD.record(free, || format!("on_friendly_fixture_cancelled(jogo {:#x}) a vaga {:#x} não ficou livre", game.addr(), slot));
+    SCOREBOARD.record(free, || format!("on_friendly_fixture_cancelled(game {:#x}) a slot {:#x} não ficou free", game.addr(), slot));
 }
 
 /// Comparer for `friendly_cancel_national_fixture`.
@@ -62,7 +62,7 @@ pub(crate) unsafe extern "thiscall" fn compare_cancel_tournament(this: usize, to
         }
     }
     let ok = read_usize(tournament) == 0 && read_usize(tournament + tournament_slot::COMPETITION) == 0 && read_usize(slot) == 0 && !in_list;
-    SCOREBOARD.record(ok, || format!("cancel_tournament(torneio {:#x}) dono {:#x} competição {:#x} vaga {:#x} na lista {}",
+    SCOREBOARD.record(ok, || format!("cancel_tournament(tournament {:#x}) owner {:#x} competição {:#x} slot {:#x} na list {}",
         tournament, read_usize(tournament), read_usize(tournament + tournament_slot::COMPETITION), read_usize(slot), in_list));
 }
 
@@ -123,7 +123,7 @@ pub(crate) unsafe extern "thiscall" fn compare_arrange_international_friendlies(
         }
     }
     SCOREBOARD.record(same && dif.is_empty(), || {
-        format!("arrange_international_friendlies(datas {:x}, {}) tape_lock de {} sorteios, o ensaio parou em {} (n diferente: {}); listas (indice, original, ensaio) {:x?}",
+        format!("arrange_international_friendlies(dates {:x}, {}) tape_lock de {} sorteios, o dry run parou em {} (n different: {}); lists (index, original, dry run) {:x?}",
             datas, n as i16, how_many, pos, falhou, dif.iter().take(4).collect::<Vec<_>>())
     });
 }
@@ -142,7 +142,7 @@ pub(crate) unsafe extern "thiscall" fn compare_friendly_check_match_invitation(t
     let reg = news_text_regions(text, size);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, a, b, club, day, year, data, text, size),
         || friendly_check_match_invitation(this, a, b, club, day, year, data, text, size));
-    SCOREBOARD.record(igual && r == n, || format!("friendly_check_match_invitation(a {:x}, b {:x}, clube {:x}, data {:x}) original={} rust={} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == n, || format!("friendly_check_match_invitation(a {:x}, b {:x}, club {:x}, date {:x}) original={} rust={} {:x?} x {:x?}",
         a, b, club, data, r, n, mo, mr));
     r
 }
@@ -158,7 +158,7 @@ pub(crate) unsafe extern "thiscall" fn compare_friendly_check_tournament_invitat
     let reg = news_text_regions(text, size);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, tournament, text, size),
         || friendly_check_tournament_invitation(this, club, tournament, text, size));
-    SCOREBOARD.record(igual && r == n, || format!("friendly_check_tournament_invitation(clube {:x}, torneio {:x}) original={} rust={} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == n, || format!("friendly_check_tournament_invitation(club {:x}, tournament {:x}) original={} rust={} {:x?} x {:x?}",
         club, tournament, r, n, mo, mr));
     r
 }
@@ -205,7 +205,7 @@ pub(crate) unsafe extern "thiscall" fn compare_resolve_international_dates(this:
     let (t, n) = (this.intl_date_table(), this.intl_date_count());
     let reg = if t != 0 && n > 0 { vec![(t, n as usize * 0x14)] } else { Vec::new() };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr()), || resolve_international_dates(this.addr()));
-    SCOREBOARD.record(igual, || format!("resolve_international_dates(conta {}) original={:x?} rust={:x?}", n, mo, mr));
+    SCOREBOARD.record(igual, || format!("resolve_international_dates(count {}) original={:x?} rust={:x?}", n, mo, mr));
 }
 
 /// Comparer for `plan_club_friendlies` (`plan_club_friendlies`; comparison mode: see the header of motor.rs).
@@ -225,7 +225,7 @@ pub(crate) unsafe extern "thiscall" fn compare_plan_club_friendlies(this: usize,
         return; // out of memory: the message box
     }
     let sorted = (1..n.max(0) as usize).all(|i| exe::compare_call_up_records_by_date(p + (i - 1) * 0x14, p + i * 0x14) <= 0);
-    SCOREBOARD.record(n >= 0 && cap >= n && z == 0 && sorted, || format!("plan_club_friendlies: plano {:#x} conta {} capacidade {} +0x34dc {} em ordem {}", p, n, cap, z, sorted));
+    SCOREBOARD.record(n >= 0 && cap >= n && z == 0 && sorted, || format!("plan_club_friendlies: plan {:#x} count {} capacity {} +0x34dc {} em order {}", p, n, cap, z, sorted));
 }
 
 /// Comparer for `add_tournament`.
@@ -240,7 +240,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_tournament(this: usize, host:
     }
     let reg = if t != 0 { vec![(t, 0x69usize.max(0x31 + size + 1))] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, host, kind, start, a, b, c, d, e, convidados, name), || add_tournament(this, host, kind, start, a, b, c, d, e, convidados, name));
-    SCOREBOARD.record(igual && r == n, || format!("add_tournament(anfitriao {:x}) original={:#x} {:x?} rust={:#x} {:x?}", host, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("add_tournament(host {:x}) original={:#x} {:x?} rust={:#x} {:x?}", host, r, mo, n, mr));
     r
 }
 
@@ -289,7 +289,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_friendly_reply(this: usiz
     } else {
         read_u8(m + friendly_match::STATUS) == s && !list_holds(this.request_reply_list(), m)
     };
-    SCOREBOARD.record(ok, || format!("process_friendly_reply(pedido {:x}) situação prevista {} vaga {:x}", m, s, v));
+    SCOREBOARD.record(ok, || format!("process_friendly_reply(request {:x}) situação prevista {} slot {:x}", m, s, v));
 }
 
 /// Comparer for `send_friendly_request`.
@@ -325,7 +325,7 @@ pub(crate) unsafe extern "thiscall" fn compare_send_friendly_request(this: usize
     } else {
         list_len(l) == before + 1 && list_holds(l, m) && read_u8(m + friendly_match::STATUS) == s
     };
-    SCOREBOARD.record(ok, || format!("send_friendly_request(pedido {:x}) nós {} -> {} situação {} prevista {}", m, before, list_len(l), read_u8(m + friendly_match::STATUS), s));
+    SCOREBOARD.record(ok, || format!("send_friendly_request(request {:x}) nós {} -> {} situação {} prevista {}", m, before, list_len(l), read_u8(m + friendly_match::STATUS), s));
 }
 
 /// Comparer for `build_nation_list`.
@@ -341,7 +341,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_nation_list(this: usize) {
     let p = this.sorted_nations();
     let n = this.sorted_nation_count();
     let ok = p == 0 || (n as usize == plan.len() && (0..plan.len()).all(|k| read_usize(p + 4 * k) == plan[k]));
-    SCOREBOARD.record(ok, || format!("build_nation_list: conta {} prevista {}", n, plan.len()));
+    SCOREBOARD.record(ok, || format!("build_nation_list: count {} prevista {}", n, plan.len()));
 }
 
 /// Comparador: pura.
@@ -393,10 +393,10 @@ pub(crate) unsafe extern "thiscall" fn compare_set_preseason_windows(this: usize
             read_i16(c + preseason_candidate::WINDOW_START) != ini || read_i16(c + preseason_candidate::WINDOW_END) != fim
                 || (nova && read_usize(c + preseason_candidate::PLANNED_DATES) == 0)
         })
-        .map(|&(c, ini, fim, nova)| format!("candidato {:x}: esperado {}..{} lista {} obtido {}..{} lista {:x}", c, ini, fim, nova,
+        .map(|&(c, ini, fim, nova)| format!("candidate {:x}: expected {}..{} list {} got {}..{} list {:x}", c, ini, fim, nova,
             read_i16(c + preseason_candidate::WINDOW_START), read_i16(c + preseason_candidate::WINDOW_END), read_usize(c + preseason_candidate::PLANNED_DATES)))
         .collect();
-    SCOREBOARD.record(erros.is_empty(), || format!("set_preseason_windows(n {}) {} candidatos: {}", n, plan.len(), erros.join("; ")));
+    SCOREBOARD.record(erros.is_empty(), || format!("set_preseason_windows(n {}) {} candidates: {}", n, plan.len(), erros.join("; ")));
 }
 
 /// Comparer for `schedule_tour_matches`.
@@ -454,7 +454,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_friendly_match(this: usize, c
         r == 0 || (read_u16(r) == dia && read_u16(r + 2) == ano && read_usize(r + friendly_match::REQUESTING_CLUB) == club && read_usize(r + 8) == 0
             && *((r + friendly_match::STATUS) as *const u8) == 1 && read_usize(r + friendly_match::HOME_CLUB) == casa && read_usize(r + friendly_match::AWAY_CLUB) == fora)
     };
-    SCOREBOARD.record(same, || format!("add_friendly_match(clube {:x}, {}/{}, adversario {:x}, em casa {}) ocupada {} original={:x}",
+    SCOREBOARD.record(same, || format!("add_friendly_match(club {:x}, {}/{}, opponent {:x}, em cell {}) occupied {} original={:x}",
         club, dia, ano, opponent, in_home, occupied, r));
     r
 }
@@ -470,7 +470,7 @@ pub(crate) unsafe extern "thiscall" fn compare_plan_friendly_on_free_date(this: 
 pub(crate) unsafe extern "stdcall" fn compare_friendly_is_club_free_on_date(data: usize, club: usize, kind: u32) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32) -> u32>(IDX_FRIENDLY_IS_CLUB_FREE_ON_DATE)(data, club, kind);
     let n = friendly_is_club_free_on_date(data, club, kind);
-    SCOREBOARD.record(r == n, || format!("friendly_is_club_free_on_date(data {:x}, clube {:x}, tipo {}) original={} rust={}", data, club, kind as u8 as i8, r, n));
+    SCOREBOARD.record(r == n, || format!("friendly_is_club_free_on_date(date {:x}, club {:x}, kind {}) original={} rust={}", data, club, kind as u8 as i8, r, n));
     r
 }
 
@@ -540,7 +540,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_friendly_match(this: usize
         && (l4 == 0 || read_usize(l4 + llist::CURSOR) == read_usize(l4 + llist::HEAD))
         && itens8 == esperado8
         && (v == 0 || (read_usize(v + scheduled_friendly_slot::OPPONENT) == 0 && read_u8(v + scheduled_friendly_slot::STATUS) == 0));
-    SCOREBOARD.record(ok, || format!("remove_friendly_match({:#x}, {}) itens {} e {} (esperava {} e {}), vaga {:#x}", game, clear_slot, itens4.len(), itens8.len(), esperado4.len(), esperado8.len(), v));
+    SCOREBOARD.record(ok, || format!("remove_friendly_match({:#x}, {}) items {} e {} (esperava {} e {}), slot {:#x}", game, clear_slot, itens4.len(), itens8.len(), esperado4.len(), esperado8.len(), v));
     r
 }
 
@@ -557,7 +557,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init_banned_nation_pairs(this: us
         let expected = [read_usize(KEY_NATION_IRAN), read_usize(KEY_NATION_UNITED_STATES), read_usize(KEY_NATION_IRAQ), usize::MAX, read_usize(KEY_NATION_VIETNAM), read_usize(KEY_NATION_UNITED_STATES), read_usize(KEY_NATION_NORTH_KOREA), read_usize(KEY_NATION_SOUTH_KOREA)];
         this.banned_pair_count() == 4 && (0..8).all(|k| read_usize(v + 4 * k) == expected[k])
     };
-    SCOREBOARD.record(ok, || format!("init_banned_nation_pairs: conta {} vetor {:#x}", this.banned_pair_count(), v));
+    SCOREBOARD.record(ok, || format!("init_banned_nation_pairs: count {} array {:#x}", this.banned_pair_count(), v));
 }
 
 /// Comparer for `is_comp_current_on_date`.
@@ -598,7 +598,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_planned_friendly(this: usize,
     let item = v.wrapping_add(n.wrapping_mul(0x14));
     let done = [read_usize(item), read_usize(item + 4), 0, read_usize(item + planned_friendly::HOST_CLUB_ID), read_usize(item + planned_friendly::HOME_CLUB_ID), read_usize(item + planned_friendly::AWAY_CLUB_ID)];
     SCOREBOARD.record(done == expected && this.planned_count() == n.wrapping_add(1), || {
-        format!("add_planned_friendly conta {} -> {}, item {:x?} (esperava {:x?})", n, this.planned_count(), done, expected)
+        format!("add_planned_friendly count {} -> {}, item {:x?} (esperava {:x?})", n, this.planned_count(), done, expected)
     });
 }
 
@@ -619,7 +619,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_tour_opponent(this: usize, c
     let reg = candidate_regions((0..(n as i32).max(0) as usize).map(|i| read_usize(ordenados + 4 * i)));
     let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, ordenados, n, band_max, nation),
         || crate::rng::without_counting(|| find_tour_opponent(this, club, ordenados, n, band_max, nation)));
-    SCOREBOARD.record(igual && r == m, || format!("find_tour_opponent({:x}, {:x}, n {}, band {}, nacao {:x}) original={:x} rust={:x} {:x?} x {:x?}",
+    SCOREBOARD.record(igual && r == m, || format!("find_tour_opponent({:x}, {:x}, n {}, band {}, nation {:x}) original={:x} rust={:x} {:x?} x {:x?}",
         club, ordenados, n, band_max as i8, nation, r, m, mo, mr));
     r
 }
@@ -685,13 +685,13 @@ pub(crate) unsafe extern "thiscall" fn compare_update_international_friendlies(t
     if let Some((primeira, quantas)) = update_friendlies_body(this, true) {
         o(this.addr());
         let day = this.intl_last_day_done();
-        SCOREBOARD.record(day == read_u16(G_CURRENT_DATE), || format!("update_international_friendlies(primeira {:x}, quantas {}) dia marcado={} hoje={}", primeira, quantas, day, read_u16(G_CURRENT_DATE)));
+        SCOREBOARD.record(day == read_u16(G_CURRENT_DATE), || format!("update_international_friendlies(first {:x}, how many {}) day marked={} today={}", primeira, quantas, day, read_u16(G_CURRENT_DATE)));
         return;
     }
     let mut reg = SCOUT_MANAGER_DATE_STATICS.to_vec();
     reg.push((this.addr() + friendly::INTL_LAST_DAY_DONE, 2));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr()), || update_international_friendlies(this.addr()));
-    SCOREBOARD.record(igual, || format!("update_international_friendlies(sem amistosos) {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual, || format!("update_international_friendlies(without amistosos) {:x?} x {:x?}", mo, mr));
 }
 
 /// Comparer for `find_scheduled_friendly_slot`.

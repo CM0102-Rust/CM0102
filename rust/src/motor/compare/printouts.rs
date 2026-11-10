@@ -20,7 +20,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pick_random_pundit(this: usize, c
         || o(this, club, kind, nation),
         || crate::rng::without_counting(|| pick_random_pundit(this, club, kind, nation)),
     );
-    SCOREBOARD.record(igual && r == n, || format!("pick_random_pundit(clube {:#x}, tipo {}, nacao {}) original={} {:x?} rust={} {:x?}", club, kind as i8, nation, r, mo, n, mr));
+    SCOREBOARD.record(igual && r == n, || format!("pick_random_pundit(club {:#x}, kind {}, nation {}) original={} {:x?} rust={} {:x?}", club, kind as i8, nation, r, mo, n, mr));
     r
 }
 
@@ -40,5 +40,5 @@ pub(crate) unsafe extern "thiscall" fn compare_get_pundit_name(this: usize, kind
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, kind, id, name, mark), || get_pundit_name(this, kind, id, name, mark));
-    SCOREBOARD.record(igual, || format!("get_pundit_name(tipo {}, id {}) original={:x?} rust={:x?}", kind as i8, id as i16, mo, mr));
+    SCOREBOARD.record(igual, || format!("get_pundit_name(kind {}, id {}) original={:x?} rust={:x?}", kind as i8, id as i16, mo, mr));
 }

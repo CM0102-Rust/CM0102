@@ -19,7 +19,7 @@ pub(crate) unsafe extern "C" fn compare_key_nation_index_of_club(club: usize) ->
     }
     let r = o(club);
     let n = key_nation_index_of_club(club);
-    SCOREBOARD.record(r == n, || format!("key_nation_index_of_club(clube {:x}) original={} rust={}", club, r, n));
+    SCOREBOARD.record(r == n, || format!("key_nation_index_of_club(club {:x}) original={} rust={}", club, r, n));
     r
 }
 
@@ -31,7 +31,7 @@ pub(crate) unsafe extern "C" fn compare_key_nation_get_club_season_year(club: us
     }
     let r = o(club);
     let n = key_nation_get_club_season_year(club);
-    SCOREBOARD.record(r == n, || format!("key_nation_get_club_season_year(clube {:x}) original={} rust={}", club, r, n));
+    SCOREBOARD.record(r == n, || format!("key_nation_get_club_season_year(club {:x}) original={} rust={}", club, r, n));
     r
 }
 
@@ -48,7 +48,7 @@ pub(crate) unsafe extern "C" fn compare_key_nation_club_in_season(club: usize, s
     let (oi, of) = (read(start), read(end));
     let ok = r == n && (start == 0 || oi == i) && (end == 0 || of == f);
     SCOREBOARD.record(ok, || {
-        format!("key_nation_club_in_season(clube {:x}) original={} {:02x?} {:02x?} rust={} {:02x?} {:02x?}", club, r, oi, of, n, i, f)
+        format!("key_nation_club_in_season(club {:x}) original={} {:02x?} {:02x?} rust={} {:02x?} {:02x?}", club, r, oi, of, n, i, f)
     });
     r
 }

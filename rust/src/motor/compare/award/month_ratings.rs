@@ -34,7 +34,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_player_rating(this: usize, e:
     let slots = if n < cap { n as usize + 1 } else { n as usize };
     let regions = [(this, 12), (tab, slots * 12)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, e), || add_player_rating(this, e));
-    SCOREBOARD.record(igual, || format!("add_player_rating(pessoa {}) original={:x?} rust={:x?}", read_i32(e), mo, mr));
+    SCOREBOARD.record(igual, || format!("add_player_rating(person {}) original={:x?} rust={:x?}", read_i32(e), mo, mr));
 }
 
 /// Comparer for `find_best_player`.
@@ -45,6 +45,6 @@ pub(crate) unsafe extern "thiscall" fn compare_find_best_player(this: usize, lea
     let (tab, n) = (read_usize(this), read_i32(this + 4));
     let regions: Vec<(usize, usize)> = if tab != 0 && n > 0 { vec![(tab, n as usize * 12)] } else { Vec::new() };
     let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, league, age), || find_best_player(this, league, age));
-    SCOREBOARD.record(igual && r == m, || format!("find_best_player(liga {}, idade {}) original={:#x} {:x?} rust={:#x} {:x?}", league, age as u8 as i8, r, mo, m, mr));
+    SCOREBOARD.record(igual && r == m, || format!("find_best_player(league {}, age {}) original={:#x} {:x?} rust={:#x} {:x?}", league, age as u8 as i8, r, mo, m, mr));
     r
 }

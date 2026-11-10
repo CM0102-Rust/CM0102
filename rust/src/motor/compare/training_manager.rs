@@ -27,7 +27,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_coach_assignments(this: us
         reg.push((this + 0x652d + 54 * read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(manager)).wrapping_sub(1) as usize, 54));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club.addr(), tecnico), || update_coach_assignments(this, club.addr(), tecnico));
-    SCOREBOARD.record(igual, || format!("update_coach_assignments(clube {:x}, tecnico {:x}) {:x?} x {:x?}", club.addr(), tecnico, mo.0, mr.0));
+    SCOREBOARD.record(igual, || format!("update_coach_assignments(club {:x}, manager {:x}) {:x?} x {:x?}", club.addr(), tecnico, mo.0, mr.0));
 }
 
 /// Comparer for `reassign_squad_schedules`.
@@ -73,7 +73,7 @@ pub(crate) unsafe extern "thiscall" fn compare_reassign_squad_schedules(this: us
         reg.push((this + 0x652d + 54 * k as usize, 54));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, manager, old, novo), || reassign_squad_schedules(this, manager, old, novo));
-    SCOREBOARD.record(igual, || format!("reassign_squad_schedules(tecnico {:x}, {:x} -> {:x}) {:x?} x {:x?}", manager, old, novo, mo.0, mr.0));
+    SCOREBOARD.record(igual, || format!("reassign_squad_schedules(manager {:x}, {:x} -> {:x}) {:x?} x {:x?}", manager, old, novo, mo.0, mr.0));
 }
 
 /// Comparador: lado a lado nos 167 programas (0x9b bytes cada).
@@ -113,7 +113,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_player_training(this: usiz
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, p.addr(), skip),
         || crate::rng::without_counting(|| update_player_training(this, p.addr(), skip)));
-    SCOREBOARD.record(igual, || format!("update_player_training(pessoa {:x}, pular {:x}) {:x?} x {:x?}", p.addr(), skip as u16, mo.0, mr.0));
+    SCOREBOARD.record(igual, || format!("update_player_training(person {:x}, skip {:x}) {:x?} x {:x?}", p.addr(), skip as u16, mo.0, mr.0));
 }
 
 /// Comparer for `get_player_schedule`.
@@ -126,7 +126,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_player_schedule(this: usize, 
         return o(this, p.addr());
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(this, p.addr()), || get_player_schedule(this, p.addr()));
-    SCOREBOARD.record(igual && r == n, || format!("get_player_schedule(pessoa {:x}) original={:x} rust={:x} {:x?} x {:x?}", p.addr(), r, n, mo.0, mr.0));
+    SCOREBOARD.record(igual && r == n, || format!("get_player_schedule(person {:x}) original={:x} rust={:x} {:x?} x {:x?}", p.addr(), r, n, mo.0, mr.0));
     r
 }
 
@@ -151,7 +151,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_or_restore_training_progre
     let f = p.player();
     let reg = [(f.addr() + player_sheet::GOALKEEPER, 0x33), (player_training_entry(this, p), 6), (G_TRAINING_PROGRESS_SAVED_DELTA_3, 5)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, p.addr(), devolver), || remove_or_restore_training_progress(this, p.addr(), devolver));
-    SCOREBOARD.record(igual, || format!("remove_or_restore_training_progress(pessoa {:x}, devolver {}) {:x?} x {:x?}", p.addr(), devolver, mo.0, mr.0));
+    SCOREBOARD.record(igual, || format!("remove_or_restore_training_progress(person {:x}, return {}) {:x?} x {:x?}", p.addr(), devolver, mo.0, mr.0));
 }
 
 /// Comparer for `get_training_attribute_change`.
@@ -166,7 +166,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_training_attribute_change(thi
     let f = p.player();
     let reg = [(f.addr() + player_sheet::GOALKEEPER, 0x33), (player_training_entry(this, p), 6)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, p.addr(), attribute), || get_training_attribute_change(this, p.addr(), attribute));
-    SCOREBOARD.record(igual && r == n, || format!("get_training_attribute_change(pessoa {:x}, atributo {}) original={} rust={} {:x?} x {:x?}", p.addr(), attribute as u8 as i8, r as i8, n as i8, mo.0, mr.0));
+    SCOREBOARD.record(igual && r == n, || format!("get_training_attribute_change(person {:x}, attribute {}) original={} rust={} {:x?} x {:x?}", p.addr(), attribute as u8 as i8, r as i8, n as i8, mo.0, mr.0));
     r
 }
 
@@ -180,7 +180,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_position_aptitude(this: usize
     }
     let r = o(this, p, mask);
     let n = get_position_aptitude(this, p, mask);
-    SCOREBOARD.record(r == n, || format!("get_position_aptitude(pessoa {:x}, mascara {:x}) original={:x} rust={:x}", p, mask as u16, r, n));
+    SCOREBOARD.record(r == n, || format!("get_position_aptitude(person {:x}, mask {:x}) original={:x} rust={:x}", p, mask as u16, r, n));
     r
 }
 
@@ -218,7 +218,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_manager_schedule(this: usize,
     }
     let r = o(this, manager, slot);
     let n = get_manager_schedule(this, manager, slot);
-    SCOREBOARD.record(r == n, || format!("get_manager_schedule(tecnico {:x}, vaga {}) original={:x} rust={:x}", manager, slot, r, n));
+    SCOREBOARD.record(r == n, || format!("get_manager_schedule(manager {:x}, slot {}) original={:x} rust={:x}", manager, slot, r, n));
     r
 }
 
@@ -228,7 +228,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_manager_schedule(this: usize,
 pub(crate) unsafe extern "thiscall" fn compare_get_coaching_factor(this: usize, club: usize, category: i8) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8) -> u32>(IDX_GET_COACHING_FACTOR)(this, club, category);
     let n = get_coaching_factor(this, club, category);
-    SCOREBOARD.record(r == n, || format!("get_coaching_factor(clube {:x}, categoria {}) original={:x} rust={:x}", club, category, r, n));
+    SCOREBOARD.record(r == n, || format!("get_coaching_factor(club {:x}, category {}) original={:x} rust={:x}", club, category, r, n));
     r
 }
 
@@ -242,7 +242,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_coach_assignments(this: usize
     }
     let r = o(this, manager);
     let n = get_coach_assignments(this, manager);
-    SCOREBOARD.record(r == n, || format!("get_coach_assignments(tecnico {:x}) original={:x} rust={:x}", manager, r, n));
+    SCOREBOARD.record(r == n, || format!("get_coach_assignments(manager {:x}) original={:x} rust={:x}", manager, r, n));
     r
 }
 
@@ -270,7 +270,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_training_progress(this: usi
     let e = read_usize(this + 0x651d) + 6 * read_i32(f.addr()) as usize;
     let regions = [(f.addr() + player_sheet::GOALKEEPER, 0x33), (e, 6)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(this, person.addr(), d), || apply_training_progress(this, person.addr(), d));
-    SCOREBOARD.record(igual, || format!("apply_training_progress(pessoa {:x}, d {:x?}) {:x?} x {:x?}", person.addr(), core::slice::from_raw_parts(d as *const i8, 5), mo.0, mr.0));
+    SCOREBOARD.record(igual, || format!("apply_training_progress(person {:x}, d {:x?}) {:x?} x {:x?}", person.addr(), core::slice::from_raw_parts(d as *const i8, 5), mo.0, mr.0));
 }
 
 /// Comparer for `find_position_training`.
@@ -289,7 +289,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_position_training(this: usiz
     let n = find_position_training(this, person.addr(), out);
     let sr = *out;
     *out = so;
-    SCOREBOARD.record(r == n && so == sr, || format!("find_position_training(pessoa {:x}) original={} {:x} rust={} {:x}", person.addr(), r, so, n, sr));
+    SCOREBOARD.record(r == n && so == sr, || format!("find_position_training(person {:x}) original={} {:x} rust={} {:x}", person.addr(), r, so, n, sr));
     r
 }
 
@@ -299,7 +299,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_position_training(this: usiz
 pub(crate) unsafe extern "thiscall" fn compare_has_fast_position_training(this: usize, person: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_HAS_FAST_POSITION_TRAINING)(this, person);
     let n = has_fast_position_training(this, person);
-    SCOREBOARD.record(r == n, || format!("has_fast_position_training(pessoa {:x}) original={} rust={}", person, r, n));
+    SCOREBOARD.record(r == n, || format!("has_fast_position_training(person {:x}) original={} rust={}", person, r, n));
     r
 }
 
@@ -310,7 +310,7 @@ pub(crate) unsafe extern "thiscall" fn compare_advance_week_counter(this: usize,
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i16) -> i32>(IDX_ADVANCE_WEEK_COUNTER);
     let regions = [(this + 0x688d, 2)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(this, day), || advance_week_counter(this, day));
-    SCOREBOARD.record(igual && r == n, || format!("advance_week_counter(dia {}) original={} rust={} {:x?} x {:x?}", *day, r, n, mo.0, mr.0));
+    SCOREBOARD.record(igual && r == n, || format!("advance_week_counter(day {}) original={} rust={} {:x?} x {:x?}", *day, r, n, mo.0, mr.0));
     r
 }
 
@@ -335,5 +335,5 @@ pub(crate) unsafe extern "thiscall" fn compare_init_player_entries(this: usize) 
             first.get_or_insert(k);
         }
     }
-    SCOREBOARD.record(erradas == 0, || format!("init_player_entries: {} fichas fora da regra (a primeira {:?})", erradas, first));
+    SCOREBOARD.record(erradas == 0, || format!("init_player_entries: {} sheets away of the rule (a first {:?})", erradas, first));
 }

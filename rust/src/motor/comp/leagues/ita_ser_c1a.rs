@@ -202,7 +202,7 @@ pub(crate) unsafe fn compare_end_of_league_stages(name: &str, this: League, orig
     original();
     let stages = this.stages();
     let ok = read_usize(slot) == champion && stages != 0 && read_usize(stages) != 0 && read_usize(stages + 4) != 0 && this.current_stage() == 1;
-    SCOREBOARD.record(ok, || format!("{}({:#x}): vaga da Supercopa {:#x} (campeão {:#x}), fases {:#x}, +0x30 = {}", name, this.addr(), read_usize(slot), champion, stages, this.current_stage() as i32));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): slot da Supercopa {:#x} (campeão {:#x}), stages {:#x}, +0x30 = {}", name, this.addr(), read_usize(slot), champion, stages, this.current_stage() as i32));
 }
 
 /// the Serie C1 schedule (each group of 18): 34 rounds from 5 September to 7 May, nearly all on the same weekday (6)

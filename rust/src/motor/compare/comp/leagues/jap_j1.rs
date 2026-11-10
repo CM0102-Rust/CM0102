@@ -13,7 +13,7 @@ pub(crate) unsafe extern "thiscall" fn compare_jap_j1_advance_stage(this: usize)
     let last = before >= (this.stage_count() as i32).wrapping_sub(1);
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_JAP_J1_ADVANCE_STAGE)(this.addr());
     let after = this.current_stage() as i32;
-    SCOREBOARD.record(after == if last { before } else { before + 1 }, || format!("jap_j1_advance_stage({:#x}) antes={} depois={}", this.addr(), before, after));
+    SCOREBOARD.record(after == if last { before } else { before + 1 }, || format!("jap_j1_advance_stage({:#x}) before={} after={}", this.addr(), before, after));
 }
 
 /// Comparer for `create_championship_final_stage`.
@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_championship_final_stage(t
         let (x, y) = (read_usize(l), read_usize(l + 6));
         stage.team_count() == 2 && read_usize(stage.addr() + 4) == this.competition().addr() && ((x, y) == (a, b) || (x, y) == (b, a)) && this.current_stage() == 2
     };
-    SCOREBOARD.record(same, || format!("create_championship_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this.addr(), a, b, stage.addr(), this.current_stage()));
+    SCOREBOARD.record(same, || format!("create_championship_final_stage({:#x}) campeoes={:#x},{:#x} stage={:#x} +0x30={}", this.addr(), a, b, stage.addr(), this.current_stage()));
 }
 
 /// Comparer for `jap_j1_start_new_season`.
@@ -47,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn compare_jap_j1_start_new_season(this: usi
     let before = this.year();
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_JAP_J1_START_NEW_SEASON)(this.addr());
     let after = this.year();
-    SCOREBOARD.record(after == before.wrapping_add(1) && this.stage_count() == 3, || format!("jap_j1_start_new_season({:#x}) ano antes={} depois={} +0x2c={}", this.addr(), before, after, this.stage_count()));
+    SCOREBOARD.record(after == before.wrapping_add(1) && this.stage_count() == 3, || format!("jap_j1_start_new_season({:#x}) year before={} after={} +0x2c={}", this.addr(), before, after, this.stage_count()));
     r
 }
 

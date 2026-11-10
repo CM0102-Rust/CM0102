@@ -465,7 +465,7 @@ pub(crate) unsafe fn compare_champion_update(name: &str, this: usize, club: Club
     original();
     in_band &= sheets.iter().skip(cut + 1).all(band);
     let mo = crate::comparison::MemorySnapshot::read(&count);
-    SCOREBOARD.record(mo == mr && in_band, || format!("{}(clube {:#x}) renovados {} (o primeiro na ficha {} de {}; fora da band: {}) original={:x?} rust={:x?}",
+    SCOREBOARD.record(mo == mr && in_band, || format!("{}(club {:#x}) renovados {} (o first in the sheet {} de {}; away of the band: {}) original={:x?} rust={:x?}",
         name, club.addr(), renovados.len(), cut, sheets.len(), !in_band, mo, mr));
 }
 
@@ -899,7 +899,7 @@ pub(crate) unsafe fn compare_cup_placed(name: &str, club: Club, game: Fixture, p
     before.write_back();
     original();
     let mo = crate::comparison::MemorySnapshot::read(&reg);
-    SCOREBOARD.record(mo == mr, || format!("{}(clube {:#x}, jogo {:#x}) original={:x?} rust={:x?}", name, club.addr(), game.addr(), mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("{}(club {:#x}, game {:#x}) original={:x?} rust={:x?}", name, club.addr(), game.addr(), mo, mr));
 }
 
 /// Copies date src into dst (`exe::date_operator_3d`).

@@ -4902,7 +4902,7 @@ pub(crate) unsafe fn compare_player_move(p: MatchPlayer, a1: u32, a2: u32, a3: u
     RECORD_MOVE.store(mov, Relaxed);
     RECORD_A7.store(a7, Relaxed);
     RECORD_716.store(write, Relaxed);
-    SCOREBOARD.record(igual && sequencia, || format!("move_to_cell(acao {:#x}) {} chamadas: {}", a3 as u16, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia, || format!("move_to_cell(action {:#x}) {} chamadas: {}", a3 as u16, k, tape_detail()));
     r
 }
 
@@ -5881,7 +5881,7 @@ pub(crate) unsafe fn compare_dribble_inner(p: MatchPlayer, mode: u32) -> u32 {
     RECORD_BALL_CARRY.store(cond, Relaxed);
     RECORD_A7.store(a7, Relaxed);
     RECORD_716.store(write, Relaxed);
-    SCOREBOARD.record(igual && sequencia && r == rr, || format!("dribble(modo {}) original={} rust={} {} chamadas: {}", mode as u8, r, rr, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia && r == rr, || format!("dribble(mode {}) original={} rust={} {} chamadas: {}", mode as u8, r, rr, k, tape_detail()));
     r
 }
 
@@ -6862,7 +6862,7 @@ pub(crate) unsafe fn compare_execute_pass_inner(p: MatchPlayer, x: u32, y: u32, 
     RECORD_PASS.store(passe, Relaxed);
     RECORD_A7.store(a7, Relaxed);
     RECORD_716.store(write, Relaxed);
-    SCOREBOARD.record(igual && sequencia && (r as u8) == (rr as u8), || format!("execute_pass(tipo {:#x}) original={} rust={} {} chamadas: {}", kind as u8, r as u8, rr as u8, k, tape_detail()));
+    SCOREBOARD.record(igual && sequencia && (r as u8) == (rr as u8), || format!("execute_pass(kind {:#x}) original={} rust={} {} chamadas: {}", kind as u8, r as u8, rr as u8, k, tape_detail()));
     r as u8
 }
 

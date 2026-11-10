@@ -31,7 +31,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_rankings(this: usize, data
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, data), || update_rankings(this, data));
     SCOREBOARD.record(igual, || {
         let dif: Vec<usize> = mo.0.iter().zip(mr.0.iter()).flat_map(|(a, b)| (0..a.1.len()).filter(move |&i| a.1[i] != b.1[i]).map(move |i| a.0 + i)).take(16).collect();
-        format!("update_rankings(dia {}) diferenças em {:x?}", read_u16(data), dif)
+        format!("update_rankings(day {}) diferenças em {:x?}", read_u16(data), dif)
     });
 }
 
@@ -53,7 +53,7 @@ pub(crate) unsafe extern "thiscall" fn compare_append_result(this: usize, nation
     let cap_n = if conta == cap { cap.wrapping_add(5) } else { cap };
     let lido = (read_i16(e + 0xa), read_i16(e + 8), read_u16(p), read_u8(p + 2), read_u16(p + 3));
     let plan = (conta.wrapping_add(1), cap_n, points as u16, mes, ano);
-    SCOREBOARD.record(lido == plan, || format!("append_result(nação {}, pontos {}) original={:?} plano={:?}", read_usize(nation), points as u16, lido, plan));
+    SCOREBOARD.record(lido == plan, || format!("append_result(nação {}, points {}) original={:?} plan={:?}", read_usize(nation), points as u16, lido, plan));
 }
 
 /// Comparer for `get_nation_strength_tier`.
@@ -85,7 +85,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_ranked_order(this: usize,
     let mut c = 0i32;
     let v = collect_ranked_order(this, &mut c);
     let same = v != 0 && c == *count && (0..c as usize).all(|k| read_usize(r + k * 4) == read_usize(v + k * 4));
-    SCOREBOARD.record(same, || format!("collect_ranked_order conta original={} rust={}", *count, c));
+    SCOREBOARD.record(same, || format!("collect_ranked_order count original={} rust={}", *count, c));
     exe::crt_free(v);
     r
 }
@@ -122,5 +122,5 @@ pub(crate) unsafe extern "thiscall" fn compare_create_default_table(this: usize)
     if tb != 0 {
         exe::crt_free(tb);
     }
-    SCOREBOARD.record(same, || format!("create_default_table: a primeira diferença na nação {:?}", dif.map(|i| (i / 0x2c, i % 0x2c))));
+    SCOREBOARD.record(same, || format!("create_default_table: a first diferença in the nação {:?}", dif.map(|i| (i / 0x2c, i % 0x2c))));
 }

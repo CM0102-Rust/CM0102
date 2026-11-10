@@ -38,7 +38,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_entrants(this: usize) -> i3
     if tr != 0 && tr != to && tr != t0 {
         exe::crt_free(tr);
     }
-    SCOREBOARD.record(igual && a == b && lists, || format!("build_entrants({:#x}) devolveu {} x {} memória {} listas {}", this.addr(), a, b, igual, lists));
+    SCOREBOARD.record(igual && a == b && lists, || format!("build_entrants({:#x}) returned {} x {} memória {} lists {}", this.addr(), a, b, igual, lists));
     a
 }
 
@@ -61,6 +61,6 @@ pub(crate) unsafe extern "thiscall" fn compare_uefa_cup_update_staff_records_for
     let predicted = if d == 1 || d == 2 || d == 0xff { 0xffff_ffff } else { before };
     let r = o(this, club.addr(), outcome, a3, a4, game, a6);
     let after = (club.continental_comp_id() as usize);
-    SCOREBOARD.record(r == 0 && after == predicted, || format!("uefa_cup_update_staff_records_for_status({:#x}, desfecho {}) +0x1db {:x} -> {:x}, previsto {:x}, devolveu {}", club.addr(), d, before, after, predicted, r));
+    SCOREBOARD.record(r == 0 && after == predicted, || format!("uefa_cup_update_staff_records_for_status({:#x}, outcome {}) +0x1db {:x} -> {:x}, predicted {:x}, returned {}", club.addr(), d, before, after, predicted, r));
     r
 }

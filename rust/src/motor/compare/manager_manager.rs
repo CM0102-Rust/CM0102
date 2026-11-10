@@ -61,7 +61,7 @@ pub(crate) unsafe extern "thiscall" fn compare_board_named_players_after_match(t
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, game, club, ids, partida, elogio, a6, a7, a8, a9, a10),
         || crate::rng::without_counting(|| board_named_players_after_match(this, game, club, ids, partida, elogio, a6, a7, a8, a9, a10)));
-    SCOREBOARD.record(igual && r == n, || format!("board_named_players_after_match(clube {:x}, elogio {}) original={} rust={} {:x?} x {:x?}", club, *elogio, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("board_named_players_after_match(club {:x}, elogio {}) original={} rust={} {:x?} x {:x?}", club, *elogio, r, n, mo, mr));
     r
 }
 
@@ -71,7 +71,7 @@ pub(crate) unsafe extern "thiscall" fn compare_board_named_players_after_match(t
 pub(crate) unsafe extern "thiscall" fn compare_get_player_match_rating_verdict(this: usize, person: usize, partida: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(IDX_GET_PLAYER_MATCH_RATING_VERDICT)(this, person, partida);
     let n = get_player_match_rating_verdict(this, person, partida);
-    SCOREBOARD.record(r == n, || format!("get_player_match_rating_verdict({:x}, partida {}) original={} rust={}", person, partida as i32, r as i8, n as i8));
+    SCOREBOARD.record(r == n, || format!("get_player_match_rating_verdict({:x}, match {}) original={} rust={}", person, partida as i32, r as i8, n as i8));
     r
 }
 
@@ -85,7 +85,7 @@ pub(crate) unsafe extern "stdcall" fn compare_build_board_player_performance_tex
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(out, 0x200)], || o(ids, win, out, variant),
         || build_board_player_performance_text(ids, win, out, variant));
-    SCOREBOARD.record(igual, || format!("build_board_player_performance_text(vitória {}, variante {}) {:?} x {:?}", win as u8, variant,
+    SCOREBOARD.record(igual, || format!("build_board_player_performance_text(vitória {}, variant {}) {:?} x {:?}", win as u8, variant,
         String::from_utf8_lossy(&mo.0[0].1[..0x40]), String::from_utf8_lossy(&mr.0[0].1[..0x40])));
 }
 
@@ -116,7 +116,7 @@ pub(crate) unsafe extern "thiscall" fn compare_check_board_transfer_veto(this: u
         || crate::rng::without_counting(|| check_board_transfer_veto(this, j, club, value, comprando)));
     let partes = if BOARD_VETO_SEEDED_RAND { 3 } else { 4 };
     let same = (0..partes).all(|i| mo.0[i] == mr.0[i]);
-    SCOREBOARD.record(same && r == n, || format!("check_board_transfer_veto(clube {:x}, valor {}, comprando {}) original={:#x} rust={:#x} {:x?} x {:x?}", club, value, comprando as u8, r, n, mo, mr));
+    SCOREBOARD.record(same && r == n, || format!("check_board_transfer_veto(club {:x}, value {}, comprando {}) original={:#x} rust={:#x} {:x?} x {:x?}", club, value, comprando as u8, r, n, mo, mr));
     r
 }
 
@@ -156,7 +156,7 @@ pub(crate) unsafe extern "thiscall" fn compare_post_manager_appointment_news(thi
 pub(crate) unsafe extern "thiscall" fn compare_get_league_confidence_band(this: usize, club: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_GET_LEAGUE_CONFIDENCE_BAND)(this, club);
     let n = get_league_confidence_band(this, club);
-    SCOREBOARD.record(r == n, || format!("get_league_confidence_band(clube {:x}) original={} rust={}", club, r, n));
+    SCOREBOARD.record(r == n, || format!("get_league_confidence_band(club {:x}) original={} rust={}", club, r, n));
     r
 }
 
@@ -165,7 +165,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_board_ratings(this: usize, cl
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_SET_BOARD_RATINGS);
     let r = read_usize(this).wrapping_add((read_i32(club) as u32).wrapping_mul(0x49) as usize);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(r, 0x49)], || o(this, club, value), || set_board_ratings(this, club, value));
-    SCOREBOARD.record(igual, || format!("set_board_ratings(clube {:x}, {:x}) {:x?} x {:x?}", club, value, mo, mr));
+    SCOREBOARD.record(igual, || format!("set_board_ratings(club {:x}, {:x}) {:x?} x {:x?}", club, value, mo, mr));
 }
 
 /// Comparer for `post_board_confidence_update_news`.
@@ -213,7 +213,7 @@ pub(crate) unsafe extern "thiscall" fn compare_issue_board_ultimatum(this: usize
     let r = o(this, club);
     let after = read_i16(read_usize(this + manager_manager_fields::ULTIMATUM_LIST)) as i32;
     SCOREBOARD.record(after == before + (r != 0) as i32, || {
-        format!("issue_board_ultimatum(clube {:x}) devolveu {}, ultimatos {} -> {}", club, r, before, after)
+        format!("issue_board_ultimatum(club {:x}) returned {}, ultimatos {} -> {}", club, r, before, after)
     });
     r
 }
@@ -243,7 +243,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_club_manager(this: usize, 
     }
     let conf = read_i16(club_board_row(this, club) + 6);
     SCOREBOARD.record(sobra == 0 && (keep != 0 || conf == 0xdac), || {
-        format!("remove_club_manager(clube {:x}, tipo {}, manter {}) marcas que sobraram {:#x}, confiança {}", club.addr(), kind as u8, keep, sobra, conf)
+        format!("remove_club_manager(club {:x}, kind {}, keep {}) marks que sobraram {:#x}, confiança {}", club.addr(), kind as u8, keep, sobra, conf)
     });
 }
 
@@ -256,7 +256,7 @@ pub(crate) unsafe extern "thiscall" fn compare_review_national_team_performance(
 pub(crate) unsafe extern "thiscall" fn compare_is_club_in_financial_trouble(this: usize, club: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_IS_CLUB_IN_FINANCIAL_TROUBLE)(this, club);
     let n = is_club_in_financial_trouble(this, club);
-    SCOREBOARD.record(r == n, || format!("is_club_in_financial_trouble(clube {:x}) original={} rust={}", club, r, n));
+    SCOREBOARD.record(r == n, || format!("is_club_in_financial_trouble(club {:x}) original={} rust={}", club, r, n));
     r
 }
 
@@ -264,7 +264,7 @@ pub(crate) unsafe extern "thiscall" fn compare_is_club_in_financial_trouble(this
 pub(crate) unsafe extern "thiscall" fn compare_get_board_confidence_band(this: usize, club: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_GET_BOARD_CONFIDENCE_BAND)(this, club);
     let n = get_board_confidence_band(this, club);
-    SCOREBOARD.record(r == n, || format!("get_board_confidence_band(clube {:x}) original={} rust={}", club, r, n));
+    SCOREBOARD.record(r == n, || format!("get_board_confidence_band(club {:x}) original={} rust={}", club, r, n));
     r
 }
 
@@ -283,7 +283,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_departure_reason(this: usize,
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u8>(IDX_GET_DEPARTURE_REASON);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&crate::rng::STATE_REGIONS, || o(this, id),
         || crate::rng::without_counting(|| get_departure_reason(this, id)));
-    SCOREBOARD.record(igual && r == n, || format!("get_departure_reason(clube {}) original={} rust={} {:x?} x {:x?}", id, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("get_departure_reason(club {}) original={} rust={} {:x?} x {:x?}", id, r, n, mo, mr));
     r
 }
 
@@ -345,7 +345,7 @@ pub(crate) unsafe extern "thiscall" fn compare_resolve_board_ultimatum(this: usi
     let r = o(this, club);
     let after = read_i16(read_usize(this + manager_manager_fields::DEPARTURE_LIST)) as i32;
     let ok = after == before + (r != 0) as i32 && (r == 0 || read_u8(board_row_at(this, read_usize(club)) + 2) & 2 != 0);
-    SCOREBOARD.record(ok, || format!("resolve_board_ultimatum(clube {:x}) devolveu {}, saídas {} -> {}", club, r, before, after));
+    SCOREBOARD.record(ok, || format!("resolve_board_ultimatum(club {:x}) returned {}, saídas {} -> {}", club, r, before, after));
     r
 }
 
@@ -383,7 +383,7 @@ pub(crate) unsafe extern "thiscall" fn compare_manager_manager_remove_player_fro
     let r = o(this, person.addr(), club.addr());
     let away = !(in_club || in_national_team) || (0..0x32usize).all(|k| club.squad(k) != person.addr());
     let ok = away && person.job_for_club() == f39 && person.club_job() == c39 && person.job_for_nation() == f28 && person.national_job() == c24;
-    SCOREBOARD.record(ok, || format!("manager_manager_remove_player_from_squad(pessoa {:x}, clube {:x}): função {:x}/{:x} clube {:x}/{:x} (esperava {:x}/{:x} {:x}/{:x}), fora das vagas {}",
+    SCOREBOARD.record(ok, || format!("manager_manager_remove_player_from_squad(person {:x}, club {:x}): função {:x}/{:x} club {:x}/{:x} (esperava {:x}/{:x} {:x}/{:x}), away das slots {}",
         read_usize(person.addr()), read_usize(club.addr()), person.job_for_club(), person.job_for_nation(), person.club_job(), person.national_job(), f39, f28, c39, c24, away));
     r
 }
@@ -413,7 +413,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_staff_from_club(this: usiz
     let expected = staff_job_fields(Staff(s.as_ptr() as usize), Club(c.as_ptr() as usize));
     let r = o(this, person.addr(), club);
     let after = staff_job_fields(person, Club(club));
-    SCOREBOARD.record(after == expected, || format!("remove_staff_from_club(pessoa {:x}, função {}, clube {:x}): pessoa {:x?}{:x?} esperava {:x?}{:x?}",
+    SCOREBOARD.record(after == expected, || format!("remove_staff_from_club(person {:x}, função {}, club {:x}): person {:x?}{:x?} esperava {:x?}{:x?}",
         read_usize(person.addr()), person.job_for_club() as i8, read_usize(club), after.0, after.1, expected.0, expected.1));
     r
 }
@@ -443,7 +443,7 @@ pub(crate) unsafe extern "thiscall" fn compare_fix_missing_jobs(this: usize) {
     }
     let reg = [(l.addr() + llist::CURSOR, 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this), || fix_missing_jobs(this));
-    SCOREBOARD.record(igual, || format!("fix_missing_jobs (nenhuma a abrir) {:x?} x {:x?}", mo, mr));
+    SCOREBOARD.record(igual, || format!("fix_missing_jobs (nenhuma a open) {:x?} x {:x?}", mo, mr));
 }
 
 /// Comparer for `best_manager_candidate_score`.
@@ -455,7 +455,7 @@ pub(crate) unsafe extern "thiscall" fn compare_best_manager_candidate_score(this
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((read_usize(this + manager_manager_fields::VACANCY_LIST) + 0xa, 4));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club, current), || crate::rng::without_counting(|| best_manager_candidate_score(this, club, current)));
-    SCOREBOARD.record(igual && r == n, || format!("best_manager_candidate_score(clube {}, atual {:x}) original={} rust={} {:x?} x {:x?}", read_usize(club), current, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("best_manager_candidate_score(club {}, current {:x}) original={} rust={} {:x?} x {:x?}", read_usize(club), current, r, n, mo, mr));
     r
 }
 
@@ -473,7 +473,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_board_after_fixture(this: 
 pub(crate) unsafe extern "thiscall" fn compare_is_staff_suitable_for_job(this: usize, person: usize, club: usize, rating_minimum: f64) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, f64) -> u8>(IDX_IS_STAFF_SUITABLE_FOR_JOB)(this, person, club, rating_minimum);
     let n = is_staff_suitable_for_job(this, person, club, rating_minimum);
-    SCOREBOARD.record(r == n, || format!("is_staff_suitable_for_job(pessoa {:x}, clube {:x}, {}) original={} rust={}", person, club, rating_minimum, r, n));
+    SCOREBOARD.record(r == n, || format!("is_staff_suitable_for_job(person {:x}, club {:x}, {}) original={} rust={}", person, club, rating_minimum, r, n));
     r
 }
 
