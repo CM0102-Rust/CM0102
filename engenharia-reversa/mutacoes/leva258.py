@@ -27,7 +27,7 @@ MUTACOES = [
     ('cpv9_jovem_tres_anos', 'let a = year.wrapping_add(2); // cpv9: o jovem por dois anos', 'let a = year.wrapping_add(3); // mutacao: tres anos', 'cpv_9 youngster contract'),
     ('cpv9_valor_mais_um', 'person.set_value((v) as usize); // cpv9: the regen value', 'write_i32(person.addr() + 0x52, v.wrapping_add(1)); // mutacao: valor + 1', 'cpv_9 regen signed'),
     ('cpv9_metade_das_vezes', 'if exe::utils_random(4) == 0 { // cpv9: once in four', 'if exe::utils_random(4) < 2 { // mutacao: metade das vezes', 'cpv_9 one in four'),
-    ('cpv10_fica_a_lesao_atual', 'write_i32(physical_record_of_id(this, read_i32(person.addr())) + 0xe, -1); // cpv10: no current injury', 'let _ = physical_record_of_id(this, read_i32(person.addr())); // mutacao: o +0xe fica', 'cpv_10 end of injury'),
+    ('cpv10_fica_a_lesao_atual', 'write_i32(physical_record_of_id(this, read_i32(person.addr())) + physical_record::CURRENT_INJURY, -1); // cpv10: no current injury', 'let _ = physical_record_of_id(this, read_i32(person.addr())); // mutacao: o +physical_record::CURRENT_INJURY fica', 'cpv_10 end of injury'),
     ('cpv10_entrada_zero_nao_termina', 'if i == -1 { // cpv10: the current injury', 'if i <= 0 { // mutacao: a entrada 0 nao termina', 'cpv_10 zero entry'),
     ('cpv10_metade_de_cima_nao_termina', 'if id >= read_i32(G_STAFF_COUNT) { // cpv10: the person id', 'if id >= read_i32(0xae2364) / 2 { // mutacao: a metade de cima nao termina', 'cpv_10 top half'),
     ('cpv11_limite_28', 'if days < 0xe { // cpv11: the day limit', 'if days < 0x1c { // mutacao: limite de 28 dias', 'cpv_11 injury of 14 to 27 days'),

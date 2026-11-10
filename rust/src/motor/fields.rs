@@ -631,6 +631,7 @@ pub(crate) mod engine {
     pub(crate) const ZONE_HIGH_WINDOW_TICKS: usize = 0x212; // 2 byte(s): possession ticks with the ball in rows 8..11 over the last 55 ticks (i16)
     pub(crate) const BALL_IN_PLAY_TIME: usize = 0x214; // 10 byte(s): five i16 counters of ticks with the ball in play (x 60 / 11 = seconds); copied to the match record +0x2a
     pub(crate) const TOTAL_TICKS: usize = 0x21a; // 2 byte(s): possession ticks counted in the whole match (i16)
+    pub(crate) const HIGHLIGHTS_GIVEN: usize = 0x21e; // 8000 byte(s): per-side table of highlight codes already given in the match: one dword per code from 0x1f40, 1000 dwords (4000 bytes) per side; 0xbf2 is the entry of code 0x21b5 for side 0
     pub(crate) const GRID: usize = 0x215e; // 9720 byte(s): pitch occupancy grid, 9 x 12 cells of 90 bytes (cell = +0x215e + 90 x (12 x x + y))
     pub(crate) const ON_PITCH_PLAYERS: usize = 0x453a; // 88 byte(s): per-side list of the match players taken onto the pitch, 11 dwords per side (+0x453a + 4 x (n + 11 x side)); count at ON_PITCH_COUNT
     pub(crate) const ON_PITCH_COUNT: usize = 0x4592; // 2 byte(s): per-side number of entries in ON_PITCH_PLAYERS (i8, +0x4592 + side); the player's order is stored in his CELL_SLOT by take_the_field
@@ -724,6 +725,7 @@ pub(crate) mod engine {
     pub(crate) const TACTICS_FLAGS_SIDE1: usize = 0xb049; // 4 byte(s): side 1 tactics flag dword (tactics +0x584 of side 1; TACTICS_FLAGS + 0x18e3)
     pub(crate) const FORMATION_TABLE_DATA_SIDE1: usize = 0xb9f8; // ? byte(s): side 1 formation/set-piece position table (216 bytes per position), pointed to by FORMATION_TABLE_SIDE1 at preparation
     pub(crate) const TACTICS_BACKUP: usize = 0xc3a8; // 12742 byte(s): copy of both tactics objects taken at preparation
+    pub(crate) const TACTICS_BACKUP_FLAGS: usize = 0xc92c; // 4 byte(s): tactics flag dword of side 0's backup tactics (TACTICS_BACKUP + 0x584; side 1 at +0x18e3)
     pub(crate) const FORMATION_TABLE: usize = 0xf56e; // 8 byte(s): pointer per side to the formation/set-piece position table (216 bytes per position)
     pub(crate) const FORMATION_TABLE_SIDE1: usize = 0xf572; // 4 byte(s): side 1 entry of FORMATION_TABLE: pointer to side 1's formation/set-piece position table (set to FORMATION_TABLE_DATA_SIDE1 at preparation)
     pub(crate) const PASSER: usize = 0xf576; // 4 byte(s): player who made the current pass/took the set piece
@@ -1146,22 +1148,27 @@ pub(crate) mod ban_slot {
 #[allow(dead_code)]
 pub(crate) mod board_record {
     pub(crate) const WEALTH_BAND: usize = 0x1; // 1 byte(s): club wealth band copied in at the season expectations
-    pub(crate) const FLAGS: usize = 0x2; // 1 byte(s): status bits (bit 2 departure recorded, bit 8 in season; cleared on a manager change) [inference]
+    pub(crate) const FLAGS: usize = 0x2; // 1 byte(s): status bits: 0x01 NEW_MANAGER, 0x02 DEPARTURE_QUEUED, 0x04 PROJECTED_ABOVE_TARGET, 0x08 PROJECTED_BELOW_TARGET, 0x10 unknown, 0x20 unknown (board request repeat test), 0x40 STADIUM_EXPANSION_APPROVED, 0x80 TRAINING_FACILITIES_APPROVED
+    pub(crate) const REQUEST_STATE: usize = 0x3; // 1 byte(s): board-request state: bit 0 extra time to rebuild granted; bits 1..4 (signed 4-bit) the id (1..6) of the last board request
+    pub(crate) const REQUESTS_MADE: usize = 0x4; // 1 byte(s): number of board requests the manager has made since the last reset (season start, new manager)
+    pub(crate) const WAGE_RISE_GRANTED: usize = 0x5; // 1 byte(s): wage-budget rise in percent the board granted on request 4 ('Make extra funds for wages available') or a wage ultimatum (0 none)
     pub(crate) const CONFIDENCE: usize = 0x6; // 2 byte(s): board confidence in the manager, 1..10000
-    pub(crate) const CONFIDENCE_2: usize = 0x8; // 2 byte(s): second confidence value (+1.15 x the match adjustment)
-    pub(crate) const CONFIDENCE_3: usize = 0xa; // 2 byte(s): third confidence value (+0.5 x the match adjustment)
+    pub(crate) const SUPPORTERS_CONFIDENCE: usize = 0x8; // 2 byte(s): the supporters' confidence in the manager (+1.15 x the match adjustment); below 3000 the supporters' protest news 0x1782
+    pub(crate) const STAFF_CONFIDENCE: usize = 0xa; // 2 byte(s): the staff's confidence in the manager (+0.5 x the match adjustment); departure reason 8, 'poor relationship with his staff' (0xa07540) [inference]
     pub(crate) const CONFIDENCE_4: usize = 0xc; // 2 byte(s): fourth confidence value (+0.2 x the match adjustment)
     pub(crate) const EXPECTATION_FLAGS: usize = 0xe; // 2 byte(s): season expectation flags (title, European places, top half, avoid relegation...)
     pub(crate) const LEAGUE_CONFIDENCE: usize = 0x12; // 2 byte(s): season change of the board's league confidence (signed; banded by get_league_confidence_band)
     pub(crate) const TRANSFER_MOOD: usize = 0x14; // 2 byte(s): board mood changed by the transfer deal reasons (signed) [inference]
-    pub(crate) const FAVOURITES_MOOD: usize = 0x16; // 2 byte(s): board mood changed by sales of favoured or rejected players and media stories, floor -10000 [inference]
+    pub(crate) const FAVOURITES_MOOD: usize = 0x16; // 2 byte(s): board mood changed by sales of favoured or rejected players and media stories, floor -10000; below -750 is departure reason 4, 'overwhelming supporter pressure' (0xa0764c) [inference]
     pub(crate) const LAST_REVIEW_DATE: usize = 0x18; // 8 byte(s): date of the last board review news (TCMDate)
     pub(crate) const LAST_REVIEW_DATE_LEAP_YEAR: usize = 0x1c; // 4 byte(s): second dword of LAST_REVIEW_DATE (the TCMDate leap-year field, cm_date::LEAP_YEAR) [verified: passed with +0x18 as the two dwords of one date to date_days_since 0x54cdb0 (also 0x69aba0 pseudocode); same pattern as staff::DATE_JOINED_CLUB_LEAP_YEAR]
+    pub(crate) const JOB_APPLICATION_DATE: usize = 0x20; // 8 byte(s): date the club's manager last applied for another club's job (TCMDate, +0x20/+0x24); 23/07/1971 (never) at career start and after each appointment
     pub(crate) const EXTRA_FUNDS_GRANTED: usize = 0x28; // 4 byte(s): money the board granted on a funds request or a funds ultimatum (0 none; cleared at season start and on a manager change) [inference]
-    pub(crate) const TARGET_POSITION: usize = 0x2c; // 4 byte(s): league position the board expects this season
+    pub(crate) const TARGET_POSITION: usize = 0x2c; // 4 byte(s): league position the board expects this season (club); for a national team the id of the competition it is expected in (from nationalteams_get_current_competition, -1 none); positions are read as a byte (handle_board_request 0x6a90d1, match preview line 1573)
     pub(crate) const SPENDING: usize = 0x30; // 8 byte(s): double spending figure, reputation squared / 4 at the season start [inference]
-    pub(crate) const SPENDING_CEILING: usize = 0x38; // 8 byte(s): double compared with SPENDING for the debt departure reason [inference]
+    pub(crate) const SQUAD_INVESTMENT: usize = 0x38; // 8 byte(s): net value of the players bought minus those sold (double), scaled by 0.25 each season so older spending weighs less; above SPENDING the board refuses funds (0x6a8dd1); departure reason 10, 'expensively assembled squad' (0xa0772c)
     pub(crate) const DISCIPLINE_COUNTERS: usize = 0x40; // 1 byte(s): two bitfields: bits 0..2 = FA disciplinary fine level (signed 3-bit, 0..4, picks the fine and is raised after each fine); bits 3..7 = ban appeals made (+8 per appeal); & 7 clears the appeals (season expectations), & 0xf8 clears the fine level
+    pub(crate) const LAST_ULTIMATUM_DATE: usize = 0x41; // 8 byte(s): date of the manager's last ultimatum to the board (TCMDate, dword pair +0x41/+0x45); 23/06/1971 (never) at career start
 }
 
 /// Fields of the `career_entry` object, named from how the routines use them. [pt] Campos do objeto `career_entry`.
@@ -1263,6 +1270,7 @@ pub(crate) mod commentary_queue {
 /// Fields of the `comp_stats_club` object, named from how the routines use them. [pt] Campos do objeto `comp_stats_club`.
 #[allow(dead_code)]
 pub(crate) mod comp_stats_club {
+    pub(crate) const MATCHES_PLAYED: usize = 0x4; // 1 byte(s): matches the club has played in the competition [verified: Comp_Stats::record_match_result 0x49f570 increments byte +4 of the club entry for every match it records (0x49f6b0..0x49f6ba); the board compares it with 8, 25 ]
     pub(crate) const WINNING_RUN: usize = 0x19; // 4 byte(s): current run of consecutive wins in the competition [verified: Comp_Stats::record_match_result 0x49fc4f increments +0x19 on a win and then clears +0x2d/+0x55 (0x49fe9d); restore_team_runs 0x4a22f0 restores the four runs +0x]
     pub(crate) const LOSING_RUN: usize = 0x2d; // 4 byte(s): current run of consecutive defeats in the competition [verified: record_match_result 0x49feb9 increments +0x2d on the defeat path and the win path clears it; TEAM_LOSING_AGAIN commentary (match_eng context_commentary) reads +]
     pub(crate) const UNBEATEN_RUN: usize = 0x41; // 4 byte(s): current unbeaten run (run record: game count +0, dates +0x45/+0x4d)
@@ -1495,6 +1503,7 @@ pub(crate) mod held_ban {
 pub(crate) mod human_manager_sheet {
     pub(crate) const LIVE_MATCH: usize = 0xe2; // 4 byte(s): live match (live_match) the manager is in; 0 none
     pub(crate) const CLUB: usize = 0xe6; // 4 byte(s): club the manager leads in that match [inference]
+    pub(crate) const IN_MATCH_SCREEN: usize = 0xea; // 4 byte(s): 1 while the manager is on the live match screen
 }
 
 /// Fields of the `illness_outbreak` object, named from how the routines use them. [pt] Campos do objeto `illness_outbreak`.
@@ -1506,8 +1515,12 @@ pub(crate) mod illness_outbreak {
 /// Fields of the `injury_entry` object, named from how the routines use them. [pt] Campos do objeto `injury_entry`.
 #[allow(dead_code)]
 pub(crate) mod injury_entry {
+    pub(crate) const MATCH_CLUB_ID: usize = 0x12; // 4 byte(s): id of the injured person's club in the match (club match record embedded at +1, its +0x11) [verified: fill_match_record_from_fixture (record_utils.rs, 0x7e4de0 family) writes the club id at out+0x11 with out = entry+1 (add_injury)]
+    pub(crate) const MATCH_OPPONENT_ID: usize = 0x16; // 4 byte(s): id of the opposing club in the match (club match record embedded at +1, its +0x15) [verified: fill_match_record_from_fixture writes the opponent club id at out+0x15 with out = entry+1]
     pub(crate) const MATCH_MARK: usize = 0x1a; // 1 byte(s): 0xff when the injury did not happen in a match
     pub(crate) const DATE: usize = 0x20; // 8 byte(s): date of the injury (TCMDate)
+    pub(crate) const DATE_YEAR: usize = 0x22; // 2 byte(s): year half of the injury date (news slot 6) [verified: DATE is a TCMDate at +0x20 (day i16, year +2, leap dword +4); slot 5 is the day, slot 6 the year; same style as staff::DATE_OF_BIRTH_YEAR]
+    pub(crate) const DATE_LEAP_YEAR: usize = 0x24; // 4 byte(s): second dword of DATE (TCMDate leap-year field) [verified: passed with DATE (+0x20) as the two dwords of the date to date_get_difference; TCMDate layout as staff::DATE_OF_BIRTH_LEAP_YEAR]
     pub(crate) const DAYS_OUT: usize = 0x28; // 2 byte(s): total days out
     pub(crate) const TRAINING_RETURN_DAYS: usize = 0x2a; // 2 byte(s): days until the return to light training
     pub(crate) const DAYS_LEFT: usize = 0x2c; // 2 byte(s): days out still remaining (counted down daily)
@@ -1821,6 +1834,7 @@ pub(crate) mod match_record {
     pub(crate) const ROW_DATE_OF_BIRTH: usize = 0x1a4; // 8 byte(s): date of birth of a player row (TCMDate; same base)
     pub(crate) const ROW_POSITION: usize = 0x1ad; // 1 byte(s): position of a player row; 0xfb = empty row (same base)
     pub(crate) const ROW_MINUTE_OFF: usize = 0x1c0; // 1 byte(s): minute substituted off of a player row (base record + 0x625 x side + 0x49 x idx)
+    pub(crate) const ROW_MINUTE_ON: usize = 0x1c2; // 1 byte(s): minute player row k was brought on (0xff = not); substitutes (k >= 11) count only when they came on [verified: 0x1c2 = 0x190 + 0x32 = match_record_row::MINUTE_ON on the ROW_STAFF_ID base; same scheme as ROW_MINUTE_OFF 0x1c0 = 0x190 + 0x30]
     pub(crate) const ROW_MINUTE_LEFT_PITCH: usize = 0x1c4; // 1 byte(s): minute a player row left the pitch (same base as ROW_MINUTE_OFF)
     pub(crate) const SIDE_SIZE: usize = 0x625; // stride between the home and away team blocks of the match record (0x625 bytes; AWAY_TEAM = HOME_TEAM + SIDE_SIZE) [verified: AWAY_TEAM 0x744 - HOME_TEAM 0x11f = 0x625; same constant as match_stats_record::SIDE_SIZE; used as 0x625 * side]
     pub(crate) const AWAY_TEAM: usize = 0x744; // 1573 byte(s): away team block (match_record_team); its first byte is the goals, 0xfd before kick-off
@@ -1866,10 +1880,17 @@ pub(crate) mod match_record_row {
     pub(crate) const YELLOW_CARDS: usize = 0x2c; // 1 byte(s): yellow cards
     pub(crate) const RED_CARD: usize = 0x2d; // 1 byte(s): red card (drawn in red on the ratings) [inference]
     pub(crate) const MINUTE_OFF: usize = 0x30; // 1 byte(s): minute substituted off; negative = not
+    pub(crate) const MATCH_FORM: usize = 0x31; // 1 byte(s): in-match form byte of the player; row +0x31
     pub(crate) const MINUTE_ON: usize = 0x32; // 1 byte(s): minute brought on; negative = not
     pub(crate) const INJURY_MINUTE: usize = 0x33; // 1 byte(s): minute injured; negative = not
     pub(crate) const MINUTE_LEFT_PITCH: usize = 0x34; // 1 byte(s): minute sent off / left the pitch; negative = not
     pub(crate) const MATCH_GRADE: usize = 0x35; // 1 byte(s): match rating shown in the ratings
+    pub(crate) const STAMINA_CEILING: usize = 0x36; // 2 byte(s): stamina ceiling of the player when the record was filled (truncated f32); row +0x36 [inference]
+    pub(crate) const CURRENT_REPUTATION: usize = 0x38; // 2 byte(s): player's current reputation after the match; row +0x38
+    pub(crate) const HOME_REPUTATION: usize = 0x3a; // 2 byte(s): player's home reputation after the match; row +0x3a
+    pub(crate) const WORLD_REPUTATION: usize = 0x3c; // 2 byte(s): player's world reputation after the match; row +0x3c
+    pub(crate) const PASS_TACKLE_COUNTS: usize = 0x3e; // 9 byte(s): the player's 9 counters copied from match_player PASSES..KEY_CHALLENGES_WON (+1..+9); row +0x3e
+    pub(crate) const BALLS_CONTESTED: usize = 0x47; // 1 byte(s): loose balls contested by the player; row +0x47
 }
 
 /// Fields of the `match_record_team` object, named from how the routines use them. [pt] Campos do objeto `match_record_team`.
@@ -1900,6 +1921,7 @@ pub(crate) mod match_record_team {
     pub(crate) const CAPTAIN: usize = 0x34; // 1 byte(s): captain's row index
     pub(crate) const FORMATION_X: usize = 0x35; // 22 byte(s): 11 u16: first coordinate of each formation slot (formation slot position, axis 0) [inference]
     pub(crate) const FORMATION_Y: usize = 0x4b; // 22 byte(s): 11 u16: second coordinate of each formation slot (axis 1) [inference]
+    pub(crate) const TACTICS_FLAGS: usize = 0x61; // 4 byte(s): the side's tactics flag dword when the record was filled (tactics +0x584)
     pub(crate) const MANAGER_ID: usize = 0x65; // 4 byte(s): staff id of the side's manager; -1 none
     pub(crate) const MANAGER_CURRENT_REPUTATION: usize = 0x69; // 2 byte(s): manager's current reputation; 0xffff none
     pub(crate) const MANAGER_HOME_REPUTATION: usize = 0x6b; // 2 byte(s): manager's home reputation; 0xffff none
@@ -2101,6 +2123,7 @@ pub(crate) mod physical_record {
     pub(crate) const RECURRENCE_GRADE: usize = 0x13; // 1 byte(s): recurrence grade/count of RECURRING_TYPE
     pub(crate) const HISTORY_FIRST: usize = 0x14; // 4 byte(s): first offset of the person's injury history (-1 none)
     pub(crate) const HISTORY_LAST: usize = 0x18; // 4 byte(s): last offset of the person's injury history (-1 none)
+    pub(crate) const TRAINING_NEWS_SENT: usize = 0x1c; // 1 byte(s): 1 once the return-to-light-training news of the current injury was posted; 0 on a new injury
     pub(crate) const LAST_INJURY_TYPE: usize = 0x1d; // 1 byte(s): type of the last injury or illness (0xff none)
     pub(crate) const PRONENESS: usize = 0x1e; // 1 byte(s): injury proneness (50 at start)
 }
@@ -2321,6 +2344,7 @@ pub(crate) mod staff_records_fields {
 pub(crate) mod staff_state {
     pub(crate) const INJURY_COUNTER: usize = 0xa; // 1 byte(s): byte of the 79-byte general.dat record raised by injuries up to 100 [inference]
     pub(crate) const STATUS_FLAGS: usize = 0xb; // 1 byte(s): bit 0x40 regen mark, bits 0x30 retirement state (0x10 announced, 0x20 retired)
+    pub(crate) const EXTRA_FLAGS: usize = 0xc; // 1 byte(s): flag byte of the 79-byte staff state record after STATUS_FLAGS: bit 0x1 cleared when the physical record is created and after the holiday recovery news; bit 0x2 blocks a foreign player's call-up by his second nation
     pub(crate) const FORMER_CLUB_ID: usize = 0xe; // 4 byte(s): club id of the first of five former-club slots (5-byte steps; -1 empty), paid a share of the fee on a sale
     pub(crate) const FORMER_CLUB_WEIGHT: usize = 0x12; // 1 byte(s): signed weight of the first former-club slot (5-byte steps) in the fee-share split
 }
@@ -2574,4 +2598,47 @@ pub(crate) mod uefa_seeding {
 #[allow(dead_code)]
 pub(crate) mod names {
     pub(crate) const ID: usize = 0x33; // 4 byte(s): TNames record (first_names/second_names/common_names.dat, 60 bytes: Name[51] at 0, ID 0x33, Nation 0x37, Count 0x3b); +0x33 is the name id [verified: docs/FORMATOS TNames +0x33 ID (community format); person_transfer_record::FIRST_NAME_ID says +0x33 of the staff FIRST_NAME record]
+}
+
+/// engine per-side match stats block (engine SIDE_STATS + 0x36 x side, 0x36 bytes; +0 shoot-out goals, +1 score)
+#[allow(dead_code)]
+pub(crate) mod side_stats {
+    pub(crate) const CAPTAIN: usize = 0x11; // 1 byte(s): captain's row index of the side
+    pub(crate) const POSSESSION: usize = 0x12; // 5 byte(s): possession percentages of the side (5 bytes)
+
+    pub(crate) const ZONE_3: usize = 0x17; // 5 byte(s): share of the third pitch zone (5 bytes)
+    pub(crate) const ZONE_2: usize = 0x1c; // 5 byte(s): share of the second pitch zone (5 bytes)
+    pub(crate) const ZONE_1: usize = 0x21; // 5 byte(s): share of the first pitch zone (5 bytes)
+}
+
+/// the screen manager's Display (display list) of a slot, 0x12f550 bytes; items of 0x18c bytes from +0xba95e (screen_build_regions)
+#[allow(dead_code)]
+pub(crate) mod display {
+    pub(crate) const ITEM_ID: usize = 0xba966; // 2 byte(s): id of display item k (+0x18c x k; item +8); 0 = the default command id [0xdd6bde]
+    pub(crate) const ITEM_VALUE: usize = 0xba9a6; // 4 byte(s): value attached to display item k (+0x18c x k; item +0x48): tab number, club pointer, commentary speed
+    pub(crate) const FOCUS_FLAGS: usize = 0x12f4fe; // 1 byte(s): flag byte written with the focus (0x20 here) [inference]
+    pub(crate) const FOCUS_ITEM: usize = 0x12f4ff; // 2 byte(s): display item that receives the focus
+
+}
+
+/// the screen manager object (0xb74450): one 0x300-byte slot per human manager (manager key +0x7d6, Display +0x7fc), current slot at +0x382a
+#[allow(dead_code)]
+pub(crate) mod screen_manager {
+    pub(crate) const NETWORK_SLOT: usize = 0x7d4; // 2 byte(s): nonzero when slot k's screen updates go over the network (+0x300 x k) [inference]
+    pub(crate) const PARAM_BLOCK: usize = 0x7e2; // 4 byte(s): current screen's parameter block of slot k (+0x300 x k; param n at +0x14 + 8n)
+    pub(crate) const DISPLAY: usize = 0x7fc; // 4 byte(s): Display (display list) of slot k (+0x300 x k)
+    pub(crate) const CURRENT_SLOT: usize = 0x382a; // 2 byte(s): index of the slot whose screen is being worked on [verified: global G_SCREEN_MANAGER_CURRENT_SLOT 0xb77c7a = 0xb74450 + 0x382a]
+
+    pub(crate) const LOCAL_DISPLAY: usize = 0x3844; // 1242448 byte(s): the manager's local Display (embedded, 0x12f550 bytes) that receives the update packets
+}
+
+/// 22-byte entry of the Injury return-to-training news queue (injury_fields::RECOVERY_NEWS_QUEUE, sorted by date): +0 light-training date, +8 full return date, +0x10 person id, +0x14 force flag, +0x15 injury type
+#[allow(dead_code)]
+pub(crate) mod recovery_news_entry {
+    pub(crate) const FULL_RETURN_DATE_YEAR: usize = 0xa; // 2 byte(s): year half of the full return date (TCMDate at +8)
+    pub(crate) const FULL_RETURN_DATE_LEAP_YEAR: usize = 0xc; // 4 byte(s): second dword of the full return date (TCMDate leap-year field)
+    pub(crate) const PERSON_ID: usize = 0x10; // 4 byte(s): staff id of the person returning
+
+    pub(crate) const FORCE_DELIVERY: usize = 0x14; // 1 byte(s): deliver the news even when the club has no human manager
+    pub(crate) const INJURY_TYPE: usize = 0x15; // 1 byte(s): injury type of the news (post_recovery_news kind)
 }

@@ -3206,7 +3206,7 @@ pub(crate) unsafe fn shot_outcome_injected(p: MatchPlayer, f_in: f32, call: &mut
         if tabela1(g) {
             more_2b(g, random(3) as u8);
         }
-        write_u8(m.addr() + engine::SHOT_REBOUND, 1);
+        m.set_shot_rebound(1u8 as i8);
         return;
     }
     // on target
@@ -3258,19 +3258,19 @@ pub(crate) unsafe fn shot_outcome_injected(p: MatchPlayer, f_in: f32, call: &mut
         more_2b(g, (random(3) + 1) as u8);
         call(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, m.addr(), [m.ball_x() as u8 as u32, m.ball_y() as u8 as u32, (side as u8 as u32) << 8, 0, 0]);
         narrate(call, event::ALMOST_AN_OWN_GOAL, (p.commentary_id() as i8) as u8 as u32, side as u8, 0);
-        write_u8(m.addr() + engine::SHOT_REBOUND, 1);
+        m.set_shot_rebound(1u8 as i8);
     } else if part > 0x33 {
         crate::comparison::branch("outcome byline");
         highlight(call, event::GREAT_SAVE_NOT_HELD, event::GOOD_SAVE_NOT_HELD, event::GOALKEEPER_TIPPED);
         if side == 1 {
-            write_u8(m.addr() + engine::BALL_Y, 0xff);
+            m.set_ball_y(0xffu8 as i8);
         } else if side == 0 {
-            write_u8(m.addr() + engine::BALL_Y, 0xc);
+            m.set_ball_y(0xcu8 as i8);
         }
-        write_u8(m.addr() + engine::POSSESSION_SIDE, other);
+        m.set_possession_side((other) as i8);
         write_u32(m.addr() + engine::BALL_HOLDER, 0);
         narrate(call, event::ALMOST_AN_OWN_GOAL, (p.commentary_id() as i8) as u8 as u32, side as u8, 0);
-        write_u8(m.addr() + engine::RESTART_TYPE, 3);
+        m.set_restart_type(3u8 as i8);
         narrate(call, event::RESTART_CORNER, u32::MAX, other, 0);
     } else {
         crate::comparison::branch("outcome save");
@@ -3607,7 +3607,7 @@ pub(crate) unsafe fn shot_on_goal_injected(p: MatchPlayer, f_in: f32, call: &mut
         if tabela1(g.addr()) {
             more_2b(g, random(3) as u8);
         }
-        write_u8(m.addr() + engine::SHOT_REBOUND, 1);
+        m.set_shot_rebound(1u8 as i8);
         return;
     }
     let k = defesa as i16 as i32;
@@ -3652,19 +3652,19 @@ pub(crate) unsafe fn shot_on_goal_injected(p: MatchPlayer, f_in: f32, call: &mut
             add(g, 0x8c);
             more_2b(g, (random(3) + 1) as u8);
             call(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, m.addr(), [m.ball_x() as u8 as u32, m.ball_y() as u8 as u32, (other as u32) << 8, 0, 0]);
-            write_u8(m.addr() + engine::SHOT_REBOUND, 1);
+            m.set_shot_rebound(1u8 as i8);
         } else if part > 0x33 {
             crate::comparison::branch("shot on target byline");
             highlight(call, event::GREAT_SAVE_NOT_HELD, event::GOOD_SAVE_NOT_HELD, event::GOALKEEPER_TIPPED);
             if side == 1 {
-                write_u8(m.addr() + engine::BALL_Y, 0xff);
+                m.set_ball_y(0xffu8 as i8);
             } else if side == 0 {
-                write_u8(m.addr() + engine::BALL_Y, 0xc);
+                m.set_ball_y(0xcu8 as i8);
             }
-            write_u8(m.addr() + engine::POSSESSION_SIDE, p27);
+            m.set_possession_side((p27) as i8);
             write_u32(m.addr() + engine::BALL_HOLDER, 0);
             narrate(call, event::ALMOST_A_FLUKE_GOAL, p2e, p27, 0);
-            write_u8(m.addr() + engine::RESTART_TYPE, 3);
+            m.set_restart_type(3u8 as i8);
             narrate(call, event::RESTART_CORNER, u32::MAX, p27, 0);
         } else {
             crate::comparison::branch("shot on target save");
@@ -3683,7 +3683,7 @@ pub(crate) unsafe fn shot_on_goal_injected(p: MatchPlayer, f_in: f32, call: &mut
     if side_of_move(m.addr()) as i8 == -1 {
         if marked_moment(m.addr()) as u8 != 0 {
             crate::comparison::branch("shot on target golden goal");
-            write_u8(m.addr() + engine::GOLDEN_GOAL_SCORED, 1);
+            m.set_golden_goal_scored(1u8 as i8);
         }
         more(p.addr(), 0xc);
         add(p, 0x89);
@@ -3851,10 +3851,10 @@ pub(crate) unsafe fn shot_on_goal_injected(p: MatchPlayer, f_in: f32, call: &mut
         }
     }
     let _ = b23;
-    write_u8(m.addr() + engine::POSSESSION_SIDE, other);
+    m.set_possession_side((other) as i8);
     write_u32(m.addr() + engine::BALL_HOLDER, 0);
-    write_u8(m.addr() + engine::RESTART_TYPE, 8);
-    write_u8(m.addr() + engine::KICKOFF_ANNOUNCED, 0);
+    m.set_restart_type(8u8 as i8);
+    m.set_kickoff_announced(0u8 as i8);
 }
 
 /// `p`'s shot against the other side's keeper (`exe::cm3_match_engine_get_goalkeeper`, save 0x700420). Quality from strength and draws gives the
@@ -4124,10 +4124,10 @@ pub(crate) unsafe fn player_move_injected(p: MatchPlayer, x: i8, y: i8, code: i1
         }
         if perdeu {
             crate::comparison::branch("movement loses the ball");
-            write_u32(m.addr() + engine::MOMENTUM_B, 0);
-            write_u8(m.addr() + engine::POSSESSION_SIDE, 0xff);
+            m.set_momentum_b(0u32 as i32);
+            m.set_possession_side(0xffu8 as i8);
             write_u32(m.addr() + engine::BALL_HOLDER, 0);
-            write_u8(m.addr() + engine::SHOT_PENDING, 0);
+            m.set_shot_pending(0u8 as i8);
             p.set_space_on_ball(0);
             p.set_ball_control(0);
             let r = random(2);
@@ -4161,7 +4161,7 @@ pub(crate) unsafe fn player_move_injected(p: MatchPlayer, x: i8, y: i8, code: i1
             }
             narrate(call, event::BOO_SPECIFIC_PLAYER, u32::MAX, other as u32, u32::MAX, 0);
         }
-        write_u8(m.addr() + engine::LAST_POSSESSION_SIDE, side as u8);
+        m.set_last_possession_side((side as u8) as i8);
         if side != -1 {
             let q = (m.addr() as isize + side as isize + 0x8d46) as *mut u8;
             *q = (*q).wrapping_add(1);
@@ -4181,8 +4181,8 @@ pub(crate) unsafe fn player_move_injected(p: MatchPlayer, x: i8, y: i8, code: i1
             fixar_19c(p, (p.ball_control()).wrapping_add(0x32));
         }
         let sum = |k: u32| {
-            write_u32(m.addr() + engine::MOMENTUM_A, (m.momentum_a() as u32).wrapping_add(k));
-            write_u32(m.addr() + engine::MOMENTUM_B, (m.momentum_b() as u32).wrapping_add(k));
+            m.set_momentum_a(((m.momentum_a() as u32).wrapping_add(k)) as i32);
+            m.set_momentum_b(((m.momentum_b() as u32).wrapping_add(k)) as i32);
         };
         if e.is_null() {
             add(p, 9);
@@ -4210,7 +4210,7 @@ pub(crate) unsafe fn player_move_injected(p: MatchPlayer, x: i8, y: i8, code: i1
                 }
             }
         }
-        write_u8(m.addr() + engine::BALL_HEIGHT, 0);
+        m.set_ball_height(0u8 as i8);
         move_action_commentary_injected(m, p, e, code, nx, ny, carries, mode, call);
         let _ = &mut carries;
     }
@@ -6370,14 +6370,14 @@ pub(crate) unsafe fn execute_pass_injected(p: MatchPlayer, x: i8, y: i8, kind_in
     let mut l24 = 0i32;
     if m.ball_holder().addr() != 0 {
         l24 = m.shot_pending() as i32;
-        write_usize(m.addr() + engine::MOMENTUM_B, 0);
-        write_u8(m.addr() + engine::POSSESSION_SIDE, 0xff);
+        m.set_momentum_b(0u32 as i32);
+        m.set_possession_side(0xffu8 as i8);
         write_usize(m.addr() + engine::BALL_HOLDER, 0);
-        write_u8(m.addr() + engine::SHOT_PENDING, 0);
+        m.set_shot_pending(0u8 as i8);
         p.set_space_on_ball(0);
         p.set_ball_control(0);
     }
-    write_i16(m.addr() + engine::PASS_POWER, l44.wrapping_sub(nota));
+    m.set_pass_power((l44.wrapping_sub(nota)) as u16);
     m.set_pass_target_x(x as u8);
     m.set_pass_target_y(y as u8);
     // the pass accuracy
@@ -6710,19 +6710,19 @@ pub(crate) unsafe fn execute_pass_injected(p: MatchPlayer, x: i8, y: i8, kind_in
             (v, random(2) as i8)
         }
     };
-    write_u8(m.addr() + engine::BALL_HEIGHT, v as u8);
-    write_u8(m.addr() + engine::BALL_ROLL, t as u8);
+    m.set_ball_height((v as u8) as i8);
+    m.set_ball_roll((t as u8) as i8);
     let mut bl2 = m.ball_height();
     let cai = (*out != 0 && bl2 > 0 && random(3) == 0) || (bl2 < 4 && wp(0x19c) as i32 > random(200));
     if cai {
         bl2 = bl2.wrapping_sub(random(2) as i8);
-        write_u8(m.addr() + engine::BALL_HEIGHT, bl2 as u8);
+        m.set_ball_height((bl2 as u8) as i8);
     }
     let cy = ty.clamp(0, 0xb);
     let cx = tx.clamp(0, 8);
-    write_i16(m.addr() + engine::BALL_DIRECTION, by_difference(m.addr(), x, y, cx, cy) as i16);
+    m.set_ball_direction((by_difference(m.addr(), x, y, cx, cy) as i16) as u16);
     // 0x7003b0: the side of the pass and the possession count
-    write_u8(m.addr() + engine::LAST_POSSESSION_SIDE, side as u8);
+    m.set_last_possession_side((side as u8) as i8);
     if side != -1 {
         write_u8(m.addr() + engine::POSSESSION_COUNTER + side as isize as usize, read_u8(m.addr() + engine::POSSESSION_COUNTER + side as isize as usize).wrapping_add(1));
         let o = (m.addr() + engine::POSSESSION_COUNTER + (side == 0) as usize) as *mut i8;
@@ -6756,14 +6756,14 @@ pub(crate) unsafe fn execute_pass_injected(p: MatchPlayer, x: i8, y: i8, kind_in
     }
     let v = m.ball_roll() as i32;
     let k = if (v as f64 + read_f64(rdata::F64_0_2)) < read_f64(rdata::F64_1) { read_f64(rdata::F64_1) } else { m.ball_roll() as f64 + read_f64(rdata::F64_0_2) };
-    write_u8(m.addr() + engine::BALL_TRANSIT_TICKS, ftol((d as f64 + d as f64) / k + read_f64(rdata::F64_0_5)) as u8);
-    write_u8(m.addr() + engine::TRANSIT_TARGET_X, tx as u8);
-    write_u8(m.addr() + engine::TRANSIT_TARGET_Y, ty as u8);
-    write_u8(m.addr() + engine::TRANSIT_ORIGIN_X, p.cell_x() as u8);
-    write_u8(m.addr() + engine::TRANSIT_ORIGIN_Y, p.cell_y() as u8);
+    m.set_ball_transit_ticks((ftol((d as f64 + d as f64) / k + read_f64(rdata::F64_0_5)) as u8) as i8);
+    m.set_transit_target_x((tx as u8) as i8);
+    m.set_transit_target_y((ty as u8) as i8);
+    m.set_transit_origin_x((p.cell_x() as u8) as i8);
+    m.set_transit_origin_y((p.cell_y() as u8) as i8);
     m.set_ball_receiver(receiver.addr());
-    write_u8(m.addr() + engine::BALL_X, tx as u8);
-    write_u8(m.addr() + engine::BALL_Y, ty as u8);
+    m.set_ball_x((tx as u8) as i8);
+    m.set_ball_y((ty as u8) as i8);
     if away(m) {
         crate::comparison::branch("pass in transit goes out");
         call(FN_CM3_MATCH_ENGINE_BALL_OUT_OF_PLAY, m.addr(), [side as u8 as u32, 0, 0, 0, 0]);

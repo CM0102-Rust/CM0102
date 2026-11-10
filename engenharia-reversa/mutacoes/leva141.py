@@ -2,7 +2,7 @@
 MUTACOES = [
     ('l_limite', 'if n > 3 && random(n as i32) != 0 && random(0x1f4) != 0 {', 'if n > 4 && random(n as i32) != 0 && random(0x1f4) != 0 {'),
     ('l_teto', '    if m.injury_count() > 6 {\n        return;', '    if m.injury_count() > 7 {\n        return;'),
-    ('l_causador', 'let q = (o + 0x31) as *mut i16;\n        *q = (*q).wrapping_sub(10);', 'let q = (o + 0x31) as *mut i16;\n        *q = (*q).wrapping_sub(9);'),
+    ('l_causador', 'let q = (o + match_player::MATCH_TEMPER) as *mut i16;\n        *q = (*q).wrapping_sub(10);', 'let q = (o + match_player::MATCH_TEMPER) as *mut i16;\n        *q = (*q).wrapping_sub(9);'),
     ('l_grave', 'if g as i8 > 0x32 {\n        crate::comparison::branch("injury serious");', 'if g as i8 > 0x33 {\n        crate::comparison::branch("injury serious");'),
     ('l_folego', 'local = random(ftol((c * c) as f64 * read_f64(rdata::F64_0_5))) as f32;', 'local = random(ftol((c * c) as f64 * read_f64(rdata::F64_0_5)) + 1) as f32;'),
     ('l_59', 'p.set_stamina_boost(r as f32);', 'p.set_stamina_boost((r + 1) as f32);'),

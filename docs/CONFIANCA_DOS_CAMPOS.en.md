@@ -19,9 +19,9 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | Level | Fields |
 |---|---|
 | community | 247 |
-| verified | 20 |
-| read | 1347 |
-| inferred | 144 |
+| verified | 27 |
+| read | 1381 |
+| inferred | 146 |
 
 ## Per record
 
@@ -34,7 +34,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `ban_appeal` | 0 | 0 | 8 | 0 |
 | `ban_record` | 0 | 0 | 7 | 0 |
 | `ban_slot` | 0 | 0 | 1 | 1 |
-| `board_record` | 0 | 1 | 10 | 6 |
+| `board_record` | 0 | 1 | 16 | 5 |
 | `bra_nat_third` | 0 | 0 | 1 | 0 |
 | `career_entry` | 0 | 0 | 7 | 0 |
 | `city` | 6 | 0 | 0 | 0 |
@@ -47,7 +47,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `cm_date` | 2 | 0 | 0 | 0 |
 | `commentary_queue` | 0 | 0 | 10 | 1 |
 | `comp_history_row` | 0 | 0 | 3 | 1 |
-| `comp_stats_club` | 0 | 2 | 5 | 1 |
+| `comp_stats_club` | 0 | 3 | 5 | 1 |
 | `competition` | 9 | 0 | 0 | 0 |
 | `con_merc_cup` | 0 | 0 | 2 | 0 |
 | `conmebol_liber` | 0 | 0 | 1 | 1 |
@@ -67,10 +67,11 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `decision_date` | 0 | 0 | 3 | 0 |
 | `discipline_fields` | 0 | 0 | 11 | 0 |
 | `discipline_record` | 0 | 0 | 3 | 0 |
+| `display` | 0 | 0 | 3 | 1 |
 | `eng_auto_cup` | 0 | 0 | 1 | 1 |
 | `eng_cc_cup` | 0 | 0 | 1 | 0 |
 | `eng_fa_cup` | 0 | 0 | 3 | 0 |
-| `engine` | 0 | 0 | 153 | 20 |
+| `engine` | 0 | 0 | 155 | 20 |
 | `english_name_tables` | 0 | 0 | 7 | 0 |
 | `euro_champ_qual` | 0 | 0 | 1 | 0 |
 | `event_type` | 0 | 0 | 3 | 0 |
@@ -89,9 +90,9 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `goldcup` | 0 | 0 | 2 | 0 |
 | `grid_cell` | 0 | 0 | 2 | 0 |
 | `held_ban` | 0 | 0 | 2 | 0 |
-| `human_manager_sheet` | 0 | 0 | 1 | 1 |
+| `human_manager_sheet` | 0 | 0 | 2 | 1 |
 | `illness_outbreak` | 0 | 0 | 1 | 0 |
-| `injury_entry` | 0 | 0 | 6 | 0 |
+| `injury_entry` | 0 | 4 | 6 | 0 |
 | `injury_fields` | 0 | 0 | 10 | 0 |
 | `instalment` | 0 | 0 | 3 | 0 |
 | `intertoto_cup` | 0 | 0 | 1 | 0 |
@@ -116,9 +117,9 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `match_incident` | 0 | 0 | 5 | 0 |
 | `match_manager` | 0 | 0 | 15 | 7 |
 | `match_player` | 0 | 3 | 110 | 22 |
-| `match_record` | 0 | 1 | 68 | 11 |
-| `match_record_row` | 0 | 0 | 14 | 4 |
-| `match_record_team` | 0 | 0 | 27 | 4 |
+| `match_record` | 0 | 2 | 68 | 11 |
+| `match_record_row` | 0 | 0 | 20 | 5 |
+| `match_record_team` | 0 | 0 | 28 | 4 |
 | `match_spectators` | 0 | 0 | 3 | 1 |
 | `match_stats` | 0 | 0 | 5 | 0 |
 | `match_stats_entry` | 0 | 0 | 4 | 0 |
@@ -144,7 +145,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `officials_nation_block` | 0 | 0 | 6 | 0 |
 | `past_transfer` | 0 | 0 | 5 | 3 |
 | `person_transfer_record` | 0 | 0 | 4 | 0 |
-| `physical_record` | 0 | 0 | 9 | 0 |
+| `physical_record` | 0 | 0 | 10 | 0 |
 | `planned_friendly` | 0 | 0 | 4 | 0 |
 | `player_category_stats` | 0 | 0 | 9 | 0 |
 | `player_regen_fields` | 0 | 0 | 12 | 0 |
@@ -157,6 +158,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `rating_record` | 0 | 0 | 2 | 1 |
 | `record_holder` | 0 | 0 | 1 | 0 |
 | `record_news_item` | 0 | 0 | 2 | 0 |
+| `recovery_news_entry` | 0 | 0 | 5 | 0 |
 | `regen_pool_item` | 0 | 0 | 3 | 0 |
 | `regen_queue_entry` | 0 | 0 | 2 | 0 |
 | `retirement_entry` | 0 | 0 | 8 | 0 |
@@ -167,15 +169,17 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `scout_manager_fields` | 0 | 0 | 4 | 0 |
 | `scout_report` | 0 | 0 | 2 | 0 |
 | `scout_request` | 0 | 0 | 4 | 0 |
+| `screen_manager` | 0 | 1 | 3 | 1 |
 | `sell_on_clause` | 0 | 0 | 3 | 0 |
 | `shortlist_manager_fields` | 0 | 0 | 10 | 0 |
 | `shortlist_pair` | 0 | 0 | 1 | 0 |
 | `shortlist_slot` | 0 | 0 | 8 | 1 |
+| `side_stats` | 0 | 0 | 5 | 0 |
 | `stadium` | 10 | 0 | 0 | 0 |
 | `stadium_obj` | 0 | 0 | 7 | 0 |
 | `staff` | 32 | 4 | 2 | 0 |
 | `staff_records_fields` | 0 | 0 | 7 | 0 |
-| `staff_state` | 0 | 0 | 3 | 1 |
+| `staff_state` | 0 | 0 | 4 | 1 |
 | `story_log_entry` | 0 | 0 | 6 | 0 |
 | `tactics_fields` | 0 | 0 | 10 | 2 |
 | `tactics_row` | 0 | 0 | 4 | 0 |
@@ -277,12 +281,11 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `finance::INSTALMENT_BALANCE` | +0x1c | 4 byte(s): Running share of transfer instalments still owed (buyer negative, seller positive); cleared when the club has none left [inference] |
 | `finance::CRISIS_STATE` | +0x165 | 1 byte(s): financial state: 0 normal, 1 crisis, 2 [inference: administration] |
 | `ban_slot::VALUE` | +0x1 | 4 byte(s): Value of the slot (-1 when free) [inference: link to the ruling body entry] |
-| `board_record::FLAGS` | +0x2 | 1 byte(s): status bits (bit 2 departure recorded, bit 8 in season; cleared on a manager change) [inference] |
+| `board_record::STAFF_CONFIDENCE` | +0xa | 2 byte(s): the staff's confidence in the manager (+0.5 x the match adjustment); departure reason 8, 'poor relationship with his staff' (0xa07540) [inference] |
 | `board_record::TRANSFER_MOOD` | +0x14 | 2 byte(s): board mood changed by the transfer deal reasons (signed) [inference] |
-| `board_record::FAVOURITES_MOOD` | +0x16 | 2 byte(s): board mood changed by sales of favoured or rejected players and media stories, floor -10000 [inference] |
+| `board_record::FAVOURITES_MOOD` | +0x16 | 2 byte(s): board mood changed by sales of favoured or rejected players and media stories, floor -10000; below -750 is departure reason 4, 'overwhelming supporter pressure' (0xa0764c) [inference] |
 | `board_record::EXTRA_FUNDS_GRANTED` | +0x28 | 4 byte(s): money the board granted on a funds request or a funds ultimatum (0 none; cleared at season start and on a manager change) [inference] |
 | `board_record::SPENDING` | +0x30 | 8 byte(s): double spending figure, reputation squared / 4 at the season start [inference] |
-| `board_record::SPENDING_CEILING` | +0x38 | 8 byte(s): double compared with SPENDING for the debt departure reason [inference] |
 | `club_record::SEASON_RATING_YEAR` | +0x20e | 2 byte(s): SEASON_RATING + rating_record YEAR (0 in the season record) [inference] |
 | `club_shortlist::ACTIVE` | +0x4 | 1 byte(s): Shortlist state of the club (1 active; 2 also seen) [inference] |
 | `club_shortlist::DAYS` | +0x8 | 1 byte(s): Day counter; set to 100 when the club suspends a player, bids skipped at 100 or more [inference] |
@@ -315,6 +318,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `match_record_row::SECOND_NAME_ID` | +0xc | 4 byte(s): second name id [inference] |
 | `match_record_row::COMMON_NAME_ID` | +0x10 | 4 byte(s): common name id [inference] |
 | `match_record_row::RED_CARD` | +0x2d | 1 byte(s): red card (drawn in red on the ratings) [inference] |
+| `match_record_row::STAMINA_CEILING` | +0x36 | 2 byte(s): stamina ceiling of the player when the record was filled (truncated f32); row +0x36 [inference] |
 | `match_record_team::HEADERS` | +0x19 | 2 byte(s): headers contested [inference] |
 | `match_record_team::POSSESSION` | +0x1f | 5 byte(s): possession percentages; [4] is the last five minutes [inference] |
 | `match_record_team::FORMATION_X` | +0x35 | 22 byte(s): 11 u16: first coordinate of each formation slot (formation slot position, axis 0) [inference] |
@@ -339,3 +343,5 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `conmebol_liber::DRAWN_CLUB_COUNT` | +0xf2 | ? byte(s): Number of clubs in DRAWN_CLUBS [inference] |
 | `conmebol_merc::DRAWN_CLUB_COUNT` | +0xf2 | ? byte(s): Number of clubs in DRAWN_CLUBS [inference] |
 | `oceania_club_champ::DRAWN_CLUB_COUNT` | +0xf2 | ? byte(s): Number of clubs in DRAWN_CLUBS, zeroed with the list [inference] |
+| `display::FOCUS_FLAGS` | +0x12f4fe | 1 byte(s): flag byte written with the focus (0x20 here) [inference] |
+| `screen_manager::NETWORK_SLOT` | +0x7d4 | 2 byte(s): nonzero when slot k's screen updates go over the network (+0x300 x k) [inference] |
