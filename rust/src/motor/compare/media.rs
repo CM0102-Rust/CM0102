@@ -129,7 +129,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_transfer_squad_reactions(
     if read_i32(this + media_fields::STORY_LOG_COUNT) > 0 && read_i32(read_usize(this) + 8) != -1 {
         join(media_staff_by_id(read_i32(read_usize(this) + 8)), new);
     }
-    core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, sheet); // the contracts read above do not count
+    write_usize(G_CONTRACT_LOOKUP_RESULT, sheet); // the contracts read above do not count
     let before = crate::comparison::MemorySnapshot::read(&reg);
     MEDIA_REACTION_DRY_RUN = true;
     MEDIA_REACTION_STOPPED = false;
@@ -339,7 +339,7 @@ pub(crate) unsafe extern "C" fn compare_compare_story_log_records(a: usize, b: u
 /// Comparer for `remove_transfer_interest`.
 pub(crate) unsafe extern "thiscall" fn compare_remove_transfer_interest(this: usize, person: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REMOVE_TRANSFER_INTEREST);
-    let n = (*((this + media_fields::INTEREST_COUNT) as *const i32)).max(0) as usize;
+    let n = read_i32(this + media_fields::INTEREST_COUNT).max(0) as usize;
     let reg = [(this + media_fields::TRANSFER_INTERESTS, 0xc), (read_u32(this + media_fields::TRANSFER_INTERESTS) as usize, n * 25)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, person), || remove_transfer_interest(this, person));
     SCOREBOARD.record(igual, || format!("remove_transfer_interest({:x}) {:x?} x {:x?}", person, mo, mr));

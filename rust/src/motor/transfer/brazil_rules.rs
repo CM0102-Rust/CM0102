@@ -19,7 +19,7 @@ pub(crate) const BRAZIL_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 pub(crate) unsafe extern "thiscall" fn construct_brazil_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparison::branch("cqk_3 brazil");
     construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x968838, 1, &BRAZIL_TRANSFER_WINDOWS, 0x98b104, 0x50);
-    *((this + 0x13) as *mut u8) = 3; // cqk3: the Brazil limit
+    write_u8(this + 0x13, 3); // cqk3: the Brazil limit
     this
 }
 

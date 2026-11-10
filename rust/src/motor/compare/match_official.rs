@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn compare_move_counts(this: usize) -> u8 {
 /// Comparer for `decide_foul`.
 pub(crate) unsafe extern "thiscall" fn compare_decide_foul(this: usize, j: usize, code: u16, kind: *mut u8, value: *mut u8) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u16, *mut u8, *mut u8) -> u8>(IDX_DECIDE_FOUL);
-    let engine = Engine(*(this as *const usize));
+    let engine = Engine(read_usize(this));
     let mut reg = vec![(this + 8, 2), (kind as usize, 1), (value as usize, 1), (engine.addr() + engine::PENDING_PLAY_KIND, 16)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, code, kind, value), || crate::rng::without_counting(|| decide_foul(this, j, code, kind, value)));
@@ -43,7 +43,7 @@ pub(crate) unsafe extern "thiscall" fn compare_decide_foul(this: usize, j: usize
 /// Comparer for `punish_foul`.
 pub(crate) unsafe extern "thiscall" fn compare_punish_foul(this: usize, j: usize, kind: *mut u8, x: i8, sev: i8, flag: u8, weight: *mut f32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, i8, i8, u8, *mut f32)>(IDX_PUNISH_FOUL);
-    let reg = card_regions(*(this as *const usize), j, kind, weight);
+    let reg = card_regions(read_usize(this), j, kind, weight);
     let t0 = *kind;
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, kind, x, sev, flag, weight), || crate::rng::without_counting(|| punish_foul(this, j, kind, x, sev, flag, weight)));
     SCOREBOARD.record(igual, || format!("punish_foul(tipo {}, sev {}, flag {}) original={:x?} rust={:x?}", t0, sev, flag, mo, mr));
@@ -52,7 +52,7 @@ pub(crate) unsafe extern "thiscall" fn compare_punish_foul(this: usize, j: usize
 /// Comparer for `punish_move`.
 pub(crate) unsafe extern "thiscall" fn compare_punish_move(this: usize, j: usize, other: usize, kind: *mut u8, x: i8, sev: i8, flag: u8, weight: *mut f32, send_off: u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, *mut u8, i8, i8, u8, *mut f32, u8)>(IDX_PUNISH_MOVE);
-    let mut reg = card_regions(*(this as *const usize), j, kind, weight);
+    let mut reg = card_regions(read_usize(this), j, kind, weight);
     reg.push((other + 0x15, 1));
     let t0 = *kind;
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, j, other, kind, x, sev, flag, weight, send_off), || crate::rng::without_counting(|| punish_move(this, j, other, kind, x, sev, flag, weight, send_off)));

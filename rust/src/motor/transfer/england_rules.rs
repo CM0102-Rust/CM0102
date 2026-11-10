@@ -11,9 +11,9 @@ use super::*;
 /// no início da janela e 0 no fim; duas datas por janela) alocada em +4 (0x944e46; sem memória, a caixa da linha
 /// `linha` do fonte `arquivo`).
 pub(crate) unsafe fn set_transfer_windows(this: usize, n: u8, t: &[[u8; 6]], file: usize, row: u32) {
-    *((this + 8) as *mut u8) = n;
+    write_u8(this + 8, n);
     let j = exe::crt_malloc((t.len() * 6) as u32);
-    core::ptr::write_unaligned((this + 4) as *mut u32, j as u32);
+    write_u32(this + 4, j as u32);
     if j == 0 {
         show_error_at(file, row);
         return;
@@ -212,7 +212,7 @@ pub(crate) unsafe extern "thiscall" fn record_loan(_this: usize, offer: usize) {
     if nation != 0 && read_usize(nation) == read_usize(KEY_NATION_ENGLAND) {
         crate::comparison::branch("cqe_5 loan counted");
         let p = season_loans_entry(club);
-        *(p as *mut u8) = read_u8(p).wrapping_add(1); // cqe5: the season calculation
+        write_u8(p, read_u8(p).wrapping_add(1)); // cqe5: the season calculation
     }
 }
 
@@ -235,7 +235,7 @@ pub(crate) unsafe extern "thiscall" fn england_rules_daily_update(this: usize, d
     while i < read_usize(G_CLUB_COUNT) as i32 {
         let club = Club(read_usize(G_CLUB_TABLE).wrapping_add((i as usize).wrapping_mul(club::SIZE)));
         if club.nation().addr() == read_usize(this + 0xa) {
-            *(season_loans_entry(club) as *mut u8) = 0;
+            write_u8(season_loans_entry(club), 0);
         }
         i += 1;
     }
@@ -278,7 +278,7 @@ pub(crate) unsafe fn england_rules_compare_can_loan(o: unsafe extern "thiscall" 
         x
     }, || {
         if msg != 0 {
-            *(msg as *mut u8) = 0;
+            write_u8(msg, 0);
         }
         let x = r(this, club, player, msg, reason);
         tr = message_text(msg);

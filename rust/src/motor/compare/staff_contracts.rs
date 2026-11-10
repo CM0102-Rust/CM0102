@@ -100,7 +100,7 @@ pub(crate) unsafe extern "thiscall" fn compare_check_transfer_request_withdrawal
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_CHECK_TRANSFER_REQUEST_WITHDRAWAL);
     let sheet = read_u32(G_CONTRACT_LOOKUP_RESULT);
     let retira = should_withdraw_transfer_request(Contract(this)).is_some();
-    *(G_CONTRACT_LOOKUP_RESULT as *mut u32) = sheet;
+    write_u32(G_CONTRACT_LOOKUP_RESULT, sheet);
     if retira {
         return o(this, ctx);
     }

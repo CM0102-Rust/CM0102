@@ -15,7 +15,7 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_cup_stage(this: usize, 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, u32, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize>(IDX_CONSTRUCT_CUP_STAGE);
     let k = (n as u16 as i16).max(0) as usize;
     let plan: Vec<(usize, u8)> = (0..k).map(|i| {
-        let s = if seeds != 0 { *((seeds + i) as *const u8) } else if by_order != 0 { i as u8 } else { 0 };
+        let s = if seeds != 0 { read_u8(seeds + i) } else if by_order != 0 { i as u8 } else { 0 };
         (read_usize(teams + i * 4), s)
     }).collect();
     let size = (rounds as u16 as i16 as i32 * 0x68).max(0) as usize;

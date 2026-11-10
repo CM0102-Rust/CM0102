@@ -112,8 +112,8 @@ pub(crate) unsafe extern "C" fn compare_comp_util_get_latest_placed_club(comp: u
     if place as u8 > 2 {
         return o(comp, place);
     }
-    let n = (*(G_CLUB_COMP_HISTORY_COUNT as *const i32)).max(0) as usize;
-    let reg = [(*(G_CLUB_COMP_HISTORY_TABLE as *const usize), 0x1a * n)];
+    let n = read_i32(G_CLUB_COMP_HISTORY_COUNT).max(0) as usize;
+    let reg = [(read_usize(G_CLUB_COMP_HISTORY_TABLE), 0x1a * n)];
     let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(comp, place), || comp_util_get_latest_placed_club(comp, place));
     SCOREBOARD.record(igual && r == x, || format!("comp_util_get_latest_placed_club({:x}, {}) {:x}/{:x} {:x?} x {:x?}", comp, place as u8, r, x, mo, mr));
     r

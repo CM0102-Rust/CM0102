@@ -46,7 +46,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
         return;
     }
     let k = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), player));
-    *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = k.addr();
+    write_usize(G_CONTRACT_LOOKUP_RESULT, k.addr());
     if k.is_null() {
         return;
     }
@@ -77,7 +77,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     set_news_slot(nt, 6, r as u32);
     let p = (player.temperament() as i32) + (player.professionalism() as i32) < 0xc
         && (player.loyalty() as i32) < 6
-        && core::ptr::read_unaligned((player.player().addr() + 0xb) as *const i16) > 0x1482;
+        && read_i16(player.player().addr() + 0xb) > 0x1482;
     set_news_slot(nt, 7, p as u32);
     set_news_slot(nt, 8, (deadline as u8 == 1) as u32);
     let kind = c.squad_status() & 0xf0;

@@ -13,9 +13,9 @@ pub(crate) unsafe fn new_marker_comp(vtabela: usize, g: usize) -> usize {
     }
     exe::new_comp(c);
     write_usize(c, vtabela);
-    *((c + 0x42) as *mut u8) = 1;
+    write_u8(c + 0x42, 1);
     write_usize(c + 4, comp_record_of_key(g));
-    *((c + 0x50) as *mut u8) = 0xff;
+    write_u8(c + 0x50, 0xff);
     c
 }
 
@@ -880,8 +880,8 @@ pub(crate) unsafe fn fra_first_apply_league_rules(this: League, written: &[(usiz
     for &(d, t, v) in written {
         match t {
             1 => *((this.addr() + d) as *mut u8) = v as u8,
-            2 => core::ptr::write_unaligned((this.addr() + d) as *mut u16, v as u16),
-            _ => core::ptr::write_unaligned((this.addr() + d) as *mut u32, v),
+            2 => write_u16(this.addr() + d, v as u16),
+            _ => write_u32(this.addr() + d, v),
         }
     }
     if !FRA_FIRST_RULES_DRY_RUN {
@@ -1036,9 +1036,9 @@ pub(crate) unsafe fn fra_first_fill_league_table(this: League, file: usize, row:
 /// 1 (0 sem encher). Fonte 0x9ccb5c, linha 0x1d3.
 pub(crate) unsafe extern "thiscall" fn fra_first_create_table(this: usize) -> u32 {
     let this = League(this);
-    let n: i16 = if core::ptr::read_unaligned((this.addr() + league::YEAR) as *const u16) == 0x7d1 { 0x12 } else { 0x14 };
-    core::ptr::write_unaligned((this.addr() + league::CLUB_COUNT) as *mut i16, n);
-    core::ptr::write_unaligned((this.addr() + league::GAMES_PER_CLUB) as *mut u16, 0xffff);
+    let n: i16 = if read_u16(this.addr() + league::YEAR) == 0x7d1 { 0x12 } else { 0x14 };
+    write_i16(this.addr() + league::CLUB_COUNT, n);
+    write_u16(this.addr() + league::GAMES_PER_CLUB, 0xffff);
     if fra_first_fill_league_table(this, 0x9ccb5c, 0x1d3, KEY_CLUB_COMP_FRENCH_FIRST_DIVISION) != Some(true) {
         return 0;
     }

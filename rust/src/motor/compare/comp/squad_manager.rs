@@ -135,7 +135,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init_new_game(this: usize) {
     SQUAD_NUMBERS_PLAN = Some(Vec::new());
     o(this);
     let done = SQUAD_NUMBERS_PLAN.take().unwrap_or_default();
-    let cleared = *(this as *const u16) == 0;
+    let cleared = read_u16(this) == 0;
     SCOREBOARD.record(done == plan && cleared, || format!("init_new_game: plano {:x?} original {:x?} ano zerado {}", plan, done, cleared));
 }
 

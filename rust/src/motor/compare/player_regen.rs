@@ -79,7 +79,7 @@ pub(crate) unsafe extern "stdcall" fn compare_player_regen_sign_for_club(person:
         return r;
     }
     let c = exe::contract_manager_get_contract(read_i32(G_CONTRACT_MANAGER) as usize, person);
-    let ok = r == 1 && (club.squad(k) as i32) == person.addr() as i32 && (person.club_job().addr() as i32) == club.addr() as i32 && (c == 0 || *((c + 0x3a) as *const u8) == 0);
+    let ok = r == 1 && (club.squad(k) as i32) == person.addr() as i32 && (person.club_job().addr() as i32) == club.addr() as i32 && (c == 0 || read_u8(c + 0x3a) == 0);
     SCOREBOARD.record(ok, || format!("player_regen_sign_for_club({:x}, {:x}) vaga {} original={}", person.addr(), club.addr(), k, r));
     r
 }
@@ -290,7 +290,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_retirement(this: usize, r: us
 pub(crate) unsafe extern "thiscall" fn compare_queue_staff_for_regen(this: usize, entry: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_QUEUE_STAFF_FOR_REGEN);
     let id = read_usize(entry) as i32;
-    if id < 0 || id > *(G_STAFF_COUNT as *const i32) {
+    if id < 0 || id > read_i32(G_STAFF_COUNT) {
         return o(this, entry);
     }
     let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)));
@@ -309,7 +309,7 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_staff_for_regen(this: usize
         let i = read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS).wrapping_add(n2 << 4);
         let gn = read_usize(i + regen_pool_item::NATION_ID) as u32;
         ok &= read_usize(i) as u32 == rid && read_usize(i + regen_pool_item::STAFF_ID) as u32 == rp
-            && rnac.map_or(gn < (*(G_NATION_COUNT as *const i32)).max(1) as u32, |v| gn == v);
+            && rnac.map_or(gn < read_i32(G_NATION_COUNT).max(1) as u32, |v| gn == v);
     }
     ok &= read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT) == n3 + bench.is_some() as usize;
     if let Some((bid, bnac, bp)) = bench {
@@ -325,7 +325,7 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_staff_for_regen(this: usize
 /// Comparer for `remove_retirement`.
 pub(crate) unsafe extern "thiscall" fn compare_remove_retirement(this: usize, key: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REMOVE_RETIREMENT);
-    let n = (*((this + player_regen_fields::RETIREMENT_COUNT) as *const i32)).max(0) as usize;
+    let n = read_i32(this + player_regen_fields::RETIREMENT_COUNT).max(0) as usize;
     let reg = [(this + player_regen_fields::RETIREMENTS, 8), (read_u32(this + player_regen_fields::RETIREMENTS) as usize, n * 26)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, key), || remove_retirement(this, key));
     SCOREBOARD.record(igual, || format!("remove_retirement {:x?} x {:x?}", mo, mr));

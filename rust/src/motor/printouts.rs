@@ -66,7 +66,7 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, club: usi
             if p == 0 {
                 break;
             }
-            if *((p + 0xca) as *const i8) == t {
+            if read_i8(p + 0xca) == t {
                 let accepted = if nation == -1 {
                     crate::comparison::branch("cpz_10 commentator of any nation");
                     true // cpz10: any nation
@@ -140,7 +140,7 @@ pub(crate) unsafe extern "thiscall" fn get_pundit_name(this: usize, kind: u32, i
                 }
                 if read_i16_as_i32(p) as i16 == id {
                     sprintf(name, 0x991944, p + 2);
-                    *mark = *((p + 0xd3) as *const u8);
+                    *mark = read_u8(p + 0xd3);
                     return;
                 }
                 i += 1;

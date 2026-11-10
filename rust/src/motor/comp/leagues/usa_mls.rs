@@ -106,7 +106,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_playoff_stage(this: usize)
     if list == 0 {
         return show_error_at(0xaa1fb4, 0x58d);
     }
-    let poe = |k: usize, c: usize| core::ptr::write_unaligned((list + 4 * k) as *mut usize, c);
+    let poe = |k: usize, c: usize| write_usize(list + 4 * k, c);
     let mut r = [0u8; 54];
     put_club_points_record(&mut r, 0, table_row_club_points(this, 0));
     put_club_points_record(&mut r, 1, table_row_club_points(League(a), 0));
@@ -138,7 +138,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_playoff_stage(this: usize)
     } else {
         0
     };
-    core::ptr::write_unaligned((this.stages() + 8) as *mut usize, stage);
+    write_usize(this.stages() + 8, stage);
     exe::crt_free(t);
     let stage = read_usize(this.stages() + 8);
     if stage == 0 {
@@ -181,8 +181,8 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
     let mut i = 0i32;
     while i < po.team_count() as i32 && n < 2 {
         let e = po.team_table() + 6 * i as usize;
-        if *((e + 5) as *const u8) == 1 {
-            core::ptr::write_unaligned((list + 4 * n as usize) as *mut usize, read_usize(e)); // cqr4: os finalistas
+        if read_u8(e + 5) == 1 {
+            write_usize(list + 4 * n as usize, read_usize(e)); // cqr4: os finalistas
             n += 1;
         }
         i += 1;
@@ -197,7 +197,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
     } else {
         0
     };
-    core::ptr::write_unaligned((this.stages() + 0xc) as *mut usize, stage);
+    write_usize(this.stages() + 0xc, stage);
     exe::crt_free(t);
     let stage = read_usize(this.stages() + 0xc);
     if stage == 0 {
@@ -304,7 +304,7 @@ pub(crate) unsafe fn create_division_stage(this: League, code: i16, k: u32, curr
     while i < read_usize(G_CLUB_COUNT) as i32 && n < this.club_count() {
         let c = base + i as usize * club::SIZE;
         if is_in_mls_division(this, Club(c), code) {
-            core::ptr::write_unaligned((v + 4 * n as usize) as *mut usize, c);
+            write_usize(v + 4 * n as usize, c);
             n += 1;
         }
         i += 1;
@@ -321,7 +321,7 @@ pub(crate) unsafe fn create_division_stage(this: League, code: i16, k: u32, curr
     } else {
         0
     };
-    core::ptr::write_unaligned((this.stages() + 4 * k as usize) as *mut usize, stage);
+    write_usize(this.stages() + 4 * k as usize, stage);
     exe::crt_free(v);
     exe::crt_free(t);
     let stage = read_usize(this.stages() + 4 * k as usize);
@@ -330,7 +330,7 @@ pub(crate) unsafe fn create_division_stage(this: League, code: i16, k: u32, curr
     }
     this.set_current_stage((current) as usize);
     crate::comparison::branch(ramo);
-    core::ptr::write_unaligned((stage + league::STAGE_ID) as *mut i16, code);
+    write_i16(stage + league::STAGE_ID, code);
 }
 
 /// The second MLS division (code 0x47b): a round-robin stage with its four clubs (in database order), the same rounds,
@@ -421,12 +421,12 @@ pub(crate) unsafe fn compare_division_stage(name: &str, this: League, code: i16,
 /// caixa, a cópia devolve 0 (a original devolve o eax da caixa; a virada é chamada pelo laço das viradas, que não o lê).
 /// O vetor das fases (+0xc) fica: as divisões e o play-off regravam as vagas.
 pub(crate) unsafe fn mls_start_new_season(this: League, year: i16) -> u32 {
-    core::ptr::write_unaligned((this.addr() + league::SEASON_CLOSED) as *mut u32, 0);
+    write_u32(this.addr() + league::SEASON_CLOSED, 0);
     exe::league_free_table(this, 0);
     let l = this.round_dates();
     if l != 0 {
         exe::crt_free(l);
-        core::ptr::write_unaligned((this.addr() + league::ROUND_DATES) as *mut usize, 0);
+        write_usize(this.addr() + league::ROUND_DATES, 0);
     }
     if (this.current_stage() as i32) >= 0 {
         let mut i = 0i32;
@@ -442,13 +442,13 @@ pub(crate) unsafe fn mls_start_new_season(this: League, year: i16) -> u32 {
             }
         }
     }
-    core::ptr::write_unaligned((this.addr() + league::CURRENT_STAGE) as *mut i32, -1);
+    write_i32(this.addr() + league::CURRENT_STAGE, -1);
     let stats = read_usize(this.addr() + league::COMP_STATS);
     if stats != 0 {
         exe::comp_stats_archive_season_and_reset(stats, 1);
     }
     let a = this.year();
-    core::ptr::write_unaligned((this.addr() + league::YEAR) as *mut i16, a.wrapping_add(year));
+    write_i16(this.addr() + league::YEAR, a.wrapping_add(year));
     crate::comparison::branch("cqs_2 mls rollover");
     let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x8c));
     if rules(this.addr()) == 0 {
@@ -518,9 +518,9 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_set_predicted_positions(this: usi
     while i < this.club_count() {
         let n = this.club_count() as i32;
         let k = i as usize;
-        core::ptr::write_unaligned((v + 4 * k) as *mut usize, aus_nsl_table_row_club(this, k));
-        core::ptr::write_unaligned((v + 4 * (k + n as usize)) as *mut usize, aus_nsl_table_row_club(League(read_usize(this.stages())), k));
-        core::ptr::write_unaligned((v + 4 * (k + 2 * n as usize)) as *mut usize, aus_nsl_table_row_club(League(read_usize(this.stages() + 4)), k));
+        write_usize(v + 4 * k, aus_nsl_table_row_club(this, k));
+        write_usize(v + 4 * (k + n as usize), aus_nsl_table_row_club(League(read_usize(this.stages())), k));
+        write_usize(v + 4 * (k + 2 * n as usize), aus_nsl_table_row_club(League(read_usize(this.stages() + 4)), k));
         i += 1;
     }
     let n = this.club_count() as i32;
@@ -556,19 +556,19 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_get_club_array(this: usize, list:
     }
     let mut i: i16 = 0;
     while i < this.club_count() {
-        core::ptr::write_unaligned((*list + 4 * i as usize) as *mut usize, aus_nsl_table_row_club(this, i as usize));
+        write_usize(*list + 4 * i as usize, aus_nsl_table_row_club(this, i as usize));
         i += 1;
     }
     let mut i: i16 = 0;
     while i < this.club_count() {
         let k = this.club_count() as i32 + i as i32;
-        core::ptr::write_unaligned((*list + 4 * k as usize) as *mut usize, aus_nsl_table_row_club(League(read_usize(this.stages())), i as usize));
+        write_usize(*list + 4 * k as usize, aus_nsl_table_row_club(League(read_usize(this.stages())), i as usize));
         i += 1;
     }
     let mut i: i16 = 0;
     while i < this.club_count() {
         let k = 2 * this.club_count() as i32 + i as i32;
-        core::ptr::write_unaligned((*list + 4 * k as usize) as *mut usize, aus_nsl_table_row_club(League(read_usize(this.stages() + 4)), i as usize));
+        write_usize(*list + 4 * k as usize, aus_nsl_table_row_club(League(read_usize(this.stages() + 4)), i as usize));
         i += 1;
     }
     crate::comparison::branch("cqs_2 mls clubs");
@@ -671,8 +671,8 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_update_staff_records_for_status(t
 /// marca 0 e 1 e sem o bloco de estatísticas +8, guardado e devolvido). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn usa_mls_add_result(this: usize, game: usize, stats: u32) -> u32 {
     let this = League(this);
-    if (*((game + 0x42) as *const i8)) < 2 {
-        *((game + 0x42) as *mut u8) = 0xff;
+    if read_i8(game + 0x42) < 2 {
+        write_u8(game + 0x42, 0xff);
     }
     exe::league_add_result(this, game, stats);
     if this.current_stage() != 1 {
@@ -680,14 +680,14 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_add_result(this: usize, game: usi
     }
     let stored = this.comp_stats();
     this.set_comp_stats((0) as usize);
-    *((game + 0x42) as *mut u8) = 0;
+    write_u8(game + 0x42, 0);
     let estagio = |k: usize| -> (usize, unsafe extern "thiscall" fn(usize, usize, u32) -> u32) {
         let e = read_usize(this.stages() + 4 * k);
         (e, core::mem::transmute(read_usize(read_usize(e) + 4)))
     };
     let (e0, f0) = estagio(0);
     f0(e0, game, stats);
-    *((game + 0x42) as *mut u8) = 1;
+    write_u8(game + 0x42, 1);
     let (e1, f1) = estagio(1);
     crate::comparison::branch("cqk_9 mls second conference");
     f1(e1, game, stats); // cqk9: the match in the second conference table

@@ -210,7 +210,7 @@ pub(crate) unsafe extern "stdcall" fn compare_shortlist_set_up_formation_slots(e
     let o = original_fn::<unsafe extern "stdcall" fn(usize)>(IDX_SHORTLIST_SET_UP_FORMATION_SLOTS);
     let reg = [(read_usize(entry), 40 * 0x25)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(entry), || shortlist_set_up_formation_slots(entry));
-    SCOREBOARD.record(igual, || format!("shortlist_set_up_formation_slots(formacao {}) primeira diferença {:x?}", *((entry + 7) as *const i8), first_memory_diff(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("shortlist_set_up_formation_slots(formacao {}) primeira diferença {:x?}", read_i8(entry + 7), first_memory_diff(&mo, &mr)));
 }
 
 /// Comparer for `update_club_shortlist`.
@@ -328,7 +328,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_interested_clubs(this: us
 pub(crate) unsafe extern "thiscall" fn compare_add_shortlist_entry(this: usize, person: usize, club: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ADD_SHORTLIST_ENTRY);
     let key = [read_usize(person) as u32, if club != 0 { read_usize(club) as u32 } else { 0xffff_ffff }];
-    let tinha = read_usize(this) != 0 && exe::crt_bsearch((key.as_ptr()) as usize, read_usize(this), (read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT)) as u32, 8, 0x757ea0) != 0;
+    let tinha = read_usize(this) != 0 && exe::crt_bsearch((key.as_ptr()) as usize, read_usize(this), read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT) as u32, 8, 0x757ea0) != 0;
     let (n0, n1) = if read_usize(this) != 0 { (read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT), read_i32(this + shortlist_manager_fields::PAIRS_BY_CLUB_COUNT)) } else { (0, 0) };
     let r = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(0x4f)) + 0xb;
     let nib = read_u8(r);
@@ -336,7 +336,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_shortlist_entry(this: usize, 
     o(this, person, club);
     let expected = if sum { (nib & 0xf0) | (nib.wrapping_add(1) & 0xf) } else { nib };
     let (d0, d1) = (if tinha { n0 } else { n0 + 1 }, if tinha { n1 } else { n1 + 1 });
-    let found = exe::crt_bsearch((key.as_ptr()) as usize, read_usize(this), (read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT)) as u32, 8, 0x757ea0) != 0;
+    let found = exe::crt_bsearch((key.as_ptr()) as usize, read_usize(this), read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT) as u32, 8, 0x757ea0) != 0;
     let ok = read_i32(this + shortlist_manager_fields::PAIRS_BY_PERSON_COUNT) == d0 && read_i32(this + shortlist_manager_fields::PAIRS_BY_CLUB_COUNT) == d1 && read_u8(r) == expected && (found || club == 0);
     SCOREBOARD.record(ok, || {
         format!("add_shortlist_entry({:#x}, {:#x}) tinha={} contas {}/{} -> {}/{} nibble {:#x} -> {:#x} (esperado {:#x})",
@@ -436,7 +436,7 @@ pub(crate) unsafe extern "thiscall" fn compare_try_loan_offer_for_player(this: u
 pub(crate) unsafe extern "thiscall" fn compare_clear_bid_markers_for_player(manager: usize, club: *const i32, player: *const i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32, *const i32)>(IDX_CLEAR_BID_MARKERS_FOR_PLAYER);
     let l = club_shortlist(manager, club);
-    let reg = if *((l + club_shortlist::ACTIVE) as *const u8) == 1 { vec![(core::ptr::read_unaligned(l as *const usize), 40 * 0x25)] } else { vec![(l, 9)] };
+    let reg = if read_u8(l + club_shortlist::ACTIVE) == 1 { vec![(read_usize(l), 40 * 0x25)] } else { vec![(l, 9)] };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(manager, club, player), || clear_bid_markers_for_player(manager, club, player));
     SCOREBOARD.record(igual, || format!("clear_bid_markers_for_player({}, {}) {:x?} x {:x?}", *club, *player, mo, mr));
 }
@@ -465,7 +465,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_club_target_reputation(thi
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> i32>(IDX_UPDATE_CLUB_TARGET_REPUTATION);
     let reg = [(shopping_list_entry(this, club) + 5, 2)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, club), || update_club_target_reputation(this, club));
-    SCOREBOARD.record(igual && r == n, || format!("update_club_target_reputation({}) original={} rust={} {:x?} x {:x?}", *(club as *const i32), r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("update_club_target_reputation({}) original={} rust={} {:x?} x {:x?}", read_i32(club), r, n, mo, mr));
     r
 }
 

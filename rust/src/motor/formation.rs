@@ -11,7 +11,7 @@ pub(crate) unsafe extern "thiscall" fn slot_code(this: usize, slot: i8, second: 
         return original_fn::<unsafe extern "thiscall" fn(usize, i8, u32) -> u16>(IDX_SLOT_CODE)(this, slot, second);
     }
     let base = if second != 0 { 0x14e } else { 0x12d };
-    core::ptr::read_unaligned((this + base + 2 * slot as usize) as *const u16)
+    read_u16(this + base + 2 * slot as usize)
 }
 
 /// Returns a grammatical attribute of a competition name [inference: its gender]: from the stage name id in the low
@@ -30,7 +30,7 @@ pub(crate) unsafe extern "C" fn competition_criterion(record: usize, a: u32, b: 
     if record == 0 {
         return 1;
     }
-    *((record + if kind == 1 { 0x37 } else { 0x52 }) as *const u8)
+    read_u8(record + if kind == 1 { 0x37 } else { 0x52 })
 }
 
 /// With attribute masking enabled and a valid person, resets that person's knowledge level (9-byte record) in each of
@@ -39,14 +39,14 @@ pub(crate) unsafe extern "C" fn competition_criterion(record: usize, a: u32, b: 
 /// [pt] { 0x5afd00 } (ret 4, fog_of_war.cpp): com a nevoa ligada (0x9cc270) e a pessoa valida, zera o
 /// nivel dela (registro de 9 bytes) nos 16 quadros de [this] que existem e estao ativos (+4).
 pub(crate) unsafe extern "thiscall" fn forget_person(this: usize, person: usize) {
-    let valid = || *(person as *const i32) < *(G_STAFF_COUNT as *const i32) && *(G_ATTRIBUTE_MASKING_ENABLED as *const u8) != 0;
+    let valid = || read_i32(person) < read_i32(G_STAFF_COUNT) && *(G_ATTRIBUTE_MASKING_ENABLED as *const u8) != 0;
     if person == 0 || !valid() {
         return;
     }
     for k in 0..16usize {
-        let q = *((this + 4 * k) as *const usize);
+        let q = read_usize(this + 4 * k);
         if q != 0 && *((q + 4) as *const u32) != 0 && valid() {
-            *((*(q as *const usize)).wrapping_add((*(person as *const i32) as usize).wrapping_mul(9)) as *mut u8) = 0;
+            write_u8(read_usize(q).wrapping_add((read_i32(person) as usize).wrapping_mul(9)), 0);
         }
     }
 }
@@ -60,8 +60,8 @@ pub(crate) unsafe extern "thiscall" fn manager_table(this: usize, manager: usize
     if manager == 0 {
         return 0;
     }
-    let k = (*(G_STAFF_COUNT as *const i32)).wrapping_sub(*(manager as *const i32)) as usize;
-    *(this.wrapping_add(k.wrapping_mul(4)).wrapping_sub(4) as *const usize)
+    let k = read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(manager)) as usize;
+    read_usize(this.wrapping_add(k.wrapping_mul(4)).wrapping_sub(4))
 }
 
 /// Splits the position mask into sector and side (`exe::formation_split_position_code`), finds the first of the 11 formation slots (+0x12d) of that
@@ -74,7 +74,7 @@ pub(crate) unsafe extern "thiscall" fn manager_table(this: usize, manager: usize
 pub(crate) unsafe extern "thiscall" fn sector_slot_taken(this: usize, mask: u32, players: usize) -> u32 {
     let (mut setor, mut lado) = (0u16, 0u16);
     exe::formation_split_position_code(mask, &mut setor, &mut lado);
-    let home = |k: usize| core::ptr::read_unaligned((this + 0x12d + 2 * k) as *const u16);
+    let home = |k: usize| read_u16(this + 0x12d + 2 * k);
     let k = match (0..11usize).find(|&k| home(k) & setor != 0 && home(k) & 0x200 != 0) {
         Some(k) => k as u8,
         None => return 0,
@@ -84,7 +84,7 @@ pub(crate) unsafe extern "thiscall" fn sector_slot_taken(this: usize, mask: u32,
     }
     (0..20usize).any(|i| {
         let p = players + 0x19 + i * 0x1be;
-        let c = *(p as *const u8);
+        let c = read_u8(p);
         c == k || (c == 0xfe && *((p + 1) as *const u8) == k)
     }) as u32
 }
@@ -95,7 +95,7 @@ pub(crate) unsafe extern "thiscall" fn sector_slot_taken(this: usize, mask: u32,
 /// [pt] { 0x5b2f10 } (ret 4, formation.cpp): a vaga (0..10) da casa `codigo` entre as 11 de +0x12d; 0xff
 /// se nao estiver.
 pub(crate) unsafe extern "thiscall" fn slot_of_code(this: usize, code: u16) -> u32 {
-    (0..11u32).find(|&k| core::ptr::read_unaligned((this + 0x12d + 2 * k as usize) as *const u16) == code).unwrap_or(0xff)
+    (0..11u32).find(|&k| read_u16(this + 0x12d + 2 * k as usize) == code).unwrap_or(0xff)
 }
 
 /// marks (+0x5b4) with 4 and 8 become 2; assigned records (+0x5bf) go back to −1; returns 1
@@ -109,7 +109,7 @@ pub(crate) unsafe extern "thiscall" fn clear_assigned(this: usize) -> u32 {
         if *b & 4 != 0 && *b & 8 != 0 {
             *b = 2;
         }
-        core::ptr::write_unaligned((this + 0x5bf + 4 * k) as *mut i32, -1);
+        write_i32(this + 0x5bf + 4 * k, -1);
     }
     1
 }
@@ -124,7 +124,7 @@ pub(crate) unsafe extern "thiscall" fn formation_mask(this: usize) -> u32 {
     let m = (this + 0x187b) as *mut u32;
     core::ptr::write_unaligned(m, 0);
     for k in 0..11usize {
-        let c = core::ptr::read_unaligned((this + 0x12d + 2 * k) as *const i16);
+        let c = read_i16(this + 0x12d + 2 * k);
         let v = core::ptr::read_unaligned(m) | exe::formation_position_to_shape_bit(c);
         core::ptr::write_unaligned(m, v);
     }
@@ -181,12 +181,12 @@ pub(crate) unsafe extern "thiscall" fn set_square(this: usize, position: i8, mas
         _ => 0,
     };
     if !(0..=10).contains(&position) || group == 0 {
-        *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
+        write_u32(G_MOUSE_LEFT_BUTTON_DOWN, 0);
         return 0;
     }
     let home = (this + 0x188b + 8 * position as usize) as *mut u64;
     *home = (*home & !group) | mask;
-    *((this + 0x187f) as *mut u32) = 0;
+    write_u32(this + 0x187f, 0);
     1
 }
 
@@ -480,7 +480,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
     let su = s as usize;
     let cel = this + 0x164 + 4 * (zy as usize + 4 * (zx as usize + 3 * (f as usize + 2 * su)));
     crate::comparison::branch("cpu_11 coordinate recorded");
-    core::ptr::write_unaligned(cel as *mut u32, coord); // cpu11: a coordenada
+    write_u32(cel, coord); // cpu11: a coordenada
     // the output of 0x5b7e60 is the coord argument itself in the original (a single slot, for the whole function)
     let mut out: [i16; 2] = [cx, cy];
     // simplification: the lists of the two stages stay contiguous as at [esp+0x64]; indexes beyond 0xea do not happen
@@ -523,7 +523,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
             list += 2;
         }
     }
-    core::ptr::write_unaligned((this + 0x187f) as *mut u32, 0);
+    write_u32(this + 0x187f, 0);
     let general = this + 0x12d + su * 2;
     let mut sf: i8 = (best[0] > best[1]) as i8;
     let mut si: i8 = 0;
@@ -542,10 +542,10 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
     if read_i16(general) as u16 != new {
         write_u16(general, new);
         exe::formation_update_shape_code(this);
-        *((this + 0x143 + su) as *mut u8) = 1;
+        write_u8(this + 0x143 + su, 1);
         for k in 0..11i8 {
             if k != s && read_i16(this + 0x12d + k as usize * 2) as u16 == new {
-                *((this + 0x143 + k as usize) as *mut u8) = 0;
+                write_u8(this + 0x143 + k as usize, 0);
             }
         }
     }
@@ -631,7 +631,7 @@ pub(crate) unsafe extern "thiscall" fn check_duplicate_position(this: usize, hom
     let su = s as usize;
     for k in 0..11usize {
         if k != su && read_i16(this + 0x12d + k * 2) == read_i16(this + 0x12d + su * 2) {
-            if *((this + 0x143 + k) as *const i8) < *((this + 0x143 + su) as *const i8) {
+            if read_i8(this + 0x143 + k) < read_i8(this + 0x143 + su) {
                 *out = 1;
                 return 1;
             }
@@ -660,7 +660,7 @@ pub(crate) unsafe extern "thiscall" fn set_marking_type(this: usize, home: u32, 
     };
     let b = (this as isize + home as u8 as i8 as isize + 0x5b4) as *mut u8;
     *b = *b & limpa | m;
-    core::ptr::write_unaligned((this + 0x187f) as *mut u32, 0);
+    write_u32(this + 0x187f, 0);
     1
 }
 
@@ -694,11 +694,11 @@ pub(crate) unsafe extern "thiscall" fn build_position_lookup(this: usize) -> u32
                 let i = (12 * k + 4 * a18 + a14) as usize;
                 for y in 3 * a18..3 * a18 + 3 {
                     for x in 3 * a14..3 * a14 + 3 {
-                        let column = core::ptr::read_unaligned((this + i * 4 + 0x164) as *const i16) as i32;
+                        let column = read_i16(this + i * 4 + 0x164) as i32;
                         let c = (column * 9 / 27) as u8;
                         let p = (this as isize + 0x5eb + ((9 * k + y) * 12 + x) as isize) as *mut u8;
                         *p = (*p & 0xf0) | (c & 0xf);
-                        let row = core::ptr::read_unaligned((this + i * 4 + 0x166) as *const i16) as i32;
+                        let row = read_i16(this + i * 4 + 0x166) as i32;
                         let d = ((row * 12 / 36) as u8) << 4;
                         *p = (c & 0xf) | d;
                         let q = (this as isize + 0xf9e + ((9 * k - y) * 12 - x) as isize) as *mut u8;
@@ -748,7 +748,7 @@ pub(crate) unsafe extern "thiscall" fn stored_cell(t: usize, slot: i8, attack: i
         return original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32) -> u32>(IDX_STORED_CELL)(t, slot, attack, band, out);
     }
     let i = high as usize + 4 * (low as usize + 3 * (attack as usize + 2 * slot as usize));
-    *out = core::ptr::read_unaligned((t + 0x164 + 4 * i) as *const u32);
+    *out = read_u32(t + 0x164 + 4 * i);
     1
 }
 
@@ -776,7 +776,7 @@ pub(crate) unsafe extern "thiscall" fn set_formation_flag(t: usize, m: u32) -> u
     };
     let marks = (t + 0x584) as *mut u32;
     let v = core::ptr::read_unaligned(marks) & !group | m;
-    core::ptr::write_unaligned((t + 0x187f) as *mut u32, 0);
+    write_u32(t + 0x187f, 0);
     core::ptr::write_unaligned(marks, v);
     1
 }
@@ -853,12 +853,12 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
     if crt_fread_one(senha, 0x32, f) != 1 {
         return fail_read(quiet, 0x909, f);
     }
-    let strlen = |a: usize| (0..).take_while(|&k| *((a + k) as *const u8) != 0).count();
+    let strlen = |a: usize| (0..).take_while(|&k| read_u8(a + k) != 0).count();
     if strlen(senha) != 0 {
         let mut k = 0usize;
         loop {
-            let b = *((senha + k) as *const u8);
-            *((senha + k) as *mut u8) = if b == 0xff { 0xff } else { !b }; // cqg8: a senha invertida
+            let b = read_u8(senha + k);
+            write_u8(senha + k, if b == 0xff { 0xff } else { !b }); // cqg8: a senha invertida
             k += 1;
             if k >= strlen(senha) {
                 break;
@@ -965,7 +965,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
     exe::crt_strtok(path, 0, 0, (this) as *mut u8, (0) as *mut u8);
     exe::formation_build_position_lookup(this);
     write_u32(this + 0x187f, 1);
-    write_u32(this + 0x1883, (*((this + 0x33) as *const u8) != 0) as u32);
+    write_u32(this + 0x1883, (read_u8(this + 0x33) != 0) as u32);
     write_u32(this + 0x1887, 1);
     cash_crt_fclose(f);
     1
@@ -1032,16 +1032,16 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
     let general = this + 0x12d + 2 * s;
     let extra_of_home = this + 0x14e + 2 * s;
     if extra == 0 && read_i16(general) != p {
-        core::ptr::write_unaligned(general as *mut i16, p);
+        write_i16(general, p);
         exe::formation_update_shape_code(this);
-        *((this + 0x143 + s) as *mut u8) = 1;
+        write_u8(this + 0x143 + s, 1);
         for j in 0..11usize {
             if j != s && read_i16(this + 0x12d + 2 * j) == p {
-                *((this + 0x143 + j) as *mut u8) = 0; // the other square with the same position
+                write_u8(this + 0x143 + j, 0); // the other square with the same position
             }
         }
     }
-    core::ptr::write_unaligned(extra_of_home as *mut i16, p);
+    write_i16(extra_of_home, p);
     // 0x5b7e60 and 0x5b73a0 only read the low word of the mask (the original pushes eax with whatever high part it has)
     // the outputs carry over from one iteration to the next, like the original’s locals (uninitialized only if 0x5b73a0 fails
     // right on the first one: zero here)
@@ -1069,12 +1069,12 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
                 }
             };
             exe::formation_get_default_coordinate(a, (0) as u32 as i8, arg, (&mut saida) as *mut u32 as *mut i16);
-            core::ptr::write_unaligned(sem_bola as *mut u32, saida);
+            write_u32(sem_bola, saida);
             exe::formation_get_default_coordinate(b, (1) as u32 as i8, arg, (&mut saida) as *mut u32 as *mut i16);
-            core::ptr::write_unaligned(com_bola as *mut u32, saida);
+            write_u32(com_bola, saida);
         }
     }
-    core::ptr::write_unaligned((this + 0x187f) as *mut u32, 0);
+    write_u32(this + 0x187f, 0);
     1
 }
 

@@ -43,7 +43,7 @@ pub(crate) unsafe fn group_stage_qualifiers(this: Cup) -> [usize; 8] {
     let mut i = 0i16;
     while i < teams && n < 4 {
         let e = this.team_table() + i as usize * 6;
-        if *((e + 5) as *const u8) == 1 {
+        if read_u8(e + 5) == 1 {
             v[n] = read_usize(e); // cqt12: um vivo da primeira zona
             n += 1;
         }
@@ -52,7 +52,7 @@ pub(crate) unsafe fn group_stage_qualifiers(this: Cup) -> [usize; 8] {
     let mut i = 0i16;
     while i < teams && n < 8 {
         let e = read_usize(read_usize(this.stages()) + 0xa7) + i as usize * 6;
-        if *((e + 5) as *const u8) == 1 {
+        if read_u8(e + 5) == 1 {
             v[n] = read_usize(e);
             n += 1;
         }
@@ -317,8 +317,8 @@ pub(crate) unsafe fn create_round_table(this: Cup, f: Option<ScheduleStage>, rod
                 exe::cup_set_round_match_day(t, r, vaga, sem, hora, cod, mando);
             }
             Cqp11B(o, v) => *((t + o) as *mut u8) = v,
-            Cqp11W(o, v) => core::ptr::write_unaligned((t + o) as *mut u16, v),
-            Cqp11X(o, v) => core::ptr::write_unaligned((t + o) as *mut u32, v),
+            Cqp11W(o, v) => write_u16(t + o, v),
+            Cqp11X(o, v) => write_u32(t + o, v),
         }
     }
     t

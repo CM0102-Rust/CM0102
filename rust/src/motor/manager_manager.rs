@@ -760,9 +760,9 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
     write_i16(ln() + 0xe, 0);
     write_u32(ln() + 0x2c, 0);
     let rep = club.reputation() as i32;
-    core::ptr::write_unaligned((ln() + 0x30) as *mut f64, rep.wrapping_mul(rep) as f64 * read_f64(rdata::F64_0_25));
+    write_f64(ln() + 0x30, rep.wrapping_mul(rep) as f64 * read_f64(rdata::F64_0_25));
     let l38 = ln() + 0x38;
-    core::ptr::write_unaligned(l38 as *mut f64, read_f64(l38) * read_f64(rdata::F64_0_25));
+    write_f64(l38, read_f64(l38) * read_f64(rdata::F64_0_25));
     write_u8(ln(), 0);
     let mut days: i32 = 0;
     if read_u8(ln() + 2) & 1 == 0 && club.manager().addr() != 0 && manager_manager_is_national_team(club) == 0 {
@@ -1568,9 +1568,9 @@ pub(crate) unsafe extern "thiscall" fn board_named_players_after_match(this: usi
         if c != 0 && read_usize(c + 8) != 0 {
             let r = exe::comp_stats_find_club_entry(read_usize(c + 8), club);
             if r != 0 && *((r + 4) as *const u8) > 8 {
-                *a9 = *((r + comp_stats_club::BEST_POSITION) as *const u8);
-                *a8 = *((r + comp_stats_club::CURRENT_POSITION) as *const u8);
-                *a7 = *((club_board_row(this, club) + 0x2c) as *const u8);
+                *a9 = read_u8(r + comp_stats_club::BEST_POSITION);
+                *a8 = read_u8(r + comp_stats_club::CURRENT_POSITION);
+                *a7 = read_u8(club_board_row(this, club) + 0x2c);
                 if read_usize(r + 0x19) == 2 {
                     *a6 = 2;
                 } else if read_usize(r + 0x2d) == 2 {
@@ -1599,7 +1599,7 @@ pub(crate) unsafe extern "thiscall" fn board_named_players_after_match(this: usi
             continue;
         }
         let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
-        *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
+        write_usize(G_CONTRACT_LOOKUP_RESULT, c);
         if c == 0 {
             continue;
         }
@@ -1661,7 +1661,7 @@ pub(crate) unsafe extern "thiscall" fn get_player_match_rating_verdict(_this: us
                 let s = sides + lado * 0x625 + 0x71 + k * 0x49;
                 let id = read_usize(s) as i32;
                 if id != -1 && person == month_ratings_staff_by_id(id) && k < 11 {
-                    let rating = *((s + match_record_row::MATCH_GRADE) as *const u8);
+                    let rating = read_u8(s + match_record_row::MATCH_GRADE);
                     v = if rating < 7 { 0xff } else if rating > 7 { 1 } else { 0 };
                     break 'busca;
                 }
@@ -1711,9 +1711,9 @@ pub(crate) unsafe extern "stdcall" fn build_board_player_performance_text(ids: *
             };
             format(out, f, b);
         }
-        *(out as *mut u8) = 0;
+        write_u8(out, 0);
     } else {
-        *(out as *mut u8) = 0;
+        write_u8(out, 0);
         if i0 != -1 {
             exe::database_format_staff_name(month_ratings_staff_by_id(i0), b, 0xc8, 1);
             let f = match variant {
@@ -1759,7 +1759,7 @@ pub(crate) unsafe fn player_value(j: Staff, club: usize, mode: u32) -> i32 {
 /// [pt] O clube do contrato do jogador (0x4cf5a0, guardado em [0xae1080]) ou 0.
 pub(crate) unsafe fn contract_club_cached(j: Staff) -> usize {
     let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), j);
-    *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
+    write_usize(G_CONTRACT_LOOKUP_RESULT, c);
     if c == 0 { 0 } else { (friendly_club_by_id(read_usize(c + 4))).addr() }
 }
 
@@ -2507,7 +2507,7 @@ pub(crate) unsafe extern "thiscall" fn get_league_confidence_band(this: usize, c
 pub(crate) unsafe extern "thiscall" fn set_board_ratings(this: usize, club: usize, value: u32) {
     for off in [6usize, 8, 0xc, 0xa] {
         let r = read_usize(this).wrapping_add((read_i32(club) as u32).wrapping_mul(0x49) as usize);
-        core::ptr::write_unaligned((r + off) as *mut u16, value as u16);
+        write_u16(r + off, value as u16);
     }
 }
 
@@ -2527,10 +2527,10 @@ pub(crate) unsafe fn is_offer_resolved(o: Offer) -> bool {
 ///
 /// [pt] Antes da data das notícias ([0xdd6ec8]: dia +0 com sinal, ano +2) em relação a hoje ([0xae2c90])?
 pub(crate) unsafe fn news_date_not_reached() -> bool {
-    let day = *(G_GAME_START_DATE as *const i16);
-    let year = *(G_GAME_START_DATE_YEAR as *const u16);
-    let today_year = *(G_CURRENT_DATE_YEAR as *const u16);
-    year > today_year || (year == today_year && day > *(G_CURRENT_DATE as *const i16))
+    let day = read_i16(G_GAME_START_DATE);
+    let year = read_u16(G_GAME_START_DATE_YEAR);
+    let today_year = read_u16(G_CURRENT_DATE_YEAR);
+    year > today_year || (year == today_year && day > read_i16(G_CURRENT_DATE))
 }
 
 /// Posts the 0x1772 board confidence news with the manager's days in the job.
@@ -2555,8 +2555,8 @@ pub(crate) unsafe extern "thiscall" fn post_board_confidence_update_news(_this: 
     exe::newsitem_set_slot(n, 0, read_usize(club.addr()) as u32);
     let manager = club.manager();
     let days = if !manager.is_null() {
-        let years = (*(G_CURRENT_DATE_YEAR as *const u16) as i32).wrapping_sub(manager.date_joined_club_year() as i32);
-        years.wrapping_mul(365).wrapping_sub((manager.date_joined_club() as i16) as i32).wrapping_add(*(G_CURRENT_DATE as *const i16) as i32)
+        let years = (read_u16(G_CURRENT_DATE_YEAR) as i32).wrapping_sub(manager.date_joined_club_year() as i32);
+        years.wrapping_mul(365).wrapping_sub((manager.date_joined_club() as i16) as i32).wrapping_add(read_i16(G_CURRENT_DATE) as i32)
     } else {
         100
     };
@@ -2666,10 +2666,10 @@ pub(crate) unsafe extern "thiscall" fn post_fa_expectations_news(_this: usize, n
 /// id do clube, 1..4 o técnico (+0xcf: o id e as três chaves +0x33 de +4, +8, +0xc); pelo alcance (0x786090).
 pub(crate) unsafe extern "thiscall" fn post_supporter_protest_news(_this: usize, club: usize) {
     let club = Club(club);
-    let day = *(G_GAME_START_DATE as *const i16);
-    let year = *(G_GAME_START_DATE_YEAR as *const u16);
-    let today_year = *(G_CURRENT_DATE_YEAR as *const u16);
-    if year > today_year || (year == today_year && day > *(G_CURRENT_DATE as *const i16)) {
+    let day = read_i16(G_GAME_START_DATE);
+    let year = read_u16(G_GAME_START_DATE_YEAR);
+    let today_year = read_u16(G_CURRENT_DATE_YEAR);
+    if year > today_year || (year == today_year && day > read_i16(G_CURRENT_DATE)) {
         return;
     }
     crate::comparison::branch("cpv_3 protest news");
@@ -2846,7 +2846,7 @@ pub(crate) unsafe extern "thiscall" fn init_club_board_records(this: usize) {
         exe::date_operator_3d(l + board_record::LAST_REVIEW_DATE, t.as_mut_ptr() as usize, G_CURRENT_DATE);
         write_u8(l, 0);
         let rep = read_i16(club + club::REPUTATION) as i32;
-        core::ptr::write_unaligned((l + board_record::SPENDING) as *mut f64, rep.wrapping_mul(rep) as f64 * 0.25);
+        write_f64(l + board_record::SPENDING, rep.wrapping_mul(rep) as f64 * 0.25);
         write_u32(l + board_record::SPENDING_CEILING, 0);
         write_u32(l + 0x3c, 0);
         if club_manager(club) == 0 {
@@ -3603,7 +3603,7 @@ pub(crate) unsafe extern "thiscall" fn is_club_in_financial_trouble(this: usize,
     if read_i16(club_board_row(this, Club(club)) + 8) >= 0xbb8 || f == 0 {
         return 0;
     }
-    (core::ptr::read_unaligned(f as *const i64) < 0) as u8
+    (read_i64(f) < 0) as u8
 }
 
 /// Returns the 0..6 band of the board confidence (limits 3000, 3500, 4275, 6500, 8500, 9500).
@@ -3768,11 +3768,11 @@ pub(crate) unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, 
     m(2, 0xfd);
     write_u32(e + board_record::SPENDING_CEILING, 0);
     write_u32(e + 0x3c, 0);
-    *((e + 4) as *mut u8) = 0;
+    write_u8(e + 4, 0);
     m(3, 0xe1);
     m(2, 0xdf);
     write_u32(e + 0x28, 0);
-    *((e + 5) as *mut u8) = 0;
+    write_u8(e + 5, 0);
     m(3, 0xfe);
     m(0x40, 7);
     exe::staff_records_record_manager_job_change(read_u32(G_STAFF_RECORDS) as usize, (club.manager().addr() as u32) as usize, club, 1);
@@ -3793,7 +3793,7 @@ pub(crate) unsafe extern "thiscall" fn reset_board_for_new_manager(this: usize, 
             band = exe::finance_get_wealth_band(fin);
         }
     }
-    *((board_row_by_id(this, read_u32(club.addr())) + 1) as *mut u8) = band;
+    write_u8(board_row_by_id(this, read_u32(club.addr())) + 1, band);
 }
 
 /// Returns the reason (0 to 11) for the manager's departure: unsettled players, league position, debt, board changes
@@ -3865,7 +3865,7 @@ pub(crate) unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32
             }
         }
         let e = board_row_by_id(this, id);
-        let (gasto, teto) = (core::ptr::read_unaligned((e + board_record::SPENDING) as *const f64), core::ptr::read_unaligned((e + board_record::SPENDING_CEILING) as *const f64));
+        let (gasto, teto) = (read_f64(e + board_record::SPENDING), read_f64(e + board_record::SPENDING_CEILING));
         if !(gasto >= teto) && read_i16(e + board_record::LEAGUE_CONFIDENCE) < -300 {
             return 0xa;
         }
@@ -3939,7 +3939,7 @@ pub(crate) unsafe fn or_byte(a: usize, v: u8) {
 ///
 /// [pt] Soma `v` à palavra de 16 bits (com a volta do `add word`).
 pub(crate) unsafe fn manager_manager_add_i16(a: usize, v: i16) {
-    core::ptr::write_unaligned(a as *mut i16, read_i16(a).wrapping_add(v));
+    write_i16(a, read_i16(a).wrapping_add(v));
 }
 
 /// Reads a double constant from the exe at address a.
@@ -4012,8 +4012,8 @@ pub(crate) unsafe extern "thiscall" fn assess_transfer_deal(this: usize, transf:
     if transf.offer_type() == 1 {
         return;
     }
-    core::ptr::write_unaligned(f2 as *mut u16, 0);
-    core::ptr::write_unaligned(f1 as *mut u16, 0);
+    write_u16(f2, 0);
+    write_u16(f1, 0);
     let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add(transf.target_staff_id().wrapping_mul(staff::SIZE)));
     if person.player().is_null() {
         return;
@@ -4028,7 +4028,7 @@ pub(crate) unsafe extern "thiscall" fn assess_transfer_deal(this: usize, transf:
         let g = board_row_at(this, read_usize(buyer.addr())) + 0x38;
         write_f64(g, value as f64 + read_f64(g));
         let limit = fee_limit(buyer);
-        let ratio = if value == 0 { *(0x968f18 as *const f32) as f64 } else { taxa as f64 / value as f64 };
+        let ratio = if value == 0 { read_f32(0x968f18) as f64 } else { taxa as f64 / value as f64 };
         if taxa <= limit {
             crate::comparison::branch("cpo_1 buyer at the limit");
             or_byte(f1, 4); // the buyer: fee within the limit
@@ -4068,7 +4068,7 @@ pub(crate) unsafe extern "thiscall" fn assess_transfer_deal(this: usize, transf:
     let g = board_row_at(this, read_usize(seller.addr())) + 0x38;
     write_f64(g, read_f64(g) - v2 as f64);
     let limit = fee_limit(seller);
-    let ratio = if v2 == 0 { *(0x968f18 as *const f32) as f64 } else { taxa as f64 / v2 as f64 };
+    let ratio = if v2 == 0 { read_f32(0x968f18) as f64 } else { taxa as f64 / v2 as f64 };
     if taxa <= limit {
         crate::comparison::branch("cpo_1 seller at the limit");
         or_byte(f2, 4); // the seller: fee within the limit
@@ -4111,13 +4111,13 @@ pub(crate) unsafe extern "thiscall" fn assess_transfer_deal(this: usize, transf:
 /// [pt] As faixas de confiança (+6, 1..10000) e o limite de baixo do humor +0x16 (−10000).
 pub(crate) unsafe fn clamp_board_row(e: usize) {
     if read_i16(e + board_record::CONFIDENCE) < 1 {
-        core::ptr::write_unaligned((e + board_record::CONFIDENCE) as *mut i16, 1);
+        write_i16(e + board_record::CONFIDENCE, 1);
     }
     if read_i16(e + board_record::CONFIDENCE) > 10000 {
-        core::ptr::write_unaligned((e + board_record::CONFIDENCE) as *mut i16, 10000);
+        write_i16(e + board_record::CONFIDENCE, 10000);
     }
     if read_i16(e + board_record::FAVOURITES_MOOD) <= -10000 {
-        core::ptr::write_unaligned((e + board_record::FAVOURITES_MOOD) as *mut i16, -10000);
+        write_i16(e + board_record::FAVOURITES_MOOD, -10000);
     }
 }
 
@@ -4810,17 +4810,17 @@ pub(crate) unsafe fn is_offer_eligible(o: Offer, club: u32) -> bool {
 /// (palavra da quantidade em +0, iterador 0x68d1b0 com posição em +0xa, recomeçada de +2 e
 /// devolvida no fim)? Lista que acaba antes da quantidade: a original (caixa de erro). Devolve só `al`.
 pub(crate) unsafe extern "thiscall" fn person_in_list(t: usize, p: *const i32) -> u8 {
-    let list = Llist(*((t + 8) as *const usize));
+    let list = Llist(read_usize(t + 8));
     let stored = (list.cursor() as u32);
     list.set_cursor(((list.head() as u32)) as usize);
     let mut i = 0i32;
-    while i < *(list.addr() as *const i16) as i32 {
+    while i < read_i16(list.addr()) as i32 {
         let e = exe::llist_get_next(list);
         if e == 0 {
             list.set_cursor((stored) as usize);
             return original_fn::<unsafe extern "thiscall" fn(usize, *const i32) -> u8>(IDX_PERSON_IN_LIST)(t, p);
         }
-        if core::ptr::read_unaligned((e + 6) as *const i32) == *p {
+        if read_i32(e + 6) == *p {
             list.set_cursor((stored) as usize);
             return 1;
         }
@@ -5012,8 +5012,8 @@ pub(crate) unsafe extern "thiscall" fn manager_manager_remove(this: usize, given
     } else {
         write_usize(prox + llist_node::PREV, ant);
     }
-    let count = core::ptr::read_unaligned(this.addr() as *const i16);
-    core::ptr::write_unaligned(this.addr() as *mut i16, count.wrapping_sub(1));
+    let count = read_i16(this.addr());
+    write_i16(this.addr(), count.wrapping_sub(1));
     if in_the == this.cursor() {
         crate::comparison::branch("cqb_10 cursor");
         this.set_cursor(read_usize(in_the + llist_node::NEXT)); // cqb10: o cursor anda
@@ -5037,7 +5037,7 @@ pub(crate) unsafe extern "thiscall" fn manager_manager_clear(this: usize) {
         exe::crt_operator_delete(in_the);
         this.set_head(next);
     }
-    core::ptr::write_unaligned(this.addr() as *mut u16, 0);
+    write_u16(this.addr(), 0);
     this.set_head(0);
     this.set_tail(0);
     this.set_cursor(0);
@@ -5082,7 +5082,7 @@ pub(crate) unsafe extern "thiscall" fn get_current_run(_this: usize, club: usize
             for (n, data, t) in [(0x19usize, 0x25usize, 1u8), (0x2d, 0x39, 3), (0x55, 0x61, 4), (0x41, 0x4d, 2)] {
                 if read_u32(e + n) as i32 > 1 && exe::date_days_since(G_CURRENT_DATE, read_u32(e + data), read_u32(e + data + 4)) < 10 { // less than 10 days ago
                     *kind = t;
-                    *size = *((e + n) as *const u8);
+                    *size = read_u8(e + n);
                     return;
                 }
             }
@@ -5111,10 +5111,10 @@ pub(crate) unsafe extern "thiscall" fn post_job_rumour_news(_this: usize, person
     if person.is_null() || person.club_job().is_null() || exe::utils_random(4) == 0 {
         return;
     }
-    let day = *(G_GAME_START_DATE as *const i16);
-    let year = *(G_GAME_START_DATE_YEAR as *const u16);
-    let today_year = *(G_CURRENT_DATE_YEAR as *const u16);
-    if year > today_year || (year == today_year && day > *(G_CURRENT_DATE as *const i16)) {
+    let day = read_i16(G_GAME_START_DATE);
+    let year = read_u16(G_GAME_START_DATE_YEAR);
+    let today_year = read_u16(G_CURRENT_DATE_YEAR);
+    if year > today_year || (year == today_year && day > read_i16(G_CURRENT_DATE)) {
         return;
     }
     crate::comparison::branch("cpv_4 manager rumour");

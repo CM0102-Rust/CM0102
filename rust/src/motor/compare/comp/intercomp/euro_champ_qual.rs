@@ -40,11 +40,11 @@ pub(crate) unsafe extern "thiscall" fn compare_euro_champ_qual_set_up_rules(this
 pub(crate) unsafe extern "thiscall" fn compare_get_group_team_count(this: usize, g: u32) -> i16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> i16>(IDX_GET_GROUP_TEAM_COUNT);
     let r = o(this, g);
-    if !matches!(*((this + euro_champ_qual::GROUP_FORMAT) as *const i8), 1 | 2) {
+    if !matches!(read_i8(this + euro_champ_qual::GROUP_FORMAT), 1 | 2) {
         return r; // simplification: the unknown format shows the message box: original only
     }
     let n = group_team_count(this, g);
-    SCOREBOARD.record(r == n, || format!("get_group_team_count(formato {}, grupo {}) original={} rust={}", *((this + euro_champ_qual::GROUP_FORMAT) as *const i8), g as u8, r, n));
+    SCOREBOARD.record(r == n, || format!("get_group_team_count(formato {}, grupo {}) original={} rust={}", read_i8(this + euro_champ_qual::GROUP_FORMAT), g as u8, r, n));
     r
 }
 
@@ -70,7 +70,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_qualification_status(this: us
 pub(crate) unsafe extern "thiscall" fn compare_init_group_one_table(this: usize) -> u32 {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_INIT_GROUP_ONE_TABLE);
-    let n = if matches!(*((this.addr() + 0xf6) as *const i8), 1 | 2) { 5i16 } else { return o(this.addr()) };
+    let n = if matches!(read_i8(this.addr() + 0xf6), 1 | 2) { 5i16 } else { return o(this.addr()) };
     let plan: Vec<usize> = (0..n as usize).map(|k| read_usize(read_usize(this.addr() + 0xf7) + k * 4)).collect();
     let r = o(this.addr());
     let t = this.table();

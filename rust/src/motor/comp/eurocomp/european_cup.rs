@@ -449,7 +449,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_rank_teams(this: usize) {
     }
     let mut i = 0i16;
     while i < this.entrant_count() {
-        core::ptr::write_unaligned((v + i as usize * 4) as *mut u32, read_usize(this.entrant_book() + i as usize * 6) as u32);
+        write_u32(v + i as usize * 4, read_usize(this.entrant_book() + i as usize * 6) as u32);
         i += 1;
     }
     exe::comp_util_sort_clubs_by_strength(v, this.entrant_count() as i32);
@@ -822,7 +822,7 @@ pub(crate) unsafe fn european_cup_add_knocked_out_record(club: usize, comp: usiz
 ///
 /// [pt] O clube sai da competição europeia da temporada (+0x1db = −1).
 pub(crate) unsafe fn leave_euro_competition(club: Club) {
-    core::ptr::write_unaligned((club.addr() + club::CONTINENTAL_COMP_ID) as *mut i32, -1);
+    write_i32(club.addr() + club::CONTINENTAL_COMP_ID, -1);
 }
 
 /// Updates the staff records by outcome and stage: in qualifying, the qualified (`add_qualified_for_round_record`) or knocked-out (`add_knocked_out_record`)
@@ -1002,7 +1002,7 @@ pub(crate) unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
     let [a, b, c, d] = draw_four_groups();
     let order: [(i8, u32); 8] = [(a, 0), (b, 1), (a, 1), (b, 0), (c, 0), (d, 1), (c, 1), (d, 0)];
     for (k, &(g, l)) in order.iter().enumerate() {
-        core::ptr::write_unaligned((list + 4 * k) as *mut usize, (second_stage_group_club(this, g, l)).addr());
+        write_usize(list + 4 * k, (second_stage_group_club(this, g, l)).addr());
     }
     for k in 0..8 {
         let obj = read_usize(read_usize(read_usize(G_DISCIPLINE)) + 4 * (this.discipline_index() as i8 as i32 as usize));
@@ -1021,7 +1021,7 @@ pub(crate) unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
     } else {
         0
     };
-    core::ptr::write_unaligned((this.stages() + 0x30) as *mut usize, stage);
+    write_usize(this.stages() + 0x30, stage);
     exe::crt_free(list);
     exe::crt_free(t);
     let stage = read_usize(this.stages() + 0x30);
@@ -1051,7 +1051,7 @@ pub(crate) unsafe fn active_entrants(this: Cup, without_7: bool, v: *mut usize) 
     while i < this.entrant_capacity() {
         let e = this.entrant_book().wrapping_add((i as i32 as usize).wrapping_mul(6));
         let c = read_usize(e);
-        if core::ptr::read_unaligned((c + 0x1db) as *const i32) == core::ptr::read_unaligned(read_usize(this.addr() + 4) as *const i32) && !(without_7 && read_u8(e + 4) == 7) {
+        if read_i32(c + 0x1db) == read_i32(read_usize(this.addr() + 4)) && !(without_7 && read_u8(e + 4) == 7) {
             core::ptr::write_unaligned(v.add(n as i32 as usize), c);
             n = n.wrapping_add(1);
         }
@@ -1089,12 +1089,12 @@ pub(crate) unsafe extern "thiscall" fn european_cup_collect_club_list(this: usiz
     let v = exe::crt_malloc(0x11c);
     if v == 0 {
         show_error_at(0x9c4900, linha);
-        core::ptr::write_unaligned(out as *mut usize, 0);
+        write_usize(out, 0);
         return 0;
     }
     crate::comparison::branch("cpz_4 list of entrants");
     let n = active_entrants(this, sem_7, v as *mut usize);
-    core::ptr::write_unaligned(out as *mut usize, v);
+    write_usize(out, v);
     (v as u32 & 0xffff_0000) | n as u16 as u32
 }
 
@@ -1108,9 +1108,9 @@ pub(crate) unsafe fn european_cup_malloc(n: u32) -> usize {
 /// [pt] Uma entrada de 6 bytes da lista dos inscritos: o clube (+0), a rodada em que entra (+4) e +5 = 0 (nesta ordem,
 /// como a original).
 pub(crate) unsafe fn european_cup_write_entrant(p: usize, club: usize, round: u8) {
-    core::ptr::write_unaligned(p as *mut usize, club);
-    *((p + 5) as *mut u8) = 0;
-    *((p + 4) as *mut u8) = round;
+    write_usize(p, club);
+    write_u8(p + 5, 0);
+    write_u8(p + 4, round);
 }
 
 /// Loop of `european_cup_collect_entrants` over the clubs ([0xae23b4], 0x245 bytes, [0xae235c] of them): clubs entered in the Champions League
@@ -1223,15 +1223,15 @@ pub(crate) unsafe fn fill_qualifying_table(this: Cup, t: usize) {
         let n = this.entrant_count() as i32;
         let list = this.entrant_book();
         let club = if n != 0 { read_usize(list.wrapping_add((n - i - 1).wrapping_mul(6) as usize)) } else { 0 };
-        core::ptr::write_unaligned((t + k) as *mut usize, club);
+        write_usize(t + k, club);
         let list = this.entrant_book();
         let code = read_u8(list.wrapping_add(((n - i).wrapping_mul(6) - 2) as usize));
-        *((t + k + 4) as *mut u8) = match code {
+        write_u8(t + k + 4, match code {
             8 => 2,
             0xd => 1,
             _ => 0,
-        };
-        *((t + k + 5) as *mut u8) = 0;
+        });
+        write_u8(t + k + 5, 0);
         i += 1;
         k += 6;
     }
@@ -1454,9 +1454,9 @@ pub(crate) unsafe extern "thiscall" fn european_cup_set_club_progress(this: usiz
     } else {
         (p1, p2, p3)
     };
-    *((e + 0x74) as *mut u8) = c74;
-    *((e + 0x73) as *mut u8) = c73;
-    *((e + 0x75) as *mut u8) = c75;
+    write_u8(e + 0x74, c74);
+    write_u8(e + 0x73, c73);
+    write_u8(e + 0x75, c75);
 }
 
 /// Builds the round table: in the group stages, the 6-round schedule (phase 1 dates in September and October and phase

@@ -182,13 +182,13 @@ pub(crate) unsafe extern "thiscall" fn compare_choose_formation(c: usize, sheets
     let m = c.engine();
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m.addr(), ENGINE_SIZE), (c.tactics(), 0x18e3), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1), (G_COMP_STATS_SORT_CONTEXT, 4)]);
-    let taticas = *(G_TACTICS as *const usize);
+    let taticas = read_usize(G_TACTICS);
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let club = c.club();
     for humano in 0..2u32 {
         let l = if club.is_null() { -1 } else { row(club.addr(), humano) };
         if l != -1 {
-            reg.push(((*((taticas + tactics_fields::ROWS) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)), 0x91));
+            reg.push((read_usize(taticas + tactics_fields::ROWS).wrapping_add((l as usize).wrapping_mul(0x91)), 0x91));
         }
     }
     let (r, rr, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(c.addr(), sheets, a2, a3, a4), || choose_formation(c.addr(), sheets, a2, a3, a4));
@@ -211,13 +211,13 @@ pub(crate) unsafe extern "thiscall" fn compare_instructions(c: usize) {
     let m = c.engine();
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m.addr(), ENGINE_SIZE), (c.tactics(), 0x18e3), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
-    let taticas = *(G_TACTICS as *const usize);
+    let taticas = read_usize(G_TACTICS);
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let club = c.club();
     for humano in 0..2u32 {
         let l = if club.is_null() { -1 } else { row(club.addr(), humano) };
         if l != -1 {
-            reg.push(((*((taticas + tactics_fields::ROWS) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)), 0x91));
+            reg.push((read_usize(taticas + tactics_fields::ROWS).wrapping_add((l as usize).wrapping_mul(0x91)), 0x91));
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(c.addr()), || instructions(c.addr()));

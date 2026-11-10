@@ -49,9 +49,9 @@ pub(crate) unsafe fn bra_reg_northeast_construct_state_league(this: League, ano:
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.table);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.predicted);
     exe::new_league(this);
-    core::ptr::write_unaligned((this.addr() + league::COMPETITION) as *mut usize, registro);
-    core::ptr::write_unaligned(this.addr() as *mut usize, e.vtabela);
-    core::ptr::write_unaligned((this.addr() + league::YEAR) as *mut u16, ano as u16);
+    write_usize(this.addr() + league::COMPETITION, registro);
+    write_usize(this.addr(), e.vtabela);
+    write_u16(this.addr() + league::YEAR, ano as u16);
     this.set_discipline_rule(disciplina);
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this.addr();
@@ -59,10 +59,10 @@ pub(crate) unsafe fn bra_reg_northeast_construct_state_league(this: League, ano:
     crate::comparison::branch(ramo);
     this.set_importance(0xf);
     this.set_stage_index(0xff);
-    core::ptr::write_unaligned((this.addr() + league::CURRENT_STAGE) as *mut i32, -1);
-    core::ptr::write_unaligned((this.addr() + league::STAGE_COUNT) as *mut u32, e.stages);
+    write_i32(this.addr() + league::CURRENT_STAGE, -1);
+    write_u32(this.addr() + league::STAGE_COUNT, e.stages);
     let v = exe::crt_malloc(e.stages * 4);
-    core::ptr::write_unaligned((this.addr() + league::STAGES) as *mut usize, v);
+    write_usize(this.addr() + league::STAGES, v);
     if regras(this.addr()) == 0 {
         show_error_at(e.file, e.rows[0]);
         return this.addr();
@@ -81,7 +81,7 @@ pub(crate) unsafe fn bra_reg_northeast_construct_state_league(this: League, ano:
     }
     let n = exe::crt_operator_new(0x5ce);
     let s = if n != 0 { exe::new_comp_stats(n, this) } else { 0 };
-    core::ptr::write_unaligned((this.addr() + league::COMP_STATS) as *mut usize, s);
+    write_usize(this.addr() + league::COMP_STATS, s);
     if s == 0 {
         show_error_at(e.file, e.rows[4]);
         return this.addr();

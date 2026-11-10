@@ -24,9 +24,9 @@ pub(crate) unsafe extern "thiscall" fn stored_taker(this: usize, club: usize, ki
         crate::comparison::branch("taker without row");
         return 0;
     }
-    let cell = (*((this + tactics_fields::ROWS) as *const usize)).wrapping_add(k as usize * 0x91 + 0x5e + (l as i32 + t as i32 * 2) as usize * 4) as *mut i32;
+    let cell = read_usize(this + tactics_fields::ROWS).wrapping_add(k as usize * 0x91 + 0x5e + (l as i32 + t as i32 * 2) as usize * 4) as *mut i32;
     let v = *cell;
-    if v > (*(G_STAFF_COUNT as *const i32)).wrapping_add(0x52d) {
+    if v > read_i32(G_STAFF_COUNT).wrapping_add(0x52d) {
         crate::comparison::branch("taker beyond the people");
         *cell = -1;
         return 0;
@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn stored_taker(this: usize, club: usize, ki
         crate::comparison::branch("taker empty");
         return 0;
     }
-    let person = Staff((*(G_STAFF_TABLE as *const usize)).wrapping_add(v as usize * staff::SIZE));
+    let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add(v as usize * staff::SIZE));
     if (person.player().addr() as u32) == 0 {
         crate::comparison::branch("taker without record");
         *cell = -1;
@@ -45,7 +45,7 @@ pub(crate) unsafe extern "thiscall" fn stored_taker(this: usize, club: usize, ki
         crate::comparison::branch("taker of the club");
         return person.addr();
     }
-    if exe::database_is_national_team(club) != 0 || exe::nationalteams_is_national_or_all_star_team(*(G_NATIONAL_TEAMS as *const usize), club) != 0 {
+    if exe::database_is_national_team(club) != 0 || exe::nationalteams_is_national_or_all_star_team(read_usize(G_NATIONAL_TEAMS), club) != 0 {
         crate::comparison::branch("taker from outside the club");
         return person.addr();
     }
@@ -84,29 +84,29 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, club: usi
     if k == -1 {
         return 0;
     }
-    let instruction = |i: usize| (*((this + tactics_fields::ROWS) as *const usize)).wrapping_add(k as usize * 0x91 + 2 + 4 * i) as *mut u32;
+    let instruction = |i: usize| read_usize(this + tactics_fields::ROWS).wrapping_add(k as usize * 0x91 + 2 + 4 * i) as *mut u32;
     let ocupados = (this + tactics_fields::UNDO_COUNT) as *mut u8;
     // the space of the current human, if any
     let espaco = || {
-        let human = *((G_SCREEN_RECORDS_MANAGER + *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize * 0x300) as *const usize);
+        let human = read_usize(G_SCREEN_RECORDS_MANAGER + read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize as usize * 0x300);
         if human == 0 {
             return None;
         }
-        let e = (*(G_STAFF_COUNT as *const i32)).wrapping_sub(*(human as *const i32)).wrapping_sub(1);
+        let e = read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(human)).wrapping_sub(1);
         if (0..16).contains(&e) { Some(this + e as usize * 0x5c) } else { None }
     };
     if volta == 0 {
         if usar != 0 {
             if let Some(s) = espaco() {
                 crate::comparison::branch("instructions stored");
-                if *((s + 0x38) as *mut u32) == 0 {
+                if read_u32(s + 0x38) == 0 {
                     *ocupados = (*ocupados).wrapping_add(1);
                 }
-                *((s + 0x30) as *mut u32) = club as u32;
-                *((s + 0x34) as *mut u32) = person;
-                *((s + 0x38) as *mut u32) = 1;
+                write_u32(s + 0x30, club as u32);
+                write_u32(s + 0x34, person);
+                write_u32(s + 0x38, 1);
                 for i in 0..20 {
-                    *((s + 0x3c + 4 * i) as *mut u32) = *instruction(i);
+                    write_u32(s + 0x3c + 4 * i, *instruction(i));
                 }
             }
         }
@@ -118,25 +118,25 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, club: usi
     }
     if usar != 0 {
         if let Some(s) = espaco() {
-            if *((s + 0x38) as *mut u32) != 0 && *((s + 0x30) as *mut u32) == club as u32 && *((s + 0x34) as *mut u32) == person {
+            if read_u32(s + 0x38) != 0 && *((s + 0x30) as *mut u32) == club as u32 && *((s + 0x34) as *mut u32) == person {
                 crate::comparison::branch("instructions returned");
                 for i in 0..20 {
-                    *instruction(i) = *((s + 0x3c + 4 * i) as *mut u32);
+                    *instruction(i) = read_u32(s + 0x3c + 4 * i);
                 }
             }
-            if *((s + 0x38) as *mut u32) != 0 {
+            if read_u32(s + 0x38) != 0 {
                 *ocupados = (*ocupados).wrapping_sub(1);
             }
-            *((s + 0x38) as *mut u32) = 0;
+            write_u32(s + 0x38, 0);
         }
         return 1;
     }
     if *ocupados != 0 {
         for e in 0..16 {
             let s = this + e * 0x5c;
-            if *((s + 0x38) as *mut u32) != 0 && *((s + 0x30) as *mut u32) == club as u32 && *((s + 0x34) as *mut u32) == person {
+            if read_u32(s + 0x38) != 0 && *((s + 0x30) as *mut u32) == club as u32 && *((s + 0x34) as *mut u32) == person {
                 crate::comparison::branch("instructions released");
-                *((s + 0x38) as *mut u32) = 0;
+                write_u32(s + 0x38, 0);
                 *ocupados = (*ocupados).wrapping_sub(1);
             }
         }
@@ -161,7 +161,7 @@ pub(crate) unsafe extern "thiscall" fn read_tactics_row(this: usize, club: usize
         return 0;
     }
     crate::comparison::branch("tactics line read");
-    core::ptr::copy((*((this + tactics_fields::ROWS) as *const usize)).wrapping_add(k as usize * 0x91) as *const u8, target, 0x91);
+    core::ptr::copy(read_usize(this + tactics_fields::ROWS).wrapping_add(k as usize * 0x91) as *const u8, target, 0x91);
     1
 }
 
@@ -177,11 +177,11 @@ pub(crate) unsafe extern "thiscall" fn write_tactics_row(this: usize, club: usiz
     }
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let k = row(club, human);
-    if k == -1 || k >= *((this + tactics_fields::ROW_COUNT) as *const i32) {
+    if k == -1 || k >= read_i32(this + tactics_fields::ROW_COUNT) {
         return 0;
     }
     crate::comparison::branch("tactics line saved");
-    core::ptr::copy(source, (*((this + tactics_fields::ROWS) as *const usize)).wrapping_add(k as usize * 0x91) as *mut u8, 0x91);
+    core::ptr::copy(source, read_usize(this + tactics_fields::ROWS).wrapping_add(k as usize * 0x91) as *mut u8, 0x91);
     1
 }
 
@@ -193,8 +193,8 @@ pub(crate) unsafe fn tactics_row_regions(this: usize, club: usize, p: usize, hum
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let k = row(club, human);
     let mut reg = vec![(G_MOUSE_LEFT_BUTTON_DOWN, 4), (p, 0x91)];
-    if k != -1 && k < *((this + tactics_fields::ROW_COUNT) as *const i32) {
-        reg.push(((*((this + tactics_fields::ROWS) as *const usize)).wrapping_add(k as usize * 0x91), 0x91));
+    if k != -1 && k < read_i32(this + tactics_fields::ROW_COUNT) {
+        reg.push((read_usize(this + tactics_fields::ROWS).wrapping_add(k as usize * 0x91), 0x91));
     }
     reg
 }
@@ -240,7 +240,7 @@ pub(crate) unsafe fn tactics_row_regions(this: usize, club: usize, p: usize, hum
 pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let more = |p: *mut u8| *p = (*p).wrapping_add(1);
     let mais16 = |p: *mut i16| *p = (*p).wrapping_add(1);
-    let word = |o: usize, side: usize| *((m + o + 2 * side) as *const i16) as i32;
+    let word = |o: usize, side: usize| read_i16(m + o + 2 * side) as i32;
     let jog = |side: usize, i: i8| Engine(m).player(side as i8, i as usize).addr();
     let add = |p: MatchPlayer, d: i16| {
         let q = (p.addr() + match_player::MATCH_RATING) as *mut i16;
@@ -248,7 +248,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
     };
     let pt = || read_usize(m + engine::MATCH);
     let pb = |o: usize| (read_usize(m + engine::MATCH) + o) as *mut i8;
-    let goals = |side: usize| *((m + 0xf5bd + side * 0x36) as *mut u8) as i32;
+    let goals = |side: usize| read_u8(m + 0xf5bd + side * 0x36) as i32;
     let narrate = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, c: u8, side: usize| {
         call(FN_MATCH_EVENTS_ADD_EVENT, read_usize(m + engine::COMMENTATOR), [code, m as u32, c as u32, side as u32, u32::MAX]);
     };
@@ -265,23 +265,23 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
     let mut decides = false;
     let mut local_28 = 0u8;
     let mut side = 0usize;
-    *((m + engine::CLOCK) as *mut i16) = 0;
-    *((m + engine::PERIOD_END) as *mut i16) = 0x1ef;
+    write_i16(m + engine::CLOCK, 0);
+    write_i16(m + engine::PERIOD_END, 0x1ef);
     let penalties = 'periodo: loop {
         team_strength(m, 0);
         team_strength(m, 1);
         for o in [0x1da, 0x1de, 0x1e2, 0x1e6] {
-            let (a, x) = (*((m + o) as *mut i16) as f64, *((m + o + 2) as *mut i16) as f64);
+            let (a, x) = (read_i16(m + o) as f64, read_i16(m + o + 2) as f64);
             let middle = x * read_f64(rdata::F64_0_5);
             if !(a >= middle) {
-                *((m + o) as *mut i16) = ftol(middle) as i16;
+                write_i16(m + o, ftol(middle) as i16);
             } else if a > x + x {
-                *((m + o) as *mut i16) = ftol(x + x) as i16;
+                write_i16(m + o, ftol(x + x) as i16);
             }
         }
         let c7 = random(2) as u8;
         let mut round = 0u8;
-        'rodadas: while *((m + engine::GOLDEN_GOAL_SCORED) as *mut u8) == 0 {
+        'rodadas: while read_u8(m + engine::GOLDEN_GOAL_SCORED) == 0 {
             side = if c7 != 0 { round as usize } else { (round == 0) as usize };
             let other = (side == 0) as usize;
             let strong = || random(word(0x1de, side) + word(0x1da, side)) > random(word(0x1da, other) + word(0x1de, other));
@@ -393,11 +393,11 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                         crate::comparison::branch("quick simulation second give_yellow_card");
                         send_off(c, call);
                     }
-                    if *((mo + engine::CARDS) as *const u8) > 4 {
+                    if read_u8(mo + engine::CARDS) > 4 {
                         // abandonment: 3 x 0 for the side whose turn it is
                         crate::comparison::branch("quick simulation abandonment");
                         end = true;
-                        *((m + 0xf5bd + other * 0x36) as *mut u8) = 0;
+                        write_u8(m + 0xf5bd + other * 0x36, 0);
                         let g = ((m + 0xf5bd + side * 0x36) as *mut u8);
                         if *g <= 3 {
                             *g = 3;
@@ -429,7 +429,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 d as f64
             } else if goals(side) + goals(other) != 0 {
                 read_f32(rdata::F32_1) as f64
-            } else if *((m + engine::CLOCK) as *mut i16) > 0x3c {
+            } else if read_i16(m + engine::CLOCK) > 0x3c {
                 read_f32(rdata::F32_0_6499999762) as f64
             } else {
                 read_f32(rdata::F32_0_75) as f64
@@ -506,7 +506,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                         }
                         if decides {
                             crate::comparison::branch("quick simulation golden goal");
-                            *((m + engine::GOLDEN_GOAL_SCORED) as *mut u8) = 1;
+                            write_u8(m + engine::GOLDEN_GOAL_SCORED, 1);
                             break 'rodadas;
                         }
                     } else {
@@ -529,8 +529,8 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
         }
         // the end of the period
         mais16(((m + engine::CLOCK) as *mut i16));
-        let t = *((m + engine::CLOCK) as *mut i16);
-        let w38 = *((pt() + 0x38) as *const u16);
+        let t = read_i16(m + engine::CLOCK);
+        let w38 = read_u16(pt() + 0x38);
         let same_in_aggregate = |a: usize, x: usize| *pb(a) as i32 + *pb(0x4b) as i32 == *pb(0x4c) as i32 + *pb(x) as i32;
         if end {
             let (a, x) = if t <= 0x5a { (0x43, 0x44) } else { (0x47, 0x48) };
@@ -542,21 +542,21 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
             }
             break 'periodo false;
         }
-        if *((m + engine::GOLDEN_GOAL_SCORED) as *mut u8) != 0 {
+        if read_u8(m + engine::GOLDEN_GOAL_SCORED) != 0 {
             *pb(0x47) = goals(0) as i8;
             *pb(0x48) = goals(1) as i8;
             break 'periodo false;
         }
         match t {
             0x2d => {
-                *((m + engine::PERIOD_END) as *mut i16) = 0x3de;
+                write_i16(m + engine::PERIOD_END, 0x3de);
                 *pb(0x45) = goals(0) as i8;
                 *pb(0x46) = goals(1) as i8;
             }
             0x5a => {
                 *pb(0x43) = goals(0) as i8;
                 *pb(0x44) = goals(1) as i8;
-                *((m + engine::PERIOD_END) as *mut i16) = 0x483;
+                write_i16(m + engine::PERIOD_END, 0x483);
                 let aggregate = *pb(0x4b) != -1;
                 if (aggregate && !same_in_aggregate(0x43, 0x44)) || (!aggregate && *pb(0x43) != *pb(0x44)) {
                     break 'periodo false;
@@ -613,7 +613,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
     // the home goal
     let c1 = Club(read_usize((pt()) + 0x1c));
     if !c1.is_null() && read_usize((pt()) + 0x14) == c1.division().addr() && (*pb(0x43) as i32 + *pb(0x44) as i32) < 5 && *pb(0x43) == *pb(0x44) && random(4) == 0 {
-        let (r0, r1) = (c1.reputation() as i32, *((read_usize((pt()) + 0x20) + 0x80) as *const i16) as i32);
+        let (r0, r1) = (c1.reputation() as i32, read_i16(read_usize((pt()) + 0x20) + 0x80) as i32);
         let s = if r0 > r1 { Some(0) } else if r0 + 0xfa < r1 { Some(1) } else { None };
         if let Some(s) = s {
             crate::comparison::branch("quick simulation home goal");
@@ -627,7 +627,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
         }
     }
     // the injuries (two passes over the last side of the turn)
-    if *(pt() as *const i32) != -2 {
+    if read_i32(pt()) != -2 {
         for _ in 0..2 {
             for i in 0..20 {
                 let p = jog(side, i);
@@ -666,28 +666,28 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
         for i in 0..20i8 {
             let p = jog(s, i);
             let q = (p + match_player::MATCH_RATING) as *mut i16;
-            if *(pt() as *const i32) == -2 && i < 11 {
+            if read_i32(pt()) == -2 && i < 11 {
                 crate::comparison::branch("quick simulation friendly rating");
                 let club = Club(if s != 0 { read_usize((pt()) + 0x20) } else { read_usize((pt()) + 0x1c) });
-                let a = (*((p + match_player::EFFECTIVE_ABILITY) as *const i16) as f64 - read_f64(rdata::F64_40)) * read_f64(rdata::F64_50);
+                let a = (read_i16(p + match_player::EFFECTIVE_ABILITY) as f64 - read_f64(rdata::F64_40)) * read_f64(rdata::F64_50);
                 let r = club.reputation() as f64 * read_f64(rdata::F64_1_6) - read_f64(rdata::F64_6000);
                 let v = ftol(((a - r) * read_f64(rdata::F64_2ENEG_05) + read_f64(rdata::F64_1)) * *q as f64) as i16;
                 *q = v.clamp(0xdac, 0x2ee0);
             }
             let n = (ftol((*q as i32 + 0x1770) as f64 * read_f64(rdata::F64_0_0004) + read_f64(rdata::F64_1_83)) as i8).clamp(1, 10);
-            *((p + match_player::MATCH_GRADE) as *mut i8) = n;
-            *((p + match_player::STAMINA_CEILING) as *mut u32) = *((p + match_player::STAMINA) as *const u32);
+            write_i8(p + match_player::MATCH_GRADE, n);
+            write_u32(p + match_player::STAMINA_CEILING, read_u32(p + match_player::STAMINA));
         }
     }
     for (a, x) in [(0xf5e2, 0xf5e4), (0xf618, 0xf61a)] {
-        if *((m + a) as *mut i16) < 10 {
+        if read_i16(m + a) < 10 {
             crate::comparison::branch("quick simulation counter reset");
-            *((m + a) as *mut i16) = 0x14;
-            *((m + x) as *mut i16) = (random(6) + 12) as i16;
-        } else if *((m + a) as *mut i16) == *((m + x) as *mut i16) {
+            write_i16(m + a, 0x14);
+            write_i16(m + x, (random(6) + 12) as i16);
+        } else if read_i16(m + a) == read_i16(m + x) {
             crate::comparison::branch("quick simulation counter equal");
             let r = random(3);
-            *((m + x) as *mut i16) = (*((m + x) as *mut i16)).wrapping_add((-1i32).wrapping_sub(r) as i16);
+            write_i16(m + x, read_i16(m + x).wrapping_add((-1i32).wrapping_sub(r) as i16));
         }
     }
 }
@@ -699,7 +699,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
 pub(crate) unsafe fn tactics_row_of_club(this: usize, club: usize, human: u32) -> Option<usize> {
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let l = row(club, human);
-    (l != -1).then(|| (*((this + tactics_fields::ROWS) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)))
+    (l != -1).then(|| read_usize(this + tactics_fields::ROWS).wrapping_add((l as usize).wrapping_mul(0x91)))
 }
 
 /// Returns the squad slot (0..19) of the club's tactics row whose person id matches the id stored at +0x52 of the row
@@ -714,10 +714,10 @@ pub(crate) unsafe extern "thiscall" fn marked_slot(this: usize, club: usize, hum
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> i8>(IDX_MARKED_SLOT)(this, club, human, minus_one);
     }
     let Some(linha) = tactics_row_of_club(this, club, human) else { return 0 };
-    let persons = *(G_STAFF_TABLE as *const usize);
+    let persons = read_usize(G_STAFF_TABLE);
     for vaga in 0..20usize {
-        let i = *((linha + tactics_row::SELECTION + 4 * vaga) as *const i32);
-        if i != -1 && *(persons.wrapping_add((i as usize).wrapping_mul(110)) as *const i32) == *((linha + tactics_row::CAPTAIN) as *const i32) {
+        let i = read_i32(linha + tactics_row::SELECTION + 4 * vaga);
+        if i != -1 && *(persons.wrapping_add((i as usize).wrapping_mul(110)) as *const i32) == read_i32(linha + tactics_row::CAPTAIN) {
             return vaga as i8;
         }
     }
@@ -735,11 +735,11 @@ pub(crate) unsafe extern "thiscall" fn mark_slot(this: usize, club: usize, slot:
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> u32>(IDX_MARK_SLOT)(this, club, slot, human);
     }
     let Some(linha) = tactics_row_of_club(this, club, human) else { return 0 };
-    let i = *((linha + tactics_row::SELECTION + 4 * slot as usize) as *const i32);
+    let i = read_i32(linha + tactics_row::SELECTION + 4 * slot as usize);
     if i == -1 {
         return 0;
     }
-    *((linha + tactics_row::CAPTAIN) as *mut i32) = i;
+    write_i32(linha + tactics_row::CAPTAIN, i);
     1
 }
 
@@ -755,11 +755,11 @@ pub(crate) unsafe extern "thiscall" fn row_person(this: usize, club: usize, whic
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> usize>(IDX_ROW_PERSON)(this, club, which, human);
     }
     let Some(linha) = tactics_row_of_club(this, club, human) else { return 0 };
-    let i = *((linha + tactics_row::PLAYMAKER + 4 * which as usize) as *const i32);
+    let i = read_i32(linha + tactics_row::PLAYMAKER + 4 * which as usize);
     if i < 0 {
         return 0;
     }
-    (*(G_STAFF_TABLE as *const usize)).wrapping_add(110 * i as usize)
+    read_usize(G_STAFF_TABLE).wrapping_add(110 * i as usize)
 }
 
 /// Returns the club's row in the tactics table: for a human-managed club with `humano` set, -1 for a second national
@@ -781,15 +781,15 @@ pub(crate) unsafe extern "stdcall" fn tactics_row(club: usize, human: u32) -> i3
         if manager == 0 {
             return original_fn::<unsafe extern "stdcall" fn(usize, u32) -> i32>(IDX_TACTICS_ROW)(club.addr(), human);
         }
-        let clubs = *(G_CLUB_COUNT as *const i32);
-        let base = (*(G_STAFF_COUNT as *const i32)).wrapping_sub(*(manager as *const i32));
+        let clubs = read_i32(G_CLUB_COUNT);
+        let base = read_i32(G_STAFF_COUNT).wrapping_sub(read_i32(manager));
         let i = base.wrapping_add(if exe::database_is_national_team(club) != 0 { 0xf } else { -1 }).wrapping_add(clubs);
         if i < 0 || i >= clubs.wrapping_add(0x20) {
             return original_fn::<unsafe extern "stdcall" fn(usize, u32) -> i32>(IDX_TACTICS_ROW)(club.addr(), human);
         }
         return i;
     }
-    *(club.addr() as *const i32)
+    read_i32(club.addr())
 }
 
 /// Returns byte `pos` (0..10) of the club's tactics row (index from 0x8982b0, for the human manager when `humano`) in
@@ -808,8 +808,8 @@ pub(crate) unsafe extern "thiscall" fn tactics_byte(this: usize, club: usize, po
     if l == -1 {
         return 0;
     }
-    let table = *((this + tactics_fields::ROWS) as *const usize);
-    *((table.wrapping_add((l as usize).wrapping_mul(0x91)) + 0x86 + pos as usize) as *const u8)
+    let table = read_usize(this + tactics_fields::ROWS);
+    read_u8(table.wrapping_add((l as usize).wrapping_mul(0x91)) + 0x86 + pos as usize)
 }
 
 /// Row of the tactic statistics table ([this], 0x28 bytes per tactic) used by the club: word +0 of the club's 0x91-byte
@@ -878,23 +878,23 @@ pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, game: u
         let l = tactic_stats_row(this, Club(c));
         exe::fill_match_record_from_fixture(game, c, pr);
         crate::comparison::branch("cpz_5 tactic row");
-        *((l + 2) as *mut i16) = (*((l + 2) as *mut i16)).wrapping_add(1);
+        write_i16(l + 2, read_i16(l + 2).wrapping_add(1));
         let (pro, contra) = (reg[0x19] as i8, reg[0x1a] as i8);
         if pro > contra {
-            *((l + 4) as *mut i16) = (*((l + 4) as *mut i16)).wrapping_add(1);
-            *((l + 0xe) as *mut i16) = (*((l + 0xe) as *mut i16)).wrapping_add(3); // cpz5: a vitória vale 3 pontos
+            write_i16(l + 4, read_i16(l + 4).wrapping_add(1));
+            write_i16(l + 0xe, read_i16(l + 0xe).wrapping_add(3)); // cpz5: a vitória vale 3 pontos
         } else if pro == contra {
-            *((l + 6) as *mut i16) = (*((l + 6) as *mut i16)).wrapping_add(1);
-            *((l + 0xe) as *mut i16) = (*((l + 0xe) as *mut i16)).wrapping_add(1);
+            write_i16(l + 6, read_i16(l + 6).wrapping_add(1));
+            write_i16(l + 0xe, read_i16(l + 0xe).wrapping_add(1));
         } else {
-            *((l + 8) as *mut i16) = (*((l + 8) as *mut i16)).wrapping_add(1);
+            write_i16(l + 8, read_i16(l + 8).wrapping_add(1));
         }
-        *((l + 0xa) as *mut i16) = (*((l + 0xa) as *mut i16)).wrapping_add(pro as i16); // cpz5: os gols pró
-        *((l + 0xc) as *mut i16) = (*((l + 0xc) as *mut i16)).wrapping_add(contra as i16);
-        let a = at_least_one(*((l + 0xa) as *mut i16));
-        let b = at_least_one(*((l + 0xc) as *mut i16));
-        let c = at_least_one(*((l + 0xe) as *mut i16));
-        let p = at_least_one(*((l + 2) as *mut i16));
+        write_i16(l + 0xa, read_i16(l + 0xa).wrapping_add(pro as i16)); // cpz5: os gols pró
+        write_i16(l + 0xc, read_i16(l + 0xc).wrapping_add(contra as i16));
+        let a = at_least_one(read_i16(l + 0xa));
+        let b = at_least_one(read_i16(l + 0xc));
+        let c = at_least_one(read_i16(l + 0xe));
+        let p = at_least_one(read_i16(l + 2));
         let q = c / p;
         let q2 = q * q;
         let g = a / p;
@@ -953,7 +953,7 @@ pub(crate) unsafe extern "thiscall" fn set_captain(this: usize, club: usize, per
         return 0;
     }
     let p = read_usize(this + tactics_fields::ROWS).wrapping_add((k as isize * 0x91) as usize) + 0x52;
-    core::ptr::write_unaligned(p as *mut u32, core::ptr::read_unaligned(person as *const u32));
+    write_u32(p, read_u32(person));
     1
 }
 
@@ -984,7 +984,7 @@ pub(crate) unsafe fn drop_undo_copies(this: usize, club: usize, team: u32) {
         let e = this + tactics_fields::UNDO_SLOTS + k * 0x5c;
         if read_usize(e + undo_slot::IN_USE) != 0 && read_usize(e) == club && read_usize(e + undo_slot::TEAM) as u32 == team {
             write_u32(e + undo_slot::IN_USE, 0);
-            *((this + tactics_fields::UNDO_COUNT) as *mut u8) = read_u8(this + tactics_fields::UNDO_COUNT).wrapping_sub(1);
+            write_u8(this + tactics_fields::UNDO_COUNT, read_u8(this + tactics_fields::UNDO_COUNT).wrapping_sub(1));
         }
     }
 }
@@ -1151,13 +1151,13 @@ pub(crate) unsafe extern "thiscall" fn clear_selection_slot(this: usize, club: u
         return 0;
     }
     crate::comparison::branch("cpq_13 clear slot");
-    core::ptr::write_unaligned(tactics_cell(this, k, 2 + 4 * v as usize) as *mut i32, -1); // the place
-    if *((this + tactics_fields::UNDO_COUNT) as *const u8) != 0 {
+    write_i32(tactics_cell(this, k, 2 + 4 * v as usize), -1); // the place
+    if read_u8(this + tactics_fields::UNDO_COUNT) != 0 {
         for e in 0..16 {
             let a = this + tactics_fields::UNDO_SLOTS + 0x5c * e;
             if read_u32(a + undo_slot::IN_USE) != 0 && read_u32(a) as usize == club && read_u32(a + undo_slot::TEAM) == team {
-                core::ptr::write_unaligned((a + undo_slot::IN_USE) as *mut u32, 0);
-                *((this + tactics_fields::UNDO_COUNT) as *mut u8) = (*((this + tactics_fields::UNDO_COUNT) as *const u8)).wrapping_sub(1);
+                write_u32(a + undo_slot::IN_USE, 0);
+                write_u8(this + tactics_fields::UNDO_COUNT, read_u8(this + tactics_fields::UNDO_COUNT).wrapping_sub(1));
             }
         }
     }
@@ -1218,16 +1218,16 @@ pub(crate) unsafe extern "thiscall" fn set_set_piece_taker(this: usize, club: us
 /// [+0x5fd] primeiras em [+0x5f9], as seguintes (até [+0x5f5] mais, só sem `humano`) em [+0x5f1].
 /// Formação negativa ou fora: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn formation_record(t: usize, f: i16, human: u32) -> usize {
-    let primeiras = core::ptr::read_unaligned((t + tactics_fields::PRESET_TACTIC_COUNT) as *const i32);
-    let limit = if human != 0 { primeiras } else { core::ptr::read_unaligned((t + tactics_fields::CUSTOM_TACTIC_COUNT) as *const i32).wrapping_add(primeiras) };
+    let primeiras = read_i32(t + tactics_fields::PRESET_TACTIC_COUNT);
+    let limit = if human != 0 { primeiras } else { read_i32(t + tactics_fields::CUSTOM_TACTIC_COUNT).wrapping_add(primeiras) };
     let f = f as i32;
     if f < 0 || f >= limit {
         return original_fn::<unsafe extern "thiscall" fn(usize, i16, u32) -> usize>(IDX_FORMATION_RECORD)(t, f as i16, human);
     }
     if f < primeiras {
-        core::ptr::read_unaligned((t + tactics_fields::PRESET_TACTICS) as *const usize).wrapping_add(f as usize * 0x18e3)
+        read_usize(t + tactics_fields::PRESET_TACTICS).wrapping_add(f as usize * 0x18e3)
     } else {
-        core::ptr::read_unaligned((t + tactics_fields::CUSTOM_TACTICS) as *const usize).wrapping_add((f - primeiras) as usize * 0x18e3)
+        read_usize(t + tactics_fields::CUSTOM_TACTICS).wrapping_add((f - primeiras) as usize * 0x18e3)
     }
 }
 
@@ -1263,9 +1263,9 @@ pub(crate) unsafe extern "thiscall" fn extra_tactic_slot(t: usize, club: usize, 
     crate::comparison::branch("extra slot deleted");
     core::ptr::write_unaligned(home, u32::MAX);
     if which == 0 {
-        let second = core::ptr::read_unaligned((row + tactics_row::SECOND_PLAYMAKER) as *const u32);
-        core::ptr::write_unaligned((row + tactics_row::PLAYMAKER) as *mut u32, second);
-        core::ptr::write_unaligned((row + tactics_row::SECOND_PLAYMAKER) as *mut u32, u32::MAX);
+        let second = read_u32(row + tactics_row::SECOND_PLAYMAKER);
+        write_u32(row + tactics_row::PLAYMAKER, second);
+        write_u32(row + tactics_row::SECOND_PLAYMAKER, u32::MAX);
     }
     1
 }
@@ -1334,8 +1334,8 @@ pub(crate) unsafe extern "thiscall" fn find_selection_slot(tactic: usize, club: 
         return 0;
     }
     let id = *person;
-    let slots = core::ptr::read_unaligned((tactic + tactics_fields::ROWS) as *const usize).wrapping_add((k as usize).wrapping_mul(0x91) + 2);
-    match (0..20).find(|&i| core::ptr::read_unaligned((slots + 4 * i) as *const i32) == id) {
+    let slots = read_usize(tactic + tactics_fields::ROWS).wrapping_add((k as usize).wrapping_mul(0x91) + 2);
+    match (0..20).find(|&i| read_i32(slots + 4 * i) == id) {
         Some(i) => i as u8,
         None => 0xff,
     }
@@ -1362,7 +1362,7 @@ pub(crate) unsafe extern "thiscall" fn set_tactic_slot(t: usize, club: usize, sl
     if l == -1 {
         return 0;
     }
-    core::ptr::write_unaligned((table_row(t, l) + 2 + 4 * slot as usize) as *mut u32, *person);
+    write_u32(table_row(t, l) + 2 + 4 * slot as usize, *person);
     let pendentes = (t + tactics_fields::UNDO_COUNT) as *mut u8;
     if *pendentes != 0 {
         for k in 0..16 {
@@ -1404,7 +1404,7 @@ pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, club: usize,
     if id <= -1 {
         return 0;
     }
-    let persons = *(G_STAFF_TABLE as *const usize);
+    let persons = read_usize(G_STAFF_TABLE);
     let p = Staff(persons.wrapping_add((id as usize).wrapping_mul(staff::SIZE)));
     if p.player().is_null() {
         core::ptr::write_unaligned(home, -1);
@@ -1427,8 +1427,8 @@ pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, club: usize,
 /// `clube`; 0 sem linha, senão 1. `clube` nulo ou formação fora de 0..[+0x5fd]+[+0x5f5]−1: a
 /// original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn set_tactic_formation(t: usize, club: usize, formation: i16, human: u32) -> u32 {
-    let limit = core::ptr::read_unaligned((t + tactics_fields::PRESET_TACTIC_COUNT) as *const i32)
-        .wrapping_add(core::ptr::read_unaligned((t + tactics_fields::CUSTOM_TACTIC_COUNT) as *const i32))
+    let limit = read_i32(t + tactics_fields::PRESET_TACTIC_COUNT)
+        .wrapping_add(read_i32(t + tactics_fields::CUSTOM_TACTIC_COUNT))
         .wrapping_sub(1);
     if club == 0 || formation < 0 || formation as i32 > limit {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, i16, u32) -> u32>(IDX_SET_TACTIC_FORMATION)(t, club, formation, human);
@@ -1438,7 +1438,7 @@ pub(crate) unsafe extern "thiscall" fn set_tactic_formation(t: usize, club: usiz
     if l == -1 {
         return 0;
     }
-    core::ptr::write_unaligned(table_row(t, l) as *mut i16, formation);
+    write_i16(table_row(t, l), formation);
     1
 }
 

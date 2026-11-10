@@ -24,7 +24,7 @@ pub(crate) unsafe extern "thiscall" fn remove_dispute(this: usize, p: usize) {
     if list == 0 {
         return;
     }
-    core::ptr::write_unaligned((list + 0xa) as *mut u32, read_usize(list + 2) as u32);
+    write_u32(list + 0xa, read_usize(list + 2) as u32);
     let mut k = 0i32;
     while (k as i16 as i32) < read_i16(read_usize(this)) as i32 {
         let in_the = exe::llist_get_next(read_usize(this));

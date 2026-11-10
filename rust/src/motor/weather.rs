@@ -60,10 +60,10 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
     }
     if (0..0x23).contains(&k) {
         let e = k as usize * 0x48;
-        let end = core::ptr::read_unaligned((G_LEAGUE_WORLD_CUP_END_DATE + e) as *const i16);
-        let year = core::ptr::read_unaligned((0xb63d9b + e) as *const u16);
-        let day = core::ptr::read_unaligned(G_CURRENT_DATE as *const i16);
-        let year_current = core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16);
+        let end = read_i16(G_LEAGUE_WORLD_CUP_END_DATE + e);
+        let year = read_u16(0xb63d9b + e);
+        let day = read_i16(G_CURRENT_DATE);
+        let year_current = read_u16(G_CURRENT_DATE_YEAR);
         if end > 0x3c {
             if year == year_current && (end as i32 - 0x3c) < day as i32 {
                 return 0;
@@ -268,7 +268,7 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
     let mut reg = read_usize(this);
     if cid != 0 {
         let leituras = cidades.wrapping_add(read_usize(cid).wrapping_mul(4));
-        *s.add(3) = *((leituras + 3) as *const u8);
+        *s.add(3) = read_u8(leituras + 3);
         if let Some(r) = weather_region(this, cid) {
             reg = r;
         } else {
@@ -288,9 +288,9 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
     let day = if !game.is_null() {
         (game.day() as i16)
     } else {
-        core::ptr::read_unaligned(G_CURRENT_DATE as *const i16)
+        read_i16(G_CURRENT_DATE)
     };
-    let limit = |o: usize| core::ptr::read_unaligned((reg + o) as *const i16);
+    let limit = |o: usize| read_i16(reg + o);
     let p: usize = if day < limit(0x1e) {
         3
     } else if day < limit(0x31) {
@@ -401,7 +401,7 @@ pub(crate) unsafe extern "thiscall" fn get_temperature(_this: usize, band: u32, 
     let d: i32 = if !game.is_null() {
         game.day() as i32
     } else {
-        core::ptr::read_unaligned(G_CURRENT_DATE as *const i16) as i32
+        read_i16(G_CURRENT_DATE) as i32
     };
     let x = d.wrapping_mul(f);
     let t: i8 = match f {
@@ -445,17 +445,17 @@ pub(crate) unsafe extern "thiscall" fn get_pitch_condition(_this: usize, clima: 
         return 0;
     }
     let est = read_usize(game + 0x18);
-    if est == 0 || *((est + stadium::COVERED) as *const u8) != 0 {
+    if est == 0 || read_u8(est + stadium::COVERED) != 0 {
         return 0;
     }
-    let sum = (core::ptr::read_unaligned((game + 0x2a) as *const u16) as i32)
+    let sum = (read_u16(game + 0x2a) as i32)
         .wrapping_add(read_i32(game + 0x10))
         .wrapping_add(read_i32(game + 0xc))
         .wrapping_add(read_i32(game));
     let h = sum % 20;
     let chuva = *clima.add(1);
     let t = *clima.add(2) as i8;
-    let mark = *((est + stadium::UNDER_SOIL_HEATING) as *const u8) != 0;
+    let mark = read_u8(est + stadium::UNDER_SOIL_HEATING) != 0;
     let places = read_i32(est + stadium::CAPACITY);
     let morno = (1..0x1d).contains(&t);
     if chuva == 5 && morno {
@@ -537,19 +537,19 @@ pub(crate) unsafe extern "thiscall" fn update_city_weather(this: usize) {
         for k in 0..3usize { // cpt5: as três medidas
             let p = read_usize(this + 4) + i * 4 + k;
             let r = friendly_random(100);
-            *(p as *mut u8) = ftol((r as i16 as i32 + *(p as *const i8) as i32) as f64 * read_f64(rdata::F64_0_5)) as u8;
+            write_u8(p, ftol((r as i16 as i32 + read_i8(p) as i32) as f64 * read_f64(rdata::F64_0_5)) as u8);
             let p = read_usize(this + 4) + i * 4 + k;
-            let v = *(p as *const i8);
+            let v = read_i8(p);
             if v < 0 {
-                *(p as *mut u8) = 0;
+                write_u8(p, 0);
             } else if v > 0x64 {
-                *(p as *mut u8) = 0x64;
+                write_u8(p, 0x64);
             }
         }
         if friendly_random(10) == 0 { // cpt5: one in ten changes the wind
             crate::comparison::branch("cpt_5 new wind");
             let r = friendly_random(3); // cpt5: o vento novo
-            *((read_usize(this + 4) + i * 4 + 3) as *mut u8) = r as u8;
+            write_u8(read_usize(this + 4) + i * 4 + 3, r as u8);
         }
         i += 1;
         if i as i32 >= read_usize(G_CITY_COUNT) as i32 {
@@ -625,9 +625,9 @@ pub(crate) unsafe extern "thiscall" fn read_region_period(_this: usize, f: usize
     if n != 0x13 {
         return 0;
     }
-    core::ptr::write_unaligned(period as *mut u16, v[0] as u16);
+    write_u16(period, v[0] as u16);
     for k in 1..18usize {
-        *((period + 1 + k) as *mut u8) = v[k] as u8;
+        write_u8(period + 1 + k, v[k] as u8);
     }
     1
 }
@@ -665,12 +665,12 @@ pub(crate) unsafe extern "thiscall" fn load_config(this: usize) {
         fatal_error_at(0xad4dec, 0x75);
     }
     let r = exe::crt_malloc((read_usize(this + 8).wrapping_mul(0x6e)) as u32);
-    *(this as *mut usize) = r;
+    write_usize(this, r);
     if r == 0 {
         fatal_error_at(0xad4dec, 0x7e);
     }
     let c = exe::crt_malloc((read_usize(G_CITY_COUNT).wrapping_mul(4)) as u32);
-    *((this + 4) as *mut usize) = c;
+    write_usize(this + 4, c);
     if c == 0 {
         fatal_error_at(0xad4dec, 0x86);
     }
@@ -690,10 +690,10 @@ pub(crate) unsafe extern "thiscall" fn load_config(this: usize) {
         for j in 0..3usize {
             let a = friendly_random(100);
             let b = friendly_random(100); // cpt7: the second random draw of the measure
-            *((read_usize(this + 4) + k * 4 + j) as *mut u8) = ftol(a.wrapping_add(b) as f64 * read_f64(rdata::F64_0_5)) as u8;
+            write_u8(read_usize(this + 4) + k * 4 + j, ftol(a.wrapping_add(b) as f64 * read_f64(rdata::F64_0_5)) as u8);
         }
         let v = friendly_random(3); // cpt7: o vento inicial
-        *((read_usize(this + 4) + k * 4 + 3) as *mut u8) = v as u8;
+        write_u8(read_usize(this + 4) + k * 4 + 3, v as u8);
         k += 1;
     }
     exe::crt_fclose(f);

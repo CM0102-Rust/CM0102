@@ -167,7 +167,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_scout(this: usize, scout: usi
 /// Comparer for `set_manager`.
 pub(crate) unsafe extern "thiscall" fn compare_set_manager(search: usize, person: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SET_MANAGER);
-    if person == 0 || *(person as *const i32) < *(G_STAFF_COUNT as *const i32) - 0x10 {
+    if person == 0 || read_i32(person) < read_i32(G_STAFF_COUNT) - 0x10 {
         return o(search, person);
     }
     let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&[(search, 4)], || o(search, person), || set_manager(search, person));

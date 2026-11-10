@@ -189,8 +189,8 @@ pub(crate) unsafe fn eng_prm_apply_league_rules(this: League, written: &[(usize,
     for &(d, t, v) in written {
         match t {
             1 => *((this.addr() + d) as *mut u8) = v as u8,
-            2 => core::ptr::write_unaligned((this.addr() + d) as *mut u16, v as u16),
-            _ => core::ptr::write_unaligned((this.addr() + d) as *mut u32, v),
+            2 => write_u16(this.addr() + d, v as u16),
+            _ => write_u32(this.addr() + d, v),
         }
     }
     if !ENG_PRM_RULES_DRY_RUN {
@@ -310,7 +310,7 @@ pub(crate) unsafe fn comp_record_of(g: usize) -> usize {
 ///
 /// [pt] O ano do jogo ([0xae2c92]) passou de 1999 (o dinheiro da TV maior).
 pub(crate) unsafe fn is_after_1999() -> bool {
-    core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16) > 0x7cf
+    read_u16(G_CURRENT_DATE_YEAR) > 0x7cf
 }
 
 /// League pay_tv_rights (`pay_tv_rights`): pays the value to every table club, or only those that came from competition

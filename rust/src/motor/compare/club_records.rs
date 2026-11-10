@@ -248,7 +248,7 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_record_news(this: usize, id
         return r; // out of memory: the box has already shown
     }
     let item = read_usize(this + club_records_fields::NEWS_QUEUE).wrapping_add(n.wrapping_mul(6));
-    let (gid, gtipo) = (core::ptr::read_unaligned(item as *const u32), *((item + record_news_item::RECORD_TYPE) as *const u8));
+    let (gid, gtipo) = (read_u32(item), read_u8(item + record_news_item::RECORD_TYPE));
     SCOREBOARD.record(r == 1 && read_usize(this + club_records_fields::NEWS_QUEUE_COUNT) == n.wrapping_add(1) && gid == id && gtipo == kind as u8, || {
         format!("queue_record_news({}, {}) devolveu {}, conta {} -> {}, item ({}, {})", id, kind as u8, r, n, read_usize(this + club_records_fields::NEWS_QUEUE_COUNT), gid, gtipo)
     });

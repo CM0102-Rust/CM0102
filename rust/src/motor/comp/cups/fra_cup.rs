@@ -43,21 +43,21 @@ pub(crate) unsafe fn fra_cup_write_cup_round(t: usize, i: u32, r: &FraCupCupRoun
     exe::cup_set_round_draw_date(t, i, r.draw.0, r.draw.1, r.draw.2, r.draw.3, year);
     exe::cup_set_round_match_date(t, i, r.game.0, r.game.1, r.game.2, r.game.3, r.game.4, year, r.game.5);
     let e = t + i as usize * 0x68;
-    let w = |o: usize, v: u16| core::ptr::write_unaligned((e + o) as *mut u16, v);
-    let d = |o: usize, v: u32| core::ptr::write_unaligned((e + o) as *mut u32, v);
+    let w = |o: usize, v: u16| write_u16(e + o, v);
+    let d = |o: usize, v: u32| write_u32(e + o, v);
     w(7, r.code);
     w(9, i as u16);
     w(0xb, r.bits.0);
     w(0xd, r.bits.1);
     w(0xf, r.bits.2);
-    *((e + 0x17) as *mut u8) = r.category;
+    write_u8(e + 0x17, r.category);
     w(0x18, r.teams.0);
     w(0x1a, r.teams.1);
     w(0x1c, r.teams.2);
     w(0x1e, r.teams.3);
-    *((e + 0x20) as *mut u8) = r.tie.0;
-    *((e + 0x21) as *mut u8) = r.tie.1;
-    *((e + 0x22) as *mut u8) = r.tie.2;
+    write_u8(e + 0x20, r.tie.0);
+    write_u8(e + 0x21, r.tie.1);
+    write_u8(e + 0x22, r.tie.2);
     d(0x5c, r.prizes.0);
     d(0x60, r.prizes.1);
     d(0x64, r.prizes.2);
@@ -168,9 +168,9 @@ pub(crate) unsafe fn comp_id_at(c: usize, o: usize) -> Option<usize> {
 /// [pt] Grava a inscrição `n` da lista (+0xa7, 6 bytes: o clube, +4 classe 0, +5 situação 0) e conta.
 pub(crate) unsafe fn add_entrant(this: Cup, n: &mut i32, club: usize) {
     let e = this.team_table() + *n as usize * 6;
-    core::ptr::write_unaligned(e as *mut u32, club as u32);
-    *((e + 4) as *mut u8) = 0;
-    *((e + 5) as *mut u8) = 0;
+    write_u32(e, club as u32);
+    write_u8(e + 4, 0);
+    write_u8(e + 5, 0);
     *n += 1;
 }
 
@@ -342,13 +342,13 @@ pub(crate) unsafe fn french_super_cup_select_teams(this: Cup) -> (i32, i32) {
         return (-1, 0);
     }
     let a = latest_placed_club(KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, 0); // cqm11: the French champion
-    core::ptr::write_unaligned(l as *mut u32, a as u32);
+    write_u32(l, a as u32);
     if a == 0 {
         show_error_at(0x9ccc48, 0xcd);
         return (0, 0);
     }
     let b = latest_placed_club(KEY_CLUB_COMP_FRENCH_CUP, 0);
-    core::ptr::write_unaligned((l + 6) as *mut u32, b as u32);
+    write_u32(l + 6, b as u32);
     if b == 0 {
         show_error_at(0x9ccc48, 0xd6);
         return (0, 0);
@@ -356,17 +356,17 @@ pub(crate) unsafe fn french_super_cup_select_teams(this: Cup) -> (i32, i32) {
     if a == b {
         crate::comparison::branch("cqm_11 french double");
         let b = latest_placed_club(KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, 1);
-        core::ptr::write_unaligned((l + 6) as *mut u32, b as u32);
+        write_u32(l + 6, b as u32);
         if b == 0 {
             show_error_at(0x9ccc48, 0xe2);
             return (0, 0);
         }
     }
     crate::comparison::branch("cqm_11 french super cup clubs");
-    *((l + 4) as *mut u8) = 0;
-    *((l + 5) as *mut u8) = 0;
-    *((l + 0xa) as *mut u8) = 0;
-    *((l + 0xb) as *mut u8) = 0;
+    write_u8(l + 4, 0);
+    write_u8(l + 5, 0);
+    write_u8(l + 0xa, 0);
+    write_u8(l + 0xb, 0);
     (1, 2)
 }
 

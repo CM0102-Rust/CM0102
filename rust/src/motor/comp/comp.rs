@@ -15,10 +15,10 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn club_in_competition(this: usize, club: usize) -> u8 {
     let this = League(this);
     let base = this.competition().addr();
-    let d = |p: usize, o: usize| *((p + o) as *const usize);
-    let limit = (*(G_CLUB_COUNT as *const i32)).wrapping_sub(*(G_NATION_COUNT as *const i32));
+    let d = |p: usize, o: usize| read_usize(p + o);
+    let limit = read_i32(G_CLUB_COUNT).wrapping_sub(read_i32(G_NATION_COUNT));
     let nation = d(club, 0x53);
-    if *(club as *const i32) >= limit {
+    if read_i32(club) >= limit {
         let continent = d(base, 0x59);
         if continent != 0 && (nation == 0 || d(nation, 0x71) != continent) {
             return 0;
@@ -42,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn club_in_competition(this: usize, club: us
             outra = stage;
         }
         let (f, tabela, step_towards) = if grupo != 0 { (grupo, 0xb1, 0x3b) } else { (outra, 0xa7, 6) };
-        let how_many = *((f + 0x3e) as *const i16);
+        let how_many = read_i16(f + 0x3e);
         let list = d(f, tabela);
         let mut k = 0i16;
         while k < how_many {
@@ -66,10 +66,10 @@ pub(crate) unsafe extern "stdcall" fn special_club(club: usize) -> u32 {
     if club == 0 {
         return 0;
     }
-    let id = *(club as *const u32);
+    let id = read_u32(club);
     [KEY_CLUB_COMP_FIFA_WORLD_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES, KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP, KEY_CLUB_COMP_COPA_AMERICA, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS, KEY_CLUB_COMP_ASIAN_CUP, KEY_CLUB_COMP_OCEANIA_NATIONS_CUP, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_ASIAN_GAMES, KEY_CLUB_COMP_CONFEDERATIONS_CUP]
         .iter()
-        .any(|&a| *(a as *const u32) == id) as u32
+        .any(|&a| read_u32(a) == id) as u32
 }
 
 /// Calls the league's vtable slot 0xa4 with no arguments [inference: finalizes the season standings and marks
@@ -123,7 +123,7 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: 
     exe::newsitem_set_slot(p, (3) as u32 as i8, position as u8 as i8 as i32 as u32);
     exe::newsitem_set_slot(p, (4) as u32 as i8, round as u16 as i16 as i32 as u32);
     exe::newsitem_set_slot(p, (7) as u32 as i8, kind as u8 as i8 as i32 as u32);
-    let b = |a: usize| *(a as *const i8);
+    let b = |a: usize| read_i8(a);
     let won = if !partida.is_null() {
         if partida.home_club() == club {
             exe::newsitem_set_slot(p, (5) as u32 as i8, read_usize(partida.away_club().addr()) as u32);
@@ -236,7 +236,7 @@ pub(crate) unsafe extern "thiscall" fn comp_collect_club_list(this: usize, list:
             let club = if league { read_usize(read_usize(f + 0xb1) + i as usize * 0x3b) } else { read_usize(read_usize(f + 0xa7) + i as usize * 6) };
             if club != 0 && !(0..n).any(|k| read_usize(v + k as usize * 4) == club) && n < 0xc8 { // cqh6: up to 200 clubs
                 crate::comparison::branch("cqh_6 club in the list");
-                core::ptr::write_unaligned((v + n as usize * 4) as *mut u32, club as u32); // cqh6: the club in the list
+                write_u32(v + n as usize * 4, club as u32); // cqh6: the club in the list
                 n += 1;
             }
             i += 1;
@@ -448,7 +448,7 @@ pub(crate) fn key_nation_entry(k: i8) -> usize {
 pub(crate) unsafe fn find_key_nation_index(nation: usize) -> Option<i8> {
     let mut k: i8 = 0;
     while k < 0x23 {
-        let e = Nation(*(key_nation_entry(k) as *const usize));
+        let e = Nation(read_usize(key_nation_entry(k)));
         if !e.is_null() && e.league_selected() != 0 && e.addr() == nation {
             return Some(k);
         }
@@ -470,7 +470,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_club(club: usize) -> u
     if nation != 0 {
         if let Some(k) = find_key_nation_index(nation) {
             crate::comparison::branch("cqb_12 club key nation");
-            return *((key_nation_entry(k) + 0x14) as *const u8); // cqb12: the active index of the club’s nation
+            return read_u8(key_nation_entry(k) + 0x14); // cqb12: the active index of the club’s nation
         }
     }
     // 0x53b900: push club; add esp, 4 -> cdecl
@@ -488,14 +488,14 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_club(club: usize) -> u
 /// do estádio (+0x38 a cidade, +0x1f a nação) entre as nações-chave ativas; sem estádio, cidade, nação ou fora da
 /// tabela, 3. Devolve só `al`.
 pub(crate) unsafe extern "C" fn comp_active_key_nation_of_stadium(stadium: usize) -> u8 {
-    let u = |a: usize| core::ptr::read_unaligned(a as *const usize);
+    let u = |a: usize| read_usize(a);
     if stadium == 0 || read_usize(stadium + stadium::CITY) == 0 || u(read_usize(stadium + stadium::CITY) + 0x1f) == 0 {
         return 3;
     }
     match find_key_nation_index(u(read_usize(stadium + stadium::CITY) + 0x1f)) {
         Some(k) => {
             crate::comparison::branch("cqb_12 stadium key nation");
-            *((key_nation_entry(k) + 0x14) as *const u8) // cqb12: the active index of the stadium’s nation
+            read_u8(key_nation_entry(k) + 0x14) // cqb12: the active index of the stadium’s nation
         }
         None => 3,
     }
@@ -505,7 +505,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_stadium(stadium: usize
 ///
 /// [pt] A entrada da tabela das nações-chave cujo índice ativo (+0x14) é `ativo`, se houver.
 pub(crate) unsafe fn key_nation_by_active_index(active: i8) -> Option<i8> {
-    (0..0x23i8).find(|&k| *((key_nation_entry(k) + 0x14) as *const i8) == active)
+    (0..0x23i8).find(|&k| read_i8(key_nation_entry(k) + 0x14) == active)
 }
 
 /// the first key nation table entry with that active index; none, the error box and 3
@@ -601,7 +601,7 @@ pub(crate) unsafe fn callup_array_full(this: usize, team: Club) -> bool {
             return false;
         }
         match club_callup_record(this, s.club_job()) {
-            Some(rec) => *((rec + 4) as *const i8) == *((rec + 5) as *const i8),
+            Some(rec) => read_i8(rec + 4) == read_i8(rec + 5),
             None => false,
         }
     })
@@ -614,7 +614,7 @@ pub(crate) unsafe fn callup_array_full(this: usize, team: Club) -> bool {
 /// (+0x42; 0xff = a própria competição, senão [+0xc] + 4 × fase) responde pela virtual +0x54 com os mesmos argumentos.
 pub(crate) unsafe extern "thiscall" fn get_fixture_match_importance(this: usize, p: usize, a: u32, b: u32) -> u32 {
     let this = League(this);
-    let stage = *((p + 0x42) as *const u8);
+    let stage = read_u8(p + 0x42);
     let c = if stage == 0xff { this.addr() } else { read_usize(this.stages().wrapping_add(4 * (stage as i8 as i32) as usize)) };
     let f: unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32 = core::mem::transmute(read_usize(read_usize(c) + 0x54));
     f(c, p, a, b)
@@ -679,14 +679,14 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, p
                 return 3;
             }
             if let Some(k) = row(a.addr()) {
-                return *((0xb63d74 + 72 * k) as *const u8); // cpt3: the friendly’s nation
+                return read_u8(0xb63d74 + 72 * k); // cpt3: the friendly’s nation
             }
             return if exe::database_is_national_team(home) != 0 { 0 } else { 3 };
         }
     }
     if !comp.nation().is_null() {
         return match row(nation.addr()) {
-            Some(k) => *((0xb63d74 + 72 * k) as *const u8), // cpt3: the competition’s key nation
+            Some(k) => read_u8(0xb63d74 + 72 * k), // cpt3: the competition’s key nation
             None => 3,
         };
     }
@@ -735,7 +735,7 @@ pub(crate) unsafe extern "thiscall" fn are_round_fixtures_known(this: usize, sta
     if current != n - 1 {
         return 0;
     }
-    let code = core::ptr::read_unaligned((c.round_table().wrapping_add((0x68 * (n - 1)) as usize) + 7) as *const i16);
+    let code = read_i16(c.round_table().wrapping_add((0x68 * (n - 1)) as usize) + 7);
     (code == 0x8c) as u32
 }
 

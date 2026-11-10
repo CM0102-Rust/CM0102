@@ -58,7 +58,7 @@ pub(crate) unsafe fn set_rounds_around_christmas(t: usize, year: u32, n: &SpaLow
     spa_lower_set_league_rounds(t, year, 0, n.comeco);
     let mut d = [0u16; 4];
     exe::date_date_549f70(&mut d, 1, 0xb, year, 0xffff_ffff);
-    let day = core::ptr::read_unaligned((t + n.reference * 0x41) as *const u16);
+    let day = read_u16(t + n.reference * 0x41);
     let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.adjust);
     let case = if k as u32 > 6 {
         show_error_at(file, n.row);

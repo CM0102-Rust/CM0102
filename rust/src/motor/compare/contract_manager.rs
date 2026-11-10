@@ -113,7 +113,7 @@ pub(crate) unsafe extern "stdcall" fn compare_contract_manager_write_morale_text
     contract_manager_write_morale_text(person, out, x);
     let n = c_string_bytes(out);
     core::ptr::copy_nonoverlapping(r.as_ptr(), out as *mut u8, r.len());
-    *((out + r.len()) as *mut u8) = 0;
+    write_u8(out + r.len(), 0);
     SCOREBOARD.record(r == n, || format!("contract_manager_write_morale_text({:x}) original={:?} rust={:?}", person, String::from_utf8_lossy(&r), String::from_utf8_lossy(&n)));
 }
 
@@ -140,7 +140,7 @@ pub(crate) unsafe extern "stdcall" fn compare_contract_manager_write_morale_comp
     let n = contract_manager_write_morale_comparison_text(a, b, out, x);
     let tn = c_string_bytes(out);
     core::ptr::copy_nonoverlapping(tr.as_ptr(), out as *mut u8, tr.len());
-    *((out + tr.len()) as *mut u8) = 0;
+    write_u8(out + tr.len(), 0);
     SCOREBOARD.record(r == n && tr == tn, || format!("contract_manager_write_morale_comparison_text original={} {:?} rust={} {:?}", r as i8, String::from_utf8_lossy(&tr), n as i8, String::from_utf8_lossy(&tn)));
     r
 }
@@ -559,7 +559,7 @@ pub(crate) unsafe extern "thiscall" fn compare_trigger_relegation_clauses(this: 
         }
     }
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_TRIGGER_RELEGATION_CLAUSES)(this, club, league);
-    let away: Vec<usize> = alvos.iter().copied().filter(|&x| *((x + contract::RELEGATION_RC) as *const u8) != 2).collect();
+    let away: Vec<usize> = alvos.iter().copied().filter(|&x| read_u8(x + contract::RELEGATION_RC) != 2).collect();
     SCOREBOARD.record(away.is_empty(), || format!("trigger_relegation_clauses({:x}) {} contratos, sem acionar {:x?}", club, alvos.len(), away));
 }
 
@@ -611,7 +611,7 @@ pub(crate) unsafe extern "thiscall" fn compare_schedule_decision_for_transfer(th
     let target = offer_to_schedule(read_usize(this + contract_manager_fields::CONTRACT_OFFERS), Offer(offer));
     let n = ability_above_club_reputation(Offer(offer));
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SCHEDULE_DECISION_FOR_TRANSFER)(this, offer);
-    let marked = target.map_or(true, |e| *((e + contract_offer::DECISION_VALID) as *const u8) == 1);
+    let marked = target.map_or(true, |e| read_u8(e + contract_offer::DECISION_VALID) == 1);
     SCOREBOARD.record(marked && r == n, || format!("schedule_decision_for_transfer({:x}) alvo {:x?} marcada={} original={} rust={}", offer, target, marked, r, n));
     r
 }
@@ -665,7 +665,7 @@ pub(crate) unsafe extern "stdcall" fn compare_contract_manager_raise_match_moral
 /// Comparer for `remove_talks_records`.
 pub(crate) unsafe extern "thiscall" fn compare_remove_talks_records(this: usize, person: usize, manager: usize, club: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_REMOVE_TALKS_RECORDS);
-    let n = (*((this + contract_manager_fields::TALKS_COUNT) as *const i32)).max(0) as usize;
+    let n = read_i32(this + contract_manager_fields::TALKS_COUNT).max(0) as usize;
     let reg = [(this + contract_manager_fields::TALKS_RECORDS, 8), (read_u32(this + contract_manager_fields::TALKS_RECORDS) as usize, n * 21)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, person, manager, club), || remove_talks_records(this, person, manager, club));
     SCOREBOARD.record(igual, || format!("remove_talks_records({:x}, {:x}, {:x}) {:x?} x {:x?}", person, manager, club, mo, mr));
@@ -676,9 +676,9 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_loan_contract(manager: usi
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32)>(IDX_REMOVE_LOAN_CONTRACT);
     let e = loan_state_entry(id);
     let mut reg = vec![(e + 4, 4)];
-    let slot = core::ptr::read_unaligned((e + 4) as *const i32);
+    let slot = read_i32(e + 4);
     if slot != -1 {
-        reg.push(((*(manager as *const usize) as isize + slot as isize * 80) as usize, 4));
+        reg.push(((read_usize(manager) as isize + slot as isize * 80) as usize, 4));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(manager, id), || remove_loan_contract(manager, id));
     SCOREBOARD.record(igual, || format!("remove_loan_contract({}) {:x?} x {:x?}", *id, mo, mr));

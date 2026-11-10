@@ -267,7 +267,7 @@ pub(crate) unsafe extern "thiscall" fn compare_referee_grade(m: usize) {
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     let referee = m.referee_id();
     if referee != 0 && *(G_OFFICIALS_MANAGER as *const usize) != 0 {
-        reg.extend(official_record_region(*(G_OFFICIALS_MANAGER as *const usize), *(referee as *const i32)));
+        reg.extend(official_record_region(read_usize(G_OFFICIALS_MANAGER), read_i32(referee)));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(m.addr()), || referee_grade(m.addr()));
     SCOREBOARD.record(igual, || format!("referee_grade {:x?} x {:x?}", mo, mr));
@@ -656,14 +656,14 @@ pub(crate) unsafe extern "thiscall" fn compare_player_left(m: usize, j: usize, j
     reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     // the captain kept in the tactic row (+0x52) of both clubs: the substitution (0x6e1090) swaps him
     // before the compared one checks whether the player who left was the captain
-    let taticas = *(G_TACTICS as *const usize);
+    let taticas = read_usize(G_TACTICS);
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let t = Fixture(m.r#match());
     for clube in [t.home_club(), t.away_club()] {
         for humano in 0..2u32 {
             let l = if clube.is_null() { -1 } else { row(clube.addr(), humano) };
             if l != -1 {
-                reg.push(((*((taticas + tactics_fields::ROWS) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)) + 0x52, 4));
+                reg.push((read_usize(taticas + tactics_fields::ROWS).wrapping_add((l as usize).wrapping_mul(0x91)) + 0x52, 4));
             }
         }
     }
@@ -685,13 +685,13 @@ pub(crate) unsafe extern "thiscall" fn compare_tackle_injury(m: usize, a: usize,
     // the random state, the two players, their injury records and what 0x6d0980 changes in the engine
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m.addr() + 0x8ea0, 0x20), (m.addr() + engine::BALL_HOLDER, 4), (m.addr() + engine::INJURY_COUNT, 2)]);
-    let table = *(*(G_INJURY as *const usize) as *const usize);
+    let table = read_usize(read_usize(G_INJURY));
     for p in [a, b] {
         if p != 0 {
             reg.push((p, 0x1be));
-            let person = *((p + match_player::STAFF) as *const usize);
-            if person != 0 && *(person as *const i32) >= 0 && *(person as *const i32) < *(G_STAFF_COUNT as *const i32) {
-                reg.push((table + *(person as *const i32) as usize * 31, 31));
+            let person = read_usize(p + match_player::STAFF);
+            if person != 0 && *(person as *const i32) >= 0 && *(person as *const i32) < read_i32(G_STAFF_COUNT) {
+                reg.push((table + read_i32(person) as usize * 31, 31));
             }
         }
     }
@@ -884,7 +884,7 @@ pub(crate) unsafe extern "thiscall" fn compare_look_for_play(this: usize, side: 
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(this.addr() + engine::SHOT_BLOCKER, 4), (base + 0x58, 1), (list, 44)]);
     for k in 0..read_i8(base + 0x58).clamp(0, 11) as usize {
-        let j = MatchPlayer(*((list + 4 * k) as *const usize));
+        let j = MatchPlayer(read_usize(list + 4 * k));
         reg.extend([(j.addr() + match_player::BALLS_CONTESTED, 1), (j.addr() + match_player::POSITION, 1), (j.addr() + match_player::BUSY, 1)]);
     }
     let (r, n, igual, sequencia, k) = compare_com_fita(

@@ -13,6 +13,6 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn construct_usa_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparison::branch("cqk_1 usa");
     construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x970a38, 1, &USA_TRANSFER_WINDOWS, 0xaa211c, 0x54);
-    *((this + 0x13) as *mut u8) = 4;
+    write_u8(this + 0x13, 4);
     this
 }

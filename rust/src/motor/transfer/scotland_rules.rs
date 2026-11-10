@@ -122,7 +122,7 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usi
 pub(crate) unsafe extern "thiscall" fn construct_scotland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparison::branch("cqk_3 scotland");
     construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x96f838, 1, &SCOTLAND_TRANSFER_WINDOWS, 0xa7b058, 0x50);
-    core::ptr::write_unaligned((this + 0x15) as *mut u32, 1);
+    write_u32(this + 0x15, 1);
     this
 }
 

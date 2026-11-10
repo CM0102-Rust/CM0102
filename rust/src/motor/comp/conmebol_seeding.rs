@@ -40,7 +40,7 @@ pub(crate) unsafe extern "thiscall" fn assign_libertadores_places(this: usize, c
         let e = this + k * 10;
         let mut n = 0u8;
         if read_u32(e) == read_u32(KEY_NATION_BRAZIL) {
-            if *(G_CURRENT_DATE_YEAR as *const u16) > 0x7d2 {
+            if read_u16(G_CURRENT_DATE_YEAR) > 0x7d2 {
                 let mut c = exe::comp_util_get_latest_placed_club(row(KEY_CLUB_COMP_BRAZILIAN_CUP), 0);
                 if c == 0 || read_u32(c + club::CONTINENTAL_COMP_ID) != u32::MAX {
                     c = exe::comp_util_get_latest_placed_club(row(KEY_CLUB_COMP_BRAZILIAN_CUP), 1);
@@ -67,7 +67,7 @@ pub(crate) unsafe extern "thiscall" fn assign_libertadores_places(this: usize, c
                 }
             }
         }
-        while (n as i8) < *((e + 8) as *const i8) {
+        while (n as i8) < read_i8(e + 8) {
             let c = exe::conmebolseeding_find_nth_unqualified_club_of_nation(this, clubs, count, read_u32(e), 1, 1, 0);
             if c != 0 && read_u32(c + club::CONTINENTAL_COMP_ID) == u32::MAX {
                 crate::comparison::branch("cqj_1 nation quota");
@@ -214,24 +214,24 @@ pub(crate) unsafe extern "stdcall" fn collect_conmebol_clubs(out: *mut usize) ->
                         crate::comparison::branch("cqj_2 mexican club");
                     }
                     crate::comparison::branch("cqj_2 removes the place");
-                    *((c + club::CONTINENTAL_COMP_ID) as *mut u32) = u32::MAX; // cqj2: no continental place
+                    write_u32(c + club::CONTINENTAL_COMP_ID, u32::MAX); // cqj2: no continental place
                     let r = t.wrapping_add((k as u16 as i16 as i32 * 12) as usize);
-                    core::ptr::write_unaligned(r as *mut u32, c as u32);
-                    core::ptr::write_unaligned((r + 4) as *mut u32, read_u32(nation.addr()));
-                    *((r + 8) as *mut u8) = (core::ptr::read_unaligned((c + club::REPUTATION) as *const i16) as i32 / 500) as u8;
+                    write_u32(r, c as u32);
+                    write_u32(r + 4, read_u32(nation.addr()));
+                    write_u8(r + 8, (read_i16(c + club::REPUTATION) as i32 / 500) as u8);
                     let division = Competition(read_u32(c + club::LAST_DIVISION) as usize);
                     if !division.is_null() {
                         crate::comparison::branch("cqj_2 division level");
-                        core::ptr::write_unaligned((r + 9) as *mut u16, (division.reputation() as u16)); // cqj2: the division level
-                        *((r + 0xb) as *mut u8) = *((c + club::LAST_POSITION) as *const u8);
+                        write_u16(r + 9, (division.reputation() as u16)); // cqj2: the division level
+                        write_u8(r + 0xb, read_u8(c + club::LAST_POSITION));
                         let comp = Nation(read_u32(read_u32(c + club::LAST_DIVISION) as usize + 0x5d) as usize);
                         if comp.is_null() || comp.league_selected() == 0 {
-                            core::ptr::write_unaligned((c + club::LAST_DIVISION) as *mut u32, 0);
-                            *((c + club::LAST_POSITION) as *mut u8) = 0;
+                            write_u32(c + club::LAST_DIVISION, 0);
+                            write_u8(c + club::LAST_POSITION, 0);
                         }
                     } else {
-                        core::ptr::write_unaligned((r + 9) as *mut u16, 0xffff);
-                        *((r + 0xb) as *mut u8) = 0x7f;
+                        write_u16(r + 9, 0xffff);
+                        write_u8(r + 0xb, 0x7f);
                     }
                     k += 1;
                 }
@@ -271,12 +271,12 @@ pub(crate) unsafe extern "thiscall" fn update_for_new_season(this: usize, skip: 
     if skip != 0 {
         return;
     }
-    let year = core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16);
-    if year == core::ptr::read_unaligned((this + 0x6f) as *const u16) {
+    let year = read_u16(G_CURRENT_DATE_YEAR);
+    if year == read_u16(this + 0x6f) {
         return;
     }
     crate::comparison::branch("cqj_2 year rollover");
-    core::ptr::write_unaligned((this + 0x6f) as *mut u16, year);
+    write_u16(this + 0x6f, year);
     let mut t = 0usize;
     let n = (exe::collect_conmebol_clubs(&mut t) as u32);
     if n as u16 == 0 {
@@ -293,7 +293,7 @@ pub(crate) unsafe extern "thiscall" fn update_for_new_season(this: usize, skip: 
 /// [pt] { 0x4c6960 } (thiscall, ret 4, conmebol_seeding.cpp, `ConmebolSeeding::set_bra_champ_cup_winner`): guarda o id do
 /// campeão da Copa dos Campeões em +0x71 (a vaga dele na Libertadores, de 2003 em diante).
 pub(crate) unsafe extern "thiscall" fn set_bra_champ_cup_winner(this: usize, club: usize) {
-    core::ptr::write_unaligned((this + 0x71) as *mut u32, read_u32(club));
+    write_u32(this + 0x71, read_u32(club));
 }
 
 /// writes CM3_TEMP\conmebol_seeding.tmp: the country count (+0x6e), 0xa bytes per country from +0, +0x6f (u16) and

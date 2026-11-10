@@ -4,7 +4,7 @@ MUTACOES = [
     ('cps1_moral_6', 'exe::staff_adjust_morale(person, 0xffff_fff4, 0); // cps1: a moral cai 12', 'exe::staff_adjust_morale(person, 0xffff_fffa, 0); // mutacao: cai 6', 'cps_1 request at computer club'),
     ('cps1_queixa_25', 'if r < exe::utils_random(0x32) { // cps1: the complaint random draw', 'if r < exe::utils_random(0x19) { // mutacao: contra 25', 'cps_1 request at computer club'),
     ('cps2_tres_anos', 'if (read_u16(G_CURRENT_DATE_YEAR) as i32) - (year as i32) < 5 { // cps2: less than five years in the nation', 'if (read_u16(0xae2c92) as i32) - (year as i32) < 3 { // mutacao: tres anos', 'cps_2 permit by career'),
-    ('cps2_sem_nacionalidade', 'core::ptr::write_unaligned((p + staff::SECOND_NATION) as *mut usize, read_usize(read_usize(p + staff::CLUB_JOB) + 0x53)); // cps2: a segunda nacionalidade', '// mutacao: sem a segunda nacionalidade', 'cps_2 second nationality'),
+    ('cps2_sem_nacionalidade', 'write_usize(p + staff::SECOND_NATION, read_usize(read_usize(p + staff::CLUB_JOB) + 0x53)); // cps2: a segunda nacionalidade', '// mutacao: sem a segunda nacionalidade', 'cps_2 second nationality'),
     ('cps2_ano_mais_novo', 'if a < year { // cps2: o ano mais antigo', 'if a > year { // mutacao: o mais novo', 'cps_2 permit by career'),
     ('cps3_desafeto_invertido', 'if r < exe::utils_random(0x14) || exe::staff_favours_club(p, club) != 0 { // cps3: the grudge random draw', 'if r > exe::utils_random(0x14) || exe::staff_favours_club(p, club) != 0 { // mutacao: invertido', 'cps_3 released'),
     ('cps3_sem_registros', 'exe::staff_records_add_free_release_records(read_usize(G_STAFF_RECORDS), p); // cps3: the release records', '// mutacao: sem os registros', 'cps_3 released'),

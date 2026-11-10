@@ -49,9 +49,9 @@ pub(crate) unsafe fn bra_reg_goias_construct_state_league(this: League, ano: u32
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.table);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.predicted);
     exe::new_league(this);
-    core::ptr::write_unaligned((this.addr() + league::COMPETITION) as *mut usize, registro);
-    core::ptr::write_unaligned(this.addr() as *mut usize, e.vtabela);
-    core::ptr::write_unaligned((this.addr() + league::YEAR) as *mut u16, ano as u16);
+    write_usize(this.addr() + league::COMPETITION, registro);
+    write_usize(this.addr(), e.vtabela);
+    write_u16(this.addr() + league::YEAR, ano as u16);
     this.set_discipline_rule(disciplina);
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this.addr();
@@ -59,10 +59,10 @@ pub(crate) unsafe fn bra_reg_goias_construct_state_league(this: League, ano: u32
     crate::comparison::branch(ramo);
     this.set_importance(0xf);
     this.set_stage_index(0xff);
-    core::ptr::write_unaligned((this.addr() + league::CURRENT_STAGE) as *mut i32, -1);
-    core::ptr::write_unaligned((this.addr() + league::STAGE_COUNT) as *mut u32, e.stages);
+    write_i32(this.addr() + league::CURRENT_STAGE, -1);
+    write_u32(this.addr() + league::STAGE_COUNT, e.stages);
     let v = exe::crt_malloc(e.stages * 4);
-    core::ptr::write_unaligned((this.addr() + league::STAGES) as *mut usize, v);
+    write_usize(this.addr() + league::STAGES, v);
     if regras(this.addr()) == 0 {
         show_error_at(e.file, e.rows[0]);
         return this.addr();
@@ -81,7 +81,7 @@ pub(crate) unsafe fn bra_reg_goias_construct_state_league(this: League, ano: u32
     }
     let n = exe::crt_operator_new(0x5ce);
     let s = if n != 0 { exe::new_comp_stats(n, this) } else { 0 };
-    core::ptr::write_unaligned((this.addr() + league::COMP_STATS) as *mut usize, s);
+    write_usize(this.addr() + league::COMP_STATS, s);
     if s == 0 {
         show_error_at(e.file, e.rows[4]);
         return this.addr();
@@ -228,7 +228,7 @@ pub(crate) unsafe fn j1_rules(o: usize) {
     write_u32_at(o, 0x1c, 0xffff_ffff);
     write_u8_at(o, 0x52, 2);
     write_u8_at(o, 0x4a, 3);
-    write_u32_at(o, 0x20, *(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2 as *const u32)); // falls to J2
+    write_u32_at(o, 0x20, read_u32(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)); // falls to J2
     write_u16_at(o, 0xd9, 8);
     write_u8_at(o, 0x49, 5);
 }
@@ -253,7 +253,7 @@ pub(crate) unsafe fn j2_rules(o: usize) {
     write_u8_at(o, 0xbf, 0);
     write_u8_at(o, 0xc0, 0);
     write_u8_at(o, 0xc1, 0);
-    write_u32_at(o, 0x1c, *(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1 as *const u32)); // promoted to J1
+    write_u32_at(o, 0x1c, read_u32(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1)); // promoted to J1
     write_u8_at(o, 0x4a, 3);
     write_u32_at(o, 0x20, 0xffff_ffff);
     write_u8_at(o, 0x49, 5);

@@ -379,7 +379,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize,
     if this.active() == 0 && full != 0 {
         let day = this.next_draw_day() as u16; // cqr12: the draw day
         let year = (this.next_draw_year_offset() as u16).wrapping_add(this.year() as u16);
-        if year == core::ptr::read_unaligned((today + 2) as *const u16) && day == core::ptr::read_unaligned(today as *const u16) {
+        if year == read_u16(today + 2) && day == read_u16(today) {
             crate::comparison::branch("cqr_12 merconorte draw");
             exe::conmerccup_select_invited_clubs(this);
             if exe::conmerccup_create_first_group_table(this) == 0 {

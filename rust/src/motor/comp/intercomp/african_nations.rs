@@ -37,8 +37,8 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
     }
     let day = this.next_draw_day() as u16;
     let year = (this.next_draw_year_offset() as u16).wrapping_add(this.year() as u16);
-    let day_of_today = core::ptr::read_unaligned(today as *const u16);
-    let year_of_today = core::ptr::read_unaligned((today + 2) as *const u16);
+    let day_of_today = read_u16(today);
+    let year_of_today = read_u16(today + 2);
     // simplification: in the passes before the draw and on errors the original returns only al = 0 (the rest of eax is leftover from the
     // earlier calls); the caller reads the byte
     if year_of_today < year || (year_of_today == year && (day_of_today as i16) < day as i16) {
@@ -66,7 +66,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
         }
         exe::crt_free(read_usize(this.addr() + 0xee));
         write_usize(this.addr() + 0xee, 0);
-        core::ptr::write_unaligned((this.addr() + 0xf2) as *mut u16, 0);
+        write_u16(this.addr() + 0xf2, 0);
         this.set_active(1);
     }
     (exe::league_update_for_date(this, today, full) as u32)
@@ -113,7 +113,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
 /// sinal; de novo enquanto a vaga do pote já saiu) entre os 4 do pote (a lista nas vagas 4p a 4p + 3) vai para a vaga 4j
 /// + p dos grupos e sai do pote (zerado). A lista liberada (0x9452ca) e +0xee = os grupos. Devolve 1.
 pub(crate) unsafe fn draw_african_nations_finalists(this: League) -> u32 {
-    core::ptr::write_unaligned((this.addr() + 0xf2) as *mut u16, 0x10);
+    write_u16(this.addr() + 0xf2, 0x10);
     let list = exe::crt_malloc(0xc8);
     write_usize(this.addr() + 0xee, list);
     if list == 0 {

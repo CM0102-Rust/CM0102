@@ -180,30 +180,30 @@ pub(crate) unsafe extern "thiscall" fn init(
     let x1 = if x1 > 0 { x1 } else { 0 };
     let y1 = if y1 > 0 { y1 } else { 0 };
     // the screen limits: immediates of `cmp edx, imm` and `mov edx, imm` (0x402b7c) and `mov esi, imm` (0x402b8d)
-    let x2 = if x2 >= core::ptr::read_unaligned(0x402b7e as *const i32) { core::ptr::read_unaligned(0x402b85 as *const i32) } else { x2 };
-    let ceiling_y = core::ptr::read_unaligned(0x402b8e as *const i32);
+    let x2 = if x2 >= read_i32(0x402b7e) { read_i32(0x402b85) } else { x2 };
+    let ceiling_y = read_i32(0x402b8e);
     let y2 = if y2 >= ceiling_y { ceiling_y } else { y2 };
     write_i32_at(area, 0, x1);
     write_i32_at(area, 4, y1);
     write_i32_at(area, 8, x2);
     write_i32_at(area, 0xc, y2);
-    *((area + 0xbac) as *mut u8) = rows;
-    *((area + 0xbab) as *mut u8) = columns;
+    write_u8(area + 0xbac, rows);
+    write_u8(area + 0xbab, columns);
     write_i32_at(area, 0x10, 0x7fffffff);
     write_i32_at(area, 0x14, 0);
     core::ptr::write_bytes((area + 0xb7a) as *mut u8, 0, 0x31);
-    core::ptr::write_unaligned((area + 0x20e) as *mut u16, owner as u16);
-    core::ptr::write_unaligned((area + 0x204) as *mut usize, areas);
-    core::ptr::write_unaligned((area + 0x208) as *mut usize, items);
-    core::ptr::write_unaligned((area + 0xb72) as *mut u16, index as u16);
-    core::ptr::write_unaligned((area + 0x20c) as *mut u16, colour as u16);
+    write_u16(area + 0x20e, owner as u16);
+    write_usize(area + 0x204, areas);
+    write_usize(area + 0x208, items);
+    write_u16(area + 0xb72, index as u16);
+    write_u16(area + 0x20c, colour as u16);
     write_i32_at(area, 0xbed, 0);
     write_i32_at(area, 0x200, 0);
     write_i32_at(area, 0xba6, 0);
-    core::ptr::write_unaligned((area + 0x210) as *mut i16, -1);
+    write_i16(area + 0x210, -1);
     write_i32_at(area, 0xbe9, 1);
-    core::ptr::write_unaligned((area + 0xb76) as *mut i16, -1);
-    core::ptr::write_unaligned((area + 0x18) as *mut u32, marks);
+    write_i16(area + 0xb76, -1);
+    write_u32(area + 0x18, marks);
     write_i32_at(area, 0x1fc, -1);
     if marks & 0x80000 != 0 {
         return;
@@ -266,7 +266,7 @@ pub(crate) fn cap_area_rows(rows: u32) -> u32 {
 /// linha; depois a barra (0x403c80). Sem o primeiro item à mostra (+0xb76 = -1): a original (caixa de
 /// erro Area.cpp 245 e a organização 0x403350).
 pub(crate) unsafe extern "thiscall" fn draw(area: usize, redraw: u32) {
-    if core::ptr::read_unaligned((area + 0xb76) as *const i16) == -1 {
+    if read_i16(area + 0xb76) == -1 {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DRAW)(area, redraw);
     }
     crate::comparison::branch("screens draw the area");
@@ -275,28 +275,28 @@ pub(crate) unsafe extern "thiscall" fn draw(area: usize, redraw: u32) {
         exe::gui_free_image(*image);
         *image = 0;
     }
-    if core::ptr::read_unaligned((area + 0x20e) as *const i16) != -1 && *image == 0 {
+    if read_i16(area + 0x20e) != -1 && *image == 0 {
         *image = exe::gui_save_screen_image(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), 0);
     }
     // simplification: the original pushes edx with the colour in dx and, on top, leftovers from earlier calls
     // (unpredictable); the color is u16 for the panel, here zero-extended
-    let colour = core::ptr::read_unaligned((area + 0x20c) as *const u16) as u32;
-    exe::gui_draw_panel(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), *((area + 0x18) as *const u32), colour, 0);
-    if *((area + 0x18) as *const u32) & 0x80000 != 0 {
+    let colour = read_u16(area + 0x20c) as u32;
+    exe::gui_draw_panel(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), read_u32(area + 0x18), colour, 0);
+    if read_u32(area + 0x18) & 0x80000 != 0 {
         let mut k: i16 = 1;
-        while *((area + 0xbac) as *const u8) > 1 && k < *((area + 0xbac) as *const u8) as i16 {
+        while read_u8(area + 0xbac) > 1 && k < read_u8(area + 0xbac) as i16 {
             let y1 = read_i32_at(area, 4);
-            let y = read_i32_at(area, 0xc).wrapping_sub(y1).wrapping_add(1).wrapping_mul(k as i32) / *((area + 0xbac) as *const u8) as i32;
+            let y = read_i32_at(area, 0xc).wrapping_sub(y1).wrapping_add(1).wrapping_mul(k as i32) / read_u8(area + 0xbac) as i32;
             let y = y.wrapping_add(y1);
-            exe::graphics_draw_line(read_i32_at(area, 0), y, read_i32_at(area, 8), y, 2, *(G_GUI_COLOUR_GREY as *const u16) as u32);
+            exe::graphics_draw_line(read_i32_at(area, 0), y, read_i32_at(area, 8), y, 2, read_u16(G_GUI_COLOUR_GREY) as u32);
             k = k.wrapping_add(1);
         }
         let mut k: i16 = 1;
-        while *((area + 0xbab) as *const u8) > 1 && k < *((area + 0xbab) as *const u8) as i16 {
+        while read_u8(area + 0xbab) > 1 && k < read_u8(area + 0xbab) as i16 {
             let x1 = read_i32_at(area, 0);
-            let x = read_i32_at(area, 8).wrapping_sub(x1).wrapping_add(1).wrapping_mul(k as i32) / *((area + 0xbab) as *const u8) as i32;
+            let x = read_i32_at(area, 8).wrapping_sub(x1).wrapping_add(1).wrapping_mul(k as i32) / read_u8(area + 0xbab) as i32;
             let x = x.wrapping_add(x1);
-            exe::graphics_draw_line(x, read_i32_at(area, 4), x, read_i32_at(area, 0xc), 2, *(G_GUI_COLOUR_GREY as *const u16) as u32);
+            exe::graphics_draw_line(x, read_i32_at(area, 4), x, read_i32_at(area, 0xc), 2, read_u16(G_GUI_COLOUR_GREY) as u32);
             k = k.wrapping_add(1);
         }
         return;
@@ -304,14 +304,14 @@ pub(crate) unsafe extern "thiscall" fn draw(area: usize, redraw: u32) {
     if read_i32_at(area, 0xbed) != 0 && *image == 0 {
         *image = exe::gui_save_screen_image(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8).wrapping_sub(0x16), read_i32_at(area, 0xc), 0);
     }
-    let total = || core::ptr::read_unaligned((area + 0xb74) as *const i16);
-    let mut i = core::ptr::read_unaligned((area + 0xb76) as *const i16);
+    let total = || read_i16(area + 0xb74);
+    let mut i = read_i16(area + 0xb76);
     let mut parar = false;
     while i < total() && !parar {
         let item = area_list_item(area, i);
-        let first = area_list_item(area, core::ptr::read_unaligned((area + 0xb76) as *const i16));
+        let first = area_list_item(area, read_i16(area + 0xb76));
         let d = read_i32_at(item, 0x24).wrapping_sub(read_i32_at(first, 0x24));
-        if d > *((area + 0xbac) as *const u8) as i32 - 1 {
+        if d > read_u8(area + 0xbac) as i32 - 1 {
             parar = true;
         } else {
             position_area_item(area, item, d);

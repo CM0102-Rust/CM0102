@@ -330,7 +330,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init_player_entries(this: usize) 
         let f = PlayerSheet(read_usize(G_PLAYER_DATA_TABLE) + 0x46 * k);
         let e = base.wrapping_add((read_i32(f.addr()) as usize).wrapping_mul(6));
         let slot = if f.goalkeeper() >= 0xf { 6 } else { 1 };
-        if *(e as *const u8) != slot || *((e + 5) as *const u8) & 0x20 != 0 {
+        if read_u8(e) != slot || read_u8(e + 5) & 0x20 != 0 {
             erradas += 1;
             first.get_or_insert(k);
         }

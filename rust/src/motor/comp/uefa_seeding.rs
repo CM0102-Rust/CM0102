@@ -25,29 +25,29 @@ pub(crate) fn seeding_nation_entry(this: usize, i: i32) -> usize {
 /// float) e os pontos e os clubes zeram. Depois ordena a tabela pelo coeficiente (qsort 0x945333 com 0x905cb0, do
 /// maior para o menor) e grava a posição de cada nação no +0x1df da seleção dela (0x53b3d0).
 pub(crate) unsafe extern "thiscall" fn roll_coefficients(this: usize) {
-    let count = || *((this + 0x438) as *const i8);
-    let year = *(G_CURRENT_DATE_YEAR as *const i16);
+    let count = || read_i8(this + 0x438);
+    let year = read_i16(G_CURRENT_DATE_YEAR);
     let mut i = 0i8;
     while i < count() {
         let e = seeding_nation_entry(this, i as i32);
         let p = Nation(read_u32(e + 4) as usize);
         if year != 0x7d1 {
             for k in 0..10usize {
-                core::ptr::write_unaligned((p.addr() + nation::UEFACOEFFICIENT91 + k * 4) as *mut u32, read_u32(p.addr() + nation::UEFACOEFFICIENT92 + k * 4));
+                write_u32(p.addr() + nation::UEFACOEFFICIENT91 + k * 4, read_u32(p.addr() + nation::UEFACOEFFICIENT92 + k * 4));
             }
-            let clubs = *((e + 0x11) as *const i8);
+            let clubs = read_i8(e + 0x11);
             if clubs != 0 {
-                let points = core::ptr::read_unaligned((e + 0xf) as *const i16) as i32;
+                let points = read_i16(e + 0xf) as i32;
                 p.set_uefacoefficient96(points as f64 / clubs as i32 as f64);
             } else {
-                core::ptr::write_unaligned((p.addr() + nation::UEFACOEFFICIENT96) as *mut u64, 0);
+                write_u64(p.addr() + nation::UEFACOEFFICIENT96, 0);
             }
         }
         crate::comparison::branch("cqi_1 coefficient sum");
         let sum = p.uefacoefficient95() + p.uefacoefficient94() + p.uefacoefficient93() + p.uefacoefficient92() + p.uefacoefficient91(); // cqi1: as 5 temporadas
-        core::ptr::write_unaligned((e + 8) as *mut f32, sum as f32);
-        *((e + 0x11) as *mut u8) = 0;
-        core::ptr::write_unaligned((e + 0xf) as *mut u16, 0);
+        write_f32(e + 8, sum as f32);
+        write_u8(e + 0x11, 0);
+        write_u16(e + 0xf, 0);
         i += 1;
     }
     exe::crt_qsort(this, count() as i32 as u32, 0x12, 0x905cb0);
@@ -71,7 +71,7 @@ pub(crate) fn memory_diff_addresses(mo: &crate::comparison::MemorySnapshot, mr: 
 ///
 /// [pt] A tabela das nações e, de cada nação, as 5 temporadas (+0xe0..+0x110) e o +0x1df da seleção.
 pub(crate) unsafe fn seeding_regions(this: usize) -> Vec<(usize, usize)> {
-    let n = (*((this + 0x438) as *const i8)).max(0) as i32;
+    let n = read_i8(this + 0x438).max(0) as i32;
     let mut reg = vec![(this, 0x43b)];
     for i in 0..n {
         let p = Nation(read_u32(seeding_nation_entry(this, i) + 4) as usize);
@@ -103,8 +103,8 @@ pub(crate) unsafe fn seeding_regions(this: usize) -> Vec<(usize, usize)> {
 /// nações, de três em três) distintas e fora a Itália.
 pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
     let g = |a: usize| read_u32(a);
-    let count = || *((this + 0x438) as *const i8);
-    let year = *(G_CURRENT_DATE_YEAR as *const i16);
+    let count = || read_i8(this + 0x438);
+    let year = read_i16(G_CURRENT_DATE_YEAR);
     let (mut fa, mut fb, mut fc, mut cont) = (-1i8, -1i8, -1i8, 0i8);
     let mut i = 0i8;
     while i < count() {
@@ -118,9 +118,9 @@ pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
             fc = i;
         }
         if id == g(KEY_NATION_LIECHTENSTEIN) {
-            *((e + 0xc) as *mut u8) = 0;
+            write_u8(e + 0xc, 0);
         }
-        *((e + 0xc) as *mut u8) = if i < 3 {
+        write_u8(e + 0xc, if i < 3 {
             4
         } else if i < 6 {
             3
@@ -130,10 +130,10 @@ pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
             1
         } else {
             0
-        };
+        });
         let id = read_u32(e);
         if id == g(KEY_NATION_LIECHTENSTEIN) || id == g(KEY_NATION_SAN_MARINO) {
-            *((e + 0xd) as *mut u8) = 0;
+            write_u8(e + 0xd, 0);
         }
         let uefa = if i < 6 {
             Some(3)
@@ -151,7 +151,7 @@ pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
             None
         };
         if let Some(v) = uefa {
-            *((e + 0xd) as *mut u8) = v;
+            write_u8(e + 0xd, v);
         }
         let id = read_u32(e);
         let intertoto = if id == g(KEY_NATION_MOLDOVA) || id == g(KEY_NATION_SAN_MARINO) || id == g(KEY_NATION_ANDORRA) || id == g(KEY_NATION_BOSNIA_HERZEGOVINA) || id == g(KEY_NATION_LIECHTENSTEIN) {
@@ -179,7 +179,7 @@ pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
             cont += 1;
             0
         };
-        *((e + 0xe) as *mut u8) = intertoto;
+        write_u8(e + 0xe, intertoto);
         i += 1;
     }
     let italia = |k: i8| read_u32(seeding_nation_entry(this, k as i32)) == g(KEY_NATION_ITALY);
@@ -197,7 +197,7 @@ pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
     }
     for k in [fa, fb, fc] {
         let p = seeding_nation_entry(this, k as i32) + 0xd;
-        *(p as *mut u8) = (*(p as *const u8)).wrapping_add(1);
+        write_u8(p, read_u8(p).wrapping_add(1));
     }
 }
 
@@ -269,7 +269,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_find_nth_unplaced_club_of_nation(_th
 
 /// Increments the byte at an address.
 pub(crate) unsafe fn increment_byte(a: usize) {
-    *(a as *mut u8) = read_u8(a).wrapping_add(1);
+    write_u8(a, read_u8(a).wrapping_add(1));
 }
 
 /// Club `c` gets the place in competition `comp`, at phase `fase`, if it has a nation and has no place yet (+0x1db =
@@ -332,25 +332,25 @@ pub(crate) unsafe extern "thiscall" fn collect_european_clubs(this: usize, out: 
             if !nation.is_null() && exe::database_is_national_team(c) == 0 {
                 let count = (nation.continent() as u32) as usize;
                 if count != 0 && read_u32(count) == read_u32(KEY_CONTINENT_EUROPE) {
-                    *((c + club::CONTINENTAL_COMP_ID) as *mut u32) = u32::MAX;
-                    core::ptr::write_unaligned((read_u32(G_CLUB_STATE_TABLE) as usize).wrapping_add((read_u32(c) as usize).wrapping_mul(6)) as *mut u32, u32::MAX);
+                    write_u32(c + club::CONTINENTAL_COMP_ID, u32::MAX);
+                    write_u32((read_u32(G_CLUB_STATE_TABLE) as usize).wrapping_add((read_u32(c) as usize).wrapping_mul(6)), u32::MAX);
                     let r = t.wrapping_add((k as u16 as i16 as i32 * 12) as usize);
-                    core::ptr::write_unaligned(r as *mut u32, c as u32);
-                    core::ptr::write_unaligned((r + 4) as *mut u32, read_u32(nation.addr()));
-                    *((r + 8) as *mut u8) = (core::ptr::read_unaligned((c + club::REPUTATION) as *const i16) as i32 / 500) as u8;
+                    write_u32(r, c as u32);
+                    write_u32(r + 4, read_u32(nation.addr()));
+                    write_u8(r + 8, (read_i16(c + club::REPUTATION) as i32 / 500) as u8);
                     let row = Competition(read_u32(c + club::LAST_DIVISION) as usize);
                     if !row.is_null() {
                         crate::comparison::branch("cqi_2 division level");
-                        core::ptr::write_unaligned((r + 9) as *mut u16, (row.reputation() as u16)); // cqi2: the division level
-                        *((r + 0xb) as *mut u8) = read_u8(c + club::LAST_POSITION);
+                        write_u16(r + 9, (row.reputation() as u16)); // cqi2: the division level
+                        write_u8(r + 0xb, read_u8(c + club::LAST_POSITION));
                         let comp = Nation(read_u32(read_u32(c + club::LAST_DIVISION) as usize + 0x5d) as usize);
                         if comp.is_null() || comp.league_selected() == 0 {
-                            core::ptr::write_unaligned((c + club::LAST_DIVISION) as *mut u32, 0);
-                            *((c + club::LAST_POSITION) as *mut u8) = 0;
+                            write_u32(c + club::LAST_DIVISION, 0);
+                            write_u8(c + club::LAST_POSITION, 0);
                         }
                     } else {
-                        core::ptr::write_unaligned((r + 9) as *mut u16, 0xffff);
-                        *((r + 0xb) as *mut u8) = 0x7f;
+                        write_u16(r + 9, 0xffff);
+                        write_u8(r + 0xb, 0x7f);
                     }
                     k += 1;
                 }
@@ -363,7 +363,7 @@ pub(crate) unsafe extern "thiscall" fn collect_european_clubs(this: usize, out: 
         }
     }
     exe::crt_qsort(t, (k as u16 as i16 as i32) as u32, 0xc, 0x905ce0);
-    if core::ptr::read_unaligned((this + 0x439) as *const i16) == 0x7d1 {
+    if read_i16(this + 0x439) == 0x7d1 {
         exe::uefaseeding_apply_euro_cfg_order(this, t, k);
     }
     // simplification: the original returns ax with the leftover high bytes of eax (the caller reads only si); the copy, zero
@@ -404,7 +404,7 @@ pub(crate) unsafe extern "thiscall" fn assign_champions_league_places(this: usiz
         h.set_euro_seeding(1);
         h.set_continental_comp_id(lc);
         let id = read_u32((h.nation().addr() as u32) as usize);
-        let n = *((this + 0x438) as *const i8) as i32;
+        let n = read_i8(this + 0x438) as i32;
         let mut i = -1i32;
         for k in 0..n {
             if read_u32(seeding_nation_entry(this, k)) == id {
@@ -418,7 +418,7 @@ pub(crate) unsafe extern "thiscall" fn assign_champions_league_places(this: usiz
         show_error_at(0xaa1a1c, 0x35d);
     }
     let mut r = 0i8;
-    while r < *((this + 0x438) as *const i8) {
+    while r < read_i8(this + 0x438) {
         let (band, ultima): ([u8; 4], u8) = if r < 3 {
             crate::comparison::branch("cqi_2 two in the groups");
             ([0, 2, 2, 0], 0) // cqi2: 1st to 3rd nation
@@ -511,8 +511,8 @@ pub(crate) unsafe extern "thiscall" fn assign_intertoto_places(this: usize, club
             let list = read_u32(this + 0x43b) as usize;
             if list != 0 {
                 exe::crt_free(list);
-                core::ptr::write_unaligned((this + 0x43b) as *mut u32, 0);
-                *((this + 0x43f) as *mut u8) = 0;
+                write_u32(this + 0x43b, 0);
+                write_u8(this + 0x43f, 0);
             }
         } else if (read_u8(e + 0xe) as i8) > 0 {
             let mut j = 0i8;
@@ -550,7 +550,7 @@ pub(crate) unsafe fn enter_uefa_cup(this: usize, c: Club, stage: u8, r: i32, col
     c.set_euro_seeding(stage);
     *colocados += 1;
     let p = seeding_nation_entry(this, r) + 0x11;
-    *(p as *mut u8) = read_u8(p).wrapping_add(1);
+    write_u8(p, read_u8(p).wrapping_add(1));
     true
 }
 
@@ -579,7 +579,7 @@ pub(crate) unsafe fn enter_uefa_cup(this: usize, c: Club, stage: u8, r: i32, col
 /// na fase 10 × a conta + 3; os dois com vaga, o primeiro sem vaga da tabela). Para quando os colocados menos a conta
 /// passam de 116.
 pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs: usize, count: u32) {
-    let n8 = || *((this + 0x438) as *const i8);
+    let n8 = || read_i8(this + 0x438);
     let uc = read_u32(KEY_CLUB_COMP_UEFA_CUP);
     let mut count_extra = 1i8;
     let mut colocados = 0i32;
@@ -598,7 +598,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
             }
         }
         let p = seeding_nation_entry(this, i) + 0x11;
-        *(p as *mut u8) = read_u8(p).wrapping_add(1);
+        write_u8(p, read_u8(p).wrapping_add(1));
         nation_of_champion = (h.nation().addr() as u32) as usize;
     }
     let s1 = exe::utils_random(n8() as i32) as u8 as i8;
@@ -675,7 +675,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                                         um()
                                     } else {
                                         let id = read_u32(cup);
-                                        let year = core::ptr::read_unaligned((0xb63d7b + (((exe::key_nation_index_of_nation(nation) as u32) as i8) as i32 * 0x48) as usize) as *const u16) as i32;
+                                        let year = read_u16(0xb63d7b + (((exe::key_nation_index_of_nation(nation) as u32) as i8) as i32 * 0x48) as usize) as i32;
                                         let comp = read_u32((read_u32(G_COMP_OBJECT_TABLE) as usize).wrapping_add(id as usize * 4)) as usize;
                                         if read_i16(comp + 0x40) as i32 == year || read_u32(nation.addr()) == read_u32(KEY_NATION_SPAIN) || read_u32(nation.addr()) == read_u32(KEY_NATION_BELGIUM) {
                                             um()
@@ -805,9 +805,9 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
         let c = club_drawn();
         if exe::human_manager_is_human_club(c, 0, 1, 0, 0) == 0 && read_u32(c + club::CONTINENTAL_COMP_ID) == u32::MAX {
             if read_u32(this + 0x43b) == 0 {
-                *((this + 0x43f) as *mut u8) = 0;
+                write_u8(this + 0x43f, 0);
                 let l = exe::crt_malloc(0x78);
-                core::ptr::write_unaligned((this + 0x43b) as *mut u32, l as u32);
+                write_u32(this + 0x43b, l as u32);
                 if l == 0 {
                     show_error_at(0xaa1a1c, 0xf9);
                     continue;
@@ -815,8 +815,8 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
             }
             let k = read_u8(this + 0x43f) as i8;
             if k < 0x1e {
-                core::ptr::write_unaligned((read_u32(this + 0x43b) as usize + k as usize * 4) as *mut u32, read_u32(c));
-                *((this + 0x43f) as *mut u8) = (k as u8).wrapping_add(1);
+                write_u32(read_u32(this + 0x43b) as usize + k as usize * 4, read_u32(c));
+                write_u8(this + 0x43f, (k as u8).wrapping_add(1));
             }
         }
     }
@@ -881,7 +881,7 @@ pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
             return;
         }
         crate::comparison::branch("cqi_3 qualification rollover");
-        core::ptr::write_unaligned((this + 0x439) as *mut i16, year);
+        write_i16(this + 0x439, year);
         exe::uefaseeding_roll_coefficients(this);
         exe::uefaseeding_set_place_counts(this);
         let mut t = 0usize;
@@ -897,7 +897,7 @@ pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
         exe::uefa_post_qualifiers_news(this);
         return;
     }
-    if *(G_CURRENT_DATE as *const i16) == 100 {
+    if read_i16(G_CURRENT_DATE) == 100 {
         let table = read_u32(G_COMP_OBJECT_TABLE) as usize;
         let league = League(read_u32(table.wrapping_add(read_u32(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) as usize * 4)) as usize);
         if league.is_null() {
@@ -927,7 +927,7 @@ pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
 ///
 /// [pt] A contagem de um byte com sinal (a original usa `movsx`).
 pub(crate) unsafe fn signed_byte_count(a: usize) -> u32 {
-    *(a as *const i8) as i32 as u32
+    read_i8(a) as i32 as u32
 }
 
 /// Opens CM3_TEMP\<name> with "wb" through the game's path builder and fopen.
@@ -984,7 +984,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_seeding_save_to_temp_file(this: usiz
         show_error_at(FONTE, 0x66f);
         return;
     }
-    if *((this + 0x43f) as *const u8) != 0 && crt_fwrite(read_usize(this + 0x43b), 4, signed_byte_count(this + 0x43f), f) != signed_byte_count(this + 0x43f) {
+    if read_u8(this + 0x43f) != 0 && crt_fwrite(read_usize(this + 0x43b), 4, signed_byte_count(this + 0x43f), f) != signed_byte_count(this + 0x43f) {
         show_error_at(FONTE, 0x679);
         return;
     }

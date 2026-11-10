@@ -91,7 +91,7 @@ pub(crate) unsafe fn appeal_plan(this: usize, id: u32, regra: u32, reduces: u32,
     }
     let s = read_usize(this + discipline_fields::BANS).wrapping_add((read_i16(entrada + ruling_body_entry::BAN_INDEX) as i32 as usize).wrapping_mul(20));
     r.suspensao = s;
-    r.games = *(s as *const u8);
+    r.games = read_u8(s);
     r.days = read_i16(s + ban_record::DAYS);
     if r.games != 0xff {
         if new as u8 != 0xff {
@@ -102,7 +102,7 @@ pub(crate) unsafe fn appeal_plan(this: usize, id: u32, regra: u32, reduces: u32,
             }
         } else if reduces as u8 != 0 {
             r.games = r.games.wrapping_sub(minus_games as u8);
-            r.solta = r.games as i8 <= *((s + ban_record::MATCHES_SERVED) as *const i8);
+            r.solta = r.games as i8 <= read_i8(s + ban_record::MATCHES_SERVED);
         } else {
             r.solta = true;
         }
@@ -147,8 +147,8 @@ pub(crate) unsafe extern "thiscall" fn apply_appeal_result(this: usize, id: u32,
     crate::comparison::branch("cqb_9 appeal");
     exe::rulingbody_remove_pending_bans(r.body, id);
     let s = r.suspensao;
-    *(s as *mut u8) = r.games;
-    core::ptr::write_unaligned((s + ban_record::DAYS) as *mut i16, r.days);
+    write_u8(s, r.games);
+    write_i16(s + ban_record::DAYS, r.days);
     if r.solta {
         // simplification: the original pushes the register with the index in the low word (the high part is leftover); 0x556d00 only reads
         // a palavra
@@ -162,7 +162,7 @@ pub(crate) unsafe extern "thiscall" fn apply_appeal_result(this: usize, id: u32,
 /// órgão da regra (0xff = sem vaga).
 pub(crate) unsafe fn ban_slot_rule(this: usize, person: usize, slot: u32) -> u8 {
     let id = read_usize(person);
-    *((read_usize(this + discipline_fields::PERSON_RECORDS) + id.wrapping_mul(29) + (slot as i8 as isize as usize).wrapping_mul(5)) as *const u8)
+    read_u8(read_usize(this + discipline_fields::PERSON_RECORDS) + id.wrapping_mul(29) + (slot as i8 as isize as usize).wrapping_mul(5))
 }
 
 /// Returns the text of the ban in the person's slot, from the ruling body of its rule; with no rule in the slot, 0.
@@ -240,7 +240,7 @@ pub(crate) unsafe fn release_entry_ban(this: usize, id: u32, e: usize) {
 /// Clears slot k of the person's discipline record (rule 0xff, index -1) and the entry (+0 = -1).
 pub(crate) unsafe fn clear_discipline_slot(this: usize, id: u32, k: usize, e: usize) {
     let v = discipline_record(this, id).wrapping_add(k * 5);
-    *(v as *mut u8) = 0xff;
+    write_u8(v, 0xff);
     write_u32(v + ban_slot::VALUE, 0xffff_ffff);
     write_u32(e, 0xffff_ffff);
 }
@@ -268,7 +268,7 @@ pub(crate) unsafe fn clear_discipline_slot(this: usize, id: u32, k: usize, e: us
 /// +0x12; cresce 20; qsort 0x55e5f0). Caixas "Error" (capacidade no máximo, sem memória) pela show_error_at.
 pub(crate) unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize) {
     for k in 0..4usize {
-        let rule = *((ban + ban_record::RULES + k) as *const u8);
+        let rule = read_u8(ban + ban_record::RULES + k);
         if rule == 0xff {
             continue;
         }
@@ -276,10 +276,10 @@ pub(crate) unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize)
         if e != 0 && read_i16(e + ruling_body_entry::BAN_INDEX) > -1 {
             crate::comparison::branch("cpo_11 suspension extended");
             let s = read_usize(this + discipline_fields::BANS).wrapping_add((read_i16(e + ruling_body_entry::BAN_INDEX) as i32 as usize).wrapping_mul(20));
-            let games = *(s as *const u8);
-            let novos = *(ban as *const u8);
+            let games = read_u8(s);
+            let novos = read_u8(ban);
             if games != 0xff && novos != 0xff {
-                *(s as *mut u8) = novos.wrapping_add(games);
+                write_u8(s, novos.wrapping_add(games));
             } else {
                 write_u16(s + ban_record::DAYS, (read_i16(s + ban_record::DAYS) as u16).wrapping_add(read_i16(ban + ban_record::DAYS) as u16));
             }
@@ -293,7 +293,7 @@ pub(crate) unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize)
     let mut slot: i16 = -1;
     for i in 0..n.max(0) {
         let s = read_usize(this + discipline_fields::BANS).wrapping_add(i as usize * 20);
-        if *(s as *const u8) == 0xff && read_i16(s + ban_record::DAYS) == -1 {
+        if read_u8(s) == 0xff && read_i16(s + ban_record::DAYS) == -1 {
             slot = i;
             exe::banrecord_operator_3d(s, ban);
             break;
@@ -331,7 +331,7 @@ pub(crate) unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize)
             let mut i = read_i16(this + discipline_fields::BAN_COUNT);
             while i < read_i16(this + discipline_fields::BAN_CAPACITY) {
                 let s = read_usize(this + discipline_fields::BANS).wrapping_add((i as i32 as usize).wrapping_mul(20));
-                *(s as *mut u8) = 0xff;
+                write_u8(s, 0xff);
                 write_u16(s + ban_record::DAYS, 0xffff);
                 i = i.wrapping_add(1);
             }
@@ -339,12 +339,12 @@ pub(crate) unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize)
     }
     crate::comparison::branch("cpo_11 new suspension");
     for k in 0..4usize {
-        let rule = *((ban + ban_record::RULES + k) as *const u8);
+        let rule = read_u8(ban + ban_record::RULES + k);
         if rule != 0xff {
             exe::rulingbody_attach_ban(ruling_body_of_rule(this, rule), id, slot as u16 as u32); // links the rule to the suspension
         }
     }
-    if *((ban + ban_record::NATION_RULE) as *const u8) == 0xff {
+    if read_u8(ban + ban_record::NATION_RULE) == 0xff {
         return;
     }
     let cap = read_i16(this + discipline_fields::NATION_INDEX_CAPACITY);
@@ -380,7 +380,7 @@ pub(crate) unsafe extern "thiscall" fn clear_bans_invalid_for_club(this: usize, 
     let id = read_usize(person) as u32;
     let r = discipline_record(this, id);
     for k in 0..4usize {
-        let rule = *((r + k * 5) as *const u8);
+        let rule = read_u8(r + k * 5);
         if rule == 0xff {
             continue;
         }
@@ -394,7 +394,7 @@ pub(crate) unsafe extern "thiscall" fn clear_bans_invalid_for_club(this: usize, 
         }
         crate::comparison::branch("cpo_11 transferred frees the slot");
         release_entry_ban(this, id, e);
-        if *((r + discipline_record::HELD_BAN_COUNT) as *const u8) != 0 {
+        if read_u8(r + discipline_record::HELD_BAN_COUNT) != 0 {
             show_error_at(0x9b8f18, 0x239);
         }
         clear_discipline_slot(this, id, k, e);
@@ -424,7 +424,7 @@ pub(crate) unsafe fn return_bans_plan(this: usize, person: usize) -> ContractRet
     let r = discipline_record(this, id);
     let contrato = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
     let clube = if contrato.is_null() { 0 } else { read_usize(G_CLUB_TABLE).wrapping_add(contrato.club().wrapping_mul(club::SIZE)) };
-    let mut p = ContractReturnPlan { contract: contrato.addr(), club: clube, guardadas: Vec::new(), rest: *((r + discipline_record::HELD_BAN_COUNT) as *const u8), soltas: Vec::new() };
+    let mut p = ContractReturnPlan { contract: contrato.addr(), club: clube, guardadas: Vec::new(), rest: read_u8(r + discipline_record::HELD_BAN_COUNT), soltas: Vec::new() };
     let list = Llist(this + discipline_fields::HELD_BANS);
     list.set_cursor((read_usize(this + discipline_fields::HELD_BANS_HEAD) as u32) as usize);
     let mut slots = [0u8; 20];
@@ -433,7 +433,7 @@ pub(crate) unsafe fn return_bans_plan(this: usize, person: usize) -> ContractRet
     let mut item = exe::llist_get_next(list);
     while item != 0 && (p.rest as i8) > 0 {
         if read_usize(item) as u32 == id {
-            let k = (*((item + held_ban::SLOT) as *const u8) as i8 as isize as usize) & 3;
+            let k = (read_u8(item + held_ban::SLOT) as i8 as isize as usize) & 3;
             let mut b = [0u8; 5];
             core::ptr::copy_nonoverlapping((item + held_ban::SLOT_DATA) as *const u8, b.as_mut_ptr(), 5);
             slots[k * 5..k * 5 + 5].copy_from_slice(&b);
@@ -487,8 +487,8 @@ pub(crate) unsafe extern "thiscall" fn restore_held_bans(this: usize, person: us
     let mut item = exe::llist_get_next(list);
     while item != 0 && *((r + discipline_record::HELD_BAN_COUNT) as *const i8) > 0 {
         if read_usize(item) as u32 == id {
-            let k = *((item + held_ban::SLOT) as *const u8) as i8 as isize as usize;
-            let rule = *(r.wrapping_add(k.wrapping_mul(5)) as *const u8);
+            let k = read_u8(item + held_ban::SLOT) as i8 as isize as usize;
+            let rule = read_u8(r.wrapping_add(k.wrapping_mul(5)));
             if rule != 0xff {
                 let e = ruling_body_entry(ruling_body_of_rule(this, rule), id);
                 if e != 0 {
@@ -500,14 +500,14 @@ pub(crate) unsafe extern "thiscall" fn restore_held_bans(this: usize, person: us
             marks[k & 3] = 1;
             let v = r.wrapping_add(k.wrapping_mul(5));
             write_u32(v, read_usize(item + held_ban::SLOT_DATA) as u32);
-            *((v + 4) as *mut u8) = *((item + 9) as *const u8);
+            write_u8(v + 4, read_u8(item + 9));
             exe::llist_remove(list, item); // libera o item
-            *((r + discipline_record::HELD_BAN_COUNT) as *mut u8) = (*((r + discipline_record::HELD_BAN_COUNT) as *const u8)).wrapping_sub(1);
+            write_u8(r + discipline_record::HELD_BAN_COUNT, read_u8(r + discipline_record::HELD_BAN_COUNT).wrapping_sub(1));
         }
         item = exe::llist_get_next(list);
     }
     for k in 0..4usize {
-        let rule = *((r + k * 5) as *const u8);
+        let rule = read_u8(r + k * 5);
         if marks[k] != 0 || k == 3 || rule == 0xff {
             continue;
         }
@@ -536,14 +536,14 @@ pub(crate) enum SuspensionPlan {
 /// full.
 pub(crate) unsafe fn add_ban_plan(this: usize, id: u32, ban: usize) -> SuspensionPlan {
     for k in 0..4usize {
-        let regra = *((ban + ban_record::RULES + k) as *const u8);
+        let regra = read_u8(ban + ban_record::RULES + k);
         if regra == 0xff {
             continue;
         }
         let e = ruling_body_entry(ruling_body_of_rule(this, regra), id);
         if e != 0 && read_i16(e + ruling_body_entry::BAN_INDEX) > -1 {
             let s = read_usize(this + discipline_fields::BANS).wrapping_add((read_i16(e + ruling_body_entry::BAN_INDEX) as i32 as usize).wrapping_mul(20));
-            let (jogos, novos) = (*(s as *const u8), *(ban as *const u8));
+            let (jogos, novos) = (read_u8(s), read_u8(ban));
             return if jogos != 0xff && novos != 0xff {
                 SuspensionPlan::Estender { s, games: novos.wrapping_add(jogos), days: read_i16(s + ban_record::DAYS) }
             } else {
@@ -554,7 +554,7 @@ pub(crate) unsafe fn add_ban_plan(this: usize, id: u32, ban: usize) -> Suspensio
     let n = read_i16(this + discipline_fields::BAN_COUNT);
     for i in 0..n.max(0) {
         let s = read_usize(this + discipline_fields::BANS).wrapping_add(i as usize * 20);
-        if *(s as *const u8) == 0xff && read_i16(s + ban_record::DAYS) == -1 {
+        if read_u8(s) == 0xff && read_i16(s + ban_record::DAYS) == -1 {
             return SuspensionPlan::Nova { slot: i, count: n };
         }
     }
@@ -638,7 +638,7 @@ pub(crate) unsafe fn serve_ban_match_plan(this: usize, id: u32, rule: u32, count
     j.suspensao = s;
     let today = read_usize(G_CURRENT_DATE) as u32;
     let (dia, ano) = (today as u16 as i16, (today >> 16) as u16);
-    let games = *(s as *const u8);
+    let games = read_u8(s);
     if games != 0xff {
         let (dia0, ano0) = (read_i16(s + ban_record::START_DATE), read_i16(s + 6) as u16);
         if ano < ano0 || (ano == ano0 && dia < dia0) { // has not started yet
@@ -649,7 +649,7 @@ pub(crate) unsafe fn serve_ban_match_plan(this: usize, id: u32, rule: u32, count
             return j;
         }
         crate::comparison::branch("cpm_4 match served");
-        let n = (*((s + ban_record::MATCHES_SERVED) as *const u8)).wrapping_add(1); // one more match served
+        let n = read_u8(s + ban_record::MATCHES_SERVED).wrapping_add(1); // one more match served
         j.counter = Some(n);
         j.cumprida = n == games;
     } else {
@@ -677,7 +677,7 @@ pub(crate) unsafe fn serve_ban_match_plan(this: usize, id: u32, rule: u32, count
 pub(crate) unsafe extern "thiscall" fn update_ban_progress(this: usize, id: u32, rule: u32, count: u32) {
     let j = serve_ban_match_plan(this, id, rule, count);
     if let Some(n) = j.counter {
-        *((j.suspensao + 1) as *mut u8) = n;
+        write_u8(j.suspensao + 1, n);
     }
     if !j.cumprida {
         return;
@@ -707,7 +707,7 @@ pub(crate) unsafe extern "thiscall" fn update_ban_progress(this: usize, id: u32,
 pub(crate) unsafe extern "thiscall" fn release_ban(this: usize, id: u32, index: u32) -> usize {
     let s = read_usize(this + discipline_fields::BANS).wrapping_add((index as u16 as i16 as i32 as usize).wrapping_mul(20));
     for k in 0..4usize {
-        let rule = *((s + ban_record::RULES + k) as *const u8);
+        let rule = read_u8(s + ban_record::RULES + k);
         if rule == 0xff {
             continue;
         }
@@ -722,14 +722,14 @@ pub(crate) unsafe extern "thiscall" fn release_ban(this: usize, id: u32, index: 
             continue;
         }
         let n = read_i16(this + discipline_fields::NATION_INDEX_COUNT).wrapping_sub(1);
-        core::ptr::write_unaligned((this + discipline_fields::NATION_INDEX_COUNT) as *mut i16, n);
+        write_i16(this + discipline_fields::NATION_INDEX_COUNT, n);
         let last = read_usize(this + discipline_fields::NATION_INDEX).wrapping_add((n as i32 as usize).wrapping_mul(8));
-        core::ptr::write_unaligned(e as *mut u32, read_usize(last) as u32);
-        core::ptr::write_unaligned((e + nation_index_item::NATION_ID) as *mut u32, read_usize(last + nation_index_item::NATION_ID) as u32);
+        write_u32(e, read_usize(last) as u32);
+        write_u32(e + nation_index_item::NATION_ID, read_usize(last + nation_index_item::NATION_ID) as u32);
         exe::crt_qsort(read_usize(this + discipline_fields::NATION_INDEX), (read_i16(this + discipline_fields::NATION_INDEX_COUNT) as i32) as u32, 8, 0x55e5f0);
     }
-    *(s as *mut u8) = 0xff;
-    core::ptr::write_unaligned((s + ban_record::DAYS) as *mut u16, 0xffff);
+    write_u8(s, 0xff);
+    write_u16(s + ban_record::DAYS, 0xffff);
     s
 }
 
@@ -764,8 +764,8 @@ pub(crate) unsafe extern "thiscall" fn clear_ban_history(this: usize, person: us
 /// `origem`: +0 e +1 (bytes), +2 (palavra), a data em +4 (0x417c10, retorno numa local), +0xc..+0xf (byte a byte),
 /// +0x10 (byte), +0x11 (palavra) e os bits 0..2 de +0x13 (os outros bits ficam). Devolve `this`.
 pub(crate) unsafe extern "thiscall" fn discipline_operator(this: usize, source: usize) -> usize {
-    let b = |o: usize| *((this + o) as *mut u8) = *((source + o) as *const u8);
-    let w = |o: usize| core::ptr::write_unaligned((this + o) as *mut u16, core::ptr::read_unaligned((source + o) as *const u16));
+    let b = |o: usize| write_u8(this + o, read_u8(source + o));
+    let w = |o: usize| write_u16(this + o, read_u16(source + o));
     b(0);
     b(1);
     w(2);
@@ -777,7 +777,7 @@ pub(crate) unsafe extern "thiscall" fn discipline_operator(this: usize, source: 
     b(0x10);
     w(0x11);
     let m = (this + ban_record::FLAGS) as *mut u8;
-    *m = (*m & !7) | (*((source + ban_record::FLAGS) as *const u8) & 7); // the three marks
+    *m = (*m & !7) | (read_u8(source + ban_record::FLAGS) & 7); // the three marks
     this
 }
 
@@ -813,9 +813,9 @@ pub(crate) unsafe extern "thiscall" fn discipline_new_season(this: usize, id: *c
 /// as não nulas) recebe o método 1 da tabela virtual com a data `hoje`.
 pub(crate) unsafe extern "thiscall" fn discipline_daily_update(this: usize, today: usize) {
     for k in 0..43usize {
-        let rules = *((*(this as *const usize) + 4 * k) as *const usize);
+        let rules = read_usize(read_usize(this) + 4 * k);
         if rules != 0 {
-            let metodo: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(*((*(rules as *const usize) + 4) as *const usize));
+            let metodo: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(read_usize(read_usize(rules) + 4));
             metodo(rules, today);
         }
     }
@@ -827,9 +827,9 @@ pub(crate) unsafe extern "thiscall" fn discipline_daily_update(this: usize, toda
 /// [pt] { 0x55cb20 } (thiscall, ret 0x10, discipline.cpp): grava a vaga `vaga` (5 bytes: o byte `tipo` e o
 /// valor) da pessoa `id` na tabela +0x14 (29 bytes por pessoa).
 pub(crate) unsafe extern "thiscall" fn discipline_set_slot(this: usize, id: i32, slot: i8, kind: u8, value: u32) {
-    let a = (*((this + discipline_fields::PERSON_RECORDS) as *const usize) as isize + id as isize * 29 + slot as isize * 5) as usize;
-    *(a as *mut u8) = kind;
-    core::ptr::write_unaligned((a + ban_slot::VALUE) as *mut u32, value);
+    let a = (read_usize(this + discipline_fields::PERSON_RECORDS) as isize + id as isize * 29 + slot as isize * 5) as usize;
+    write_u8(a, kind);
+    write_u32(a + ban_slot::VALUE, value);
 }
 
 // simplification: the first two only dispatch through the virtual table (effects outside): proven by the career
@@ -879,7 +879,7 @@ pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: 
     if !club.is_null() {
         if exe::human_manager_is_human_club(club, 0, 1, (0) as u32, 0) != 0 {
             if let Some(s) = (0..20).map(|k| club.addr() + club::TEAM_SELECTED + k * 4).find(|&s| read_usize(s) == player.addr()) {
-                *(s as *mut usize) = 0; // leaves the slot
+                write_usize(s, 0); // leaves the slot
             }
         }
     }
@@ -937,9 +937,9 @@ pub(crate) unsafe extern "thiscall" fn hold_bans_for_loan(this: usize, player: u
         r[4] = k; // the place
         r[5..].copy_from_slice(core::slice::from_raw_parts(slot as *const u8, 5));
         (exe::llist_add_tail(this + discipline_fields::HELD_BANS, (r.as_ptr()) as *const u8 as usize, 10) as u32);
-        core::ptr::write_unaligned(slot as *mut u32, u32::MAX);
-        *((slot + 4) as *mut u8) = 0xff;
-        *((reg + discipline_record::HELD_BAN_COUNT) as *mut u8) = (*((reg + discipline_record::HELD_BAN_COUNT) as *const u8)).wrapping_add(1);
+        write_u32(slot, u32::MAX);
+        write_u8(slot + 4, 0xff);
+        write_u8(reg + discipline_record::HELD_BAN_COUNT, read_u8(reg + discipline_record::HELD_BAN_COUNT).wrapping_add(1));
     }
 }
 
@@ -979,11 +979,11 @@ pub(crate) unsafe extern "thiscall" fn is_one_booking_from_ban(this: usize, pers
 /// [pt] { 0x55cae0 } (thiscall, ret 0xc, discipline.cpp): a punição da linha `linha` (29 bytes) e da coluna
 /// `coluna` (5 bytes) da tabela [this+0x14]: o dword +1 se o byte +0 for `tipo`, senão −1.
 pub(crate) unsafe extern "thiscall" fn table_penalty(t: usize, row: i32, column: i8, kind: i8) -> i32 {
-    let e = (*((t + discipline_fields::PERSON_RECORDS) as *const usize))
+    let e = read_usize(t + discipline_fields::PERSON_RECORDS)
         .wrapping_add((row as usize).wrapping_mul(29))
         .wrapping_add((column as isize * 5) as usize);
-    if *(e as *const i8) == kind {
-        core::ptr::read_unaligned((e + ban_slot::VALUE) as *const i32)
+    if read_i8(e) == kind {
+        read_i32(e + ban_slot::VALUE)
     } else {
         -1
     }
@@ -1042,7 +1042,7 @@ pub(crate) unsafe extern "thiscall" fn discipline_remove_player(this: usize, id:
     let r = read_usize(this + discipline_fields::PERSON_RECORDS).wrapping_add((id as usize).wrapping_mul(29));
     exe::discipline_clear_ban_history(this, read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)));
     for k in 0..4usize {
-        let rule = *((r + k * 5) as *const u8);
+        let rule = read_u8(r + k * 5);
         if rule == 0xff {
             continue;
         }
@@ -1051,13 +1051,13 @@ pub(crate) unsafe extern "thiscall" fn discipline_remove_player(this: usize, id:
             continue;
         }
         crate::comparison::branch("cpo_13 regen frees the slot");
-        let i = core::ptr::read_unaligned((e + ruling_body_entry::BAN_INDEX) as *const i16);
+        let i = read_i16(e + ruling_body_entry::BAN_INDEX);
         if i > -1 {
             // the index in ax; the high part of eax is that of the entry pointer (0x556d00 only reads the word)
             exe::discipline_release_ban(this, id, (e as u32 & 0xffff_0000) | i as u16 as u32);
         }
         let v = read_usize(this + discipline_fields::PERSON_RECORDS).wrapping_add((id as usize).wrapping_mul(29) + k * 5);
-        *(v as *mut u8) = 0xff;
+        write_u8(v, 0xff);
         write_u32(v + ban_slot::VALUE, 0xffff_ffff);
         write_u32(e, 0xffff_ffff);
     }
@@ -1067,12 +1067,12 @@ pub(crate) unsafe extern "thiscall" fn discipline_remove_player(this: usize, id:
     while item != 0 && *((r + discipline_record::HELD_BAN_COUNT) as *const i8) > 0 {
         if read_usize(item) as u32 == id {
             exe::llist_remove(list, item); // libera o item
-            *((r + discipline_record::HELD_BAN_COUNT) as *mut u8) = (*((r + discipline_record::HELD_BAN_COUNT) as *const u8)).wrapping_sub(1);
+            write_u8(r + discipline_record::HELD_BAN_COUNT, read_u8(r + discipline_record::HELD_BAN_COUNT).wrapping_sub(1));
         }
         item = exe::llist_get_next(list);
     }
     core::ptr::write_bytes(r as *mut u8, 0xff, 29);
-    *((r + discipline_record::HELD_BAN_COUNT) as *mut u8) = 0;
+    write_u8(r + discipline_record::HELD_BAN_COUNT, 0);
 }
 
 /// Returns the player's held ban in a slot, or 0 if none.
@@ -1087,14 +1087,14 @@ pub(crate) unsafe extern "thiscall" fn discipline_remove_player(this: usize, id:
 /// (byte +0x1c do registro de 29 bytes em [+0x14]) e devolve a de mesmo jogador e vaga; 0 se nenhuma.
 pub(crate) unsafe extern "thiscall" fn find_held_ban(discipline: usize, id: i32, slot: i8) -> usize {
     let list = Llist(discipline + discipline_fields::HELD_BANS);
-    let record = (*((discipline + discipline_fields::PERSON_RECORDS) as *const usize) as isize + id as isize * 29) as usize;
+    let record = (read_usize(discipline + discipline_fields::PERSON_RECORDS) as isize + id as isize * 29) as usize;
     list.set_cursor(((list.head() as u32)) as usize);
     let mut p = exe::llist_get_next(list);
     while p != 0 {
-        if *((record + discipline_record::HELD_BAN_COUNT) as *const i8) <= 0 {
+        if read_i8(record + discipline_record::HELD_BAN_COUNT) <= 0 {
             return 0;
         }
-        if *(p as *const i32) == id && *((p + held_ban::SLOT) as *const i8) == slot {
+        if read_i32(p) == id && *((p + held_ban::SLOT) as *const i8) == slot {
             return p;
         }
         p = exe::llist_get_next(list);

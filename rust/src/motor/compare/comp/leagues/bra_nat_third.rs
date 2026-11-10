@@ -64,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_set_predicted_posit
     o(this);
     let wrong = (0..0x38).find(|&k| {
         let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this + 8), v[k]) } else { 0 };
-        read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + 4 * k) != v[k] || e == 0 || *((e + comp_stats_club::DANGER_POSITION) as *const u8) != place_for_index(k)
+        read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + 4 * k) != v[k] || e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != place_for_index(k)
     });
     SCOREBOARD.record(wrong.is_none(), || format!("bra_nat_third_set_predicted_positions({:#x}): a vaga {:?} não bate", this, wrong));
 }
@@ -238,7 +238,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_set_up_rules(this: 
 pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let (n, l, dest) = serie_c_staff_records(League(this), club, status, stage, false);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_BRA_NAT_THIRD_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, status, stage, a4, a5, a6);
-    let written = if l == 0 { dest } else { *((l + league_table_row::STATUS) as *const u8) };
+    let written = if l == 0 { dest } else { read_u8(l + league_table_row::STATUS) };
     SCOREBOARD.record(r == n && written == dest, || format!("bra_nat_third_update_staff_records_for_status({:x}, {:x}, {}, {}) original={} rust={} destino {} x {}", this, club, status as u8 as i8, stage as u8 as i8, r as i32, n as i32, written as i8, dest as i8));
     r
 }

@@ -44,21 +44,21 @@ pub(crate) unsafe fn jap_j_cup_write_cup_round(t: usize, i: u32, r: &JapJCupCupR
     exe::cup_set_round_draw_date(t, i, r.draw.0, r.draw.1, r.draw.2, r.draw.3, year);
     exe::cup_set_round_match_date(t, i, r.game.0, r.game.1, r.game.2, r.game.3, r.game.4, year, r.game.5);
     let e = t + i as usize * 0x68;
-    let w = |o: usize, v: u16| core::ptr::write_unaligned((e + o) as *mut u16, v);
-    let d = |o: usize, v: u32| core::ptr::write_unaligned((e + o) as *mut u32, v);
+    let w = |o: usize, v: u16| write_u16(e + o, v);
+    let d = |o: usize, v: u32| write_u32(e + o, v);
     w(7, r.code);
     w(9, i as u16);
     w(0xb, r.bits.0);
     w(0xd, r.bits.1);
     w(0xf, r.bits.2);
-    *((e + 0x17) as *mut u8) = r.category;
+    write_u8(e + 0x17, r.category);
     w(0x18, r.teams.0);
     w(0x1a, r.teams.1);
     w(0x1c, r.teams.2);
     w(0x1e, r.teams.3);
-    *((e + 0x20) as *mut u8) = r.tie.0;
-    *((e + 0x21) as *mut u8) = r.tie.1;
-    *((e + 0x22) as *mut u8) = r.tie.2;
+    write_u8(e + 0x20, r.tie.0);
+    write_u8(e + 0x21, r.tie.1);
+    write_u8(e + 0x22, r.tie.2);
     d(0x5c, r.prizes.0);
     d(0x60, r.prizes.1);
     d(0x64, r.prizes.2);
@@ -241,11 +241,11 @@ pub(crate) unsafe fn collect_j_cup_entrants(this: Cup) -> (i32, i32) {
         let c = jap_j_cup_club_by_index(i as i32);
         if comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1)) && n < this.team_count() as i32 {
             let e = this.team_table() + n as usize * 6;
-            core::ptr::write_unaligned(e as *mut u32, c as u32);
+            write_u32(e, c as u32);
             crate::comparison::branch("cqn_12 j1 seed");
             let s = jap_j_cup_random(0x14); // cqn12: the drawn class of the J1 clubs
-            *((e + 4) as *mut u8) = s as u8;
-            *((e + 5) as *mut u8) = 0;
+            write_u8(e + 4, s as u8);
+            write_u8(e + 5, 0);
             n += 1;
             if n == this.team_count() as i32 {
                 break;
@@ -477,7 +477,7 @@ pub(crate) unsafe fn collect_emperors_cup_entrants(this: Cup) -> (i32, i32) {
         let c = jap_j_cup_club_by_index(i as i32);
         if comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1)) && n < this.team_count() as i32 {
             crate::comparison::branch("cqn_12 j1 class in emperor cup");
-            eng_cc_cup_write_entrant(this, n, c, *((c + 0x5f) as *const u8)); // cqn12: the class of the J1 clubs in the Emperor’s Cup
+            eng_cc_cup_write_entrant(this, n, c, read_u8(c + 0x5f)); // cqn12: the class of the J1 clubs in the Emperor’s Cup
             n += 1;
             if n == this.team_count() as i32 {
                 break;

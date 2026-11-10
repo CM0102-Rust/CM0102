@@ -124,11 +124,11 @@ pub(crate) unsafe extern "thiscall" fn compare_set_slot_position(this: usize, ho
 pub(crate) unsafe extern "thiscall" fn compare_forget_person(this: usize, person: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_FORGET_PERSON);
     let mut reg: Vec<(usize, usize)> = Vec::new();
-    if person != 0 && *(person as *const i32) < *(G_STAFF_COUNT as *const i32) {
+    if person != 0 && *(person as *const i32) < read_i32(G_STAFF_COUNT) {
         for k in 0..16usize {
-            let q = *((this + 4 * k) as *const usize);
+            let q = read_usize(this + 4 * k);
             if q != 0 {
-                reg.push(((*(q as *const usize)).wrapping_add((*(person as *const i32) as usize).wrapping_mul(9)), 1));
+                reg.push((read_usize(q).wrapping_add((read_i32(person) as usize).wrapping_mul(9)), 1));
             }
         }
     }

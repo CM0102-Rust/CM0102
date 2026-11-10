@@ -104,12 +104,12 @@ pub(crate) unsafe extern "C" fn zget_archive_id(path: usize) -> u32 {
     }
     read_header_copy(h, f);
     exe::crt_fclose(f);
-    let kind = *(h as *const u32);
+    let kind = read_u32(h);
     if kind != 3 && kind != 4 {
         exe::crt_operator_delete(h);
         return 0x14;
     }
-    let id = *((h + 4) as *const u32);
+    let id = read_u32(h + 4);
     exe::crt_operator_delete(h);
     id
 }
@@ -143,17 +143,17 @@ pub(crate) unsafe extern "C" fn zget_matching_size(path: usize, default: usize) 
     }
     read_header_copy(h, f);
     exe::crt_fclose(f);
-    let kind = *(h as *const u32);
+    let kind = read_u32(h);
     if kind != 3 && kind != 4 {
         exe::crt_operator_delete(h);
         return 0;
     }
     let mut sum = 0i32;
     let mut i = 0i32;
-    while i < *((h + 8) as *const i32) {
+    while i < read_i32(h + 8) {
         let item = h + 0xc + 0x10c * i as usize;
         if exe::zipdir_match_filename_pattern(default, item + 8) != 0 {
-            sum = sum.wrapping_add(*((item + 4) as *const i32));
+            sum = sum.wrapping_add(read_i32(item + 4));
         }
         i += 1;
     }
@@ -301,13 +301,13 @@ pub(crate) unsafe extern "C" fn zextract_matching_files(path: usize, folder: usi
             exe::crt_fread(h + 0xc, 0x10c, if old { 0xfa } else { 0x3e8 }, f);
         }
         exe::crt_fclose(f);
-        let kind = *(h as *const u32);
+        let kind = read_u32(h);
         if kind != 3 && kind != 4 {
             exe::crt_operator_delete(h);
             return error(nomes, &mut z);
         }
         for i in 0..0x3e8usize {
-            let source = if (i as i32) < *((h + 8) as *const i32) { h + 0x14 + 0x10c * i } else { 0xad6ad8 };
+            let source = if (i as i32) < read_i32(h + 8) { h + 0x14 + 0x10c * i } else { 0xad6ad8 };
             zipdir_c_strcpy((nomes + 0x104 * i) as *mut u8, source as *const u8);
         }
         exe::crt_operator_delete(h);
@@ -357,14 +357,14 @@ pub(crate) unsafe extern "C" fn zextract_matching_files(path: usize, folder: usi
 ///
 /// [pt] Lê um dword sem alinhamento no ZFILE.
 pub(crate) unsafe fn zf_read_i32(z: usize, o: usize) -> i32 {
-    core::ptr::read_unaligned((z + o) as *const i32)
+    read_i32(z + o)
 }
 
 /// Writes an unaligned i32 at offset o of the ZFILE.
 ///
 /// [pt] Grava um dword sem alinhamento no ZFILE.
 pub(crate) unsafe fn zf_write_i32(z: usize, o: usize, v: i32) {
-    core::ptr::write_unaligned((z + o) as *mut i32, v)
+    write_i32(z + o, v)
 }
 
 /// Next compressed byte from the read buffer, refilling it with an fread of 0x30d40 bytes when exhausted.
@@ -374,14 +374,14 @@ pub(crate) unsafe fn zf_write_i32(z: usize, o: usize, v: i32) {
 pub(crate) unsafe fn zf_next_byte(z: usize) -> u8 {
     let c = zf_read_i32(z, 0xa3185);
     if c < zf_read_i32(z, 0xa318d) {
-        let b = *((z + 0x41705 + c as usize) as *const u8);
+        let b = read_u8(z + 0x41705 + c as usize);
         zf_write_i32(z, 0xa3185, c + 1);
         return b;
     }
     // simplification: the branch marks the block, not each call (zread runs millions of times during loading)
     crate::comparison::branch("save zread block");
     zf_write_i32(z, 0xa318d, (exe::crt_fread(z + 0x41705, 1, 0x30d40, zf_read_i32(z, 0) as usize) as i32));
-    let b = *((z + 0x41705) as *const u8);
+    let b = read_u8(z + 0x41705);
     zf_write_i32(z, 0xa3185, 1);
     b
 }
@@ -430,7 +430,7 @@ pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, size: i32, how_many: 
                     if k >= request {
                         break 'fora;
                     }
-                    *buf.add(k as usize) = *((z + 0x18) as *const u8);
+                    *buf.add(k as usize) = read_u8(z + 0x18);
                     k += 1;
                     let e = zf_read_i32(z, 0x10) + 1;
                     zf_write_i32(z, 0x10, e);
@@ -451,7 +451,7 @@ pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, size: i32, how_many: 
                     k += 1;
                 } else {
                     zf_write_i32(z, 0x14, b as i32 - 0x80);
-                    *((z + 0x18) as *mut u8) = zf_next_byte(z);
+                    write_u8(z + 0x18, zf_next_byte(z));
                 }
                 if zf_read_i32(z, 0x14) == 0 {
                     if k >= request {
@@ -479,7 +479,7 @@ pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, size: i32, how_many: 
 pub(crate) unsafe fn zf_put_byte(z: usize, b: u8) {
     let p = zf_read_i32(z, 0xa3189);
     if p < 0x30d40 {
-        *((z + 0x72445 + p as usize) as *mut u8) = b;
+        write_u8(z + 0x72445 + p as usize, b);
         zf_write_i32(z, 0xa3189, p + 1);
         return;
     }
@@ -487,7 +487,7 @@ pub(crate) unsafe fn zf_put_byte(z: usize, b: u8) {
     crate::comparison::branch("save zwrite block");
     exe::crt_fwrite(z + 0x72445, 1, (p) as u32, zf_read_i32(z, 0) as usize);
     zf_write_i32(z, 0xa3189, 1);
-    *((z + 0x72445) as *mut u8) = b;
+    write_u8(z + 0x72445, b);
 }
 
 /// Writes to the item like fwrite and adds to the size in the index; on type 4 encodes the RLE (runs of up to 0x7f kept

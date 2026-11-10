@@ -89,12 +89,12 @@ pub(crate) unsafe fn hits_key_nation_error(club: Club) -> bool {
 /// original devolve só os 16 bits baixos com sentido (os altos são a sobra da vaga empurrada). Pelos registros do clube
 /// 0x444930/0x447430/0x448ad0 e pela história do jogador 0x7c3e40/0x7c5fe0.
 pub(crate) unsafe extern "C" fn key_nation_get_club_season_year(club: usize) -> u16 {
-    let year = *(G_CURRENT_DATE_YEAR as *const u16);
+    let year = read_u16(G_CURRENT_DATE_YEAR);
     if club != 0 && exe::database_is_national_team(club) == 0 {
         let k = exe::key_nation_index_of_club(club) as i8 as isize;
         let e = (0xb63d60isize + 72 * k) as usize;
-        let start = core::ptr::read_unaligned((e + 0x15) as *const u16);
-        if (read_usize(e + 0x17) != 0 || start < 0x3c) && (*(G_CURRENT_DATE as *const i16) as i32) < start as i32 {
+        let start = read_u16(e + 0x15);
+        if (read_usize(e + 0x17) != 0 || start < 0x3c) && (read_i16(G_CURRENT_DATE) as i32) < start as i32 {
             return year.wrapping_sub(1); // cpu1: o ano anterior
         }
     }
@@ -154,8 +154,8 @@ pub(crate) unsafe extern "C" fn key_nation_club_in_season(club: usize, start: us
         }
     }
     let a = read_i16(row + 0x2a);
-    let t = *(G_CURRENT_DATE as *const i16);
-    let y = *(G_CURRENT_DATE_YEAR as *const u16);
+    let t = read_i16(G_CURRENT_DATE);
+    let y = read_u16(G_CURRENT_DATE_YEAR);
     if a > c {
         if t > a {
             write_date(start, a, y);

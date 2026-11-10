@@ -39,7 +39,7 @@ pub(crate) unsafe extern "stdcall" fn compare_event_text(ev: usize, ctx: usize, 
     }
     let reg = [(ev + 2, 2), (0xb67ea0, 0x400), (0xb67dd8, 0xc8)];
     let (r, rr, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(ev, ctx, comp, variant) as u32, || event_text(ev, ctx, comp, variant) as u32);
-    SCOREBOARD.record(igual && r == rr, || format!("event_text(codigo {:#x} variante {}) original={:#x} rust={:#x} {:x?} x {:x?}", *(ev as *const u16), variant, r, rr, mo, mr));
+    SCOREBOARD.record(igual && r == rr, || format!("event_text(codigo {:#x} variante {}) original={:#x} rust={:#x} {:x?} x {:x?}", read_u16(ev), variant, r, rr, mo, mr));
     r as usize
 }
 
@@ -80,7 +80,7 @@ pub(crate) unsafe extern "thiscall" fn compare_combine_with_previous(t: usize, e
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(e, 14), (t + 0x30, 12 * 14)]);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(t, e, m), || crate::rng::without_counting(|| combine_with_previous(t, e, m)));
-    SCOREBOARD.record(igual && r == n, || format!("combine_with_previous({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", core::ptr::read_unaligned(e as *const u16), r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("combine_with_previous({:#x}) original={:#x} rust={:#x} {:x?} x {:x?}", read_u16(e), r, n, mo, mr));
     r
 }
 

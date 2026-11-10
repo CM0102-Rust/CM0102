@@ -25,7 +25,7 @@ use super::*;
 pub(crate) unsafe fn set_up_rules(this: League) -> u32 {
     this.set_win_points(3);
     write_u8(this.addr() + league::SUBSTITUTIONS_ALLOWED, 3);
-    core::ptr::write_unaligned((this.addr() + league::LEGS) as *mut i16, 2); // cqs8: dois turnos
+    write_i16(this.addr() + league::LEGS, 2); // cqs8: dois turnos
     this.set_draw_points(1);
     this.set_match_category(0xa);
     this.set_comp_type(2);
@@ -37,16 +37,16 @@ pub(crate) unsafe fn set_up_rules(this: League) -> u32 {
     this.set_relegation_playoff_count(0);
     this.set_relegated_count(0);
     write_u8(this.addr() + league::SUBSTITUTES_NAMED, 7);
-    core::ptr::write_unaligned((this.addr() + league::GAMES_PER_CLUB) as *mut u16, 0xffff);
+    write_u16(this.addr() + league::GAMES_PER_CLUB, 0xffff);
     let mut data = [0u32; 2];
     // simplification: the original pushes the year in ecx with the high 16 bits of the cup pointer; 0x549f70 reads the word
     exe::date_date_549f70((&mut data) as *mut [u32; 2] as *mut [u16; 4], 0xa, 2, this.year() as u16 as u32, 5); // cqs8: the draw date
-    core::ptr::write_unaligned((this.addr() + league::NEXT_DRAW_DAY) as *mut u16, data[0] as u16);
-    core::ptr::write_unaligned((this.addr() + league::NEXT_DRAW_YEAR_OFFSET) as *mut u16, 0);
+    write_u16(this.addr() + league::NEXT_DRAW_DAY, data[0] as u16);
+    write_u16(this.addr() + league::NEXT_DRAW_YEAR_OFFSET, 0);
     crate::comparison::branch("cqs_8 euro rules");
     let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     let t = rounds(this.addr(), 0xffff_ffff, this.addr() + league::ROUND_COUNT, this.addr() + league::STAGE_ID, 0);
-    core::ptr::write_unaligned((this.addr() + league::ROUND_DATES) as *mut u32, t as u32);
+    write_u32(this.addr() + league::ROUND_DATES, t as u32);
     1
 }
 
@@ -68,7 +68,7 @@ pub(crate) unsafe extern "thiscall" fn euro_champ_qual_set_up_rules(this: usize)
 /// grupos 0, 2, 5 e 7 têm 6 e os outros 5; outro formato, a caixa da linha 0x245 e 5. `g` é o byte do argumento.
 pub(crate) unsafe fn group_team_count(this: usize, g: u32) -> i16 {
     let g = g as u8;
-    match *((this + 0xf6) as *const i8) {
+    match read_i8(this + 0xf6) {
         1 => if matches!(g, 0 | 2 | 5) { 6 } else { 5 }, // cqs8: the groups of 6 in format 1
         2 => if matches!(g, 0 | 2 | 5 | 7) { 6 } else { 5 },
         _ => {

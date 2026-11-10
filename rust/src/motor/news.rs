@@ -50,8 +50,8 @@ pub(crate) unsafe extern "thiscall" fn mark_item_read(this: usize, manager: usiz
             let mut tratador = 0u32;
             if exe::newsitem_get_action_button(v, manager, 0xde1f64, 0x7d0, &mut tratador) != 2 {
                 crate::comparison::branch("cpo_6 news read");
-                core::ptr::write_unaligned((v + news_item::READ) as *mut u32, 1);
-                core::ptr::write_unaligned((e + 8) as *mut i32, read_i32(e + 8) - 1);
+                write_u32(v + news_item::READ, 1);
+                write_i32(e + 8, read_i32(e + 8) - 1);
                 break;
             }
         }
@@ -60,7 +60,7 @@ pub(crate) unsafe extern "thiscall" fn mark_item_read(this: usize, manager: usiz
         return 0;
     }
     if sincronizar != 0 {
-        let of_team = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize);
+        let of_team = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize as usize);
         let m = (exe::screenmanager_find_manager_channel(G_SCREEN_MANAGER, of_team) as u32) as u16;
         for j in 0..0x10i32 {
             let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add((read_i32(G_STAFF_COUNT) - j - 1).wrapping_mul(0x6e) as usize));
@@ -194,7 +194,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_club_manager(this: usize, news: u
         return 0;
     }
     let manager = club.manager().addr();
-    *((news + news_item::REACH) as *mut u8) = 0;
+    write_u8(news + news_item::REACH, 0);
     if manager == 0 {
         return 0;
     }
@@ -228,7 +228,7 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, news: usi
         show_error_at(0xa693ec, 0x1f47);
         return 0;
     }
-    *((news + news_item::IMPORTANT) as *mut u8) = (exe::newsitem_is_important_for(news, manager) as u32) as u8;
+    write_u8(news + news_item::IMPORTANT, (exe::newsitem_is_important_for(news, manager) as u32) as u8);
     write_usize(news + news_item::READ, 0);
     let idx = news_human_manager_index(manager.addr());
     if idx < 0 {
@@ -277,7 +277,7 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, news: usi
     if current.wrapping_add(1) == start.wrapping_add(0x64) {
         write_usize(e + 4, start as usize);
     }
-    if *(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG as *const i16) != 0 || exe::human_manager_is_on_holiday(read_usize(G_HUMAN_MANAGER), manager) != 0 {
+    if read_i16(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG) != 0 || exe::human_manager_is_on_holiday(read_usize(G_HUMAN_MANAGER), manager) != 0 {
         crate::comparison::branch("cpn_1 automatic reply");
         exe::newsitem_auto_respond(slot(current), manager, manager.club_job()); // the club
         let national_team = manager.national_job();
@@ -391,7 +391,7 @@ pub(crate) unsafe extern "thiscall" fn has_urgent_items(this: usize, manager: us
             return 1; // pede resposta
         }
         let slot = read_usize(this).wrapping_add((k as usize).wrapping_mul(NEWS_NEWS_ITEM_SIZE));
-        if *((slot + news_item::IMPORTANT) as *const u8) == 1 && read_usize(slot + news_item::READ) == 0 {
+        if read_u8(slot + news_item::IMPORTANT) == 1 && read_usize(slot + news_item::READ) == 0 {
             return 1; // important and unread
         }
         k -= 1;
@@ -426,7 +426,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_string(this: usize, field: u32, 
     }
     let d = 4 * field as i32;
     exe::at_9466d0(this + news_item::DATA + d as usize, text, (0xc8 - d) as u32);
-    *((this + news_item::TEXT_END) as *mut u8) = 0;
+    write_u8(this + news_item::TEXT_END, 0);
     if !next.is_null() {
         let mut n = 0i32;
         while *text.add(n as usize) != 0 {
@@ -588,7 +588,7 @@ pub(crate) unsafe fn club_or_current_human(club: usize) -> usize {
     if club != 0 {
         return club;
     }
-    read_usize(read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize) + 0x39)
+    read_usize(read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize as usize) + 0x39)
 }
 
 /// Human manager i (0..15, last 16 people of G_STAFF_TABLE) if active (+0x5f = 1).
@@ -605,7 +605,7 @@ pub(crate) unsafe fn active_human_manager(i: usize) -> Option<usize> {
 /// [pt] Entrega a notícia a cada técnico humano ativo que `passa` (0x785d40 com 0), com o alcance `alcance` em +0xde.
 /// Devolve se todas as entregas foram aceitas (a primeira recusada encerra).
 pub(crate) unsafe fn deliver_to_human_managers(this: usize, news: usize, reach: u8, passes: impl Fn(usize) -> bool) -> bool {
-    *((news + news_item::REACH) as *mut u8) = reach;
+    write_u8(news + news_item::REACH, reach);
     for i in 0..0x10 {
         if let Some(p) = active_human_manager(i) {
             if passes(p) && exe::news_deliver_to_manager(this, news, p, 0) == 0 {
@@ -689,7 +689,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_nation_club_managers(this: usize,
     if news == 0 || nation == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_CLUB_MANAGERS)(this, news, nation); // message box: original only
     }
-    *((news + news_item::REACH) as *mut u8) = 2; // the nation’s reach
+    write_u8(news + news_item::REACH, 2); // the nation’s reach
     for i in 0..0x10usize {
         let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add(read_usize(G_STAFF_COUNT).wrapping_sub(0x10).wrapping_add(i).wrapping_mul(staff::SIZE)));
         if p.classification() != 1 {
@@ -713,11 +713,11 @@ pub(crate) unsafe extern "thiscall" fn send_to_nation_club_managers(this: usize,
 /// guardados pela 0x53e990)? Devolve a pessoa, ou nenhuma (a original mostra a caixa).
 pub(crate) unsafe fn check_search_scout(this: usize) -> Option<usize> {
     let i = read_usize(this + player_search_fields::SCOUT_ID) as i32;
-    if *((this + player_search_fields::LIST_TYPE) as *const u8) != 4 || i <= -1 {
+    if read_u8(this + player_search_fields::LIST_TYPE) != 4 || i <= -1 {
         return None;
     }
     let p = read_usize(G_STAFF_TABLE).wrapping_add((i as usize).wrapping_mul(staff::SIZE));
-    if exe::database_staff_matches_names(p, (read_usize(this + player_search_fields::SCOUT_NAME_REF)) as u32, (read_usize(this + 0x178)) as u32, (read_usize(this + 0x17c)) as u32, this + 0x184) == 0 || p == 0 {
+    if exe::database_staff_matches_names(p, read_usize(this + player_search_fields::SCOUT_NAME_REF) as u32, read_usize(this + 0x178) as u32, read_usize(this + 0x17c) as u32, this + 0x184) == 0 || p == 0 {
         return None;
     }
     Some(p)
@@ -728,18 +728,18 @@ pub(crate) unsafe fn check_search_scout(this: usize) -> Option<usize> {
 /// [pt] A entrada (12 bytes) da caixa de notícias do técnico humano: [noticias+8] + 12 × (id − [0xae2364] +
 /// 0x10); None quando o índice fica negativo (a original abre a caixa de erro).
 pub(crate) unsafe fn manager_inbox_entry(news: usize, manager: usize) -> Option<usize> {
-    let i = (*(manager as *const i32)).wrapping_sub(*(G_STAFF_COUNT as *const i32)).wrapping_add(0x10);
+    let i = read_i32(manager).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10);
     if i < 0 {
         return None;
     }
-    Some((*((news + 8) as *const usize)).wrapping_add((i as usize).wrapping_mul(12)))
+    Some(read_usize(news + 8).wrapping_add((i as usize).wrapping_mul(12)))
 }
 
 /// News item k of the inbox starting at inicio: [news] + 0xdf × (inicio + k).
 ///
 /// [pt] A notícia `k` da caixa que começa em `inicio`: [noticias] + 0xdf × (inicio + k).
 pub(crate) unsafe fn inbox_news_item(news: usize, start: i32, k: i32) -> usize {
-    (*(news as *const usize)).wrapping_add((start.wrapping_add(k) as usize).wrapping_mul(0xdf))
+    read_usize(news).wrapping_add((start.wrapping_add(k) as usize).wrapping_mul(0xdf))
 }
 
 /// Counts the unread news in a human manager's inbox, in total or for one category.
@@ -765,16 +765,16 @@ pub(crate) unsafe extern "thiscall" fn count_unread(news: usize, manager: usize,
     if category as u8 == 0 {
         return *total; // message box total
     }
-    let start = *(entry as *const i32);
+    let start = read_i32(entry);
     if start == -1 {
         return 0;
     }
     let mut count = 0;
     for k in 0..100 {
         let n = inbox_news_item(news, start, k);
-        if core::ptr::read_unaligned((n + news_item::ID) as *const u32) != 0
+        if read_u32(n + news_item::ID) != 0
             && (exe::newsitem_get_category(n) as u32) as u8 == category as u8
-            && core::ptr::read_unaligned((n + news_item::READ) as *const u32) == 0
+            && read_u32(n + news_item::READ) == 0
         {
             count += 1;
         }
@@ -791,17 +791,17 @@ pub(crate) unsafe fn set_slot_target(news: usize, manager: usize, id: u32, slot:
     if manager == 0 || id == 0 || !(0..0x32).contains(&slot) {
         return Err(());
     }
-    if copy != 0 && core::ptr::read_unaligned((copy + news_item::ID) as *const u32) != id {
+    if copy != 0 && read_u32(copy + news_item::ID) != id {
         return Err(());
     }
     let entry = manager_inbox_entry(news, manager).ok_or(())?;
-    let start = *(entry as *const i32);
+    let start = read_i32(entry);
     if start == -1 {
         return Ok(None);
     }
     (0..100)
         .map(|k| inbox_news_item(news, start, k))
-        .find(|&n| core::ptr::read_unaligned((n + news_item::ID) as *const u32) == id)
+        .find(|&n| read_u32(n + news_item::ID) == id)
         .map(Some)
         .ok_or(())
 }
@@ -822,11 +822,11 @@ pub(crate) unsafe extern "thiscall" fn set_item_slot(news: usize, manager: usize
         Err(()) => return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, usize) -> u32>(IDX_SET_ITEM_SLOT)(news, manager, id, slot, value, copy),
     };
     if copy != 0 {
-        core::ptr::write_unaligned((copy + 5 + 4 * slot as usize) as *mut u32, value);
+        write_u32(copy + 5 + 4 * slot as usize, value);
     }
     match target {
         Some(n) => {
-            core::ptr::write_unaligned((n + 5 + 4 * slot as usize) as *mut u32, value); // mark in the box
+            write_u32(n + 5 + 4 * slot as usize, value); // mark in the box
             1
         }
         None => 0,
@@ -848,7 +848,7 @@ pub(crate) unsafe extern "stdcall" fn news_club_has_human_manager(club: usize) -
         return r;
     }
     let t = exe::database_get_club_manager(club);
-    exe::human_manager_is_on_holiday(*(G_HUMAN_MANAGER as *const usize), t);
+    exe::human_manager_is_on_holiday(read_usize(G_HUMAN_MANAGER), t);
     1 // humano
 }
 
@@ -885,14 +885,14 @@ pub(crate) unsafe extern "thiscall" fn clear_inbox(this: usize, manager: usize) 
         }
     }
     let first = read_i32(caixa);
-    core::ptr::write_unaligned((caixa + 8) as *mut i32, 0);
-    core::ptr::write_unaligned((caixa + 4) as *mut i32, first);
+    write_i32(caixa + 8, 0);
+    write_i32(caixa + 4, first);
     if first != -1 {
         crate::comparison::branch("clear_inbox");
         for k in 0..0x64u32 {
             let n = (read_i32(this) as u32).wrapping_add(k.wrapping_add(read_i32(caixa) as u32).wrapping_mul(0xdf)) as usize;
-            core::ptr::write_unaligned((n + news_item::ID) as *mut i32, 0);
-            core::ptr::write_unaligned((n + news_item::READ) as *mut i32, 1);
+            write_i32(n + news_item::ID, 0);
+            write_i32(n + news_item::READ, 1);
         }
     }
 }
@@ -911,13 +911,13 @@ pub(crate) unsafe extern "thiscall" fn clear_inbox(this: usize, manager: usize) 
 pub(crate) unsafe extern "thiscall" fn construct_news_item(this: usize, kind: u32, importante: u32) -> usize {
     exe::date_date_54a110(this + news_item::DATE);
     write_usize(this, kind as usize);
-    *((this + news_item::IMPORTANT) as *mut u8) = importante as u8;
+    write_u8(this + news_item::IMPORTANT, importante as u8);
     for k in 0..50 {
         write_usize(this + news_item::DATA + 4 * k, 0);
     }
     let mut temporary = [0u32; 2];
     exe::date_operator_3d(this + news_item::DATE, temporary.as_mut_ptr() as usize, G_CURRENT_DATE);
-    *((this + news_item::DAY_SLICE) as *mut u8) = *(G_CURRENT_DAY_SLICE as *const u8);
+    write_u8(this + news_item::DAY_SLICE, read_u8(G_CURRENT_DAY_SLICE));
     write_usize(this + news_item::ID, 0);
     write_usize(this + news_item::READ, 0);
     this
@@ -992,7 +992,7 @@ pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, manager: usi
 /// 1000.. → 7, 2000.. → 3, 3000.. → 4, 4000.. → 5, 5000.. → 1, 6000..0x1790 → 6. Fora disso: a original
 /// (caixa de erro). Devolve o eax inteiro como a original (o tipo com o al trocado).
 pub(crate) unsafe extern "thiscall" fn get_category(news: usize) -> u32 {
-    let t = *(news as *const i32);
+    let t = read_i32(news);
     let c = match t {
         1..=999 => 2,
         1000..=1999 => 7,
@@ -1015,7 +1015,7 @@ pub(crate) unsafe extern "thiscall" fn get_slot(news: usize, slot: i8) -> u32 {
     if !(0..0x32).contains(&slot) {
         return original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u32>(IDX_GET_SLOT)(news, slot);
     }
-    core::ptr::read_unaligned((news + 5 + slot as usize * 4) as *const u32)
+    read_u32(news + 5 + slot as usize * 4)
 }
 
 /// stores news field 0..49
@@ -1027,7 +1027,7 @@ pub(crate) unsafe extern "thiscall" fn set_news_field(t: usize, k: i8, value: u3
     if !(0..0x32).contains(&k) {
         return original_fn::<unsafe extern "thiscall" fn(usize, i8, u32) -> u32>(IDX_SET_NEWS_FIELD)(t, k, value);
     }
-    core::ptr::write_unaligned((t + 5 + 4 * k as usize) as *mut u32, value);
+    write_u32(t + 5 + 4 * k as usize, value);
     1
 }
 
@@ -1041,8 +1041,8 @@ pub(crate) unsafe extern "thiscall" fn set_news_field(t: usize, k: i8, value: u3
 /// (dupla), +4 (byte), as 50 fichas de +5 (duplas, na ordem), a data em +0xcd, +0xd5 (byte), +0xd6 e +0xda (duplas) e
 /// +0xde (byte). Devolve `this`.
 pub(crate) unsafe extern "thiscall" fn news_operator(this: usize, source: usize) -> usize {
-    let d = |o: usize| core::ptr::write_unaligned((this + o) as *mut u32, core::ptr::read_unaligned((source + o) as *const u32));
-    let b = |o: usize| *((this + o) as *mut u8) = *((source + o) as *const u8);
+    let d = |o: usize| write_u32(this + o, read_u32(source + o));
+    let b = |o: usize| write_u8(this + o, read_u8(source + o));
     d(0);
     b(4);
     for k in 0..50 {

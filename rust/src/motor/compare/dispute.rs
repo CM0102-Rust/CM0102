@@ -15,7 +15,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_dispute(this: usize, p: us
     }
     let m = read_usize(this + 4).wrapping_add(read_i32(p) as isize as usize);
     let list = Llist(read_usize(this));
-    if *(m as *const u8) == 0 {
+    if read_u8(m) == 0 {
         let mut reg = vec![(m, 1)];
         if !list.is_null() {
             reg.push((list.addr(), 0xe));
@@ -43,6 +43,6 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_dispute(this: usize, p: us
     }
     o(this, p);
     let count_after = if !list.is_null() { read_i16(list.addr()) } else { 0 };
-    SCOREBOARD.record(*(m as *const u8) == 0 && count_after == count_before - found,
+    SCOREBOARD.record(read_u8(m) == 0 && count_after == count_before - found,
         || format!("remove_dispute(pessoa {:x}) conta {} -> {} (achou {})", p, count_before, count_after, found));
 }

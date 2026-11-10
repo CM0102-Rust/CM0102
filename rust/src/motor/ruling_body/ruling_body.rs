@@ -59,12 +59,12 @@ pub(crate) fn ban_days(code: i32, e: i8) -> Option<u16> {
 /// ([0xae2c90], 0x417c10), +0x10 = 3, +0x1c o id do jogador (+0), +0x6f = (+0x48 do jogador == 0). Devolve 1; sem
 /// suspensão, 0 sem gravar nada.
 pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j: usize, by_games: u32) -> u32 {
-    let code = match *((j + 0x2c) as *const u8) {
-        0 => *((j + 0x2e) as *const i8) as i32, // cpu10: the foul of the first type
-        1 => *((j + 0x2f) as *const i8) as i32,
+    let code = match read_u8(j + 0x2c) {
+        0 => read_i8(j + 0x2e) as i32, // cpu10: the foul of the first type
+        1 => read_i8(j + 0x2f) as i32,
         _ => return 0,
     };
-    let escala = *((this + 6) as *const i8);
+    let escala = read_i8(this + 6);
     let (jogos, dias) = if by_games != 0 {
         match ban_matches(code, escala) {
             Some(n) => (n, 0xffffu16),
@@ -77,14 +77,14 @@ pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j:
         }
     };
     crate::comparison::branch("cpu_10 punishment");
-    *(r as *mut u8) = jogos; // cpu10: the suspension matches
-    *((r + 1) as *mut u8) = 0;
-    *((r + 2) as *mut u16) = dias;
+    write_u8(r, jogos); // cpu10: the suspension matches
+    write_u8(r + 1, 0);
+    write_u16(r + 2, dias);
     let mut today = [0u32; 2];
     exe::date_operator_3d(r + 4, today.as_mut_ptr() as usize, G_CURRENT_DATE);
-    *((r + 0x10) as *mut u8) = 3;
-    *((r + 0x1c) as *mut u32) = read_usize(j) as u32;
-    *((r + 0x6f) as *mut u8) = (*((j + 0x48) as *const u8) == 0) as u8;
+    write_u8(r + 0x10, 3);
+    write_u32(r + 0x1c, read_usize(j) as u32);
+    write_u8(r + 0x6f, (read_u8(j + 0x48) == 0) as u8);
     1 // cpu10: the punishment carried out
 }
 
@@ -114,14 +114,14 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
     while i < read_i32(this + 0x13) {
         let id = read_i32(e);
         if id != -1 {
-            let s = *((e + 6) as *const i16);
+            let s = read_i16(e + 6);
             let free = if s == -1 {
                 true
             } else {
                 let ban = read_usize(read_usize(G_DISCIPLINE) + 4).wrapping_add((s as i32 as usize).wrapping_mul(20));
                 let years = if read_i32(this + 0x17) == -1 && read_i32(this + 0x1b) == -1 { 4 } else { 2 };
-                let year = *((ban + 6) as *const u16) as i32;
-                if *(G_CURRENT_DATE_YEAR as *const u16) as i32 - year >= years {
+                let year = read_u16(ban + 6) as i32;
+                if read_u16(G_CURRENT_DATE_YEAR) as i32 - year >= years {
                     crate::comparison::branch("cpu_10 old suspension");
                     // simplification: the original pushes the index with the high 16 bits of the previous edx; 0x556d00 reads only the word.
                     exe::discipline_release_ban(read_usize(G_DISCIPLINE), id as u32, s as u16 as u32);
@@ -132,19 +132,19 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
             };
             if free {
                 let id = read_i32(e);
-                let g = exe::discipline_find_held_ban(read_usize(G_DISCIPLINE), id, *((this + 4) as *const i8));
-                if g != 0 && *((g + 5) as *const u8) == *((this + 5) as *const u8) {
-                    *((g + 6) as *mut u32) = 0xffff_ffff;
+                let g = exe::discipline_find_held_ban(read_usize(G_DISCIPLINE), id, read_i8(this + 4));
+                if g != 0 && *((g + 5) as *const u8) == read_u8(this + 5) {
+                    write_u32(g + 6, 0xffff_ffff);
                 } else {
-                    exe::discipline_set_slot(read_usize(G_DISCIPLINE), read_i32(e), *((this + 4) as *const i8), *((this + 5) as *const u8), 0xffff_ffff);
+                    exe::discipline_set_slot(read_usize(G_DISCIPLINE), read_i32(e), read_i8(this + 4), read_u8(this + 5), 0xffff_ffff);
                 }
-                *(e as *mut u32) = 0xffff_ffff;
+                write_u32(e, 0xffff_ffff);
             } else {
-                let f = *((e + 0xd) as *const u8);
-                *((e + 4) as *mut u8) = 0;
-                *((e + 5) as *mut u8) = 0;
-                *((e + 8) as *mut u16) = 0;
-                *((e + 0xd) as *mut u8) = f & 0xc0;
+                let f = read_u8(e + 0xd);
+                write_u8(e + 4, 0);
+                write_u8(e + 5, 0);
+                write_u16(e + 8, 0);
+                write_u8(e + 0xd, f & 0xc0);
             }
         }
         i += 1;
@@ -180,11 +180,11 @@ pub(crate) unsafe extern "thiscall" fn compact_entries(this: usize) {
         if read_i32(source) != -1 {
             if source != target {
                 core::ptr::copy(source as *const u8, target as *mut u8, 0xe);
-                let g = exe::discipline_find_held_ban(read_usize(G_DISCIPLINE), read_i32(source), *((this + 4) as *const i8));
-                if g != 0 && *((g + 5) as *const u8) == *((this + 5) as *const u8) {
-                    *((g + 6) as *mut u32) = n;
+                let g = exe::discipline_find_held_ban(read_usize(G_DISCIPLINE), read_i32(source), read_i8(this + 4));
+                if g != 0 && *((g + 5) as *const u8) == read_u8(this + 5) {
+                    write_u32(g + 6, n);
                 } else {
-                    exe::discipline_set_slot(read_usize(G_DISCIPLINE), read_i32(source), *((this + 4) as *const i8), *((this + 5) as *const u8), n);
+                    exe::discipline_set_slot(read_usize(G_DISCIPLINE), read_i32(source), read_i8(this + 4), read_u8(this + 5), n);
                 }
             }
             target += 0xe;
@@ -193,10 +193,10 @@ pub(crate) unsafe extern "thiscall" fn compact_entries(this: usize) {
         i += 1;
         source += 0xe;
     }
-    *((this + 0x13) as *mut u32) = n;
-    *((this + 0xf) as *mut u32) = n + 100;
+    write_u32(this + 0x13, n);
+    write_u32(this + 0xf, n + 100);
     let p = exe::crt_realloc(read_usize(this + 0xb), (n + 100) * 14);
-    *((this + 0xb) as *mut u32) = p as u32;
+    write_u32(this + 0xb, p as u32);
     if p == 0 {
         show_error_at(0xa7a858, 0x594);
     }

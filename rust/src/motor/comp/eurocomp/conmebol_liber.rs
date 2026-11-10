@@ -29,7 +29,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_for_date(this: usiz
     if this.active() == 0 && full != 0 {
         let day = this.next_draw_day() as u16; // cqr10: the draw day
         let year = (this.next_draw_year_offset() as u16).wrapping_add(this.year() as u16);
-        if year == core::ptr::read_unaligned((today + 2) as *const u16) && day == core::ptr::read_unaligned(today as *const u16) {
+        if year == read_u16(today + 2) && day == read_u16(today) {
             crate::comparison::branch("cqr_10 libertadores draw");
             exe::conmebolliber_select_qualified_clubs(this);
             if exe::conmebolliber_build_first_group_table(this) == 0 {
@@ -355,9 +355,9 @@ pub(crate) unsafe fn libertadores_entrants(this: usize, max: i32, out: &mut [usi
 /// linha 0x297 e devolve 0; senão a lista embaralhada (0x4afb40(lista, 32): push n; push lista; add esp, 8 -> cdecl; 3 ×
 /// 32 trocas sorteadas) e devolve 1.
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_select_qualified_clubs(this: usize) -> u32 {
-    core::ptr::write_unaligned((this + 0xf2) as *mut u32, 0x20);
+    write_u32(this + 0xf2, 0x20);
     let list = exe::crt_malloc(0x80);
-    core::ptr::write_unaligned((this + 0xee) as *mut u32, list as u32);
+    write_u32(this + 0xee, list as u32);
     if list == 0 {
         show_error_at(0x9a7de4, 0x285);
         return 0;
@@ -365,7 +365,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_select_qualified_clubs(thi
     let mut v = [0usize; 32];
     let n = libertadores_entrants(this, read_usize(this + 0xf2) as i32, &mut v);
     for (k, &c) in v.iter().enumerate().take(n.min(32) as usize) {
-        core::ptr::write_unaligned((list + k * 4) as *mut u32, c as u32); // cqk11: the club in database order
+        write_u32(list + k * 4, c as u32); // cqk11: the club in database order
     }
     if n != read_usize(this + 0xf2) as i32 {
         show_error_at(0x9a7de4, 0x297);
@@ -419,8 +419,8 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_s
                 let weight = scale_by_round(0x32, 0x64, read_i16(game + 0x34), 4);
                 let knockout = Cup(read_usize(this.stages() + 0x1c));
                 let r = read_i16(game + 0x34) as isize;
-                let round = (knockout.addr() as u32 & 0xffff_0000) | core::ptr::read_unaligned((knockout.round_table().wrapping_add((r * 0x68) as usize) + 0x6f) as *const u16) as u32;
-                european_cup_add_qualified_record(club, comp, core::ptr::read_unaligned((game + 0x32) as *const u16) as u32, round, weight);
+                let round = (knockout.addr() as u32 & 0xffff_0000) | read_u16(knockout.round_table().wrapping_add((r * 0x68) as usize) + 0x6f) as u32;
+                european_cup_add_qualified_record(club, comp, read_u16(game + 0x32) as u32, round, weight);
             }
             1 => {
                 final_(0x86a800);
@@ -429,9 +429,9 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_s
                 let nation = Nation(read_usize(read_usize(t) + 0x53));
                 crate::comparison::branch("cqk_11 libertadores champion");
                 if !nation.is_null() && read_usize(nation.continent()) == read_usize(KEY_CONTINENT_SOUTH_AMERICA) {
-                    core::ptr::write_unaligned(t as *mut u32, club as u32); // cqk11: the champion in the South American slot
+                    write_u32(t, club as u32); // cqk11: the champion in the South American slot
                 } else {
-                    core::ptr::write_unaligned((t + 6) as *mut u32, club as u32);
+                    write_u32(t + 6, club as u32);
                 }
                 exe::comp_stats_archive_season_and_reset(read_usize(mundial.addr() + 8), 1);
                 let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(mundial.addr()) + 0x5c));

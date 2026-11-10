@@ -58,7 +58,7 @@ pub(crate) unsafe extern "C" fn compare_match_without_human(partida: usize) -> u
         return o(partida);
     }
     let mut reg = vec![(0xa15704usize, 4usize)];
-    if *(G_QUICK_SIM_COMP_FLAGS_PENDING as *const usize) != 0 {
+    if read_usize(G_QUICK_SIM_COMP_FLAGS_PENDING) != 0 {
         reg.extend(human_national_team_marks().into_iter().map(|e| (e, 1)));
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(partida), || match_without_human(partida));
@@ -83,31 +83,31 @@ pub(crate) unsafe extern "C" fn compare_post_match_events(partida: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_POST_MATCH_EVENTS);
     // the list cursor, the two clubs’ rows in [[0xb67a44]] and the flags of the events’ contracts
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    let list = *(G_MATCH_DAY_PLAYER_INCIDENT_LIST as *const usize);
+    let list = read_usize(G_MATCH_DAY_PLAYER_INCIDENT_LIST);
     if list != 0 {
         reg.push((list, 0xe));
-        let person = |id: i32| (*(G_STAFF_TABLE as *const usize) as isize + id as isize * 0x6e) as usize;
-        let mut in_the = core::ptr::read_unaligned((list + 2) as *const usize);
+        let person = |id: i32| (read_usize(G_STAFF_TABLE) as isize + id as isize * 0x6e) as usize;
+        let mut in_the = read_usize(list + 2);
         let mut k = 0;
-        while in_the != 0 && k < core::ptr::read_unaligned(list as *const i16) as i32 {
-            let ev = core::ptr::read_unaligned(in_the as *const usize);
-            in_the = core::ptr::read_unaligned((in_the + 6) as *const usize);
+        while in_the != 0 && k < read_i16(list) as i32 {
+            let ev = read_usize(in_the);
+            in_the = read_usize(in_the + 6);
             k += 1;
             if ev == 0 {
                 break;
             }
-            let club = (*(G_CLUB_TABLE as *const usize) as isize + core::ptr::read_unaligned((ev + 4) as *const i32) as isize * 0x245) as usize;
+            let club = (read_usize(G_CLUB_TABLE) as isize + read_i32(ev + 4) as isize * 0x245) as usize;
             if club == partida.home_club().addr() || club == partida.away_club().addr() {
-                reg.extend(contract_flags_region(person(core::ptr::read_unaligned(ev as *const i32)), club));
+                reg.extend(contract_flags_region(person(read_i32(ev)), club));
             }
         }
     }
-    let table = *(G_MANAGER_MANAGER as *const usize);
+    let table = read_usize(G_MANAGER_MANAGER);
     if table != 0 {
         for o in [0x1c, 0x20] {
-            let club = *((partida.addr() + o) as *const usize);
+            let club = read_usize(partida.addr() + o);
             if club != 0 {
-                reg.push(((*(table as *const usize) as isize + *(club as *const i32) as isize * 0x49) as usize, 0x49));
+                reg.push(((read_usize(table) as isize + read_i32(club) as isize * 0x49) as usize, 0x49));
             }
         }
     }
@@ -119,8 +119,8 @@ pub(crate) unsafe extern "C" fn compare_post_match_players(partida: usize, t: us
     let o = original_fn::<unsafe extern "C" fn(usize, usize)>(IDX_POST_MATCH_PLAYERS);
     // the player records (+0x45, +9 to +0xe), the contracts, +0x80 of the clubs and the records of the
     // manager and of the assistants (+8 to +0xd)
-    let g = |a: usize| *(a as *const usize);
-    let read = |a: usize| core::ptr::read_unaligned(a as *const i32);
+    let g = |a: usize| read_usize(a);
+    let read = |a: usize| read_i32(a);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     for lado in 0..2usize {
         let club = Club((g(G_CLUB_TABLE) as isize + read(t + 4 * lado) as isize * 0x245) as usize);
@@ -171,7 +171,7 @@ pub(crate) unsafe extern "C" fn compare_match_day_drop_viewer_and_finish_match()
 /// Comparer for `find_record_fixture`.
 pub(crate) unsafe extern "thiscall" fn compare_find_record_fixture(stats: usize, k: i32, out: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(IDX_FIND_RECORD_FIXTURE);
-    if k < 0 || k > (*((stats + match_stats::CAPACITY) as *const i32)).wrapping_sub(1) || out == 0 {
+    if k < 0 || k > read_i32(stats + match_stats::CAPACITY).wrapping_sub(1) || out == 0 {
         return o(stats, k, out);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(out, 0x4f)], || o(stats, k, out), || find_record_fixture(stats, k, out));

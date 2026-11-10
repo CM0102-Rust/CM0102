@@ -127,7 +127,7 @@ pub(crate) unsafe fn asian_cup_winners_finalists(this: Cup) -> [usize; 4] {
         let mut i = 0i16;
         while i < teams && n < 4 {
             let e = tabela + i as usize * 6;
-            if *((e + 5) as *const u8) == 1 {
+            if read_u8(e + 5) == 1 {
                 v[n as usize] = read_usize(e);
                 n += 1;
             }

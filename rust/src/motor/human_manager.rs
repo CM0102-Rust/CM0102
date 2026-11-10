@@ -13,19 +13,19 @@ use super::*;
 /// conjunto de selecoes (0x5409b0), repete com a selecao principal da nacao dele (0x53b3d0),
 /// ja sem `qualquer`. Clube nulo: a original (caixa de erro, zera 0xb67a34, 0).
 pub(crate) unsafe extern "C" fn human_club(club: usize, without_tactic: u32, any: u8, person: usize, force: u32) -> u32 {
-    let h = *(G_HUMAN_MANAGER as *const usize);
+    let h = read_usize(G_HUMAN_MANAGER);
     let (mut club, mut any, mut person) = (club, any, person);
     loop {
         if club == 0 {
             return original_fn::<unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32>(IDX_HUMAN_CLUB)(0, without_tactic, any, person, force);
         }
         if person == 0 {
-            person = *((club + club::MANAGER) as *const usize);
+            person = read_usize(club + club::MANAGER);
         }
-        let manager = *((club + club::MANAGER) as *const usize);
-        if manager != 0 && person == manager && *(person as *const i32) >= (*(G_STAFF_COUNT as *const i32)).wrapping_sub(16) {
+        let manager = read_usize(club + club::MANAGER);
+        if manager != 0 && person == manager && *(person as *const i32) >= read_i32(G_STAFF_COUNT).wrapping_sub(16) {
             let tactic = without_tactic == 0
-                && (exe::human_manager_is_computer_controlled(h, person) != 0 || matches!(human_manager_record_checked(h, person), Ok(r) if *((r + 0x9a01) as *const u32) != 0));
+                && (exe::human_manager_is_computer_controlled(h, person) != 0 || matches!(human_manager_record_checked(h, person), Ok(r) if read_u32(r + 0x9a01) != 0));
             if !tactic {
                 if force != 0 || any != 0 {
                     return 1;
@@ -40,7 +40,7 @@ pub(crate) unsafe extern "C" fn human_club(club: usize, without_tactic: u32, any
             return 0;
         }
         any = 0;
-        club = exe::database_get_national_team(*((club + club::NATION) as *const usize));
+        club = exe::database_get_national_team(read_usize(club + club::NATION));
     }
 }
 
@@ -63,7 +63,7 @@ pub(crate) unsafe fn person_and_human_record(this: usize, person: usize) -> Opti
 /// Sem pessoa nenhuma ou fora da faixa: a original (caixa de erro, zera 0xb67a34, 0).
 pub(crate) unsafe extern "thiscall" fn manager_9ace(this: usize, person: usize) -> u32 {
     match person_and_human_record(this, person) {
-        Some((_, r)) => *((r + 0x9ace) as *const u32),
+        Some((_, r)) => read_u32(r + 0x9ace),
         None => original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_MANAGER_9ACE)(this, person),
     }
 }
@@ -81,14 +81,14 @@ pub(crate) unsafe extern "thiscall" fn manager_9a06(this: usize, person: usize, 
     }
     match person_and_human_record(this, person) {
         Some((p, r)) => {
-            let club = Club(*((p + 0x24) as *const usize));
+            let club = Club(read_usize(p + 0x24));
             if !club.is_null() && club.nation().number_staff() < 400 {
                 if !out.is_null() {
                     *out = 1;
                 }
                 return 0;
             }
-            (*((r + 0x9a06) as *const u8) != 0) as u8
+            (read_u8(r + 0x9a06) != 0) as u8
         }
         None => original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u32) -> u8>(IDX_MANAGER_9A06)(this, person, out),
     }
@@ -129,10 +129,10 @@ pub(crate) unsafe fn human_manager_record_checked(this: usize, person: usize) ->
 /// da faixa). Sem pessoa nenhuma: o original mostra uma caixa de erro e zera 0xb67a34.
 pub(crate) unsafe extern "thiscall" fn manager_9a01(this: usize, person: usize) -> u32 {
     match human_manager_record_checked(this, person) {
-        Ok(r) => *((r + 0x9a01) as *const u32),
+        Ok(r) => read_u32(r + 0x9a01),
         Err(sem_pessoa) => {
             if sem_pessoa {
-                *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
+                write_u32(G_MOUSE_LEFT_BUTTON_DOWN, 0);
             }
             0
         }
@@ -146,9 +146,9 @@ pub(crate) unsafe extern "thiscall" fn manager_9a01(this: usize, person: usize) 
 /// de zero? Sem pessoa nenhuma ou fora da faixa: o original mostra uma caixa de erro e zera 0xb67a34.
 pub(crate) unsafe extern "thiscall" fn manager_9a05(this: usize, person: usize) -> u32 {
     match human_manager_record_checked(this, person) {
-        Ok(r) => (*((r + 0x9a05) as *const u8) != 0) as u32,
+        Ok(r) => (read_u8(r + 0x9a05) != 0) as u32,
         Err(_) => {
-            *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
+            write_u32(G_MOUSE_LEFT_BUTTON_DOWN, 0);
             0
         }
     }
@@ -182,7 +182,7 @@ pub(crate) unsafe extern "C" fn split_mask(m: u32, setor: *mut u16, side: *mut u
     match [1u16, 2, 4, 8, 0x10, 0x20, 0x40].iter().find(|&&b| m & b as u32 != 0) {
         Some(&b) => *setor = b,
         None => {
-            *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
+            write_u32(G_MOUSE_LEFT_BUTTON_DOWN, 0);
             return 0;
         }
     }
@@ -197,7 +197,7 @@ pub(crate) unsafe extern "C" fn split_mask(m: u32, setor: *mut u16, side: *mut u
     } else if m & 0x800 != 0 {
         0x800
     } else {
-        *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
+        write_u32(G_MOUSE_LEFT_BUTTON_DOWN, 0);
         return 0;
     };
     *side = v;
@@ -288,7 +288,7 @@ pub(crate) unsafe extern "thiscall" fn select_tactic_slot(this: usize, reserve: 
     } else {
         0
     };
-    *((human_manager_record_at(this, k) + 0x9a69) as *mut u8) = slot;
+    write_u8(human_manager_record_at(this, k) + 0x9a69, slot);
 }
 
 /// The watched match (79 bytes at [this] + 0x9ad4) of human manager i.
@@ -351,8 +351,8 @@ pub(crate) unsafe extern "thiscall" fn is_fixture_watched(this: usize, partida: 
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_IS_FIXTURE_WATCHED)(this, partida);
     }
     for k in 0..16i32 {
-        let i = k.wrapping_add(*(G_STAFF_COUNT as *const i32)).wrapping_sub(0x10);
-        let h = Staff((*(G_STAFF_TABLE as *const usize)).wrapping_add((i as isize * 110) as usize));
+        let i = k.wrapping_add(read_i32(G_STAFF_COUNT)).wrapping_sub(0x10);
+        let h = Staff(read_usize(G_STAFF_TABLE).wrapping_add((i as isize * 110) as usize));
         if h.classification() != 0 && exe::human_manager_is_watching_fixture(this, partida, h) != 0 {
             return 1;
         }
@@ -401,11 +401,11 @@ pub(crate) unsafe extern "thiscall" fn has_nickname(this: usize, person: usize, 
         Some(None) => return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_HAS_NICKNAME)(this, person, human),
         Some(Some(i)) => i,
     };
-    let r = (*(this as *const usize)).wrapping_add(i.wrapping_mul(0xa6ef));
-    let list = core::ptr::read_unaligned((r + 0xa6e3) as *const usize);
+    let r = read_usize(this).wrapping_add(i.wrapping_mul(0xa6ef));
+    let list = read_usize(r + 0xa6e3);
     // the key: the id and a 0 byte (0x601a10 only compares the id)
-    let key = [*(person as *const u32), 0u32];
-    let found = if list == 0 { 0 } else { (exe::crt_bsearch((key.as_ptr()) as usize, list, core::ptr::read_unaligned((r + 0xa6eb) as *const u32), 0x1e, 0x601a10) != 0) as u32 };
+    let key = [read_u32(person), 0u32];
+    let found = if list == 0 { 0 } else { (exe::crt_bsearch((key.as_ptr()) as usize, list, read_u32(r + 0xa6eb), 0x1e, 0x601a10) != 0) as u32 };
     found // apelido
 }
 
@@ -437,7 +437,7 @@ pub(crate) unsafe fn human_manager_record(manager: usize, person: usize) -> Opti
 /// humano saiu de férias (+0x9a65 do registro). Fora da faixa: a original (caixa de erro, 0).
 pub(crate) unsafe extern "thiscall" fn get_holiday_stamp(manager: usize, person: usize) -> u32 {
     match human_manager_record(manager, person) {
-        Some(r) => core::ptr::read_unaligned((r + 0x9a65) as *const u32),
+        Some(r) => read_u32(r + 0x9a65),
         None => original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_GET_HOLIDAY_STAMP)(manager, person),
     }
 }
@@ -466,10 +466,10 @@ pub(crate) unsafe extern "C" fn human_manager_get_stand_in_manager(club: usize) 
     if auxiliar != 0 {
         return auxiliar;
     }
-    let injury_word_0c = |p: Staff| core::ptr::read_unaligned((p.non_player().addr() + 0xa) as *const i16);
+    let injury_word_0c = |p: Staff| read_i16(p.non_player().addr() + 0xa);
     let mut best = 0usize;
     for k in 0..5 {
-        let c = Staff(core::ptr::read_unaligned((club.addr() + club::COACHES + k * 4) as *const usize));
+        let c = Staff(read_usize(club.addr() + club::COACHES + k * 4));
         if c.is_null() || c.non_player().is_null() {
             continue;
         }
@@ -618,9 +618,9 @@ pub(crate) unsafe extern "thiscall" fn remove_nickname_from_all(this: usize, id:
                     }
                     let n = read_u32(g + 0xa6eb) as usize;
                     let end = (read_u32(g + 0xa6e3) as usize).wrapping_add(n.wrapping_mul(30));
-                    *((end - 0x1a) as *mut u8) = 0;
-                    core::ptr::write_unaligned((end - 0x1e) as *mut u32, u32::MAX);
-                    core::ptr::write_unaligned((g + 0xa6eb) as *mut u32, (n as u32).wrapping_sub(1));
+                    write_u8(end - 0x1a, 0);
+                    write_u32(end - 0x1e, u32::MAX);
+                    write_u32(g + 0xa6eb, (n as u32).wrapping_sub(1));
                 }
             }
             c = c.wrapping_add(1);
@@ -652,22 +652,22 @@ pub(crate) unsafe extern "C" fn human_runs_club(club: usize, any: u32, force: i8
         if c == 0 {
             return original_fn::<unsafe extern "C" fn(usize, u32, i8) -> u32>(IDX_HUMAN_RUNS_CLUB)(0, any, force);
         }
-        let team = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
-        let human = core::ptr::read_unaligned((0xb74c26 + team * 0x300) as usize as *const usize);
-        let manager = core::ptr::read_unaligned((c + club::MANAGER) as *const usize);
+        let team = read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize;
+        let human = read_usize((0xb74c26 + team * 0x300) as usize);
+        let manager = read_usize(c + club::MANAGER);
         'proximo: {
             if manager == 0 || human != manager {
                 break 'proximo;
             }
-            let humanos = *(G_HUMAN_MANAGER as *const usize);
+            let humanos = read_usize(G_HUMAN_MANAGER);
             if any == 0 {
                 if exe::human_manager_is_computer_controlled(humanos, human) != 0 {
                     break 'proximo;
                 }
-                let i = (*(human as *const i32)).wrapping_sub(*(G_STAFF_COUNT as *const i32)).wrapping_add(0x10);
+                let i = read_i32(human).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10);
                 if i >= 0
-                    && i <= (*((humanos + 4) as *const i32)).wrapping_sub(1)
-                    && core::ptr::read_unaligned((*(humanos as *const usize) + i as usize * 0xa6ef + 0x9a01) as *const u32) != 0
+                    && i <= read_i32(humanos + 4).wrapping_sub(1)
+                    && read_u32(read_usize(humanos) + i as usize * 0xa6ef + 0x9a01) != 0
                 {
                     break 'proximo;
                 }
@@ -680,7 +680,7 @@ pub(crate) unsafe extern "C" fn human_runs_club(club: usize, any: u32, force: i8
         if exe::club_is_national_team(c) == 0 {
             return 0;
         }
-        c = exe::database_get_national_team(core::ptr::read_unaligned((c + club::NATION) as *const usize));
+        c = exe::database_get_national_team(read_usize(c + club::NATION));
     }
 }
 
@@ -698,18 +698,18 @@ pub(crate) unsafe extern "C" fn human_runs_club(club: usize, any: u32, force: i8
 pub(crate) unsafe extern "thiscall" fn set_human_field(t: usize, value: u32, manager: *const i32) -> u32 {
     let mut p = manager;
     if p.is_null() {
-        let team = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
+        let team = read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize;
         p = core::ptr::read_unaligned((0xb74c26 + team * 0x300) as usize as *const *const i32);
     }
     if p.is_null() {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(IDX_SET_HUMAN_FIELD)(t, value, manager);
     }
-    let i = (*p).wrapping_sub(*(G_STAFF_COUNT as *const i32)).wrapping_add(0x10);
-    if i < 0 || i > (*((t + 4) as *const i32)).wrapping_sub(1) {
+    let i = (*p).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10);
+    if i < 0 || i > read_i32(t + 4).wrapping_sub(1) {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(IDX_SET_HUMAN_FIELD)(t, value, manager);
     }
     crate::comparison::branch("human data saved");
-    core::ptr::write_unaligned((*(t as *const usize) + i as usize * 0xa6ef + 0x9a65) as *mut u32, value);
+    write_u32(read_usize(t) + i as usize * 0xa6ef + 0x9a65, value);
     1
 }
 
@@ -733,7 +733,7 @@ pub(crate) unsafe extern "thiscall" fn set_human_field(t: usize, value: u32, man
 pub(crate) unsafe extern "thiscall" fn set_on_holiday(this: usize, holiday: u32, manager: usize) {
     let mut t = manager;
     if t == 0 {
-        t = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * (*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize));
+        t = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * (read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize as usize));
         if t == 0 {
             show_error_at(0x9cf11c, 0x41c);
             return;
@@ -754,7 +754,7 @@ pub(crate) unsafe extern "thiscall" fn set_on_holiday(this: usize, holiday: u32,
     } else if before != 0 {
         *count = (*count).wrapping_sub(1);
     }
-    core::ptr::write_unaligned(mark as *mut u32, holiday);
+    write_u32(mark, holiday);
     crate::comparison::branch("cpy_13 human on holiday");
     if holiday != 0 {
         if read_usize(t + staff::CLUB_JOB) != 0 {

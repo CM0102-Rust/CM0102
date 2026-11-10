@@ -1,7 +1,7 @@
 # Mutacoes da leva140 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva140.py --carreira 2002-06-01 --confirmar 2001-10-01
 MUTACOES = [
     ('t_ler', "as *const u8, target, 0x91);", "as *const u8, target, 0x90);", "tactics line read"),
-    ('t_gravar', "core::ptr::copy(source, (*((this + tactics_fields::ROWS) as *const usize)).wrapping_add(k as usize * 0x91) as *mut u8, 0x91);", "core::ptr::copy(source.add(1), (*((this + tactics_fields::ROWS) as *const usize)).wrapping_add(k as usize * 0x91) as *mut u8, 0x90);", "tactics line saved"),
+    ('t_gravar', "core::ptr::copy(source, read_usize(this + tactics_fields::ROWS).wrapping_add(k as usize * 0x91) as *mut u8, 0x91);", "core::ptr::copy(source.add(1), read_usize(this + tactics_fields::ROWS).wrapping_add(k as usize * 0x91) as *mut u8, 0x90);", "tactics line saved"),
     ('s_metade', "let middle = x * read_f64(rdata::F64_0_5);", "let middle = x * read_f64(rdata::F64_0_5) * 1.02;"),
     ('s_ataque', "let r = random((word(0x1da, other) + 200) / 19);", "let r = random((word(0x1da, other) + 201) / 19);"),
     ('s_duelo2', "let r = random(word(0x1de, other) / 5);", "let r = random(word(0x1de, other) / 6);"),
@@ -9,8 +9,8 @@ MUTACOES = [
     ('s_desgaste', "add(MatchPlayer(p), -0xf);\n                more(((m + 0xf5ca", "add(MatchPlayer(p), -0xe);\n                more(((m + 0xf5ca"),
     ('s_expulsao', "add(MatchPlayer(jog(other, c as i8)), -0xfa);", "add(MatchPlayer(jog(other, c as i8)), -0xf9);", "quick simulation sending off"),
     ('s_amarelo', "if read_i8(p + match_player::YELLOW_CARDS) == 2 {\n                        crate::comparison::branch(\"quick simulation second give_yellow_card\");", "if read_i8(p + match_player::YELLOW_CARDS) == 3 {\n                        crate::comparison::branch(\"quick simulation second give_yellow_card\");", "quick simulation give_yellow_card"),
-    ('s_abandono', "if *((mo + engine::CARDS) as *const u8) > 4 {", "if *((mo + engine::CARDS) as *const u8) > 5 {", "quick simulation abandonment"),
-    ('s_fator', "} else if *((m + engine::CLOCK) as *mut i16) > 0x3c {\n                read_f32(rdata::F32_0_6499999762) as f64", "} else if *((m + engine::CLOCK) as *mut i16) > 0x3d {\n                read_f32(rdata::F32_0_6499999762) as f64"),
+    ('s_abandono', "if read_u8(mo + engine::CARDS) > 4 {", "if read_u8(mo + engine::CARDS) > 5 {", "quick simulation abandonment"),
+    ('s_fator', "} else if read_i16(m + engine::CLOCK) > 0x3c {\n                read_f32(rdata::F32_0_6499999762) as f64", "} else if read_i16(m + engine::CLOCK) > 0x3d {\n                read_f32(rdata::F32_0_6499999762) as f64"),
     ('s_chute', "if us + 0xa5 > random(0x172)", "if us + 0xa6 > random(0x172)"),
     ('s_gol', "if us + 0x2d > random((7 - local_28 as i32 * 3)", "if us + 0x2e > random((7 - local_28 as i32 * 3)", "quick simulation goal"),
     ('s_goleiros', "if read_i8(q + match_player::POSITION) >= 0 && player_table(q) == 1 {\n                more((q + match_player::GOALS_CONCEDED) as *mut u8);", "if read_i8(q + match_player::POSITION) >= 0 && player_table(q) == 2 {\n                more((q + match_player::GOALS_CONCEDED) as *mut u8);", "quick simulation goal"),
@@ -19,8 +19,8 @@ MUTACOES = [
     ('s_mando', "more(((m + 0xf5be + s * 0x36) as *mut u8));", "more(((m + 0xf5bd + s * 0x36) as *mut u8));", "quick simulation home goal"),
     ('s_lesao', "cl = cl.wrapping_add(0xf);", "cl = cl.wrapping_add(0xe);", "quick simulation injury"),
     ('s_nota', "as i8).clamp(1, 10);", "as i8).clamp(1, 9);"),
-    ('s_amistoso', "let a = (*((p + match_player::EFFECTIVE_ABILITY) as *const i16) as f64 - read_f64(rdata::F64_40)) * read_f64(rdata::F64_50);", "let a = (*((p + match_player::EFFECTIVE_ABILITY) as *const i16) as f64 - read_f64(rdata::F64_40) - 1.0) * read_f64(rdata::F64_50);", "quick simulation friendly rating"),
-    ('s_contador', "*((m + x) as *mut i16) = (random(6) + 12) as i16;", "*((m + x) as *mut i16) = (random(6) + 13) as i16;", "quick simulation counter reset"),
-    ('s_contador_igual', "*((m + x) as *mut i16) = (*((m + x) as *mut i16)).wrapping_add((-1i32).wrapping_sub(r) as i16);", "*((m + x) as *mut i16) = (*((m + x) as *mut i16)).wrapping_add((-2i32).wrapping_sub(r) as i16);", "quick simulation counter equal"),
+    ('s_amistoso', "let a = (read_i16(p + match_player::EFFECTIVE_ABILITY) as f64 - read_f64(rdata::F64_40)) * read_f64(rdata::F64_50);", "let a = (read_i16(p + match_player::EFFECTIVE_ABILITY) as f64 - read_f64(rdata::F64_40) - 1.0) * read_f64(rdata::F64_50);", "quick simulation friendly rating"),
+    ('s_contador', "write_i16(m + x, (random(6) + 12) as i16);", "write_i16(m + x, (random(6) + 13) as i16);", "quick simulation counter reset"),
+    ('s_contador_igual', "write_i16(m + x, read_i16(m + x).wrapping_add((-1i32).wrapping_sub(r) as i16));", "write_i16(m + x, read_i16(m + x).wrapping_add((-2i32).wrapping_sub(r) as i16));", "quick simulation counter equal"),
     ('s_periodo', "0x69 => *((m + engine::PERIOD_END) as *mut i16) = 0x528,", "0x69 => *((m + engine::PERIOD_END) as *mut i16) = 0x529,"),
 ]

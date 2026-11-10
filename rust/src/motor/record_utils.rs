@@ -95,9 +95,9 @@ pub(crate) unsafe extern "C" fn fill_staff_name_ref(person: usize, out: usize) -
         return 0;
     }
     for k in 0..3 {
-        core::ptr::write_unaligned((out + 4 * k) as *mut u32, name_id(read_u32(person.addr() + staff::FIRST_NAME + 4 * k)));
+        write_u32(out + 4 * k, name_id(read_u32(person.addr() + staff::FIRST_NAME + 4 * k)));
     }
-    core::ptr::write_unaligned((out + 0xc) as *mut u32, read_u32(person.addr()));
+    write_u32(out + 0xc, read_u32(person.addr()));
     let mut t = [0u8; 8];
     exe::date_operator_3d(out + 0x10, t.as_mut_ptr() as usize, person.addr() + staff::DATE_OF_BIRTH);
     1
@@ -158,7 +158,7 @@ pub(crate) unsafe fn add_year_award(this: usize, p: Staff, club: usize, prize: u
         return;
     }
     let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p));
-    *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c.addr();
+    write_usize(G_CONTRACT_LOOKUP_RESULT, c.addr());
     if c.is_null() || c.contract_type() & 0x3f == 5 {
         return;
     }
@@ -170,7 +170,7 @@ pub(crate) unsafe fn add_year_award(this: usize, p: Staff, club: usize, prize: u
         return;
     }
     if read_usize(G_TRANSFER_MANAGER) != 0 {
-        if exe::date_days_since(G_CURRENT_DATE, (k.date_started()) as u32, (read_usize(k.addr() + contract::DATE_STARTED + 4)) as u32) > 0x12c { // cpy10: mais de 300 dias
+        if exe::date_days_since(G_CURRENT_DATE, (k.date_started()) as u32, read_usize(k.addr() + contract::DATE_STARTED + 4) as u32) > 0x12c { // cpy10: mais de 300 dias
             let owner = contract_club_except_type5(p);
             let x = exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), owner, p, 0, 0);
             if x != 0 && read_usize(x + 0xf) == read_usize(p.addr()) {

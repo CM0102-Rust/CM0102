@@ -9,14 +9,14 @@ use super::*;
 /// sim; sem o +0x5d do registro (0xae23d0, 107 bytes) nao; senao so a do objeto em 0xadadfc com
 /// fase 2 (+0x43), rodadas (+0x3e) e a primeira rodada (+0xb1) com o clube +4 em +0x57 ou +0x60.
 pub(crate) unsafe extern "C" fn competition_counts(id: i32) -> u32 {
-    let g = |a: usize| *(a as *const i32);
+    let g = |a: usize| read_i32(a);
     if id == g(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION) || id == g(KEY_CLUB_COMP_FRENCH_CFA) || id == g(KEY_CLUB_COMP_FRENCH_LOWER_DIVISION) {
         return 1;
     }
-    if *((*(G_CLUB_COMP_TABLE as *const usize)).wrapping_add((id as usize).wrapping_mul(107)).wrapping_add(0x5d) as *const u32) == 0 {
+    if read_u32(read_usize(G_CLUB_COMP_TABLE).wrapping_add((id as usize).wrapping_mul(107)).wrapping_add(0x5d)) == 0 {
         return 0;
     }
-    let c = League(*((*(G_COMP_OBJECT_TABLE as *const usize)).wrapping_add((id as usize).wrapping_mul(4)) as *const usize));
+    let c = League(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((id as usize).wrapping_mul(4))));
     if c.is_null() || (c.comp_type() as i8) != 2 || (c.club_count() as u16) == 0 {
         return 0;
     }
@@ -24,7 +24,7 @@ pub(crate) unsafe extern "C" fn competition_counts(id: i32) -> u32 {
     if r == 0 {
         return 0;
     }
-    let first = Club(*(r as *const usize));
+    let first = Club(read_usize(r));
     let target = (c.competition().addr() as i32);
     ((first.division().addr() as i32) == target || (first.reserve_division().addr() as i32) == target) as u32
 }
@@ -34,7 +34,7 @@ pub(crate) unsafe extern "C" fn competition_counts(id: i32) -> u32 {
 ///
 /// [pt] { 0x4b0780 } (comparacao do qsort): byte +0x5f do segundo menos o do primeiro (nulo vale 0).
 pub(crate) unsafe extern "C" fn order_by_5f(a: *const usize, b: *const usize) -> i32 {
-    let v = |p: usize| if p == 0 { 0 } else { *((p + 0x5f) as *const i8) as i32 };
+    let v = |p: usize| if p == 0 { 0 } else { read_i8(p + 0x5f) as i32 };
     v(*b) - v(*a)
 }
 
@@ -42,7 +42,7 @@ pub(crate) unsafe extern "C" fn order_by_5f(a: *const usize, b: *const usize) ->
 ///
 /// [pt] { 0x4b07b0 } (comparacao do qsort): palavra +0x80 do segundo menos a do primeiro.
 pub(crate) unsafe extern "C" fn order_by_80(a: *const usize, b: *const usize) -> i32 {
-    *((*b + 0x80) as *const i16) as i32 - *((*a + 0x80) as *const i16) as i32
+    read_i16(*b + 0x80) as i32 - read_i16(*a + 0x80) as i32
 }
 
 /// qsort comparator for club pointers: sorts by the club's word at +0x80 (reputation) in descending order, with null
@@ -58,7 +58,7 @@ pub(crate) unsafe extern "C" fn order_by_80_desc(a: *const usize, b: *const usiz
     if y == 0 {
         return -1;
     }
-    *((y + 0x80) as *const i16) as i32 - *((x + 0x80) as *const i16) as i32
+    read_i16(y + 0x80) as i32 - read_i16(x + 0x80) as i32
 }
 
 /// qsort comparator: orders records by their 16-bit word at +0x80 (the club reputation) in ascending order, null
@@ -73,7 +73,7 @@ pub(crate) unsafe extern "C" fn order_by_80_asc(a: *const usize, b: *const usize
     if y == 0 {
         return -1;
     }
-    *((x + 0x80) as *const i16) as i32 - *((y + 0x80) as *const i16) as i32
+    read_i16(x + 0x80) as i32 - read_i16(y + 0x80) as i32
 }
 
 /// Returns the units digit of round code `n` (n % 10) when `n` is below 1000, else 0; used to read the round variant
@@ -94,10 +94,10 @@ pub(crate) unsafe extern "C" fn units_digit(n: i32) -> u8 {
 /// [pt] { 0x5c6710 } (friendly.cpp): a competicao e amistosa? E a guardada em +4 do objeto, ou o id dela
 /// (+0) esta entre as 127 ultimas competicoes de clubes (quantidade em 0xae2378).
 pub(crate) unsafe extern "thiscall" fn is_friendly(this: usize, comp: usize) -> u32 {
-    if comp == *((this + 4) as *const usize) {
+    if comp == read_usize(this + 4) {
         return 1;
     }
-    (*(comp as *const i32) >= (*(G_CLUB_COMP_COUNT as *const i32)).wrapping_sub(0x7f)) as u32
+    (read_i32(comp) >= read_i32(G_CLUB_COMP_COUNT).wrapping_sub(0x7f)) as u32
 }
 
 /// Returns the person's contract inside a contract list: `this` points to an array of 80-byte contract records, and the
@@ -132,11 +132,11 @@ pub(crate) unsafe extern "thiscall" fn contract_of(this: usize, person: usize) -
 /// caixa de erro, zera 0xb67a34 e devolve 0 (aqui, sem a caixa).
 pub(crate) unsafe extern "C" fn is_national_team(club: usize) -> u32 {
     if club == 0 {
-        *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
+        write_u32(G_MOUSE_LEFT_BUTTON_DOWN, 0);
         return 0;
     }
-    let limit = (*(G_CLUB_COUNT as *const i32)).wrapping_sub((*(G_NATION_COUNT as *const i32)).wrapping_mul(2));
-    (*(club as *const i32) >= limit) as u32
+    let limit = read_i32(G_CLUB_COUNT).wrapping_sub(read_i32(G_NATION_COUNT).wrapping_mul(2));
+    (read_i32(club) >= limit) as u32
 }
 
 /// Computes each club's strength key (`comp_util_get_club_strength_score`) and sorts clubs and keys descending by swapping, as `comp_util_sort_clubs_by_strength`.
@@ -330,8 +330,8 @@ pub(crate) unsafe extern "C" fn comp_util_get_fixture_venue_side(club: usize, ga
 /// 0x9cd200): maior antes (−1); menor ou sem ordem (NaN, a flag C0 do fcomp), 1; igual, 0. Quente (o qsort): sem
 /// contador. A original ordena e libera o vetor logo depois: a ordem não chega ao jogo (só o comparando acusa).
 pub(crate) unsafe extern "C" fn compare_nation_coefficients_desc(a: usize, b: usize) -> i32 {
-    let x = core::ptr::read_unaligned((a + 4) as *const f64);
-    let y = core::ptr::read_unaligned((b + 4) as *const f64);
+    let x = read_f64(a + 4);
+    let y = read_f64(b + 4);
     if x > y {
         return -1; // o maior antes
     }
@@ -456,7 +456,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
     if smaller(comp) != 0 {
         return 0;
     }
-    let league = League(read_usize((*(G_COMP_OBJECT_TABLE as *const usize)).wrapping_add(4 * *(a.division().addr() as *const u32) as usize)));
+    let league = League(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(4 * read_u32(a.division().addr()) as usize)));
     if league.is_null() || league.comp_stats() == 0 {
         return 0;
     }
@@ -531,14 +531,14 @@ pub(crate) unsafe extern "C" fn comp_util_get_club_strength_score(club: usize) -
     if club.is_null() {
         return -10_000_000;
     }
-    let finances = *(G_FINANCE_TABLE as *const usize);
+    let finances = read_usize(G_FINANCE_TABLE);
     let mut strength: i32 = 0;
     if finances == 0 {
         strength = club.cash() / 400;
     } else {
         let f = exe::financetable_get_club_finance(finances, club);
         if f != 0 {
-            strength = (core::ptr::read_unaligned(f as *const i64) / 300) as i32;
+            strength = (read_i64(f) / 300) as i32;
         }
     }
     strength = strength.wrapping_add((club.reputation() as i32) << 4); // the reputation
@@ -587,15 +587,15 @@ pub(crate) unsafe extern "C" fn comp_util_get_latest_placed_club(comp: usize, pl
     if place > 2 {
         return original_fn::<unsafe extern "C" fn(usize, u32) -> usize>(IDX_COMP_UTIL_GET_LATEST_PLACED_CLUB)(comp, place as u32); // message box: original only
     }
-    exe::crt_qsort(*(G_CLUB_COMP_HISTORY_TABLE as *const usize), (*(G_CLUB_COMP_HISTORY_COUNT as *const i32)) as u32, 0x1a, 0x540780);
+    exe::crt_qsort(read_usize(G_CLUB_COMP_HISTORY_TABLE), read_i32(G_CLUB_COMP_HISTORY_COUNT) as u32, 0x1a, 0x540780);
     let mut key = [0u8; 0x1a];
     key[4..8].copy_from_slice(&comp.to_le_bytes());
     key[8..10].copy_from_slice(&0xffffu16.to_le_bytes()); // o ano: qualquer
-    let mut p = exe::crt_bsearch((key.as_ptr()) as usize, *(G_CLUB_COMP_HISTORY_TABLE as *const usize), (*(G_CLUB_COMP_HISTORY_COUNT as *const i32)) as u32, 0x1a, 0x540780);
+    let mut p = exe::crt_bsearch((key.as_ptr()) as usize, read_usize(G_CLUB_COMP_HISTORY_TABLE), read_i32(G_CLUB_COMP_HISTORY_COUNT) as u32, 0x1a, 0x540780);
     if p == 0 {
         return 0;
     }
-    let t = *(G_CLUB_COMP_HISTORY_TABLE as *const usize);
+    let t = read_usize(G_CLUB_COMP_HISTORY_TABLE);
     while p > t {
         p -= 0x1a;
         if exe::database_compare_comp_history_rows(key.as_ptr(), p) != 0 {
@@ -628,9 +628,9 @@ pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(news: usi
         v = v.wrapping_add(1);
         r
     };
-    let d = |o: usize, x: u32| core::ptr::write_unaligned((partida + o) as *mut u32, x);
-    let w = |o: usize, x: u32| core::ptr::write_unaligned((partida + o) as *mut u16, x as u16);
-    let b = |o: usize, x: u32| *((partida + o) as *mut u8) = x as u8;
+    let d = |o: usize, x: u32| write_u32(partida + o, x);
+    let w = |o: usize, x: u32| write_u16(partida + o, x as u16);
+    let b = |o: usize, x: u32| write_u8(partida + o, x as u8);
     d(0xc, read());
     d(0x10, read());
     b(0x3d, read());
@@ -652,7 +652,7 @@ pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(news: usi
     *cursor = v;
     let pointer = |o: usize, table: usize, size: u32| {
         let i = read_u32(partida + o);
-        if i == 0xffff_ffff { 0 } else { (*(table as *const u32)).wrapping_add(i.wrapping_mul(size)) }
+        if i == 0xffff_ffff { 0 } else { read_u32(table).wrapping_add(i.wrapping_mul(size)) }
     };
     d(0x1c, pointer(0xc, G_CLUB_TABLE, 0x245)); // home club
     d(0x20, pointer(0x10, G_CLUB_TABLE, 0x245));
@@ -760,7 +760,7 @@ pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(club: usi
 /// byte baixo do próprio argumento `cursor` (só a parte baixa chega à 0x785790).
 pub(crate) unsafe extern "C" fn comp_util_write_fixture_to_news_slots(game: usize, news: usize, cursor: *mut u8) -> u32 {
     let b = |o: usize| read_i8(game + o) as i32 as u32;
-    let s = |o: usize| core::ptr::read_unaligned((game + o) as *const i16) as i32 as u32;
+    let s = |o: usize| read_i16(game + o) as i32 as u32;
     let values = [
         read_u32(game + 0xc), read_u32(game + 0x10), b(0x3d), b(0x3e), read_u32(game + 4), read_u32(game + 0), b(0x42), s(0x32), s(0x30),
         b(0x43), b(0x44), b(0x4b), b(0x4c), b(0x47), b(0x48), (read_u16(game + 0x2a) as u32), (read_u16(game + 0x28) as u32), read_u32(game + 8),
@@ -859,13 +859,13 @@ pub(crate) unsafe extern "C" fn comp_util_add_history_record(league: usize, a: u
         if exe::database_grow_comp_history_table(0x14) == 0 {
             return 0;
         }
-        let n = *(G_CLUB_COMP_HISTORY_COUNT as *const i32);
-        r = (*(G_CLUB_COMP_HISTORY_TABLE as *const usize)).wrapping_add(26usize.wrapping_mul(n.wrapping_sub(20) as usize));
+        let n = read_i32(G_CLUB_COMP_HISTORY_COUNT);
+        r = read_usize(G_CLUB_COMP_HISTORY_TABLE).wrapping_add(26usize.wrapping_mul(n.wrapping_sub(20) as usize));
     }
-    core::ptr::write_unaligned((r + 4) as *mut usize, read_usize(league + 4));
-    core::ptr::write_unaligned((r + 8) as *mut u16, *(G_CURRENT_DATE_YEAR as *const u16)); // o ano
+    write_usize(r + 4, read_usize(league + 4));
+    write_u16(r + 8, read_u16(G_CURRENT_DATE_YEAR)); // o ano
     for (k, v) in [a, b, c, d].into_iter().enumerate() {
-        core::ptr::write_unaligned((r + 0xa + 4 * k) as *mut u32, v);
+        write_u32(r + 0xa + 4 * k, v);
     }
     r
 }

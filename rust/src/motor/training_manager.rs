@@ -11,9 +11,9 @@ pub(crate) unsafe fn training_manager_staff_by_id(id: i32) -> usize {
 ///
 /// [pt] A vaga de 9 bytes da comissão (+0 id do treinador, +4..+8 as notas das cinco categorias) volta a vazia: −1, 0, 0.
 pub(crate) unsafe fn clear_coach_slot(e: usize) {
-    core::ptr::write_unaligned(e as *mut i32, -1);
-    core::ptr::write_unaligned((e + 4) as *mut u32, 0);
-    *((e + 8) as *mut u8) = 0;
+    write_i32(e, -1);
+    write_u32(e + 4, 0);
+    write_u8(e + 8, 0);
 }
 
 /// The rating divisors by the coach's number of categories (1 to 5), floats built on the stack by the original: 1.0;
@@ -97,9 +97,9 @@ pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, clu
         }
         if let Some(v) = (0..6).find(|&v| read_i32(t + 9 * v) == -1) {
             let e = t + 9 * v;
-            core::ptr::write_unaligned(e as *mut i32, read_i32(p));
-            core::ptr::write_unaligned((e + 4) as *mut u32, 0x0101_0101);
-            *((e + 8) as *mut u8) = 1;
+            write_i32(e, read_i32(p));
+            write_u32(e + 4, 0x0101_0101);
+            write_u8(e + 8, 1);
         }
     }
     for v in 0..6 {
@@ -113,9 +113,9 @@ pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, clu
             clear_coach_slot(e);
             continue;
         }
-        let n = (0..5).filter(|&j| *((e + 4 + j) as *const u8) != 0).count();
+        let n = (0..5).filter(|&j| read_u8(e + 4 + j) != 0).count();
         for j in 0..5 {
-            if *((e + 4 + j) as *const u8) == 0 {
+            if read_u8(e + 4 + j) == 0 {
                 continue;
             }
             let b = |k: usize| read_i8(f + k) as i32;
@@ -132,7 +132,7 @@ pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, clu
             // the low byte, signed, as float divided by the float of the quantity (x87 double precision)
             let q = ftol(x as i8 as f64 / f32::from_bits(RATING_DIVISORS[n - 1]) as f64) as i8; // cqf7: the quantity divisor
             crate::comparison::branch("cqf_7 coach rating");
-            *((e + 4 + j) as *mut i8) = q.clamp(1, 20);
+            write_i8(e + 4 + j, q.clamp(1, 20));
         }
     }
 }
@@ -193,16 +193,16 @@ pub(crate) unsafe extern "thiscall" fn reassign_squad_schedules(this: usize, man
                 show_error_at(0xa8ccd0, 0x34c);
                 continue;
             }
-            *(training_entry_of_player_data(this, f) as *mut u8) = if read_i8(f + player_sheet::GOALKEEPER) >= 0xf { 6 } else { 1 };
+            write_u8(training_entry_of_player_data(this, f), if read_i8(f + player_sheet::GOALKEEPER) >= 0xf { 6 } else { 1 });
         }
     }
     if new == 0 {
         return;
     }
     for vaga in 0..10i8 {
-        if *((human_training_schedule(this, manager, vaga) + 0x15) as *const u8) == 6 {
+        if read_u8(human_training_schedule(this, manager, vaga) + 0x15) == 6 {
             gol = vaga;
-        } else if *((human_training_schedule(this, manager, vaga) + 0x15) as *const u8) == 1 {
+        } else if read_u8(human_training_schedule(this, manager, vaga) + 0x15) == 1 {
             geral = vaga;
         }
     }
@@ -256,7 +256,7 @@ pub(crate) unsafe fn training_entry_of_staff(this: usize, p: Staff) -> usize {
 /// original faz a cada consulta.
 pub(crate) unsafe fn training_manager_get_contract_stored(p: Staff) -> usize {
     let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
-    *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
+    write_usize(G_CONTRACT_LOOKUP_RESULT, c);
     c
 }
 
@@ -351,9 +351,9 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
             *mark |= 0x20;
             let (mut goleiro, mut geral) = (-1i8, -1i8);
             for k in 0..10i8 {
-                if *((human_training_schedule(this, manager, k) + 0x15) as *const u8) == 6 {
+                if read_u8(human_training_schedule(this, manager, k) + 0x15) == 6 {
                     goleiro = k;
-                } else if *((human_training_schedule(this, manager, k) + 0x15) as *const u8) == 1 {
+                } else if read_u8(human_training_schedule(this, manager, k) + 0x15) == 1 {
                     geral = k;
                 }
             }
@@ -364,7 +364,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
             } else {
                 1
             };
-            *(e as *mut i8) = slot;
+            write_i8(e, slot);
             let v = exe::training_schedule_get_training_load(human_training_schedule(this, manager, slot));
             crate::comparison::branch("cqd_8 human schedule");
             exe::injury_set_training_load(read_usize(G_INJURY), p, v as u32);
@@ -384,7 +384,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
             *mark &= 0xdf;
             exe::injury_set_training_load(read_usize(G_INJURY), p, 0x32);
             let f = p.player();
-            *(training_entry_of_staff(this, p) as *mut u8) = if f.goalkeeper() >= 0xf { 6 } else { 1 };
+            write_u8(training_entry_of_staff(this, p), if f.goalkeeper() >= 0xf { 6 } else { 1 });
             let mut q = 0usize;
             let n = exe::training_manager_find_position_training(this, p, &mut q);
             let mut k = 0i8;
@@ -402,7 +402,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
     if weeks > 0x1e {
         weeks = 0x1e;
     }
-    core::ptr::write_unaligned((e + 1) as *mut u16, read_u16(this + 0x688d));
+    write_u16(e + 1, read_u16(this + 0x688d));
     let mut q = 0usize;
     let npos = exe::training_manager_find_position_training(this, p, &mut q);
     if *mark & 0x10 != 0 && npos == 0 {
@@ -468,7 +468,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
                 if (skip != 0 && read_u16(it - 3) == skip) || taxa > 0 {
                     if friendly_random(read_i8(it) as i32) < 5 {
                         let n = read_i8(it - 1).wrapping_add(2);
-                        *((it - 1) as *mut i8) = if n > 0x14 { 0x14 } else { n };
+                        write_i8(it - 1, if n > 0x14 { 0x14 } else { n });
                     }
                     let c = contract_of_club;
                     if c != 0 && read_usize(c + 0x45) & 0x8000 == 0 {
@@ -491,10 +491,10 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
                     }
                 } else if taxa < 0 && friendly_random((taxa as i32).abs()) < 5 {
                     let n = read_i8(it - 1).wrapping_sub(2);
-                    *((it - 1) as *mut i8) = n;
+                    write_i8(it - 1, n);
                     if n < 1 {
-                        *(it as *mut i8) = 0;
-                        *((it - 1) as *mut i8) = 1;
+                        write_i8(it, 0);
+                        write_i8(it - 1, 1);
                         acabou = true;
                     }
                 }
@@ -516,11 +516,11 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
                 let base = read_usize(this + 0x6521);
                 let n = read_i32(this + 0x6525);
                 let item = base.wrapping_add((i as isize * 8) as usize);
-                if *((item + 7) as *const u8) == 0 {
+                if read_u8(item + 7) == 0 {
                     let last = base.wrapping_add((n as isize * 8 - 8) as usize);
-                    core::ptr::write_unaligned(item as *mut u32, read_usize(last) as u32);
-                    core::ptr::write_unaligned((item + 4) as *mut u32, read_usize(last + 4) as u32);
-                    core::ptr::write_unaligned((this + 0x6525) as *mut i32, read_i32(this + 0x6525) - 1);
+                    write_u32(item, read_usize(last) as u32);
+                    write_u32(item + 4, read_usize(last + 4) as u32);
+                    write_i32(this + 0x6525, read_i32(this + 0x6525) - 1);
                 }
                 i += 1;
                 if i >= read_i32(this + 0x6525) {
@@ -568,13 +568,13 @@ pub(crate) unsafe extern "thiscall" fn get_player_schedule(this: usize, p: usize
                 }
                 return this.wrapping_add(0x4d8 + 0x60e * k as usize);
             }
-            return human_training_schedule(this, manager, *(training_entry_of_staff(this, p) as *const i8));
+            return human_training_schedule(this, manager, read_i8(training_entry_of_staff(this, p)));
         }
     }
     if exe::injury_get_player_injury_status(read_usize(G_INJURY), p) == 2 {
         return this;
     }
-    this.wrapping_add((*(training_entry_of_staff(this, p) as *const i8) as isize * 0x9b) as usize)
+    this.wrapping_add((read_i8(training_entry_of_staff(this, p)) as isize * 0x9b) as usize)
 }
 
 /// `TRAINING_SCHEDULE::get_category_level(category)`: returns the level of the schedule's category (+4 + category,
@@ -595,7 +595,7 @@ pub(crate) unsafe extern "thiscall" fn get_category_level(this: usize, category:
 ///
 /// [pt] A entrada de 6 bytes do treino do jogador: [this+0x651d] + 6 × id da ficha (+0x61).
 pub(crate) unsafe fn player_training_entry(this: usize, p: Staff) -> usize {
-    read_usize(this + 0x651d).wrapping_add((*(p.player().addr() as *const i32) as isize * 6) as usize)
+    read_usize(this + 0x651d).wrapping_add((read_i32(p.player().addr()) as isize * 6) as usize)
 }
 
 /// Signed nibble of category k in a training entry (low/high of +3, +4, low of +5).
@@ -603,7 +603,7 @@ pub(crate) unsafe fn player_training_entry(this: usize, p: Staff) -> usize {
 /// [pt] O meio byte com sinal da categoria `k` na entrada do treino: 0 o baixo de +3, 1 o alto de +3, 2 o baixo de +4, 3 o
 /// alto de +4, 4 o baixo de +5.
 pub(crate) unsafe fn training_nibble(e: usize, k: usize) -> i8 {
-    let b = *((e + 3 + k / 2) as *const u8);
+    let b = read_u8(e + 3 + k / 2);
     if k % 2 == 0 {
         ((b << 4) as i8) >> 4
     } else {
@@ -640,7 +640,7 @@ pub(crate) unsafe extern "thiscall" fn remove_or_restore_training_progress(this:
     }
     let e = player_training_entry(this, p);
     let mut d = [0i8; 8];
-    let g = |a: usize| *(a as *const i8);
+    let g = |a: usize| read_i8(a);
     if devolver != 0 {
         crate::comparison::branch("cqd_9 give back");
         d[0] = g(G_TRAINING_PROGRESS_SAVED_DELTA_0); // cqd9: returns category 0
@@ -650,11 +650,11 @@ pub(crate) unsafe extern "thiscall" fn remove_or_restore_training_progress(this:
         d[4] = g(G_TRAINING_PROGRESS_SAVED_DELTA_4); // cqd9: returns category 4
     } else {
         crate::comparison::branch("cqd_9 remove");
-        *(G_TRAINING_PROGRESS_SAVED_DELTA_0 as *mut i8) = training_nibble(e, 0);
-        *(G_TRAINING_PROGRESS_SAVED_DELTA_1 as *mut i8) = training_nibble(e, 1); // cqd9: guarda a categoria 1
-        *(G_TRAINING_PROGRESS_SAVED_DELTA_2 as *mut i8) = training_nibble(e, 2);
-        *(G_TRAINING_PROGRESS_SAVED_DELTA_3 as *mut i8) = training_nibble(e, 3);
-        *(G_TRAINING_PROGRESS_SAVED_DELTA_4 as *mut i8) = training_nibble(e, 4);
+        write_i8(G_TRAINING_PROGRESS_SAVED_DELTA_0, training_nibble(e, 0));
+        write_i8(G_TRAINING_PROGRESS_SAVED_DELTA_1, training_nibble(e, 1)); // cqd9: guarda a categoria 1
+        write_i8(G_TRAINING_PROGRESS_SAVED_DELTA_2, training_nibble(e, 2));
+        write_i8(G_TRAINING_PROGRESS_SAVED_DELTA_3, training_nibble(e, 3));
+        write_i8(G_TRAINING_PROGRESS_SAVED_DELTA_4, training_nibble(e, 4));
         for k in 0..5 {
             d[k] = training_nibble(e, k).wrapping_neg();
         }
@@ -730,7 +730,7 @@ pub(crate) unsafe extern "thiscall" fn get_position_aptitude(this: usize, p: usi
     let f = p.player();
     // simplification: the original pushes the attribute byte in a register with leftover upper bytes; 0x544380 reads
     // o byte
-    let rating = |o: usize| (exe::player_attribute_rating(f, *((f.addr() + o) as *const u8) as u32) as u32) as u8 as i8 as i32;
+    let rating = |o: usize| (exe::player_attribute_rating(f, read_u8(f.addr() + o) as u32) as u32) as u8 as i8 as i32;
     let b = |o: usize| read_i8(f.addr() + o) as i32;
     let adapt = p.adaptability() as i32;
     let r = match m {
@@ -767,7 +767,7 @@ pub(crate) unsafe extern "thiscall" fn get_position_aptitude(this: usize, p: usi
 /// [pt] Os cinco níveis (+4..+8) de um programa de treino.
 pub(crate) unsafe fn set_schedule_levels(this: usize, n: [u8; 5]) {
     for (k, v) in n.iter().enumerate() {
-        *((this + 4 + k) as *mut u8) = *v;
+        write_u8(this + 4 + k, *v);
     }
 }
 
@@ -787,8 +787,8 @@ pub(crate) unsafe fn set_schedule_levels(this: usize, n: [u8; 5]) {
 /// 0 na terceira), 0 e 7 sem treino (tudo 0); fora de 0..=7 (o −1 da primeira vaga do humano) só a vaga e o tipo. Pela
 /// set_default_schedules (0x8b3d40, 167 vezes no começo do jogo) e pelas telas do treino.
 pub(crate) unsafe extern "thiscall" fn set_type(this: usize, slot: i8, kind: i8) {
-    *(this as *mut i32) = slot as i32;
-    *((this + 0x15) as *mut i8) = kind;
+    write_i32(this, slot as i32);
+    write_i8(this + 0x15, kind);
     match kind {
         1 => {
             crate::comparison::branch("cpu_8 general");
@@ -847,7 +847,7 @@ pub(crate) unsafe extern "thiscall" fn set_default_schedules(this: usize) {
     }
     for h in 0..0x10i32 {
         let id = read_i32(G_STAFF_COUNT).wrapping_sub(h).wrapping_sub(1);
-        let person = (*(G_STAFF_TABLE as *const usize)).wrapping_add((id as u32).wrapping_mul(0x6e) as usize);
+        let person = read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul(0x6e) as usize);
         for (vaga, t) in [(0usize, -1i8), (1, 0), (2, 1), (3, 2), (4, 3), (5, 4)] {
             exe::training_schedule_set_type(human_schedule_slot(this, person, vaga), vaga as i8, t);
         }
@@ -995,14 +995,14 @@ pub(crate) unsafe extern "thiscall" fn get_training_load(this: usize) -> i32 {
 ///
 /// [pt] O atributo de 1 a 20 em `a` mais `v`, entre 1 e 20.
 pub(crate) unsafe fn add_clamped_1_20(a: usize, v: i32) {
-    *(a as *mut i8) = (read_i8(a) as i32 + v).clamp(1, 20) as i8;
+    write_i8(a, (read_i8(a) as i32 + v).clamp(1, 20) as i8);
 }
 
 /// Adds v to the -125..125 attribute byte at a, clamped.
 ///
 /// [pt] O atributo de −125 a 125 em `a` mais `v`, entre −125 e 125.
 pub(crate) unsafe fn add_clamped_125(a: usize, v: i32) {
-    *(a as *mut i8) = (read_i8(a) as i32 + v).clamp(-125, 125) as i8;
+    write_i8(a, (read_i8(a) as i32 + v).clamp(-125, 125) as i8);
 }
 
 /// How much the attribute moves for progress d over the stored nibble n: (d + n)/2 - n/2 in 8 bits.
@@ -1017,16 +1017,16 @@ pub(crate) fn progress_step(d: i8, n: i32) -> i32 {
 ///
 /// [pt] O meio byte alto de `a` mais `d` (o baixo fica).
 pub(crate) unsafe fn add_high_nibble(a: usize, d: i8) {
-    let v = *(a as *const u8);
-    *(a as *mut u8) = ((v & 0xf0).wrapping_add((d as u8) << 4)) | (v & 0x0f);
+    let v = read_u8(a);
+    write_u8(a, ((v & 0xf0).wrapping_add((d as u8) << 4)) | (v & 0x0f));
 }
 
 /// Adds d to the low nibble of the byte at a (high kept).
 ///
 /// [pt] O meio byte baixo de `a` mais `d` (o alto fica).
 pub(crate) unsafe fn add_low_nibble(a: usize, d: i8) {
-    let v = *(a as *const u8);
-    *(a as *mut u8) = (v & 0xf0) | (v.wrapping_add(d as u8) & 0x0f);
+    let v = read_u8(a);
+    write_u8(a, (v & 0xf0) | (v.wrapping_add(d as u8) & 0x0f));
 }
 
 /// `TRAINING_MANAGER::apply_training_progress(person, d)`, called by update_player_training (`update_player_training`, each player on
@@ -1150,7 +1150,7 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
     let mut sides = de15(player_sheet::LEFT_SIDE) + de15(player_sheet::CENTRAL) + de15(player_sheet::RIGHT_SIDE);
     for j in 0..n as usize {
         let item = p + 8 * j;
-        let field = match *((item + 4) as *const i16) as i32 {
+        let field = match read_i16(item + 4) as i32 {
             1 => 0xf,
             2 => 0x10,
             4 => 0x11,
@@ -1164,14 +1164,14 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
             _ => continue,
         };
         if read_i8(item + 6) >= 0xf {
-            *((f.addr() + field) as *mut u8) = 0x14;
+            write_u8(f.addr() + field, 0x14);
         } else if field == 0x18 || field == 0x19 || field == 0x17 {
             if sides > 1 {
-                *((f.addr() + field) as *mut u8) = 1;
+                write_u8(f.addr() + field, 1);
                 sides -= 1;
             }
         } else if positions > 1 {
-            *((f.addr() + field) as *mut u8) = 1;
+            write_u8(f.addr() + field, 1);
             positions -= 1;
         }
     }
@@ -1208,7 +1208,7 @@ pub(crate) unsafe extern "thiscall" fn find_position_training(this: usize, perso
         show_error_at(0xa8ccd0, 0x9a3);
         return 0;
     }
-    if *((read_usize(this + 0x651d) + 6 * read_i32(f.addr()) as usize + 5) as *const u8) & 0x10 == 0 {
+    if read_u8(read_usize(this + 0x651d) + 6 * read_i32(f.addr()) as usize + 5) & 0x10 == 0 {
         return 0;
     }
     let key = read_i32(person.addr());
@@ -1294,7 +1294,7 @@ pub(crate) unsafe extern "thiscall" fn advance_week_counter(this: usize, day: *c
 /// (0x8b1750, que só depois refaz a vaga dos jogadores do computador) e todo o treino do clube humano usam essa vaga.
 pub(crate) unsafe extern "thiscall" fn init_player_entries(this: usize) {
     let p = exe::crt_calloc(read_usize(G_PLAYER_DATA_COUNT) as u32, 6);
-    *((this + 0x651d) as *mut u32) = p as u32;
+    write_u32(this + 0x651d, p as u32);
     if p == 0 {
         show_error_at(0xa8ccd0, 0x6e3);
         return;
@@ -1304,13 +1304,13 @@ pub(crate) unsafe extern "thiscall" fn init_player_entries(this: usize) {
     while i < read_i32(G_PLAYER_DATA_COUNT) {
         let sheet = || read_usize(this + 0x651d).wrapping_add((read_i32(f) as usize).wrapping_mul(6));
         *((sheet() + 5) as *mut u8) &= 0xdf;
-        let goal = *((f + player_sheet::GOALKEEPER) as *const i8);
+        let goal = read_i8(f + player_sheet::GOALKEEPER);
         if goal >= 0xf { // cpu9: goalkeeper from 15 up
             crate::comparison::branch("cpu_9 goalkeeper");
-            *(sheet() as *mut u8) = 6; // cpu9: the goalkeepers programme
+            write_u8(sheet(), 6); // cpu9: the goalkeepers programme
         } else {
             crate::comparison::branch("cpu_9 outfield");
-            *(sheet() as *mut u8) = 1; // cpu9: o programa geral
+            write_u8(sheet(), 1); // cpu9: o programa geral
         }
         i += 1;
         f += 0x46;

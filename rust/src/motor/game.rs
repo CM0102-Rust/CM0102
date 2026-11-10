@@ -65,7 +65,7 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
                 }
             }
         }
-        *(G_NATION_COEFFICIENT_HISTORY_NEEDS_INIT as *mut u8) = 0;
+        write_u8(G_NATION_COEFFICIENT_HISTORY_NEEDS_INIT, 0);
     }
     let today = read_usize(G_CURRENT_DATE) as i16;
     if read_i16(G_NATION_COEFFICIENT_UPDATE_DAY_TABLE + (current_month() * 2) as usize) != today {
@@ -83,7 +83,7 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
         let mut i = 0i16;
         loop {
             let e = array + i as i32 as usize * 0xc;
-            *(e as *mut usize) = na;
+            write_usize(e, na);
             let s = read_f64(na + nation::FIFACOEFFICIENT93) * read_f64(rdata::F64_0_6) + read_f64(na + nation::FIFACOEFFICIENT92) * read_f64(rdata::F64_0_4) + read_f64(na + nation::FIFACOEFFICIENT91) * read_f64(rdata::F64_0_2)
                 + read_f64(na + nation::FIFACOEFFICIENT94) * read_f64(rdata::F64_0_8) + read_f64(na + nation::FIFACOEFFICIENT96) + read_f64(na + nation::FIFACOEFFICIENT95);
             write_f64(e + 4, s);
@@ -94,7 +94,7 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
                 for (k, x) in h.iter().enumerate() {
                     write_f64(na + nation::FIFACOEFFICIENT91 + k * 8, *x);
                 }
-                *((na + nation::GAMES_PLAYED) as *mut u8) = mark;
+                write_u8(na + nation::GAMES_PLAYED, mark);
             }
             i = i.wrapping_add(1);
             na += 0x122;
@@ -151,7 +151,7 @@ pub(crate) unsafe extern "C" fn clamp_char_sum(a: u32, b: u32, min: u32, max: u3
 /// [pt] O contrato da pessoa (0x4cf5a0), guardado em [0xae1080] como a original faz a cada chamada.
 pub(crate) unsafe fn game_get_contract_and_store(p: usize) -> usize {
     let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
-    core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, c);
+    write_usize(G_CONTRACT_LOOKUP_RESULT, c);
     c
 }
 
@@ -677,8 +677,8 @@ pub(crate) unsafe extern "thiscall" fn transfer_manager_get_shortlist_manager(ma
 /// ([treino+0x651d]), pelo id dos dados do jogador ([[jogador+0x61]]).
 pub(crate) unsafe extern "thiscall" fn training_manager_get_player_entry(treino: usize, player: usize) -> usize {
     let player = Staff(player);
-    let table = core::ptr::read_unaligned((treino + 0x651d) as *const usize);
-    let id = *(player.player().addr() as *const i32);
+    let table = read_usize(treino + 0x651d);
+    let id = read_i32(player.player().addr());
     (table as isize + id as isize * 6) as usize
 }
 
@@ -686,7 +686,7 @@ pub(crate) unsafe extern "thiscall" fn training_manager_get_player_entry(treino:
 ///
 /// [pt] O byte da carga de treino do jogador `*id` no registro de condição (31 bytes por jogador, +0x1e).
 pub(crate) unsafe fn training_load_byte(injuries: usize, id: *const i32) -> *mut u8 {
-    (*(injuries as *const usize) as isize + *id as isize * 31 + 0x1e) as *mut u8
+    (read_usize(injuries) as isize + *id as isize * 31 + 0x1e) as *mut u8
 }
 
 /// the f64 average +0x20/+0x28 or +0x10/+0x18 (zero divisor: 6.8)

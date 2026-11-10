@@ -25,19 +25,19 @@ pub(crate) unsafe extern "thiscall" fn compare_scout_manager_daily_update(this: 
     copy.push(0);
     // the trial run prunes the copy: swaps the vector and the count of `this` for the copy’s and restores them afterwards
     let (b0, c0) = (read_usize(this + scout_manager_fields::SCOUT_REQUESTS), read_i32(this + scout_manager_fields::SCOUT_REQUEST_COUNT));
-    core::ptr::write_unaligned((this + scout_manager_fields::SCOUT_REQUESTS) as *mut usize, copy.as_mut_ptr() as usize);
+    write_usize(this + scout_manager_fields::SCOUT_REQUESTS, copy.as_mut_ptr() as usize);
     let state = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     let a1080 = read_usize(G_CONTRACT_LOOKUP_RESULT);
     SCOUT_DAILY_DRY_RUN = true;
     crate::rng::without_counting(|| scout_manager_daily_update(this));
     SCOUT_DAILY_DRY_RUN = false;
     state.write_back();
-    core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, a1080);
+    write_usize(G_CONTRACT_LOOKUP_RESULT, a1080);
     let n1 = read_i32(this + scout_manager_fields::SCOUT_REQUEST_COUNT).max(0) as usize;
     exe::crt_qsort(copy.as_mut_ptr() as usize, (n1 as i32) as u32, 0x11, 0x7fc270);
     let plan: Vec<u8> = copy[..n1 * 0x11].to_vec();
-    core::ptr::write_unaligned((this + scout_manager_fields::SCOUT_REQUESTS) as *mut usize, b0);
-    core::ptr::write_unaligned((this + scout_manager_fields::SCOUT_REQUEST_COUNT) as *mut i32, c0);
+    write_usize(this + scout_manager_fields::SCOUT_REQUESTS, b0);
+    write_i32(this + scout_manager_fields::SCOUT_REQUEST_COUNT, c0);
     let r = o(this);
     let n2 = read_i32(this + scout_manager_fields::SCOUT_REQUEST_COUNT).max(0) as usize;
     let now: Vec<u8> = (0..n2 * 0x11).map(|k| read_u8(read_usize(this + scout_manager_fields::SCOUT_REQUESTS) + k)).collect();
@@ -229,7 +229,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_club_scout_targets(this: 
 /// Comparer for `remove_scout_request`.
 pub(crate) unsafe extern "thiscall" fn compare_remove_scout_request(this: usize, person: usize, club: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_REMOVE_SCOUT_REQUEST);
-    let n = (*((this + scout_manager_fields::SCOUT_REQUEST_COUNT) as *const i32)).max(0) as usize;
+    let n = read_i32(this + scout_manager_fields::SCOUT_REQUEST_COUNT).max(0) as usize;
     let reg = [(this + scout_manager_fields::SCOUT_REQUESTS, 0xc), (read_u32(this + scout_manager_fields::SCOUT_REQUESTS) as usize, n * 17)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, person, club), || remove_scout_request(this, person, club));
     SCOREBOARD.record(igual, || format!("remove_scout_request({:x}, {:x}) {:x?} x {:x?}", person, club, mo, mr));

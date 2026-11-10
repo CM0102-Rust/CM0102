@@ -151,7 +151,7 @@ pub(crate) unsafe fn set_up_all_star_teams(this: Cup) -> i32 {
                 crate::comparison::branch("cqr_6 all-star game stadium");
                 let first = read_usize(this.team_table());
                 write_usize(first + 0x69, read_usize(c + 0x69)); // cqr6: the stadium of the drawn club
-                *((read_usize(this.team_table()) + 0x6d) as *mut u8) = 0;
+                write_u8(read_usize(this.team_table()) + 0x6d, 0);
                 break;
             }
             k = k.wrapping_sub(1);
@@ -163,7 +163,7 @@ pub(crate) unsafe fn set_up_all_star_teams(this: Cup) -> i32 {
     write_usize(read_usize(l + 6) + 0x53, nation);
     write_usize(read_usize(l) + 0x53, read_usize(read_usize(l + 6) + 0x53));
     for o in [4usize, 5, 0xa, 0xb] {
-        *((this.team_table() + o) as *mut u8) = 0;
+        write_u8(this.team_table() + o, 0);
     }
     1
 }
@@ -237,21 +237,21 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this
     let year = this.year() as i32 as u32;
     exe::cup_set_round_draw_date(t, 0, 0xf, 5, 0, 5, year);
     exe::cup_set_round_match_date(t, 0, 2, 7, 0, 6, 1, year, 0); // cqm12: the All-Star Game on 2 August
-    let w = |o: usize, v: u16| core::ptr::write_unaligned((t + o) as *mut u16, v);
-    let d = |o: usize, v: u32| core::ptr::write_unaligned((t + o) as *mut u32, v);
+    let w = |o: usize, v: u16| write_u16(t + o, v);
+    let d = |o: usize, v: u32| write_u32(t + o, v);
     w(0x18, 2);
     w(0x1c, 2);
     w(7, 0);
     w(9, 0);
     w(0xb, 0);
     w(0xd, 0x20);
-    *((t + 0x17) as *mut u8) = 8;
+    write_u8(t + 0x17, 8);
     w(0x1a, 1);
     w(0xf, 0);
     w(0x1e, 0);
-    *((t + 0x20) as *mut u8) = 0;
-    *((t + 0x21) as *mut u8) = 1;
-    *((t + 0x22) as *mut u8) = 0;
+    write_u8(t + 0x20, 0);
+    write_u8(t + 0x21, 1);
+    write_u8(t + 0x22, 0);
     d(0x5c, 0);
     d(0x60, 0);
     d(0x64, 0);

@@ -51,7 +51,7 @@ pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, game: u
 pub(crate) unsafe fn add_match_rating(r: usize, e: usize) {
     let s = (r + 8) as *mut u16;
     core::ptr::write_unaligned(s, core::ptr::read_unaligned(s).wrapping_add(read_u8(e + 0x35) as u16));
-    *((r + 0xa) as *mut u8) = read_u8(r + 0xa).wrapping_add(1);
+    write_u8(r + 0xa, read_u8(r + 0xa).wrapping_add(1));
 }
 
 /// Finds or appends the person's record in the month ratings table, adds the rating and counts one match.
@@ -105,10 +105,10 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
     let r = table + (n as usize) * 12;
     write_u32(r, id as u32);
     write_u32(r + 4, league as u32);
-    core::ptr::write_unaligned((r + 8) as *mut u16, 0);
-    *((r + 0xb) as *mut u8) = (p.age() as u8);
+    write_u16(r + 8, 0);
+    write_u8(r + 0xb, (p.age() as u8));
     crate::comparison::branch("cpw_5 new player in the month");
-    *((r + 0xa) as *mut u8) = 0; // cpw5: starts with no matches
+    write_u8(r + 0xa, 0); // cpw5: starts with no matches
     write_u32(this + 4, n.wrapping_add(1) as u32);
     add_match_rating(r, e);
 }

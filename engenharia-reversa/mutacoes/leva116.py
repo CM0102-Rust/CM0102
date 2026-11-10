@@ -4,7 +4,7 @@ MUTACOES = [
     ('v_goleiro', "        pos[i] = if i == 0 && goalkeeper != 0 {\n            0", "        pos[i] = if i == 0 && goalkeeper != 0 {\n            1"),
     ('v_extras', "    let limit = ((comp.squad_rules() as u8) & 0xf) as i32 + 0xb;", "    let limit = ((comp.squad_rules() as u8) & 0xf) as i32 + 0xa;"),
     ('v_forca', "            let r = random(0xbb8) + 0xbb8;", "            let r = random(0xbb8) + 0xbb7;"),
-    ('v_saida', "                *((j + match_player::POSITION) as *mut i8) = -4;", "                *((j + match_player::POSITION) as *mut i8) = -3;"),
+    ('v_saida', "                write_i8(j + match_player::POSITION, -4);", "                write_i8(j + match_player::POSITION, -3);"),
     ('v_codigo', "        2 => 0x1f5c,", "        2 => 0x1f59,"),
     ('v_cansaco', "        let tired = if comentarios && random(read_i16(sai + 0x31) as i32) < -10 {", "        let tired = if comentarios && random(read_i16(sai + 0x31) as i32) < -9 {"),
     ('v_capitao', "            if melhor == -1 || v > nota {\n                nota = v;\n                melhor = k;\n            }\n        }\n        j += 0x1be;\n    }\n    call(FN_TACTICS_SET_CAPTAIN_FROM_SLOT", "            if melhor == -1 || v >= nota {\n                nota = v;\n                melhor = k;\n            }\n        }\n        j += 0x1be;\n    }\n    call(FN_TACTICS_SET_CAPTAIN_FROM_SLOT"),

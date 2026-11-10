@@ -49,9 +49,9 @@ pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: League, ano: u32, 
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.table);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.predicted);
     exe::new_league(this);
-    core::ptr::write_unaligned((this.addr() + league::COMPETITION) as *mut usize, registro);
-    core::ptr::write_unaligned(this.addr() as *mut usize, e.vtabela);
-    core::ptr::write_unaligned((this.addr() + league::YEAR) as *mut u16, ano as u16);
+    write_usize(this.addr() + league::COMPETITION, registro);
+    write_usize(this.addr(), e.vtabela);
+    write_u16(this.addr() + league::YEAR, ano as u16);
     this.set_discipline_rule(disciplina);
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this.addr();
@@ -59,10 +59,10 @@ pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: League, ano: u32, 
     crate::comparison::branch(ramo);
     this.set_importance(0xf);
     this.set_stage_index(0xff);
-    core::ptr::write_unaligned((this.addr() + league::CURRENT_STAGE) as *mut i32, -1);
-    core::ptr::write_unaligned((this.addr() + league::STAGE_COUNT) as *mut u32, e.stages);
+    write_i32(this.addr() + league::CURRENT_STAGE, -1);
+    write_u32(this.addr() + league::STAGE_COUNT, e.stages);
     let v = exe::crt_malloc(e.stages * 4);
-    core::ptr::write_unaligned((this.addr() + league::STAGES) as *mut usize, v);
+    write_usize(this.addr() + league::STAGES, v);
     if regras(this.addr()) == 0 {
         show_error_at(e.file, e.rows[0]);
         return this.addr();
@@ -81,7 +81,7 @@ pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: League, ano: u32, 
     }
     let n = exe::crt_operator_new(0x5ce);
     let s = if n != 0 { exe::new_comp_stats(n, this) } else { 0 };
-    core::ptr::write_unaligned((this.addr() + league::COMP_STATS) as *mut usize, s);
+    write_usize(this.addr() + league::COMP_STATS, s);
     if s == 0 {
         show_error_at(e.file, e.rows[4]);
         return this.addr();
@@ -297,8 +297,8 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
     while i < n {
         let e = t + 0x76 * i as usize;
         let c = Club(read_usize(G_CLUB_TABLE) + 0x245 * read_usize(e));
-        let pos = *((e + 0x73) as *const u8);
-        let prevista = *((e + 0x72) as *const u8);
+        let pos = read_u8(e + 0x73);
+        let prevista = read_u8(e + 0x72);
         let owner = c.own_stadium() != 0;
         let add = |v: i32| c.set_attendance(c.attendance().wrapping_add(v));
         let d = (prevista as i16).wrapping_sub(pos as i16).wrapping_add(1);
@@ -347,7 +347,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
                 let v = ftol(val as f64 * f);
                 add(exe::utils_random(v));
             }
-            let games = *((e + 5) as *const u8);
+            let games = read_u8(e + 5);
             if games != 0 {
                 let val = (read_i32(e + 6) / games as i32).wrapping_add(c.attendance().wrapping_mul(4));
                 c.set_attendance(ftol(val as f64 * f * 0.2));
@@ -384,7 +384,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
             };
             let v = ftol(val as f64 * f);
             add(exe::utils_random(v));
-            let games = *((e + 5) as *const u8);
+            let games = read_u8(e + 5);
             if games != 0 {
                 let val = (read_i32(e + 6) / games as i32).wrapping_add(c.attendance().wrapping_mul(4));
                 c.set_attendance(ftol(val as f64 * 0.2)); // cqt4: the mix with the real attendance
@@ -455,7 +455,7 @@ pub(crate) unsafe fn create_half_season_stage(this: League, k: u32, file: usize,
     }
     let mut i: i16 = 0;
     while i < this.club_count() {
-        core::ptr::write_unaligned((clubs + 4 * i as usize) as *mut usize, read_usize(this.table() + i as usize * 0x3b));
+        write_usize(clubs + 4 * i as usize, read_usize(this.table() + i as usize * 0x3b));
         i += 1;
     }
     let id = 0x439 + (k as u8 != 0) as u32;
@@ -469,7 +469,7 @@ pub(crate) unsafe fn create_half_season_stage(this: League, k: u32, file: usize,
         0
     };
     let k = k as u8 as i8 as i32;
-    core::ptr::write_unaligned((this.stages() + 4 * k as usize) as *mut usize, stage);
+    write_usize(this.stages() + 4 * k as usize, stage);
     this.set_current_stage((k) as usize);
     crate::comparison::branch(ramo);
     exe::crt_free(clubs);
@@ -536,12 +536,12 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_half_season_stage(this
 /// thiscall([0xb74340], +4), ret 4), cujo eax ela devolve. Com caixa, a cópia devolve 0 (a original devolve o eax da
 /// caixa, que a virada do Brasil não lê).
 pub(crate) unsafe fn start_new_season_two_halves(this: League, table: usize, file: usize, year: i16, ramo: &'static str) -> u32 {
-    core::ptr::write_unaligned((this.addr() + league::SEASON_CLOSED) as *mut u32, 0);
+    write_u32(this.addr() + league::SEASON_CLOSED, 0);
     exe::league_free_table(this, 0);
     let l = this.round_dates();
     if l != 0 {
         exe::crt_free(l);
-        core::ptr::write_unaligned((this.addr() + league::ROUND_DATES) as *mut usize, 0);
+        write_usize(this.addr() + league::ROUND_DATES, 0);
     }
     let stats = read_usize(this.addr() + league::COMP_STATS);
     if stats != 0 {
@@ -562,13 +562,13 @@ pub(crate) unsafe fn start_new_season_two_halves(this: League, table: usize, fil
         }
     }
     exe::crt_free(this.stages());
-    core::ptr::write_unaligned((this.addr() + league::STAGE_COUNT) as *mut u32, 3);
+    write_u32(this.addr() + league::STAGE_COUNT, 3);
     let v = exe::crt_malloc(0xc);
-    let a = core::ptr::read_unaligned((this.addr() + league::YEAR) as *const i16);
-    core::ptr::write_unaligned((this.addr() + league::YEAR) as *mut i16, a.wrapping_add(year));
+    let a = read_i16(this.addr() + league::YEAR);
+    write_i16(this.addr() + league::YEAR, a.wrapping_add(year));
     crate::comparison::branch(ramo);
-    core::ptr::write_unaligned((this.addr() + league::STAGES) as *mut usize, v);
-    core::ptr::write_unaligned((this.addr() + league::CURRENT_STAGE) as *mut i32, -1);
+    write_usize(this.addr() + league::STAGES, v);
+    write_i32(this.addr() + league::CURRENT_STAGE, -1);
     let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x8c));
     if rules(this.addr()) == 0 {
         show_error_at(file, 0x1d4);
@@ -679,21 +679,21 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
         return show_error_at(0x98b014, 0x226);
     }
     let a = half_champion(this, 0);
-    core::ptr::write_unaligned(list as *mut usize, a);
+    write_usize(list, a);
     let b = half_champion(this, 1);
-    core::ptr::write_unaligned((list + 4) as *mut usize, b);
+    write_usize(list + 4, b);
     if a == b {
         crate::comparison::branch("cqo_9 same champion");
         this.set_current_stage((1) as usize);
         this.set_stage_count((2) as usize);
         for k in 0..2 {
-            *((read_usize(read_usize(this.stages() + 4 * k) + 0xb1) + 0x37) as *mut u8) = 5; // cqo9: champion of both halves
+            write_u8(read_usize(read_usize(this.stages() + 4 * k) + 0xb1) + 0x37, 5); // cqo9: champion of both halves
         }
         let mut i: i16 = 0;
         while i < this.club_count() {
             let row = this.table() + i as usize * 0x3b;
             if read_usize(row) == read_usize(list) {
-                *((row + 0x37) as *mut u8) = 5;
+                write_u8(row + 0x37, 5);
             }
             i += 1;
         }
@@ -714,7 +714,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
     } else {
         0
     };
-    core::ptr::write_unaligned((this.stages() + 8) as *mut usize, stage);
+    write_usize(this.stages() + 8, stage);
     let stage = read_usize(this.stages() + 8);
     if stage == 0 {
         return show_error_at(0x98b014, 0x250);

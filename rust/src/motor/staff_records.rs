@@ -42,9 +42,9 @@ pub(crate) unsafe fn raise_champion_reputation(club: Club, weight: i16, champion
 ///
 /// [pt] O moral do contrato (+0x44, byte com sinal) sobe `d`, preso em −100..100.
 pub(crate) unsafe fn add_contract_morale(k: usize, d: i32) {
-    let c = *((k + 0x44) as *const i8);
+    let c = read_i8(k + 0x44);
     let x = c as i32 + d;
-    *((k + 0x44) as *mut i8) = if x > 100 { 100 } else if x < -100 { -100 } else { c.wrapping_add(d as i8) };
+    write_i8(k + 0x44, if x > 100 { 100 } else if x < -100 { -100 } else { c.wrapping_add(d as i8) });
 }
 
 /// Offers a contract renewal (`contract_manager_offer_contract`, factor 1.0) to an own-club player when the transfer manager exists, the
@@ -429,7 +429,7 @@ pub(crate) unsafe fn compare_champion_update(name: &str, this: usize, club: Club
         }
         let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club);
         let m = p.player().addr() + 0x45;
-        sheets.push((m, k, *(m as *const i8)));
+        sheets.push((m, k, read_i8(m)));
         if k != 0 {
             contracts.push(k);
         }
@@ -456,7 +456,7 @@ pub(crate) unsafe fn compare_champion_update(name: &str, this: usize, club: Club
     count.extend(contracts.iter().filter(|k| !renovados.contains(k)).map(|&k| (k + 0x44, 1)));
     // The later ones, by the range of 0x544710: morale m rises from 0 to 20 (+20 or +10 drawn), clamped to 1..20.
     let band = |&(m, _, m0): &(usize, usize, i8)| -> bool {
-        let (m0, v) = (m0 as i32, *(m as *const i8) as i32);
+        let (m0, v) = (m0 as i32, read_i8(m) as i32);
         v >= m0.clamp(1, 20) && v <= (m0 + 20).clamp(1, 20)
     };
     let mut in_band = sheets.iter().skip(cut + 1).all(band);
@@ -498,7 +498,7 @@ pub(crate) unsafe extern "thiscall" fn clear_human_manager_record(this: usize, p
 
 /// Adds 1 to the i16 at address a.
 pub(crate) unsafe fn increment_i16(a: usize) {
-    core::ptr::write_unaligned(a as *mut i16, read_i16(a).wrapping_add(1));
+    write_i16(a, read_i16(a).wrapping_add(1));
 }
 
 /// Returns the club manager's points record (FN_STAFF_RECORDS_GET_MANAGER_RECORD with create), or 0 without a manager.
@@ -517,7 +517,7 @@ pub(crate) unsafe fn club_manager_record(this: usize, club: Club) -> ManagerReco
 /// [pt] Os pontos de um lado na partida `m`: ((a + b) × 5 + (c − b, em 8 bits)) × 2 + d, vezes 5 (bytes com sinal).
 pub(crate) unsafe fn side_match_points(m: usize, a: usize, b: usize, c: usize, d: usize) -> i32 {
     let x = read_i8_as_i32(m + a).wrapping_add(read_i8_as_i32(m + b));
-    let y = (*((m + c) as *const u8)).wrapping_sub(*((m + b) as *const u8)) as i8 as i32;
+    let y = read_u8(m + c).wrapping_sub(read_u8(m + b)) as i8 as i32;
     let x = x.wrapping_mul(5).wrapping_add(y);
     read_i8_as_i32(m + d).wrapping_add(x.wrapping_mul(2)).wrapping_mul(5)
 }
@@ -953,7 +953,7 @@ pub(crate) unsafe extern "thiscall" fn record_manager_job_change(this: usize, ma
         let r = exe::staff_records_get_manager_record(this, manager, 1);
         if r != 0 {
             let today = G_CURRENT_DATE;
-            let (ai, ah) = (*((G_GAME_START_DATE + 2) as *const u16), *((today + 2) as *const u16));
+            let (ai, ah) = (read_u16(G_GAME_START_DATE + 2), read_u16(today + 2));
             let after = ai > ah || (ai == ah && read_i16(G_GAME_START_DATE) > read_i16(today));
             if !after {
                 crate::comparison::branch("cqa_12 spell closed");
@@ -994,13 +994,13 @@ pub(crate) unsafe extern "thiscall" fn record_manager_job_change(this: usize, ma
                 let mut t = [0u8; 8];
                 let d = exe::date_date_549f70((t.as_mut_ptr()) as *mut [u16; 4], 0xd, 0xb, 0x7b7, u32::MAX);
                 staff_records_copy_date(r + manager_record::CURRENT_CLUB_END, d);
-                *((r + manager_record::CLUB_JOBS) as *mut u8) = (*((r + manager_record::CLUB_JOBS) as *const u8)).wrapping_add(1); // cqa12: as passagens
+                write_u8(r + manager_record::CLUB_JOBS, read_u8(r + manager_record::CLUB_JOBS).wrapping_add(1)); // cqa12: as passagens
             }
         }
     } else if signed == 1 {
         let r = exe::staff_records_get_manager_record(this, manager, 1);
         if r != 0 {
-            *((r + manager_record::NATIONAL_JOBS) as *mut u8) = (*((r + manager_record::NATIONAL_JOBS) as *const u8)).wrapping_add(1);
+            write_u8(r + manager_record::NATIONAL_JOBS, read_u8(r + manager_record::NATIONAL_JOBS).wrapping_add(1));
         }
     }
     let mut e = history_entry();
@@ -1507,8 +1507,8 @@ pub(crate) unsafe extern "thiscall" fn add_qualified_for_round_record(this: usiz
 ///
 /// [pt] O inteiro de 64 bits em `a` somado de `v` (estendido com sinal: cdq, add, adc).
 pub(crate) unsafe fn staff_records_add_i64(a: usize, v: i32) {
-    let x = core::ptr::read_unaligned(a as *const i64);
-    core::ptr::write_unaligned(a as *mut i64, x.wrapping_add(v as i64));
+    let x = read_i64(a);
+    write_i64(a, x.wrapping_add(v as i64));
 }
 
 /// Writes i32 v at offset o of a history entry.
@@ -1625,7 +1625,7 @@ pub(crate) unsafe fn transfer_parties(t: Offer) -> (usize, usize, usize, usize) 
 /// records, plus history entries for the player and clubs; no file histories when not writing.
 pub(crate) unsafe fn record_transfer(this: usize, t: Offer, write: bool) {
     let (pessoa, c, vendedor, comprador) = transfer_parties(t);
-    *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
+    write_usize(G_CONTRACT_LOOKUP_RESULT, c);
     let mut e = history_entry();
     let value = exe::transfer_offer_get_total_value(t, 1, 0, 0, 1);
     let with_swap = || (!t.exchange_players().is_null()) as i32;
@@ -1642,7 +1642,7 @@ pub(crate) unsafe fn record_transfer(this: usize, t: Offer, write: bool) {
                 }
                 stamp_game_date((r + manager_record::BIGGEST_PURCHASE_DATE) as *mut u8);
                 write_i32(r + manager_record::BIGGEST_PURCHASE_FEE, value);
-                *((r + manager_record::BIGGEST_PURCHASE_SWAP) as *mut u8) = with_swap() as u8;
+                write_u8(r + manager_record::BIGGEST_PURCHASE_SWAP, with_swap() as u8);
                 write_i32(r + manager_record::BIGGEST_PURCHASE_SELLER, staff_records_id_or_minus_one(vendedor));
                 write_i32(r + manager_record::BIGGEST_PURCHASE_BUYER, read_i32(comprador));
             }
@@ -1684,7 +1684,7 @@ pub(crate) unsafe fn record_transfer(this: usize, t: Offer, write: bool) {
                 }
                 stamp_game_date((r + manager_record::BIGGEST_SALE_DATE) as *mut u8);
                 write_i32(r + manager_record::BIGGEST_SALE_FEE, value);
-                *((r + manager_record::BIGGEST_SALE_SWAP) as *mut u8) = with_swap() as u8;
+                write_u8(r + manager_record::BIGGEST_SALE_SWAP, with_swap() as u8);
                 write_i32(r + manager_record::BIGGEST_SALE_SELLER, read_i32(vendedor));
                 write_i32(r + manager_record::BIGGEST_SALE_BUYER, staff_records_id_or_minus_one(comprador));
             }
@@ -1901,8 +1901,8 @@ pub(crate) unsafe extern "thiscall" fn staff_records_daily_update(this: usize, d
             write_usize(e + manager_record::MONTH_LEAGUE_POINTS, 0); // the month’s points
         }
         let m = date_month(data);
-        core::ptr::write_unaligned((this + staff_records_fields::CURRENT_MONTH) as *mut i16, m);
-        core::ptr::write_unaligned((this + staff_records_fields::CURRENT_YEAR) as *mut i16, read_i16(data + 2));
+        write_i16(this + staff_records_fields::CURRENT_MONTH, m);
+        write_i16(this + staff_records_fields::CURRENT_YEAR, read_i16(data + 2));
     }
     if read_i16(data) == 0 {
         let base = read_usize(this + staff_records_fields::MANAGER_RECORDS);
@@ -2055,7 +2055,7 @@ pub(crate) unsafe extern "thiscall" fn get_manager_of_year_candidates(this: usiz
         }
         let r = ManagerRecord(exe::staff_records_get_manager_record(this, manager, 1));
         if !r.is_null() && r.games() != 0 {
-            core::ptr::write_unaligned((clubs + 4 * k as usize) as *mut u32, read_usize(clubs + 4 * i) as u32);
+            write_u32(clubs + 4 * k as usize, read_usize(clubs + 4 * i) as u32);
             k += 1;
         }
     }
@@ -2134,8 +2134,8 @@ pub(crate) unsafe extern "thiscall" fn get_manager_record(this: usize, person: u
             write_u32(r + manager_record::NATIONAL_SEASON_POINTS, 0);
         }
     }
-    let (dia, ano) = (read_i16(G_GAME_START_DATE), core::ptr::read_unaligned(G_GAME_START_DATE_YEAR as *const u16));
-    let today_year = core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16);
+    let (dia, ano) = (read_i16(G_GAME_START_DATE), read_u16(G_GAME_START_DATE_YEAR));
+    let today_year = read_u16(G_CURRENT_DATE_YEAR);
     if ano > today_year || (ano == today_year && dia > read_i16(G_CURRENT_DATE)) {
         return r; // the date in [0xdd6ec8] has not come yet
     }
@@ -2205,7 +2205,7 @@ pub(crate) unsafe extern "thiscall" fn add_free_release_records(this: usize, per
     crate::comparison::branch("cpr_9 released");
     let mut e = history_entry();
     let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
-    *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c.addr();
+    write_usize(G_CONTRACT_LOOKUP_RESULT, c.addr());
     let club = Club(if !c.is_null() { read_usize(G_CLUB_TABLE).wrapping_add(c.club().wrapping_mul(club::SIZE)) } else { 0 });
     if !club.is_null() && club.manager().addr() != 0 {
         stamp_game_date(e.as_mut_ptr());
@@ -2373,7 +2373,7 @@ pub(crate) unsafe extern "thiscall" fn clear_manager_record(records: usize, id: 
     let r = friendly_manager_record(records, id);
     core::ptr::write_bytes(r as *mut u8, 0, 210);
     for o in [0x86, 0xc2, 0xc6, 0x4a, 0x5e, 0x72] {
-        core::ptr::write_unaligned((r + o) as *mut i32, -1);
+        write_i32(r + o, -1);
     }
 }
 

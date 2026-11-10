@@ -39,8 +39,8 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
     let this = League(this);
     let day = this.next_draw_day() as u16;
     let year = (this.next_draw_year_offset() as u16).wrapping_add(this.year() as u16);
-    let day_of_today = core::ptr::read_unaligned(today as *const u16);
-    let year_of_today = core::ptr::read_unaligned((today + 2) as *const u16);
+    let day_of_today = read_u16(today);
+    let year_of_today = read_u16(today + 2);
     // simplification: in the loops before the draw and on errors the original returns only al (0 or 1; the rest of eax is leftover from the
     // earlier calls); the caller reads the byte
     if year_of_today < year || (year_of_today == year && (day_of_today as i16) < day as i16) {
@@ -565,8 +565,8 @@ pub(crate) unsafe fn build_stage_table(this: League, f: Option<OceaniaStage>, ro
                 exe::cup_set_round_match_day(t, r, vaga, sem, hora, cod, mando);
             }
             Cqq12B(o, v) => *((t + o) as *mut u8) = v,
-            Cqq12W(o, v) => core::ptr::write_unaligned((t + o) as *mut u16, v),
-            Cqq12X(o, v) => core::ptr::write_unaligned((t + o) as *mut u32, v),
+            Cqq12W(o, v) => write_u16(t + o, v),
+            Cqq12X(o, v) => write_u32(t + o, v),
         }
     }
     t
@@ -720,9 +720,9 @@ pub(crate) unsafe fn build_team_table(this: Cup, file: usize, row: u32, name: &'
     while i < this.team_count() {
         let c = read_usize(read_usize(this.addr() + 0xb2) + order(i) as usize * 4);
         let e = this.team_table() + i as usize * 6;
-        core::ptr::write_unaligned(e as *mut u32, c as u32);
-        *((e + 4) as *mut u8) = 0;
-        *((e + 5) as *mut u8) = 0;
+        write_u32(e, c as u32);
+        write_u8(e + 4, 0);
+        write_u8(e + 5, 0);
         i = i.wrapping_add(1);
     }
     1

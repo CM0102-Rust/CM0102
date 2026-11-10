@@ -2,5 +2,5 @@
 MUTACOES = [
     ('r_minuto', '    pw(reg.addr() + match_record::MINUTE, ((m.clock() as u16) as i16 as i32 / 11) as u16);', '    pw(reg.addr() + match_record::MINUTE, ((m.clock() as u16) as i16 as i32 / 10) as u16);'),
     ('o_minuto', '    let r = *a.add(3) as i32 - *b.add(3) as i32;', '    let r = *b.add(3) as i32 - *a.add(3) as i32;'),
-    ('i_ultima', '    *((last - 2) as *mut u8) = 0;', '    *((last - 2) as *mut u8) = 1;'),
+    ('i_ultima', '    write_u8(last - 2, 0);', '    write_u8(last - 2, 1);'),
 ]

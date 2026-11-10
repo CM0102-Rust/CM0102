@@ -4,7 +4,7 @@ use super::*;
 ///
 /// [pt] Os inscritos menos a metade (truncada, com sinal) dos clubes da preliminar (+0xb2, byte com sinal).
 pub(crate) unsafe fn entrants_minus_half_prelim(this: Cup, k: i16) -> i32 {
-    k as i32 - (*((this.addr() + 0xb2) as *const i8) as i32) / 2
+    k as i32 - (read_i8(this.addr() + 0xb2) as i32) / 2
 }
 
 /// `UefaCup::build_entrants()` (0x902b90, thiscall, ret 0, uefa_cup.cpp; called from the constructor, 2001-000): builds
@@ -52,7 +52,7 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: Cup) -> i32 {
         show_error_at(F, 0x1bf);
         return -1;
     }
-    *((this.addr() + 0xb2) as *mut u8) = 0;
+    write_u8(this.addr() + 0xb2, 0);
     let base = read_usize(G_CLUB_TABLE);
     let mut k: i16 = 0;
     let mut i: i16 = 0;
@@ -63,10 +63,10 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: Cup) -> i32 {
                 let e = k as i32 as usize * 6;
                 k = k.wrapping_add(1);
                 write_usize(this.team_table() + e, c);
-                *((this.team_table() + e + 4) as *mut u8) = *((c + 0x1df) as *const u8);
-                *((this.team_table() + e + 5) as *mut u8) = 0;
-                if *((c + 0x1df) as *const i8) >= 0xa { // cqs9: those in the preliminary
-                    *((this.addr() + 0xb2) as *mut u8) = (*((this.addr() + 0xb2) as *const u8)).wrapping_add(1);
+                write_u8(this.team_table() + e + 4, read_u8(c + 0x1df));
+                write_u8(this.team_table() + e + 5, 0);
+                if read_i8(c + 0x1df) >= 0xa { // cqs9: those in the preliminary
+                    write_u8(this.addr() + 0xb2, read_u8(this.addr() + 0xb2).wrapping_add(1));
                 }
             }
             i = i.wrapping_add(1);
@@ -90,8 +90,8 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: Cup) -> i32 {
                     let e = k as i32 as usize * 6;
                     k = k.wrapping_add(1);
                     write_usize(this.team_table() + e, c);
-                    *((this.team_table() + e + 4) as *mut u8) = 3; // cqs9: the class of those who complete it
-                    *((this.team_table() + e + 5) as *mut u8) = 0;
+                    write_u8(this.team_table() + e + 4, 3); // cqs9: the class of those who complete it
+                    write_u8(this.team_table() + e + 5, 0);
                     write_usize(c + 0x1db, read_usize(read_usize(this.addr() + 4)));
                 }
                 j = j.wrapping_add(1);
@@ -106,7 +106,7 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: Cup) -> i32 {
         k = k.wrapping_sub(1);
     }
     exe::crt_qsort(this.team_table(), k as i32 as u32, 6, 0x522190);
-    let b2 = *((this.addr() + 0xb2) as *const i8);
+    let b2 = read_i8(this.addr() + 0xb2);
     if b2 < 0 || b2 % 2 != 0 {
         return 0;
     }
@@ -124,10 +124,10 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: Cup) -> i32 {
         for q in 0..k as usize {
             let e = this.team_table() + q * 6;
             let c = read_usize(e);
-            if *((e + 4) as *const u8) == 1 && c != 0 {
+            if read_u8(e + 4) == 1 && c != 0 {
                 let m = this.entrant_count() as i32 as usize * 6;
                 write_usize(this.entrant_book() + m, c);
-                *((this.entrant_book() + this.entrant_count() as i32 as usize * 6 + 4) as *mut u8) = 3;
+                write_u8(this.entrant_book() + this.entrant_count() as i32 as usize * 6 + 4, 3);
                 this.set_entrant_count(this.entrant_count().wrapping_add(1));
             }
         }
@@ -171,7 +171,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, 
     }
     crate::comparison::branch("cqq_10 uefa fixtures");
     let year = this.year() as i32 as u32;
-    let (tab, n) = uefa_cup_rounds(*((this.addr() + uefa_cup::PRELIMINARY_CLUB_COUNT) as *const i8));
+    let (tab, n) = uefa_cup_rounds(read_i8(this.addr() + uefa_cup::PRELIMINARY_CLUB_COUNT));
     for (i, r) in tab[..n].iter().enumerate() {
         eng_cc_cup_write_cup_round(t, i as u32, r, year);
     }
@@ -195,7 +195,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_update_staff_records_for_status(
         if d == 0xff {
             crate::comparison::branch("cqi_10 dropped into uefa");
         }
-        core::ptr::write_unaligned((club.addr() + club::CONTINENTAL_COMP_ID) as *mut i32, -1); // cqi10: whoever finishes in the UEFA leaves the European competition
+        write_i32(club.addr() + club::CONTINENTAL_COMP_ID, -1); // cqi10: whoever finishes in the UEFA leaves the European competition
     }
     exe::cup_update_staff_records_for_status(this, club, outcome, a3, a4, game, a6)
 }

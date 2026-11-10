@@ -204,7 +204,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_stats(this: usize, player:
     let current = read_usize(slot) as i32;
     let (n, soltos) = (read_usize(this + player_stats_fields::CATEGORY_COUNT), read_usize(this + player_stats_fields::FREE_CATEGORY_COUNT));
     let solto = if current == -1 && soltos != 0 {
-        (0..n as i32).find(|&i| core::ptr::read_unaligned((read_usize(this + player_stats_fields::CATEGORY_RECORDS) + ((i as usize) << 5) + 0xe) as *const u16) == 0xffff)
+        (0..n as i32).find(|&i| read_u16(read_usize(this + player_stats_fields::CATEGORY_RECORDS) + ((i as usize) << 5) + 0xe) == 0xffff)
     } else {
         None
     };
@@ -218,7 +218,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_stats(this: usize, player:
         return r;
     }
     let expected = read_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add((indice as usize) << 5);
-    let cleared = current != -1 || (0..0x20).all(|k| *((r + k) as *const u8) == 0);
+    let cleared = current != -1 || (0..0x20).all(|k| read_u8(r + k) == 0);
     let same = r == expected && read_usize(slot) as i32 == indice && read_usize(this + player_stats_fields::CATEGORY_COUNT) == n2 && read_usize(this + player_stats_fields::FREE_CATEGORY_COUNT) == soltos2 && cleared;
     SCOREBOARD.record(same, || format!("create_stats({:x}, {:x}, {}) original={:x} plano={:x} índice {} x {} conta {} x {} soltos {} x {} zerado={}",
         this, player, category as u8 as i8, r, expected, read_usize(slot) as i32, indice, read_usize(this + player_stats_fields::CATEGORY_COUNT), n2, read_usize(this + player_stats_fields::FREE_CATEGORY_COUNT), soltos2, cleared));
@@ -243,7 +243,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_language(this: usize, person:
     let base = read_usize(this + player_stats_fields::LANGUAGES);
     let e = |i: usize| {
         let r = base.wrapping_add(i * 6);
-        (read_usize(r) as u32, *((r + language_entry::LANGUAGE) as *const u8), *((r + language_entry::FLUENCY) as *const u8))
+        (read_usize(r) as u32, read_u8(r + language_entry::LANGUAGE), read_u8(r + language_entry::FLUENCY))
     };
     let count = read_usize(this + player_stats_fields::LANGUAGE_COUNT);
     let mut ok = count == n.wrapping_add(1) && read_usize(this + player_stats_fields::LANGUAGE_CAPACITY) == cap;
@@ -371,8 +371,8 @@ pub(crate) unsafe extern "thiscall" fn compare_end_season_for_key_nation(this: u
 /// Comparer for `remove_language`.
 pub(crate) unsafe extern "thiscall" fn compare_remove_language(stats: usize, sheet: usize, language: i8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8)>(IDX_REMOVE_LANGUAGE);
-    let table = *((stats + player_stats_fields::LANGUAGES) as *const usize);
-    let count = *((stats + player_stats_fields::LANGUAGE_COUNT) as *const i32);
+    let table = read_usize(stats + player_stats_fields::LANGUAGES);
+    let count = read_i32(stats + player_stats_fields::LANGUAGE_COUNT);
     if table == 0 || count <= 0 {
         return o(stats, sheet, language);
     }

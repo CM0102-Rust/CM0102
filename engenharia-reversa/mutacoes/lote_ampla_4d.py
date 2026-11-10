@@ -5,6 +5,6 @@ MUTACOES = [
     ('r_excluido', '|| r.no_statistics() == 0 {', '|| r.no_statistics() != 0 {'),
     ('m_dobro', '            weight = weight.wrapping_add(weight);', '            weight = weight.wrapping_add(1);'),
     ('s_faixa', '                *size = (*size).wrapping_sub(1);', '                *size = (*size).wrapping_sub(0);'),
-    ('i_ultima', '    *((last - 2) as *mut u8) = 0;', '    *((last - 2) as *mut u8) = 1;'),
+    ('i_ultima', '    write_u8(last - 2, 0);', '    write_u8(last - 2, 1);'),
     ('tr_recusa', '        return 0; // refused, no second question', '        return 1; // refused, no second question'),
 ]

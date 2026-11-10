@@ -79,7 +79,7 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_create_final_stage(this: 
     let mut i = 0i32;
     while i < po.team_count() as i32 && n < 2 {
         let e = po.team_table() + 6 * i as usize;
-        if *((e + 5) as *const u8) == 1 {
+        if read_u8(e + 5) == 1 {
             v[n] = read_usize(e);
             n += 1;
         }
@@ -181,7 +181,7 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_set_predicted_positions(t
     const LUGARES: [u8; 12] = [1, 4, 7, 10, 1, 4, 7, 10, 1, 4, 7, 10];
     let wrong = (0..12).find(|&k| {
         let e = if v[k] != 0 { exe::comp_stats_find_club_entry(this.comp_stats(), v[k]) } else { 0 };
-        e == 0 || *((e + comp_stats_club::DANGER_POSITION) as *const u8) != LUGARES[k]
+        e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != LUGARES[k]
     });
     SCOREBOARD.record(wrong.is_none(), || format!("usa_mls_set_predicted_positions({:#x}): a posição da vaga {:?} não bate ({:x?})", this.addr(), wrong, v));
 }

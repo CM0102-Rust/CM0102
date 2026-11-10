@@ -52,9 +52,9 @@ pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: League, ano: u32
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.table);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.predicted);
     exe::new_league(this);
-    core::ptr::write_unaligned((this.addr() + league::COMPETITION) as *mut usize, registro);
-    core::ptr::write_unaligned(this.addr() as *mut usize, e.vtabela);
-    core::ptr::write_unaligned((this.addr() + league::YEAR) as *mut u16, ano as u16);
+    write_usize(this.addr() + league::COMPETITION, registro);
+    write_usize(this.addr(), e.vtabela);
+    write_u16(this.addr() + league::YEAR, ano as u16);
     this.set_discipline_rule(disciplina);
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this.addr();
@@ -62,10 +62,10 @@ pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: League, ano: u32
     crate::comparison::branch(ramo);
     this.set_importance(0xf);
     this.set_stage_index(0xff);
-    core::ptr::write_unaligned((this.addr() + league::CURRENT_STAGE) as *mut i32, -1);
-    core::ptr::write_unaligned((this.addr() + league::STAGE_COUNT) as *mut u32, e.stages);
+    write_i32(this.addr() + league::CURRENT_STAGE, -1);
+    write_u32(this.addr() + league::STAGE_COUNT, e.stages);
     let v = exe::crt_malloc(e.stages * 4);
-    core::ptr::write_unaligned((this.addr() + league::STAGES) as *mut usize, v);
+    write_usize(this.addr() + league::STAGES, v);
     if regras(this.addr()) == 0 {
         show_error_at(e.file, e.rows[0]);
         return this.addr();
@@ -84,7 +84,7 @@ pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: League, ano: u32
     }
     let n = exe::crt_operator_new(0x5ce);
     let s = if n != 0 { exe::new_comp_stats(n, this) } else { 0 };
-    core::ptr::write_unaligned((this.addr() + league::COMP_STATS) as *mut usize, s);
+    write_usize(this.addr() + league::COMP_STATS, s);
     if s == 0 {
         show_error_at(e.file, e.rows[4]);
         return this.addr();
@@ -181,12 +181,12 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_bahia(this: usize, year
 /// 0), ret 4); por fim as posições previstas (virtual +0x5c) e a renovação dos árbitros do estadual
 /// (OfficialsManager::renew_officials 0x79cee0, thiscall([0xb74340], +4), ret 4), cujo eax ela devolve.
 pub(crate) unsafe fn state_league_new_season(this: League, table: usize, file: usize, rows: [u32; 4], year: i16, ramo: &'static str) -> u32 {
-    core::ptr::write_unaligned((this.addr() + league::SEASON_CLOSED) as *mut u32, 0);
+    write_u32(this.addr() + league::SEASON_CLOSED, 0);
     exe::league_free_table(this, 0);
     let l = this.round_dates();
     if l != 0 {
         exe::crt_free(l);
-        core::ptr::write_unaligned((this.addr() + league::ROUND_DATES) as *mut usize, 0);
+        write_usize(this.addr() + league::ROUND_DATES, 0);
     }
     let stats = read_usize(this.addr() + league::COMP_STATS);
     if stats != 0 {
@@ -206,10 +206,10 @@ pub(crate) unsafe fn state_league_new_season(this: League, table: usize, file: u
             }
         }
     }
-    let a = core::ptr::read_unaligned((this.addr() + league::YEAR) as *const i16);
-    core::ptr::write_unaligned((this.addr() + league::YEAR) as *mut i16, a.wrapping_add(year));
+    let a = read_i16(this.addr() + league::YEAR);
+    write_i16(this.addr() + league::YEAR, a.wrapping_add(year));
     crate::comparison::branch(ramo);
-    core::ptr::write_unaligned((this.addr() + league::CURRENT_STAGE) as *mut i32, -1);
+    write_i32(this.addr() + league::CURRENT_STAGE, -1);
     let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x8c));
     if rules(this.addr()) == 0 {
         show_error_at(file, rows[0]);

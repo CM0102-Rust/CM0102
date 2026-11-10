@@ -1,6 +1,6 @@
 # Mutacoes da leva50 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva50.py
 MUTACOES = [
-    ('g_limite', "let limit = (*(G_CLUB_COUNT as *const i32)).wrapping_sub(*(G_NATION_COUNT as *const i32));", "let limit = (*(G_CLUB_COUNT as *const i32)).wrapping_sub(*(G_NATION_COUNT as *const i32)) + 1;"),
+    ('g_limite', '(IDX_IS_SECOND_NATIONAL_TEAM)(0);\n    }\n    let limit = read_i32(G_CLUB_COUNT).wrapping_sub(read_i32(G_NATION_COUNT));', '(IDX_IS_SECOND_NATIONAL_TEAM)(0);\n    }\n    let limit = read_i32(G_CLUB_COUNT).wrapping_sub(read_i32(G_NATION_COUNT)) + 1;'),
     ('a_troca', "let (este, outro) = if side_b == 0 { (home, away) } else { (away, home) };", "let (este, outro) = (home, away);"),
     ('a_bonus', "        (false, true) => (0, 1),", "        (false, true) => (1, 0),"),
     ('a_fase3', "as i32) == 3 {\n        *fase3 = 1;", "as i32) == 4 {\n        *fase3 = 1;"),

@@ -90,7 +90,7 @@ pub(crate) unsafe fn index_fatal_error(row: u32, mark: u32) -> ! {
     // the original does not pop the arguments of 0x90d130: they are the rest of ”v%s %s.%s %d”
     format(0xae24d0, 0x9870e8, v, nome.as_ptr(), ext.as_ptr(), row);
     exe::gui_show_message_box(0x9870e0, 0xae24d0, 0);
-    *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
+    write_u32(G_MOUSE_LEFT_BUTTON_DOWN, 0);
     exe::game_fatal_cleanup();
     exe::shared_noop_ret0_5a8f60();
     exit(mark)
@@ -320,7 +320,7 @@ pub(crate) unsafe extern "C" fn get_region_name(region: u32, text: usize, size: 
     }
     let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    *(text as *mut u8) = 0;
+    write_u8(text, 0);
     let r = r as i32;
     let fb = form as u8;
     let i = language(); // the original rereads [0x9eb2dc] on every question (the same value)
@@ -408,7 +408,7 @@ pub(crate) unsafe extern "C" fn get_continent_adjective(continent: usize, text: 
     }
     let language: unsafe extern "C" fn() -> i32 = core::mem::transmute(FN_LANGLIB_GET_LANGUAGE);
     let adjective: unsafe extern "C" fn(u32, u32) -> u8 = core::mem::transmute(FN_GET_ADJECTIVE_FORM_INDEX);
-    *(text as *mut u8) = 0;
+    write_u8(text, 0);
     let own = continent + 0x23; // the record’s adjective (dbu)
     let table = if form as u8 == 0 {
         None

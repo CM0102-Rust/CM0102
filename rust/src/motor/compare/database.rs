@@ -34,8 +34,8 @@ pub(crate) unsafe extern "C" fn compare_rejected_by(a: usize, b: usize) -> u32 {
 /// contar sorteios). Sem pessoas (caixa e fim): só a original.
 pub(crate) unsafe extern "C" fn compare_database_player_initialisation(data: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_DATABASE_PLAYER_INITIALISATION);
-    let gi = |a: usize| (*(a as *const i32)).max(0) as usize;
-    let rd = |a: usize| *(a as *const usize);
+    let gi = |a: usize| read_i32(a).max(0) as usize;
+    let rd = |a: usize| read_usize(a);
     if gi(G_STAFF_COUNT) == 0 || rd(G_STAFF_TABLE) == 0 {
         return o(data);
     }
@@ -530,7 +530,7 @@ pub(crate) unsafe extern "C" fn compare_database_staff_matches_names(person: usi
 /// Comparer for `database_compare_clubs_by_latitude`.
 pub(crate) unsafe extern "C" fn compare_database_compare_clubs_by_latitude(a: usize, b: usize) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_CLUBS_BY_LATITUDE);
-    if *(a as *const usize) == 0 || *(b as *const usize) == 0 {
+    if read_usize(a) == 0 || read_usize(b) == 0 {
         return o(a, b); // message box: original only
     }
     let r = o(a, b);
@@ -542,7 +542,7 @@ pub(crate) unsafe extern "C" fn compare_database_compare_clubs_by_latitude(a: us
 /// Comparer for `database_compare_clubs_by_longitude`.
 pub(crate) unsafe extern "C" fn compare_database_compare_clubs_by_longitude(a: usize, b: usize) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_DATABASE_COMPARE_CLUBS_BY_LONGITUDE);
-    if *(a as *const usize) == 0 || *(b as *const usize) == 0 {
+    if read_usize(a) == 0 || read_usize(b) == 0 {
         return o(a, b); // message box: original only
     }
     let r = o(a, b);
@@ -832,7 +832,7 @@ pub(crate) unsafe extern "C" fn compare_database_count_club_coaches(club: usize)
 /// a tabela do eng.lng ([0xae2408]) ainda nula, o primeiro uso aloca e carrega sob o quadro SEH: só a original.
 /// Senão as duas, comparando o ponteiro devolvido (sem efeito na memória).
 pub(crate) unsafe fn compare_nome_em_ingles(name: &str, x: usize, o: unsafe extern "C" fn(usize) -> usize, r: unsafe extern "C" fn(usize) -> usize) -> usize {
-    let language = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
+    let language = read_u32(G_DATABASE_NAMES_LANGUAGE);
     if language != 0 && language != 1 && *(G_ENGLISH_NAME_TABLES as *const usize) == 0 {
         return o(x);
     }
@@ -860,7 +860,7 @@ pub(crate) unsafe extern "C" fn compare_staff_comp_get_english_name(comp: usize)
 /// Comparer for `stadium_get_english_name`.
 pub(crate) unsafe extern "C" fn compare_stadium_get_english_name(stadium: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_STADIUM_GET_ENGLISH_NAME);
-    let language = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
+    let language = read_u32(G_DATABASE_NAMES_LANGUAGE);
     if language != 0 && language != 1 && *(G_ENGLISH_NAME_TABLES as *const usize) == 0 {
         return o(stadium); // first use (allocates and loads): original only
     }
@@ -933,8 +933,8 @@ pub(crate) unsafe extern "C" fn compare_database_prune_comp_history_table() {
 /// 0xde1f64. Pessoa com jogador, preferências ou não jogador fora da faixa (caixa): só a original.
 pub(crate) unsafe extern "C" fn compare_resolve_database_indexes(leniente: u32) {
     let o = original_fn::<unsafe extern "C" fn(u32)>(IDX_RESOLVE_DATABASE_INDEXES);
-    let gi = |a: usize| core::ptr::read_unaligned(a as *const i32);
-    let rd = |a: usize| *(a as *const usize);
+    let gi = |a: usize| read_i32(a);
+    let rd = |a: usize| read_usize(a);
     let (pessoas, n) = (rd(G_STAFF_TABLE), gi(G_STAFF_COUNT));
     let caixa = (0..n.max(0) as usize).any(|i| PERSON_RANGE_CHECK_FIELDS.iter().any(|&(d, teto, ..)| gi(pessoas + i * staff::SIZE + d) >= gi(teto)));
     if caixa {
@@ -962,8 +962,8 @@ pub(crate) unsafe extern "C" fn compare_resolve_database_indexes(leniente: u32) 
 /// [pt] Comparador de 0x53db40: original e cópia lado a lado sobre o vetor de ids [0xae2d1c].
 pub(crate) unsafe extern "C" fn compare_database_sort_clubs_by_reputation(redo: u32) {
     let o = original_fn::<unsafe extern "C" fn(u32)>(IDX_DATABASE_SORT_CLUBS_BY_REPUTATION);
-    let v = *(G_CLUB_REPUTATION_ORDER as *const usize);
-    let n = core::ptr::read_unaligned(G_CLUB_COUNT as *const i32);
+    let v = read_usize(G_CLUB_REPUTATION_ORDER);
+    let n = read_i32(G_CLUB_COUNT);
     if v == 0 || n <= 0 {
         return o(redo);
     }
@@ -1029,11 +1029,11 @@ pub(crate) unsafe fn compare_normalizacao_do_jogador(o: unsafe extern "C" fn(usi
         return o(person.addr()); // does nothing: original only
     }
     let regions = [(player, 70), (person.addr() + staff::DETERMINATION, 1)];
-    let manager = *(G_TRAINING_MANAGER as *const usize);
+    let manager = read_usize(G_TRAINING_MANAGER);
     let before = crate::comparison::MemorySnapshot::read(&regions);
-    *(G_TRAINING_MANAGER as *mut usize) = 0;
+    write_usize(G_TRAINING_MANAGER, 0);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(person.addr()), || rust(person.addr()));
-    *(G_TRAINING_MANAGER as *mut usize) = manager;
+    write_usize(G_TRAINING_MANAGER, manager);
     SCOREBOARD.record(igual, || format!("{}({:x}) {:x?} x {:x?}", name, person.addr(), mo, mr));
     if manager != 0 {
         before.write_back();
@@ -1066,7 +1066,7 @@ pub(crate) unsafe extern "C" fn compare_staff_normalise_player_attributes(person
 /// Comparer for `nation_get_english_name`.
 pub(crate) unsafe extern "C" fn compare_nation_get_english_name(nation: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_NATION_GET_ENGLISH_NAME);
-    let language = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
+    let language = read_u32(G_DATABASE_NAMES_LANGUAGE);
     if language != 0 && language != 1 && *(G_ENGLISH_NAME_TABLES as *const usize) == 0 {
         return o(nation); // first use (allocates and loads): original only
     }
@@ -1079,7 +1079,7 @@ pub(crate) unsafe extern "C" fn compare_nation_get_english_name(nation: usize) -
 /// Comparer for `club_get_english_short_name`.
 pub(crate) unsafe extern "C" fn compare_club_get_english_short_name(club: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_CLUB_GET_ENGLISH_SHORT_NAME);
-    let language = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
+    let language = read_u32(G_DATABASE_NAMES_LANGUAGE);
     if language != 0 && language != 1 && *(G_ENGLISH_NAME_TABLES as *const usize) == 0 {
         return o(club); // first use (allocates and loads): original only
     }
@@ -1131,14 +1131,14 @@ pub(crate) unsafe extern "C" fn compare_database_merge_b_team_staff() {
 /// impressão dele não é critério).
 pub(crate) unsafe extern "C" fn compare_database_build_nation_name_index() {
     original_fn::<unsafe extern "C" fn()>(IDX_DATABASE_BUILD_NATION_NAME_INDEX)();
-    let t = *(G_NATION_NAME_INDEX_TABLE as *const usize);
-    let n = (*(G_NATION_COUNT as *const i32)).max(0) as usize * 0x24;
+    let t = read_usize(G_NATION_NAME_INDEX_TABLE);
+    let n = read_i32(G_NATION_COUNT).max(0) as usize * 0x24;
     if t == 0 || n == 0 {
         return;
     }
     let mut buffer = vec![0u8; n];
     let r = buffer.as_mut_ptr() as usize;
-    *(G_NATION_NAME_INDEX_TABLE as *mut usize) = r;
+    write_usize(G_NATION_NAME_INDEX_TABLE, r);
     fill_nation_name_index(r);
     let original = core::slice::from_raw_parts(t as *const u8, n);
     let copy = core::slice::from_raw_parts(r as *const u8, n);
@@ -1146,9 +1146,9 @@ pub(crate) unsafe extern "C" fn compare_database_build_nation_name_index() {
     SCOREBOARD.record(onde.is_none(), || {
         let k = onde.unwrap_or(0) & !3;
         format!("database_build_nation_name_index: diverge na nação {} +{:#x} original={} rust={}", k / 0x24, k % 0x24,
-            core::ptr::read_unaligned((t + k) as *const i32), core::ptr::read_unaligned((r + k) as *const i32))
+            read_i32(t + k), read_i32(r + k))
     });
-    *(G_NATION_NAME_INDEX_TABLE as *mut usize) = t;
+    write_usize(G_NATION_NAME_INDEX_TABLE, t);
 }
 
 /// Comparer for `database_remove_staff_from_club`.
@@ -1160,7 +1160,7 @@ pub(crate) unsafe extern "C" fn compare_database_remove_staff_from_club(club: us
     }
     // the club, the person and, for the senior national team, the U21 (the only other place the routine zeroes)
     let mut regions = vec![(club.addr(), 581), (person, 110)];
-    let (id, n, nacoes) = (*(club.addr() as *const i32), *(G_CLUB_COUNT as *const i32), *(G_NATION_COUNT as *const i32));
+    let (id, n, nacoes) = (read_i32(club.addr()), read_i32(G_CLUB_COUNT), read_i32(G_NATION_COUNT));
     let nation = club.nation().addr();
     if id >= n.wrapping_sub(nacoes.wrapping_mul(2)) && id < n.wrapping_sub(nacoes) && nation != 0 {
         let s = exe::database_get_national_u21_team(nation);
@@ -1352,7 +1352,7 @@ pub(crate) unsafe extern "C" fn compare_database_get_colour_family(colour: usize
         return r; // message box: original only
     }
     let n = database_get_colour_family(colour);
-    SCOREBOARD.record(r == n, || format!("database_get_colour_family({:x}: id {}) original={} rust={}", colour, *(colour as *const u32), r, n));
+    SCOREBOARD.record(r == n, || format!("database_get_colour_family({:x}: id {}) original={} rust={}", colour, read_u32(colour), r, n));
     r
 }
 
@@ -1443,7 +1443,7 @@ pub(crate) unsafe extern "C" fn compare_database_get_club_manager(club: usize) -
 /// Comparer for `club_get_english_name`.
 pub(crate) unsafe extern "C" fn compare_club_get_english_name(club: usize) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_CLUB_GET_ENGLISH_NAME);
-    let language = *(G_DATABASE_NAMES_LANGUAGE as *const u32);
+    let language = read_u32(G_DATABASE_NAMES_LANGUAGE);
     if language != 0 && language != 1 && *(G_ENGLISH_NAME_TABLES as *const usize) == 0 {
         return o(club); // first use (allocates and loads): original only
     }

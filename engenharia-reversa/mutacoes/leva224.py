@@ -2,7 +2,7 @@
 MUTACOES = [
     ('dq7_primeiro', 'for _ in 0..20 { // 20 rolls for the first name', 'for _ in 0..19 { // 20 rolls for the first name'),
     ('dq7_segundo', 'for _ in 0..20 { // 20 random rolls of the second name', 'for _ in 0..19 { // 20 random rolls of the second name'),
-    ('dq7_copia', '        *((target + i) as *mut u8) = b;', '        *((target + i) as *mut u8) = b ^ 0x20;'),
+    ('dq7_copia', '        write_u8(target + i, b);', '        write_u8(target + i, b ^ 0x20);'),
     ('dq8_casa', '1 => (read_usize(club + 0x83), read_usize(club + 0x87)), // casa', '1 => (read_usize(club + 0x87), read_usize(club + 0x83)), // casa'),
     ('dq8_tecnico', '            return t; // the club’s manager', '            return 0; // the club’s manager'),
     ('dq8_ingles', 'club.wrapping_add(4); // language 0 or 1', 'club.wrapping_add(5); // language 0 or 1'),

@@ -47,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn compare_goldcup_set_predicted_positions(t
     o(this);
     let wrong = (0..12).find(|&k| {
         let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this + 8), v[k]) } else { 0 };
-        e == 0 || *((e + comp_stats_club::DANGER_POSITION) as *const u8) as u32 != COPA_AMERICA_PREDICTED_PLACES[k]
+        e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) as u32 != COPA_AMERICA_PREDICTED_PLACES[k]
     });
     SCOREBOARD.record(wrong.is_none(), || format!("goldcup_set_predicted_positions: a posição prevista da vaga {:?} não bate", wrong));
 }
@@ -68,8 +68,8 @@ pub(crate) unsafe extern "thiscall" fn compare_goldcup_update_for_date(this: usi
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_GOLDCUP_UPDATE_FOR_DATE);
     let draws = this.active() == 0
         && full == 0
-        && (this.next_draw_year_offset() as u16).wrapping_add(this.year() as u16) == core::ptr::read_unaligned((today + 2) as *const u16)
-        && this.next_draw_day() as u16 == core::ptr::read_unaligned(today as *const u16);
+        && (this.next_draw_year_offset() as u16).wrapping_add(this.year() as u16) == read_u16(today + 2)
+        && this.next_draw_day() as u16 == read_u16(today);
     let r = o(this.addr(), today, full);
     if draws {
         let stages = this.stages();
@@ -99,7 +99,7 @@ pub(crate) unsafe extern "thiscall" fn compare_goldcup_create_group_table(this: 
     let mut read = [(0usize, 0u8); 4];
     if t != 0 {
         for (i, l) in read.iter_mut().enumerate() {
-            *l = (read_usize(t + i * 0x3b), *((t + i * 0x3b + 4) as *const u8));
+            *l = (read_usize(t + i * 0x3b), read_u8(t + i * 0x3b + 4));
         }
     }
     let same = r == 1 && this.club_count() == 4 && t != 0 && (0..4).all(|i| read[i] == (predicted[i], i as u8));

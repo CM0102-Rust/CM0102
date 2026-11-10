@@ -72,7 +72,7 @@ pub(crate) unsafe extern "thiscall" fn compare_assign_champions_league_places(th
 /// entrega notícia).
 pub(crate) unsafe extern "thiscall" fn compare_assign_intertoto_places(this: usize, clubs: usize, count: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ASSIGN_INTERTOTO_PLACES);
-    if *(G_CURRENT_DATE_YEAR as *const i16) != 0x7d1 || read_u32(this + uefa_seeding::INTERTOTO_VOLUNTEERS) != 0 {
+    if read_i16(G_CURRENT_DATE_YEAR) != 0x7d1 || read_u32(this + uefa_seeding::INTERTOTO_VOLUNTEERS) != 0 {
         return o(this, clubs, count);
     }
     let mut reg = club_regions();

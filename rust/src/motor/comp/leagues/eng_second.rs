@@ -58,7 +58,7 @@ pub(crate) unsafe fn eng_second_set_christmas_rounds(t: usize, year: u32, n: &En
     eng_second_set_league_rounds(t, year, 0, n.comeco);
     let mut d = [0u16; 4];
     exe::date_date_549f70(&mut d, 1, 0xb, year, 0xffff_ffff);
-    let day = core::ptr::read_unaligned((t + n.reference * 0x41) as *const u16);
+    let day = read_u16(t + n.reference * 0x41);
     let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.adjust);
     let case = if k as u32 > 6 {
         show_error_at(file, n.row);
@@ -372,8 +372,8 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
                     crate::comparison::branch("cpz_2 won the knockout");
                     let promotion: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
                     promotion(eng_second_staff_records(), club, comp, 0x32);
-                    *((this.table() + (i as usize) * 0x3b + 0x37) as *mut u8) = 0;
-                    *(left as *mut u8) = 1;
+                    write_u8(this.table() + (i as usize) * 0x3b + 0x37, 0);
+                    write_u8(left, 1);
                     return 0;
                 }
                 0 => {
@@ -381,7 +381,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
                     slot(eng_second_staff_records(), club, comp, 0xa0, 0x96, 0xf);
                 }
                 0xff | 2 => {
-                    *((this.table() + (i as usize) * 0x3b + 0x37) as *mut u8) = 0xfe;
+                    write_u8(this.table() + (i as usize) * 0x3b + 0x37, 0xfe);
                     return 0;
                 }
                 _ => {}
@@ -432,9 +432,9 @@ pub(crate) unsafe fn set_club_stage_status(this: usize, club: usize, stage: u8, 
         p = map(p);
         a = map(a);
     }
-    *((e + 0x73) as *mut u8) = a;
-    *((e + 0x74) as *mut u8) = m;
-    *((e + 0x75) as *mut u8) = p;
+    write_u8(e + 0x73, a);
+    write_u8(e + 0x74, m);
+    write_u8(e + 0x75, p);
 }
 
 /// Comparer of the stage status: side by side on the entry's 3 bytes; only the original without an entry.

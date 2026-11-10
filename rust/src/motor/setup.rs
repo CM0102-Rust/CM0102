@@ -38,38 +38,38 @@ pub(crate) unsafe fn load_read_error(row: u32, text: usize, z: &mut usize) -> u3
 /// de +0xc do antigo. Os 5 pares (+0x12 + 5j = 0, +0xe + 5j = −1) e os dwords +0x27/+0x2b/+0x2f/
 /// +0x33/+0x37 (+0x14j, j = 0, 1) = −1.
 pub(crate) unsafe fn convert_staff_state(font: usize, size: usize, n: i32) {
-    let d = || *(G_STAFF_STATE_TABLE as *const usize);
+    let d = || read_usize(G_STAFF_STATE_TABLE);
     let mesclar = |base: u8, other: u8, m: u8| base ^ ((base ^ other) & m);
     for i in 0..n.max(0) as usize {
         let (o, f) = (i * 0x4f, i * size);
-        *((d() + o) as *mut u32) = *((font + f) as *const u32);
+        write_u32(d() + o, read_u32(font + f));
         let x = d() + o + 0xb;
-        *(x as *mut u8) = mesclar(read_u8(font + (f + 0xb)), *(x as *const u8), 0x7f);
-        *((d() + o + 0xa) as *mut u8) = read_u8(font + (f + 0xa));
-        *((d() + o + 4) as *mut u32) = core::ptr::read_unaligned((font + f + 4) as *const u32);
-        *((d() + o + 9) as *mut u8) = read_u8(font + (f + 9));
-        *((d() + o + 8) as *mut u8) = read_u8(font + (f + 8));
+        write_u8(x, mesclar(read_u8(font + (f + 0xb)), read_u8(x), 0x7f));
+        write_u8(d() + o + 0xa, read_u8(font + (f + 0xa)));
+        write_u32(d() + o + 4, read_u32(font + f + 4));
+        write_u8(d() + o + 9, read_u8(font + (f + 9)));
+        write_u8(d() + o + 8, read_u8(font + (f + 8)));
         for m in [0xfu8, 0x40, 0x30] {
             let x = d() + o + 0xb;
-            *(x as *mut u8) = mesclar(*(x as *const u8), read_u8(font + (f + 0xb)), m);
+            write_u8(x, mesclar(read_u8(x), read_u8(font + (f + 0xb)), m));
         }
         let c = d() + o + 0xc;
-        *(c as *mut u8) = mesclar(*(c as *const u8), read_u8(font + (f + 0xc)), 1);
+        write_u8(c, mesclar(read_u8(c), read_u8(font + (f + 0xc)), 1));
         if size == 0x26 {
-            *((d() + o + 0xd) as *mut u8) = 0;
+            write_u8(d() + o + 0xd, 0);
             *((d() + o + 0xc) as *mut u8) &= 0xfd;
         } else {
-            *((d() + o + 0xd) as *mut u8) = read_u8(font + (f + 0xd));
+            write_u8(d() + o + 0xd, read_u8(font + (f + 0xd)));
             let c = d() + o + 0xc;
-            *(c as *mut u8) = mesclar(*(c as *const u8), read_u8(font + (f + 0xc)), 2);
+            write_u8(c, mesclar(read_u8(c), read_u8(font + (f + 0xc)), 2));
         }
         for j in 0..5 {
-            *((d() + o + 0x12 + 5 * j) as *mut u8) = 0;
-            core::ptr::write_unaligned((d() + o + 0xe + 5 * j) as *mut u32, 0xffffffff);
+            write_u8(d() + o + 0x12 + 5 * j, 0);
+            write_u32(d() + o + 0xe + 5 * j, 0xffffffff);
         }
         for j in 0..2 {
             for c in [0x33usize, 0x2b, 0x2f, 0x27, 0x37] {
-                core::ptr::write_unaligned((d() + o + c + 0x14 * j) as *mut u32, 0xffffffff);
+                write_u32(d() + o + c + 0x14 * j, 0xffffffff);
             }
         }
     }
@@ -161,8 +161,8 @@ pub(crate) const LOAD_STEPS: [LoadStep; 0x2b] = [
 /// devolve só quando acha (sem achar, a caixa "Insert CD" e de novo, para sempre). Sem `exigir` = a do fim
 /// (0x82e31d, sem patch nos dois exes): numa unidade de CD sem o exe, a caixa "CD Not Required" e para.
 pub(crate) unsafe fn check_game_cd(exigir: bool) {
-    let units_digit: unsafe extern "system" fn(u32, *mut u8) -> u32 = core::mem::transmute(*(0x9670f8 as *const usize));
-    let kind: unsafe extern "system" fn(usize) -> u32 = core::mem::transmute(*(0x967100 as *const usize));
+    let units_digit: unsafe extern "system" fn(u32, *mut u8) -> u32 = core::mem::transmute(read_usize(0x9670f8));
+    let kind: unsafe extern "system" fn(usize) -> u32 = core::mem::transmute(read_usize(0x967100));
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     // cm0102-1080 comes without the CD requirement only in the initial search: the type’s jne (0x82aac4, 75 55) became
@@ -562,9 +562,9 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
 /// nomes vazios, +0x10 = data(1, 0, 1966, −1) (0x54a130), +0x18 = 1966, +0x24 = +0x39 = 0 e 0x7ff990
 /// (gerente de telas, pessoa, −1).
 pub(crate) unsafe fn undo_holiday_managers() {
-    let u = |a: usize| *(a as *const usize);
+    let u = |a: usize| read_usize(a);
     for i in 0..0x10usize {
-        let s = Staff(u(G_STAFF_TABLE).wrapping_add(0x6e * ((*(G_STAFF_COUNT as *const i32)).wrapping_sub(i as i32).wrapping_sub(1) as usize)));
+        let s = Staff(u(G_STAFF_TABLE).wrapping_add(0x6e * (read_i32(G_STAFF_COUNT).wrapping_sub(i as i32).wrapping_sub(1) as usize)));
         if s.classification() != 5 {
             continue;
         }
@@ -579,9 +579,9 @@ pub(crate) unsafe fn undo_holiday_managers() {
             f(u(g), s.addr());
         }
         s.set_classification(0);
-        *(s.first_name() as *mut u8) = 0;
-        *(s.second_name() as *mut u8) = 0;
-        *(s.common_name() as *mut u8) = 0;
+        write_u8(s.first_name(), 0);
+        write_u8(s.second_name(), 0);
+        write_u8(s.common_name(), 0);
         exe::date_set(s.addr() + staff::DATE_OF_BIRTH, 1, 0, 0x7ae, -1);
         s.set_age((0x7ae) as i16);
         s.set_national_job(Club((0) as usize));
@@ -672,9 +672,9 @@ pub(crate) unsafe fn setup_fatal_error(row: u32) -> ! {
 ///   nação dele em +0x1a, os nomes (0x539c60, 0x53a1b0) em +4 e +8, e 0x826f20(pessoa, clube). 1.
 pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst: *const u8) -> u32 {
     crate::comparison::branch("save create game from configuration");
-    let options = || *(G_CONFIG as *const usize);
-    let u = |a: usize| *(a as *const u32);
-    let i = |a: usize| *(a as *const i32);
+    let options = || read_usize(G_CONFIG);
+    let u = |a: usize| read_u32(a);
+    let i = |a: usize| read_i32(a);
     let mut temporary = [0u8; 0x104];
     copy_text(temporary.as_mut_ptr(), (exe::utils_build_file_path(0x987da0, 0xad9c64) as *const u8));
     let mut dados = [0u8; 0x104];
@@ -701,13 +701,13 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
         let mut d = 0usize;
         while k < i(G_NATION_COUNT) {
             k += 1;
-            *((u(G_NATION_TABLE) as usize + d + 0x11c) as *mut u8) = 0;
+            write_u8(u(G_NATION_TABLE) as usize + d + 0x11c, 0);
             d += 0x122;
         }
-        *(G_NATIONS_TO_LOAD_COUNT as *mut u32) = 0;
-        *(G_SELECTED_NATION_COUNT as *mut u32) = 0;
+        write_u32(G_NATIONS_TO_LOAD_COUNT, 0);
+        write_u32(G_SELECTED_NATION_COUNT, 0);
         if of_front {
-            *(G_MAIN_NATION as *mut u32) = 0;
+            write_u32(G_MAIN_NATION, 0);
         }
         if exe::key_nation_build_table() == 0 {
             setup_fatal_error(error_key);
@@ -768,7 +768,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
                     }
                     let size = core::ffi::CStr::from_ptr(exe::nation_get_english_three_letter_name(n) as *const core::ffi::c_char).to_bytes().len() as u32;
                     if (exe::crt_strncmp((v) as usize, (exe::nation_get_english_three_letter_name(n)) as usize, size) == 0 || exe::nation_matches_region_filter(n, v) != 0) && u(G_MAIN_NATION) == 0 {
-                        *(G_MAIN_NATION as *mut u32) = n as u32;
+                        write_u32(G_MAIN_NATION, n as u32);
                     }
                 }
                 league += 0x48;
@@ -813,16 +813,16 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
         } else if exe::at_947120(b, 0xa812c4, 0x14) == 0 {
             // ENABLE_MATCH_ENGINE=
             if has(0x14, 0xa812c0) {
-                *(G_MATCH_ENGINE_ENABLED as *mut u8) = 1;
+                write_u8(G_MATCH_ENGINE_ENABLED, 1);
             } else if has(0x14, 0xa812bc) {
-                *(G_MATCH_ENGINE_ENABLED as *mut u8) = 0;
+                write_u8(G_MATCH_ENGINE_ENABLED, 0);
             }
         } else if exe::at_947120(b, 0xa812a4, 0x15) == 0 {
             // ENABLE_COMPUTER_BIDS=
             if has(0x15, 0xa812c0) {
-                *(G_COMPUTER_BIDS_ENABLED as *mut u32) = 1;
+                write_u32(G_COMPUTER_BIDS_ENABLED, 1);
             } else if has(0x15, 0xa812bc) {
-                *(G_COMPUTER_BIDS_ENABLED as *mut u32) = 0;
+                write_u32(G_COMPUTER_BIDS_ENABLED, 0);
             }
         } else if exe::at_947120(b, 0xa81298, 0xb) == 0 {
             // ON_HOLIDAY=
@@ -841,8 +841,8 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
     if default.is_null() || default.league_selected() & 2 == 0 {
         return 0;
     }
-    *(G_NEW_GAME_SETUP_DONE_FLAG as *mut u32) = 1;
-    *(G_SETUP_FILE_GAME_FLAG as *mut u32) = 1;
+    write_u32(G_NEW_GAME_SETUP_DONE_FLAG, 1);
+    write_u32(G_SETUP_FILE_GAME_FLAG, 1);
     if exe::create_game(!qst.is_null() as u32) == 0 {
         setup_fatal_error(0x1d11);
     }
@@ -854,11 +854,11 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
         return 1;
     }
     copy_text((options() + 0x113) as *mut u8, 0xa81288 as *const u8);
-    *(G_GAME_HAS_SAVE_FILE_FLAG as *mut u32) = 1;
+    write_u32(G_GAME_HAS_SAVE_FILE_FLAG, 1);
     let mut data = [0u8; 8];
     exe::date_operator_3d(G_LAST_AUTOSAVE_DATE, (data.as_mut_ptr()) as usize, G_CURRENT_DATE);
-    let slot = || G_SCREEN_RECORDS_MANAGER.wrapping_add((*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize).wrapping_mul(0x300));
-    if core::ptr::read_unaligned(slot() as *const u32) != 0 {
+    let slot = || G_SCREEN_RECORDS_MANAGER.wrapping_add((read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize as usize).wrapping_mul(0x300));
+    if read_u32(slot()) != 0 {
         return 0;
     }
     let table = u(G_STAFF_TABLE) as usize;
@@ -868,20 +868,20 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
     } else {
         let mut q = table.wrapping_add((i(G_STAFF_COUNT) as usize).wrapping_mul(staff::SIZE)).wrapping_sub(0x6e);
         for _ in 0..0x10 {
-            if *((q + staff::CLASSIFICATION) as *const u8) == 0 {
+            if read_u8(q + staff::CLASSIFICATION) == 0 {
                 p = q;
                 break;
             }
             q = q.wrapping_sub(0x6e);
         }
     }
-    core::ptr::write_unaligned(slot() as *mut u32, p as u32);
+    write_u32(slot(), p as u32);
     *core::ptr::read_unaligned((p + staff::COMMON_NAME) as *const *mut u8) = 0;
     exe::date_set(p + staff::DATE_OF_BIRTH, 1, 0, 0x7ae, -1);
-    core::ptr::write_unaligned((p + staff::YEAR_OF_BIRTH) as *mut u16, 0x7ae);
-    core::ptr::write_unaligned((p + staff::NATIONAL_JOB) as *mut u32, 0);
-    core::ptr::write_unaligned((p + staff::CLUB_JOB) as *mut u32, 0);
-    *((p + staff::CLASSIFICATION) as *mut u8) = 1;
+    write_u16(p + staff::YEAR_OF_BIRTH, 0x7ae);
+    write_u32(p + staff::NATIONAL_JOB, 0);
+    write_u32(p + staff::CLUB_JOB, 0);
+    write_u8(p + staff::CLASSIFICATION, 1);
     exe::human_manager_reset_human_record(u(G_HUMAN_MANAGER) as usize, p);
     exe::human_manager_set_on_holiday(u(G_HUMAN_MANAGER) as usize, holiday, 0);
     let club = Club(loop {
@@ -891,16 +891,16 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
             continue;
         }
         let nation = c.nation().addr();
-        if nation == 0 || *((nation + nation::LEAGUE_SELECTED) as *const u8) & 2 == 0 || exe::club_can_be_managed(c) == 0 {
+        if nation == 0 || read_u8(nation + nation::LEAGUE_SELECTED) & 2 == 0 || exe::club_can_be_managed(c) == 0 {
             continue;
         }
         break c.addr();
     });
     let nation = club.nation().addr();
-    core::ptr::write_unaligned((p + staff::NATION) as *mut usize, nation);
-    core::ptr::write_unaligned((p + staff::FIRST_NAME) as *mut u32, (exe::database_pick_first_name_for_nation(nation) as u32));
-    let n2 = (exe::database_pick_second_name_for_nation(core::ptr::read_unaligned((p + staff::NATION) as *const usize)) as u32);
-    core::ptr::write_unaligned((p + staff::SECOND_NAME) as *mut u32, n2);
+    write_usize(p + staff::NATION, nation);
+    write_u32(p + staff::FIRST_NAME, (exe::database_pick_first_name_for_nation(nation) as u32));
+    let n2 = (exe::database_pick_second_name_for_nation(read_usize(p + staff::NATION)) as u32);
+    write_u32(p + staff::SECOND_NAME, n2);
     exe::appoint_human_manager_to_club(p, club);
     1
 }
@@ -1059,16 +1059,16 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
     let translate: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let write: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
     crate::comparison::branch("save write game");
-    let options = || *((*(G_CONFIG as *const usize) + 4) as *const u32);
+    let options = || read_u32(read_usize(G_CONFIG) + 4);
     let kind = || if options() & 0x8000 != 0 { 3u32 } else { 4 };
-    let sem_memoria = || *(G_MEMORY_CHECK_ENABLED as *const u32) != 0 && exe::os_get_free_memory_mb() < 1;
-    *(G_GAME_DATA_VERSION as *mut u32) = 0xfffc1fb9;
+    let sem_memoria = || read_u32(G_MEMORY_CHECK_ENABLED) != 0 && exe::os_get_free_memory_mb() < 1;
+    write_u32(G_GAME_DATA_VERSION, 0xfffc1fb9);
     if options() & 0x20000000 != 0 {
         let foul = if exe::os_get_free_disk_space_mb(0) < 0x19 {
-            *(G_GAME_IN_PROGRESS_FLAG as *mut u32) = 1;
+            write_u32(G_GAME_IN_PROGRESS_FLAG, 1);
             true
         } else if sem_memoria() {
-            *(G_GAME_SESSION_STARTED_FLAG as *mut u32) = 1;
+            write_u32(G_GAME_SESSION_STARTED_FLAG, 1);
             true
         } else {
             false
@@ -1100,12 +1100,12 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
     }
     if options() & 0x40000000 != 0 {
         if exe::os_get_free_disk_space_mb(0) < 0x19 {
-            *(G_GAME_IN_PROGRESS_FLAG as *mut u32) = 1;
+            write_u32(G_GAME_IN_PROGRESS_FLAG, 1);
             exe::crt_remove(path);
             return 0;
         }
         if sem_memoria() {
-            *(G_GAME_SESSION_STARTED_FLAG as *mut u32) = 1;
+            write_u32(G_GAME_SESSION_STARTED_FLAG, 1);
             exe::crt_remove(path);
             return 0;
         }
@@ -1114,12 +1114,12 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
     // disk and memory between the steps: sets the mark, deletes the working path and returns 0
     let falta_espaco = || {
         if exe::os_get_free_disk_space_mb(0) < 0x19 {
-            *(G_GAME_IN_PROGRESS_FLAG as *mut u32) = 1;
+            write_u32(G_GAME_IN_PROGRESS_FLAG, 1);
             exe::crt_remove(l);
             return true;
         }
         if sem_memoria() {
-            *(G_GAME_SESSION_STARTED_FLAG as *mut u32) = 1;
+            write_u32(G_GAME_SESSION_STARTED_FLAG, 1);
             exe::crt_remove(l);
             return true;
         }
@@ -1147,7 +1147,7 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
         exe::zclose(&mut z);
         false
     };
-    let u = |a: usize| *(a as *const u32);
+    let u = |a: usize| read_u32(a);
     if !field(G_GAME_DATA_VERSION, 4, 1, 0x29aa, 0xa81b1c) {
         return 0;
     }
@@ -1182,11 +1182,11 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
         // memory >= 25 (and not >= 1)
         if k == 0x11 {
             if exe::os_get_free_disk_space_mb(0) < 0x19 {
-                *(G_GAME_IN_PROGRESS_FLAG as *mut u32) = 1;
+                write_u32(G_GAME_IN_PROGRESS_FLAG, 1);
                 return 0;
             }
-            if *(G_MEMORY_CHECK_ENABLED as *const u32) != 0 && exe::os_get_free_memory_mb() < 0x19 {
-                *(G_GAME_SESSION_STARTED_FLAG as *mut u32) = 1;
+            if read_u32(G_MEMORY_CHECK_ENABLED) != 0 && exe::os_get_free_memory_mb() < 0x19 {
+                write_u32(G_GAME_SESSION_STARTED_FLAG, 1);
                 return 0;
             }
         } else if falta_espaco() {
@@ -1215,7 +1215,7 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
             SaveStep::Virtual(g) => {
                 let o = u(g) as usize;
                 if o != 0 {
-                    let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(*((*(o as *const usize) + 0x1c) as *const usize));
+                    let f: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(read_usize(read_usize(o) + 0x1c));
                     f(o, 1);
                 }
             }
@@ -1250,8 +1250,8 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
         }
         exe::crt_rename(l, path);
     }
-    *(G_GAME_HAS_SAVE_FILE_FLAG as *mut u32) = 1;
-    *(G_GAME_UNSAVED_CHANGES_FLAG as *mut u32) = 0;
+    write_u32(G_GAME_HAS_SAVE_FILE_FLAG, 1);
+    write_u32(G_GAME_UNSAVED_CHANGES_FLAG, 0);
     let mut data = [0u8; 8];
     exe::date_operator_3d(G_LAST_AUTOSAVE_DATE, (data.as_mut_ptr()) as usize, G_CURRENT_DATE);
     1
@@ -1407,7 +1407,7 @@ pub(crate) unsafe fn setup_warning(row: u32) {
     let s = version(nome.as_mut_ptr(), ext.as_mut_ptr(), row);
     format(0xae24d0, 0x9870e8, s, nome.as_ptr(), ext.as_ptr(), row);
     exe::gui_show_message_box(0x9870e0, 0xae24d0, 0);
-    *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
+    write_u32(G_MOUSE_LEFT_BUTTON_DOWN, 0);
 }
 
 /// `save_fifa_transfer_rules(save)` (cdecl): writes the last item of the save, `fifa_transfer_rules.zip`: 2 bytes,
@@ -1481,8 +1481,8 @@ pub(crate) unsafe extern "C" fn load_fifa_transfer_rules(save: usize) {
         exe::zclose(&mut z);
         return;
     }
-    if *(G_FIFA_TRANSFER_RULES_IN_FORCE as *const u8) == 1 {
-        *(G_MAX_CONTRACT_LENGTH_YEARS as *mut u8) = 5;
+    if read_u8(G_FIFA_TRANSFER_RULES_IN_FORCE) == 1 {
+        write_u8(G_MAX_CONTRACT_LENGTH_YEARS, 5);
     }
     exe::zclose(&mut z);
 }
@@ -1531,32 +1531,32 @@ pub(crate) unsafe extern "C" fn free_game_data(tela: u32) -> u32 {
     // destrutor + delete + global zerado
     let objetos = |list: &[(usize, usize)]| {
         for &(g, destrutor) in list {
-            let p = *(g as *const usize);
+            let p = read_usize(g);
             if p != 0 {
                 let d: unsafe extern "thiscall" fn(usize) = core::mem::transmute(destrutor);
                 d(p);
                 exe::crt_operator_delete(p);
-                *(g as *mut usize) = 0;
+                write_usize(g, 0);
             }
         }
     };
     // free + global zerado
     let soltos = |list: &[usize]| {
         for &g in list {
-            let p = *(g as *const usize);
+            let p = read_usize(g);
             if p != 0 {
                 exe::crt_free(p);
-                *(g as *mut usize) = 0;
+                write_usize(g, 0);
             }
         }
     };
     // virtual destructor (vtable[0], with 1 = delete) + zeroed global
     let virtual_ = |g: usize| {
-        let p = *(g as *const usize);
+        let p = read_usize(g);
         if p != 0 {
             let d: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(**(p as *const *const usize));
             d(p, 1);
-            *(g as *mut usize) = 0;
+            write_usize(g, 0);
         }
     };
     exe::screenmanager_end_network_session(G_SCREEN_MANAGER);
@@ -1565,11 +1565,11 @@ pub(crate) unsafe extern "C" fn free_game_data(tela: u32) -> u32 {
     }
     exe::match_events_free_event_tables();
     objetos(&[(G_MATCH_DAY, 0x6b4190)]);
-    let p = *(G_COMP_OBJECT_TABLE as *const usize);
+    let p = read_usize(G_COMP_OBJECT_TABLE);
     if p != 0 {
         exe::crt_free(p);
-        *(G_COMP_OBJECT_TABLE as *mut usize) = 0;
-        *(G_COMP_OBJECT_COUNT as *mut usize) = 0;
+        write_usize(G_COMP_OBJECT_TABLE, 0);
+        write_usize(G_COMP_OBJECT_COUNT, 0);
     }
     exe::key_nation_delete_all_comps();
     objetos(&[(G_MEDIA, 0x72b200), (G_FOG_OF_WAR, 0x5af6a0), (G_MANAGER_MANAGER, 0x68e0e0), (G_CLUB_HISTORY, 0x442e20),
@@ -1581,10 +1581,10 @@ pub(crate) unsafe extern "C" fn free_game_data(tela: u32) -> u32 {
               (G_STAFF_RECORDS, 0x8687c0), (G_MATCH_STATS, 0x7293c0), (G_PLAYER_STATS, 0x7c0d00), (G_HOST_COUNTRY, 0x58e330),
               (G_FIXTURE_MANAGER, 0x5aa0d0), (G_HUMAN_MANAGER, 0x5fb730), (G_SCOUT_MANAGER, 0x7f6aa0), (G_NEWS, 0x785d00)]);
     // [0xdd7ef0]: only the delete, no destructor
-    let p = *(G_SQUAD_MANAGER as *const usize);
+    let p = read_usize(G_SQUAD_MANAGER);
     if p != 0 {
         exe::crt_operator_delete(p);
-        *(G_SQUAD_MANAGER as *mut usize) = 0;
+        write_usize(G_SQUAD_MANAGER, 0);
     }
     virtual_(G_RESERVE_COMP);
     objetos(&[(G_CONTRACT_MANAGER, 0x4c74f0), (G_FINANCE_TABLE, 0x59a5a0)]);
@@ -1595,9 +1595,9 @@ pub(crate) unsafe extern "C" fn free_game_data(tela: u32) -> u32 {
     soltos(&[G_NATION_NAME_INDEX_TABLE]);
     exe::database_free_all_tables();
     exe::date_set(G_CURRENT_DATE, 1, 0, 0x7d1, -1);
-    *(G_CURRENT_DAY_SLICE as *mut u8) = 0;
-    *(G_GAME_DATA_LOADED_FLAG as *mut u32) = 0;
-    *(G_GAME_HAS_SAVE_FILE_FLAG as *mut u32) = 0;
+    write_u8(G_CURRENT_DAY_SLICE, 0);
+    write_u32(G_GAME_DATA_LOADED_FLAG, 0);
+    write_u32(G_GAME_HAS_SAVE_FILE_FLAG, 0);
     1
 }
 
@@ -1607,7 +1607,7 @@ pub(crate) unsafe extern "C" fn free_game_data(tela: u32) -> u32 {
 /// [pt] { 0x839590 } (cdecl, Setup.cpp): a cor do título: [0xae3184] com `x` ≠ 0, senão [0xae31a8]. A
 /// original só troca `ax`: os 16 bits de cima da devolução são os de `x`.
 pub(crate) unsafe extern "C" fn get_heading_colour(x: u32) -> u32 {
-    let c = if x != 0 { *(G_GUI_COLOUR_PALE_GREY as *const u16) } else { *(G_GUI_COLOUR_RED as *const u16) };
+    let c = if x != 0 { read_u16(G_GUI_COLOUR_PALE_GREY) } else { read_u16(G_GUI_COLOUR_RED) };
     (x & 0xffff_0000) | c as u32
 }
 

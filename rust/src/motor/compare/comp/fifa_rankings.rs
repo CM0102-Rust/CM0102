@@ -51,7 +51,7 @@ pub(crate) unsafe extern "thiscall" fn compare_append_result(this: usize, nation
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_APPEND_RESULT)(this, nation, points, partida);
     let p = read_usize(e + 4).wrapping_add(conta as isize as usize * 5);
     let cap_n = if conta == cap { cap.wrapping_add(5) } else { cap };
-    let lido = (read_i16(e + 0xa), read_i16(e + 8), read_u16(p), *((p + 2) as *const u8), read_u16(p + 3));
+    let lido = (read_i16(e + 0xa), read_i16(e + 8), read_u16(p), read_u8(p + 2), read_u16(p + 3));
     let plan = (conta.wrapping_add(1), cap_n, points as u16, mes, ano);
     SCOREBOARD.record(lido == plan, || format!("append_result(nação {}, pontos {}) original={:?} plano={:?}", read_usize(nation), points as u16, lido, plan));
 }
@@ -117,7 +117,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_default_table(this: usize)
     let dif = if same || ta == 0 || tb == 0 {
         None
     } else {
-        (0..n).find(|&i| *((ta + i) as *const u8) != *((tb + i) as *const u8))
+        (0..n).find(|&i| read_u8(ta + i) != read_u8(tb + i))
     };
     if tb != 0 {
         exe::crt_free(tb);

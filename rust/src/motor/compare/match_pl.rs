@@ -229,7 +229,7 @@ pub(crate) unsafe extern "thiscall" fn compare_take_ball(this: usize) {
     if !m.is_null() {
         engine(m.addr(), &mut reg);
         for campo in [0xf582usize, 0xf576] {
-            let p = MatchPlayer(*((m.addr() + campo) as *const usize));
+            let p = MatchPlayer(read_usize(m.addr() + campo));
             if !p.is_null() && p != this {
                 reg.push((p.addr(), 0x40));
                 reg.push((p.addr() + match_player::MOVE_SKILL + 2 * 59, 0x10));

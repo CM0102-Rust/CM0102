@@ -58,7 +58,7 @@ pub(crate) unsafe fn eng_first_set_christmas_rounds(t: usize, year: u32, n: &Eng
     eng_first_set_league_rounds(t, year, 0, n.comeco);
     let mut d = [0u16; 4];
     exe::date_date_549f70(&mut d, 1, 0xb, year, 0xffff_ffff);
-    let day = core::ptr::read_unaligned((t + n.reference * 0x41) as *const u16);
+    let day = read_u16(t + n.reference * 0x41);
     let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.adjust);
     let case = if k as u32 > 6 {
         show_error_at(file, n.row);
@@ -386,7 +386,7 @@ pub(crate) unsafe fn create_playoff_stage(this: League, rows: [usize; 4], file: 
         return show_error_at(file, row_without_list);
     }
     for (k, &l) in rows.iter().enumerate() {
-        core::ptr::write_unaligned((list + 4 * k) as *mut usize, eng_first_league_row_club(this, l));
+        write_usize(list + 4 * k, eng_first_league_row_club(this, l));
     }
     crate::comparison::branch(name);
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
@@ -403,7 +403,7 @@ pub(crate) unsafe fn create_playoff_stage(this: League, rows: [usize; 4], file: 
     } else {
         0
     };
-    core::ptr::write_unaligned(this.stages() as *mut usize, stage);
+    write_usize(this.stages(), stage);
     exe::crt_free(list);
     exe::crt_free(t);
     let stage = read_usize(this.stages());

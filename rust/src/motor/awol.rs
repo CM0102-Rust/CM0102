@@ -37,19 +37,19 @@ pub(crate) unsafe fn toggle_mark_and_unlist(this: usize, person: usize, bit: u8,
         return;
     }
     let p = marks.wrapping_add(read_usize(person));
-    let m = *(p as *const u8);
+    let m = read_u8(p);
     if m & bit == 0 {
         return;
     }
     if foul {
         crate::comparison::branch("cqd_11 absence removed");
     }
-    *(p as *mut u8) = m ^ bit;
+    write_u8(p, m ^ bit);
     let l = read_usize(this + list);
     if l == 0 {
         return;
     }
-    core::ptr::write_unaligned((l + 0xa) as *mut usize, read_usize(l + 2));
+    write_usize(l + 0xa, read_usize(l + 2));
     // 0x68d1b0: mov ecx, [edi + lista] -> thiscall; 0x68d1f0: push item; mov ecx, [edi + lista]; ret 4 -> thiscall
     let mut i: i32 = 0;
     if read_i16(l) as i32 <= 0 {
@@ -113,7 +113,7 @@ pub(crate) unsafe fn plan_toggle_mark_and_unlist(this: usize, person: usize, bit
         return (None, l, items);
     }
     let p = read_usize(this + 0xc).wrapping_add(read_usize(person));
-    let m = *(p as *const u8);
+    let m = read_u8(p);
     if m & bit == 0 {
         return (Some((p, m)), l, items);
     }
@@ -136,9 +136,9 @@ pub(crate) unsafe fn compare_toggle_mark_and_unlist(this: usize, person: usize, 
     let (marca, l, fica) = plan_toggle_mark_and_unlist(this, person, bit, list);
     o(this, person);
     let after = llist_items(l);
-    let mark_ok = marca.map_or(true, |(p, m)| *(p as *const u8) == m);
+    let mark_ok = marca.map_or(true, |(p, m)| read_u8(p) == m);
     SCOREBOARD.record(mark_ok && after == fica, || format!("{}(pessoa {:#x}) marca plano {:x?} agora {:x?}; lista plano {:x?} agora {:x?}",
-        name, person, marca, marca.map(|(p, _)| *(p as *const u8)), fica, after));
+        name, person, marca, marca.map(|(p, _)| read_u8(p)), fica, after));
 }
 
 /// The rehearsal of the news item. The random draws come from the original routine's tape (n and the answer) and,
@@ -276,7 +276,7 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
 pub(crate) unsafe fn maybe_drop_attribute(a: usize, zero: bool) {
     let v = read_u8(a) as i8;
     if v > 1 && (friendly_random(v as i32) == 0) == zero {
-        *(a as *mut i8) = v - 1;
+        write_i8(a, v - 1);
     }
 }
 
@@ -860,7 +860,7 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
     let np = read_usize(read_usize(club + club::MANAGER) + 0x69);
     crate::comparison::branch("cpz_9 fine by form");
     // simplification: the original pushes ecx with byte +0x19 only in cl (the high ones are leftover); 0x544410 only reads the byte
-    let c =friendly_random((exe::non_player_attribute_rating(np, (*((np + non_player::MAN_HANDLING) as *const u8) as u32) as i8) as i8) as i32);
+    let c =friendly_random((exe::non_player_attribute_rating(np, (read_u8(np + non_player::MAN_HANDLING) as u32) as i8) as i8) as i32);
     let e = friendly_random(5); // cpz9: the deadline random draw
     let deadline = if c > e { 1 } else { 2 }; // cpz9: the fine deadline
     exe::fine_fine_player(read_usize(G_FINE), player, deadline, 1);

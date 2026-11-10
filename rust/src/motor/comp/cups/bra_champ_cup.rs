@@ -77,7 +77,7 @@ pub(crate) unsafe fn build_stage_schedule(this: Cup, f: BraChampCupStagePlan, ro
                 eng_cc_cup_write_cup_round(t, i as u32, r, year);
             }
             for &(r, o, v) in a_mais {
-                core::ptr::write_unaligned((t + r * 0x68 + o) as *mut u16, v);
+                write_u16(t + r * 0x68 + o, v);
             }
             t
         }

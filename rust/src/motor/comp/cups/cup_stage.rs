@@ -46,8 +46,8 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
     this.set_next_draw_round(0);
     this.set_round_count((rounds as u16) as i16);
     this.set_stage_label((id as u16) as i16);
-    this.set_substitutes_named(*((parent + 0x49) as *const u8));
-    this.set_substitutions_allowed(*((parent + 0x4a) as *const u8));
+    this.set_substitutes_named(read_u8(parent + 0x49));
+    this.set_substitutions_allowed(read_u8(parent + 0x4a));
     this.set_prize_fund((a14 as usize) as i32);
     let size = (rounds as u16 as i16 as i32 * 0x68) as u32;
     let t = exe::crt_malloc(size);
@@ -72,7 +72,7 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
         write_usize(this.team_table() + e, read_usize(teams + i as usize * 4)); // cqs7: o time i
         write_u8(this.team_table() + e + 5, 0);
         let s = if seeds != 0 {
-            *((seeds + i as usize) as *const u8) // cqs7: the vector seed
+            read_u8(seeds + i as usize) // cqs7: the vector seed
         } else if by_order != 0 {
             i as u8
         } else {

@@ -58,7 +58,7 @@ pub(crate) unsafe fn write_rounds_winter_break(t: usize, year: u32, n: &SpaFirst
     spa_first_write_league_rounds(t, year, 0, n.comeco);
     let mut d = [0u16; 4];
     exe::date_date_549f70(&mut d, 1, 0xb, year, 0xffff_ffff);
-    let day = core::ptr::read_unaligned((t + n.reference * 0x41) as *const u16);
+    let day = read_u16(t + n.reference * 0x41);
     let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.adjust);
     let case = if k as u32 > 6 {
         show_error_at(file, n.row);
@@ -331,8 +331,8 @@ pub(crate) unsafe fn spa_first_apply_league_rules(this: League, written: &[(usiz
     for &(d, t, v) in written {
         match t {
             1 => *((this.addr() + d) as *mut u8) = v as u8,
-            2 => core::ptr::write_unaligned((this.addr() + d) as *mut u16, v as u16),
-            _ => core::ptr::write_unaligned((this.addr() + d) as *mut u32, v),
+            2 => write_u16(this.addr() + d, v as u16),
+            _ => write_u32(this.addr() + d, v),
         }
     }
     if !SPA_FIRST_RULES_DRY_RUN {
@@ -469,7 +469,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let comp = read_usize(field);
         if comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION) {
-            core::ptr::write_unaligned(field as *mut usize, comp_record_of(KEY_CLUB_COMP_A_LOWER_DIVISION));
+            write_usize(field, comp_record_of(KEY_CLUB_COMP_A_LOWER_DIVISION));
         }
         i = i.wrapping_add(1);
         field = field.wrapping_add(0x245);
@@ -528,9 +528,9 @@ pub(crate) unsafe extern "thiscall" fn spa_first_set_club_progress(this: usize, 
         0x11 | 0x12 => 0x13,
         v => v,
     };
-    *((e + 0x73) as *mut u8) = current as u8;
-    *((e + 0x74) as *mut u8) = m;
-    *((e + 0x75) as *mut u8) = p;
+    write_u8(e + 0x73, current as u8);
+    write_u8(e + 0x74, m);
+    write_u8(e + 0x75, p);
 }
 
 /// the Primera: discipline 0x1a, only the league; finally, if the nation lacks bit 4 of +0x11c [inference: the lower

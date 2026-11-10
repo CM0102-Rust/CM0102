@@ -24,7 +24,7 @@ pub(crate) unsafe extern "thiscall" fn count_results_in_period(this: usize, nati
     let mut n = 0u16;
     while j >= 0 {
         let p = hist.wrapping_add(j as isize as usize * 5);
-        let v = read_u16(p + 3) as i32 * 12 + *((p + 2) as *const u8) as i32;
+        let v = read_u16(p + 3) as i32 * 12 + read_u8(p + 2) as i32;
         if v < of {
             break;
         }
@@ -67,7 +67,7 @@ pub(crate) unsafe extern "thiscall" fn update_rankings(this: usize, data: usize)
     let mut i = 0i32;
     while i < read_usize(G_NATION_COUNT) as i32 {
         let e = read_usize(this) + i as usize * 0x2c;
-        let mut k = (*((e + 0xa) as *const u8)).wrapping_sub(1) as i8 as i32;
+        let mut k = read_u8(e + 0xa).wrapping_sub(1) as i8 as i32;
         while k >= 0 {
             let hist = read_usize(e + 4);
             let p = hist + k as usize * 5;
@@ -75,21 +75,21 @@ pub(crate) unsafe extern "thiscall" fn update_rankings(this: usize, data: usize)
             if y < year || (y == year && *((p + 2) as *const u8) < month) {
                 let last = hist + read_i16(e + 0xa) as isize as usize * 5 - 5;
                 core::ptr::copy(last as *const u8, p as *mut u8, 5);
-                *((e + 0xa) as *mut i16) = read_i16(e + 0xa).wrapping_sub(1);
+                write_i16(e + 0xa, read_i16(e + 0xa).wrapping_sub(1));
             }
             k -= 1;
         }
         exe::crt_qsort(read_usize(e + 4), read_i16(e + 0xa) as i32 as u32, 5, 0x58e220);
         i += 1;
     }
-    if month == *((this + 4) as *const u8) && read_u16(data + 2) != read_u16(G_GAME_START_DATE_YEAR) {
+    if month == read_u8(this + 4) && read_u16(data + 2) != read_u16(G_GAME_START_DATE_YEAR) {
         let mut i = 0i32;
         while i < read_usize(G_NATION_COUNT) as i32 {
             let e = read_usize(this) + i as usize * 0x2c;
             for o in [0x24usize, 0x20, 0x1c, 0x18, 0x14] {
-                *((e + o + 4) as *mut u32) = *((e + o) as *const u32);
+                write_u32(e + o + 4, read_u32(e + o));
             }
-            *((e + 0x14) as *mut u32) = 0;
+            write_u32(e + 0x14, 0);
             i += 1;
         }
     }
@@ -100,8 +100,8 @@ pub(crate) unsafe extern "thiscall" fn update_rankings(this: usize, data: usize)
     let mut k = 0i32;
     while k < n {
         let r = read_usize(v + k as usize * 4);
-        *((r + 0x12) as *mut u16) = read_u16(r + 0x10);
-        *((r + 0x10) as *mut u16) = (k + 1) as u16;
+        write_u16(r + 0x12, read_u16(r + 0x10));
+        write_u16(r + 0x10, (k + 1) as u16);
         k += 1;
     }
     exe::crt_free(v);
@@ -150,7 +150,7 @@ pub(crate) unsafe fn match_month_year(partida: Fixture) -> (u8, u16) {
 pub(crate) unsafe extern "thiscall" fn append_result(this: usize, nation: usize, points: u32, partida: usize) {
     let e = ranking_entry(this, nation);
     if read_u16(e + 0xa) == read_u16(e + 8) {
-        *((e + 8) as *mut u16) = read_u16(e + 8).wrapping_add(5);
+        write_u16(e + 8, read_u16(e + 8).wrapping_add(5));
         let h = read_usize(e + 4);
         let n = read_i16(e + 8) as i32 * 5;
         let new = if h != 0 {
@@ -158,15 +158,15 @@ pub(crate) unsafe extern "thiscall" fn append_result(this: usize, nation: usize,
         } else {
             exe::crt_malloc(n as u32)
         };
-        *((e + 4) as *mut usize) = new;
+        write_usize(e + 4, new);
     }
     let c = read_i16(e + 0xa);
-    *((e + 0xa) as *mut i16) = c.wrapping_add(1); // cpt2: mais um resultado
+    write_i16(e + 0xa, c.wrapping_add(1)); // cpt2: mais um resultado
     let p = read_usize(e + 4).wrapping_add(c as isize as usize * 5);
-    *(p as *mut u16) = points as u16;
+    write_u16(p, points as u16);
     let (mes, ano) = match_month_year(Fixture(partida));
-    *((p + 2) as *mut u8) = mes; // cpt2: the match month
-    core::ptr::write_unaligned((p + 3) as *mut u16, ano); // cpt2: the match year
+    write_u8(p + 2, mes); // cpt2: the match month
+    write_u16(p + 3, ano); // cpt2: the match year
     crate::comparison::branch("cpt_2 result");
 }
 
@@ -223,7 +223,7 @@ pub(crate) unsafe extern "thiscall" fn get_nation_strength_tier(this: usize, nat
 /// (sem resultados, o +0x18). A pontuação (+0xc, f32): (+0x14 + 5/6 de +0x18 + 4/6 de +0x1c + 3/6 de +0x20 + 2/6 de
 /// +0x24 + 1/6 de +0x28, cada parte truncada) × [0x96a350].
 pub(crate) unsafe extern "thiscall" fn recalculate_scores(this: usize) {
-    let factor = core::ptr::read_unaligned(0x96a350 as *const f64);
+    let factor = read_f64(0x96a350);
     let mut i = 0i32;
     if read_usize(G_NATION_COUNT) as i32 <= 0 {
         return;
@@ -252,7 +252,7 @@ pub(crate) unsafe extern "thiscall" fn recalculate_scores(this: usize) {
             k = k.wrapping_add(1);
         }
         let year = if count > 8 { (all.wrapping_mul(8) / count as i32 + oito) / 2 } else { oito };
-        *((e + 0x14) as *mut i32) = year;
+        write_i32(e + 0x14, year);
         let base = core::ptr::read_unaligned(G_GAME_START_DATE as *const [u8; 8]);
         let mut d = [0u8; 8];
         let r = exe::date_sub_days(G_CURRENT_DATE, (&mut d) as *mut [u8; 8] as usize, 0x16d);
@@ -260,17 +260,17 @@ pub(crate) unsafe extern "thiscall" fn recalculate_scores(this: usize) {
         let after = by > ry || (by == ry && i16::from_le_bytes([base[0], base[1]]) > read_i16(r));
         if after && read_i16(e + 0xa) < 9 {
             let c = read_i16(e + 0xa);
-            let v18 = *((e + 0x18) as *const i32);
-            *((e + 0x14) as *mut i32) = if c != 0 { (v18.wrapping_add(oito) / (c as i32 + 8)).wrapping_shl(3) } else { v18 };
+            let v18 = read_i32(e + 0x18);
+            write_i32(e + 0x14, if c != 0 { (v18.wrapping_add(oito) / (c as i32 + 8)).wrapping_shl(3) } else { v18 });
         }
-        let t = |o: usize| *((e + o) as *const i32);
+        let t = |o: usize| read_i32(e + o);
         let sum = (t(0x24).wrapping_mul(2) / 6)
             .wrapping_add(t(0x20).wrapping_mul(3) / 6)
             .wrapping_add(t(0x1c).wrapping_mul(4) / 6)
             .wrapping_add(t(0x18).wrapping_mul(5) / 6)
             .wrapping_add(t(0x28) / 6)
             .wrapping_add(t(0x14));
-        *((e + 0xc) as *mut f32) = (sum as f64 * factor) as f32;
+        write_f32(e + 0xc, (sum as f64 * factor) as f32);
         i += 1;
         if i >= read_usize(G_NATION_COUNT) as i32 {
             break;
@@ -302,7 +302,7 @@ pub(crate) unsafe extern "thiscall" fn collect_ranked_order(this: usize, count: 
     let mut i = 0usize;
     while (i as i32) < read_usize(G_NATION_COUNT) as i32 {
         if read_usize(nations + i * nation::SIZE + 0x71) != 0 {
-            *((v + n * 4) as *mut usize) = read_usize(this) + i * 0x2c;
+            write_usize(v + n * 4, read_usize(this) + i * 0x2c);
             n += 1;
         }
         i += 1;
@@ -321,8 +321,8 @@ pub(crate) unsafe extern "thiscall" fn collect_ranked_order(this: usize, count: 
 /// [pt] { 0x58e240 } (cdecl, fifa_rankings.cpp): `compare_ranking_score_desc(a, b)`, a ordem do qsort da 0x58d610: as
 /// pontuações (f32 +0xc das entradas apontadas): a menor que b (ou sem ordem), 1; iguais, 0; maior, −1.
 pub(crate) unsafe extern "C" fn compare_ranking_score_desc(a: usize, b: usize) -> i32 {
-    let fa = *((read_usize(a) + 0xc) as *const f32);
-    let fb = *((read_usize(b) + 0xc) as *const f32);
+    let fa = read_f32(read_usize(a) + 0xc);
+    let fb = read_f32(read_usize(b) + 0xc);
     if !(fa >= fb) {
         1
     } else if fa == fb {
@@ -351,31 +351,31 @@ pub(crate) unsafe extern "C" fn compare_ranking_score_desc(a: usize, b: usize) -
 /// das nações com continente) dá a posição: +0x12 = a posição de antes (+0x10) e +0x10 = 1, 2, 3...; a lista é solta.
 pub(crate) unsafe extern "thiscall" fn create_default_table(this: usize) {
     let t = exe::crt_calloc(read_u32(G_NATION_COUNT), 0x2c);
-    *(this as *mut usize) = t;
+    write_usize(this, t);
     if t == 0 {
         show_error_at(0x9c74f4, 0x2da);
         return;
     }
-    let c1 = core::ptr::read_unaligned(0x96a348 as *const f64);
-    let c2 = core::ptr::read_unaligned(0x968908 as *const f64);
+    let c1 = read_f64(0x96a348);
+    let c2 = read_f64(0x968908);
     let mut k = 0i32;
     while k < read_u32(G_NATION_COUNT) as i32 {
         let r = t + 0x2c * k as usize;
-        *(r as *mut i32) = k;
-        let a = core::ptr::read_unaligned((read_u32(G_NATION_TABLE) as usize + 0x122 * k as usize + 0xa8) as *const f64) * c1;
+        write_i32(r, k);
+        let a = read_f64(read_u32(G_NATION_TABLE) as usize + 0x122 * k as usize + 0xa8) * c1;
         let p = (a * c2) as i32;
         for j in 0..6 {
-            *((r + 0x14 + 4 * j) as *mut i32) = p;
+            write_i32(r + 0x14 + 4 * j, p);
         }
-        *((r + 0xc) as *mut f32) = a as f32;
+        write_f32(r + 0xc, a as f32);
         k += 1;
     }
     let mut n = 0i32;
     let l = exe::fifa_rankings_collect_ranked_order(this, &mut n);
     for i in 0..n.max(0) as usize {
         let r = read_u32(l + 4 * i) as usize;
-        *((r + 0x12) as *mut u16) = *((r + 0x10) as *const u16);
-        *((r + 0x10) as *mut u16) = (i + 1) as u16;
+        write_u16(r + 0x12, read_u16(r + 0x10));
+        write_u16(r + 0x10, (i + 1) as u16);
     }
     exe::crt_free(l);
 }

@@ -306,19 +306,19 @@ pub(crate) unsafe extern "thiscall" fn fra_cfa_set_up_rules(this: usize) -> u32 
     let this = League(this);
     this.set_legs((2) as i16);
     this.set_match_category(2);
-    *((this.addr() + league::TIEBREAKS + 2) as *mut u8) = 2;
+    write_u8(this.addr() + league::TIEBREAKS + 2, 2);
     this.set_win_points(3); // cqn4: the points per win in the French lower leagues
     this.set_draw_points(1);
     this.set_club_sides(1);
-    *((this.addr() + league::TIEBREAKS) as *mut u8) = 4;
-    *((this.addr() + league::TIEBREAKS + 1) as *mut u8) = 1;
+    write_u8(this.addr() + league::TIEBREAKS, 4);
+    write_u8(this.addr() + league::TIEBREAKS + 1, 1);
     this.set_promoted_count(0);
     this.set_promotion_playoff_count(0);
     this.set_relegation_playoff_count(0);
     this.set_relegated_count(0);
     // simplification: the original writes to +0x1c the id of [0x9cf624] (the same global the Spanish Segunda uses for the
     // Primera); fiel.
-    this.set_upper_division_id((read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION)) as i32);
+    this.set_upper_division_id(read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) as i32);
     this.set_lower_division_id(0xffff_ffff);
     this.set_league_flags((0x43) as i16); // cqn4: the rule bits of the lower leagues
     let calendario: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
@@ -628,7 +628,7 @@ pub(crate) unsafe fn compare_french_table(name: &str, this: League, clubs: usize
     let mut found: Vec<(usize, u8)> = Vec::new();
     let mut same = r == 1 && this.club_count() == n && t != 0;
     if same {
-        found = (0..n as usize).map(|k| (read_usize(t + k * 0x3b), *((t + k * 0x3b + 0x38) as *const u8))).collect();
+        found = (0..n as usize).map(|k| (read_usize(t + k * 0x3b), read_u8(t + k * 0x3b + 0x38))).collect();
         same = found == plan;
     }
     SCOREBOARD.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this.addr(), r, plan, found));
@@ -678,9 +678,9 @@ pub(crate) unsafe fn set_c1_club_progress(this: usize, club: usize, stage: u8, c
             v => v,
         };
     }
-    *((e + 0x73) as *mut u8) = a;
-    *((e + 0x74) as *mut u8) = m;
-    *((e + 0x75) as *mut u8) = p;
+    write_u8(e + 0x73, a);
+    write_u8(e + 0x74, m);
+    write_u8(e + 0x75, p);
 }
 
 /// Comparer of set_club_progress: finds the stats entry first and runs both side by side on its 3 bytes; without entry,

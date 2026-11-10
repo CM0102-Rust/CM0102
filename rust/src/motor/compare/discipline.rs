@@ -21,7 +21,7 @@ pub(crate) unsafe extern "thiscall" fn compare_serve_international_bans(this: us
     while ini != 0 && e < fim {
         let id = read_usize(e) as u32;
         let j = serve_ban_match_plan(this, id, 0, 1);
-        let before = if j.suspensao != 0 { *((j.suspensao + 1) as *const u8) } else { 0 };
+        let before = if j.suspensao != 0 { read_u8(j.suspensao + 1) } else { 0 };
         plan.push((id, j, before));
         e += 8;
     }
@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn compare_serve_international_bans(this: us
             continue;
         }
         let s = j.suspensao;
-        let (jogos, contador, dias) = (*(s as *const u8), *((s + ban_record::MATCHES_SERVED) as *const u8), read_i16(s + ban_record::DAYS));
+        let (jogos, contador, dias) = (read_u8(s), read_u8(s + ban_record::MATCHES_SERVED), read_i16(s + ban_record::DAYS));
         let ok = if j.cumprida { jogos == 0xff && dias == -1 } else { contador == j.counter.unwrap_or(*before) };
         if !ok && error.is_none() {
             error = Some(format!("pessoa {} contador {} (esperava {:?}, antes {}), cumprida={} suspensão {:#x}/{}", id, contador, j.counter, before, j.cumprida, jogos, dias));
@@ -53,7 +53,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_appeal_result(this: usize, 
         return;
     }
     let s = r.suspensao;
-    let (jogos, dias) = (*(s as *const u8), read_i16(s + ban_record::DAYS));
+    let (jogos, dias) = (read_u8(s), read_i16(s + ban_record::DAYS));
     let ok = if r.solta { jogos == 0xff && dias == -1 } else { jogos == r.games && dias == r.days };
     SCOREBOARD.record(ok, || format!("apply_appeal_result({}, regra {}) jogos {:#x} dias {} (esperava {:#x}/{}, solta={})", id, rule as i8, jogos, dias, r.games, r.days, r.solta));
 }
@@ -93,15 +93,15 @@ pub(crate) unsafe extern "thiscall" fn compare_add_ban(this: usize, id: u32, ban
     let (ok, detalhe) = match plan {
         SuspensionPlan::Caixa => return,
         SuspensionPlan::Estender { s, games: jogos, days: dias } => {
-            let ok = *(s as *const u8) == jogos && read_i16(s + ban_record::DAYS) == dias && *((s + ban_record::FLAGS) as *const u8) & 1 == 1
+            let ok = read_u8(s) == jogos && read_i16(s + ban_record::DAYS) == dias && *((s + ban_record::FLAGS) as *const u8) & 1 == 1
                 && *((ban + ban_record::FLAGS) as *const u8) & 1 == 1;
-            (ok, format!("estender: jogos {} (esperava {}), dias {} (esperava {})", *(s as *const u8), jogos, read_i16(s + ban_record::DAYS), dias))
+            (ok, format!("estender: jogos {} (esperava {}), dias {} (esperava {})", read_u8(s), jogos, read_i16(s + ban_record::DAYS), dias))
         }
         SuspensionPlan::Nova { slot: vaga, count: conta } => {
             let s = read_usize(this + discipline_fields::BANS).wrapping_add((vaga as i32 as usize).wrapping_mul(20));
-            let mut ok = read_i16(this + discipline_fields::BAN_COUNT) == conta && *(s as *const u8) == *(ban as *const u8) && read_i16(s + ban_record::DAYS) == read_i16(ban + ban_record::DAYS);
+            let mut ok = read_i16(this + discipline_fields::BAN_COUNT) == conta && *(s as *const u8) == read_u8(ban) && read_i16(s + ban_record::DAYS) == read_i16(ban + ban_record::DAYS);
             for k in 0..4usize {
-                ok &= *((s + ban_record::RULES + k) as *const u8) == rules[k];
+                ok &= read_u8(s + ban_record::RULES + k) == rules[k];
                 if rules[k] != 0xff {
                     let e = ruling_body_entry(ruling_body_of_rule(this, rules[k]), id);
                     ok &= e != 0 && read_i16(e + ruling_body_entry::BAN_INDEX) == vaga;
@@ -203,13 +203,13 @@ pub(crate) unsafe extern "thiscall" fn compare_restore_held_bans(this: usize, pe
 /// confere o contador, ou a suspensão solta (livre e a entrada do órgão sem índice), ou nada mudado.
 pub(crate) unsafe extern "thiscall" fn compare_update_ban_progress(this: usize, id: u32, rule: u32, count: u32) {
     let j = serve_ban_match_plan(this, id, rule, count);
-    let before = if j.suspensao != 0 { *((j.suspensao + 1) as *const u8) } else { 0 };
+    let before = if j.suspensao != 0 { read_u8(j.suspensao + 1) } else { 0 };
     original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32)>(IDX_UPDATE_BAN_PROGRESS)(this, id, rule, count);
     if j.suspensao == 0 {
         return;
     }
     let s = j.suspensao;
-    let (jogos, contador, dias) = (*(s as *const u8), *((s + ban_record::MATCHES_SERVED) as *const u8), read_i16(s + ban_record::DAYS));
+    let (jogos, contador, dias) = (read_u8(s), read_u8(s + ban_record::MATCHES_SERVED), read_i16(s + ban_record::DAYS));
     let ok = if j.cumprida {
         jogos == 0xff && dias == -1 && read_i16(j.entry + ruling_body_entry::BAN_INDEX) == -1
     } else {
@@ -228,7 +228,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_ban_progress(this: usize, 
 pub(crate) unsafe extern "thiscall" fn compare_release_ban(this: usize, id: u32, index: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> usize>(IDX_RELEASE_BAN);
     let s = read_usize(this + discipline_fields::BANS).wrapping_add((index as u16 as i16 as i32 as usize).wrapping_mul(20));
-    if *((s + ban_record::NATION_RULE) as *const u8) != 0xff && find_in_nation_index(this, id) == 0 {
+    if read_u8(s + ban_record::NATION_RULE) != 0xff && find_in_nation_index(this, id) == 0 {
         return o(this, id, index);
     }
     let mut reg = vec![(s, 20), (this + discipline_fields::NATION_INDEX_CAPACITY, 4)];
@@ -237,7 +237,7 @@ pub(crate) unsafe extern "thiscall" fn compare_release_ban(this: usize, id: u32,
         reg.push((read_usize(this + discipline_fields::NATION_INDEX), n as usize * 8));
     }
     for k in 0..4usize {
-        let rule = *((s + ban_record::RULES + k) as *const u8);
+        let rule = read_u8(s + ban_record::RULES + k);
         if rule != 0xff {
             let e = ruling_body_entry(ruling_body_for_rule(this, rule), id);
             if e != 0 {
@@ -286,7 +286,7 @@ pub(crate) unsafe extern "thiscall" fn compare_discipline_daily_update(this: usi
 /// Comparer for `discipline_set_slot`.
 pub(crate) unsafe extern "thiscall" fn compare_discipline_set_slot(this: usize, id: i32, slot: i8, kind: u8, value: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i8, u8, u32)>(IDX_DISCIPLINE_SET_SLOT);
-    let a = (*((this + discipline_fields::PERSON_RECORDS) as *const usize) as isize + id as isize * 29 + slot as isize * 5) as usize;
+    let a = (read_usize(this + discipline_fields::PERSON_RECORDS) as isize + id as isize * 29 + slot as isize * 5) as usize;
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(a, 5)], || o(this, id, slot, kind, value), || discipline_set_slot(this, id, slot, kind, value));
     SCOREBOARD.record(igual, || format!("discipline_set_slot({}, {}) {:x?} x {:x?}", id, slot, mo, mr));
 }
@@ -370,7 +370,7 @@ pub(crate) unsafe extern "thiscall" fn compare_discipline_remove_player(this: us
     let r = read_usize(this + discipline_fields::PERSON_RECORDS).wrapping_add((id as usize).wrapping_mul(29));
     let mut entries = Vec::new();
     for k in 0..4usize {
-        let rule = *((r + k * 5) as *const u8);
+        let rule = read_u8(r + k * 5);
         if rule != 0xff {
             let e = ruling_body_entry(ruling_body_of_rule(this, rule), id);
             if e != 0 {

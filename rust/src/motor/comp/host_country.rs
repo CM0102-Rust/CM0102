@@ -135,7 +135,7 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
                     write_u16(e + 4, y);
                     write_u32(e, read_usize(g as usize) as u32);
                     write_u16(e + 0x1f, d.day as u16);
-                    *((e + 0x21) as *mut u8) = intervalo;
+                    write_u8(e + 0x21, intervalo);
                     e += 0x22;
                     y = y.wrapping_add(step_towards);
                 }
@@ -151,7 +151,7 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
         let r = exe::utils_random((0x46) as u32 as i32); // cqo3: the random draw of the decision day
         write_u16(p, read_u16(p).wrapping_add((r - 0x23) as u16));
         let e = read_usize(this) + o;
-        if *((e + 0x1e) as *const u8) != 0xfd && (read_usize(e + 0x12) as u32 != u32::MAX || read_usize(e + 0x1a) as u32 != u32::MAX) {
+        if read_u8(e + 0x1e) != 0xfd && (read_usize(e + 0x12) as u32 != u32::MAX || read_usize(e + 0x1a) as u32 != u32::MAX) {
             show_error_at(0x9cf0d8, 0x226);
             write_u32(read_usize(this) + o + 0x12, u32::MAX);
             write_u32(read_usize(this) + o + 0x1a, u32::MAX);
@@ -184,7 +184,7 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize)
     let mut it = exe::llist_get_next(list);
     while it != 0 {
         let e = read_usize(it);
-        let k = *((e + 0x1e) as *const i8);
+        let k = read_i8(e + 0x1e);
         let skip = ((k > 0 || k == -3) && read_u16(G_CURRENT_DATE_YEAR) as u32 == (read_u16(e + 4) as u32).wrapping_sub(8))
             || read_usize(e) == read_usize(KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES)
             || (read_usize(e) == read_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP) && read_u16(e + 4) == 0x7d6 && read_usize(e + 6) == read_usize(KEY_NATION_GERMANY));
@@ -201,7 +201,7 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize)
                 }
             } else {
                 exe::new_newsitem(p, 5, 0);
-                let mut b = *((read_usize(it) + 0x1e) as *const i8);
+                let mut b = read_i8(read_usize(it) + 0x1e);
                 if b == -3 {
                     b = 0;
                 }
@@ -308,7 +308,7 @@ pub(crate) unsafe extern "thiscall" fn find_hosts(this: usize, comp: u32, year: 
         if read_u32(e) == comp {
             let ae = read_u16(e + 4);
             if ae == year as u16 || ae == 0 {
-                let k = *((e + 0x1e) as *const i8);
+                let k = read_i8(e + 0x1e);
                 if k > -1 {
                     return host_pair(e, k, a, b) as u32;
                 }
@@ -340,7 +340,7 @@ pub(crate) unsafe extern "thiscall" fn find_next_hosts(this: usize, comp: u32, a
     let mut i = 0i16;
     while i < n {
         if read_u32(e) == comp {
-            let k = *((e + 0x1e) as *const i8);
+            let k = read_i8(e + 0x1e);
             if k > -1 {
                 return host_pair(e, k, a, b) as u32;
             }
@@ -450,9 +450,9 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
             let ae = read_u16(e + 4);
             if ae < year && ae != 0 {
                 crate::comparison::branch("cqj_3 next edition");
-                core::ptr::write_unaligned((e + 4) as *mut u16, ae.wrapping_add(*((e + 0x21) as *const i8) as i16 as u16)); // cqj3: o intervalo
-                if *((e + 0x1e) as *const u8) != 0xfd {
-                    *((e + 0x1e) as *mut u8) = 0xfe;
+                write_u16(e + 4, ae.wrapping_add(read_i8(e + 0x21) as i16 as u16)); // cqj3: o intervalo
+                if read_u8(e + 0x1e) != 0xfd {
+                    write_u8(e + 0x1e, 0xfe);
                 }
             }
             i += 1;
@@ -478,7 +478,7 @@ pub(crate) unsafe extern "thiscall" fn save_temp_file(this: usize) {
         return;
     }
     crt_fwrite(this + 4, 2, 1, f);
-    crt_fwrite(read_usize(this), 0x22, *((this + 4) as *const i16) as i32 as u32, f); // cpx6: os anfitriões
+    crt_fwrite(read_usize(this), 0x22, read_i16(this + 4) as i32 as u32, f); // cpx6: os anfitriões
     uefa_seeding_crt_fclose(f);
 }
 

@@ -94,7 +94,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
     exe::comp_util_sort_and_shuffle_top_clubs(l.caribe.as_mut_ptr() as usize, l.n[2], 1);
     exe::comp_util_sort_and_shuffle_top_clubs(l.mls.as_mut_ptr() as usize, l.n[3], 1);
     let t = |k: usize| this.team_table().wrapping_add(k * 6);
-    let pd = |a: usize, v: usize| core::ptr::write_unaligned(a as *mut u32, v as u32);
+    let pd = |a: usize, v: usize| write_u32(a, v as u32);
     crate::comparison::branch("cqi_11 qualified");
     pd(t(2), l.mex[0]);
     pd(t(3), l.mex[1]); // cqi11: the Mexican runner-up
@@ -116,8 +116,8 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
     }
     let mut i = 0i32;
     while i < this.team_count() as i32 {
-        *((this.team_table() + i as usize * 6 + 4) as *mut u8) = 0;
-        *((this.team_table() + i as usize * 6 + 5) as *mut u8) = 0;
+        write_u8(this.team_table() + i as usize * 6 + 4, 0);
+        write_u8(this.team_table() + i as usize * 6 + 5, 0);
         i += 1;
     }
     1

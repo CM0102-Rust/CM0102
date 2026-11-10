@@ -292,7 +292,7 @@ pub(crate) unsafe extern "thiscall" fn compare_copy_table(league: usize) -> usiz
                 if (h2h && (5..9).contains(&b)) || (forma && (9..13).contains(&b)) {
                     continue;
                 }
-                if *((lt + b) as *const u8) != *((lc + b) as *const u8) {
+                if read_u8(lt + b) != read_u8(lc + b) {
                     erros.push(format!("linha {} +{:#x}", i, b));
                     break;
                 }
@@ -340,8 +340,8 @@ pub(crate) unsafe extern "thiscall" fn compare_league_set_predicted_positions(le
         }
         let p = (i as u8).wrapping_add(1);
         let e = exe::comp_stats_find_club_entry(league.comp_stats(), c as usize);
-        if e == 0 || *((e + comp_stats_club::DANGER_POSITION) as *const u8) != p {
-            erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if e == 0 { -1 } else { *((e + comp_stats_club::DANGER_POSITION) as *const u8) as i32 }));
+        if e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != p {
+            erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if e == 0 { -1 } else { read_u8(e + comp_stats_club::DANGER_POSITION) as i32 }));
         }
     }
     SCOREBOARD.record(erros.is_empty(), || format!("league_set_predicted_positions({:x}) {} clubes: {}", league.addr(), n, erros.join("; ")));
@@ -539,7 +539,7 @@ pub(crate) unsafe extern "thiscall" fn compare_league_check_complete(league: usi
 pub(crate) unsafe extern "thiscall" fn compare_pay_tv_rights(league: usize, value: i32, filter: usize) {
     let league = League(league);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize)>(IDX_PAY_TV_RIGHTS);
-    let finances = *(G_FINANCE_TABLE as *const usize);
+    let finances = read_usize(G_FINANCE_TABLE);
     let n = league.club_count().max(0) as usize;
     let clubs: Vec<usize> = (0..n).map(|i| read_usize(league.table() + 0x3b * i)).collect();
     if finances == 0 || clubs.contains(&0) {
@@ -560,8 +560,8 @@ pub(crate) unsafe extern "thiscall" fn compare_league_record_season_honours(leag
         return o(league);
     }
     let mut reg = comp_history_regions();
-    let how_many = (*(G_CLUB_COUNT as *const i32)).wrapping_sub(*(G_NATION_COUNT as *const i32)).max(0) as usize;
-    reg.push((*(G_CLUB_TABLE as *const usize), 0x245 * how_many));
+    let how_many = read_i32(G_CLUB_COUNT).wrapping_sub(read_i32(G_NATION_COUNT)).max(0) as usize;
+    reg.push((read_usize(G_CLUB_TABLE), 0x245 * how_many));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(league), || league_record_season_honours(league));
     SCOREBOARD.record(igual && r == n, || format!("league_record_season_honours({:x}) {:x}/{:x} {:x?} x {:x?}", league, r, n, mo, mr));
     r

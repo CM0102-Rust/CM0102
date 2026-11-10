@@ -84,7 +84,7 @@ pub(crate) unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -
     } else {
         0
     };
-    core::ptr::write_unaligned(this.stages() as *mut usize, stage);
+    write_usize(this.stages(), stage);
     exe::crt_free(t);
     let stage = read_usize(this.stages());
     if stage == 0 {
@@ -131,8 +131,8 @@ pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
         return show_error_at(0x987c20, 0x348);
     }
     let series = read_usize(this.stages());
-    core::ptr::write_unaligned(list as *mut usize, aus_nsl_table_row_club(League(series), 0)); // cqr3: the first of the final series
-    core::ptr::write_unaligned((list + 4) as *mut usize, aus_nsl_table_row_club(League(series), 1)); // cqr3: the second of the final series
+    write_usize(list, aus_nsl_table_row_club(League(series), 0)); // cqr3: the first of the final series
+    write_usize(list + 4, aus_nsl_table_row_club(League(series), 1)); // cqr3: the second of the final series
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this.addr(), 1, &mut rodadas, &mut extra, 0);
@@ -143,7 +143,7 @@ pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
     } else {
         0
     };
-    core::ptr::write_unaligned((this.stages() + 4) as *mut usize, stage);
+    write_usize(this.stages() + 4, stage);
     exe::crt_free(t);
     let stage = read_usize(this.stages() + 4);
     if stage == 0 {
@@ -216,8 +216,8 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_set_up_rules(this: usize) -> u32 
     let this = League(this);
     set_nsl_rules(this.addr());
     crate::comparison::branch("cqj_8 nsl rules");
-    let vt = *(this.addr() as *const usize);
-    let f: unsafe extern "thiscall" fn(usize, i32, usize, usize, usize) -> usize = core::mem::transmute(*((vt + 0x3c) as *const usize));
+    let vt = read_usize(this.addr());
+    let f: unsafe extern "thiscall" fn(usize, i32, usize, usize, usize) -> usize = core::mem::transmute(read_usize(vt + 0x3c));
     let r = f(this.addr(), -1, this.addr() + league::ROUND_COUNT, this.addr() + league::STAGE_ID, 0);
     write_u32_at(this.addr(), 0xba, r as u32);
     1
@@ -228,9 +228,9 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_set_up_rules(this: usize) -> u32 
 /// [pt] O histórico do primeiro estágio: o slot 13 (+0x30, `record_season_honours`, thiscall sem argumentos) do estágio
 /// [[this+0xc]].
 pub(crate) unsafe fn record_first_stage_honours(this: League) -> u32 {
-    let e = *(this.stages() as *const usize);
-    let vt = *(e as *const usize);
-    let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(*((vt + 0x30) as *const usize));
+    let e = read_usize(this.stages());
+    let vt = read_usize(e);
+    let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(vt + 0x30));
     f(e)
 }
 

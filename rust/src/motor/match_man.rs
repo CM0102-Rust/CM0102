@@ -31,7 +31,7 @@ pub(crate) unsafe extern "C" fn pick(
     let m = a4 as u8 as i8 as i32;
     let x = a5 as u8 as i8 as i32;
     let tot = m + x;
-    let pes = |k: i32| *((persons + 4 * k as usize) as *const usize);
+    let pes = |k: i32| read_usize(persons + 4 * k as usize);
     let sai = |i: i32| (out + 4 * i as usize) as *mut usize;
     let (mut al12, mut al13, mut al15) = (false, false, false);
     if marks == 0 {
@@ -65,27 +65,27 @@ pub(crate) unsafe extern "C" fn pick(
         return 0;
     }
     let jog = exe::crt_calloc(n as u32, 4);
-    let jg = |k: i32| *((jog + 4 * k as usize) as *const usize);
+    let jg = |k: i32| read_usize(jog + 4 * k as usize);
     if !staff.is_null() {
         for k in 0..n {
             let mut j = staff.players();
             let mut found = 0usize;
             for _ in 0..20 {
-                if *((j + match_player::STAFF) as *const usize) == pes(k) {
+                if read_usize(j + match_player::STAFF) == pes(k) {
                     found = j;
                     break;
                 }
                 j += 0x1be;
             }
-            *((jog + 4 * k as usize) as *mut usize) = found;
+            write_usize(jog + 4 * k as usize, found);
         }
     }
     let mut lc = 0u32;
     if mode & 0x400000 != 0 && !club.is_null() {
         let p = club.manager().addr();
-        let q = *(G_STAFF_COUNT as *const i32);
+        let q = read_i32(G_STAFF_COUNT);
         if p != 0 && *(p as *const i32) >= q - 0x10 && *(p as *const i32) < q && read_i8(p + staff::CLASSIFICATION) != 0 {
-            lc = exe::human_manager_get_saved_lineup(*(G_HUMAN_MANAGER as *const usize), p);
+            lc = exe::human_manager_get_saved_lineup(read_usize(G_HUMAN_MANAGER), p);
         }
     }
     let used = exe::crt_calloc(n as u32, 1);
@@ -103,9 +103,9 @@ pub(crate) unsafe extern "C" fn pick(
     let rating = |person: Staff, j: usize, i: i32| -> i32 {
         let i = i as usize;
         rating_fn(
-            person.addr(), person.player().addr(), j, *((codes + 2 * i) as *const u16) as u32, mode, club.addr(), staff.addr(), a10, u32::MAX,
-            *((marks + 8 * i) as *const u32), *((marks + 8 * i + 4) as *const u32), *((bytes + i) as *const u8) as u32, a14,
-            *((curtos + 2 * i) as *const u16) as u32, lc,
+            person.addr(), person.player().addr(), j, read_u16(codes + 2 * i) as u32, mode, club.addr(), staff.addr(), a10, u32::MAX,
+            read_u32(marks + 8 * i), read_u32(marks + 8 * i + 4), read_u8(bytes + i) as u32, a14,
+            read_u16(curtos + 2 * i) as u32, lc,
         )
     };
     let soltar = |target: usize| {
@@ -126,7 +126,7 @@ pub(crate) unsafe extern "C" fn pick(
                     continue;
                 }
                 let cand = pes(k);
-                if cand == 0 || *((cand + staff::PLAYER) as *const usize) == 0 {
+                if cand == 0 || read_usize(cand + staff::PLAYER) == 0 {
                     continue;
                 }
                 let (mut melhor, mut best_rating) = (-1i32, 0i32);
@@ -161,8 +161,8 @@ pub(crate) unsafe extern "C" fn pick(
             if ocupante == 0 {
                 continue;
             }
-            let f = read_i8(*((ocupante + staff::PLAYER) as *const usize) + 0xf);
-            let exit = if *((codes + 2 * i as usize) as *const u8) & 1 != 0 { f < 10 } else { f == 20 };
+            let f = read_i8(read_usize(ocupante + staff::PLAYER) + 0xf);
+            let exit = if read_u8(codes + 2 * i as usize) & 1 != 0 { f < 10 } else { f == 20 };
             if exit {
                 soltar(ocupante);
                 *sai(i) = 0;
@@ -176,7 +176,7 @@ pub(crate) unsafe extern "C" fn pick(
             let (mut melhor, mut mk) = (0usize, 0i32);
             for k in 0..n {
                 let cand = pes(k);
-                if cand == 0 || *((cand + staff::PLAYER) as *const usize) == 0 {
+                if cand == 0 || read_usize(cand + staff::PLAYER) == 0 {
                     continue;
                 }
                 let r = rating(Staff(cand), jg(k), i);
@@ -267,7 +267,7 @@ pub(crate) unsafe extern "C" fn pick(
         }
         let mut j = staff.players();
         for _ in 0..20 {
-            if *((j + match_player::STAFF) as *const usize) == p {
+            if read_usize(j + match_player::STAFF) == p {
                 return j;
             }
             j += 0x1be;
@@ -337,9 +337,9 @@ pub(crate) unsafe extern "C" fn pick(
 /// motor rodando e o fator a menos de 0,5 do guardado, mantem a postura atual (+0x1ab).
 pub(crate) unsafe extern "thiscall" fn stance(c: usize) -> u8 {
     let c = MatchManager(c);
-    let u = |p: usize, o: usize| *((p + o) as *const usize);
-    let i = |p: usize, o: usize| *((p + o) as *const i32);
-    let w = |p: usize, o: usize| *((p + o) as *const i16) as i32;
+    let u = |p: usize, o: usize| read_usize(p + o);
+    let i = |p: usize, o: usize| read_i32(p + o);
+    let w = |p: usize, o: usize| read_i16(p + o) as i32;
     let m = Engine(u(c.addr(), match_manager::ENGINE));
     let side = c.side();
     let lu = side as isize as usize;
@@ -455,7 +455,7 @@ pub(crate) unsafe extern "thiscall" fn stance(c: usize) -> u8 {
                         x18 = 0.0;
                     }
                     let mut base = h;
-                    let pe = *((e + 0x72) as *const u8);
+                    let pe = read_u8(e + 0x72);
                     if pe < 5 && (x11 as i32 - 3) < x12 as i32 {
                         let e2 = exe::comp_stats_find_club_entry(u(u(u(G_COMP_OBJECT_TABLE, 0), 4 * u(game, 0)), 8), clube_b);
                         if e2 != 0 && *((e2 + 0x72) as *const u8) > pe {
@@ -469,7 +469,7 @@ pub(crate) unsafe extern "thiscall" fn stance(c: usize) -> u8 {
                                     x30 *= ((rep_a - lim) as f64 + (rep_a - 5000) as f64) * 0.0002 + 1.0;
                                 }
                             }
-                            let p = game_pow(x30, 1.5) * (*((e2 + 0x72) as *const u8) as i32 - pe as i32) as f64;
+                            let p = game_pow(x30, 1.5) * (read_u8(e2 + 0x72) as i32 - pe as i32) as f64;
                             let p3 = p * p * p;
                             let q = p3 / ((k as i32 * k as i32) as f64 * 50.0 + 250.0) + 1.0;
                             let q = if 1.0 > q { 1.0 } else if 10.0 < q { 10.0 } else { q };
@@ -625,7 +625,7 @@ pub(crate) unsafe extern "thiscall" fn choose_formation(c: usize, sheets: usize,
     let m = c.engine();
     let human = c.tactic_slot() as i32;
     let tat = || read_usize(G_TACTICS + 0);
-    let how_many = || (*((tat() + 0x5fd) as *const i32)).wrapping_add(*((tat() + 0x5f5) as *const i32));
+    let how_many = || read_i32(tat() + 0x5fd).wrapping_add(read_i32(tat() + 0x5f5));
     let best: i32;
     let tactic = 'tactic: {
         if read_i8(m.addr() + 0) != 0 {
@@ -634,7 +634,7 @@ pub(crate) unsafe extern "thiscall" fn choose_formation(c: usize, sheets: usize,
             break 'tactic exe::tactics_get_club_tactic(tat(), club, (human) as u32);
         } else {
             let p = club.manager();
-            let q = *(G_STAFF_COUNT as *const i32);
+            let q = read_i32(G_STAFF_COUNT);
             if human == 0 && !p.is_null() && *(p.addr() as *const i32) >= q - 0x10 && *(p.addr() as *const i32) < q && (p.classification() as i8) != 0 {
                 let manager = read_usize(G_HUMAN_MANAGER + 0);
                 if exe::human_manager_is_on_holiday(manager, p) != 0 && exe::human_manager_get_holiday_option(manager, 2, p) != 0 {
@@ -723,7 +723,7 @@ pub(crate) unsafe fn judge_formations(
         }
     }
     let tat = || read_usize(G_TACTICS + 0);
-    let how_many = || (*((tat() + 0x5fd) as *const i32)).wrapping_add(*((tat() + 0x5f5) as *const i32));
+    let how_many = || read_i32(tat() + 0x5fd).wrapping_add(read_i32(tat() + 0x5f5));
     let list = calloc(how_many() as u32, 8);
     let (mut melhor, mut melhor_r) = (-1i32, 0f64);
     let manager = c.manager_sheet();
@@ -741,8 +741,8 @@ pub(crate) unsafe fn judge_formations(
         };
         let v = if v > 3.0 { 3.0 } else { v };
         let mut x = ((3000.0 - t as f64) * 5.0 + v * t as f64) * 0.005;
-        let tactic = exe::tactics_get_tactic_block(tat(), *(f as *const u16) as u32, 0);
-        let flags = *((tactic + tactics_fields::FLAGS) as *const u32);
+        let tactic = exe::tactics_get_tactic_block(tat(), read_u16(f) as u32, 0);
+        let flags = read_u32(tactic + tactics_fields::FLAGS);
         if !manager.is_null() {
             if flags & 0x400 != 0 {
                 x += (manager.offside() as i32 - 10) as f64;
@@ -857,7 +857,7 @@ pub(crate) unsafe fn judge_formations(
             _ => x,
         };
         let r = y * (sum as f64 / escala as f64);
-        *((list + 8 * idx as usize) as *mut f64) = r;
+        write_f64(list + 8 * idx as usize, r);
         if melhor == -1 || r > melhor_r {
             melhor_r = r;
             melhor = idx;
@@ -893,8 +893,8 @@ pub(crate) unsafe fn judge_formations(
 /// para quem esta em +6/+0xa/+0xe da comissao).
 pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
     let c = MatchManager(c);
-    let u = |p: usize, o: usize| *((p + o) as *const usize);
-    let w = |p: usize, o: usize| *((p + o) as *const i16);
+    let u = |p: usize, o: usize| read_usize(p + o);
+    let w = |p: usize, o: usize| read_i16(p + o);
     let average: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f32 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
     let (ca, cb) = (u(c.addr(), match_manager::CLUB), u(c.addr(), match_manager::OPPONENT));
     let mut acc = 0i8;
@@ -902,7 +902,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
     let human = c.tactic_slot();
     if human == 0 {
         let p = u(ca, club::MANAGER);
-        let q = *(G_STAFF_COUNT as *const i32);
+        let q = read_i32(G_STAFF_COUNT);
         if p != 0 && *(p as *const i32) >= q - 0x10 && *(p as *const i32) < q && read_i8(p + staff::CLASSIFICATION) != 0 {
             let manager = u(G_HUMAN_MANAGER, 0);
             if exe::human_manager_is_on_holiday(manager, p) != 0 && exe::human_manager_get_holiday_option(u(G_HUMAN_MANAGER, 0), 2, u(u(c.addr(), match_manager::CLUB), 0xcf)) != 0 {
@@ -978,18 +978,18 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
             continue;
         }
         let f = u(j, match_player::PLAYER);
-        let pos_j = *((j + match_player::POSITION) as *const u8) as u32;
+        let pos_j = read_u8(j + match_player::POSITION) as u32;
         let a = |k: u32| exe::staff_get_player_attribute(u(j, match_player::STAFF), k) as i32;
         let tb = || exe::match_player_get_position(j);
         let fb = |o: usize| read_i8(u(j, match_player::PLAYER) + o);
         let div = 13 - ((exe::non_player_attribute_rating(u(c.addr(), match_manager::MANAGER_SHEET), (0xb) as i8) as i8) as i32) / 2;
-        let rest = (*(u(c.addr(), match_manager::MANAGER_SHEET) as *const i32)).wrapping_add(*(f as *const i32)) % div;
+        let rest = read_i32(u(c.addr(), match_manager::MANAGER_SHEET)).wrapping_add(read_i32(f)) % div;
         let mut f38 = (rest as f64 * 0.05 + 1.0) * f40 * 1.2;
         if f38 < 0.6 {
             f38 = 0.6;
         }
         // avanco pelas pontas
-        if *((t() + 0x187b) as *const u32) & 0x1c00000 == 0 {
+        if read_u32(t() + 0x187b) & 0x1c00000 == 0 {
             let lat = |band: u16, ref_: usize| tb() & band != 0 && fb(0x14) as i32 >= fb(ref_) as i32 - 1 && fb(0x19) == 20;
             if tb() & 0x10 != 0 && tb() & 0x200 != 0 && fb(0x14) as i32 > fb(0x13) as i32 - 1 && fb(0x19) == 20 && f38 * 16.0 < a(7) as f64 {
                 exe::formation_set_slot_position(t(), pos_j, 0x220, 0);
@@ -1009,7 +1009,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
                 exe::formation_set_slot_position(t(), read_i8(j + match_player::POSITION) as u8 as u32, 0x440, 1);
             }
         }
-        let fl = |v: f32| *((j + match_player::STAMINA) as *const f32) as f64 > v as f64;
+        let fl = |v: f32| read_f32(j + match_player::STAMINA) as f64 > v as f64;
         if (tb() & 2 != 0 || tb() & 0x20 != 0 || tb() & 0x40 != 0)
             && fl(8250.0)
             && fb(0x3c) > 12
@@ -1018,7 +1018,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
             && f38 * 40.0 < (a(0x14) + (tc(0x15) as i32 - 10) * 3) as f64
         {
             exe::formation_set_player_instruction(t(), pos_j as i8, 0x200000);
-            if (*((j + match_player::STAMINA) as *const f32) as f64) < 8500.0 || fb(0x3c) < 18 || fb(0x44) > 16 {
+            if (read_f32(j + match_player::STAMINA) as f64) < 8500.0 || fb(0x3c) < 18 || fb(0x44) > 16 {
                 exe::formation_set_player_instruction(t(), read_i8(j + match_player::POSITION), 0x4000);
             }
         } else {
@@ -1037,7 +1037,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
         }
         if (tb() & 8 != 0 || tb() & 0x10 != 0) && tb() & 0x80 == 0 && tb() & 0x800 == 0 && f38 * 16.0 > a(7) as f64 {
             dois_ou_quatro();
-            let r = (exe::cm3_match_engine_find_marking_target(m, (*((j + match_player::SIDE) as *const u8) as u32) as i8, read_i8(j + match_player::POSITION)) as i8);
+            let r = (exe::cm3_match_engine_find_marking_target(m, (read_u8(j + match_player::SIDE) as u32) as i8, read_i8(j + match_player::POSITION)) as i8);
             if r != -1 {
                 let side = (read_i8(j + match_player::POSITION) == 0) as usize;
                 let o = Engine(m).player(side as i8, r as usize).addr();
@@ -1048,7 +1048,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
                     ra < w(u(c.addr(), match_manager::OPPONENT), 0x80).wrapping_add(0xfa) || w(u(o, match_player::PLAYER), 0xb).wrapping_add(0xfa) > ra
                 };
                 let sides = || tbo() & 0x200 != 0 || tbo() & 0x100 != 0 || tbo() & 0x400 != 0;
-                let resto5 = || *(u(o, match_player::STAFF) as *const i32) % 5;
+                let resto5 = || read_i32(u(o, match_player::STAFF)) % 5;
                 if u(o, match_player::STAFF) != 0 {
                     if (tbo() & 0x20 != 0 || (exe::match_player_get_secondary_position(o) as u8) & 0x20 != 0)
                         && sides()
@@ -1142,7 +1142,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
             let f28 = f38 * 14.0;
             let te4 = tc(0xe) as i32 / 4;
             let pj = || read_i8(j + match_player::POSITION) as u8 as u32;
-            let fl8000 = || *((j + match_player::STAMINA) as *const f32) as f64;
+            let fl8000 = || read_f32(j + match_player::STAMINA) as f64;
             if f28 - (te4 as f64) < a(0x14) as f64 && f28 - ((tc(0xe) as i32 / 4) as f64) < a(0xc) as f64 && fl8000() > 8000.0 {
                 exe::formation_set_player_instruction(t(), pj() as i8, 0x800000);
             } else {
@@ -1371,7 +1371,7 @@ pub(crate) unsafe extern "thiscall" fn starters(c: usize) -> u8 {
 ///
 /// [pt] `titulares` com a 0x6e0d00 (poe na vaga) injetada.
 pub(crate) unsafe fn starters_with(c: MatchManager, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
-    let total = || (*((c.fixture().addr() + 0x4d) as *const u8) & 0xf) as i32 + 11;
+    let total = || (read_u8(c.fixture().addr() + 0x4d) & 0xf) as i32 + 11;
     let mut n = 0u8;
     let mut k = 0i8;
     while (k as i32) < total() {
@@ -1379,7 +1379,7 @@ pub(crate) unsafe fn starters_with(c: MatchManager, call: &mut dyn FnMut(usize, 
         let p = exe::tactics_get_selected_player(read_usize(G_TACTICS + 0), c.club(), pos, c.tactic_slot() as i32);
         if p != 0 && exe::injury_get_player_injury_status(read_usize(G_INJURY + 0), p) != 2 {
             let game = c.fixture();
-            let free = *(game.addr() as *const i32) == -2 || exe::discipline_is_player_banned(read_usize(G_DISCIPLINE + 0), p, game.competition(), 1, 0) == 0;
+            let free = read_i32(game.addr()) == -2 || exe::discipline_is_player_banned(read_usize(G_DISCIPLINE + 0), p, game.competition(), 1, 0) == 0;
             if free && exe::nationalteams_get_international_duty_club(read_usize(G_NATIONAL_TEAMS + 0), p, G_CURRENT_DATE, c.club(), 0, 0) == 0 && call(FN_MATCH_MAN_PLACE_PLAYER_IN_TEAM, c.addr(), [pos, p as u32, pos, 0, 0]) as u8 != 0 {
                 n = n.wrapping_add(1);
             }
@@ -1397,7 +1397,7 @@ pub(crate) unsafe fn starters_with(c: MatchManager, call: &mut dyn FnMut(usize, 
 /// taticas (0x8984d0). Com tecnico humano (+0x19) so quando 0x600a50 nega ou 0x5fd480 confirma.
 pub(crate) unsafe extern "thiscall" fn store_tactic(c: usize) {
     let c = MatchManager(c);
-    let u = |p: usize, o: usize| *((p + o) as *const usize);
+    let u = |p: usize, o: usize| read_usize(p + o);
     let club = u(c.addr(), match_manager::CLUB);
     if club == 0 || u(G_TACTICS, 0) == 0 {
         return;
@@ -1423,7 +1423,7 @@ pub(crate) unsafe fn show_error_at(file: usize, row: u32) {
     let s = join(nome.as_mut_ptr(), ext.as_mut_ptr(), row);
     format(0xae24d0, 0x9870e8, s);
     exe::gui_show_message_box(0x9870e0, 0xae24d0, 0);
-    *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
+    write_u32(G_MOUSE_LEFT_BUTTON_DOWN, 0);
 }
 
 /// the staff selects the team against the opponent. Outside the human, weighs today's match against the next one on the
@@ -2208,11 +2208,11 @@ pub(crate) unsafe fn substitute_with(c: MatchManager, goalkeeper: u8, call: &mut
     }
     let mut sheets = [0usize; 20];
     for i in 0..n1 {
-        sheets[i] = *((list[i] + 0x69) as *const usize);
+        sheets[i] = read_usize(list[i] + 0x69);
     }
     // the scale mode
     let club = c.club();
-    let strength = |o: usize| read_i16((*((c.addr() + o) as *const usize)) + 0x80) as i32;
+    let strength = |o: usize| read_i16(read_usize(c.addr() + o) + 0x80) as i32;
     let mut mode: u32 = if exe::database_is_national_team(club) != 0 { 0x1ffffd2 + 0x8a0cb } else { 0x8a0cb };
     if c.tactic_slot() != 0 {
         mode = (mode | 0x20100) ^ 0x80000;
@@ -2233,8 +2233,8 @@ pub(crate) unsafe fn substitute_with(c: MatchManager, goalkeeper: u8, call: &mut
             } else if c.selection_mode() != 3 {
                 false
             } else {
-                let id = *(comp.addr() as *const i32);
-                id <= -1 || exe::comp_is_club_still_in_contention(*((*(G_COMP_OBJECT_TABLE as *const usize) + id as usize * 4) as *const usize), club) != 0
+                let id = read_i32(comp.addr());
+                id <= -1 || exe::comp_is_club_still_in_contention(read_usize(read_usize(G_COMP_OBJECT_TABLE) + id as usize * 4), club) != 0
             };
             if check_national_team {
                 if exe::database_is_national_team(club) == 0 {
@@ -2250,12 +2250,12 @@ pub(crate) unsafe fn substitute_with(c: MatchManager, goalkeeper: u8, call: &mut
     }
     if exe::human_manager_is_human_club(club, 1, (1) as u32, (0) as u32, 0) != 0 && c.tactic_slot() == 0 {
         let p = club.manager().addr();
-        if p != 0 && exe::human_manager_is_on_holiday(*(G_HUMAN_MANAGER as *const usize), p) != 0 && exe::human_manager_get_holiday_option(*(G_HUMAN_MANAGER as *const usize), (3) as u32, p) != 0 {
+        if p != 0 && exe::human_manager_is_on_holiday(read_usize(G_HUMAN_MANAGER), p) != 0 && exe::human_manager_get_holiday_option(read_usize(G_HUMAN_MANAGER), (3) as u32, p) != 0 {
             mode |= 0x400000;
         }
     }
     let mut place = [0usize; 20];
-    let extra = *((c.tactics() + 0x584) as *const u32);
+    let extra = read_u32(c.tactics() + 0x584);
     let args: [usize; 15] = [
         sheets.as_ptr() as usize, n1, table.as_ptr() as usize, slots, 0, place.as_mut_ptr() as usize, mode as usize, club.addr(), c.addr(), c.manager(), 0,
         mark.as_ptr() as usize, bpos.as_ptr() as usize, extra as usize, tab_b.as_ptr() as usize,
@@ -2273,29 +2273,29 @@ pub(crate) unsafe fn substitute_with(c: MatchManager, goalkeeper: u8, call: &mut
         let mut j = c.players();
         let mut found = false;
         for _ in 0..20 {
-            if *((j + match_player::STAFF) as *const usize) == sheets[i] {
+            if read_usize(j + match_player::STAFF) == sheets[i] {
                 found = true;
                 break;
             }
             j += 0x1be;
         }
         if !found || j == 0 {
-            *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
+            write_u32(G_MOUSE_LEFT_BUTTON_DOWN, 0);
             continue;
         }
-        let slot = (0..slots).find(|&k| place[k] == *((j + match_player::STAFF) as *const usize));
+        let slot = (0..slots).find(|&k| place[k] == read_usize(j + match_player::STAFF));
         match slot {
             Some(k) => {
                 if read_i8(j + match_player::POSITION) == -1 {
                     c.set_substitutions_left(c.substitutions_left().wrapping_sub(1));
                     exe::cm3_match_engine_place_player_at_entry_cell(m, j);
-                    *((j + match_player::MINUTE_ON) as *mut i8) = minute_in_period(m);
+                    write_i8(j + match_player::MINUTE_ON, minute_in_period(m));
                     entraram[ne] = j;
                     ne += 1;
                 }
                 let e = read_i8(j + match_player::POSITION);
                 if e >= 0 || e == -1 {
-                    *((j + match_player::POSITION) as *mut i8) = pos[k];
+                    write_i8(j + match_player::POSITION, pos[k]);
                 }
             }
             None => {
@@ -2303,9 +2303,9 @@ pub(crate) unsafe fn substitute_with(c: MatchManager, goalkeeper: u8, call: &mut
                     continue;
                 }
                 exe::cm3_match_engine_remove_player_from_pitch(m, j, -1);
-                *((j + match_player::POSITION) as *mut i8) = -4;
-                *((j + match_player::SUBSTITUTED_OFF) as *mut u8) = 1;
-                *((j + match_player::MINUTE_OFF) as *mut i8) = minute_in_period(m);
+                write_i8(j + match_player::POSITION, -4);
+                write_u8(j + match_player::SUBSTITUTED_OFF, 1);
+                write_i8(j + match_player::MINUTE_OFF, minute_in_period(m));
                 sairam[ns] = j;
                 ns += 1;
             }
@@ -2370,7 +2370,7 @@ pub(crate) unsafe fn substitute_with(c: MatchManager, goalkeeper: u8, call: &mut
         }
         j += 0x1be;
     }
-    call(FN_TACTICS_SET_CAPTAIN_FROM_SLOT, *(G_TACTICS as *const usize), [club.addr() as u32, melhor as u8 as u32, c.tactic_slot() as i32 as u32, 0, 0]);
+    call(FN_TACTICS_SET_CAPTAIN_FROM_SLOT, read_usize(G_TACTICS), [club.addr() as u32, melhor as u8 as u32, c.tactic_slot() as i32 as u32, 0, 0]);
     call(FN_MATCH_MAN_REASSIGN_POSITIONS, c.addr(), [0, 0, 0, 0, 0]);
 }
 
@@ -2435,7 +2435,7 @@ pub(crate) unsafe fn rebuild_team_with(c: MatchManager, call: &mut dyn FnMut(usi
     for k in 0..20 {
         let j = c.players() + k * 0x1be;
         if read_i8(j + match_player::POSITION) >= 0 {
-            sheets[n] = *((j + match_player::STAFF) as *const usize);
+            sheets[n] = read_usize(j + match_player::STAFF);
             n += 1;
         }
     }
@@ -2462,19 +2462,19 @@ pub(crate) unsafe fn rebuild_team_with(c: MatchManager, call: &mut dyn FnMut(usi
         tab_b[n] = exe::match_player_get_secondary_position(j);
         mark[n] = exe::formation_get_player_instructions(c.tactics(), read_i8(j + match_player::POSITION));
         bpos[n] = exe::formation_get_marking_type(c.tactics(), read_i8(j + match_player::POSITION));
-        sheets[n] = *((j + match_player::STAFF) as *const usize);
+        sheets[n] = read_usize(j + match_player::STAFF);
         n += 1;
     }
     let club = c.club();
     let mut mode = 0x8800u32;
     if exe::human_manager_is_human_club(club, 1, (1) as u32, (0) as u32, 0) != 0 && c.tactic_slot() == 0 {
         let p = club.manager().addr();
-        if p != 0 && exe::human_manager_is_on_holiday(*(G_HUMAN_MANAGER as *const usize), p) != 0 && exe::human_manager_get_holiday_option(*(G_HUMAN_MANAGER as *const usize), (3) as u32, p) != 0 {
+        if p != 0 && exe::human_manager_is_on_holiday(read_usize(G_HUMAN_MANAGER), p) != 0 && exe::human_manager_get_holiday_option(read_usize(G_HUMAN_MANAGER), (3) as u32, p) != 0 {
             mode = 0x408800;
         }
     }
     let mut place = [0usize; 20];
-    let extra = *((c.tactics() + 0x584) as *const u32);
+    let extra = read_u32(c.tactics() + 0x584);
     let args: [usize; 15] = [
         sheets.as_ptr() as usize, n, table.as_ptr() as usize, n, 0, place.as_mut_ptr() as usize, mode as usize, club.addr(), c.addr(), c.manager(), 0,
         mark.as_ptr() as usize, bpos.as_ptr() as usize, extra as usize, tab_b.as_ptr() as usize,
@@ -2488,7 +2488,7 @@ pub(crate) unsafe fn rebuild_team_with(c: MatchManager, call: &mut dyn FnMut(usi
         let mut j = c.players();
         let mut found = false;
         for _ in 0..20 {
-            if *((j + match_player::STAFF) as *const usize) == sheets[i] {
+            if read_usize(j + match_player::STAFF) == sheets[i] {
                 found = true;
                 break;
             }
@@ -2497,9 +2497,9 @@ pub(crate) unsafe fn rebuild_team_with(c: MatchManager, call: &mut dyn FnMut(usi
         if !found {
             j = 0;
         }
-        let f = *((j + match_player::STAFF) as *const usize);
+        let f = read_usize(j + match_player::STAFF);
         if let Some(k) = (0..n).find(|&k| place[k] == f) {
-            *((j + match_player::POSITION) as *mut i8) = pos[k];
+            write_i8(j + match_player::POSITION, pos[k]);
             exe::match_player_calc_ratings(j, 0);
         }
     }
@@ -2552,7 +2552,7 @@ pub(crate) unsafe extern "thiscall" fn best_in_list(this: usize, list: *const us
         }
         let mut v = exe::match_man_get_captain_score(p, 0, this.club()) as i32;
         let x = this.manager_sheet();
-        if !x.is_null() && ((exe::non_player_attribute_rating(x, (x.judgement() as u8 as u32) as i8) as i8) as i32) < *(p.addr() as *const i32) % 20 {
+        if !x.is_null() && ((exe::non_player_attribute_rating(x, (x.judgement() as u8 as u32) as i8) as i8) as i32) < read_i32(p.addr()) % 20 {
             let m = (x.addr() as i32) % 20;
             v = ftol((read_f64(rdata::F64_1_1) - m as f64 * read_f64(rdata::F64_0_01)) * v as i16 as f64);
         }
@@ -2631,7 +2631,7 @@ pub(crate) unsafe extern "C" fn rate_player(person: usize, player: usize, club: 
         y = 4.0;
     }
     let mut x = 0.0f64;
-    let e = Contract(contract(*(G_CONTRACT_MANAGER as *const usize), p.addr(), club.addr()));
+    let e = Contract(contract(read_usize(G_CONTRACT_MANAGER), p.addr(), club.addr()));
     if !e.is_null() {
         x = e.morale() as f64 * d8(0x968ef8) + d8(0x968968);
         let adjust = match (e.squad_status() as i8) as u8 >> 4 {
@@ -2971,16 +2971,16 @@ pub(crate) unsafe extern "C" fn apply_squad_rule(
 ///
 /// [pt] A data (dia +0, ano +2) de `a` vem antes da de `b`? (comparação do ano sem sinal, do dia com sinal)
 pub(crate) unsafe fn match_man_date_is_before(a: usize, b: usize) -> bool {
-    let (aa, ab) = (*((a + 2) as *const u16), *((b + 2) as *const u16));
-    aa < ab || (aa == ab && *(a as *const i16) < *(b as *const i16))
+    let (aa, ab) = (read_u16(a + 2), read_u16(b + 2));
+    aa < ab || (aa == ab && *(a as *const i16) < read_i16(b))
 }
 
 /// Days from the person's date (+0x3e/+0x40) to today, counting 365 per year.
 ///
 /// [pt] Os dias desde a data de `p` (+0x3e) até hoje ([0xae2c90]), contando 365 por ano.
 pub(crate) unsafe fn match_man_days_since_date(p: Staff) -> i32 {
-    let years = *(G_CURRENT_DATE_YEAR as *const u16) as i32 - p.date_joined_club_year() as i32;
-    years * 365 - (p.date_joined_club() as i16) as i32 + *(G_CURRENT_DATE as *const i16) as i32
+    let years = read_u16(G_CURRENT_DATE_YEAR) as i32 - p.date_joined_club_year() as i32;
+    years * 365 - (p.date_joined_club() as i16) as i32 + read_i16(G_CURRENT_DATE) as i32
 }
 
 /// Observer's date (+0x3e) is before the player's, and the player's date is more than a year ago.
@@ -3002,14 +3002,14 @@ pub(crate) unsafe fn scouted_over_a_year_ago(o: usize, p: Staff) -> bool {
 ///
 /// [pt] Byte com sinal em `p + k`.
 pub(crate) unsafe fn signed_byte_at(p: usize, k: usize) -> i32 {
-    *((p + k) as *const i8) as i32
+    read_i8(p + k) as i32
 }
 
 /// PLAYERSTATS get_stat (`get_stat` on G_PLAYER_STATS) for player data `f`.
 ///
 /// [pt] A 0x7c1e30 das notas ([0xb74350]) da ficha `f`.
 pub(crate) unsafe fn player_stat(f: PlayerSheet, k: u32, c: u32, x: f32) -> f64 {
-    exe::playerstats_get_stat(*(G_PLAYER_STATS as *const usize), f, k, c, x)
+    exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), f, k, c, x)
 }
 
 /// Rating of player data `f` for position mask `m` from its attributes via table `tab`, with the main-position special
@@ -3090,7 +3090,7 @@ pub(crate) unsafe fn position_attribute_adjust(f: PlayerSheet, m: u32) -> i32 {
 /// [pt] O acréscimo da média das notas (0x7c1950 x 0,2; com o observador `quem` de mais de um ano no
 /// clube do jogador, pesada pelos dias) à soma, por `cont`.
 pub(crate) unsafe fn recent_form_bonus(p: Staff, f: PlayerSheet, club: Club, who: Staff, count: i8) -> i32 {
-    let mut x = (exe::playerstats_get_recent_form(*(G_PLAYER_STATS as *const usize), f) as f64 * read_f64(rdata::F64_0_2)) as f32;
+    let mut x = (exe::playerstats_get_recent_form(read_usize(G_PLAYER_STATS), f) as f64 * read_f64(rdata::F64_0_2)) as f32;
     if club == p.club_job() && !who.is_null() && scouted_over_a_year_ago(who.addr(), p) {
         let d = match_man_days_since_date(p) as f64;
         x = (((read_f64(rdata::F64_365) - d) * read_f64(rdata::F64_7_5) + d * x as f64) * read_f64(rdata::F64_0_002739726027)) as f32;
@@ -3116,13 +3116,13 @@ pub(crate) unsafe fn recent_form_bonus(p: Staff, f: PlayerSheet, club: Club, who
 /// `quem`, e as notas 0x7c1e30(1) e 0x7c1e30(6, 0x14, `ultimo`) no clube (ou mesma nação).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn form_bonus(p: Staff, f: PlayerSheet, club: Club, who: Staff, age: i8, count: i8, sum: i32, l3c: i32, teto_veterano: bool, last: u32) -> i32 {
-    let notes = *(G_PLAYER_STATS as *const usize);
+    let notes = read_usize(G_PLAYER_STATS);
     let ceiling = |v: i32| {
         let y = v as f64 * read_f32(rdata::F32_0_05000000075_AT_96D61C) as f64 + read_f32(rdata::F32_6_800000191) as f64;
         (if y > read_f64(rdata::F64_7_3) { read_f64(rdata::F64_7_3) } else { y }) as f32
     };
     let ratio = || {
-        let (m10, m18) = (*((notes + 0x10) as *const f64), *((notes + 0x18) as *const f64));
+        let (m10, m18) = (read_f64(notes + 0x10), read_f64(notes + 0x18));
         if m18 == read_f64(rdata::F64_0) { read_f64(rdata::F64_6_8) } else { m10 / m18 }
     };
     let mut x = f32::from_bits(0x40d9999a);
@@ -3172,11 +3172,11 @@ pub(crate) unsafe fn form_bonus(p: Staff, f: PlayerSheet, club: Club, who: Staff
 ///
 /// [pt] O desconto do histórico do jogador (0x62ed70, +0x28).
 pub(crate) unsafe fn injury_history_penalty(p: Staff, l4c: i32) -> i32 {
-    let h = exe::injury_get_player_injury(*(G_INJURY as *const usize), p);
+    let h = exe::injury_get_player_injury(read_usize(G_INJURY), p);
     if h == 0 {
         return l4c;
     }
-    let w = core::ptr::read_unaligned((h + 0x28) as *const i16) as i32;
+    let w = read_i16(h + 0x28) as i32;
     l4c + if w <= 10 { -2 * w } else { -20 - w }
 }
 
@@ -3185,7 +3185,7 @@ pub(crate) unsafe fn injury_history_penalty(p: Staff, l4c: i32) -> i32 {
 ///
 /// [pt] A reputação do jogador (0x62c3d0 pelo id).
 pub(crate) unsafe fn injury_word_0c(p: usize) -> i16 {
-    exe::injury_get_fatigue(*(G_INJURY as *const usize), *(p as *const u32))
+    exe::injury_get_fatigue(read_usize(G_INJURY), read_u32(p))
 }
 
 /// End of flag 0x4000: age penalty (flag 0x100), half-attribute sum bonus, +0x2f and the foreign player's
@@ -3215,7 +3215,7 @@ pub(crate) unsafe fn age_and_foreigner_adjust(p: Staff, f: PlayerSheet, club: Cl
     if nation.is_null() || (nation.first_language() as u8) == (pais.first_language() as u8) {
         return l4c;
     }
-    let mut c = (exe::playerstats_get_language_fluency(*(G_PLAYER_STATS as *const usize), p, club, (nation.addr() as u32 & !0xff) | (nation.first_language() as u8) as u32, 1) as u32) as u8 as i8;
+    let mut c = (exe::playerstats_get_language_fluency(read_usize(G_PLAYER_STATS), p, club, (nation.addr() as u32 & !0xff) | (nation.first_language() as u8) as u32, 1) as u32) as u8 as i8;
     if flags & 0x100 != 0 {
         let k = (age as u8).wrapping_sub((p.adaptability() / 2) as u8).wrapping_add(5) as i8;
         let m = read_f64(rdata::F64_26) - k as f64 * read_f64(rdata::F64_0_83);
@@ -3256,7 +3256,7 @@ pub(crate) unsafe fn contract_adjust(p: Staff, f: PlayerSheet, club: Club, contr
     } else {
         let lim = owner.reputation() as i32 - 0x4e2;
         let dx = club.reputation();
-        let ax = *((contract + 0x3d) as *const i8) as i16;
+        let ax = read_i8(contract + 0x3d) as i16;
         let cl = age;
         let k = if dx as i32 > lim {
             let ax = ax.wrapping_add(0x64);
@@ -3464,18 +3464,18 @@ pub(crate) unsafe fn scout_knowledge_bonus(p: Staff, f: PlayerSheet, club: Club,
 /// [0xae1080]): a porcentagem +4 / (+4 + +6) em byte (0 sem nenhum); None fora da lista ou de 70 em
 /// diante.
 pub(crate) unsafe fn work_permit_appearance_pct(p: Staff) -> Option<i8> {
-    let list = *(G_TRANSFER_MANAGER as *const usize);
+    let list = read_usize(G_TRANSFER_MANAGER);
     let x = exe::transfer_manager_find_work_permit(list, p);
     if x == 0 {
         return None;
     }
-    let c = exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), p);
-    *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
-    let owner = if c == 0 { 0 } else { *(G_CLUB_TABLE as *const usize) + *((c + 4) as *const usize) * club::SIZE };
+    let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
+    write_usize(G_CONTRACT_LOOKUP_RESULT, c);
+    let owner = if c == 0 { 0 } else { read_usize(G_CLUB_TABLE) + read_usize(c + 4) * club::SIZE };
     if exe::transfer_manager_player_needs_work_permit(list, p, owner, 1) == 0 {
         return None;
     }
-    let (a, b) = (*((x + 4) as *const u16) as i32, *((x + 6) as *const u16) as i32);
+    let (a, b) = (read_u16(x + 4) as i32, read_u16(x + 6) as i32);
     if a + b == 0 {
         return Some(0);
     }
@@ -3637,8 +3637,8 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
         return -10000;
     }
     let fb = |k: usize| signed_byte_at(f.addr(), k);
-    let bd = *(G_INJURY as *const usize);
-    let of_the_base = *(p.addr() as *const i32) < *(G_STAFF_COUNT as *const i32);
+    let bd = read_usize(G_INJURY);
+    let of_the_base = read_i32(p.addr()) < read_i32(G_STAFF_COUNT);
     let active = limit > -1;
     let mut l24: i32 = 10000;
     let mut l28: i32 = 100;
@@ -3648,7 +3648,7 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
         l28 = l24 as i16 as i32 / 100;
     }
     let age = (p.age() as i8);
-    let contract = if *(G_CONTRACT_MANAGER as *const usize) != 0 { exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), p, club) } else { 0 };
+    let contract = if read_usize(G_CONTRACT_MANAGER) != 0 { exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club) } else { 0 };
     let (conhece, obs) = if !o.is_null() {
         (o.non_player().addr(), o.addr())
     } else if !club.is_null() && club.manager().addr() != 0 {
@@ -3678,7 +3678,7 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
     if flags & 0x10 != 0 {
         count += 1;
         let a = f.home_reputation() as f64;
-        let b = core::ptr::read_unaligned((p.nation().addr() + nation::REPUTATION) as *const i16) as f64;
+        let b = read_i16(p.nation().addr() + nation::REPUTATION) as f64;
         sum += ftol(a / ((read_f64(rdata::F64_1_8) - b * read_f64(rdata::F64_0_0001)) * read_f64(rdata::F64_50)));
         if cut(sum, count) {
             return -10000;
@@ -3752,7 +3752,7 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
         }
         let h = exe::injury_get_player_injury(bd, p);
         if h != 0 {
-            l4c -= core::ptr::read_unaligned((h + 0x2c) as *const i16) as i32;
+            l4c -= read_i16(h + 0x2c) as i32;
         }
         l4c = age_and_foreigner_adjust(p, f, club, flags, pos, masc, age, count, l4c);
     }
@@ -3782,7 +3782,7 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
             l4c += contract_extra(p, Contract(contract), flags, l28);
         }
     } else if flags & 0x20000 != 0 {
-        let c = exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), p, club);
+        let c = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club);
         if c != 0 {
             l4c += contract_bond(p, Contract(c), flags);
         }
@@ -3804,13 +3804,13 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
 /// [pt] O valor para a habilidade potencial (flag 0x100): no clube do contrato (0x4cf5a0, que fica em
 /// [0xae1080]) a média x 25 mais o potencial (+7) x 25 (em 16 bits); fora dele, a média x 50.
 pub(crate) unsafe fn potential_or_average_value(p: Staff, f: PlayerSheet, club: Club, sum: i32, count: i8) -> i32 {
-    let c = exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), p);
-    *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
-    let owner = if c == 0 { 0 } else { *(G_CLUB_TABLE as *const usize) + *((c + 4) as *const usize) * club::SIZE };
+    let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
+    write_usize(G_CONTRACT_LOOKUP_RESULT, c);
+    let owner = if c == 0 { 0 } else { read_usize(G_CLUB_TABLE) + read_usize(c + 4) * club::SIZE };
     if owner == club.addr() {
         let q = sum * 25 / count as i32;
         let _ = f.addr();
-        let pot = core::ptr::read_unaligned((p.player().addr() + 7) as *const i16).wrapping_mul(0x19) as u16 as u32;
+        let pot = read_i16(p.player().addr() + 7).wrapping_mul(0x19) as u16 as u32;
         q.wrapping_add(((q as u32 & 0xffff0000) | pot) as i32)
     } else {
         sum * 50 / count as i32
@@ -4131,8 +4131,8 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
 ///
 /// [pt] O desconto da flag 0x4000 pelo histórico (0x62ed70, +0x2c).
 pub(crate) unsafe fn injury_history_penalty_2c(p: Staff, l4c: i32) -> i32 {
-    let h = exe::injury_get_player_injury(*(G_INJURY as *const usize), p);
-    if h == 0 { l4c } else { l4c - core::ptr::read_unaligned((h + 0x2c) as *const i16) as i32 }
+    let h = exe::injury_get_player_injury(read_usize(G_INJURY), p);
+    if h == 0 { l4c } else { l4c - read_i16(h + 0x2c) as i32 }
 }
 
 /// The fatigue of match player `reg` to subtract from stamina (`+0x35`).
@@ -4153,15 +4153,15 @@ pub(crate) unsafe fn match_fatigue_offset(reg: MatchPlayer, goalkeeper: i32) -> 
         let side = reg.side();
         let base = Engine((m.addr() as isize + side as isize * 0xd0) as usize);
         let t = base.side0_manager();
-        let n = *(G_STAFF_COUNT as *const i32);
-        if t.is_null() || *(t.addr() as *const i32) < n - 0x10 || *(t.addr() as *const i32) >= n || t.classification() == 0 {
+        let n = read_i32(G_STAFF_COUNT);
+        if t.is_null() || read_i32(t.addr()) < n - 0x10 || read_i32(t.addr()) >= n || t.classification() == 0 {
             false
         } else {
-            let tecnicos = *(G_HUMAN_MANAGER as *const usize);
+            let tecnicos = read_usize(G_HUMAN_MANAGER);
             if exe::human_manager_is_on_holiday(tecnicos, t) != 0 {
                 false
             } else if (base.side0_manager_tactic_slot() as u8) != 0 {
-                let c = *((m.r#match() + if side == 0 { 0x1c } else { 0x20 }) as *const usize);
+                let c = read_usize(m.r#match() + if side == 0 { 0x1c } else { 0x20 });
                 if exe::database_is_national_team(c) != 0 {
                     true
                 } else {
@@ -4257,15 +4257,15 @@ pub(crate) unsafe fn tactic_instruction_adjust(f: PlayerSheet, lo: u32, b1: u8, 
 /// 200 x a nota (nunca negativa), com a nota negativa pela metade; pesado pelo valor do jogador.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn holiday_selection_bonus(p: Staff, club: Club, holiday: usize, pos: u32, base: i32, without_value: u32, value: i32, mut l4c: i32) -> i32 {
-    let id = *(p.addr() as *const i32);
-    let Some(k) = (0..16usize).find(|&k| *((holiday + 8 * k) as *const i32) == id) else {
+    let id = read_i32(p.addr());
+    let Some(k) = (0..16usize).find(|&k| read_i32(holiday + 8 * k) == id) else {
         return l4c;
     };
     let accepted = || {
-        if exe::human_manager_get_holiday_option(*(G_HUMAN_MANAGER as *const usize), (2) as u32, club.manager().addr()) == 0 {
+        if exe::human_manager_get_holiday_option(read_usize(G_HUMAN_MANAGER), (2) as u32, club.manager().addr()) == 0 {
             return true;
         }
-        let w = *((holiday + 8 * k + 4) as *const i32);
+        let w = read_i32(holiday + 8 * k + 4);
         w == pos as i16 as i32 || w == -1
     };
     let mut bonus;
@@ -4315,7 +4315,7 @@ pub(crate) unsafe fn holiday_selection_bonus(p: Staff, club: Club, holiday: usiz
 pub(crate) unsafe extern "thiscall" fn select_side(t: usize, m: usize, tecnico: usize, rows: usize, players: usize, side: u32, club: usize, other: usize, game: usize, slots: *mut i8) -> i8 {
     let m = Engine(m);
     let game = Fixture(game);
-    let u = |q: usize, o: usize| *((q + o) as *const usize);
+    let u = |q: usize, o: usize| read_usize(q + o);
     if m.is_null() {
         match_man_fatal_error(0x69);
     }
@@ -4332,57 +4332,57 @@ pub(crate) unsafe extern "thiscall" fn select_side(t: usize, m: usize, tecnico: 
         match_man_fatal_error(0x71);
     }
     if tecnico != 0 {
-        *((t + match_manager::MANAGER) as *mut usize) = tecnico;
-        *((t + match_manager::MANAGER_SHEET) as *mut usize) = u(tecnico, staff::NON_PLAYER);
+        write_usize(t + match_manager::MANAGER, tecnico);
+        write_usize(t + match_manager::MANAGER_SHEET, u(tecnico, staff::NON_PLAYER));
     } else {
-        *((t + match_manager::MANAGER) as *mut usize) = 0;
-        *((t + match_manager::MANAGER_SHEET) as *mut usize) = 0;
+        write_usize(t + match_manager::MANAGER, 0);
+        write_usize(t + match_manager::MANAGER_SHEET, 0);
     }
-    *((t + match_manager::PLAYERS) as *mut usize) = players;
-    *((t + match_manager::SIDE) as *mut u8) = side as u8;
-    *((t + match_manager::SQUAD_ROWS) as *mut usize) = rows;
-    *((t + match_manager::CLUB) as *mut usize) = club;
-    *((t + match_manager::ENGINE) as *mut usize) = m.addr();
-    *((t + match_manager::FIXTURE) as *mut usize) = game.addr();
-    *((t + match_manager::BEST_PLAYER) as *mut usize) = 0;
-    *((t + match_manager::KEY_PLAYER_3) as *mut usize) = 0;
-    *((t + match_manager::KEY_PLAYER_2) as *mut usize) = 0;
-    *((t + 6) as *mut usize) = 0;
-    *((t + match_manager::TACTICS) as *mut usize) = m.addr() + engine::TACTICS + (side as u8 as i8 as isize * 0x18e3) as usize;
-    *((t + match_manager::OPPONENT) as *mut usize) = other;
+    write_usize(t + match_manager::PLAYERS, players);
+    write_u8(t + match_manager::SIDE, side as u8);
+    write_usize(t + match_manager::SQUAD_ROWS, rows);
+    write_usize(t + match_manager::CLUB, club);
+    write_usize(t + match_manager::ENGINE, m.addr());
+    write_usize(t + match_manager::FIXTURE, game.addr());
+    write_usize(t + match_manager::BEST_PLAYER, 0);
+    write_usize(t + match_manager::KEY_PLAYER_3, 0);
+    write_usize(t + match_manager::KEY_PLAYER_2, 0);
+    write_usize(t + 6, 0);
+    write_usize(t + match_manager::TACTICS, m.addr() + engine::TACTICS + (side as u8 as i8 as isize * 0x18e3) as usize);
+    write_usize(t + match_manager::OPPONENT, other);
     let home = (club == u(game.addr(), fixture::HOME_CLUB) && (game.home_side_mark() as i8) == 0) || (club == u(game.addr(), fixture::AWAY_CLUB) && game.away_side_mark() == 0);
     if home {
-        *((t + match_manager::TACTIC_SLOT) as *mut u8) = 1;
-        *((t + match_manager::SELECTION_MODE) as *mut u8) = 0;
+        write_u8(t + match_manager::TACTIC_SLOT, 1);
+        write_u8(t + match_manager::SELECTION_MODE, 0);
     } else {
-        *((t + match_manager::TACTIC_SLOT) as *mut u8) = 0;
-        *((t + match_manager::SELECTION_MODE) as *mut u8) = 3;
+        write_u8(t + match_manager::TACTIC_SLOT, 0);
+        write_u8(t + match_manager::SELECTION_MODE, 3);
     }
-    let sheet = NonPlayer(*((t + match_manager::MANAGER_SHEET) as *mut usize));
+    let sheet = NonPlayer(read_usize(t + match_manager::MANAGER_SHEET));
     if !sheet.is_null() {
-        *((t) as *mut u16) = (sheet.current_reputation() as u16);
-        *((t + match_manager::MANAGER_HOME_REPUTATION) as *mut u16) = (sheet.home_reputation() as u16);
-        *((t + match_manager::MANAGER_WORLD_REPUTATION) as *mut u16) = (sheet.world_reputation() as u16);
+        write_u16(t, (sheet.current_reputation() as u16));
+        write_u16(t + match_manager::MANAGER_HOME_REPUTATION, (sheet.home_reputation() as u16));
+        write_u16(t + match_manager::MANAGER_WORLD_REPUTATION, (sheet.world_reputation() as u16));
     }
-    let manager = *(G_HUMAN_MANAGER as *const usize);
+    let manager = read_usize(G_HUMAN_MANAGER);
     let n: i8;
-    if *(m.addr() as *const u8) == 0 && (exe::database_get_club_manager(club) as u32) != 0 && human_club(club, 0, 1, 0, 0) != 0 {
+    if read_u8(m.addr()) == 0 && (exe::database_get_club_manager(club) as u32) != 0 && human_club(club, 0, 1, 0, 0) != 0 {
         if is_second_national_team(club) != 0 {
-            *((t + match_manager::MANAGER) as *mut usize) = u(main_national_team(u(club, club::NATION)), 0xcf);
+            write_usize(t + match_manager::MANAGER, u(main_national_team(u(club, club::NATION)), 0xcf));
         }
         exe::human_manager_select_tactic_slot(manager, read_i8(t + match_manager::TACTIC_SLOT) as i32, club, u(club, club::MANAGER));
         let r = exe::human_manager_get_active_tactic(manager, u(club, club::MANAGER));
-        if r == 0 || *((t + match_manager::TACTICS) as *mut usize) == 0 {
+        if r == 0 || read_usize(t + match_manager::TACTICS) == 0 {
             match_man_fatal_error(0xbc);
         }
-        core::ptr::copy_nonoverlapping(r as *const u8, *((t + match_manager::TACTICS) as *mut usize) as *mut u8, 0x18e3);
+        core::ptr::copy_nonoverlapping(r as *const u8, read_usize(t + match_manager::TACTICS) as *mut u8, 0x18e3);
         let without_manager = |t: usize| {
-            let x = exe::human_manager_get_stand_in_manager(*((t + match_manager::CLUB) as *const usize));
-            *((t + match_manager::MANAGER) as *mut usize) = x;
-            *((t + match_manager::MANAGER_SHEET) as *mut usize) = if x != 0 { *((x + staff::NON_PLAYER) as *const usize) } else { 0 };
+            let x = exe::human_manager_get_stand_in_manager(read_usize(t + match_manager::CLUB));
+            write_usize(t + match_manager::MANAGER, x);
+            write_usize(t + match_manager::MANAGER_SHEET, if x != 0 { read_usize(x + staff::NON_PLAYER) } else { 0 });
             exe::match_man_pick_team(t, other, 1)
         };
-        n = if *((t + match_manager::TACTIC_SLOT) as *mut u8) == 0 {
+        n = if read_u8(t + match_manager::TACTIC_SLOT) == 0 {
             starters(t) as i8
         } else if is_national_team(club) == 0 {
             if manager_9a05(manager, u(club, club::MANAGER)) == 0 { without_manager(t) } else { starters(t) as i8 }
@@ -4393,14 +4393,14 @@ pub(crate) unsafe extern "thiscall" fn select_side(t: usize, m: usize, tecnico: 
         };
         *slots = (((game.squad_rules() as u8) & 0xf) + 0xb) as i8;
     } else {
-        let x = *((t + match_manager::MANAGER) as *mut usize);
+        let x = read_usize(t + match_manager::MANAGER);
         if x != 0 {
-            let base = *(G_STAFF_COUNT as *const i32);
-            let id = *(x as *const i32);
+            let base = read_i32(G_STAFF_COUNT);
+            let id = read_i32(x);
             if id >= base - 0x10 && id < base && read_i8(x + staff::CLASSIFICATION) != 0 {
-                let y = exe::human_manager_get_stand_in_manager(*((t + match_manager::CLUB) as *mut usize));
-                *((t + match_manager::MANAGER) as *mut usize) = y;
-                *((t + match_manager::MANAGER_SHEET) as *mut usize) = if y != 0 { u(y, staff::NON_PLAYER) } else { 0 };
+                let y = exe::human_manager_get_stand_in_manager(read_usize(t + match_manager::CLUB));
+                write_usize(t + match_manager::MANAGER, y);
+                write_usize(t + match_manager::MANAGER_SHEET, if y != 0 { u(y, staff::NON_PLAYER) } else { 0 });
             }
         }
         n = exe::match_man_pick_team(t, other, 2);
@@ -4409,7 +4409,7 @@ pub(crate) unsafe extern "thiscall" fn select_side(t: usize, m: usize, tecnico: 
         let mut k = 0u8;
         while (k as i8) < total as i8 {
             let p = u(players + k as usize * 0x1be, 0x69);
-            if p != 0 && *(p as *const i32) < *(G_STAFF_COUNT as *const i32) {
+            if p != 0 && *(p as *const i32) < read_i32(G_STAFF_COUNT) {
                 *slots = (*slots).wrapping_add(1);
             }
             k += 1;
@@ -4418,8 +4418,8 @@ pub(crate) unsafe extern "thiscall" fn select_side(t: usize, m: usize, tecnico: 
     let bench = ((game.squad_rules() as u8) >> 4) & 0xf;
     let sobra = (n as u8).wrapping_sub(0xb) as i8;
     let r = if bench as i8 >= sobra { sobra } else { bench as i8 };
-    *((t + match_manager::SUBSTITUTIONS_LEFT) as *mut u8) = if r <= 0 { 0 } else if (bench as i8) < sobra { bench } else { sobra as u8 };
-    read_tactics_row(*(G_TACTICS as *const usize), *((t + match_manager::CLUB) as *mut usize), (t + match_manager::TACTICS_ROW) as *mut u8, read_i8(t + match_manager::TACTIC_SLOT) as i32 as u32);
+    write_u8(t + match_manager::SUBSTITUTIONS_LEFT, if r <= 0 { 0 } else if (bench as i8) < sobra { bench } else { sobra as u8 });
+    read_tactics_row(read_usize(G_TACTICS), read_usize(t + match_manager::CLUB), (t + match_manager::TACTICS_ROW) as *mut u8, read_i8(t + match_manager::TACTIC_SLOT) as i32 as u32);
     n
 }
 
@@ -4442,7 +4442,7 @@ pub(crate) unsafe extern "C" fn perceived_ability(o: usize, p: usize, c: usize, 
     let p = Staff(p);
     let o = Staff(o);
     let c = Club(c);
-    let mut semente = (*(p.addr() as *const i32)).wrapping_add(*(G_GAME_RANDOM_SEED as *const i32));
+    let mut semente = read_i32(p.addr()).wrapping_add(read_i32(G_GAME_RANDOM_SEED));
     let mut rep = if rep > -1 {
         rep / 50
     } else {
@@ -4457,9 +4457,9 @@ pub(crate) unsafe extern "C" fn perceived_ability(o: usize, p: usize, c: usize, 
     let mut conhece = 0usize;
     if !o.is_null() {
         conhece = o.non_player().addr();
-        semente = semente.wrapping_add(*(o.addr() as *const i32));
+        semente = semente.wrapping_add(read_i32(o.addr()));
         if conhece != 0 && kind == 2 && rep > 0x32 {
-            let k = chance_to_know(conhece, *((conhece + non_player::JUDGEMENT) as *const i8)) as i8 as i32;
+            let k = chance_to_know(conhece, read_i8(conhece + non_player::JUDGEMENT)) as i8 as i32;
             if rep as i32 + (k - 10) * 10 > semente % 200 {
                 return sheet.current_ability();
             }
@@ -4471,7 +4471,7 @@ pub(crate) unsafe extern "C" fn perceived_ability(o: usize, p: usize, c: usize, 
         let x = if semente % 10 == 0 {
             f * read_f32(rdata::F32_20) as f64
         } else {
-            let level = *((conhece + if kind == 2 { 0x17 } else { 0x18 }) as *const i8);
+            let level = read_i8(conhece + if kind == 2 { 0x17 } else { 0x18 });
             (chance_to_know(conhece, level) as i8 as f64) * f
         };
         certeza = (ftol(x + read_f64(rdata::F64_0_5)) as i8).min(0x14);

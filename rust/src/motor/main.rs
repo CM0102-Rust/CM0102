@@ -12,10 +12,10 @@ use super::*;
 pub(crate) unsafe fn find_list_node_by_bytes(this: Llist, given: usize) -> usize {
     let mut in_the = read_usize(this.addr() + 2); // cqb10: the search starts at the head
     while in_the != 0 {
-        let n = core::ptr::read_unaligned((in_the + 4) as *const i16) as i32 as u32;
+        let n = read_i16(in_the + 4) as i32 as u32;
         let item = read_usize(in_the);
         let mut k = 0u32;
-        while k < n && *((item + k as usize) as *const u8) == *((given + k as usize) as *const u8) {
+        while k < n && *((item + k as usize) as *const u8) == read_u8(given + k as usize) {
             k += 1;
         }
         if k == n {

@@ -36,7 +36,7 @@ pub(crate) unsafe fn create_knockout_from_table(this: League, rows: &[usize], se
         return show_error_at(file, row_without_list);
     }
     for (k, &l) in rows.iter().enumerate() {
-        core::ptr::write_unaligned((list + 4 * k) as *mut usize, bra_reg_bahia_table_row_club(this, l));
+        write_usize(list + 4 * k, bra_reg_bahia_table_row_club(this, l));
     }
     crate::comparison::branch(ramo);
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
@@ -53,7 +53,7 @@ pub(crate) unsafe fn create_knockout_from_table(this: League, rows: &[usize], se
     } else {
         0
     };
-    core::ptr::write_unaligned(this.stages() as *mut usize, stage);
+    write_usize(this.stages(), stage);
     let stage = read_usize(this.stages());
     if stage == 0 {
         return show_error_at(file, row_without_stage);

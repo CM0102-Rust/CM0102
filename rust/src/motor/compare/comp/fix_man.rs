@@ -312,7 +312,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_fixture(this: usize, f: us
     let mut in_the = read_usize(l + 2);
     let mut has = false;
     while in_the != 0 && !has {
-        let n = *((in_the + 4) as *const i16) as isize as usize;
+        let n = read_i16(in_the + 4) as isize as usize;
         has = core::slice::from_raw_parts(read_usize(in_the) as *const u8, n) == core::slice::from_raw_parts(f as *const u8, n);
         in_the = read_usize(in_the + 6);
     }
@@ -339,7 +339,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_fixtures(this: usize, dia0: 
             dia0 as u16, ano0 as u16, dia1 as u16, ano1 as u16, club as i32, comp as i32, kind as u8, side as u8, r as u16, n as u16));
         return r;
     }
-    let (conta, cauda) = (*(list as *const u16), read_u32(list + 6));
+    let (conta, cauda) = (read_u16(list), read_u32(list + 6));
     let r = o(this, dia0, ano0, dia1, ano1, club, list, comp, kind, side);
     let (n, iguais) = run_with_temp_list(list, conta, cauda,
         |p| find_fixtures(this, dia0, ano0, dia1, ano1, club, p, comp, kind, side));
@@ -355,7 +355,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_fixtures(this: usize, dia0: 
 pub(crate) unsafe extern "thiscall" fn compare_collect_comp_fixtures_on_day(this: usize, year: u32, day: u32, slice: u32, comp: u32, round: u32,
                                                                 kind: u32, list: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, usize) -> u32>(IDX_COLLECT_COMP_FIXTURES_ON_DAY);
-    let (conta, cauda) = (*(list as *const u16), read_u32(list + 6));
+    let (conta, cauda) = (read_u16(list), read_u32(list + 6));
     let r = o(this, year, day, slice, comp, round, kind, list);
     let (n, iguais) = run_with_temp_list(list, conta, cauda,
         |p| collect_comp_fixtures_on_day(this, year, day, slice, comp, round, kind, p));
@@ -422,11 +422,11 @@ pub(crate) unsafe extern "stdcall" fn compare_get_fixture_list_for_date(data: us
 /// Comparer for `mark_calendar_year`.
 pub(crate) unsafe extern "C" fn compare_mark_calendar_year(game: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_MARK_CALENDAR_YEAR);
-    let table = *(G_CLUB_FIXTURE_YEAR_TABLE as *const usize);
+    let table = read_usize(G_CLUB_FIXTURE_YEAR_TABLE);
     let reg: Vec<(usize, usize)> = if table == 0 {
         vec![]
     } else {
-        [0xc, 0x10].iter().map(|&o| (table.wrapping_add((*((game + o) as *const i32) as usize).wrapping_mul(2)), 2)).collect()
+        [0xc, 0x10].iter().map(|&o| (table.wrapping_add((read_i32(game + o) as usize).wrapping_mul(2)), 2)).collect()
     };
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(game), || mark_calendar_year(game));
     SCOREBOARD.record(igual, || format!("mark_calendar_year({:#x}) {:x?} x {:x?}", game, mo, mr));

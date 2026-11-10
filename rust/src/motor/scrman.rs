@@ -20,8 +20,8 @@ pub(crate) unsafe extern "thiscall" fn is_forward_unavailable(manager: usize) ->
 pub(crate) unsafe fn copy_to_work_text(source: usize) {
     let mut i = 0;
     loop {
-        let b = *((source + i) as *const u8);
-        *((0xde1f64 + i) as *mut u8) = b;
+        let b = read_u8(source + i);
+        write_u8(0xde1f64 + i, b);
         if b == 0 {
             break;
         }
@@ -37,11 +37,11 @@ pub(crate) unsafe fn copy_to_work_text(source: usize) {
 /// (+8 > +4 de `rodadas`); senão o nome (+0x38).
 pub(crate) unsafe fn panel_competition_name(c: Competition, rounds: usize) {
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let more_of_one = core::ptr::read_unaligned((rounds + 8) as *const i32) > core::ptr::read_unaligned((rounds + 4) as *const i32);
-    let key = *(c.addr() as *const usize);
-    if key == *(KEY_CLUB_COMP_FRIENDLY as *const usize) && more_of_one {
+    let more_of_one = read_i32(rounds + 8) > read_i32(rounds + 4);
+    let key = read_usize(c.addr());
+    if key == read_usize(KEY_CLUB_COMP_FRIENDLY) && more_of_one {
         text(0xde1f64, 0xa1631c);
-    } else if key == *(KEY_CLUB_COMP_RESERVE as *const usize) && more_of_one {
+    } else if key == read_usize(KEY_CLUB_COMP_RESERVE) && more_of_one {
         text(0xde1f64, 0xa16310);
     } else {
         copy_to_work_text(c.addr() + competition::SHORT_NAME);

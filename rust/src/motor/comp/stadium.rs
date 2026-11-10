@@ -822,9 +822,9 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
     }
     let est = game.stadium();
     if est != 0 && read_i32(est + stadium::CAPACITY) < 0x5dc {
-        core::ptr::write_unaligned((est + stadium::CAPACITY) as *mut i32, rc as i32 * 1000);
+        write_i32(est + stadium::CAPACITY, rc as i32 * 1000);
         if read_i32(est + stadium::CAPACITY) < 0x5dc {
-            core::ptr::write_unaligned((est + stadium::CAPACITY) as *mut i32, 0x5dc);
+            write_i32(est + stadium::CAPACITY, 0x5dc);
         }
     }
     if pf.wrapping_add(pc) != 0 {
@@ -918,7 +918,7 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
     let home = Club(home);
     let away = Club(away);
     let inglaterra = Nation(read_usize(G_NATION_TABLE).wrapping_add(read_usize(KEY_NATION_ENGLAND).wrapping_mul(nation::SIZE)));
-    if est == inglaterra.national_stadium() && core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16) < 0x7d4 {
+    if est == inglaterra.national_stadium() && read_u16(G_CURRENT_DATE_YEAR) < 0x7d4 {
         return 0;
     }
     let m = marks as u8;
@@ -1336,15 +1336,15 @@ pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
             *cap += 0x1e;
         }
         let r = *lista + 16 * *conta as usize;
-        *(r as *mut u32) = read_u32(nation.addr());
-        *((r + 4) as *mut u32) = read_u32((nation.continent() as u32) as usize);
-        *((r + 0xc) as *mut usize) = e;
+        write_u32(r, read_u32(nation.addr()));
+        write_u32(r + 4, read_u32((nation.continent() as u32) as usize));
+        write_usize(r + 0xc, e);
         crate::comparison::branch("cqn_3 enters the list");
-        *((r + 8) as *mut u32) = ((nation.national_stadium() as u32) as usize == e) as u32; // cqn3: o estádio nacional
+        write_u32(r + 8, ((nation.national_stadium() as u32) as usize == e) as u32); // cqn3: o estádio nacional
         *conta += 1;
     }
     exe::crt_qsort(*lista, *conta as u32, 0x10, 0x85e2f0);
-    *((this + stadium_obj::VENUE_SORT) as *mut u8) = 1;
+    write_u8(this + stadium_obj::VENUE_SORT, 1);
 }
 
 /// venue qsort: places (+0x3c) of the stadium (+0xc), largest first; without a stadium, 0
@@ -1353,14 +1353,14 @@ pub(crate) unsafe extern "thiscall" fn build_venue_list(this: usize) {
 /// [pt] { 0x85e350 } (cdecl, stadium.cpp): `stadium_compare_venues_by_capacity(a, b)`, o qsort dos locais na busca do
 /// estádio neutro (0x85c8de): pelos lugares (+0x3c) do estádio (+0xc), do maior para o menor; sem um dos estádios, 0.
 pub(crate) unsafe extern "C" fn stadium_compare_venues_by_capacity(a: usize, b: usize) -> i32 {
-    let ea = core::ptr::read_unaligned((a + 0xc) as *const usize);
+    let ea = read_usize(a + 0xc);
     if ea == 0 {
         return 0;
     }
-    let eb = core::ptr::read_unaligned((b + 0xc) as *const usize);
+    let eb = read_usize(b + 0xc);
     if eb == 0 {
         return 0;
     }
-    core::ptr::read_unaligned((eb + stadium::CAPACITY) as *const i32).wrapping_sub(core::ptr::read_unaligned((ea + stadium::CAPACITY) as *const i32))
+    read_i32(eb + stadium::CAPACITY).wrapping_sub(read_i32(ea + stadium::CAPACITY))
 }
 

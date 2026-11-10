@@ -17,7 +17,7 @@ MUTACOES = [
     ('dbj2_clube_curto', '.wrapping_add(0x34) // short name in the row', '.wrapping_add(0x33) // short name in the row'),
     ('dbk1_cortar_elencos', '                while k >= 0 && total > 48 { // the combined squad at 48', '                while k >= 0 && total > 47 { // mutacao: o elenco conjunto a 47'),
     ('dbk1_juntar_comissao', '                        if n < k as i32 { // the B team’s staff go to the A team', '                        if n < 0 { // mutacao: a comissao do B nao vai para o A'),
-    ('dbk1_indice_de_nomes', '                        *((e + d_quantos) as *mut i32) = quantos; // group size', '                        *((e + d_quantos) as *mut i32) = quantos + 1; // mutacao: a quantidade do grupo + 1'),
+    ('dbk1_indice_de_nomes', '                        write_i32(e + d_quantos, quantos); // group size', '                        write_i32(e + d_quantos, quantos + 1); // mutacao: a quantidade do grupo + 1'),
     ('dbk2_tirar_pessoa', '            person.set_club_job(Club(0)); // detaches the person from the club', '            // mutacao: a pessoa fica com o clube (+Club(0)x39) depois de sair'),
     ('dbk2_olheiros', '        let o = rd(p.addr() + club::SCOUTS + 4 * j); // the partner’s scouts', '        let o = rd(club.addr() + 0x1b3 + 4 * j); // mutacao: os olheiros do proprio clube no lugar dos do parceiro'),
 ]

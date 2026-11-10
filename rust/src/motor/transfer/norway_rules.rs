@@ -6,7 +6,7 @@ use super::*;
 /// vtable da nação e as janelas.
 pub(crate) unsafe fn construct_nation_rules(this: usize, a: [u32; 5], vtable: u32, n: u8, t: &[[u8; 6]], file: usize, row: u32) {
     exe::new_transfer_rules(this, a[0], a[1], a[2], a[3], a[4]);
-    core::ptr::write_unaligned(this as *mut u32, vtable);
+    write_u32(this, vtable);
     set_transfer_windows(this, n, t, file, row);
 }
 

@@ -160,14 +160,14 @@ pub(crate) unsafe extern "thiscall" fn compare_set_human_field(t: usize, value: 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(IDX_SET_HUMAN_FIELD);
     let mut p = manager;
     if p.is_null() {
-        let team = *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
+        let team = read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize;
         p = core::ptr::read_unaligned((0xb74c26 + team * 0x300) as usize as *const *const i32);
     }
     let reg = if p.is_null() {
         vec![]
     } else {
-        let i = (*p).wrapping_sub(*(G_STAFF_COUNT as *const i32)).wrapping_add(0x10);
-        if i < 0 || i > (*((t + 4) as *const i32)).wrapping_sub(1) { vec![] } else { vec![(*(t as *const usize) + i as usize * 0xa6ef + 0x9a65, 4)] }
+        let i = (*p).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10);
+        if i < 0 || i > read_i32(t + 4).wrapping_sub(1) { vec![] } else { vec![(read_usize(t) + i as usize * 0xa6ef + 0x9a65, 4)] }
     };
     let (r, v, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(t, value, manager), || set_human_field(t, value, manager));
     SCOREBOARD.record(igual && r == v, || format!("set_human_field({:#x}, {:#x}, {:p}) original={} {:x?} rust={} {:x?}", t, value, manager, r, mo, v, mr));
@@ -177,7 +177,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_human_field(t: usize, value: 
 /// Comparer for `set_on_holiday`.
 pub(crate) unsafe extern "thiscall" fn compare_set_on_holiday(this: usize, holiday: u32, manager: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize)>(IDX_SET_ON_HOLIDAY);
-    let t = if manager != 0 { manager } else { read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * (*(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize as usize)) };
+    let t = if manager != 0 { manager } else { read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * (read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize as usize)) };
     let i = if t == 0 { -1 } else { (read_usize(t) as i32).wrapping_sub(read_usize(G_STAFF_COUNT) as i32).wrapping_add(0x10) };
     if i < 0 || i > (read_usize(this + 4) as i32).wrapping_sub(1) {
         return o(this, holiday, manager); // the message box: original only

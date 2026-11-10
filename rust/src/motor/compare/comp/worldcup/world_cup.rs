@@ -54,8 +54,8 @@ pub(crate) unsafe extern "thiscall" fn compare_run_group_draw(this: usize) {
 pub(crate) unsafe extern "thiscall" fn compare_world_cup_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_WORLD_CUP_UPDATE_FOR_DATE);
-    let year = core::ptr::read_unaligned((today + 2) as *const u16) as i32;
-    let day = core::ptr::read_unaligned(today as *const u16);
+    let year = read_u16(today + 2) as i32;
+    let day = read_u16(today);
     let draws = this.next_draw_day() as u16 == day && this.next_draw_year_offset() as i32 + this.year() as i32 == year && full != 0 && this.table() == 0;
     let r = o(this.addr(), today, full);
     if draws {

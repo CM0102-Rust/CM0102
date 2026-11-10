@@ -59,7 +59,7 @@ pub(crate) unsafe extern "thiscall" fn compare_send_to_club_manager(this: usize,
     let manager = club.manager().addr();
     let human = manager != 0 && read_i32(manager) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10);
     let r = o(this, news, club.addr());
-    let ok = *((news + news_item::REACH) as *const u8) == 0 && (human || r == 0) && r <= 1;
+    let ok = read_u8(news + news_item::REACH) == 0 && (human || r == 0) && r <= 1;
     SCOREBOARD.record(ok, || format!("send_to_club_manager(clube {:x}, técnico {:x}, humano {}) devolveu {}", club.addr(), manager, human, r));
     r
 }
@@ -98,7 +98,7 @@ pub(crate) unsafe extern "thiscall" fn compare_deliver_to_manager(this: usize, n
     };
     // with the manager on holiday the automatic reply (0x784100) may deliver another news item to the same human: the ring moves
     // more slots and the count together (found on 31/10/2026, when the routine left DESLIGADAS)
-    let responde = !repetida && (*(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG as *const i16) != 0 || exe::human_manager_is_on_holiday(read_usize(G_HUMAN_MANAGER), manager) != 0);
+    let responde = !repetida && (read_i16(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG) != 0 || exe::human_manager_is_on_holiday(read_usize(G_HUMAN_MANAGER), manager) != 0);
     let r = o(this, news, manager, free);
     if r == 0 {
         SCOREBOARD.record(new, || format!("deliver_to_manager devolveu 0 sem anel novo")); // only without memory
@@ -352,7 +352,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_inbox_items(this: usize, mana
 /// Comparer for `get_category`.
 pub(crate) unsafe extern "thiscall" fn compare_get_category(news: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_GET_CATEGORY);
-    let t = *(news as *const i32);
+    let t = read_i32(news);
     if !(1..=0x1790).contains(&t) {
         return o(news);
     }

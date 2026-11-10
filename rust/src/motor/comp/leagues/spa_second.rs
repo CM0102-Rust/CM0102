@@ -58,7 +58,7 @@ pub(crate) unsafe fn set_rounds_with_christmas(t: usize, year: u32, n: &SpaSecon
     spa_second_set_league_rounds(t, year, 0, n.comeco);
     let mut d = [0u16; 4];
     exe::date_date_549f70(&mut d, 1, 0xb, year, 0xffff_ffff);
-    let day = core::ptr::read_unaligned((t + n.reference * 0x41) as *const u16);
+    let day = read_u16(t + n.reference * 0x41);
     let k = (day.wrapping_sub(d[0]).wrapping_add(1) as i16 as i32).wrapping_sub(n.adjust);
     let case = if k as u32 > 6 {
         show_error_at(file, n.row);
@@ -305,7 +305,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u
             exe::league_init_table_row(this, k as u32, c, 0, 0);
             if is_b_team_of_comp_club(c, KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) {
                 crate::comparison::branch("cqm_6 b team in the second division");
-                *((this.table() + (k as i8 as isize as usize).wrapping_mul(0x3b) + 0x37) as *mut u8) = 0xfc;
+                write_u8(this.table() + (k as i8 as isize as usize).wrapping_mul(0x3b) + 0x37, 0xfc);
             }
             k = k.wrapping_add(1);
             if k as i8 as i16 == this.club_count() {

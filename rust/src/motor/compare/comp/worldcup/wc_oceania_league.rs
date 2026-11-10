@@ -14,7 +14,7 @@ pub(crate) unsafe extern "thiscall" fn compare_wc_oceania_league_update_staff_re
     let n = if slot { mundial.entrant_count() } else { 0 };
     let cabe = slot && n < mundial.entrant_capacity();
     let r = o(this, club, outcome, stage, out, game, a6);
-    let same = r == 0 && (!slot || (*(out as *const u8) == 4 && mundial.entrant_count() == if cabe { n + 1 } else { n }));
+    let same = r == 0 && (!slot || (read_u8(out) == 4 && mundial.entrant_count() == if cabe { n + 1 } else { n }));
     SCOREBOARD.record(same, || format!("wc_oceania_league_update_staff_records_for_status({:#x}, {}, {}) devolveu {} vaga={} lista {}", club, outcome as u8, stage as u8, r, slot, n));
     r
 }

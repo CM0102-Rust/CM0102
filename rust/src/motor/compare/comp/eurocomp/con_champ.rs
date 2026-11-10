@@ -66,7 +66,7 @@ pub(crate) unsafe extern "thiscall" fn compare_con_champ_create_round_table(this
     if a != 0 {
         let ok = (0..2usize).all(|r| {
             let e = a + r * 0x68 + 0x23;
-            core::ptr::read_unaligned(e as *const u32) == 0 && core::slice::from_raw_parts((e + 4) as *const u8, 3) == [0xff, 0xff, 0xff]
+            read_u32(e) == 0 && core::slice::from_raw_parts((e + 4) as *const u8, 3) == [0xff, 0xff, 0xff]
         });
         SCOREBOARD.record(ok, || format!("con_champ_create_round_table: o dia 0 dos confrontos da original difere"));
     }

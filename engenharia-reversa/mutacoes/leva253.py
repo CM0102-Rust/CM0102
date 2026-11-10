@@ -3,7 +3,7 @@ MUTACOES = [
     ('cpq1_sem_demissao', '    crate::comparison::branch("cpq_1 sacked");\n    record_departure(this, club, 1);', '    crate::comparison::branch("cpq_1 sacked"); // mutacao: a demissao nao entra na lista', 'cpq_1 sacked'),
     ('cpq1_ultimato_fora_da_lista', '    list_add_tail(read_usize(this + manager_manager_fields::ULTIMATUM_LIST), &id as *const u32 as usize, 4);', '    let _ = id; // mutacao: o ultimato nao entra na lista', 'cpq_1 ultimatum given'),
     ('cpq1_tecnico_com_contrato', '        exe::contract_manager_remove_contract(read_usize(G_CONTRACT_MANAGER), tec);', '        let _ = tec; // mutacao: o tecnico fica com o contrato', 'cpq_1 remove the manager'),
-    ('cpq2_apuro_sem_saldo', '    (core::ptr::read_unaligned(f as *const i64) < 0) as u8', '    1 // mutacao: sem olhar o saldo'),
+    ('cpq2_apuro_sem_saldo', '    (read_i64(f) < 0) as u8', '    1 // mutacao: sem olhar o saldo'),
     ('cpq2_selecao_sem_piso', '        write_i16(club_board_row(this, national_team) + 6, 0x1964); // new manager', '        // mutacao: sem o piso do tecnico novo', 'cpq_2 national team evaluated'),
     ('cpq2_federacao_demite', '    exe::manager_manager_consider_sacking_manager(this, national_team, 0);', '    record_national_departure(this, national_team, 0); // mutacao: demite em vez de pensar', 'cpq_2 the federation considers'),
     ('cpq3_acesso_400', '    club.set_reputation(club.reputation().wrapping_add(500));', '    club.set_reputation(club.reputation().wrapping_add(400)); // mutacao: +400', 'cpq_3 promotion'),
@@ -36,6 +36,6 @@ MUTACOES = [
     ('cpq_lado_em_casa', '    1 // the club’s stadium', '    2 // mutacao: em casa vira fora', 'cpq_12 at home'),
     ('cpq_coeficiente_maior', '        return -1; // o maior antes', '        return 1; // mutacao: o maior depois'),
     ('cpq_pedido_sempre', '        return 0; // no request', '        return 1; // mutacao: todo jogador pedido', 'cpq_12 without request'),
-    ('cpq_limpar_outra_vaga', '    core::ptr::write_unaligned(tactics_cell(this, k, 2 + 4 * v as usize) as *mut i32, -1); // the place', '    core::ptr::write_unaligned(tactics_cell(this, k, 2 + 4 * (v as usize + 1)) as *mut i32, -1); // mutacao: a vaga seguinte', 'cpq_13 clear slot'),
+    ('cpq_limpar_outra_vaga', '    write_i32(tactics_cell(this, k, 2 + 4 * v as usize), -1); // the place', '    write_i32(tactics_cell(this, k, 2 + 4 * (v as usize + 1)), -1); // mutacao: a vaga seguinte', 'cpq_13 clear slot'),
     ('cpq_batedor_fica', '    core::ptr::write_unaligned(cell(e), -1); // no taker', '    // mutacao: o batedor tirado fica na celula', 'cpq_13 taker cleared'),
 ]

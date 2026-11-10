@@ -251,7 +251,7 @@ pub(crate) unsafe fn italian_schedule(this: League, fase: u32, rounds: *mut i16,
             }
             crate::comparison::branch("cqo_6 italian tiebreak match");
             let ano = this.year() as i32 as u32;
-            eng_cc_cup_write_cup_round(t, 0, &italian_playoff_round(p.draw, p.game, *((this.addr() + 0xee) as *const i8)), ano);
+            eng_cc_cup_write_cup_round(t, 0, &italian_playoff_round(p.draw, p.game, read_i8(this.addr() + 0xee)), ano);
             t
         }
         _ => 0,
@@ -514,10 +514,10 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
                     let l2 = this.table() + i as usize * 0x3b;
                     core::ptr::copy_nonoverlapping(tmp.as_ptr(), (l2 - 0x3b) as *mut u8, 0x3b);
                     let l3 = this.table() + i as usize * 0x3b;
-                    *((l3 + 4) as *mut u8) = i as u8;
-                    *((l3 - 0x3b + 4) as *mut u8) = (i as u8).wrapping_sub(1);
-                    *((l3 + 0x37) as *mut u8) = 0xff;
-                    *((l3 - 0x3b + 0x37) as *mut u8) = 0xff;
+                    write_u8(l3 + 4, i as u8);
+                    write_u8(l3 - 0x3b + 4, (i as u8).wrapping_sub(1));
+                    write_u8(l3 + 0x37, 0xff);
+                    write_u8(l3 - 0x3b + 0x37, 0xff);
                     break;
                 }
             }
@@ -525,11 +525,11 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
                 // simplification: the original reads the club of the next row even on the last one (4 bytes past the table), as here.
                 let below = read_usize(l + 0x3b);
                 if below == a || below == b {
-                    *((t + i as usize * 0x3b + 4) as *mut u8) = i as u8;
+                    write_u8(t + i as usize * 0x3b + 4, i as u8);
                     let t2 = this.table();
-                    *((t2 + i as usize * 0x3b + 0x3f) as *mut u8) = (i as u8).wrapping_add(1);
-                    *((this.table() + i as usize * 0x3b + 0x37) as *mut u8) = 0xff;
-                    *((this.table() + i as usize * 0x3b + 0x72) as *mut u8) = 0xff;
+                    write_u8(t2 + i as usize * 0x3b + 0x3f, (i as u8).wrapping_add(1));
+                    write_u8(this.table() + i as usize * 0x3b + 0x37, 0xff);
+                    write_u8(this.table() + i as usize * 0x3b + 0x72, 0xff);
                     break;
                 }
             }
@@ -612,7 +612,7 @@ pub(crate) unsafe fn construct_italian_division(this: League, ano: u32, registro
     }
     crate::comparison::branch("cqm_4 new italian division");
     if p.series {
-        *((this.addr() + 0xee) as *mut u8) = 0;
+        write_u8(this.addr() + 0xee, 0);
         this.set_season_closed(1); // cqm4: the history mark of A and B
     }
     this.set_stage_index(0xff);
@@ -1526,8 +1526,8 @@ pub(crate) unsafe fn ita_ser_a_apply_league_rules(this: League, written: &[(usiz
     for &(d, t, v) in written {
         match t {
             1 => *((this.addr() + d) as *mut u8) = v as u8,
-            2 => core::ptr::write_unaligned((this.addr() + d) as *mut u16, v as u16),
-            _ => core::ptr::write_unaligned((this.addr() + d) as *mut u32, v),
+            2 => write_u16(this.addr() + d, v as u16),
+            _ => write_u32(this.addr() + d, v),
         }
     }
     if !ITA_SER_A_RULES_DRY_RUN {

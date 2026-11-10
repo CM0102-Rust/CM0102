@@ -42,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn wc_oceania_league_update_staff_records_fo
             let id = read_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP);
             european_cup_add_qualified_record(club, read_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b)), 0, 0, 0x64);
             exe::worldcup_add_qualified_team(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(id.wrapping_mul(4))), club);
-            *(out as *mut u8) = 4;
+            write_u8(out, 4);
         } else if d == 2 {
             eliminar(0x64);
         }

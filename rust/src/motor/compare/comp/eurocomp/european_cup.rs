@@ -74,7 +74,7 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_rank_teams(this: usi
         let c = v[k as usize] as usize;
         c != 0 && {
             let e = exe::comp_stats_find_club_entry(read_usize(this.addr() + 8), c);
-            e == 0 || *((e + comp_stats_club::DANGER_POSITION) as *const u8) != p
+            e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != p
         }
     });
     SCOREBOARD.record(wrong.is_none(), || format!("european_cup_rank_teams: a posição {:?} não bate", wrong));
@@ -170,7 +170,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_quarter_finals(this: usize) 
     let mut expected = vivos.clone();
     found.sort_unstable();
     expected.sort_unstable();
-    let left = away.iter().all(|&c| core::ptr::read_unaligned((c + club::EURO_FLAG) as *const i32) == -1);
+    let left = away.iter().all(|&c| read_i32(c + club::EURO_FLAG) == -1);
     let same = found == expected && left && stage.team_count() == 8 && (this.current_stage() as i32) == 0xc;
     SCOREBOARD.record(same, || format!("draw_quarter_finals({:#x}) esperado={:x?} lista={:x?} saiu={} +0x30={}", this.addr(), expected, found, left, (this.current_stage() as i32)));
 }

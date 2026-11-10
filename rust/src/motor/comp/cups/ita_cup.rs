@@ -33,7 +33,7 @@ pub(crate) unsafe fn create_first_group_table(this: League, n: i16, file: usize,
     while (i as i16) < this.club_count() {
         let slot = read_usize(this.addr() + 0xee) + i as isize as usize * 4;
         exe::league_init_table_row(this, i as u8 as u32, read_usize(slot), 0, 0);
-        core::ptr::write_unaligned((read_usize(this.addr() + 0xee) + i as isize as usize * 4) as *mut u32, 0); // cqr7: the group 1 slot leaves the list
+        write_u32(read_usize(this.addr() + 0xee) + i as isize as usize * 4, 0); // cqr7: the group 1 slot leaves the list
         i = i.wrapping_add(1);
     }
     exe::league_send_group_draw_news(this);
@@ -502,7 +502,7 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this
             while r < n {
                 if read_usize(group.table() + r as usize * 0x3b) == read_usize(league.table() + l) {
                     group.set_promoted_count(2);
-                    *((group.table() + r as usize * 0x3b + 0x37) as *mut u8) = 6;
+                    write_u8(group.table() + r as usize * 0x3b + 0x37, 6);
                     g = 0x10;
                     break;
                 }
@@ -713,7 +713,7 @@ pub(crate) unsafe fn is_italian_club(c: usize) -> bool {
 ///
 /// [pt] A posição na temporada anterior (+0x5f, byte com sinal; 0 o campeão [inferência]).
 pub(crate) unsafe fn last_season_position(c: usize) -> i8 {
-    *((c + 0x5f) as *const i8)
+    read_i8(c + 0x5f)
 }
 
 /// Shuffles n pointers from v (CompUtil shuffle_pointer_array, cdecl).
@@ -735,9 +735,9 @@ pub(crate) unsafe fn sort_pointers(v: usize, n: u32, cmp: usize) {
 ///
 /// [pt] A lista de ponteiros (+0xee) com o máximo `max` em +0xf2 (dword): 0x944e46 de 4 × max; sem memória, a caixa `linha`.
 pub(crate) unsafe fn alloc_entrant_list(this: usize, max: u32, file: usize, row: u32) -> Option<usize> {
-    core::ptr::write_unaligned((this + 0xf2) as *mut u32, max);
+    write_u32(this + 0xf2, max);
     let l = exe::crt_malloc(max * 4);
-    core::ptr::write_unaligned((this + 0xee) as *mut u32, l as u32);
+    write_u32(this + 0xee, l as u32);
     if l == 0 {
         show_error_at(file, row);
         return None;
@@ -750,7 +750,7 @@ pub(crate) unsafe fn alloc_entrant_list(this: usize, max: u32, file: usize, row:
 /// [pt] Põe `c` no fim da lista (+0xee) e devolve verdadeiro quando a conta chega ao máximo +0xf2 (dword).
 pub(crate) unsafe fn push_entrant(this: usize, n: &mut i32, c: usize) -> bool {
     *n += 1;
-    core::ptr::write_unaligned((read_usize(this + 0xee) + (*n as usize - 1) * 4) as *mut u32, c as u32);
+    write_u32(read_usize(this + 0xee) + (*n as usize - 1) * 4, c as u32);
     *n == read_usize(this + 0xf2) as i32
 }
 
@@ -860,7 +860,7 @@ pub(crate) unsafe fn select_coppa_italia_entrants(this: usize) -> (i32, i32) {
                 }
             }
             m += 1;
-            core::ptr::write_unaligned((l + (m as usize - 1) * 4) as *mut u32, v[pot + r as usize] as u32);
+            write_u32(l + (m as usize - 1) * 4, v[pot + r as usize] as u32);
             v[pot + r as usize] = 0;
             pot += 8;
         }
@@ -933,7 +933,7 @@ pub(crate) unsafe fn compare_select_entrants(name: &str, this: usize, o: impl Fn
         let (r, n) = crate::rng::without_counting(c);
         lr.set(read_usize(this + 0xee));
         nr.set(n);
-        core::ptr::write_unaligned((this + 0xee) as *mut u32, lo.get() as u32);
+        write_u32(this + 0xee, lo.get() as u32);
         r
     });
     let (lo, lr) = (lo.get(), lr.get());
@@ -1006,9 +1006,9 @@ pub(crate) unsafe fn select_serie_c_cup_entrants(this: usize) -> (i32, i32) {
             crate::comparison::branch("cqo_11 serie c cup final places");
             let e = l + (j as i16 as isize * 4) as usize;
             let t = read_usize(e);
-            core::ptr::write_unaligned(e as *mut u32, c as u32);
+            write_u32(e, c as u32);
             j += 1;
-            core::ptr::write_unaligned((l + idx * 4) as *mut u32, t as u32);
+            write_u32(l + idx * 4, t as u32);
             if j as i16 as i32 >= read_usize(this + 0xf2) as i32 {
                 break;
             }
@@ -1090,7 +1090,7 @@ pub(crate) const CHAMPIONS_CUP_RULES: GroupStageRules = GroupStageRules { win: 3
 /// (+0x42, clubes), sem play-offs nem rebaixamento (+0xbf, +0xc0, +0xc1 = 0); depois a tabela das rodadas da virtual
 /// +0x3c (push 0; push &+0x3a; push &+0xa9; push −1; mov ecx, this -> thiscall, ret 0x10) em +0xba. Devolve 1.
 pub(crate) unsafe fn set_cup_league_rules(this: League, g: &GroupStageRules, rounds: i16) -> u32 {
-    let b = |o: usize, v: u8| *((this.addr() + o) as *mut u8) = v;
+    let b = |o: usize, v: u8| write_u8(this.addr() + o, v);
     b(0xc2, g.win);
     b(0xc3, g.draw);
     b(0xc4, g.category);
@@ -1102,19 +1102,19 @@ pub(crate) unsafe fn set_cup_league_rules(this: League, g: &GroupStageRules, rou
     b(0xc0, 0);
     b(0xc1, 0);
     b(0x42, 1);
-    core::ptr::write_unaligned((this.addr() + league::UPPER_DIVISION_ID) as *mut i32, -1);
-    core::ptr::write_unaligned((this.addr() + league::LOWER_DIVISION_ID) as *mut i32, -1);
-    core::ptr::write_unaligned((this.addr() + league::LEGS) as *mut i16, rounds);
+    write_i32(this.addr() + league::UPPER_DIVISION_ID, -1);
+    write_i32(this.addr() + league::LOWER_DIVISION_ID, -1);
+    write_i16(this.addr() + league::LEGS, rounds);
     if let Some(p) = g.prize {
-        core::ptr::write_unaligned((this.addr() + league::PRIZE_FUND) as *mut u32, p);
+        write_u32(this.addr() + league::PRIZE_FUND, p);
     }
     if let Some(w) = g.bits {
-        core::ptr::write_unaligned((this.addr() + league::LEAGUE_FLAGS) as *mut u16, w);
+        write_u16(this.addr() + league::LEAGUE_FLAGS, w);
     }
-    let vt = core::ptr::read_unaligned(this.addr() as *const usize);
-    let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(core::ptr::read_unaligned((vt + 0x3c) as *const usize));
+    let vt = read_usize(this.addr());
+    let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(vt + 0x3c));
     let t = table(this.addr(), 0xffff_ffff, this.addr() + league::ROUND_COUNT, this.addr() + league::STAGE_ID, 0);
-    core::ptr::write_unaligned((this.addr() + league::ROUND_DATES) as *mut u32, t as u32);
+    write_u32(this.addr() + league::ROUND_DATES, t as u32);
     1
 }
 

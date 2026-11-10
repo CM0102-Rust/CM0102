@@ -47,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_final_stage(this: us
     } else {
         0
     };
-    core::ptr::write_unaligned((this.stages() + 0x28) as *mut usize, stage);
+    write_usize(this.stages() + 0x28, stage);
     if read_usize(this.stages() + 0x28) == 0 {
         return show_error_at(0x98aba4, 0x392);
     }
@@ -92,12 +92,12 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_final_stage(this: us
 /// a virada do Brasil não lê); no fim, o eax do free ou o +0xee (a cópia devolve 0: ninguém lê).
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usize) -> u32 {
     let this = League(this);
-    core::ptr::write_unaligned((this.addr() + league::SEASON_CLOSED) as *mut u32, 0);
+    write_u32(this.addr() + league::SEASON_CLOSED, 0);
     exe::league_free_table(this, 0);
     let l = this.round_dates();
     if l != 0 {
         exe::crt_free(l);
-        core::ptr::write_unaligned((this.addr() + league::ROUND_DATES) as *mut usize, 0);
+        write_usize(this.addr() + league::ROUND_DATES, 0);
     }
     let stats = read_usize(this.addr() + league::COMP_STATS);
     if stats != 0 {
@@ -117,14 +117,14 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
             }
         }
     }
-    core::ptr::write_unaligned((this.addr() + league::CURRENT_STAGE) as *mut i32, -1);
+    write_i32(this.addr() + league::CURRENT_STAGE, -1);
     exe::crt_free(this.stages());
     let n = this.stage_count() as i32;
     let a = this.year();
-    core::ptr::write_unaligned((this.addr() + league::YEAR) as *mut i16, a.wrapping_add(1));
+    write_i16(this.addr() + league::YEAR, a.wrapping_add(1));
     crate::comparison::branch("cqs_4 serie c rollover");
     let v = if n > 0 { exe::crt_malloc((n * 4) as u32) } else { 0 };
-    core::ptr::write_unaligned((this.addr() + league::STAGES) as *mut usize, v);
+    write_usize(this.addr() + league::STAGES, v);
     let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x8c));
     if rules(this.addr()) == 0 {
         show_error_at(0x98aba4, 0x202);
@@ -153,7 +153,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
     if l != 0 {
         exe::crt_free(l);
     }
-    core::ptr::write_unaligned((this.addr() + bra_nat_third::CLUB_LIST) as *mut usize, 0);
+    write_usize(this.addr() + bra_nat_third::CLUB_LIST, 0);
     0
 }
 
@@ -247,7 +247,7 @@ pub(crate) unsafe fn bra_nat_third_create_group_stage_cqs3_grupo(this: League, g
     }
     let k = g as u8 as i8 as i32;
     for j in 0..7usize {
-        core::ptr::write_unaligned((v + 4 * j) as *mut usize, read_usize(read_usize(this.addr() + 0xee) + 4 * (7 * (k + 1) as usize + j)));
+        write_usize(v + 4 * j, read_usize(read_usize(this.addr() + 0xee) + 4 * (7 * (k + 1) as usize + j)));
     }
     let p = exe::crt_operator_new(0xee);
     let stage = if p != 0 {
@@ -257,7 +257,7 @@ pub(crate) unsafe fn bra_nat_third_create_group_stage_cqs3_grupo(this: League, g
     } else {
         0
     };
-    core::ptr::write_unaligned((this.stages() + 4 * k as usize) as *mut usize, stage);
+    write_usize(this.stages() + 4 * k as usize, stage);
     if read_usize(this.stages() + 4 * k as usize) == 0 {
         return show_error_at(0x98aba4, 0x487);
     }
@@ -347,7 +347,7 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
                 core::ptr::read_volatile(core::ptr::null::<usize>()) // simplification: the original reads address 0 here and crashes
             }
         };
-        core::ptr::write_unaligned((list + 4 * SECOND_ROUND_SEEDS[k] as usize) as *mut usize, c);
+        write_usize(list + 4 * SECOND_ROUND_SEEDS[k] as usize, c);
     }
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
@@ -359,7 +359,7 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
     } else {
         0
     };
-    core::ptr::write_unaligned((this.stages() + 0x1c) as *mut usize, stage);
+    write_usize(this.stages() + 0x1c, stage);
     if read_usize(this.stages() + 0x1c) == 0 {
         return show_error_at(0x98aba4, 0x31b);
     }
@@ -427,7 +427,7 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
         } else {
             0
         };
-        core::ptr::write_unaligned((this.stages() + 4 * k as usize) as *mut usize, stage);
+        write_usize(this.stages() + 4 * k as usize, stage);
         if read_usize(this.stages() + 4 * k as usize) == 0 {
             return show_error_at(0x98aba4, f);
         }
@@ -465,7 +465,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -
         exe::crt_free(old);
     }
     let list = exe::crt_malloc(0xe0);
-    core::ptr::write_unaligned((this.addr() + bra_nat_third::CLUB_LIST) as *mut usize, list);
+    write_usize(this.addr() + bra_nat_third::CLUB_LIST, list);
     if list == 0 {
         show_error_at(0x98aba4, 0x18f);
         return 1;
@@ -484,7 +484,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -
             break;
         }
         if read_usize(club + club::DIVISION) == this.competition().addr() {
-            core::ptr::write_unaligned((read_usize(this.addr() + bra_nat_third::CLUB_LIST) + (k as i8 as isize as usize) * 4) as *mut usize, club);
+            write_usize(read_usize(this.addr() + bra_nat_third::CLUB_LIST) + (k as i8 as isize as usize) * 4, club);
             k = k.wrapping_add(1);
         }
         i += 1;

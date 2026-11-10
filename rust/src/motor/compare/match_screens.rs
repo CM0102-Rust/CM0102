@@ -17,7 +17,7 @@ pub(crate) unsafe extern "thiscall" fn compare_destroy_match_stats(stats: usize)
 pub(crate) unsafe extern "thiscall" fn compare_fill_match_record(stats: usize, m: usize, reg: usize, sem_renda: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_FILL_MATCH_RECORD);
     // simplification: the first call (static data and atexit) and the errors only through the original
-    if m == 0 || reg == 0 || *(G_MATCH_STATS_FILL_RECORD_STATIC_DATE_GUARD as *const u8) & 1 == 0 {
+    if m == 0 || reg == 0 || read_u8(G_MATCH_STATS_FILL_RECORD_STATIC_DATE_GUARD) & 1 == 0 {
         return o(stats, m, reg, sem_renda);
     }
     // the shirt number given by the original (0x85a470) stays outside the regions: the copy finds it already given
@@ -99,9 +99,9 @@ pub(crate) unsafe extern "C" fn compare_build_match_screen() {
     }
     let p = get_screen_param(0);
     if p != 0 && get_screen_param(1) as u8 != 1 {
-        let rd = |a: usize| core::ptr::read_unaligned(a as *const usize);
+        let rd = |a: usize| read_usize(a);
         let espectadores = read_usize(p + live_match::SPECTATORS);
-        extra.push(((espectadores as isize + 0xc5 + *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize * 4) as usize, 4));
+        extra.push(((espectadores as isize + 0xc5 + read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize * 4) as usize, 4));
         extra.push((espectadores + match_spectators::COUNT, 1));
         let pm = Engine(read_usize(p + live_match::ENGINE));
         if !pm.is_null() && pm.commentator() != 0 {
@@ -177,7 +177,7 @@ pub(crate) unsafe extern "C" fn compare_draw_match_overview_panel(top: *mut i32,
     let p0 = get_screen_param(0);
     let photo = get_screen_param(0x1d);
     let commentator = p0 != 0
-        && core::ptr::read_unaligned((core::ptr::read_unaligned((p0 + live_match::RECORD) as *const usize) + 0x53) as *const u32) == 0
+        && read_u32(read_usize(p0 + live_match::RECORD) + 0x53) == 0
         && get_screen_param(7) != 0;
     let reg = screen_update_regions(false);
     if overview_would_error() || commentator || (p0 != 0 && photo == 0) || reg.is_none() {
@@ -364,7 +364,7 @@ pub(crate) unsafe extern "C" fn compare_draw_match_report_panel(top: *mut i32, b
 /// [pt] A montagem é comparada de verdade, com a marca de vista do humano no grupo (+0x14 + 4h).
 pub(crate) unsafe extern "C" fn compare_build_day_fixtures_screen() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_BUILD_DAY_FIXTURES_SCREEN);
-    let mark = (get_screen_param(1) as isize + 0x14 + *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize * 4) as usize;
+    let mark = (get_screen_param(1) as isize + 0x14 + read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize * 4) as usize;
     compare_pela_lista_com("build_day_fixtures_screen", &[(mark, 4)], || o(), || build_day_fixtures_screen());
 }
 
@@ -523,7 +523,7 @@ pub(crate) unsafe extern "C" fn compare_match_screens_tally_live_score(partida: 
 /// Comparer for `fixture_entry_matches`.
 pub(crate) unsafe extern "thiscall" fn compare_fixture_entry_matches(stats: usize, k: i32, a: i32, b: i32, data_a: i16, data_b: i16) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32, i32, i16, i16) -> i32>(IDX_FIXTURE_ENTRY_MATCHES);
-    if k < -1 || k > (*((stats + match_stats::CAPACITY) as *const i32)).wrapping_sub(1) {
+    if k < -1 || k > read_i32(stats + match_stats::CAPACITY).wrapping_sub(1) {
         return o(stats, k, a, b, data_a, data_b);
     }
     let r = o(stats, k, a, b, data_a, data_b);
@@ -597,7 +597,7 @@ pub(crate) unsafe extern "C" fn compare_match_screens_handle_latest_scores_cycle
 /// Comparer for `handle_team_stats_input`.
 pub(crate) unsafe extern "C" fn compare_handle_team_stats_input(item: u32) -> i32 {
     let p0 = get_screen_param(0);
-    let redesenha = *(G_MATCH_SCREEN_LIVE_DATA_FLAG as *const u32) != 0 && *(*((p0 + live_match::SPECTATORS) as *const usize) as *const u8) & 4 != 0;
+    let redesenha = read_u32(G_MATCH_SCREEN_LIVE_DATA_FLAG) != 0 && *(read_usize(p0 + live_match::SPECTATORS) as *const u8) & 4 != 0;
     compare_resposta("handle_team_stats_input", item, original_fn(432), handle_team_stats_input, redesenha)
 }
 

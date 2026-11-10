@@ -1,7 +1,7 @@
 # Mutacoes do match_wrap_up do motor (3). Uso: python mutacoes.py mutacoes\levaN.py --carreira 2002-06-01
 MUTACOES = [
     ('f_anel', "    let pos = if pos == 0 { 0xb } else { pos.wrapping_sub(1) };", "    let pos = if pos == 0 { 0xa } else { pos.wrapping_sub(1) };"),
-    ('f_repetido', "        core::ptr::write_unaligned((t + 6) as *mut i16, n - 1);", "        core::ptr::write_unaligned((t + 6) as *mut i16, n);"),
+    ('f_repetido', "        write_i16(t + 6, n - 1);", "        write_i16(t + 6, n);"),
     ('c_tempo', "    b(0x2db0, 0x7d);", "    b(0x2db0, 0x7c);"),
-    ('l_fim', "    *(G_MATCH_EVENTS_CONFIG_LANGUAGE as *mut u32) = u32::MAX;", "    *(G_MATCH_EVENTS_CONFIG_LANGUAGE as *mut u32) = 0;"),
+    ('l_fim', "    write_u32(G_MATCH_EVENTS_CONFIG_LANGUAGE, u32::MAX);", "    write_u32(G_MATCH_EVENTS_CONFIG_LANGUAGE, 0);"),
 ]

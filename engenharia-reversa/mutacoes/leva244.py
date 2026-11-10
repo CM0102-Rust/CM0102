@@ -1,6 +1,6 @@
 # Mutações da 244a leva (itens cph_2, cph_3, cph_4, cph_5, cph_6, cph_7). Uso: python mutacoes.py mutacoes\leva244.py --carreira 2002-06-01
 MUTACOES = [
-    ('cph_lugar_reservas', 'return if person.playing_squad() & 1 != 0 { 2 } else { 1 }; // main or reserves', 'return if *((person.addr() + 0x5e) as *const u8) & 1 != 0 { 1 } else { 2 }; // mutacao: trocados'),
+    ('cph_lugar_reservas', 'return if person.playing_squad() & 1 != 0 { 2 } else { 1 }; // main or reserves', 'return if read_u8(person.addr() + 0x5e) & 1 != 0 { 1 } else { 2 }; // mutacao: trocados'),
     ('cph_lugar_marca', 'if mark == 0 { 4 } else { 3 }', 'if mark == 0 { 3 } else { 4 } // mutacao: trocados'),
     ('cph_subir', 'toggle_placement_if_in(this, person, club, [1, 3]) // reserves or B team', 'toggle_placement_if_in(this, person, club, [1, 1]) // mutacao: sem o time B'),
     ('cph_descer', 'toggle_placement_if_in(this, person, club, [2, 4]) // senior team or club with a B team', 'toggle_placement_if_in(this, person, club, [2, 2]) // mutacao: sem o clube com time B'),
@@ -10,8 +10,8 @@ MUTACOES = [
     ('cph_conversas_clube', '&& (club == 0 || read_u32(r + contract_talks::CLUB_ID) == read_u32(club)) // the club', '&& (club == 0 || true) // mutacao: sem o clube'),
     ('cph_interesse_ordem', 'if *n != 0 {\n        media_crt_qsort(read_u32(this + media_fields::TRANSFER_INTERESTS) as usize, *n, 0x19, 0x757ea0);', 'if *n < 0 {\n        media_crt_qsort(read_u32(this + media_fields::TRANSFER_INTERESTS) as usize, *n, 0x19, 0x757ea0); // mutacao: sem reordenar'),
     ('cph_pedido_data', 'exe::date_operator_3d(r + 8, (&mut local) as *mut [u8; 8] as usize, r + 0x19);', 'exe::date_operator_3d(r + 8, (&mut local) as *mut [u8; 8] as usize, r + 8); // mutacao: a data fica'),
-    ('cph_apelido_fim', 'core::ptr::write_unaligned((end - 0x1e) as *mut u32, u32::MAX);', 'core::ptr::write_unaligned((end - 0x1e) as *mut u32, 0); // mutacao: id 0'),
-    ('cph_pendente_fim', 'core::ptr::write_unaligned(end as *mut u32, u32::MAX); // the last one without a person', 'core::ptr::write_unaligned(end as *mut u32, 0); // mutacao: pessoa 0'),
+    ('cph_apelido_fim', 'write_u32(end - 0x1e, u32::MAX);', 'write_u32(end - 0x1e, 0); // mutacao: id 0'),
+    ('cph_pendente_fim', 'write_u32(end, u32::MAX); // the last one without a person', 'write_u32(end, 0); // mutacao: pessoa 0'),
     ('cph_desempregado_tecnico', 'manager.current_reputation() < 50 && friendly_random(5) == 0 // the weak manager', 'manager.current_reputation() < 49 && friendly_random(5) == 0 // mutacao: 49'),
     ('cph_desempregado_sorteio', 'friendly_random(rating) < 0x2ee // the roll by the rating', 'friendly_random(rating) < 700 // mutacao: 700'),
     ('cph_permissao_oferta', 'return 1; // the offer’s player', 'return 0; // mutacao: nunca precisa'),

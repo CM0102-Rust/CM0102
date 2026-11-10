@@ -255,8 +255,8 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, toda
     let this = League(this);
     let day = this.next_draw_day() as u16; // cqr13: the draw day
     let year = (this.next_draw_year_offset() as u16).wrapping_add(this.year() as u16);
-    let day_of_today = core::ptr::read_unaligned(today as *const u16);
-    let year_of_today = core::ptr::read_unaligned((today + 2) as *const u16);
+    let day_of_today = read_u16(today);
+    let year_of_today = read_u16(today + 2);
     // simplification: in the two passes before the draw and on errors the original returns only al = 0 (the rest of eax is leftover from the
     // earlier calls); the caller reads the byte
     if year_of_today < year || (year_of_today == year && (day_of_today as i16) < day as i16) {
@@ -516,8 +516,8 @@ pub(crate) unsafe fn build_phase_table(this: League, f: Option<GoldcupStagePlan>
                 exe::cup_set_round_match_day(t, r, vaga, sem, hora, cod, mando);
             }
             Cqp12B(o, v) => *((t + o) as *mut u8) = v,
-            Cqp12W(o, v) => core::ptr::write_unaligned((t + o) as *mut u16, v),
-            Cqp12X(o, v) => core::ptr::write_unaligned((t + o) as *mut u32, v),
+            Cqp12W(o, v) => write_u16(t + o, v),
+            Cqp12X(o, v) => write_u32(t + o, v),
         }
     }
     t
@@ -794,9 +794,9 @@ pub(crate) fn confed_cup_phase(fase: u32) -> Option<GoldcupStagePlan> {
 pub(crate) unsafe fn goldcup_write_rule_fields(this: usize, fields: &[(usize, u8, u32)], win: u8) {
     for &(o, n, v) in fields {
         if n == 1 {
-            *((this + o) as *mut u8) = if o == 0xc2 { win } else { v as u8 };
+            write_u8(this + o, if o == 0xc2 { win } else { v as u8 });
         } else {
-            core::ptr::write_unaligned((this + o) as *mut u16, v as u16);
+            write_u16(this + o, v as u16);
         }
     }
 }
@@ -822,14 +822,14 @@ pub(crate) unsafe fn check_set_up_rules(name: &str, this: usize, fields: &[(usiz
     let mut errados: [(usize, u32); 4] = [(0, 0); 4];
     let mut k = 0;
     for &(off, n, v) in fields {
-        let (lido, v) = if n == 1 { (*((this + off) as *const u8) as u32, v & 0xff) } else { (core::ptr::read_unaligned((this + off) as *const u16) as u32, v & 0xffff) };
+        let (lido, v) = if n == 1 { (read_u8(this + off) as u32, v & 0xff) } else { (read_u16(this + off) as u32, v & 0xffff) };
         if lido != v && k < 4 {
             errados[k] = (off, lido);
             k += 1;
         }
     }
-    let b6 = core::ptr::read_unaligned((this + 0xb6) as *const u16);
-    let lido8 = core::ptr::read_unaligned((this + 0xb8) as *const u16);
+    let b6 = read_u16(this + 0xb6);
+    let lido8 = read_u16(this + 0xb8);
     SCOREBOARD.record(r == 1 && k == 0 && b6 == word && lido8 == b8, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {:#x}", name, this, r, &errados[..k], b6, word, lido8));
     r
 }

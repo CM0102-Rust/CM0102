@@ -9,8 +9,8 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_update_for_date(thi
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CONMEBOL_MERC_UPDATE_FOR_DATE);
     let draws = this.active() == 0
         && full != 0
-        && (this.next_draw_year_offset() as u16).wrapping_add(this.year() as u16) == core::ptr::read_unaligned((today + 2) as *const u16)
-        && this.next_draw_day() as u16 == core::ptr::read_unaligned(today as *const u16) && !is_rollover_day(this, today);
+        && (this.next_draw_year_offset() as u16).wrapping_add(this.year() as u16) == read_u16(today + 2)
+        && this.next_draw_day() as u16 == read_u16(today) && !is_rollover_day(this, today);
     let r = o(this.addr(), today, full);
     if draws {
         let stages = this.stages();
@@ -39,7 +39,7 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_create_first_group_
     let mut read = [(0usize, 0u8); 4];
     if t != 0 {
         for (i, l) in read.iter_mut().enumerate() {
-            *l = (read_usize(t + i * 0x3b), *((t + i * 0x3b + 4) as *const u8));
+            *l = (read_usize(t + i * 0x3b), read_u8(t + i * 0x3b + 4));
         }
     }
     let same = r == 1 && this.club_count() == 4 && t != 0 && (0..4).all(|i| read[i] == (predicted[i], i as u8));
@@ -95,7 +95,7 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_select_invited_club
         let (r, n) = crate::rng::without_counting(|| mercosur_select_invited_clubs(this));
         lr.set(read_usize(this + conmebol_merc::DRAWN_CLUBS));
         nr.set(n);
-        core::ptr::write_unaligned((this + conmebol_merc::DRAWN_CLUBS) as *mut u32, lo.get() as u32);
+        write_u32(this + conmebol_merc::DRAWN_CLUBS, lo.get() as u32);
         r
     });
     let (lo, lr) = (lo.get(), lr.get());

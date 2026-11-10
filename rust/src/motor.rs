@@ -3364,7 +3364,7 @@ compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, ()
 /// [pt] A linha `linha` da tabela tática do objeto `t` ([t+0x601], 0x91 bytes por linha: palavra da
 /// formação e 20 vagas de 4 bytes a partir de +2).
 unsafe fn table_row(t: usize, linha: i32) -> usize {
-    core::ptr::read_unaligned((t + tactics_fields::ROWS) as *const usize).wrapping_add((linha as usize).wrapping_mul(0x91))
+    read_usize(t + tactics_fields::ROWS).wrapping_add((linha as usize).wrapping_mul(0x91))
 }
 
 /// The regions the three can touch: the club's row in the table (if any) and the pending
@@ -3509,7 +3509,7 @@ unsafe extern "thiscall" fn compare_engine_decide_foul(this: usize, j: usize, co
 
 unsafe extern "thiscall" fn compare_look_for_offside(this: usize, l: i8, linha: i8, y: i8, passador: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, usize) -> usize>(IDX_LOOK_FOR_OFFSIDE);
-    let motor = Engine(*(this as *const usize));
+    let motor = Engine(read_usize(this));
     let mut reg = vec![(this + 8, 2), (motor.addr() + engine::PENDING_PLAY_KIND, 16)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, l, linha, y, passador), || crate::rng::without_counting(|| look_for_offside(this, l, linha, y, passador)));
@@ -3821,13 +3821,13 @@ compare_value!(compare_group_decided, group_decided, IDX_GROUP_DECIDED, (clube: 
 ///
 /// [pt] As linhas do clube da comissao no banco de taticas (0x8982b0 por tecnico humano ou nao).
 unsafe fn club_rows(clube: usize) -> Vec<(usize, usize)> {
-    let taticas = *(G_TACTICS as *const usize);
+    let taticas = read_usize(G_TACTICS);
     let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let mut v = Vec::new();
     for humano in 0..2u32 {
         let l = if clube == 0 || taticas == 0 { -1 } else { linha(clube, humano) };
         if l != -1 {
-            v.push(((*((taticas + tactics_fields::ROWS) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)), 0x91));
+            v.push((read_usize(taticas + tactics_fields::ROWS).wrapping_add((l as usize).wrapping_mul(0x91)), 0x91));
         }
     }
     v
@@ -3957,24 +3957,24 @@ unsafe fn diag_sample(c: usize, qual: &str) {
     if !DIAG_CALLS.is_power_of_two() {
         return;
     }
-    let p = (*(G_STAFF_TABLE as *const usize)).wrapping_add(DIAG_PERSON.wrapping_mul(110));
-    let k = exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), p);
+    let p = read_usize(G_STAFF_TABLE).wrapping_add(DIAG_PERSON.wrapping_mul(110));
+    let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
     linha(&format!("diag {} chamada {}: contrato da vez +0 {} +4 {}; contrato da pessoa {}: {}", qual, DIAG_CALLS,
-        core::ptr::read_unaligned(c as *const i32), core::ptr::read_unaligned((c + 4) as *const i32), DIAG_PERSON,
-        if k == 0 { "nenhum".to_string() } else { format!("+0 {} +4 {} {}", core::ptr::read_unaligned(k as *const i32), core::ptr::read_unaligned((k + 4) as *const i32), diag_contract(k)) }));
+        read_i32(c), read_i32(c + 4), DIAG_PERSON,
+        if k == 0 { "nenhum".to_string() } else { format!("+0 {} +4 {} {}", read_i32(k), read_i32(k + 4), diag_contract(k)) }));
 }
 
 unsafe extern "thiscall" fn diag_complaint(c: usize, f: u32, z: u32) -> u32 {
     if c != 0 {
         diag_sample(c, "queixa");
     }
-    let alvo = c != 0 && (core::ptr::read_unaligned(c as *const u32) as usize == DIAG_PERSON || core::ptr::read_unaligned((c + 4) as *const u32) as usize == DIAG_CLUB);
+    let alvo = c != 0 && (read_u32(c) as usize == DIAG_PERSON || read_u32(c + 4) as usize == DIAG_CLUB);
     if alvo {
-        linha(&format!("diag queixa pessoa {} queixa {:#x} z {} antes: {}", core::ptr::read_unaligned(c as *const u32), f, z, diag_contract(c)));
+        linha(&format!("diag queixa pessoa {} queixa {:#x} z {} antes: {}", read_u32(c), f, z, diag_contract(c)));
     }
     let r = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(DIAG_COMPLAINT)(c, f, z);
     if alvo {
-        linha(&format!("diag queixa pessoa {} devolveu {} depois: {}", core::ptr::read_unaligned(c as *const u32), r, diag_contract(c)));
+        linha(&format!("diag queixa pessoa {} devolveu {} depois: {}", read_u32(c), r, diag_contract(c)));
     }
     // CM_DIAG_FORCAR=Q: a synthetic complaint Q on person P's contract, once, right after the game's first complaint
     // (the same event in the save variants: only the contract state decides whether the request goes out)
@@ -3982,7 +3982,7 @@ unsafe extern "thiscall" fn diag_complaint(c: usize, f: u32, z: u32) -> u32 {
     if !FORCED {
         if let Some(q) = std::env::var("CM_DIAG_FORCAR").ok().and_then(|v| u32::from_str_radix(v.trim_start_matches("0x"), 16).ok()) {
             FORCED = true;
-            let k = exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), (*(G_STAFF_TABLE as *const usize)).wrapping_add(DIAG_PERSON.wrapping_mul(110)));
+            let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), read_usize(G_STAFF_TABLE).wrapping_add(DIAG_PERSON.wrapping_mul(110)));
             if k != 0 {
                 linha(&format!("diag queixa forcada {:#x} pessoa {} antes: {}", q, DIAG_PERSON, diag_contract(k)));
                 let r2 = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(DIAG_COMPLAINT)(k, q, 0);
@@ -3997,13 +3997,13 @@ unsafe extern "thiscall" fn diag_mark(c: usize, f: u32) -> u32 {
     if c != 0 {
         diag_sample(c, "marca");
     }
-    let alvo = c != 0 && (core::ptr::read_unaligned(c as *const u32) as usize == DIAG_PERSON || core::ptr::read_unaligned((c + 4) as *const u32) as usize == DIAG_CLUB);
+    let alvo = c != 0 && (read_u32(c) as usize == DIAG_PERSON || read_u32(c + 4) as usize == DIAG_CLUB);
     if alvo {
-        linha(&format!("diag marca pessoa {} marca {:#x} antes: {}", core::ptr::read_unaligned(c as *const u32), f, diag_contract(c)));
+        linha(&format!("diag marca pessoa {} marca {:#x} antes: {}", read_u32(c), f, diag_contract(c)));
     }
     let r = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32) -> u32>(DIAG_MARK)(c, f);
     if alvo {
-        linha(&format!("diag marca pessoa {} devolveu {} depois: {}", core::ptr::read_unaligned(c as *const u32), r, diag_contract(c)));
+        linha(&format!("diag marca pessoa {} devolveu {} depois: {}", read_u32(c), r, diag_contract(c)));
     }
     r
 }
@@ -4042,7 +4042,7 @@ unsafe fn grid_inconsistent(m: Engine) -> Option<String> {
                     return Some(format!("casa ({},{}) lado {} contagem {}", x, y, l, n));
                 }
                 for i in 0..n as usize {
-                    let p = MatchPlayer(*((casa + 4 * (11 * l + i)) as *const usize));
+                    let p = MatchPlayer(read_usize(casa + 4 * (11 * l + i)));
                     let base = m.player(l as i8, 0).addr();
                     if p.addr() < base || p.addr() >= base + 20 * 0x1be || (p.addr() - base) % 0x1be != 0 {
                         return Some(format!("casa ({},{}) lado {} entrada {}/{} = {:#x}", x, y, l, i, n, p.addr()));

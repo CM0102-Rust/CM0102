@@ -4,7 +4,7 @@ MUTACOES = [
     ('dq4_peso', '(0x23, 2), (0x24, 0)', '(0x23, 3), (0x24, 0)'),
     ('dq4_britanica', 'id == g(KEY_NATION_ENGLAND) || ', ''),
     ('dq5_basco', '    BASQUE_CLUBS.iter().any(|&a| id == g(a)) as u32', '    (!BASQUE_CLUBS.iter().any(|&a| id == g(a))) as u32'),
-    ('dq5_listada', '*((v + contract::TRANSFER_STATUS) as *const u8) & 1 == 0', '*((v + contract::TRANSFER_STATUS) as *const u8) & 2 == 0'),
+    ('dq5_listada', 'read_u8(v + contract::TRANSFER_STATUS) & 1 == 0', 'read_u8(v + contract::TRANSFER_STATUS) & 2 == 0'),
     ('dq5_emprestimo', '*((v + contract::TRANSFER_STATUS) as *const u8) & 2 != 0) as u32', '*((v + contract::TRANSFER_STATUS) as *const u8) & 1 != 0) as u32'),
     ('dq6_pedido', 'v.transfer_status() & 8 != 0', 'v.transfer_status() & 9 != 0'),
     ('dq6_nota', '(ability + 2 * (value as u8 as i8 as i32))', '(ability + 3 * (value as u8 as i8 as i32))'),

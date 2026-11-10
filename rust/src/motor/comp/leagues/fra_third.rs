@@ -44,7 +44,7 @@ pub(crate) unsafe fn written_league_round_bytes(t: usize, guia: usize, n: usize)
         v.extend_from_slice(core::slice::from_raw_parts((e + 0x3d) as *const u8, 4));
         for j in 0..8usize {
             v.extend_from_slice(core::slice::from_raw_parts((e + 5 + j * 7) as *const u8, 7));
-            if *((guia + r * 0x41 + 5 + j * 7 + 4) as *const i8) == -1 {
+            if read_i8(guia + r * 0x41 + 5 + j * 7 + 4) == -1 {
                 break;
             }
         }

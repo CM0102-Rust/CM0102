@@ -14,7 +14,7 @@ use super::*;
 /// a caixa da linha 0xb6 sem memória.
 pub(crate) unsafe extern "thiscall" fn eng_fa_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let this = Cup(this);
-    let t = fa_cup_rounds(*((this.addr() + eng_fa_cup::EXEMPTION_COUNT) as *const i8) as i16, *((this.addr() + eng_fa_cup::FIFTH_ROUND_ENTRY) as *const u8), this.team_count());
+    let t = fa_cup_rounds(read_i8(this.addr() + eng_fa_cup::EXEMPTION_COUNT) as i16, read_u8(this.addr() + eng_fa_cup::FIFTH_ROUND_ENTRY), this.team_count());
     eng_cc_cup_create_single_stage_round_table(this, stage, rounds, extra, out, &t, 0x9c42cc, 0xb6, "cql_10 tabela da copa da inglaterra")
 }
 

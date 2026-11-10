@@ -103,7 +103,7 @@ pub(crate) unsafe fn record_state_knockout(this: League, club: usize, st: u8, ga
                 }
                 let l = this.table() + 0x3b * i as usize;
                 if fazer {
-                    *((l + 0x37) as *mut u8) = 5;
+                    write_u8(l + 0x37, 5);
                 }
                 return (l, 5);
             }
@@ -117,7 +117,7 @@ pub(crate) unsafe fn record_state_knockout(this: League, club: usize, st: u8, ga
                 }
                 let l = this.table() + 0x3b * i as usize;
                 if fazer {
-                    *((l + 0x37) as *mut u8) = 0xfe;
+                    write_u8(l + 0x37, 0xfe);
                 }
                 return (l, 0xfe);
             }

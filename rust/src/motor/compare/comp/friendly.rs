@@ -390,11 +390,11 @@ pub(crate) unsafe extern "thiscall" fn compare_set_preseason_windows(this: usize
     original_fn::<unsafe extern "thiscall" fn(usize, usize, i32)>(IDX_SET_PRESEASON_WINDOWS)(this, ptrs, n);
     let erros: Vec<String> = plan.iter()
         .filter(|&&(c, ini, fim, nova)| {
-            core::ptr::read_unaligned((c + preseason_candidate::WINDOW_START) as *const i16) != ini || core::ptr::read_unaligned((c + preseason_candidate::WINDOW_END) as *const i16) != fim
+            read_i16(c + preseason_candidate::WINDOW_START) != ini || read_i16(c + preseason_candidate::WINDOW_END) != fim
                 || (nova && read_usize(c + preseason_candidate::PLANNED_DATES) == 0)
         })
         .map(|&(c, ini, fim, nova)| format!("candidato {:x}: esperado {}..{} lista {} obtido {}..{} lista {:x}", c, ini, fim, nova,
-            core::ptr::read_unaligned((c + preseason_candidate::WINDOW_START) as *const i16), core::ptr::read_unaligned((c + preseason_candidate::WINDOW_END) as *const i16), read_usize(c + preseason_candidate::PLANNED_DATES)))
+            read_i16(c + preseason_candidate::WINDOW_START), read_i16(c + preseason_candidate::WINDOW_END), read_usize(c + preseason_candidate::PLANNED_DATES)))
         .collect();
     SCOREBOARD.record(erros.is_empty(), || format!("set_preseason_windows(n {}) {} candidatos: {}", n, plan.len(), erros.join("; ")));
 }
@@ -528,7 +528,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_friendly_match(this: usize
         esperado8.remove(k);
     }
     let v = if clear_slot != 0 {
-        exe::friendly_find_scheduled_friendly_slot(this, *(game as *const u16) as u32, *((game + 2) as *const u16) as u32, read_usize(game + friendly_match::AWAY_CLUB), read_usize(game + friendly_match::HOME_CLUB))
+        exe::friendly_find_scheduled_friendly_slot(this, read_u16(game) as u32, read_u16(game + 2) as u32, read_usize(game + friendly_match::AWAY_CLUB), read_usize(game + friendly_match::HOME_CLUB))
     } else {
         0
     };
@@ -658,9 +658,9 @@ pub(crate) unsafe extern "thiscall" fn compare_schedule_assign_opponent(this: us
 pub(crate) unsafe extern "thiscall" fn compare_register_comp_objects(friendly: usize) {
     let friendly = Friendly(friendly);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_REGISTER_COMP_OBJECTS);
-    let table = *(G_COMP_OBJECT_TABLE as *const usize) as isize;
+    let table = read_usize(G_COMP_OBJECT_TABLE) as isize;
     let base = friendly.first_tournament_comp_id() as isize;
-    let reg = [((table + *(KEY_CLUB_COMP_FRIENDLY as *const i32) as isize * 4) as usize, 4), ((table + base * 4) as usize, 0x7f * 4)];
+    let reg = [((table + read_i32(KEY_CLUB_COMP_FRIENDLY) as isize * 4) as usize, 4), ((table + base * 4) as usize, 0x7f * 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(friendly.addr()), || register_comp_objects(friendly.addr()));
     SCOREBOARD.record(igual, || format!("register_comp_objects {:x?} x {:x?}", mo, mr));
 }

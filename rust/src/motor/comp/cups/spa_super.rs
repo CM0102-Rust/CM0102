@@ -19,10 +19,10 @@ pub(crate) unsafe fn alloc_two_team_list(this: Cup, file: usize, row: u32) -> Op
 ///
 /// [pt] O fim comum: classe e situação 0 nos dois; devolve 1.
 pub(crate) unsafe fn finish_two_team_list(l: usize) -> (i32, i32) {
-    *((l + 4) as *mut u8) = 0;
-    *((l + 5) as *mut u8) = 0;
-    *((l + 0xa) as *mut u8) = 0;
-    *((l + 0xb) as *mut u8) = 0;
+    write_u8(l + 4, 0);
+    write_u8(l + 5, 0);
+    write_u8(l + 0xa, 0);
+    write_u8(l + 0xb, 0);
     (1, 2)
 }
 
@@ -30,7 +30,7 @@ pub(crate) unsafe fn finish_two_team_list(l: usize) -> (i32, i32) {
 ///
 /// [pt] Grava o clube `c` na vaga `v` da lista; sem clube, a caixa `linha` (fonte `arquivo`) e falso.
 pub(crate) unsafe fn set_team_slot(l: usize, v: usize, c: usize, file: usize, row: u32) -> bool {
-    core::ptr::write_unaligned((l + 6 * v) as *mut u32, c as u32);
+    write_u32(l + 6 * v, c as u32);
     if c == 0 {
         show_error_at(file, row);
         return false;

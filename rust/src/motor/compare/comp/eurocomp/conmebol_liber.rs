@@ -9,8 +9,8 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_update_for_date(th
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CONMEBOL_LIBER_UPDATE_FOR_DATE);
     let draws = this.active() == 0
         && full != 0
-        && (this.next_draw_year_offset() as u16).wrapping_add(this.year() as u16) == core::ptr::read_unaligned((today + 2) as *const u16)
-        && this.next_draw_day() as u16 == core::ptr::read_unaligned(today as *const u16);
+        && (this.next_draw_year_offset() as u16).wrapping_add(this.year() as u16) == read_u16(today + 2)
+        && this.next_draw_day() as u16 == read_u16(today);
     let r = o(this.addr(), today, full);
     if draws {
         let stages = this.stages();
@@ -39,7 +39,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_first_group_table(this: usi
     let mut read = [(0usize, 0u8); 4];
     if t != 0 {
         for (i, l) in read.iter_mut().enumerate() {
-            *l = (read_usize(t + i * 0x3b), *((t + i * 0x3b + 4) as *const u8));
+            *l = (read_usize(t + i * 0x3b), read_u8(t + i * 0x3b + 4));
         }
     }
     let same = r == 1 && this.club_count() == 4 && t != 0 && (0..4).all(|i| read[i] == (predicted[i], i as u8));
@@ -97,8 +97,8 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_select_qualified_c
     let (la, depois) = (read_usize(this + conmebol_liber::DRAWN_CLUBS), crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS));
     let a: [u32; 32] = if la != 0 { core::ptr::read_unaligned(la as *const [u32; 32]) } else { [0; 32] };
     state.write_back();
-    core::ptr::write_unaligned((this + conmebol_liber::DRAWN_CLUBS) as *mut u32, ee as u32);
-    core::ptr::write_unaligned((this + conmebol_liber::DRAWN_CLUB_COUNT) as *mut u32, f2 as u32);
+    write_u32(this + conmebol_liber::DRAWN_CLUBS, ee as u32);
+    write_u32(this + conmebol_liber::DRAWN_CLUB_COUNT, f2 as u32);
     let rr = crate::rng::pause_trace(|| crate::rng::without_counting(|| conmebol_liber_select_qualified_clubs(this)));
     let lb = read_usize(this + conmebol_liber::DRAWN_CLUBS);
     let b: [u32; 32] = if lb != 0 { core::ptr::read_unaligned(lb as *const [u32; 32]) } else { [0; 32] };
@@ -106,8 +106,8 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_select_qualified_c
     if lb != 0 && lb != la {
         exe::crt_free(lb);
     }
-    core::ptr::write_unaligned((this + conmebol_liber::DRAWN_CLUBS) as *mut u32, la as u32);
-    core::ptr::write_unaligned((this + conmebol_liber::DRAWN_CLUB_COUNT) as *mut u32, 0x20);
+    write_u32(this + conmebol_liber::DRAWN_CLUBS, la as u32);
+    write_u32(this + conmebol_liber::DRAWN_CLUB_COUNT, 0x20);
     depois.write_back();
     SCOREBOARD.record(r == rr && a == b && same_state, || format!("conmebol_liber_select_qualified_clubs({:#x}) devolveu {} x {} estado igual {} original {:x?} rust {:x?}", this, r, rr, same_state, a, b));
     r

@@ -9,7 +9,7 @@ MUTACOES = [
     ('cqs6_finalistas_trocados', '        write_usize(l, c);\n    }\n    if let Some(c) = first_entrant_with_status(read_usize(read_usize(this.stages()) + 0xa7), this.team_count() as i32, 1) { // cqs6: the brackets finalist\n        write_usize(l + 4, c);', '        write_usize(l + 4, c); // mutacao: o mando trocado\n    }\n    if let Some(c) = first_entrant_with_status(read_usize(read_usize(this.stages()) + 0xa7), this.team_count() as i32, 1) { // cqs6: the brackets finalist\n        write_usize(l, c);', 'cqs_6 trophy final'),
     ('cqs6_final_sem_sorteio', 'exe::cup_draw_round(f, 0); // cqs6: the draw of the final', '// mutacao', 'cqs_6 trophy final'),
     ('cqs6_final_no_ano_seguinte', 'this.year() as u16 as u32, 1, 1, // cqs6: the year of the final', '(this.year() + 1) as u16 as u32, 1, 1, // mutacao', 'cqs_6 trophy final'),
-    ('cqs7_sementes_zeradas', '*((seeds + i as usize) as *const u8) // cqs7: the vector seed', '0 // mutacao', 'cqs_7 cup stage'),
+    ('cqs7_sementes_zeradas', 'read_u8(seeds + i as usize) // cqs7: the vector seed', '0 // mutacao', 'cqs_7 cup stage'),
     ('cqs7_times_em_ordem_inversa', 'read_usize(teams + i as usize * 4)); // cqs7: o time i', 'read_usize(teams + (m - 1 - i) as usize * 4)); // mutacao', 'cqs_7 cup stage'),
     ('cqs7_fase_no_ano_seguinte', 'this.set_year((year as u16) as i16); // cqs7: the stage year', 'this.set_year(((year as u16).wrapping_add(1)) as i16); // mutacao', 'cqs_7 cup stage'),
     ('cqs10_o_seguinte_de_cada_fase_passa', 'read_usize(exe::league_get_table_row(stage, j)) // cqs10: position j of the stage', 'read_usize(exe::league_get_table_row(stage, j + 1)) // mutacao: o seguinte passa', 'cqs_10 classificados da libertadores'),

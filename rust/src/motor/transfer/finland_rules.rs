@@ -11,6 +11,6 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn construct_finland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparison::branch("cqm_3 finland");
     construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x96a75c, 1, &FINLAND_TRANSFER_WINDOWS, 0x9cc134, 0x50);
-    core::ptr::write_unaligned((this + 0x15) as *mut u32, 1);
+    write_u32(this + 0x15, 1);
     this
 }

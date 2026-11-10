@@ -33,8 +33,8 @@ pub(crate) unsafe extern "thiscall" fn record_referee_grade(this: usize, r: *con
 ///
 /// [pt] A ficha do arbitro que a 0x79ce10 mexe (vazia se o id nao vale).
 pub(crate) unsafe fn official_record_region(manager: usize, id: i32) -> Vec<(usize, usize)> {
-    let base = *(manager as *const usize);
-    if base == 0 || id < 0 || id >= *(G_OFFICIAL_COUNT as *const i32) {
+    let base = read_usize(manager);
+    if base == 0 || id < 0 || id >= read_i32(G_OFFICIAL_COUNT) {
         return Vec::new();
     }
     vec![(base + id as usize * 17, 17)]
@@ -126,7 +126,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
                 *m = 0;
                 continue;
             }
-            let limit = if *((nation + nation::LEAGUE_SELECTED) as *const u8) == 0 { 5 } else { 0x3c }; // cqg9: the referees who stay per nation
+            let limit = if read_u8(nation + nation::LEAGUE_SELECTED) == 0 { 5 } else { 0x3c }; // cqg9: the referees who stay per nation
             if group <= limit {
                 ficam += 1;
                 *m = 1;
@@ -141,7 +141,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
     let mut dst = new;
     let mut i = 0i32;
     while i < read_i32(G_OFFICIAL_COUNT) {
-        if *((marks + i as usize) as *const u8) != 0 {
+        if read_u8(marks + i as usize) != 0 {
             exe::official_operator_3d(dst, official_record(i));
             dst += 0x2b;
         }
@@ -286,7 +286,7 @@ pub(crate) unsafe extern "C" fn officials_manager_compare_comp_level(a: usize, b
 ///
 /// [pt] A qualidade do árbitro na ordem: o byte +0x28 × 50 + a palavra +0x22, em 16 bits.
 pub(crate) unsafe fn official_quality(r: usize) -> i16 {
-    (*((r + 0x28) as *const i8) as i16).wrapping_mul(0x32).wrapping_add(read_i16(r + official::RATING)) // cqh7: the quality weight
+    (read_i8(r + 0x28) as i16).wrapping_mul(0x32).wrapping_add(read_i16(r + official::RATING)) // cqh7: the quality weight
 }
 
 /// Nation id of the official ([+0x16] + 0).
@@ -497,7 +497,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
             }
         }
     }
-    core::ptr::write_unaligned(out as *mut i16, k as i16);
+    write_i16(out, k as i16);
     (k as u32 & 0xffff_ff00) | 1
 }
 
@@ -514,7 +514,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
 pub(crate) unsafe extern "thiscall" fn clear_busy_flags(this: usize) -> u32 {
     let mut i = 0i32;
     while i < read_i32(this + officials_manager_fields::BUSY_COUNT) {
-        *(read_usize(this + officials_manager_fields::BUSY_FLAGS).wrapping_add(i as usize) as *mut u8) = 0;
+        write_u8(read_usize(this + officials_manager_fields::BUSY_FLAGS).wrapping_add(i as usize), 0);
         i += 1;
     }
     i as u32
@@ -581,9 +581,9 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
         crate::comparison::branch("cpy_8 referee renewed");
         let nation = read_usize(sheet.addr() + player_sheet::WING_BACK);
         let n1 = exe::database_pick_first_name_for_nation(nation);
-        core::ptr::write_unaligned((sheet.addr() + 4) as *mut usize, n1);
+        write_usize(sheet.addr() + 4, n1);
         let n2 = exe::database_pick_first_name_for_nation(read_usize(sheet.addr() + player_sheet::WING_BACK));
-        core::ptr::write_unaligned((sheet.addr() + 8) as *mut usize, n2);
+        write_usize(sheet.addr() + 8, n2);
         sheet.set_dirtiness((if random(10) != 0 {
             (random(0x10) as u8).wrapping_add(5)
         } else {
@@ -592,16 +592,16 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
         }) as i8);
         let r5 = random(5);
         let base = (read_i16(G_CURRENT_DATE_YEAR) as u16).wrapping_sub(0x1b);
-        core::ptr::write_unaligned((sheet.addr() + official::BIRTH_YEAR) as *mut u16, (r5 as u16).wrapping_add(base));
-        core::ptr::write_unaligned((sheet.addr() + official::BIRTH_DAY) as *mut u16, random(0x154) as u16);
+        write_u16(sheet.addr() + official::BIRTH_YEAR, (r5 as u16).wrapping_add(base));
+        write_u16(sheet.addr() + official::BIRTH_DAY, random(0x154) as u16);
     }
     for k in 0..n.max(0) {
         let row = read_usize(this).wrapping_add(ini.wrapping_add(k).wrapping_mul(0x11) as usize);
-        *((row + official_stats::CARDS) as *mut u8) = 0;
-        core::ptr::write_unaligned((row + official_stats::FOULS) as *mut u16, 0);
-        core::ptr::write_unaligned((row + official_stats::GRADE_SUM) as *mut u16, 0);
-        core::ptr::write_unaligned((row + official_stats::MATCHES) as *mut u16, 0);
-        core::ptr::write_unaligned((row + official_stats::AVERAGE_GRADE) as *mut u32, 0);
+        write_u8(row + official_stats::CARDS, 0);
+        write_u16(row + official_stats::FOULS, 0);
+        write_u16(row + official_stats::GRADE_SUM, 0);
+        write_u16(row + official_stats::MATCHES, 0);
+        write_u32(row + official_stats::AVERAGE_GRADE, 0);
     }
     1
 }
@@ -669,7 +669,7 @@ pub(crate) unsafe extern "thiscall" fn officials_manager_add_random_officials(_t
     }
     let before = read_i32(G_OFFICIAL_COUNT);
     let t = exe::crt_realloc(read_usize(G_OFFICIAL_TABLE), (before.wrapping_add(count).wrapping_mul(0x2b)) as u32);
-    *(G_OFFICIAL_TABLE as *mut usize) = t;
+    write_usize(G_OFFICIAL_TABLE, t);
     if t == 0 {
         fatal_error_at(0xa6a22c, 0x342);
     }
@@ -680,7 +680,7 @@ pub(crate) unsafe extern "thiscall" fn officials_manager_add_random_officials(_t
         r += 0x2b;
     }
     let n = read_i32(G_OFFICIAL_COUNT).wrapping_add(count);
-    *(G_OFFICIAL_COUNT as *mut i32) = n;
+    write_i32(G_OFFICIAL_COUNT, n);
     crate::comparison::branch("cpy_9 sort");
     exe::crt_qsort(read_usize(G_OFFICIAL_TABLE), (n) as u32, 0x2b, 0x79d480); // cpy9: ordenar a tabela
 }
@@ -836,8 +836,8 @@ pub(crate) unsafe extern "thiscall" fn officials_manager_operator(this: usize, s
 /// árbitros ou erro ao gravar: a caixa (0x150, 0x156, 0x15c, 0x164, 0x16c, 0x174), fecha o item e 0.
 pub(crate) unsafe extern "thiscall" fn save_official_stats(this: usize, save: usize) -> u8 {
     const FONTE: usize = 0xa6a22c;
-    let arbitros = || *(G_OFFICIAL_COUNT as *const u32);
-    let nations = || *(G_NATION_COUNT as *const u32);
+    let arbitros = || read_u32(G_OFFICIAL_COUNT);
+    let nations = || read_u32(G_NATION_COUNT);
     crate::comparison::branch("cpx_7 save referee stats");
     if save == 0 {
         show_error_at(FONTE, 0x142);

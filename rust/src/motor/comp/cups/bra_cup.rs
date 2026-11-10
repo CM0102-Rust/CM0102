@@ -37,7 +37,7 @@ pub(crate) unsafe fn start_new_cup_season(this: Cup, entrants: usize, file: usiz
         let l = read_usize(this.addr() + o);
         if l != 0 {
             exe::crt_free(l);
-            core::ptr::write_unaligned((this.addr() + o) as *mut u32, 0);
+            write_u32(this.addr() + o, 0);
         }
     }
     if this.tie_tables() != 0 {
@@ -46,7 +46,7 @@ pub(crate) unsafe fn start_new_cup_season(this: Cup, entrants: usize, file: usiz
             let p = read_usize(this.tie_tables() + i as usize * 4);
             if p != 0 {
                 exe::crt_free(p);
-                core::ptr::write_unaligned((this.tie_tables() + i as usize * 4) as *mut u32, 0);
+                write_u32(this.tie_tables() + i as usize * 4, 0);
             }
             i += 1;
         }
@@ -162,9 +162,9 @@ pub(crate) unsafe fn build_brazil_cup_teams(this: Cup) -> i32 {
         let font = o; // cqo12: the registration of each slot
         let c = read_usize(this.entrant_book() + font);
         let e = this.team_table() + o;
-        core::ptr::write_unaligned(e as *mut u32, c as u32);
-        *((e + 5) as *mut u8) = 0xff;
-        *((e + 4) as *mut u8) = 0;
+        write_u32(e, c as u32);
+        write_u8(e + 5, 0xff);
+        write_u8(e + 4, 0);
         i = i.wrapping_add(1);
     }
     1

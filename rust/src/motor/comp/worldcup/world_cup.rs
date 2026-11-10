@@ -194,8 +194,8 @@ pub(crate) unsafe extern "thiscall" fn run_group_draw(this: usize) {
 /// ecx -> thiscall, ret 8), cuja devolução (eax) ela repassa. A data: +0 o dia do ano, +2 o ano (sem sinal).
 pub(crate) unsafe extern "thiscall" fn world_cup_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let this = League(this);
-    let year = core::ptr::read_unaligned((today + 2) as *const u16) as i32;
-    let day = core::ptr::read_unaligned(today as *const u16);
+    let year = read_u16(today + 2) as i32;
+    let day = read_u16(today);
     if read_i16(this.addr() + 0x18e) as u16 == day && read_i16(this.addr() + 0x190) as i32 + this.year() as i32 == year && full != 0 {
         exe::worldcup_seed_teams(this);
     }

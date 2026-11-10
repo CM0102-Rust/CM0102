@@ -64,21 +64,21 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
         return show_error_at(0x98af98, 0x226);
     }
     let a = half_champion(this, 0);
-    core::ptr::write_unaligned(list as *mut usize, a);
+    write_usize(list, a);
     let b = half_champion(this, 1);
-    core::ptr::write_unaligned((list + 4) as *mut usize, b);
+    write_usize(list + 4, b);
     if a == b {
         crate::comparison::branch("cqo_8 same champion");
         this.set_current_stage((1) as usize);
         this.set_stage_count((2) as usize);
         for k in 0..2 {
-            *((read_usize(read_usize(this.stages() + 4 * k) + 0xb1) + 0x37) as *mut u8) = 5; // cqo8: champion of both halves
+            write_u8(read_usize(read_usize(this.stages() + 4 * k) + 0xb1) + 0x37, 5); // cqo8: champion of both halves
         }
         let mut i: i16 = 0;
         while i < this.club_count() {
             let row = this.table() + i as usize * 0x3b;
             if read_usize(row) == read_usize(list) {
-                *((row + 0x37) as *mut u8) = 5;
+                write_u8(row + 0x37, 5);
             }
             i += 1;
         }
@@ -99,7 +99,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
     } else {
         0
     };
-    core::ptr::write_unaligned((this.stages() + 8) as *mut usize, stage);
+    write_usize(this.stages() + 8, stage);
     let stage = read_usize(this.stages() + 8);
     if stage == 0 {
         return show_error_at(0x98af98, 0x250);

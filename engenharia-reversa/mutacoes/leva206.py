@@ -2,5 +2,5 @@
 MUTACOES = [
     ('l_tamanho', "    if exe::crt_fread(out, MATCH_STATS_RECORD_SIZE, 1, f) != 1 {", "    if exe::crt_fread(out, MATCH_STATS_RECORD_SIZE - 4, 1, f) != 1 {"),
     ('r_excluido', "|| r.no_statistics() == 0 {", "|| r.no_statistics() != 0 {"),
-    ('g_data', "    *((e + match_stats_entry::DAY) as *mut u16) = game.day();", "    *((e + match_stats_entry::DAY) as *mut u16) = game.year();"),
+    ('g_data', "    write_u16(e + match_stats_entry::DAY, game.day());", "    write_u16(e + match_stats_entry::DAY, game.year());"),
 ]

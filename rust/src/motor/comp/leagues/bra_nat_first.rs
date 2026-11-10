@@ -30,7 +30,7 @@ pub(crate) unsafe fn create_play_off_stage(this: League, rows: &[usize; 4], file
         return show_error_at(file, row_without_list);
     }
     for (k, &l) in rows.iter().enumerate() {
-        core::ptr::write_unaligned((list + 4 * k) as *mut usize, bra_reg_bahia_table_row_club(this, l));
+        write_usize(list + 4 * k, bra_reg_bahia_table_row_club(this, l));
     }
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
@@ -46,7 +46,7 @@ pub(crate) unsafe fn create_play_off_stage(this: League, rows: &[usize; 4], file
     } else {
         0
     };
-    core::ptr::write_unaligned(this.stages() as *mut usize, stage);
+    write_usize(this.stages(), stage);
     exe::crt_free(t);
     let stage = read_usize(this.stages());
     if stage == 0 {
@@ -170,7 +170,7 @@ pub(crate) unsafe fn rebuild_season(this: League, table: usize, file: usize, row
     let l = this.round_dates();
     if l != 0 {
         exe::crt_free(l);
-        core::ptr::write_unaligned((this.addr() + league::ROUND_DATES) as *mut usize, 0);
+        write_usize(this.addr() + league::ROUND_DATES, 0);
     }
     let stats = read_usize(this.addr() + league::COMP_STATS);
     if stats != 0 {
@@ -190,9 +190,9 @@ pub(crate) unsafe fn rebuild_season(this: League, table: usize, file: usize, row
             }
         }
     }
-    let a = core::ptr::read_unaligned((this.addr() + league::YEAR) as *const i16);
-    core::ptr::write_unaligned((this.addr() + league::YEAR) as *mut i16, a.wrapping_add(year));
-    core::ptr::write_unaligned((this.addr() + league::CURRENT_STAGE) as *mut i32, -1);
+    let a = read_i16(this.addr() + league::YEAR);
+    write_i16(this.addr() + league::YEAR, a.wrapping_add(year));
+    write_i32(this.addr() + league::CURRENT_STAGE, -1);
     if bra_nat_first_call_virtual_no_args(this.addr(), 0x8c) == 0 {
         show_error_at(file, rows[0]);
         return false;
@@ -432,8 +432,8 @@ pub(crate) unsafe fn compare_division_table(name: &str, this: League, n: i16, g:
 /// alvos: 0x429b50, 0x42c140, 0x42d620): estágio -1, as saídas +0xa9 e +0x3a (palavras), sem a marca (0); o ponteiro
 /// devolvido vai para +0xba.
 pub(crate) unsafe fn create_main_schedule(o: League) {
-    let vt = *(o.addr() as *const usize);
-    let f: unsafe extern "thiscall" fn(usize, i32, usize, usize, usize) -> usize = core::mem::transmute(*((vt + 0x3c) as *const usize));
+    let vt = read_usize(o.addr());
+    let f: unsafe extern "thiscall" fn(usize, i32, usize, usize, usize) -> usize = core::mem::transmute(read_usize(vt + 0x3c));
     let r = f(o.addr(), -1, o.addr() + league::ROUND_COUNT, o.addr() + league::STAGE_ID, 0);
     write_u32_at(o.addr(), 0xba, r as u32);
 }
@@ -465,7 +465,7 @@ pub(crate) unsafe fn set_serie_a_rules(o: usize) {
     write_u8_at(o, 0xc1, 4); // rebaixados
     write_u32_at(o, 0x1c, 0xffff_ffff); // nenhuma liga acima
     write_u8_at(o, 0x4a, 3); // substitutions
-    write_u32_at(o, 0x20, *(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION as *const u32)); // relegated to Série B
+    write_u32_at(o, 0x20, read_u32(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION)); // relegated to Série B
     write_u16_at(o, 0xd9, 8); // bit 0x8: the top ones go to the next stage (no promotion, no champion band)
     write_u8_at(o, 0x52, 2); // fixed squad numbering
     write_u8_at(o, 0x49, 7); // substitutes on the bench
@@ -487,11 +487,11 @@ pub(crate) unsafe fn set_serie_b_rules(o: usize) {
     write_u8_at(o, 0xbf, 0);
     write_u8_at(o, 0xc0, 0);
     write_u8_at(o, 0xc1, 4); // quatro caem
-    write_u32_at(o, 0x1c, *(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION as *const u32)); // goes up to Série A
+    write_u32_at(o, 0x1c, read_u32(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION)); // goes up to Série A
     write_u16_at(o, 0xd9, 2); // bit 0x2: the top places are promotion places
     write_u8_at(o, 0x52, 2);
     write_u8_at(o, 0x4a, 3);
-    write_u32_at(o, 0x20, *(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_THIRD_DIVISION as *const u32)); // drops to Série C
+    write_u32_at(o, 0x20, read_u32(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_THIRD_DIVISION)); // drops to Série C
     write_u8_at(o, 0x49, 7);
 }
 
@@ -513,7 +513,7 @@ pub(crate) unsafe fn set_serie_c_rules(o: usize) {
     write_u8_at(o, 0xc1, 2);
     write_u8_at(o, 0x4a, 3);
     write_u8_at(o, 0x52, 2);
-    write_u32_at(o, 0x1c, *(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION as *const u32)); // promoted to Série B
+    write_u32_at(o, 0x1c, read_u32(KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION)); // promoted to Série B
     write_u32_at(o, 0x20, 0xffff_ffff); // nenhuma liga abaixo
     write_u16_at(o, 0xd9, 8);
     write_u8_at(o, 0x49, 7);
@@ -600,14 +600,14 @@ pub(crate) unsafe fn serie_a_staff_records(this: usize, club: usize, status: u32
         if fazer {
             crate::comparison::branch("cqj_9 serie a champion");
             add_champions_record(club, comp); // cqj9: the Serie A champion record
-            *((l + 0x37) as *mut u8) = 5;
+            write_u8(l + 0x37, 5);
         }
         return (0, l, 5);
     }
     if st == 2 || st == 0xff {
         let l = bra_nat_first_find_club_row(this, club);
         if fazer {
-            *((l + 0x37) as *mut u8) = 0xfe; // eliminado
+            write_u8(l + 0x37, 0xfe); // eliminado
         }
         return (0, l, 0xfe);
     }
@@ -670,7 +670,7 @@ pub(crate) unsafe fn serie_c_staff_records(this: League, club: usize, status: u3
         }
         if found != 0 && fazer {
             crate::comparison::branch("cqj_9 serie c promoted");
-            *((found + 0x37) as *mut u8) = 0; // cqj9: the destination of those promoted from Serie C
+            write_u8(found + 0x37, 0); // cqj9: the destination of those promoted from Serie C
         }
         return (0, found, 0);
     }
@@ -716,7 +716,7 @@ pub(crate) unsafe fn baiano_staff_records(this: League, club: usize, status: u32
                 }
                 let l = this.table() + 0x3b * i as usize;
                 if fazer {
-                    *((l + 0x37) as *mut u8) = 5;
+                    write_u8(l + 0x37, 5);
                 }
                 return (0, l, 5);
             }
@@ -730,7 +730,7 @@ pub(crate) unsafe fn baiano_staff_records(this: League, club: usize, status: u32
                 }
                 let l = this.table() + 0x3b * i as usize;
                 if fazer {
-                    *((l + 0x37) as *mut u8) = 0xfe;
+                    write_u8(l + 0x37, 0xfe);
                 }
                 return (0, l, 0xfe);
             }

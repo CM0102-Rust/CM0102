@@ -311,9 +311,9 @@ pub(crate) unsafe extern "thiscall" fn compare_cup_record_season_honours(cup: us
         return o(cup); // simplification: the history grows (realloc) or there is no competition: original only
     }
     let (campeao, vice, terceiro, anfitria) = season_honours(Cup(cup));
-    let year = core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16);
+    let year = read_u16(G_CURRENT_DATE_YEAR);
     o(cup);
-    let lido = (read_usize(row + 4), core::ptr::read_unaligned((row + 8) as *const u16), read_usize(row + comp_history_row::CHAMPION), read_usize(row + comp_history_row::RUNNER_UP), read_usize(row + comp_history_row::THIRD_PLACE), read_usize(row + comp_history_row::HOST));
+    let lido = (read_usize(row + 4), read_u16(row + 8), read_usize(row + comp_history_row::CHAMPION), read_usize(row + comp_history_row::RUNNER_UP), read_usize(row + comp_history_row::THIRD_PLACE), read_usize(row + comp_history_row::HOST));
     let predicted = (read_usize(cup + 4), year, campeao, vice, terceiro, anfitria);
     SCOREBOARD.record(lido == predicted, || format!("cup_record_season_honours: linha {:x?} prevista {:x?}", lido, predicted));
 }
@@ -354,7 +354,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_fixture_side_teams(this: usiz
     }
     let res = o(this.addr(), round, game, side, out);
     let got = core::slice::from_raw_parts(out, res.clamp(0, 0x100) as usize);
-    let global = *(G_CUP_POSSIBLE_TEAM_COUNT as *const i32);
+    let global = read_i32(G_CUP_POSSIBLE_TEAM_COUNT);
     SCOREBOARD.record(res == n && global == n && got == &expected[..n.clamp(0, 0x100) as usize], || format!("get_fixture_side_teams({:x}, {}, {}, {}) {}/{} global {} {:?} x {:?}", this.addr(), round, game, side as u8, res, n, global, got, &expected[..n.clamp(0, 0x100) as usize]));
     res
 }
@@ -676,8 +676,8 @@ pub(crate) unsafe extern "thiscall" fn compare_cup_rank_teams(this: usize) {
             continue;
         }
         let e = exe::comp_stats_find_club_entry(read_usize(this.addr() + 8), c);
-        if e == 0 || *((e + comp_stats_club::DANGER_POSITION) as *const u8) != p {
-            erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if e == 0 { -1 } else { *((e + comp_stats_club::DANGER_POSITION) as *const u8) as i32 }));
+        if e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != p {
+            erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if e == 0 { -1 } else { read_u8(e + comp_stats_club::DANGER_POSITION) as i32 }));
         }
     }
     SCOREBOARD.record(erros.is_empty(), || format!("cup_rank_teams({:x}) {} posições: {}", this.addr(), plan.len(), erros.join("; ")));

@@ -112,7 +112,7 @@ pub(crate) unsafe fn play_with(j: MatchPlayer, strength: i16, height: f32, style
         _ => {
             // simplification: the original routine shows the “Error” box (version, file, line 0x4755); +0x8ea9
             // outside 0..4 does not happen in the game
-            *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
+            write_u32(G_MOUSE_LEFT_BUTTON_DOWN, 0);
             return 0;
         }
     };
@@ -225,7 +225,7 @@ pub(crate) unsafe fn play_with(j: MatchPlayer, strength: i16, height: f32, style
                     let a = random(grav as i8 as i32);
                     if a > random(0x14) {
                         let partida = m.r#match();
-                        let club = Club(*((partida + if j.side() == 0 { 0x20 } else { 0x1c }) as *const usize));
+                        let club = Club(read_usize(partida + if j.side() == 0 { 0x20 } else { 0x1c }));
                         let k = club.nation().addr();
                         if k != 0 && read_i8(k + 0x77) == 8 {
                             narrate(call, event::SILENT_OFF_OFF_OFF, 0, 0, u32::MAX);
@@ -378,18 +378,18 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
     // simplification: 0x7c1e30 (returns floating point) also reaches 0x68d0d0 in 3 levels, stays direct
     let contract = |n: usize, p: usize, c: usize| (ch.borrow_mut())(0x4cf5f0, n, [p as u32, c as u32, 0, 0, 0]) as usize;
     let test_600a50 = |c: usize, a: u32, b: u32, d: u32, e: u32| (ch.borrow_mut())(0x600a50, 0, [c as u32, a, b, d, e]) as i32;
-    let g = |a: usize| *(a as *const usize);
-    let read = |a: usize| core::ptr::read_unaligned(a as *const i32);
-    let w = |a: usize| core::ptr::read_unaligned(a as *const i16);
-    let ub = |a: usize| *(a as *const u8) as i32;
+    let g = |a: usize| read_usize(a);
+    let read = |a: usize| read_i32(a);
+    let w = |a: usize| read_i16(a);
+    let ub = |a: usize| read_u8(a) as i32;
     let club_of = |id: i32| (g(G_CLUB_TABLE) as isize + id as isize * 0x245) as usize;
     let average = || {
         let b = g(G_PLAYER_STATS);
-        let d = core::ptr::read_unaligned((b + 0x18) as *const f64);
-        if d != 0.0 { core::ptr::read_unaligned((b + 0x10) as *const f64) / d } else { 6.8 }
+        let d = read_f64(b + 0x18);
+        if d != 0.0 { read_f64(b + 0x10) / d } else { 6.8 }
     };
     let esp = exe::national_teams_is_finals_comp(g(G_NATIONAL_TEAMS), (read(partida + 0x14) as u32) as u32 as usize);
-    if *(G_ATTRIBUTE_MASKING_ENABLED as *const u8) != 0 && g(G_FOG_OF_WAR) != 0 {
+    if read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 && g(G_FOG_OF_WAR) != 0 {
         register(g(G_FOG_OF_WAR), partida, t);
     }
     let comp = if read(partida) > -1 { g(g(g(G_COMP_OBJECT_TABLE) + read(partida) as usize * 4) + 8) } else { 0 };
@@ -413,7 +413,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                 let c = contract(g(G_CONTRACT_MANAGER), p, club.addr());
                 let nota1 = exe::comp_stats_get_player_stat(comp, read_usize(p + staff::PLAYER), 1);
                 let nota11 = exe::comp_stats_get_player_stat(comp, read_usize(p + staff::PLAYER), 0x11);
-                if c != 0 && matches!(*((c + contract::SQUAD_STATUS) as *const u8) & 0xf0, 0x10 | 0x20 | 0x30) {
+                if c != 0 && matches!(read_u8(c + contract::SQUAD_STATUS) & 0xf0, 0x10 | 0x20 | 0x30) {
                     let x = exe::shortlist_manager_find_club_shortlist_entry(g(g(G_TRANSFER_MANAGER) + 0x856), club, p, 0, 0);
                     let passes = test_600a50(club.addr(), 0, 1, 0, 0) != 0 || (x != 0 && read(x + 0xf) == read(p));
                     let d = w(ts + 0x18e) as f64;
@@ -423,7 +423,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                         && *(row as *const u8) <= 6
                         && scoreboard(ts) <= scoreboard(other)
                         && ((random(10) + 5) as f64) < nota1
-                        && (*((read_usize(p + staff::PLAYER) + 0x45) as *const i8) as i32) < random(10)
+                        && (read_i8(read_usize(p + staff::PLAYER) + 0x45) as i32) < random(10)
                         && average() + 0.2 > nota11
                         && average() - 0.2 < nota11
                     {
@@ -434,7 +434,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
             }
             if esp != 0 && comp != 0 && *((t + 0x4c) as *const u8) == 0 {
                 let nota1 = exe::comp_stats_get_player_stat(comp, read_usize(p + staff::PLAYER), 1);
-                if *(row as *const u8) >= 9 && scoreboard(ts) >= scoreboard(other) && ((random(5) + 2) as f64) < nota1 && !ja_34 {
+                if read_u8(row) >= 9 && scoreboard(ts) >= scoreboard(other) && ((random(5) + 2) as f64) < nota1 && !ja_34 {
                     let m = average();
                     let nota11 = exe::comp_stats_get_player_stat(comp, read_usize(p + staff::PLAYER), 0x11);
                     let r = random(9);
@@ -446,10 +446,10 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                 }
             }
             let f = read_usize(p + staff::PLAYER);
-            *((f + 0x45) as *mut u8) = *((row - 4) as *const u8);
-            core::ptr::write_unaligned((f + 0xb) as *mut i16, w(row + 3));
-            core::ptr::write_unaligned((read_usize(p + staff::PLAYER) + 9) as *mut i16, w(row + 5));
-            core::ptr::write_unaligned((read_usize(p + staff::PLAYER) + 0xd) as *mut i16, w(row + 7));
+            write_u8(f + 0x45, read_u8(row - 4));
+            write_i16(f + 0xb, w(row + 3));
+            write_i16(read_usize(p + staff::PLAYER) + 9, w(row + 5));
+            write_i16(read_usize(p + staff::PLAYER) + 0xd, w(row + 7));
             if read(club_of(read(t)) + 0x53) == read(club_of(read(t + 4)) + 0x53) && *((row - 8) as *const u8) != 0 {
                 let v = exe::playerstats_get_stat(g(G_PLAYER_STATS), read_usize(p + staff::PLAYER), 6, 0xb, 6.5);
                 let previous = Nation(read_usize(p + staff::NATION));
@@ -483,13 +483,13 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
             if !manager.is_null() && !manager.non_player().is_null() {
                 let f = manager.non_player();
                 da = w(ts + 0x188).wrapping_sub(w(f.addr() + 0xa));
-                core::ptr::write_unaligned((f.addr() + 0xa) as *mut i16, w(f.addr() + 0xa).wrapping_add(da));
+                write_i16(f.addr() + 0xa, w(f.addr() + 0xa).wrapping_add(da));
                 let f = manager.non_player();
                 db = w(ts + 0x18a).wrapping_sub(w(f.addr() + 8));
-                core::ptr::write_unaligned((f.addr() + 8) as *mut i16, w(f.addr() + 8).wrapping_add(db));
+                write_i16(f.addr() + 8, w(f.addr() + 8).wrapping_add(db));
                 let f = manager.non_player();
                 dc = w(ts + 0x18c).wrapping_sub(w(f.addr() + 0xc));
-                core::ptr::write_unaligned((f.addr() + 0xc) as *mut i16, w(f.addr() + 0xc).wrapping_add(dc));
+                write_i16(f.addr() + 0xc, w(f.addr() + 0xc).wrapping_add(dc));
             }
             for k in -1i32..5 {
                 let aux = Staff(if k == -1 { club.assistant_manager() } else { g(club.addr() + club::COACHES + k as usize * 4) });
@@ -499,9 +499,9 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                 for (o, dv) in [(0xa, da), (8, db), (0xc, dc)] {
                     let f = aux.non_player();
                     let v = w(f.addr() + o).wrapping_add(ftol(dv as f64 * 0.25) as i16);
-                    core::ptr::write_unaligned((f.addr() + o) as *mut i16, v);
+                    write_i16(f.addr() + o, v);
                     let f = aux.non_player();
-                    core::ptr::write_unaligned((f.addr() + o) as *mut i16, w(f.addr() + o).clamp(1, 10000));
+                    write_i16(f.addr() + o, w(f.addr() + o).clamp(1, 10000));
                 }
             }
         }

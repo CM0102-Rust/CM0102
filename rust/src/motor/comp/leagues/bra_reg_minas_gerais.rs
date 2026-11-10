@@ -70,21 +70,21 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_final_stage(t
         return show_error_at(0x98aed0, 0x226);
     }
     let a = half_champion(this, 0);
-    core::ptr::write_unaligned(list as *mut usize, a);
+    write_usize(list, a);
     let b = half_champion(this, 1);
-    core::ptr::write_unaligned((list + 4) as *mut usize, b);
+    write_usize(list + 4, b);
     if a == b {
         crate::comparison::branch("cqo_7 same champion");
         this.set_current_stage((1) as usize);
         this.set_stage_count((2) as usize);
         for k in 0..2 {
-            *((read_usize(read_usize(this.stages() + 4 * k) + 0xb1) + 0x37) as *mut u8) = 5; // cqo7: champion of both halves
+            write_u8(read_usize(read_usize(this.stages() + 4 * k) + 0xb1) + 0x37, 5); // cqo7: champion of both halves
         }
         let mut i: i16 = 0;
         while i < this.club_count() {
             let row = this.table() + i as usize * 0x3b;
             if read_usize(row) == read_usize(list) {
-                *((row + 0x37) as *mut u8) = 5;
+                write_u8(row + 0x37, 5);
             }
             i += 1;
         }
@@ -105,7 +105,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_final_stage(t
     } else {
         0
     };
-    core::ptr::write_unaligned((this.stages() + 8) as *mut usize, stage);
+    write_usize(this.stages() + 8, stage);
     let stage = read_usize(this.stages() + 8);
     if stage == 0 {
         return show_error_at(0x98aed0, 0x250);
@@ -168,14 +168,14 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_record_season_honour
 /// [pt] 0x4a4850 `Comp_Stats::find_club_entry(clube)` (thiscall, ret 4): a entrada do clube nas estatísticas da competição
 /// ([this+8]); ordena a tabela pelo clube quando preciso (marca +0x18) e busca. Original (não portada).
 pub(crate) unsafe fn bra_reg_minas_gerais_comp_stats_club_entry(this: usize, club: usize) -> usize {
-    exe::comp_stats_find_club_entry(core::ptr::read_unaligned((this + 8) as *const u32) as usize, club)
+    exe::comp_stats_find_club_entry(read_u32(this + 8) as usize, club)
 }
 
 /// Writes the club's current, lowest and highest progress codes (+0x73, +0x74, +0x75).
 pub(crate) unsafe fn write_progress_codes(e: usize, current: u8, minimum: u8, maxima: u8) {
-    *((e + 0x73) as *mut u8) = current;
-    *((e + 0x74) as *mut u8) = minimum;
-    *((e + 0x75) as *mut u8) = maxima;
+    write_u8(e + 0x73, current);
+    write_u8(e + 0x74, minimum);
+    write_u8(e + 0x75, maxima);
 }
 
 /// Minas Gerais, Parana and Rio: writes the club progress codes (current, lowest and highest position); in the round

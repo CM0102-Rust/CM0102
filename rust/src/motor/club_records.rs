@@ -2,17 +2,17 @@ use super::*;
 
 /// Adds v to the byte at address a (wrapping).
 pub(crate) unsafe fn add_u8_at(a: usize, v: u8) {
-    *(a as *mut u8) = (*(a as *const u8)).wrapping_add(v);
+    write_u8(a, read_u8(a).wrapping_add(v));
 }
 
 /// Adds v to the unaligned u16 at address a (wrapping).
 pub(crate) unsafe fn add_u16_at(a: usize, v: u16) {
-    core::ptr::write_unaligned(a as *mut u16, core::ptr::read_unaligned(a as *const u16).wrapping_add(v));
+    write_u16(a, read_u16(a).wrapping_add(v));
 }
 
 /// Adds v to the unaligned f64 at address a.
 pub(crate) unsafe fn add_f64_at(a: usize, v: f64) {
-    core::ptr::write_unaligned(a as *mut f64, v + core::ptr::read_unaligned(a as *const f64));
+    write_f64(a, v + read_f64(a));
 }
 
 /// PLAYERSTATS get_category_record(player, category).
@@ -155,7 +155,7 @@ pub(crate) unsafe fn club_records_queue_record_news(this: usize, club: usize, su
         }
         e += 6;
     }
-    exe::club_records_queue_record_news(this, (read_usize(club)) as u32, kind as u32);
+    exe::club_records_queue_record_news(this, read_usize(club) as u32, kind as u32);
 }
 
 /// The league and its following type-2 stages with the same number of rows (+0x3e).
@@ -227,31 +227,31 @@ pub(crate) unsafe extern "thiscall" fn update_league_position_records(this: usiz
             if exe::club_records_record_type_applies(1, club, 1) != 0 {
                 let v = read_usize(t + club_record::BEST_POSITION_COMP) as i32;
                 if v < 0 || competition_reputation(comp) > competition_reputation(v) || (comp == v && pos < read_u8(t)) {
-                    *(t as *mut u8) = pos;
-                    core::ptr::write_unaligned((t + club_record::BEST_POSITION_COMP) as *mut i32, comp);
-                    core::ptr::write_unaligned((t + club_record::BEST_POSITION_YEAR) as *mut u16, 0);
+                    write_u8(t, pos);
+                    write_i32(t + club_record::BEST_POSITION_COMP, comp);
+                    write_u16(t + club_record::BEST_POSITION_YEAR, 0);
                 }
                 let v = read_usize(s + club_record::BEST_POSITION_COMP) as i32;
                 if always != 0 && (away(v) || competition_reputation(comp) > competition_reputation(v) || (comp == v && pos < read_u8(s))) {
                     crate::comparison::branch("cpx_12 best position ever");
-                    *(s as *mut u8) = pos;
-                    core::ptr::write_unaligned((s + club_record::BEST_POSITION_COMP) as *mut i32, comp);
-                    core::ptr::write_unaligned((s + club_record::BEST_POSITION_YEAR) as *mut u16, year);
+                    write_u8(s, pos);
+                    write_i32(s + club_record::BEST_POSITION_COMP, comp);
+                    write_u16(s + club_record::BEST_POSITION_YEAR, year);
                     club_records_queue_record_news(this, club, summary, 1);
                 }
             }
             if exe::club_records_record_type_applies(2, club, 1) != 0 {
                 let v = read_usize(t + club_record::WORST_POSITION_COMP) as i32;
                 if v < 0 || competition_reputation(comp) < competition_reputation(v) || (comp == v && pos > read_u8(t + club_record::WORST_POSITION)) {
-                    *((t + club_record::WORST_POSITION) as *mut u8) = pos;
-                    core::ptr::write_unaligned((t + club_record::WORST_POSITION_COMP) as *mut i32, comp);
-                    core::ptr::write_unaligned((t + club_record::WORST_POSITION_YEAR) as *mut u16, 0);
+                    write_u8(t + club_record::WORST_POSITION, pos);
+                    write_i32(t + club_record::WORST_POSITION_COMP, comp);
+                    write_u16(t + club_record::WORST_POSITION_YEAR, 0);
                 }
                 let v = read_usize(s + club_record::WORST_POSITION_COMP) as i32;
                 if always != 0 && (away(v) || competition_reputation(comp) < competition_reputation(v) || (comp == v && pos > read_u8(s + club_record::WORST_POSITION))) {
-                    *((s + club_record::WORST_POSITION) as *mut u8) = pos;
-                    core::ptr::write_unaligned((s + club_record::WORST_POSITION_COMP) as *mut i32, comp);
-                    core::ptr::write_unaligned((s + club_record::WORST_POSITION_YEAR) as *mut u16, year);
+                    write_u8(s + club_record::WORST_POSITION, pos);
+                    write_i32(s + club_record::WORST_POSITION_COMP, comp);
+                    write_u16(s + club_record::WORST_POSITION_YEAR, year);
                     club_records_queue_record_news(this, club, summary, 2);
                 }
             }
@@ -314,10 +314,10 @@ pub(crate) unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
         if !RECORD_NEWS_DRY_RUN {
             exe::crt_free(read_usize(this + club_records_fields::NEWS_QUEUE));
         }
-        core::ptr::write_unaligned((this + club_records_fields::NEWS_QUEUE) as *mut usize, 0);
-        core::ptr::write_unaligned((this + club_records_fields::NEWS_QUEUE_CAPACITY) as *mut usize, 0);
+        write_usize(this + club_records_fields::NEWS_QUEUE, 0);
+        write_usize(this + club_records_fields::NEWS_QUEUE_CAPACITY, 0);
     }
-    core::ptr::write_unaligned((this + club_records_fields::NEWS_QUEUE_COUNT) as *mut usize, 0);
+    write_usize(this + club_records_fields::NEWS_QUEUE_COUNT, 0);
     1
 }
 
@@ -434,12 +434,12 @@ pub(crate) unsafe fn is_big_transfer(value: i32, club: Club) -> bool {
 pub(crate) unsafe fn copy_transfer_record(a: usize, o: usize, d: usize) {
     let mut draft = [0u8; 8];
     for k in 0..5 {
-        core::ptr::write_unaligned((a + d + transfer_fee_record::HOLDER * k) as *mut usize, read_usize(o + d + transfer_fee_record::HOLDER * k));
+        write_usize(a + d + transfer_fee_record::HOLDER * k, read_usize(o + d + transfer_fee_record::HOLDER * k));
     }
     exe::date_operator_3d(a + d + transfer_fee_record::HOLDER_DATE, (draft.as_mut_ptr()) as usize, o + d + transfer_fee_record::HOLDER_DATE);
-    core::ptr::write_unaligned((a + d + transfer_fee_record::OTHER_CLUB_ID) as *mut usize, read_usize(o + d + transfer_fee_record::OTHER_CLUB_ID));
+    write_usize(a + d + transfer_fee_record::OTHER_CLUB_ID, read_usize(o + d + transfer_fee_record::OTHER_CLUB_ID));
     exe::date_operator_3d(a + d + transfer_fee_record::DATE, (draft.as_mut_ptr()) as usize, o + d + transfer_fee_record::DATE);
-    *((a + d + transfer_fee_record::FLAG) as *mut u8) = read_u8(o + d + transfer_fee_record::FLAG);
+    write_u8(a + d + transfer_fee_record::FLAG, read_u8(o + d + transfer_fee_record::FLAG));
 }
 
 /// `Club_Records::update_transfer_fee_records(transfer)`: updates the buyer's paid record and the seller's received
@@ -466,7 +466,7 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
     let person = read_usize(G_STAFF_TABLE).wrapping_add(((t.target_staff_id() as i32) as usize).wrapping_mul(staff::SIZE));
     let buyer = Club((injury_club_by_index((t.buyer_club_id() as i32))).addr());
     let contract = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
-    core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, contract.addr());
+    write_usize(G_CONTRACT_LOOKUP_RESULT, contract.addr());
     let seller = if !contract.is_null() { injury_club_by_index((contract.club() as i32)) } else { Club(0) };
     let mut draft = [0u8; 8];
     let s = exe::club_records_get_season_record(this, buyer, 1);
@@ -477,11 +477,11 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
     let value = (t.fee() as i32);
     if value != 0 && value > read_i32(s + club_record::FEE_PAID) {
         crate::comparison::branch("cpp_10 record fee paid");
-        core::ptr::write_unaligned((s + club_record::FEE_PAID) as *mut i32, value);
+        write_i32(s + club_record::FEE_PAID, value);
         exe::fill_staff_name_ref(person, s + club_record::FEE_PAID_HOLDER);
-        core::ptr::write_unaligned((s + club_record::FEE_PAID_OTHER_CLUB_ID) as *mut usize, read_usize(seller.addr()));
+        write_usize(s + club_record::FEE_PAID_OTHER_CLUB_ID, read_usize(seller.addr()));
         exe::date_operator_3d(s + club_record::FEE_PAID_DATE, (draft.as_mut_ptr()) as usize, G_CURRENT_DATE);
-        *((s + club_record::FEE_PAID_FLAG) as *mut u8) = (!t.exchange_players().is_null()) as u8;
+        write_u8(s + club_record::FEE_PAID_FLAG, (!t.exchange_players().is_null()) as u8);
         if (t.fee() as i32) > read_i32(a + club_record::FEE_PAID) {
             copy_transfer_record(a, s, 0x313);
             if is_big_transfer(read_i32(a + club_record::FEE_PAID), buyer) {
@@ -499,11 +499,11 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
     if value == 0 || value <= read_i32(s + club_record::FEE_RECEIVED) {
         return 1;
     }
-    core::ptr::write_unaligned((s + club_record::FEE_RECEIVED) as *mut i32, value);
+    write_i32(s + club_record::FEE_RECEIVED, value);
     exe::fill_staff_name_ref(person, s + club_record::FEE_RECEIVED_HOLDER);
-    core::ptr::write_unaligned((s + club_record::FEE_RECEIVED_OTHER_CLUB_ID) as *mut usize, read_usize(buyer.addr()));
+    write_usize(s + club_record::FEE_RECEIVED_OTHER_CLUB_ID, read_usize(buyer.addr()));
     exe::date_operator_3d(s + club_record::FEE_RECEIVED_DATE, (draft.as_mut_ptr()) as usize, G_CURRENT_DATE);
-    *((s + club_record::FEE_RECEIVED_FLAG) as *mut u8) = (!t.exchange_players().is_null()) as u8;
+    write_u8(s + club_record::FEE_RECEIVED_FLAG, (!t.exchange_players().is_null()) as u8);
     if (t.fee() as i32) > read_i32(a + club_record::FEE_RECEIVED) {
         copy_transfer_record(a, s, 0x33c);
         if is_big_transfer(read_i32(a + club_record::FEE_RECEIVED), seller) && !record_news_queued(this, read_usize(seller.addr()), 0x1d) {
@@ -648,7 +648,7 @@ pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, 
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_UPDATE_SEASON_RATING_RECORD)(this, club.addr()); // message box: original only
     }
     let entry = read_usize(this + club_records_fields::CLUB_ENTRIES).wrapping_add(read_usize(club.addr()).wrapping_mul(0x6a));
-    if *((entry + club_record_entry::SEASON_GAMES) as *const u8) == 0 {
+    if read_u8(entry + club_record_entry::SEASON_GAMES) == 0 {
         return 0;
     }
     let r = exe::club_records_get_season_record(this, club, 0);
@@ -675,7 +675,7 @@ pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, 
             continue;
         }
         let jogou = ftol(exe::player_stats_get_record_value(reg, 1, 6.5)) as u8;
-        if (jogou as i32) < *((entry + club_record_entry::SEASON_GAMES) as *const i8) as i32 / 2 { // fewer than half the matches
+        if (jogou as i32) < read_i8(entry + club_record_entry::SEASON_GAMES) as i32 / 2 { // fewer than half the matches
             continue;
         }
         let average = exe::player_stats_get_record_value(reg, 0x11, 6.5);
@@ -683,7 +683,7 @@ pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, 
         if *rating as f64 == read_f64(rdata::F64_NEG_1) || average > *rating as f64 {
             crate::comparison::branch("cpm_6 season rating record");
             *rating = average as f32;
-            *((r + club_record::SEASON_RATING_GAMES) as *mut u8) = jogou;
+            write_u8(r + club_record::SEASON_RATING_GAMES, jogou);
             exe::fill_staff_name_ref(p, r + 0x1f5);
             write_i16(r + club_record::SEASON_RATING_YEAR, 0);
             found = 1;
@@ -810,8 +810,8 @@ pub(crate) unsafe extern "thiscall" fn queue_record_news(this: usize, id: u32, k
     }
     let n = read_usize(this + club_records_fields::NEWS_QUEUE_COUNT);
     let item = read_usize(this + club_records_fields::NEWS_QUEUE).wrapping_add(n.wrapping_mul(6));
-    core::ptr::write_unaligned(item as *mut u32, id);
-    *((item + record_news_item::RECORD_TYPE) as *mut u8) = kind as u8;
+    write_u32(item, id);
+    write_u8(item + record_news_item::RECORD_TYPE, kind as u8);
     write_usize(this + club_records_fields::NEWS_QUEUE_COUNT, n.wrapping_add(1)); // one more news item
     1
 }
@@ -1008,10 +1008,10 @@ pub(crate) unsafe fn assign_record_holder(target: usize, source: usize) {
 /// [pt] { 0x448230 } (thiscall, ret 4, club_records.cpp): `rating_record_assign`: copia o recorde de nota (0x1f bytes) de
 /// `origem`: a nota (+0, dupla), o recordista em +4, o byte +0x1c e a palavra +0x1d. Devolve `this`.
 pub(crate) unsafe extern "thiscall" fn rating_record_assign(this: usize, source: usize) -> usize {
-    core::ptr::write_unaligned(this as *mut u32, core::ptr::read_unaligned(source as *const u32)); // a nota
+    write_u32(this, read_u32(source)); // a nota
     assign_record_holder(this + rating_record::HOLDER, source + rating_record::HOLDER);
-    *((this + rating_record::GAMES) as *mut u8) = *((source + rating_record::GAMES) as *const u8); // the rating record byte
-    core::ptr::write_unaligned((this + rating_record::YEAR) as *mut u16, core::ptr::read_unaligned((source + rating_record::YEAR) as *const u16));
+    write_u8(this + rating_record::GAMES, read_u8(source + rating_record::GAMES)); // the rating record byte
+    write_u16(this + rating_record::YEAR, read_u16(source + rating_record::YEAR));
     this
 }
 
@@ -1021,9 +1021,9 @@ pub(crate) unsafe extern "thiscall" fn rating_record_assign(this: usize, source:
 /// [pt] { 0x4484d0 } (thiscall, ret 4, club_records.cpp): `man_of_match_record_assign`: copia o recorde de melhor em campo
 /// (0x1b bytes) de `origem`: as vezes (+0, byte), o recordista em +1 e o ano da temporada (+0x19). Devolve `this`.
 pub(crate) unsafe extern "thiscall" fn man_of_match_record_assign(this: usize, source: usize) -> usize {
-    *(this as *mut u8) = *(source as *const u8); // the man-of-the-match count
+    write_u8(this, read_u8(source)); // the man-of-the-match count
     assign_record_holder(this + man_of_match_record::HOLDER, source + man_of_match_record::HOLDER);
-    core::ptr::write_unaligned((this + man_of_match_record::YEAR) as *mut u16, core::ptr::read_unaligned((source + man_of_match_record::YEAR) as *const u16));
+    write_u16(this + man_of_match_record::YEAR, read_u16(source + man_of_match_record::YEAR));
     this
 }
 
@@ -1033,10 +1033,10 @@ pub(crate) unsafe extern "thiscall" fn man_of_match_record_assign(this: usize, s
 /// [pt] { 0x448500 } (thiscall, ret 4, club_records.cpp): `discipline_record_assign`: copia o recorde de disciplina (0x1c
 /// bytes) de `origem`: os amarelos (+0) e vermelhos (+1), o recordista em +2 e o ano da temporada (+0x1a). Devolve `this`.
 pub(crate) unsafe extern "thiscall" fn discipline_record_assign(this: usize, source: usize) -> usize {
-    *(this as *mut u8) = *(source as *const u8);
-    *((this + club_discipline_record::RED_CARDS) as *mut u8) = *((source + club_discipline_record::RED_CARDS) as *const u8); // the reds
+    write_u8(this, read_u8(source));
+    write_u8(this + club_discipline_record::RED_CARDS, read_u8(source + club_discipline_record::RED_CARDS)); // the reds
     assign_record_holder(this + club_discipline_record::HOLDER, source + club_discipline_record::HOLDER);
-    core::ptr::write_unaligned((this + club_discipline_record::YEAR) as *mut u16, core::ptr::read_unaligned((source + club_discipline_record::YEAR) as *const u16));
+    write_u16(this + club_discipline_record::YEAR, read_u16(source + club_discipline_record::YEAR));
     this
 }
 
@@ -1046,7 +1046,7 @@ pub(crate) unsafe extern "thiscall" fn discipline_record_assign(this: usize, sou
 /// [pt] { 0x448530 } (thiscall, ret 4, club_records.cpp): `count_record_assign`: copia o recorde de contagem (0x1a bytes) de
 /// `origem`: a contagem (+0, palavra) e o recordista em +2 (pela 0x448490, já em Rust). Devolve `this`.
 pub(crate) unsafe extern "thiscall" fn count_record_assign(this: usize, source: usize) -> usize {
-    core::ptr::write_unaligned(this as *mut u16, core::ptr::read_unaligned(source as *const u16)); // a contagem
+    write_u16(this, read_u16(source)); // a contagem
     exe::record_holder_assign(this + count_record::HOLDER, source + count_record::HOLDER);
     this
 }
@@ -1058,7 +1058,7 @@ pub(crate) unsafe extern "thiscall" fn count_record_assign(this: usize, source: 
 /// torcida (0x1a bytes) de `origem`: o recordista em +0 (pela 0x448490) e o ano da temporada (+0x18). Devolve `this`.
 pub(crate) unsafe extern "thiscall" fn fans_player_record_assign(this: usize, source: usize) -> usize {
     exe::record_holder_assign(this, source);
-    core::ptr::write_unaligned((this + fans_player_record::YEAR) as *mut u16, core::ptr::read_unaligned((source + fans_player_record::YEAR) as *const u16)); // the supporter’s year
+    write_u16(this + fans_player_record::YEAR, read_u16(source + fans_player_record::YEAR)); // the supporter’s year
     this
 }
 
@@ -1098,14 +1098,14 @@ pub(crate) unsafe extern "thiscall" fn count_record_construct(this: usize) -> us
 /// transferência (0x29 bytes) de `origem`: cinco duplas (+0..+0x10: o valor, o jogador, o outro clube...), a data em
 /// +0x14, a dupla +0x1c, a data em +0x20 e a marca de troca (+0x28). Devolve `this`.
 pub(crate) unsafe extern "thiscall" fn transfer_fee_record_assign(this: usize, source: usize) -> usize {
-    let d = |o: usize| core::ptr::write_unaligned((this + o) as *mut u32, core::ptr::read_unaligned((source + o) as *const u32));
+    let d = |o: usize| write_u32(this + o, read_u32(source + o));
     for o in [0, 4, 8, 0xc, 0x10] {
         d(o); // the value and the ids
     }
     copy_record_date(this + transfer_fee_record::HOLDER_DATE, source + transfer_fee_record::HOLDER_DATE);
     d(transfer_fee_record::OTHER_CLUB_ID);
     copy_record_date(this + transfer_fee_record::DATE, source + transfer_fee_record::DATE);
-    *((this + transfer_fee_record::FLAG) as *mut u8) = *((source + transfer_fee_record::FLAG) as *const u8); // the swap flag
+    write_u8(this + transfer_fee_record::FLAG, read_u8(source + transfer_fee_record::FLAG)); // the swap flag
     this
 }
 
@@ -1117,7 +1117,7 @@ pub(crate) unsafe extern "thiscall" fn transfer_fee_record_assign(this: usize, s
 /// partida (0x38 bytes) de `origem`: os gols (+0, byte), o recordista em +1 (0x448490) e o registro da partida em +0x19
 /// (0x448110, ambos já em Rust). Devolve `this`.
 pub(crate) unsafe extern "thiscall" fn goals_in_match_record_assign(this: usize, source: usize) -> usize {
-    *(this as *mut u8) = *(source as *const u8); // the goals
+    write_u8(this, read_u8(source)); // the goals
     exe::record_holder_assign(this + goals_in_match_record::HOLDER, source + goals_in_match_record::HOLDER);
     exe::match_record_assign(this + goals_in_match_record::MATCH, source + goals_in_match_record::MATCH);
     this
@@ -1137,7 +1137,7 @@ pub(crate) unsafe fn copy_record_date(target: usize, source: usize) {
 /// [pt] { 0x448490 } (thiscall, ret 4, club_records.cpp): copia o recordista (0x18 bytes) de `origem`:
 /// quatro palavras duplas de identificação (+0..+0xc) e a data em +0x10. Devolve `this`.
 pub(crate) unsafe extern "thiscall" fn record_holder_assign(this: usize, source: usize) -> usize {
-    let d = |o: usize| core::ptr::write_unaligned((this + o) as *mut u32, core::ptr::read_unaligned((source + o) as *const u32));
+    let d = |o: usize| write_u32(this + o, read_u32(source + o));
     d(0); // identification
     d(4);
     d(8);
@@ -1156,9 +1156,9 @@ pub(crate) unsafe extern "thiscall" fn record_holder_assign(this: usize, source:
 /// `origem`: a data em +0, depois +8 (dupla), +0xc e +0xe (palavras), +0x10 (byte), +0x11 e +0x15
 /// (duplas), +0x19 e +0x1a (bytes) e +0x1b (dupla). Devolve `this`.
 pub(crate) unsafe extern "thiscall" fn match_record_assign(this: usize, source: usize) -> usize {
-    let d = |o: usize| core::ptr::write_unaligned((this + o) as *mut u32, core::ptr::read_unaligned((source + o) as *const u32));
-    let w = |o: usize| core::ptr::write_unaligned((this + o) as *mut u16, core::ptr::read_unaligned((source + o) as *const u16));
-    let b = |o: usize| *((this + o) as *mut u8) = *((source + o) as *const u8);
+    let d = |o: usize| write_u32(this + o, read_u32(source + o));
+    let w = |o: usize| write_u16(this + o, read_u16(source + o));
+    let b = |o: usize| write_u8(this + o, read_u8(source + o));
     copy_record_date(this, source);
     d(8); // opponent
     w(0xc);
@@ -1178,7 +1178,7 @@ pub(crate) unsafe extern "thiscall" fn match_record_assign(this: usize, source: 
 /// [pt] { 0x448170 } (thiscall, ret 4, club_records.cpp): copia o registro de sequência (0x14 bytes) de
 /// `origem`: o número de jogos (+0) e as datas de início (+4) e fim (+0xc). Devolve `this`.
 pub(crate) unsafe extern "thiscall" fn run_record_assign(this: usize, source: usize) -> usize {
-    *(this as *mut u32) = *(source as *const u32); // jogos
+    write_u32(this, read_u32(source)); // jogos
     copy_record_date(this + run_record::START_DATE, source + run_record::START_DATE);
     copy_record_date(this + run_record::END_DATE, source + run_record::END_DATE);
     this
@@ -1193,20 +1193,20 @@ pub(crate) unsafe extern "C" fn reset_records(r: usize) -> u32 {
     if r == 0 {
         return original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_RESET_RECORDS)(r);
     }
-    let d = |o: usize| core::ptr::write_unaligned((r + o) as *mut u32, u32::MAX);
-    core::ptr::write_unaligned((r + club_record::SEASON_RATING) as *mut u32, 0xbf800000);
+    let d = |o: usize| write_u32(r + o, u32::MAX);
+    write_u32(r + club_record::SEASON_RATING, 0xbf800000);
     for o in [1, 8, 0xe, 0x31, 0x54, 0x77, 0x85, 0xa4, 0xc3, 0xe2, 0x101, 0x118, 0x12c, 0x140, 0x154] {
         d(o);
     }
     for o in [0x168, 0x183, 0x19e, 0x1d6, 0x210, 0x22b] {
-        *((r + o) as *mut u8) = 0xff;
+        write_u8(r + o, 0xff);
     }
     for o in [0x247, 0x261] {
-        core::ptr::write_unaligned((r + o) as *mut u16, 0xffff);
+        write_u16(r + o, 0xffff);
     }
     d(0x2a3);
     d(0x2e2);
-    core::ptr::write_unaligned((r + 0x2f9) as *mut u16, 0xffff);
+    write_u16(r + 0x2f9, 0xffff);
     for o in [0x313, 0x33c, 0x365, 0x36b, 0x37d] {
         d(o);
     }

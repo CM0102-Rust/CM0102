@@ -28,8 +28,8 @@ pub(crate) unsafe fn search_cell_side_with(
             if mode == 2 {
                 count = count.wrapping_add(1);
             } else if f(p.addr(), a4, a5, a3, a6) != 0 {
-                *((this.addr() + 0x1a6) as *mut u8) = 0;
-                *((this.addr() + engine::SIDE_PLAYED_BALL) as *mut u8) = 0;
+                write_u8(this.addr() + 0x1a6, 0);
+                write_u8(this.addr() + engine::SIDE_PLAYED_BALL, 0);
                 return 1;
             }
         }
@@ -312,7 +312,7 @@ pub(crate) unsafe extern "thiscall" fn in_the_box(this: usize) -> u8 {
 /// "o melhor de dois sorteios". A ordem dos 15 sorteios e a do original.
 pub(crate) unsafe extern "thiscall" fn draw_moment(this: usize) {
     let this = MatchPlayer(this);
-    let grava = |o: usize, v: i32| *((this.addr() + o) as *mut u8) = v as u8;
+    let grava = |o: usize, v: i32| write_u8(this.addr() + o, v as u8);
     let best_of_two = |n: i32| {
         let a = random(n);
         let b = random(n);
@@ -375,14 +375,14 @@ pub(crate) unsafe extern "thiscall" fn hold_position_one(this: usize, side_reque
         let mut new = 0i8;
         if reserve != 0 {
             new = read_i8(reserve + match_player::PREVIOUS_POSITION);
-            *((reserve + match_player::PREVIOUS_POSITION) as *mut i8) = read_i8(p + match_player::POSITION);
+            write_i8(reserve + match_player::PREVIOUS_POSITION, read_i8(p + match_player::POSITION));
         }
         *stored = p;
         if position_table_entry(this, p, new) == 1 {
-            *((p + match_player::POSITION) as *mut i8) = new;
+            write_i8(p + match_player::POSITION, new);
         }
     }
-    *((this + if side_request == 1 { 0xf5a2 } else { 0xf59e }) as *const usize)
+    read_usize(this + if side_request == 1 { 0xf5a2 } else { 0xf59e })
 }
 
 /// Match engine: tells whether player `j` has a clear path forward: 0 if his cell is marked by the opponents (unless
@@ -530,8 +530,8 @@ pub(crate) unsafe extern "stdcall" fn special_code(code: i8) -> u8 {
     if !(0..=0x3c).contains(&i) {
         return 0;
     }
-    let case = *((0x6cb680 + i as usize) as *const u8) as usize;
-    (*((0x6cb678 + 4 * case) as *const u32) == 0x6cb66c) as u8
+    let case = read_u8(0x6cb680 + i as usize) as usize;
+    (read_u32(0x6cb678 + 4 * case) == 0x6cb66c) as u8
 }
 
 /// Is player `j` behind the stored extreme player of his side (`this` = match engine)? Side 0: his y (+0x103) <= the y
@@ -572,7 +572,7 @@ pub(crate) unsafe extern "thiscall" fn pressure_in_box(this: usize, side_b: i8) 
     let mark = (this as isize + 6 + side_b as isize) as *mut u8;
     *mark = 0;
     let mut sum: i32 = 0;
-    let cell = |base: usize, column: usize| *((base + column * 0x438) as *const i8) as i16 as i32;
+    let cell = |base: usize, column: usize| read_i8(base + column * 0x438) as i16 as i32;
     if side_b == 0 {
         for linha in (0..=5i32).rev() {
             let base = this + 0x2379 - (5 - linha) as usize * 0x5a;
@@ -816,7 +816,7 @@ pub(crate) unsafe extern "thiscall" fn record_move(this: usize, code: u16, playe
     this.set_pending_play_offender(MatchPlayer((player) as usize));
     this.set_pending_play_victim((other) as usize);
     for (o, v) in [(0x4769, b4769), (0x475a, b475a), (0x475b, b475b), (0x475c, b475c), (0x475d, b475d), (0x475e, b475e)] {
-        *((this.addr() + o) as *mut u8) = v;
+        write_u8(this.addr() + o, v);
     }
 }
 
@@ -1531,7 +1531,7 @@ pub(crate) unsafe fn summarize_sides(engine: Engine) {
             *b8(o) = 0;
         }
         for o in (0x22..=0x30).step_by(2) {
-            *((c + o) as *mut u16) = 0;
+            write_u16(c + o, 0);
         }
         *b8(0xb) = 0;
         *b8(0xc) = 0;
@@ -1545,12 +1545,12 @@ pub(crate) unsafe fn summarize_sides(engine: Engine) {
             if *rating < 1 {
                 *rating = 1;
             }
-            let u = |o: usize| *((p.addr() + o) as *const u8);
+            let u = |o: usize| read_u8(p.addr() + o);
             for (dst, src) in [(2isize, 0xf), (0, 0xd), (1, 0xe), (-2, 0xa), (-1, 0xb)] {
                 *b8(dst) = (*b8(dst)).wrapping_add(u(src));
             }
             for (dst, src) in [(0x22, 1), (0x24, 2), (0x26, 4), (0x28, 5), (0x2a, 7), (0x2c, 8), (0x2e, 9), (0x30, 0x12)] {
-                *((c + dst) as *mut u16) = (*((c + dst) as *mut u16)).wrapping_add(u(src) as u16);
+                write_u16(c + dst, read_u16(c + dst).wrapping_add(u(src) as u16));
             }
             *b8(0xb) = (*b8(0xb)).wrapping_add(u(match_player::RED_CARDS));
             *b8(0xc) = (*b8(0xc)).wrapping_add(u(match_player::YELLOW_CARDS));
@@ -1574,12 +1574,12 @@ pub(crate) unsafe extern "thiscall" fn match_summary(this: usize, moment: i16) {
     };
     match moment {
         0 | 1 => {
-            *((this.addr() + engine::TEMPO_ROLL_A) as *mut f32) = ((random(7) as u8).wrapping_add(3) as i8) as f32;
-            *((this.addr() + engine::TEMPO_ROLL_B) as *mut f32) = ((random(7) as u8).wrapping_add(3) as i8) as f32;
+            write_f32(this.addr() + engine::TEMPO_ROLL_A, ((random(7) as u8).wrapping_add(3) as i8) as f32);
+            write_f32(this.addr() + engine::TEMPO_ROLL_B, ((random(7) as u8).wrapping_add(3) as i8) as f32);
             let estados = |r: i32| r + (this.score() as u8) as i32 + (this.score_side1() as u8) as i32;
             let t = estados(random(5));
             let t = if t < 10 { 10 } else { estados(random(5)) };
-            *((this.addr() + engine::TEMPO_GOALS_ROLL) as *mut f32) = (t as u8 as i8) as f32;
+            write_f32(this.addr() + engine::TEMPO_GOALS_ROLL, (t as u8 as i8) as f32);
             summarize_sides(this);
         }
         0x3de => summarize_sides(this),
@@ -1781,7 +1781,7 @@ pub(crate) unsafe extern "thiscall" fn choose_square(this: usize, j: usize, sx: 
                 };
                 if j.moment_decisions() != 0 {
                     let i = (side_of_player(j) == 0) as usize;
-                    if *((engine.addr() + 6371 * i + 0x9766) as *const u32) & 0x400 != 0 {
+                    if read_u32(engine.addr() + 6371 * i + 0x9766) & 0x400 != 0 {
                         d = d.wrapping_add(1);
                     }
                 }
@@ -2537,7 +2537,7 @@ pub(crate) unsafe fn apply_pending_foul_with(m: Engine, call: &mut dyn FnMut(usi
         m.set_pending_play_serious(0);
         m.set_pending_play_kind(pending_play::NONE);
         for o in 0x475b..=0x475e {
-            *((m.addr() + o) as *mut u8) = 0xff;
+            write_u8(m.addr() + o, 0xff);
         }
     };
     if (m.pending_play_kind() as u8) == pending_play::NONE as u8 {
@@ -2669,7 +2669,7 @@ pub(crate) unsafe fn apply_pending_foul_with(m: Engine, call: &mut dyn FnMut(usi
             narrate(call, event::REFEREES_A_WANKER, u32::MAX, side_of(m.pending_play_offender()), u32::MAX);
         }
         if matches!((m.pending_play_kind() as u8), 3..=6) || sound == 0x1f7a {
-            *((m.pending_play_offender().addr() + match_player::SENT_OFF) as *mut u8) = 1;
+            write_u8(m.pending_play_offender().addr() + match_player::SENT_OFF, 1);
             if random(7) == 0 {
                 narrate(call, event::TEAM_ARGUES_WITH_REFEREE, u32::MAX, side_of(m.pending_play_offender()), u32::MAX);
             }
@@ -2679,7 +2679,7 @@ pub(crate) unsafe fn apply_pending_foul_with(m: Engine, call: &mut dyn FnMut(usi
     let block = m.player(j.side(), 0).addr();
     for i in 0..20 {
         let p = block + 0x1be * i;
-        if *((p + match_player::STAFF) as *const usize) == 0 {
+        if read_usize(p + match_player::STAFF) == 0 {
             continue;
         }
         let f = if p == j.addr() {
@@ -2850,7 +2850,7 @@ pub(crate) unsafe fn tackle_contest_with(m: Engine, x: i8, y: i8, call: &mut dyn
     let mut punished: Option<(u8, usize, usize)> = None;
     'faltas: {
         if l != 0 {
-            *((wv + match_player::MATCH_RATING) as *mut i16) = (*((wv + match_player::MATCH_RATING) as *mut i16)).wrapping_add(4);
+            write_i16(wv + match_player::MATCH_RATING, read_i16(wv + match_player::MATCH_RATING).wrapping_add(4));
             // 0x6e9820 may exit before writing the advantage (foul in the area, impatient referee): the
             // the original then reads what was left on the stack; the copy uses 0 (Lucas’s decision, 14/10/2026)
             vantagem = NO_ANSWER_MARK;
@@ -2861,7 +2861,7 @@ pub(crate) unsafe fn tackle_contest_with(m: Engine, x: i8, y: i8, call: &mut dyn
                 vantagem = 0;
             }
             if m.live_match() != 0 && (exe::match_player_is_in_penalty_area(wv, read_i8(wv + match_player::SIDE) as u8) as u32) as u8 != 0
-                && (special(lance_w) || vantagem != 0 || random(*((wv + 0x31) as *mut i16) as i32) < -10)
+                && (special(lance_w) || vantagem != 0 || random(read_i16(wv + 0x31) as i32) < -10)
                 && random(3) != 0
             {
                 narrate(call, event::PENALTY_CLAIM_SOUND, (read_u8(wv + match_player::COMMENTARY_ID) as u32), (read_u8(wv + match_player::SIDE) as u32), u32::MAX);
@@ -2979,7 +2979,7 @@ pub(crate) unsafe fn tackle_contest_with(m: Engine, x: i8, y: i8, call: &mut dyn
             sound = 0x1f7a;
             m.set_restart_type(restart::PENALTY);
             m.set_fouled_player(v);
-            *((f + match_player::MATCH_RATING) as *mut i16) = (*((f + match_player::MATCH_RATING) as *mut i16)).wrapping_sub(500);
+            write_i16(f + match_player::MATCH_RATING, read_i16(f + match_player::MATCH_RATING).wrapping_sub(500));
         } else {
             sound = 0x1f79;
             m.set_restart_type(restart::FREE_KICK);
@@ -3021,7 +3021,7 @@ pub(crate) unsafe fn tackle_contest_with(m: Engine, x: i8, y: i8, call: &mut dyn
                 narrate(call, event::REFEREES_A_WANKER, u32::MAX, lado_extra, u32::MAX);
             }
             if sent_off || sound == 0x1f7a {
-                *((alvo + match_player::SENT_OFF) as *mut u8) = 1;
+                write_u8(alvo + match_player::SENT_OFF, 1);
                 if random(7) == 0 {
                     narrate(call, event::TEAM_ARGUES_WITH_REFEREE, u32::MAX, lado_extra, u32::MAX);
                 }
@@ -3030,7 +3030,7 @@ pub(crate) unsafe fn tackle_contest_with(m: Engine, x: i8, y: i8, call: &mut dyn
         let block = m.player(read_i8(f + match_player::SIDE), 0).addr();
         for i in 0..20 {
             let p = block + 0x1be * i;
-            if *((p + match_player::STAFF) as *const usize) == 0 {
+            if read_usize(p + match_player::STAFF) == 0 {
                 continue;
             }
             let factor = if p == f {
@@ -3071,17 +3071,17 @@ pub(crate) unsafe fn tackle_contest_with(m: Engine, x: i8, y: i8, call: &mut dyn
         };
         crate::comparison::branch(match code { 0x2164 => "contest leitura 2164", 0x214f => "contest leitura 214f", _ => "contest leitura 1f5d" });
         narrate(call, code, (read_u8(wv + match_player::COMMENTARY_ID) as u32), (read_u8(wv + match_player::SIDE) as u32), (read_u8(l + match_player::COMMENTARY_ID) as u32) | (read_u8(l + match_player::SIDE) as u32) << 8);
-        *((wv + 7) as *mut u8) = (*((wv + 7) as *mut u8)).wrapping_add(1);
-        *((wv + 8) as *mut u8) = (*((wv + 8) as *mut u8)).wrapping_add(1);
-        *((wv + match_player::MATCH_RATING) as *mut i16) = (*((wv + match_player::MATCH_RATING) as *mut i16)).wrapping_add(0x28);
-        *((l + 7) as *mut u8) = (*((l + 7) as *mut u8)).wrapping_add(1);
-        *((l + match_player::MATCH_RATING) as *mut i16) = (*((l + match_player::MATCH_RATING) as *mut i16)).wrapping_add(if exe::match_player_get_position(l) == 1 { -600 } else { -10 });
+        write_u8(wv + 7, read_u8(wv + 7).wrapping_add(1));
+        write_u8(wv + 8, read_u8(wv + 8).wrapping_add(1));
+        write_i16(wv + match_player::MATCH_RATING, read_i16(wv + match_player::MATCH_RATING).wrapping_add(0x28));
+        write_u8(l + 7, read_u8(l + 7).wrapping_add(1));
+        write_i16(l + match_player::MATCH_RATING, read_i16(l + match_player::MATCH_RATING).wrapping_add(if exe::match_player_get_position(l) == 1 { -600 } else { -10 }));
         if exe::match_player_is_last_defender(wv) != 0 {
-            *((wv + 9) as *mut u8) = (*((wv + 9) as *mut u8)).wrapping_add(1);
-            *((wv + match_player::MATCH_RATING) as *mut i16) = (*((wv + match_player::MATCH_RATING) as *mut i16)).wrapping_add(300);
+            write_u8(wv + 9, read_u8(wv + 9).wrapping_add(1));
+            write_i16(wv + match_player::MATCH_RATING, read_i16(wv + match_player::MATCH_RATING).wrapping_add(300));
         }
     }
-    *((wv + match_player::ACTION) as *mut i16) = lance_w as i16;
+    write_i16(wv + match_player::ACTION, lance_w as i16);
     let k = random(200);
     let far = read_i8(wv + match_player::MOMENT_AGILITY) as i32 * read_i8(wv + match_player::MOMENT_ANTICIPATION) as i32 > k
         || (exe::match_player_distance_to_opponent_goal(wv) as f64) < 2.0
@@ -3095,8 +3095,8 @@ pub(crate) unsafe fn tackle_contest_with(m: Engine, x: i8, y: i8, call: &mut dyn
         exe::match_player_set_facing_direction(wv, x, y, 4, if y > 3 { y - 3 } else { 0 });
     }
     call(FN_MATCH_PLAYER_TAKE_POSSESSION, wv, [0; 5]);
-    *((wv + match_player::BALL_CONTROL) as *mut i16) = (nota_w - nota_l - 225) as i16;
-    *((wv + match_player::BALL_CONTROL) as *mut i16) = (*((wv + match_player::BALL_CONTROL) as *mut i16)).clamp(-200, 200);
+    write_i16(wv + match_player::BALL_CONTROL, (nota_w - nota_l - 225) as i16);
+    write_i16(wv + match_player::BALL_CONTROL, read_i16(wv + match_player::BALL_CONTROL).clamp(-200, 200));
     if l != 0 {
         exe::match_player_add_action_delay(l, b_w);
     }
@@ -3599,7 +3599,7 @@ pub(crate) unsafe fn call_thiscall4(a: usize, this: usize, x: u32, y: u32, z: u3
 /// [pt] Fim da partida pelo laco: o fechamento (0x6d1cc0) e, para cada clube que um humano dirige
 /// (0x600a50) sem o registro +0x9a05 do tecnico (0x5fd480), as instrucoes guardadas voltam (0x896fe0).
 pub(crate) unsafe fn finish_match_for_clubs(m: usize) {
-    let u = |q: usize, o: usize| *((q + o) as *const usize);
+    let u = |q: usize, o: usize| read_usize(q + o);
     exe::match_eng_update_post_match_reputations(m);
     for (o, marca) in [(0x1c, 0x40), (0x20, 0x41)] {
         let t = u(m, engine::MATCH);
@@ -3624,7 +3624,7 @@ pub(crate) unsafe fn update_nearest_to_ball(m: Engine) {
     for (lado, campo) in [(0u32, 0x8eac), (1, 0x8ead)] {
         let (bx, by) = (m.ball_x(), m.ball_y());
         let g = call_thiscall1(FN_CM3_MATCH_ENGINE_GET_GOALKEEPER, m.addr(), lado);
-        *((m.addr() + campo) as *mut u8) = call_thiscall3(FN_CM3_MATCH_ENGINE_IS_CLOSEST_TEAMMATE_TO_CELL, m.addr(), g, bx as u8 as u32, by as u8 as u32) as u8;
+        write_u8(m.addr() + campo, call_thiscall3(FN_CM3_MATCH_ENGINE_IS_CLOSEST_TEAMMATE_TO_CELL, m.addr(), g, bx as u8 as u32, by as u8 as u32) as u8);
     }
 }
 
@@ -3666,9 +3666,9 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
     };
     let acrescimos = || {
         let r = random(10) as i8;
-        *((m + engine::CLOCK) as *mut i16) = (*((m + engine::CLOCK) as *mut i16)).wrapping_add(r as i16);
+        write_i16(m + engine::CLOCK, read_i16(m + engine::CLOCK).wrapping_add(r as i16));
         let v = random(ftol(r as f64 * read_f64(rdata::F64_0_8)));
-        *((m + engine::STOPPAGE_TIME) as *mut u8) = (*((m + engine::STOPPAGE_TIME) as *mut u8)).wrapping_add(v as u8);
+        write_u8(m + engine::STOPPAGE_TIME, read_u8(m + engine::STOPPAGE_TIME).wrapping_add(v as u8));
     };
     let mut n = n_in as u8 as i8;
     if read_i8(m + 0) != 0 {
@@ -3682,14 +3682,14 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
         for k in 0..20 {
             let f = m + engine::PLAYERS + (side * 20 + k) * 0x1be;
             if read_i8(f + match_player::POSITION) >= 0 && *((f + match_player::ENGINE) as *const u32) == 0 {
-                *((f + match_player::POSITION) as *mut u8) = 0xfb;
+                write_u8(f + match_player::POSITION, 0xfb);
             }
         }
     }
     for o in [0xf576, 0xf57a, 0xf57e, 0xf5ae, 0x91de, 0xf586, 0xf58a, 0xf5a6, 0xf5aa, 0xf58e, 0xf592] {
         let q = read_usize(m + o);
         if q != 0 && *((q + match_player::ENGINE) as *const usize) == 0 {
-            *((m + o) as *mut usize) = 0;
+            write_usize(m + o, 0);
         }
     }
     'instante: while n != 0 {
@@ -3705,7 +3705,7 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
                 if read_i8(m + engine::SHOOTOUT_STATE) == 0 {
                     crate::comparison::branch("loop penalties decided");
                     finish_match_for_clubs(m);
-                    call_thiscall1(FN_CM3_MATCH_ENGINE_REBUILD_TEAM_MATCH_STATS, m, *((m + engine::PERIOD_END) as *mut i16) as u16 as u32);
+                    call_thiscall1(FN_CM3_MATCH_ENGINE_REBUILD_TEAM_MATCH_STATS, m, read_i16(m + engine::PERIOD_END) as u16 as u32);
                     call_thiscall0(FN_CM3_MATCH_ENGINE_RECORD_REFEREE_RATING, m);
                     return 2;
                 }
@@ -3726,8 +3726,8 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
             _ => {}
         }
         if read_i8(m + engine::KICKOFF_ANNOUNCED) == 0 && read_i8(m + engine::RESTART_TYPE) == 8 && read_i8(m + engine::GOLDEN_GOAL_SCORED) == 0 {
-            narrate(if *((m + engine::CLOCK) as *mut i16) > 1 { event::KICK_OFF } else { event::START_MATCH }, read_i8(m + engine::POSSESSION_SIDE) as u8 as u32);
-            *((m + engine::KICKOFF_ANNOUNCED) as *mut u8) = 1;
+            narrate(if read_i16(m + engine::CLOCK) > 1 { event::KICK_OFF } else { event::START_MATCH }, read_i8(m + engine::POSSESSION_SIDE) as u8 as u32);
+            write_u8(m + engine::KICKOFF_ANNOUNCED, 1);
             continue;
         }
         if read_i8(m + engine::RESTART_TYPE) != 0 && read_i8(m + engine::PUNISHMENT_STATE) == 0 && read_i8(m + engine::GOLDEN_GOAL_SCORED) == 0 {
@@ -3756,7 +3756,7 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
             }
         }
         if read_i8(m + engine::PUNISHMENT_STATE) == 2 {
-            *((m + engine::PUNISHMENT_STATE) as *mut u8) = 0;
+            write_u8(m + engine::PUNISHMENT_STATE, 0);
         }
         // o lance marcado
         let q = read_usize(m + engine::PENDING_PLAY_OFFENDER);
@@ -3787,32 +3787,32 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
             if read_i8(m + engine::GOLDEN_GOAL_SCORED) == 0 && read_i8(m + engine::RESTART_TYPE) != 0 && (d == 0 || read_i8(d + match_player::POSITION) < 0) {
                 crate::comparison::branch("loop set piece pick_restart_taker");
                 let c = call_thiscall3(FN_CM3_MATCH_ENGINE_PICK_RESTART_TAKER, m, read_i8(m + engine::POSSESSION_SIDE) as u8 as u32, read_i8(m + engine::RESTART_TYPE) as u8 as u32, 0) as usize;
-                *((m + engine::BALL_HOLDER) as *mut usize) = c;
+                write_usize(m + engine::BALL_HOLDER, c);
                 call_thiscall2(FN_MATCH_PLAYER_MOVE_TO_GRID_CELL, c, read_i8(m + engine::BALL_X) as u8 as u32, read_i8(m + engine::BALL_Y) as u8 as u32);
-                *((read_usize(m + engine::BALL_HOLDER) + 0x19c) as *mut i16) = 200;
+                write_i16(read_usize(m + engine::BALL_HOLDER) + 0x19c, 200);
                 call_thiscall0(FN_MATCH_PLAYER_TAKE_POSSESSION, read_usize(m + engine::BALL_HOLDER));
                 let d = if read_i8(m + engine::POSSESSION_SIDE) != 0 { 1 } else { 0xa };
                 call_thiscall4(FN_MATCH_PLAYER_SET_FACING_DIRECTION, read_usize(m + engine::BALL_HOLDER), read_i8(m + engine::BALL_X) as u8 as u32, read_i8(m + engine::BALL_Y) as u8 as u32, 4, d);
             }
         }
-        *((m + engine::SUB_TICK) as *mut i16) = (*((m + engine::SUB_TICK) as *mut i16)).wrapping_add(1);
-        if *((m + engine::SUB_TICK) as *mut i16) >= 1 || read_i8(m + engine::GOLDEN_GOAL_SCORED) != 0 {
+        write_i16(m + engine::SUB_TICK, read_i16(m + engine::SUB_TICK).wrapping_add(1));
+        if read_i16(m + engine::SUB_TICK) >= 1 || read_i8(m + engine::GOLDEN_GOAL_SCORED) != 0 {
             n = n.wrapping_sub(1);
             let limit = read_i8(m + engine::ABANDON_MINUTE);
-            if limit != -1 && (limit as i16).wrapping_mul(11) < *((m + engine::CLOCK) as *mut i16) {
+            if limit != -1 && (limit as i16).wrapping_mul(11) < read_i16(m + engine::CLOCK) {
                 crate::comparison::branch("loop abandonment");
-                *((m + engine::SCORE) as *mut u8) = 0xfd;
-                *((m + engine::SCORE_SIDE1) as *mut u8) = 0xfd;
-                *((read_usize(m + engine::MATCH) + 0x43) as *mut u8) = 0xfd;
-                *((m + engine::RESTART_TYPE) as *mut u8) = 0;
+                write_u8(m + engine::SCORE, 0xfd);
+                write_u8(m + engine::SCORE_SIDE1, 0xfd);
+                write_u8(read_usize(m + engine::MATCH) + 0x43, 0xfd);
+                write_u8(m + engine::RESTART_TYPE, 0);
                 narrate(event::MATCH_ABANDONED_PITCH_CONDITION, 0);
                 return 8;
             }
             if read_i8(m + engine::LIVE_MATCH) != 0 {
                 call_thiscall1(FN_CM3_MATCH_ENGINE_REBUILD_TEAM_MATCH_STATS, m, 0x3de);
             }
-            *((m + engine::CLOCK) as *mut i16) = (*((m + engine::CLOCK) as *mut i16)).wrapping_add(1);
-            *((m + engine::SUB_TICK) as *mut i16) = 0;
+            write_i16(m + engine::CLOCK, read_i16(m + engine::CLOCK).wrapping_add(1));
+            write_i16(m + engine::SUB_TICK, 0);
             match call_thiscall0(FN_CM3_MATCH_ENGINE_PERIOD_COMPLETED, m) as i8 {
                 0 => {
                     for side in [0i8, 1] {
@@ -3840,13 +3840,13 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
                             *tb(fixture::AWAY_AGGREGATE) = (*tb(fixture::AWAY_AGGREGATE)).wrapping_add(*tb(fixture::AWAY_GOALS));
                         }
                     }
-                    if *(t.addr() as *const i32) != -2 {
-                        call_thiscall1(FN_TACTICS_RECORD_TACTIC_RESULT, *(G_TACTICS as *const usize), t.addr() as u32);
+                    if read_i32(t.addr()) != -2 {
+                        call_thiscall1(FN_TACTICS_RECORD_TACTIC_RESULT, read_usize(G_TACTICS), t.addr() as u32);
                     }
                     let p = read_i8(m + engine::SHOOTOUT_STATE);
                     if p != 0 {
                         crate::comparison::branch("loop end for penalties");
-                        *((m + engine::CLOCK) as *mut i16) = (*((m + engine::CLOCK) as *mut i16) as i32 / 30 * 30) as i16;
+                        write_i16(m + engine::CLOCK, (read_i16(m + engine::CLOCK) as i32 / 30 * 30) as i16);
                         narrate(if p == 1 { event::ANNOUNCE_SHOOTOUT } else { event::ANNOUNCE_PENALTIES }, 0);
                         return 4;
                     }
@@ -3870,8 +3870,8 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
             continue;
         }
         if read_usize(m + engine::PASS_RECEIVER) != read_usize(m + engine::BALL_HOLDER) && read_usize(m + engine::BALL_HOLDER) != 0 {
-            *((m + engine::PASS_RECEIVER) as *mut usize) = 0;
-            *((m + engine::ASSIST_CANDIDATE) as *mut usize) = 0;
+            write_usize(m + engine::PASS_RECEIVER, 0);
+            write_usize(m + engine::ASSIST_CANDIDATE, 0);
         }
         call_thiscall2(FN_CM3_MATCH_ENGINE_RECORD_POSSESSION_TICK, m, read_i8(m + engine::POSSESSION_SIDE) as u8 as u32, read_i8(m + engine::LIVE_MATCH) as u8 as u32);
         for side in [0i8, 1] {
@@ -3885,24 +3885,24 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
         call_thiscall0(FN_CM3_MATCH_ENGINE_UPDATE_OFFSIDE_LINES, m);
         call_thiscall0(FN_CM3_MATCH_ENGINE_UPDATE_DEFENSIVE_LINES, m);
         call_thiscall0(FN_CM3_MATCH_ENGINE_BUILD_ACTION_ORDER, m);
-        *((m + engine::ACTION_FIRST_PLAYER) as *mut usize) = 0;
+        write_usize(m + engine::ACTION_FIRST_PLAYER, 0);
         update_nearest_to_ball(Engine(m));
-        *((m + 2) as *mut u8) = 0xff;
-        *((m + 3) as *mut u8) = 0xff;
+        write_u8(m + 2, 0xff);
+        write_u8(m + 3, 0xff);
         let (mut vx, mut vy) = (read_i8(m + engine::BALL_X), read_i8(m + engine::BALL_Y));
-        if *((m + engine::TACTICS_FLAGS) as *const u32) & 0x1000 != 0 {
+        if read_u32(m + engine::TACTICS_FLAGS) & 0x1000 != 0 {
             call_thiscall1(FN_CM3_MATCH_ENGINE_UPDATE_SIDE_PRESSURE_FLAG, m, 0);
         }
-        if *((m + engine::TACTICS_FLAGS_SIDE1) as *const u32) & 0x1000 != 0 {
+        if read_u32(m + engine::TACTICS_FLAGS_SIDE1) & 0x1000 != 0 {
             call_thiscall1(FN_CM3_MATCH_ENGINE_UPDATE_SIDE_PRESSURE_FLAG, m, 1);
         }
-        let list = |i: i32| *((m + engine::ACTIVE_LIST + i as usize * 4) as *const usize);
+        let list = |i: i32| read_usize(m + engine::ACTIVE_LIST + i as usize * 4);
         let mut i = 0i8;
         while i < read_i8(m + engine::ACTIVE_LIST_COUNT) {
             let q = list(i as i32);
-            *((q + match_player::ACTION_ORDER) as *mut i8) = i;
-            *((q + match_player::MARKER_COUNT) as *mut u8) = 0;
-            *((q + match_player::MARKING_TARGET) as *mut usize) = 0;
+            write_i8(q + match_player::ACTION_ORDER, i);
+            write_u8(q + match_player::MARKER_COUNT, 0);
+            write_usize(q + match_player::MARKING_TARGET, 0);
             i += 1;
         }
         // the markings
@@ -3921,7 +3921,7 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
                 }
                 let table = || call_thiscall0(FN_MATCH_PLAYER_GET_POSITION, q);
                 let by = read_i8(m + engine::BALL_Y);
-                let mark = if *((m + engine::TACTICS_FLAGS + side as isize as usize * 0x18e3) as *const u32) & 0x4000 != 0 {
+                let mark = if read_u32(m + engine::TACTICS_FLAGS + side as isize as usize * 0x18e3) & 0x4000 != 0 {
                     true
                 } else if read_i8(m + engine::POSSESSION_SIDE) == side && if side == 0 { by >= 3 } else { by <= 8 } {
                     false
@@ -3945,11 +3945,11 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
                     continue;
                 }
             }
-            *((q + match_player::MARKING_TARGET) as *mut usize) = target;
+            write_usize(q + match_player::MARKING_TARGET, target);
             let k = read_i8(target + match_player::MARKER_COUNT);
             if k < 3 {
-                *((target + match_player::MARKERS + k as usize * 4) as *mut usize) = q;
-                *((target + match_player::MARKER_COUNT) as *mut u8) = (k + 1) as u8;
+                write_usize(target + match_player::MARKERS + k as usize * 4, q);
+                write_u8(target + match_player::MARKER_COUNT, (k + 1) as u8);
             }
         }
         // the decision of each active player
@@ -3957,12 +3957,12 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
         let mut i = 0i32;
         while i < read_i8(m + engine::ACTIVE_LIST_COUNT) as i32 {
             let q = list(i);
-            if *((q + match_player::MARKING_TARGET) as *const usize) == 0 || read_i8(m + engine::POSSESSION_SIDE) == read_i8(q + match_player::SIDE) {
+            if read_usize(q + match_player::MARKING_TARGET) == 0 || read_i8(m + engine::POSSESSION_SIDE) == read_i8(q + match_player::SIDE) {
                 if !cansou || read_i8(q + match_player::MOMENT_PACE) as i32 > random(10) {
                     call_thiscall0(FN_MATCH_PLAYER_TAKE_TURN, q);
                 }
                 let q = list(i);
-                let action = *((q + match_player::ACTION) as *const i16);
+                let action = read_i16(q + match_player::ACTION);
                 if action == 0x11 || action == 0x12 {
                     let v = read_f32(q + if action == 0x11 { 0x71 } else { 0xc1 }) as f64;
                     if random(ftol(read_f32(rdata::F32_2010) as f64 - v * read_f32(rdata::F32_100) as f64)) == 0 {
@@ -3979,7 +3979,7 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
                 // the pending shot and the marked contest
                 let mut done = false;
                 if read_i8(m + engine::BALL_TRANSIT_TICKS) != 0 {
-                    *((m + engine::BALL_TRANSIT_TICKS) as *mut u8) = (*((m + engine::BALL_TRANSIT_TICKS) as *mut u8)).wrapping_sub(1);
+                    write_u8(m + engine::BALL_TRANSIT_TICKS, read_u8(m + engine::BALL_TRANSIT_TICKS).wrapping_sub(1));
                     if read_i8(m + engine::BALL_TRANSIT_TICKS) == 0 && read_i8(m + engine::BALL_HEIGHT) == 4 && read_usize(m + engine::BALL_RECEIVER) == 0 {
                         crate::comparison::branch("loop contest scheduled");
                         call_thiscall2(FN_CM3_MATCH_ENGINE_RESOLVE_BALL_CHALLENGE, m, read_i8(m + engine::TRANSIT_TARGET_X) as u8 as u32, read_i8(m + engine::TRANSIT_TARGET_Y) as u8 as u32);
@@ -3988,14 +3988,14 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
                 }
                 let c = read_usize(m + engine::BALL_RECEIVER);
                 if !done && read_i8(m + engine::BALL_TRANSIT_TICKS) == 0 && c != 0 {
-                    let shoot = |c: usize| call_thiscall3(FN_MATCH_PLAYER_RECEIVE_BALL, c, *((m + engine::PASS_POWER) as *mut i16) as u16 as u32, read_i8(m + engine::TRANSIT_ORIGIN_X) as u8 as u32, read_i8(m + engine::TRANSIT_ORIGIN_Y) as u8 as u32);
+                    let shoot = |c: usize| call_thiscall3(FN_MATCH_PLAYER_RECEIVE_BALL, c, read_i16(m + engine::PASS_POWER) as u16 as u32, read_i8(m + engine::TRANSIT_ORIGIN_X) as u8 as u32, read_i8(m + engine::TRANSIT_ORIGIN_Y) as u8 as u32);
                     if read_i8(c + match_player::CELL_X) == read_i8(m + engine::BALL_X) && read_i8(c + match_player::CELL_Y) == read_i8(m + engine::BALL_Y) {
                         shoot(c);
                     } else if c == read_usize(m + engine::SET_PIECE_TAKER) && read_i8(c + match_player::BUSY) == 0 && read_i8(c + match_player::MOMENT_ANTICIPATION) != 0 && read_i8(c + match_player::MOMENT_MOVEMENT) != 0 {
                         crate::comparison::branch("loop taker approaches");
-                        *((m + engine::BALL_TRANSIT_TICKS) as *mut u8) = 1;
+                        write_u8(m + engine::BALL_TRANSIT_TICKS, 1);
                         call_thiscall1(FN_MATCH_PLAYER_CHOOSE_ATTACKING_OFF_BALL_MOVE, c, 1);
-                        *((m + engine::BALL_TRANSIT_TICKS) as *mut u8) = 0;
+                        write_u8(m + engine::BALL_TRANSIT_TICKS, 0);
                         let c2 = MatchPlayer(read_usize(m + engine::BALL_RECEIVER));
                         if c2.addr() == c && c2.cell_x() == read_i8(m + engine::BALL_X) && c2.cell_y() == read_i8(m + engine::BALL_Y) {
                             shoot(c2.addr());
@@ -4010,12 +4010,12 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
                     continue 'instante;
                 }
                 let q = list(i);
-                let action = *((q + match_player::ACTION) as *const i16);
+                let action = read_i16(q + match_player::ACTION);
                 if (action == 0x104 || action == 0x76) && i < 0x16 {
                     crate::comparison::branch("loop enters the list");
                     let k = read_i8(m + engine::ACTIVE_LIST_COUNT);
-                    *((m + engine::ACTIVE_LIST + k as isize as usize * 4) as *mut usize) = q;
-                    *((m + engine::ACTIVE_LIST_COUNT) as *mut u8) = (k + 1) as u8;
+                    write_usize(m + engine::ACTIVE_LIST + k as isize as usize * 4, q);
+                    write_u8(m + engine::ACTIVE_LIST_COUNT, (k + 1) as u8);
                 }
                 call_thiscall0(FN_CM3_MATCH_ENGINE_UPDATE_OFFSIDE_LINES, m);
                 if vx != read_i8(m + engine::BALL_X) || vy != read_i8(m + engine::BALL_Y) {
@@ -4139,21 +4139,21 @@ pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5
     let n7 = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, a3: u32, a4: u32, a5: u32, a6: u32, a7: i8| narrate_packed7(call, m, code, a3, a4, a5, a6, a7);
     // 0x7002f0: dois campos -1; 0x70a860: tres
     let na = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, a3: u32, a4: u32, a7: i8| narrate_packed7(call, m, code, a3, a4, 0xff, 0xff, a7);
-    let l60 = *((m + engine::MOMENTUM_B) as *mut i32);
-    let l5c = *((m + engine::MOMENTUM_A) as *mut i32);
+    let l60 = read_i32(m + engine::MOMENTUM_B);
+    let l5c = read_i32(m + engine::MOMENTUM_A);
     let target_y = if lado == 0 { 0xb } else { 0 };
     let d = distance_to_point(p, 4, target_y);
-    let (l58, l50, l54) = (*((p + match_player::SHOT_QUALITY) as *mut i16), read_i8(p + match_player::CELL_X), read_i8(p + match_player::CELL_Y));
-    let l8c = *((p + match_player::ACTION) as *mut i16);
+    let (l58, l50, l54) = (read_i16(p + match_player::SHOT_QUALITY), read_i8(p + match_player::CELL_X), read_i8(p + match_player::CELL_Y));
+    let l8c = read_i16(p + match_player::ACTION);
     let mut l64: i32 = 0xf0;
     let v0 = a2;
     let mut l28: i8 = 6;
     let l25 = how_many_mark(m, p);
-    let minuto = (*((m + engine::CLOCK) as *mut i16) as i32 / 11) as i16;
+    let minuto = (read_i16(m + engine::CLOCK) as i32 / 11) as i16;
     let l16 = minuto as i8;
-    *((m + engine::LAST_SHOT_SIDE) as *mut u8) = lado as u8;
-    *((m + engine::LAST_SHOT_MINUTE) as *mut i16) = minuto;
-    let l18 = !((*((m + engine::MOMENTUM_B) as *mut i32) as f64) < read_f64(rdata::F64_1680));
+    write_u8(m + engine::LAST_SHOT_SIDE, lado as u8);
+    write_i16(m + engine::LAST_SHOT_MINUTE, minuto);
+    let l18 = !((read_i32(m + engine::MOMENTUM_B) as f64) < read_f64(rdata::F64_1680));
     let l1b = ((ftol(d as f64 * read_f32(rdata::F32_9) as f64 + read_f64(rdata::F64_2_5)) as i8 as i32 / 5) * 5) as i8;
     if tipo == 0x39 || tipo == 3 {
         l28 = 5;
@@ -4164,18 +4164,18 @@ pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5
     let d2 = distance_to_point(p, 4, target_y);
     let mut l7c = 0u16;
     let mut l10 = classify_move(p, tipo as i8 as i16, l50, l54, 4, if lado == 1 { 0 } else { 0xb }, (d2 as f64 + read_f64(rdata::F64_1)) as f32, &mut l7c);
-    *((p + match_player::SHOT_QUALITY) as *mut i16) = (*((p + match_player::SHOT_QUALITY) as *mut i16)).wrapping_add(-(l7c as i16 as i32 / 2) as i16);
+    write_i16(p + match_player::SHOT_QUALITY, read_i16(p + match_player::SHOT_QUALITY).wrapping_add(-(l7c as i16 as i32 / 2) as i16));
     let r = random(l7c as i16 as i32);
     v = v.wrapping_sub(r);
     // whoever made the pass gets the shot assist
     let mut l68 = 0u32;
     let q = read_usize(m + engine::ASSIST_CANDIDATE);
-    if p == read_usize(m + engine::PASS_RECEIVER) && q != 0 && !matches!(*((p + match_player::ACTION) as *mut i16), 0x12 | 0x11) && (*((p + 0x29) as *mut i16) > -100 || v as i16 > 100) && modo == 1 {
-        if !matches!(*((q + match_player::ACTION) as *mut i16), 0x34 | 0x37) {
+    if p == read_usize(m + engine::PASS_RECEIVER) && q != 0 && !matches!(read_i16(p + match_player::ACTION), 0x12 | 0x11) && (read_i16(p + 0x29) > -100 || v as i16 > 100) && modo == 1 {
+        if !matches!(read_i16(q + match_player::ACTION), 0x34 | 0x37) {
             crate::comparison::branch("shot assist");
-            *((q + 3) as *mut u8) = (*((q + 3) as *mut u8)).wrapping_add(1);
-            *((q + match_player::MATCH_RATING) as *mut i16) = (*((q + match_player::MATCH_RATING) as *mut i16)).wrapping_add((*((p + 0x29) as *mut i16) as i32 / 3 + 0xe1) as i16);
-            *((m + engine::MOMENTUM_A) as *mut i32) = (*((m + engine::MOMENTUM_A) as *mut i32)).wrapping_add(0x113);
+            write_u8(q + 3, read_u8(q + 3).wrapping_add(1));
+            write_i16(q + match_player::MATCH_RATING, read_i16(q + match_player::MATCH_RATING).wrapping_add((read_i16(p + 0x29) as i32 / 3 + 0xe1) as i16));
+            write_i32(m + engine::MOMENTUM_A, read_i32(m + engine::MOMENTUM_A).wrapping_add(0x113));
         }
         l68 = 1;
     }
@@ -4214,14 +4214,14 @@ pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5
         let mut penalty = false;
         let mut l44 = 0u8;
         'contest: {
-            if l70 < *((p + match_player::BALL_CONTROL) as *mut i16) {
+            if l70 < read_i16(p + match_player::BALL_CONTROL) {
                 // no foul: the clean contest
             } else {
                 let (mut l88, mut l74) = (0u8, 0i8);
                 let mut l2c = foul_in_engine(m, e, p, l30, -1, &mut l88, &mut l74, &mut l44);
                 if read_i8(m + engine::LIVE_MATCH) != 0
                     && is_in_attacked_box(lado, read_i8(e + match_player::CELL_X), read_i8(e + match_player::CELL_Y))
-                    && (special_code(l30) != 0 || l44 != 0 || random(*((e + 0x31) as *mut i16) as i32) < -10)
+                    && (special_code(l30) != 0 || l44 != 0 || random(read_i16(e + 0x31) as i32) < -10)
                     && random(3) != 0
                 {
                     n7(call, event::PENALTY_CLAIM_SOUND, (read_u8(e + match_player::COMMENTARY_ID) as u32), (read_u8(e + match_player::SIDE) as u32), 0xff, 0xff, 0);
@@ -4255,13 +4255,13 @@ pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5
             penalty = l44 != 0 && (player_band(p, (lado == 0) as u8) as u8 != 0 || l84 != 0);
         }
         // a disputa limpa (0x702675)
-        *((e + match_player::ACTION) as *mut i16) = l30 as i16;
-        *((e + 4) as *mut u8) = (*((e + 4) as *mut u8)).wrapping_add(1);
+        write_i16(e + match_player::ACTION, l30 as i16);
+        write_u8(e + 4, read_u8(e + 4).wrapping_add(1));
         let t = table_a(m, e);
-        *((e + match_player::MATCH_RATING) as *mut i16) = (*((e + match_player::MATCH_RATING) as *mut i16)).wrapping_add(if t & 0x30 != 0 && table_a(m, e) & 0x880 != 0 { -0x3b } else { -0x46 });
+        write_i16(e + match_player::MATCH_RATING, read_i16(e + match_player::MATCH_RATING).wrapping_add(if t & 0x30 != 0 && table_a(m, e) & 0x880 != 0 { -0x3b } else { -0x46 }));
         if v as i16 > l70 {
             crate::comparison::branch("shot gets past the challenger");
-            *((e + match_player::BUSY) as *mut u8) = (*((e + match_player::BUSY) as *mut u8)).wrapping_add(l4d);
+            write_u8(e + match_player::BUSY, read_u8(e + match_player::BUSY).wrapping_add(l4d));
         } else {
             crate::comparison::branch("shot tackled");
             shot_tackled_with(Engine(m), p, MatchPlayer(e), l30, l70, v, l4c, l44, penalty, call);
@@ -4269,7 +4269,7 @@ pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5
         }
     } else if !matches!(tipo, 0x33 | 0x35 | 3 | 0x39) && modo != 4 {
         // no challenger: the approach commentary
-        if player_band(p, (lado == 0) as u8) as u8 != 0 && a5 as u8 == 0 && set_piece_code(*((p + match_player::ACTION) as *mut i16)) != 0 {
+        if player_band(p, (lado == 0) as u8) as u8 != 0 && a5 as u8 == 0 && set_piece_code(read_i16(p + match_player::ACTION)) != 0 {
             na(call, event::FINDS_A_GAP, (read_u8(p + match_player::COMMENTARY_ID) as u32), lado as u8 as u32, 0);
         } else if random(10) == 0 && (0x14..=0x23).contains(&l1b) && player_band(p, (lado == 0) as u8) as u8 == 0 && read_i8(p + match_player::CELL_X) < 6 && read_i8(p + match_player::CELL_X) > 2 {
             na(call, event::IN_CENTRAL_ATTACK, (read_u8(p + match_player::COMMENTARY_ID) as u32), lado as u8 as u32, l1b);
@@ -4316,34 +4316,34 @@ pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5
         na(call, som, (read_u8(p + match_player::COMMENTARY_ID) as u32), lado as u8 as u32, 0);
     }
     // 0x703883: o impedimento
-    *((p + match_player::ACTION) as *mut i16) = 0x6d;
+    write_i16(p + match_player::ACTION, 0x6d);
     if tipo != 0x33 && tipo != 0x35 && modo == 1 {
         let o = engine_look_for_offside(m, lado, read_i8(p + match_player::CELL_Y), if lado == 0 { 0xb } else { 0 }, p);
         if o != 0 {
             if random(500) != 0 {
                 crate::comparison::branch("shot offside recorded");
-                record_move(m, 0xffff, o as u32, 0, 0, 8, *((o + match_player::CELL_X) as *mut u8), *((o + match_player::CELL_Y) as *mut u8), 0xff, 0xff);
+                record_move(m, 0xffff, o as u32, 0, 0, 8, read_u8(o + match_player::CELL_X), read_u8(o + match_player::CELL_Y), 0xff, 0xff);
                 modo = 2;
             } else {
                 crate::comparison::branch("shot offside");
                 na(call, event::RESTART_OFFSIDE, (read_u8(o + match_player::COMMENTARY_ID) as u32), lado as u8 as u32, 0);
                 let k = m + engine::OFFSIDES + (lado as isize * 0x36) as usize;
-                *((k + 0) as *mut u8) = (*((k + 0) as *mut u8)).wrapping_add(1);
-                *((o + match_player::OFFSIDES) as *mut u8) = (*((o + match_player::OFFSIDES) as *mut u8)).wrapping_add(1);
-                *((m + engine::BALL_X) as *mut u8) = *((o + match_player::CELL_X) as *mut u8);
-                *((m + engine::BALL_Y) as *mut u8) = *((o + match_player::CELL_Y) as *mut u8);
-                *((m + engine::RESTART_TYPE) as *mut u8) = 7;
-                *((m + engine::POSSESSION_SIDE) as *mut u8) = (lado == 0) as u8;
-                *((m + engine::BALL_HOLDER) as *mut usize) = 0;
+                write_u8(k + 0, read_u8(k + 0).wrapping_add(1));
+                write_u8(o + match_player::OFFSIDES, read_u8(o + match_player::OFFSIDES).wrapping_add(1));
+                write_u8(m + engine::BALL_X, read_u8(o + match_player::CELL_X));
+                write_u8(m + engine::BALL_Y, read_u8(o + match_player::CELL_Y));
+                write_u8(m + engine::RESTART_TYPE, 7);
+                write_u8(m + engine::POSSESSION_SIDE, (lado == 0) as u8);
+                write_usize(m + engine::BALL_HOLDER, 0);
                 return;
             }
         }
     }
-    *((m + engine::POSSESSION_SIDE) as *mut u8) = 0xff;
-    *((m + engine::SHOT_PENDING) as *mut u8) = 0;
-    let l40 = *((p + 0x29) as *mut i16);
-    *((p + 0x29) as *mut i16) = 0;
-    *((p + match_player::BALL_CONTROL) as *mut i16) = 0;
+    write_u8(m + engine::POSSESSION_SIDE, 0xff);
+    write_u8(m + engine::SHOT_PENDING, 0);
+    let l40 = read_i16(p + 0x29);
+    write_i16(p + 0x29, 0);
+    write_i16(p + match_player::BALL_CONTROL, 0);
     let mut l11 = 0u8;
     if tipo != 0x33 && modo != 4 {
         let forca = if (v as i16) < 0 { 0 } else { v as i16 as i32 };
@@ -4353,7 +4353,7 @@ pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5
         }
     }
     if read_usize(m + engine::BALL_HOLDER) == p {
-        *((m + engine::BALL_HOLDER) as *mut usize) = 0;
+        write_usize(m + engine::BALL_HOLDER, 0);
     }
     if l11 == 2 {
         // the shot hit someone on the way
@@ -4367,7 +4367,7 @@ pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5
         let s1 = random(2000);
         let s2 = random(1000);
         v = v.wrapping_add(s2.wrapping_sub(s1));
-        *((p + match_player::SHOT_QUALITY) as *mut i16) = 0;
+        write_i16(p + match_player::SHOT_QUALITY, 0);
     }
     // the outcome class
     let has = l1c != 0;
@@ -4391,29 +4391,29 @@ pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5
     match modo {
         3 | 4 => {
             let k = m + 0x1a9 + lado as isize as usize;
-            *((k + 0) as *mut u8) = (*((k + 0) as *mut u8)).wrapping_add(1);
+            write_u8(k + 0, read_u8(k + 0).wrapping_add(1));
         }
         1 => {
             if tipo == 0x33 {
-                *((p + match_player::PENALTIES_TAKEN) as *mut u8) = (*((p + match_player::PENALTIES_TAKEN) as *mut u8)).wrapping_add(1);
+                write_u8(p + match_player::PENALTIES_TAKEN, read_u8(p + match_player::PENALTIES_TAKEN).wrapping_add(1));
             }
             let q = read_usize(m + engine::SHOT_BLOCKER);
             if tipo == 0x33 || q == 0 || (read_i8(q + match_player::CELL_X) == 4 && (read_i8(q + match_player::CELL_Y) == 0 || read_i8(q + match_player::CELL_Y) == 0xb)) {
-                *((p + match_player::SHOTS) as *mut u8) = (*((p + match_player::SHOTS) as *mut u8)).wrapping_add(1);
-                *((p + match_player::MATCH_RATING) as *mut i16) = (*((p + match_player::MATCH_RATING) as *mut i16)).wrapping_add(if tipo != 0x33 { -150 } else { -1000 });
+                write_u8(p + match_player::SHOTS, read_u8(p + match_player::SHOTS).wrapping_add(1));
+                write_i16(p + match_player::MATCH_RATING, read_i16(p + match_player::MATCH_RATING).wrapping_add(if tipo != 0x33 { -150 } else { -1000 }));
                 if in_the_target {
-                    *((p + match_player::SHOTS_ON_TARGET) as *mut u8) = (*((p + match_player::SHOTS_ON_TARGET) as *mut u8)).wrapping_add(1);
+                    write_u8(p + match_player::SHOTS_ON_TARGET, read_u8(p + match_player::SHOTS_ON_TARGET).wrapping_add(1));
                     let k: i32 = if tipo != 0x33 { 0xdc } else { 400 };
                     if l10 == 0xe || l10 == 0xf {
-                        *((p + match_player::MATCH_RATING) as *mut i16) = (*((p + match_player::MATCH_RATING) as *mut i16)).wrapping_add(ftol(k as f64 * read_f64(rdata::F64_0_5)) as i16);
+                        write_i16(p + match_player::MATCH_RATING, read_i16(p + match_player::MATCH_RATING).wrapping_add(ftol(k as f64 * read_f64(rdata::F64_0_5)) as i16));
                     } else {
-                        *((p + match_player::MATCH_RATING) as *mut i16) = (*((p + match_player::MATCH_RATING) as *mut i16)).wrapping_add(k as i16);
+                        write_i16(p + match_player::MATCH_RATING, read_i16(p + match_player::MATCH_RATING).wrapping_add(k as i16));
                     }
                 }
             }
             if !in_the_target {
-                let di = ((*((p + match_player::SHOT_QUALITY) as *mut i16)).wrapping_sub(v as i16).wrapping_add(0xf0)).clamp(0, 200);
-                *((p + match_player::MATCH_RATING) as *mut i16) = (*((p + match_player::MATCH_RATING) as *mut i16)).wrapping_sub(di);
+                let di = (read_i16(p + match_player::SHOT_QUALITY).wrapping_sub(v as i16).wrapping_add(0xf0)).clamp(0, 200);
+                write_i16(p + match_player::MATCH_RATING, read_i16(p + match_player::MATCH_RATING).wrapping_sub(di));
                 if random(read_i8(read_usize(p + match_player::STAFF) + 0x5a) as i32) == 0 && adjust_17(p, (-(di as i32 / 50)) as i8) != 0 {
                     match_performance(p, 0);
                 }
@@ -4427,22 +4427,22 @@ pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5
         if bx < 0 || by >= 0xc || (bx >= 9 && by < 0) {
             call(FN_CM3_MATCH_ENGINE_BALL_OUT_OF_PLAY, m, [(lado == 0) as u32, 0, 0, 0, 0]);
         }
-        *((m + engine::SHOT_REBOUND) as *mut u8) = 1;
+        write_u8(m + engine::SHOT_REBOUND, 1);
         return;
     }
     if lado == 1 {
-        *((m + engine::BALL_X) as *mut u8) = 4;
-        *((m + engine::BALL_Y) as *mut u8) = 0;
+        write_u8(m + engine::BALL_X, 4);
+        write_u8(m + engine::BALL_Y, 0);
     } else if lado == 0 {
-        *((m + engine::BALL_X) as *mut u8) = 4;
-        *((m + engine::BALL_Y) as *mut u8) = 0xb;
+        write_u8(m + engine::BALL_X, 4);
+        write_u8(m + engine::BALL_Y, 0xb);
     }
     l64 = l1b as i32;
     if l1b as i32 > random(0xf) + 0x19 {
         // long shot: everyone decides again with dead ball 5
         crate::comparison::branch("shot from distance");
-        let stored = *((m + engine::BALL_HEIGHT) as *mut u8);
-        *((m + engine::BALL_HEIGHT) as *mut u8) = 5;
+        let stored = read_u8(m + engine::BALL_HEIGHT);
+        write_u8(m + engine::BALL_HEIGHT, 5);
         for l in 0..2i8 {
             for k in 0..20 {
                 let j = Engine(m).player(l, k).addr();
@@ -4451,11 +4451,11 @@ pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5
                 }
             }
         }
-        *((m + engine::BALL_HEIGHT) as *mut u8) = stored;
+        write_u8(m + engine::BALL_HEIGHT, stored);
     }
     if l20 != 0 {
         if modo == 1 && tg() == 1 {
-            *((g + match_player::MATCH_RATING) as *mut i16) = (*((g + match_player::MATCH_RATING) as *mut i16)).wrapping_sub(800);
+            write_i16(g + match_player::MATCH_RATING, read_i16(g + match_player::MATCH_RATING).wrapping_sub(800));
             if random(read_i8(read_usize(g + match_player::STAFF) + 0x5a) as i32 * 20 + 10) == 0 {
                 let r = random(3);
                 adjust_17(g, (r as u8).wrapping_neg() as i8);
@@ -4472,12 +4472,12 @@ pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5
         l38 = 0;
     }
     if tipo == 0x39 {
-        *((p + match_player::BUSY) as *mut u8) = (*((p + match_player::BUSY) as *mut u8)).wrapping_add(2);
+        write_u8(p + match_player::BUSY, read_u8(p + match_player::BUSY).wrapping_add(2));
     }
     let (mut l12, mut l13, mut l26, mut l4e, mut l4f) = (0i8, 0i8, 0u8, 0u8, 0u8);
     aggregate_score(m, lado, &mut l12, &mut l13, &mut l26, &mut l4e, &mut l4f, 1);
     let l38_antes = l38 as i16;
-    l38 = (l38 as i16 as i32) - if l14 != 0 { 100 } else { 0 } - *((p + match_player::SHOT_QUALITY) as *mut i16) as i32 + v as i16 as i32 - 0x64;
+    l38 = (l38 as i16 as i32) - if l14 != 0 { 100 } else { 0 } - read_i16(p + match_player::SHOT_QUALITY) as i32 + v as i16 as i32 - 0x64;
     let factor = match tipo {
         5 => read_f32(rdata::F32_5_5),
         0x17 | 0x1c => read_f32(rdata::F32_1_5),
@@ -4490,7 +4490,7 @@ pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5
         _ => read_f32(rdata::F32_1),
     } as f64;
     let gain = if l38 < 0 { l38 as f64 / factor } else { l38 as f64 * factor };
-    *((m + engine::MOMENTUM_B) as *mut i32) = (*((m + engine::MOMENTUM_B) as *mut i32)).wrapping_add(ftol(gain));
+    write_i32(m + engine::MOMENTUM_B, read_i32(m + engine::MOMENTUM_B).wrapping_add(ftol(gain)));
     let c = ShotLocals {
         p, m, g, side: lado, kind: tipo, a1, v, v0, sound: som, mode: modo, count: a5 as u8 as i8, list: a6, d, l10, l11, l14, l16,
         l17: 0, l18, l19, l1a, l1b, l20, l25, l28, l38_before: l38_antes, l40, l50, l54, l58, l5c, l60, l64, l68,
@@ -4805,13 +4805,13 @@ pub(crate) unsafe fn shot_on_target_with(mut c: ShotLocals, call: &mut dyn FnMut
     };
     if !goal {
         if c.l19 && tg() == 1 {
-            *((g + match_player::MATCH_RATING) as *mut i16) = (*((g + match_player::MATCH_RATING) as *mut i16)).wrapping_add(0x15e);
+            write_i16(g + match_player::MATCH_RATING, read_i16(g + match_player::MATCH_RATING).wrapping_add(0x15e));
             if random(read_i8(g + match_player::MATCH_FORM) as i32 * 20 + 0x32) == 0 {
                 let r = random(4);
                 adjust(g, r);
             }
         } else if c.l1a && tg() == 1 {
-            *((g + match_player::MATCH_RATING) as *mut i16) = (*((g + match_player::MATCH_RATING) as *mut i16)).wrapping_add(0x258);
+            write_i16(g + match_player::MATCH_RATING, read_i16(g + match_player::MATCH_RATING).wrapping_add(0x258));
             if random((read_i8(g + match_player::MATCH_FORM) as i32 + 1) * 20) == 0 {
                 let r = random(7);
                 adjust(g, r);
@@ -4835,16 +4835,16 @@ pub(crate) unsafe fn shot_on_target_with(mut c: ShotLocals, call: &mut dyn FnMut
         }
         let base = m + (lado as isize * 0x36) as usize;
         match read_i8(m + engine::SET_PIECE_KIND) {
-            -1 | 7 => *((base + engine::FREE_KICK_PLAY_GOALS) as *mut u8) = (*((base + engine::FREE_KICK_PLAY_GOALS) as *mut u8)).wrapping_add(1),
-            3 => *((base + engine::CORNER_GOALS) as *mut u8) = (*((base + engine::CORNER_GOALS) as *mut u8)).wrapping_add(1),
-            6 => *((base + engine::DIRECT_FREE_KICK_GOALS) as *mut u8) = (*((base + engine::DIRECT_FREE_KICK_GOALS) as *mut u8)).wrapping_add(1),
+            -1 | 7 => *((base + engine::FREE_KICK_PLAY_GOALS) as *mut u8) = read_u8(base + engine::FREE_KICK_PLAY_GOALS).wrapping_add(1),
+            3 => *((base + engine::CORNER_GOALS) as *mut u8) = read_u8(base + engine::CORNER_GOALS).wrapping_add(1),
+            6 => *((base + engine::DIRECT_FREE_KICK_GOALS) as *mut u8) = read_u8(base + engine::DIRECT_FREE_KICK_GOALS).wrapping_add(1),
             _ => {}
         }
         if marked_moment(m) as u8 != 0 {
-            *((m + engine::GOLDEN_GOAL_SCORED) as *mut u8) = 1;
+            write_u8(m + engine::GOLDEN_GOAL_SCORED, 1);
         }
         if c.kind == 0x33 {
-            *((p + match_player::PENALTIES_SCORED) as *mut u8) = (*((p + match_player::PENALTIES_SCORED) as *mut u8)).wrapping_add(1);
+            write_u8(p + match_player::PENALTIES_SCORED, read_u8(p + match_player::PENALTIES_SCORED).wrapping_add(1));
         }
     } else if modo == 3 || modo == 4 {
         shootout_goal_with(&c, call);
@@ -4853,68 +4853,68 @@ pub(crate) unsafe fn shot_on_target_with(mut c: ShotLocals, call: &mut dyn FnMut
     }
     if c.l11 == 0 {
         for o in [0x3d, 0x3f, 0x41, 0x43, 0x45] {
-            *((p + o) as *mut i16) = (*((p + o) as *mut i16)).wrapping_add(1);
+            write_i16(p + o, read_i16(p + o).wrapping_add(1));
         }
-        *((p + match_player::GOALS) as *mut u8) = (*((p + match_player::GOALS) as *mut u8)).wrapping_add(1);
+        write_u8(p + match_player::GOALS, read_u8(p + match_player::GOALS).wrapping_add(1));
         c.l17 = 1;
     }
     if modo == 1 {
         if c.l11 == 0 {
             if c.kind == 0x33 {
-                *((p + match_player::MATCH_RATING) as *mut i16) = (*((p + match_player::MATCH_RATING) as *mut i16)).wrapping_add(0x2bc);
+                write_i16(p + match_player::MATCH_RATING, read_i16(p + match_player::MATCH_RATING).wrapping_add(0x2bc));
             } else {
-                *((p + match_player::MATCH_RATING) as *mut i16) = (*((p + match_player::MATCH_RATING) as *mut i16)).wrapping_add(0x28a);
+                write_i16(p + match_player::MATCH_RATING, read_i16(p + match_player::MATCH_RATING).wrapping_add(0x28a));
                 if random((read_i8(p + match_player::MATCH_FORM) as i32 + 1) * 20) == 0 {
                     let r = random(8);
                     adjust(p, r);
                 }
             }
             let floor = ((read_u8(p + match_player::GOALS) as u32) as i32 + 5) * 1000;
-            if (*((p + match_player::MATCH_RATING) as *mut i16) as i32) <= floor {
-                *((p + match_player::MATCH_RATING) as *mut i16) = floor as i16;
+            if (read_i16(p + match_player::MATCH_RATING) as i32) <= floor {
+                write_i16(p + match_player::MATCH_RATING, floor as i16);
             }
         } else {
-            *((p + match_player::ASSISTS) as *mut u8) = (*((p + match_player::ASSISTS) as *mut u8)).wrapping_add(1);
-            *((p + match_player::MATCH_RATING) as *mut i16) = (*((p + match_player::MATCH_RATING) as *mut i16)).wrapping_add(0x113);
+            write_u8(p + match_player::ASSISTS, read_u8(p + match_player::ASSISTS).wrapping_add(1));
+            write_i16(p + match_player::MATCH_RATING, read_i16(p + match_player::MATCH_RATING).wrapping_add(0x113));
             if random(read_i8(p + match_player::MATCH_FORM) as i32 * 20 + 0x32) == 0 {
                 let r = random(4);
                 adjust(p, r);
             }
             let floor = ftol(((read_u8(p + match_player::ASSISTS) as u32) as f64 * read_f32(rdata::F32_0_5) as f64 + read_f64(rdata::F64_4_5)) * read_f64(rdata::F64_1000)) as i16;
-            if *((p + match_player::MATCH_RATING) as *mut i16) <= floor {
-                *((p + match_player::MATCH_RATING) as *mut i16) = floor;
+            if read_i16(p + match_player::MATCH_RATING) <= floor {
+                write_i16(p + match_player::MATCH_RATING, floor);
             }
         }
         if tg() == 1 {
             // the goalkeeper conceded the goal
-            *((g + match_player::GOALS_CONCEDED) as *mut u8) = (*((g + match_player::GOALS_CONCEDED) as *mut u8)).wrapping_add(1);
+            write_u8(g + match_player::GOALS_CONCEDED, read_u8(g + match_player::GOALS_CONCEDED).wrapping_add(1));
             let sheet = Staff(read_usize(g + match_player::STAFF));
             if random(sheet.determination() as i32 + 1) != 0 && random(sheet.pressure() as i32 + 1) != 0 {
                 let r = random((read_u8(g + match_player::GOALS_CONCEDED) as u32) as i32 * (read_u8(g + match_player::GOALS_CONCEDED) as u32) as i32) as i8;
-                let sum = if (r as i32) < (read_u8(p + match_player::GOALS_CONCEDED) as u32) as i32 { *((p + match_player::GOALS_CONCEDED) as *mut u8) } else { r as u8 };
-                *((g + match_player::FRUSTRATION) as *mut u8) = (*((g + match_player::FRUSTRATION) as *mut u8)).wrapping_add(sum);
+                let sum = if (r as i32) < (read_u8(p + match_player::GOALS_CONCEDED) as u32) as i32 { read_u8(p + match_player::GOALS_CONCEDED) } else { r as u8 };
+                write_u8(g + match_player::FRUSTRATION, read_u8(g + match_player::FRUSTRATION).wrapping_add(sum));
                 match_performance(g, 0);
             }
             if c.kind != 0x33 {
-                *((g + match_player::MATCH_RATING) as *mut i16) = (*((g + match_player::MATCH_RATING) as *mut i16)).wrapping_sub(500);
+                write_i16(g + match_player::MATCH_RATING, read_i16(g + match_player::MATCH_RATING).wrapping_sub(500));
             }
-            let di = *((g + match_player::MATCH_RATING) as *mut i16);
+            let di = read_i16(g + match_player::MATCH_RATING);
             if c.l14 != 0 {
                 let mut v = (c.d as f64 + read_f64(rdata::F64_0_25)) * read_f64(rdata::F64_NEG_600) * read_f64(rdata::F64_0_5);
                 if !(v > read_f64(rdata::F64_NEG_1000)) {
                     v = read_f64(rdata::F64_NEG_1000);
                 }
-                *((g + match_player::MATCH_RATING) as *mut i16) = (ftol(v) as i16).wrapping_add(di);
+                write_i16(g + match_player::MATCH_RATING, (ftol(v) as i16).wrapping_add(di));
             }
         }
         let q = read_usize(m + engine::ASSIST_CANDIDATE);
         if p == read_usize(m + engine::PASS_RECEIVER) && q != 0 {
-            *((q + match_player::ASSISTS) as *mut u8) = (*((q + match_player::ASSISTS) as *mut u8)).wrapping_add(1);
-            *((q + match_player::MATCH_RATING) as *mut i16) = (*((q + match_player::MATCH_RATING) as *mut i16)).wrapping_add(0x113);
-            if c.l68 == 0 && !matches!(*((q + match_player::ACTION) as *mut i16), 0x34 | 0x37) {
-                *((q + 3) as *mut u8) = (*((q + 3) as *mut u8)).wrapping_add(1);
-                *((q + match_player::MATCH_RATING) as *mut i16) = (*((q + match_player::MATCH_RATING) as *mut i16)).wrapping_add((*((p + 0x29) as *mut i16) as i32 / 3 + 0xe1) as i16);
-                *((m + engine::MOMENTUM_A) as *mut i32) = (*((m + engine::MOMENTUM_A) as *mut i32)).wrapping_add(0x113);
+            write_u8(q + match_player::ASSISTS, read_u8(q + match_player::ASSISTS).wrapping_add(1));
+            write_i16(q + match_player::MATCH_RATING, read_i16(q + match_player::MATCH_RATING).wrapping_add(0x113));
+            if c.l68 == 0 && !matches!(read_i16(q + match_player::ACTION), 0x34 | 0x37) {
+                write_u8(q + 3, read_u8(q + 3).wrapping_add(1));
+                write_i16(q + match_player::MATCH_RATING, read_i16(q + match_player::MATCH_RATING).wrapping_add((read_i16(p + 0x29) as i32 / 3 + 0xe1) as i16));
+                write_i32(m + engine::MOMENTUM_A, read_i32(m + engine::MOMENTUM_A).wrapping_add(0x113));
             }
         }
     }
@@ -4926,7 +4926,7 @@ pub(crate) unsafe fn shot_on_target_with(mut c: ShotLocals, call: &mut dyn FnMut
     if c.kind == 0x33 {
         na(call, if modo == 1 { event::SCORED_PENALTY } else { event::SCORED_ILLEGAL_PENALTY }, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, 0);
     } else {
-        *((m + engine::MOMENTUM_A) as *mut i32) = (*((m + engine::MOMENTUM_A) as *mut i32)).wrapping_sub(*((m + engine::MOMENTUM_B) as *mut i32));
+        write_i32(m + engine::MOMENTUM_A, read_i32(m + engine::MOMENTUM_A).wrapping_sub(read_i32(m + engine::MOMENTUM_B)));
         narrate_goal_with(&mut c, call);
     }
     goal_stands_with(&mut c, call);
@@ -4958,8 +4958,8 @@ pub(crate) unsafe fn narrate_goal_with(c: &mut ShotLocals, call: &mut dyn FnMut(
         let r = random(10);
         read_i8(read_usize(p + match_player::STAFF) + 0x58) > (r as u8).wrapping_add(0xe) as i8
     };
-    let l4786 = *((m + engine::MOMENTUM_B) as *mut i32);
-    let l4782 = || *((m + engine::MOMENTUM_A) as *mut i32) as f64;
+    let l4786 = read_i32(m + engine::MOMENTUM_B);
+    let l4782 = || read_i32(m + engine::MOMENTUM_A) as f64;
     if side_of_move(m) as i8 > -1 || c.mode == 6 || c.mode == 5 {
         // 0x707c86
         if c.l11 == 0 {
@@ -5040,7 +5040,7 @@ pub(crate) unsafe fn narrate_goal_with(c: &mut ShotLocals, call: &mut dyn FnMut(
         if mk.is_null() {
             return;
         }
-        let minute = (*((m + engine::CLOCK) as *mut i16) as i32 / 11) as i8;
+        let minute = (read_i16(m + engine::CLOCK) as i32 / 11) as i8;
         if c.count == 0 {
             if c.e != 0 {
                 return;
@@ -5055,7 +5055,7 @@ pub(crate) unsafe fn narrate_goal_with(c: &mut ShotLocals, call: &mut dyn FnMut(
             return;
         }
         let (pe, me) = (read_usize(p + match_player::PLAYER), mk.player());
-        if c.e == 0 || pe == 0 || me.is_null() || *((p + match_player::MATCH_RATING) as *mut i16) <= 0x1a5e || mk.match_rating() >= 0x1c52 || mk.addr() != c.e {
+        if c.e == 0 || pe == 0 || me.is_null() || read_i16(p + match_player::MATCH_RATING) <= 0x1a5e || mk.match_rating() >= 0x1c52 || mk.addr() != c.e {
             return;
         }
         if (c.kind == 3 || c.kind == 0x39) && read_i8(pe + player_sheet::JUMPING) > 10 && read_i8(pe + player_sheet::JUMPING) as i32 - me.jumping() as i32 > 3 {
@@ -5080,8 +5080,8 @@ pub(crate) unsafe fn narrate_goal_with(c: &mut ShotLocals, call: &mut dyn FnMut(
     if p == read_usize(m + engine::PASS_RECEIVER) && q != 0 {
         let tq = || if read_usize(q + match_player::ENGINE) != 0 { table_a(read_usize(q + match_player::ENGINE), q) } else { 0 };
         let nq = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32| na(call, code, (read_u8(q + match_player::COMMENTARY_ID) as u32), (read_u8(q + match_player::SIDE) as u32), 0);
-        if role_880(q) != 0 && tq() & 0x38 != 0 && matches!(*((m + engine::PASS_TYPE) as *mut i16), 0x5e | 6 | 7 | 8) {
-            if *((q + match_player::MATCH_RATING) as *mut i16) <= 0x1a5e {
+        if role_880(q) != 0 && tq() & 0x38 != 0 && matches!(read_i16(m + engine::PASS_TYPE), 0x5e | 6 | 7 | 8) {
+            if read_i16(q + match_player::MATCH_RATING) <= 0x1a5e {
                 return;
             }
             if (read_u8(q + 3) as u32) > 1 && (read_u8(q + match_player::ASSISTS) as u32) > 1 && (read_u8(q + match_player::PASSES) as u32) > 0xa {
@@ -5139,13 +5139,13 @@ pub(crate) unsafe fn narrate_goal_with(c: &mut ShotLocals, call: &mut dyn FnMut(
 /// chutador volta a casa e ao +0x39 de antes, domina e chuta de novo no modo 1 (0x704a57 e iguais).
 pub(crate) unsafe fn retake_shot_with(c: &ShotLocals, apply: bool, desfazer: bool, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let (p, m) = (c.p, c.m);
-    *((m + engine::MOMENTUM_B) as *mut i32) = c.l60;
-    *((m + engine::MOMENTUM_A) as *mut i32) = c.l5c;
+    write_i32(m + engine::MOMENTUM_B, c.l60);
+    write_i32(m + engine::MOMENTUM_A, c.l5c);
     if apply {
         apply_to_team(m, p, f32::from_bits(0x3fb9999a));
     }
     narrate_packed7(call, m, event::MUST_RETAKE, read_i8(p + match_player::COMMENTARY_ID) as u8 as u32, c.side as u8 as u32, 0xff, 0xff, 0);
-    *((p + match_player::SHOT_QUALITY) as *mut i16) = c.l58;
+    write_i16(p + match_player::SHOT_QUALITY, c.l58);
     if desfazer {
         undo_goal_stats(p);
     }
@@ -5180,7 +5180,7 @@ pub(crate) unsafe fn narrate_pressure_teammates_with(c: &ShotLocals, k: i32, cal
         return false;
     }
     let zero = (lado == 0) as u32;
-    let reiniciar = || core::ptr::write_unaligned((c.list + 0xa) as *mut u32, core::ptr::read_unaligned((c.list + 2) as *const u32));
+    let reiniciar = || write_u32(c.list + 0xa, read_u32(c.list + 2));
     if n == 1 {
         reiniciar();
         let r1 = next_list_item(c.list) as usize;
@@ -5249,8 +5249,8 @@ pub(crate) unsafe fn goalkeeper_save_with(mut c: ShotLocals, ratio: f32, call: &
         _ => "shot defesa segura",
     });
     if class == 3 {
-        *((g + match_player::BUSY) as *mut u8) = (*((g + match_player::BUSY) as *mut u8)).wrapping_add(random(3) as u8);
-        *((g + match_player::MATCH_RATING) as *mut i16) = (*((g + match_player::MATCH_RATING) as *mut i16)).wrapping_add(if c.kind != 0x33 { 200 } else { 1300 });
+        write_u8(g + match_player::BUSY, read_u8(g + match_player::BUSY).wrapping_add(random(3) as u8));
+        write_i16(g + match_player::MATCH_RATING, read_i16(g + match_player::MATCH_RATING).wrapping_add(if c.kind != 0x33 { 200 } else { 1300 }));
     }
     // the start of the commentary: set piece, penalties or free kick
     let mut a_2122 = false;
@@ -5288,7 +5288,7 @@ pub(crate) unsafe fn goalkeeper_save_with(mut c: ShotLocals, ratio: f32, call: &
             }
         }
     }
-    let high = (*((m + engine::MOMENTUM_A) as *const i32) as f64) > read_f64(rdata::F64_1680);
+    let high = (read_i32(m + engine::MOMENTUM_A) as f64) > read_f64(rdata::F64_1680);
     if class == 1 {
         // rebatida (0x70909d)
         if modo == 5 || modo == 6 {
@@ -5296,14 +5296,14 @@ pub(crate) unsafe fn goalkeeper_save_with(mut c: ShotLocals, ratio: f32, call: &
             return;
         }
         if modo != 2 {
-            *((g + match_player::MATCH_RATING) as *mut i16) = (*((g + match_player::MATCH_RATING) as *mut i16)).wrapping_add(if c.kind != 0x33 { 140 } else { 1000 });
+            write_i16(g + match_player::MATCH_RATING, read_i16(g + match_player::MATCH_RATING).wrapping_add(if c.kind != 0x33 { 140 } else { 1000 }));
         }
         if modo != 1 && modo != 2 {
             return;
         }
-        *((g + match_player::BUSY) as *mut u8) = (*((g + match_player::BUSY) as *mut u8)).wrapping_add((random(3) + 1) as u8);
+        write_u8(g + match_player::BUSY, read_u8(g + match_player::BUSY).wrapping_add((random(3) + 1) as u8));
         call(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, m, [(read_u8(m + engine::BALL_X) as u32), (read_u8(m + engine::BALL_Y) as u32), ((lado == 0) as u32) << 8, ((c.kind == 0x33) as u32) << 8, 0]);
-        *((m + engine::SHOT_REBOUND) as *mut u8) = 1;
+        write_u8(m + engine::SHOT_REBOUND, 1);
         if c.l15 != 0 || read_i8(m + engine::RESTART_TYPE) == 0 || modo == 4 {
             return;
         }
@@ -5326,7 +5326,7 @@ pub(crate) unsafe fn goalkeeper_save_with(mut c: ShotLocals, ratio: f32, call: &
                 na(call, event::GREAT_GOAL_DENIED, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, 0);
             }
             if !matches!(modo, 5 | 6 | 2) {
-                *((g + match_player::MATCH_RATING) as *mut i16) = (*((g + match_player::MATCH_RATING) as *mut i16)).wrapping_add(if c.kind != 0x33 { 120 } else { 1000 });
+                write_i16(g + match_player::MATCH_RATING, read_i16(g + match_player::MATCH_RATING).wrapping_add(if c.kind != 0x33 { 120 } else { 1000 }));
             }
         }
         if modo == 4 || modo == 3 {
@@ -5345,7 +5345,7 @@ pub(crate) unsafe fn goalkeeper_save_with(mut c: ShotLocals, ratio: f32, call: &
             na(call, event::GREAT_GOAL_DENIED, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, 0);
         } else {
             let limit = 0x12c + if c.l1a { 0x190 } else { 0 } + if c.l19 { 0xc8 } else { 0 };
-            if *((p + match_player::SHOT_QUALITY) as *mut i16) as i32 > limit || c.kind == 0x3a {
+            if read_i16(p + match_player::SHOT_QUALITY) as i32 > limit || c.kind == 0x3a {
                 na(call, event::MISSED_EASY_CHANCE_CLOSE, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, read_i8(p + match_player::GOALS));
             }
             if c.l40 < -0x87 && c.kind != 0x3a {
@@ -5376,9 +5376,9 @@ pub(crate) unsafe fn corner_from_shot(c: &ShotLocals, call: &mut dyn FnMut(usize
             std::process::abort();
         }
     }
-    *((m + engine::POSSESSION_SIDE) as *mut u8) = *((p + match_player::SIDE) as *const u8);
-    *((m + engine::BALL_HOLDER) as *mut u32) = 0;
-    *((m + engine::RESTART_TYPE) as *mut u8) = 3;
+    write_u8(m + engine::POSSESSION_SIDE, read_u8(p + match_player::SIDE));
+    write_u32(m + engine::BALL_HOLDER, 0);
+    write_u8(m + engine::RESTART_TYPE, 3);
     narrate_packed7(call, m, event::RESTART_CORNER, 0xff, lado as u8 as u32, 0xff, 0xff, 0);
 }
 
@@ -5460,7 +5460,7 @@ pub(crate) unsafe fn goal_stands_with(c: &mut ShotLocals, call: &mut dyn FnMut(u
     if anular(c, call) {
         return;
     }
-    let minuto = *((m + engine::CLOCK) as *const i16) as i32 / 11;
+    let minuto = read_i16(m + engine::CLOCK) as i32 / 11;
     'final_: {
         if modo == 3 || modo == 4 {
             apply_to_side(m, (lado == 0) as i8, f32::from_bits(0x3fa00000));
@@ -5587,7 +5587,7 @@ pub(crate) unsafe fn goal_stands_with(c: &mut ShotLocals, call: &mut dyn FnMut(u
         add_disposition(m, lado, 0x96);
         add_disposition(m, (lado == 0) as i8, -0x87);
         let k = m + engine::SCORE + (lado as isize * 0x36) as usize;
-        *((k + 0) as *mut u8) = (*((k + 0) as *mut u8)).wrapping_add(1);
+        write_u8(k + 0, read_u8(k + 0).wrapping_add(1));
         // the score commentary (0x6d4b70 stays in the original)
         let zero = (lado == 0) as u32;
         let mut l3c = 0u32;
@@ -5630,10 +5630,10 @@ pub(crate) unsafe fn goal_stands_with(c: &mut ShotLocals, call: &mut dyn FnMut(u
             }
         }
     }
-    *((m + engine::POSSESSION_SIDE) as *mut u8) = (lado == 0) as u8;
-    *((m + engine::BALL_HOLDER) as *mut u32) = 0;
-    *((m + engine::RESTART_TYPE) as *mut u8) = 8;
-    *((m + engine::KICKOFF_ANNOUNCED) as *mut u8) = 0;
+    write_u8(m + engine::POSSESSION_SIDE, (lado == 0) as u8);
+    write_u32(m + engine::BALL_HOLDER, 0);
+    write_u8(m + engine::RESTART_TYPE, 8);
+    write_u8(m + engine::KICKOFF_ANNOUNCED, 0);
 }
 
 /// The shot that missed (part of `shoot`): blocked for a corner, hit the post (ball loose) or wide (goal kick), with
@@ -5747,9 +5747,9 @@ pub(crate) unsafe fn shot_off_target_with(c: &ShotLocals, call: &mut dyn FnMut(u
             let l = if c.l11 != 0 { (lado == 0) as u32 } else { lp };
             call(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, m, [(read_u8(m + engine::BALL_X) as u32), (read_u8(m + engine::BALL_Y) as u32), 2 | l << 8, 1 | ((c.kind == 0x33) as u32) << 8, 0]);
             if tg() == 1 {
-                *((g + match_player::BUSY) as *mut u8) = (*((g + match_player::BUSY) as *mut u8)).wrapping_add(random(3) as u8);
+                write_u8(g + match_player::BUSY, read_u8(g + match_player::BUSY).wrapping_add(random(3) as u8));
             }
-            *((m + engine::SHOT_REBOUND) as *mut u8) = 1;
+            write_u8(m + engine::SHOT_REBOUND, 1);
         }
         2..=4 => {
             crate::comparison::branch("shot weak and wide");
@@ -5796,7 +5796,7 @@ pub(crate) unsafe fn narrate_weak_miss_with(c: &ShotLocals, call: &mut dyn FnMut
     let zero = (lado == 0) as u32;
     let na = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, a7: i8| narrate_packed7(call, m, code, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, 0xff, 0xff, a7);
     let n_21c6 = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, r: MatchPlayer| narrate_packed7(call, m, event::UNABLE_TO_SHAKE_MARKER, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, (r.commentary_id() as u32), ((r.side() as u8) as u32), 0);
-    let reiniciar = || core::ptr::write_unaligned((c.list + 0xa) as *mut u32, core::ptr::read_unaligned((c.list + 2) as *const u32));
+    let reiniciar = || write_u32(c.list + 0xa, read_u32(c.list + 2));
     if c.l18 && c.l11 == 0 {
         let q = MatchPlayer(free_teammate(m, p));
         if !q.is_null() && read_i8(read_usize(p + match_player::PLAYER) + 0x3f) < 10 && {
@@ -5812,7 +5812,7 @@ pub(crate) unsafe fn narrate_weak_miss_with(c: &ShotLocals, call: &mut dyn FnMut
         }
         return;
     }
-    if (*((m + engine::MOMENTUM_A) as *const i32) as f64) > read_f64(rdata::F64_1680) {
+    if (read_i32(m + engine::MOMENTUM_A) as f64) > read_f64(rdata::F64_1680) {
         if c.l40 >= -0x87 {
             if c.kind == 0x3a && c.count == 0 {
                 na(call, event::SHOOTING_PLAYER_UNDER_NO_PRESSURE, 0);
@@ -5857,9 +5857,9 @@ pub(crate) unsafe fn narrate_weak_miss_with(c: &ShotLocals, call: &mut dyn FnMut
         na(call, event::GREAT_GOAL_MISSED, 0);
         return;
     }
-    let x39 = *((p + match_player::SHOT_QUALITY) as *const i16);
+    let x39 = read_i16(p + match_player::SHOT_QUALITY);
     if x39 > 0x15e {
-        if read_i8(p + match_player::GOALS) == 2 && (*((m + engine::CLOCK) as *const i16) as i32 / 11) > 0x32 {
+        if read_i8(p + match_player::GOALS) == 2 && (read_i16(m + engine::CLOCK) as i32 / 11) > 0x32 {
             na(call, event::MISSED_HAT_TRICK_EASY_CHANCE, 2);
         } else {
             na(call, event::MISSED_EASY_CHANCE_NOT_CLOSE, read_i8(p + match_player::GOALS));
@@ -5923,12 +5923,12 @@ pub(crate) unsafe fn narrate_miss_with(c: &ShotLocals, call: &mut dyn FnMut(usiz
         companheiros(call);
         return;
     }
-    if (*((m + engine::MOMENTUM_A) as *const i32) as f64) > read_f64(rdata::F64_1680) {
+    if (read_i32(m + engine::MOMENTUM_A) as f64) > read_f64(rdata::F64_1680) {
         companheiros(call);
         na(call, event::GREAT_GOAL_MISSED, 0);
         return;
     }
-    let x39 = *((p + match_player::SHOT_QUALITY) as *const i16);
+    let x39 = read_i16(p + match_player::SHOT_QUALITY);
     let k3a = c.kind == 0x3a;
     if (x39 > 0x15e && !k3a) || (x39 > 0xaf && k3a) {
         na(call, if read_i8(p + match_player::GOALS) != 2 { event::MISSED_EASY_CHANCE_CLOSE } else { event::MISSED_HAT_TRICK_EASY_CHANCE }, read_i8(p + match_player::GOALS));
@@ -6162,176 +6162,176 @@ pub(crate) unsafe fn push_prematch_event(m: Engine, sheet: Staff, club: Club, ba
 #[allow(clippy::cognitive_complexity)]
 pub(crate) unsafe fn prepare_match_with(m: usize, game: usize, fast: u8, commentator: usize, ao_vivo: u8) -> u8 {
     let clear = |of: usize, ate: usize| core::ptr::write_bytes((m + of) as *mut u8, 0, ate - of);
-    *((m + engine::MATCH) as *mut usize) = game;
-    *((m + engine::SHOOTOUT_STATE) as *mut u8) = 0;
-    *((m + engine::PUNISHMENT_STATE) as *mut u8) = 0;
+    write_usize(m + engine::MATCH, game);
+    write_u8(m + engine::SHOOTOUT_STATE, 0);
+    write_u8(m + engine::PUNISHMENT_STATE, 0);
     clear(0x21e, 0x21e + 8000);
-    *((m + engine::MATCH_RUNNING) as *mut u8) = 0;
-    *((m + engine::PENDING_INCIDENT_COUNT) as *mut u8) = 0;
-    *((m + 0x1cc) as *mut u8) = 0;
-    *((m + engine::SIDE_SENT_OFF) as *mut u8) = 0;
-    *((m + engine::SIDE_REPUTATION) as *mut u16) = *((read_usize(game + fixture::HOME_CLUB) + 0x80) as *const u16);
-    *((m + 0x1d8) as *mut u16) = *((read_usize(game + fixture::AWAY_CLUB) + 0x80) as *const u16);
-    *((m + engine::SIDE_OUT_OF_POSITION) as *mut u8) = 0;
-    *((m + 0xb0) as *mut u8) = 0;
-    *((m + engine::FURTHEST_FORWARD) as *mut u32) = 0;
-    *((m + engine::FURTHEST_FORWARD_SIDE1) as *mut u32) = 0;
-    *((m + engine::LAST_SHOT_MINUTE) as *mut u16) = 0xffff;
-    *((m + engine::LAST_SHOT_SIDE) as *mut u8) = 0;
-    *((m + engine::PASS_TYPE) as *mut u16) = 0xffff;
+    write_u8(m + engine::MATCH_RUNNING, 0);
+    write_u8(m + engine::PENDING_INCIDENT_COUNT, 0);
+    write_u8(m + 0x1cc, 0);
+    write_u8(m + engine::SIDE_SENT_OFF, 0);
+    write_u16(m + engine::SIDE_REPUTATION, read_u16(read_usize(game + fixture::HOME_CLUB) + 0x80));
+    write_u16(m + 0x1d8, read_u16(read_usize(game + fixture::AWAY_CLUB) + 0x80));
+    write_u8(m + engine::SIDE_OUT_OF_POSITION, 0);
+    write_u8(m + 0xb0, 0);
+    write_u32(m + engine::FURTHEST_FORWARD, 0);
+    write_u32(m + engine::FURTHEST_FORWARD_SIDE1, 0);
+    write_u16(m + engine::LAST_SHOT_MINUTE, 0xffff);
+    write_u8(m + engine::LAST_SHOT_SIDE, 0);
+    write_u16(m + engine::PASS_TYPE, 0xffff);
     let time = (game + fixture::SQUAD_RULES) as *mut u16;
-    if *((game + fixture::SQUAD_RULES) as *const u8) & 0xf > 9 {
+    if read_u8(game + fixture::SQUAD_RULES) & 0xf > 9 {
         *time = (*time & 0xfff9) | 9;
     }
-    if (*((game + fixture::SQUAD_RULES) as *const u8) & 0xf0) as u32 > 0x90 {
+    if (read_u8(game + fixture::SQUAD_RULES) & 0xf0) as u32 > 0x90 {
         *time = (*time & 0xff9f) | 0x90;
     }
-    let clima = *(G_WEATHER as *const usize);
+    let clima = read_usize(G_WEATHER);
     exe::weather_get_match_weather(clima, m + engine::WEATHER, game);
-    *((m + 1) as *mut u8) = exe::weather_get_pitch_condition(clima, m + engine::WEATHER, game);
+    write_u8(m + 1, exe::weather_get_pitch_condition(clima, m + engine::WEATHER, game));
     let v = exe::weather_check_postponement(clima, game);
     *time = ((((v & 3) as i8 as i16) << 12) as u16) | (*time & 0xcfff);
     if *time & 0x2000 == 0 {
         *time &= 0xcfff;
-        *((m + engine::ABANDON_MINUTE) as *mut u8) = 0xff;
+        write_u8(m + engine::ABANDON_MINUTE, 0xff);
     } else {
-        *((m + engine::ABANDON_MINUTE) as *mut u8) = if random(2) != 0 { (random(0x19) as u8).wrapping_add(0xf) } else { (random(0x1e) as u8).wrapping_add(0x32) };
-        if matches!(*((m + 1) as *mut u8), 0 | 2 | 4) {
+        write_u8(m + engine::ABANDON_MINUTE, if random(2) != 0 { (random(0x19) as u8).wrapping_add(0xf) } else { (random(0x1e) as u8).wrapping_add(0x32) });
+        if matches!(read_u8(m + 1), 0 | 2 | 4) {
             *time &= 0xcfff;
-            *((m + engine::ABANDON_MINUTE) as *mut u8) = 0xff;
+            write_u8(m + engine::ABANDON_MINUTE, 0xff);
         }
     }
-    *((m + engine::FORMATION_TABLE) as *mut u32) = (m + engine::FORMATION_TABLE_DATA) as u32;
-    *((m + engine::FORMATION_TABLE_SIDE1) as *mut u32) = (m + engine::FORMATION_TABLE_DATA_SIDE1) as u32;
-    *((m + engine::POSITION_TABLE) as *mut u32) = (m + engine::POSITION_TABLE_DATA) as u32;
-    *((m + engine::POSITION_TABLE_SIDE1) as *mut u32) = (m + engine::POSITION_TABLE_DATA_SIDE1) as u32;
-    *((m + engine::ARROW_TABLE) as *mut u32) = (m + engine::ARROW_TABLE_DATA) as u32;
-    *((m + engine::ARROW_TABLE_SIDE1) as *mut u32) = (m + engine::ARROW_TABLE_DATA_SIDE1) as u32;
-    if *(G_MATCH_ZONE_TABLE_INIT_PENDING as *const u8) != 0 {
+    write_u32(m + engine::FORMATION_TABLE, (m + engine::FORMATION_TABLE_DATA) as u32);
+    write_u32(m + engine::FORMATION_TABLE_SIDE1, (m + engine::FORMATION_TABLE_DATA_SIDE1) as u32);
+    write_u32(m + engine::POSITION_TABLE, (m + engine::POSITION_TABLE_DATA) as u32);
+    write_u32(m + engine::POSITION_TABLE_SIDE1, (m + engine::POSITION_TABLE_DATA_SIDE1) as u32);
+    write_u32(m + engine::ARROW_TABLE, (m + engine::ARROW_TABLE_DATA) as u32);
+    write_u32(m + engine::ARROW_TABLE_SIDE1, (m + engine::ARROW_TABLE_DATA_SIDE1) as u32);
+    if read_u8(G_MATCH_ZONE_TABLE_INIT_PENDING) != 0 {
         for i in -8..9i32 {
             for j in -11..12i32 {
-                *((0xb67c30 + ((i * 24 + j) * 2) as isize as usize) as *mut u16) = cell_angle_degrees(i, j);
+                write_u16(0xb67c30 + ((i * 24 + j) * 2) as isize as usize, cell_angle_degrees(i, j));
             }
         }
-        *(G_MATCH_ZONE_TABLE_INIT_PENDING as *mut u8) = 0;
+        write_u8(G_MATCH_ZONE_TABLE_INIT_PENDING, 0);
     }
-    *((m + engine::INJURY_COUNT) as *mut u16) = 0;
-    *((m + 0x8eba) as *mut u8) = 0;
-    *((m + engine::CLOCK) as *mut u16) = 0;
-    *((m + engine::STOPPAGE_TIME) as *mut u8) = 0;
-    *((m + engine::SUBSTITUTION_PENDING) as *mut u8) = 0;
-    *((m + engine::PERIOD_END) as *mut u16) = 0x1ef;
-    *((m + engine::SUB_TICK) as *mut u16) = 0;
-    *((m + engine::GOLDEN_GOAL_SCORED) as *mut u8) = 0;
-    *((m + 0x1a9) as *mut u8) = 0;
-    *((m + 0x1aa) as *mut u8) = 0;
-    *((m + engine::LAST_SUBSTITUTION_TICK) as *mut u16) = 0;
-    *((m + 0x8ece) as *mut u16) = 0;
-    *((m + 4) as *mut u8) = 0xb;
-    *((m + 5) as *mut u8) = 0xb;
-    *((m + engine::LAST_STANCE_CALL_TICK) as *mut u16) = 0x2710;
-    *((m + 0x1d4) as *mut u16) = 0x2710;
-    *((m + engine::ADJUSTED_PLAYER_ID) as *mut u32) = u32::MAX;
+    write_u16(m + engine::INJURY_COUNT, 0);
+    write_u8(m + 0x8eba, 0);
+    write_u16(m + engine::CLOCK, 0);
+    write_u8(m + engine::STOPPAGE_TIME, 0);
+    write_u8(m + engine::SUBSTITUTION_PENDING, 0);
+    write_u16(m + engine::PERIOD_END, 0x1ef);
+    write_u16(m + engine::SUB_TICK, 0);
+    write_u8(m + engine::GOLDEN_GOAL_SCORED, 0);
+    write_u8(m + 0x1a9, 0);
+    write_u8(m + 0x1aa, 0);
+    write_u16(m + engine::LAST_SUBSTITUTION_TICK, 0);
+    write_u16(m + 0x8ece, 0);
+    write_u8(m + 4, 0xb);
+    write_u8(m + 5, 0xb);
+    write_u16(m + engine::LAST_STANCE_CALL_TICK, 0x2710);
+    write_u16(m + 0x1d4, 0x2710);
+    write_u32(m + engine::ADJUSTED_PLAYER_ID, u32::MAX);
     for o in [0x1a4, 0x1cd, 8, 9, 6, 7, 0x1a5, 0x1a6] {
-        *((m + o) as *mut u8) = 0;
+        write_u8(m + o, 0);
     }
-    *((m + engine::MOMENTUM_B) as *mut u32) = 0;
-    *((m + engine::MOMENTUM_A) as *mut u32) = 0;
-    *((m + engine::SIDE_STANCE) as *mut u8) = 0xff;
-    *((m + 0x1ac) as *mut u8) = 0xff;
-    *((m + engine::STANCE_FACTOR) as *mut u32) = 0xc47a0000;
-    *((m + 0x476e) as *mut u32) = 0xc47a0000;
-    *((m + engine::BALL_TRANSIT_TICKS) as *mut u8) = 0;
-    *((m + engine::TRANSIT_TARGET_X) as *mut u8) = 0;
-    *((m + engine::TRANSIT_TARGET_Y) as *mut u8) = 0;
-    *((m + engine::BALL_RECEIVER) as *mut u32) = 0;
-    *((m + engine::SET_PIECE_KIND) as *mut u8) = 0;
-    *((m + engine::SHOT_PENDING) as *mut u8) = 0;
-    *((m + engine::STOPPAGE_ANNOUNCED) as *mut u8) = 0;
-    *((m + 0x8d49) as *mut u8) = 0;
-    *((m + engine::PENDING_PLAY_CODE) as *mut u16) = 0xffff;
-    *((m + engine::PENDING_PLAY_OFFENDER) as *mut u32) = 0;
-    *((m + engine::PENDING_PLAY_VICTIM) as *mut u32) = 0;
-    *((m + engine::PENDING_PLAY_SERIOUS) as *mut u8) = 0;
-    *((m + engine::PENDING_PLAY_KIND) as *mut u8) = 0;
+    write_u32(m + engine::MOMENTUM_B, 0);
+    write_u32(m + engine::MOMENTUM_A, 0);
+    write_u8(m + engine::SIDE_STANCE, 0xff);
+    write_u8(m + 0x1ac, 0xff);
+    write_u32(m + engine::STANCE_FACTOR, 0xc47a0000);
+    write_u32(m + 0x476e, 0xc47a0000);
+    write_u8(m + engine::BALL_TRANSIT_TICKS, 0);
+    write_u8(m + engine::TRANSIT_TARGET_X, 0);
+    write_u8(m + engine::TRANSIT_TARGET_Y, 0);
+    write_u32(m + engine::BALL_RECEIVER, 0);
+    write_u8(m + engine::SET_PIECE_KIND, 0);
+    write_u8(m + engine::SHOT_PENDING, 0);
+    write_u8(m + engine::STOPPAGE_ANNOUNCED, 0);
+    write_u8(m + 0x8d49, 0);
+    write_u16(m + engine::PENDING_PLAY_CODE, 0xffff);
+    write_u32(m + engine::PENDING_PLAY_OFFENDER, 0);
+    write_u32(m + engine::PENDING_PLAY_VICTIM, 0);
+    write_u8(m + engine::PENDING_PLAY_SERIOUS, 0);
+    write_u8(m + engine::PENDING_PLAY_KIND, 0);
     for o in 0x475b..=0x475e {
-        *((m + o) as *mut u8) = 0xff;
+        write_u8(m + o, 0xff);
     }
-    *((m + engine::FOULED_PLAYER) as *mut u32) = 0;
-    *((m + 2) as *mut u8) = 0xff;
-    *((m + 3) as *mut u8) = 0xff;
+    write_u32(m + engine::FOULED_PLAYER, 0);
+    write_u8(m + 2, 0xff);
+    write_u8(m + 3, 0xff);
     clear(0x8f02, 0x8f7a);
     clear(0x1f6, 0x21e);
     clear(0xa, 0xaf);
     clear(0x8d51, 0x8e9b);
-    *((m + engine::POSSESSION_WINDOW_INDEX) as *mut u8) = 0;
-    *((m + engine::LAST_POSSESSION_SIDE) as *mut u8) = 0xff;
-    *((m + engine::BALL_DIRECTION) as *mut u16) = 0xb4;
-    *((m + engine::BALL_ROLL) as *mut u8) = 0;
-    *((m + engine::BALL_HOLDER) as *mut u32) = 0;
-    *((m + engine::BALL_HEIGHT) as *mut u8) = 0;
+    write_u8(m + engine::POSSESSION_WINDOW_INDEX, 0);
+    write_u8(m + engine::LAST_POSSESSION_SIDE, 0xff);
+    write_u16(m + engine::BALL_DIRECTION, 0xb4);
+    write_u8(m + engine::BALL_ROLL, 0);
+    write_u32(m + engine::BALL_HOLDER, 0);
+    write_u8(m + engine::BALL_HEIGHT, 0);
     for o in [0xf576, 0xf57a, 0xf57e, 0xf5ae, 0x91de, 0xf586, 0xf58a, 0xf5a6, 0xf5aa, 0xf58e, 0xf592] {
-        *((m + o) as *mut u32) = 0;
+        write_u32(m + o, 0);
     }
     clear(engine::GRID, engine::GRID + 0x97e * 4);
-    *((m + engine::GOALKEEPER) as *mut u32) = 0;
-    *((m + engine::GOALKEEPER_SIDE1) as *mut u32) = 0;
+    write_u32(m + engine::GOALKEEPER, 0);
+    write_u32(m + engine::GOALKEEPER_SIDE1, 0);
     for l in 0..2usize {
         let e = 0xf5bd + 0x36 * l;
         clear(e - 1, e + 0x10);
         clear(e + 0x11, e + 0x35);
-        *((m + 0x8d46 + l) as *mut u8) = 0;
+        write_u8(m + 0x8d46 + l, 0);
     }
-    *((m + engine::TEMPO_ROLL_A) as *mut u32) = 0x40c00000;
-    *((m + engine::TEMPO_ROLL_B) as *mut u32) = 0x40c00000;
-    *((m + engine::TEMPO_GOALS_ROLL) as *mut u32) = 0x40a00000;
-    *((m + 0) as *mut u8) = fast;
-    if *(G_MATCH_ENGINE_ENABLED as *const u8) == 0 {
-        *((m + 0) as *mut u8) = 1;
-        *((m + engine::OWNS_COMMENTATOR) as *mut u8) = 0;
+    write_u32(m + engine::TEMPO_ROLL_A, 0x40c00000);
+    write_u32(m + engine::TEMPO_ROLL_B, 0x40c00000);
+    write_u32(m + engine::TEMPO_GOALS_ROLL, 0x40a00000);
+    write_u8(m + 0, fast);
+    if read_u8(G_MATCH_ENGINE_ENABLED) == 0 {
+        write_u8(m + 0, 1);
+        write_u8(m + engine::OWNS_COMMENTATOR, 0);
     }
-    *((m + engine::LIVE_MATCH) as *mut u8) = ao_vivo;
+    write_u8(m + engine::LIVE_MATCH, ao_vivo);
     let (casa, fora) = (read_usize(game + fixture::HOME_CLUB), read_usize(game + fixture::AWAY_CLUB));
-    *((m + engine::SIDE_KIT) as *mut u8) = kit(casa, fora, 1);
-    *((m + 0x8d50) as *mut u8) = kit(fora, casa, 0);
-    let x2e = *((game + fixture::REFEREE) as *const i16);
-    let referee = if *(G_OFFICIALS_MANAGER as *const u32) != 0 && *(game as *const i32) != -2 && x2e > -1 {
-        (*(G_OFFICIAL_TABLE as *const u32)).wrapping_add((x2e as i32 * 0x2b) as u32) as usize
+    write_u8(m + engine::SIDE_KIT, kit(casa, fora, 1));
+    write_u8(m + 0x8d50, kit(fora, casa, 0));
+    let x2e = read_i16(game + fixture::REFEREE);
+    let referee = if read_u32(G_OFFICIALS_MANAGER) != 0 && *(game as *const i32) != -2 && x2e > -1 {
+        read_u32(G_OFFICIAL_TABLE).wrapping_add((x2e as i32 * 0x2b) as u32) as usize
     } else {
         0
     };
     init_strictness(m + engine::REFEREE, m as u32, referee);
     let comp = read_usize(game + fixture::COMPETITION);
-    if *(game as *const i32) != -2 && *(comp as *const u32) != *(KEY_CLUB_COMP_RESERVE as *const u32) {
-        *((m + engine::ATTENDANCE) as *mut u32) = exe::stadium_calculate_match_attendance(*(G_STADIUM as *const usize), game, m + engine::PITCH_CONDITION);
+    if read_i32(game) != -2 && *(comp as *const u32) != read_u32(KEY_CLUB_COMP_RESERVE) {
+        write_u32(m + engine::ATTENDANCE, exe::stadium_calculate_match_attendance(read_usize(G_STADIUM), game, m + engine::PITCH_CONDITION));
     } else {
-        *((m + engine::ATTENDANCE) as *mut u32) = 0;
-        *((m + engine::PITCH_CONDITION) as *mut u32) = 0;
-        *((m + 0x91d6) as *mut u32) = 0;
-        *((m + 0x91da) as *mut u32) = 0;
+        write_u32(m + engine::ATTENDANCE, 0);
+        write_u32(m + engine::PITCH_CONDITION, 0);
+        write_u32(m + 0x91d6, 0);
+        write_u32(m + 0x91da, 0);
     }
-    if *((m + engine::PITCH_CONDITION) as *mut u32) == 0 {
-        *((m + engine::PITCH_CONDITION) as *mut u32) = 100;
-        *((m + 0x91d6) as *mut u32) = 0x5a;
-        *((m + 0x91da) as *mut u32) = 0xa;
+    if read_u32(m + engine::PITCH_CONDITION) == 0 {
+        write_u32(m + engine::PITCH_CONDITION, 100);
+        write_u32(m + 0x91d6, 0x5a);
+        write_u32(m + 0x91da, 0xa);
     }
-    if *(game as *const i32) == -2 {
-        *((m + 0x1ad) as *mut u16) = 0;
+    if read_i32(game) == -2 {
+        write_u16(m + 0x1ad, 0);
     } else {
         // pitch wear (+0x1ad) and how much it weighs (+0x1ae)
-        let (g2, g6, ga) = (*((m + engine::PITCH_CONDITION) as *mut u32) as i32 as f64, *((m + 0x91d6) as *mut u32) as i32 as f64, *((m + 0x91da) as *mut u32) as i32 as f64);
+        let (g2, g6, ga) = (read_u32(m + engine::PITCH_CONDITION) as i32 as f64, read_u32(m + 0x91d6) as i32 as f64, read_u32(m + 0x91da) as i32 as f64);
         let x = g6 * read_f64(rdata::F64_100) / g2;
         let t = (read_f64(rdata::F64_100) - x) as f32;
         let a = (ga * read_f64(rdata::F64_0_0001) + read_f64(rdata::F64_5)) - x * read_f64(rdata::F64_0_3333333333);
         let a = if !(a > read_f64(rdata::F64_10)) && a < read_f64(rdata::F64_0) { read_f64(rdata::F64_0) } else if a > read_f64(rdata::F64_10) { read_f64(rdata::F64_10) } else { a };
-        *((m + 0x1ad) as *mut u8) = ftol(a) as u8;
+        write_u8(m + 0x1ad, ftol(a) as u8);
         let stadium = read_usize(casa + club::STADIUM);
         let base = if stadium == read_usize(game + fixture::STADIUM) || stadium == read_usize(fora + club::STADIUM) { read_f32(rdata::F32_1) } else { read_f32(rdata::F32_0) } as f64;
         let c = (g6 * read_f64(rdata::F64_0_0001) + read_f64(rdata::F64_5)) - t as f64 * read_f64(rdata::F64_0_3333333333);
         let cf = c as f32 as f64;
         let smaller = if c > read_f64(rdata::F64_10) { read_f64(rdata::F64_10) } else { cf };
         let r = if base > smaller { base } else if cf > read_f64(rdata::F64_10) { read_f64(rdata::F64_10) } else { cf };
-        *((m + 0x1ae) as *mut u8) = ftol(r) as u8;
+        write_u8(m + 0x1ae, ftol(r) as u8);
     }
     // the squads
     let (mut n_casa, mut n_fora) = (0i8, 0i8);
@@ -6341,17 +6341,17 @@ pub(crate) unsafe fn prepare_match_with(m: usize, game: usize, fast: u8, comment
         let mut data = [0u8; 8];
         let mut quando = [0u8; 200];
         let (mut nome, mut ext) = ([0u8; 256], [0u8; 256]);
-        let j = *((m + engine::MATCH) as *const usize);
-        exe::new_date((data.as_mut_ptr()) as *mut u8 as usize, *((j + fixture::DAY) as *const u16) as u32, *((j + fixture::YEAR) as *const u16) as u32);
+        let j = read_usize(m + engine::MATCH);
+        exe::new_date((data.as_mut_ptr()) as *mut u8 as usize, read_u16(j + fixture::DAY) as u32, read_u16(j + fixture::YEAR) as u32);
         exe::date_get_short_weekday_date_string(data.as_mut_ptr(), quando.as_mut_ptr(), 200, 0xff);
-        let id = *(j as *const i32);
+        let id = read_i32(j);
         let comp = if id == -2 { 0xa158dc } else if id == -1 { 0xa158ec } else { read_usize(j + fixture::COMPETITION) + 0x38 };
         format(0xde1f64, text, n as i32, read_usize(j + fixture::HOME_CLUB) + 0x38, read_usize(j + fixture::AWAY_CLUB) + 0x38, comp, quando.as_ptr());
         exe::crt_strtok(0xa15884, 0, 0, nome.as_mut_ptr(), ext.as_mut_ptr());
         let s = join(nome.as_mut_ptr(), ext.as_mut_ptr(), row);
         format(0xae24d0, 0x9870e8, s);
         exe::gui_show_message_box(0x9870e0, 0xae24d0, 0);
-        *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
+        write_u32(G_MOUSE_LEFT_BUTTON_DOWN, 0);
     };
     let nc = exe::match_man_init(m + engine::MATCH_MANAGERS, m, read_usize(casa + club::MANAGER), casa + club::SQUAD, m + engine::PLAYERS, 0, casa, fora, game, &mut n_casa);
     if nc < 0xb {
@@ -6362,75 +6362,75 @@ pub(crate) unsafe fn prepare_match_with(m: usize, game: usize, fast: u8, comment
         pouco(nf, 0x28c, 0xa15858);
     }
     if (n_fora as i32 + n_casa as i32) < 5 && ao_vivo == 0 {
-        *((m + 0) as *mut u8) = 1;
+        write_u8(m + 0, 1);
     }
     core::ptr::copy_nonoverlapping((m + engine::TACTICS) as *const u8, (m + engine::TACTICS_BACKUP) as *mut u8, 0xc71 * 4 + 2);
-    *((m + engine::SIDE_STRENGTH) as *mut u16) = 0x6e;
-    *((m + 0x1d0) as *mut u16) = 0x6e;
-    *((m + engine::COMMENTATOR) as *mut u32) = 0;
-    if *((m + 0x8eba) as *mut u8) != 0 {
-        *((m + 0) as *mut u8) = 1;
-        *((m + engine::OWNS_COMMENTATOR) as *mut u8) = 0;
+    write_u16(m + engine::SIDE_STRENGTH, 0x6e);
+    write_u16(m + 0x1d0, 0x6e);
+    write_u32(m + engine::COMMENTATOR, 0);
+    if read_u8(m + 0x8eba) != 0 {
+        write_u8(m + 0, 1);
+        write_u8(m + engine::OWNS_COMMENTATOR, 0);
         return 0;
     }
     // o narrador
     if commentator != 0 {
-        *((m + engine::COMMENTATOR) as *mut u32) = commentator as u32;
-        *((m + engine::OWNS_COMMENTATOR) as *mut u8) = 0;
+        write_u32(m + engine::COMMENTATOR, commentator as u32);
+        write_u8(m + engine::OWNS_COMMENTATOR, 0);
     } else {
         let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
         let p = new(0x2db1);
-        *((m + engine::COMMENTATOR) as *mut u32) = if p != 0 { exe::new_match_events(p, *((m + engine::LIVE_MATCH) as *mut u8)) as u32 } else { 0 };
-        *((m + engine::OWNS_COMMENTATOR) as *mut u8) = 1;
-        *(*((m + engine::COMMENTATOR) as *mut u32) as usize as *mut u8) = 1;
+        write_u32(m + engine::COMMENTATOR, if p != 0 { exe::new_match_events(p, read_u8(m + engine::LIVE_MATCH)) as u32 } else { 0 });
+        write_u8(m + engine::OWNS_COMMENTATOR, 1);
+        write_u8(read_u32(m + engine::COMMENTATOR) as usize, 1);
     }
     side_strength(m, 0);
     side_strength(m, 1);
     individual_marking(m);
-    *((m + engine::MATCH_RUNNING) as *mut u8) = 1;
-    let slots = *(G_TACTICS as *const usize);
+    write_u8(m + engine::MATCH_RUNNING, 1);
+    let slots = read_usize(G_TACTICS);
     let starter = |l: usize, k: i8| Engine(m).player(l as i8, k as usize).addr();
     for (l, o_clube, o_marca, o_destino) in [(0usize, 0x1c, 0x40, 0xf5cd), (1, 0x20, 0x41, 0xf603)] {
-        let k = marked_slot(slots, read_usize(game + o_clube), (*((game + o_marca) as *const u8) == 0) as u32, 0);
-        *((m + o_destino) as *mut u8) = if starter(l, k) == 0 {
+        let k = marked_slot(slots, read_usize(game + o_clube), (read_u8(game + o_marca) == 0) as u32, 0);
+        write_u8(m + o_destino, if starter(l, k) == 0 {
             0xff
         } else {
-            let k = marked_slot(slots, read_usize(game + o_clube), (*((game + o_marca) as *const u8) == 0) as u32, 0);
-            *(starter(l, k) as *const u8)
-        };
+            let k = marked_slot(slots, read_usize(game + o_clube), (read_u8(game + o_marca) == 0) as u32, 0);
+            read_u8(starter(l, k))
+        });
     }
     // the list of pre-match events
     let new: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(FN_CRT_OPERATOR_NEW);
     let p = new(0xe);
     let list = if p != 0 { exe::new_llist(p) } else { 0 };
-    *((m + engine::EVENT_LIST) as *mut u32) = list as u32;
+    write_u32(m + engine::EVENT_LIST, list as u32);
     'eventos: {
         if list == 0 || is_national_team(casa) != 0 {
             break 'eventos;
         }
-        if *((m + 0) as *mut u8) != 0 {
+        if read_u8(m + 0) != 0 {
             return 1;
         }
         let comp = read_usize(game + fixture::COMPETITION);
-        if *((game + fixture::HOME_SIDE_MARK) as *const u8) == 0 || comp == 0 {
+        if read_u8(game + fixture::HOME_SIDE_MARK) == 0 || comp == 0 {
             break 'eventos;
         }
-        let amistosos = *(G_FRIENDLY as *const usize);
+        let amistosos = read_usize(G_FRIENDLY);
         if amistosos != 0 && is_friendly(amistosos, comp) != 0 {
             break 'eventos;
         }
         add_prematch_player_events(Engine(m), Fixture(game));
     }
-    if *((m + 0) as *mut u8) == 0 {
+    if read_u8(m + 0) == 0 {
         if random(2) != 0 {
-            *((m + engine::NEXT_KICKOFF_SIDE) as *mut u8) = 1;
-            *((m + engine::POSSESSION_SIDE) as *mut u8) = 0;
+            write_u8(m + engine::NEXT_KICKOFF_SIDE, 1);
+            write_u8(m + engine::POSSESSION_SIDE, 0);
         } else {
-            *((m + engine::NEXT_KICKOFF_SIDE) as *mut u8) = 0;
-            *((m + engine::POSSESSION_SIDE) as *mut u8) = 1;
+            write_u8(m + engine::NEXT_KICKOFF_SIDE, 0);
+            write_u8(m + engine::POSSESSION_SIDE, 1);
         }
-        *((m + engine::RESTART_TYPE) as *mut u8) = 8;
-        *((m + engine::KICKOFF_ANNOUNCED) as *mut u8) = 0;
+        write_u8(m + engine::RESTART_TYPE, 8);
+        write_u8(m + engine::KICKOFF_ANNOUNCED, 0);
     }
     1
 }
@@ -6447,12 +6447,12 @@ pub(crate) unsafe fn prepare_match_with(m: usize, game: usize, fast: u8, comment
 /// pelo indice de [0xb74350], 5 ou 4; o fim de contrato perto (0x54cdb0), 6.
 #[allow(clippy::cognitive_complexity)]
 pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
-    let contracts = *(G_CONTRACT_MANAGER as *const usize);
-    let slots = *(G_TACTICS as *const usize);
+    let contracts = read_usize(G_CONTRACT_MANAGER);
+    let slots = read_usize(G_TACTICS);
     let index = || {
-        let t = *(G_PLAYER_STATS as *const usize);
-        let d = *((t + 0x18) as *const f64);
-        if d == read_f64(rdata::F64_0) { read_f64(rdata::F64_6_8) } else { *((t + 0x10) as *const f64) / d }
+        let t = read_usize(G_PLAYER_STATS);
+        let d = read_f64(t + 0x18);
+        if d == read_f64(rdata::F64_0) { read_f64(rdata::F64_6_8) } else { read_f64(t + 0x10) / d }
     };
     for lado in 0..2i8 {
         let starter_of_the_slot = |j: usize| {
@@ -6481,7 +6481,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
             let bb = read_1bc(j);
             let d = player_table_b(j);
             let flags = contract_flags(c);
-            let marked = flags & 0x40 != 0 || *((c + 0x45) as *const u32) & 0x2000000 != 0;
+            let marked = flags & 0x40 != 0 || read_u32(c + 0x45) & 0x2000000 != 0;
             if marked && a != 0 && ((d & a) == d || (bb & a) != bb) {
                 crate::comparison::branch("prematch unhappy");
                 push_prematch_event(m, f, club, 0, 0, k as u8, 0x13);
@@ -6535,7 +6535,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
                     } else if f5a < 6 {
                         p -= 5;
                     }
-                    if *((c + 0x45) as *const u32) != 0 {
+                    if read_u32(c + 0x45) != 0 {
                         p += 5;
                     } else if contract_flags(c) != 0 {
                         p += 1;
@@ -6561,10 +6561,10 @@ pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
             let pe = PlayerSheet(read_usize(j + match_player::PLAYER));
             let r = random(7);
             if (pe.leadership() as i32) > r + 6 && pe.current_reputation() > 0xea6 && f.professionalism() < 7 && (f.professionalism() as i32) < random(0xf) {
-                let x = random(read_i16((read_usize(j + match_player::PLAYER)) + 0xb) as i32);
+                let x = random(read_i16(read_usize(j + match_player::PLAYER) + 0xb) as i32);
                 if random(club.reputation() as i32) < x && *((c + 0x45) as *const u32) & 0x2f7a0b != 0 {
                     crate::comparison::branch("prematch interest");
-                    push_prematch_event(m, f, club, *((c + 0x45) as *const u32), starter_of_the_slot(j), lado as u8, 0x1e);
+                    push_prematch_event(m, f, club, read_u32(c + 0x45), starter_of_the_slot(j), lado as u8, 0x1e);
                 }
             }
             // a forma
@@ -6588,7 +6588,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
                     form = form.wrapping_add(1);
                 }
             }
-            let sheet_average = *(G_PLAYER_STATS as *const usize);
+            let sheet_average = read_usize(G_PLAYER_STATS);
             if form < 0x17 {
                 let m1 = exe::playerstats_get_stat(sheet_average, sheet_61.addr(), 6, 1, 6.5) as f32;
                 let m2 = exe::playerstats_get_stat(sheet_average, f.player().addr(), 6, 0x11, 6.5) as f32;
@@ -6613,7 +6613,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
                     && (m2 as f64) < index()
                 {
                     crate::comparison::branch("prematch form down");
-                    push_prematch_event(m, f, club, *((c + 0x45) as *const u32), starter_of_the_slot(j), lado as u8, 5);
+                    push_prematch_event(m, f, club, read_u32(c + 0x45), starter_of_the_slot(j), lado as u8, 5);
                 }
             } else if form > 0x20 {
                 let m1 = exe::playerstats_get_stat(sheet_average, sheet_61.addr(), 6, 1, 6.5) as f32;
@@ -6625,7 +6625,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
                     }
                     if m2 < index() - read_f64(rdata::F64_1) + z {
                         crate::comparison::branch("prematch form up");
-                        push_prematch_event(m, f, club, *((c + 0x45) as *const u32), starter_of_the_slot(j), lado as u8, 4);
+                        push_prematch_event(m, f, club, read_u32(c + 0x45), starter_of_the_slot(j), lado as u8, 4);
                     }
                 }
             }
@@ -6637,7 +6637,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
                     let g = read_i8(c + 0x3f);
                     if (g as i32) > random(4) + 2 {
                         crate::comparison::branch("prematch end of contract");
-                        push_prematch_event(m, f, club, *((c + 0x45) as *const u32), starter_of_the_slot(j), lado as u8, 6);
+                        push_prematch_event(m, f, club, read_u32(c + 0x45), starter_of_the_slot(j), lado as u8, 6);
                     }
                 }
             }
@@ -6809,7 +6809,7 @@ pub(crate) const RISK_BY_MOVE: [u8; 0x2f] = [0, 10, 10, 10, 10, 10, 10, 10, 10, 
 /// outro jogador, 1..=9; sem, 1..=5) ou por sorteio, e o lance 5 tem tipos proprios (6, 9, 10).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn tackle_injury_with(m: Engine, a: MatchPlayer, tipo_a: i16, b: usize, kind_b: i16, direct: u8, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let injuries = *(G_INJURY as *const usize);
+    let injuries = read_usize(G_INJURY);
     let f4 = |a: usize| read_f32(a.addr()) as f64;
     let d8 = |a: usize| read_f64(a.addr());
     let mut chance = [0i8; 2];
@@ -6825,11 +6825,11 @@ pub(crate) unsafe fn tackle_injury_with(m: Engine, a: MatchPlayer, tipo_a: i16, 
         if p == 0 {
             continue;
         }
-        let person = *((p + match_player::STAFF) as *const usize);
+        let person = read_usize(p + match_player::STAFF);
         let e = call(FN_INJURY_GET_PLAYER_INJURY, injuries, [person as u32, 0, 0, 0, 0]) as usize;
         if e != 0 {
             f[k] = 6.0;
-            grav[k] = exe::injury_get_type_category(injuries, *(e as *const i8)) as i8;
+            grav[k] = exe::injury_get_type_category(injuries, read_i8(e)) as i8;
             if random(0x19) != 0 {
                 chance[k] = (chance[k] as u8).wrapping_shl(1) as i8;
             }
@@ -6841,7 +6841,7 @@ pub(crate) unsafe fn tackle_injury_with(m: Engine, a: MatchPlayer, tipo_a: i16, 
         let q = f4(0x96d1b0) / x * f[k] as f64;
         // the branch follows `a`’s record (as in the original), the value a of the player himself
         let branch = read_i8(a.player().addr() + 0x2d);
-        let val = read_i8(*((p + match_player::PLAYER) as *const usize) + 0x2d) as i32;
+        let val = read_i8(read_usize(p + match_player::PLAYER) + 0x2d) as i32;
         let v = if branch > 10 { val as f64 * q * f4(0x96afc4) } else { ((val - 10) as f64 * f4(0x96afc4) + f4(0x968e70)) * q };
         f[k] = v as f32;
         if exe::injury_get_recurring_injury_level(injuries, person) != 0 {
@@ -7002,7 +7002,7 @@ pub(crate) unsafe extern "C" fn kit(club: usize, other: usize, any: u32) -> u8 {
     let other = Club(other);
     let club = Club(club);
     if club.is_null() || other.is_null() {
-        *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
+        write_u32(G_MOUSE_LEFT_BUTTON_DOWN, 0);
         return 0;
     }
     let any = any as u8 != 0;
@@ -7010,7 +7010,7 @@ pub(crate) unsafe extern "C" fn kit(club: usize, other: usize, any: u32) -> u8 {
         0
     } else {
         let c = other.back_colour1();
-        if c != 0 { c } else { *(G_COLOUR_TABLE as *const usize) + *(KEY_COLOUR_WHITE as *const i32) as usize * 58 }
+        if c != 0 { c } else { read_usize(G_COLOUR_TABLE) + read_i32(KEY_COLOUR_WHITE) as usize * 58 }
     };
     let (mut x, mut y) = (0usize, 0usize);
     let mut k = 0u8;
@@ -7076,12 +7076,12 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
     let of_game = comp.competition();
     let injury_word_0c = || rep.reputation() as i32;
     // the competition level
-    let mut level: i8 = if *(comp.addr() as *const i32) == -2 {
+    let mut level: i8 = if read_i32(comp.addr()) == -2 {
         5
     } else {
         let n = if (comp.home_side_mark() as i8) != 0 {
             Some(((injury_word_0c() / 500 + of_game.reputation() as i32) / 2) as i8)
-        } else if *(G_NATIONAL_TEAMS as *const usize) != 0 && exe::national_teams_is_finals_comp(*(G_NATIONAL_TEAMS as *const usize), of_game) != 0 {
+        } else if read_usize(G_NATIONAL_TEAMS) != 0 && exe::national_teams_is_finals_comp(read_usize(G_NATIONAL_TEAMS), of_game) != 0 {
             let v = of_game.reputation();
             if v <= 0xf { None } else { Some(v as i8) }
         } else {
@@ -7114,7 +7114,7 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
     let mut grande = false;
     let ja_national_team = exe::database_is_national_team(club) != 0;
     let div_9 = if ja_national_team
-        || (*(comp.addr() as *const i32) == -2 && (club.nation().addr() as i32) != 0 && (club.nation().addr() as i32) == (person.nation().addr() as i32))
+        || (read_i32(comp.addr()) == -2 && (club.nation().addr() as i32) != 0 && (club.nation().addr() as i32) == (person.nation().addr() as i32))
         || (!of_game.is_null() && (of_game.nation().addr() as i32) == (person.nation().addr() as i32))
         || (club.nation().addr() as i32) == (person.nation().addr() as i32)
     {
@@ -7137,7 +7137,7 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
         div_d = (age(0xd, 0x15) as i16).wrapping_sub(nivel0);
         if (comp.category() as i8) == 0xa
             && *(G_NATIONAL_TEAMS as *const usize) != 0
-            && exe::national_teams_is_finals_comp(*(G_NATIONAL_TEAMS as *const usize), of_game) != 0
+            && exe::national_teams_is_finals_comp(read_usize(G_NATIONAL_TEAMS), of_game) != 0
             && of_game.reputation() >= 0x11
             && !((factor as f64) < d8(0x968988))
             && injury_word_0c() > 0x157c
@@ -7188,9 +7188,9 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
     }
     // the rating’s deviation from the league average
     let average = || {
-        let g = *(G_PLAYER_STATS as *const usize);
+        let g = read_usize(G_PLAYER_STATS);
         let (soma, n) = if average_b as u8 != 0 { (0x20, 0x28) } else { (0x10, 0x18) };
-        if *((g + n) as *const f64) == d8(0x9689a0) { d8(0x968998) } else { *((g + soma) as *const f64) / *((g + n) as *const f64) }
+        if read_f64(g + n) == d8(0x9689a0) { d8(0x968998) } else { read_f64(g + soma) / read_f64(g + n) }
     };
     let mut desvio = rating as f64 - average();
     if desvio < f4(0x968970) {
@@ -7275,7 +7275,7 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
     let rd = preso(cd, f_d, f4(0x96d1a8), (level as i32 * 100) as f64, td);
     // the club’s reputation pulls +0xb
     if exe::database_is_national_team(club) == 0 && level > 10 {
-        let e = Contract(exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), person, club));
+        let e = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club));
         if !e.is_null() {
             let mut id = (person.year_of_birth() as i8) as i32 as f32;
             if read_f32(rdata::F32_19) < id {
@@ -7354,7 +7354,7 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
     let by = m.ball_y() as i32;
     let cx = ((bx - 4).abs()) as i8;
     let cy = ((if flag == 1 { by - 11 } else { by }).abs()) as i8;
-    let base = if (0..=8).contains(&cx) && (0..=11).contains(&cy) { *((G_CELL_DISTANCE_TABLE + (cy as usize * 9 + cx as usize) * 4) as *const f32) } else { read_f32(rdata::F32_1000) };
+    let base = if (0..=8).contains(&cx) && (0..=11).contains(&cy) { read_f32(G_CELL_DISTANCE_TABLE + (cy as usize * 9 + cx as usize) * 4) } else { read_f32(rdata::F32_1000) };
     let mut dist = (base as f64 + read_f64(rdata::F64_0_5)) as f32;
     if dist as f64 > read_f64(rdata::F64_1) {
         let x = dist as f64 * read_f64(rdata::F64_0_5);
@@ -7369,7 +7369,7 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
     let n = || read_i8(home + flag as usize + 0x58) as i32;
     let mut i = 0;
     while i < n() {
-        let p = MatchPlayer(*((home + (flag as usize * 11 + i as usize) * 4) as *const usize));
+        let p = MatchPlayer(read_usize(home + (flag as usize * 11 + i as usize) * 4));
         i += 1;
         if p.is_null() {
             // the original logs the error and ends the game
@@ -7382,7 +7382,7 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
         let mut v: f64 = if m.ball_height() == ball_height::IN_THE_AIR {
             read_f32(rdata::F32_3_5) as f64
         } else if (exe::match_player_get_instructions(p) as u32) & 0x200 != 0 {
-            let e = *((m.addr() + engine::TACTICS_FLAGS + 6371 * flag as usize) as *const u32);
+            let e = read_u32(m.addr() + engine::TACTICS_FLAGS + 6371 * flag as usize);
             if e & 0x20 != 0 {
                 read_f32(rdata::F32_0_5) as f64
             } else if e & 0x40 != 0 {
@@ -7585,7 +7585,7 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
             _ => {
                 let error: unsafe extern "C" fn(usize, usize, i32) = core::mem::transmute(FN_CRT_SPRINTF);
                 error(0xde1f64, 0xa15954, kind as i32);
-                *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
+                write_u32(G_MOUSE_LEFT_BUTTON_DOWN, 0);
                 None
             }
         };
@@ -7619,7 +7619,7 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
                 true
             } else {
                 let c = p.position();
-                (0..=10).contains(&c) && *((*((m.addr() + engine::POSITION_TABLE + p.side() as usize * 4) as *const usize) + c as usize * 2) as *const i16) == 1 && random(2) == 0
+                (0..=10).contains(&c) && *((read_usize(m.addr() + engine::POSITION_TABLE + p.side() as usize * 4) + c as usize * 2) as *const i16) == 1 && random(2) == 0
             };
             if follows && colegas_a_frente == 0 && (exe::match_player_is_on_wing(p) == 0 || exe::match_player_is_in_own_third(p) == 0) {
                 *risky = 1;
@@ -7722,7 +7722,7 @@ pub(crate) unsafe fn pressure_on_player_with(m: Engine, j: MatchPlayer, out: *mu
     let base = || j.moment_movement() as i32 + j.ball_control() as i32 / 20;
     let k = read_f64(rdata::F64_1_7);
     for i in 0..n.max(0) as usize {
-        let p = MatchPlayer(*((home + side * 44 + i * 4) as *const usize));
+        let p = MatchPlayer(read_usize(home + side * 44 + i * 4));
         if p.position() < 0 {
             continue;
         }
@@ -8364,7 +8364,7 @@ pub(crate) unsafe extern "thiscall" fn line_up_kickoff(this: usize) {
                 continue;
             }
             let table = read_usize(this.addr() + (0xf56e + 4 * (j.side() == 1) as usize));
-            let home = *((table + pos as usize * 0xd8 + 0xa2) as *const u8);
+            let home = read_u8(table + pos as usize * 0xd8 + 0xa2);
             move_to_cell(j, (home & 0xf) as i8, (home >> 4) as i8);
             exe::cm3_match_engine_update_offside_lines(this);
             if is_past_defensive_line(this, j) && sai_jogando {
@@ -8752,12 +8752,12 @@ pub(crate) unsafe extern "thiscall" fn side_strength(this: usize, side: i8) {
 ///
 /// [pt] { 0x68d1b0 }: o proximo item da lista (cursor em +0xa: devolve o +0 do no e avanca para o +6), ou 0.
 pub(crate) unsafe extern "thiscall" fn next_list_item(this: usize) -> u32 {
-    let in_the = core::ptr::read_unaligned((this + 0xa) as *const usize);
+    let in_the = read_usize(this + 0xa);
     if in_the == 0 {
         return 0;
     }
-    core::ptr::write_unaligned((this + 0xa) as *mut usize, core::ptr::read_unaligned((in_the + 6) as *const usize));
-    core::ptr::read_unaligned(in_the as *const u32)
+    write_usize(this + 0xa, read_usize(in_the + 6));
+    read_u32(in_the)
 }
 
 /// Returns the signed word +0xc of the person `id`'s 31-byte injury record in the array [this]; 0 when the id is beyond
@@ -8766,10 +8766,10 @@ pub(crate) unsafe extern "thiscall" fn next_list_item(this: usize) -> u32 {
 /// [pt] { 0x62c3d0 } (ret 4, injury.cpp): a palavra com sinal +0xc do registro de 31 bytes da pessoa `id`
 /// em [this]; id a partir de 0xae2364: 0.
 pub(crate) unsafe extern "thiscall" fn word_0c(this: usize, id: i32) -> i32 {
-    if id >= *(G_STAFF_COUNT as *const i32) {
+    if id >= read_i32(G_STAFF_COUNT) {
         return 0;
     }
-    core::ptr::read_unaligned((*(this as *const usize)).wrapping_add((id as usize).wrapping_mul(31)).wrapping_add(0xc) as *const i16) as i32
+    read_i16(read_usize(this).wrapping_add((id as usize).wrapping_mul(31)).wrapping_add(0xc)) as i32
 }
 
 /// Returns `v` with the units digit of its low word removed (v - w % 10) when that signed word is below 1000, else `v`
@@ -8791,8 +8791,8 @@ pub(crate) unsafe extern "stdcall" fn group_nation(nation: usize) -> u32 {
     if nation == 0 {
         return 0;
     }
-    let id = *(nation as *const u32);
-    [KEY_CLUB_COMP_B_INTERNATIONAL, KEY_CLUB_COMP_RESERVE, KEY_CLUB_COMP_UNDER_21_INTERNATIONAL, KEY_CLUB_COMP_SPANISH_LOWER_DIVISION, KEY_CLUB_COMP_FRENCH_CFA, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION].iter().any(|&a| *(a as *const u32) == id) as u32
+    let id = read_u32(nation);
+    [KEY_CLUB_COMP_B_INTERNATIONAL, KEY_CLUB_COMP_RESERVE, KEY_CLUB_COMP_UNDER_21_INTERNATIONAL, KEY_CLUB_COMP_SPANISH_LOWER_DIVISION, KEY_CLUB_COMP_FRENCH_CFA, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION].iter().any(|&a| read_u32(a) == id) as u32
 }
 
 /// Counts how many active players of the opposing side man-mark `alvo` (`designated_marked`).
@@ -8878,10 +8878,10 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
     m.set_restart_type(restart::OPEN_PLAY);
     let c = m.ball_holder();
     let mut factor_nation = f32::from_bits(0x3e4ccccd);
-    let nation = *((c.staff().addr() + staff::NATION) as *const usize);
+    let nation = read_usize(c.staff().addr() + staff::NATION);
     if nation != 0 {
-        let id = *(nation as *const u32);
-        let g = |a: usize| *(a as *const u32) == id;
+        let id = read_u32(nation);
+        let g = |a: usize| read_u32(a) == id;
         if g(KEY_NATION_ENGLAND) || g(KEY_NATION_SCOTLAND) || g(KEY_NATION_WALES) || g(KEY_NATION_NORTHERN_IRELAND) || g(KEY_NATION_REPUBLIC_OF_IRELAND) || g(KEY_NATION_NORWAY) {
             factor_nation = 1.0;
         } else if g(KEY_NATION_SWEDEN) || g(KEY_NATION_DENMARK) || g(KEY_NATION_GERMANY) {
@@ -8903,7 +8903,7 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
     let role_of = |q: MatchPlayer| -> u16 {
         let pos = q.position();
         if (0..=10).contains(&pos) {
-            *((*((m.addr() + engine::POSITION_TABLE + 4 * side_of_player(q) as usize) as *const usize) + 2 * pos as usize) as *const u16)
+            read_u16(read_usize(m.addr() + engine::POSITION_TABLE + 4 * side_of_player(q) as usize) + 2 * pos as usize)
         } else {
             0
         }
@@ -8968,7 +8968,7 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
         } else {
             ((partida.home_side_mark() as i8), partida.home_club())
         };
-        let table = *(G_TACTICS as *const usize);
+        let table = read_usize(G_TACTICS);
         let sheet_p = p.staff();
         if sheet_p == Staff(exe::tactics_get_playmaker(table, clube_p, 0, (marca_p == 0) as u32)) {
             v1c = v1c.wrapping_add(1000);
@@ -8994,7 +8994,7 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
         if t(0x70df40)(c.addr()) == 0 {
             let mc = exe::match_player_get_instructions(c);
             let level = if mc & 1 != 0 {
-                let f = *((m.addr() + 6371 * ls as usize + 0x9766) as *const u32);
+                let f = read_u32(m.addr() + 6371 * ls as usize + 0x9766);
                 if f & 8 != 0 { 3 } else if f & 4 != 0 { 2 } else if f & 2 != 0 { 1 } else { 0 }
             } else if exe::match_player_get_instructions(c) & 0x10 != 0 {
                 3
@@ -9441,7 +9441,7 @@ pub(crate) unsafe extern "thiscall" fn player_order(m: usize) {
             }
         }
     }
-    *(G_ACTION_ORDER_MATCH_ENGINE as *mut usize) = m.addr();
+    write_usize(G_ACTION_ORDER_MATCH_ENGINE, m.addr());
     exe::crt_qsort(m.addr() + engine::ACTIVE_LIST, (*n as i32) as u32, (4) as u32, 0x6bd840);
 }
 
@@ -9584,15 +9584,15 @@ pub(crate) unsafe fn goal_distance_bonus(d: f32) -> i32 {
 /// clubes da partida sao da mesma nacao, senao a mundial; em centenas, menos 50.
 pub(crate) unsafe fn target_reputation(j: MatchPlayer, p: MatchPlayer, clubs: (Club, Club)) -> i32 {
     let sheet = p.player();
-    let nation = |q: MatchPlayer| *((q.staff().addr() + staff::NATION) as *const u32);
+    let nation = |q: MatchPlayer| read_u32(q.staff().addr() + staff::NATION);
     let off = if nation(j) == nation(p) {
         9
-    } else if clubs.0 != Club(0) && clubs.1 != Club(0) && *(((clubs.0).addr() + 0x53) as *const u32) == *(((clubs.1).addr() + 0x53) as *const u32) {
+    } else if clubs.0 != Club(0) && clubs.1 != Club(0) && *(((clubs.0).addr() + 0x53) as *const u32) == read_u32((clubs.1).addr() + 0x53) {
         0xb
     } else {
         0xd
     };
-    (*((sheet.addr() + off) as *const i16) as i32) / 100 - 50
+    (read_i16(sheet.addr() + off) as i32) / 100 - 50
 }
 
 /// Chooses the opponent that player `j` will mark, or 0: none if his position has instruction bit 1; the designated
@@ -9704,7 +9704,7 @@ pub(crate) unsafe extern "thiscall" fn who_to_mark(m: usize, j: usize) -> usize 
             let f18 = match_eng_distance_to_goal(j, col as i32, r as i32);
             let mut k = 0i8;
             while k < how_many(home) {
-                let q = *((home + 4 * (k as isize + 11 * s as isize) as usize) as *const usize);
+                let q = read_usize(home + 4 * (k as isize + 11 * s as isize) as usize);
                 k = k.wrapping_add(1);
                 let ponta = m.ball_holder();
                 if q == ponta.addr() {
@@ -9715,7 +9715,7 @@ pub(crate) unsafe extern "thiscall" fn who_to_mark(m: usize, j: usize) -> usize 
                     continue;
                 }
                 if q != ponta.addr() && q != m.set_piece_taker() {
-                    let marks = *((m.addr() + engine::TACTICS_FLAGS + 6371 * side_j) as *const u32);
+                    let marks = read_u32(m.addr() + engine::TACTICS_FLAGS + 6371 * side_j);
                     let dif = difference_of_player(q) as i8;
                     if if marks & 0x400 != 0 && bonus != 0 { dif >= 0 } else { dif > 0 } {
                         continue;
@@ -9738,10 +9738,10 @@ pub(crate) unsafe extern "thiscall" fn who_to_mark(m: usize, j: usize) -> usize 
                     }
                     a = a.wrapping_add(0x14);
                 }
-                let mut e = (*((q + match_player::SHOTS_ON_TARGET) as *const u8) as i32 + *((q + match_player::SHOTS) as *const u8) as i32 + 0xa) * 10;
-                e = e.wrapping_sub(ftol(read_f64(rdata::F64_180) - *((q + match_player::MATCH_RATING) as *const i16) as f64 * read_f64(rdata::F64_0_03)));
+                let mut e = (read_u8(q + match_player::SHOTS_ON_TARGET) as i32 + read_u8(q + match_player::SHOTS) as i32 + 0xa) * 10;
+                e = e.wrapping_sub(ftol(read_f64(rdata::F64_180) - read_i16(q + match_player::MATCH_RATING) as f64 * read_f64(rdata::F64_0_03)));
                 e = e.wrapping_sub(ftol(f18 as f64 * f18 as f64 - read_f32(rdata::F32_100) as f64));
-                e = e.wrapping_sub(ftol(*((q + match_player::ASSISTS) as *const u8) as f64 * read_f64(rdata::F64_NEG_7_5)));
+                e = e.wrapping_sub(ftol(read_u8(q + match_player::ASSISTS) as f64 * read_f64(rdata::F64_NEG_7_5)));
                 let n = n14 as i32;
                 e = e.wrapping_sub(n.wrapping_mul(n));
                 e = e.wrapping_sub(ftol(f1c as f64 * f1c as f64 * read_f32(rdata::F32_50) as f64));
@@ -9749,15 +9749,15 @@ pub(crate) unsafe extern "thiscall" fn who_to_mark(m: usize, j: usize) -> usize 
                 let pos = read_i8(q + match_player::POSITION);
                 let role = |base: usize| -> u16 {
                     if (0..=10).contains(&pos) {
-                        let t = *((m.addr() + base + 4 * side_of_player(MatchPlayer(q)) as usize) as *const usize);
-                        *((t + 2 * pos as usize) as *const u16)
+                        let t = read_usize(m.addr() + base + 4 * side_of_player(MatchPlayer(q)) as usize);
+                        read_u16(t + 2 * pos as usize)
                     } else {
                         0
                     }
                 };
                 let w = role(0x8ebc);
                 if w & 0x20 != 0 && w & 0x800 == 0 && w & 0x80 == 0 {
-                    let sheet = PlayerSheet(*((q + match_player::PLAYER) as *const usize));
+                    let sheet = PlayerSheet(read_usize(q + match_player::PLAYER));
                     rating = rating.wrapping_add(10 * sheet.free_role() as i32);
                 } else {
                     let fixed = |v: u16| v == 0x140 || v == 0x240 || v == 0x440;
@@ -9933,7 +9933,7 @@ pub(crate) unsafe extern "thiscall" fn penalty(this: usize) {
         for l in 0..2i8 {
             let j = this.player(l, k);
             if j.position() >= 0 && j != c {
-                let goalkeeper = *((this.addr() + if l == 0 { 0xf59e } else { 0xf5a2 }) as *const usize);
+                let goalkeeper = read_usize(this.addr() + if l == 0 { 0xf59e } else { 0xf5a2 });
                 let y = j.cell_y();
                 if j.addr() == goalkeeper {
                     move_to_cell(j, 4, if l == 0 { 0 } else { 11 });
@@ -9954,7 +9954,7 @@ pub(crate) unsafe extern "thiscall" fn penalty(this: usize) {
 /// [pt] Caixa de erro do original (match_eng.cpp, linha) sem a mensagem: zera 0xb67a34, 0x5cc7d0,
 /// 0x5a8f60 e exit(-1).
 pub(crate) unsafe fn fatal_exit() -> ! {
-    *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
+    write_u32(G_MOUSE_LEFT_BUTTON_DOWN, 0);
     let exit: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     exe::game_fatal_cleanup();
     exe::shared_noop_ret0_5a8f60();
@@ -10022,7 +10022,7 @@ pub(crate) unsafe extern "thiscall" fn choose_taker(this: usize, side: i8, kind:
             let away = j.side() != 0;
             let reserve = (read_i8(partida + (if away { 0x41 } else { 0x40 })) == 0) as i32;
             let club = read_usize(partida + (if away { 0x20 } else { 0x1c }));
-            exe::tactics_get_set_piece_taker(*(G_TACTICS as *const usize), club, a, b, reserve) == j.staff().addr()
+            exe::tactics_get_set_piece_taker(read_usize(G_TACTICS), club, a, b, reserve) == j.staff().addr()
         };
         // near goal: table of ball distances (|a7 - 4|, |a8 - goal line|)
         let table_ball = || {
@@ -10081,19 +10081,19 @@ pub(crate) unsafe extern "thiscall" fn choose_taker(this: usize, side: i8, kind:
             5 => {
                 let block = Engine((this.addr() as isize + 0xd0 * side as isize) as usize);
                 let manager = block.side0_manager();
-                let n = *(G_STAFF_COUNT as *const i32);
+                let n = read_i32(G_STAFF_COUNT);
                 let list = !manager.is_null()
                     && (n - 16..n).contains(&*(manager.addr() as *const i32))
                     && (manager.classification() as i8) != 0
-                    && exe::human_manager_is_on_holiday(*(G_HUMAN_MANAGER as *const usize), manager) == 0
+                    && exe::human_manager_is_on_holiday(read_usize(G_HUMAN_MANAGER), manager) == 0
                     && (block.side0_manager_tactic_slot() == 0
                         || is_national_team(read_usize(partida + (if side == 0 { 0x1c } else { 0x20 }))) != 0
-                        || exe::human_manager_controls_reserve_team(*(G_HUMAN_MANAGER as *const usize), block.side0_manager()) != 0)
+                        || exe::human_manager_controls_reserve_team(read_usize(G_HUMAN_MANAGER), block.side0_manager()) != 0)
                     && excluidos == 0;
                 if list {
                     let mut v = ftol(f(j.addr(), match_player::PENALTIES) - (read_i8(j.player().addr() + 0xf) as i32 * 20 - 20) as f64) as i16;
                     for b in 0..50i32 {
-                        if exe::human_manager_get_squad_number_player(*(G_HUMAN_MANAGER as *const usize), b, block.side0_manager()) == j.staff().addr() {
+                        if exe::human_manager_get_squad_number_player(read_usize(G_HUMAN_MANAGER), b, block.side0_manager()) == j.staff().addr() {
                             v = 10000 - b as i16;
                             break;
                         }
@@ -10115,7 +10115,7 @@ pub(crate) unsafe extern "thiscall" fn choose_taker(this: usize, side: i8, kind:
                         if b5a != 0 && exe::utils_random(b5a as i32) == 0 {
                             s = ftol(s as f64 * read_f64(rdata::F64_0_35)) as i16;
                         }
-                        s = ftol((*((j.player().addr() + 0xb) as *const i16) as f64 * read_f64(rdata::F64_2_5ENEG_05) + read_f64(rdata::F64_0_75)) * s as f64) as i16;
+                        s = ftol((read_i16(j.player().addr() + 0xb) as f64 * read_f64(rdata::F64_2_5ENEG_05) + read_f64(rdata::F64_0_75)) * s as f64) as i16;
                     }
                     s
                 }
@@ -10173,7 +10173,7 @@ pub(crate) unsafe extern "C" fn player_reputation(reg: usize, my: usize, other: 
         return;
     }
     let comp = partida.competition();
-    let mut level: i8 = if *(partida.addr() as *const i32) == -2 {
+    let mut level: i8 = if read_i32(partida.addr()) == -2 {
         5
     } else {
         let v = if (partida.home_side_mark() as i8) != 0 {
@@ -10253,7 +10253,7 @@ pub(crate) unsafe extern "C" fn player_reputation(reg: usize, my: usize, other: 
     let r_world = band(mundo, read_f32(rdata::F32_500) as f64, (nv * 100) as f64, average(n_world, mundo, new_world));
     let c = nv.wrapping_mul(400);
     let cap = |x: i32, floor: i32, r: i32| (x.clamp(floor, 10000) as i16).max(r as i16);
-    *(reg.addr() as *mut i16) = r_home.min(cap(c, 5000, casa)).max(1);
+    write_i16(reg.addr(), r_home.min(cap(c, 5000, casa)).max(1));
     reg.set_manager_home_reputation(r_current.min(cap(c / f_atual, 5000, atual)).max(1));
     reg.set_manager_world_reputation(r_world.min(cap(c / f_mundo, 3000, mundo)).max(1));
 }
@@ -10263,7 +10263,7 @@ pub(crate) unsafe extern "C" fn player_reputation(reg: usize, my: usize, other: 
 ///
 /// [pt] Razao das estatisticas globais (0xb74350): +0x20/+0x28 ou +0x10/+0x18; divisor zero da 6,8.
 pub(crate) unsafe fn global_stats_ratio(alt: bool) -> f64 {
-    let g = *(G_PLAYER_STATS as *const usize);
+    let g = read_usize(G_PLAYER_STATS);
     let (a, b) = if alt { (0x20, 0x28) } else { (0x10, 0x18) };
     if read_f64(g + b) == read_f64(rdata::F64_0) {
         read_f64(rdata::F64_6_8)
@@ -10871,8 +10871,8 @@ pub(crate) unsafe fn luck_multiplier(v: f64, person: PlayerSheet) -> f64 {
 ///
 /// [pt] Palavra do motor (com sinal) vezes `k`, truncada de volta na palavra `destino`.
 pub(crate) unsafe fn scale_engine_word(this: Engine, source: usize, k: f64, target: usize) {
-    let v = *((this.addr() + source) as *const i16) as f64;
-    *((this.addr() + target) as *mut i16) = ftol(v * k) as i16;
+    let v = read_i16(this.addr() + source) as f64;
+    write_i16(this.addr() + target, ftol(v * k) as i16);
 }
 
 /// Computes a side's team strength in seven words (`engine::TEAM_STRENGTH` ... +0x1f2, step 4, + 2 x side) by summing over the 20
@@ -10900,14 +10900,14 @@ pub(crate) unsafe extern "thiscall" fn team_strength(this: usize, side_b: i8) {
         if read_i8(p + match_player::POSITION) < 0 {
             continue;
         }
-        if *((p + match_player::STAFF) as *const usize) == 0 {
-            *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
+        if read_usize(p + match_player::STAFF) == 0 {
+            write_u32(G_MOUSE_LEFT_BUTTON_DOWN, 0);
             return;
         }
-        let person = PlayerSheet(*((p + match_player::PLAYER) as *const usize));
+        let person = PlayerSheet(read_usize(p + match_player::PLAYER));
         exe::match_player_drain_stamina(p, (30 - person.stamina() as i32) as f32, -1);
         let role = match_player_position(MatchPlayer(p)) as u8;
-        let palavra5 = |pe: usize| *((pe + 5) as *const i16) as f64;
+        let palavra5 = |pe: usize| read_i16(pe + 5) as f64;
         // S: chute e finalizacao
         let mut s = ((((((f(p, match_player::TACKLING) + f(p, match_player::POSITIONING)) + f(p, match_player::PACE)) + f(p, match_player::ANTICIPATION)) + cinquenta) * meio + read_f32(rdata::F32_48) as f64)
             + f(p, match_player::STAMINA) * k898
@@ -11053,8 +11053,8 @@ pub(crate) unsafe extern "thiscall" fn team_strength(this: usize, side_b: i8) {
         if !club.is_null() && !game.is_null() {
             let comp = club.nation().addr();
             if game.nation().addr() == comp && comp != 0 {
-                let id = *(comp as *const u32);
-                let g = |a: usize| *(a as *const u32);
+                let id = read_u32(comp);
+                let g = |a: usize| read_u32(a);
                 let k = if id == g(KEY_NATION_GERMANY) || id == g(KEY_NATION_SCOTLAND) || id == g(KEY_NATION_BELGIUM) {
                     0x96d390
                 } else if id == g(KEY_NATION_SWEDEN) {
@@ -11078,7 +11078,7 @@ pub(crate) unsafe extern "thiscall" fn team_strength(this: usize, side_b: i8) {
     let aplica = if game.is_null() {
         true
     } else {
-        let who = *(G_FRIENDLY as *const usize);
+        let who = read_usize(G_FRIENDLY);
         if who == 0 {
             false
         } else {
@@ -11228,21 +11228,21 @@ pub(crate) unsafe extern "thiscall" fn injure(m: usize, kind: u32, chance: u32, 
 /// competição (+4), depois +0x46 (byte), +0x36, +0x38 e +0x34 (palavras) e, empatando tudo, pelo nome
 /// do primeiro clube (+0x20 → +0x38) na comparação de textos 0x90c1d0 (sem maiúsculas).
 pub(crate) unsafe extern "C" fn day_match_order(a: usize, b: usize) -> i32 {
-    let d = core::ptr::read_unaligned((a + 4) as *const i32).wrapping_sub(core::ptr::read_unaligned((b + 4) as *const i32));
+    let d = read_i32(a + 4).wrapping_sub(read_i32(b + 4));
     if d != 0 {
         return d;
     }
-    let d = *((a + 0x46) as *const i8) as i32 - *((b + 0x46) as *const i8) as i32;
+    let d = read_i8(a + 0x46) as i32 - read_i8(b + 0x46) as i32;
     if d != 0 {
         return d;
     }
     for o in [0x36, 0x38, 0x34] {
-        let d = core::ptr::read_unaligned((a + o) as *const i16) as i32 - core::ptr::read_unaligned((b + o) as *const i16) as i32;
+        let d = read_i16(a + o) as i32 - read_i16(b + o) as i32;
         if d != 0 {
             return d;
         }
     }
-    let name = |x: usize| core::ptr::read_unaligned((x + 0x20) as *const usize).wrapping_add(0x38);
+    let name = |x: usize| read_usize(x + 0x20).wrapping_add(0x38);
     exe::utils_string_compare((name(a)) as *const u8, (name(b)) as *const u8, 1, 0)
 }
 
@@ -11258,7 +11258,7 @@ pub(crate) unsafe extern "C" fn day_match_order(a: usize, b: usize) -> i32 {
 /// (+0x104 + +0x105) × (+0x3b × 0,005 + 0,5) × +0x4d (f32), truncada, do maior para o menor.
 pub(crate) unsafe extern "C" fn action_order(a: *const usize, b: *const usize) -> i32 {
     let (pa, pb) = (*a, *b);
-    let m = Engine(*(G_ACTION_ORDER_MATCH_ENGINE as *const usize));
+    let m = Engine(read_usize(G_ACTION_ORDER_MATCH_ENGINE));
     if (m.restart_type() as u8) != restart::OPEN_PLAY as u8 {
         let first = m.ball_holder();
         if pa == first.addr() {
@@ -11494,7 +11494,7 @@ pub(crate) unsafe extern "thiscall" fn context_commentary(m: usize, side: u32, e
 pub(crate) unsafe extern "thiscall" fn referee_grade(m: usize) {
     let m = Engine(m);
     let referee = m.referee_id();
-    if referee == 0 || *(referee as *const i32) == -1 {
+    if referee == 0 || read_i32(referee) == -1 {
         return;
     }
     let partida = Fixture(m.r#match());
@@ -11505,7 +11505,7 @@ pub(crate) unsafe extern "thiscall" fn referee_grade(m: usize) {
     if comp.is_null() {
         return;
     }
-    let amistosos = *(G_FRIENDLY as *const usize);
+    let amistosos = read_usize(G_FRIENDLY);
     if amistosos != 0 {
         if exe::friendly_is_friendly_competition(amistosos, comp) != 0 {
             crate::comparison::branch("referee rating friendly");
@@ -11539,11 +11539,11 @@ pub(crate) unsafe extern "thiscall" fn referee_grade(m: usize) {
         rating = 10;
     }
     let mut r = [0u8; 8];
-    r[..4].copy_from_slice(&(*(referee as *const i32)).to_le_bytes());
+    r[..4].copy_from_slice(&read_i32(referee).to_le_bytes());
     r[4] = cards as u8;
     r[5] = faltas as u8;
     r[6] = rating as u8;
-    exe::officialsmanager_record_match_stats(*(G_OFFICIALS_MANAGER as *const usize), r.as_ptr());
+    exe::officialsmanager_record_match_stats(read_usize(G_OFFICIALS_MANAGER), r.as_ptr());
 }
 
 /// the match without moves, in periods of two rounds. Per period, the team strength (0x6c0c60) with four pairs clamped
@@ -11663,7 +11663,7 @@ pub(crate) unsafe extern "thiscall" fn side_byte(this: usize, player: usize) -> 
             return (this.goalkeeper_nearest() as i8) as u8;
         }
     }
-    let stored = *((this.addr() + if s == 1 { 0xf58a } else { 0xf586 }) as *const usize);
+    let stored = read_usize(this.addr() + if s == 1 { 0xf58a } else { 0xf586 });
     (player == stored) as u8
 }
 

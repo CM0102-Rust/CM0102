@@ -17,7 +17,7 @@ MUTACOES = [
     ('dbp_tirar_clube_favorito', '        remove_from_list3(pref + 4, club); // the favorite clubs', '        remove_from_list3(pref + 0x10, club); // mutacao: dos clubes rejeitados'),
     ('dbp_tirar_rejeitada', '        let reg = pref + preferences::STAFF_DISLIKED_STAFF1; // the rejected people', '        let reg = pref + preferences::STAFF_FAVOURITE_STAFF1; // mutacao: das pessoas favoritas'),
     ('dbr_longitude', '    order_by_city_coordinate(ca, cb, 0x2b) // a longitude', '    order_by_city_coordinate(ca, cb, 0x23) // mutacao: a latitude no lugar da longitude'),
-    ('dbr_fora_da_argentina', '(id != *(KEY_NATION_ARGENTINA as *const u32)) as u32, // a Argentina', '(id == *(0x9cf218 as *const u32)) as u32, // mutacao: a resposta invertida'),
+    ('dbr_fora_da_argentina', '(id != read_u32(KEY_NATION_ARGENTINA)) as u32, // a Argentina', '(id == read_u32(0x9cf218)) as u32, // mutacao: a resposta invertida'),
     ('dbr_fora_de_arg_fra_cro', 'let keys = [KEY_NATION_ARGENTINA, KEY_NATION_FRANCE, KEY_NATION_CROATIA]; // Argentina, France, Croatia', 'let keys = [0x9cf218usize, 0x9cf218, 0x9cf2ac]; // mutacao: sem a Franca'),
     ('dbr_pessoas_pelo_nome_completo', 'exe::database_format_staff_name(pb, nb.as_mut_ptr() as usize, 0x7d0, 1);\n    }\n    compare_text_nocase(na.as_ptr(), nb.as_ptr())', 'exe::database_format_staff_name(pb, nb.as_mut_ptr() as usize, 0x7d0, 1);\n    }\n    compare_text_nocase(nb.as_ptr(), na.as_ptr()) // mutacao: a ordem invertida'),
     ('dbr_confere_nomes', '    for (d, id) in [(4, name), (8, surname), (0xc, common)] {', '    for (d, id) in [(4, name), (0xc, common)] { // mutacao: sem o sobrenome'),

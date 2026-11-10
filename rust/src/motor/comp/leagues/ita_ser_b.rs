@@ -96,7 +96,7 @@ pub(crate) unsafe extern "thiscall" fn ita_league_sort_clubs_level_on_points(thi
     exe::crt_qsort(first, (how_many as u16 as i16 as i32) as u32, 0x3b, 0x683410); // cql4: the block of tied clubs
     let mut i: i16 = 0;
     while i < this.club_count() {
-        *((ita_ser_a_table_row(this, i as usize) + 4) as *mut u8) = i as u8;
+        write_u8(ita_ser_a_table_row(this, i as usize) + 4, i as u8);
         i += 1;
     }
 }

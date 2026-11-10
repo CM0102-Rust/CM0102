@@ -296,7 +296,7 @@ pub(crate) unsafe fn south_american_cup_schedule(this: League, stage: u32, round
         eng_cc_cup_write_cup_round(t, i as u32, r, year);
     }
     for &(r, o, v) in more {
-        core::ptr::write_unaligned((t + r * 0x68 + o) as *mut u16, v);
+        write_u16(t + r * 0x68 + o, v);
     }
     t
 }
@@ -400,9 +400,9 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_schedule(this: usize
 /// [0xae235c] − 2 × [0xae2350]) que as regras ([0xae1000], 0x4c6890: thiscall com o clube) convidam entra na lista, sem
 /// conferir o espaço; a lista é embaralhada (0x4afb40 com +0xf2). Devolve 1.
 pub(crate) unsafe fn mercosur_select_invited_clubs(this: usize) -> (i32, i32) {
-    core::ptr::write_unaligned((this + 0xf2) as *mut u32, 0x14);
+    write_u32(this + 0xf2, 0x14);
     let l = exe::crt_malloc(0x50);
-    core::ptr::write_unaligned((this + 0xee) as *mut u32, l as u32);
+    write_u32(this + 0xee, l as u32);
     if l == 0 {
         show_error_at(0x9a7e5c, 0x2c6);
         return (0, 0);
@@ -413,14 +413,14 @@ pub(crate) unsafe fn mercosur_select_invited_clubs(this: usize) -> (i32, i32) {
     while i < clubs() {
         let c = read_usize(G_CLUB_TABLE).wrapping_add((i as isize * 0x245) as usize);
         if exe::conmebolseeding_is_mercosur_invited_club(read_usize(G_CONMEBOL_SEEDING), c) != 0 {
-            core::ptr::write_unaligned((read_usize(this + 0xee) + k as usize * 4) as *mut u32, c as u32);
+            write_u32(read_usize(this + 0xee) + k as usize * 4, c as u32);
             k = k.wrapping_add(1);
         }
         i += 1;
     }
     crate::comparison::branch("cqo_13 mercosul guests");
     // simplification: the original pushes the word +0xf2 with garbage in the high 16 bits (the previous eax); 0x4afb40 reads the word
-    exe::comp_util_shuffle_pointer_array(read_usize(this + 0xee), core::ptr::read_unaligned((this + 0xf2) as *const u16) as u32); // cqo13: embaralha os convidados
+    exe::comp_util_shuffle_pointer_array(read_usize(this + 0xee), read_u16(this + 0xf2) as u32); // cqo13: embaralha os convidados
     (1, k as i32)
 }
 

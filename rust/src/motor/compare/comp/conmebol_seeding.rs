@@ -20,7 +20,7 @@ pub(crate) unsafe extern "thiscall" fn compare_assign_libertadores_places(this: 
             let (x, y) = (mo.0[0].1[a - base], mr.0[0].1[a - base]);
             format!("clube {} +{:x}: {:02x}/{:02x}", q, k, x, y)
         }).collect();
-        format!("assign_libertadores_places (ano {}): {}", *(G_CURRENT_DATE_YEAR as *const u16), l.join(", "))
+        format!("assign_libertadores_places (ano {}): {}", read_u16(G_CURRENT_DATE_YEAR), l.join(", "))
     });
 }
 

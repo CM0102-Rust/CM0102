@@ -4,5 +4,5 @@ MUTACOES = [
     ('u_par2', "                (x, y) = if k == 1 { (club.fore_colour2(), club.back_colour2()) } else { (club.fore_colour3(), club.back_colour3()) };", "                (x, y) = if k == 1 { (club.fore_colour3(), club.back_colour3()) } else { (club.fore_colour2(), club.back_colour2()) };"),
     ('u_fim', "    if x == 0 || y == 0 { 1 } else { k }", "    if x == 0 || y == 0 { 1 } else { k + 1 }"),
     ('u_nenhum', "            _ => return 1,", "            _ => return 3,"),
-    ('u_cor', "        if c != 0 { c } else { *(G_COLOUR_TABLE as *const usize) + *(KEY_COLOUR_WHITE as *const i32) as usize * 58 }", "        if c != 0 { c } else { *(G_COLOUR_TABLE as *const usize) }"),
+    ('u_cor', "        if c != 0 { c } else { read_usize(G_COLOUR_TABLE) + read_i32(KEY_COLOUR_WHITE) as usize * 58 }", "        if c != 0 { c } else { read_usize(G_COLOUR_TABLE) }"),
 ]

@@ -344,7 +344,7 @@ pub(crate) unsafe extern "thiscall" fn compare_resolve_board_ultimatum(this: usi
     let before = read_i16(outs) as i32;
     let r = o(this, club);
     let after = read_i16(read_usize(this + manager_manager_fields::DEPARTURE_LIST)) as i32;
-    let ok = after == before + (r != 0) as i32 && (r == 0 || *((board_row_at(this, read_usize(club)) + 2) as *const u8) & 2 != 0);
+    let ok = after == before + (r != 0) as i32 && (r == 0 || read_u8(board_row_at(this, read_usize(club)) + 2) & 2 != 0);
     SCOREBOARD.record(ok, || format!("resolve_board_ultimatum(clube {:x}) devolveu {}, saídas {} -> {}", club, r, before, after));
     r
 }

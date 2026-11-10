@@ -119,7 +119,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
                         let c = base + i as u16 as usize * club::SIZE;
                         let before = read_usize(c + 0x5b);
                         if before != 0 && read_usize(before) == read_usize(KEY_CLUB_COMP_ENGLISH_CONFERENCE) && eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_ENGLISH_CONFERENCE) {
-                            let v = *((c + 0x5f) as *const i8);
+                            let v = read_i8(c + 0x5f);
                             if ((cat == 6 && v <= cat) || v == cat) && c != 0 && c != found {
                                 push_section_club(this, &mut k, c);
                             }
@@ -298,7 +298,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_advance_stage(this: usize) {
 /// [pt] O primeiro clube da lista de inscritos `l` (entradas de 6 bytes: +0 o clube, +5 a situação) com a situação `s`, entre
 /// as `n` primeiras (n = +0x3e da copa, word com sinal); sem ele, None.
 pub(crate) unsafe fn first_entrant_with_status(l: usize, n: i32, s: u8) -> Option<usize> {
-    (0..n.max(0) as usize).find(|&i| *((l + i * 6 + 5) as *const u8) == s).map(|i| read_usize(l + i * 6))
+    (0..n.max(0) as usize).find(|&i| read_u8(l + i * 6 + 5) == s).map(|i| read_usize(l + i * 6))
 }
 
 /// Builds the Trophy final when the sections end: a single tie (2-team Cup_Stage, stage 1) between the club still alive

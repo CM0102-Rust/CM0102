@@ -7,9 +7,9 @@ use super::*;
 pub(crate) unsafe fn wc_europe_league_write_rule_fields(this: League, fields: &[(usize, u8, u32)]) {
     for &(o, n, v) in fields {
         if n == 1 {
-            *((this.addr() + o) as *mut u8) = v as u8;
+            write_u8(this.addr() + o, v as u8);
         } else {
-            core::ptr::write_unaligned((this.addr() + o) as *mut u16, v as u16);
+            write_u16(this.addr() + o, v as u16);
         }
     }
 }
@@ -32,8 +32,8 @@ pub(crate) unsafe fn comp_date_word(this: League, day: u32, month: u32, week: u3
 pub(crate) unsafe fn finish_rules_setup(this: League, word: u16, b8: u16) -> u32 {
     this.set_next_draw_day((word) as i16);
     this.set_next_draw_year_offset((b8) as i16);
-    let vt = core::ptr::read_unaligned(this.addr() as *const usize);
-    let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(core::ptr::read_unaligned((vt + 0x3c) as *const usize));
+    let vt = read_usize(this.addr());
+    let table: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(vt + 0x3c));
     let t = table(this.addr(), 0xffff_ffff, this.addr() + league::ROUND_COUNT, this.addr() + league::STAGE_ID, 0);
     this.set_round_dates((t as u32) as usize);
     1
@@ -48,14 +48,14 @@ pub(crate) unsafe fn check_qualifier_rules(name: &str, this: usize, fields: &[(u
     let mut errados: [(usize, u32); 4] = [(0, 0); 4];
     let mut k = 0;
     for &(off, n, v) in fields {
-        let (lido, v) = if n == 1 { (*((this + off) as *const u8) as u32, v & 0xff) } else { (core::ptr::read_unaligned((this + off) as *const u16) as u32, v & 0xffff) };
+        let (lido, v) = if n == 1 { (read_u8(this + off) as u32, v & 0xff) } else { (read_u16(this + off) as u32, v & 0xffff) };
         if lido != v && k < 4 {
             errados[k] = (off, lido);
             k += 1;
         }
     }
-    let b6 = core::ptr::read_unaligned((this + 0xb6) as *const u16);
-    let lido8 = core::ptr::read_unaligned((this + 0xb8) as *const u16);
+    let b6 = read_u16(this + 0xb6);
+    let lido8 = read_u16(this + 0xb8);
     SCOREBOARD.record(r == 1 && k == 0 && b6 == word && lido8 == b8, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {}", name, this, r, &errados[..k], b6, word, lido8));
     r
 }
