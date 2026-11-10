@@ -583,8 +583,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
     let p1 = Staff(p1);
     let p2 = Club(p2);
     use crate::comparison::branch;
-    let k = |a: usize| read_f64(a);
-    let zero = k(0x9689a0);
+    let zero = read_f64(rdata::F64_0);
     // the calls by address, with the conventions checked at the original’s call sites
     // 0x54a110: lea ecx, data -> thiscall, ret 0
     // 0x8cca10: push 0; push person; mov ecx, [0xde1f54] -> thiscall, ret 8
@@ -632,9 +631,9 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
     }
     let a57 = p1.ambition() as i32 as f64;
     let age = (p1.age() as i8);
-    let aa8: f32 = ((k(0x968dc0) - a57 * k(0x967878)) - p1.professionalism() as i32 as f64 * k(0x967878)) as f32;
-    let mut a88: f32 = (a57 * k(0x968a98) + k(0x9689b0)) as f32;
-    let mut b4: f32 = (a57 * k(0x967888) + k(0x968968)) as f32;
+    let aa8: f32 = ((read_f64(rdata::F64_1_4) - a57 * read_f64(rdata::F64_0_025)) - p1.professionalism() as i32 as f64 * read_f64(rdata::F64_0_025)) as f32;
+    let mut a88: f32 = (a57 * read_f64(rdata::F64_0_02) + read_f64(rdata::F64_0_8)) as f32;
+    let mut b4: f32 = (a57 * read_f64(rdata::F64_0_05) + read_f64(rdata::F64_0_5)) as f32;
     let c0 = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p1));
     write_usize(G_CONTRACT_LOOKUP_RESULT, c0.addr());
     let mut d4 = 0usize;
@@ -642,7 +641,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         d4 = read_usize(G_CLUB_TABLE).wrapping_add(c0.club().wrapping_mul(club::SIZE));
         if d4 != 0 {
             if read_usize(d4 + club::NATION) == 0 {
-                return k(0x968e38);
+                return read_f64(rdata::F64_3_5);
             }
             if read_u8(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p1) + 0x35) & 0x3f == 5 {
                 d4 = 0;
@@ -656,9 +655,9 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
     if !p2.is_null() && p2.addr() == d4 && c != 0 {
         let days = exe::date_days_since(c + contract::CONTRACT_EXPIRES, read_usize(G_CURRENT_DATE) as u32, read_usize(G_CURRENT_DATE_LEAP) as u32);
         let r1 = r61.current_reputation() as i32;
-        let mut s = ftol((p2.reputation() as i32 - r1) as f64 * k(0x968968)) as i16;
+        let mut s = ftol((p2.reputation() as i32 - r1) as f64 * read_f64(rdata::F64_0_5)) as i16;
         if a0 & 0x10 != 0 {
-            s = ftol(s as f64 * k(0x968968)) as i16;
+            s = ftol(s as f64 * read_f64(rdata::F64_0_5)) as i16;
         }
         let lim = p1.loyalty() as i32 * 10 + 0x465;
         let s: i32 = if s < 0 { 0 } else if s as i32 > lim { lim as i16 as i32 } else { s as i32 };
@@ -668,7 +667,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
                 && read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(0x4f)) + 0xb) & 0xf == 0
                 && r1 + p1.ambition() as i32 * 20 < (p1.loyalty() as i32 + 0xaa) * 25 + s
             {
-                return k(0x968e38);
+                return read_f64(rdata::F64_3_5);
             }
         }
     }
@@ -691,18 +690,18 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         f8 = 2.75; // cqe4: the base for another club
         if c != 0 && read_u8(c + contract::LEAVING_ON_BOSMAN) != 0 {
             let dd = days_until_date(c + 0x2f, c + contract::CONTRACT_EXPIRES);
-            let v = k(0x9689c0) - dd as f64 * k(0x969048);
-            if !p6.is_null() && v < p1.pressure() as i32 as f64 * k(0x968a98) + k(0x968e48) {
+            let v = read_f64(rdata::F64_1_1) - dd as f64 * read_f64(rdata::F64_0_002);
+            if !p6.is_null() && v < p1.pressure() as i32 as f64 * read_f64(rdata::F64_0_02) + read_f64(rdata::F64_0_6) {
                 *p6 |= 1;
             }
-            f8 = v * k(0x9690a8);
+            f8 = v * read_f64(rdata::F64_2_75);
         } else if d4 == 0 {
             let dd =((read_u16(G_CURRENT_DATE_YEAR) as i32 - p1.date_joined_club_year() as i32) * 365 - (p1.date_joined_club() as i16) as i32) + read_i16(G_CURRENT_DATE) as i32;
-            let mut x = dd.wrapping_mul(dd) as f64 * k(0x96f9b8);
-            if k(0x96d6a0) < x {
-                x = k(0x96d6a0);
+            let mut x = dd.wrapping_mul(dd) as f64 * read_f64(rdata::F64_0_001111111111);
+            if read_f64(rdata::F64_12) < x {
+                x = read_f64(rdata::F64_12);
             }
-            f8 = x + k(0x9690a8);
+            f8 = x + read_f64(rdata::F64_2_75);
         }
     }
     // the reputation of both clubs in a loan request
@@ -712,51 +711,51 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         let rb = r61.current_reputation();
         if ax > read_i16(d4 + club::REPUTATION) && (same || ax > 0x1676) {
             if rb <= 0x1c52 && exe::staff_is_loan_listed(p1, 0) != 0 {
-                f8 *= k(0x968940);
+                f8 *= read_f64(rdata::F64_1_5);
             } else {
-                f8 *= k(0x968928);
+                f8 *= read_f64(rdata::F64_1_25);
             }
         } else if ax > 0xabe && (same || ax > 0x1676) && ax > rb {
             if rb <= 0x1c52 && exe::staff_is_loan_listed(p1, 0) != 0 {
-                f8 *= k(0x969588);
+                f8 *= read_f64(rdata::F64_1_35);
             } else {
-                f8 *= k(0x968980);
+                f8 *= read_f64(rdata::F64_1_15);
             }
         } else if ax > 0x109a && same {
             if rb > 0x186a && ax < 0x1482 {
-                f8 *= k(0x968fa0);
+                f8 *= read_f64(rdata::F64_1_025);
             } else if rb <= 0x1c52 && exe::staff_is_loan_listed(p1, 0) != 0 {
-                f8 *= k(0x968928);
+                f8 *= read_f64(rdata::F64_1_25);
             } else {
-                f8 *= k(0x9689c0);
+                f8 *= read_f64(rdata::F64_1_1);
             }
         }
     }
     if exe::staff_dislikes_club(p1, p2) != 0 {
-        f8 *= k(0x968f78);
+        f8 *= read_f64(rdata::F64_0_33);
         fl(2);
     }
     if exe::staff_dislikes_club(p1, d4) != 0 {
         let s = (p1.pressure() as u8).wrapping_add((p1.loyalty() as u8)).wrapping_add((p1.professionalism() as u8)) as i8;
         if s > 0x2d {
-            f8 *= k(0x968928);
+            f8 *= read_f64(rdata::F64_1_25);
         } else if s > 0x19 {
-            f8 *= k(0x968940);
+            f8 *= read_f64(rdata::F64_1_5);
         } else {
             f8 = f8 + f8;
         }
         fl(4);
     }
     if exe::staff_favours_club(p1, d4) != 0 && exe::staff_is_transfer_listed_or_requested(p1, d4) == 0 && read_u8(c + contract::LEAVING_ON_BOSMAN) == 0 {
-        f8 *= k(0x968968);
+        f8 *= read_f64(rdata::F64_0_5);
         fl(8);
     }
     if exe::staff_favours_club(p1, p2) != 0 {
         fl(0x10);
-        f8 *= k(0x968930);
+        f8 *= read_f64(rdata::F64_3);
     }
     if age > 0x22 && d4 != p2.addr() && p2.nation() != p1.nation() {
-        f8 *= k(0x969040);
+        f8 *= read_f64(rdata::F64_0_75);
     }
     let max1 = |n: i8| if n < 1 { 1 } else { n as i32 };
     if d4 != 0 && d4 != p2.addr() {
@@ -764,37 +763,37 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         let i2 = read_usize(p2.addr());
         let i4 = read_usize(d4);
         if (i2 == e1 || i2 == e2) && (i4 == e1 || i4 == e2) {
-            f8 = (k(0x967878) / max1(p1.loyalty()) as f64) * f8;
+            f8 = (read_f64(rdata::F64_0_025) / max1(p1.loyalty()) as f64) * f8;
             fl(0x20);
         } else {
             let n2 = read_usize(p2.nation().addr());
             let (na, nb) = (read_usize(KEY_NATION_CROATIA), read_usize(KEY_NATION_YUGOSLAVIA));
             if n2 == nb && read_usize(read_usize(d4 + club::NATION)) == na && read_usize(p1.nation().addr()) == na {
-                f8 *= k(0x967888);
+                f8 *= read_f64(rdata::F64_0_05);
                 fl(2);
             } else if n2 == na && read_usize(read_usize(d4 + club::NATION)) == nb && read_usize(p1.nation().addr()) == nb {
-                f8 *= k(0x967880);
+                f8 *= read_f64(rdata::F64_0_1);
                 fl(2);
             } else {
                 if p2.addr() == read_usize(d4 + club::RIVAL1) || p2.addr() == read_usize(d4 + club::RIVAL2) || p2.addr() == read_usize(d4 + club::RIVAL3) {
                     let m = if n2 == read_usize(KEY_NATION_ITALY) {
-                        k(0x967890) - p1.loyalty() as i32 as f64 * k(0x968a98)
+                        read_f64(rdata::F64_1) - p1.loyalty() as i32 as f64 * read_f64(rdata::F64_0_02)
                     } else {
-                        k(0x968918) / max1(p1.loyalty()) as f64
+                        read_f64(rdata::F64_0_2) / max1(p1.loyalty()) as f64
                     };
                     f8 = m * f8;
-                    if !p6.is_null() && m < k(0x968e40) {
+                    if !p6.is_null() && m < read_f64(rdata::F64_0_7) {
                         *p6 |= 0x20;
                     }
                 }
                 if exe::comp_util_get_league_clash_type(p2, d4) != 0 {
                     let m = if read_usize(p2.nation().addr()) == read_usize(KEY_NATION_ITALY) {
-                        k(0x967890) - p1.loyalty() as i32 as f64 * k(0x968a98)
+                        read_f64(rdata::F64_1) - p1.loyalty() as i32 as f64 * read_f64(rdata::F64_0_02)
                     } else {
-                        k(0x969040) / max1(p1.loyalty()) as f64
+                        read_f64(rdata::F64_0_75) / max1(p1.loyalty()) as f64
                     };
                     f8 = m * f8;
-                    if !p6.is_null() && m < k(0x968e40) {
+                    if !p6.is_null() && m < read_f64(rdata::F64_0_7) {
                         *p6 |= 0x20;
                     }
                 }
@@ -807,7 +806,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         fl(0x40);
     }
     if exe::staff_is_disliked_by(t2, p1) != 0 {
-        f8 *= k(0x968f78);
+        f8 *= read_f64(rdata::F64_0_33);
         fl(0x80);
     }
     if d4 != 0 {
@@ -817,7 +816,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
             fl(0x100);
         }
         if exe::staff_is_favoured_by(t4, p1) != 0 {
-            f8 *= k(0x968968);
+            f8 *= read_f64(rdata::F64_0_5);
             if !p6.is_null() && read_u8(c + contract::TRANSFER_STATUS) & 8 == 0 {
                 *p6 |= 0x200;
             }
@@ -837,30 +836,30 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
     } else {
         let e44 = read_i8(c + 0x44) as i32;
         if p2.addr() == d4 {
-            f8 = (e44 as f64 * k(0x969028) + k(0x967890)) * f8;
+            f8 = (e44 as f64 * read_f64(rdata::F64_0_0025) + read_f64(rdata::F64_1)) * f8;
             ea = p5b;
             if p2.manager().addr() != 0 && is_150_days_since(p2.manager()) {
                 ea = exe::contract_manager_get_deserved_squad_status(read_usize(G_CONTRACT_MANAGER), p1, c) as i8;
             }
         } else {
-            let v = k(0x967890) - e44 as f64 * k(0x969028);
+            let v = read_f64(rdata::F64_1) - e44 as f64 * read_f64(rdata::F64_0_0025);
             f8 = v * f8;
-            if v > k(0x96afa8) {
+            if v > read_f64(rdata::F64_1_01) {
                 f8 = v * f8;
             }
             if a0 & 0x10 != 0 {
-                a88 = (a88 as f64 * k(0x968940)) as f32;
+                a88 = (a88 as f64 * read_f64(rdata::F64_1_5)) as f32;
             }
             if a0 & 0x100 != 0 {
-                a88 = (a88 as f64 * k(0x968940)) as f32;
+                a88 = (a88 as f64 * read_f64(rdata::F64_1_5)) as f32;
             }
             if a0 & 1 != 0 {
-                b4 = (b4 as f64 * k(0x968940)) as f32;
+                b4 = (b4 as f64 * read_f64(rdata::F64_1_5)) as f32;
             }
             if !p6.is_null() {
-                if v > k(0x968940) && read_u8(c + contract::TRANSFER_STATUS) & 8 == 0 {
+                if v > read_f64(rdata::F64_1_5) && read_u8(c + contract::TRANSFER_STATUS) & 8 == 0 {
                     *p6 |= 0x400;
-                } else if v < k(0x968968) {
+                } else if v < read_f64(rdata::F64_0_5) {
                     *p6 |= 0x800;
                 }
             }
@@ -885,28 +884,28 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
     let mut den: f32 = 1.0; // [base+0x58]
     if p2.addr() != d4 {
         if exe::human_manager_is_human_club(p2, 0, 1, 0, 0) != 0 {
-            let v = p2.manager().loyalty() as i32 as f64 * k(0x967878) + k(0x968968);
+            let v = p2.manager().loyalty() as i32 as f64 * read_f64(rdata::F64_0_025) + read_f64(rdata::F64_0_5);
             f8 = v * f8;
-            if !p6.is_null() && v < k(0x96a698) {
+            if !p6.is_null() && v < read_f64(rdata::F64_0_675) {
                 *p6 |= 0x20000000;
             }
         }
         match ea {
             1 => {
-                f8 *= k(0x96a5d0);
+                f8 *= read_f64(rdata::F64_0_65);
                 if !p6.is_null() && read_usize(c + 0x45) == 0 {
                     *p6 |= 0x1000;
                 }
             }
             2 => {
-                f8 *= k(0x969040);
+                f8 *= read_f64(rdata::F64_0_75);
                 if !p6.is_null() && read_usize(c + 0x45) == 0 {
                     *p6 |= 0x1000;
                 }
             }
-            3 => f8 *= k(0x9689d8),
+            3 => f8 *= read_f64(rdata::F64_0_9),
             4 => {
-                f8 *= k(0x96d640);
+                f8 *= read_f64(rdata::F64_1_8);
                 fl(0x2000);
                 if age < 0x20 {
                     if age > 0x17 {
@@ -919,20 +918,20 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
             }
             5 => {
                 if !p4b {
-                    f8 *= k(0x969040);
+                    f8 *= read_f64(rdata::F64_0_75);
                 }
                 if jovem {
                     f8 = f8 + f8;
                 }
             }
             6 => {
-                f8 *= k(0x9689c0);
+                f8 *= read_f64(rdata::F64_1_1);
                 if jovem {
-                    f8 *= k(0x968938);
+                    f8 *= read_f64(rdata::F64_4);
                 }
             }
             7 => {
-                f8 *= k(0x968988);
+                f8 *= read_f64(rdata::F64_7);
                 fl(0x2000);
             }
             _ => {}
@@ -944,73 +943,73 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
                     f8 = f8 + f8;
                     fl(0x4000);
                 } else {
-                    f8 *= k(0x96f9b0);
+                    f8 *= read_f64(rdata::F64_1_538461538);
                 }
                 b4 *= read_f32(rdata::F32_1_100000024);
             }
             2 => {
                 if cf10 {
-                    f8 *= k(0x96f9a8);
+                    f8 *= read_f64(rdata::F64_1_666666667);
                     fl(0x4000);
                 } else {
-                    f8 *= k(0x96f9a0);
+                    f8 *= read_f64(rdata::F64_1_333333333);
                 }
                 b4 *= read_f32(rdata::F32_1_049999952);
             }
             3 => {
                 if !cf10 {
-                    f8 *= k(0x96f998);
+                    f8 *= read_f64(rdata::F64_1_111111111);
                 }
                 if pos20() {
-                    f8 *= k(0x9689b0);
+                    f8 *= read_f64(rdata::F64_0_8);
                 }
             }
             4 => {
                 if a0 & 0x10 != 0 {
-                    f8 *= k(0x96f990);
+                    f8 *= read_f64(rdata::F64_0_175);
                     if !p1.non_player().is_null() {
-                        f8 *= k(0x96f988);
+                        f8 *= read_f64(rdata::F64_2_666666667);
                     } else {
                         fl(0x8000);
                     }
                 } else {
-                    f8 *= if pos20() { k(0x968f20) } else { k(0x968fb0) };
+                    f8 *= if pos20() { read_f64(rdata::F64_0_15) } else { read_f64(rdata::F64_0_375) };
                 }
                 if age < 0x20 {
                     if age > 0x17 {
-                        f8 *= k(0x968968);
+                        f8 *= read_f64(rdata::F64_0_5);
                     }
                     if (p1.int_apps() as i8) != 0 {
-                        f8 *= k(0x968968);
+                        f8 *= read_f64(rdata::F64_0_5);
                     }
                 }
                 b4 *= read_f32(rdata::F32_0_8000000119);
             }
             5 => {
                 if a0 & 0x10 != 0 {
-                    f8 *= k(0x969020);
+                    f8 *= read_f64(rdata::F64_0_03333333333);
                     fl(0x8000);
                 } else {
-                    f8 *= if pos20() { k(0x968918) } else { k(0x968e00) };
+                    f8 *= if pos20() { read_f64(rdata::F64_0_2) } else { read_f64(rdata::F64_0_4) };
                 }
                 if jovem {
-                    f8 *= k(0x968968);
+                    f8 *= read_f64(rdata::F64_0_5);
                 }
                 b4 *= read_f32(rdata::F32_0_6700000167);
             }
             6 => {
                 if a0 & 0x10 != 0 {
-                    f8 *= k(0x968a98);
+                    f8 *= read_f64(rdata::F64_0_02);
                     fl(0x8000);
                 } else {
-                    f8 *= if pos20() { k(0x967880) } else { k(0x968f20) };
+                    f8 *= if pos20() { read_f64(rdata::F64_0_1) } else { read_f64(rdata::F64_0_15) };
                 }
                 if jovem {
-                    f8 *= k(0x9689e0);
+                    f8 *= read_f64(rdata::F64_0_25);
                 }
                 b4 *= read_f32(rdata::F32_0_5);
             }
-            7 => f8 *= k(0x969048),
+            7 => f8 *= read_f64(rdata::F64_0_002),
             _ => {}
         }
         // the new club’s reputation, on several scales, against the person’s
@@ -1038,7 +1037,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         }
         let ax = read_i16(read_usize(this + shortlist_manager_fields::CLUB_SHORTLISTS).wrapping_add(read_usize(p2.addr()).wrapping_mul(9)) + 5);
         let m = if si > ax { si } else { ax };
-        let cx = ftol(si as f64 * k(0x96a5d0) + m as f64 * k(0x969510)) as i16;
+        let cx = ftol(si as f64 * read_f64(rdata::F64_0_65) + m as f64 * read_f64(rdata::F64_0_35)) as i16;
         let den0 = ((b4 as f64 + a88 as f64) + aa8 as f64) + read_f32(rdata::F32_2) as f64;
         den = if den0 > zero { den0 as f32 } else { 0.5 };
         let s = (((h6c as i16 as f64 * b4 as f64 + h68 as f64 * a88 as f64) + h34 as i16 as f64 * aa8 as f64) + cx as f64) + rv as f64;
@@ -1052,14 +1051,14 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
                 w = half_or_minus_2000(w);
             }
         }
-        e8 = ftol(w as f64 * k(0x968940) - k(0x9688e8));
+        e8 = ftol(w as f64 * read_f64(rdata::F64_1_5) - read_f64(rdata::F64_5000));
         if p2.nation().addr() != 0 {
             let (m, f) = language_fluency_factor(p1, p2, e8 as i16);
-            if age < 0x12 && f < k(0x9688a0) && read_usize(p1.nation().addr() + nation::CONTINENT) != p2.nation().continent() {
+            if age < 0x12 && f < read_f64(rdata::F64_5) && read_usize(p1.nation().addr() + nation::CONTINENT) != p2.nation().continent() {
                 return zero;
             }
             f8 = m * f8;
-            if !p6.is_null() && m < k(0x968e48) {
+            if !p6.is_null() && m < read_f64(rdata::F64_0_6) {
                 *p6 |= 0x10000;
             }
         }
@@ -1081,29 +1080,29 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
                 if exe::staff_is_loan_listed(p1, 0) != 0 && age < 0x18 && !r61.is_null() && r61.current_reputation() < 0x109a && p1.professionalism() > 0xf
                     && p1.pressure() > 0xa && c != 0 && !matches!(ea, 1 | 2 | 3 | 4)
                 {
-                    g *= k(0x968e18);
+                    g *= read_f64(rdata::F64_2_5);
                 }
                 if d4 != 0 && p2.nation().addr() != 0 && read_usize(p2.nation().addr()) == read_usize(KEY_NATION_ITALY) && age < 0x18
                     && read_usize(d4 + club::DIVISION) != 0 && read_usize(read_usize(d4 + club::DIVISION)) == read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_A)
                 {
-                    g *= k(0x968930);
+                    g *= read_f64(rdata::F64_3);
                 }
                 if cid2 != 0 && cid4 != 0 {
                     let dd = shortlist_manager_city_distance(cid2, cid4);
-                    if dd < k(0x968e30) {
-                        f8 = g * k(0x96f978);
+                    if dd < read_f64(rdata::F64_40) {
+                        f8 = g * read_f64(rdata::F64_2_9);
                         fl(0x20000);
-                    } else if dd < k(0x96d6e0) {
-                        let m = k(0x96afa0) - dd * k(0x968a90);
+                    } else if dd < read_f64(rdata::F64_80) {
+                        let m = read_f64(rdata::F64_4_5) - dd * read_f64(rdata::F64_0_04);
                         f8 = m * g;
-                        if !p6.is_null() && m > k(0x969018) {
+                        if !p6.is_null() && m > read_f64(rdata::F64_1_6) {
                             *p6 |= 0x20000;
                         }
                     } else {
-                        f8 = g * k(0x968de8);
+                        f8 = g * read_f64(rdata::F64_1_3);
                     }
                 } else {
-                    f8 = g * k(0x968de8);
+                    f8 = g * read_f64(rdata::F64_1_3);
                 }
                 break 'n Segue::Fatores;
             }
@@ -1116,30 +1115,30 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
                 }
                 if cid2 != 0 && cid4 != 0 {
                     let dd = shortlist_manager_city_distance(cid2, cid4);
-                    if dd < k(0x968e30) {
-                        f8 *= k(0x96f978);
+                    if dd < read_f64(rdata::F64_40) {
+                        f8 *= read_f64(rdata::F64_2_9);
                         fl(0x20000);
-                    } else if dd < k(0x96d6e0) {
-                        let m = k(0x96afa0) - dd * k(0x968a90);
+                    } else if dd < read_f64(rdata::F64_80) {
+                        let m = read_f64(rdata::F64_4_5) - dd * read_f64(rdata::F64_0_04);
                         f8 = m * f8;
-                        if !p6.is_null() && m > k(0x969018) {
+                        if !p6.is_null() && m > read_f64(rdata::F64_1_6) {
                             *p6 |= 0x20000;
                         }
                     } else {
-                        f8 *= k(0x968de8);
+                        f8 *= read_f64(rdata::F64_1_3);
                     }
                 } else {
-                    f8 *= k(0x968de8);
+                    f8 *= read_f64(rdata::F64_1_3);
                 }
                 break 'n Segue::Fatores;
             }
             let t = p2.manager().addr();
             let same_manager = t != 0 && read_usize(t + 0x1a) != 0 && exe::database_is_staff_foreign(p1, read_usize(t + 0x1a), 1) == 0;
             if p2.nation().addr() != 0 && read_usize(p2.nation().addr()) == read_usize(KEY_NATION_GERMANY) {
-                f8 *= k(0x969040);
+                f8 *= read_f64(rdata::F64_0_75);
             }
             if p4b {
-                f8 *= if same_manager { k(0x96a6a8) } else { k(0x968920) };
+                f8 *= if same_manager { read_f64(rdata::F64_0_45) } else { read_f64(rdata::F64_0_08) };
                 fl(0x40000);
                 break 'n Segue::Fatores;
             }
@@ -1147,36 +1146,36 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
             let c57 = p1.ambition() as i32;
             if same_manager {
                 match p5b {
-                    2 => f8 = ((c56 as f64 * k(0x968ef0) + c57 as f64 * k(0x968a98)) + k(0x9689b0)) * f8,
-                    3 => f8 = ((c56 as f64 * k(0x968ef0) + c57 as f64 * k(0x968a98)) + k(0x968e40)) * f8,
+                    2 => f8 = ((c56 as f64 * read_f64(rdata::F64_0_005) + c57 as f64 * read_f64(rdata::F64_0_02)) + read_f64(rdata::F64_0_8)) * f8,
+                    3 => f8 = ((c56 as f64 * read_f64(rdata::F64_0_005) + c57 as f64 * read_f64(rdata::F64_0_02)) + read_f64(rdata::F64_0_7)) * f8,
                     4 => {
-                        f8 *= k(0x968968);
+                        f8 *= read_f64(rdata::F64_0_5);
                         fl(0x80000);
                     }
                     5 => {
-                        f8 *= k(0x968e00);
+                        f8 *= read_f64(rdata::F64_0_4);
                         fl(0x80000);
                     }
                     6 => {
-                        f8 *= k(0x968918);
+                        f8 *= read_f64(rdata::F64_0_2);
                         fl(0x80000);
                     }
                     _ => {}
                 }
             } else {
                 match p5b {
-                    2 => f8 = ((c56 + c57) as f64 * k(0x967898) + k(0x968e40)) * f8,
-                    3 => f8 = ((c56 + c57) as f64 * k(0x967898) + k(0x968e48)) * f8,
+                    2 => f8 = ((c56 + c57) as f64 * read_f64(rdata::F64_0_01) + read_f64(rdata::F64_0_7)) * f8,
+                    3 => f8 = ((c56 + c57) as f64 * read_f64(rdata::F64_0_01) + read_f64(rdata::F64_0_6)) * f8,
                     4 => {
-                        f8 *= k(0x9689e0);
+                        f8 *= read_f64(rdata::F64_0_25);
                         fl(0x80000);
                     }
                     5 => {
-                        f8 = ((c56 + c57) as f64 * k(0x968d60) + k(0x9689e0)) * f8;
+                        f8 = ((c56 + c57) as f64 * read_f64(rdata::F64_0_004) + read_f64(rdata::F64_0_25)) * f8;
                         fl(0x80000);
                     }
                     6 => {
-                        f8 *= k(0x967878);
+                        f8 *= read_f64(rdata::F64_0_025);
                         fl(0x80000);
                     }
                     _ => {}
@@ -1186,38 +1185,38 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         };
         if follows == Segue::Padrao {
             if (c != 0 && read_u8(c + contract::LEAVING_ON_BOSMAN) != 0) || exe::staff_is_transfer_listed(p1, 0) != 0 {
-                f8 *= k(0x968e18);
-                if f8 < k(0x968950) && (p2.reputation() > 0x1a5e || p2.reputation() > read_i16(d4 + club::REPUTATION)) {
-                    let t = f8 + k(0x967890);
-                    f8 = if k(0x968950) < t { 2.0 } else { t };
+                f8 *= read_f64(rdata::F64_2_5);
+                if f8 < read_f64(rdata::F64_2) && (p2.reputation() > 0x1a5e || p2.reputation() > read_i16(d4 + club::REPUTATION)) {
+                    let t = f8 + read_f64(rdata::F64_1);
+                    f8 = if read_f64(rdata::F64_2) < t { 2.0 } else { t };
                 }
             }
         } else {
             if exe::staff_is_loan_listed(p1, 0) != 0 {
-                f8 = (k(0x968940) - c1 as f64 * k(0x967898)) * f8;
+                f8 = (read_f64(rdata::F64_1_5) - c1 as f64 * read_f64(rdata::F64_0_01)) * f8;
             }
-            let mut m = k(0x967890) - c1 as f64 * k(0x96d370);
-            if m < k(0x967880) {
-                m = k(0x967880);
+            let mut m = read_f64(rdata::F64_1) - c1 as f64 * read_f64(rdata::F64_0_015);
+            if m < read_f64(rdata::F64_0_1) {
+                m = read_f64(rdata::F64_0_1);
             }
             f8 = m * f8;
-            if !p6.is_null() && m < k(0x968e48) {
+            if !p6.is_null() && m < read_f64(rdata::F64_0_6) {
                 *p6 |= 0x40000;
             }
             let a = if pos20() {
                 (0x21 - age as i32) as f64
             } else {
                 let a = (0x1c - age as i32) as f64;
-                if a < zero { a * k(0x968e00) } else { a }
+                if a < zero { a * read_f64(rdata::F64_0_4) } else { a }
             };
-            let a = a.abs() * k(0x968f00) + k(0x9689e0);
+            let a = a.abs() * read_f64(rdata::F64_0_08333333333) + read_f64(rdata::F64_0_25);
             f8 = a * f8;
-            if !p6.is_null() && a < k(0x968e48) {
+            if !p6.is_null() && a < read_f64(rdata::F64_0_6) {
                 *p6 |= 0x40000;
             }
         }
         if d4 == 0 {
-            f8 *= k(0x968f98);
+            f8 *= read_f64(rdata::F64_1_75);
         } else if exe::staff_is_transfer_listed_or_requested(p1, 0) == 0 && exe::staff_is_loan_listed(p1, 0) == 0 && (c == 0 || read_u8(c + contract::LEAVING_ON_BOSMAN) == 0) {
             let dd = ((read_u16(G_CURRENT_DATE_YEAR) as i32 - p1.date_joined_club_year() as i32) * 365 - (p1.date_joined_club() as i16) as i32) + read_i16(G_CURRENT_DATE) as i32;
             let e: i32 = if p4b {
@@ -1233,12 +1232,12 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
                 return zero;
             }
             if e > 0x190 {
-                l80 = 400.0 * k(0x969028);
+                l80 = 400.0 * read_f64(rdata::F64_0_0025);
             } else {
                 if e == 0 {
                     return zero;
                 }
-                l80 = e as f64 * k(0x969028);
+                l80 = e as f64 * read_f64(rdata::F64_0_0025);
             }
         }
     } else {
@@ -1264,32 +1263,32 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
             }
         }
         match ea {
-            1 => f8 *= k(0x968978),
-            3 => f8 *= k(0x9689d8),
+            1 => f8 *= read_f64(rdata::F64_1_2),
+            3 => f8 *= read_f64(rdata::F64_0_9),
             4 => {
-                f8 *= k(0x969520);
+                f8 *= read_f64(rdata::F64_0_85);
                 if age < 0x20 {
                     if age > 0x17 {
-                        f8 *= k(0x968968);
+                        f8 *= read_f64(rdata::F64_0_5);
                     }
                     if (p1.int_apps() as i8) != 0 {
-                        f8 *= k(0x968968);
+                        f8 *= read_f64(rdata::F64_0_5);
                     }
                 }
             }
             5 => {
-                f8 *= k(0x969040);
+                f8 *= read_f64(rdata::F64_0_75);
                 if jovem {
-                    f8 *= k(0x968968);
+                    f8 *= read_f64(rdata::F64_0_5);
                 }
             }
             6 => {
-                f8 *= k(0x968e40);
+                f8 *= read_f64(rdata::F64_0_7);
                 if jovem {
-                    f8 *= k(0x9689e0);
+                    f8 *= read_f64(rdata::F64_0_25);
                 }
             }
-            7 => f8 *= k(0x967898),
+            7 => f8 *= read_f64(rdata::F64_0_01),
             _ => {}
         }
     }
@@ -1300,7 +1299,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
             aev = 3;
         }
         ae = aev.wrapping_mul(aev);
-        signed_byte_at = ftol(average_reputation3(p1.player()) as i16 as f64 * k(0x968940) - k(0x9688e8)) as i16;
+        signed_byte_at = ftol(average_reputation3(p1.player()) as i16 as f64 * read_f64(rdata::F64_1_5) - read_f64(rdata::F64_5000)) as i16;
     } else {
         let n4 = Nation(read_usize(d4 + club::NATION));
         let mut aev = if !n4.is_null() { (n4.state_of_development() as i8) } else { 3 };
@@ -1314,7 +1313,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         l8c = reg;
         let t4 = read_usize(d4 + club::MANAGER);
         let si: i16 = if t4 == 0 || read_usize(t4 + staff::NON_PLAYER) == 0 {
-            ftol(h6c4 as i16 as f64 * k(0x969040)) as i16
+            ftol(h6c4 as i16 as f64 * read_f64(rdata::F64_0_75)) as i16
         } else if read_usize(G_MANAGER_MANAGER) == 0 {
             read_i16(read_usize(t4 + staff::NON_PLAYER) + 0xa)
         } else {
@@ -1332,13 +1331,13 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         }
         let ax = read_i16(read_usize(this + shortlist_manager_fields::CLUB_SHORTLISTS).wrapping_add(read_usize(d4).wrapping_mul(9)) + 5);
         let m = if di > ax { di } else { ax };
-        let axv = ftol(di as f64 * k(0x96a5d0) + m as f64 * k(0x969510)) as i16;
+        let axv = ftol(di as f64 * read_f64(rdata::F64_0_65) + m as f64 * read_f64(rdata::F64_0_35)) as i16;
         // simplification: at the club itself (p2 == d4) the original divides by the float [base+0x58] that nobody wrote (leftover from
         // stack); the result is not used afterwards (the path goes straight to the end), and the copy divides by 1.
         let s = (((bx as i16 as f64 * b4 as f64 + h6c4 as i16 as f64 * a88 as f64) + h44 as i16 as f64 * aa8 as f64) + axv as f64) + si as f64;
         let mut di = ftol(s / den as f64) as i16;
         if !p4b && exe::staff_is_transfer_listed(p1, 0) != 0 {
-            di = ftol(di as f64 * k(0x9689d8)) as i16;
+            di = ftol(di as f64 * read_f64(rdata::F64_0_9)) as i16;
         }
         let cl = read_u8(d4 + club::PROFESSIONAL_STATUS);
         if cl != 1 {
@@ -1350,9 +1349,9 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
             }
         }
         if exe::contract_manager_get_squad_placement(read_usize(G_CONTRACT_MANAGER), p1, d4) == 3 {
-            di = ftol(di as f64 * k(0x968e40)) as i16;
+            di = ftol(di as f64 * read_f64(rdata::F64_0_7)) as i16;
         }
-        signed_byte_at = ftol(di as f64 * k(0x968940) - k(0x9688e8)) as i16;
+        signed_byte_at = ftol(di as f64 * read_f64(rdata::F64_1_5) - read_f64(rdata::F64_5000)) as i16;
         if !n4.is_null() && p2.addr() != d4 {
             let (m, _) = language_fluency_factor(p1, Club(d4), signed_byte_at);
             f8 = f8 / m;
@@ -1361,11 +1360,11 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
     if p2.addr() != d4 {
         let comp2 = p2.division().addr();
         if comp2 == 0 || read_usize(comp2) == read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION) {
-            f8 *= k(0x967880);
+            f8 *= read_f64(rdata::F64_0_1);
         } else if p1.club_job() == p2 && !r61.is_null() && r61.player_morale() > 0xa {
-            f8 = r61.player_morale() as i32 as f64 * f8 * k(0x967880);
+            f8 = r61.player_morale() as i32 as f64 * f8 * read_f64(rdata::F64_0_1);
         }
-        let mut a8 = (p2.reputation() as i32 - average_reputation3(r61)) as f64 * k(0x96a6b8) + k(0x967890);
+        let mut a8 = (p2.reputation() as i32 - average_reputation3(r61)) as f64 * read_f64(rdata::F64_0_000125) + read_f64(rdata::F64_1);
         let e8s = e8 as i16 as i32;
         let sbs = signed_byte_at as i32;
         let cf10 = c != 0 && read_u8(c + 0x45) & 0x10 != 0;
@@ -1385,67 +1384,67 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
                 && !((p2.nation().league_standard() as i8) < 0xa && (p2.nation().league_standard() as i8) < read_i8(read_usize(d4 + club::NATION) + 0x85));
         }
         let dv: f64 = if long {
-            (e8s - sbs) as f64 * k(0x968968)
+            (e8s - sbs) as f64 * read_f64(rdata::F64_0_5)
         } else if cf10 && e8s < sbs && sbs - e8s < 0x1388 {
             let d = (sbs - e8s) as f64;
-            d * k(0x96f970) * d
+            d * read_f64(rdata::F64_NEG_0_0002) * d
         } else if e8s > sbs {
             if c != 0 && read_u8(c + 0x45) & 1 != 0 {
-                (e8s - sbs) as f64 * k(0x968e18)
+                (e8s - sbs) as f64 * read_f64(rdata::F64_2_5)
             } else {
-                (p1.ambition() as i32 as f64 * k(0x96f930) + k(0x969040)) * (e8s - sbs) as f64
+                (p1.ambition() as i32 as f64 * read_f64(rdata::F64_0_08771929825) + read_f64(rdata::F64_0_75)) * (e8s - sbs) as f64
             }
         } else if p5b > 3 {
-            (e8s - sbs) as f64 * k(0x968940)
-        } else if !(f8 > k(0x9688b0)) {
+            (e8s - sbs) as f64 * read_f64(rdata::F64_1_5)
+        } else if !(f8 > read_f64(rdata::F64_10)) {
             (e8s - sbs) as f64
         } else {
             let v = if sbs > 0x1b58 && e8s < 0x7d0 && p4b {
                 let z = read_f32(rdata::F32_2) as f64 - (sbs - e8s) as f64 * read_f32(rdata::F32_0_0001999999949) as f64;
-                let mn = if f8 < k(0x968ff8) { f8 } else { k(0x968ff8) };
+                let mn = if f8 < read_f64(rdata::F64_50) { f8 } else { read_f64(rdata::F64_50) };
                 let zm = z * mn;
-                if k(0x9688b0) > zm {
-                    k(0x9688b0) * k(0x967898)
+                if read_f64(rdata::F64_10) > zm {
+                    read_f64(rdata::F64_10) * read_f64(rdata::F64_0_01)
                 } else {
-                    zm * k(0x967898)
+                    zm * read_f64(rdata::F64_0_01)
                 }
             } else {
-                f8 * k(0x967898)
+                f8 * read_f64(rdata::F64_0_01)
             };
-            let mut w = k(0x9689c0) - v;
-            if w < k(0x967880) {
-                w = k(0x967880);
-            } else if !(w <= k(0x967890)) {
-                w = k(0x967890);
+            let mut w = read_f64(rdata::F64_1_1) - v;
+            if w < read_f64(rdata::F64_0_1) {
+                w = read_f64(rdata::F64_0_1);
+            } else if !(w <= read_f64(rdata::F64_1)) {
+                w = read_f64(rdata::F64_1);
             }
             w * (e8s - sbs) as f64
         };
-        if dv > zero && l80 < k(0x967890) {
-            let mut t = dv * k(0x968a98);
-            if k(0x9688a8) < t {
-                t = k(0x9688a8);
+        if dv > zero && l80 < read_f64(rdata::F64_1) {
+            let mut t = dv * read_f64(rdata::F64_0_02);
+            if read_f64(rdata::F64_100) < t {
+                t = read_f64(rdata::F64_100);
             }
-            let r = ((k(0x9688a8) - t) * l80 + t) * k(0x967898);
+            let r = ((read_f64(rdata::F64_100) - t) * l80 + t) * read_f64(rdata::F64_0_01);
             f8 = f8 * r;
-            if !p6.is_null() && r < k(0x968e48) {
+            if !p6.is_null() && r < read_f64(rdata::F64_0_6) {
                 *p6 |= 0x100000;
             }
         }
         branch("cqe_4 injury_word_0c factor");
-        let mut e0 = dv * k(0x96f960) + k(0x967890); // cqe4: the factor of the compared reputation
-        if e0 < k(0x96a350) {
+        let mut e0 = dv * read_f64(rdata::F64_0_0001612903226) + read_f64(rdata::F64_1); // cqe4: the factor of the compared reputation
+        if e0 < read_f64(rdata::F64_0_001) {
             e0 = f64::from_bits(0x3f50624dd2f1a9fc);
         }
         if c != 0 && read_u8(c + contract::UNKNOWN18_3) & 1 != 0 {
-            e0 *= k(0x968940);
+            e0 *= read_f64(rdata::F64_1_5);
         }
         let mut x = e0 * f8;
         let without_requested = |c: Contract| c.is_null() || c.leaving_on_bosman() == 0;
         if !p6.is_null() {
-            if e0 < k(0x968e48) {
-                let ok = b4 as f64 > k(0x968978) && l8c != 0 && l84 == 0 && x > k(0x968928) && ea < 4 && ea > 0 && without_requested(Contract(c));
+            if e0 < read_f64(rdata::F64_0_6) {
+                let ok = b4 as f64 > read_f64(rdata::F64_1_2) && l8c != 0 && l84 == 0 && x > read_f64(rdata::F64_1_25) && ea < 4 && ea > 0 && without_requested(Contract(c));
                 *p6 |= if ok { 0x400000 } else { 0x800000 };
-            } else if e0 > k(0x968940) && b4 as f64 > k(0x968978) && l8c == 0 && l84 != 0
+            } else if e0 > read_f64(rdata::F64_1_5) && b4 as f64 > read_f64(rdata::F64_1_2) && l8c == 0 && l84 != 0
                 && !(d4 != 0 && read_i16(d4 + club::REPUTATION) >= 0x1d4c) && p5b < 4 && p5b > 0 && without_requested(Contract(c))
             {
                 *p6 |= 0x200000;
@@ -1457,10 +1456,10 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         if c != 0 && read_u8(c + 0x45) & 1 != 0 {
             x *= e0;
             if !p6.is_null() {
-                if e0 < k(0x9689b0) {
-                    let ok = b4 as f64 > k(0x968978) && l8c != 0 && l84 == 0 && x > k(0x968928) && ea < 4 && ea > 0 && read_u8(c + contract::LEAVING_ON_BOSMAN) == 0;
+                if e0 < read_f64(rdata::F64_0_8) {
+                    let ok = b4 as f64 > read_f64(rdata::F64_1_2) && l8c != 0 && l84 == 0 && x > read_f64(rdata::F64_1_25) && ea < 4 && ea > 0 && read_u8(c + contract::LEAVING_ON_BOSMAN) == 0;
                     *p6 |= if ok { 0x400000 } else { 0x800000 };
-                } else if e0 > k(0x968950) && b4 as f64 > k(0x968978) && l8c == 0 && l84 != 0
+                } else if e0 > read_f64(rdata::F64_2) && b4 as f64 > read_f64(rdata::F64_1_2) && l8c == 0 && l84 != 0
                     && !(d4 != 0 && read_i16(d4 + club::REPUTATION) >= 0x1d4c) && p5b < 4 && p5b > 0 && read_u8(c + contract::LEAVING_ON_BOSMAN) == 0
                 {
                     *p6 |= 0x200000;
@@ -1469,14 +1468,14 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         }
         if p4b {
             if r61.current_reputation() > signed_byte_at && sbs > e8s {
-                a8 = ((e8s - sbs) as f64 * k(0x96a600) + k(0x967890)) * a8;
-                if a8 < k(0x967880) {
+                a8 = ((e8s - sbs) as f64 * read_f64(rdata::F64_0_0002) + read_f64(rdata::F64_1)) * a8;
+                if a8 < read_f64(rdata::F64_0_1) {
                     a8 = f64::from_bits(0x3fb999999999999a);
                 }
             }
             let r = ae as i32 as f64 / ad as i32 as f64;
             x = x * r;
-            if !p6.is_null() && r < k(0x968e48) {
+            if !p6.is_null() && r < read_f64(rdata::F64_0_6) {
                 *p6 |= 0x1000000;
             }
         } else if d4 != 0 {
@@ -1485,7 +1484,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
                 if t != 0 && read_usize(t) == read_usize(KEY_CONTINENT_EUROPE) {
                     let u = p2.nation().continent();
                     if u != 0 && read_usize(u) != read_usize(KEY_CONTINENT_EUROPE) && u != read_usize(read_usize(d4 + club::NATION) + 0x71) {
-                        x *= k(0x968e00);
+                        x *= read_f64(rdata::F64_0_4);
                         fl(0x2000000);
                     }
                 }
@@ -1493,20 +1492,20 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
                 let v6c = h6c4 as i16;
                 let wv = if v6c > 0x1f4 { v6c as i32 } else { 500 };
                 let mut q = (ae as i32 as f64 * h68 as f64) / (wv as f64 * ad as i32 as f64);
-                if !(k(0x967898) <= q) {
-                    q = k(0x967898);
-                } else if k(0x9688b0) < q {
-                    q = k(0x9688b0);
+                if !(read_f64(rdata::F64_0_01) <= q) {
+                    q = read_f64(rdata::F64_0_01);
+                } else if read_f64(rdata::F64_10) < q {
+                    q = read_f64(rdata::F64_10);
                 }
                 x = x * q;
-                if p2.nation().continent() != read_usize(read_usize(d4 + club::NATION) + 0x71) && q < k(0x967890) {
-                    x *= k(0x968918);
+                if p2.nation().continent() != read_usize(read_usize(d4 + club::NATION) + 0x71) && q < read_f64(rdata::F64_1) {
+                    x *= read_f64(rdata::F64_0_2);
                     fl(0x2000000);
                 }
             }
         }
         f8 = a8 * x;
-        if !p6.is_null() && a8 < k(0x968e48) {
+        if !p6.is_null() && a8 < read_f64(rdata::F64_0_6) {
             *p6 |= 0x800000;
         }
     }
@@ -1529,7 +1528,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
             }
         }
     }
-    if p3 == 0 || p4b || f8 < k(0x968f98) {
+    if p3 == 0 || p4b || f8 < read_f64(rdata::F64_1_75) {
         return f8;
     }
     // the salary: the default (in a local STAFF_CONTRACT) against the club’s ceiling
@@ -1542,13 +1541,13 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         return zero;
     }
     // 0x864550: push 0; push 0xb; push status; push 0; push club; push person; lea ecx, contract -> thiscall, ret 0x18
-    let w0 = exe::staff_contract_default_staff_contract(contract_local.as_mut_ptr() as usize, p1.addr(), p2.addr(), 0, p5, 0xb, 0);
+    let w0 = exe::staff_contract_default_staff_contract(contract_local.as_mut_ptr() as usize, p1, p2, 0, p5, 0xb, 0);
     // 0x5968d0: push situation; push person; mov ecx, finances -> thiscall, ret 8
     let a8w = exe::finance_get_max_wage(fin, p1, p5) as f64;
     let mut e8w = 0.0f64;
-    let base = if !(k(0x967880) <= f8) { k(0x967880) } else { f8 };
-    let mut q = k(0x968e38) / base; // cqe4: the asking price by interest
-    if q < k(0x9689d8) {
+    let base = if !(read_f64(rdata::F64_0_1) <= f8) { read_f64(rdata::F64_0_1) } else { f8 };
+    let mut q = read_f64(rdata::F64_3_5) / base; // cqe4: the asking price by interest
+    if q < read_f64(rdata::F64_0_9) {
         q = f64::from_bits(0x3feccccccccccccd);
     }
     let mut wv = q * w0;
@@ -1557,35 +1556,35 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
             e8w = 10.0;
         }
         if exe::staff_is_transfer_listed_or_requested(p1, d4) != 0 {
-            e8w = e8w + k(0x9688b0);
+            e8w = e8w + read_f64(rdata::F64_10);
         }
         if read_i8(c + 0x3d) < 0 {
-            e8w = e8w - read_i8(c + 0x3d) as i32 as f64 * k(0x968918);
+            e8w = e8w - read_i8(c + 0x3d) as i32 as f64 * read_f64(rdata::F64_0_2);
         }
         if a0 != 0 {
-            e8w = e8w - read_i8(c + 0x44) as i32 as f64 * k(0x968918);
+            e8w = e8w - read_i8(c + 0x44) as i32 as f64 * read_f64(rdata::F64_0_2);
         }
         if !(zero <= e8w) {
             e8w = 0.0;
-        } else if k(0x968ea8) < e8w {
+        } else if read_f64(rdata::F64_20) < e8w {
             e8w = 20.0;
         }
     }
     let mut f = f8;
-    if !(wv * k(0x96a5d0) <= a8w) {
+    if !(wv * read_f64(rdata::F64_0_65) <= a8w) {
         return zero;
     }
     if !(wv <= a8w) {
-        let mut t = wv * k(0x968968);
+        let mut t = wv * read_f64(rdata::F64_0_5);
         if !(a8w <= t) {
             t = a8w;
         }
-        wv = (wv * (k(0x968ea8) - e8w) + t * e8w) * k(0x967888);
+        wv = (wv * (read_f64(rdata::F64_20) - e8w) + t * e8w) * read_f64(rdata::F64_0_05);
     }
     if !(wv <= a8w) && !(wv <= zero) {
         let r = a8w / wv;
-        if r < k(0x968e40) {
-            return k(0x967880);
+        if r < read_f64(rdata::F64_0_7) {
+            return read_f64(rdata::F64_0_1);
         }
         f = f * r;
         wv = a8w;
@@ -1594,18 +1593,18 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         return f;
     }
     let mut g = read_usize(c + contract::WAGE) as i32 as f64;
-    if g < k(0x9688b0) {
-        g = k(0x9688b0);
+    if g < read_f64(rdata::F64_10) {
+        g = read_f64(rdata::F64_10);
     }
     let mut h = if d4 == p2.addr() { g / wv } else { wv / g };
-    if !(k(0x967880) <= h) {
-        h = k(0x967880);
-    } else if k(0x9688b0) < h {
-        return f * k(0x9688b0);
-    } else if !(h < k(0x967890)) {
+    if !(read_f64(rdata::F64_0_1) <= h) {
+        h = read_f64(rdata::F64_0_1);
+    } else if read_f64(rdata::F64_10) < h {
+        return f * read_f64(rdata::F64_10);
+    } else if !(h < read_f64(rdata::F64_1)) {
         return f * h;
     }
-    f * ((((k(0x968ea8) - e8w) * h + e8w) * k(0x967888)) / q)
+    f * ((((read_f64(rdata::F64_20) - e8w) * h + e8w) * read_f64(rdata::F64_0_05)) / q)
 }
 
 /// Branch counter for a hot routine: calls ramo only every 4096 passes.
@@ -3788,12 +3787,12 @@ pub(crate) unsafe extern "thiscall" fn get_squad_status_for_club(this: usize, pe
 pub(crate) unsafe extern "stdcall" fn shortlist_manager_estimate_squad_status(person: usize, club: usize) -> u32 {
     let person = Staff(person);
     let club = Club(club);
-    let mut rep = if (exe::database_get_staff_reputation_for_viewer(person, exe::database_get_club_manager(club.addr()), 0) as u16) as i16 > 1 { (exe::database_get_staff_reputation_for_viewer(person, exe::database_get_club_manager(club.addr()), 0) as u16) as i16 } else { 1 };
+    let mut rep = if (exe::database_get_staff_reputation_for_viewer(person, exe::database_get_club_manager(club), 0) as u16) as i16 > 1 { (exe::database_get_staff_reputation_for_viewer(person, exe::database_get_club_manager(club), 0) as u16) as i16 } else { 1 };
     let mut rc = club.reputation();
     if rc <= 1 {
         rc = 1;
     }
-    let t = exe::database_get_club_manager(club.addr());
+    let t = exe::database_get_club_manager(club);
     if exe::scout_manager_is_player_shortlisted(read_usize(G_SCOUT_MANAGER), person, t) != 0 {
         let a = rep as f64 * read_f64(rdata::F64_1_5);
         let b = rc as f64 * read_f64(rdata::F64_0_75);

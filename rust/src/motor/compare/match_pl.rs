@@ -446,7 +446,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pass_ball(j: usize, kind: u8, rec
         (0x7103e0, [0; 5]),
     ];
     let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(j.addr(), kind, receiver, a3, a4, a5), |chamar| {
-        pass_ball_injected(j, kind, receiver, a4, a5, &mut |rotina, this, args| {
+        pass_ball_injected(j, kind, MatchPlayer(receiver), a4, a5, &mut |rotina, this, args| {
             let mask = MASCARAS.iter().find(|m| m.0 == rotina).map_or([u32::MAX; 5], |m| m.1);
             chamar(rotina, this, args, mask)
         })

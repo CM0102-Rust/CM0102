@@ -152,7 +152,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_record_season_honours(this
     for (linha, valor, posicao) in [(0usize, 175000i32, 1i32), (0x3b, 100000, 2)] {
         let c = read_usize(this.table() + linha);
         exe::finance_add_prize_money(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c), valor);
-        exe::comp_send_prize_money_news(this.addr(), read_usize(this.table() + linha), valor, 0, posicao, 0, 0, -2);
+        exe::comp_send_prize_money_news(this, read_usize(this.table() + linha), valor, 0, posicao, 0, 0, -2);
     }
     crate::comparison::branch("cqo_8 prizes");
     exe::bra_nat_first_fill_champions_cup_entrants()

@@ -36,7 +36,7 @@ pub(crate) unsafe fn match_weight(club: Club, fixture: Fixture, factor: &mut f64
     if exe::comp_is_club_still_in_contention(obj, club) == 0 {
         return read_f64(rdata::F64_0_2);
     }
-    if exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), comp.addr()) != 0 {
+    if exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), comp) != 0 {
         return if manager_manager_is_national_team(fixture.home_club()) != 0 { read_f64(rdata::F64_0_67) } else { read_f64(rdata::F64_0_05) };
     }
     if fixture.home_side_mark() == 0 {
@@ -662,7 +662,7 @@ pub(crate) unsafe extern "thiscall" fn post_board_match_reaction_news(this: usiz
         exe::newsitem_set_slot(n, k as i8, v as i8 as i32 as u32);
         k = k.wrapping_add(1);
     }
-    exe::fill_match_record_from_fixture(fixture.addr(), club, r);
+    exe::fill_match_record_from_fixture(fixture, club, r);
     exe::write_match_record_to_news(r, n, &mut k);
     exe::news_send_to_club_manager(read_usize(G_NEWS), n, club);
 }
@@ -1812,7 +1812,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
     let rating: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
     BOARD_VETO_SEEDED_RAND = false;
     if comprando as u8 != 0 {
-        let l = exe::injury_get_player_injury(read_usize(G_INJURY), j.addr());
+        let l = exe::injury_get_player_injury(read_usize(G_INJURY), j);
         if l != 0 && read_i16(l + injury_entry::DAYS_OUT) > 0x14 {
             let mut semeou = false;
             for k in 0..3usize {
@@ -3832,7 +3832,7 @@ pub(crate) unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32
     for k in 0..0x32 {
         let p = Staff((club.squad(k) as u32) as usize);
         if !p.is_null() && (p.player().addr() as u32) != 0 {
-            let c = exe::contract_manager_get_contract_for_club(read_u32(G_CONTRACT_MANAGER) as usize, p.addr(), club.addr());
+            let c = exe::contract_manager_get_contract_for_club(read_u32(G_CONTRACT_MANAGER) as usize, p, club);
             if c != 0 && read_u32(c + 0x45) & 0x1000_0000 != 0 {
                 queixosos = queixosos.wrapping_add(1);
             }
@@ -4028,7 +4028,7 @@ pub(crate) unsafe extern "thiscall" fn assess_transfer_deal(this: usize, transf:
         let g = board_row_at(this, read_usize(buyer.addr())) + 0x38;
         write_f64(g, value as f64 + read_f64(g));
         let limit = fee_limit(buyer);
-        let ratio = if value == 0 { read_f32(0x968f18) as f64 } else { taxa as f64 / value as f64 };
+        let ratio = if value == 0 { read_f32(rdata::F32_0_5) as f64 } else { taxa as f64 / value as f64 };
         if taxa <= limit {
             crate::comparison::branch("cpo_1 buyer at the limit");
             or_byte(f1, 4); // the buyer: fee within the limit
@@ -4068,7 +4068,7 @@ pub(crate) unsafe extern "thiscall" fn assess_transfer_deal(this: usize, transf:
     let g = board_row_at(this, read_usize(seller.addr())) + 0x38;
     write_f64(g, read_f64(g) - v2 as f64);
     let limit = fee_limit(seller);
-    let ratio = if v2 == 0 { read_f32(0x968f18) as f64 } else { taxa as f64 / v2 as f64 };
+    let ratio = if v2 == 0 { read_f32(rdata::F32_0_5) as f64 } else { taxa as f64 / v2 as f64 };
     if taxa <= limit {
         crate::comparison::branch("cpo_1 seller at the limit");
         or_byte(f2, 4); // the seller: fee within the limit
@@ -4362,7 +4362,7 @@ pub(crate) unsafe extern "thiscall" fn manager_manager_remove_player_from_squad(
     if person.club_job() == Club(club) {
         let (f, fica) = role_after_leaving(person.job_for_club());
         person.set_job_for_club(f);
-        exe::playerstats_archive_player_stats(read_usize(G_PLAYER_STATS), person.addr(), -1, 0, 0, -1, 0);
+        exe::playerstats_archive_player_stats(read_usize(G_PLAYER_STATS), person, -1, 0, 0, -1, 0);
         (exe::shortlist_manager_update_staff_status(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), person, club, 4, 2) as usize);
         exe::tactics_remove_player_from_selection(read_usize(G_TACTICS), club, person, 0, 1);
         exe::tactics_remove_player_from_selection(read_usize(G_TACTICS), club, person, 1, 1);
@@ -4672,7 +4672,7 @@ pub(crate) unsafe extern "thiscall" fn best_manager_candidate_score(this: usize,
                 break 'f true;
             }
             if read_usize(p + staff::PLAYER) != 0 && read_usize(p + staff::CLUB_JOB) != 0 && matches!(read_u8(p + staff::JOB_FOR_CLUB), 0xb | 0xc | 0xd | 0xf) {
-                let k = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club.addr()));
+                let k = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club));
                 if !k.is_null() && k.leaving_on_bosman() != 0 {
                     break 'f true;
                 }

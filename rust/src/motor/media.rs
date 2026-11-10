@@ -2888,7 +2888,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
     }
     let mut rating = manager.addr() as i32; // without a player: the argument that occupies the slot
     if !player.is_null() {
-        rating = ftol(exe::media_rate_player_form_for_story(this, player, club, contract, kind, 3, 0.0) * read_f32(0x968990) as f64);
+        rating = ftol(exe::media_rate_player_form_for_story(this, player, club, contract, kind, 3, 0.0) * read_f32(rdata::F32_5) as f64);
     }
     let f = || manager.non_player(); // the manager record
     let ch = |o: usize| exe::non_player_attribute_rating(f(), read_i8(f().addr() + o)) as i8 as i32; // the knowledge by attribute +o

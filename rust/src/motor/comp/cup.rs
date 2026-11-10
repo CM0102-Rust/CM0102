@@ -3087,7 +3087,7 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
                         let v = cup_round_entry(this, round) + j;
                         r.set_time_slice(read_u8(v + 0x28)); // cqc7: a fatia marcada
                         r.set_stage(read_u8(v + 0x29));
-                        exe::stadium_set_fixture_venue(read_usize(G_STADIUM), read_usize(cup_round_entry(this, round) + j + 0x23), r.addr(), this.venue_stadium_id());
+                        exe::stadium_set_fixture_venue(read_usize(G_STADIUM), read_usize(cup_round_entry(this, round) + j + 0x23), r, this.venue_stadium_id());
                         exe::fixture_manager_add_fixture(read_usize(G_FIXTURE_MANAGER), r, 1);
                         if dp != 0 {
                             exe::crt_operator_delete(dp);

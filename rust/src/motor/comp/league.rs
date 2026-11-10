@@ -3500,8 +3500,7 @@ pub(crate) unsafe fn league_row(league: League, i: i32) -> usize {
 ///
 /// [pt] A margem de gols (+1, mínimo 1, senão 0xff) que falta para alcançar a linha `alvo` pelo critério da
 /// liga (+0xc5): 1 saldo (+0x15 − +0x17), 2 gols pró (+0x15).
-pub(crate) unsafe fn goal_margin_to_reach(league: League, row: LeagueTableRow, target: usize) -> u8 {
-    let target = LeagueTableRow(target);
+pub(crate) unsafe fn goal_margin_to_reach(league: League, row: LeagueTableRow, target: LeagueTableRow) -> u8 {
     let c = if (league.tiebreaks() as u8) == 1 {
         (target.goals_for() as u8).wrapping_sub((target.goals_against() as u8)).wrapping_sub((row.goals_for() as u8)).wrapping_add((row.goals_against() as u8))
     } else {
@@ -3543,7 +3542,7 @@ pub(crate) unsafe extern "thiscall" fn final_day_margin_needed(league: usize, ro
             return Some(0xff);
         }
         if extra == 0 && (criterio == 1 || criterio == 2) {
-            return Some(goal_margin_to_reach(league, row, target));
+            return Some(goal_margin_to_reach(league, row, LeagueTableRow(target)));
         }
         None
     };
@@ -3575,7 +3574,7 @@ pub(crate) unsafe extern "thiscall" fn final_day_margin_needed(league: usize, ro
                 return 0xff;
             }
             if v == p(table) && (criterio == 1 || criterio == 2) {
-                return goal_margin_to_reach(league, row, table);
+                return goal_margin_to_reach(league, row, LeagueTableRow(table));
             }
         } else if clubs > 1 {
             let v = read_i16(table + 0x54) as i32 + extra;

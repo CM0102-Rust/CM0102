@@ -40,7 +40,15 @@ def main():
         for m in LEITURA.finditer(open(p, encoding='utf-8').read()):
             usos[(int(m.group(3), 16), m.group(2))] += 1
     nomes, usados = {}, set()
+    # the constants already named stay (a run only adds the new raw reads; 10/11/2026)
+    arq = os.path.join(SRC, 'motor', 'rdata_consts.rs')
+    if os.path.exists(arq):
+        for m in re.finditer(r'pub\(crate\) const (\w+): usize = (0x[0-9a-f]+); // f(32|64) = (\S+)', open(arq, encoding='utf-8').read()):
+            nomes[(int(m.group(2), 16), m.group(3))] = (m.group(1), float(m.group(4)))
+            usados.add(m.group(1))
     for (end, bits), _ in sorted(usos.items()):
+        if (end, bits) in nomes:
+            continue
         off = end - 0x400000
         v = struct.unpack_from('<f' if bits == '32' else '<d', exe, off)[0]
         base = 'F%s_%s' % (bits, texto_valor(v))

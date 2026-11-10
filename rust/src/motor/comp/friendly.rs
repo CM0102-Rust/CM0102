@@ -1425,7 +1425,7 @@ pub(crate) unsafe extern "thiscall" fn process_friendly_reply(this: usize, m: us
     if s == 3 || s == 4 {
         // push +0x10; push +0x14; push ano; push dia; ecx = this; sem add esp -> thiscall, ret 0x10
         // simplification: the day and the year go in registers with garbage in the high 16 bits; 0x5c6740 only reads the words
-        let v = exe::friendly_find_scheduled_friendly_slot(this.addr(), read_i16(m) as u16 as u32, read_i16(m + 2) as u16 as u32, read_usize(m + friendly_match::AWAY_CLUB), read_usize(m + friendly_match::HOME_CLUB));
+        let v = exe::friendly_find_scheduled_friendly_slot(this, read_i16(m) as u16 as u32, read_i16(m + 2) as u16 as u32, read_usize(m + friendly_match::AWAY_CLUB), read_usize(m + friendly_match::HOME_CLUB));
         if v != 0 {
             if s == 3 {
                 write_u8(v + scheduled_friendly_slot::STATUS, 3);
@@ -1592,7 +1592,7 @@ pub(crate) unsafe extern "thiscall" fn build_nation_list(this: usize) {
 /// [pt] O clube do contrato do jogador (0x4cf5a0, guardado em [0xae1080]; registros de 0x245 bytes), ou 0 sem contrato ou
 /// com o contrato do tipo 5 (+0x35 & 0x3f).
 pub(crate) unsafe fn contract_club_except_type5(p: Staff) -> usize {
-    let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p.addr()));
+    let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p));
     write_usize(G_CONTRACT_LOOKUP_RESULT, c.addr());
     if c.is_null() || c.contract_type() & 0x3f == 5 {
         0
@@ -2609,7 +2609,7 @@ pub(crate) unsafe extern "thiscall" fn remove_friendly_match(this: usize, game: 
     if clear_slot != 0 {
         // simplification: the original pushes day and year in registers with the high 16 bits of other values; 0x5c6740 only
         // reads the low 16 bits
-        let v = exe::friendly_find_scheduled_friendly_slot(this.addr(), read_u16(game) as u32, read_u16(game + 2) as u32, read_usize(game + friendly_match::AWAY_CLUB), read_usize(game + friendly_match::HOME_CLUB));
+        let v = exe::friendly_find_scheduled_friendly_slot(this, read_u16(game) as u32, read_u16(game + 2) as u32, read_usize(game + friendly_match::AWAY_CLUB), read_usize(game + friendly_match::HOME_CLUB));
         if v != 0 {
             write_usize(v + scheduled_friendly_slot::OPPONENT, 0);
             write_u8(v + scheduled_friendly_slot::STATUS, 0);
@@ -2814,8 +2814,7 @@ pub(crate) unsafe fn are_rival_clubs(a: Club, b: Club) -> bool {
 /// True if the clubs' nations (+0x53) are rivals (+0x110/+0x114/+0x118, either direction).
 ///
 /// [pt] As nações (+0x53) dos clubes são rivais (+0x110, +0x114, +0x118, nos dois sentidos)?
-pub(crate) unsafe fn are_rival_nations(a: usize, b: Club) -> bool {
-    let a = Club(a);
+pub(crate) unsafe fn are_rival_nations(a: Club, b: Club) -> bool {
     let (na, nb) = (a.nation().addr(), b.nation().addr());
     [0x110usize, 0x114, 0x118].iter().any(|&o| na == read_usize(nb + o) || nb == read_usize(na + o))
 }
@@ -2892,7 +2891,7 @@ pub(crate) unsafe extern "thiscall" fn find_friendly_opponent(this: usize, club:
             if fc != -1 && fcl != -1 && (fc > read_i16(club + preseason_candidate::WINDOW_END) || fcl > read_i16(c + preseason_candidate::WINDOW_END)) {
                 break 'proximo;
             }
-            if are_rival_clubs(cp, op) || (are_rival_nations(cp.addr(), op) && friendly_random(2) == 0) {
+            if are_rival_clubs(cp, op) || (are_rival_nations(cp, op) && friendly_random(2) == 0) {
                 break 'proximo;
             }
             if cp.division() == op.division() {
@@ -2992,7 +2991,7 @@ pub(crate) unsafe extern "thiscall" fn find_tour_opponent(this: usize, club: usi
             if read_i8(c + 5) > band_max as i8 || excluded_by_intertoto(Friendly(this), op) || cp == op || already_opponent(c, club) {
                 break 'proximo;
             }
-            if are_rival_clubs(cp, op) || (are_rival_nations(cp.addr(), op) && friendly_random(2) == 0) {
+            if are_rival_clubs(cp, op) || (are_rival_nations(cp, op) && friendly_random(2) == 0) {
                 break 'proximo;
             }
             if cp.division() == op.division() {

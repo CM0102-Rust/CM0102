@@ -1344,9 +1344,9 @@ pub(crate) unsafe extern "stdcall" fn player_regen_sign_for_club(person: usize, 
     club.set_squad(k, (person.addr() as i32) as usize);
     person.set_club_job(Club((club.addr() as i32) as usize));
     person.set_wage((0) as usize);
-    let v = exe::contract_manager_calc_player_value(manager, person.addr(), club.addr(), 1, -1, 0);
+    let v = exe::contract_manager_calc_player_value(manager, person, club, 1, -1, 0);
     person.set_value((v) as usize); // cpv9: the regen value
-    exe::staff_set_squad_flags(person.addr(), 1);
+    exe::staff_set_squad_flags(person, 1);
     if exe::utils_random(4) == 0 { // cpv9: once in four
         crate::comparison::branch("cpv_9 one in four");
         exe::staff_add_favoured_club(person, club, 0);

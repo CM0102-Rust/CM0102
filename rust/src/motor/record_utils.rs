@@ -39,7 +39,7 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(game: usize, club
     core::ptr::write_unaligned(((out + 8) as *mut u8) as *mut u32, read_u32(game.addr()));
     core::ptr::write_unaligned(((out + 0xc) as *mut u8) as *mut u16, (game.round_prefix() as u16));
     core::ptr::write_unaligned(((out + 0xe) as *mut u8) as *mut u16, (game.round_name() as u16));
-    *((out + 0x10) as *mut u8) = exe::comp_util_get_fixture_venue_side(club, game.addr());
+    *((out + 0x10) as *mut u8) = exe::comp_util_get_fixture_venue_side(club, game);
     core::ptr::write_unaligned(((out + 0x11) as *mut u8) as *mut u32, read_u32(club));
     core::ptr::write_unaligned(((out + 0x1b) as *mut u8) as *mut u32, (game.match_stats_slot() as u32));
     if club as u32 == (game.home_club().addr() as u32) { // cpz7: the club is the home team

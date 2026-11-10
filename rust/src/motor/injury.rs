@@ -2438,7 +2438,7 @@ pub(crate) unsafe fn plan_recurring_injury(this: usize, record: usize, injury: *
     }
     let club = Club(read_usize(pessoa + staff::CLUB_JOB));
     if read_usize(pessoa + staff::PLAYER) != 0 && !club.is_null() && club.reputation() > 0x109a {
-        if exe::human_manager_is_human_club(club.addr(), 0, 1, 0, 0) == 0 && friendly_random(3) == 0 && pessoa != 0 {
+        if exe::human_manager_is_human_club(club, 0, 1, 0, 0) == 0 && friendly_random(3) == 0 && pessoa != 0 {
             return RecurringInjuryOutcome::Tratar(pessoa);
         }
     }
@@ -2647,7 +2647,7 @@ pub(crate) unsafe extern "thiscall" fn get_match_condition(this: usize, player: 
     exe::injury_update_player_fitness(this, player);
     let c = read_i16(read_usize(this).wrapping_add((read_i32(player) as usize).wrapping_mul(31)).wrapping_add(0xa));
     if in_percent != 0 {
-        return ftol(c as f64 * read_f32(0x96bac8) as f64) as u16; // in percent
+        return ftol(c as f64 * read_f32(rdata::F32_0_009999999776) as f64) as u16; // in percent
     }
     c as u16
 }

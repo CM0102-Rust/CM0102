@@ -223,7 +223,7 @@ pub(crate) unsafe extern "thiscall" fn get_nation_strength_tier(this: usize, nat
 /// (sem resultados, o +0x18). A pontuação (+0xc, f32): (+0x14 + 5/6 de +0x18 + 4/6 de +0x1c + 3/6 de +0x20 + 2/6 de
 /// +0x24 + 1/6 de +0x28, cada parte truncada) × [0x96a350].
 pub(crate) unsafe extern "thiscall" fn recalculate_scores(this: usize) {
-    let factor = read_f64(0x96a350);
+    let factor = read_f64(rdata::F64_0_001);
     let mut i = 0i32;
     if read_usize(G_NATION_COUNT) as i32 <= 0 {
         return;
@@ -356,8 +356,8 @@ pub(crate) unsafe extern "thiscall" fn create_default_table(this: usize) {
         show_error_at(0x9c74f4, 0x2da);
         return;
     }
-    let c1 = read_f64(0x96a348);
-    let c2 = read_f64(0x968908);
+    let c1 = read_f64(rdata::F64_0_02857142857);
+    let c2 = read_f64(rdata::F64_1000);
     let mut k = 0i32;
     while k < read_u32(G_NATION_COUNT) as i32 {
         let r = t + 0x2c * k as usize;

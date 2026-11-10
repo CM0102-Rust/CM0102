@@ -77,7 +77,7 @@ pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_update_for_date(thi
     if uefa.is_null() || read_usize(this + intertoto_cup::WINNERS_SENT_TO_UEFA) != 0 {
         return o(this, today, stage);
     }
-    let (v, k) = intertoto_winners_for_uefa(this, uefa);
+    let (v, k) = intertoto_winners_for_uefa(Cup(this), uefa);
     let n36 = uefa.entrant_count();
     let r = o(this, today, stage);
     let passed = read_usize(this + intertoto_cup::WINNERS_SENT_TO_UEFA) == 1;

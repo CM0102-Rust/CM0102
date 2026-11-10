@@ -340,7 +340,7 @@ pub(crate) unsafe fn fan_rating(p: Staff, club: Club, st: usize) -> f64 {
     } else if exe::club_dislikes_staff(p, club) != 0 {
         rating = rating - read_f64(rdata::F64_2);
     }
-    if exe::staff_favours_club(p.addr(), club.addr()) != 0 {
+    if exe::staff_favours_club(p, club) != 0 {
         rating + read_f64(rdata::F64_0_2)
     } else if exe::staff_dislikes_club(p, club) != 0 {
         rating - read_f64(rdata::F64_1_5)

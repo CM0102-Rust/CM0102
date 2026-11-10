@@ -217,8 +217,7 @@ pub(crate) unsafe fn uefa_cup_object() -> usize {
 ///
 /// [pt] Os vencedores do Intertoto (+5 = 1 no registro de 6 bytes de +0xa7) que cabem nas três últimas vagas da UEFA, na
 /// ordem em que a 0x633d40 os põe: as vagas vão de +0x3e da UEFA − 27 até + 3 (palavras com sinal).
-pub(crate) unsafe fn intertoto_winners_for_uefa(this: usize, uefa: Cup) -> ([usize; 3], usize) {
-    let this = Cup(this);
+pub(crate) unsafe fn intertoto_winners_for_uefa(this: Cup, uefa: Cup) -> ([usize; 3], usize) {
     let mut v = [0usize; 3];
     let mut k = 0usize;
     let mut slot = uefa.team_count().wrapping_sub(0x1b);

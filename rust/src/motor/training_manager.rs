@@ -58,7 +58,7 @@ pub(crate) unsafe fn non_player_attribute_rating(f: usize, k: usize) -> i32 {
 /// sinal dividido pelo divisor da quantidade de categorias marcadas (1,0 a 2,0, float), truncado e posto em 1..20.
 pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, club: usize, tecnico: usize) {
     let club = Club(club);
-    if tecnico == 0 && exe::human_manager_is_human_club(club.addr(), 1, 1, 0, 0) == 0 {
+    if tecnico == 0 && exe::human_manager_is_human_club(club, 1, 1, 0, 0) == 0 {
         return;
     }
     if exe::database_is_national_team(club) != 0 {

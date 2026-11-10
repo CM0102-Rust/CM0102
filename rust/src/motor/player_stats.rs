@@ -1383,7 +1383,7 @@ pub(crate) unsafe extern "thiscall" fn get_last_match_rating(stats: usize, id: *
     }
     let record = (read_usize(stats + player_stats_fields::PLAYER_ENTRIES) as isize + *id as isize * 39) as usize;
     let rating = read_u8(record + player_stats_entry::LAST_RATING) & 0xf;
-    if rating != 0 { rating as f32 } else { read_f32(0x96e2b8) }
+    if rating != 0 { rating as f32 } else { read_f32(rdata::F32_6_5) }
 }
 
 /// Sums the goals of the player's seasons for the club in the career table (`build_career_history`), in 16 bits.

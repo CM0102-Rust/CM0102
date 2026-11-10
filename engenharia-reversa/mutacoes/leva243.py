@@ -17,7 +17,7 @@ MUTACOES = [
     ('cpg_doador_zero', 'if s > melhor && s > 0 { // the nation’s best', 'if s > melhor && s >= 0 { // mutacao: aceita nota zero'),
     ('cpg_suspensao_bits', '*m = (*m & !7) | (read_u8(source + ban_record::FLAGS) & 7); // the three marks', '*m = (*m & !7) | (read_u8(source + ban_record::FLAGS) & 3); // mutacao: so duas marcas'),
     ('cpg_salario_minimo', 'this.set_wage(if v < 0x37 { 0x37 } else { v }); // the minimum of 55', 'this.set_wage(if v < 0x38 { 0x38 } else { v }); // mutacao: minimo 56'),
-    ('cpg_condicao_porcento', 'return ftol(c as f64 * read_f32(0x96bac8) as f64) as u16; // in percent', 'return (ftol(c as f64 * read_f32(0x96bac8) as f64) - 1) as u16; // mutacao: um ponto a menos'),
+    ('cpg_condicao_porcento', 'return ftol(c as f64 * read_f32(rdata::F32_0_009999999776) as f64) as u16; // in percent', 'return (ftol(c as f64 * read_f32(rdata::F32_0_009999999776) as f64) - 1) as u16; // mutacao: um ponto a menos'),
     ('cph_dias_fim', '(exe::date_days_since(this.addr() + contract::CONTRACT_EXPIRES, read_u32(G_CURRENT_DATE), read_u32(G_CURRENT_DATE_LEAP)) as u32) // the contract end date', '(exe::date_days_since(this.addr() + contract::DATE_STARTED, read_u32(0xae2c90), read_u32(0xae2c94)) as u32) // mutacao: a data de inicio'),
     ('cph_queixas_zero', 'this.set_grievances(0); // the complaints', '*((this.addr() + contract::GRIEVANCES) as *mut u8) = 0; // mutacao: so o byte baixo'),
     ('cph_retirada_moral', 'this.set_morale((read_u8(pessoa + staff::PROFESSIONALISM).wrapping_add(read_u8(pessoa + staff::LOYALTY)).wrapping_add(5)) as i8);', 'this.set_morale((read_u8(pessoa + staff::PROFESSIONALISM).wrapping_add(read_u8(pessoa + staff::LOYALTY)).wrapping_add(4)) as i8); // mutacao'),

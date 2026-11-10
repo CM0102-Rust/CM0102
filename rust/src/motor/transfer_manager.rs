@@ -686,7 +686,7 @@ pub(crate) unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, slot: usiz
     if !l.is_null() && dry_run == 0 {
         l.set_cursor(l.head());
         loop {
-            let p = transfer_manager_llist_next(read_usize(o.addr()));
+            let p = transfer_manager_llist_next(Llist(read_usize(o.addr())));
             if p == 0 {
                 break;
             }
@@ -708,7 +708,7 @@ pub(crate) unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, slot: usiz
     if !t.is_null() {
         t.set_cursor(t.head());
         let ceiling = floor.wrapping_sub(k);
-        let mut p = transfer_manager_llist_next(o.exchange_players().addr());
+        let mut p = transfer_manager_llist_next(o.exchange_players());
         while p != 0 {
             let j = Staff((transfer_manager_staff_by_id(read_usize(p))).addr());
             let m = exe::formation_get_position_mask(j.player());
@@ -736,7 +736,7 @@ pub(crate) unsafe extern "thiscall" fn ai_respond_to_bid(this: usize, slot: usiz
             if dry_run == 0 && exe::shortlist_manager_club_wants_player(this.shortlist_manager(), j, seller, v, 1) == 0 {
                 swap_refused = 1;
             }
-            p = transfer_manager_llist_next(o.exchange_players().addr());
+            p = transfer_manager_llist_next(o.exchange_players());
         }
     }
     let price = if k > floor { // cqe1: the price by value k
@@ -1072,7 +1072,7 @@ pub(crate) unsafe extern "thiscall" fn make_exchange_option(this: usize, buyer: 
                             break 'jogador;
                         }
                         pl.set_cursor(pl.head());
-                        let p = transfer_manager_llist_next(pl.addr());
+                        let p = transfer_manager_llist_next(pl);
                         if offer.slot_index() != read_usize(p) {
                             break 'jogador;
                         }
@@ -1116,7 +1116,7 @@ pub(crate) unsafe extern "thiscall" fn make_exchange_option(this: usize, buyer: 
                     let t = new.exchange_players();
                     t.set_cursor(t.head());
                     loop {
-                        let p = transfer_manager_llist_next(new.exchange_players().addr());
+                        let p = transfer_manager_llist_next(new.exchange_players());
                         if p == 0 {
                             break;
                         }
@@ -1319,7 +1319,7 @@ pub(crate) unsafe extern "thiscall" fn accept_transfer_bid(this: usize, slot: us
             if !l.is_null() {
                 write_usize(l.addr() + llist::CURSOR, read_usize(l.addr() + llist::HEAD));
                 loop {
-                    let p = transfer_manager_llist_next(o.exchange_players().addr());
+                    let p = transfer_manager_llist_next(o.exchange_players());
                     if p == 0 {
                         break;
                     }
@@ -1335,7 +1335,7 @@ pub(crate) unsafe extern "thiscall" fn accept_transfer_bid(this: usize, slot: us
                 if l != 0 {
                     write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
                     loop {
-                        let p = transfer_manager_llist_next(read_usize(o.addr()));
+                        let p = transfer_manager_llist_next(Llist(read_usize(o.addr())));
                         if p == 0 {
                             break;
                         }
@@ -1362,7 +1362,7 @@ pub(crate) unsafe extern "thiscall" fn accept_transfer_bid(this: usize, slot: us
     if !o.exchange_players().is_null() {
         let l = o.exchange_players();
         write_usize(l.addr() + llist::CURSOR, read_usize(l.addr() + llist::HEAD));
-        let mut p = transfer_manager_llist_next(o.exchange_players().addr());
+        let mut p = transfer_manager_llist_next(o.exchange_players());
         while p != 0 {
             let person = transfer_manager_staff_by_id(read_usize(p));
             if transfer_manager_is_human_club(seller) {
@@ -1389,7 +1389,7 @@ pub(crate) unsafe extern "thiscall" fn accept_transfer_bid(this: usize, slot: us
                     }
                 }
             }
-            p = transfer_manager_llist_next(o.exchange_players().addr());
+            p = transfer_manager_llist_next(o.exchange_players());
         }
         free_empty_exchange_list(o);
     }
@@ -1404,7 +1404,7 @@ pub(crate) unsafe extern "thiscall" fn accept_transfer_bid(this: usize, slot: us
     let l = o.exchange_players();
     write_usize(l.addr() + llist::CURSOR, read_usize(l.addr() + llist::HEAD));
     loop {
-        let p = transfer_manager_llist_next(o.exchange_players().addr());
+        let p = transfer_manager_llist_next(o.exchange_players());
         if p == 0 {
             break;
         }
@@ -1501,7 +1501,7 @@ pub(crate) unsafe extern "thiscall" fn post_offer_made_news(this: usize, o: usiz
     if !l.is_null() {
         l.set_cursor(l.head());
         loop {
-            let p = transfer_manager_llist_next(o.exchange_players().addr());
+            let p = transfer_manager_llist_next(o.exchange_players());
             if p == 0 {
                 break;
             }
@@ -1984,7 +1984,7 @@ pub(crate) unsafe extern "thiscall" fn check_offer_work_permits(this: usize, off
     if precisa {
         if proposta != 0 && !concedida {
             crate::comparison::branch("cqc_7 permit refused");
-            exe::transfer_manager_post_offer_collapsed_news(this.addr(), offer.addr(), buyer.addr(), 0x13);
+            exe::transfer_manager_post_offer_collapsed_news(this, offer, buyer, 0x13);
             offer.set_status(0x10); // cqc7: the offer falls through over the permit
             exe::transfer_manager_close_offer_contract_offers(this, offer);
             let target = transfer_manager_staff_by_id(offer.target_staff_id());
@@ -2069,7 +2069,7 @@ pub(crate) unsafe fn schedule_offer_days(this: TransferManagerFields, o: Offer, 
 /// Next node of a game LLIST (`next_list_item`), advancing its cursor.
 ///
 /// [pt] O próximo da lista (0x68d1b0: mov ecx, lista -> thiscall, ret 0).
-pub(crate) unsafe fn transfer_manager_llist_next(l: usize) -> usize {
+pub(crate) unsafe fn transfer_manager_llist_next(l: Llist) -> usize {
     (exe::llist_get_next(l) as u32) as usize
 }
 
@@ -2092,7 +2092,7 @@ pub(crate) unsafe fn clear_offer_bid_markers(this: TransferManagerFields, o: Off
     }
     l.set_cursor(l.head());
     loop {
-        let p = transfer_manager_llist_next(o.exchange_players().addr());
+        let p = transfer_manager_llist_next(o.exchange_players());
         if p == 0 {
             break;
         }
@@ -2183,7 +2183,7 @@ pub(crate) unsafe extern "thiscall" fn transfer_manager_daily_update(this: usize
     let l = Llist(balde(this));
     l.set_cursor(l.head());
     loop {
-        let p = transfer_manager_llist_next(balde(this));
+        let p = transfer_manager_llist_next(Llist(balde(this)));
         if p == 0 {
             break;
         }
@@ -2407,7 +2407,7 @@ pub(crate) unsafe fn process_due_offer_body(this: TransferManagerFields, slot: u
         if l != 0 {
             write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
             loop {
-                let p = transfer_manager_llist_next(read_usize(o3.addr()));
+                let p = transfer_manager_llist_next(Llist(read_usize(o3.addr())));
                 if p == 0 {
                     break;
                 }
@@ -2465,7 +2465,7 @@ pub(crate) unsafe fn process_due_offer_body(this: TransferManagerFields, slot: u
         exe::llist_copy_from(l, o.exchange_players());
         write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
         loop {
-            let p = transfer_manager_llist_next(l);
+            let p = transfer_manager_llist_next(Llist(l));
             if p == 0 {
                 break;
             }
@@ -2613,7 +2613,7 @@ pub(crate) unsafe extern "thiscall" fn check_offer_restrictions(this: usize, o: 
             pl.set_cursor(pl.head());
             let mut sum = v;
             loop {
-                let p = transfer_manager_llist_next(pl.addr());
+                let p = transfer_manager_llist_next(pl);
                 if p == 0 {
                     break;
                 }
@@ -7581,7 +7581,7 @@ pub(crate) unsafe extern "stdcall" fn transfer_manager_selling_club_must_accept(
     if read_u8(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), seller) + 0x165) != 1 {
         return 0;
     }
-    let request = exe::contract_manager_calc_asking_price(read_usize(G_CONTRACT_MANAGER), seller.addr(), buyer.addr(), person.addr(), 0, 1, 1);
+    let request = exe::contract_manager_calc_asking_price(read_usize(G_CONTRACT_MANAGER), seller, buyer, person, 0, 1, 1);
     let w = exe::transfer_offer_get_weighted_value(offer, 0, 0, 1, 0, 1);
     let floor = (seller.reputation() as i32 * 20).max(20000);
     if request < floor || w.wrapping_mul(2) <= request || w <= 50000 {
@@ -8258,7 +8258,7 @@ pub(crate) unsafe extern "thiscall" fn get_offer_response_delay(this: usize, off
             && read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(0x4f)) + 0xb) & 0xf < 3
             && status > 0
         {
-            if exe::shortlist_manager_staff_interest_in_joining_club(this.shortlist_manager(), p.addr(), buyer.addr(), 0, 0, 1, 0) > read_f64(rdata::F64_3_15) {
+            if exe::shortlist_manager_staff_interest_in_joining_club(this.shortlist_manager(), p, buyer, 0, 0, 1, 0) > read_f64(rdata::F64_3_15) {
                 let x = deadline as i32 as f64 * read_f64(rdata::F64_2_5);
                 let ceiling = read_f64(rdata::F64_30);
                 value = Some(ftol(if ceiling < x || x.is_nan() { ceiling } else { x }) as u8);
@@ -9960,11 +9960,11 @@ pub(crate) unsafe extern "thiscall" fn handle_player_rejected_terms(this: usize,
                 if rc > rv {
                     let dif = rc.wrapping_sub(rv) as f64;
                     let k = if rc > 0x1e46 && sheet.current_reputation() < 0x128e {
-                        read_f64(0x96a730)
+                        read_f64(rdata::F64_0_075)
                     } else if rc > 0x109a {
-                        read_f64(0x967888)
+                        read_f64(rdata::F64_0_05)
                     } else {
-                        read_f64(0x967878)
+                        read_f64(rdata::F64_0_025)
                     };
                     crate::comparison::branch("cpv_2 player injury_word_0c");
                     let sum = ftol(dif * k) as i16; // cpv2: the reputation rises

@@ -2864,8 +2864,7 @@ pub(crate) unsafe extern "C" fn write_player_description(person: i32, position: 
 ///
 /// [pt] A nota do colega `o` como favorito da `pessoa` no `clube` (os filtros e a nota da 0x548810, iguais aos da 0x548da0),
 /// ou `None` se ele não entra. As chamadas pelo endereço do jogo, na ordem da original.
-pub(crate) unsafe fn favourite_colleague_score(person: Staff, club: Club, o: usize) -> Option<i32> {
-    let o = Staff(o);
+pub(crate) unsafe fn favourite_colleague_score(person: Staff, club: Club, o: Staff) -> Option<i32> {
     if o.player().is_null() {
         return None;
     }
@@ -2970,7 +2969,7 @@ pub(crate) unsafe extern "C" fn staff_is_best_favoured_candidate(person: usize, 
     if age(G_CURRENT_DATE, person.date_joined_club(), person.date_joined_club_leap_year()) < id % 28 + 14 {
         return 0;
     }
-    let target = match favourite_colleague_score(person, club, candidate) {
+    let target = match favourite_colleague_score(person, club, Staff(candidate)) {
         Some(n) => n,
         None => return 0,
     };
@@ -2979,7 +2978,7 @@ pub(crate) unsafe extern "C" fn staff_is_best_favoured_candidate(person: usize, 
         if o == 0 {
             continue;
         }
-        if let Some(n) = favourite_colleague_score(person, club, o) {
+        if let Some(n) = favourite_colleague_score(person, club, Staff(o)) {
             if n > target {
                 return 0; // there is a better one
             }
@@ -4509,7 +4508,7 @@ pub(crate) unsafe extern "C" fn club_has_enough_defenders(club: usize) -> u8 {
         return 0;
     }
     if let Some(v) = club_goals_per_game(Club(club), 0x6a) {
-        if v as f64 > read_f64(0x969588) {
+        if v as f64 > read_f64(rdata::F64_1_35) {
             return 0; // a defesa toma gols demais
         }
     }
@@ -4544,7 +4543,7 @@ pub(crate) unsafe extern "C" fn club_has_enough_strikers(club: usize) -> u8 {
         return 0;
     }
     if let Some(v) = club_goals_per_game(Club(club), 0x69) {
-        if (v as f64) < read_f64(0x968940) {
+        if (v as f64) < read_f64(rdata::F64_1_5) {
             return 0; // o ataque faz poucos gols
         }
     }
@@ -7404,7 +7403,7 @@ pub(crate) unsafe extern "C" fn database_get_club_scouts(club: usize, array: *mu
         return original_fn::<unsafe extern "C" fn(usize, *mut usize) -> u32>(IDX_DATABASE_GET_CLUB_SCOUTS)(club.addr(), array);
     }
     let rd = |a: usize| read_usize(a);
-    let p = Club(exe::club_get_linked_b_team(club.addr(), core::ptr::null_mut(), 1));
+    let p = Club(exe::club_get_linked_b_team(club, core::ptr::null_mut(), 1));
     if p.is_null() {
         for j in 0..7 {
             core::ptr::write_unaligned(array.add(j), rd(club.addr() + club::SCOUTS + 4 * j));

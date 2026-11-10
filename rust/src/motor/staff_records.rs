@@ -140,7 +140,7 @@ pub(crate) unsafe fn manager_rating_gains(t: Staff, club: Club, id_comp: usize) 
         (400, 400)
     } else {
         // 0x53d980: 3 pushes; add esp, 0xc -> cdecl
-        (if exe::database_is_staff_foreign(t.addr(), club.nation().addr(), 1) != 0 { 200 } else { 400 }, 200)
+        (if exe::database_is_staff_foreign(t, club.nation().addr(), 1) != 0 { 200 } else { 400 }, 200)
     }
 }
 
@@ -807,7 +807,7 @@ pub(crate) unsafe fn update_cup_placed_club(this: usize, club: Club, game: Fixtu
             let (k1, k2) = if (c.club_sides() as i8) != 1 {
                 (k, k)
             } else {
-                (if exe::database_is_staff_foreign(t.addr(), club.nation().addr(), 1) != 0 { metade } else { k }, metade)
+                (if exe::database_is_staff_foreign(t, club.nation().addr(), 1) != 0 { metade } else { k }, metade)
             };
             let side = fixture.addr() + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (game.away_club() == club) as usize;
             raise_side_rating(side, weight, k);
