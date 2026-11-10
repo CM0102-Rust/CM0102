@@ -29,6 +29,17 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 28: Portuguese function names and more locals
+
+`nomes_em_ingles.py`: the functions and comparers left with Portuguese names got English ones (`compare_condicao` →
+`compare_player_condition`, `compare_papel_ataque` → `compare_attacking_role`, `posicao_no_conteiner` →
+`position_in_container`, `instalar_passagem` → `install_passthrough`, the `novo()` constructors → `new()`...), `IDX_`
+constants included. `cm0102-base` keeps its names for now (Tweaks carries copies of it): an alias in the `use`.
+`traduzir_locais.py` no longer blocks a name that only clashes with a record method or a path-qualified item, and
+`partida` → `fixture` (`match` is a keyword): 178 more locals. The count no longer takes `total`, `time` and `media` as
+Portuguese. Portuguese locals 474 → 243. Proof: 7cc445c2 ×2, detector equal, comparison 0; the 12 changed mutations
+compile.
+
 ## Readability batch 27: the debug messages in English
 
 `textos_em_ingles.py --todos`: the debug messages outside the comparers (the competition helpers: "returned", "stage",

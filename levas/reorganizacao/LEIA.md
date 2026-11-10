@@ -28,6 +28,17 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 28 da legibilidade: nomes de função em português e mais locais
+
+`nomes_em_ingles.py`: as funções e os comparadores que tinham ficado com nome em português ganharam nome em inglês
+(`compare_condicao` → `compare_player_condition`, `compare_papel_ataque` → `compare_attacking_role`,
+`posicao_no_conteiner` → `position_in_container`, `instalar_passagem` → `install_passthrough`, os construtores `novo()` →
+`new()`...), com as constantes `IDX_`. O `cm0102-base` fica com os nomes dele por enquanto (o Tweaks leva cópias dele): um
+apelido no `use`. `traduzir_locais.py` deixou de barrar um nome que só colide com um método de registro ou com um item
+chamado pelo caminho, e `partida` → `fixture` (`match` é palavra reservada): mais 178 locais. A contagem deixou de tomar
+`total`, `time` e `media` como português. Locais em português 474 → 243. Prova: 7cc445c2 ×2, detector igual, comparação
+0; as 12 mutações mudadas compilam.
+
 ## Leva 27 da legibilidade: as mensagens de depuração em inglês
 
 `textos_em_ingles.py --todos`: as mensagens de depuração fora dos comparadores (as auxiliares das competições:
