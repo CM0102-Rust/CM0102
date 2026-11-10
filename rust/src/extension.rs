@@ -54,6 +54,6 @@ unsafe fn load() -> Option<InstantFn> {
             return None;
         }
     }
-    crate::registro::linha("extensao: botao.dll carregada");
+    crate::registro::linha("extension: botao.dll loaded");
     Some(core::mem::transmute::<*mut core::ffi::c_void, InstantFn>(p))
 }

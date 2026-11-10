@@ -131,7 +131,7 @@ def carregar(a):
         log = os.path.join(a.pasta, 'ddraw_%s.log' % nome)
         shutil.copy2(os.path.join(JOGO, 'ddraw.log'), log)
         linhas = [l.rstrip() for l in open(log, encoding='utf-8', errors='replace')]
-        dias[nome] = [l for l in linhas if l.startswith('dia ')]
+        dias[nome] = [l for l in linhas if l.startswith(('dia ', 'day '))]
         # "cps_1 ...": os ramos do clube do computador; "pedido de transferencia no clube humano": a linha
         # proposta para o motor.rs (o clube humano vai direto para a original, sem ramo)
         achadas = [l for l in linhas if 'cps_1 ' in l or 'clube humano' in l]

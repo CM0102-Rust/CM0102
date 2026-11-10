@@ -370,7 +370,7 @@ pub unsafe extern "thiscall" fn days_until(this: *const Data, other: Data) -> i3
 // ---------- comparison with the originals ----------
 
 static mut ORIGINALS: [usize; 10] = [0; 10];
-static SCOREBOARD: Scoreboard = Scoreboard::new("data");
+static SCOREBOARD: Scoreboard = Scoreboard::new("date");
 
 unsafe fn original_fn<F>(i: usize) -> F {
     core::mem::transmute_copy(&ORIGINALS[i])
@@ -567,7 +567,7 @@ pub unsafe fn install(comparing: bool) {
         }
     }
     if comparing {
-        linha("data: modo comparacao (original x Rust)");
+        linha("date: comparison mode (original x Rust)");
     }
 }
 

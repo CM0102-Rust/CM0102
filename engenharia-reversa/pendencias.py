@@ -11,8 +11,8 @@ log = sys.argv[1] if len(sys.argv) > 1 else os.path.join(RAIZ, 'jogo', 'ddraw.lo
 pendentes = re.findall(r'^\| `([^`]+)` \|', open(os.path.join(RAIZ, 'docs', 'PENDENCIAS.md'), encoding='utf-8').read(), re.M)
 texto = open(log, encoding='utf-8', errors='replace').read()
 vistos = {}
-for nome, n in re.findall(r'^ramo (.+): (\d+)$', texto, re.M):
+for nome, n in re.findall(r'^(?:ramo|branch) (.+): (\d+)$', texto, re.M):
     vistos[nome] = max(vistos.get(nome, 0), int(n))
 for p in pendentes:
     print('%-28s %s' % (p, 'RODOU (%d+)' % vistos[p] if p in vistos else 'ainda pendente'))
-print('divergencias no registro:', len(re.findall('DIVERGENCIA', texto)))
+print('divergencias no registro:', len(re.findall('DIVERGEN(?:CIA|CE)', texto)))

@@ -40,7 +40,7 @@ def carreira(ini, fim, referencia=None, chamadas=(1, 9999999), mostrar=False):
 base = carreira(0, 0)
 print('base (sem veneno):', base, '(referência be54a138)' if args.ate == '2002-06-01' else '', flush=True)
 with open(LOG, encoding='utf-8', errors='replace') as f, open(BASE_DIARIO, 'w', encoding='utf-8') as g:
-    g.writelines(l for l in f if l.startswith('dia '))
+    g.writelines(l for l in f if l.startswith(('dia ', 'day ')))
 if args.dword:
     # a primeira chamada cujo resíduo naquele dword muda a carreira: menor b com as chamadas 1..b envenenadas mudando
     d = int(args.dword, 16)
@@ -57,7 +57,7 @@ if args.dword:
         lo, hi = (lo, m) if r != base else (m, hi)
     carreira(d, d + 4, BASE_DIARIO, (hi, hi), mostrar=True)
     print('CHAMADA %d; a cadeia:' % hi)
-    print(''.join(l for l in open(LOG, encoding='utf-8', errors='replace') if 'sonda_pilha: chamada' in l))
+    print(''.join(l for l in open(LOG, encoding='utf-8', errors='replace') if 'sonda_pilha: chamada' in l or 'stack_probe: call' in l))
     sys.exit()
 ini, fim = (int(x, 16) for x in args.faixa.split('-'))
 achados, fila = [], [(ini, fim)]

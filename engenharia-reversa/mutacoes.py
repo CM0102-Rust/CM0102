@@ -113,13 +113,13 @@ def autoteste(valor='1'):
             if p.poll() is not None:
                 break
             texto = open(LOG, encoding='utf-8', errors='replace').read() if os.path.exists(LOG) else ''
-            if 'motor: AUTOTESTE' in texto or 'motor: DIVERGENCIA' in texto:
+            if 'motor: AUTOTESTE' in texto or 'motor: DIVERGENCIA' in texto or 'engine: SELFTEST' in texto or 'engine: DIVERGENCE' in texto:
                 break
     finally:
         p.kill()
         p.wait()
     texto = open(LOG, encoding='utf-8', errors='replace').read() if os.path.exists(LOG) else ''
-    return [l for l in texto.splitlines() if l.startswith('banco') or l.startswith('motor: AUTOTESTE') or 'motor: DIVERGENCIA' in l or 'EXCECAO' in l]
+    return [l for l in texto.splitlines() if l.startswith(('banco', 'database', 'motor: AUTOTESTE', 'engine: SELFTEST')) or 'motor: DIVERGENCIA' in l or 'engine: DIVERGENCE' in l or ('EXCECAO' in l or 'EXCEPTION' in l)]
 
 
 # --ligas "ENG ESP ...": a carreira ampla (de madrugada); --limite: segundos por execucao (padrao 900)
@@ -134,7 +134,7 @@ def fora_do_item(nome, linha):
     """A confirmação no modo comparando só vale se a rotina que divergiu é do item da mutação (cqa12_x -> levas/fila/
     cqa_12/rotinas.py): uma divergência de outro item (um erro dele) confirmaria todas as escapadas (264ª, 01/11)."""
     m = re.match(r'([a-z]+)(\d+)_', nome)
-    d = re.search(r'DIVERGENCIA (\w+)', linha)
+    d = re.search(r'DIVERGEN(?:CIA|CE) (\w+)', linha)
     rot = m and os.path.join(RAIZ, 'levas', 'fila', '%s_%s' % m.groups(), 'rotinas.py')
     if not d or not rot or not os.path.exists(rot) or d.group(1) in open(rot, encoding='utf-8').read():
         return linha
@@ -166,8 +166,8 @@ def jogo(data):
     if r.returncode != 0 and not os.path.exists(LOG):
         return ['SIMULACAO RECUSADA: ' + (r.stdout + r.stderr).strip().splitlines()[-1:][0] if (r.stdout + r.stderr).strip() else 'SIMULACAO RECUSADA']
     texto = open(LOG, encoding='utf-8', errors='replace').read() if os.path.exists(LOG) else ''
-    achados = [l for l in texto.splitlines() if 'DIVERGENCIA' in l or 'EXCECAO' in l]
-    return achados[:1] or [l for l in texto.splitlines() if l.startswith('motor: ') and 'comparacoes' in l][-1:]
+    achados = [l for l in texto.splitlines() if ('DIVERGENCIA' in l or 'DIVERGENCE' in l) or ('EXCECAO' in l or 'EXCEPTION' in l)]
+    return achados[:1] or [l for l in texto.splitlines() if l.startswith(('motor: ', 'engine: ')) and ('comparacoes' in l or 'comparisons' in l)][-1:]
 
 
 def carreira(data):
@@ -190,7 +190,7 @@ def carreira(data):
             break
         print('  trava do laboratorio ocupada: tentando de novo', flush=True)
     texto = open(LOG, encoding='utf-8', errors='replace').read() if os.path.exists(LOG) else ''
-    quedas = [l for l in texto.splitlines() if 'EXCECAO' in l]
+    quedas = [l for l in texto.splitlines() if ('EXCECAO' in l or 'EXCEPTION' in l)]
     fim = [l.split(': ', 1)[1].rsplit(', ', 1)[0] for l in r.stdout.splitlines() if l.startswith('execucao 1:')]
     return quedas[:1] or fim or ['SEM RESULTADO: ' + ' '.join((r.stdout + r.stderr).strip().splitlines()[-2:])]
 
@@ -200,8 +200,8 @@ def ramos_da_base():
     texto = open(LOG, encoding='utf-8', errors='replace').read() if os.path.exists(LOG) else ''
     vistos = {}
     for l in texto.splitlines():
-        if l.startswith('ramo ') and ': ' in l:
-            nome, n = l[5:].rsplit(': ', 1)
+        if l.startswith(('ramo ', 'branch ')) and ': ' in l:
+            nome, n = l.split(' ', 1)[1].rsplit(': ', 1)
             if n.strip().isdigit():
                 vistos[nome] = max(vistos.get(nome, 0), int(n))
     return vistos
@@ -227,8 +227,8 @@ def carga_comparando():
     a.ate = '2001-07-27'  # 3 dias depois do save (2001-205): a carga comparando é lenta; os textos rodam logo
     prova_save.carregar(a, 'comparar')
     texto = open(LOG, encoding='utf-8', errors='replace').read() if os.path.exists(LOG) else ''
-    linhas = [l for l in texto.splitlines() if 'DIVERGENCIA' in l or 'EXCECAO' in l]
-    return linhas[:3] or [l for l in texto.splitlines() if l.startswith('motor:') and 'comparacoes' in l][-1:] or ['SEM RESULTADO']
+    linhas = [l for l in texto.splitlines() if ('DIVERGENCIA' in l or 'DIVERGENCE' in l) or ('EXCECAO' in l or 'EXCEPTION' in l)]
+    return linhas[:3] or [l for l in texto.splitlines() if l.startswith(('motor:', 'engine:')) and ('comparacoes' in l or 'comparisons' in l)][-1:] or ['SEM RESULTADO']
 
 
 def main():
@@ -283,9 +283,9 @@ def main():
             base = r[0]
             if fim:
                 texto = open(LOG, encoding='utf-8', errors='replace').read() if os.path.exists(LOG) else ''
-                open(DIAS, 'w', encoding='utf-8').write(''.join(l + '\n' for l in texto.splitlines() if l.startswith('dia ')))
+                open(DIAS, 'w', encoding='utf-8').write(''.join(l + '\n' for l in texto.splitlines() if l.startswith(('dia ', 'day '))))
             # base com divergencia: as mutacoes nao provam nada (e a cadeia que chamou para aqui)
-            if any('DIVERGENCIA' in l or 'EXCECAO' in l for l in r):
+            if any(('DIVERGENCIA' in l or 'DIVERGENCE' in l) or ('EXCECAO' in l or 'EXCEPTION' in l) for l in r):
                 sys.exit('base com divergencia: mutacoes canceladas')
             ramos = ramos_da_base()
             if ramos:
@@ -316,7 +316,7 @@ def main():
                     t0 = time.time()
                     r = ['comparando: ' + (jogo(confirmar) or ['SEM RESULTADO'])[0]]
                     # ainda sem divergência: o save em português (os ramos por idioma que o inglês não alcança, 26/10)
-                    if '--confirmar-pt' in sys.argv and 'DIVERGENCIA' not in r[0] and 'EXCECAO' not in r[0]:
+                    if '--confirmar-pt' in sys.argv and not ('DIVERGENCIA' in r[0] or 'DIVERGENCE' in r[0]) and not ('EXCECAO' in r[0] or 'EXCEPTION' in r[0]):
                         print('mutacao %-18s %4.0fs %s' % (nome, time.time() - t0, r[0][:150]), flush=True)
                         t0 = time.time()
                         r = ['comparando (carga pt): ' + carga_comparando()[0]]

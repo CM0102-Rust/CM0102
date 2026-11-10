@@ -112,7 +112,7 @@ def main():
     base = carreira(args.ate)
     diario = os.path.join(SAIDA, 'base_diario.txt')
     with open(LOG, encoding='utf-8', errors='replace') as f, open(diario, 'w', encoding='utf-8') as g:
-        g.writelines(l for l in f if l.startswith('dia '))
+        g.writelines(l for l in f if l.startswith(('dia ', 'day ')))
     rel = open(os.path.join(SAIDA, 'varredura.txt'), 'a', encoding='utf-8')
 
     def nota(t):

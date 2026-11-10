@@ -3909,7 +3909,7 @@ pub unsafe fn instalar(comparando: bool) {
     for i in 0..N {
         if SEM_ROTINAS.contains(&nomes[i]) {
             // the original through the same pass-through detour as original mode (same private stack)
-            linha(&format!("motor: {} fica no original (SEM_ROTINAS)", nomes[i]));
+            linha(&format!("engine: {} stays with the original (SEM_ROTINAS)", nomes[i]));
             detours::hook(nomes[i], &PROLOGOS[i], detours::PASSTHROUGH);
             continue;
         }
@@ -3923,7 +3923,7 @@ pub unsafe fn instalar(comparando: bool) {
         ORIGINAIS[i] = feito.unwrap_or(PROLOGOS[i].address);
     }
     if comparando {
-        linha("motor: modo comparacao (original x Rust)");
+        linha("engine: comparison mode (original x Rust)");
     } else if let Some(p) = std::env::var("CM_DIAG_PESSOA").ok().and_then(|v| v.parse::<usize>().ok()) {
         // diagnosis (31/10/2026, test of CMRTE's "Make unhappy"): person P's new complaint and new mark,
         // with the contract fields before and after (the 0x4d8610 request of the human club has its own line)
@@ -3959,7 +3959,7 @@ unsafe fn diag_sample(c: usize, qual: &str) {
     }
     let p = read_usize(G_STAFF_TABLE).wrapping_add(DIAG_PERSON.wrapping_mul(110));
     let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
-    linha(&format!("diag {} chamada {}: contrato da vez +0 {} +4 {}; contrato da pessoa {}: {}", qual, DIAG_CALLS,
+    linha(&format!("diag {} call {}: current contract +0 {} +4 {}; the person's contract {}: {}", qual, DIAG_CALLS,
         read_i32(c), read_i32(c + 4), DIAG_PERSON,
         if k == 0 { "nenhum".to_string() } else { format!("+0 {} +4 {} {}", read_i32(k), read_i32(k + 4), diag_contract(k)) }));
 }
@@ -3970,11 +3970,11 @@ unsafe extern "thiscall" fn diag_complaint(c: usize, f: u32, z: u32) -> u32 {
     }
     let alvo = c != 0 && (read_u32(c) as usize == DIAG_PERSON || read_u32(c + 4) as usize == DIAG_CLUB);
     if alvo {
-        linha(&format!("diag queixa pessoa {} queixa {:#x} z {} antes: {}", read_u32(c), f, z, diag_contract(c)));
+        linha(&format!("diag complaint person {} complaint {:#x} z {} before: {}", read_u32(c), f, z, diag_contract(c)));
     }
     let r = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(DIAG_COMPLAINT)(c, f, z);
     if alvo {
-        linha(&format!("diag queixa pessoa {} devolveu {} depois: {}", read_u32(c), r, diag_contract(c)));
+        linha(&format!("diag complaint person {} returned {} after: {}", read_u32(c), r, diag_contract(c)));
     }
     // CM_DIAG_FORCAR=Q: a synthetic complaint Q on person P's contract, once, right after the game's first complaint
     // (the same event in the save variants: only the contract state decides whether the request goes out)
@@ -3984,9 +3984,9 @@ unsafe extern "thiscall" fn diag_complaint(c: usize, f: u32, z: u32) -> u32 {
             FORCED = true;
             let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), read_usize(G_STAFF_TABLE).wrapping_add(DIAG_PERSON.wrapping_mul(110)));
             if k != 0 {
-                linha(&format!("diag queixa forcada {:#x} pessoa {} antes: {}", q, DIAG_PERSON, diag_contract(k)));
+                linha(&format!("diag forced complaint {:#x} person {} before: {}", q, DIAG_PERSON, diag_contract(k)));
                 let r2 = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(DIAG_COMPLAINT)(k, q, 0);
-                linha(&format!("diag queixa forcada devolveu {} depois: {}", r2, diag_contract(k)));
+                linha(&format!("diag forced complaint returned {} after: {}", r2, diag_contract(k)));
             }
         }
     }
@@ -3999,11 +3999,11 @@ unsafe extern "thiscall" fn diag_mark(c: usize, f: u32) -> u32 {
     }
     let alvo = c != 0 && (read_u32(c) as usize == DIAG_PERSON || read_u32(c + 4) as usize == DIAG_CLUB);
     if alvo {
-        linha(&format!("diag marca pessoa {} marca {:#x} antes: {}", read_u32(c), f, diag_contract(c)));
+        linha(&format!("diag mark person {} mark {:#x} before: {}", read_u32(c), f, diag_contract(c)));
     }
     let r = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32) -> u32>(DIAG_MARK)(c, f);
     if alvo {
-        linha(&format!("diag marca pessoa {} devolveu {} depois: {}", read_u32(c), r, diag_contract(c)));
+        linha(&format!("diag mark person {} returned {} after: {}", read_u32(c), r, diag_contract(c)));
     }
     r
 }
@@ -4023,7 +4023,7 @@ pub unsafe fn instalar_passagem() {
             detours::hook_probe(&format!("engine {} (stack probe)", i), p, dentro);
             continue;
         }
-        detours::hook(&format!("motor {} (original isolada)", i), p, detours::PASSTHROUGH);
+        detours::hook(&format!("engine {} (original, isolated)", i), p, detours::PASSTHROUGH);
     }
 }
 
@@ -5193,14 +5193,14 @@ pub unsafe fn autoteste(casos: u64) {
             let avisar = || WARNINGS47.fetch_add(1, std::sync::atomic::Ordering::Relaxed) < 6;
             if let Some(e) = grid_inconsistent(Engine(m)) {
                 if avisar() {
-                    linha(&format!("motor: grade inconsistente antes do pontape: {}", e));
+                    linha(&format!("engine: inconsistent grid before the kick-off: {}", e));
                 }
             }
             compare_kick_off(m);
             let grade47 = grid_inconsistent(Engine(m));
             if let Some(e) = &grade47 {
                 if avisar() {
-                    linha(&format!("motor: grade inconsistente depois do pontape: {}", e));
+                    linha(&format!("engine: inconsistent grid after the kick-off: {}", e));
                 }
             }
             // batch 47: fine positions (the kick-off grid stays consistent; positions 0..=10)

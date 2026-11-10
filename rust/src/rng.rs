@@ -164,7 +164,7 @@ thread_local! {
     static RUNNING: Cell<Running> = const { Cell::new(Running::Nothing) };
 }
 
-static SCOREBOARD: Scoreboard = Scoreboard::new("aleatorio");
+static SCOREBOARD: Scoreboard = Scoreboard::new("random");
 
 thread_local! {
     /// Draw trace (diagnosis): (n, answer) of each outside call, when on.
@@ -267,7 +267,7 @@ pub unsafe fn install(mode: Mode) {
     if let Some(t) = detours::hook("random", &PROLOGUE, target) {
         ORIGINAL = t;
         match mode {
-            Mode::Compare => linha("aleatorio: modo comparacao (original x Rust)"),
+            Mode::Compare => linha("random: comparison mode (original x Rust)"),
             Mode::Observe => linha("aleatorio: modo observador (so a original roda)"),
             Mode::Rust => {}
         }

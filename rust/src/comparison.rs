@@ -33,7 +33,7 @@ pub fn branch(name: &'static str) {
         }
     };
     if n.is_power_of_two() {
-        linha(&format!("ramo {}: {}", name, n));
+        linha(&format!("branch {}: {}", name, n));
     }
 }
 
@@ -65,12 +65,12 @@ impl Scoreboard {
         if !equal {
             let d = self.divergences.fetch_add(1, Ordering::Relaxed) + 1;
             if d <= DETAILED {
-                linha(&format!("{}: DIVERGENCIA {}", self.name, detail()));
+                linha(&format!("{}: DIVERGENCE {}", self.name, detail()));
             }
         }
         if total == self.milestone.load(Ordering::Relaxed) {
             self.milestone.store(total * 10, Ordering::Relaxed);
-            linha(&format!("{}: {} comparacoes, {} divergencias", self.name, total, self.divergences.load(Ordering::Relaxed)));
+            linha(&format!("{}: {} comparisons, {} divergences", self.name, total, self.divergences.load(Ordering::Relaxed)));
         }
     }
 
@@ -85,7 +85,7 @@ impl Scoreboard {
         let (t0, d0) = self.counts();
         f();
         let (t1, d1) = self.counts();
-        linha(&format!("{}: AUTOTESTE {} casos, {} divergencias", self.name, t1 - t0, d1 - d0));
+        linha(&format!("{}: SELFTEST {} cases, {} divergences", self.name, t1 - t0, d1 - d0));
     }
 }
 

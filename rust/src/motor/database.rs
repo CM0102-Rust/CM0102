@@ -5596,7 +5596,7 @@ pub unsafe fn autoteste_dbm_1() {
         *(a as *mut usize) = antes[i];
     }
     let (t1, d1) = SCOREBOARD.counts();
-    linha(&format!("banco idioma (nomes em inglês 1): AUTOTESTE {} casos, {} divergencias", t1 - t0, d1 - d0));
+    linha(&format!("database language (English names 1): SELFTEST {} cases, {} divergences", t1 - t0, d1 - d0));
 }
 
 /// `stadium_get_english_name(stadium)`: the stadium's name, or its English one from eng.lng when another language is
@@ -5719,7 +5719,7 @@ pub unsafe fn autoteste_dbm_2() {
         SCOREBOARD.record(soltos == esperado, || format!("eng_lng_free_tables: soltos {:x?} esperados {:x?}", soltos, esperado));
     }
     let (t1, d1) = SCOREBOARD.counts();
-    linha(&format!("banco idioma (estádio, .lng, soltar): AUTOTESTE {} casos, {} divergencias", t1 - t0, d1 - d0));
+    linha(&format!("database language (stadium, .lng, release): SELFTEST {} cases, {} divergences", t1 - t0, d1 - d0));
 }
 
 /// Shows the Database.cpp error box ("v%s %s.%s %d" with the line) and clears G_MOUSE_LEFT_BUTTON_DOWN; the game
@@ -7023,7 +7023,7 @@ pub unsafe fn autoteste_dbj_2() {
         *(a as *mut usize) = antes[i];
     }
     let (t1, d1) = SCOREBOARD.counts();
-    linha(&format!("banco v1 e nomes em inglês: AUTOTESTE {} casos, {} divergencias", t1 - t0, d1 - d0));
+    linha(&format!("database v1 and English names: SELFTEST {} cases, {} divergences", t1 - t0, d1 - d0));
 }
 
 /// `database_trim_senior_and_b_team_squads()`: flags every club that has a partner team and trims each joint senior+B

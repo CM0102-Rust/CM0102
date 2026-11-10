@@ -40,8 +40,8 @@ L=(); M=(); [ -n "$LIGAS" ] && L=(--ligas "$LIGAS") && M=(--ligas "$LIGAS" --lim
   python laboratorio.py | head -1
   echo "=== JOGO REAL"
   python -u simular.py --ate $ATE_REAL --motor sim --modo comparar --limite $LIM_REAL "${L[@]}"
-  grep -aE "DIVERG|EXCECAO" ../jogo_testes/ddraw.log | head -5 | cut -c1-300
-  grep -aE "comparacoes" ../jogo_testes/ddraw.log | tail -3
+  grep -aE "DIVERG|EXCECAO|EXCEPTION" ../jogo_testes/ddraw.log | head -5 | cut -c1-300
+  grep -aE "comparacoes|comparisons" ../jogo_testes/ddraw.log | tail -3
   grep -a "sonda_lixo" ../jogo_testes/ddraw.log | tail -1
   fi
   python laboratorio.py | head -1

@@ -91,7 +91,7 @@ pub unsafe fn wrap(real: *mut c_void, kind: Kind) -> *mut c_void {
     match new_entry {
         Err(emb) => emb as *mut c_void,
         Ok((emb, id)) => {
-            linha(&format!("  novo {:?} #{} (real {:p})", kind, id, real));
+            linha(&format!("  new {:?} #{} (real {:p})", kind, id, real));
             emb as *mut c_void
         }
     }
@@ -172,7 +172,7 @@ unsafe extern "system" fn query_interface(this: *mut Wrapper, iid: *const [u8; 1
     let r = g(real, iid, out);
     let guid = if iid.is_null() { String::from("?") } else { (*iid).iter().map(|b| format!("{:02x}", b)).collect() };
     // For now the returned object is NOT wrapped: if the game uses it, the log shows it and we handle it.
-    linha(&format!("#{} QueryInterface({}) -> {:#x}  [nao embrulhado]", (*this).id, guid, r));
+    linha(&format!("#{} QueryInterface({}) -> {:#x}  [not wrapped]", (*this).id, guid, r));
     r
 }
 
@@ -193,7 +193,7 @@ unsafe extern "system" fn release(this: *mut Wrapper) -> u32 {
             e.by_wrapper.remove(&(this as usize));
         });
         drop(Box::from_raw(this));
-        linha(&format!("  liberado {:?} #{}", kind, id));
+        linha(&format!("  released {:?} #{}", kind, id));
         if kind == Kind::DirectDraw {
             summary();
         }

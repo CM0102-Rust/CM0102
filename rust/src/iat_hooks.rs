@@ -52,7 +52,7 @@ pub unsafe fn replace_import(dll: &str, function: &str, replacement: usize) -> O
         }
         desc += 20;
     }
-    linha(&format!("gancho: {}!{} nao encontrado na IAT", dll, function));
+    linha(&format!("hook: {}!{} not found in the IAT", dll, function));
     None
 }
 
@@ -107,7 +107,7 @@ unsafe fn cstr(p: usize) -> &'static str {
 /// [pt] O procedimento da janela chama ChangeDisplaySettingsA ao ganhar/perder o foco em tela cheia
 /// (volta a 800x600x16 / devolve o modo do Windows). Com a nossa camada de video o modo nunca muda.
 unsafe extern "system" fn change_display_settings_a(mode: *const c_void, flags: u32) -> i32 {
-    linha(&format!("ChangeDisplaySettingsA({:p}, {:#x}) ignorado", mode, flags));
+    linha(&format!("ChangeDisplaySettingsA({:p}, {:#x}) ignored", mode, flags));
     0 // DISP_CHANGE_SUCCESSFUL
 }
 
@@ -188,7 +188,7 @@ unsafe extern "system" fn create_mutex_a(attributes: *mut c_void, initial_owner:
     let h = path[..n].iter().fold(0xcbf2_9ce4_8422_2325u64, |h, &b| (h ^ b.to_ascii_lowercase() as u64).wrapping_mul(0x100_0000_01b3));
     let new_name = format!("{} {:016x}\0", GAME_MUTEX, h);
     MUTEX_NAME[..new_name.len()].copy_from_slice(new_name.as_bytes());
-    linha(&format!("mutex do jogo: {}", new_name.trim_end_matches('\0')));
+    linha(&format!("game mutex: {}", new_name.trim_end_matches('\0')));
     f(attributes, initial_owner, core::ptr::addr_of!(MUTEX_NAME) as *const u8)
 }
 
@@ -204,7 +204,7 @@ pub unsafe fn install_early() {
         let n = for_each_import(|dll, name, _| {
             (dll.eq_ignore_ascii_case("DSOUND.dll") && name.is_none()).then(|| direct_sound_create as *const () as usize)
         });
-        linha(&format!("gancho: DSOUND sem som nos testes ({} entrada)", n));
+        linha(&format!("hook: DSOUND silent in the tests ({} entry)", n));
         if let Some(a) = replace_import("USER32.dll", "MoveWindow", move_window as *const () as usize) {
             MOVE_WINDOW_ORIGINAL = a;
         }

@@ -1808,7 +1808,7 @@ pub(crate) unsafe extern "thiscall" fn handle_transfer_request(this: usize, cont
         // simplification: the human club receives the news item built on the stack (0x77bbe0 and the delivery are switched off): that
         // case stays with the original (which repeats the 0x7875e0 query, with no effect).
         // the record serves the proof of CMRTE’s ”Deixar infeliz” (make unhappy) (31/10/2026; deixar_infeliz.py): rare call
-        linha(&format!("pedido de transferencia no clube humano: pessoa {}", read_usize(contract.addr())));
+        linha(&format!("transfer request at the human club: person {}", read_usize(contract.addr())));
         return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_HANDLE_TRANSFER_REQUEST)(this, contract.addr());
     }
     if contract.squad_status() & 0xf0 != 0x10 {

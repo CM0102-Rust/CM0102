@@ -158,13 +158,13 @@ def cadeia(n):
     import re
     t = open(os.path.join(R, 'levas', str(n), 'cadeia.txt'), encoding='utf-8', errors='replace').read()
     nomes = {}
-    for nome, res in re.findall(r'^mutacao (\S+)\s+\d+s (ACUSADA|IGUAL A BASE|EXCECAO|[A-Z ]+?)[:(]', t, re.M):
+    for nome, res in re.findall(r'^mutacao (\S+)\s+\d+s (ACUSADA|IGUAL A BASE|EXCECAO|EXCEPTION|[A-Z ]+?)[:(]', t, re.M):
         res = res.strip()
         if nome not in nomes or res == 'ACUSADA':
             nomes[nome] = res
     acusadas = [k for k, v in nomes.items() if v != 'IGUAL A BASE']
     escapadas = [k for k, v in nomes.items() if v == 'IGUAL A BASE']
-    conf = [(m.group(1), 'DIVERGENCIA' in m.group(2) or re.search(r'\b[1-9]\d* divergencias', m.group(2)))
+    conf = [(m.group(1), re.search('DIVERGEN(?:CIA|CE)', m.group(2)) or re.search(r'\b[1-9]\d* divergen(?:cias|ces)', m.group(2)))
             for m in re.finditer(r'^mutacao (\S+)\s+\d+s comparando[^:]*: (.*)$', t, re.M)]
     for nome, div in conf:
         if div and nome in escapadas:
@@ -175,7 +175,7 @@ def cadeia(n):
     imp = impressoes(n)
     # 05/11/2026 (Lucas): na leva de competições o jogo real fica adiado para a auditoria (comparação acumulada)
     ok = ((imp['jogo'] is not None or '=== JOGO REAL ADIADO' in t) and len(imp['rust']) >= 2 and len(set(imp['rust'])) == 1 and bool(imp['original'])
-          and not re.search(r'\b[1-9]\d* divergencias|DIVERGENCIA ', t.split('=== JOGO REAL')[-1].split('=== CARREIRA')[0]))
+          and not re.search(r'\b[1-9]\d* divergen(?:cias|ces)|DIVERGEN(?:CIA|CE) ', t.split('=== JOGO REAL')[-1].split('=== CARREIRA')[0]))
     # a linha DIVERGENCIA do ddraw.log também barra: o total de comparações só é impresso em marcos, e uma
     # divergência depois do último marco não entra nele (a 268ª, 02/11/2026)
     return len(nomes), len(acusadas), escapadas, ok

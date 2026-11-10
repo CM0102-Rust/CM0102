@@ -175,7 +175,7 @@ def rodar(args, semente, extra=()):
     referencia = []
     if getattr(args, 'referencia', None):
         with open(args.referencia, encoding='utf-8') as f:
-            referencia = [l.rstrip('\n') for l in f if l.startswith('dia ')]
+            referencia = [l.rstrip('\n') for l in f if l.startswith(('dia ', 'day '))]
     t0 = time.time()
     p = subprocess.Popen([os.path.join(JOGO, args.exe), '-windowed', '-seed', str(semente), *extra], cwd=JOGO, env=ambiente)
     while True:
@@ -198,7 +198,7 @@ def rodar(args, semente, extra=()):
         # diferente ja decide (as mutacoes da carreira, 28/10/2026); so linhas completas
         if referencia and os.path.exists(log):
             with open(log, encoding='utf-8', errors='replace') as f:
-                dias = [l for l in f.read().split('\n')[:-1] if l.startswith('dia ')]
+                dias = [l for l in f.read().split('\n')[:-1] if l.startswith(('dia ', 'day '))]
             for feito, esperado in zip(dias, referencia):
                 if feito != esperado:
                     p.kill()
@@ -207,26 +207,26 @@ def rodar(args, semente, extra=()):
         # --parar-na-divergencia: a primeira divergencia ja decide (as mutacoes no modo comparacao)
         if args.parar_na_divergencia and os.path.exists(log):
             with open(log, encoding='utf-8', errors='replace') as f:
-                if 'DIVERGENCIA' in f.read():
+                if re.search('DIVERGEN(?:CIA|CE)', f.read()):
                     p.kill()
                     p.wait()
                     return None, time.time() - t0, 'parado na primeira divergencia'
     segundos = time.time() - t0
     texto = open(log, encoding='utf-8', errors='replace').read() if os.path.exists(log) else ''
-    m = re.search(r'SIMULACAO parou em (\S+) sorteios=(\d+) ponteiro=(\S+) deslocamento=(\S+) rand=(\S+)', texto)
+    m = re.search(r'(?:SIMULACAO parou em|SIMULATION stopped at) (\S+) (?:sorteios|draws)=(\d+) (?:ponteiro|pointer)=(\S+) (?:deslocamento|offset)=(\S+) rand=(\S+)', texto)
     if not m and caixa_do_jogo(log):
         return None, segundos, caixa_do_jogo(log)
     if not m:
         return None, segundos, 'o jogo saiu sem chegar na data (codigo %s); veja jogo\\ddraw.log' % p.returncode
     impressao = hashlib.sha1(' '.join(m.groups()[1:]).encode()).hexdigest()[:16]
-    mp = re.search(r'^partidas: (\d+) motores, impressao (\w+)', texto, re.M)
+    mp = re.search(r'^(?:partidas|matches): (\d+) (?:motores|engines), (?:impressao|fingerprint) (\w+)', texto, re.M)
     info = {'data': m.group(1), 'sorteios': int(m.group(2)), 'impressao': impressao,
             'partidas': '%s/%s' % mp.groups() if mp else '-',
-            'banco': (re.findall(r'^memoria: banco ([0-9a-f]{16})', texto, re.M) or ['-'])[-1],
-            'comparacoes': re.findall(r'^(\w+): (\d+) comparacoes, (\d+) divergencias', texto, re.M),
-            'divergencias': len(re.findall(r'DIVERGENCIA', texto)),
-            'avisos': re.findall(r'^(?:alocador|cobertura): AVISO.*', texto, re.M),
-            'cobertura': [(e, a, int(n)) for e, a, n in re.findall(r'^cobertura ([0-9a-f]+) (\S*) (\d+)$', texto, re.M)]}
+            'banco': (re.findall(r'^(?:memoria: banco|memory: bank) ([0-9a-f]{16})', texto, re.M) or ['-'])[-1],
+            'comparacoes': re.findall(r'^(\w+): (\d+) (?:comparacoes|comparisons), (\d+) (?:divergencias|divergences)', texto, re.M),
+            'divergencias': len(re.findall(r'DIVERGEN(?:CIA|CE)', texto)),
+            'avisos': re.findall(r'^(?:alocador|cobertura|allocator|coverage): (?:AVISO|WARNING).*', texto, re.M),
+            'cobertura': [(e, a, int(n)) for e, a, n in re.findall(r'^(?:cobertura|coverage) ([0-9a-f]+) (\S*) (\d+)$', texto, re.M)]}
     return info, segundos, None
 
 

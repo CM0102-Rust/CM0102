@@ -150,7 +150,7 @@ pub unsafe fn autoteste_dbj_1() {
     }
     let _ = std::fs::remove_file(ARQ);
     let (t1, d1) = SCOREBOARD.counts();
-    linha(&format!("banco v1 (conversores): AUTOTESTE {} casos, {} divergencias", t1 - t0, d1 - d0));
+    linha(&format!("database v1 (converters): SELFTEST {} cases, {} divergences", t1 - t0, d1 - d0));
 }
 
 /// Writes n 17-byte records (staff_history.dat, id 17) in one go, through zwrite (save) or fwrite (Data folder); 1 if

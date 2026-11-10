@@ -123,7 +123,7 @@ pub fn stub_summary() {
         }
         linha(&format!("desvios: pilha particular usou ate {} KB (detector enche {} KB)", (STACK_BASE + STACK - p) >> 10, POISON_SPAN >> 10));
     }
-    linha(&format!("desvios: trechos em {} bloco(s) de {} KB, {} KB usados, ultimo bloco em {:#x}..{:#x}",
+    linha(&format!("detours: trampolines in {} block(s) of {} KB, {} KB used, last block at {:#x}..{:#x}",
         g.2, BLOCK >> 10, g.3 >> 10, g.1.saturating_sub(BLOCK), g.1));
 }
 
@@ -156,7 +156,7 @@ unsafe fn isolate_with(target: usize, poison: bool) -> usize {
     });
     let code = executable(256);
     if top == 0 || code == 0 {
-        linha("desvios: AVISO sem pilha particular");
+        linha("detours: WARNING no private stack");
         return target;
     }
     let base = top + 16 - STACK as u32;
@@ -413,18 +413,18 @@ pub fn signature_summary() {
 /// [pt] Miolo dos desvios: confere a rotina e os bytes, monta o trampolim e salta para `destino(trampolim)`.
 unsafe fn hook_with(name: &str, p: &Prologue, target: impl FnOnce(usize) -> usize) -> Option<usize> {
     if !signature_matches(p.address) {
-        linha(&format!("rotina {:#x} fica com o exe (alterada)", p.address));
+        linha(&format!("routine {:#x} stays with the exe (changed)", p.address));
         return None;
     }
     let current = core::slice::from_raw_parts(p.address as *const u8, p.bytes.len());
     if current != p.bytes {
-        linha(&format!("desvio {} recusado: bytes em {:#x} sao {:02x?}, esperava {:02x?}", name, p.address, current, p.bytes));
+        linha(&format!("detour {} refused: bytes at {:#x} are {:02x?}, expected {:02x?}", name, p.address, current, p.bytes));
         return None;
     }
     let n = p.bytes.len();
     let tramp = executable(32) as *mut u8;
     if tramp.is_null() {
-        linha(&format!("desvio {} recusado: sem memoria executavel", name));
+        linha(&format!("detour {} refused: no executable memory", name));
         return None;
     }
     let m = build_trampoline(p, tramp);
@@ -520,7 +520,7 @@ pub unsafe fn apply_resolution() {
             continue;
         }
         if current != before {
-            linha(&format!("resolucao: troca em {:#x} fica de fora: bytes {:02x?}, esperava {:02x?}", va, current, before));
+            linha(&format!("resolution: patch at {:#x} left out: bytes {:02x?}, expected {:02x?}", va, current, before));
             left_out += 1;
             continue;
         }
@@ -531,7 +531,7 @@ pub unsafe fn apply_resolution() {
         win::FlushInstructionCache(win::GetCurrentProcess(), va as *const c_void, after.len());
         applied += 1;
     }
-    linha(&format!("resolucao 1080: {} trocas aplicadas, {} ja estavam, {} de fora (de {})", applied, already, left_out, crate::resolution::TROCAS.len()));
+    linha(&format!("resolution 1080: {} patches applied, {} already there, {} left out (of {})", applied, already, left_out, crate::resolution::TROCAS.len()));
     if win::ambiente("CM_RESOLUCAO_CONFERIR") {
         check_resolution();
     }
@@ -544,7 +544,7 @@ pub unsafe fn apply_resolution() {
 /// lado do exe (fora a IAT, que o carregador preenche). Usa a heap: so nas provas, nunca na carreira.
 unsafe fn check_resolution() {
     let Ok(disk) = std::env::current_exe().and_then(|p| std::fs::read(p.with_file_name("cm0102-1080.exe"))) else {
-        linha("resolucao: conferencia sem o cm0102-1080.exe");
+        linha("resolution: check without cm0102-1080.exe");
         return;
     };
     let base = 0x400000usize;
@@ -563,10 +563,10 @@ unsafe fn check_resolution() {
         let mem = core::slice::from_raw_parts((base + rva) as *const u8, n);
         let diffs: Vec<usize> = (0..n).filter(|&i| mem[i] != disk[raw + i] && !(iat..iat + iat_n).contains(&(rva + i))).collect();
         let examples: Vec<String> = diffs.iter().take(8).map(|&i| format!("{:#x}", base + rva + i)).collect();
-        linha(&format!("resolucao: conferencia {} ({} bytes): {} diferem {:?}", name, n, diffs.len(), examples));
+        linha(&format!("resolution: check {} ({} bytes): {} differ {:?}", name, n, diffs.len(), examples));
         total += diffs.len();
     }
-    linha(&format!("resolucao: conferencia com o cm0102-1080.exe: {} bytes diferem (IAT de fora)", total));
+    linha(&format!("resolution: check against cm0102-1080.exe: {} bytes differ (IAT left out)", total));
 }
 
 // ---------- exe with a third-party patch: deferred installation ----------
@@ -615,7 +615,7 @@ unsafe fn our_exe() -> bool {
     let h = fnv(core::slice::from_raw_parts(0x401000 as *const u8, TEXT_LEN));
     let ours = entry == OUR_ENTRY && OUR_TEXTS.contains(&h);
     if !ours {
-        linha(&format!("desvios: exe com patch (.text {:016x}, entrada {:#x}): foto das assinaturas e desvios do motor adiados para a 1a DirectDrawCreate", h, 0x400000 + entry));
+        linha(&format!("detours: patched exe (.text {:016x}, entry {:#x}): the signature snapshot and the engine detours wait for the 1st DirectDrawCreate", h, 0x400000 + entry));
     }
     ours
 }
@@ -665,12 +665,12 @@ unsafe fn install_box() {
     const ENTRY_BYTES: [u8; 9] = [0x83, 0xec, 0x6c, 0x8b, 0x0d, 0x30, 0x7a, 0xb6, 0x00];
     let current = *(E as *const [u8; 9]);
     if current != ENTRY_BYTES && current[0] != 0xe9 {
-        linha(&format!("msgbox: caixas do jogo fora do log (entrada de {:#x} mudada: {:02x?})", E, current));
+        linha(&format!("msgbox: the game's boxes are not logged (entry of {:#x} changed: {:02x?})", E, current));
         return;
     }
     let t = executable(16) as *mut u8;
     if t.is_null() {
-        linha("msgbox: caixas do jogo fora do log (sem memoria executavel)");
+        linha("msgbox: the game's boxes are not logged (no executable memory)");
         return;
     }
     let how = if current == ENTRY_BYTES {
@@ -687,7 +687,7 @@ unsafe fn install_box() {
     write_jmp(E as *mut u8, message_box as *const () as usize);
     win::VirtualProtect(E as *mut c_void, 5, old_protect, &mut old_protect);
     win::FlushInstructionCache(win::GetCurrentProcess(), E as *const c_void, 5);
-    linha(&format!("msgbox: as caixas do jogo vao para o log ({})", how));
+    linha(&format!("msgbox: the game's boxes go to the log ({})", how));
 }
 
 /// Installs all the detours. Called when the DLL loads, before the game's WinMain.
@@ -727,7 +727,7 @@ pub unsafe fn install_deferred() {
         install_box();
     }
     if DEFERRED.swap(false, std::sync::atomic::Ordering::Relaxed) {
-        linha(&format!("desvios: instalacao adiada (data do jogo {:?})", *(0xae2c90 as *const [u16; 2])));
+        linha(&format!("detours: installation postponed (game date {:?})", *(0xae2c90 as *const [u16; 2])));
         check_signatures();
         install_engine();
         install_box();
@@ -818,7 +818,7 @@ unsafe fn recheck_bodies(today: [u16; 2]) {
         e.3 = 0;
         let p = e.0 as *mut u8;
         if *(p as *const [u8; 5]) != e.4 {
-            linha(&format!("rotina {:#x}: corpo e entrada mudaram depois do desvio (dia {:?}); fica com o exe", e.0, today));
+            linha(&format!("routine {:#x}: body and entry changed after the detour (day {:?}); stays with the exe", e.0, today));
             continue;
         }
         let mut old_protect = 0u32;
@@ -826,7 +826,7 @@ unsafe fn recheck_bodies(today: [u16; 2]) {
         core::ptr::copy_nonoverlapping(e.1.as_ptr(), p, e.1.len());
         win::VirtualProtect(p as *mut c_void, e.1.len(), old_protect, &mut old_protect);
         win::FlushInstructionCache(win::GetCurrentProcess(), p as *const c_void, e.1.len());
-        linha(&format!("rotina {:#x}: corpo mudou depois do desvio (dia {:?}); desvio desfeito, fica com o exe", e.0, today));
+        linha(&format!("routine {:#x}: body changed after the detour (day {:?}); detour undone, stays with the exe", e.0, today));
     }
 }
 
@@ -845,13 +845,13 @@ pub unsafe fn self_tests() {
         return;
     }
     let value = win::texto_ambiente("CM_AUTOTESTE");
-    if let Some(n) = value.strip_prefix("motor:") {
+    if let Some(n) = value.strip_prefix("motor:").or_else(|| value.strip_prefix("engine:")) {
         crate::motor::autoteste(n.parse().unwrap_or(2_000_000));
         return;
     }
     // CM_AUTOTESTE=banco: only the database self-tests (mutacoes.py --autoteste-banco); the engine with 1 case closes
-    // with the "motor: AUTOTESTE" line that mutacoes.py expects
-    if value == "banco" {
+    // with the "engine: SELFTEST" line that mutacoes.py expects
+    if value == "banco" || value == "database" {
         crate::motor::autoteste_dbj_1();
         crate::motor::autoteste_dbj_2();
         crate::motor::autoteste_dbm_1();

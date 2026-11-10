@@ -240,7 +240,7 @@ impl Allocator {
     /// [pt] Registra o aviso do ultimo `juntar` (chamar depois de soltar a trava).
     fn log_merged(notice: Option<(usize, usize)>, which: &str) {
         if let Some((k, top)) = notice {
-            linha(&format!("alocador: regiao {} esgotada; {} livres depois de juntar, topo em {:#x}", which, k, top));
+            linha(&format!("allocator: region {} exhausted; {} free after merging, top at {:#x}", which, k, top));
         }
     }
 
@@ -308,7 +308,7 @@ unsafe extern "system" fn heap_alloc(h: usize, flags: u32, n: usize) -> usize {
     }
     let p = with_heap(|a| a.alocar(n, flags & HEAP_ZERO_MEMORY != 0));
     if p == 0 {
-        linha(&format!("alocador: regiao esgotada pedindo {} bytes", n));
+        linha(&format!("allocator: region exhausted asking for {} bytes", n));
     }
     p
 }
@@ -433,7 +433,7 @@ unsafe fn in_dll_region(l: Layout, zero: bool) -> Option<*mut u8> {
     drop(a);
     Allocator::log_merged(notice, "da DLL");
     if p == 0 && !DLL_EXHAUSTED.swap(true, Ordering::Relaxed) {
-        linha(&format!("alocador: AVISO regiao da DLL esgotada pedindo {} bytes; o que nao couber vai para a heap do Windows", l.size()));
+        linha(&format!("allocator: WARNING the DLL region is exhausted asking for {} bytes; what does not fit goes to the Windows heap", l.size()));
     }
     if p == 0 {
         return None;
@@ -480,7 +480,7 @@ unsafe fn reserve(bases: &[usize], size: usize) -> usize {
         let p = crate::win::VirtualAlloc(b as *mut _, size, crate::win::MEM_COMMIT | crate::win::MEM_RESERVE, crate::win::PAGE_READWRITE);
         if !p.is_null() {
             if p as usize != bases[0] {
-                linha(&format!("alocador: AVISO regiao em {:#x} e nao em {:#x}", p as usize, bases[0]));
+                linha(&format!("allocator: WARNING region at {:#x} and not at {:#x}", p as usize, bases[0]));
             }
             return p as usize;
         }
@@ -512,7 +512,7 @@ unsafe extern "system" fn virtual_alloc(end: usize, size: usize, kind: u32, prot
             return r;
         }
     }
-    linha("alocador: AVISO band fixa do VirtualAlloc esgotada; endereco do Windows");
+    linha("allocator: WARNING the fixed VirtualAlloc band is exhausted; Windows address");
     f(0, size, kind, prot)
 }
 
@@ -570,7 +570,7 @@ unsafe extern "system" fn global_free(p: usize) -> usize {
 pub unsafe fn instalar() {
     let start = reserve(&BASES, REGION);
     if start == 0 {
-        linha("alocador: AVISO nenhuma regiao fixa livre; heap do Windows (simulacao nao reproduzivel)");
+        linha("allocator: WARNING no free fixed region; Windows heap (simulation not reproducible)");
         return;
     }
     let vis = reserve(&VISIBLE_BASES, VISIBLE_REGION);
@@ -581,15 +581,15 @@ pub unsafe fn instalar() {
     let compare = crate::win::ambiente("CM_COMPARAR");
     let dll = if compare { 0 } else { reserve(&DLL_BASES, DLL_REGION) };
     if compare {
-        linha("alocador: modo comparar, o resto da memoria da DLL fica na heap do Windows");
+        linha("allocator: comparison mode, the rest of the DLL memory stays on the Windows heap");
     } else if dll != 0 {
         DLL.lock().unwrap_or_else(|e| e.into_inner()).activate(dll, DLL_REGION);
         DLL_RANGE[0].store(dll, Ordering::Relaxed);
         DLL_RANGE[1].store(dll + DLL_REGION, Ordering::Relaxed);
         DLL_THREAD.store(crate::win::GetCurrentThreadId(), Ordering::Relaxed);
-        linha(&format!("alocador: resto da memoria da DLL em regiao fixa {:#x}..{:#x}", dll, dll + DLL_REGION));
+        linha(&format!("allocator: rest of the DLL memory in fixed region {:#x}..{:#x}", dll, dll + DLL_REGION));
     } else {
-        linha("alocador: AVISO regiao da DLL ocupada; o resto da memoria da DLL fica na heap do Windows");
+        linha("allocator: WARNING the DLL region is taken; the rest of the DLL memory stays on the Windows heap");
     }
     HEAP.lock().unwrap_or_else(|e| e.into_inner()).activate(start, REGION);
     HANDLE = start;
@@ -605,12 +605,12 @@ pub unsafe fn instalar() {
     crate::iat_hooks::replace_import("KERNEL32.dll", "GlobalFree", global_free as *const () as usize);
     match crate::iat_hooks::replace_import("KERNEL32.dll", "VirtualAlloc", virtual_alloc as *const () as usize) {
         Some(a) => VIRTUAL_ALLOC_ORIGINAL = a,
-        None => linha("alocador: AVISO VirtualAlloc nao trocado"),
+        None => linha("allocator: WARNING VirtualAlloc not replaced"),
     }
     for (i, (name, new_fn)) in swaps.iter().enumerate() {
         match crate::iat_hooks::replace_import("KERNEL32.dll", name, *new_fn) {
             Some(a) => ORIGINALS[i] = a,
-            None => linha(&format!("alocador: {} nao trocado", name)),
+            None => linha(&format!("allocator: {} not replaced", name)),
         }
     }
     linha(&format!("alocador: regiao fixa {:#x}..{:#x}", start, start + REGION));

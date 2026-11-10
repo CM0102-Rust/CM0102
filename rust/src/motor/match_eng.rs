@@ -3856,7 +3856,7 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
                 }
                 r => {
                     // simplification: the original stops the game with ”Error” (match_eng.cpp, line 0x776); 0x6bd930 only returns 0..=4
-                    linha(&format!("motor: engine_loop: periodo devolveu {}", r));
+                    linha(&format!("engine: engine_loop: the period returned {}", r));
                     std::process::abort();
                 }
             }
@@ -4182,7 +4182,7 @@ pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5
     let g = hold_position_one(m, (lado == 0) as i8);
     if g == 0 {
         // simplification: the original stops the game (match_pl.cpp line 0x2e0b); without a goalkeeper there is no shot
-        linha("motor: shoot: sem goleiro");
+        linha("engine: shoot: no goalkeeper");
         std::process::abort();
     }
     let l1c: u8 = match tipo {
@@ -5372,7 +5372,7 @@ pub(crate) unsafe fn corner_from_shot(c: &ShotLocals, call: &mut dyn FnMut(usize
         0 => *((m + engine::BALL_Y) as *mut u8) = 0xc,
         _ => {
             // simplification: the original stops the game (match_pl.cpp); the side is always 0 or 1
-            linha("motor: shoot: lado invalido no corner");
+            linha("engine: shoot: invalid side on the corner");
             std::process::abort();
         }
     }

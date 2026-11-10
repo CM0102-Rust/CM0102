@@ -73,7 +73,7 @@ unsafe extern "C" fn show_chain(entry: u32) {
             }
         }
     }
-    linha(&format!("sonda_pilha: chamada {} data {:?} entrada {:#x} retornos {}", CALLS, *(0xae2c90 as *const [u16; 2]), entry, ret.join(" ")));
+    linha(&format!("stack_probe: call {} date {:?} entry {:#x} returns {}", CALLS, *(0xae2c90 as *const [u16; 2]), entry, ret.join(" ")));
 }
 
 /// Builds the stubs around the routine's trampoline `tramp`; returns the detour target.
@@ -163,7 +163,7 @@ pub unsafe fn build_stub(tramp: usize, inside: bool) -> usize {
     c.extend([0xff, 0x25]); c.extend(a(&raw mut TARGET));
     assert!(c.len() <= 512);
     core::ptr::copy_nonoverlapping(c.as_ptr(), code as *mut u8, c.len());
-    linha(&format!("sonda_pilha: {}, band {:#x}..{:#x} abaixo da entrada com {:#x}, chamadas {}..{}",
+    linha(&format!("stack_probe: {}, band {:#x}..{:#x} below the entry with {:#x}, calls {}..{}",
         if inside { "dentro" } else { "depois" }, start, end, poison, first, last));
     code
 }
@@ -194,7 +194,7 @@ pub unsafe fn install_list() {
         .collect();
     let block = win::VirtualAlloc(core::ptr::null_mut(), 96 * marked.len() + 64, win::MEM_COMMIT | win::MEM_RESERVE, win::PAGE_EXECUTE_READWRITE) as usize;
     if block == 0 {
-        linha("sonda_pilha: lista sem memória");
+        linha("stack_probe: list without memory");
         return;
     }
     let mut pos = block;
@@ -226,5 +226,5 @@ pub unsafe fn install_list() {
         pos += 96;
     }
     win::FlushInstructionCache(win::GetCurrentProcess(), core::ptr::null(), 0);
-    linha(&format!("sonda_pilha: lista com {} rotinas marcadas", marked.len()));
+    linha(&format!("stack_probe: list with {} marked routines", marked.len()));
 }

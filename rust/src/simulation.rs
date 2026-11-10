@@ -36,7 +36,7 @@ fn date_from_env(name: &str) -> Option<(u16, u16)> {
     let s = String::from_utf16_lossy(&buf[..k.min(32)]);
     let a = interpret(&s);
     if let Some((year, day)) = a {
-        linha(&format!("simulacao: {} = {} (ano {}, dia {})", name, s, year, day));
+        linha(&format!("simulation: {} = {} (year {}, day {})", name, s, year, day));
     }
     a
 }
@@ -114,7 +114,7 @@ unsafe fn check_thread(origin: &str) {
         let n = OTHER_THREADS.fetch_add(1, Ordering::Relaxed);
         if n < 20 || (n + 1).is_power_of_two() {
             let [d, a] = *CURRENT_DATE;
-            linha(&format!("simulacao: {} na thread {} (principal {}), data {}-{:03}, {} vezes", origin, t, p, a, d, n + 1));
+            linha(&format!("simulation: {} on thread {} (main {}), date {}-{:03}, {} times", origin, t, p, a, d, n + 1));
         }
     }
 }
@@ -263,7 +263,7 @@ pub unsafe fn sorteio(requested: i32, pointer: u32, offset: i32, rand: u32) {
             }
         }
         if (a, d) == (ra, rd) {
-            write_trace(&format!("{} n={} chamador={:#x} ponteiro={:#x} deslocamento={:#x} rand={:#x}", n, requested, { crate::detours::RETURN_TO }, pointer, offset, rand));
+            write_trace(&format!("{} n={} caller={:#x} pointer={:#x} offset={:#x} rand={:#x}", n, requested, { crate::detours::RETURN_TO }, pointer, offset, rand));
         } else if (a, d) > (ra, rd) {
             close_trace();
         }
@@ -273,17 +273,17 @@ pub unsafe fn sorteio(requested: i32, pointer: u32, offset: i32, rand: u32) {
     let today = (a as u64) << 16 | d as u64;
     if LAST_DAY.swap(today, Ordering::Relaxed) != today {
         let mem = memory_of_day();
-        linha(&format!("dia {}-{:03} sorteios={} ponteiro={:#x} deslocamento={:#x} rand={:#x} pessoas={:016x} memoria={:016x} relogios={:?}{}", a, d, n, pointer, offset, rand, hash_people(), mem,
+        linha(&format!("day {}-{:03} draws={} pointer={:#x} offset={:#x} rand={:#x} people={:016x} memory={:016x} clocks={:?}{}", a, d, n, pointer, offset, rand, hash_people(), mem,
             CLOCKS.iter().map(|r| r.load(Ordering::Relaxed)).collect::<Vec<_>>(), hash_whole_game()));
     }
     if (a, d) < (year, day) || a < 1900 {
         return;
     }
     linha(&format!(
-        "SIMULACAO parou em {}-{:03} sorteios={} ponteiro={:#x} deslocamento={:#x} rand={:#x}",
+        "SIMULATION stopped at {}-{:03} draws={} pointer={:#x} offset={:#x} rand={:#x}",
         a, d, n, pointer, offset, rand
     ));
-    linha(&format!("partidas: {} motores, impressao {:016x}", MATCH_COUNT.load(Ordering::Relaxed), MATCHES.load(Ordering::Relaxed)));
+    linha(&format!("matches: {} engines, fingerprint {:016x}", MATCH_COUNT.load(Ordering::Relaxed), MATCHES.load(Ordering::Relaxed)));
     {
         let (start, top) = crate::allocator::game_region();
         // diagnosis: with jogo\heap_fim.txt (the output path inside), dumps the game's heap at the end
@@ -297,7 +297,7 @@ pub unsafe fn sorteio(requested: i32, pointer: u32, offset: i32, rand: u32) {
         }
         let _ = start;
         let blocks = game_blocks();
-        linha(&format!("memoria: banco {:016x} ({} blocos, {} KB)", memory_of_day(), blocks.len(), blocks.iter().map(|b| b.1).sum::<usize>() >> 10));
+        linha(&format!("memory: bank {:016x} ({} blocks, {} KB)", memory_of_day(), blocks.len(), blocks.iter().map(|b| b.1).sum::<usize>() >> 10));
     }
     let (dll, live) = crate::allocator::dll_peak();
     linha(&format!("alocador: pico {} MB; regiao da DLL: pico {} KB, ate {} KB vivos", crate::allocator::pico() >> 20, dll >> 10, live >> 10));
@@ -440,7 +440,7 @@ unsafe extern "C" fn traced_qsort(base: *mut u8, n: usize, width: usize, cmp: us
     let before = if on_day { hash_array(base, n * width) } else { 0 };
     f(base, n, width, cmp);
     if on_day {
-        write_trace(&format!("qsort cmp={:#x} n={} largura={} entrada={:016x} saida={:016x}", cmp, n, width, before, hash_array(base, n * width)));
+        write_trace(&format!("qsort cmp={:#x} n={} width={} input={:016x} output={:016x}", cmp, n, width, before, hash_array(base, n * width)));
     }
 }
 
@@ -457,7 +457,7 @@ static COVERAGE: std::sync::Mutex<Vec<(usize, String, &'static mut u32)>> = std:
 unsafe fn install_coverage() {
     let path = std::env::current_exe().map(|p| p.with_file_name("cobertura.txt")).unwrap_or_default();
     let Ok(text) = std::fs::read_to_string(&path) else {
-        linha("cobertura: AVISO cobertura.txt nao encontrado (rode cobertura.py)");
+        linha("coverage: WARNING cobertura.txt not found (run cobertura.py)");
         return;
     };
     let mut list = COVERAGE.lock().unwrap_or_else(|e| e.into_inner());
@@ -468,16 +468,16 @@ unsafe fn install_coverage() {
         let bytes: Vec<u8> = (0..hex.len() / 2).filter_map(|i| u8::from_str_radix(&hex[2 * i..2 * i + 2], 16).ok()).collect();
         let p = crate::detours::Prologue { address: address, bytes: Box::leak(bytes.into_boxed_slice()) };
         let counter: &'static mut u32 = Box::leak(Box::new(0));
-        if crate::detours::count_calls(&format!("cobertura {:#x}", address), &p, counter) {
+        if crate::detours::count_calls(&format!("coverage {:#x}", address), &p, counter) {
             list.push((address, file.to_string(), counter));
         }
     }
-    linha(&format!("cobertura: {} funcoes com contador", list.len()));
+    linha(&format!("coverage: {} functions with a counter", list.len()));
 }
 
 fn dump_coverage() {
     for (e, file, n) in COVERAGE.lock().unwrap_or_else(|e| e.into_inner()).iter() {
-        linha(&format!("cobertura {:x} {} {}", e, file, n));
+        linha(&format!("coverage {:x} {} {}", e, file, n));
     }
 }
 
@@ -527,7 +527,7 @@ unsafe fn isolate_imports() {
             Some(crate::detours::isolate_import(current))
         }
     });
-    linha(&format!("simulacao: {} funcoes do Windows isoladas na pilha particular", n));
+    linha(&format!("simulation: {} Windows functions isolated on the private stack", n));
 }
 
 // ---------- exceptions ----------
@@ -555,7 +555,7 @@ pub unsafe extern "system" fn record_exception(info: *const [usize; 2]) -> i32 {
         let dll = core::ptr::addr_of!(__ImageBase) as usize;
         let location = if address >= dll && address - dll < 0x0100_0000 { format!(" (ddraw.dll+{:#x})", address - dll) } else { String::new() };
         linha(&format!(
-            "EXCECAO {:#x} em {:#x}{} (data {:?}) eax={:x} ebx={:x} ecx={:x} edx={:x} esi={:x} edi={:x} ebp={:x} esp={:x} pilha: {}",
+            "EXCEPTION {:#x} at {:#x}{} (date {:?}) eax={:x} ebx={:x} ecx={:x} edx={:x} esi={:x} edi={:x} ebp={:x} esp={:x} stack: {}",
             code, address, location, *CURRENT_DATE, r(0xb0), r(0xa4), r(0xac), r(0xa8), r(0xa0), r(0x9c), r(0xb4), esp, stack.join(" ")
         ));
     }
@@ -592,7 +592,7 @@ unsafe extern "C" fn restore_humans_on_holiday() -> i32 {
             if *((t + 0x5f) as *const u8) == 1 {
                 set_on_holiday(hm, 1, t);
                 set_holiday_stamp(hm, 0, t);
-                crate::registro::linha(&format!("CM_FERIAS: humano {:#x} de ferias depois do -load", t));
+                crate::registro::linha(&format!("CM_FERIAS: human {:#x} on holiday after -load", t));
             }
         }
     }
@@ -616,7 +616,7 @@ pub unsafe fn install() {
         if let Some(v) = std::fs::read_to_string(file).ok().and_then(|t| u32::from_str_radix(t.trim(), 16).ok()) {
             crate::detours::POISON.store(v, Ordering::Relaxed);
         }
-        linha(&format!("simulacao: veneno {:08x}", crate::detours::POISON.load(Ordering::Relaxed)));
+        linha(&format!("simulation: poison {:08x}", crate::detours::POISON.load(Ordering::Relaxed)));
         crate::allocator::instalar();
         if crate::win::ambiente("CM_FERIAS") {
             if let Some(t) = crate::detours::hook("holiday after -load (CM_FERIAS)", &PROLOGUE_RESTORE_HUMANS,

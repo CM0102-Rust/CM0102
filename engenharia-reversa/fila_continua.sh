@@ -35,7 +35,7 @@ for l in linhas:
     if not m:
         continue
     nome, r = m.groups()
-    if r.startswith('ACUSADA') or ('comparando' in r and 'DIVERGENCIA' in r) or ('comparando' in r and 'EXCECAO' in r):
+    if r.startswith('ACUSADA') or ('comparando' in r and ('DIVERGENCIA' in r or 'DIVERGENCE' in r)) or ('comparando' in r and ('EXCECAO' in r or 'EXCEPTION' in r)):
         acusadas.add(nome)
     elif r.startswith('IGUAL A BASE') or 'comparando' in r:
         escaparam.add(nome)

@@ -510,7 +510,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
 }
 
 pub(crate) static mut ORIGINAIS: [usize; N] = [0; N];
-pub(crate) static SCOREBOARD: Scoreboard = Scoreboard::new("motor");
+pub(crate) static SCOREBOARD: Scoreboard = Scoreboard::new("engine");
 
 /// Returns original routine i (the bytes saved before the detour) as a function pointer of type F.
 pub(crate) unsafe fn original_fn<F: Copy>(i: usize) -> F {

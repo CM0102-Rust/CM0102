@@ -6686,7 +6686,7 @@ pub(crate) unsafe fn execute_pass_injected(p: MatchPlayer, x: i8, y: i8, kind_in
         }
         _ => {
             // simplification: the original stops the game (”MATCH_PLAYER::pass() - unknown pass”); the callers only use the 16 types above
-            linha(&format!("motor: execute_pass: tipo desconhecido {:#x}", tipo));
+            linha(&format!("engine: execute_pass: unknown kind {:#x}", tipo));
             std::process::abort();
         }
     }
