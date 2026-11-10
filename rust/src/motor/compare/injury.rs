@@ -59,7 +59,7 @@ pub(crate) unsafe extern "thiscall" fn compare_post_recovery_news(this: usize, p
     reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
     reg.push((physical_record_of_player(this, p.addr()), 31));
     reg.push((read_usize(G_STAFF_STATE_TABLE).wrapping_add((*(p.addr() as *const i32) as isize * 0x4f) as usize), 0x4f));
-    let club = Club((p.club_job()).addr());
+    let club = Club(p.club_job().addr());
     if !club.is_null() && club.manager().addr() != 0 {
         reg.push((club.manager().addr(), 0x6e));
     }

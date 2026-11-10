@@ -5,7 +5,7 @@ MUTACOES = [
     ('i_comp_zera', "            pr(comp + day_competition::INTERESTING, 0);\n            pr(comp + day_competition::HAS_MARKED, 0);", "            pr(comp + day_competition::INTERESTING, 1);\n            pr(comp + day_competition::HAS_MARKED, 0);"),
     ('i_16', "for k in 0..16 {\n                    let pe", "for k in 0..15 {\n                    let pe", "interest human in the competition"),
     ('i_k', "(ler(0xae2364) + k - 16)", "(ler(0xae2364) + k - 15)", "interest human in the competition"),
-    ('i_outro', "|| (other != Club(0) && exe::comp_includes_club(object, other) != 0)", "|| false", "interest human in the competition"),
+    ('i_outro', "|| (!other.is_null() && exe::comp_includes_club(object, other) != 0)", "|| false", "interest human in the competition"),
     ('i_marca_comp', "crate::comparison::branch(\"interest human in the competition\");\n                        pr(comp + day_competition::INTERESTING, 1);", "crate::comparison::branch(\"interest human in the competition\");\n                        pr(comp + day_competition::INTERESTING, 0);", "interest human in the competition"),
     ('i_6b61e0', "crate::comparison::branch(\"interest via 6b61e0\");\n                    pr(comp + day_competition::INTERESTING, 1);", "crate::comparison::branch(\"interest via 6b61e0\");\n                    pr(comp + day_competition::INTERESTING, 0);", "interest via 6b61e0"),
     ('i_byte44', "(exe::human_manager_is_human_club(read_usize(m + day_match::HOME_CLUB), 0, *((m + day_match::HOME_SIDE_MARK) as *const u8) as u32, 0, 0) as i32)", "(exe::human_manager_is_human_club(read_usize(m + day_match::HOME_CLUB), 0, *((m + day_match::AWAY_SIDE_MARK) as *const u8) as u32, 0, 0) as i32)"),

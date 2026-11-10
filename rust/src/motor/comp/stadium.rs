@@ -137,7 +137,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
                     count = false;
                     break 'vaga;
                 }
-                if !home.is_null() && !away.is_null() && !fin_prm_is_national_team(home.addr()) && (marks as i32) < 0x40 {
+                if !home.is_null() && !away.is_null() && !fin_prm_is_national_team(home) && (marks as i32) < 0x40 {
                     let s = read_usize(e + 0xc);
                     if s == home.stadium().addr() || s == away.stadium().addr() {
                         break 'vaga;
@@ -312,7 +312,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
     let mut step_towards = 0;
     if f == 0x8000 {
         let monaco = read_usize(G_KEY_CLUB_AS_MONACO);
-        if read_usize((fx.home_club()).addr()) != monaco && read_usize((fx.away_club()).addr()) != monaco {
+        if read_usize(fx.home_club().addr()) != monaco && read_usize(fx.away_club().addr()) != monaco {
             fixar(read_usize(read_usize(G_CLUB_TABLE) + monaco * club::SIZE + 0x69));
             return;
         }
@@ -322,7 +322,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
         step_towards = 1;
     } else if f == 0 {
         let casa = fx.home_club();
-        if d.year < 0x7d3 && fin_prm_is_national_team(casa.addr()) && read_usize(casa.nation().addr()) == read_usize(KEY_NATION_ENGLAND) {
+        if d.year < 0x7d3 && fin_prm_is_national_team(casa) && read_usize(casa.nation().addr()) == read_usize(KEY_NATION_ENGLAND) {
             f = 0x20;
         }
         let casa = fx.home_club();
@@ -339,7 +339,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
                 chave[2] = d.is_leap_year as u32;
                 livre = buscar(chave.as_ptr() as usize, read_usize(this), read_usize(this + stadium_obj::BOOKING_COUNT) as u32, 0xc, 0x85e380) == 0;
             }
-            if livre && (read_usize(read_usize((fx.home_club()).addr() + 0x69) + 0x3c) as i32) < 40000 {
+            if livre && (read_usize(read_usize(fx.home_club().addr() + 0x69) + 0x3c) as i32) < 40000 {
                 *neutro = 1;
                 fixar(read_usize(nation_by_id(fin) + 0x80));
                 add_stadium_booking(this, fx.stadium(), pd);
@@ -348,7 +348,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
         }
         *neutro = 0;
         let casa = fx.home_club();
-        if f != 0x20 && casa != Club(0) && casa.stadium().addr() != 0 {
+        if f != 0x20 && !casa.is_null() && casa.stadium().addr() != 0 {
             let n = casa.nation().addr();
             let mut amistoso = false;
             if n != 0 && (read_usize(n) == read_usize(KEY_NATION_ITALY) || read_usize(n) == read_usize(KEY_NATION_FRANCE)) {
@@ -356,10 +356,10 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
             }
             if !amistoso {
                 crate::comparison::branch("cqo_1 home team stadium");
-                fixar(read_usize((fx.home_club()).addr() + 0x69)); // cqo1: the home team stadium
+                fixar(read_usize(fx.home_club().addr() + 0x69)); // cqo1: the home team stadium
                 return;
             }
-        } else if !fin_prm_is_national_team((fx.home_club()).addr()) {
+        } else if !fin_prm_is_national_team(Club(fx.home_club().addr())) {
             fx.set_stadium(0);
             fx.set_stadium_id(u32::MAX as usize);
             return;
@@ -368,9 +368,9 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
     }
     if step_towards == 1 {
         let comp = fx.competition();
-        if comp != Competition(0) {
+        if !comp.is_null() {
             let n = comp.nation().addr();
-            if n != 0 && read_usize(n) == read_usize(KEY_NATION_ENGLAND) && !fin_prm_is_national_team((fx.home_club()).addr()) && read_usize(G_STADIUM_STASHED_VENUE_ID) as i32 != -1 {
+            if n != 0 && read_usize(n) == read_usize(KEY_NATION_ENGLAND) && !fin_prm_is_national_team(Club(fx.home_club().addr())) && read_usize(G_STADIUM_STASHED_VENUE_ID) as i32 != -1 {
                 *neutro = 1;
                 fixar(read_usize(nation_by_id(read_usize(KEY_NATION_WALES)) + 0x80));
                 return;
@@ -437,8 +437,8 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
     } else {
         alvo = comp.nation().addr();
     }
-    if f & 0x20 != 0 && fin_prm_is_national_team((fx.home_club()).addr()) {
-        alvo = read_usize((fx.home_club()).addr() + 0x53);
+    if f & 0x20 != 0 && fin_prm_is_national_team(Club(fx.home_club().addr())) {
+        alvo = read_usize(fx.home_club().addr() + 0x53);
     }
     if f & 4 != 0 && alvo != 0 {
         let st = read_usize(alvo + nation::NATIONAL_STADIUM);
@@ -448,10 +448,10 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
             add_stadium_booking(this, fx.stadium(), pd);
             return;
         }
-        f = if fin_prm_is_national_team((fx.home_club()).addr()) { 0x20 } else { 0x40 };
+        f = if fin_prm_is_national_team(Club(fx.home_club().addr())) { 0x20 } else { 0x40 };
     }
     let buscar: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize = core::mem::transmute(FN_STADIUM_FIND_AVAILABLE_VENUE);
-    let r = buscar(this, f, comp.continent(), alvo, pd, (fx.home_club()).addr(), (fx.away_club()).addr(), fx.addr());
+    let r = buscar(this, f, comp.continent(), alvo, pd, fx.home_club().addr(), fx.away_club().addr(), fx.addr());
     fx.set_stadium(r);
     if r == 0 && alt != 0 {
         f = match f {
@@ -461,7 +461,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
             0x200 => 0x2000,
             x => x,
         };
-        let r = buscar(this, f, comp.continent(), alt, pd, (fx.home_club()).addr(), (fx.away_club()).addr(), fx.addr());
+        let r = buscar(this, f, comp.continent(), alt, pd, fx.home_club().addr(), fx.away_club().addr(), fx.addr());
         fx.set_stadium(r);
     }
     let st = fx.stadium();
@@ -641,7 +641,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
     while side < 2 {
         let k = side as usize;
         let comp = game.competition();
-        if comp != Competition(0) {
+        if !comp.is_null() {
             f[k] = comp.reputation() as i32 as f64;
             if f[k] < read_f64(rdata::F64_1) {
                 f[k] = 1.0;
@@ -656,8 +656,8 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
         let mut adjust = read_f64(rdata::F64_0);
         if exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), comp) == 0 && read_usize(G_COMP_OBJECT_TABLE) != 0 && read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(comp.addr()) * 4) != 0 && read_usize(G_RESERVE_COMP) != 0 {
             let group: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
-            if group((game.competition()).addr()) == 0 {
-                let league = read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize((game.competition()).addr()) * 4);
+            if group(game.competition().addr()) == 0 {
+                let league = read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(game.competition().addr()) * 4);
                 if read_u8(league + league::COMP_TYPE) != 2 {
                     let x = ((game.round_number() as u8).wrapping_sub(read_u8(league + league::LEGS)) as i8) as i32 as f64;
                     adjust = if x < read_f64(rdata::F64_NEG_6) {
@@ -715,7 +715,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
         }
         pf = ftol(away.min_attendance().wrapping_add(away.attendance()) as f64 * f[1] * d * read_f64(rdata::F64_0_5));
         let comp = game.competition();
-        if comp != Competition(0) && home != Club(0) && home.division().addr() == comp.addr() {
+        if !comp.is_null() && !home.is_null() && home.division() == comp {
             let league = read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(comp.addr()) * 4);
             if league != 0 && read_usize(league + 8) != 0 {
                 let p = exe::comp_stats_find_club_entry(read_usize(league + 8), home);
@@ -795,7 +795,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
         pf = ftol(pf as f64 * read_f64(rdata::F64_0_85));
     }
     let comp = game.competition();
-    if comp != Competition(0) && home != Club(0) && home.division().addr() == comp.addr() && home.own_stadium() != 0 {
+    if !comp.is_null() && !home.is_null() && home.division() == comp && home.own_stadium() != 0 {
         let n = comp.reputation();
         if n > 0xc {
             let m = (n.wrapping_sub(0xc) as i32 + 3) * 2000;
@@ -834,7 +834,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
             let lot = read_i32(est + stadium::CAPACITY);
             let vis = if game.neutral_venue() == 0 {
                 let a = lot as f64;
-                let x = a - read_i32((game.away_club()).addr() + 0x73) as f64 * f[0];
+                let x = a - read_i32(game.away_club().addr() + 0x73) as f64 * f[0];
                 let y = a * read_f64(rdata::F64_0_15);
                 let z = if x < y { x } else { y };
                 let w = a * read_f64(rdata::F64_0_05);
@@ -962,8 +962,8 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
             if exe::database_is_national_team(game.home_club()) != 0 {
                 expected = 0xea60;
             } else {
-                let a = read_i32((game.away_club()).addr() + 0x73);
-                let c = read_i32((game.home_club()).addr() + 0x73);
+                let a = read_i32(game.away_club().addr() + 0x73);
+                let c = read_i32(game.home_club().addr() + 0x73);
                 let s = c.wrapping_add(a);
                 if s < 0x1388 {
                     expected = 0x1388;
@@ -1027,7 +1027,7 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
 /// nação, 0,05; e sempre [0x96d2c8]. Devolve o double no st0.
 pub(crate) unsafe extern "thiscall" fn get_travel_distance_factor(_this: usize, game: usize, cid_est: usize, cid_club: usize, base: f64) -> f64 {
     let game = Fixture(game);
-    let nation = Nation(read_usize((game.away_club()).addr() + 0x53));
+    let nation = Nation(read_usize(game.away_club().addr() + 0x53));
     let r = (nation.state_of_development() as i8) as i32 as f64;
     let dy = read_f64(cid_est + city::LONGITUDE) - read_f64(cid_club + city::LONGITUDE);
     let dx = read_f64(cid_est + city::LATITUDE) - read_f64(cid_club + city::LATITUDE);
@@ -1053,7 +1053,7 @@ pub(crate) unsafe extern "thiscall" fn get_travel_distance_factor(_this: usize, 
     if kind == 0xa && f < read_f64(rdata::F64_0_2) {
         return read_f64(rdata::F64_0_2);
     }
-    if f < read_f64(rdata::F64_0_05) && read_usize((game.home_club()).addr() + 0x53) == nation.addr() {
+    if f < read_f64(rdata::F64_0_05) && read_usize(game.home_club().addr() + 0x53) == nation.addr() {
         return read_f64(rdata::F64_0_05);
     }
     if f < read_f64(rdata::F64_0_03) {

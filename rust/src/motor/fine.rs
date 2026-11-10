@@ -60,7 +60,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
         return;
     }
     let current = player.club_job();
-    if current != Club(0) && !club_has_human_manager(current.addr()) {
+    if !current.is_null() && !club_has_human_manager(current.addr()) {
         return;
     }
     crate::comparison::branch("cpz_9 news of the reaction to the fine");
@@ -106,10 +106,10 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
 pub(crate) unsafe extern "stdcall" fn post_coach_fine_feedback_news(player: usize, coach: usize, outcome: u32) {
     let coach = Staff(coach);
     let player = Staff(player);
-    if player.is_null() || player.player() == 0 || player.nation() == Nation(0) || player.club_job() == Club(0) {
+    if player.is_null() || player.player() == 0 || player.nation().is_null() || player.club_job().is_null() {
         return;
     }
-    if coach.is_null() || coach.player() == 0 || coach.nation() == Nation(0) {
+    if coach.is_null() || coach.player() == 0 || coach.nation().is_null() {
         return;
     }
     crate::comparison::branch("cpz_9 news of the coach return");

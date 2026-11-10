@@ -59,7 +59,7 @@ pub(crate) unsafe extern "thiscall" fn on_friendly_fixture_cancelled(this: usize
     if game.competition() == Competition(read_usize(this + 4)) && read_usize(this + friendly::SCHEDULED_SLOT_LIST) != 0 {
         // 0x5c6740: push +0x1c; push +0x20; push (dx = +0x28); push (ax = +0x2a); mov ecx, this -> thiscall, ret 0x10;
         // the registers carry in the high words what they already had (the pointer +0x14 and the +0x1c)
-        let v = exe::friendly_find_scheduled_friendly_slot(this, replace_low_word((game.home_club()).addr(), (game.day() as i16)), replace_low_word((game.competition()).addr(), (game.year() as i16)), (game.away_club().addr() as u32) as usize, (game.home_club().addr() as u32) as usize);
+        let v = exe::friendly_find_scheduled_friendly_slot(this, replace_low_word(game.home_club().addr(), (game.day() as i16)), replace_low_word(game.competition().addr(), (game.year() as i16)), (game.away_club().addr() as u32) as usize, (game.home_club().addr() as u32) as usize);
         if v != 0 {
             crate::comparison::branch("cqg_10 friendly slot free");
             core::ptr::write_unaligned((v + scheduled_friendly_slot::OPPONENT) as *mut u32, 0); // cqg10: the place stays free
@@ -104,11 +104,11 @@ pub(crate) unsafe extern "thiscall" fn friendly_cancel_national_fixture(this: us
     let who = if mark == 0x100 {
         game.home_club()
     } else { Club(if mark == 0x200 {
-        exe::database_get_national_u21_team(read_usize((game.home_club()).addr() + 0x53))
+        exe::database_get_national_u21_team(read_usize(game.home_club().addr() + 0x53))
     } else {
         0
     }) };
-    if who != Club(0) && read_usize(who.addr()) as i32 != -1 {
+    if !who.is_null() && read_usize(who.addr()) as i32 != -1 {
         crate::comparison::branch("cqg_10 national team match the day before");
         let id = read_usize(who.addr()) as u32;
         let (mut d0, mut d1, mut d2) = ([0u8; 8], [0u8; 8], [0u8; 8]);
@@ -351,12 +351,12 @@ impl FriendlyComparerTrial {
 /// uma vai à lista (pela id) da outra: a de casa recebe a de fora, depois o contrário (0x68d0d0 com 4: thiscall na
 /// lista). No ensaio, só o registro.
 pub(crate) unsafe fn link_fixture_nations(this: usize, p: Fixture, usadas: usize, ens: Option<&mut FriendlyComparerTrial>) {
-    let na = read_usize((p.home_club()).addr() + 0x53);
+    let na = read_usize(p.home_club().addr() + 0x53);
     if na == 0 {
         return;
     }
     let a = read_usize(na) as u32;
-    let nb = read_usize((p.away_club()).addr() + 0x53);
+    let nb = read_usize(p.away_club().addr() + 0x53);
     if nb == 0 {
         return;
     }
@@ -977,7 +977,7 @@ pub(crate) unsafe extern "thiscall" fn find_human_club_tournament(this: usize) -
         return 0;
     }
     let club = manager.club_job();
-    if club == Club(0) {
+    if club.is_null() {
         return 0;
     }
     for i in 0..0x7fusize {
@@ -1212,7 +1212,7 @@ pub(crate) unsafe extern "thiscall" fn find_human_club_open_invitation(this: usi
         return 0;
     }
     let club = manager.club_job();
-    if club == Club(0) {
+    if club.is_null() {
         return 0;
     }
     core::ptr::write_unaligned((list + llist::CURSOR) as *mut usize, read_usize(list + llist::HEAD));
@@ -2881,7 +2881,7 @@ pub(crate) unsafe extern "thiscall" fn find_friendly_opponent(this: usize, club:
             if are_rival_clubs(cp, op) || (are_rival_nations(cp.addr(), op) && friendly_random(2) == 0) {
                 break 'proximo;
             }
-            if cp.division().addr() == op.division().addr() {
+            if cp.division() == op.division() {
                 break 'proximo;
             }
             if read_i8(c + 4) > (friendly_random(3) as i8).wrapping_add(3) {
@@ -2981,7 +2981,7 @@ pub(crate) unsafe extern "thiscall" fn find_tour_opponent(this: usize, club: usi
             if are_rival_clubs(cp, op) || (are_rival_nations(cp.addr(), op) && friendly_random(2) == 0) {
                 break 'proximo;
             }
-            if cp.division().addr() == op.division().addr() {
+            if cp.division() == op.division() {
                 break 'proximo;
             }
             if read_i8(c + 4) > (friendly_random(3) as i8).wrapping_add(3) {

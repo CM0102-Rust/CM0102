@@ -198,7 +198,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_create_table(this: 
     let mut i: i32 = 0;
     while i < read_usize(G_CLUB_COUNT) as i32 && plan.len() < 0x38 {
         let club = Club(read_usize(G_CLUB_TABLE) + (i as usize) * club::SIZE);
-        if club.division().addr() == this.competition().addr() {
+        if club.division() == this.competition() {
             plan.push(club.addr());
         }
         i += 1;

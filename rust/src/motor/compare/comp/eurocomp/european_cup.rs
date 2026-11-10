@@ -280,7 +280,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_fixture(this: usize, game
     let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PROCESS_FIXTURE);
     let (a, b) = if !game.is_null() { (game.home_club(), game.away_club()) } else { (Club(0), Club(0)) };
-    if a == Club(0) || b == Club(0) {
+    if a.is_null() || b.is_null() {
         return o(this, game.addr(), arg); // simplification: without a club, original only
     }
     let (ca, cb) = (nation_coefficient_word(Club(a.addr())), nation_coefficient_word(Club(b.addr())));

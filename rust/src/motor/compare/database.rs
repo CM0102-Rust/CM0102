@@ -1696,7 +1696,7 @@ pub(crate) unsafe extern "thiscall" fn compare_ball_out(this: usize, l: u8) -> u
     }
     let mut extra = vec![(this.addr() + 0x8ea0, 0x20), (this.addr() + 0x4780, 0x10), (this.addr() + 0xf570, 0x20), (this.addr() + 0x1a0, 0x10)];
     let owner = this.ball_holder();
-    if owner != MatchPlayer(0) {
+    if !owner.is_null() {
         extra.extend([(owner.addr() + 0x29, 2), (owner.addr() + 0x19c, 2)]);
     }
     let (r, n) = (core::cell::Cell::new(0u8), core::cell::Cell::new(0u8));

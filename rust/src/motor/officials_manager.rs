@@ -180,7 +180,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
             continue;
         }
         let nation = comp.nation();
-        if nation == Nation(0) {
+        if nation.is_null() {
             continue;
         }
         let b = blocos.wrapping_add((read_i32(nation.addr()) as isize * 0x102) as usize);
@@ -388,9 +388,9 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
         return 0xffff_ff00;
     }
     let nations = read_i32(G_NATION_COUNT);
-    let home = Club((game.home_club()).addr());
+    let home = Club(game.home_club().addr());
     let away = game.away_club();
-    let comp = Competition((game.competition()).addr());
+    let comp = Competition(game.competition().addr());
     let band_of_nation = |nacao: i32| {
         let b = nation_officials_block(this, nacao);
         (read_i32(b + officials_nation_block::FIRST_REFEREE), read_i32(b + officials_nation_block::REFEREE_COUNT))
@@ -445,8 +445,8 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                     crate::comparison::branch("cpy_8 neutral referee");
                     (read_i32(b + officials_nation_block::FIRST_REFEREE).wrapping_sub(ftol(count * -0.75)), ftol(count * 0.25)) // cpy8: the top quarter
                 } else {
-                    let nacao = if comp.nation() != Nation(0) {
-                        read_i32((comp.nation()).addr())
+                    let nacao = if !comp.nation().is_null() {
+                        read_i32(comp.nation().addr())
                     } else if let Some(k) = officials_manager_club_nation_id(home) {
                         k
                     } else if let Some(k) = officials_manager_club_nation_id(Club(away.addr())) {
@@ -555,7 +555,7 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
     if exe::comp_util_is_league_division(read_i32(comp.addr())) == 0 {
         return 0;
     }
-    let nacao = if comp.nation() != Nation(0) { read_i32((comp.nation()).addr()) } else { random(read_i32(G_NATION_COUNT)) };
+    let nacao = if !comp.nation().is_null() { read_i32(comp.nation().addr()) } else { random(read_i32(G_NATION_COUNT)) };
     let b = nation_officials_block(this, nacao);
     let mut band = None;
     for f in 0..read_i16(b + officials_nation_block::COMP_COUNT).max(0) as usize {

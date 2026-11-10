@@ -291,7 +291,7 @@ pub(crate) unsafe extern "C" fn key_nation_is_international_comp(comp: usize) ->
 pub(crate) unsafe extern "C" fn key_nation_index_of_comp(comp: usize) -> u8 {
     let comp = Competition(comp);
     let nation = comp.nation();
-    if nation != Nation(0) {
+    if !nation.is_null() {
         let row = (0..0x23usize).find(|&k| read_usize(G_LEAGUE_TABLE + 72 * k) == nation.addr()); // cpt4: the nation search
         return match row {
             Some(k) => k as u8, // cpt4: the nation row

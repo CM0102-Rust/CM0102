@@ -5015,7 +5015,7 @@ pub(crate) unsafe extern "stdcall" fn match_stats_get_record_bucket(game: usize,
         if game.home_side_mark() == 0 {
             return 2;
         }
-        let v = core::ptr::read_unaligned(((game.home_club()).addr() + 0x80) as *const i16);
+        let v = core::ptr::read_unaligned((game.home_club().addr() + 0x80) as *const i16);
         return if v as i32 * 2 >= 10000 || v >= 0x157c { 0 } else { 2 };
     }
     // simplification: the two byte tables of the jumps are read from the exe itself (the hook only replaces the start of the routine)
@@ -5030,7 +5030,7 @@ pub(crate) unsafe extern "stdcall" fn match_stats_get_record_bucket(game: usize,
             }
             match table(0x729d94, c) {
                 0 => 0,
-                1 => (core::ptr::read_unaligned(((game.competition()).addr() + 0x69) as *const i16) <= 0xc) as u8,
+                1 => (core::ptr::read_unaligned((game.competition().addr() + 0x69) as *const i16) <= 0xc) as u8,
                 _ => 1,
             }
         }
@@ -5042,7 +5042,7 @@ pub(crate) unsafe extern "stdcall" fn match_stats_get_record_bucket(game: usize,
             if c as u32 > 0x23 { 1 } else { (table(0x729d64, c) != 0) as u8 }
         }
         _ => {
-            let n = *(((game.competition()).addr() + 0x69) as *const i8);
+            let n = *((game.competition().addr() + 0x69) as *const i8);
             if n > 0xd { 1 } else { (n <= 6) as u8 + 2 }
         }
     }
@@ -5393,7 +5393,7 @@ pub(crate) unsafe extern "C" fn match_details_input(item: u32) -> i32 {
             let e = record(current_human_display());
             if id_ou_default(core::ptr::read_unaligned((e + 0xba966) as *const u16)) == 2 {
                 let club = core::ptr::read_unaligned((e + 0xba9a6) as *const usize);
-                let mark = if club == (p1f.home_club()).addr() { p1f.home_side_mark() } else { (p1f.away_side_mark() as u8) };
+                let mark = if club == p1f.home_club().addr() { p1f.home_side_mark() } else { (p1f.away_side_mark() as u8) };
                 exe::tactics_screen_open(club, (mark == 0) as u32, (0) as usize, 0, (v1e) as i32, 0);
                 return -4;
             }

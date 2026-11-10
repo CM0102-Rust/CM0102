@@ -253,7 +253,7 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
     let dry_run = (*core::ptr::addr_of!(AWOL_NEWS_TAPE)).is_some();
     if exe::news_club_has_human_manager(news, club) != 0 {
         if dry_run {
-            AWOL_NEWS_DESTINATION = (1, (player.club_job()).addr());
+            AWOL_NEWS_DESTINATION = (1, player.club_job().addr());
         } else {
             exe::news_send_to_club_manager(news, nt, player.club_job());
         }

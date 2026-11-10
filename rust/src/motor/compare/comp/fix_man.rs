@@ -67,7 +67,7 @@ pub(crate) unsafe extern "thiscall" fn compare_load_fixtures(this: usize) {
 pub(crate) unsafe extern "thiscall" fn compare_collect_day_clashes(this: usize, game: usize, grav: *mut i32, list: usize, nations: usize, n: u32, data: usize, desloc: u32) {
     let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32, usize, usize, u32, usize, u32)>(IDX_COLLECT_DAY_CLASHES);
-    if game.is_null() || list == 0 || grav.is_null() || game.home_club() == Club(0) || game.away_club() == Club(0) {
+    if game.is_null() || list == 0 || grav.is_null() || game.home_club().is_null() || game.away_club().is_null() {
         return o(this, game.addr(), grav, list, nations, n, data, desloc);
     }
     let mut g = *grav;

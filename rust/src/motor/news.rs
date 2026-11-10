@@ -282,7 +282,7 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, news: usi
         crate::comparison::branch("cpn_1 automatic reply");
         exe::newsitem_auto_respond(slot(current), manager, manager.club_job()); // the club
         let national_team = manager.national_job();
-        if national_team != Club(0) {
+        if !national_team.is_null() {
             exe::newsitem_auto_respond(slot(current), manager, national_team);
         }
     }
@@ -492,7 +492,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_comp_region(this: usize, news: us
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_COMP_REGION)(this, news, comp.addr()); // message box: original only
     }
     let nation = comp.nation();
-    if nation != Nation(0) {
+    if !nation.is_null() {
         crate::comparison::branch("cpk_5 news of the competition nation");
         let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_NATION_CLUB_MANAGERS);
         return f(this, news, nation.addr());
@@ -696,7 +696,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_nation_club_managers(this: usize,
         if p.classification() != 1 {
             continue;
         }
-        let club = Club((p.club_job()).addr());
+        let club = Club(p.club_job().addr());
         if club.is_null() || club.nation().addr() != nation {
             continue;
         }

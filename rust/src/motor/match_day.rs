@@ -1007,7 +1007,7 @@ pub(crate) unsafe extern "thiscall" fn match_day_interest(d: usize) -> u32 {
                     let pe = Staff((g(G_STAFF_TABLE) as isize + (read(G_STAFF_COUNT) + k - 16) as isize * 0x6e) as usize);
                     let club = pe.club_job();
                     let other = pe.national_job();
-                    if (club != Club(0) && exe::comp_includes_club(object, club) != 0) || (other != Club(0) && exe::comp_includes_club(object, other) != 0) {
+                    if (!club.is_null() && exe::comp_includes_club(object, club) != 0) || (!other.is_null() && exe::comp_includes_club(object, other) != 0) {
                         crate::comparison::branch("interest human in the competition");
                         pr(comp + day_competition::INTERESTING, 1);
                         pr(d + match_day_fields::HAS_INTEREST, 1);
@@ -1131,8 +1131,8 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
     let base = g(G_STAFF_TABLE);
     for k in 0..16isize {
         let pe = Staff((base as isize + (read(G_STAFF_COUNT) as isize - 1 - k) * 0x6e) as usize);
-        if !pe.is_null() && pe.classification() == 1 && pe.club_job() != Club(0) {
-            let nation = read((pe.club_job()).addr() + 0x57);
+        if !pe.is_null() && pe.classification() == 1 && !pe.club_job().is_null() {
+            let nation = read(pe.club_job().addr() + 0x57);
             if nation == (c1.division().addr() as i32) || nation == (c2.division().addr() as i32) {
                 crate::comparison::branch("no human nation manager");
                 return 0;
@@ -1151,7 +1151,7 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
         return 0;
     }
     if matches!(x, 3..=7) {
-        let q = g((partida.competition()).addr() + 0x59);
+        let q = g(partida.competition().addr() + 0x59);
         if q != 0 && *((0xb67a58 + g(q)) as *const u8) != 0 {
             crate::comparison::branch("no human national team marked");
             return 0;

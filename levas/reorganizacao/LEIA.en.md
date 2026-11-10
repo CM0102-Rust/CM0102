@@ -29,6 +29,16 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 14b: the cleanup
+
+`limpar_tipos.py`: `(x.f()).addr()` → `x.f().addr()` (387 → 2), `x == Club(0)` → `x.is_null()` (238 → 10) and
+`a.addr() == b.addr()` → `a == b` when both sides have the same type (48 → 7; the compiler decides, and a function that
+does not compile goes back to its previous text); the first two rewrites also apply to the mutation lists. Propagation
+now recognises chains (`f(x.club_job().addr())`), 7 more functions. `.addr()` 6,215 → 6,086; what is left is mostly
+arguments of functions that take `usize` with mixed callers (~3,200), field accesses that stay raw (~760: width, array,
+compound write), unnamed offsets (~300) and casts/comparisons (~500). Proof: 7cc445c2 ×2, detector equal, comparison 0;
+the 17 changed mutations compile.
+
 ## Migration to typed records, batch 14: typed pointer fields (outside reader, round 10, item 1)
 
 `ponteiros_registros.py` finds, from how the code uses it, which record each field that returned `usize` points to (the

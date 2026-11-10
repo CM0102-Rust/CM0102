@@ -299,7 +299,7 @@ pub(crate) unsafe extern "thiscall" fn compare_assess_transfer_deal(this: usize,
     let buyer = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(transf + 8).wrapping_mul(club::SIZE));
     reg.push((board_row_at(this, read_usize(buyer)) + 0x38, 8));
     let seller = person.club_job();
-    if seller != Club(0) {
+    if !seller.is_null() {
         reg.push((board_row_at(this, read_usize(seller.addr())) + 0x38, 8));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, transf, f1, f2),
@@ -316,7 +316,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_transfer_confidence_changes
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add(read_usize(transf + offer::TARGET_STAFF_ID).wrapping_mul(staff::SIZE)));
     reg.push((board_row_at(this, read_usize(transf + 8)), 0x49));
-    let seller = Club((person.club_job()).addr());
+    let seller = Club(person.club_job().addr());
     if !seller.is_null() {
         reg.push((board_row_at(this, read_usize(seller.addr())), 0x49));
         let pref = staff_preferences(Staff(seller.chairman().addr()));

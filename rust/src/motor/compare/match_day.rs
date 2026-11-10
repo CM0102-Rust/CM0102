@@ -97,7 +97,7 @@ pub(crate) unsafe extern "C" fn compare_post_match_events(partida: usize) {
                 break;
             }
             let club = (*(G_CLUB_TABLE as *const usize) as isize + core::ptr::read_unaligned((ev + 4) as *const i32) as isize * 0x245) as usize;
-            if club == (partida.home_club()).addr() || club == (partida.away_club()).addr() {
+            if club == partida.home_club().addr() || club == partida.away_club().addr() {
                 reg.extend(contract_flags_region(person(core::ptr::read_unaligned(ev as *const i32)), club));
             }
         }

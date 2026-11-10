@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_finals_series_stage(this: 
     }
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CREATE_FINALS_SERIES_STAGE)(this.addr());
     let stage = League(read_usize(this.stages()));
-    let same = r == 1 && !stage.is_null() && stage.club_count() == 6 && stage.competition().addr() == this.competition().addr() && this.current_stage() == 0 && {
+    let same = r == 1 && !stage.is_null() && stage.club_count() == 6 && stage.competition() == this.competition() && this.current_stage() == 0 && {
         let mut in_it = [0usize; 6];
         for (i, c) in in_it.iter_mut().enumerate() {
             *c = aus_nsl_table_row_club(stage, i);

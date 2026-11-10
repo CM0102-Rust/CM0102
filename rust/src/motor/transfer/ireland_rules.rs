@@ -43,7 +43,7 @@ pub(crate) unsafe extern "thiscall" fn ireland_rules_can_loan_player(this: usize
         None => return 1,
         Some(d) => d,
     });
-    if club.division().addr() == owner.division().addr() {
+    if club.division() == owner.division() {
         crate::comparison::branch("cqe_6 ireland same division");
         return refuse_loan(msg, reason, 0x9ea168, read_usize(this + 0xa), 0x1d);
     }

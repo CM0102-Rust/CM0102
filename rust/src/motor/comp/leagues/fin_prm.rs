@@ -504,7 +504,7 @@ pub(crate) unsafe fn is_human_club_with(club: Club, a: u32) -> u32 {
 /// True if the club is a national team (`exe::database_is_national_team`).
 ///
 /// [pt] A seleção (0x53b900: push; add esp, 4 -> cdecl).
-pub(crate) unsafe fn fin_prm_is_national_team(club: usize) -> bool {
+pub(crate) unsafe fn fin_prm_is_national_team(club: Club) -> bool {
     exe::database_is_national_team(club) != 0
 }
 
@@ -630,7 +630,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
     }
     let rep = club.reputation();
     let mut di: i32 = rep as i32 / 50;
-    let band: i8 = if fin_prm_is_national_team(club.addr()) { 0 } else { wealth_band(fin) };
+    let band: i8 = if fin_prm_is_national_team(club) { 0 } else { wealth_band(fin) };
     let nation = Nation(club.nation().addr());
     let e = |g: usize| read_i32(nation.addr()) == read_i32(g);
     let tabela: usize = if nation.is_null() || e(KEY_NATION_WALES) || e(KEY_NATION_REPUBLIC_OF_IRELAND) || e(KEY_NATION_NORTHERN_IRELAND) || e(KEY_NATION_AUSTRALIA) {
@@ -770,7 +770,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
         let vv = read_i64(tabela.wrapping_add(idx)).wrapping_sub(minus as i64) as f64 * f;
         let floor = read_i64((if default { 0x9c83e8usize } else { 0x9c8338 }).wrapping_add(idx)) as f64 * f;
         r = if vv <= floor { ftol(floor) } else { ftol(vv) };
-        if !fin_prm_is_national_team(club.addr()) {
+        if !fin_prm_is_national_team(club) {
             match wealth_band(fin) {
                 1 => r = mul_exe_f64(r, 0x9689b8),
                 2 => r = mul_exe_f64(r, 0x9689c0),
@@ -987,7 +987,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
         if s < b20 {
             s = ftol(s as f64 * read_f64(rdata::F64_0_75) + b20 as f64 * read_f64(rdata::F64_0_25));
         }
-        if !fin_prm_is_national_team(club.addr()) && !nation.is_null() {
+        if !fin_prm_is_national_team(club) && !nation.is_null() {
             if e(KEY_NATION_GERMANY) || e(KEY_NATION_FRANCE) {
                 match wealth_band(fin) {
                     1 => s = mul_exe_f64(s, 0x9689b8),
@@ -1228,7 +1228,7 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
         tv = ftol((q as f64 + read_f64(rdata::F64_1_75)) * publico as f64); // cqb1: TV by attendance (1,75);
     }
     let home = partida.home_club();
-    let away = Club((partida.away_club()).addr());
+    let away = Club(partida.away_club().addr());
     let mut cost; // the original’s ebp
     if home.professional_status() != 1 && away.professional_status() != 1 {
         cost = ftol(publico as f64 * read_f64(rdata::F64_0_25));
@@ -1313,7 +1313,7 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
                 75000
             };
         } else if t == 6 || t == 4 {
-            let w = read_i16((partida.competition()).addr() + 0x69);
+            let w = read_i16(partida.competition().addr() + 0x69);
             let m = if w > 5 { w as i32 } else { 5 };
             dinheiro = div_trunc(m.wrapping_mul(if t == 6 { 125000 } else { 25000 }), 20);
         }
@@ -1331,7 +1331,7 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
         cost = div_trunc(cost, 15);
         gastos = div_trunc(gastos, 10);
     }
-    if home != Club(0) && !nation.is_null() {
+    if !home.is_null() && !nation.is_null() {
         let n = read_i32(nation.addr());
         if n == read_i32(KEY_NATION_WALES) || n == read_i32(KEY_NATION_REPUBLIC_OF_IRELAND) || n == read_i32(KEY_NATION_NORTHERN_IRELAND) {
             dinheiro = div_trunc(dinheiro, 5);
@@ -1346,7 +1346,7 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
         fin_prm_add_i32(fin + b, v);
         add_to_balance(Finance(fin), v as i64);
     };
-    if partida.neutral_venue() == 0 && read_usize((partida.home_club()).addr() + 0x57) == (partida.competition()).addr() {
+    if partida.neutral_venue() == 0 && read_usize(partida.home_club().addr() + 0x57) == partida.competition().addr() {
         let x = dinheiro as f64;
         add(mandante, 0x158, 0xb8, ftol(x * read_f64(rdata::F64_0_75)));
         add(visitante, 0x158, 0xb8, ftol(x * read_f64(rdata::F64_0_25)));
@@ -1404,7 +1404,7 @@ pub(crate) unsafe extern "thiscall" fn calc_gate_receipts(table: usize, partida:
         return 0;
     }
     let Some(fin) = match_club_finance(table, partida, 0x1c) else { return 0 };
-    let comp = Competition((partida.competition()).addr());
+    let comp = Competition(partida.competition().addr());
     let mut v: i32;
     if partida.neutral_venue() != 0 && !comp.is_null() {
         v = (comp.reputation() as i32).wrapping_add(8).wrapping_mul(attendance);
@@ -1417,12 +1417,12 @@ pub(crate) unsafe extern "thiscall" fn calc_gate_receipts(table: usize, partida:
         };
         if comp.is_null() || friendly {
             v = ftol(price as f64 * read_f64(rdata::F64_0_5) * attendance as f64);
-        } else if home.professional_status() == 1 || read_u8((partida.away_club()).addr() + 0x64) == 1 {
+        } else if home.professional_status() == 1 || read_u8(partida.away_club().addr() + 0x64) == 1 {
             v = price.wrapping_add(4).wrapping_mul(attendance);
         } else {
             v = price.wrapping_add(3).wrapping_mul(attendance);
         }
-        if fin != 0 && home.division().addr() == comp.addr() {
+        if fin != 0 && home.division() == comp {
             let desconto = *((fin + 0x160) as *const f32) as f64;
             v = ftol(v as f64 - desconto * v as f64);
         }

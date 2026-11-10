@@ -33,12 +33,12 @@ pub(crate) unsafe extern "thiscall" fn init_strictness(this: usize, engine: u32,
 pub(crate) unsafe extern "thiscall" fn move_counts(this: usize) -> u8 {
     let this = Engine(this);
     let p = this.pending_play_offender();
-    if this.pending_play_kind() == pending_play::NONE || p == MatchPlayer(0) {
+    if this.pending_play_kind() == pending_play::NONE || p.is_null() {
         return 0;
     }
     let l = read_i8(p.addr() + 0x27);
     let owner = this.ball_holder();
-    if owner == MatchPlayer(0) || read_i8(owner.addr() + 0x27) as i32 != (l == 0) as i32 {
+    if owner.is_null() || read_i8(owner.addr() + 0x27) as i32 != (l == 0) as i32 {
         return 1;
     }
     let (y, linha) = (this.ball_y(), this.pending_play_y());
@@ -451,7 +451,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
     }
     // advantage: (20, or 5 in the band of its own side) x (+0x5c of `outro`’s profile)^1.5 / (1 or 3)
     let a = if ((exe::match_player_is_in_penalty_area(j, (j.side()) as u8) as u32) as u8) != 0 { 5.0 } else { 20.0 };
-    let b = read_i8((other.staff()).addr() + 0x5c) as f64;
+    let b = read_i8(other.staff().addr() + 0x5c) as f64;
     let div = if other.last_fouled_by() != j.addr() { 1.0 } else { 3.0 };
     *advantage = (random(ftol(a * game_pow(b, read_f64(rdata::F64_1_5)) / div)) == 0) as u8;
     let word = |p: usize, d: i16| *((p + 0x31) as *mut i16) = (*((p + 0x31) as *const i16)).wrapping_add(d);
@@ -514,7 +514,7 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
     // final adjustment from `outro`’s record (+0x5c): 1 -> `um`; >= 6 -> +1 below 10; otherwise `senao`
     let by_sheet = |um: i32, senao: i32| {
         if *advantage != 0 && !other.is_null() {
-            let c = read_i8((other.staff()).addr() + 0x5c);
+            let c = read_i8(other.staff().addr() + 0x5c);
             if c == 1 {
                 *grav = (*grav).wrapping_add(um as i8);
             } else if c >= 6 {

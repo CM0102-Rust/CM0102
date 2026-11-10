@@ -183,7 +183,7 @@ pub(crate) unsafe extern "thiscall" fn compare_facing(this: usize, a: i8, b: i8)
 /// Comparer for `respond`.
 pub(crate) unsafe fn compare_respond(p: MatchPlayer, a: u32, b: u32, c: u32, d: u32, rodar: &dyn Fn() -> u32) -> u8 {
     use std::sync::atomic::Ordering::Relaxed;
-    let m = Engine((p.engine()).addr());
+    let m = Engine(p.engine().addr());
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = Fixture(m.r#match());
@@ -370,7 +370,7 @@ pub(crate) unsafe extern "thiscall" fn compare_atualizar(this: usize) {
     regions.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) =
         crate::comparison::side_by_side(&regions, || f(this.addr()), || crate::rng::without_counting(|| update_player(this.addr())));
-    SCOREBOARD.record(igual, || format!("update_player(papel {:#x}) original={:x?} rust={:x?}", engine_player_role((this.engine()).addr(), this), mo, mr));
+    SCOREBOARD.record(igual, || format!("update_player(papel {:#x}) original={:x?} rust={:x?}", engine_player_role(this.engine().addr(), this), mo, mr));
 }
 
 /// Comparer for `momento`.

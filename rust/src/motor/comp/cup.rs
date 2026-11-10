@@ -1292,7 +1292,7 @@ pub(crate) unsafe fn wins_uefa_cup_place(comp: Competition, club: usize) -> bool
     if read_i32(comp.addr()) == read_i32(KEY_CLUB_COMP_ENGLISH_LEAGUE_CUP) {
         return true;
     }
-    let nation = Nation((comp.nation()).addr());
+    let nation = Nation(comp.nation().addr());
     if nation.is_null() {
         return false;
     }
@@ -3085,7 +3085,7 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
                         }
                         write_u8(cup_round_entry(this, round) + j + 0x29, 0xff);
                     }
-                    news_of_game((r.home_club()).addr(), (r.away_club()).addr(), r.home_club_id(), r.away_club_id(), r.stadium_id(),
+                    news_of_game(r.home_club().addr(), r.away_club().addr(), r.home_club_id(), r.away_club_id(), r.stadium_id(),
                         (r.day() as i16) as u16, (r.year() as i16) as u16);
                     j += 7;
                 } else {

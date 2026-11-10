@@ -159,7 +159,7 @@ pub(crate) unsafe fn compare_com_fita<R>(reg: Vec<(usize, usize)>, original: imp
 /// Comparer for `play`.
 pub(crate) unsafe fn compare_play(p: MatchPlayer, a1: u32, a2: u32, a3: u32, a4: u32, rodar: &dyn Fn() -> u32) -> u8 {
     use std::sync::atomic::Ordering::Relaxed;
-    let m = Engine((p.engine()).addr());
+    let m = Engine(p.engine().addr());
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = Fixture(m.r#match());
@@ -661,7 +661,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_left(m: usize, j: usize, j
     let t = Fixture(m.r#match());
     for clube in [t.home_club(), t.away_club()] {
         for humano in 0..2u32 {
-            let l = if clube == Club(0) { -1 } else { row(clube.addr(), humano) };
+            let l = if clube.is_null() { -1 } else { row(clube.addr(), humano) };
             if l != -1 {
                 reg.push(((*((taticas + tactics_fields::ROWS) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)) + 0x52, 4));
             }

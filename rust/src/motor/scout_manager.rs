@@ -63,10 +63,10 @@ pub(crate) unsafe fn judge_scout_request(request: usize, catorze: usize) -> (boo
     if exe::injury_get_player_injury_status(read_usize(G_INJURY), player) == 2 {
         return (true, false, 0, 0, 0);
     }
-    let seu = Club((player.club_job()).addr());
+    let seu = Club(player.club_job().addr());
     let mut nation = if !seu.is_null() { seu.nation().addr() } else { 0 };
     if nation == 0 {
-        nation = (player.nation()).addr();
+        nation = player.nation().addr();
         if nation == 0 {
             return (false, false, 0, 0, 0);
         }
@@ -1047,7 +1047,7 @@ pub(crate) unsafe extern "thiscall" fn sync_scout_lists(this: usize, manager: us
             continue;
         }
         let o = Staff(search_scout(l));
-        if club != Club(0) {
+        if !club.is_null() {
             if o.is_null() || (o.club_job() == club && o.job_for_club() == 9) {
                 continue;
             }
@@ -1055,7 +1055,7 @@ pub(crate) unsafe extern "thiscall" fn sync_scout_lists(this: usize, manager: us
         crate::comparison::branch("cqa_6 list without scout");
         set_search_scout(l, 0);
     }
-    if club != Club(0) {
+    if !club.is_null() {
         let mut v = [0usize; 7];
         exe::database_get_club_scouts(club, v.as_mut_ptr());
         for &s in v.iter() {
@@ -1112,7 +1112,7 @@ pub(crate) unsafe extern "thiscall" fn sync_scout_lists(this: usize, manager: us
 pub(crate) unsafe extern "thiscall" fn find_club_search_entry(this: usize, p: usize) -> usize {
     let p = Staff(p);
     let m = scout_manager_current_human_manager();
-    if m == 0 || p.club_job() == Club(0) {
+    if m == 0 || p.club_job().is_null() {
         return 0;
     }
     let slot = read_u8(m).wrapping_sub(read_u8(G_STAFF_COUNT)).wrapping_add(0x10) as i8;
@@ -1123,7 +1123,7 @@ pub(crate) unsafe extern "thiscall" fn find_club_search_entry(this: usize, p: us
     for i in 0..10u32 {
         let l = exe::scout_manager_get_search(this, i, m);
         // simplification: the original reads +0x190 without checking the search (would crash with 0); here a null search does not count
-        if l == 0 || read_usize(l + 0x190) != read_usize((p.club_job()).addr()) || read_usize(exe::scout_manager_get_search(this, i, m) + 0x170) == 0 {
+        if l == 0 || read_usize(l + 0x190) != read_usize(p.club_job().addr()) || read_usize(exe::scout_manager_get_search(this, i, m) + 0x170) == 0 {
             continue;
         }
         return exe::player_search_find_or_claim_player_slot(read_usize(exe::scout_manager_get_search(this, i, m) + 0x170), p, 0);

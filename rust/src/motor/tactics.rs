@@ -817,8 +817,8 @@ pub(crate) unsafe extern "thiscall" fn tactics_byte(this: usize, club: usize, po
 ///
 /// [pt] A linha da tabela de estatísticas das táticas ([this], 0x28 bytes por tática) usada pelo clube: a palavra +0 do
 /// registro de 0x91 bytes do clube (id em +0) na tabela tática (+0x601).
-pub(crate) unsafe fn tactic_stats_row(this: usize, club: usize) -> usize {
-    let id = read_usize(club);
+pub(crate) unsafe fn tactic_stats_row(this: usize, club: Club) -> usize {
+    let id = read_usize(club.addr());
     let k = read_i16(read_usize(this + tactics_fields::ROWS).wrapping_add(id.wrapping_mul(0x91))) as i32;
     read_usize(this).wrapping_add((k as isize * 0x28) as usize)
 }
@@ -876,7 +876,7 @@ pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, game: u
             show_error_at(0xa8b908, 0x20a);
             continue;
         }
-        let l = tactic_stats_row(this, c);
+        let l = tactic_stats_row(this, Club(c));
         exe::fill_match_record_from_fixture(game, c, pr);
         crate::comparison::branch("cpz_5 tactic row");
         *((l + 2) as *mut i16) = (*((l + 2) as *mut i16)).wrapping_add(1);
@@ -1413,7 +1413,7 @@ pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, club: usize,
         return 0;
     }
     if exe::database_is_national_team(club) != 0 {
-        let nation = Nation((p.national_job()).addr());
+        let nation = Nation(p.national_job().addr());
         if nation.is_null() || nation.three_letter_name() != (club.nation().addr() as u32) {
             core::ptr::write_unaligned(home, -1);
             return 0;

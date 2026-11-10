@@ -28,6 +28,16 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 14b: a limpeza
+
+`limpar_tipos.py`: `(x.f()).addr()` → `x.f().addr()` (387 → 2), `x == Club(0)` → `x.is_null()` (238 → 10) e
+`a.addr() == b.addr()` → `a == b` quando os dois lados têm o mesmo tipo (48 → 7; o compilador decide, e a função que não
+compila volta ao texto de antes); as duas primeiras trocas valem também nas listas de mutação. A propagação reconhece
+agora as cadeias (`f(x.club_job().addr())`), mais 7 funções. `.addr()` 6.215 → 6.086; o que sobra é sobretudo argumento
+de funções que recebem `usize` com chamadas mistas (~3.200), acessos de campo que ficam crus (~760: largura, vetor,
+escrita composta), deslocamentos sem nome (~300) e conversões/comparações (~500). Prova: 7cc445c2 ×2, detector igual,
+comparação 0; as 17 mutações mudadas compilam.
+
 ## Migração para os registros tipados, leva 14: os campos-ponteiro tipados (leitor de fora, rodada 10, item 1)
 
 `ponteiros_registros.py` descobre, pelo uso no código, para que registro aponta cada campo que devolvia `usize`

@@ -213,7 +213,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
 /// [pt] O código de divisão do clube `c` na MLS (usa_mls_get_club_division 0x909ec0: push c; call; add esp, 4 -> cdecl; a
 /// palavra baixa do eax: 0x413, 0x47b ou 0x414), se ele é da competição da liga (+0x57 do clube = +4 da liga).
 pub(crate) unsafe fn is_in_mls_division(this: League, c: Club, code: i16) -> bool {
-    c.division().addr() == this.competition().addr() && (exe::usa_mls_get_club_division(c) as u32) as u16 as i16 == code
+    c.division() == this.competition() && (exe::usa_mls_get_club_division(c) as u32) as u16 as i16 == code
 }
 
 /// Creates the MLS table (the first division, code 0x413): the four clubs of the competition with that division code,

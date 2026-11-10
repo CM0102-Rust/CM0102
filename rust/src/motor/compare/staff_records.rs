@@ -56,8 +56,8 @@ pub(crate) unsafe extern "thiscall" fn compare_record_match_result(this: usize, 
     if p.category() == 1 {
         return o(this, p.addr(), m);
     }
-    let a = club_manager_record(this, Club((p.home_club()).addr()));
-    let v = club_manager_record(this, Club((p.away_club()).addr()));
+    let a = club_manager_record(this, Club(p.home_club().addr()));
+    let v = club_manager_record(this, Club(p.away_club().addr()));
     let mut reg = Vec::new();
     for r in [a, v] {
         if r != 0 {

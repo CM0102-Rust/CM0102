@@ -42,14 +42,14 @@ pub(crate) unsafe fn match_stats_category(p: Fixture, side: i32, warn: bool, err
     if exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), p.competition()) != 0 {
         return if exe::database_is_national_team(p.home_club()) != 0 { 5 } else { 1 };
     }
-    let id = read_usize((p.competition()).addr());
+    let id = read_usize(p.competition().addr());
     if id == read_usize(KEY_CLUB_COMP_RESERVE) || id == read_usize(KEY_CLUB_COMP_UNDER_21_INTERNATIONAL) || id == read_usize(KEY_CLUB_COMP_B_INTERNATIONAL) {
         return 1;
     }
-    if club == (p.home_club()).addr() && p.home_side_mark() == 0 {
+    if club == p.home_club().addr() && p.home_side_mark() == 0 {
         return 1;
     }
-    if club == (p.away_club()).addr() && (p.away_side_mark() as u8) == 0 {
+    if club == p.away_club().addr() && (p.away_side_mark() as u8) == 0 {
         return 1;
     }
     let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(4)));

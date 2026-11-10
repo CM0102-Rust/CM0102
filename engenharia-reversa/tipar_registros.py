@@ -576,6 +576,8 @@ def propagar(tipos, grava):
             mods[m.group(2)] = m.group(1)
     conv = {t: Conversor(m) for t, m in mods.items()}
     nomes_t = '|'.join(tipos)
+    import ponteiros_registros as pr
+    _, ret_getter, _ = pr.registros()  # (Type, getter) -> return type: the type of a chain `x.club_job()`
     for rodada in range(10):
         fontes = {}
         for raiz, _, fs in os.walk(SRC):
@@ -611,8 +613,13 @@ def propagar(tipos, grava):
                         continue
                     args, _ = ie.args_da_chamada(mk, m.end() - 1)
                     for k, x in enumerate(args or []):
-                        mm = re.fullmatch(r'\s*([a-z_][a-z0-9_]*)\.addr\(\)\s*', x)
-                        votos[(m.group(1), k)][tipadas.get(mm.group(1), '-') if mm else '-'] += 1
+                        mm = re.fullmatch(r'\s*([a-z_][a-z0-9_]*)((?:\.[a-z_0-9]+\(\))*)\.addr\(\)\s*', x)
+                        tp = '-'
+                        if mm and mm.group(1) in tipadas:
+                            tp = tipadas[mm.group(1)]
+                            for meth in re.findall(r'\.([a-z_0-9]+)\(\)', mm.group(2)):
+                                tp = ret_getter.get((tp, meth), '-')
+                        votos[(m.group(1), k)][tp if tp in tipos else '-'] += 1
         cand = {}
         for (nome, k), c in votos.items():
             q, a, b, ps, ts = defs[nome]

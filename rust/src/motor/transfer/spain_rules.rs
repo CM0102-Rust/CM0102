@@ -69,7 +69,7 @@ pub(crate) unsafe extern "thiscall" fn spain_rules_can_loan_player(this: usize, 
         None => return 1,
         Some(d) => d,
     });
-    if club.division().addr() == owner.division().addr() {
+    if club.division() == owner.division() {
         // 0x7c1e30: push 6,5f; push 1; push 2; push record; mov ecx, [0xb74350] -> thiscall, ret 0x10 (returns in st0)
         let v = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), player.player(), 2, 1, 6.5);
         if v > read_f32(rdata::F32_5) as f64 {

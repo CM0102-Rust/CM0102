@@ -249,7 +249,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pick_club_from_nation_list(this: 
     let player = Staff(player);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_PICK_CLUB_FROM_NATION_LIST);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    for n in [read_usize((player.nation()).addr()), read_usize(KEY_NATION_ENGLAND)] {
+    for n in [read_usize(player.nation().addr()), read_usize(KEY_NATION_ENGLAND)] {
         let l = nation_club_list(this, n);
         if l != 0 {
             reg.push((l + llist::CURSOR, 4));
@@ -299,7 +299,7 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_staff_for_regen(this: usize
     let np = person.non_player();
     let jp = person.player();
     let nation = person.nation();
-    let reserve = (np != 0).then(|| (read_usize(np) as u32, (nation != Nation(0)).then(|| read_usize(nation.addr()) as u32), read_usize(person.addr()) as u32));
+    let reserve = (np != 0).then(|| (read_usize(np) as u32, (!nation.is_null()).then(|| read_usize(nation.addr()) as u32), read_usize(person.addr()) as u32));
     let bench = (jp != 0).then(|| (read_usize(jp) as u32, read_usize(nation.addr()) as u32, read_usize(person.addr()) as u32));
     o(this, entry);
     let queue = read_usize(this + player_regen_fields::REGEN_QUEUE).wrapping_add(n1.wrapping_mul(12));

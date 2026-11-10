@@ -23,7 +23,7 @@ MUTACOES = [
     ('cqf7_tatica_por_2', '(a + non_player_attribute_rating(f, 0x10) + b(0x12)) / 3 // cqf7: the tactics rating', '(a + non_player_attribute_rating(f, 0x10) + b(0x12)) / 2 // mutacao: a nota de tática', 'cqf_7 coach rating'),
     ('cqf8_grupo_sem_clube', 'let club_in = read_usize(no + career_entry::CLUB_ID) as u32; // cqf8: the club of the group of the node', 'let club_in = 0xffff_ffffu32; // mutacao: o clube do grupo do nó', 'cqf_8 history season'),
     ('cqf8_grupo_dois_anos_antes', 'let year_in = read_u16(no); // cqf8: the year of the group of the node', 'let year_in = read_u16(no).wrapping_sub(2); // mutacao: o ano do grupo do nó', 'cqf_8 history season'),
-    ('cqf8_atual_sem_clube', 'let id = if club == Club(0) { 0xffff_ffff } else { read_usize(club.addr()) as u32 }; // cqf8: the club of the current season', 'let id = if club == Club(0) { 0xffff_ffff } else { 0xffff_ffffu32 }; // mutacao: o clube da temporada atual', 'cqf_8 current season'),
+    ('cqf8_atual_sem_clube', 'let id = if club.is_null() { 0xffff_ffff } else { read_usize(club.addr()) as u32 }; // cqf8: the club of the current season', 'let id = if club.is_null() { 0xffff_ffff } else { 0xffff_ffffu32 }; // mutacao: o clube da temporada atual', 'cqf_8 current season'),
     ('cqf9_tipo_mais_1', 'return tipo as u32; // cqf9: the injury type by name', 'return tipo as u32 + 1; // mutacao: o tipo da lesão pelo nome', 'cqf_9 injury by name'),
     ('cqf9_nenhum_bate', 'if strncmp(name, texto, n) == 0 {', 'if strncmp(name, texto, n) == 0 && false {', 'cqf_9 injury by name'),
     ('cqf9_artrite_trocada', 'if strncmp(name, 0xa6b3a8, 8) == 0 { 0x4c } else { 0x4b }', 'if strncmp(name, 0xa6b3a8, 8) == 0 { 0x4b } else { 0x4c }', 'cqf_9 injury by name'),

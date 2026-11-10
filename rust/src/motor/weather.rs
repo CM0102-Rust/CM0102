@@ -47,14 +47,14 @@ pub(crate) unsafe fn postpone_if_draw_nonzero(n: i32) -> u8 {
 pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usize) -> u8 {
     let game = Fixture(game);
     let est = game.stadium();
-    if est == 0 || read_usize(est + stadium::CITY) == 0 || read_usize(est + stadium::CAPACITY) == 0 || game.competition() == Competition(0) {
+    if est == 0 || read_usize(est + stadium::CITY) == 0 || read_usize(est + stadium::CAPACITY) == 0 || game.competition().is_null() {
         return 0;
     }
     let home = game.home_club();
     if home.division().addr() == 0 {
         return 0;
     }
-    let k: i8 = if home != Club(0) { (exe::key_nation_index_of_club(home) as i8) } else { -1 };
+    let k: i8 = if !home.is_null() { (exe::key_nation_index_of_club(home) as i8) } else { -1 };
     if game.competition() != Competition(home.division().addr()) || read_u8(est + stadium::COVERED) != 0 {
         return 0;
     }
@@ -252,7 +252,7 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
         }
     }
     if cid == 0 {
-        let home = Club((game.home_club()).addr());
+        let home = Club(game.home_club().addr());
         if !home.is_null() {
             let c = home.stadium().addr();
             if c != 0 && read_usize(c + stadium::CITY) != 0 {

@@ -2,7 +2,7 @@
 MUTACOES = [
     ('cpo_comprador_no_limite', 'or_byte(f1, 4); // the buyer: fee within the limit', 'or_byte(f1, 8); // mutacao: o comprador ganha a marca da barganha', 'cpo_1 comprador no limite'),
     ('cpo_vendedor_no_limite', 'or_byte(f2, 4); // the seller: fee within the limit', 'or_byte(f2, 2); // mutacao: o vendedor perde confianca', 'cpo_1 vendedor no limite'),
-    ('cpo_tirar_favorito', 'exe::staff_remove_favoured_staff(read_usize((person.club_job()).addr() + 0xbf), person); // the seller’s chairman', 'let _ = person; // mutacao: o jogador fica nas favoritas do presidente', 'cpo_1 remove favourite'),
+    ('cpo_tirar_favorito', 'exe::staff_remove_favoured_staff(read_usize(person.club_job().addr() + 0xbf), person); // the seller’s chairman', 'let _ = person; // mutacao: o jogador fica nas favoritas do presidente', 'cpo_1 remove favourite'),
     ('cpo_tirar_contrato', 'write_usize(main_contract_slot(person), usize::MAX); // the person is left without a contract', '// mutacao: a pessoa fica com o indice do contrato', 'cpo_2 remove contract'),
     ('cpo_reenviar_oferta', 'exe::contract_manager_add_contract_offer(this, (item) as usize as *mut u8, t, read_usize(item + contract_offer::TRANSFER_OFFER_SERIAL), (q as u32 & 0xffff_ff00) | byte, 1, 1, 0); // with the transfer', '// mutacao: sem reenviar', 'cpo_2 resend offer'),
     ('cpo_mes_do_fim', 'let p = exe::date_add_days((d1.as_mut_ptr()) as usize, (d2.as_mut_ptr()) as usize, (0xa) as u32); // dez dias depois', 'let p = exe::date_add_days((d1.as_mut_ptr()) as usize, (d2.as_mut_ptr()) as usize, (0x28) as u32); // mutacao: quarenta dias depois'),

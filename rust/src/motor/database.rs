@@ -4902,7 +4902,7 @@ pub(crate) unsafe extern "C" fn club_squad_strength_band(club: usize, other: usi
         } else if ro < 0x109a && f < 5 {
             f += 1; // the scout of a small club sees the stronger club (dbo)
         }
-        if other.division().addr() == club.division().addr() {
+        if other.division() == club.division() {
             let d = ro.wrapping_sub(rep);
             let table = rd(G_CLUB_STATE_TABLE);
             let mark = |c: usize| *(table.wrapping_add((id(c).wrapping_mul(6) as usize).wrapping_add(4)) as *const i8);
@@ -4999,7 +4999,7 @@ pub(crate) unsafe extern "C" fn club_reputation_for_staff(club: usize, person: u
         let games = *((e + 4) as *const u8) as i32;
         if games < 20 {
             let before = (club.last_position() as i8) as i32;
-            let w = if club.last_division().addr() != comp.addr() {
+            let w = if club.last_division() != comp {
                 read_f64(rdata::F64_1_3)
             } else if n != 0 && n != 20 {
                 weight((before * 20 - 20) / n)
@@ -5772,7 +5772,7 @@ pub(crate) unsafe fn any_coach_missing_from_club() -> bool {
     let mut i = 0i32;
     while i < read_i32(G_STAFF_COUNT) {
         let s = Staff(read_usize(G_STAFF_TABLE) + i as usize * 110);
-        let c = Club((s.club_job()).addr());
+        let c = Club(s.club_job().addr());
         if s.job_for_club() == 8 && !c.is_null() && !(0..5).any(|j| c.coaches(j) == s.addr()) {
             return true;
         }
@@ -6062,7 +6062,7 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
             let club = Club(rd(h + 0xa));
             let q = Staff(rd(h + 4));
             if !club.is_null() && !q.is_null() {
-                let nq = Nation((q.nation()).addr());
+                let nq = Nation(q.nation().addr());
                 let nc = Nation(club.nation().addr());
                 if (!nq.is_null() && nq.league_selected() != 0) || (!nc.is_null() && nc.league_selected() != 0) {
                     mark(gi(club.addr()));
@@ -6166,7 +6166,7 @@ pub(crate) unsafe extern "C" fn database_prune_comp_history_table() {
         let l = read_usize(G_CLUB_COMP_HISTORY_TABLE) + i as usize * 0x1a;
         let comp = Competition(read_usize(l + 4));
         if !comp.is_null() {
-            let nation = Nation((comp.nation()).addr());
+            let nation = Nation(comp.nation().addr());
             if nation.is_null() || nation.league_selected() != 0 { // a linha fica
                 core::ptr::copy(l as *const u8, (read_usize(G_CLUB_COMP_HISTORY_TABLE) + k * 0x1a) as *mut u8, 0x1a);
                 k += 1;
@@ -7364,7 +7364,7 @@ pub(crate) unsafe extern "C" fn database_remove_staff_from_club(club: usize, per
             let n = gi(G_CLUB_COUNT);
             if ok && id >= n.wrapping_sub(gi(G_NATION_COUNT).wrapping_mul(2)) && id < n.wrapping_sub(gi(G_NATION_COUNT)) {
                 let s = Club(exe::database_get_national_u21_team(read_usize(club + 0x53)));
-                if s.manager().addr() == person.addr() {
+                if s.manager() == person {
                     core::ptr::write_unaligned((s.addr() + club::MANAGER) as *mut usize, 0); // the U21 coach
                 }
             }
@@ -7562,7 +7562,7 @@ pub(crate) unsafe extern "C" fn database_get_comp_colours(competition: usize, fr
     // 0x5e4800 does & 0xff on all three, so the extended bytes give the same pixel (as in 0x53b640)
     core::ptr::write_unaligned(front, *(G_GUI_COLOUR_PALE_GREY as *const u16));
     core::ptr::write_unaligned(bottom, *(G_GUI_COLOUR_DARK_BLUE as *const u16));
-    let owner = Nation((competition.nation()).addr());
+    let owner = Nation(competition.nation().addr());
     let (a, b) = if !owner.is_null() { (owner.foreground_colour1(), owner.background_colour1()) } else { (competition.foreground_colour(), competition.background_colour()) };
     let pixel = |c: usize| {
         exe::graphics_rgb_to_pixel((read_u8(c + 0x37) as u32), (read_u8(c + 0x38) as u32), (read_u8(c + 0x39) as u32), (0) as u32) as u16
@@ -8951,12 +8951,12 @@ pub(crate) unsafe extern "C" fn database_get_reputation_scope(person: usize, who
         return 4;
     }
     let club = person.club_job();
-    if club != Club(0) {
+    if !club.is_null() {
         if club == who_ve.club_job() {
             return 0;
         }
-        let other = Club((who_ve.club_job()).addr());
-        if !other.is_null() && club.nation().addr() == other.nation().addr() {
+        let other = Club(who_ve.club_job().addr());
+        if !other.is_null() && club.nation() == other.nation() {
             return 0;
         }
     }
@@ -8968,7 +8968,7 @@ pub(crate) unsafe extern "C" fn database_get_reputation_scope(person: usize, who
         return 2;
     }
     let club = person.club_job();
-    if club != Club(0) && exe::database_is_staff_foreign(who_ve, club.nation().addr(), 1) == 0 {
+    if !club.is_null() && exe::database_is_staff_foreign(who_ve, club.nation().addr(), 1) == 0 {
         return 3;
     }
     if *(who_ve.addr() as *const i32) >= (*(G_STAFF_COUNT as *const i32)).wrapping_sub(16) {
@@ -8978,7 +8978,7 @@ pub(crate) unsafe extern "C" fn database_get_reputation_scope(person: usize, who
     if player == 0 {
         return 4;
     }
-    let club_of_who_ve = Club((who_ve.club_job()).addr());
+    let club_of_who_ve = Club(who_ve.club_job().addr());
     if club_of_who_ve.is_null() {
         return 4;
     }
@@ -9058,17 +9058,17 @@ pub(crate) unsafe extern "C" fn database_is_staff_foreign(person: usize, nation:
         if britanica(g(n1.addr())) {
             return 0;
         }
-        if n2 != Nation(0) && britanica(g(n2.addr())) {
+        if !n2.is_null() && britanica(g(n2.addr())) {
             return 0;
         }
     }
-    if n1 != Nation(0) {
+    if !n1.is_null() {
         let (x, y) = (g(KEY_NATION_AUSTRALIA), g(KEY_NATION_NEW_ZEALAND)); // Australia and its pair
         if (id == x || id == y) && (g(n1.addr()) == x || g(n1.addr()) == y) {
             return 0;
         }
     }
-    if id == g(KEY_NATION_ITALY) && n1 != Nation(0) && g(n1.addr()) == g(KEY_NATION_UKRAINE) {
+    if id == g(KEY_NATION_ITALY) && !n1.is_null() && g(n1.addr()) == g(KEY_NATION_UKRAINE) {
         return 0;
     }
     if id == g(KEY_NATION_PORTUGAL) && exe::database_is_staff_eu_national(person, 0) == 0 {
@@ -9152,13 +9152,13 @@ pub(crate) unsafe extern "C" fn nation_allows_free_transfers(nation: usize) -> u
 pub(crate) unsafe extern "C" fn database_is_staff_eu_national(person: usize, nation_of_club: usize) -> u32 {
     let person = Staff(person);
     let g = |a: usize| *(a as *const u32);
-    let n = Nation((person.nation()).addr());
+    let n = Nation(person.nation().addr());
     if n.group_membership() == 2 { return 1; } // EU nationality
     let id = g(n.addr());
     if id == g(KEY_NATION_SWITZERLAND) {
         return 1;
     }
-    let n2 = Nation((person.second_nation()).addr());
+    let n2 = Nation(person.second_nation().addr());
     if !n2.is_null() && n2.group_membership() == 2 {
         return 1;
     }

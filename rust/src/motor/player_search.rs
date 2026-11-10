@@ -226,7 +226,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
         nation = read_usize(read_usize(t + stadium::CITY) + 0x1f);
     }
     if nation == 0 {
-        nation = read_usize((game.home_club()).addr() + 0x53);
+        nation = read_usize(game.home_club().addr() + 0x53);
     }
     if read_u8(this + player_search_fields::LIST_TYPE) != 4 {
         return 0;
@@ -297,7 +297,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
                             let mut k = 0usize;
                             while free {
                                 let id = read_i32(result + 0x190 + side as usize * 0x625 + k);
-                                if id != -1 && request(read_usize(G_SCOUT_MANAGER), staff_records_staff_by_id(id as usize), (scout.club_job()).addr(), 1) != 0 {
+                                if id != -1 && request(read_usize(G_SCOUT_MANAGER), staff_records_staff_by_id(id as usize), scout.club_job().addr(), 1) != 0 {
                                     free = false;
                                 }
                                 k += 0x49;

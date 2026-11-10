@@ -276,7 +276,7 @@ pub(crate) unsafe extern "thiscall" fn select_tactic_slot(this: usize, reserve: 
     let Some(k) = human_manager_human_manager_index(this, t.addr()) else {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize)>(IDX_SELECT_TACTIC_SLOT)(this, reserve, club, manager); // message box: original only
     };
-    let club = if club != 0 { club } else { (t.club_job()).addr() };
+    let club = if club != 0 { club } else { t.club_job().addr() };
     let slot: u8 = if club != 0 && exe::club_is_national_team(club) != 0 {
         4
     } else if reserve != 0 && club != 0 && exe::database_is_national_team(club) != 0 {

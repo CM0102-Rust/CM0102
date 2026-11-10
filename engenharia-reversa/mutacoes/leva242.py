@@ -14,7 +14,7 @@ MUTACOES = [
     ('cpd_ordem_clube', 'return (*(cx as *const i32)).wrapping_sub(*(cy as *const i32)); // the club id', 'return (*(cy as *const i32)).wrapping_sub(*(cx as *const i32)); // mutacao: ao contrario'),
     ('cpe_amistoso_sorteio', 'if friendly_random(5) == 1 { // the friendly’s opponent', 'if friendly_random(5) == 2 { // mutacao: outro sorteio'),
     ('cpe_excursao_sorteio', 'if friendly_random(2) == 1 { // the tour opponent', 'if friendly_random(2) == 0 { // mutacao: o outro lado do sorteio'),
-    ('cpe_resultado_pontos_casa', 'league_add_i16(r + league_table_row::HOME_POINTS, points((p.home_club()).addr())); // the home team’s points', 'league_add_i16(r + league_table_row::HOME_POINTS, points((p.home_club()).addr()).wrapping_mul(2)); // mutacao: o dobro'),
+    ('cpe_resultado_pontos_casa', 'league_add_i16(r + league_table_row::HOME_POINTS, points(p.home_club().addr())); // the home team’s points', 'league_add_i16(r + league_table_row::HOME_POINTS, points(p.home_club().addr()).wrapping_mul(2)); // mutacao: o dobro'),
     ('cpe_pontos_vitoria', 'if won(p.home_goals(), p.away_goals()) { league.win_points() } else { 0 } // the points for a win', 'if won(p.home_goals(), p.away_goals()) { league.win_points().wrapping_add(1) } else { 0 } // mutacao: um a mais'),
     ('cpe_confronto_posicao', 'let dif = *((b + 4) as *const i8) as i32 - *((a + 4) as *const i8) as i32; // the tie’s position', 'let dif = *((a + 4) as *const i8) as i32 - *((b + 4) as *const i8) as i32; // mutacao: invertida'),
     ('cpe_datas_ano', 'if ya < yb { // o ano antes\n        return -1;', 'if ya < yb { // mutacao: invertido\n        return 1;'),
