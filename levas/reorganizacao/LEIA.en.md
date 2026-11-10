@@ -29,6 +29,16 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 24: the hooked routines named once, in English
+
+Each line of the `routines!` table carried a Portuguese label for the log (`"motor_tabela_a"`) repeating what the Rust
+function's name already says; the labels went and the macro takes the name from the function itself (`stringify!`), so
+the log, `SEM_ROTINAS` and the tools use `table_a` (2,092 labels; the old → new map is in `docs/NOMES_ROTULOS.csv`, so
+old logs and notes stay readable). `tabela_motor.py` reads both forms, `fila.py` writes the new one and `prova_save.py`
+maps an old batch's labels through the CSV. The hand-written hook names (the gates, the simulation's clock, RAM and
+disk, the stack probe) are in English too (Lucas's decision, 10/11: everything that can go to English goes). Proof:
+7cc445c2 ×2, detector equal, comparison 0.
+
 ## Readability batch 23: the global club and person tables by name
 
 `club_at(i)` and `staff_at(id)` (in `motor/mem.rs`) replace the hand arithmetic on the game's tables

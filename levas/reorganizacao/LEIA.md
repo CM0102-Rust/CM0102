@@ -28,6 +28,16 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 24 da legibilidade: as rotinas desviadas com um nome só, em inglês
+
+Cada linha da tabela `routines!` levava um rótulo em português para o log (`"motor_tabela_a"`) que repetia o que o nome
+da função Rust já diz; os rótulos saíram e o macro tira o nome da própria função (`stringify!`), então o log, o
+`SEM_ROTINAS` e as ferramentas usam `table_a` (2.092 rótulos; o mapa antigo → novo em `docs/NOMES_ROTULOS.csv`, para os
+logs e as notas antigas continuarem legíveis). `tabela_motor.py` lê as duas formas, `fila.py` escreve a nova e
+`prova_save.py` passa os rótulos de uma leva antiga pelo CSV. Os nomes de desvio escritos à mão (as portas, o relógio,
+a RAM e o disco da simulação, a sonda de pilha) também passaram ao inglês (decisão do Lucas, 10/11: tudo o que der vai
+para o inglês). Prova: 7cc445c2 ×2, detector igual, comparação 0.
+
 ## Leva 23 da legibilidade: as tabelas globais de clubes e de pessoas com nome
 
 `club_at(i)` e `staff_at(id)` (no `motor/mem.rs`) substituem a conta à mão nas tabelas do jogo
