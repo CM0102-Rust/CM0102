@@ -6,5 +6,5 @@ MUTACOES = [
     ('e_vinte', "            if games < 20 {\n                ((20 - games as i32)", "            if games < 19 {\n                ((20 - games as i32)"),
     ('n_zero', "    let rating = |n: u8| if n == 0 { 0x1b } else { n as u16 * 4 };", "    let rating = |n: u8| if n == 0 { 0x1a } else { n as u16 * 4 };"),
     ('n_baixo', "        .wrapping_add(rating(e & 0xf));", "        .wrapping_add(rating(e >> 4));"),
-    ('z_volante', "        if a & 0x880 != 0 && a & 8 != 0 {\n            return 0;\n        }\n        if b & 0x880 != 0 && exe::formation_get_slot_position(this, i, 1) & 8 != 0 {", "        if a & 0x880 != 0 && a & 0x10 != 0 {\n            return 0;\n        }\n        if b & 0x880 != 0 && exe::formation_get_slot_position(this, i, 1) & 8 != 0 {"),
+    ('z_volante', "        if a & 0x880 != 0 && a & (slot_cells::DEFENSIVE_MIDFIELDER as u16) != 0 {\n            return 0;\n        }\n        if b & 0x880 != 0 && exe::formation_get_slot_position(this, i, 1) & 8 != 0 {", "        if a & 0x880 != 0 && a & 0x10 != 0 {\n            return 0;\n        }\n        if b & 0x880 != 0 && exe::formation_get_slot_position(this, i, 1) & 8 != 0 {"),
 ]

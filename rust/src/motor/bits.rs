@@ -25,6 +25,17 @@ pub(crate) mod discipline_counters {
     pub(crate) const APPEALS_MADE: u8 = 0xf8;
 }
 
+/// Bits of `cup_round::DRAW_RULES`.
+#[allow(dead_code)]
+pub(crate) mod draw_rules {
+    /// swap when virtual +0x90 club_in_higher_division returns club b.4 value 1. Name: verified.
+    pub(crate) const LOWER_DIVISION_AT_HOME: i16 = 0x1;
+    /// draw keeping clubs of the same nation apart (0x51d9f0 check_round_teams_for_nation).4. Name: verified.
+    pub(crate) const SEPARATE_NATIONS: i16 = 0x4;
+    /// swap when the level (+4) of a is below b's.4 value 8. Name: verified.
+    pub(crate) const HIGHER_LEVEL_AT_HOME: i16 = 0x8;
+}
+
 /// Bits of `board_record::EXPECTATION_FLAGS`.
 #[allow(dead_code)]
 pub(crate) mod expectation_flags {
@@ -53,11 +64,32 @@ pub(crate) mod expectation_flags_byte1 {
     pub(crate) const EUROPEAN_SUCCESS: u8 = 0x4;
 }
 
+/// Bits of `staff_state::EXTRA_FLAGS`.
+#[allow(dead_code)]
+pub(crate) mod extra_flags {
+    /// set by record_international_result after an under-21 international (with the nation swap); with it a foreign player cannot be called up by another nation. Name: read.
+    pub(crate) const PLAYED_U21_INTERNATIONAL: u8 = 0x2;
+}
+
 /// Bits of `formation_fields::FLAGS`.
 #[allow(dead_code)]
 pub(crate) mod formation_fields_flags {
     /// set_team_instruction 0x5b50d0 groups 1/2/4/8 (mask 0xfffffff0); instructions() picks 2,1,4,8 for directness <=8,<=14,<=18,<=20, so 8 is the most direct passing. Name: inferred.
     pub(crate) const LONG_BALL: i32 = 0x8;
+}
+
+/// Bits of `nation::LEAGUE_SELECTED`.
+#[allow(dead_code)]
+pub(crate) mod league_selected {
+    /// club_can_be_managed requires it; key_nation_get_main_continent picks the first league nation with it; the save summary (file_screens.rs) lists bit-2 nations first and bit-1 nations in the second string. Name: read.
+    pub(crate) const PLAYABLE: u8 = 0x2;
+}
+
+/// Bits of `formation_fields::PLAYER_INSTRUCTIONS`.
+#[allow(dead_code)]
+pub(crate) mod player_instructions {
+    /// mark_stars sets it for players rating over 8500 (vision, movement, finishing, form); exclusive with 0x400000 in set_square; game meaning of the instruction not identified. Name: inferred.
+    pub(crate) const STANDOUT_PLAYER: u32 = 0x800000;
 }
 
 /// Bits of `staff::PLAYING_SQUAD`.
@@ -82,6 +114,30 @@ pub(crate) mod request_state {
     pub(crate) const LAST_REQUEST: u32 = 0x1e;
 }
 
+/// Bits of `formation_fields::SLOT_CELLS`.
+#[allow(dead_code)]
+pub(crate) mod slot_cells {
+    /// same position code as position_mask (player_sheet DEFENDER 4, DEFENSIVE_MIDFIELDER 8, LEFT_SIDE 0x80, CENTRAL 0x200, RIGHT_SIDE 0x800); split by formation_split_position_code into sector and side. Name: read.
+    pub(crate) const DEFENDER: u32 = 0x4;
+    /// same position code as position_mask (player_sheet DEFENDER 4, DEFENSIVE_MIDFIELDER 8, LEFT_SIDE 0x80, CENTRAL 0x200, RIGHT_SIDE 0x800); split by formation_split_position_code into sector and side. Name: read.
+    pub(crate) const DEFENSIVE_MIDFIELDER: u32 = 0x8;
+    /// same position code as position_mask (player_sheet DEFENDER 4, DEFENSIVE_MIDFIELDER 8, LEFT_SIDE 0x80, CENTRAL 0x200, RIGHT_SIDE 0x800); split by formation_split_position_code into sector and side; 0x880 = either flank. Name: read.
+    pub(crate) const LEFT: u32 = 0x80;
+    /// same position code as position_mask (player_sheet DEFENDER 4, DEFENSIVE_MIDFIELDER 8, LEFT_SIDE 0x80, CENTRAL 0x200, RIGHT_SIDE 0x800); split by formation_split_position_code into sector and side. Name: read.
+    pub(crate) const CENTRE: u32 = 0x200;
+    /// same position code as position_mask (player_sheet DEFENDER 4, DEFENSIVE_MIDFIELDER 8, LEFT_SIDE 0x80, CENTRAL 0x200, RIGHT_SIDE 0x800); split by formation_split_position_code into sector and side; 0x880 = either flank. Name: read.
+    pub(crate) const RIGHT: u32 = 0x800;
+}
+
+/// Bits of `fixture::SQUAD_RULES`.
+#[allow(dead_code)]
+pub(crate) mod squad_rules {
+    /// refresh_minor_squads: bit 0x100 refreshes the B/Olympic squad (type 1). Name: read.
+    pub(crate) const B_SQUAD_MATCH: u16 = 0x100;
+    /// refresh_minor_squads: bit 0x200 refreshes the under-21 squad (type 2). Name: read.
+    pub(crate) const U21_SQUAD_MATCH: u16 = 0x200;
+}
+
 /// Bits of `staff_state::STATUS_FLAGS`.
 #[allow(dead_code)]
 pub(crate) mod staff_state_status_flags {
@@ -103,4 +159,15 @@ pub(crate) mod tactics_flags {
     pub(crate) const OFFSIDE_TRAP: u32 = 0x400;
     /// with it set the player's row follows the ball line (row +-2..4); in off_ball_decide (line 7938) est & 0x4000 alone makes the player press. Name: inferred.
     pub(crate) const PRESSING: u32 = 0x4000;
+}
+
+/// Bits of `cup_round::TIE_RULES`.
+#[allow(dead_code)]
+pub(crate) mod tie_rules {
+    /// no fixture news here: the matches move to the fixed slot dates (line 3016 tests the same bit) and get their news there.4 test at 0x51EC41. Name: verified.
+    pub(crate) const FIXED_DATES: i16 = 0x100;
+    /// no draw: ties in the order built.4, CAMPOS.md. Name: verified.
+    pub(crate) const FIXED_BRACKET: i16 = 0x200;
+    /// calls 0x51d2d0 sort_round_teams, the seeded draw. Name: verified.
+    pub(crate) const SEEDED_DRAW: i16 = 0x400;
 }

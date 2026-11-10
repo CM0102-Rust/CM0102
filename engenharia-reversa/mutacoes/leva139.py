@@ -10,6 +10,6 @@ MUTACOES = [
     ('f_minuto_reserva', "                end.wrapping_sub(c)", "                end.wrapping_sub(c).wrapping_add(1)", "match_wrap_up media do lado"),
     ('f_tipo6', "read_i8(p + match_player::YELLOW_CARDS) == 2 || read_i8(p + match_player::RED_CARDS) != 0", "read_i8(p + match_player::YELLOW_CARDS) == 2 || read_i8(p + match_player::RED_CARDS) == 0", "match_wrap_up type 6 event"),
     ('f_evento_jogador', "read_i8(p + match_player::MATCH_GRADE) < 7 && random(read_i8(p + match_player::MATCH_FORM) as i32) == 0", "read_i8(p + match_player::MATCH_GRADE) < 8 && random(read_i8(p + match_player::MATCH_FORM) as i32) == 0", "match_wrap_up day event"),
-    ('f_proposta', "if r1 > random(0x14) && read_i8(x + 0x14) > 5 {", "if r1 > random(0x15) && read_i8(x + 0x14) > 5 {", "match_wrap_up day event"),
+    ('f_proposta', "if r1 > random(0x14) && read_i8(x + non_player::DISCIPLINE) > 5 {", "if r1 > random(0x15) && read_i8(x + non_player::DISCIPLINE) > 5 {", "match_wrap_up day event"),
     ('f_lixo_evento', "            ev[0xd] = side as u8;\n                            ev[0xf..0x13].copy_from_slice(&u32::MAX.to_le_bytes());\n                            ev[0x13..0x15].copy_from_slice(&11u16.to_le_bytes());", "            ev[0xd] = side as u8;\n                            ev[0xf..0x13].copy_from_slice(&u32::MAX.to_le_bytes());\n                            ev[0x13..0x15].copy_from_slice(&11u16.to_le_bytes());\n                            ev[0x16] = 1;", "match_wrap_up unhappy"),
 ]

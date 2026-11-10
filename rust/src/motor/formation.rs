@@ -74,8 +74,8 @@ pub(crate) unsafe extern "thiscall" fn manager_table(this: usize, manager: usize
 pub(crate) unsafe extern "thiscall" fn sector_slot_taken(this: usize, mask: u32, players: usize) -> u32 {
     let (mut setor, mut lado) = (0u16, 0u16);
     exe::formation_split_position_code(mask, &mut setor, &mut lado);
-    let home = |k: usize| read_u16(this + 0x12d + 2 * k);
-    let k = match (0..11usize).find(|&k| home(k) & setor != 0 && home(k) & 0x200 != 0) {
+    let home = |k: usize| read_u16(this + formation_fields::SLOT_CELLS + 2 * k);
+    let k = match (0..11usize).find(|&k| home(k) & setor != 0 && home(k) & (slot_cells::CENTRE as u16) != 0) {
         Some(k) => k as u8,
         None => return 0,
     };
@@ -83,7 +83,7 @@ pub(crate) unsafe extern "thiscall" fn sector_slot_taken(this: usize, mask: u32,
         return 1;
     }
     (0..20usize).any(|i| {
-        let p = players + 0x19 + i * 0x1be;
+        let p = players + match_player::POSITION + i * 0x1be;
         let c = read_u8(p);
         c == k || (c == 0xfe && *((p + 1) as *const u8) == k)
     }) as u32
@@ -95,7 +95,7 @@ pub(crate) unsafe extern "thiscall" fn sector_slot_taken(this: usize, mask: u32,
 /// [pt] { 0x5b2f10 } (ret 4, formation.cpp): a vaga (0..10) da casa `codigo` entre as 11 de +0x12d; 0xff
 /// se nao estiver.
 pub(crate) unsafe extern "thiscall" fn slot_of_code(this: usize, code: u16) -> u32 {
-    (0..11u32).find(|&k| read_u16(this + 0x12d + 2 * k as usize) == code).unwrap_or(0xff)
+    (0..11u32).find(|&k| read_u16(this + formation_fields::SLOT_CELLS + 2 * k as usize) == code).unwrap_or(0xff)
 }
 
 /// marks (+0x5b4) with 4 and 8 become 2; assigned records (+0x5bf) go back to −1; returns 1
@@ -105,11 +105,11 @@ pub(crate) unsafe extern "thiscall" fn slot_of_code(this: usize, code: u16) -> u
 /// (+0x5bf) voltam a -1. Devolve 1.
 pub(crate) unsafe extern "thiscall" fn clear_assigned(this: usize) -> u32 {
     for k in 0..11usize {
-        let b = (this + 0x5b4 + k) as *mut u8;
+        let b = (this + formation_fields::MARKING_TYPES + k) as *mut u8;
         if *b & 4 != 0 && *b & 8 != 0 {
             *b = 2;
         }
-        write_i32(this + 0x5bf + 4 * k, -1);
+        write_i32(this + formation_fields::DESIGNATED_PEOPLE + 4 * k, -1);
     }
     1
 }
@@ -121,10 +121,10 @@ pub(crate) unsafe extern "thiscall" fn clear_assigned(this: usize) -> u32 {
 /// (0x5b5a60), com onze mascaras trocadas por quatro formacoes de referencia. Devolve a mascara
 /// antes da troca (o eax da original).
 pub(crate) unsafe extern "thiscall" fn formation_mask(this: usize) -> u32 {
-    let m = (this + 0x187b) as *mut u32;
+    let m = (this + formation_fields::FORMATION_MASK) as *mut u32;
     core::ptr::write_unaligned(m, 0);
     for k in 0..11usize {
-        let c = read_i16(this + 0x12d + 2 * k);
+        let c = read_i16(this + formation_fields::SLOT_CELLS + 2 * k);
         let v = core::ptr::read_unaligned(m) | exe::formation_position_to_shape_bit(c);
         core::ptr::write_unaligned(m, v);
     }
@@ -146,7 +146,7 @@ pub(crate) unsafe extern "thiscall" fn formation_mask(this: usize) -> u32 {
 /// [pt] { 0x5b58e0 } (formation.cpp): a pessoa designada para a posicao (indice em +0x5bf + 4 x posicao,
 /// no vetor de pessoas de 0xae23bc, 110 bytes cada); indice negativo: 0.
 pub(crate) unsafe extern "thiscall" fn designated_for_position(this: usize, position: i8) -> usize {
-    let i = *((this as isize + 0x5bf + 4 * position as isize) as *const i32);
+    let i = *((this as isize + (formation_fields::DESIGNATED_PEOPLE as isize) + 4 * position as isize) as *const i32);
     if i > -1 {
         (*(G_STAFF_TABLE as *const usize)).wrapping_add(110 * i as usize)
     } else {
@@ -186,7 +186,7 @@ pub(crate) unsafe extern "thiscall" fn set_square(this: usize, position: i8, mas
     }
     let home = (this + 0x188b + 8 * position as usize) as *mut u64;
     *home = (*home & !group) | mask;
-    write_u32(this + 0x187f, 0);
+    write_u32(this + formation_fields::CHANGED_FLAG, 0);
     1
 }
 
@@ -205,7 +205,7 @@ pub(crate) unsafe extern "thiscall" fn mark_stars(this: usize, side: i8) {
             continue;
         }
         let pd = j.player();
-        let sum = 10 * (read_i8(pd.addr() + 0x43) as i32 + read_i8(pd.addr() + 0x33) as i32 + read_i8(pd.addr() + 0x27) as i32);
+        let sum = 10 * (pd.vision() as i32 + pd.movement() as i32 + pd.finishing() as i32);
         let mut v = ftol(sum as f64 + j.stamina() as f64);
         // simplification: the original calls 0x717410 on every test; it only reads the player
         let r = match_player_position(j);
@@ -226,7 +226,7 @@ pub(crate) unsafe extern "thiscall" fn mark_stars(this: usize, side: i8) {
             v += 2000;
         }
         if v as i16 > 8500 {
-            exe::formation_set_player_instruction((this as isize + 0x91e2 + 0x18e3 * side as isize) as usize, j.position(), 0x80_0000);
+            exe::formation_set_player_instruction((this as isize + (engine::TACTICS as isize) + 0x18e3 * side as isize) as usize, j.position(), (player_instructions::STANDOUT_PLAYER as u64));
         }
     }
 }
@@ -254,23 +254,23 @@ pub(crate) unsafe extern "C" fn position_mask(p: usize) -> u16 {
     let mut m = 0u16;
     let mut level = 15i8;
     loop {
-        if read_i8(p + 0xf) >= level {
+        if read_i8(p + player_sheet::GOALKEEPER) >= level {
             m |= 1;
         }
-        if read_i8(p + 0x11) >= level {
+        if read_i8(p + player_sheet::DEFENDER) >= level {
             m |= 4;
         }
-        if read_i8(p + 0x10) >= level {
+        if read_i8(p + player_sheet::SWEEPER) >= level {
             m |= 2;
         }
-        if read_i8(p + 0x12) >= level {
+        if read_i8(p + player_sheet::DEFENSIVE_MIDFIELDER) >= level {
             m |= 8;
-        } else if read_i8(p + 0x14) >= level {
+        } else if read_i8(p + player_sheet::ATTACKING_MIDFIELDER) >= level {
             m |= 0x20;
-        } else if read_i8(p + 0x13) >= level {
+        } else if read_i8(p + player_sheet::MIDFIELDER) >= level {
             m |= 0x10;
         }
-        if read_i8(p + 0x15) >= level {
+        if read_i8(p + player_sheet::ATTACKER) >= level {
             m |= 0x40;
         }
         level -= 1;
@@ -278,13 +278,13 @@ pub(crate) unsafe extern "C" fn position_mask(p: usize) -> u16 {
             break;
         }
     }
-    if read_i8(p + 0x17) >= 15 {
+    if read_i8(p + player_sheet::RIGHT_SIDE) >= 15 {
         m |= 0x800;
     }
-    if read_i8(p + 0x18) >= 15 {
+    if read_i8(p + player_sheet::LEFT_SIDE) >= 15 {
         m |= 0x80;
     }
-    if read_i8(p + 0x19) >= 15 {
+    if read_i8(p + player_sheet::CENTRAL) >= 15 {
         m |= 0x200;
     }
     m
@@ -478,7 +478,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
         return original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(IDX_SET_SLOT_COORDINATE)(this, home, stage, band, coord);
     }
     let su = s as usize;
-    let cel = this + 0x164 + 4 * (zy as usize + 4 * (zx as usize + 3 * (f as usize + 2 * su)));
+    let cel = this + formation_fields::SLOT_COORDINATES + 4 * (zy as usize + 4 * (zx as usize + 3 * (f as usize + 2 * su)));
     crate::comparison::branch("cpu_11 coordinate recorded");
     write_u32(cel, coord); // cpu11: a coordenada
     // the output of 0x5b7e60 is the coord argument itself in the original (a single slot, for the whole function)
@@ -493,7 +493,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
         let mut list = 0x9cc368usize;
         while read_i16(list) != -1 {
             let pos = read_i16(list) as u16;
-            let base = this + 0x164 + su * 0x60 + p * 0x30;
+            let base = this + formation_fields::SLOT_COORDINATES + su * 0x60 + p * 0x30;
             let mut dist: i32 = 0;
             for zx in 0..3u32 {
                 for zy in 0..4u32 {
@@ -523,8 +523,8 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
             list += 2;
         }
     }
-    write_u32(this + 0x187f, 0);
-    let general = this + 0x12d + su * 2;
+    write_u32(this + formation_fields::CHANGED_FLAG, 0);
+    let general = this + formation_fields::SLOT_CELLS + su * 2;
     let mut sf: i8 = (best[0] > best[1]) as i8;
     let mut si: i8 = 0;
     for q in 0..2i8 {
@@ -542,14 +542,14 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
     if read_i16(general) as u16 != new {
         write_u16(general, new);
         exe::formation_update_shape_code(this);
-        write_u8(this + 0x143 + su, 1);
+        write_u8(this + formation_fields::DISPLAY_ORDER + su, 1);
         for k in 0..11i8 {
-            if k != s && read_i16(this + 0x12d + k as usize * 2) as u16 == new {
-                write_u8(this + 0x143 + k as usize, 0);
+            if k != s && read_i16(this + formation_fields::SLOT_CELLS + k as usize * 2) as u16 == new {
+                write_u8(this + formation_fields::DISPLAY_ORDER + k as usize, 0);
             }
         }
     }
-    let extra = this + 0x14e + su * 2;
+    let extra = this + formation_fields::EXTRA_SLOT_CELLS + su * 2;
     let o = (1 - sf as i32) * 11; // the start of the other stage’s list
     let in_the = count[(1 - sf) as usize];
     let current = read_i16(general) as u16;
@@ -630,8 +630,8 @@ pub(crate) unsafe extern "thiscall" fn check_duplicate_position(this: usize, hom
     *out = 0;
     let su = s as usize;
     for k in 0..11usize {
-        if k != su && read_i16(this + 0x12d + k * 2) == read_i16(this + 0x12d + su * 2) {
-            if read_i8(this + 0x143 + k) < read_i8(this + 0x143 + su) {
+        if k != su && read_i16(this + formation_fields::SLOT_CELLS + k * 2) == read_i16(this + formation_fields::SLOT_CELLS + su * 2) {
+            if read_i8(this + formation_fields::DISPLAY_ORDER + k) < read_i8(this + formation_fields::DISPLAY_ORDER + su) {
                 *out = 1;
                 return 1;
             }
@@ -658,9 +658,9 @@ pub(crate) unsafe extern "thiscall" fn set_marking_type(this: usize, home: u32, 
         8 | 0x10 => 0xe7,
         _ => return original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(IDX_SET_MARKING_TYPE)(this, home, mark),
     };
-    let b = (this as isize + home as u8 as i8 as isize + 0x5b4) as *mut u8;
+    let b = (this as isize + home as u8 as i8 as isize + (formation_fields::MARKING_TYPES as isize)) as *mut u8;
     *b = *b & limpa | m;
-    write_u32(this + 0x187f, 0);
+    write_u32(this + formation_fields::CHANGED_FLAG, 0);
     1
 }
 
@@ -670,7 +670,7 @@ pub(crate) unsafe extern "thiscall" fn set_marking_type(this: usize, home: u32, 
 /// [pt] As regiões da formação que as três gravam: as posições, as marcas, as extras e as coordenadas (+0x12d..+0x584),
 /// os tipos de marcação (+0x5b4, 11) e a máscara com +0x187f (+0x187b, 8).
 pub(crate) fn formation_regions(this: usize) -> [(usize, usize); 3] {
-    [(this + 0x12d, 0x584 - 0x12d), (this + 0x5b4, 11), (this + 0x187b, 8)]
+    [(this + formation_fields::SLOT_CELLS, 0x584 - 0x12d), (this + formation_fields::MARKING_TYPES, 11), (this + formation_fields::FORMATION_MASK, 8)]
 }
 
 /// Expands each formation slot's positions into the pitch cell tables and their mirrored copy.
@@ -694,14 +694,14 @@ pub(crate) unsafe extern "thiscall" fn build_position_lookup(this: usize) -> u32
                 let i = (12 * k + 4 * a18 + a14) as usize;
                 for y in 3 * a18..3 * a18 + 3 {
                     for x in 3 * a14..3 * a14 + 3 {
-                        let column = read_i16(this + i * 4 + 0x164) as i32;
+                        let column = read_i16(this + i * 4 + formation_fields::SLOT_COORDINATES) as i32;
                         let c = (column * 9 / 27) as u8;
-                        let p = (this as isize + 0x5eb + ((9 * k + y) * 12 + x) as isize) as *mut u8;
+                        let p = (this as isize + (formation_fields::POSITION_LOOKUP as isize) + ((9 * k + y) * 12 + x) as isize) as *mut u8;
                         *p = (*p & 0xf0) | (c & 0xf);
-                        let row = read_i16(this + i * 4 + 0x166) as i32;
+                        let row = read_i16(this + i * 4 + formation_fields::SLOT_COORDINATES + 2) as i32;
                         let d = ((row * 12 / 36) as u8) << 4;
                         *p = (c & 0xf) | d;
-                        let q = (this as isize + 0xf9e + ((9 * k - y) * 12 - x) as isize) as *mut u8;
+                        let q = (this as isize + (formation_fields::POSITION_LOOKUP as isize) + 0x9b3 + ((9 * k - y) * 12 - x) as isize) as *mut u8;
                         *q = 0xb0u8.wrapping_sub(d) ^ (0xf8u8.wrapping_sub(c) & 0xf); // espelho
                     }
                 }
@@ -748,7 +748,7 @@ pub(crate) unsafe extern "thiscall" fn stored_cell(t: usize, slot: i8, attack: i
         return original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, u32, *mut u32) -> u32>(IDX_STORED_CELL)(t, slot, attack, band, out);
     }
     let i = high as usize + 4 * (low as usize + 3 * (attack as usize + 2 * slot as usize));
-    *out = read_u32(t + 0x164 + 4 * i);
+    *out = read_u32(t + formation_fields::SLOT_COORDINATES + 4 * i);
     1
 }
 
@@ -774,9 +774,9 @@ pub(crate) unsafe extern "thiscall" fn set_formation_flag(t: usize, m: u32) -> u
         0x8000 | 0x10000 | 0x20000 => 0x38000,
         _ => return original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_SET_FORMATION_FLAG)(t, m),
     };
-    let marks = (t + 0x584) as *mut u32;
+    let marks = (t + formation_fields::FLAGS) as *mut u32;
     let v = core::ptr::read_unaligned(marks) & !group | m;
-    write_u32(t + 0x187f, 0);
+    write_u32(t + formation_fields::CHANGED_FLAG, 0);
     core::ptr::write_unaligned(marks, v);
     1
 }
@@ -849,7 +849,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
     if id < 0x98ec59 {
         return fail_read(quiet, 0x900, f);
     }
-    let senha = this + 0x33;
+    let senha = this + formation_fields::PASSWORD;
     if crt_fread_one(senha, 0x32, f) != 1 {
         return fail_read(quiet, 0x909, f);
     }
@@ -865,44 +865,44 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
             }
         }
     }
-    if crt_fread_one(this + 0x65, 200, f) != 1 {
+    if crt_fread_one(this + formation_fields::CREATOR, 200, f) != 1 {
         return fail_read(quiet, 0x915, f);
     }
     if id >= 0x98ec5a {
-        if crt_fread_one(this + 0x187b, 4, f) != 1 {
+        if crt_fread_one(this + formation_fields::FORMATION_MASK, 4, f) != 1 {
             return fail_read(quiet, 0x920, f);
         }
         if !nativo {
-            write_u32(this + 0x187b, swap_bytes_u32(read_u32(this + 0x187b)));
+            write_u32(this + formation_fields::FORMATION_MASK, swap_bytes_u32(read_u32(this + formation_fields::FORMATION_MASK)));
         }
     } else {
-        write_u32(this + 0x187b, 0);
+        write_u32(this + formation_fields::FORMATION_MASK, 0);
     }
-    if crt_fread_one(this + 0x12d, 0x16, f) != 1 {
+    if crt_fread_one(this + formation_fields::SLOT_CELLS, 0x16, f) != 1 {
         return fail_read(quiet, 0x930, f);
     }
     if !nativo {
-        exe::swap_bytes_16_array(this + 0x12d, 0xb);
+        exe::swap_bytes_16_array(this + formation_fields::SLOT_CELLS, 0xb);
     }
     exe::formation_update_shape_code(this);
     if id >= 0x98ec5c {
-        if crt_fread_one(this + 0x143, 0xb, f) != 1 {
+        if crt_fread_one(this + formation_fields::DISPLAY_ORDER, 0xb, f) != 1 {
             return fail_read(quiet, 0x940, f);
         }
     } else {
-        core::ptr::write_bytes((this + 0x143) as *mut u8, 0, 0xb);
+        core::ptr::write_bytes((this + formation_fields::DISPLAY_ORDER) as *mut u8, 0, 0xb);
     }
-    if crt_fread_one(this + 0x14e, 0x16, f) != 1 {
+    if crt_fread_one(this + formation_fields::EXTRA_SLOT_CELLS, 0x16, f) != 1 {
         return fail_read(quiet, 0x94f, f);
     }
     if !nativo {
-        exe::swap_bytes_16_array(this + 0x14e, 0xb);
+        exe::swap_bytes_16_array(this + formation_fields::EXTRA_SLOT_CELLS, 0xb);
     }
-    if crt_fread_one(this + 0x164, 0x420, f) != 1 {
+    if crt_fread_one(this + formation_fields::SLOT_COORDINATES, 0x420, f) != 1 {
         return fail_read(quiet, 0x959, f);
     }
     if !nativo {
-        exe::swap_bytes_16_array(this + 0x164, 0x210);
+        exe::swap_bytes_16_array(this + formation_fields::SLOT_COORDINATES, 0x210);
     }
     if id == 0x98ec59 || id == 0x98ec5a {
         let mut descarte = [0u8; 0x108];
@@ -913,7 +913,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
             exe::swap_bytes_16_array(descarte.as_mut_ptr() as usize, 0x84);
         }
     }
-    let team = this + 0x584;
+    let team = this + formation_fields::FLAGS;
     if crt_fread_one(team, 4, f) == 1 {
         if !nativo {
             write_u32(team, swap_bytes_u32(read_u32(team)));
@@ -944,7 +944,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
     } else if quiet == 0 {
         formation_error_box(0x988);
     }
-    if crt_fread_one(this + 0x5b4, 0xb, f) != 1 && quiet == 0 {
+    if crt_fread_one(this + formation_fields::MARKING_TYPES, 0xb, f) != 1 && quiet == 0 {
         formation_error_box(0x98f);
     }
     let mut v = read_u32(team);
@@ -964,8 +964,8 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
     }
     exe::crt_strtok(path, 0, 0, (this) as *mut u8, (0) as *mut u8);
     exe::formation_build_position_lookup(this);
-    write_u32(this + 0x187f, 1);
-    write_u32(this + 0x1883, (read_u8(this + 0x33) != 0) as u32);
+    write_u32(this + formation_fields::CHANGED_FLAG, 1);
+    write_u32(this + formation_fields::HAS_PASSWORD, (read_u8(this + formation_fields::PASSWORD) != 0) as u32);
     write_u32(this + 0x1887, 1);
     cash_crt_fclose(f);
     1
@@ -986,13 +986,13 @@ pub(crate) unsafe extern "thiscall" fn centre_backs_without_conflict(this: usize
     for i in 0..=10u32 {
         let a = read_u16(this + (0x12d + 2 * i as usize));
         let b = read_u16(this + (0x14e + 2 * i as usize));
-        if a & 0x880 != 0 && a & 4 != 0 {
+        if a & 0x880 != 0 && a & (slot_cells::DEFENDER as u16) != 0 {
             return 0;
         }
         if b & 0x880 != 0 && b & 4 != 0 {
             return 0;
         }
-        if a & 0x880 != 0 && a & 8 != 0 {
+        if a & 0x880 != 0 && a & (slot_cells::DEFENSIVE_MIDFIELDER as u16) != 0 {
             return 0;
         }
         if b & 0x880 != 0 && exe::formation_get_slot_position(this, i, 1) & 8 != 0 {
@@ -1029,15 +1029,15 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
     }
     let s = k as usize;
     let p = position as u16 as i16;
-    let general = this + 0x12d + 2 * s;
-    let extra_of_home = this + 0x14e + 2 * s;
+    let general = this + formation_fields::SLOT_CELLS + 2 * s;
+    let extra_of_home = this + formation_fields::EXTRA_SLOT_CELLS + 2 * s;
     if extra == 0 && read_i16(general) != p {
         write_i16(general, p);
         exe::formation_update_shape_code(this);
-        write_u8(this + 0x143 + s, 1);
+        write_u8(this + formation_fields::DISPLAY_ORDER + s, 1);
         for j in 0..11usize {
-            if j != s && read_i16(this + 0x12d + 2 * j) == p {
-                write_u8(this + 0x143 + j, 0); // the other square with the same position
+            if j != s && read_i16(this + formation_fields::SLOT_CELLS + 2 * j) == p {
+                write_u8(this + formation_fields::DISPLAY_ORDER + j, 0); // the other square with the same position
             }
         }
     }
@@ -1055,7 +1055,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
         for altura in 0..4usize {
             let arg = band as u32 | (altura as u32) << 16;
             let i = altura + 4 * (band + 6 * s);
-            let (sem_bola, com_bola) = (this + 0x164 + 4 * i, this + 0x194 + 4 * i);
+            let (sem_bola, com_bola) = (this + formation_fields::SLOT_COORDINATES + 4 * i, this + formation_fields::SLOT_COORDINATES + 0x30 + 4 * i);
             let (g, e) = (read_i16(general) as u16 as u32, read_i16(extra_of_home) as u16 as u32);
             let (a, b) = if g == e {
                 (g, g) // the same position with and without the ball
@@ -1074,7 +1074,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
             write_u32(com_bola, saida);
         }
     }
-    write_u32(this + 0x187f, 0);
+    write_u32(this + formation_fields::CHANGED_FLAG, 0);
     1
 }
 
@@ -1084,6 +1084,6 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
 ///
 /// [pt] { 0x5b57c0 }: byte `i` de uma tabela em +0x5b4 (por posicao; ver 0x6f4600).
 pub(crate) unsafe extern "thiscall" fn position_byte(this: usize, i: i8) -> u8 {
-    *((this as isize + 0x5b4 + i as isize) as *const u8)
+    *((this as isize + (formation_fields::MARKING_TYPES as isize) + i as isize) as *const u8)
 }
 

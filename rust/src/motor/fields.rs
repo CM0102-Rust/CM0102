@@ -1326,11 +1326,13 @@ pub(crate) mod cup_round {
     pub(crate) const ROUND_NUMBER: usize = 0x9; // 2 byte(s): round number copied to fixture ROUND_NUMBER
     pub(crate) const DRAW_RULES: usize = 0xb; // 2 byte(s): draw rule bits copied to fixture ROUND_DRAW_RULES (bit 4 checked by draw_round)
     pub(crate) const TIE_RULES: usize = 0xd; // 2 byte(s): tie rule bits copied to fixture TIE_RULES (0x100 no fixture news, 0x200 no draw news, 0x800 level-based home side)
+    pub(crate) const TWO_LEG_TIE_RULES: usize = 0xf; // 2 byte(s): tie-break rule bits ORed into the match's TIE_RULES (+0x38) by apply_round_rules_to_match
     pub(crate) const VENUE_VALUE: usize = 0x13; // 4 byte(s): home venue value passed to Stadium::set_fixture_venue
     pub(crate) const MATCH_CATEGORY: usize = 0x17; // 1 byte(s): match category copied to fixture CATEGORY
     pub(crate) const TEAMS: usize = 0x18; // 2 byte(s): number of teams in the round
     pub(crate) const TIES: usize = 0x1a; // 2 byte(s): number of ties in the round
     pub(crate) const NEW_TEAMS: usize = 0x1c; // 2 byte(s): number of teams entering at this round
+    pub(crate) const FIRST_NEW_TEAM: usize = 0x1e; // 2 byte(s): team table index of the first team entering at this round (entrants already in)
     pub(crate) const SINGLE_LEG_FLAG: usize = 0x20; // 1 byte(s): positive with fewer than 2 legs sets fixture SQUAD_RULES bit 0x400 [inference]
     pub(crate) const LEGS: usize = 0x21; // 1 byte(s): number of legs (2 = two-legged)
     pub(crate) const LEG_GAP_DAYS: usize = 0x22; // 1 byte(s): signed days from the first leg to the second leg
@@ -1338,6 +1340,7 @@ pub(crate) mod cup_round {
     pub(crate) const SLOT_WEEKDAY: usize = 0x27; // 1 byte(s): weekday of match-day slot 0 (-1..6)
     pub(crate) const SLOT_TIME_SLICE: usize = 0x28; // 1 byte(s): time slice of match-day slot 0 (-1..2)
     pub(crate) const SLOT_CODE: usize = 0x29; // 1 byte(s): code of match-day slot 0 (0xff = no slot)
+    pub(crate) const FIRST_TIE_NUMBER: usize = 0x5b; // 1 byte(s): number of the round's first tie, counted from the final backwards
     pub(crate) const WINNER_PRIZE: usize = 0x60; // 4 byte(s): prize paid to each tie winner (-1 = share of the cup PRIZE_FUND)
     pub(crate) const LOSER_PRIZE: usize = 0x64; // 4 byte(s): prize paid to each tie loser
 }
@@ -1354,6 +1357,8 @@ pub(crate) mod cup_tie {
     pub(crate) const HOME_LINK_ROUND: usize = 0xe; // 2 byte(s): round of the tie linked to the home side (-1 none)
     pub(crate) const AWAY_LINK_ROUND: usize = 0x10; // 2 byte(s): round of the tie linked to the away side (-1 none)
     pub(crate) const FEEDER_ROUND: usize = 0x12; // 2 byte(s): round of FEEDER_TIE
+    pub(crate) const REPLAYS_PLAYED: usize = 0x32; // 1 byte(s): replays already played; with NEXT_MATCH picks the result block [verified: cleared at the tie reset of map_fixture_tree; MAPA_SAVE 6.1: process_fixture adds +0x32 and +0x33 to pick the result block (0x51A3CE), +0x33 written at 0x51A57F]
+    pub(crate) const NEXT_MATCH: usize = 0x33; // 1 byte(s): which match of the tie comes next (0 first, 1 second) [verified: cleared at the tie reset of map_fixture_tree; MAPA_SAVE 6.1: process_fixture adds +0x32 and +0x33 to pick the result block (0x51A3CE), +0x33 written at 0x51A57F]
     pub(crate) const FIXTURE_STATE: usize = 0x34; // 1 byte(s): fixture creation state: 0 none, 1 postponed, 2 to create, 3 created
 }
 
@@ -1562,6 +1567,7 @@ pub(crate) mod job_vacancy {
 /// Fields of the `key_nation_record` object, named from how the routines use them. [pt] Campos do objeto `key_nation_record`.
 #[allow(dead_code)]
 pub(crate) mod key_nation_record {
+    pub(crate) const ACTIVE_INDEX: usize = 0x14; // 1 byte(s): position of the entry among the active league entries (passed as the group to get_fixture_list_for_date) [verified: community data map: g_league_table+0x14 active_index (s8), numbered by key_nation_number_active_entries]
     pub(crate) const SEASON_END_DAY: usize = 0x15; // 2 byte(s): Day of year the nation's season ends (72-byte records at 0xb63d60)
     pub(crate) const SEASON_SPANS_YEAR: usize = 0x1d; // 1 byte(s): Nonzero when the season ends in the following year [inference]
 }
@@ -1882,6 +1888,8 @@ pub(crate) mod match_record_row {
     pub(crate) const POSITION: usize = 0x1d; // 1 byte(s): position (match_player POSITION); 0xfb = empty row
     pub(crate) const PREVIOUS_POSITION: usize = 0x1e; // 1 byte(s): previous position (match_player PREVIOUS_POSITION)
     pub(crate) const GOALS: usize = 0x21; // 1 byte(s): goals scored
+    pub(crate) const PENALTIES_TAKEN: usize = 0x23; // 1 byte(s): penalties taken in the match (copy of match_player PENALTIES_TAKEN) [verified: match_screens fill_match_record: row+0x1c+7 <- match_player(+0x69 STAFF)-0x5c = match_player +0xd PENALTIES_TAKEN; taken - scored == 1 gives the missed-penalty ]
+    pub(crate) const PENALTIES_SCORED: usize = 0x24; // 1 byte(s): penalties scored in the match (copy of match_player PENALTIES_SCORED) [verified: match_screens fill_match_record: row+0x1c+8 <- match_player +0x69-0x5b = +0xe PENALTIES_SCORED; the pair also feeds player_category_stats +4/+5 and player_searc]
     pub(crate) const ASSISTS: usize = 0x27; // 1 byte(s): assists in the match (multiplied by the contract ASSIST_BONUS)
     pub(crate) const YELLOW_CARDS: usize = 0x2c; // 1 byte(s): yellow cards
     pub(crate) const RED_CARD: usize = 0x2d; // 1 byte(s): red card (drawn in red on the ratings) [inference]
@@ -2002,13 +2010,23 @@ pub(crate) mod nation_index_item {
 #[allow(dead_code)]
 pub(crate) mod national_squad_record {
     pub(crate) const CURRENT_COMPETITION: usize = 0x4; // 4 byte(s): competition the nation currently plays (-1 none)
+    pub(crate) const RESERVE_START: usize = 0x8; // 4 byte(s): index in the reserve pool where the nation's senior section starts (under-21 at +0x1d) [verified: 0x775ba0/0x76abf0: start = dword +8 plus the level capacities; o = 0x15 for the under-21 set]
     pub(crate) const RESERVE_GROUPS: usize = 0xd; // 42 byte(s): two 0x15-byte reserve level groups (senior, under-21) [inference]
+    pub(crate) const RESERVE_LEVEL_CAPACITY: usize = 0xe; // 1 byte(s): slots of reserve level j in the pool (senior; under-21 at +0x23); summed to find a level's start [verified: community 0x76abf0 build_selection_pools (four position groups); start of level n = +8 plus the capacities of the previous levels; add_to_reserves compares coun]
+    pub(crate) const RESERVE_LEVEL_MIN_REPUTATION: usize = 0xf; // 2 byte(s): lowest home reputation in the level (10000 when empty); a full level only takes a player above it [verified: compared with TPlayer +9 HomeReputation (FORMATOS); 10000 from build_selection_pools; community: pools sorted by home reputation]
+    pub(crate) const U21_RESERVE_LEVEL_COUNT: usize = 0x22; // 1 byte(s): under-21 level count zeroed (RESERVE_LEVEL_COUNT + 0x15) [verified: the under-21 set is 0x15 bytes after the senior one (o = 0x15)]
+    pub(crate) const U21_RESERVE_LEVEL_MIN_REPUTATION: usize = 0x24; // 2 byte(s): under-21 lowest home reputation reset to 10000 (RESERVE_LEVEL_MIN_REPUTATION + 0x15) [verified: the under-21 set is 0x15 bytes after the senior one]
     pub(crate) const SQUAD_STAMP_DATE: usize = 0x32; // 8 byte(s): today's stamp of the main squad (type t at +0x14 x t)
     pub(crate) const SQUAD_DATE: usize = 0x3a; // 8 byte(s): squad date of the main squad (type t at +0x14 x t)
+    pub(crate) const MAX_SQUAD_SIZE: usize = 0x42; // 1 byte(s): largest squad size of the main squad slot (B +0x56, under-21 +0x6a) [verified: community map: 0x76d430 get_squad_size_limits writes out_max_size here (0x17/0x18/0x1a); 0x7754c0 get_max_squad_size returns it; can_change_squad compares the s]
     pub(crate) const CALLED_UP_MARK: usize = 0x43; // 1 byte(s): called-up mark of the main squad (type t at +0x14 x t)
+    pub(crate) const SQUAD_SELECTED: usize = 0x44; // 1 byte(s): squad selected flag of the main squad slot (B +0x58, under-21 +0x6c): set by set_squad_selected, cleared on the squad date after the match; 0 = the squad can change [verified: community map: 0x76c0f0 NationalTeams::set_squad_selected / 0x76e010 is_squad_selected set/read byte +0x44 of the 0x14-byte squad slot record (nation record + 0]
+    pub(crate) const OPEN_SLOTS: usize = 0x45; // 1 byte(s): replacement slots open in the main squad (B +0x59, under-21 +0x6d): +1 when an injured player withdraws, -1 per replacement, 0 when none is found
     pub(crate) const B_SQUAD_DATE: usize = 0x4e; // 8 byte(s): squad date of the B/Olympic squad
+    pub(crate) const B_SQUAD_SELECTED: usize = 0x58; // 1 byte(s): B/Olympic squad selected flag (0x44 + 0x14) [verified: community map: 0x76c0f0 NationalTeams::set_squad_selected / 0x76e010 is_squad_selected set/read byte +0x44 of the 0x14-byte squad slot record (nation record + 0]
     pub(crate) const U21_SQUAD_DATE: usize = 0x62; // 8 byte(s): squad date of the under-21 squad
     pub(crate) const U21_CALLED_UP_MARK: usize = 0x6b; // 1 byte(s): called-up mark of the under-21 squad
+    pub(crate) const U21_SQUAD_SELECTED: usize = 0x6c; // 1 byte(s): under-21 squad selected flag (0x44 + 0x28) [verified: community map: 0x76c0f0 NationalTeams::set_squad_selected / 0x76e010 is_squad_selected set/read byte +0x44 of the 0x14-byte squad slot record (nation record + 0]
 }
 
 /// Fields of the `national_teams_fields` object, named from how the routines use them. [pt] Campos do objeto `national_teams_fields`.
@@ -2351,8 +2369,11 @@ pub(crate) mod staff_state {
     pub(crate) const INJURY_COUNTER: usize = 0xa; // 1 byte(s): byte of the 79-byte general.dat record raised by injuries up to 100 [inference]
     pub(crate) const STATUS_FLAGS: usize = 0xb; // 1 byte(s): bit 0x40 regen mark, bits 0x30 retirement state (0x10 announced, 0x20 retired)
     pub(crate) const EXTRA_FLAGS: usize = 0xc; // 1 byte(s): flag byte of the 79-byte staff state record after STATUS_FLAGS: bit 0x1 cleared when the physical record is created and after the holiday recovery news; bit 0x2 blocks a foreign player's call-up by his second nation
+    pub(crate) const B_INTERNATIONAL_PLAYED: usize = 0xd; // 1 byte(s): set to 1 for each player who played a B international
     pub(crate) const FORMER_CLUB_ID: usize = 0xe; // 4 byte(s): club id of the first of five former-club slots (5-byte steps; -1 empty), paid a share of the fee on a sale
     pub(crate) const FORMER_CLUB_WEIGHT: usize = 0x12; // 1 byte(s): signed weight of the first former-club slot (5-byte steps) in the fee-share split
+    pub(crate) const OPINION_LINK_STAFF_ID: usize = 0x27; // 4 byte(s): staff id of the first opinion link (-1 empty); the second link is at +0x14 (+0x3b)
+    pub(crate) const OPINION_LINK_FLAG: usize = 0x37; // 4 byte(s): contract flag value of the first opinion link (-1 empty); the second link's is at +0x14 (+0x4b)
 }
 
 /// Fields of the `story_log_entry` object, named from how the routines use them. [pt] Campos do objeto `story_log_entry`.
@@ -2531,13 +2552,19 @@ pub(crate) mod euro_champ_qual {
 /// Fields of the `formation` object, named from how the routines use them. [pt] Campos do objeto `formation`.
 #[allow(dead_code)]
 pub(crate) mod formation_fields {
+    pub(crate) const PASSWORD: usize = 0x33; // 50 byte(s): formation password string, stored inverted in the file (each byte ~b, 0xff kept) [verified: load_from_disk exe error strings 'unable to read in the %s' (0x5b5d10): 'password' read into +0x33, 0x32 bytes]
+    pub(crate) const CREATOR: usize = 0x65; // 200 byte(s): formation creator string [verified: load_from_disk exe error strings 'unable to read in the %s' (0x5b5d10): 'creator' read into +0x65, 200 bytes]
     pub(crate) const SLOT_CELLS: usize = 0x12d; // 22 byte(s): Tactical grid cell codes of the 11 formation slots (words; a second set follows at +0x14e)
+    pub(crate) const DISPLAY_ORDER: usize = 0x143; // 11 byte(s): per slot display-order byte; set to 1 on the slot that takes a position, 0 on the others sharing it; compared in check_duplicate_position [verified: load_from_disk exe error strings 'unable to read in the %s' (0x5b5d10): 'display order' read into +0x143, 11 bytes]
+    pub(crate) const EXTRA_SLOT_CELLS: usize = 0x14e; // 22 byte(s): extra general position code of each of the 11 slots (the with/without-ball counterpart of SLOT_CELLS) [verified: load_from_disk exe error strings 'unable to read in the %s' (0x5b5d10): 'extra general positions' read into +0x14e; engine ARROW_TABLE_DATA = TACTICS + 0x14e]
+    pub(crate) const SLOT_COORDINATES: usize = 0x164; // 1056 byte(s): pitch coordinates (x word, y word) per slot x stage (0 without, 1 with the ball) x band 0..2 x height 0..3: 0x60 x slot + 0x30 x stage + 0x10 x band + 4 x height [verified: load_from_disk exe error strings 'unable to read in the %s' (0x5b5d10): 'actual positions' read into +0x164, 0x420 bytes; indexing in stored_cell/set_slot_coord]
     pub(crate) const FLAGS: usize = 0x584; // 4 byte(s): Tactics flag dword (0x1000 marking by ball side, 0x4000, 0x400...), changed by set_formation_flag
     pub(crate) const MARKING_TYPES: usize = 0x5b4; // 11 byte(s): Marking type byte of each of the 11 slots (4 and 8 become 2 in clear_assigned)
     pub(crate) const DESIGNATED_PEOPLE: usize = 0x5bf; // 44 byte(s): Person record index designated for each of the 11 positions (-1 none)
     pub(crate) const POSITION_LOOKUP: usize = 0x5eb; // 4752 byte(s): Position lookup tables built by build_position_lookup (up to FORMATION_MASK)
     pub(crate) const FORMATION_MASK: usize = 0x187b; // 4 byte(s): OR of the position bits of the 11 slots (formation_mask)
     pub(crate) const CHANGED_FLAG: usize = 0x187f; // 4 byte(s): Changed flag of the formation, cleared by set_square and written with the marking and formation flags
+    pub(crate) const HAS_PASSWORD: usize = 0x1883; // 4 byte(s): 1 when PASSWORD is not empty, set at load
     pub(crate) const PLAYER_INSTRUCTIONS: usize = 0x188b; // 88 byte(s): per position (0..10) 64-bit instruction mask (+0x188b + 8 x position); bits of a group are mutually exclusive
 }
 
@@ -2559,6 +2586,7 @@ pub(crate) mod grid_cell {
 #[allow(dead_code)]
 pub(crate) mod match_incident {
     pub(crate) const CLUB_ID: usize = 0x4; // 4 byte(s): club id of the day incident (0x19-byte entries of the match-day player incident list; +0 the person id)
+    pub(crate) const SIDE: usize = 0xd; // 1 byte(s): side (0 home, 1 away) of the player the day incident is about
     pub(crate) const OUTCOME: usize = 0xe; // 1 byte(s): outcome mark set at the match wrap-up (1 accepted by the other manager, 0 otherwise)
     pub(crate) const RESPONDER_ID: usize = 0xf; // 4 byte(s): staff id of the manager who answered the incident (-1 none)
     pub(crate) const KIND: usize = 0x13; // 2 byte(s): incident kind (0x82, 0x1e, 0x0b...) selecting the news and reactions
@@ -2604,6 +2632,8 @@ pub(crate) mod uefa_seeding {
 #[allow(dead_code)]
 pub(crate) mod names {
     pub(crate) const ID: usize = 0x33; // 4 byte(s): TNames record (first_names/second_names/common_names.dat, 60 bytes: Name[51] at 0, ID 0x33, Nation 0x37, Count 0x3b); +0x33 is the name id [verified: docs/FORMATOS TNames +0x33 ID (community format); person_transfer_record::FIRST_NAME_ID says +0x33 of the staff FIRST_NAME record]
+    pub(crate) const NATION: usize = 0x37; // 4 byte(s): nation id of the name (-1 none) [verified: docs/FORMATOS TNames +0x37 Nation (int); checked against G_NATION_COUNT and turned into the nation record]
+    pub(crate) const WEIGHT: usize = 0x3b; // 1 byte(s): weight (TNames Count) of the name in the weighted draws [verified: docs/FORMATOS TNames +0x3b Count (sbyte); summed into nation_name_index *_WEIGHT_SUM and compared as the draw weight]
 }
 
 /// engine per-side match stats block (engine SIDE_STATS + 0x36 x side, 0x36 bytes; +0 shoot-out goals, +1 score)
@@ -2656,4 +2686,34 @@ pub(crate) mod tactic_stats {
 
     pub(crate) const ATTACK_SCORE: usize = 0x18; // 8 byte(s): f64 score of the tactic used for stance 2 (attack) and any other value [inference]
     pub(crate) const DEFENSIVE_SCORE: usize = 0x20; // 8 byte(s): f64 score of the tactic used for stances 3..5 (balanced, defend, park the bus) [inference]
+}
+
+/// 0x12-byte item of the NationalTeams call-up list (national_teams_fields::CALL_UP_LIST): +0 national side id, +4 competition id, +8 duty start date (TCMDate), +0x10 duty end day
+#[allow(dead_code)]
+pub(crate) mod call_up_entry {
+    pub(crate) const DUTY_END_DAY: usize = 0x10; // 2 byte(s): day of year the call-up ends (1000 = open; set to tomorrow by end_duty_*, item removed when it equals today)
+
+}
+
+/// the 42,735-byte human manager record (one per human manager, found by person_and_human_record in human_manager.rs; +0x9a06, +0x9ace also read there)
+#[allow(dead_code)]
+pub(crate) mod human_manager_record {
+    pub(crate) const HOLIDAY_OPTIONS: usize = 0x9b23; // 1 byte(s): holiday option bytes of the human manager record, indexed by option [verified: community name HUMAN_MANAGER::get_holiday_option (0x5fea50, high) returns byte +0x9b23 + option]
+
+}
+
+/// TStaffHistory, 17-byte rows of staff_history.dat (+4 staff, +8 year, +0xa club, +0xe on loan, +0xf apps, +0x10 goals)
+#[allow(dead_code)]
+pub(crate) mod staff_history {
+    pub(crate) const CLUB: usize = 0xa; // 4 byte(s): club of the career history row (id in the file, pointer after load) [verified: docs/FORMATOS TStaffHistory +0xa ClubID; the load converts it with G_CLUB_TABLE/581 (line 6392)]
+
+}
+
+/// colour.dat rows (58 bytes, table [0xae23ec], count [0xae2394]); RGB bytes at +0x37..+0x39
+#[allow(dead_code)]
+pub(crate) mod colour {
+    pub(crate) const RED: usize = 0x37; // 1 byte(s): red component of the colour.dat row
+
+    pub(crate) const GREEN: usize = 0x38; // 1 byte(s): green component of the colour.dat row
+    pub(crate) const BLUE: usize = 0x39; // 1 byte(s): blue component of the colour.dat row
 }

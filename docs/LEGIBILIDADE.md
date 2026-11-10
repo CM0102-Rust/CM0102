@@ -8,26 +8,22 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 
 | Medida | Quantidade |
 |---|---:|
-| deslocamentos crus | 4124 |
+| deslocamentos crus | 3840 |
 | chaves fixas cruas | 1821 |
 | chamadas por endereço | 0 |
 | cópias de acesso à memória | 0 |
 | rotinas sem cabeçalho | 0 |
 | locais/parâmetros em português | 241 |
-| linhas | 229524 |
+| linhas | 230095 |
 
 ## Por arquivo (os 40 piores, pelos deslocamentos crus)
 
 | Arquivo | deslocamentos crus | chaves fixas cruas | chamadas por endereço | cópias de acesso à memória | rotinas sem cabeçalho | locais/parâmetros em português | linhas |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | `motor.rs` | 587 | 0 | 0 | 0 | 0 | 104 | 6427 |
-| `motor/national_teams.rs` | 136 | 33 | 0 | 0 | 0 | 2 | 3510 |
 | `motor/match_screens.rs` | 128 | 4 | 0 | 0 | 0 | 6 | 5878 |
 | `motor/match_man.rs` | 124 | 1 | 0 | 0 | 0 | 1 | 4498 |
-| `motor/database.rs` | 100 | 86 | 0 | 0 | 0 | 8 | 9344 |
-| `motor/comp/cup.rs` | 96 | 8 | 0 | 0 | 0 | 3 | 3519 |
 | `motor/match_eng.rs` | 95 | 7 | 0 | 0 | 0 | 13 | 11686 |
-| `motor/formation.rs` | 85 | 0 | 0 | 0 | 0 | 0 | 1089 |
 | `motor/comp/fix_man.rs` | 82 | 31 | 0 | 0 | 0 | 4 | 2591 |
 | `motor/comp/league.rs` | 82 | 20 | 0 | 0 | 0 | 6 | 4132 |
 | `motor/media.rs` | 80 | 2 | 0 | 0 | 0 | 0 | 3444 |
@@ -35,6 +31,7 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/tactics.rs` | 76 | 0 | 0 | 0 | 0 | 2 | 1444 |
 | `motor/player_search.rs` | 72 | 0 | 0 | 0 | 0 | 0 | 901 |
 | `motor/contract_manager.rs` | 68 | 16 | 0 | 0 | 0 | 4 | 4240 |
+| `motor/national_teams.rs` | 63 | 33 | 0 | 0 | 0 | 2 | 3510 |
 | `motor/training_manager.rs` | 63 | 0 | 0 | 0 | 0 | 1 | 1319 |
 | `motor/area.rs` | 59 | 0 | 0 | 0 | 0 | 0 | 353 |
 | `motor/comp/uefa_seeding.rs` | 59 | 7 | 0 | 0 | 0 | 0 | 997 |
@@ -53,6 +50,7 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/officials_manager.rs` | 40 | 0 | 0 | 0 | 0 | 2 | 872 |
 | `motor/comp/comp.rs` | 39 | 9 | 0 | 0 | 0 | 0 | 755 |
 | `motor/db_files.rs` | 37 | 0 | 0 | 0 | 0 | 0 | 1282 |
+| `motor/fields.rs` | 34 | 0 | 0 | 0 | 0 | 0 | 2719 |
 | `motor/comp/cups/eng_cc_cup.rs` | 34 | 12 | 0 | 0 | 0 | 1 | 620 |
 | `motor/comp/cups/ita_cup.rs` | 34 | 19 | 0 | 0 | 0 | 1 | 1155 |
 | `motor/zipdir.rs` | 33 | 0 | 0 | 0 | 0 | 0 | 604 |
@@ -60,3 +58,5 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/match_events.rs` | 32 | 0 | 0 | 0 | 0 | 1 | 1892 |
 | `motor/comp/fifa_rankings.rs` | 32 | 0 | 0 | 0 | 0 | 0 | 382 |
 | `motor/manager_manager.rs` | 31 | 2 | 0 | 0 | 0 | 0 | 5143 |
+| `motor/record_utils.rs` | 31 | 0 | 0 | 0 | 0 | 0 | 248 |
+| `motor/match_official.rs` | 30 | 0 | 0 | 0 | 0 | 0 | 695 |

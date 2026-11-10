@@ -3,7 +3,7 @@ MUTACOES = [
     ('dbl_clube_em_temporada', '    exe::key_nation_club_in_season(club, 0, 0) // the season of the club’s nation', '    (exe::key_nation_club_in_season(club, 0, 0) == 0) as u32 // mutacao: a resposta invertida'),
     ('dbl_clube_em_nacao_grande', 'KEY_NATION_SPAIN, KEY_NATION_HOLLAND]; // Netherlands (club)', '0x9cf488, 0x9cf488]; // mutacao: sem a Holanda (clube)'),
     ('dbl_nacao_grande', 'KEY_NATION_SPAIN, KEY_NATION_HOLLAND]; // Holland (nation)', '0x9cf488, 0x9cf488]; // mutacao: sem a Holanda (nação)'),
-    ('dbl_limpar_vinculos', '            write_state_i32(c, k + 0x37, -1); // the value of the empty link', '            write_state_i32(c, k + 0x37, -2); // mutacao: o valor do vínculo vazio -2'),
+    ('dbl_limpar_vinculos', '            write_state_i32(c, k + staff_state::OPINION_LINK_FLAG, -1); // the value of the empty link', '            write_state_i32(c, k + staff_state::OPINION_LINK_FLAG, -2); // mutacao: o valor do vínculo vazio -2'),
     ('dbl_juntar_vinculo', '        write_state_i32(c, 0x3b, id); // the second link', '        // mutacao: o segundo vínculo sem o id'),
     ('dbl_tirar_vinculo', '        write_state_i32(c, 0x3b, -1); // empties the second link', '        // mutacao: o segundo vínculo fica com o id'),
     ('dbl_auxiliar', '    p.assistant_manager() // the partner’s assistant', '    rd(club.addr() + 0xd3) // mutacao: o auxiliar do proprio clube no lugar do parceiro'),
@@ -19,6 +19,6 @@ MUTACOES = [
     ('dbn1_comissao_alvo', '            let target = ((rep(Club(c)) + 500) * k as i32 / 10000).clamp(1, k as i32); // the commission by reputation', '            let target = ((rep(Club(c)) + 500) * k as i32 / 10000).clamp(2, k as i32); // mutacao: no minimo 2'),
     ('dbn1_cortar_pessoas', '        for &d in &[0x39usize, 0x24] { // the person’s club and national team stay', '        for &d in &[0x24usize] { // mutacao: o clube da pessoa nao a segura'),
     ('dbn1_podar', '            if nation.is_null() || nation.league_selected() != 0 { // a linha fica', '            if nation.is_null() || !nation.is_null() { // mutacao: fica tambem a linha de nacao nao escolhida'),
-    ('dbn2_cidade_sem_nacao', '        a(e + 0x1f, G_NATION_TABLE, 0x122); // the city’s nation', '        wr(e + 0x1f, 0); // mutacao: a cidade sem nacao'),
+    ('dbn2_cidade_sem_nacao', '        a(e + city::NATION, G_NATION_TABLE, 0x122); // the city’s nation', '        wr(e + city::NATION, 0); // mutacao: a cidade sem nacao'),
     ('dbn2_ordenar', '    exe::crt_qsort(rd(G_CLUB_REPUTATION_ORDER), gi(G_CLUB_COUNT) as u32, 4, 0x540020); // all clubs by reputation', '    exe::crt_qsort(rd(G_CLUB_REPUTATION_ORDER), (gi(0xae235c) - 1) as u32, 4, 0x540020); // mutacao: o ultimo clube fica fora da ordem'),
 ]

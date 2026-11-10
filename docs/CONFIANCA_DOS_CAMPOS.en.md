@@ -19,8 +19,8 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | Level | Fields |
 |---|---|
 | community | 247 |
-| verified | 27 |
-| read | 1385 |
+| verified | 50 |
+| read | 1398 |
 | inferred | 151 |
 
 ## Per record
@@ -36,6 +36,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `ban_slot` | 0 | 0 | 1 | 1 |
 | `board_record` | 0 | 1 | 16 | 5 |
 | `bra_nat_third` | 0 | 0 | 1 | 0 |
+| `call_up_entry` | 0 | 0 | 1 | 0 |
 | `career_entry` | 0 | 0 | 7 | 0 |
 | `city` | 6 | 0 | 0 | 0 |
 | `club` | 43 | 0 | 2 | 0 |
@@ -45,6 +46,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `club_records_fields` | 0 | 0 | 10 | 0 |
 | `club_shortlist` | 0 | 0 | 0 | 2 |
 | `cm_date` | 2 | 0 | 0 | 0 |
+| `colour` | 0 | 0 | 3 | 0 |
 | `commentary_queue` | 0 | 0 | 10 | 1 |
 | `comp_history_row` | 0 | 0 | 3 | 1 |
 | `comp_stats_club` | 0 | 3 | 5 | 1 |
@@ -59,8 +61,8 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `contract_talks` | 0 | 0 | 2 | 0 |
 | `count_record` | 0 | 0 | 2 | 0 |
 | `cup` | 0 | 0 | 25 | 2 |
-| `cup_round` | 0 | 0 | 20 | 1 |
-| `cup_tie` | 0 | 0 | 10 | 0 |
+| `cup_round` | 0 | 0 | 23 | 1 |
+| `cup_tie` | 0 | 2 | 10 | 0 |
 | `day_competition` | 0 | 0 | 5 | 1 |
 | `day_group` | 0 | 0 | 5 | 0 |
 | `day_match` | 0 | 0 | 17 | 1 |
@@ -80,7 +82,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `finance` | 0 | 0 | 40 | 2 |
 | `fixture` | 0 | 0 | 35 | 6 |
 | `fixture_manager` | 0 | 0 | 7 | 0 |
-| `formation_fields` | 0 | 0 | 8 | 0 |
+| `formation_fields` | 0 | 5 | 9 | 0 |
 | `fra_first` | 0 | 0 | 2 | 0 |
 | `free_transfer_entry` | 0 | 0 | 2 | 0 |
 | `friendly` | 0 | 0 | 19 | 2 |
@@ -90,6 +92,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `goldcup` | 0 | 0 | 2 | 0 |
 | `grid_cell` | 0 | 0 | 2 | 0 |
 | `held_ban` | 0 | 0 | 2 | 0 |
+| `human_manager_record` | 0 | 1 | 0 | 0 |
 | `human_manager_sheet` | 0 | 0 | 2 | 1 |
 | `illness_outbreak` | 0 | 0 | 1 | 0 |
 | `injury_entry` | 0 | 4 | 6 | 0 |
@@ -98,7 +101,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `intertoto_cup` | 0 | 0 | 1 | 0 |
 | `intl_date_entry` | 0 | 0 | 6 | 1 |
 | `job_vacancy` | 0 | 0 | 1 | 0 |
-| `key_nation_record` | 0 | 0 | 1 | 1 |
+| `key_nation_record` | 0 | 1 | 1 | 1 |
 | `language_entry` | 0 | 0 | 2 | 0 |
 | `league` | 0 | 5 | 44 | 6 |
 | `league_projection` | 0 | 0 | 5 | 0 |
@@ -114,11 +117,11 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `manager_record` | 0 | 0 | 47 | 0 |
 | `match_day_fields` | 0 | 0 | 17 | 0 |
 | `match_events_fields` | 0 | 0 | 3 | 0 |
-| `match_incident` | 0 | 0 | 5 | 0 |
+| `match_incident` | 0 | 0 | 6 | 0 |
 | `match_manager` | 0 | 0 | 15 | 7 |
 | `match_player` | 0 | 3 | 111 | 22 |
 | `match_record` | 0 | 2 | 68 | 11 |
-| `match_record_row` | 0 | 0 | 20 | 5 |
+| `match_record_row` | 0 | 2 | 20 | 5 |
 | `match_record_team` | 0 | 0 | 28 | 4 |
 | `match_spectators` | 0 | 0 | 3 | 1 |
 | `match_stats` | 0 | 0 | 5 | 0 |
@@ -126,12 +129,12 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `match_stats_record` | 0 | 0 | 6 | 0 |
 | `match_summary` | 0 | 0 | 1 | 0 |
 | `media_fields` | 0 | 0 | 6 | 0 |
-| `names` | 0 | 1 | 0 | 0 |
+| `names` | 0 | 3 | 0 | 0 |
 | `nation` | 34 | 0 | 1 | 0 |
 | `nation_club_bucket` | 0 | 0 | 2 | 0 |
 | `nation_index_item` | 0 | 0 | 1 | 0 |
 | `nation_name_index` | 0 | 0 | 9 | 0 |
-| `national_squad_record` | 0 | 0 | 7 | 1 |
+| `national_squad_record` | 0 | 9 | 8 | 1 |
 | `national_teams_fields` | 0 | 0 | 9 | 0 |
 | `news_fields` | 0 | 0 | 3 | 0 |
 | `news_item` | 0 | 0 | 8 | 0 |
@@ -178,8 +181,9 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `stadium` | 10 | 0 | 0 | 0 |
 | `stadium_obj` | 0 | 0 | 7 | 0 |
 | `staff` | 32 | 4 | 2 | 0 |
+| `staff_history` | 0 | 1 | 0 | 0 |
 | `staff_records_fields` | 0 | 0 | 7 | 0 |
-| `staff_state` | 0 | 0 | 4 | 1 |
+| `staff_state` | 0 | 0 | 7 | 1 |
 | `story_log_entry` | 0 | 0 | 6 | 0 |
 | `tactic_stats` | 0 | 0 | 0 | 3 |
 | `tactics_fields` | 0 | 0 | 10 | 2 |
