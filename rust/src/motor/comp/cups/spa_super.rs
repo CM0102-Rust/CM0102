@@ -4,10 +4,10 @@ use super::*;
 /// memory.
 ///
 /// [pt] O começo comum: +0x3e = 2 e a lista de dois (0x944e46 de 0xc em +0xa7); sem memória, a caixa `linha` e None.
-pub(crate) unsafe fn alloc_two_team_list(this: usize, file: usize, row: u32) -> Option<usize> {
-    core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 2);
+pub(crate) unsafe fn alloc_two_team_list(this: Cup, file: usize, row: u32) -> Option<usize> {
+    this.set_team_count(2);
     let l = exe::crt_malloc(0xc);
-    core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
+    this.set_team_table((l as u32) as usize);
     if l == 0 {
         show_error_at(file, row);
         return None;
@@ -50,7 +50,7 @@ pub(crate) unsafe fn set_team_slot(l: usize, v: usize, c: usize, file: usize, ro
 /// e 0); se é o mesmo clube, o primeiro vira o vice da Copa do Rei (sem ele, 0xe0 e 0). Devolve 1.
 pub(crate) unsafe fn select_spanish_super_cup_teams(this: usize) -> (i32, i32) {
     const F: usize = 0xa82a58;
-    let l = match alloc_two_team_list(this, F, 0xc2) {
+    let l = match alloc_two_team_list(Cup(this), F, 0xc2) {
         Some(l) => l,
         None => return (-1, 0),
     };
@@ -87,18 +87,18 @@ pub(crate) unsafe extern "thiscall" fn spa_super_select_teams(this: usize) -> i3
 ///
 /// [pt] Lado a lado para as rotinas que alocam a lista +0xa7 (como `eng_cc_cup_compare_entrant_list`): o +0x3e e o [0xb67a34] a partir do
 /// mesmo estado; a lista da cópia é comparada nos 12 bytes (só com a devolução 1) e liberada.
-pub(crate) unsafe fn compare_team_list(name: &str, this: usize, o: impl FnOnce() -> i32, c: impl FnOnce() -> (i32, i32)) -> i32 {
+pub(crate) unsafe fn compare_team_list(name: &str, this: Cup, o: impl FnOnce() -> i32, c: impl FnOnce() -> (i32, i32)) -> i32 {
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
-    let reg = [(this + cup::TEAM_COUNT, 2usize), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
+    let reg = [(this.addr() + cup::TEAM_COUNT, 2usize), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o();
-        lo.set(read_usize(this + cup::TEAM_TABLE));
+        lo.set(this.team_table());
         r
     }, || {
         let (r, _) = c();
-        lr.set(read_usize(this + cup::TEAM_TABLE));
-        core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, lo.get() as u32);
+        lr.set(this.team_table());
+        this.set_team_table((lo.get() as u32) as usize);
         r
     });
     let (lo, lr) = (lo.get(), lr.get());
@@ -111,7 +111,7 @@ pub(crate) unsafe fn compare_team_list(name: &str, this: usize, o: impl FnOnce()
     if lr != 0 && lr != lo {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {}", name, this, a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {}", name, this.addr(), a, b, igual, list));
     a
 }
 
@@ -132,7 +132,7 @@ pub(crate) unsafe fn compare_team_list(name: &str, this: usize, o: impl FnOnce()
 /// (sem ele, 0x105 e 0). Devolve 1.
 pub(crate) unsafe fn select_japanese_super_cup_teams(this: usize) -> (i32, i32) {
     const F: usize = 0x9eaf4c;
-    let l = match alloc_two_team_list(this, F, 0xc1) {
+    let l = match alloc_two_team_list(Cup(this), F, 0xc1) {
         Some(l) => l,
         None => return (-1, 0),
     };
@@ -182,6 +182,6 @@ pub(crate) unsafe fn spa_super_written_round_bytes(t: usize) -> Vec<u8> {
 /// [pt] { 0x858960 } (thiscall, ret 0x10, spa_super.cpp; a virtual +0x3c da Supercopa da Espanha): `SpaSuper::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x99 sem memória.
 pub(crate) unsafe extern "thiscall" fn spa_super_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    fra_super_create_single_stage_round_table(this, stage, rounds, extra, out, &SPANISH_SUPER_CUP, 0xa82a58, 0x99, "cql_12 tabela da supercopa da espanha", |_| {})
+    fra_super_create_single_stage_round_table(Cup(this), stage, rounds, extra, out, &SPANISH_SUPER_CUP, 0xa82a58, 0x99, "cql_12 tabela da supercopa da espanha", |_| {})
 }
 

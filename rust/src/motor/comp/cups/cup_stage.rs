@@ -29,47 +29,48 @@ use super::*;
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: usize, n: u32, teams: usize, rounds: u32, a5: u32, template: usize, year: u32, stage: u32, b2: u32,
     id: u32, b3: u32, arvore: u32, by_order: u32, a14: u32, seeds: usize) -> usize {
+    let this = Cup(this);
     const F: usize = 0x9b5944;
     exe::new_cup(this);
-    write_usize(this + 4, a5 as usize);
-    write_u16(this + cup::YEAR, year as u16); // cqs7: the stage year
-    write_u8(this + cup::CLUB_SIDES, b2 as u8);
-    write_u8(this + cup::STAGE_INDEX, stage as u8);
-    write_usize(this + cup::CURRENT_STAGE, usize::MAX);
-    write_usize(this + cup::STAGE_COUNT, usize::MAX);
-    write_u8(this + cup::IMPORTANCE_BIAS, b3 as u8);
-    write_usize(this, 0x969468);
-    write_u8(this + 0x43, 1);
-    write_u8(this + cup::RUN_BY_STAGES, 0);
-    write_u8(this + cup::CURRENT_ROUND, 0);
-    write_u8(this + cup::NEXT_DRAW_ROUND, 0);
-    write_u16(this + cup::ROUND_COUNT, rounds as u16);
-    write_u16(this + cup::STAGE_LABEL, id as u16);
-    write_u8(this + cup::SUBSTITUTES_NAMED, *((parent + 0x49) as *const u8));
-    write_u8(this + cup::SUBSTITUTIONS_ALLOWED, *((parent + 0x4a) as *const u8));
-    write_usize(this + cup::PRIZE_FUND, a14 as usize);
+    write_usize(this.addr() + 4, a5 as usize);
+    this.set_year((year as u16) as i16); // cqs7: the stage year
+    this.set_club_sides(b2 as u8);
+    this.set_stage_index(stage as u8);
+    this.set_current_stage(usize::MAX);
+    this.set_stage_count(usize::MAX);
+    this.set_importance_bias(b3 as u8);
+    write_usize(this.addr(), 0x969468);
+    write_u8(this.addr() + 0x43, 1);
+    this.set_run_by_stages(0);
+    this.set_current_round(0);
+    this.set_next_draw_round(0);
+    this.set_round_count((rounds as u16) as i16);
+    this.set_stage_label((id as u16) as i16);
+    this.set_substitutes_named(*((parent + 0x49) as *const u8));
+    this.set_substitutions_allowed(*((parent + 0x4a) as *const u8));
+    this.set_prize_fund((a14 as usize) as i32);
     let size = (rounds as u16 as i16 as i32 * 0x68) as u32;
     let t = exe::crt_malloc(size);
-    write_usize(this + cup::ROUND_TABLE, t);
+    this.set_round_table(t);
     if t == 0 {
         show_error_at(F, 0x48);
-        return this;
+        return this.addr();
     }
     core::ptr::copy_nonoverlapping(template as *const u8, t as *mut u8, size as usize);
-    write_u16(this + cup::TEAM_COUNT, n as u16);
+    this.set_team_count((n as u16) as i16);
     let l = exe::crt_calloc(n as u16 as i16 as i32 as u32, 6);
-    write_usize(this + cup::TEAM_TABLE, l);
+    this.set_team_table(l);
     if l == 0 {
         show_error_at(F, 0x53);
-        return this;
+        return this.addr();
     }
     crate::comparison::branch("cqs_7 cup stage");
-    let m = read_i16(this + cup::TEAM_COUNT) as i32;
+    let m = this.team_count() as i32;
     let mut i = 0i32;
     while i < m {
         let e = i as usize * 6;
-        write_usize(read_usize(this + cup::TEAM_TABLE) + e, read_usize(teams + i as usize * 4)); // cqs7: o time i
-        write_u8(read_usize(this + cup::TEAM_TABLE) + e + 5, 0);
+        write_usize(this.team_table() + e, read_usize(teams + i as usize * 4)); // cqs7: o time i
+        write_u8(this.team_table() + e + 5, 0);
         let s = if seeds != 0 {
             *((seeds + i as usize) as *const u8) // cqs7: the vector seed
         } else if by_order != 0 {
@@ -77,15 +78,15 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
         } else {
             0
         };
-        write_u8(read_usize(this + cup::TEAM_TABLE) + e + 4, s);
+        write_u8(this.team_table() + e + 4, s);
         i += 1;
     }
     let (map, linha) = if arvore != 0 { (0x5241e0usize, 0x62) } else { (0x518790usize, 0x6a) };
     let map: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(map);
-    if map(this) < 0 {
+    if map(this.addr()) < 0 {
         show_error_at(F, linha);
     }
-    this
+    this.addr()
 }
 
 /// Destroys a knockout stage: frees the team list, the round table and each round's fixtures, then destroys the base.
@@ -101,23 +102,24 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
 /// confrontos das +0x3c rodadas e o próprio vetor liberados (0x9452ca, cdecl; os ponteiros ficam); por fim a base
 /// (Cup::~Cup 0x518690, mov ecx -> thiscall, ret 0), cujo eax ela devolve.
 pub(crate) unsafe extern "thiscall" fn destroy_cup_stage(this: usize) -> usize {
-    write_usize(this, 0x969468);
-    if read_usize(this + cup::TEAM_TABLE) != 0 {
-        exe::crt_free(read_usize(this + cup::TEAM_TABLE));
+    let this = Cup(this);
+    write_usize(this.addr(), 0x969468);
+    if this.team_table() != 0 {
+        exe::crt_free(this.team_table());
     }
-    if read_usize(this + cup::ROUND_TABLE) != 0 {
-        exe::crt_free(read_usize(this + cup::ROUND_TABLE));
+    if this.round_table() != 0 {
+        exe::crt_free(this.round_table());
     }
-    if read_usize(this + cup::TIE_TABLES) != 0 {
+    if this.tie_tables() != 0 {
         let mut i = 0i32;
-        while i < read_i16(this + cup::ROUND_COUNT) as i32 {
-            let p = read_usize(read_usize(this + cup::TIE_TABLES) + i as usize * 4);
+        while i < this.round_count() as i32 {
+            let p = read_usize(this.tie_tables() + i as usize * 4);
             if p != 0 {
                 exe::crt_free(p);
             }
             i += 1;
         }
-        exe::crt_free(read_usize(this + cup::TIE_TABLES));
+        exe::crt_free(this.tie_tables());
     }
     crate::comparison::branch("cqs_7 end of cup stage");
     exe::drop_cup(this)

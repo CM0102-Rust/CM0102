@@ -36,7 +36,7 @@ pub(crate) enum BraChampCupStagePlan {
 /// grupos: é_liga (se pedido) = 1, rodadas, extra; a tabela de 0x41 bytes por rodada (0x944e46; sem memória, a caixa e
 /// 0) com as datas, o ano +0x40 em 16 bits. No mata-mata: é_liga = 0, rodadas, extra = 0; a tabela de 0x68 bytes por
 /// rodada (sem memória, a caixa e 0), as rodadas pela `eng_cc_cup_write_cup_round` com o ano +0x40 com sinal e as palavras a mais.
-pub(crate) unsafe fn build_stage_schedule(this: usize, f: BraChampCupStagePlan, rounds: *mut i16, extra: *mut i16, league: *mut i32, file: usize) -> usize {
+pub(crate) unsafe fn build_stage_schedule(this: Cup, f: BraChampCupStagePlan, rounds: *mut i16, extra: *mut i16, league: *mut i32, file: usize) -> usize {
     match f {
         BraChampCupStagePlan::Nada => 0,
         BraChampCupStagePlan::Grupos(grupos, id, linha, nome) => {
@@ -53,7 +53,7 @@ pub(crate) unsafe fn build_stage_schedule(this: usize, f: BraChampCupStagePlan, 
             crate::comparison::branch(nome);
             // the year goes with garbage in the high bytes in the original (the previous register with the word +0x40 over it); the
             // 0x68a160 only uses the low 16 bits: the copy passes the clean year
-            let year = core::ptr::read_unaligned((this + cup::YEAR) as *const u16) as u32;
+            let year = (this.year() as u16) as u32;
             for (r, &(dia, mes, semana, codigo)) in grupos.iter().enumerate() {
                 exe::league_round_set_date(t, r as i32, dia as i32, mes as i32, 0, semana as i32, codigo as i32, year, 0);
                 exe::league_round_set_match_slot(t, r as i32, 0, -1, -1, -1, 0);
@@ -72,7 +72,7 @@ pub(crate) unsafe fn build_stage_schedule(this: usize, f: BraChampCupStagePlan, 
                 return 0;
             }
             crate::comparison::branch(nome);
-            let year = core::ptr::read_unaligned((this + cup::YEAR) as *const i16) as i32 as u32;
+            let year = this.year() as i32 as u32;
             for (i, r) in mata.iter().enumerate() {
                 eng_cc_cup_write_cup_round(t, i as u32, r, year);
             }
@@ -180,7 +180,7 @@ pub(crate) fn champions_cup_stage(stage: u32) -> BraChampCupStagePlan {
 /// [pt] { 0x425c10 } (thiscall, ret 0x10, bra_champ_cup.cpp; a virtual +0x3c da Copa dos Campeões): `BraChampCup::
 /// create_schedule(fase, &rodadas, &extra, &é_liga)`: a preliminar, os grupos ou o mata-mata (`champions_cup_stage`).
 pub(crate) unsafe extern "thiscall" fn bra_champ_cup_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    build_stage_schedule(this, champions_cup_stage(stage), rounds, extra, league, 0x98a1e8)
+    build_stage_schedule(Cup(this), champions_cup_stage(stage), rounds, extra, league, 0x98a1e8)
 }
 
 /// A Merconorte, grupos (fases abaixo de 3): seis rodadas às terças de 15 em 15 dias, de 9 de setembro a 18 de novembro.

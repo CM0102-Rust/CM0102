@@ -134,8 +134,8 @@ pub(crate) unsafe fn injure_with(m: Engine, kind: u32, chance: u32, p: MatchPlay
         p.set_injury_pending((1) as i8);
         p.set_injury_forces_off((1) as i8);
     } else {
-        let person = p.player();
-        let v = (read_i8(person + player_sheet::INJURY_PRONENESS) as i32 * 25) as f64 + read_f64(rdata::F64_7100);
+        let person = PlayerSheet(p.player());
+        let v = (person.injury_proneness() as i32 * 25) as f64 + read_f64(rdata::F64_7100);
         if v > *folego as f64 {
             crate::comparison::branch("injury to 5");
             write_2b(p.addr(), 5);
@@ -1112,8 +1112,8 @@ pub(crate) unsafe extern "thiscall" fn injury_post_injury_news(_this: usize, p: 
     exe::write_match_record_to_news(l + 1, nw, &mut mark);
     let news = read_usize(G_NEWS);
     if read_i16(l + injury_entry::DAYS_OUT) > 100 {
-        let f = p.player();
-        if f != 0 && read_i16(f + player_sheet::WORLD_REPUTATION) > 0x1f40 {
+        let f = PlayerSheet(p.player());
+        if !f.is_null() && f.world_reputation() > 0x1f40 {
             exe::news_send_to_all_managers(read_usize(G_NEWS), nw);
         } else {
             let mut i: i8 = 0;
@@ -2244,10 +2244,10 @@ pub(crate) unsafe extern "thiscall" fn init_squad_fitness(this: usize) {
             if p.is_null() || read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) {
                 continue;
             }
-            let player = p.player();
-            if player != 0 {
+            let player = PlayerSheet(p.player());
+            if !player.is_null() {
                 crate::comparison::branch("cpp_9 initial form");
-                let v = days - (read_u8(player + player_sheet::NATURAL_FITNESS) as i8 as i32) / 2 - ((p.professionalism() as u8) as i8 as i32) / 4;
+                let v = days - ((player.natural_fitness() as u8) as i8 as i32) / 2 - ((p.professionalism() as u8) as i8 as i32) / 4;
                 let v = v.clamp(1, 0x28);
                 let r = read_usize(this).wrapping_add((read_i32(p.addr()) as usize).wrapping_mul(31));
                 core::ptr::write_unaligned((r + 8) as *mut u16, (10000 - v * 75) as u16); // a forma inicial
@@ -2421,8 +2421,8 @@ pub(crate) unsafe fn plan_recurring_injury(this: usize, record: usize, injury: *
         if read_u8(r + physical_record::RECURRING_TYPE) != 0xff {
             let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add(i as usize * staff::SIZE));
             let v = friendly_random(0x65) as u8;
-            let player = p.player();
-            let rating = if player == 0 { 0x64 } else { v.wrapping_add(read_u8(r + physical_record::RECURRENCE_GRADE).wrapping_mul(0xfb)).wrapping_sub(read_u8(player + player_sheet::INJURY_PRONENESS)) };
+            let player = PlayerSheet(p.player());
+            let rating = if player.is_null() { 0x64 } else { v.wrapping_add(read_u8(r + physical_record::RECURRENCE_GRADE).wrapping_mul(0xfb)).wrapping_sub((player.injury_proneness() as u8)) };
             if rating as i8 > melhor {
                 (melhor, escolhido, pessoa) = (rating as i8, r, p.addr());
             }
@@ -2575,9 +2575,9 @@ pub(crate) unsafe extern "thiscall" fn recover_injury(t: usize, p: *const i32, m
         core::ptr::write_unaligned(e, (x as i32).wrapping_add(v as i32) as i16);
         return;
     }
-    let sheet = core::ptr::read_unaligned((p as usize + 0x61) as *const usize);
+    let sheet = PlayerSheet(core::ptr::read_unaligned((p as usize + 0x61) as *const usize));
     let b = |a: usize| *(a as *const i8) as i16;
-    let sum = b(sheet + player_sheet::WORK_RATE).wrapping_add(b(sheet + player_sheet::STAMINA)).wrapping_add(b(p as usize + 0x5b));
+    let sum = b(sheet.addr() + player_sheet::WORK_RATE).wrapping_add(b(sheet.addr() + player_sheet::STAMINA)).wrapping_add(b(p as usize + 0x5b));
     if (v as i32) < 0x4b0 - sum as i32 {
         core::ptr::write_unaligned(e, v.wrapping_add(ritmo));
     } else if v < 0x4e2 {
@@ -2708,8 +2708,8 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
     if id >= read_i32(G_STAFF_COUNT) {
         return;
     }
-    let sheet = person.player();
-    if sheet == 0 {
+    let sheet = PlayerSheet(person.player());
+    if sheet.is_null() {
         return;
     }
     let rec = read_usize(this).wrapping_add((id as u32).wrapping_mul(31) as usize);
@@ -2822,7 +2822,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
     }
     // a forma
     let f = read_i16(rec + 8) as i32;
-    let natural = read_i8(sheet + player_sheet::NATURAL_FITNESS);
+    let natural = sheet.natural_fitness();
     let mut v = read_i8(rec + physical_record::PRONENESS).wrapping_sub(natural);
     if v < 0 {
         v = 0;
@@ -2945,8 +2945,8 @@ pub(crate) unsafe extern "thiscall" fn daily_wear(t: usize, id: i32) {
         let r = exe::utils_random(0xd) as i16;
         core::ptr::write_unaligned(e, core::ptr::read_unaligned(e).wrapping_sub(r));
     }
-    let sheet = p.player();
-    if sheet != 0 && *((sheet + player_sheet::GOALKEEPER) as *const u8) == 0x14 && core::ptr::read_unaligned(e) >= 0x41a {
+    let sheet = PlayerSheet(p.player());
+    if !sheet.is_null() && (sheet.goalkeeper() as u8) == 0x14 && core::ptr::read_unaligned(e) >= 0x41a {
         core::ptr::write_unaligned(e, 0x41a);
     }
 }

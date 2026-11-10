@@ -15,22 +15,23 @@ pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_create_round_table(
 /// [pt] Lado a lado: o +0x3e e o [0xb67a34] a partir do mesmo estado; a original deixa a lista dela em +0xa7, a cópia faz a
 /// sua, comparada nos inscritos (com a devolução 1) e liberada.
 pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_collect_entrants(this: usize) -> i32 {
+    let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_INTERTOTO_CUP_COLLECT_ENTRANTS);
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
     let nr = core::cell::Cell::new(0i32);
-    let reg = [(this + cup::TEAM_COUNT, 2usize), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
-    let before = read_usize(this + cup::TEAM_TABLE);
+    let reg = [(this.addr() + cup::TEAM_COUNT, 2usize), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
+    let before = this.team_table();
     let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
-        let r = o(this);
-        lo.set(read_usize(this + cup::TEAM_TABLE));
-        core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, before as u32);
+        let r = o(this.addr());
+        lo.set(this.team_table());
+        this.set_team_table((before as u32) as usize);
         r
     }, || {
         let (r, n) = collect_intertoto_entrants(this);
-        lr.set(read_usize(this + cup::TEAM_TABLE));
+        lr.set(this.team_table());
         nr.set(n);
-        core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, lo.get() as u32);
+        this.set_team_table((lo.get() as u32) as usize);
         r
     });
     let (lo, lr) = (lo.get(), lr.get());
@@ -43,7 +44,7 @@ pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_collect_entrants(th
     if lr != 0 && lr != lo && lr != before {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("intertoto_cup_collect_entrants({:#x}) devolveu {} x {} memória {} lista {}", this, a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("intertoto_cup_collect_entrants({:#x}) devolveu {} x {} memória {} lista {}", this.addr(), a, b, igual, list));
     a
 }
 
@@ -55,7 +56,7 @@ pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_collect_club_list(t
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16>(IDX_INTERTOTO_CUP_COLLECT_CLUB_LIST);
     let mut s2 = 0usize;
     let reg = [(0xb67a34usize, 4usize)];
-    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, out, ativos), || collect_club_list(this, &mut s2, ativos));
+    let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || o(this, out, ativos), || collect_club_list(Cup(this), &mut s2, ativos));
     let lo = *out;
     let list = if lo != 0 && s2 != 0 {
         core::slice::from_raw_parts(lo as *const u8, a as usize * 4) == core::slice::from_raw_parts(s2 as *const u8, b as usize * 4)
@@ -72,23 +73,23 @@ pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_collect_club_list(t
 /// Comparer for `intertoto_cup_update_for_date`.
 pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_INTERTOTO_CUP_UPDATE_FOR_DATE);
-    let uefa = uefa_cup_object();
-    if uefa == 0 || read_usize(this + intertoto_cup::WINNERS_SENT_TO_UEFA) != 0 {
+    let uefa = Cup(uefa_cup_object());
+    if uefa.is_null() || read_usize(this + intertoto_cup::WINNERS_SENT_TO_UEFA) != 0 {
         return o(this, today, stage);
     }
     let (v, k) = intertoto_winners_for_uefa(this, uefa);
-    let n36 = read_i16(uefa + cup::ENTRANT_COUNT);
+    let n36 = uefa.entrant_count();
     let r = o(this, today, stage);
     let passed = read_usize(this + intertoto_cup::WINNERS_SENT_TO_UEFA) == 1;
     let predicted = if passed { n36.wrapping_add(k as i16) } else { n36 };
-    let mut same = read_i16(uefa + cup::ENTRANT_COUNT) == predicted;
+    let mut same = uefa.entrant_count() == predicted;
     if passed && same {
         for (j, &c) in v.iter().enumerate().take(k) {
-            let l = read_usize(uefa + cup::ENTRANT_BOOK).wrapping_add(((n36 as isize) + j as isize) as usize * 6);
+            let l = uefa.entrant_book().wrapping_add(((n36 as isize) + j as isize) as usize * 6);
             same &= read_usize(l) == c && read_u8(l + 4) == 4;
         }
     }
-    SCOREBOARD.record(same, || format!("intertoto_cup_update_for_date({:#x}) passou={} livro {} -> {} previsto {} vencedores {:x?}", this, passed, n36, read_i16(uefa + cup::ENTRANT_COUNT), predicted, &v[..k]));
+    SCOREBOARD.record(same, || format!("intertoto_cup_update_for_date({:#x}) passou={} livro {} -> {} previsto {} vencedores {:x?}", this, passed, n36, uefa.entrant_count(), predicted, &v[..k]));
     r
 }
 

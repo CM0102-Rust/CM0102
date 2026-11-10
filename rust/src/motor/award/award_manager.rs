@@ -27,31 +27,31 @@ pub(crate) unsafe extern "C" fn award_raise_winner_reputation(person: usize, clu
     let club = Club(club);
     let nation = nation as u16 as i16;
     let world = world as u16 as i16;
-    let p = person.player();
-    if p != 0 && player != 0 {
+    let p = PlayerSheet(person.player());
+    if !p.is_null() && player != 0 {
         crate::comparison::branch("cpw_6 player award");
-        add_to_word(p + player_sheet::WORLD_REPUTATION, ftol(world as i32 as f64 * read_f64(rdata::F64_0_05))); // cpw6: the worldwide increase;
-        if read_i16(p + player_sheet::WORLD_REPUTATION) > 10000 {
-            write_i16(p + player_sheet::WORLD_REPUTATION, 10000);
+        add_to_word(p.addr() + player_sheet::WORLD_REPUTATION, ftol(world as i32 as f64 * read_f64(rdata::F64_0_05))); // cpw6: the worldwide increase;
+        if p.world_reputation() > 10000 {
+            p.set_world_reputation(10000);
         }
-        if read_i16(p + player_sheet::WORLD_REPUTATION) <= world { // cpw6: o piso mundial
-            write_i16(p + player_sheet::WORLD_REPUTATION, world);
+        if p.world_reputation() <= world { // cpw6: o piso mundial
+            p.set_world_reputation(world);
         }
         if !club.is_null() && club.nation() == person.nation() { // cpw6: the club of the player’s nation
-            add_to_word(p + player_sheet::HOME_REPUTATION, ftol(nation as i32 as f64 * read_f64(rdata::F64_0_1)));
-            clamp_word(p + player_sheet::HOME_REPUTATION, nation);
+            add_to_word(p.addr() + player_sheet::HOME_REPUTATION, ftol(nation as i32 as f64 * read_f64(rdata::F64_0_1)));
+            clamp_word(p.addr() + player_sheet::HOME_REPUTATION, nation);
         } else {
-            add_to_word(p + player_sheet::HOME_REPUTATION, ftol((nation as i32 + world as i32) as f64 * read_f64(rdata::F64_0_025)));
-            if read_i16(p + player_sheet::HOME_REPUTATION) > 10000 {
-                write_i16(p + player_sheet::HOME_REPUTATION, 10000);
+            add_to_word(p.addr() + player_sheet::HOME_REPUTATION, ftol((nation as i32 + world as i32) as f64 * read_f64(rdata::F64_0_025)));
+            if p.home_reputation() > 10000 {
+                p.set_home_reputation(10000);
             }
             let floor = nation as i32 / 2 + world as i32 / 2;
-            if (read_i16(p + player_sheet::HOME_REPUTATION) as i32) <= floor {
-                write_i16(p + player_sheet::HOME_REPUTATION, floor as i16);
+            if (p.home_reputation() as i32) <= floor {
+                p.set_home_reputation(floor as i16);
             }
         }
-        add_to_word(p + player_sheet::CURRENT_REPUTATION, ftol(nation as i32 as f64 * read_f64(rdata::F64_0_1)));
-        clamp_word(p + player_sheet::CURRENT_REPUTATION, nation);
+        add_to_word(p.addr() + player_sheet::CURRENT_REPUTATION, ftol(nation as i32 as f64 * read_f64(rdata::F64_0_1)));
+        clamp_word(p.addr() + player_sheet::CURRENT_REPUTATION, nation);
         let lists = read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856);
         if lists != 0 && !MONTH_AWARD_DRY_RUN {
             exe::shortlist_manager_add_player_to_club_shortlists(lists, person, 1);

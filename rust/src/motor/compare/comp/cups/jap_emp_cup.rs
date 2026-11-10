@@ -6,7 +6,7 @@ use super::*;
 /// Comparer for `jap_emp_cup_start_new_season`.
 pub(crate) unsafe extern "thiscall" fn compare_jap_emp_cup_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_JAP_EMP_CUP_START_NEW_SEASON);
-    compare_cup_new_season("jap_emp_cup_start_new_season", this, || o(this))
+    compare_cup_new_season("jap_emp_cup_start_new_season", Cup(this), || o(this))
 }
 
 /// Comparer for `jap_emp_cup_create_round_table`.
@@ -19,5 +19,5 @@ pub(crate) unsafe extern "thiscall" fn compare_jap_emp_cup_create_round_table(th
 /// Comparer for `jap_emp_cup_collect_entrants`.
 pub(crate) unsafe extern "thiscall" fn compare_jap_emp_cup_collect_entrants(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_JAP_EMP_CUP_COLLECT_ENTRANTS);
-    jap_j_cup_compare_entrant_list("jap_emp_cup_collect_entrants", this, || o(this), || collect_emperors_cup_entrants(this))
+    jap_j_cup_compare_entrant_list("jap_emp_cup_collect_entrants", Cup(this), || o(this), || collect_emperors_cup_entrants(Cup(this)))
 }

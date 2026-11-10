@@ -3,7 +3,7 @@ MUTACOES = [
     ('cqe1_aceita_menos', 'if v as f64 * read_f64(rdata::F64_0_85) < request_f && troca_recusada == 0 {', 'if v as f64 * 1.2 < request_f && troca_recusada == 0 {', 'cqe_1 accepts'),
     ('cqe1_sem_contraproposta', 'if v as f64 * read_f64(rdata::F64_0_75) < request_f && kind != 1 && kind != 2 && dry_run == 0 { // cqe1: a contraproposta', 'if v as f64 * read_f64(rdata::F64_0_75) < request_f && kind != 1 && kind != 2 && dry_run == 0 && false { // mutacao: sem contraproposta', 'cqe_1 counter-offer'),
     ('cqe1_preco_sempre_o_piso', 'let price = if k > floor { // cqe1: the price by value k', 'let price = if k > floor && false { // mutacao: sempre o piso', 'cqe_1 price by k'),
-    ('cqe2_preco_pela_metade', 'write_usize(new + offer::FEE, value as u32 as usize); // cqe2: the option price', 'write_usize(new + offer::FEE, (value / 2) as u32 as usize); // mutacao: a metade', 'cqe_2 option built'),
+    ('cqe2_preco_pela_metade', 'new.set_fee(value as u32 as usize); // cqe2: the option price', 'new.set_fee((value / 2) as u32 as usize); // mutacao: a metade', 'cqe_2 option built'),
     ('cqe2_lista_do_vendedor_invertida', 'if read_u8(reg + club_shortlist::ACTIVE) == 0 { // cqe2: the seller without an active scouting list', 'if read_u8(reg + club_shortlist::ACTIVE) != 0 { // mutacao: invertido', 'cqe_2 option built'),
     ('cqe2_so_o_alvo', 'if id <= -1 { // cqe2: the slot without a target', 'if true { // mutacao: so o alvo', 'cqe_2 slot with target'),
     ('cqe3_lance_mais_dificil', 'let r1 = exe::utils_random((club.reputation() as i32).wrapping_mul(2).wrapping_add(1000)); // cqe3: the bid random draw', 'let r1 = exe::utils_random((read_i16(club.addr() + 0x80) as i32).wrapping_mul(2).wrapping_add(2000)); // mutacao: + 2000', 'cqe_3 bid draw'),

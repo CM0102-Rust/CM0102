@@ -8,7 +8,7 @@ use super::*;
 /// a virada (`start_new_cup_season`) com os inscritos de JapEmpCup::collect_entrants (0x6624f0) e as caixas do jap_emp_cup.cpp nas
 /// linhas 0x217, 0x21e e 0x225.
 pub(crate) unsafe extern "thiscall" fn jap_emp_cup_start_new_season(this: usize) -> u32 {
-    start_new_cup_season(this, 0x6624f0, 0x9eab90, [0x217, 0x21e, 0x225], 1, "cqr_5 virada da copa do imperador") // cqr5: the Emperor’s Cup
+    start_new_cup_season(Cup(this), 0x6624f0, 0x9eab90, [0x217, 0x21e, 0x225], 1, "cqr_5 virada da copa do imperador") // cqr5: the Emperor’s Cup
 }
 
 /// rule: the Emperor's Cup has 7 single-leg rounds with a seeded draw (+0xd = 0x83): 1st round (64 teams) drawn 1/11,
@@ -20,7 +20,7 @@ pub(crate) unsafe extern "thiscall" fn jap_emp_cup_start_new_season(this: usize)
 /// [pt] { 0x661ff0 } (thiscall, ret 0x10, jap_emp_cup.cpp; a virtual +0x3c da Copa do Imperador): `JapEmpCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa0 sem memória.
 pub(crate) unsafe extern "thiscall" fn jap_emp_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    build_single_stage_cup_rounds(this, stage, rounds, extra, out, &EMPERORS_CUP_ROUNDS, 0x9eab90, 0xa0, "cqn_11 tabela da copa do imperador")
+    build_single_stage_cup_rounds(Cup(this), stage, rounds, extra, out, &EMPERORS_CUP_ROUNDS, 0x9eab90, 0xa0, "cqn_11 tabela da copa do imperador")
 }
 
 /// rule: the Emperor's Cup takes 80 clubs: 47 from the regional divisions ([0x9cf678], sorted by reputation and
@@ -36,5 +36,5 @@ pub(crate) unsafe extern "thiscall" fn jap_emp_cup_create_round_table(this: usiz
 /// = a posição da temporada anterior; as 16 últimas inscrições vão ao qsort pela classe; faltando clubes nas divisões
 /// de baixo, a caixa de erro
 pub(crate) unsafe extern "thiscall" fn jap_emp_cup_collect_entrants(this: usize) -> i32 {
-    collect_emperors_cup_entrants(this).0
+    collect_emperors_cup_entrants(Cup(this)).0
 }

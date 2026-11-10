@@ -608,8 +608,8 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_pending_offers_for_staff(t
 /// [pt] Comparador: a oferta que a cópia marcaria antes; a original marca e agenda (a 0x4cd230 pode acrescentar na lista
 /// das decisões); confere a marca e o valor.
 pub(crate) unsafe extern "thiscall" fn compare_schedule_decision_for_transfer(this: usize, offer: usize) -> u32 {
-    let target = offer_to_schedule(read_usize(this + contract_manager_fields::CONTRACT_OFFERS), offer);
-    let n = ability_above_club_reputation(offer);
+    let target = offer_to_schedule(read_usize(this + contract_manager_fields::CONTRACT_OFFERS), Offer(offer));
+    let n = ability_above_club_reputation(Offer(offer));
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SCHEDULE_DECISION_FOR_TRANSFER)(this, offer);
     let marked = target.map_or(true, |e| *((e + contract_offer::DECISION_VALID) as *const u8) == 1);
     SCOREBOARD.record(marked && r == n, || format!("schedule_decision_for_transfer({:x}) alvo {:x?} marcada={} original={} rust={}", offer, target, marked, r, n));

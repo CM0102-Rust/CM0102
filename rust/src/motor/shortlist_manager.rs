@@ -270,17 +270,17 @@ pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) 
             }
             write_u8(slot(0x24), read_u8(slot(0x24)) & 0xdf);
             let mut offer = [0u8; 0x44];
-            let po = offer.as_mut_ptr() as usize;
+            let po = Offer(offer.as_mut_ptr() as usize);
             exe::new_transfer_offer(po);
             let mut terms: usize = 0;
             if exe::transfer_offer_build_bid(po, p, club, slot(0), read_usize(slot(7)) as u32, 0, &mut terms) == 0 {
                 ((exe::shortlist_manager_update_staff_status(this, p, club, 1, (read_u8(slot(0)) != 0xb) as u32) as usize) as u8);
             } else {
-                exe::transfer_manager_add_transfer_offer(gm, (po) as usize as *mut u8, (0) as u32 as *mut u8);
+                exe::transfer_manager_add_transfer_offer(gm, (po.addr()) as usize as *mut u8, (0) as u32 as *mut u8);
                 if terms != 0 {
                     // simplification: the job goes with the high bytes of the slot vector pointer (as in the original)
                     let job = (read_usize(reg) as u32 & 0xffff_ff00) | read_u8(slot(0)) as u32;
-                    exe::contract_manager_add_contract_offer(read_usize(G_CONTRACT_MANAGER), (terms) as usize as *mut u8, (read_usize(po + offer::SLOT_INDEX) as i32) as i32 as usize, (read_usize(po + offer::SERIAL) as u32) as u32 as usize, job, 0, 1, 0);
+                    exe::contract_manager_add_contract_offer(read_usize(G_CONTRACT_MANAGER), (terms) as usize as *mut u8, (po.slot_index() as i32) as i32 as usize, (po.serial() as u32) as u32 as usize, job, 0, 1, 0);
                     let c = contract_of_staff_cached(p);
                     let seller = if c == 0 { 0 } else { transfer_manager_club_by_id(read_usize(c + contract::CLUB)) };
                     if seller != 0 && exe::human_manager_is_human_club(seller, 0, 1, 0, 0) == 0
@@ -312,7 +312,7 @@ pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) 
                     }
                     exe::crt_operator_delete(terms);
                 }
-                write_usize(slot(0x17), read_usize(po + offer::SLOT_INDEX));
+                write_usize(slot(0x17), po.slot_index());
                 if player {
                     count = count.wrapping_add(1);
                 }
@@ -402,8 +402,8 @@ pub(crate) fn max_f64(x: f64, y: f64) -> f64 {
 /// Truncated average of the three reputations of a player record (+9, +0xb, +0xd).
 ///
 /// [pt] A média das três reputações da ficha do jogador (+9, +0xb, +0xd), truncada.
-pub(crate) unsafe fn average_reputation3(f: usize) -> i32 {
-    (read_i16(f + player_sheet::WORLD_REPUTATION) as i32 + read_i16(f + player_sheet::CURRENT_REPUTATION) as i32 + read_i16(f + player_sheet::HOME_REPUTATION) as i32) / 3
+pub(crate) unsafe fn average_reputation3(f: PlayerSheet) -> i32 {
+    (f.world_reputation() as i32 + f.current_reputation() as i32 + f.home_reputation() as i32) / 3
 }
 
 /// Club reputation adjusted by stadium city attraction.
@@ -651,11 +651,11 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
     }
     let c = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p1, d4);
     let a0: u32 = if c != 0 { read_usize(c + 0x45) as u32 } else { 0 };
-    let r61 = p1.player();
+    let r61 = PlayerSheet(p1.player());
     // the club itself with a contract: stays (3,5) when the contract does not end soon and his reputation does not exceed the club’s
     if !p2.is_null() && p2.addr() == d4 && c != 0 {
         let days = exe::date_days_since(c + contract::CONTRACT_EXPIRES, read_usize(G_CURRENT_DATE) as u32, read_usize(G_CURRENT_DATE_LEAP) as u32);
-        let r1 = read_i16(r61 + player_sheet::CURRENT_REPUTATION) as i32;
+        let r1 = r61.current_reputation() as i32;
         let mut s = ftol((p2.reputation() as i32 - r1) as f64 * k(0x968968)) as i16;
         if a0 & 0x10 != 0 {
             s = ftol(s as f64 * k(0x968968)) as i16;
@@ -706,10 +706,10 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         }
     }
     // the reputation of both clubs in a loan request
-    if p4b && r61 != 0 && read_i16(r61 + player_sheet::WORLD_REPUTATION) < 0x128e && !p2.is_null() && d4 != 0 && p2.addr() != d4 && a0 & 0x10 != 0 {
+    if p4b && !r61.is_null() && r61.world_reputation() < 0x128e && !p2.is_null() && d4 != 0 && p2.addr() != d4 && a0 & 0x10 != 0 {
         let ax = p2.reputation();
         let same = p2.nation().addr() == read_usize(d4 + club::NATION);
-        let rb = read_i16(r61 + player_sheet::CURRENT_REPUTATION);
+        let rb = r61.current_reputation();
         if ax > read_i16(d4 + club::REPUTATION) && (same || ax > 0x1676) {
             if rb <= 0x1c52 && exe::staff_is_loan_listed(p1, 0) != 0 {
                 f8 *= k(0x968940);
@@ -1078,7 +1078,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
                     break 'n Segue::Padrao;
                 }
                 let mut g = f8;
-                if exe::staff_is_loan_listed(p1, 0) != 0 && age < 0x18 && r61 != 0 && read_i16(r61 + player_sheet::CURRENT_REPUTATION) < 0x109a && p1.professionalism() > 0xf
+                if exe::staff_is_loan_listed(p1, 0) != 0 && age < 0x18 && !r61.is_null() && r61.current_reputation() < 0x109a && p1.professionalism() > 0xf
                     && p1.pressure() > 0xa && c != 0 && !matches!(ea, 1 | 2 | 3 | 4)
                 {
                     g *= k(0x968e18);
@@ -1300,7 +1300,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
             aev = 3;
         }
         ae = aev.wrapping_mul(aev);
-        signed_byte_at = ftol(average_reputation3(p1.player()) as i16 as f64 * k(0x968940) - k(0x9688e8)) as i16;
+        signed_byte_at = ftol(average_reputation3(PlayerSheet(p1.player())) as i16 as f64 * k(0x968940) - k(0x9688e8)) as i16;
     } else {
         let n4 = Nation(read_usize(d4 + club::NATION));
         let mut aev = if !n4.is_null() { (n4.state_of_development() as i8) } else { 3 };
@@ -1362,8 +1362,8 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         let comp2 = p2.division().addr();
         if comp2 == 0 || read_usize(comp2) == read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION) {
             f8 *= k(0x967880);
-        } else if p1.club_job() == p2 && r61 != 0 && read_i8(r61 + player_sheet::PLAYER_MORALE) > 0xa {
-            f8 = read_i8(r61 + player_sheet::PLAYER_MORALE) as i32 as f64 * f8 * k(0x967880);
+        } else if p1.club_job() == p2 && !r61.is_null() && r61.player_morale() > 0xa {
+            f8 = r61.player_morale() as i32 as f64 * f8 * k(0x967880);
         }
         let mut a8 = (p2.reputation() as i32 - average_reputation3(r61)) as f64 * k(0x96a6b8) + k(0x967890);
         let e8s = e8 as i16 as i32;
@@ -1468,7 +1468,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
             }
         }
         if p4b {
-            if read_i16(r61 + player_sheet::CURRENT_REPUTATION) > signed_byte_at && sbs > e8s {
+            if r61.current_reputation() > signed_byte_at && sbs > e8s {
                 a8 = ((e8s - sbs) as f64 * k(0x96a600) + k(0x967890)) * a8;
                 if a8 < k(0x967880) {
                     a8 = f64::from_bits(0x3fb999999999999a);
@@ -3053,11 +3053,11 @@ pub(crate) unsafe fn shortlist_manager_get_contract_and_store(person: usize) -> 
 /// o do jogador (+0x39), tenta a 0x842e10 e conta cada clube que o pôs na lista.
 pub(crate) unsafe extern "thiscall" fn add_player_to_club_shortlists(this: usize, player: usize, force: u32) {
     let player = Staff(player);
-    let sheets = player.player();
-    if sheets == 0 {
+    let sheets = PlayerSheet(player.player());
+    if sheets.is_null() {
         return;
     }
-    if force == 0 && core::ptr::read_unaligned((sheets + player_sheet::CURRENT_REPUTATION) as *const i16) < 0x157c {
+    if force == 0 && sheets.current_reputation() < 0x157c {
         return;
     }
     let record = |j: usize| read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(j).wrapping_mul(0x4f));

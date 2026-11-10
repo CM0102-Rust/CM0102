@@ -1036,7 +1036,7 @@ pub(crate) unsafe fn select_serie_c_cup_entrants(this: usize) -> (i32, i32) {
 /// e 0). Classe e situação 0 nos dois; devolve 1.
 pub(crate) unsafe fn init_supercoppa_teams(this: usize) -> (i32, i32) {
     const F: usize = 0x9ea934;
-    let l = match alloc_two_team_list(this, F, 0xc2) {
+    let l = match alloc_two_team_list(Cup(this), F, 0xc2) {
         Some(l) => l,
         None => return (-1, 0),
     };

@@ -13,5 +13,5 @@ pub(crate) unsafe extern "thiscall" fn compare_ita_c1_super_create_round_table(t
 /// Comparer for `ita_c1_super_init_team_list`.
 pub(crate) unsafe extern "thiscall" fn compare_ita_c1_super_init_team_list(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_ITA_C1_SUPER_INIT_TEAM_LIST);
-    compare_team_list("ita_c1_super_init_team_list", this, || o(this), || init_c1_super_cup_list(this))
+    compare_team_list("ita_c1_super_init_team_list", Cup(this), || o(this), || init_c1_super_cup_list(this))
 }

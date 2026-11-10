@@ -62,13 +62,13 @@ pub(crate) unsafe extern "thiscall" fn compare_create_grand_final_stage(this: us
     let series = read_usize(this.stages());
     let (a, b) = (aus_nsl_table_row_club(League(series), 0), aus_nsl_table_row_club(League(series), 1));
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_GRAND_FINAL_STAGE)(this.addr());
-    let stage = read_usize(this.stages() + 4);
-    let same = stage != 0 && {
-        let l = read_usize(stage + cup::TEAM_TABLE);
+    let stage = Cup(read_usize(this.stages() + 4));
+    let same = !stage.is_null() && {
+        let l = stage.team_table();
         let (x, y) = (read_usize(l), read_usize(l + 6));
-        read_i16(stage + cup::TEAM_COUNT) == 2 && read_usize(stage + 4) == this.competition().addr() && ((x, y) == (a, b) || (x, y) == (b, a))
+        stage.team_count() == 2 && read_usize(stage.addr() + 4) == this.competition().addr() && ((x, y) == (a, b) || (x, y) == (b, a))
     };
-    SCOREBOARD.record(same, || format!("create_grand_final_stage({:#x}) finalistas={:#x},{:#x} fase={:#x}", this.addr(), a, b, stage));
+    SCOREBOARD.record(same, || format!("create_grand_final_stage({:#x}) finalistas={:#x},{:#x} fase={:#x}", this.addr(), a, b, stage.addr()));
 }
 
 /// Comparer for `aus_nsl_set_up_rules`.

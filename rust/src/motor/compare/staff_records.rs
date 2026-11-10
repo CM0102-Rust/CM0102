@@ -224,14 +224,15 @@ pub(crate) unsafe extern "thiscall" fn compare_add_qualified_for_round_record(th
 /// lista da troca (o cursor) e os registros dos dois técnicos (criados antes só quando a original os pede); a cópia
 /// sem os históricos em arquivo, que a original já gravou, e sem contar os sorteios.
 pub(crate) unsafe extern "thiscall" fn compare_add_transfer_records(this: usize, t: usize) {
+    let t = Offer(t);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_TRANSFER_RECORDS);
     let (pessoa, _, vendedor, comprador) = transfer_parties(t);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
-    if read_usize(t + 4) != 0 {
-        reg.push((read_usize(t + 4), 0xe));
+    if read_usize(t.addr() + 4) != 0 {
+        reg.push((read_usize(t.addr() + 4), 0xe));
     }
-    for (clube, cargo) in [(comprador, read_u8(t + offer::JOB_TYPE)), (vendedor, read_u8(pessoa + staff::JOB_FOR_CLUB))] {
+    for (clube, cargo) in [(comprador, t.job_type()), (vendedor, read_u8(pessoa + staff::JOB_FOR_CLUB))] {
         if clube != 0 && read_usize(clube + club::MANAGER) != 0 && staff_records_is_player_job(cargo) {
             let r = staff_records_manager_record(this, Staff(read_usize(clube + club::MANAGER)));
             if r != 0 {
@@ -239,7 +240,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_transfer_records(this: usize,
             }
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, t),
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, t.addr()),
         || crate::rng::without_counting(|| record_transfer(this, t, false)));
     SCOREBOARD.record(igual, || format!("add_transfer_records(pessoa {:x}) {:x?} x {:x?}", pessoa, mo, mr));
 }

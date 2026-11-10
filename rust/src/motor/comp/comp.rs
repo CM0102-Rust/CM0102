@@ -319,15 +319,15 @@ pub(crate) unsafe extern "thiscall" fn find_club_progress(this: usize, club: usi
 /// Address of tie p (0x35 bytes) of cup round r (per-round arrays at [+0xad]).
 ///
 /// [pt] O confronto `p` (0x35 bytes) da rodada `r` da copa (vetores em [+0xad]).
-pub(crate) unsafe fn cup_tie(cup: usize, r: i32, p: i32) -> usize {
-    read_usize(read_usize(cup + cup::TIE_TABLES) + (r as isize * 4) as usize).wrapping_add((p as isize * 0x35) as usize)
+pub(crate) unsafe fn cup_tie(cup: Cup, r: i32, p: i32) -> usize {
+    read_usize(cup.tie_tables() + (r as isize * 4) as usize).wrapping_add((p as isize * 0x35) as usize)
 }
 
 /// Address of cup round r (0x68 bytes in table [+0xa3]).
 ///
 /// [pt] A rodada `r` da copa (0x68 bytes na tabela [+0xa3]).
-pub(crate) unsafe fn comp_cup_round(cup: usize, r: i32) -> usize {
-    read_usize(cup + cup::ROUND_TABLE).wrapping_add((r as isize * 0x68) as usize)
+pub(crate) unsafe fn comp_cup_round(cup: Cup, r: i32) -> usize {
+    cup.round_table().wrapping_add((r as isize * 0x68) as usize)
 }
 
 /// Stage k of the competition as the original reads it: -1 itself, 0..+0x30 from [+0xc]; out of range shows the
@@ -721,22 +721,22 @@ pub(crate) unsafe extern "thiscall" fn are_round_fixtures_known(this: usize, sta
     if stage < -1 {
         return original_fn::<unsafe extern "thiscall" fn(usize, i32, i32) -> u32>(IDX_ARE_ROUND_FIXTURES_KNOWN)(this.addr(), stage, round);
     }
-    let c = if stage == -1 { this.addr() } else { read_usize(this.stages().wrapping_add(4 * stage as usize)) };
-    if *((c + cup::COMP_TYPE) as *const u8) == 2 {
+    let c = Cup(if stage == -1 { this.addr() } else { read_usize(this.stages().wrapping_add(4 * stage as usize)) });
+    if c.comp_type() == 2 {
         return 1;
     }
-    let current = *((c + cup::CURRENT_ROUND) as *const i8) as i32;
+    let current = (c.current_round() as i8) as i32;
     if round < current {
         return 1;
     }
     if round != current {
         return 0;
     }
-    let n = core::ptr::read_unaligned((c + cup::ROUND_COUNT) as *const i16) as i32;
+    let n = c.round_count() as i32;
     if current != n - 1 {
         return 0;
     }
-    let code = core::ptr::read_unaligned((read_usize(c + cup::ROUND_TABLE).wrapping_add((0x68 * (n - 1)) as usize) + 7) as *const i16);
+    let code = core::ptr::read_unaligned((c.round_table().wrapping_add((0x68 * (n - 1)) as usize) + 7) as *const i16);
     (code == 0x8c) as u32
 }
 

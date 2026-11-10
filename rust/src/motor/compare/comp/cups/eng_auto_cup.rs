@@ -59,22 +59,24 @@ pub(crate) unsafe extern "thiscall" fn compare_select_section_clubs(this: usize)
 ///
 /// [pt] Só a original (aloca a fase), conferindo o plano: a fase em [+0xc][0] e +0x30 = 0.
 pub(crate) unsafe extern "thiscall" fn compare_create_section_stage(this: usize) {
+    let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_SECTION_STAGE);
-    o(this);
-    let f = read_usize(read_usize(this + cup::STAGES));
-    SCOREBOARD.record(f != 0 && read_usize(this + cup::CURRENT_STAGE) == 0, || format!("create_section_stage({:#x}) fase {:#x} +0x30 {}", this, f, read_usize(this + cup::CURRENT_STAGE) as i32));
+    o(this.addr());
+    let f = read_usize(this.stages());
+    SCOREBOARD.record(f != 0 && this.current_stage() == 0, || format!("create_section_stage({:#x}) fase {:#x} +0x30 {}", this.addr(), f, this.current_stage() as i32));
 }
 
 /// Comparer for `eng_auto_cup_advance_stage`.
 ///
 /// [pt] Só a original (a final aloca e sorteia), conferindo o plano: +0x30 sobe um fora da última fase e fica na última.
 pub(crate) unsafe extern "thiscall" fn compare_eng_auto_cup_advance_stage(this: usize) {
+    let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_AUTO_CUP_ADVANCE_STAGE);
-    let before = read_usize(this + cup::CURRENT_STAGE) as i32;
-    let last = before >= (read_usize(this + cup::STAGE_COUNT) as i32).wrapping_sub(1);
-    o(this);
-    let after = read_usize(this + cup::CURRENT_STAGE) as i32;
-    SCOREBOARD.record(after == if last { before } else { before + 1 }, || format!("eng_auto_cup_advance_stage({:#x}) fase {} -> {}", this, before, after));
+    let before = this.current_stage() as i32;
+    let last = before >= (this.stage_count() as i32).wrapping_sub(1);
+    o(this.addr());
+    let after = this.current_stage() as i32;
+    SCOREBOARD.record(after == if last { before } else { before + 1 }, || format!("eng_auto_cup_advance_stage({:#x}) fase {} -> {}", this.addr(), before, after));
 }
 
 /// Comparer for `eng_auto_cup_create_final_stage`.
@@ -82,10 +84,11 @@ pub(crate) unsafe extern "thiscall" fn compare_eng_auto_cup_advance_stage(this: 
 /// [pt] Só a original (aloca a fase e sorteia), conferindo o plano: a fase em [+0xc][1] (com o vetor dos dois finalistas
 /// achados antes, quando há fase).
 pub(crate) unsafe extern "thiscall" fn compare_eng_auto_cup_create_final_stage(this: usize) {
+    let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_AUTO_CUP_CREATE_FINAL_STAGE);
-    o(this);
-    let f = read_usize(read_usize(this + cup::STAGES) + 4);
-    SCOREBOARD.record(f != 0, || format!("eng_auto_cup_create_final_stage({:#x}) sem a fase da final", this));
+    o(this.addr());
+    let f = read_usize(this.stages() + 4);
+    SCOREBOARD.record(f != 0, || format!("eng_auto_cup_create_final_stage({:#x}) sem a fase da final", this.addr()));
 }
 
 /// Comparer for `eng_auto_cup_rank_teams`.
@@ -95,8 +98,9 @@ pub(crate) unsafe extern "thiscall" fn compare_eng_auto_cup_rank_teams(this: usi
 
 /// Comparer for `eng_auto_cup_collect_entrants`.
 pub(crate) unsafe extern "thiscall" fn compare_eng_auto_cup_collect_entrants(this: usize) -> i32 {
+    let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_ENG_AUTO_CUP_COLLECT_ENTRANTS);
-    eng_cc_cup_compare_entrant_list("eng_auto_cup_collect_entrants", this, &[(this + cup::TEAM_COUNT, 2), (G_MOUSE_LEFT_BUTTON_DOWN, 4)], || o(this), || collect_auto_cup_entrants(this), |_, n| n.max(0) as usize * 6)
+    eng_cc_cup_compare_entrant_list("eng_auto_cup_collect_entrants", this, &[(this.addr() + cup::TEAM_COUNT, 2), (G_MOUSE_LEFT_BUTTON_DOWN, 4)], || o(this.addr()), || collect_auto_cup_entrants(this), |_, n| n.max(0) as usize * 6)
 }
 
 /// Comparer for `eng_auto_cup_create_round_table`.

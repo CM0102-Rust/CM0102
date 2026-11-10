@@ -104,9 +104,9 @@ pub(crate) unsafe extern "thiscall" fn compare_update_player_training(this: usiz
     if exe::training_manager_get_player_schedule(this, p) == 0 || exe::training_manager_find_position_training(this, p, &mut q) > 0 {
         return o(this, p.addr(), skip);
     }
-    let f = p.player();
+    let f = PlayerSheet(p.player());
     let mut reg = Vec::from(crate::rng::STATE_REGIONS);
-    reg.extend_from_slice(&[(G_CONTRACT_LOOKUP_RESULT, 4), (training_entry_of_staff(this, p), 6), (f + player_sheet::GOALKEEPER, 0x33)]);
+    reg.extend_from_slice(&[(G_CONTRACT_LOOKUP_RESULT, 4), (training_entry_of_staff(this, p), 6), (f.addr() + player_sheet::GOALKEEPER, 0x33)]);
     let les = read_usize(G_INJURY);
     if les != 0 {
         reg.push((read_usize(les).wrapping_add((read_i32(p.addr()) as isize * 31 + 0x1e) as usize), 1));
@@ -148,8 +148,8 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_or_restore_training_progre
     if p.is_null() || p.player() == 0 {
         return o(this, p.addr(), devolver);
     }
-    let f = p.player();
-    let reg = [(f + player_sheet::GOALKEEPER, 0x33), (player_training_entry(this, p), 6), (G_TRAINING_PROGRESS_SAVED_DELTA_3, 5)];
+    let f = PlayerSheet(p.player());
+    let reg = [(f.addr() + player_sheet::GOALKEEPER, 0x33), (player_training_entry(this, p), 6), (G_TRAINING_PROGRESS_SAVED_DELTA_3, 5)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, p.addr(), devolver), || remove_or_restore_training_progress(this, p.addr(), devolver));
     SCOREBOARD.record(igual, || format!("remove_or_restore_training_progress(pessoa {:x}, devolver {}) {:x?} x {:x?}", p.addr(), devolver, mo.0, mr.0));
 }
@@ -163,8 +163,8 @@ pub(crate) unsafe extern "thiscall" fn compare_get_training_attribute_change(thi
     if p.is_null() || p.player() == 0 {
         return o(this, p.addr(), attribute);
     }
-    let f = p.player();
-    let reg = [(f + player_sheet::GOALKEEPER, 0x33), (player_training_entry(this, p), 6)];
+    let f = PlayerSheet(p.player());
+    let reg = [(f.addr() + player_sheet::GOALKEEPER, 0x33), (player_training_entry(this, p), 6)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, p.addr(), attribute), || get_training_attribute_change(this, p.addr(), attribute));
     SCOREBOARD.record(igual && r == n, || format!("get_training_attribute_change(pessoa {:x}, atributo {}) original={} rust={} {:x?} x {:x?}", p.addr(), attribute as u8 as i8, r as i8, n as i8, mo.0, mr.0));
     r
@@ -266,9 +266,9 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_training_progress(this: usi
     if person.is_null() || person.player() == 0 || read_i32(person.addr()) >= read_i32(G_STAFF_COUNT) {
         return o(this, person.addr(), d);
     }
-    let f = person.player();
-    let e = read_usize(this + 0x651d) + 6 * read_i32(f) as usize;
-    let regions = [(f + player_sheet::GOALKEEPER, 0x33), (e, 6)];
+    let f = PlayerSheet(person.player());
+    let e = read_usize(this + 0x651d) + 6 * read_i32(f.addr()) as usize;
+    let regions = [(f.addr() + player_sheet::GOALKEEPER, 0x33), (e, 6)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(this, person.addr(), d), || apply_training_progress(this, person.addr(), d));
     SCOREBOARD.record(igual, || format!("apply_training_progress(pessoa {:x}, d {:x?}) {:x?} x {:x?}", person.addr(), core::slice::from_raw_parts(d as *const i8, 5), mo.0, mr.0));
 }
@@ -327,9 +327,9 @@ pub(crate) unsafe extern "thiscall" fn compare_init_player_entries(this: usize) 
     let mut erradas = 0usize;
     let mut first = None;
     for k in 0..read_i32(G_PLAYER_DATA_COUNT).max(0) as usize {
-        let f = read_usize(G_PLAYER_DATA_TABLE) + 0x46 * k;
-        let e = base.wrapping_add((read_i32(f) as usize).wrapping_mul(6));
-        let slot = if *((f + player_sheet::GOALKEEPER) as *const i8) >= 0xf { 6 } else { 1 };
+        let f = PlayerSheet(read_usize(G_PLAYER_DATA_TABLE) + 0x46 * k);
+        let e = base.wrapping_add((read_i32(f.addr()) as usize).wrapping_mul(6));
+        let slot = if f.goalkeeper() >= 0xf { 6 } else { 1 };
         if *(e as *const u8) != slot || *((e + 5) as *const u8) & 0x20 != 0 {
             erradas += 1;
             first.get_or_insert(k);

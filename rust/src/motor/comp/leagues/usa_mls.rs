@@ -172,15 +172,15 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, usize) -> usize =
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-    let po = read_usize(this.stages() + 8);
+    let po = Cup(read_usize(this.stages() + 8));
     let list = exe::crt_malloc(8);
     if list == 0 {
         return show_error_at(0xaa1fb4, 0x5e5);
     }
     let mut n = 0i8;
     let mut i = 0i32;
-    while i < read_i16(po + cup::TEAM_COUNT) as i32 && n < 2 {
-        let e = read_usize(po + cup::TEAM_TABLE) + 6 * i as usize;
+    while i < po.team_count() as i32 && n < 2 {
+        let e = po.team_table() + 6 * i as usize;
         if *((e + 5) as *const u8) == 1 {
             core::ptr::write_unaligned((list + 4 * n as usize) as *mut usize, read_usize(e)); // cqr4: os finalistas
             n += 1;

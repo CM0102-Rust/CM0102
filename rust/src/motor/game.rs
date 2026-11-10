@@ -537,10 +537,10 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
         if exe::injury_get_player_injury_status(read_usize(G_INJURY), p) == 2 {
             continue;
         }
-        let jog = p.player();
+        let jog = PlayerSheet(p.player());
         let cl = (p.professionalism() as u8);
-        let dl = read_u8(jog + player_sheet::WORK_RATE);
-        let mut bl = read_u8(jog + player_sheet::LEADERSHIP).wrapping_add((p.age() as u8)).wrapping_add(cl).wrapping_add(dl);
+        let dl = (jog.work_rate() as u8);
+        let mut bl = (jog.leadership() as u8).wrapping_add((p.age() as u8)).wrapping_add(cl).wrapping_add(dl);
         if cl == 1 {
             bl = bl.wrapping_add(0xfb);
         }

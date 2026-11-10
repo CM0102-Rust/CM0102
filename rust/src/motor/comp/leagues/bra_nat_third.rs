@@ -404,11 +404,11 @@ pub(crate) unsafe extern "thiscall" fn create_third_round_groups(this: usize) {
     let slots: [u8; 4] = [2, 0, 0, 0];
     let tiebreak: [u8; 4] = [1, 2, 4, 0];
     let mut v = [0usize; 8];
-    let second = read_usize(this.stages() + 0x1c);
+    let second = Cup(read_usize(this.stages() + 0x1c));
     let mut n = 0usize;
     let mut i = 0i32;
-    while i < read_i16(second + cup::TEAM_COUNT) as i32 {
-        let e = read_usize(second + cup::TEAM_TABLE) + 6 * i as usize;
+    while i < second.team_count() as i32 {
+        let e = second.team_table() + 6 * i as usize;
         // simplification: the original writes without bounds into a list of 8 on the stack; the stage has 8 winners (the copy stops at the 8th).
         if read_u8(e + 5) == 1 && n < 8 {
             v[n] = read_usize(e);

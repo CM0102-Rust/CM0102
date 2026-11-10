@@ -52,15 +52,15 @@ pub(crate) unsafe fn match_stats_category(p: Fixture, side: i32, warn: bool, err
     if club == p.away_club().addr() && (p.away_side_mark() as u8) == 0 {
         return 1;
     }
-    let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(4)));
-    if comp == 0 {
+    let comp = Cup(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(4))));
+    if comp.is_null() {
         *error = true;
         if warn {
             show_error_at(0xa78310, 0x103a);
         }
         return 2;
     }
-    match read_u8(comp + cup::CLUB_SIDES) {
+    match comp.club_sides() {
         4 => 5,
         2 => 4,
         1 => {
@@ -463,8 +463,9 @@ pub(crate) unsafe fn copy_transfer_record(a: usize, o: usize, d: usize) {
 /// 300): o recorde na fila de notícias (0x452cb0, 0x1c, se ainda não está) e o técnico (+0xbf) passa a gostar da pessoa
 /// (0x547a10, forçado). O mesmo para o vendedor no recorde recebido (+0x33c; a fila com 0x1d, sem o gostar). 1.
 pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, t: usize) -> u32 {
-    let person = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(t + offer::TARGET_STAFF_ID) as usize).wrapping_mul(staff::SIZE));
-    let buyer = Club(injury_club_by_index(read_i32(t + offer::BUYER_CLUB_ID)));
+    let t = Offer(t);
+    let person = read_usize(G_STAFF_TABLE).wrapping_add(((t.target_staff_id() as i32) as usize).wrapping_mul(staff::SIZE));
+    let buyer = Club(injury_club_by_index((t.buyer_club_id() as i32)));
     let contract = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
     core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, contract.addr());
     let seller = if !contract.is_null() { injury_club_by_index((contract.club() as i32)) } else { 0 };
@@ -474,15 +475,15 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
     if seller == 0 {
         return 1;
     }
-    let value = read_i32(t + offer::FEE);
+    let value = (t.fee() as i32);
     if value != 0 && value > read_i32(s + club_record::FEE_PAID) {
         crate::comparison::branch("cpp_10 record fee paid");
         core::ptr::write_unaligned((s + club_record::FEE_PAID) as *mut i32, value);
         exe::fill_staff_name_ref(person, s + club_record::FEE_PAID_HOLDER);
         core::ptr::write_unaligned((s + club_record::FEE_PAID_OTHER_CLUB_ID) as *mut usize, read_usize(seller));
         exe::date_operator_3d(s + club_record::FEE_PAID_DATE, (draft.as_mut_ptr()) as usize, G_CURRENT_DATE);
-        *((s + club_record::FEE_PAID_FLAG) as *mut u8) = (read_usize(t + offer::EXCHANGE_PLAYERS) != 0) as u8;
-        if read_i32(t + offer::FEE) > read_i32(a + club_record::FEE_PAID) {
+        *((s + club_record::FEE_PAID_FLAG) as *mut u8) = (t.exchange_players() != 0) as u8;
+        if (t.fee() as i32) > read_i32(a + club_record::FEE_PAID) {
             copy_transfer_record(a, s, 0x313);
             if is_big_transfer(read_i32(a + club_record::FEE_PAID), buyer) {
                 crate::comparison::branch("cpp_10 big transfer");
@@ -495,7 +496,7 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
     }
     let s = exe::club_records_get_season_record(this, seller, 1);
     let a = exe::club_records_get_all_time_record(this, seller, 1);
-    let value = read_i32(t + offer::FEE);
+    let value = (t.fee() as i32);
     if value == 0 || value <= read_i32(s + club_record::FEE_RECEIVED) {
         return 1;
     }
@@ -503,8 +504,8 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
     exe::fill_staff_name_ref(person, s + club_record::FEE_RECEIVED_HOLDER);
     core::ptr::write_unaligned((s + club_record::FEE_RECEIVED_OTHER_CLUB_ID) as *mut usize, read_usize(buyer.addr()));
     exe::date_operator_3d(s + club_record::FEE_RECEIVED_DATE, (draft.as_mut_ptr()) as usize, G_CURRENT_DATE);
-    *((s + club_record::FEE_RECEIVED_FLAG) as *mut u8) = (read_usize(t + offer::EXCHANGE_PLAYERS) != 0) as u8;
-    if read_i32(t + offer::FEE) > read_i32(a + club_record::FEE_RECEIVED) {
+    *((s + club_record::FEE_RECEIVED_FLAG) as *mut u8) = (t.exchange_players() != 0) as u8;
+    if (t.fee() as i32) > read_i32(a + club_record::FEE_RECEIVED) {
         copy_transfer_record(a, s, 0x33c);
         if is_big_transfer(read_i32(a + club_record::FEE_RECEIVED), Club(seller)) && !record_news_queued(this, read_usize(seller), 0x1d) {
             exe::club_records_queue_record_news(this, read_usize(seller) as u32, 0x1d);
@@ -854,16 +855,17 @@ pub(crate) unsafe fn check_record_plan(name: &str, club: usize, e: usize, count:
 /// se preciso)? Tem de ser ao menos 50 × reputação (+0x80) + 500.000; com `exigir`, também ao menos reputação² × a
 /// constante 0x967880 (_ftol); e acima de zero e do recorde (+0x313). Oferta nula: 0.
 pub(crate) unsafe extern "thiscall" fn offer_breaks_fee_record(this: usize, offer: usize, exigir: u32) -> u8 {
-    if offer == 0 {
+    let offer = Offer(offer);
+    if offer.is_null() {
         return 0;
     }
-    let club = Club(read_usize(G_CLUB_TABLE).wrapping_add(read_usize(offer + offer::BUYER_CLUB_ID).wrapping_mul(club::SIZE)));
+    let club = Club(read_usize(G_CLUB_TABLE).wrapping_add(offer.buyer_club_id().wrapping_mul(club::SIZE)));
     let rec = exe::club_records_get_all_time_record(this, club, 1);
     if rec == 0 || club.is_null() {
         return 0;
     }
     let rep = club.reputation() as i32;
-    let value = read_usize(offer + offer::FEE) as i32;
+    let value = offer.fee() as i32;
     if value < rep.wrapping_mul(25).wrapping_add(250_000).wrapping_mul(2) {
         return 0; // below the minimum for the reputation
     }

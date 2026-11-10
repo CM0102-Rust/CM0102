@@ -123,17 +123,17 @@ pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_create_knockou
     }
     let mut plan = semifinalists(this).to_vec();
     o(this.addr());
-    let stage = read_usize(this.stages() + 4);
-    if stage == 0 {
+    let stage = Cup(read_usize(this.stages() + 4));
+    if stage.is_null() {
         SCOREBOARD.record(false, || format!("oceania_club_champ_create_knockout_stage({:#x}) sem fase", this.addr()));
         return;
     }
-    let list = read_usize(stage + cup::TEAM_TABLE);
+    let list = stage.team_table();
     let mut found: Vec<usize> = (0..4).map(|k| read_usize(list + 6 * k)).collect();
     let (pl, ac) = (plan.clone(), found.clone());
     plan.sort_unstable();
     found.sort_unstable();
-    let same = plan == found && read_i16(stage + cup::TEAM_COUNT) == 4 && read_usize(stage + 4) == this.competition().addr();
+    let same = plan == found && stage.team_count() == 4 && read_usize(stage.addr() + 4) == this.competition().addr();
     SCOREBOARD.record(same, || format!("oceania_club_champ_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this.addr(), pl, ac));
 }
 

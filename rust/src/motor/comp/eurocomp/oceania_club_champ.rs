@@ -707,19 +707,19 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_schedule(this: 
 /// create_team_entries 0x40d4d0, o mesmo corpo): +0x3e = 16 e a tabela (0x944e46 de 0x60 em +0xa7; sem memória, a caixa
 /// `linha` de `arquivo` e −1); a vaga i recebe o clube i dos classificados (+0xb2, ponteiros; `ordem` dá o índice) com
 /// classe e situação 0. Devolve 1.
-pub(crate) unsafe fn build_team_table(this: usize, file: usize, row: u32, name: &'static str, order: impl Fn(i16) -> i16) -> i32 {
-    core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0x10);
+pub(crate) unsafe fn build_team_table(this: Cup, file: usize, row: u32, name: &'static str, order: impl Fn(i16) -> i16) -> i32 {
+    this.set_team_count(0x10);
     let l = exe::crt_malloc(0x60);
-    core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
+    this.set_team_table((l as u32) as usize);
     if l == 0 {
         show_error_at(file, row);
         return -1;
     }
     crate::comparison::branch(name);
     let mut i: i16 = 0;
-    while i < core::ptr::read_unaligned((this + cup::TEAM_COUNT) as *const i16) {
-        let c = read_usize(read_usize(this + 0xb2) + order(i) as usize * 4);
-        let e = read_usize(this + cup::TEAM_TABLE) + i as usize * 6;
+    while i < this.team_count() {
+        let c = read_usize(read_usize(this.addr() + 0xb2) + order(i) as usize * 4);
+        let e = this.team_table() + i as usize * 6;
         core::ptr::write_unaligned(e as *mut u32, c as u32);
         *((e + 4) as *mut u8) = 0;
         *((e + 5) as *mut u8) = 0;
@@ -732,18 +732,18 @@ pub(crate) unsafe fn build_team_table(this: usize, file: usize, row: u32, name: 
 ///
 /// [pt] Lado a lado: o +0x3e e o [0xb67a34] a partir do mesmo estado; a original deixa a tabela dela em +0xa7, a cópia faz a
 /// sua, comparada nas 16 vagas (com a devolução 1) e liberada.
-pub(crate) unsafe fn compare_team_table(name: &str, this: usize, o: impl FnOnce() -> i32, c: impl FnOnce() -> i32) -> i32 {
+pub(crate) unsafe fn compare_team_table(name: &str, this: Cup, o: impl FnOnce() -> i32, c: impl FnOnce() -> i32) -> i32 {
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
-    let reg = [(this + cup::TEAM_COUNT, 2usize), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
+    let reg = [(this.addr() + cup::TEAM_COUNT, 2usize), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     let (a, b, igual, _, _) = crate::comparison::side_by_side(&reg, || {
         let r = o();
-        lo.set(read_usize(this + cup::TEAM_TABLE));
+        lo.set(this.team_table());
         r
     }, || {
         let r = c();
-        lr.set(read_usize(this + cup::TEAM_TABLE));
-        core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, lo.get() as u32);
+        lr.set(this.team_table());
+        this.set_team_table((lo.get() as u32) as usize);
         r
     });
     let (lo, lr) = (lo.get(), lr.get());
@@ -756,7 +756,7 @@ pub(crate) unsafe fn compare_team_table(name: &str, this: usize, o: impl FnOnce(
     if lr != 0 && lr != lo {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {}", name, this, a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {}", name, this.addr(), a, b, igual, list));
     a
 }
 

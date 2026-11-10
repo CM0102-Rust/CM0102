@@ -116,8 +116,8 @@ pub(crate) unsafe fn create_end_of_league_stages(this: League, file: usize, rows
         core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
     let calendario: unsafe extern "thiscall" fn(usize, u32, *mut u32, *mut u32, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     // the Série C1 Super Cup
-    let cup = read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(KEY_CLUB_COMP_ITALIAN_C1_SUPER_CUP) * 4);
-    let entrants = read_usize(cup + cup::TEAM_TABLE);
+    let cup = Cup(read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(KEY_CLUB_COMP_ITALIAN_C1_SUPER_CUP) * 4));
+    let entrants = cup.team_table();
     let champion = ita_ser_c1a_league_row_club(this, 0);
     if read_usize(entrants) != 0 {
         write_usize(entrants + 6, champion);
@@ -195,8 +195,8 @@ pub(crate) unsafe extern "thiscall" fn create_playoff_stages(this: usize) {
 /// [pt] O comparador das duas: alocam e sorteiam: só a original. O plano, feito antes: o campeão e a vaga da Supercopa. Depois:
 /// a vaga com o campeão, as duas fases em [+0xc] e +0x30 = 1.
 pub(crate) unsafe fn compare_end_of_league_stages(name: &str, this: League, original: impl FnOnce()) {
-    let cup = read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(KEY_CLUB_COMP_ITALIAN_C1_SUPER_CUP) * 4);
-    let entrants = read_usize(cup + cup::TEAM_TABLE);
+    let cup = Cup(read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(KEY_CLUB_COMP_ITALIAN_C1_SUPER_CUP) * 4));
+    let entrants = cup.team_table();
     let champion = ita_ser_c1a_league_row_club(this, 0);
     let slot = if read_usize(entrants) != 0 { entrants + 6 } else { entrants };
     original();

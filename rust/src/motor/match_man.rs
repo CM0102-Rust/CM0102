@@ -2614,9 +2614,9 @@ pub(crate) unsafe extern "C" fn rate_player(person: usize, player: usize, club: 
     if p.is_null() {
         return -10000;
     }
-    let sheet = p.player();
+    let sheet = PlayerSheet(p.player());
     let enc = encaixe(p.addr(), club.addr()) as f64;
-    let mut y = (*((sheet + player_sheet::WORLD_REPUTATION) as *const i16) as i32 - club.reputation() as i32) as f64 * d8(0x969048) + d8(0x968940);
+    let mut y = (sheet.world_reputation() as i32 - club.reputation() as i32) as f64 * d8(0x969048) + d8(0x968940);
     if !(d8(0x96d220) <= y) {
         y = -4.0;
     } else if d8(0x968938) < y {
@@ -2646,7 +2646,7 @@ pub(crate) unsafe extern "C" fn rate_player(person: usize, player: usize, club: 
         exe::date_days_since(G_CURRENT_DATE, (p.date_joined_club() as u32), (p.date_joined_club_leap_year() as u32)) as f64
     };
     let f = if a > d8(0x968908) { (a - d8(0x968908)) * d8(0x96a6b8) + d8(0x967890) } else { 1.0 };
-    let base = read_i8(sheet + player_sheet::LEADERSHIP) as f64 * f - (enc * enc + d8(0x9688a0)) * d8(0x967880);
+    let base = sheet.leadership() as f64 * f - (enc * enc + d8(0x9688a0)) * d8(0x967880);
     let mut v = ftol(base + y + x + d8(0x968968)) as i16;
     let age = (p.year_of_birth() as i8);
     let k = if age < 0x12 {
@@ -2999,7 +2999,7 @@ pub(crate) unsafe fn signed_byte_at(p: usize, k: usize) -> i32 {
 /// PLAYERSTATS get_stat (`get_stat` on G_PLAYER_STATS) for player data `f`.
 ///
 /// [pt] A 0x7c1e30 das notas ([0xb74350]) da ficha `f`.
-pub(crate) unsafe fn player_stat(f: usize, k: u32, c: u32, x: f32) -> f64 {
+pub(crate) unsafe fn player_stat(f: PlayerSheet, k: u32, c: u32, x: f32) -> f64 {
     exe::playerstats_get_stat(*(G_PLAYER_STATS as *const usize), f, k, c, x)
 }
 
@@ -3009,8 +3009,8 @@ pub(crate) unsafe fn player_stat(f: usize, k: u32, c: u32, x: f32) -> f64 {
 /// [pt] A nota da posição (máscara `m`) pelos atributos da ficha `f` na tabela `tab` (0xa15d50 ou
 /// 0xa15cfc). A posição principal tem os casos de `m` igual a 8 ou 0x10 e a exceção de lateral
 /// (0x800/0x80) na faixa 0x10; a secundária da 0x6e2f20 não.
-pub(crate) unsafe fn position_rating(f: usize, m: u32, masc: u32, table: usize, main: bool) -> i32 {
-    let fb = |k: usize| signed_byte_at(f, k);
+pub(crate) unsafe fn position_rating(f: PlayerSheet, m: u32, masc: u32, table: usize, main: bool) -> i32 {
+    let fb = |k: usize| signed_byte_at(f.addr(), k);
     let t = |k: i32| *((table as isize + 4 * k as isize) as *const i32);
     let m16 = m as u16;
     let sem_ala = m & 0x800 == 0 && m & 0x80 == 0;
@@ -3056,8 +3056,8 @@ pub(crate) unsafe fn position_rating(f: usize, m: u32, masc: u32, table: usize, 
 /// Adjustment of the position mask by the player's game attributes; 100 when no bit matches.
 ///
 /// [pt] O ajuste da posição (máscara `m`) pelos atributos de jogo da ficha `f`; 100 sem nenhum.
-pub(crate) unsafe fn position_attribute_adjust(f: usize, m: u32) -> i32 {
-    let fb = |k: usize| signed_byte_at(f, k);
+pub(crate) unsafe fn position_attribute_adjust(f: PlayerSheet, m: u32) -> i32 {
+    let fb = |k: usize| signed_byte_at(f.addr(), k);
     if m & 0x1000 != 0 {
         (fb(0x1a) - 10) * 10
     } else if m & 0x80 != 0 {
@@ -3080,7 +3080,7 @@ pub(crate) unsafe fn position_attribute_adjust(f: usize, m: u32) -> i32 {
 ///
 /// [pt] O acréscimo da média das notas (0x7c1950 x 0,2; com o observador `quem` de mais de um ano no
 /// clube do jogador, pesada pelos dias) à soma, por `cont`.
-pub(crate) unsafe fn recent_form_bonus(p: Staff, f: usize, club: Club, who: Staff, count: i8) -> i32 {
+pub(crate) unsafe fn recent_form_bonus(p: Staff, f: PlayerSheet, club: Club, who: Staff, count: i8) -> i32 {
     let mut x = (exe::playerstats_get_recent_form(*(G_PLAYER_STATS as *const usize), f) as f64 * read_f64(rdata::F64_0_2)) as f32;
     if club == p.club_job() && !who.is_null() && scouted_over_a_year_ago(who.addr(), p) {
         let d = match_man_days_since_date(p) as f64;
@@ -3106,7 +3106,7 @@ pub(crate) unsafe fn recent_form_bonus(p: Staff, f: usize, club: Club, who: Staf
 /// limitado para os de mais de 33 anos quando `teto_veterano`, pesado pelos dias com o observador
 /// `quem`, e as notas 0x7c1e30(1) e 0x7c1e30(6, 0x14, `ultimo`) no clube (ou mesma nação).
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe fn form_bonus(p: Staff, f: usize, club: Club, who: Staff, age: i8, count: i8, sum: i32, l3c: i32, teto_veterano: bool, last: u32) -> i32 {
+pub(crate) unsafe fn form_bonus(p: Staff, f: PlayerSheet, club: Club, who: Staff, age: i8, count: i8, sum: i32, l3c: i32, teto_veterano: bool, last: u32) -> i32 {
     let notes = *(G_PLAYER_STATS as *const usize);
     let ceiling = |v: i32| {
         let y = v as f64 * read_f32(rdata::F32_0_05000000075_AT_96D61C) as f64 + read_f32(rdata::F32_6_800000191) as f64;
@@ -3185,8 +3185,8 @@ pub(crate) unsafe fn injury_word_0c(p: usize) -> i16 {
 /// [pt] O fim da flag 0x4000 (comum às duas notas): a idade com +0x100, a soma das metades dos
 /// atributos (sem goleiro), +0x2f e o fator do estrangeiro (0x7c6830 e a tabela por continente).
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe fn age_and_foreigner_adjust(p: Staff, f: usize, club: Club, flags: u32, pos: u32, masc: u32, age: i8, count: i8, mut l4c: i32) -> i32 {
-    let fb = |k: usize| signed_byte_at(f, k);
+pub(crate) unsafe fn age_and_foreigner_adjust(p: Staff, f: PlayerSheet, club: Club, flags: u32, pos: u32, masc: u32, age: i8, count: i8, mut l4c: i32) -> i32 {
+    let fb = |k: usize| signed_byte_at(f.addr(), k);
     if flags & 0x100 != 0 {
         let cl = if masc & 1 != 0 { 0x1d } else { 0x19 };
         let y = read_f64(rdata::F64_3_5) - count as f64 * read_f64(rdata::F64_0_67);
@@ -3236,8 +3236,8 @@ pub(crate) unsafe fn age_and_foreigner_adjust(p: Staff, f: usize, club: Club, fl
 /// [pt] O ajuste pelo contrato (flag 0x2000000): sem clube (+0x39) há mais de 60 dias, o salário (+0x80)
 /// do clube contra o do dono e a satisfação (+0x3d do contrato), a idade e o goleiro, a lesão
 /// (0x5444a0) e a idade com os jogos (+0x22).
-pub(crate) unsafe fn contract_adjust(p: Staff, f: usize, club: Club, contract: usize, age: i8, mut l4c: i32) -> i32 {
-    let fb = |k: usize| signed_byte_at(f, k);
+pub(crate) unsafe fn contract_adjust(p: Staff, f: PlayerSheet, club: Club, contract: usize, age: i8, mut l4c: i32) -> i32 {
+    let fb = |k: usize| signed_byte_at(f.addr(), k);
     let mul = |l: i32, k: f64| ftol(l as f64 * k);
     let owner = Club(p.club_job().addr());
     if owner.is_null() {
@@ -3371,8 +3371,8 @@ pub(crate) unsafe fn contract_adjust(p: Staff, f: usize, club: Club, contract: u
 /// +0x1a, +0x1f, +0x13), o gosto do jogador pelo clube e por `quem`, e os atributos de cada faixa de
 /// posição; `craque_meia` liga o bônus dos craques também na faixa 0x20 (só na 0x6e6340).
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe fn scout_knowledge_bonus(p: Staff, f: usize, club: Club, conhece: usize, obs: usize, who: Staff, pos: u32, masc: u32, age: i8, mut l4c: i32, craque_meia: bool) -> i32 {
-    let fb = |k: usize| signed_byte_at(f, k);
+pub(crate) unsafe fn scout_knowledge_bonus(p: Staff, f: PlayerSheet, club: Club, conhece: usize, obs: usize, who: Staff, pos: u32, masc: u32, age: i8, mut l4c: i32, craque_meia: bool) -> i32 {
+    let fb = |k: usize| signed_byte_at(f.addr(), k);
     let kb = |k: usize| signed_byte_at(conhece, k);
     if age <= 0x17 {
         l4c += ftol((kb(0x22) - 10) as f64 * read_f64(rdata::F64_0_6666666667));
@@ -3557,7 +3557,7 @@ pub(crate) unsafe fn injury_word_0c_adjust(p: Staff, l4c: i32) -> i32 {
 /// Appearances penalty (+0x22, flag 0x100000) or club adjustment (flag 4: owner +0x39 and their manager's +0x69).
 ///
 /// [pt] Os jogos (+0x22, flag 0x100000) ou o clube (flag 4: o dono +0x39 e o +0x69 do treinador dele).
-pub(crate) unsafe fn appearances_or_club_adjust(p: Staff, f: usize, flags: u32, da_base: bool, l4c: i32) -> i32 {
+pub(crate) unsafe fn appearances_or_club_adjust(p: Staff, f: PlayerSheet, flags: u32, da_base: bool, l4c: i32) -> i32 {
     if flags & 0x100000 != 0 {
         return l4c - (p.int_apps() as i32 * 5).min(0x32);
     }
@@ -3566,7 +3566,7 @@ pub(crate) unsafe fn appearances_or_club_adjust(p: Staff, f: usize, flags: u32, 
     }
     let owner = Club(p.club_job().addr());
     if owner.is_null() {
-        return if core::ptr::read_unaligned((f + player_sheet::HOME_REPUTATION) as *const i16) < 0x1388 { l4c - 0x1e } else { l4c };
+        return if f.home_reputation() < 0x1388 { l4c - 0x1e } else { l4c };
     }
     let s = Competition(owner.division().addr());
     if s.is_null() {
@@ -3623,11 +3623,11 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
     if p.is_null() {
         return -10000;
     }
-    let f = p.player();
-    if f == 0 {
+    let f = PlayerSheet(p.player());
+    if f.is_null() {
         return -10000;
     }
-    let fb = |k: usize| signed_byte_at(f, k);
+    let fb = |k: usize| signed_byte_at(f.addr(), k);
     let bd = *(G_INJURY as *const usize);
     let da_base = *(p.addr() as *const i32) < *(G_STAFF_COUNT as *const i32);
     let active = limit > -1;
@@ -3658,7 +3658,7 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
     let cut = |sum: i32, count: i8| active && sum * 200 / (count as i32) < limit;
     if flags & 0x40 != 0 {
         count = 1;
-        sum = core::ptr::read_unaligned((f + player_sheet::CURRENT_REPUTATION) as *const i16) as i32 / 50;
+        sum = f.current_reputation() as i32 / 50;
         if club == p.club_job() && !o.is_null() && scouted_over_a_year_ago(o.addr(), p) {
             sum = ftol((read_f64(rdata::F64_1_375) - match_man_days_since_date(p) as f64 * read_f64(rdata::F64_0_001)) * sum as f64);
         }
@@ -3668,7 +3668,7 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
     }
     if flags & 0x10 != 0 {
         count += 1;
-        let a = core::ptr::read_unaligned((f + player_sheet::HOME_REPUTATION) as *const i16) as f64;
+        let a = f.home_reputation() as f64;
         let b = core::ptr::read_unaligned((p.nation().addr() + 0x8e) as *const i16) as f64;
         sum += ftol(a / ((read_f64(rdata::F64_1_8) - b * read_f64(rdata::F64_0_0001)) * read_f64(rdata::F64_50)));
         if cut(sum, count) {
@@ -3677,7 +3677,7 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
     }
     if flags & 0x20 != 0 {
         count += 1;
-        sum += core::ptr::read_unaligned((f + player_sheet::WORLD_REPUTATION) as *const i16) as i32 / 50;
+        sum += f.world_reputation() as i32 / 50;
         if cut(sum, count) {
             return -10000;
         }
@@ -3794,13 +3794,13 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
 ///
 /// [pt] O valor para a habilidade potencial (flag 0x100): no clube do contrato (0x4cf5a0, que fica em
 /// [0xae1080]) a média x 25 mais o potencial (+7) x 25 (em 16 bits); fora dele, a média x 50.
-pub(crate) unsafe fn potential_or_average_value(p: Staff, f: usize, club: Club, sum: i32, count: i8) -> i32 {
+pub(crate) unsafe fn potential_or_average_value(p: Staff, f: PlayerSheet, club: Club, sum: i32, count: i8) -> i32 {
     let c = exe::contract_manager_get_contract(*(G_CONTRACT_MANAGER as *const usize), p);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
     let owner = if c == 0 { 0 } else { *(G_CLUB_TABLE as *const usize) + *((c + 4) as *const usize) * club::SIZE };
     if owner == club.addr() {
         let q = sum * 25 / count as i32;
-        let _ = f;
+        let _ = f.addr();
         let pot = core::ptr::read_unaligned((p.player() + 7) as *const i16).wrapping_mul(0x19) as u16 as u32;
         q.wrapping_add(((q as u32 & 0xffff0000) | pot) as i32)
     } else {
@@ -3813,9 +3813,9 @@ pub(crate) unsafe fn potential_or_average_value(p: Staff, f: usize, club: Club, 
 ///
 /// [pt] A fama (flag 0x200000): -200 para os famosos (valor/100 >= 99) de +0x3c alto, +0x2d baixo e
 /// reputação abaixo de 500; senão 100 - valor/100.
-pub(crate) unsafe fn fame_adjust(f: usize, p: Staff, l28: i32, l4c: i32) -> i32 {
+pub(crate) unsafe fn fame_adjust(f: PlayerSheet, p: Staff, l28: i32, l4c: i32) -> i32 {
     let v = l28 as i16 as i32;
-    if v >= 0x63 && signed_byte_at(f, 0x3c) > 0xe && signed_byte_at(f, 0x2d) < 8 && injury_word_0c(p.addr()) < 0x1f4 {
+    if v >= 0x63 && signed_byte_at(f.addr(), 0x3c) > 0xe && signed_byte_at(f.addr(), 0x2d) < 8 && injury_word_0c(p.addr()) < 0x1f4 {
         l4c - 200
     } else {
         l4c + 100 - v
@@ -3858,14 +3858,15 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
     p: usize, f: usize, reg: usize, pos: u32, flags: u32, club: usize, side: usize, manager: usize, limit: i32, mark: u32, _marca_alta: u32,
     bytes: u32, tactic: u32, pos2: u32, holiday: usize,
 ) -> i32 {
+    let f = PlayerSheet(f);
     let reg = MatchPlayer(reg);
     let p = Staff(p);
     let manager = Staff(manager);
     let club = Club(club);
-    if p.is_null() || f == 0 {
+    if p.is_null() || f.is_null() {
         return -10000;
     }
-    let fb = |k: usize| signed_byte_at(f, k);
+    let fb = |k: usize| signed_byte_at(f.addr(), k);
     let bd = *(G_INJURY as *const usize);
     let da_base = *(p.addr() as *const i32) < *(G_STAFF_COUNT as *const i32);
     let age = (p.age() as i8);
@@ -3913,7 +3914,7 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
     let cut = |sum: i32, count: i8| active && sum * 200 / (count as i32) < limit;
     if flags & 0x40 != 0 {
         count = 1;
-        sum = core::ptr::read_unaligned((f + player_sheet::CURRENT_REPUTATION) as *const i16) as i32 / 50;
+        sum = f.current_reputation() as i32 / 50;
         if club == p.club_job() && !manager.is_null() && scouted_over_a_year_ago(manager.addr(), p) {
             sum = ftol((read_f64(rdata::F64_1_375) - match_man_days_since_date(p) as f64 * read_f64(rdata::F64_0_001)) * sum as f64);
         }
@@ -3923,7 +3924,7 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
     }
     if flags & 0x10 != 0 {
         count += 1;
-        let a = core::ptr::read_unaligned((f + player_sheet::HOME_REPUTATION) as *const i16) as f64;
+        let a = f.home_reputation() as f64;
         let b = core::ptr::read_unaligned((p.nation().addr() + 0x8e) as *const i16) as f64;
         sum += ftol(a / ((read_f64(rdata::F64_2) - b * read_f64(rdata::F64_0_0001)) * read_f64(rdata::F64_50)));
         if cut(sum, count) {
@@ -3932,7 +3933,7 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
     }
     if flags & 0x20 != 0 {
         count += 1;
-        sum += core::ptr::read_unaligned((f + player_sheet::WORLD_REPUTATION) as *const i16) as i32 / 50;
+        sum += f.world_reputation() as i32 / 50;
         if cut(sum, count) {
             return -10000;
         }
@@ -3968,9 +3969,9 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
         if l34 as i16 > -1 && r < l34 as i16 {
             r = l34 as i16;
         }
-        let fp = p.player();
-        if fp != 0 {
-            let (d, c) = (*((fp + player_sheet::ACCELERATION) as *const i8), *((fp + player_sheet::PLAYER_PACE) as *const i8));
+        let fp = PlayerSheet(p.player());
+        if !fp.is_null() {
+            let (d, c) = (fp.acceleration(), fp.player_pace());
             r = r.wrapping_sub(if d < 6 { 10 } else if d < 10 { 5 } else { 0 });
             r = r.wrapping_sub(if c < 6 { 15 } else if c < 10 { 10 } else { 0 });
         }
@@ -4179,8 +4180,8 @@ pub(crate) unsafe fn match_fatigue_offset(reg: MatchPlayer, goalkeeper: i32) -> 
 ///
 /// [pt] As marcas da tática (flag 0x8000): `marca` (o u64 das instruções, parte baixa), `bytes` (o
 /// byte das instruções) e `tatica` contra os atributos da ficha.
-pub(crate) unsafe fn tactic_instruction_adjust(f: usize, lo: u32, b1: u8, tactic: u32, marked: bool, mut l4c: i32) -> i32 {
-    let fb = |k: usize| signed_byte_at(f, k);
+pub(crate) unsafe fn tactic_instruction_adjust(f: PlayerSheet, lo: u32, b1: u8, tactic: u32, marked: bool, mut l4c: i32) -> i32 {
+    let fb = |k: usize| signed_byte_at(f.addr(), k);
     let x = |k: usize, c: usize| ftol((fb(k) - 10) as f64 * read_f64(c));
     let t13 = tactic as u8;
     let um = lo & 1 != 0;
@@ -4437,11 +4438,11 @@ pub(crate) unsafe extern "C" fn perceived_ability(o: usize, p: usize, c: usize, 
     } else {
         exe::database_get_staff_reputation_for_viewer(p, if o.is_null() { c.manager().addr() } else { o.addr() }, 0) / 50
     };
-    let sheet = p.player();
+    let sheet = PlayerSheet(p.player());
     let age = if kind == 2 {
         0
     } else {
-        ((p.age() as u8)).wrapping_sub(if *((sheet + player_sheet::GOALKEEPER) as *const u8) == 0x14 { 0x1a } else { 0x17 }) as i8
+        ((p.age() as u8)).wrapping_sub(if (sheet.goalkeeper() as u8) == 0x14 { 0x1a } else { 0x17 }) as i8
     };
     let mut conhece = 0usize;
     if !o.is_null() {
@@ -4450,7 +4451,7 @@ pub(crate) unsafe extern "C" fn perceived_ability(o: usize, p: usize, c: usize, 
         if conhece != 0 && kind == 2 && rep > 0x32 {
             let k = chance_to_know(conhece, *((conhece + non_player::JUDGEMENT) as *const i8)) as i8 as i32;
             if rep as i32 + (k - 10) * 10 > semente % 200 {
-                return core::ptr::read_unaligned((sheet + player_sheet::CURRENT_ABILITY) as *const i16);
+                return sheet.current_ability();
             }
         }
     }
@@ -4468,12 +4469,12 @@ pub(crate) unsafe extern "C" fn perceived_ability(o: usize, p: usize, c: usize, 
     let c32 = certeza as i32;
     let ruido = (semente % ((0x15 - c32) * 2) + c32 - 0x15) as i16 as i32;
     let verdade = if kind == 2 {
-        core::ptr::read_unaligned((sheet + player_sheet::CURRENT_ABILITY) as *const i16)
+        sheet.current_ability()
     } else {
         if age > 0 {
             rep = rep.wrapping_sub((age as i16).wrapping_mul(age as i16));
         }
-        core::ptr::read_unaligned((sheet + player_sheet::POTENTIAL_ABILITY) as *const i16)
+        sheet.potential_ability()
     } as i32;
     let weight = (c32 / 2 + 10) as i8 as i32;
     (((verdade + ruido) * weight + (20 - weight) * rep as i32) / 20) as i16

@@ -9,7 +9,7 @@ use super::*;
 /// [pt] { 0x90b170 } (thiscall, ret 0x10, usa_open_cup.cpp; a virtual +0x3c da Copa dos EUA): `UsaOpenCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 5 rodadas; a caixa da linha 0x9c sem memória.
 pub(crate) unsafe extern "thiscall" fn usa_open_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    build_single_stage_cup_rounds(this, stage, rounds, extra, out, &US_OPEN_CUP_ROUNDS, 0xaa20e0, 0x9c, "cqn_11 tabela da copa dos eua")
+    build_single_stage_cup_rounds(Cup(this), stage, rounds, extra, out, &US_OPEN_CUP_ROUNDS, 0xaa20e0, 0x9c, "cqn_11 tabela da copa dos eua")
 }
 
 /// rule: the US Open Cup takes 32 clubs: 10 from each of the two lower leagues ([0x9cf594] and [0x9cf598], up to 50
@@ -20,7 +20,7 @@ pub(crate) unsafe extern "thiscall" fn usa_open_cup_create_round_table(this: usi
 /// olhados em cada uma, ordenados pela reputação e embaralhados entre os melhores), com a classe 2, e todos os da MLS
 /// com a classe 1
 pub(crate) unsafe extern "thiscall" fn usa_open_cup_collect_entrants(this: usize) -> i32 {
-    collect_us_open_cup_entrants(this).0
+    collect_us_open_cup_entrants(Cup(this)).0
 }
 
 /// rule: the same turn in the US Open Cup: tables freed, history archived, year +1, the entrants
@@ -31,5 +31,5 @@ pub(crate) unsafe extern "thiscall" fn usa_open_cup_collect_entrants(this: usize
 /// a virada (`usa_mls_all_stars_cup_start_new_season`) com os inscritos de UsaOpenCup::collect_entrants (0x90b530) e as caixas do usa_open_cup.cpp
 /// nas linhas 0x198, 0x19f e 0x1a6.
 pub(crate) unsafe extern "thiscall" fn usa_open_cup_start_new_season(this: usize) -> u32 {
-    usa_mls_all_stars_cup_start_new_season(this, 0x90b530, 0xaa20e0, [0x198, 0x19f, 0x1a6], 1, true, "cqr_6 virada da copa dos eua") // cqr6: the US Cup
+    usa_mls_all_stars_cup_start_new_season(Cup(this), 0x90b530, 0xaa20e0, [0x198, 0x19f, 0x1a6], 1, true, "cqr_6 virada da copa dos eua") // cqr6: the US Cup
 }

@@ -631,12 +631,12 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
         for _ in 0..2 {
             for i in 0..20 {
                 let p = jog(side, i);
-                let person = read_usize(p + match_player::PLAYER);
-                if read_i8(p + match_player::POSITION) < 0 || person == 0 {
+                let person = PlayerSheet(read_usize(p + match_player::PLAYER));
+                if read_i8(p + match_player::POSITION) < 0 || person.is_null() {
                     continue;
                 }
                 let f = read_f32(p + match_player::STAMINA);
-                let mut cl = (read_i8(person + player_sheet::INJURY_PRONENESS) as u8).wrapping_mul(2).wrapping_add(5);
+                let mut cl = (person.injury_proneness() as u8).wrapping_mul(2).wrapping_add(5);
                 if !(f >= read_f32(rdata::F32_6750)) {
                     cl = cl.wrapping_add(0xf);
                 } else if !(f >= read_f32(rdata::F32_8000)) {

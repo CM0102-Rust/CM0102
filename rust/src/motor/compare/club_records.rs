@@ -102,18 +102,19 @@ pub(crate) unsafe extern "thiscall" fn compare_pick_fans_player_of_year(this: us
 /// criados na mesma ordem da original, e os recordes pago e recebido esperados); a original roda; pega os registros
 /// de novo (o vetor pode ter sido realocado) e confere os valores e o clube de cada recorde e o [0xae1080].
 pub(crate) unsafe extern "thiscall" fn compare_update_transfer_fee_records(this: usize, t: usize) -> u32 {
+    let t = Offer(t);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_UPDATE_TRANSFER_FEE_RECORDS);
-    let person = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(t + offer::TARGET_STAFF_ID) as usize).wrapping_mul(staff::SIZE));
-    let buyer = injury_club_by_index(read_i32(t + offer::BUYER_CLUB_ID));
+    let person = read_usize(G_STAFF_TABLE).wrapping_add(((t.target_staff_id() as i32) as usize).wrapping_mul(staff::SIZE));
+    let buyer = injury_club_by_index((t.buyer_club_id() as i32));
     let contract = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
     let seller = if !contract.is_null() { injury_club_by_index((contract.club() as i32)) } else { 0 };
     if seller == 0 {
-        let r = o(this, t);
+        let r = o(this, t.addr());
         SCOREBOARD.record(r == 1 && read_usize(G_CONTRACT_LOOKUP_RESULT) == 0, || format!("update_transfer_fee_records sem vendedor: {} [G_CONTRACT_LOOKUP_RESULT]={:x}", r, read_usize(G_CONTRACT_LOOKUP_RESULT)));
         return r;
     }
     let records = || [exe::club_records_get_season_record(this, buyer, 1), exe::club_records_get_all_time_record(this, buyer, 1), exe::club_records_get_season_record(this, seller, 1), exe::club_records_get_all_time_record(this, seller, 1)];
-    let value = read_i32(t + offer::FEE);
+    let value = (t.fee() as i32);
     let rg = records();
     // (value, club) of each record: paid in the season and all-time by the buyer, received by the seller
     let mut plan = [(read_i32(rg[0] + 0x313), read_usize(rg[0] + 0x32f)), (read_i32(rg[1] + 0x313), read_usize(rg[1] + 0x32f)),
@@ -139,7 +140,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_transfer_fee_records(this:
             }
         }
     }
-    let r = o(this, t);
+    let r = o(this, t.addr());
     let rg = records();
     let now = [(read_i32(rg[0] + 0x313), read_usize(rg[0] + 0x32f)), (read_i32(rg[1] + 0x313), read_usize(rg[1] + 0x32f)),
                  (read_i32(rg[2] + 0x33c), read_usize(rg[2] + 0x358)), (read_i32(rg[3] + 0x33c), read_usize(rg[3] + 0x358))];

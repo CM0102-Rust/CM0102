@@ -13,11 +13,11 @@ pub(crate) unsafe extern "thiscall" fn compare_jap_j_cup_create_round_table(this
 /// Comparer for `jap_j_cup_collect_entrants`.
 pub(crate) unsafe extern "thiscall" fn compare_jap_j_cup_collect_entrants(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_JAP_J_CUP_COLLECT_ENTRANTS);
-    jap_j_cup_compare_entrant_list("jap_j_cup_collect_entrants", this, || o(this), || collect_j_cup_entrants(this))
+    jap_j_cup_compare_entrant_list("jap_j_cup_collect_entrants", Cup(this), || o(this), || collect_j_cup_entrants(Cup(this)))
 }
 
 /// Comparer for `jap_j_cup_start_new_season`.
 pub(crate) unsafe extern "thiscall" fn compare_jap_j_cup_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_JAP_J_CUP_START_NEW_SEASON);
-    compare_cup_new_season("jap_j_cup_start_new_season", this, || o(this))
+    compare_cup_new_season("jap_j_cup_start_new_season", Cup(this), || o(this))
 }

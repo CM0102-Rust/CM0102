@@ -402,11 +402,11 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
         if friendly(read_usize(G_FRIENDLY), comp.addr()) != 0 {
             band_of_nation(read_i32(home.nation().addr())) // like the original, without checking the nation
         } else {
-            let c = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_i32(comp.addr()).wrapping_mul(4) as usize));
-            if c == 0 {
+            let c = Cup(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_i32(comp.addr()).wrapping_mul(4) as usize)));
+            if c.is_null() {
                 band_of_nation(officials_manager_club_nation_id(home).unwrap_or_else(|| random(nations)))
             } else {
-                let kind = read_u8(c + cup::CLUB_SIDES) as i8;
+                let kind = c.club_sides() as i8;
                 if kind == 2 || kind == 4 {
                     let continent_of = |club: Club| {
                         let n = club.nation().addr();
@@ -548,8 +548,8 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
     if comp.is_null() {
         return 0;
     }
-    let c = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_i32(comp.addr()).wrapping_mul(4) as usize));
-    if c == 0 || read_u8(c + cup::CLUB_SIDES) == 4 || read_u8(c + cup::CLUB_SIDES) == 2 {
+    let c = Cup(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_i32(comp.addr()).wrapping_mul(4) as usize)));
+    if c.is_null() || c.club_sides() == 4 || c.club_sides() == 2 {
         return 0;
     }
     if exe::comp_util_is_league_division(read_i32(comp.addr())) == 0 {
@@ -567,33 +567,33 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
     }
     let (ini, n) = band.unwrap_or((read_i32(b + officials_nation_block::FIRST_REFEREE), read_i32(b + officials_nation_block::REFEREE_COUNT)));
     for k in 0..n.max(0) {
-        let sheet = read_usize(G_OFFICIAL_TABLE).wrapping_add(ini.wrapping_add(k).wrapping_mul(0x2b) as usize);
-        if sheet == 0 {
+        let sheet = PlayerSheet(read_usize(G_OFFICIAL_TABLE).wrapping_add(ini.wrapping_add(k).wrapping_mul(0x2b) as usize));
+        if sheet.is_null() {
             show_error_at(0xa6a22c, 0xa61);
             continue;
         }
         let year = read_u8(G_CURRENT_DATE_YEAR);
-        let dif = (read_i16(sheet + official::BIRTH_DAY) as i32).wrapping_sub(read_i16(G_CURRENT_DATE) as i32);
-        let age = if dif > 0 { year.wrapping_sub(read_u8(sheet + official::BIRTH_YEAR)).wrapping_sub(1) } else { year.wrapping_sub(read_u8(sheet + official::BIRTH_YEAR)) } as i8;
+        let dif = (read_i16(sheet.addr() + official::BIRTH_DAY) as i32).wrapping_sub(read_i16(G_CURRENT_DATE) as i32);
+        let age = if dif > 0 { year.wrapping_sub(read_u8(sheet.addr() + official::BIRTH_YEAR)).wrapping_sub(1) } else { year.wrapping_sub(read_u8(sheet.addr() + official::BIRTH_YEAR)) } as i8;
         if age <= 0x28 || (age <= 0x2d && random(3) != 0) {
             continue;
         }
         crate::comparison::branch("cpy_8 referee renewed");
-        let nation = read_usize(sheet + player_sheet::WING_BACK);
+        let nation = read_usize(sheet.addr() + player_sheet::WING_BACK);
         let n1 = exe::database_pick_first_name_for_nation(nation);
-        core::ptr::write_unaligned((sheet + 4) as *mut usize, n1);
-        let n2 = exe::database_pick_first_name_for_nation(read_usize(sheet + player_sheet::WING_BACK));
-        core::ptr::write_unaligned((sheet + 8) as *mut usize, n2);
-        *((sheet + player_sheet::DIRTINESS) as *mut u8) = if random(10) != 0 {
+        core::ptr::write_unaligned((sheet.addr() + 4) as *mut usize, n1);
+        let n2 = exe::database_pick_first_name_for_nation(read_usize(sheet.addr() + player_sheet::WING_BACK));
+        core::ptr::write_unaligned((sheet.addr() + 8) as *mut usize, n2);
+        sheet.set_dirtiness((if random(10) != 0 {
             (random(0x10) as u8).wrapping_add(5)
         } else {
             let a = random(0xb) as u8;
             a.wrapping_add(random(0xb) as u8)
-        };
+        }) as i8);
         let r5 = random(5);
         let base = (read_i16(G_CURRENT_DATE_YEAR) as u16).wrapping_sub(0x1b);
-        core::ptr::write_unaligned((sheet + official::BIRTH_YEAR) as *mut u16, (r5 as u16).wrapping_add(base));
-        core::ptr::write_unaligned((sheet + official::BIRTH_DAY) as *mut u16, random(0x154) as u16);
+        core::ptr::write_unaligned((sheet.addr() + official::BIRTH_YEAR) as *mut u16, (r5 as u16).wrapping_add(base));
+        core::ptr::write_unaligned((sheet.addr() + official::BIRTH_DAY) as *mut u16, random(0x154) as u16);
     }
     for k in 0..n.max(0) {
         let row = read_usize(this).wrapping_add(ini.wrapping_add(k).wrapping_mul(0x11) as usize);

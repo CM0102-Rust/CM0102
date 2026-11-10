@@ -549,13 +549,13 @@ pub(crate) unsafe fn big_spender_bonus(club: Club, band: i8, w: i32) -> i32 {
 ///
 /// [pt] O teto do técnico humano pelas reputações (+0xb, +0xd) e pela experiência (+5) do não-jogador `np`, pela idade
 /// (+0x18) e pela marca +0x22 da pessoa e pelo cargo (o trecho 0x597405..0x597566).
-pub(crate) unsafe fn human_manager_wage_cap(person: Staff, np: usize, job: i8) -> i32 {
+pub(crate) unsafe fn human_manager_wage_cap(person: Staff, np: PlayerSheet, job: i8) -> i32 {
     let age = (person.age() as u8) as i8;
     let mark = person.int_apps() != 0;
-    let cx = read_i16(np + player_sheet::CURRENT_REPUTATION);
+    let cx = np.current_reputation();
     let manager = job < 4 && job != 0 && job != 7;
     if cx < 0xea6 {
-        let ax = read_i16(np + player_sheet::CURRENT_ABILITY);
+        let ax = np.current_ability();
         if ax < 0x3c {
             if age <= 0x17 { 0x1388 } else { 0x1388 + 0x9c4 }
         } else if ax < 0x64 {
@@ -564,13 +564,13 @@ pub(crate) unsafe fn human_manager_wage_cap(person: Staff, np: usize, job: i8) -
             0x61a8
         }
     } else if cx < 0x1482 {
-        if read_i16(np + player_sheet::CURRENT_ABILITY) >= 0x64 { 0x7530 } else { 0x7530 - 5000 }
+        if np.current_ability() >= 0x64 { 0x7530 } else { 0x7530 - 5000 }
     } else if cx < 0x1c52 {
-        if age > 0x22 && read_i16(np + player_sheet::CURRENT_ABILITY) < 0x78 {
+        if age > 0x22 && np.current_ability() < 0x78 {
             if manager { 0x927c } else { 0x7ef4 }
         } else {
-            let cx2 = read_i16(np + player_sheet::CURRENT_ABILITY);
-            if cx2 < 0x8c && read_i16(np + player_sheet::WORLD_REPUTATION) < 0xea6 {
+            let cx2 = np.current_ability();
+            if cx2 < 0x8c && np.world_reputation() < 0xea6 {
                 0x9c40 + if mark { 0x1388 } else { 0 }
             } else if manager {
                 if mark { 0xe09c } else if cx2 >= 0x8c { 0x13880 } else { 0x13880 - 15000 }
@@ -578,7 +578,7 @@ pub(crate) unsafe fn human_manager_wage_cap(person: Staff, np: usize, job: i8) -
                 0xafc8
             }
         }
-    } else if read_i16(np + player_sheet::WORLD_REPUTATION) < 0x1a5e {
+    } else if np.world_reputation() < 0x1a5e {
         0x186a0 + if mark { 0x61a8 } else { 0 }
     } else {
         0x2ab98
@@ -824,7 +824,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
         if is_human_club_with(club, 0) != 0 {
             let np = person.player();
             if np != 0 {
-                let ceiling = human_manager_wage_cap(person, np, job as i8);
+                let ceiling = human_manager_wage_cap(person, PlayerSheet(np), job as i8);
                 if ceiling < r {
                     r = ceiling.wrapping_sub(ftol(r.wrapping_sub(ceiling) as f64 * read_f64(rdata::F64_NEG_0_1)));
                 }
@@ -1750,9 +1750,9 @@ pub(crate) unsafe extern "thiscall" fn try_board_takeover(this: usize, club: usi
         0.5
     };
     let presence = club.chairman().addr();
-    let sheet = if presence != 0 { read_usize(presence + staff::NON_PLAYER) } else { 0 };
-    let with_sheet = presence != 0 && sheet != 0;
-    let first = if with_sheet { friendly_random(read_i8(sheet + player_sheet::WING_BACK) as i32) } else { friendly_random(0x14) };
+    let sheet = PlayerSheet(if presence != 0 { read_usize(presence + staff::NON_PLAYER) } else { 0 });
+    let with_sheet = presence != 0 && !sheet.is_null();
+    let first = if with_sheet { friendly_random(sheet.wing_back() as i32) } else { friendly_random(0x14) };
     if first != 0 {
         return 0;
     }

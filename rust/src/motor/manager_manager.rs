@@ -236,11 +236,11 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
             }
             let p = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE));
             let nation = club.nation().addr();
-            let sheet = read_usize(p + 0x61);
+            let sheet = PlayerSheet(read_usize(p + 0x61));
             let rep = if other.nation().addr() == nation {
-                read_i16(sheet + player_sheet::CURRENT_REPUTATION)
+                sheet.current_reputation()
             } else if read_usize(p + 0x1a) == nation {
-                read_i16(sheet + player_sheet::HOME_REPUTATION)
+                sheet.home_reputation()
             } else if exe::database_is_staff_foreign(p, nation, 1) == 0 {
                 read_i16(read_usize(p + 0x61) + 9)
             } else {
@@ -2517,10 +2517,10 @@ pub(crate) unsafe extern "thiscall" fn set_board_ratings(this: usize, club: usiz
 /// True if the transfer offer status (+0x2c) is 2, 3, 4, 0x10 or 0x14, or 0xf with +0x2e ≥ 3.
 ///
 /// [pt] A oferta já resolvida pelo status (+0x2c): 2, 3, 4, 0x10 ou 0x14, ou 0xf com +0x2e ≥ 3.
-pub(crate) unsafe fn is_offer_resolved(o: usize) -> bool {
-    match read_u8(o + offer::STATUS) {
+pub(crate) unsafe fn is_offer_resolved(o: Offer) -> bool {
+    match o.status() {
         2 | 3 | 4 | 0x10 | 0x14 => true,
-        0xf => read_u8(o + offer::RESPONSE_ROUND) >= 3,
+        0xf => o.response_round() >= 3,
         _ => false,
     }
 }
@@ -2616,21 +2616,21 @@ pub(crate) unsafe fn offer_contract_club(c: Contract, filter: bool) -> usize {
 /// [pt] Põe a oferta em espera: status 1, a marca +0x30 (bits 1..3 limpos, bit 0 ligado), sai a proposta de contrato do
 /// jogador com o comprador (0x4cca70), termos zerados (+0x10) e, para cada jogador da troca (+4), sai a proposta pela
 /// vaga +0x20 (0x4ccb30) e o estado dele (+4) zera.
-pub(crate) unsafe fn put_offer_on_hold(o: usize) {
-    let mark = (read_u8(o + offer::COMPLETION_TIMING) & 0xf1) | 1;
-    write_u8(o + offer::STATUS, 1);
-    write_u8(o + offer::COMPLETION_TIMING, mark);
-    exe::contract_manager_remove_contract_offer(read_usize(G_CONTRACT_MANAGER), staff_records_staff_by_id(read_usize(o + offer::TARGET_STAFF_ID)), friendly_club_by_id(read_usize(o + offer::BUYER_CLUB_ID)));
-    write_u8(o + offer::TERMS_STATE, 0);
-    let l = read_usize(o + offer::EXCHANGE_PLAYERS);
+pub(crate) unsafe fn put_offer_on_hold(o: Offer) {
+    let mark = (o.completion_timing() & 0xf1) | 1;
+    o.set_status(1);
+    o.set_completion_timing(mark);
+    exe::contract_manager_remove_contract_offer(read_usize(G_CONTRACT_MANAGER), staff_records_staff_by_id(o.target_staff_id()), friendly_club_by_id(o.buyer_club_id()));
+    o.set_terms_state(0);
+    let l = o.exchange_players();
     if l != 0 {
         core::ptr::write_unaligned((l + llist::CURSOR) as *mut usize, read_usize(l + llist::HEAD));
         loop {
-            let y = exe::llist_get_next(read_usize(o + offer::EXCHANGE_PLAYERS));
+            let y = exe::llist_get_next(o.exchange_players());
             if y == 0 {
                 break;
             }
-            exe::contract_manager_remove_contract_offer_for_transfer(read_usize(G_CONTRACT_MANAGER), staff_records_staff_by_id(read_usize(y)), read_usize(o + offer::SLOT_INDEX));
+            exe::contract_manager_remove_contract_offer_for_transfer(read_usize(G_CONTRACT_MANAGER), staff_records_staff_by_id(read_usize(y)), o.slot_index());
             write_u8(y + 4, 0);
         }
     }
@@ -4013,16 +4013,17 @@ pub(crate) unsafe fn fee_limit(club: Club) -> i32 {
 /// tira o valor do gasto e marca `f2` com as faixas espelhadas (0,25/0,5/2/4; 0,125/8) e 0x20 ou 0x80. Transferência
 /// já avaliada (+0x1f = 1): nada (as marcas ficam como estão).
 pub(crate) unsafe extern "thiscall" fn assess_transfer_deal(this: usize, transf: usize, f1: usize, f2: usize) {
-    if *((transf + offer::OFFER_TYPE) as *const u8) == 1 {
+    let transf = Offer(transf);
+    if transf.offer_type() == 1 {
         return;
     }
     core::ptr::write_unaligned(f2 as *mut u16, 0);
     core::ptr::write_unaligned(f1 as *mut u16, 0);
-    let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add(read_usize(transf + offer::TARGET_STAFF_ID).wrapping_mul(staff::SIZE)));
+    let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add(transf.target_staff_id().wrapping_mul(staff::SIZE)));
     if person.player() == 0 {
         return;
     }
-    let buyer = Club(read_usize(G_CLUB_TABLE).wrapping_add(read_usize(transf + offer::BUYER_CLUB_ID).wrapping_mul(club::SIZE)));
+    let buyer = Club(read_usize(G_CLUB_TABLE).wrapping_add(transf.buyer_club_id().wrapping_mul(club::SIZE)));
     let mut value = player_value_for_club(person, buyer);
     if value == 0 {
         value = 1;
@@ -4166,12 +4167,13 @@ pub(crate) unsafe fn apply_reason_flags(e: usize, f: u32) {
 /// favorito e rejeitado no humor +0x16 (e +0x14). Limita a confiança a 1..10000 e +0x16 a −10000 ou mais; no fim o
 /// jogador sai das pessoas favoritas do presidente do vendedor (0x547c10).
 pub(crate) unsafe extern "thiscall" fn apply_transfer_confidence_changes(this: usize, transf: usize) {
-    let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add(read_usize(transf + offer::TARGET_STAFF_ID).wrapping_mul(staff::SIZE)));
-    let mut fc: usize = transf; // the argument’s slot
+    let transf = Offer(transf);
+    let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add(transf.target_staff_id().wrapping_mul(staff::SIZE)));
+    let mut fc: usize = transf.addr(); // the argument’s slot
     let mut fv: usize = this; // the ecx pushed in the prologue
     exe::manager_manager_assess_transfer_deal(this, transf, &mut fc as *mut usize as usize, &mut fv as *mut usize as usize);
     let f = fc as u32;
-    let e = board_row_at(this, read_usize(transf + offer::BUYER_CLUB_ID));
+    let e = board_row_at(this, transf.buyer_club_id());
     apply_reason_flags(e, f);
     if f & 0x20 != 0 {
         manager_manager_add_i16(e + board_record::TRANSFER_MOOD, -100);
@@ -4801,8 +4803,8 @@ pub(crate) unsafe fn club_shortlist_entries(this: usize, id: u32) -> Vec<usize> 
 /// True if the offer belongs to the club (+8) or is flagged (+0x2d = 1), and its status (+0x2c) is 2.
 ///
 /// [pt] A oferta `o` serve: do `clube` (+8) ou marcada (+0x2d = 1), e no estado 2 (+0x2c)?
-pub(crate) unsafe fn is_offer_eligible(o: usize, club: u32) -> bool {
-    (read_usize(o + offer::BUYER_CLUB_ID) as u32 == club || *((o + offer::PLAYER_AWARE) as *const u8) == 1) && *((o + offer::STATUS) as *const u8) == 2
+pub(crate) unsafe fn is_offer_eligible(o: Offer, club: u32) -> bool {
+    (o.buyer_club_id() as u32 == club || o.player_aware() == 1) && o.status() == 2
 }
 
 /// Is the person in the list (iterator `next_list_item`, restored at the end)?
@@ -4895,8 +4897,8 @@ pub(crate) unsafe extern "thiscall" fn is_staff_suitable_for_job(_this: usize, p
     let time = |p: Staff| exe::date_days_since(G_CURRENT_DATE, (p.date_joined_club() as u32), (p.date_joined_club_leap_year() as u32));
     let limit = |p: Staff| (read_u8_volatile(p.addr() + staff::LOYALTY) as i8 as i32 + 0x15) * 10;
     if read_u8_volatile(person.addr() + staff::JOB_FOR_CLUB) == 0xb {
-        let player = (person.player() as u32) as usize;
-        if player != 0 && read_i16(player + player_sheet::CURRENT_REPUTATION) > 0x128e && rep(club.addr()) < 0x1a5e {
+        let player = PlayerSheet((person.player() as u32) as usize);
+        if !player.is_null() && player.current_reputation() > 0x128e && rep(club.addr()) < 0x1a5e {
             let c = exe::contract_manager_get_contract(read_u32(G_CONTRACT_MANAGER) as usize, person);
             if c != 0 {
                 let band = read_u8_volatile(c + 0x4f) >> 4;

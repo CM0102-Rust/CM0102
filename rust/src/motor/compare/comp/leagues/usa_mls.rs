@@ -47,18 +47,18 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_create_playoff_stage(this
         plan[3 + k] = club_of_record(&r, k);
     }
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_USA_MLS_CREATE_PLAYOFF_STAGE)(this.addr());
-    let stage = read_usize(this.stages() + 8);
-    let same = stage != 0 && read_i16(stage + cup::TEAM_COUNT) == 8 && read_usize(stage + 4) == this.competition().addr() && {
+    let stage = Cup(read_usize(this.stages() + 8));
+    let same = !stage.is_null() && stage.team_count() == 8 && read_usize(stage.addr() + 4) == this.competition().addr() && {
         let mut in_it = [0usize; 8];
         for (i, c) in in_it.iter_mut().enumerate() {
-            *c = read_usize(read_usize(stage + cup::TEAM_TABLE) + 6 * i);
+            *c = read_usize(stage.team_table() + 6 * i);
         }
         let mut p = plan;
         p.sort_unstable();
         in_it.sort_unstable();
         p == in_it
     };
-    SCOREBOARD.record(same, || format!("usa_mls_create_playoff_stage({:#x}) fase={:#x} plano={:x?}", this.addr(), stage, plan));
+    SCOREBOARD.record(same, || format!("usa_mls_create_playoff_stage({:#x}) fase={:#x} plano={:x?}", this.addr(), stage.addr(), plan));
 }
 
 /// Comparer for `usa_mls_create_final_stage` (comparison mode: see the header of motor.rs): the comparer of the final;
@@ -73,12 +73,12 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_create_playoff_stage(this
 /// os dois na lista dela (como conjunto).
 pub(crate) unsafe extern "thiscall" fn compare_usa_mls_create_final_stage(this: usize) {
     let this = League(this);
-    let po = read_usize(this.stages() + 8);
+    let po = Cup(read_usize(this.stages() + 8));
     let mut v = [0usize; 2];
     let mut n = 0usize;
     let mut i = 0i32;
-    while i < read_i16(po + cup::TEAM_COUNT) as i32 && n < 2 {
-        let e = read_usize(po + cup::TEAM_TABLE) + 6 * i as usize;
+    while i < po.team_count() as i32 && n < 2 {
+        let e = po.team_table() + 6 * i as usize;
         if *((e + 5) as *const u8) == 1 {
             v[n] = read_usize(e);
             n += 1;
@@ -86,14 +86,14 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_create_final_stage(this: 
         i += 1;
     }
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_USA_MLS_CREATE_FINAL_STAGE)(this.addr());
-    let stage = read_usize(this.stages() + 0xc);
+    let stage = Cup(read_usize(this.stages() + 0xc));
     // simplification: with fewer than two winners the original reads uninitialized slots from the list; then only the stage is checked.
-    let same = stage != 0 && n < 2 || stage != 0 && {
-        let l = read_usize(stage + cup::TEAM_TABLE);
+    let same = !stage.is_null() && n < 2 || !stage.is_null() && {
+        let l = stage.team_table();
         let (x, y) = (read_usize(l), read_usize(l + 6));
-        read_i16(stage + cup::TEAM_COUNT) == 2 && read_usize(stage + 4) == this.competition().addr() && ((x, y) == (v[0], v[1]) || (x, y) == (v[1], v[0]))
+        stage.team_count() == 2 && read_usize(stage.addr() + 4) == this.competition().addr() && ((x, y) == (v[0], v[1]) || (x, y) == (v[1], v[0]))
     };
-    SCOREBOARD.record(same, || format!("usa_mls_create_final_stage({:#x}) finalistas={:x?} n={} fase={:#x}", this.addr(), v, n, stage));
+    SCOREBOARD.record(same, || format!("usa_mls_create_final_stage({:#x}) finalistas={:x?} n={} fase={:#x}", this.addr(), v, n, stage.addr()));
 }
 
 /// Comparer for `usa_mls_create_table`.

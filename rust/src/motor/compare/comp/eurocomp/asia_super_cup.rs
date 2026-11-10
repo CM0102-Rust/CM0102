@@ -13,5 +13,5 @@ pub(crate) unsafe extern "thiscall" fn compare_asia_super_cup_create_round_table
 /// Comparer for `asia_super_cup_select_teams`.
 pub(crate) unsafe extern "thiscall" fn compare_asia_super_cup_select_teams(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_ASIA_SUPER_CUP_SELECT_TEAMS);
-    compare_team_list("asia_super_cup_select_teams", this, || o(this), || select_asian_super_cup_teams(this))
+    compare_team_list("asia_super_cup_select_teams", Cup(this), || o(this), || select_asian_super_cup_teams(this))
 }

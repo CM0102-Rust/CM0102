@@ -12,12 +12,13 @@ pub(crate) unsafe extern "thiscall" fn compare_eng_fa_cup_create_round_table(thi
 
 /// Comparer for `eng_fa_cup_update_for_date`.
 pub(crate) unsafe extern "thiscall" fn compare_eng_fa_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
+    let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ENG_FA_CUP_UPDATE_FOR_DATE);
-    let before = read_usize(this + cup::SEASON_SET_UP);
+    let before = this.season_set_up();
     let vira = before == 0 && stage != 0 && is_date_today(make_date_dword(3, 9, read_i16(today + 2) as u16 as u32, 0xffff_ffff), today)
-        && !(is_date_today(make_date_dword(1, 9, 0x7cf, 0xffff_ffff), today) && *((this + 0xb2) as *const u8) == 0);
-    let r = o(this, today, stage);
-    let after = read_usize(this + cup::SEASON_SET_UP);
-    SCOREBOARD.record(!vira || after == 1, || format!("eng_fa_cup_update_for_date({:#x}) vira {} +0x45 {} -> {}", this, vira, before, after));
+        && !(is_date_today(make_date_dword(1, 9, 0x7cf, 0xffff_ffff), today) && *((this.addr() + 0xb2) as *const u8) == 0);
+    let r = o(this.addr(), today, stage);
+    let after = this.season_set_up();
+    SCOREBOARD.record(!vira || after == 1, || format!("eng_fa_cup_update_for_date({:#x}) vira {} +0x45 {} -> {}", this.addr(), vira, before, after));
     r
 }

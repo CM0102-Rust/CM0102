@@ -13,13 +13,14 @@ use super::*;
 /// embaralha; a cópia sem contar). Quando falta clube numa lista (menos de 2 mexicanos, 3 centro-americanos, 1
 /// caribenho, ou 2 da MLS sem o objeto [0x9cf728]) a original lê sobra de pilha: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_con_champ_select_qualified_clubs(this: usize) -> u32 {
+    let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_CHAMP_SELECT_QUALIFIED_CLUBS);
     let l = concacaf_club_lists();
     let other = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_US_OPEN_CUP).wrapping_mul(4)));
-    if l.n[0] < 2 || l.n[1] < 3 || l.n[2] < 1 || (other == 0 && l.n[3] < 2) || read_usize(this + cup::TEAM_TABLE) == 0 {
-        return o(this); // simplification: short list (the original reads stack leftover) or no table: original only
+    if l.n[0] < 2 || l.n[1] < 3 || l.n[2] < 1 || (other == 0 && l.n[3] < 2) || this.team_table() == 0 {
+        return o(this.addr()); // simplification: short list (the original reads stack leftover) or no table: original only
     }
-    let mut regions = vec![(this + cup::TEAM_COUNT, 2), (read_usize(this + cup::TEAM_TABLE), 48)];
+    let mut regions = vec![(this.addr() + cup::TEAM_COUNT, 2), (this.team_table(), 48)];
     regions.extend_from_slice(&crate::rng::STATE_REGIONS);
     // 0x4afd80 reorders the competition history ([0xae23d4], [0xae237c] rows of 0x1a bytes) on every call; with
     // tie, the order the original left changes the champion the copy would find: the history goes into the regions
@@ -27,29 +28,31 @@ pub(crate) unsafe extern "thiscall" fn compare_con_champ_select_qualified_clubs(
     if history != 0 {
         regions.push((history, read_usize(G_CLUB_COMP_HISTORY_COUNT).wrapping_mul(0x1a)));
     }
-    let (r, rr, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this), || crate::rng::without_counting(|| con_champ_select_qualified_clubs(this)));
-    SCOREBOARD.record(igual && r == rr, || format!("con_champ_select_qualified_clubs({:#x}) listas {:?} original={:x?} rust={:x?}", this, l.n, mo, mr));
+    let (r, rr, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this.addr()), || crate::rng::without_counting(|| con_champ_select_qualified_clubs(this.addr())));
+    SCOREBOARD.record(igual && r == rr, || format!("con_champ_select_qualified_clubs({:#x}) listas {:?} original={:x?} rust={:x?}", this.addr(), l.n, mo, mr));
     r
 }
 
 /// Comparer for `con_champ_update_for_date`.
 pub(crate) unsafe extern "thiscall" fn compare_con_champ_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
+    let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CON_CHAMP_UPDATE_FOR_DATE);
-    if read_usize(this + cup::TEAM_TABLE) == 0 {
-        return o(this, today, stage);
+    if this.team_table() == 0 {
+        return o(this.addr(), today, stage);
     }
-    let seleciona = read_usize(read_usize(this + cup::TEAM_TABLE)) == 0 && stage != 0;
-    let n = read_i16(this + cup::TEAM_COUNT);
-    let r = o(this, today, stage);
-    let same = if seleciona { read_i16(this + cup::TEAM_COUNT) == 8 } else { read_i16(this + cup::TEAM_COUNT) == n };
-    SCOREBOARD.record(same, || format!("con_champ_update_for_date({:#x}, fase {}) seleciona={} times {} -> {}", this, stage, seleciona, n, read_i16(this + cup::TEAM_COUNT)));
+    let seleciona = read_usize(this.team_table()) == 0 && stage != 0;
+    let n = this.team_count();
+    let r = o(this.addr(), today, stage);
+    let same = if seleciona { this.team_count() == 8 } else { this.team_count() == n };
+    SCOREBOARD.record(same, || format!("con_champ_update_for_date({:#x}, fase {}) seleciona={} times {} -> {}", this.addr(), stage, seleciona, n, this.team_count()));
     r
 }
 
 /// Comparer for `con_champ_set_up_rounds`.
 pub(crate) unsafe extern "thiscall" fn compare_con_champ_set_up_rounds(this: usize) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_CHAMP_SET_UP_ROUNDS)(this);
-    SCOREBOARD.record(r == 1 && read_usize(this + cup::PRIZE_FUND) == 0x1e8480, || format!("con_champ_set_up_rounds({:#x}) devolveu {} prêmios {}", this, r, read_usize(this + cup::PRIZE_FUND)));
+    let this = Cup(this);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_CHAMP_SET_UP_ROUNDS)(this.addr());
+    SCOREBOARD.record(r == 1 && (this.prize_fund() as usize) == 0x1e8480, || format!("con_champ_set_up_rounds({:#x}) devolveu {} prêmios {}", this.addr(), r, (this.prize_fund() as usize)));
     r
 }
 

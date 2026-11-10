@@ -399,8 +399,8 @@ pub(crate) unsafe fn national_tournament_staff_records(name: u8, this: League, c
             0 => {
                 let r = read_i16(game + 0x34);
                 let weight = scale_by_round(0x28, 0x64, r, 3);
-                let knockout = read_usize(this.stages() + groups as usize * 4);
-                let round = read_i16(read_usize(knockout + cup::ROUND_TABLE).wrapping_add((r as isize * 0x68) as usize) + 0x6f) as u16 as u32;
+                let knockout = Cup(read_usize(this.stages() + groups as usize * 4));
+                let round = read_i16(knockout.round_table().wrapping_add((r as isize * 0x68) as usize) + 0x6f) as u16 as u32;
                 european_cup_add_qualified_record(club, comp, read_i16(game + 0x32) as u16 as u32, round, weight);
             }
             0xff => {

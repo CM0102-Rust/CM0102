@@ -16,9 +16,10 @@ use super::*;
 /// adiar, 3 ao criar) e, criando com os dois times, os jogos do mandante na competição sobem 1 (2 na de duas mãos com a
 /// copa ainda ativa).
 pub(crate) unsafe extern "thiscall" fn compare_create_tie_fixtures(this: usize, round: u32, tie: u32, adiar: u32) -> u32 {
+    let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(IDX_CREATE_TIE_FIXTURES);
     let ri = round as i16 as i32;
-    let id = read_usize(read_usize(this + 4)) as u32;
+    let id = read_usize(read_usize(this.addr() + 4)) as u32;
     let (mut k, mut ad) = (tie as i16 as i32, adiar);
     if k == -1 {
         let n = read_i16(round_entry(this, ri) + 0x1a) as i32;
@@ -32,7 +33,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_tie_fixtures(this: usize, 
             }
         }
         if k == -1 {
-            let r = o(this, round, tie, adiar);
+            let r = o(this.addr(), round, tie, adiar);
             SCOREBOARD.record(r == 0, || format!("create_tie_fixtures(rodada {}) sem confronto marcado: {}", ri, r));
             return r;
         }
@@ -48,17 +49,17 @@ pub(crate) unsafe extern "thiscall" fn compare_create_tie_fixtures(this: usize, 
     // that comes next, + 14 days. On a clash, 0x5aa680 reschedules the match (0x5ab510): cup (type 2) up to the date of the
     // next round (without it, 2 weeks), the other types up to 2 weeks later; with more leagues it happens (the 1st round
     // of cup 101, 2001-225, went more than 7 days)
-    let first_leg = (read_u8(e + cup_round::YEAR_OFFSET) as i8 as i32 + read_i16(this + cup::YEAR) as i32, read_i16(e + cup_round::DAY) as i32);
+    let first_leg = (read_u8(e + cup_round::YEAR_OFFSET) as i8 as i32 + this.year() as i32, read_i16(e + cup_round::DAY) as i32);
     let last = if duas { add_days_to_day_year(first_leg, read_u8(e + cup_round::LEG_GAP_DAYS) as i32) } else { first_leg };
     let tomorrow = add_days_to_day_year((read_i16(G_CURRENT_DATE_YEAR) as u16 as i32, read_i16(G_CURRENT_DATE) as i32), 1);
-    let next = if ri < read_i16(this + cup::ROUND_COUNT) as i32 - 1 {
-        (read_u8(e + 0x6d) as i8 as i32 + read_i16(this + cup::YEAR) as i32, read_i16(e + 0x6b) as i32)
+    let next = if ri < this.round_count() as i32 - 1 {
+        (read_u8(e + 0x6d) as i8 as i32 + this.year() as i32, read_i16(e + 0x6b) as i32)
     } else {
         last
     };
     let end = add_days_to_day_year(last.max(tomorrow).max(next), 14);
     let before = if check { club_fixtures_until(ic, id, end) } else { 0 };
-    let r = o(this, round, tie, adiar);
+    let r = o(this.addr(), round, tie, adiar);
     let mark = read_u8(t + cup_tie::FIXTURE_STATE);
     let mut ok = r == 1 && mark == if ad != 0 { 2 } else { 3 };
     let mut expected = 0;
@@ -87,7 +88,7 @@ pub(crate) unsafe extern "thiscall" fn compare_post_draw_news(this: usize, round
 pub(crate) unsafe extern "thiscall" fn compare_sort_round_teams(cup: usize, round: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_SORT_ROUND_TEAMS);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend(all_ties_regions(cup));
+    reg.extend(all_ties_regions(Cup(cup)));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(cup, round),
         || crate::rng::without_counting(|| sort_round_teams(cup, round)));
     SCOREBOARD.record(igual, || {
@@ -103,7 +104,7 @@ pub(crate) unsafe extern "thiscall" fn compare_sort_round_teams(cup: usize, roun
 pub(crate) unsafe extern "thiscall" fn compare_check_round_teams_for_nation(cup: usize, round: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_CHECK_ROUND_TEAMS_FOR_NATION);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend(all_ties_regions(cup));
+    reg.extend(all_ties_regions(Cup(cup)));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(cup, round),
         || crate::rng::without_counting(|| check_round_teams_for_nation(cup, round)));
     SCOREBOARD.record(igual, || {
@@ -115,10 +116,11 @@ pub(crate) unsafe extern "thiscall" fn compare_check_round_teams_for_nation(cup:
 
 /// Comparador: lado a lado no byte +0xb1.
 pub(crate) unsafe extern "thiscall" fn compare_cup_start_new_season(cup: usize) {
+    let cup = Cup(cup);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CUP_START_NEW_SEASON);
-    let reg = [(cup + cup::RUN_BY_STAGES, 1)];
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(cup), || cup_start_new_season(cup));
-    SCOREBOARD.record(igual, || format!("cup_start_new_season({:#x}) {:x?} x {:x?}", cup, mo, mr));
+    let reg = [(cup.addr() + cup::RUN_BY_STAGES, 1)];
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(cup.addr()), || cup_start_new_season(cup.addr()));
+    SCOREBOARD.record(igual, || format!("cup_start_new_season({:#x}) {:x?} x {:x?}", cup.addr(), mo, mr));
 }
 
 /// Comparer for `pay_round_prize_money`.
@@ -133,23 +135,24 @@ pub(crate) unsafe extern "thiscall" fn compare_cup_start_new_season(cup: usize) 
 /// os registros de finanças dos dois clubes, restaurados depois do ensaio); confere o fundo e as finanças. Sem clube,
 /// sem finanças ou com a divisão que cai: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_pay_round_prize_money(cup: usize, winner: usize, loser: usize, round: u32, partida: usize) {
+    let cup = Cup(cup);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, usize)>(IDX_PAY_ROUND_PRIZE_MONEY);
     let (cv, cp) = (read_usize(winner), read_usize(loser));
     if cv == 0 || cp == 0 || cv == cp || round_prizes(cup, round as i16 as i32, false).is_none() {
-        return o(cup, winner, loser, round, partida); // simplification: with no club or with the falling division, original only
+        return o(cup.addr(), winner, loser, round, partida); // simplification: with no club or with the falling division, original only
     }
     let (fv, fp) = (european_cup_club_finance(cv), european_cup_club_finance(cp));
     if fv == 0 || fp == 0 {
-        return o(cup, winner, loser, round, partida); // simplification: without finances, original only
+        return o(cup.addr(), winner, loser, round, partida); // simplification: without finances, original only
     }
-    let regions = [(cup + cup::PRIZE_FUND, 4), (fv, 0x167), (fp, 0x167)];
+    let regions = [(cup.addr() + cup::PRIZE_FUND, 4), (fv, 0x167), (fp, 0x167)];
     let before = crate::comparison::MemorySnapshot::read(&regions);
     ROUND_PRIZE_MONEY_DRY_RUN = true;
-    crate::rng::pause_trace(|| crate::rng::without_counting(|| pay_round_prize_money(cup, winner, loser, round, partida)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| pay_round_prize_money(cup.addr(), winner, loser, round, partida)));
     ROUND_PRIZE_MONEY_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
-    o(cup, winner, loser, round, partida);
+    o(cup.addr(), winner, loser, round, partida);
     let mo = crate::comparison::MemorySnapshot::read(&regions);
     SCOREBOARD.record(mo == mr, || format!("pay_round_prize_money(rodada {}, vencedor {:x}, perdedor {:x}) o fundo e as finanças diferem", round as i16, cv, cp));
 }
@@ -162,7 +165,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_home_teams_for_round(cup: usi
     let (ini, fim) = ties_range(cup, round, laco);
     let mut reg = Vec::new();
     if ini < fim {
-        reg.push((round_tie(cup, round as i16 as i32, ini as i32), (fim as i32 - ini as i32) as usize * 0x35));
+        reg.push((round_tie(Cup(cup), round as i16 as i32, ini as i32), (fim as i32 - ini as i32) as usize * 0x35));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(cup, round, laco), || set_home_teams_for_round(cup, round, laco));
     SCOREBOARD.record(igual, || format!("set_home_teams_for_round(rodada {}, laco {}) original={:x?} rust={:x?}", round as i16, laco as i16, mo, mr));
@@ -184,7 +187,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_home_teams_for_round(cup: usi
 pub(crate) unsafe extern "thiscall" fn compare_record_team_progress(cup: usize, team: u32, round: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32)>(IDX_RECORD_TEAM_PROGRESS);
     let stats = read_usize(cup + 8);
-    let club = read_usize(team_entry(cup, team as i16 as i32));
+    let club = read_usize(team_entry(Cup(cup), team as i16 as i32));
     let reg = if stats != 0 && club != 0 { exe::comp_stats_find_club_entry(stats, club) } else { 0 };
     if reg == 0 {
         return o(cup, team, round); // simplification: no record to look at, original only
@@ -205,15 +208,16 @@ pub(crate) unsafe extern "thiscall" fn compare_record_team_progress(cup: usize, 
 /// rodadas (a desta mais 1 dia, as seguintes no mínimo essa); sorteada, todos os confrontos com +0x34 = 1 e +0xac com
 /// a soma prevista (as consultas da notícia não mudam com o sorteio).
 pub(crate) unsafe extern "thiscall" fn compare_draw_round(cup: usize, round: u32) -> u32 {
+    let cup = Cup(cup);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_DRAW_ROUND);
-    if read_usize(cup + cup::SEASON_SET_UP) == 0 || read_u8(round_ties_array(cup, round) + 0x34) != 0 {
-        return o(cup, round); // simplification: nothing to draw, the original does nothing
+    if cup.season_set_up() == 0 || read_u8(round_ties_array(cup, round) + 0x34) != 0 {
+        return o(cup.addr(), round); // simplification: nothing to draw, the original does nothing
     }
-    let n = read_i16(cup + cup::ROUND_COUNT);
+    let n = cup.round_count();
     if round_has_open_team(cup, round) {
         // the date plan: (record, day word, year byte) of each round from here on
         let mut a = [0u8; 8];
-        let (mut dia, mut ano) = (read_i16(round_record_by_dword(cup, round)), (read_u8(round_record_by_dword(cup, round) + 2) as i8 as i16).wrapping_add(read_i16(cup + cup::YEAR)) as u16);
+        let (mut dia, mut ano) = (read_i16(round_record_by_dword(cup, round)), (read_u8(round_record_by_dword(cup, round) + 2) as i8 as i16).wrapping_add(cup.year()) as u16);
         // 0x54c5b0 (plus 1): normalize forward, 365 days in the leap year (crate::date::bissexto)
         dia = dia.wrapping_add(1);
         let size = |y: u16| if crate::date::is_leap_year(y) == 1 { 365i16 } else { 364 };
@@ -223,32 +227,32 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_round(cup: usize, round: u32
         }
         a[0..2].copy_from_slice(&dia.to_le_bytes());
         a[2..4].copy_from_slice(&ano.to_le_bytes());
-        let mut plan = vec![(round_record_by_dword(cup, round), dia, a[2].wrapping_sub(read_u8(cup + cup::YEAR)))];
+        let mut plan = vec![(round_record_by_dword(cup, round), dia, a[2].wrapping_sub((cup.year() as u8)))];
         let mut k = round.wrapping_add(1);
         while (k as i16) < n {
             let rk = round_record_by_dword(cup, k as i16 as i32 as u32);
             let mut b = [0u8; 8];
-            let anob = (read_u8(rk + 2) as i8 as i16).wrapping_add(read_i16(cup + cup::YEAR)) as u16;
+            let anob = (read_u8(rk + 2) as i8 as i16).wrapping_add(cup.year()) as u16;
             b[0..2].copy_from_slice(&read_i16(rk).to_le_bytes());
             b[2..4].copy_from_slice(&anob.to_le_bytes());
-            plan.push(if cup_date_is_after(&a, &b) { (rk, dia, a[2].wrapping_sub(read_u8(cup + cup::YEAR))) } else { (rk, read_i16(rk), read_u8(rk + 2)) });
+            plan.push(if cup_date_is_after(&a, &b) { (rk, dia, a[2].wrapping_sub((cup.year() as u8))) } else { (rk, read_i16(rk), read_u8(rk + 2)) });
             k = k.wrapping_add(1);
         }
-        let r = o(cup, round);
+        let r = o(cup.addr(), round);
         let ok = plan.iter().all(|&(rk, d, y)| read_i16(rk) == d && read_u8(rk + 2) == y);
         SCOREBOARD.record(ok, || format!("draw_round(rodada {}) as datas adiadas diferem do plano", round as i32));
         return r;
     }
-    let before_ac = read_u8(cup + cup::NEXT_DRAW_ROUND);
-    let r = o(cup, round);
+    let before_ac = cup.next_draw_round();
+    let r = o(cup.addr(), round);
     let mut ok = r == 1;
     let reg = round_record_by_dword(cup, round);
     for k in 0..read_i16(reg + cup_round::TIES).max(0) as usize {
         ok &= read_u8(round_ties_array(cup, round) + k * 0x35 + 0x34) == 1;
     }
     let sum = if !skips_draw_news(cup, round) && read_i16(reg + cup_round::ROUND_CODE) != 0x8c { 1 } else { 0 };
-    ok &= read_u8(cup + cup::NEXT_DRAW_ROUND) == before_ac.wrapping_add(sum);
-    SCOREBOARD.record(ok, || format!("draw_round(rodada {}) marcas dos confrontos ou +0xac ({} -> {}) diferem do plano", round as i32, before_ac, read_u8(cup + cup::NEXT_DRAW_ROUND)));
+    ok &= cup.next_draw_round() == before_ac.wrapping_add(sum);
+    SCOREBOARD.record(ok, || format!("draw_round(rodada {}) marcas dos confrontos ou +0xac ({} -> {}) diferem do plano", round as i32, before_ac, cup.next_draw_round()));
     r
 }
 
@@ -273,16 +277,17 @@ pub(crate) unsafe extern "thiscall" fn compare_club_in_higher_division(this: usi
 /// não podem rodar duas vezes). O plano, feito antes: o estado do clube (+0 do registro de 6 bytes) passa à Copa da
 /// UEFA quando o campeão ganha a vaga; senão não muda. Sem clube: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_cup_update_staff_records_for_status(cup: usize, club: usize, outcome: u32, a3: u32, a4: u32, game: usize, final_: u32) -> u32 {
+    let cup = Cup(cup);
     let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_CUP_UPDATE_STAFF_RECORDS_FOR_STATUS);
     if club == 0 || game.is_null() {
-        return o(cup, club, outcome, a3, a4, game.addr(), final_); // simplification: without a club or match, original only
+        return o(cup.addr(), club, outcome, a3, a4, game.addr(), final_); // simplification: without a club or match, original only
     }
     let state = club_state_record(club);
     let before = read_i32(state);
-    let predicted = if game.category() != 1 && read_usize(cup + cup::STAGE_COUNT) == 0 && read_u8(cup + cup::STAGE_INDEX) == 0xff && outcome as u8 == 1
-        && wins_uefa_cup_place(Competition(read_usize(cup + 4)), club) { read_i32(KEY_CLUB_COMP_UEFA_CUP) } else { before };
-    let r = o(cup, club, outcome, a3, a4, game.addr(), final_);
+    let predicted = if game.category() != 1 && cup.stage_count() == 0 && cup.stage_index() == 0xff && outcome as u8 == 1
+        && wins_uefa_cup_place(Competition(read_usize(cup.addr() + 4)), club) { read_i32(KEY_CLUB_COMP_UEFA_CUP) } else { before };
+    let r = o(cup.addr(), club, outcome, a3, a4, game.addr(), final_);
     let after = read_i32(state);
     SCOREBOARD.record(r == 0 && after == predicted, || format!("cup_update_staff_records_for_status(desfecho {}) estado {:x} -> {:x}, previsto {:x}, devolveu {}", outcome as u8, before, after, predicted, r));
     r
@@ -305,7 +310,7 @@ pub(crate) unsafe extern "thiscall" fn compare_cup_record_season_honours(cup: us
     if row == 0 || read_usize(cup + 4) == 0 {
         return o(cup); // simplification: the history grows (realloc) or there is no competition: original only
     }
-    let (campeao, vice, terceiro, anfitria) = season_honours(cup);
+    let (campeao, vice, terceiro, anfitria) = season_honours(Cup(cup));
     let year = core::ptr::read_unaligned(G_CURRENT_DATE_YEAR as *const u16);
     o(cup);
     let lido = (read_usize(row + 4), core::ptr::read_unaligned((row + 8) as *const u16), read_usize(row + comp_history_row::CHAMPION), read_usize(row + comp_history_row::RUNNER_UP), read_usize(row + comp_history_row::THIRD_PLACE), read_usize(row + comp_history_row::HOST));
@@ -324,7 +329,7 @@ pub(crate) unsafe extern "thiscall" fn compare_register_semi_final_losers_for_ue
         return o(cup); // simplification: without the seeding, original only
     }
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&[(s + uefa_seeding::CUP_FINALS, 50 * 12)], || o(cup), || register_semi_final_losers_for_uefa(cup));
-    SCOREBOARD.record(igual, || format!("register_semi_final_losers_for_uefa(copa {:x}) a semeadura difere ({:?})", cup, semi_final_losers(cup)));
+    SCOREBOARD.record(igual, || format!("register_semi_final_losers_for_uefa(copa {:x}) a semeadura difere ({:?})", cup, semi_final_losers(Cup(cup))));
 }
 
 /// Comparer for `get_fixture_side_teams`.
@@ -332,11 +337,12 @@ pub(crate) unsafe extern "thiscall" fn compare_register_semi_final_losers_for_ue
 /// [pt] Comparador: o esperado sai do núcleo sobre uma conta própria e uma saída própria antes da original; depois, a
 /// devolução, a conta global e a saída têm de bater.
 pub(crate) unsafe extern "thiscall" fn compare_get_fixture_side_teams(this: usize, round: i32, game: i32, side: u32, out: *mut i16) -> i32 {
+    let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32, u32, *mut i16) -> i32>(IDX_GET_FIXTURE_SIDE_TEAMS);
-    if out.is_null() || round < 0 || round > read_i16(this + cup::ROUND_COUNT) as i32 || read_usize(this + cup::TEAM_TABLE) == 0 || game == -1 {
-        return o(this, round, game, side, out); // simplification: the box, original only
+    if out.is_null() || round < 0 || round > this.round_count() as i32 || this.team_table() == 0 || game == -1 {
+        return o(this.addr(), round, game, side, out); // simplification: the box, original only
     }
-    let reg = read_usize(read_usize(this + cup::TIE_TABLES) + round as usize * 4) + (game as usize).wrapping_mul(0x35);
+    let reg = read_usize(this.tie_tables() + round as usize * 4) + (game as usize).wrapping_mul(0x35);
     let (c, r, j) = if side as u8 != 0 { (read_i16(reg), reg + cup_tie::HOME_LINK_ROUND, reg + cup_tie::HOME_LINK_TIE) } else { (read_i16(reg + cup_tie::AWAY_TEAM), reg + cup_tie::AWAY_LINK_ROUND, reg + cup_tie::AWAY_LINK_TIE) };
     let mut expected = vec![0i16; 0x100];
     let mut n: i32 = 0;
@@ -346,10 +352,10 @@ pub(crate) unsafe extern "thiscall" fn compare_get_fixture_side_teams(this: usiz
     } else {
         collect_fixture_teams(this, read_i16(r) as i32, read_i16(j) as i32, expected.as_mut_ptr(), &mut n, false);
     }
-    let res = o(this, round, game, side, out);
+    let res = o(this.addr(), round, game, side, out);
     let obtido = core::slice::from_raw_parts(out, res.clamp(0, 0x100) as usize);
     let global = *(G_CUP_POSSIBLE_TEAM_COUNT as *const i32);
-    SCOREBOARD.record(res == n && global == n && obtido == &expected[..n.clamp(0, 0x100) as usize], || format!("get_fixture_side_teams({:x}, {}, {}, {}) {}/{} global {} {:?} x {:?}", this, round, game, side as u8, res, n, global, obtido, &expected[..n.clamp(0, 0x100) as usize]));
+    SCOREBOARD.record(res == n && global == n && obtido == &expected[..n.clamp(0, 0x100) as usize], || format!("get_fixture_side_teams({:x}, {}, {}, {}) {}/{} global {} {:?} x {:?}", this.addr(), round, game, side as u8, res, n, global, obtido, &expected[..n.clamp(0, 0x100) as usize]));
     res
 }
 
@@ -365,7 +371,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_possible_teams(this: usiz
     let c0 = *count;
     let mut expected = vec![0i16; 0x200];
     let mut n = c0;
-    collect_fixture_teams(this, round, game, expected.as_mut_ptr(), &mut n, false);
+    collect_fixture_teams(Cup(this), round, game, expected.as_mut_ptr(), &mut n, false);
     let res = o(this, round, game, out, count);
     let end = (*count).clamp(c0, 0x200);
     let obtido = core::slice::from_raw_parts(out.offset(c0 as isize), (end - c0) as usize);
@@ -391,7 +397,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_up_round(this: usize, round: 
 pub(crate) unsafe extern "thiscall" fn compare_randomize_round_teams(cup: usize, round: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_RANDOMIZE_ROUND_TEAMS);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend(all_ties_regions(cup));
+    reg.extend(all_ties_regions(Cup(cup)));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(cup, round),
         || crate::rng::without_counting(|| randomize_round_teams(cup, round)));
     SCOREBOARD.record(igual, || {
@@ -406,7 +412,7 @@ pub(crate) unsafe extern "thiscall" fn compare_randomize_round_teams(cup: usize,
 /// [pt] Comparador: só grava confrontos (da rodada e das seguintes): lado a lado pelos confrontos de todas as rodadas.
 pub(crate) unsafe extern "thiscall" fn compare_separate_shared_stadium_ties(cup: usize, round: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_SEPARATE_SHARED_STADIUM_TIES);
-    let reg = all_ties_regions(cup);
+    let reg = all_ties_regions(Cup(cup));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(cup, round), || separate_shared_stadium_ties(cup, round));
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
@@ -446,7 +452,7 @@ pub(crate) unsafe extern "thiscall" fn compare_decide_fixture_winner(this: usize
         return o(this, game.addr());
     }
     let reg = [(game.addr() + fixture::HOME_RESULT_MARK, 2)];
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || Some(o(this, game.addr())), || fixture_winner_side(this, game));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || Some(o(this, game.addr())), || fixture_winner_side(Cup(this), game));
     let r = r.unwrap_or(0);
     if let Some(n) = n {
         SCOREBOARD.record(igual && r == n, || format!("decide_fixture_winner(regra {:x}) original={} rust={} {:x?} x {:x?}", (game.tie_rules() as i16) as u16, r, n, mo, mr));
@@ -561,12 +567,13 @@ pub(crate) unsafe extern "thiscall" fn compare_cup_check_complete(this: usize, s
 /// a vaga do que está na data da rodada fica 0xff; as outras vagas não mudam. Sem a copa em [0xadadfc] depois: nada a
 /// conferir.
 pub(crate) unsafe extern "thiscall" fn compare_move_round_fixtures_to_set_dates(this: usize, data: usize, round: u32) {
+    let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_MOVE_ROUND_FIXTURES_TO_SET_DATES);
     let e = cup_round_entry(this, round);
     if read_i16(e + cup_round::TIE_RULES) as u16 & 0x100 == 0 || read_u8(e + cup_round::SLOT_CODE) == 0xff {
-        return o(this, data, round);
+        return o(this.addr(), data, round);
     }
-    let id = read_usize(read_usize(this + 4));
+    let id = read_usize(read_usize(this.addr() + 4));
     let mut list = [0u8; 0x10];
     let l = list.as_mut_ptr() as usize;
     exe::new_llist(l);
@@ -579,7 +586,7 @@ pub(crate) unsafe extern "thiscall" fn compare_move_round_fixtures_to_set_dates(
         let mut j = 0usize;
         let mut f = exe::llist_get_next(l);
         while f != 0 {
-            if read_u8(this + cup::STAGE_INDEX) == read_u8(f + fixture::STAGE_INDEX) && j < 0x38 && expected[j / 7] != 0xff {
+            if this.stage_index() == read_u8(f + fixture::STAGE_INDEX) && j < 0x38 && expected[j / 7] != 0xff {
                 if fixture_on_round_date(this, e, Fixture(f)) {
                     expected[j / 7] = 0xff;
                 }
@@ -589,7 +596,7 @@ pub(crate) unsafe extern "thiscall" fn compare_move_round_fixtures_to_set_dates(
         }
     }
     exe::drop_llist(l);
-    o(this, data, round);
+    o(this.addr(), data, round);
     if read_usize(read_usize(G_COMP_OBJECT_TABLE) + id * 4) == 0 {
         return; // simplification: the cup has left the game; nothing to check
     }
@@ -612,12 +619,13 @@ pub(crate) unsafe extern "thiscall" fn compare_move_round_fixtures_to_set_dates(
 /// (+6 vaga, +8 lado, +0x12 rodada uma ou duas adiante) uma vaga que aponta de volta para ele (+0xa/+0xe mandante,
 /// +0xc/+0x10 visitante).
 pub(crate) unsafe extern "thiscall" fn compare_map_fixture_tree(this: usize) -> i32 {
+    let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_MAP_FIXTURE_TREE);
-    let r = o(this);
-    if r != 1 || read_usize(this + cup::SEASON_SET_UP) == 0 {
+    let r = o(this.addr());
+    if r != 1 || this.season_set_up() == 0 {
         return r;
     }
-    let nr = read_i16(this + cup::ROUND_COUNT);
+    let nr = this.round_count();
     let m = (if read_i16(comp_cup_round(this, nr as i32).wrapping_sub(0x61)) == 0x8c { nr.wrapping_sub(1) } else { nr }) as i32;
     let mut error: Option<(i32, i32)> = None;
     'fora: for rd in 0..(m - 1).max(0) {
@@ -649,29 +657,30 @@ pub(crate) unsafe extern "thiscall" fn compare_map_fixture_tree(this: usize) -> 
 /// planejadas sobre uma cópia ordenada do vetor (as chaves num Vec); depois, o registro de cada clube planejado tem
 /// de ter em +0x72 a última posição dele.
 pub(crate) unsafe extern "thiscall" fn compare_cup_rank_teams(this: usize) {
+    let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CUP_RANK_TEAMS);
-    let n = read_i16(this + cup::TEAM_COUNT) as i32;
-    if read_usize(this + 8) == 0 || n <= 0 {
-        return o(this); // simplification: the box or nothing to sort, original only
+    let n = this.team_count() as i32;
+    if read_usize(this.addr() + 8) == 0 || n <= 0 {
+        return o(this.addr()); // simplification: the box or nothing to sort, original only
     }
-    let mut v: Vec<u32> = (0..n as usize).map(|i| read_usize(read_usize(this + cup::TEAM_TABLE) + i * 6) as u32).collect();
+    let mut v: Vec<u32> = (0..n as usize).map(|i| read_usize(this.team_table() + i * 6) as u32).collect();
     let mut k = vec![0i32; n as usize];
     sort_clubs_by_strength(v.as_mut_ptr(), k.as_mut_ptr(), n);
     // simplification: with more slots in the rounds than clubs, the original reads past the vector (block leftover); the plan reads 0
     v.extend(core::iter::repeat(0).take(0x100));
     let plan = set_final_positions_by_round(this, v.as_ptr(), 0);
-    o(this);
+    o(this.addr());
     let mut erros = Vec::new();
     for (i, &(c, p)) in plan.iter().enumerate() {
         if c == 0 || plan[i + 1..].iter().any(|x| x.0 == c) {
             continue;
         }
-        let e = exe::comp_stats_find_club_entry(read_usize(this + 8), c);
+        let e = exe::comp_stats_find_club_entry(read_usize(this.addr() + 8), c);
         if e == 0 || *((e + comp_stats_club::DANGER_POSITION) as *const u8) != p {
             erros.push(format!("clube {:x} esperado {} obtido {}", c, p, if e == 0 { -1 } else { *((e + comp_stats_club::DANGER_POSITION) as *const u8) as i32 }));
         }
     }
-    SCOREBOARD.record(erros.is_empty(), || format!("cup_rank_teams({:x}) {} posições: {}", this, plan.len(), erros.join("; ")));
+    SCOREBOARD.record(erros.is_empty(), || format!("cup_rank_teams({:x}) {} posições: {}", this.addr(), plan.len(), erros.join("; ")));
 }
 
 /// Comparer for `cup_set_round_match_day`.

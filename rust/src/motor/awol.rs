@@ -435,9 +435,9 @@ pub(crate) unsafe extern "thiscall" fn awol_daily_update(this: usize) {
                 let b = friendly_random(5);
                 if (a as u8 as i8) < ((b as u8).wrapping_add(1) as i8) {
                     maybe_drop_attribute(person.addr() + staff::PROFESSIONALISM, true);
-                    let j = person.player();
-                    if j != 0 {
-                        maybe_drop_attribute(j + player_sheet::WORK_RATE, true);
+                    let j = PlayerSheet(person.player());
+                    if !j.is_null() {
+                        maybe_drop_attribute(j.addr() + player_sheet::WORK_RATE, true);
                     }
                     true
                 } else {

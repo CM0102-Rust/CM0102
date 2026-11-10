@@ -2,7 +2,7 @@ r"""Follows the mutation anchors broken by a mechanical change of the Rust sourc
 anchor was found once in the sources at a commit and is no longer found, the lines it covered are matched to the
 changed lines (difflib) and the same textual change is applied to the anchor and to the replacement (the parts of the
 line around the anchor must be unchanged). Prints what it could not follow.
-Usage: python seguir_ancoras.py COMMIT [--gravar]
+Usage: python seguir_ancoras.py COMMIT [--gravar]   (then the `.addr()` fallback: sem_addr)
 [pt] Segue as âncoras de mutação quebradas por uma troca mecânica: acha a linha antiga e a nova (difflib) e aplica a
 mesma troca na âncora e no texto de troca.
 """
@@ -126,6 +126,64 @@ def main():
         if novo_txt != txt and '--gravar' in sys.argv:
             open(os.path.join(PASTA, lf), 'w', encoding='utf-8').write(novo_txt)
     print('%d seguidas, %d não' % (n_ok, n_falha))
+    sem_addr('--gravar' in sys.argv)
+
+
+def sem_addr(grava):
+    """Fallback for anchors found nowhere whose only change is a dropped `.addr()` (the function now takes the type):
+    tries dropping each `.addr()` (up to 4) and keeps the variant found exactly once; the replacement follows."""
+    import itertools
+    import glob
+    R2 = R.replace(os.sep, '/')
+    os.chdir(os.path.join(R, 'engenharia-reversa'))
+    txt = ''.join(open(p, encoding='utf-8').read() for p in glob.glob(R2 + '/rust/src/**/*.rs', recursive=True))
+    pasta = R2 + '/engenharia-reversa/mutacoes/'
+    for f in sorted(os.listdir(pasta)):
+        if not f.endswith('.py'):
+            continue
+        try:
+            ms = runpy.run_path(pasta + f).get('MUTACOES', [])
+        except Exception:
+            continue
+        s = open(pasta + f, encoding='utf-8').read()
+        mudou = False
+        for m in ms:
+            if txt.count(m[1]) != 0:
+                continue
+            pos = [x.start() for x in re.finditer(r'\.addr\(\)', m[1])]
+            achou = None
+            for k in range(1, min(len(pos), 4) + 1):
+                for comb in itertools.combinations(pos, k):
+                    a = m[1]
+                    for p in sorted(comb, reverse=True):
+                        a = a[:p] + a[p + 7:]
+                    if txt.count(a) == 1:
+                        achou = (comb, a)
+                        break
+                if achou:
+                    break
+            if not achou:
+                continue
+            comb, a = achou
+            # the same `.addr()` removals in the replacement, by the surrounding text
+            b = m[2]
+            for p in comb:
+                ctx = m[1][max(0, p - 30):p + 7]
+                if ctx in b:
+                    b = b.replace(ctx, ctx[:-7])
+            for v, n2 in ((repr(m[1]), repr(a)), (json.dumps(m[1], ensure_ascii=False), json.dumps(a, ensure_ascii=False))):
+                if v in s:
+                    s = s.replace(v, n2, 1)
+                    break
+            for v, n2 in ((repr(m[2]), repr(b)), (json.dumps(m[2], ensure_ascii=False), json.dumps(b, ensure_ascii=False))):
+                if v in s:
+                    s = s.replace(v, n2, 1)
+                    break
+            mudou = True
+            print('consertei', f, m[0])
+        if mudou:
+            if grava:
+                open(pasta + f, 'w', encoding='utf-8').write(s)
 
 
 if __name__ == '__main__':

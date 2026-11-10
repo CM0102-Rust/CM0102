@@ -13,14 +13,15 @@ use super::*;
 /// clubes, as 8 fases em [+0xc], +0x30 = 7 e os clubes das tabelas das fases (+0xb1, linhas de 0x3b bytes, 4 por
 /// fase) são exatamente os 32 do plano.
 pub(crate) unsafe extern "thiscall" fn compare_draw_phase1_groups(this: usize) {
+    let this = Cup(this);
     let plan = group_draw_clubs(this);
-    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_DRAW_PHASE1_GROUPS)(this);
+    original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_DRAW_PHASE1_GROUPS)(this.addr());
     if plan.len() != 32 || read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(KEY_CLUB_COMP_UEFA_CUP) * 4) == 0 {
         return;
     }
-    let stages = read_usize(this + cup::STAGES);
+    let stages = this.stages();
     let mut vistos = Vec::with_capacity(32);
-    let mut ok = read_usize(this + cup::CURRENT_STAGE) == 7;
+    let mut ok = this.current_stage() == 7;
     for g in 0..8usize {
         let f = League(read_usize(stages + g * 4));
         if f.is_null() || f.table() == 0 {
@@ -33,7 +34,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_phase1_groups(this: usize) {
     }
     vistos.sort_unstable();
     ok = ok && vistos == plan;
-    SCOREBOARD.record(ok, || format!("draw_phase1_groups: as fases não têm os 32 clubes do plano (+0x30 = {})", read_usize(this + cup::CURRENT_STAGE) as i32));
+    SCOREBOARD.record(ok, || format!("draw_phase1_groups: as fases não têm os 32 clubes do plano (+0x30 = {})", this.current_stage() as i32));
 }
 
 /// Comparer for `european_cup_compare_clubs_by_seed`.
@@ -52,26 +53,27 @@ pub(crate) unsafe extern "C" fn compare_european_cup_compare_clubs_by_seed(a: *c
 /// tabela do mata-mata pedida ao método +0x3c e liberada): a posição (+0x72 do registro achado por 0x4a4850) de cada
 /// clube do plano.
 pub(crate) unsafe extern "thiscall" fn compare_european_cup_rank_teams(this: usize) {
+    let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_EUROPEAN_CUP_RANK_TEAMS);
-    if read_usize(this + 8) == 0 || read_usize(this + cup::ENTRANT_BOOK) == 0 || read_i16(this + cup::ENTRANT_COUNT) <= 0 {
-        return o(this);
+    if read_usize(this.addr() + 8) == 0 || this.entrant_book() == 0 || this.entrant_count() <= 0 {
+        return o(this.addr());
     }
-    let n = read_i16(this + cup::ENTRANT_COUNT) as usize;
-    let mut v: Vec<u32> = (0..n).map(|i| read_usize(read_usize(this + cup::ENTRANT_BOOK) + i * 6) as u32).collect();
+    let n = this.entrant_count() as usize;
+    let mut v: Vec<u32> = (0..n).map(|i| read_usize(this.entrant_book() + i * 6) as u32).collect();
     exe::comp_util_sort_clubs_by_strength((v.as_mut_ptr()) as usize, n as i32);
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     let (mut nm, mut id) = (0i16, 0i16);
-    let knockout = rounds_of_cup(this, 0xc, &mut nm, &mut id, 0);
+    let knockout = rounds_of_cup(this.addr(), 0xc, &mut nm, &mut id, 0);
     let plan = if knockout != 0 { planned_final_positions(this, knockout, nm).0 } else { Vec::new() };
     exe::crt_free(knockout);
-    o(this);
+    o(this.addr());
     if plan.iter().any(|&(k, _)| k as usize >= n) {
         return; // the original reads past the vector: no check
     }
     let wrong = plan.iter().find(|&&(k, p)| {
         let c = v[k as usize] as usize;
         c != 0 && {
-            let e = exe::comp_stats_find_club_entry(read_usize(this + 8), c);
+            let e = exe::comp_stats_find_club_entry(read_usize(this.addr() + 8), c);
             e == 0 || *((e + comp_stats_club::DANGER_POSITION) as *const u8) != p
         }
     });
@@ -88,16 +90,17 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_rank_teams(this: usi
 /// chamada de fora (tentativa 0), as fases 8..11 existem, +0x30 = 11 e os clubes das tabelas delas (+0xb1, linhas de
 /// 0x3b bytes) são os 16 classificados.
 pub(crate) unsafe extern "thiscall" fn compare_draw_phase2_groups(this: usize, attempt: u32) {
+    let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DRAW_PHASE2_GROUPS);
     if attempt as u8 != 0 || read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(KEY_CLUB_COMP_UEFA_CUP) * 4) == 0 {
-        return o(this, attempt);
+        return o(this.addr(), attempt);
     }
     let plan = second_stage_clubs(this);
-    o(this, attempt);
+    o(this.addr(), attempt);
     let mut vistos = Vec::with_capacity(16);
-    let mut ok = read_usize(this + cup::CURRENT_STAGE) == 11;
+    let mut ok = this.current_stage() == 11;
     for h in 8..12usize {
-        let f = League(read_usize(read_usize(this + cup::STAGES) + h * 4));
+        let f = League(read_usize(this.stages() + h * 4));
         if f.is_null() || f.table() == 0 {
             ok = false;
             break;
@@ -108,7 +111,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_phase2_groups(this: usize, a
     }
     vistos.sort_unstable();
     ok = ok && vistos == plan;
-    SCOREBOARD.record(ok, || format!("draw_phase2_groups: as fases não têm os 16 classificados (+0x30 = {})", read_usize(this + cup::CURRENT_STAGE) as i32));
+    SCOREBOARD.record(ok, || format!("draw_phase2_groups: as fases não têm os 16 classificados (+0x30 = {})", this.current_stage() as i32));
 }
 
 /// Comparer for `european_cup_compare_phase2_draw_entries`.
@@ -146,6 +149,7 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_update_staff_records
 
 /// Comparer for `draw_quarter_finals`.
 pub(crate) unsafe extern "thiscall" fn compare_draw_quarter_finals(this: usize) {
+    let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_DRAW_QUARTER_FINALS);
     let mut vivos: Vec<usize> = Vec::new();
     let mut away: Vec<usize> = Vec::new();
@@ -155,20 +159,20 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_quarter_finals(this: usize) 
         away.push(second_stage_group_club(this, g, 2));
         away.push(second_stage_group_club(this, g, 3));
     }
-    o(this);
-    let stage = read_usize(read_usize(this + cup::STAGES) + 0x30);
-    if stage == 0 {
-        SCOREBOARD.record(false, || format!("draw_quarter_finals({:#x}) sem fase", this));
+    o(this.addr());
+    let stage = Cup(read_usize(this.stages() + 0x30));
+    if stage.is_null() {
+        SCOREBOARD.record(false, || format!("draw_quarter_finals({:#x}) sem fase", this.addr()));
         return;
     }
-    let list = read_usize(stage + cup::TEAM_TABLE);
+    let list = stage.team_table();
     let mut found: Vec<usize> = (0..8).map(|k| read_usize(list + 6 * k)).collect();
     let mut expected = vivos.clone();
     found.sort_unstable();
     expected.sort_unstable();
     let left = away.iter().all(|&c| core::ptr::read_unaligned((c + club::EURO_FLAG) as *const i32) == -1);
-    let same = found == expected && left && read_i16(stage + cup::TEAM_COUNT) == 8 && core::ptr::read_unaligned((this + cup::CURRENT_STAGE) as *const i32) == 0xc;
-    SCOREBOARD.record(same, || format!("draw_quarter_finals({:#x}) esperado={:x?} lista={:x?} saiu={} +0x30={}", this, expected, found, left, core::ptr::read_unaligned((this + cup::CURRENT_STAGE) as *const i32)));
+    let same = found == expected && left && stage.team_count() == 8 && (this.current_stage() as i32) == 0xc;
+    SCOREBOARD.record(same, || format!("draw_quarter_finals({:#x}) esperado={:x?} lista={:x?} saiu={} +0x30={}", this.addr(), expected, found, left, (this.current_stage() as i32)));
 }
 
 /// Comparer for `european_cup_collect_club_list`.
@@ -183,28 +187,29 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_quarter_finals(this: usize) 
 /// local pelos mesmos inscritos: a conta (palavra de baixo da devolução) e os clubes da lista dela iguais. Nos tipos
 /// que vão para a 0x48e1c0 e sem lista: a devolução e a saída como a original deixou.
 pub(crate) unsafe extern "thiscall" fn compare_european_cup_collect_club_list(this: usize, out: usize, kind: u32) -> u32 {
+    let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_EUROPEAN_CUP_COLLECT_CLUB_LIST);
     let t = kind as u8;
     let sem_7 = match t {
         1 => Some(true),
         2 => Some(false),
-        3 if core::ptr::read_unaligned((this + cup::CURRENT_STAGE) as *const i32) == 0xb => Some(false),
+        3 if (this.current_stage() as i32) == 0xb => Some(false),
         _ => None,
     };
     let mut plan = [0usize; 71];
     let n = match sem_7 {
-        Some(s) if read_i16(this + cup::ENTRANT_CAPACITY) <= 71 => active_entrants(this, s, plan.as_mut_ptr()),
-        _ => return o(this, out, kind),
+        Some(s) if this.entrant_capacity() <= 71 => active_entrants(this, s, plan.as_mut_ptr()),
+        _ => return o(this.addr(), out, kind),
     };
-    let r = o(this, out, kind);
+    let r = o(this.addr(), out, kind);
     let v = read_usize(out);
     if v == 0 {
-        SCOREBOARD.record(r as u16 == 0, || format!("european_cup_collect_club_list({:#x}, {}) sem lista original={:#x}", this, t, r));
+        SCOREBOARD.record(r as u16 == 0, || format!("european_cup_collect_club_list({:#x}, {}) sem lista original={:#x}", this.addr(), t, r));
         return r;
     }
     let list = core::slice::from_raw_parts(v as *const usize, (n.max(0) as usize).min(71));
     let same = r as u16 as i16 == n && list == &plan[..list.len()];
-    SCOREBOARD.record(same, || format!("european_cup_collect_club_list({:#x}, {}) original={:#x} rust={} lista={:x?} plano={:x?}", this, t, r, n, list, &plan[..list.len()]));
+    SCOREBOARD.record(same, || format!("european_cup_collect_club_list({:#x}, {}) original={:#x} rust={} lista={:x?} plano={:x?}", this.addr(), t, r, n, list, &plan[..list.len()]));
     r
 }
 
@@ -218,10 +223,11 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_collect_club_list(th
 /// copiada e repreenchida pela cópia (fill_champions_league_entrants só lê os clubes, que a original não muda) tem de sair igual,
 /// +0x36, +0x38 e a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_european_cup_collect_entrants(this: usize) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_EUROPEAN_CUP_COLLECT_ENTRANTS)(this);
-    let t = read_usize(this + cup::ENTRANT_BOOK);
+    let this = Cup(this);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_EUROPEAN_CUP_COLLECT_ENTRANTS)(this.addr());
+    let t = this.entrant_book();
     if t == 0 {
-        SCOREBOARD.record(r == 0, || format!("european_cup_collect_entrants({:x}) sem lista original={}", this, r));
+        SCOREBOARD.record(r == 0, || format!("european_cup_collect_entrants({:x}) sem lista original={}", this.addr(), r));
         return r;
     }
     let mut v = core::slice::from_raw_parts(t as *const u8, 0x47 * 6).to_vec();
@@ -229,9 +235,9 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_collect_entrants(thi
     let n = if total == 0x47 { 1 } else { 0 };
     let same = r == n
         && v[..] == *core::slice::from_raw_parts(t as *const u8, 0x47 * 6)
-        && read_i16(this + cup::ENTRANT_COUNT) == if n == 1 { 0x47 } else { 0 }
-        && read_i16(this + cup::ENTRANT_CAPACITY) == 0x47;
-    SCOREBOARD.record(same, || format!("european_cup_collect_entrants({:x}) original={} +0x36={} rust={} total={}", this, r, read_i16(this + cup::ENTRANT_COUNT), n, total));
+        && this.entrant_count() == if n == 1 { 0x47 } else { 0 }
+        && this.entrant_capacity() == 0x47;
+    SCOREBOARD.record(same, || format!("european_cup_collect_entrants({:x}) original={} +0x36={} rust={} total={}", this.addr(), r, this.entrant_count(), n, total));
     r
 }
 
@@ -240,16 +246,17 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_collect_entrants(thi
 /// [pt] Comparador da 0x584990: a original aloca (só ela roda); depois a tabela dela, copiada e remontada pela cópia,
 /// tem de sair igual, com +0x3e = 55 e a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_build_qualifying_entry_table(this: usize) -> i32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BUILD_QUALIFYING_ENTRY_TABLE)(this);
-    let t = read_usize(this + cup::TEAM_TABLE);
-    if t == 0 || read_i16(this + cup::TEAM_COUNT) != 0x37 {
-        SCOREBOARD.record(r == -1 && t == 0, || format!("build_qualifying_entry_table({:x}) original={} tabela={:x} +0x3e={}", this, r, t, read_i16(this + cup::TEAM_COUNT)));
+    let this = Cup(this);
+    let r = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BUILD_QUALIFYING_ENTRY_TABLE)(this.addr());
+    let t = this.team_table();
+    if t == 0 || this.team_count() != 0x37 {
+        SCOREBOARD.record(r == -1 && t == 0, || format!("build_qualifying_entry_table({:x}) original={} tabela={:x} +0x3e={}", this.addr(), r, t, this.team_count()));
         return r;
     }
     let mut v = core::slice::from_raw_parts(t as *const u8, 0x14a).to_vec();
     fill_qualifying_table(this, v.as_mut_ptr() as usize);
     let same = r == 1 && v[..] == *core::slice::from_raw_parts(t as *const u8, 0x14a);
-    SCOREBOARD.record(same, || format!("build_qualifying_entry_table({:x}) original={} tabela={:x?}", this, r, &v[..]));
+    SCOREBOARD.record(same, || format!("build_qualifying_entry_table({:x}) original={} tabela={:x?}", this.addr(), r, &v[..]));
     r
 }
 
@@ -277,27 +284,28 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_advance_stage(this: 
 /// finanças não entram (a base paga o prêmio da rodada da copa nos mesmos campos, 0x51a2fe); o prêmio segue o ramo do
 /// placar que os pontos do coeficiente já conferem. Sem clube, nação, seleção ou finanças: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_process_fixture(this: usize, game: usize, arg: u32) {
+    let this = Cup(this);
     let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PROCESS_FIXTURE);
     let (a, b) = if !game.is_null() { (game.home_club(), game.away_club()) } else { (Club(0), Club(0)) };
     if a.is_null() || b.is_null() {
-        return o(this, game.addr(), arg); // simplification: without a club, original only
+        return o(this.addr(), game.addr(), arg); // simplification: without a club, original only
     }
     let (ca, cb) = (nation_coefficient_word(Club(a.addr())), nation_coefficient_word(Club(b.addr())));
     let (fa, fb) = (european_cup_club_finance(a.addr()), european_cup_club_finance(b.addr()));
     if ca == 0 || cb == 0 || fa == 0 || fb == 0 {
-        return o(this, game.addr(), arg); // simplification: without nation, national team or finances, original only (crashes the same way)
+        return o(this.addr(), game.addr(), arg); // simplification: without nation, national team or finances, original only (crashes the same way)
     }
     let check = [(ca, 2), (cb, 2)];
     let before = crate::comparison::MemorySnapshot::read(&[(ca, 2), (cb, 2), (fa, 0x167), (fb, 0x167)]);
-    let stage = read_i32(this + cup::CURRENT_STAGE);
+    let stage = (this.current_stage() as i32);
     EUROPEAN_CUP_FIXTURE_DRY_RUN = true;
-    crate::rng::pause_trace(|| crate::rng::without_counting(|| process_fixture(this, game.addr(), arg)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| process_fixture(this.addr(), game.addr(), arg)));
     EUROPEAN_CUP_FIXTURE_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&check);
     before.write_back();
-    o(this, game.addr(), arg);
-    if read_i32(this + cup::CURRENT_STAGE) != stage {
+    o(this.addr(), game.addr(), arg);
+    if (this.current_stage() as i32) != stage {
         return; // simplification: the stage advanced in the database and the draw added coefficient: no comparison
     }
     let mo = crate::comparison::MemorySnapshot::read(&check);

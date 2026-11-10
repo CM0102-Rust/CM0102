@@ -1235,12 +1235,12 @@ pub(crate) unsafe extern "thiscall" fn get_international_duty_club(this: usize, 
             }
         }
     }
-    let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_AMERICAN_MLS_ALL_STARS).wrapping_mul(4)));
-    if comp == 0 {
+    let comp = Cup(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_AMERICAN_MLS_ALL_STARS).wrapping_mul(4))));
+    if comp.is_null() {
         return sai(0);
     }
-    let reg = read_usize(comp + cup::ROUND_TABLE);
-    let year = (read_u8(reg + 5) as i8 as i16).wrapping_add(read_u16(comp + cup::YEAR) as i16) as u16;
+    let reg = comp.round_table();
+    let year = (read_u8(reg + 5) as i8 as i16).wrapping_add((comp.year() as u16) as i16) as u16;
     let mut game = [0u8; 8];
     let pj = game.as_mut_ptr() as usize;
     exe::new_date(pj, read_u16(reg + 3) as u32, year as u32);

@@ -316,8 +316,8 @@ pub(crate) unsafe extern "C" fn news_create_not_for_sale_story(player: usize, cl
     } else {
         write(n, 7, 0xffff_ffff);
     }
-    let f = player.player();
-    if f != 0 && read_i16(f + player_sheet::WORLD_REPUTATION) > 0x1f40 {
+    let f = PlayerSheet(player.player());
+    if !f.is_null() && f.world_reputation() > 0x1f40 {
         exe::news_send_to_all_managers(read_usize(G_NEWS), n);
     } else {
         for &d in dest.iter().take((nd as i8).max(0) as usize) {
@@ -3292,8 +3292,8 @@ pub(crate) unsafe extern "thiscall" fn post_financial_trouble_news(_this: usize,
     if club.is_null() || club.nation().addr() == 0 {
         return;
     }
-    let sheet = club.stadium().addr();
-    if sheet == 0 || read_usize(sheet + player_sheet::PENALTIES) == 0 || club.division().addr() == 0 {
+    let sheet = PlayerSheet(club.stadium().addr());
+    if sheet.is_null() || read_usize(sheet.addr() + player_sheet::PENALTIES) == 0 || club.division().addr() == 0 {
         return;
     }
     crate::comparison::branch("cpk_6 financial trouble");

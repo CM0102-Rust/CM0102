@@ -76,7 +76,7 @@ pub(crate) unsafe fn fra_cup_write_cup_round(t: usize, i: u32, r: &FraCupCupRoun
 /// de uma fase só: fora da fase −1 (o byte), devolve 0 sem gravar nada. Na −1: saida (se pedida) = 0, rodadas = o
 /// tamanho da tabela, extra = 0; a tabela (0x944e46 de 0x68 × rodadas; sem memória, a caixa `linha` de `arquivo` e
 /// devolve 0) com cada rodada; devolve a tabela.
-pub(crate) unsafe fn single_stage_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32, table: &[FraCupCupRound], file: usize, row: u32, name: &'static str) -> usize {
+pub(crate) unsafe fn single_stage_round_table(this: Cup, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32, table: &[FraCupCupRound], file: usize, row: u32, name: &'static str) -> usize {
     if stage as u8 != 0xff {
         return 0;
     }
@@ -91,7 +91,7 @@ pub(crate) unsafe fn single_stage_round_table(this: usize, stage: u32, rounds: *
         return 0;
     }
     crate::comparison::branch(name);
-    let year = core::ptr::read_unaligned((this + cup::YEAR) as *const i16) as i32 as u32;
+    let year = this.year() as i32 as u32;
     for (i, r) in table.iter().enumerate() {
         fra_cup_write_cup_round(t, i as u32, r, year);
     }
@@ -124,7 +124,7 @@ pub(crate) const FRENCH_CUP_ROUNDS: [FraCupCupRound; 9] = [
 /// [pt] { 0x5ba3f0 } (thiscall, ret 0x10, fra_cup.cpp; a virtual +0x3c da Copa da França): `FraCup::create_round_table(fase,
 /// &rodadas, &extra, &saida)`: na fase −1, as 9 rodadas; a caixa da linha 0xa6 sem memória.
 pub(crate) unsafe extern "thiscall" fn fra_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    single_stage_round_table(this, stage, rounds, extra, out, &FRENCH_CUP_ROUNDS, 0x9ccb28, 0xa6, "cql_11 tabela da copa da franca")
+    single_stage_round_table(Cup(this), stage, rounds, extra, out, &FRENCH_CUP_ROUNDS, 0x9ccb28, 0xa6, "cql_11 tabela da copa da franca")
 }
 
 /// A Copa da Liga francesa (FraLgeCup): sete rodadas de setembro a abril do ano seguinte.
@@ -166,8 +166,8 @@ pub(crate) unsafe fn comp_id_at(c: usize, o: usize) -> Option<usize> {
 /// Writes entrant n (club, class 0, status 0) in the 6-byte list at +0xa7 and counts it.
 ///
 /// [pt] Grava a inscrição `n` da lista (+0xa7, 6 bytes: o clube, +4 classe 0, +5 situação 0) e conta.
-pub(crate) unsafe fn add_entrant(this: usize, n: &mut i32, club: usize) {
-    let e = read_usize(this + cup::TEAM_TABLE) + *n as usize * 6;
+pub(crate) unsafe fn add_entrant(this: Cup, n: &mut i32, club: usize) {
+    let e = this.team_table() + *n as usize * 6;
     core::ptr::write_unaligned(e as *mut u32, club as u32);
     *((e + 4) as *mut u8) = 0;
     *((e + 5) as *mut u8) = 0;
@@ -178,13 +178,13 @@ pub(crate) unsafe fn add_entrant(this: usize, n: &mut i32, club: usize) {
 ///
 /// [pt] Uma passada pelos clubes (os `ate` primeiros, índice em 16 bits) que passam em `entra(clube, n)`; com `para`, a
 /// passada acaba quando a lista enche (+0x3e).
-pub(crate) unsafe fn enter_clubs_pass(this: usize, n: &mut i32, ate: impl Fn() -> i32, para: bool, enters: impl Fn(usize, i32) -> bool) {
+pub(crate) unsafe fn enter_clubs_pass(this: Cup, n: &mut i32, ate: impl Fn() -> i32, para: bool, enters: impl Fn(usize, i32) -> bool) {
     let mut i: i16 = 0;
     while (i as i32) < ate() {
         let c = eng_cc_cup_club_by_index(i);
         if enters(c, *n) {
             add_entrant(this, n, c);
-            if para && *n == read_i16(this + cup::TEAM_COUNT) as i32 {
+            if para && *n == this.team_count() as i32 {
                 return;
             }
         }
@@ -195,15 +195,15 @@ pub(crate) unsafe fn enter_clubs_pass(this: usize, n: &mut i32, ate: impl Fn() -
 /// Adds clubs of division [id] while they fit (n < +0x3e).
 ///
 /// [pt] Os clubes da divisão [id] enquanto cabem (n < +0x3e), até encher.
-pub(crate) unsafe fn fra_cup_enter_division_clubs(this: usize, n: &mut i32, id: usize) {
-    enter_clubs_pass(this, n, || read_usize(G_CLUB_COUNT) as i32, true, |c, n| comp_id_at(c, 0x57) == Some(read_usize(id)) && n < read_i16(this + cup::TEAM_COUNT) as i32);
+pub(crate) unsafe fn fra_cup_enter_division_clubs(this: Cup, n: &mut i32, id: usize) {
+    enter_clubs_pass(this, n, || read_usize(G_CLUB_COUNT) as i32, true, |c, n| comp_id_at(c, 0x57) == Some(read_usize(id)) && n < this.team_count() as i32);
 }
 
 /// Amateur entrant limit of the French Cup: 0xb8 in 2001, 0xb6 otherwise.
 ///
 /// [pt] O limite dos amadores da Copa da França: 0xb8 em 2001 (+0x40 = 0x7d1), 0xb6 nos outros anos.
-pub(crate) unsafe fn french_cup_amateur_limit(this: usize) -> i32 {
-    if read_i16(this + cup::YEAR) == 0x7d1 { 0xb8 } else { 0xb6 }
+pub(crate) unsafe fn french_cup_amateur_limit(this: Cup) -> i32 {
+    if this.year() == 0x7d1 { 0xb8 } else { 0xb6 }
 }
 
 /// `FraCup::collect_entrants()` (`fra_cup_collect_entrants`, thiscall, ret 0, fra_cup.cpp): builds the 222-entrant French Cup list;
@@ -226,10 +226,10 @@ pub(crate) unsafe fn french_cup_amateur_limit(this: usize) -> i32 {
 /// franceses sem divisão que não são seleções (0x53b900), entre os clubes antes das 2 × [0xae2350] seleções do fim — estas
 /// três até `french_cup_amateur_limit`; a Segunda ([0x9cf5d0]) e a Primeira ([0x9cf5cc]) enquanto cabem. Devolve 1 com a lista
 /// cheia, senão 0 (e quantos entraram, para o comparador).
-pub(crate) unsafe fn french_cup_collect_entrants(this: usize) -> (i32, i32) {
-    core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0xde);
+pub(crate) unsafe fn french_cup_collect_entrants(this: Cup) -> (i32, i32) {
+    this.set_team_count(0xde);
     let l = exe::crt_malloc(0x534);
-    core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
+    this.set_team_table((l as u32) as usize);
     if l == 0 {
         show_error_at(0x9ccb28, 0x16f);
         return (-1, 0);
@@ -251,7 +251,7 @@ pub(crate) unsafe fn french_cup_collect_entrants(this: usize) -> (i32, i32) {
     crate::comparison::branch("cqm_11 french cup entrants");
     fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION); // cqm11: the French Second Division in the Coupe de France
     fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_FIRST_DIVISION); // cqm11: the French First Division in the Coupe de France
-    ((n == read_i16(this + cup::TEAM_COUNT) as i32) as i32, n)
+    ((n == this.team_count() as i32) as i32, n)
 }
 
 /// rule: the Coupe de France takes 222 clubs, in this order (the order decides the entry round: the first 40 in the 6th
@@ -268,7 +268,7 @@ pub(crate) unsafe fn french_cup_collect_entrants(this: usize) -> (i32, i32) {
 /// ligação; os franceses sem divisão que não são seleções — estes três grupos até 184 inscritos em 2001 e 182 nos
 /// outros anos; a Segunda e a Primeira; com a lista incompleta, devolve 0
 pub(crate) unsafe extern "thiscall" fn fra_cup_collect_entrants(this: usize) -> i32 {
-    french_cup_collect_entrants(this).0
+    french_cup_collect_entrants(Cup(this)).0
 }
 
 /// `FraLgeCup::collect_entrants()` (`0x5bd160`, thiscall, ret 0, `fra_lge_cup.cpp`): builds the list of 54 French
@@ -287,17 +287,17 @@ pub(crate) unsafe extern "thiscall" fn fra_cup_collect_entrants(this: usize) -> 
 /// com competição) da [0x9cf5d8], até 16 em 2001 (+0x40 = 0x7d1) e 14 nos outros anos; os da [0x9cf5d4] que vieram da
 /// [0x9cf5d8] enquanto a lista tem menos de 16; a Segunda ([0x9cf5d0]) e a Primeira ([0x9cf5cc]) enquanto cabem.
 /// Devolve 1 com a lista cheia, senão 0.
-pub(crate) unsafe fn french_league_cup_collect_entrants(this: usize) -> (i32, i32) {
-    core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 0x36);
+pub(crate) unsafe fn french_league_cup_collect_entrants(this: Cup) -> (i32, i32) {
+    this.set_team_count(0x36);
     let l = exe::crt_malloc(0x144);
-    core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
+    this.set_team_table((l as u32) as usize);
     if l == 0 {
         show_error_at(0x9ccb98, 0x146);
         return (-1, 0);
     }
     let mut n = 0i32;
     let all = || read_usize(G_CLUB_COUNT) as i32;
-    let limit = if read_i16(this + cup::YEAR) == 0x7d1 { 0x10 } else { 0xe };
+    let limit = if this.year() == 0x7d1 { 0x10 } else { 0xe };
     enter_clubs_pass(this, &mut n, all, true, |c, n| {
         comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_FRENCH_NATIONAL)) && read_usize(c + 0x5b) != 0 && comp_id_at(c, 0x5b) != Some(read_usize(KEY_CLUB_COMP_FRENCH_CFA)) && n < limit
     });
@@ -307,7 +307,7 @@ pub(crate) unsafe fn french_league_cup_collect_entrants(this: usize) -> (i32, i3
         let c = eng_cc_cup_club_by_index(i);
         if comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_FRENCH_NATIONAL)) && comp_id_at(c, 0x5b) == Some(read_usize(KEY_CLUB_COMP_FRENCH_CFA)) {
             add_entrant(this, &mut n, c);
-            if n == read_i16(this + cup::TEAM_COUNT) as i32 {
+            if n == this.team_count() as i32 {
                 break;
             }
         }
@@ -316,7 +316,7 @@ pub(crate) unsafe fn french_league_cup_collect_entrants(this: usize) -> (i32, i3
     crate::comparison::branch("cqm_11 french league cup entrants");
     fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION); // cqm11: the French Second Division in the League Cup
     fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_FIRST_DIVISION); // cqm11: the French First Division in the League Cup
-    ((n == read_i16(this + cup::TEAM_COUNT) as i32) as i32, n)
+    ((n == this.team_count() as i32) as i32, n)
 }
 
 /// `FraSuper::select_teams()` (`fra_super_select_teams`, thiscall, ret 0, fra_super.cpp): picks the First Division champion and the
@@ -333,10 +333,10 @@ pub(crate) unsafe fn french_league_cup_collect_entrants(this: usize) -> (i32, i3
 /// +0xa7; sem memória, a caixa da linha 0xc4 e −1). O campeão da Primeira ([0x9cf5cc]; sem ele, a caixa 0xcd e 0) e o
 /// da Copa da França ([0x9cf70c]; sem ele, 0xd6 e 0); se é o mesmo clube, o segundo vira o vice da Primeira (sem ele, 0xe2
 /// e 0). Classe e situação 0 nos dois; devolve 1.
-pub(crate) unsafe fn french_super_cup_select_teams(this: usize) -> (i32, i32) {
-    core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 2);
+pub(crate) unsafe fn french_super_cup_select_teams(this: Cup) -> (i32, i32) {
+    this.set_team_count(2);
     let l = exe::crt_malloc(0xc);
-    core::ptr::write_unaligned((this + cup::TEAM_TABLE) as *mut u32, l as u32);
+    this.set_team_table((l as u32) as usize);
     if l == 0 {
         show_error_at(0x9ccc48, 0xc4);
         return (-1, 0);

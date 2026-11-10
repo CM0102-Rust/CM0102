@@ -105,11 +105,11 @@ pub(crate) unsafe extern "thiscall" fn classify_move(this: usize, code: i16, a: 
     let assinado = sign.wrapping_mul(ang);
     let tol = ftol(read_f32(rdata::F32_90) as f64 - (strength as f64 * read_f32(rdata::F32_18) as f64 - this.technique() as f64));
     let (lim, menos) = (tol as i16, (tol.wrapping_neg()) as i16);
-    let person = this.player();
+    let person = PlayerSheet(this.player());
     let (r, attr) = if assinado > lim {
-        (0, read_i8(person + player_sheet::LEFT_FOOT))
+        (0, person.left_foot())
     } else if assinado < menos {
-        (1, read_i8(person + player_sheet::RIGHT_FOOT))
+        (1, person.right_foot())
     } else {
         return this.preferred_foot() as u8;
     };
@@ -1049,9 +1049,9 @@ pub(crate) unsafe extern "thiscall" fn choose_by_role_b(this: usize, argumento: 
         if let Some(b) = bits {
             factor = f32::from_bits(b);
         }
-        let person = p.player();
-        if person != 0 {
-            let a = read_i8(person + player_sheet::WORK_RATE);
+        let person = PlayerSheet(p.player());
+        if !person.is_null() {
+            let a = person.work_rate();
             if a > 15 {
                 factor *= read_f32(rdata::F32_1_100000024);
             } else if a > 10 {
@@ -1060,7 +1060,7 @@ pub(crate) unsafe extern "thiscall" fn choose_by_role_b(this: usize, argumento: 
                 factor *= read_f32(rdata::F32_0_9499999881);
             }
             for o in [0x39, 0x3e] {
-                let a = read_i8(person + o);
+                let a = read_i8(person.addr() + o);
                 if a > 15 {
                     factor *= read_f32(rdata::F32_1_100000024);
                 } else if a < 5 {
@@ -1179,9 +1179,9 @@ pub(crate) unsafe extern "thiscall" fn choose_by_role_c(this: usize, argumento: 
         if let Some(b) = bits {
             factor = f32::from_bits(b);
         }
-        let person = p.player();
-        if person != 0 {
-            let w = *((person + player_sheet::CURRENT_ABILITY) as *const i16);
+        let person = PlayerSheet(p.player());
+        if !person.is_null() {
+            let w = person.current_ability();
             factor = if w > 0x8c {
                 factor * read_f32(rdata::F32_1_399999976)
             } else if w < 0x3c {
@@ -1189,7 +1189,7 @@ pub(crate) unsafe extern "thiscall" fn choose_by_role_c(this: usize, argumento: 
             } else {
                 (w as f64 * read_f64(rdata::F64_0_01) * factor as f64) as f32
             };
-            let r = random(read_i8(person + player_sheet::CONSISTENCY) as i32);
+            let r = random(person.consistency() as i32);
             if r < random(0x14) {
                 factor *= read_f32(rdata::F32_0_6999999881);
             }
@@ -1389,9 +1389,9 @@ pub(crate) unsafe extern "thiscall" fn choose_by_role_e(this: usize, argumento: 
         if let Some(b) = bits {
             factor = f32::from_bits(b);
         }
-        let person = p.player();
-        if person != 0 {
-            let w = *((person + player_sheet::CURRENT_ABILITY) as *const i16);
+        let person = PlayerSheet(p.player());
+        if !person.is_null() {
+            let w = person.current_ability();
             factor = if w > 0x8c {
                 factor * read_f32(rdata::F32_1_399999976)
             } else if w < 0x3c {
@@ -1400,7 +1400,7 @@ pub(crate) unsafe extern "thiscall" fn choose_by_role_e(this: usize, argumento: 
                 (w as f64 * read_f64(rdata::F64_0_01) * factor as f64) as f32
             };
             for o in [0x37, 0x43] {
-                let a = read_i8(person + o);
+                let a = read_i8(person.addr() + o);
                 if a > 15 {
                     factor *= read_f32(rdata::F32_1_100000024);
                 } else if a < 6 {
@@ -1410,7 +1410,7 @@ pub(crate) unsafe extern "thiscall" fn choose_by_role_e(this: usize, argumento: 
                 }
             }
             if mode as u8 == 0 {
-                let t = [0x40, 0x36, 0x26, 0x1b].iter().fold(0u8, |t, &o| t.wrapping_add(read_i8(person + o) as u8)) as i8;
+                let t = [0x40, 0x36, 0x26, 0x1b].iter().fold(0u8, |t, &o| t.wrapping_add(read_i8(person.addr() + o) as u8)) as i8;
                 if t > 0x4b {
                     factor *= read_f32(rdata::F32_1_25);
                 } else if t > 0x3c {
@@ -1421,7 +1421,7 @@ pub(crate) unsafe extern "thiscall" fn choose_by_role_e(this: usize, argumento: 
                     factor *= read_f32(rdata::F32_0_9499999881);
                 }
             }
-            let r = random(read_i8(person + player_sheet::CONSISTENCY) as i32);
+            let r = random(person.consistency() as i32);
             if r < random(0x14) {
                 factor *= read_f32(rdata::F32_0_75);
             }
@@ -1641,8 +1641,8 @@ pub(crate) unsafe fn score_cell_for_player(engine: Engine, j: MatchPlayer, x: i8
     if flag2 {
         bl = *((home + 0x58 + opp) as *const i8);
         if bl != 0 {
-            let person = j.player();
-            let r = random(read_i8(person + player_sheet::DRIBBLING) as i32);
+            let person = PlayerSheet(j.player());
+            let r = random(person.dribbling() as i32);
             if r > random(3) {
                 bl = (bl as i32 - 2).max(0) as i8;
             }
@@ -6559,9 +6559,9 @@ pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
                 }
             }
             // another club’s interest (0x6b917a)
-            let pe = read_usize(j + match_player::PLAYER);
+            let pe = PlayerSheet(read_usize(j + match_player::PLAYER));
             let r = random(7);
-            if (read_i8(pe + player_sheet::LEADERSHIP) as i32) > r + 6 && read_i16(pe + player_sheet::CURRENT_REPUTATION) > 0xea6 && f.professionalism() < 7 && (f.professionalism() as i32) < random(0xf) {
+            if (pe.leadership() as i32) > r + 6 && pe.current_reputation() > 0xea6 && f.professionalism() < 7 && (f.professionalism() as i32) < random(0xf) {
                 let x = random(read_i16((read_usize(j + match_player::PLAYER)) + 0xb) as i32);
                 if random(club.reputation() as i32) < x && *((c + 0x45) as *const u32) & 0x2f7a0b != 0 {
                     crate::comparison::branch("prematch interest");
@@ -6569,18 +6569,18 @@ pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
                 }
             }
             // a forma
-            let sheet_61 = f.player();
+            let sheet_61 = PlayerSheet(f.player());
             let mut form = (f.year_of_birth() as i8);
-            if sheet_61 != 0 {
-                let x0f = read_i8(sheet_61 + player_sheet::GOALKEEPER);
+            if !sheet_61.is_null() {
+                let x0f = sheet_61.goalkeeper();
                 if x0f == 0x14 {
                     form = form.wrapping_sub(2);
-                } else if read_i8(sheet_61 + player_sheet::DEFENDER) == 0x14 {
+                } else if sheet_61.defender() == 0x14 {
                     form = form.wrapping_sub(1);
-                } else if read_i8(sheet_61 + player_sheet::ATTACKER) == 0x14 || read_i8(sheet_61 + player_sheet::ATTACKING_MIDFIELDER) == 0x14 {
+                } else if sheet_61.attacker() == 0x14 || sheet_61.attacking_midfielder() == 0x14 {
                     form = form.wrapping_add(1);
                 }
-                let x3c = read_i8(sheet_61 + player_sheet::STAMINA);
+                let x3c = sheet_61.stamina();
                 if x0f != 0x14 && x3c > 0xf {
                     form = form.wrapping_sub(2);
                 } else if x3c > 0xa {
@@ -6591,7 +6591,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
             }
             let sheet_average = *(G_PLAYER_STATS as *const usize);
             if form < 0x17 {
-                let m1 = average(sheet_average, sheet_61, 6, 1, 6.5) as f32;
+                let m1 = average(sheet_average, sheet_61.addr(), 6, 1, 6.5) as f32;
                 let m2 = average(sheet_average, f.player(), 6, 0x11, 6.5) as f32;
                 let mut al = f.professionalism().wrapping_add(f.pressure()).wrapping_add((f.year_of_birth() as i8)).wrapping_sub(0x1e);
                 if al < 4 {
@@ -6603,10 +6603,10 @@ pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
                         al = 0x19 - x3c;
                     }
                 }
-                let f61 = f.player();
-                if f61 != 0
+                let f61 = PlayerSheet(f.player());
+                if !f61.is_null()
                     && (f.int_apps() as i8) == 0
-                    && read_i16(f61 + player_sheet::CURRENT_REPUTATION) < 0x1b58
+                    && f61.current_reputation() < 0x1b58
                     && club.reputation() > 0xcb2
                     && (al as f64) < m1 as f64
                     && game.home_side_mark() != 0
@@ -6617,7 +6617,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
                     push_prematch_event(m, f, club, *((c + 0x45) as *const u32), titular_da_vaga(j), lado as u8, 5);
                 }
             } else if form > 0x20 {
-                let m1 = average(sheet_average, sheet_61, 6, 1, 6.5) as f32;
+                let m1 = average(sheet_average, sheet_61.addr(), 6, 1, 6.5) as f32;
                 let m2 = average(sheet_average, f.player(), 6, 0x11, 6.5);
                 if m1 as f64 > read_f32(rdata::F32_2) as f64 {
                     let mut z = m1 as f64 * read_f64(rdata::F64_0_1);
@@ -8720,11 +8720,11 @@ pub(crate) unsafe extern "thiscall" fn side_strength(this: usize, side: i8) {
         let club = Club(if main == 0 { 0 } else { (*(G_CLUB_TABLE as *const usize)).wrapping_add((*((main + 4) as *const i32) as usize).wrapping_mul(581)) });
         let c = exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), person, club);
         if c != 0 && !club.is_null() {
-            let sheet = *((j + match_player::PLAYER) as *const usize);
-            if (read_i8(sheet + player_sheet::LEADERSHIP) as i32) > random(20)
-                && (*((sheet + player_sheet::CURRENT_REPUTATION) as *const i16) as i32) > random(7000)
+            let sheet = PlayerSheet(*((j + match_player::PLAYER) as *const usize));
+            if (sheet.leadership() as i32) > random(20)
+                && (sheet.current_reputation() as i32) > random(7000)
                 && (person.professionalism() as i32) < random(6)
-                && *((sheet + player_sheet::CURRENT_REPUTATION) as *const i16) > (club.reputation()).wrapping_sub(750)
+                && sheet.current_reputation() > (club.reputation()).wrapping_sub(750)
                 && core::ptr::read_unaligned((c + contract::GRIEVANCES) as *const u32) & 0x17a0b != 0
             {
                 if j == designado() {
@@ -9758,8 +9758,8 @@ pub(crate) unsafe extern "thiscall" fn who_to_mark(m: usize, j: usize) -> usize 
                 };
                 let w = role(0x8ebc);
                 if w & 0x20 != 0 && w & 0x800 == 0 && w & 0x80 == 0 {
-                    let sheet = *((q + match_player::PLAYER) as *const usize);
-                    rating = rating.wrapping_add(10 * read_i8(sheet + player_sheet::FREE_ROLE) as i32);
+                    let sheet = PlayerSheet(*((q + match_player::PLAYER) as *const usize));
+                    rating = rating.wrapping_add(10 * sheet.free_role() as i32);
                 } else {
                     let fixed = |v: u16| v == 0x140 || v == 0x240 || v == 0x440;
                     if (0..=10).contains(&pos) && !fixed(role(0x8ebc)) && fixed(role(0x8ec4)) {
@@ -10037,8 +10037,8 @@ pub(crate) unsafe extern "thiscall" fn choose_taker(this: usize, side: i8, kind:
         };
         let attack = if side == 0 { a7 < 4 } else { side == 1 && a7 > 4 };
         let bola_parada = || {
-            let pd = j.player();
-            let mut s = (read_i8(pd + player_sheet::FREE_KICKS) as i16).wrapping_mul(5).wrapping_add((j.moment_flair() as i16).wrapping_mul(2));
+            let pd = PlayerSheet(j.player());
+            let mut s = (pd.free_kicks() as i16).wrapping_mul(5).wrapping_add((j.moment_flair() as i16).wrapping_mul(2));
             if s <= 0 {
                 return s;
             }
@@ -10048,7 +10048,7 @@ pub(crate) unsafe extern "thiscall" fn choose_taker(this: usize, side: i8, kind:
             } else if age < 24 {
                 s = ftol(s as f64 * read_f64(rdata::F64_0_95)) as i16;
             }
-            ftol((*((pd + player_sheet::CURRENT_REPUTATION) as *const i16) as f64 * read_f64(rdata::F64_2_5ENEG_05) + read_f64(rdata::F64_0_75)) * s as f64) as i16
+            ftol((pd.current_reputation() as f64 * read_f64(rdata::F64_2_5ENEG_05) + read_f64(rdata::F64_0_75)) * s as f64) as i16
         };
         let far = || {
             let g1 = exe::match_player_distance_to_cell(j, a7, a8);
@@ -10859,8 +10859,8 @@ pub(crate) unsafe fn apply_attribute_step(v: f64, x: i8, rules: &[(char, i8, usi
 /// If random(person attribute 0x21) < random(20), multiplies v by 0x96d248 (rounded to f32).
 ///
 /// [pt] sorteio(atributo 0x21 da pessoa) < sorteio(20): multiplica por 0x96d248.
-pub(crate) unsafe fn luck_multiplier(v: f64, person: usize) -> f64 {
-    let a = random(read_i8(person + 0x21) as i32);
+pub(crate) unsafe fn luck_multiplier(v: f64, person: PlayerSheet) -> f64 {
+    let a = random(read_i8(person.addr() + 0x21) as i32);
     if a < random(0x14) {
         (v * read_f32(rdata::F32_0_75) as f64) as f32 as f64
     } else {
@@ -10905,16 +10905,16 @@ pub(crate) unsafe extern "thiscall" fn team_strength(this: usize, side_b: i8) {
             *(G_MOUSE_LEFT_BUTTON_DOWN as *mut u32) = 0;
             return;
         }
-        let person = *((p + match_player::PLAYER) as *const usize);
-        exe::match_player_drain_stamina(p, (30 - read_i8(person + player_sheet::STAMINA) as i32) as f32, -1);
+        let person = PlayerSheet(*((p + match_player::PLAYER) as *const usize));
+        exe::match_player_drain_stamina(p, (30 - person.stamina() as i32) as f32, -1);
         let role = match_player_position(MatchPlayer(p)) as u8;
         let palavra5 = |pe: usize| *((pe + 5) as *const i16) as f64;
         // S: chute e finalizacao
         let mut s = ((((((f(p, match_player::TACKLING) + f(p, match_player::POSITIONING)) + f(p, match_player::PACE)) + f(p, match_player::ANTICIPATION)) + cinquenta) * meio + read_f32(rdata::F32_48) as f64)
             + f(p, match_player::STAMINA) * k898
             - k8a8) as f32 as f64;
-        if person != 0 {
-            let t = (read_i8(person + player_sheet::LEADERSHIP) >> 2) as f64 + s;
+        if !person.is_null() {
+            let t = (person.leadership() >> 2) as f64 + s;
             let kw = if role & 4 != 0 || role & 2 != 0 {
                 0x967880
             } else if role & 8 != 0 {
@@ -10922,17 +10922,17 @@ pub(crate) unsafe extern "thiscall" fn team_strength(this: usize, side_b: i8) {
             } else {
                 0x967898
             };
-            s = (palavra5(person) * read_f64(kw) + t) as f32 as f64;
+            s = (palavra5(person.addr()) * read_f64(kw) + t) as f32 as f64;
             let default = [('>', 15, 0x96d3b8), ('<', 6, 0x96b014), ('<', 10, 0x96d3b4)];
             let strong = [('>', 15, 0x96d3b0), ('<', 6, 0x96b014), ('<', 10, 0x96d3b4)];
-            s = apply_attribute_step(s, read_i8(person + player_sheet::MARKING), &default, true);
-            s = apply_attribute_step(s, read_i8(person + player_sheet::STAMINA), &[('>', 15, 0x96d3b8), ('<', 6, 0x96a32c), ('<', 10, 0x96b014)], true);
-            s = apply_attribute_step(s, read_i8(person + player_sheet::WORK_RATE), &strong, true);
-            s = apply_attribute_step(s, read_i8(person + player_sheet::TACKLING), &default, true);
-            s = apply_attribute_step(s, read_i8(person + player_sheet::ANTICIPATION), &default, true);
-            s = apply_attribute_step(s, read_i8(person + player_sheet::JUMPING), &strong, true);
-            s = apply_attribute_step(s, read_i8(person + player_sheet::HEADING), &strong, true);
-            let sum = read_i8(person + player_sheet::PLAYER_PACE).wrapping_add(read_i8(person + player_sheet::ACCELERATION));
+            s = apply_attribute_step(s, person.marking(), &default, true);
+            s = apply_attribute_step(s, person.stamina(), &[('>', 15, 0x96d3b8), ('<', 6, 0x96a32c), ('<', 10, 0x96b014)], true);
+            s = apply_attribute_step(s, person.work_rate(), &strong, true);
+            s = apply_attribute_step(s, person.tackling(), &default, true);
+            s = apply_attribute_step(s, person.anticipation(), &default, true);
+            s = apply_attribute_step(s, person.jumping(), &strong, true);
+            s = apply_attribute_step(s, person.heading(), &strong, true);
+            let sum = person.player_pace().wrapping_add(person.acceleration());
             s = apply_attribute_step(s, sum, &[('>', 0x23, 0x96d3b0), ('<', 10, 0x96a32c), ('<', 0x14, 0x96d3b4)], true);
             s = luck_multiplier(s, person);
         }
@@ -10942,7 +10942,7 @@ pub(crate) unsafe extern "thiscall" fn team_strength(this: usize, side_b: i8) {
             + f(p, match_player::STAMINA) * k898
             + read_f64(rdata::F64_57)
             - k8a8) as f32 as f64;
-        if person != 0 {
+        if !person.is_null() {
             let kw = if role & 0x40 != 0 {
                 0x967880
             } else if role & 0x20 != 0 {
@@ -10954,18 +10954,18 @@ pub(crate) unsafe extern "thiscall" fn team_strength(this: usize, side_b: i8) {
             } else {
                 0x967898
             };
-            t2 = (palavra5(person) * read_f64(kw) + t2) as f32 as f64;
-            t2 = apply_attribute_step(t2, read_i8(person + player_sheet::WORK_RATE), &[('>', 15, 0x96d3b8), ('<', 6, 0x96d394)], true);
-            t2 = apply_attribute_step(t2, read_i8(person + player_sheet::STAMINA), &[('>', 15, 0x96d3b0), ('<', 6, 0x96b014)], true);
-            t2 = apply_attribute_step(t2, read_i8(person + player_sheet::ONE_ON_ONES), &[('>', 15, 0x96a33c), ('<', 6, 0x96a32c)], true);
+            t2 = (palavra5(person.addr()) * read_f64(kw) + t2) as f32 as f64;
+            t2 = apply_attribute_step(t2, person.work_rate(), &[('>', 15, 0x96d3b8), ('<', 6, 0x96d394)], true);
+            t2 = apply_attribute_step(t2, person.stamina(), &[('>', 15, 0x96d3b0), ('<', 6, 0x96b014)], true);
+            t2 = apply_attribute_step(t2, person.one_on_ones(), &[('>', 15, 0x96a33c), ('<', 6, 0x96a32c)], true);
             let three = [('>', 15, 0x96d390), ('<', 6, 0x96d38c), ('<', 10, 0x96d394)];
-            t2 = apply_attribute_step(t2, read_i8(person + player_sheet::PASSING), &three, true);
-            t2 = apply_attribute_step(t2, read_i8(person + player_sheet::VISION), &three, true);
-            let sum = read_i8(person + player_sheet::TECHNIQUE).wrapping_add(read_i8(person + player_sheet::PLAYER_PACE)).wrapping_add(read_i8(person + player_sheet::DRIBBLING)).wrapping_add(read_i8(person + player_sheet::ACCELERATION));
+            t2 = apply_attribute_step(t2, person.passing(), &three, true);
+            t2 = apply_attribute_step(t2, person.vision(), &three, true);
+            let sum = person.technique().wrapping_add(person.player_pace()).wrapping_add(person.dribbling()).wrapping_add(person.acceleration());
             t2 = apply_attribute_step(t2, sum, &[('>', 0x4b, 0x96d388), ('>', 0x41, 0x96d3b8), ('>', 0x32, 0x96d3b0), ('>', 0x23, 0), ('>', 0x19, 0x96d3b4), ('*', 0, 0x96d394)], true);
-            t2 = apply_attribute_step(t2, read_i8(person + player_sheet::ANTICIPATION), &[('>', 15, 0x96a33c), ('<', 10, 0x96b014), ('<', 6, 0x96a32c)], true);
-            t2 = apply_attribute_step(t2, read_i8(person + player_sheet::MOVEMENT), &[('>', 15, 0x96d3b8), ('<', 6, 0x96b014), ('<', 10, 0x96d3b4)], true);
-            t2 = apply_attribute_step(t2, read_i8(person + player_sheet::TEAMWORK), &[('>', 15, 0x96d3b0), ('<', 10, 0x96b014), ('<', 5, 0x96a32c)], true);
+            t2 = apply_attribute_step(t2, person.anticipation(), &[('>', 15, 0x96a33c), ('<', 10, 0x96b014), ('<', 6, 0x96a32c)], true);
+            t2 = apply_attribute_step(t2, person.movement(), &[('>', 15, 0x96d3b8), ('<', 6, 0x96b014), ('<', 10, 0x96d3b4)], true);
+            t2 = apply_attribute_step(t2, person.teamwork(), &[('>', 15, 0x96d3b0), ('<', 10, 0x96b014), ('<', 5, 0x96a32c)], true);
             t2 = luck_multiplier(t2, person);
         }
         // T3
@@ -10975,7 +10975,7 @@ pub(crate) unsafe extern "thiscall" fn team_strength(this: usize, side_b: i8) {
             + f(p, match_player::STAMINA) * k898
             + read_f64(rdata::F64_76)
             - k8a8) as f32 as f64;
-        if person != 0 {
+        if !person.is_null() {
             let kw = if role & 0x40 != 0 {
                 0x968918
             } else if role & 0x20 != 0 {
@@ -10988,18 +10988,18 @@ pub(crate) unsafe extern "thiscall" fn team_strength(this: usize, side_b: i8) {
                 0x967898
             };
             // in st0, without storing as float between the steps
-            let mut v = palavra5(person) * read_f64(kw) + t3;
+            let mut v = palavra5(person.addr()) * read_f64(kw) + t3;
             let strong = [('>', 15, 0x96d3b0), ('<', 6, 0x96b014), ('<', 10, 0x96d3b4)];
-            v = apply_attribute_step(v, read_i8(person + player_sheet::WORK_RATE), &strong, false);
-            v = apply_attribute_step(v, read_i8(person + player_sheet::STAMINA), &strong, false);
-            v = apply_attribute_step(v, read_i8(person + player_sheet::ONE_ON_ONES), &[('>', 15, 0x96d3b8), ('>', 10, 0x96d3b0), ('<', 6, 0x96d394)], false);
-            v = apply_attribute_step(v, read_i8(person + player_sheet::LONG_SHOTS), &[('>', 15, 0x96d368), ('>', 10, 0x96d3b0), ('<', 6, 0x96d3b4)], false);
-            let sum = read_i8(person + player_sheet::PLAYER_PACE).wrapping_add(read_i8(person + player_sheet::DRIBBLING)).wrapping_add(read_i8(person + player_sheet::ACCELERATION)).wrapping_add(read_i8(person + player_sheet::TECHNIQUE));
+            v = apply_attribute_step(v, person.work_rate(), &strong, false);
+            v = apply_attribute_step(v, person.stamina(), &strong, false);
+            v = apply_attribute_step(v, person.one_on_ones(), &[('>', 15, 0x96d3b8), ('>', 10, 0x96d3b0), ('<', 6, 0x96d394)], false);
+            v = apply_attribute_step(v, person.long_shots(), &[('>', 15, 0x96d368), ('>', 10, 0x96d3b0), ('<', 6, 0x96d3b4)], false);
+            let sum = person.player_pace().wrapping_add(person.dribbling()).wrapping_add(person.acceleration()).wrapping_add(person.technique());
             v = apply_attribute_step(v, sum, &[('>', 0x4b, 0x96d388), ('>', 0x41, 0x96d3b8), ('>', 0x32, 0x96d3b0), ('<', 10, 0x96d320), ('<', 0x19, 0x96d364), ('*', 0, 0x96b014)], false);
             t3 = v as f32 as f64;
-            t3 = apply_attribute_step(t3, read_i8(person + player_sheet::ANTICIPATION), &[('>', 15, 0x96d388), ('<', 6, 0x96a32c), ('<', 10, 0x96d360)], true);
-            t3 = apply_attribute_step(t3, read_i8(person + player_sheet::MOVEMENT), &[('>', 15, 0x96d388), ('>', 10, 0x96d3b0), ('<', 6, 0x96d394)], true);
-            t3 = apply_attribute_step(t3, read_i8(person + player_sheet::TECHNIQUE), &[('>', 15, 0x96d3b8)], true);
+            t3 = apply_attribute_step(t3, person.anticipation(), &[('>', 15, 0x96d388), ('<', 6, 0x96a32c), ('<', 10, 0x96d360)], true);
+            t3 = apply_attribute_step(t3, person.movement(), &[('>', 15, 0x96d388), ('>', 10, 0x96d3b0), ('<', 6, 0x96d394)], true);
+            t3 = apply_attribute_step(t3, person.technique(), &[('>', 15, 0x96d3b8)], true);
             t3 = luck_multiplier(t3, person);
         }
         // C1, C4 (stays in the x87, without rounding), C5, C6

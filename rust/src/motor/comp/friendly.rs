@@ -1929,12 +1929,12 @@ pub(crate) unsafe fn set_friendly_windows(ptrs: usize, n: i32, write: bool) -> V
         }
         let (mut prim, mut ult) = (u32::MAX as usize, u32::MAX as usize);
         let lg = read_usize(ent + 0x26);
-        let comp = if lg != 0 { read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(lg) * 4) } else { 0 };
-        if comp != 0 && *((comp + cup::COMP_TYPE) as *const u8) == 1 {
+        let comp = Cup(if lg != 0 { read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(lg) * 4) } else { 0 });
+        if !comp.is_null() && comp.comp_type() == 1 {
             if write {
                 // the league start dates that the original builds and does not use (locals only)
                 let (mut t1, mut t2, mut t3, mut t4, mut t5, mut t6) = ([0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8]);
-                let x = read_usize(comp + cup::ROUND_TABLE);
+                let x = comp.round_table();
                 let year = *((x + cup_round::YEAR_OFFSET) as *const i8) as i16 as u16 as u32;
                 let r = exe::new_date((&mut t1) as *mut [u8; 8] as usize, read_u16(x + cup_round::DAY) as u32, year);
                 exe::date_operator_3d((&mut t2) as *mut [u8; 8] as usize, (&mut t3) as *mut [u8; 8] as usize, r);
@@ -1944,7 +1944,7 @@ pub(crate) unsafe fn set_friendly_windows(ptrs: usize, n: i32, write: bool) -> V
                     exe::date_operator_3d((&mut t6) as *mut [u8; 8] as usize, (&mut t3) as *mut [u8; 8] as usize, r);
                 }
             }
-            let t = read_usize(comp + cup::TEAM_TABLE);
+            let t = comp.team_table();
             let a = read_usize(t);
             prim = if a != 0 { read_usize(a) } else { u32::MAX as usize };
             let b = read_usize(t + 6);

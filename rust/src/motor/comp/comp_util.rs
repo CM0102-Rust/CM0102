@@ -221,25 +221,25 @@ pub(crate) unsafe extern "thiscall" fn set_club_final_position(this: usize, club
 /// (+0x3c − 2) para trás ([+0xa3] + r × 0x68, a conta de quem sai em +0x1a), até um clube nulo no começo da rodada.
 /// Na primeira rodada vista, os que saem nela ganham todos a posição 1 (sem olhar nulos); em cada rodada, os seguintes
 /// ganham a posição do contador (que sobe a cada vaga, nula ou não), pulando os nulos. `gravar` = 0 só monta a lista.
-pub(crate) unsafe fn set_final_positions_by_round(this: usize, v: *const u32, write: usize) -> Vec<(usize, u8)> {
+pub(crate) unsafe fn set_final_positions_by_round(this: Cup, v: *const u32, write: usize) -> Vec<(usize, u8)> {
     let mut chamadas: Vec<(usize, u8)> = Vec::new();
     let mut s: i16 = 0; // the index into the vector (bp signed)
     let mut b: u8 = 1; // the position counter
     let mut a: u8 = 1; // the pushed position (only the low byte counts; the original pushes the dword with leftovers on top)
-    let mut r = read_i16(this + cup::ROUND_COUNT).wrapping_sub(2) as i32;
+    let mut r = this.round_count().wrapping_sub(2) as i32;
     while r >= 0 {
         if *v.offset(s as isize) == 0 {
             break;
         }
-        let count = |r: i32| read_i16(read_usize(this + cup::ROUND_TABLE) + r as usize * 0x68 + 0x1a) as i32;
-        if r == read_i16(this + cup::ROUND_COUNT) as i32 - 2 {
+        let count = |r: i32| read_i16(this.round_table() + r as usize * 0x68 + 0x1a) as i32;
+        if r == this.round_count() as i32 - 2 {
             let mut j = 0;
             while j < count(r) {
                 let c = *v.offset(s as isize) as usize;
                 s = s.wrapping_add(1);
                 chamadas.push((c, a));
                 if write != 0 {
-                    exe::comp_stats_set_club_final_position(read_usize(this + 8), c, a as u32);
+                    exe::comp_stats_set_club_final_position(read_usize(this.addr() + 8), c, a as u32);
                 }
                 b = b.wrapping_add(1);
                 j += 1;
@@ -254,7 +254,7 @@ pub(crate) unsafe fn set_final_positions_by_round(this: usize, v: *const u32, wr
                 chamadas.push((c, a));
                 if write != 0 {
                     crate::comparison::branch("cpt_13 position by round");
-                    exe::comp_stats_set_club_final_position(read_usize(this + 8), c, a as u32);
+                    exe::comp_stats_set_club_final_position(read_usize(this.addr() + 8), c, a as u32);
                 }
             }
             b = b.wrapping_add(1);

@@ -77,7 +77,7 @@ pub(crate) unsafe fn fra_super_write_cup_round(t: usize, i: u32, r: &FraSuperCup
 /// tamanho da tabela, extra = 0; a tabela (0x944e46 de 0x68 × rodadas; sem memória, a caixa `linha` de `arquivo` e
 /// devolve 0) com cada rodada; devolve a tabela. `ajuste` mexe na primeira rodada depois da alocação (o mando sorteado da
 /// Supercopa francesa).
-pub(crate) unsafe fn fra_super_create_single_stage_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32, table: &[FraSuperCupRound], file: usize, row: u32, name: &'static str,
+pub(crate) unsafe fn fra_super_create_single_stage_round_table(this: Cup, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32, table: &[FraSuperCupRound], file: usize, row: u32, name: &'static str,
     adjust: impl FnOnce(&mut FraSuperCupRound)) -> usize {
     if stage as u8 != 0xff {
         return 0;
@@ -95,7 +95,7 @@ pub(crate) unsafe fn fra_super_create_single_stage_round_table(this: usize, stag
     crate::comparison::branch(name);
     let mut t0 = table[0];
     adjust(&mut t0);
-    let year = core::ptr::read_unaligned((this + cup::YEAR) as *const i16) as i32 as u32;
+    let year = this.year() as i32 as u32;
     for (i, r) in table.iter().enumerate() {
         fra_super_write_cup_round(t, i as u32, if i == 0 { &t0 } else { r }, year);
     }
@@ -111,8 +111,8 @@ pub(crate) const FRENCH_SUPER_CUP_ROUNDS: [FraSuperCupRound; 1] = [
 ///
 /// [pt] O mando da Supercopa da França: 0x400 em 2001 (+0x40 = 0x7d1); nos outros anos, um dos seis (0x200, 0x400, 0x800,
 /// 0x1000, 0x2000, 0x4000) pela 0x90cfc0 (push 6; add esp, 4 -> cdecl, o sorteio de 0 a 5).
-pub(crate) unsafe fn french_super_cup_venue(this: usize) -> u32 {
-    if core::ptr::read_unaligned((this + cup::YEAR) as *const i16) == 0x7d1 {
+pub(crate) unsafe fn french_super_cup_venue(this: Cup) -> u32 {
+    if this.year() == 0x7d1 {
         return 0x400;
     }
     const MANDOS: [i16; 6] = [0x200, 0x400, 0x800, 0x1000, 0x2000, 0x4000];
@@ -130,8 +130,8 @@ pub(crate) unsafe fn french_super_cup_venue(this: usize) -> u32 {
 /// `french_super_cup_venue` (a original sorteia depois da data do sorteio, que não sorteia: a cópia sorteia logo antes);
 /// a caixa da linha 0x97 sem memória.
 pub(crate) unsafe extern "thiscall" fn fra_super_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    fra_super_create_single_stage_round_table(this, stage, rounds, extra, out, &FRENCH_SUPER_CUP_ROUNDS, 0x9ccc48, 0x97, "cql_12 tabela da supercopa da franca",
-        |r| r.game.5 = french_super_cup_venue(this))
+    fra_super_create_single_stage_round_table(Cup(this), stage, rounds, extra, out, &FRENCH_SUPER_CUP_ROUNDS, 0x9ccc48, 0x97, "cql_12 tabela da supercopa da franca",
+        |r| r.game.5 = french_super_cup_venue(Cup(this)))
 }
 
 // simplification: outside 2001 the original rolls home advantage (0x90cfc0): only it runs in that case.
@@ -154,6 +154,6 @@ pub(crate) const JAPAN_SUPER_CUP_ROUNDS: [FraSuperCupRound; 1] = [
 /// [pt] regra: a Supercopa da França é entre o campeão da Primeira e o da Copa da França; se o mesmo clube ganhou as duas,
 /// entra o vice da Primeira; sem algum deles, a caixa de erro
 pub(crate) unsafe extern "thiscall" fn fra_super_select_teams(this: usize) -> i32 {
-    french_super_cup_select_teams(this).0
+    french_super_cup_select_teams(Cup(this)).0
 }
 

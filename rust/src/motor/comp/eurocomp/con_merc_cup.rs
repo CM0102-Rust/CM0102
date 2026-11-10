@@ -551,7 +551,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usi
 /// [pt] { 0x4c1960 } (thiscall, ret 0x10, con_merc_cup.cpp; a virtual +0x3c da Merconorte): `ConMercCup::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: os grupos ou o mata-mata (`merconorte_stage`).
 pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    build_stage_schedule(this, merconorte_stage(stage), rounds, extra, league, 0x9a7d6c)
+    build_stage_schedule(Cup(this), merconorte_stage(stage), rounds, extra, league, 0x9a7d6c)
 }
 
 /// rule: the Copa Merconorte groups are home and away, 3/1 points, tiebreak 1, 2, 3, one qualifier per group, category

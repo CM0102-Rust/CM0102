@@ -9,12 +9,13 @@ use super::*;
 /// das duas zonas), os dois grupos (0x40c110), chegando a 3 (depois dos grupos), as semifinais (0x40c3d0); as duas mov
 /// ecx, this -> thiscall, ret 0.
 pub(crate) unsafe extern "thiscall" fn asia_club_champ_advance_stage(this: usize) {
-    let f = read_usize(this + cup::CURRENT_STAGE) as i32;
-    if f >= (read_usize(this + cup::STAGE_COUNT) as i32).wrapping_sub(1) {
+    let this = Cup(this);
+    let f = this.current_stage() as i32;
+    if f >= (this.stage_count() as i32).wrapping_sub(1) {
         return show_error_at(0x987a40, 0x355);
     }
     let f = f + 1;
-    write_usize(this + cup::CURRENT_STAGE, f as usize);
+    this.set_current_stage(f as usize);
     if f == 1 {
         crate::comparison::branch("cqt_12 asia groups");
         exe::asiaclubchamp_create_group_stages(this);
@@ -35,13 +36,13 @@ pub(crate) unsafe extern "thiscall" fn asia_club_champ_advance_stage(this: usize
 /// [pt] Os 8 dos grupos: os vivos (+5 = 1 na tabela de 6 bytes) do mata-mata da primeira zona (a tabela da copa, +0xa7) até 4
 /// e depois os do mata-mata da segunda zona (a tabela +0xa7 da fase [+0xc][0]) até 8; as duas buscas vão até o +0x3e da
 /// copa (palavra com sinal). Devolve os 8 (as vagas que sobrarem ficam 0: a original as deixa com sobra da pilha).
-pub(crate) unsafe fn group_stage_qualifiers(this: usize) -> [usize; 8] {
+pub(crate) unsafe fn group_stage_qualifiers(this: Cup) -> [usize; 8] {
     let mut v = [0usize; 8];
     let mut n = 0usize;
-    let teams = read_i16(this + cup::TEAM_COUNT);
+    let teams = this.team_count();
     let mut i = 0i16;
     while i < teams && n < 4 {
-        let e = read_usize(this + cup::TEAM_TABLE) + i as usize * 6;
+        let e = this.team_table() + i as usize * 6;
         if *((e + 5) as *const u8) == 1 {
             v[n] = read_usize(e); // cqt12: um vivo da primeira zona
             n += 1;
@@ -50,7 +51,7 @@ pub(crate) unsafe fn group_stage_qualifiers(this: usize) -> [usize; 8] {
     }
     let mut i = 0i16;
     while i < teams && n < 8 {
-        let e = read_usize(read_usize(read_usize(this + cup::STAGES)) + 0xa7) + i as usize * 6;
+        let e = read_usize(read_usize(this.stages()) + 0xa7) + i as usize * 6;
         if *((e + 5) as *const u8) == 1 {
             v[n] = read_usize(e);
             n += 1;
@@ -76,24 +77,24 @@ pub(crate) unsafe fn group_stage_qualifiers(this: usize) -> [usize; 8] {
 /// ret 0x58, 22 argumentos: a copa, 4, os 4 times, 1, +4, a tabela das rodadas, as rodadas (word), 3, 1, 8, &{1, 2, 0,
 /// 0}, &{2, 0, 0, 0}, o ano +0x40 (word), `g`, o id (word), +0x51, `a17`, 0, 0x28, −1, 0, 2; a original empurra os words
 /// e bytes com lixo nos bytes altos, que o construtor não lê) em [+0xc][`g`]; a tabela liberada (0x9452ca). Devolve a fase.
-pub(crate) unsafe fn create_asia_group(this: usize, g: u32, teams: *const usize, a17: u32) -> usize {
+pub(crate) unsafe fn create_asia_group(this: Cup, g: u32, teams: *const usize, a17: u32) -> usize {
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, *const u8, *const u8, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
     let rules: [u8; 4] = [1, 2, 0, 0];
     let rules_b: [u8; 4] = [2, 0, 0, 0];
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
-    let table = rounds_of_cup(this, g, &mut rodadas, &mut id, 0);
+    let table = rounds_of_cup(this.addr(), g, &mut rodadas, &mut id, 0);
     let p = exe::crt_operator_new(0xee);
     let stage = if p != 0 {
         construct(
             p,
-            this,
+            this.addr(),
             4,
             teams,
             1,
-            read_usize(this + 4),
+            read_usize(this.addr() + 4),
             table,
             rodadas as u16 as u32,
             3,
@@ -101,10 +102,10 @@ pub(crate) unsafe fn create_asia_group(this: usize, g: u32, teams: *const usize,
             8,
             rules.as_ptr(),
             rules_b.as_ptr(),
-            read_i16(this + cup::YEAR) as u16 as u32,
+            this.year() as u16 as u32,
             g,
             id as u16 as u32,
-            *((this + cup::IMPORTANCE_BIAS) as *const u8) as u32,
+            this.importance_bias() as u32,
             a17,
             0,
             0x28,
@@ -115,9 +116,9 @@ pub(crate) unsafe fn create_asia_group(this: usize, g: u32, teams: *const usize,
     } else {
         0
     };
-    write_usize(read_usize(this + cup::STAGES) + g as usize * 4, stage);
+    write_usize(this.stages() + g as usize * 4, stage);
     exe::crt_free(table);
-    read_usize(read_usize(this + cup::STAGES) + g as usize * 4)
+    read_usize(this.stages() + g as usize * 4)
 }
 
 /// AsiaClubChamp::create_group_stages: takes the 8 survivors of the two zones, creates group 1 (the first 4) and group
@@ -130,6 +131,7 @@ pub(crate) unsafe fn create_asia_group(this: usize, g: u32, teams: *const usize,
 /// ret 0); o grupo 2 (fase 2, os 4 seguintes, o 17º argumento 1; sem fase, a caixa da linha 0x3b4 e volta), a notícia e
 /// +0x30 = 2.
 pub(crate) unsafe extern "thiscall" fn create_group_stages(this: usize) {
+    let this = Cup(this);
     let v = group_stage_qualifiers(this);
     let group_1 = [v[0], v[1], v[2], v[3]]; // cqt12: o grupo 1
     let f = create_asia_group(this, 1, group_1.as_ptr(), 2);
@@ -144,7 +146,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_stages(this: usize) {
         return show_error_at(0x987a40, 0x3b4);
     }
     exe::league_send_group_draw_news(f);
-    write_usize(this + cup::CURRENT_STAGE, 2);
+    this.set_current_stage(2);
 }
 
 // simplification: the stages are allocated and the news goes to the managers: does not run twice. Original only; the plan: those alive
@@ -155,8 +157,8 @@ pub(crate) unsafe extern "thiscall" fn create_group_stages(this: usize) {
 ///
 /// [pt] Os 4 das semifinais, na ordem da lista: o 1º do grupo 1 ([+0xc][1], tabela +0xb1), o 2º do grupo 2 ([+0xc][2]), o
 /// 1º do grupo 2 e o 2º do grupo 1 (os cruzamentos: as chaves são os pares da lista).
-pub(crate) unsafe fn asia_semi_finalists(this: usize) -> [usize; 4] {
-    let l = |g: usize, p: usize| read_usize(read_usize(read_usize(read_usize(this + cup::STAGES) + g * 4) + 0xb1) + p * 0x3b);
+pub(crate) unsafe fn asia_semi_finalists(this: Cup) -> [usize; 4] {
+    let l = |g: usize, p: usize| read_usize(read_usize(read_usize(this.stages() + g * 4) + 0xb1) + p * 0x3b);
     [l(1, 0), l(2, 1), l(2, 0), l(1, 1)] // cqt12: 1st of 1 × 2nd of 2, 1st of 2 × 2nd of 1
 }
 
@@ -185,6 +187,7 @@ pub(crate) unsafe fn asia_semi_finalists(this: usize) -> [usize; 4] {
 /// não é liberada, como na original). Com ela: o sorteio da rodada 0 (0x51c410 Cup::draw_round: push 0; mov ecx, fase ->
 /// thiscall, ret 4) e a lista liberada.
 pub(crate) unsafe extern "thiscall" fn asia_club_champ_create_semi_final_stage(this: usize) {
+    let this = Cup(this);
     let list = exe::crt_malloc(0x10);
     if list == 0 {
         return show_error_at(0x987a40, 0x3d1);
@@ -193,21 +196,21 @@ pub(crate) unsafe extern "thiscall" fn asia_club_champ_create_semi_final_stage(t
     for (k, &c) in asia_semi_finalists(this).iter().enumerate() {
         write_usize(list + k * 4, c);
     }
-    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this) + 0x3c));
+    let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     let (mut rodadas, mut id) = (0i16, 0i16);
-    let table = rounds_of_cup(this, 3, &mut rodadas, &mut id, 0);
+    let table = rounds_of_cup(this.addr(), 3, &mut rodadas, &mut id, 0);
     let p = exe::crt_operator_new(0xb2);
     let stage = if p != 0 {
         #[allow(clippy::type_complexity)]
         let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, *const u8) -> usize =
             core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
-        construct(p, this, 4, list, rodadas as u16 as u32, read_usize(this + 4), table, read_i16(this + cup::YEAR) as u16 as u32, 3, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
+        construct(p, this.addr(), 4, list, rodadas as u16 as u32, read_usize(this.addr() + 4), table, this.year() as u16 as u32, 3, 2, id as u16 as u32, 0x14, 0, 0, 0, core::ptr::null())
     } else {
         0
     };
-    write_usize(read_usize(this + cup::STAGES) + 0xc, stage);
+    write_usize(this.stages() + 0xc, stage);
     exe::crt_free(table);
-    let f = read_usize(read_usize(this + cup::STAGES) + 0xc);
+    let f = read_usize(this.stages() + 0xc);
     if f == 0 {
         return show_error_at(0x987a40, 0x3e6);
     }
@@ -278,7 +281,7 @@ pub(crate) struct ScheduleStage {
 /// [pt] Executa a fase `f` (ou devolve 0 sem ela): as saídas, a tabela (0x944e46; sem memória, a caixa `linha` do fonte
 /// `arquivo` e 0) e as operações na ordem; o ano da copa (+0x40) vai em 16 bits limpos para a 0x68a160 (a original
 /// empurra o registrador com lixo nos 16 bits altos; a 0x68a160 só usa a palavra) e com sinal para as de copa.
-pub(crate) unsafe fn create_round_table(this: usize, f: Option<ScheduleStage>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
+pub(crate) unsafe fn create_round_table(this: Cup, f: Option<ScheduleStage>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
     let f = match f {
         Some(f) => f,
         None => return 0,
@@ -296,8 +299,8 @@ pub(crate) unsafe fn create_round_table(this: usize, f: Option<ScheduleStage>, r
         return 0;
     }
     crate::comparison::branch(f.name);
-    let ano16 = core::ptr::read_unaligned((this + cup::YEAR) as *const u16) as u32;
-    let ano = core::ptr::read_unaligned((this + cup::YEAR) as *const i16) as i32 as u32;
+    let ano16 = (this.year() as u16) as u32;
+    let ano = this.year() as i32 as u32;
     for op in f.ops {
         match *op {
             Cqp11D(r, dia, mes, anos, sem, cod, v) => {
@@ -506,7 +509,7 @@ pub(crate) fn asian_club_champ_stage(fase: u32) -> Option<ScheduleStage> {
 /// [pt] { 0x40ae90 } (thiscall, ret 0x10, asia_club_champ.cpp; a virtual +0x3c): `AsiaClubChamp::create_round_table(fase,
 /// &rodadas, &extra, &é_liga)`: a fase de `asian_club_champ_stage`.
 pub(crate) unsafe extern "thiscall" fn asia_club_champ_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    create_round_table(this, asian_club_champ_stage(stage), rounds, extra, league, 0x987a40)
+    create_round_table(Cup(this), asian_club_champ_stage(stage), rounds, extra, league, 0x987a40)
 }
 
 /// Stage description of the Asian Cup Winners' Cup: zone qualifiers (-1, 0) and the final stage (1).
@@ -546,6 +549,6 @@ pub(crate) fn ldv_trophy_stage(fase: u32) -> Option<ScheduleStage> {
 /// [pt] { 0x40b620 } (thiscall, ret 0, asia_club_champ.cpp): `AsiaClubChamp::build_team_table()`: os 16 times (a caixa da
 /// linha 0x1cd sem memória).
 pub(crate) unsafe extern "thiscall" fn asia_club_champ_build_team_table(this: usize) -> i32 {
-    build_team_table(this, 0x987a40, 0x1cd, "cqq_12 times da liga dos campeoes asiatica", |i| i) // cqq12: the Asian Champions League teams
+    build_team_table(Cup(this), 0x987a40, 0x1cd, "cqq_12 times da liga dos campeoes asiatica", |i| i) // cqq12: the Asian Champions League teams
 }
 

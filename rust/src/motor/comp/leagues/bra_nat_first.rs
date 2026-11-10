@@ -117,18 +117,18 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_create_play_off_stage(this:
 pub(crate) unsafe fn compare_play_off_stage(name: &str, this: League, rows: &[usize; 4], original: impl FnOnce()) {
     let mut plan: Vec<usize> = rows.iter().map(|&l| bra_reg_bahia_table_row_club(this, l)).collect();
     original();
-    let stage = read_usize(this.stages());
-    if stage == 0 {
+    let stage = Cup(read_usize(this.stages()));
+    if stage.is_null() {
         SCOREBOARD.record(false, || format!("{}({:#x}) sem fase", name, this.addr()));
         return;
     }
-    let list = read_usize(stage + cup::TEAM_TABLE);
+    let list = stage.team_table();
     let mut found: Vec<usize> = (0..4).map(|k| read_usize(list + 6 * k)).collect();
     let (pl, ac) = (plan.clone(), found.clone());
     plan.sort_unstable();
     found.sort_unstable();
-    let same = plan == found && read_i16(stage + cup::TEAM_COUNT) == 4 && read_usize(stage + 4) == this.competition().addr() && this.current_stage() == 0;
-    SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this.addr(), pl, stage, ac, read_i16(stage + cup::TEAM_COUNT)));
+    let same = plan == found && stage.team_count() == 4 && read_usize(stage.addr() + 4) == this.competition().addr() && this.current_stage() == 0;
+    SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this.addr(), pl, stage.addr(), ac, stage.team_count()));
 }
 
 /// Competition object whose id is in global `global` (table G_COMP_OBJECT_TABLE).

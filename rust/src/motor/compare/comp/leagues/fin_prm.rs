@@ -189,14 +189,14 @@ pub(crate) unsafe extern "thiscall" fn compare_try_finance_boost_event(this: usi
     let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_TRY_FINANCE_BOOST_EVENT);
     let presence = Staff(if !club.is_null() { club.chairman().addr() } else { 0 });
-    let sheet = if !presence.is_null() { presence.non_player() } else { 0 };
+    let sheet = PlayerSheet(if !presence.is_null() { presence.non_player() } else { 0 });
     if club.is_null() || fin == 0 {
         return o(this, club.addr(), fin); // simplification: without a club or without finances, original only
     }
     let mut extras = vec![(club.addr() + club::PLC, 1)];
     let mut check = Vec::new();
-    if sheet != 0 {
-        extras.push((sheet + player_sheet::BRAVERY, 1)); // the record’s +0x20 drops on every event with it
+    if !sheet.is_null() {
+        extras.push((sheet.addr() + player_sheet::BRAVERY, 1)); // the record’s +0x20 drops on every event with it
         check.push(1);
     }
     compare_rare_finance_event("try_finance_boost_event", fin, &extras, &check, || o(this, club.addr(), fin), || try_finance_boost_event(this, club.addr(), fin))

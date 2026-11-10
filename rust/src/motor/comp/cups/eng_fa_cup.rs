@@ -13,7 +13,8 @@ use super::*;
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 9 rodadas (`fa_cup_rounds`);
 /// a caixa da linha 0xb6 sem memória.
 pub(crate) unsafe extern "thiscall" fn eng_fa_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    let t = fa_cup_rounds(*((this + eng_fa_cup::EXEMPTION_COUNT) as *const i8) as i16, *((this + eng_fa_cup::FIFTH_ROUND_ENTRY) as *const u8), core::ptr::read_unaligned((this + cup::TEAM_COUNT) as *const i16));
+    let this = Cup(this);
+    let t = fa_cup_rounds(*((this.addr() + eng_fa_cup::EXEMPTION_COUNT) as *const i8) as i16, *((this.addr() + eng_fa_cup::FIFTH_ROUND_ENTRY) as *const u8), this.team_count());
     eng_cc_cup_create_single_stage_round_table(this, stage, rounds, extra, out, &t, 0x9c42cc, 0xb6, "cql_10 tabela da copa da inglaterra")
 }
 
@@ -39,16 +40,17 @@ pub(crate) unsafe extern "thiscall" fn eng_fa_cup_create_round_table(this: usize
 /// dá a caixa (linhas 0x3d6, 0x3dd, 0x3e4) e 1 —, a ordem prevista (virtual +0x5c) e o sorteio da 1ª rodada (0x51c800:
 /// push 0; mov ecx, copa -> thiscall, ret 4). Sempre, no fim, a atualização da copa.
 pub(crate) unsafe extern "thiscall" fn eng_fa_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
-    if read_usize(this + cup::SEASON_SET_UP) == 0 && stage != 0 {
-        if is_date_today(make_date_dword(1, 9, 0x7cf, 0xffff_ffff), today) && *((this + eng_fa_cup::FIFTH_ROUND_QUESTION_ASKED) as *const u8) == 0 {
+    let this = Cup(this);
+    if this.season_set_up() == 0 && stage != 0 {
+        if is_date_today(make_date_dword(1, 9, 0x7cf, 0xffff_ffff), today) && *((this.addr() + eng_fa_cup::FIFTH_ROUND_QUESTION_ASKED) as *const u8) == 0 {
             // simplification: the 1999 question builds and delivers a news item (only on that day, outside any new career)
-            return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ENG_FA_CUP_UPDATE_FOR_DATE)(this, today, stage);
+            return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ENG_FA_CUP_UPDATE_FOR_DATE)(this.addr(), today, stage);
         }
         // simplification: the year goes in ax with the rest of eax in the high bytes; 0x549f70 reads it as a word
         if is_date_today(make_date_dword(3, 9, read_i16(today + 2) as u16 as u32, 0xffff_ffff), today) { // cqn10: the FA Cup entries on 3/10
             free_season_tables(this);
             crate::comparison::branch("cqn_10 fa cup entries");
-            core::ptr::write_unaligned((this + cup::SEASON_SET_UP) as *mut u32, 1);
+            this.set_season_set_up((1) as usize);
             if exe::engfacup_collect_entrants(this) < 0 {
                 show_error_at(0x9c42cc, 0x3d6);
                 return 1;

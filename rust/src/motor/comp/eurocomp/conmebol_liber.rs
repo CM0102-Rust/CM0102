@@ -417,15 +417,15 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_s
             }
             0 => {
                 let weight = scale_by_round(0x32, 0x64, read_i16(game + 0x34), 4);
-                let knockout = read_usize(this.stages() + 0x1c);
+                let knockout = Cup(read_usize(this.stages() + 0x1c));
                 let r = read_i16(game + 0x34) as isize;
-                let round = (knockout as u32 & 0xffff_0000) | core::ptr::read_unaligned((read_usize(knockout + cup::ROUND_TABLE).wrapping_add((r * 0x68) as usize) + 0x6f) as *const u16) as u32;
+                let round = (knockout.addr() as u32 & 0xffff_0000) | core::ptr::read_unaligned((knockout.round_table().wrapping_add((r * 0x68) as usize) + 0x6f) as *const u16) as u32;
                 european_cup_add_qualified_record(club, comp, core::ptr::read_unaligned((game + 0x32) as *const u16) as u32, round, weight);
             }
             1 => {
                 final_(0x86a800);
-                let mundial = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_WORLD_CLUB_CUP).wrapping_mul(4)));
-                let t = read_usize(mundial + cup::TEAM_TABLE);
+                let mundial = Cup(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_WORLD_CLUB_CUP).wrapping_mul(4))));
+                let t = mundial.team_table();
                 let nation = Nation(read_usize(read_usize(t) + 0x53));
                 crate::comparison::branch("cqk_11 libertadores champion");
                 if !nation.is_null() && read_usize(nation.continent()) == read_usize(KEY_CONTINENT_SOUTH_AMERICA) {
@@ -433,9 +433,9 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_s
                 } else {
                     core::ptr::write_unaligned((t + 6) as *mut u32, club as u32);
                 }
-                exe::comp_stats_archive_season_and_reset(read_usize(mundial + 8), 1);
-                let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(mundial) + 0x5c));
-                prever(mundial);
+                exe::comp_stats_archive_season_and_reset(read_usize(mundial.addr() + 8), 1);
+                let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(mundial.addr()) + 0x5c));
+                prever(mundial.addr());
             }
             2 => final_(0x86b0b0),
             _ => {}

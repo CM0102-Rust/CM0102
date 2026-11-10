@@ -12,7 +12,7 @@ MUTACOES = [
     ('i_saida', "            *((m + engine::NEXT_KICKOFF_SIDE) as *mut u8) = 1;\n            *((m + engine::POSSESSION_SIDE) as *mut u8) = 0;", "            *((m + engine::NEXT_KICKOFF_SIDE) as *mut u8) = 0;\n            *((m + engine::POSSESSION_SIDE) as *mut u8) = 1;"),
     ('i_pontos', "                    if p > 5 && (p as i32) > random(0x1e) {", "                    if p > 6 && (p as i32) > random(0x1e) {", "prematch unhappy with position"),
     ('i_ficha', "                    p += if f5b == 1 { 0x14 } else if f5b < 6 { 0xa } else { 5 };", "                    p += if f5b == 1 { 0x14 } else if f5b < 6 { 0xb } else { 5 };", "prematch unhappy with position"),
-    ('i_interesse', "            let r = random(7);\n            if (read_i8(pe + player_sheet::LEADERSHIP) as i32) > r + 6", "            let r = random(8);\n            if (read_i8(pe + player_sheet::LEADERSHIP) as i32) > r + 6", "prematch interest"),
+    ('i_interesse', "            let r = random(7);\n            if (pe.leadership() as i32) > r + 6", "            let r = random(8);\n            if (pe.leadership() as i32) > r + 6", "prematch interest"),
     ('i_forma', "            if form < 0x17 {\n                let m1", "            if form < 0x18 {\n                let m1", "prematch form down"),
     ('i_alta', "            } else if form > 0x20 {", "            } else if form > 0x1f {", "prematch form up"),
     ('i_contrato', "                let r = random(200) + 0x32;", "                let r = random(200) + 0x33;", "prematch end of contract"),

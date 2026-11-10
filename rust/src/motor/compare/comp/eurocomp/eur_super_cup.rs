@@ -6,7 +6,7 @@ use super::*;
 /// Comparer for `eur_super_cup_select_teams`.
 pub(crate) unsafe extern "thiscall" fn compare_eur_super_cup_select_teams(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_EUR_SUPER_CUP_SELECT_TEAMS);
-    compare_team_list("eur_super_cup_select_teams", this, || o(this), || select_european_super_cup_teams(this))
+    compare_team_list("eur_super_cup_select_teams", Cup(this), || o(this), || select_european_super_cup_teams(Cup(this)))
 }
 
 /// Comparer for `eur_super_cup_create_round_table`.

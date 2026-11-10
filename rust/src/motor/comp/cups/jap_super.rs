@@ -8,7 +8,7 @@ use super::*;
 /// [pt] { 0x666020 } (thiscall, ret 0x10, jap_super.cpp; a virtual +0x3c da Supercopa do Japão): `JapSuper::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x98 sem memória.
 pub(crate) unsafe extern "thiscall" fn jap_super_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    fra_super_create_single_stage_round_table(this, stage, rounds, extra, out, &JAPAN_SUPER_CUP_ROUNDS, 0x9eaf4c, 0x98, "cql_12 tabela da supercopa do japao", |_| {})
+    fra_super_create_single_stage_round_table(Cup(this), stage, rounds, extra, out, &JAPAN_SUPER_CUP_ROUNDS, 0x9eaf4c, 0x98, "cql_12 tabela da supercopa do japao", |_| {})
 }
 
 /// rule: the Japanese Super Cup is between the J1 champion and the Emperor's Cup winner; a winner with no nation (+0x53
@@ -32,5 +32,5 @@ pub(crate) unsafe extern "thiscall" fn jap_super_select_teams(this: usize) -> i3
 /// a virada (`usa_mls_all_stars_cup_start_new_season`) com os dois clubes de JapSuper::select_teams (0x666160) e as caixas do jap_super.cpp nas
 /// linhas 0x14b, 0x152 e 0x159.
 pub(crate) unsafe extern "thiscall" fn jap_super_start_new_season(this: usize) -> u32 {
-    usa_mls_all_stars_cup_start_new_season(this, 0x666160, 0x9eaf4c, [0x14b, 0x152, 0x159], 1, true, "cqr_6 virada da supercopa japonesa") // cqr6: a Supercopa japonesa
+    usa_mls_all_stars_cup_start_new_season(Cup(this), 0x666160, 0x9eaf4c, [0x14b, 0x152, 0x159], 1, true, "cqr_6 virada da supercopa japonesa") // cqr6: a Supercopa japonesa
 }

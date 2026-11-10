@@ -126,16 +126,17 @@ pub(crate) unsafe extern "C" fn compare_database_get_player_attribute_name(attri
 
 /// Comparer for `database_format_player_positions`.
 pub(crate) unsafe extern "C" fn compare_database_format_player_positions(player: usize, text: usize, size: u32, form: u32) -> u32 {
+    let player = PlayerSheet(player);
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_PLAYER_POSITIONS);
-    if text == 0 || player == 0 || (size as u16 as i16) < 0x1e {
-        return o(player, text, size, form); // message box: original only
+    if text == 0 || player.is_null() || (size as u16 as i16) < 0x1e {
+        return o(player.addr(), text, size, form); // message box: original only
     }
     // the text, the player’s ratings (the original may write +0x13) and the start of the global text [0xde1f64]
     let n = (size as u16 as usize).min(128);
-    let reg = [(text, n), (player + player_sheet::GOALKEEPER, 12), (0xde1f64, 64)];
-    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(player, text, size, form),
-        || database_format_player_positions(player, text, size, form));
-    SCOREBOARD.record(igual && r == x, || format!("database_format_player_positions({:x}, forma {}) original={} rust={} {:x?} x {:x?}", player, form as u8, r, x, mo, mr));
+    let reg = [(text, n), (player.addr() + player_sheet::GOALKEEPER, 12), (0xde1f64, 64)];
+    let (r, x, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(player.addr(), text, size, form),
+        || database_format_player_positions(player.addr(), text, size, form));
+    SCOREBOARD.record(igual && r == x, || format!("database_format_player_positions({:x}, forma {}) original={} rust={} {:x?} x {:x?}", player.addr(), form as u8, r, x, mo, mr));
     r
 }
 
@@ -1319,12 +1320,13 @@ pub(crate) unsafe extern "C" fn compare_database_vector_to_non_player(not_player
 
 /// Comparer for `database_vector_to_player`.
 pub(crate) unsafe extern "C" fn compare_database_vector_to_player(player: usize, person: usize, array: usize) -> u32 {
+    let player = PlayerSheet(player);
     let person = Staff(person);
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_DATABASE_VECTOR_TO_PLAYER);
     // the ATTRIBUTE_VECTOR_CELLS offsets are at +0x0f..+0x44
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(player + player_sheet::GOALKEEPER, 0x44 - 0x0f + 1), (person.addr() + staff::DETERMINATION, 1)],
-        || o(player, person.addr(), array), || database_vector_to_player(player, person.addr(), array));
-    SCOREBOARD.record(igual && r == n, || format!("database_vector_to_player({:x}) original={:x} rust={:x} {:x?} x {:x?}", player, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(player.addr() + player_sheet::GOALKEEPER, 0x44 - 0x0f + 1), (person.addr() + staff::DETERMINATION, 1)],
+        || o(player.addr(), person.addr(), array), || database_vector_to_player(player.addr(), person.addr(), array));
+    SCOREBOARD.record(igual && r == n, || format!("database_vector_to_player({:x}) original={:x} rust={:x} {:x?} x {:x?}", player.addr(), r, n, mo, mr));
     r
 }
 

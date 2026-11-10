@@ -9,7 +9,7 @@ use super::*;
 /// [pt] { 0x57a500 } (thiscall, ret 0, eur_super_cup.cpp): `EurSuperCup::select_teams()`: a lista de dois (sem memória, a
 /// caixa da linha 0xc1 e −1). O campeão da Liga dos Campeões ([0x9cf6e8]; sem ele, a caixa 0xca e 0) e o da Recopa
 /// ([0x9cf6ec]) na copa de 1999, nas outras o da Copa da UEFA ([0x9cf6f0]); sem ele, 0xd5 e 0. Devolve 1.
-pub(crate) unsafe fn select_european_super_cup_teams(this: usize) -> (i32, i32) {
+pub(crate) unsafe fn select_european_super_cup_teams(this: Cup) -> (i32, i32) {
     const F: usize = 0x9c45f8;
     let l = match alloc_two_team_list(this, F, 0xc1) {
         Some(l) => l,
@@ -19,7 +19,7 @@ pub(crate) unsafe fn select_european_super_cup_teams(this: usize) -> (i32, i32) 
     if !set_team_slot(l, 0, a, F, 0xca) {
         return (0, 0);
     }
-    let cup = if core::ptr::read_unaligned((this + cup::YEAR) as *const i16) == 0x7cf { KEY_CLUB_COMP_EUROPEAN_CUP_WINNERS_CUP } else { KEY_CLUB_COMP_UEFA_CUP };
+    let cup = if this.year() == 0x7cf { KEY_CLUB_COMP_EUROPEAN_CUP_WINNERS_CUP } else { KEY_CLUB_COMP_UEFA_CUP };
     let b = latest_placed_club(cup, 0); // cqq11: the UEFA Cup winner
     if !set_team_slot(l, 1, b, F, 0xd5) {
         return (0, 0);
@@ -35,7 +35,7 @@ pub(crate) unsafe fn select_european_super_cup_teams(this: usize) -> (i32, i32) 
 /// [pt] regra: a Supercopa Europeia é entre o campeão da Liga dos Campeões e o da Recopa na edição de 1999 (a última Recopa)
 /// e, nas outras, o da Copa da UEFA; sem um dos dois, a caixa de erro
 pub(crate) unsafe extern "thiscall" fn eur_super_cup_select_teams(this: usize) -> i32 {
-    select_european_super_cup_teams(this).0
+    select_european_super_cup_teams(Cup(this)).0
 }
 
 /// `AsiaSuperCup::select_teams()` (`0x410a50`, thiscall, ret 0, `asia_super_cup.cpp`): picks the Asian Champions Cup
@@ -52,7 +52,7 @@ pub(crate) unsafe extern "thiscall" fn eur_super_cup_select_teams(this: usize) -
 /// conferir, como a original). Devolve 1.
 pub(crate) unsafe fn select_asian_super_cup_teams(this: usize) -> (i32, i32) {
     const F: usize = 0x987be0;
-    let l = match alloc_two_team_list(this, F, 0xc0) {
+    let l = match alloc_two_team_list(Cup(this), F, 0xc0) {
         Some(l) => l,
         None => return (-1, 0),
     };
@@ -82,7 +82,7 @@ pub(crate) unsafe fn select_asian_super_cup_teams(this: usize) -> (i32, i32) {
 /// caixa da linha 0xc2 e −1) com as duas vagas vazias (os clubes entram depois, com os campeões das duas chaves da C1
 /// [inferência]); classe e situação 0. Devolve 1.
 pub(crate) unsafe fn init_c1_super_cup_list(this: usize) -> (i32, i32) {
-    let l = match alloc_two_team_list(this, 0x9ea1c8, 0xc2) {
+    let l = match alloc_two_team_list(Cup(this), 0x9ea1c8, 0xc2) {
         Some(l) => l,
         None => return (-1, 0),
     };
@@ -99,6 +99,6 @@ pub(crate) unsafe fn init_c1_super_cup_list(this: usize) -> (i32, i32) {
 /// [pt] { 0x57a3c0 } (thiscall, ret 0x10, eur_super_cup.cpp; a virtual +0x3c da Supercopa Europeia): `EurSuperCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x98 sem memória.
 pub(crate) unsafe extern "thiscall" fn eur_super_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    eng_cc_cup_create_single_stage_round_table(this, stage, rounds, extra, out, &EUROPEAN_SUPER_CUP_ROUNDS, 0x9c45f8, 0x98, "cqp_10 tabela da supercopa europeia")
+    eng_cc_cup_create_single_stage_round_table(Cup(this), stage, rounds, extra, out, &EUROPEAN_SUPER_CUP_ROUNDS, 0x9c45f8, 0x98, "cqp_10 tabela da supercopa europeia")
 }
 

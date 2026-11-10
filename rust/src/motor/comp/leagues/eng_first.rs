@@ -445,12 +445,12 @@ pub(crate) unsafe fn compare_playoff_stage(name: &str, this: League, rows: [usiz
     }
     let n = this.promotion_playoff_count() as i8 as i16;
     original();
-    let stage = read_usize(this.stages());
-    if stage == 0 {
+    let stage = Cup(read_usize(this.stages()));
+    if stage.is_null() {
         SCOREBOARD.record(false, || format!("{}({:#x}) sem fase", name, this.addr()));
         return;
     }
-    let list = read_usize(stage + cup::TEAM_TABLE);
+    let list = stage.team_table();
     let mut found: [usize; 4] = [0; 4];
     for (k, a) in found.iter_mut().enumerate() {
         *a = read_usize(list + 6 * k);
@@ -458,8 +458,8 @@ pub(crate) unsafe fn compare_playoff_stage(name: &str, this: League, rows: [usiz
     let (mut x, mut y) = (plan, found);
     x.sort_unstable();
     y.sort_unstable();
-    let same = x == y && read_i16(stage + cup::TEAM_COUNT) == n && read_usize(stage + 4) == this.competition().addr();
-    SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={} n={}", name, this.addr(), plan, stage, found, read_i16(stage + cup::TEAM_COUNT), n));
+    let same = x == y && stage.team_count() == n && read_usize(stage.addr() + 4) == this.competition().addr();
+    SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={} n={}", name, this.addr(), plan, stage.addr(), found, stage.team_count(), n));
 }
 
 /// at the last stage (+0x30 >= +0x2c - 1) the error box (line 0x2ce); otherwise +0x30 + 1 and, on reaching 0, the

@@ -29,13 +29,13 @@ pub(crate) unsafe extern "thiscall" fn compare_create_championship_final_stage(t
     let this = League(this);
     let (a, b) = (half_champion(this, 0), half_champion(this, 1));
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_CHAMPIONSHIP_FINAL_STAGE)(this.addr());
-    let stage = read_usize(this.stages() + 8);
-    let same = stage != 0 && {
-        let l = read_usize(stage + cup::TEAM_TABLE);
+    let stage = Cup(read_usize(this.stages() + 8));
+    let same = !stage.is_null() && {
+        let l = stage.team_table();
         let (x, y) = (read_usize(l), read_usize(l + 6));
-        read_i16(stage + cup::TEAM_COUNT) == 2 && read_usize(stage + 4) == this.competition().addr() && ((x, y) == (a, b) || (x, y) == (b, a)) && this.current_stage() == 2
+        stage.team_count() == 2 && read_usize(stage.addr() + 4) == this.competition().addr() && ((x, y) == (a, b) || (x, y) == (b, a)) && this.current_stage() == 2
     };
-    SCOREBOARD.record(same, || format!("create_championship_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this.addr(), a, b, stage, this.current_stage()));
+    SCOREBOARD.record(same, || format!("create_championship_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x} +0x30={}", this.addr(), a, b, stage.addr(), this.current_stage()));
 }
 
 /// Comparer for `jap_j1_start_new_season`.

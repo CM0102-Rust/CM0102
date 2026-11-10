@@ -12,13 +12,13 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_create_final_stage(
     let this = League(this);
     let (a, b) = (stage_leader(this, 8), stage_leader(this, 9));
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BRA_NAT_THIRD_CREATE_FINAL_STAGE)(this.addr());
-    let stage = read_usize(this.stages() + 0x28);
-    let same = stage != 0 && {
-        let l = read_usize(stage + cup::TEAM_TABLE);
+    let stage = Cup(read_usize(this.stages() + 0x28));
+    let same = !stage.is_null() && {
+        let l = stage.team_table();
         let (x, y) = (read_usize(l), read_usize(l + 6));
-        read_i16(stage + cup::TEAM_COUNT) == 2 && this.current_stage() == 10 && ((x, y) == (a, b) || (x, y) == (b, a))
+        stage.team_count() == 2 && this.current_stage() == 10 && ((x, y) == (a, b) || (x, y) == (b, a))
     };
-    SCOREBOARD.record(same, || format!("bra_nat_third_create_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x}", this.addr(), a, b, stage));
+    SCOREBOARD.record(same, || format!("bra_nat_third_create_final_stage({:#x}) campeoes={:#x},{:#x} fase={:#x}", this.addr(), a, b, stage.addr()));
 }
 
 /// Comparer for `bra_nat_third_start_new_season`.
@@ -134,18 +134,18 @@ pub(crate) unsafe extern "thiscall" fn compare_create_second_round_stage(this: u
         }
     }
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_SECOND_ROUND_STAGE)(this.addr());
-    let stage = read_usize(this.stages() + 0x1c);
-    let same = stage != 0 && read_i16(stage + cup::TEAM_COUNT) == 0x10 && this.current_stage() == 7 && {
+    let stage = Cup(read_usize(this.stages() + 0x1c));
+    let same = !stage.is_null() && stage.team_count() == 0x10 && this.current_stage() == 7 && {
         let mut in_it = [0usize; 16];
         for (j, c) in in_it.iter_mut().enumerate() {
-            *c = read_usize(read_usize(stage + cup::TEAM_TABLE) + 6 * j);
+            *c = read_usize(stage.team_table() + 6 * j);
         }
         let (mut a, mut b) = (plan, in_it);
         a.sort_unstable();
         b.sort_unstable();
         a == b
     };
-    SCOREBOARD.record(same, || format!("create_second_round_stage({:#x}) fase={:#x} plano={:x?}", this.addr(), stage, plan));
+    SCOREBOARD.record(same, || format!("create_second_round_stage({:#x}) fase={:#x} plano={:x?}", this.addr(), stage.addr(), plan));
 }
 
 /// Comparer for `create_third_round_groups`.
@@ -154,12 +154,12 @@ pub(crate) unsafe extern "thiscall" fn compare_create_second_round_stage(this: u
 /// vencedores da segunda fase; depois, as fases 8 e 9 com 4 clubes cada, os oito juntos (como conjunto) e +0x30 = 9.
 pub(crate) unsafe extern "thiscall" fn compare_create_third_round_groups(this: usize) {
     let this = League(this);
-    let second = read_usize(this.stages() + 0x1c);
+    let second = Cup(read_usize(this.stages() + 0x1c));
     let mut plan = [0usize; 8];
     let mut n = 0usize;
     let mut i = 0i32;
-    while i < read_i16(second + cup::TEAM_COUNT) as i32 && n < 8 {
-        let e = read_usize(second + cup::TEAM_TABLE) + 6 * i as usize;
+    while i < second.team_count() as i32 && n < 8 {
+        let e = second.team_table() + 6 * i as usize;
         if read_u8(e + 5) == 1 {
             plan[n] = read_usize(e);
             n += 1;

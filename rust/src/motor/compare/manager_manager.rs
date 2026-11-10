@@ -292,19 +292,20 @@ pub(crate) unsafe extern "thiscall" fn compare_get_departure_reason(this: usize,
 /// [pt] Comparador: a avaliação pede o valor do jogador (0x4d0c60, que sorteia): lado a lado com o estado do sorteador, as
 /// duas palavras de marcas e os gastos líquidos do comprador e do vendedor; a cópia sem contar os sorteios.
 pub(crate) unsafe extern "thiscall" fn compare_assess_transfer_deal(this: usize, transf: usize, f1: usize, f2: usize) {
+    let transf = Offer(transf);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ASSESS_TRANSFER_DEAL);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(f1, 2), (f2, 2)]);
-    let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add(read_usize(transf + offer::TARGET_STAFF_ID).wrapping_mul(staff::SIZE)));
-    let buyer = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(transf + 8).wrapping_mul(club::SIZE));
+    let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add(transf.target_staff_id().wrapping_mul(staff::SIZE)));
+    let buyer = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(transf.addr() + 8).wrapping_mul(club::SIZE));
     reg.push((board_row_at(this, read_usize(buyer)) + 0x38, 8));
     let seller = person.club_job();
     if !seller.is_null() {
         reg.push((board_row_at(this, read_usize(seller.addr())) + 0x38, 8));
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, transf, f1, f2),
-        || crate::rng::without_counting(|| assess_transfer_deal(this, transf, f1, f2)));
-    SCOREBOARD.record(igual, || format!("assess_transfer_deal({:x}) {:x?} x {:x?}", transf, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, transf.addr(), f1, f2),
+        || crate::rng::without_counting(|| assess_transfer_deal(this, transf.addr(), f1, f2)));
+    SCOREBOARD.record(igual, || format!("assess_transfer_deal({:x}) {:x?} x {:x?}", transf.addr(), mo, mr));
 }
 
 /// Comparer for `apply_transfer_confidence_changes`.
@@ -312,10 +313,11 @@ pub(crate) unsafe extern "thiscall" fn compare_assess_transfer_deal(this: usize,
 /// [pt] Comparador: lado a lado com o estado do sorteador (a avaliação 0x696570 sorteia), as linhas da diretoria do
 /// comprador e do vendedor e as três pessoas favoritas do presidente do vendedor (0x547c10); a cópia sem contar.
 pub(crate) unsafe extern "thiscall" fn compare_apply_transfer_confidence_changes(this: usize, transf: usize) {
+    let transf = Offer(transf);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_APPLY_TRANSFER_CONFIDENCE_CHANGES);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add(read_usize(transf + offer::TARGET_STAFF_ID).wrapping_mul(staff::SIZE)));
-    reg.push((board_row_at(this, read_usize(transf + 8)), 0x49));
+    let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add(transf.target_staff_id().wrapping_mul(staff::SIZE)));
+    reg.push((board_row_at(this, read_usize(transf.addr() + 8)), 0x49));
     let seller = Club(person.club_job().addr());
     if !seller.is_null() {
         reg.push((board_row_at(this, read_usize(seller.addr())), 0x49));
@@ -324,9 +326,9 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_transfer_confidence_changes
             reg.push((pref + preferences::STAFF_FAVOURITE_STAFF1, 12));
         }
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, transf),
-        || crate::rng::without_counting(|| apply_transfer_confidence_changes(this, transf)));
-    SCOREBOARD.record(igual, || format!("apply_transfer_confidence_changes({:x}) {:x?} x {:x?}", transf, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, transf.addr()),
+        || crate::rng::without_counting(|| apply_transfer_confidence_changes(this, transf.addr())));
+    SCOREBOARD.record(igual, || format!("apply_transfer_confidence_changes({:x}) {:x?} x {:x?}", transf.addr(), mo, mr));
 }
 
 /// Comparer for `resolve_board_ultimatum`.

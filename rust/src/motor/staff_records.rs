@@ -1348,8 +1348,8 @@ pub(crate) unsafe fn promotion_regions(this: usize, club: Club, promotion: bool)
         }
     }
     for p in counted_squad_players(club) {
-        let j = read_usize(p + staff::PLAYER);
-        reg.extend([(j + player_sheet::HOME_REPUTATION, 6), (j + player_sheet::PLAYER_MORALE, 1)]);
+        let j = PlayerSheet(read_usize(p + staff::PLAYER));
+        reg.extend([(j.addr() + player_sheet::HOME_REPUTATION, 6), (j.addr() + player_sheet::PLAYER_MORALE, 1)]);
         let c = Contract(game_contract_for_club(p, club));
         if !c.is_null() {
             let kind = c.squad_status() >> 4;
@@ -1583,16 +1583,16 @@ pub(crate) unsafe fn put_person_keys(e: &mut [u8; 0x40], o: usize, p: usize) {
 /// Calls f for each item of the transfer's swap list (LLIST at +4), resetting the cursor first.
 ///
 /// [pt] Os itens da lista da troca (LLIST em +4 da transferência, relida a cada passo; o cursor reposto antes), na ordem.
-pub(crate) unsafe fn for_each_swap_item(t: usize, mut f: impl FnMut(usize)) {
-    let l = read_usize(t + offer::EXCHANGE_PLAYERS);
+pub(crate) unsafe fn for_each_swap_item(t: Offer, mut f: impl FnMut(usize)) {
+    let l = t.exchange_players();
     if l == 0 {
         return;
     }
     core::ptr::write_unaligned((l + llist::CURSOR) as *mut u32, read_usize(l + llist::HEAD) as u32);
-    let mut e = exe::llist_get_next(read_usize(t + offer::EXCHANGE_PLAYERS));
+    let mut e = exe::llist_get_next(t.exchange_players());
     while e != 0 {
         f(e);
-        e = exe::llist_get_next(read_usize(t + offer::EXCHANGE_PLAYERS));
+        e = exe::llist_get_next(t.exchange_players());
     }
 }
 
@@ -1611,29 +1611,29 @@ pub(crate) unsafe fn staff_records_manager_record(this: usize, manager: Staff) -
 /// Sides of a transfer: (person, his contract, selling club or 0, buying club).
 ///
 /// [pt] Os lados da transferência: (pessoa, contrato da pessoa 0x4cf5a0, vendedor ou 0, comprador).
-pub(crate) unsafe fn transfer_parties(t: usize) -> (usize, usize, usize, usize) {
-    let person = staff_records_staff_by_id(read_usize(t + offer::TARGET_STAFF_ID));
+pub(crate) unsafe fn transfer_parties(t: Offer) -> (usize, usize, usize, usize) {
+    let person = staff_records_staff_by_id(t.target_staff_id());
     let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
     let seller = if !c.is_null() && c.contract_type() & 0x3f != 5 {
         read_usize(G_CLUB_TABLE).wrapping_add(c.club().wrapping_mul(club::SIZE))
     } else {
         0
     };
-    (person, c.addr(), seller, read_usize(G_CLUB_TABLE).wrapping_add(read_usize(t + offer::BUYER_CLUB_ID).wrapping_mul(club::SIZE)))
+    (person, c.addr(), seller, read_usize(G_CLUB_TABLE).wrapping_add(t.buyer_club_id().wrapping_mul(club::SIZE)))
 }
 
 /// Records a transfer in the staff records: biggest purchase/sale and totals in the buying and selling managers'
 /// records, plus history entries for the player and clubs; no file histories when not writing.
-pub(crate) unsafe fn record_transfer(this: usize, t: usize, write: bool) {
+pub(crate) unsafe fn record_transfer(this: usize, t: Offer, write: bool) {
     let (pessoa, c, vendedor, comprador) = transfer_parties(t);
     *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
     let mut e = history_entry();
     let value = exe::transfer_offer_get_total_value(t, 1, 0, 0, 1);
-    let with_swap = || (read_usize(t + offer::EXCHANGE_PLAYERS) != 0) as i32;
-    let kind = read_u8(t + offer::JOB_TYPE) as i8 as i32;
+    let with_swap = || (t.exchange_players() != 0) as i32;
+    let kind = t.job_type() as i8 as i32;
     if comprador != 0 && read_usize(comprador + club::MANAGER) != 0 {
         let manager = read_usize(comprador + club::MANAGER);
-        let r = if staff_records_is_player_job(read_u8(t + offer::JOB_TYPE)) { staff_records_manager_record(this, Staff(manager)) } else { 0 };
+        let r = if staff_records_is_player_job(t.job_type()) { staff_records_manager_record(this, Staff(manager)) } else { 0 };
         if r != 0 {
             crate::comparison::branch("cpq_4 purchase");
             if value > read_i32(r + manager_record::BIGGEST_PURCHASE_FEE) {
@@ -1649,8 +1649,8 @@ pub(crate) unsafe fn record_transfer(this: usize, t: usize, write: bool) {
             }
             write_i16(r + manager_record::PLAYERS_BOUGHT, read_i16(r + manager_record::PLAYERS_BOUGHT).wrapping_add(1));
             staff_records_add_i64(r + manager_record::PURCHASES_TOTAL, value);
-            if read_usize(t + offer::EXCHANGE_PLAYERS) != 0 {
-                write_i16(r + manager_record::PLAYERS_SOLD, read_i16(r + manager_record::PLAYERS_SOLD).wrapping_add(read_i16(read_usize(t + offer::EXCHANGE_PLAYERS))));
+            if t.exchange_players() != 0 {
+                write_i16(r + manager_record::PLAYERS_SOLD, read_i16(r + manager_record::PLAYERS_SOLD).wrapping_add(read_i16(t.exchange_players())));
                 for_each_swap_item(t, |x| staff_records_add_i64(r + manager_record::SALES_TOTAL, read_i32(staff_records_staff_by_id(read_usize(x)) + 0x52)));
             }
         }
@@ -1691,8 +1691,8 @@ pub(crate) unsafe fn record_transfer(this: usize, t: usize, write: bool) {
             }
             write_i16(r + manager_record::PLAYERS_SOLD, read_i16(r + manager_record::PLAYERS_SOLD).wrapping_add(1));
             staff_records_add_i64(r + manager_record::SALES_TOTAL, value);
-            if read_usize(t + offer::EXCHANGE_PLAYERS) != 0 {
-                write_i16(r + manager_record::PLAYERS_BOUGHT, read_i16(r + manager_record::PLAYERS_BOUGHT).wrapping_add(read_i16(read_usize(t + offer::EXCHANGE_PLAYERS))));
+            if t.exchange_players() != 0 {
+                write_i16(r + manager_record::PLAYERS_BOUGHT, read_i16(r + manager_record::PLAYERS_BOUGHT).wrapping_add(read_i16(t.exchange_players())));
                 for_each_swap_item(t, |x| staff_records_add_i64(r + manager_record::PURCHASES_TOTAL, read_i32(staff_records_staff_by_id(read_usize(x)) + 0x52)));
             }
         }
@@ -1767,7 +1767,7 @@ pub(crate) unsafe fn record_transfer(this: usize, t: usize, write: bool) {
 /// (+0xa0) e o valor deles (+0xa4). Os históricos (tipos 0x64 compra, 0x65 venda, 0x66 transferência) do técnico do
 /// comprador, do vendedor, da pessoa e dos jogadores da troca, no arquivo (0x58e340).
 pub(crate) unsafe extern "thiscall" fn add_transfer_records(this: usize, t: usize) {
-    record_transfer(this, t, true)
+    record_transfer(this, Offer(t), true)
 }
 
 /// Builds a dated person history entry with club id (+8), type (+0xc), competition id or −1 (+0xd) and the signed stage

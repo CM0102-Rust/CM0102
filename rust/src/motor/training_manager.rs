@@ -384,8 +384,8 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
             crate::comparison::branch("cqd_8 left the human club");
             *mark &= 0xdf;
             exe::injury_set_training_load(read_usize(G_INJURY), p, 0x32);
-            let f = p.player();
-            *(training_entry_of_staff(this, p) as *mut u8) = if read_i8(f + player_sheet::GOALKEEPER) >= 0xf { 6 } else { 1 };
+            let f = PlayerSheet(p.player());
+            *(training_entry_of_staff(this, p) as *mut u8) = if f.goalkeeper() >= 0xf { 6 } else { 1 };
             let mut q = 0usize;
             let n = exe::training_manager_find_position_training(this, p, &mut q);
             let mut k = 0i8;
@@ -1061,30 +1061,30 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
         show_error_at(0xa8ccd0, 0x4b3);
         return;
     }
-    let f = person.player();
-    if f == 0 {
+    let f = PlayerSheet(person.player());
+    if f.is_null() {
         show_error_at(0xa8ccd0, 0x4ba);
         return;
     }
     if read_i32(person.addr()) >= read_i32(G_STAFF_COUNT) {
         return;
     }
-    let e = read_usize(this + 0x651d) + 6 * read_i32(f) as usize;
+    let e = read_usize(this + 0x651d) + 6 * read_i32(f.addr()) as usize;
     // category 3 (the high nibble of +4)
     let k = read_i8(d + 3);
     if k != 0 {
         let dd = progress_step(k, (read_i8(e + 4) >> 4) as i32);
         if dd != 0 {
             let six = dd * 6;
-            add_clamped_1_20(f + player_sheet::CORNERS, dd);
-            add_clamped_125(f + player_sheet::CROSSING, six);
-            add_clamped_125(f + player_sheet::DRIBBLING, six);
-            add_clamped_1_20(f + player_sheet::FREE_KICKS, dd);
-            add_clamped_125(f + player_sheet::HEADING, six);
-            add_clamped_125(f + player_sheet::PASSING, six);
-            add_clamped_125(f + player_sheet::TACKLING, six);
-            add_clamped_1_20(f + player_sheet::TECHNIQUE, dd);
-            add_clamped_125(f + player_sheet::THROW_INS, six);
+            add_clamped_1_20(f.addr() + player_sheet::CORNERS, dd);
+            add_clamped_125(f.addr() + player_sheet::CROSSING, six);
+            add_clamped_125(f.addr() + player_sheet::DRIBBLING, six);
+            add_clamped_1_20(f.addr() + player_sheet::FREE_KICKS, dd);
+            add_clamped_125(f.addr() + player_sheet::HEADING, six);
+            add_clamped_125(f.addr() + player_sheet::PASSING, six);
+            add_clamped_125(f.addr() + player_sheet::TACKLING, six);
+            add_clamped_1_20(f.addr() + player_sheet::TECHNIQUE, dd);
+            add_clamped_125(f.addr() + player_sheet::THROW_INS, six);
         }
         add_high_nibble(e + 4, k); // cpt9: stores the progress of category 3
     }
@@ -1093,14 +1093,14 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
     if k != 0 {
         let dd = progress_step(k, (read_i8(e + 3) << 4 >> 4) as i32);
         if dd != 0 {
-            add_clamped_1_20(f + player_sheet::ACCELERATION, dd); // cpt9: the first attribute of category 0
-            add_clamped_1_20(f + player_sheet::AGILITY, dd);
-            add_clamped_1_20(f + player_sheet::JUMPING, dd);
-            add_clamped_1_20(f + player_sheet::NATURAL_FITNESS, dd);
-            add_clamped_1_20(f + player_sheet::PLAYER_PACE, dd);
-            add_clamped_125(f + player_sheet::REFLEXES, dd * 6);
-            add_clamped_1_20(f + player_sheet::STAMINA, dd);
-            add_clamped_1_20(f + player_sheet::STRENGTH, dd);
+            add_clamped_1_20(f.addr() + player_sheet::ACCELERATION, dd); // cpt9: the first attribute of category 0
+            add_clamped_1_20(f.addr() + player_sheet::AGILITY, dd);
+            add_clamped_1_20(f.addr() + player_sheet::JUMPING, dd);
+            add_clamped_1_20(f.addr() + player_sheet::NATURAL_FITNESS, dd);
+            add_clamped_1_20(f.addr() + player_sheet::PLAYER_PACE, dd);
+            add_clamped_125(f.addr() + player_sheet::REFLEXES, dd * 6);
+            add_clamped_1_20(f.addr() + player_sheet::STAMINA, dd);
+            add_clamped_1_20(f.addr() + player_sheet::STRENGTH, dd);
         }
         add_low_nibble(e + 3, k);
     }
@@ -1110,9 +1110,9 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
         let dd = progress_step(k, (read_i8(e + 4) << 4 >> 4) as i32);
         if dd != 0 {
             let six = dd * 6;
-            add_clamped_125(f + player_sheet::FINISHING, six);
-            add_clamped_125(f + player_sheet::LONG_SHOTS, six);
-            add_clamped_125(f + player_sheet::PENALTIES, six);
+            add_clamped_125(f.addr() + player_sheet::FINISHING, six);
+            add_clamped_125(f.addr() + player_sheet::LONG_SHOTS, six);
+            add_clamped_125(f.addr() + player_sheet::PENALTIES, six);
         }
         add_low_nibble(e + 4, k);
     }
@@ -1122,11 +1122,11 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
         let dd = progress_step(k, (read_i8(e + 3) >> 4) as i32);
         if dd != 0 {
             let six = dd * 6; // cpt9: category 1, six times the step
-            add_clamped_125(f + player_sheet::DECISIONS, six);
-            add_clamped_125(f + player_sheet::MARKING, six);
-            add_clamped_125(f + player_sheet::MOVEMENT, six);
-            add_clamped_1_20(f + player_sheet::TEAMWORK, dd);
-            add_clamped_125(f + player_sheet::POSITIONING, six);
+            add_clamped_125(f.addr() + player_sheet::DECISIONS, six);
+            add_clamped_125(f.addr() + player_sheet::MARKING, six);
+            add_clamped_125(f.addr() + player_sheet::MOVEMENT, six);
+            add_clamped_1_20(f.addr() + player_sheet::TEAMWORK, dd);
+            add_clamped_125(f.addr() + player_sheet::POSITIONING, six);
         }
         add_high_nibble(e + 3, k);
     }
@@ -1136,8 +1136,8 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
         let dd = progress_step(k, (read_i8(e + 5) << 4 >> 4) as i32);
         if dd != 0 {
             let six = dd * 6;
-            add_clamped_125(f + player_sheet::HANDLING, six);
-            add_clamped_125(f + player_sheet::ONE_ON_ONES, six);
+            add_clamped_125(f.addr() + player_sheet::HANDLING, six);
+            add_clamped_125(f.addr() + player_sheet::ONE_ON_ONES, six);
         }
         add_low_nibble(e + 5, k);
     }
@@ -1147,7 +1147,7 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
     if n <= 0 {
         return;
     }
-    let de15 = |o: usize| (read_i8(f + o) >= 0xf) as i8;
+    let de15 = |o: usize| (read_i8(f.addr() + o) >= 0xf) as i8;
     let mut positions = de15(player_sheet::GOALKEEPER) + de15(player_sheet::SWEEPER) + de15(player_sheet::DEFENDER) + de15(player_sheet::DEFENSIVE_MIDFIELDER) + de15(player_sheet::MIDFIELDER) + de15(player_sheet::ATTACKING_MIDFIELDER) + de15(player_sheet::ATTACKER);
     let mut sides = de15(player_sheet::LEFT_SIDE) + de15(player_sheet::CENTRAL) + de15(player_sheet::RIGHT_SIDE);
     for j in 0..n as usize {
@@ -1166,14 +1166,14 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
             _ => continue,
         };
         if read_i8(item + 6) >= 0xf {
-            *((f + field) as *mut u8) = 0x14;
+            *((f.addr() + field) as *mut u8) = 0x14;
         } else if field == 0x18 || field == 0x19 || field == 0x17 {
             if sides > 1 {
-                *((f + field) as *mut u8) = 1;
+                *((f.addr() + field) as *mut u8) = 1;
                 sides -= 1;
             }
         } else if positions > 1 {
-            *((f + field) as *mut u8) = 1;
+            *((f.addr() + field) as *mut u8) = 1;
             positions -= 1;
         }
     }

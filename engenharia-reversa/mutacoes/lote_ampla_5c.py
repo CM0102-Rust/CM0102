@@ -9,7 +9,7 @@ MUTACOES = [
     ('n_veterano', '            Some(0x9689e0)', '            Some(0x968968)'),
     ('t_item', '        if *p == *(e as *const i32) {', '        if *p == *((e + 4) as *const i32) {'),
     ('f_estado', '        2 | 3 | 4 | 0x10 | 0x14 => 1,', '        2 | 3 | 0x10 | 0x14 => 1,'),
-    ('f_fase', '        0xf => (*((o + offer::RESPONSE_ROUND) as *const u8) >= 3) as u32,', '        0xf => (*((o + offer::RESPONSE_ROUND) as *const u8) >= 2) as u32,'),
+    ('f_fase', '        0xf => (o.response_round() >= 3) as u32,', '        0xf => (o.response_round() >= 2) as u32,'),
     ('d_43', '    for k in 0..43usize {', '    for k in 0..42usize {'),
     ('t_desmarca', '    *staff_flags_ptr(manager, id) &= 0xbf;', '    *staff_flags_ptr(manager, id) &= 0x3f;'),
     ('t_vaga', '    if k < *((table + transfer_manager_fields::OFFER_CAPACITY) as *const i32) {', '    if k <= *((table + transfer_manager_fields::OFFER_CAPACITY) as *const i32) {'),

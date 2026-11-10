@@ -13,11 +13,11 @@ pub(crate) unsafe extern "thiscall" fn compare_jap_super_create_round_table(this
 /// Comparer for `jap_super_select_teams`.
 pub(crate) unsafe extern "thiscall" fn compare_jap_super_select_teams(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_JAP_SUPER_SELECT_TEAMS);
-    compare_team_list("jap_super_select_teams", this, || o(this), || select_japanese_super_cup_teams(this))
+    compare_team_list("jap_super_select_teams", Cup(this), || o(this), || select_japanese_super_cup_teams(this))
 }
 
 /// Comparer for `jap_super_start_new_season`.
 pub(crate) unsafe extern "thiscall" fn compare_jap_super_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_JAP_SUPER_START_NEW_SEASON);
-    compare_cup_new_season("jap_super_start_new_season", this, || o(this))
+    compare_cup_new_season("jap_super_start_new_season", Cup(this), || o(this))
 }

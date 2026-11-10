@@ -14,50 +14,52 @@ pub(crate) unsafe extern "thiscall" fn compare_asia_cup_winner_create_knockout_s
     let table = |g: i32| if g < 0 { this.table() } else { read_usize(read_usize(stages + g as usize * 4) + 0xb1) };
     let mut plan: Vec<usize> = AFRICAN_NATIONS_QUARTER_FINAL_SLOTS.iter().map(|&(g, p)| read_usize(table(g) + p as usize * 0x3b)).collect();
     o(this.addr());
-    let stage = read_usize(this.stages() + 0xc);
-    if stage == 0 {
+    let stage = Cup(read_usize(this.stages() + 0xc));
+    if stage.is_null() {
         SCOREBOARD.record(false, || format!("asia_cup_winner_create_knockout_stage({:#x}) sem fase", this.addr()));
         return;
     }
-    let list = read_usize(stage + cup::TEAM_TABLE);
+    let list = stage.team_table();
     let mut found: Vec<usize> = (0..8).map(|k| read_usize(list + 6 * k)).collect();
     let (pl, ac) = (plan.clone(), found.clone());
     plan.sort_unstable();
     found.sort_unstable();
-    let same = plan == found && read_i16(stage + cup::TEAM_COUNT) == 8 && read_usize(stage + 4) == this.competition().addr() && this.current_stage() == 3;
+    let same = plan == found && stage.team_count() == 8 && read_usize(stage.addr() + 4) == this.competition().addr() && this.current_stage() == 3;
     SCOREBOARD.record(same, || format!("asia_cup_winner_create_knockout_stage({:#x}) plano={:x?} lista={:x?}", this.addr(), pl, ac));
 }
 
 /// Comparer for `asia_cup_winner_advance_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_asia_cup_winner_advance_stage(this: usize) {
+    let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ASIA_CUP_WINNER_ADVANCE_STAGE);
-    let f = read_usize(this + cup::CURRENT_STAGE) as i32;
-    let last = f >= (read_usize(this + cup::STAGE_COUNT) as i32).wrapping_sub(1);
-    o(this);
-    let after = read_usize(this + cup::CURRENT_STAGE) as i32;
-    SCOREBOARD.record(after == if last { f } else { f + 1 }, || format!("asia_cup_winner_advance_stage({:#x}) fase {} -> {}", this, f, after));
+    let f = this.current_stage() as i32;
+    let last = f >= (this.stage_count() as i32).wrapping_sub(1);
+    o(this.addr());
+    let after = this.current_stage() as i32;
+    SCOREBOARD.record(after == if last { f } else { f + 1 }, || format!("asia_cup_winner_advance_stage({:#x}) fase {} -> {}", this.addr(), f, after));
 }
 
 /// Comparer for `create_finals_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_create_finals_stage(this: usize) {
+    let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_FINALS_STAGE);
-    if read_usize(this + cup::TEAM_TABLE) == 0 || read_usize(this + cup::STAGES) == 0 || read_usize(read_usize(this + cup::STAGES)) == 0 {
-        return o(this);
+    if this.team_table() == 0 || this.stages() == 0 || read_usize(this.stages()) == 0 {
+        return o(this.addr());
     }
     let mut plan = asian_cup_winners_finalists(this).to_vec();
-    o(this);
-    let stage = read_usize(read_usize(this + cup::STAGES) + 4);
-    if stage == 0 {
-        SCOREBOARD.record(false, || format!("create_finals_stage({:#x}) sem fase", this));
+    o(this.addr());
+    let stage = Cup(read_usize(this.stages() + 4));
+    if stage.is_null() {
+        SCOREBOARD.record(false, || format!("create_finals_stage({:#x}) sem fase", this.addr()));
         return;
     }
-    let list = read_usize(stage + cup::TEAM_TABLE);
+    let list = stage.team_table();
     let mut found: Vec<usize> = (0..4).map(|k| read_usize(list + 6 * k)).collect();
     let (pl, ac) = (plan.clone(), found.clone());
     plan.sort_unstable();
     found.sort_unstable();
-    let same = plan == found && read_i16(stage + cup::TEAM_COUNT) == 4 && read_usize(stage + 4) == read_usize(this + 4);
-    SCOREBOARD.record(same, || format!("create_finals_stage({:#x}) plano={:x?} lista={:x?}", this, pl, ac));
+    let same = plan == found && stage.team_count() == 4 && read_usize(stage.addr() + 4) == read_usize(this.addr() + 4);
+    SCOREBOARD.record(same, || format!("create_finals_stage({:#x}) plano={:x?} lista={:x?}", this.addr(), pl, ac));
 }
 
 /// Comparer for `asia_cup_winner_create_round_table`.
@@ -70,5 +72,5 @@ pub(crate) unsafe extern "thiscall" fn compare_asia_cup_winner_create_round_tabl
 /// Comparer for `create_team_entries`.
 pub(crate) unsafe extern "thiscall" fn compare_create_team_entries(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CREATE_TEAM_ENTRIES);
-    compare_team_table("create_team_entries", this, || o(this), || create_team_entries(this))
+    compare_team_table("create_team_entries", Cup(this), || o(this), || create_team_entries(this))
 }

@@ -81,11 +81,11 @@ pub(crate) unsafe extern "thiscall" fn check_fifa_protected_period(c: usize, _x:
 /// tela do contrato.
 pub(crate) unsafe extern "C" fn staff_contract_is_bonus_type_allowed(person: usize, kind: u32) -> u32 {
     let person = Staff(person);
-    let f = person.player();
-    if f == 0 {
+    let f = PlayerSheet(person.player());
+    if f.is_null() {
         return 0;
     }
-    if read_u8(f + player_sheet::GOALKEEPER) == 0x14 {
+    if (f.goalkeeper() as u8) == 0x14 {
         return (kind as u8 == 2) as u32;
     }
     (kind as u8 != 2) as u32
@@ -601,9 +601,9 @@ pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
     } else if b44 > 0 {
         rating = rating.wrapping_add(2);
     }
-    let sheet = p.player();
-    if sheet != 0 {
-        let rep = core::ptr::read_unaligned((sheet + player_sheet::CURRENT_REPUTATION) as *const i16);
+    let sheet = PlayerSheet(p.player());
+    if !sheet.is_null() {
+        let rep = sheet.current_reputation();
         if rep > 0x1c52 {
             rating = rating.wrapping_sub(5);
         } else if rep > 0x1676 {

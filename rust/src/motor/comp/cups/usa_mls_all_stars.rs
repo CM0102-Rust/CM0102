@@ -25,40 +25,40 @@ use super::*;
 /// (`inscritos`, mov ecx, esi; call direto -> thiscall, ret 0), as rodadas (virtual +0x8c) e a árvore dos confrontos
 /// (virtual +0x94); por fim, com `previstas`, as posições previstas (virtual +0x5c), cujo eax ela devolve (o Jogo das
 /// Estrelas não as tem: devolve o eax da árvore).
-pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: usize, entrants: usize, file: usize, rows: [u32; 3], year: i16, predicted: bool, ramo: &'static str) -> u32 {
-    write_usize(this + cup::SEASON_CLOSED, 0);
+pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: Cup, entrants: usize, file: usize, rows: [u32; 3], year: i16, predicted: bool, ramo: &'static str) -> u32 {
+    this.set_season_closed(0);
     for o in [0xa7usize, 0xa3] {
-        let l = read_usize(this + o);
+        let l = read_usize(this.addr() + o);
         if l != 0 {
             exe::crt_free(l);
-            write_usize(this + o, 0);
+            write_usize(this.addr() + o, 0);
         }
     }
-    if read_usize(this + cup::TIE_TABLES) != 0 {
+    if this.tie_tables() != 0 {
         let mut i = 0i32;
-        while i < read_i16(this + cup::ROUND_COUNT) as i32 {
-            let p = read_usize(read_usize(this + cup::TIE_TABLES) + i as usize * 4);
+        while i < this.round_count() as i32 {
+            let p = read_usize(this.tie_tables() + i as usize * 4);
             if p != 0 {
                 exe::crt_free(p);
-                write_usize(read_usize(this + cup::TIE_TABLES) + i as usize * 4, 0);
+                write_usize(this.tie_tables() + i as usize * 4, 0);
             }
             i += 1;
         }
-        exe::crt_free(read_usize(this + cup::TIE_TABLES));
-        write_usize(this + cup::TIE_TABLES, 0);
+        exe::crt_free(this.tie_tables());
+        this.set_tie_tables(0);
     }
-    let e = read_usize(this + 8);
+    let e = read_usize(this.addr() + 8);
     if e != 0 {
         exe::comp_stats_archive_season_and_reset(e, 1);
     }
-    let a = read_i16(this + cup::YEAR);
-    core::ptr::write_unaligned((this + cup::YEAR) as *mut i16, a.wrapping_add(year));
+    let a = this.year();
+    this.set_year(a.wrapping_add(year));
     crate::comparison::branch(ramo);
-    *((this + cup::CURRENT_ROUND) as *mut u8) = 0;
-    *((this + cup::RUN_BY_STAGES) as *mut u8) = 0;
+    this.set_current_round(0);
+    this.set_run_by_stages(0);
     let entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(entrants);
     // simplification: in the boxes the original exits with the box’s eax (0x5e8290); the caller of the turnover does not read the return
-    if entrants(this) < 0 {
+    if entrants(this.addr()) < 0 {
         show_error_at(file, rows[0]);
         return 0;
     }
@@ -89,7 +89,7 @@ pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: usize, entrant
 /// start_new_season()`, a virada (`usa_mls_all_stars_cup_start_new_season`) com os dois times de UsaMlsAllStars::set_up_teams (0x90a540) e as caixas
 /// do usa_mls_all_stars.cpp nas linhas 0x133, 0x13a e 0x141, sem as posições previstas.
 pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_start_new_season_90a760(this: usize) -> u32 {
-    usa_mls_all_stars_cup_start_new_season(this, 0x90a540, 0xaa20a0, [0x133, 0x13a, 0x141], 1, false, "cqr_6 virada do jogo das estrelas") // cqr6: the All-Star Game
+    usa_mls_all_stars_cup_start_new_season(Cup(this), 0x90a540, 0xaa20a0, [0x133, 0x13a, 0x141], 1, false, "cqr_6 virada do jogo das estrelas") // cqr6: the All-Star Game
 }
 
 /// Club record i of G_CLUB_TABLE (0x245 bytes each).
@@ -123,22 +123,22 @@ pub(crate) unsafe fn usa_mls_all_stars_club_by_index(i: usize) -> usize {
 /// da tabela: o primeiro time das estrelas fica com o estádio dele (+0x69) e +0x6d = 0 (sem o k-ésimo, nada muda). Os
 /// dois ficam com a nação [0xae23a8] + 0x122 × [0x9cf4f8] (+0x53, os EUA [inferência]) e os quatro bytes da lista (+4,
 /// +5, +0xa, +0xb) zerados. Devolve 1.
-pub(crate) unsafe fn set_up_all_star_teams(this: usize) -> i32 {
-    core::ptr::write_unaligned((this + cup::TEAM_COUNT) as *mut i16, 2);
+pub(crate) unsafe fn set_up_all_star_teams(this: Cup) -> i32 {
+    this.set_team_count(2);
     let l = exe::crt_malloc(0xc);
-    write_usize(this + cup::TEAM_TABLE, l);
+    this.set_team_table(l);
     if l == 0 {
         show_error_at(0xaa20a0, 0xc6);
         return -1;
     }
     let (a, b) = (read_usize(G_KEY_CLUB_MLS_ALL_STARS_EAST), read_usize(G_KEY_CLUB_MLS_ALL_STARS_WEST));
-    let conferencia = if read_i16(this + cup::YEAR) % 2 != 0 {
+    let conferencia = if this.year() % 2 != 0 {
         write_usize(l, usa_mls_all_stars_club_by_index(a));
-        write_usize(read_usize(this + cup::TEAM_TABLE) + 6, usa_mls_all_stars_club_by_index(b));
+        write_usize(this.team_table() + 6, usa_mls_all_stars_club_by_index(b));
         0x413
     } else {
         write_usize(l + 6, usa_mls_all_stars_club_by_index(a));
-        write_usize(read_usize(this + cup::TEAM_TABLE), usa_mls_all_stars_club_by_index(b));
+        write_usize(this.team_table(), usa_mls_all_stars_club_by_index(b));
         0x414
     };
     let mut k = exe::utils_random(6) as u8; // cqr6: o estádio sorteado entre 6
@@ -149,9 +149,9 @@ pub(crate) unsafe fn set_up_all_star_teams(this: usize) -> i32 {
         if league != 0 && read_usize(league) == read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && ((exe::usa_mls_get_club_division(c) as u32) as i16) as i32 == conferencia {
             if k == 0 {
                 crate::comparison::branch("cqr_6 all-star game stadium");
-                let first = read_usize(read_usize(this + cup::TEAM_TABLE));
+                let first = read_usize(this.team_table());
                 write_usize(first + 0x69, read_usize(c + 0x69)); // cqr6: the stadium of the drawn club
-                *((read_usize(read_usize(this + cup::TEAM_TABLE)) + 0x6d) as *mut u8) = 0;
+                *((read_usize(this.team_table()) + 0x6d) as *mut u8) = 0;
                 break;
             }
             k = k.wrapping_sub(1);
@@ -159,11 +159,11 @@ pub(crate) unsafe fn set_up_all_star_teams(this: usize) -> i32 {
         i += 1;
     }
     let nation = read_usize(G_NATION_TABLE).wrapping_add(read_usize(KEY_NATION_UNITED_STATES).wrapping_mul(nation::SIZE));
-    let l = read_usize(this + cup::TEAM_TABLE);
+    let l = this.team_table();
     write_usize(read_usize(l + 6) + 0x53, nation);
     write_usize(read_usize(l) + 0x53, read_usize(read_usize(l + 6) + 0x53));
     for o in [4usize, 5, 0xa, 0xb] {
-        *((read_usize(this + cup::TEAM_TABLE) + o) as *mut u8) = 0;
+        *((this.team_table() + o) as *mut u8) = 0;
     }
     1
 }
@@ -179,7 +179,7 @@ pub(crate) unsafe fn set_up_all_star_teams(this: usize) -> i32 {
 /// sorteado (1 em 6, pela ordem da tabela) entre os da conferência do mandante (0x413 no ano ímpar, 0x414 no par); os
 /// dois times ficam com a nação dos EUA [inferência]
 pub(crate) unsafe extern "thiscall" fn set_up_teams(this: usize) -> i32 {
-    set_up_all_star_teams(this)
+    set_up_all_star_teams(Cup(this))
 }
 
 /// rule: the two MLS All-Star selections are called up on the day of Date(26, 6, year, 6): 26 July moved to weekday 6
@@ -198,7 +198,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_update_for_date(this: u
         crate::comparison::branch("cqn_10 all-star game call-up");
         exe::usamlsallstars_select_squads(this);
     }
-    eng_cc_cup_cup_update_for_date(this, today, stage)
+    eng_cc_cup_cup_update_for_date(Cup(this), today, stage)
 }
 
 /// Rule: the MLS All-Star game is a single match between the two conference selections, drawn on 15/6 and played on 2/8
@@ -219,6 +219,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_update_for_date(this: u
 /// mando 0 (0x521e60 e 0x521eb0, cdecl, com o ano +0x40); nome 0, +0xd = 0x20, categoria 8, 2 times, 1 jogo, 2 novos,
 /// 1 jogo por confronto, sem prêmio.
 pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
+    let this = Cup(this);
     if stage as u8 != 0xff {
         return 0;
     }
@@ -233,7 +234,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this
         return 0;
     }
     crate::comparison::branch("cqm_12 all-star game fixture");
-    let year = core::ptr::read_unaligned((this + cup::YEAR) as *const i16) as i32 as u32;
+    let year = this.year() as i32 as u32;
     exe::cup_set_round_draw_date(t, 0, 0xf, 5, 0, 5, year);
     exe::cup_set_round_match_date(t, 0, 2, 7, 0, 6, 1, year, 0); // cqm12: the All-Star Game on 2 August
     let w = |o: usize, v: u16| core::ptr::write_unaligned((t + o) as *mut u16, v);

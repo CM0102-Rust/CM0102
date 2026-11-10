@@ -4571,11 +4571,11 @@ pub(crate) unsafe fn punish_move_foul_injected(m: Engine, e: MatchPlayer, p: usi
             && exe::human_manager_is_human_club(e.club(), 0, 1, 0, 0) == 0
             && (read_i8(e.staff().addr() + 0x5b) as i32) < v as i32 + 10
         {
-            let person = e.player();
+            let person = PlayerSheet(e.player());
             let k = 0xfu8.wrapping_sub(v as u8);
-            if read_i8(person + player_sheet::AGGRESSION) > (random(5) as u8).wrapping_add(k) as i8
-                && read_i8(person + player_sheet::DIRTINESS) > (random(5) as u8).wrapping_add(k) as i8
-                && *((person + player_sheet::CURRENT_REPUTATION) as *const i16) > (random(0xdac) + 3000) as i16
+            if person.aggression() > (random(5) as u8).wrapping_add(k) as i8
+                && person.dirtiness() > (random(5) as u8).wrapping_add(k) as i8
+                && person.current_reputation() > (random(0xdac) + 3000) as i16
                 && v as i32 > random(3) + 1
             {
                 crate::comparison::branch("movement event 0x82");
@@ -6082,11 +6082,11 @@ pub(crate) unsafe fn pass_foul_injected(m: Engine, e: MatchPlayer, p: usize, mut
         && exe::human_manager_is_human_club(e.club(), 0, 1, 0, 0) == 0
         && (read_i8(e.staff().addr() + 0x5b) as i32) < v as i32 + 10
     {
-        let person = e.player();
+        let person = PlayerSheet(e.player());
         let k = 0xfu8.wrapping_sub(v as u8);
-        if read_i8(person + player_sheet::AGGRESSION) > (random(5) as u8).wrapping_add(k) as i8
-            && read_i8(person + player_sheet::DIRTINESS) > (random(5) as u8).wrapping_add(k) as i8
-            && *((person + player_sheet::CURRENT_REPUTATION) as *const i16) > (random(0xdac) + 3000) as i16
+        if person.aggression() > (random(5) as u8).wrapping_add(k) as i8
+            && person.dirtiness() > (random(5) as u8).wrapping_add(k) as i8
+            && person.current_reputation() > (random(0xdac) + 3000) as i16
             && v as i32 > random(3) + 1
         {
             crate::comparison::branch("pass event 0x82");
@@ -6991,8 +6991,8 @@ pub(crate) unsafe fn post_match_events_injected(partida: Fixture, call: &mut dyn
                         let b = random(5);
                         if a < b || exe::media_has_story_for_player(noticias(), p) != 0 || c45(c) != 0x4000000 {
                             let r = random(2000) + 0x1194;
-                            let sheet = *((p + staff::PLAYER) as *const usize);
-                            if core::ptr::read_unaligned((sheet + player_sheet::CURRENT_REPUTATION) as *const i16) as i32 > r {
+                            let sheet = PlayerSheet(*((p + staff::PLAYER) as *const usize));
+                            if sheet.current_reputation() as i32 > r {
                                 crate::comparison::branch("events 0x0a news");
                                 news(noticias(), p, club, 0xa, partida.addr(), 0);
                             }
@@ -7078,8 +7078,8 @@ pub(crate) unsafe extern "thiscall" fn recover_stamina(j: usize, ceiling: u8) {
     let j = MatchPlayer(j);
     let injury: unsafe extern "thiscall" fn(usize, u32) -> i16 = core::mem::transmute(FN_INJURY_GET_FATIGUE);
     let f = |o: usize| (j.addr() + o) as *mut f32;
-    let sheet = j.player();
-    if sheet == 0 {
+    let sheet = PlayerSheet(j.player());
+    if sheet.is_null() {
         return;
     }
     let injuries = *((G_INJURY) as *const usize);
@@ -7089,7 +7089,7 @@ pub(crate) unsafe extern "thiscall" fn recover_stamina(j: usize, ceiling: u8) {
     if v > 1000 {
         factor = read_f64(rdata::F64_1_4) - v as f64 * read_f64(rdata::F64_0_0004);
     }
-    let ritmo = read_i8(sheet + player_sheet::NATURAL_FITNESS) as i32;
+    let ritmo = sheet.natural_fitness() as i32;
     if ceiling == 0 {
         let m = j.engine();
         let base = if !m.is_null() && exe::cm3_match_engine_get_player_position(m, j) == 1 {
@@ -7157,9 +7157,9 @@ pub(crate) unsafe fn save_shot_injected(j: MatchPlayer, strength: i16, call: &mu
     let narra = |c: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32| {
         c(0x6d6f70, m.commentator(), [code, m.addr() as u32, (j.commentary_id() as i8) as u8 as u32, dir as u8 as u32, u32::MAX]);
     };
-    let sheet = j.player();
+    let sheet = PlayerSheet(j.player());
     let pega = strength <= 1000 && {
-        let n = ftol(read_i8(sheet + player_sheet::CONSISTENCY) as f64 + j.handling() as f64);
+        let n = ftol(sheet.consistency() as f64 + j.handling() as f64);
         random(n) < random(0x14)
     };
     if !pega {
@@ -8826,8 +8826,8 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     if j != 0 && *((j + match_player::PLAYER) as *const usize) != 0 {
         l18 = ((rating(j) as f64 - q(0x968e08)) * q(0x96d6f8)) as f32;
         let j2 = MatchPlayer(designado(Engine((engine()).addr())));
-        let fj = *((j + match_player::PLAYER) as *const usize);
-        let x = ((read_i8(fj + player_sheet::POSITIONING) as i32) as f64 + (read_i8(fj + player_sheet::POSITIONING) as i32) as f64 + (read_i16((j2.player()) + 5) as i32) as f64) * q(0x967880);
+        let fj = PlayerSheet(*((j + match_player::PLAYER) as *const usize));
+        let x = ((fj.positioning() as i32) as f64 + (fj.positioning() as i32) as f64 + (read_i16((j2.player()) + 5) as i32) as f64) * q(0x967880);
         let l34 = if x < q(0x9689a0) { 0.0 } else if !(x <= q(0x968ea8)) { 20.0 } else { x };
         l28 = (rating(j) as f64 * l34 * q(0x968ef0)) as f32;
         let mj = *((j + match_player::ENGINE) as *const usize);
@@ -9340,8 +9340,8 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         }
     }
     if ta() != 1 {
-        let fi = sheet();
-        if read_i8(fi + player_sheet::GOALKEEPER) == 20 && read_i8(fi + player_sheet::DEFENDER) < 10 && read_i8(fi + player_sheet::DEFENSIVE_MIDFIELDER) < 10 && read_i8(fi + player_sheet::MIDFIELDER) < 15 && read_i8(fi + player_sheet::ATTACKING_MIDFIELDER) < 10 && read_i8(fi + player_sheet::ATTACKER) < 10 {
+        let fi = PlayerSheet(sheet());
+        if fi.goalkeeper() == 20 && fi.defender() < 10 && fi.defensive_midfielder() < 10 && fi.midfielder() < 15 && fi.attacking_midfielder() < 10 && fi.attacker() < 10 {
             for (o, c) in [(0x9d, 0x96d424), (0xf1, 0x96d22c), (0x95, 0x96d22c), (0x91, 0x96d22c), (0x7d, 0x96d22c), (0xad, 0x96d364), (0xa9, 0x96d248), (0xcd, 0x968f18), (0xc5, 0x968f18), (0xdd, 0x96d248), (0xb9, 0x96d248)] {
                 wr(o, (read_f32(this.addr() + o) as f64) * f(c));
             }
@@ -9370,8 +9370,8 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
                 mul(o, k);
             }
         }
-        let pa61 = p.player();
-        if pa61 != 0 && read_i8(c + contract::MORALE) < -25 && read_i8(pa61 + player_sheet::WORK_RATE) < 15 && (p.professionalism() as i32) < 10 && (read_i16(pa61 + player_sheet::CURRENT_REPUTATION) as i32) > 3750 && (read_i16(pa61 + player_sheet::CURRENT_REPUTATION) as i32) > (read_i16((club_side()) + 0x80) as i32) + 250 {
+        let pa61 = PlayerSheet(p.player());
+        if !pa61.is_null() && read_i8(c + contract::MORALE) < -25 && pa61.work_rate() < 15 && (p.professionalism() as i32) < 10 && (pa61.current_reputation() as i32) > 3750 && (pa61.current_reputation() as i32) > (read_i16((club_side()) + 0x80) as i32) + 250 {
             mul(0xf5, 0x96b014);
             mul(0x7d, 0x96a32c);
             if read_i8(c + contract::MORALE) < -75 {
@@ -9510,9 +9510,9 @@ pub(crate) unsafe extern "thiscall" fn player_rating(this: usize) -> i32 {
         *((t + if this.side() == 0 { 0x1c } else { 0x20 }) as *const usize)
     };
     let person = Staff(this.staff().addr());
-    let sheet = this.player();
+    let sheet = PlayerSheet(this.player());
     let n = exe::database_get_contract_rating_modifier(person, club()) as f64;
-    let mut form = (*((sheet + player_sheet::WORLD_REPUTATION) as *const i16) as i32 - *((club() + 0x80) as *const i16) as i32) as f64 * 0.002 + 1.5;
+    let mut form = (sheet.world_reputation() as i32 - *((club() + 0x80) as *const i16) as i32) as f64 * 0.002 + 1.5;
     if form < -4.0 {
         form = -4.0;
     } else if form > 4.0 {
@@ -9540,7 +9540,7 @@ pub(crate) unsafe extern "thiscall" fn player_rating(this: usize) -> i32 {
         exe::date_days_since(G_CURRENT_DATE, read(staff::DATE_JOINED_CLUB), read(0x42)) as f64
     };
     let y = if x > 1000.0 { (x - 1000.0) * 0.000125 + 1.0 } else { 1.0 };
-    let e = *((sheet + player_sheet::LEADERSHIP) as *const i8) as f64;
+    let e = sheet.leadership() as f64;
     ftol(e * y - (n * n + 5.0) * 0.1 + form + c + 0.5)
 }
 
@@ -10183,8 +10183,8 @@ pub(crate) unsafe extern "thiscall" fn aim_set_facing_direction(this: usize, a: 
         let q = random(0x1e);
         *dir = dir.read().wrapping_add(p.wrapping_sub(q) as u16);
     }
-    let person = this.player();
-    let adjust = (read_i8(person + player_sheet::RIGHT_FOOT) as i16).wrapping_sub(read_i8(person + player_sheet::LEFT_FOOT) as i16).wrapping_mul(2);
+    let person = PlayerSheet(this.player());
+    let adjust = (person.right_foot() as i16).wrapping_sub(person.left_foot() as i16).wrapping_mul(2);
     *dir = dir.read().wrapping_add(adjust as u16);
     let v = *dir as i16;
     if v < 0 {

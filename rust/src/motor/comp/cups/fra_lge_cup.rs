@@ -9,7 +9,7 @@ use super::*;
 /// [pt] { 0x5bcc40 } (thiscall, ret 0x10, fra_lge_cup.cpp; a virtual +0x3c da Copa da Liga francesa): `FraLgeCup::
 /// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa2 sem memória.
 pub(crate) unsafe extern "thiscall" fn fra_lge_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
-    single_stage_round_table(this, stage, rounds, extra, out, &FRENCH_LEAGUE_CUP_ROUNDS, 0x9ccb98, 0xa2, "cql_11 tabela da copa da liga francesa")
+    single_stage_round_table(Cup(this), stage, rounds, extra, out, &FRENCH_LEAGUE_CUP_ROUNDS, 0x9ccb98, 0xa2, "cql_11 tabela da copa da liga francesa")
 }
 
 /// rule: the French League Cup takes 54 clubs, in this order (the first 16 in the preliminary round, the next 20 in the
@@ -23,5 +23,5 @@ pub(crate) unsafe extern "thiscall" fn fra_lge_cup_create_round_table(this: usiz
 /// anos), completados até 16 com os da [0x9cf5d4] que vieram da [0x9cf5d8] (os promovidos [inferência]); a Segunda e a
 /// Primeira; com a lista incompleta, devolve 0
 pub(crate) unsafe extern "thiscall" fn fra_lge_cup_collect_entrants(this: usize) -> i32 {
-    french_league_cup_collect_entrants(this).0
+    french_league_cup_collect_entrants(Cup(this)).0
 }
