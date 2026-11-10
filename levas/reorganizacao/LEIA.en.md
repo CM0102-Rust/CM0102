@@ -29,6 +29,15 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 32: one safety contract, the engine's flags as atomics (decision (a))
+
+`estaticos_atomicos.py`: the engine's 71 file-level scalar `static mut` (dry-run flags, trampolines) become atomics with
+`Relaxed` (the game has a single thread), so reading them no longer needs `unsafe`. The 23 left are borrowed (`addr_of!`:
+the comparers' tapes, the records a dry run builds) or read by the original routine table; the 36 in the rest of the
+crate are the infrastructure the asm reads. `motor.rs` got one `# Safety` section for every `unsafe fn` of the engine
+instead of one on each (checked 3.9.68 exe, the game's thread, live records as arguments). Proof: aa7e9c95 ×2 (the fingerprint moved from 7cc445c2, as it did in earlier batches: the generated code changed and so did the stack residue the original reads; the bar is Rust ×2 equal and comparison 0), detector
+equal, comparison 0; no mutation names the changed statics and no anchor broke.
+
 ## Readability batch 31: a typed value keeps its type (outside reader, round 11)
 
 `metodos_em_cadeia.py`: a typed record's field read through its address becomes the field's method, chains included

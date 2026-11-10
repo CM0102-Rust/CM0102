@@ -28,6 +28,15 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 32 da legibilidade: um contrato de segurança, as flags do motor atômicas (decisão (a))
+
+`estaticos_atomicos.py`: os 71 `static mut` escalares de arquivo do motor (flags de ensaio, trampolins) viram atômicos
+com `Relaxed` (o jogo tem uma thread só), e lê-los deixa de pedir `unsafe`. Os 23 que ficam são emprestados (`addr_of!`:
+as fitas dos comparadores, os registros que um ensaio monta) ou lidos pela tabela das originais; os 36 do resto do crate
+são a infraestrutura que o asm lê. O `motor.rs` ganhou uma seção `# Safety` única para todas as `unsafe fn` do motor, em
+vez de uma em cada uma (exe 3.9.68 conferido, thread do jogo, registros vivos como argumento). Prova: aa7e9c95 ×2 (a impressão mudou de 7cc445c2, como já mudou em outras levas: o código gerado mudou e o resíduo de pilha que a original lê também; o critério é Rust ×2 igual e comparação 0),
+detector igual, comparação 0; nenhuma mutação cita os estáticos trocados e nenhuma âncora quebrou.
+
 ## Leva 31 da legibilidade: o valor tipado fica com o tipo (leitor de fora, rodada 11)
 
 `metodos_em_cadeia.py`: o campo de um registro tipado lido pelo endereço vira o método dele, também numa cadeia
