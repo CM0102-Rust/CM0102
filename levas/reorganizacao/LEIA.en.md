@@ -29,6 +29,14 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 25: the comparers' messages in English
+
+`textos_em_ingles.py`: 720 messages the comparers print on a divergence (`"semana({:?}) original={} rust={}"`) now name
+the routine by its Rust function (inside `compare_X`, a Portuguese name at the start becomes X; elsewhere the
+`docs/NOMES_ROTULOS.csv` map), and their Portuguese words go through the dictionary (expected, got, club, person, cell,
+side, count...). No tool reads these texts; the log keywords the tools read change in a batch of their own. Proof:
+7cc445c2 ×2, detector equal, comparison 0.
+
 ## Readability batch 24: the hooked routines named once, in English
 
 Each line of the `routines!` table carried a Portuguese label for the log (`"motor_tabela_a"`) repeating what the Rust

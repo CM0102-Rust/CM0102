@@ -28,6 +28,14 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 25 da legibilidade: as mensagens dos comparadores em inglês
+
+`textos_em_ingles.py`: 720 mensagens que os comparadores escrevem numa divergência (`"semana({:?}) original={} rust={}"`)
+passam a nomear a rotina pela função Rust (dentro de `compare_X`, um nome português no começo vira X; fora, o mapa do
+`docs/NOMES_ROTULOS.csv`), e as palavras portuguesas passam pelo dicionário (expected, got, club, person, cell, side,
+count...). Nenhuma ferramenta lê esses textos; as palavras-chave do log que as ferramentas leem mudam numa leva própria.
+Prova: 7cc445c2 ×2, detector igual, comparação 0.
+
 ## Leva 24 da legibilidade: as rotinas desviadas com um nome só, em inglês
 
 Cada linha da tabela `routines!` levava um rótulo em português para o log (`"motor_tabela_a"`) que repetia o que o nome
