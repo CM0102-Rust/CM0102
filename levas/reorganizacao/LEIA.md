@@ -28,6 +28,16 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 35 da legibilidade: leitores de campo em quatro arquivos, bits das flags com nome
+
+Leitores de campo no `match_screens.rs` (185 → 80 crus; 65 são coordenadas de desenho), `transfer_manager.rs` (122 →
+17), `injury.rs` (115 → 19) e a segunda passada do `manager_manager.rs`. Registros novos: `screen_manager`, `display`,
+`side_stats`, `recovery_news_entry`. `nomear_bits.py` dá nome aos bits dos campos de flags no `bits.rs` novo
+(`expectation_flags::TITLE_CHALLENGE`...); `ajustar_constantes.py` põe o `as T` no nome usado em conta de outro tipo.
+Revisão do registro da diretoria: `SPENDING_CEILING` → `SQUAD_INVESTMENT`, `CONFIDENCE_2/3` →
+`SUPPORTERS_/STAFF_CONFIDENCE`. O defeito do recurso de suspensão (0x557000) foi para o `DEFEITOS_DO_ORIGINAL`. Prova:
+aa7e9c95 ×2, detector igual, comparação 0; as 11 mutações mudadas compilam.
+
 ## Leva 34 da legibilidade: leitores de campo no manager_manager.rs (piloto da decisão (e))
 
 Dois agentes leitores deram um veredito para cada um dos 205 `+ 0x..` crus do `manager_manager.rs` (registro, nome,

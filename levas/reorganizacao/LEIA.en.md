@@ -29,6 +29,16 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 35: field readers on four files, flag bits by name
+
+Field readers on `match_screens.rs` (185 -> 80 raw; 65 are drawing coordinates), `transfer_manager.rs` (122 -> 17),
+`injury.rs` (115 -> 19) and a second pass on `manager_manager.rs`. New records: `screen_manager`, `display`,
+`side_stats`, `recovery_news_entry`. `nomear_bits.py` names the bits of flag fields in the new `bits.rs`
+(`expectation_flags::TITLE_CHALLENGE`...); `ajustar_constantes.py` adds the `as T` to a name used in another integer
+type. Board record review: `SPENDING_CEILING` -> `SQUAD_INVESTMENT`, `CONFIDENCE_2/3` -> `SUPPORTERS_/STAFF_CONFIDENCE`.
+The appeal defect (0x557000) went to `DEFEITOS_DO_ORIGINAL`. Proof: aa7e9c95 ×2, detector equal, comparison 0; the 11
+changed mutations compile.
+
 ## Readability batch 34: field readers on manager_manager.rs (pilot of decision (e))
 
 Two reader agents gave a verdict on each of the 205 raw `+ 0x..` of `manager_manager.rs` (record, name, width,
