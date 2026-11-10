@@ -28,6 +28,15 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 37 da legibilidade: leitores de campo em seleções, banco, copas e formações
+
+Vereditos dos leitores no `national_teams.rs`, `database.rs`, `comp/cup.rs` e `formation.rs`. Registros novos:
+`call_up_entry`, `human_manager_record`, `staff_history`, `colour`; campos novos no `national_squad_record` (limites do
+elenco, reservas por nível), no `formation_fields` (senha, autor, coordenadas das vagas, pelas mensagens de erro da
+carga), no `cup_round`/`cup_tie` e no `names` (NATION, WEIGHT). Bits das regras de sorteio e de confronto das copas,
+das casas das vagas e das regras de elenco. Prova: aa7e9c95 ×2, detector igual (cobre também a leva 36), comparação 0;
+as mutações mudadas compilam.
+
 ## Leva 36 da legibilidade: leitores de campo no motor de partidas
 
 Vereditos dos leitores no `match_eng.rs` (175 crus → 64), `match_man.rs` (173 → 124; quase todo o resto é o quadro de

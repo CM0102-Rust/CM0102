@@ -29,6 +29,14 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 37: field readers on national teams, database, cups, formations
+
+Reader verdicts on `national_teams.rs`, `database.rs`, `comp/cup.rs` and `formation.rs`. New records: `call_up_entry`,
+`human_manager_record`, `staff_history`, `colour`; new fields in `national_squad_record` (squad size limits, reserves
+by level), `formation_fields` (password, creator, slot coordinates, from the loader's error strings), `cup_round`/
+`cup_tie` and `names` (NATION, WEIGHT). Bits of the cups' draw and tie rules, of the slot cells and of the squad rules.
+Proof: aa7e9c95 ×2, detector equal (it also covers batch 36), comparison 0; the changed mutations compile.
+
 ## Readability batch 36: field readers on the match engine
 
 Reader verdicts on `match_eng.rs` (175 raw -> 64), `match_man.rs` (173 -> 124; almost all the rest is the original
