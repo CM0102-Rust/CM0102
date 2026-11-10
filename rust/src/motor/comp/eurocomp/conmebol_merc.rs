@@ -50,8 +50,8 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
         && core::ptr::read_unaligned(junho.as_ptr() as *const u16) == core::ptr::read_unaligned(today as *const u16)
         && this.year() as i32 != year_of_today as i32
     {
-        let virada: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 8));
-        virada(this.addr());
+        let turned: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 8));
+        turned(this.addr());
     }
     if this.active() == 0 && full != 0 {
         let day = this.next_draw_day() as u16; // cqr11: the draw day

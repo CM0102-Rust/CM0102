@@ -243,8 +243,8 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
     if scout.is_null() || read_u8(result + 0x4c) != 0 {
         return 0;
     }
-    let acompanhado = read_i32(this + player_search_fields::ASSIGNED_CLUB);
-    if acompanhado > -1 && read_usize(this + 0x170) != 0 && ((game.home_club_id() as i32) == acompanhado || (game.away_club_id() as i32) == acompanhado) {
+    let followed = read_i32(this + player_search_fields::ASSIGNED_CLUB);
+    if followed > -1 && read_usize(this + 0x170) != 0 && ((game.home_club_id() as i32) == followed || (game.away_club_id() as i32) == followed) {
         if !SCOUT_MATCH_DRY_RUN {
             crate::comparison::branch("cqf_10 club history");
             // 0x7bd310: push resultado; push jogo; mov ecx, [this+0x170] -> thiscall, ret 8
@@ -556,14 +556,14 @@ pub(crate) unsafe extern "thiscall" fn player_search_find_or_claim_player_slot(t
 /// (< 16) metade; < 20 metade ou 2/3 nos pobres; senão encolhe pela falta de jogadores frente à nação (+0x69 × 1,35 +
 /// 20) e a riqueza puxa (−2..2: × 0,909 ou − 1000, × 0,952 ou − 500, nada, × 1,0125 ou + 125, × 1,025 ou + 250).
 /// No mínimo 500. A base vai em `*base` (se não nulo). As contas de ponto flutuante em f64 (o x87 do jogo em 53 bits).
-pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize, base: *mut i32, forcada: *const i16) -> i32 {
+pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize, base: *mut i32, forced: *const i16) -> i32 {
     let club = Club(club);
     let li = (club.continental_comp_id() as i32);
     let league = Competition(if li > -1 { (read_i32(G_CLUB_COMP_TABLE) as usize).wrapping_add((li as usize).wrapping_mul(0x6b)) } else { 0 });
     let nation = (club.division().addr() as i32) as usize;
     let mut esi: i32;
-    if !forcada.is_null() {
-        esi = *forcada as i32;
+    if !forced.is_null() {
+        esi = *forced as i32;
     } else {
         let rep = club.reputation() as i32;
         let t = ftol(club.min_attendance() as f64 * read_f64(rdata::F64_0_43) - read_f64(rdata::F64_430)) as i16 as i32;
@@ -606,7 +606,7 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
     } else {
         ftol(esi as f64 * read_f64(rdata::F64_1_6) + read_f64(rdata::F64_5000))
     };
-    if forcada.is_null() {
+    if forced.is_null() {
         let squad = (exe::database_count_club_squad(club, 0, 0) as i8);
         let with_nation = |c: usize| c != 0 && read_i32((read_i32(G_COMP_OBJECT_TABLE) as usize).wrapping_add(read_i32(c) as usize * 4)) != 0;
         if squad < 16 && with_nation(nation) {

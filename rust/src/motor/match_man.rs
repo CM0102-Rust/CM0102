@@ -1592,7 +1592,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
     }
 
     // resting players: the slot masks and the first scale, with those who can play
-    let emprestado_fora = |p: usize| -> bool {
+    let loaned_away = |p: usize| -> bool {
         // loaned (0x4cf6d0) to a club other than the partner (0x540a50)?
         let owner = |p: usize| {
             let c = exe::contract_manager_get_contract(u(G_CONTRACT_MANAGER, 0), p);
@@ -1658,7 +1658,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
                 }
             }
             let day = if *(game.addr() as *const u32) == *(KEY_CLUB_COMP_RESERVE as *const u32) { f + 0xac } else { G_CURRENT_DATE };
-            if exe::nationalteams_get_international_duty_club(u(G_NATIONAL_TEAMS, 0), p, day, club, 0, 0) != 0 || emprestado_fora(p) {
+            if exe::nationalteams_get_international_duty_club(u(G_NATIONAL_TEAMS, 0), p, day, club, 0, 0) != 0 || loaned_away(p) {
                 continue;
             }
             let c = *((f + 0x18) as *mut u8) as usize;
@@ -1749,7 +1749,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
         let away = (*(game.addr() as *const i32) != -2 && exe::discipline_is_player_banned(u(G_DISCIPLINE, 0), p, u(game.addr(), fixture::COMPETITION), 1, 0) != 0)
             || exe::nationalteams_get_international_duty_club(u(G_NATIONAL_TEAMS, 0), p, G_CURRENT_DATE, club, 0, 0) != 0
             || (*(game.addr() as *const i32) != -2 && exe::transfer_manager_get_ineligibility_code(u(G_TRANSFER_MANAGER, 0), p, game) != 0)
-            || emprestado_fora(p);
+            || loaned_away(p);
         if away {
             mark_se(p);
             continue;
@@ -2034,11 +2034,11 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
     };
     let sheet = u(t.addr(), match_manager::MANAGER_SHEET);
     let lim = |base: i32| if weight_of_side() > 0 { base + 3 } else { base };
-    let disposicao = |i: isize| *(((m as isize) + 0x476a + 4 * i) as *const f32) as f64;
+    let disposition = |i: isize| *(((m as isize) + 0x476a + 4 * i) as *const f32) as f64;
     let e = |o: usize| read_i8(sheet + o) as i32;
     match exe::match_man_choose_mentality(t) as i8 {
         1 => {
-            let d = disposicao(side);
+            let d = disposition(side);
             let x = if sheet != 0 && !(d >= read_f64(rdata::F64_2_5)) {
                 if e(0xe) > 6 && special { 0x10000 } else { 0x20000 }
             } else if special || d > read_f64(rdata::F64_10) {
@@ -2084,7 +2084,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
                 a(0x20000);
             } else if e(0xe) > lim(0xf) && special {
                 a(0x10000);
-            } else if e(0xe) <= 5 && weight_of_side() != 0 && !(disposicao(n_final as isize) > read_f64(rdata::F64_1)) {
+            } else if e(0xe) <= 5 && weight_of_side() != 0 && !(disposition(n_final as isize) > read_f64(rdata::F64_1)) {
                 // as in the original: reads the formation at the index of the total slots (the loop’s ebx), not the side’s
                 g(0x8000);
                 if e(0x13) < lim(4) { bx(0x1000) } else { cx() }
@@ -2326,17 +2326,17 @@ pub(crate) unsafe fn substitute_with(c: MatchManager, goalkeeper: u8, call: &mut
         let (sai, entra) = (sairam[i], entraram[i]);
         let comentarios = m.live_match() != 0;
         // fatigue: first the one going off, then the one coming on
-        let cansado = if comentarios && random(read_i16(sai + 0x31) as i32) < -10 {
+        let tired = if comentarios && random(read_i16(sai + 0x31) as i32) < -10 {
             Some(sai)
         } else if comentarios && random(read_i16(entra + 0x31) as i32) < -10 {
             Some(entra)
         } else {
             None
         };
-        if let Some(p) = cansado {
+        if let Some(p) = tired {
             call(FN_MATCH_EVENTS_ADD_EVENT, commentator, [event::BOO_SPECIFIC_PLAYER, m.addr() as u32, u32::MAX, (read_i8(p + match_player::SIDE) == 0) as u32, u32::MAX]);
         }
-        let machucado = if comentarios && {
+        let injured = if comentarios && {
             let r = random(read_i16(sai + match_player::MATCH_RATING) as i32 / 30 + read_i16(sai + 0x33) as i32 - 0xe9);
             r > random(0x1e)
         } {
@@ -2349,7 +2349,7 @@ pub(crate) unsafe fn substitute_with(c: MatchManager, goalkeeper: u8, call: &mut
         } else {
             None
         };
-        if let Some(p) = machucado {
+        if let Some(p) = injured {
             call(FN_MATCH_EVENTS_ADD_EVENT, commentator, [event::APPLAUD_SPECIFIC_PLAYER, m.addr() as u32, u32::MAX, read_i8(p + match_player::SIDE) as u8 as u32, u32::MAX]);
         }
         let cod = if read_i8(sai + match_player::INJURY_MINUTE) > -1 { 0x20d7 } else { 0x1f5b };
@@ -3022,7 +3022,7 @@ pub(crate) unsafe fn position_rating(f: PlayerSheet, m: u32, masc: u32, table: u
     let fb = |k: usize| signed_byte_at(f.addr(), k);
     let t = |k: i32| *((table as isize + 4 * k as isize) as *const i32);
     let m16 = m as u16;
-    let sem_ala = m & 0x800 == 0 && m & 0x80 == 0;
+    let without_ala = m & 0x800 == 0 && m & 0x80 == 0;
     if m & 1 != 0 {
         fb(0xf) * fb(0xf) - 300
     } else if masc & 1 != 0 {
@@ -3034,9 +3034,9 @@ pub(crate) unsafe fn position_rating(f: PlayerSheet, m: u32, masc: u32, table: u
     } else if main && m16 == 8 {
         t(fb(0x16).max(fb(0x11)).max(fb(0x12)).max(fb(0x13)))
     } else if m & 8 != 0 {
-        t(if sem_ala { fb(0x12) } else { fb(0x16) })
+        t(if without_ala { fb(0x12) } else { fb(0x16) })
     } else if m & 0x10 != 0 {
-        if !main || sem_ala {
+        if !main || without_ala {
             if main && m16 == 0x10 {
                 t(fb(0x14).max(fb(0x12)).max(fb(0x13)))
             } else {
@@ -3048,7 +3048,7 @@ pub(crate) unsafe fn position_rating(f: PlayerSheet, m: u32, masc: u32, table: u
             t(fb(0x14).max(fb(0x13)))
         }
     } else if m & 0x20 != 0 {
-        if sem_ala {
+        if without_ala {
             let a = fb(0x14) as f64;
             let middle = (fb(0x14) + fb(0x1a)) as f64 * read_f64(rdata::F64_0_5);
             t(ftol(if a <= middle { middle } else { a }))
@@ -3566,11 +3566,11 @@ pub(crate) unsafe fn injury_word_0c_adjust(p: Staff, l4c: i32) -> i32 {
 /// Appearances penalty (+0x22, flag 0x100000) or club adjustment (flag 4: owner +0x39 and their manager's +0x69).
 ///
 /// [pt] Os jogos (+0x22, flag 0x100000) ou o clube (flag 4: o dono +0x39 e o +0x69 do treinador dele).
-pub(crate) unsafe fn appearances_or_club_adjust(p: Staff, f: PlayerSheet, flags: u32, da_base: bool, l4c: i32) -> i32 {
+pub(crate) unsafe fn appearances_or_club_adjust(p: Staff, f: PlayerSheet, flags: u32, of_the_base: bool, l4c: i32) -> i32 {
     if flags & 0x100000 != 0 {
         return l4c - (p.int_apps() as i32 * 5).min(0x32);
     }
-    if flags & 4 == 0 || !da_base {
+    if flags & 4 == 0 || !of_the_base {
         return l4c;
     }
     let owner = p.club_job();
@@ -3638,7 +3638,7 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
     }
     let fb = |k: usize| signed_byte_at(f.addr(), k);
     let bd = *(G_INJURY as *const usize);
-    let da_base = *(p.addr() as *const i32) < *(G_STAFF_COUNT as *const i32);
+    let of_the_base = *(p.addr() as *const i32) < *(G_STAFF_COUNT as *const i32);
     let active = limit > -1;
     let mut l24: i32 = 10000;
     let mut l28: i32 = 100;
@@ -3691,7 +3691,7 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
             return -10000;
         }
     }
-    if flags & 4 != 0 && da_base {
+    if flags & 4 != 0 && of_the_base {
         let v = ftol(player_stat(f, 5, 0x12, f32::from_bits(0x40d00000)) * read_f64(rdata::F64_20));
         if v != 0 {
             count += 1;
@@ -3725,10 +3725,10 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
         }
     }
     // from here on the original reuses the limit’s slot for calculations: it no longer cuts
-    if flags & 0x40000 != 0 && da_base {
+    if flags & 0x40000 != 0 && of_the_base {
         sum += recent_form_bonus(p, f, club, o, count);
     }
-    if flags & 2 != 0 && da_base {
+    if flags & 2 != 0 && of_the_base {
         sum = form_bonus(p, f, club, o, age, count, sum, l3c, false, 0x3fb66666);
     }
     let mut l4c: i32 = 0;
@@ -3738,7 +3738,7 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
             l4c = ftol((l4c - 0x96) as f64 * read_f64(rdata::F64_1_5) + read_f64(rdata::F64_150));
         }
     }
-    if flags & 8 != 0 && da_base {
+    if flags & 8 != 0 && of_the_base {
         l4c += ftol(fb(0x45) as f64 * read_f64(rdata::F64_1_5) - read_f64(rdata::F64_15));
     }
     if flags & 0x4000 != 0 {
@@ -3756,7 +3756,7 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
         }
         l4c = age_and_foreigner_adjust(p, f, club, flags, pos, masc, age, count, l4c);
     }
-    if contract != 0 && !club.is_null() && flags & 0x2000000 != 0 && da_base {
+    if contract != 0 && !club.is_null() && flags & 0x2000000 != 0 && of_the_base {
         l4c = contract_adjust(p, f, club, contract, age, l4c);
     }
     if without_value == 0 {
@@ -3790,8 +3790,8 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
             l4c = injury_word_0c_adjust(p, l4c);
         }
     }
-    l4c = appearances_or_club_adjust(p, f, flags, da_base, l4c);
-    if !da_base {
+    l4c = appearances_or_club_adjust(p, f, flags, of_the_base, l4c);
+    if !of_the_base {
         l4c -= 0x1e;
     }
     l4c = own_club_bonus(p, club, l4c);
@@ -3878,7 +3878,7 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
     }
     let fb = |k: usize| signed_byte_at(f.addr(), k);
     let bd = *(G_INJURY as *const usize);
-    let da_base = *(p.addr() as *const i32) < *(G_STAFF_COUNT as *const i32);
+    let of_the_base = *(p.addr() as *const i32) < *(G_STAFF_COUNT as *const i32);
     let age = (p.age() as i8);
     let contract = if *(G_CONTRACT_MANAGER as *const usize) != 0 { exe::contract_manager_get_contract_for_club(*(G_CONTRACT_MANAGER as *const usize), p, club) } else { 0 };
     let without_value = flags & 0x800;
@@ -3952,7 +3952,7 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
         count += 1;
         sum += (reg.match_rating() as i32 - match_fatigue_offset(reg, fb(0xf))) / 50;
     }
-    if flags & 4 != 0 && da_base {
+    if flags & 4 != 0 && of_the_base {
         let v = ftol(player_stat(f, 5, 0x12, f32::from_bits(0x40d00000)) * read_f64(rdata::F64_20));
         if v != 0 {
             count += 1;
@@ -3991,10 +3991,10 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
             return -10000;
         }
     }
-    if flags & 0x40000 != 0 && da_base {
+    if flags & 0x40000 != 0 && of_the_base {
         sum += recent_form_bonus(p, f, club, manager, count);
     }
-    if flags & 2 != 0 && da_base {
+    if flags & 2 != 0 && of_the_base {
         sum = form_bonus(p, f, club, manager, age, count, sum, l3c, true, 0x3faccccd);
     }
     let mut l4c: i32 = 0;
@@ -4004,14 +4004,14 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
             l4c = ftol((l4c - 0x96) as f64 * read_f64(rdata::F64_1_5) + read_f64(rdata::F64_150));
         }
     }
-    if flags & 8 != 0 && da_base {
+    if flags & 8 != 0 && of_the_base {
         l4c += ftol((fb(0x45) - 10) as f64 * read_f64(rdata::F64_0_8));
     }
     let marked = mark & 0x8000 != 0 || (mark & 0x2000 != 0 && tactic & 0x100 != 0);
     if flags & 0x8000 != 0 {
         l4c = tactic_instruction_adjust(f, mark, bytes as u8, tactic, marked, l4c);
     }
-    if contract != 0 && !club.is_null() && flags & 0x2000000 != 0 && da_base {
+    if contract != 0 && !club.is_null() && flags & 0x2000000 != 0 && of_the_base {
         l4c = contract_adjust(p, f, club, contract, age, l4c);
     }
     if flags & 0x4000 != 0 {
@@ -4110,9 +4110,9 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
             l4c = injury_word_0c_adjust(p, l4c);
         }
     }
-    l4c = appearances_or_club_adjust(p, f, flags, da_base, l4c);
+    l4c = appearances_or_club_adjust(p, f, flags, of_the_base, l4c);
     let mut base = l40;
-    if !da_base && !club.is_null() {
+    if !of_the_base && !club.is_null() {
         let nation = club.nation();
         if !nation.is_null() && nation.league_selected() != 0 {
             l4c -= 0x46;
@@ -4477,8 +4477,8 @@ pub(crate) unsafe extern "C" fn perceived_ability(o: usize, p: usize, c: usize, 
         certeza = (ftol(x + read_f64(rdata::F64_0_5)) as i8).min(0x14);
     }
     let c32 = certeza as i32;
-    let ruido = (semente % ((0x15 - c32) * 2) + c32 - 0x15) as i16 as i32;
-    let verdade = if kind == 2 {
+    let noise = (semente % ((0x15 - c32) * 2) + c32 - 0x15) as i16 as i32;
+    let truth = if kind == 2 {
         sheet.current_ability()
     } else {
         if age > 0 {
@@ -4487,6 +4487,6 @@ pub(crate) unsafe extern "C" fn perceived_ability(o: usize, p: usize, c: usize, 
         sheet.potential_ability()
     } as i32;
     let weight = (c32 / 2 + 10) as i8 as i32;
-    (((verdade + ruido) * weight + (20 - weight) * rep as i32) / 20) as i16
+    (((truth + noise) * weight + (20 - weight) * rep as i32) / 20) as i16
 }
 

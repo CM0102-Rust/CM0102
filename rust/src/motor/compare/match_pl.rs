@@ -262,9 +262,9 @@ pub(crate) unsafe extern "thiscall" fn compare_move_to(this: usize, x: i8, y: i8
     let (l, v) = (side_of_player(this), this.cell_slot());
     let n = read_i8(old + (0x58 + l as usize));
     if v >= 0 && n > 0 {
-        let movido = *((old as isize + 4 * (11 * l as isize + n as isize - 1)) as *const usize);
-        if movido != 0 {
-            reg.push((movido + 0x28, 1));
+        let moved = *((old as isize + 4 * (11 * l as isize + n as isize - 1)) as *const usize);
+        if moved != 0 {
+            reg.push((moved + 0x28, 1));
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr(), x, y), || move_to(this.addr(), x, y));

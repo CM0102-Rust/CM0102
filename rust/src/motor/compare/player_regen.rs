@@ -429,12 +429,12 @@ pub(crate) unsafe extern "thiscall" fn compare_build_nation_club_lists(this: usi
         }
     }
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_BUILD_NATION_CLUB_LISTS)(this);
-    let errada = (0..n).find(|&k| {
+    let wrong = (0..n).find(|&k| {
         let l = read_usize(read_usize(this) + 4 * k);
         let ids: Vec<usize> = if l != 0 { list_items_capped(l).into_iter().map(|e| read_usize(e)).collect() } else { Vec::new() };
         l != 0 && ids != plan[k]
     });
-    SCOREBOARD.record(errada.is_none(), || format!("build_nation_club_lists: a lista da nação {:?} difere do plano", errada));
+    SCOREBOARD.record(wrong.is_none(), || format!("build_nation_club_lists: a lista da nação {:?} difere do plano", wrong));
 }
 
 /// Comparer for `process_regen_queue` (comparison mode: see the header of motor.rs): `0x7abac0` (the young regen)

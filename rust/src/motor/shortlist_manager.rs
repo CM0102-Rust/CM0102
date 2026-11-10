@@ -1440,13 +1440,13 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
             e0 *= k(0x968940);
         }
         let mut x = e0 * f8;
-        let sem_pedida = |c: Contract| c.is_null() || c.leaving_on_bosman() == 0;
+        let without_requested = |c: Contract| c.is_null() || c.leaving_on_bosman() == 0;
         if !p6.is_null() {
             if e0 < k(0x968e48) {
-                let ok = b4 as f64 > k(0x968978) && l8c != 0 && l84 == 0 && x > k(0x968928) && ea < 4 && ea > 0 && sem_pedida(Contract(c));
+                let ok = b4 as f64 > k(0x968978) && l8c != 0 && l84 == 0 && x > k(0x968928) && ea < 4 && ea > 0 && without_requested(Contract(c));
                 *p6 |= if ok { 0x400000 } else { 0x800000 };
             } else if e0 > k(0x968940) && b4 as f64 > k(0x968978) && l8c == 0 && l84 != 0
-                && !(d4 != 0 && read_i16(d4 + club::REPUTATION) >= 0x1d4c) && p5b < 4 && p5b > 0 && sem_pedida(Contract(c))
+                && !(d4 != 0 && read_i16(d4 + club::REPUTATION) >= 0x1d4c) && p5b < 4 && p5b > 0 && without_requested(Contract(c))
             {
                 *p6 |= 0x200000;
             }
@@ -1542,8 +1542,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         return zero;
     }
     // 0x864550: push 0; push 0xb; push status; push 0; push club; push person; lea ecx, contract -> thiscall, ret 0x18
-    let default: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32) -> f64 = core::mem::transmute(FN_STAFF_CONTRACT_DEFAULT_STAFF_CONTRACT);
-    let w0 = default(contract_local.as_mut_ptr() as usize, p1.addr(), p2.addr(), 0, p5, 0xb, 0);
+    let w0 = exe::staff_contract_default_staff_contract(contract_local.as_mut_ptr() as usize, p1.addr(), p2.addr(), 0, p5, 0xb, 0);
     // 0x5968d0: push situation; push person; mov ecx, finances -> thiscall, ret 8
     let a8w = exe::finance_get_max_wage(fin, p1, p5) as f64;
     let mut e8w = 0.0f64;
@@ -1717,10 +1716,10 @@ pub(crate) unsafe fn interested_clubs(this: usize, player: usize) -> Vec<usize> 
     exe::new_llist(list);
     exe::shortlist_manager_collect_interested_clubs(this, player, list, 0, 1, 0);
     let mut v = Vec::new();
-    let mut no = list.head();
-    while no != 0 && v.len() < 0x10000 {
-        v.push(read_usize(read_usize(no) + 4));
-        no = read_usize(no + llist_node::NEXT);
+    let mut in_the = list.head();
+    while in_the != 0 && v.len() < 0x10000 {
+        v.push(read_usize(read_usize(in_the) + 4));
+        in_the = read_usize(in_the + llist_node::NEXT);
     }
     exe::drop_llist(list);
     v
@@ -2683,7 +2682,7 @@ pub(crate) unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clu
         }
     }
     let a = abertas as i32;
-    let mut repartido: i32 = 0;
+    let mut split: i32 = 0;
     if limit > 0 {
         for k in 0..limit as i32 {
             let v = slot(k);
@@ -2716,10 +2715,10 @@ pub(crate) unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clu
             let Some(dv) = divisor else { continue };
             let x = if dv == 0 { 0 } else { budget.wrapping_div(dv) };
             write_i32(v + 7, x);
-            repartido = repartido.wrapping_add(x);
+            split = split.wrapping_add(x);
         }
     }
-    let mut rest = budget.wrapping_sub(repartido);
+    let mut rest = budget.wrapping_sub(split);
     let mut baixos: i8 = 0;
     if limit > 0 {
         for k in 0..limit as i32 {
@@ -2749,7 +2748,7 @@ pub(crate) unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clu
             if club.professional_status() != 1 && t != 0xb {
                 write_i32(v + 7, 0);
             } else {
-                let base = if repartido >= 1000 { repartido } else { 1000 };
+                let base = if split >= 1000 { split } else { 1000 };
                 let e = read_i32(v + 7);
                 let x = ftol((e as f64) / (base as f64) * (rest as f64) * read_f64(rdata::F64_NEG_0_5));
                 crate::comparison::branch("cpy_3 reduction by surplus");
@@ -3487,11 +3486,11 @@ pub(crate) unsafe extern "thiscall" fn collect_interested_clubs(this: usize, pla
 /// [pt] Os itens (8 bytes) de uma LLIST (+2 o primeiro nó; nó: +0 o dado, +6 o próximo).
 pub(crate) unsafe fn llist_pairs(list: Llist) -> Vec<(u32, u32)> {
     let mut v = Vec::new();
-    let mut no = list.head();
-    while no != 0 {
-        let x = read_usize(no);
+    let mut in_the = list.head();
+    while in_the != 0 {
+        let x = read_usize(in_the);
         v.push((read_usize(x) as u32, read_usize(x + 4) as u32));
-        no = read_usize(no + llist_node::NEXT);
+        in_the = read_usize(in_the + llist_node::NEXT);
     }
     v
 }
@@ -3624,9 +3623,9 @@ pub(crate) unsafe extern "stdcall" fn shortlist_manager_predict_selling_club_res
         if exe::human_manager_is_human_club(seller, 0, 1, (0) as u32, 0) != 0 {
             return 0;
         }
-        let listado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_LOAN_LISTED);
+        let listed: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_LOAN_LISTED);
         let rep = buyer.reputation() as f64;
-        if listado(player.addr(), 0) != 0 && rep * read_f64(rdata::F64_1_25) > read_i16(player.player().addr() + 0xb) as f64 {
+        if listed(player.addr(), 0) != 0 && rep * read_f64(rdata::F64_1_25) > read_i16(player.player().addr() + 0xb) as f64 {
             return 0;
         }
         let st = k.squad_status() & 0xf0;
@@ -3660,8 +3659,8 @@ pub(crate) unsafe extern "stdcall" fn shortlist_manager_predict_selling_club_res
     if offer >= price as i64 {
         return 0;
     }
-    let listado: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_TRANSFER_LISTED);
-    if exe::human_manager_is_human_club(seller, 0, 1, (0) as u32, 0) != 0 && (price.wrapping_sub(0x16e360) as i64) < offer && listado(player.addr(), 0) != 0 {
+    let listed: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_TRANSFER_LISTED);
+    if exe::human_manager_is_human_club(seller, 0, 1, (0) as u32, 0) != 0 && (price.wrapping_sub(0x16e360) as i64) < offer && listed(player.addr(), 0) != 0 {
         return 1;
     }
     if price as f64 * read_f64(rdata::F64_0_7142857143) > offer as f64 {
@@ -3789,13 +3788,12 @@ pub(crate) unsafe extern "thiscall" fn get_squad_status_for_club(this: usize, pe
 pub(crate) unsafe extern "stdcall" fn shortlist_manager_estimate_squad_status(person: usize, club: usize) -> u32 {
     let person = Staff(person);
     let club = Club(club);
-    let manager: unsafe extern "C" fn(usize) -> usize = core::mem::transmute(FN_DATABASE_GET_CLUB_MANAGER);
-    let mut rep = if (exe::database_get_staff_reputation_for_viewer(person, manager(club.addr()), 0) as u16) as i16 > 1 { (exe::database_get_staff_reputation_for_viewer(person, manager(club.addr()), 0) as u16) as i16 } else { 1 };
+    let mut rep = if (exe::database_get_staff_reputation_for_viewer(person, exe::database_get_club_manager(club.addr()), 0) as u16) as i16 > 1 { (exe::database_get_staff_reputation_for_viewer(person, exe::database_get_club_manager(club.addr()), 0) as u16) as i16 } else { 1 };
     let mut rc = club.reputation();
     if rc <= 1 {
         rc = 1;
     }
-    let t = manager(club.addr());
+    let t = exe::database_get_club_manager(club.addr());
     if exe::scout_manager_is_player_shortlisted(read_usize(G_SCOUT_MANAGER), person, t) != 0 {
         let a = rep as f64 * read_f64(rdata::F64_1_5);
         let b = rc as f64 * read_f64(rdata::F64_0_75);
@@ -3979,15 +3977,15 @@ pub(crate) unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, pl
         return -1;
     }
     let f2 = staff_interest_in_club(this, player, club, 0, 0, 1);
-    let mut meses = until_end as u8;
+    let mut months = until_end as u8;
     crate::comparison::branch("cpw_3 count from the start");
     if f2 >= read_f64(rdata::F64_2_75) { // cpw3: the interest to count from the start;
         let n = read_usize(club.nation().addr());
         if n != read_usize(KEY_NATION_SPAIN) && n != read_usize(KEY_NATION_PORTUGAL) && n != read_usize(KEY_NATION_ITALY) {
-            meses = start as u8;
+            months = start as u8;
         }
     }
-    let mut month_return = meses.wrapping_add(m);
+    let mut month_return = months.wrapping_add(m);
     // simplification: the year goes in the slot of the player argument (the low word; the rest is the player’s address), and the
     // percentage afterwards in its low byte; the copy reproduces the dword.
     let mut slot = (player as u32 & 0xffff_0000) | today_year as u32;

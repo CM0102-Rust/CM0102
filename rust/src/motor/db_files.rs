@@ -167,11 +167,9 @@ pub unsafe fn autoteste_dbj_1() {
 pub(crate) unsafe extern "C" fn db_files_write_staff_history(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("database write people history");
     let written = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(records, 17, n, stream)
+        exe::zwrite(records, 17, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(records, 17, n, stream)
+        exe::crt_fwrite(records, 17, n, stream)
     };
     (written == n) as i32 // write people’s history
 }
@@ -189,11 +187,9 @@ pub(crate) unsafe extern "C" fn db_files_write_staff_history(stream: usize, use_
 pub(crate) unsafe extern "C" fn db_files_write_comps(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("database write competitions");
     let written = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(records, 107, n, stream)
+        exe::zwrite(records, 107, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(records, 107, n, stream)
+        exe::crt_fwrite(records, 107, n, stream)
     };
     (written == n) as i32 // save competitions
 }
@@ -215,11 +211,9 @@ pub(crate) unsafe extern "C" fn db_files_write_comps(stream: usize, use_zip: i32
 pub(crate) unsafe extern "C" fn db_files_write_comp_history(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("database write competition histories");
     let written = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(records, 26, n, stream)
+        exe::zwrite(records, 26, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(records, 26, n, stream)
+        exe::crt_fwrite(records, 26, n, stream)
     };
     (written == n) as i32 // write competition histories
 }
@@ -241,11 +235,9 @@ pub(crate) unsafe extern "C" fn db_files_write_comp_history(stream: usize, use_z
 pub(crate) unsafe extern "C" fn db_files_write_staff_comps(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("database write staff competitions");
     let written = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(records, 101, n, stream)
+        exe::zwrite(records, 101, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(records, 101, n, stream)
+        exe::crt_fwrite(records, 101, n, stream)
     };
     (written == n) as i32 // save staff competitions
 }
@@ -267,11 +259,9 @@ pub(crate) unsafe extern "C" fn db_files_write_staff_comps(stream: usize, use_zi
 pub(crate) unsafe extern "C" fn db_files_write_officials(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("database write referees");
     let written = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(records, 43, n, stream)
+        exe::zwrite(records, 43, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(records, 43, n, stream)
+        exe::crt_fwrite(records, 43, n, stream)
     };
     (written == n) as i32 // save referees
 }
@@ -294,11 +284,9 @@ pub(crate) unsafe extern "C" fn db_files_write_officials(stream: usize, use_zip:
 pub(crate) unsafe extern "C" fn db_files_write_records_0x3a(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("database write 58-byte records");
     let written = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(records, 58, n, stream)
+        exe::zwrite(records, 58, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(records, 58, n, stream)
+        exe::crt_fwrite(records, 58, n, stream)
     };
     (written == n) as i32 // save 58-byte records
 }
@@ -316,11 +304,9 @@ pub(crate) unsafe extern "C" fn db_files_write_records_0x3a(stream: usize, use_z
 pub(crate) unsafe extern "C" fn db_files_write_or_read_records_0x3c(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("database write names");
     let written = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(records, 60, n, stream)
+        exe::zwrite(records, 60, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(records, 60, n, stream)
+        exe::crt_fwrite(records, 60, n, stream)
     };
     (written == n) as i32 // gravar nomes
 }
@@ -394,11 +380,9 @@ pub(crate) unsafe extern "C" fn db_files_open_for_write(folder: usize, name: usi
 pub(crate) unsafe extern "C" fn db_files_write_continents(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("database write continents");
     let written = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(records, 198, n, stream)
+        exe::zwrite(records, 198, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(records, 198, n, stream)
+        exe::crt_fwrite(records, 198, n, stream)
     };
     (written == n) as i32
 }
@@ -422,11 +406,9 @@ pub(crate) unsafe extern "C" fn db_files_write_continents(stream: usize, use_zip
 pub(crate) unsafe extern "C" fn db_files_write_nations(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("database write nations");
     let written = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(records, 290, n, stream)
+        exe::zwrite(records, 290, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(records, 290, n, stream)
+        exe::crt_fwrite(records, 290, n, stream)
     };
     (written == n) as i32
 }
@@ -450,11 +432,9 @@ pub(crate) unsafe extern "C" fn db_files_write_nations(stream: usize, use_zip: i
 pub(crate) unsafe extern "C" fn db_files_write_cities(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("database write cities");
     let written = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(records, 56, n, stream)
+        exe::zwrite(records, 56, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(records, 56, n, stream)
+        exe::crt_fwrite(records, 56, n, stream)
     };
     (written == n) as i32
 }
@@ -478,11 +458,9 @@ pub(crate) unsafe extern "C" fn db_files_write_cities(stream: usize, use_zip: i3
 pub(crate) unsafe extern "C" fn db_files_write_stadiums(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("database write stadiums");
     let written = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(records, 78, n, stream)
+        exe::zwrite(records, 78, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(records, 78, n, stream)
+        exe::crt_fwrite(records, 78, n, stream)
     };
     (written == n) as i32
 }
@@ -506,8 +484,7 @@ pub(crate) unsafe extern "C" fn db_files_write_stadiums(stream: usize, use_zip: 
 pub(crate) unsafe extern "C" fn db_files_write_clubs(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("database write clubs");
     let written = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(records, 581, n, stream)
+        exe::zwrite(records, 581, n, stream)
     } else {
         exe::crt_fwrite(records, 581, n, stream)
     };
@@ -533,8 +510,7 @@ pub(crate) unsafe extern "C" fn db_files_write_clubs(stream: usize, use_zip: i32
 pub(crate) unsafe extern "C" fn db_files_write_staff(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("database write people 110");
     let written = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(records, 110, n, stream)
+        exe::zwrite(records, 110, n, stream)
     } else {
         exe::crt_fwrite(records, 110, n, stream)
     };
@@ -560,11 +536,9 @@ pub(crate) unsafe extern "C" fn db_files_write_staff(stream: usize, use_zip: i32
 pub(crate) unsafe extern "C" fn db_files_write_players(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("database write non-players");
     let written = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(records, 68, n, stream)
+        exe::zwrite(records, 68, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(records, 68, n, stream)
+        exe::crt_fwrite(records, 68, n, stream)
     };
     (written == n) as i32
 }
@@ -588,11 +562,9 @@ pub(crate) unsafe extern "C" fn db_files_write_players(stream: usize, use_zip: i
 pub(crate) unsafe extern "C" fn db_files_write_non_players(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("database write players");
     let written = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(records, 70, n, stream)
+        exe::zwrite(records, 70, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(records, 70, n, stream)
+        exe::crt_fwrite(records, 70, n, stream)
     };
     (written == n) as i32
 }
@@ -616,11 +588,9 @@ pub(crate) unsafe extern "C" fn db_files_write_non_players(stream: usize, use_zi
 pub(crate) unsafe extern "C" fn db_files_write_staff_extra(stream: usize, use_zip: i32, records: usize, n: u32) -> i32 {
     crate::comparison::branch("database write preferences");
     let written = if use_zip != 0 {
-        let zwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
-        zwrite(records, 52, n, stream)
+        exe::zwrite(records, 52, n, stream)
     } else {
-        let fwrite: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FWRITE);
-        fwrite(records, 52, n, stream)
+        exe::crt_fwrite(records, 52, n, stream)
     };
     (written == n) as i32
 }
@@ -651,11 +621,9 @@ pub(crate) unsafe extern "C" fn db_files_read_officials(stream: usize, use_zip: 
     }
     crate::comparison::branch("database read referees");
     let read = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(records, 43, n, stream)
+        exe::zread(records, 43, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(records, 43, n, stream)
+        exe::crt_fread(records, 43, n, stream)
     };
     (read == n) as i32 // referees
 }
@@ -686,11 +654,9 @@ pub(crate) unsafe extern "C" fn db_files_read_colours(stream: usize, use_zip: i3
     }
     crate::comparison::branch("database read colours");
     let read = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(records, 58, n, stream)
+        exe::zread(records, 58, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(records, 58, n, stream)
+        exe::crt_fread(records, 58, n, stream)
     };
     (read == n) as i32 // cores
 }
@@ -723,11 +689,9 @@ pub(crate) unsafe extern "C" fn db_files_read_names(stream: usize, use_zip: i32,
     }
     crate::comparison::branch("database read names");
     let read = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(records, 60, n, stream)
+        exe::zread(records, 60, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(records, 60, n, stream)
+        exe::crt_fread(records, 60, n, stream)
     };
     (read == n) as i32 // nomes
 }
@@ -767,8 +731,7 @@ pub(crate) unsafe extern "C" fn db_files_read_clubs(stream: usize, use_zip: i32,
     }
     crate::comparison::branch("database read clubs");
     let read = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(records, 581, n, stream)
+        exe::zread(records, 581, n, stream)
     } else {
         exe::crt_fread(records, 581, n, stream)
     };
@@ -817,11 +780,9 @@ pub(crate) unsafe extern "C" fn db_files_read_comps(stream: usize, use_zip: i32,
     }
     crate::comparison::branch("database read competitions");
     let read = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(records, 107, n, stream)
+        exe::zread(records, 107, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(records, 107, n, stream)
+        exe::crt_fread(records, 107, n, stream)
     };
     (read == n) as i32 // club competitions
 }
@@ -860,11 +821,9 @@ pub(crate) unsafe extern "C" fn db_files_read_players(stream: usize, use_zip: i3
     }
     crate::comparison::branch("database read non-players");
     let read = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(records, 68, n, stream)
+        exe::zread(records, 68, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(records, 68, n, stream)
+        exe::crt_fread(records, 68, n, stream)
     };
     (read == n) as i32 // non-players
 }
@@ -903,11 +862,9 @@ pub(crate) unsafe extern "C" fn db_files_read_non_players(stream: usize, use_zip
     }
     crate::comparison::branch("database read players");
     let read = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(records, 70, n, stream)
+        exe::zread(records, 70, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(records, 70, n, stream)
+        exe::crt_fread(records, 70, n, stream)
     };
     (read == n) as i32 // jogadores
 }
@@ -941,11 +898,9 @@ pub(crate) unsafe extern "C" fn db_files_read_staff(stream: usize, use_zip: i32,
     }
     crate::comparison::branch("database read people 110");
     let read = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(records, 110, n, stream)
+        exe::zread(records, 110, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(records, 110, n, stream)
+        exe::crt_fread(records, 110, n, stream)
     };
     (read == n) as i32 // pessoas 110
 }
@@ -978,11 +933,9 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_extra(stream: usize, use_zip
     }
     crate::comparison::branch("database read preferences");
     let read = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(records, 52, n, stream)
+        exe::zread(records, 52, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(records, 52, n, stream)
+        exe::crt_fread(records, 52, n, stream)
     };
     (read == n) as i32 // preferences
 }
@@ -1013,11 +966,9 @@ pub(crate) unsafe extern "C" fn db_files_read_continents(stream: usize, use_zip:
     }
     crate::comparison::branch("database read continents");
     let read = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(records, 198, n, stream)
+        exe::zread(records, 198, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(records, 198, n, stream)
+        exe::crt_fread(records, 198, n, stream)
     };
     (read == n) as i32 // continentes
 }
@@ -1048,11 +999,9 @@ pub(crate) unsafe extern "C" fn db_files_read_nations(stream: usize, use_zip: i3
     }
     crate::comparison::branch("database read nations");
     let read = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(records, 290, n, stream)
+        exe::zread(records, 290, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(records, 290, n, stream)
+        exe::crt_fread(records, 290, n, stream)
     };
     (read == n) as i32 // nations
 }
@@ -1083,11 +1032,9 @@ pub(crate) unsafe extern "C" fn db_files_read_cities(stream: usize, use_zip: i32
     }
     crate::comparison::branch("database read cities");
     let read = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(records, 56, n, stream)
+        exe::zread(records, 56, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(records, 56, n, stream)
+        exe::crt_fread(records, 56, n, stream)
     };
     (read == n) as i32 // cidades
 }
@@ -1118,11 +1065,9 @@ pub(crate) unsafe extern "C" fn db_files_read_stadiums(stream: usize, use_zip: i
     }
     crate::comparison::branch("database read stadiums");
     let read = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(records, 78, n, stream)
+        exe::zread(records, 78, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(records, 78, n, stream)
+        exe::crt_fread(records, 78, n, stream)
     };
     (read == n) as i32 // stadiums
 }
@@ -1155,8 +1100,7 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_v1(stream: usize, use_zip: i
     let read = if use_zip != 0 {
         exe::zread(records, 157, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(records, 157, n, stream)
+        exe::crt_fread(records, 157, n, stream)
     };
     (read == n) as i32 // pessoas 157
 }
@@ -1187,11 +1131,9 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_history(stream: usize, use_z
     }
     crate::comparison::branch("database read people history");
     let read = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(records, 17, n, stream)
+        exe::zread(records, 17, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(records, 17, n, stream)
+        exe::crt_fread(records, 17, n, stream)
     };
     (read == n) as i32 // people history
 }
@@ -1222,11 +1164,9 @@ pub(crate) unsafe extern "C" fn db_files_read_comp_history(stream: usize, use_zi
     }
     crate::comparison::branch("database read competition histories");
     let read = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(records, 26, n, stream)
+        exe::zread(records, 26, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(records, 26, n, stream)
+        exe::crt_fread(records, 26, n, stream)
     };
     (read == n) as i32 // competition histories
 }
@@ -1257,11 +1197,9 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_comps(stream: usize, use_zip
     }
     crate::comparison::branch("database read staff competitions");
     let read = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(records, 101, n, stream)
+        exe::zread(records, 101, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(records, 101, n, stream)
+        exe::crt_fread(records, 101, n, stream)
     };
     (read == n) as i32 // staff competitions
 }
@@ -1292,11 +1230,9 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_comp_history(stream: usize, 
     }
     crate::comparison::branch("database read staff competition history");
     let read = if use_zip != 0 {
-        let zread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZREAD);
-        zread(records, 58, n, stream)
+        exe::zread(records, 58, n, stream)
     } else {
-        let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-        fread(records, 58, n, stream)
+        exe::crt_fread(records, 58, n, stream)
     };
     (read == n) as i32 // staff competition history
 }

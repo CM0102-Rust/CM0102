@@ -190,14 +190,14 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_collect_club_list(th
     let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_EUROPEAN_CUP_COLLECT_CLUB_LIST);
     let t = kind as u8;
-    let sem_7 = match t {
+    let without_7 = match t {
         1 => Some(true),
         2 => Some(false),
         3 if (this.current_stage() as i32) == 0xb => Some(false),
         _ => None,
     };
     let mut plan = [0usize; 71];
-    let n = match sem_7 {
+    let n = match without_7 {
         Some(s) if this.entrant_capacity() <= 71 => active_entrants(this, s, plan.as_mut_ptr()),
         _ => return o(this.addr(), out, kind),
     };

@@ -189,7 +189,7 @@ pub(crate) unsafe extern "thiscall" fn compare_post_bosman_departure_news(this: 
 /// estado, comparando a oferta (0x63 bytes), o contador e a cabeça da lista (o cursor). Oferta nova (acrescentada, aloca):
 /// a cópia em ensaio monta o registro; a original acrescenta, e o nó novo (o último do jogador pelo clube) tem de ter os
 /// mesmos 0x63 primeiros bytes, com o contador + 1.
-pub(crate) unsafe extern "thiscall" fn compare_add_contract_offer(this: usize, terms: usize, slot: i32, value: u32, mark: u32, a5: u32, decides: u32, acertado: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_add_contract_offer(this: usize, terms: usize, slot: i32, value: u32, mark: u32, a5: u32, decides: u32, agreed: u32) {
     let terms = Contract(terms);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, u32, u32, u32)>(IDX_ADD_CONTRACT_OFFER);
     let id = read_usize(terms.addr());
@@ -207,12 +207,12 @@ pub(crate) unsafe extern "thiscall" fn compare_add_contract_offer(this: usize, t
     all.extend(crate::rng::STATE_REGIONS);
     let before = crate::comparison::MemorySnapshot::read(&all);
     CONTRACT_OFFER_DRY_RUN = true;
-    crate::rng::pause_trace(|| crate::rng::without_counting(|| add_contract_offer(this, terms.addr(), slot, value, mark, a5, decides, acertado)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| add_contract_offer(this, terms.addr(), slot, value, mark, a5, decides, agreed)));
     CONTRACT_OFFER_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&all[..n_cmp]);
     let record = DRY_RUN_CONTRACT_OFFER_RECORD;
     before.write_back();
-    o(this, terms.addr(), slot, value, mark, a5, decides, acertado);
+    o(this, terms.addr(), slot, value, mark, a5, decides, agreed);
     let mo = crate::comparison::MemorySnapshot::read(&all[..n_cmp]);
     let same = if item != 0 {
         mo == mr
@@ -221,14 +221,14 @@ pub(crate) unsafe extern "thiscall" fn compare_add_contract_offer(this: usize, t
         let l = read_usize(this + contract_manager_fields::CONTRACT_OFFERS);
         let mut new = 0;
         if l != 0 {
-            let mut no = read_usize(l + llist::HEAD);
+            let mut in_the = read_usize(l + llist::HEAD);
             let mut n = 0;
-            while no != 0 && n < 100000 {
-                let x = read_usize(no);
+            while in_the != 0 && n < 100000 {
+                let x = read_usize(in_the);
                 if read_usize(x) == id && read_usize(x + 4) == club {
                     new = x;
                 }
-                no = read_usize(no + llist_node::NEXT);
+                in_the = read_usize(in_the + llist_node::NEXT);
                 n += 1;
             }
         }
@@ -246,15 +246,15 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_contract_offer_for_transfe
     let l = Llist(read_usize(this + contract_manager_fields::CONTRACT_OFFERS));
     let mut found = false;
     if !l.is_null() {
-        let mut no = l.head();
+        let mut in_the = l.head();
         let mut n = 0;
-        while no != 0 && n < 100000 {
-            let x = read_usize(no);
+        while in_the != 0 && n < 100000 {
+            let x = read_usize(in_the);
             if read_usize(x) == read_usize(person) && read_usize(x + contract_offer::TRANSFER_OFFER_SLOT) as i32 == slot {
                 found = true;
                 break;
             }
-            no = read_usize(no + llist_node::NEXT);
+            in_the = read_usize(in_the + llist_node::NEXT);
             n += 1;
         }
     }
@@ -421,8 +421,8 @@ pub(crate) unsafe extern "thiscall" fn compare_contract_manager_lower_match_mora
     }
     o(this, person, club, contract.addr());
     let after = read_u8_volatile(contract.addr() + contract::MORALE) as i8;
-    let esperada = plan.map_or(before, |m| lowered_morale(before, m));
-    SCOREBOARD.record(after == esperada, || format!("contract_manager_lower_match_morale(queda {:?}) moral {} -> original {} plano {}", plan, before, after, esperada));
+    let expected = plan.map_or(before, |m| lowered_morale(before, m));
+    SCOREBOARD.record(after == expected, || format!("contract_manager_lower_match_morale(queda {:?}) moral {} -> original {} plano {}", plan, before, after, expected));
 }
 
 /// Comparer for `remove_contract`.
@@ -513,11 +513,11 @@ pub(crate) unsafe extern "thiscall" fn compare_add_staff_contract(this: usize, p
         return r; // out of memory
     }
     let id = read_usize(person);
-    let ligada = read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(0x4f)));
+    let on = read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(0x4f)));
     let in_contract = read_usize(read_usize(this).wrapping_add(n.wrapping_mul(0x50)));
-    SCOREBOARD.record(ligada == n && in_contract == id && read_usize(this + contract_manager_fields::CONTRACT_COUNT) == n.wrapping_add(1), || {
+    SCOREBOARD.record(on == n && in_contract == id && read_usize(this + contract_manager_fields::CONTRACT_COUNT) == n.wrapping_add(1), || {
         format!("add_staff_contract(pessoa {}, valor {}) vaga {} (esperava {}), id no contrato {}, conta {} -> {}",
-            id, value, ligada, n, in_contract, n, read_usize(this + contract_manager_fields::CONTRACT_COUNT))
+            id, value, on, n, in_contract, n, read_usize(this + contract_manager_fields::CONTRACT_COUNT))
     });
     r
 }
@@ -534,12 +534,12 @@ pub(crate) unsafe extern "thiscall" fn compare_add_decision_date(this: usize, pe
     }
     let v = read_usize(this + contract_manager_fields::DECISION_DATES);
     let e = |j: usize| v.wrapping_add(n.wrapping_add(j).wrapping_mul(14));
-    let data_de = |j: usize| core::ptr::read_unaligned((e(j) + 4) as *const [u8; 8]);
+    let data_of = |j: usize| core::ptr::read_unaligned((e(j) + 4) as *const [u8; 8]);
     let mut certo = read_usize(this + contract_manager_fields::DECISION_COUNT) == n.wrapping_add(k + 1);
     for (j, l) in lembretes[..k].iter().enumerate() {
-        certo &= read_usize(e(j)) == id && data_de(j) == *l && *((e(j) + 0xd) as *const u8) == 2;
+        certo &= read_usize(e(j)) == id && data_of(j) == *l && *((e(j) + 0xd) as *const u8) == 2;
     }
-    certo &= read_usize(e(k)) == id && data_de(k) == d && *((e(k) + 0xc) as *const u8) == slice as u8 && *((e(k) + 0xd) as *const u8) == kind as u8;
+    certo &= read_usize(e(k)) == id && data_of(k) == d && *((e(k) + 0xc) as *const u8) == slice as u8 && *((e(k) + 0xd) as *const u8) == kind as u8;
     SCOREBOARD.record(certo, || {
         format!("add_decision_date(pessoa {}, fatia {}, tipo {}) conta {} -> {} (esperava {}), lembretes {:?}, entradas {:?}",
             id, slice as u8, kind as u8, n, read_usize(this + contract_manager_fields::DECISION_COUNT), n + k + 1, &lembretes[..k],

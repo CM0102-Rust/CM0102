@@ -82,7 +82,7 @@ pub(crate) struct AppealPlan {
 
 /// Plan of a discipline appeal for person id under a rule: finds the entry and ban, computes reduced matches/days and
 /// whether the ban is lifted.
-pub(crate) unsafe fn appeal_plan(this: usize, id: u32, regra: u32, reduz: u32, menos_jogos: u32, menos_dias: u32, novo: u32, dias_fixo: u32) -> AppealPlan {
+pub(crate) unsafe fn appeal_plan(this: usize, id: u32, regra: u32, reduces: u32, minus_games: u32, minus_days: u32, new: u32, days_fixed: u32) -> AppealPlan {
     let orgao = read_usize(read_usize(this).wrapping_add((regra as i8 as isize as usize).wrapping_mul(4)));
     let entrada = exe::rulingbody_find_or_add_discipline_entry(orgao, id, 0);
     let mut r = AppealPlan { body: orgao, entry: entrada, suspensao: 0, games: 0, days: 0, solta: false };
@@ -94,26 +94,26 @@ pub(crate) unsafe fn appeal_plan(this: usize, id: u32, regra: u32, reduz: u32, m
     r.games = *(s as *const u8);
     r.days = read_i16(s + ban_record::DAYS);
     if r.games != 0xff {
-        if novo as u8 != 0xff {
-            r.games = r.games.wrapping_sub(novo as u8);
+        if new as u8 != 0xff {
+            r.games = r.games.wrapping_sub(new as u8);
             if (r.games as i8) < 0 {
                 r.games = 0;
                 r.solta = true;
             }
-        } else if reduz as u8 != 0 {
-            r.games = r.games.wrapping_sub(menos_jogos as u8);
+        } else if reduces as u8 != 0 {
+            r.games = r.games.wrapping_sub(minus_games as u8);
             r.solta = r.games as i8 <= *((s + ban_record::MATCHES_SERVED) as *const i8);
         } else {
             r.solta = true;
         }
-    } else if dias_fixo as u16 != 0xffff {
-        r.days = r.days.wrapping_sub(menos_dias as i16);
+    } else if days_fixed as u16 != 0xffff {
+        r.days = r.days.wrapping_sub(minus_days as i16);
         if r.days <= 0 {
             r.days = 0;
             r.solta = true;
         }
-    } else if reduz as u8 != 0 {
-        r.days = r.days.wrapping_sub(menos_dias as i16);
+    } else if reduces as u8 != 0 {
+        r.days = r.days.wrapping_sub(minus_days as i16);
         r.solta = r.days <= 0;
     } else {
         r.solta = true;
@@ -447,9 +447,9 @@ pub(crate) unsafe fn return_bans_plan(this: usize, person: usize) -> ContractRet
         if marks[k] || slots[k * 5] == 0xff {
             continue;
         }
-        let orgao = ruling_body_of_rule(this, slots[k * 5]);
-        if !ruling_body_covers_club(orgao, Club(clube)) {
-            let e = ruling_body_entry(orgao, id);
+        let body = ruling_body_of_rule(this, slots[k * 5]);
+        if !ruling_body_covers_club(body, Club(clube)) {
+            let e = ruling_body_entry(body, id);
             if e != 0 {
                 p.soltas.push((k, e));
             }
@@ -1010,8 +1010,7 @@ pub(crate) unsafe extern "thiscall" fn process_match(this: usize, partida: usize
             return (exe::rulingbody_process_match(b, partida, result, 1, 1, 1) as u32);
         }
     }
-    let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
-    if friendly(read_usize(G_FRIENDLY), partida.competition().addr()) == 0 && read_usize(partida.addr()) != read_usize(KEY_CLUB_COMP_RESERVE) {
+    if exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), partida.competition().addr()) == 0 && read_usize(partida.addr()) != read_usize(KEY_CLUB_COMP_RESERVE) {
         return 0;
     }
     for (lado, a, b) in [(0x1cusize, 1u32, 0u32), (0x20, 0, 1)] {

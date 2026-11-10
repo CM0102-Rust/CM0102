@@ -5,8 +5,8 @@ use super::*;
 ///
 /// [pt] { 0x64ef30 } (thiscall, ret 0x10, ita_ser_c1b.cpp, 2.279 bytes, método +0x3c): `ItaSerC1b::create_schedule`: a
 /// chave B, o mesmo código. Fonte 0x9ea558, linhas 0xac, 0x156, 0x190.
-pub(crate) unsafe extern "thiscall" fn ita_ser_c1b_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    create_c1_schedule(League(this), fase, rodadas, extra, liga, &C1BracketVariant { file: 0x9ea558, rows: [0xac, 0x156, 0x190] })
+pub(crate) unsafe extern "thiscall" fn ita_ser_c1b_create_schedule(this: usize, fase: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    create_c1_schedule(League(this), fase, rounds, extra, league, &C1BracketVariant { file: 0x9ea558, rows: [0xac, 0x156, 0x190] })
 }
 
 /// the same rule in C1/B

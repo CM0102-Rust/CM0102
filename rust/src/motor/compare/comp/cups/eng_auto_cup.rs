@@ -17,12 +17,12 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn compare_select_section_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SELECT_SECTION_CLUBS);
     let base = read_usize(G_CLUB_TABLE);
-    let tem_rebaixado = (0..read_usize(G_CLUB_COUNT) as i32).any(|i| {
+    let has_relegated = (0..read_usize(G_CLUB_COUNT) as i32).any(|i| {
         let c = Club(base + i as usize * club::SIZE);
         let before = c.last_division().addr();
         eng_auto_cup_is_in_comp(c.addr(), KEY_CLUB_COMP_ENGLISH_CONFERENCE) && before != 0 && read_usize(before) == read_usize(KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION)
     });
-    if !tem_rebaixado {
+    if !has_relegated {
         return o(this);
     }
     let before = read_usize(this + eng_auto_cup::SELECTED_CLUBS);

@@ -87,11 +87,11 @@ pub(crate) unsafe extern "C" fn compare_post_match_events(partida: usize) {
     if list != 0 {
         reg.push((list, 0xe));
         let person = |id: i32| (*(G_STAFF_TABLE as *const usize) as isize + id as isize * 0x6e) as usize;
-        let mut no = core::ptr::read_unaligned((list + 2) as *const usize);
+        let mut in_the = core::ptr::read_unaligned((list + 2) as *const usize);
         let mut k = 0;
-        while no != 0 && k < core::ptr::read_unaligned(list as *const i16) as i32 {
-            let ev = core::ptr::read_unaligned(no as *const usize);
-            no = core::ptr::read_unaligned((no + 6) as *const usize);
+        while in_the != 0 && k < core::ptr::read_unaligned(list as *const i16) as i32 {
+            let ev = core::ptr::read_unaligned(in_the as *const usize);
+            in_the = core::ptr::read_unaligned((in_the + 6) as *const usize);
             k += 1;
             if ev == 0 {
                 break;

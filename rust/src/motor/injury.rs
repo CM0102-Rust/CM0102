@@ -171,17 +171,17 @@ pub(crate) unsafe fn injury_list_regions() -> Vec<(usize, usize)> {
     let list = if owner != 0 { *((owner + injury_fields::MATCH_HIT_LIST) as *const usize) } else { 0 };
     if list != 0 {
         reg.extend([(owner + injury_fields::MATCH_HIT_LIST, 4), (list, 0xe)]);
-        let mut no = core::ptr::read_unaligned((list + 2) as *const usize);
+        let mut in_the = core::ptr::read_unaligned((list + 2) as *const usize);
         for _ in 0..(*(list as *const i16)).max(0) {
-            if no == 0 {
+            if in_the == 0 {
                 break;
             }
-            reg.push((no, 0xa));
-            let e = *(no as *const usize);
+            reg.push((in_the, 0xa));
+            let e = *(in_the as *const usize);
             if e != 0 {
                 reg.push((e, 6));
             }
-            no = core::ptr::read_unaligned((no + 6) as *const usize);
+            in_the = core::ptr::read_unaligned((in_the + 6) as *const usize);
         }
     }
     reg
@@ -240,23 +240,23 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
     if !sheet.is_null() && *(sheet.addr() as *const i32) >= *(G_STAFF_COUNT as *const i32) {
         return 0;
     }
-    let atuacao = p.match_rating() as i32;
+    let performance = p.match_rating() as i32;
     let b = |o: usize| read_i8(p.addr() + o);
     let minute = m.clock() as i32 / 11;
     let in_field = minute - b(0x1f) as i32;
     let limit = |t: i32| (t * 33 + 0xfa0).min(0x1964);
     // the common conditions: no goal, no card, +0x17 up to 8, +0x03 up to 2 and the performance up to the limit
-    let common = || b(0xc) == 0 && b(0x10) == 0 && b(0x17) <= 8 && (b(3) as u8) <= 2 && atuacao <= limit(in_field);
+    let common = || b(0xc) == 0 && b(0x10) == 0 && b(0x17) <= 8 && (b(3) as u8) <= 2 && performance <= limit(in_field);
     let search = |cod: u32, data: &[u8; 8]| {
         let f: unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, *const [u8; 8]) -> u32 = core::mem::transmute(FN_MEDIA_HAS_LOGGED_STORY);
         f(*(G_MEDIA as *const usize), sheet.addr(), p.club(), -1, cod, data) != 0
     };
-    let algum = |de: u32, ate: u32, data: &[u8; 8]| (de..=ate).any(|k| search(k as u16 as u32, data));
+    let algum = |of: u32, ate: u32, data: &[u8; 8]| (of..=ate).any(|k| search(k as u16 as u32, data));
     let r = match c {
         0x219e => common() && (algum(0, 0x1d, &d7) || algum(0x1e, 0x27, &d7)),
-        0x219f => atuacao >= random(0x7d0) + 0x1b58 && algum(0, 0x1d, &d7),
+        0x219f => performance >= random(0x7d0) + 0x1b58 && algum(0, 0x1d, &d7),
         0x21a0 => {
-            if exe::date_days_since(today, *((sheet.addr() + player_sheet::TACKLING) as *const u32), *((sheet.addr() + player_sheet::VERSATILITY) as *const u32)) < 0x5a || atuacao <= random(0x7d0) + 0x1b58 {
+            if exe::date_days_since(today, *((sheet.addr() + player_sheet::TACKLING) as *const u32), *((sheet.addr() + player_sheet::VERSATILITY) as *const u32)) < 0x5a || performance <= random(0x7d0) + 0x1b58 {
                 false
             } else {
                 let f: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_MEDIA_HAS_RESPONSE_TWO_FOR_PLAYER);
@@ -281,23 +281,23 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
                 minute > r && in_field / goals > 0x1e && search(0x52, &d7)
             }
         }
-        0x21b0 => atuacao > random(1000) + 0x1f40 && search(0x34, &d7),
+        0x21b0 => performance > random(1000) + 0x1f40 && search(0x34, &d7),
         0x21b1 => common() && search(0x34, &d7),
         0x21b2 => common() && search(0x33, &d30),
-        0x21b3 => atuacao > random(1000) + 0x1f40 && search(0x33, &d30),
-        0x21b4 => atuacao >= random(0x7d0) + 0x1b58 && algum(0x28, 0x3b, &d7),
-        0x21b5 => atuacao > random(1000) + 0x1f40 && b(0x30) != 0,
+        0x21b3 => performance > random(1000) + 0x1f40 && search(0x33, &d30),
+        0x21b4 => performance >= random(0x7d0) + 0x1b58 && algum(0x28, 0x3b, &d7),
+        0x21b5 => performance > random(1000) + 0x1f40 && b(0x30) != 0,
         0x21b6 => {
-            let yes = atuacao > random(0x7d0) + 0x1c52 && b(0xc) == 1 && in_field > 0x41 && b(0x30) != 0;
+            let yes = performance > random(0x7d0) + 0x1c52 && b(0xc) == 1 && in_field > 0x41 && b(0x30) != 0;
             if yes {
                 crate::comparison::branch("highlight mark 21b5");
                 *((m.addr() + 0xbf2 + side as usize * 4000) as *mut u32) = 1;
             }
             yes
         }
-        0x21b7 => b(0x30) != 0 && b(0xc) == 0 && b(0x10) == 0 && b(0x17) <= 8 && (b(3) as u8) <= 2 && in_field >= 0x37 && atuacao <= limit(in_field),
+        0x21b7 => b(0x30) != 0 && b(0xc) == 0 && b(0x10) == 0 && b(0x17) <= 8 && (b(3) as u8) <= 2 && in_field >= 0x37 && performance <= limit(in_field),
         0x21b8 => {
-            atuacao < 0x1964
+            performance < 0x1964
                 && (b(0x14) as u8 as i32) > random(3)
                 && player_table(p.addr()) & 4 != 0
                 && read_i8(p.player().addr() + 0x11) as i32 > random(4) + 0xf
@@ -1810,13 +1810,11 @@ pub(crate) unsafe extern "thiscall" fn end_player_injury(this: usize, person: us
     }
     let e = (read_i32(this + injury_fields::INJURY_ENTRIES) as u32).wrapping_add((i as u32).wrapping_mul(0x30)) as usize;
     if *(e as *const u8) != 0x51 {
-        let history: unsafe extern "thiscall" fn(usize, usize, usize, *const u8) -> usize = core::mem::transmute(FN_FILE_LLIST_ADD_NODE);
-        history(read_i32(this + injury_fields::INJURY_HISTORY) as usize, r + physical_record::HISTORY_FIRST, r + physical_record::HISTORY_LAST, e as *const u8);
+        exe::file_llist_add_node(read_i32(this + injury_fields::INJURY_HISTORY) as usize, r + physical_record::HISTORY_FIRST, r + physical_record::HISTORY_LAST, e as *const u8);
     }
     let club = (person.club_job().addr() as i32) as usize;
     if news != 0 && club != 0 {
-        let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-        if human(club, 0, 1, 0, 0) != 0 {
+        if exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0 {
             // simplification: the original pushes the whole ecx with the type in the low byte; 0x630ee0 reads the byte
             exe::injury_post_recovery_news(this, person, 1, *(e as *const u8) as u32, 0, 0);
         }
@@ -1933,7 +1931,7 @@ pub(crate) unsafe fn find_type3_decision(this: usize, id: i32, limit: &[u8; 8], 
     let base = read_usize(this + contract_manager_fields::DECISION_DATES);
     let (la, ld) = (u16::from_le_bytes([limit[2], limit[3]]), i16::from_le_bytes([limit[0], limit[1]]));
     let mut i = read_usize(this + contract_manager_fields::DECISION_NEXT_INDEX) as i32;
-    let mut anulada = -1i32;
+    let mut cancelled = -1i32;
     while i < count {
         let r = base.wrapping_add((i as usize).wrapping_mul(14));
         let ra = read_u16(r + 6);
@@ -1944,7 +1942,7 @@ pub(crate) unsafe fn find_type3_decision(this: usize, id: i32, limit: &[u8; 8], 
             if alterar {
                 core::ptr::write_unaligned(r as *mut u32, u32::MAX);
             }
-            anulada = i;
+            cancelled = i;
             break;
         }
         i += 1;
@@ -1953,7 +1951,7 @@ pub(crate) unsafe fn find_type3_decision(this: usize, id: i32, limit: &[u8; 8], 
     i = i.max(count.wrapping_sub(read_usize(this + contract_manager_fields::DECISIONS_ADDED) as i32));
     while i < count {
         let r = read_usize(this + contract_manager_fields::DECISION_DATES).wrapping_add((i as usize).wrapping_mul(14));
-        if *((r + decision_date::KIND) as *const u8) == 3 && read_usize(r) as i32 == id && i != anulada {
+        if *((r + decision_date::KIND) as *const u8) == 3 && read_usize(r) as i32 == id && i != cancelled {
             return r;
         }
         i += 1;
@@ -2164,7 +2162,7 @@ pub(crate) unsafe extern "stdcall" fn injury_player_in_close_season(person: usiz
     if person.is_null() {
         return 1;
     }
-    let mut convocado = false;
+    let mut called_up = false;
     let national_team = person.national_job();
     if !national_team.is_null() {
         let k = exe::national_teams_get_squad_slot(national_team, (person.playing_squad() & 8) as u32);
@@ -2172,10 +2170,10 @@ pub(crate) unsafe extern "stdcall" fn injury_player_in_close_season(person: usiz
         let q = exe::nationalteams_get_squad_slot_record(read_usize(G_NATIONAL_TEAMS), national_team.nation().addr(), k as u32);
         let lo = read_usize(q) as u32;
         let (ano, ano_h) = ((lo >> 16) as u16, read_i16(G_CURRENT_DATE_YEAR) as u16);
-        convocado = ano > ano_h || (ano == ano_h && (lo as u16 as i16) > read_i16(G_CURRENT_DATE));
+        called_up = ano > ano_h || (ano == ano_h && (lo as u16 as i16) > read_i16(G_CURRENT_DATE));
     }
     let club = person.club_job();
-    if club.is_null() || convocado || (club.continental_comp_id() as i32) != -1 {
+    if club.is_null() || called_up || (club.continental_comp_id() as i32) != -1 {
         return 0;
     }
     if exe::key_nation_club_in_season(club, (start.as_mut_ptr()) as *mut u32 as usize, (end.as_mut_ptr()) as *mut u32 as usize) != 0 {
@@ -2440,8 +2438,7 @@ pub(crate) unsafe fn plan_recurring_injury(this: usize, record: usize, injury: *
     }
     let club = Club(read_usize(pessoa + staff::CLUB_JOB));
     if read_usize(pessoa + staff::PLAYER) != 0 && !club.is_null() && club.reputation() > 0x109a {
-        let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-        if human(club.addr(), 0, 1, 0, 0) == 0 && friendly_random(3) == 0 && pessoa != 0 {
+        if exe::human_manager_is_human_club(club.addr(), 0, 1, 0, 0) == 0 && friendly_random(3) == 0 && pessoa != 0 {
             return RecurringInjuryOutcome::Tratar(pessoa);
         }
     }
@@ -2753,13 +2750,13 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
     } else {
         l38 = t;
         let national_team = person.national_job();
-        let mut ocupado = false;
+        let mut occupied = false;
         if !national_team.is_null() {
             let k = exe::national_teams_get_squad_slot(national_team, (person.playing_squad() & 8) as u32);
             // simplification: the original pushes the argument with al on top (the rest is the person pointer); only the byte counts
             let d = exe::nationalteams_get_squad_slot_record(read_usize(G_NATIONAL_TEAMS), national_team.nation().addr(), (person.addr() as u32 & 0xffff_ff00) | k as u32);
             let (ano, hoje) = (read_u16(d + 2), read_u16(G_CURRENT_DATE_YEAR));
-            ocupado = if ano > hoje {
+            occupied = if ano > hoje {
                 true
             } else if ano < hoje {
                 false
@@ -2768,7 +2765,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
             };
         }
         let club = person.club_job();
-        if !club.is_null() && !ocupado {
+        if !club.is_null() && !occupied {
             if club != Club(read_usize(G_FITNESS_UPDATE_CACHED_CLUB)) || read_u16(G_FITNESS_UPDATE_CACHE_DATE_YEAR) != read_u16(G_CURRENT_DATE_YEAR) || read_i16(G_FITNESS_UPDATE_CACHE_DATE) != read_i16(G_CURRENT_DATE) {
                 let r = exe::key_nation_club_in_season(club, G_FITNESS_UPDATE_SEASON_START_DATE, G_FITNESS_UPDATE_SEASON_END_DATE);
                 *(G_FITNESS_UPDATE_CACHED_SEASON_FLAG as *mut u32) = (r == 0) as u32;
@@ -3013,11 +3010,10 @@ pub(crate) unsafe extern "thiscall" fn choose_injury_type(injuries: usize, categ
 /// das voltas aos treinos (entradas de 0x16 bytes) em Injury::post_due_recovery_news (0x62e010, todo dia): a data em
 /// +8 da chave antes da do item (0x456770), −1; depois (0x456740), 1; igual, 0.
 pub(crate) unsafe extern "C" fn injury_compare_entry_dates(key: usize, item: usize) -> i32 {
-    let after: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_DATE_OPERATOR_3E);
     if exe::date_operator_3c(key + 8, read_usize(item + 8) as u32, read_usize(item + 0xc) as u32) != 0 {
         return -1;
     }
-    if after(key + 8, read_usize(item + 8) as u32, read_usize(item + 0xc) as u32) != 0 {
+    if exe::date_operator_3e(key + 8, read_usize(item + 8) as u32, read_usize(item + 0xc) as u32) != 0 {
         return 1;
     }
     crate::comparison::branch("cps_9 same date");

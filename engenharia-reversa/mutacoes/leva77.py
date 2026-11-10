@@ -1,7 +1,7 @@
 # Mutacoes da leva77 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva77.py
 MUTACOES = [
-    ('l_6', "core::ptr::read_unaligned((no + 6) as *const usize));", "core::ptr::read_unaligned((no + 4) as *const usize));"),
-    ('l_valor', "    core::ptr::read_unaligned(no as *const u32)\n}", "    core::ptr::read_unaligned((no + 2) as *const u32)\n}"),
+    ('l_6', "core::ptr::read_unaligned((in_the + 6) as *const usize));", "core::ptr::read_unaligned((in_the + 4) as *const usize));"),
+    ('l_valor', "    core::ptr::read_unaligned(in_the as *const u32)\n}", "    core::ptr::read_unaligned((in_the + 2) as *const u32)\n}"),
     ('w_limite', "    if id >= *(G_STAFF_COUNT as *const i32) {\n        return 0;\n    }\n    core::ptr::read_unaligned(", "    if id > *(G_STAFF_COUNT as *const i32) {\n        return 0;\n    }\n    core::ptr::read_unaligned("),
     ('w_31', "(id as usize).wrapping_mul(31)).wrapping_add(0xc) as *const i16) as i32", "(id as usize).wrapping_mul(32)).wrapping_add(0xc) as *const i16) as i32"),
     ('w_sinal', "(0xc) as *const i16) as i32", "(0xc) as *const u16) as i32"),

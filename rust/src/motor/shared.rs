@@ -90,10 +90,10 @@ pub(crate) unsafe fn play_with(j: MatchPlayer, strength: i16, height: f32, style
         call(FN_MATCH_EVENTS_ADD_EVENT, m.commentator(), [code | (a7 as u8 as u32) << 16, m.addr() as u32, a3, a4, a5]);
     };
     let narrate = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, a3: u32, a4: u32, a5: u32| narrar7(call, code, a3, a4, a5, 0);
-    let area_de = |p: usize, lado1: bool| {
+    let area_of = |p: usize, lado1: bool| {
         (2..=6).contains(&read_i8(p + 0x102)) && if lado1 { (10..=11).contains(&read_i8(p + 0x103)) } else { (0..=1).contains(&read_i8(p + 0x103)) }
     };
-    let in_the_box = || area_de(j.addr(), j.side() == 1);
+    let in_the_box = || area_of(j.addr(), j.side() == 1);
     let espirra = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, spread: i32, shooter: usize| {
         call(FN_CM3_MATCH_ENGINE_MOVE_BALL_TO_CELL, m.addr(), [((j.cell_x() as u8) as u32), ((j.cell_y() as u8) as u32), (spread as u8 as u32) | ((j.side() as u8) as u32) << 8, 0, shooter as u32]);
     };
@@ -251,7 +251,7 @@ pub(crate) unsafe fn play_with(j: MatchPlayer, strength: i16, height: f32, style
                     if sound == 0x1f79 {
                         let far = (read_i8(c + 0x27) == 1 && read_i8(c + 0x103) < 4) || (read_i8(c + 0x27) == 0 && read_i8(c + 0x103) > 7);
                         if t == 7 {
-                            if far && !area_de(c, j.side() == 1) {
+                            if far && !area_of(c, j.side() == 1) {
                                 narrate(call, event::FREE_KICK_CHANCE_INDIRECT, (read_u8(c + 0x2e) as u32), zero(j.addr()), u32::MAX);
                             }
                         } else if far {

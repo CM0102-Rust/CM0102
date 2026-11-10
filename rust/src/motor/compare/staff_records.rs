@@ -128,13 +128,13 @@ pub(crate) unsafe extern "thiscall" fn compare_add_cup_third_place_record(this: 
 /// [pt] Comparador em ensaio: o registro do técnico criado antes (0x86f5b0, como a original faria nos dois caminhos que o
 /// pedem), a cópia sem os históricos e a original a partir do mesmo estado (o registro, 0xd2 bytes, e a data estática da
 /// 0x54cdb0). Nulos: só a original.
-pub(crate) unsafe extern "thiscall" fn compare_record_manager_job_change(this: usize, manager: usize, club: usize, contratado: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_record_manager_job_change(this: usize, manager: usize, club: usize, signed: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_RECORD_MANAGER_JOB_CHANGE);
     if club == 0 || manager == 0 {
-        return o(this, manager, club, contratado);
+        return o(this, manager, club, signed);
     }
     let mut reg = vec![(G_DAYS_SINCE_SCRATCH_DATE, 8usize)];
-    if is_national_team(club) == 0 || contratado as u8 == 1 {
+    if is_national_team(club) == 0 || signed as u8 == 1 {
         let r = exe::staff_records_get_manager_record(this, manager, 1);
         if r != 0 {
             reg.push((r, 0xd2));
@@ -142,13 +142,13 @@ pub(crate) unsafe extern "thiscall" fn compare_record_manager_job_change(this: u
     }
     let before = crate::comparison::MemorySnapshot::read(&reg);
     CUP_PLACED_CLUB_DRY_RUN = true;
-    record_manager_job_change(this, manager, club, contratado);
+    record_manager_job_change(this, manager, club, signed);
     CUP_PLACED_CLUB_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&reg);
     before.write_back();
-    o(this, manager, club, contratado);
+    o(this, manager, club, signed);
     let mo = crate::comparison::MemorySnapshot::read(&reg);
-    SCOREBOARD.record(mo == mr, || format!("record_manager_job_change(tecnico {:#x}, clube {:#x}, {}) original={:x?} rust={:x?}", manager, club, contratado as u8, mo, mr));
+    SCOREBOARD.record(mo == mr, || format!("record_manager_job_change(tecnico {:#x}, clube {:#x}, {}) original={:x?} rust={:x?}", manager, club, signed as u8, mo, mr));
 }
 
 /// Comparer for `add_team_of_year_record`.
@@ -262,24 +262,24 @@ pub(crate) unsafe extern "thiscall" fn compare_add_failed_to_qualify_record(this
 /// do mês zerados e o mês e o ano guardados; no primeiro dia do ano, os pontos do ano zerados.
 pub(crate) unsafe extern "thiscall" fn compare_staff_records_daily_update(this: usize, data: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_STAFF_RECORDS_DAILY_UPDATE);
-    let virada = date_month(data) as i32 != read_i16(this + staff_records_fields::CURRENT_MONTH) as u16 as i32 || read_i16(data + 2) != read_i16(this + staff_records_fields::CURRENT_YEAR);
+    let turned = date_month(data) as i32 != read_i16(this + staff_records_fields::CURRENT_MONTH) as u16 as i32 || read_i16(data + 2) != read_i16(this + staff_records_fields::CURRENT_YEAR);
     let year = read_i16(data) == 0;
     let (m, a) = (date_month(data), read_i16(data + 2));
     o(this, data);
-    if !virada && !year {
+    if !turned && !year {
         return;
     }
-    let mut ok = !virada || (read_i16(this + staff_records_fields::CURRENT_MONTH) == m && read_i16(this + staff_records_fields::CURRENT_YEAR) == a);
+    let mut ok = !turned || (read_i16(this + staff_records_fields::CURRENT_MONTH) == m && read_i16(this + staff_records_fields::CURRENT_YEAR) == a);
     let mut first = -1i32;
     for k in 0..manager_record_count().max(0) {
         let e = ManagerRecord(manager_record_at(this, k));
-        let certo = (!virada || ((e.month_points() as usize) == 0 && e.month_league_points() == 0)) && (!year || (e.year_points() as usize) == 0);
+        let certo = (!turned || ((e.month_points() as usize) == 0 && e.month_league_points() == 0)) && (!year || (e.year_points() as usize) == 0);
         if !certo && first < 0 {
             first = k;
         }
         ok &= certo;
     }
-    SCOREBOARD.record(ok, || format!("staff_records_daily_update(mês {}, ano {}) virada {} ano novo {}: registro {} não zerado", m, a, virada, year, first));
+    SCOREBOARD.record(ok, || format!("staff_records_daily_update(mês {}, ano {}) virada {} ano novo {}: registro {} não zerado", m, a, turned, year, first));
 }
 
 /// Comparer for `staff_records_end_season_for_nation`.
@@ -380,8 +380,8 @@ pub(crate) unsafe extern "thiscall" fn compare_add_free_release_records(this: us
 }
 
 /// Comparer for `add_loan_records`.
-pub(crate) unsafe extern "thiscall" fn compare_add_loan_records(this: usize, person: usize, de: usize, club: usize) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ADD_LOAN_RECORDS)(this, person, de, club)
+pub(crate) unsafe extern "thiscall" fn compare_add_loan_records(this: usize, person: usize, of: usize, club: usize) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ADD_LOAN_RECORDS)(this, person, of, club)
 }
 
 /// Comparer for `rewind_staff_history`.

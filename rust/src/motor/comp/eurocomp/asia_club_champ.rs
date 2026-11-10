@@ -281,7 +281,7 @@ pub(crate) struct ScheduleStage {
 /// [pt] Executa a fase `f` (ou devolve 0 sem ela): as saídas, a tabela (0x944e46; sem memória, a caixa `linha` do fonte
 /// `arquivo` e 0) e as operações na ordem; o ano da copa (+0x40) vai em 16 bits limpos para a 0x68a160 (a original
 /// empurra o registrador com lixo nos 16 bits altos; a 0x68a160 só usa a palavra) e com sinal para as de copa.
-pub(crate) unsafe fn create_round_table(this: Cup, f: Option<ScheduleStage>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, arquivo: usize) -> usize {
+pub(crate) unsafe fn create_round_table(this: Cup, f: Option<ScheduleStage>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, file: usize) -> usize {
     let f = match f {
         Some(f) => f,
         None => return 0,
@@ -295,7 +295,7 @@ pub(crate) unsafe fn create_round_table(this: Cup, f: Option<ScheduleStage>, rod
     }
     let t = exe::crt_malloc(f.size);
     if t == 0 {
-        show_error_at(arquivo, f.row);
+        show_error_at(file, f.row);
         return 0;
     }
     crate::comparison::branch(f.name);

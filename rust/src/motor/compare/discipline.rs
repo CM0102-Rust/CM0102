@@ -131,7 +131,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_bans_invalid_for_club(this:
     let mut before = [0u8; 29];
     core::ptr::copy_nonoverlapping(r as *const u8, before.as_mut_ptr(), 29);
     let mut plan: [Option<usize>; 4] = [None; 4];
-    let mut duvida = [false; 4];
+    let mut doubt = [false; 4];
     for k in 0..4usize {
         let rule = before[k * 5];
         if rule == 0xff {
@@ -141,7 +141,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_bans_invalid_for_club(this:
         if !ruling_body_covers_club(body, Club(club)) {
             let e = ruling_body_entry(body, id);
             if e != 0 {
-                duvida[k] = plan[..k].iter().any(|x| *x == Some(e));
+                doubt[k] = plan[..k].iter().any(|x| *x == Some(e));
                 plan[k] = Some(e);
             }
         }
@@ -151,7 +151,7 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_bans_invalid_for_club(this:
     core::ptr::copy_nonoverlapping(r as *const u8, after.as_mut_ptr(), 29);
     let mut ok = after[20..] == before[20..];
     for k in 0..4usize {
-        if duvida[k] {
+        if doubt[k] {
             continue;
         }
         let v = &after[k * 5..k * 5 + 5];

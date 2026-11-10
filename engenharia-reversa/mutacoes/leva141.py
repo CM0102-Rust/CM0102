@@ -13,6 +13,6 @@ MUTACOES = [
     ('r_grave', '} else if *chance as i8 > *g as i8 {\n        crate::comparison::branch("injury more serious");', '} else if *chance as i8 >= *g as i8 + 3 {\n        crate::comparison::branch("injury more serious");', 'injury more serious'),
     ('r_nova', 'r[5] = *chance;', 'r[5] = (*chance).wrapping_add(1);', 'injury recorded'),
     ('l_para3', 'if local >= read_f32(rdata::F32_500) && (p.injury_forces_off() as u8) != 0 {', 'if local > read_f32(rdata::F32_500) * 1.5 && (p.injury_forces_off() as u8) != 0 {', 'injury to 3 and leaves'),
-    ('d_21b5', '0x21b5 => atuacao > random(1000) + 0x1f40 && b(0x30) != 0,', '0x21b5 => atuacao > random(1000) + 0x1f40,'),
+    ('d_21b5', '0x21b5 => performance > random(1000) + 0x1f40 && b(0x30) != 0,', '0x21b5 => performance > random(1000) + 0x1f40,'),
     ('d_sim', 'crate::comparison::branch(if r { "destaque sim" } else { "destaque nao" });', 'let r = r || c == 0x21b1;\n    crate::comparison::branch(if r { "destaque sim" } else { "destaque nao" });'),
 ]

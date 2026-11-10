@@ -84,7 +84,7 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, club: usi
     if k == -1 {
         return 0;
     }
-    let instrucao = |i: usize| (*((this + tactics_fields::ROWS) as *const usize)).wrapping_add(k as usize * 0x91 + 2 + 4 * i) as *mut u32;
+    let instruction = |i: usize| (*((this + tactics_fields::ROWS) as *const usize)).wrapping_add(k as usize * 0x91 + 2 + 4 * i) as *mut u32;
     let ocupados = (this + tactics_fields::UNDO_COUNT) as *mut u8;
     // the space of the current human, if any
     let espaco = || {
@@ -106,13 +106,13 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, club: usi
                 *((s + 0x34) as *mut u32) = person;
                 *((s + 0x38) as *mut u32) = 1;
                 for i in 0..20 {
-                    *((s + 0x3c + 4 * i) as *mut u32) = *instrucao(i);
+                    *((s + 0x3c + 4 * i) as *mut u32) = *instruction(i);
                 }
             }
         }
         crate::comparison::branch("instructions deleted");
         for i in 0..20 {
-            *instrucao(i) = u32::MAX;
+            *instruction(i) = u32::MAX;
         }
         return 1;
     }
@@ -121,7 +121,7 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, club: usi
             if *((s + 0x38) as *mut u32) != 0 && *((s + 0x30) as *mut u32) == club as u32 && *((s + 0x34) as *mut u32) == person {
                 crate::comparison::branch("instructions returned");
                 for i in 0..20 {
-                    *instrucao(i) = *((s + 0x3c + 4 * i) as *mut u32);
+                    *instruction(i) = *((s + 0x3c + 4 * i) as *mut u32);
                 }
             }
             if *((s + 0x38) as *mut u32) != 0 {
@@ -860,10 +860,9 @@ pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, game: u
         show_error_at(0xa8b908, 0x1f9);
         return 0;
     }
-    let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     for k in 0..2 {
         let c = read_usize(game.addr() + fixture::HOME_CLUB + 4 * k);
-        if c != 0 && human(c, 0, 1, 0, 0) != 0 {
+        if c != 0 && exe::human_manager_is_human_club(c, 0, 1, 0, 0) != 0 {
             return 0;
         }
     }
@@ -949,8 +948,7 @@ pub(crate) unsafe extern "thiscall" fn set_captain(this: usize, club: usize, per
         show_error_at(0xa8b908, 0x581);
         return 0;
     }
-    let row: unsafe extern "thiscall" fn(usize, usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
-    let k = row(this, club, team);
+    let k = exe::tactics_get_club_tactics_index(this, club, team);
     if k == -1 {
         return 0;
     }

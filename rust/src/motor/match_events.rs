@@ -242,7 +242,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
         c
     };
     // a linha inteira (virgulas inclusive) num texto alocado; marcas `<X` desconhecidas avisam
-    let text = |linha_alocacao: u32, row_mark: u32| -> usize {
+    let text = |row_allocation: u32, row_mark: u32| -> usize {
         let mut c = pula_brancos_e_le();
         let mut n = 0usize;
         while c != 0xa && c != -1 {
@@ -253,7 +253,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
         *((BUF + n) as *mut u8) = 0;
         let t = exe::crt_malloc(n as u32 + 1);
         if t == 0 {
-            fatal_error_at(FONTE, linha_alocacao);
+            fatal_error_at(FONTE, row_allocation);
         }
         core::ptr::copy_nonoverlapping(BUF as *const u8, t as *mut u8, n + 1);
         let mut i = 0usize;
@@ -764,8 +764,8 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
     let mut cor1 = [0u8; 4];
     let mut cor2 = [0u8; 4];
 
-    let valido = (0..0x2a5).contains(&k) && *((e + 1) as *const u8) == 0;
-    if valido {
+    let valid = (0..0x2a5).contains(&k) && *((e + 1) as *const u8) == 0;
+    if valid {
         crate::comparison::branch("commentary on the panel");
         if sons() == 0 {
             return 0;
@@ -856,7 +856,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
         let mut pre = [0u8; 0x100];
         let mut suf = [0u8; 0x100];
         let mut name = [0u8; 0xd0];
-        let mut inteiro = [0u8; 0x800];
+        let mut whole = [0u8; 0x800];
         let mut arb = [0u8; 0xd0];
         let mut text_stage = [0u8; 0x800];
         let colours_default = |c1: &mut [u8; 4], c2: &mut [u8; 4], second: usize| {
@@ -898,11 +898,11 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                                 // the width of the whole text (up to the `|`) decides the short name
                                 let mut n = 0usize;
                                 while *((s + n) as *const u8) != 0 && *((s + n) as *const u8) != b'|' {
-                                    inteiro[n] = *((s + n) as *const u8);
+                                    whole[n] = *((s + n) as *const u8);
                                     n += 1;
                                 }
-                                inteiro[n] = 0;
-                                let short = (exe::font_text_width(font, inteiro.as_ptr()) as i16) < 0x12c;
+                                whole[n] = 0;
+                                let short = (exe::font_text_width(font, whole.as_ptr()) as i16) < 0x12c;
                                 exe::match_events_format_player_name(ctx, lado_j as i8 as i32, idx as i8 as i32, name.as_mut_ptr(), 0xc8, short as u32, mode, 1);
                                 sufixo(pos + 3, &mut suf);
                                 let r = exe::langlib_apply_grammar_modifier(name.as_ptr() as usize, 0xad9c64 as *const u8, suf.as_ptr(), 0x64, 0x64);
@@ -1312,12 +1312,12 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
     let same = |o: usize| read_i8(q + o) == read_i8(e + o);
     let copiar = || core::ptr::copy((q as *const u8).add(5), (e as *mut u8).add(5), 8);
     // the previous one becomes the main one and the new one becomes the other (+7, +8)
-    let swap = |inteiro: bool| {
+    let swap = |whole: bool| {
         *((e + 8) as *mut i8) = read_i8(e + 6);
         *((e + 7) as *mut i8) = read_i8(e + 5);
         *((e + 5) as *mut i8) = read_i8(q + 5);
         *((e + 6) as *mut i8) = read_i8(q + 6);
-        if inteiro {
+        if whole {
             core::ptr::write_unaligned((e + 9) as *mut u32, core::ptr::read_unaligned((q + 9) as *const u32));
         }
     };

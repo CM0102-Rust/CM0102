@@ -47,7 +47,7 @@ pub(crate) struct BraRegBahiaStateChampionship {
 /// 0), ret 4); as estatísticas (operator new 0x944cf1 de 0x5ce e Comp_Stats::Comp_Stats 0x49ee70, thiscall(novo,
 /// this), ret 4; o quadro SEH da original cobre só esse new) em +8 (sem elas: a caixa); por fim as posições previstas.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: League, ano: u32, registro: usize, e: &BraRegBahiaStateChampionship, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
+pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: League, ano: u32, registro: usize, e: &BraRegBahiaStateChampionship, disciplina: u8, predicted_yes: bool, ramo: &'static str) -> usize {
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.rules);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.table);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.predicted);
@@ -89,7 +89,7 @@ pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: League, ano: u32
         show_error_at(e.file, e.rows[4]);
         return this.addr();
     }
-    if previstas_sim {
+    if predicted_yes {
         previstas(this.addr());
     }
     this.addr()

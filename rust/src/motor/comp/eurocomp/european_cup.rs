@@ -209,8 +209,8 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
             let mut g = start;
             while g < fim {
                 let nation = club_nation(Club(read_usize(slot(g, p))));
-                let repetida = (0..4).any(|q| q != p && nation == club_nation(Club(read_usize(slot(g, q)))));
-                if repetida {
+                let repeated = (0..4).any(|q| q != p && nation == club_nation(Club(read_usize(slot(g, q)))));
+                if repeated {
                     for g2 in start..fim {
                         if g2 == g {
                             continue;
@@ -474,10 +474,10 @@ pub(crate) unsafe extern "thiscall" fn european_cup_rank_teams(this: usize) {
 ///
 /// [pt] Copia a entrada de 7 bytes `de` (+0 o clube, +4 os da mesma nação, +5 o grupo da primeira fase, +6 0 vencedor / 1
 /// segundo) para `para`, como a original: o dword, o word +4 e o byte +6.
-pub(crate) unsafe fn copy_group_entry(para: usize, de: usize) {
-    write_usize(para, read_usize(de));
-    write_u16(para + 4, read_i16(de + 4) as u16);
-    write_u8(para + 6, read_u8(de + 6));
+pub(crate) unsafe fn copy_group_entry(para: usize, of: usize) {
+    write_usize(para, read_usize(of));
+    write_u16(para + 4, read_i16(of + 4) as u16);
+    write_u8(para + 6, read_u8(of + 6));
 }
 
 /// Draws the Champions League second group phase: the 16 qualifiers sorted, the same-group pairs, each one's group
@@ -1045,13 +1045,13 @@ pub(crate) unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
 ///
 /// [pt] A lista dos inscritos (+0x14, 6 bytes: +0 o clube, +4 a rodada de entrada; +0x38 deles) que seguem na competição
 /// (+0x1db = o id da copa, [+4]); com `sem_7`, fora os de rodada de entrada 7. Grava em `v` (até 71) e devolve a conta.
-pub(crate) unsafe fn active_entrants(this: Cup, sem_7: bool, v: *mut usize) -> i16 {
+pub(crate) unsafe fn active_entrants(this: Cup, without_7: bool, v: *mut usize) -> i16 {
     let mut n: i16 = 0;
     let mut i: i16 = 0;
     while i < this.entrant_capacity() {
         let e = this.entrant_book().wrapping_add((i as i32 as usize).wrapping_mul(6));
         let c = read_usize(e);
-        if core::ptr::read_unaligned((c + 0x1db) as *const i32) == core::ptr::read_unaligned(read_usize(this.addr() + 4) as *const i32) && !(sem_7 && read_u8(e + 4) == 7) {
+        if core::ptr::read_unaligned((c + 0x1db) as *const i32) == core::ptr::read_unaligned(read_usize(this.addr() + 4) as *const i32) && !(without_7 && read_u8(e + 4) == 7) {
             core::ptr::write_unaligned(v.add(n as i32 as usize), c);
             n = n.wrapping_add(1);
         }

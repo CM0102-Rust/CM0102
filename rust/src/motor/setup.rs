@@ -503,8 +503,8 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
                 };
                 *(global as *mut usize) = o;
                 // FOG_OF_WAR checks the Media global (as in saving)
-                let conferido = if k == 0x29 { u(G_MEDIA) as usize } else { o };
-                if conferido == 0 {
+                let checked = if k == 0x29 { u(G_MEDIA) as usize } else { o };
+                if checked == 0 {
                     setup_warning(linha);
                     return 0;
                 }
@@ -672,7 +672,7 @@ pub(crate) unsafe fn setup_fatal_error(row: u32) -> ! {
 ///   nação dele em +0x1a, os nomes (0x539c60, 0x53a1b0) em +4 e +8, e 0x826f20(pessoa, clube). 1.
 pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst: *const u8) -> u32 {
     crate::comparison::branch("save create game from configuration");
-    let opcoes = || *(G_CONFIG as *const usize);
+    let options = || *(G_CONFIG as *const usize);
     let u = |a: usize| *(a as *const u32);
     let i = |a: usize| *(a as *const i32);
     let mut temporary = [0u8; 0x104];
@@ -696,7 +696,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
         if exe::load_database_from_files(dados.as_ptr(), 1) == 0 {
             setup_fatal_error(error_bench);
         }
-        exe::config_apply_and_save(opcoes());
+        exe::config_apply_and_save(options());
         let mut k = 0i32;
         let mut d = 0usize;
         while k < i(G_NATION_COUNT) {
@@ -731,20 +731,20 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
         if exe::at_947120(b, 0xa81348, 9) == 0 {
             // DATABASE=
             if has(9, 0xa81340) {
-                exe::config_set_option(opcoes(), 1);
+                exe::config_set_option(options(), 1);
             } else if has(9, 0xa81338) {
-                exe::config_set_option(opcoes(), 2);
+                exe::config_set_option(options(), 2);
             } else if has(9, 0xa81330) {
-                exe::config_set_option(opcoes(), 4);
+                exe::config_set_option(options(), 4);
             }
         } else if exe::at_947120(b, 0xa81320, 0xc) == 0 {
             // MATCH_STATS=
             if has(0xc, 0xa81340) {
-                exe::config_set_option(opcoes(), 0x200);
+                exe::config_set_option(options(), 0x200);
             } else if has(0xc, 0xa81318) {
-                exe::config_set_option(opcoes(), 0x400);
+                exe::config_set_option(options(), 0x400);
             } else if has(0xc, 0xa81310) {
-                exe::config_set_option(opcoes(), 0x800);
+                exe::config_set_option(options(), 0x800);
             }
         } else if exe::at_947120(b, 0xa812fc, 0x13) == 0 {
             // FOREGROUND_LEAGUES=
@@ -757,7 +757,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
                 let n = u(league - 8) as usize;
                 if n != 0 && u(league) != 0 && (exe::crt_strstr((v) as usize, exe::nation_get_english_three_letter_name(n) as usize) != 0 || exe::nation_matches_region_filter(n, v) != 0) {
                     let m = (n + nation::LEAGUE_SELECTED) as *mut u8;
-                    let mark = ((!(u(opcoes() + 4) as u8) & 2) | 1) << 1;
+                    let mark = ((!(u(options() + 4) as u8) & 2) | 1) << 1;
                     if *m == 0 {
                         *m = mark;
                         *(G_NATIONS_TO_LOAD_COUNT as *mut i32) += 1;
@@ -785,10 +785,10 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
                 if n != 0 && u(league) != 0 && (exe::crt_strstr((v) as usize, exe::nation_get_english_three_letter_name(n) as usize) != 0 || exe::nation_matches_region_filter(n, v) != 0) {
                     let m = (n + nation::LEAGUE_SELECTED) as *mut u8;
                     if *m == 0 {
-                        *m = ((!(u(opcoes() + 4) as u8) & 2) << 1) | 1;
+                        *m = ((!(u(options() + 4) as u8) & 2) << 1) | 1;
                         *(G_NATIONS_TO_LOAD_COUNT as *mut i32) += 1;
                     } else if *m == 2 {
-                        *m = ((!(u(opcoes() + 4) as u8) & 2) << 1) | 1;
+                        *m = ((!(u(options() + 4) as u8) & 2) << 1) | 1;
                         *(G_SELECTED_NATION_COUNT as *mut i32) -= 1;
                     }
                 }
@@ -803,8 +803,8 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
                     && (t == 0x9eb244 || u(G_NATION_TABLE) == 0 || exe::database_language_file_exists(k) != 0)
                     && has(9, u(t) as usize)
                 {
-                    exe::config_set_language(opcoes(), k);
-                    exe::config_apply_and_save(opcoes());
+                    exe::config_set_language(options(), k);
+                    exe::config_apply_and_save(options());
                     break;
                 }
                 t += 4;
@@ -853,7 +853,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
         exe::free_game_data(1);
         return 1;
     }
-    copy_text((opcoes() + 0x113) as *mut u8, 0xa81288 as *const u8);
+    copy_text((options() + 0x113) as *mut u8, 0xa81288 as *const u8);
     *(G_GAME_HAS_SAVE_FILE_FLAG as *mut u32) = 1;
     let mut data = [0u8; 8];
     exe::date_operator_3d(G_LAST_AUTOSAVE_DATE, (data.as_mut_ptr()) as usize, G_CURRENT_DATE);
@@ -1059,11 +1059,11 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
     let translate: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let write: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_ZWRITE);
     crate::comparison::branch("save write game");
-    let opcoes = || *((*(G_CONFIG as *const usize) + 4) as *const u32);
-    let kind = || if opcoes() & 0x8000 != 0 { 3u32 } else { 4 };
+    let options = || *((*(G_CONFIG as *const usize) + 4) as *const u32);
+    let kind = || if options() & 0x8000 != 0 { 3u32 } else { 4 };
     let sem_memoria = || *(G_MEMORY_CHECK_ENABLED as *const u32) != 0 && exe::os_get_free_memory_mb() < 1;
     *(G_GAME_DATA_VERSION as *mut u32) = 0xfffc1fb9;
-    if opcoes() & 0x20000000 != 0 {
+    if options() & 0x20000000 != 0 {
         let foul = if exe::os_get_free_disk_space_mb(0) < 0x19 {
             *(G_GAME_IN_PROGRESS_FLAG as *mut u32) = 1;
             true
@@ -1087,7 +1087,7 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
         return 0;
     }
     let mut local = [0u8; 0x104];
-    if opcoes() & 0x20000000 != 0 {
+    if options() & 0x20000000 != 0 {
         let (mut unidade, mut dir, mut nome, mut ext) = ([0u8; 0x104], [0u8; 0x104], [0u8; 0x100], [0u8; 0x100]);
         exe::crt_strtok((path) as usize, (unidade.as_mut_ptr()) as usize, (dir.as_mut_ptr()) as usize, nome.as_mut_ptr(), ext.as_mut_ptr());
         exe::crt_makepath(local.as_mut_ptr(), (unidade.as_ptr()) as usize, (dir.as_ptr()) as usize, 0xa81cf4, (ext.as_ptr()) as usize);
@@ -1098,7 +1098,7 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
     if exe::utils_file_exists((l) as usize) != 0 && exe::crt_remove(l) == -1 {
         return 0;
     }
-    if opcoes() & 0x40000000 != 0 {
+    if options() & 0x40000000 != 0 {
         if exe::os_get_free_disk_space_mb(0) < 0x19 {
             *(G_GAME_IN_PROGRESS_FLAG as *mut u32) = 1;
             exe::crt_remove(path);
@@ -1237,14 +1237,14 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
         return 0;
     }
     exe::screenmanager_send_network_status_message(G_SCREEN_MANAGER, (text.as_ptr()) as usize, (0x25) as i32, 0x25, -1);
-    let (t, row) = if opcoes() & 0x8000 != 0 { (3, 0x2c82) } else { (4, 0x2c8a) };
+    let (t, row) = if options() & 0x8000 != 0 { (3, 0x2c82) } else { (4, 0x2c8a) };
     if exe::zadd_matching_files(l, temporary.as_ptr(), 0xa813ac, a4, t) == 0 {
         save_error_box(row, 0xa817a4, 0x9c7774, 0x9c7680);
         return 0;
     }
     exe::halloffame_save(u(G_HALL_OF_FAME) as usize);
     exe::save_fifa_transfer_rules(l);
-    if opcoes() & 0x20000000 != 0 {
+    if options() & 0x20000000 != 0 {
         if exe::utils_file_exists((path) as usize) != 0 && exe::crt_remove(path) == -1 {
             save_error_box(0x2ca7, 0xa81cc0, 0x9af90c, 0x9af828);
         }
@@ -1354,7 +1354,6 @@ pub(crate) unsafe fn load_version_error_box(row: u32, reason: usize) {
 /// NÃO é fechado (o ZFILE e o arquivo ficam abertos). O quadro SEH da original só protege a data
 /// local (0x54a110, sem destrutor), que cai dentro do resumo (+0xf64) e é sobrescrita pela leitura.
 pub(crate) unsafe extern "C" fn valid_saved_game_version(path: usize) -> u32 {
-    let version: unsafe extern "C" fn() -> *const u8 = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     crate::comparison::branch("save saved game version");
     let mut summary = [0u8; 0xf74];
     let mut v = 0i32;
@@ -1382,9 +1381,9 @@ pub(crate) unsafe extern "C" fn valid_saved_game_version(path: usize) -> u32 {
         exe::zclose(&mut z);
         return 0;
     }
-    let exe = core::ffi::CStr::from_ptr(version() as *const core::ffi::c_char).to_bytes();
-    let gravada = core::ffi::CStr::from_ptr(summary.as_ptr().add(0x7d0) as *const core::ffi::c_char).to_bytes();
-    (exe == gravada) as u32
+    let exe = core::ffi::CStr::from_ptr(exe::utils_get_version_string() as *const core::ffi::c_char).to_bytes();
+    let written = core::ffi::CStr::from_ptr(summary.as_ptr().add(0x7d0) as *const core::ffi::c_char).to_bytes();
+    (exe == written) as u32
 }
 
 // simplification: opens the item and, when it succeeds, does not close it (the ZFILE and the file stay open, as in the

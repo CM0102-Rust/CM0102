@@ -331,7 +331,6 @@ pub(crate) unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
 /// + 0,025 × +2 + 1/60 × +6; o clube gosta dele (0x547790) +0,2, não gosta (0x5477d0) −2 (guardada); ele gosta do
 /// clube (0x547d60) +0,2, não gosta (0x547d30) −1,5 (só na comparação).
 pub(crate) unsafe fn fan_rating(p: Staff, club: Club, st: usize) -> f64 {
-    let gosta: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_FAVOURS_CLUB);
     let average = read_i16(st + player_category_stats::RATING_TOTAL) as i32 as f64 / read_u8(st) as i32 as f64;
     let mut rating = average + read_u8(st + player_category_stats::GOALS) as i32 as f64 * read_f64(rdata::F64_0_025);
     rating = rating + read_u8(st + 6) as i32 as f64 * read_f64(rdata::F64_0_01666666667);
@@ -341,7 +340,7 @@ pub(crate) unsafe fn fan_rating(p: Staff, club: Club, st: usize) -> f64 {
     } else if exe::club_dislikes_staff(p, club) != 0 {
         rating = rating - read_f64(rdata::F64_2);
     }
-    if gosta(p.addr(), club.addr()) != 0 {
+    if exe::staff_favours_club(p.addr(), club.addr()) != 0 {
         rating + read_f64(rdata::F64_0_2)
     } else if exe::staff_dislikes_club(p, club) != 0 {
         rating - read_f64(rdata::F64_1_5)
@@ -548,7 +547,6 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_totals(this: usize, value: i
     if buyer.is_null() || seller.is_null() {
         return 1;
     }
-    let news: unsafe extern "thiscall" fn(usize, u32, u32) -> u32 = core::mem::transmute(FN_CLUB_RECORDS_QUEUE_RECORD_NEWS);
     let add = |field: usize| {
         let v = read_usize(field) as i32;
         write_usize(field, if v == -1 { value } else { v.wrapping_add(value) } as usize);
@@ -563,7 +561,7 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_totals(this: usize, value: i
         let minimum = (seller.reputation() as i32 + 500).wrapping_mul(1000);
         if read_usize(t + club_record::TRANSFER_INCOME) as i32 >= minimum && year != read_i16(s + club_record::TRANSFER_INCOME_YEAR) && !is_record_news_queued(this, read_usize(seller.addr()), 0x1f) {
             crate::comparison::branch("cpm_6 record fee received news");
-            news(this, read_usize(seller.addr()) as u32, 0x1f); // record fee received
+            exe::club_records_queue_record_news(this, read_usize(seller.addr()) as u32, 0x1f); // record fee received
         }
         write_usize(s + club_record::TRANSFER_INCOME, read_usize(t + club_record::TRANSFER_INCOME));
         write_i16(s + club_record::TRANSFER_INCOME_YEAR, year);
@@ -579,7 +577,7 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_totals(this: usize, value: i
         // the original checks the minimum against the old record (the ecx that still holds the all-time one)
         if read_usize(s + club_record::TRANSFER_SPENDING) as i32 >= minimum && !is_record_news_queued(this, read_usize(buyer.addr()), 0x1e) {
             crate::comparison::branch("cpm_6 record fee paid news");
-            news(this, read_usize(buyer.addr()) as u32, 0x1e); // record fee paid
+            exe::club_records_queue_record_news(this, read_usize(buyer.addr()) as u32, 0x1e); // record fee paid
         }
         write_usize(s + club_record::TRANSFER_SPENDING, read_usize(t + club_record::TRANSFER_SPENDING));
         write_i16(s + club_record::TRANSFER_SPENDING_YEAR, year);
@@ -836,10 +834,10 @@ pub(crate) unsafe fn record_index_plan(e: usize, count: usize, create: u32) -> (
 pub(crate) unsafe fn check_record_plan(name: &str, club: usize, e: usize, count: usize, array: usize, plan: (i32, usize, bool), r: usize) {
     let (i, n, novo) = plan;
     let expected = if i <= -1 { 0 } else { read_usize(array).wrapping_add((i as usize).wrapping_mul(0x38b)) };
-    let reiniciado = !novo || (r != 0 && read_usize(r + club_record::SEASON_RATING) == 0xbf800000 && read_usize(r + club_record::FEE_PAID) as i32 == -1);
-    SCOREBOARD.record(r == expected && read_usize(e) as i32 == i && read_usize(count) == n && reiniciado, || {
+    let restarted = !novo || (r != 0 && read_usize(r + club_record::SEASON_RATING) == 0xbf800000 && read_usize(r + club_record::FEE_PAID) as i32 == -1);
+    SCOREBOARD.record(r == expected && read_usize(e) as i32 == i && read_usize(count) == n && restarted, || {
         format!("{}(clube {}) índice {} (esperava {}), conta {} (esperava {}), registro {:x} (esperava {:x}), novo={} reiniciado={}",
-            name, read_usize(club), read_usize(e) as i32, i, read_usize(count), n, r, expected, novo, reiniciado)
+            name, read_usize(club), read_usize(e) as i32, i, read_usize(count), n, r, expected, novo, restarted)
     });
 }
 

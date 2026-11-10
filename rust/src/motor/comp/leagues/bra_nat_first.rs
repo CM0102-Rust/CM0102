@@ -141,8 +141,8 @@ pub(crate) unsafe fn comp_by_global(global: usize) -> usize {
 /// Calls the thiscall virtual at offset deslocamento of object c with no arguments → u32.
 ///
 /// [pt] A virtual `deslocamento` de `c`, thiscall sem argumentos.
-pub(crate) unsafe fn bra_nat_first_call_virtual_no_args(c: usize, deslocamento: usize) -> u32 {
-    let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(c) + deslocamento));
+pub(crate) unsafe fn bra_nat_first_call_virtual_no_args(c: usize, offset: usize) -> u32 {
+    let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(c) + offset));
     f(c)
 }
 
@@ -647,7 +647,7 @@ pub(crate) unsafe fn serie_c_staff_records(this: League, club: usize, status: u3
         }
         // the club’s row in the league (k = -1) or in stages 0..6, the first that has the club, gets destination 0
         let mut k: i8 = -1;
-        let mut achada = 0;
+        let mut found = 0;
         while k < 7 {
             let league = League(if k == -1 { this.addr() } else { read_usize(this.stages() + 4 * k as i32 as usize) });
             let n = league.club_count();
@@ -657,22 +657,22 @@ pub(crate) unsafe fn serie_c_staff_records(this: League, club: usize, status: u3
                 while (i as i16) < n {
                     let r = t.wrapping_add(0x3b * i as i32 as usize);
                     if read_usize(r) == club {
-                        achada = r;
+                        found = r;
                         break;
                     }
                     i = i.wrapping_add(1);
                 }
-                if achada != 0 {
+                if found != 0 {
                     break;
                 }
             }
             k += 1;
         }
-        if achada != 0 && fazer {
+        if found != 0 && fazer {
             crate::comparison::branch("cqj_9 serie c promoted");
-            *((achada + 0x37) as *mut u8) = 0; // cqj9: the destination of those promoted from Serie C
+            *((found + 0x37) as *mut u8) = 0; // cqj9: the destination of those promoted from Serie C
         }
-        return (0, achada, 0);
+        return (0, found, 0);
     }
     if fa == 10 {
         // a final

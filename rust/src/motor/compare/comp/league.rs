@@ -124,8 +124,8 @@ pub(crate) unsafe extern "thiscall" fn compare_create_fixtures(this: usize) -> u
 ///
 /// [pt] O comparador da promoção e do rebaixamento: só a original (simplification: os contratos, o técnico demitido e as notícias
 /// não rodam duas vezes); a cópia leva o ramo.
-pub(crate) unsafe extern "thiscall" fn compare_league_promote_and_relegate(ecx: usize, above: usize, below: usize, contratos: u32, aos_pairs: u32, sobem: u32, descem: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_LEAGUE_PROMOTE_AND_RELEGATE)(ecx, above, below, contratos, aos_pairs, sobem, descem)
+pub(crate) unsafe extern "thiscall" fn compare_league_promote_and_relegate(ecx: usize, above: usize, below: usize, contracts: u32, aos_pairs: u32, sobem: u32, descem: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_LEAGUE_PROMOTE_AND_RELEGATE)(ecx, above, below, contracts, aos_pairs, sobem, descem)
 }
 
 /// Comparer for `update_positions_and_status` (comparison mode: see the header of motor.rs): the comparer of
@@ -410,7 +410,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init_table_row(this: usize, i: u3
     let n = this.club_count();
     let a7_expected = if a7 == -1 && n > 0 { (n - 1).wrapping_mul(this.legs()) } else { a7 };
     let status = if !club.is_null() { club.professional_status() } else { 0 };
-    let situacao_esperada = if status == 3 { 2 } else { status };
+    let status_expected = if status == 3 { 2 } else { status };
     let table = if rows == 0 { this.table() } else { rows };
     let confrontos = uses_head_to_head_rule(this);
     o(this.addr(), i, club.addr(), mark, rows);
@@ -418,7 +418,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init_table_row(this: usize, i: u3
     let l = LeagueTableRow(table.wrapping_add((idx * TABLE_ROW_SIZE as isize) as usize));
     let mut ok = read_usize(l.addr()) == club.addr() && (l.position() as u8) == i as u8 && l.status() == 0xff && l.mark() == mark as u8
         && l.best_possible_position() == 1 && l.worst_possible_position() == n as u8 && this.games_per_club() == a7_expected
-        && (club.is_null() || club.professional_status() == situacao_esperada)
+        && (club.is_null() || club.professional_status() == status_expected)
         && (l.position_history() != 0) == (this.legs() > 0) && (l.h2h_entries() != 0) == confrontos;
     for k in 0..3 {
         let e = l.addr() + league_table_row::PLAYED + 14 * k;

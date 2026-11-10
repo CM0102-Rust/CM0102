@@ -517,12 +517,12 @@ pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, size: i32, how_man
         crate::comparison::branch("save zwrite type 3");
         return (exe::crt_fwrite((buf) as usize, (size) as u32, (how_many) as u32, zf_read_i32(z, 0) as usize) as i32);
     }
-    let repetido = (z + 0x18) as *mut u8;
+    let repeated = (z + 0x18) as *mut u8;
     let mut k = 0i32;
     while k < total {
         let n = zf_read_i32(z, 0x14);
         if n != 0 {
-            let c = *repetido;
+            let c = *repeated;
             if *buf.add(k as usize) == c {
                 if n.wrapping_add(0x80) < 0xff {
                     zf_write_i32(z, 0x14, n + 1);
@@ -532,17 +532,17 @@ pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, size: i32, how_man
                 // 0x7f copies: emit the pair and start over
                 crate::comparison::branch("save zwrite pair 0x7f");
                 zf_put_byte(z, (n as u8).wrapping_add(0x80));
-                zf_put_byte(z, *repetido);
+                zf_put_byte(z, *repeated);
             } else if n <= 1 && c <= 0x80 {
                 zf_put_byte(z, c);
             } else {
                 let count = (n as u8).wrapping_add(0x80);
                 zf_put_byte(z, count);
-                zf_put_byte(z, *repetido);
+                zf_put_byte(z, *repeated);
             }
         }
         zf_write_i32(z, 0x14, 1);
-        *repetido = *buf.add(k as usize);
+        *repeated = *buf.add(k as usize);
         k += 1;
     }
     how_many

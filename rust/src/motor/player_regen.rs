@@ -1338,17 +1338,15 @@ pub(crate) unsafe extern "stdcall" fn player_regen_sign_for_club(person: usize, 
         return 0;
     }
     let manager = read_i32(G_CONTRACT_MANAGER) as usize;
-    let value: unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32) -> i32 = core::mem::transmute(FN_CONTRACT_MANAGER_CALC_PLAYER_VALUE);
-    let squad: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(FN_STAFF_SET_SQUAD_FLAGS);
     let month_of_end: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_CONTRACT_MANAGER_SEASON_END_MONTH);
     let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     crate::comparison::branch("cpv_9 regen signed");
     club.set_squad(k, (person.addr() as i32) as usize);
     person.set_club_job(Club((club.addr() as i32) as usize));
     person.set_wage((0) as usize);
-    let v = value(manager, person.addr(), club.addr(), 1, -1, 0);
+    let v = exe::contract_manager_calc_player_value(manager, person.addr(), club.addr(), 1, -1, 0);
     person.set_value((v) as usize); // cpv9: the regen value
-    squad(person.addr(), 1);
+    exe::staff_set_squad_flags(person.addr(), 1);
     if exe::utils_random(4) == 0 { // cpv9: once in four
         crate::comparison::branch("cpv_9 one in four");
         exe::staff_add_favoured_club(person, club, 0);
@@ -2484,14 +2482,14 @@ pub(crate) unsafe fn can_club_bid(player: usize, club: usize) -> bool {
 /// o de maior nota (0x7ad220, sorteia; comparada em 16 bits, a partir de −25000). Nenhum: 0. Sem SEH; a local do
 /// parceiro só é lida quando a 0x540a50 o acha (e a grava).
 pub(crate) unsafe extern "thiscall" fn pick_best_club_for_player(_this: usize, player: usize) -> usize {
-    let estrangeiro: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
+    let foreigner: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
     let total = || (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
     let (mut melhor, mut melhor_nota) = (0usize, -25000i16);
     let mut eh_a = 0u32;
     let mut club = read_usize(G_CLUB_TABLE);
     let mut i = 0i32;
     while i < total() {
-        let candidate = estrangeiro(player, read_usize(club + club::NATION), 1) == 0
+        let candidate = foreigner(player, read_usize(club + club::NATION), 1) == 0
             && (exe::club_get_linked_b_team(club, &mut eh_a, 1) == 0 || eh_a != 0)
             && !is_basque_restricted(Staff(player), club);
         if candidate {

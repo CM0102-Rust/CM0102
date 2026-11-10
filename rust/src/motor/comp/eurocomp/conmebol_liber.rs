@@ -244,11 +244,11 @@ pub(crate) unsafe fn apply_cup_rules(this: League, g: &ContinentalGroupRules, da
 ///
 /// [pt] O plano: os campos de `g`, a palavra da data (calculada antes numa Date local pela 0x549f70, sem efeito fora dela),
 /// +0xb8 = 0, o prêmio e a devolução 1.
-pub(crate) unsafe fn check_cup_rules(nome: &str, this: League, g: &ContinentalGroupRules, o: impl FnOnce() -> u32) -> u32 {
+pub(crate) unsafe fn check_cup_rules(name: &str, this: League, g: &ContinentalGroupRules, o: impl FnOnce() -> u32) -> u32 {
     let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
     data(d.as_mut_ptr(), g.day, g.month, (this.year() as u16) as u32, g.week);
-    let palavra = core::ptr::read_unaligned(d.as_ptr() as *const u16);
+    let word = core::ptr::read_unaligned(d.as_ptr() as *const u16);
     let r = o();
     let mut errados: [(usize, u32); 4] = [(0, 0); 4];
     let mut k = 0;
@@ -267,7 +267,7 @@ pub(crate) unsafe fn check_cup_rules(nome: &str, this: League, g: &ContinentalGr
     let b6 = (this.next_draw_day() as u16);
     let b8 = (this.next_draw_year_offset() as u16);
     let premio = g.prize.map_or(true, |p| (this.prize_fund() as u32) == p);
-    SCOREBOARD.record(r == 1 && k == 0 && b6 == palavra && b8 == 0 && premio, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {} prêmio ok {}", nome, this.addr(), r, &errados[..k], b6, palavra, b8, premio));
+    SCOREBOARD.record(r == 1 && k == 0 && b6 == word && b8 == 0 && premio, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {} prêmio ok {}", name, this.addr(), r, &errados[..k], b6, word, b8, premio));
     r
 }
 

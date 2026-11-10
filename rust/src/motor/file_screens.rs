@@ -33,7 +33,6 @@ use super::*;
 pub(crate) unsafe extern "C" fn build_save_game_summary(summary: *mut u8) {
     let format: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let translate: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let version: unsafe extern "C" fn() -> *const u8 = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let mut nation = [0u8; 100];
     *summary = 0;
     *summary.add(0x3e8) = 0;
@@ -80,7 +79,7 @@ pub(crate) unsafe extern "C" fn build_save_game_summary(summary: *mut u8) {
     }
     let mut copy = [0u8; 8];
     exe::date_operator_3d(summary as usize + 0xf64, (copy.as_mut_ptr()) as usize, G_CURRENT_DATE);
-    copy_text(summary.add(0x7d0), version());
+    copy_text(summary.add(0x7d0), exe::utils_get_version_string());
     let mut now = 0i32;
     let t = exe::at_946ebb(&mut now);
     let total = (*(G_GAME_PLAY_TIME_TOTAL as *const i32)).wrapping_add(t.wrapping_sub(*(G_GAME_PLAY_TIME_LAST_STAMP as *const i32)));

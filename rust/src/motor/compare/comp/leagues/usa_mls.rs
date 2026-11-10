@@ -222,10 +222,10 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_add_result(this: usize, g
     let this = League(this);
     let mark = (game.stage_index() as i8);
     let block = this.comp_stats();
-    let esperada = if this.current_stage() == 1 { 1 } else if mark < 2 { -1 } else { mark };
+    let expected = if this.current_stage() == 1 { 1 } else if mark < 2 { -1 } else { mark };
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_USA_MLS_ADD_RESULT)(this.addr(), game.addr(), stats);
     let (m, b) = ((game.stage_index() as i8), this.comp_stats());
-    SCOREBOARD.record(r == 1 && m == esperada && b == block, || format!("usa_mls_add_result({:x}, {:x}) devolveu {} marca {} x {} bloco {:x} x {:x}", this.addr(), game.addr(), r, m, esperada, b, block));
+    SCOREBOARD.record(r == 1 && m == expected && b == block, || format!("usa_mls_add_result({:x}, {:x}) devolveu {} marca {} x {} bloco {:x} x {:x}", this.addr(), game.addr(), r, m, expected, b, block));
     r
 }
 

@@ -107,6 +107,27 @@ espalhar:spread entradas:entries acima:above propria:own conduz:carries foto:pho
 seis:six compensacao:compensation lugares:places grade:grid cauda:tail premios:prizes turnos:rounds pote:pot
 reduz:reduces venceu:won funcao:function devolver:return tempo:time maiuscula:capital abreviado:abbreviated
 longo:long terceiro:third sim:yes divisor:divisor terco:third contador:counter cinco:five porcento:percent'''.split()))
+# rodada 20 (10/11/2026)
+D.update(dict(x.split(':') for x in '''contratos:contracts argumento:argument deslocamento:offset esperada:expected obtido:got
+como:how valida:valid dos:of_the reacao:reaction escolhida:chosen de:of no:in_the da:of_the designado:designated movido:moved
+parado:stopped limite:limit mensagem:message avaliacao:rating estrangeiro:foreigner achada:found opcoes:options sem:without
+escalacao:lineup contratado:signed zerado:cleared momento:moment acumulado:accumulated emprestado:loaned acertado:agreed
+ponderados:weighted compartilhado:shared ofuscado:dimmed ocupado:occupied verdade:truth parada:stopped ocupada:occupied
+chamada:call valido:valid inteiro:whole severidade:severity qualidade:quality ousado:bold menu:menu jogado:played
+traduzido:translated forcado:forced anunciada:announced forcada:forced simulado:simulated aumento:raise gravada:written
+listado:listed meses:months recusada:refused dinheiro:money negociacoes:negotiations vende:sells calado:silent novas:new
+duracao:duration virada:turned ligada:on formacoes:formations real:real imagem:image reiniciado:restarted reputado:reputed
+ambicao:ambition nasc:birth classificado:qualified copiado:copied cumprida:served atuacao:performance anulada:cancelled
+convocado:called_up orcamento:budget rapido:fast assinado:signed punido:punished narrado:narrated titular:starter
+contado:counted somado:summed atacada:attacked defendida:defended alocacao:allocation disposicao:disposition cansado:tired
+machucado:injured ruido:noise dirigido:managed recuado:withdrawn decidido:decided angulo:angle fechado:closed fechada:closed
+velocidade:speed narracao:commentary muito:very rolagem:scroll ruim:bad abandonada:abandoned valores:values
+conectado:connected montagem:assembly vencido:expired montado:built acompanhado:followed conferido:checked pedida:requested
+repartido:split lealdade:loyalty funcoes:functions reproduzido:replayed instrucao:instruction vencida:expired fracoes:fractions
+repetido:repeated ponteiro:pointer preferido:preferred cancelado:cancelled reaproveitado:reused resolvido:resolved
+paridade:parity conferida:checked tentar:try divisoes:divisions repetida:repeated liquido:net divida:debt
+aquecimento:heating duvida:doubt batida:taken corrigido:fixed usada:used errada:wrong liberado:released
+emprestada:loaned montada:built ordenado:sorted respondido:answered rebaixado:relegated ao:to_the'''.split()))
 INGLES |= set('''l4c ops2 desl dest alt sel desloc sev l28 difference difs cat global obs fechar2 penalties adv item16 display
 pts den esc pct transf for disp l3c desc masc ecx l24 tabela1 ult cmp cur pot nat signed sprintf esi kit ban txt'''.split())
 INGLES |= set('''original qsort without with area bsearch delta fread until zread ops ids fwrite zwrite and calloc dir rust

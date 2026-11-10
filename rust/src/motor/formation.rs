@@ -39,13 +39,13 @@ pub(crate) unsafe extern "C" fn competition_criterion(record: usize, a: u32, b: 
 /// [pt] { 0x5afd00 } (ret 4, fog_of_war.cpp): com a nevoa ligada (0x9cc270) e a pessoa valida, zera o
 /// nivel dela (registro de 9 bytes) nos 16 quadros de [this] que existem e estao ativos (+4).
 pub(crate) unsafe extern "thiscall" fn forget_person(this: usize, person: usize) {
-    let valida = || *(person as *const i32) < *(G_STAFF_COUNT as *const i32) && *(G_ATTRIBUTE_MASKING_ENABLED as *const u8) != 0;
-    if person == 0 || !valida() {
+    let valid = || *(person as *const i32) < *(G_STAFF_COUNT as *const i32) && *(G_ATTRIBUTE_MASKING_ENABLED as *const u8) != 0;
+    if person == 0 || !valid() {
         return;
     }
     for k in 0..16usize {
         let q = *((this + 4 * k) as *const usize);
-        if q != 0 && *((q + 4) as *const u32) != 0 && valida() {
+        if q != 0 && *((q + 4) as *const u32) != 0 && valid() {
             *((*(q as *const usize)).wrapping_add((*(person as *const i32) as usize).wrapping_mul(9)) as *mut u8) = 0;
         }
     }
@@ -551,9 +551,9 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
     }
     let extra = this + 0x14e + su * 2;
     let o = (1 - sf as i32) * 11; // the start of the other stage’s list
-    let no = count[(1 - sf) as usize];
+    let in_the = count[(1 - sf) as usize];
     let current = read_i16(general) as u16;
-    for a in 0..no.max(0) as i32 {
+    for a in 0..in_the.max(0) as i32 {
         if cand[(o + a) as usize] == current {
             write_u16(extra, cand[(o + a) as usize]);
             return 1;
@@ -561,7 +561,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
     }
     // simplification: the outputs of 0x5b73a0 are uninitialized in the original if it fails (position without a side); here 0
     let (mut setor, mut lado_c, mut lado_a) = (0u16, 0u16, 0u16);
-    for b in 0..no.max(0) as i32 {
+    for b in 0..in_the.max(0) as i32 {
         exe::formation_split_position_code(cand[(o + b) as usize] as u32, &mut setor, &mut lado_c);
         exe::formation_split_position_code(read_i16(general) as u16 as u32, &mut setor, &mut lado_a);
         if lado_c == lado_a {
@@ -569,7 +569,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
             return 1;
         }
     }
-    if no != 2 {
+    if in_the != 2 {
         write_u16(extra, cand[o as usize]);
         return 1;
     }
@@ -587,7 +587,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
     q[21] = (last_dy >> 16) as u16;
     q[22..].copy_from_slice(&cand[..0xea]);
     let mut v1a: i8 = count[0]; // [esp+0x1a]
-    let mut v12: i8 = no; // [esp+0x12]
+    let mut v12: i8 = in_the; // [esp+0x12]
     for k in 0..7usize {
         if q[12 + k] & c0 != 0 {
             v1a = k as i8;
@@ -816,7 +816,7 @@ pub(crate) unsafe extern "thiscall" fn set_formation_flag(t: usize, m: u32) -> u
 /// 0x5b3560 com a fase 0 e a faixa 0); o nome (+0) é o do arquivo (_splitpath 0x944cff); o mapa das casas (0x5b7160);
 /// +0x187f = 1, +0x1883 = senha não vazia, +0x1887 = 1. Fecha e devolve 1. Os arquivos não nativos trocam a ordem dos
 /// bytes (0x43f2d0 palavras, 0x43f300 dwords, 0x43f350 qwords).
-pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, quiet: u32, ofuscado: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, quiet: u32, dimmed: u32) -> u32 {
     if path == 0 {
         if quiet == 0 {
             formation_error_box(0x8d8);
@@ -839,7 +839,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
     if !nativo {
         id = swap_bytes_u32(id);
     }
-    if ofuscado != 0 {
+    if dimmed != 0 {
         id = id.wrapping_sub(0x75bcd15);
     }
     let id = id as i32;

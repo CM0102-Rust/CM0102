@@ -167,8 +167,8 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
             continue;
         }
         let cp = game_get_contract_and_store(p);
-        let de = if cp != 0 { england_rules_club_of_contract(Contract(cp)) } else { 0 };
-        if de != club.addr() {
+        let of = if cp != 0 { england_rules_club_of_contract(Contract(cp)) } else { 0 };
+        if of != club.addr() {
             n = n.wrapping_add(1);
         }
     }
@@ -184,8 +184,7 @@ pub(crate) unsafe extern "thiscall" fn england_rules_can_loan_player(this: usize
         return 0;
     }
     // 0x8e8e50: push 0; push 0xae2c90; mov ecx, edi (this) -> thiscall, ret 8 (a janela aberta hoje)
-    let window: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_RULES_FIND_OPEN_WINDOW);
-    if window(this, G_CURRENT_DATE, 0) != 0 {
+    if exe::transfer_rules_find_open_window(this, G_CURRENT_DATE, 0) != 0 {
         return 1;
     }
     crate::comparison::branch("cqe_5 outside the window");

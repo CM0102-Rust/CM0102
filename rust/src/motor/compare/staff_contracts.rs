@@ -12,18 +12,18 @@ pub(crate) unsafe extern "thiscall" fn compare_has_active_release_clause(c: usiz
 }
 
 /// Comparer for `check_fifa_protected_period`.
-pub(crate) unsafe extern "thiscall" fn compare_check_fifa_protected_period(c: usize, x: usize, no_limite: *mut u32, years: *mut u8) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_check_fifa_protected_period(c: usize, x: usize, in_the_limit: *mut u32, years: *mut u8) -> u32 {
     // the outputs as they were before: the copy starts from them (the original only writes `anos` in the period)
-    let (mut nl, mut na) = (if no_limite.is_null() { 0 } else { *no_limite }, if years.is_null() { 0 } else { *years });
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u32, *mut u8) -> u32>(IDX_CHECK_FIFA_PROTECTED_PERIOD)(c, x, no_limite, years);
-    let (ol, oa) = (if no_limite.is_null() { 0 } else { *no_limite }, if years.is_null() { 0 } else { *years });
+    let (mut nl, mut na) = (if in_the_limit.is_null() { 0 } else { *in_the_limit }, if years.is_null() { 0 } else { *years });
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u32, *mut u8) -> u32>(IDX_CHECK_FIFA_PROTECTED_PERIOD)(c, x, in_the_limit, years);
+    let (ol, oa) = (if in_the_limit.is_null() { 0 } else { *in_the_limit }, if years.is_null() { 0 } else { *years });
     let n = check_fifa_protected_period(
         c,
         x,
-        if no_limite.is_null() { core::ptr::null_mut() } else { &mut nl },
+        if in_the_limit.is_null() { core::ptr::null_mut() } else { &mut nl },
         if years.is_null() { core::ptr::null_mut() } else { &mut na },
     );
-    let ok = r == n && (no_limite.is_null() || ol == nl) && (years.is_null() || oa == na);
+    let ok = r == n && (in_the_limit.is_null() || ol == nl) && (years.is_null() || oa == na);
     SCOREBOARD.record(ok, || format!("check_fifa_protected_period({:x}) original={} {} {} rust={} {} {}", c, r, ol, oa, n, nl, na));
     r
 }

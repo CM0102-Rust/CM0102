@@ -16,8 +16,8 @@ pub(crate) unsafe extern "C" fn compare_comp_util_sort_clubs_by_strength(v: usiz
     let mut k = vec![0i32; n as usize];
     sort_clubs_by_strength(expected.as_mut_ptr(), k.as_mut_ptr(), n);
     o(v, n);
-    let obtido = core::slice::from_raw_parts(v as *const u32, n as usize);
-    SCOREBOARD.record(obtido == &expected[..], || format!("comp_util_sort_clubs_by_strength(n {}) original={:x?} rust={:x?}", n, obtido, expected));
+    let got = core::slice::from_raw_parts(v as *const u32, n as usize);
+    SCOREBOARD.record(got == &expected[..], || format!("comp_util_sort_clubs_by_strength(n {}) original={:x?} rust={:x?}", n, got, expected));
 }
 
 /// Comparer for `set_club_final_position`.

@@ -480,19 +480,19 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
         crate::comparison::branch("cpy_8 drawn referee");
         ini.wrapping_add(random(n.wrapping_sub(1))) // cpy8: the random draw within the band
     };
-    let ocupado = |k: i32| {
+    let occupied = |k: i32| {
         let sheet = read_usize(G_OFFICIAL_TABLE).wrapping_add(k.wrapping_mul(0x2b) as usize);
         read_u8(read_usize(this + officials_manager_fields::BUSY_FLAGS).wrapping_add(read_usize(sheet))) != 0
     };
     let mut k = drawn;
-    if ocupado(k) {
+    if occupied(k) {
         let end = n.wrapping_add(ini);
         loop {
             k += 1;
             if k >= end {
                 k = ini;
             }
-            if k == drawn || !ocupado(k) {
+            if k == drawn || !occupied(k) {
                 break;
             }
         }

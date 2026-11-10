@@ -1,7 +1,7 @@
 # Mutacoes da leva52 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva52.py
 MUTACOES = [
     ('t_ultimo', "*list(j.cell_slot() as isize) = *list(*n as isize - 1);", "*list(j.cell_slot() as isize) = *list(*n as isize - 2);"),
-    ('t_movido', "        movido.set_cell_slot(idx);", "        movido.set_cell_slot(idx + 1);"),
+    ('t_movido', "        moved.set_cell_slot(idx);", "        moved.set_cell_slot(idx + 1);"),
     ('t_na', "        if exe::match_player_is_marked_by(*marked, j) != 0 {", "        if exe::match_player_is_marked_by(*marked, j) == 0 {"),
     ('t_lista', "            if *((q + match_player::MARKING_TARGET) as *const usize) == j.addr() {\n                *((q + match_player::MARKING_TARGET) as *mut usize) = 0;", "            if *((q + match_player::MARKING_TARGET) as *const usize) != 0 {\n                *((q + match_player::MARKING_TARGET) as *mut usize) = 0;"),
     ('t_modo', "    if mode != -3 && j.addr() != *((this + engine::GOALKEEPER_SIDE1)", "    if mode != -2 && j.addr() != *((this + engine::GOALKEEPER_SIDE1)"),

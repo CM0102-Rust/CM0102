@@ -4,8 +4,7 @@ use super::*;
 ///
 /// [pt] fread (0x945bfe, cdecl): `n` registros de `tam` bytes; devolve quantos leu.
 pub(crate) unsafe fn crt_fread_one(buf: usize, size: u32, f: usize) -> u32 {
-    let fread: unsafe extern "C" fn(usize, u32, u32, usize) -> u32 = core::mem::transmute(FN_CRT_FREAD);
-    fread(buf, size, 1, f)
+    exe::crt_fread(buf, size, 1, f)
 }
 
 /// CRT fclose.

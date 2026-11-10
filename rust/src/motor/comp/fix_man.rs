@@ -95,21 +95,21 @@ pub(crate) unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
                 let mut k: i8 = 0;
                 while k < read_u8(G_KEY_NATION_ACTIVE_COUNT) as i8 {
                     let list = read_usize(lists + k as isize as usize * 4);
-                    let mut no = read_usize(list + 6);
-                    write_usize(list + 0xa, no);
-                    while no != 0 {
-                        let f = read_usize(no);
+                    let mut in_the = read_usize(list + 6);
+                    write_usize(list + 0xa, in_the);
+                    while in_the != 0 {
+                        let f = read_usize(in_the);
                         if read_usize(f) != read_usize(KEY_CLUB_COMP_RESERVE) || read_u8(f + 0x3a) != 1 {
                             break;
                         }
                         if !fix_man_is_human_club(read_usize(f + 0x1c)) && !fix_man_is_human_club(read_usize(f + 0x20)) {
                             exe::llist_get_prev(list);
                             crate::comparison::branch("cqd_6 friendly discarded");
-                            exe::llist_remove_node(list, no); // cqd6: yesterday’s friendly leaves the list
+                            exe::llist_remove_node(list, in_the); // cqd6: yesterday’s friendly leaves the list
                         } else {
                             exe::llist_get_prev(list);
                         }
-                        no = read_usize(list + 0xa);
+                        in_the = read_usize(list + 0xa);
                     }
                     k = k.wrapping_add(1);
                 }
@@ -295,10 +295,10 @@ pub(crate) unsafe fn fix_man_list_items(list: usize) -> Vec<usize> {
     if list == 0 {
         return v;
     }
-    let mut no = read_usize(list + 2);
-    while no != 0 {
-        v.push(read_usize(no));
-        no = read_usize(no + 6);
+    let mut in_the = read_usize(list + 2);
+    while in_the != 0 {
+        v.push(read_usize(in_the));
+        in_the = read_usize(in_the + 6);
     }
     v
 }
@@ -338,12 +338,12 @@ pub(crate) unsafe fn is_in_league(club: Club, id: i32) -> bool {
 ///
 /// [pt] A regra de conflito da competição (método +0x60 da competição [0xadadfc][id]: push b; push a; ecx = comp ->
 /// thiscall): 0 sem a tabela ou sem a competição.
-pub(crate) unsafe fn comp_clash_rule(id_de: usize, a: usize, b: usize) -> u32 {
+pub(crate) unsafe fn comp_clash_rule(id_of: usize, a: usize, b: usize) -> u32 {
     let table = read_usize(G_COMP_OBJECT_TABLE);
     if table == 0 {
         return 0;
     }
-    let c = read_usize(table.wrapping_add((read_i32(id_de) as usize).wrapping_mul(4)));
+    let c = read_usize(table.wrapping_add((read_i32(id_of) as usize).wrapping_mul(4)));
     if c == 0 {
         return 0;
     }
@@ -355,8 +355,8 @@ pub(crate) unsafe fn comp_clash_rule(id_de: usize, a: usize, b: usize) -> u32 {
 /// severity to its type (+0x3a).
 ///
 /// [pt] O jogo `x` entra (0x16 se já foi jogado, +0x43 diferente de 0xff) e a gravidade sobe ao tipo dele (+0x3a).
-pub(crate) unsafe fn add_clash_by_type(grav: *mut i32, list: usize, x: Fixture, conferir_jogado: bool) {
-    if conferir_jogado && (x.home_goals() as u8) != 0xff {
+pub(crate) unsafe fn add_clash_by_type(grav: *mut i32, list: usize, x: Fixture, check_played: bool) {
+    if check_played && (x.home_goals() as u8) != 0xff {
         *grav = 0x16;
         return;
     }
@@ -435,15 +435,15 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
     if flag == 0 {
         let comp = game.competition();
         let nc = if !comp.is_null() { comp.nation() } else { Nation(0) };
-        let e_da = |g: usize| !nc.is_null() && read_i32(nc.addr()) == read_i32(g);
-        if same(day_of_year(0x19, 0xb, year())) && !e_da(KEY_NATION_JAPAN) {
+        let and_of_the = |g: usize| !nc.is_null() && read_i32(nc.addr()) == read_i32(g);
+        if same(day_of_year(0x19, 0xb, year())) && !and_of_the(KEY_NATION_JAPAN) {
             crate::comparison::branch("cqc_3 Christmas");
             return dezenove();
         }
-        if e_da(KEY_NATION_NORTHERN_IRELAND) && exe::date_get_weekday((&day) as *const [u8; 8] as usize) as i16 == 6 {
+        if and_of_the(KEY_NATION_NORTHERN_IRELAND) && exe::date_get_weekday((&day) as *const [u8; 8] as usize) as i16 == 6 {
             return dezenove();
         }
-        if e_da(KEY_NATION_GREECE) {
+        if and_of_the(KEY_NATION_GREECE) {
             let t = day_of_year(10, 3, year());
             if t.1 < read_u16(d + 2) || (t.1 == read_u16(d + 2) && (t.0 as i16) < read_u16(d) as i16) {
                 let t = day_of_year(0x14, 3, year());
@@ -977,17 +977,17 @@ pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, cle
         && read_u8(game + fixture::STAGE) == 0xff
     {
         write_u16(game + fixture::SQUAD_RULES, marks | 0x800);
-        let preferido = home.match_day();
-        if preferido != 0xff && (preferido == 5 || preferido == 6 || preferido == 4) {
+        let preferred = home.match_day();
+        if preferred != 0xff && (preferred == 5 || preferred == 6 || preferred == 4) {
             let mut d = [0u8; 8];
             date_from_day_year(&mut d, read_u16(game + fixture::DAY), read_u16(game + fixture::YEAR));
             let pd = d.as_ptr() as usize;
             let day = date_weekday(pd) as u8;
-            if preferido != day && (day == 5 || day == 6) {
+            if preferred != day && (day == 5 || day == 6) {
                 let mut t = [0u8; 8];
                 date_default(&mut t);
                 crate::comparison::branch("cqc_4 home side preferred day");
-                nearest_weekday(pd, preferido as i8 as i16 as u16 as u32, &mut t); // cqc4: the home side’s preferred day
+                nearest_weekday(pd, preferred as i8 as i16 as u16 as u32, &mut t); // cqc4: the home side’s preferred day
                 let pt = t.as_ptr() as usize;
                 write_u16(game + fixture::YEAR, read_u16(pt + 2));
                 write_u16(game + fixture::DAY, read_u16(pt));
@@ -1410,7 +1410,6 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
     if SAME_DAY_CLASH_DRY_RUN {
         return 1;
     }
-    let news: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_FIXTURE_MANAGER_QUEUE_FIXTURE_MOVED_NEWS);
     // the calendar ones: ecx = this; push the match (0x5abc30, 0x5ab510; ret 4), push 0; push the match (0x5aa680; ret 8),
     // push 0; push &gravidade; push the match (0x5ad780; ret 0xc), push 0; push causa; push the match (0x5aac70; ret 0xc);
     // 0x68d040: ecx = a lista; 0x944c94: push lista; add esp, 4 -> cdecl
@@ -1434,7 +1433,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
         exe::fixture_manager_find_new_fixture_date(this, sai);
     }
     exe::fixture_manager_add_fixture(this, sai, 0);
-    news(this, sai, causa, 0);
+    exe::fixture_manager_queue_fixture_moved_news(this, sai, causa, 0);
     1
 }
 

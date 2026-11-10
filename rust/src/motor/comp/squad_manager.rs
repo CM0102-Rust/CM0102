@@ -112,7 +112,6 @@ pub(crate) unsafe fn contract_valid_for_club(k: usize, c: usize) -> bool {
 /// pessoa), se vale no clube: o +0x3a dele; senão 0.
 pub(crate) unsafe extern "thiscall" fn get_squad_number(_this: usize, p: usize, c: usize) -> i8 {
     let p = Staff(p);
-    let player: unsafe extern "C" fn(i8) -> u32 = core::mem::transmute(FN_DATABASE_IS_PLAYER_JOB);
     if p.is_null() || c == 0 {
         return 0;
     }
@@ -120,7 +119,7 @@ pub(crate) unsafe extern "thiscall" fn get_squad_number(_this: usize, p: usize, 
         return *(((p.player().addr() as u32) as usize + 4) as *const i8);
     }
     let k = exe::contract_manager_get_contract(read_u32(G_CONTRACT_MANAGER) as usize, p);
-    if k != 0 && player((p.job_for_club() as i8)) != 0 && contract_valid_for_club(k, c) {
+    if k != 0 && exe::database_is_player_job((p.job_for_club() as i8)) != 0 && contract_valid_for_club(k, c) {
         crate::comparison::branch("cql_1 contract number");
         return *((k + 0x3a) as *const i8); // cql1: the contract number
     }

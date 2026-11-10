@@ -101,8 +101,8 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
         let p = exe::date_add_days(r + transfer_interest::DATE, (end.as_mut_ptr()) as usize, 0x1f); // cqc10: o interesse vale 31 dias
         crate::comparison::branch("cqc_10 interest");
         let (hd, ha) = (i16::from_le_bytes([today[0], today[1]]), u16::from_le_bytes([today[2], today[3]]));
-        let vencido = ha > read_i16(p + 2) as u16 || (ha == read_i16(p + 2) as u16 && hd > read_i16(p));
-        if vencido || manager_owner == 0 || person.player().is_null() {
+        let expired = ha > read_i16(p + 2) as u16 || (ha == read_i16(p + 2) as u16 && hd > read_i16(p));
+        if expired || manager_owner == 0 || person.player().is_null() {
             let n = read_i32(this + media_fields::INTEREST_COUNT);
             let last = read_usize(this + media_fields::TRANSFER_INTERESTS).wrapping_add((n as usize).wrapping_mul(25)).wrapping_sub(25);
             core::ptr::copy(last as *const u8, r as *mut u8, 25);
@@ -2060,19 +2060,19 @@ pub(crate) unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this
     gravar(n, 4, read_usize(club.addr()) as u32);
     let r = reply as u8;
     let rep = read_i16(player.player().addr() + 0xb);
-    let mut reacao = 0i8;
+    let mut reaction = 0i8;
     if rep > 0x109a && rep > club.reputation() {
         let manager = read_usize(G_CONTRACT_MANAGER);
         let cat_ok = exe::contract_manager_get_deserved_squad_status(manager, player, contract) == 1 || exe::contract_manager_get_deserved_squad_status(manager, player, contract) == 2;
         if cat_ok && ((player.age() as i8) as i32) > 0x16 {
             if (player.loyalty() as i32) < 0xa && (player.ambition() as i32) > 0xf && (player.temperament() as i32) < 6 {
-                reacao = if mark && r == 2 { 3 } else { 1 };
+                reaction = if mark && r == 2 { 3 } else { 1 };
             } else if days_since_arrival(player) > 0x3e8 && (player.loyalty() as i32) > 0xf && read_usize(contract + 0x45) & 0x181 == 0 {
-                reacao = if mark && r == 2 { 4 } else { 2 };
+                reaction = if mark && r == 2 { 4 } else { 2 };
             }
         }
     }
-    gravar(n, 5, reacao as i32 as u32);
+    gravar(n, 5, reaction as i32 as u32);
     gravar(n, 6, r as i8 as i32 as u32);
     let row = read_usize(read_usize(G_MANAGER_MANAGER)).wrapping_add((read_usize(club.addr())).wrapping_mul(0x49));
     gravar(n, 7, (read_i16(row + 6) < 0xfa0) as u32); // board confidence below 4000

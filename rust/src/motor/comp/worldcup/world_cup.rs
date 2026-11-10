@@ -385,7 +385,6 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize,
 /// da nação de cada clube (+0x53) vira a Copa (0x775220 push [+4]; push nação; mov ecx, [0xb74318] -> thiscall, ret 8)
 /// e o vetor é liberado (0x9452ca).
 pub(crate) unsafe extern "thiscall" fn world_cup_set_predicted_positions(this: usize) {
-    let position: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(FN_COMP_STATS_SET_CLUB_FINAL_POSITION);
     if read_usize(this + 8) == 0 {
         show_error_at(0xad5888, 0x671);
         return;
@@ -407,7 +406,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_set_predicted_positions(this: u
     exe::crt_qsort(v, read_i16(this + 0x36) as i32 as u32, 4, 0x4b07d0);
     const FAIXAS: [u32; 32] = [1, 2, 3, 4, 5, 5, 5, 5, 9, 9, 9, 9, 9, 9, 9, 9, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19];
     for (k, &p) in FAIXAS.iter().enumerate() {
-        position(read_usize(this + 8), read_usize(v + k * 4), p);
+        exe::comp_stats_set_club_final_position(read_usize(this + 8), read_usize(v + k * 4), p);
     }
     let mut i = 0i16;
     while i < read_i16(this + 0x36) {
@@ -565,7 +564,6 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
         crate::comparison::branch("cqf_6 no seeds in 2002");
         return;
     }
-    let sedes: unsafe extern "thiscall" fn(usize, usize, u32, *mut i32, *mut i32, u32) -> u8 = core::mem::transmute(FN_HOSTCOUNTRY_FIND_HOSTS);
     this.set_entrants_are_qualifiers(0);
     if this.entrant_count() < 0x20 {
         show_error_at(0xad5888, 0x59e);
@@ -600,7 +598,7 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
     // simplification: both outputs start at −1 (no venue); the original leaves them with the stack leftover when 0x5fa730 does not
     // finds the Cup (it only writes them when it finds it)
     let (mut a, mut b) = (-1i32, -1i32);
-    sedes(read_usize(G_HOST_COUNTRY), read_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP), this.year() as u16 as u32, &mut a, &mut b, 1);
+    exe::hostcountry_find_hosts(read_usize(G_HOST_COUNTRY), read_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP), this.year() as u16 as u32, &mut a, &mut b, 1);
     let sede1 = if a != -1 { exe::database_get_national_team(read_usize(G_NATION_TABLE).wrapping_add(a.wrapping_mul(0x122) as usize)) } else { 0 };
     let sede2 = if b != -1 { exe::database_get_national_team(read_usize(G_NATION_TABLE).wrapping_add(b.wrapping_mul(0x122) as usize)) } else { 0 };
     let detentor = exe::comp_util_get_latest_placed_club(read_usize(G_CLUB_COMP_TABLE).wrapping_add((read_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP) as i32).wrapping_mul(0x6b) as usize), 0);

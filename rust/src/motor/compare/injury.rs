@@ -112,8 +112,8 @@ pub(crate) unsafe extern "thiscall" fn compare_add_injury(this: usize, kind_arg:
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, usize, usize, u32, u32, u32, u32) -> i32>(IDX_ADD_INJURY);
     let r = o(this, kind_arg, retroativa, p.addr(), game, surto, news, rec_arg, so_recorrencia);
     let kind = kind_arg as u8 as i8;
-    let valida = !p.is_null() && (read_usize(p.addr()) as i32) < read_usize(G_STAFF_COUNT) as i32 && !p.player().is_null() && (0..0x52).contains(&kind);
-    let ok = if !valida || so_recorrencia != 0 {
+    let valid = !p.is_null() && (read_usize(p.addr()) as i32) < read_usize(G_STAFF_COUNT) as i32 && !p.player().is_null() && (0..0x52).contains(&kind);
+    let ok = if !valid || so_recorrencia != 0 {
         r == -1
     } else {
         let reg = physical_record(this, read_usize(p.addr()));
@@ -210,7 +210,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_match_effects(this: usize, 
     let partida = MatchRecord(partida);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_APPLY_MATCH_EFFECTS);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    let mut batida = false;
+    let mut taken = false;
     for lado in 0..2usize {
         for k in 0..0x14usize {
             let slot = partida.addr() + match_record::ROW_MINUTE_OFF + 0x625 * lado + 0x49 * k;
@@ -220,11 +220,11 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_match_effects(this: usize, 
             }
             reg.push(((read_i32(this) as u32).wrapping_add((id as u32).wrapping_mul(31)).wrapping_add(0xa) as usize, 4));
             if *((slot - 0x11) as *const u8) != 0 && read_i32(this + injury_fields::MATCH_HIT_LIST) != 0 && has_injury_hit(this, id, Staff(pessoa)) {
-                batida = true;
+                taken = true;
             }
         }
     }
-    if batida {
+    if taken {
         crate::comparison::branch("apply_match_effects with collision");
         return o(this, game, partida.addr());
     }

@@ -192,10 +192,9 @@ pub(crate) unsafe extern "thiscall" fn get_club_finance(this: usize, club: usize
     if club == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_CLUB_FINANCE)(this, club);
     }
-    let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let mut eh_a: u32 = 0;
     let mut c = club;
-    let p = partner(club, &mut eh_a, 1);
+    let p = exe::club_get_linked_b_team(club, &mut eh_a, 1);
     if p != 0 && eh_a == 0 {
         c = p;
     }

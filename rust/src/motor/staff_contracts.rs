@@ -38,10 +38,10 @@ pub(crate) unsafe extern "thiscall" fn has_active_release_clause(c: usize) -> u3
 /// (0x53ab90) abaixo de 28, senão 2, em `anos` (se não nulo); a duração de hoje até a data (0x54cc30, duas vezes, como a
 /// original) com menos anos que o período, 1; com os anos exatos e 0 dias, `no_limite` = 1; 0. Pelo dia dos contratos
 /// 0x4c7ac0, pelo lance 0x8e5d60, pela troca com compensação 0x84b6f0 e por telas. Sem contador.
-pub(crate) unsafe extern "thiscall" fn check_fifa_protected_period(c: usize, _x: usize, no_limite: *mut u32, years: *mut u8) -> u32 {
+pub(crate) unsafe extern "thiscall" fn check_fifa_protected_period(c: usize, _x: usize, in_the_limit: *mut u32, years: *mut u8) -> u32 {
     let c = Contract(c);
-    if !no_limite.is_null() {
-        *no_limite = 0;
+    if !in_the_limit.is_null() {
+        *in_the_limit = 0;
     }
     if read_u8(G_FIFA_TRANSFER_RULES_IN_FORCE) != 1 {
         return 1; // cpu4: without the new rules
@@ -67,8 +67,8 @@ pub(crate) unsafe extern "thiscall" fn check_fifa_protected_period(c: usize, _x:
     if a < limit as i32 {
         return 1; // cpu4: dentro do periodo
     }
-    if !no_limite.is_null() && a == limit as i32 && u16::from_le_bytes([l[0], l[1]]) == 0 {
-        *no_limite = 1;
+    if !in_the_limit.is_null() && a == limit as i32 && u16::from_le_bytes([l[0], l[1]]) == 0 {
+        *in_the_limit = 1;
     }
     0
 }
@@ -570,8 +570,8 @@ pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
     if auxiliar != 0 && p.addr() == auxiliar {
         return 0;
     }
-    let funcoes = (t.grievances() as usize) as u32;
-    if funcoes == 0 {
+    let functions = (t.grievances() as usize) as u32;
+    if functions == 0 {
         return 0;
     }
     let b = |o: usize| *((p.addr() + o) as *const i8);
@@ -611,14 +611,14 @@ pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
         }
     }
     let tecnica = t.flags() & 8 != 0;
-    let m1 = funcoes & 0x1000002;
+    let m1 = functions & 0x1000002;
     let mut k = 0u8;
     for bits in [0x20000u32, 0x40000, 0x1000002, 0x200600, 0x2840, 0x14] {
-        if funcoes & bits != 0 {
+        if functions & bits != 0 {
             k += 1;
         }
     }
-    if tecnica || funcoes & 0x4582208 != 0 {
+    if tecnica || functions & 0x4582208 != 0 {
         k += 1;
     }
     if k > 1 {
@@ -641,12 +641,12 @@ pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
     let rating = rating as i8;
     let yes = (b59 < 15 && t.transfer_status() & 1 != 0)
         || (m1 != 0 && b59 < 10 && rating < 25)
-        || (funcoes & 0x20020 != 0 && rating < 25)
-        || (funcoes & 0x200 != 0 && rating < 18)
-        || (funcoes & 4 != 0 && b(staff::AMBITION) > 15 && b5b < 10)
-        || (funcoes & 0x2808 != 0 && b59 < 10 && b5a < 6 && rating < 30)
-        || ((funcoes & 0x82200 != 0 || tecnica) && b5b < 10 && rating < 20)
-        || funcoes & 0x111 != 0
+        || (functions & 0x20020 != 0 && rating < 25)
+        || (functions & 0x200 != 0 && rating < 18)
+        || (functions & 4 != 0 && b(staff::AMBITION) > 15 && b5b < 10)
+        || (functions & 0x2808 != 0 && b59 < 10 && b5a < 6 && rating < 30)
+        || ((functions & 0x82200 != 0 || tecnica) && b5b < 10 && rating < 20)
+        || functions & 0x111 != 0
         || (b44 as i32) < -0x46 - b59 as i32;
     yes as u32
 }

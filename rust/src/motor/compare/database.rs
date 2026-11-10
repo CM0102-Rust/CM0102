@@ -1152,11 +1152,11 @@ pub(crate) unsafe extern "C" fn compare_database_build_nation_name_index() {
 }
 
 /// Comparer for `database_remove_staff_from_club`.
-pub(crate) unsafe extern "C" fn compare_database_remove_staff_from_club(club: usize, person: usize, data: usize, disable: u32, como_jogador: u32) -> u32 {
+pub(crate) unsafe extern "C" fn compare_database_remove_staff_from_club(club: usize, person: usize, data: usize, disable: u32, how_player: u32) -> u32 {
     let club = Club(club);
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, u32) -> u32>(IDX_DATABASE_REMOVE_STAFF_FROM_CLUB);
     if club.is_null() || person == 0 {
-        return o(club.addr(), person, data, disable, como_jogador); // 0 or box: original only
+        return o(club.addr(), person, data, disable, how_player); // 0 or box: original only
     }
     // the club, the person and, for the senior national team, the U21 (the only other place the routine zeroes)
     let mut regions = vec![(club.addr(), 581), (person, 110)];
@@ -1168,8 +1168,8 @@ pub(crate) unsafe extern "C" fn compare_database_remove_staff_from_club(club: us
             regions.push((s, 581));
         }
     }
-    let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(club.addr(), person, data, disable, como_jogador),
-        || database_remove_staff_from_club(club.addr(), person, data, disable, como_jogador));
+    let (r, m, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(club.addr(), person, data, disable, how_player),
+        || database_remove_staff_from_club(club.addr(), person, data, disable, how_player));
     SCOREBOARD.record(igual && r == m, || format!("database_remove_staff_from_club({:x}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",
         club.addr(), person, data != 0, disable, r, m, mo, mr));
     r
@@ -1504,17 +1504,17 @@ pub(crate) unsafe extern "C" fn compare_database_compare_comp_history_rows(a: us
 
 /// Comparer for `database_player_to_attribute_vector`.
 pub(crate) unsafe extern "C" fn compare_database_player_to_attribute_vector(player: usize, person: usize, array: usize, end_of_sides: *mut u8,
-                                                            end_of_positions: *mut u8, fim_dos_ponderados: *mut u8) -> usize {
+                                                            end_of_positions: *mut u8, end_of_the_weighted: *mut u8) -> usize {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, *mut u8, *mut u8, *mut u8) -> usize>(IDX_DATABASE_PLAYER_TO_ATTRIBUTE_VECTOR);
     let mut regions = vec![(array, 0x3f * 3)];
-    for p in [end_of_sides, end_of_positions, fim_dos_ponderados] {
+    for p in [end_of_sides, end_of_positions, end_of_the_weighted] {
         if !p.is_null() {
             regions.push((p as usize, 1));
         }
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&regions,
-        || o(player, person, array, end_of_sides, end_of_positions, fim_dos_ponderados),
-        || database_player_to_attribute_vector(player, person, array, end_of_sides, end_of_positions, fim_dos_ponderados));
+        || o(player, person, array, end_of_sides, end_of_positions, end_of_the_weighted),
+        || database_player_to_attribute_vector(player, person, array, end_of_sides, end_of_positions, end_of_the_weighted));
     SCOREBOARD.record(igual && r == n, || format!("database_player_to_attribute_vector({:x}, {:x}) original={:x} rust={:x} {:x?} x {:x?}", player, person, r, n, mo, mr));
     r
 }
@@ -1682,8 +1682,8 @@ pub(crate) unsafe extern "C" fn compare_save_database_for_game(save: usize, a4: 
 }
 
 /// Comparer for `load_database_from_stream`.
-pub(crate) unsafe extern "C" fn compare_load_database_from_stream(save: usize, compartilhado: u32) -> u32 {
-    original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_LOAD_DATABASE_FROM_STREAM)(save, compartilhado)
+pub(crate) unsafe extern "C" fn compare_load_database_from_stream(save: usize, shared: u32) -> u32 {
+    original_fn::<unsafe extern "C" fn(usize, u32) -> u32>(IDX_LOAD_DATABASE_FROM_STREAM)(save, shared)
 }
 
 /// Comparer for `ball_out`.

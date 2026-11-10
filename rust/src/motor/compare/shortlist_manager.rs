@@ -232,14 +232,14 @@ pub(crate) unsafe extern "thiscall" fn compare_suspend_clubs_shortlisting_player
     exe::shortlist_manager_collect_interested_clubs(this, player, list, 1, 3, 0);
     // the items (8 bytes: player id, club id) through the nodes (+2 the first; node: +0 the data, +6 the next)
     let mut reg: Vec<(usize, usize)> = Vec::new();
-    let mut no = list.head();
-    while no != 0 {
-        let e = read_usize(this + shortlist_manager_fields::CLUB_SHORTLISTS).wrapping_add(read_usize(read_usize(no) + 4).wrapping_mul(9));
+    let mut in_the = list.head();
+    while in_the != 0 {
+        let e = read_usize(this + shortlist_manager_fields::CLUB_SHORTLISTS).wrapping_add(read_usize(read_usize(in_the) + 4).wrapping_mul(9));
         reg.push((e, 9));
         if clear != 0 {
             reg.push((read_usize(e), 0x28 * 0x25));
         }
-        no = read_usize(no + llist_node::NEXT);
+        in_the = read_usize(in_the + llist_node::NEXT);
     }
     exe::drop_llist(list);
     exe::crt_operator_delete(list);
@@ -270,22 +270,22 @@ pub(crate) unsafe extern "thiscall" fn compare_transfer_list_player(this: usize,
 /// Comparer for `build_position_lists`.
 pub(crate) unsafe extern "thiscall" fn compare_build_position_lists(this: usize, not_used: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_BUILD_POSITION_LISTS)(this, not_used);
-    let mut ruim = None;
+    let mut bad = None;
     'f: for vaga in 0..16usize {
         let n = read_i32(this + shortlist_manager_fields::POSITION_LIST_COUNTS + vaga * 4);
         if n > read_i32(this + shortlist_manager_fields::POSITION_LIST_CAPACITY) {
-            ruim = Some((vaga, -1));
+            bad = Some((vaga, -1));
             break;
         }
         for j in 0..n.max(0) as usize {
             let (a, b) = (read_usize(this + shortlist_manager_fields::POSITION_LISTS_BY_PERSON + vaga * 4) + j * 12, read_usize(this + shortlist_manager_fields::POSITION_LISTS_BY_KEY + vaga * 4) + j * 12);
             if read_usize(a) != read_usize(b) || exe::shortlist_staff_fits_slot_position(staff_records_staff_by_id(read_usize(a)), vaga as u32) == 0 {
-                ruim = Some((vaga, j as i32));
+                bad = Some((vaga, j as i32));
                 break 'f;
             }
         }
     }
-    SCOREBOARD.record(ruim.is_none(), || format!("build_position_lists: vaga e entrada {:?}", ruim));
+    SCOREBOARD.record(bad.is_none(), || format!("build_position_lists: vaga e entrada {:?}", bad));
 }
 
 /// Comparador: lado a lado pelos 32 vetores (12 bytes por entrada) e por [0xae1080].

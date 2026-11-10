@@ -475,9 +475,9 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this
         0
     });
     for i in 0..16usize {
-        let de = group_table(this, i) + 0x3b;
+        let of = group_table(this, i) + 0x3b;
         let para = league.table() + i * 0x3b;
-        core::ptr::copy_nonoverlapping(de as *const u8, para as *mut u8, 0x3b); // cqr9: the runner-up of group i
+        core::ptr::copy_nonoverlapping(of as *const u8, para as *mut u8, 0x3b); // cqr9: the runner-up of group i
         write_usize(league.table() + i * 0x3b + 9, 0);
         write_usize(league.table() + i * 0x3b + 5, 0);
     }
@@ -975,7 +975,7 @@ pub(crate) unsafe fn select_serie_c_cup_entrants(this: usize) -> (i32, i32) {
         Some(l) => l,
         None => return (0, 0),
     };
-    let divisoes = [read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_C1_A), read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_C1_B), read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_C2_A), read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_C2_B), read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_C2_C)];
+    let divisions = [read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_C1_A), read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_C1_B), read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_C2_A), read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_C2_B), read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_C2_C)];
     let mut m = 0i32;
     let mut i = 0;
     while i < ita_cup_club_count_without_nations() {
@@ -985,7 +985,7 @@ pub(crate) unsafe fn select_serie_c_cup_entrants(this: usize) -> (i32, i32) {
             continue;
         }
         match comp_id_at(c, 0x57) {
-            Some(d) if divisoes.contains(&d) => {
+            Some(d) if divisions.contains(&d) => {
                 if push_entrant(this, &mut m, c) {
                     break;
                 }
@@ -1121,14 +1121,14 @@ pub(crate) unsafe fn set_cup_league_rules(this: League, g: &GroupStageRules, rou
 /// Checks after the original that the fields set_cup_league_rules writes have the planned values.
 ///
 /// [pt] O plano: os campos que `set_cup_league_rules` grava, lidos depois da original.
-pub(crate) unsafe fn check_cup_league_rules(nome: &str, this: League, g: &GroupStageRules, r: u32) {
+pub(crate) unsafe fn check_cup_league_rules(name: &str, this: League, g: &GroupStageRules, r: u32) {
     let lido = (this.win_points(), this.draw_points(), this.match_category(), [(this.tiebreaks() as u8), read_u8(this.addr() + league::TIEBREAKS + 1), read_u8(this.addr() + league::TIEBREAKS + 2), read_u8(this.addr() + league::TIEBREAKS + 3)], this.promoted_count(), [this.promotion_playoff_count(), this.relegation_playoff_count(), this.relegated_count()], this.club_sides(),
         this.upper_division_id(), (this.lower_division_id() as i32),
         this.legs());
-    let previsto = (g.win, g.draw, g.category, g.tiebreak, g.slots, [0u8; 3], 1u8, -1i32, -1i32, 1i16);
+    let predicted = (g.win, g.draw, g.category, g.tiebreak, g.slots, [0u8; 3], 1u8, -1i32, -1i32, 1i16);
     let premio = g.prize.map_or(true, |p| (this.prize_fund() as u32) == p);
     let bits = g.bits.map_or(true, |w| (this.league_flags() as u16) == w);
-    SCOREBOARD.record(r == 1 && lido == previsto && premio && bits, || format!("{}({:#x}) devolveu {} regras {:?} previstas {:?} prêmio ok {} bits ok {}", nome, this.addr(), r, lido, previsto, premio, bits));
+    SCOREBOARD.record(r == 1 && lido == predicted && premio && bits, || format!("{}({:#x}) devolveu {} regras {:?} previstas {:?} prêmio ok {} bits ok {}", name, this.addr(), r, lido, predicted, premio, bits));
 }
 
 /// rule: the Italian Cup groups are single round robin, 3 points a win and 1 a draw; tiebreak by codes 4, 1 and 2

@@ -16,7 +16,7 @@ use super::*;
 /// começo; ano × 12 + mês antes do começo do período para a busca, até o fim conta um. Em 16 bits. TapeCall a cada
 /// permissão que chega aos jogos da seleção: sem contador.
 pub(crate) unsafe extern "thiscall" fn count_results_in_period(this: usize, nation: usize, month_of: u32, year_of: u32, month_until: u32, year_until: u32) -> u16 {
-    let de = (year_of & 0xffff) as i32 * 12 + month_of as u8 as i8 as i32;
+    let of = (year_of & 0xffff) as i32 * 12 + month_of as u8 as i8 as i32;
     let ate = (year_until & 0xffff) as i32 * 12 + month_until as u8 as i8 as i32;
     let e = read_usize(this).wrapping_add((read_usize(nation) as u32).wrapping_mul(0x2c) as usize);
     let hist = read_usize(e + 4);
@@ -25,7 +25,7 @@ pub(crate) unsafe extern "thiscall" fn count_results_in_period(this: usize, nati
     while j >= 0 {
         let p = hist.wrapping_add(j as isize as usize * 5);
         let v = read_u16(p + 3) as i32 * 12 + *((p + 2) as *const u8) as i32;
-        if v < de {
+        if v < of {
             break;
         }
         if v <= ate { // cpt1: ate o mes final

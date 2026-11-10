@@ -91,18 +91,18 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_collect_fixture_op
 /// da original volta no fim. Nos elencos de 23 e 25 a original passa a sobra da pilha nas vagas a partir da 22ª: elas
 /// ficam fora (correção conhecida, o ramo); as 22 primeiras e o resto conferem. Sem escala (técnico humano), nada a
 /// comparar. Dentro de uma gravação de fora, só a original.
-pub(crate) unsafe extern "thiscall" fn compare_select_squad(this: usize, nation: usize, kind: u32, data: usize, p: usize, forcado: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_select_squad(this: usize, nation: usize, kind: u32, data: usize, p: usize, forced: u32) {
     use std::sync::atomic::Ordering::Relaxed;
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, usize, u32)>(IDX_SELECT_SQUAD);
     if is_recording() {
-        return o(this, nation, kind, data, p, forcado);
+        return o(this, nation, kind, data, p, forced);
     }
     let t = kind as u8 as i8;
     let regions = squad_selection_regions(this, nation, t, p);
     let externa = tape_lock().take();
     *tape_lock() = Some((regions.clone(), Vec::new()));
     let level = RECORDABLE_DEPTH.swap(0, Relaxed);
-    o(this, nation, kind, data, p, forcado);
+    o(this, nation, kind, data, p, forced);
     let gravadas = tape_lock().take().map_or(Vec::new(), |f| f.1);
     RECORDABLE_DEPTH.store(level, Relaxed);
     *tape_lock() = externa;
@@ -129,8 +129,8 @@ pub(crate) unsafe extern "thiscall" fn compare_select_squad(this: usize, nation:
     let dw = |k: usize| u32::from_le_bytes([ent[k], ent[k + 1], ent[k + 2], ent[k + 3]]) as usize;
     let list: Vec<usize> = (0..n1.min(ent.len() / 4)).map(|k| dw(4 * k)).collect();
     let code: Vec<u16> = ent.get(4 * n1..).unwrap_or(&[]).chunks_exact(2).map(|c| u16::from_le_bytes([c[0], c[1]])).collect();
-    let corrigido = size == 23 || size == 25;
-    let lim = if corrigido { 22.min(code.len()) } else { code.len() };
+    let fixed = size == 23 || size == 25;
+    let lim = if fixed { 22.min(code.len()) } else { code.len() };
     let same = a[1] as u8 == n && a[2] == mode && a[3] as usize == elenco && code.len() == size as usize
         && list[..] == cand[..n1.min(200)] && code[..lim] == codigos[..lim];
     SCOREBOARD.record(same, || format!(
@@ -675,8 +675,8 @@ pub(crate) unsafe extern "thiscall" fn compare_record_club_call_ups(this: usize,
         // the CRT’s own qsort (the order of equals is its own), outside the original’s trace
         crate::rng::pause_trace(|| qsort(expected.as_mut_ptr() as usize, 0x32, 4, 0x778ef0));
         o(this, team.addr(), b, p);
-        let obtido: Vec<u32> = (0..0x32usize).map(|i| team.squad(i) as u32).collect();
-        SCOREBOARD.record(obtido == expected, || format!("record_club_call_ups({:x}) elenco original={:x?} esperado={:x?}", team.addr(), obtido, expected));
+        let got: Vec<u32> = (0..0x32usize).map(|i| team.squad(i) as u32).collect();
+        SCOREBOARD.record(got == expected, || format!("record_club_call_ups({:x}) elenco original={:x?} esperado={:x?}", team.addr(), got, expected));
         return;
     }
     let mut reg = vec![(team.addr() + club::SQUAD, 0xc8)];

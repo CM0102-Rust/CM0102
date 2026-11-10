@@ -137,7 +137,7 @@ pub(crate) unsafe fn is_in_penalty_area(j: MatchPlayer) -> bool {
 /// [pt] { 0x6e9630 }: punicao da falta (tipo 1): vermelho direto (-1000, tipo 4), amarelo pela
 /// severidade contra sorteios, ou so -25; com `flag` (ou papel 1), sorteio(3000): acima de 475
 /// vermelho (-750, tipo 6, 9 no registro), acima de 50 (ou na area) amarelo com -375.
-pub(crate) unsafe extern "thiscall" fn punish_foul(this: usize, j: usize, kind: *mut u8, x: i8, severidade: i8, flag: u8, weight: *mut f32) {
+pub(crate) unsafe extern "thiscall" fn punish_foul(this: usize, j: usize, kind: *mut u8, x: i8, severity: i8, flag: u8, weight: *mut f32) {
     let j = MatchPlayer(j);
     *weight = 1.5;
     let engine = Engine(*(this as *const usize));
@@ -148,11 +148,11 @@ pub(crate) unsafe extern "thiscall" fn punish_foul(this: usize, j: usize, kind: 
     }
     let d = (j.addr() + match_player::MATCH_RATING) as *mut i16;
     if flag == 0 && exe::cm3_match_engine_get_player_position(engine, j) & 1 == 0 {
-        if severidade as i32 > random(0xf) + 9 {
+        if severity as i32 > random(0xf) + 9 {
             *d = (*d).wrapping_add(-1000);
             *kind = 4;
             *weight = 5.0;
-        } else if severidade as i32 > random(5) + 3 {
+        } else if severity as i32 > random(5) + 3 {
             apply_card_penalty(engine, j);
             give_yellow_card(j, kind, x, weight);
         } else {
@@ -184,7 +184,7 @@ pub(crate) unsafe extern "thiscall" fn punish_foul(this: usize, j: usize, kind: 
 /// 1,25; com `flag`, sorteio(3000) acima de 375 e vermelho (tipo 5), senao amarelo com desconto
 /// (acima de 50, ou na area); sem `flag`, vermelho pela severidade (marca 0x16 com `expulsar`),
 /// amarelo contra sorteio(6) ou -25. Conta a falta no jogador e 0x15 no outro.
-pub(crate) unsafe extern "thiscall" fn punish_move(this: usize, j: usize, other: usize, kind: *mut u8, x: i8, severidade: i8, flag: u8, weight: *mut f32, send_off: u8) {
+pub(crate) unsafe extern "thiscall" fn punish_move(this: usize, j: usize, other: usize, kind: *mut u8, x: i8, severity: i8, flag: u8, weight: *mut f32, send_off: u8) {
     let j = MatchPlayer(j);
     *weight = 1.5;
     if j.position() < 0 {
@@ -211,7 +211,7 @@ pub(crate) unsafe extern "thiscall" fn punish_move(this: usize, j: usize, other:
                     apply_card_penalty(engine, j);
                     give_yellow_card(j, kind, x, weight);
                 }
-            } else if severidade as i32 > random(0xf) + 7 {
+            } else if severity as i32 > random(0xf) + 7 {
                 *d = (*d).wrapping_add(-1000);
                 *kind = 4;
                 *weight = 5.0;
@@ -219,7 +219,7 @@ pub(crate) unsafe extern "thiscall" fn punish_move(this: usize, j: usize, other:
                 if send_off != 0 {
                     j.set_sent_off(1);
                 }
-            } else if severidade as i32 > random(6) {
+            } else if severity as i32 > random(6) {
                 apply_card_penalty(engine, j);
                 give_yellow_card(j, kind, x, weight);
             } else {

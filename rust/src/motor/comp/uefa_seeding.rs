@@ -647,7 +647,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                 last_stage = f;
                 let mut j = 0i8;
                 loop {
-                    let mut tentar_de_novo = false;
+                    let mut try_of_new = false;
                     let c = if chosen == 0 {
                         if nation.league_selected() == 0 {
                             um()
@@ -655,7 +655,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                             let cup = read_u32(G_LEAGUE_WORLD_CUP_CUP_COMP + (((exe::key_nation_index_of_nation(nation) as u32) as i8) as i32 * 0x48) as usize) as usize;
                             if cup == 0 {
                                 show_error_at(0xaa1a1c, 0x418);
-                                tentar_de_novo = true;
+                                try_of_new = true;
                                 0
                             } else {
                                 let mut c = exe::comp_util_get_latest_placed_club(cup, 0);
@@ -722,7 +722,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                     } else {
                         um()
                     };
-                    if tentar_de_novo {
+                    if try_of_new {
                         j -= 1;
                     } else {
                         chosen = chosen.wrapping_add(1);

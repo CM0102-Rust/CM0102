@@ -184,10 +184,10 @@ pub(crate) unsafe extern "thiscall" fn compare_set_on_holiday(this: usize, holid
     }
     let mark = read_usize(this).wrapping_add((i as usize).wrapping_mul(0xa6ef)).wrapping_add(0x9a01);
     let (antes, conta) = (read_usize(mark), read_usize(this + 0xc) as i32);
-    let esperada = conta + if holiday != 0 && antes == 0 { 1 } else if holiday == 0 && antes != 0 { -1 } else { 0 };
+    let expected = conta + if holiday != 0 && antes == 0 { 1 } else if holiday == 0 && antes != 0 { -1 } else { 0 };
     o(this, holiday, manager);
     let (depois, conta2) = (read_usize(mark) as u32, read_usize(this + 0xc) as i32);
-    SCOREBOARD.record(depois == holiday && conta2 == esperada, || format!("set_on_holiday({}, técnico {:x}): marca {:x} -> {:x}, conta {} -> {} (esperava {})", holiday, t, antes, depois, conta, conta2, esperada));
+    SCOREBOARD.record(depois == holiday && conta2 == expected, || format!("set_on_holiday({}, técnico {:x}): marca {:x} -> {:x}, conta {} -> {} (esperava {})", holiday, t, antes, depois, conta, conta2, expected));
 }
 
 /// Comparer for `square_bit`.

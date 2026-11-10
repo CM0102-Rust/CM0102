@@ -400,12 +400,12 @@ pub(crate) unsafe fn count_items_on_day(this: usize, day: i16) -> u32 {
         return 0;
     }
     let mut n = 0;
-    let mut no = l.head();
-    while no != 0 {
-        if read_i16(read_usize(no) + 0x10) == day {
+    let mut in_the = l.head();
+    while in_the != 0 {
+        if read_i16(read_usize(in_the) + 0x10) == day {
             n += 1;
         }
-        no = read_usize(no + llist_node::NEXT);
+        in_the = read_usize(in_the + llist_node::NEXT);
     }
     n
 }

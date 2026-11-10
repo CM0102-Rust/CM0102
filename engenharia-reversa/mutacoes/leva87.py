@@ -6,6 +6,6 @@ MUTACOES = [
     ('f_20', "            if (sheet.leadership() as i32) > random(20)", "            if (sheet.leadership() as i32) > random(19)"),
     ('f_750', "(club.reputation()).wrapping_sub(750)", "(club.reputation()).wrapping_sub(700)"),
     ('f_3', "                    sum(-3 * rating(j));", "                    sum(-2 * rating(j));"),
-    ('f_soma', "        if j != designado() {\n            sum(rating(j));", "        if j != designado() {\n            sum(rating(j) + 1);"),
+    ('f_soma', "        if j != designated() {\n            sum(rating(j));", "        if j != designated() {\n            sum(rating(j) + 1);"),
     ('f_marca', "            exe::match_player_calc_ratings(j, 1);", "            exe::match_player_calc_ratings(j, 0);"),
 ]

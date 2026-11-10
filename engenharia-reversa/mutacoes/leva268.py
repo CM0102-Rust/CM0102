@@ -1,6 +1,6 @@
 # Mutações da 268a leva (itens cqe_1, cqe_2, cqe_3, cqe_4, cqe_5, cqe_6). Uso: python mutacoes.py mutacoes\leva268.py --carreira 2002-06-01
 MUTACOES = [
-    ('cqe1_aceita_menos', 'if v as f64 * read_f64(rdata::F64_0_85) < request_f && troca_recusada == 0 {', 'if v as f64 * 1.2 < request_f && troca_recusada == 0 {', 'cqe_1 accepts'),
+    ('cqe1_aceita_menos', 'if v as f64 * read_f64(rdata::F64_0_85) < request_f && swap_refused == 0 {', 'if v as f64 * 1.2 < request_f && swap_refused == 0 {', 'cqe_1 accepts'),
     ('cqe1_sem_contraproposta', 'if v as f64 * read_f64(rdata::F64_0_75) < request_f && kind != 1 && kind != 2 && dry_run == 0 { // cqe1: a contraproposta', 'if v as f64 * read_f64(rdata::F64_0_75) < request_f && kind != 1 && kind != 2 && dry_run == 0 && false { // mutacao: sem contraproposta', 'cqe_1 counter-offer'),
     ('cqe1_preco_sempre_o_piso', 'let price = if k > floor { // cqe1: the price by value k', 'let price = if k > floor && false { // mutacao: sempre o piso', 'cqe_1 price by k'),
     ('cqe2_preco_pela_metade', 'new.set_fee(value as u32 as usize); // cqe2: the option price', 'new.set_fee((value / 2) as u32 as usize); // mutacao: a metade', 'cqe_2 option built'),

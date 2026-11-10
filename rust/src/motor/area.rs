@@ -88,17 +88,17 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
     let weights = |desl: usize, n: usize| (0..n).map(|k| *((area + desl + k) as *const u8) as i32).fold(0i32, |a, b| a.wrapping_add(b));
     let n = *((area + 0xbab) as *const u8) as i32 - 1;
     let sum = weights(0xbad, (n + 1) as usize);
-    let mut acumulado = 0i32;
+    let mut accumulated = 0i32;
     let mut c = 0i32;
     while c <= n {
-        acumulado = acumulado.wrapping_add(*((area as isize + c as isize + 0xbad) as *const u8) as i32);
+        accumulated = accumulated.wrapping_add(*((area as isize + c as isize + 0xbad) as *const u8) as i32);
         if c == 0 {
             write_i32_at(area, 0x1c, lado);
         } else {
             write_i32_at(area, c as isize * 4 + 0x1c, read_i32_at(area, c as isize * 4 + 0x108).wrapping_add(2));
         }
         if c < *((area + 0xbab) as *const u8) as i32 - 1 {
-            write_i32_at(area, c as isize * 4 + 0x10c, acumulado.wrapping_mul(width).wrapping_div(sum).wrapping_add(lado - 1));
+            write_i32_at(area, c as isize * 4 + 0x10c, accumulated.wrapping_mul(width).wrapping_div(sum).wrapping_add(lado - 1));
         } else {
             write_i32_at(area, c as isize * 4 + 0x10c, width.wrapping_add(lado - 1));
         }
@@ -110,17 +110,17 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
     // rows: +0x94 start and +0x184 end, by weights +0xbcb
     let n = *((area + 0xbac) as *const u8) as i32 - 1;
     let sum = weights(0xbcb, (n + 1) as usize);
-    let mut acumulado = 0i32;
+    let mut accumulated = 0i32;
     let mut l = 0i32;
     while l <= n {
-        acumulado = acumulado.wrapping_add(*((area as isize + l as isize + 0xbcb) as *const u8) as i32);
+        accumulated = accumulated.wrapping_add(*((area as isize + l as isize + 0xbcb) as *const u8) as i32);
         if l == 0 {
             write_i32_at(area, 0x94, cima);
         } else {
             write_i32_at(area, l as isize * 4 + 0x94, read_i32_at(area, l as isize * 4 + 0x180).wrapping_add(2));
         }
         let end = if l < *((area + 0xbac) as *const u8) as i32 - 1 {
-            acumulado.wrapping_mul(height).wrapping_div(sum).wrapping_add(cima - 1)
+            accumulated.wrapping_mul(height).wrapping_div(sum).wrapping_add(cima - 1)
         } else {
             height.wrapping_add(cima - 1)
         };
@@ -270,13 +270,13 @@ pub(crate) unsafe extern "thiscall" fn draw(area: usize, redraw: u32) {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DRAW)(area, redraw);
     }
     crate::comparison::branch("screens draw the area");
-    let imagem = (area + 0x200) as *mut usize;
-    if redraw != 0 && *imagem != 0 {
-        exe::gui_free_image(*imagem);
-        *imagem = 0;
+    let image = (area + 0x200) as *mut usize;
+    if redraw != 0 && *image != 0 {
+        exe::gui_free_image(*image);
+        *image = 0;
     }
-    if core::ptr::read_unaligned((area + 0x20e) as *const i16) != -1 && *imagem == 0 {
-        *imagem = exe::gui_save_screen_image(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), 0);
+    if core::ptr::read_unaligned((area + 0x20e) as *const i16) != -1 && *image == 0 {
+        *image = exe::gui_save_screen_image(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), 0);
     }
     // simplification: the original pushes edx with the colour in dx and, on top, leftovers from earlier calls
     // (unpredictable); the color is u16 for the panel, here zero-extended
@@ -301,8 +301,8 @@ pub(crate) unsafe extern "thiscall" fn draw(area: usize, redraw: u32) {
         }
         return;
     }
-    if read_i32_at(area, 0xbed) != 0 && *imagem == 0 {
-        *imagem = exe::gui_save_screen_image(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8).wrapping_sub(0x16), read_i32_at(area, 0xc), 0);
+    if read_i32_at(area, 0xbed) != 0 && *image == 0 {
+        *image = exe::gui_save_screen_image(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8).wrapping_sub(0x16), read_i32_at(area, 0xc), 0);
     }
     let total = || core::ptr::read_unaligned((area + 0xb74) as *const i16);
     let mut i = core::ptr::read_unaligned((area + 0xb76) as *const i16);

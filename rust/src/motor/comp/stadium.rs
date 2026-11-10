@@ -71,7 +71,6 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
     let nation = Nation(nation);
     let home = Club(home);
     let away = Club(away);
-    let search: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let state = (this + stadium_obj::VENUE_SORT) as *mut u8;
     // the key: only the order field and +0xc (0) matter to the comparers
     let mut key = [0u32; 4];
@@ -99,7 +98,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
     }
     let k = key.as_ptr() as usize;
     if cmp != 0 {
-        e = search(k, read_usize(this + stadium_obj::VENUES), read_usize(this + stadium_obj::VENUE_COUNT) as u32, 0x10, cmp);
+        e = exe::crt_bsearch(k, read_usize(this + stadium_obj::VENUES), read_usize(this + stadium_obj::VENUE_COUNT) as u32, 0x10, cmp);
         if e != 0 {
             // loop back to the first slot with the same key
             loop {
@@ -122,7 +121,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
     if e != 0 {
         let mut i: i16 = 0;
         let mut best = 0i32;
-        let mut escolhida = 0usize;
+        let mut chosen = 0usize;
         loop {
             if i >= 0x1e {
                 break;
@@ -164,7 +163,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
                     let n = exe::stadium_score_venue_for_fixture(this, read_usize(e + 0xc), marks, home, away, partida);
                     if n > best {
                         best = n; // cqo1: a melhor nota
-                        escolhida = e;
+                        chosen = e;
                     }
                 } else {
                     if read_usize(e + 8) != 0 {
@@ -202,9 +201,9 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
         if best > 0 {
             crate::comparison::branch("cqo_1 neutral by rating");
             if partida != 0 {
-                add_stadium_booking(this, read_usize(escolhida + 0xc), data);
+                add_stadium_booking(this, read_usize(chosen + 0xc), data);
             }
-            return read_usize(escolhida + 0xc);
+            return read_usize(chosen + 0xc);
         }
     }
     if !nation.is_null() && marks & 2 == 0 && marks & 0x2c != 0 {
@@ -292,7 +291,7 @@ pub(crate) unsafe fn stadium_choice_regions(this: usize, extra: Option<(usize, u
 ///   sem nenhuma, a nação da competição (+0x5d). Com 0x20, a seleção joga no próprio país. Com 4, o estádio nacional
 ///   da nação (reservado); sem ele, 0x20 (seleção) ou 0x40. Depois a busca do estádio neutro (0x85c800) na nação e, sem
 ///   achar, na alternativa (marcas 0x40..0x200 → 0x400..0x2000).
-pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u32, partida: usize, estadio: u32) {
+pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marks: u32, partida: usize, estadio: u32) {
     if partida == 0 {
         return show_error_at(0xa835b0, 0x1f0);
     }
@@ -307,7 +306,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
         fx.set_stadium_id(read_usize(st));
     };
     let neutro = (fx.addr() + fixture::NEUTRAL_VENUE) as *mut u8;
-    let mut f = marcas;
+    let mut f = marks;
     // 0 = the general rules (0x85c5a7); 1 = the English rule of 4 (0x85c38e)
     let mut step_towards = 0;
     if f == 0x8000 {
@@ -321,25 +320,25 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
     } else if f == 4 {
         step_towards = 1;
     } else if f == 0 {
-        let casa = fx.home_club();
-        if d.year < 0x7d3 && fin_prm_is_national_team(casa) && read_usize(casa.nation().addr()) == read_usize(KEY_NATION_ENGLAND) {
+        let home = fx.home_club();
+        if d.year < 0x7d3 && fin_prm_is_national_team(home) && read_usize(home.nation().addr()) == read_usize(KEY_NATION_ENGLAND) {
             f = 0x20;
         }
-        let casa = fx.home_club();
-        let n = casa.nation().addr();
+        let home = fx.home_club();
+        let n = home.nation().addr();
         let fin = read_usize(KEY_NATION_FINLAND);
-        if n != 0 && read_usize(n) == fin && fx.stage_index() != 0xff && read_usize(fx.addr()) == read_usize(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE) && casa.stadium().addr() != 0 {
+        if n != 0 && read_usize(n) == fin && fx.stage_index() != 0xff && read_usize(fx.addr()) == read_usize(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE) && home.stadium().addr() != 0 {
             let st = read_usize(nation_by_id(fin) + 0x80);
-            let mut livre = true;
+            let mut free = true;
             if read_usize(this) != 0 {
-                let buscar: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
-                let mut chave = [0u32; 3];
-                chave[0] = read_usize(st) as u32;
-                chave[1] = (d.day as u16 as u32) | ((d.year as u32) << 16);
-                chave[2] = d.is_leap_year as u32;
-                livre = buscar(chave.as_ptr() as usize, read_usize(this), read_usize(this + stadium_obj::BOOKING_COUNT) as u32, 0xc, 0x85e380) == 0;
+                let search: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
+                let mut key = [0u32; 3];
+                key[0] = read_usize(st) as u32;
+                key[1] = (d.day as u16 as u32) | ((d.year as u32) << 16);
+                key[2] = d.is_leap_year as u32;
+                free = search(key.as_ptr() as usize, read_usize(this), read_usize(this + stadium_obj::BOOKING_COUNT) as u32, 0xc, 0x85e380) == 0;
             }
-            if livre && (read_usize(read_usize(fx.home_club().addr() + club::STADIUM) + 0x3c) as i32) < 40000 {
+            if free && (read_usize(read_usize(fx.home_club().addr() + club::STADIUM) + 0x3c) as i32) < 40000 {
                 *neutro = 1;
                 fixar(read_usize(nation_by_id(fin) + 0x80));
                 add_stadium_booking(this, fx.stadium(), pd);
@@ -347,14 +346,14 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
             }
         }
         *neutro = 0;
-        let casa = fx.home_club();
-        if f != 0x20 && !casa.is_null() && casa.stadium().addr() != 0 {
-            let n = casa.nation().addr();
-            let mut amistoso = false;
+        let home = fx.home_club();
+        if f != 0x20 && !home.is_null() && home.stadium().addr() != 0 {
+            let n = home.nation().addr();
+            let mut friendly = false;
             if n != 0 && (read_usize(n) == read_usize(KEY_NATION_ITALY) || read_usize(n) == read_usize(KEY_NATION_FRANCE)) {
-                amistoso = exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), fx.competition()) != 0;
+                friendly = exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), fx.competition()) != 0;
             }
-            if !amistoso {
+            if !friendly {
                 crate::comparison::branch("cqo_1 home team stadium");
                 fixar(read_usize(fx.home_club().addr() + club::STADIUM)); // cqo1: the home team stadium
                 return;
@@ -398,11 +397,11 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
     let (mut a, mut b) = (0u32, 0u32);
     // simplification: the original pushes eax with the year (word +0x2c) in the low 16 bits and leftover in the high ones; 0x5fa730 only reads the word
     let r = exe::hostcountry_find_hosts(read_usize(G_HOST_COUNTRY), (read_usize(comp.addr()) as u32) as u32 as usize, fx.season_year() as u32, (&mut a) as *mut u32 as *mut i32, (&mut b) as *mut u32 as *mut i32, 1) as u8;
-    let mut alvo;
+    let mut target;
     let mut alt = 0usize;
     if r == 2 {
         let (na, nb) = (nation_by_id(a as usize), nation_by_id(b as usize));
-        alvo = nb;
+        target = nb;
         if f & 0x80 == 0 && f & 0x2a00 == 0 {
             if f & 0x40 != 0 || f & 0x5500 != 0 {
                 if f & 0x40 != 0 {
@@ -417,7 +416,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
                     f = 0x200;
                 }
                 alt = nb;
-                alvo = na;
+                target = na;
             }
         } else {
             if f & 0x80 != 0 {
@@ -433,15 +432,15 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
         }
     } else if r == 1 {
         crate::comparison::branch("cqo_1 single host");
-        alvo = nation_by_id(a as usize); // cqo1: a sede única
+        target = nation_by_id(a as usize); // cqo1: a sede única
     } else {
-        alvo = comp.nation().addr();
+        target = comp.nation().addr();
     }
     if f & 0x20 != 0 && fin_prm_is_national_team(fx.home_club()) {
-        alvo = read_usize(fx.home_club().addr() + club::NATION);
+        target = read_usize(fx.home_club().addr() + club::NATION);
     }
-    if f & 4 != 0 && alvo != 0 {
-        let st = read_usize(alvo + nation::NATIONAL_STADIUM);
+    if f & 4 != 0 && target != 0 {
+        let st = read_usize(target + nation::NATIONAL_STADIUM);
         if st != 0 {
             crate::comparison::branch("cqo_1 national stadium");
             fixar(st);
@@ -450,8 +449,8 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
         }
         f = if fin_prm_is_national_team(fx.home_club()) { 0x20 } else { 0x40 };
     }
-    let buscar: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize = core::mem::transmute(FN_STADIUM_FIND_AVAILABLE_VENUE);
-    let r = buscar(this, f, comp.continent(), alvo, pd, fx.home_club().addr(), fx.away_club().addr(), fx.addr());
+    let search: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize = core::mem::transmute(FN_STADIUM_FIND_AVAILABLE_VENUE);
+    let r = search(this, f, comp.continent(), target, pd, fx.home_club().addr(), fx.away_club().addr(), fx.addr());
     fx.set_stadium(r);
     if r == 0 && alt != 0 {
         f = match f {
@@ -461,7 +460,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
             0x200 => 0x2000,
             x => x,
         };
-        let r = buscar(this, f, comp.continent(), alt, pd, fx.home_club().addr(), fx.away_club().addr(), fx.addr());
+        let r = search(this, f, comp.continent(), alt, pd, fx.home_club().addr(), fx.away_club().addr(), fx.addr());
         fx.set_stadium(r);
     }
     let st = fx.stadium();
@@ -1167,10 +1166,10 @@ pub(crate) unsafe extern "thiscall" fn stadium_daily_update(this: usize, today: 
     let k = k as i16 as i32;
     let n = read_usize(this + stadium_obj::BOOKING_COUNT) as i32;
     if k < n {
-        let de = list.wrapping_add(((n - k - 1) as usize).wrapping_mul(12));
+        let of = list.wrapping_add(((n - k - 1) as usize).wrapping_mul(12));
         // forward rep movsd: the regions may overlap
         for j in 0..(k as usize * 3) {
-            write_u32(list + j * 4, read_usize(de + j * 4) as u32);
+            write_u32(list + j * 4, read_usize(of + j * 4) as u32);
         }
     }
     write_u32(this + stadium_obj::BOOKING_COUNT, (n - k) as u32);
@@ -1231,12 +1230,11 @@ pub(crate) unsafe extern "thiscall" fn is_stadium_free_on_date(this: usize, stad
     if read_usize(this) == 0 {
         return 1;
     }
-    let search: unsafe extern "C" fn(usize, usize, u32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let mut key = [0u8; 12];
     let mut t = [0u8; 8];
     core::ptr::write_unaligned(key.as_mut_ptr() as *mut u32, read_usize(stadium) as u32);
     exe::date_operator_3d(key.as_mut_ptr() as usize + 4, t.as_mut_ptr() as usize, data);
-    let r = search(key.as_ptr() as usize, read_usize(this), read_usize(this + stadium_obj::BOOKING_COUNT) as u32, 0xc, 0x85e380);
+    let r = exe::crt_bsearch(key.as_ptr() as usize, read_usize(this), read_usize(this + stadium_obj::BOOKING_COUNT) as u32, 0xc, 0x85e380);
     crate::comparison::branch("cps_7 reservation checked");
     (r == 0) as u32 // cps7: free without the reservation
 }

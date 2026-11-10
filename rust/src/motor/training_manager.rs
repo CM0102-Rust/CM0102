@@ -58,8 +58,7 @@ pub(crate) unsafe fn non_player_attribute_rating(f: usize, k: usize) -> i32 {
 /// sinal dividido pelo divisor da quantidade de categorias marcadas (1,0 a 2,0, float), truncado e posto em 1..20.
 pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, club: usize, tecnico: usize) {
     let club = Club(club);
-    let human: unsafe extern "C" fn(usize, u32, u8, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
-    if tecnico == 0 && human(club.addr(), 1, 1, 0, 0) == 0 {
+    if tecnico == 0 && exe::human_manager_is_human_club(club.addr(), 1, 1, 0, 0) == 0 {
         return;
     }
     if exe::database_is_national_team(club) != 0 {
@@ -461,7 +460,6 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
     }
     let mut acabou = false;
     if npos > 0 {
-        let reclamar: unsafe extern "thiscall" fn(usize, u32, u32) = core::mem::transmute(FN_STAFF_CONTRACT_APPLY_EVENT_FLAGS);
         let mut k = 0i8;
         let mut it = q + 7; // the item’s fee (+7); the rating at +6, the mask at +4
         loop {
@@ -483,7 +481,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
                         if quer && a < 0xf && friendly_random(a as i32) < 10 && read_usize(G_INJURY) != 0
                             && exe::injury_get_player_injury_status(read_usize(G_INJURY), p) == 0 {
                             crate::comparison::branch("cqd_8 complains about position training");
-                            reclamar(c, 0x8000, 0);
+                            exe::staff_contract_apply_event_flags(c, 0x8000, 0);
                             let m = (c + 0x44) as *mut i8;
                             let v = *m as i32 - 5;
                             *m = if v > 100 { 100 } else if v < -100 { -100 } else { (*m).wrapping_sub(5) };
@@ -687,13 +685,13 @@ pub(crate) unsafe extern "thiscall" fn get_training_attribute_change(this: usize
         d[k] = training_nibble(e, k).wrapping_neg();
     }
     training_manager_apply_training_progress(this, p, &d);
-    let sem = (exe::staff_get_player_attribute(p, attribute) as u8);
+    let without = (exe::staff_get_player_attribute(p, attribute) as u8);
     let mut v = [0i8; 8];
     for k in 0..5 {
         v[k] = d[k].wrapping_neg();
     }
     training_manager_apply_training_progress(this, p, &v);
-    before.wrapping_sub(sem)
+    before.wrapping_sub(without)
 }
 
 /// Position masks accepted by `get_position_aptitude` (others show the error box).

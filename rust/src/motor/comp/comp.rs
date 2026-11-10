@@ -265,7 +265,6 @@ pub(crate) unsafe extern "thiscall" fn comp_collect_club_list(this: usize, list:
 /// +0xad com 0x35 bytes) com um confronto em que o time joga (+0 ou +2): rodada = +7 da rodada, e volta.
 pub(crate) unsafe extern "thiscall" fn find_club_progress(this: usize, club: usize, stage_id: *mut i16, round: *mut i16, status: *mut u8) {
     let this = League(this);
-    let row: unsafe extern "thiscall" fn(usize, i32) -> usize = core::mem::transmute(FN_LEAGUE_GET_TABLE_ROW);
     let mut f = this.current_stage() as i32;
     while f >= -1 {
         let s = if f > -1 { read_usize(this.stages() + f as usize * 4) } else { this.addr() };
@@ -273,9 +272,9 @@ pub(crate) unsafe extern "thiscall" fn find_club_progress(this: usize, club: usi
             if read_u8(s + 0x43) == 2 {
                 let mut i = 0i8;
                 while (i as i16) < read_i16(s + 0x3e) {
-                    if read_usize(row(s, i as i32)) == club {
+                    if read_usize(exe::league_get_table_row(s, i as i32)) == club {
                         *stage_id = read_i16(s + 0x3a);
-                        *status = read_u8(row(s, i as i32) + 0x37);
+                        *status = read_u8(exe::league_get_table_row(s, i as i32) + 0x37);
                         return;
                     }
                     i = i.wrapping_add(1);

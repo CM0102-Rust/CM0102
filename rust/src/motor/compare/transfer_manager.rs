@@ -173,10 +173,10 @@ pub(crate) unsafe extern "thiscall" fn compare_check_offer_work_permits(this: us
     let offer = Offer(offer);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_CHECK_OFFER_WORK_PERMITS);
     let (precisa, proposta, concedida) = check_work_permit(TransferManagerFields(this), (transfer_manager_staff_by_id(offer.target_staff_id())).addr(), transfer_manager_club_by_id(offer.buyer_club_id()));
-    let recusada = precisa && proposta != 0 && !concedida;
+    let refused = precisa && proposta != 0 && !concedida;
     let r = o(this, offer.addr(), quiet);
-    let ok = if recusada { r == 0 && offer.status() == 0x10 } else { r == 1 };
-    SCOREBOARD.record(ok, || format!("check_offer_work_permits(oferta {:x}) recusada prevista {} devolveu {}", offer.addr(), recusada, r));
+    let ok = if refused { r == 0 && offer.status() == 0x10 } else { r == 1 };
+    SCOREBOARD.record(ok, || format!("check_offer_work_permits(oferta {:x}) recusada prevista {} devolveu {}", offer.addr(), refused, r));
     r
 }
 
@@ -199,13 +199,13 @@ pub(crate) unsafe extern "thiscall" fn compare_transfer_manager_daily_update(thi
     let this = TransferManagerFields(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_TRANSFER_MANAGER_DAILY_UPDATE);
     let f = slice as u8;
-    let sem_base = this.current_year() == 0;
-    let roda = if sem_base {
+    let without_base = this.current_year() == 0;
+    let roda = if without_base {
         true
     } else {
         read_i16(today + cm_date::YEAR) == this.current_year() && read_i16(today) == this.current_date() && this.current_slice() == f
     };
-    let (f855, j84c) = (if sem_base { f } else { this.current_slice() }, this.day_cursor());
+    let (f855, j84c) = (if without_base { f } else { this.current_slice() }, this.day_cursor());
     let mut tomorrow = [0u8; 8];
     {
         let r = exe::date_add_days(today, tomorrow.as_mut_ptr() as usize, 1);
@@ -390,19 +390,19 @@ pub(crate) unsafe extern "thiscall" fn compare_check_squad_limits(this: usize, c
     SQUAD_LIMITS_RELEASED_PLAYER = 0;
     let n = crate::rng::pause_trace(|| check_squad_limits(this, club, o.addr(), count_queue, reason));
     SQUAD_LIMITS_DRY_RUN = false;
-    let liberado = SQUAD_LIMITS_RELEASED_PLAYER;
+    let released = SQUAD_LIMITS_RELEASED_PLAYER;
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
     let r = f(this, club, o.addr(), count_queue, reason);
     let mo = crate::comparison::MemorySnapshot::read(&regions);
-    let same = if liberado == 0 {
+    let same = if released == 0 {
         mo.0 == mr.0
     } else {
-        let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), liberado));
+        let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), released));
         c.is_null() || friendly_club_by_id(c.club()) != Club(club)
     };
     SCOREBOARD.record(same && r == n, || {
-        format!("check_squad_limits(clube {:x}, oferta {:x}, fila {}) original={} rust={} liberado={:x} {:x?} x {:x?}", club, o.addr(), count_queue, r, n, liberado, mo, mr)
+        format!("check_squad_limits(clube {:x}, oferta {:x}, fila {}) original={} rust={} liberado={:x} {:x?} x {:x?}", club, o.addr(), count_queue, r, n, released, mo, mr)
     });
     r
 }
@@ -480,10 +480,10 @@ pub(crate) unsafe extern "thiscall" fn compare_post_transfer_finalised_news(this
 pub(crate) unsafe extern "thiscall" fn compare_free_transfer_staff(this: usize, p: usize, club: usize, reason: u32, compensation: i32, so_record: u32) {
     let this = TransferManagerFields(this);
     let p = Staff(p);
-    let emprestada = exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p) != 0;
+    let loaned = exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p) != 0;
     let n = this.past_transfer_count();
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32)>(IDX_FREE_TRANSFER_STAFF)(this.addr(), p.addr(), club, reason, compensation, so_record);
-    if emprestada {
+    if loaned {
         SCOREBOARD.record(this.past_transfer_count() == n, || format!("free_transfer_staff(pessoa {}) emprestada: conta {} -> {}", read_usize(p.addr()), n, this.past_transfer_count()));
         return;
     }
@@ -561,8 +561,8 @@ pub(crate) unsafe extern "thiscall" fn compare_post_offer_collapsed_news(this: u
 }
 
 /// Comparer for `post_appearance_money_news`.
-pub(crate) unsafe extern "thiscall" fn compare_post_appearance_money_news(this: usize, clausula: usize, value: u32, kind: u32, calado: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(IDX_POST_APPEARANCE_MONEY_NEWS)(this, clausula, value, kind, calado)
+pub(crate) unsafe extern "thiscall" fn compare_post_appearance_money_news(this: usize, clausula: usize, value: u32, kind: u32, silent: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(IDX_POST_APPEARANCE_MONEY_NEWS)(this, clausula, value, kind, silent)
 }
 
 /// Comparer for `finalise_transfer`.
@@ -634,14 +634,14 @@ pub(crate) unsafe extern "thiscall" fn compare_settle_previous_transfer_clauses(
     if !l.is_null() {
         regions.push((l.addr(), 0xe));
         // the traversal without moving the list cursor: the nodes (+0 the item, +6 the next) starting from the head +2
-        let mut no = l.head();
+        let mut in_the = l.head();
         let mut n = 0;
-        while no != 0 && n < 64 {
-            let item = read_usize(no);
+        while in_the != 0 && n < 64 {
+            let item = read_usize(in_the);
             if item != 0 && has(read_usize(item)) {
                 alguma = true;
             }
-            no = read_usize(no + llist_node::NEXT);
+            in_the = read_usize(in_the + llist_node::NEXT);
             n += 1;
         }
         if n >= 64 {
@@ -1020,9 +1020,9 @@ pub(crate) unsafe extern "stdcall" fn compare_transfer_manager_get_next_window_d
 /// Comparer for `transfer_manager_calc_compensation_fee`.
 ///
 /// [pt] Comparador: pelo valor (lado a lado pelas estáticas das datas; o valor do jogador 0x4d0c60 e a idade só calculam).
-pub(crate) unsafe extern "stdcall" fn compare_transfer_manager_calc_compensation_fee(person: usize, buyer: usize, sem_regras_novas: u32) -> i32 {
+pub(crate) unsafe extern "stdcall" fn compare_transfer_manager_calc_compensation_fee(person: usize, buyer: usize, without_rules_new: u32) -> i32 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32) -> i32>(IDX_TRANSFER_MANAGER_CALC_COMPENSATION_FEE);
-    let (ro, rr, igual, _, _) = crate::comparison::side_by_side(&DATE_OP_STATICS, || o(person, buyer, sem_regras_novas), || transfer_manager_calc_compensation_fee(person, buyer, sem_regras_novas));
+    let (ro, rr, igual, _, _) = crate::comparison::side_by_side(&DATE_OP_STATICS, || o(person, buyer, without_rules_new), || transfer_manager_calc_compensation_fee(person, buyer, without_rules_new));
     SCOREBOARD.record(igual && ro == rr, || format!("transfer_manager_calc_compensation_fee(pessoa {:x}) {} x {}, estáticas iguais {}", if person != 0 { read_usize(person) } else { 0 }, ro, rr, igual));
     ro
 }
@@ -1130,14 +1130,14 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_offer(this: usize, offer: 
     let this = TransferManagerFields(this);
     let offer = Offer(offer);
     let slot = (offer.slot_index() as i32);
-    let ligada = (offer.negotiation_index() as i32) != -1;
+    let on = (offer.negotiation_index() as i32) != -1;
     let (n8, n14, livre) = ((this.offer_count() as i32), this.negotiation_count(), this.lowest_free_slot());
     let q = this.person_flags().wrapping_add(offer.target_staff_id().wrapping_mul(8)) + 1;
     let offers = read_u8(q);
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REMOVE_OFFER)(this.addr(), offer.addr());
     let ok = read_usize(read_usize(this.addr()).wrapping_add((slot as usize).wrapping_mul(4))) == 0
         && (this.offer_count() as i32) == n8 - 1
-        && this.negotiation_count() == n14 - ligada as i32
+        && this.negotiation_count() == n14 - on as i32
         && this.lowest_free_slot() == livre.min(slot)
         && read_u8(q) == offers.wrapping_sub(1);
     SCOREBOARD.record(ok, || format!("remove_offer: vaga {} contas {}/{} -> {}/{} livre {} -> {} ofertas {} -> {}",
@@ -1637,8 +1637,8 @@ pub(crate) unsafe extern "thiscall" fn compare_find_work_permit(this: usize, per
 /// dos humanos; com mais ligas acontece) ou gravar na seleção (+0x24), e a pessoa não fica em +0x39.
 pub(crate) unsafe extern "stdcall" fn compare_fill_vacated_staff_job(club: usize, job: u32) {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, u32)>(IDX_FILL_VACATED_STAFF_JOB);
-    let escolhida = if club != 0 { job_sought_by_slot(job).and_then(|c| first_unemployed_staff(Club(club), c as u8)) } else { None };
-    let Some(p) = escolhida else {
+    let chosen = if club != 0 { job_sought_by_slot(job).and_then(|c| first_unemployed_staff(Club(club), c as u8)) } else { None };
+    let Some(p) = chosen else {
         crate::comparison::branch("fill_vacated_staff_job nobody");
         return o(club, job);
     };
@@ -1678,15 +1678,15 @@ pub(crate) unsafe extern "thiscall" fn compare_hold_offers_at_window_close(this:
 pub(crate) unsafe extern "thiscall" fn compare_schedule_offer(this: usize, offer: usize, days: u32, slices: u32) -> u32 {
     let this = TransferManagerFields(this);
     let offer = Offer(offer);
-    let sem_base = this.current_year() == 0;
+    let without_base = this.current_year() == 0;
     let (data, fatia, balde) = vacancy_schedule_plan(this, days as u8, slices as u8);
     let count = read_i16(balde);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(IDX_SCHEDULE_OFFER)(this.addr(), offer.addr(), days, slices);
-    let gravada = core::slice::from_raw_parts((offer.addr() + offer::DUE_DATE) as *const u8, 8);
-    let base_ok = !sem_base || core::slice::from_raw_parts((this.addr() + transfer_manager_fields::CURRENT_DATE) as *const u8, 8) == core::slice::from_raw_parts(G_CURRENT_DATE as *const u8, 8);
-    let ok = gravada == &data[..] && (offer.due_slice() as i8) == fatia && read_i16(balde) == count.wrapping_add(1) && base_ok;
+    let written = core::slice::from_raw_parts((offer.addr() + offer::DUE_DATE) as *const u8, 8);
+    let base_ok = !without_base || core::slice::from_raw_parts((this.addr() + transfer_manager_fields::CURRENT_DATE) as *const u8, 8) == core::slice::from_raw_parts(G_CURRENT_DATE as *const u8, 8);
+    let ok = written == &data[..] && (offer.due_slice() as i8) == fatia && read_i16(balde) == count.wrapping_add(1) && base_ok;
     SCOREBOARD.record(ok, || format!("schedule_offer(dias {}, fatias {}): data {:x?} (plano {:x?}), fatia {} (plano {}), balde {:x} conta {} -> {}, base {}",
-        days as u8 as i8, slices as u8 as i8, gravada, data, (offer.due_slice() as i8), fatia, balde, count, read_i16(balde), base_ok));
+        days as u8 as i8, slices as u8 as i8, written, data, (offer.due_slice() as i8), fatia, balde, count, read_i16(balde), base_ok));
     r
 }
 

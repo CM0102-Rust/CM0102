@@ -31,7 +31,7 @@ MUTACOES = [
     ('cqj8_empate_mls', 'write_u8_at(o, 0xc3, 1); // cqj8: the MLS points per draw', 'write_u8_at(o, 0xc3, 0); // mutacao: os pontos por empate da MLS', 'cqj_8 mls rules'),
     ('cqj8_sem_historico_estadual', 'record_first_stage_honours(League(this)); // cqj8: the state championship history', '// mutacao: sem o histórico do estadual', 'cqj_8 state league history'),
     ('cqj9_campeao_serie_a', 'add_champions_record(club, comp); // cqj9: the Serie A champion record', '// mutacao: sem o registro do campeão da Série A', 'cqj_9 serie a champion'),
-    ('cqj9_promovido_serie_c', '*((achada + 0x37) as *mut u8) = 0; // cqj9: the destination of those promoted from Serie C', '*((achada + 0x37) as *mut u8) = 1; // mutacao: o destino de quem sobe da Série C', 'cqj_9 serie c promoted'),
+    ('cqj9_promovido_serie_c', '*((found + 0x37) as *mut u8) = 0; // cqj9: the destination of those promoted from Serie C', '*((found + 0x37) as *mut u8) = 1; // mutacao: o destino de quem sobe da Série C', 'cqj_9 serie c promoted'),
     ('cqj9_rebaixado_baiano', 'bra_nat_first_add_relegation_record(club, comp); // cqj9: the club relegated from the Baiano', '// mutacao: sem o registro do rebaixado do Baiano', 'cqj_9 baiano relegated'),
     ('cqk7_campeao_estadual', 'add_champions_record(club, comp); // cqk7: the state champion record', '// mutacao: sem o registro do campeão do estadual', 'cqk_7 state league champion'),
     ('cqk7_rebaixado_estadual', 'bra_nat_first_add_relegation_record(club, comp); // cqk7: the club relegated from the state championship', '// mutacao: sem o registro do rebaixado do estadual', 'cqk_7 state league relegated'),

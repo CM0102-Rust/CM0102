@@ -1,6 +1,6 @@
 # Mutações da 248a leva (itens cpl_1, cpl_2, cpl_3, cpl_4, cpl_5, cpl_6, cpl_7). Uso: python mutacoes.py mutacoes\leva248.py --carreira 2002-06-01
 MUTACOES = [
-    ('cpl_clube_tem_oferta', 'if read_usize(offer_at(this, read_usize(no)) + 8) == read_usize(club) { // the offer is from the club', 'if read_usize(offer_at(this, read_usize(no)) + 8) != read_usize(club) { // mutacao: de outro clube', 'cpl_1 club has offer'),
+    ('cpl_clube_tem_oferta', 'if read_usize(offer_at(this, read_usize(in_the)) + 8) == read_usize(club) { // the offer is from the club', 'if read_usize(offer_at(this, read_usize(in_the)) + 8) != read_usize(club) { // mutacao: de outro clube', 'cpl_1 club has offer'),
     ('cpl_oferta_do_clube', 'if o.buyer_club_id() == read_usize(club) { // the club’s offer', 'if !o.is_null() { // mutacao: a primeira de qualquer clube', 'cpl_1 club offer'),
     ('cpl_oferta_pendente', 'if matches!(o.status(), 0 | 1 | 5 | 6) { // the pending status', 'if matches!(o.status(), 0 | 5 | 6) { // mutacao: sem a 1', 'cpl_1 pending offer'),
     ('cpl_sob_oferta_marca', 'return mark(); // a marca "sob oferta"', 'return 0; // mutacao: ninguem sob oferta'),

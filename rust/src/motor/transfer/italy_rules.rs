@@ -35,8 +35,8 @@ pub(crate) unsafe extern "thiscall" fn italy_rules_can_loan_player(this: usize, 
             continue;
         }
         let cp = game_get_contract_and_store(p);
-        let de = if cp != 0 { england_rules_club_of_contract(Contract(cp)) } else { 0 };
-        if de != club.addr() {
+        let of = if cp != 0 { england_rules_club_of_contract(Contract(cp)) } else { 0 };
+        if of != club.addr() {
             n = n.wrapping_add(1);
         }
     }

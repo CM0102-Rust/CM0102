@@ -275,9 +275,9 @@ pub(crate) unsafe fn eng_cc_cup_enter_division_clubs(this: Cup, n: &mut i32, id:
 ///
 /// [pt] A classe de quem veio da divisão `de` (+0x5b, a competição da temporada anterior; +0x5f a posição nela, byte): `base`
 /// menos a posição.
-pub(crate) unsafe fn came_from_division(c: usize, de: usize) -> bool {
+pub(crate) unsafe fn came_from_division(c: usize, of: usize) -> bool {
     let p = read_usize(c + 0x5b);
-    p != 0 && read_usize(p) == read_usize(de)
+    p != 0 && read_usize(p) == read_usize(of)
 }
 
 /// `EngCcCup::collect_entrants()` (`eng_cc_cup_collect_entrants`, thiscall, ret 0, eng_cc_cup.cpp): fills the League Cup entrant list from

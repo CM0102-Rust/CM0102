@@ -51,13 +51,13 @@ pub(crate) unsafe extern "thiscall" fn compare_cancel_tournament(this: usize, to
     let mut in_list = false;
     let p = this.pending_tournament_list();
     if !p.is_null() {
-        let mut no = read_usize(p.addr() + 2);
+        let mut in_the = read_usize(p.addr() + 2);
         let mut n = 0;
-        while no != 0 && n < 0x10000 {
-            if read_usize(read_usize(no)) == tournament {
+        while in_the != 0 && n < 0x10000 {
+            if read_usize(read_usize(in_the)) == tournament {
                 in_list = true;
             }
-            no = read_usize(no + 6);
+            in_the = read_usize(in_the + 6);
             n += 1;
         }
     }
@@ -91,40 +91,40 @@ pub(crate) unsafe extern "thiscall" fn compare_cancel_tournament(this: usize, to
 pub(crate) unsafe extern "thiscall" fn compare_arrange_international_friendlies(this: usize, datas: usize, n: u32) {
     let this = Friendly(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_ARRANGE_INTERNATIONAL_FRIENDLIES);
-    let nacoes = read_usize(G_NATION_COUNT) as i32;
-    let k = nacoes.max((this.sorted_nation_count() as usize) as i32).max(0) as usize;
+    let nations = read_usize(G_NATION_COUNT) as i32;
+    let k = nations.max((this.sorted_nation_count() as usize) as i32).max(0) as usize;
     let antes: Vec<Vec<u32>> = (0..k).map(|q| list_item_ids(nation_friendly_list(this, q))).collect();
-    let mut e = FriendlyComparerTrial { usadas: vec![0u8; nacoes.max(0) as usize], before: std::rc::Rc::new(antes), new: vec![Vec::new(); k] };
+    let mut e = FriendlyComparerTrial { usadas: vec![0u8; nations.max(0) as usize], before: std::rc::Rc::new(antes), new: vec![Vec::new(); k] };
     link_nations_near_date(this.addr(), datas, 0, Some(&mut e));
     let ((), tape_lock) = crate::rng::trace(|| o(this.addr(), datas, n));
-    let quantos = tape_lock.len();
+    let how_many = tape_lock.len();
     *core::ptr::addr_of_mut!(FRIENDLY_TAPE) = (tape_lock, 0, false);
     pair_nations_for_friendlies(this.addr(), datas, n, 0, Some(&mut e), 0);
-    let igual = tape_fully_consumed();
+    let same = tape_fully_consumed();
     let (pos, falhou) = { let f = &*core::ptr::addr_of!(FRIENDLY_TAPE); (f.1, f.2) };
     *core::ptr::addr_of_mut!(FRIENDLY_TAPE) = (Vec::new(), 0, false);
     let mut dif = Vec::new();
     for q in 0..k.max(e.new.len()) {
-        let mut depois = if q < k { list_item_ids(nation_friendly_list(this, q)) } else { Vec::new() };
-        let mut falta = false;
+        let mut after = if q < k { list_item_ids(nation_friendly_list(this, q)) } else { Vec::new() };
+        let mut foul = false;
         for x in e.before.get(q).map(|v| v.as_slice()).unwrap_or(&[]) {
-            match depois.iter().position(|y| y == x) {
+            match after.iter().position(|y| y == x) {
                 Some(p) => {
-                    depois.remove(p);
+                    after.remove(p);
                 }
-                None => falta = true,
+                None => foul = true,
             }
         }
-        let mut esperado = e.new.get(q).cloned().unwrap_or_default();
-        depois.sort_unstable();
-        esperado.sort_unstable();
-        if falta || depois != esperado {
-            dif.push((q, depois, esperado));
+        let mut expected = e.new.get(q).cloned().unwrap_or_default();
+        after.sort_unstable();
+        expected.sort_unstable();
+        if foul || after != expected {
+            dif.push((q, after, expected));
         }
     }
-    SCOREBOARD.record(igual && dif.is_empty(), || {
+    SCOREBOARD.record(same && dif.is_empty(), || {
         format!("arrange_international_friendlies(datas {:x}, {}) tape_lock de {} sorteios, o ensaio parou em {} (n diferente: {}); listas (indice, original, ensaio) {:x?}",
-            datas, n as i16, quantos, pos, falhou, dif.iter().take(4).collect::<Vec<_>>())
+            datas, n as i16, how_many, pos, falhou, dif.iter().take(4).collect::<Vec<_>>())
     });
 }
 
@@ -224,8 +224,8 @@ pub(crate) unsafe extern "thiscall" fn compare_plan_club_friendlies(this: usize,
     if p == 0 {
         return; // out of memory: the message box
     }
-    let ordenado = (1..n.max(0) as usize).all(|i| exe::compare_call_up_records_by_date(p + (i - 1) * 0x14, p + i * 0x14) <= 0);
-    SCOREBOARD.record(n >= 0 && cap >= n && z == 0 && ordenado, || format!("plan_club_friendlies: plano {:#x} conta {} capacidade {} +0x34dc {} em ordem {}", p, n, cap, z, ordenado));
+    let sorted = (1..n.max(0) as usize).all(|i| exe::compare_call_up_records_by_date(p + (i - 1) * 0x14, p + i * 0x14) <= 0);
+    SCOREBOARD.record(n >= 0 && cap >= n && z == 0 && sorted, || format!("plan_club_friendlies: plano {:#x} conta {} capacidade {} +0x34dc {} em ordem {}", p, n, cap, z, sorted));
 }
 
 /// Comparer for `add_tournament`.
@@ -316,11 +316,11 @@ pub(crate) unsafe extern "thiscall" fn compare_send_friendly_request(this: usize
     LAST_FRIENDLY_REPLY = 0;
     o(this.addr(), m);
     let l = this.request_reply_list();
-    let respondido = s == 2 && LAST_FRIENDLY_REPLY == m;
-    if respondido {
+    let answered = s == 2 && LAST_FRIENDLY_REPLY == m;
+    if answered {
         crate::comparison::branch("cqa_2 request answered by the assistant");
     }
-    let ok = l == 0 || if respondido {
+    let ok = l == 0 || if answered {
         list_len(l) == before && !list_holds(l, m)
     } else {
         list_len(l) == before + 1 && list_holds(l, m) && read_u8(m + friendly_match::STATUS) == s
@@ -443,11 +443,11 @@ pub(crate) unsafe extern "thiscall" fn compare_create_due_planned_friendlies(thi
 /// +0xc o clube, +8 = 0, +0x18 = 1 e o mandante e o visitante pelo `em_casa`.
 pub(crate) unsafe extern "thiscall" fn compare_add_friendly_match(this: usize, club: usize, data: usize, opponent: usize, in_home: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32) -> usize>(IDX_ADD_FRIENDLY_MATCH);
-    let ocupada = home_stadium_busy_on(club, data, opponent, in_home);
+    let occupied = home_stadium_busy_on(club, data, opponent, in_home);
     let (dia, ano) = (read_u16(data), read_u16(data + 2));
     let r = o(this, club, data, opponent, in_home);
     let (casa, fora) = if in_home != 0 { (club, opponent) } else { (opponent, club) };
-    let same = if ocupada {
+    let same = if occupied {
         r == 0
     } else {
         // simplification: r = 0 without being occupied only when out of memory (the box has already shown): not checked
@@ -455,7 +455,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_friendly_match(this: usize, c
             && *((r + friendly_match::STATUS) as *const u8) == 1 && read_usize(r + friendly_match::HOME_CLUB) == casa && read_usize(r + friendly_match::AWAY_CLUB) == fora)
     };
     SCOREBOARD.record(same, || format!("add_friendly_match(clube {:x}, {}/{}, adversario {:x}, em casa {}) ocupada {} original={:x}",
-        club, dia, ano, opponent, in_home, ocupada, r));
+        club, dia, ano, opponent, in_home, occupied, r));
     r
 }
 

@@ -6,7 +6,7 @@ MUTACOES = [
     ('m_aprox', "                } else {\n                    Some(event::IN_CENTRAL_ATTACK)\n                }", "                } else {\n                    Some(event::IN_LEFT_ATTACK)\n                }", "movement narrated approach"),
     ('m_cresce', "let v = p.confidence() as f64 * read_f32(rdata::F32_1_049999952) as f64;", "let v = p.confidence() as f64 * read_f32(rdata::F32_1_049999952) as f64 * 1.01;", "movement grows"),
     ('m_posse', "        let q = (m.addr() as isize + side as isize + 0x8d46) as *mut u8;\n        *q = (*q).wrapping_add(5);", "        let q = (m.addr() as isize + side as isize + 0x8d46) as *mut u8;\n        *q = (*q).wrapping_add(6);", "movement passes"),
-    ('m_19c', "let limite_nota = (nota as i32 + 0x32).max(0xfa);", "let limite_nota = (nota as i32 + 0x33).max(0xfa);", "movement passes"),
+    ('m_19c', "let limit_rating = (nota as i32 + 0x32).max(0xfa);", "let limit_rating = (nota as i32 + 0x33).max(0xfa);", "movement passes"),
     ('m_soma', "            add(p, 9);\n            sum(0x24);", "            add(p, 9);\n            sum(0x25);", "movement passes"),
     ('m_adiantado', "let qy = if q == 0 { 9 } else { read_i8(q + match_player::CELL_Y) };", "let qy = if q == 0 { 8 } else { read_i8(q + match_player::CELL_Y) };"),
     ('m_vaga', "            p.set_cell_slot((*count(new) as u8) as i8);\n            *count(new) = (*count(new)).wrapping_add(1);\n            *slot(new, p.cell_slot()) = p.addr();\n        } else {", "            p.set_cell_slot((*count(new) as u8) as i8);\n            *count(new) = (*count(new)).wrapping_add(2);\n            *slot(new, p.cell_slot()) = p.addr();\n        } else {"),

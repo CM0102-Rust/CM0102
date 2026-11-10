@@ -8,5 +8,5 @@ MUTACOES = [
     ('c_idade', "    } else if b44 > 0x32 {\n        rating = rating.wrapping_add(5);", "    } else if b44 > 0x32 {\n        rating = rating.wrapping_add(4);"),
     ('c_rep', "        if rep > 0x1c52 {", "        if rep > 0x1c53 {"),
     ('c_k', "        rating = rating.wrapping_sub(3);\n        if b5b < 6 {", "        rating = rating.wrapping_sub(2);\n        if b5b < 6 {"),
-    ('c_25', "        || (funcoes & 0x20020 != 0 && rating < 25)", "        || (funcoes & 0x20020 != 0 && rating < 24)"),
+    ('c_25', "        || (functions & 0x20020 != 0 && rating < 25)", "        || (functions & 0x20020 != 0 && rating < 24)"),
 ]

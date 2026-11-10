@@ -26,7 +26,7 @@ MEDIDAS = [
 # nomes locais em português (let e parâmetros): palavras comuns e terminações portuguesas (indicador, não exato)
 PT_PALAVRAS = set('''clube pessoa nacao jogador contrato vaga vagas lista oferta ano dia mes valor total primeiro ultimo novo velha
 velho achou acha conta lado bola casa grade papel lance chute time jogo partida rodada fase grupo liga copa tabela linha
-regra regras vencedor perdedor gols pontos posicao nivel idade data tipo codigo registro ficha bloco motor sorteio peso
+regra regras vencedor perdedor gols pontos posicao nivel idade tipo codigo registro ficha bloco motor sorteio peso
 resto limite faixa campo origem destino proximo anterior quantos quantas maior menor melhor pior soma media dono humano
 vendedor comprador alvo troca empréstimo emprestimo salario premio verba orcamento torneio campeao vice estadio cidade
 tecnico treinador arbitro olheiro diretor clubes pessoas jogadores nacoes ofertas contratos dias anos meses semana

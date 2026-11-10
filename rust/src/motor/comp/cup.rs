@@ -2898,10 +2898,9 @@ pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: us
     let cup = Cup(cup);
     let p = Fixture(p);
     let club = Club(club);
-    let friendly: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_FRIENDLY_IS_FRIENDLY_COMPETITION);
     // simplification: the original writes only the output byte into a stack dword and pushes the dword; 0x786090 reads the byte
     let mut out: u32 = 0xff;
-    if friendly(read_usize(G_FRIENDLY), read_usize(cup.addr() + 4)) != 0 {
+    if exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), read_usize(cup.addr() + 4)) != 0 {
         return 0;
     }
     let comp = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(read_usize(cup.addr() + 4)).wrapping_mul(4)));
@@ -3088,8 +3087,7 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
                         let v = cup_round_entry(this, round) + j;
                         r.set_time_slice(read_u8(v + 0x28)); // cqc7: a fatia marcada
                         r.set_stage(read_u8(v + 0x29));
-                        let stadium: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_STADIUM_SET_FIXTURE_VENUE);
-                        stadium(read_usize(G_STADIUM), read_usize(cup_round_entry(this, round) + j + 0x23), r.addr(), this.venue_stadium_id());
+                        exe::stadium_set_fixture_venue(read_usize(G_STADIUM), read_usize(cup_round_entry(this, round) + j + 0x23), r.addr(), this.venue_stadium_id());
                         exe::fixture_manager_add_fixture(read_usize(G_FIXTURE_MANAGER), r, 1);
                         if dp != 0 {
                             exe::crt_operator_delete(dp);

@@ -142,7 +142,7 @@ pub(crate) unsafe extern "thiscall" fn pick_day_match(day: usize) -> u32 {
         return 0;
     }
     let mut found = 0u32;
-    let mut escolhida = 0usize;
+    let mut chosen = 0usize;
     let n = *((day + match_day_fields::COMPETITION_COUNT) as *const i32);
     let mut k = 0i32;
     while k < n {
@@ -150,17 +150,17 @@ pub(crate) unsafe extern "thiscall" fn pick_day_match(day: usize) -> u32 {
         core::ptr::write_bytes((e + day_competition::PANEL) as *mut u8, 0, 0x40);
         let e = *((day + match_day_fields::COMPETITIONS) as *const usize) + k as usize * 0x54;
         if *((e + day_competition::HAS_MARKED) as *const usize) != 0 {
-            if escolhida == 0 || *((escolhida + day_competition::HAS_MARKED) as *const usize) == 0 {
-                escolhida = e;
+            if chosen == 0 || *((chosen + day_competition::HAS_MARKED) as *const usize) == 0 {
+                chosen = e;
             }
             found = 1;
-        } else if *((e + day_competition::INTERESTING) as *const usize) != 0 && escolhida == 0 {
-            escolhida = e;
+        } else if *((e + day_competition::INTERESTING) as *const usize) != 0 && chosen == 0 {
+            chosen = e;
         }
         k += 1;
     }
     *(G_MATCH_DAY_SCREEN_SHOWING_FLAG as *mut u32) = 1;
-    exe::open_day_fixtures_screen(0, escolhida);
+    exe::open_day_fixtures_screen(0, chosen);
     exe::screenmanager_monitor(G_SCREEN_MANAGER);
     *(G_MATCH_DAY_SCREEN_SHOWING_FLAG as *mut u32) = 0;
     found
@@ -692,7 +692,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                     let r = exe::match_day_can_quick_simulate(p + day_match::FIXTURE_COPY);
                     crate::comparison::branch("match without human");
                     exe::cm3_match_engine_init_match(m, p + day_match::FIXTURE_COPY, r, 0, 0);
-                    let rapido = *(u(p, day_match::ENGINE) as *const i8) != 0;
+                    let fast = *(u(p, day_match::ENGINE) as *const i8) != 0;
                     until_end(p);
                     let summary = new_summary(p);
                     if summary == 0 {
@@ -700,7 +700,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                     } else {
                         exe::match_stats_record_match(u(G_MATCH_STATS, 0), u(p, day_match::ENGINE), summary);
                         without_engine(p);
-                        if !rapido {
+                        if !fast {
                             crate::comparison::branch("score in the bar");
                             // the scoreboard with the day’s percentage on the bar
                             let n = read(match_day_fields::MATCH_COUNT);

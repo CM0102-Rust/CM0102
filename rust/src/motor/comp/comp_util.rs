@@ -650,14 +650,14 @@ pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(news: usi
     w(0x28, read());
     d(8, read());
     *cursor = v;
-    let ponteiro = |o: usize, table: usize, size: u32| {
+    let pointer = |o: usize, table: usize, size: u32| {
         let i = read_u32(partida + o);
         if i == 0xffff_ffff { 0 } else { (*(table as *const u32)).wrapping_add(i.wrapping_mul(size)) }
     };
-    d(0x1c, ponteiro(0xc, G_CLUB_TABLE, 0x245)); // home club
-    d(0x20, ponteiro(0x10, G_CLUB_TABLE, 0x245));
-    d(0x18, ponteiro(4, G_STADIUM_TABLE, 0x4e));
-    d(0x14, ponteiro(0, G_CLUB_COMP_TABLE, 0x6b));
+    d(0x1c, pointer(0xc, G_CLUB_TABLE, 0x245)); // home club
+    d(0x20, pointer(0x10, G_CLUB_TABLE, 0x245));
+    d(0x18, pointer(4, G_STADIUM_TABLE, 0x4e));
+    d(0x14, pointer(0, G_CLUB_COMP_TABLE, 0x6b));
 }
 
 /// Classifies the cup tie result for the club, from the final margin, the side and the reputation gap.
@@ -761,13 +761,13 @@ pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(club: usi
 pub(crate) unsafe extern "C" fn comp_util_write_fixture_to_news_slots(game: usize, news: usize, cursor: *mut u8) -> u32 {
     let b = |o: usize| read_i8(game + o) as i32 as u32;
     let s = |o: usize| core::ptr::read_unaligned((game + o) as *const i16) as i32 as u32;
-    let valores = [
+    let values = [
         read_u32(game + 0xc), read_u32(game + 0x10), b(0x3d), b(0x3e), read_u32(game + 4), read_u32(game + 0), b(0x42), s(0x32), s(0x30),
         b(0x43), b(0x44), b(0x4b), b(0x4c), b(0x47), b(0x48), (read_u16(game + 0x2a) as u32), (read_u16(game + 0x28) as u32), read_u32(game + 8),
     ];
     let mut k = *cursor;
     let mut r = 0;
-    for v in valores {
+    for v in values {
         r = exe::newsitem_set_slot(news, k as i8, v);
         k = k.wrapping_add(1);
     }

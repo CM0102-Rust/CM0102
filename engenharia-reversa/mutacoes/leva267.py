@@ -7,7 +7,7 @@ MUTACOES = [
     ('cqd5_mando_trocado', 'let (ea, eb) = (ea, eb); // cqd5: the home and away sides', 'let (ea, eb) = (eb, ea); // mutacao: o mando trocado', 'cqd_5 fixture list match'),
     ('cqd5_ordem_sem_sorteio', 'exe::league_draw_team_order(this, n as u32); // cqd5: the order of the clubs', '// mutacao: a ordem dos clubes sem sorteio', 'cqd_5 order drawn'),
     ('cqd6_sem_reservas_de_amanha', 'exe::reservecomp_schedule_reserve_fixtures(read_usize(G_RESERVE_COMP), pb); // cqd6: tomorrow’s reservations', '// mutacao: sem as reservas de amanha', 'cqd_6 tomorrow reserves'),
-    ('cqd6_amistoso_fica', 'exe::llist_remove_node(list, no); // cqd6: yesterday’s friendly leaves the list', '// mutacao: o amistoso de ontem fica na lista', 'cqd_6 friendly discarded'),
+    ('cqd6_amistoso_fica', 'exe::llist_remove_node(list, in_the); // cqd6: yesterday’s friendly leaves the list', '// mutacao: o amistoso de ontem fica na lista', 'cqd_6 friendly discarded'),
     ('cqd6_jogo_no_dia_seguinte', 'let day = (j.day() as i16) as u16 as usize; // cqd6: the day of the loaded match', 'let day = { let x = (j.day() as i16) as u16 as usize; if x < 364 { x + 1 } else { x } }; // mutacao: o dia seguinte', 'cqd_6 match loaded'),
     ('cqd7_moeda_da_rodada_seguinte', 'let first = moeda != 0; // cqd7: the side coin in the next round', 'let first = moeda == 0; // mutacao: a moeda invertida', 'cqd_7 place in the next round'),
     ('cqd7_moeda_da_primeira_rodada', 'let first_0 = moeda != 0; // cqd7: the side coin in the first round', 'let first_0 = moeda == 0; // mutacao: a moeda invertida', 'cqd_7 team in the first round'),

@@ -30,11 +30,11 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_dispute(this: usize, p: us
         let cursor = list.cursor();
         list.set_cursor((list.head() as u32) as usize);
         for _ in 0..count_before.max(0) {
-            let no = exe::llist_get_next(list);
-            if no == 0 {
+            let in_the = exe::llist_get_next(list);
+            if in_the == 0 {
                 break;
             }
-            if read_i32(no) == read_i32(p) {
+            if read_i32(in_the) == read_i32(p) {
                 found = 1;
                 break;
             }

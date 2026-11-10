@@ -60,8 +60,7 @@ pub(crate) unsafe extern "thiscall" fn spain_rules_can_loan_player(this: usize, 
     let player = Staff(player);
     let club = Club(club);
     // 0x8e8e50: push 0; push 0xae2c90; mov ecx, edi (this) -> thiscall, ret 8
-    let window: unsafe extern "thiscall" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_TRANSFER_RULES_FIND_OPEN_WINDOW);
-    if window(this, G_CURRENT_DATE, 0) == 0 {
+    if exe::transfer_rules_find_open_window(this, G_CURRENT_DATE, 0) == 0 {
         crate::comparison::branch("cqe_6 spain outside the window");
         return refuse_outside_window(this, msg, reason);
     }

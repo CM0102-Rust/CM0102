@@ -161,10 +161,10 @@ pub(crate) unsafe extern "thiscall" fn compare_report_poor_fitness(this: usize, 
     plan[4..8].copy_from_slice(&read_u32(club).to_le_bytes());
     plan[8..].copy_from_slice(core::slice::from_raw_parts(G_CURRENT_DATE as *const u8, 8));
     o(this, player, club);
-    let no = if tail != 0 { read_usize(tail + 6) } else { read_usize(l + 2) };
-    let data = if no != 0 { read_usize(no) } else { 0 };
+    let in_the = if tail != 0 { read_usize(tail + 6) } else { read_usize(l + 2) };
+    let data = if in_the != 0 { read_usize(in_the) } else { 0 };
     let same = data != 0 && core::slice::from_raw_parts(data as *const u8, 0x10) == plan;
-    SCOREBOARD.record(same, || format!("report_poor_fitness(jogador {:#x}, clube {:#x}) plano={:x?} lista: no {:#x} dados {:#x}", player, club, plan, no, data));
+    SCOREBOARD.record(same, || format!("report_poor_fitness(jogador {:#x}, clube {:#x}) plano={:x?} lista: no {:#x} dados {:#x}", player, club, plan, in_the, data));
 }
 
 /// Comparer for `is_player_awol`.

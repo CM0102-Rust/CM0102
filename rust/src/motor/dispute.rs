@@ -27,13 +27,13 @@ pub(crate) unsafe extern "thiscall" fn remove_dispute(this: usize, p: usize) {
     core::ptr::write_unaligned((list + 0xa) as *mut u32, read_usize(list + 2) as u32);
     let mut k = 0i32;
     while (k as i16 as i32) < read_i16(read_usize(this)) as i32 {
-        let no = exe::llist_get_next(read_usize(this));
-        if no == 0 {
+        let in_the = exe::llist_get_next(read_usize(this));
+        if in_the == 0 {
             return;
         }
-        if read_i32(no) == read_i32(p) {
+        if read_i32(in_the) == read_i32(p) {
             crate::comparison::branch("cqg_7 left the contest");
-            exe::llist_remove(read_usize(this), no);
+            exe::llist_remove(read_usize(this), in_the);
             return;
         }
         k += 1;

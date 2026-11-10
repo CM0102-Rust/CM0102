@@ -353,9 +353,9 @@ pub(crate) unsafe extern "thiscall" fn compare_get_fixture_side_teams(this: usiz
         collect_fixture_teams(this, read_i16(r) as i32, read_i16(j) as i32, expected.as_mut_ptr(), &mut n, false);
     }
     let res = o(this.addr(), round, game, side, out);
-    let obtido = core::slice::from_raw_parts(out, res.clamp(0, 0x100) as usize);
+    let got = core::slice::from_raw_parts(out, res.clamp(0, 0x100) as usize);
     let global = *(G_CUP_POSSIBLE_TEAM_COUNT as *const i32);
-    SCOREBOARD.record(res == n && global == n && obtido == &expected[..n.clamp(0, 0x100) as usize], || format!("get_fixture_side_teams({:x}, {}, {}, {}) {}/{} global {} {:?} x {:?}", this.addr(), round, game, side as u8, res, n, global, obtido, &expected[..n.clamp(0, 0x100) as usize]));
+    SCOREBOARD.record(res == n && global == n && got == &expected[..n.clamp(0, 0x100) as usize], || format!("get_fixture_side_teams({:x}, {}, {}, {}) {}/{} global {} {:?} x {:?}", this.addr(), round, game, side as u8, res, n, global, got, &expected[..n.clamp(0, 0x100) as usize]));
     res
 }
 
@@ -374,9 +374,9 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_possible_teams(this: usiz
     collect_fixture_teams(Cup(this), round, game, expected.as_mut_ptr(), &mut n, false);
     let res = o(this, round, game, out, count);
     let end = (*count).clamp(c0, 0x200);
-    let obtido = core::slice::from_raw_parts(out.offset(c0 as isize), (end - c0) as usize);
-    let ok = res == n && *count == n && obtido == &expected[c0 as usize..n.clamp(c0, 0x200) as usize];
-    SCOREBOARD.record(ok, || format!("collect_possible_teams({:x}, {}, {}) {}/{} conta {} {:?} x {:?}", this, round, game, res, n, *count, obtido, &expected[c0 as usize..n.clamp(c0, 0x200) as usize]));
+    let got = core::slice::from_raw_parts(out.offset(c0 as isize), (end - c0) as usize);
+    let ok = res == n && *count == n && got == &expected[c0 as usize..n.clamp(c0, 0x200) as usize];
+    SCOREBOARD.record(ok, || format!("collect_possible_teams({:x}, {}, {}) {}/{} conta {} {:?} x {:?}", this, round, game, res, n, *count, got, &expected[c0 as usize..n.clamp(c0, 0x200) as usize]));
     res
 }
 

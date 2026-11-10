@@ -44,7 +44,7 @@ pub(crate) struct BraRegRioStateChampionship {
 /// 0), ret 4); as estatísticas (operator new 0x944cf1 de 0x5ce e Comp_Stats::Comp_Stats 0x49ee70, thiscall(novo,
 /// this), ret 4; o quadro SEH da original cobre só esse new) em +8 (sem elas: a caixa); por fim as posições previstas.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: League, ano: u32, registro: usize, e: &BraRegRioStateChampionship, disciplina: u8, previstas_sim: bool, ramo: &'static str) -> usize {
+pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: League, ano: u32, registro: usize, e: &BraRegRioStateChampionship, disciplina: u8, predicted_yes: bool, ramo: &'static str) -> usize {
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.rules);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.table);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.predicted);
@@ -86,7 +86,7 @@ pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: League, ano: u32, 
         show_error_at(e.file, e.rows[4]);
         return this.addr();
     }
-    if previstas_sim {
+    if predicted_yes {
         previstas(this.addr());
     }
     this.addr()
@@ -763,11 +763,10 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_record_season_honours(this: u
     }
     let history: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_RECORD_SEASON_HONOURS);
     history(this.addr());
-    let news: unsafe extern "thiscall" fn(usize, usize, i32, i32, i32, u32, usize, i32) = core::mem::transmute(FN_COMP_SEND_PRIZE_MONEY_NEWS);
     for (linha, valor, posicao) in [(0usize, 675000i32, 1i32), (0x3b, 250000, 2)] {
         let c = read_usize(this.table() + linha);
         exe::finance_add_prize_money(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c), valor);
-        news(this.addr(), read_usize(this.table() + linha), valor, 0, posicao, 0, 0, -2);
+        exe::comp_send_prize_money_news(this.addr(), read_usize(this.table() + linha), valor, 0, posicao, 0, 0, -2);
     }
     crate::comparison::branch("cqo_9 prizes");
     exe::bra_nat_first_fill_champions_cup_entrants()

@@ -4,7 +4,7 @@ MUTACOES = [
     ('p_distancia', "let mut l14 = random(ftol(d as f64 * d as f64 * d as f64 * d as f64 * read_f32(rdata::F32_4) as f64 / k));", "let mut l14 = random(ftol(d as f64 * d as f64 * d as f64 * read_f32(rdata::F32_4) as f64 / k));"),
     ('p_perto', "l14 = l14.wrapping_add(ftol(read_f32(rdata::F32_250) as f64 - d as f64 * read_f32(rdata::F32_125) as f64));", "l14 = l14.wrapping_add(ftol(read_f32(rdata::F32_250) as f64 - d as f64 * read_f32(rdata::F32_125) as f64 * 1.1));"),
     ('p_cinco', "let five = |v: f64| ((ftol(v * read_f32(rdata::F32_9) as f64 + read_f64(rdata::F64_2_5)) as i8 as i32 / 5) * 5) as i8;", "let five = |v: f64| ((ftol(v * read_f32(rdata::F32_9) as f64 + read_f64(rdata::F64_2_5)) as i8 as i32 / 4) * 4) as i8;"),
-    ('p_posicao', "return w.wrapping_add(if dirigido() { 0x3e } else { 0x2d });", "return w.wrapping_add(if dirigido() { 0x3e } else { 0x2e });"),
+    ('p_posicao', "return w.wrapping_add(if managed() { 0x3e } else { 0x2d });", "return w.wrapping_add(if managed() { 0x3e } else { 0x2e });"),
     ('p_terco', "base.wrapping_sub((l14 as i16 as i32 / 3) as i16).wrapping_sub(l20 as i16)", "base.wrapping_sub((l14 as i16 as i32 / 4) as i16).wrapping_sub(l20 as i16)"),
     ('p_escanteio', "wp(0x186).wrapping_sub((l14 as i16).wrapping_add(l14 as i16))", "wp(0x186).wrapping_sub(l14 as i16)", "pass inaccurate"),
     ('p_lateral', "wp(0x156).wrapping_sub(l14 as i16).wrapping_add(300)", "wp(0x156).wrapping_sub(l14 as i16).wrapping_add(301)"),

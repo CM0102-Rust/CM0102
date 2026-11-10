@@ -89,7 +89,6 @@ pub(crate) unsafe extern "thiscall" fn fin_prm_end_season_for_nation(this: usize
     if entry == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_FIN_PRM_END_SEASON_FOR_NATION)(this, entry); // a caixa
     }
-    let row: unsafe extern "C" fn(usize) -> u8 = core::mem::transmute(FN_KEY_NATION_INDEX_OF_CLUB);
     let mut club = read_usize(G_CLUB_TABLE);
     let mut k = 0i32;
     let mut desloc = 0usize;
@@ -101,7 +100,7 @@ pub(crate) unsafe extern "thiscall" fn fin_prm_end_season_for_nation(this: usize
         if read_usize(club + club::DIVISION) != 0 && !nation.is_null() {
             let active = nation.league_selected() != 0;
             if active || read_i16(club + club::REPUTATION) >= 0x1388 { // cqc1: the club of an inactive nation by reputation
-                let l = row(club) as i8 as i32;
+                let l = exe::key_nation_index_of_club(club) as i8 as i32;
                 if (0xb63d60 + l * 72) as usize == entry {
                     if !active && read_i16(club + club::REPUTATION) < 0x1770 {
                         crate::comparison::branch("cqc_1 inactive nation below 6000");
@@ -1285,18 +1284,18 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
         let r2 = friendly_random(0xfa);
         gastos = ftol((r2 as f64 + r1f as f64) + publico as f64);
     }
-    let mut dinheiro = 0i32; // the original’s [esp+0x1c]
+    let mut money = 0i32; // the original’s [esp+0x1c]
     let kind_ok = match (partida.stage() as i8 as i32).wrapping_add(1) as u32 {
         1 => {
-            dinheiro = 25000;
+            money = 25000;
             true
         }
         2 => {
-            dinheiro = 75000;
+            money = 75000;
             true
         }
         3 => {
-            dinheiro = 125000;
+            money = 125000;
             true
         }
         _ => false, // 0 (stage −1) and outside the table: by type
@@ -1305,7 +1304,7 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
         let t = partida.category();
         if t == 8 || t == 7 {
             let sum = home.reputation() as i32 + away.reputation() as i32;
-            dinheiro = if sum > 10000 {
+            money = if sum > 10000 {
                 125000
             } else if sum <= 7500 {
                 25000
@@ -1315,18 +1314,18 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
         } else if t == 6 || t == 4 {
             let w = read_i16(partida.competition().addr() + competition::REPUTATION);
             let m = if w > 5 { w as i32 } else { 5 };
-            dinheiro = div_trunc(m.wrapping_mul(if t == 6 { 125000 } else { 25000 }), 20);
+            money = div_trunc(m.wrapping_mul(if t == 6 { 125000 } else { 25000 }), 20);
         }
     }
     let nation = home.nation();
     let kind = if !nation.is_null() { nation.state_of_development() as i8 } else { 3 };
     if kind == 2 {
-        dinheiro = div_trunc(dinheiro, 5);
+        money = div_trunc(money, 5);
         tv = div_trunc(tv, 2);
         cost = div_trunc(cost, 4);
         gastos = div_trunc(gastos, 2);
     } else if kind != 1 {
-        dinheiro = div_trunc(dinheiro, 10);
+        money = div_trunc(money, 10);
         tv = div_trunc(tv, 10);
         cost = div_trunc(cost, 15);
         gastos = div_trunc(gastos, 10);
@@ -1334,24 +1333,24 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
     if !home.is_null() && !nation.is_null() {
         let n = read_i32(nation.addr());
         if n == read_i32(KEY_NATION_WALES) || n == read_i32(KEY_NATION_REPUBLIC_OF_IRELAND) || n == read_i32(KEY_NATION_NORTHERN_IRELAND) {
-            dinheiro = div_trunc(dinheiro, 5);
+            money = div_trunc(money, 5);
             tv = div_trunc(tv, 2);
             cost = div_trunc(cost, 4);
             gastos = div_trunc(gastos, 2);
         }
     }
-    let liquido = tv.wrapping_sub(gastos).wrapping_sub(cost).wrapping_add(renda);
+    let net = tv.wrapping_sub(gastos).wrapping_sub(cost).wrapping_add(renda);
     let add = |fin: usize, a: usize, b: usize, v: i32| {
         fin_prm_add_i32(fin + a, v);
         fin_prm_add_i32(fin + b, v);
         add_to_balance(Finance(fin), v as i64);
     };
     if partida.neutral_venue() == 0 && read_usize(partida.home_club().addr() + club::DIVISION) == partida.competition().addr() {
-        let x = dinheiro as f64;
+        let x = money as f64;
         add(mandante, 0x158, 0xb8, ftol(x * read_f64(rdata::F64_0_75)));
         add(visitante, 0x158, 0xb8, ftol(x * read_f64(rdata::F64_0_25)));
         crate::comparison::branch("cqb_1 net to the home side");
-        add(mandante, 0x140, 0xa0, liquido); // cqb1: o líquido ao mandante
+        add(mandante, 0x140, 0xa0, net); // cqb1: o líquido ao mandante
         let home = partida.home_club();
         let est = home.stadium().addr();
         if home.own_stadium() != 0 && est != 0 {
@@ -1364,10 +1363,10 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
         }
         return;
     }
-    let half = ftol(dinheiro as f64 * read_f64(rdata::F64_0_5));
+    let half = ftol(money as f64 * read_f64(rdata::F64_0_5));
     add(mandante, 0x158, 0xb8, half);
     add(visitante, 0x158, 0xb8, half);
-    let l2 = div_trunc(liquido, 2);
+    let l2 = div_trunc(net, 2);
     add(mandante, 0x140, 0xa0, l2);
     add(visitante, 0x140, 0xa0, l2);
 }
@@ -1588,8 +1587,8 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
         let (lo, hi) = balance_halves(fin);
         let n = read_i8(club.chairman().non_player().addr() + 0x20) as i32;
         let r3 = friendly_random(n.wrapping_mul(1_000_000)) as i64;
-        let divida = ((hi as i64) << 32 | lo as i64).wrapping_neg();
-        if r3 <= divida {
+        let debt = ((hi as i64) << 32 | lo as i64).wrapping_neg();
+        if r3 <= debt {
             return 0;
         }
         let rep = rep as i32;
@@ -2665,8 +2664,8 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
     }
     let level = (club.addr() + club::TRAINING) as *mut i8;
     if read_u8(est + stadium::UNDER_SOIL_HEATING) != 0 && club.reputation() < 0x109a {
-        let aquecimento: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_FINANCE_POST_STADIUM_WORKS_NEWS);
-        aquecimento(this, club.addr(), 0, 7);
+        let heating: unsafe extern "thiscall" fn(usize, usize, u32, u32) = core::mem::transmute(FN_FINANCE_POST_STADIUM_WORKS_NEWS);
+        heating(this, club.addr(), 0, 7);
         club.stadium().set_under_soil_heating(0);
         let n = *level;
         if n == 0x14 {

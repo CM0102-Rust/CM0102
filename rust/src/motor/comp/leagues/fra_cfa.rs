@@ -21,10 +21,9 @@ pub(crate) type FraCfaScheduleRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8
 /// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
 /// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
 pub(crate) unsafe fn fra_cfa_set_league_rounds(t: usize, year: u32, first: i32, table: &[FraCfaScheduleRound]) {
-    let data: unsafe extern "C" fn(usize, i32, i32, i32, i32, i32, i32, u32, u32) -> usize = core::mem::transmute(FN_LEAGUE_ROUND_SET_DATE);
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in table.iter().enumerate() {
         let i = first + k as i32;
-        data(t, i, dia as i32, mes as i32, anos as i32, semana as i32, codigo as i32, year, 0);
+        exe::league_round_set_date(t, i, dia as i32, mes as i32, anos as i32, semana as i32, codigo as i32, year, 0);
         for (j, &(a, b, c)) in faixas.iter().enumerate() {
             exe::league_round_set_match_slot(t, i, j as i32, a as i32, b as i32, c as i32, 0);
         }
@@ -51,12 +50,12 @@ pub(crate) struct SinglePhaseLeague {
 /// (−1; as outras devolvem 0 sem gravar nada): é_liga (se pedido) = 1, as rodadas, extra = 0, a tabela de rodadas × 0x41
 /// bytes (malloc 0x944e46: push; add esp, 4 -> cdecl; sem memória: a caixa e 0) com as datas e as faixas da liga.
 /// Devolve a tabela.
-pub(crate) unsafe fn create_cfa_schedule(this: League, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, p: &SinglePhaseLeague) -> usize {
+pub(crate) unsafe fn create_cfa_schedule(this: League, fase: u32, rodadas: *mut i16, extra: *mut i16, league: *mut i32, p: &SinglePhaseLeague) -> usize {
     if fase as u8 != 0xff {
         return 0;
     }
-    if !liga.is_null() {
-        *liga = 1;
+    if !league.is_null() {
+        *league = 1;
     }
     *rodadas = p.rounds;
     *extra = 0;
@@ -401,24 +400,24 @@ pub(crate) unsafe fn construct_group_league(this: League, ano: u32, p: &Backgrou
         return this.addr();
     }
     crate::comparison::branch("cqn_4 french bottom league");
-    let mut lista = vec![0usize; p.maximo as usize];
+    let mut list = vec![0usize; p.maximo as usize];
     let mut k: i16 = 0;
     let mut genericos: i16 = 0;
     let n = (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
-    let base_clubes = read_usize(G_CLUB_TABLE);
+    let base_clubs = read_usize(G_CLUB_TABLE);
     let mut i: i32 = 0;
     while i < n {
-        let c = Club(base_clubes + (i as usize) * club::SIZE);
+        let c = Club(base_clubs + (i as usize) * club::SIZE);
         let comp = c.division().addr();
         let id = if comp != 0 { read_usize(comp) } else { 0 };
         if comp != 0 && p.all.iter().any(|&g| id == read_usize(g)) {
-            lista[k as usize] = c.addr();
+            list[k as usize] = c.addr();
             k += 1;
             if k == p.maximo {
                 break;
             }
         } else {
-            let entra = match p.nation {
+            let enters = match p.nation {
                 Some(g) => {
                     let nacao = c.nation().addr();
                     nacao != 0 && read_usize(nacao) == read_usize(g) && c.reserve_division().addr() == 0 && comp != 0 && id == read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)
@@ -428,8 +427,8 @@ pub(crate) unsafe fn construct_group_league(this: League, ano: u32, p: &Backgrou
                     comp != 0 && id == read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION) && reserva != 0 && read_usize(reserva) == read_usize(p.competition)
                 }
             };
-            if entra && genericos < p.genericos { // cqn4: the maximum clubs of the generic division
-                lista[k as usize] = c.addr();
+            if enters && genericos < p.genericos { // cqn4: the maximum clubs of the generic division
+                list[k as usize] = c.addr();
                 k += 1;
                 genericos += 1;
                 if k == p.maximo {
@@ -439,9 +438,9 @@ pub(crate) unsafe fn construct_group_league(this: League, ano: u32, p: &Backgrou
         }
         i += 1;
     }
-    exe::comp_util_shuffle_pointer_array(lista.as_mut_ptr() as usize, k as u16 as u32); // cqn4: the list random draw
+    exe::comp_util_shuffle_pointer_array(list.as_mut_ptr() as usize, k as u16 as u32); // cqn4: the list random draw
     for g in 0..p.groups {
-        if tabela(this.addr(), lista.as_ptr() as usize + g * p.by_group * 4) == 0 {
+        if tabela(this.addr(), list.as_ptr() as usize + g * p.by_group * 4) == 0 {
             show_error_at(p.file, p.rows[1]);
             return this.addr();
         }

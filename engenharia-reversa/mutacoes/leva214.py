@@ -3,7 +3,7 @@ MUTACOES = [
     ('lt_pontos', '        return pb - pa; // pontos', '        return pa - pb; // pontos'),
     ('lt_grade', '                    *c = k; // place filled', '                    *c = k + 1; // place filled'),
     ('lt_ultimo_dia', '        return 0xff; // outside the last day', '        return 0xfe; // outside the last day'),
-    ('cu_clube', '    d(0x1c, ponteiro(0xc, G_CLUB_TABLE, 0x245)); // home club', '    d(0x1c, ponteiro(0x10, G_CLUB_TABLE, 0x245)); // home club'),
+    ('cu_clube', '    d(0x1c, pointer(0xc, G_CLUB_TABLE, 0x245)); // home club', '    d(0x1c, pointer(0x10, G_CLUB_TABLE, 0x245)); // home club'),
     ('cu_sem_destaque', '    4 // no highlight', '    3 // no highlight'),
     ('cu_semana', '    *((e + cup_round::SLOT_WEEKDAY) as *mut u8) = week as u8; // day of the week', '    *((e + cup_round::SLOT_WEEKDAY) as *mut u8) = (week as u8).wrapping_add(1); // day of the week'),
     ('fm_espelho', '*q = 0xb0u8.wrapping_sub(d) ^ (0xf8u8.wrapping_sub(c) & 0xf); // espelho', '*q = 0xa0u8.wrapping_sub(d) ^ (0xf8u8.wrapping_sub(c) & 0xf); // espelho'),

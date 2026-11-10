@@ -161,8 +161,7 @@ pub(crate) unsafe extern "thiscall" fn send_by_scope(this: usize, news: usize, c
             continent
         }
         4 => {
-            let all: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_ALL_MANAGERS);
-            return all(this, news);
+            return exe::news_send_to_all_managers(this, news);
         }
         5 => {
             two = core::mem::transmute(FN_NEWS_SEND_TO_COMP_REGION);

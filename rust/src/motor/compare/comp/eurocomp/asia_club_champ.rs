@@ -24,14 +24,14 @@ pub(crate) unsafe extern "thiscall" fn compare_create_group_stages(this: usize) 
     }
     let v = group_stage_qualifiers(this);
     o(this.addr());
-    let checks = |g: usize, de: &[usize]| {
+    let checks = |g: usize, of: &[usize]| {
         let f = League(read_usize(this.stages() + g * 4));
         let t = if !f.is_null() { f.table() } else { 0 };
         if t == 0 || f.club_count() != 4 || f.year() != this.year() {
             return false;
         }
         let mut a: Vec<usize> = (0..4).map(|k| read_usize(t + k * 0x3b)).collect();
-        let mut b = de.to_vec();
+        let mut b = of.to_vec();
         a.sort_unstable();
         b.sort_unstable();
         a == b

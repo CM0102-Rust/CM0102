@@ -484,25 +484,25 @@ pub(crate) unsafe extern "thiscall" fn compare_is_staff_suitable_for_job(this: u
 /// dos vizinhos.
 pub(crate) unsafe extern "thiscall" fn compare_manager_manager_remove(this: usize, given: usize) -> u32 {
     let this = Llist(this);
-    let no = find_list_node_by_bytes(this, given);
+    let in_the = find_list_node_by_bytes(this, given);
     let before: [u8; 14] = core::ptr::read_unaligned(this.addr() as *const [u8; 14]);
-    let (prox, ant) = if no != 0 { (read_usize(no + llist_node::NEXT), read_usize(no + llist_node::PREV)) } else { (0, 0) };
+    let (prox, ant) = if in_the != 0 { (read_usize(in_the + llist_node::NEXT), read_usize(in_the + llist_node::PREV)) } else { (0, 0) };
     let (cabeca, cauda, cursor) = (this.head(), this.tail(), this.cursor());
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_MANAGER_MANAGER_REMOVE)(this.addr(), given);
     let after: [u8; 14] = core::ptr::read_unaligned(this.addr() as *const [u8; 14]);
-    let ok = if no == 0 {
+    let ok = if in_the == 0 {
         r == 0 && after == before
     } else {
         let count = core::ptr::read_unaligned(before.as_ptr() as *const i16).wrapping_sub(1);
         r == 1
             && core::ptr::read_unaligned(this.addr() as *const i16) == count
-            && this.head() == if no == cabeca { prox } else { cabeca }
-            && this.tail() == if no == cauda { ant } else { cauda }
-            && this.cursor() == if no == cursor { prox } else { cursor }
-            && (no == cabeca || read_usize(ant + 6) == prox)
-            && (no == cauda || read_usize(prox + llist_node::PREV) == ant)
+            && this.head() == if in_the == cabeca { prox } else { cabeca }
+            && this.tail() == if in_the == cauda { ant } else { cauda }
+            && this.cursor() == if in_the == cursor { prox } else { cursor }
+            && (in_the == cabeca || read_usize(ant + 6) == prox)
+            && (in_the == cauda || read_usize(prox + llist_node::PREV) == ant)
     };
-    SCOREBOARD.record(ok, || format!("manager_manager_remove({:#x}, {:#x}) original={} nó {:#x} cabeçalho {:x?} -> {:x?}", this.addr(), given, r, no, before, after));
+    SCOREBOARD.record(ok, || format!("manager_manager_remove({:#x}, {:#x}) original={} nó {:#x} cabeçalho {:x?} -> {:x?}", this.addr(), given, r, in_the, before, after));
     r
 }
 

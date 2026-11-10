@@ -81,9 +81,9 @@ pub(crate) unsafe fn offer_renewal_if_due(club: Club, p: Staff, k: Contract) {
 ///
 /// [pt] Os históricos da entrada `e` para o técnico (já feito por quem chama), o presidente (+0xbf) e os 20 da escalação
 /// (+0x190 do lado, 0x49 bytes, −1 vazio; pessoas válidas e fora o técnico; nula: a caixa da linha 0x1010).
-pub(crate) unsafe fn add_lineup_histories(this: usize, club: Club, escalacao: usize, e: &[u8; 0x40]) {
+pub(crate) unsafe fn add_lineup_histories(this: usize, club: Club, lineup: usize, e: &[u8; 0x40]) {
     for j in 0..0x14usize {
-        let id = read_i32(escalacao + 0x49 * j);
+        let id = read_i32(lineup + 0x49 * j);
         if id == -1 {
             continue;
         }
@@ -139,9 +139,8 @@ pub(crate) unsafe fn manager_rating_gains(t: Staff, club: Club, id_comp: usize) 
     if (c.club_sides() as i8) != 1 {
         (400, 400)
     } else {
-        let estrangeiro: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
         // 0x53d980: 3 pushes; add esp, 0xc -> cdecl
-        (if estrangeiro(t.addr(), club.nation().addr(), 1) != 0 { 200 } else { 400 }, 200)
+        (if exe::database_is_staff_foreign(t.addr(), club.nation().addr(), 1) != 0 { 200 } else { 400 }, 200)
     }
 }
 
@@ -338,8 +337,8 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
     if chairman != 0 {
         append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(chairman), &e);
     }
-    let escalacao = partida.addr() + match_record::ROW_STAFF_ID + 0x625 * (club != game.home_club()) as usize;
-    add_lineup_histories(this, club, escalacao, &e);
+    let lineup = partida.addr() + match_record::ROW_STAFF_ID + 0x625 * (club != game.home_club()) as usize;
+    add_lineup_histories(this, club, lineup, &e);
     for j in 0..50usize {
         if (comp.reputation() as i32).wrapping_mul(400) < club.reputation() as i32 {
             break;
@@ -421,7 +420,7 @@ pub(crate) unsafe fn compare_champion_update(name: &str, this: usize, club: Club
         fixas.push((club.addr() + club::MAX_ATTENDANCE, 4));
         fixas.push((club.stadium().addr() + stadium::EXPANSION_CAPACITY, 4));
     }
-    let mut contratos = Vec::new();
+    let mut contracts = Vec::new();
     let mut sheets = Vec::new(); // (morale from the record, contract or 0, previous morale), in squad order
     for j in 0..50usize {
         let p = Staff(club.squad(j));
@@ -432,12 +431,12 @@ pub(crate) unsafe fn compare_champion_update(name: &str, this: usize, club: Club
         let m = p.player().addr() + 0x45;
         sheets.push((m, k, *(m as *const i8)));
         if k != 0 {
-            contratos.push(k);
+            contracts.push(k);
         }
     }
     let mut todas = fixas.clone();
     todas.extend(sheets.iter().map(|&(m, _, _)| (m, 1)));
-    todas.extend(contratos.iter().map(|&k| (k + 0x44, 1)));
+    todas.extend(contracts.iter().map(|&k| (k + 0x44, 1)));
     todas.extend(crate::rng::STATE_REGIONS.iter().copied());
     let before = crate::comparison::MemorySnapshot::read(&todas);
     (*core::ptr::addr_of_mut!(DRY_RUN_RENEWED_CONTRACTS)).clear();
@@ -454,7 +453,7 @@ pub(crate) unsafe fn compare_champion_update(name: &str, this: usize, club: Club
     // comes from another point of the random generator; his and the previous ones enter the count.
     let cut = renovados.first().and_then(|r| sheets.iter().position(|&(_, k, _)| k == *r)).unwrap_or(sheets.len());
     count.extend(sheets.iter().take(cut + 1).map(|&(m, _, _)| (m, 1)));
-    count.extend(contratos.iter().filter(|k| !renovados.contains(k)).map(|&k| (k + 0x44, 1)));
+    count.extend(contracts.iter().filter(|k| !renovados.contains(k)).map(|&k| (k + 0x44, 1)));
     // The later ones, by the range of 0x544710: morale m rises from 0 to 20 (+20 or +10 drawn), clamped to 1..20.
     let band = |&(m, _, m0): &(usize, usize, i8)| -> bool {
         let (m0, v) = (m0 as i32, *(m as *const i8) as i32);
@@ -808,8 +807,7 @@ pub(crate) unsafe fn update_cup_placed_club(this: usize, club: Club, game: Fixtu
             let (k1, k2) = if (c.club_sides() as i8) != 1 {
                 (k, k)
             } else {
-                let estrangeiro: unsafe extern "C" fn(usize, usize, u32) -> u32 = core::mem::transmute(FN_DATABASE_IS_STAFF_FOREIGN);
-                (if estrangeiro(t.addr(), club.nation().addr(), 1) != 0 { metade } else { k }, metade)
+                (if exe::database_is_staff_foreign(t.addr(), club.nation().addr(), 1) != 0 { metade } else { k }, metade)
             };
             let side = partida.addr() + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (game.away_club() == club) as usize;
             raise_side_rating(side, weight, k);
@@ -822,9 +820,9 @@ pub(crate) unsafe fn update_cup_placed_club(this: usize, club: Club, game: Fixtu
     if chairman != 0 {
         append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(chairman), &e);
     }
-    let escalacao = partida.addr() + match_record::ROW_STAFF_ID + 0x625 * (club != game.home_club()) as usize;
+    let lineup = partida.addr() + match_record::ROW_STAFF_ID + 0x625 * (club != game.home_club()) as usize;
     for j in 0..0x14usize {
-        let id = read_i32(escalacao + 0x49 * j);
+        let id = read_i32(lineup + 0x49 * j);
         if id == -1 {
             continue;
         }
@@ -945,12 +943,12 @@ pub(crate) unsafe fn days_between(a: usize, b: usize) -> i32 {
 /// +0x56 = 13/11/1975 da 0x549f70) e +1 em +0xb4. Na seleção, contratado = 1: +1 em +0xb5. Os históricos: do técnico
 /// (tipo 0x96: clube, contratado), do presidente do clube (+0xbf; tipo 0x97 com o técnico e as três chaves) e do clube
 /// (tipo 0x96 no +8, o técnico, as chaves e contratado). Técnico ou clube nulos: a caixa (linha 0x3b1).
-pub(crate) unsafe extern "thiscall" fn record_manager_job_change(this: usize, manager: usize, club: usize, contratado: u32) {
+pub(crate) unsafe extern "thiscall" fn record_manager_job_change(this: usize, manager: usize, club: usize, signed: u32) {
     let club = Club(club);
     if club.is_null() || manager == 0 {
         return show_error_at(0xa83b78, 0x3b1);
     }
-    let contratado = contratado as u8 as i8;
+    let signed = signed as u8 as i8;
     if is_national_team(club.addr()) == 0 {
         let r = exe::staff_records_get_manager_record(this, manager, 1);
         if r != 0 {
@@ -989,7 +987,7 @@ pub(crate) unsafe extern "thiscall" fn record_manager_job_change(this: usize, ma
                 }
             }
             write_i32(r + manager_record::CURRENT_CLUB, -1);
-            if contratado == 1 {
+            if signed == 1 {
                 crate::comparison::branch("cqa_12 new spell");
                 write_i32(r + manager_record::CURRENT_CLUB, read_i32(club.addr()));
                 staff_records_copy_date(r + manager_record::CURRENT_CLUB_SINCE, today);
@@ -999,7 +997,7 @@ pub(crate) unsafe extern "thiscall" fn record_manager_job_change(this: usize, ma
                 *((r + manager_record::CLUB_JOBS) as *mut u8) = (*((r + manager_record::CLUB_JOBS) as *const u8)).wrapping_add(1); // cqa12: as passagens
             }
         }
-    } else if contratado == 1 {
+    } else if signed == 1 {
         let r = exe::staff_records_get_manager_record(this, manager, 1);
         if r != 0 {
             *((r + manager_record::NATIONAL_JOBS) as *mut u8) = (*((r + manager_record::NATIONAL_JOBS) as *const u8)).wrapping_add(1);
@@ -1009,14 +1007,14 @@ pub(crate) unsafe extern "thiscall" fn record_manager_job_change(this: usize, ma
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0x96;
     put_i32(&mut e, 8, read_i32(club.addr()));
-    put_i32(&mut e, 0xd, contratado as i32);
+    put_i32(&mut e, 0xd, signed as i32);
     append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(manager), &e);
     if club.chairman().addr() != 0 {
         let mut e2 = history_entry();
         stamp_game_date(e2.as_mut_ptr());
         e2[0xc] = 0x97;
         put_i32(&mut e2, 8, read_i32(club.addr()));
-        put_i32(&mut e2, 0xd, contratado as i32);
+        put_i32(&mut e2, 0xd, signed as i32);
         put_person_keys(&mut e2, 0x11, manager);
         append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(club.chairman().addr()), &e2);
     }
@@ -1024,7 +1022,7 @@ pub(crate) unsafe extern "thiscall" fn record_manager_job_change(this: usize, ma
     stamp_game_date(e3.as_mut_ptr());
     e3[8] = 0x96;
     put_person_keys(&mut e3, 9, manager);
-    put_i32(&mut e3, 0x19, contratado as i32);
+    put_i32(&mut e3, 0x19, signed as i32);
     append_club_history_by_id(this, read_usize(club.addr()), &e3);
 }
 
@@ -2240,7 +2238,7 @@ pub(crate) unsafe extern "thiscall" fn add_free_release_records(this: usize, per
 /// dele (+0xcf), o histórico do técnico (tipo 0x69: o clube, a pessoa e os três ids +0x33 de +4, +8 e +0xc dela, e o id
 /// de `de`); depois, na mesma entrada, o da pessoa (tipo 0x6a: o clube e o id de `de`), no arquivo (0x58e340). O clube
 /// é lido antes do teste da pessoa, como na original; pessoa nula: a caixa "Error" (linha 0x1010).
-pub(crate) unsafe extern "thiscall" fn add_loan_records(this: usize, person: usize, de: usize, club: usize) {
+pub(crate) unsafe extern "thiscall" fn add_loan_records(this: usize, person: usize, of: usize, club: usize) {
     let club = Club(club);
     crate::comparison::branch("cps_9 loan");
     let mut e = history_entry();
@@ -2250,13 +2248,13 @@ pub(crate) unsafe extern "thiscall" fn add_loan_records(this: usize, person: usi
         e[0xc] = 0x69;
         put_i32(&mut e, 8, read_i32(club.addr()));
         put_person_keys(&mut e, 0xd, person);
-        put_i32(&mut e, 0x1d, read_i32(de));
+        put_i32(&mut e, 0x1d, read_i32(of));
         append_person_history_by_id(true, this, read_usize(manager), &e);
     }
     stamp_game_date(e.as_mut_ptr());
     e[0xc] = 0x6a;
     put_i32(&mut e, 8, read_i32(club.addr()));
-    put_i32(&mut e, 0xd, read_i32(de));
+    put_i32(&mut e, 0xd, read_i32(of));
     if person != 0 {
         append_person_history_by_id(true, this, read_usize(person), &e);
     } else {

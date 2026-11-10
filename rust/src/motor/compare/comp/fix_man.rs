@@ -259,14 +259,14 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_fixture_moved_news(this: us
     before.write_back();
     o(this, f, causa, old);
     let l2 = read_usize(this + fixture_manager::MOVED_NEWS_QUEUE);
-    let montada = FIXTURE_MOVED_NEWS_WAS_BUILT;
-    let same = montada
+    let built = FIXTURE_MOVED_NEWS_WAS_BUILT;
+    let same = built
         && l2 != 0
         && read_i16_as_i32(l2) == count + 1
         && read_usize(read_usize(l2 + 6)) != 0
         && core::slice::from_raw_parts(read_usize(read_usize(l2 + 6)) as *const u8, 0xde)
             == core::slice::from_raw_parts(core::ptr::addr_of!(FIXTURE_MOVED_NEWS_BUILT) as *const u8, 0xde);
-    SCOREBOARD.record(same, || format!("queue_fixture_moved_news(jogo {:#x}, nova) montada={} conta {} -> {}", f, montada, count, if l2 != 0 { read_i16_as_i32(l2) } else { -1 }));
+    SCOREBOARD.record(same, || format!("queue_fixture_moved_news(jogo {:#x}, nova) montada={} conta {} -> {}", f, built, count, if l2 != 0 { read_i16_as_i32(l2) } else { -1 }));
 }
 
 /// Comparer for `find_stored_fixture`.
@@ -309,12 +309,12 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_fixture(this: usize, f: us
         return o(this, f); // simplification: no memory for the block, original only (the box)
     }
     let count = read_u16(l);
-    let mut no = read_usize(l + 2);
+    let mut in_the = read_usize(l + 2);
     let mut has = false;
-    while no != 0 && !has {
-        let n = *((no + 4) as *const i16) as isize as usize;
-        has = core::slice::from_raw_parts(read_usize(no) as *const u8, n) == core::slice::from_raw_parts(f as *const u8, n);
-        no = read_usize(no + 6);
+    while in_the != 0 && !has {
+        let n = *((in_the + 4) as *const i16) as isize as usize;
+        has = core::slice::from_raw_parts(read_usize(in_the) as *const u8, n) == core::slice::from_raw_parts(f as *const u8, n);
+        in_the = read_usize(in_the + 6);
     }
     let r = o(this, f);
     let expected = has as u32;

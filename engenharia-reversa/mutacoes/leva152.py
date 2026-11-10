@@ -2,7 +2,7 @@
 MUTACOES = [
     ('j_pendente', "            if read_i8(p + day_match::HOME_GOALS) == -1 && u(p, day_match::ENGINE) == 0 {", "            if read_i8(p + day_match::HOME_GOALS) == -1 && u(p, day_match::ENGINE) == 1 {"),
     ('j_fila', "                exe::virtual_staff_fill_fixture_squads(u(G_VIRTUAL_STAFF, 0), p + day_match::FIXTURE_COPY, -2, 0);", "                exe::virtual_staff_fill_fixture_squads(u(G_VIRTUAL_STAFF, 0), p + day_match::FIXTURE_COPY, -1, 0);"),
-    ('j_rapida', "                    exe::cm3_match_engine_init_match(m, p + day_match::FIXTURE_COPY, r, 0, 0);\n                    let rapido", "                    exe::cm3_match_engine_init_match(m, p + day_match::FIXTURE_COPY, 0, 0, 0);\n                    let rapido"),
+    ('j_rapida', "                    exe::cm3_match_engine_init_match(m, p + day_match::FIXTURE_COPY, r, 0, 0);\n                    let fast", "                    exe::cm3_match_engine_init_match(m, p + day_match::FIXTURE_COPY, 0, 0, 0);\n                    let fast"),
     ('j_conta', "                *((day + match_day_fields::FINISHED_COUNT) as *mut i32) += 1;\n            }\n        }\n    };", "                *((day + match_day_fields::FINISHED_COUNT) as *mut i32) += 3;\n            }\n        }\n    };"),
     ('j_fechar', "                    exe::match_day_apply_match_result(day, p);\n", ""),
     ('j_linhas', "                            exe::formation_clear_marking_targets(exe::human_manager_get_active_tactic(manager(), u(u(p, oc), 0xcf)));\n", ""),

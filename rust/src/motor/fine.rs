@@ -40,7 +40,7 @@ pub(crate) static mut FINE_NEWS_WOULD_BUILD: bool = false;
 /// personalidade (+0x5d + +0x5b abaixo de 12, +0x59 abaixo de 6 e reputação +0xb acima de 5250), prazo 1, o contrato
 /// de tipo 7 (+0x4f), a transferência futura (0x8cca10), os efeitos e o jogo pelo tipo (+0x4f 1 com mais de 23 anos,
 /// ou 2).
-pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, reason: u32, reacao: u32, deadline: u32, efeitos: u32) {
+pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, reason: u32, reaction: u32, deadline: u32, efeitos: u32) {
     let player = Staff(player);
     if player.is_null() {
         return;
@@ -54,8 +54,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     if club == 0 {
         return;
     }
-    let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
-    let c = Contract(contract(read_usize(G_CONTRACT_MANAGER), player.addr(), club));
+    let c = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), player.addr(), club));
     if c.is_null() {
         return;
     }
@@ -73,7 +72,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     exe::new_newsitem(nt, 0xbc6, 0);
     set_news_person_slots(nt, 0, player);
     set_news_slot(nt, 4, reason as i8 as u32);
-    set_news_slot(nt, 5, reacao as i8 as u32);
+    set_news_slot(nt, 5, reaction as i8 as u32);
     let r = friendly_random(2);
     set_news_slot(nt, 6, r as u32);
     let p = (player.temperament() as i32) + (player.professionalism() as i32) < 0xc

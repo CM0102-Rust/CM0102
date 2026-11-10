@@ -8,10 +8,10 @@ pub(crate) unsafe fn llist_items(list: usize) -> Vec<usize> {
     if list == 0 {
         return v;
     }
-    let mut no = read_usize(list + 2);
-    while no != 0 && v.len() < 0x10000 {
-        v.push(read_usize(no));
-        no = read_usize(no + 6);
+    let mut in_the = read_usize(list + 2);
+    while in_the != 0 && v.len() < 0x10000 {
+        v.push(read_usize(in_the));
+        in_the = read_usize(in_the + 6);
     }
     v
 }

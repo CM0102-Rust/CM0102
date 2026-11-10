@@ -41,8 +41,8 @@ pub(crate) unsafe extern "thiscall" fn group_decided(this: usize, club: usize, p
     exe::league_sort_table(this, t);
     let n = this.club_count();
     // the original reads +4 from address 0 if the club is not in the copy (never happens in the game)
-    let achada = (0..n).find(|&k| *(row(t.addr(), k) as *const usize) == club).map_or(0, |k| row(t.addr(), k));
-    if *((achada + 4) as *const u8) != 0 {
+    let found = (0..n).find(|&k| *(row(t.addr(), k) as *const usize) == club).map_or(0, |k| row(t.addr(), k));
+    if *((found + 4) as *const u8) != 0 {
         exe::league_free_table(this, t);
         return 0;
     }
@@ -81,12 +81,12 @@ pub(crate) unsafe fn comment_standing_with(this: Engine, side: u32, call: AddEve
     let commentator = || this.commentator();
     let fala = |c: &mut dyn FnMut(usize, [u32; 7]), code: u32, l: u32| c(commentator(), [code, this.addr() as u32, u32::MAX, l, u32::MAX, u32::MAX, 0]);
     // the aggregate score with the 5th output (fase3): in the original it lands on the argument itself
-    let resolvido = |l: i8| -> bool {
+    let resolved = |l: i8| -> bool {
         let (mut a, mut b, mut c, mut d, mut e) = (0i8, 0i8, 0u8, 0u8, 0u8);
         exe::cm3_match_engine_get_goal_margin(this, l, &mut a, &mut b, &mut c, &mut d, &mut e, 0) > 0 && e == 0
     };
     let bl = side as u8 as i8;
-    if read_i16(t() + 0x32) == 0 && count_t() == 0 && read_i16(t() + 0x30) == 0x82 && resolvido(bl) {
+    if read_i16(t() + 0x32) == 0 && count_t() == 0 && read_i16(t() + 0x30) == 0x82 && resolved(bl) {
         fala(call, event::THROUGH_TO_FINAL, side);
         return;
     }
@@ -96,7 +96,7 @@ pub(crate) unsafe fn comment_standing_with(this: Engine, side: u32, call: AddEve
             fala(call, event::WON_COMPETITION, side);
             return;
         }
-    } else if read_i16(t() + 0x30) == 0x96 && resolvido(bl) {
+    } else if read_i16(t() + 0x30) == 0x96 && resolved(bl) {
         fala(call, event::WON_COMPETITION, side);
         return;
     }
@@ -133,14 +133,14 @@ pub(crate) unsafe fn comment_standing_with(this: Engine, side: u32, call: AddEve
     if bl != 1 || this.golden_goal_scored() != 0 {
         return;
     }
-    if read_i16(t() + 0x32) == 0 && count_t() == 0 && read_i16(t() + 0x30) == 0x82 && resolvido(0) {
+    if read_i16(t() + 0x32) == 0 && count_t() == 0 && read_i16(t() + 0x30) == 0x82 && resolved(0) {
         return;
     }
     if count_t() != 0 {
         if exe::league_would_result_clinch_title(object(), *((t() + 0x1c) as *const usize), t()) != 0 {
             return;
         }
-    } else if read_i16(t() + 0x30) == 0x96 && resolvido(0) {
+    } else if read_i16(t() + 0x30) == 0x96 && resolved(0) {
         return;
     }
     fala(call, event::FINAL_WHISTLE, 0);
@@ -1054,10 +1054,10 @@ pub(crate) unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
                     let v = read_usize(read_usize(grid + 4 + i as usize * 4) + col as usize * 4) as i32;
                     if v != 0 {
                         let turno = ((j - 1) / (n - 1)) % 2 != 0;
-                        let paridade = (this.year() as i32 + this.stage_index() as i8 as i32) % 2 != 0;
+                        let parity = (this.year() as i32 + this.stage_index() as i8 as i32) % 2 != 0;
                         let idx = if v > 0 { v - 1 } else { -1 - v };
                         let row = read_usize(grid + 4 + (idx as isize * 4) as usize);
-                        let (a, b) = if (v > 0) ^ turno ^ paridade { (idx, i) } else { (i, idx) };
+                        let (a, b) = if (v > 0) ^ turno ^ parity { (idx, i) } else { (i, idx) };
                         write_usize(row + col as usize * 4, 0);
                         let ult = this.club_count() as i32 - 1;
                         if a >= 0 && a <= ult && b >= 0 && b <= ult {
@@ -1130,11 +1130,11 @@ pub(crate) unsafe extern "thiscall" fn create_fixtures(this: usize) -> u32 {
 /// ret 0x10); os dois ficam com +0x37 = 0xff. Senão, todos os rebaixados descem assim e depois todos os de baixo que
 /// sobem sobem. Os contados que diferem dos esperados (0xff = qualquer) dão a caixa da linha 0x15dc (sobem) ou 0x15e2
 /// (descem).
-pub(crate) unsafe extern "thiscall" fn league_promote_and_relegate(ecx: usize, above: usize, below: usize, contratos: u32, aos_pairs: u32, sobem: u32, descem: u32) {
+pub(crate) unsafe extern "thiscall" fn league_promote_and_relegate(ecx: usize, above: usize, below: usize, contracts: u32, aos_pairs: u32, sobem: u32, descem: u32) {
     let below = League(below);
     let above = League(above);
     let (mut desceram, mut subiram) = (0u8, 0u8);
-    if contratos != 0 {
+    if contracts != 0 {
         let mut i = 0i32;
         while i < below.club_count() as i32 {
             let e = LeagueTableRow(below.table() + i as usize * 0x3b);
@@ -1976,8 +1976,8 @@ pub(crate) unsafe extern "thiscall" fn copy_table(league: usize) -> usize {
             let m = league.club_count() as i32;
             let h = exe::crt_malloc((14 * m - 14) as u32);
             core::ptr::write_unaligned((c + row(i as i32) + 5) as *mut usize, h);
-            let de = read_usize(league.table() + row(i as i32) + 5);
-            core::ptr::copy_nonoverlapping(de as *const u8, h as *mut u8, (14 * league.club_count() as i32 - 14) as usize);
+            let of = read_usize(league.table() + row(i as i32) + 5);
+            core::ptr::copy_nonoverlapping(of as *const u8, h as *mut u8, (14 * league.club_count() as i32 - 14) as usize);
             i += 1;
         }
     }
@@ -1987,8 +1987,8 @@ pub(crate) unsafe extern "thiscall" fn copy_table(league: usize) -> usize {
             let t = league.games_per_club() as i32;
             let h = exe::crt_malloc(t as u32);
             core::ptr::write_unaligned((c + row(i as i32) + 9) as *mut usize, h);
-            let de = read_usize(league.table() + row(i as i32) + 9);
-            core::ptr::copy_nonoverlapping(de as *const u8, h as *mut u8, league.games_per_club() as i32 as usize);
+            let of = read_usize(league.table() + row(i as i32) + 9);
+            core::ptr::copy_nonoverlapping(of as *const u8, h as *mut u8, league.games_per_club() as i32 as usize);
             i += 1;
         }
     }
@@ -3548,8 +3548,8 @@ pub(crate) unsafe extern "thiscall" fn final_day_margin_needed(league: usize, ro
         None
     };
     // the first unmarked row from `de` to `ate` (exclusive), with points + extra against those of `linha`
-    let decides = |de: i16, ate: i16| -> Option<u8> {
-        let mut i = de;
+    let decides = |of: i16, ate: i16| -> Option<u8> {
+        let mut i = of;
         while i < ate {
             let r = league_row(league, i as i32);
             if *((r + league_table_row::STATUS) as *const u8) == 0xff {

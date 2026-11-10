@@ -32,7 +32,6 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(game: usize, club
         show_error_at(0xa7a088, 0x39);
         return 0;
     }
-    let side: unsafe extern "C" fn(usize, usize) -> u8 = core::mem::transmute(FN_COMP_UTIL_GET_FIXTURE_VENUE_SIDE);
     let (mut t0, mut t1) = ([0u8; 8], [0u8; 8]);
     let (p0, p1) = (t0.as_mut_ptr() as usize, t1.as_mut_ptr() as usize);
     let d = exe::new_date(p0, game.day() as u32, game.year() as u32);
@@ -40,7 +39,7 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(game: usize, club
     core::ptr::write_unaligned(((out + 8) as *mut u8) as *mut u32, read_u32(game.addr()));
     core::ptr::write_unaligned(((out + 0xc) as *mut u8) as *mut u16, (game.round_prefix() as u16));
     core::ptr::write_unaligned(((out + 0xe) as *mut u8) as *mut u16, (game.round_name() as u16));
-    *((out + 0x10) as *mut u8) = side(club, game.addr());
+    *((out + 0x10) as *mut u8) = exe::comp_util_get_fixture_venue_side(club, game.addr());
     core::ptr::write_unaligned(((out + 0x11) as *mut u8) as *mut u32, read_u32(club));
     core::ptr::write_unaligned(((out + 0x1b) as *mut u8) as *mut u32, (game.match_stats_slot() as u32));
     if club as u32 == (game.home_club().addr() as u32) { // cpz7: the club is the home team

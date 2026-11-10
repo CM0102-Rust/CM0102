@@ -136,11 +136,11 @@ pub(crate) unsafe extern "thiscall" fn compare_officials_manager_add_random_offi
     let estado_orig = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     let total = read_i32(G_OFFICIAL_COUNT);
     let t = read_usize(G_OFFICIAL_TABLE);
-    let mut usada = vec![false; total.max(0) as usize];
+    let mut used = vec![false; total.max(0) as usize];
     let mut missing = Vec::new();
     for (k, g) in novas.iter().enumerate() {
-        match (0..usada.len()).find(|&j| !usada[j] && same_official_record(g, t + j * 0x2b)) {
-            Some(j) => usada[j] = true,
+        match (0..used.len()).find(|&j| !used[j] && same_official_record(g, t + j * 0x2b)) {
+            Some(j) => used[j] = true,
             None => missing.push(k),
         }
     }

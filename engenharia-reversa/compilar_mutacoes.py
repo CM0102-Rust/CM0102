@@ -7,6 +7,7 @@ Usage: python compilar_mutacoes.py [--desde COMMIT (default HEAD) | --lista FILE
 """
 import os
 import runpy
+import re
 import subprocess
 import sys
 
@@ -15,6 +16,74 @@ R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def arg(nome, padrao):
     return sys.argv[sys.argv.index(nome) + 1] if nome in sys.argv else padrao
+
+
+def em_lotes(alvo, src, banco, tamanho=60):
+    """Batches (10/11/2026): up to `tamanho` mutations whose anchors do not overlap are applied together and checked
+    once. On errors, the mutations whose enclosing function holds an error line (or the whole batch, when an error
+    falls elsewhere) go back to the one-by-one check. Returns (those to check one by one, bad anchors)."""
+    sys.path.insert(0, os.path.join(R, 'engenharia-reversa'))
+    import mover_rotinas
+    textos = {p: open(p, encoding='utf-8').read() for p in src}
+    validas, ruins = [], 0
+    for f, m in alvo:
+        hit = [p for p, t in textos.items() if m[1] in t]
+        if len(hit) != 1 or textos[hit[0]].count(m[1]) != 1:
+            print('ÂNCORA', f, m[0], len(hit), flush=True)
+            ruins += 1
+            continue
+        i = textos[hit[0]].index(m[1])
+        validas.append((f, m, hit[0], i, i + len(m[1])))
+    sobra = []
+    pend = validas
+    while pend:
+        lote, resto, usados = [], [], {}
+        for v in pend:
+            spans = usados.setdefault(v[2], [])
+            if len(lote) < tamanho and not any(a < v[4] + 200 and v[3] - 200 < b for a, b in spans):
+                lote.append(v)
+                spans.append((v[3], v[4]))
+            else:
+                resto.append(v)
+        pend = resto
+        faixas = {}  # file -> [(first line, last line, item)] of each mutation's enclosing function, in the mutated text
+        for p in {v[2] for v in lote}:
+            t = textos[p]
+            vs = sorted([v for v in lote if v[2] == p], key=lambda v: -v[3])
+            for v in vs:
+                t = t[:v[3]] + v[1][2] + t[v[4]:]
+            open(p, 'w', encoding='utf-8').write(t)
+            # each mutation's new position: shift by the length changes of the ones before it
+            desloc = 0
+            pos = {}
+            for v in sorted(vs, key=lambda v: v[3]):
+                pos[id(v)] = v[3] + desloc
+                desloc += len(v[1][2]) - len(v[1][1])
+            blocos = mover_rotinas.blocos(t)
+            for v in vs:
+                a = pos[id(v)]
+                bl = next(((x, y) for _, x, y in blocos if x <= a < y), (a, a + len(v[1][2])))
+                faixas.setdefault(os.path.normcase(os.path.normpath(p)), []).append((t.count('\n', 0, bl[0]) + 1, t.count('\n', 0, bl[1]) + 1, v))
+        r = subprocess.run(['cargo', 'check', '--release', '--message-format=short'], cwd=os.path.join(banco, 'rust'),
+                           capture_output=True, text=True)
+        for p in {v[2] for v in lote}:
+            open(p, 'w', encoding='utf-8').write(textos[p])
+        if r.returncode == 0:
+            print('lote de %d: ok' % len(lote), flush=True)
+            continue
+        suspeitas = set()
+        for fl, ln in re.findall(r'^(src[^:]+):(\d+):\d+: error', r.stderr, re.M):
+            q = os.path.normcase(os.path.normpath(os.path.join(banco, 'rust', fl)))
+            achou = [v for a, b, v in faixas.get(q, []) if a <= int(ln) <= b]
+            if not achou:
+                suspeitas = {id(v) for v in lote}
+                break
+            suspeitas |= {id(v) for v in achou}
+        if not suspeitas:
+            suspeitas = {id(v) for v in lote}
+        print('lote de %d: %d suspeitas' % (len(lote), len(suspeitas)), flush=True)
+        sobra += [(v[0], v[1]) for v in lote if id(v) in suspeitas]
+    return sobra, ruins
 
 
 def main():
@@ -62,6 +131,8 @@ def main():
     print(len(alvo), 'mutações mudadas', flush=True)
     src = [os.path.join(dp, y) for dp, _, x in os.walk(os.path.join(banco, 'rust', 'src')) for y in x if y.endswith('.rs')]
     ruins = 0
+    if len(alvo) > 3 and '--uma-a-uma' not in sys.argv:
+        alvo, ruins = em_lotes(alvo, src, banco)
     for f, m in alvo:
         hit = [p for p in src if m[1] in open(p, encoding='utf-8').read()]
         if len(hit) != 1:

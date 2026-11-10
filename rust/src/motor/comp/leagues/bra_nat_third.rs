@@ -142,8 +142,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_start_new_season(this: usiz
         show_error_at(0x98aba4, 0x216);
         return 0;
     }
-    let expectations: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
-    expectations(this.addr());
+    exe::league_set_club_season_expectations(this.addr());
     (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this.addr() + league::COMPETITION)) as u32); // cqs4: the renewal of the Serie C referees
     for g in 0..7 {
         exe::branatthird_create_group_stage(this, g);

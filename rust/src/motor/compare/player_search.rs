@@ -100,12 +100,12 @@ pub(crate) unsafe extern "thiscall" fn compare_player_search_find_or_claim_playe
 /// Comparer for `player_search_get_club_target_rating`.
 ///
 /// [pt] Comparador: pura (lê o clube, o elenco e as finanças; grava só `*base`): as duas sobre bases próprias.
-pub(crate) unsafe extern "C" fn compare_player_search_get_club_target_rating(club: usize, base: *mut i32, forcada: *const i16) -> i32 {
+pub(crate) unsafe extern "C" fn compare_player_search_get_club_target_rating(club: usize, base: *mut i32, forced: *const i16) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(usize, *mut i32, *const i16) -> i32>(IDX_PLAYER_SEARCH_GET_CLUB_TARGET_RATING);
     let (mut bo, mut br) = (0x7fff_0001_i32, 0x7fff_0002_i32);
-    let r = o(club, &mut bo, forcada);
-    let n = player_search_get_club_target_rating(club, &mut br, forcada);
-    SCOREBOARD.record(r == n && bo == br, || format!("player_search_get_club_target_rating({:x}, forcada {}) {}/{} base {}/{}", club, if forcada.is_null() { -1 } else { *forcada as i32 }, r, n, bo, br));
+    let r = o(club, &mut bo, forced);
+    let n = player_search_get_club_target_rating(club, &mut br, forced);
+    SCOREBOARD.record(r == n && bo == br, || format!("player_search_get_club_target_rating({:x}, forcada {}) {}/{} base {}/{}", club, if forced.is_null() { -1 } else { *forced as i32 }, r, n, bo, br));
     if !base.is_null() {
         *base = bo;
     }

@@ -213,8 +213,8 @@ pub(crate) unsafe fn compare_end_of_league_stages(name: &str, this: League, orig
 ///
 /// [pt] { 0x64ad80 } (thiscall, ret 0x10, ita_ser_c1a.cpp, 2.279 bytes, método +0x3c): `ItaSerC1a::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: a chave A da Série C1. Fonte 0x9ea474, linhas 0xab, 0x155, 0x18f.
-pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_create_schedule(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    create_c1_schedule(League(this), fase, rodadas, extra, liga, &C1BracketVariant { file: 0x9ea474, rows: [0xab, 0x155, 0x18f] })
+pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_create_schedule(this: usize, fase: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    create_c1_schedule(League(this), fase, rounds, extra, league, &C1BracketVariant { file: 0x9ea474, rows: [0xab, 0x155, 0x18f] })
 }
 
 /// the club's place forecast in C1/A: in the league, best and worst place become bands (2 to 5 = the promotion
