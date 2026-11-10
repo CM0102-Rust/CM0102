@@ -463,7 +463,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_continent_managers(this: usize, n
     deliver_to_human_managers(this, news, 3, |p| {
         let c = Club(read_usize(p + staff::CLUB_JOB));
         if !c.is_null() {
-            let n = Nation(c.nation().addr());
+            let n = c.nation();
             if !n.is_null() && n.continent() == continent { // the continent of the club’s nation
                 crate::comparison::branch("cpk_5 continent by club");
                 return true;
@@ -696,7 +696,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_nation_club_managers(this: usize,
         if p.classification() != 1 {
             continue;
         }
-        let club = Club(p.club_job().addr());
+        let club = p.club_job();
         if club.is_null() || club.nation().addr() != nation {
             continue;
         }

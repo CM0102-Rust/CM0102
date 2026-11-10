@@ -43,7 +43,10 @@ def texto(s):
 
 
 def comparacoes(s):
-    return re.sub(r'(?<![\w.])(%s)\.addr\(\)\s*(==|!=)\s*(%s)\.addr\(\)(?![\w.(])' % (CADEIA, CADEIA), r'\1 \2 \3', s)
+    """Compiler-checked (a function that does not compile goes back): `a.addr() == b.addr()` -> `a == b`, and a
+    rewrap of the same type `Club(x.club().addr())` -> `x.club()`."""
+    s = re.sub(r'(?<![\w.])(%s)\.addr\(\)\s*(==|!=)\s*(%s)\.addr\(\)(?![\w.(])' % (CADEIA, CADEIA), r'\1 \2 \3', s)
+    return re.sub(r'(?<![\w.:])%s\((%s)\.addr\(\)\)' % (TIPOS, CADEIA), r'\1', s)
 
 
 def main():

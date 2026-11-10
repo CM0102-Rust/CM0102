@@ -55,7 +55,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
         return 0;
     }
     let k: i8 = if !home.is_null() { (exe::key_nation_index_of_club(home) as i8) } else { -1 };
-    if game.competition() != Competition(home.division().addr()) || read_u8(est + stadium::COVERED) != 0 {
+    if game.competition() != home.division() || read_u8(est + stadium::COVERED) != 0 {
         return 0;
     }
     if (0..0x23).contains(&k) {
@@ -252,7 +252,7 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
         }
     }
     if cid == 0 {
-        let home = Club(game.home_club().addr());
+        let home = game.home_club();
         if !home.is_null() {
             let c = home.stadium().addr();
             if c != 0 && read_usize(c + stadium::CITY) != 0 {

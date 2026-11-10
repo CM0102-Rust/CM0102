@@ -359,7 +359,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
                 fixar(read_usize(fx.home_club().addr() + club::STADIUM)); // cqo1: the home team stadium
                 return;
             }
-        } else if !fin_prm_is_national_team(Club(fx.home_club().addr())) {
+        } else if !fin_prm_is_national_team(fx.home_club()) {
             fx.set_stadium(0);
             fx.set_stadium_id(u32::MAX as usize);
             return;
@@ -370,7 +370,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
         let comp = fx.competition();
         if !comp.is_null() {
             let n = comp.nation().addr();
-            if n != 0 && read_usize(n) == read_usize(KEY_NATION_ENGLAND) && !fin_prm_is_national_team(Club(fx.home_club().addr())) && read_usize(G_STADIUM_STASHED_VENUE_ID) as i32 != -1 {
+            if n != 0 && read_usize(n) == read_usize(KEY_NATION_ENGLAND) && !fin_prm_is_national_team(fx.home_club()) && read_usize(G_STADIUM_STASHED_VENUE_ID) as i32 != -1 {
                 *neutro = 1;
                 fixar(read_usize(nation_by_id(read_usize(KEY_NATION_WALES)) + 0x80));
                 return;
@@ -437,7 +437,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
     } else {
         alvo = comp.nation().addr();
     }
-    if f & 0x20 != 0 && fin_prm_is_national_team(Club(fx.home_club().addr())) {
+    if f & 0x20 != 0 && fin_prm_is_national_team(fx.home_club()) {
         alvo = read_usize(fx.home_club().addr() + club::NATION);
     }
     if f & 4 != 0 && alvo != 0 {
@@ -448,7 +448,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
             add_stadium_booking(this, fx.stadium(), pd);
             return;
         }
-        f = if fin_prm_is_national_team(Club(fx.home_club().addr())) { 0x20 } else { 0x40 };
+        f = if fin_prm_is_national_team(fx.home_club()) { 0x20 } else { 0x40 };
     }
     let buscar: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize = core::mem::transmute(FN_STADIUM_FIND_AVAILABLE_VENUE);
     let r = buscar(this, f, comp.continent(), alvo, pd, fx.home_club().addr(), fx.away_club().addr(), fx.addr());

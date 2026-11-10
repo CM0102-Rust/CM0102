@@ -49,15 +49,15 @@ pub(crate) unsafe extern "thiscall" fn assign_libertadores_places(this: usize, c
                     n = 1;
                 }
                 let id = read_u32(this + 0x71);
-                if id != u32::MAX && enter_libertadores(Club(contract_manager_club_by_id(id)), 2) {
+                if id != u32::MAX && enter_libertadores(contract_manager_club_by_id(id), 2) {
                     n = n.wrapping_add(1);
                 }
             } else {
-                if enter_libertadores(Club(contract_manager_club_by_id(read_u32(G_KEY_CLUB_SOCIEDADE_ESPORTIVA_PALMEIRAS))), 2) {
+                if enter_libertadores(contract_manager_club_by_id(read_u32(G_KEY_CLUB_SOCIEDADE_ESPORTIVA_PALMEIRAS)), 2) {
                     crate::comparison::branch("cqj_1 brazil fixed");
                     n = 1; // cqj1: o Palmeiras
                 }
-                if enter_libertadores(Club(contract_manager_club_by_id(read_u32(G_KEY_CLUB_CRUZEIRO_ESPORTE_CLUBE))), 2) {
+                if enter_libertadores(contract_manager_club_by_id(read_u32(G_KEY_CLUB_CRUZEIRO_ESPORTE_CLUBE)), 2) {
                     n = n.wrapping_add(1);
                 }
             }

@@ -154,10 +154,10 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_quarter_finals(this: usize) 
     let mut vivos: Vec<usize> = Vec::new();
     let mut away: Vec<usize> = Vec::new();
     for g in 0..4i8 {
-        vivos.push(second_stage_group_club(this, g, 0));
-        vivos.push(second_stage_group_club(this, g, 1));
-        away.push(second_stage_group_club(this, g, 2));
-        away.push(second_stage_group_club(this, g, 3));
+        vivos.push((second_stage_group_club(this, g, 0)).addr());
+        vivos.push((second_stage_group_club(this, g, 1)).addr());
+        away.push((second_stage_group_club(this, g, 2)).addr());
+        away.push((second_stage_group_club(this, g, 3)).addr());
     }
     o(this.addr());
     let stage = Cup(read_usize(this.stages() + 0x30));
@@ -291,7 +291,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_fixture(this: usize, game
     if a.is_null() || b.is_null() {
         return o(this.addr(), game.addr(), arg); // simplification: without a club, original only
     }
-    let (ca, cb) = (nation_coefficient_word(Club(a.addr())), nation_coefficient_word(Club(b.addr())));
+    let (ca, cb) = (nation_coefficient_word(a), nation_coefficient_word(b));
     let (fa, fb) = (european_cup_club_finance(a.addr()), european_cup_club_finance(b.addr()));
     if ca == 0 || cb == 0 || fa == 0 || fb == 0 {
         return o(this.addr(), game.addr(), arg); // simplification: without nation, national team or finances, original only (crashes the same way)

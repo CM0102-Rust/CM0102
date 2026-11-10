@@ -4047,11 +4047,11 @@ pub(crate) unsafe fn save_match_snapshot(mut copy: usize, state: MatchRecord) {
 ///
 /// [pt] O estado da partida que as rotinas de valores mostram: na partida (parâmetro 0) [p0 + 0x5f], fora
 /// dela o parâmetro 0x20 (lido depois dos outros, como a original).
-pub(crate) unsafe fn displayed_match_state(p0: usize) -> usize {
+pub(crate) unsafe fn displayed_match_state(p0: usize) -> MatchRecord {
     if p0 != 0 {
-        core::ptr::read_unaligned((p0 + live_match::RECORD) as *const usize)
+        MatchRecord(core::ptr::read_unaligned((p0 + live_match::RECORD) as *const usize))
     } else {
-        get_screen_param(0x20)
+        MatchRecord(get_screen_param(0x20))
     }
 }
 
@@ -4082,23 +4082,23 @@ pub(crate) unsafe extern "C" fn refresh_match_stats_values() {
     let copy = get_screen_param(0x1d);
     let e = displayed_match_state(p0);
     let byte = |k: usize, d: u32| {
-        if copy == 0 || (read_u8(e + k) as i32) != (read_u8(copy + k) as i32) {
-            format(BUF, FORMAT_D, (read_u8(e + k) as i32));
+        if copy == 0 || (read_u8(e.addr() + k) as i32) != (read_u8(copy + k) as i32) {
+            format(BUF, FORMAT_D, (read_u8(e.addr() + k) as i32));
             exe::screenmanager_set_widget_text(sm, item.wrapping_add(d), BUF);
         }
     };
     let diferenca = |a: usize, b: usize, d: u32| {
-        if copy == 0 || (read_u8(e + a) as i32) - (read_u8(e + b) as i32) != (read_u8(copy + a) as i32) - (read_u8(copy + b) as i32) {
-            format(BUF, FORMAT_D, (read_u8(e + a) as i32) - (read_u8(e + b) as i32));
+        if copy == 0 || (read_u8(e.addr() + a) as i32) - (read_u8(e.addr() + b) as i32) != (read_u8(copy + a) as i32) - (read_u8(copy + b) as i32) {
+            format(BUF, FORMAT_D, (read_u8(e.addr() + a) as i32) - (read_u8(e.addr() + b) as i32));
             exe::screenmanager_set_widget_text(sm, item.wrapping_add(d), BUF);
         }
     };
     let write_percent_pair = |muda: usize, den: usize, num: usize, d: u32, inverter: bool| {
-        if copy == 0 || (read_i16(e + muda) as i32) != (read_i16(copy + muda) as i32) {
-            if (read_i16(e + den) as i32) == 0 {
+        if copy == 0 || (read_i16(e.addr() + muda) as i32) != (read_i16(copy + muda) as i32) {
+            if (read_i16(e.addr() + den) as i32) == 0 {
                 *(BUF as *mut [u8; 2]) = *b"-\0";
             } else {
-                let x = (read_i16(e + num) as i32) * 100 / (read_i16(e + den) as i32);
+                let x = (read_i16(e.addr() + num) as i32) * 100 / (read_i16(e.addr() + den) as i32);
                 format(BUF, FORMAT_PCT, if inverter { 100 - x } else { x });
             }
             exe::screenmanager_set_widget_text(sm, item.wrapping_add(d), BUF);
@@ -4123,7 +4123,7 @@ pub(crate) unsafe extern "C" fn refresh_match_stats_values() {
     for (k, d) in [(0x12e, 0x21), (0x753, 0x23), (0x12f, 0x24), (0x754, 0x26)] {
         read_i8(k + d);
     }
-    save_match_snapshot(copy, MatchRecord(e));
+    save_match_snapshot(copy, e);
 }
 
 /// Updates the action zones cells with the values that changed since the copy in param `0x1d` (with no copy, all):
@@ -4164,7 +4164,7 @@ pub(crate) unsafe extern "C" fn refresh_action_zones_values() {
     let base = get_screen_param(0x19) as i32;
     let copy = get_screen_param(0x1d);
     let marks = get_screen_param(0x23) as u32;
-    let e = MatchRecord(displayed_match_state(p0));
+    let e = MatchRecord((displayed_match_state(p0)).addr());
     let it = |d: u32| b.wrapping_add(d);
 
     for (i, a, c) in [(0u32, 0x767, 0x142), (1, 0x763, 0x13e), (2, 0x764, 0x13f), (3, 0x765, 0x140), (4, 0x766, 0x141)] {
@@ -4264,7 +4264,7 @@ pub(crate) unsafe extern "C" fn refresh_player_ratings_rows() {
     let p0 = get_screen_param(0);
     let mut item = get_screen_param(0xd) as u32;
     let copy = MatchRecord(get_screen_param(0x1d));
-    let e = MatchRecord(displayed_match_state(p0));
+    let e = MatchRecord((displayed_match_state(p0)).addr());
     let current = e.man_of_the_match_id();
     for t in 0..2usize {
         for j in 0..20usize {

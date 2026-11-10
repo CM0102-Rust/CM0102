@@ -465,14 +465,14 @@ pub(crate) unsafe fn copy_transfer_record(a: usize, o: usize, d: usize) {
 pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, t: usize) -> u32 {
     let t = Offer(t);
     let person = read_usize(G_STAFF_TABLE).wrapping_add(((t.target_staff_id() as i32) as usize).wrapping_mul(staff::SIZE));
-    let buyer = Club(injury_club_by_index((t.buyer_club_id() as i32)));
+    let buyer = Club((injury_club_by_index((t.buyer_club_id() as i32))).addr());
     let contract = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
     core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, contract.addr());
-    let seller = if !contract.is_null() { injury_club_by_index((contract.club() as i32)) } else { 0 };
+    let seller = if !contract.is_null() { injury_club_by_index((contract.club() as i32)) } else { Club(0) };
     let mut draft = [0u8; 8];
     let s = exe::club_records_get_season_record(this, buyer, 1);
     let a = exe::club_records_get_all_time_record(this, buyer, 1);
-    if seller == 0 {
+    if seller.is_null() {
         return 1;
     }
     let value = (t.fee() as i32);
@@ -480,7 +480,7 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
         crate::comparison::branch("cpp_10 record fee paid");
         core::ptr::write_unaligned((s + club_record::FEE_PAID) as *mut i32, value);
         exe::fill_staff_name_ref(person, s + club_record::FEE_PAID_HOLDER);
-        core::ptr::write_unaligned((s + club_record::FEE_PAID_OTHER_CLUB_ID) as *mut usize, read_usize(seller));
+        core::ptr::write_unaligned((s + club_record::FEE_PAID_OTHER_CLUB_ID) as *mut usize, read_usize(seller.addr()));
         exe::date_operator_3d(s + club_record::FEE_PAID_DATE, (draft.as_mut_ptr()) as usize, G_CURRENT_DATE);
         *((s + club_record::FEE_PAID_FLAG) as *mut u8) = (!t.exchange_players().is_null()) as u8;
         if (t.fee() as i32) > read_i32(a + club_record::FEE_PAID) {
@@ -507,8 +507,8 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
     *((s + club_record::FEE_RECEIVED_FLAG) as *mut u8) = (!t.exchange_players().is_null()) as u8;
     if (t.fee() as i32) > read_i32(a + club_record::FEE_RECEIVED) {
         copy_transfer_record(a, s, 0x33c);
-        if is_big_transfer(read_i32(a + club_record::FEE_RECEIVED), Club(seller)) && !record_news_queued(this, read_usize(seller), 0x1d) {
-            exe::club_records_queue_record_news(this, read_usize(seller) as u32, 0x1d);
+        if is_big_transfer(read_i32(a + club_record::FEE_RECEIVED), seller) && !record_news_queued(this, read_usize(seller.addr()), 0x1d) {
+            exe::club_records_queue_record_news(this, read_usize(seller.addr()) as u32, 0x1d);
         }
     }
     1

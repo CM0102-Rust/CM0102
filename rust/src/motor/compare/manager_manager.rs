@@ -318,10 +318,10 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_transfer_confidence_changes
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add(transf.target_staff_id().wrapping_mul(staff::SIZE)));
     reg.push((board_row_at(this, read_usize(transf.addr() + 8)), 0x49));
-    let seller = Club(person.club_job().addr());
+    let seller = person.club_job();
     if !seller.is_null() {
         reg.push((board_row_at(this, read_usize(seller.addr())), 0x49));
-        let pref = staff_preferences(Staff(seller.chairman().addr()));
+        let pref = staff_preferences(seller.chairman());
         if pref != 0 {
             reg.push((pref + preferences::STAFF_FAVOURITE_STAFF1, 12));
         }

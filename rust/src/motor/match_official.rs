@@ -120,13 +120,13 @@ pub(crate) unsafe fn apply_card_penalty(engine: Engine, j: MatchPlayer) {
 ///
 /// [pt] Contador de faltas do lado no motor (0xf5c9 + 54 x lado).
 pub(crate) unsafe fn count_foul(engine: Engine, j: MatchPlayer) {
-    let c = (engine.addr() as isize + 0xf5c9 + 54 * side_of_player(MatchPlayer(j.addr())) as isize) as *mut u8;
+    let c = (engine.addr() as isize + 0xf5c9 + 54 * side_of_player(j) as isize) as *mut u8;
     *c = (*c).wrapping_add(1);
 }
 
 /// Calls the match player is_in_penalty_area check for the player.
 pub(crate) unsafe fn is_in_penalty_area(j: MatchPlayer) -> bool {
-    (exe::match_player_is_in_penalty_area(j, side_of_player(MatchPlayer(j.addr())) as u8) as u32) as u8 != 0
+    (exe::match_player_is_in_penalty_area(j, side_of_player(j) as u8) as u32) as u8 != 0
 }
 
 /// The referee's punishment for a foul by player `j`: counts the foul; for a type 1 foul, either a straight red (type

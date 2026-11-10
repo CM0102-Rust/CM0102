@@ -1086,7 +1086,7 @@ pub(crate) fn cup_date_is_after(a: &[u8; 8], b: &[u8; 8]) -> bool {
 /// seleções (0x76d940 em [0xb74318]: push comp; ecx = as seleções; sem add esp -> ret 4; a cópia Rust é stdcall(comp))
 /// ou exe::friendly_is_friendly_competition(0x5c6710 em [0xae2c74]: push comp; ecx = o Friendly -> thiscall, ret 4).
 pub(crate) unsafe fn skips_draw_news(cup: Cup, r: u32) -> bool {
-    let reg = round_record_by_dword(Cup(cup.addr()), r);
+    let reg = round_record_by_dword(cup, r);
     if read_i16(reg + cup_round::TIES) < 2 || read_i16(reg + cup_round::TIE_RULES) & 0x200 != 0 {
         return true;
     }
@@ -1227,7 +1227,7 @@ pub(crate) unsafe extern "thiscall" fn draw_round(cup: usize, round: u32) -> u32
 ///
 /// [pt] O nível da divisão do clube: a palavra +0x69 da divisão (+0x57), ou 0 sem divisão.
 pub(crate) unsafe fn division_level(club: Club) -> i16 {
-    let d = Competition(club.division().addr());
+    let d = club.division();
     if !d.is_null() {
         d.reputation()
     } else {
@@ -1299,7 +1299,7 @@ pub(crate) unsafe fn wins_uefa_cup_place(comp: Competition, club: usize) -> bool
     if read_i32(comp.addr()) == read_i32(KEY_CLUB_COMP_ENGLISH_LEAGUE_CUP) {
         return true;
     }
-    let nation = Nation(comp.nation().addr());
+    let nation = comp.nation();
     if nation.is_null() {
         return false;
     }
@@ -2932,7 +2932,7 @@ pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: us
     exe::newsitem_set_slot(n, cursor[0] as i8, proxima as u32);
     let news = read_usize(G_NEWS);
     if out as u8 != 0xff {
-        let nation = Nation(club.nation().addr());
+        let nation = club.nation();
         let continent = if !nation.is_null() { nation.continent() } else { 0 };
         exe::news_send_by_scope(news, n, club, read_usize(cup.addr() + 4), nation, continent, out);
         return 1;

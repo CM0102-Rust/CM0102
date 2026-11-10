@@ -84,7 +84,7 @@ pub(crate) unsafe fn ball_out_with(this: Engine, side_b: u8, call: AddEventCall)
 pub(crate) unsafe fn play_with(j: MatchPlayer, strength: i16, height: f32, style: i8, strong: u8, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
     let special: unsafe extern "stdcall" fn(i8) -> u8 = core::mem::transmute(FN_IS_UNDISPUTED_ACTION_CODE);
     let zero = |p: usize| (read_i8(p + 0x27) == 0) as u32;
-    let m = Engine(j.engine().addr());
+    let m = j.engine();
     // the commentary’s seventh argument goes in the high part of the code (see `dispatch_tackle_calls`)
     let narrar7 = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, a3: u32, a4: u32, a5: u32, a7: i8| {
         call(FN_MATCH_EVENTS_ADD_EVENT, m.commentator(), [code | (a7 as u8 as u32) << 16, m.addr() as u32, a3, a4, a5]);
@@ -453,7 +453,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
             if read(club_of(read(t)) + 0x53) == read(club_of(read(t + 4)) + 0x53) && *((row - 8) as *const u8) != 0 {
                 let v = exe::playerstats_get_stat(g(G_PLAYER_STATS), read_usize(p + staff::PLAYER), 6, 0xb, 6.5);
                 let previous = Nation(read_usize(p + staff::NATION));
-                let nation = Nation(club.nation().addr());
+                let nation = club.nation();
                 let f = read_usize(p + staff::PLAYER);
                 if !(v == 0.0 || v.is_nan())
                     && !previous.is_null()

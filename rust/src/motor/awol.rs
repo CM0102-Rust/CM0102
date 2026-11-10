@@ -435,7 +435,7 @@ pub(crate) unsafe extern "thiscall" fn awol_daily_update(this: usize) {
                 let b = friendly_random(5);
                 if (a as u8 as i8) < ((b as u8).wrapping_add(1) as i8) {
                     maybe_drop_attribute(person.addr() + staff::PROFESSIONALISM, true);
-                    let j = PlayerSheet(person.player().addr());
+                    let j = person.player();
                     if !j.is_null() {
                         maybe_drop_attribute(j.addr() + player_sheet::WORK_RATE, true);
                     }
@@ -726,11 +726,11 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
     if exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0 {
         return;
     }
-    let manager = Staff(club.manager().addr());
+    let manager = club.manager();
     if manager.is_null() {
         return;
     }
-    let np = NonPlayer(manager.non_player().addr());
+    let np = manager.non_player();
     if np.is_null() || friendly_random(np.discipline() as i8 as i32) == 0 {
         return;
     }
@@ -886,7 +886,7 @@ pub(crate) unsafe extern "thiscall" fn is_player_awol(this: usize, p: usize, so_
     let mark = || read_u8(read_usize(this + 0xc) + read_usize(p)) as u32 & 1;
     if so_read == 0 && mark() != 0 {
         let c = injury_main_contract_stored(p);
-        if c == 0 || injury_club_of_contract(c) == 0 {
+        if c.is_null() || injury_club_of_contract(c.addr()) == 0 {
             crate::comparison::branch("cqb_5 absence ends without club");
             exe::awol_clear_awol(this, p);
         }

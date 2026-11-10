@@ -94,7 +94,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
         write_u32(this, table as u32);
     }
     let p = Staff(month_ratings_staff_by_id(id));
-    let club = Club(p.club_job().addr());
+    let club = p.club_job();
     let mut league = -1i32;
     if !club.is_null() {
         let l = club.division().addr();

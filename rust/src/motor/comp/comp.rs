@@ -536,7 +536,7 @@ pub(crate) unsafe fn club_callup_record(this: usize, c: Club) -> Option<usize> {
     if id >= n || id < 0 {
         return None;
     }
-    let nation = Nation(c.nation().addr());
+    let nation = c.nation();
     if nation.is_null() || nation.league_selected() == 0 || read_usize(nation.addr()) == read_usize(KEY_NATION_BRAZIL) {
         return None;
     }
@@ -601,7 +601,7 @@ pub(crate) unsafe fn callup_array_full(this: usize, team: Club) -> bool {
         if s.is_null() || read_usize(s.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 || s.club_job().is_null() {
             return false;
         }
-        match club_callup_record(this, Club(s.club_job().addr())) {
+        match club_callup_record(this, s.club_job()) {
             Some(rec) => *((rec + 4) as *const i8) == *((rec + 5) as *const i8),
             None => false,
         }
@@ -674,8 +674,8 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, p
             if exe::database_is_national_team(partida.home_club()) != 0 || exe::database_is_national_team(partida.away_club()) != 0 {
                 return 1;
             }
-            let home = Club(partida.home_club().addr());
-            let a = Nation(home.nation().addr());
+            let home = partida.home_club();
+            let a = home.nation();
             if a.addr() != read_usize(partida.away_club().addr() + club::NATION) || a.league_selected() == 0 {
                 return 3;
             }

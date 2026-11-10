@@ -13,7 +13,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_winner(this: usize, id: i32, 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32, u32, u32)>(IDX_SET_WINNER);
     let mut regions = vec![(this + 0x1d, 12 * 11)];
     if id > -1 {
-        winner_reputation_regions(&mut regions, month_ratings_staff_by_id(id), if club_id > -1 { month_award_club_by_id(club_id) } else { 0 });
+        winner_reputation_regions(&mut regions, month_ratings_staff_by_id(id), if club_id > -1 { (month_award_club_by_id(club_id)).addr() } else { 0 });
     }
     compare_month_award("set_winner", &regions, || o(this, id, club_id, month, year), || set_winner(this, id, club_id, month, year));
 }

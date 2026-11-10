@@ -73,7 +73,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_tactic_result(this: usize,
     if game.is_null() || game.home_club().is_null() || game.away_club().is_null() {
         return o(this, game.addr());
     }
-    let reg = [(tactic_stats_row(this, Club(game.home_club().addr())), 0x28), (tactic_stats_row(this, Club(game.away_club().addr())), 0x28)];
+    let reg = [(tactic_stats_row(this, game.home_club()), 0x28), (tactic_stats_row(this, game.away_club()), 0x28)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, game.addr()), || record_tactic_result(this, game.addr()));
     SCOREBOARD.record(igual && r == n, || format!("record_tactic_result(jogo {:x}) original={} rust={} {:x?} x {:x?}", game.addr(), r, n, mo, mr));
     r

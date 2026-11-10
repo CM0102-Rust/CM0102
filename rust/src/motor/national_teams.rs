@@ -721,7 +721,7 @@ pub(crate) unsafe fn is_squad_candidate(this: usize, nation: Nation, t: i8, data
         let other_nation = |c: Club| !c.is_null() && c.nation().addr() != 0 && c.nation().continent() != nation.continent();
         let mut contract_ok = true;
         if k == read_usize(KEY_CLUB_COMP_FRIENDLY) || k == read_usize(KEY_CLUB_COMP_B_INTERNATIONAL) || k == read_usize(KEY_CLUB_COMP_UNDER_21_INTERNATIONAL) {
-            if other_nation(Club(c.addr())) {
+            if other_nation(c) {
                 // international friendlies, B and under-21: a club from another nation only with reputation (+0x80) up to 0.8 of the
                 // opponent (the home team +0x1c is the team itself: the away team +0x20); outside friendlies, no
                 if k != read_usize(KEY_CLUB_COMP_FRIENDLY) {
@@ -743,7 +743,7 @@ pub(crate) unsafe fn is_squad_candidate(this: usize, nation: Nation, t: i8, data
             if !contract_ok {
                 return false;
             }
-        } else if other_nation(Club(c.addr())) && c.division().addr() != 0
+        } else if other_nation(c) && c.division().addr() != 0
             && (read_i16(p.competition().addr() + competition::REPUTATION) as f64) < read_i16(c.division().addr() + competition::REPUTATION) as f64 * 0.7
         {
             // in the other competitions, a club from another nation whose league (+0x57) has +0x69 above the competition’s / 0.7
@@ -787,7 +787,7 @@ pub(crate) unsafe fn is_squad_candidate(this: usize, nation: Nation, t: i8, data
     if t == 2 && (j.age() as u8) as i8 > 0x17 { // cqc12: the under-21 age
         return false;
     }
-    let nat = Nation(j.nation().addr());
+    let nat = j.nation();
     if nat != nation {
         // from another nation: no team, no +0x22 mark, no bit 2 of +0xc in the 79-byte record, with the second
         // nation (+0x1e) in this one; it gets in if this one has a higher +0x8e, or (club in the same confederation +0x71 or no club)
@@ -1244,7 +1244,7 @@ pub(crate) unsafe extern "thiscall" fn get_international_duty_club(this: usize, 
     let mut game = [0u8; 8];
     let pj = game.as_mut_ptr() as usize;
     exe::new_date(pj, read_u16(reg + 3) as u32, year as u32);
-    let cj = Club(player.club_job().addr());
+    let cj = player.club_job();
     if cj.is_null() {
         return sai(0);
     }
@@ -1297,7 +1297,7 @@ pub(crate) unsafe extern "thiscall" fn get_international_duty_club(this: usize, 
 pub(crate) unsafe extern "stdcall" fn national_teams_player_is_eligible(player: usize, manager: usize) -> u32 {
     let manager = Staff(manager);
     let player = Staff(player);
-    let sel = Club(manager.national_job().addr());
+    let sel = manager.national_job();
     if player.player().is_null() || sel.is_null() {
         return 0;
     }
@@ -1319,7 +1319,7 @@ pub(crate) unsafe extern "stdcall" fn national_teams_player_is_eligible(player: 
     if read_u8(p + 0xc) & 2 != 0 && player.nation() != Nation(nation) {
         return 0;
     }
-    let other = Club(player.national_job().addr());
+    let other = player.national_job();
     if !other.is_null() && other.nation().addr() != nation {
         return 0;
     }
@@ -1504,20 +1504,20 @@ pub(crate) unsafe extern "thiscall" fn select_squads_for_fixture(this: usize, p:
         return;
     }
     let (casa, fora) = (p.home_club(), p.away_club());
-    let reg = club_nation_record(this, Club(casa.addr()));
+    let reg = club_nation_record(this, casa);
     if exe::club_is_national_team(casa) == 0 {
-        refresh_or_select_squad(this, p, Club(casa.addr()), reg, 0, || true);
+        refresh_or_select_squad(this, p, casa, reg, 0, || true);
         if p.flags() & 2 == 0 {
-            release_overage_u21(this, Club(p.home_club().addr()));
-            release_overage_u21(this, Club(p.away_club().addr()));
+            release_overage_u21(this, p.home_club());
+            release_overage_u21(this, p.away_club());
         }
     }
-    refresh_minor_squads(this, p, Club(casa.addr()), reg);
-    let reg = club_nation_record(this, Club(fora.addr()));
+    refresh_minor_squads(this, p, casa, reg);
+    let reg = club_nation_record(this, fora);
     if exe::club_is_national_team(fora) == 0 {
-        refresh_or_select_squad(this, p, Club(fora.addr()), reg, 0, || true);
+        refresh_or_select_squad(this, p, fora, reg, 0, || true);
     }
-    refresh_minor_squads(this, p, Club(fora.addr()), reg);
+    refresh_minor_squads(this, p, fora, reg);
     if !SELECT_SQUADS_DRY_RUN {
         exe::national_teams_remove_duplicate_squad_entries(read_usize(p.home_club().addr() + club::NATION));
         exe::national_teams_remove_duplicate_squad_entries(read_usize(p.away_club().addr() + club::NATION));
@@ -1658,7 +1658,7 @@ pub(crate) unsafe fn club_nation_record(this: usize, club: Club) -> usize {
 pub(crate) unsafe fn swap_to_club_nation(p: Staff, club: Club) {
     if club.nation() == p.second_nation() {
         p.set_second_nation(p.nation());
-        p.set_nation(Nation(club.nation().addr()));
+        p.set_nation(club.nation());
     }
 }
 
@@ -1924,7 +1924,7 @@ pub(crate) unsafe extern "thiscall" fn withdraw_injured_player(this: usize, p: u
     if days < 0xe { // cpv11: the day limit
         return;
     }
-    let club = Club(p.national_job().addr());
+    let club = p.national_job();
     if club.is_null() {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_WITHDRAW_INJURED_PLAYER)(this, p.addr(), days_arg);
     }
@@ -2002,7 +2002,7 @@ pub(crate) unsafe fn release_plan(this: usize, p: Staff, days: u32) -> u8 {
     if (days as u16 as i16) < 0xe || p.job_for_nation() != 0xb {
         return 0;
     }
-    let club = Club(p.national_job().addr());
+    let club = p.national_job();
     let kind = call_up_type(club, p);
     let inj = exe::injury_get_player_injury(read_usize(G_INJURY), p);
     if inj != 0 && read_u8(inj) == 0x51 {
@@ -2169,7 +2169,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_can_change_squad(this: usi
             }
             return 0;
         }
-        let c = Club(p.national_job().addr());
+        let c = p.national_job();
         if !c.is_null() && c.nation().addr() != nation {
             if msg != 0 {
                 let mut name = [0u8; 0x12c];
@@ -2369,10 +2369,10 @@ pub(crate) unsafe extern "thiscall" fn can_schedule_club_fixture(this: usize, ga
         return 1;
     }
     let (pa, pb) = (a.as_ptr() as usize, b.as_ptr() as usize);
-    if has_too_many_called_up(this, Club(game.home_club().addr()), pa, pb) {
+    if has_too_many_called_up(this, game.home_club(), pa, pb) {
         return 0;
     }
-    if has_too_many_called_up(this, Club(game.away_club().addr()), pa, pb) {
+    if has_too_many_called_up(this, game.away_club(), pa, pb) {
         crate::comparison::branch("cpp_12 away side called up");
         return 0; // the away club with too many called up
     }
@@ -2507,7 +2507,7 @@ pub(crate) unsafe fn mark_club_code(this: usize, c: usize, n: i32, code: u8) {
 ///
 /// [pt] O clube tem nação marcada (+0x53, +0x11c ≠ 0)?
 pub(crate) unsafe fn has_flagged_nation(c: Club) -> bool {
-    let n = Nation(c.nation().addr());
+    let n = c.nation();
     !n.is_null() && n.league_selected() != 0
 }
 
@@ -2728,8 +2728,8 @@ pub(crate) unsafe fn would_free_call_up_record(rec: usize) -> bool {
 /// National team for call-up type: main team (`exe::database_get_national_team`) for 0 and 1, U21 (`exe::database_get_national_u21_team`) otherwise.
 ///
 /// [pt] O time da nação para o tipo de convocação: 0 e 1 a seleção principal (0x53b3d0), os outros o sub-21 (0x53b4f0).
-pub(crate) unsafe fn national_team_for_type(nation: usize, kind: u8) -> usize {
-    if kind == 0 || kind == 1 { exe::database_get_national_team(nation) } else { exe::database_get_national_u21_team(nation) }
+pub(crate) unsafe fn national_team_for_type(nation: usize, kind: u8) -> Club {
+    if kind == 0 || kind == 1 { Club(exe::database_get_national_team(nation)) } else { Club(exe::database_get_national_u21_team(nation)) }
 }
 
 /// Removes person p from the team's tactics selection (`remove_player_from_selection` with 1 then 0), as the originals do before clearing the
@@ -2762,7 +2762,7 @@ pub(crate) unsafe fn clear_national_call_up(p: Staff) {
 pub(crate) unsafe extern "thiscall" fn add_player_to_squad(_this: usize, nation: usize, kind: u32, p: usize) {
     let p = Staff(p);
     let kind = kind as u8;
-    let team = Club(national_team_for_type(nation, kind));
+    let team = Club((national_team_for_type(nation, kind)).addr());
     let squad: u32 = if kind == 0 || kind == 2 { 4 } else { 8 };
     let slot = match (0..50usize).find(|&c| team.squad(c) == 0) {
         Some(c) => team.addr() + club::SQUAD + 4 * c,
@@ -2795,7 +2795,7 @@ pub(crate) unsafe fn squad_change_regions(team: Club, p: Staff) -> [(usize, usiz
 /// tática do time (0x896c60, duas vezes) e, se ele está numa das 50 vagas (+0xd7), esvazia a vaga e limpa a
 /// pessoa (+0x24, +0x28, +0x5e & 3). Sem SEH, sem sorteio, sem locais; caixa só com time ou pessoa nulos (0x896c60).
 pub(crate) unsafe extern "thiscall" fn national_teams_remove_player_from_squad(_this: usize, nation: usize, kind: u32, p: usize) {
-    let team = Club(national_team_for_type(nation, kind as u8));
+    let team = Club((national_team_for_type(nation, kind as u8)).addr());
     remove_from_tactics(team, p);
     if let Some(c) = (0..50usize).find(|&c| team.squad(c) == p) {
         core::ptr::write_unaligned((team.addr() + club::SQUAD + 4 * c) as *mut usize, 0);
@@ -3261,7 +3261,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_remove_player(this: usize,
             i += 1;
         }
     }
-    let national_team = Club(player.national_job().addr());
+    let national_team = player.national_job();
     if national_team.is_null() {
         return;
     }

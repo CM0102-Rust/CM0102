@@ -77,7 +77,7 @@ pub(crate) unsafe extern "thiscall" fn compare_mark_player_under_offer(this: usi
 pub(crate) unsafe extern "thiscall" fn compare_value_player_for_club(this: usize, club: usize, p: usize, slot: usize, out: *mut i32, minimum: i32, ceiling: u32) -> i32 {
     let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut i32, i32, u32) -> i32>(IDX_VALUE_PLAYER_FOR_CLUB);
-    let obs = Staff(club.manager().addr());
+    let obs = club.manager();
     if !obs.is_null() && obs.non_player().is_null() {
         return o(this, club.addr(), p, slot, out, minimum, ceiling);
     }
@@ -105,7 +105,7 @@ pub(crate) unsafe extern "thiscall" fn compare_count_slots_with_bids(this: usize
 /// [pt] Comparador: lado a lado pelo byte +0x4e do contrato, e a devolução.
 pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_remove_from_transfer_list(person: usize) -> u32 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_SHORTLIST_MANAGER_REMOVE_FROM_TRANSFER_LIST);
-    let c = Contract(contract_of_staff(person));
+    let c = Contract((contract_of_staff(person)).addr());
     let reg = if !c.is_null() { vec![(c.addr() + contract::TRANSFER_STATUS, 1)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(person), || shortlist_manager_remove_from_transfer_list(person));
     SCOREBOARD.record(igual && r == n, || format!("shortlist_manager_remove_from_transfer_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", person, r, n, mo, mr));
@@ -117,7 +117,7 @@ pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_remove_from_tran
 /// [pt] Comparador: lado a lado pelo byte +0x4e do contrato, e a devolução.
 pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_remove_from_loan_list(person: usize) -> u32 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_SHORTLIST_MANAGER_REMOVE_FROM_LOAN_LIST);
-    let c = Contract(contract_of_staff(person));
+    let c = Contract((contract_of_staff(person)).addr());
     let reg = if !c.is_null() { vec![(c.addr() + contract::TRANSFER_STATUS, 1)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(person), || shortlist_manager_remove_from_loan_list(person));
     SCOREBOARD.record(igual && r == n, || format!("shortlist_manager_remove_from_loan_list(pessoa {:x}) original={:#x} rust={:#x} {:x?} x {:x?}", person, r, n, mo, mr));
@@ -258,10 +258,10 @@ pub(crate) unsafe extern "thiscall" fn compare_add_player_to_club_shortlists(thi
 /// contrato, o contrato fica à venda (+0x4e bit 1, +0x4f nibble alto 7).
 pub(crate) unsafe extern "thiscall" fn compare_transfer_list_player(this: usize, player: usize, news: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_TRANSFER_LIST_PLAYER);
-    let mark = exe::staff_is_transfer_listed(player, 0) == 0 && get_contract(player) != 0;
+    let mark = exe::staff_is_transfer_listed(player, 0) == 0 && get_contract(player) != Contract(0);
     o(this, player, news);
     if mark {
-        let c = Contract(get_contract(player));
+        let c = Contract((get_contract(player)).addr());
         let ok = !c.is_null() && c.transfer_status() & 1 != 0 && c.squad_status() & 0xf0 == 0x70;
         SCOREBOARD.record(ok, || format!("transfer_list_player(jogador {:x}) contrato {:x} sem a marca de à venda", read_usize(player), c.addr()));
     }

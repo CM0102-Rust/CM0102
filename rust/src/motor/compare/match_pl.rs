@@ -10,7 +10,7 @@ pub(crate) unsafe extern "thiscall" fn compare_shot(j: usize, strength: u32, x: 
     if is_recording_top_level() {
         return o(j.addr(), strength, x, y);
     }
-    let m = Engine(j.engine().addr());
+    let m = j.engine();
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_CONTRACT_LOOKUP_RESULT, 4)]);
     let t = Fixture(m.r#match());
@@ -174,7 +174,7 @@ pub(crate) unsafe extern "thiscall" fn compare_write_2b(this: usize, v: u8) {
 pub(crate) unsafe extern "thiscall" fn compare_release_ball(this: usize) {
     let this = MatchPlayer(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_RELEASE_BALL);
-    let m = Engine(this.engine().addr());
+    let m = this.engine();
     let reg = [(m.addr() + engine::MOMENTUM_B, 4), (m.addr() + engine::POSSESSION_SIDE, 1), (m.addr() + engine::BALL_HOLDER, 4), (m.addr() + engine::SHOT_PENDING, 1), (this.addr() + match_player::SPACE_ON_BALL, 2), (this.addr() + match_player::BALL_CONTROL, 2)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr()), || release_ball(this.addr()));
     SCOREBOARD.record(igual, || format!("release_ball original={:x?} rust={:x?}", mo, mr));
@@ -255,7 +255,7 @@ pub(crate) unsafe extern "thiscall" fn compare_move_to(this: usize, x: i8, y: i8
         });
         return;
     }
-    let engine = Engine(this.engine().addr());
+    let engine = this.engine();
     let old = engine.cell(this.cell_x(), this.cell_y()).addr();
     let new = engine.cell(x, y).addr();
     let mut reg = vec![(this.addr() + match_player::CELL_SLOT, 1), (this.addr() + match_player::CELL_X, 2), (old, 90), (new, 90), (engine.addr() + engine::BALL_X, 2)];
@@ -347,7 +347,7 @@ pub(crate) unsafe extern "thiscall" fn compare_tackle(j: usize, strong: u32) {
     if is_recording_top_level() {
         return o(j.addr(), strong);
     }
-    let m = Engine(j.engine().addr());
+    let m = j.engine();
     // the whole engine, the random roll, the error, 0xae1080 and the tactic row of both clubs (the sending-off
     // pode trocar o capitao)
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
@@ -391,7 +391,7 @@ pub(crate) unsafe extern "thiscall" fn compare_save_shot(j: usize, strength: i16
     if is_recording_top_level() {
         return o(j.addr(), strength);
     }
-    let m = Engine(j.engine().addr());
+    let m = j.engine();
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m.addr() + 0x1a0, 0x30), (m.addr() + engine::GRID, 0x8f00 - 0x215e), (m.addr() + engine::FORMATION_TABLE, 0xa0)]);
     let (r, n, igual, sequencia, k) = compare_com_fita(reg, || o(j.addr(), strength), |chamar| {
@@ -465,7 +465,7 @@ pub(crate) unsafe extern "thiscall" fn compare_decide_player(j: usize) {
         });
         return;
     }
-    let m = Engine(j.engine().addr());
+    let m = j.engine();
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     // what the decision writes and what it rereads after carrying the ball (ball owner, +0x8eb2, side’s situation)
     reg.extend([(m.addr() + 0x1a0, 0x30), (m.addr() + engine::GRID, 0x8f00 - 0x215e), (m.addr() + engine::FORMATION_TABLE, 0x48)]);

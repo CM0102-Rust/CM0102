@@ -21,10 +21,10 @@ pub(crate) unsafe fn fin_prm_is_human_club(club: Club) -> u32 {
 ///
 /// [pt] O registro de finanças do clube (0x167 bytes) pelo parceiro: 0x540a50 (3 pushes; add esp, 0xc -> cdecl(clube, &a,
 /// 1)); o parceiro quando ele existe e o clube é o B (a = 0). `a` é a local da original (a 0x540a50 a grava).
-pub(crate) unsafe fn finance_of_parent_club(this: usize, club: Club, a: &mut u32) -> usize {
+pub(crate) unsafe fn finance_of_parent_club(this: usize, club: Club, a: &mut u32) -> Finance {
     let p = exe::club_get_linked_b_team(club, a, 1);
     let c = if p != 0 && *a == 0 { p } else { club.addr() };
-    read_usize(this).wrapping_add((read_i32(c) as u32).wrapping_mul(0x167) as usize)
+    Finance(read_usize(this).wrapping_add((read_i32(c) as u32).wrapping_mul(0x167) as usize))
 }
 
 /// Posts the stadium works / training news (FN_FINANCE_POST_STADIUM_WORKS_NEWS) with club, value and type.
@@ -180,7 +180,7 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club_
     }
     let mut local = 0u32; // the original’s [esp + 0x20] (the owner’s 0x540a50 and the average attendance)
     let mut a = 0u32;
-    let fin = Finance(finance_of_parent_club(this, club, &mut a));
+    let fin = Finance((finance_of_parent_club(this, club, &mut a)).addr());
     if fin.is_null() {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEASON_END_CLUB_UPDATE)(this, club.addr()); // a caixa
     }
@@ -208,7 +208,7 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club_
                 k += 1;
                 other = Club(other.addr() + club::SIZE);
             }
-            let owner_fin = if !owner.is_null() { Finance(finance_of_parent_club(this, owner, &mut local)) } else { Finance(0) };
+            let owner_fin = if !owner.is_null() { Finance((finance_of_parent_club(this, owner, &mut local)).addr()) } else { Finance(0) };
             if owner.is_null() || owner_fin.is_null() {
                 club.set_own_stadium(1);
                 charge_expense(fin, finance::MONTH_GROUND_COSTS, finance::SEASON_GROUND_COSTS, 20_000_000);
@@ -376,7 +376,7 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club_
 /// [pt] O centro de treino do clube da máquina no fim da temporada (o trecho 0x59d32a..0x59d54d da 0x59cfa0), cobrado nas
 /// finanças do próprio clube ([tabela] + id × 0x167, sem o parceiro).
 pub(crate) unsafe fn upgrade_ai_training_ground(this: usize, club: Club, goal_difference: i32) {
-    let manager = Staff(club.manager().addr());
+    let manager = club.manager();
     if manager.is_null() || club.reputation() == 0 || (club.training() as u8) as i8 >= 0x14 || manager.non_player().is_null() {
         return;
     }
@@ -434,7 +434,7 @@ pub(crate) unsafe fn pay_dividend(this: usize, club: Club, fin: Finance) {
         }
     } else {
         let mut s16 = rep as i16;
-        let presence = Staff(club.chairman().addr());
+        let presence = club.chairman();
         if !presence.is_null() && !presence.non_player().is_null() {
             let e = (7i16.wrapping_sub((presence.loyalty() as u8) as i8 as i16)).wrapping_mul(3).wrapping_sub(read_u8(presence.non_player().addr() + 0x20) as i8 as i16);
             s16 = (rep as i16).wrapping_add(e.wrapping_mul(5));
@@ -631,7 +631,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
     let rep = club.reputation();
     let mut di: i32 = rep as i32 / 50;
     let band: i8 = if fin_prm_is_national_team(club) { 0 } else { wealth_band(fin) };
-    let nation = Nation(club.nation().addr());
+    let nation = club.nation();
     let e = |g: usize| read_i32(nation.addr()) == read_i32(g);
     let tabela: usize = if nation.is_null() || e(KEY_NATION_WALES) || e(KEY_NATION_REPUBLIC_OF_IRELAND) || e(KEY_NATION_NORTHERN_IRELAND) || e(KEY_NATION_AUSTRALIA) {
         0x9c8498
@@ -742,9 +742,9 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
                 f = q * m;
             }
             factor = f;
-            let lc = Competition(club.division().addr());
+            let lc = club.division();
             if !lc.is_null() {
-                let d2 = Competition(club.last_division().addr());
+                let d2 = club.last_division();
                 let c16 = lc.reputation();
                 let cubo = |x: i32| x.wrapping_mul(x).wrapping_mul(x);
                 let v = if !d2.is_null() && d2.reputation() > c16 {
@@ -824,7 +824,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
         if is_human_club_with(club, 0) != 0 {
             let np = person.player();
             if !np.is_null() {
-                let ceiling = human_manager_wage_cap(person, PlayerSheet(np.addr()), job as i8);
+                let ceiling = human_manager_wage_cap(person, np, job as i8);
                 if ceiling < r {
                     r = ceiling.wrapping_sub(ftol(r.wrapping_sub(ceiling) as f64 * read_f64(rdata::F64_NEG_0_1)));
                 }
@@ -1228,7 +1228,7 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
         tv = ftol((q as f64 + read_f64(rdata::F64_1_75)) * publico as f64); // cqb1: TV by attendance (1,75);
     }
     let home = partida.home_club();
-    let away = Club(partida.away_club().addr());
+    let away = partida.away_club();
     let mut cost; // the original’s ebp
     if home.professional_status() != 1 && away.professional_status() != 1 {
         cost = ftol(publico as f64 * read_f64(rdata::F64_0_25));
@@ -1318,7 +1318,7 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, partid
             dinheiro = div_trunc(m.wrapping_mul(if t == 6 { 125000 } else { 25000 }), 20);
         }
     }
-    let nation = Nation(home.nation().addr());
+    let nation = home.nation();
     let kind = if !nation.is_null() { nation.state_of_development() as i8 } else { 3 };
     if kind == 2 {
         dinheiro = div_trunc(dinheiro, 5);
@@ -1404,7 +1404,7 @@ pub(crate) unsafe extern "thiscall" fn calc_gate_receipts(table: usize, partida:
         return 0;
     }
     let Some(fin) = match_club_finance(table, partida, 0x1c) else { return 0 };
-    let comp = Competition(partida.competition().addr());
+    let comp = partida.competition();
     let mut v: i32;
     if partida.neutral_venue() != 0 && !comp.is_null() {
         v = (comp.reputation() as i32).wrapping_add(8).wrapping_mul(attendance);
@@ -1428,7 +1428,7 @@ pub(crate) unsafe extern "thiscall" fn calc_gate_receipts(table: usize, partida:
         }
     }
     let home = partida.home_club();
-    let nation = Nation(home.nation().addr());
+    let nation = home.nation();
     let kind = if !nation.is_null() { nation.state_of_development() as i8 } else { 3 };
     if kind == 2 {
         v = div_trunc(v, 4);
@@ -1549,7 +1549,7 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
         }
     }
     let rep = club.reputation();
-    let presence = Staff(club.chairman().addr());
+    let presence = club.chairman();
     let strong = |a: usize, b: usize| a != 0 && b != 0; // (pointers checked before the bytes)
     let div = match wealth_band(fin) {
         -2 => read_f64(if rep > 0xea6 { 0x968fd0 } else { 0x96a730 }),
@@ -1664,7 +1664,7 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
         post_finance_boost_news(this, club, value, budget as u32, kind);
     }
     if with_sheet {
-        let f = NonPlayer(club.chairman().non_player().addr());
+        let f = club.chairman().non_player();
         let x = f.resources();
         if x > 5 {
             f.set_resources(x - 1);
@@ -1742,7 +1742,7 @@ pub(crate) unsafe extern "thiscall" fn try_board_takeover(this: usize, club: usi
         -1 => if rep > 0x109a { 0.2 } else { 0.05 },
         _ => 0.001,
     };
-    let league = Competition(club.division().addr());
+    let league = club.division();
     let mut factor = if !league.is_null() {
         let k = rep as i32 as f64 * read_f64(rdata::F64_0_002) / league.reputation() as i32 as f64;
         if !(k >= read_f64(rdata::F64_0_75)) { read_f64(rdata::F64_0_75) } else { k } // fcomp: smaller or unordered (NaN) becomes 0.75;
@@ -2203,7 +2203,7 @@ pub(crate) unsafe fn fin_prm_club_finance(this: usize, club: Club) -> usize {
 /// (+0x73) × reputação × fator, truncado; × (sorteio(11) + 95) × 0,01, truncado, soma em +0xbc, +0x15c e no saldo.
 pub(crate) unsafe extern "thiscall" fn add_weekly_merchandising_income(this: usize, club: usize) {
     let club = Club(club);
-    let other = Staff(club.chairman().addr());
+    let other = club.chairman();
     let est = NonPlayer(if !other.is_null() { other.non_player().addr() } else { 0 });
     let rep = club.reputation() as i32;
     let factor = if !est.is_null() {
@@ -2326,7 +2326,7 @@ pub(crate) unsafe extern "thiscall" fn sell_season_tickets(this: usize, apply: i
     if ratio > read_f64(rdata::F64_0_875) {
         core::ptr::write_unaligned((this.addr() + finance::SEASON_TICKET_RATIO) as *mut u32, 0x3f600000);
     }
-    let nation = Nation(club.nation().addr());
+    let nation = club.nation();
     let kind = if !nation.is_null() { nation.state_of_development() as i8 } else { 3 };
     match kind {
         1 => {}
@@ -2758,12 +2758,12 @@ pub(crate) unsafe extern "thiscall" fn try_board_debt_payment(this: usize, club:
         return 0;
     }
     let n = ftol(read_f64(rdata::F64_6) / div);
-    let other = Staff(club.chairman().addr());
+    let other = club.chairman();
     if !other.is_null() && !other.non_player().is_null() {
         if friendly_random(n) != 0 {
             return 0;
         }
-        let est = NonPlayer(club.chairman().non_player().addr());
+        let est = club.chairman().non_player();
         if friendly_random((est.resources() as u8) as i8 as i32) == 0 {
             return 0;
         }
@@ -2866,11 +2866,11 @@ pub(crate) unsafe extern "thiscall" fn try_cash_injection(this: usize, club: usi
         _ => read_f64(rdata::F64_0_001),
     };
     let rep = club.reputation() as i32;
-    let other = Staff(club.chairman().addr());
+    let other = club.chairman();
     let mut value;
     if !other.is_null() && !other.non_player().is_null() && club.plc() == 0 {
         let r = friendly_random(ftol(read_f64(rdata::F64_30) / div));
-        let est = NonPlayer(club.chairman().non_player().addr());
+        let est = club.chairman().non_player();
         if (est.business() as i8 as i32) <= r {
             return 0;
         }
@@ -2952,7 +2952,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_staff_wage(this: usize, job: i8) 
     if exe::database_is_national_team(club) != 0 {
         return default;
     }
-    let nation = Nation(club.nation().addr());
+    let nation = club.nation();
     let mut w;
     if nation.is_null() {
         w = ftol(default as f64 * read_f64(rdata::F64_0_25));
@@ -2994,7 +2994,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_staff_wage(this: usize, job: i8) 
                 }
             }
         }
-        let league = Competition(club.division().addr());
+        let league = club.division();
         if !league.is_null() {
             crate::comparison::branch("cpv_7 league weight");
             w = ftol(league.reputation() as f64 * w as f64 * read_f64(rdata::F64_0_2)); // cpv7: the league weight;

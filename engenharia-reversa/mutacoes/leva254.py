@@ -10,7 +10,7 @@ MUTACOES = [
     ('cpr3_estado_futura', 'offer.set_status(0x13); // future transfer', 'offer.set_status(0x12); // mutacao: estado errado', 'cpr_3 add future'),
     ('cpr3_sem_marca', '*staff_flags_byte(this, offer.target_staff_id()) |= 0x10; // the future transfer mark', 'let _ = 0x10; // mutacao: sem a marca', 'cpr_3 add future'),
     ('cpr4_desfeita_conta', 'o.response_round() < 3 // undone (+0x2e = 3) does not count', 'true // mutacao: a desfeita conta', 'cpr_4 offer undone'),
-    ('cpr4_emprestimo_conta', 'let owner = if !c.is_null() && c.contract_type() & 0x3f != 5 { friendly_club_by_id(c.club()) } else { 0 }; // the loan does not count', 'let owner = if !c.is_null() { friendly_club_by_id(c.club()) } else { 0 }; // mutacao: o emprestimo conta', 'cpr_4 loaned player'),
+    ('cpr4_emprestimo_conta', 'let owner = if !c.is_null() && c.contract_type() & 0x3f != 5 { friendly_club_by_id(c.club()) } else { Club(0) }; // the loan does not count', 'let owner = if !c.is_null() { friendly_club_by_id(c.club()) } else { Club(0) }; // mutacao: o emprestimo conta', 'cpr_4 loaned player'),
     ('cpr4_sem_agenda', 'exe::transfer_manager_schedule_offer(this, o, 0xa, 0); // the offer comes back in 10 days', '// mutacao: sem agenda', 'cpr_4 undo offer'),
     ('cpr5_expectativa_7000', '        let h = ((f as f64 / g) * 7500.0) as f32;', '        let h = ((f as f64 / g) * 7000.0) as f32; // mutacao', 'cpr_5 board with manager'),
     ('cpr5_sem_sorteio_0xa', '        roll_confidence(l + board_record::CONFIDENCE_3, 0x6d6, h);', '        write_i16(l + board_record::CONFIDENCE_3, ftol((0x36b as f64 + h as f64) as f32 as f64 - friendly_random(0x1f4) as f64) as i16); // mutacao', 'cpr_5 board with manager'),

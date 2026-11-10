@@ -1276,8 +1276,8 @@ pub(crate) unsafe fn league_announce_team_status(league: League, i: i32, status:
 ///
 /// [pt] Grava a situação `v` no +0x37 da linha `i` e a anuncia.
 pub(crate) unsafe fn set_row_status(league: League, i: i32, v: u8, high: u32) {
-    *((league_table_row(League(league.addr()), i) + 0x37) as *mut u8) = v;
-    league_announce_team_status(League(league.addr()), i, v as i8 as i32 as u32, high);
+    *((league_table_row(league, i) + 0x37) as *mut u8) = v;
+    league_announce_team_status(league, i, v as i8 as i32 as u32, high);
 }
 
 /// Maximum reachable points of a table row: (season games +0xa7 − played +0x11) × win points (+0xc2) + points (+0x19).
@@ -1555,8 +1555,8 @@ pub(crate) unsafe extern "thiscall" fn update_positions_and_status(this: usize) 
         if best == read_i8(li + league_table_row::WORST_POSSIBLE_POSITION) && best < 9 && this.stage_index() == 0xff {
             if exe::comp_util_is_league_division(read_i32(this.competition().addr())) != 0 && this.upper_division_id() == -1 {
                 let slot = read_usize(G_CLUB_STATE_TABLE) + (read_i32(read_usize(li)) as usize).wrapping_mul(6);
-                let reg = Competition(this.competition().addr());
-                let nation = Nation(reg.nation().addr());
+                let reg = this.competition();
+                let nation = reg.nation();
                 if read_i32(slot) == -1 && !nation.is_null() && read_i32(nation.addr()) != read_i32(KEY_NATION_SCOTLAND) {
                     let count = nation.continent();
                     if count != 0 && read_i32(count) == read_i32(KEY_CONTINENT_EUROPE) {
@@ -1823,7 +1823,7 @@ pub(crate) unsafe extern "thiscall" fn announce_team_status(league: usize, club:
     exe::newsitem_set_slot(n, 5, r as u32);
     let news = read_usize(G_NEWS);
     if out as u8 != 0xff {
-        let nacao = Nation(club.nation().addr());
+        let nacao = club.nation();
         let continent = if !nacao.is_null() { nacao.continent() } else { 0 };
         exe::news_send_by_scope(news, n, club, league.competition().addr(), nacao, continent, out);
         return 1;

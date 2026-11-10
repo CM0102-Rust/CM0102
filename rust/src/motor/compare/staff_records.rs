@@ -10,7 +10,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_league_champions_record(this:
     if club.is_null() || comp == 0 || read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(4 * read_usize(comp))) == 0 {
         return o(this, club.addr(), comp);
     }
-    let t = Staff(club.manager().addr());
+    let t = club.manager();
     let notes = if !t.is_null() && !t.non_player().is_null() { (t.non_player().addr() + 8, 6) } else { (club.addr() + club::REPUTATION, 2) };
     compare_champion_update("add_league_champions_record", this, club, notes, true, || o(this, club.addr(), comp),
         || add_league_champions_record(this, club.addr(), comp));
@@ -57,12 +57,12 @@ pub(crate) unsafe extern "thiscall" fn compare_record_match_result(this: usize, 
     if p.category() == 1 {
         return o(this, p.addr(), m);
     }
-    let a = club_manager_record(this, Club(p.home_club().addr()));
-    let v = club_manager_record(this, Club(p.away_club().addr()));
+    let a = club_manager_record(this, p.home_club());
+    let v = club_manager_record(this, p.away_club());
     let mut reg = Vec::new();
     for r in [a, v] {
-        if r != 0 {
-            reg.push((r, 0xd2));
+        if !r.is_null() {
+            reg.push((r.addr(), 0xd2));
         }
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, p.addr(), m), || record_match_result(this, p.addr(), m));

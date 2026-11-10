@@ -16,7 +16,7 @@ use super::*;
 /// observando o próprio clube; a carreira automática não chega a esta rotina).
 pub(crate) unsafe extern "thiscall" fn compare_player_search_record_scouted_club_match(this: usize, game: usize, result: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_PLAYER_SEARCH_RECORD_SCOUTED_CLUB_MATCH);
-    let club_obs = Club(friendly_club_by_id(read_usize(this)));
+    let club_obs = friendly_club_by_id(read_usize(this));
     if read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 && club_obs.manager().addr() != 0 {
         o(this, game, result);
         return;

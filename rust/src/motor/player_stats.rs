@@ -174,7 +174,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
         show_error_at(0xa78310, 0xf28);
         return 0;
     }
-    let club = Club(p.club_job().addr());
+    let club = p.club_job();
     let f = p.player();
     if f.is_null() {
         return 0;
@@ -1102,7 +1102,7 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
     if by_contract != 0 {
         let c = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club));
         if !c.is_null() {
-            let cp = Club(person.club_job().addr());
+            let cp = person.club_job();
             if !cp.is_null() && club.nation() == cp.nation() {
                 return c.squad_status() & 0xf;
             }
@@ -1112,11 +1112,11 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
         if read_u8(person.nation().addr() + nation::FIRST_LANGUAGE) == l {
             return true;
         }
-        let s = Nation(person.second_nation().addr());
+        let s = person.second_nation();
         !s.is_null() && (s.first_language() as u8) == l // the second nation
     };
     if !club.is_null() {
-        let n = Nation(club.nation().addr());
+        let n = club.nation();
         if !n.is_null() && fala((n.first_language() as u8)) {
             return 10;
         }
@@ -1253,8 +1253,8 @@ pub(crate) unsafe extern "thiscall" fn player_stats_record_match(this: usize, p:
             if cat == 2 || (read_usize(p) as i32 > -1 && exe::comp_util_is_league_division(read_usize(p) as i32) != 0) {
                 add_u16_at(reg + player_stats_entry::CLUB_LEAGUE_GAMES, 1);
                 add_u16_at(reg + player_stats_entry::CLUB_LEAGUE_GOALS, read_u8(e + lineup_row::GOALS) as u16);
-                if exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), pessoa) == 0 && contract_of_staff(pessoa) != 0 {
-                    add_u16_at(contract_of_staff(pessoa) + 0x3b, 1);
+                if exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), pessoa) == 0 && contract_of_staff(pessoa) != Contract(0) {
+                    add_u16_at((contract_of_staff(pessoa)).addr() + 0x3b, 1);
                 }
             }
             let (f24, f25, f26) = (read_u8(reg + player_stats_entry::RECENT_RATINGS), read_u8(reg + 0x25), read_u8(reg + player_stats_entry::LAST_RATING));
@@ -1288,7 +1288,7 @@ pub(crate) unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, na
     }
     let mut i = 0i32;
     while i < read_i32(G_CLUB_COUNT) {
-        let club = Club(injury_club_by_index(i));
+        let club = Club((injury_club_by_index(i)).addr());
         if injury_is_national_team(club) {
             break; // the first national team ends it
         }
@@ -1470,7 +1470,7 @@ pub(crate) unsafe extern "stdcall" fn competition_weight(p: usize, code: i8) -> 
             0
         }
     };
-    let c1 = Nation(p.nation().addr());
+    let c1 = p.nation();
     if c1.is_null() {
         return 0;
     }
@@ -1485,7 +1485,7 @@ pub(crate) unsafe extern "stdcall" fn competition_weight(p: usize, code: i8) -> 
     if c1.third_language() == code {
         return 300;
     }
-    let c2 = Nation(p.second_nation().addr());
+    let c2 = p.second_nation();
     if c2.is_null() {
         return 0;
     }

@@ -507,7 +507,7 @@ def ajustar_pelo_compilador(tipos):
                     edicoes[arq].append((sp['byte_start'], sp['byte_end'], 'para_tipo', tipo))
                     feito = True
                     break
-                if ('expected `usize`, found `%s`' % tipo) in txt:
+                if ('expected `usize`, found `%s`' % tipo) in txt or ('expected integer, found `%s`' % tipo) in txt:
                     edicoes[arq].append((sp['byte_start'], sp['byte_end'], 'para_usize', tipo))
                     feito = True
                     break

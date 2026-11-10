@@ -107,8 +107,8 @@ pub(crate) unsafe extern "thiscall" fn compare_update_transfer_fee_records(this:
     let person = read_usize(G_STAFF_TABLE).wrapping_add(((t.target_staff_id() as i32) as usize).wrapping_mul(staff::SIZE));
     let buyer = injury_club_by_index((t.buyer_club_id() as i32));
     let contract = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
-    let seller = if !contract.is_null() { injury_club_by_index((contract.club() as i32)) } else { 0 };
-    if seller == 0 {
+    let seller = if !contract.is_null() { injury_club_by_index((contract.club() as i32)) } else { Club(0) };
+    if seller.is_null() {
         let r = o(this, t.addr());
         SCOREBOARD.record(r == 1 && read_usize(G_CONTRACT_LOOKUP_RESULT) == 0, || format!("update_transfer_fee_records sem vendedor: {} [G_CONTRACT_LOOKUP_RESULT]={:x}", r, read_usize(G_CONTRACT_LOOKUP_RESULT)));
         return r;
@@ -122,19 +122,19 @@ pub(crate) unsafe extern "thiscall" fn compare_update_transfer_fee_records(this:
     let mut queue = read_i32(this + club_records_fields::NEWS_QUEUE_COUNT);
     if value != 0 {
         if value > plan[0].0 {
-            plan[0] = (value, read_usize(seller));
+            plan[0] = (value, read_usize(seller.addr()));
             if value > plan[1].0 {
                 plan[1] = plan[0];
-                if is_big_transfer(value, Club(buyer)) && !record_news_queued(this, read_usize(buyer), 0x1c) {
+                if is_big_transfer(value, buyer) && !record_news_queued(this, read_usize(buyer.addr()), 0x1c) {
                     queue += 1;
                 }
             }
         }
         if value > plan[2].0 {
-            plan[2] = (value, read_usize(buyer));
+            plan[2] = (value, read_usize(buyer.addr()));
             if value > plan[3].0 {
                 plan[3] = plan[2];
-                if is_big_transfer(value, Club(seller)) && !record_news_queued(this, read_usize(seller), 0x1d) {
+                if is_big_transfer(value, seller) && !record_news_queued(this, read_usize(seller.addr()), 0x1d) {
                     queue += 1;
                 }
             }

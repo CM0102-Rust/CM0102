@@ -384,7 +384,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
             crate::comparison::branch("cqd_8 left the human club");
             *mark &= 0xdf;
             exe::injury_set_training_load(read_usize(G_INJURY), p, 0x32);
-            let f = PlayerSheet(p.player().addr());
+            let f = p.player();
             *(training_entry_of_staff(this, p) as *mut u8) = if f.goalkeeper() >= 0xf { 6 } else { 1 };
             let mut q = 0usize;
             let n = exe::training_manager_find_position_training(this, p, &mut q);
@@ -1061,7 +1061,7 @@ pub(crate) unsafe extern "thiscall" fn apply_training_progress(this: usize, pers
         show_error_at(0xa8ccd0, 0x4b3);
         return;
     }
-    let f = PlayerSheet(person.player().addr());
+    let f = person.player();
     if f.is_null() {
         show_error_at(0xa8ccd0, 0x4ba);
         return;

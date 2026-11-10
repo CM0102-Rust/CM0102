@@ -7,7 +7,7 @@ pub(crate) unsafe fn player_search_contract_club(person: Staff) -> usize {
     // 0x4cf5a0: push person; mov ecx, [0xae1050] -> thiscall, ret 4
     let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
     core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, c.addr());
-    if !c.is_null() { friendly_club_by_id(c.club()) } else { 0 }
+    if !c.is_null() { (friendly_club_by_id(c.club())).addr() } else { 0 }
 }
 
 /// `player_search_record_scouted_club_match(match, result)`, called by the watched match (`player_search_scout_match`) when the list
@@ -34,7 +34,7 @@ pub(crate) unsafe fn player_search_contract_club(person: Staff) -> usize {
 /// técnico passa a conhecer o jogador (0x5b09d0, que sorteia).
 pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(this: usize, game: usize, result: usize) {
     let game = Fixture(game);
-    let club_obs = Club(friendly_club_by_id(read_usize(this)));
+    let club_obs = friendly_club_by_id(read_usize(this));
     for i in 0..0x32usize {
         let v = this + 4 + i * 0x1a2;
         let id = read_i32(v);
@@ -42,10 +42,10 @@ pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(t
             continue;
         }
         let p = staff_records_staff_by_id(id as usize);
-        if p != 0 && read_i32(p) >= read_i32(G_STAFF_COUNT) {
+        if !p.is_null() && read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) {
             continue;
         }
-        let c = read_usize(p + staff::CLUB_JOB);
+        let c = read_usize(p.addr() + staff::CLUB_JOB);
         if c != 0 && read_usize(c) == read_usize(this) {
             continue;
         }
@@ -73,7 +73,7 @@ pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(t
             continue;
         }
         let p = staff_records_staff_by_id(id as usize);
-        if p != 0 && read_i32(p) >= read_i32(G_STAFF_COUNT) {
+        if !p.is_null() && read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) {
             continue;
         }
         if club_obs.manager().addr() != 0 && exe::human_manager_is_human_club(club_obs, 0, 1, 0, 0) != 0 && read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 {
@@ -239,7 +239,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
     if exe::database_staff_matches_names(staff_records_staff_by_id(id_scout as usize), (read_usize(this + player_search_fields::SCOUT_NAME_REF)) as u32, (read_usize(this + 0x178)) as u32, (read_usize(this + 0x17c)) as u32, this + 0x184) == 0 {
         return 0;
     }
-    let scout = Staff(staff_records_staff_by_id(read_i32(this + player_search_fields::SCOUT_ID) as usize));
+    let scout = Staff((staff_records_staff_by_id(read_i32(this + player_search_fields::SCOUT_ID) as usize)).addr());
     if scout.is_null() || read_u8(result + 0x4c) != 0 {
         return 0;
     }
@@ -297,7 +297,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
                             let mut k = 0usize;
                             while free {
                                 let id = read_i32(result + 0x190 + side as usize * 0x625 + k);
-                                if id != -1 && request(read_usize(G_SCOUT_MANAGER), staff_records_staff_by_id(id as usize), scout.club_job().addr(), 1) != 0 {
+                                if id != -1 && request(read_usize(G_SCOUT_MANAGER), (staff_records_staff_by_id(id as usize)).addr(), scout.club_job().addr(), 1) != 0 {
                                     free = false;
                                 }
                                 k += 0x49;
@@ -363,7 +363,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
             if id == -1 {
                 continue;
             }
-            let p = Staff(staff_records_staff_by_id(id as usize));
+            let p = Staff((staff_records_staff_by_id(id as usize)).addr());
             if !p.is_null() && read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) {
                 continue;
             }
@@ -884,7 +884,7 @@ pub(crate) unsafe extern "thiscall" fn scout_covers_nation(this: usize, nation: 
         }
         return 0;
     }
-    let nc = Nation(club.nation().addr());
+    let nc = club.nation();
     if nc.group_membership() == 2 && nation.group_membership() == 2 {
         return 1;
     }

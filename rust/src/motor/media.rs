@@ -89,7 +89,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
         core::ptr::write_unaligned(G_CONTRACT_LOOKUP_RESULT as *mut usize, c);
         let (mut dono, mut vinc) = (0usize, 0usize);
         if c != 0 {
-            dono = month_award_club_by_id(read_i32(c + 4));
+            dono = (month_award_club_by_id(read_i32(c + 4))).addr();
             if dono != 0 {
                 vinc = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, dono);
                 manager_owner = read_usize(dono + club::MANAGER);
@@ -184,7 +184,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
             write(n, 0xe, (exe::staff_is_transfer_listed_or_requested(person, 0) != 0) as u32);
             write(n, 0xf, cnt as i32 as u32);
             // the interested parties by reputation (highest to lowest)
-            let rep = |id: i32| read_i16(month_award_club_by_id(id) + 0x80);
+            let rep = |id: i32| read_i16((month_award_club_by_id(id)).addr() + 0x80);
             let c = cnt as usize;
             for a in 0..c.saturating_sub(1) {
                 for b in a + 1..c {
@@ -203,7 +203,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
                 if (nd as i8) >= 0x1e {
                     break;
                 }
-                add_unique_recipient(&mut dest, &mut nd, month_award_club_by_id(id));
+                add_unique_recipient(&mut dest, &mut nd, (month_award_club_by_id(id)).addr());
             }
             let total = read_i32(G_STAFF_COUNT);
             for q in 0..16i32 {
@@ -216,7 +216,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
                     if (nd as i8) >= 0x1e {
                         break;
                     }
-                    let ci = Club(month_award_club_by_id(id));
+                    let ci = month_award_club_by_id(id);
                     let hc = h.club_job();
                     let junto = ci.division() == hc.division()
                         || (ci.nation() == hc.nation() && (ci.reputation() as i32 - 0xbb8) > hc.reputation() as i32);
@@ -232,7 +232,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_interest(this: usize) {
                 exe::media_apply_squad_reaction_to_player_story(this, 0x1f, person, dono, ids.as_mut_ptr(), cnt as u8 as u32);
             }
             if dono != 0 && media_is_human_club(dono, 0, 1) == 0 && resp != 0 {
-                if club != 0 {
+                if !club.is_null() {
                     exe::media_warn_squad_of_position_rival(this, person, club, dono, resp);
                 }
                 exe::media_apply_player_story_response(this, person, dono, 0x1f, resp);
@@ -316,7 +316,7 @@ pub(crate) unsafe extern "C" fn news_create_not_for_sale_story(player: usize, cl
     } else {
         write(n, 7, 0xffff_ffff);
     }
-    let f = PlayerSheet(player.player().addr());
+    let f = player.player();
     if !f.is_null() && f.world_reputation() > 0x1f40 {
         exe::news_send_to_all_managers(read_usize(G_NEWS), n);
     } else {
@@ -376,7 +376,7 @@ pub(crate) unsafe extern "thiscall" fn queue_trophy_praise_story(_this: usize, c
     };
     write(n, 0xa, conf as u32);
     write(n, 0xb, (club.division().addr() == comp) as u32);
-    let manager = Staff(club.manager().addr());
+    let manager = club.manager();
     let days = exe::date_days_since(G_CURRENT_DATE, manager.date_joined_club() as u32, manager.date_joined_club_leap_year() as u32);
     write(n, 0xc, days as u32);
     if days < 0xb4 {
@@ -442,7 +442,7 @@ pub(crate) unsafe fn club_staff_vector(club: Club, call: &mut dyn FnMut(usize, u
     let mut v = [0usize; 58];
     exe::database_collect_club_squad(club, v.as_mut_ptr(), 0);
     v[50] = club.chairman().addr();
-    let manager = Staff(club.manager().addr());
+    let manager = club.manager();
     v[51] = if call(FN_HUMAN_MANAGER_IS_HUMAN_CLUB, 0, [club.addr() as u32, 0, 1, 0, 0]) != 0 || (!manager.is_null() && exe::database_is_player_job((manager.job_for_club() as u32) as i8) != 0) {
         0
     } else {
@@ -1321,7 +1321,7 @@ pub(crate) unsafe extern "thiscall" fn queue_signing_celebration_story(this: usi
     if p.is_null() || p.nation().is_null() {
         return;
     }
-    let current = Club(p.club_job().addr());
+    let current = p.club_job();
     if current.is_null() || current.manager().addr() == 0 || current.stadium().addr() == 0 || p.player().is_null() {
         return;
     }
@@ -2077,7 +2077,7 @@ pub(crate) unsafe extern "thiscall" fn post_player_criticism_reaction_news(_this
     let row = read_usize(read_usize(G_MANAGER_MANAGER)).wrapping_add((read_usize(club.addr())).wrapping_mul(0x49));
     gravar(n, 7, (read_i16(row + 6) < 0xfa0) as u32); // board confidence below 4000
     gravar(n, 8, topic);
-    set_person_slots_optional(gravar, n, 9, Staff(club.manager().addr()), false);
+    set_person_slots_optional(gravar, n, 9, club.manager(), false);
     let mut clubs = [0usize; 0x1e];
     let tm = read_usize(G_TRANSFER_MANAGER);
     let k = if tm != 0 { exe::transfer_manager_collect_player_news_recipients(tm, player, 0x21a, clubs.as_mut_ptr(), 0x1e) as i8 } else { 0 };
@@ -3292,7 +3292,7 @@ pub(crate) unsafe extern "thiscall" fn post_financial_trouble_news(_this: usize,
     if club.is_null() || club.nation().addr() == 0 {
         return;
     }
-    let sheet = PlayerSheet(club.stadium().addr());
+    let sheet = club.stadium();
     if sheet.is_null() || read_usize(sheet.addr() + player_sheet::PENALTIES) == 0 || club.division().addr() == 0 {
         return;
     }
@@ -3305,7 +3305,7 @@ pub(crate) unsafe extern "thiscall" fn post_financial_trouble_news(_this: usize,
     let v = exe::utils_random(2); // the news item’s random roll
     exe::newsitem_set_slot(n, 2, v as u32);
     let news = read_usize(G_NEWS);
-    let division = Competition(club.division().addr());
+    let division = club.division();
     if club.reputation() >= 9000 && !division.is_null() && division.reputation() > 12 {
         exe::news_send_to_all_managers(news, n);
     } else {
@@ -3413,7 +3413,7 @@ pub(crate) unsafe extern "thiscall" fn queue_manager_fa_complaint_story(this: us
     let nt = local.as_mut_ptr() as usize;
     exe::new_newsitem(nt, 0x178e, 0);
     exe::newsitem_set_slot(nt, 0, read_u32(club.addr()));
-    let manager = Staff(club.manager().addr());
+    let manager = club.manager();
     if !manager.is_null() {
         exe::newsitem_set_slot(nt, 1, read_u32(manager.addr()));
         exe::newsitem_set_slot(nt, 2, read_u32(manager.first_name() + 0x33));

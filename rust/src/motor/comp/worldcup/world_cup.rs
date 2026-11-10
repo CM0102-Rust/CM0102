@@ -640,7 +640,7 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
             write_u8(this.entrant_book() + i * 6 + 4, 3);
             continue;
         }
-        let nation = Nation(club.nation().addr());
+        let nation = club.nation();
         let count = if !nation.is_null() { nation.continent() } else { 0 };
         if count == 0 {
             show_error_at(0xad5888, 0x61e);

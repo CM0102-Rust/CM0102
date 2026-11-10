@@ -202,7 +202,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_duty_competitions(this: u
 pub(crate) unsafe extern "thiscall" fn compare_select_squads_for_fixture(this: usize, p: usize) {
     let p = Fixture(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SELECT_SQUADS_FOR_FIXTURE);
-    let regions = [(club_nation_record(this, Club(p.home_club().addr())) + 0x32, 0x3a), (club_nation_record(this, Club(p.away_club().addr())) + 0x32, 0x3a)];
+    let regions = [(club_nation_record(this, p.home_club()) + 0x32, 0x3a), (club_nation_record(this, p.away_club()) + 0x32, 0x3a)];
     let before = crate::comparison::MemorySnapshot::read(&regions);
     o(this, p.addr());
     let mo = crate::comparison::MemorySnapshot::read(&regions);
@@ -295,12 +295,12 @@ pub(crate) unsafe extern "thiscall" fn compare_format_squad_label(this: usize, k
 pub(crate) unsafe extern "thiscall" fn compare_withdraw_injured_player(this: usize, p: usize, days: u32) {
     let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_WITHDRAW_INJURED_PLAYER);
-    let club = Club(p.national_job().addr());
+    let club = p.national_job();
     if (days as u16 as i16) < 0xe || club.is_null() {
         return o(this, p.addr(), days);
     }
     let plan = release_plan(this, p, days);
-    let team = Club(national_team_for_type(club.nation().addr(), call_up_type(club, p)));
+    let team = Club((national_team_for_type(club.nation().addr(), call_up_type(club, p))).addr());
     let estava = !team.is_null() && (0..50usize).any(|c| team.squad(c) == p.addr());
     let before = (club, p.job_for_nation());
     o(this, p.addr(), days);
@@ -472,10 +472,10 @@ pub(crate) unsafe extern "thiscall" fn compare_prune_club_call_up_records(this: 
 pub(crate) unsafe extern "thiscall" fn compare_add_player_to_squad(this: usize, nation: usize, kind: u32, p: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_ADD_PLAYER_TO_SQUAD);
     let team = national_team_for_type(nation, kind as u8);
-    if team == 0 || p == 0 {
+    if team.is_null() || p == 0 {
         return o(this, nation, kind, p);
     }
-    let reg = squad_change_regions(Club(team), Staff(p));
+    let reg = squad_change_regions(team, Staff(p));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, nation, kind, p), || add_player_to_squad(this, nation, kind, p));
     SCOREBOARD.record(igual, || format!("add_player_to_squad({:x}, {}, {:x}) {:x?} x {:x?}", nation, kind as u8, p, mo, mr));
 }
@@ -487,10 +487,10 @@ pub(crate) unsafe extern "thiscall" fn compare_add_player_to_squad(this: usize, 
 pub(crate) unsafe extern "thiscall" fn compare_national_teams_remove_player_from_squad(this: usize, nation: usize, kind: u32, p: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_NATIONAL_TEAMS_REMOVE_PLAYER_FROM_SQUAD);
     let team = national_team_for_type(nation, kind as u8);
-    if team == 0 || p == 0 {
+    if team.is_null() || p == 0 {
         return o(this, nation, kind, p);
     }
-    let reg = squad_change_regions(Club(team), Staff(p));
+    let reg = squad_change_regions(team, Staff(p));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, nation, kind, p), || national_teams_remove_player_from_squad(this, nation, kind, p));
     SCOREBOARD.record(igual, || format!("national_teams_remove_player_from_squad({:x}, {}, {:x}) {:x?} x {:x?}", nation, kind as u8, p, mo, mr));
 }
@@ -691,7 +691,7 @@ pub(crate) unsafe extern "thiscall" fn compare_record_club_call_ups(this: usize,
             continue;
         }
         vistos.push(c);
-        if let Some(rec) = club_callup_record(this, Club(c.addr())) {
+        if let Some(rec) = club_callup_record(this, c) {
             reg.push((rec, 6));
             let cap = *((rec + 4) as *const i8);
             if read_usize(rec) != 0 && cap > 0 {

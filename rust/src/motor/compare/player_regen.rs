@@ -250,7 +250,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pick_club_from_nation_list(this: 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_PICK_CLUB_FROM_NATION_LIST);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     for n in [read_usize(player.nation().addr()), read_usize(KEY_NATION_ENGLAND)] {
-        let l = Llist(nation_club_list(this, n));
+        let l = Llist((nation_club_list(this, n)).addr());
         if !l.is_null() {
             reg.push((l.addr() + llist::CURSOR, 4));
         }

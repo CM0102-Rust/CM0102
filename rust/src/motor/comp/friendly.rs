@@ -189,14 +189,14 @@ pub(crate) unsafe extern "thiscall" fn cancel_tournament(this: usize, tournament
             exe::news_send_to_club_manager(read_usize(G_NEWS), nt, c);
         }
     }
-    let pendentes = Llist(this.pending_tournament_list().addr());
+    let pendentes = this.pending_tournament_list();
     if !pendentes.is_null() {
         pendentes.set_cursor(pendentes.head());
         let mut item = exe::llist_get_next(this.pending_tournament_list());
         while item != 0 {
             if tournament == read_usize(item) {
                 exe::llist_remove(this.pending_tournament_list(), item);
-                let p = Llist(this.pending_tournament_list().addr());
+                let p = this.pending_tournament_list();
                 p.set_cursor(p.head());
             }
             item = exe::llist_get_next(this.pending_tournament_list());
@@ -1092,7 +1092,7 @@ pub(crate) unsafe extern "thiscall" fn plan_club_friendlies(this: usize, entries
         let last = ordenados.wrapping_add((count as usize).wrapping_mul(4)).wrapping_sub(4);
         while q < last {
             let cand = read_usize(q);
-            let club = Club(month_award_club_by_id(read_i32(cand)));
+            let club = month_award_club_by_id(read_i32(cand));
             if club.nation().addr() != read_usize(league) {
                 break;
             }
@@ -1208,7 +1208,7 @@ pub(crate) unsafe extern "thiscall" fn add_tournament(this: usize, host: usize, 
 /// data (+8 ≠ 0) pelo próximo da lista (0x68d1b0: ecx = a lista; sem push -> thiscall); senão 0.
 pub(crate) unsafe extern "thiscall" fn find_human_club_open_invitation(this: usize) -> usize {
     let this = Friendly(this);
-    let list = Llist(this.friendly_match_list().addr());
+    let list = this.friendly_match_list();
     if list.is_null() {
         return 0;
     }
@@ -1236,11 +1236,11 @@ pub(crate) unsafe extern "thiscall" fn find_human_club_open_invitation(this: usi
 ///
 /// [pt] O outro clube do pedido de amistoso (0x19 bytes: +0 dia, +2 ano, +0xc quem pede, +0x10 e +0x14 os dois clubes do
 /// jogo, +0x18 a situação): o +0x10, ou o +0x14 quando o +0x10 é o que pede.
-pub(crate) unsafe fn other_friendly_club(m: usize) -> usize {
+pub(crate) unsafe fn other_friendly_club(m: usize) -> Club {
     if read_usize(m + friendly_match::REQUESTING_CLUB) == read_usize(m + friendly_match::HOME_CLUB) {
-        read_usize(m + friendly_match::AWAY_CLUB)
+        Club(read_usize(m + friendly_match::AWAY_CLUB))
     } else {
-        read_usize(m + friendly_match::HOME_CLUB)
+        Club(read_usize(m + friendly_match::HOME_CLUB))
     }
 }
 
@@ -1286,7 +1286,7 @@ pub(crate) unsafe fn send_friendly_news(m: usize, kind: u32, status: u32, para: 
 /// push 1; push 0; push o; add esp, 0x14 -> cdecl(o, 0, 1, 0, 0)), salvo com `forcar`.
 pub(crate) unsafe fn friendly_needs_decision(m: usize, force: u32) -> bool {
     let o = other_friendly_club(m);
-    if o == 0 || read_u8(m + friendly_match::STATUS) != 1 {
+    if o.is_null() || read_u8(m + friendly_match::STATUS) != 1 {
         return false;
     }
     exe::human_manager_is_human_club(o, 0, (1) as u32, (0) as u32, 0) == 0 || force != 0
@@ -1309,7 +1309,7 @@ pub(crate) unsafe fn friendly_needs_decision(m: usize, force: u32) -> bool {
 /// de quem pede é ao menos a do outro / fator, ou se a diferença das reputações não passa de fator × 600.
 pub(crate) unsafe fn friendly_reply(m: usize, count: bool) -> u8 {
     let a = Club(read_usize(m + friendly_match::REQUESTING_CLUB));
-    let o = Club(other_friendly_club(m));
+    let o = Club((other_friendly_club(m)).addr());
     let (na, no) = (a.nation().addr(), o.nation().addr());
     let second = o.addr() == read_usize(m + friendly_match::HOME_CLUB);
     let mut f = if second { read_f64(rdata::F64_1_32) } else { read_f64(rdata::F64_1_65) };
@@ -1377,7 +1377,7 @@ pub(crate) unsafe extern "thiscall" fn process_friendly_reply(this: usize, m: us
     if a.is_null() {
         return;
     }
-    let o = Club(other_friendly_club(m));
+    let o = Club((other_friendly_club(m)).addr());
     if friendly_needs_decision(m, force) {
         if a.nation().addr() == 0 || o.nation().addr() == 0 {
             *((m + friendly_match::STATUS) as *mut u8) = 4; // like the original (which crashes right after, reading the null nation)
@@ -1509,7 +1509,7 @@ pub(crate) unsafe extern "thiscall" fn send_friendly_request(this: usize, m: usi
     }
     let copy = m;
     exe::llist_add_tail(this.request_reply_list(), (&copy) as *const usize as usize, 4);
-    if o == 0 || read_u8(m + friendly_match::STATUS) != 1 || !club_has_human_manager(o) {
+    if o.is_null() || read_u8(m + friendly_match::STATUS) != 1 || !club_has_human_manager(o.addr()) {
         return;
     }
     crate::comparison::branch("cqa_2 request to the human");
@@ -1517,7 +1517,7 @@ pub(crate) unsafe extern "thiscall" fn send_friendly_request(this: usize, m: usi
     if !club_has_human_manager(read_usize(m + friendly_match::HOME_CLUB)) && !club_has_human_manager(read_usize(m + friendly_match::AWAY_CLUB)) {
         return;
     }
-    send_friendly_news(m, 6, 2, o);
+    send_friendly_news(m, 6, 2, o.addr());
 }
 
 /// Number of nodes in a LLIST (cursor untouched).
@@ -2772,8 +2772,8 @@ pub(crate) unsafe extern "thiscall" fn add_planned_friendly(this: usize, host: u
 /// Club record with the given id in the club table (0x245 bytes each).
 ///
 /// [pt] O clube de id `id` na tabela [0xae23b4] (registros de 0x245 bytes).
-pub(crate) unsafe fn friendly_club_by_id(id: usize) -> usize {
-    read_usize(G_CLUB_TABLE).wrapping_add(id.wrapping_mul(club::SIZE))
+pub(crate) unsafe fn friendly_club_by_id(id: usize) -> Club {
+    Club(read_usize(G_CLUB_TABLE).wrapping_add(id.wrapping_mul(club::SIZE)))
 }
 
 /// True if candidate c already has the club (by id) in its opponents list (+0xa); rewinds and walks the list.
@@ -2858,7 +2858,7 @@ pub(crate) unsafe extern "thiscall" fn find_friendly_opponent(this: usize, club:
     } else if band > 0x14 {
         band = 0x14;
     }
-    let cp = Club(friendly_club_by_id(read_usize(club)));
+    let cp = friendly_club_by_id(read_usize(club));
     let mut key = [0u8; 0x16];
     key[5] = band as u8;
     let mut c;
@@ -2876,7 +2876,7 @@ pub(crate) unsafe extern "thiscall" fn find_friendly_opponent(this: usize, club:
     while c < last {
         'proximo: {
             let id = read_usize(c);
-            let op = Club(friendly_club_by_id(id));
+            let op = friendly_club_by_id(id);
             if cp == op {
                 break 'proximo;
             }
@@ -2962,7 +2962,7 @@ pub(crate) unsafe fn candidate_regions(candidates: impl Iterator<Item = usize>) 
 /// têm o clube na lista (+0xa), os rivais, os de nações rivais (sorteio(2) = 0), os da mesma cidade (+0x57) e os acima
 /// da faixa do sorteio (+4 > sorteio(3) + 3); fica com o candidato quando sorteio(2) = 1. Nenhum: 0. Sem SEH, sem caixa.
 pub(crate) unsafe extern "thiscall" fn find_tour_opponent(this: usize, club: usize, ordenados: usize, n: u32, band_max: u32, nation: usize) -> usize {
-    let cp = Club(friendly_club_by_id(read_usize(club)));
+    let cp = friendly_club_by_id(read_usize(club));
     let mut key = [0u8; 0x16];
     key[5] = 0xff;
     core::ptr::write_unaligned(key.as_mut_ptr().add(6) as *mut usize, read_usize(nation));
@@ -2987,7 +2987,7 @@ pub(crate) unsafe extern "thiscall" fn find_tour_opponent(this: usize, club: usi
     let last = ordenados.wrapping_add((n as usize).wrapping_mul(4)).wrapping_sub(4);
     while s < last {
         let c = read_usize(s);
-        let op = Club(friendly_club_by_id(read_usize(c)));
+        let op = friendly_club_by_id(read_usize(c));
         if op.nation().addr() != nation {
             return 0;
         }
@@ -3034,7 +3034,7 @@ pub(crate) unsafe extern "thiscall" fn find_tour_opponent(this: usize, club: usi
 pub(crate) unsafe extern "thiscall" fn find_friendly_match(this: usize, data: usize, club: usize) -> usize {
     let this = Friendly(this);
     let u = |a: usize| core::ptr::read_unaligned(a as *const usize);
-    let l = Llist(this.friendly_match_list().addr());
+    let l = this.friendly_match_list();
     if l.is_null() {
         return 0;
     }
@@ -3247,7 +3247,7 @@ pub(crate) unsafe extern "thiscall" fn remove_club_from_ai_plans(amistosos: usiz
 /// tira 0x90cfc0(100) e fica o maior (estrito, comparado como byte com sinal).
 pub(crate) unsafe extern "thiscall" fn pick_tour_nation(_this: usize, club: usize) -> usize {
     let club = Club(club);
-    let own = Nation(club.nation().addr());
+    let own = club.nation();
     let reach: i8 = match club.reputation() {
         8000.. => 5,
         6000.. => 4,

@@ -67,7 +67,7 @@ pub(crate) unsafe extern "C" fn key_nation_index_of_club(club: usize) -> u8 {
 ///
 /// [pt] Se o clube cai na caixa "Error" da 0x669360 (não é seleção, nação escolhida fora da tabela).
 pub(crate) unsafe fn hits_key_nation_error(club: Club) -> bool {
-    let nation = Nation(club.nation().addr());
+    let nation = club.nation();
     exe::database_is_national_team(club) == 0
         && !nation.is_null()
         && nation.league_selected() != 0

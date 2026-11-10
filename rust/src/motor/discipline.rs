@@ -875,7 +875,7 @@ pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: 
         return 0;
     }
     crate::comparison::branch("cpk_3 suspended by the competition");
-    let club = Club(player.club_job().addr());
+    let club = player.club_job();
     if !club.is_null() {
         if exe::human_manager_is_human_club(club, 0, 1, (0) as u32, 0) != 0 {
             if let Some(s) = (0..20).map(|k| club.addr() + club::TEAM_SELECTED + k * 4).find(|&s| read_usize(s) == player.addr()) {

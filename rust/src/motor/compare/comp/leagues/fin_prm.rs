@@ -70,12 +70,12 @@ pub(crate) unsafe extern "thiscall" fn compare_season_end_club_update(this: usiz
     let mut a = 0u32;
     let fin = finance_of_parent_club(this, club, &mut a);
     let stadium = club.stadium().addr();
-    if fin == 0 || (stadium != 0 && club.own_stadium() == 0 && club.division().addr() != 0 && read_i32(fin) > 0x2160ec0) {
+    if fin.is_null() || (stadium != 0 && club.own_stadium() == 0 && club.division().addr() != 0 && read_i32(fin.addr()) > 0x2160ec0) {
         return o(this, club.addr()); // simplification: the stadium purchase may touch the owner; original only
     }
     let own = read_usize(this).wrapping_add((read_i32(club.addr()) as u32).wrapping_mul(0x167) as usize);
-    let mut reg = vec![(fin, 0x167), (club.addr(), 0x245), (board_requests_row(club), 0x49)];
-    if own != fin {
+    let mut reg = vec![(fin.addr(), 0x167), (club.addr(), 0x245), (board_requests_row(club), 0x49)];
+    if own != fin.addr() {
         reg.push((own, 0x167));
     }
     if stadium != 0 {

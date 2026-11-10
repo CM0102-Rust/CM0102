@@ -3,8 +3,8 @@ use super::*;
 /// Club record with the given id (0x245 bytes each).
 ///
 /// [pt] O clube `id` ([0xae23b4], 0x245 bytes cada).
-pub(crate) unsafe fn month_award_club_by_id(id: i32) -> usize {
-    read_usize(G_CLUB_TABLE).wrapping_add((id as usize).wrapping_mul(club::SIZE))
+pub(crate) unsafe fn month_award_club_by_id(id: i32) -> Club {
+    Club(read_usize(G_CLUB_TABLE).wrapping_add((id as usize).wrapping_mul(club::SIZE)))
 }
 
 /// The comparers' rehearsal run. The copy runs without the news item (`exe::month_award_post_winner_news`), without the award record (`add_month_award_record`)
@@ -98,19 +98,19 @@ pub(crate) unsafe extern "thiscall" fn set_winner(this: usize, id: i32, club_id:
     write_u32(v + 0x1d, id as u32);
     write_u32(v + 0x21, club_id as u32);
     if id > -1 {
-        let club = if club_id > -1 { month_award_club_by_id(club_id) } else { 0 };
+        let club = if club_id > -1 { month_award_club_by_id(club_id) } else { Club(0) };
         // the high bytes of the reputations come from dword +0x19 in the register, as the original pushes
         let mark = read_usize(this + 0x19) as u32;
         let high = mark & 0xffff0000;
         crate::comparison::branch("cpw_6 winner of the month");
-        raise_winner_reputation(month_ratings_staff_by_id(id), club, high | read_i16(this + 0x15) as u16 as u32, high | read_i16(this + 0x17) as u16 as u32, mark);
+        raise_winner_reputation(month_ratings_staff_by_id(id), club.addr(), high | read_i16(this + 0x15) as u16 as u32, high | read_i16(this + 0x17) as u16 as u32, mark);
     }
     if MONTH_AWARD_DRY_RUN {
         return;
     }
     exe::month_award_post_winner_news(this, (this as u32 & 0xffffff00) | k as u32);
     let cid = read_i32(v + 0x21);
-    let club = if cid != -1 { month_award_club_by_id(cid) } else { 0 };
+    let club = if cid != -1 { month_award_club_by_id(cid) } else { Club(0) };
     exe::staff_records_add_month_award_record(read_usize(G_STAFF_RECORDS), month_ratings_staff_by_id(read_i32(v + 0x1d)), club, read_usize(this + 5) as u32, month, year);
 }
 

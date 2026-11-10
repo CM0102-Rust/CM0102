@@ -966,8 +966,8 @@ pub(crate) unsafe fn draw_four_groups() -> [i8; 4] {
 ///
 /// [pt] O clube da linha `k` do grupo `g` da fase 2 (a fase [+0xc] + 0x20 + 4 × g; League::get_table_row 0x6826d0,
 /// thiscall(grupo, k), ret 4).
-pub(crate) unsafe fn second_stage_group_club(this: Cup, g: i8, k: u32) -> usize {
-    read_usize(exe::league_get_table_row(read_usize(this.stages() + 0x20 + 4 * (g as i32 as usize)), (k) as i32))
+pub(crate) unsafe fn second_stage_group_club(this: Cup, g: i8, k: u32) -> Club {
+    Club(read_usize(exe::league_get_table_row(read_usize(this.stages() + 0x20 + 4 * (g as i32 as usize)), (k) as i32)))
 }
 
 /// Draws the order of the 4 phase 2 groups (`exe::utils_random`) and pairs the quarter-finals (1st of a v 2nd of b, 2nd of a v 1st
@@ -1002,7 +1002,7 @@ pub(crate) unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
     let [a, b, c, d] = draw_four_groups();
     let order: [(i8, u32); 8] = [(a, 0), (b, 1), (a, 1), (b, 0), (c, 0), (d, 1), (c, 1), (d, 0)];
     for (k, &(g, l)) in order.iter().enumerate() {
-        core::ptr::write_unaligned((list + 4 * k) as *mut usize, second_stage_group_club(this, g, l));
+        core::ptr::write_unaligned((list + 4 * k) as *mut usize, (second_stage_group_club(this, g, l)).addr());
     }
     for k in 0..8 {
         let obj = read_usize(read_usize(read_usize(G_DISCIPLINE)) + 4 * (this.discipline_index() as i8 as i32 as usize));
@@ -1029,8 +1029,8 @@ pub(crate) unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
         return show_error_at(0x9c4900, 0x78a);
     }
     for g in 0..4i8 {
-        leave_euro_competition(Club(second_stage_group_club(this, g, 2)));
-        leave_euro_competition(Club(second_stage_group_club(this, g, 3)));
+        leave_euro_competition(Club((second_stage_group_club(this, g, 2)).addr()));
+        leave_euro_competition(Club((second_stage_group_club(this, g, 3)).addr()));
     }
     exe::cup_set_up_round(stage, 0);
     this.set_current_stage((0xc) as usize);
@@ -1379,8 +1379,8 @@ pub(crate) unsafe extern "thiscall" fn process_fixture(this: usize, game: usize,
             crate::comparison::branch("cpy_6 draw bonus");
             european_cup_add_prize_money(european_cup_club_finance(game.home_club().addr()), 0x186a0); // cpy6: the home side’s draw prize
             european_cup_add_prize_money(european_cup_club_finance(game.away_club().addr()), 0x186a0);
-            european_cup_send_prize_money_news(this, Club(game.home_club().addr()), 0x186a0, game);
-            european_cup_send_prize_money_news(this, Club(game.away_club().addr()), 0x186a0, game);
+            european_cup_send_prize_money_news(this, game.home_club(), 0x186a0, game);
+            european_cup_send_prize_money_news(this, game.away_club(), 0x186a0, game);
         }
     }
     if EUROPEAN_CUP_FIXTURE_DRY_RUN {

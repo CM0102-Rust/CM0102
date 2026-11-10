@@ -104,7 +104,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_player_training(this: usiz
     if exe::training_manager_get_player_schedule(this, p) == 0 || exe::training_manager_find_position_training(this, p, &mut q) > 0 {
         return o(this, p.addr(), skip);
     }
-    let f = PlayerSheet(p.player().addr());
+    let f = p.player();
     let mut reg = Vec::from(crate::rng::STATE_REGIONS);
     reg.extend_from_slice(&[(G_CONTRACT_LOOKUP_RESULT, 4), (training_entry_of_staff(this, p), 6), (f.addr() + player_sheet::GOALKEEPER, 0x33)]);
     let les = read_usize(G_INJURY);
@@ -148,7 +148,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_or_restore_training_progre
     if p.is_null() || p.player().is_null() {
         return o(this, p.addr(), devolver);
     }
-    let f = PlayerSheet(p.player().addr());
+    let f = p.player();
     let reg = [(f.addr() + player_sheet::GOALKEEPER, 0x33), (player_training_entry(this, p), 6), (G_TRAINING_PROGRESS_SAVED_DELTA_3, 5)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, p.addr(), devolver), || remove_or_restore_training_progress(this, p.addr(), devolver));
     SCOREBOARD.record(igual, || format!("remove_or_restore_training_progress(pessoa {:x}, devolver {}) {:x?} x {:x?}", p.addr(), devolver, mo.0, mr.0));
@@ -163,7 +163,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_training_attribute_change(thi
     if p.is_null() || p.player().is_null() {
         return o(this, p.addr(), attribute);
     }
-    let f = PlayerSheet(p.player().addr());
+    let f = p.player();
     let reg = [(f.addr() + player_sheet::GOALKEEPER, 0x33), (player_training_entry(this, p), 6)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, p.addr(), attribute), || get_training_attribute_change(this, p.addr(), attribute));
     SCOREBOARD.record(igual && r == n, || format!("get_training_attribute_change(pessoa {:x}, atributo {}) original={} rust={} {:x?} x {:x?}", p.addr(), attribute as u8 as i8, r as i8, n as i8, mo.0, mr.0));
@@ -266,7 +266,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_training_progress(this: usi
     if person.is_null() || person.player().is_null() || read_i32(person.addr()) >= read_i32(G_STAFF_COUNT) {
         return o(this, person.addr(), d);
     }
-    let f = PlayerSheet(person.player().addr());
+    let f = person.player();
     let e = read_usize(this + 0x651d) + 6 * read_i32(f.addr()) as usize;
     let regions = [(f.addr() + player_sheet::GOALKEEPER, 0x33), (e, 6)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(this, person.addr(), d), || apply_training_progress(this, person.addr(), d));

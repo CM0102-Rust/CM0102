@@ -250,7 +250,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_tournament(this: usize, host:
 pub(crate) unsafe extern "thiscall" fn compare_find_human_club_open_invitation(this: usize) -> usize {
     let this = Friendly(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_FIND_HUMAN_CLUB_OPEN_INVITATION);
-    let list = Llist(this.friendly_match_list().addr());
+    let list = this.friendly_match_list();
     let reg = if !list.is_null() { vec![(list.addr() + llist::CURSOR, 4)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr()), || find_human_club_open_invitation(this.addr()));
     SCOREBOARD.record(igual && r == n, || format!("find_human_club_open_invitation original={:#x} {:x?} rust={:#x} {:x?}", r, mo, n, mr));
@@ -275,7 +275,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_friendly_reply(this: usiz
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PROCESS_FRIENDLY_REPLY);
     LAST_FRIENDLY_REPLY = m;
     let a = Club(if m != 0 { read_usize(m + friendly_match::REQUESTING_CLUB) } else { 0 });
-    let other = Club(if m != 0 { other_friendly_club(m) } else { 0 });
+    let other = Club(if m != 0 { (other_friendly_club(m)).addr() } else { 0 });
     if a.is_null() || (!other.is_null() && (a.nation().addr() == 0 || other.nation().addr() == 0)) {
         return o(this.addr(), m, force); // simplification: with no requester or no nation, original only
     }
@@ -312,7 +312,7 @@ pub(crate) unsafe extern "thiscall" fn compare_send_friendly_request(this: usize
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEND_FRIENDLY_REQUEST);
     let other = other_friendly_club(m);
     let before = list_len(this.request_reply_list());
-    let s = if other != 0 && read_u8(m + friendly_match::STATUS) == 1 && club_has_human_manager(other) { 2 } else { read_u8(m + friendly_match::STATUS) };
+    let s = if !other.is_null() && read_u8(m + friendly_match::STATUS) == 1 && club_has_human_manager(other.addr()) { 2 } else { read_u8(m + friendly_match::STATUS) };
     LAST_FRIENDLY_REPLY = 0;
     o(this.addr(), m);
     let l = this.request_reply_list();
@@ -714,7 +714,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_club_from_ai_plans(amistos
     if array != 0 && n > 0 {
         regions.push((array, n as usize * 0x14));
     }
-    let list = Llist(amistosos.friendly_match_list().addr());
+    let list = amistosos.friendly_match_list();
     if !list.is_null() {
         // the cursor and the +0xc pointer of each friendly in the list (traversed here before; the two
         // rotinas reiniciam o cursor)

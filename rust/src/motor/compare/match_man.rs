@@ -159,7 +159,7 @@ pub(crate) unsafe extern "C" fn compare_pick(
 pub(crate) unsafe extern "thiscall" fn compare_stance(c: usize) -> u8 {
     let c = MatchManager(c);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_STANCE);
-    let m = Engine(c.engine().addr());
+    let m = c.engine();
     // the active ones (engine+4/+5, 0x6cbbb0), the factor of both sides, the dates (0x54cdb0) and the pointer of the
     // table that the league search (0x4a4850) sorts
     let reg = [(m.addr() + 4, 2), (m.addr() + engine::STANCE_FACTOR, 8), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1), (G_COMP_STATS_SORT_CONTEXT, 4)];

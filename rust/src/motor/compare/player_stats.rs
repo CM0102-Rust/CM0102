@@ -343,8 +343,8 @@ pub(crate) unsafe extern "thiscall" fn compare_player_stats_record_match(this: u
             }
             regions.push((read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add(read_usize(e + lineup_row::PLAYER_ID).wrapping_mul(0x27)) + 0x20, 7));
             let ct = contract_of_staff(pessoa);
-            if ct != 0 {
-                regions.push((ct + 0x3b, 2));
+            if !ct.is_null() {
+                regions.push((ct.addr() + 0x3b, 2));
             }
         }
     }

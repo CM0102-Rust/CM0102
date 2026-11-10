@@ -3,8 +3,8 @@ use super::*;
 /// Club record i in the club table (0x245 bytes each).
 ///
 /// [pt] O registro do clube `i` (0x245 bytes em [0xae23b4]; a original calcula base + i + 580·i).
-pub(crate) unsafe fn fix_man_club_by_index(i: usize) -> usize {
-    read_usize(G_CLUB_TABLE).wrapping_add(i).wrapping_add(i.wrapping_mul(0x244))
+pub(crate) unsafe fn fix_man_club_by_index(i: usize) -> Club {
+    Club(read_usize(G_CLUB_TABLE).wrapping_add(i).wrapping_add(i.wrapping_mul(0x244)))
 }
 
 /// True if the club has a human manager (`exe::human_manager_is_human_club` with 1,1,0,0).
@@ -236,12 +236,12 @@ pub(crate) unsafe extern "thiscall" fn load_fixtures(this: usize) {
         if a as u32 == u32::MAX {
             fatal_error_at(0x9cc208, 0x74b);
         }
-        j.set_home_club(Club(fix_man_club_by_index(a)));
+        j.set_home_club(fix_man_club_by_index(a));
         let b = j.away_club_id();
         if b as u32 == u32::MAX {
             fatal_error_at(0x9cc208, 0x751);
         }
-        j.set_away_club(Club(fix_man_club_by_index(b)));
+        j.set_away_club(fix_man_club_by_index(b));
         let c = read_usize(j.addr());
         if c as u32 == u32::MAX {
             fatal_error_at(0x9cc208, 0x758);
@@ -433,7 +433,7 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
         return;
     }
     if flag == 0 {
-        let comp = Competition(game.competition().addr());
+        let comp = game.competition();
         let nc = if !comp.is_null() { comp.nation() } else { Nation(0) };
         let e_da = |g: usize| !nc.is_null() && read_i32(nc.addr()) == read_i32(g);
         if same(day_of_year(0x19, 0xb, year())) && !e_da(KEY_NATION_JAPAN) {
@@ -471,8 +471,8 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
                     let mut x = exe::llist_get_next(l);
                     while x != 0 {
                         let c1 = Club(read_usize(x + 0x1c));
-                        let h = Club(game.home_club().addr());
-                        let a = Club(game.away_club().addr());
+                        let h = game.home_club();
+                        let a = game.away_club();
                         if c1.is_null() || h.is_null() || a.is_null() {
                             // the box (line 0xcc8) and the end of the game: the original
                             return original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32, usize, usize, u32, usize, u32)>(IDX_COLLECT_DAY_CLASHES)(this, game.addr(), grav, list, nations, n, data, desloc);
@@ -603,12 +603,12 @@ pub(crate) unsafe extern "thiscall" fn find_fixture_clashes(this: usize, game: u
     let key = exe::comp_active_key_nation_of_fixture(game.competition(), game) as i8;
     a[7] = key as u8;
     let mut n: usize = 8;
-    let home = Club(game.home_club().addr());
+    let home = game.home_club();
     if !home.is_null() && home.division().addr() != 0 {
         a[8] = exe::comp_active_key_nation_of_fixture(home.division().addr(), 0);
         n = 9;
     }
-    let away = Club(game.away_club().addr());
+    let away = game.away_club();
     if !away.is_null() && away.division().addr() != 0 {
         a[n] = exe::comp_active_key_nation_of_fixture(away.division().addr(), 0);
         n += 1;
@@ -1621,7 +1621,7 @@ pub(crate) unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, ga
     let mut f2 = [0u8; 0x4f];
     for k in 0..2 {
         let club = Club(read_usize(game.addr() + if k == 0 { 0x1c } else { 0x20 }));
-        let nation = Nation(club.nation().addr());
+        let nation = club.nation();
         if nation.is_null() || nation.league_selected() == 0 {
             continue;
         }
@@ -2480,13 +2480,13 @@ pub(crate) unsafe extern "thiscall" fn add_away_trip_illness_risk(_this: usize, 
     if nation.state_of_development() != 3 { // cps13: só o terceiro mundo
         return;
     }
-    let home = Club(f.home_club().addr());
+    let home = f.home_club();
     if !home.is_null() && home.nation() != nation {
         crate::comparison::branch("cps_13 home side illness");
         // the original pushes the year in the club’s eax and the day in the nation’s ecx (high halves of the pointers)
         add_illness_risk_before_match(f, f.home_club_id(), read_usize(read_usize(f.stadium() + 0x38) + 0x1f), nation.addr() as u32, home.addr() as u32);
     }
-    let away = Club(f.away_club().addr());
+    let away = f.away_club();
     if !away.is_null() && away.nation().addr() != read_usize(read_usize(f.stadium() + 0x38) + 0x1f) {
         crate::comparison::branch("cps_13 away side illness");
         // the year in the stadium’s ecx and the day in the city’s edx

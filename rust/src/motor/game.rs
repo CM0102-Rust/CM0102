@@ -158,19 +158,19 @@ pub(crate) unsafe fn game_get_contract_and_store(p: usize) -> usize {
 /// Club of a contract (by id at +4), or 0.
 ///
 /// [pt] O clube do contrato (pelo id em +4), ou 0 sem contrato.
-pub(crate) unsafe fn game_club_of_contract(c: usize) -> usize {
+pub(crate) unsafe fn game_club_of_contract(c: usize) -> Club {
     if c == 0 {
-        0
+        Club(0)
     } else {
-        club_record(read_usize(c + 4))
+        Club(club_record(read_usize(c + 4)))
     }
 }
 
 /// CONTRACT_MANAGER get_contract_for_club (`exe::contract_manager_get_contract_for_club`).
 ///
 /// [pt] O vínculo da pessoa com o clube (0x4cf5f0).
-pub(crate) unsafe fn game_contract_for_club(p: usize, club: Club) -> usize {
-    exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club)
+pub(crate) unsafe fn game_contract_for_club(p: usize, club: Club) -> Contract {
+    Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club))
 }
 
 /// staff_is_disliked_by (`exe::staff_is_disliked_by`): does `pessoa` dislike `alvo`.
@@ -261,7 +261,7 @@ pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
         if is_disliked_by(b, a) != 0 {
             exe::staff_remove_disliked_staff(a, b);
             let c = game_get_contract_and_store(a.addr());
-            if c == 0 || game_club_of_contract(c) == 0 {
+            if c == 0 || game_club_of_contract(c) == Club(0) {
                 continue;
             }
             let ca = game_club_of_contract(game_get_contract_and_store(a.addr()));
@@ -269,8 +269,8 @@ pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
             if ca != cb {
                 continue;
             }
-            let k = game_contract_for_club(a.addr(), Club(game_club_of_contract(game_get_contract_and_store(a.addr()))));
-            if k == 0 || read_usize(k + 0x45) & 0x800 == 0 {
+            let k = game_contract_for_club(a.addr(), Club((game_club_of_contract(game_get_contract_and_store(a.addr()))).addr()));
+            if k.is_null() || read_usize(k.addr() + 0x45) & 0x800 == 0 {
                 continue;
             }
             exe::news_post_feud_settled(a, b);
@@ -311,13 +311,13 @@ pub(crate) unsafe fn player_vs_manager_check(p: Staff) {
     if c == 0 {
         return;
     }
-    let club = Club(game_club_of_contract(c));
+    let club = Club((game_club_of_contract(c)).addr());
     if club.is_null() {
         return;
     }
     // original defect, reproduced: the contract of squad slot 10, not the player's own (docs/DEFEITOS_DO_ORIGINAL.md)
     let k = game_contract_for_club(club.squad(10), club);
-    if k == 0 {
+    if k.is_null() {
         return;
     }
     if friendly_random((p.professionalism() as i32) + 5) != 0 && friendly_random((p.temperament() as i32) + 5) != 0 && friendly_random((p.pressure() as i32) + 5) != 0 {
@@ -331,7 +331,7 @@ pub(crate) unsafe fn player_vs_manager_check(p: Staff) {
     if friendly_random((p.pressure() as i32)) == 0 {
         e -= 5;
     }
-    if read_usize(k + 0x45) != 0 || friendly_random(0x64) == 0 {
+    if read_usize(k.addr() + 0x45) != 0 || friendly_random(0x64) == 0 {
         if friendly_random((p.professionalism() as i32)) == 0 {
             e -= 0xf;
         }
@@ -349,7 +349,7 @@ pub(crate) unsafe fn player_vs_manager_check(p: Staff) {
     if p.staff_preferences() == 0 {
         return;
     }
-    dressing_room_friction(p, club, k);
+    dressing_room_friction(p, club, k.addr());
 }
 
 // simplification: rolls and touches the preferences (0x547a10, 0x547af0, 0x547c10, 0x547c50), quarrel and complaint: original only;
@@ -370,13 +370,13 @@ pub(crate) unsafe extern "C" fn game_check_club_dressing_room_unrest(club: usize
             continue;
         }
         let k = game_contract_for_club(p.addr(), club);
-        if k == 0 {
+        if k.is_null() {
             continue;
         }
         if p.staff_preferences() == 0 {
             continue;
         }
-        dressing_room_friction(p, club, k);
+        dressing_room_friction(p, club, k.addr());
     }
 }
 
@@ -422,11 +422,11 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
                     continue;
                 }
                 let c = game_contract_for_club(p, Club(club));
-                if c == 0 {
+                if c.is_null() {
                     continue;
                 }
                 let l = read_i8_as_i32(read_usize(p + staff::PLAYER) + 0x2f);
-                soma = soma.wrapping_add(read_i8_as_i32(c + 0x44) * l);
+                soma = soma.wrapping_add(read_i8_as_i32(c.addr() + 0x44) * l);
                 lideranca += l;
                 q += 1;
             }
@@ -442,7 +442,7 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
                     continue;
                 }
                 let c = game_contract_for_club(p, Club(club));
-                let m = if c == 0 { 0 } else { read_i8_as_i32(c + 0x44) };
+                let m = if c.is_null() { 0 } else { read_i8_as_i32(c.addr() + 0x44) };
                 let l = read_i8_as_i32(read_usize(p + staff::PLAYER) + 0x2f);
                 crate::comparison::branch("cps_5 drawn morale");
                 let r1 = friendly_random(soma.wrapping_mul(2) / (l + lideranca));
@@ -537,7 +537,7 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
         if exe::injury_get_player_injury_status(read_usize(G_INJURY), p) == 2 {
             continue;
         }
-        let jog = PlayerSheet(p.player().addr());
+        let jog = p.player();
         let cl = (p.professionalism() as u8);
         let dl = (jog.work_rate() as u8);
         let mut bl = (jog.leadership() as u8).wrapping_add((p.age() as u8)).wrapping_add(cl).wrapping_add(dl);
