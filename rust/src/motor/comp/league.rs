@@ -109,7 +109,7 @@ pub(crate) unsafe fn comment_standing_with(this: Engine, side: u32, call: AddEve
             let mut sum = 0.0f64;
             let mut n = 0i8;
             for k in 0..20usize {
-                let j = MatchPlayer(side_player_slot(this.addr(), bl, k));
+                let j = this.player(bl, k);
                 if k <= 10 || (j.minute_on() as u8) != 0xff {
                     sum += j.match_grade() as f64;
                     n = n.wrapping_add(1);

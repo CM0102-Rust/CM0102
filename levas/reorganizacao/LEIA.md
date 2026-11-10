@@ -28,6 +28,19 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 16: as partes internas do motor (leitor de fora, rodada 10, item 5)
+
+O jogador em campo e a casa da grade ganham acesso com nome. `Engine::player(lado, k)` devolve o `MatchPlayer` k (0..20)
+do lado (motor + `engine::PLAYERS` + 8920 × lado + 0x1be × k) e substitui os ~200 cálculos à mão
+(`(m as isize + 0x4796 + 0x1be * (k + 20 * lado)) as usize`, `side_player_slot`, `player_in_block` por dentro);
+`engine.cell(x, y)` devolve a `GridCell` (motor + `engine::GRID` + 90 × (12x + y)) e substitui `occupancy_grid_cell` e as
+fórmulas da grade (as vizinhas viram `home(±1)`). `jogador_do_motor.py` faz a troca: as formas cruas viram a chamada, o
+receptor tipado perde o `.addr()`, o `usize` cru ganha `Engine(..)`, e os casts dos argumentos vêm das mensagens do
+compilador; ~20 casos à mão. Depois, `tipar_registros.py match_player` tipou as variáveis que recebem o jogador (137 →
+51 `.addr()` sobre `player(..)`). Também viraram nomes os códigos de narração que tinham ficado (as zonas do campo,
+`event::IN_LEFT_MIDFIELD`.., e o gol na estreia). Nenhum `0x4796`/`8920`/`0x22d8`/`0x215e`/`0x21b6` fica fora de
+`fields.rs`. Prova: 7cc445c2 ×2, detector igual, comparação 0; a mutação mudada compila.
+
 ## Migração para os registros tipados, leva 15: os códigos de narração (leitor de fora, rodada 10, item 4)
 
 `aplicar_eventos.py` lê os identificadores do `Data/events_eng.cfg` do próprio jogo (`# EVENT_HAND_BALL` sobre

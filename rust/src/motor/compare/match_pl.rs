@@ -256,8 +256,8 @@ pub(crate) unsafe extern "thiscall" fn compare_move_to(this: usize, x: i8, y: i8
         return;
     }
     let engine = Engine(this.engine().addr());
-    let old = occupancy_grid_cell(engine.addr(), this.cell_x(), this.cell_y()) as usize;
-    let new = occupancy_grid_cell(engine.addr(), x, y) as usize;
+    let old = engine.cell(this.cell_x(), this.cell_y()).addr();
+    let new = engine.cell(x, y).addr();
     let mut reg = vec![(this.addr() + match_player::CELL_SLOT, 1), (this.addr() + match_player::CELL_X, 2), (old, 90), (new, 90), (engine.addr() + engine::BALL_X, 2)];
     let (l, v) = (side_of_player(this), this.cell_slot());
     let n = read_i8(old + (0x58 + l as usize));

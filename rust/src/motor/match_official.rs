@@ -266,7 +266,7 @@ pub(crate) unsafe extern "thiscall" fn look_for_offside(this: usize, side_b: i8,
         return 0;
     }
     for k in 0..20 {
-        let p = side_player_slot(engine.addr(), side_b, k);
+        let p = engine.player(side_b, k).addr();
         if read_i8(p + 0x19) < 0 || p == passador {
             continue;
         }

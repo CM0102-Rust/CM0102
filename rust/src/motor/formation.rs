@@ -200,7 +200,7 @@ pub(crate) unsafe extern "thiscall" fn set_square(this: usize, position: i8, mas
 /// 0x800 e 0x80); 0x10 +1000; 0x20 +2000.
 pub(crate) unsafe extern "thiscall" fn mark_stars(this: usize, side: i8) {
     for k in 0..20 {
-        let j = MatchPlayer(side_player_slot(this, side, k));
+        let j = Engine(this).player(side, k);
         if j.position() < 0 {
             continue;
         }

@@ -389,7 +389,7 @@ pub(crate) unsafe extern "thiscall" fn compare_posicao_um(this: usize, l: i8) ->
     let f = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> usize>(IDX_HOLD_POSITION_ONE);
     let mut regions = vec![(this.addr() + engine::GOALKEEPER, 8)];
     for k in 0..40 {
-        regions.push((this.addr() + engine::PLAYERS + 8920 * (k / 20) + (k % 20) * 0x1be + 0x19, 2));
+        regions.push((this.player((k / 20), ((k % 20)) as usize).addr() + 0x19, 2));
     }
     let (r, n, igual, _, _) = crate::comparison::side_by_side(&regions, || f(this.addr(), l), || hold_position_one(this.addr(), l));
     SCOREBOARD.record(igual && r == n, || format!("hold_position_one({}) original={:#x} rust={:#x} memoria igual={}", l, r, n, igual));

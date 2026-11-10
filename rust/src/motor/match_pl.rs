@@ -128,7 +128,7 @@ pub(crate) unsafe extern "thiscall" fn closest_to_goal(this: usize, j: usize) ->
     }
     let s = side_of_player(j);
     let other = (s == 0) as isize;
-    let home = this as isize + other + 2 * 45 * (j.cell_y() as isize + 12 * j.cell_x() as isize) + 0x21b6;
+    let home = (Engine(this).cell(j.cell_x(), j.cell_y()).addr() + grid_cell::OCCUPANT_COUNT) as isize + other;
     if *(home as *const u8) != 0 {
         return 0;
     }
@@ -137,7 +137,7 @@ pub(crate) unsafe extern "thiscall" fn closest_to_goal(this: usize, j: usize) ->
         limit = (limit as f64 + read_f64(rdata::F64_1)) as f32;
     }
     let row: i8 = if s == 0 { 0xb } else { 0 };
-    let block = |l: isize| (this as isize + 8920 * l + 0x4796) as usize;
+    let block = |l: isize| Engine(this).player(l as i8, 0).addr();
     for k in 0..20 {
         let p = block(other) + k * 0x1be;
         if read_i8(p + match_player::POSITION) >= 0 && exe::match_player_get_position(p) != 1 && !(exe::match_player_distance_to_cell(p, 4, row) > limit) {
@@ -330,7 +330,7 @@ pub(crate) unsafe extern "thiscall" fn position_place_players(this: usize, j: us
 pub(crate) unsafe extern "thiscall" fn defensive_lines(this: usize) {
     let this = Engine(this);
     let ativos = |side: usize| {
-        (0..20).map(move |k| (this.addr() + engine::PLAYERS + 8920 * side + k * 0x1be) as usize).filter(move |&p| read_i8(p + match_player::POSITION) >= 0 && exe::match_player_get_position(p) != 1)
+        (0..20).map(move |k| (this.player(side as i8, k).addr()) as usize).filter(move |&p| read_i8(p + match_player::POSITION) >= 0 && exe::match_player_get_position(p) != 1)
     };
     let greater = ativos(1).fold(6i8, |m, p| m.max(read_i8(p + match_player::CELL_Y)));
     *((this.addr() + engine::OFFSIDE_LINE) as *mut i8) = greater.wrapping_add(1);
@@ -737,7 +737,7 @@ pub(crate) unsafe extern "thiscall" fn store_extremes(this: usize) {
     for (lado_b, campo_menor, campo_maior) in [(0usize, 0xf58eusize, 0xf596usize), (1, 0xf59a, 0xf592)] {
         let (mut menor, mut maior) = (12i8, -1i8);
         for k in 0..20 {
-            let p = MatchPlayer(this.addr() + engine::PLAYERS + 8920 * lado_b + k * 0x1be);
+            let p = this.player(lado_b as i8, k);
             let pos = p.position();
             if pos < 0 || (pos <= 10 && position_table_entry(this.addr(), p.addr(), pos) == 1) {
                 continue;
@@ -809,7 +809,7 @@ pub(crate) unsafe extern "thiscall" fn side_of_move(this: usize) -> u8 {
 ///
 /// [pt] { 0x6c2fe0 } (match_eng.cpp): endereco do jogador `k` do bloco do `lado`.
 pub(crate) unsafe extern "thiscall" fn player_in_block(this: usize, side_b: i8, k: i8) -> usize {
-    (this as isize + 0x4796 + 0x1be * (side_b as isize * 20 + k as isize)) as usize
+    Engine(this).player(side_b, k as usize).addr()
 }
 
 /// Match engine: the role code of player `jogador`'s reserve position (+0x1a, 0..10) from his side's formation table
@@ -903,7 +903,7 @@ pub(crate) unsafe extern "thiscall" fn clear_move(this: usize) {
 /// [pt] { 0x6cf710 } (match_eng.cpp): soma `delta` a disposicao (0x35) de todos os ativos do lado.
 pub(crate) unsafe extern "thiscall" fn add_disposition(this: usize, side_b: i8, delta: i16) {
     for k in 0..20 {
-        let p = MatchPlayer(side_player_slot(this, side_b, k));
+        let p = Engine(this).player(side_b, k);
         if p.position() >= 0 {
             let w = (p.addr() + match_player::MATCH_RATING) as *mut i16;
             *w = (*w).wrapping_add(delta);
@@ -1321,12 +1321,21 @@ pub(crate) unsafe extern "thiscall" fn goalkeeper_save(this: usize, a: i8, b: i8
     ftol((w as i32 / 6) as f64 + v as f64 * read_f64(rdata::F64_0_5714285714) + read_f64(rdata::F64_20)) as u16
 }
 
-/// Address of grid cell (x, y) in the engine occupancy grid (90 bytes per cell from `engine::GRID`).
-///
-/// [pt] Casa (x, y) da grade de ocupacao do motor: 90 bytes por casa, a partir de 0x215e; por lado,
-/// lista de 11 ponteiros (44 bytes) e a quantidade em 0x58 + lado.
-pub(crate) fn occupancy_grid_cell(engine: usize, x: i8, y: i8) -> isize {
-    engine as isize + 0x215e + 90 * (12 * x as isize + y as isize)
+/// Bytes of one cell of the engine's occupancy grid.
+pub(crate) const GRID_CELL_SIZE: usize = 90;
+/// Cells per grid column (the grid is 9 x 12).
+pub(crate) const GRID_ROWS: usize = 12;
+
+impl Engine {
+    /// Cell (x, y) of the occupancy grid: engine + `engine::GRID` + 90 x (12 x x + y). Per side, a list of 11 match
+    /// player pointers (`grid_cell::OCCUPANTS`, side 1 at +0x2c) and the count at `grid_cell::OCCUPANT_COUNT` + side.
+    /// Negative or out-of-grid coordinates wrap like the original's signed arithmetic.
+    ///
+    /// [pt] A casa (x, y) da grade de ocupacao do motor (9 x 12 casas de 90 bytes).
+    pub(crate) fn cell(self, x: i8, y: i8) -> GridCell {
+        let i = (GRID_ROWS as isize * x as isize + y as isize) as usize;
+        GridCell((self.0 + engine::GRID).wrapping_add(i.wrapping_mul(GRID_CELL_SIZE)))
+    }
 }
 
 /// Moves the match player to grid cell (x, y): removes him from his side's list in the old cell (the last one takes his
@@ -1347,9 +1356,9 @@ pub(crate) unsafe extern "thiscall" fn move_to(this: usize, x: i8, y: i8) {
     let list = |home: isize, l: i8, i: isize| (home + 4 * (11 * l as isize + i)) as *mut usize;
     let how_many = |home: isize, l: i8| (home + 0x58 + l as isize) as *mut i8;
     let slot = (this.addr() + match_player::CELL_SLOT) as *mut i8;
-    let new = occupancy_grid_cell(engine.addr(), x, y);
+    let new = engine.cell(x, y).addr() as isize;
     if *slot > -1 {
-        let old = occupancy_grid_cell(engine.addr(), this.cell_x(), this.cell_y());
+        let old = engine.cell(this.cell_x(), this.cell_y()).addr() as isize;
         let l = side_of_player(this);
         let n = *how_many(old, l);
         if n == 0 {
@@ -3747,7 +3756,7 @@ pub(crate) unsafe fn shot_on_goal_injected(p: MatchPlayer, f_in: f32, call: &mut
     let c = |o: usize| *w(o);
     let redondo = |v: i16, d: i16| v >= d && v % d == 0;
     let mark: Option<(u32, i16)> = if p.debut() != 0 && p.goals() == 1 {
-        Some((if player_highlight(p.addr(), event::SCORES_TO_CAP_IMPRESSIVE_DEBUT) != 0 { 0x21b6 } else { 0x2010 }, c(0x3d)))
+        Some((if player_highlight(p.addr(), event::SCORES_TO_CAP_IMPRESSIVE_DEBUT) != 0 { event::SCORES_TO_CAP_IMPRESSIVE_DEBUT } else { event::SCORED_ON_HIS_DEBUT }, c(0x3d)))
     } else if c(0x3d) == 1 {
         Some((0x200f, 1))
     } else if c(0x3f) == 1 {
@@ -4040,29 +4049,29 @@ pub(crate) unsafe fn player_move_injected(p: MatchPlayer, x: i8, y: i8, code: i1
             let middle = (side == 0 && (4..=7).contains(&py)) || (side == 1 && (4..=7).contains(&py));
             let code_n: Option<u32> = if bottom {
                 if corner_own {
-                    Some(0x2160)
+                    Some(event::IN_LEFT_ATTACK)
                 } else if corner_other {
-                    Some(0x2162)
+                    Some(event::IN_RIGHT_ATTACK)
                 } else if is_in_attacked_box(side, px, py) {
                     None
                 } else {
-                    Some(0x2161)
+                    Some(event::IN_CENTRAL_ATTACK)
                 }
             } else if !middle && (side == 0 || side == 1) {
                 // behind (side 0: < 4; side 1: > 7)
                 if corner_own {
-                    Some(0x215a)
+                    Some(event::IN_LEFT_DEFENCE)
                 } else if corner_other {
-                    Some(0x215c)
+                    Some(event::IN_RIGHT_DEFENCE)
                 } else {
-                    Some(0x215b)
+                    Some(event::IN_CENTRAL_DEFENCE)
                 }
             } else if (side == 0 && px < 2) || (side == 1 && px > 6) {
-                Some(0x215d)
+                Some(event::IN_LEFT_MIDFIELD)
             } else if corner_other {
-                Some(0x215f)
+                Some(event::IN_RIGHT_MIDFIELD)
             } else if (px as i32 - 4).abs() < 2 && (py == 5 || py == 6) && random(2) != 0 {
-                Some(0x215e)
+                Some(event::IN_CENTRAL_MIDFIELD)
             } else {
                 None
             };
@@ -4170,7 +4179,7 @@ pub(crate) unsafe fn player_move_injected(p: MatchPlayer, x: i8, y: i8, code: i1
         let v = (at16 as i32 - limite_nota) as f64 + (p.technique() as f64 * p.dribbling() as f64);
         let delta = if (read_f32(rdata::F32_0) as f64) < v { 0 } else { ftol(v) as i16 };
         fixar_19c(p, (p.ball_control()).wrapping_add(delta));
-        let home = (m.addr() as isize + other as isize + 0x21b6 + ((p.cell_y() as isize) + p.cell_x() as isize * 0xc) * 0x5a) as *const u8;
+        let home = (m.cell(p.cell_x(), p.cell_y()).addr() + grid_cell::OCCUPANT_COUNT + other as usize) as *const u8;
         if *home == 0 {
             fixar_19c(p, (p.ball_control()).wrapping_add(0x32));
         }
@@ -4669,7 +4678,7 @@ pub(crate) unsafe fn grid_step_injected(m: Engine, p: MatchPlayer, ox: i8, oy: i
         call(FN_MATCH_EVENTS_ADD_EVENT, m.commentator(), [code, m.addr() as u32, a3, a4, u32::MAX]);
     };
     let side = p.side();
-    let home = |x: i8, y: i8| (m.addr() as isize + 0x215e + (y as isize + x as isize * 0xc) * 0x5a) as usize;
+    let home = |x: i8, y: i8| m.cell(x, y).addr();
     let slot = |c: usize, k: i8| (c as isize + (side as isize * 0xb + k as isize) * 4) as *mut usize;
     let count = |c: usize| (c as isize + side as isize + 0x58) as *mut i8;
     if p.cell_x() != nx || p.cell_y() != ny {
@@ -5222,7 +5231,7 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
                 l14 = l14.wrapping_add(ftol((r * k) as f64 * pw));
             }
             if distance_table_cell_yx(y0() as i32 - g.cell_y() as i32, x0() as i32 - g.cell_x() as i32) as f64 == read_f64(rdata::F64_0)
-                && read_i8(m.addr() + (0x21b6 + (y0() as isize + x0() as isize * 12) as usize * 0x5a + (side == 0) as usize)) == 1
+                && read_i8(m.cell(x0() as i8, y0() as i8).addr() + grid_cell::OCCUPANT_COUNT + (side == 0) as usize) == 1
             {
                 crate::comparison::branch("dribble one on one");
                 let r1 = random(ftol(fl(match_player::FINISHING) * read_f32(rdata::F32_10) as f64));
@@ -5477,7 +5486,7 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
             let e = random(ftol(p.moment_decisions() as f64 * read_f64(rdata::F64_30)));
             if e > random(200) {
                 // the opponents on the same square
-                let home = m.addr() + engine::GRID + (y0() as isize + x0() as isize * 12) as usize * 90;
+                let home = m.cell(x0() as i8, y0() as i8).addr();
                 let other = (side == 0) as usize;
                 let mut i = 0i8;
                 while i < *((home + other + 0x58) as *const i8) {
@@ -6451,22 +6460,22 @@ pub(crate) unsafe fn execute_pass_injected(p: MatchPlayer, x: i8, y: i8, kind_in
             let corner_other = (side == 0 && px > 6) || (side == 1 && px < 2);
             let code = if bottom {
                 if corner_own {
-                    Some(0x2160)
+                    Some(event::IN_LEFT_ATTACK)
                 } else if corner_other {
-                    Some(0x2162)
+                    Some(event::IN_RIGHT_ATTACK)
                 } else if is_in_attacked_box(side, px, py) {
                     None
                 } else {
-                    Some(0x2161)
+                    Some(event::IN_CENTRAL_ATTACK)
                 }
             } else if recuado {
                 Some(if corner_own { 0x215a } else if corner_other { 0x215c } else { 0x215b })
             } else if (side == 0 && px < 2) || (side == 1 && px > 6) {
-                Some(0x215d)
+                Some(event::IN_LEFT_MIDFIELD)
             } else if corner_other {
-                Some(0x215f)
+                Some(event::IN_RIGHT_MIDFIELD)
             } else if (px as i32 - 4).abs() < 2 && (py == 5 || py == 6) && random(2) != 0 {
-                Some(0x215e)
+                Some(event::IN_CENTRAL_MIDFIELD)
             } else {
                 None
             };
@@ -8029,7 +8038,7 @@ pub(crate) unsafe fn off_ball_move_injected(j: MatchPlayer, call: &mut dyn FnMut
         return;
     }
     if in_bottom {
-        let home = (m.addr() as isize + 0x21b6 + 90 * (12 * x as isize + y as isize)) as usize;
+        let home = m.cell(x as i8, y as i8).addr() + grid_cell::OCCUPANT_COUNT;
         let other = *((home as isize + (dir == 0) as isize) as *const u8);
         let my = *((home as isize + dir as isize) as *const u8);
         if other != 0 && my == 1 && b(0x10a) != 0 {
@@ -8806,7 +8815,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         let l = this.side();
         let (c, fl) = if l != 0 { (*((t + fixture::AWAY_CLUB) as *const usize), (read_i8(t + fixture::AWAY_SIDE_MARK) == 0) as u32) } else { (*((t + fixture::HOME_CLUB) as *const usize), (read_i8(t + fixture::HOME_SIDE_MARK) == 0) as u32) };
         let k = exe::tactics_find_captain_slot(*(G_TACTICS as *const usize), c, fl, 0) as i32;
-        (m.addr() as isize + 0x4796 + 0x1be * (k + 20 * l as i32) as isize) as usize
+        m.player(l, k as usize).addr()
     };
 
     let (mut l28, mut l18, mut l24, mut l1c, mut l14) = (0f32, 0f32, 0f32, 0f32, 0f32);
@@ -10000,7 +10009,7 @@ pub(crate) unsafe extern "thiscall" fn designated_marked(this: usize) -> usize {
     }
     let sheet = exe::formation_get_marking_target(formation, this.position());
     let other = (side == 0) as i8;
-    let target = MatchPlayer(match (0..20).map(|k| side_player_slot(engine.addr(), other, k)).find(|&q| read_i8(q + match_player::POSITION) >= 0 && *((q + match_player::STAFF) as *const usize) == sheet) {
+    let target = MatchPlayer(match (0..20).map(|k| engine.player(other, k).addr()).find(|&q| read_i8(q + match_player::POSITION) >= 0 && *((q + match_player::STAFF) as *const usize) == sheet) {
         Some(q) => q,
         None => return 0,
     });

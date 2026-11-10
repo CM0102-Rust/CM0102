@@ -1675,7 +1675,7 @@ pub(crate) unsafe fn probe_context_commentary(m: Engine, o: unsafe extern "thisc
             *(G_MEDIA as *mut usize) = if cenario == 0 { average } else { falsa.as_ptr() as usize };
             m.set_clock(if cenario == 2 { 31 * 11 } else { minute });
             for lado in 0..2u32 {
-                let notes: Vec<(usize, usize)> = (0..20).map(|k| (m.addr() + lado as usize * 0x22d8 + 0x47cb + k * 0x1be, 2)).collect();
+                let notes: Vec<(usize, usize)> = (0..20).map(|k| (m.player(lado as i8, k).addr() + match_player::MATCH_RATING, 2)).collect();
                 let guardadas = crate::comparison::MemorySnapshot::read(&notes);
                 for limit in [None, Some(0x1d4di16), Some(0x1b59), Some(8000), Some(0x1e46), Some(0x1a2b)] {
                     if let Some(v) = limit {

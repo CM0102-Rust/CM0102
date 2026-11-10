@@ -43,7 +43,7 @@ macro_rules! compare_split {
     ($nome:ident, $rust:ident, $i:expr) => {
         pub(crate) unsafe extern "thiscall" fn $nome(this: usize, l: i8, delta: i16) {
             let f = original_fn::<unsafe extern "thiscall" fn(usize, i8, i16)>($i);
-            let reg: Vec<(usize, usize)> = (0..20).map(|k| (side_player_slot(this, l, k) + 0x35, 2)).collect();
+            let reg: Vec<(usize, usize)> = (0..20).map(|k| (Engine(this).player(l, k).addr() + 0x35, 2)).collect();
             let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || f(this, l, delta), || $rust(this, l, delta));
             SCOREBOARD.record(igual, || format!("{}({}, {}) original={:x?} rust={:x?}", stringify!($rust), l, delta, mo, mr));
         }

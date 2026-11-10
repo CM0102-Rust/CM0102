@@ -262,7 +262,7 @@ pub(crate) unsafe extern "thiscall" fn fill_match_record(stats: usize, m: usize,
         if sem_renda != 0 {
             let away = (b(game() + 0x40 + t) == 0) as i32;
             let c = exe::tactics_find_captain_slot(d(G_TACTICS) as usize, d(game() + 0x1c + 4 * t) as usize, (away) as u32, (0) as u32) as i32;
-            pb(tm + match_record_team::CAPTAIN, b((m.addr() as isize + (c + t as i32 * 20) as isize * 0x1be + 0x4796) as usize));
+            pb(tm + match_record_team::CAPTAIN, b(m.player(t as i8, c as usize).addr()));
         } else {
             pb(tm + match_record_team::CAPTAIN, b(s + 0x11));
         }
@@ -289,7 +289,7 @@ pub(crate) unsafe extern "thiscall" fn fill_match_record(stats: usize, m: usize,
         pw(tm + match_record_team::SIDE_REPUTATION, w(m.addr() + 2 * t + 0x1d6));
         for k in 0..20usize {
             let x = tm + 0x8d + 0x49 * k;
-            let y = m.addr() + 0x22d8 * t + 0x47ff + 0x1be * k;
+            let y = m.player(t as i8, k).addr() + match_player::STAFF;
             let manager = || d(G_SQUAD_MANAGER) as usize;
             if uses {
                 if d(y + 4) == 0 {

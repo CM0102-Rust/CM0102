@@ -241,7 +241,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
     let more = |p: *mut u8| *p = (*p).wrapping_add(1);
     let mais16 = |p: *mut i16| *p = (*p).wrapping_add(1);
     let word = |o: usize, side: usize| *((m + o + 2 * side) as *const i16) as i32;
-    let jog = |side: usize, i: i8| (m as isize + 0x4796 + (i as isize + side as isize * 20) * 0x1be) as usize;
+    let jog = |side: usize, i: i8| Engine(m).player(side as i8, i as usize).addr();
     let add = |p: MatchPlayer, d: i16| {
         let q = (p.addr() + match_player::MATCH_RATING) as *mut i16;
         *q = (*q).wrapping_add(d);

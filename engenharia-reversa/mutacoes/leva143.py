@@ -3,7 +3,7 @@ MUTACOES = [
     ('m_dois_passos', "            nx = step_towards(nx, x);\n            ny = step_towards(ny, y);", "            ny = step_towards(ny, y);"),
     ('m_base', "            0x12 => 0x13e,\n            _ => 0x13c,", "            0x12 => 0x13c,\n            _ => 0x13c,", "movement with the ball"),
     ('m_cubo', "at -= random(c * c * c * 50);", "at -= random(c * c * c * 51);", "movement with the ball"),
-    ('m_aprox', "                } else {\n                    Some(0x2161)\n                }", "                } else {\n                    Some(0x2160)\n                }", "movement narrated approach"),
+    ('m_aprox', "                } else {\n                    Some(event::IN_CENTRAL_ATTACK)\n                }", "                } else {\n                    Some(event::IN_LEFT_ATTACK)\n                }", "movement narrated approach"),
     ('m_cresce', "let v = p.confidence() as f64 * read_f32(rdata::F32_1_049999952) as f64;", "let v = p.confidence() as f64 * read_f32(rdata::F32_1_049999952) as f64 * 1.01;", "movement grows"),
     ('m_posse', "        let q = (m.addr() as isize + side as isize + 0x8d46) as *mut u8;\n        *q = (*q).wrapping_add(5);", "        let q = (m.addr() as isize + side as isize + 0x8d46) as *mut u8;\n        *q = (*q).wrapping_add(6);", "movement passes"),
     ('m_19c', "let limite_nota = (nota as i32 + 0x32).max(0xfa);", "let limite_nota = (nota as i32 + 0x33).max(0xfa);", "movement passes"),

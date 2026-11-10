@@ -350,7 +350,7 @@ pub(crate) unsafe extern "thiscall" fn stance(c: usize) -> u8 {
         let mut sum = [0i32; 2];
         for (l, s) in sum.iter_mut().enumerate() {
             for k in 0..20 {
-                let j = MatchPlayer(m.addr() + 0x22d8 * l + 0x4796 + 0x1be * k);
+                let j = m.player(l as i8, k);
                 if j.position() >= 0 {
                     *s = s.wrapping_add(exe::match_man_judge_player_ability(u(c, match_manager::MANAGER), u(j.addr(), match_player::STAFF), clube_a, (2) as i8, (u32::MAX) as i16) as i32);
                 }
@@ -951,7 +951,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
     exe::tactics_set_playmaker(tat(), u(c, match_manager::CLUB), 0, 0, (hum) as i32 as u32);
     exe::tactics_set_playmaker(tat(), u(c, match_manager::CLUB), 1, 0, (read_i8(c + match_manager::TACTIC_SLOT) as i32) as i32 as u32);
     let m = u(c, match_manager::ENGINE);
-    let block = |k: usize| m + 0x22d8 * read_i8(c + match_manager::SIDE) as isize as usize + 0x4796 + 0x1be * k;
+    let block = |k: usize| Engine(m).player(read_i8(c + match_manager::SIDE), k).addr();
     // the running total of those who can take set pieces
     for k in 0..20 {
         let j = block(k);
@@ -1036,7 +1036,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
             let r = (exe::cm3_match_engine_find_marking_target(m, (*((j + match_player::SIDE) as *const u8) as u32) as i8, read_i8(j + match_player::POSITION)) as i8);
             if r != -1 {
                 let side = (read_i8(j + match_player::POSITION) == 0) as usize;
-                let o = m + 0x1be * (r as isize as usize).wrapping_add(20 * side) + 0x4796;
+                let o = Engine(m).player(side as i8, r as usize).addr();
                 let blk = || (u(c, match_manager::ENGINE) as isize + 0x91e2 + 0x18e3 * read_i8(j + match_player::SIDE) as isize) as usize;
                 let tbo = || exe::match_player_get_position(o);
                 let reps = || {

@@ -369,7 +369,7 @@ pub(crate) unsafe extern "thiscall" fn compare_team_strength(this: usize, l: i8)
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8)>(IDX_TEAM_STRENGTH);
     let mut reg = vec![(this + 0x1d8, 0x20), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     for k in 0..20 {
-        let p = MatchPlayer(side_player_slot(this, l, k));
+        let p = Engine(this).player(l, k);
         reg.extend([(p.addr() + match_player::MATCH_RATING, 2), (p.addr() + match_player::STAMINA, 4)]);
     }
     reg.extend(crate::rng::STATE_REGIONS);
@@ -448,7 +448,7 @@ pub(crate) unsafe extern "thiscall" fn compare_side_strength(this: usize, side: 
     let mut reg: Vec<(usize, usize)> = crate::rng::STATE_REGIONS.to_vec();
     reg.push(((this as isize + 0x1ce + 2 * l) as usize, 2));
     reg.push(((this as isize + 0xaf + l) as usize, 1));
-    reg.push((side_player_slot(this, side, 0), 20 * 0x1be));
+    reg.push((Engine(this).player(side, 0).addr(), 20 * 0x1be));
     reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, side), || crate::rng::without_counting(|| side_strength(this, side)));
     SCOREBOARD.record(igual, || format!("side_strength({}) original={:x?} rust={:x?}", side, mo, mr));
@@ -467,7 +467,7 @@ pub(crate) unsafe extern "thiscall" fn compare_intercept(this: usize, x: i8, y: 
     reg.extend([(this.addr() + engine::GRID, 9 * 12 * 90), (this.addr() + 0x8ea0, 0x20), (this.addr() + 0x4780, 0x10), (this.addr() + 0xf570, 0x44)]);
     for l in 0..2i8 {
         for k in 0..20 {
-            let j = MatchPlayer(side_player_slot(this.addr(), l, k));
+            let j = this.player(l, k);
             reg.extend([(j.addr() + match_player::BALLS_CONTESTED, 1), (j.addr() + match_player::POSITION, 1), (j.addr() + match_player::BUSY, 1), (j.addr() + match_player::ACTION, 2)]);
         }
     }
@@ -752,7 +752,7 @@ pub(crate) unsafe extern "thiscall" fn compare_opposition_challenge(m: usize, at
     reg[6] = (b as usize, if b.is_null() { 0 } else { 1 });
     for l in 0..2i8 {
         for k in 0..20 {
-            reg[7 + l as usize * 20 + k] = (side_player_slot(m, l, k) + 0x4d, 4);
+            reg[7 + l as usize * 20 + k] = (Engine(m).player(l, k).addr() + 0x4d, 4);
         }
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg[..47], || o(m, atacante, side, kind, a, b, rating, lance, risky, free), || {

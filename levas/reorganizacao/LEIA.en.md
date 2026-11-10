@@ -29,6 +29,19 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 16: the engine's sub-structures (outside reader, round 10, item 5)
+
+The match player and the grid cell get named access. `Engine::player(side, k)` returns match player k (0..20) of the
+side (engine + `engine::PLAYERS` + 8920 × side + 0x1be × k) and replaces the ~200 hand computations
+(`(m as isize + 0x4796 + 0x1be * (k + 20 * side)) as usize`, `side_player_slot`, the inside of `player_in_block`);
+`engine.cell(x, y)` returns the `GridCell` (engine + `engine::GRID` + 90 × (12x + y)) and replaces `occupancy_grid_cell`
+and the grid formulas (the neighbours become `home(±1)`). `jogador_do_motor.py` does the rewrite: raw forms become the
+call, a typed receiver loses its `.addr()`, a raw `usize` gets `Engine(..)`, and the argument casts come from the
+compiler's messages; ~20 cases by hand. Then `tipar_registros.py match_player` typed the variables that receive the
+player (137 → 51 `.addr()` on `player(..)`). The commentary codes left behind also became names (the pitch zones,
+`event::IN_LEFT_MIDFIELD`.., and the debut goal). No `0x4796`/`8920`/`0x22d8`/`0x215e`/`0x21b6` is left outside
+`fields.rs`. Proof: 7cc445c2 ×2, detector equal, comparison 0; the changed mutation compiles.
+
 ## Migration to typed records, batch 15: the commentary codes (outside reader, round 10, item 4)
 
 `aplicar_eventos.py` reads the identifiers of the game's own `Data/events_eng.cfg` (`# EVENT_HAND_BALL` above
