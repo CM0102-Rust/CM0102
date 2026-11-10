@@ -28,6 +28,15 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 17: ofertas, copas e fichas de jogador
+
+`tipar_leva.sh MÓDULO=Tipo ...` roda o padrão completo de uma leva para cada par (`tipar_registros.py MÓDULO`, `--exe`,
+`--assinaturas`, `--ajustar`, `--acessos`, depois `--propagar` e `limpar_tipos.py`). As variáveis de `Offer`, `Cup` e
+`PlayerSheet` ganharam o tipo: acessos crus a `offer` 923 → 178, a `cup` 805 → 88, a `player_sheet` 681 → 438.
+`seguir_ancoras.py` ganhou o recurso para a âncora cuja única mudança é um `.addr()` que saiu (a função passou a receber o
+tipo); 5 textos de troca de mutação foram ajustados à mão. Prova: 7cc445c2 ×2, detector igual, comparação 0; as
+mutações mudadas compilam.
+
 ## Migração para os registros tipados, leva 16: as partes internas do motor (leitor de fora, rodada 10, item 5)
 
 O jogador em campo e a casa da grade ganham acesso com nome. `Engine::player(lado, k)` devolve o `MatchPlayer` k (0..20)

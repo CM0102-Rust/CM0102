@@ -29,6 +29,15 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 17: offers, cups and player sheets
+
+`tipar_leva.sh MODULE=Type ...` runs the full pattern of a batch for each pair (`tipar_registros.py MODULE`, `--exe`,
+`--assinaturas`, `--ajustar`, `--acessos`, then `--propagar` and `limpar_tipos.py`). `Offer`, `Cup` and `PlayerSheet`
+variables got their type: raw accesses to `offer` 923 → 178, `cup` 805 → 88, `player_sheet` 681 → 438.
+`seguir_ancoras.py` gained the fallback for an anchor whose only change is a dropped `.addr()` (the function now takes
+the type); 5 mutation replacements were fixed by hand. Proof: 7cc445c2 ×2, detector equal, comparison 0; the changed
+mutations compile.
+
 ## Migration to typed records, batch 16: the engine's sub-structures (outside reader, round 10, item 5)
 
 The match player and the grid cell get named access. `Engine::player(side, k)` returns match player k (0..20) of the
