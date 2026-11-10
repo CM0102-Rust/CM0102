@@ -31,7 +31,7 @@ MUTACOES = [
     ('cpt10_duas_semanas', '*s = (*s).wrapping_add(1); // cpt10: one more week', '*s = (*s).wrapping_add(2); // mutacao: duas semanas', 'cpt_10 week'),
     ('cpt10_semana_de_6_dias', 'let rest = v % 7; // cpt10: the 7-day week', 'let rest = v % 6; // mutacao: a semana de 6 dias', 'cpt_10 week'),
     ('cpt11_sem_plano', 'exe::friendly_plan_ai_preseason_friendlies(this); // cpt11: planejar', '// mutacao: nao planeja', 'cpt_11 planned the pre-season'),
-    ('cpt11_faixa_250', 'let band = (rep / 500) as u8; // cpt11: a faixa', 'let faixa = (rep / 250) as u8; // mutacao: faixa pela metade', 'cpt_11 pre-season candidate'),
+    ('cpt11_faixa_250', 'let band = (rep / 500) as u8; // cpt11: a faixa', 'let band = (rep / 250) as u8; // mutacao: faixa pela metade', 'cpt_11 pre-season candidate'),
     ('cpt11_janela_curta', 'let mut start = end.wrapping_sub(18); // cpt11: the window start', 'let mut start = end.wrapping_sub(11); // mutacao: janela curta', 'cpt_11 window recorded'),
     ('cpt12_largura', 'let width = (n as u8).wrapping_mul(2).wrapping_add(1) as i8 as i16; // cpt12: the tour width', 'let width = (n as u8).wrapping_mul(2).wrapping_add(3) as i8 as i16; // mutacao: mais larga', 'cpt_12 tour window'),
     ('cpt12_mando_trocado', 'let m = exe::friendly_add_friendly_match(this, club, (&mut d1) as *mut [u8; 8] as usize, other, 0); // cpt12: the home club', 'let m = exe::friendly_add_friendly_match(this, other, (&mut d1) as *mut [u8; 8] as usize, club, 0); // mutacao: mando trocado', 'cpt_12 tour match scheduled'),

@@ -1054,7 +1054,7 @@ pub(crate) unsafe extern "thiscall" fn process_retirements(this: usize) {
         let (dia, ano) = (today as u16 as i16, (today >> 16) as u16);
         let (vdia, vano) = (read_i16(item + retirement_entry::RETIRE_DATE), read_i16(item + retirement_entry::RETIRE_YEAR) as u16);
         if ano > vano || (ano == vano && dia > vdia) {
-            let p = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(item) as isize * 0x6e) as usize);
+            let p = staff_at(read_i32(item) as isize).addr();
             process_due_retirement(this, item, p, &mut slot);
         } else {
             if read_u8(item + retirement_entry::ANNOUNCED) != 0 {
@@ -1068,7 +1068,7 @@ pub(crate) unsafe extern "thiscall" fn process_retirements(this: usize) {
             let id = read_i32(item);
             if *retirement_flags_byte(id) & 0x30 != 0x10 {
                 // simplification: the original pushes the reason in edx with leftover upper bytes; 0x7aa340 reads the byte
-                exe::player_regen_post_retirement_announcement_news(read_usize(G_STAFF_TABLE).wrapping_add((id as isize * 0x6e) as usize), read_u8(item + retirement_entry::REASON) as u32);
+                exe::player_regen_post_retirement_announcement_news(staff_at(id as isize).addr(), read_u8(item + retirement_entry::REASON) as u32);
             }
             let id = read_i32(item);
             write_u8(item + retirement_entry::ANNOUNCED, 1);
@@ -1192,7 +1192,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize
             let c = contract_of_uncached(p.addr());
             write_usize(G_CONTRACT_LOOKUP_RESULT, c);
             if c != 0 {
-                let club = read_usize(G_CLUB_TABLE).wrapping_add((read_i32(c + 4) as isize * 0x245) as usize);
+                let club = club_at(read_i32(c + 4) as isize).addr();
                 if club != 0 {
                     crate::comparison::branch("cqd_10 retirement insurance");
                     exe::news_post_insurance_payout(club, p, p.value() as u32);
@@ -2505,7 +2505,7 @@ pub(crate) unsafe extern "thiscall" fn pick_best_club_for_player(_this: usize, p
             }
         }
         i += 1;
-        club += 0x245;
+        club += club::SIZE;
     }
     melhor
 }

@@ -1068,8 +1068,8 @@ pub(crate) unsafe extern "thiscall" fn compare_collapse_offer(this: usize, offer
 }
 
 /// Comparer for `make_loan_offer`.
-pub(crate) unsafe extern "thiscall" fn compare_make_loan_offer(this: usize, player: usize, club: usize, end: usize, write_percent_pair: u32, a5: u32, a6: u32) -> u32 {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32) -> u32>(IDX_MAKE_LOAN_OFFER)(this, player, club, end, write_percent_pair, a5, a6)
+pub(crate) unsafe extern "thiscall" fn compare_make_loan_offer(this: usize, player: usize, club: usize, end: usize, percentage: u32, a5: u32, a6: u32) -> u32 {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32) -> u32>(IDX_MAKE_LOAN_OFFER)(this, player, club, end, percentage, a5, a6)
 }
 
 /// Comparer for `process_due_future_transfers`.

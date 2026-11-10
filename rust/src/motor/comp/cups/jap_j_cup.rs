@@ -176,7 +176,7 @@ pub(crate) const US_OPEN_CUP_ROUNDS: [JapJCupCupRound; 5] = [
 ///
 /// [pt] O clube `i` da tabela dos clubes ([0xae23b4], registros de 0x245 bytes).
 pub(crate) unsafe fn jap_j_cup_club_by_index(i: i32) -> usize {
-    read_usize(G_CLUB_TABLE).wrapping_add((i as isize * 0x245) as usize)
+    club_at(i as isize).addr()
 }
 
 /// Random 0..n-1 (`exe::utils_random`).

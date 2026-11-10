@@ -265,7 +265,7 @@ pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
             }
         }
         i += 1;
-        c += 0x245;
+        c += club::SIZE;
     }
     crate::comparison::branch("cqs_11 merconorte guests");
     exe::comp_util_sort_and_shuffle_top_clubs(mexico.clubs.as_mut_ptr() as usize, mexico.n as u32, 4); // cqs11: the 4 from Mexico

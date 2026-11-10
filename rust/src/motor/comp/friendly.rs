@@ -1877,7 +1877,7 @@ pub(crate) unsafe extern "thiscall" fn plan_ai_preseason_friendlies(this: usize)
                 write_u16(r + preseason_candidate::WINDOW_END, 0xffff);
                 n += 1;
             }
-            club += 0x245;
+            club += club::SIZE;
             i += 1;
             if i as i16 as i32 >= read_usize(G_CLUB_COUNT) as i32 {
                 break;

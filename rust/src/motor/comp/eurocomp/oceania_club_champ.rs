@@ -343,7 +343,7 @@ pub(crate) unsafe fn select_qualified_clubs(this: usize) -> u32 {
             }
         }
         i += 1;
-        c += 0x245;
+        c += club::SIZE;
     }
     crate::comparison::branch("cqt_11 oceania clubs");
     if champion == 0 {

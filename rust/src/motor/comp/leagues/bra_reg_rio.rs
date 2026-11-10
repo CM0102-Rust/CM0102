@@ -296,7 +296,7 @@ pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
     let mut i = 0i32;
     while i < n {
         let e = t + 0x76 * i as usize;
-        let c = Club(read_usize(G_CLUB_TABLE) + 0x245 * read_usize(e));
+        let c = club_at(read_usize(e) as isize);
         let pos = read_u8(e + 0x73);
         let prevista = read_u8(e + 0x72);
         let owner = c.own_stadium() != 0;

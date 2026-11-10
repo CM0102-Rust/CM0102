@@ -6917,7 +6917,7 @@ pub(crate) unsafe fn post_match_events_injected(partida: Fixture, call: &mut dyn
     let list = || read_usize(G_MATCH_DAY_PLAYER_INCIDENT_LIST);
     let noticias = || read_usize(G_MEDIA);
     let read = |p: usize| read_i32(p);
-    let person = |id: i32| (read_usize(G_STAFF_TABLE) as isize + id as isize * 0x6e) as usize;
+    let person = |id: i32| staff_at(id as isize).addr();
     let c45 = |c: usize| read_u32(c + 0x45);
     // the word +o of the club’s row in [[0xb67a44]] minus `menos`, between 1 and 10000
     let adjust = |club: usize, o: usize, minus: i16| {
@@ -6937,7 +6937,7 @@ pub(crate) unsafe fn post_match_events_injected(partida: Fixture, call: &mut dyn
             return;
         }
         k += 1;
-        let club = (read_usize(G_CLUB_TABLE) as isize + read(ev + 4) as isize * 0x245) as usize;
+        let club = club_at(read(ev + 4) as isize).addr();
         if (club != partida.home_club().addr() && club != partida.away_club().addr()) || away(club) != 0 {
             continue;
         }

@@ -151,7 +151,7 @@ pub(crate) unsafe extern "thiscall" fn reset_morale_state(this: usize, person: u
 /// +0x3b (16 bits), +0x1c..=+0x20 e +0x21, −1 em +0x10/+0x14/+0x18 e as cláusulas: +0x1c sem acesso, +0x1d multa
 /// mínima. As cópias das datas (0x417c10, sem outro efeito) viram cópias de 8 bytes.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn init_from_current_contract(this: usize, person: usize, club: usize, end: usize, write_percent_pair: u32, without_promotion: u32, multa: u32) {
+pub(crate) unsafe extern "thiscall" fn init_from_current_contract(this: usize, person: usize, club: usize, end: usize, percentage: u32, without_promotion: u32, multa: u32) {
     let this = Contract(this);
     let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
     if c.is_null() {
@@ -162,7 +162,7 @@ pub(crate) unsafe extern "thiscall" fn init_from_current_contract(this: usize, p
     write_usize(this.addr(), read_usize(person));
     this.set_unknown((0) as u32);
     this.set_club(read_usize(club));
-    let salary = ((c.wage() as usize) as i32).wrapping_mul(write_percent_pair as u8 as i8 as i32) / 100; // the salary percentage
+    let salary = ((c.wage() as usize) as i32).wrapping_mul(percentage as u8 as i8 as i32) / 100; // the salary percentage
     this.set_wage((salary as usize) as i32);
     core::ptr::write_unaligned((this.addr() + contract::DATE_STARTED) as *mut [u8; 8], core::ptr::read_unaligned(G_CURRENT_DATE as *const [u8; 8])); // hoje
     core::ptr::write_unaligned((this.addr() + contract::CONTRACT_EXPIRES) as *mut [u8; 8], core::ptr::read_unaligned(end as *const [u8; 8])); // the end of the contract

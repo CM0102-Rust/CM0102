@@ -411,7 +411,7 @@ pub(crate) unsafe fn mercosur_select_invited_clubs(this: usize) -> (i32, i32) {
     let mut k = 0i16;
     let mut i = 0i32;
     while i < clubs() {
-        let c = read_usize(G_CLUB_TABLE).wrapping_add((i as isize * 0x245) as usize);
+        let c = club_at(i as isize).addr();
         if exe::conmebolseeding_is_mercosur_invited_club(read_usize(G_CONMEBOL_SEEDING), c) != 0 {
             write_u32(read_usize(this + 0xee) + k as usize * 4, c as u32);
             k = k.wrapping_add(1);

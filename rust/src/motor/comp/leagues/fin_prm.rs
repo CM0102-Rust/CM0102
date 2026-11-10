@@ -114,7 +114,7 @@ pub(crate) unsafe extern "thiscall" fn fin_prm_end_season_for_nation(this: usize
         }
         k += 1;
         desloc += 0x167;
-        club += 0x245;
+        club += club::SIZE;
     }
 }
 
@@ -3052,9 +3052,9 @@ pub(crate) unsafe extern "thiscall" fn pay_bonuses(this: usize, value: i32) {
 /// [pt] { 0x598340 } (thiscall, ret 4, finance.cpp): `Finance::adjust_max_wage(percentual)`, pela resposta da diretoria
 /// (MANAGER_MANAGER::handle_board_request 0x6a91b0) e pela 0x6acee8: o teto salarial (+0x14) vira (percentual + 100) ×
 /// 0,01 × teto, truncado.
-pub(crate) unsafe extern "thiscall" fn adjust_max_wage(this: usize, write_percent_pair: i8) {
+pub(crate) unsafe extern "thiscall" fn adjust_max_wage(this: usize, percentage: i8) {
     let this = Finance(this);
-    let v = ftol((write_percent_pair as i32 + 100) as f64 * read_f64(rdata::F64_0_01) * this.wage_ceiling() as f64);
+    let v = ftol((percentage as i32 + 100) as f64 * read_f64(rdata::F64_0_01) * this.wage_ceiling() as f64);
     this.set_wage_ceiling(v);
 }
 

@@ -236,7 +236,7 @@ pub(crate) unsafe extern "stdcall" fn collect_conmebol_clubs(out: *mut usize) ->
                     k += 1;
                 }
             }
-            c += 0x245;
+            c += club::SIZE;
             i += 1;
             if (i as u16 as i16 as i32) >= read_u32(G_CLUB_COUNT) as i32 {
                 break;

@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn compare_fin_prm_end_season_for_nation(thi
         if read_usize(club + club::DIVISION) != 0 && !nation.is_null() && (nation.league_selected() != 0 || read_i16(club + club::REPUTATION) >= 0x1388) && (0xb63d60 + (exe::key_nation_index_of_club(club) as i8 as i32) * 72) as usize == entry {
             last = Some(k);
         }
-        club += 0x245;
+        club += club::SIZE;
     }
     o(this, entry);
     if let Some(k) = last {
@@ -388,11 +388,11 @@ pub(crate) unsafe extern "thiscall" fn compare_pay_bonuses(this: usize, value: i
 }
 
 /// Comparador: lado a lado no teto salarial (+0x14).
-pub(crate) unsafe extern "thiscall" fn compare_adjust_max_wage(this: usize, write_percent_pair: i8) {
+pub(crate) unsafe extern "thiscall" fn compare_adjust_max_wage(this: usize, percentage: i8) {
     let this = Finance(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i8)>(IDX_ADJUST_MAX_WAGE);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this.addr() + finance::WAGE_CEILING, 4)], || o(this.addr(), write_percent_pair), || adjust_max_wage(this.addr(), write_percent_pair));
-    SCOREBOARD.record(igual, || format!("adjust_max_wage(fin {:#x}, {}) original={:x?} rust={:x?}", this.addr(), write_percent_pair, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(this.addr() + finance::WAGE_CEILING, 4)], || o(this.addr(), percentage), || adjust_max_wage(this.addr(), percentage));
+    SCOREBOARD.record(igual, || format!("adjust_max_wage(fin {:#x}, {}) original={:x?} rust={:x?}", this.addr(), percentage, mo, mr));
 }
 
 /// Comparer for `get_wealth_band`.

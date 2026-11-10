@@ -37,6 +37,6 @@ MUTACOES = [
     ('cqa12_teto_de_100', '        let sum = if foul > teto { teto } else { foul }; // cqa12: the rise cap', '        let sum = if foul > 100 { 100 } else { foul }; let _ = teto; // mutacao: teto de 100', 'cqa_12 reputacao do vice'),
     ('cqa12_limiar_pela_metade', '    let target = (weight as i32).wrapping_mul(limiar); // cqa12: the reputation threshold', '    let target = (weight as i32).wrapping_mul(limiar / 2); // mutacao: o limiar pela metade', 'cqa_12 reputacao do vice'),
     ('cqa13_torcida_sem_500', '            let x = read_i16(row + 8).wrapping_add(0x1f4); // cqa13: a torcida comemora', '            let x = read_i16(row + 8).wrapping_add(0); // mutacao: a torcida nao comemora', 'cqa_13 torcida comemora'),
-    ('cqa13_elenco_forte_100', '    let limit = if rn < 0x9c4 { 0x14 } else if rn < 0x1482 { 0x19 } else if rn >= 0x1c52 { 0x20 } else { 0x1e }; // cqa13: the strong squad limit', '    let limite = 0x64 + 0 * rn as i32; // mutacao: limite de 100', 'cqa_13 strong squad'),
+    ('cqa13_elenco_forte_100', '    let limit = if rn < 0x9c4 { 0x14 } else if rn < 0x1482 { 0x19 } else if rn >= 0x1c52 { 0x20 } else { 0x1e }; // cqa13: the strong squad limit', '    let limit = 0x64 + 0 * rn as i32; // mutacao: limite de 100', 'cqa_13 strong squad'),
     ('cqa13_moral_menos_50', '                let x = read_i8_as_i32(c + 0x44) - 0x19; // cqa13: the morale of the teammate drops', '                let x = read_i8_as_i32(c + 0x44) - 0x32; // mutacao: a moral cai 50', 'cqa_13 morale drops'),
 ]

@@ -11,7 +11,7 @@ MUTACOES = [
     ('c_qualidade', "    let quality = ftol(r2.wrapping_sub(r1).wrapping_mul(factor as i32 + 1) as f64 / f as f64);\n    let g = MatchPlayer(hold_position_one(m.addr(), other as i8));", "    let quality = ftol(r2.wrapping_sub(r1).wrapping_mul(factor as i32 + 2) as f64 / f as f64);\n    let g = MatchPlayer(hold_position_one(m.addr(), other as i8));"),
     ('c_alvo', "        more(p.addr(), 0xa);\n        if kind == 1 {\n            more(p.addr(), 0xb);", "        more(p.addr(), 0xa);\n        if kind == 2 {\n            more(p.addr(), 0xb);"),
     ('c_fora', "            narrate(call, event::SHOT_JUST_WIDE + (kind as u32 - 8), p2e, p27, 0);", "            narrate(call, event::SHOT_JUST_WIDE + (kind as u32 - 7), p2e, p27, 0);", "shot on target wide"),
-    ('c_gol_atuacao', "        more(p.addr(), 0xc);\n        add(p, 0x89);", "        more(p.addr(), 0xc);\n        add(p.addr(), 0x8a);", "shot on target goal"),
+    ('c_gol_atuacao', "        more(p.addr(), 0xc);\n        add(p, 0x89);", "        more(p.addr(), 0xc);\n        add(p, 0x8a);", "shot on target goal"),
     ('c_contagens', "        for o in [0x3d, 0x3f, 0x41, 0x43, 0x45] {", "        for o in [0x3d, 0x3f, 0x41, 0x43] {", "shot on target goal"),
     ('c_hat_trick', "    if p.goals() == 3 {\n        crate::comparison::branch(\"shot on target hat-trick\");", "    if p.goals() == 4 {\n        crate::comparison::branch(\"shot on target hat-trick\");", "shot on target hat-trick"),
     ('c_marca', "    } else if c(0x45) == 1 || redondo(c(0x45), 5) {", "    } else if c(0x45) == 1 || redondo(c(0x45), 6) {", "shot on target mark"),

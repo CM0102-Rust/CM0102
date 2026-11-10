@@ -86,7 +86,7 @@ pub(crate) unsafe extern "C" fn compare_post_match_events(partida: usize) {
     let list = read_usize(G_MATCH_DAY_PLAYER_INCIDENT_LIST);
     if list != 0 {
         reg.push((list, 0xe));
-        let person = |id: i32| (read_usize(G_STAFF_TABLE) as isize + id as isize * 0x6e) as usize;
+        let person = |id: i32| staff_at(id as isize).addr();
         let mut in_the = read_usize(list + 2);
         let mut k = 0;
         while in_the != 0 && k < read_i16(list) as i32 {
@@ -96,7 +96,7 @@ pub(crate) unsafe extern "C" fn compare_post_match_events(partida: usize) {
             if ev == 0 {
                 break;
             }
-            let club = (read_usize(G_CLUB_TABLE) as isize + read_i32(ev + 4) as isize * 0x245) as usize;
+            let club = club_at(read_i32(ev + 4) as isize).addr();
             if club == partida.home_club().addr() || club == partida.away_club().addr() {
                 reg.extend(contract_flags_region(person(read_i32(ev)), club));
             }

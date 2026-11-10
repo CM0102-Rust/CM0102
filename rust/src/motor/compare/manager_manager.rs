@@ -434,7 +434,7 @@ pub(crate) unsafe extern "thiscall" fn compare_fix_missing_jobs(this: usize) {
             empty = false;
             break;
         }
-        club += 0x245;
+        club += club::SIZE;
     }
     l.set_cursor(cursor);
     if !empty {

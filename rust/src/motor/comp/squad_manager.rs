@@ -49,7 +49,7 @@ pub(crate) unsafe extern "thiscall" fn process_euro_registration(this: usize, st
         write_u16(this, read_u16(G_CURRENT_DATE_YEAR));
         let mut i = 0i32;
         while i < read_u32(G_STAFF_COUNT) as i32 {
-            let m = (read_u32(G_STAFF_TABLE) as usize + 0x6e * i as usize + 0x6d) as *mut u8;
+            let m = (staff_at(i as isize).addr() + 0x6d) as *mut u8;
             if *m != 0 {
                 *m = 0;
             }

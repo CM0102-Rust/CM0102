@@ -4615,7 +4615,7 @@ pub(crate) unsafe extern "thiscall" fn fix_missing_jobs(this: usize) {
             Some(false) => {}
         }
         i += 1;
-        club += 0x245;
+        club += club::SIZE;
     }
 }
 

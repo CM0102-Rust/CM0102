@@ -94,7 +94,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
                 }
             }
             i += 1;
-            p += 0x245;
+            p += club::SIZE;
             if i >= n() {
                 break;
             }

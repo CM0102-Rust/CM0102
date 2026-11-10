@@ -8,13 +8,13 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 
 | Medida | Quantidade |
 |---|---:|
-| deslocamentos crus | 4982 |
+| deslocamentos crus | 4980 |
 | chaves fixas cruas | 1821 |
 | chamadas por endereço | 0 |
 | cópias de acesso à memória | 0 |
 | rotinas sem cabeçalho | 0 |
 | locais/parâmetros em português | 474 |
-| linhas | 228506 |
+| linhas | 228524 |
 
 ## Por arquivo (os 40 piores, pelos deslocamentos crus)
 

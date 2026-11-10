@@ -115,7 +115,7 @@ pub(crate) unsafe fn collect_intertoto_entrants(this: Cup) -> (i32, i32) {
         if k >= this.team_count() as i32 {
             break;
         }
-        let c = read_usize(G_CLUB_TABLE).wrapping_add((i as isize * 0x245) as usize);
+        let c = club_at(i as isize).addr();
         if read_usize(c + 0x1db) == read_usize(KEY_CLUB_COMP_INTER_TOTO_CUP) {
             write_u32(v + k as usize * 4, c as u32);
             k += 1;

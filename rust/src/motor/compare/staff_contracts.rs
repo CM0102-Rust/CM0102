@@ -50,17 +50,17 @@ pub(crate) unsafe extern "thiscall" fn compare_reset_morale_state(this: usize, p
 ///
 /// [pt] Comparador: lado a lado no contrato e nos vínculos da pessoa; sem contrato atual (a caixa), só a original.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn compare_init_from_current_contract(this: usize, person: usize, club: usize, end: usize, write_percent_pair: u32, without_promotion: u32, multa: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_init_from_current_contract(this: usize, person: usize, club: usize, end: usize, percentage: u32, without_promotion: u32, multa: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(IDX_INIT_FROM_CURRENT_CONTRACT);
     if exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person) == 0 {
-        return o(this, person, club, end, write_percent_pair, without_promotion, multa);
+        return o(this, person, club, end, percentage, without_promotion, multa);
     }
     let regions = morale_reset_regions(this, read_usize(person));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions,
-        || o(this, person, club, end, write_percent_pair, without_promotion, multa),
-        || init_from_current_contract(this, person, club, end, write_percent_pair, without_promotion, multa));
+        || o(this, person, club, end, percentage, without_promotion, multa),
+        || init_from_current_contract(this, person, club, end, percentage, without_promotion, multa));
     SCOREBOARD.record(igual, || {
-        format!("init_from_current_contract(pessoa {}, write_percent_pair {}, {}, {}) {:x?} x {:x?}", read_usize(person), write_percent_pair as u8 as i8, without_promotion as u8, multa as u8, mo, mr)
+        format!("init_from_current_contract(pessoa {}, percentage {}, {}, {}) {:x?} x {:x?}", read_usize(person), percentage as u8 as i8, without_promotion as u8, multa as u8, mo, mr)
     });
 }
 

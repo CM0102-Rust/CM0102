@@ -2,5 +2,5 @@
 MUTACOES = [
     ('e_vaga', "        core::ptr::write_unaligned((loan_state_entry(id) + 4) as *mut i32, -1);", "        core::ptr::write_unaligned((loan_state_entry(id) + 4) as *mut i32, 0);"),
     ('l_alvo', "                if target == -1 {\n                    write_i32(v + shortlist_slot::OFFER_REF, -1);", "                if target == -1 {\n                    write_i32(v + shortlist_slot::OFFER_REF, 0);"),
-    ('s_empate', "        if best == 0 || injury_word_0c(c) > injury_word_0c(Staff(best)) {", "        if best == 0 || injury_word_0c(c.addr()) >= injury_word_0c(best) {"),
+    ('s_empate', "        if best == 0 || injury_word_0c(c) > injury_word_0c(Staff(best)) {", "        if best == 0 || injury_word_0c(c) >= injury_word_0c(Staff(best)) {"),
 ]

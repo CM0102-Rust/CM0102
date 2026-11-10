@@ -7093,7 +7093,7 @@ pub(crate) unsafe extern "C" fn database_trim_senior_and_b_team_squads() {
             }
         }
         i += 1;
-        club += 0x245;
+        club += club::SIZE;
     }
 }
 
@@ -7165,7 +7165,7 @@ pub(crate) unsafe extern "C" fn database_merge_b_team_staff() {
             }
         }
         i += 1;
-        club += 0x245;
+        club += club::SIZE;
     }
 }
 

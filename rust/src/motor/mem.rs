@@ -117,3 +117,21 @@ pub unsafe fn read_u64(a: usize) -> u64 {
 pub unsafe fn write_u64(a: usize, v: u64) {
     core::ptr::write_unaligned(a as *mut u64, v);
 }
+
+/// The club at index `i` of the game's club table (`G_CLUB_TABLE`, `club::SIZE` bytes each). No bounds check and
+/// 32-bit wrapping, like the original's inline arithmetic.
+///
+/// [pt] O clube no índice `i` da tabela de clubes do jogo (sem conferir limites, como a conta do original).
+#[inline(always)]
+pub unsafe fn club_at(i: isize) -> Club {
+    Club(read_usize(G_CLUB_TABLE).wrapping_add((i as usize).wrapping_mul(club::SIZE)))
+}
+
+/// The person with id `id` in the game's person table (`G_STAFF_TABLE`, `staff::SIZE` bytes each). No bounds check
+/// and 32-bit wrapping, like the original's inline arithmetic.
+///
+/// [pt] A pessoa de id `id` na tabela de pessoas do jogo (sem conferir limites, como a conta do original).
+#[inline(always)]
+pub unsafe fn staff_at(id: isize) -> Staff {
+    Staff(read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)))
+}

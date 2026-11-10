@@ -26,7 +26,7 @@ MUTACOES = [
     ('cpy8_neutro_do_comeco', '                    (read_i32(b + officials_nation_block::FIRST_REFEREE).wrapping_sub(ftol(count * -0.75)), ftol(count * 0.25)) // cpy8: the top quarter', '                    (read_i32(b + officials_nation_block::FIRST_REFEREE), ftol(count * 0.25)) // mutacao: o comeco do bloco', 'cpy_8 neutral referee'),
     ('cpy9_nota_mais_dois', '    write_i16(r + official::RATING, random_byte_plus(0x50, 1) as i8 as i16); // cpy9: a nota +0x22', '    write_i16(r + official::RATING, random_byte_plus(0x50, 2) as i8 as i16); // mutacao: +2', 'cpy_9 new referee'),
     ('cpy9_atributo_28_mais_oito', '    write_u8(r + 0x28, random_byte_plus(10, 7)); // cpy9: o atributo +0x28', '    write_u8(r + 0x28, random_byte_plus(10, 8)); // mutacao: +8', 'cpy_9 new referee'),
-    ('cpy9_sem_ordenar', '    exe::crt_qsort(read_usize(G_OFFICIAL_TABLE), (n) as u32, 0x2b, 0x79d480); // cpy9: ordenar a tabela', '    let _ = (sort, n); // mutacao: sem ordenar', 'cpy_9 sort'),
+    ('cpy9_sem_ordenar', '    exe::crt_qsort(read_usize(G_OFFICIAL_TABLE), (n) as u32, 0x2b, 0x79d480); // cpy9: ordenar a tabela', '    let _ = n; // mutacao: sem ordenar', 'cpy_9 sort'),
     ('cpy10_sem_sorteio_59', '    if v59 <= 0xf { // cpy10: o +0x59', '    if v59 <= 0x7f { // mutacao: sem sorteio pelo +0x59', 'cpy_10 thanks draw'),
     ('cpy10_todos_sorteiam', '        return; // cpy10: só o creditado', '        // mutacao: o segundo e o terceiro seguem', 'cpy_10 without credit'),
     ('cpy10_renovacao_1200', '> 0x12c { // cpy10: mais de 300 dias', '> 0x4b0 { // mutacao: mais de 1200 dias', 'cpy_10 renewal'),

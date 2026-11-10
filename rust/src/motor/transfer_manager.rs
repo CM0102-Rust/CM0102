@@ -2847,7 +2847,7 @@ pub(crate) unsafe extern "thiscall" fn pay_next_sale_percentage(this: usize, p: 
     if part < 1000 {
         return 0;
     }
-    crate::comparison::branch("cqb_6 write_percent_pair paid");
+    crate::comparison::branch("cqb_6 percentage paid");
     if !FORMER_CLUB_FEE_DRY_RUN {
         exe::transfer_manager_post_sale_percentage_news(this, e, part, o, da_oferta);
     }
@@ -2902,7 +2902,7 @@ pub(crate) unsafe fn clause_finance_regions(this: TransferManagerFields, p: usiz
 /// Vai aos técnicos do clube da cláusula e do vendedor (0x7861e0).
 pub(crate) unsafe extern "thiscall" fn post_sale_percentage_news(_this: usize, e: usize, part: i32, o: usize, of_offer: u32) {
     let o = Offer(o);
-    crate::comparison::branch("cqb_6 write_percent_pair news");
+    crate::comparison::branch("cqb_6 percentage news");
     let p = Staff((staff_records_staff_by_id(read_usize(e + sell_on_clause::PERSON_ID))).addr());
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
@@ -5391,7 +5391,7 @@ pub(crate) unsafe extern "thiscall" fn try_complete_offer(this: usize, offer: us
 pub(crate) unsafe fn settle_old_clauses(this: TransferManagerFields, person: usize, remove: usize, offer: Offer) {
     let mark = |p: usize| read_u8(this.person_flags().wrapping_add(read_usize(p).wrapping_mul(8)));
     if mark(person) & 8 != 0 {
-        crate::comparison::branch("cpw_2 write_percent_pair of the previous sale");
+        crate::comparison::branch("cpw_2 percentage of the previous sale");
         exe::transfer_manager_pay_next_sale_percentage(this, person, offer);
         exe::transfer_manager_remove_next_sale_percentage(this, remove);
     }
@@ -6218,7 +6218,7 @@ pub(crate) unsafe extern "thiscall" fn build_clause_offer_option(_this: usize, c
     // the record’s reputation (+0xb) / 500, with the sign (the original’s magic multiplication)
     let fama = || (read_u16(player.player().addr() + 0xb) as i16 as i32) / 500;
     if rep < 0xf && fama() - (rep as i32) > 2 {
-        crate::comparison::branch("cps_4 write_percent_pair of the sale");
+        crate::comparison::branch("cps_4 percentage of the sale");
         let o = *out;
         write_usize(o + offer::FEE, offer_value_times(Offer(o), 0.8)); // cps4: the percentage value
         write_u8(*out + offer::SELL_ON_PERCENT, 0x14);
@@ -7057,7 +7057,7 @@ pub(crate) unsafe extern "thiscall" fn collapse_offers_for_player(this: usize, p
 /// a ordem da busca 0x8cb0f0).
 pub(crate) unsafe extern "thiscall" fn add_next_sale_percentage(this: usize, record: usize) {
     let this = TransferManagerFields(this);
-    crate::comparison::branch("cpr_4 write_percent_pair of the next sale");
+    crate::comparison::branch("cpr_4 percentage of the next sale");
     if !grow_record_vector(this, 0x880, 4, 50, 0xd, 0x2553, 0xa8eb50) {
         return;
     }
@@ -7940,7 +7940,7 @@ pub(crate) unsafe extern "thiscall" fn collapse_offer(this: usize, offer: usize,
 /// fim, a porcentagem do salário e as duas cláusulas); acrescenta a oferta (0x8be300 com o contrato) e a oferta de
 /// contrato (0x4cc490 com a vaga +0x20 e o valor +0x24 da oferta, 0xb, 0, 1, 0). Destrói a oferta local (0x8e5710) e
 /// devolve a vaga (+0x20).
-pub(crate) unsafe extern "thiscall" fn make_loan_offer(this: usize, player: usize, club: usize, end: usize, write_percent_pair: u32, a5: u32, a6: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn make_loan_offer(this: usize, player: usize, club: usize, end: usize, percentage: u32, a5: u32, a6: u32) -> u32 {
     let field = |o: &[u8; 0x44], k: usize| u32::from_le_bytes([o[k], o[k + 1], o[k + 2], o[k + 3]]);
     let mut o = [0u8; 0x44];
     exe::new_transfer_offer((o.as_mut_ptr()) as usize);
@@ -7948,7 +7948,7 @@ pub(crate) unsafe extern "thiscall" fn make_loan_offer(this: usize, player: usiz
     let mut c = [0u8; 0x50];
     exe::new_staff_contract((c.as_mut_ptr()) as usize);
     crate::comparison::branch("cpq_8 loan offer");
-    exe::staff_contract_init_from_current_contract((c.as_mut_ptr()) as usize, player, club, (end) as u32, write_percent_pair, a5, a6); // the salary by percentage
+    exe::staff_contract_init_from_current_contract((c.as_mut_ptr()) as usize, player, club, (end) as u32, percentage, a5, a6); // the salary by percentage
     exe::transfer_manager_add_transfer_offer(this, o.as_mut_ptr(), c.as_mut_ptr());
     exe::contract_manager_add_contract_offer(read_usize(G_CONTRACT_MANAGER), c.as_mut_ptr(), (field(&o, 0x20)) as u32 as usize, (field(&o, 0x24)) as u32 as usize, 0xb, 0, 1, 0);
     let slot = field(&o, 0x20);

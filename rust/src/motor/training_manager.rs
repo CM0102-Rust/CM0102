@@ -4,7 +4,7 @@ use super::*;
 ///
 /// [pt] O registro da pessoa `id` (tabela [0xae23bc], 0x6e bytes).
 pub(crate) unsafe fn training_manager_staff_by_id(id: i32) -> usize {
-    read_usize(G_STAFF_TABLE).wrapping_add((id as isize * 0x6e) as usize)
+    staff_at(id as isize).addr()
 }
 
 /// Resets a 9-byte coaching slot to empty (id -1, ratings 0).
@@ -267,7 +267,7 @@ pub(crate) unsafe fn training_manager_club_of_contract(c: usize) -> usize {
     if c == 0 {
         0
     } else {
-        read_usize(G_CLUB_TABLE).wrapping_add((read_i32(c + 4) as isize * 0x245) as usize)
+        club_at(read_i32(c + 4) as isize).addr()
     }
 }
 
