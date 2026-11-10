@@ -53,9 +53,9 @@ pub(crate) unsafe extern "thiscall" fn compare_update_league_position_records(th
     let ro = o(this, liga0.addr(), always);
     let mo = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
-    POSITION_RECORDS_DRY_RUN = true;
+    POSITION_RECORDS_DRY_RUN.store(true, Relaxed);
     let rr = crate::rng::pause_trace(|| update_league_position_records(this, liga0.addr(), always));
-    POSITION_RECORDS_DRY_RUN = false;
+    POSITION_RECORDS_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     mo.write_back();
     SCOREBOARD.record(ro == rr && mo == mr, || format!("update_league_position_records({:x}, {:x}, {}) original={} {:x?} rust={} {:x?}", this, liga0.addr(), always, ro, mo, rr, mr));
@@ -70,9 +70,9 @@ pub(crate) unsafe extern "thiscall" fn compare_send_record_news(this: usize) -> 
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SEND_RECORD_NEWS);
     let regions = [(this + club_records_fields::NEWS_QUEUE, 0xc)];
     let before = crate::comparison::MemorySnapshot::read(&regions);
-    RECORD_NEWS_DRY_RUN = true;
+    RECORD_NEWS_DRY_RUN.store(true, Relaxed);
     let rr = crate::rng::pause_trace(|| send_record_news(this));
-    RECORD_NEWS_DRY_RUN = false;
+    RECORD_NEWS_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
     let ro = o(this);

@@ -272,7 +272,7 @@ pub(crate) unsafe extern "thiscall" fn load_fixtures(this: usize) {
 ///
 /// [pt] O ensaio do comparador dos conflitos de um dia: a cópia não acrescenta (0x68d0d0 aloca o nó e a cópia do jogo) e
 /// guarda os jogos que acrescentaria, na ordem.
-pub(crate) static mut DAY_CLASHES_DRY_RUN: bool = false;
+pub(crate) static DAY_CLASHES_DRY_RUN: AtomicBool = AtomicBool::new(false);
 pub(crate) static mut DAY_CLASHES_APPENDED: Vec<usize> = Vec::new();
 
 /// Appends a copy of the 0x4f-byte fixture to the list (0x68d0d0); in dry-run mode only records it.
@@ -280,7 +280,7 @@ pub(crate) static mut DAY_CLASHES_APPENDED: Vec<usize> = Vec::new();
 /// [pt] Acrescenta a cópia dos 0x4f bytes do jogo no fim da lista (0x68d0d0: ecx = lista; push 0x4f; push jogo -> thiscall,
 /// ret 8); no ensaio, só guarda o jogo.
 pub(crate) unsafe fn append_fixture(list: usize, game: usize) {
-    if DAY_CLASHES_DRY_RUN {
+    if DAY_CLASHES_DRY_RUN.load(Relaxed) {
         DAY_CLASHES_APPENDED.push(game);
         return;
     }
@@ -1329,7 +1329,7 @@ pub(crate) unsafe extern "C" fn fix_man_save_fixture_leg_checks() {
 /// Rehearsal mode of `resolve_same_day_clash` (the comparer). The copy stops at the decision, before touching the calendar.
 ///
 /// [pt] Modo de ensaio da 0x5ae380 (o comparador): a cópia para na decisão, antes de mexer no calendário.
-pub(crate) static mut SAME_DAY_CLASH_DRY_RUN: bool = false;
+pub(crate) static SAME_DAY_CLASH_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// Resolves a new fixture falling on the same day as another: the one with higher priority stays and the other is moved
 /// to a new date, with the rescheduling news.
@@ -1371,7 +1371,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
     write_usize(conflitos + 0xa, read_usize(conflitos + 2));
     let other = exe::llist_get_next(conflitos);
     if game == 0 || other == 0 {
-        if !SAME_DAY_CLASH_DRY_RUN {
+        if !SAME_DAY_CLASH_DRY_RUN.load(Relaxed) {
             show_error_at(0x9cc208, 0xde6); // "E:\dev\CM3\cm3 00-01\cm3\code\comp\fix_man.cpp"
         }
         return 1;
@@ -1408,7 +1408,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
         crate::comparison::branch("cqb_13 new one wins");
     }
     let sai_old = new_wins && (v.home_goals() as u8) == 0xff; // cqb13: the one in the list not yet played
-    if SAME_DAY_CLASH_DRY_RUN {
+    if SAME_DAY_CLASH_DRY_RUN.load(Relaxed) {
         return 1;
     }
     // the calendar ones: ecx = this; push the match (0x5abc30, 0x5ab510; ret 4), push 0; push the match (0x5aa680; ret 8),
@@ -1729,9 +1729,9 @@ pub(crate) unsafe extern "thiscall" fn reschedule_club_fixtures_near_date(this: 
 /// not create the queue).
 ///
 /// [pt] O ensaio da notícia: a cópia monta a notícia nova aqui em vez de pô-la na fila (e não cria a fila).
-pub(crate) static mut FIXTURE_MOVED_NEWS_DRY_RUN: bool = false;
+pub(crate) static FIXTURE_MOVED_NEWS_DRY_RUN: AtomicBool = AtomicBool::new(false);
 pub(crate) static mut FIXTURE_MOVED_NEWS_BUILT: [u8; 0xe0] = [0; 0xe0];
-pub(crate) static mut FIXTURE_MOVED_NEWS_WAS_BUILT: bool = false;
+pub(crate) static FIXTURE_MOVED_NEWS_WAS_BUILT: AtomicBool = AtomicBool::new(false);
 
 /// Data slot k of a news item (NEWSITEM get_slot).
 pub(crate) unsafe fn news_slot(n: usize, k: u32) -> u32 {
@@ -1777,7 +1777,7 @@ pub(crate) unsafe fn find_queued_fixture_news(l: usize, f: usize) -> usize {
 /// campos dela nos dados 7 a 0xd) ou, sem causa, −1 e a data velha (dados 0xc e 0xd); entra na fila (0x68d0d0, 0xdf).
 pub(crate) unsafe extern "thiscall" fn queue_fixture_moved_news(this: usize, f: usize, causa: usize, old: usize) {
     let f = Fixture(f);
-    if read_usize(this + fixture_manager::MOVED_NEWS_QUEUE) == 0 && !FIXTURE_MOVED_NEWS_DRY_RUN {
+    if read_usize(this + fixture_manager::MOVED_NEWS_QUEUE) == 0 && !FIXTURE_MOVED_NEWS_DRY_RUN.load(Relaxed) {
         let m = exe::crt_operator_new(0xe);
         if m != 0 {
             list_init(m);
@@ -1817,9 +1817,9 @@ pub(crate) unsafe extern "thiscall" fn queue_fixture_moved_news(this: usize, f: 
         exe::newsitem_set_slot(nt, 0xc, read_i16_as_i32(old) as u32);
         exe::newsitem_set_slot(nt, 0xd, read_u16(old + 2) as u32);
     }
-    if FIXTURE_MOVED_NEWS_DRY_RUN {
+    if FIXTURE_MOVED_NEWS_DRY_RUN.load(Relaxed) {
         core::ptr::copy_nonoverlapping(nt as *const u8, core::ptr::addr_of_mut!(FIXTURE_MOVED_NEWS_BUILT) as *mut u8, 0xe0);
-        FIXTURE_MOVED_NEWS_WAS_BUILT = true;
+        FIXTURE_MOVED_NEWS_WAS_BUILT.store(true, Relaxed);
         return;
     }
     exe::llist_add_tail(read_usize(this + fixture_manager::MOVED_NEWS_QUEUE), nt, 0xdf);

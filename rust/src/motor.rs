@@ -31,6 +31,23 @@
 //! - Names: hooked routines carry the original method name (docs/NOMES.csv), helpers an English name
 //!   (docs/NOMES_AUXILIARES.csv); both files keep the old Portuguese name the batch documentation uses.
 //!
+//! # Safety
+//! One contract covers every `unsafe fn` here, instead of a `# Safety` section repeated on each of them:
+//! - it runs inside `cm0102.exe` 3.9.68 (or the 1080 copy), after the DLL checked the routine's bytes (`signatures.rs`),
+//!   so every `G_*`, `KEY_*`, `FN_*` address and every record layout (`records.rs`, `fields.rs`) is the one it names;
+//! - it runs on the game's own thread, as the original did, never concurrently: the game is single-threaded, which is
+//!   also why the engine's flags are atomics with `Relaxed` (they only exist so the access needs no `unsafe`);
+//! - a record argument (`Club`, `Staff`...) or a `usize` record address is a live record of the game, as the original
+//!   routine would receive it; the routine may read and write it exactly as the original does.
+//!
+//! What is still `static mut` (23 in the engine) is borrowed (`addr_of!`: the comparers' tapes, the records a dry run
+//! builds) or read by the original routine table (`ORIGINAIS`); the rest of the crate's `static mut` is the
+//! infrastructure the asm reads (`detours.rs`, `stack_probe.rs`, `allocator.rs`).
+//!
+//! [pt] Segurança: um contrato só vale para todas as `unsafe fn` daqui (dentro do exe 3.9.68 conferido, na thread do
+//! jogo, que é uma só, com registros vivos do jogo como argumento). As flags do motor são atômicos com `Relaxed`; o que
+//! ainda é `static mut` é emprestado (`addr_of!`) ou lido pelo asm.
+//!
 //! [pt] As rotinas do jogo reescritas em Rust e como elas substituem as originais. A DLL desvia o começo de cada rotina
 //! original para a cópia em Rust (`detours.rs`), depois de conferir os primeiros bytes (`PROLOGOS`) e o hash da rotina
 //! inteira (`signatures.rs`). Cada rotina desviada é uma linha da tabela `routines!` (endereço e primeiros bytes, cópia, comparador; o log usa o nome da função Rust); `original_fn::<F>(IDX_<NOME>)` chama a original
@@ -39,6 +56,7 @@
 use crate::comparison::{Scoreboard, TestRng};
 use crate::detours::{self, Prologue};
 use crate::registro::linha;
+pub(crate) use core::sync::atomic::{AtomicBool, AtomicI32, AtomicU32, AtomicU8, AtomicUsize, Ordering::Relaxed};
 
 /// Builds the tables of the hooked routines from one line per routine (the four used to be separate arrays aligned
 /// only by position): `Prologue { .. } => rust_fn, comparer_fn;`. Generates PROLOGOS (the address and the
@@ -3673,7 +3691,7 @@ unsafe extern "C" fn compare_won_the_match(jogo: usize, clube: u32) -> u8 {
 // Port of 0x6d6f70 (commentary): in comparison, records the calls made by the original of a
 // ported routine (with the RNG state afterwards); the Rust copy checks the sequence and does not run
 // the commentary again (avoids duplicate events). Outside recording, it just passes through.
-static mut PORT_6D6F70: usize = 0;
+static PORT_6D6F70: AtomicUsize = AtomicUsize::new(0);
 static RECORDING_6D6F70: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 /// In the comparison of `exe::match_player_try_block_shot` the tape keeps the seventh argument of the narration in the high part of the code.
 ///
@@ -3687,7 +3705,7 @@ unsafe extern "thiscall" fn port_6d6f70(this: usize, a1: u32, a2: u32, a3: u32, 
     use std::sync::atomic::{AtomicU32, Ordering::Relaxed};
     // 0x6d6f70 may call itself (one comment triggers another): only the outer call is recorded
     static DEPTH: AtomicU32 = AtomicU32::new(0);
-    let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) = core::mem::transmute(PORT_6D6F70);
+    let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32) = core::mem::transmute(PORT_6D6F70.load(Relaxed));
     // inside a tape recording (the last two arguments are -1 and 0 in the ported callers)
     if is_recording() {
         let codigo = if RECORD_A7.load(Relaxed) { a1 & 0xffff | (a7 & 0xff) << 16 } else { a1 };
@@ -3876,31 +3894,31 @@ pub unsafe fn instalar(comparando: bool) {
             }
         }
         if let Some(t) = detours::hook("gate_6f5c30 (save)", &PROLOGUE_6F5C30, respond_hook as *const () as usize) {
-            MATCH_PLAYER_RESPOND_TRAMPOLINE = t;
+            MATCH_PLAYER_RESPOND_TRAMPOLINE.store(t, Relaxed);
         }
         if let Some(t) = detours::hook("gate_6d6f70 (save)", &PROLOGUE_6D6F70, port_6d6f70 as *const () as usize) {
-            PORT_6D6F70 = t;
+            PORT_6D6F70.store(t, Relaxed);
         }
         if let Some(t) = detours::hook("gate_6eaea0 (save)", &PROLOGUE_6EAEA0, init_player_hook as *const () as usize) {
-            INIT_MATCH_PLAYER_TRAMPOLINE = t;
+            INIT_MATCH_PLAYER_TRAMPOLINE.store(t, Relaxed);
         }
         if let Some(t) = detours::hook("gate_716630 (save)", &PROLOGUE_716630, gate_start_fight as *const () as usize) {
-            START_FIGHT_TRAMPOLINE = t;
+            START_FIGHT_TRAMPOLINE.store(t, Relaxed);
         }
         if let Some(t) = detours::hook("gate_716e10 (save)", &PROLOGUE_716E10, gate_react_to_foul_decision as *const () as usize) {
-            REACT_TO_FOUL_DECISION_TRAMPOLINE = t;
+            REACT_TO_FOUL_DECISION_TRAMPOLINE.store(t, Relaxed);
         }
         if let Some(t) = detours::hook("gate_716c90 (save)", &PROLOGUE_716C90, gate_handle_suspected_dive as *const () as usize) {
-            HANDLE_SUSPECTED_DIVE_TRAMPOLINE = t;
+            HANDLE_SUSPECTED_DIVE_TRAMPOLINE.store(t, Relaxed);
         }
         if let Some(t) = detours::hook("gate_70dfd0 (save)", &PROLOGUE_70DFD0, gate_try_block_shot as *const () as usize) {
-            TRY_BLOCK_SHOT_TRAMPOLINE = t;
+            TRY_BLOCK_SHOT_TRAMPOLINE.store(t, Relaxed);
         }
         if let Some(t) = detours::hook("gate_68d0d0 (save)", &PROLOGUE_68D0D0, gate_llist_add_tail as *const () as usize) {
-            LLIST_ADD_TAIL_TRAMPOLINE = t;
+            LLIST_ADD_TAIL_TRAMPOLINE.store(t, Relaxed);
         }
         if let Some(t) = detours::hook("gate_62ed70 (save)", &PROLOGUE_62ED70, gate_get_player_injury as *const () as usize) {
-            GET_PLAYER_INJURY_TRAMPOLINE = t;
+            GET_PLAYER_INJURY_TRAMPOLINE.store(t, Relaxed);
         }
     }
     let rust = rust_table();
@@ -3927,25 +3945,25 @@ pub unsafe fn instalar(comparando: bool) {
     } else if let Some(p) = std::env::var("CM_DIAG_PESSOA").ok().and_then(|v| v.parse::<usize>().ok()) {
         // diagnosis (31/10/2026, test of CMRTE's "Make unhappy"): person P's new complaint and new mark,
         // with the contract fields before and after (the 0x4d8610 request of the human club has its own line)
-        DIAG_PERSON = p;
-        DIAG_CLUB = std::env::var("CM_DIAG_CLUBE").ok().and_then(|v| v.parse::<usize>().ok()).unwrap_or(usize::MAX);
-        DIAG_COMPLAINT = detours::hook("diag complaint 0x867700", &Prologue { address: 0x867700, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x8b, 0x15, 0xb4, 0x23, 0xae, 0x00] }, diag_complaint as *const () as usize).unwrap_or(0);
+        DIAG_PERSON.store(p, Relaxed);
+        DIAG_CLUB.store(std::env::var("CM_DIAG_CLUBE").ok().and_then(|v| v.parse::<usize>().ok()).unwrap_or(usize::MAX), Relaxed);
+        DIAG_COMPLAINT.store(detours::hook("diag complaint 0x867700", &Prologue { address: 0x867700, bytes: &[0x53, 0x56, 0x8b, 0xf1, 0x8b, 0x15, 0xb4, 0x23, 0xae, 0x00] }, diag_complaint as *const () as usize).unwrap_or(0), Relaxed);
     }
 }
 
-static mut DIAG_PERSON: usize = usize::MAX;
-static mut DIAG_COMPLAINT: usize = 0;
+static DIAG_PERSON: AtomicUsize = AtomicUsize::new(usize::MAX);
+static DIAG_COMPLAINT: AtomicUsize = AtomicUsize::new(0);
 /// CM_DIAG_CLUBE=C: also every contract of club C (+4), to find who in the club receives a complaint or mark.
 ///
 /// [pt] CM_DIAG_CLUBE=C: também todo contrato do clube C (+4), para achar quem do clube recebe queixa ou marca
-static mut DIAG_CLUB: usize = usize::MAX;
-static mut DIAG_MARK: usize = 0;
+static DIAG_CLUB: AtomicUsize = AtomicUsize::new(usize::MAX);
+static DIAG_MARK: AtomicUsize = AtomicUsize::new(0);
 
 unsafe fn diag_contract(c: usize) -> String {
     format!("+0x44 {} +0x45 {:#x} +0x40 {:#x} +0x49 {} +0x4e {:#x} +0x4f {:#x}", read_u8(c + 0x44) as i8, read_u32(c + 0x45), read_u32(c + 0x40), read_u8(c + 0x49), read_u8(c + 0x4e), read_u8(c + 0x4f))
 }
 
-static mut DIAG_CALLS: u32 = 0;
+static DIAG_CALLS: AtomicU32 = AtomicU32::new(0);
 
 /// At every power of 2 of calls (from any person): the person of the current contract and person P's contract
 /// read directly from memory (`exe::contract_manager_get_contract` over [0xae1050], person = [0xae23bc] + id × 110), to check the save's writing.
@@ -3953,14 +3971,14 @@ static mut DIAG_CALLS: u32 = 0;
 /// [pt] A cada potência de 2 de chamadas (de qualquer pessoa): a pessoa do contrato da vez e o contrato da pessoa P lido
 /// direto na memória (0x4cf5a0 sobre [0xae1050], pessoa = [0xae23bc] + id × 110), para conferir a gravação do save.
 unsafe fn diag_sample(c: usize, qual: &str) {
-    DIAG_CALLS += 1;
-    if !DIAG_CALLS.is_power_of_two() {
+    DIAG_CALLS.fetch_add(1, Relaxed);
+    if !DIAG_CALLS.load(Relaxed).is_power_of_two() {
         return;
     }
-    let p = read_usize(G_STAFF_TABLE).wrapping_add(DIAG_PERSON.wrapping_mul(110));
+    let p = read_usize(G_STAFF_TABLE).wrapping_add(DIAG_PERSON.load(Relaxed).wrapping_mul(110));
     let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
-    linha(&format!("diag {} call {}: current contract +0 {} +4 {}; the person's contract {}: {}", qual, DIAG_CALLS,
-        read_i32(c), read_i32(c + 4), DIAG_PERSON,
+    linha(&format!("diag {} call {}: current contract +0 {} +4 {}; the person's contract {}: {}", qual, DIAG_CALLS.load(Relaxed),
+        read_i32(c), read_i32(c + 4), DIAG_PERSON.load(Relaxed),
         if k == 0 { "nenhum".to_string() } else { format!("+0 {} +4 {} {}", read_i32(k), read_i32(k + 4), diag_contract(k)) }));
 }
 
@@ -3968,11 +3986,11 @@ unsafe extern "thiscall" fn diag_complaint(c: usize, f: u32, z: u32) -> u32 {
     if c != 0 {
         diag_sample(c, "queixa");
     }
-    let alvo = c != 0 && (read_u32(c) as usize == DIAG_PERSON || read_u32(c + 4) as usize == DIAG_CLUB);
+    let alvo = c != 0 && (read_u32(c) as usize == DIAG_PERSON.load(Relaxed) || read_u32(c + 4) as usize == DIAG_CLUB.load(Relaxed));
     if alvo {
         linha(&format!("diag complaint person {} complaint {:#x} z {} before: {}", read_u32(c), f, z, diag_contract(c)));
     }
-    let r = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(DIAG_COMPLAINT)(c, f, z);
+    let r = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(DIAG_COMPLAINT.load(Relaxed))(c, f, z);
     if alvo {
         linha(&format!("diag complaint person {} returned {} after: {}", read_u32(c), r, diag_contract(c)));
     }
@@ -3982,10 +4000,10 @@ unsafe extern "thiscall" fn diag_complaint(c: usize, f: u32, z: u32) -> u32 {
     if !FORCED {
         if let Some(q) = std::env::var("CM_DIAG_FORCAR").ok().and_then(|v| u32::from_str_radix(v.trim_start_matches("0x"), 16).ok()) {
             FORCED = true;
-            let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), read_usize(G_STAFF_TABLE).wrapping_add(DIAG_PERSON.wrapping_mul(110)));
+            let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), read_usize(G_STAFF_TABLE).wrapping_add(DIAG_PERSON.load(Relaxed).wrapping_mul(110)));
             if k != 0 {
-                linha(&format!("diag forced complaint {:#x} person {} before: {}", q, DIAG_PERSON, diag_contract(k)));
-                let r2 = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(DIAG_COMPLAINT)(k, q, 0);
+                linha(&format!("diag forced complaint {:#x} person {} before: {}", q, DIAG_PERSON.load(Relaxed), diag_contract(k)));
+                let r2 = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(DIAG_COMPLAINT.load(Relaxed))(k, q, 0);
                 linha(&format!("diag forced complaint returned {} after: {}", r2, diag_contract(k)));
             }
         }
@@ -3997,11 +4015,11 @@ unsafe extern "thiscall" fn diag_mark(c: usize, f: u32) -> u32 {
     if c != 0 {
         diag_sample(c, "marca");
     }
-    let alvo = c != 0 && (read_u32(c) as usize == DIAG_PERSON || read_u32(c + 4) as usize == DIAG_CLUB);
+    let alvo = c != 0 && (read_u32(c) as usize == DIAG_PERSON.load(Relaxed) || read_u32(c + 4) as usize == DIAG_CLUB.load(Relaxed));
     if alvo {
         linha(&format!("diag mark person {} mark {:#x} before: {}", read_u32(c), f, diag_contract(c)));
     }
-    let r = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32) -> u32>(DIAG_MARK)(c, f);
+    let r = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32) -> u32>(DIAG_MARK.load(Relaxed))(c, f);
     if alvo {
         linha(&format!("diag mark person {} returned {} after: {}", read_u32(c), r, diag_contract(c)));
     }

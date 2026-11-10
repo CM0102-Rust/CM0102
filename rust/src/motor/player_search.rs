@@ -166,8 +166,8 @@ pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(t
 ///
 /// [pt] O ensaio da 0x7b5be0 (só no comparador): a cópia decide tudo até o relatório sem os efeitos (o histórico 0x7bd310 e o
 /// relatório não rodam) e anota se chegaria ao relatório.
-pub(crate) static mut SCOUT_MATCH_DRY_RUN: bool = false;
-pub(crate) static mut SCOUT_MATCH_WOULD_REPORT: bool = false;
+pub(crate) static SCOUT_MATCH_DRY_RUN: AtomicBool = AtomicBool::new(false);
+pub(crate) static SCOUT_MATCH_WOULD_REPORT: AtomicBool = AtomicBool::new(false);
 
 /// `PLAYER_SEARCH::scout_match(match, result, out)` (SEH frame for the local list and dates), called by the watched
 /// match (`scout_manager_scout_match`): the matching scout list (type 4) watches the played match and produces reports.
@@ -245,7 +245,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
     }
     let followed = read_i32(this + player_search_fields::ASSIGNED_CLUB);
     if followed > -1 && read_usize(this + 0x170) != 0 && ((game.home_club_id() as i32) == followed || (game.away_club_id() as i32) == followed) {
-        if !SCOUT_MATCH_DRY_RUN {
+        if !SCOUT_MATCH_DRY_RUN.load(Relaxed) {
             crate::comparison::branch("cqf_10 club history");
             // 0x7bd310: push resultado; push jogo; mov ecx, [this+0x170] -> thiscall, ret 8
             exe::player_search_record_scouted_club_match(read_usize(this + 0x170), game, result);
@@ -330,8 +330,8 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
     // [this+0x1a5] -> thiscall, ret 8
     let (mut tmp, mut copia) = ([0u32; 2], [0u32; 2]);
     let tomorrow = exe::date_add_days(G_CURRENT_DATE, tmp.as_mut_ptr() as usize, 1); // cqf10: amanhã
-    if SCOUT_MATCH_DRY_RUN {
-        SCOUT_MATCH_WOULD_REPORT = true;
+    if SCOUT_MATCH_DRY_RUN.load(Relaxed) {
+        SCOUT_MATCH_WOULD_REPORT.store(true, Relaxed);
         return 1;
     }
     exe::date_operator_3d(this + player_search_fields::SCOUTING_START_DATE, copia.as_mut_ptr() as usize, tomorrow);

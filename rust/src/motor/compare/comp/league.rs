@@ -153,15 +153,15 @@ pub(crate) unsafe extern "thiscall" fn compare_update_positions_and_status(this:
     let regions = table_status_regions(this);
     let before = crate::comparison::MemorySnapshot::read(&regions);
     *core::ptr::addr_of_mut!(STATUS_ANNOUNCE_TAPE) = Vec::new();
-    STATUS_ANNOUNCE_TAPE_POS = 0;
+    STATUS_ANNOUNCE_TAPE_POS.store(0, Relaxed);
     *core::ptr::addr_of_mut!(STATUS_ANNOUNCE_RECORD) = Some(regions.clone());
     o(this.addr());
     *core::ptr::addr_of_mut!(STATUS_ANNOUNCE_RECORD) = None;
     let mo = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
-    POSITIONS_STATUS_DRY_RUN = true;
+    POSITIONS_STATUS_DRY_RUN.store(true, Relaxed);
     crate::rng::pause_trace(|| update_positions_and_status(this.addr()));
-    POSITIONS_STATUS_DRY_RUN = false;
+    POSITIONS_STATUS_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     mo.write_back();
     SCOREBOARD.record(mo == mr, || format!("update_positions_and_status({:#x}) original={:x?} rust={:x?}", this.addr(), mo, mr));
@@ -195,9 +195,9 @@ pub(crate) unsafe extern "thiscall" fn compare_pay_prize_money(league: usize) {
         }
     }
     let before = crate::comparison::MemorySnapshot::read(&regions);
-    LEAGUE_PRIZE_MONEY_DRY_RUN = true;
+    LEAGUE_PRIZE_MONEY_DRY_RUN.store(true, Relaxed);
     crate::rng::pause_trace(|| crate::rng::without_counting(|| pay_prize_money(league.addr())));
-    LEAGUE_PRIZE_MONEY_DRY_RUN = false;
+    LEAGUE_PRIZE_MONEY_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
     o(league.addr());
@@ -249,9 +249,9 @@ pub(crate) unsafe extern "thiscall" fn compare_league_add_result(league: usize, 
     let mut regions = vec![(league.addr() + league::LAST_RESULT_DATE, 8)];
     regions.extend(result_update_regions(p, league.table(), n, core::ptr::null_mut(), core::ptr::null_mut()));
     let before = crate::comparison::MemorySnapshot::read(&regions);
-    LEAGUE_ADD_RESULT_DRY_RUN = true;
+    LEAGUE_ADD_RESULT_DRY_RUN.store(true, Relaxed);
     let rr = crate::rng::pause_trace(|| crate::rng::without_counting(|| league_add_result(league.addr(), p.addr(), game)));
-    LEAGUE_ADD_RESULT_DRY_RUN = false;
+    LEAGUE_ADD_RESULT_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
     let ro = o(league.addr(), p.addr(), game);

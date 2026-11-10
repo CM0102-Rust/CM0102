@@ -1770,7 +1770,7 @@ pub(crate) unsafe fn contract_club_cached(j: Staff) -> usize {
 ///
 /// [pt] Se a cópia semeou o rand da CRT pelo relógio (os fisioterapeutas avaliaram): o comparador não confere o estado do
 /// rand (o relógio anda entre a original e a cópia no jogo real).
-pub(crate) static mut BOARD_VETO_SEEDED_RAND: bool = false;
+pub(crate) static BOARD_VETO_SEEDED_RAND: AtomicBool = AtomicBool::new(false);
 
 /// Checks whether the board vetoes a transfer: when buying an injured player, the physios draw the veto; at a human
 /// club, the board vetoes on budget, asking price or fee and loses confidence.
@@ -1810,7 +1810,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
     let j = Staff(j);
     let club = Club(club);
     let rating: unsafe extern "C" fn(usize, u32) -> i8 = core::mem::transmute(FN_NON_PLAYER_ATTRIBUTE_RATING);
-    BOARD_VETO_SEEDED_RAND = false;
+    BOARD_VETO_SEEDED_RAND.store(false, Relaxed);
     if comprando as u8 != 0 {
         let l = exe::injury_get_player_injury(read_usize(G_INJURY), j);
         if l != 0 && read_i16(l + injury_entry::DAYS_OUT) > 0x14 {
@@ -1822,7 +1822,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
                 }
                 exe::crt_srand((read_usize(j.addr()) as u32).wrapping_add(1).wrapping_mul((read_usize(f.addr()) as u32).wrapping_add(1)));
                 semeou = true;
-                BOARD_VETO_SEEDED_RAND = true;
+                BOARD_VETO_SEEDED_RAND.store(true, Relaxed);
                 crate::comparison::branch("cpy_12 physio evaluates");
                 let np = f.non_player();
                 // the original pushes the whole register with byte +0x1e in the low part; 0x544410 only reads the byte
@@ -2109,8 +2109,8 @@ pub(crate) unsafe fn news_set_manager_names(n: usize, p: Staff, first: u8, k_nex
 /// [pt] O ensaio do comparador: a cópia roda sem entregar a notícia (as entregas copiam a notícia nas caixas dos técnicos
 /// humanos, alocam e podem dar a resposta automática) e guarda o alcance que daria (+0xde: 4 todos, 2 os do país, 1 os
 /// da divisão; 0 nenhuma) e a notícia montada.
-pub(crate) static mut MANAGER_NEWS_DRY_RUN: bool = false;
-pub(crate) static mut MANAGER_NEWS_REACH: u8 = 0;
+pub(crate) static MANAGER_NEWS_DRY_RUN: AtomicBool = AtomicBool::new(false);
+pub(crate) static MANAGER_NEWS_REACH: AtomicU8 = AtomicU8::new(0);
 pub(crate) static mut MANAGER_NEWS_BUILT: [u8; 0xe0] = [0; 0xe0];
 
 /// Delivers news item n by reach (4 all managers, 2 nation managers, else division managers) through G_NEWS; in
@@ -2119,8 +2119,8 @@ pub(crate) static mut MANAGER_NEWS_BUILT: [u8; 0xe0] = [0; 0xe0];
 /// [pt] A entrega da notícia `n` pelo `alcance` (4: 0x786780; 2: 0x7863f0 com a nação; 1: 0x7862d0 com a divisão) pelas
 /// notícias [0xb7431c]; no ensaio, só o plano.
 pub(crate) unsafe fn deliver_news(n: usize, reach: u8, target: usize) {
-    if MANAGER_NEWS_DRY_RUN {
-        MANAGER_NEWS_REACH = reach;
+    if MANAGER_NEWS_DRY_RUN.load(Relaxed) {
+        MANAGER_NEWS_REACH.store(reach, Relaxed);
         core::ptr::copy_nonoverlapping(n as *const u8, core::ptr::addr_of_mut!(MANAGER_NEWS_BUILT) as *mut u8, 0xe0);
         return;
     }
@@ -2180,12 +2180,12 @@ pub(crate) unsafe fn compare_manager_news(name: &str, regions: Vec<(usize, usize
     let mut all = regions.clone();
     all.extend(crate::rng::STATE_REGIONS);
     let before = crate::comparison::MemorySnapshot::read(&all);
-    MANAGER_NEWS_DRY_RUN = true;
-    MANAGER_NEWS_REACH = 0;
+    MANAGER_NEWS_DRY_RUN.store(true, Relaxed);
+    MANAGER_NEWS_REACH.store(0, Relaxed);
     let (_, rr) = crate::rng::trace(|| crate::rng::without_counting(copy));
-    MANAGER_NEWS_DRY_RUN = false;
+    MANAGER_NEWS_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&regions);
-    let (alcance, noticia) = (MANAGER_NEWS_REACH, *core::ptr::addr_of!(MANAGER_NEWS_BUILT));
+    let (alcance, noticia) = (MANAGER_NEWS_REACH.load(Relaxed), *core::ptr::addr_of!(MANAGER_NEWS_BUILT));
     before.write_back();
     let (_, ro) = crate::rng::trace(original);
     let mo = crate::comparison::MemorySnapshot::read(&regions);
@@ -2430,13 +2430,13 @@ pub(crate) unsafe fn days_since(d: usize) -> i32 {
 ///
 /// [pt] O ensaio do comparador: a cópia roda sem o fim da lesão (0x62e700: histórico em arquivo e notícia), que não pode
 /// rodar duas vezes; chegando lá, marca `END_INJURY_REACHED` e o comparador fica com a original sozinha.
-pub(crate) static mut END_INJURY_DRY_RUN: bool = false;
-pub(crate) static mut END_INJURY_REACHED: bool = false;
+pub(crate) static END_INJURY_DRY_RUN: AtomicBool = AtomicBool::new(false);
+pub(crate) static END_INJURY_REACHED: AtomicBool = AtomicBool::new(false);
 
 /// Ends the person's injury (FN_INJURY_END_PLAYER_INJURY with 1); in rehearsal mode only records that it would.
 pub(crate) unsafe fn end_injury(this: usize, person: Staff) {
-    if END_INJURY_DRY_RUN {
-        END_INJURY_REACHED = true;
+    if END_INJURY_DRY_RUN.load(Relaxed) {
+        END_INJURY_REACHED.store(true, Relaxed);
         return;
     }
     exe::injury_end_player_injury(this, person, 1);

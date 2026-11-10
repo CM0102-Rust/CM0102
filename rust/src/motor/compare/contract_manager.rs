@@ -206,9 +206,9 @@ pub(crate) unsafe extern "thiscall" fn compare_add_contract_offer(this: usize, t
     all.extend(TRANSFER_MANAGER_DATE_STATICS);
     all.extend(crate::rng::STATE_REGIONS);
     let before = crate::comparison::MemorySnapshot::read(&all);
-    CONTRACT_OFFER_DRY_RUN = true;
+    CONTRACT_OFFER_DRY_RUN.store(true, Relaxed);
     crate::rng::pause_trace(|| crate::rng::without_counting(|| add_contract_offer(this, terms.addr(), slot, value, mark, a5, decides, agreed)));
-    CONTRACT_OFFER_DRY_RUN = false;
+    CONTRACT_OFFER_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&all[..n_cmp]);
     let record = DRY_RUN_CONTRACT_OFFER_RECORD;
     before.write_back();

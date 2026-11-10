@@ -747,7 +747,7 @@ pub(crate) unsafe fn round_tie(cup: Cup, r: i32, k: i32) -> usize {
 }
 
 /// O ensaio do comparador da `pay_round_prize_money`: a cópia roda sem a notícia do prêmio (`send_prize_money_news`, que aloca).
-pub(crate) static mut ROUND_PRIZE_MONEY_DRY_RUN: bool = false;
+pub(crate) static ROUND_PRIZE_MONEY_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// Sends the prize money news (Comp `send_prize_money_news`) for a club, amount, next round, fixture and outcome; nothing in dry-run
 /// mode.
@@ -755,7 +755,7 @@ pub(crate) static mut ROUND_PRIZE_MONEY_DRY_RUN: bool = false;
 /// [pt] A notícia do prêmio (Comp 0x48e3e0: 7 pushes; ecx = a copa; sem add esp -> thiscall(copa, clube, valor, alto do
 /// valor, −1, rodada seguinte, partida, desfecho), ret 0x1c); no ensaio, nada.
 pub(crate) unsafe fn send_prize_news(cup: Cup, club: usize, value: i32, next: u32, fixture: Fixture, outcome: u8) {
-    if ROUND_PRIZE_MONEY_DRY_RUN {
+    if ROUND_PRIZE_MONEY_DRY_RUN.load(Relaxed) {
         return;
     }
     // simplification: the original pushes the dword of a local of which it writes only the low byte (the high bits are stack leftover);

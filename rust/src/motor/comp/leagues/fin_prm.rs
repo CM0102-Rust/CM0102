@@ -1689,9 +1689,9 @@ pub(crate) unsafe fn compare_rare_finance_event(name: &str, fin: usize, extras: 
     regions.extend(crate::rng::STATE_REGIONS);
     regions.extend_from_slice(extras);
     let before = crate::comparison::MemorySnapshot::read(&regions);
-    RARE_FINANCE_EVENT_DRY_RUN = true;
+    RARE_FINANCE_EVENT_DRY_RUN.store(true, Relaxed);
     let n = crate::rng::pause_trace(|| crate::rng::without_counting(copy));
-    RARE_FINANCE_EVENT_DRY_RUN = false;
+    RARE_FINANCE_EVENT_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
     let r = original();
@@ -1773,7 +1773,7 @@ pub(crate) unsafe extern "thiscall" fn try_board_takeover(this: usize, club: usi
     fin.set_season_other_income(fin.season_other_income().wrapping_add(v));
     credit_balance(fin, v);
     let budget = transfer_budget(fin);
-    if with_sheet && !RARE_FINANCE_EVENT_DRY_RUN {
+    if with_sheet && !RARE_FINANCE_EVENT_DRY_RUN.load(Relaxed) {
         let presence = club.chairman().addr();
         let nation = club.nation().addr();
         let new = if nation != 0 && friendly_random(0x3e8) != 0 {
@@ -2464,13 +2464,13 @@ pub(crate) unsafe fn run_weekly_event(routine: usize, this: usize, club: Club, f
 ///
 /// [pt] O ensaio do comparador: a cópia roda sem a notícia (0x59f300) e sem a verba (0x598800), que alocam e não podem
 /// rodar duas vezes.
-pub(crate) static mut RARE_FINANCE_EVENT_DRY_RUN: bool = false;
+pub(crate) static RARE_FINANCE_EVENT_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// Posts the finance event news (FN_FINANCE_POST_FINANCE_BOOST_NEWS); nothing in rehearsal.
 ///
 /// [pt] A notícia do evento (0x59f300: thiscall(tabela, clube, valor, verba, tipo), ret 0x10); no ensaio, nada.
 pub(crate) unsafe fn post_finance_boost_news(this: usize, club: Club, value: i32, budget: u32, kind: u32) {
-    if RARE_FINANCE_EVENT_DRY_RUN {
+    if RARE_FINANCE_EVENT_DRY_RUN.load(Relaxed) {
         return;
     }
     exe::finance_post_finance_boost_news(this, club, value, budget, kind);
@@ -2481,7 +2481,7 @@ pub(crate) unsafe fn post_finance_boost_news(this: usize, club: Club, value: i32
 /// [pt] A verba de transferências (Finance::get_transfer_budget 0x598800 com 0, 0, 0, 1, 0) que vai na notícia; no
 /// ensaio, 0 (a notícia não sai).
 pub(crate) unsafe fn transfer_budget(fin: Finance) -> u32 {
-    if RARE_FINANCE_EVENT_DRY_RUN {
+    if RARE_FINANCE_EVENT_DRY_RUN.load(Relaxed) {
         return 0;
     }
     (exe::finance_get_transfer_budget(fin, 0, 0, 0, 1, 0) as u32)
@@ -2803,9 +2803,9 @@ pub(crate) unsafe fn compare_finance_event(name: &str, fin: usize, original: imp
     let mut regions = vec![(fin, 0x167)];
     regions.extend(crate::rng::STATE_REGIONS);
     let before = crate::comparison::MemorySnapshot::read(&regions);
-    RARE_FINANCE_EVENT_DRY_RUN = true;
+    RARE_FINANCE_EVENT_DRY_RUN.store(true, Relaxed);
     let n = crate::rng::pause_trace(|| crate::rng::without_counting(copy));
-    RARE_FINANCE_EVENT_DRY_RUN = false;
+    RARE_FINANCE_EVENT_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
     let r = original();

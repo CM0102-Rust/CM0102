@@ -868,7 +868,7 @@ pub(crate) const SERIE_C1B_FIXTURES: [(u8, u8, u16, u32, u32); 306] = [
 /// allocates).
 ///
 /// [pt] No ensaio (o comparador) a cópia grava as regras e não chama a virtual +0x3c (a tabela de rodadas, que aloca).
-pub(crate) static mut FRA_FIRST_RULES_DRY_RUN: bool = false;
+pub(crate) static FRA_FIRST_RULES_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// Writes the (offset, size, value) rules into the league and builds the round table via vtable +0x3c into +0xba
 /// (skipped in dry run); returns 1.
@@ -884,7 +884,7 @@ pub(crate) unsafe fn fra_first_apply_league_rules(this: League, written: &[(usiz
             _ => write_u32(this.addr() + d, v),
         }
     }
-    if !FRA_FIRST_RULES_DRY_RUN {
+    if !FRA_FIRST_RULES_DRY_RUN.load(Relaxed) {
         let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
         let t = rounds(this.addr(), 0xffff_ffff, this.addr() + league::ROUND_COUNT, this.addr() + league::STAGE_ID, 0);
         this.set_round_dates(t);
@@ -965,9 +965,9 @@ pub(crate) unsafe fn fra_first_compare_league_rules(name: &str, this: League, wr
     let r = original();
     let mo = crate::comparison::MemorySnapshot::read(&band);
     before.write_back();
-    FRA_FIRST_RULES_DRY_RUN = true;
+    FRA_FIRST_RULES_DRY_RUN.store(true, Relaxed);
     let rr = crate::rng::pause_trace(copy);
-    FRA_FIRST_RULES_DRY_RUN = false;
+    FRA_FIRST_RULES_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&band);
     mo.write_back();
     let field = |m: &crate::comparison::MemorySnapshot, d: usize, t: u8| -> u32 {

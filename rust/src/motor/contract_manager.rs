@@ -1458,7 +1458,7 @@ pub(crate) unsafe fn staff_interest_in_club(list: usize, person: usize, club: Cl
 ///
 /// [pt] O ensaio do comparador: a cópia roda sem a oferta de empréstimo (0x8bed60) nem a atualização da lista (0x843e10),
 /// que alocam e mexem nas listas; devolve −2 onde faria a oferta e −3 onde atualizaria a lista.
-pub(crate) static mut LOAN_OFFER_DRY_RUN: bool = false;
+pub(crate) static LOAN_OFFER_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// True when 8-byte date a (day i16, year u16) is before date b, compared as the original does.
 ///
@@ -1603,7 +1603,7 @@ pub(crate) unsafe fn find_contract_offer(l: Llist, id: usize, club: usize) -> us
 ///
 /// [pt] O ensaio do comparador: a cópia não cria nem acrescenta à lista (0x944cf1, 0x68d020, 0x68d0d0) e não chama o que vem
 /// depois (0x8c1f80, 0x8c2060, 0x4cd230), que alocam, sorteiam e mexem nas ofertas.
-pub(crate) static mut CONTRACT_OFFER_DRY_RUN: bool = false;
+pub(crate) static CONTRACT_OFFER_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// `CONTRACT_MANAGER::add_contract_offer(terms, slot, value, flag, a5, decide, agreed)` (SEH frame without a
 /// destructor), called by the loan offer (`make_loan_offer`), the stored offers (`resubmit_held_offers`), the lists (`make_club_bids`), the
@@ -1674,7 +1674,7 @@ pub(crate) unsafe extern "thiscall" fn add_contract_offer(this: usize, terms: us
         write_u8(r + contract_offer::MARK, mark as u8);
         write_u32(r + contract_offer::RESERVED_RECORD, 0xffff_ffff);
         write_u8(r + contract_offer::DECISION_VALID, !tipo6 as u8);
-        if CONTRACT_OFFER_DRY_RUN {
+        if CONTRACT_OFFER_DRY_RUN.load(Relaxed) {
             core::ptr::copy_nonoverlapping(r as *const u8, core::ptr::addr_of_mut!(DRY_RUN_CONTRACT_OFFER_RECORD) as *mut u8, 0x6f);
         } else {
             if read_usize(this + contract_manager_fields::CONTRACT_OFFERS) == 0 {
@@ -1688,7 +1688,7 @@ pub(crate) unsafe extern "thiscall" fn add_contract_offer(this: usize, terms: us
         let c = contract_offer_counter(terms.addr()) as *mut u8;
         *c = (*c).wrapping_add(1); // cpw4: the offer counter of the person
     }
-    if CONTRACT_OFFER_DRY_RUN {
+    if CONTRACT_OFFER_DRY_RUN.load(Relaxed) {
         return;
     }
     if slot != -1 {

@@ -147,9 +147,9 @@ pub(crate) unsafe extern "thiscall" fn compare_pay_round_prize_money(cup: usize,
     }
     let regions = [(cup.addr() + cup::PRIZE_FUND, 4), (fv, 0x167), (fp, 0x167)];
     let before = crate::comparison::MemorySnapshot::read(&regions);
-    ROUND_PRIZE_MONEY_DRY_RUN = true;
+    ROUND_PRIZE_MONEY_DRY_RUN.store(true, Relaxed);
     crate::rng::pause_trace(|| crate::rng::without_counting(|| pay_round_prize_money(cup.addr(), winner, loser, round, fixture)));
-    ROUND_PRIZE_MONEY_DRY_RUN = false;
+    ROUND_PRIZE_MONEY_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
     o(cup.addr(), winner, loser, round, fixture);

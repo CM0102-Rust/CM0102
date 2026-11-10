@@ -416,9 +416,9 @@ pub(crate) unsafe extern "thiscall" fn compare_try_loan_offer_for_player(this: u
     regions.extend(crate::rng::STATE_REGIONS);
     regions.extend(TRANSFER_MANAGER_DATE_STATICS);
     let before = crate::comparison::MemorySnapshot::read(&regions);
-    LOAN_OFFER_DRY_RUN = true;
+    LOAN_OFFER_DRY_RUN.store(true, Relaxed);
     let n = crate::rng::pause_trace(|| crate::rng::without_counting(|| try_loan_offer_for_player(this, player, club)));
-    LOAN_OFFER_DRY_RUN = false;
+    LOAN_OFFER_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
     let r = o(this, player, club);

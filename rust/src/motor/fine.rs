@@ -19,8 +19,8 @@ pub(crate) unsafe fn set_news_person_slots(n: usize, k: i8, p: Staff) {
 /// random and goes to the managers' inboxes).
 ///
 /// [pt] O ensaio das notícias: a cópia para no ponto em que montaria a notícia (que sorteia e vai às caixas dos técnicos).
-pub(crate) static mut FINE_NEWS_DRY_RUN: bool = false;
-pub(crate) static mut FINE_NEWS_WOULD_BUILD: bool = false;
+pub(crate) static FINE_NEWS_DRY_RUN: AtomicBool = AtomicBool::new(false);
+pub(crate) static FINE_NEWS_WOULD_BUILD: AtomicBool = AtomicBool::new(false);
 
 /// Posts the news of a fined player's reaction: for a player under contract at a human club, news 0xbc6 with reason,
 /// reaction, random(2), personality, period, contract type, future transfer and effects.
@@ -63,8 +63,8 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
         return;
     }
     crate::comparison::branch("cpz_9 news of the reaction to the fine");
-    if FINE_NEWS_DRY_RUN {
-        FINE_NEWS_WOULD_BUILD = true;
+    if FINE_NEWS_DRY_RUN.load(Relaxed) {
+        FINE_NEWS_WOULD_BUILD.store(true, Relaxed);
         return;
     }
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)

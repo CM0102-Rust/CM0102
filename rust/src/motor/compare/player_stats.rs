@@ -40,11 +40,11 @@ pub(crate) unsafe extern "thiscall" fn compare_archive_player_stats(this: usize,
         }
     }
     let before = crate::comparison::MemorySnapshot::read(&regions);
-    ARCHIVE_STATS_DRY_RUN = true;
+    ARCHIVE_STATS_DRY_RUN.store(true, Relaxed);
     ARCHIVE_STATS_PENDING_TOTALS = (0, 0);
-    ARCHIVE_STATS_CLUB_ID = club_id as i32;
+    ARCHIVE_STATS_CLUB_ID.store(club_id as i32, Relaxed);
     let n = crate::rng::pause_trace(|| archive_player_stats(this, p.addr(), value, loan, end, club_id, other));
-    ARCHIVE_STATS_DRY_RUN = false;
+    ARCHIVE_STATS_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
     let r = o(this, p.addr(), value, loan, end, club_id, other);

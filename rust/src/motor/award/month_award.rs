@@ -12,7 +12,7 @@ pub(crate) unsafe fn month_award_club_by_id(id: i32) -> Club {
 ///
 /// [pt] O ensaio dos comparadores: a cópia roda sem a notícia (0x767330), sem o registro do prêmio (0x86c8c0) e sem as
 /// listas dos clubes (0x842c00), que alocam e não podem rodar duas vezes.
-pub(crate) static mut MONTH_AWARD_DRY_RUN: bool = false;
+pub(crate) static MONTH_AWARD_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// Picks the best player of the month ratings with the requested age and records him as the month winner, with his
 /// club.
@@ -62,7 +62,7 @@ pub(crate) unsafe extern "thiscall" fn award_best_rated_player(this: usize, note
 ///
 /// [pt] A reputação do premiado: no ensaio, a cópia direto (sem as listas dos clubes); senão pelo endereço (0x412f00).
 pub(crate) unsafe fn raise_winner_reputation(person: usize, club: usize, nation: u32, world: u32, player: u32) {
-    if MONTH_AWARD_DRY_RUN {
+    if MONTH_AWARD_DRY_RUN.load(Relaxed) {
         return award_raise_winner_reputation(person, club, nation, world, player);
     }
     exe::award_raise_winner_reputation(person, club, nation, world, player);
@@ -105,7 +105,7 @@ pub(crate) unsafe extern "thiscall" fn set_winner(this: usize, id: i32, club_id:
         crate::comparison::branch("cpw_6 winner of the month");
         raise_winner_reputation(month_ratings_staff_by_id(id), club.addr(), high | read_i16(this + 0x15) as u16 as u32, high | read_i16(this + 0x17) as u16 as u32, mark);
     }
-    if MONTH_AWARD_DRY_RUN {
+    if MONTH_AWARD_DRY_RUN.load(Relaxed) {
         return;
     }
     exe::month_award_post_winner_news(this, (this as u32 & 0xffffff00) | k as u32);
@@ -141,9 +141,9 @@ pub(crate) unsafe fn winner_reputation_regions(regions: &mut Vec<(usize, usize)>
 /// [pt] O comparador em ensaio: a cópia sem as chamadas que alocam e a original a partir do mesmo estado das `regioes`.
 pub(crate) unsafe fn compare_month_award(name: &str, regions: &[(usize, usize)], original: impl FnOnce(), copy: impl FnOnce()) {
     let before = crate::comparison::MemorySnapshot::read(regions);
-    MONTH_AWARD_DRY_RUN = true;
+    MONTH_AWARD_DRY_RUN.store(true, Relaxed);
     crate::rng::pause_trace(copy);
-    MONTH_AWARD_DRY_RUN = false;
+    MONTH_AWARD_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(regions);
     before.write_back();
     original();

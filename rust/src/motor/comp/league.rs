@@ -1221,7 +1221,7 @@ pub(crate) unsafe extern "thiscall" fn league_promote_and_relegate(ecx: usize, a
 ///
 /// [pt] No ensaio (o comparador da 0x684cd0) a cópia não chama as virtuais +0x40 (o anúncio da situação, que manda notícia
 /// e grava os registros) e +0x68 (a situação nas estatísticas) nem as cláusulas de rebaixamento (0x4cd030).
-pub(crate) static mut POSITIONS_STATUS_DRY_RUN: bool = false;
+pub(crate) static POSITIONS_STATUS_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// The tape of the comparer of `update_positions_and_status`: the original routine runs first and each of its announcements (+0x40 =
 /// `announce_team_status`, through its comparer) stores the club, the status and the bytes that the competition's virtual +0x44 wrote
@@ -1236,7 +1236,7 @@ pub(crate) static mut POSITIONS_STATUS_DRY_RUN: bool = false;
 /// No ensaio, o anúncio da cópia que bater com o próximo da fita repõe esses bytes.
 pub(crate) static mut STATUS_ANNOUNCE_RECORD: Option<Vec<(usize, usize)>> = None;
 pub(crate) static mut STATUS_ANNOUNCE_TAPE: Vec<(usize, u8, Vec<(usize, u8)>)> = Vec::new();
-pub(crate) static mut STATUS_ANNOUNCE_TAPE_POS: usize = 0;
+pub(crate) static STATUS_ANNOUNCE_TAPE_POS: AtomicUsize = AtomicUsize::new(0);
 
 /// Returns row i of the league table (+0xb1, 0x3b bytes).
 ///
@@ -1255,10 +1255,10 @@ pub(crate) unsafe fn league_table_row(league: League, i: i32) -> usize {
 /// o clube da linha `i`. `alto` = os bits de cima do registrador que a original empurra com a fase (+0x44) no byte de
 /// baixo (o ponteiro da linha ou a devolução das cláusulas: reproduzidos).
 pub(crate) unsafe fn league_announce_team_status(league: League, i: i32, status: u32, high: u32) {
-    if POSITIONS_STATUS_DRY_RUN {
+    if POSITIONS_STATUS_DRY_RUN.load(Relaxed) {
         let tape_lock = &*core::ptr::addr_of!(STATUS_ANNOUNCE_TAPE);
-        if let Some((clube, s, bytes)) = tape_lock.get(STATUS_ANNOUNCE_TAPE_POS) {
-            STATUS_ANNOUNCE_TAPE_POS += 1;
+        if let Some((clube, s, bytes)) = tape_lock.get(STATUS_ANNOUNCE_TAPE_POS.load(Relaxed)) {
+            STATUS_ANNOUNCE_TAPE_POS.fetch_add(1, Relaxed);
             if *clube == read_usize(league_table_row(league, i)) && *s == status as u8 {
                 for &(a, v) in bytes {
                     write_u8(a, v);
@@ -1504,7 +1504,7 @@ pub(crate) unsafe extern "thiscall" fn update_positions_and_status(this: usize) 
                 let g = *m(read_i8(li + league_table_row::BEST_POSSIBLE_POSITION) as i32 - 1);
                 if g == 3 {
                     let mut high = high_row;
-                    if !POSITIONS_STATUS_DRY_RUN {
+                    if !POSITIONS_STATUS_DRY_RUN.load(Relaxed) {
                         crate::comparison::branch("cpz_3 relegation clauses");
                         high = exe::contract_manager_trigger_relegation_clauses(read_usize(G_CONTRACT_MANAGER), read_usize(li), this.competition().addr()) & !0xff; // cpz3: the relegation clauses
                     }
@@ -1574,7 +1574,7 @@ pub(crate) unsafe extern "thiscall" fn update_positions_and_status(this: usize) 
             }
         }
         // the situation in the statistics (virtual +0x68)
-        if !POSITIONS_STATUS_DRY_RUN {
+        if !POSITIONS_STATUS_DRY_RUN.load(Relaxed) {
             let li = league_table_row(this, ii);
             // simplification: the original pushes the worst, the best, the position and the stage in registers with garbage in the bits of
             // top; the +0x68 ones (0x573260, 0x578660, Comp::set_club_progress 0x48e380) only read the byte.
@@ -1651,7 +1651,7 @@ pub(crate) unsafe fn compare_stage_advance(name: &str, this: League, original: i
 ///
 /// [pt] O ensaio do comparador da 0x682e10: a cópia roda sem a notícia do prêmio (0x48e3e0, que aloca e não pode rodar duas
 /// vezes).
-pub(crate) static mut LEAGUE_PRIZE_MONEY_DRY_RUN: bool = false;
+pub(crate) static LEAGUE_PRIZE_MONEY_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// Prize divisor 1 + 2 + … + n, truncated to 16 bits like the original.
 ///
@@ -1719,7 +1719,7 @@ pub(crate) unsafe extern "thiscall" fn pay_prize_money(league: usize) {
         let fin = european_cup_club_finance(club);
         crate::comparison::branch("cpx_11 bonus paid");
         exe::finance_add_prize_money(fin, value); // cpx11: o prêmio
-        if value > 1000 && !LEAGUE_PRIZE_MONEY_DRY_RUN {
+        if value > 1000 && !LEAGUE_PRIZE_MONEY_DRY_RUN.load(Relaxed) {
             // simplification: the original pushes the position in dl and the rest of edx (29 × i, leftover from the row calculation); the
             // 0x48e3e0 reads only the byte
             let pos = ((29 * i as i32 as u32) & !0xff) | (i as u8).wrapping_add(1) as u32;
@@ -1871,7 +1871,7 @@ pub(crate) unsafe extern "thiscall" fn announce_team_status(league: usize, club:
 ///
 /// [pt] O ensaio do comparador da 0x685d30: a cópia roda sem a estatística da competição (0x49f570, que acha ou cria os
 /// registros dos jogadores e não pode rodar duas vezes).
-pub(crate) static mut LEAGUE_ADD_RESULT_DRY_RUN: bool = false;
+pub(crate) static LEAGUE_ADD_RESULT_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// Adds a result to the league: stamps today's date on the league; a stage fixture goes to its stage; otherwise adds
 /// the fixture to the table (`apply_result_to_table`) and to the competition stats (`exe::comp_stats_record_match_result`) and returns 1.
@@ -1925,7 +1925,7 @@ pub(crate) unsafe extern "thiscall" fn league_add_result(league: usize, p: usize
     if comp == 0 || read_usize(comp + 8) == 0 || game == 0 {
         return 1;
     }
-    if !LEAGUE_ADD_RESULT_DRY_RUN {
+    if !LEAGUE_ADD_RESULT_DRY_RUN.load(Relaxed) {
         // simplification: the original pushes the points as dwords of the locals with an uninitialized high part; 0x49f570 reads the shorts
         exe::comp_stats_record_match_result(read_usize(comp + 8), p, game, pts_casa as i32, pts_fora as i32);
     }

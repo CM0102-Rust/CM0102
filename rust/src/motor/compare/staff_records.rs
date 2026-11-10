@@ -93,9 +93,9 @@ pub(crate) unsafe extern "thiscall" fn compare_add_supporters_player_of_year_rec
         reg.push((pref + preferences::STAFF_FAVOURITE_CLUBS1, 0x18));
     }
     let before = crate::comparison::MemorySnapshot::read(&reg);
-    SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN = true;
+    SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN.store(true, Relaxed);
     crate::rng::pause_trace(|| crate::rng::without_counting(|| add_supporters_player_of_year_record(this, person.addr(), club.addr(), a, b)));
-    SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN = false;
+    SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&reg);
     before.write_back();
     o(this, person.addr(), club.addr(), a, b);
@@ -141,9 +141,9 @@ pub(crate) unsafe extern "thiscall" fn compare_record_manager_job_change(this: u
         }
     }
     let before = crate::comparison::MemorySnapshot::read(&reg);
-    CUP_PLACED_CLUB_DRY_RUN = true;
+    CUP_PLACED_CLUB_DRY_RUN.store(true, Relaxed);
     record_manager_job_change(this, manager, club, signed);
-    CUP_PLACED_CLUB_DRY_RUN = false;
+    CUP_PLACED_CLUB_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&reg);
     before.write_back();
     o(this, manager, club, signed);

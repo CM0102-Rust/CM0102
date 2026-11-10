@@ -2696,8 +2696,8 @@ pub(crate) unsafe fn send_news_to_club_manager(n: usize, club: usize) {
 /// [pt] O ensaio dos comparadores: a cópia roda sem as notícias e sem os totais do clube (0x448ad0), que alocam ou entregam
 /// e não podem rodar duas vezes; FORMER_CLUB_FEE_DELIVERIES conta as entregas que a original faria (elas podem mexer em [0xae1080]
 /// pela resposta automática do humano de férias).
-pub(crate) static mut FORMER_CLUB_FEE_DRY_RUN: bool = false;
-pub(crate) static mut FORMER_CLUB_FEE_DELIVERIES: u32 = 0;
+pub(crate) static FORMER_CLUB_FEE_DRY_RUN: AtomicBool = AtomicBool::new(false);
+pub(crate) static FORMER_CLUB_FEE_DELIVERIES: AtomicU32 = AtomicU32::new(0);
 
 /// Pays former clubs their fee cuts: for a player over 22, (offer fee / 20) / sum of weights × the weight of each of up
 /// to five former clubs goes into the buyer's sales; news 0xfc3 goes to the former club when the cut exceeds 11 ×
@@ -2730,7 +2730,7 @@ pub(crate) unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o:
     crate::comparison::branch("cqb_6 share of previous clubs");
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
-    if !FORMER_CLUB_FEE_DRY_RUN {
+    if !FORMER_CLUB_FEE_DRY_RUN.load(Relaxed) {
         transfer_manager_construct_news_item(n, 0xfc3);
     }
     let r = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(0x4f));
@@ -2742,7 +2742,7 @@ pub(crate) unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o:
     }
     let twenty = (o.fee() as i32) / 20;
     let divisor = if sum == 0 { 1 } else { sum as i32 };
-    if !FORMER_CLUB_FEE_DRY_RUN {
+    if !FORMER_CLUB_FEE_DRY_RUN.load(Relaxed) {
         set_news_slot(n, 0, read_usize(p.addr()) as u32);
         set_news_slot(n, 1, read_usize(p.first_name() + 0x33) as u32);
         set_news_slot(n, 2, read_usize(p.second_name() + 0x33) as u32);
@@ -2757,7 +2757,7 @@ pub(crate) unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o:
         // simplification: the original reads [0] if the second contract were missing; unreachable (the same contract has just passed)
         if !c2.is_null() && c2.contract_type() & 0x3f != 5 { read_usize(transfer_manager_club_of_contract(c2)) as u32 } else { u32::MAX }
     };
-    if !FORMER_CLUB_FEE_DRY_RUN {
+    if !FORMER_CLUB_FEE_DRY_RUN.load(Relaxed) {
         set_news_slot(n, 7, v7);
     }
     for k in 0..5 {
@@ -2774,8 +2774,8 @@ pub(crate) unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o:
         crate::comparison::branch("cqb_6 share paid");
         post_finance_amount(0x599800, fin, value); // cqb6: enters the sales of the buyer
         if value > (club.reputation() as i32).wrapping_mul(11).wrapping_sub(10000) {
-            FORMER_CLUB_FEE_DELIVERIES += 1;
-            if !FORMER_CLUB_FEE_DRY_RUN {
+            FORMER_CLUB_FEE_DELIVERIES.fetch_add(1, Relaxed);
+            if !FORMER_CLUB_FEE_DRY_RUN.load(Relaxed) {
                 set_news_slot(n, 5, value as u32);
                 set_news_slot(n, 6, read_usize(club.addr()) as u32);
                 send_news_to_club_manager(n, club.addr());
@@ -2848,14 +2848,14 @@ pub(crate) unsafe extern "thiscall" fn pay_next_sale_percentage(this: usize, p: 
         return 0;
     }
     crate::comparison::branch("cqb_6 percentage paid");
-    if !FORMER_CLUB_FEE_DRY_RUN {
+    if !FORMER_CLUB_FEE_DRY_RUN.load(Relaxed) {
         exe::transfer_manager_post_sale_percentage_news(this, e, part, o, da_oferta);
     }
     let da_clausula = friendly_club_by_id(read_usize(e + sell_on_clause::RECEIVING_CLUB_ID));
     let fin_recebe = european_cup_club_finance(da_clausula.addr());
     let fin_paga = european_cup_club_finance(transfer_manager_club_of_contract(Contract((injury_main_contract_stored(p)).addr())));
     let of_contract = transfer_manager_club_of_contract(Contract((injury_main_contract_stored(p)).addr()));
-    if !FORMER_CLUB_FEE_DRY_RUN {
+    if !FORMER_CLUB_FEE_DRY_RUN.load(Relaxed) {
         exe::club_records_add_transfer_totals(read_usize(G_CLUB_RECORDS), part, of_contract, friendly_club_by_id(read_usize(e + sell_on_clause::RECEIVING_CLUB_ID)));
     }
     post_finance_amount(0x599800, fin_recebe, part);
@@ -3223,8 +3223,8 @@ pub(crate) unsafe extern "thiscall" fn reject_loan_offer(this: usize, slot: *mut
 
 /// O ensaio do comparador da `check_squad_limits`: a cópia roda sem liberar o jogador escolhido (`add_free_release_records` e `free_transfer_staff` mexem no
 /// resto do jogo) e guarda quem seria em SQUAD_LIMITS_RELEASED_PLAYER.
-pub(crate) static mut SQUAD_LIMITS_DRY_RUN: bool = false;
-pub(crate) static mut SQUAD_LIMITS_RELEASED_PLAYER: usize = 0;
+pub(crate) static SQUAD_LIMITS_DRY_RUN: AtomicBool = AtomicBool::new(false);
+pub(crate) static SQUAD_LIMITS_RELEASED_PLAYER: AtomicUsize = AtomicUsize::new(0);
 
 /// Job type byte is a player job (DATABASE is_player_job `exe::database_is_player_job`, types 11..15).
 ///
@@ -3461,8 +3461,8 @@ pub(crate) unsafe extern "thiscall" fn check_squad_limits(this: usize, club: usi
                     return fail_with_reason(club, o, reason, 4);
                 }
                 crate::comparison::branch("cqa_5 releases the cheapest");
-                if SQUAD_LIMITS_DRY_RUN {
-                    SQUAD_LIMITS_RELEASED_PLAYER = chosen;
+                if SQUAD_LIMITS_DRY_RUN.load(Relaxed) {
+                    SQUAD_LIMITS_RELEASED_PLAYER.store(chosen, Relaxed);
                 } else {
                     let free: unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32) = core::mem::transmute(FN_TRANSFER_MANAGER_FREE_TRANSFER_STAFF);
                     exe::staff_records_add_free_release_records(read_usize(G_STAFF_RECORDS), chosen);
@@ -3576,14 +3576,14 @@ pub(crate) unsafe fn increment_permit_counter(r: usize, o: usize) {
 ///
 /// [pt] O ensaio do comparador: a cópia roda sem pagar os prêmios por jogos (0x8cb340 dá notícia, aloca e paga), como se
 /// nenhum pagasse (sem tirar o bônus); a contagem das permissões não depende deles.
-pub(crate) static mut APPEARANCE_CLAUSES_DRY_RUN: bool = false;
+pub(crate) static APPEARANCE_CLAUSES_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// TRANSFER_MANAGER::pay_appearance_money(person, games, type); returns 0 without calling during the comparer's dry
 /// run.
 ///
 /// [pt] TRANSFER_MANAGER::pay_appearance_money (0x8cb340: thiscall(this, pessoa, jogos, tipo, 0), ret 0x10); no ensaio, 0.
 pub(crate) unsafe fn pay_appearance_money_unless_dry_run(this: usize, p: usize, games: i32, kind: u32) -> u32 {
-    if APPEARANCE_CLAUSES_DRY_RUN {
+    if APPEARANCE_CLAUSES_DRY_RUN.load(Relaxed) {
         return 0;
     }
     exe::transfer_manager_pay_appearance_money(this, p, games, kind, 0)
@@ -4053,7 +4053,7 @@ pub(crate) unsafe fn llist_items_from_start(l: Llist) -> Vec<usize> {
 ///
 /// [pt] O ensaio do comparador: a cópia roda sem as chamadas que mexem no resto do jogo (o desassossego com sorteio, a
 /// notícia, o agendamento, as listas de observação e as ofertas de contrato), que não podem rodar duas vezes.
-pub(crate) static mut OFFER_RESPONSE_DRY_RUN: bool = false;
+pub(crate) static OFFER_RESPONSE_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// The offers that the dry run moved from status 0xf to 8 (`dry_run_restore_contract_offers`), returned to 0xf after
 /// the copy.
@@ -4101,7 +4101,7 @@ pub(crate) unsafe fn shortlist_manager_of(this: TransferManagerFields) -> usize 
 /// [pt] Shortlist_Manager::clear_bid_markers_for_player (0x84aeb0: thiscall(gerência, clube, pessoa), ret 8); no ensaio,
 /// nada.
 pub(crate) unsafe fn clear_bid_markers(this: usize, club: usize, person: usize) {
-    if OFFER_RESPONSE_DRY_RUN {
+    if OFFER_RESPONSE_DRY_RUN.load(Relaxed) {
         return;
     }
     exe::shortlist_manager_clear_bid_markers_for_player(shortlist_manager_of(TransferManagerFields(this)), club, person);
@@ -4112,7 +4112,7 @@ pub(crate) unsafe fn clear_bid_markers(this: usize, club: usize, person: usize) 
 /// [pt] Shortlist_Manager::update_staff_status (0x843e10: thiscall(gerência, pessoa, clube, evento, tipo), ret 0x10); no
 /// ensaio, nada.
 pub(crate) unsafe fn update_shortlist_status(this: usize, person: usize, club: usize, event: u32, kind: u32) {
-    if OFFER_RESPONSE_DRY_RUN {
+    if OFFER_RESPONSE_DRY_RUN.load(Relaxed) {
         return;
     }
     (exe::shortlist_manager_update_staff_status(shortlist_manager_of(TransferManagerFields(this)), person, club, event, kind) as usize);
@@ -4128,7 +4128,7 @@ pub(crate) unsafe fn update_shortlist_status(this: usize, person: usize, club: u
 /// transferência futura, 0x8c6db0 fechar as ofertas de contrato da oferta); no ensaio, nada, só o bit 0x10 da marca da
 /// pessoa que a 0x8cbf70 apaga (o comparador lê o byte; as marcas dos jogadores da troca ele não lê nem devolve).
 pub(crate) unsafe fn call_with_offer(f: usize, this: TransferManagerFields, o: Offer) {
-    if OFFER_RESPONSE_DRY_RUN {
+    if OFFER_RESPONSE_DRY_RUN.load(Relaxed) {
         if f == 0x8cbf70 {
             *((this.person_flags().wrapping_add(o.target_staff_id().wrapping_mul(8))) as *mut u8) &= 0xef;
         }
@@ -4196,14 +4196,14 @@ pub(crate) unsafe fn update_buyer_shortlist_entry(this: usize, o: Offer) {
 /// Removes the contract offers of the target and of each exchange player (clearing +0x10 and each item's +4), and
 /// updates the buyer's shortlist status of exchange players when the seller is AI.
 pub(crate) unsafe fn withdraw_offer_contract_offers(this: usize, o: Offer, seller: usize, buyer: usize) {
-    if !OFFER_RESPONSE_DRY_RUN {
+    if !OFFER_RESPONSE_DRY_RUN.load(Relaxed) {
         exe::contract_manager_remove_contract_offer(read_usize(G_CONTRACT_MANAGER), staff_records_staff_by_id(o.target_staff_id()), friendly_club_by_id(o.buyer_club_id()));
     }
     o.set_terms_state(0);
     let swap = o.exchange_players();
     if !swap.is_null() {
         for e in llist_items_from_start(swap) {
-            if !OFFER_RESPONSE_DRY_RUN {
+            if !OFFER_RESPONSE_DRY_RUN.load(Relaxed) {
                 exe::contract_manager_remove_contract_offer_for_transfer(read_usize(G_CONTRACT_MANAGER), staff_records_staff_by_id(read_usize(e)), o.slot_index());
             }
             write_u8(e + 4, 0);
@@ -4249,7 +4249,7 @@ pub(crate) unsafe fn contract_club_stored(person: usize) -> usize {
 ///
 /// [pt] A notícia da oferta recusada (0x8d5170: thiscall(gerência, oferta, motivo), ret 8); no ensaio, nada.
 pub(crate) unsafe fn transfer_manager_post_offer_rejected_news(this: usize, o: Offer, reason: u32) {
-    if OFFER_RESPONSE_DRY_RUN {
+    if OFFER_RESPONSE_DRY_RUN.load(Relaxed) {
         return;
     }
     exe::transfer_manager_post_offer_rejected_news(this, o, reason);
@@ -4259,7 +4259,7 @@ pub(crate) unsafe fn transfer_manager_post_offer_rejected_news(this: usize, o: O
 ///
 /// [pt] TRANSFER_MANAGER::schedule_offer (0x8c6220: thiscall(gerência, oferta, dias, fatias), ret 0xc); no ensaio, nada.
 pub(crate) unsafe fn schedule_offer_unless_dry_run(this: usize, o: Offer, days: u32) {
-    if OFFER_RESPONSE_DRY_RUN {
+    if OFFER_RESPONSE_DRY_RUN.load(Relaxed) {
         return;
     }
     exe::transfer_manager_schedule_offer(this, o, days, 0);
@@ -4342,7 +4342,7 @@ pub(crate) unsafe extern "thiscall" fn withdraw_transfer_offer(this: usize, slot
         call_with_offer(0x8cbf70, TransferManagerFields(this), current);
     }
     if o.status() as i8 >= 0xb {
-        if OFFER_RESPONSE_DRY_RUN {
+        if OFFER_RESPONSE_DRY_RUN.load(Relaxed) {
             dry_run_restore_contract_offers(o.target_staff_id());
         } else {
             exe::contract_manager_resubmit_held_offers(read_usize(G_CONTRACT_MANAGER), o.target_staff_id());
@@ -4403,9 +4403,9 @@ pub(crate) unsafe fn compare_reject_withdraw(name: &str, this: TransferManagerFi
         regions.push((e, 5));
     }
     let before = crate::comparison::MemorySnapshot::read(&regions);
-    OFFER_RESPONSE_DRY_RUN = true;
+    OFFER_RESPONSE_DRY_RUN.store(true, Relaxed);
     crate::rng::pause_trace(copy);
-    OFFER_RESPONSE_DRY_RUN = false;
+    OFFER_RESPONSE_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     for r in (*core::ptr::addr_of_mut!(DRY_RUN_OFFERS_TO_RESTORE)).drain(..) {
         write_u8(r + offer::STATUS, 0xf);
@@ -4500,8 +4500,8 @@ pub(crate) unsafe fn get_contract_store_lookup(person: Staff) -> Contract {
 ///
 /// [pt] O ensaio do comparador: a cópia para antes da queixa (0x867700), da fuga (0x419840) e das antipatias (0x547e70,
 /// 0x547af0), que mexem no resto do jogo, e marca que chegou lá.
-pub(crate) static mut UNSETTLE_PLAYER_DRY_RUN: bool = false;
-pub(crate) static mut UNSETTLE_PLAYER_REACHED: bool = false;
+pub(crate) static UNSETTLE_PLAYER_DRY_RUN: AtomicBool = AtomicBool::new(false);
+pub(crate) static UNSETTLE_PLAYER_REACHED: AtomicBool = AtomicBool::new(false);
 
 /// A random draw against the buyer's reputation flags the player as unsettled; when flagged, a score from his
 /// attributes and interest leads to the 0x80 complaint, going missing and grudges.
@@ -4589,8 +4589,8 @@ pub(crate) unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o:
     if pond < smaller {
         return;
     }
-    if UNSETTLE_PLAYER_DRY_RUN {
-        UNSETTLE_PLAYER_REACHED = true;
+    if UNSETTLE_PLAYER_DRY_RUN.load(Relaxed) {
+        UNSETTLE_PLAYER_REACHED.store(true, Relaxed);
         return;
     }
     crate::comparison::branch("cpx_2 unsettled");

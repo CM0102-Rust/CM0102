@@ -1533,7 +1533,7 @@ pub(crate) unsafe fn list_len(l: usize) -> usize {
 }
 
 /// O último pedido que passou pelo comparador da `process_friendly_reply` (a resposta).
-pub(crate) static mut LAST_FRIENDLY_REPLY: usize = 0;
+pub(crate) static LAST_FRIENDLY_REPLY: AtomicUsize = AtomicUsize::new(0);
 
 /// Nations in the nation table that have a continent (+0x71), in table order.
 ///

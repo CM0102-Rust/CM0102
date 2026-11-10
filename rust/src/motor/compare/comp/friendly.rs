@@ -273,7 +273,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_human_club_open_invitation(t
 pub(crate) unsafe extern "thiscall" fn compare_process_friendly_reply(this: usize, m: usize, force: u32) {
     let this = Friendly(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PROCESS_FRIENDLY_REPLY);
-    LAST_FRIENDLY_REPLY = m;
+    LAST_FRIENDLY_REPLY.store(m, Relaxed);
     let a = Club(if m != 0 { read_usize(m + friendly_match::REQUESTING_CLUB) } else { 0 });
     let other = Club(if m != 0 { (other_friendly_club(m)).addr() } else { 0 });
     if a.is_null() || (!other.is_null() && (a.nation().addr() == 0 || other.nation().addr() == 0)) {
@@ -313,10 +313,10 @@ pub(crate) unsafe extern "thiscall" fn compare_send_friendly_request(this: usize
     let other = other_friendly_club(m);
     let before = list_len(this.request_reply_list());
     let s = if !other.is_null() && read_u8(m + friendly_match::STATUS) == 1 && club_has_human_manager(other.addr()) { 2 } else { read_u8(m + friendly_match::STATUS) };
-    LAST_FRIENDLY_REPLY = 0;
+    LAST_FRIENDLY_REPLY.store(0, Relaxed);
     o(this.addr(), m);
     let l = this.request_reply_list();
-    let answered = s == 2 && LAST_FRIENDLY_REPLY == m;
+    let answered = s == 2 && LAST_FRIENDLY_REPLY.load(Relaxed) == m;
     if answered {
         crate::comparison::branch("cqa_2 request answered by the assistant");
     }

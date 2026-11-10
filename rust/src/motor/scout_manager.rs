@@ -11,7 +11,7 @@ pub(crate) unsafe fn scout_manager_date_after(day: i16, year: u16, data: usize) 
 /// The dry run of `0x7f8750`: the copy only prunes the requests (in its own vector) and stops before the reports.
 ///
 /// [pt] O ensaio da 0x7f8750: a cópia só poda os pedidos (num vetor dela) e para antes dos relatórios.
-pub(crate) static mut SCOUT_DAILY_DRY_RUN: bool = false;
+pub(crate) static SCOUT_DAILY_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// Prunes a scouting request (0x11 bytes: +0 the club, +4 the player, +8 the date, +0x10 how many reports); returns
 /// (remove, process).
@@ -141,7 +141,7 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -
     while i < read_i32(this + scout_manager_fields::SCOUT_REQUEST_COUNT) {
         let request = read_usize(this + scout_manager_fields::SCOUT_REQUESTS) + i as usize * 0x11;
         let (tirar, processar, jogador, tecnico, nacao) = judge_scout_request(request, catorze);
-        if processar && !SCOUT_DAILY_DRY_RUN {
+        if processar && !SCOUT_DAILY_DRY_RUN.load(Relaxed) {
             crate::comparison::branch("cqf_12 request processed");
             let mut feitos: i8 = 0;
             for k in 0..10u32 {
@@ -168,7 +168,7 @@ pub(crate) unsafe extern "thiscall" fn scout_manager_daily_update(this: usize) -
         }
         i += 1;
     }
-    if SCOUT_DAILY_DRY_RUN {
+    if SCOUT_DAILY_DRY_RUN.load(Relaxed) {
         exe::drop_llist(l);
         return 1;
     }
@@ -251,7 +251,7 @@ pub(crate) unsafe extern "thiscall" fn send_scout_reports(this: usize, list: usi
             i += 1;
         }
         let first = v + start as usize * 0x67;
-        if SCOUT_DAILY_DRY_RUN {
+        if SCOUT_DAILY_DRY_RUN.load(Relaxed) {
             if let Some(g) = &mut *core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS) {
                 g.push((read_usize(first + scout_report::PLAYER_ID) as u32, read_usize(first + scout_report::CLUB_ID) as u32, how_many));
             }

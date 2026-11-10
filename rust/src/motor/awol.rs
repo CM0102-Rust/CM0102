@@ -613,8 +613,8 @@ pub(crate) unsafe extern "thiscall" fn has_fitness_incident(this: usize, person:
 ///
 /// [pt] O ensaio dos comparadores de `miss_training`, `end_absence` e `set_flags`: a cópia para antes
 /// das chamadas que alocam, dão notícia ou não podem rodar duas vezes e deixa em MISS_TRAINING_DECISION o que faria.
-pub(crate) static mut MISS_TRAINING_DRY_RUN: bool = false;
-pub(crate) static mut MISS_TRAINING_DECISION: u32 = 0;
+pub(crate) static MISS_TRAINING_DRY_RUN: AtomicBool = AtomicBool::new(false);
+pub(crate) static MISS_TRAINING_DECISION: AtomicU32 = AtomicU32::new(0);
 
 /// Club record of contract k (id +4, G_CLUB_TABLE), or 0.
 ///
@@ -690,8 +690,8 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
                 && friendly_random((person.loyalty() as u8) as i8 as i32 + 10) == 0
             {
                 crate::comparison::branch("cpw_7 vanished instead of missing");
-                if MISS_TRAINING_DRY_RUN {
-                    MISS_TRAINING_DECISION = 1;
+                if MISS_TRAINING_DRY_RUN.load(Relaxed) {
+                    MISS_TRAINING_DECISION.store(1, Relaxed);
                     return;
                 }
                 exe::awol_start_absence(this, person, (0) as usize, 0);
@@ -700,8 +700,8 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
         }
     }
     crate::comparison::branch("cpw_7 marked the absence");
-    if MISS_TRAINING_DRY_RUN {
-        MISS_TRAINING_DECISION = 2;
+    if MISS_TRAINING_DRY_RUN.load(Relaxed) {
+        MISS_TRAINING_DECISION.store(2, Relaxed);
         return;
     }
     *m |= 2;
@@ -764,8 +764,8 @@ pub(crate) unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
     let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     write_u32(G_CONTRACT_LOOKUP_RESULT, k as u32);
     if k != 0 && awol_club_of_contract(Contract(k)) != 0 {
-        if MISS_TRAINING_DRY_RUN {
-            MISS_TRAINING_DECISION = 1;
+        if MISS_TRAINING_DRY_RUN.load(Relaxed) {
+            MISS_TRAINING_DECISION.store(1, Relaxed);
         } else {
             let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add((read_i32(r) as usize).wrapping_mul(staff::SIZE)));
             exe::awol_post_news(p, p.club_job(), 0, 0xffffffff);
@@ -773,7 +773,7 @@ pub(crate) unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
     }
     let m = read_usize(this + 0xc).wrapping_add(read_i32(r) as usize) as *mut u8;
     *m ^= 1;
-    if MISS_TRAINING_DRY_RUN {
+    if MISS_TRAINING_DRY_RUN.load(Relaxed) {
         return;
     }
     exe::llist_remove(read_usize(this), r);

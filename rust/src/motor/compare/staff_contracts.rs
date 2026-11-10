@@ -120,11 +120,11 @@ pub(crate) unsafe extern "thiscall" fn compare_set_flags(c: usize, marks: u32) {
     let mut regions = vec![(c + 0x40, 4)];
     regions.extend(crate::rng::STATE_REGIONS);
     let before = crate::comparison::MemorySnapshot::read(&regions);
-    MISS_TRAINING_DRY_RUN = true;
-    MISS_TRAINING_DECISION = 0;
+    MISS_TRAINING_DRY_RUN.store(true, Relaxed);
+    MISS_TRAINING_DECISION.store(0, Relaxed);
     crate::rng::pause_trace(|| crate::rng::without_counting(|| set_flags(c, marks)));
-    MISS_TRAINING_DRY_RUN = false;
-    let pediu = MISS_TRAINING_DECISION != 0;
+    MISS_TRAINING_DRY_RUN.store(false, Relaxed);
+    let pediu = MISS_TRAINING_DECISION.load(Relaxed) != 0;
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
     o(c, marks);

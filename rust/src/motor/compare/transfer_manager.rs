@@ -268,13 +268,13 @@ pub(crate) unsafe extern "thiscall" fn compare_pay_former_club_fee_cuts(this: us
     let o = Offer(o);
     let original = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_PAY_FORMER_CLUB_FEE_CUTS);
     let fin = european_cup_club_finance((friendly_club_by_id(o.buyer_club_id())).addr());
-    FORMER_CLUB_FEE_DELIVERIES = 0;
+    FORMER_CLUB_FEE_DELIVERIES.store(0, Relaxed);
     let (_, _, same, mo, mr) = crate::comparison::side_by_side(&[(fin, 0x167), (G_CONTRACT_LOOKUP_RESULT, 4)], || original(this, o.addr()), || {
-        FORMER_CLUB_FEE_DRY_RUN = true;
+        FORMER_CLUB_FEE_DRY_RUN.store(true, Relaxed);
         crate::rng::without_counting(|| pay_former_club_fee_cuts(this, o.addr()));
-        FORMER_CLUB_FEE_DRY_RUN = false;
+        FORMER_CLUB_FEE_DRY_RUN.store(false, Relaxed);
     });
-    let entregas = FORMER_CLUB_FEE_DELIVERIES;
+    let entregas = FORMER_CLUB_FEE_DELIVERIES.load(Relaxed);
     let same = same || (entregas != 0 && mo.0[0] == mr.0[0]);
     SCOREBOARD.record(same, || format!("pay_former_club_fee_cuts(offer {:#x}) entregas={} original={:x?} rust={:x?}", o.addr(), entregas, mo, mr));
 }
@@ -299,9 +299,9 @@ pub(crate) unsafe extern "thiscall" fn compare_pay_next_sale_percentage(this: us
         regions.push((b, 0x167));
     }
     let (r, n, same, mo, mr) = crate::comparison::side_by_side(&regions, || original(this, p, o), || {
-        FORMER_CLUB_FEE_DRY_RUN = true;
+        FORMER_CLUB_FEE_DRY_RUN.store(true, Relaxed);
         let n = crate::rng::without_counting(|| pay_next_sale_percentage(this, p, o));
-        FORMER_CLUB_FEE_DRY_RUN = false;
+        FORMER_CLUB_FEE_DRY_RUN.store(false, Relaxed);
         n
     });
     let same = r == n && (same || (r != 0 && mo.0[3..] == mr.0[3..]));
@@ -386,11 +386,11 @@ pub(crate) unsafe extern "thiscall" fn compare_check_squad_limits(this: usize, c
         regions.push((o.exchange_players().addr() + llist::CURSOR, 4));
     }
     let before = crate::comparison::MemorySnapshot::read(&regions);
-    SQUAD_LIMITS_DRY_RUN = true;
-    SQUAD_LIMITS_RELEASED_PLAYER = 0;
+    SQUAD_LIMITS_DRY_RUN.store(true, Relaxed);
+    SQUAD_LIMITS_RELEASED_PLAYER.store(0, Relaxed);
     let n = crate::rng::pause_trace(|| check_squad_limits(this, club, o.addr(), count_queue, reason));
-    SQUAD_LIMITS_DRY_RUN = false;
-    let released = SQUAD_LIMITS_RELEASED_PLAYER;
+    SQUAD_LIMITS_DRY_RUN.store(false, Relaxed);
+    let released = SQUAD_LIMITS_RELEASED_PLAYER.load(Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
     let r = f(this, club, o.addr(), count_queue, reason);
@@ -439,9 +439,9 @@ pub(crate) unsafe extern "thiscall" fn compare_update_appearance_clauses_after_m
     }
     let regions = [(v, n as usize * 0xe)];
     let before = crate::comparison::MemorySnapshot::read(&regions);
-    APPEARANCE_CLAUSES_DRY_RUN = true;
+    APPEARANCE_CLAUSES_DRY_RUN.store(true, Relaxed);
     crate::rng::pause_trace(|| crate::rng::without_counting(|| update_appearance_clauses_after_match(this.addr(), game.addr(), fixture)));
-    APPEARANCE_CLAUSES_DRY_RUN = false;
+    APPEARANCE_CLAUSES_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
     o(this.addr(), game.addr(), fixture);
@@ -541,14 +541,14 @@ pub(crate) unsafe extern "thiscall" fn compare_unsettle_player_after_bid(this: u
     let mut regions = vec![(o, 0x30usize), (G_CONTRACT_LOOKUP_RESULT, 4)];
     regions.extend(crate::rng::STATE_REGIONS);
     let before = crate::comparison::MemorySnapshot::read(&regions);
-    UNSETTLE_PLAYER_DRY_RUN = true;
-    UNSETTLE_PLAYER_REACHED = false;
+    UNSETTLE_PLAYER_DRY_RUN.store(true, Relaxed);
+    UNSETTLE_PLAYER_REACHED.store(false, Relaxed);
     crate::rng::pause_trace(|| crate::rng::without_counting(|| unsettle_player_after_bid(this, o)));
-    UNSETTLE_PLAYER_DRY_RUN = false;
+    UNSETTLE_PLAYER_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
     orig_f(this, o);
-    if UNSETTLE_PLAYER_REACHED {
+    if UNSETTLE_PLAYER_REACHED.load(Relaxed) {
         return;
     }
     let mo = crate::comparison::MemorySnapshot::read(&regions);

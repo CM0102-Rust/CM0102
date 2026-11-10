@@ -419,8 +419,8 @@ pub(crate) unsafe extern "thiscall" fn set_flags(c: usize, marks: u32) {
         return;
     }
     crate::comparison::branch("cpw_7 transfer request");
-    if MISS_TRAINING_DRY_RUN {
-        MISS_TRAINING_DECISION = 1;
+    if MISS_TRAINING_DRY_RUN.load(Relaxed) {
+        MISS_TRAINING_DECISION.store(1, Relaxed);
         return;
     }
     exe::contract_manager_handle_transfer_request(read_usize(G_CONTRACT_MANAGER), c);

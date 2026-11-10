@@ -2205,11 +2205,11 @@ pub(crate) unsafe fn apply_pending_punishments_with(m: Engine, first: usize, cal
 // Ports of 0x716630 (prepares) and 0x716e10 (tires): both narrate internally. Tape units only in
 // comparison of punishments (0x716e10 also runs inside many other routines).
 pub(crate) static RECORD_716: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-pub(crate) static mut START_FIGHT_TRAMPOLINE: usize = 0;
+pub(crate) static START_FIGHT_TRAMPOLINE: AtomicUsize = AtomicUsize::new(0);
 pub(crate) const PROLOGUE_716630: Prologue = Prologue { address: 0x716630, bytes: &[0x83, 0xec, 0x10, 0x53, 0x55] };
-pub(crate) static mut REACT_TO_FOUL_DECISION_TRAMPOLINE: usize = 0;
+pub(crate) static REACT_TO_FOUL_DECISION_TRAMPOLINE: AtomicUsize = AtomicUsize::new(0);
 pub(crate) const PROLOGUE_716E10: Prologue = Prologue { address: 0x716e10, bytes: &[0x83, 0xec, 0x08, 0x53, 0x56] };
-pub(crate) static mut HANDLE_SUSPECTED_DIVE_TRAMPOLINE: usize = 0;
+pub(crate) static HANDLE_SUSPECTED_DIVE_TRAMPOLINE: AtomicUsize = AtomicUsize::new(0);
 pub(crate) const PROLOGUE_716C90: Prologue = Prologue { address: 0x716c90, bytes: &[0x51, 0x56, 0x8b, 0xf1, 0x57] };
 
 /// Shared gate for the 0x716xxx MATCH_PLAYER calls: runs the original directly, or records it on the open tape as one
@@ -2226,17 +2226,17 @@ pub(crate) unsafe fn gate_match_player_call(routine: usize, target: usize, p: us
 }
 /// Gate for MATCH_PLAYER::start_fight (0x716630): records it on the comparison tape when recording, else just calls it.
 pub(crate) unsafe extern "thiscall" fn gate_start_fight(p: usize, a1: u32) {
-    gate_match_player_call(0x716630, START_FIGHT_TRAMPOLINE, p, a1)
+    gate_match_player_call(0x716630, START_FIGHT_TRAMPOLINE.load(Relaxed), p, a1)
 }
 /// Gate for MATCH_PLAYER::react_to_foul_decision (0x716e10): records it on the comparison tape when recording, else
 /// just calls it.
 pub(crate) unsafe extern "thiscall" fn gate_react_to_foul_decision(p: usize, a1: u32) {
-    gate_match_player_call(0x716e10, REACT_TO_FOUL_DECISION_TRAMPOLINE, p, a1)
+    gate_match_player_call(0x716e10, REACT_TO_FOUL_DECISION_TRAMPOLINE.load(Relaxed), p, a1)
 }
 /// Gate for MATCH_PLAYER::handle_suspected_dive (0x716c90): records it on the comparison tape when recording, else just
 /// calls it.
 pub(crate) unsafe extern "thiscall" fn gate_handle_suspected_dive(p: usize) {
-    let o: unsafe extern "thiscall" fn(usize) = core::mem::transmute(HANDLE_SUSPECTED_DIVE_TRAMPOLINE);
+    let o: unsafe extern "thiscall" fn(usize) = core::mem::transmute(HANDLE_SUSPECTED_DIVE_TRAMPOLINE.load(Relaxed));
     if !(RECORD_716.load(std::sync::atomic::Ordering::Relaxed) && is_recording()) {
         return o(p);
     }
@@ -6973,12 +6973,12 @@ pub(crate) unsafe extern "thiscall" fn tackle_injury(m: usize, a: usize, kind: u
 
 // Ports of 0x62ed70 (current injury: updates the record through 0x62c680) and 0x6d0980 (applies the injury,
 // allocating): tape units.
-pub(crate) static mut GET_PLAYER_INJURY_TRAMPOLINE: usize = 0;
+pub(crate) static GET_PLAYER_INJURY_TRAMPOLINE: AtomicUsize = AtomicUsize::new(0);
 pub(crate) const PROLOGUE_62ED70: Prologue = Prologue { address: 0x62ed70, bytes: &[0x81, 0xec, 0x00, 0x02, 0x00, 0x00] };
 
 /// Gate for Injury::get_player_injury (`exe::injury_get_player_injury`): records it on the comparison tape when recording, else just calls it.
 pub(crate) unsafe extern "thiscall" fn gate_get_player_injury(l: usize, person: usize) -> usize {
-    let o: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(GET_PLAYER_INJURY_TRAMPOLINE);
+    let o: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(GET_PLAYER_INJURY_TRAMPOLINE.load(Relaxed));
     if !is_recording() {
         return o(l, person);
     }
@@ -7773,13 +7773,13 @@ pub(crate) unsafe extern "thiscall" fn pressure(m: usize, j: usize, out: *mut i1
 
 // Port of 0x68d0d0 (puts a copy of a block on the list, allocating): tape unit, for the copy
 // Rust not to allocate again.
-pub(crate) static mut LLIST_ADD_TAIL_TRAMPOLINE: usize = 0;
+pub(crate) static LLIST_ADD_TAIL_TRAMPOLINE: AtomicUsize = AtomicUsize::new(0);
 pub(crate) const PROLOGUE_68D0D0: Prologue = Prologue { address: 0x68d0d0, bytes: &[0x6a, 0xff, 0x68, 0x56, 0xcb, 0x95, 0x00] };
 
 /// Gate for LLIST::add_tail (0x68d0d0): when recording, records it (by content for stack blocks in wrap-up, injury,
 /// movement and pass comparisons), else just calls it.
 pub(crate) unsafe extern "thiscall" fn gate_llist_add_tail(l: usize, p: usize, n: u32) {
-    let o: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(LLIST_ADD_TAIL_TRAMPOLINE);
+    let o: unsafe extern "thiscall" fn(usize, usize, u32) = core::mem::transmute(LLIST_ADD_TAIL_TRAMPOLINE.load(Relaxed));
     if !is_recording() {
         return o(l, p, n);
     }
@@ -8646,13 +8646,13 @@ pub(crate) fn tape_detail() -> String {
 }
 
 // Port of 0x70dfd0 (the move, 7 KB: narrates, rolls random numbers and changes the engine and the player).
-pub(crate) static mut TRY_BLOCK_SHOT_TRAMPOLINE: usize = 0;
+pub(crate) static TRY_BLOCK_SHOT_TRAMPOLINE: AtomicUsize = AtomicUsize::new(0);
 pub(crate) const PROLOGUE_70DFD0: Prologue = Prologue { address: 0x70dfd0, bytes: &[0x81, 0xec, 0x20, 0x02, 0x00, 0x00] };
 
 /// Gate for MATCH_PLAYER::try_block_shot (`exe::match_player_try_block_shot`): runs its comparer, as a recorded unit when a tape is open.
 pub(crate) unsafe extern "thiscall" fn gate_try_block_shot(p: usize, a1: u32, a2: u32, a3: u32, a4: u32) -> u8 {
     let rodar = || {
-        let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u8 = core::mem::transmute(TRY_BLOCK_SHOT_TRAMPOLINE);
+        let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u8 = core::mem::transmute(TRY_BLOCK_SHOT_TRAMPOLINE.load(Relaxed));
         f(p, a1, a2, a3, a4) as u32
     };
     // the comparison of 0x70dfd0 (129th batch): its hook and this port. The comparisons of those who

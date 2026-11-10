@@ -1327,13 +1327,13 @@ pub(crate) unsafe fn add_uefa_coefficient(nation: usize, points: u32) {
 ///
 /// [pt] O ensaio do comparador da 0x583b10: a cópia roda sem a notícia do prêmio (0x48e3e0, que aloca) e sem a base da copa
 /// (0x51a150, que processa o jogo inteiro e não pode rodar duas vezes).
-pub(crate) static mut EUROPEAN_CUP_FIXTURE_DRY_RUN: bool = false;
+pub(crate) static EUROPEAN_CUP_FIXTURE_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// Sends the prize money news (Comp `send_prize_money_news`); nothing in dry run.
 ///
 /// [pt] A notícia do prêmio (Comp 0x48e3e0: thiscall(this, clube, valor, 0, −1, 0, jogo, −2), ret 0x1c); no ensaio, nada.
 pub(crate) unsafe fn european_cup_send_prize_money_news(this: usize, club: Club, value: u32, game: Fixture) {
-    if EUROPEAN_CUP_FIXTURE_DRY_RUN {
+    if EUROPEAN_CUP_FIXTURE_DRY_RUN.load(Relaxed) {
         return;
     }
     exe::comp_send_prize_money_news(this, club, (value) as i32, (0) as i32, -1, 0, game, -2);
@@ -1383,7 +1383,7 @@ pub(crate) unsafe extern "thiscall" fn process_fixture(this: usize, game: usize,
             european_cup_send_prize_money_news(this, game.away_club(), 0x186a0, game);
         }
     }
-    if EUROPEAN_CUP_FIXTURE_DRY_RUN {
+    if EUROPEAN_CUP_FIXTURE_DRY_RUN.load(Relaxed) {
         return;
     }
     exe::cup_process_fixture(this, game, arg);

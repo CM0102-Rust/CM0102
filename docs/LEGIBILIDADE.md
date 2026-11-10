@@ -14,13 +14,13 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | cópias de acesso à memória | 0 |
 | rotinas sem cabeçalho | 0 |
 | locais/parâmetros em português | 241 |
-| linhas | 228550 |
+| linhas | 228568 |
 
 ## Por arquivo (os 40 piores, pelos deslocamentos crus)
 
 | Arquivo | deslocamentos crus | chaves fixas cruas | chamadas por endereço | cópias de acesso à memória | rotinas sem cabeçalho | locais/parâmetros em português | linhas |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| `motor.rs` | 587 | 0 | 0 | 0 | 0 | 104 | 6406 |
+| `motor.rs` | 587 | 0 | 0 | 0 | 0 | 104 | 6424 |
 | `motor/match_screens.rs` | 233 | 4 | 0 | 0 | 0 | 6 | 5878 |
 | `motor/manager_manager.rs` | 209 | 2 | 0 | 0 | 0 | 0 | 5140 |
 | `motor/match_eng.rs` | 206 | 7 | 0 | 0 | 0 | 13 | 11686 |

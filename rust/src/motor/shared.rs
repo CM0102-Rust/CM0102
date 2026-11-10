@@ -524,7 +524,7 @@ pub(crate) unsafe fn original_fn<F: Copy>(i: usize) -> F {
 // next players in the list, which the original skips). In the self-test (synthetic players) the port
 // responds synthetically, without running the real routine.
 
-pub(crate) static mut MATCH_PLAYER_RESPOND_TRAMPOLINE: usize = 0;
+pub(crate) static MATCH_PLAYER_RESPOND_TRAMPOLINE: AtomicUsize = AtomicUsize::new(0);
 pub(crate) static RECORD_6F5C30: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 pub(crate) static SYNTHETIC: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
@@ -538,7 +538,7 @@ pub(crate) unsafe extern "thiscall" fn respond_hook(p: usize, a: u32, b: u32, c:
         if SYNTHETIC.load(Relaxed) {
             (p as u32 ^ a ^ b.wrapping_mul(3) ^ c.wrapping_mul(5) ^ d.wrapping_mul(7)) >> 4 & 1
         } else {
-            let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u8 = core::mem::transmute(MATCH_PLAYER_RESPOND_TRAMPOLINE);
+            let f: unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u8 = core::mem::transmute(MATCH_PLAYER_RESPOND_TRAMPOLINE.load(Relaxed));
             f(p, a, b, c, d) as u32
         }
     };

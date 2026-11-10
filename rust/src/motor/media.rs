@@ -839,8 +839,8 @@ pub(crate) unsafe fn current_reputation(person: Staff) -> i16 {
 ///
 /// [pt] O ensaio do comparador da 0x758200: a cópia roda sem nada que aloque, dê notícia ou peça transferência; quando chega
 /// a um desses, `MEDIA_REACTION_STOPPED` e ela para (a comparação fica só com a original).
-pub(crate) static mut MEDIA_REACTION_DRY_RUN: bool = false;
-pub(crate) static mut MEDIA_REACTION_STOPPED: bool = false;
+pub(crate) static MEDIA_REACTION_DRY_RUN: AtomicBool = AtomicBool::new(false);
+pub(crate) static MEDIA_REACTION_STOPPED: AtomicBool = AtomicBool::new(false);
 
 /// STAFF_CONTRACT set_flags; in the dry run, checks whether it would trigger a transfer request and returns true (stop)
 /// if so.
@@ -848,15 +848,15 @@ pub(crate) static mut MEDIA_REACTION_STOPPED: bool = false;
 /// [pt] Liga marcas no contrato (STAFF_CONTRACT::set_flags 0x867560). No ensaio, pela cópia em ensaio dela (MISS_TRAINING_DRY_RUN): se
 /// ela pediria transferência, para. Devolve se parou.
 pub(crate) unsafe fn set_contract_flags_or_stop(c: usize, marks: u32) -> bool {
-    if MEDIA_REACTION_DRY_RUN {
-        MISS_TRAINING_DRY_RUN = true;
-        MISS_TRAINING_DECISION = 0;
+    if MEDIA_REACTION_DRY_RUN.load(Relaxed) {
+        MISS_TRAINING_DRY_RUN.store(true, Relaxed);
+        MISS_TRAINING_DECISION.store(0, Relaxed);
         set_flags(c, marks);
-        MISS_TRAINING_DRY_RUN = false;
-        if MISS_TRAINING_DECISION != 0 {
-            MEDIA_REACTION_STOPPED = true;
+        MISS_TRAINING_DRY_RUN.store(false, Relaxed);
+        if MISS_TRAINING_DECISION.load(Relaxed) != 0 {
+            MEDIA_REACTION_STOPPED.store(true, Relaxed);
         }
-        return MEDIA_REACTION_STOPPED;
+        return MEDIA_REACTION_STOPPED.load(Relaxed);
     }
     exe::staff_contract_set_flags(c, marks);
     false
@@ -909,8 +909,8 @@ pub(crate) unsafe fn would_request_transfer(c: Contract, marks: u32) -> bool {
 /// [pt] As queixas do contrato (STAFF_CONTRACT::apply_event_flags 0x867700 com a pessoa). No ensaio, para antes se ela
 /// pediria transferência. Devolve se parou.
 pub(crate) unsafe fn apply_event_flags_or_stop(c: usize, marks: u32, person: Staff) -> bool {
-    if MEDIA_REACTION_DRY_RUN && would_request_transfer(Contract(c), marks) {
-        MEDIA_REACTION_STOPPED = true;
+    if MEDIA_REACTION_DRY_RUN.load(Relaxed) && would_request_transfer(Contract(c), marks) {
+        MEDIA_REACTION_STOPPED.store(true, Relaxed);
         return true;
     }
     exe::staff_contract_apply_event_flags(c, marks, (person.addr()) as u32);
@@ -922,13 +922,13 @@ pub(crate) unsafe fn apply_event_flags_or_stop(c: usize, marks: u32, person: Sta
 /// [pt] Tira queixas do contrato (STAFF_CONTRACT::clear_grievances 0x8674e0). No ensaio, para antes se o pedido de
 /// transferência seria retirado (a decisão `should_withdraw_transfer_request` com as queixas já tiradas). Devolve se parou.
 pub(crate) unsafe fn clear_grievances_or_stop(c: usize, queixas: u32) -> bool {
-    if MEDIA_REACTION_DRY_RUN {
+    if MEDIA_REACTION_DRY_RUN.load(Relaxed) {
         let before = read_usize(c + 0x45);
         write_usize(c + 0x45, before & !(queixas as usize));
         let retira = should_withdraw_transfer_request(Contract(c)).is_some();
         write_usize(c + 0x45, before);
         if retira {
-            MEDIA_REACTION_STOPPED = true;
+            MEDIA_REACTION_STOPPED.store(true, Relaxed);
             return true;
         }
     }
@@ -940,8 +940,8 @@ pub(crate) unsafe fn clear_grievances_or_stop(c: usize, queixas: u32) -> bool {
 ///
 /// [pt] A comemoração da contratação (0x75b6e0); no ensaio, para.
 pub(crate) unsafe fn signing_celebration_or_stop(this: usize, p: Staff, club: Club, kind: u32, porta_voz: usize) -> bool {
-    if MEDIA_REACTION_DRY_RUN {
-        MEDIA_REACTION_STOPPED = true;
+    if MEDIA_REACTION_DRY_RUN.load(Relaxed) {
+        MEDIA_REACTION_STOPPED.store(true, Relaxed);
         return true;
     }
     exe::media_queue_signing_celebration_story(this, p, club, kind, 1, porta_voz);
@@ -1287,8 +1287,8 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
     {
         let who = squad_spokesman(old, p);
         if who != 0 {
-            if MEDIA_REACTION_DRY_RUN {
-                MEDIA_REACTION_STOPPED = true;
+            if MEDIA_REACTION_DRY_RUN.load(Relaxed) {
+                MEDIA_REACTION_STOPPED.store(true, Relaxed);
                 return;
             }
             exe::media_queue_sale_unrest_story(this, old, new, p, who);

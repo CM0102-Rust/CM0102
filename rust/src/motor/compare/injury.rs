@@ -64,11 +64,11 @@ pub(crate) unsafe extern "thiscall" fn compare_post_recovery_news(this: usize, p
         reg.push((club.manager().addr(), 0x6e));
     }
     let before = crate::comparison::MemorySnapshot::read(&reg);
-    RECOVERY_NEWS_DRY_RUN = true;
-    RECOVERY_NEWS_WOULD_GO_AWOL = false;
+    RECOVERY_NEWS_DRY_RUN.store(true, Relaxed);
+    RECOVERY_NEWS_WOULD_GO_AWOL.store(false, Relaxed);
     crate::rng::pause_trace(|| crate::rng::without_counting(|| post_recovery_news(this, p.addr(), estagio, kind, force, days)));
-    RECOVERY_NEWS_DRY_RUN = false;
-    let fugiu = RECOVERY_NEWS_WOULD_GO_AWOL;
+    RECOVERY_NEWS_DRY_RUN.store(false, Relaxed);
+    let fugiu = RECOVERY_NEWS_WOULD_GO_AWOL.load(Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&reg);
     before.write_back();
     o(this, p.addr(), estagio, kind, force, days);
@@ -170,13 +170,13 @@ pub(crate) unsafe extern "thiscall" fn compare_injury_daily_update(this: usize) 
     }
     reg.extend(crate::rng::STATE_REGIONS);
     let before = crate::comparison::MemorySnapshot::read(&reg);
-    INJURY_DAILY_DRY_RUN = true;
-    INJURY_DAILY_STOPPED = false;
+    INJURY_DAILY_DRY_RUN.store(true, Relaxed);
+    INJURY_DAILY_STOPPED.store(false, Relaxed);
     crate::rng::pause_trace(|| crate::rng::without_counting(|| injury_daily_update(this)));
-    INJURY_DAILY_DRY_RUN = false;
+    INJURY_DAILY_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&reg);
     before.write_back();
-    if INJURY_DAILY_STOPPED {
+    if INJURY_DAILY_STOPPED.load(Relaxed) {
         crate::comparison::branch("cpw_9 new injury only in the original");
         return o(this);
     }
@@ -542,13 +542,13 @@ pub(crate) unsafe extern "thiscall" fn compare_update_player_fitness(this: usize
     let general = read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(0x4f));
     let e = crate::rng::STATE_REGIONS;
     let reg = [(rec, 31), (general + staff_state::INJURY_COUNTER, 1), (G_FITNESS_UPDATE_CACHE_DATE, 0x2c), e[0], e[1]];
-    END_INJURY_REACHED = false;
+    END_INJURY_REACHED.store(false, Relaxed);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, person.addr()), || {
-        END_INJURY_DRY_RUN = true;
+        END_INJURY_DRY_RUN.store(true, Relaxed);
         crate::rng::without_counting(|| update_player_fitness(this, person.addr()));
-        END_INJURY_DRY_RUN = false;
+        END_INJURY_DRY_RUN.store(false, Relaxed);
     });
-    if END_INJURY_REACHED {
+    if END_INJURY_REACHED.load(Relaxed) {
         crate::comparison::branch("cpw_8 end of injury only in the original");
         return;
     }

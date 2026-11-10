@@ -72,9 +72,9 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_day_clashes(this: usize, 
     }
     let mut g = *grav;
     DAY_CLASHES_APPENDED.clear();
-    DAY_CLASHES_DRY_RUN = true;
+    DAY_CLASHES_DRY_RUN.store(true, Relaxed);
     collect_day_clashes(this, game.addr(), &mut g, list, nations, n, data, desloc);
-    DAY_CLASHES_DRY_RUN = false;
+    DAY_CLASHES_DRY_RUN.store(false, Relaxed);
     let expected = fixtures_bytes(&DAY_CLASHES_APPENDED);
     let ne = DAY_CLASHES_APPENDED.len();
     let before = fix_man_list_items(list);
@@ -204,9 +204,9 @@ pub(crate) unsafe extern "thiscall" fn compare_resolve_same_day_clash(this: usiz
     }
     let reg = [(conflitos + 2, 0xc)];
     let before = crate::comparison::MemorySnapshot::read(&reg);
-    SAME_DAY_CLASH_DRY_RUN = true;
+    SAME_DAY_CLASH_DRY_RUN.store(true, Relaxed);
     resolve_same_day_clash(this, game, conflitos);
-    SAME_DAY_CLASH_DRY_RUN = false;
+    SAME_DAY_CLASH_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&reg);
     before.write_back();
     let r = o(this, game, conflitos);
@@ -252,14 +252,14 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_fixture_moved_news(this: us
     }
     let before = crate::comparison::MemorySnapshot::read(&regions);
     let count = if l != 0 { read_i16_as_i32(l) } else { 0 };
-    FIXTURE_MOVED_NEWS_DRY_RUN = true;
-    FIXTURE_MOVED_NEWS_WAS_BUILT = false;
+    FIXTURE_MOVED_NEWS_DRY_RUN.store(true, Relaxed);
+    FIXTURE_MOVED_NEWS_WAS_BUILT.store(false, Relaxed);
     crate::rng::pause_trace(|| queue_fixture_moved_news(this, f, causa, old));
-    FIXTURE_MOVED_NEWS_DRY_RUN = false;
+    FIXTURE_MOVED_NEWS_DRY_RUN.store(false, Relaxed);
     before.write_back();
     o(this, f, causa, old);
     let l2 = read_usize(this + fixture_manager::MOVED_NEWS_QUEUE);
-    let built = FIXTURE_MOVED_NEWS_WAS_BUILT;
+    let built = FIXTURE_MOVED_NEWS_WAS_BUILT.load(Relaxed);
     let same = built
         && l2 != 0
         && read_i16_as_i32(l2) == count + 1

@@ -114,7 +114,7 @@ pub(crate) unsafe extern "thiscall" fn compare_check_board_transfer_veto(this: u
     let regions = [(club_board_row(this, Club(club)), 0x49), (G_CONTRACT_LOOKUP_RESULT, 4), (0xde1f5c, 8), (0xad6c30, 4)];
     let (r, n, _, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, j, club, value, comprando),
         || crate::rng::without_counting(|| check_board_transfer_veto(this, j, club, value, comprando)));
-    let partes = if BOARD_VETO_SEEDED_RAND { 3 } else { 4 };
+    let partes = if BOARD_VETO_SEEDED_RAND.load(Relaxed) { 3 } else { 4 };
     let same = (0..partes).all(|i| mo.0[i] == mr.0[i]);
     SCOREBOARD.record(same && r == n, || format!("check_board_transfer_veto(club {:x}, value {}, comprando {}) original={:#x} rust={:#x} {:x?} x {:x?}", club, value, comprando as u8, r, n, mo, mr));
     r

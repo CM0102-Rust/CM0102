@@ -3940,7 +3940,7 @@ pub(crate) unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, pl
     let owner = Club(if c != 0 { (friendly_club_by_id(read_usize(c + contract::CLUB))).addr() } else { 0 });
     if owner.is_null() {
         if entry != 0 {
-            if LOAN_OFFER_DRY_RUN {
+            if LOAN_OFFER_DRY_RUN.load(Relaxed) {
                 return -3;
             }
             ((exe::shortlist_manager_update_staff_status(this, player, club, 1, 0) as usize) as u32);
@@ -4021,7 +4021,7 @@ pub(crate) unsafe extern "thiscall" fn try_loan_offer_for_player(this: usize, pl
     let dif = club.reputation() as i32 - owner.reputation() as i32;
     let pct = if dif > 0x9c4 { 100 } else if dif <= -0x5dc { 0 } else { 50 };
     let slot = (slot & !0xff) | pct;
-    if LOAN_OFFER_DRY_RUN {
+    if LOAN_OFFER_DRY_RUN.load(Relaxed) {
         return -2;
     }
     exe::transfer_manager_make_loan_offer(read_usize(G_TRANSFER_MANAGER), player, club, v, slot, 1, 1) as i32

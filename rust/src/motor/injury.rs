@@ -363,8 +363,8 @@ pub(crate) unsafe fn strncmp(a: usize, b: usize, n: u32) -> i32 {
 ///
 /// [pt] O ensaio do comparador: a cópia roda sem a entrega da notícia (0x786090, que aloca) e para antes da fuga (0x419840,
 /// que põe na lista e manda notícia), guardando a decisão.
-pub(crate) static mut RECOVERY_NEWS_DRY_RUN: bool = false;
-pub(crate) static mut RECOVERY_NEWS_WOULD_GO_AWOL: bool = false;
+pub(crate) static RECOVERY_NEWS_DRY_RUN: AtomicBool = AtomicBool::new(false);
+pub(crate) static RECOVERY_NEWS_WOULD_GO_AWOL: AtomicBool = AtomicBool::new(false);
 
 /// Address of the player's 31-byte physical record in the injury table ([this] + 31 × id).
 ///
@@ -516,8 +516,8 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
                         let a = friendly_random(read_i8(p + staff::LOYALTY) as i32);
                         let b = friendly_random(5);
                         if a < b {
-                            if RECOVERY_NEWS_DRY_RUN {
-                                RECOVERY_NEWS_WOULD_GO_AWOL = true;
+                            if RECOVERY_NEWS_DRY_RUN.load(Relaxed) {
+                                RECOVERY_NEWS_WOULD_GO_AWOL.store(true, Relaxed);
                                 return;
                             }
                             exe::awol_start_absence(read_usize(G_AWOL), p, club, 4);
@@ -644,7 +644,7 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
     }
     exe::newsitem_set_slot(n, 9, res as i32 as u32);
     exe::newsitem_set_slot(n, 10, f1 as i32 as u32);
-    if RECOVERY_NEWS_DRY_RUN {
+    if RECOVERY_NEWS_DRY_RUN.load(Relaxed) {
         return;
     }
     let nation = Nation(if club != 0 { read_usize(club + club::NATION) } else { read_usize(p + staff::NATION) });
@@ -1174,8 +1174,8 @@ pub(crate) unsafe fn is_recurring_category(this: usize, idx: i32, category: u8) 
 /// [pt] O ensaio do comparador: a cópia roda só a fase do treino (sem soltar a lista das batidas, sem o físico do dia 180,
 /// sem a lesão nova nem as rotinas do fim); `INJURY_DAILY_STOPPED` marca que ela chegou a uma lesão nova (0x62d250, que aloca e
 /// manda notícia) ou ao físico de todos.
-pub(crate) static mut INJURY_DAILY_DRY_RUN: bool = false;
-pub(crate) static mut INJURY_DAILY_STOPPED: bool = false;
+pub(crate) static INJURY_DAILY_DRY_RUN: AtomicBool = AtomicBool::new(false);
+pub(crate) static INJURY_DAILY_STOPPED: AtomicBool = AtomicBool::new(false);
 /// What the copy left in the regions of the training phase, waiting for the original routine to reach the comeback news
 /// items (`post_due_recovery_news`).
 ///
@@ -1219,7 +1219,7 @@ pub(crate) const INJURY_TYPE_CASES: [u8; 0x31] = [
 pub(crate) unsafe extern "thiscall" fn injury_daily_update(this: usize) {
     let list = read_usize(this + injury_fields::MATCH_HIT_LIST);
     if list != 0 {
-        if !INJURY_DAILY_DRY_RUN {
+        if !INJURY_DAILY_DRY_RUN.load(Relaxed) {
             exe::drop_llist(list);
             exe::crt_operator_delete(list);
         }
@@ -1234,8 +1234,8 @@ pub(crate) unsafe extern "thiscall" fn injury_daily_update(this: usize) {
         k += 1;
     }
     if exe::date_operator_3c(G_CURRENT_DATE, read_usize(G_GAME_START_DATE) as u32, read_usize(G_GAME_START_DATE_FLAGS) as u32) != 0 && read_i16(G_CURRENT_DATE) == 0xb4 {
-        if INJURY_DAILY_DRY_RUN {
-            INJURY_DAILY_STOPPED = true;
+        if INJURY_DAILY_DRY_RUN.load(Relaxed) {
+            INJURY_DAILY_STOPPED.store(true, Relaxed);
             return;
         }
         let mut p = read_usize(G_STAFF_TABLE);
@@ -1250,7 +1250,7 @@ pub(crate) unsafe extern "thiscall" fn injury_daily_update(this: usize) {
         crate::comparison::branch("cpw_9 training day");
         roll_training_injuries(this);
     }
-    if INJURY_DAILY_DRY_RUN {
+    if INJURY_DAILY_DRY_RUN.load(Relaxed) {
         return;
     }
     exe::injury_post_due_recovery_news(this);
@@ -1354,8 +1354,8 @@ pub(crate) unsafe fn roll_training_injuries(this: usize) {
             if case == 1 {
                 break 'proximo; // type 0x14: no injury
             }
-            if INJURY_DAILY_DRY_RUN {
-                INJURY_DAILY_STOPPED = true;
+            if INJURY_DAILY_DRY_RUN.load(Relaxed) {
+                INJURY_DAILY_STOPPED.store(true, Relaxed);
                 return;
             }
             apply_injury_attribute_loss(this, idx, p, category, case);

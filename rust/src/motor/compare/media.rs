@@ -131,13 +131,13 @@ pub(crate) unsafe extern "thiscall" fn compare_process_transfer_squad_reactions(
     }
     write_usize(G_CONTRACT_LOOKUP_RESULT, sheet); // the contracts read above do not count
     let before = crate::comparison::MemorySnapshot::read(&reg);
-    MEDIA_REACTION_DRY_RUN = true;
-    MEDIA_REACTION_STOPPED = false;
+    MEDIA_REACTION_DRY_RUN.store(true, Relaxed);
+    MEDIA_REACTION_STOPPED.store(false, Relaxed);
     crate::rng::pause_trace(|| crate::rng::without_counting(|| process_transfer_squad_reactions(this, p.addr(), new, old, flag)));
-    MEDIA_REACTION_DRY_RUN = false;
+    MEDIA_REACTION_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&reg);
     before.write_back();
-    if MEDIA_REACTION_STOPPED {
+    if MEDIA_REACTION_STOPPED.load(Relaxed) {
         crate::comparison::branch("cqa_13 reactions only in the original");
         return o(this, p.addr(), new, old, flag);
     }

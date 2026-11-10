@@ -299,9 +299,9 @@ pub(crate) unsafe extern "thiscall" fn compare_process_fixture(this: usize, game
     let check = [(ca, 2), (cb, 2)];
     let before = crate::comparison::MemorySnapshot::read(&[(ca, 2), (cb, 2), (fa, 0x167), (fb, 0x167)]);
     let stage = (this.current_stage() as i32);
-    EUROPEAN_CUP_FIXTURE_DRY_RUN = true;
+    EUROPEAN_CUP_FIXTURE_DRY_RUN.store(true, Relaxed);
     crate::rng::pause_trace(|| crate::rng::without_counting(|| process_fixture(this.addr(), game.addr(), arg)));
-    EUROPEAN_CUP_FIXTURE_DRY_RUN = false;
+    EUROPEAN_CUP_FIXTURE_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&check);
     before.write_back();
     o(this.addr(), game.addr(), arg);

@@ -177,7 +177,7 @@ pub(crate) unsafe fn compare_english_constructor(name: &str, this: League, year:
 /// allocates).
 ///
 /// [pt] No ensaio (o comparador) a cópia grava as regras e não chama a virtual +0x3c (a tabela de rodadas, que aloca).
-pub(crate) static mut ENG_PRM_RULES_DRY_RUN: bool = false;
+pub(crate) static ENG_PRM_RULES_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// Writes the rule fields (offset, size, value) into the league and builds the main-stage round table via virtual +0x3c
 /// into +0xba (skipped in dry run); returns 1.
@@ -193,7 +193,7 @@ pub(crate) unsafe fn eng_prm_apply_league_rules(this: League, written: &[(usize,
             _ => write_u32(this.addr() + d, v),
         }
     }
-    if !ENG_PRM_RULES_DRY_RUN {
+    if !ENG_PRM_RULES_DRY_RUN.load(Relaxed) {
         let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
         let t = rounds(this.addr(), 0xffff_ffff, this.addr() + league::ROUND_COUNT, this.addr() + league::STAGE_ID, 0);
         this.set_round_dates(t);
@@ -281,9 +281,9 @@ pub(crate) unsafe fn eng_prm_compare_league_rules(name: &str, this: League, writ
     let r = original();
     let mo = crate::comparison::MemorySnapshot::read(&band);
     before.write_back();
-    ENG_PRM_RULES_DRY_RUN = true;
+    ENG_PRM_RULES_DRY_RUN.store(true, Relaxed);
     let rr = crate::rng::pause_trace(copy);
-    ENG_PRM_RULES_DRY_RUN = false;
+    ENG_PRM_RULES_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&band);
     mo.write_back();
     let field = |m: &crate::comparison::MemorySnapshot, d: usize, t: u8| -> u32 {

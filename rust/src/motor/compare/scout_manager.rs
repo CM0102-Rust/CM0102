@@ -28,9 +28,9 @@ pub(crate) unsafe extern "thiscall" fn compare_scout_manager_daily_update(this: 
     write_usize(this + scout_manager_fields::SCOUT_REQUESTS, copy.as_mut_ptr() as usize);
     let state = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     let a1080 = read_usize(G_CONTRACT_LOOKUP_RESULT);
-    SCOUT_DAILY_DRY_RUN = true;
+    SCOUT_DAILY_DRY_RUN.store(true, Relaxed);
     crate::rng::without_counting(|| scout_manager_daily_update(this));
-    SCOUT_DAILY_DRY_RUN = false;
+    SCOUT_DAILY_DRY_RUN.store(false, Relaxed);
     state.write_back();
     write_usize(G_CONTRACT_LOOKUP_RESULT, a1080);
     let n1 = read_i32(this + scout_manager_fields::SCOUT_REQUEST_COUNT).max(0) as usize;
@@ -59,9 +59,9 @@ pub(crate) unsafe extern "thiscall" fn compare_send_scout_reports(this: usize, l
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEND_SCOUT_REPORTS);
     let cursor = list.cursor();
     *core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS) = Some(Vec::new());
-    SCOUT_DAILY_DRY_RUN = true;
+    SCOUT_DAILY_DRY_RUN.store(true, Relaxed);
     send_scout_reports(this, list.addr());
-    SCOUT_DAILY_DRY_RUN = false;
+    SCOUT_DAILY_DRY_RUN.store(false, Relaxed);
     let plan = (*core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS)).replace(Vec::new()).unwrap_or_default();
     list.set_cursor(cursor);
     o(this, list.addr());

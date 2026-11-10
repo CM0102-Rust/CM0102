@@ -207,13 +207,13 @@ pub(crate) unsafe extern "thiscall" fn compare_select_squads_for_fixture(this: u
     o(this, p.addr());
     let mo = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
-    SELECT_SQUADS_DRY_RUN = true;
-    SELECT_SQUADS_REQUESTED_SQUAD = false;
+    SELECT_SQUADS_DRY_RUN.store(true, Relaxed);
+    SELECT_SQUADS_REQUESTED_SQUAD.store(false, Relaxed);
     crate::rng::pause_trace(|| select_squads_for_fixture(this, p.addr()));
-    SELECT_SQUADS_DRY_RUN = false;
+    SELECT_SQUADS_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     mo.write_back();
-    if !SELECT_SQUADS_REQUESTED_SQUAD {
+    if !SELECT_SQUADS_REQUESTED_SQUAD.load(Relaxed) {
         SCOREBOARD.record(mo == mr, || format!("select_squads_for_fixture({:x}, {:x}) original={:x?} rust={:x?}", this, p.addr(), mo, mr));
     }
 }
@@ -226,9 +226,9 @@ pub(crate) unsafe extern "stdcall" fn compare_national_teams_post_player_called_
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, u32)>(IDX_NATIONAL_TEAMS_POST_PLAYER_CALLED_UP_NEWS);
     let regions = [(G_CONTRACT_LOOKUP_RESULT, 4usize)];
     let before = crate::comparison::MemorySnapshot::read(&regions);
-    CALLED_UP_NEWS_DRY_RUN = true;
+    CALLED_UP_NEWS_DRY_RUN.store(true, Relaxed);
     crate::rng::pause_trace(|| national_teams_post_player_called_up_news(player, nation, slot));
-    CALLED_UP_NEWS_DRY_RUN = false;
+    CALLED_UP_NEWS_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
     o(player, nation, slot);
@@ -255,9 +255,9 @@ pub(crate) unsafe extern "thiscall" fn compare_record_international_result(this:
     }
     let regions = caps_update_regions(this, p, m);
     let before = crate::comparison::MemorySnapshot::read(&regions);
-    INTERNATIONAL_RESULT_DRY_RUN = true;
+    INTERNATIONAL_RESULT_DRY_RUN.store(true, Relaxed);
     crate::rng::pause_trace(|| crate::rng::without_counting(|| record_international_result(this, p.addr(), m)));
-    INTERNATIONAL_RESULT_DRY_RUN = false;
+    INTERNATIONAL_RESULT_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
     o(this, p.addr(), m);

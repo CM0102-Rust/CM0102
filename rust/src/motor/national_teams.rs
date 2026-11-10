@@ -1397,11 +1397,11 @@ pub(crate) unsafe fn national_teams_list_items(list: usize) -> Vec<usize> {
 
 /// O ensaio do comparador da `select_squads_for_fixture`: a cópia roda sem escolher elenco (`select_squad`), sem dispensar os acima da idade do
 /// sub-21 (`release_overage_u21_players`: no ensaio, só o byte +0x6b que ela zera depois da data) e sem apagar repetidos (`national_teams_remove_duplicate_squad_entries`).
-pub(crate) static mut SELECT_SQUADS_DRY_RUN: bool = false;
+pub(crate) static SELECT_SQUADS_DRY_RUN: AtomicBool = AtomicBool::new(false);
 /// In the dry run: the copy requested a squad (the comparison is not valid).
 ///
 /// [pt] No ensaio: a cópia pediu um elenco (a comparação não vale).
-pub(crate) static mut SELECT_SQUADS_REQUESTED_SQUAD: bool = false;
+pub(crate) static SELECT_SQUADS_REQUESTED_SQUAD: AtomicBool = AtomicBool::new(false);
 
 /// One squad of nation record `reg` (type 0 main, 1 B/Olympic, 2 under-21).
 ///
@@ -1431,8 +1431,8 @@ pub(crate) unsafe fn refresh_or_select_squad(this: usize, p: Fixture, club: Club
         }
         return;
     }
-    if SELECT_SQUADS_DRY_RUN {
-        SELECT_SQUADS_REQUESTED_SQUAD = true;
+    if SELECT_SQUADS_DRY_RUN.load(Relaxed) {
+        SELECT_SQUADS_REQUESTED_SQUAD.store(true, Relaxed);
         return;
     }
     crate::comparison::branch("cpx_13 squad requested");
@@ -1460,7 +1460,7 @@ pub(crate) unsafe fn refresh_minor_squads(this: usize, p: Fixture, club: Club, r
 /// [pt] O que a 0x76d880 grava no registro (fora das pessoas): depois da data do sub-21 (+0x62/+0x66, 0x456740 sobre
 /// hoje), zera a marca +0x6b.
 pub(crate) unsafe fn release_overage_u21(this: usize, club: Club) {
-    if !SELECT_SQUADS_DRY_RUN {
+    if !SELECT_SQUADS_DRY_RUN.load(Relaxed) {
         return exe::nationalteams_release_overage_u21_players(this, club.nation().addr());
     }
     let reg = club_nation_record(this, club);
@@ -1518,7 +1518,7 @@ pub(crate) unsafe extern "thiscall" fn select_squads_for_fixture(this: usize, p:
         refresh_or_select_squad(this, p, fora, reg, 0, || true);
     }
     refresh_minor_squads(this, p, fora, reg);
-    if !SELECT_SQUADS_DRY_RUN {
+    if !SELECT_SQUADS_DRY_RUN.load(Relaxed) {
         exe::national_teams_remove_duplicate_squad_entries(p.home_club().nation().addr());
         exe::national_teams_remove_duplicate_squad_entries(p.away_club().nation().addr());
     }
@@ -1538,7 +1538,7 @@ pub(crate) unsafe fn club_of_person_contract(person: Staff) -> usize {
 }
 
 /// O ensaio do comparador da `national_teams_post_player_called_up_news`: a cópia roda sem entregar a notícia.
-pub(crate) static mut CALLED_UP_NEWS_DRY_RUN: bool = false;
+pub(crate) static CALLED_UP_NEWS_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// With a human manager at the player's club, sends news item 0x21 (the player, the national side and the slot) to the
 /// manager of club +0x39 and of the contract club.
@@ -1591,14 +1591,14 @@ pub(crate) unsafe extern "stdcall" fn national_teams_post_player_called_up_news(
     }
     let news = read_usize(G_NEWS);
     let c39 = player.club_job();
-    if !c39.is_null() && !CALLED_UP_NEWS_DRY_RUN {
+    if !c39.is_null() && !CALLED_UP_NEWS_DRY_RUN.load(Relaxed) {
         exe::news_send_to_club_manager(news, n, c39);
     }
     if club_of_person_contract(player) == player.club_job().addr() {
         return;
     }
     let c = club_of_person_contract(player);
-    if !CALLED_UP_NEWS_DRY_RUN {
+    if !CALLED_UP_NEWS_DRY_RUN.load(Relaxed) {
         exe::news_send_to_club_manager(news, n, c);
     }
 }
@@ -1613,7 +1613,7 @@ pub(crate) unsafe extern "stdcall" fn national_teams_post_player_called_up_news(
 /// [pt] O ensaio do comparador da 0x76b600: a cópia roda sem o ranking da FIFA (0x58cf70, acrescenta pontos ao histórico),
 /// sem a primeira convocação (0x86cc50, vai para o arquivo), sem o jogo pela seleção no registro de transferências
 /// (0x8ce920) e sem a notícia aos clubes (0x7706c0, aloca).
-pub(crate) static mut INTERNATIONAL_RESULT_DRY_RUN: bool = false;
+pub(crate) static INTERNATIONAL_RESULT_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// Lineup slot k (0..20) of side in match summary m: m + 0x625 x side + 0x190 + 0x49 x k.
 ///
@@ -1720,7 +1720,7 @@ pub(crate) unsafe extern "thiscall" fn record_international_result(this: usize, 
             swap_to_club_nation(Staff(person), Club(club));
         });
     } else if comp != read_usize(KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES) {
-        if !INTERNATIONAL_RESULT_DRY_RUN {
+        if !INTERNATIONAL_RESULT_DRY_RUN.load(Relaxed) {
             exe::fifa_rankings_record_match_result(read_usize(this + national_teams_fields::FIFA_RANKING), p);
         }
         for lado in 0..2usize {
@@ -1744,14 +1744,14 @@ pub(crate) unsafe extern "thiscall" fn record_international_result(this: usize, 
                 if read_u8(person + staff::INT_APPS) == 0 {
                     swap_to_club_nation(Staff(person), Club(club));
                     let opponent = if club == p.home_club().addr() { p.away_club() } else { p.home_club() };
-                    if !INTERNATIONAL_RESULT_DRY_RUN {
+                    if !INTERNATIONAL_RESULT_DRY_RUN.load(Relaxed) {
                         exe::staff_records_add_first_cap_record(read_usize(G_STAFF_RECORDS), person, opponent);
                     }
                 }
                 crate::comparison::branch("cpw_12 national team match");
                 write_u8(person + staff::INT_APPS, read_u8(person + staff::INT_APPS).wrapping_add(1)); // cpw12: one match
                 write_u8(person + staff::INT_GOALS, read_u8(person + staff::INT_GOALS).wrapping_add(read_u8(slot + match_record_row::GOALS))); // cpw12: os gols
-                if !INTERNATIONAL_RESULT_DRY_RUN {
+                if !INTERNATIONAL_RESULT_DRY_RUN.load(Relaxed) {
                     // the original pushes edx with the short of the matches below and the high part of 55 × nation id
                     let id_nation = read_usize(read_usize(club + club::NATION)) as u32;
                     let n = core::ptr::read_unaligned(games) as u16 as u32;
@@ -1779,7 +1779,7 @@ pub(crate) unsafe extern "thiscall" fn record_international_result(this: usize, 
         let highlight_k = read_i8(m + 0x625 * lado + 0x153) as isize;
         let highlight_id = read_usize((m + 0x625 * lado + 0x190) .wrapping_add((0x49 * highlight_k) as usize));
         let highlight = read_usize(G_STAFF_TABLE).wrapping_add(highlight_id.wrapping_mul(staff::SIZE));
-        if !INTERNATIONAL_RESULT_DRY_RUN {
+        if !INTERNATIONAL_RESULT_DRY_RUN.load(Relaxed) {
             // simplification: the original pushes the count in a dword of the local with only the low byte written; 0x7706c0 reads the byte
             exe::nationalteams_send_club_international_report_news(this, club, p, m, highlight, list.as_mut_ptr(), q as u32);
         }

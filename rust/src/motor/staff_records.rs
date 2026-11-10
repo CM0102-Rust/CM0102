@@ -7,7 +7,7 @@ use super::*;
 ///
 /// [pt] O ensaio dos comparadores: as cópias sem os históricos (arquivo), sem as notícias (0x75c390), sem acabar as
 /// convocações (0x774f30) e sem a renovação (0x4cda70), anotando os contratos que a renovação mexeria.
-pub(crate) static mut STAFF_HISTORY_DRY_RUN: bool = false;
+pub(crate) static STAFF_HISTORY_DRY_RUN: AtomicBool = AtomicBool::new(false);
 pub(crate) static mut DRY_RUN_RENEWED_CONTRACTS: Vec<usize> = Vec::new();
 /// After the copy's last day count (`exe::date_days_since`), the rehearsal skipped a call of the original routine that also counts
 /// days and leaves its static scratch date (0xae2470) in another year: the renewal (`contract_manager_offer_contract`, by age), the end of the
@@ -16,7 +16,7 @@ pub(crate) static mut DRY_RUN_RENEWED_CONTRACTS: Vec<usize> = Vec::new();
 /// [pt] Depois da última conta de dias (0x54cdb0) da cópia, o ensaio pulou uma chamada da original que também conta dias
 /// e deixa a data de rascunho estática dela (0xae2470) noutro ano: a renovação (0x4cda70, pela idade), o fim das
 /// convocações (0x774f30) ou a notícia do elogio (0x75c390). Essa data então fica fora da conta.
-pub(crate) static mut DRY_RUN_STRAY_SCRATCH_DATE: bool = false;
+pub(crate) static DRY_RUN_STRAY_SCRATCH_DATE: AtomicBool = AtomicBool::new(false);
 
 /// Raises club reputation (club::REPUTATION) toward weight × 500, at most 750 at once, clamped to 1..10000.
 ///
@@ -57,7 +57,7 @@ pub(crate) unsafe fn offer_renewal_if_due(club: Club, p: Staff, k: Contract) {
     if read_usize(G_TRANSFER_MANAGER) == 0 {
         return;
     }
-    DRY_RUN_STRAY_SCRATCH_DATE = false;
+    DRY_RUN_STRAY_SCRATCH_DATE.store(false, Relaxed);
     if days_between(G_CURRENT_DATE, k.addr() + contract::DATE_STARTED) <= 300 {
         return;
     }
@@ -66,9 +66,9 @@ pub(crate) unsafe fn offer_renewal_if_due(club: Club, p: Staff, k: Contract) {
     if v == 0 || read_i32(v + shortlist_slot::TARGET_STAFF_ID) != read_i32(p.addr()) {
         return;
     }
-    if STAFF_HISTORY_DRY_RUN {
+    if STAFF_HISTORY_DRY_RUN.load(Relaxed) {
         (*core::ptr::addr_of_mut!(DRY_RUN_RENEWED_CONTRACTS)).push(k.addr());
-        DRY_RUN_STRAY_SCRATCH_DATE = true;
+        DRY_RUN_STRAY_SCRATCH_DATE.store(true, Relaxed);
         return;
     }
     // 0x4cda70: push 1; push 0x3ff00000; push 0; push −1; push 0; push 0; push p; mov ecx, [0xae1050] -> thiscall
@@ -98,7 +98,7 @@ pub(crate) unsafe fn add_lineup_histories(this: usize, club: Club, lineup: usize
             show_error_at(0xa83b78, 0x1010);
             continue;
         }
-        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(p), e);
+        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN.load(Relaxed), this, read_usize(p), e);
     }
 }
 
@@ -111,7 +111,7 @@ pub(crate) unsafe fn add_club_history(this: usize, club: Club, kind: u8, comp: C
     stamp_game_date(e.as_mut_ptr());
     e[8] = kind;
     put_i32(&mut e, 9, read_i32(comp.addr()));
-    if !STAFF_HISTORY_DRY_RUN {
+    if !STAFF_HISTORY_DRY_RUN.load(Relaxed) {
         let p = read_usize(this + staff_records_fields::CLUB_HISTORY_LISTS).wrapping_add(read_usize(club.addr()).wrapping_mul(8));
         exe::file_llist_add_node(read_usize(this + staff_records_fields::CLUB_HISTORY_FILE), p, p + 4, e.as_ptr());
     }
@@ -121,8 +121,8 @@ pub(crate) unsafe fn add_club_history(this: usize, club: Club, kind: u8, comp: C
 ///
 /// [pt] A notícia do elogio do título (0x75c390 em [0xb6b7c8]; fora do ensaio).
 pub(crate) unsafe fn post_trophy_praise(club: Club, comp: Competition, mark: u32) {
-    if STAFF_HISTORY_DRY_RUN {
-        DRY_RUN_STRAY_SCRATCH_DATE = true;
+    if STAFF_HISTORY_DRY_RUN.load(Relaxed) {
+        DRY_RUN_STRAY_SCRATCH_DATE.store(true, Relaxed);
         return;
     }
     // 0x75c390: push mark; push comp; push club; mov ecx, [0xb6b7c8] -> thiscall (ret 0xc)
@@ -216,7 +216,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
             raise_side_rating(np.addr() + non_player::HOME_REPUTATION, weight, k1);
             raise_side_rating(np.addr() + non_player::WORLD_REPUTATION, weight, k2);
         }
-        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(t.addr()), &e);
+        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN.load(Relaxed), this, read_usize(t.addr()), &e);
         // 0x86f5b0: push 1; push manager; mov ecx, edi (the this) -> thiscall (ret 8)
         let r = ManagerRecord(exe::staff_records_get_manager_record(this, club.manager().addr(), 1));
         if !r.is_null() {
@@ -229,7 +229,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
     }
     let chairman = club.chairman().addr();
     if chairman != 0 {
-        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(chairman), &e);
+        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN.load(Relaxed), this, read_usize(chairman), &e);
     }
     // 0x7c1e30: push 6,5f; push 1; push 2; push player sheet; mov ecx, [0xb74350] -> thiscall (ret 0x10, x87); 0x544710: 3
     // pushes; add esp, 0xc -> cdecl; 0x4cf5f0: push club; push p; mov ecx, [0xae1050] -> thiscall (ret 8)
@@ -243,7 +243,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_champions_record(this: usize, 
         let f = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), p.player(), 2, 1, 6.5);
         if f > threshold as f64 { // cqd13: acima do limiar
             crate::comparison::branch("cqd_13 champion standout player");
-            append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(p.addr()), &e);
+            append_person_history_by_id(!STAFF_HISTORY_DRY_RUN.load(Relaxed), this, read_usize(p.addr()), &e);
             exe::staff_adjust_morale(p, 0x14, 1); // cqd13: the morale of the standout player
             let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club);
             if k == 0 {
@@ -318,7 +318,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
             raise_side_rating(side + 2, weight, k1);
             raise_side_rating(side + 4, weight, k2);
         }
-        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(club.manager().addr()), &e);
+        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN.load(Relaxed), this, read_usize(club.manager().addr()), &e);
         let r = ManagerRecord(exe::staff_records_get_manager_record(this, club.manager().addr(), 1));
         if !r.is_null() {
             r.set_cups_won(r.cups_won().wrapping_add(1));
@@ -335,7 +335,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
     }
     let chairman = club.chairman().addr();
     if chairman != 0 {
-        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN, this, read_usize(chairman), &e);
+        append_person_history_by_id(!STAFF_HISTORY_DRY_RUN.load(Relaxed), this, read_usize(chairman), &e);
     }
     let lineup = fixture.addr() + match_record::ROW_STAFF_ID + 0x625 * (club != game.home_club()) as usize;
     add_lineup_histories(this, club, lineup, &e);
@@ -363,8 +363,8 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
     }
     // 0x76d940 and 0x774f30: push comp; mov ecx, [0xb74318] (0x76d940 does not read ecx and only compares the id; ret 4 in both)
     if exe::national_teams_is_finals_comp(read_usize(G_NATIONAL_TEAMS), game.competition()) != 0 {
-        if STAFF_HISTORY_DRY_RUN {
-            DRY_RUN_STRAY_SCRATCH_DATE = true;
+        if STAFF_HISTORY_DRY_RUN.load(Relaxed) {
+            DRY_RUN_STRAY_SCRATCH_DATE.store(true, Relaxed);
         } else {
             exe::nationalteams_end_duty_for_competition(read_usize(G_NATIONAL_TEAMS), game.competition());
         }
@@ -440,13 +440,13 @@ pub(crate) unsafe fn compare_champion_update(name: &str, this: usize, club: Club
     todas.extend(crate::rng::STATE_REGIONS.iter().copied());
     let before = crate::comparison::MemorySnapshot::read(&todas);
     (*core::ptr::addr_of_mut!(DRY_RUN_RENEWED_CONTRACTS)).clear();
-    DRY_RUN_STRAY_SCRATCH_DATE = false;
-    STAFF_HISTORY_DRY_RUN = true;
+    DRY_RUN_STRAY_SCRATCH_DATE.store(false, Relaxed);
+    STAFF_HISTORY_DRY_RUN.store(true, Relaxed);
     crate::rng::without_counting(copy);
-    STAFF_HISTORY_DRY_RUN = false;
+    STAFF_HISTORY_DRY_RUN.store(false, Relaxed);
     let renovados = core::mem::take(&mut *core::ptr::addr_of_mut!(DRY_RUN_RENEWED_CONTRACTS));
     let mut count = fixas;
-    if DRY_RUN_STRAY_SCRATCH_DATE {
+    if DRY_RUN_STRAY_SCRATCH_DATE.load(Relaxed) {
         count.retain(|&(a, _)| a != G_DAYS_SINCE_SCRATCH_DATE);
     }
     // The original’s renewal rolls (0x4cda70): the players’ morale after the first renewed one (0x544710 rolls)
@@ -690,7 +690,7 @@ pub(crate) unsafe extern "thiscall" fn add_league_finish_records(this: usize, le
 // simplification: only writes the history to the file (does not run twice): original only; the copy takes the branch.
 
 /// O ensaio do comparador da `add_supporters_player_of_year_record`: a cópia sem o histórico (arquivo).
-pub(crate) static mut SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN: bool = false;
+pub(crate) static SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// `Staff_Records::add_supporters_player_of_year_record(person, club, a, b)`: the supporters' player of the year. SEH
 /// frame only for the local date. Called by the end of season of the records (0x447880).
@@ -716,7 +716,7 @@ pub(crate) unsafe extern "thiscall" fn add_supporters_player_of_year_record(this
     put_i32(&mut e, 8, read_i32(club));
     put_i32(&mut e, 0xd, (a & 0xffff) as i32);
     put_i32(&mut e, 0x11, b as i32);
-    append_person_history_by_id(!SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN, this, read_usize(person.addr()), &e);
+    append_person_history_by_id(!SUPPORTERS_PLAYER_OF_YEAR_DRY_RUN.load(Relaxed), this, read_usize(person.addr()), &e);
     let r1 = friendly_random(0x15 - (person.loyalty() as i32));
     if r1 < friendly_random(10) {
         crate::comparison::branch("cqa_11 favourite goal_crowd_reaction");
@@ -728,7 +728,7 @@ pub(crate) unsafe extern "thiscall" fn add_supporters_player_of_year_record(this
 /// The comparers' rehearsal: the copies run without the history (file) and without ending the call-ups.
 ///
 /// [pt] O ensaio dos comparadores: as cópias sem o histórico (arquivo) e sem acabar as convocações.
-pub(crate) static mut CUP_PLACED_CLUB_DRY_RUN: bool = false;
+pub(crate) static CUP_PLACED_CLUB_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// Appends history entry e to club id's list in the club history FILE_LLIST [this+4]; nothing in rehearsal (takes the
 /// club id; skipped in rehearsal).
@@ -736,7 +736,7 @@ pub(crate) static mut CUP_PLACED_CLUB_DRY_RUN: bool = false;
 /// [pt] A entrada `e` no fim da lista do clube `id` no arquivo do histórico dos clubes (FILE_LLIST [this+4], 0x58e340; o
 /// começo e o fim em [this+0x10] + id × 8). No ensaio, nada.
 pub(crate) unsafe fn append_club_history_by_id(this: usize, id: usize, e: &[u8; 0x40]) {
-    if CUP_PLACED_CLUB_DRY_RUN {
+    if CUP_PLACED_CLUB_DRY_RUN.load(Relaxed) {
         return;
     }
     let p = read_usize(this + staff_records_fields::CLUB_HISTORY_LISTS).wrapping_add(id.wrapping_mul(8));
@@ -814,11 +814,11 @@ pub(crate) unsafe fn update_cup_placed_club(this: usize, club: Club, game: Fixtu
             raise_side_rating(side + 2, weight, k1);
             raise_side_rating(side + 4, weight, k2);
         }
-        append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(t.addr()), &e);
+        append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN.load(Relaxed), this, read_usize(t.addr()), &e);
     }
     let chairman = club.chairman().addr();
     if chairman != 0 {
-        append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(chairman), &e);
+        append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN.load(Relaxed), this, read_usize(chairman), &e);
     }
     let lineup = fixture.addr() + match_record::ROW_STAFF_ID + 0x625 * (club != game.home_club()) as usize;
     for j in 0..0x14usize {
@@ -837,9 +837,9 @@ pub(crate) unsafe fn update_cup_placed_club(this: usize, club: Club, game: Fixtu
             show_error_at(0xa83b78, 0x1010);
             continue;
         }
-        append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(p), &e);
+        append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN.load(Relaxed), this, read_usize(p), &e);
     }
-    if kind == 2 && !CUP_PLACED_CLUB_DRY_RUN {
+    if kind == 2 && !CUP_PLACED_CLUB_DRY_RUN.load(Relaxed) {
         let stored: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_NATIONAL_TEAMS_IS_FINALS_COMP);
         if stored(game.competition().addr()) != 0 {
             exe::nationalteams_end_duty_for_nation_in_competition(read_usize(G_NATIONAL_TEAMS), game.home_club(), game.competition());
@@ -892,9 +892,9 @@ pub(crate) unsafe fn compare_cup_placed(name: &str, club: Club, game: Fixture, f
     }
     let reg = [(club.addr() + club::REPUTATION, 2), (fixture.addr() + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (game.away_club() == club) as usize, 6)];
     let before = crate::comparison::MemorySnapshot::read(&reg);
-    CUP_PLACED_CLUB_DRY_RUN = true;
+    CUP_PLACED_CLUB_DRY_RUN.store(true, Relaxed);
     copy();
-    CUP_PLACED_CLUB_DRY_RUN = false;
+    CUP_PLACED_CLUB_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&reg);
     before.write_back();
     original();
@@ -1008,7 +1008,7 @@ pub(crate) unsafe extern "thiscall" fn record_manager_job_change(this: usize, ma
     e[0xc] = 0x96;
     put_i32(&mut e, 8, read_i32(club.addr()));
     put_i32(&mut e, 0xd, signed as i32);
-    append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(manager), &e);
+    append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN.load(Relaxed), this, read_usize(manager), &e);
     if club.chairman().addr() != 0 {
         let mut e2 = history_entry();
         stamp_game_date(e2.as_mut_ptr());
@@ -1016,7 +1016,7 @@ pub(crate) unsafe extern "thiscall" fn record_manager_job_change(this: usize, ma
         put_i32(&mut e2, 8, read_i32(club.addr()));
         put_i32(&mut e2, 0xd, signed as i32);
         put_person_keys(&mut e2, 0x11, manager);
-        append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN, this, read_usize(club.chairman().addr()), &e2);
+        append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN.load(Relaxed), this, read_usize(club.chairman().addr()), &e2);
     }
     let mut e3 = history_entry();
     stamp_game_date(e3.as_mut_ptr());

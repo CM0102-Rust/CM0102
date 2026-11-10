@@ -98,9 +98,9 @@ compare_value!(compare_centre_backs_without_conflict, centre_backs_without_confl
 ///
 /// [pt] O ensaio do comparador: a cópia roda sem gravar no arquivo de histórico (FILE_LLIST::add_node 0x58e340, que escreve
 /// no arquivo e move as posições da ficha); os nós que ela gravaria entram direto na soma dos jogos e gols pelo clube.
-pub(crate) static mut ARCHIVE_STATS_DRY_RUN: bool = false;
+pub(crate) static ARCHIVE_STATS_DRY_RUN: AtomicBool = AtomicBool::new(false);
 pub(crate) static mut ARCHIVE_STATS_PENDING_TOTALS: (u16, u16) = (0, 0);
-pub(crate) static mut ARCHIVE_STATS_CLUB_ID: i32 = -1;
+pub(crate) static ARCHIVE_STATS_CLUB_ID: AtomicI32 = AtomicI32::new(-1);
 
 /// Builds the 0x2b-byte career history node: club season year, club id, category bytes, value, type and category bits.
 ///
@@ -125,8 +125,8 @@ pub(crate) unsafe fn career_history_node(club: Club, data: Option<usize>, value:
 /// [pt] Grava o nó no fim da lista do histórico da ficha (0x58e340 no arquivo [this], posições +0x18/+0x1c do registro);
 /// no ensaio, só soma.
 pub(crate) unsafe fn append_history_node(this: usize, reg: usize, in_the: &[u8; 0x2b]) {
-    if ARCHIVE_STATS_DRY_RUN {
-        if i32::from_le_bytes([in_the[2], in_the[3], in_the[4], in_the[5]]) == ARCHIVE_STATS_CLUB_ID && in_the[0x2a] & 0xf8 == 0x10 {
+    if ARCHIVE_STATS_DRY_RUN.load(Relaxed) {
+        if i32::from_le_bytes([in_the[2], in_the[3], in_the[4], in_the[5]]) == ARCHIVE_STATS_CLUB_ID.load(Relaxed) && in_the[0x2a] & 0xf8 == 0x10 {
             ARCHIVE_STATS_PENDING_TOTALS.0 = ARCHIVE_STATS_PENDING_TOTALS.0.wrapping_add(in_the[6] as u16);
             ARCHIVE_STATS_PENDING_TOTALS.1 = ARCHIVE_STATS_PENDING_TOTALS.1.wrapping_add(in_the[8] as u16);
         }
@@ -248,7 +248,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
             exe::drop_llist(list);
             exe::crt_operator_delete(list);
         }
-        if ARCHIVE_STATS_DRY_RUN {
+        if ARCHIVE_STATS_DRY_RUN.load(Relaxed) {
             let a = (reg + player_stats_entry::CLUB_LEAGUE_GAMES) as *mut u16;
             core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(ARCHIVE_STATS_PENDING_TOTALS.0));
             let g = (reg + player_stats_entry::CLUB_LEAGUE_GOALS) as *mut u16;

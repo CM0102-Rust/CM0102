@@ -116,7 +116,7 @@ pub(crate) fn stats_categories_for(cat: u8) -> [Option<u8>; 2] {
 /// first, has already sorted them).
 ///
 /// [pt] O ensaio do comparador da 0x447430: a cópia roda sem ordenar as tabelas (a original, que roda antes, já ordenou).
-pub(crate) static mut POSITION_RECORDS_DRY_RUN: bool = false;
+pub(crate) static POSITION_RECORDS_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// CLUB_RECORDS get_season_record(club, create).
 pub(crate) unsafe fn club_season_record(this: usize, club: usize, create: u32) -> usize {
@@ -207,7 +207,7 @@ pub(crate) unsafe extern "thiscall" fn update_league_position_records(this: usiz
     }
     let comp = read_usize(liga0.competition().addr()) as i32;
     for liga in league_stage_chain(liga0) {
-        if !POSITION_RECORDS_DRY_RUN {
+        if !POSITION_RECORDS_DRY_RUN.load(Relaxed) {
             exe::league_sort_table(liga, 0);
         }
         let mut i = 0i32;
@@ -261,7 +261,7 @@ pub(crate) unsafe extern "thiscall" fn update_league_position_records(this: usiz
 }
 
 /// O ensaio do comparador da `send_record_news`: a cópia roda sem preencher nem entregar as notícias e sem soltar a fila.
-pub(crate) static mut RECORD_NEWS_DRY_RUN: bool = false;
+pub(crate) static RECORD_NEWS_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// `Club_Records::send_record_news()` (SEH frame without a destructor): delivers the news item of each queued record
 /// (human club or national side) and empties the queue.
@@ -299,7 +299,7 @@ pub(crate) unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
         let n = local.as_mut_ptr() as usize;
         exe::new_newsitem(n, 0x3e8, 0);
         let reg = if read_u8(e + record_news_item::PERIOD) == 2 { club_season_record(this, club.addr(), 0) } else { club_all_time_record(this, club.addr(), 0) };
-        if RECORD_NEWS_DRY_RUN {
+        if RECORD_NEWS_DRY_RUN.load(Relaxed) {
             continue;
         }
         // simplification: the original pushes the local’s dword with the type in the low byte (the rest is leftover); 0x453120 reads the byte
@@ -311,7 +311,7 @@ pub(crate) unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
         }
     }
     if read_usize(this + club_records_fields::NEWS_QUEUE_CAPACITY) as i32 >= 100 {
-        if !RECORD_NEWS_DRY_RUN {
+        if !RECORD_NEWS_DRY_RUN.load(Relaxed) {
             exe::crt_free(read_usize(this + club_records_fields::NEWS_QUEUE));
         }
         write_usize(this + club_records_fields::NEWS_QUEUE, 0);

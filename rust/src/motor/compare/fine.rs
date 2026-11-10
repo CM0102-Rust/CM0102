@@ -12,15 +12,15 @@ pub(crate) unsafe extern "stdcall" fn compare_post_fine_reaction_news(player: us
     let mut regions = vec![(G_CONTRACT_LOOKUP_RESULT, 4)];
     regions.extend(crate::rng::STATE_REGIONS);
     let before = crate::comparison::MemorySnapshot::read(&regions);
-    FINE_NEWS_DRY_RUN = true;
-    FINE_NEWS_WOULD_BUILD = false;
+    FINE_NEWS_DRY_RUN.store(true, Relaxed);
+    FINE_NEWS_WOULD_BUILD.store(false, Relaxed);
     crate::rng::pause_trace(|| crate::rng::without_counting(|| post_fine_reaction_news(player, reason, reaction, deadline, efeitos)));
-    FINE_NEWS_DRY_RUN = false;
+    FINE_NEWS_DRY_RUN.store(false, Relaxed);
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
     o(player, reason, reaction, deadline, efeitos);
     let mo = crate::comparison::MemorySnapshot::read(&regions);
-    let montaria = FINE_NEWS_WOULD_BUILD;
+    let montaria = FINE_NEWS_WOULD_BUILD.load(Relaxed);
     let same = if montaria { mo.0[0].1 == mr.0[0].1 } else { mo == mr };
     SCOREBOARD.record(same, || format!("post_fine_reaction_news(player {:#x}) montaria={} original={:x?} rust={:x?}", player, montaria, mo, mr));
 }
