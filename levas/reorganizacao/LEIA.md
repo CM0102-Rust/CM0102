@@ -28,6 +28,15 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 36 da legibilidade: leitores de campo no motor de partidas
+
+Vereditos dos leitores no `match_eng.rs` (175 crus → 64), `match_man.rs` (173 → 124; quase todo o resto é o quadro de
+pilha emulado da rotina original) e `match_pl.rs` (160 → 47). Campos novos no `engine` (SHOOTOUT_SHOTS, SHOTS_ON_TARGET,
+SIDE_PITCH_HANDICAP e MATCH_ALREADY_OVER como inferência), `match_player::STARTING_POSITION`, o registro `tactic_stats`;
+bits das táticas (OFFSIDE_TRAP, PRESSING) e do `staff::PLAYING_SQUAD`. O +0x1a4 do motor ficou sem nome: os dois
+leitores discordaram. Prova: aa7e9c95 ×2, comparação 0; o detector de lixo não rodou (memória livre abaixo de 4 GB com
+os leitores rodando) e fica coberto pela prova da leva 37, que contém este código; as 13 mutações mudadas compilam.
+
 ## Leva 35 da legibilidade: leitores de campo em quatro arquivos, bits das flags com nome
 
 Leitores de campo no `match_screens.rs` (185 → 80 crus; 65 são coordenadas de desenho), `transfer_manager.rs` (122 →

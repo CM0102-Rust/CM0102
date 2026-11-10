@@ -29,6 +29,15 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 36: field readers on the match engine
+
+Reader verdicts on `match_eng.rs` (175 raw -> 64), `match_man.rs` (173 -> 124; almost all the rest is the original
+routine's emulated stack frame) and `match_pl.rs` (160 -> 47). New `engine` fields (SHOOTOUT_SHOTS, SHOTS_ON_TARGET,
+SIDE_PITCH_HANDICAP and MATCH_ALREADY_OVER as inference), `match_player::STARTING_POSITION`, the `tactic_stats` record;
+bits of the tactics (OFFSIDE_TRAP, PRESSING) and of `staff::PLAYING_SQUAD`. Engine +0x1a4 stays unnamed: the two
+readers disagreed. Proof: aa7e9c95 ×2, comparison 0; the garbage detector did not run (free memory under 4 GB with the
+readers running) and is covered by batch 37's proof, which contains this code; the 13 changed mutations compile.
+
 ## Readability batch 35: field readers on four files, flag bits by name
 
 Field readers on `match_screens.rs` (185 -> 80 raw; 65 are drawing coordinates), `transfer_manager.rs` (122 -> 17),

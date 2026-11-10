@@ -1,0 +1,9 @@
+  aguardando: so 2.8 GB de RAM livre (minimo 4.0)
+  aguardando: so 2.7 GB de RAM livre (minimo 4.0)
+    pool nao paginado 2.53 -> 2.60 GB, paginado 4.94 -> 4.97 GB
+execucao 1: parou em 2002-000, 255059399 sorteios, impressao 8f102bc2fd659fd2, partidas 10268/ceab981763c296dc, banco c4e1d3f72306de75, 529 s
+    date: 100000000 comparacoes, 0 divergencias
+    engine: 1000000000 comparacoes, 0 divergencias
+    random: 100000000 comparacoes, 0 divergencias
+game.cfg restaurado; auto_setup.cfg removido
+0
