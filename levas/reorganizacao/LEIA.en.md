@@ -29,6 +29,19 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 26: the DLL's log in English
+
+The log lines the tools read changed together with their readers, which accept both forms (old logs and diaries stay
+readable): `DIVERGENCIA` → `DIVERGENCE`, `EXCECAO` → `EXCEPTION`, `N comparisons, N divergences`, `SIMULATION stopped
+at .. draws= pointer= offset=`, `matches: N engines, fingerprint`, `memory: bank`, the diary `day .. draws= people=
+memory= clocks=`, `branch <name>: N`, `coverage`, `allocator:/coverage: WARNING`, `<name>: SELFTEST N cases`; the
+scoreboards are `engine`, `date` and `random`. The other ~70 messages (allocator, detours, resolution, msgbox,
+simulation, stack probe, diag) too. `CM_AUTOTESTE` also takes `engine:N` and `database`. Readers updated: `simular.py`,
+`mutacoes.py`, `cadeia.sh`, `fila_continua.sh`, `gen_docs.py`, `pendencias.py` and the diary readers
+(`deixar_infeliz.py`, `leitoras.py`, `sonda_pilha.py`). Proof: 7cc445c2 ×2, detector equal, comparison 0 (`simular.py`
+read the new lines: `engine: 1000000000 comparisons, 0 divergences`); the mutation test with the new log catches the
+mutations.
+
 ## Readability batch 25: the comparers' messages in English
 
 `textos_em_ingles.py`: 720 messages the comparers print on a divergence (`"semana({:?}) original={} rust={}"`) now name

@@ -28,6 +28,19 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 26 da legibilidade: o log da DLL em inglês
+
+As linhas do log que as ferramentas leem mudaram junto com os leitores, que aceitam as duas formas (logs e diários antigos
+continuam legíveis): `DIVERGENCIA` → `DIVERGENCE`, `EXCECAO` → `EXCEPTION`, `N comparisons, N divergences`,
+`SIMULATION stopped at .. draws= pointer= offset=`, `matches: N engines, fingerprint`, `memory: bank`, o diário `day ..
+draws= people= memory= clocks=`, `branch <nome>: N`, `coverage`, `allocator:/coverage: WARNING`, `<nome>: SELFTEST N
+cases`; os placares são `engine`, `date` e `random`. As outras ~70 mensagens (alocador, desvios, resolução, msgbox,
+simulação, sonda de pilha, diag) também. `CM_AUTOTESTE` aceita também `engine:N` e `database`. Leitores atualizados:
+`simular.py`, `mutacoes.py`, `cadeia.sh`, `fila_continua.sh`, `gen_docs.py`, `pendencias.py` e os leitores do diário
+(`deixar_infeliz.py`, `leitoras.py`, `sonda_pilha.py`). Prova: 7cc445c2 ×2, detector igual, comparação 0 (o `simular.py`
+leu as linhas novas: `engine: 1000000000 comparisons, 0 divergences`); o teste de mutação com o log novo acusa as
+mutações.
+
 ## Leva 25 da legibilidade: as mensagens dos comparadores em inglês
 
 `textos_em_ingles.py`: 720 mensagens que os comparadores escrevem numa divergência (`"semana({:?}) original={} rust={}"`)
