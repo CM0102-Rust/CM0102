@@ -22,13 +22,19 @@ sys.path.insert(0, os.path.join(R, 'engenharia-reversa'))
 import mover_rotinas  # noqa: E402
 import traduzir_locais as tl  # noqa: E402
 
-TIPOS = r'(?:Club|Staff|League|Competition|Fixture|MatchPlayer|Contract|Nation|Finance|Engine)'
-CADEIA = r'[a-z_][a-z0-9_]*(?:\.[a-z_0-9]+\(\))*'
+_REC = open(os.path.join(SRC, 'motor', 'records.rs'), encoding='utf-8').read()
+TIPOS = r'(?:%s)' % '|'.join(sorted(re.findall(r'pub\(crate\) struct (\w+)\(pub\(crate\) usize\);', _REC), key=len, reverse=True))
+CADEIA = r'[a-z_][a-z0-9_]*(?:\(\))?(?:\.[a-z_0-9]+\(\))*'
 
 
 def texto(s):
-    """The two plain-text equivalences."""
-    s = re.sub(r'\((%s)\)\.addr\(\)' % CADEIA, r'\1.addr()', s)
+    """The plain-text equivalences (doubled parentheses around a chain go first, until nothing changes)."""
+    while True:
+        s2 = re.sub(r'\(\((%s)\)\)' % CADEIA, r'(\1)', s)
+        s2 = re.sub(r'\((%s)\)\.addr\(\)' % CADEIA, r'\1.addr()', s2)
+        if s2 == s:
+            break
+        s = s2
     s = re.sub(r'(?<![\w.])(%s)\s*==\s*%s\(0\)' % (CADEIA, TIPOS), r'\1.is_null()', s)
     s = re.sub(r'(?<![\w.])(%s)\s*!=\s*%s\(0\)' % (CADEIA, TIPOS), r'!\1.is_null()', s)
     s = re.sub(r'(?<![\w.])%s\(0\)\s*==\s*(%s)\b(?!\()' % (TIPOS, CADEIA), r'\1.is_null()', s)

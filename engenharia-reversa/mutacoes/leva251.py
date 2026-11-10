@@ -19,7 +19,7 @@ MUTACOES = [
     ('cpo_tipos_comuns_limite', 'let y = exe::utils_random(0x24);\n            if x <= y {\n                return 3;', 'let y = exe::utils_random(0x20); // mutacao\n            if x <= y {\n                return 3;', 'cpo_6 common types'),
     ('cpo_nota_x4', 'rating = ftol(exe::media_rate_player_form_for_story(this, player, club, contract, kind, 3, 0.0) * *(0x968990 as *const f32) as f64);', 'rating = ftol(exe::media_rate_player_form_for_story(this, player, club, contract, kind, 3, 0.0) * 4.0); // mutacao', 'cpo_6 common types'),
     ('cpo_gratidao_tipo_sem_sorteio', 'let s = exe::utils_random(10);\n            t = if (player.temperament() as i32) >= s { 0x12 } else { 0x21 };', 'let s = 0; // mutacao: sem o sorteio\n            t = if (player.temperament() as i32) >= s { 0x12 } else { 0x21 };', 'cpo_7 gratitude type'),
-    ('cpo_gratidao_nao_sobe', '*((sheet + player_sheet::WORK_RATE) as *mut u8) += 1;', '// mutacao: sem subir +0x44', 'cpo_7 gratitude rises'),
+    ('cpo_gratidao_nao_sobe', '*((sheet.addr() + player_sheet::WORK_RATE) as *mut u8) += 1;', '// mutacao: sem subir +0x44', 'cpo_7 gratitude rises'),
     ('cpo_gratidao_sem_sorteio_3', 'crate::comparison::branch("cpo_7 gratitude draw 3");\n            exe::utils_random(3)', 'crate::comparison::branch("cpo_7 gratitude draw 3");\n            0 // mutacao: sem o sorteio', 'cpo_7 gratitude draw 3'),
     ('cpo_montar_vaga', 'if exe::shortlist_staff_fits_slot_position(p, vaga) == 0 {', 'if exe::shortlist_staff_fits_slot_position(p, vaga ^ 1) == 0 { // mutacao: a vaga vizinha', 'cpo_8 build lists'),
     ('cpo_ordenar_faixa', 'if k != 0 && exe::staff_contract_get_expiry_band(k) == 0 {', 'if k != 0 { // mutacao: sem a faixa do vencimento', 'cpo_8 faixa do contrato'),

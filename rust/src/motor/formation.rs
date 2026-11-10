@@ -205,7 +205,7 @@ pub(crate) unsafe extern "thiscall" fn mark_stars(this: usize, side: i8) {
             continue;
         }
         let pd = j.player();
-        let sum = 10 * (read_i8(pd + 0x43) as i32 + read_i8(pd + 0x33) as i32 + read_i8(pd + 0x27) as i32);
+        let sum = 10 * (read_i8(pd.addr() + 0x43) as i32 + read_i8(pd.addr() + 0x33) as i32 + read_i8(pd.addr() + 0x27) as i32);
         let mut v = ftol(sum as f64 + j.stamina() as f64);
         // simplification: the original calls 0x717410 on every test; it only reads the player
         let r = match_player_position(j);

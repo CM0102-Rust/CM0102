@@ -367,7 +367,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
             if !p.is_null() && read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) {
                 continue;
             }
-            if player_search_contract_club(p) == club_scout.addr() || p.player() == 0 {
+            if player_search_contract_club(p) == club_scout.addr() || p.player().is_null() {
                 continue;
             }
             if read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 {

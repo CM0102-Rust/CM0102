@@ -1037,10 +1037,10 @@ pub(crate) unsafe extern "thiscall" fn role_880(this: usize) -> u8 {
 pub(crate) unsafe extern "thiscall" fn release_ball(this: usize) {
     let this = MatchPlayer(this);
     let engine = || this.engine();
-    *(((engine()).addr() + 0x4786) as *mut u32) = 0;
-    *(((engine()).addr() + 0x8eae) as *mut u8) = 0xff;
-    *(((engine()).addr() + 0xf582) as *mut u32) = 0;
-    *(((engine()).addr() + 0x1a7) as *mut u8) = 0;
+    *((engine().addr() + 0x4786) as *mut u32) = 0;
+    *((engine().addr() + 0x8eae) as *mut u8) = 0xff;
+    *((engine().addr() + 0xf582) as *mut u32) = 0;
+    *((engine().addr() + 0x1a7) as *mut u8) = 0;
     this.set_space_on_ball((0) as i16);
     this.set_ball_control((0) as i16);
 }
@@ -1086,7 +1086,7 @@ pub(crate) unsafe extern "thiscall" fn adjusted_rating(this: usize, base: i8) ->
     }
     let person = this.player();
     let wins = |o: usize| {
-        let r = random(read_i8(person + o) as i32);
+        let r = random(read_i8(person.addr() + o) as i32);
         r > random(0x29)
     };
     let lado0 = side_of_player(this) == 0;
@@ -1148,9 +1148,9 @@ pub(crate) unsafe extern "thiscall" fn adjust_17(this: usize, delta: i8) -> u8 {
 pub(crate) unsafe extern "thiscall" fn take_ball(this: usize) {
     let this = MatchPlayer(this);
     let m = || this.engine();
-    let b = |o: usize| ((m()).addr() + o) as *mut u8;
-    let w = |o: usize| ((m()).addr() + o) as *mut u32;
-    if m() == Engine(0) {
+    let b = |o: usize| (m().addr() + o) as *mut u8;
+    let w = |o: usize| (m().addr() + o) as *mut u32;
+    if m().is_null() {
         return;
     }
     let old = *w(engine::BALL_HOLDER) as usize;
@@ -1203,12 +1203,12 @@ pub(crate) unsafe extern "thiscall" fn take_ball(this: usize) {
         *b(engine::SET_PIECE_KIND) = 0;
     }
     *((m().addr() as isize + 0x1a5 + side_of_player(this) as isize) as *mut u8) = 1;
-    *(((m()).addr() + 0x1a5 + (side_of_player(this) == 0) as usize) as *mut u8) = 0;
+    *((m().addr() + 0x1a5 + (side_of_player(this) == 0) as usize) as *mut u8) = 0;
     *b(engine::BALL_X) = this.cell_x() as u8;
     *b(engine::BALL_Y) = this.cell_y() as u8;
     *b(engine::POSSESSION_SIDE) = side_of_player(this) as u8;
     *w(engine::BALL_HOLDER) = this.addr() as u32;
-    *(((m()).addr() + 0x8ed8) as *mut u16) = (this.facing() as u16);
+    *((m().addr() + 0x8ed8) as *mut u16) = (this.facing() as u16);
     *b(engine::BALL_ROLL) = 0;
     let mm = m();
     if mm.last_possession_side() != side_of_player(this) {
@@ -3000,16 +3000,16 @@ pub(crate) unsafe fn shoot_injected(j: MatchPlayer, strength_in: i16, x_in: i8, 
             let (pj, pe) = (j.player(), *((e + match_player::PLAYER) as *const usize));
             let me = *((e + match_player::ENGINE) as *const usize);
             let code = 'n: {
-                if pj != 0 {
+                if !pj.is_null() {
                     if pe != 0 {
                         let r = random(3);
-                        if r + read_i8(pj + player_sheet::JUMPING) as i32 + 3 < read_i8(pe + player_sheet::JUMPING) as i32 {
+                        if r + pj.jumping() as i32 + 3 < read_i8(pe + player_sheet::JUMPING) as i32 {
                             break 'n 0x2164;
                         }
                     }
                     if pe != 0 && !(me != 0 && exe::cm3_match_engine_get_player_position(me, e) == 1) {
                         let r = random(3);
-                        if read_i8(pj + player_sheet::JUMPING) as i32 > r + read_i8(pe + player_sheet::JUMPING) as i32 + 5 {
+                        if pj.jumping() as i32 > r + read_i8(pe + player_sheet::JUMPING) as i32 + 5 {
                             break 'n 0x21cb;
                         }
                     }
@@ -4572,7 +4572,7 @@ pub(crate) unsafe fn punish_move_foul_injected(m: Engine, e: MatchPlayer, p: usi
             && exe::human_manager_is_human_club(e.club(), 0, 1, 0, 0) == 0
             && (read_i8(e.staff().addr() + staff::PROFESSIONALISM) as i32) < v as i32 + 10
         {
-            let person = PlayerSheet(e.player());
+            let person = PlayerSheet(e.player().addr());
             let k = 0xfu8.wrapping_sub(v as u8);
             if person.aggression() > (random(5) as u8).wrapping_add(k) as i8
                 && person.dirtiness() > (random(5) as u8).wrapping_add(k) as i8
@@ -6083,7 +6083,7 @@ pub(crate) unsafe fn pass_foul_injected(m: Engine, e: MatchPlayer, p: usize, mut
         && exe::human_manager_is_human_club(e.club(), 0, 1, 0, 0) == 0
         && (read_i8(e.staff().addr() + staff::PROFESSIONALISM) as i32) < v as i32 + 10
     {
-        let person = PlayerSheet(e.player());
+        let person = PlayerSheet(e.player().addr());
         let k = 0xfu8.wrapping_sub(v as u8);
         if person.aggression() > (random(5) as u8).wrapping_add(k) as i8
             && person.dirtiness() > (random(5) as u8).wrapping_add(k) as i8
@@ -7079,7 +7079,7 @@ pub(crate) unsafe extern "thiscall" fn recover_stamina(j: usize, ceiling: u8) {
     let j = MatchPlayer(j);
     let injury: unsafe extern "thiscall" fn(usize, u32) -> i16 = core::mem::transmute(FN_INJURY_GET_FATIGUE);
     let f = |o: usize| (j.addr() + o) as *mut f32;
-    let sheet = PlayerSheet(j.player());
+    let sheet = PlayerSheet(j.player().addr());
     if sheet.is_null() {
         return;
     }
@@ -7158,7 +7158,7 @@ pub(crate) unsafe fn save_shot_injected(j: MatchPlayer, strength: i16, call: &mu
     let narra = |c: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32| {
         c(0x6d6f70, m.commentator(), [code, m.addr() as u32, (j.commentary_id() as i8) as u8 as u32, dir as u8 as u32, u32::MAX]);
     };
-    let sheet = PlayerSheet(j.player());
+    let sheet = PlayerSheet(j.player().addr());
     let pega = strength <= 1000 && {
         let n = ftol(sheet.consistency() as f64 + j.handling() as f64);
         random(n) < random(0x14)
@@ -7275,7 +7275,7 @@ pub(crate) unsafe fn long_ball_injected(j: MatchPlayer, mode: i8, refinar: u8, c
     } else {
         exe::match_player_distance_to_cell(j, 4, 0)
     };
-    let (bx, by) = (|| read_i8((m()).addr() + 0x8ea7), || read_i8((m()).addr() + 0x8ea8));
+    let (bx, by) = (|| read_i8(m().addr() + 0x8ea7), || read_i8(m().addr() + 0x8ea8));
     let kind: u32;
     let (mut tx, mut ty): (i8, i8);
     // the column and the row according to the sides: (roll offset, step)
@@ -7327,7 +7327,7 @@ pub(crate) unsafe fn long_ball_injected(j: MatchPlayer, mode: i8, refinar: u8, c
             tx = mira(bx(), f12, f13, 2, 2, 2);
             refina = true;
         } else {
-            kind = if read_i8((m()).addr() + 0x8ea9) != -1 { 9 } else { 0x3e };
+            kind = if read_i8(m().addr() + 0x8ea9) != -1 { 9 } else { 0x3e };
             ty = mira(by(), f15, f14, 5, 4, 3);
             tx = mira(bx(), f12, f13, 5, 3, 3);
             if dir == 0 {
@@ -7397,11 +7397,11 @@ pub(crate) unsafe fn long_ball_injected(j: MatchPlayer, mode: i8, refinar: u8, c
                 *count = (*count).wrapping_add(1);
                 q.set_offsides((((q.offsides() as i8)).wrapping_add(1)) as u8);
                 j.set_passes((((j.passes() as i8)).wrapping_sub(1)) as u8);
-                *(((m()).addr() + 0x8ea7) as *mut i8) = q.cell_x();
-                *(((m()).addr() + 0x8ea8) as *mut i8) = q.cell_y();
-                *(((m()).addr() + 0x8eb2) as *mut i8) = 7;
-                *(((m()).addr() + 0x8eae) as *mut i8) = (dir == 0) as i8;
-                *(((m()).addr() + 0xf582) as *mut usize) = 0;
+                *((m().addr() + 0x8ea7) as *mut i8) = q.cell_x();
+                *((m().addr() + 0x8ea8) as *mut i8) = q.cell_y();
+                *((m().addr() + 0x8eb2) as *mut i8) = 7;
+                *((m().addr() + 0x8eae) as *mut i8) = (dir == 0) as i8;
+                *((m().addr() + 0xf582) as *mut usize) = 0;
                 return;
             }
             exe::cm3_match_engine_set_pending_foul(m(), 0xffff, q.addr() as u32, 0, 0, 8, q.cell_x() as u8, q.cell_y() as u8, 0xff, 0xff);
@@ -7490,11 +7490,11 @@ pub(crate) unsafe fn pass_ball_injected(j: MatchPlayer, kind: u8, receiver: usiz
                 *count = (*count).wrapping_add(1);
                 q.set_offsides((((q.offsides() as i8)).wrapping_add(1)) as u8);
                 j.set_passes((((j.passes() as i8)).wrapping_sub(1)) as u8);
-                *(((m()).addr() + 0x8ea7) as *mut i8) = q.cell_x();
-                *(((m()).addr() + 0x8ea8) as *mut i8) = q.cell_y();
-                *(((m()).addr() + 0x8eb2) as *mut i8) = 7;
-                *(((m()).addr() + 0x8eae) as *mut i8) = (dir == 0) as i8;
-                *(((m()).addr() + 0xf582) as *mut usize) = 0;
+                *((m().addr() + 0x8ea7) as *mut i8) = q.cell_x();
+                *((m().addr() + 0x8ea8) as *mut i8) = q.cell_y();
+                *((m().addr() + 0x8eb2) as *mut i8) = 7;
+                *((m().addr() + 0x8eae) as *mut i8) = (dir == 0) as i8;
+                *((m().addr() + 0xf582) as *mut usize) = 0;
                 return;
             }
             exe::cm3_match_engine_set_pending_foul(m(), 0xffff, q.addr() as u32, 0, 0, 8, q.cell_x() as u8, q.cell_y() as u8, 0xff, 0xff);
@@ -8202,7 +8202,7 @@ pub(crate) unsafe fn off_ball_decide_injected(j: MatchPlayer, call: &mut dyn FnM
     }
     if testar_c {
         if exe::formation_get_player_instructions(block, j.position()) & 0x200000 != 0 {
-            let r1 = random(*((j.player() + 0x1a) as *const i8) as i32);
+            let r1 = random(*((j.player().addr() + 0x1a) as *const i8) as i32);
             if r1 >= random(5) && subir(call, 0xc, 0x6a, false) {
                 return;
             }
@@ -8414,7 +8414,7 @@ pub(crate) unsafe extern "thiscall" fn evolve_moment(this: usize) {
         return;
     }
     let ff = (this.addr() + match_player::ANGER) as *mut i8;
-    let h = (this.frustration() as i32 / 2 + read_i8(this.player() + 0x25) as i32 + 10) / 4;
+    let h = (this.frustration() as i32 / 2 + read_i8(this.player().addr() + 0x25) as i32 + 10) / 4;
     if *ff as i32 > h {
         *ff = (*ff).wrapping_sub(1);
     }
@@ -8478,13 +8478,13 @@ pub(crate) unsafe extern "C" fn match_of_interest(p: usize) -> u32 {
     if id == g(KEY_CLUB_COMP_INTER_TOTO_CUP) && (exe::comp_util_get_base_round_id(((p.round_name() as u16) as i32) as u32) as i32) as i16 != 150 {
         return 0;
     }
-    if u((comp()).addr() + 0x5d) != 0 {
-        if u(G_RESERVE_COMP) != 0 && of_group((comp()).addr()) != 0 {
+    if u(comp().addr() + 0x5d) != 0 {
+        if u(G_RESERVE_COMP) != 0 && of_group(comp().addr()) != 0 {
             return 0;
         }
         for s in 0..16 {
             let t = manager(s);
-            if read_i8(t + staff::CLASSIFICATION) == 1 && read_usize(t + staff::CLUB_JOB) != 0 && u(read_usize(t + staff::CLUB_JOB) + 0x53) == u((comp()).addr() + 0x5d) {
+            if read_i8(t + staff::CLASSIFICATION) == 1 && read_usize(t + staff::CLUB_JOB) != 0 && u(read_usize(t + staff::CLUB_JOB) + 0x53) == u(comp().addr() + 0x5d) {
                 let c1c = Club(p.home_club().addr());
                 let cm = comp();
                 if c1c.division() != cm && c1c.reserve_division() != cm {
@@ -8496,7 +8496,7 @@ pub(crate) unsafe extern "C" fn match_of_interest(p: usize) -> u32 {
         }
         return 0;
     }
-    let mut edi = u((comp()).addr() + 0x59);
+    let mut edi = u(comp().addr() + 0x59);
     if edi == 0 {
         let k = if id == g(KEY_CLUB_COMP_WORLD_CUP_AFRICAN_QUALIFYING_SECTION) || id == g(KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS) {
             Some(g(KEY_CONTINENT_AFRICA))
@@ -8558,14 +8558,14 @@ pub(crate) unsafe extern "thiscall" fn match_performance(this: usize, marcar: u8
     let f = |a: usize| read_f32(a) as f64;
     let engine = || this.engine();
     let sheet = || this.player();
-    let fb = |o: usize| (read_i8((sheet()) + o) as i32);
-    let ta = || if engine() != Engine(0) { table_a((engine()).addr(), this.addr()) } else { 0 };
-    let tb = || if engine() != Engine(0) { table_b((engine()).addr(), this.addr()) } else { 0 };
+    let fb = |o: usize| (read_i8(sheet().addr() + o) as i32);
+    let ta = || if !engine().is_null() { table_a(engine().addr(), this.addr()) } else { 0 };
+    let tb = || if !engine().is_null() { table_b(engine().addr(), this.addr()) } else { 0 };
     let p37 = (this.addr() + match_player::POSITION_ADJUSTMENT) as *mut i16;
     let soma37 = move |v: i32| *p37 = (*p37).wrapping_add(v as i16);
     let word = |o: usize, v: i32| *((this.addr() + o) as *mut i16) = v as i16;
     exe::match_player_calc_match_attributes(this);
-    let bl: i8 = if (read_i8((sheet()) + 0xf) as i32) > 15 { 20 } else { ftol((read_i8((sheet()) + 0xf) as i32) as f64 * q(0x969040) + q(0x9688a0)) as i8 };
+    let bl: i8 = if (read_i8(sheet().addr() + 0xf) as i32) > 15 { 20 } else { ftol((read_i8(sheet().addr() + 0xf) as i32) as f64 * q(0x969040) + q(0x9688a0)) as i8 };
     *p37 = 0;
     // the position in table A against the attributes at +0x10..+0x1a
     let greater_13_14 = || core::cmp::max(fb(0x14) - 5, fb(0x13));
@@ -8802,11 +8802,11 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     let person = || this.staff();
     let sheet = || this.player();
     let engine = || this.engine();
-    let ta = || if engine() != Engine(0) { table_a((engine()).addr(), this.addr()) } else { 0 };
-    let tb = || if engine() != Engine(0) { table_b((engine()).addr(), this.addr()) } else { 0 };
+    let ta = || if !engine().is_null() { table_a(engine().addr(), this.addr()) } else { 0 };
+    let tb = || if !engine().is_null() { table_b(engine().addr(), this.addr()) } else { 0 };
     let n_persons = || *(G_STAFF_COUNT as *const i32);
     let club_side = || {
-        let t = *(((engine()).addr() + 0x4792) as *const usize);
+        let t = *((engine().addr() + 0x4792) as *const usize);
         *((t + if this.side() != 0 { 0x20 } else { 0x1c }) as *const usize)
     };
     let rating: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(FN_MATCH_PLAYER_CALC_INFLUENCE_SCORE);
@@ -8820,15 +8820,15 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     };
 
     let (mut l28, mut l18, mut l24, mut l1c, mut l14) = (0f32, 0f32, 0f32, 0f32, 0f32);
-    let l12 = read_i8((person()).addr() + 0x18) as i32;
+    let l12 = read_i8(person().addr() + 0x18) as i32;
 
     // the designated player (marked slot of the side’s tactic)
-    let j = designado(Engine((engine()).addr()));
+    let j = designado(Engine(engine().addr()));
     if j != 0 && *((j + match_player::PLAYER) as *const usize) != 0 {
         l18 = ((rating(j) as f64 - q(0x968e08)) * q(0x96d6f8)) as f32;
-        let j2 = MatchPlayer(designado(Engine((engine()).addr())));
+        let j2 = MatchPlayer(designado(Engine(engine().addr())));
         let fj = PlayerSheet(*((j + match_player::PLAYER) as *const usize));
-        let x = ((fj.positioning() as i32) as f64 + (fj.positioning() as i32) as f64 + (read_i16((j2.player()) + 5) as i32) as f64) * q(0x967880);
+        let x = ((fj.positioning() as i32) as f64 + (fj.positioning() as i32) as f64 + (read_i16(j2.player().addr() + 5) as i32) as f64) * q(0x967880);
         let l34 = if x < q(0x9689a0) { 0.0 } else if !(x <= q(0x968ea8)) { 20.0 } else { x };
         l28 = (rating(j) as f64 * l34 * q(0x968ef0)) as f32;
         let mj = *((j + match_player::ENGINE) as *const usize);
@@ -8869,7 +8869,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         0
     };
     let side = this.side() as i32;
-    l18 = ((((read_i16(((engine())).addr() + ((0x1ce + 2 * side) as usize)) as i32) - 100) as f64 * q(0x96d260) + q(0x967890)) * l18 as f64) as f32;
+    l18 = ((((read_i16(engine().addr() + ((0x1ce + 2 * side) as usize)) as i32) - 100) as f64 * q(0x96d260) + q(0x967890)) * l18 as f64) as f32;
     let p = person();
     let greater = || core::cmp::max(p.pressure(), p.determination()) as i32;
     let w33 = (this.own_club_feeling() as i32);
@@ -8878,19 +8878,19 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     let dl = if w31 < 0 { ((greater() - 10) * w31) / -10 } else { core::cmp::min((((p.professionalism() as i32) - 10) * w31) / 10, 10) };
     bl = bl.wrapping_add(dl as i8);
     bl = if ta() == 1 { bl.clamp(-5, 15) } else { bl.clamp(-10, 10) };
-    let b1ad = read_i8((engine()).addr() + ((0x1ad + side) as usize));
+    let b1ad = read_i8(engine().addr() + ((0x1ad + side) as usize));
     if b1ad != 0 {
-        let t = *(((engine()).addr() + 0x4792) as *const usize);
+        let t = *((engine().addr() + 0x4792) as *const usize);
         let al = b1ad as i32;
         let base = |c: usize| {
             (al as f64 + q(0x9688b0)) * f(0x96d490) + q(c) - ((p.professionalism() as i32) - 10) as f64 * q(0x96a7a8)
-                - ((read_i8((sheet()) + 0x2c) as i32) - 10) as f64 * q(0x9689e0) - l18 as f64 * q(0x968968)
+                - ((read_i8(sheet().addr() + 0x2c) as i32) - 10) as f64 * q(0x9689e0) - l18 as f64 * q(0x968968)
         };
         let x = if t != 0 && (read_i8(t + fixture::CATEGORY) == 8 || read_i8(t + fixture::CATEGORY) == 10) {
             base(0x968e38)
         } else {
             let mut s = f(0x96d6f4);
-            if read_i8((engine()).addr() + 0) == 0 {
+            if read_i8(engine().addr() + 0) == 0 {
                 let wt = (read_i16((*((t + fixture::COMPETITION) as *const usize)) + 0x69) as i32);
                 if wt > 12 {
                     s = (wt - 10) as f64 * f(0x96d6f0) + f(0x96d6f4);
@@ -8906,11 +8906,11 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
             l1c = 1.0;
         }
     }
-    let l30 = (read_i8((sheet()) + 0x21) as i32) as f32;
+    let l30 = (read_i8(sheet().addr() + 0x21) as i32) as f32;
     let tabela79 = |id: i32| *((*(G_STAFF_STATE_TABLE as *const usize)).wrapping_add((id as usize).wrapping_mul(79)).wrapping_add(0xa) as *const u8) as i32;
     let teto30 = |v: i32| if v as f64 > q(0x968dd8) { v as f64 } else { q(0x968dd8) };
     if !p.is_null() && *(p.addr() as *const i32) >= n_persons() {
-        let v = (read_i16((sheet()) + 5) as i32) as f64 + l18 as f64 * q(0x968f98) - l1c as f64;
+        let v = (read_i16(sheet().addr() + 5) as i32) as f64 + l18 as f64 * q(0x968f98) - l1c as f64;
         this.set_effective_ability(ftol(v) as i16);
         let h = (exe::database_get_contract_rating_modifier(p, club_side()) as i8 as i32) / 2;
         let a = h as f64 + (l30 as f64 - l1c as f64);
@@ -8919,7 +8919,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         }
     } else {
         let id = *(p.addr() as *const i32);
-        let v = (read_i16((sheet()) + 5) as i32) as f64 + l18 as f64 * q(0x968f98) - l1c as f64 - tabela79(id) as f64 + (this.frustration() as i32 / 2) as f64;
+        let v = (read_i16(sheet().addr() + 5) as i32) as f64 + l18 as f64 * q(0x968f98) - l1c as f64 - tabela79(id) as f64 + (this.frustration() as i32 / 2) as f64;
         this.set_effective_ability(ftol(v) as i16);
         let h = (exe::database_get_contract_rating_modifier(p, club_side()) as i8 as i32) / 2;
         let h17 = this.match_form() as i32 / 2 - 5;
@@ -8934,7 +8934,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     this.set_effective_ability(ftol(((this.match_form() as i32 - 10) * this.consistency_roll() as i32) as f64 * q(0x969020) + (this.effective_ability() as i32) as f64) as i16);
     // youth bonus (+0x14 of the tactics frame, cell +0x69) in L14
     {
-        let t = *(((engine()).addr() + 0x4792) as *const usize);
+        let t = *((engine().addr() + 0x4792) as *const usize);
         if t != 0 {
             let t14 = *((t + fixture::COMPETITION) as *const usize);
             if t14 != 0 && read_i8(t + fixture::CATEGORY) != 6 {
@@ -8944,7 +8944,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
                     let age = (pv.year_of_birth() as i8) as i32;
                     let dx = ax.wrapping_mul(500) as i16 as i32;
                     let mut e = (pv.pressure() as i32).wrapping_mul(150);
-                    if read_i8(sheet() + 0xf) != 20 {
+                    if read_i8(sheet().addr() + 0xf) != 20 {
                         if age > 21 {
                             e += 750;
                         } else if age > 18 {
@@ -8953,8 +8953,8 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
                     }
                     let ecx = e as i16 as i32;
                     let d = dx - ecx;
-                    if d > 4500 && (read_i16((sheet()) + 0xd) as i32) < d {
-                        let edi = (read_i16((sheet()) + 0xd) as i32) - dx + ecx;
+                    if d > 4500 && (read_i16(sheet().addr() + 0xd) as i32) < d {
+                        let edi = (read_i16(sheet().addr() + 0xd) as i32) - dx + ecx;
                         let add = if ta() == 1 {
                             if edi <= 2500 { f(0x96b008) } else { f(0x968990) }
                         } else if edi > 2500 {
@@ -8972,7 +8972,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     }
     let p3b = (this.addr() + match_player::EFFECTIVE_ABILITY) as *mut i16;
     if ta() == 1 {
-        let v = ftol((read_i16((sheet()) + 5) as i32) as f64 * q(0x969040)) as i16;
+        let v = ftol((read_i16(sheet().addr() + 5) as i32) as f64 * q(0x969040)) as i16;
         if *p3b < v {
             *p3b = v;
         }
@@ -8981,7 +8981,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
             *p3b = 8;
         }
     }
-    let lim = if ta() == 1 { ((read_i16((sheet()) + 7) as i32) as i16).wrapping_add(10) } else { (read_i16((sheet()) + 7) as i32) as i16 };
+    let lim = if ta() == 1 { ((read_i16(sheet().addr() + 7) as i32) as i16).wrapping_add(10) } else { (read_i16(sheet().addr() + 7) as i32) as i16 };
     if *p3b > lim {
         *p3b = lim;
     }
@@ -9011,7 +9011,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     let form_b20 = || exe::cm3_match_engine_side_has_no_wide_defenders(engine(), (this.side() == 0) as u8) != 0 && par_880() && (ta() & 0x60 != 0 || tb() & 0x60 != 0);
     let form_af0 = || exe::cm3_match_engine_side_has_no_wide_midfield_or_attack(engine(), this.side() as u8) != 0 && (ta() & 0x78 != 0 || tb() & 0x78 != 0);
     let a_20_0c = || ta() & 0x20 != 0 && ta() & 0xc != 0;
-    let fb = |o: usize| (read_i8((sheet()) + o) as i32) as f64;
+    let fb = |o: usize| (read_i8(sheet().addr() + o) as i32) as f64;
     let l12f = l12;
 
     // +0x7d
@@ -9088,7 +9088,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     } else if ta() & 0x20 != 0 {
         b33 * q(0x9689d0)
     } else if ta() & 0x18 != 0 {
-        if read_i8(sheet() + 0x12) == 20 { b33 * q(0x969520) } else { b33 * q(0x9689d8) }
+        if read_i8(sheet().addr() + 0x12) == 20 { b33 * q(0x969520) } else { b33 * q(0x9689d8) }
     } else {
         b33 * q(0x9689b0)
     }) as f32;
@@ -9140,7 +9140,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         }
     }
     if ta() == 1 {
-        if l12f < 21 || (read_i16((sheet()) + 0xd) as i32) < 3750 {
+        if l12f < 21 || (read_i16(sheet().addr() + 0xd) as i32) < 3750 {
             l1c = (l1c as f64 * q(0x96af30)) as f32;
         } else if l12f < 23 {
             l1c = (l1c as f64 * q(0x96a6d8)) as f32;
@@ -9188,9 +9188,9 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     guarda(0xdd, (fb(0x3e) + fb(0x3e) + w3() - l44) * q(0x967880));
     guarda(0xe9, (fb(0x41) + fb(0x41) + w3()) * q(0x967880));
     // L28 by byte +0x43 (and word +5); +0xf1
-    let b43 = (read_i8((sheet()) + 0x43) as i32);
+    let b43 = (read_i8(sheet().addr() + 0x43) as i32);
     if b43 > 10 {
-        let w5 = (read_i16((sheet()) + 5) as i32);
+        let w5 = (read_i16(sheet().addr() + 5) as i32);
         if w5 < 80 {
             l28 = ((b43 - 10) as f64 * q(0x969040) + q(0x9688b0)) as f32;
         } else if w5 < 125 {
@@ -9205,9 +9205,9 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         pow(0xf1, q(0x96d4e8), q(0x968978));
     }
     // +0x71 and the like (record bytes), limited by the engine type (+1: 1, 8, 32)
-    let m1 = read_i8((engine()).addr() + 1) as i32;
-    let s = read_i8(sheet() + 0x44).wrapping_add(read_i8(sheet() + 0x3d));
-    let mut cl = read_i8(sheet() + 0x1b);
+    let m1 = read_i8(engine().addr() + 1) as i32;
+    let s = read_i8(sheet().addr() + 0x44).wrapping_add(read_i8(sheet().addr() + 0x3d));
+    let mut cl = read_i8(sheet().addr() + 0x1b);
     if m1 == 1 || m1 == 8 || m1 == 32 {
         if s == 40 {
             if cl == 20 {
@@ -9240,7 +9240,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     wr(0x9d, v28 - l14 as f64 * f(0x96afc4));
     wr(0xa1, fb(0x29) * q(0x96d698) + q(0x96d6a8));
     wr(0xad, fb(0x2e) - l14 as f64 * f(0x96d694));
-    let mut al = read_i8(sheet() + 0x36);
+    let mut al = read_i8(sheet().addr() + 0x36);
     if m1 == 32 {
         if s == 40 {
             if al == 20 {
@@ -9298,7 +9298,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         32 => wr(0xd5, (this.stamina_attribute() as f64) - q(0x9689e0)),
         _ => {}
     }
-    let t = *(((engine()).addr() + 0x4792) as *const usize);
+    let t = *((engine().addr() + 0x4792) as *const usize);
     if l12f < 32 && t != 0 {
         let c1c = Club(*((t + fixture::HOME_CLUB) as *const usize));
         if !c1c.is_null() {
@@ -9314,7 +9314,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         }
     }
     wr(0xe1, fb(0x3f));
-    let mut a40 = read_i8(sheet() + 0x40);
+    let mut a40 = read_i8(sheet().addr() + 0x40);
     match m1 {
         1 => a40 = if a40 == 20 { 19 } else { a40.min(18) },
         8 => a40 = a40.min(17),
@@ -9326,7 +9326,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     if ta() != 1 && t != 0 {
         let t14 = *((t + fixture::COMPETITION) as *const usize);
         if t14 != 0 && *(t14 as *const u32) == *(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE as *const u32) {
-            let pn = *(((person()).addr() + 0x1a) as *const usize);
+            let pn = *((person().addr() + 0x1a) as *const usize);
             if pn != 0 {
                 let id = *(pn as *const u32);
                 let g = |a: usize| *(a as *const u32);
@@ -9341,7 +9341,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         }
     }
     if ta() != 1 {
-        let fi = PlayerSheet(sheet());
+        let fi = PlayerSheet(sheet().addr());
         if fi.goalkeeper() == 20 && fi.defender() < 10 && fi.defensive_midfielder() < 10 && fi.midfielder() < 15 && fi.attacking_midfielder() < 10 && fi.attacker() < 10 {
             for (o, c) in [(0x9d, 0x96d424), (0xf1, 0x96d22c), (0x95, 0x96d22c), (0x91, 0x96d22c), (0x7d, 0x96d22c), (0xad, 0x96d364), (0xa9, 0x96d248), (0xcd, 0x968f18), (0xc5, 0x968f18), (0xdd, 0x96d248), (0xb9, 0x96d248)] {
                 wr(o, (read_f32(this.addr() + o) as f64) * f(c));
@@ -9351,7 +9351,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
     // +0xf5
     let b44 = fb(0x44);
     let v44 = if l12f < 36 { b44 } else { b44 * q(0x969040) };
-    let h = ((read_i8(((person())).addr() + 0x5b) as i32) / 2 + 10) as f64;
+    let h = ((read_i8(person().addr() + 0x5b) as i32) / 2 + 10) as f64;
     wr(0xf5, (this.frustration() as f64 + v44) - l14 as f64 / h + l24 as f64 * q(0x968968));
     let p = person();
     if !p.is_null() && *(p.addr() as *const i32) >= n_persons() {
@@ -9371,7 +9371,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
                 mul(o, k);
             }
         }
-        let pa61 = PlayerSheet(p.player());
+        let pa61 = PlayerSheet(p.player().addr());
         if !pa61.is_null() && read_i8(c + contract::MORALE) < -25 && pa61.work_rate() < 15 && (p.professionalism() as i32) < 10 && (pa61.current_reputation() as i32) > 3750 && (pa61.current_reputation() as i32) > (read_i16((club_side()) + 0x80) as i32) + 250 {
             mul(0xf5, 0x96b014);
             mul(0x7d, 0x96a32c);
@@ -9389,7 +9389,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
             }
         }
         if c45() & 0x2088 != 0 {
-            let w0b = (read_i16((p.player()) + 0xb) as i32);
+            let w0b = (read_i16(p.player().addr() + 0xb) as i32);
             if (w0b > 4250 && (p.professionalism() as i32) < 10) || (p.professionalism() as i32) < 5 {
                 mul(0xf5, 0x96a32c);
             }
@@ -9401,7 +9401,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
                 mul(0xf5, 0x96b014);
             }
         }
-        let fraco = || (p.pressure() as i32) < 5 && (p.professionalism() as i32) < 6 && (p.temperament() as i32) < 10 && (read_i16((p.player()) + 0xd) as i32) > 5250;
+        let fraco = || (p.pressure() as i32) < 5 && (p.professionalism() as i32) < 6 && (p.temperament() as i32) < 10 && (read_i16(p.player().addr() + 0xd) as i32) > 5250;
         let strong = [(0xf5, 0x96d38c), (0x9d, 0x96a32c), (0xf1, 0x96a32c), (0x95, 0x96a32c), (0x91, 0x96d38c), (0xc1, 0x96a32c)];
         let sorte = [(0xf5, 0x96b014), (0x91, 0x96b014), (0x9d, 0x96a32c), (0xf1, 0x96a32c), (0x95, 0x96a32c), (0xc1, 0x96b014)];
         if c45() & 0x20000 != 0 {
@@ -9428,17 +9428,17 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         }
     }
     // the person’s preferences (clubs of the opponent and of his own side, managers, designated)
-    let t = *(((engine()).addr() + 0x4792) as *const usize);
+    let t = *((engine().addr() + 0x4792) as *const usize);
     if read_i8(t + fixture::HOME_SIDE_MARK) == 0 {
         return;
     }
     let minus = |o: usize, k: i32, c: usize| wr(o, (read_f32(this.addr() + o) as f64) - k as f64 * f(c));
     let club_other = || {
-        let t = *(((engine()).addr() + 0x4792) as *const usize);
+        let t = *((engine().addr() + 0x4792) as *const usize);
         *((t + if this.side() == 0 { 0x20 } else { 0x1c }) as *const usize)
     };
-    let k25 = || 25 - (read_i8(((person())).addr() + 0x5b) as i32);
-    let k50 = || 50 - (read_i8(((person())).addr() + 0x5b) as i32) - (read_i8(((person())).addr() + 0x59) as i32);
+    let k25 = || 25 - (read_i8(person().addr() + 0x5b) as i32);
+    let k50 = || 50 - (read_i8(person().addr() + 0x5b) as i32) - (read_i8(person().addr() + 0x59) as i32);
     if exe::staff_dislikes_club(person(), club_other()) != 0 {
         wr(0xf5, (this.work_rate() as f64) + f(0x968990));
         wr(0x75, k25() as f64 * f(0x96d668) + (this.aggression() as f64));
@@ -9468,10 +9468,10 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         wr(0xe1, (this.teamwork() as f64) + f(0x968990));
     }
     let pd = |m: usize| *((designado(Engine(m)) + 0x69) as *const usize);
-    if exe::staff_is_disliked_by(pd((engine()).addr()), person()) != 0 {
+    if exe::staff_is_disliked_by(pd(engine().addr()), person()) != 0 {
         minus(0xf5, k25(), 0x96d668);
         minus(0xe1, k25(), 0x96d668);
-    } else if exe::staff_is_favoured_by(pd((engine()).addr()), person()) != 0 {
+    } else if exe::staff_is_favoured_by(pd(engine().addr()), person()) != 0 {
         wr(0xf5, (this.work_rate() as f64) + f(0x968990));
         wr(0xe1, (this.teamwork() as f64) + f(0x968990));
     }
@@ -9511,7 +9511,7 @@ pub(crate) unsafe extern "thiscall" fn player_rating(this: usize) -> i32 {
         *((t + if this.side() == 0 { 0x1c } else { 0x20 }) as *const usize)
     };
     let person = Staff(this.staff().addr());
-    let sheet = PlayerSheet(this.player());
+    let sheet = PlayerSheet(this.player().addr());
     let n = exe::database_get_contract_rating_modifier(person, club()) as f64;
     let mut form = (sheet.world_reputation() as i32 - *((club() + 0x80) as *const i16) as i32) as f64 * 0.002 + 1.5;
     if form < -4.0 {
@@ -10184,7 +10184,7 @@ pub(crate) unsafe extern "thiscall" fn aim_set_facing_direction(this: usize, a: 
         let q = random(0x1e);
         *dir = dir.read().wrapping_add(p.wrapping_sub(q) as u16);
     }
-    let person = PlayerSheet(this.player());
+    let person = PlayerSheet(this.player().addr());
     let adjust = (person.right_foot() as i16).wrapping_sub(person.left_foot() as i16).wrapping_mul(2);
     *dir = dir.read().wrapping_add(adjust as u16);
     let v = *dir as i16;

@@ -588,7 +588,7 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_remove_player(this
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_NATIONAL_TEAMS_REMOVE_PLAYER);
     let u = |p: usize| core::ptr::read_unaligned(p as *const usize);
     let nation = player.nation();
-    if nation.is_null() || player.player() == 0 {
+    if nation.is_null() || player.player().is_null() {
         return o(this, player.addr());
     }
     // the regions: the player, the nation record, the level band in the list and the national team (the level,

@@ -78,7 +78,7 @@ pub(crate) unsafe extern "thiscall" fn compare_value_player_for_club(this: usize
     let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, *mut i32, i32, u32) -> i32>(IDX_VALUE_PLAYER_FOR_CLUB);
     let obs = Staff(club.manager().addr());
-    if !obs.is_null() && obs.non_player() == 0 {
+    if !obs.is_null() && obs.non_player().is_null() {
         return o(this, club.addr(), p, slot, out, minimum, ceiling);
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(out as usize, 4)], || o(this, club.addr(), p, slot, out, minimum, ceiling), || value_player_for_club(this, club.addr(), p, slot, out, minimum, ceiling));
@@ -196,7 +196,7 @@ pub(crate) unsafe extern "thiscall" fn compare_allocate_transfer_budget(this: us
 pub(crate) unsafe extern "stdcall" fn compare_shortlist_manager_squad_status_allowed(person: usize, status: u32) -> u32 {
     let person = Staff(person);
     let o = original_fn::<unsafe extern "stdcall" fn(usize, u32) -> u32>(IDX_SHORTLIST_MANAGER_SQUAD_STATUS_ALLOWED);
-    if person.player() == 0 {
+    if person.player().is_null() {
         return o(person.addr(), status);
     }
     let r = o(person.addr(), status);

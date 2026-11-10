@@ -14,7 +14,7 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | cópias de acesso à memória | 0 |
 | rotinas sem cabeçalho | 0 |
 | locais/parâmetros em português | 856 |
-| linhas | 228662 |
+| linhas | 228666 |
 
 ## Por arquivo (os 40 piores, pelos deslocamentos crus)
 

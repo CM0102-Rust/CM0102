@@ -1,1 +1,89 @@
-{}
+{
+ "friendly::FRIENDLY_MATCH_LIST": {
+  "type": "Llist",
+  "uses": 4,
+  "examples": [
+   "Llist(this.friendly_match_list())",
+   "Llist(this.friendly_match_list())",
+   "Llist(this.friendly_match_list())"
+  ]
+ },
+ "friendly::PENDING_TOURNAMENT_LIST": {
+  "type": "Llist",
+  "uses": 2,
+  "examples": [
+   "Llist(this.pending_tournament_list())",
+   "Llist(this.pending_tournament_list())"
+  ]
+ },
+ "match_manager::CLUB": {
+  "type": "Club",
+  "uses": 3,
+  "examples": [
+   "Club(c.club())",
+   "Club(c.club())",
+   "Club(c.club())"
+  ]
+ },
+ "match_manager::ENGINE": {
+  "type": "Engine",
+  "uses": 3,
+  "examples": [
+   "Engine(c.engine())",
+   "Engine(c.engine())",
+   "Engine(c.engine())"
+  ]
+ },
+ "match_manager::FIXTURE": {
+  "type": "Fixture",
+  "uses": 2,
+  "examples": [
+   "Fixture(c.fixture())",
+   "Fixture(c.fixture())"
+  ]
+ },
+ "match_manager::MANAGER_SHEET": {
+  "type": "NonPlayer",
+  "uses": 2,
+  "examples": [
+   "NonPlayer(c.manager_sheet())",
+   "NonPlayer(this.manager_sheet())"
+  ]
+ },
+ "match_player::PLAYER": {
+  "type": "PlayerSheet",
+  "uses": 9,
+  "examples": [
+   "PlayerSheet(p.player())",
+   "PlayerSheet(this.player())",
+   "PlayerSheet(j.player())"
+  ]
+ },
+ "offer::EXCHANGE_PLAYERS": {
+  "type": "Llist",
+  "uses": 31,
+  "examples": [
+   "Llist(o.exchange_players())",
+   "Llist(t.exchange_players())",
+   "Llist(offer.exchange_players())"
+  ]
+ },
+ "staff::NON_PLAYER": {
+  "type": "NonPlayer",
+  "uses": 8,
+  "examples": [
+   "NonPlayer(manager.non_player())",
+   "NonPlayer(f.non_player())",
+   "NonPlayer(manager.non_player())"
+  ]
+ },
+ "staff::PLAYER": {
+  "type": "PlayerSheet",
+  "uses": 48,
+  "examples": [
+   "PlayerSheet(person.player())",
+   "PlayerSheet(person.player())",
+   "PlayerSheet(person.player())"
+  ]
+ }
+}

@@ -78,7 +78,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     set_news_slot(nt, 6, r as u32);
     let p = (player.temperament() as i32) + (player.professionalism() as i32) < 0xc
         && (player.loyalty() as i32) < 6
-        && core::ptr::read_unaligned((player.player() + 0xb) as *const i16) > 0x1482;
+        && core::ptr::read_unaligned((player.player().addr() + 0xb) as *const i16) > 0x1482;
     set_news_slot(nt, 7, p as u32);
     set_news_slot(nt, 8, (deadline as u8 == 1) as u32);
     let kind = c.squad_status() & 0xf0;
@@ -106,10 +106,10 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
 pub(crate) unsafe extern "stdcall" fn post_coach_fine_feedback_news(player: usize, coach: usize, outcome: u32) {
     let coach = Staff(coach);
     let player = Staff(player);
-    if player.is_null() || player.player() == 0 || player.nation().is_null() || player.club_job().is_null() {
+    if player.is_null() || player.player().is_null() || player.nation().is_null() || player.club_job().is_null() {
         return;
     }
-    if coach.is_null() || coach.player() == 0 || coach.nation().is_null() {
+    if coach.is_null() || coach.player().is_null() || coach.nation().is_null() {
         return;
     }
     crate::comparison::branch("cpz_9 news of the coach return");

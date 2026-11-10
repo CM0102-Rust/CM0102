@@ -2,7 +2,7 @@
 MUTACOES = [
     ('b_celula', "0x5e + (l as i32 + t as i32 * 2) as usize * 4) as *mut i32;", "0x5e + (t as i32 + l as i32 * 2) as usize * 4) as *mut i32;", "taker of the club"),
     ('b_limite', "if v > (*(G_STAFF_COUNT as *const i32)).wrapping_add(0x52d) {", "if v > (*(G_STAFF_COUNT as *const i32)).wrapping_add(0x52c) {", "taker beyond the people"),
-    ('b_ficha', "    if (person.player() as u32) == 0 {\n        crate::comparison::branch(\"taker without record\");\n        *cell = -1;", "    if (person.player() as u32) == 0 {\n        crate::comparison::branch(\"taker without record\");\n        *cell = -2;", "taker without record"),
+    ('b_ficha', "    if (person.player().addr() as u32) == 0 {\n        crate::comparison::branch(\"taker without record\");\n        *cell = -1;", "    if (person.player().addr() as u32) == 0 {\n        crate::comparison::branch(\"taker without record\");\n        *cell = -2;", "taker without record"),
     ('b_clube', "    if person.club_job() == Club(club) {\n        crate::comparison::branch(\"taker of the club\");", "    if person.club_job() != Club(club) {\n        crate::comparison::branch(\"taker of the club\");", "taker of the club"),
     ('b_saiu', "    crate::comparison::branch(\"taker left the club\");\n    *cell = -1;\n    0", "    crate::comparison::branch(\"taker left the club\");\n    0", "taker left the club"),
     ('i_ocupados', "                if *((s + 0x38) as *mut u32) == 0 {\n                    *ocupados = (*ocupados).wrapping_add(1);", "                if *((s + 0x38) as *mut u32) == 0 {\n                    *ocupados = (*ocupados).wrapping_add(2);", "instructions stored"),

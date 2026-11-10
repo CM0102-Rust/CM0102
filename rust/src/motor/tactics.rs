@@ -36,7 +36,7 @@ pub(crate) unsafe extern "thiscall" fn stored_taker(this: usize, club: usize, ki
         return 0;
     }
     let person = Staff((*(G_STAFF_TABLE as *const usize)).wrapping_add(v as usize * staff::SIZE));
-    if (person.player() as u32) == 0 {
+    if (person.player().addr() as u32) == 0 {
         crate::comparison::branch("taker without record");
         *cell = -1;
         return 0;
@@ -1408,7 +1408,7 @@ pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, club: usize,
     }
     let persons = *(G_STAFF_TABLE as *const usize);
     let p = Staff(persons.wrapping_add((id as usize).wrapping_mul(staff::SIZE)));
-    if p.player() == 0 {
+    if p.player().is_null() {
         core::ptr::write_unaligned(home, -1);
         return 0;
     }

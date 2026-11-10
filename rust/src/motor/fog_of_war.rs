@@ -27,7 +27,7 @@ pub(crate) unsafe extern "thiscall" fn know_person(this: usize, person: usize, f
     let reg = (*(this as *const usize)).wrapping_add((*(person as *const i32) as usize).wrapping_mul(9));
     let mut data = [0u8; 8];
     exe::date_operator_3d(reg + 1, data.as_mut_ptr() as usize, G_CURRENT_DATE);
-    let obs = NonPlayer(if font.is_null() { 0 } else { font.non_player() });
+    let obs = NonPlayer(if font.is_null() { 0 } else { font.non_player().addr() });
     let level = reg as *mut u8;
     if obs.is_null() {
         *level = 3;

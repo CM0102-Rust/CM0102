@@ -385,7 +385,7 @@ pub(crate) unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, clu
                 continue;
             }
             let player = p.player();
-            if player == 0 || p.club_job() != club {
+            if player.is_null() || p.club_job() != club {
                 continue;
             }
             let st = exe::playerstats_get_category_record(read_usize(G_PLAYER_STATS), player, 6);
@@ -482,7 +482,7 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
         exe::fill_staff_name_ref(person, s + club_record::FEE_PAID_HOLDER);
         core::ptr::write_unaligned((s + club_record::FEE_PAID_OTHER_CLUB_ID) as *mut usize, read_usize(seller));
         exe::date_operator_3d(s + club_record::FEE_PAID_DATE, (draft.as_mut_ptr()) as usize, G_CURRENT_DATE);
-        *((s + club_record::FEE_PAID_FLAG) as *mut u8) = (t.exchange_players() != 0) as u8;
+        *((s + club_record::FEE_PAID_FLAG) as *mut u8) = (!t.exchange_players().is_null()) as u8;
         if (t.fee() as i32) > read_i32(a + club_record::FEE_PAID) {
             copy_transfer_record(a, s, 0x313);
             if is_big_transfer(read_i32(a + club_record::FEE_PAID), buyer) {
@@ -504,7 +504,7 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
     exe::fill_staff_name_ref(person, s + club_record::FEE_RECEIVED_HOLDER);
     core::ptr::write_unaligned((s + club_record::FEE_RECEIVED_OTHER_CLUB_ID) as *mut usize, read_usize(buyer.addr()));
     exe::date_operator_3d(s + club_record::FEE_RECEIVED_DATE, (draft.as_mut_ptr()) as usize, G_CURRENT_DATE);
-    *((s + club_record::FEE_RECEIVED_FLAG) as *mut u8) = (t.exchange_players() != 0) as u8;
+    *((s + club_record::FEE_RECEIVED_FLAG) as *mut u8) = (!t.exchange_players().is_null()) as u8;
     if (t.fee() as i32) > read_i32(a + club_record::FEE_RECEIVED) {
         copy_transfer_record(a, s, 0x33c);
         if is_big_transfer(read_i32(a + club_record::FEE_RECEIVED), Club(seller)) && !record_news_queued(this, read_usize(seller), 0x1d) {
@@ -666,7 +666,7 @@ pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, 
             continue;
         }
         let est = p.player();
-        if est == 0 || read_usize(p.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
+        if est.is_null() || read_usize(p.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
             continue;
         }
         if p.club_job() != club && p.club_job() != Club(exe::club_get_linked_b_team(club, (0) as *mut u32, 1)) {

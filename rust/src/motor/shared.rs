@@ -480,28 +480,28 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
             crate::comparison::branch("players manager");
             let manager = Staff((g(G_STAFF_TABLE) as isize + id as isize * 0x6e) as usize);
             let (mut da, mut db, mut dc) = (0i16, 0i16, 0i16);
-            if !manager.is_null() && manager.non_player() != 0 {
+            if !manager.is_null() && !manager.non_player().is_null() {
                 let f = manager.non_player();
-                da = w(ts + 0x188).wrapping_sub(w(f + 0xa));
-                core::ptr::write_unaligned((f + 0xa) as *mut i16, w(f + 0xa).wrapping_add(da));
+                da = w(ts + 0x188).wrapping_sub(w(f.addr() + 0xa));
+                core::ptr::write_unaligned((f.addr() + 0xa) as *mut i16, w(f.addr() + 0xa).wrapping_add(da));
                 let f = manager.non_player();
-                db = w(ts + 0x18a).wrapping_sub(w(f + 8));
-                core::ptr::write_unaligned((f + 8) as *mut i16, w(f + 8).wrapping_add(db));
+                db = w(ts + 0x18a).wrapping_sub(w(f.addr() + 8));
+                core::ptr::write_unaligned((f.addr() + 8) as *mut i16, w(f.addr() + 8).wrapping_add(db));
                 let f = manager.non_player();
-                dc = w(ts + 0x18c).wrapping_sub(w(f + 0xc));
-                core::ptr::write_unaligned((f + 0xc) as *mut i16, w(f + 0xc).wrapping_add(dc));
+                dc = w(ts + 0x18c).wrapping_sub(w(f.addr() + 0xc));
+                core::ptr::write_unaligned((f.addr() + 0xc) as *mut i16, w(f.addr() + 0xc).wrapping_add(dc));
             }
             for k in -1i32..5 {
                 let aux = Staff(if k == -1 { club.assistant_manager() } else { g(club.addr() + club::COACHES + k as usize * 4) });
-                if aux.is_null() || aux == manager || aux.non_player() == 0 {
+                if aux.is_null() || aux == manager || aux.non_player().is_null() {
                     continue;
                 }
                 for (o, dv) in [(0xa, da), (8, db), (0xc, dc)] {
                     let f = aux.non_player();
-                    let v = w(f + o).wrapping_add(ftol(dv as f64 * 0.25) as i16);
-                    core::ptr::write_unaligned((f + o) as *mut i16, v);
+                    let v = w(f.addr() + o).wrapping_add(ftol(dv as f64 * 0.25) as i16);
+                    core::ptr::write_unaligned((f.addr() + o) as *mut i16, v);
                     let f = aux.non_player();
-                    core::ptr::write_unaligned((f + o) as *mut i16, w(f + o).clamp(1, 10000));
+                    core::ptr::write_unaligned((f.addr() + o) as *mut i16, w(f.addr() + o).clamp(1, 10000));
                 }
             }
         }

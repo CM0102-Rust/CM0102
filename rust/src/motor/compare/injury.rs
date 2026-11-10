@@ -47,8 +47,8 @@ pub(crate) unsafe extern "thiscall" fn compare_post_recovery_news(this: usize, p
     }
     let mut reg: Vec<(usize, usize)> = Vec::from(crate::rng::STATE_REGIONS);
     reg.push((p.addr(), 0x6e));
-    if p.player() != 0 {
-        reg.push((p.player(), 0x46));
+    if !p.player().is_null() {
+        reg.push((p.player().addr(), 0x46));
     }
     let before_1080 = read_usize(G_CONTRACT_LOOKUP_RESULT);
     let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
@@ -112,7 +112,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_injury(this: usize, kind_arg:
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, usize, usize, u32, u32, u32, u32) -> i32>(IDX_ADD_INJURY);
     let r = o(this, kind_arg, retroativa, p.addr(), game, surto, news, rec_arg, so_recorrencia);
     let kind = kind_arg as u8 as i8;
-    let valida = !p.is_null() && (read_usize(p.addr()) as i32) < read_usize(G_STAFF_COUNT) as i32 && p.player() != 0 && (0..0x52).contains(&kind);
+    let valida = !p.is_null() && (read_usize(p.addr()) as i32) < read_usize(G_STAFF_COUNT) as i32 && !p.player().is_null() && (0..0x52).contains(&kind);
     let ok = if !valida || so_recorrencia != 0 {
         r == -1
     } else {
@@ -393,7 +393,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init_squad_fitness(this: usize) {
     for i in 0..injury_club_count_without_nations().max(0) as usize {
         for s in 0..50usize {
             let p = Staff(read_usize(base + i * club::SIZE + 0xd7 + 4 * s));
-            if !p.is_null() && read_i32(p.addr()) < read_i32(G_STAFF_COUNT) && p.player() == 0 {
+            if !p.is_null() && read_i32(p.addr()) < read_i32(G_STAFF_COUNT) && p.player().is_null() {
                 regions.push((p.addr() + staff::CLUB_JOB, 5));
             }
         }
@@ -534,7 +534,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_training_load(injuries: usize
 pub(crate) unsafe extern "thiscall" fn compare_update_player_fitness(this: usize, person: usize) {
     let person = Staff(person);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_UPDATE_PLAYER_FITNESS);
-    if *(G_FITNESS_UPDATE_STATIC_INIT_FLAGS as *const u8) & 7 != 7 || person.is_null() || read_i32(person.addr()) < 0 || read_i32(person.addr()) >= read_i32(G_STAFF_COUNT) || person.player() == 0 {
+    if *(G_FITNESS_UPDATE_STATIC_INIT_FLAGS as *const u8) & 7 != 7 || person.is_null() || read_i32(person.addr()) < 0 || read_i32(person.addr()) >= read_i32(G_STAFF_COUNT) || person.player().is_null() {
         return o(this, person.addr()); // simplification: the statics and the first-time atexit cannot run twice
     }
     let id = read_i32(person.addr()) as usize;

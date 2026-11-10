@@ -1024,7 +1024,7 @@ pub(crate) unsafe extern "C" fn compare_compare_staff_by_player_ability_desc(a: 
 pub(crate) unsafe fn compare_normalizacao_do_jogador(o: unsafe extern "C" fn(usize), rust: unsafe extern "C" fn(usize), person: usize,
                                            name: &'static str) {
     let person = Staff(person);
-    let player = if person.is_null() { 0 } else { person.player() };
+    let player = if person.is_null() { 0 } else { person.player().addr() };
     if player == 0 {
         return o(person.addr()); // does nothing: original only
     }
@@ -1335,7 +1335,7 @@ pub(crate) unsafe extern "C" fn compare_database_vector_to_player(player: usize,
 pub(crate) unsafe extern "C" fn compare_staff_normalise_non_player_attributes(person: usize) {
     let person = Staff(person);
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_NORMALISE_NON_PLAYER_ATTRIBUTES);
-    let nj = NonPlayer(if person.is_null() { 0 } else { person.non_player() });
+    let nj = NonPlayer(if person.is_null() { 0 } else { person.non_player().addr() });
     if nj.is_null() {
         return o(person.addr()); // does nothing: original only
     }
@@ -1464,7 +1464,7 @@ pub(crate) unsafe extern "C" fn compare_staff_adjust_morale(person: usize, delta
     }
     // rolls (0x90cfc0): the generator state goes back between the sides and the copy does not count the rolls
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.push((person.player() + 0x45, 1));
+    reg.push((person.player().addr() + 0x45, 1));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(person.addr(), delta, limitar),
         || crate::rng::without_counting(|| staff_adjust_morale(person.addr(), delta, limitar)));
     SCOREBOARD.record(igual && r == n, || format!("staff_adjust_morale({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", person.addr(), delta as u8 as i8, limitar, r, n, mo, mr));

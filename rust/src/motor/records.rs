@@ -1703,12 +1703,12 @@ impl Staff {
     }
     /// `staff::PLAYER` (+0x61). Name: community.
     #[inline(always)]
-    pub(crate) unsafe fn player(self) -> usize {
-        read_usize(self.0 + staff::PLAYER)
+    pub(crate) unsafe fn player(self) -> PlayerSheet {
+        PlayerSheet(read_usize(self.0 + staff::PLAYER))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_player(self, v: usize) {
-        write_usize(self.0 + staff::PLAYER, v)
+    pub(crate) unsafe fn set_player(self, v: PlayerSheet) {
+        write_usize(self.0 + staff::PLAYER, v.0)
     }
     /// `staff::STAFF_PREFERENCES` (+0x65). Name: community.
     #[inline(always)]
@@ -1721,12 +1721,12 @@ impl Staff {
     }
     /// `staff::NON_PLAYER` (+0x69). Name: community.
     #[inline(always)]
-    pub(crate) unsafe fn non_player(self) -> usize {
-        read_usize(self.0 + staff::NON_PLAYER)
+    pub(crate) unsafe fn non_player(self) -> NonPlayer {
+        NonPlayer(read_usize(self.0 + staff::NON_PLAYER))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_non_player(self, v: usize) {
-        write_usize(self.0 + staff::NON_PLAYER, v)
+    pub(crate) unsafe fn set_non_player(self, v: NonPlayer) {
+        write_usize(self.0 + staff::NON_PLAYER, v.0)
     }
     /// `staff::SQUAD_SELECTED_FOR` (+0x6d). Name: community.
     #[inline(always)]
@@ -2434,12 +2434,12 @@ impl Friendly {
     }
     /// `friendly::FRIENDLY_MATCH_LIST` (+0x34c8). Name: read.
     #[inline(always)]
-    pub(crate) unsafe fn friendly_match_list(self) -> usize {
-        read_usize(self.0 + friendly::FRIENDLY_MATCH_LIST)
+    pub(crate) unsafe fn friendly_match_list(self) -> Llist {
+        Llist(read_usize(self.0 + friendly::FRIENDLY_MATCH_LIST))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_friendly_match_list(self, v: usize) {
-        write_usize(self.0 + friendly::FRIENDLY_MATCH_LIST, v)
+    pub(crate) unsafe fn set_friendly_match_list(self, v: Llist) {
+        write_usize(self.0 + friendly::FRIENDLY_MATCH_LIST, v.0)
     }
     /// `friendly::SCHEDULED_SLOT_LIST` (+0x34cc). Name: read.
     #[inline(always)]
@@ -2452,12 +2452,12 @@ impl Friendly {
     }
     /// `friendly::PENDING_TOURNAMENT_LIST` (+0x34d0). Name: read.
     #[inline(always)]
-    pub(crate) unsafe fn pending_tournament_list(self) -> usize {
-        read_usize(self.0 + friendly::PENDING_TOURNAMENT_LIST)
+    pub(crate) unsafe fn pending_tournament_list(self) -> Llist {
+        Llist(read_usize(self.0 + friendly::PENDING_TOURNAMENT_LIST))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_pending_tournament_list(self, v: usize) {
-        write_usize(self.0 + friendly::PENDING_TOURNAMENT_LIST, v)
+    pub(crate) unsafe fn set_pending_tournament_list(self, v: Llist) {
+        write_usize(self.0 + friendly::PENDING_TOURNAMENT_LIST, v.0)
     }
     /// `friendly::REQUEST_REPLY_LIST` (+0x34d4). Name: read.
     #[inline(always)]
@@ -4079,12 +4079,12 @@ impl Offer {
     }
     /// `offer::EXCHANGE_PLAYERS` (+0x4). Name: read.
     #[inline(always)]
-    pub(crate) unsafe fn exchange_players(self) -> usize {
-        read_usize(self.0 + offer::EXCHANGE_PLAYERS)
+    pub(crate) unsafe fn exchange_players(self) -> Llist {
+        Llist(read_usize(self.0 + offer::EXCHANGE_PLAYERS))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_exchange_players(self, v: usize) {
-        write_usize(self.0 + offer::EXCHANGE_PLAYERS, v)
+    pub(crate) unsafe fn set_exchange_players(self, v: Llist) {
+        write_usize(self.0 + offer::EXCHANGE_PLAYERS, v.0)
     }
     /// `offer::BUYER_CLUB_ID` (+0x8). Name: read.
     #[inline(always)]
@@ -5207,8 +5207,12 @@ impl Engine {
     }
     /// `engine::GRID` (+0x215e). Name: read.
     #[inline(always)]
-    pub(crate) fn grid_addr(self) -> usize {
-        self.0 + engine::GRID
+    pub(crate) unsafe fn grid(self) -> u8 {
+        read_u8(self.0 + engine::GRID)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_grid(self, v: u8) {
+        write_u8(self.0 + engine::GRID, v)
     }
     /// `engine::ON_PITCH_PLAYERS` (+0x453a). Name: read.
     #[inline(always)]
@@ -6954,12 +6958,12 @@ impl MatchPlayer {
     }
     /// `match_player::PLAYER` (+0x6d). Name: read.
     #[inline(always)]
-    pub(crate) unsafe fn player(self) -> usize {
-        read_usize(self.0 + match_player::PLAYER)
+    pub(crate) unsafe fn player(self) -> PlayerSheet {
+        PlayerSheet(read_usize(self.0 + match_player::PLAYER))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_player(self, v: usize) {
-        write_usize(self.0 + match_player::PLAYER, v)
+    pub(crate) unsafe fn set_player(self, v: PlayerSheet) {
+        write_usize(self.0 + match_player::PLAYER, v.0)
     }
     /// `match_player::ACCELERATION` (+0x71). Name: read.
     #[inline(always)]
@@ -8464,12 +8468,12 @@ impl MatchManager {
     }
     /// `match_manager::ENGINE` (+0x12). Name: read.
     #[inline(always)]
-    pub(crate) unsafe fn engine(self) -> usize {
-        read_usize(self.0 + match_manager::ENGINE)
+    pub(crate) unsafe fn engine(self) -> Engine {
+        Engine(read_usize(self.0 + match_manager::ENGINE))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_engine(self, v: usize) {
-        write_usize(self.0 + match_manager::ENGINE, v)
+    pub(crate) unsafe fn set_engine(self, v: Engine) {
+        write_usize(self.0 + match_manager::ENGINE, v.0)
     }
     /// `match_manager::SELECTION_FLAG` (+0x16). Name: inferred.
     #[inline(always)]
@@ -8527,12 +8531,12 @@ impl MatchManager {
     }
     /// `match_manager::MANAGER_SHEET` (+0x1f). Name: read.
     #[inline(always)]
-    pub(crate) unsafe fn manager_sheet(self) -> usize {
-        read_usize(self.0 + match_manager::MANAGER_SHEET)
+    pub(crate) unsafe fn manager_sheet(self) -> NonPlayer {
+        NonPlayer(read_usize(self.0 + match_manager::MANAGER_SHEET))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_manager_sheet(self, v: usize) {
-        write_usize(self.0 + match_manager::MANAGER_SHEET, v)
+    pub(crate) unsafe fn set_manager_sheet(self, v: NonPlayer) {
+        write_usize(self.0 + match_manager::MANAGER_SHEET, v.0)
     }
     /// `match_manager::PLAYERS` (+0x23). Name: read.
     #[inline(always)]
@@ -8563,12 +8567,12 @@ impl MatchManager {
     }
     /// `match_manager::CLUB` (+0x2f). Name: read.
     #[inline(always)]
-    pub(crate) unsafe fn club(self) -> usize {
-        read_usize(self.0 + match_manager::CLUB)
+    pub(crate) unsafe fn club(self) -> Club {
+        Club(read_usize(self.0 + match_manager::CLUB))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_club(self, v: usize) {
-        write_usize(self.0 + match_manager::CLUB, v)
+    pub(crate) unsafe fn set_club(self, v: Club) {
+        write_usize(self.0 + match_manager::CLUB, v.0)
     }
     /// `match_manager::OPPONENT` (+0x33). Name: read.
     #[inline(always)]
@@ -8581,12 +8585,12 @@ impl MatchManager {
     }
     /// `match_manager::FIXTURE` (+0x37). Name: read.
     #[inline(always)]
-    pub(crate) unsafe fn fixture(self) -> usize {
-        read_usize(self.0 + match_manager::FIXTURE)
+    pub(crate) unsafe fn fixture(self) -> Fixture {
+        Fixture(read_usize(self.0 + match_manager::FIXTURE))
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_fixture(self, v: usize) {
-        write_usize(self.0 + match_manager::FIXTURE, v)
+    pub(crate) unsafe fn set_fixture(self, v: Fixture) {
+        write_usize(self.0 + match_manager::FIXTURE, v.0)
     }
     /// `match_manager::BEST_PLAYER` (+0x3b). Name: inferred.
     #[inline(always)]

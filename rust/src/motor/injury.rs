@@ -134,7 +134,7 @@ pub(crate) unsafe fn injure_with(m: Engine, kind: u32, chance: u32, p: MatchPlay
         p.set_injury_pending((1) as i8);
         p.set_injury_forces_off((1) as i8);
     } else {
-        let person = PlayerSheet(p.player());
+        let person = PlayerSheet(p.player().addr());
         let v = (person.injury_proneness() as i32 * 25) as f64 + read_f64(rdata::F64_7100);
         if v > *folego as f64 {
             crate::comparison::branch("injury to 5");
@@ -300,7 +300,7 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
             atuacao < 0x1964
                 && (b(0x14) as u8 as i32) > random(3)
                 && player_table(p.addr()) & 4 != 0
-                && read_i8(p.player() + 0x11) as i32 > random(4) + 0xf
+                && read_i8(p.player().addr() + 0x11) as i32 > random(4) + 0xf
                 && b(0xc) == 0
                 && (b(0x17) as i32) < random(6)
                 && in_field > random(0x32) + 0x1e
@@ -333,7 +333,7 @@ pub(crate) unsafe extern "thiscall" fn injury_grade(injuries: usize, person: usi
         return 0;
     }
     let id = *(person.addr() as *const i32);
-    if id >= *(G_STAFF_COUNT as *const i32) || person.player() == 0 {
+    if id >= *(G_STAFF_COUNT as *const i32) || person.player().is_null() {
         return 0;
     }
     let r = *(injuries as *const usize) + (id as usize).wrapping_mul(31);
@@ -788,7 +788,7 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
     if read_usize(p.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
         return -1;
     }
-    if p.player() == 0 || !(0..0x52).contains(&kind) {
+    if p.player().is_null() || !(0..0x52).contains(&kind) {
         return original(this, kind_arg, retroativa, p.addr(), game.addr(), surto, news, rec_arg, so_recorrencia); // the boxes: original only
     }
     exe::injury_update_player_fitness(this, p);
@@ -900,10 +900,10 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
                 continue;
             }
             let np = f.non_player();
-            if np == 0 {
+            if np.is_null() {
                 continue;
             }
-            if exe::non_player_attribute_rating(np, read_u8(np + non_player::PHYSIOTHERAPY) as i8) as i8 > best {
+            if exe::non_player_attribute_rating(np, read_u8(np.addr() + non_player::PHYSIOTHERAPY) as i8) as i8 > best {
                 let np = read_usize(read_usize(p.club_job().addr() + club::PHYSIOS + 4 * k) + 0x69);
                 best = exe::non_player_attribute_rating(np, read_u8(np + non_player::PHYSIOTHERAPY) as i8) as i8;
             }
@@ -924,12 +924,12 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
     let age = (p.age() as u8) as i8;
     if kind != 0x51 && read_i16(G_INJURY_TYPE_BASE_DAYS + t) > 10 {
         if age > 0x1e {
-            let ax = (read_i8_as_i32(p.player() + 0x2d) as i16).wrapping_add(age as i16).wrapping_sub(0x23);
+            let ax = (read_i8_as_i32(p.player().addr() + 0x2d) as i16).wrapping_add(age as i16).wrapping_sub(0x23);
             if ax > 0 {
                 extra = extra.wrapping_add(friendly_random(ax as i32));
             }
         }
-        let al = read_u8(p.player() + 0x2d) as i8;
+        let al = read_u8(p.player().addr() + 0x2d) as i8;
         if al > 10 {
             extra = extra.wrapping_add(friendly_random((al as i16 - 10) as i32));
         }
@@ -942,7 +942,7 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
         if read_u8(g) >= 100 {
             break;
         }
-        if friendly_random(read_i8_as_i32(p.player() + 0x34) * 5 + 0xc) == 0 {
+        if friendly_random(read_i8_as_i32(p.player().addr() + 0x34) * 5 + 0xc) == 0 {
             let g = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(0x4f)) + 0xa;
             *(g as *mut u8) = read_u8(g).wrapping_add(1);
         }
@@ -1023,12 +1023,12 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
     }
     // retirement by age and by a long return to training
     let volta = || read_i16(read_usize(this + injury_fields::INJURY_ENTRIES) + off + 0x2a) as i32;
-    let propensao = || read_i8_as_i32(p.player() + 0x2d);
+    let propensao = || read_i8_as_i32(p.player().addr() + 0x2d);
     let years = || ((p.age() as i8) as i32);
     let encerra = (age > 0x24 && volta() > 0x78 - propensao() - years() && friendly_random(volta()) > 0x5a - years())
         || (age > 0x21 && volta() > 0x96 - propensao() - years() && friendly_random(volta()) > 0x5a - years())
         || (age > 0x1f && volta() > 0x12c - years() && friendly_random(volta()) > 0xc8 - years())
-        || (volta() > 0x1f4 && friendly_random(read_i8_as_i32(p.player() + 0x34) + 5) == 0);
+        || (volta() > 0x1f4 && friendly_random(read_i8_as_i32(p.player().addr() + 0x34) + 5) == 0);
     if encerra && read_usize(G_PLAYER_REGEN) != 0 {
         crate::comparison::branch("cqb_5 retires through injury");
         exe::player_regen_schedule_injury_retirement(read_usize(G_PLAYER_REGEN), p, read_i16(read_usize(this + injury_fields::INJURY_ENTRIES) + off + 0x2a));
@@ -1112,7 +1112,7 @@ pub(crate) unsafe extern "thiscall" fn injury_post_injury_news(_this: usize, p: 
     exe::write_match_record_to_news(l + 1, nw, &mut mark);
     let news = read_usize(G_NEWS);
     if read_i16(l + injury_entry::DAYS_OUT) > 100 {
-        let f = PlayerSheet(p.player());
+        let f = PlayerSheet(p.player().addr());
         if !f.is_null() && f.world_reputation() > 0x1f40 {
             exe::news_send_to_all_managers(read_usize(G_NEWS), nw);
         } else {
@@ -1272,7 +1272,7 @@ pub(crate) unsafe fn roll_training_injuries(this: usize) {
         let idx = friendly_random(read_i32(G_STAFF_COUNT));
         let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add((idx as u32).wrapping_mul(0x6e) as usize));
         'proximo: {
-            if p.player() == 0 {
+            if p.player().is_null() {
                 i -= 1; // not a player: the random roll does not count
                 break 'proximo;
             }
@@ -1283,7 +1283,7 @@ pub(crate) unsafe fn roll_training_injuries(this: usize) {
             if exe::awol_is_player_awol(read_usize(G_AWOL), p, 0) != 0 {
                 break 'proximo;
             }
-            if read_i8(p.player() + 0xf) == 0x14 {
+            if read_i8(p.player().addr() + 0xf) == 0x14 {
                 let r5 = friendly_random(5);
                 let r2 = friendly_random(2);
                 if r5 > r2 {
@@ -1297,13 +1297,13 @@ pub(crate) unsafe fn roll_training_injuries(this: usize) {
             if read_i8(rec + physical_record::RECURRING_TYPE) > -1 {
                 let rec = physical_record_by_index(this, idx);
                 let r = friendly_random(100);
-                let lim = ((read_i8(p.player() + 0x2d) as i32 - 3) * 5 + read_i8(rec + physical_record::PRONENESS) as i32 + read_i8(rec + physical_record::RECURRENCE_GRADE) as i32) * 2;
+                let lim = ((read_i8(p.player().addr() + 0x2d) as i32 - 3) * 5 + read_i8(rec + physical_record::PRONENESS) as i32 + read_i8(rec + physical_record::RECURRENCE_GRADE) as i32) * 2;
                 if r > lim {
                     break 'proximo;
                 }
             } else {
                 let r = friendly_random(0xa0);
-                let lim = ((read_i8(p.player() + 0x2d) as i32 - 3) * 5 + read_i8(physical_record_by_index(this, idx) + 0x1e) as i32) * 2; // cpw9: the risk without recurrence
+                let lim = ((read_i8(p.player().addr() + 0x2d) as i32 - 3) * 5 + read_i8(physical_record_by_index(this, idx) + 0x1e) as i32) * 2; // cpw9: the risk without recurrence
                 if r > lim {
                     break 'proximo;
                 }
@@ -1340,7 +1340,7 @@ pub(crate) unsafe fn roll_training_injuries(this: usize) {
                     }
                 }
             }
-            if read_i8(p.player() + 0xf) < 0xf && category == 7 {
+            if read_i8(p.player().addr() + 0xf) < 0xf && category == 7 {
                 i -= 1;
                 break 'proximo;
             }
@@ -1373,53 +1373,53 @@ pub(crate) unsafe fn apply_injury_attribute_loss(this: usize, idx: i32, p: Staff
     let sheet = || p.player();
     match case {
         0 => {
-            let a = read_i8(sheet() + 0x1b);
+            let a = read_i8(sheet().addr() + 0x1b);
             if a == 0x14 {
                 if is_recurring_category(this, idx, category) {
                     let f = sheet();
                     let r = friendly_random(3) as u8;
-                    add_to_byte(f + player_sheet::ACCELERATION, 0xffu8.wrapping_sub(r));
+                    add_to_byte(f.addr() + player_sheet::ACCELERATION, 0xffu8.wrapping_sub(r));
                 } else if friendly_random(3) != 0 {
                     let f = sheet();
                     let r = friendly_random(2) as u8;
-                    add_to_byte(f + player_sheet::ACCELERATION, 0xffu8.wrapping_sub(r));
+                    add_to_byte(f.addr() + player_sheet::ACCELERATION, 0xffu8.wrapping_sub(r));
                 }
             } else if a > 0xf && friendly_random(3) == 0 {
-                add_to_byte(sheet() + 0x1b, 0xff);
+                add_to_byte(sheet().addr() + 0x1b, 0xff);
             }
-            if read_i8(sheet() + 0x36) == 0x14 {
+            if read_i8(sheet().addr() + 0x36) == 0x14 {
                 if is_recurring_category(this, idx, category) {
                     let f = sheet();
                     let r = friendly_random(3) as u8;
-                    add_to_byte(f + player_sheet::PLAYER_PACE, 0xffu8.wrapping_sub(r));
+                    add_to_byte(f.addr() + player_sheet::PLAYER_PACE, 0xffu8.wrapping_sub(r));
                 } else if friendly_random(3) != 0 {
-                    add_to_byte(sheet() + 0x36, 0xff);
+                    add_to_byte(sheet().addr() + 0x36, 0xff);
                 }
-            } else if read_i8(sheet() + 0x1b) > 0x11 && friendly_random(3) == 0 {
-                add_to_byte(sheet() + 0x1b, 0xff);
+            } else if read_i8(sheet().addr() + 0x1b) > 0x11 && friendly_random(3) == 0 {
+                add_to_byte(sheet().addr() + 0x1b, 0xff);
             }
         }
         2 => {
-            if is_recurring_category(this, idx, category) && read_i8(sheet() + 0x1b) == 0x14 && friendly_random(3) == 0 {
-                add_to_byte(sheet() + 0x1b, 0xff);
+            if is_recurring_category(this, idx, category) && read_i8(sheet().addr() + 0x1b) == 0x14 && friendly_random(3) == 0 {
+                add_to_byte(sheet().addr() + 0x1b, 0xff);
             }
         }
         3 => {
-            let c = read_i8(sheet() + 0x1d);
+            let c = read_i8(sheet().addr() + 0x1d);
             if c == 0x14 {
-                *((sheet() + 0x1d) as *mut u8) = 0x13;
+                *((sheet().addr() + 0x1d) as *mut u8) = 0x13;
             } else if c > 0xf && friendly_random(3) == 0 {
-                add_to_byte(sheet() + 0x1d, 0xff);
+                add_to_byte(sheet().addr() + 0x1d, 0xff);
             }
         }
         4 => {
-            let c = read_i8(sheet() + 0x1d);
+            let c = read_i8(sheet().addr() + 0x1d);
             if c == 0x14 {
                 if friendly_random(3) != 0 {
-                    add_to_byte(sheet() + 0x1d, 0xff);
+                    add_to_byte(sheet().addr() + 0x1d, 0xff);
                 }
             } else if c > 0xf && friendly_random(3) == 0 {
-                add_to_byte(sheet() + 0x1d, 0xff);
+                add_to_byte(sheet().addr() + 0x1d, 0xff);
             }
         }
         _ => {}
@@ -1722,7 +1722,7 @@ pub(crate) unsafe fn has_injury_hit(this: usize, id: i32, person: Staff) -> bool
     let mut found = false;
     let mut e = exe::llist_get_next(list);
     while e != 0 && !found {
-        found = read_i32(e) == id && (read_i8(e + 4) != 7 || read_i8((person.player() as i32) as usize + 0xf) >= 0xf);
+        found = read_i32(e) == id && (read_i8(e + 4) != 7 || read_i8((person.player().addr() as i32) as usize + 0xf) >= 0xf);
         e = exe::llist_get_next(list);
     }
     list.set_cursor((cursor) as usize);
@@ -2245,7 +2245,7 @@ pub(crate) unsafe extern "thiscall" fn init_squad_fitness(this: usize) {
             if p.is_null() || read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) {
                 continue;
             }
-            let player = PlayerSheet(p.player());
+            let player = PlayerSheet(p.player().addr());
             if !player.is_null() {
                 crate::comparison::branch("cpp_9 initial form");
                 let v = days - ((player.natural_fitness() as u8) as i8 as i32) / 2 - ((p.professionalism() as u8) as i8 as i32) / 4;
@@ -2422,7 +2422,7 @@ pub(crate) unsafe fn plan_recurring_injury(this: usize, record: usize, injury: *
         if read_u8(r + physical_record::RECURRING_TYPE) != 0xff {
             let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add(i as usize * staff::SIZE));
             let v = friendly_random(0x65) as u8;
-            let player = PlayerSheet(p.player());
+            let player = PlayerSheet(p.player().addr());
             let rating = if player.is_null() { 0x64 } else { v.wrapping_add(read_u8(r + physical_record::RECURRENCE_GRADE).wrapping_mul(0xfb)).wrapping_sub((player.injury_proneness() as u8)) };
             if rating as i8 > melhor {
                 (melhor, escolhido, pessoa) = (rating as i8, r, p.addr());
@@ -2709,7 +2709,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
     if id >= read_i32(G_STAFF_COUNT) {
         return;
     }
-    let sheet = PlayerSheet(person.player());
+    let sheet = PlayerSheet(person.player().addr());
     if sheet.is_null() {
         return;
     }
@@ -2946,7 +2946,7 @@ pub(crate) unsafe extern "thiscall" fn daily_wear(t: usize, id: i32) {
         let r = exe::utils_random(0xd) as i16;
         core::ptr::write_unaligned(e, core::ptr::read_unaligned(e).wrapping_sub(r));
     }
-    let sheet = PlayerSheet(p.player());
+    let sheet = PlayerSheet(p.player().addr());
     if !sheet.is_null() && (sheet.goalkeeper() as u8) == 0x14 && core::ptr::read_unaligned(e) >= 0x41a {
         core::ptr::write_unaligned(e, 0x41a);
     }
@@ -3037,7 +3037,7 @@ pub(crate) unsafe extern "C" fn injury_compare_entry_dates(key: usize, item: usi
 /// chamadores leem só o al.
 pub(crate) unsafe extern "thiscall" fn get_recurring_injury_type(this: usize, person: usize) -> u8 {
     let person = Staff(person);
-    if person.is_null() || read_usize(person.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 || person.player() == 0 {
+    if person.is_null() || read_usize(person.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 || person.player().is_null() {
         return 0xff;
     }
     *((read_usize(this) + 31 * read_usize(person.addr())) as *const u8).add(0x12)

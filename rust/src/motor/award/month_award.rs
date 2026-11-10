@@ -122,12 +122,12 @@ pub(crate) unsafe extern "thiscall" fn set_winner(this: usize, id: i32, club_id:
 pub(crate) unsafe fn winner_reputation_regions(regions: &mut Vec<(usize, usize)>, person: usize, club: usize) {
     let person = Staff(person);
     let p = person.player();
-    if p != 0 {
-        regions.push((p + 9, 6));
+    if !p.is_null() {
+        regions.push((p.addr() + 9, 6));
     }
     let np = person.non_player();
-    if np != 0 {
-        regions.push((np + 8, 6));
+    if !np.is_null() {
+        regions.push((np.addr() + 8, 6));
     }
     if club != 0 {
         let rows = read_usize(read_usize(G_MANAGER_MANAGER));

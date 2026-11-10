@@ -175,6 +175,8 @@ def main():
                 L += ['    #[inline(always)]', '    pub(crate) fn %s_addr(self) -> usize {' % nome, '        self.0 + %s::%s' % (mod, c), '    }']
                 continue
             n_campos += 1
+            if not alvo and t and t[:1].isupper():
+                alvo = t  # a pointer typed in an earlier run (kept by tipos_ja_gerados)
             if alvo:
                 L += ['    #[inline(always)]', '    pub(crate) unsafe fn %s(self) -> %s {' % (fn, alvo),
                       '        %s(read_usize(self.0 + %s::%s))' % (alvo, mod, c), '    }',

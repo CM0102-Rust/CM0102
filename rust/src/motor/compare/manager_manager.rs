@@ -231,7 +231,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_club_manager(this: usize, 
     if exe::database_is_national_team(club) == 0 {
         for k in 0..50usize {
             let p = Staff(club.squad(k));
-            if p.is_null() || p.player() == 0 {
+            if p.is_null() || p.player().is_null() {
                 continue;
             }
             let ct = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);

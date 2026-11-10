@@ -159,7 +159,7 @@ pub(crate) unsafe extern "C" fn compare_pick(
 pub(crate) unsafe extern "thiscall" fn compare_stance(c: usize) -> u8 {
     let c = MatchManager(c);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_STANCE);
-    let m = Engine(c.engine());
+    let m = Engine(c.engine().addr());
     // the active ones (engine+4/+5, 0x6cbbb0), the factor of both sides, the dates (0x54cdb0) and the pointer of the
     // table that the league search (0x4a4850) sorts
     let reg = [(m.addr() + 4, 2), (m.addr() + engine::STANCE_FACTOR, 8), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1), (G_COMP_STATS_SORT_CONTEXT, 4)];
@@ -181,12 +181,12 @@ pub(crate) unsafe extern "thiscall" fn compare_choose_formation(c: usize, sheets
     // written and what the instructions touch), the rating dates (0x6e2f20) and the search pointer in the league
     let m = c.engine();
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (c.tactics(), 0x18e3), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1), (G_COMP_STATS_SORT_CONTEXT, 4)]);
+    reg.extend([(m.addr(), ENGINE_SIZE), (c.tactics(), 0x18e3), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (G_DAYS_SINCE_SCRATCH_DATE, 8), (0xae2418, 1), (G_SUB_DAYS_RESULT_DATE, 8), (0xae249e, 1), (G_COMP_STATS_SORT_CONTEXT, 4)]);
     let taticas = *(G_TACTICS as *const usize);
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let club = c.club();
     for humano in 0..2u32 {
-        let l = if club == 0 { -1 } else { row(club, humano) };
+        let l = if club.is_null() { -1 } else { row(club.addr(), humano) };
         if l != -1 {
             reg.push(((*((taticas + tactics_fields::ROWS) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)), 0x91));
         }
@@ -210,12 +210,12 @@ pub(crate) unsafe extern "thiscall" fn compare_instructions(c: usize) {
     // of the club in the tactics database
     let m = c.engine();
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (c.tactics(), 0x18e3), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
+    reg.extend([(m.addr(), ENGINE_SIZE), (c.tactics(), 0x18e3), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
     let taticas = *(G_TACTICS as *const usize);
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let club = c.club();
     for humano in 0..2u32 {
-        let l = if club == 0 { -1 } else { row(club, humano) };
+        let l = if club.is_null() { -1 } else { row(club.addr(), humano) };
         if l != -1 {
             reg.push(((*((taticas + tactics_fields::ROWS) as *const usize)).wrapping_add((l as usize).wrapping_mul(0x91)), 0x91));
         }
@@ -238,7 +238,7 @@ pub(crate) unsafe extern "thiscall" fn compare_put_in_place(c: usize, pos: u32, 
         return call_recording(FN_MATCH_MAN_PLACE_PLAYER_IN_TEAM, c.addr(), [pos, person as u32, extra, 0, 0], || o(c.addr(), pos, person, extra) as u32) as u8;
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(c.engine(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
+    reg.extend([(c.engine().addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
     let (r, rr, igual, sequencia, k) = compare_com_fita(reg, || o(c.addr(), pos, person, extra), |chamar| {
         place_in_slot_with(c, pos, person, extra, &mut |rotina, this, args| chamar(rotina, this, args, [u32::MAX, u32::MAX, 0xff, 0xff, 0xff]))
     });
@@ -271,7 +271,7 @@ pub(crate) unsafe extern "thiscall" fn compare_starters(c: usize) -> u8 {
         return call_recording(FN_MATCH_MAN_PLACE_SELECTED_PLAYERS, c.addr(), [0, 0, 0, 0, 0], || o(c.addr()) as u32) as u8;
     }
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(c.engine(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
+    reg.extend([(c.engine().addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
     let (r, rr, igual, sequencia, k) = compare_com_fita(reg, || o(c.addr()), |chamar| {
         starters_with(c, &mut |rotina, this, args| chamar(rotina, this, args, [0xff, u32::MAX, 0xff, 0, 0]))
     });
@@ -283,7 +283,7 @@ pub(crate) unsafe extern "thiscall" fn compare_starters(c: usize) -> u8 {
 pub(crate) unsafe extern "thiscall" fn compare_store_tactic(c: usize) {
     let c = MatchManager(c);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_STORE_TACTIC);
-    let mut reg = club_rows(c.club());
+    let mut reg = club_rows(c.club().addr());
     reg.push((G_MOUSE_LEFT_BUTTON_DOWN, 4));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(c.addr()), || store_tactic(c.addr()));
     SCOREBOARD.record(igual, || format!("store_tactic(humano {}) {}", c.tactic_slot(), first_difference(&mo, &mr)));
@@ -302,7 +302,7 @@ pub(crate) unsafe extern "thiscall" fn compare_substitute(c: usize, goalkeeper: 
     }
     let m = c.engine();
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
+    reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
     let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(c.addr(), goalkeeper), |chamar| {
         substitute_with(c, goalkeeper as u8, &mut |rotina, this, args| {
             let mask = match rotina {
@@ -330,7 +330,7 @@ pub(crate) unsafe extern "thiscall" fn compare_redo_team(c: usize) {
     }
     let m = c.engine();
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.extend([(m, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
+    reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
     let (_, _, igual, sequencia, k) = compare_com_fita(reg, || o(c.addr()), |chamar| {
         rebuild_team_with(c, &mut |rotina, this, args| {
             let mask = match rotina {

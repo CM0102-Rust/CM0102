@@ -189,14 +189,14 @@ pub(crate) unsafe extern "thiscall" fn cancel_tournament(this: usize, tournament
             exe::news_send_to_club_manager(read_usize(G_NEWS), nt, c);
         }
     }
-    let pendentes = Llist(this.pending_tournament_list());
+    let pendentes = Llist(this.pending_tournament_list().addr());
     if !pendentes.is_null() {
         pendentes.set_cursor(pendentes.head());
         let mut item = exe::llist_get_next(this.pending_tournament_list());
         while item != 0 {
             if tournament == read_usize(item) {
                 exe::llist_remove(this.pending_tournament_list(), item);
-                let p = Llist(this.pending_tournament_list());
+                let p = Llist(this.pending_tournament_list().addr());
                 p.set_cursor(p.head());
             }
             item = exe::llist_get_next(this.pending_tournament_list());
@@ -1208,7 +1208,7 @@ pub(crate) unsafe extern "thiscall" fn add_tournament(this: usize, host: usize, 
 /// data (+8 ≠ 0) pelo próximo da lista (0x68d1b0: ecx = a lista; sem push -> thiscall); senão 0.
 pub(crate) unsafe extern "thiscall" fn find_human_club_open_invitation(this: usize) -> usize {
     let this = Friendly(this);
-    let list = Llist(this.friendly_match_list());
+    let list = Llist(this.friendly_match_list().addr());
     if list.is_null() {
         return 0;
     }
@@ -1626,7 +1626,7 @@ pub(crate) unsafe fn add_month_award_record_body(this: usize, p: Staff, club: us
         }
         return;
     }
-    if p.player() == 0 {
+    if p.player().is_null() {
         return;
     }
     let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p));
@@ -1761,9 +1761,9 @@ pub(crate) unsafe extern "thiscall" fn friendly_update_for_date(this: usize, tod
     exe::friendly_create_due_planned_friendlies(this);
     exe::friendly_update_international_friendlies(this);
     let l = this.pending_tournament_list();
-    if l != 0 {
-        let count = read_u16(l) as i16;
-        write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
+    if !l.is_null() {
+        let count = read_u16(l.addr()) as i16;
+        write_usize(l.addr() + llist::CURSOR, read_usize(l.addr() + llist::HEAD));
         if count > 0 {
             let mut n = count as i32;
             loop {
@@ -1775,7 +1775,7 @@ pub(crate) unsafe extern "thiscall" fn friendly_update_for_date(this: usize, tod
                 }
                 let l = this.pending_tournament_list();
                 n -= 1;
-                write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
+                write_usize(l.addr() + llist::CURSOR, read_usize(l.addr() + llist::HEAD));
                 if n == 0 {
                     break;
                 }
@@ -1792,8 +1792,8 @@ pub(crate) unsafe extern "thiscall" fn friendly_update_for_date(this: usize, tod
         }
     }
     let l = this.friendly_match_list();
-    if l != 0 {
-        write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
+    if !l.is_null() {
+        write_usize(l.addr() + llist::CURSOR, read_usize(l.addr() + llist::HEAD));
         let mut p = exe::llist_get_next(this.friendly_match_list());
         while p != 0 {
             if read_usize(p + friendly_match::HOME_CLUB) == 0 || read_usize(p + friendly_match::AWAY_CLUB) == 0 {
@@ -2336,9 +2336,9 @@ pub(crate) unsafe extern "thiscall" fn add_friendly_match(this: usize, club: usi
     };
     write_usize(m + friendly_match::HOME_CLUB, mandante);
     write_usize(m + friendly_match::AWAY_CLUB, visitante);
-    if this.friendly_match_list() == 0 {
+    if this.friendly_match_list().is_null() {
         let l = alloc_empty_list();
-        this.set_friendly_match_list(l);
+        this.set_friendly_match_list(Llist(l));
         if l == 0 {
             show_error_at(0x9cd0a0, 0xe9f);
             exe::crt_operator_delete(m);
@@ -2348,7 +2348,7 @@ pub(crate) unsafe extern "thiscall" fn add_friendly_match(this: usize, club: usi
     if reaproveitado {
         return m;
     }
-    let c = list_append_copy(this.friendly_match_list(), m, 0x19);
+    let c = list_append_copy(this.friendly_match_list().addr(), m, 0x19);
     if c == 0 {
         show_error_at(0x9cd0a0, 0xeac);
         exe::crt_operator_delete(m);
@@ -2589,7 +2589,7 @@ pub(crate) unsafe extern "C" fn compare_fixture_records_by_date(a: usize, b: usi
 /// a lista +0x34c8: a original (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn remove_friendly_match(this: usize, game: usize, clear_slot: u32) -> u32 {
     let this = Friendly(this);
-    if game == 0 || this.friendly_match_list() == 0 {
+    if game == 0 || this.friendly_match_list().is_null() {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_REMOVE_FRIENDLY_MATCH)(this.addr(), game, clear_slot);
     }
     let recomecar = || {
@@ -3034,7 +3034,7 @@ pub(crate) unsafe extern "thiscall" fn find_tour_opponent(this: usize, club: usi
 pub(crate) unsafe extern "thiscall" fn find_friendly_match(this: usize, data: usize, club: usize) -> usize {
     let this = Friendly(this);
     let u = |a: usize| core::ptr::read_unaligned(a as *const usize);
-    let l = Llist(this.friendly_match_list());
+    let l = Llist(this.friendly_match_list().addr());
     if l.is_null() {
         return 0;
     }

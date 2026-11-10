@@ -81,7 +81,7 @@ pub(crate) unsafe extern "thiscall" fn check_fifa_protected_period(c: usize, _x:
 /// tela do contrato.
 pub(crate) unsafe extern "C" fn staff_contract_is_bonus_type_allowed(person: usize, kind: u32) -> u32 {
     let person = Staff(person);
-    let f = PlayerSheet(person.player());
+    let f = PlayerSheet(person.player().addr());
     if f.is_null() {
         return 0;
     }
@@ -314,7 +314,7 @@ pub(crate) unsafe fn should_withdraw_transfer_request(this: Contract) -> Option<
     } else {
         0
     };
-    if club == 0 || (person.player() as u32) == 0 || (this.club() as u32) != read_u32(club) {
+    if club == 0 || (person.player().addr() as u32) == 0 || (this.club() as u32) != read_u32(club) {
         return None;
     }
     if this.transfer_status() & 8 == 0 || this.leaving_on_bosman() != 0 {
@@ -415,7 +415,7 @@ pub(crate) unsafe extern "thiscall" fn set_flags(c: usize, marks: u32) {
     if exe::transfer_manager_is_queued_for_free_transfer(read_usize(G_TRANSFER_MANAGER), person) != 0 {
         return;
     }
-    if (person.age() as u8) as i8 <= 0x14 && read_i16(person.player() + 0xb) <= 0x109a {
+    if (person.age() as u8) as i8 <= 0x14 && read_i16(person.player().addr() + 0xb) <= 0x109a {
         return;
     }
     crate::comparison::branch("cpw_7 transfer request");
@@ -601,7 +601,7 @@ pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
     } else if b44 > 0 {
         rating = rating.wrapping_add(2);
     }
-    let sheet = PlayerSheet(p.player());
+    let sheet = PlayerSheet(p.player().addr());
     if !sheet.is_null() {
         let rep = sheet.current_reputation();
         if rep > 0x1c52 {

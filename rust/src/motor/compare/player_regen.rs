@@ -299,8 +299,8 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_staff_for_regen(this: usize
     let np = person.non_player();
     let jp = person.player();
     let nation = person.nation();
-    let reserve = (np != 0).then(|| (read_usize(np) as u32, (!nation.is_null()).then(|| read_usize(nation.addr()) as u32), read_usize(person.addr()) as u32));
-    let bench = (jp != 0).then(|| (read_usize(jp) as u32, read_usize(nation.addr()) as u32, read_usize(person.addr()) as u32));
+    let reserve = (!np.is_null()).then(|| (read_usize(np.addr()) as u32, (!nation.is_null()).then(|| read_usize(nation.addr()) as u32), read_usize(person.addr()) as u32));
+    let bench = (!jp.is_null()).then(|| (read_usize(jp.addr()) as u32, read_usize(nation.addr()) as u32, read_usize(person.addr()) as u32));
     o(this, entry);
     let queue = read_usize(this + player_regen_fields::REGEN_QUEUE).wrapping_add(n1.wrapping_mul(12));
     let mut ok = read_usize(this + player_regen_fields::REGEN_QUEUE_COUNT) == n1 + 1 && read_usize(queue) as i32 == id && read_usize(queue + regen_queue_entry::REGEN_DATE) as u32 == datas;

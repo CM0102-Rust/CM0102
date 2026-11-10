@@ -724,7 +724,7 @@ pub(crate) unsafe extern "C" fn compare_develop_player(jm: usize, person: usize,
         });
         return;
     }
-    let st = PlayerSheet(person.player());
+    let st = PlayerSheet(person.player().addr());
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(st.addr() + player_sheet::CURRENT_ABILITY, 0xa), (st.addr() + player_sheet::PLAYER_MORALE, 1)]);
     if jm != 0 {

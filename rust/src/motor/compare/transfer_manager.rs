@@ -382,8 +382,8 @@ pub(crate) unsafe extern "thiscall" fn compare_check_squad_limits(this: usize, c
     if !reason.is_null() {
         regions.push((reason as usize, 2));
     }
-    if o.exchange_players() != 0 {
-        regions.push((o.exchange_players() + 0xa, 4));
+    if !o.exchange_players().is_null() {
+        regions.push((o.exchange_players().addr() + 0xa, 4));
     }
     let before = crate::comparison::MemorySnapshot::read(&regions);
     SQUAD_LIMITS_DRY_RUN = true;
@@ -628,7 +628,7 @@ pub(crate) unsafe extern "thiscall" fn compare_settle_previous_transfer_clauses(
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SETTLE_PREVIOUS_TRANSFER_CLAUSES);
     let marks = this.person_flags();
     let has = |id: usize| read_u8(marks.wrapping_add(id.wrapping_mul(8))) & 0xe != 0;
-    let l = Llist(offer.exchange_players());
+    let l = Llist(offer.exchange_players().addr());
     let mut regions = vec![(marks.wrapping_add(offer.target_staff_id().wrapping_mul(8)), 8usize)];
     let mut alguma = has(offer.target_staff_id());
     if !l.is_null() {
@@ -835,7 +835,7 @@ pub(crate) unsafe extern "thiscall" fn compare_note_terms_offered_to_exchange_pl
         return o(this.addr(), k, person);
     }
     let of = Offer(read_usize(read_usize(this.addr()).wrapping_add((k as usize).wrapping_mul(4))));
-    let l = Llist(of.exchange_players());
+    let l = Llist(of.exchange_players().addr());
     let mut regions = vec![(of.addr() + offer::STATUS, 1), (l.addr() + llist::CURSOR, 4)];
     for e in llist_collect(l) {
         regions.push((e + exchange_player::TERMS_STATE, 1));
@@ -884,7 +884,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_future_transfer(this: usiz
     if n > 0 {
         regions.push((this.future_transfers(), n as usize * 0xc));
     }
-    let l = Llist(offer.exchange_players());
+    let l = Llist(offer.exchange_players().addr());
     if !l.is_null() {
         l.set_cursor(l.head());
         let mut e = exe::llist_get_next(l);
@@ -1215,7 +1215,7 @@ pub(crate) unsafe extern "stdcall" fn compare_player_club_uses_bosman(person: us
 pub(crate) unsafe extern "thiscall" fn compare_check_board_veto(this: usize, offer: usize, buyer: usize, seller: usize, player: usize, decides: usize, reason: *mut u16) -> u32 {
     let player = Staff(player);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, usize, *mut u16) -> u32>(IDX_CHECK_BOARD_VETO);
-    let data = if player.is_null() { 0 } else { player.player() };
+    let data = if player.is_null() { 0 } else { player.player().addr() };
     if data == 0 {
         return o(this, offer, buyer, seller, player.addr(), decides, reason);
     }
@@ -1348,7 +1348,7 @@ pub(crate) unsafe extern "thiscall" fn compare_can_end_loan(this: usize, club: u
 pub(crate) unsafe extern "thiscall" fn compare_transfer_manager_offer_needs_work_permit(this: usize, offer: usize) -> u32 {
     let offer = Offer(offer);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_TRANSFER_MANAGER_OFFER_NEEDS_WORK_PERMIT);
-    let list = Llist((offer.exchange_players() as u32) as usize);
+    let list = Llist((offer.exchange_players().addr() as u32) as usize);
     let mut reg = vec![(G_CONTRACT_LOOKUP_RESULT, 4)];
     if !list.is_null() {
         reg.push((list.addr() + llist::CURSOR, 4));
@@ -1432,8 +1432,8 @@ pub(crate) unsafe extern "thiscall" fn compare_get_exchange_offers_for_player(ma
             let club = *(p as *const u32);
             for i in 0..((manager.offer_capacity() as i32)).max(0) as usize {
                 let offer = Offer(*((*(manager.addr() as *const usize) + 4 * i) as *const usize));
-                if !offer.is_null() && (offer.buyer_club_id() as u32) == club && offer.exchange_players() != 0 {
-                    regions.push((offer.exchange_players() + 0xa, 4));
+                if !offer.is_null() && (offer.buyer_club_id() as u32) == club && !offer.exchange_players().is_null() {
+                    regions.push((offer.exchange_players().addr() + 0xa, 4));
                 }
             }
         }
@@ -1450,7 +1450,7 @@ pub(crate) unsafe extern "stdcall" fn compare_transfer_manager_close_offer_contr
     let o = original_fn::<unsafe extern "stdcall" fn(usize)>(IDX_TRANSFER_MANAGER_CLOSE_OFFER_CONTRACT_OFFERS);
     // the proposals that can close: those of the target’s id and of the swap ids (the club does not filter here)
     let mut ids = vec![(offer.target_staff_id() as u32)];
-    let l = Llist(offer.exchange_players());
+    let l = Llist(offer.exchange_players().addr());
     if !l.is_null() {
         ids.extend(llist_data_values(l).iter().map(|&e| *(e as *const u32)));
     }
@@ -1510,8 +1510,8 @@ pub(crate) unsafe extern "thiscall" fn compare_get_exchange_negotiations_for_pla
             let negociacoes = manager.common_name();
             for i in 0..(*((manager.addr() + staff::DATE_OF_BIRTH) as *const i32)).max(0) as usize {
                 let neg = Offer(*((negociacoes + i * 4) as *const usize));
-                if !neg.is_null() && (neg.buyer_club_id() as u32) == club && neg.exchange_players() != 0 {
-                    regions.push((neg.exchange_players() + 0xa, 4));
+                if !neg.is_null() && (neg.buyer_club_id() as u32) == club && !neg.exchange_players().is_null() {
+                    regions.push((neg.exchange_players().addr() + 0xa, 4));
                 }
             }
         }

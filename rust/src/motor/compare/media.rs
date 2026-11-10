@@ -99,7 +99,7 @@ pub(crate) unsafe extern "stdcall" fn compare_media_format_response_option_label
 pub(crate) unsafe extern "thiscall" fn compare_process_transfer_squad_reactions(this: usize, p: usize, new: usize, old: usize, flag: u32) {
     let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32)>(IDX_PROCESS_TRANSFER_SQUAD_REACTIONS);
-    if p.is_null() || new == 0 || p.player() == 0 || ((p.age() as i8) as i32) < 0x13 || current_reputation(p) < 0x109a {
+    if p.is_null() || new == 0 || p.player().is_null() || ((p.age() as i8) as i32) < 0x13 || current_reputation(p) < 0x109a {
         return o(this, p.addr(), new, old, flag);
     }
     let sheet = read_usize(G_CONTRACT_LOOKUP_RESULT);

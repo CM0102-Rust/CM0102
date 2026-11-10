@@ -11,7 +11,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_league_champions_record(this:
         return o(this, club.addr(), comp);
     }
     let t = Staff(club.manager().addr());
-    let notes = if !t.is_null() && t.non_player() != 0 { (t.non_player() + 8, 6) } else { (club.addr() + club::REPUTATION, 2) };
+    let notes = if !t.is_null() && !t.non_player().is_null() { (t.non_player().addr() + 8, 6) } else { (club.addr() + club::REPUTATION, 2) };
     compare_champion_update("add_league_champions_record", this, club, notes, true, || o(this, club.addr(), comp),
         || add_league_champions_record(this, club.addr(), comp));
 }
@@ -364,7 +364,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_manager_record(this: usize, p
     let mut reg = vec![(r, 0xd2)];
     let owner = read_u32(r + manager_record::OWNER) as i32;
     if owner != -1 && owner != read_u32(person.addr()) as i32 {
-        let z = (read_u32(this + staff_records_fields::MANAGER_RECORDS) as usize).wrapping_add((read_u32((person.non_player() as u32) as usize) as usize).wrapping_mul(0xd2));
+        let z = (read_u32(this + staff_records_fields::MANAGER_RECORDS) as usize).wrapping_add((read_u32((person.non_player().addr() as u32) as usize) as usize).wrapping_mul(0xd2));
         if z != r {
             reg.push((z, 0xd2));
         }

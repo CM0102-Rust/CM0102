@@ -50,8 +50,8 @@ pub(crate) unsafe extern "thiscall" fn compare_cancel_tournament(this: usize, to
     o(this.addr(), tournament, without_owner);
     let mut in_list = false;
     let p = this.pending_tournament_list();
-    if p != 0 {
-        let mut no = read_usize(p + 2);
+    if !p.is_null() {
+        let mut no = read_usize(p.addr() + 2);
         let mut n = 0;
         while no != 0 && n < 0x10000 {
             if read_usize(read_usize(no)) == tournament {
@@ -250,7 +250,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_tournament(this: usize, host:
 pub(crate) unsafe extern "thiscall" fn compare_find_human_club_open_invitation(this: usize) -> usize {
     let this = Friendly(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_FIND_HUMAN_CLUB_OPEN_INVITATION);
-    let list = Llist(this.friendly_match_list());
+    let list = Llist(this.friendly_match_list().addr());
     let reg = if !list.is_null() { vec![(list.addr() + llist::CURSOR, 4)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this.addr()), || find_human_club_open_invitation(this.addr()));
     SCOREBOARD.record(igual && r == n, || format!("find_human_club_open_invitation original={:#x} {:x?} rust={:#x} {:x?}", r, mo, n, mr));
@@ -517,13 +517,13 @@ pub(crate) unsafe extern "C" fn compare_compare_fixture_records_by_date(a: usize
 pub(crate) unsafe extern "thiscall" fn compare_remove_friendly_match(this: usize, game: usize, clear_slot: u32) -> u32 {
     let this = Friendly(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_REMOVE_FRIENDLY_MATCH);
-    if game == 0 || this.friendly_match_list() == 0 {
+    if game == 0 || this.friendly_match_list().is_null() {
         return o(this.addr(), game, clear_slot);
     }
     // simplification: 0x68d1f0 finds the node by the item’s content; the plan assumes items with distinct content (the normal case)
     let l4 = this.request_reply_list();
     let esperado4: Vec<usize> = if l4 != 0 { list_items_capped(l4).into_iter().filter(|&e| read_usize(e) != game).collect() } else { Vec::new() };
-    let mut esperado8 = list_items_capped(this.friendly_match_list());
+    let mut esperado8 = list_items_capped(this.friendly_match_list().addr());
     if let Some(k) = esperado8.iter().position(|&e| e == game) {
         esperado8.remove(k);
     }
@@ -535,7 +535,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_friendly_match(this: usize
     let r = o(this.addr(), game, clear_slot);
     let l4 = this.request_reply_list();
     let itens4 = if l4 != 0 { list_items_capped(l4) } else { Vec::new() };
-    let itens8 = list_items_capped(this.friendly_match_list());
+    let itens8 = list_items_capped(this.friendly_match_list().addr());
     let ok = itens4 == esperado4
         && (l4 == 0 || read_usize(l4 + llist::CURSOR) == read_usize(l4 + llist::HEAD))
         && itens8 == esperado8
@@ -714,7 +714,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_club_from_ai_plans(amistos
     if array != 0 && n > 0 {
         regions.push((array, n as usize * 0x14));
     }
-    let list = Llist(amistosos.friendly_match_list());
+    let list = Llist(amistosos.friendly_match_list().addr());
     if !list.is_null() {
         // the cursor and the +0xc pointer of each friendly in the list (traversed here before; the two
         // rotinas reiniciam o cursor)

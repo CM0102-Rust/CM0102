@@ -133,8 +133,8 @@ pub(crate) unsafe extern "C" fn compare_post_match_players(partida: usize, t: us
             }
             let p = Staff((g(G_STAFF_TABLE) as isize + id as isize * 0x6e) as usize);
             let f = p.player();
-            if f != 0 {
-                reg.extend([(f + 0x45, 1), (f + 9, 6)]);
+            if !f.is_null() {
+                reg.extend([(f.addr() + 0x45, 1), (f.addr() + 9, 6)]);
                 reg.extend(contract_flags_region(p.addr(), club.addr()));
             }
         }
@@ -144,11 +144,11 @@ pub(crate) unsafe extern "C" fn compare_post_match_players(partida: usize, t: us
             let mut sheets = vec![manager.non_player()];
             for a in [club.assistant_manager(), read_usize(club.addr() + club::COACHES), g(club.addr() + 0x1a3), g(club.addr() + 0x1a7), g(club.addr() + 0x1ab), g(club.addr() + 0x1af)] {
                 if a != 0 {
-                    sheets.push(g(a + 0x69));
+                    sheets.push(NonPlayer(g(a + 0x69)));
                 }
             }
-            for f in sheets.into_iter().filter(|&f| f != 0) {
-                reg.push((f + 8, 6));
+            for f in sheets.into_iter().filter(|&f| !f.is_null()) {
+                reg.push((f.addr() + 8, 6));
             }
         }
     }

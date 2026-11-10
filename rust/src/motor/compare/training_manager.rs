@@ -97,14 +97,14 @@ pub(crate) unsafe extern "thiscall" fn compare_training_manager_cpp_0x8b2230(thi
 pub(crate) unsafe extern "thiscall" fn compare_update_player_training(this: usize, p: usize, skip: u32) {
     let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_UPDATE_PLAYER_TRAINING);
-    if p.is_null() || read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) || p.player() == 0 {
+    if p.is_null() || read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) || p.player().is_null() {
         return o(this, p.addr(), skip);
     }
     let mut q = 0usize;
     if exe::training_manager_get_player_schedule(this, p) == 0 || exe::training_manager_find_position_training(this, p, &mut q) > 0 {
         return o(this, p.addr(), skip);
     }
-    let f = PlayerSheet(p.player());
+    let f = PlayerSheet(p.player().addr());
     let mut reg = Vec::from(crate::rng::STATE_REGIONS);
     reg.extend_from_slice(&[(G_CONTRACT_LOOKUP_RESULT, 4), (training_entry_of_staff(this, p), 6), (f.addr() + player_sheet::GOALKEEPER, 0x33)]);
     let les = read_usize(G_INJURY);
@@ -122,7 +122,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_player_training(this: usiz
 pub(crate) unsafe extern "thiscall" fn compare_get_player_schedule(this: usize, p: usize) -> usize {
     let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_PLAYER_SCHEDULE);
-    if p.is_null() || p.player() == 0 {
+    if p.is_null() || p.player().is_null() {
         return o(this, p.addr());
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(this, p.addr()), || get_player_schedule(this, p.addr()));
@@ -145,10 +145,10 @@ pub(crate) unsafe extern "thiscall" fn compare_get_category_level(this: usize, c
 pub(crate) unsafe extern "thiscall" fn compare_remove_or_restore_training_progress(this: usize, p: usize, devolver: u32) {
     let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_REMOVE_OR_RESTORE_TRAINING_PROGRESS);
-    if p.is_null() || p.player() == 0 {
+    if p.is_null() || p.player().is_null() {
         return o(this, p.addr(), devolver);
     }
-    let f = PlayerSheet(p.player());
+    let f = PlayerSheet(p.player().addr());
     let reg = [(f.addr() + player_sheet::GOALKEEPER, 0x33), (player_training_entry(this, p), 6), (G_TRAINING_PROGRESS_SAVED_DELTA_3, 5)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, p.addr(), devolver), || remove_or_restore_training_progress(this, p.addr(), devolver));
     SCOREBOARD.record(igual, || format!("remove_or_restore_training_progress(pessoa {:x}, devolver {}) {:x?} x {:x?}", p.addr(), devolver, mo.0, mr.0));
@@ -160,10 +160,10 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_or_restore_training_progre
 pub(crate) unsafe extern "thiscall" fn compare_get_training_attribute_change(this: usize, p: usize, attribute: u32) -> u8 {
     let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(IDX_GET_TRAINING_ATTRIBUTE_CHANGE);
-    if p.is_null() || p.player() == 0 {
+    if p.is_null() || p.player().is_null() {
         return o(this, p.addr(), attribute);
     }
-    let f = PlayerSheet(p.player());
+    let f = PlayerSheet(p.player().addr());
     let reg = [(f.addr() + player_sheet::GOALKEEPER, 0x33), (player_training_entry(this, p), 6)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this, p.addr(), attribute), || get_training_attribute_change(this, p.addr(), attribute));
     SCOREBOARD.record(igual && r == n, || format!("get_training_attribute_change(pessoa {:x}, atributo {}) original={} rust={} {:x?} x {:x?}", p.addr(), attribute as u8 as i8, r as i8, n as i8, mo.0, mr.0));
@@ -263,10 +263,10 @@ pub(crate) unsafe extern "thiscall" fn compare_get_training_load(this: usize) ->
 pub(crate) unsafe extern "thiscall" fn compare_apply_training_progress(this: usize, person: usize, d: usize) {
     let person = Staff(person);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_APPLY_TRAINING_PROGRESS);
-    if person.is_null() || person.player() == 0 || read_i32(person.addr()) >= read_i32(G_STAFF_COUNT) {
+    if person.is_null() || person.player().is_null() || read_i32(person.addr()) >= read_i32(G_STAFF_COUNT) {
         return o(this, person.addr(), d);
     }
-    let f = PlayerSheet(person.player());
+    let f = PlayerSheet(person.player().addr());
     let e = read_usize(this + 0x651d) + 6 * read_i32(f.addr()) as usize;
     let regions = [(f.addr() + player_sheet::GOALKEEPER, 0x33), (e, 6)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(this, person.addr(), d), || apply_training_progress(this, person.addr(), d));
@@ -279,7 +279,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_training_progress(this: usi
 pub(crate) unsafe extern "thiscall" fn compare_find_position_training(this: usize, person: usize, out: *mut usize) -> i32 {
     let person = Staff(person);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut usize) -> i32>(IDX_FIND_POSITION_TRAINING);
-    if person.is_null() || out.is_null() || person.player() == 0 {
+    if person.is_null() || out.is_null() || person.player().is_null() {
         return o(this, person.addr(), out);
     }
     let before = *out;

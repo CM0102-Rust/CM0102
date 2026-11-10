@@ -746,7 +746,7 @@ pub(crate) unsafe extern "thiscall" fn release_ban(this: usize, id: u32, index: 
 /// Devolve o que a 0x58f110 devolve. Pessoa nula ou não jogadora (+0x61): a original (caixa fatal).
 pub(crate) unsafe extern "thiscall" fn clear_ban_history(this: usize, person: usize) -> usize {
     let person = Staff(person);
-    if person.is_null() || person.player() == 0 {
+    if person.is_null() || person.player().is_null() {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_CLEAR_BAN_HISTORY)(this, person.addr()); // fatal box: original only
     }
     let r = person_discipline_record(this, read_usize(person.addr()));

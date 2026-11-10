@@ -155,7 +155,7 @@ pub(crate) unsafe fn add_year_award(this: usize, p: Staff, club: usize, prize: u
         }
         return;
     }
-    if p.player() == 0 {
+    if p.player().is_null() {
         return;
     }
     let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p));

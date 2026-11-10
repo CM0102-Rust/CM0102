@@ -2869,7 +2869,7 @@ pub(crate) unsafe extern "C" fn write_player_description(person: i32, position: 
 /// ou `None` se ele não entra. As chamadas pelo endereço do jogo, na ordem da original.
 pub(crate) unsafe fn favourite_colleague_score(person: Staff, club: Club, o: usize) -> Option<i32> {
     let o = Staff(o);
-    if o.player() == 0 {
+    if o.player().is_null() {
         return None;
     }
     let id = read_usize(person.addr()) as i32;
@@ -2885,16 +2885,16 @@ pub(crate) unsafe fn favourite_colleague_score(person: Staff, club: Club, o: usi
     if contract.is_null() {
         return None;
     }
-    let rep = read_i16_as_i32(o.player() + 0xb);
+    let rep = read_i16_as_i32(o.player().addr() + 0xb);
     if rep <= 0x109a || rep <= (club.reputation() as i32) - 0x2ee {
         return None;
     }
-    if exe::transfer_manager_get_future_transfer(read_usize(G_TRANSFER_MANAGER), o, 0) != 0 || read_i16_as_i32(o.player() + 5) <= 100 {
+    if exe::transfer_manager_get_future_transfer(read_usize(G_TRANSFER_MANAGER), o, 0) != 0 || read_i16_as_i32(o.player().addr() + 5) <= 100 {
         return None;
     }
     let l0 = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), o.player(), 6, 0x11, 6.5) as f32 as f64; // fstp dword
     let m1 = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), o.player(), 6, 1, 6.5);
-    let data = PlayerSheet(o.player());
+    let data = PlayerSheet(o.player().addr());
     let mut n = (data.current_reputation() as i32);
     if m1 > read_f32(rdata::F32_5) as f64 {
         let g = read_usize(G_PLAYER_STATS);
@@ -2997,7 +2997,7 @@ pub(crate) unsafe extern "C" fn staff_is_best_favoured_candidate(person: usize, 
 /// [pt] A 0x7c1e30 das notas ([0xb74350]) do jogador (+0x61) da pessoa: `media(p, tipo, atributo)`, peso 6,5.
 pub(crate) unsafe fn player_stat_average(person: Staff, kind: u32, attribute: u32) -> f64 {
     let average: unsafe extern "thiscall" fn(usize, usize, u32, u32, f32) -> f64 = core::mem::transmute(FN_PLAYERSTATS_GET_STAT);
-    average(read_usize(G_PLAYER_STATS), person.player(), kind, attribute, 6.5)
+    average(read_usize(G_PLAYER_STATS), person.player().addr(), kind, attribute, 6.5)
 }
 
 /// Computed player attribute (`staff_compute_player_attribute`) of the person's player, as a signed byte.
@@ -3076,16 +3076,16 @@ pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, o
         return 0;
     }
     let j = || person.player();
-    let b = |k: usize| signed_byte_at(j(), k);
+    let b = |k: usize| signed_byte_at(j().addr(), k);
     let m = |kind: u32, attribute: u32| player_stat_average(person, kind, attribute);
-    let mut f = natural_position_bits(j(), [1, 4, 2, 8, 0x10, 0x20, 0x40], 0);
+    let mut f = natural_position_bits(j().addr(), [1, 4, 2, 8, 0x10, 0x20, 0x40], 0);
     let r = random(3);
     let id = read_usize(person.addr()) as u32;
     let nibble = (*(read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(79) as usize).wrapping_add(0xb) as *const u8) & 0xf) as i32;
     if nibble > r && read_usize(G_TRANSFER_MANAGER) != 0 && exe::transfer_manager_get_future_transfer(read_usize(G_TRANSFER_MANAGER), person, 0) == 0 {
         f += 0x1000000;
     }
-    if j() != 0 && (0x10..=0x19).map(b).sum::<i32>() > 110 {
+    if !j().is_null() && (0x10..=0x19).map(b).sum::<i32>() > 110 {
         f += 0x80;
     }
     if b(0x3c) > random(3) + 15 {
@@ -3143,7 +3143,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, o
         }
     }
     let v = m(2, 0x16);
-    let limit = 1400 - read_i16_as_i32(j() + 0xb) / 10;
+    let limit = 1400 - read_i16_as_i32(j().addr() + 0xb) / 10;
     if !(limit as f64 >= v) {
         let a = m(6, 2) as f32;
         let c = m(6, 1) as f32;
@@ -3190,9 +3190,9 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
         return 0;
     }
     let j = || person.player();
-    let b = |k: usize| signed_byte_at(j(), k);
+    let b = |k: usize| signed_byte_at(j().addr(), k);
     let m = |kind: u32, attribute: u32| player_stat_average(person, kind, attribute);
-    let mut f = natural_position_bits(j(), [0, 0x20, 0x10, 0x40, 0x80, 0x100, 0x200], 0x800000);
+    let mut f = natural_position_bits(j().addr(), [0, 0x20, 0x10, 0x40, 0x80, 0x100, 0x200], 0x800000);
     if (person.temperament() as i32) < random(4) + 5 && (b(0x1c) > 15 || b(0x25) < 6) {
         let a = (m(2, 0xb) * read_f32(rdata::F32_3) as f64) as f32; // fstp dword;
         let s = (m(2, 0xa) + a as f64) as f32; // fstp dword
@@ -3293,7 +3293,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
     if !(m(2, 0x15) >= read_f64(rdata::F64_3)) && m(2, 0x10) > read_f64(rdata::F64_50) {
         f += 0x200000;
     }
-    if computed_player_attribute(person, 0x14) < 7 || computed_player_attribute(person, 0x14) < read_i16_as_i32(j() + 5) / 15 {
+    if computed_player_attribute(person, 0x14) < 7 || computed_player_attribute(person, 0x14) < read_i16_as_i32(j().addr() + 5) / 15 {
         f += 0x400000;
     }
     f
@@ -3940,10 +3940,10 @@ pub(crate) unsafe extern "C" fn staff_get_natural_position_mask(person: usize) -
         return 0;
     }
     let j = person.player();
-    if j == 0 {
+    if j.is_null() {
         return 0;
     }
-    let b = |k: usize| read_i8(j + k);
+    let b = |k: usize| read_i8(j.addr() + k);
     if b(0xf) == 20 {
         return 1;
     }
@@ -3997,7 +3997,7 @@ pub(crate) unsafe extern "C" fn club_count_squad_with_position_mask(club: usize,
     let mut n = 0u8;
     for k in 0..50 {
         let p = Staff(club.squad(k));
-        if !p.is_null() && p.player() != 0 && exe::staff_get_natural_position_mask(p) == mask { // the equal ones
+        if !p.is_null() && !p.player().is_null() && exe::staff_get_natural_position_mask(p) == mask { // the equal ones
             n = n.wrapping_add(1);
         }
     }
@@ -4057,7 +4057,7 @@ pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(person: usize, clu
     let (mut melhor, mut nota_melhor) = (0usize, -10000i32);
     for k in 0..50 {
         let o = Staff(club.squad(k));
-        if o.is_null() || o.player() == 0 {
+        if o.is_null() || o.player().is_null() {
             continue;
         }
         let oid = read_usize(o.addr()) as i32;
@@ -4075,16 +4075,16 @@ pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(person: usize, clu
         if contract.is_null() {
             continue;
         }
-        let rep = read_i16(o.player() + 0xb) as i32;
+        let rep = read_i16(o.player().addr() + 0xb) as i32;
         if rep <= 0x109a || rep <= club.reputation() as i32 - 0x2ee {
             continue;
         }
-        if exe::transfer_manager_get_future_transfer(read_usize(G_TRANSFER_MANAGER), o, 0) != 0 || read_i16(o.player() + 5) <= 100 {
+        if exe::transfer_manager_get_future_transfer(read_usize(G_TRANSFER_MANAGER), o, 0) != 0 || read_i16(o.player().addr() + 5) <= 100 {
             continue;
         }
         let l0 = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), o.player(), 6, 0x11, 6.5) as f32 as f64; // fstp dword
         let m1 = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), o.player(), 6, 1, 6.5);
-        let data = PlayerSheet(o.player());
+        let data = PlayerSheet(o.player().addr());
         let mut rating = data.current_reputation() as i32;
         if m1 > read_f32(rdata::F32_5) as f64 {
             let g = read_usize(G_PLAYER_STATS);
@@ -4350,7 +4350,7 @@ pub(crate) unsafe extern "C" fn database_staff_matches_names(person: usize, name
     if person.is_null() {
         return original_fn::<unsafe extern "C" fn(usize, u32, u32, u32, usize) -> u32>(IDX_DATABASE_STAFF_MATCHES_NAMES)(person.addr(), name, surname, common, data);
     }
-    if person.player() == 0 && person.non_player() == 0 {
+    if person.player().is_null() && person.non_player().is_null() {
         return 0;
     }
     for (d, id) in [(4, name), (8, surname), (0xc, common)] {
@@ -4445,13 +4445,13 @@ pub(crate) unsafe fn count_squad_above_ability(club: Club, limit: i32, position:
             continue;
         }
         let j = p.player();
-        if j == 0 || !position(j) || exe::injury_get_player_injury_status(rd(G_INJURY), p) == 2 {
+        if j.is_null() || !position(j.addr()) || exe::injury_get_player_injury_status(rd(G_INJURY), p) == 2 {
             continue;
         }
         if core::ptr::read_unaligned(p.addr() as *const i32) >= *(G_STAFF_COUNT as *const i32) {
             continue;
         }
-        if core::ptr::read_unaligned((j + 5) as *const i16) as i32 > limit {
+        if core::ptr::read_unaligned((j.addr() + 5) as *const i16) as i32 > limit {
             n += 1;
         }
     }
@@ -4578,13 +4578,13 @@ pub(crate) unsafe fn count_squad_above_ability_with(club: Club, limit: i32, posi
             continue;
         }
         let j = p.player();
-        if j == 0 || !position(j) || exe::injury_get_player_injury_status(rd(G_INJURY), p) == 2 {
+        if j.is_null() || !position(j.addr()) || exe::injury_get_player_injury_status(rd(G_INJURY), p) == 2 {
             continue;
         }
         if core::ptr::read_unaligned(p.addr() as *const i32) >= *(G_STAFF_COUNT as *const i32) {
             continue;
         }
-        if core::ptr::read_unaligned((j + 5) as *const i16) as i32 > limit && extra(j) {
+        if core::ptr::read_unaligned((j.addr() + 5) as *const i16) as i32 > limit && extra(j.addr()) {
             n += 1;
         }
     }
@@ -4639,7 +4639,7 @@ pub(crate) unsafe extern "C" fn club_has_fit_goalkeeper(club: usize) -> u8 {
         if p.is_null() {
             continue;
         }
-        let j = PlayerSheet(p.player());
+        let j = PlayerSheet(p.player().addr());
         if j.is_null() || (j.goalkeeper() as u8) != 20 || exe::injury_get_player_injury_status(rd(G_INJURY), p) == 2 {
             continue;
         }
@@ -4696,13 +4696,13 @@ pub(crate) unsafe fn count_natural_at_position(club: Club, position: usize, attr
             continue;
         }
         let j = p.player();
-        if j == 0 || *((j + position) as *const u8) != 20 || exe::injury_get_player_injury_status(rd(G_INJURY), p) == 2 {
+        if j.is_null() || *((j.addr() + position) as *const u8) != 20 || exe::injury_get_player_injury_status(rd(G_INJURY), p) == 2 {
             continue;
         }
         if core::ptr::read_unaligned(p.addr() as *const i32) >= *(G_STAFF_COUNT as *const i32) {
             continue;
         }
-        if core::ptr::read_unaligned((j + 5) as *const i16) as i32 > limit && *((j + attribute) as *const i8) as i32 > a {
+        if core::ptr::read_unaligned((j.addr() + 5) as *const i16) as i32 > limit && *((j.addr() + attribute) as *const i8) as i32 > a {
             n += 1;
         }
     }
@@ -4774,13 +4774,13 @@ pub(crate) unsafe fn count_squad_by_rep_thresholds(club: Club, ceiling: i32, pos
             continue;
         }
         let j = p.player();
-        if j == 0 || !position(j) || exe::injury_get_player_injury_status(rd(G_INJURY), p) == 2 {
+        if j.is_null() || !position(j.addr()) || exe::injury_get_player_injury_status(rd(G_INJURY), p) == 2 {
             continue;
         }
         if core::ptr::read_unaligned(p.addr() as *const i32) >= *(G_STAFF_COUNT as *const i32) {
             continue;
         }
-        if core::ptr::read_unaligned((j + 5) as *const i16) as i32 > limit && extra(j, a) {
+        if core::ptr::read_unaligned((j.addr() + 5) as *const i16) as i32 > limit && extra(j.addr(), a) {
             n += 1;
         }
     }
@@ -5012,7 +5012,7 @@ pub(crate) unsafe extern "C" fn club_reputation_for_staff(club: usize, person: u
             v = ((20 - games) as f64 * w + games as f64 * v) * read_f64(rdata::F64_0_05);
         }
         let mut bonus = 0;
-        if !person.is_null() && person.player() != 0 && database_club_of_contract(person) == club.addr() {
+        if !person.is_null() && !person.player().is_null() && database_club_of_contract(person) == club.addr() {
             let m = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), person.player(), 6, 0x14, v as f32);
             v = (m + v) * read_f64(rdata::F64_0_5);
             bonus = club_preference_bonus(club, person);
@@ -5032,7 +5032,7 @@ pub(crate) unsafe extern "C" fn club_reputation_for_staff(club: usize, person: u
     let mut eax = if league.is_null() { comp.addr() } else { high as usize };
     let mut bonus = 0;
     if !person.is_null() {
-        eax = person.player();
+        eax = person.player().addr();
         if eax != 0 {
             eax = database_club_of_contract(person);
             if eax == club.addr() {
@@ -6586,7 +6586,7 @@ pub(crate) unsafe extern "C" fn qsort_comparator_squad_by_player_0xb(a: usize, b
         return -1;
     }
     let ability = |p: Staff| {
-        let j = PlayerSheet(p.player());
+        let j = PlayerSheet(p.player().addr());
         if !j.is_null() { j.current_reputation() } else { 0 }
     };
     ability(Staff(pb)) as i32 - ability(Staff(pa)) as i32 // the largest first
@@ -6605,7 +6605,7 @@ pub(crate) unsafe extern "C" fn qsort_comparator_squad_by_player_0xb(a: usize, b
 pub(crate) unsafe extern "C" fn compare_staff_by_player_ability_desc(a: usize, b: usize) -> i32 {
     let player = |p: usize| {
         let s = Staff(*(p as *const usize));
-        if s.is_null() { 0 } else { s.player() }
+        if s.is_null() { 0 } else { s.player().addr() }
     };
     let ja = PlayerSheet(player(a));
     if ja.is_null() {
@@ -6775,7 +6775,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_physical_attributes(perso
     if person.is_null() {
         return;
     }
-    let player = PlayerSheet(person.player());
+    let player = PlayerSheet(person.player().addr());
     if player.is_null() {
         return;
     }
@@ -6874,7 +6874,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_attributes(person: usize)
     if person.is_null() {
         return;
     }
-    let player = PlayerSheet(person.player());
+    let player = PlayerSheet(person.player().addr());
     if player.is_null() {
         return;
     }
@@ -7681,10 +7681,10 @@ pub(crate) unsafe extern "C" fn database_add_staff_to_club(club: usize, person: 
     if reduzir != 0 {
         c = if matches!(c, 0xb | 0xc | 0xd | 0xf) { 0xb } else { 0 };
     }
-    if person.player() != 0 {
+    if !person.player().is_null() {
         if exe::human_manager_is_human_club(club, 0, 1, 0, 0) == 0 {
             let player = person.player();
-            if core::ptr::read_unaligned((player + 5) as *const i16) > 0x55 {
+            if core::ptr::read_unaligned((player.addr() + 5) as *const i16) > 0x55 {
                 if c == 6 {
                     c = 0xd;
                 } else if c == 8 {
@@ -7983,7 +7983,7 @@ pub(crate) unsafe extern "C" fn staff_normalise_non_player_attributes(person: us
         return;
     }
     let nj = person.non_player();
-    if nj == 0 {
+    if nj.is_null() {
         return;
     }
     let mut array = [0u8; 63 * 3];
@@ -8594,7 +8594,7 @@ pub(crate) unsafe extern "C" fn staff_adjust_morale(person: usize, delta: u32, l
     if d == 0 {
         return 0;
     }
-    let player = PlayerSheet(person.player());
+    let player = PlayerSheet(person.player().addr());
     let morale = player.player_morale();
     let sum = morale as i32 + d as i32;
     let simples = morale.wrapping_add(d);
@@ -8977,14 +8977,14 @@ pub(crate) unsafe extern "C" fn database_get_reputation_scope(person: usize, who
         return 4;
     }
     let player = person.player();
-    if player == 0 {
+    if player.is_null() {
         return 4;
     }
     let club_of_who_ve = Club(who_ve.club_job().addr());
     if club_of_who_ve.is_null() {
         return 4;
     }
-    let sum = core::ptr::read_unaligned((player + 9) as *const i16) as i32 + club_of_who_ve.reputation() as i32;
+    let sum = core::ptr::read_unaligned((player.addr() + 9) as *const i16) as i32 + club_of_who_ve.reputation() as i32;
     if sum >= 0x36b0 {
         3
     } else {
@@ -9008,9 +9008,9 @@ pub(crate) unsafe extern "C" fn database_get_staff_reputation_for_viewer(person:
     let person = Staff(person);
     let e = exe::database_get_reputation_scope(person, who_ve);
     let (dados, atual) = if not_player != 0 {
-        (person.non_player(), 8)
+        (person.non_player().addr(), 8)
     } else {
-        (person.player(), 9)
+        (person.player().addr(), 9)
     };
     // r(0) atual, r(2) nacional, r(4) mundial
     let r = |d: usize| core::ptr::read_unaligned((dados + atual + d) as *const i16) as i32;

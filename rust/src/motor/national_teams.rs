@@ -193,7 +193,7 @@ pub(crate) unsafe fn match_performance_code(result: MatchRecord, side: usize, pl
         if read_u8(e + match_record_row::MINUTE_LEFT_PITCH) != 0xff {
             c |= 4;
         }
-        if (result.man_of_the_match_id() as usize) == read_usize(player.player()) {
+        if (result.man_of_the_match_id() as usize) == read_usize(player.player().addr()) {
             c |= 0x10;
         }
         if (read_u8(e + 0x23) as i32) - (read_u8(e + 0x24) as i32) == 1 {
@@ -808,7 +808,7 @@ pub(crate) unsafe fn is_squad_candidate(this: usize, nation: Nation, t: i8, data
             }
         }
     }
-    let v = read_i16(j.player() + 9);
+    let v = read_i16(j.player().addr() + 9);
     v > lim.0 && v <= lim.1
 }
 
@@ -1298,7 +1298,7 @@ pub(crate) unsafe extern "stdcall" fn national_teams_player_is_eligible(player: 
     let manager = Staff(manager);
     let player = Staff(player);
     let sel = Club(manager.national_job().addr());
-    if player.player() == 0 || sel.is_null() {
+    if player.player().is_null() || sel.is_null() {
         return 0;
     }
     if exe::database_is_national_team(sel) == 0 {
@@ -2979,7 +2979,7 @@ pub(crate) unsafe extern "thiscall" fn call_up_replacement(this: usize, nation: 
     while k < end {
         let q = Staff(read_usize(reserve.wrapping_add((4 * k) as usize)));
         k += 1;
-        if q == saindo || q.player() == 0 || exe::staff_dislikes_club(q, exe::database_get_national_team(q.nation())) != 0 {
+        if q == saindo || q.player().is_null() || exe::staff_dislikes_club(q, exe::database_get_national_team(q.nation())) != 0 {
             continue;
         }
         if exe::injury_get_player_injury_status(*(G_INJURY as *const usize), q) != 0 {
@@ -3075,7 +3075,7 @@ pub(crate) unsafe fn add_to_reserves(this: usize, p: Staff, rec: usize, sub: u32
     let c = rec.wrapping_add(o).wrapping_add((4 * level as i32) as usize);
     let reserve = || read_usize(this + national_teams_fields::RESERVE_POOLS + 4 * sub as usize);
     let slot = |k: i32| reserve().wrapping_add((4 * k) as usize);
-    let rating = read_i16(p.player() + 9);
+    let rating = read_i16(p.player().addr() + 9);
     if read_u8(c + 0xd) < read_u8(c + 0xe) {
         let start = reserve_level_start(rec, o, level);
         core::ptr::write_unaligned(slot(start.wrapping_add(read_u8(c + 0xd) as i32)) as *mut usize, p.addr());
@@ -3236,14 +3236,14 @@ pub(crate) unsafe extern "thiscall" fn national_teams_remove_player(this: usize,
     let player = Staff(player);
     let u = |p: usize| core::ptr::read_unaligned(p as *const usize);
     let nation = player.nation();
-    if nation.is_null() || player.player() == 0 {
+    if nation.is_null() || player.player().is_null() {
         return;
     }
     let level: unsafe extern "stdcall" fn(usize, *const i16, u8) -> u8 = core::mem::transmute(FN_NATIONAL_TEAMS_GET_POSITION_GROUP);
     let reg = read_usize(this + national_teams_fields::NATION_RECORDS).wrapping_add((*(nation.addr() as *const u32) as usize).wrapping_mul(110));
     let n = level(player.addr(), reg as *const i16, 0) as i8 as isize;
     let field = |o: isize| (reg as isize).wrapping_add(n * 4 + o) as usize;
-    if core::ptr::read_unaligned(field(0xf) as *const i16) < core::ptr::read_unaligned((player.player() + 9) as *const i16) {
+    if core::ptr::read_unaligned(field(0xf) as *const i16) < core::ptr::read_unaligned((player.player().addr() + 9) as *const i16) {
         let mut start = u(reg + 8) as i32;
         for k in 0..n.max(0) as usize {
             start = start.wrapping_add(*((reg + 0xe + 4 * k) as *const u8) as i32);
@@ -3319,7 +3319,7 @@ pub(crate) unsafe extern "stdcall" fn national_team_level(j: usize, rep: *const 
         return 0;
     }
     let sheet = j.player();
-    let n = |o: usize| *((sheet + o) as *const i8) >= 0xf;
+    let n = |o: usize| *((sheet.addr() + o) as *const i8) >= 0xf;
     if n(0xf) {
         0
     } else if n(0x10) || n(0x11) {

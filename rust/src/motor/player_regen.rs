@@ -128,7 +128,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
     let (ficha_id, nacao_id, nacao2_id) = (read_i32(bench), read_i32(bench + regen_pool_item::NATION_ID), read_i32(bench + regen_pool_item::SECOND_NATION_ID));
     exe::player_regen_remove_player_data_from_pool(this, ficha_id);
     p.set_classification(2);
-    p.set_player(read_usize(G_PLAYER_DATA_TABLE).wrapping_add((ficha_id as isize * 0x46) as usize));
+    p.set_player(PlayerSheet(read_usize(G_PLAYER_DATA_TABLE).wrapping_add((ficha_id as isize * 0x46) as usize)));
     *staff_state_byte(p, staff_state::STATUS_FLAGS) |= 0x40;
     *staff_state_byte(p, 0xd) = 0;
     *staff_state_byte(p, 0xc) &= 0xfd;
@@ -149,8 +149,8 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
     call_thiscall_1(0x4d0bd0, read_usize(G_CONTRACT_MANAGER), p);
     p.set_int_apps(0);
     p.set_int_goals(0);
-    if p.non_player() != 0 {
-        p.set_non_player((0) as usize);
+    if !p.non_player().is_null() {
+        p.set_non_player(NonPlayer((0) as usize));
     }
     *staff_state_byte(p, staff_state::STATUS_FLAGS) &= 0xf0;
     *staff_state_byte(p, 8) = 0;
@@ -220,149 +220,149 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
         };
         crate::comparison::branch("cqg_7 small nation");
         if age > 0x14 {
-            roll_current_ability(PlayerSheet(f), 0x96a5d8, 0x9689e0);
+            roll_current_ability(PlayerSheet(f.addr()), 0x96a5d8, 0x9689e0);
         } else if age > 0x1a {
-            roll_current_ability(PlayerSheet(f), 0x968918, 0x968e48);
+            roll_current_ability(PlayerSheet(f.addr()), 0x968918, 0x968e48);
         } else if age > 0x17 {
-            roll_current_ability(PlayerSheet(f), 0x968fb0, 0x96a688);
+            roll_current_ability(PlayerSheet(f.addr()), 0x968fb0, 0x96a688);
         } else {
-            roll_current_ability(PlayerSheet(f), 0x968e48, 0x9689e0);
+            roll_current_ability(PlayerSheet(f.addr()), 0x968e48, 0x9689e0);
         }
         let r = friendly_random(0x2ee);
-        write_i16(f + player_sheet::HOME_REPUTATION, (r as i16).wrapping_add(read_i16(f + player_sheet::CURRENT_ABILITY).wrapping_mul(0x1e)).wrapping_add(0xfa));
+        f.set_home_reputation((r as i16).wrapping_add(f.current_ability().wrapping_mul(0x1e)).wrapping_add(0xfa));
         let mut l121 = age <= 0x12;
-        if !l121 && read_i16(f + player_sheet::POTENTIAL_ABILITY) > 0x8c && read_i16(f + player_sheet::CURRENT_ABILITY) > 0x64 && read_i16(f + player_sheet::HOME_REPUTATION) < 0x1964 && age < 0x16 && friendly_random(4) != 0 {
-            write_i16(f + player_sheet::HOME_REPUTATION, mul_rdata_const(read_i16(f + player_sheet::HOME_REPUTATION), 0x968978));
+        if !l121 && f.potential_ability() > 0x8c && f.current_ability() > 0x64 && f.home_reputation() < 0x1964 && age < 0x16 && friendly_random(4) != 0 {
+            f.set_home_reputation(mul_rdata_const(f.home_reputation(), 0x968978));
         }
         if age <= 0x12 {
             l121 = true;
         }
         if l121 {
-            let a = read_i16(f + player_sheet::CURRENT_ABILITY);
+            let a = f.current_ability();
             let r = friendly_random(0xc8) as i16;
             let v = if a < 0x8c {
-                r.wrapping_add(read_i16(f + player_sheet::CURRENT_ABILITY).wrapping_mul(5)).wrapping_add(1)
+                r.wrapping_add(f.current_ability().wrapping_mul(5)).wrapping_add(1)
             } else {
-                r.wrapping_add(read_i16(f + player_sheet::CURRENT_ABILITY).wrapping_add(0x19).wrapping_mul(10))
+                r.wrapping_add(f.current_ability().wrapping_add(0x19).wrapping_mul(10))
             };
-            write_i16(f + player_sheet::WORLD_REPUTATION, v);
+            f.set_world_reputation(v);
         } else {
-            let a = read_i16(f + player_sheet::CURRENT_ABILITY);
+            let a = f.current_ability();
             if a < 0x78 {
                 let r = friendly_random(0xc8) as i16;
-                write_i16(f + player_sheet::WORLD_REPUTATION, r.wrapping_add(read_i16(f + player_sheet::CURRENT_ABILITY).wrapping_mul(0xf)).wrapping_add(1));
+                f.set_world_reputation(r.wrapping_add(f.current_ability().wrapping_mul(0xf)).wrapping_add(1));
             } else if age > 0x15 && a > 0x78 {
                 let r = friendly_random(0xc8) as i16;
-                write_i16(f + player_sheet::WORLD_REPUTATION, r.wrapping_add(read_i16(f + player_sheet::CURRENT_ABILITY).wrapping_add(0xa).wrapping_mul(0x19)));
+                f.set_world_reputation(r.wrapping_add(f.current_ability().wrapping_add(0xa).wrapping_mul(0x19)));
             } else {
                 let r = friendly_random(0xc8) as i16;
                 let sum = if a < 0x8c { 1 } else { 0xfa };
-                write_i16(f + player_sheet::WORLD_REPUTATION, r.wrapping_add(read_i16(f + player_sheet::CURRENT_ABILITY).wrapping_mul(0x14)).wrapping_add(sum));
+                f.set_world_reputation(r.wrapping_add(f.current_ability().wrapping_mul(0x14)).wrapping_add(sum));
             }
         }
-        if read_i16(f + player_sheet::HOME_REPUTATION) < 0x8ca {
+        if f.home_reputation() < 0x8ca {
             let r = friendly_random(5);
-            write_i16(f + player_sheet::WORLD_REPUTATION, (r as i16).wrapping_add(1));
+            f.set_world_reputation((r as i16).wrapping_add(1));
         }
-        if read_i16(f + player_sheet::HOME_REPUTATION) < read_i16(f + player_sheet::WORLD_REPUTATION) {
-            write_i16(f + player_sheet::HOME_REPUTATION, read_i16(f + player_sheet::WORLD_REPUTATION).wrapping_add(0xa));
-            write_i16(f + player_sheet::WORLD_REPUTATION, 1);
+        if f.home_reputation() < f.world_reputation() {
+            f.set_home_reputation(f.world_reputation().wrapping_add(0xa));
+            f.set_world_reputation(1);
         }
         let r = friendly_random(0x32);
-        write_i16(f + player_sheet::CURRENT_REPUTATION, (r as i16).wrapping_add(read_i16(f + player_sheet::HOME_REPUTATION)));
+        f.set_current_reputation((r as i16).wrapping_add(f.home_reputation()));
         if age > 0x17 {
-            if read_i16(f + player_sheet::HOME_REPUTATION) < 0x1770 {
-                write_i16(f + player_sheet::HOME_REPUTATION, mul_rdata_const(read_i16(f + player_sheet::HOME_REPUTATION), 0x969588));
+            if f.home_reputation() < 0x1770 {
+                f.set_home_reputation(mul_rdata_const(f.home_reputation(), 0x969588));
             }
-            if read_i16(f + player_sheet::CURRENT_REPUTATION) < 0x1770 {
-                write_i16(f + player_sheet::CURRENT_REPUTATION, mul_rdata_const(read_i16(f + player_sheet::CURRENT_REPUTATION), 0x969588));
+            if f.current_reputation() < 0x1770 {
+                f.set_current_reputation(mul_rdata_const(f.current_reputation(), 0x969588));
             }
-            let a = read_i16(f + player_sheet::CURRENT_ABILITY);
+            let a = f.current_ability();
             if a < mul_rdata_const(a, 0x96a5d0) && friendly_random(4) != 0 {
-                write_i16(f + player_sheet::CURRENT_ABILITY, mul_rdata_const(read_i16(f + player_sheet::CURRENT_ABILITY), 0x96a5d0));
+                f.set_current_ability(mul_rdata_const(f.current_ability(), 0x96a5d0));
             }
         } else if age < 0x14 {
-            if read_i16(f + player_sheet::CURRENT_ABILITY) < mul_rdata_const(read_i16(f + player_sheet::POTENTIAL_ABILITY), 0x968968) && friendly_random(4) != 0 {
-                write_i16(f + player_sheet::CURRENT_ABILITY, mul_rdata_const(read_i16(f + player_sheet::POTENTIAL_ABILITY), 0x968968));
+            if f.current_ability() < mul_rdata_const(f.potential_ability(), 0x968968) && friendly_random(4) != 0 {
+                f.set_current_ability(mul_rdata_const(f.potential_ability(), 0x968968));
             }
             if age < 0x12 {
-                cap_current_ability(PlayerSheet(f), 0x78, 0x96);
+                cap_current_ability(PlayerSheet(f.addr()), 0x78, 0x96);
             } else {
-                cap_current_ability(PlayerSheet(f), 0x78, 0x32);
+                cap_current_ability(PlayerSheet(f.addr()), 0x78, 0x32);
             }
         } else {
-            if read_i16(f + player_sheet::HOME_REPUTATION) < 0x1676 {
-                write_i16(f + player_sheet::HOME_REPUTATION, mul_rdata_const(read_i16(f + player_sheet::HOME_REPUTATION), 0x968928));
+            if f.home_reputation() < 0x1676 {
+                f.set_home_reputation(mul_rdata_const(f.home_reputation(), 0x968928));
             }
-            if read_i16(f + player_sheet::CURRENT_REPUTATION) < 0x1676 {
-                write_i16(f + player_sheet::CURRENT_REPUTATION, mul_rdata_const(read_i16(f + player_sheet::CURRENT_REPUTATION), 0x968928));
+            if f.current_reputation() < 0x1676 {
+                f.set_current_reputation(mul_rdata_const(f.current_reputation(), 0x968928));
             }
-            if read_i16(f + player_sheet::CURRENT_ABILITY) < mul_rdata_const(read_i16(f + player_sheet::POTENTIAL_ABILITY), 0x968e48) && friendly_random(4) != 0 {
-                write_i16(f + player_sheet::CURRENT_ABILITY, mul_rdata_const(read_i16(f + player_sheet::POTENTIAL_ABILITY), 0x968e48));
+            if f.current_ability() < mul_rdata_const(f.potential_ability(), 0x968e48) && friendly_random(4) != 0 {
+                f.set_current_ability(mul_rdata_const(f.potential_ability(), 0x968e48));
             }
-            cap_current_ability(PlayerSheet(f), 0x8c, 0x32);
+            cap_current_ability(PlayerSheet(f.addr()), 0x8c, 0x32);
         }
     } else {
         // the big nation or no nation: the ability by position and the age by random roll(10000)
-        if *((f + player_sheet::ATTACKER) as *const u8) == 0x14 {
-            roll_current_ability(PlayerSheet(f), 0x968e48, 0x968e80);
-        } else if *((f + player_sheet::DEFENDER) as *const u8) == 0x14 || *((f + player_sheet::SWEEPER) as *const u8) == 0x14 {
-            roll_current_ability(PlayerSheet(f), 0x96a5d8, 0x9689e0);
-        } else if *((f + player_sheet::GOALKEEPER) as *const u8) == 0x14 {
-            roll_current_ability(PlayerSheet(f), 0x968968, 0x9689e0);
+        if (f.attacker() as u8) == 0x14 {
+            roll_current_ability(PlayerSheet(f.addr()), 0x968e48, 0x968e80);
+        } else if (f.defender() as u8) == 0x14 || (f.sweeper() as u8) == 0x14 {
+            roll_current_ability(PlayerSheet(f.addr()), 0x96a5d8, 0x9689e0);
+        } else if (f.goalkeeper() as u8) == 0x14 {
+            roll_current_ability(PlayerSheet(f.addr()), 0x968968, 0x9689e0);
         } else {
-            roll_current_ability(PlayerSheet(f), 0x968e48, 0x9689e0);
+            roll_current_ability(PlayerSheet(f.addr()), 0x968e48, 0x9689e0);
         }
         if friendly_random(0xfa) != 0 {
             let r = friendly_random(0x2ee) as i16;
-            write_i16(f + player_sheet::HOME_REPUTATION, r.wrapping_add(read_i16(f + player_sheet::CURRENT_ABILITY).wrapping_mul(0x14)).wrapping_add(0xfa)); // cqg7: the +9 reputation of the regen
+            f.set_home_reputation(r.wrapping_add(f.current_ability().wrapping_mul(0x14)).wrapping_add(0xfa)); // cqg7: the +9 reputation of the regen
             crate::comparison::branch("cqg_7 regen injury_word_0c");
             let r = friendly_random(0x14) as i16;
-            write_i16(f + player_sheet::WORLD_REPUTATION, r.wrapping_add(read_i16(f + player_sheet::CURRENT_ABILITY).wrapping_mul(5)).wrapping_add(1));
+            f.set_world_reputation(r.wrapping_add(f.current_ability().wrapping_mul(5)).wrapping_add(1));
         } else {
             let r = friendly_random(0x2ee) as i16;
-            write_i16(f + player_sheet::HOME_REPUTATION, r.wrapping_add(read_i16(f + player_sheet::CURRENT_ABILITY).wrapping_mul(0xf)).wrapping_add(0x7d));
-            write_i16(f + player_sheet::WORLD_REPUTATION, 1);
+            f.set_home_reputation(r.wrapping_add(f.current_ability().wrapping_mul(0xf)).wrapping_add(0x7d));
+            f.set_world_reputation(1);
         }
-        if read_i16(f + player_sheet::HOME_REPUTATION) < read_i16(f + player_sheet::WORLD_REPUTATION) {
-            write_i16(f + player_sheet::HOME_REPUTATION, read_i16(f + player_sheet::WORLD_REPUTATION).wrapping_add(0xa));
-            write_i16(f + player_sheet::WORLD_REPUTATION, 1);
+        if f.home_reputation() < f.world_reputation() {
+            f.set_home_reputation(f.world_reputation().wrapping_add(0xa));
+            f.set_world_reputation(1);
         }
         let r = friendly_random(0x32);
-        write_i16(f + player_sheet::CURRENT_REPUTATION, (r as i16).wrapping_add(read_i16(f + player_sheet::HOME_REPUTATION)));
+        f.set_current_reputation((r as i16).wrapping_add(f.home_reputation()));
         let s = friendly_random(0x2710);
         crate::comparison::branch("cqg_7 big nation");
         if s == 0 {
             age = (friendly_random(4) as i8).wrapping_add(0xf);
             if age == 0xf {
-                cap_current_ability(PlayerSheet(f), 0x50, 0xfa);
+                cap_current_ability(PlayerSheet(f.addr()), 0x50, 0xfa);
             } else {
-                cap_current_ability(PlayerSheet(f), 0x64, 0x96);
+                cap_current_ability(PlayerSheet(f.addr()), 0x64, 0x96);
             }
         } else if s < 0x1388 {
             age = (friendly_random(3) as i8).wrapping_add(0x10); // cqg7: the age from 16 to 18
             crate::comparison::branch("cqg_7 age 16 to 18");
             if age < 0x12 {
-                cap_current_ability(PlayerSheet(f), 0x50, 0xfa);
+                cap_current_ability(PlayerSheet(f.addr()), 0x50, 0xfa);
             } else {
-                cap_current_ability(PlayerSheet(f), 0x64, 0x96);
+                cap_current_ability(PlayerSheet(f.addr()), 0x64, 0x96);
             }
         } else if s > 0x26f7 {
             age = (friendly_random(6) as i8).wrapping_add(0x15);
         } else {
             age = (friendly_random(4) as i8).wrapping_add(0x11);
             if age == 0x11 {
-                cap_current_ability(PlayerSheet(f), 0x5a, 0xfa);
+                cap_current_ability(PlayerSheet(f.addr()), 0x5a, 0xfa);
             } else {
-                cap_current_ability(PlayerSheet(f), 0x6e, 0x96);
+                cap_current_ability(PlayerSheet(f.addr()), 0x6e, 0x96);
             }
         }
     }
     if exe::nation_is_major_nation(p.nation()) == 0 {
-        if age < 0x19 && read_i16(f + player_sheet::CURRENT_ABILITY) < 0x78 {
-            write_i16(f + player_sheet::WORLD_REPUTATION, 1);
+        if age < 0x19 && f.current_ability() < 0x78 {
+            f.set_world_reputation(1);
         } else {
-            write_i16(f + player_sheet::WORLD_REPUTATION, mul_rdata_const(read_i16(f + player_sheet::WORLD_REPUTATION), 0x96a5d0));
+            f.set_world_reputation(mul_rdata_const(f.world_reputation(), 0x96a5d0));
         }
     }
     p.set_date_of_birth_year((read_i16(G_CURRENT_DATE_YEAR).wrapping_sub(age as i16)) as u16); // cqg7: the birth year
@@ -371,27 +371,27 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
     let a = exe::database_get_staff_age(p, G_CURRENT_DATE as *const u16);
     p.set_age(a as u8 as i8 as i16);
     // +0x1b
-    if read_i16(f + player_sheet::POTENTIAL_ABILITY) > 0x64 && (read_i8(f + player_sheet::ATTACKER) >= 0xf || read_i8(f + player_sheet::ATTACKING_MIDFIELDER) >= 0xf) {
+    if f.potential_ability() > 0x64 && (f.attacker() >= 0xf || f.attacking_midfielder() >= 0xf) {
         if friendly_random(3) != 0 {
             let r = friendly_random(0xb);
-            write_i8(f + player_sheet::ACCELERATION, (r as i8).wrapping_add(0xa));
+            f.set_acceleration((r as i8).wrapping_add(0xa));
         } else if friendly_random(3) == 0 {
             let r = friendly_random(7);
-            write_i8(f + player_sheet::ACCELERATION, (r as i8).wrapping_add(0xe));
+            f.set_acceleration((r as i8).wrapping_add(0xe));
         } else {
             let r = friendly_random(0x10);
-            write_i8(f + player_sheet::ACCELERATION, (r as i8).wrapping_add(5));
+            f.set_acceleration((r as i8).wrapping_add(5));
         }
     } else if friendly_random(4) != 0 {
         let r = friendly_random(0xa);
-        write_i8(f + player_sheet::ACCELERATION, (r as i8).wrapping_add(8));
+        f.set_acceleration((r as i8).wrapping_add(8));
     } else {
         let r = friendly_random(0x10);
-        write_i8(f + player_sheet::ACCELERATION, (r as i8).wrapping_add(5));
+        f.set_acceleration((r as i8).wrapping_add(5));
     }
-    adjust_personality_attribute(f + player_sheet::ACCELERATION, 5, 5, 0xa, 0xa, 8);
+    adjust_personality_attribute(f.addr() + player_sheet::ACCELERATION, 5, 5, 0xa, 0xa, 8);
     // +0x36 by +0x1b
-    let a = read_i8(f + player_sheet::ACCELERATION);
+    let a = f.acceleration();
     let v = if a > 0xf {
         (friendly_random(0xb) as i8).wrapping_add(0xa)
     } else if a > 0xa {
@@ -403,134 +403,134 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
     } else {
         (friendly_random(0xa) as i8).wrapping_add(5)
     };
-    write_i8(f + player_sheet::PLAYER_PACE, v);
+    f.set_player_pace(v);
     // +0x1d (the 20-rated goalkeeper with 4/5 by PA)
-    if read_i8(f + player_sheet::GOALKEEPER) == 0x14 && friendly_random(5) != 0 {
+    if f.goalkeeper() == 0x14 && friendly_random(5) != 0 {
         let r = friendly_random(0x14);
-        let v = if read_i16(f + player_sheet::POTENTIAL_ABILITY) as i32 > r + 0x64 {
+        let v = if f.potential_ability() as i32 > r + 0x64 {
             (friendly_random(0xb) as i8).wrapping_add(0xa)
         } else {
             (friendly_random(0x10) as i8).wrapping_add(5)
         };
-        write_i8(f + player_sheet::AGILITY, v);
+        f.set_agility(v);
     } else {
         let r = friendly_random(0x14);
-        write_i8(f + player_sheet::AGILITY, (r as i8).wrapping_add(1));
-        adjust_personality_attribute(f + player_sheet::AGILITY, 6, 5, 6, 0, 0);
+        f.set_agility((r as i8).wrapping_add(1));
+        adjust_personality_attribute(f.addr() + player_sheet::AGILITY, 6, 5, 6, 0, 0);
     }
     // +0x2e
     let mut k: i8 = -5;
-    if read_i8(f + player_sheet::DEFENDER) >= 0xf {
-        k = if read_i8(f + player_sheet::CENTRAL) >= 0xf { 5 } else { 0 };
-    } else if ((read_i8(f + player_sheet::MIDFIELDER) >= 0xf || read_i8(f + player_sheet::DEFENSIVE_MIDFIELDER) >= 0xf) && read_i8(f + player_sheet::CENTRAL) >= 0xf)
-        || read_i8(f + player_sheet::GOALKEEPER) >= 0xf
-        || read_i8(f + player_sheet::ATTACKER) >= 0xf
+    if f.defender() >= 0xf {
+        k = if f.central() >= 0xf { 5 } else { 0 };
+    } else if ((f.midfielder() >= 0xf || f.defensive_midfielder() >= 0xf) && f.central() >= 0xf)
+        || f.goalkeeper() >= 0xf
+        || f.attacker() >= 0xf
     {
         k = 0;
     }
     let r1 = friendly_random(k as i32 * 3);
     let r2 = friendly_random(0x14);
-    write_i8(f + player_sheet::JUMPING, (r1 as i8).wrapping_add(r2 as i8));
-    let a = read_i8(f + player_sheet::JUMPING);
-    write_i8(f + player_sheet::JUMPING, if a < 1 { 1 } else if a > 0x14 { 0x14 } else { a });
+    f.set_jumping((r1 as i8).wrapping_add(r2 as i8));
+    let a = f.jumping();
+    f.set_jumping(if a < 1 { 1 } else if a > 0x14 { 0x14 } else { a });
     // +0x34
     let r = friendly_random(0x14);
-    write_i8(f + player_sheet::NATURAL_FITNESS, (r as i8).wrapping_add(1));
-    adjust_personality_attribute(f + player_sheet::NATURAL_FITNESS, 6, 8, 0xa, 0, 0);
+    f.set_natural_fitness((r as i8).wrapping_add(1));
+    adjust_personality_attribute(f.addr() + player_sheet::NATURAL_FITNESS, 6, 8, 0xa, 0, 0);
     // +0x44
     let r = friendly_random(0x14);
-    write_i8(f + player_sheet::WORK_RATE, (r as i8).wrapping_add(1));
-    if read_i8(f + player_sheet::WORK_RATE) > 0xf && friendly_random(3) != 0 {
-        subtract_random(f + player_sheet::WORK_RATE, 5);
+    f.set_work_rate((r as i8).wrapping_add(1));
+    if f.work_rate() > 0xf && friendly_random(3) != 0 {
+        subtract_random(f.addr() + player_sheet::WORK_RATE, 5);
     } else {
-        let a = read_i8(f + player_sheet::WORK_RATE);
+        let a = f.work_rate();
         if a < 5 {
-            add_random_if_below(f + player_sheet::WORK_RATE, 5, 0xa);
+            add_random_if_below(f.addr() + player_sheet::WORK_RATE, 5, 0xa);
         } else if a < 0xa {
-            add_random_if_below(f + player_sheet::WORK_RATE, 0xa, 5);
+            add_random_if_below(f.addr() + player_sheet::WORK_RATE, 0xa, 5);
         }
     }
     // +0x3c by age
     if age < 0x12 {
         let r = friendly_random(0x14);
-        write_i8(f + player_sheet::STAMINA, (r as i8).wrapping_add(1));
-        adjust_personality_attribute(f + player_sheet::STAMINA, 8, 5, 8, 0xa, 6);
+        f.set_stamina((r as i8).wrapping_add(1));
+        adjust_personality_attribute(f.addr() + player_sheet::STAMINA, 8, 5, 8, 0xa, 6);
     } else if age < 0x18 {
         let r = friendly_random(0x12);
-        write_i8(f + player_sheet::STAMINA, (r as i8).wrapping_add(3));
-        adjust_personality_attribute(f + player_sheet::STAMINA, 5, 5, 0xa, 0xa, 5);
+        f.set_stamina((r as i8).wrapping_add(3));
+        adjust_personality_attribute(f.addr() + player_sheet::STAMINA, 5, 5, 0xa, 0xa, 5);
     } else {
         let r = friendly_random(0xf);
-        write_i8(f + player_sheet::STAMINA, (r as i8).wrapping_add(6));
-        adjust_personality_attribute(f + player_sheet::STAMINA, 3, 0xa, 8, 0, 0);
+        f.set_stamina((r as i8).wrapping_add(6));
+        adjust_personality_attribute(f.addr() + player_sheet::STAMINA, 3, 0xa, 8, 0, 0);
     }
-    if read_i8(f + player_sheet::STAMINA) < 0xa && read_i8(f + player_sheet::WORK_RATE) > 0xf {
+    if f.stamina() < 0xa && f.work_rate() > 0xf {
         let r = friendly_random(5);
-        write_i8(f + player_sheet::STAMINA, read_i8(f + player_sheet::STAMINA).wrapping_add(r as i8));
+        f.set_stamina(f.stamina().wrapping_add(r as i8));
     }
     // +0x3d by age
     let r = friendly_random(0x14);
-    write_i8(f + player_sheet::STRENGTH, (r as i8).wrapping_add(1));
+    f.set_strength((r as i8).wrapping_add(1));
     if age < 0x12 {
-        adjust_personality_attribute(f + player_sheet::STRENGTH, 0xa, 5, 6, 0, 0);
+        adjust_personality_attribute(f.addr() + player_sheet::STRENGTH, 0xa, 5, 6, 0, 0);
     } else if age < 0x18 {
-        adjust_personality_attribute(f + player_sheet::STRENGTH, 8, 5, 8, 0, 0);
+        adjust_personality_attribute(f.addr() + player_sheet::STRENGTH, 8, 5, 8, 0, 0);
     } else {
-        adjust_personality_attribute(f + player_sheet::STRENGTH, 5, 5, 0xa, 0, 0);
+        adjust_personality_attribute(f.addr() + player_sheet::STRENGTH, 5, 5, 0xa, 0, 0);
     }
-    if (read_i8(f + player_sheet::DEFENDER) == 0x14 || read_i8(f + player_sheet::DEFENSIVE_MIDFIELDER) == 0x14) && read_i8(f + player_sheet::STRENGTH) < 0xa {
+    if (f.defender() == 0x14 || f.defensive_midfielder() == 0x14) && f.strength() < 0xa {
         let r = friendly_random(5);
-        write_i8(f + player_sheet::STRENGTH, read_i8(f + player_sheet::STRENGTH).wrapping_add(r as i8));
+        f.set_strength(f.strength().wrapping_add(r as i8));
     }
-    if read_i8(f + player_sheet::JUMPING) > 0xf && read_i8(f + player_sheet::STRENGTH) < 0xa {
+    if f.jumping() > 0xf && f.strength() < 0xa {
         let r = friendly_random(5);
-        write_i8(f + player_sheet::STRENGTH, read_i8(f + player_sheet::STRENGTH).wrapping_add(r as i8));
+        f.set_strength(f.strength().wrapping_add(r as i8));
     }
     // +0x1e, +0x24, +0x2c, +0x2f (and +0x21) by age
     if age < 0x18 {
         if age < 0x12 {
-            subtract_random(f + player_sheet::ANTICIPATION, 0x28);
-            subtract_random(f + player_sheet::DECISIONS, 0x28);
-            let a = read_i8(f + player_sheet::IMPORTANT_MATCHES);
+            subtract_random(f.addr() + player_sheet::ANTICIPATION, 0x28);
+            subtract_random(f.addr() + player_sheet::DECISIONS, 0x28);
+            let a = f.important_matches();
             if a > 0xf {
-                subtract_random(f + player_sheet::IMPORTANT_MATCHES, 8);
+                subtract_random(f.addr() + player_sheet::IMPORTANT_MATCHES, 8);
             } else if a > 0xa {
-                subtract_random(f + player_sheet::IMPORTANT_MATCHES, 5);
+                subtract_random(f.addr() + player_sheet::IMPORTANT_MATCHES, 5);
             }
-            let a = read_i8(f + player_sheet::LEADERSHIP);
+            let a = f.leadership();
             if a > 0xf {
-                subtract_random(f + player_sheet::LEADERSHIP, 0xa);
+                subtract_random(f.addr() + player_sheet::LEADERSHIP, 0xa);
             } else if a > 0xa {
-                subtract_random(f + player_sheet::LEADERSHIP, 8);
+                subtract_random(f.addr() + player_sheet::LEADERSHIP, 8);
             }
         } else {
-            subtract_random(f + player_sheet::ANTICIPATION, 0x14);
-            subtract_random(f + player_sheet::DECISIONS, 0x14);
-            if read_i8(f + player_sheet::IMPORTANT_MATCHES) > 0xf {
-                subtract_random(f + player_sheet::IMPORTANT_MATCHES, 5);
+            subtract_random(f.addr() + player_sheet::ANTICIPATION, 0x14);
+            subtract_random(f.addr() + player_sheet::DECISIONS, 0x14);
+            if f.important_matches() > 0xf {
+                subtract_random(f.addr() + player_sheet::IMPORTANT_MATCHES, 5);
             }
-            let a = read_i8(f + player_sheet::LEADERSHIP);
+            let a = f.leadership();
             if a > 0xf {
-                subtract_random(f + player_sheet::LEADERSHIP, 8);
+                subtract_random(f.addr() + player_sheet::LEADERSHIP, 8);
             } else if a > 0xa {
-                subtract_random(f + player_sheet::LEADERSHIP, 5);
+                subtract_random(f.addr() + player_sheet::LEADERSHIP, 5);
             }
         }
-        if read_i8(f + player_sheet::LEADERSHIP) > 0xf {
-            subtract_random(f + player_sheet::LEADERSHIP, 8);
+        if f.leadership() > 0xf {
+            subtract_random(f.addr() + player_sheet::LEADERSHIP, 8);
         }
     } else if age > 0x19 && age < 0x1d {
-        add_random_if_below(f + player_sheet::STRENGTH, 5, 8);
-        add_random_if_below(f + player_sheet::CONSISTENCY, 5, 8);
-        add_random_if_below(f + player_sheet::STAMINA, 5, 8);
-        subtract_random(f + player_sheet::ANTICIPATION, 0xa);
-        subtract_random(f + player_sheet::DECISIONS, 0xa);
-        add_random_if_below(f + player_sheet::IMPORTANT_MATCHES, 5, 8);
-        let a = read_i8(f + player_sheet::LEADERSHIP);
+        add_random_if_below(f.addr() + player_sheet::STRENGTH, 5, 8);
+        add_random_if_below(f.addr() + player_sheet::CONSISTENCY, 5, 8);
+        add_random_if_below(f.addr() + player_sheet::STAMINA, 5, 8);
+        subtract_random(f.addr() + player_sheet::ANTICIPATION, 0xa);
+        subtract_random(f.addr() + player_sheet::DECISIONS, 0xa);
+        add_random_if_below(f.addr() + player_sheet::IMPORTANT_MATCHES, 5, 8);
+        let a = f.leadership();
         if a > 0xf {
-            subtract_random(f + player_sheet::LEADERSHIP, 5);
+            subtract_random(f.addr() + player_sheet::LEADERSHIP, 5);
         } else if a > 0xa {
-            subtract_random(f + player_sheet::LEADERSHIP, 3);
+            subtract_random(f.addr() + player_sheet::LEADERSHIP, 3);
         }
     }
     // the club
@@ -544,11 +544,11 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
             if human(c) != 0 {
                 exe::player_regen_post_youth_promotion_news(p, c);
             }
-            if read_i16(p.player() + 7) > 0x50 {
+            if read_i16(p.player().addr() + 7) > 0x50 {
                 let t = Staff(read_usize(c + club::CHAIRMAN));
-                if !t.is_null() && t.non_player() != 0 {
+                if !t.is_null() && !t.non_player().is_null() {
                     let r = friendly_random(100);
-                    if read_i8(t.non_player() + 0x16) as i32 > r {
+                    if read_i8(t.non_player().addr() + 0x16) as i32 > r {
                         exe::staff_add_favoured_staff(t, p, 0);
                     }
                 }
@@ -563,13 +563,13 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
     }
     if p.club_job().is_null() && age < 0x14 {
         let f = p.player();
-        if read_i16(f + player_sheet::CURRENT_REPUTATION) > 0x4e2 {
-            write_i16(f + player_sheet::CURRENT_REPUTATION, 0x4e2);
+        if f.current_reputation() > 0x4e2 {
+            f.set_current_reputation(0x4e2);
         }
-        if read_i16(f + player_sheet::HOME_REPUTATION) > 0x4e2 {
-            write_i16(f + player_sheet::HOME_REPUTATION, 0x4e2);
+        if f.home_reputation() > 0x4e2 {
+            f.set_home_reputation(0x4e2);
         }
-        write_i16(f + player_sheet::WORLD_REPUTATION, 1);
+        f.set_world_reputation(1);
     }
     exe::staff_normalise_player_physical_attributes(p);
     exe::staff_normalise_player_attributes(p);
@@ -809,7 +809,7 @@ pub(crate) unsafe fn maybe_become_coach(this: usize, p: Staff) {
         return;
     }
     let f = p.player();
-    let t = ftol(read_i16(f + player_sheet::CURRENT_REPUTATION) as f64 + game_pow(r as f64, 3.0));
+    let t = ftol(f.current_reputation() as f64 + game_pow(r as f64, 3.0));
     let r1 = friendly_random(t);
     let passes = r1 > friendly_random(50000) || { // cqd10: the random draw to become a manager
         let r3 = friendly_random(0x30d40).wrapping_add(0x30d40);
@@ -821,29 +821,29 @@ pub(crate) unsafe fn maybe_become_coach(this: usize, p: Staff) {
     }
     crate::comparison::branch("cqd_10 becomes coach");
     let id = read_i32(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS));
-    p.set_non_player((read_usize(G_NON_PLAYER_TABLE).wrapping_add((id as isize * 0x44) as usize) as u32) as usize);
+    p.set_non_player(NonPlayer((read_usize(G_NON_PLAYER_TABLE).wrapping_add((id as isize * 0x44) as usize) as u32) as usize));
     exe::player_regen_remove_spare_non_player_record(this, (read_i32(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS))) as i32 as u32);
-    if read_i8(p.player() + 0xf) == 0x14 {
+    if read_i8(p.player().addr() + 0xf) == 0x14 {
         let nj = p.non_player();
-        let (a, b) = (read_i8(nj + non_player::COACHING), read_i8(nj + non_player::COACHING_GKS));
+        let (a, b) = (nj.coaching(), nj.coaching_gks());
         if a > b {
-            *((nj + non_player::COACHING_GKS) as *mut i8) = a;
-            *((p.non_player() + 0x10) as *mut i8) = b;
+            nj.set_coaching_gks(a);
+            *((p.non_player().addr() + 0x10) as *mut i8) = b;
             if friendly_random(4) == 0 {
                 let v = (friendly_random(0x32) as u8).wrapping_add(0x32);
-                *((p.non_player() + 0x11) as *mut u8) = v;
+                *((p.non_player().addr() + 0x11) as *mut u8) = v;
             }
         }
     }
     exe::staff_normalise_non_player_attributes(p);
     let f = p.player();
     let nj = p.non_player();
-    if read_i16(f + player_sheet::CURRENT_REPUTATION) > 0x1d4c {
-        set_coach_attributes(p, PlayerSheet(f), NonPlayer(nj), read_f64(rdata::F64_0_9), [read_f64(rdata::F64_7500), read_f64(rdata::F64_7500), read_f64(rdata::F64_5750)]);
+    if f.current_reputation() > 0x1d4c {
+        set_coach_attributes(p, PlayerSheet(f.addr()), NonPlayer(nj.addr()), read_f64(rdata::F64_0_9), [read_f64(rdata::F64_7500), read_f64(rdata::F64_7500), read_f64(rdata::F64_5750)]);
     } else if friendly_random(p.ambition() as i32) != 0 {
-        set_coach_attributes(p, PlayerSheet(f), NonPlayer(nj), read_f64(rdata::F64_0_75), [read_f64(rdata::F64_6000), read_f64(rdata::F64_6000), read_f64(rdata::F64_3750)]);
+        set_coach_attributes(p, PlayerSheet(f.addr()), NonPlayer(nj.addr()), read_f64(rdata::F64_0_75), [read_f64(rdata::F64_6000), read_f64(rdata::F64_6000), read_f64(rdata::F64_3750)]);
     } else {
-        set_coach_attributes(p, PlayerSheet(f), NonPlayer(nj), read_f64(rdata::F64_0_5), [read_f64(rdata::F64_4500), read_f64(rdata::F64_4500), read_f64(rdata::F64_1)]);
+        set_coach_attributes(p, PlayerSheet(f.addr()), NonPlayer(nj.addr()), read_f64(rdata::F64_0_5), [read_f64(rdata::F64_4500), read_f64(rdata::F64_4500), read_f64(rdata::F64_1)]);
     }
 }
 
@@ -1117,7 +1117,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize
     if p.is_null() {
         return;
     }
-    if p.player() != 0 && matches!((p.job_for_club() as i8), 8 | 5) {
+    if !p.player().is_null() && matches!((p.job_for_club() as i8), 8 | 5) {
         return;
     }
     let club = p.club_job();
@@ -1149,13 +1149,13 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize
     exe::newsitem_set_slot(nw, 8, job as i32 as u32);
     exe::newsitem_set_slot(nw, 9, p.int_apps() as u32);
     exe::newsitem_set_slot(nw, 0xa, (p.job_for_nation() as i8) as i32 as u32);
-    exe::newsitem_set_slot(nw, 0xb, (p.player() != 0 && p.non_player() != 0) as u32);
+    exe::newsitem_set_slot(nw, 0xb, (!p.player().is_null() && !p.non_player().is_null()) as u32);
     exe::newsitem_set_slot(nw, 0xc, (p.age() as i8) as i32 as u32);
-    exe::newsitem_set_slot(nw, 0xd, (p.non_player() != 0) as u32);
-    exe::newsitem_set_slot(nw, 0xe, (p.player() != 0) as u32);
+    exe::newsitem_set_slot(nw, 0xd, (!p.non_player().is_null()) as u32);
+    exe::newsitem_set_slot(nw, 0xe, (!p.player().is_null()) as u32);
     let mut clubs = [0usize; 30];
     let tm = read_usize(G_TRANSFER_MANAGER);
-    let n = if tm != 0 && p.player() != 0 {
+    let n = if tm != 0 && !p.player().is_null() {
         exe::transfer_manager_collect_player_news_recipients(tm, p, 0xa, clubs.as_mut_ptr(), 0x1e) as i8
     } else {
         0
@@ -1163,12 +1163,12 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize
     let mn = read_usize(G_NEWS);
     let pais = Nation(p.nation().addr());
     let f = p.player();
-    let nj = NonPlayer(p.non_player());
+    let nj = NonPlayer(p.non_player().addr());
     let cargo5 = || (p.job_for_club() as i8) == 5;
     if !pais.is_null() && (pais.league_standard() as i8) > 8
-        && ((f != 0 && read_i16(f + player_sheet::WORLD_REPUTATION) > 0x2134) || (!nj.is_null() && nj.world_reputation() > 0x222e && cargo5())) {
+        && ((!f.is_null() && f.world_reputation() > 0x2134) || (!nj.is_null() && nj.world_reputation() > 0x222e && cargo5())) {
         exe::news_send_to_all_managers(mn, nw);
-    } else if (f != 0 && read_i16(f + player_sheet::WORLD_REPUTATION) > 0x1d4c) || (!nj.is_null() && nj.current_reputation() > 0x1c52 && cargo5()) {
+    } else if (!f.is_null() && f.world_reputation() > 0x1d4c) || (!nj.is_null() && nj.current_reputation() > 0x1c52 && cargo5()) {
         exe::news_send_to_nation_managers(mn, nw, pais);
         let c = p.club_job();
         if !c.is_null() && read_usize(c.addr() + 0x53) != p.nation().addr() {
@@ -1178,7 +1178,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize
         let c = p.club_job();
         if !c.is_null() && read_usize(c.addr() + 0x57) != 0 && cargo5() {
             exe::news_send_to_division_managers(mn, nw, read_usize(c.addr() + 0x57));
-        } else if f == 0 {
+        } else if f.is_null() {
             exe::news_send_to_club_manager(mn, nw, c);
         } else if n > 0 {
             for k in 0..n as usize {
@@ -1188,7 +1188,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize
     }
     if reason as u8 == 8 {
         let f = p.player();
-        if f != 0 && read_i16(f + player_sheet::CURRENT_REPUTATION) > 0x109a {
+        if !f.is_null() && f.current_reputation() > 0x109a {
             let c = contract_of_uncached(p.addr());
             *(G_CONTRACT_LOOKUP_RESULT as *mut usize) = c;
             if c != 0 {
@@ -1458,7 +1458,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_announcement_
     if person.is_null() {
         return;
     }
-    if (person.player() as i32) != 0 && matches!(person.job_for_club(), 8 | 5) {
+    if (person.player().addr() as i32) != 0 && matches!(person.job_for_club(), 8 | 5) {
         return;
     }
     crate::comparison::branch("player_regen_post_retirement_announcement_news");
@@ -1517,7 +1517,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_data_to_pool(this: usize, pers
     crate::comparison::branch("cpu_9 player bench");
     let record = Staff(read_usize(G_STAFF_TABLE).wrapping_add((person as u32).wrapping_mul(0x6e) as usize));
     let item = read_usize(this + player_regen_fields::PLAYER_DATA_POOL).wrapping_add(read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT) << 4);
-    write_usize(item, read_usize(record.player()));
+    write_usize(item, read_usize(record.player().addr()));
     write_usize(item + regen_pool_item::NATION_ID, nation as usize);
     write_usize(item + regen_pool_item::SECOND_NATION_ID, second as usize);
     write_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT, read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT).wrapping_add(1));
@@ -1739,10 +1739,10 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_initial_retirement(_th
     let c2 = contract_with_current_club(person);
     let status = contract_status(c2);
     let age = (person.age() as i8);
-    let j = PlayerSheet(person.player());
+    let j = PlayerSheet(person.player().addr());
     let reason: u8 = 'm: {
         if j.is_null() {
-            if person.non_player() != 0 && age <= non_player_age_limit(person, out) {
+            if !person.non_player().is_null() && age <= non_player_age_limit(person, out) {
                 return 0;
             }
             break 'm 0x20;
@@ -1836,10 +1836,10 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
     let c2 = Contract(contract_with_current_club(person));
     let status = contract_status(c2.addr());
     let age = (person.age() as i8);
-    let j = PlayerSheet(person.player());
+    let j = PlayerSheet(person.player().addr());
     let reason: u8 = 'm: {
         if j.is_null() {
-            if person.non_player() != 0 && age <= non_player_age_limit(person, out) {
+            if !person.non_player().is_null() && age <= non_player_age_limit(person, out) {
                 return 0;
             }
             break 'm 0x20;
@@ -1885,7 +1885,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
                 break 'm 1;
             }
             if !c2.is_null() && ((exe::staff_contract_days_to_end_date(c2) as u32) as i16) < 300 && status < 0x32 {
-                if person.non_player() != 0 {
+                if !person.non_player().is_null() {
                     break 'm 1;
                 }
                 if person.ambition() as i32 > random(20) {
@@ -2209,7 +2209,7 @@ pub(crate) unsafe fn job_exit_regions(person: Staff) -> Vec<(usize, usize)> {
 /// sorteio(10000) (lê o jogador sem conferir, como a original). Quente (todas as pessoas a cada chamada): sem contador.
 pub(crate) unsafe extern "stdcall" fn player_regen_score_non_player_candidate(person: usize) -> i32 {
     let person = Staff(person);
-    if person.non_player() != 0 {
+    if !person.non_player().is_null() {
         return -10000;
     }
     let id = read_usize(person.addr());
@@ -2225,18 +2225,18 @@ pub(crate) unsafe extern "stdcall" fn player_regen_score_non_player_candidate(pe
     if !club.is_null() {
         let injury_word_0c = (club.reputation() as i32);
         let player = person.player();
-        if injury_word_0c != 0 && player != 0 {
-            rating = rating.wrapping_add((read_i16_as_i32(player + player_sheet::CURRENT_REPUTATION) / injury_word_0c).wrapping_mul(250));
+        if injury_word_0c != 0 && !player.is_null() {
+            rating = rating.wrapping_add(((player.current_reputation() as i32) / injury_word_0c).wrapping_mul(250));
         }
     }
     let player = person.player();
-    if player != 0 {
-        let v = read_i8_as_i32(player + player_sheet::LEADERSHIP) / 2;
+    if !player.is_null() {
+        let v = (player.leadership() as i32) / 2;
         rating = rating.wrapping_add(random(ftol(game_pow(v as f64, 3.0))));
-        if read_i16_as_i32(player + player_sheet::WORLD_REPUTATION) > 7500 {
+        if (player.world_reputation() as i32) > 7500 {
             rating = rating.wrapping_add(100);
         }
-        if read_i16_as_i32(player + player_sheet::CURRENT_REPUTATION) > 7500 {
+        if (player.current_reputation() as i32) > 7500 {
             rating = rating.wrapping_add(50);
         }
     }
@@ -2253,7 +2253,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_score_non_player_candidate(pe
     let b = person.int_apps() as i32;
     rating = rating.wrapping_add(b * b);
     let r = random(10000); // no club
-    if read_i16_as_i32(person.player() + 0xd) > r {
+    if read_i16_as_i32(person.player().addr() + 0xd) > r {
         rating = rating.wrapping_add(rating);
     }
     random(rating)
@@ -2571,7 +2571,7 @@ pub(crate) unsafe extern "thiscall" fn pick_club_from_nation_list(this: usize, p
         }
         let club = Club(read_usize(G_CLUB_TABLE).wrapping_add(read_usize(item).wrapping_mul(club::SIZE)));
         if !is_basque_restricted(player, club.addr()) && can_club_bid(player.addr(), club.addr()) && (exe::database_count_club_squad(club, 0, 0) as i8) < 0x32 {
-            let sheet = PlayerSheet(player.player());
+            let sheet = PlayerSheet(player.player().addr());
             let rep = club.reputation() as i32;
             let c = rep
                 .wrapping_sub((sheet.current_reputation() as i32).wrapping_sub(rep).wrapping_abs())
@@ -2716,7 +2716,7 @@ pub(crate) unsafe extern "thiscall" fn queue_staff_for_regen(this: usize, entry:
     write_u16(queue + regen_queue_entry::REGEN_DATE, core::ptr::read_unaligned((entry + 4) as *const u16));
     write_u16(queue + regen_queue_entry::REGEN_YEAR, core::ptr::read_unaligned((entry + 6) as *const u16));
     write_usize(this + player_regen_fields::REGEN_QUEUE_COUNT, read_usize(this + player_regen_fields::REGEN_QUEUE_COUNT).wrapping_add(1)); // one more in the regen queue
-    if person.non_player() != 0 {
+    if !person.non_player().is_null() {
         if read_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT) == read_usize(this + player_regen_fields::SPARE_NON_PLAYER_CAPACITY).wrapping_sub(1) {
             let p = crt_realloc(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS), read_usize(this + player_regen_fields::SPARE_NON_PLAYER_CAPACITY).wrapping_add(250) << 4);
             write_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS, p);
@@ -2726,7 +2726,7 @@ pub(crate) unsafe extern "thiscall" fn queue_staff_for_regen(this: usize, entry:
             }
         }
         let item = || read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS).wrapping_add(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT) << 4);
-        write_usize(item(), read_usize(person.non_player()));
+        write_usize(item(), read_usize(person.non_player().addr()));
         let nation = person.nation();
         if !nation.is_null() {
             write_usize(item() + 4, read_usize(nation.addr()));
@@ -2737,7 +2737,7 @@ pub(crate) unsafe extern "thiscall" fn queue_staff_for_regen(this: usize, entry:
         write_usize(item() + 0xc, read_usize(person.addr()));
         write_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT, read_usize(this + player_regen_fields::SPARE_NON_PLAYER_COUNT).wrapping_add(1));
     }
-    if person.player() != 0 {
+    if !person.player().is_null() {
         let cap = read_usize(this + player_regen_fields::PLAYER_DATA_POOL_CAPACITY);
         if read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT) == cap.wrapping_sub(1) {
             let p = crt_realloc(read_usize(this + player_regen_fields::PLAYER_DATA_POOL), cap.wrapping_add(250) << 4);
@@ -2748,7 +2748,7 @@ pub(crate) unsafe extern "thiscall" fn queue_staff_for_regen(this: usize, entry:
             }
         }
         let item = || read_usize(this + player_regen_fields::PLAYER_DATA_POOL).wrapping_add(read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT) << 4);
-        write_usize(item(), read_usize(person.player()));
+        write_usize(item(), read_usize(person.player().addr()));
         write_usize(item() + 4, read_usize(person.nation().addr()));
         write_usize(item() + 0xc, read_usize(person.addr()));
         write_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT, read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT).wrapping_add(1));
@@ -2830,8 +2830,8 @@ pub(crate) unsafe extern "stdcall" fn player_regen_check_unemployed_retirement(p
     if player_regen_is_on_shortlist(person) {
         return 0;
     }
-    let manager = NonPlayer((person.non_player() as u32) as usize);
-    if manager.is_null() && (person.player() as u32) == 0 {
+    let manager = NonPlayer((person.non_player().addr() as u32) as usize);
+    if manager.is_null() && (person.player().addr() as u32) == 0 {
         without_record = true;
     }
     let aposenta = if !manager.is_null() {
@@ -2839,7 +2839,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_check_unemployed_retirement(p
             return 0;
         }
         manager.current_reputation() < 50 && friendly_random(5) == 0 // the weak manager
-    } else if (person.player() as u32) == 0 {
+    } else if (person.player().addr() as u32) == 0 {
         false
     } else {
         if player_regen_is_on_shortlist(person) {
@@ -2851,7 +2851,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_check_unemployed_retirement(p
             let years = (*(G_CURRENT_DATE_YEAR as *const u16) as i32).wrapping_sub(person.date_joined_club_year() as i32);
             let days = years.wrapping_mul(365).wrapping_sub((person.date_joined_club() as i16) as i32).wrapping_add(*(G_CURRENT_DATE as *const i16) as i32);
             if days > 0x16d {
-                let rating = *(((person.player() as u32) as usize + 0xb) as *const i16) as i32;
+                let rating = *(((person.player().addr() as u32) as usize + 0xb) as *const i16) as i32;
                 friendly_random(rating) < 0x2ee // the roll by the rating
             } else {
                 false
@@ -3030,7 +3030,7 @@ pub(crate) unsafe extern "thiscall" fn find_retirement_entry(regen: usize, id: *
 pub(crate) unsafe extern "stdcall" fn player_regen_score_club_for_player(player: usize, club: usize, squad: i8) -> i32 {
     let player = Staff(player);
     let club = Club(club);
-    let sheet = PlayerSheet(player.player());
+    let sheet = PlayerSheet(player.player().addr());
     let rep = club.reputation() as i32;
     let mut s = rep
         .wrapping_sub((sheet.current_reputation() as i32 - rep).wrapping_abs())
@@ -3066,7 +3066,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_score_club_for_player(player:
         });
     }
     let manager = Staff(club.manager().addr());
-    let x = NonPlayer(if !manager.is_null() { manager.non_player() } else { 0 });
+    let x = NonPlayer(if !manager.is_null() { manager.non_player().addr() } else { 0 });
     if !x.is_null() && exe::human_manager_is_human_club(club, 1, 1, 0, 0) == 0 {
         s = s.wrapping_add((x.youngsters() as i32 - 10) * 30);
         if sheet.potential_ability() as i32 > exe::utils_random(0x4b) + 0x64 {
@@ -3263,30 +3263,30 @@ pub(crate) unsafe extern "thiscall" fn process_regen_queue(this: usize) {
         }
         crate::comparison::branch("cpw_10 reserve manager");
         let nj = NonPlayer(read_usize(G_NON_PLAYER_TABLE).wrapping_add((read_usize(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS)) as u32).wrapping_mul(0x44) as usize));
-        s.set_non_player(nj.addr());
-        let sheet = PlayerSheet(s.player());
+        s.set_non_player(nj);
+        let sheet = PlayerSheet(s.player().addr());
         if sheet.is_null() {
             let a = friendly_random(0x5dc).wrapping_add(1) as u16;
-            write_u16(s.non_player() + 8, a);
+            write_u16(s.non_player().addr() + 8, a);
             let b = friendly_random(0x5dc).wrapping_add(1) as u16;
-            write_u16(s.non_player() + 0xa, b);
+            write_u16(s.non_player().addr() + 0xa, b);
             let c = friendly_random(0x1f4).wrapping_add(1) as u16;
-            write_u16(s.non_player() + 0xc, c);
+            write_u16(s.non_player().addr() + 0xc, c);
         } else {
             if sheet.goalkeeper() == 0x14 {
                 let (cl, dl) = (nj.coaching(), nj.coaching_gks());
                 if cl > dl {
                     nj.set_coaching_gks(cl);
-                    *((s.non_player() + 0x10) as *mut i8) = dl;
+                    *((s.non_player().addr() + 0x10) as *mut i8) = dl;
                     if friendly_random(4) == 0 {
                         let r = friendly_random(0x32) as u8;
-                        *((s.non_player() + 0x11) as *mut u8) = r.wrapping_add(0x32);
+                        *((s.non_player().addr() + 0x11) as *mut u8) = r.wrapping_add(0x32);
                     }
                 }
             }
             exe::staff_normalise_non_player_attributes(s);
             place_coach_at_ai_club(s);
-            let rep = read_i16(s.player() + 0xb);
+            let rep = read_i16(s.player().addr() + 0xb);
             let (k, teto) = if rep > 0x1d4c {
                 (0x9689d8, 0x9690b8)
             } else if friendly_random(s.ambition() as i32) != 0 {
@@ -3295,11 +3295,11 @@ pub(crate) unsafe extern "thiscall" fn process_regen_queue(this: usize) {
                 (0x968968, 0x96e288)
             };
             let a = rebuilt_coach_rating(s, rep, None, k, teto);
-            write_u16(s.non_player() + 0xa, a);
-            let b = rebuilt_coach_rating(s, read_i16(s.player() + 9), None, k, teto);
-            write_u16(s.non_player() + 8, b);
-            let c = rebuilt_coach_rating(s, read_i16(s.player() + 0xd), Some(0x969040), k, teto);
-            write_u16(s.non_player() + 0xc, c);
+            write_u16(s.non_player().addr() + 0xa, a);
+            let b = rebuilt_coach_rating(s, read_i16(s.player().addr() + 9), None, k, teto);
+            write_u16(s.non_player().addr() + 8, b);
+            let c = rebuilt_coach_rating(s, read_i16(s.player().addr() + 0xd), Some(0x969040), k, teto);
+            write_u16(s.non_player().addr() + 0xc, c);
         }
         exe::player_regen_remove_spare_non_player_record(this, (read_i32(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS))) as i32 as u32);
     }

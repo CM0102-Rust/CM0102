@@ -304,7 +304,7 @@ pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
 ///
 /// [pt] Uma pessoa do laço de fora dos dias múltiplos de 50 (0x5d6f15..0x5d7115).
 pub(crate) unsafe fn player_vs_manager_check(p: Staff) {
-    if p.player() == 0 || p.staff_preferences() == 0 {
+    if p.player().is_null() || p.staff_preferences() == 0 {
         return;
     }
     let c = game_get_contract_and_store(p.addr());
@@ -339,7 +339,7 @@ pub(crate) unsafe fn player_vs_manager_check(p: Staff) {
             e -= 0xf;
         }
     }
-    let rep = read_i16(p.player() + 0xb);
+    let rep = read_i16(p.player().addr() + 0xb);
     if rep > 0x1194 && rep > club.reputation() {
         e -= 5;
     }
@@ -387,7 +387,7 @@ pub(crate) unsafe extern "C" fn game_check_club_dressing_room_unrest(club: usize
 ///
 /// [pt] A pessoa conta para a liderança do clube: id válido (< [0xae2364]), contrato com o clube (+0x39) e ficha de jogador.
 pub(crate) unsafe fn is_club_squad_player(p: Staff, club: usize) -> bool {
-    !p.is_null() && (read_usize(p.addr()) as i32) < read_usize(G_STAFF_COUNT) as i32 && p.club_job() == Club(club) && p.player() != 0
+    !p.is_null() && (read_usize(p.addr()) as i32) < read_usize(G_STAFF_COUNT) as i32 && p.club_job() == Club(club) && !p.player().is_null()
 }
 
 /// Spreads morale through the squads by leadership: one club in seven each day (not national teams): the squad's
@@ -516,7 +516,7 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
     for _ in 0..q {
         let p = Staff(current);
         current = current.wrapping_add(0x6e);
-        if p.player() == 0 || p.job_for_club() != 0xb {
+        if p.player().is_null() || p.job_for_club() != 0xb {
             continue;
         }
         let c = game_get_contract_and_store(p.addr());
@@ -537,7 +537,7 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
         if exe::injury_get_player_injury_status(read_usize(G_INJURY), p) == 2 {
             continue;
         }
-        let jog = PlayerSheet(p.player());
+        let jog = PlayerSheet(p.player().addr());
         let cl = (p.professionalism() as u8);
         let dl = (jog.work_rate() as u8);
         let mut bl = (jog.leadership() as u8).wrapping_add((p.age() as u8)).wrapping_add(cl).wrapping_add(dl);
@@ -555,7 +555,7 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
         }
         let mut and_foul = false;
         let a = (p.professionalism() as u8);
-        if (a as i8) < 8 && (read_u8(p.player() + 0x2f) as i8) < 8 && (bl as i8) < 0x2b {
+        if (a as i8) < 8 && (read_u8(p.player().addr() + 0x2f) as i8) < 8 && (bl as i8) < 0x2b {
             let mut s = a;
             if days_since_staff_date(p) < 0x1e {
                 s = s.wrapping_add(0x64);
@@ -678,7 +678,7 @@ pub(crate) unsafe extern "thiscall" fn transfer_manager_get_shortlist_manager(ma
 pub(crate) unsafe extern "thiscall" fn training_manager_get_player_entry(treino: usize, player: usize) -> usize {
     let player = Staff(player);
     let table = core::ptr::read_unaligned((treino + 0x651d) as *const usize);
-    let id = *(player.player() as *const i32);
+    let id = *(player.player().addr() as *const i32);
     (table as isize + id as isize * 6) as usize
 }
 

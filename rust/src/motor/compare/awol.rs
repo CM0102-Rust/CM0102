@@ -92,7 +92,7 @@ pub(crate) unsafe extern "thiscall" fn compare_has_fitness_incident(this: usize,
 pub(crate) unsafe extern "thiscall" fn compare_miss_training(this: usize, person: usize) {
     let person = Staff(person);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_MISS_TRAINING);
-    if person.is_null() || person.player() == 0 || read_i32(person.addr()) >= read_i32(G_STAFF_COUNT) {
+    if person.is_null() || person.player().is_null() || read_i32(person.addr()) >= read_i32(G_STAFF_COUNT) {
         return o(this, person.addr());
     }
     let m = read_usize(this + awol_fields::PERSON_FLAGS).wrapping_add(read_i32(person.addr()) as usize);

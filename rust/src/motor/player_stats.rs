@@ -176,10 +176,10 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
     }
     let club = Club(p.club_job().addr());
     let f = p.player();
-    if f == 0 {
+    if f.is_null() {
         return 0;
     }
-    let reg = read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add((read_i32(f) as isize * 0x27) as usize);
+    let reg = read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add((read_i32(f.addr()) as isize * 0x27) as usize);
     let mut sexta = false;
     for cat in 0..6usize {
         let id = read_i32(reg + 4 * cat);
@@ -355,7 +355,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
         return 0;
     }
     let f = p.player();
-    if f == 0 {
+    if f.is_null() {
         show_player_stats_error(0xbaa);
         return 0;
     }
@@ -383,7 +383,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
     let mut year_current = u16::from_le_bytes([last.0[0], last.0[1]]);
     let mut club_current = u32::from_le_bytes([last.0[2], last.0[3], last.0[4], last.0[5]]);
     let mut kind_current: u8 = 0xff;
-    let reg_sheet = read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add((read_i32(f) as isize * 0x27) as usize);
+    let reg_sheet = read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add((read_i32(f.addr()) as isize * 0x27) as usize);
     let list = Llist(exe::file_llist_get_nodes(read_usize(this), read_usize(reg_sheet + player_stats_entry::HISTORY_START) as u32, read_usize(reg_sheet + player_stats_entry::HISTORY_LAST) as u32));
     if !list.is_null() {
         list.set_cursor((list.tail() as u32) as usize);
@@ -590,7 +590,7 @@ pub(crate) unsafe extern "stdcall" fn player_stats_years_since_at_club(p: usize,
     if p.club_job() == Club(club) {
         return 0;
     }
-    if p.player() == 0 {
+    if p.player().is_null() {
         show_player_stats_error(0x135f);
         return -1;
     }
@@ -816,7 +816,7 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_career_goals(person: usiz
     if read_i32(person.addr()) >= read_i32(G_STAFF_COUNT) {
         return 0;
     }
-    if person.player() == 0 {
+    if person.player().is_null() {
         show_error_at(0xa78310, 0xb5d);
         return 0;
     }
@@ -1052,10 +1052,10 @@ pub(crate) unsafe extern "thiscall" fn improve_language(this: usize, person: usi
 /// (+0x61): a original (caixa fatal). Devolve o que a 0x58f110 devolve. Do regen (0x7a59e0).
 pub(crate) unsafe extern "thiscall" fn player_stats_reset_player(this: usize, person: usize) -> usize {
     let person = Staff(person);
-    if person.is_null() || person.player() == 0 {
+    if person.is_null() || person.player().is_null() {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_PLAYER_STATS_RESET_PLAYER)(this, person.addr()); // fatal box: original only
     }
-    let r = read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add(read_usize(person.player()).wrapping_mul(39)); // the id of the player profile (+0x61), not the person’s
+    let r = read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add(read_usize(person.player().addr()).wrapping_mul(39)); // the id of the player profile (+0x61), not the person’s
     for k in 0..6usize {
         let i = read_usize(r + 4 * k);
         if i as u32 == 0xffff_ffff {
@@ -1296,7 +1296,7 @@ pub(crate) unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, na
         if (0xb63d60usize).wrapping_add((k * 72) as usize) == nation {
             for s in 0..50usize {
                 let p = Staff(club.squad(s));
-                if p.is_null() || p.player() == 0 || read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) {
+                if p.is_null() || p.player().is_null() || read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) {
                     continue;
                 }
                 if exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p) == 0 || p.club_job() == club {
@@ -1418,7 +1418,7 @@ pub(crate) unsafe extern "stdcall" fn player_stats_get_goals_for_club(person: us
     if read_i32(person.addr()) >= read_i32(G_STAFF_COUNT) {
         return 0;
     }
-    if person.player() == 0 {
+    if person.player().is_null() {
         show_error_at(0xa78310, 0xb1e);
         return 0;
     }

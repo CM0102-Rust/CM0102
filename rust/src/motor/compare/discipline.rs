@@ -256,7 +256,7 @@ pub(crate) unsafe extern "thiscall" fn compare_release_ban(this: usize, id: u32,
 pub(crate) unsafe extern "thiscall" fn compare_clear_ban_history(this: usize, person: usize) -> usize {
     let person = Staff(person);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_CLEAR_BAN_HISTORY);
-    if person.is_null() || person.player() == 0 {
+    if person.is_null() || person.player().is_null() {
         return o(this, person.addr());
     }
     let r = person_discipline_record(this, read_usize(person.addr()));

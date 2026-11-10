@@ -189,7 +189,7 @@ pub(crate) unsafe extern "thiscall" fn compare_try_finance_boost_event(this: usi
     let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_TRY_FINANCE_BOOST_EVENT);
     let presence = Staff(if !club.is_null() { club.chairman().addr() } else { 0 });
-    let sheet = PlayerSheet(if !presence.is_null() { presence.non_player() } else { 0 });
+    let sheet = PlayerSheet(if !presence.is_null() { presence.non_player().addr() } else { 0 });
     if club.is_null() || fin == 0 {
         return o(this, club.addr(), fin); // simplification: without a club or without finances, original only
     }

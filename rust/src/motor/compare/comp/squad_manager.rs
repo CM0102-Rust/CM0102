@@ -95,7 +95,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_squad_number(this: usize, p: 
 pub(crate) unsafe extern "thiscall" fn compare_allocate_squad_number(this: usize, c: usize, p: usize) {
     let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ALLOCATE_SQUAD_NUMBER);
-    if p.is_null() || (p.player() as u32) == 0 || preferred_squad_numbers((p.player() as u32) as usize).is_none() {
+    if p.is_null() || (p.player().addr() as u32) == 0 || preferred_squad_numbers((p.player().addr() as u32) as usize).is_none() {
         return o(this, c, p.addr());
     }
     let reg = squad_number_regions(&[p.addr()]);

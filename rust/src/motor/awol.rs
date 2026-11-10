@@ -194,7 +194,7 @@ pub(crate) unsafe fn taped_random(n: i32) -> i32 {
 pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usize, player: usize, club: usize) {
     let player = Staff(player);
     let _ = this;
-    if player.is_null() || player.player() == 0 || club == 0 || read_usize(club + club::MANAGER) == 0 { // cqd11: no player or manager
+    if player.is_null() || player.player().is_null() || club == 0 || read_usize(club + club::MANAGER) == 0 { // cqd11: no player or manager
         return;
     }
     // 0x77bbe0: push 0; push 0xbc9; lea ecx -> thiscall; 0x785790: push v; push k; lea ecx -> thiscall; 0x600a50: 5
@@ -260,7 +260,7 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
         return;
     }
     let nation = read_usize(club + club::NATION);
-    if nation == 0 || read_i16(player.player() + 0xb) <= 0x1c52 {
+    if nation == 0 || read_i16(player.player().addr() + 0xb) <= 0x1c52 {
         return;
     }
     if dry_run {
@@ -421,7 +421,7 @@ pub(crate) unsafe extern "thiscall" fn awol_daily_update(this: usize) {
         if weeks_after_have_passed(r + 8, 1) {
             let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add((read_i32(r) as usize).wrapping_mul(staff::SIZE)));
             let resolveu = if read_u8(r + 0x10) != 0 {
-                if person.player() == 0 {
+                if person.player().is_null() {
                     true
                 } else if friendly_random((person.professionalism() as u8) as i8 as i32) == 0 && friendly_random((person.temperament() as u8) as i8 as i32) == 0 {
                     maybe_drop_attribute(person.addr() + staff::PROFESSIONALISM, true);
@@ -435,7 +435,7 @@ pub(crate) unsafe extern "thiscall" fn awol_daily_update(this: usize) {
                 let b = friendly_random(5);
                 if (a as u8 as i8) < ((b as u8).wrapping_add(1) as i8) {
                     maybe_drop_attribute(person.addr() + staff::PROFESSIONALISM, true);
-                    let j = PlayerSheet(person.player());
+                    let j = PlayerSheet(person.player().addr());
                     if !j.is_null() {
                         maybe_drop_attribute(j.addr() + player_sheet::WORK_RATE, true);
                     }
@@ -464,7 +464,7 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
     let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add((read_i32(r) as usize).wrapping_mul(staff::SIZE)));
     if read_u8(r + 0xc) != 0 {
         // o caso repetido
-        if person.player() != 0 {
+        if !person.player().is_null() {
             crate::comparison::branch("cpw_7 repeated case");
             if friendly_random((person.professionalism() as u8) as i8 as i32) == 0 && friendly_random((person.temperament() as u8) as i8 as i32) == 0 { // cpw7: the random draws of the repeated case
                 maybe_drop_attribute(person.addr() + staff::PROFESSIONALISM, true);
@@ -484,7 +484,7 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
     if !club.is_null() {
         for v in 0..0x32usize {
             let s = Staff(club.squad(v));
-            if s.is_null() || s == person || s.player() == 0 {
+            if s.is_null() || s == person || s.player().is_null() {
                 continue;
             }
             let ct = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club));
@@ -495,32 +495,32 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
                 let a = friendly_random((s.professionalism() as u8) as i8 as i32);
                 let b = friendly_random(0x1e);
                 let f = ct.squad_status() & 0xf0;
-                if a > b && (f == 0x10 || f == 0x20) && (s.age() as u8) as i8 > 0x17 && read_i16(s.player() + 0xb) > 0x1482 {
+                if a > b && (f == 0x10 || f == 0x20) && (s.age() as u8) as i8 > 0x17 && read_i16(s.player().addr() + 0xb) > 0x1482 {
                     exe::staff_contract_set_flags(ct, 2);
                 }
             }
-            if (s.age() as u8) as i8 >= 0x15 || read_i16(s.player() + 0xb) <= 0x1482 {
+            if (s.age() as u8) as i8 >= 0x15 || read_i16(s.player().addr() + 0xb) <= 0x1482 {
                 continue;
             }
             maybe_drop_attribute(s.addr() + staff::PROFESSIONALISM, true);
             let j = s.player();
-            if read_u8(j + player_sheet::WORK_RATE) as i8 > 1 && friendly_random((s.professionalism() as u8) as i8 as i32) == 0 {
-                *((j + player_sheet::WORK_RATE) as *mut i8) -= 1;
+            if (j.work_rate() as u8) as i8 > 1 && friendly_random((s.professionalism() as u8) as i8 as i32) == 0 {
+                j.set_work_rate(j.work_rate().wrapping_sub(1));
             }
             maybe_drop_attribute(s.addr() + staff::TEMPERAMENT, true);
         }
     }
     // o faltoso
     let j = person.player();
-    if j != 0 {
+    if !j.is_null() {
         let a = friendly_random((person.professionalism() as u8) as i8 as i32);
         let b = friendly_random(0xf);
         if (a as u8 as i8) < ((b as u8).wrapping_add(1) as i8) {
             maybe_drop_attribute(person.addr() + staff::PROFESSIONALISM, false);
-            maybe_drop_attribute(person.player() + 0x44, false);
+            maybe_drop_attribute(person.player().addr() + 0x44, false);
             close_awol_case(this, r);
             awol_miss_training(this, person);
-            if !club.is_null() && person.player() != 0 {
+            if !club.is_null() && !person.player().is_null() {
                 exe::media_create_player_media_story(read_usize(G_MEDIA), person, club, 8, 0, 0);
             }
             return;
@@ -668,7 +668,7 @@ pub(crate) const AWOL_RESIDUE_BYTE: u8 = 0x90;
 /// de sorteio(5), senão 2; motivo 1).
 pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize) {
     let person = Staff(person);
-    if person.is_null() || person.player() == 0 || read_i32(person.addr()) >= read_i32(G_STAFF_COUNT) {
+    if person.is_null() || person.player().is_null() || read_i32(person.addr()) >= read_i32(G_STAFF_COUNT) {
         return;
     }
     let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
@@ -714,7 +714,7 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
     let c = exe::injury_get_condition(read_usize(G_INJURY), person, 0);
     // the original’s calculations are 32-bit with high bytes from other values in the register, but only the low word
     // arrives (the condition is short in 0x62bd10)
-    let queda = 0x15i16.wrapping_sub(read_u8(person.player() + 0x34) as i8 as i16).wrapping_mul(25);
+    let queda = 0x15i16.wrapping_sub(read_u8(person.player().addr() + 0x34) as i8 as i16).wrapping_mul(25);
     let r = friendly_random(queda as i32);
     let new = (c as u16).wrapping_sub((queda as u16).wrapping_add(r as u16).wrapping_add(0x64));
     exe::injury_set_match_condition(read_usize(G_INJURY), person, new as i16, 0);
@@ -730,7 +730,7 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
     if manager.is_null() {
         return;
     }
-    let np = NonPlayer(manager.non_player());
+    let np = NonPlayer(manager.non_player().addr());
     if np.is_null() || friendly_random(np.discipline() as i8 as i32) == 0 {
         return;
     }
@@ -848,11 +848,11 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
         return;
     }
     let np = manager.non_player();
-    if np == 0 {
+    if np.is_null() {
         return;
     }
     crate::comparison::branch("cpz_9 fine evaluated");
-    let a = friendly_random(read_i8_as_i32(np + non_player::DISCIPLINE));
+    let a = friendly_random(read_i8_as_i32(np.addr() + non_player::DISCIPLINE));
     let b = friendly_random(10); // cpz9: the fine random draw
     if a <= b {
         return;

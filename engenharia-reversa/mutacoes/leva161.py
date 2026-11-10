@@ -1,6 +1,6 @@
 # Mutacoes da leva161 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva161.py --carreira 2002-06-01
 MUTACOES = [
-    ('s_nota', "    let n = |o: usize| *((sheet + o) as *const i8) >= 15;", "    let n = |o: usize| *((sheet + o) as *const i8) >= 14;"),
+    ('s_nota', "    let n = |o: usize| *((sheet.addr() + o) as *const i8) >= 15;", "    let n = |o: usize| *((sheet.addr() + o) as *const i8) >= 14;"),
     ('s_vaga8', "        8 => (0x13, 0x18),", "        8 => (0x13, 0x19),"),
     ('s_id', "(*(G_STAFF_COUNT as *const i32)).wrapping_sub(0x10)", "(*(G_STAFF_COUNT as *const i32)).wrapping_sub(0x11)"),
     ('p_meia', "        0x108 | 0x208 | 0x408 => 6,", "        0x108 | 0x208 | 0x408 => 7,"),

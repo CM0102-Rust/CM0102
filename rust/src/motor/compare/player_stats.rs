@@ -28,10 +28,10 @@ pub(crate) unsafe extern "stdcall" fn compare_player_statistic(r: *const u8, whi
 pub(crate) unsafe extern "thiscall" fn compare_archive_player_stats(this: usize, p: usize, value: u32, loan: u32, end: u32, club_id: u32, other: u32) -> u32 {
     let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_ARCHIVE_PLAYER_STATS);
-    if p.is_null() || p.player() == 0 {
+    if p.is_null() || p.player().is_null() {
         return o(this, p.addr(), value, loan, end, club_id, other);
     }
-    let reg = read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add((read_i32(p.player()) as isize * 0x27) as usize);
+    let reg = read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add((read_i32(p.player().addr()) as isize * 0x27) as usize);
     let mut regions = vec![(reg + player_stats_entry::CLUB_LEAGUE_GAMES, 4)];
     for cat in 0..6usize {
         let id = read_i32(reg + 4 * cat);
@@ -67,7 +67,7 @@ pub(crate) unsafe extern "thiscall" fn compare_archive_player_stats(this: usize,
 pub(crate) unsafe extern "thiscall" fn compare_build_career_history(this: usize, p: usize, count: *mut i32) -> usize {
     let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize>(IDX_BUILD_CAREER_HISTORY);
-    if p.is_null() || (read_i32(p.addr()) < read_i32(G_STAFF_COUNT) && p.player() == 0) {
+    if p.is_null() || (read_i32(p.addr()) < read_i32(G_STAFF_COUNT) && p.player().is_null()) {
         return o(this, p.addr(), count);
     }
     let r = o(this, p.addr(), count);
@@ -99,7 +99,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_career_history(this: usize,
 pub(crate) unsafe extern "stdcall" fn compare_player_stats_years_since_at_club(p: usize, club: usize) -> i16 {
     let p = Staff(p);
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> i16>(IDX_PLAYER_STATS_YEARS_SINCE_AT_CLUB);
-    if p.is_null() || club == 0 || (read_i32(p.addr()) < read_i32(G_STAFF_COUNT) && p.club_job() != Club(club) && p.player() == 0) {
+    if p.is_null() || club == 0 || (read_i32(p.addr()) < read_i32(G_STAFF_COUNT) && p.club_job() != Club(club) && p.player().is_null()) {
         return o(p.addr(), club);
     }
     let r = o(p.addr(), club);
@@ -162,7 +162,7 @@ pub(crate) unsafe extern "C" fn compare_player_stats_compare_history_by_club(a: 
 pub(crate) unsafe extern "stdcall" fn compare_player_stats_get_career_goals(person: usize) -> u16 {
     let person = Staff(person);
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u16>(IDX_PLAYER_STATS_GET_CAREER_GOALS);
-    if person.is_null() || (read_i32(person.addr()) < read_i32(G_STAFF_COUNT) && person.player() == 0) {
+    if person.is_null() || (read_i32(person.addr()) < read_i32(G_STAFF_COUNT) && person.player().is_null()) {
         return o(person.addr());
     }
     let r = o(person.addr());
@@ -276,10 +276,10 @@ pub(crate) unsafe extern "thiscall" fn compare_improve_language(this: usize, per
 pub(crate) unsafe extern "thiscall" fn compare_player_stats_reset_player(this: usize, person: usize) -> usize {
     let person = Staff(person);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_PLAYER_STATS_RESET_PLAYER);
-    if person.is_null() || person.player() == 0 {
+    if person.is_null() || person.player().is_null() {
         return o(this, person.addr());
     }
-    let r = read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add(read_usize(person.player()).wrapping_mul(39)); // the id of the player profile (+0x61), not the person’s
+    let r = read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add(read_usize(person.player().addr()).wrapping_mul(39)); // the id of the player profile (+0x61), not the person’s
     let mut reg = vec![(r, 39), (this + player_stats_fields::FREE_CATEGORY_COUNT, 4)];
     for k in 0..6usize {
         let i = read_usize(r + 4 * k);
@@ -409,7 +409,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_last_match_rating(stats: usiz
 pub(crate) unsafe extern "stdcall" fn compare_player_stats_get_goals_for_club(person: usize, club: usize) -> u16 {
     let person = Staff(person);
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u16>(IDX_PLAYER_STATS_GET_GOALS_FOR_CLUB);
-    if person.is_null() || club == 0 || (read_i32(person.addr()) < read_i32(G_STAFF_COUNT) && person.player() == 0) {
+    if person.is_null() || club == 0 || (read_i32(person.addr()) < read_i32(G_STAFF_COUNT) && person.player().is_null()) {
         return o(person.addr(), club);
     }
     let r = o(person.addr(), club);
