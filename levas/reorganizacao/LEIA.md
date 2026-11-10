@@ -28,6 +28,16 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 22 da legibilidade: um dialeto de memória só
+
+`unificar_acessos.py`: 5.697 acessos crus por ponteiro em 1.558 funções viraram os acessos sem alinhamento do
+`motor/mem.rs` (`*((E) as *const T)` → `read_T(E)`, `*((E) as *mut T) = V` → `write_T(E, V)`, `read_unaligned` e
+`write_unaligned` idem). Ficam: a atribuição composta (`+=` avaliaria E duas vezes), o deref tomado por referência e o
+cast de algo que não é endereço; 159 funções que não compilaram voltaram. Saem os parênteses em volta de um `read_T(..)`
+sozinho. As âncoras de mutação quebradas foram refeitas reaplicando a conversão na função antiga com a mutação; dez
+âncoras antigas ambíguas ganharam contexto único (81 → 71). Prova: 7cc445c2 ×2, detector igual, comparação 0; as 318
+mutações mudadas compilam (em lotes).
+
 ## Migração para os registros tipados, leva 21: locais em português e transmutes repetidos
 
 `traduzir_locais.py` ganhou 160 palavras (rodada 20): 364 nomes locais em 285 funções passaram ao inglês (locais em

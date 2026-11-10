@@ -29,6 +29,16 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 22: one memory dialect
+
+`unificar_acessos.py`: 5,697 raw pointer accesses in 1,558 functions became the unaligned accessors of `motor/mem.rs`
+(`*((E) as *const T)` → `read_T(E)`, `*((E) as *mut T) = V` → `write_T(E, V)`, `read_unaligned` and `write_unaligned`
+likewise). Left: compound assignment (`+=` would evaluate E twice), a deref taken by reference and a cast of something
+that is not an address; 159 functions that did not compile went back. Parentheses around a lone `read_T(..)` go. The
+broken mutation anchors were redone by re-running the rewrite on the old function with the mutation applied; ten old
+ambiguous anchors got unique context (81 → 71). Proof: 7cc445c2 ×2, detector equal, comparison 0; the 318 changed
+mutations compile (in batches).
+
 ## Migration to typed records, batch 21: Portuguese locals and repeated transmutes
 
 `traduzir_locais.py` got 160 words (round 20): 364 local names in 285 functions are now English (Portuguese locals 856 →
