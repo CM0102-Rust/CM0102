@@ -29,6 +29,15 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 20: functions return their record type
+
+`tipar_retornos.py`: 29 of our functions that returned a record as a bare `usize` (`contract_of_staff`,
+`friendly_club_by_id`, `staff_records_staff_by_id`, `transfer_manager_main_contract_stored`...) return the type, voted by
+how the callers use the value (`Club(f(..))` or `f(..) + club::FIELD`); the compiler fixes the rest. `--ajustar` now
+handles an `if`/`else` whose branches ended up with different types. `limpar_tipos.py` drops a rewrap of the same type
+(`Club(x.club().addr())` → `x.club()`) when the function still compiles (305 functions). Proof: 7cc445c2 ×2, detector
+equal, comparison 0; the changed mutations compile.
+
 ## Migration to typed records, batch 19: ten more typed pointer fields
 
 `ponteiros_registros.py` found ten more pointer fields by use: `staff::PLAYER` and `match_player::PLAYER` →

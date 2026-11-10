@@ -28,6 +28,15 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 20: as funções devolvem o tipo do registro
+
+`tipar_retornos.py`: 29 funções nossas que devolviam um registro em `usize` (`contract_of_staff`, `friendly_club_by_id`,
+`staff_records_staff_by_id`, `transfer_manager_main_contract_stored`...) passam a devolver o tipo, votado pelo uso que as
+chamadas fazem do valor (`Club(f(..))` ou `f(..) + club::CAMPO`); o compilador ajusta o resto. O `--ajustar` passou a
+tratar o `if`/`else` cujos ramos ficaram de tipos diferentes. `limpar_tipos.py` tira o reembrulho do mesmo tipo
+(`Club(x.club().addr())` → `x.club()`) quando a função continua compilando (305 funções). Prova: 7cc445c2 ×2,
+detector igual, comparação 0; as mutações mudadas compilam.
+
 ## Migração para os registros tipados, leva 19: mais dez campos-ponteiro com tipo
 
 `ponteiros_registros.py` achou, pelo uso, mais dez campos-ponteiro: `staff::PLAYER` e `match_player::PLAYER` →
