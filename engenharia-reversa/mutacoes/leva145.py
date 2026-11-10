@@ -2,7 +2,7 @@
 # python mutacoes.py mutacoes\leva145.py --carreira 2002-06-01
 MUTACOES = [
     ('l_limpeza', "*((f + match_player::POSITION) as *mut u8) = 0xfb;", "*((f + match_player::POSITION) as *mut u8) = 0x05;"),
-    ('l_pontape', "narrate(if *((m + engine::CLOCK) as *mut i16) > 1 { 0x1f74 } else { 0x212f }", "narrate(if *((m + engine::CLOCK) as *mut i16) > 1 { 0x1f74 } else { 0x1f74 }"),
+    ('l_pontape', "narrate(if *((m + engine::CLOCK) as *mut i16) > 1 { event::KICK_OFF } else { event::START_MATCH }", "narrate(if *((m + engine::CLOCK) as *mut i16) > 1 { 0x1f74 } else { 0x1f74 }"),
     ('l_tentativas', "let c = random(0x14) as i8;", "let c = random(0x13) as i8;"),
     ('l_sorteio5', "} else if random(5) == 0 && call_thiscall0(FN_CM3_MATCH_ENGINE_AWARD_PENDING_FOUL, m)", "} else if random(6) == 0 && call_thiscall0(FN_CM3_MATCH_ENGINE_AWARD_PENDING_FOUL, m)"),
     ('l_sorteio7', "            } else if random(7) == 0 {\n                let v = if read_i8(m + engine::PENDING_PLAY_KIND)", "            } else if random(8) == 0 {\n                let v = if read_i8(m + engine::PENDING_PLAY_KIND)"),

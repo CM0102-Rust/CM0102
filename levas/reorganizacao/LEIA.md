@@ -28,6 +28,18 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 15: os códigos de narração (leitor de fora, rodada 10, item 4)
+
+`aplicar_eventos.py` lê os identificadores do `Data/events_eng.cfg` do próprio jogo (`# EVENT_HAND_BALL` sobre
+`= 72, ...`; o código que o exe passa ao `Match_Events::add_event` é 8000 + o número do evento) e gera
+`rust/src/motor/events.rs`: o módulo `event`, 677 constantes (`event::HAND_BALL = 8072`), nível do nome "jogo" (o arquivo
+do próprio jogo dá o nome). Só os identificadores entram, nenhum texto da narração. Os literais trocam SÓ onde o valor
+é com certeza um código: o argumento na posição de um parâmetro `code`/`codigo` (ou `abertura`/`common`/`quieta`) das
+closures e funções de narração, e o primeiro elemento do vetor passado com `FN_MATCH_EVENTS_ADD_EVENT`; os outros
+números do mesmo intervalo (a grade 0x21b6, reputações 8000, flags 0x2000) ficam. 516 literais viraram nomes
+(`narrate(call, event::SILENT_OFF_OFF_OFF, ..)`). Prova: 7cc445c2 ×2, detector igual, comparação 0; as 17 mutações
+mudadas compilam.
+
 ## Migração para os registros tipados, leva 14b: a limpeza
 
 `limpar_tipos.py`: `(x.f()).addr()` → `x.f().addr()` (387 → 2), `x == Club(0)` → `x.is_null()` (238 → 10) e

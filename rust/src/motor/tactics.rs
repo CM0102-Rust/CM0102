@@ -375,7 +375,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                     more((mo + engine::CARDS) as *mut u8);
                     player_left_pitch_with(Engine(m), MatchPlayer(p), 1, call);
                     team_strength(m, other as i8);
-                    narrate(call, 0x1ff8, c, other);
+                    narrate(call, event::SENT_OFF, c, other);
                 };
                 if random(word(0x1ea, other)) > random(0x61a8) {
                     crate::comparison::branch("quick simulation sending off");
@@ -474,12 +474,12 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                         goleiros(other);
                         if local_28 != 0 {
                             crate::comparison::branch("quick simulation penalty goal");
-                            narrate(call, 0x1fcf, c9, side);
+                            narrate(call, event::SCORED_PENALTY, c9, side);
                             more((ml + 0xf5c1) as *mut u8);
                             more((p + match_player::PENALTIES_TAKEN) as *mut u8);
                             more((p + match_player::PENALTIES_SCORED) as *mut u8);
                         } else {
-                            narrate(call, 0x1fcc, c9, side);
+                            narrate(call, event::GOAL_ONE, c9, side);
                             if c20 {
                                 let o = match random(4) {
                                     0 | 1 => 0xf5c3,
@@ -514,7 +514,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                         if local_28 != 0 {
                             crate::comparison::branch("quick simulation penalty missed");
                             let c = choose_by_role_c(m, side as u32, local_28 as u32);
-                            narrate(call, 0x1fce, c, side);
+                            narrate(call, event::MISSED_PENALTY, c, side);
                             let p = jog(side, c as i8);
                             more((p + match_player::PENALTIES_TAKEN) as *mut u8);
                             add(MatchPlayer(p), -500);
@@ -623,7 +623,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
             more((p + match_player::GOALS) as *mut u8);
             add(MatchPlayer(p), 0x1db);
             goleiros(1 - s);
-            narrate(call, 0x1fcc, c, s);
+            narrate(call, event::GOAL_ONE, c, s);
         }
     }
     // the injuries (two passes over the last side of the turn)

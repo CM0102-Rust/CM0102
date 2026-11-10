@@ -2328,7 +2328,7 @@ pub(crate) unsafe fn substitute_with(c: usize, goalkeeper: u8, call: &mut dyn Fn
             None
         };
         if let Some(p) = cansado {
-            call(FN_MATCH_EVENTS_ADD_EVENT, commentator, [0x211d, m.addr() as u32, u32::MAX, (read_i8(p + match_player::SIDE) == 0) as u32, u32::MAX]);
+            call(FN_MATCH_EVENTS_ADD_EVENT, commentator, [event::BOO_SPECIFIC_PLAYER, m.addr() as u32, u32::MAX, (read_i8(p + match_player::SIDE) == 0) as u32, u32::MAX]);
         }
         let machucado = if comentarios && {
             let r = random(read_i16(sai + match_player::MATCH_RATING) as i32 / 30 + read_i16(sai + 0x33) as i32 - 0xe9);
@@ -2344,7 +2344,7 @@ pub(crate) unsafe fn substitute_with(c: usize, goalkeeper: u8, call: &mut dyn Fn
             None
         };
         if let Some(p) = machucado {
-            call(FN_MATCH_EVENTS_ADD_EVENT, commentator, [0x211e, m.addr() as u32, u32::MAX, read_i8(p + match_player::SIDE) as u8 as u32, u32::MAX]);
+            call(FN_MATCH_EVENTS_ADD_EVENT, commentator, [event::APPLAUD_SPECIFIC_PLAYER, m.addr() as u32, u32::MAX, read_i8(p + match_player::SIDE) as u8 as u32, u32::MAX]);
         }
         let cod = if read_i8(sai + match_player::INJURY_MINUTE) > -1 { 0x20d7 } else { 0x1f5b };
         let a = [cod, m.addr() as u32, read_i8(entra + match_player::COMMENTARY_ID) as u8 as u32, read_i8(entra + match_player::SIDE) as u8 as u32, read_i8(sai + match_player::COMMENTARY_ID) as u8 as u32];
@@ -2437,7 +2437,7 @@ pub(crate) unsafe fn rebuild_team_with(c: usize, call: &mut dyn FnMut(usize, usi
         request_buffers(&[(sheets.as_ptr() as usize, 44)], &[]);
         if call(FN_MATCH_MAN_CHOOSE_COMPUTER_TACTIC, c, [sheets.as_ptr() as u32, 0xb, 0x8c1, 2, 0]) as u8 != 0 {
             let m = Engine(read_usize(c + match_manager::ENGINE));
-            call(FN_MATCH_EVENTS_ADD_EVENT, m.commentator(), [0x2007, m.addr() as u32, u32::MAX, read_i8(c + match_manager::SIDE) as u8 as u32, u32::MAX]);
+            call(FN_MATCH_EVENTS_ADD_EVENT, m.commentator(), [event::CHANGE_FORMATION, m.addr() as u32, u32::MAX, read_i8(c + match_manager::SIDE) as u8 as u32, u32::MAX]);
         }
     }
     let mut pos = [0i8; 20];

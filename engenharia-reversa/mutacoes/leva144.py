@@ -21,7 +21,7 @@ MUTACOES = [
     ('c_acao', "action = if random(if (p.action() as i16) != moves::HOLD_BALL as i16 { 2 } else { 10 }) != 0 { 4 } else { 2 };", "action = if random(if (p.action() as i16) != moves::HOLD_BALL as i16 { 3 } else { 10 }) != 0 { 4 } else { 2 };"),
     ('c_vira', "if y0() < 9 { y0() + 3 } else { 0xb }", "if y0() < 9 { y0() + 2 } else { 0xb }", "dribble turns towards goal"),
     ('c_tabela', "(p.space_on_ball() as i32 / 3 + 0x113) as i16);", "(p.space_on_ball() as i32 / 3 + 0x114) as i16);", "dribble one-two returned"),
-    ('c_narra', "call(FN_MATCH_EVENTS_ADD_EVENT, read_usize(m.addr() + engine::COMMENTATOR), [0x1f44,", "call(FN_MATCH_EVENTS_ADD_EVENT, read_usize(m.addr() + engine::COMMENTATOR), [0x1f45,"),
+    ('c_narra', "call(FN_MATCH_EVENTS_ADD_EVENT, read_usize(m.addr() + engine::COMMENTATOR), [event::GREAT_FIRST_TOUCH,", "call(FN_MATCH_EVENTS_ADD_EVENT, read_usize(m.addr() + engine::COMMENTATOR), [0x1f45,"),
     ('c_media', "v / 2 + la4 / 2", "v / 2 + la4 / 3"),
     ('c_ponta', "nc += 500;", "nc += 600;"),
 ]

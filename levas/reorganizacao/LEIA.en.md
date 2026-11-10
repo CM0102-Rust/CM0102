@@ -29,6 +29,18 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 15: the commentary codes (outside reader, round 10, item 4)
+
+`aplicar_eventos.py` reads the identifiers of the game's own `Data/events_eng.cfg` (`# EVENT_HAND_BALL` above
+`= 72, ...`; the code the exe passes to `Match_Events::add_event` is 8000 + the event number) and generates
+`rust/src/motor/events.rs`: module `event`, 677 constants (`event::HAND_BALL = 8072`), name level "game" (the game's own
+file names it). Only the identifiers go in, none of the commentary texts. Literals change ONLY where the value is
+certainly a code: the argument in the position of a `code`/`codigo` (or `abertura`/`common`/`quieta`) parameter of the
+narration closures and functions, and the first element of the array passed with `FN_MATCH_EVENTS_ADD_EVENT`; the other
+numbers in the same range (the grid 0x21b6, reputations 8000, flags 0x2000) stay. 516 literals became names
+(`narrate(call, event::SILENT_OFF_OFF_OFF, ..)`). Proof: 7cc445c2 ×2, detector equal, comparison 0; the 17 changed
+mutations compile.
+
 ## Migration to typed records, batch 14b: the cleanup
 
 `limpar_tipos.py`: `(x.f()).addr()` → `x.f().addr()` (387 → 2), `x == Club(0)` → `x.is_null()` (238 → 10) and

@@ -3120,6 +3120,9 @@ pub(crate) use self::discipline::*;
 #[path = "motor/dispute.rs"]
 pub(crate) mod dispute;
 pub(crate) use self::dispute::*;
+#[path = "motor/events.rs"]
+pub(crate) mod events;
+pub(crate) use self::events::*;
 #[path = "motor/exe_calls.rs"]
 pub(crate) mod exe_calls;
 pub(crate) use self::exe_calls::*;

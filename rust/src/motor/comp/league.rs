@@ -87,24 +87,24 @@ pub(crate) unsafe fn comment_standing_with(this: Engine, side: u32, call: AddEve
     };
     let bl = side as u8 as i8;
     if read_i16(t() + 0x32) == 0 && count_t() == 0 && read_i16(t() + 0x30) == 0x82 && resolvido(bl) {
-        fala(call, 0x2171, side);
+        fala(call, event::THROUGH_TO_FINAL, side);
         return;
     }
     if count_t() != 0 {
         let club = *((t() + if bl != 0 { 0x20 } else { 0x1c }) as *const usize);
         if exe::league_would_result_clinch_title(object(), club, t()) != 0 {
-            fala(call, 0x2170, side);
+            fala(call, event::WON_COMPETITION, side);
             return;
         }
     } else if read_i16(t() + 0x30) == 0x96 && resolvido(bl) {
-        fala(call, 0x2170, side);
+        fala(call, event::WON_COMPETITION, side);
         return;
     }
     if this.live_match() != 0 {
         let (mut casa, mut fora, mut classificado, mut x, mut y) = (0i8, 0i8, 0u8, 0u8, 0u8);
         exe::cm3_match_engine_get_goal_margin(this, bl, &mut casa, &mut fora, &mut classificado, &mut x, &mut y, 0);
         if casa > fora || (casa == fora && classificado != 0) {
-            fala(call, 0x2120, side);
+            fala(call, event::SILENT_WON_MATCH, side);
         } else {
             let mut sum = 0.0f64;
             let mut n = 0i8;
@@ -121,12 +121,12 @@ pub(crate) unsafe fn comment_standing_with(this: Engine, side: u32, call: AddEve
             let x = average * read_f64(rdata::F64_0_5) - read_f64(rdata::F64_2);
             if bl == 0 {
                 if average < read_f64(rdata::F64_7) && x * strength(0x20) < strength(0x1c) {
-                    fala(call, 0x2121, 0);
+                    fala(call, event::BOO_OFF_PITCH, 0);
                 }
                 return;
             }
             if average < read_f64(rdata::F64_6_67) && x * strength(0x1c) < strength(0x20) * read_f64(rdata::F64_0_8) {
-                fala(call, 0x2121, side);
+                fala(call, event::BOO_OFF_PITCH, side);
             }
         }
     }
@@ -143,7 +143,7 @@ pub(crate) unsafe fn comment_standing_with(this: Engine, side: u32, call: AddEve
     } else if read_i16(t() + 0x30) == 0x96 && resolvido(0) {
         return;
     }
-    fala(call, 0x2001, 0);
+    fala(call, event::FINAL_WHISTLE, 0);
 }
 
 /// Adds the match commentary about side `lado`'s qualification situation (group decided, tie already resolved, ahead on

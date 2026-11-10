@@ -8,7 +8,7 @@ MUTACOES = [
     ('f_area', "read_i8(m.pending_play_offender().addr() + 0x27) == 1 { (10..=11).contains(&y) }", "read_i8(m.pending_play_offender().addr() + 0x27) == 1 { (9..=11).contains(&y) }"),
     ('f_penalti', "*d = (*d).wrapping_sub(500);\n            sound = 0x1f7a;", "*d = (*d).wrapping_sub(499);\n            sound = 0x1f7a;"),
     ('f_parada', "matches!(k, 0 | 5..=13 | 0x3b | 0x3c)", "matches!(k, 0 | 5..=12 | 0x3b | 0x3c)"),
-    ('f_nove', "if random(9) == 0 {\n        narrate(call, 0x20df", "if random(8) == 0 {\n        narrate(call, 0x20df"),
+    ('f_nove', "if random(9) == 0 {\n        narrate(call, event::HARSH_DECISION", "if random(8) == 0 {\n        narrate(call, event::HARSH_DECISION"),
     ('f_lado', "let side_of = |p: MatchPlayer| if sofreu { zero(p) } else { ((p.side() as u8) as u32) };", "let side_of = |p: usize| if sofreu { (read_u8(p + match_player::SIDE) as u32) } else { zero(p) };"),
     ('p_achou', "                *((this.addr() + 0x1a6) as *mut u8) = 0;\n                *((this.addr() + engine::SIDE_PLAYED_BALL) as *mut u8) = 0;\n                return 1;", "                *((this.addr() + 0x1a6) as *mut u8) = 0;\n                *((this.addr() + engine::SIDE_PLAYED_BALL) as *mut u8) = 1;\n                return 1;"),
     ('f_cansar', "call(FN_MATCH_PLAYER_REACT_TO_FOUL_DECISION, m.pending_play_offender().addr(), [0; 5]);", "call(FN_MATCH_PLAYER_REACT_TO_FOUL_DECISION, m.pending_play_offender().addr(), [1, 0, 0, 0, 0]);"),

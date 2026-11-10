@@ -12,5 +12,5 @@ MUTACOES = [
     ('r_limite', "let mut lim = ftol((1500.0 - p * p * 100.0)", "let mut lim = ftol((1501.0 - p * p * 100.0)"),
     ('r_domina', "            j.set_match_rating((j.match_rating()).wrapping_add(0x1c));", "            j.set_match_rating((j.match_rating()).wrapping_add(0x1d));", "respond controlled"),
     ('r_goleiro_perde', "        if random(10) != 0 {\n            (1, 0)", "        if random(9) != 0 {\n            (1, 0)", "respond goalkeeper lost"),
-    ('r_perde', "narrate(call, if kind <= 2 { 0x213e } else { 0x1f71 }", "narrate(call, if kind <= 1 { 0x213e } else { 0x1f71 }", "respond lost"),
+    ('r_perde', "narrate(call, if kind <= 2 { event::SEMI_INTERCEPT } else { event::HEAD_IT }", "narrate(call, if kind <= 1 { event::SEMI_INTERCEPT } else { event::HEAD_IT }", "respond lost"),
 ]

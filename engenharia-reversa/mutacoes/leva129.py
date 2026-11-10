@@ -12,7 +12,7 @@ MUTACOES = [
     ('j_registra', "exe::cm3_match_engine_set_pending_foul(m, lance as u16, j.addr() as u32, 0, 0, t, (j.cell_x() as u8), (j.cell_y() as u8), cartao, grav);", "exe::cm3_match_engine_set_pending_foul(m, lance as u16, j.addr() as u32, 0, 0, t, (j.cell_y() as u8), (j.cell_x() as u8), cartao, grav);", "play foul recorded"),
     ('j_penalti', "j.set_match_rating((j.match_rating()).wrapping_sub(500));\n            } else {", "j.set_match_rating((j.match_rating()).wrapping_sub(499));\n            } else {", "play penalty"),
     ('j_venceu', "j.set_match_rating((j.match_rating()).wrapping_add(0x1e));", "j.set_match_rating((j.match_rating()).wrapping_add(0x1f));", "play won"),
-    ('j_estilo', "narrar7(call, 0x1f65, (j.commentary_id() as u32), ((j.side() as u8) as u32), u32::MAX, style);", "narrar7(call, 0x1f65, (j.commentary_id() as u32), ((j.side() as u8) as u32), u32::MAX, style.wrapping_add(1));", "play won"),
+    ('j_estilo', "narrar7(call, event::BLOCK_SHOT, (j.commentary_id() as u32), ((j.side() as u8) as u32), u32::MAX, style);", "narrar7(call, event::BLOCK_SHOT, (j.commentary_id() as u32), ((j.side() as u8) as u32), u32::MAX, style.wrapping_add(1));", "play won"),
     ('j_meia_lua', "espirra(call, random(3), 0);", "espirra(call, random(3), j.addr());", "play arc"),
     ('j_perdeu', "j.set_match_rating((j.match_rating()).wrapping_add(0x14));", "j.set_match_rating((j.match_rating()).wrapping_add(0x15));", "play lost"),
 ]

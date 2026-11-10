@@ -2,7 +2,7 @@
 MUTACOES = [
     ('p_passou', "    let passed = |end: i32| m.clock() as i32 > m.stoppage_time() as i32 + end;", "    let passed = |end: i32| m.clock() as i32 >= m.stoppage_time() as i32 + end;"),
     ('p_intervalo', "            *tb(fixture::HOME_GOALS_HALF_TIME) = m.score();", "            *tb(fixture::HOME_GOALS_HALF_TIME) = m.score_side1();"),
-    ('p_20f1', "            fala(call, 0x20f1);", "            fala(call, 0x20f2);"),
+    ('p_20f1', "            fala(call, event::HALF_TIME_WHISTLE);", "            fala(call, 0x20f2);"),
     ('p_3de', "            call(FN_CM3_MATCH_ENGINE_REBUILD_TEAM_MATCH_STATS, m.addr(), [0x3de, 0, 0, 0, 0]);\n            recuperar(0);", "            call(FN_CM3_MATCH_ENGINE_REBUILD_TEAM_MATCH_STATS, m.addr(), [0x3df, 0, 0, 0, 0]);\n            recuperar(0);"),
     ('p_teto0', "            recuperar(0);", "            recuperar(1);"),
     ('p_saida', "        m.set_next_kickoff_side((a == 0) as i8);", "        m.set_next_kickoff_side(a);"),

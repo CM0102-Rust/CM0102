@@ -7,5 +7,5 @@ MUTACOES = [
     ('n_7', "if average < read_f64(rdata::F64_7) &&", "if average < read_f64(rdata::F64_7) + 0.5 &&"),
     ('n_08', "strength(0x20) * read_f64(rdata::F64_0_8)", "strength(0x20)"),
     ('n_2120', "casa == fora && classificado != 0", "casa == fora && classificado == 0"),
-    ('n_2001', "fala(call, 0x2001, 0);", "fala(call, 0x2001, 1);"),
+    ('n_2001', "fala(call, event::FINAL_WHISTLE, 0);", "fala(call, event::FINAL_WHISTLE, 1);"),
 ]
