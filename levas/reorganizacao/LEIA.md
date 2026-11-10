@@ -28,6 +28,16 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 19: mais dez campos-ponteiro com tipo
+
+`ponteiros_registros.py` achou, pelo uso, mais dez campos-ponteiro: `staff::PLAYER` e `match_player::PLAYER` →
+`PlayerSheet`, `staff::NON_PLAYER` e `match_manager::MANAGER_SHEET` → `NonPlayer`, `offer::EXCHANGE_PLAYERS` e as listas
+do amistoso → `Llist`, `match_manager::ENGINE` → `Engine`, `CLUB` → `Club`, `FIXTURE` → `Fixture`. O gerador
+(`registros.py`) passou a manter como ponteiro um campo tipado numa rodada anterior (gerava `read_Club` quando o
+`ponteiros.json` já não o listava). `limpar_tipos.py` lê todos os tipos do `records.rs` e tira parênteses duplos em volta
+de uma cadeia (`((sheet())).addr()` → `sheet().addr()`). Prova: 7cc445c2 ×2, detector igual, comparação 0; as 25
+mutações mudadas compilam.
+
 ## Migração para os registros tipados, leva 18: deslocamentos com nome e mais oito registros
 
 `nomear_deslocamentos.py`: numa função, o deslocamento cru sobre uma variável tipada (`x.addr() + 0x27`, ou uma cadeia

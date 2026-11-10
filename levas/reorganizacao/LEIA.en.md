@@ -29,6 +29,16 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 19: ten more typed pointer fields
+
+`ponteiros_registros.py` found ten more pointer fields by use: `staff::PLAYER` and `match_player::PLAYER` →
+`PlayerSheet`, `staff::NON_PLAYER` and `match_manager::MANAGER_SHEET` → `NonPlayer`, `offer::EXCHANGE_PLAYERS` and the
+friendly lists → `Llist`, `match_manager::ENGINE` → `Engine`, `CLUB` → `Club`, `FIXTURE` → `Fixture`. The generator
+(`registros.py`) now keeps as a pointer a field typed in an earlier run (it generated `read_Club` when `ponteiros.json`
+no longer listed it). `limpar_tipos.py` reads every type from `records.rs` and removes doubled parentheses around a chain
+(`((sheet())).addr()` → `sheet().addr()`). Proof: 7cc445c2 ×2, detector equal, comparison 0; the 25 changed mutations
+compile.
+
 ## Migration to typed records, batch 18: named offsets and eight more records
 
 `nomear_deslocamentos.py`: in a function, a raw offset on a typed variable (`x.addr() + 0x27`, or a chain
