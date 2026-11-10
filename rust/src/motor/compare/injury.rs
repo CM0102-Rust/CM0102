@@ -207,15 +207,16 @@ pub(crate) unsafe extern "thiscall" fn compare_post_due_recovery_news(this: usiz
 /// registro de 31 bytes em [this]) de cada pessoa das vagas. Partida com batida que chega ao tipo da lesão: só a original (a lesão nova aloca e manda a
 /// notícia; a gravidade da primeira batida pode ser sobra de pilha).
 pub(crate) unsafe extern "thiscall" fn compare_apply_match_effects(this: usize, game: usize, partida: usize) {
+    let partida = MatchRecord(partida);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_APPLY_MATCH_EFFECTS);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     let mut batida = false;
     for lado in 0..2usize {
         for k in 0..0x14usize {
-            let slot = partida + match_record::ROW_MINUTE_OFF + 0x625 * lado + 0x49 * k;
+            let slot = partida.addr() + match_record::ROW_MINUTE_OFF + 0x625 * lado + 0x49 * k;
             let Some((id, pessoa)) = staff_of_match_slot(slot) else { continue };
             if pessoa == 0 {
-                return o(this, game, partida);
+                return o(this, game, partida.addr());
             }
             reg.push(((read_i32(this) as u32).wrapping_add((id as u32).wrapping_mul(31)).wrapping_add(0xa) as usize, 4));
             if *((slot - 0x11) as *const u8) != 0 && read_i32(this + injury_fields::MATCH_HIT_LIST) != 0 && has_injury_hit(this, id, Staff(pessoa)) {
@@ -225,13 +226,13 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_match_effects(this: usize, 
     }
     if batida {
         crate::comparison::branch("apply_match_effects with collision");
-        return o(this, game, partida);
+        return o(this, game, partida.addr());
     }
     if read_i32(this + injury_fields::MATCH_HIT_LIST) != 0 {
         reg.push((read_i32(this + injury_fields::MATCH_HIT_LIST) as usize + 0xa, 4)); // the cursor of the kicks list
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, game, partida), || crate::rng::without_counting(|| apply_match_effects(this, game, partida)));
-    SCOREBOARD.record(igual, || format!("apply_match_effects({:x}, {:x}) {:x?} x {:x?}", game, partida, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, game, partida.addr()), || crate::rng::without_counting(|| apply_match_effects(this, game, partida.addr())));
+    SCOREBOARD.record(igual, || format!("apply_match_effects({:x}, {:x}) {:x?} x {:x?}", game, partida.addr(), mo, mr));
 }
 
 /// Comparer for `find_match_injury`.
@@ -239,8 +240,8 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_match_effects(this: usize, 
 /// [pt] Comparador: lado a lado no cursor da lista e na devolução.
 pub(crate) unsafe extern "thiscall" fn compare_find_match_injury(this: usize, person: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_FIND_MATCH_INJURY);
-    let list = read_i32(this + injury_fields::MATCH_HIT_LIST) as usize;
-    let reg: &[(usize, usize)] = if list == 0 { &[] } else { &[(list + llist::CURSOR, 4)] };
+    let list = Llist(read_i32(this + injury_fields::MATCH_HIT_LIST) as usize);
+    let reg: &[(usize, usize)] = if list.is_null() { &[] } else { &[(list.addr() + llist::CURSOR, 4)] };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(reg, || o(this, person), || find_match_injury(this, person));
     SCOREBOARD.record(igual && r == n, || format!("find_match_injury({:x}) original={:x} {:x?} rust={:x} {:x?}", person, r, mo, n, mr));
     r

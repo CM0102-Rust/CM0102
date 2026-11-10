@@ -666,7 +666,8 @@ pub(crate) unsafe extern "thiscall" fn manager_manager_adjust_board_confidence(t
 /// [pt] { 0x5d5ab0 } (thiscall, game.cpp): o gerente da lista de observados guardado em +0x856 do gerente
 /// de transferências.
 pub(crate) unsafe extern "thiscall" fn transfer_manager_get_shortlist_manager(manager: usize) -> usize {
-    core::ptr::read_unaligned((manager + transfer_manager_fields::SHORTLIST_MANAGER) as *const usize)
+    let manager = TransferManagerFields(manager);
+    manager.shortlist_manager()
 }
 
 /// the player's 6-byte entry in the training table

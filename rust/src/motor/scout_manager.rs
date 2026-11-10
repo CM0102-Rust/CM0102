@@ -210,7 +210,8 @@ pub(crate) static mut SCOUT_REPORT_GROUPS: Option<Vec<(u32, u32, u8)>> = None;
 /// mesmo jogador (+0x2b) e do mesmo clube (+0x50) vira uma notícia de relatório (0x7f9a60 com o primeiro e quantos).
 /// Libera o vetor (0x9452ca). A lista fica com o cursor no começo.
 pub(crate) unsafe extern "thiscall" fn send_scout_reports(this: usize, list: usize) {
-    let count = read_i16(list);
+    let list = Llist(list);
+    let count = read_i16(list.addr());
     if count == 0 {
         return;
     }
@@ -223,7 +224,7 @@ pub(crate) unsafe extern "thiscall" fn send_scout_reports(this: usize, list: usi
         show_error_at(0xa7b094, 0x7dd);
         return;
     }
-    core::ptr::write_unaligned((list + llist::CURSOR) as *mut usize, read_usize(list + llist::HEAD));
+    list.set_cursor(list.head());
     let mut dst = v;
     let mut item = exe::llist_get_next(list);
     while item != 0 {
@@ -360,10 +361,10 @@ pub(crate) unsafe fn mark_clubs_three_days(this: usize, d: usize) {
 /// 0x9cf78c, 0x9cf964), com mandante que não é a seleção B (0x5409b0) e a marca +0x40: os convocados por clube
 /// (0x7771c0) das duas seleções; com o bit 0x200 de +0x4d, também os das seleções B (0x53b4f0 da nação +0x53 de cada
 /// uma) e, sem ele e com o 0x100, os das duas com `b` = 1.
-pub(crate) unsafe fn select_squads_for_fixtures(this: usize, l: usize) {
+pub(crate) unsafe fn select_squads_for_fixtures(this: usize, l: Llist) {
     // 0x76bab0: push p; mov ecx, edi -> thiscall ret 4; 0x5409b0 e 0x53b4f0: push; add esp, 4 -> cdecl;
     // 0x7771c0: push p; push b; push time; mov ecx, edi -> thiscall ret 0xc
-    write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
+    l.set_cursor(l.head());
     let mut p = exe::llist_get_next(l);
     while p != 0 {
         crate::comparison::branch("cqc_12 calls up");
@@ -394,12 +395,12 @@ pub(crate) unsafe fn select_squads_for_fixtures(this: usize, l: usize) {
 ///
 /// [pt] Quantos itens da lista em +0 são do dia `dia` (+0x10), percorrendo os nós sem mexer no cursor.
 pub(crate) unsafe fn count_items_on_day(this: usize, day: i16) -> u32 {
-    let l = read_usize(this);
-    if l == 0 {
+    let l = Llist(read_usize(this));
+    if l.is_null() {
         return 0;
     }
     let mut n = 0;
-    let mut no = read_usize(l + llist::HEAD);
+    let mut no = l.head();
     while no != 0 {
         if read_i16(read_usize(no) + 0x10) == day {
             n += 1;
@@ -602,7 +603,7 @@ pub(crate) const SCOUT_MANAGER_DATE_STATICS: [(usize, usize); 8] = [(G_ADD_DAYS_
 ///
 /// [pt] O corpo da 0x5cbb00. No `ensaio` (o comparador), nada se grava e nada se chama além das consultas: devolve o par
 /// (primeira entrada, quantas) que iria à 0x5cbdf0, ou None se a original não a chamaria.
-pub(crate) unsafe fn update_friendlies_body(this: usize, dry_run: bool) -> Option<(usize, u32)> {
+pub(crate) unsafe fn update_friendlies_body(this: Friendly, dry_run: bool) -> Option<(usize, u32)> {
     // 0x54a110: thiscall(date) (lea ecx); 0x54c770: thiscall(0xae2c90, output, 0xc) (mov ecx, 0xae2c90; 2 push);
     // 0x68d080: thiscall(list) (mov ecx, list; no push); 0x945333: cdecl(array, count, size, comparison) (add esp,
     // 0x10); 0x5cbdd0: thiscall(entry, year) (mov ecx, entry; 1 push); 0x417c10: thiscall(destination, output, source)
@@ -620,13 +621,13 @@ pub(crate) unsafe fn update_friendlies_body(this: usize, dry_run: bool) -> Optio
         crate::comparison::branch("cpy_4 year rollover");
         let mut i = 0i32;
         while i < read_usize(G_NATION_COUNT) as i32 {
-            let l = read_usize(read_usize(this + friendly::NATION_LISTS).wrapping_add(i as usize * 4));
+            let l = read_usize(this.nation_lists().wrapping_add(i as usize * 4));
             if l != 0 {
                 exe::llist_clear(l);
             }
             i += 1;
         }
-        exe::crt_qsort(read_usize(this + friendly::SORTED_NATIONS), read_usize(this + friendly::SORTED_NATION_COUNT) as u32, 4, 0x5cc5f0); // cpy4: the nations by reputation
+        exe::crt_qsort(this.sorted_nations(), (this.sorted_nation_count() as usize) as u32, 4, 0x5cc5f0); // cpy4: the nations by reputation
         // the first World Cup year (year − 2 a multiple of 4) from this one; the high half of the dword the original adds is
         // stack leftover: here, zero
         let mut year = read_u16(G_CURRENT_DATE_YEAR) as u32;
@@ -634,8 +635,8 @@ pub(crate) unsafe fn update_friendlies_body(this: usize, dry_run: bool) -> Optio
             year = year.wrapping_add(1);
         }
         let mut k = 0i32;
-        while k < read_usize(this + friendly::INTL_DATE_COUNT) as i32 {
-            let e = read_usize(this + friendly::INTL_DATE_TABLE).wrapping_add(k as usize * 0x14);
+        while k < (this.intl_date_count() as usize) as i32 {
+            let e = this.intl_date_table().wrapping_add(k as usize * 0x14);
             let mut a = ((*((e + 0xb) as *const i8)) as i16 as u16 as u32).wrapping_add(year);
             if (a & 0xffff) as i32 - read_u16(G_CURRENT_DATE_YEAR) as i32 > 3 {
                 a = a.wrapping_add(0xfffc);
@@ -643,7 +644,7 @@ pub(crate) unsafe fn update_friendlies_body(this: usize, dry_run: bool) -> Optio
             exe::friendly_international_date_resolve(e, a);
             k += 1;
         }
-        exe::crt_qsort(read_usize(this + friendly::INTL_DATE_TABLE), read_usize(this + friendly::INTL_DATE_COUNT) as u32, 0x14, 0x5cc610);
+        exe::crt_qsort(this.intl_date_table(), (this.intl_date_count() as usize) as u32, 0x14, 0x5cc610);
     }
     // the date of 0xdd6ec8 after today + 12 weeks: nothing
     let x_year = read_u16(G_GAME_START_DATE_YEAR);
@@ -651,13 +652,13 @@ pub(crate) unsafe fn update_friendlies_body(this: usize, dry_run: bool) -> Optio
     if x_year > l_year || (x_year == l_year && *(G_GAME_START_DATE as *const i16) > core::ptr::read_unaligned(lim.as_ptr() as *const i16)) {
         return None;
     }
-    if read_u16(this + friendly::INTL_LAST_DAY_DONE) as u32 == today as i16 as i32 as u32 {
+    if this.intl_last_day_done() as u32 == today as i16 as i32 as u32 {
         return None;
     }
     let mut lixo = [0u8; 8];
     exe::date_operator_3d(d, (&mut lixo) as *mut [u8; 8] as usize, lim.as_ptr() as usize);
-    let base = read_usize(this + friendly::INTL_DATE_TABLE);
-    let n = read_usize(this + friendly::INTL_DATE_COUNT);
+    let base = this.intl_date_table();
+    let n = (this.intl_date_count() as usize);
     let p = exe::crt_bsearch(key.as_ptr() as usize, base, n as u32, 0x14, 0x5cc610);
     if p == 0 {
         return None;
@@ -683,7 +684,7 @@ pub(crate) unsafe fn update_friendlies_body(this: usize, dry_run: bool) -> Optio
     }
     crate::comparison::branch("cpy_4 friendlies scheduled");
     exe::friendly_arrange_international_friendlies(this, first, how_many); // cpy4: schedule the friendlies of the date
-    *((this + friendly::INTL_LAST_DAY_DONE) as *mut u16) = read_u16(G_CURRENT_DATE);
+    this.set_intl_last_day_done(read_u16(G_CURRENT_DATE));
     Some((first, how_many))
 }
 

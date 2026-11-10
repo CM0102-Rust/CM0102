@@ -212,17 +212,17 @@ pub(crate) unsafe extern "thiscall" fn update_league_position_records(this: usiz
         }
         let mut i = 0i32;
         while i < read_i16(liga + league::CLUB_COUNT) as i32 {
-            let row = read_usize(liga + league::TABLE).wrapping_add(0x3b * i as usize);
-            let club = read_usize(row);
+            let row = LeagueTableRow(read_usize(liga + league::TABLE).wrapping_add(0x3b * i as usize));
+            let club = read_usize(row.addr());
             i += 1;
-            if read_u8(row + league_table_row::PLAYED) == 0 || club == 0 {
+            if (row.played() as u8) == 0 || club == 0 {
                 continue;
             }
             let t = club_season_record(this, club, 1);
             let s = club_all_time_record(this, club, 1);
             let summary = read_usize(this + club_records_fields::CLUB_ENTRIES).wrapping_add(read_usize(club).wrapping_mul(0x6a));
             let year = (exe::key_nation_get_club_season_year(club) as i16) as u16;
-            let pos = read_u8(row + league_table_row::POSITION);
+            let pos = (row.position() as u8);
             let away = |v: i32| v < 0 || v > read_usize(G_CLUB_COMP_COUNT) as i32;
             if exe::club_records_record_type_applies(1, club, 1) != 0 {
                 let v = read_usize(t + club_record::BEST_POSITION_COMP) as i32;

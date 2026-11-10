@@ -196,7 +196,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_contract_offer(this: usize, t
     let club = terms.club();
     let count = contract_offer_counter(terms.addr());
     let l = read_usize(this + contract_manager_fields::CONTRACT_OFFERS);
-    let item = if read_u8(count) != 0 && l != 0 { find_contract_offer(l, id, club) } else { 0 };
+    let item = if read_u8(count) != 0 && l != 0 { find_contract_offer(Llist(l), id, club) } else { 0 };
     let mut all = vec![(count, 1usize)];
     if item != 0 {
         all.push((item, 0x63));
@@ -243,10 +243,10 @@ pub(crate) unsafe extern "thiscall" fn compare_add_contract_offer(this: usize, t
 /// pela vaga na lista, o contador desce 1; sem ela, fica.
 pub(crate) unsafe extern "thiscall" fn compare_remove_contract_offer_for_transfer(this: usize, person: usize, slot: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32)>(IDX_REMOVE_CONTRACT_OFFER_FOR_TRANSFER);
-    let l = read_usize(this + contract_manager_fields::CONTRACT_OFFERS);
+    let l = Llist(read_usize(this + contract_manager_fields::CONTRACT_OFFERS));
     let mut found = false;
-    if l != 0 {
-        let mut no = read_usize(l + llist::HEAD);
+    if !l.is_null() {
+        let mut no = l.head();
         let mut n = 0;
         while no != 0 && n < 100000 {
             let x = read_usize(no);
@@ -354,12 +354,12 @@ pub(crate) unsafe extern "thiscall" fn compare_process_due_decision_dates(this: 
 /// do clube lidas da lista, sem alocar): a conta e os 111 bytes de cada uma, na ordem.
 pub(crate) unsafe extern "thiscall" fn compare_get_current_contract_offers(this: usize, club: usize, out: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(IDX_GET_CURRENT_CONTRACT_OFFERS);
-    let list = read_u32(this + contract_manager_fields::CONTRACT_OFFERS) as usize;
-    if list == 0 || club == 0 || out == 0 {
+    let list = Llist(read_u32(this + contract_manager_fields::CONTRACT_OFFERS) as usize);
+    if list.is_null() || club == 0 || out == 0 {
         return o(this, club, out);
     }
     let mut plan: Vec<u8> = Vec::new();
-    core::ptr::write_unaligned((list + llist::CURSOR) as *mut u32, read_u32(list + llist::HEAD));
+    list.set_cursor(((list.head() as u32)) as usize);
     let mut item = exe::llist_get_next(list);
     while item != 0 {
         let state = read_u8(item + contract_offer::CONTRACT_TYPE) & 0x3f;
@@ -448,12 +448,12 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_contract(this: usize, pers
 /// e confere o plano feito antes: devolve quantas ofertas da pessoa havia na lista.
 pub(crate) unsafe extern "thiscall" fn compare_resubmit_held_offers(this: usize, id: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_RESUBMIT_HELD_OFFERS);
-    let list = read_usize(this + contract_manager_fields::HELD_OFFERS);
-    if list == 0 {
+    let list = Llist(read_usize(this + contract_manager_fields::HELD_OFFERS));
+    if list.is_null() {
         return o(this, id);
     }
     // the plan: the original restarts the cursor (+0xa) before traversing
-    write_usize(list + llist::CURSOR, read_usize(list + llist::HEAD));
+    list.set_cursor(list.head());
     let mut expected = 0u32;
     let mut item = exe::llist_get_next(list);
     while item != 0 {

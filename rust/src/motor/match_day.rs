@@ -1132,7 +1132,7 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
     for k in 0..16isize {
         let pe = Staff((base as isize + (read(G_STAFF_COUNT) as isize - 1 - k) * 0x6e) as usize);
         if !pe.is_null() && pe.classification() == 1 && !pe.club_job().is_null() {
-            let nation = read(pe.club_job().addr() + 0x57);
+            let nation = read(pe.club_job().addr() + club::DIVISION);
             if nation == (c1.division().addr() as i32) || nation == (c2.division().addr() as i32) {
                 crate::comparison::branch("no human nation manager");
                 return 0;
@@ -1151,7 +1151,7 @@ pub(crate) unsafe extern "C" fn match_without_human(partida: usize) -> u32 {
         return 0;
     }
     if matches!(x, 3..=7) {
-        let q = g(partida.competition().addr() + 0x59);
+        let q = g(partida.competition().addr() + competition::CONTINENT);
         if q != 0 && *((0xb67a58 + g(q)) as *const u8) != 0 {
             crate::comparison::branch("no human national team marked");
             return 0;

@@ -424,8 +424,8 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_staff_from_club(this: usiz
 /// da lista; com vaga a abrir (ou a caixa), só a original.
 pub(crate) unsafe extern "thiscall" fn compare_fix_missing_jobs(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_FIX_MISSING_JOBS);
-    let l = read_usize(this + manager_manager_fields::VACANCY_LIST);
-    let cursor = read_usize(l + llist::CURSOR);
+    let l = Llist(read_usize(this + manager_manager_fields::VACANCY_LIST));
+    let cursor = l.cursor();
     let mut eh_a = 0u32;
     let mut club = read_usize(G_CLUB_TABLE);
     let mut empty = true;
@@ -436,12 +436,12 @@ pub(crate) unsafe extern "thiscall" fn compare_fix_missing_jobs(this: usize) {
         }
         club += 0x245;
     }
-    core::ptr::write_unaligned((l + llist::CURSOR) as *mut usize, cursor);
+    l.set_cursor(cursor);
     if !empty {
         // simplification: 0x69ba50 opens the slot (allocates, draws the candidate): does not run twice; Rust mode and the career prove
         return o(this);
     }
-    let reg = [(l + llist::CURSOR, 4)];
+    let reg = [(l.addr() + llist::CURSOR, 4)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(this), || fix_missing_jobs(this));
     SCOREBOARD.record(igual, || format!("fix_missing_jobs (nenhuma a abrir) {:x?} x {:x?}", mo, mr));
 }
@@ -483,25 +483,26 @@ pub(crate) unsafe extern "thiscall" fn compare_is_staff_suitable_for_job(this: u
 /// a cauda, a conta, o cursor e os vizinhos); a original tira; confere a devolução, o cabeçalho (14 bytes) e os elos
 /// dos vizinhos.
 pub(crate) unsafe extern "thiscall" fn compare_manager_manager_remove(this: usize, given: usize) -> u32 {
+    let this = Llist(this);
     let no = find_list_node_by_bytes(this, given);
-    let before: [u8; 14] = core::ptr::read_unaligned(this as *const [u8; 14]);
+    let before: [u8; 14] = core::ptr::read_unaligned(this.addr() as *const [u8; 14]);
     let (prox, ant) = if no != 0 { (read_usize(no + llist_node::NEXT), read_usize(no + llist_node::PREV)) } else { (0, 0) };
-    let (cabeca, cauda, cursor) = (read_usize(this + llist::HEAD), read_usize(this + llist::TAIL), read_usize(this + llist::CURSOR));
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_MANAGER_MANAGER_REMOVE)(this, given);
-    let after: [u8; 14] = core::ptr::read_unaligned(this as *const [u8; 14]);
+    let (cabeca, cauda, cursor) = (this.head(), this.tail(), this.cursor());
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_MANAGER_MANAGER_REMOVE)(this.addr(), given);
+    let after: [u8; 14] = core::ptr::read_unaligned(this.addr() as *const [u8; 14]);
     let ok = if no == 0 {
         r == 0 && after == before
     } else {
         let count = core::ptr::read_unaligned(before.as_ptr() as *const i16).wrapping_sub(1);
         r == 1
-            && core::ptr::read_unaligned(this as *const i16) == count
-            && read_usize(this + llist::HEAD) == if no == cabeca { prox } else { cabeca }
-            && read_usize(this + llist::TAIL) == if no == cauda { ant } else { cauda }
-            && read_usize(this + llist::CURSOR) == if no == cursor { prox } else { cursor }
+            && core::ptr::read_unaligned(this.addr() as *const i16) == count
+            && this.head() == if no == cabeca { prox } else { cabeca }
+            && this.tail() == if no == cauda { ant } else { cauda }
+            && this.cursor() == if no == cursor { prox } else { cursor }
             && (no == cabeca || read_usize(ant + 6) == prox)
             && (no == cauda || read_usize(prox + llist_node::PREV) == ant)
     };
-    SCOREBOARD.record(ok, || format!("manager_manager_remove({:#x}, {:#x}) original={} nó {:#x} cabeçalho {:x?} -> {:x?}", this, given, r, no, before, after));
+    SCOREBOARD.record(ok, || format!("manager_manager_remove({:#x}, {:#x}) original={} nó {:#x} cabeçalho {:x?} -> {:x?}", this.addr(), given, r, no, before, after));
     r
 }
 

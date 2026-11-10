@@ -14,21 +14,21 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_dispute(this: usize, p: us
         return o(this, p);
     }
     let m = read_usize(this + 4).wrapping_add(read_i32(p) as isize as usize);
-    let list = read_usize(this);
+    let list = Llist(read_usize(this));
     if *(m as *const u8) == 0 {
         let mut reg = vec![(m, 1)];
-        if list != 0 {
-            reg.push((list, 0xe));
+        if !list.is_null() {
+            reg.push((list.addr(), 0xe));
         }
         let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, p), || remove_dispute(this, p));
         SCOREBOARD.record(igual, || format!("remove_dispute(pessoa {:x}) {:x?} x {:x?}", p, mo.0, mr.0));
         return;
     }
     let mut found = 0i16;
-    let count_before = if list != 0 { read_i16(list) } else { 0 };
-    if list != 0 {
-        let cursor = read_usize(list + llist::CURSOR);
-        core::ptr::write_unaligned((list + llist::CURSOR) as *mut u32, read_usize(list + llist::HEAD) as u32);
+    let count_before = if !list.is_null() { read_i16(list.addr()) } else { 0 };
+    if !list.is_null() {
+        let cursor = list.cursor();
+        list.set_cursor((list.head() as u32) as usize);
         for _ in 0..count_before.max(0) {
             let no = exe::llist_get_next(list);
             if no == 0 {
@@ -39,10 +39,10 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_dispute(this: usize, p: us
                 break;
             }
         }
-        core::ptr::write_unaligned((list + llist::CURSOR) as *mut u32, cursor as u32);
+        list.set_cursor((cursor as u32) as usize);
     }
     o(this, p);
-    let count_after = if list != 0 { read_i16(list) } else { 0 };
+    let count_after = if !list.is_null() { read_i16(list.addr()) } else { 0 };
     SCOREBOARD.record(*(m as *const u8) == 0 && count_after == count_before - found,
         || format!("remove_dispute(pessoa {:x}) conta {} -> {} (achou {})", p, count_before, count_after, found));
 }

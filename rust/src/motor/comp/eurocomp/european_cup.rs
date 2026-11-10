@@ -1365,7 +1365,7 @@ pub(crate) unsafe extern "thiscall" fn process_fixture(this: usize, game: usize,
         (game.away_club(), game.home_club())
     } else {
         add_uefa_coefficient(read_usize(a.addr() + 0x53), 1);
-        add_uefa_coefficient(read_usize(game.away_club().addr() + 0x53), 1);
+        add_uefa_coefficient(read_usize(game.away_club().addr() + club::NATION), 1);
         (Club(0), Club(0))
     };
     let _ = perdedor;

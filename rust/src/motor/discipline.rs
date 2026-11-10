@@ -48,7 +48,7 @@ pub(crate) unsafe fn nation_index_range(this: usize, team: Club) -> (usize, usiz
 /// (0x556e90 com 0 e 1). No fim a lista é destruída.
 pub(crate) unsafe extern "thiscall" fn serve_international_bans(this: usize, team: usize) {
     let mut l = [0u8; 14];
-    let list = l.as_mut_ptr() as usize;
+    let list = Llist(l.as_mut_ptr() as usize);
     exe::new_llist(list);
     let (ini, fim) = nation_index_range(this, Club(team));
     if ini != 0 {
@@ -58,7 +58,7 @@ pub(crate) unsafe extern "thiscall" fn serve_international_bans(this: usize, tea
             e += 8;
         }
         // the cursor (+0xa) at the start (+2)
-        core::ptr::write_unaligned((list + llist::CURSOR) as *mut usize, read_usize(list + llist::HEAD));
+        list.set_cursor(list.head());
         let mut p = exe::llist_get_next(list);
         while p != 0 {
             crate::comparison::branch("cqb_9 match served");
@@ -425,8 +425,8 @@ pub(crate) unsafe fn return_bans_plan(this: usize, person: usize) -> ContractRet
     let contrato = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
     let clube = if contrato.is_null() { 0 } else { read_usize(G_CLUB_TABLE).wrapping_add(contrato.club().wrapping_mul(club::SIZE)) };
     let mut p = ContractReturnPlan { contract: contrato.addr(), club: clube, guardadas: Vec::new(), rest: *((r + discipline_record::HELD_BAN_COUNT) as *const u8), soltas: Vec::new() };
-    let list = this + discipline_fields::HELD_BANS;
-    write_u32(list + llist::CURSOR, read_usize(this + discipline_fields::HELD_BANS_HEAD) as u32);
+    let list = Llist(this + discipline_fields::HELD_BANS);
+    list.set_cursor((read_usize(this + discipline_fields::HELD_BANS_HEAD) as u32) as usize);
     let mut slots = [0u8; 20];
     core::ptr::copy_nonoverlapping(r as *const u8, slots.as_mut_ptr(), 20);
     let mut marks = [false; 4];
@@ -481,8 +481,8 @@ pub(crate) unsafe extern "thiscall" fn restore_held_bans(this: usize, person: us
     let contract = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
     write_u32(G_CONTRACT_LOOKUP_RESULT, contract.addr() as u32);
     let club = if contract.is_null() { 0 } else { read_usize(G_CLUB_TABLE).wrapping_add(contract.club().wrapping_mul(club::SIZE)) };
-    let list = this + discipline_fields::HELD_BANS;
-    write_u32(list + llist::CURSOR, read_usize(this + discipline_fields::HELD_BANS_HEAD) as u32);
+    let list = Llist(this + discipline_fields::HELD_BANS);
+    list.set_cursor((read_usize(this + discipline_fields::HELD_BANS_HEAD) as u32) as usize);
     let mut marks = [0u32; 4];
     let mut item = exe::llist_get_next(list);
     while item != 0 && *((r + discipline_record::HELD_BAN_COUNT) as *const i8) > 0 {
@@ -898,16 +898,16 @@ pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: 
 /// guardadas (+0x1c; o cursor +0xa volta ao começo +2), tira (0x68d1f0) cada item do id `*pessoa` enquanto o contador
 /// do registro dele (+0x1c, com sinal) for positivo, descontando um a cada item.
 pub(crate) unsafe extern "thiscall" fn drop_held_bans(this: usize, person: *const u32) {
-    let l = this + discipline_fields::HELD_BANS;
+    let l = Llist(this + discipline_fields::HELD_BANS);
     let n = stored_suspension_counter(this, *person as usize);
-    core::ptr::write_unaligned((l + llist::CURSOR) as *mut usize, read_usize(l + llist::HEAD));
-    let mut e = contract_manager_list_next(l);
+    l.set_cursor(l.head());
+    let mut e = contract_manager_list_next(l.addr());
     while e != 0 && *n > 0 {
         if read_usize(e) as u32 == *person {
             list_remove(l, e);
             *n = (*n).wrapping_sub(1); // one fewer
         }
-        e = contract_manager_list_next(l);
+        e = contract_manager_list_next(l.addr());
     }
 }
 
@@ -1062,8 +1062,8 @@ pub(crate) unsafe extern "thiscall" fn discipline_remove_player(this: usize, id:
         write_u32(v + ban_slot::VALUE, 0xffff_ffff);
         write_u32(e, 0xffff_ffff);
     }
-    let list = this + discipline_fields::HELD_BANS;
-    write_u32(list + llist::CURSOR, read_usize(this + discipline_fields::HELD_BANS_HEAD) as u32);
+    let list = Llist(this + discipline_fields::HELD_BANS);
+    list.set_cursor((read_usize(this + discipline_fields::HELD_BANS_HEAD) as u32) as usize);
     let mut item = exe::llist_get_next(list);
     while item != 0 && *((r + discipline_record::HELD_BAN_COUNT) as *const i8) > 0 {
         if read_usize(item) as u32 == id {
@@ -1087,9 +1087,9 @@ pub(crate) unsafe extern "thiscall" fn discipline_remove_player(this: usize, id:
 /// percorre a lista das guardadas (+0x1c, do começo, 0x68d1b0) enquanto o jogador tem alguma
 /// (byte +0x1c do registro de 29 bytes em [+0x14]) e devolve a de mesmo jogador e vaga; 0 se nenhuma.
 pub(crate) unsafe extern "thiscall" fn find_held_ban(discipline: usize, id: i32, slot: i8) -> usize {
-    let list = discipline + discipline_fields::HELD_BANS;
+    let list = Llist(discipline + discipline_fields::HELD_BANS);
     let record = (*((discipline + discipline_fields::PERSON_RECORDS) as *const usize) as isize + id as isize * 29) as usize;
-    core::ptr::write_unaligned((list + llist::CURSOR) as *mut u32, core::ptr::read_unaligned((list + llist::HEAD) as *const u32));
+    list.set_cursor(((list.head() as u32)) as usize);
     let mut p = exe::llist_get_next(list);
     while p != 0 {
         if *((record + discipline_record::HELD_BAN_COUNT) as *const i8) <= 0 {

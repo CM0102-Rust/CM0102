@@ -20,13 +20,13 @@ pub(crate) fn is_recording_injury() -> bool {
 /// (pelo id): mesmo tipo soma a gravidade (+5, no maximo 100); outro tipo fica o mais grave. Ficha nova:
 /// o registro (id, tipo, gravidade) vai para a lista. Devolve em `tipo` e `chance` o que ficou.
 pub(crate) unsafe fn register_injury_with(this: usize, sheet: usize, kind: *mut u8, chance: *mut u8, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
-    let l = *((this + injury_fields::MATCH_HIT_LIST) as *const usize);
-    if l == 0 {
+    let l = Llist(*((this + injury_fields::MATCH_HIT_LIST) as *const usize));
+    if l.is_null() {
         crate::comparison::branch("injury new list");
         let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(IDX_REGISTER_INJURY);
         return o(this, sheet, kind, chance);
     }
-    core::ptr::write_unaligned((l + llist::CURSOR) as *mut u32, core::ptr::read_unaligned((l + llist::HEAD) as *const u32));
+    l.set_cursor(((l.head() as u32)) as usize);
     let id = *(sheet as *const u32);
     let mut e = exe::llist_get_next(l);
     while e != 0 && *(e as *const u32) != id {
@@ -39,7 +39,7 @@ pub(crate) unsafe fn register_injury_with(this: usize, sheet: usize, kind: *mut 
         r[4] = *kind;
         r[5] = *chance;
         request_buffers(&[(r.as_ptr() as usize, 6)], &[]);
-        call(FN_LLIST_ADD_TAIL, l, [0, 6, 0, 0, 0]);
+        call(FN_LLIST_ADD_TAIL, l.addr(), [0, 6, 0, 0, 0]);
         return;
     }
     let (t, g) = ((e + 4) as *mut u8, (e + 5) as *mut u8);
@@ -873,7 +873,7 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
             let mut club = game.home_club();
             let found = if club.squad(k) == p.addr() {
                 true
-            } else if read_usize(game.away_club().addr() + 0xd7 + 4 * k) == p.addr() {
+            } else if read_usize(game.away_club().addr() + club::SQUAD + 4 * k) == p.addr() {
                 club = game.away_club();
                 true
             } else {
@@ -895,7 +895,7 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
     let mut best: i8 = 0;
     if !p.club_job().is_null() {
         for k in 0..3usize {
-            let f = Staff(read_usize(p.club_job().addr() + 0x1cf + 4 * k));
+            let f = Staff(read_usize(p.club_job().addr() + club::PHYSIOS + 4 * k));
             if f.is_null() {
                 continue;
             }
@@ -904,7 +904,7 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
                 continue;
             }
             if exe::non_player_attribute_rating(np, read_u8(np + non_player::PHYSIOTHERAPY) as i8) as i8 > best {
-                let np = read_usize(read_usize(p.club_job().addr() + 0x1cf + 4 * k) + 0x69);
+                let np = read_usize(read_usize(p.club_job().addr() + club::PHYSIOS + 4 * k) + 0x69);
                 best = exe::non_player_attribute_rating(np, read_u8(np + non_player::PHYSIOTHERAPY) as i8) as i8;
             }
         }
@@ -953,8 +953,8 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
         if !club.is_null() {
             if exe::human_manager_is_human_club(club, 0, (1) as u32, (0) as u32, 0) == 0 && days >= 100 {
                 if exe::staff_is_transfer_listed(p, 0) == 0 && read_usize(G_TRANSFER_MANAGER) != 0 {
-                    let tm = read_usize(G_TRANSFER_MANAGER);
-                    let m = read_usize(read_usize(tm + transfer_manager_fields::SHORTLIST_MANAGER) + 0xdc).wrapping_add(read_usize(p.club_job().addr()).wrapping_mul(9)) + 8;
+                    let tm = TransferManagerFields(read_usize(G_TRANSFER_MANAGER));
+                    let m = read_usize(tm.shortlist_manager() + 0xdc).wrapping_add(read_usize(p.club_job().addr()).wrapping_mul(9)) + 8;
                     *(m as *mut u8) = 100;
                 }
             }
@@ -1604,7 +1604,7 @@ pub(crate) unsafe fn staff_of_match_slot(slot: usize) -> Option<(i32, usize)> {
 /// Slot level used for match rhythm: +4 if not negative, else +0, else the match default (+0x4d) [inference].
 ///
 /// [pt] O nível da vaga para o ritmo: +4 se não for negativo, senão +0, senão o padrão da partida (+0x4d).
-pub(crate) unsafe fn slot_rhythm_level(partida: usize, slot: usize) -> i8 {
+pub(crate) unsafe fn slot_rhythm_level(partida: MatchRecord, slot: usize) -> i8 {
     let b = read_i8(slot + 4);
     if b >= 0 {
         return b;
@@ -1613,7 +1613,7 @@ pub(crate) unsafe fn slot_rhythm_level(partida: usize, slot: usize) -> i8 {
     if b >= 0 {
         b
     } else {
-        read_i8(partida + match_record::MINUTE)
+        (partida.minute() as i8)
     }
 }
 
@@ -1644,16 +1644,17 @@ pub(crate) unsafe fn slot_rhythm_level(partida: usize, slot: usize) -> i8 {
 /// mais) tem a gravidade por +5 (acima de 95: 2; de 66: 1; de 51: 0; senão a da batida anterior) e o tipo da lesão
 /// (0x62d140); tipo válido: fim da lesão atual (0x62e700) e a lesão nova (0x62d250 com o jogo, ou 0 no jogo −2).
 pub(crate) unsafe extern "thiscall" fn apply_match_effects(this: usize, game: usize, partida: usize) {
+    let partida = MatchRecord(partida);
     let game = Fixture(game);
     // simplification: the severity is a local of the original that carries over from one hit to the next; with no hit above 51 before,
     // the original reads a stack leftover and the copy uses 0 (the comparer leaves every match with a clash to the original).
     let mut severity: i8 = 0;
     for lado in 0..2usize {
-        let base = partida + match_record::ROW_MINUTE_OFF + 0x625 * lado;
+        let base = partida.addr() + match_record::ROW_MINUTE_OFF + 0x625 * lado;
         for k in 0..0x14i8 {
             let slot = base + 0x49 * k as usize;
             let Some((id, pessoa)) = staff_of_match_slot(slot) else { continue };
-            let mark = read_i8(partida + match_record::NO_STATISTICS) != 0;
+            let mark = (partida.no_statistics() as i8) != 0;
             let level: i8 = if k < 0xb {
                 if mark { 0x5a } else { slot_rhythm_level(partida, slot) }
             } else if *((slot + 2) as *const u8) == 0xff {
@@ -1681,8 +1682,8 @@ pub(crate) unsafe extern "thiscall" fn apply_match_effects(this: usize, game: us
             if *((slot - 0x11) as *const u8) == 0 || read_i32(this + injury_fields::MATCH_HIT_LIST) == 0 {
                 continue;
             }
-            let list = read_i32(this + injury_fields::MATCH_HIT_LIST) as usize;
-            core::ptr::write_unaligned((list + llist::CURSOR) as *mut u32, core::ptr::read_unaligned((list + llist::HEAD) as *const u32));
+            let list = Llist(read_i32(this + injury_fields::MATCH_HIT_LIST) as usize);
+            list.set_cursor(((list.head() as u32)) as usize);
             let mut e = exe::llist_get_next(read_i32(this + injury_fields::MATCH_HIT_LIST) as usize);
             while e != 0 {
                 let kind = read_i8(e + 4);
@@ -1715,16 +1716,16 @@ pub(crate) unsafe extern "thiscall" fn apply_match_effects(this: usize, game: us
 /// [pt] A pessoa tem batida na lista da partida que chega à lesão (a mesma conferência da 0x62c080)? O cursor (+0xa) volta
 /// ao que era.
 pub(crate) unsafe fn has_injury_hit(this: usize, id: i32, person: Staff) -> bool {
-    let list = read_i32(this + injury_fields::MATCH_HIT_LIST) as usize;
-    let cursor = core::ptr::read_unaligned((list + llist::CURSOR) as *const u32);
-    core::ptr::write_unaligned((list + llist::CURSOR) as *mut u32, core::ptr::read_unaligned((list + llist::HEAD) as *const u32));
+    let list = Llist(read_i32(this + injury_fields::MATCH_HIT_LIST) as usize);
+    let cursor = (list.cursor() as u32);
+    list.set_cursor(((list.head() as u32)) as usize);
     let mut found = false;
     let mut e = exe::llist_get_next(list);
     while e != 0 && !found {
         found = read_i32(e) == id && (read_i8(e + 4) != 7 || read_i8((person.player() as i32) as usize + 0xf) >= 0xf);
         e = exe::llist_get_next(list);
     }
-    core::ptr::write_unaligned((list + llist::CURSOR) as *mut u32, cursor);
+    list.set_cursor((cursor) as usize);
     found
 }
 
@@ -1738,11 +1739,11 @@ pub(crate) unsafe fn has_injury_hit(this: usize, id: i32, person: Staff) -> bool
 /// partida (+0x28; cursor +0xa recomeça de +2, 0x68d1b0) com o id da pessoa, ou 0 (sem lista também). Pelas telas do
 /// pessoal (0x870650, 0x885820).
 pub(crate) unsafe extern "thiscall" fn find_match_injury(this: usize, person: usize) -> usize {
-    let list = read_i32(this + injury_fields::MATCH_HIT_LIST) as usize;
-    if list == 0 {
+    let list = Llist(read_i32(this + injury_fields::MATCH_HIT_LIST) as usize);
+    if list.is_null() {
         return 0;
     }
-    core::ptr::write_unaligned((list + llist::CURSOR) as *mut u32, core::ptr::read_unaligned((list + llist::HEAD) as *const u32));
+    list.set_cursor(((list.head() as u32)) as usize);
     let mut e = exe::llist_get_next(read_i32(this + injury_fields::MATCH_HIT_LIST) as usize);
     while e != 0 {
         if read_i32(e) == read_i32(person) {
@@ -2518,8 +2519,8 @@ pub(crate) unsafe extern "thiscall" fn reset_player_history(this: usize, person:
 pub(crate) unsafe extern "thiscall" fn injury_reset_player(this: usize, id: u32) -> usize {
     crate::comparison::branch("cpm_5 reset player");
     if read_usize(this + injury_fields::MATCH_HIT_LIST) != 0 {
-        let l = read_usize(this + injury_fields::MATCH_HIT_LIST);
-        core::ptr::write_unaligned((l + llist::CURSOR) as *mut usize, read_usize(l + llist::HEAD));
+        let l = Llist(read_usize(this + injury_fields::MATCH_HIT_LIST));
+        l.set_cursor(l.head());
         let mut e = exe::llist_get_next(read_usize(this + injury_fields::MATCH_HIT_LIST));
         while e != 0 {
             if read_usize(e) as u32 == id {

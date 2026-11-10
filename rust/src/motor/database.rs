@@ -87,11 +87,11 @@ pub(crate) unsafe fn match_wrap_up_with(m: Engine, call: &mut dyn FnMut(usize, u
     };
     let partida = || m.r#match();
     let person_of = |id: i32| (*(G_STAFF_TABLE as *const usize)).wrapping_add(id as usize * staff::SIZE);
-    let list = m.event_list();
-    if list != 0 && list_global() != 0 && partida() != 0 && read_i8(partida() + 0x40) != 0 {
-        *((list + llist::CURSOR) as *mut u32) = core::ptr::read_unaligned((list + llist::HEAD) as *const u32);
+    let list = Llist(m.event_list());
+    if !list.is_null() && list_global() != 0 && partida() != 0 && read_i8(partida() + 0x40) != 0 {
+        list.set_cursor(((list.head() as u32)) as usize);
         let mut i: i8 = 0;
-        while (i as i16) < *(list as *const i16) {
+        while (i as i16) < *(list.addr() as *const i16) {
             let e = exe::llist_get_next(list);
             if e == 0 {
                 break;
@@ -1554,21 +1554,21 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
             ww(p + staff::AGE, age_at_date(Staff(p), data) as i16);
         }
 
-        let nj = read_usize(p + staff::NON_PLAYER);
-        if nj != 0 {
+        let nj = NonPlayer(read_usize(p + staff::NON_PLAYER));
+        if !nj.is_null() {
             // ---- the non-player: the reputations (+0xc, +0xa, +8) ----
-            let a = read_i16(nj + non_player::WORLD_REPUTATION).wrapping_mul(50);
-            let di = read_i16(nj + non_player::CURRENT_REPUTATION).wrapping_mul(50);
-            let bp = read_i16(nj + non_player::HOME_REPUTATION).wrapping_mul(50);
-            ww(nj + non_player::CURRENT_REPUTATION, di);
-            ww(nj + non_player::WORLD_REPUTATION, a);
-            ww(nj + non_player::HOME_REPUTATION, bp);
+            let a = nj.world_reputation().wrapping_mul(50);
+            let di = nj.current_reputation().wrapping_mul(50);
+            let bp = nj.home_reputation().wrapping_mul(50);
+            ww(nj.addr() + non_player::CURRENT_REPUTATION, di);
+            ww(nj.addr() + non_player::WORLD_REPUTATION, a);
+            ww(nj.addr() + non_player::HOME_REPUTATION, bp);
             let rep = |x: usize| w(x + 0x80);
             let vezes = |x: usize, k: usize| ftol(rep(x) as f64 * read_f64(k)) as i16;
             if !in_range(a, 1, 10000) {
                 let c = read_usize(p + staff::CLUB_JOB);
                 let s = read_usize(p + staff::NATIONAL_JOB);
-                ww(nj + non_player::WORLD_REPUTATION, if c != 0 && rep(c) > 0x1676 {
+                ww(nj.addr() + non_player::WORLD_REPUTATION, if c != 0 && rep(c) > 0x1676 {
                     vezes(c, 0x969510)
                 } else if s != 0 {
                     vezes(s, 0x968968)
@@ -1576,13 +1576,13 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                     1
                 });
             }
-            let x = read_i16(nj + non_player::WORLD_REPUTATION);
+            let x = nj.world_reputation();
             let bx = if x < 1 { 1 } else if x > 10000 { 10000 } else { x };
-            ww(nj + non_player::WORLD_REPUTATION, bx);
+            ww(nj.addr() + non_player::WORLD_REPUTATION, bx);
             if !in_range(di, 1, 10000) {
                 let c = read_usize(p + staff::CLUB_JOB);
                 let s = read_usize(p + staff::NATIONAL_JOB);
-                ww(nj + non_player::CURRENT_REPUTATION, if in_range(bp, 1, 10000) {
+                ww(nj.addr() + non_player::CURRENT_REPUTATION, if in_range(bp, 1, 10000) {
                     bp
                 } else if in_range(bx, 1, 10000) {
                     bx
@@ -1594,13 +1594,13 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                     1
                 });
             }
-            let x = read_i16(nj + non_player::CURRENT_REPUTATION);
+            let x = nj.current_reputation();
             let di2 = if x < 1 { 1 } else if x > 10000 { 10000 } else { x };
-            ww(nj + non_player::CURRENT_REPUTATION, di2);
+            ww(nj.addr() + non_player::CURRENT_REPUTATION, di2);
             if !in_range(bp, 1, 10000) {
                 let c = read_usize(p + staff::CLUB_JOB);
                 let s = read_usize(p + staff::NATIONAL_JOB);
-                ww(nj + non_player::HOME_REPUTATION, if in_range(di2, 1, 10000) {
+                ww(nj.addr() + non_player::HOME_REPUTATION, if in_range(di2, 1, 10000) {
                     di2
                 } else if in_range(bx, 1, 10000) {
                     bx
@@ -1612,16 +1612,16 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                     1
                 });
             }
-            let x = read_i16(nj + non_player::HOME_REPUTATION);
-            ww(nj + non_player::HOME_REPUTATION, if x < 1 { 1 } else if x > 10000 { 10000 } else { x });
+            let x = nj.home_reputation();
+            ww(nj.addr() + non_player::HOME_REPUTATION, if x < 1 { 1 } else if x > 10000 { 10000 } else { x });
             let c = read_usize(p + staff::CLUB_JOB);
             if c == 0 || read_usize(c + club::NATION) == read_usize(p + staff::NATION) {
-                ww(nj + non_player::HOME_REPUTATION, di2);
+                ww(nj.addr() + non_player::HOME_REPUTATION, di2);
             }
-            if !in_range(read_i16(nj + non_player::CURRENT_ABILITY), 1, 200) {
+            if !in_range(nj.current_ability(), 1, 200) {
                 let c = read_usize(p + staff::CLUB_JOB);
                 let s = read_usize(p + staff::NATIONAL_JOB);
-                ww(nj + non_player::CURRENT_ABILITY, if c != 0 {
+                ww(nj.addr() + non_player::CURRENT_ABILITY, if c != 0 {
                     (rep(c) as i32 / 50) as i16
                 } else if s != 0 {
                     (rep(s) as i32 / 50) as i16
@@ -1629,13 +1629,13 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                     s16(100).wrapping_add(1)
                 });
             }
-            if !in_range(read_i16(nj + non_player::POTENTIAL_ABILITY), 1, 200) {
+            if !in_range((nj.potential_ability() as i16), 1, 200) {
                 let r = s16(200).wrapping_add(1);
-                let x = read_i16(nj + non_player::CURRENT_ABILITY);
-                ww(nj + non_player::POTENTIAL_ABILITY, if x > r { x } else { r });
+                let x = nj.current_ability();
+                ww(nj.addr() + non_player::POTENTIAL_ABILITY, if x > r { x } else { r });
             }
             let nation = read_usize(p + staff::NATION);
-            if nation != 0 && read_u8(nj + non_player::DIRECTNESS) == 0 {
+            if nation != 0 && (nj.directness() as u8) == 0 {
                 let id = gi(nation);
                 let home = [KEY_NATION_REPUBLIC_OF_IRELAND, KEY_NATION_ENGLAND, KEY_NATION_SCOTLAND, KEY_NATION_NORTHERN_IRELAND, KEY_NATION_WALES, KEY_NATION_NORWAY].iter().any(|&k| id == gi(k));
                 let v = if home {
@@ -1645,7 +1645,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                     let x = 5u8.wrapping_sub(exe::utils_random(5) as u8);
                     x.wrapping_add(exe::utils_random(7) as u8)
                 };
-                wb(nj + non_player::DIRECTNESS, v);
+                wb(nj.addr() + non_player::DIRECTNESS, v);
             }
             // ---- attributes outside 1..20: from the template ----
             exe::database_non_player_to_attribute_vector(nj, p, v1.as_mut_ptr() as usize, core::ptr::null_mut());
@@ -1669,27 +1669,27 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                 if read_u8(p + staff::JOB_FOR_CLUB) == 5 && c != 0 && rep(c) > 0x186a {
                     // the big club’s coach
                     let e_360 = || read_usize(p + staff::NATION) != 0 && gi(read_usize(p + staff::NATION)) == gi(KEY_NATION_ITALY);
-                    let fora20 = |o: usize| signed_byte_at(nj + o) < 1 || signed_byte_at(nj + o) > 20;
+                    let fora20 = |o: usize| signed_byte_at(nj.addr() + o) < 1 || signed_byte_at(nj.addr() + o) > 20;
                     if fora20(non_player::DIRECTNESS) {
-                        wb(nj + non_player::DIRECTNESS, (if e_360() { s8(0x10).wrapping_add(1) } else { s8(0xe).wrapping_add(7) }) as u8);
+                        wb(nj.addr() + non_player::DIRECTNESS, (if e_360() { s8(0x10).wrapping_add(1) } else { s8(0xe).wrapping_add(7) }) as u8);
                     }
                     if fora20(non_player::ATTACKING) {
                         let c = read_usize(p + staff::CLUB_JOB);
-                        wb(nj + non_player::ATTACKING, (if rep(c) > 0x1e46 {
+                        wb(nj.addr() + non_player::ATTACKING, (if rep(c) > 0x1e46 {
                             if e_360() { s8(4).wrapping_add(0xd) } else { s8(8).wrapping_add(0xd) }
                         } else {
                             s8(9).wrapping_add(0xc)
                         }) as u8);
                     }
                     if fora20(non_player::MOTIVATING) {
-                        wb(nj + non_player::MOTIVATING, s8(0xd).wrapping_add(8) as u8);
+                        wb(nj.addr() + non_player::MOTIVATING, s8(0xd).wrapping_add(8) as u8);
                     }
                     if fora20(non_player::PRESSING) {
-                        wb(nj + non_player::PRESSING, s8(0xd).wrapping_add(8) as u8);
+                        wb(nj.addr() + non_player::PRESSING, s8(0xd).wrapping_add(8) as u8);
                     }
                     if fora20(non_player::TACTICS) {
                         let c = read_usize(p + staff::CLUB_JOB);
-                        wb(nj + non_player::TACTICS, (if rep(c) > 0x1e46 {
+                        wb(nj.addr() + non_player::TACTICS, (if rep(c) > 0x1e46 {
                             if e_360() { s8(7).wrapping_add(0xe) } else { s8(9).wrapping_add(0xc) }
                         } else {
                             s8(0xb).wrapping_add(0xa)
@@ -1712,7 +1712,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                         }
                         exe::database_non_player_to_attribute_vector(nj, p, G_NON_PLAYER_ATTRIBUTE_VECTOR, core::ptr::null_mut());
                         exe::database_non_player_to_attribute_vector(cn, q, 0xae2238, core::ptr::null_mut());
-                        let dif = (read_i16(nj + non_player::CURRENT_ABILITY) as i32 - w(cn + 4) as i32).abs();
+                        let dif = (nj.current_ability() as i32 - w(cn + 4) as i32).abs();
                         let mut esc = ftol(dif as f64 * read_f64(rdata::F64_2_5));
                         if w(G_NON_PLAYER_ATTRIBUTE_VECTOR) != -0x7f {
                             let mut o = 0isize;
@@ -1746,7 +1746,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                 e10 = best;
                 if molde != 0 {
                     exe::database_non_player_to_attribute_vector(molde, p, v2.as_mut_ptr() as usize, core::ptr::null_mut());
-                    let mut hn = read_i16(nj + non_player::CURRENT_ABILITY);
+                    let mut hn = nj.current_ability();
                     if !in_range(hn, 1, 200) {
                         hn = s16(100).wrapping_add(1);
                     }
@@ -1765,7 +1765,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                                     d.wrapping_add(s8(6).wrapping_sub(3))
                                 } else {
                                     let r = s8(6);
-                                    r.wrapping_add(((read_i16(nj + non_player::CURRENT_ABILITY) as i32 / 10) as i8).wrapping_sub(3))
+                                    r.wrapping_add(((nj.current_ability() as i32 / 10) as i8).wrapping_sub(3))
                                 };
                                 set_attr_cell_value(&mut v1, k, if c < 1 { s8(8).wrapping_add(1) as i16 } else if c > 20 { 0x14 } else { c as i16 });
                             }
@@ -1781,7 +1781,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                         let x = attr_cell_value(&v1, k);
                         if x < 1 || x > 20 {
                             let r = s8(7);
-                            let c = r.wrapping_add(((read_i16(nj + non_player::CURRENT_ABILITY) as i32 / 10) as i8).wrapping_sub(3));
+                            let c = r.wrapping_add(((nj.current_ability() as i32 / 10) as i8).wrapping_sub(3));
                             set_attr_cell_value(&mut v1, k, if c < 1 { s8(8).wrapping_add(1) as i16 } else if c > 20 { 0x14 } else { c as i16 });
                         }
                         k += 1;
@@ -1794,20 +1794,20 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
             (exe::database_attribute_vector_to_non_player(nj, p, v1.as_mut_ptr() as usize) as u32);
             // ---- o cargo: olheiro (9), fisioterapeuta (8), treinador (10) ----
             let ate = |o: usize, max: i8, n: i32, base: u8| {
-                if signed_byte_at(nj + o) > max {
-                    wb(nj + o, (exe::utils_random(n) as u8).wrapping_add(base));
+                if signed_byte_at(nj.addr() + o) > max {
+                    wb(nj.addr() + o, (exe::utils_random(n) as u8).wrapping_add(base));
                 }
             };
             let job = read_u8(p + staff::JOB_FOR_CLUB);
             if job == 9 && exe::utils_random(100) != 0 {
-                let a17 = read_i8(nj + non_player::JUDGEMENT);
-                wb(nj + non_player::BUSINESS, 1);
-                wb(nj + non_player::PHYSIOTHERAPY, 1);
+                let a17 = nj.judgement();
+                wb(nj.addr() + non_player::BUSINESS, 1);
+                wb(nj.addr() + non_player::PHYSIOTHERAPY, 1);
                 if a17 < 5 {
-                    wb(nj + non_player::JUDGEMENT, (exe::utils_random(5) as u8).wrapping_add(4));
+                    wb(nj.addr() + non_player::JUDGEMENT, (exe::utils_random(5) as u8).wrapping_add(4));
                 }
-                if read_i8(nj + non_player::JUDGING_POTENTIAL) < 4 {
-                    wb(nj + non_player::JUDGING_POTENTIAL, (exe::utils_random(5) as u8).wrapping_add(3));
+                if nj.judging_potential() < 4 {
+                    wb(nj.addr() + non_player::JUDGING_POTENTIAL, (exe::utils_random(5) as u8).wrapping_add(3));
                 }
                 ate(0x10, 8, 8, 1);
                 ate(0x11, 8, 8, 1);
@@ -1815,13 +1815,13 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                 ate(0x13, 5, 5, 1);
                 ate(0x1a, 5, 5, 1);
             } else if job == 8 && exe::utils_random(100) != 0 {
-                wb(nj + non_player::BUSINESS, 1);
-                wb(nj + non_player::PHYSIOTHERAPY, 1);
+                wb(nj.addr() + non_player::BUSINESS, 1);
+                wb(nj.addr() + non_player::PHYSIOTHERAPY, 1);
             } else if job == 0xa && exe::utils_random(100) != 0 {
-                let a1e = read_i8(nj + non_player::PHYSIOTHERAPY);
-                wb(nj + non_player::BUSINESS, 1);
+                let a1e = (nj.physiotherapy() as i8);
+                wb(nj.addr() + non_player::BUSINESS, 1);
                 if a1e < 5 {
-                    wb(nj + non_player::PHYSIOTHERAPY, (exe::utils_random(10) as u8).wrapping_add(4));
+                    wb(nj.addr() + non_player::PHYSIOTHERAPY, (exe::utils_random(10) as u8).wrapping_add(4));
                 }
                 for o in [0x10usize, 0x11, 0x12, 0x13, 0x17, 0x18, 0x1a] {
                     ate(o, 5, 5, 1);
@@ -1830,31 +1830,31 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
             // ---- the famous names (+0x43) ----
             let name = |s: usize| exe::staff_name_equals(p, s) != 0;
             if name(0x9b63e0) {
-                wb(nj + non_player::FORMATION, 3);
-                wb(nj + non_player::DIRECTNESS, 7);
-                wb(nj + non_player::ATTACKING, 0x11);
+                wb(nj.addr() + non_player::FORMATION, 3);
+                wb(nj.addr() + non_player::DIRECTNESS, 7);
+                wb(nj.addr() + non_player::ATTACKING, 0x11);
             } else if name(0x9b63d0) || name(0x9b63c4) || name(0x9b63b4) || name(0x9b63a8) {
-                wb(nj + non_player::FORMATION, 3);
+                wb(nj.addr() + non_player::FORMATION, 3);
             } else if name(0x9b6398) || name(0x9b6388) || name(0x9b6378) || name(0x9b6368) || name(0x9b635c) {
-                wb(nj + non_player::FORMATION, 2);
+                wb(nj.addr() + non_player::FORMATION, 2);
             } else if name(0x9b634c) {
-                wb(nj + non_player::FORMATION, 6);
+                wb(nj.addr() + non_player::FORMATION, 6);
             } else {
-                let x = read_i8(nj + non_player::FORMATION);
+                let x = nj.formation();
                 if x == 0 || x >= 10 {
                     let r = exe::utils_random(0x1a);
                     if (r as u32) <= 0x19 {
                         const TABELA: [u8; 26] = [0, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 5, 5, 5, 6, 6, 6, 7, 7, 8];
-                        wb(nj + non_player::FORMATION, TABELA[r as usize]);
+                        wb(nj.addr() + non_player::FORMATION, TABELA[r as usize]);
                     }
                 }
             }
             for k in 0..8 {
-                wd(nj + non_player::GOALKEEPER + 4 * k, 0);
+                wd(nj.addr() + non_player::GOALKEEPER + 4 * k, 0);
             }
             // ---- the missing role ----
             if read_u8(p + staff::JOB_FOR_CLUB) == 0 && read_u8(p + staff::JOB_FOR_NATION) == 0 {
-                let (c21, c1b, a10, a11) = (read_i8(nj + non_player::TACTICS), read_i8(nj + non_player::MOTIVATING), read_i8(nj + non_player::COACHING), read_i8(nj + non_player::COACHING_GKS));
+                let (c21, c1b, a10, a11) = (nj.tactics(), (nj.motivating() as i8), nj.coaching(), nj.coaching_gks());
                 wb(p + staff::JOB_FOR_CLUB, if read_usize(p + staff::PLAYER) != 0 {
                     0xb
                 } else if c21 > 10 && c1b > 10 {
@@ -1862,7 +1862,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                 } else if (a10 > 6 || a11 > 6) && c1b > 10 && c21 > 10 {
                     6
                 } else if a10 <= 6 && a11 <= 6 {
-                    9 + (read_i8(nj + non_player::PHYSIOTHERAPY) > 10) as u8
+                    9 + ((nj.physiotherapy() as i8) > 10) as u8
                 } else {
                     8
                 });
@@ -8152,14 +8152,15 @@ pub(crate) unsafe extern "C" fn database_colours_clash(a: usize, b: usize) -> u8
 /// x = (palavra +4 + 2 × byte) × 0,05 + 10; (x + 0,1 x²) / 3 + 0,5, preso em 1..20 e truncado. Pessoa
 /// ou não jogador nulos ou atributo fora de 1..12: a original (caixa e −1).
 pub(crate) unsafe extern "C" fn staff_compute_non_player_attribute(person: usize, not_player: usize, attribute: u32) -> u8 {
+    let not_player = NonPlayer(not_player);
     let person = Staff(person);
     let a = attribute as u8 as i8;
-    if person.is_null() || !(1..=12).contains(&a) || not_player == 0 {
-        return original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_COMPUTE_NON_PLAYER_ATTRIBUTE)(person.addr(), not_player, attribute);
+    if person.is_null() || !(1..=12).contains(&a) || not_player.is_null() {
+        return original_fn::<unsafe extern "C" fn(usize, usize, u32) -> u8>(IDX_STAFF_COMPUTE_NON_PLAYER_ATTRIBUTE)(person.addr(), not_player.addr(), attribute);
     }
     let formula = |d: usize| {
-        let b = *((not_player + d) as *const i8) as f64;
-        let x = (*((not_player + non_player::CURRENT_ABILITY) as *const i16) as f64 + (b + b)) * 0.05 + 10.0;
+        let b = *((not_player.addr() + d) as *const i8) as f64;
+        let x = (not_player.current_ability() as f64 + (b + b)) * 0.05 + 10.0;
         let y = (x * x * 0.1 + x) * read_f64(rdata::F64_0_3333333333) + 0.5;
         ftol(if !(y > 1.0) { 1.0 } else if !(y < 20.0) { 20.0 } else { y }) as u8
     };
@@ -8170,12 +8171,12 @@ pub(crate) unsafe extern "C" fn staff_compute_non_player_attribute(person: usize
         4 => (person.determination() as u8),
         5 => formula(0x17),
         6 => formula(0x18),
-        7 => read_u8(not_player + non_player::DISCIPLINE),
+        7 => not_player.discipline(),
         8 => formula(0x19),
         9 => formula(0x1b),
         10 => formula(0x1e),
         11 => formula(0x21),
-        _ => read_u8(not_player + non_player::YOUNGSTERS),
+        _ => (not_player.youngsters() as u8),
     }
 }
 

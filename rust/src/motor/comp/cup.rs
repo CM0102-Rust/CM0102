@@ -3020,7 +3020,7 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
         return;
     }
     let mut list = [0u8; 0x10];
-    let l = list.as_mut_ptr() as usize;
+    let l = Llist(list.as_mut_ptr() as usize);
     exe::new_llist(l);
     if collect_round_fixtures(this, data, round, l) != 0 {
         exe::newsitem_set_slot(n1, 0, read_usize(read_usize(this.addr() + 4)) as u32);
@@ -3044,7 +3044,7 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
                 exe::news_send_to_club_manager(read_usize(G_NEWS), n1, c2);
             }
         };
-        write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
+        l.set_cursor(l.head());
         let mut j = 0usize;
         let mut f = exe::llist_get_next(l);
         while f != 0 {

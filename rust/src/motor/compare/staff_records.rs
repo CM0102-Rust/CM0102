@@ -18,14 +18,15 @@ pub(crate) unsafe extern "thiscall" fn compare_add_league_champions_record(this:
 
 /// Comparer for `add_cup_winners_record`.
 pub(crate) unsafe extern "thiscall" fn compare_add_cup_winners_record(this: usize, club: usize, game: usize, partida: usize) {
+    let partida = MatchRecord(partida);
     let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ADD_CUP_WINNERS_RECORD);
-    if club == 0 || game.is_null() || partida == 0 {
-        return o(this, club, game.addr(), partida);
+    if club == 0 || game.is_null() || partida.is_null() {
+        return o(this, club, game.addr(), partida.addr());
     }
-    let notes = (partida + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (game.away_club() == Club(club)) as usize, 6);
-    compare_champion_update("add_cup_winners_record", this, Club(club), notes, false, || o(this, club, game.addr(), partida),
-        || add_cup_winners_record(this, club, game.addr(), partida));
+    let notes = (partida.addr() + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (game.away_club() == Club(club)) as usize, 6);
+    compare_champion_update("add_cup_winners_record", this, Club(club), notes, false, || o(this, club, game.addr(), partida.addr()),
+        || add_cup_winners_record(this, club, game.addr(), partida.addr()));
 }
 
 /// Comparer for `clear_human_manager_record`.
@@ -105,14 +106,14 @@ pub(crate) unsafe extern "thiscall" fn compare_add_supporters_player_of_year_rec
 /// Comparer for `add_cup_runners_up_record`.
 pub(crate) unsafe extern "thiscall" fn compare_add_cup_runners_up_record(this: usize, club: usize, game: usize, partida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ADD_CUP_RUNNERS_UP_RECORD);
-    compare_cup_placed("add_cup_runners_up_record", Club(club), Fixture(game), partida, || o(this, club, game, partida),
+    compare_cup_placed("add_cup_runners_up_record", Club(club), Fixture(game), MatchRecord(partida), || o(this, club, game, partida),
         || add_cup_runners_up_record(this, club, game, partida))
 }
 
 /// Comparer for `add_cup_third_place_record`.
 pub(crate) unsafe extern "thiscall" fn compare_add_cup_third_place_record(this: usize, club: usize, game: usize, partida: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ADD_CUP_THIRD_PLACE_RECORD);
-    compare_cup_placed("add_cup_third_place_record", Club(club), Fixture(game), partida, || o(this, club, game, partida),
+    compare_cup_placed("add_cup_third_place_record", Club(club), Fixture(game), MatchRecord(partida), || o(this, club, game, partida),
         || add_cup_third_place_record(this, club, game, partida))
 }
 
@@ -271,8 +272,8 @@ pub(crate) unsafe extern "thiscall" fn compare_staff_records_daily_update(this: 
     let mut ok = !virada || (read_i16(this + staff_records_fields::CURRENT_MONTH) == m && read_i16(this + staff_records_fields::CURRENT_YEAR) == a);
     let mut first = -1i32;
     for k in 0..manager_record_count().max(0) {
-        let e = manager_record_at(this, k);
-        let certo = (!virada || (read_usize(e + manager_record::MONTH_POINTS) == 0 && read_usize(e + manager_record::MONTH_LEAGUE_POINTS) == 0)) && (!year || read_usize(e + manager_record::YEAR_POINTS) == 0);
+        let e = ManagerRecord(manager_record_at(this, k));
+        let certo = (!virada || ((e.month_points() as usize) == 0 && e.month_league_points() == 0)) && (!year || (e.year_points() as usize) == 0);
         if !certo && first < 0 {
             first = k;
         }

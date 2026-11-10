@@ -40,7 +40,7 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
     this.set_stage_count(usize::MAX);
     this.set_importance_bias(b3 as u8);
     write_usize(this.addr(), 0x969468);
-    write_u8(this.addr() + 0x43, 1);
+    this.set_comp_type(1);
     this.set_run_by_stages(0);
     this.set_current_round(0);
     this.set_next_draw_round(0);

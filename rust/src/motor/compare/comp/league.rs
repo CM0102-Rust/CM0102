@@ -415,18 +415,18 @@ pub(crate) unsafe extern "thiscall" fn compare_init_table_row(this: usize, i: u3
     let confrontos = uses_head_to_head_rule(this);
     o(this.addr(), i, club.addr(), mark, rows);
     let idx = i as u8 as i8 as isize;
-    let l = table.wrapping_add((idx * TABLE_ROW_SIZE as isize) as usize);
-    let mut ok = read_usize(l) == club.addr() && read_u8(l + league_table_row::POSITION) == i as u8 && read_u8(l + league_table_row::STATUS) == 0xff && read_u8(l + league_table_row::MARK) == mark as u8
-        && read_u8(l + league_table_row::BEST_POSSIBLE_POSITION) == 1 && read_u8(l + league_table_row::WORST_POSSIBLE_POSITION) == n as u8 && this.games_per_club() == a7_expected
+    let l = LeagueTableRow(table.wrapping_add((idx * TABLE_ROW_SIZE as isize) as usize));
+    let mut ok = read_usize(l.addr()) == club.addr() && (l.position() as u8) == i as u8 && l.status() == 0xff && l.mark() == mark as u8
+        && l.best_possible_position() == 1 && l.worst_possible_position() == n as u8 && this.games_per_club() == a7_expected
         && (club.is_null() || club.professional_status() == situacao_esperada)
-        && (read_usize(l + league_table_row::POSITION_HISTORY) != 0) == (this.legs() > 0) && (read_usize(l + league_table_row::H2H_ENTRIES) != 0) == confrontos;
+        && (l.position_history() != 0) == (this.legs() > 0) && (l.h2h_entries() != 0) == confrontos;
     for k in 0..3 {
-        let e = l + league_table_row::PLAYED + 14 * k;
+        let e = l.addr() + league_table_row::PLAYED + 14 * k;
         ok &= (e - 4..e + 10).all(|a| read_u8(a) == 0);
     }
-    let last = idx == n as isize - 1 && read_usize(l + league_table_row::H2H_ENTRIES) != 0;
-    if read_usize(l + league_table_row::H2H_ENTRIES) != 0 && !last {
-        let p = read_usize(l + league_table_row::H2H_ENTRIES);
+    let last = idx == n as isize - 1 && l.h2h_entries() != 0;
+    if l.h2h_entries() != 0 && !last {
+        let p = l.h2h_entries();
         ok &= (0..(n as usize).saturating_sub(1)).all(|k| (p + 14 * k + 4..p + 14 * k + 14).all(|a| read_u8(a) == 0));
     }
     if last {
@@ -437,7 +437,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init_table_row(this: usize, i: u3
         }
     }
     SCOREBOARD.record(ok, || format!("init_table_row(linha {}, clube {:x}, marca {}) clubes {}, rodadas {} (esperava {}), confrontos {} ({:x}), histórico {:x}",
-        idx, club.addr(), mark as u8, n, this.games_per_club(), a7_expected, confrontos, read_usize(l + league_table_row::H2H_ENTRIES), read_usize(l + league_table_row::POSITION_HISTORY)));
+        idx, club.addr(), mark as u8, n, this.games_per_club(), a7_expected, confrontos, l.h2h_entries(), l.position_history()));
 }
 
 /// Comparer for `league_get_club_array`.

@@ -730,11 +730,11 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
     if manager.is_null() {
         return;
     }
-    let np = manager.non_player();
-    if np == 0 || friendly_random(read_u8(np + non_player::DISCIPLINE) as i8 as i32) == 0 {
+    let np = NonPlayer(manager.non_player());
+    if np.is_null() || friendly_random(np.discipline() as i8 as i32) == 0 {
         return;
     }
-    let a = friendly_random((exe::non_player_attribute_rating(np, (read_u8(np + non_player::MAN_HANDLING) as u32) as i8) as i8) as i32);
+    let a = friendly_random((exe::non_player_attribute_rating(np, (np.man_handling() as u32) as i8) as i8) as i32);
     let b = friendly_random(5);
     crate::comparison::branch("cpw_7 fine for absence");
     exe::fine_fine_player(read_usize(G_FINE), person, if a > b { 1 } else { 2 }, 1);

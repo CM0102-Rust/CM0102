@@ -58,25 +58,25 @@ pub(crate) unsafe extern "C" fn award_raise_winner_reputation(person: usize, clu
         }
         return;
     }
-    let np = person.non_player();
-    if np == 0 || player != 0 {
+    let np = NonPlayer(person.non_player());
+    if np.is_null() || player != 0 {
         return;
     }
-    if read_i16(np + non_player::WORLD_REPUTATION) <= world {
-        write_i16(np + non_player::WORLD_REPUTATION, world);
+    if np.world_reputation() <= world {
+        np.set_world_reputation(world);
     }
     if !club.is_null() && club.nation() == person.nation() {
-        if read_i16(np + non_player::HOME_REPUTATION) <= nation {
-            write_i16(np + non_player::HOME_REPUTATION, nation);
+        if np.home_reputation() <= nation {
+            np.set_home_reputation(nation);
         }
     } else {
         let floor = nation as i32 / 2 + world as i32 / 2;
-        if (read_i16(np + non_player::HOME_REPUTATION) as i32) <= floor {
-            write_i16(np + non_player::HOME_REPUTATION, floor as i16);
+        if (np.home_reputation() as i32) <= floor {
+            np.set_home_reputation(floor as i16);
         }
     }
-    if read_i16(np + non_player::CURRENT_REPUTATION) <= nation {
-        write_i16(np + non_player::CURRENT_REPUTATION, nation);
+    if np.current_reputation() <= nation {
+        np.set_current_reputation(nation);
     }
     if club.is_null() {
         return;

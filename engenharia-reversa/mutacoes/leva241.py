@@ -1,6 +1,6 @@
 # Mutações da 241a leva (itens cpa_1, cpa_2, cpa_3, cpc_2, cpc_1). Uso: python mutacoes.py mutacoes\leva241.py --carreira 2002-06-01
 MUTACOES = [
-    ('cpa_ordem_posicao', '            *((r + league_table_row::POSITION) as *mut i8) = c; // the position', '            *((r + league_table_row::POSITION) as *mut i8) = c.wrapping_add(1); // mutacao: uma posicao abaixo'),
+    ('cpa_ordem_posicao', '            r.set_position(c); // the position', '            r.set_position(c.wrapping_add(1)); // mutacao: uma posicao abaixo'),
     ('cpa_mini_posicao', '                pos = pos.wrapping_sub(1); // the position goes down', '                pos = pos.wrapping_sub(0); // mutacao: a posicao nao desce'),
     ('cpa_liberar_propria', '    if propria { // the league one: clears the count and the table', '    if !propria { // mutacao: zera a da liga ao soltar uma copia'),
     ('cpa_completa_rodadas', '            if ((read_u8(table + LEAGUE_TABLE_ROW_SIZE * i + 0x11) as i8) as i16) < rounds { // ainda falta jogar', '            if ((read_u8(table + LEAGUE_TABLE_ROW_SIZE * i + 0x11) as i8) as i16) < rounds - 1 { // mutacao: uma rodada antes'),

@@ -27,16 +27,16 @@ pub(crate) unsafe extern "thiscall" fn know_person(this: usize, person: usize, f
     let reg = (*(this as *const usize)).wrapping_add((*(person as *const i32) as usize).wrapping_mul(9));
     let mut data = [0u8; 8];
     exe::date_operator_3d(reg + 1, data.as_mut_ptr() as usize, G_CURRENT_DATE);
-    let obs = if font.is_null() { 0 } else { font.non_player() };
+    let obs = NonPlayer(if font.is_null() { 0 } else { font.non_player() });
     let level = reg as *mut u8;
-    if obs == 0 {
+    if obs.is_null() {
         *level = 3;
         return;
     }
     if *level == 3 {
         return;
     }
-    let c = exe::non_player_attribute_rating(obs, *((obs + non_player::JUDGEMENT) as *const i8)) as i8;
+    let c = exe::non_player_attribute_rating(obs, obs.judgement()) as i8;
     let r = random(c as i32) as i8;
     *level = if c < 15 && r == 0 {
         (*level).wrapping_add(1)

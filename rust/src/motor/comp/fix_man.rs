@@ -412,10 +412,10 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
     // 0x53b900 (push; add esp, 4 -> cdecl), 0x53b3d0 (push; add esp, 4 -> cdecl)
     // 0x76d940: ecx = [0xb74318]; push comp -> thiscall, ret 4 (the Rust copy ignores ecx)
     let e_sel = exe::database_is_national_team(game.home_club());
-    let n1 = read_usize(game.home_club().addr() + 0x53);
+    let n1 = read_usize(game.home_club().addr() + club::NATION);
     // simplification: without a nation the original leaves the national team uninitialized; every club has a nation, so 0 does not happen in the game
     let s1 = if n1 != 0 { exe::database_get_national_team(n1) } else { 0 };
-    let n2 = read_usize(game.away_club().addr() + 0x53);
+    let n2 = read_usize(game.away_club().addr() + club::NATION);
     let s2 = if n2 != 0 { exe::database_get_national_team(n2) } else { 0 };
     let flag = desloc as u8 as i8;
     let mut day = [0u8; 8];
@@ -454,7 +454,7 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
         }
     }
     let nation = read_usize(G_NATION_TABLE).wrapping_add((read_i32(KEY_NATION_NORWAY) as usize).wrapping_mul(nation::SIZE));
-    if read_usize(game.home_club().addr() + 0x53) == nation || read_usize(game.away_club().addr() + 0x53) == nation {
+    if read_usize(game.home_club().addr() + club::NATION) == nation || read_usize(game.away_club().addr() + club::NATION) == nation {
         if same(day_of_year(0x11, 4, year())) && flag == 0 {
             return dezenove();
         }
@@ -1394,7 +1394,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
     let n = novo.as_mut_ptr() as usize;
     let v = Fixture(velho.as_mut_ptr() as usize);
     let mut pn = read_i16(read_usize(n + 0x14) + 0x69);
-    let mut pv = read_i16(v.competition().addr() + 0x69);
+    let mut pv = read_i16(v.competition().addr() + competition::REPUTATION);
     if exe::database_is_national_team(read_usize(n + 0x1c)) != 0 {
         pn = pn.wrapping_add(0x15);
     }
@@ -1402,7 +1402,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
         pv = pv.wrapping_add(0x15);
     }
     let new_wins = pn > pv // cqb13: a prioridade maior fica
-        || (pn == pv && read_i16(read_usize(n + 0x1c) + 0x80) > read_i16(v.home_club().addr() + 0x80));
+        || (pn == pv && read_i16(read_usize(n + 0x1c) + 0x80) > read_i16(v.home_club().addr() + club::REPUTATION));
     if new_wins {
         crate::comparison::branch("cqb_13 new one wins");
     }

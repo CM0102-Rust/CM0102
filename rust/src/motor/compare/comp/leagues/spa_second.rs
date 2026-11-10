@@ -45,8 +45,8 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_second_create_table(this: usi
     let mut ok = r == (plan.len() == 0x16) as u32 && this.club_count() == 0x16 && t != 0;
     if ok {
         for (k, &(c, b)) in plan.iter().enumerate() {
-            let l = t + k * 0x3b;
-            ok = ok && read_usize(l) == c && (!b || *((l + league_table_row::STATUS) as *const u8) == 0xfc);
+            let l = LeagueTableRow(t + k * 0x3b);
+            ok = ok && read_usize(l.addr()) == c && (!b || l.status() == 0xfc);
         }
     }
     SCOREBOARD.record(ok, || format!("spa_second_create_table({:#x}): devolveu {}, plano {:x?}", this.addr(), r, plan));

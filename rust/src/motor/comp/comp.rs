@@ -676,7 +676,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, p
             }
             let home = Club(partida.home_club().addr());
             let a = Nation(home.nation().addr());
-            if a.addr() != read_usize(partida.away_club().addr() + 0x53) || a.league_selected() == 0 {
+            if a.addr() != read_usize(partida.away_club().addr() + club::NATION) || a.league_selected() == 0 {
                 return 3;
             }
             if let Some(k) = row(a.addr()) {

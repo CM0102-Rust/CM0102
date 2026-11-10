@@ -54,19 +54,20 @@ pub(crate) unsafe extern "C" fn compare_shortlist_compare_slots_by_index(a: usiz
 /// [pt] Comparador: lado a lado pelas listas de 40 vagas dos clubes interessados (a cópia e a original montam e soltam a
 /// mesma lista local) e pelo cursor da lista `troca`.
 pub(crate) unsafe extern "thiscall" fn compare_mark_player_under_offer(this: usize, player: usize, buyer: usize, swap: usize) {
+    let swap = Llist(swap);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_MARK_PLAYER_UNDER_OFFER);
     let mut reg: Vec<(usize, usize)> = interested_clubs(this, player).into_iter()
         .map(|k| read_usize(read_usize(this + shortlist_manager_fields::CLUB_SHORTLISTS).wrapping_add(k.wrapping_mul(9))))
         .filter(|&t| t != 0)
         .map(|t| (t, 40 * 0x25))
         .collect();
-    if swap != 0 {
-        reg.push((swap + llist::CURSOR, 4));
+    if !swap.is_null() {
+        reg.push((swap.addr() + llist::CURSOR, 4));
     }
-    let ((), (), igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, player, buyer, swap),
-        || mark_player_under_offer(this, player, buyer, swap));
+    let ((), (), igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, player, buyer, swap.addr()),
+        || mark_player_under_offer(this, player, buyer, swap.addr()));
     SCOREBOARD.record(igual, || format!("mark_player_under_offer(jogador {:#x}, comprador {:#x}, troca {:#x}) {:x?} x {:x?}",
-        player, buyer, swap, mo, mr));
+        player, buyer, swap.addr(), mo, mr));
 }
 
 /// Comparer for `value_player_for_club`.
@@ -227,11 +228,11 @@ pub(crate) unsafe extern "thiscall" fn compare_suspend_clubs_shortlisting_player
     if p == 0 {
         return o(this, player, clear);
     }
-    let list = exe::new_llist(p);
+    let list = Llist(exe::new_llist(p));
     exe::shortlist_manager_collect_interested_clubs(this, player, list, 1, 3, 0);
     // the items (8 bytes: player id, club id) through the nodes (+2 the first; node: +0 the data, +6 the next)
     let mut reg: Vec<(usize, usize)> = Vec::new();
-    let mut no = read_usize(list + llist::HEAD);
+    let mut no = list.head();
     while no != 0 {
         let e = read_usize(this + shortlist_manager_fields::CLUB_SHORTLISTS).wrapping_add(read_usize(read_usize(no) + 4).wrapping_mul(9));
         reg.push((e, 9));
@@ -318,7 +319,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_interested_clubs(this: us
     let l = new.as_mut_ptr() as usize;
     exe::new_llist(l);
     collect_interested_clubs(this, player, l, ignore, mode, so_humanos);
-    let (a, b) = (llist_pairs(out), llist_pairs(l));
+    let (a, b) = (llist_pairs(Llist(out)), llist_pairs(Llist(l)));
     exe::llist_clear(l);
     SCOREBOARD.record(a == b, || format!("collect_interested_clubs({:#x}) original={:x?} rust={:x?}", player, a, b));
 }

@@ -8,7 +8,7 @@ MUTACOES = [
     ('p_3', "    if *level == 3 {\n        return;\n    }", ""),
     ('p_15', "    *level = if c < 15 && r == 0 {", "    *level = if c <= 15 && r == 0 {"),
     ('p_6', "    } else if *level == 0 && r < 6 {", "    } else if r < 6 {"),
-    ('p_17', "    let c = exe::non_player_attribute_rating(obs, *((obs + non_player::JUDGEMENT) as *const i8)) as i8;", "    let c = exe::non_player_attribute_rating(obs, *((obs + non_player::INTERFERENCE) as *const i8)) as i8;"),
+    ('p_17', "    let c = exe::non_player_attribute_rating(obs, obs.judgement()) as i8;", "    let c = exe::non_player_attribute_rating(obs, obs.interference()) as i8;"),
     ('n_lados', "        let club = Club(*((partida + if lado == 0 { 0x20 } else { 0x1c }) as *const usize));\n        if exe::human_manager_is_human_club", "        let club = Club(*((partida + if lado == 0 { 0x1c } else { 0x20 }) as *const usize));\n        if exe::human_manager_is_human_club"),
     ('n_625', "            let e = data + lado * 0x625 + 0x190 + vaga * 0x49;", "            let e = data + lado * 0x624 + 0x190 + vaga * 0x49;"),
     ('n_reserva', "(vaga > 10 && *((e + 0x32) as *const u8) == 0xff)", "(vaga >= 10 && *((e + 0x32) as *const u8) == 0xff)"),

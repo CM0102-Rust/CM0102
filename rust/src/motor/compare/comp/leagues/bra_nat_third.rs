@@ -116,9 +116,9 @@ pub(crate) unsafe extern "thiscall" fn compare_create_second_round_stage(this: u
     let this = League(this);
     let mut r = [(0usize, 0i16); 16];
     for (k, g) in (-1i32..7).enumerate() {
-        let t = read_usize(if g == -1 { this.addr() } else { read_usize(this.stages() + 4 * g as usize) } + 0xb1);
-        r[2 * k] = (read_usize(t), read_i16(t + league_table_row::POINTS));
-        r[2 * k + 1] = (read_usize(t + 0x3b), read_i16(t + 0x54));
+        let t = LeagueTableRow(read_usize(if g == -1 { this.addr() } else { read_usize(this.stages() + 4 * g as usize) } + 0xb1));
+        r[2 * k] = (read_usize(t.addr()), t.points());
+        r[2 * k + 1] = (read_usize(t.addr() + 0x3b), read_i16(t.addr() + 0x54));
     }
     let mut plan = [0usize; 16];
     for k in 0..16 {

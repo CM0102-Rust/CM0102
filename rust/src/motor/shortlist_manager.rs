@@ -1055,7 +1055,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         e8 = ftol(w as f64 * k(0x968940) - k(0x9688e8));
         if p2.nation().addr() != 0 {
             let (m, f) = language_fluency_factor(p1, p2, e8 as i16);
-            if age < 0x12 && f < k(0x9688a0) && read_usize(p1.nation().addr() + 0x71) != p2.nation().continent() {
+            if age < 0x12 && f < k(0x9688a0) && read_usize(p1.nation().addr() + nation::CONTINENT) != p2.nation().continent() {
                 return zero;
             }
             f8 = m * f8;
@@ -1295,7 +1295,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
     }
     // the reputation of the current club (or of the person, without a club) on the same scale
     if d4 == 0 {
-        let mut aev = read_i8(p1.nation().addr() + 0x7e);
+        let mut aev = read_i8(p1.nation().addr() + nation::STATE_OF_DEVELOPMENT);
         if aev < 1 || aev > 3 {
             aev = 3;
         }
@@ -1481,7 +1481,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
             }
         } else if d4 != 0 {
             if ae == ad {
-                let t = read_usize(p1.nation().addr() + 0x71);
+                let t = read_usize(p1.nation().addr() + nation::CONTINENT);
                 if t != 0 && read_usize(t) == read_usize(KEY_CONTINENT_EUROPE) {
                     let u = p2.nation().continent();
                     if u != 0 && read_usize(u) != read_usize(KEY_CONTINENT_EUROPE) && u != read_usize(read_usize(d4 + club::NATION) + 0x71) {
@@ -1713,11 +1713,11 @@ pub(crate) unsafe extern "C" fn shortlist_compare_slots_by_index(a: usize, b: us
 /// bytes: id do jogador, id do clube).
 pub(crate) unsafe fn interested_clubs(this: usize, player: usize) -> Vec<usize> {
     let mut l = [0u8; 0x10];
-    let list = l.as_mut_ptr() as usize;
+    let list = Llist(l.as_mut_ptr() as usize);
     exe::new_llist(list);
     exe::shortlist_manager_collect_interested_clubs(this, player, list, 0, 1, 0);
     let mut v = Vec::new();
-    let mut no = read_usize(list + llist::HEAD);
+    let mut no = list.head();
     while no != 0 && v.len() < 0x10000 {
         v.push(read_usize(read_usize(no) + 4));
         no = read_usize(no + llist_node::NEXT);
@@ -1747,22 +1747,23 @@ pub(crate) unsafe fn interested_clubs(this: usize, player: usize) -> Vec<usize> 
 /// byte +0x11 da última oferta achada é 11) ganha o bit 0x20 (+0x24); sem a lista, fora o comprador, a vaga de tipo 11
 /// ou, sem ela, a de outro tipo. Clube sem vaga encerra.
 pub(crate) unsafe extern "thiscall" fn mark_player_under_offer(this: usize, player: usize, buyer: usize, swap: usize) {
+    let swap = Llist(swap);
     // 0x68d020/0x68d040/0x68d1b0: lea ecx, lista -> thiscall; 0x842180: 5 pushes; mov ecx, ebx (ret 0x14); 0x600a50:
     // 5 pushes; add esp, 0x14 -> cdecl; 0x8c61e0: push id; mov ecx, [0xde1f54] (ret 4); 0x849ce0: 4 pushes; mov ecx,
     // ebx (ret 0x10)
     let mut l = [0u8; 0x10];
-    let list = l.as_mut_ptr() as usize;
+    let list = Llist(l.as_mut_ptr() as usize);
     exe::new_llist(list);
     exe::shortlist_manager_collect_interested_clubs(this, player, list, 0, 1, 0);
-    core::ptr::write_unaligned((list + llist::CURSOR) as *mut usize, read_usize(list + llist::HEAD));
+    list.set_cursor(list.head());
     let mut last = player; // the original’s ebp: the player, then the last offer found (holds across clubs)
     let mut item = exe::llist_get_next(list);
     'clubes: while item != 0 {
         let k = read_usize(item + shortlist_pair::CLUB_ID);
         let club = read_usize(G_CLUB_TABLE).wrapping_add(k.wrapping_mul(club::SIZE));
         if exe::human_manager_is_human_club(club, 0, 1, 0, 0) == 0 {
-            let v = if swap != 0 {
-                core::ptr::write_unaligned((swap + llist::CURSOR) as *mut usize, read_usize(swap + llist::HEAD));
+            let v = if !swap.is_null() {
+                swap.set_cursor(swap.head());
                 let mut q = exe::llist_get_next(swap);
                 while q != 0 {
                     last = exe::transfer_manager_get_offer_slot(read_usize(G_TRANSFER_MANAGER), (read_usize(q)) as i32);
@@ -2444,13 +2445,13 @@ pub(crate) unsafe extern "thiscall" fn update_staff_status(this: usize, person: 
     // 0x4cf5f0: thiscall([0xae1050], pessoa, clube) (2 push); 0x83f3a0: thiscall(this, vaga, clube, pessoa) (3 push)
     let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let mut list = [0u8; 0x10]; // a LLIST local (0xe bytes)
-    let l = list.as_mut_ptr() as usize;
+    let l = Llist(list.as_mut_ptr() as usize);
     exe::new_llist(l);
     let ev = event as u8;
     let id = read_usize(person.addr());
     if (club == 0 || club == person.club_job().addr()) && ev == 4 {
         exe::shortlist_manager_collect_interested_clubs(this, person, l, 0, 3, 0);
-        core::ptr::write_unaligned((l + llist::CURSOR) as *mut usize, read_usize(l + llist::HEAD));
+        l.set_cursor(l.head());
         let mut e = exe::llist_get_next(l);
         while e != 0 {
             ((exe::shortlist_manager_update_staff_status(this, person, friendly_club_by_id(read_usize(e + shortlist_pair::CLUB_ID)), 1, 2) as usize) as u8);
@@ -2984,15 +2985,15 @@ pub(crate) unsafe extern "thiscall" fn update_club_shortlist(this: usize, club: 
 /// A contagem (+0, 16 bits com sinal) é relida a cada volta, como na original.
 pub(crate) unsafe extern "thiscall" fn suspend_clubs_shortlisting_player(this: usize, player: usize, clear: u8) {
     let p = exe::crt_operator_new(0xe);
-    let list = if p != 0 { exe::new_llist(p) } else { 0 };
+    let list = Llist(if p != 0 { exe::new_llist(p) } else { 0 });
     exe::shortlist_manager_collect_interested_clubs(this, player, list, 1, 3, 0);
-    let n = *(list as *const i16);
+    let n = *(list.addr() as *const i16);
     if n != 0 {
-        core::ptr::write_unaligned((list + llist::CURSOR) as *mut usize, read_usize(list + llist::HEAD));
+        list.set_cursor(list.head());
     }
     if n > 0 {
         let mut i = 0i32;
-        while i < *(list as *const i16) as i32 {
+        while i < *(list.addr() as *const i16) as i32 {
             let item = exe::llist_get_next(list);
             if item != 0 {
                 let e = read_usize(this + shortlist_manager_fields::CLUB_SHORTLISTS).wrapping_add(read_usize(item + shortlist_pair::CLUB_ID).wrapping_mul(9));
@@ -3010,7 +3011,7 @@ pub(crate) unsafe extern "thiscall" fn suspend_clubs_shortlisting_player(this: u
             i += 1;
         }
     }
-    if list != 0 {
+    if !list.is_null() {
         exe::drop_llist(list);
         exe::crt_operator_delete(list);
     }
@@ -3176,7 +3177,7 @@ pub(crate) unsafe extern "thiscall" fn transfer_list_player(this: usize, player:
         lealdade > s1.wrapping_sub(s2)
     };
     if desgostar {
-        exe::staff_add_disliked_staff(player, read_usize(player.club_job().addr() + 0xcf), 1);
+        exe::staff_add_disliked_staff(player, read_usize(player.club_job().addr() + club::MANAGER), 1);
     }
     if news != 0 {
         exe::shortlist_manager_add_player_to_club_shortlists(this, player, 1);
@@ -3191,9 +3192,9 @@ pub(crate) unsafe extern "thiscall" fn transfer_list_player(this: usize, player:
 /// [pt] O registro de prêmio por jogos (0xd bytes: +0 id da pessoa, +4 valor, +8 jogos, +9 id do clube antigo) da pessoa,
 /// pela busca binária (0x946464 com 0x8b4e00) no vetor das seleções (tipo 5: +0x898, conta +0x8a0) ou do clube
 /// (+0x88c, conta +0x894) do TRANSFER_MANAGER.
-pub(crate) unsafe fn appearance_bonus_record(this: usize, player: usize, kind: u32) -> usize {
+pub(crate) unsafe fn appearance_bonus_record(this: TransferManagerFields, player: usize, kind: u32) -> usize {
     let key = [read_usize(player) as u32];
-    let (vetor, conta) = if kind as u8 == 5 { (read_usize(this + transfer_manager_fields::INTERNATIONAL_APPEARANCE_MONEY), read_usize(this + transfer_manager_fields::INTERNATIONAL_APPEARANCE_MONEY_COUNT)) } else { (read_usize(this + transfer_manager_fields::APPEARANCE_MONEY), read_usize(this + transfer_manager_fields::APPEARANCE_MONEY_COUNT)) };
+    let (vetor, conta) = if kind as u8 == 5 { (this.international_appearance_money(), this.international_appearance_money_count()) } else { (this.appearance_money(), this.appearance_money_count()) };
     exe::crt_bsearch((key.as_ptr()) as usize, vetor, (conta) as u32, 0xd, 0x8b4e00)
 }
 
@@ -3484,9 +3485,9 @@ pub(crate) unsafe extern "thiscall" fn collect_interested_clubs(this: usize, pla
 /// The 8-byte items (two u32) of an LLIST.
 ///
 /// [pt] Os itens (8 bytes) de uma LLIST (+2 o primeiro nó; nó: +0 o dado, +6 o próximo).
-pub(crate) unsafe fn llist_pairs(list: usize) -> Vec<(u32, u32)> {
+pub(crate) unsafe fn llist_pairs(list: Llist) -> Vec<(u32, u32)> {
     let mut v = Vec::new();
-    let mut no = read_usize(list + llist::HEAD);
+    let mut no = list.head();
     while no != 0 {
         let x = read_usize(no);
         v.push((read_usize(x) as u32, read_usize(x + 4) as u32));
@@ -4147,8 +4148,8 @@ pub(crate) unsafe extern "thiscall" fn update_club_target_reputation(this: usize
         let dif = read_i8(p + staff::AMBITION) as i32 - read_i8(read_usize(p + staff::NON_PLAYER) + 0x1d) as i32;
         let v = por(dif, 0x968958, w()) as i16;
         core::ptr::write_unaligned(target, v);
-        let sheet = u(club.chairman().addr() + staff::NON_PLAYER);
-        core::ptr::write_unaligned(target, por(read_i8(sheet + non_player::RESOURCES) as i32 - 10, 0x967878, v as i32) as i16);
+        let sheet = NonPlayer(u(club.chairman().addr() + staff::NON_PLAYER));
+        core::ptr::write_unaligned(target, por(sheet.resources() as i32 - 10, 0x967878, v as i32) as i16);
     }
     let floor = club.reputation();
     let v = core::ptr::read_unaligned(target);

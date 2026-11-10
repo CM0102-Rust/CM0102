@@ -70,8 +70,8 @@ pub(crate) unsafe extern "thiscall" fn compare_has_missed_training(this: usize, 
 /// [pt] O comparador do atraso: lado a lado pela devolução (byte baixo) e pelo cursor da lista.
 pub(crate) unsafe extern "thiscall" fn compare_has_fitness_incident(this: usize, person: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_HAS_FITNESS_INCIDENT);
-    let l = read_usize(this + 8);
-    let regions: Vec<(usize, usize)> = if l != 0 { vec![(l + llist::CURSOR, 4)] } else { Vec::new() };
+    let l = Llist(read_usize(this + 8));
+    let regions: Vec<(usize, usize)> = if !l.is_null() { vec![(l.addr() + llist::CURSOR, 4)] } else { Vec::new() };
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, person), || has_fitness_incident(this, person));
     SCOREBOARD.record(igual && r as u8 == n as u8, || format!("has_fitness_incident(pessoa {:#x}) original={:#x} {:x?} rust={:#x} {:x?}", person, r, mo, n, mr));
     r

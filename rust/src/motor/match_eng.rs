@@ -1228,7 +1228,7 @@ pub(crate) unsafe extern "thiscall" fn apply_factor(this: usize, factor: f32) {
     let c = (this.addr() + match_player::CONFIDENCE) as *mut f32;
     let produto = factor as f64 * *c as f64;
     *c = produto as f32;
-    let minimum = ((25 - read_i8(this.staff().addr() + 0x5d) as i32) * 2) as f32;
+    let minimum = ((25 - read_i8(this.staff().addr() + staff::TEMPERAMENT) as i32) * 2) as f32;
     let v = if produto > minimum as f64 { produto } else { minimum as f64 };
     *c = v as f32;
     if v > read_f64(rdata::F64_100) {
@@ -2544,7 +2544,7 @@ pub(crate) unsafe fn apply_pending_foul_with(m: Engine, call: &mut dyn FnMut(usi
         return 0;
     }
     if (m.restart_type() as u8) != restart::OPEN_PLAY as u8 {
-        let side = read_i8(m.pending_play_offender().addr() + 0x27);
+        let side = read_i8(m.pending_play_offender().addr() + match_player::SIDE);
         if m.possession_side() as i32 == (side == 0) as i32 {
             let (marcada, aqui) = (m.ball_y(), m.pending_play_y());
             if (aqui < marcada && side == 1) || (marcada < aqui && side == 0) {
@@ -2615,7 +2615,7 @@ pub(crate) unsafe fn apply_pending_foul_with(m: Engine, call: &mut dyn FnMut(usi
         m.set_restart_type(restart::INDIRECT_FREE_KICK);
     } else {
         let (x, y) = (m.pending_play_x(), m.pending_play_y());
-        let area = (2..=6).contains(&x) && if read_i8(m.pending_play_offender().addr() + 0x27) == 1 { (10..=11).contains(&y) } else { (0..=1).contains(&y) };
+        let area = (2..=6).contains(&x) && if read_i8(m.pending_play_offender().addr() + match_player::SIDE) == 1 { (10..=11).contains(&y) } else { (0..=1).contains(&y) };
         if area {
             m.set_restart_type(restart::PENALTY);
             let who = MatchPlayer(if sofreu { m.pending_play_victim() } else { m.pending_play_offender().addr() });
@@ -2669,7 +2669,7 @@ pub(crate) unsafe fn apply_pending_foul_with(m: Engine, call: &mut dyn FnMut(usi
             narrate(call, event::REFEREES_A_WANKER, u32::MAX, side_of(MatchPlayer(m.pending_play_offender().addr())), u32::MAX);
         }
         if matches!((m.pending_play_kind() as u8), 3..=6) || sound == 0x1f7a {
-            *((m.pending_play_offender().addr() + 0x16) as *mut u8) = 1;
+            *((m.pending_play_offender().addr() + match_player::SENT_OFF) as *mut u8) = 1;
             if random(7) == 0 {
                 narrate(call, event::TEAM_ARGUES_WITH_REFEREE, u32::MAX, side_of(MatchPlayer(m.pending_play_offender().addr())), u32::MAX);
             }
@@ -4561,7 +4561,7 @@ pub(crate) unsafe fn shot_foul_with(m: Engine, e: MatchPlayer, p: usize, kind: u
         m.set_restart_type(restart::PENALTY);
         m.set_fouled_player(p.addr());
         e.set_match_rating((e.match_rating()).wrapping_sub(500));
-        if random(read_i8(e.staff().addr() + 0x5a) as i32) == 0 {
+        if random(read_i8(e.staff().addr() + staff::PRESSURE) as i32) == 0 {
             let r = random(10);
             if adjust_17(e.addr(), (r as u8).wrapping_neg() as i8) != 0 {
                 match_performance(e.addr(), 0);
@@ -5802,8 +5802,8 @@ pub(crate) unsafe fn narrate_weak_miss_with(c: &ShotLocals, call: &mut dyn FnMut
         if !q.is_null() && read_i8(read_usize(p + match_player::PLAYER) + 0x3f) < 10 && {
             let r = random(6);
             read_i8(read_usize(p + match_player::STAFF) + 0x5b) < (r as u8).wrapping_add(10) as i8
-        } && read_i8(q.staff().addr() + 0x5b) < 10
-            && random(read_i8(q.staff().addr() + 0x5b) as i32) == 0
+        } && read_i8(q.staff().addr() + staff::PROFESSIONALISM) < 10
+            && random(read_i8(q.staff().addr() + staff::PROFESSIONALISM) as i32) == 0
         {
             crate::comparison::branch("shot teammate free");
             narrate_packed7(call, m, event::SELFISH_PLAYER, (read_u8(p + match_player::COMMENTARY_ID) as u32), lp, (q.commentary_id() as u32), ((q.side() as u8) as u32), 0);
@@ -7643,7 +7643,7 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
             }
         }
         let leitura = p.moment_decisions() as i32;
-        let b5c = || read_i8(p.staff().addr() + 0x5c) as i32;
+        let b5c = || read_i8(p.staff().addr() + staff::SPORTSMANSHIP) as i32;
         let arr = *risky as i32;
         let chosen: Option<i8> = 'e: {
             if kind == 0x15 {
@@ -8879,7 +8879,7 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
     m.set_restart_type(restart::OPEN_PLAY);
     let c = MatchPlayer(m.ball_holder().addr());
     let mut factor_nation = f32::from_bits(0x3e4ccccd);
-    let nation = *((c.staff().addr() + 0x1a) as *const usize);
+    let nation = *((c.staff().addr() + staff::NATION) as *const usize);
     if nation != 0 {
         let id = *(nation as *const u32);
         let g = |a: usize| *(a as *const u32) == id;
@@ -9325,7 +9325,7 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
         v38 = v38.wrapping_sub(155 * q);
         let v30b = v30.wrapping_sub(25 * q);
         let mut base = v1c;
-        if random(read_i8(c.staff().addr() + 0x5b) as i32 + 1) == 0 {
+        if random(read_i8(c.staff().addr() + staff::PROFESSIONALISM) as i32 + 1) == 0 {
             let (fp, fc) = (p.staff(), c.staff());
             if exe::staff_is_disliked_by(fp, fc) != 0 {
                 continue;
@@ -9585,7 +9585,7 @@ pub(crate) unsafe fn goal_distance_bonus(d: f32) -> i32 {
 /// clubes da partida sao da mesma nacao, senao a mundial; em centenas, menos 50.
 pub(crate) unsafe fn target_reputation(j: MatchPlayer, p: MatchPlayer, clubs: (Club, Club)) -> i32 {
     let sheet = p.player();
-    let nation = |q: MatchPlayer| *((q.staff().addr() + 0x1a) as *const u32);
+    let nation = |q: MatchPlayer| *((q.staff().addr() + staff::NATION) as *const u32);
     let off = if nation(j) == nation(p) {
         9
     } else if clubs.0 != Club(0) && clubs.1 != Club(0) && *(((clubs.0).addr() + 0x53) as *const u32) == *(((clubs.1).addr() + 0x53) as *const u32) {
@@ -10161,15 +10161,16 @@ pub(crate) unsafe extern "thiscall" fn choose_taker(this: usize, side: i8, kind:
 /// (minimo 21). Faixas por partida: casa -250/+300, atual -250/+375, mundial -500/+100 x nivel (x
 /// 2 - reputacao/10000). Tetos: 400 x nivel (/2 sem o caso especial), entre 5000 (mundial 3000) e 10000.
 pub(crate) unsafe extern "C" fn player_reputation(reg: usize, my: usize, other: usize, partida: usize, value: f32, alt: u8, bonus: u8) {
+    let reg = MatchManager(reg);
     let partida = Fixture(partida);
     let my = Club(my);
     let other = Club(other);
-    let p = Staff(*((reg + match_manager::MANAGER) as *const usize));
+    let p = Staff(reg.manager());
     if p.is_null() {
         return;
     }
-    let st = p.non_player();
-    if st == 0 {
+    let st = NonPlayer(p.non_player());
+    if st.is_null() {
         return;
     }
     let comp = Competition(partida.competition().addr());
@@ -10184,7 +10185,7 @@ pub(crate) unsafe extern "C" fn player_reputation(reg: usize, my: usize, other: 
         v.min(20)
     };
     let ceiling = |rep: i32, minimum: i8| ((rep / 1000) as i8).wrapping_add(16).max(minimum) as i16;
-    let (atual, casa, mundo) = ((read_i16(st + non_player::HOME_REPUTATION) as i32), (read_i16(st + non_player::CURRENT_REPUTATION) as i32), (read_i16(st + non_player::WORLD_REPUTATION) as i32));
+    let (atual, casa, mundo) = ((st.home_reputation() as i32), (st.current_reputation() as i32), (st.world_reputation() as i32));
     let n_home = ceiling(casa, 22).wrapping_sub(level as i16);
     let national_team = is_national_team(my.addr()) != 0;
     let club_p = p.nation();
@@ -10253,9 +10254,9 @@ pub(crate) unsafe extern "C" fn player_reputation(reg: usize, my: usize, other: 
     let r_world = band(mundo, read_f32(rdata::F32_500) as f64, (nv * 100) as f64, average(n_world, mundo, new_world));
     let c = nv.wrapping_mul(400);
     let cap = |x: i32, floor: i32, r: i32| (x.clamp(floor, 10000) as i16).max(r as i16);
-    *(reg as *mut i16) = r_home.min(cap(c, 5000, casa)).max(1);
-    *((reg + match_manager::MANAGER_HOME_REPUTATION) as *mut i16) = r_current.min(cap(c / f_atual, 5000, atual)).max(1);
-    *((reg + match_manager::MANAGER_WORLD_REPUTATION) as *mut i16) = r_world.min(cap(c / f_mundo, 3000, mundo)).max(1);
+    *(reg.addr() as *mut i16) = r_home.min(cap(c, 5000, casa)).max(1);
+    reg.set_manager_home_reputation(r_current.min(cap(c / f_atual, 5000, atual)).max(1));
+    reg.set_manager_world_reputation(r_world.min(cap(c / f_mundo, 3000, mundo)).max(1));
 }
 
 /// Ratio of the global player stats (G_PLAYER_STATS): +0x20/+0x28 or +0x10/+0x18; zero divisor gives the 0x968998
@@ -10860,7 +10861,7 @@ pub(crate) unsafe fn apply_attribute_step(v: f64, x: i8, rules: &[(char, i8, usi
 ///
 /// [pt] sorteio(atributo 0x21 da pessoa) < sorteio(20): multiplica por 0x96d248.
 pub(crate) unsafe fn luck_multiplier(v: f64, person: PlayerSheet) -> f64 {
-    let a = random(read_i8(person.addr() + 0x21) as i32);
+    let a = random(person.consistency() as i32);
     if a < random(0x14) {
         (v * read_f32(rdata::F32_0_75) as f64) as f32 as f64
     } else {

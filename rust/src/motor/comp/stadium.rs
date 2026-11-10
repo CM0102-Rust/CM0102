@@ -339,7 +339,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
                 chave[2] = d.is_leap_year as u32;
                 livre = buscar(chave.as_ptr() as usize, read_usize(this), read_usize(this + stadium_obj::BOOKING_COUNT) as u32, 0xc, 0x85e380) == 0;
             }
-            if livre && (read_usize(read_usize(fx.home_club().addr() + 0x69) + 0x3c) as i32) < 40000 {
+            if livre && (read_usize(read_usize(fx.home_club().addr() + club::STADIUM) + 0x3c) as i32) < 40000 {
                 *neutro = 1;
                 fixar(read_usize(nation_by_id(fin) + 0x80));
                 add_stadium_booking(this, fx.stadium(), pd);
@@ -356,7 +356,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
             }
             if !amistoso {
                 crate::comparison::branch("cqo_1 home team stadium");
-                fixar(read_usize(fx.home_club().addr() + 0x69)); // cqo1: the home team stadium
+                fixar(read_usize(fx.home_club().addr() + club::STADIUM)); // cqo1: the home team stadium
                 return;
             }
         } else if !fin_prm_is_national_team(Club(fx.home_club().addr())) {
@@ -438,7 +438,7 @@ pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marcas: u3
         alvo = comp.nation().addr();
     }
     if f & 0x20 != 0 && fin_prm_is_national_team(Club(fx.home_club().addr())) {
-        alvo = read_usize(fx.home_club().addr() + 0x53);
+        alvo = read_usize(fx.home_club().addr() + club::NATION);
     }
     if f & 4 != 0 && alvo != 0 {
         let st = read_usize(alvo + nation::NATIONAL_STADIUM);
@@ -834,7 +834,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
             let lot = read_i32(est + stadium::CAPACITY);
             let vis = if game.neutral_venue() == 0 {
                 let a = lot as f64;
-                let x = a - read_i32(game.away_club().addr() + 0x73) as f64 * f[0];
+                let x = a - read_i32(game.away_club().addr() + club::ATTENDANCE) as f64 * f[0];
                 let y = a * read_f64(rdata::F64_0_15);
                 let z = if x < y { x } else { y };
                 let w = a * read_f64(rdata::F64_0_05);
@@ -962,8 +962,8 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
             if exe::database_is_national_team(game.home_club()) != 0 {
                 expected = 0xea60;
             } else {
-                let a = read_i32(game.away_club().addr() + 0x73);
-                let c = read_i32(game.home_club().addr() + 0x73);
+                let a = read_i32(game.away_club().addr() + club::ATTENDANCE);
+                let c = read_i32(game.home_club().addr() + club::ATTENDANCE);
                 let s = c.wrapping_add(a);
                 if s < 0x1388 {
                     expected = 0x1388;
@@ -1027,7 +1027,7 @@ pub(crate) unsafe extern "thiscall" fn score_venue_for_fixture(_this: usize, est
 /// nação, 0,05; e sempre [0x96d2c8]. Devolve o double no st0.
 pub(crate) unsafe extern "thiscall" fn get_travel_distance_factor(_this: usize, game: usize, cid_est: usize, cid_club: usize, base: f64) -> f64 {
     let game = Fixture(game);
-    let nation = Nation(read_usize(game.away_club().addr() + 0x53));
+    let nation = Nation(read_usize(game.away_club().addr() + club::NATION));
     let r = (nation.state_of_development() as i8) as i32 as f64;
     let dy = read_f64(cid_est + city::LONGITUDE) - read_f64(cid_club + city::LONGITUDE);
     let dx = read_f64(cid_est + city::LATITUDE) - read_f64(cid_club + city::LATITUDE);
@@ -1053,7 +1053,7 @@ pub(crate) unsafe extern "thiscall" fn get_travel_distance_factor(_this: usize, 
     if kind == 0xa && f < read_f64(rdata::F64_0_2) {
         return read_f64(rdata::F64_0_2);
     }
-    if f < read_f64(rdata::F64_0_05) && read_usize(game.home_club().addr() + 0x53) == nation.addr() {
+    if f < read_f64(rdata::F64_0_05) && read_usize(game.home_club().addr() + club::NATION) == nation.addr() {
         return read_f64(rdata::F64_0_05);
     }
     if f < read_f64(rdata::F64_0_03) {

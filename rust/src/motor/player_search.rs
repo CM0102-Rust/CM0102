@@ -226,7 +226,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
         nation = read_usize(read_usize(t + stadium::CITY) + 0x1f);
     }
     if nation == 0 {
-        nation = read_usize(game.home_club().addr() + 0x53);
+        nation = read_usize(game.home_club().addr() + club::NATION);
     }
     if read_u8(this + player_search_fields::LIST_TYPE) != 4 {
         return 0;

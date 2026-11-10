@@ -562,9 +562,9 @@ pub(crate) unsafe fn squad_reaction_to_story_with(topic: u32, player: Staff, clu
             continue;
         }
         let mut rating: i8 = 10;
-        let manager = read_usize(p + staff::NON_PLAYER);
-        if manager != 0 {
-            rating = read_i8(manager + non_player::PATIENCE).wrapping_add(10);
+        let manager = NonPlayer(read_usize(p + staff::NON_PLAYER));
+        if !manager.is_null() {
+            rating = (manager.patience() as i8).wrapping_add(10);
         } else if read_usize(p + staff::PLAYER) != 0 {
             if (player.age() as i8) > 0x14 && read_i8(p + staff::AGE) < 0x17 && read_i16(read_usize(p + staff::PLAYER) + 0xb) < 0x109a {
                 continue;
@@ -1346,7 +1346,7 @@ pub(crate) unsafe extern "thiscall" fn queue_signing_celebration_story(this: usi
     exe::newsitem_set_slot(nt, 9, kind as u8 as i8 as i32 as u32);
     let mut r = 0u32;
     if exe::human_manager_is_human_club(p.club_job(), 0, 1, 0, 0) == 0 {
-        r = exe::media_pick_ai_manager_response(this, read_usize(p.club_job().addr() + 0xcf), p, 0x82);
+        r = exe::media_pick_ai_manager_response(this, read_usize(p.club_job().addr() + club::MANAGER), p, 0x82);
     }
     exe::newsitem_set_slot(nt, 10, r);
     let mut k: i8 = 0xb;
@@ -1358,7 +1358,7 @@ pub(crate) unsafe extern "thiscall" fn queue_signing_celebration_story(this: usi
         k = 0xf;
     }
     exe::newsitem_set_slot(nt, k, (club.reputation() > 0x1c52) as u32);
-    let t = read_usize(p.club_job().addr() + 0xcf);
+    let t = read_usize(p.club_job().addr() + club::MANAGER);
     exe::newsitem_set_slot(nt, k + 1, read_usize(t) as u32);
     for j in 1..4usize {
         exe::newsitem_set_slot(nt, k + 1 + j as i8, read_usize(read_usize(t + 4 * j) + 0x33) as u32);
@@ -1469,12 +1469,12 @@ pub(crate) unsafe fn place_coach_at_ai_club(s: Staff) {
     }
     let rep = |k: usize| {
         let f = read_i16(s.player() + 0xb) as f64;
-        let c = read_i16(s.club_job().addr() + 0x80) as f64 * read_f64(k);
+        let c = read_i16(s.club_job().addr() + club::REPUTATION) as f64 * read_f64(k);
         c > f
     };
     if rep(0x968968) && (exe::database_count_club_coaches(s.club_job()) as i8) < 5 {
         for k in 0..5usize {
-            let v = s.club_job().addr() + 0x19f + 4 * k;
+            let v = s.club_job().addr() + club::COACHES + 4 * k;
             if read_usize(v) == 0 {
                 core::ptr::write_unaligned(v as *mut usize, s.addr());
                 s.set_job_for_club(0xf);
@@ -1483,14 +1483,14 @@ pub(crate) unsafe fn place_coach_at_ai_club(s: Staff) {
         if s.job_for_club() == 0xf || exe::database_get_club_assistant(s.club_job()) != 0 {
             return;
         }
-        core::ptr::write_unaligned((s.club_job().addr() + 0xd3) as *mut usize, s.addr());
+        core::ptr::write_unaligned((s.club_job().addr() + club::ASSISTANT_MANAGER) as *mut usize, s.addr());
         s.set_job_for_club(0xd);
         return;
     }
     if !rep(0x969040) || exe::database_get_club_assistant(s.club_job()) != 0 {
         return;
     }
-    core::ptr::write_unaligned((s.club_job().addr() + 0xd3) as *mut usize, s.addr());
+    core::ptr::write_unaligned((s.club_job().addr() + club::ASSISTANT_MANAGER) as *mut usize, s.addr());
     s.set_job_for_club(0xd);
 }
 

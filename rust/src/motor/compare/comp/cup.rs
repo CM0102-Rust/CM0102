@@ -575,14 +575,14 @@ pub(crate) unsafe extern "thiscall" fn compare_move_round_fixtures_to_set_dates(
     }
     let id = read_usize(read_usize(this.addr() + 4));
     let mut list = [0u8; 0x10];
-    let l = list.as_mut_ptr() as usize;
+    let l = Llist(list.as_mut_ptr() as usize);
     exe::new_llist(l);
     let mut expected = [0u8; 8];
     for k in 0..8 {
         expected[k] = read_u8(e + k * 7 + 0x29);
     }
     if collect_round_fixtures(this, data, round, l) != 0 {
-        write_usize(l + llist::CURSOR, read_usize(l + llist::HEAD));
+        l.set_cursor(l.head());
         let mut j = 0usize;
         let mut f = exe::llist_get_next(l);
         while f != 0 {

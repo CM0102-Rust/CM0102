@@ -1311,10 +1311,11 @@ pub(crate) unsafe extern "C" fn compare_club_can_be_managed(club: usize) -> u8 {
 
 /// Comparer for `database_vector_to_non_player`.
 pub(crate) unsafe extern "C" fn compare_database_vector_to_non_player(not_player: usize, person: usize, array: usize) -> u32 {
+    let not_player = NonPlayer(not_player);
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize) -> u32>(IDX_DATABASE_VECTOR_TO_NON_PLAYER);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(not_player + non_player::ATTACKING, 21)],
-        || o(not_player, person, array), || database_vector_to_non_player(not_player, person, array));
-    SCOREBOARD.record(igual && r == n, || format!("database_vector_to_non_player({:x}) original={:x} rust={:x} {:x?} x {:x?}", not_player, r, n, mo, mr));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(not_player.addr() + non_player::ATTACKING, 21)],
+        || o(not_player.addr(), person, array), || database_vector_to_non_player(not_player.addr(), person, array));
+    SCOREBOARD.record(igual && r == n, || format!("database_vector_to_non_player({:x}) original={:x} rust={:x} {:x?} x {:x?}", not_player.addr(), r, n, mo, mr));
     r
 }
 
@@ -1334,11 +1335,11 @@ pub(crate) unsafe extern "C" fn compare_database_vector_to_player(player: usize,
 pub(crate) unsafe extern "C" fn compare_staff_normalise_non_player_attributes(person: usize) {
     let person = Staff(person);
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_NORMALISE_NON_PLAYER_ATTRIBUTES);
-    let nj = if person.is_null() { 0 } else { person.non_player() };
-    if nj == 0 {
+    let nj = NonPlayer(if person.is_null() { 0 } else { person.non_player() });
+    if nj.is_null() {
         return o(person.addr()); // does nothing: original only
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(nj + non_player::ATTACKING, 21)], || o(person.addr()),
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(nj.addr() + non_player::ATTACKING, 21)], || o(person.addr()),
         || staff_normalise_non_player_attributes(person.addr()));
     SCOREBOARD.record(igual, || format!("staff_normalise_non_player_attributes({:x}) {:x?} x {:x?}", person.addr(), mo, mr));
 }

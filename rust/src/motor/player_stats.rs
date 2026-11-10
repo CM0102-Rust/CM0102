@@ -231,9 +231,9 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
     if (club_id as i32) > -1 || (value as i32) > -1 {
         core::ptr::write_unaligned((reg + player_stats_entry::CLUB_LEAGUE_GAMES) as *mut u16, 0);
         core::ptr::write_unaligned((reg + player_stats_entry::CLUB_LEAGUE_GOALS) as *mut u16, 0);
-        let list = exe::file_llist_get_nodes(read_usize(this), read_usize(reg + player_stats_entry::HISTORY_START) as u32, read_usize(reg + player_stats_entry::HISTORY_LAST) as u32);
-        if list != 0 {
-            core::ptr::write_unaligned((list + llist::CURSOR) as *mut u32, read_usize(list + llist::HEAD) as u32);
+        let list = Llist(exe::file_llist_get_nodes(read_usize(this), read_usize(reg + player_stats_entry::HISTORY_START) as u32, read_usize(reg + player_stats_entry::HISTORY_LAST) as u32));
+        if !list.is_null() {
+            list.set_cursor((list.head() as u32) as usize);
             let mut no = exe::llist_get_next(list);
             while no != 0 {
                 if read_usize(no + career_entry::CLUB_ID) as u32 == club_id && *((no + career_entry::KIND) as *const u8) & 0xf8 == 0x10 {
@@ -384,9 +384,9 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
     let mut club_current = u32::from_le_bytes([last.0[2], last.0[3], last.0[4], last.0[5]]);
     let mut kind_current: u8 = 0xff;
     let reg_sheet = read_usize(this + player_stats_fields::PLAYER_ENTRIES).wrapping_add((read_i32(f) as isize * 0x27) as usize);
-    let list = exe::file_llist_get_nodes(read_usize(this), read_usize(reg_sheet + player_stats_entry::HISTORY_START) as u32, read_usize(reg_sheet + player_stats_entry::HISTORY_LAST) as u32);
-    if list != 0 {
-        write_u32(list + llist::CURSOR, read_usize(list + llist::TAIL) as u32);
+    let list = Llist(exe::file_llist_get_nodes(read_usize(this), read_usize(reg_sheet + player_stats_entry::HISTORY_START) as u32, read_usize(reg_sheet + player_stats_entry::HISTORY_LAST) as u32));
+    if !list.is_null() {
+        list.set_cursor((list.tail() as u32) as usize);
         let mut no = exe::llist_get_prev(list);
         while no != 0 {
             let kind = read_u8(no + career_entry::KIND);
@@ -1097,7 +1097,7 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
     let club = Club(club);
     let language = language as u8;
     if !person.is_null() && read_usize(person.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
-        return if read_u8(person.nation().addr() + 0x77) == language { 10 } else { 0 }; // the human manager
+        return if read_u8(person.nation().addr() + nation::FIRST_LANGUAGE) == language { 10 } else { 0 }; // the human manager
     }
     if by_contract != 0 {
         let c = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club));
@@ -1109,7 +1109,7 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
         }
     }
     let fala = |l: u8| {
-        if read_u8(person.nation().addr() + 0x77) == l {
+        if read_u8(person.nation().addr() + nation::FIRST_LANGUAGE) == l {
             return true;
         }
         let s = Nation(person.second_nation().addr());

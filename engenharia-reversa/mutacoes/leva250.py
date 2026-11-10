@@ -20,5 +20,5 @@ MUTACOES = [
     ('cpn_alvos_evento', '((exe::shortlist_manager_update_staff_status(this, p, club, 3, kind) as usize) as u32);', 'let _ = kind; // mutacao: sem o evento 3', 'cpn_6 target outside the club'),
     ('cpn_busca_mesma_regiao', 'return 1; // the same region as the club’s nation', 'return 0; // mutacao: a mesma regiao nao cobre', 'cpn_7 same region'),
     ('cpn_busca_nacao_do_olheiro', 'return 1; // the nation is not foreign for the scout', 'return 0; // mutacao: a nacao do olheiro nao cobre', 'cpn_7 scout nation'),
-    ('cpn_amistoso_lista', 'exe::llist_remove(read_usize(this + friendly::FRIENDLY_MATCH_LIST), game) // removes the match from the friendlies list', '1 // mutacao: o jogo fica na lista', 'cpn_7 remove the friendly'),
+    ('cpn_amistoso_lista', 'exe::llist_remove(this.friendly_match_list(), game) // removes the match from the friendlies list', '1 // mutacao: o jogo fica na lista', 'cpn_7 remove the friendly'),
 ]

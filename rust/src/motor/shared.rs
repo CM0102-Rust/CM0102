@@ -147,7 +147,7 @@ pub(crate) unsafe fn play_with(j: MatchPlayer, strength: i16, height: f32, style
     let (mut valor, lance) = if em_area && exe::cm3_match_engine_get_player_position(m, j) == 1 {
         choose()
     } else {
-        let ficha5c = read_i8(j.staff().addr() + 0x5c) as i32;
+        let ficha5c = read_i8(j.staff().addr() + staff::SPORTSMANSHIP) as i32;
         if random(em_area as i32 * 500 + 100 + ficha5c * 200) != 0 {
             choose()
         } else {

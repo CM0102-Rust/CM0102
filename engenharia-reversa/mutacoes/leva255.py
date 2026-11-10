@@ -29,7 +29,7 @@ MUTACOES = [
     ('cps9_volta_nao_achada', '0 // cps9: the return of today found', '-1 // mutacao: a volta de hoje nao e achada', 'cps_9 same date'),
     ('cps10_todos_os_clubes', 'if v >= 0 && v == read_i32(club) { // cps10: only the club groups', 'if v >= 0 { // mutacao: todos os clubes'),
     ('cps10_um_gol_a_mais', 's // cps10: the goals for the club', 's.wrapping_add(1) // mutacao: um gol a mais'),
-    ('cps10_menos_pontos_primeiro', 'read_i32(rb + manager_record::SEASON_POINTS).wrapping_sub(read_i32(ra + manager_record::SEASON_POINTS)) // cps10: most points first', 'read_i32(ra + manager_record::SEASON_POINTS).wrapping_sub(read_i32(rb + manager_record::SEASON_POINTS)) // mutacao: menos pontos primeiro', 'cps_10 points of both'),
+    ('cps10_menos_pontos_primeiro', 'rb.season_points().wrapping_sub(ra.season_points()) // cps10: most points first', 'ra.season_points().wrapping_sub(rb.season_points()) // mutacao: menos pontos primeiro', 'cps_10 points of both'),
     ('cps11_nao_acha', 'return item; // cps11: the saved copy', 'return 0; // mutacao: nao acha', 'cps_11 found the stored match'),
     ('cps11_nao_guarda', 'if exe::llist_add_tail(l, f, 0x4f) == 0 { // cps11: guardar', 'if false { // mutacao: nao guarda', 'cps_11 stored match'),
     ('cps11_nao_tira', 'let r = exe::llist_remove(fixture_list_in_block(b, Fixture(f)), f); // cps11: tirar', 'let r = 0u32; // mutacao: nao tira', 'cps_11 match removed'),

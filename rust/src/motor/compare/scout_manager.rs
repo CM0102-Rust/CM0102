@@ -55,17 +55,18 @@ pub(crate) unsafe extern "thiscall" fn compare_scout_manager_daily_update(this: 
 /// 0x7f9a60 ligado; antes, a cópia em ensaio (sem a 0x7f9a60) diz os grupos (jogador, clube, quantos) em ordem, e as
 /// chamadas da original têm de ser essas.
 pub(crate) unsafe extern "thiscall" fn compare_send_scout_reports(this: usize, list: usize) {
+    let list = Llist(list);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEND_SCOUT_REPORTS);
-    let cursor = read_usize(list + llist::CURSOR);
+    let cursor = list.cursor();
     *core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS) = Some(Vec::new());
     SCOUT_DAILY_DRY_RUN = true;
-    send_scout_reports(this, list);
+    send_scout_reports(this, list.addr());
     SCOUT_DAILY_DRY_RUN = false;
     let plan = (*core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS)).replace(Vec::new()).unwrap_or_default();
-    core::ptr::write_unaligned((list + llist::CURSOR) as *mut usize, cursor);
-    o(this, list);
+    list.set_cursor(cursor);
+    o(this, list.addr());
     let done = (*core::ptr::addr_of_mut!(SCOUT_REPORT_GROUPS)).take().unwrap_or_default();
-    SCOREBOARD.record(done == plan, || format!("send_scout_reports(lista {:#x}) original {:x?} ensaio {:x?}", list, done, plan));
+    SCOREBOARD.record(done == plan, || format!("send_scout_reports(lista {:#x}) original {:x?} ensaio {:x?}", list.addr(), done, plan));
 }
 
 /// Comparer for `send_scout_report_news`.

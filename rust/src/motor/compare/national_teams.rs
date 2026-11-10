@@ -604,7 +604,7 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_remove_player(this
         }
     }
     if !player.national_job().is_null() {
-        regions[3] = (player.national_job().addr() + 0xd7, 200);
+        regions[3] = (player.national_job().addr() + club::SQUAD, 200);
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, player.addr()), || national_teams_remove_player(this, player.addr()));
     SCOREBOARD.record(igual, || format!("national_teams_remove_player(nivel {}) {:x?} x {:x?}", n, mo, mr));

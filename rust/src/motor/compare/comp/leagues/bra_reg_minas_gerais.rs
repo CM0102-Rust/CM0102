@@ -43,8 +43,8 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_minas_gerais_create_final
     let same = if a == b {
         let mark = |k: usize| *((read_usize(read_usize(this.stages() + 4 * k) + 0xb1) + 0x37) as *const u8) == 5;
         let in_league = (0..this.club_count().max(0) as usize).all(|i| {
-            let row = this.table() + i * 0x3b;
-            read_usize(row) != a || *((row + league_table_row::STATUS) as *const u8) == 5
+            let row = LeagueTableRow(this.table() + i * 0x3b);
+            read_usize(row.addr()) != a || row.status() == 5
         });
         this.current_stage() == 1 && this.stage_count() == 2 && mark(0) && mark(1) && in_league
     } else {

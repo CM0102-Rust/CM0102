@@ -2,7 +2,7 @@
 MUTACOES = [
     ('cpo_comprador_no_limite', 'or_byte(f1, 4); // the buyer: fee within the limit', 'or_byte(f1, 8); // mutacao: o comprador ganha a marca da barganha', 'cpo_1 comprador no limite'),
     ('cpo_vendedor_no_limite', 'or_byte(f2, 4); // the seller: fee within the limit', 'or_byte(f2, 2); // mutacao: o vendedor perde confianca', 'cpo_1 vendedor no limite'),
-    ('cpo_tirar_favorito', 'exe::staff_remove_favoured_staff(read_usize(person.club_job().addr() + 0xbf), person); // the seller’s chairman', 'let _ = person; // mutacao: o jogador fica nas favoritas do presidente', 'cpo_1 remove favourite'),
+    ('cpo_tirar_favorito', 'exe::staff_remove_favoured_staff(read_usize(person.club_job().addr() + club::CHAIRMAN), person); // the seller’s chairman', 'let _ = person; // mutacao: o jogador fica nas favoritas do presidente', 'cpo_1 remove favourite'),
     ('cpo_tirar_contrato', 'write_usize(main_contract_slot(person), usize::MAX); // the person is left without a contract', '// mutacao: a pessoa fica com o indice do contrato', 'cpo_2 remove contract'),
     ('cpo_reenviar_oferta', 'exe::contract_manager_add_contract_offer(this, (item) as usize as *mut u8, t, read_usize(item + contract_offer::TRANSFER_OFFER_SERIAL), (q.addr() as u32 & 0xffff_ff00) | byte, 1, 1, 0); // with the transfer', '// mutacao: sem reenviar', 'cpo_2 resend offer'),
     ('cpo_mes_do_fim', 'let p = exe::date_add_days((d1.as_mut_ptr()) as usize, (d2.as_mut_ptr()) as usize, (0xa) as u32); // dez dias depois', 'let p = exe::date_add_days((d1.as_mut_ptr()) as usize, (d2.as_mut_ptr()) as usize, (0x28) as u32); // mutacao: quarenta dias depois'),
@@ -28,7 +28,7 @@ MUTACOES = [
     ('cpo_prever_negocia', 'crate::comparison::branch("cpo_9 negotiates");\n    1\n}', 'crate::comparison::branch("cpo_9 negotiates");\n    2 // mutacao: recusa\n}', 'cpo_9 negotiates'),
     ('cpo_periodo_recua', 'let m = (*month).wrapping_sub(1);', 'let m = (*month).wrapping_sub(2); // mutacao: dois meses', 'cpo_9 steps back the month'),
     ('cpo_prazo_sorteio', 'let s = exe::utils_random(status as i32 / 10 + 0xc) as i8;', 'let s = exe::utils_random(status as i32 / 10 + 6) as i8; // mutacao: ate +6', 'cpo_10 drawn deadline'),
-    ('cpo_prestacao_acabada', 'exe::llist_remove(list, e);', 'let _ = list; // mutacao: a acabada fica', 'cpo_10 instalment finished'),
+    ('cpo_prestacao_acabada', 'exe::llist_remove(list, e);', 'let _ = list.addr(); // mutacao: a acabada fica', 'cpo_10 instalment finished'),
     ('cpo_tirar_ofertas_pessoa', '*q = (*q).wrapping_sub(1); // the offers for the person', '// mutacao: sem baixar as ofertas pela pessoa', 'cpo_10 remove offer'),
     ('cpo11_suspensao_sem_regras', 'exe::rulingbody_attach_ban(ruling_body_of_rule(this, rule), id, slot as u16 as u32); // links the rule to the suspension', 'let _ = (&ligar, slot); // mutacao: a regra sem ligar a suspensao', 'cpo_11 new suspension'),
     ('cpo11_transferido_sem_cobertura', 'if ruling_body_covers_club(body, Club(club)) {\n            continue;\n        }\n        let e = ruling_body_entry(body, id);\n        if e == 0 {', '// mutacao: o Club(club)e novo nunca cobre\n        let e = ruling_body_entry(body, id);\n        if e == 0 {', 'cpo_11 transferred frees the slot'),
