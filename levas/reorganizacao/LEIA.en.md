@@ -29,6 +29,17 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 30: the style step for new batches
+
+`padronizar.sh` runs the readability tools over the code right after a batch is integrated (`publicar_leva.py` calls it):
+first the compiler-driven fix of calls written against the old API, then `read_T`/`write_T`, the global tables, the reader
+closures and the `.rdata` names, English locals and messages, named offsets, typed records and the cleanup. Every tool is
+idempotent and backs out a function that does not compile; a second pass over the tree changes nothing. The first pass
+over the current tree still typed a few accesses. Fixes on the way: `nomear_rdata.py` keeps every existing line (an
+address can carry two names); a typed setter writes a bare literal as `0xffffu16 as i16` (a literal above `i16::MAX` typed
+as `i16` does not compile). `COMO_ESCREVER_UM_ITEM` describes the typed style. Outside reader, round 11:
+`leitor_de_fora_rodada11.txt`. Proof: 7cc445c2 ×2, detector equal, comparison 0; the 5 changed mutations compile.
+
 ## Readability batch 29: typed signatures and the last raw float constants
 
 `tipar_registros.py --assinaturas` for the 25 record types in use and `--propagar` over them (`.addr()` 8,079 → 8,017: the

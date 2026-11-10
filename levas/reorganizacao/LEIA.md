@@ -28,6 +28,18 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 30 da legibilidade: o passo de estilo para as levas novas
+
+`padronizar.sh` passa as ferramentas de legibilidade no código logo depois de integrar uma leva (o `publicar_leva.py`
+chama): primeiro o ajuste pelo compilador das chamadas escritas contra a API antiga, depois `read_T`/`write_T`, as tabelas
+globais, os fechos leitores e os nomes do `.rdata`, locais e mensagens em inglês, deslocamentos com nome, registros tipados
+e a limpeza. Cada ferramenta é idempotente e volta a função que não compila; uma segunda passada sobre a árvore não muda
+nada. A primeira passada sobre a árvore atual ainda tipou alguns acessos. Consertos no caminho: o `nomear_rdata.py` mantém
+todas as linhas existentes (um endereço pode ter dois nomes); o setter tipado escreve um literal solto como
+`0xffffu16 as i16` (um literal acima de `i16::MAX` tipado como `i16` não compila). O `COMO_ESCREVER_UM_ITEM` descreve o
+estilo tipado. Leitor de fora, rodada 11: `leitor_de_fora_rodada11.txt`. Prova: 7cc445c2 ×2, detector igual, comparação
+0; as 5 mutações mudadas compilam.
+
 ## Leva 29 da legibilidade: assinaturas tipadas e as últimas constantes de ponto flutuante cruas
 
 `tipar_registros.py --assinaturas` para os 25 tipos de registro em uso e `--propagar` sobre eles (`.addr()` 8.079 → 8.017:

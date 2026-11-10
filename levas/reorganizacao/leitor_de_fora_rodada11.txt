@@ -1,0 +1,74 @@
+ROUND 11 READER REPORT (Rust developer, no Portuguese, no RE background)
+VERDICT: Clearly better than round 10 (raw derefs down two thirds, commentary codes and engine sub-structures named), still not approachable: the typed records now leak back to raw addresses through `.addr() + module::FIELD` instead of methods, so the code looks typed but mostly is not.
+
+NUMBERS (rust/src, comments stripped, gen = records/fields/exe_calls/exe_fns/globals/keys/events/match_codes/rdata_consts/signatures).
+Method: one script run on HEAD (46d3fedf) and on the round-10 tree (91b70c11, git archive); it reproduces the round-10 figures
+(4,957 offsets, 10,961 accessors, 5,298 .addr(), 9,354 unsafe fn) except where noted. Format: now (round 10).
+- raw offsets `+ 0x..`: 4,591 (4,957). motor.rs 566, manager_manager 205, match_screens 185, match_eng 178, match_man 174
+- typed accessor calls (2,714 accessors in records.rs): 14,451 (10,961)
+- raw `read_*/write_*(.. + module::FIELD)`: 5,783 (7,590; report said 7,619). transfer_manager 1,283 -> 329; match_eng 511 -> 779 (up)
+- raw pointer derefs `*((x + o) as *const T)`: 1,872 (5,634 by this script; report said 6,563). motor.rs 741 is the autotest
+- `.addr()`: 7,721 (5,298), +46%. Of these: `.addr() + module::F` 1,445 (769), `.addr() + 0x..` 317 (198), `.addr() as` 422 (324)
+- `transmute` outside exe_calls: 955 (1,115); match_screens.rs 116 untouched (match_screens.rs:28-30)
+- `unsafe`: 9,196 unsafe fn outside gen (9,354), 9 `unsafe {}` blocks (9), 0 SAFETY comments (0)
+- `static mut`: 130 (130)
+- literal exe addresses 0x4xxxxx-0xbxxxxx in routine code (excl. index.rs, motor.rs, fixed_keys, nation_adjectives, comp/leagues):
+  4,236 (4,846 same cut; report's ~7,560 used a broader cut). database.rs 840, match_screens 480, match_eng 320
+- hex commentary ids 0x20xx/0x21xx: 565 (968); `event::` names used 535 times (0)
+- Portuguese: code identifiers with a Portuguese word part 3,394 (4,283); Portuguese string literals 81 (1,694). Remaining:
+  lado 276, linha 179 (crate::registro::linha, the logging API), dia/ano, vaga 137, casa/fora, melhor, sai, olheiros, desloc.
+  Doc headers: 5,160 `[pt]` doc lines still double every routine header.
+- #[test]: 8 (8)
+
+TOP OBSTACLES (by impact)
+1. Typed-then-untyped. Pointer fields now return records, but the code immediately calls `.addr()` and adds a field constant
+   whose method exists. contract_manager.rs:192 `read_usize(person.club_job().addr() + club::MANAGER)` (Club::manager()
+   exists, records.rs:426); match_eng.rs:2547 `read_i8(m.pending_play_offender().addr() + match_player::SIDE)` with `j.side()`
+   two lines below (2558); squad_manager.rs:52 `(staff_at(i).addr() + 0x6d) as *mut u8`; eurocomp/intertoto_cup.rs:118
+   `club_at(i).addr()`. match_pl.rs alone has 207 `.addr() + module::F` (17, 355, 364, 2965-2986, 3023-3025).
+2. Raw usize records persist in whole files: fin_prm.rs:99-117 unchanged since round 10 (`club + club::NATION`,
+   `read_i16(club + club::REPUTATION) >= 0x1388`, `(0xb63d60 + l * 72)`, `desloc += 0x167`, `(f + 0x110)`); comp code walks the
+   club table by hand (con_champ.rs:65, european_cup.rs:1174, fix_man.rs:2046 `club.wrapping_mul(0x245)`) although club_at exists.
+3. Sub-structures named but not used everywhere: MATCH_PLAYER_SIZE (match_eng.rs:485) next to `block + 0x1be * i`
+   (match_eng.rs:2147, 2681, 3032) and `engine::PLAYERS + (side * 20 + k) * 0x1be` (3683, 3736) instead of `m.player(side, k)`.
+4. Docs still narrate the disassembly in hex the code no longer uses: match_eng.rs:2505-2510 ("commentates 0x2109 ... 0x20df ...
+   marks +0x16 ... (0x716e10)") over code that says event::RESTART_OFFSIDE_PAST_TENSE; league.rs:63-73 unchanged.
+5. Safety story unchanged: 9,196 unsafe fn, 0 SAFETY, 130 static mut, 8 tests; nothing says which invariants matter.
+6. Leftover magic: hex commentary in match_pl.rs:1858-1886 (0x20ea, 0x2164, 0x2150) and narrate(call, 0x1fdc, ..) at 3440;
+   job-type numbers in transfer_manager.rs staff_role_slot_group (8 | 0xf, 9, 0xa, 6 | 0xd); City/Official::nation() -> usize.
+7. Portuguese locals in English code: cup.rs:409-443 (lado, ligado, jogo), area.rs:74 (lado, cima), match_eng.rs:2549
+   (marcada, aqui), match_pl.rs:2989 (posse, um), contract_manager.rs:192 (olheiros); base API registro::linha, allocator::instalar.
+
+INCONSISTENT
+- One field three ways within 12 lines (match_eng.rs:2529/2547/2558: `p.side()`, `.addr() + match_player::SIDE`, `j.side()`).
+- Null checks both ways: `(this.pending_play_offender().addr() as u32) != 0` (match_eng.rs:812) vs `.is_null()` (1,798 uses).
+- Constructors re-wrapping raw values: `MatchPlayer((player) as usize)`, `MatchPlayer(0)` as "null", `Engine(this).cell(..)`.
+- Typed constants cast on both sides persist: `(m.restart_type() as u8) != restart::OPEN_PLAY as u8` (match_eng.rs:2546).
+- club_at/staff_at: 17 call sites vs dozens of hand-rolled `+ 0x245` strides (36 left).
+
+GOOD
+- event:: (events.rs) names every commentary code from the game's own events_eng.cfg; 535 uses, hex ids down 42%.
+- Engine::player(side, k) (match_eng.rs:494, 543 calls) and Engine::cell(x, y) (match_pl.rs:1336) with clear doc comments;
+  0x4796 / 0x22d8 / 0x21b6 strides are gone from routine code.
+- Raw derefs cut by two thirds; read_*/write_* is now the clear majority dialect. Inline transmutes -14%.
+- Log/comparer strings are English (Portuguese strings 1,694 -> 81, mostly branch labels in comp/cups).
+- The round-10 GOOD list still holds: routines! macro, small clean detours.rs/comparison.rs, exe_calls wrappers, match_codes.rs.
+
+WHAT A MOTIVATED RUST DEV CAN DO TODAY
+- Game management: read and tweak isolated rules (reputation thresholds, contract dates, finance amounts, staff slots) in
+  contract_manager.rs, transfer_manager.rs, fin_prm.rs; most first-level and many second-level reads are named. Still cannot
+  restructure or add cross-record features without learning the raw/typed seams, cannot audit memory safety, and cannot test
+  without the original exe + game data (8 #[test]).
+- Match engine: can now follow who does what to which player and what gets commentated (player(side,k), cell(x,y), event::*,
+  match_codes), and change named decisions. Positional/rating maths (match_pl.rs 837 .addr(), ftol with rdata floats at
+  match_pl.rs:379-380) is still offset arithmetic; changes there are verified only by the in-game comparison run.
+
+COMPARED WITH ROUND 10
+- Improved: derefs 5,634 -> 1,872; typed calls +32%; raw `+ module::F` reads -24% (transfer_manager -74%); hex commentary -42%;
+  engine players/grid modelled; Portuguese strings almost gone; transmutes -14%; literal addresses -13%.
+- Not improved: unsafe/SAFETY/static mut/tests identical; fin_prm.rs and league.rs headers exactly as reported; Portuguese locals
+  only -21%; [pt] header blocks still double the docs.
+- Worse: the migration's cost is visible. `.addr()` rose 5,298 -> 7,721 and `.addr() + module::F` nearly doubled (769 -> 1,445);
+  match_eng.rs raw field reads rose 511 -> 779. Typing the pointer return values without rewriting the call sites turned
+  `read_x(p + F)` into `read_x(typed.addr() + F)`: noisier, no safer. The next step is mechanical: replace
+  `read_T(x.addr() + rec::F)` with `x.f()` wherever records.rs has the accessor (most of the 1,445).
