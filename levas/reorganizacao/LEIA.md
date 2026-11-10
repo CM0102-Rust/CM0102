@@ -28,6 +28,14 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 38 da legibilidade: leitores de campo em jogos, ligas, mídia e listas de observação
+
+Vereditos dos leitores no `comp/fix_man.rs`, `comp/league.rs`, `media.rs` e `shortlist_manager.rs`. Registros novos:
+`fixture_leg_check`, `fixed_fixture`, `h2h_entry`. Bits das marcas da liga, das regras de confronto, da situação de
+transferência, da contagem de listas da IA no estado da pessoa e duas queixas do contrato (inferência). Placar das levas
+34 a 38: deslocamentos crus 4.495 → 3.177; 109 campos novos com nome (verificados 14 → 50) e 55 bits em 23 módulos do
+`bits.rs`. Prova: aa7e9c95 ×2, detector igual, comparação 0; as mutações mudadas compilam.
+
 ## Leva 37 da legibilidade: leitores de campo em seleções, banco, copas e formações
 
 Vereditos dos leitores no `national_teams.rs`, `database.rs`, `comp/cup.rs` e `formation.rs`. Registros novos:

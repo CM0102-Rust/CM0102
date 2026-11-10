@@ -29,6 +29,14 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 38: field readers on fixtures, leagues, media and shortlists
+
+Reader verdicts on `comp/fix_man.rs`, `comp/league.rs`, `media.rs` and `shortlist_manager.rs`. New records:
+`fixture_leg_check`, `fixed_fixture`, `h2h_entry`. Bits of the league flags, the tie rules, the transfer status, the AI
+shortlist count in the staff state and two contract grievances (inference). Scoreboard of batches 34 to 38: raw offsets
+4,495 -> 3,177; 109 new named fields (verified 14 -> 50) and 55 bits in 23 modules of `bits.rs`. Proof: aa7e9c95 ×2,
+detector equal, comparison 0; the changed mutations compile.
+
 ## Readability batch 37: field readers on national teams, database, cups, formations
 
 Reader verdicts on `national_teams.rs`, `database.rs`, `comp/cup.rs` and `formation.rs`. New records: `call_up_entry`,
