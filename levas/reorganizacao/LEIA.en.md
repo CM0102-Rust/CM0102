@@ -29,6 +29,17 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 31: a typed value keeps its type (outside reader, round 11)
+
+`metodos_em_cadeia.py`: a typed record's field read through its address becomes the field's method, chains included
+(`read_usize(person.club_job().addr() + club::MANAGER)` → `person.club_job().manager().addr()`), in two phases: the checked
+form `Club::manager(EXPR)` compiles only when EXPR is a Club; then it becomes the method call. 429 accesses. The
+hand-written strides left: club pointers step by `club::SIZE`, the remaining club index arithmetic uses `club_at(..)`, the
+engine player blocks use `m.player(side, k)` and the match manager got `player(k)` over its 20-player block.
+`PlayerStatsEntry::nova` → `new`. The `.addr()` left (7,788) is mostly the boundary: half are arguments of the hooked
+routines and the comparers, which take `usize` because the exe calls them that way. Proof: 7cc445c2 ×2, detector equal,
+comparison 0; the 14 changed mutations compile.
+
 ## Readability batch 30: the style step for new batches
 
 `padronizar.sh` runs the readability tools over the code right after a batch is integrated (`publicar_leva.py` calls it):

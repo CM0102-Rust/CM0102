@@ -28,6 +28,17 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 31 da legibilidade: o valor tipado fica com o tipo (leitor de fora, rodada 11)
+
+`metodos_em_cadeia.py`: o campo de um registro tipado lido pelo endereço vira o método dele, também numa cadeia
+(`read_usize(person.club_job().addr() + club::MANAGER)` → `person.club_job().manager().addr()`), em duas fases: a forma
+conferida `Club::manager(EXPR)` só compila se EXPR for Club; depois vira a chamada de método. 429 acessos. Os passos
+escritos à mão que sobravam: o ponteiro de clube anda por `club::SIZE`, as contas de índice de clube restantes usam
+`club_at(..)`, os blocos de jogadores do motor usam `m.player(lado, k)` e o técnico da partida ganhou `player(k)` sobre o
+bloco de 20 jogadores dele. `PlayerStatsEntry::nova` → `new`. O `.addr()` que fica (7.788) é sobretudo fronteira: metade é
+argumento das rotinas desviadas e dos comparadores, que recebem `usize` porque o exe as chama assim. Prova: 7cc445c2 ×2,
+detector igual, comparação 0; as 14 mutações mudadas compilam.
+
 ## Leva 30 da legibilidade: o passo de estilo para as levas novas
 
 `padronizar.sh` passa as ferramentas de legibilidade no código logo depois de integrar uma leva (o `publicar_leva.py`
