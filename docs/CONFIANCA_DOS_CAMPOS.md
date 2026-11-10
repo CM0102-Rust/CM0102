@@ -20,7 +20,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 |---|---|
 | comunidade | 247 |
 | conferido | 50 |
-| lido | 1398 |
+| lido | 1404 |
 | inferido | 151 |
 
 ## Por registro
@@ -80,7 +80,9 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `exchange_player` | 0 | 0 | 2 | 0 |
 | `fans_player_record` | 0 | 0 | 1 | 0 |
 | `finance` | 0 | 0 | 40 | 2 |
+| `fixed_fixture` | 0 | 0 | 1 | 0 |
 | `fixture` | 0 | 0 | 35 | 6 |
+| `fixture_leg_check` | 0 | 0 | 4 | 0 |
 | `fixture_manager` | 0 | 0 | 7 | 0 |
 | `formation_fields` | 0 | 5 | 9 | 0 |
 | `fra_first` | 0 | 0 | 2 | 0 |
@@ -91,6 +93,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `goals_in_match_record` | 0 | 0 | 3 | 0 |
 | `goldcup` | 0 | 0 | 2 | 0 |
 | `grid_cell` | 0 | 0 | 2 | 0 |
+| `h2h_entry` | 0 | 0 | 1 | 0 |
 | `held_ban` | 0 | 0 | 2 | 0 |
 | `human_manager_record` | 0 | 1 | 0 | 0 |
 | `human_manager_sheet` | 0 | 0 | 2 | 1 |

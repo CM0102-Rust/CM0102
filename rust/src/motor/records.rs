@@ -21409,3 +21409,150 @@ impl core::fmt::LowerHex for Colour {
     }
 }
 
+/// A `fixture_leg_check` record in the game's memory (fields in `fields::fixture_leg_check`). [pt] Um registro `fixture_leg_check` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct FixtureLegCheck(pub(crate) usize);
+
+#[allow(dead_code)]
+impl FixtureLegCheck {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `fixture_leg_check::STAGE_INDEX` (+0x4). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn stage_index(self) -> u8 {
+        read_u8(self.0 + fixture_leg_check::STAGE_INDEX)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_stage_index(self, v: u8) {
+        write_u8(self.0 + fixture_leg_check::STAGE_INDEX, v)
+    }
+    /// `fixture_leg_check::ROUND_NUMBER` (+0x5). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn round_number(self) -> i16 {
+        read_i16(self.0 + fixture_leg_check::ROUND_NUMBER)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_round_number(self, v: i16) {
+        write_i16(self.0 + fixture_leg_check::ROUND_NUMBER, v)
+    }
+    /// `fixture_leg_check::HOME_CLUB_ID` (+0x7). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn home_club_id(self) -> i32 {
+        read_i32(self.0 + fixture_leg_check::HOME_CLUB_ID)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_home_club_id(self, v: i32) {
+        write_i32(self.0 + fixture_leg_check::HOME_CLUB_ID, v)
+    }
+    /// `fixture_leg_check::AWAY_CLUB_ID` (+0xb). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn away_club_id(self) -> usize {
+        read_usize(self.0 + fixture_leg_check::AWAY_CLUB_ID)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_away_club_id(self, v: usize) {
+        write_usize(self.0 + fixture_leg_check::AWAY_CLUB_ID, v)
+    }
+}
+
+impl Addr for FixtureLegCheck {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for FixtureLegCheck {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `fixed_fixture` record in the game's memory (fields in `fields::fixed_fixture`). [pt] Um registro `fixed_fixture` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct FixedFixture(pub(crate) usize);
+
+#[allow(dead_code)]
+impl FixedFixture {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `fixed_fixture::AWAY_CLUB_ID` (+0xc). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn away_club_id(self) -> usize {
+        read_usize(self.0 + fixed_fixture::AWAY_CLUB_ID)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_away_club_id(self, v: usize) {
+        write_usize(self.0 + fixed_fixture::AWAY_CLUB_ID, v)
+    }
+}
+
+impl Addr for FixedFixture {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for FixedFixture {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `h2h_entry` record in the game's memory (fields in `fields::h2h_entry`). [pt] Um registro `h2h_entry` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct H2hEntry(pub(crate) usize);
+
+#[allow(dead_code)]
+impl H2hEntry {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `h2h_entry::GOALS_AGAINST` (+0xa). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn goals_against(self) -> i16 {
+        read_i16(self.0 + h2h_entry::GOALS_AGAINST)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_goals_against(self, v: i16) {
+        write_i16(self.0 + h2h_entry::GOALS_AGAINST, v)
+    }
+}
+
+impl Addr for H2hEntry {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for H2hEntry {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+

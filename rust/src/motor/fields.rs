@@ -2717,3 +2717,27 @@ pub(crate) mod colour {
     pub(crate) const GREEN: usize = 0x38; // 1 byte(s): green component of the colour.dat row
     pub(crate) const BLUE: usize = 0x39; // 1 byte(s): blue component of the colour.dat row
 }
+
+/// 15-byte entry of the fixture leg check list (G_FIXTURE_LEGS_LIST, check_fixture_legs.tmp): a leg of a two-legged tie to check later (comp id, stage, round, clubs)
+#[allow(dead_code)]
+pub(crate) mod fixture_leg_check {
+    pub(crate) const STAGE_INDEX: usize = 0x4; // 1 byte(s): stage index of the competition (copied from fixture STAGE_INDEX; -1 = the competition itself)
+    pub(crate) const ROUND_NUMBER: usize = 0x5; // 2 byte(s): round number of the leg (copied from fixture ROUND_NUMBER)
+    pub(crate) const HOME_CLUB_ID: usize = 0x7; // 4 byte(s): home club id of the leg (copied from fixture HOME_CLUB_ID)
+    pub(crate) const AWAY_CLUB_ID: usize = 0xb; // 4 byte(s): away club id of the leg (copied from fixture AWAY_CLUB_ID)
+
+}
+
+/// Entry of the league's fixed fixture list (league::FIXED_FIXTURES, 0x10 bytes): +0 date (day, +2 year), +8 home club id, +0xc away club id
+#[allow(dead_code)]
+pub(crate) mod fixed_fixture {
+    pub(crate) const AWAY_CLUB_ID: usize = 0xc; // 4 byte(s): away club id of a fixed fixture (+8 is the home club id)
+
+}
+
+/// Head-to-head entry of a league table row (league_table_row::H2H_ENTRIES, 14 bytes per opponent): +0 opponent club, then the totals of a table column block
+#[allow(dead_code)]
+pub(crate) mod h2h_entry {
+    pub(crate) const GOALS_AGAINST: usize = 0xa; // 2 byte(s): goals conceded against that opponent
+
+}

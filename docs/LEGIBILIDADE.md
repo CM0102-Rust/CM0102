@@ -8,13 +8,13 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 
 | Medida | Quantidade |
 |---|---:|
-| deslocamentos crus | 3840 |
+| deslocamentos crus | 3570 |
 | chaves fixas cruas | 1821 |
 | chamadas por endereço | 0 |
 | cópias de acesso à memória | 0 |
 | rotinas sem cabeçalho | 0 |
 | locais/parâmetros em português | 241 |
-| linhas | 230095 |
+| linhas | 230322 |
 
 ## Por arquivo (os 40 piores, pelos deslocamentos crus)
 
@@ -24,10 +24,6 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/match_screens.rs` | 128 | 4 | 0 | 0 | 0 | 6 | 5878 |
 | `motor/match_man.rs` | 124 | 1 | 0 | 0 | 0 | 1 | 4498 |
 | `motor/match_eng.rs` | 95 | 7 | 0 | 0 | 0 | 13 | 11686 |
-| `motor/comp/fix_man.rs` | 82 | 31 | 0 | 0 | 0 | 4 | 2591 |
-| `motor/comp/league.rs` | 82 | 20 | 0 | 0 | 0 | 6 | 4132 |
-| `motor/media.rs` | 80 | 2 | 0 | 0 | 0 | 0 | 3444 |
-| `motor/shortlist_manager.rs` | 78 | 31 | 0 | 0 | 0 | 2 | 4242 |
 | `motor/tactics.rs` | 76 | 0 | 0 | 0 | 0 | 2 | 1444 |
 | `motor/player_search.rs` | 72 | 0 | 0 | 0 | 0 | 0 | 901 |
 | `motor/contract_manager.rs` | 68 | 16 | 0 | 0 | 0 | 4 | 4240 |
@@ -50,7 +46,7 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/officials_manager.rs` | 40 | 0 | 0 | 0 | 0 | 2 | 872 |
 | `motor/comp/comp.rs` | 39 | 9 | 0 | 0 | 0 | 0 | 755 |
 | `motor/db_files.rs` | 37 | 0 | 0 | 0 | 0 | 0 | 1282 |
-| `motor/fields.rs` | 34 | 0 | 0 | 0 | 0 | 0 | 2719 |
+| `motor/fields.rs` | 34 | 0 | 0 | 0 | 0 | 0 | 2743 |
 | `motor/comp/cups/eng_cc_cup.rs` | 34 | 12 | 0 | 0 | 0 | 1 | 620 |
 | `motor/comp/cups/ita_cup.rs` | 34 | 19 | 0 | 0 | 0 | 1 | 1155 |
 | `motor/zipdir.rs` | 33 | 0 | 0 | 0 | 0 | 0 | 604 |
@@ -60,3 +56,7 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/manager_manager.rs` | 31 | 2 | 0 | 0 | 0 | 0 | 5143 |
 | `motor/record_utils.rs` | 31 | 0 | 0 | 0 | 0 | 0 | 248 |
 | `motor/match_official.rs` | 30 | 0 | 0 | 0 | 0 | 0 | 695 |
+| `motor/comp/cup.rs` | 30 | 8 | 0 | 0 | 0 | 3 | 3519 |
+| `motor/comp/intercomp/african_nations.rs` | 29 | 4 | 0 | 0 | 0 | 0 | 482 |
+| `motor/staff_records.rs` | 27 | 2 | 0 | 0 | 0 | 0 | 2379 |
+| `motor/transfer_manager.rs` | 27 | 29 | 0 | 0 | 0 | 3 | 10492 |

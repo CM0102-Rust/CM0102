@@ -71,11 +71,40 @@ pub(crate) mod extra_flags {
     pub(crate) const PLAYED_U21_INTERNATIONAL: u8 = 0x2;
 }
 
+/// Bits of `fixture::TIE_RULES`.
+#[allow(dead_code)]
+pub(crate) mod fixture_tie_rules {
+    /// part of mask 0x21 (any shoot-out decides a level match); 0x20 is the 35-yard variant, so 0x1 the ordinary penalties. Name: inferred.
+    pub(crate) const PENALTY_SHOOT_OUT: u16 = 0x1;
+    /// a level match is decided by the extra-time goals only with this bit; league::MATCH_RULES: bit 2 extra time. Name: read.
+    pub(crate) const EXTRA_TIME: u16 = 0x2;
+    /// changes the shoot-out result mark from 4 to 5; field comment: 0x20 35-yard shoot-out. Name: inferred.
+    pub(crate) const SHOOT_OUT_35_YARD: u16 = 0x20;
+}
+
 /// Bits of `formation_fields::FLAGS`.
 #[allow(dead_code)]
 pub(crate) mod formation_fields_flags {
     /// set_team_instruction 0x5b50d0 groups 1/2/4/8 (mask 0xfffffff0); instructions() picks 2,1,4,8 for directness <=8,<=14,<=18,<=20, so 8 is the most direct passing. Name: inferred.
     pub(crate) const LONG_BALL: i32 = 0x8;
+}
+
+/// Bits of `contract::GRIEVANCES`.
+#[allow(dead_code)]
+pub(crate) mod grievances {
+    /// set on old-club teammates when an established player is sold (process_transfer_squad_reactions); cleared when a bigger player arrives at the new club. Name: inferred.
+    pub(crate) const STAR_TEAMMATE_SOLD: u32 = 0x20000000;
+    /// set via apply_event_flags on same-position teammates when the club signs a player; cleared when the squad is weak or the position has fewer than 2 players. Name: inferred.
+    pub(crate) const SAME_POSITION_SIGNING: u32 = 0x80000000;
+}
+
+/// Bits of `league::LEAGUE_FLAGS`.
+#[allow(dead_code)]
+pub(crate) mod league_flags {
+    /// with the bit the first row not yet out (status 0xfe/0xfc/3) is looked for; field comment: 1 champion status. Name: read.
+    pub(crate) const CHAMPION_STATUS: i16 = 0x1;
+    /// with it each club goes to the slot the virtual +0xa8 returns before the schedule; field comment: 0x100 fixed table slots. Name: read.
+    pub(crate) const FIXED_TABLE_SLOTS: i16 = 0x100;
 }
 
 /// Bits of `nation::LEAGUE_SELECTED`.
@@ -114,6 +143,13 @@ pub(crate) mod request_state {
     pub(crate) const LAST_REQUEST: u32 = 0x1e;
 }
 
+/// Bits of `shortlist_slot::FLAGS`.
+#[allow(dead_code)]
+pub(crate) mod shortlist_slot_flags {
+    /// existing comment: bit 0 loan slot; loan slots end in loan_listed_value_end. Name: read.
+    pub(crate) const LOAN_SLOT: u8 = 0x1;
+}
+
 /// Bits of `formation_fields::SLOT_CELLS`.
 #[allow(dead_code)]
 pub(crate) mod slot_cells {
@@ -129,6 +165,13 @@ pub(crate) mod slot_cells {
     pub(crate) const RIGHT: u32 = 0x800;
 }
 
+/// Bits of `league::SQUAD_FLAGS`.
+#[allow(dead_code)]
+pub(crate) mod squad_flags {
+    /// with it the league assigns squad numbers (squad_manager_assign_league_squad_numbers) days before the first round. Name: read.
+    pub(crate) const FIXED_SQUAD_NUMBERS: u8 = 0x2;
+}
+
 /// Bits of `fixture::SQUAD_RULES`.
 #[allow(dead_code)]
 pub(crate) mod squad_rules {
@@ -141,6 +184,10 @@ pub(crate) mod squad_rules {
 /// Bits of `staff_state::STATUS_FLAGS`.
 #[allow(dead_code)]
 pub(crate) mod staff_state_status_flags {
+    /// == 0: not on any AI shortlist. Name: read.
+    pub(crate) const AI_SHORTLIST_COUNT: u8 = 0xf;
+    /// & 0x30 == 0x10 skips the player; existing comment: 0x10 announced. Name: read.
+    pub(crate) const RETIREMENT_ANNOUNCED: u8 = 0x10;
     /// docs/MARCA_DO_REGEN: bits 0x30 retirement state (0x10 announced, 0x20 retired); tested as a whole mask. Name: verified.
     pub(crate) const RETIREMENT_STATE: u8 = 0x30;
 }
@@ -170,4 +217,13 @@ pub(crate) mod tie_rules {
     pub(crate) const FIXED_BRACKET: i16 = 0x200;
     /// calls 0x51d2d0 sort_round_teams, the seeded draw. Name: verified.
     pub(crate) const SEEDED_DRAW: i16 = 0x400;
+}
+
+/// Bits of `contract::TRANSFER_STATUS`.
+#[allow(dead_code)]
+pub(crate) mod transfer_status {
+    /// staff_is_loan_listed (database.rs) tests TRANSFER_STATUS & 2. Name: verified.
+    pub(crate) const LOAN_LISTED: u8 = 0x2;
+    /// staff_is_transfer_listed_or_requested tests & 9 and staff_is_transfer_listed & 1, so 8 is the request. Name: inferred.
+    pub(crate) const TRANSFER_REQUESTED: u8 = 0x8;
 }

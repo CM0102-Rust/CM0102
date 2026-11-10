@@ -20,7 +20,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 |---|---|
 | community | 247 |
 | verified | 50 |
-| read | 1398 |
+| read | 1404 |
 | inferred | 151 |
 
 ## Per record
@@ -80,7 +80,9 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `exchange_player` | 0 | 0 | 2 | 0 |
 | `fans_player_record` | 0 | 0 | 1 | 0 |
 | `finance` | 0 | 0 | 40 | 2 |
+| `fixed_fixture` | 0 | 0 | 1 | 0 |
 | `fixture` | 0 | 0 | 35 | 6 |
+| `fixture_leg_check` | 0 | 0 | 4 | 0 |
 | `fixture_manager` | 0 | 0 | 7 | 0 |
 | `formation_fields` | 0 | 5 | 9 | 0 |
 | `fra_first` | 0 | 0 | 2 | 0 |
@@ -91,6 +93,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `goals_in_match_record` | 0 | 0 | 3 | 0 |
 | `goldcup` | 0 | 0 | 2 | 0 |
 | `grid_cell` | 0 | 0 | 2 | 0 |
+| `h2h_entry` | 0 | 0 | 1 | 0 |
 | `held_ban` | 0 | 0 | 2 | 0 |
 | `human_manager_record` | 0 | 1 | 0 | 0 |
 | `human_manager_sheet` | 0 | 0 | 2 | 1 |

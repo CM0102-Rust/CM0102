@@ -20,5 +20,5 @@ MUTACOES = [
     ('cpl_historia_do_time', 'return 1; // the team’s story already told', 'return 0; // mutacao: nunca contada', 'cpl_6 team story already told'),
     ('cpl_interesse_conta', 'write_usize(this + media_fields::INTEREST_COUNT, n); // mais um interesse', 'write_usize(this + media_fields::INTEREST_COUNT, n.wrapping_sub(1)); // mutacao: a conta nao sobe', 'cpl_7 new interest'),
     ('cpl_interesse_repetido', 'return; // the interest is already there', '// mutacao: o repetido entra', 'cpl_7 repeated interest'),
-    ('cpl_interesse_boato', 'write_u8(item() + 0x10, 0); // the rumour has not come out yet', 'write_u8(item() + 0x10, 1); // mutacao: o boato ja saiu', 'cpl_7 new interest'),
+    ('cpl_interesse_boato', 'write_u8(item() + transfer_interest::STATE, 0); // the rumour has not come out yet', 'write_u8(item() + transfer_interest::STATE, 1); // mutacao: o boato ja saiu', 'cpl_7 new interest'),
 ]
