@@ -18,7 +18,7 @@ pub(crate) unsafe extern "thiscall" fn compare_on_friendly_fixture_cancelled(thi
     }
     o(this.addr(), game.addr(), who);
     let free = slot == 0 || (read_usize(slot + scheduled_friendly_slot::OPPONENT) == 0 && read_u8(slot + scheduled_friendly_slot::STATUS) == 0);
-    SCOREBOARD.record(free, || format!("on_friendly_fixture_cancelled(game {:#x}) a slot {:#x} não ficou free", game.addr(), slot));
+    SCOREBOARD.record(free, || format!("on_friendly_fixture_cancelled(game {:#x}) a slot {:#x} not ficou free", game.addr(), slot));
 }
 
 /// Comparer for `friendly_cancel_national_fixture`.
@@ -62,7 +62,7 @@ pub(crate) unsafe extern "thiscall" fn compare_cancel_tournament(this: usize, to
         }
     }
     let ok = read_usize(tournament) == 0 && read_usize(tournament + tournament_slot::COMPETITION) == 0 && read_usize(slot) == 0 && !in_list;
-    SCOREBOARD.record(ok, || format!("cancel_tournament(tournament {:#x}) owner {:#x} competição {:#x} slot {:#x} na list {}",
+    SCOREBOARD.record(ok, || format!("cancel_tournament(tournament {:#x}) owner {:#x} competition {:#x} slot {:#x} na list {}",
         tournament, read_usize(tournament), read_usize(tournament + tournament_slot::COMPETITION), read_usize(slot), in_list));
 }
 
@@ -289,7 +289,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_friendly_reply(this: usiz
     } else {
         read_u8(m + friendly_match::STATUS) == s && !list_holds(this.request_reply_list(), m)
     };
-    SCOREBOARD.record(ok, || format!("process_friendly_reply(request {:x}) situação prevista {} slot {:x}", m, s, v));
+    SCOREBOARD.record(ok, || format!("process_friendly_reply(request {:x}) status prevista {} slot {:x}", m, s, v));
 }
 
 /// Comparer for `send_friendly_request`.
@@ -325,7 +325,7 @@ pub(crate) unsafe extern "thiscall" fn compare_send_friendly_request(this: usize
     } else {
         list_len(l) == before + 1 && list_holds(l, m) && read_u8(m + friendly_match::STATUS) == s
     };
-    SCOREBOARD.record(ok, || format!("send_friendly_request(request {:x}) nós {} -> {} situação {} prevista {}", m, before, list_len(l), read_u8(m + friendly_match::STATUS), s));
+    SCOREBOARD.record(ok, || format!("send_friendly_request(request {:x}) nós {} -> {} status {} prevista {}", m, before, list_len(l), read_u8(m + friendly_match::STATUS), s));
 }
 
 /// Comparer for `build_nation_list`.

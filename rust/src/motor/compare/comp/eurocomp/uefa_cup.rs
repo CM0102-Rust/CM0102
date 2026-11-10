@@ -38,7 +38,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_entrants(this: usize) -> i3
     if tr != 0 && tr != to && tr != t0 {
         exe::crt_free(tr);
     }
-    SCOREBOARD.record(igual && a == b && lists, || format!("build_entrants({:#x}) returned {} x {} memória {} lists {}", this.addr(), a, b, igual, lists));
+    SCOREBOARD.record(igual && a == b && lists, || format!("build_entrants({:#x}) returned {} x {} memory {} lists {}", this.addr(), a, b, igual, lists));
     a
 }
 

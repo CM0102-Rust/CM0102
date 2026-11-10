@@ -183,7 +183,7 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_set_predicted_positions(t
         let e = if v[k] != 0 { exe::comp_stats_find_club_entry(this.comp_stats(), v[k]) } else { 0 };
         e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != LUGARES[k]
     });
-    SCOREBOARD.record(wrong.is_none(), || format!("usa_mls_set_predicted_positions({:#x}): a posição of the slot {:?} não bate ({:x?})", this.addr(), wrong, v));
+    SCOREBOARD.record(wrong.is_none(), || format!("usa_mls_set_predicted_positions({:#x}): a position of the slot {:?} not bate ({:x?})", this.addr(), wrong, v));
 }
 
 /// Comparer for `usa_mls_get_club_array`.

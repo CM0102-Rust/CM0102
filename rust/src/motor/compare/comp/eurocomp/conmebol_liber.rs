@@ -20,7 +20,7 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_update_for_date(th
             && stages != 0
             && (0..7).all(|g| read_usize(stages + g * 4) != 0)
             && this.current_stage() == 6;
-        SCOREBOARD.record(ok, || format!("conmebol_liber_update_for_date({:#x}): o draw não montou the groups (+0x45 {}, +0x30 {})", this.addr(), this.active(), this.current_stage() as i32));
+        SCOREBOARD.record(ok, || format!("conmebol_liber_update_for_date({:#x}): o draw not montou the groups (+0x45 {}, +0x30 {})", this.addr(), this.active(), this.current_stage() as i32));
     }
     r
 }
@@ -64,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_create_group_stage
         a.sort_unstable();
         plan.sort_unstable();
         let ok = !f.is_null() && this.current_stage() as i32 == g && f.club_count() == 4 && f.year() == this.year() && a == plan;
-        SCOREBOARD.record(ok, || format!("conmebol_liber_create_group_stage({}): a stage não bate with o plan ({:x?} read {:x?})", g, plan, a));
+        SCOREBOARD.record(ok, || format!("conmebol_liber_create_group_stage({}): a stage not bate with o plan ({:x?} read {:x?})", g, plan, a));
     }
     r
 }

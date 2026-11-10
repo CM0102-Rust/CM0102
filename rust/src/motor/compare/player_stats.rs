@@ -135,7 +135,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_stat(this: usize, player: usi
     let r = o(this, player, category, which, default);
     let n = get_stat(this, player, category, which, default);
     SCOREBOARD.record(r.to_bits() == n.to_bits(), || {
-        format!("get_stat(player {}, category {}, which {}, padrão {}) original={} rust={}", read_usize(player) as i32, c, which as u8, default, r, n)
+        format!("get_stat(player {}, category {}, which {}, default {}) original={} rust={}", read_usize(player) as i32, c, which as u8, default, r, n)
     });
     r
 }
@@ -220,7 +220,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_stats(this: usize, player:
     let expected = read_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add((indice as usize) << 5);
     let cleared = current != -1 || (0..0x20).all(|k| read_u8(r + k) == 0);
     let same = r == expected && read_usize(slot) as i32 == indice && read_usize(this + player_stats_fields::CATEGORY_COUNT) == n2 && read_usize(this + player_stats_fields::FREE_CATEGORY_COUNT) == soltos2 && cleared;
-    SCOREBOARD.record(same, || format!("create_stats({:x}, {:x}, {}) original={:x} plan={:x} índice {} x {} count {} x {} soltos {} x {} cleared={}",
+    SCOREBOARD.record(same, || format!("create_stats({:x}, {:x}, {}) original={:x} plan={:x} index {} x {} count {} x {} soltos {} x {} cleared={}",
         this, player, category as u8 as i8, r, expected, read_usize(slot) as i32, indice, read_usize(this + player_stats_fields::CATEGORY_COUNT), n2, read_usize(this + player_stats_fields::FREE_CATEGORY_COUNT), soltos2, cleared));
     r
 }

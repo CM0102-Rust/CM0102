@@ -1145,7 +1145,7 @@ pub(crate) unsafe extern "C" fn compare_database_build_nation_name_index() {
     let onde = original.iter().zip(copy).position(|(a, b)| a != b);
     SCOREBOARD.record(onde.is_none(), || {
         let k = onde.unwrap_or(0) & !3;
-        format!("database_build_nation_name_index: diverge in the nação {} +{:#x} original={} rust={}", k / 0x24, k % 0x24,
+        format!("database_build_nation_name_index: diverge in the nation {} +{:#x} original={} rust={}", k / 0x24, k % 0x24,
             read_i32(t + k), read_i32(r + k))
     });
     write_usize(G_NATION_NAME_INDEX_TABLE, t);

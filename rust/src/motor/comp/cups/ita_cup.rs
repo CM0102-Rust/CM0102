@@ -111,7 +111,7 @@ pub(crate) unsafe fn ita_cup_compare_advance_stage(name: &str, this: League, ori
     let last = before >= (this.stage_count() as i32).wrapping_sub(1);
     original();
     let after = this.current_stage() as i32;
-    SCOREBOARD.record(after == if last { before } else { before + 1 }, || format!("{}({:#x}) fase {} -> {}", name, this.addr(), before, after));
+    SCOREBOARD.record(after == if last { before } else { before + 1 }, || format!("{}({:#x}) stage {} -> {}", name, this.addr(), before, after));
 }
 
 /// ItaCup::advance_stage: moves the Italian Cup to its next stage (shared `advance_cup_stage`, error box at ita_cup.cpp
@@ -424,7 +424,7 @@ pub(crate) unsafe fn ita_cup_compare_knockout_stage(name: &str, this: League, st
     original();
     let f = read_usize(this.stages() + stage * 4);
     let ok = f != 0 && slots.iter().all(|&j| read_usize(read_usize(this.addr() + 0xee) + j * 4) == 0);
-    SCOREBOARD.record(ok, || format!("{}({:#x}) fase {:#x}, vagas tiradas {:?}", name, this.addr(), f, slots));
+    SCOREBOARD.record(ok, || format!("{}({:#x}) stage {:#x}, slots tiradas {:?}", name, this.addr(), f, slots));
 }
 
 /// `ItaCCup::create_knockout_stage()` (`0x63dc10`, thiscall, ret 0, `ita_c_cup.cpp`): builds the 32-team knockout of
@@ -622,7 +622,7 @@ pub(crate) unsafe fn ita_cup_compare_schedule(name: &str, stage: u32, rounds: *m
     if stage as u8 as i8 > limit {
         // simplification: above the knockout neither of the two writes anything; the outputs may not even exist
         let a = o();
-        SCOREBOARD.record(a == 0, || format!("{}(fase {}) devolveu {:#x}", name, stage as u8 as i8, a));
+        SCOREBOARD.record(a == 0, || format!("{}(stage {}) returned {:#x}", name, stage as u8 as i8, a));
         return a;
     }
     let (mut r2, mut e2) = (*rounds, *extra);
@@ -639,7 +639,7 @@ pub(crate) unsafe fn ita_cup_compare_schedule(name: &str, stage: u32, rounds: *m
     if b != 0 {
         exe::crt_free(b);
     }
-    SCOREBOARD.record(igual && outs && table, || format!("{}(fase {}): saídas {} ({} x {}) tabela {}", name, stage as u8 as i8, outs, *rounds, r2, table));
+    SCOREBOARD.record(igual && outs && table, || format!("{}(stage {}): outs {} ({} x {}) table {}", name, stage as u8 as i8, outs, *rounds, r2, table));
     a
 }
 
@@ -948,7 +948,7 @@ pub(crate) unsafe fn compare_select_entrants(name: &str, this: usize, o: impl Fn
     if lr != 0 && lr != lo {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) returned {} x {} memória {} {:x?} x {:x?} list {} ({} bytes) {:x?} x {:x?}", name, this, a, b, igual, mo, mr, list, k, vo, vr));
+    SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) returned {} x {} memory {} {:x?} x {:x?} list {} ({} bytes) {:x?} x {:x?}", name, this, a, b, igual, mo, mr, list, k, vo, vr));
     a
 }
 
@@ -1128,7 +1128,7 @@ pub(crate) unsafe fn check_cup_league_rules(name: &str, this: League, g: &GroupS
     let predicted = (g.win, g.draw, g.category, g.tiebreak, g.slots, [0u8; 3], 1u8, -1i32, -1i32, 1i16);
     let premio = g.prize.map_or(true, |p| (this.prize_fund() as u32) == p);
     let bits = g.bits.map_or(true, |w| (this.league_flags() as u16) == w);
-    SCOREBOARD.record(r == 1 && lido == predicted && premio && bits, || format!("{}({:#x}) devolveu {} regras {:?} previstas {:?} prêmio ok {} bits ok {}", name, this.addr(), r, lido, predicted, premio, bits));
+    SCOREBOARD.record(r == 1 && lido == predicted && premio && bits, || format!("{}({:#x}) returned {} rules {:?} predicted {:?} prize ok {} bits ok {}", name, this.addr(), r, lido, predicted, premio, bits));
 }
 
 /// rule: the Italian Cup groups are single round robin, 3 points a win and 1 a draw; tiebreak by codes 4, 1 and 2

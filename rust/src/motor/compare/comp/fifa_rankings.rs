@@ -7,7 +7,7 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn compare_count_results_in_period(this: usize, nation: usize, month_of: u32, year_of: u32, month_until: u32, year_until: u32) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> u16>(IDX_COUNT_RESULTS_IN_PERIOD)(this, nation, month_of, year_of, month_until, year_until);
     let n = count_results_in_period(this, nation, month_of, year_of, month_until, year_until);
-    SCOREBOARD.record(r == n, || format!("count_results_in_period(nação {}, {}/{} a {}/{}) original={} rust={}", read_usize(nation), month_of as u8, year_of as u16, month_until as u8, year_until as u16, r, n));
+    SCOREBOARD.record(r == n, || format!("count_results_in_period(nation {}, {}/{} a {}/{}) original={} rust={}", read_usize(nation), month_of as u8, year_of as u16, month_until as u8, year_until as u16, r, n));
     r
 }
 
@@ -31,7 +31,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_rankings(this: usize, data
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, data), || update_rankings(this, data));
     SCOREBOARD.record(igual, || {
         let dif: Vec<usize> = mo.0.iter().zip(mr.0.iter()).flat_map(|(a, b)| (0..a.1.len()).filter(move |&i| a.1[i] != b.1[i]).map(move |i| a.0 + i)).take(16).collect();
-        format!("update_rankings(day {}) diferenças em {:x?}", read_u16(data), dif)
+        format!("update_rankings(day {}) differences em {:x?}", read_u16(data), dif)
     });
 }
 
@@ -53,14 +53,14 @@ pub(crate) unsafe extern "thiscall" fn compare_append_result(this: usize, nation
     let cap_n = if conta == cap { cap.wrapping_add(5) } else { cap };
     let lido = (read_i16(e + 0xa), read_i16(e + 8), read_u16(p), read_u8(p + 2), read_u16(p + 3));
     let plan = (conta.wrapping_add(1), cap_n, points as u16, mes, ano);
-    SCOREBOARD.record(lido == plan, || format!("append_result(nação {}, points {}) original={:?} plan={:?}", read_usize(nation), points as u16, lido, plan));
+    SCOREBOARD.record(lido == plan, || format!("append_result(nation {}, points {}) original={:?} plan={:?}", read_usize(nation), points as u16, lido, plan));
 }
 
 /// Comparer for `get_nation_strength_tier`.
 pub(crate) unsafe extern "thiscall" fn compare_get_nation_strength_tier(this: usize, nation: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_GET_NATION_STRENGTH_TIER)(this, nation);
     let n = get_nation_strength_tier(this, nation);
-    SCOREBOARD.record(r == n, || format!("get_nation_strength_tier(nação {}) original={} rust={}", read_usize(nation), r, n));
+    SCOREBOARD.record(r == n, || format!("get_nation_strength_tier(nation {}) original={} rust={}", read_usize(nation), r, n));
     r
 }
 
@@ -72,7 +72,7 @@ pub(crate) unsafe extern "thiscall" fn compare_recalculate_scores(this: usize) {
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0[0].1, &mr.0[0].1);
         let dif: Vec<usize> = (0..a.len()).filter(|&i| a[i] != b[i]).take(16).collect();
-        format!("recalculate_scores diferenças nos deslocamentos {:x?}", dif)
+        format!("recalculate_scores differences nos deslocamentos {:x?}", dif)
     });
 }
 
@@ -122,5 +122,5 @@ pub(crate) unsafe extern "thiscall" fn compare_create_default_table(this: usize)
     if tb != 0 {
         exe::crt_free(tb);
     }
-    SCOREBOARD.record(same, || format!("create_default_table: a first diferença in the nação {:?}", dif.map(|i| (i / 0x2c, i % 0x2c))));
+    SCOREBOARD.record(same, || format!("create_default_table: a first difference in the nation {:?}", dif.map(|i| (i / 0x2c, i % 0x2c))));
 }

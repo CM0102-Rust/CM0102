@@ -1689,7 +1689,7 @@ pub(crate) unsafe fn probe_context_commentary(m: Engine, o: unsafe extern "thisc
                         let mut reg = crate::rng::STATE_REGIONS.to_vec();
                         reg.push((ps as usize, 4));
                         let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(m.addr(), lado, evento, ps), || context_commentary(m.addr(), lado, evento, ps));
-                        SCOREBOARD.record(igual && r == n, || format!("sonda context_commentary(cenario {}, {}, {:#x}, media {:?}) original={} rust={} {:x?} x {:x?}", cenario, lado, evento, limit, r, n, mo, mr));
+                        SCOREBOARD.record(igual && r == n, || format!("sonda context_commentary(cenario {}, {}, {:#x}, average {:?}) original={} rust={} {:x?} x {:x?}", cenario, lado, evento, limit, r, n, mo, mr));
                     }
                 }
                 guardadas.write_back();

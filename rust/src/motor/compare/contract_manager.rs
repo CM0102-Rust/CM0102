@@ -39,7 +39,7 @@ pub(crate) unsafe extern "thiscall" fn compare_contract_manager_offer_contract(t
     };
     let same = same || (sem_sobra(&mo) == sem_sobra(&mr) && mo.0[1..] == mr.0[1..]);
     SCOREBOARD.record(same && r == n, || format!(
-        "contract_manager_offer_contract(person {:#x}, club {:#x}, slot {}, factor {}, mode {}): original {} rust {}, memória {:x?} x {:x?}",
+        "contract_manager_offer_contract(person {:#x}, club {:#x}, slot {}, factor {}, mode {}): original {} rust {}, memory {:x?} x {:x?}",
         person, club, slot, factor, mode, r, n, mo, mr));
     r
 }
@@ -90,7 +90,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_after_match(this: usize, g
     for &(fin, antes, total) in &plan {
         if fin != 0 {
             let pago = read_i32(fin + finance::SEASON_BONUSES).wrapping_sub(antes);
-            SCOREBOARD.record(pago == total, || format!("update_after_match(game {:x}) bônus of fin {:x}: original {} predicted {}", game.addr(), fin, pago, total));
+            SCOREBOARD.record(pago == total, || format!("update_after_match(game {:x}) bonus of fin {:x}: original {} predicted {}", game.addr(), fin, pago, total));
         }
     }
 }
@@ -234,7 +234,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_contract_offer(this: usize, t
         }
         mo == mr && new != 0 && core::slice::from_raw_parts(new as *const u8, 0x63) == &record[..0x63]
     };
-    SCOREBOARD.record(same, || format!("add_contract_offer(person {:#x}, club {:#x}, slot {}, atualizada {}) original={:x?} rust={:x?}", id, club, slot, item != 0, mo, mr));
+    SCOREBOARD.record(same, || format!("add_contract_offer(person {:#x}, club {:#x}, slot {}, updated {}) original={:x?} rust={:x?}", id, club, slot, item != 0, mo, mr));
 }
 
 /// Comparer for `remove_contract_offer_for_transfer`.

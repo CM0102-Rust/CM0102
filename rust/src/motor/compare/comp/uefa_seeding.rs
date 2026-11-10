@@ -10,7 +10,7 @@ pub(crate) unsafe extern "thiscall" fn compare_roll_coefficients(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ROLL_COEFFICIENTS);
     let reg = seeding_regions(this);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || roll_coefficients(this));
-    SCOREBOARD.record(igual, || format!("roll_coefficients: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("roll_coefficients: differences em {:x?}", memory_diff_addresses(&mo, &mr)));
 }
 
 /// Comparer for `set_place_counts`.
@@ -21,7 +21,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_place_counts(this: usize) {
     let mut reg = vec![(this, 0x43b), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this), || crate::rng::without_counting(|| set_place_counts(this)));
-    SCOREBOARD.record(igual, || format!("set_place_counts: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("set_place_counts: differences em {:x?}", memory_diff_addresses(&mo, &mr)));
 }
 
 /// Comparer for `uefa_find_nth_unplaced_club_of_nation`.
@@ -31,7 +31,7 @@ pub(crate) unsafe extern "thiscall" fn compare_uefa_find_nth_unplaced_club_of_na
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize>(IDX_UEFA_FIND_NTH_UNPLACED_CLUB_OF_NATION);
     let r = o(this, clubs, count, nation, n, without_slot, without_human);
     let c = uefa_find_nth_unplaced_club_of_nation(this, clubs, count, nation, n, without_slot, without_human);
-    SCOREBOARD.record(r == c, || format!("uefa_find_nth_unplaced_club_of_nation(nação {:x}, n {}, {} {}): original {:x} rust {:x}", nation, n as u8, without_slot, without_human, r, c));
+    SCOREBOARD.record(r == c, || format!("uefa_find_nth_unplaced_club_of_nation(nation {:x}, n {}, {} {}): original {:x} rust {:x}", nation, n as u8, without_slot, without_human, r, c));
     r
 }
 
@@ -50,7 +50,7 @@ pub(crate) unsafe extern "thiscall" fn compare_collect_european_clubs(this: usiz
     if t2 != 0 {
         exe::crt_free(t2);
     }
-    SCOREBOARD.record(igual && table, || format!("collect_european_clubs: {} e {} clubs, table {}, diferenças em {:x?}", n, m, table, memory_diff_addresses(&mo, &mr)));
+    SCOREBOARD.record(igual && table, || format!("collect_european_clubs: {} e {} clubs, table {}, differences em {:x?}", n, m, table, memory_diff_addresses(&mo, &mr)));
     a
 }
 
@@ -62,7 +62,7 @@ pub(crate) unsafe extern "thiscall" fn compare_assign_champions_league_places(th
     let mut reg = club_regions();
     reg.push((this, 0x440));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clubs, count), || assign_champions_league_places(this, clubs, count));
-    SCOREBOARD.record(igual, || format!("assign_champions_league_places: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("assign_champions_league_places: differences em {:x?}", memory_diff_addresses(&mo, &mr)));
 }
 
 /// Comparer for `assign_intertoto_places`.
@@ -79,7 +79,7 @@ pub(crate) unsafe extern "thiscall" fn compare_assign_intertoto_places(this: usi
     reg.push((this, 0x440));
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clubs, count), || crate::rng::without_counting(|| assign_intertoto_places(this, clubs, count)));
-    SCOREBOARD.record(igual, || format!("assign_intertoto_places: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("assign_intertoto_places: differences em {:x?}", memory_diff_addresses(&mo, &mr)));
 }
 
 /// Comparer for `assign_uefa_cup_places`.
@@ -93,7 +93,7 @@ pub(crate) unsafe extern "thiscall" fn compare_assign_uefa_cup_places(this: usiz
     let mut reg = vec![(this, 0x698), (read_u32(G_CLUB_TABLE) as usize, n * club::SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)];
     reg.extend(crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, clubs, count), || crate::rng::without_counting(|| assign_uefa_cup_places(this, clubs, count)));
-    SCOREBOARD.record(igual, || format!("assign_uefa_cup_places: diferenças em {:x?}", memory_diff_addresses(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("assign_uefa_cup_places: differences em {:x?}", memory_diff_addresses(&mo, &mr)));
 }
 
 /// Comparer for `pick_english_intertoto_club`.

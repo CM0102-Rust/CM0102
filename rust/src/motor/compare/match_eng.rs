@@ -395,7 +395,7 @@ pub(crate) unsafe extern "thiscall" fn compare_kick_off(this: usize) {
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|r| (0..a[r].1.len()).filter(move |&i| a[r].1[i] != b[r].1[i]).map(move |i| a[r].0 + i)).take(16).collect();
-        format!("kick_off() diferencas em {:x?}", dif)
+        format!("kick_off() differences em {:x?}", dif)
     });
 }
 
@@ -933,7 +933,7 @@ pub(crate) unsafe extern "thiscall" fn compare_penalty_order(m: usize) {
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("penalty_order diferencas em {:x?}", dif)
+        format!("penalty_order differences em {:x?}", dif)
     });
 }
 
@@ -957,7 +957,7 @@ pub(crate) unsafe extern "thiscall" fn compare_take_off_pitch(this: usize, j: us
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|r| (0..a[r].1.len()).filter(move |&i| a[r].1[i] != b[r].1[i]).map(move |i| a[r].0 + i)).take(16).collect();
-        format!("take_off_pitch({}) diferencas em {:x?}", mode, dif)
+        format!("take_off_pitch({}) differences em {:x?}", mode, dif)
     });
 }
 
@@ -969,7 +969,7 @@ pub(crate) unsafe extern "thiscall" fn compare_individual_marking(this: usize) {
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|r| (0..a[r].1.len()).filter(move |&i| a[r].1[i] != b[r].1[i]).map(move |i| a[r].0 + i)).take(16).collect();
-        format!("individual_marking diferencas em {:x?}", dif)
+        format!("individual_marking differences em {:x?}", dif)
     });
 }
 
@@ -1019,7 +1019,7 @@ pub(crate) unsafe extern "thiscall" fn compare_choose_taker(this: usize, side: i
     SCOREBOARD.record(igual && r == n, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("choose_taker(side {}, kind {}) original={:x} rust={:x}, diferencas em {:x?}", side, kind, r, n, dif)
+        format!("choose_taker(side {}, kind {}) original={:x} rust={:x}, differences em {:x?}", side, kind, r, n, dif)
     });
     r
 }

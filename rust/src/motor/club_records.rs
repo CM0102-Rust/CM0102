@@ -836,7 +836,7 @@ pub(crate) unsafe fn check_record_plan(name: &str, club: usize, e: usize, count:
     let expected = if i <= -1 { 0 } else { read_usize(array).wrapping_add((i as usize).wrapping_mul(0x38b)) };
     let restarted = !novo || (r != 0 && read_usize(r + club_record::SEASON_RATING) == 0xbf800000 && read_usize(r + club_record::FEE_PAID) as i32 == -1);
     SCOREBOARD.record(r == expected && read_usize(e) as i32 == i && read_usize(count) == n && restarted, || {
-        format!("{}(clube {}) índice {} (esperava {}), conta {} (esperava {}), registro {:x} (esperava {:x}), novo={} reiniciado={}",
+        format!("{}(club {}) index {} (esperava {}), count {} (esperava {}), record {:x} (esperava {:x}), new={} restarted={}",
             name, read_usize(club), read_usize(e) as i32, i, read_usize(count), n, r, expected, novo, restarted)
     });
 }

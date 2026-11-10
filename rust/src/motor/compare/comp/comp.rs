@@ -132,7 +132,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_stage(this: usize, k: i32) ->
 pub(crate) unsafe extern "C" fn compare_comp_active_key_nation_of_fixture(comp: usize, partida: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_COMP_ACTIVE_KEY_NATION_OF_FIXTURE)(comp, partida);
     let n = comp_active_key_nation_of_fixture(comp, partida);
-    SCOREBOARD.record(r == n, || format!("comp_active_key_nation_of_fixture(competição {}, match {:x}) original={} rust={}", read_usize(comp) as i32, partida, r, n));
+    SCOREBOARD.record(r == n, || format!("comp_active_key_nation_of_fixture(competition {}, match {:x}) original={} rust={}", read_usize(comp) as i32, partida, r, n));
     r
 }
 

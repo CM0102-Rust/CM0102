@@ -56,7 +56,7 @@ pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_select_invited_clubs
     if lr != 0 && lr != lo {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("con_merc_cup_select_invited_clubs({:#x}) returned {} x {} memória {} list {}", this, a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("con_merc_cup_select_invited_clubs({:#x}) returned {} x {} memory {} list {}", this, a, b, igual, list));
     a
 }
 
@@ -77,7 +77,7 @@ pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_update_for_date(this
             && stages != 0
             && (0..3).all(|g| read_usize(stages + g * 4) != 0)
             && this.current_stage() == 2;
-        SCOREBOARD.record(ok, || format!("con_merc_cup_update_for_date({:#x}): o draw não montou the groups (+0x45 {}, +0x30 {})", this.addr(), this.active(), this.current_stage() as i32));
+        SCOREBOARD.record(ok, || format!("con_merc_cup_update_for_date({:#x}): o draw not montou the groups (+0x45 {}, +0x30 {})", this.addr(), this.active(), this.current_stage() as i32));
     }
     r
 }
@@ -121,7 +121,7 @@ pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_create_group_stage(t
         a.sort_unstable();
         plan.sort_unstable();
         let ok = !f.is_null() && this.current_stage() as i32 == g && f.club_count() == 4 && f.year() == this.year() && a == plan;
-        SCOREBOARD.record(ok, || format!("con_merc_cup_create_group_stage({}): a stage não bate with o plan ({:x?} read {:x?})", g, plan, a));
+        SCOREBOARD.record(ok, || format!("con_merc_cup_create_group_stage({}): a stage not bate with o plan ({:x?} read {:x?})", g, plan, a));
     }
     r
 }

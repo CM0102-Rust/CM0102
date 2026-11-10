@@ -60,7 +60,7 @@ pub(crate) unsafe extern "thiscall" fn compare_move_fixtures_for_tv(this: usize,
     o(this.addr(), data);
     let expected = if n == 0 { 0 } else { validas.min(n) };
     let movidas = (0..block).filter(|k| read_u8(e + k * 7 + 0xb) == 0xff).count();
-    SCOREBOARD.record(movidas == expected, || format!("move_fixtures_for_tv(date {:x}) slots {} válidas {} games {}: movidas {} (expected {})",
+    SCOREBOARD.record(movidas == expected, || format!("move_fixtures_for_tv(date {:x}) slots {} valid {} games {}: movidas {} (expected {})",
         data, block, validas, n, movidas, expected));
 }
 
@@ -116,7 +116,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_fixtures(this: usize) -> u
     let own = list != 0 && this.year() as i32 == read_i16(list + 2) as u16 as i32;
     let r = o(this.addr());
     let ok = !(own && r == 1) || this.fixed_fixtures() == 0;
-    SCOREBOARD.record(ok, || format!("create_fixtures: list própria {} returned {} +0xea {:x}", own, r, this.fixed_fixtures()));
+    SCOREBOARD.record(ok, || format!("create_fixtures: list own {} returned {} +0xea {:x}", own, r, this.fixed_fixtures()));
     r
 }
 
@@ -436,7 +436,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init_table_row(this: usize, i: u3
             ok &= outros.enumerate().all(|(k, j)| read_usize(p + 14 * k) == read_usize(table + j * TABLE_ROW_SIZE));
         }
     }
-    SCOREBOARD.record(ok, || format!("init_table_row(row {}, club {:x}, mark {}) clubs {}, rounds {} (esperava {}), confrontos {} ({:x}), histórico {:x}",
+    SCOREBOARD.record(ok, || format!("init_table_row(row {}, club {:x}, mark {}) clubs {}, rounds {} (esperava {}), confrontos {} ({:x}), history {:x}",
         idx, club.addr(), mark as u8, n, this.games_per_club(), a7_expected, confrontos, l.h2h_entries(), l.position_history()));
 }
 

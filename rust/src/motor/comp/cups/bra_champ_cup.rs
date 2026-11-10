@@ -138,7 +138,7 @@ pub(crate) unsafe fn compare_stage_schedule(name: &str, stage: u32, f: BraChampC
     if b != 0 {
         exe::crt_free(b);
     }
-    SCOREBOARD.record(igual && outs && table, || format!("{}(stage {}): saídas {} ({} x {}) table {}", name, stage as u8 as i8, outs, *rounds, r2, table));
+    SCOREBOARD.record(igual && outs && table, || format!("{}(stage {}): outs {} ({} x {}) table {}", name, stage as u8 as i8, outs, *rounds, r2, table));
     a
 }
 

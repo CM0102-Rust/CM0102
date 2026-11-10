@@ -451,7 +451,7 @@ pub(crate) unsafe fn compare_league_day(name: &str, this: League, full: u32, fai
     if full != 0 && stages == 0 {
         if this.stage_count() != 0 {
             let z = faixas();
-            SCOREBOARD.record(tie_on_zone_boundary(this, &z) && this.stages() != 0, || format!("{}({:#x}): stage of the tiebreak without draw in the fronteira (+0xc = {:#x})", name, this.addr(), this.stages()));
+            SCOREBOARD.record(tie_on_zone_boundary(this, &z) && this.stages() != 0, || format!("{}({:#x}): stage of the tiebreak without draw in the boundary (+0xc = {:#x})", name, this.addr(), this.stages()));
         } else {
             SCOREBOARD.record(!(this.complete() != 0 && this.tiebreak_matches() != 0), || format!("{}({:#x}): o end of the season ficou pendente (+0xdd e +0xe6 ligados)", name, this.addr()));
         }
@@ -1629,7 +1629,7 @@ pub(crate) unsafe fn ita_ser_a_compare_league_rules(name: &str, this: League, wr
         }
     };
     let difs: Vec<(usize, u32, u32)> = written.iter().filter(|e| field(&mo, e.0, e.1) != field(&mr, e.0, e.1)).map(|e| (e.0, field(&mo, e.0, e.1), field(&mr, e.0, e.1))).collect();
-    SCOREBOARD.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this.addr(), r, rr, difs));
+    SCOREBOARD.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (offset, original, rust)={:x?}", name, this.addr(), r, rr, difs));
     r
 }
 
@@ -1740,7 +1740,7 @@ pub(crate) unsafe fn ita_ser_a_compare_league_table(name: &str, this: League, n:
             same = same && this.prize_mode() == 1 && this.prize_fund() == exe::league_calc_prize_fund(this, c);
         }
     }
-    SCOREBOARD.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this.addr(), r, plan, found));
+    SCOREBOARD.record(same, || format!("{}({:#x}) original={} plan={:x?} table={:x?}", name, this.addr(), r, plan, found));
     r
 }
 

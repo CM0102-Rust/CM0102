@@ -97,7 +97,7 @@ pub(crate) unsafe extern "thiscall" fn compare_renew_officials(this: usize, comp
     SCOREBOARD.record(igual && r == n, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("renew_officials(comp {:#x}) original={} rust={}, diferencas em {:x?}", comp, r, n, dif)
+        format!("renew_officials(comp {:#x}) original={} rust={}, differences em {:x?}", comp, r, n, dif)
     });
     r
 }
@@ -164,7 +164,7 @@ pub(crate) unsafe extern "C" fn compare_officials_manager_validate_officials() {
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("officials_manager_validate_officials ({} sheets) diferencas em {:x?}", total, dif)
+        format!("officials_manager_validate_officials ({} sheets) differences em {:x?}", total, dif)
     });
 }
 

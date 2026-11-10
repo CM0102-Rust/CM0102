@@ -304,7 +304,7 @@ unsafe extern "system" fn s_blt_fast(this: *mut Wrapper, x: usize, y: usize, src
     if count_call("S.BltFast") {
         let src_id = if src == 0 { 0 } else { with_state(|e| e.by_wrapper.contains_key(&src)).then(|| (*(src as *const Wrapper)).id).unwrap_or(0) };
         linha(&format!(
-            "#{} S.BltFast(x={} y={} origem=#{} {} trans={:#x}) -> {:#x}",
+            "#{} S.BltFast(x={} y={} source=#{} {} trans={:#x}) -> {:#x}",
             (*this).id, x as i32, y as i32, src_id, rect(src_rect), trans, r
         ));
     }

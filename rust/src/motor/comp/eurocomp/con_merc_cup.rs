@@ -117,7 +117,7 @@ pub(crate) unsafe fn con_merc_cup_compare_knockout_stage(name: &str, this: Leagu
     original();
     let stage = read_usize(this.stages() + knockout * 4);
     if stage == 0 {
-        SCOREBOARD.record(false, || format!("{}({:#x}) sem fase", name, this.addr()));
+        SCOREBOARD.record(false, || format!("{}({:#x}) without stage", name, this.addr()));
         return;
     }
     let list = read_usize(stage + 0xa7);
@@ -126,7 +126,7 @@ pub(crate) unsafe fn con_merc_cup_compare_knockout_stage(name: &str, this: Leagu
     plan.sort_unstable();
     found.sort_unstable();
     let same = plan == found && read_i16(stage + 0x3e) as usize == teams && read_usize(stage + 4) == this.competition().addr();
-    SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this.addr(), pl, stage, ac, read_i16(stage + 0x3e)));
+    SCOREBOARD.record(same, || format!("{}({:#x}) plan={:x?} stage={:#x} list={:x?} +0x3e={}", name, this.addr(), pl, stage, ac, read_i16(stage + 0x3e)));
 }
 
 /// rule: the Merconorte semi-finals have 4 clubs: the winner (+0xbe = 1) of each of the 4 groups, in a cup stage (stage
@@ -347,7 +347,7 @@ pub(crate) unsafe fn con_merc_cup_compare_advance_stage(name: &str, this: League
     let last = f >= (this.stage_count() as i32).wrapping_sub(1);
     original();
     let after = this.current_stage() as i32;
-    SCOREBOARD.record(after == if last { f } else { f + 1 }, || format!("{}({:#x}) fase {} -> {}", name, this.addr(), f, after));
+    SCOREBOARD.record(after == if last { f } else { f + 1 }, || format!("{}({:#x}) stage {} -> {}", name, this.addr(), f, after));
 }
 
 /// Club k of the drawn list (+0xee pointers).

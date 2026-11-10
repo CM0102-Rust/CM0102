@@ -64,7 +64,7 @@ pub(crate) unsafe fn compare_montagem_da_partida(name: &str, extra: &[(usize, us
     // generator advanced twice in comparison mode and the career shifted; 204th)
     reg.extend_from_slice(&crate::rng::STATE_REGIONS);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, original, || crate::rng::without_counting(rust));
-    SCOREBOARD.record(igual, || format!("{}: diferencas em {:?}", name, first_differences(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("{}: differences em {:?}", name, first_differences(&mo, &mr)));
 }
 
 /// Comparer for `build_match_screen`.
@@ -157,7 +157,7 @@ pub(crate) unsafe extern "C" fn compare_refresh_possession_bar() {
     }
     reg.push((0xde1f64, 0x100));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(), || refresh_possession_bar());
-    SCOREBOARD.record(igual, || format!("refresh_possession_bar: diferencas em {:?}", first_differences(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("refresh_possession_bar: differences em {:?}", first_differences(&mo, &mr)));
 }
 
 /// Comparer for `draw_match_overview_panel`.
@@ -193,7 +193,7 @@ pub(crate) unsafe extern "C" fn compare_draw_match_overview_panel(top: *mut i32,
         reg.push((photo, 0xd7a));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(top, base), || draw_match_overview_panel(top, base));
-    SCOREBOARD.record(igual, || format!("draw_match_overview_panel: diferencas em {:?}", first_differences(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("draw_match_overview_panel: differences em {:?}", first_differences(&mo, &mr)));
 }
 
 /// Comparer for `match_screens_draw_live_league_table`.
@@ -274,7 +274,7 @@ pub(crate) unsafe extern "C" fn compare_fill_team_stats_rows(mode: u32, area: us
     reg.extend(screen_param_regions());
     reg.push((0xde1f64, 0x100));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(mode, area), || fill_team_stats_rows(mode, area));
-    SCOREBOARD.record(igual, || format!("fill_team_stats_rows({}, {:#x}): diferencas em {:?}", mode, area, first_differences(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("fill_team_stats_rows({}, {:#x}): differences em {:?}", mode, area, first_differences(&mo, &mr)));
 }
 
 /// Comparer for `refresh_latest_scores_rows`.
@@ -296,7 +296,7 @@ pub(crate) unsafe extern "C" fn compare_refresh_latest_scores_rows() {
     }
     reg.push((0xde1f64, 0x100));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(), || refresh_latest_scores_rows());
-    SCOREBOARD.record(igual, || format!("refresh_latest_scores_rows: diferencas em {:?}", first_differences(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("refresh_latest_scores_rows: differences em {:?}", first_differences(&mo, &mr)));
 }
 
 /// Comparer for `match_screens_handle_waiting_screen`.
@@ -322,7 +322,7 @@ pub(crate) unsafe fn compare_pela_lista_com(name: &str, extra: &[(usize, usize)]
             let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
             Some(format!("{:#x}+{:#x}", a, k))
         }).collect();
-        format!("{}: diferencas em {:?}", name, dif)
+        format!("{}: differences em {:?}", name, dif)
     });
 }
 
@@ -399,7 +399,7 @@ pub(crate) unsafe fn compare_valores_da_partida(name: &str, original: impl FnOnc
             let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
             Some(format!("{:#x}+{:#x}", a, k))
         }).collect();
-        format!("{}: diferencas em {:?}", name, dif)
+        format!("{}: differences em {:?}", name, dif)
     });
 }
 
@@ -446,7 +446,7 @@ pub(crate) unsafe fn compare_painel_pela_lista(name: &str, original: impl FnOnce
             let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
             Some(format!("{:#x}+{:#x}", a, k))
         }).collect();
-        format!("{}: diferencas em {:?}", name, dif)
+        format!("{}: differences em {:?}", name, dif)
     });
 }
 
@@ -642,7 +642,7 @@ pub(crate) unsafe extern "C" fn compare_build_latest_scores() {
             let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
             Some(format!("{:#x}+{:#x}", a, k))
         }).collect();
-        format!("build_latest_scores: diferencas em {:?}", dif)
+        format!("build_latest_scores: differences em {:?}", dif)
     });
 }
 
@@ -698,6 +698,6 @@ pub(crate) unsafe extern "C" fn compare_draw_latest_scores_panel(top: *mut i32, 
             let k = x.iter().zip(y.iter()).position(|(p, q)| p != q)?;
             Some(format!("{:#x}+{:#x}", a, k))
         }).collect();
-        format!("draw_latest_scores_panel: diferencas em {:?}", dif)
+        format!("draw_latest_scores_panel: differences em {:?}", dif)
     });
 }

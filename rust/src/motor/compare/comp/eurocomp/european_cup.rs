@@ -34,7 +34,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_phase1_groups(this: usize) {
     }
     vistos.sort_unstable();
     ok = ok && vistos == plan;
-    SCOREBOARD.record(ok, || format!("draw_phase1_groups: as stages não têm os 32 clubs of the plan (+0x30 = {})", this.current_stage() as i32));
+    SCOREBOARD.record(ok, || format!("draw_phase1_groups: as stages not has os 32 clubs of the plan (+0x30 = {})", this.current_stage() as i32));
 }
 
 /// Comparer for `european_cup_compare_clubs_by_seed`.
@@ -77,7 +77,7 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_rank_teams(this: usi
             e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != p
         }
     });
-    SCOREBOARD.record(wrong.is_none(), || format!("european_cup_rank_teams: a posição {:?} não bate", wrong));
+    SCOREBOARD.record(wrong.is_none(), || format!("european_cup_rank_teams: a position {:?} not bate", wrong));
 }
 
 /// Comparer for `draw_phase2_groups`.
@@ -111,7 +111,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_phase2_groups(this: usize, a
     }
     vistos.sort_unstable();
     ok = ok && vistos == plan;
-    SCOREBOARD.record(ok, || format!("draw_phase2_groups: as stages não têm os 16 classificados (+0x30 = {})", this.current_stage() as i32));
+    SCOREBOARD.record(ok, || format!("draw_phase2_groups: as stages not has os 16 classificados (+0x30 = {})", this.current_stage() as i32));
 }
 
 /// Comparer for `european_cup_compare_phase2_draw_entries`.
@@ -358,6 +358,6 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_create_round_table(t
     if b != 0 {
         exe::crt_free(b);
     }
-    SCOREBOARD.record(igual && outs && table, || format!("european_cup_create_round_table({}): saídas {} table {}", f, outs, table));
+    SCOREBOARD.record(igual && outs && table, || format!("european_cup_create_round_table({}): outs {} table {}", f, outs, table));
     a
 }

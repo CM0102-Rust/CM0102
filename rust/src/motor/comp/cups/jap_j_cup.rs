@@ -121,7 +121,7 @@ pub(crate) unsafe fn compare_cup_round_table(name: &str, stage: u32, rounds: *mu
     if b != 0 {
         exe::crt_free(b);
     }
-    SCOREBOARD.record(igual && outs && table, || format!("{}(stage {}): saídas {} ({} x {}) table {}", name, stage as u8 as i8, outs, *rounds, r2, table));
+    SCOREBOARD.record(igual && outs && table, || format!("{}(stage {}): outs {} ({} x {}) table {}", name, stage as u8 as i8, outs, *rounds, r2, table));
     a
 }
 
@@ -302,7 +302,7 @@ pub(crate) unsafe fn jap_j_cup_compare_entrant_list(name: &str, this: Cup, o: im
     if lr != 0 && lr != lo {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", name, this.addr(), a, b, igual, list, k));
+    SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) returned {} x {} memory {} list {} ({} bytes)", name, this.addr(), a, b, igual, list, k));
     a
 }
 

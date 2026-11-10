@@ -630,7 +630,7 @@ pub(crate) unsafe fn compare_stage_table(name: &str, stage: u32, f: Option<Ocean
     if b != 0 {
         exe::crt_free(b);
     }
-    SCOREBOARD.record(igual && outs && table, || format!("{}(stage {}): saídas {} ({} x {}) table {}", name, stage as u8 as i8, outs, *rounds, r2, table));
+    SCOREBOARD.record(igual && outs && table, || format!("{}(stage {}): outs {} ({} x {}) table {}", name, stage as u8 as i8, outs, *rounds, r2, table));
     a
 }
 
@@ -756,7 +756,7 @@ pub(crate) unsafe fn compare_team_table(name: &str, this: Cup, o: impl FnOnce() 
     if lr != 0 && lr != lo {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) returned {} x {} memória {} list {}", name, this.addr(), a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) returned {} x {} memory {} list {}", name, this.addr(), a, b, igual, list));
     a
 }
 

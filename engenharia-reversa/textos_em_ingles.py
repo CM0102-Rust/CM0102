@@ -5,7 +5,7 @@ message go through the word dictionary of traduzir_locais.py (only whole words f
 placeholders and hex stay). Only string literals of `format!`/`push`/`Some` inside the comparers (rust/src/motor/compare/
 and the `compare_*` functions) are touched: no tool reads those texts (the log keywords the tools parse change in
 their own batch). The mutation snippets follow.
-Usage: python textos_em_ingles.py [--gravar]
+Usage: python textos_em_ingles.py [--todos] [--gravar]   (--todos: also the debug messages outside the comparers)
 [pt] As mensagens dos comparadores em inglês: o nome antigo da rotina vira o nome Rust e as palavras passam pelo
 dicionário do traduzir_locais.py.
 """
@@ -31,6 +31,10 @@ EXTRA = {'original': 'original', 'esperado': 'expected', 'obtido': 'got', 'casa'
          'devolveu': 'returned', 'memoria': 'memory', 'regiao': 'region', 'pilha': 'stack', 'erro': 'error',
          'lista': 'list', 'item': 'item', 'itens': 'items', 'campo': 'field', 'campos': 'fields', 'bloco': 'block',
          'e': 'and', 'ou': 'or', 'de': 'of', 'do': 'of the', 'da': 'of the', 'em': 'in', 'no': 'in the', 'na': 'in the',
+         'diferencas': 'differences', 'diferenca': 'difference', 'campeoes': 'champions', 'suspensao': 'suspension',
+         'cabecalho': 'header', 'fronteira': 'boundary', 'atualizada': 'updated', 'confianca': 'confidence', 'comeco': 'start',
+         'proxima': 'next', 'permissoes': 'permissions', 'so': 'only', 'estaticas': 'static', 'prestacoes': 'instalments',
+         'conferencias': 'checks', 'validas': 'valid', 'origem': 'source',
          'para': 'for', 'pelo': 'by the', 'pela': 'by the', 'os': 'the', 'as': 'the', 'o': 'the', 'a': 'the'}
 CURTAS = {'e', 'ou', 'de', 'do', 'da', 'em', 'no', 'na', 'os', 'as', 'o', 'a'}
 
@@ -59,7 +63,7 @@ def traduzir_texto(s, rotinas, propria=None):
             if all(p in tl.D or p in EXTRA for p in partes if p):
                 return '_'.join(EXTRA.get(p, tl.D.get(p, p)).replace(' ', '_') for p in partes)
             return w
-        lw = w.lower()
+        lw = sem_acento(w.lower())
         if lw in CURTAS:
             return w  # a short word only goes with its sentence (below)
         t = EXTRA.get(lw) or tl.D.get(lw)
@@ -68,16 +72,26 @@ def traduzir_texto(s, rotinas, propria=None):
         return t.replace('_', ' ') if w.islower() else t.replace('_', ' ').capitalize()
     partes = re.split(r'(\{[^}]*\})', s)
     for k in range(0, len(partes), 2):
-        txt = re.sub(r'(?<![\w{%])[A-Za-z][a-z_]*(?![\w}])', palavra, partes[k])
+        txt = re.sub(r'(?<![\w{%])[A-Za-zÀ-ú][a-zà-ú_]*(?![\w}])', palavra, partes[k])
         # the short Portuguese words, only between words that were translated or are English
         txt = re.sub(r'(?<=[a-z] )(e|ou|de|do|da|em|no|na|os|as)(?= [a-z{])', lambda m: EXTRA[m.group(1)], txt)
         partes[k] = txt
     return ''.join(partes)
 
 
-def converter(bloco, rotinas, todo=False):
+def sem_acento(w):
+    import unicodedata
+    return ''.join(c for c in unicodedata.normalize('NFD', w) if unicodedata.category(c) != 'Mn')
+
+
+def mensagem(s):
+    """A debug message (`--todos`): has a `{}` placeholder and is not a path or a file name."""
+    return '{' in s and ' ' in s and not re.search(r'[/\\]|\.\w{2,4}\b(?!\))', s)
+
+
+def converter(bloco, rotinas, todo=False, todos=False):
     mk = tr.mascara(bloco)
-    if not todo and not re.search(r'\bfn compare_\w+', mk):
+    if not todo and not todos and not re.search(r'\bfn compare_\w+', mk):
         return bloco, 0
     out, pos, n = [], 0, 0
     fm = re.search(r'fn compare_(\w+)', mk)
@@ -86,6 +100,8 @@ def converter(bloco, rotinas, todo=False):
         a, b = m.start(1), m.end(1)
         if mk[a - 1] != ' ' and mk[a:b].strip():
             continue  # inside a comment or not a literal
+        if todos and not todo and not propria and not mensagem(bloco[a:b]):
+            continue
         novo = traduzir_texto(bloco[a:b], rotinas, propria)
         if novo != bloco[a:b]:
             out += [bloco[pos:a], novo]
@@ -111,7 +127,7 @@ def main():
             partes, pos = [], 0
             for _, a, b in mover_rotinas.blocos(t):
                 bloco = t[a:b]
-                novo, k = converter(bloco, rotinas, todo)
+                novo, k = converter(bloco, rotinas, todo, '--todos' in sys.argv)
                 if not k:
                     continue
                 n += k

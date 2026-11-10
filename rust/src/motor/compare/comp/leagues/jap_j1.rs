@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_championship_final_stage(t
         let (x, y) = (read_usize(l), read_usize(l + 6));
         stage.team_count() == 2 && read_usize(stage.addr() + 4) == this.competition().addr() && ((x, y) == (a, b) || (x, y) == (b, a)) && this.current_stage() == 2
     };
-    SCOREBOARD.record(same, || format!("create_championship_final_stage({:#x}) campeoes={:#x},{:#x} stage={:#x} +0x30={}", this.addr(), a, b, stage.addr(), this.current_stage()));
+    SCOREBOARD.record(same, || format!("create_championship_final_stage({:#x}) champions={:#x},{:#x} stage={:#x} +0x30={}", this.addr(), a, b, stage.addr(), this.current_stage()));
 }
 
 /// Comparer for `jap_j1_start_new_season`.

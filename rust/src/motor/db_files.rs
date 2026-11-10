@@ -332,7 +332,7 @@ pub(crate) unsafe fn check_database_path(routine: &str, folder: usize, name: usi
     let o = core::slice::from_raw_parts(0xde1f64 as *const u8, 0x400);
     let end = |s: &[u8]| s.iter().position(|&b| b == 0).unwrap_or(s.len());
     let (a, b) = (&o[..end(o)], &c[..end(&c)]);
-    SCOREBOARD.record(a == b, || format!("{} caminho {:?} x {:?}", routine, String::from_utf8_lossy(a), String::from_utf8_lossy(b)));
+    SCOREBOARD.record(a == b, || format!("{} path {:?} x {:?}", routine, String::from_utf8_lossy(a), String::from_utf8_lossy(b)));
 }
 
 /// Builds folder + name at 0xde1f64 (_makepath) and returns exe::crt_fopen(path, "rb"); the comparer checks the path.

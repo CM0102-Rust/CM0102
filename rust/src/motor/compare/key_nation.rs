@@ -7,7 +7,7 @@ use super::*;
 pub(crate) unsafe extern "C" fn compare_key_nation_index_of_nation(nation: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_KEY_NATION_INDEX_OF_NATION)(nation);
     let n = key_nation_index_of_nation(nation);
-    SCOREBOARD.record(r == n, || format!("key_nation_index_of_nation(nação {:x}) original={} rust={}", nation, r, n));
+    SCOREBOARD.record(r == n, || format!("key_nation_index_of_nation(nation {:x}) original={} rust={}", nation, r, n));
     r
 }
 
@@ -77,7 +77,7 @@ pub(crate) unsafe extern "C" fn compare_key_nation_is_world_cup_comp(comp: usize
     }
     let r = o(comp);
     let n = key_nation_is_world_cup_comp(comp);
-    SCOREBOARD.record(r == n, || format!("key_nation_is_world_cup_comp(competição {}) original={} rust={}", read_usize(comp) as i32, r, n));
+    SCOREBOARD.record(r == n, || format!("key_nation_is_world_cup_comp(competition {}) original={} rust={}", read_usize(comp) as i32, r, n));
     r
 }
 
@@ -89,7 +89,7 @@ pub(crate) unsafe extern "C" fn compare_key_nation_is_international_comp(comp: u
     }
     let r = o(comp);
     let n = key_nation_is_international_comp(comp);
-    SCOREBOARD.record(r == n, || format!("key_nation_is_international_comp(competição {}) original={} rust={}", read_usize(comp) as i32, r, n));
+    SCOREBOARD.record(r == n, || format!("key_nation_is_international_comp(competition {}) original={} rust={}", read_usize(comp) as i32, r, n));
     r
 }
 
@@ -97,6 +97,6 @@ pub(crate) unsafe extern "C" fn compare_key_nation_is_international_comp(comp: u
 pub(crate) unsafe extern "C" fn compare_key_nation_index_of_comp(comp: usize) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_KEY_NATION_INDEX_OF_COMP)(comp);
     let n = key_nation_index_of_comp(comp);
-    SCOREBOARD.record(r == n, || format!("key_nation_index_of_comp(competição {}) original={} rust={}", read_usize(comp) as i32, r, n));
+    SCOREBOARD.record(r == n, || format!("key_nation_index_of_comp(competition {}) original={} rust={}", read_usize(comp) as i32, r, n));
     r
 }

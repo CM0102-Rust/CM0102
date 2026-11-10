@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn compare_euro_champ_qual_set_up_rules(this
     if tr != 0 && tr != to {
         exe::crt_free(tr);
     }
-    SCOREBOARD.record(igual && a == b && table, || format!("euro_champ_qual_set_up_rules({:#x}) returned {} x {} memória {} table {}", this.addr(), a, b, igual, table));
+    SCOREBOARD.record(igual && a == b && table, || format!("euro_champ_qual_set_up_rules({:#x}) returned {} x {} memory {} table {}", this.addr(), a, b, igual, table));
     a
 }
 

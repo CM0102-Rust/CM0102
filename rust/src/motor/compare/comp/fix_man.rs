@@ -22,7 +22,7 @@ pub(crate) unsafe extern "thiscall" fn compare_fix_man_daily_update(this: usize)
     let queue = read_usize(this + fixture_manager::MOVED_NEWS_QUEUE);
     let after = read_i16(G_FIXTURE_LEGS_LIST);
     SCOREBOARD.record((havia == 0 || queue == 0) && (before == 0 || after == 0),
-        || format!("fix_man_daily_update: queue das notícias {:x} -> {:x}, conferências {} -> {}", havia, queue, before, after));
+        || format!("fix_man_daily_update: queue das news {:x} -> {:x}, checks {} -> {}", havia, queue, before, after));
 }
 
 /// Comparer for `get_fixture_list`.

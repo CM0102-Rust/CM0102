@@ -66,7 +66,7 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_collect_fixture_op
     let plan = (*core::ptr::addr_of_mut!(FIXTURE_OPPONENTS_PLAN)).take().unwrap_or_default();
     let r = o(this, national_team, game);
     let now = list_item_values(r);
-    SCOREBOARD.record(now == plan, || format!("national_teams_collect_fixture_opponents(seleção {:#x}, game {:#x}) plan {:x?} original {:x?}", national_team, game, plan, now));
+    SCOREBOARD.record(now == plan, || format!("national_teams_collect_fixture_opponents(national team {:#x}, game {:#x}) plan {:x?} original {:x?}", national_team, game, plan, now));
     r
 }
 
@@ -134,7 +134,7 @@ pub(crate) unsafe extern "thiscall" fn compare_select_squad(this: usize, nation:
     let same = a[1] as u8 == n && a[2] == mode && a[3] as usize == elenco && code.len() == size as usize
         && list[..] == cand[..n1.min(200)] && code[..lim] == codigos[..lim];
     SCOREBOARD.record(same, || format!(
-        "select_squad(nação {:x}, kind {}, size {}) original: n {} mode {:#x} team {:x} list {:x?} códigos {:x?}; rust: n {} mode {:#x} team {:x} list {:x?} códigos {:x?}",
+        "select_squad(nation {:x}, kind {}, size {}) original: n {} mode {:#x} team {:x} list {:x?} codes {:x?}; rust: n {} mode {:#x} team {:x} list {:x?} codes {:x?}",
         nation, t, size, a[1] as u8, a[2], a[3], list, code, n, mode, elenco, &cand[..(n as i8).max(0) as usize], &codigos[..size as usize]));
 }
 
@@ -408,7 +408,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_current_competition(this: usi
     o(this, nation, comp);
     let (atual2, fila2) = (read_usize(p.slot) as u32, read_usize(p.queue) as u32);
     let ok = atual2 == p.new.unwrap_or(atual) && fila2 == p.in_queue.unwrap_or(fila);
-    SCOREBOARD.record(ok, || format!("set_current_competition(nação {}, comp {}) current {:#x} -> {:#x} (esperava {:x?}), queue {:#x} -> {:#x} (esperava {:x?})",
+    SCOREBOARD.record(ok, || format!("set_current_competition(nation {}, comp {}) current {:#x} -> {:#x} (esperava {:x?}), queue {:#x} -> {:#x} (esperava {:x?})",
         read_usize(nation), read_usize(comp), atual, atual2, p.new, fila, fila2, p.in_queue));
 }
 

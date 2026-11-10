@@ -52,7 +52,7 @@ pub(crate) unsafe extern "thiscall" fn compare_con_champ_update_for_date(this: u
 pub(crate) unsafe extern "thiscall" fn compare_con_champ_set_up_rounds(this: usize) -> u32 {
     let this = Cup(this);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_CHAMP_SET_UP_ROUNDS)(this.addr());
-    SCOREBOARD.record(r == 1 && (this.prize_fund() as usize) == 0x1e8480, || format!("con_champ_set_up_rounds({:#x}) returned {} prêmios {}", this.addr(), r, (this.prize_fund() as usize)));
+    SCOREBOARD.record(r == 1 && (this.prize_fund() as usize) == 0x1e8480, || format!("con_champ_set_up_rounds({:#x}) returned {} prizes {}", this.addr(), r, (this.prize_fund() as usize)));
     r
 }
 

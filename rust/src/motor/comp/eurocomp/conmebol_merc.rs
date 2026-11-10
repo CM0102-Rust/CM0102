@@ -338,7 +338,7 @@ pub(crate) unsafe fn compare_south_american_cup_schedule(name: &str, stage: u32,
     if b != 0 {
         exe::crt_free(b);
     }
-    SCOREBOARD.record(igual && outs && table, || format!("{}(stage {}): saídas {} ({} x {}) table {}", name, f, outs, *rounds, r2, table));
+    SCOREBOARD.record(igual && outs && table, || format!("{}(stage {}): outs {} ({} x {}) table {}", name, f, outs, *rounds, r2, table));
     a
 }
 

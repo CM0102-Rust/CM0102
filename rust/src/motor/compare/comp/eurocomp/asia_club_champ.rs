@@ -37,7 +37,7 @@ pub(crate) unsafe extern "thiscall" fn compare_create_group_stages(this: usize) 
         a == b
     };
     let ok = checks(1, &v[..4]) && checks(2, &v[4..]) && this.current_stage() == 2;
-    SCOREBOARD.record(ok, || format!("create_group_stages({:#x}): os groups não batem with the vivos {:x?}", this.addr(), v));
+    SCOREBOARD.record(ok, || format!("create_group_stages({:#x}): os groups not batem with the vivos {:x?}", this.addr(), v));
 }
 
 /// Comparer for `asia_club_champ_create_semi_final_stage`.

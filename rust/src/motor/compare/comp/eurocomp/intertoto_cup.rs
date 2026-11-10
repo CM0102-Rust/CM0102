@@ -44,7 +44,7 @@ pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_collect_entrants(th
     if lr != 0 && lr != lo && lr != before {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("intertoto_cup_collect_entrants({:#x}) returned {} x {} memória {} list {}", this.addr(), a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("intertoto_cup_collect_entrants({:#x}) returned {} x {} memory {} list {}", this.addr(), a, b, igual, list));
     a
 }
 

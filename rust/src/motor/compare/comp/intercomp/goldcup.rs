@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_up_team_list(this: usize) -> 
     if lr != 0 && lr != lo {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("set_up_team_list({:#x}) returned {} x {} memória {} list {}", this, a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("set_up_team_list({:#x}) returned {} x {} memory {} list {}", this, a, b, igual, list));
     a
 }
 
@@ -49,7 +49,7 @@ pub(crate) unsafe extern "thiscall" fn compare_goldcup_set_predicted_positions(t
         let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this + 8), v[k]) } else { 0 };
         e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) as u32 != COPA_AMERICA_PREDICTED_PLACES[k]
     });
-    SCOREBOARD.record(wrong.is_none(), || format!("goldcup_set_predicted_positions: a posição prevista of the slot {:?} não bate", wrong));
+    SCOREBOARD.record(wrong.is_none(), || format!("goldcup_set_predicted_positions: a position prevista of the slot {:?} not bate", wrong));
 }
 
 /// Comparer for `goldcup_start_new_season`.
@@ -80,7 +80,7 @@ pub(crate) unsafe extern "thiscall" fn compare_goldcup_update_for_date(this: usi
             && stages != 0
             && (0..2).all(|g| read_usize(stages + g * 4) != 0)
             && this.current_stage() == 1;
-        SCOREBOARD.record(ok, || format!("goldcup_update_for_date({:#x}): o draw não montou the groups (+0x45 {}, +0x30 {})", this.addr(), this.active(), this.current_stage() as i32));
+        SCOREBOARD.record(ok, || format!("goldcup_update_for_date({:#x}): o draw not montou the groups (+0x45 {}, +0x30 {})", this.addr(), this.active(), this.current_stage() as i32));
     }
     r
 }
@@ -124,7 +124,7 @@ pub(crate) unsafe extern "thiscall" fn compare_goldcup_create_group_stage(this: 
         a.sort_unstable();
         plan.sort_unstable();
         let ok = !f.is_null() && this.current_stage() as i32 == g && f.club_count() == 4 && f.year() == this.year() && a == plan;
-        SCOREBOARD.record(ok, || format!("goldcup_create_group_stage({}): a stage não bate with o plan ({:x?} read {:x?})", g, plan, a));
+        SCOREBOARD.record(ok, || format!("goldcup_create_group_stage({}): a stage not bate with o plan ({:x?} read {:x?})", g, plan, a));
     }
     r
 }

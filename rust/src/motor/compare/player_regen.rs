@@ -101,7 +101,7 @@ pub(crate) unsafe extern "thiscall" fn compare_schedule_injury_retirement(this: 
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("schedule_injury_retirement({:x}, {}) diferencas em {:x?}", person, days, dif)
+        format!("schedule_injury_retirement({:x}, {}) differences em {:x?}", person, days, dif)
     });
 }
 
@@ -434,7 +434,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_nation_club_lists(this: usi
         let ids: Vec<usize> = if l != 0 { list_items_capped(l).into_iter().map(|e| read_usize(e)).collect() } else { Vec::new() };
         l != 0 && ids != plan[k]
     });
-    SCOREBOARD.record(wrong.is_none(), || format!("build_nation_club_lists: a list of the nação {:?} difere of the plan", wrong));
+    SCOREBOARD.record(wrong.is_none(), || format!("build_nation_club_lists: a list of the nation {:?} difere of the plan", wrong));
 }
 
 /// Comparer for `process_regen_queue` (comparison mode: see the header of motor.rs): `0x7abac0` (the young regen)

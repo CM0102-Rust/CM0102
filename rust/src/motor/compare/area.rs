@@ -21,7 +21,7 @@ pub(crate) unsafe extern "thiscall" fn compare_area_layout(area: usize) {
         reg.push((area_item_at(read_usize(area + 0x208), owner) + 0x7c, 2));
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(area), || area_layout(area));
-    SCOREBOARD.record(igual, || format!("area_layout {:#x}: diferencas em {:?}", area, first_differences(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("area_layout {:#x}: differences em {:?}", area, first_differences(&mo, &mr)));
 }
 
 /// Comparer for `init`.
@@ -36,7 +36,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init(
         || o(area, areas, items, index, x1, y1, x2, y2, columns, weights_columns, cap_area_rows(rows), weights_rows, marks, colour, owner),
         || init(area, areas, items, index, x1, y1, x2, y2, columns, weights_columns, rows, weights_rows, marks, colour, owner),
     );
-    SCOREBOARD.record(igual, || format!("init {:#x}: diferencas em {:?}", area, first_differences(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("init {:#x}: differences em {:?}", area, first_differences(&mo, &mr)));
 }
 
 /// Comparer for `draw`.

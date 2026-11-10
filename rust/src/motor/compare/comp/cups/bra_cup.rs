@@ -46,7 +46,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_cup_build_team_table(this: us
     if lr != 0 && lr != lo {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("bra_cup_build_team_table({:#x}) returned {} x {} memória {} list {}", this.addr(), a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("bra_cup_build_team_table({:#x}) returned {} x {} memory {} list {}", this.addr(), a, b, igual, list));
     a
 }
 
@@ -78,6 +78,6 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_cup_set_up_rounds(this: usize
     if tr != 0 && tr != to {
         exe::crt_free(tr);
     }
-    SCOREBOARD.record(igual && a == b && table, || format!("bra_cup_set_up_rounds({:#x}) returned {} x {} memória {} table {}", this.addr(), a, b, igual, table));
+    SCOREBOARD.record(igual && a == b && table, || format!("bra_cup_set_up_rounds({:#x}) returned {} x {} memory {} table {}", this.addr(), a, b, igual, table));
     a
 }

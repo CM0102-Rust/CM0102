@@ -59,7 +59,7 @@ pub(crate) unsafe extern "thiscall" fn compare_player_search_scout_match(this: u
     };
     let r = o(this, game, result, out);
     let after = (read_i16(this + player_search_fields::SCOUTING_START_YEAR) as u16, read_i16(this + player_search_fields::SCOUTING_START_DATE));
-    SCOREBOARD.record(r == n && after == predicted, || format!("player_search_scout_match(list {:#x}, game {:#x}) original={} dry run={} começo before {:x?} predicted {:x?} after {:x?}",
+    SCOREBOARD.record(r == n && after == predicted, || format!("player_search_scout_match(list {:#x}, game {:#x}) original={} dry run={} start before {:x?} predicted {:x?} after {:x?}",
         this, game, r, n, before, predicted, after));
     r
 }

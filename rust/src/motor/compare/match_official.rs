@@ -80,7 +80,7 @@ pub(crate) unsafe extern "thiscall" fn compare_foul_decision(
     SCOREBOARD.record(igual && r == v, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("foul_decision(kind {:#x}) original={} rust={} diferencas em {:x?}", kind, r, v, dif)
+        format!("foul_decision(kind {:#x}) original={} rust={} differences em {:x?}", kind, r, v, dif)
     });
     r
 }

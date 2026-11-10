@@ -85,7 +85,7 @@ pub(crate) unsafe extern "stdcall" fn compare_build_board_player_performance_tex
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(out, 0x200)], || o(ids, win, out, variant),
         || build_board_player_performance_text(ids, win, out, variant));
-    SCOREBOARD.record(igual, || format!("build_board_player_performance_text(vitória {}, variant {}) {:?} x {:?}", win as u8, variant,
+    SCOREBOARD.record(igual, || format!("build_board_player_performance_text(win {}, variant {}) {:?} x {:?}", win as u8, variant,
         String::from_utf8_lossy(&mo.0[0].1[..0x40]), String::from_utf8_lossy(&mr.0[0].1[..0x40])));
 }
 
@@ -243,7 +243,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_club_manager(this: usize, 
     }
     let conf = read_i16(club_board_row(this, club) + 6);
     SCOREBOARD.record(sobra == 0 && (keep != 0 || conf == 0xdac), || {
-        format!("remove_club_manager(club {:x}, kind {}, keep {}) marks que sobraram {:#x}, confiança {}", club.addr(), kind as u8, keep, sobra, conf)
+        format!("remove_club_manager(club {:x}, kind {}, keep {}) marks que sobraram {:#x}, confidence {}", club.addr(), kind as u8, keep, sobra, conf)
     });
 }
 
@@ -345,7 +345,7 @@ pub(crate) unsafe extern "thiscall" fn compare_resolve_board_ultimatum(this: usi
     let r = o(this, club);
     let after = read_i16(read_usize(this + manager_manager_fields::DEPARTURE_LIST)) as i32;
     let ok = after == before + (r != 0) as i32 && (r == 0 || read_u8(board_row_at(this, read_usize(club)) + 2) & 2 != 0);
-    SCOREBOARD.record(ok, || format!("resolve_board_ultimatum(club {:x}) returned {}, saídas {} -> {}", club, r, before, after));
+    SCOREBOARD.record(ok, || format!("resolve_board_ultimatum(club {:x}) returned {}, outs {} -> {}", club, r, before, after));
     r
 }
 
@@ -383,7 +383,7 @@ pub(crate) unsafe extern "thiscall" fn compare_manager_manager_remove_player_fro
     let r = o(this, person.addr(), club.addr());
     let away = !(in_club || in_national_team) || (0..0x32usize).all(|k| club.squad(k) != person.addr());
     let ok = away && person.job_for_club() == f39 && person.club_job() == c39 && person.job_for_nation() == f28 && person.national_job() == c24;
-    SCOREBOARD.record(ok, || format!("manager_manager_remove_player_from_squad(person {:x}, club {:x}): função {:x}/{:x} club {:x}/{:x} (esperava {:x}/{:x} {:x}/{:x}), away das slots {}",
+    SCOREBOARD.record(ok, || format!("manager_manager_remove_player_from_squad(person {:x}, club {:x}): function {:x}/{:x} club {:x}/{:x} (esperava {:x}/{:x} {:x}/{:x}), away das slots {}",
         read_usize(person.addr()), read_usize(club.addr()), person.job_for_club(), person.job_for_nation(), person.club_job(), person.national_job(), f39, f28, c39, c24, away));
     r
 }
@@ -413,7 +413,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_staff_from_club(this: usiz
     let expected = staff_job_fields(Staff(s.as_ptr() as usize), Club(c.as_ptr() as usize));
     let r = o(this, person.addr(), club);
     let after = staff_job_fields(person, Club(club));
-    SCOREBOARD.record(after == expected, || format!("remove_staff_from_club(person {:x}, função {}, club {:x}): person {:x?}{:x?} esperava {:x?}{:x?}",
+    SCOREBOARD.record(after == expected, || format!("remove_staff_from_club(person {:x}, function {}, club {:x}): person {:x?}{:x?} esperava {:x?}{:x?}",
         read_usize(person.addr()), person.job_for_club() as i8, read_usize(club), after.0, after.1, expected.0, expected.1));
     r
 }
@@ -502,7 +502,7 @@ pub(crate) unsafe extern "thiscall" fn compare_manager_manager_remove(this: usiz
             && (in_the == cabeca || read_usize(ant + 6) == prox)
             && (in_the == cauda || read_usize(prox + llist_node::PREV) == ant)
     };
-    SCOREBOARD.record(ok, || format!("manager_manager_remove({:#x}, {:#x}) original={} nó {:#x} cabeçalho {:x?} -> {:x?}", this.addr(), given, r, in_the, before, after));
+    SCOREBOARD.record(ok, || format!("manager_manager_remove({:#x}, {:#x}) original={} nó {:#x} header {:x?} -> {:x?}", this.addr(), given, r, in_the, before, after));
     r
 }
 
@@ -512,7 +512,7 @@ pub(crate) unsafe extern "thiscall" fn compare_manager_manager_remove(this: usiz
 pub(crate) unsafe extern "thiscall" fn compare_manager_manager_clear(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_MANAGER_MANAGER_CLEAR)(this);
     let after: [u8; 14] = core::ptr::read_unaligned(this as *const [u8; 14]);
-    SCOREBOARD.record(after == [0u8; 14], || format!("manager_manager_clear({:#x}) cabeçalho {:x?}", this, after));
+    SCOREBOARD.record(after == [0u8; 14], || format!("manager_manager_clear({:#x}) header {:x?}", this, after));
 }
 
 /// Comparer for `get_current`.

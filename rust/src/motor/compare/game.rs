@@ -36,7 +36,7 @@ pub(crate) unsafe extern "C" fn compare_game_update_nation_coefficients() {
         let na = base + k * 0x122;
         let g = nation_coefficient_history(Nation(na));
         if (0..6).any(|j| g[j].to_bits() != h[j].to_bits()) || read_u8(na + 0x121) != *mark {
-            error = Some(format!("nação {} ({:x}): {:?}/{} x plan {:?}/{}", k, na, g, read_u8(na + 0x121), h, mark));
+            error = Some(format!("nation {} ({:x}): {:?}/{} x plan {:?}/{}", k, na, g, read_u8(na + 0x121), h, mark));
             break;
         }
     }

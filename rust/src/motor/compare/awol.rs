@@ -164,7 +164,7 @@ pub(crate) unsafe extern "thiscall" fn compare_report_poor_fitness(this: usize, 
     let in_the = if tail != 0 { read_usize(tail + 6) } else { read_usize(l + 2) };
     let data = if in_the != 0 { read_usize(in_the) } else { 0 };
     let same = data != 0 && core::slice::from_raw_parts(data as *const u8, 0x10) == plan;
-    SCOREBOARD.record(same, || format!("report_poor_fitness(player {:#x}, club {:#x}) plan={:x?} list: no {:#x} data {:#x}", player, club, plan, in_the, data));
+    SCOREBOARD.record(same, || format!("report_poor_fitness(player {:#x}, club {:#x}) plan={:x?} list: no {:#x} date {:#x}", player, club, plan, in_the, data));
 }
 
 /// Comparer for `is_player_awol`.
@@ -180,6 +180,6 @@ pub(crate) unsafe extern "thiscall" fn compare_is_player_awol(this: usize, p: us
         }
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(this, p, so_read), || is_player_awol(this, p, so_read));
-    SCOREBOARD.record(igual && r as u8 == n as u8, || format!("is_player_awol(person {:#x}, so_ler {}) original={} {:x?} rust={} {:x?}", p, so_read, r as u8, mo, n as u8, mr));
+    SCOREBOARD.record(igual && r as u8 == n as u8, || format!("is_player_awol(person {:#x}, only_read {}) original={} {:x?} rust={} {:x?}", p, so_read, r as u8, mo, n as u8, mr));
     r
 }

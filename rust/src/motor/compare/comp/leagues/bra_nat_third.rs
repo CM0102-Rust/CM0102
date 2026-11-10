@@ -18,7 +18,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_create_final_stage(
         let (x, y) = (read_usize(l), read_usize(l + 6));
         stage.team_count() == 2 && this.current_stage() == 10 && ((x, y) == (a, b) || (x, y) == (b, a))
     };
-    SCOREBOARD.record(same, || format!("bra_nat_third_create_final_stage({:#x}) campeoes={:#x},{:#x} stage={:#x}", this.addr(), a, b, stage.addr()));
+    SCOREBOARD.record(same, || format!("bra_nat_third_create_final_stage({:#x}) champions={:#x},{:#x} stage={:#x}", this.addr(), a, b, stage.addr()));
 }
 
 /// Comparer for `bra_nat_third_start_new_season`.
@@ -66,7 +66,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_set_predicted_posit
         let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this + 8), v[k]) } else { 0 };
         read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + 4 * k) != v[k] || e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != place_for_index(k)
     });
-    SCOREBOARD.record(wrong.is_none(), || format!("bra_nat_third_set_predicted_positions({:#x}): a slot {:?} não bate", this, wrong));
+    SCOREBOARD.record(wrong.is_none(), || format!("bra_nat_third_set_predicted_positions({:#x}): a slot {:?} not bate", this, wrong));
 }
 
 /// Comparer for `bra_nat_third_create_group_stage` (comparison mode: see the header of motor.rs): the comparer of one

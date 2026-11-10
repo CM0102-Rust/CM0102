@@ -229,7 +229,7 @@ unsafe extern "C" fn compare(n: i32) -> i32 {
 
     SCOREBOARD.record(r_orig == r_rust && after_orig == after_rust, || {
         format!(
-            "n={} original={} rust={} estado antes={:x?} original={:x?} rust={:x?}",
+            "n={} original={} rust={} state before={:x?} original={:x?} rust={:x?}",
             n, r_orig, r_rust, before, after_orig, after_rust
         )
     });

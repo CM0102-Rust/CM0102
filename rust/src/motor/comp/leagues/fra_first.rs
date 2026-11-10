@@ -217,7 +217,7 @@ pub(crate) unsafe fn fra_first_compare_fixed_fixtures(name: &str, this: League, 
     let v = this.fixed_fixtures();
     let n = league_match_count(this);
     let ok = v == 0 || (read_usize(v - 4) as i32 == n && (0..n.max(0) as usize).all(|i| read_usize(v + i * 0x10 + 8) != 0xffff_ffff && read_usize(v + i * 0x10 + 0xc) != 0xffff_ffff));
-    SCOREBOARD.record(ok, || format!("{}({:#x}): a lista dos jogos fixos (+0xea = {:#x}) fora do esperado", name, this.addr(), v));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): a list of the games fixed (+0xea = {:#x}) away of the expected", name, this.addr(), v));
 }
 
 /// the add_result stub of competitions that play no matches: returns 1
@@ -979,7 +979,7 @@ pub(crate) unsafe fn fra_first_compare_league_rules(name: &str, this: League, wr
         }
     };
     let difs: Vec<(usize, u32, u32)> = written.iter().filter(|e| field(&mo, e.0, e.1) != field(&mr, e.0, e.1)).map(|e| (e.0, field(&mo, e.0, e.1), field(&mr, e.0, e.1))).collect();
-    SCOREBOARD.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this.addr(), r, rr, difs));
+    SCOREBOARD.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (offset, original, rust)={:x?}", name, this.addr(), r, rr, difs));
     r
 }
 
@@ -1089,7 +1089,7 @@ pub(crate) unsafe fn fra_first_compare_league_table(name: &str, this: League, n:
                 };
         }
     }
-    SCOREBOARD.record(same, || format!("{}({:#x}) original={} plano={:x?} tabela={:x?}", name, this.addr(), r, plan, found));
+    SCOREBOARD.record(same, || format!("{}({:#x}) original={} plan={:x?} table={:x?}", name, this.addr(), r, plan, found));
     r
 }
 

@@ -102,7 +102,7 @@ pub(crate) unsafe fn compare_league_round_table(name: &str, stage: u32, rounds: 
     if b != 0 {
         exe::crt_free(b);
     }
-    SCOREBOARD.record(igual && outs && table, || format!("{}(stage {}): saídas {} table {}", name, stage as u8 as i8, outs, table));
+    SCOREBOARD.record(igual && outs && table, || format!("{}(stage {}): outs {} table {}", name, stage as u8 as i8, outs, table));
     a
 }
 
@@ -432,7 +432,7 @@ pub(crate) unsafe fn spa_first_compare_league_rules(name: &str, this: League, wr
         }
     };
     let difs: Vec<(usize, u32, u32)> = written.iter().filter(|e| field(&mo, e.0, e.1) != field(&mr, e.0, e.1)).map(|e| (e.0, field(&mo, e.0, e.1), field(&mr, e.0, e.1))).collect();
-    SCOREBOARD.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (deslocamento, original, rust)={:x?}", name, this.addr(), r, rr, difs));
+    SCOREBOARD.record(difs.is_empty() && r == rr, || format!("{}({:#x}) original={} rust={} (offset, original, rust)={:x?}", name, this.addr(), r, rr, difs));
     r
 }
 

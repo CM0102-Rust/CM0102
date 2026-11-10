@@ -51,7 +51,7 @@ pub(crate) unsafe extern "thiscall" fn compare_select_section_clubs(this: usize)
     if lr != 0 && lr != lo {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("select_section_clubs({:#x}) returned {} x {} memória {} list {}", this, a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("select_section_clubs({:#x}) returned {} x {} memory {} list {}", this, a, b, igual, list));
     a
 }
 

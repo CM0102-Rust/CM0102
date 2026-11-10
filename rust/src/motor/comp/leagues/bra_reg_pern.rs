@@ -49,7 +49,7 @@ pub(crate) unsafe fn bra_reg_pern_compare_knockout_from_table(name: &str, this: 
     original();
     let stage = Cup(read_usize(this.stages()));
     if stage.is_null() {
-        SCOREBOARD.record(false, || format!("{}({:#x}) sem fase", name, this.addr()));
+        SCOREBOARD.record(false, || format!("{}({:#x}) without stage", name, this.addr()));
         return;
     }
     let list = stage.team_table();
@@ -58,7 +58,7 @@ pub(crate) unsafe fn bra_reg_pern_compare_knockout_from_table(name: &str, this: 
     plan.sort_unstable();
     found.sort_unstable();
     let same = plan == found && stage.team_count() as usize == rows.len() && read_usize(stage.addr() + 4) == this.competition().addr() && this.current_stage() == 0;
-    SCOREBOARD.record(same, || format!("{}({:#x}) plano={:x?} fase={:#x} lista={:x?} +0x3e={}", name, this.addr(), pl, stage.addr(), ac, stage.team_count()));
+    SCOREBOARD.record(same, || format!("{}({:#x}) plan={:x?} stage={:#x} list={:x?} +0x3e={}", name, this.addr(), pl, stage.addr(), ac, stage.team_count()));
 }
 
 /// The Pernambuco state league at career creation: the year and the database competition, disciplinary rule 7 and, with

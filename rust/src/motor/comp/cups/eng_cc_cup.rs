@@ -429,7 +429,7 @@ pub(crate) unsafe fn eng_cc_cup_compare_entrant_list(name: &str, this: Cup, reg:
     if lr != 0 && lr != lo {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) devolveu {} x {} memória {} lista {} ({} bytes)", name, this.addr(), a, b, igual, list, k));
+    SCOREBOARD.record(igual && a == b && list, || format!("{}({:#x}) returned {} x {} memory {} list {} ({} bytes)", name, this.addr(), a, b, igual, list, k));
     a
 }
 

@@ -60,7 +60,7 @@ pub(crate) unsafe extern "thiscall" fn compare_send_to_club_manager(this: usize,
     let human = manager != 0 && read_i32(manager) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10);
     let r = o(this, news, club.addr());
     let ok = read_u8(news + news_item::REACH) == 0 && (human || r == 0) && r <= 1;
-    SCOREBOARD.record(ok, || format!("send_to_club_manager(club {:x}, técnico {:x}, human {}) returned {}", club.addr(), manager, human, r));
+    SCOREBOARD.record(ok, || format!("send_to_club_manager(club {:x}, manager {:x}, human {}) returned {}", club.addr(), manager, human, r));
     r
 }
 
@@ -123,7 +123,7 @@ pub(crate) unsafe extern "thiscall" fn compare_deliver_to_manager(this: usize, n
 pub(crate) unsafe extern "thiscall" fn compare_auto_respond_all(this: usize, manager: usize, club: usize) -> u32 {
     let human = manager != 0 && read_i32(manager).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10) >= 0;
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_AUTO_RESPOND_ALL)(this, manager, club);
-    SCOREBOARD.record(r == human as u32, || format!("auto_respond_all(técnico {:x}, human {}) returned {}", manager, human, r));
+    SCOREBOARD.record(r == human as u32, || format!("auto_respond_all(manager {:x}, human {}) returned {}", manager, human, r));
     r
 }
 
@@ -345,7 +345,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_inbox_items(this: usize, mana
     } else {
         r == 0 || (*count as usize == ids.len() && ids.iter().enumerate().all(|(i, &id)| read_usize(r + i * MEDIA_NEWS_ITEM_SIZE + 0xd6) == id))
     };
-    SCOREBOARD.record(ok, || format!("get_inbox_items(category {}) {} notícias, esperava {:?}", category as u8, if r == 0 { 0 } else { *count }, ids));
+    SCOREBOARD.record(ok, || format!("get_inbox_items(category {}) {} news, esperava {:?}", category as u8, if r == 0 { 0 } else { *count }, ids));
     r
 }
 

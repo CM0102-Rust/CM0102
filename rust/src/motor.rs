@@ -3864,7 +3864,7 @@ unsafe fn compare_restart(nome: &str, this: usize, o: unsafe extern "thiscall" f
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("{} diferencas em {:x?}", nome, dif)
+        format!("{} differences em {:x?}", nome, dif)
     });
 }
 
@@ -4039,7 +4039,7 @@ unsafe fn grid_inconsistent(m: Engine) -> Option<String> {
             for l in 0..2usize {
                 let n = read_i8(casa + (0x58 + l));
                 if !(0..=11).contains(&n) {
-                    return Some(format!("casa ({},{}) lado {} contagem {}", x, y, l, n));
+                    return Some(format!("cell ({},{}) side {} count {}", x, y, l, n));
                 }
                 for i in 0..n as usize {
                     let p = MatchPlayer(read_usize(casa + 4 * (11 * l + i)));
@@ -4048,7 +4048,7 @@ unsafe fn grid_inconsistent(m: Engine) -> Option<String> {
                         return Some(format!("casa ({},{}) lado {} entrada {}/{} = {:#x}", x, y, l, i, n, p.addr()));
                     }
                     if p.cell_x() != x || p.cell_y() != y || p.cell_slot() != i as i8 {
-                        return Some(format!("casa ({},{}) lado {} entrada {}: jogador em ({},{}) indice {}", x, y, l, i, p.cell_x(), p.cell_y(), p.cell_slot()));
+                        return Some(format!("cell ({},{}) side {} entry {}: player em ({},{}) index {}", x, y, l, i, p.cell_x(), p.cell_y(), p.cell_slot()));
                     }
                 }
             }

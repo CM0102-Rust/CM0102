@@ -136,7 +136,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_injury(this: usize, kind_arg:
                 && read_i16(l + injury_entry::TRAINING_RETURN_DAYS) == return_to_training_days(kind, read_i16(l + injury_entry::DAYS_OUT))
         }
     };
-    SCOREBOARD.record(ok, || format!("add_injury(kind {:#x}, retroativa {}, person {:#x}, recorrencia {}, so {}) = {}", kind_arg, retroativa, p.addr(), rec_arg as u8 as i8, so_recorrencia, r));
+    SCOREBOARD.record(ok, || format!("add_injury(kind {:#x}, retroativa {}, person {:#x}, recorrencia {}, only {}) = {}", kind_arg, retroativa, p.addr(), rec_arg as u8 as i8, so_recorrencia, r));
     r
 }
 
@@ -399,7 +399,7 @@ pub(crate) unsafe extern "thiscall" fn compare_init_squad_fitness(this: usize) {
         }
     }
     let (_, _, igual, _, _) = crate::comparison::side_by_side(&regions, || o(this), || init_squad_fitness(this));
-    SCOREBOARD.record(igual, || format!("init_squad_fitness: memória difere ({} regiões)", regions.len()));
+    SCOREBOARD.record(igual, || format!("init_squad_fitness: memory difere ({} regions)", regions.len()));
 }
 
 /// Comparer for `init_records`.

@@ -47,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_up_teams(this: usize) -> i32 
     if lr != 0 && lr != lo {
         exe::crt_free(lr);
     }
-    SCOREBOARD.record(igual && a == b && list, || format!("set_up_teams({:#x}) returned {} x {} memória {} list {}", this.addr(), a, b, igual, list));
+    SCOREBOARD.record(igual && a == b && list, || format!("set_up_teams({:#x}) returned {} x {} memory {} list {}", this.addr(), a, b, igual, list));
     a
 }
 
@@ -82,6 +82,6 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_all_stars_create_round_ta
     if b != 0 {
         exe::crt_free(b);
     }
-    SCOREBOARD.record(igual && outs && table, || format!("usa_mls_all_stars_create_round_table: saídas {} table {}", outs, table));
+    SCOREBOARD.record(igual && outs && table, || format!("usa_mls_all_stars_create_round_table: outs {} table {}", outs, table));
     a
 }

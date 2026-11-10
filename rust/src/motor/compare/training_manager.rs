@@ -204,7 +204,7 @@ pub(crate) unsafe extern "thiscall" fn compare_set_default_schedules(this: usize
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("set_default_schedules({:x}) diferencas em {:x?}", this, dif)
+        format!("set_default_schedules({:x}) differences em {:x?}", this, dif)
     });
 }
 

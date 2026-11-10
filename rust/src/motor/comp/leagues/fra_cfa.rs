@@ -90,7 +90,7 @@ pub(crate) unsafe fn compare_cfa_schedule(name: &str, stage: u32, rounds: *mut i
     if b != 0 {
         exe::crt_free(b);
     }
-    SCOREBOARD.record(igual && outs && table, || format!("{}(stage {}): saídas {} table {}", name, stage as u8 as i8, outs, table));
+    SCOREBOARD.record(igual && outs && table, || format!("{}(stage {}): outs {} table {}", name, stage as u8 as i8, outs, table));
     a
 }
 
@@ -124,7 +124,7 @@ pub(crate) unsafe fn compare_c1_schedule(name: &str, stage: u32, rounds: *mut i1
     if b != 0 {
         exe::crt_free(b);
     }
-    SCOREBOARD.record(igual && outs && table, || format!("{}(stage {}): saídas {} table {}", name, stage as u8 as i8, outs, table));
+    SCOREBOARD.record(igual && outs && table, || format!("{}(stage {}): outs {} table {}", name, stage as u8 as i8, outs, table));
     a
 }
 

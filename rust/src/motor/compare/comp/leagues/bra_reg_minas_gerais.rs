@@ -57,7 +57,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_minas_gerais_create_final
             stage.team_count() == 2 && read_usize(stage.addr() + 4) == this.competition().addr() && ((x, y) == (a, b) || (x, y) == (b, a)) && this.current_stage() == 2
         }
     };
-    SCOREBOARD.record(same, || format!("bra_reg_minas_gerais_create_final_stage({:#x}) campeoes={:#x},{:#x} +0x30={} +0x2c={}", this.addr(), a, b, this.current_stage(), this.stage_count()));
+    SCOREBOARD.record(same, || format!("bra_reg_minas_gerais_create_final_stage({:#x}) champions={:#x},{:#x} +0x30={} +0x2c={}", this.addr(), a, b, this.current_stage(), this.stage_count()));
 }
 
 /// Comparer for `bra_reg_minas_gerais_record_season_honours` (end of season; comparison mode: see the header of

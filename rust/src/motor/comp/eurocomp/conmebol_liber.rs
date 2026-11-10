@@ -267,7 +267,7 @@ pub(crate) unsafe fn check_cup_rules(name: &str, this: League, g: &ContinentalGr
     let b6 = (this.next_draw_day() as u16);
     let b8 = (this.next_draw_year_offset() as u16);
     let premio = g.prize.map_or(true, |p| (this.prize_fund() as u32) == p);
-    SCOREBOARD.record(r == 1 && k == 0 && b6 == word && b8 == 0 && premio, || format!("{}({:#x}) devolveu {} campos errados {:x?} data {:#x} prevista {:#x} +0xb8 {} prêmio ok {}", name, this.addr(), r, &errados[..k], b6, word, b8, premio));
+    SCOREBOARD.record(r == 1 && k == 0 && b6 == word && b8 == 0 && premio, || format!("{}({:#x}) returned {} fields errados {:x?} date {:#x} prevista {:#x} +0xb8 {} prize ok {}", name, this.addr(), r, &errados[..k], b6, word, b8, premio));
     r
 }
 

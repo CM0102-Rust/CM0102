@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn compare_serve_international_bans(this: us
         let (jogos, contador, dias) = (read_u8(s), read_u8(s + ban_record::MATCHES_SERVED), read_i16(s + ban_record::DAYS));
         let ok = if j.cumprida { jogos == 0xff && dias == -1 } else { contador == j.counter.unwrap_or(*before) };
         if !ok && error.is_none() {
-            error = Some(format!("person {} counter {} (esperava {:?}, before {}), served={} suspensão {:#x}/{}", id, contador, j.counter, before, j.cumprida, jogos, dias));
+            error = Some(format!("person {} counter {} (esperava {:?}, before {}), served={} suspension {:#x}/{}", id, contador, j.counter, before, j.cumprida, jogos, dias));
         }
     }
     SCOREBOARD.record(error.is_none(), || format!("serve_international_bans(team {:#x}, {} persons): {}", team, plan.len(), error.clone().unwrap_or_default()));
@@ -110,7 +110,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_ban(this: usize, id: u32, ban
             if rules[3] != 0xff {
                 ok &= read_i16(this + discipline_fields::NATION_INDEX_COUNT) == index.wrapping_add(1);
             }
-            (ok, format!("new: slot {} count {} (esperava {}), índice {} (before {})", vaga, read_i16(this + discipline_fields::BAN_COUNT), conta, read_i16(this + discipline_fields::NATION_INDEX_COUNT), index))
+            (ok, format!("new: slot {} count {} (esperava {}), index {} (before {})", vaga, read_i16(this + discipline_fields::BAN_COUNT), conta, read_i16(this + discipline_fields::NATION_INDEX_COUNT), index))
         }
     };
     SCOREBOARD.record(ok, || format!("add_ban({}) {}", id, detalhe));
@@ -216,7 +216,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_ban_progress(this: usize, 
         contador == j.counter.unwrap_or(before)
     };
     SCOREBOARD.record(ok, || {
-        format!("update_ban_progress({}, {}, {}) counter {} (esperava {:?}, before {}), served={} suspensão {:#x}/{} entry {}",
+        format!("update_ban_progress({}, {}, {}) counter {} (esperava {:?}, before {}), served={} suspension {:#x}/{} entry {}",
             id, rule as u8, count, contador, j.counter, before, j.cumprida, jogos, dias, read_i16(j.entry + ruling_body_entry::BAN_INDEX))
     });
 }

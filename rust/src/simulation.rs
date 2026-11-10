@@ -114,7 +114,7 @@ unsafe fn check_thread(origin: &str) {
         let n = OTHER_THREADS.fetch_add(1, Ordering::Relaxed);
         if n < 20 || (n + 1).is_power_of_two() {
             let [d, a] = *CURRENT_DATE;
-            linha(&format!("simulation: {} on thread {} (main {}), date {}-{:03}, {} times", origin, t, p, a, d, n + 1));
+            linha(&format!("simulation: {} on thread {} (main {}), date {}-{:03}, {} teams", origin, t, p, a, d, n + 1));
         }
     }
 }
@@ -242,7 +242,7 @@ unsafe fn hash_whole_game() -> String {
     }
     memory_map();
     let (start, top) = crate::allocator::game_region();
-    format!(" heap={:016x} dados={:016x}", if start == 0 { 0 } else { hash_range(start, top & !7) }, hash_range(0x987000, 0xde4638))
+    format!(" heap={:016x} date={:016x}", if start == 0 { 0 } else { hash_range(start, top & !7) }, hash_range(0x987000, 0xde4638))
 }
 
 pub unsafe fn sorteio(requested: i32, pointer: u32, offset: i32, rand: u32) {
@@ -372,7 +372,7 @@ unsafe extern "C" fn fixed_clock() -> i32 {
     let v = CLOCKS[i].fetch_add(1, Ordering::Relaxed) as i32;
     let [d, a] = *CURRENT_DATE;
     if rastro() == Some((a, d)) {
-        write_trace(&format!("clock de {:#x} (rotina {:#x}) = {}", r, CLOCK_CALLERS.get(i).copied().unwrap_or(0), v));
+        write_trace(&format!("clock de {:#x} (routine {:#x}) = {}", r, CLOCK_CALLERS.get(i).copied().unwrap_or(0), v));
     }
     v
 }

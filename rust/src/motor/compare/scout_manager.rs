@@ -270,7 +270,7 @@ pub(crate) unsafe extern "thiscall" fn compare_sync_scout_lists(this: usize, man
         }
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, manager), || sync_scout_lists(this, manager));
-    SCOREBOARD.record(igual && r == n, || format!("sync_scout_lists(técnico {:x}) original={} rust={} {:x?} x {:x?}", m, r, n, mo, mr));
+    SCOREBOARD.record(igual && r == n, || format!("sync_scout_lists(manager {:x}) original={} rust={} {:x?} x {:x?}", m, r, n, mo, mr));
     r
 }
 

@@ -279,7 +279,7 @@ pub(crate) unsafe extern "thiscall" fn compare_staff_records_daily_update(this: 
         }
         ok &= certo;
     }
-    SCOREBOARD.record(ok, || format!("staff_records_daily_update(mês {}, year {}) turned {} year new {}: record {} não cleared", m, a, turned, year, first));
+    SCOREBOARD.record(ok, || format!("staff_records_daily_update(month {}, year {}) turned {} year new {}: record {} not cleared", m, a, turned, year, first));
 }
 
 /// Comparer for `staff_records_end_season_for_nation`.
@@ -317,7 +317,7 @@ pub(crate) unsafe extern "thiscall" fn compare_staff_records_end_season_for_nati
         let s = manager_record_at(this, k) + 0xba;
         plan[k as usize] != (read_usize(s), read_usize(s + 4), read_i32(s + 8), read_i32(s + 0xc))
     });
-    SCOREBOARD.record(wrong.is_none(), || format!("staff_records_end_season_for_nation(competição {}) record {:?} difere of the plan", id, wrong));
+    SCOREBOARD.record(wrong.is_none(), || format!("staff_records_end_season_for_nation(competition {}) record {:?} difere of the plan", id, wrong));
 }
 
 /// Comparer for `find_manager_of_the_month`.
@@ -425,7 +425,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_year_award_record(this: usize
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, p.addr(), club, prize, a4, a5, credito),
         || add_year_award(this, p, club, prize, a4, a5, credito, false));
-    SCOREBOARD.record(igual, || format!("add_year_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p.addr(), read_usize(prize), mo, mr));
+    SCOREBOARD.record(igual, || format!("add_year_award_record({:x}, prize {:x}) {:x?} x {:x?}", p.addr(), read_usize(prize), mo, mr));
 }
 
 /// Comparer for `add_first_cap_record`.
@@ -461,7 +461,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_month_award_record(this: usiz
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(r, 0xd2)], || o(this, p.addr(), club, prize, a4, a5),
         || add_month_award_record_body(this, p, club, prize, a4, a5, false));
-    SCOREBOARD.record(igual, || format!("add_month_award_record({:x}, prêmio {:x}) {:x?} x {:x?}", p.addr(), read_usize(prize), mo, mr));
+    SCOREBOARD.record(igual, || format!("add_month_award_record({:x}, prize {:x}) {:x?} x {:x?}", p.addr(), read_usize(prize), mo, mr));
 }
 
 /// Comparer for `clear_manager_record`.

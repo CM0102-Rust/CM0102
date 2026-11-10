@@ -94,7 +94,7 @@ pub(crate) unsafe extern "thiscall" fn compare_sort_round_teams(cup: usize, roun
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("sort_round_teams(round {}) diferencas em {:x?}", round as i16, dif)
+        format!("sort_round_teams(round {}) differences em {:x?}", round as i16, dif)
     });
 }
 
@@ -110,7 +110,7 @@ pub(crate) unsafe extern "thiscall" fn compare_check_round_teams_for_nation(cup:
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("check_round_teams_for_nation(round {}) diferencas em {:x?}", round as i16, dif)
+        format!("check_round_teams_for_nation(round {}) differences em {:x?}", round as i16, dif)
     });
 }
 
@@ -154,7 +154,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pay_round_prize_money(cup: usize,
     before.write_back();
     o(cup.addr(), winner, loser, round, partida);
     let mo = crate::comparison::MemorySnapshot::read(&regions);
-    SCOREBOARD.record(mo == mr, || format!("pay_round_prize_money(round {}, winner {:x}, loser {:x}) o bottom and the finanças diferem", round as i16, cv, cp));
+    SCOREBOARD.record(mo == mr, || format!("pay_round_prize_money(round {}, winner {:x}, loser {:x}) o bottom and the finances diferem", round as i16, cv, cp));
 }
 
 /// Comparer for `set_home_teams_for_round`.
@@ -403,7 +403,7 @@ pub(crate) unsafe extern "thiscall" fn compare_randomize_round_teams(cup: usize,
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("randomize_round_teams(round {}) diferencas em {:x?}", round as i16, dif)
+        format!("randomize_round_teams(round {}) differences em {:x?}", round as i16, dif)
     });
 }
 
@@ -417,7 +417,7 @@ pub(crate) unsafe extern "thiscall" fn compare_separate_shared_stadium_ties(cup:
     SCOREBOARD.record(igual, || {
         let (a, b) = (&mo.0, &mr.0);
         let dif: Vec<usize> = (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect();
-        format!("separate_shared_stadium_ties(round {}) diferencas em {:x?}", round as i16, dif)
+        format!("separate_shared_stadium_ties(round {}) differences em {:x?}", round as i16, dif)
     });
 }
 
@@ -643,7 +643,7 @@ pub(crate) unsafe extern "thiscall" fn compare_map_fixture_tree(this: usize) -> 
             }
         }
     }
-    SCOREBOARD.record(error.is_none(), || format!("map_fixture_tree: o tie (round, índice) {:?} without a slot of return", error));
+    SCOREBOARD.record(error.is_none(), || format!("map_fixture_tree: o tie (round, index) {:?} without a slot of return", error));
     r
 }
 
@@ -680,7 +680,7 @@ pub(crate) unsafe extern "thiscall" fn compare_cup_rank_teams(this: usize) {
             erros.push(format!("club {:x} expected {} got {}", c, p, if e == 0 { -1 } else { read_u8(e + comp_stats_club::DANGER_POSITION) as i32 }));
         }
     }
-    SCOREBOARD.record(erros.is_empty(), || format!("cup_rank_teams({:x}) {} posições: {}", this.addr(), plan.len(), erros.join("; ")));
+    SCOREBOARD.record(erros.is_empty(), || format!("cup_rank_teams({:x}) {} positions: {}", this.addr(), plan.len(), erros.join("; ")));
 }
 
 /// Comparer for `cup_set_round_match_day`.

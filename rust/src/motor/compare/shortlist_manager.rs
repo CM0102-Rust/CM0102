@@ -83,7 +83,7 @@ pub(crate) unsafe extern "thiscall" fn compare_value_player_for_club(this: usize
     }
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(out as usize, 4)], || o(this, club.addr(), p, slot, out, minimum, ceiling), || value_player_for_club(this, club.addr(), p, slot, out, minimum, ceiling));
     SCOREBOARD.record(igual && r == n, || {
-        format!("value_player_for_club(club {:x}, person {:x}, slot {:x}, mínimo {}, ceiling {}) original={} rust={} {:x?} x {:x?}", club.addr(), p, slot, minimum, ceiling, r, n, mo, mr)
+        format!("value_player_for_club(club {:x}, person {:x}, slot {:x}, minimum {}, ceiling {}) original={} rust={} {:x?} x {:x?}", club.addr(), p, slot, minimum, ceiling, r, n, mo, mr)
     });
     r
 }
@@ -210,7 +210,7 @@ pub(crate) unsafe extern "stdcall" fn compare_shortlist_set_up_formation_slots(e
     let o = original_fn::<unsafe extern "stdcall" fn(usize)>(IDX_SHORTLIST_SET_UP_FORMATION_SLOTS);
     let reg = [(read_usize(entry), 40 * 0x25)];
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(entry), || shortlist_set_up_formation_slots(entry));
-    SCOREBOARD.record(igual, || format!("shortlist_set_up_formation_slots(formation {}) first diferença {:x?}", read_i8(entry + 7), first_memory_diff(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("shortlist_set_up_formation_slots(formation {}) first difference {:x?}", read_i8(entry + 7), first_memory_diff(&mo, &mr)));
 }
 
 /// Comparer for `update_club_shortlist`.
@@ -244,7 +244,7 @@ pub(crate) unsafe extern "thiscall" fn compare_suspend_clubs_shortlisting_player
     exe::drop_llist(list);
     exe::crt_operator_delete(list);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, player, clear), || suspend_clubs_shortlisting_player(this, player, clear));
-    SCOREBOARD.record(igual, || format!("suspend_clubs_shortlisting_player(player {:x}, clear {}, {} regiões) first diferença {:x?}", read_usize(player), clear, reg.len(), first_memory_diff(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("suspend_clubs_shortlisting_player(player {:x}, clear {}, {} regions) first difference {:x?}", read_usize(player), clear, reg.len(), first_memory_diff(&mo, &mr)));
 }
 
 /// Comparer for `add_player_to_club_shortlists`.

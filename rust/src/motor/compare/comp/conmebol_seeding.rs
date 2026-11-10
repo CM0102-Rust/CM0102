@@ -31,7 +31,7 @@ pub(crate) unsafe extern "thiscall" fn compare_find_nth_unqualified_club_of_nati
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize>(IDX_FIND_NTH_UNQUALIFIED_CLUB_OF_NATION);
     let r = o(this, clubs, count, nation, n, without_slot, without_human);
     let c = find_nth_unqualified_club_of_nation(this, clubs, count, nation, n, without_slot, without_human);
-    SCOREBOARD.record(r == c, || format!("find_nth_unqualified_club_of_nation(nação {:x}, n {}, {} {}): original {:x} rust {:x}", nation, n as u8, without_slot, without_human, r, c));
+    SCOREBOARD.record(r == c, || format!("find_nth_unqualified_club_of_nation(nation {:x}, n {}, {} {}): original {:x} rust {:x}", nation, n as u8, without_slot, without_human, r, c));
     r
 }
 
@@ -61,7 +61,7 @@ pub(crate) unsafe extern "stdcall" fn compare_collect_conmebol_clubs(out: *mut u
     if t2 != 0 {
         exe::crt_free(t2);
     }
-    SCOREBOARD.record(igual && table, || format!("collect_conmebol_clubs: {} e {} clubs, table {}, diferenças em {:x?}", n, m, table, memory_diff_addresses(&mo, &mr)));
+    SCOREBOARD.record(igual && table, || format!("collect_conmebol_clubs: {} e {} clubs, table {}, differences em {:x?}", n, m, table, memory_diff_addresses(&mo, &mr)));
     a
 }
 
@@ -73,7 +73,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_for_new_season(this: usize
     let mut reg = club_seeding_regions();
     reg.push((this + conmebol_seeding::LAST_SEASON_YEAR, 2));
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, skip), || update_for_new_season(this, skip));
-    SCOREBOARD.record(igual, || format!("update_for_new_season({}): diferenças em {:x?}", skip, memory_diff_addresses(&mo, &mr)));
+    SCOREBOARD.record(igual, || format!("update_for_new_season({}): differences em {:x?}", skip, memory_diff_addresses(&mo, &mr)));
 }
 
 /// Lado a lado: o +0x71.
