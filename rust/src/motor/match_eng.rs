@@ -6486,7 +6486,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
             } else if (f.job_for_club() as i8) != 0xc && a != 0 && (d & a) != d && (bb & a) != bb {
                 let s: i16 = if a == 1 {
                     6
-                } else if (d | 4) != 0 && read_i8(f.player().addr() + 0x11) < 10 && read_i8(f.player().addr() + 0x12) < 10 {
+                } else if (d | 4) != 0 && read_i8(f.player().addr() + player_sheet::DEFENDER) < 10 && read_i8(f.player().addr() + player_sheet::DEFENSIVE_MIDFIELDER) < 10 {
                     2
                 } else if (d | 4) != 0 && (a | 4) != 0 {
                     -1
@@ -6497,7 +6497,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
                 } else {
                     1
                 };
-                let w = read_i16(f.player().addr() + 0xb);
+                let w = read_i16(f.player().addr() + player_sheet::CURRENT_REPUTATION);
                 let f5b = f.professionalism();
                 let f57 = f.ambition();
                 if w > 0xcb2
@@ -6595,7 +6595,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
                     al = 4;
                 } else if form < 0x12 && al > 0x19 {
                     al = 0x19;
-                    let x3c = read_i8(f.player().addr() + 0x3c);
+                    let x3c = read_i8(f.player().addr() + player_sheet::STAMINA);
                     if x3c < 0xa {
                         al = 0x19 - x3c;
                     }
@@ -6628,7 +6628,7 @@ pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
                 }
             }
             // the end of the contract
-            if random(f.temperament() as i32) == 0 && read_i8(f.player().addr() + 0x25) > 0xf {
+            if random(f.temperament() as i32) == 0 && read_i8(f.player().addr() + player_sheet::DIRTINESS) > 0xf {
                 let d = exe::date_days_since(G_CURRENT_DATE, (f.date_joined_club() as u32), (f.date_joined_club_leap_year() as u32));
                 let r = random(200) + 0x32;
                 if d > r && form > 0x17 {
@@ -6838,7 +6838,7 @@ pub(crate) unsafe fn tackle_injury_with(m: Engine, a: MatchPlayer, tipo_a: i16, 
         }
         let q = f4(0x96d1b0) / x * f[k] as f64;
         // the branch follows `a`’s record (as in the original), the value a of the player himself
-        let branch = read_i8(a.player().addr() + 0x2d);
+        let branch = read_i8(a.player().addr() + player_sheet::INJURY_PRONENESS);
         let val = read_i8(read_usize(p + match_player::PLAYER) + 0x2d) as i32;
         let v = if branch > 10 { val as f64 * q * f4(0x96afc4) } else { ((val - 10) as f64 * f4(0x96afc4) + f4(0x968e70)) * q };
         f[k] = v as f32;

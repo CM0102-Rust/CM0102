@@ -2405,7 +2405,7 @@ pub(crate) unsafe extern "C" fn database_format_player_positions(player: usize, 
     }
     if is_empty_text(buf) {
         if (player.attacking_midfielder() as i32) >= 0xf {
-            player.set_midfielder((0xf) as i8); // the original writes to the player
+            player.set_midfielder(0xfu8 as i8); // the original writes to the player
         }
         if f == 2 || f == 3 {
             format(0xde1f64, POSITION_ATTACKING_MIDFIELDER.1);
@@ -2881,7 +2881,7 @@ pub(crate) unsafe fn favourite_colleague_score(person: Staff, club: Club, o: Sta
     if contract.is_null() {
         return None;
     }
-    let rep = read_i16_as_i32(o.player().addr() + 0xb);
+    let rep = read_i16_as_i32(o.player().addr() + player_sheet::CURRENT_REPUTATION);
     if rep <= 0x109a || rep <= (club.reputation() as i32) - 0x2ee {
         return None;
     }
@@ -4069,7 +4069,7 @@ pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(person: usize, clu
         if contract.is_null() {
             continue;
         }
-        let rep = read_i16(o.player().addr() + 0xb) as i32;
+        let rep = read_i16(o.player().addr() + player_sheet::CURRENT_REPUTATION) as i32;
         if rep <= 0x109a || rep <= club.reputation() as i32 - 0x2ee {
             continue;
         }
@@ -5479,7 +5479,7 @@ pub(crate) unsafe extern "C" fn database_count_club_coaches(club: usize) -> u8 {
     let contar = |c: Club| {
         let total = read_i32(G_STAFF_COUNT);
         (0..5).filter(|&j| {
-            let t = read_usize(c.addr() + club::COACHES + 4 * j);
+            let t = c.coaches(j);
             t != 0 && *(t as *const i32) < total // valid coach
         }).count() as u8
     };
@@ -7741,7 +7741,7 @@ pub(crate) unsafe extern "C" fn database_add_staff_to_club(club: usize, person: 
 ///
 /// [pt] Um dos 50 lugares do elenco (+0xd7, ponteiros de pessoa) do `clube`.
 pub(crate) unsafe fn squad_slot(club: Club, i: usize) -> usize {
-    read_usize(club.addr() + club::SQUAD + 4 * i)
+    club.squad(i)
 }
 
 /// Person is non-null and its id is below the staff count.

@@ -45,7 +45,7 @@ pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(t
         if !p.is_null() && read_i32(p.addr()) >= read_i32(G_STAFF_COUNT) {
             continue;
         }
-        let c = read_usize(p.addr() + staff::CLUB_JOB);
+        let c = p.club_job().addr();
         if c != 0 && read_usize(c) == read_usize(this) {
             continue;
         }

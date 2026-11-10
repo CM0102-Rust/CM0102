@@ -415,7 +415,7 @@ pub(crate) unsafe extern "thiscall" fn set_flags(c: usize, marks: u32) {
     if exe::transfer_manager_is_queued_for_free_transfer(read_usize(G_TRANSFER_MANAGER), person) != 0 {
         return;
     }
-    if (person.age() as u8) as i8 <= 0x14 && read_i16(person.player().addr() + 0xb) <= 0x109a {
+    if (person.age() as u8) as i8 <= 0x14 && read_i16(person.player().addr() + player_sheet::CURRENT_REPUTATION) <= 0x109a {
         return;
     }
     crate::comparison::branch("cpw_7 transfer request");

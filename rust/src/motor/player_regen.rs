@@ -548,7 +548,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
                 let t = Staff(read_usize(c + club::CHAIRMAN));
                 if !t.is_null() && !t.non_player().is_null() {
                     let r = friendly_random(100);
-                    if read_i8(t.non_player().addr() + 0x16) as i32 > r {
+                    if read_i8(t.non_player().addr() + non_player::INTERFERENCE) as i32 > r {
                         exe::staff_add_favoured_staff(t, p, 0);
                     }
                 }
@@ -823,15 +823,15 @@ pub(crate) unsafe fn maybe_become_coach(this: usize, p: Staff) {
     let id = read_i32(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS));
     p.set_non_player(NonPlayer((read_usize(G_NON_PLAYER_TABLE).wrapping_add((id as isize * 0x44) as usize) as u32) as usize));
     exe::player_regen_remove_spare_non_player_record(this, read_i32(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS)) as i32 as u32);
-    if read_i8(p.player().addr() + 0xf) == 0x14 {
+    if read_i8(p.player().addr() + player_sheet::GOALKEEPER) == 0x14 {
         let nj = p.non_player();
         let (a, b) = (nj.coaching(), nj.coaching_gks());
         if a > b {
             nj.set_coaching_gks(a);
-            write_i8(p.non_player().addr() + 0x10, b);
+            write_i8(p.non_player().addr() + non_player::COACHING, b);
             if friendly_random(4) == 0 {
                 let v = (friendly_random(0x32) as u8).wrapping_add(0x32);
-                write_u8(p.non_player().addr() + 0x11, v);
+                write_u8(p.non_player().addr() + non_player::COACHING_GKS, v);
             }
         }
     }
@@ -2251,7 +2251,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_score_non_player_candidate(pe
     let b = person.int_apps() as i32;
     rating = rating.wrapping_add(b * b);
     let r = random(10000); // no club
-    if read_i16_as_i32(person.player().addr() + 0xd) > r {
+    if read_i16_as_i32(person.player().addr() + player_sheet::WORLD_REPUTATION) > r {
         rating = rating.wrapping_add(rating);
     }
     random(rating)
@@ -2347,7 +2347,7 @@ pub(crate) unsafe fn remove_from_team(p: Staff, field: usize) {
     exe::tactics_remove_player_from_selection(read_usize(G_TACTICS), read_usize(p.addr() + field), p, 1, 1);
     let team = Club(read_usize(p.addr() + field));
     if let Some(k) = (0..0x32usize).find(|&k| team.squad(k) == p.addr()) {
-        write_usize(team.addr() + club::SQUAD + 4 * k, 0);
+        team.set_squad(k, 0);
     }
 }
 
@@ -3267,24 +3267,24 @@ pub(crate) unsafe extern "thiscall" fn process_regen_queue(this: usize) {
             let a = friendly_random(0x5dc).wrapping_add(1) as u16;
             write_u16(s.non_player().addr() + 8, a);
             let b = friendly_random(0x5dc).wrapping_add(1) as u16;
-            write_u16(s.non_player().addr() + 0xa, b);
+            write_u16(s.non_player().addr() + non_player::CURRENT_REPUTATION, b);
             let c = friendly_random(0x1f4).wrapping_add(1) as u16;
-            write_u16(s.non_player().addr() + 0xc, c);
+            write_u16(s.non_player().addr() + non_player::WORLD_REPUTATION, c);
         } else {
             if sheet.goalkeeper() == 0x14 {
                 let (cl, dl) = (nj.coaching(), nj.coaching_gks());
                 if cl > dl {
                     nj.set_coaching_gks(cl);
-                    write_i8(s.non_player().addr() + 0x10, dl);
+                    write_i8(s.non_player().addr() + non_player::COACHING, dl);
                     if friendly_random(4) == 0 {
                         let r = friendly_random(0x32) as u8;
-                        write_u8(s.non_player().addr() + 0x11, r.wrapping_add(0x32));
+                        write_u8(s.non_player().addr() + non_player::COACHING_GKS, r.wrapping_add(0x32));
                     }
                 }
             }
             exe::staff_normalise_non_player_attributes(s);
             place_coach_at_ai_club(s);
-            let rep = read_i16(s.player().addr() + 0xb);
+            let rep = read_i16(s.player().addr() + player_sheet::CURRENT_REPUTATION);
             let (k, teto) = if rep > 0x1d4c {
                 (0x9689d8, 0x9690b8)
             } else if friendly_random(s.ambition() as i32) != 0 {
@@ -3293,11 +3293,11 @@ pub(crate) unsafe extern "thiscall" fn process_regen_queue(this: usize) {
                 (0x968968, 0x96e288)
             };
             let a = rebuilt_coach_rating(s, rep, None, k, teto);
-            write_u16(s.non_player().addr() + 0xa, a);
+            write_u16(s.non_player().addr() + non_player::CURRENT_REPUTATION, a);
             let b = rebuilt_coach_rating(s, read_i16(s.player().addr() + 9), None, k, teto);
             write_u16(s.non_player().addr() + 8, b);
-            let c = rebuilt_coach_rating(s, read_i16(s.player().addr() + 0xd), Some(0x969040), k, teto);
-            write_u16(s.non_player().addr() + 0xc, c);
+            let c = rebuilt_coach_rating(s, read_i16(s.player().addr() + player_sheet::WORLD_REPUTATION), Some(0x969040), k, teto);
+            write_u16(s.non_player().addr() + non_player::WORLD_REPUTATION, c);
         }
         exe::player_regen_remove_spare_non_player_record(this, read_i32(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS)) as i32 as u32);
     }

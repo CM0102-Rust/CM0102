@@ -50,6 +50,15 @@ def campos_do_registro(mod):
     return tipo, out
 
 
+
+def cast_valor(v, t):
+    """`v as t` for a setter: a bare literal gets the unsigned suffix of t's width (`0xffffu16 as i16`: a literal
+    above i16::MAX typed as i16 does not compile, 10/11/2026); anything else `(v) as t`."""
+    larg = {'i8': 'u8', 'i16': 'u16', 'i32': 'u32', 'i64': 'u64'}
+    if re.fullmatch(r'0x[0-9a-f]+|\d+', v.strip()) and t in larg:
+        return '%s%s as %s' % (v.strip(), larg[t], t)
+    return '(%s) as %s' % (v, t)
+
 def mascara(s):
     """The text with comments and string/char literals blanked (same length): positions stay valid."""
     out = list(s)
@@ -128,7 +137,7 @@ class Conversor:
         if t == ft:
             return '%s.set_%s(%s)' % (x, nome.replace('r#', ''), valor)
         if LARG.get(t) == LARG.get(ft) and 'f' not in (t[0] + ft[0]):
-            return '%s.set_%s((%s) as %s)' % (x, nome.replace('r#', ''), valor, ft)
+            return '%s.set_%s(%s)' % (x, nome.replace('r#', ''), cast_valor(valor, ft))
         return None
 
     def variaveis(self, bloco, mk):
@@ -215,7 +224,7 @@ class Conversor:
             elif m.group(1) == 'write' and len(args) == 2:
                 ini_v = m.end() + mk[m.end():fim].rindex(args[1])
                 v = s[ini_v:ini_v + len(args[1])].strip()
-                novo = '%s.set_%s(%s, %s)' % (x, nome, i, v if t == et else '(%s) as %s' % (v, et))
+                novo = '%s.set_%s(%s, %s)' % (x, nome, i, v if t == et else cast_valor(v, et))
             else:
                 continue
             edicoes.append((m.start(), fim, novo))
@@ -286,7 +295,7 @@ class Conversor:
                 if fim < 0:
                     continue
                 v = self.converter_trecho(s[m.end() + atr.end():fim].strip(), xs, so_acessos)
-                novo = '%s.set_%s(%s, %s)' % (x, nome, i.strip(), v if t == et else '(%s) as %s' % (v, et))
+                novo = '%s.set_%s(%s, %s)' % (x, nome, i.strip(), v if t == et else cast_valor(v, et))
                 edicoes.append((m.start(), fim, novo))
                 ocupado.append((m.start(), fim))
             else:

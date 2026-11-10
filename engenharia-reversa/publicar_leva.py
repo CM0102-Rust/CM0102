@@ -4,7 +4,7 @@ r"""Publica a leva N (depois da cadeia ok) e prepara a N+1. Uso: python publicar
    e o glossário;
 2. commit "Simulacao: Na leva (X rotinas): título" com docs, wiki, README, levas/N, mutações e motor.rs;
    push;
-3. levas/N+1/integrar.py, cargo build, a DLL em jogo_testes/, e confere as âncoras das mutações.
+3. levas/N+1/integrar.py, o estilo de legibilidade (padronizar.sh), cargo build, a DLL em jogo_testes/, e confere as âncoras das mutações.
 Depois disso, a cadeia da N+1: bash engenharia-reversa/cadeia.sh N+1 (em segundo plano).
 """
 import os
@@ -60,6 +60,9 @@ def main():
         print(f'a {prox}a já está integrada; pulando o integrar.py', flush=True)
     else:
         rodar(sys.executable, os.path.join('levas', str(prox), 'integrar.py'))
+        # the readability style for the code that came in (10/11/2026): typed records, read_T/write_T, English names
+        # and messages, named constants; the batch's chain then tests it in that form
+        rodar('bash', os.path.join('engenharia-reversa', 'padronizar.sh'))
     # a tabela das assinaturas acompanha a PROLOGOS (a DLL não desvia rotina que não seja a do exe original/1080)
     rodar(sys.executable, os.path.join('engenharia-reversa', 'assinaturas.py'))
     # every exe function the copies call, checked against the original machine code (stack, ecx, return width)

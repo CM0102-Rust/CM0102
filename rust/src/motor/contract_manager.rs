@@ -127,9 +127,9 @@ pub(crate) unsafe fn copy_contract(d: Contract, o: Contract) {
 /// não mexem (a tabela de saltos da original).
 pub(crate) unsafe fn set_contract_type_from_job(c: Contract) {
     match c.squad_status() >> 4 {
-        1 => c.set_happiness((0x4b) as i8),
-        2 => c.set_happiness((0x32) as i8),
-        3 => c.set_happiness((0x28) as i8),
+        1 => c.set_happiness(0x4bu8 as i8),
+        2 => c.set_happiness(0x32u8 as i8),
+        3 => c.set_happiness(0x28u8 as i8),
         4 | 5 | 6 | 8 => c.set_happiness((0) as i8),
         _ => {}
     }
@@ -442,7 +442,7 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_offer_contract(this: usi
     }
     let mut job: u8 = 0;
     let mut est = exe::shortlist_manager_get_squad_status_for_club(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), person, club, (&mut job) as *mut u8 as usize);
-    if est == 3 && read_i16(person.player().addr() + 0xb) > 0x1482 {
+    if est == 3 && read_i16(person.player().addr() + player_sheet::CURRENT_REPUTATION) > 0x1482 {
         est = 2;
     }
     // simplification: the status and the job go in dwords with the high bytes of stack leftovers in the original; 0x85fc50 and
@@ -919,7 +919,7 @@ pub(crate) unsafe extern "thiscall" fn update_after_match(this: usize, game: usi
 /// ficha (+0x61), pelas telas. O eax leva os bytes altos da pessoa, como na original.
 pub(crate) unsafe extern "stdcall" fn contract_manager_get_player_morale(person: usize) -> u32 {
     let person = Staff(person);
-    (person.addr() as u32 & 0xffff_ff00) | read_u8(person.player().addr() + 0x45) as u32
+    (person.addr() as u32 & 0xffff_ff00) | read_u8(person.player().addr() + player_sheet::PLAYER_MORALE) as u32
 }
 
 /// Copies the zero-terminated text at a (up to 0x400 bytes) into a Vec, for the text comparers.
@@ -943,7 +943,7 @@ pub(crate) unsafe fn c_string_bytes(a: usize) -> Vec<u8> {
 pub(crate) unsafe extern "stdcall" fn contract_manager_write_morale_text(person: usize, out: usize, _x: u32) {
     let person = Staff(person);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let m = read_i8(person.player().addr() + 0x45);
+    let m = read_i8(person.player().addr() + player_sheet::PLAYER_MORALE);
     let f = if m < 4 {
         0x9a8320usize
     } else if m < 8 {
@@ -1271,7 +1271,7 @@ pub(crate) unsafe extern "stdcall" fn contract_manager_write_morale_comparison_t
     let b = Staff(b);
     let a = Staff(a);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-    let dif = read_i8(a.player().addr() + 0x45).wrapping_sub(read_i8(b.player().addr() + 0x45));
+    let dif = read_i8(a.player().addr() + player_sheet::PLAYER_MORALE).wrapping_sub(read_i8(b.player().addr() + player_sheet::PLAYER_MORALE));
     let f = if dif < -13 {
         0x9a8348usize
     } else if dif < -7 {
@@ -3182,7 +3182,7 @@ pub(crate) unsafe fn offer_to_schedule(l: usize, offer: Offer) -> Option<usize> 
 /// (+8) da oferta?
 pub(crate) unsafe fn ability_above_club_reputation(offer: Offer) -> u32 {
     let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add(offer.target_staff_id().wrapping_mul(staff::SIZE)));
-    let hab = read_i16(person.player().addr() + 0xb) as i32 / 500;
+    let hab = read_i16(person.player().addr() + player_sheet::CURRENT_REPUTATION) as i32 / 500;
     let club = Club(read_usize(G_CLUB_TABLE).wrapping_add(offer.buyer_club_id().wrapping_mul(club::SIZE)));
     (hab > club.reputation() as i32) as u32
 }

@@ -2795,7 +2795,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_remove_player_from_squad(_
     let team = Club((national_team_for_type(nation, kind as u8)).addr());
     remove_from_tactics(team, p);
     if let Some(c) = (0..50usize).find(|&c| team.squad(c) == p) {
-        write_usize(team.addr() + club::SQUAD + 4 * c, 0);
+        team.set_squad(c, 0);
         clear_national_call_up(Staff(p));
     }
 }
@@ -3263,7 +3263,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_remove_player(this: usize,
         return;
     }
     if let Some(k) = (0..50).find(|&k| u(national_team.addr() + club::SQUAD + 4 * k) == player.addr()) {
-        write_usize(national_team.addr() + club::SQUAD + 4 * k, 0);
+        national_team.set_squad(k, 0);
     }
     player.set_national_job(Club(0));
     player.set_playing_squad(player.playing_squad() & 3);

@@ -300,7 +300,7 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
             performance < 0x1964
                 && (b(0x14) as u8 as i32) > random(3)
                 && player_table(p.addr()) & 4 != 0
-                && read_i8(p.player().addr() + 0x11) as i32 > random(4) + 0xf
+                && read_i8(p.player().addr() + player_sheet::DEFENDER) as i32 > random(4) + 0xf
                 && b(0xc) == 0
                 && (b(0x17) as i32) < random(6)
                 && in_field > random(0x32) + 0x1e
@@ -924,12 +924,12 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
     let age = (p.age() as u8) as i8;
     if kind != 0x51 && read_i16(G_INJURY_TYPE_BASE_DAYS + t) > 10 {
         if age > 0x1e {
-            let ax = (read_i8_as_i32(p.player().addr() + 0x2d) as i16).wrapping_add(age as i16).wrapping_sub(0x23);
+            let ax = (read_i8_as_i32(p.player().addr() + player_sheet::INJURY_PRONENESS) as i16).wrapping_add(age as i16).wrapping_sub(0x23);
             if ax > 0 {
                 extra = extra.wrapping_add(friendly_random(ax as i32));
             }
         }
-        let al = read_u8(p.player().addr() + 0x2d) as i8;
+        let al = read_u8(p.player().addr() + player_sheet::INJURY_PRONENESS) as i8;
         if al > 10 {
             extra = extra.wrapping_add(friendly_random((al as i16 - 10) as i32));
         }
@@ -942,7 +942,7 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
         if read_u8(g) >= 100 {
             break;
         }
-        if friendly_random(read_i8_as_i32(p.player().addr() + 0x34) * 5 + 0xc) == 0 {
+        if friendly_random(read_i8_as_i32(p.player().addr() + player_sheet::NATURAL_FITNESS) * 5 + 0xc) == 0 {
             let g = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(0x4f)) + 0xa;
             write_u8(g, read_u8(g).wrapping_add(1));
         }
@@ -1023,12 +1023,12 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
     }
     // retirement by age and by a long return to training
     let volta = || read_i16(read_usize(this + injury_fields::INJURY_ENTRIES) + off + 0x2a) as i32;
-    let propensao = || read_i8_as_i32(p.player().addr() + 0x2d);
+    let propensao = || read_i8_as_i32(p.player().addr() + player_sheet::INJURY_PRONENESS);
     let years = || ((p.age() as i8) as i32);
     let encerra = (age > 0x24 && volta() > 0x78 - propensao() - years() && friendly_random(volta()) > 0x5a - years())
         || (age > 0x21 && volta() > 0x96 - propensao() - years() && friendly_random(volta()) > 0x5a - years())
         || (age > 0x1f && volta() > 0x12c - years() && friendly_random(volta()) > 0xc8 - years())
-        || (volta() > 0x1f4 && friendly_random(read_i8_as_i32(p.player().addr() + 0x34) + 5) == 0);
+        || (volta() > 0x1f4 && friendly_random(read_i8_as_i32(p.player().addr() + player_sheet::NATURAL_FITNESS) + 5) == 0);
     if encerra && read_usize(G_PLAYER_REGEN) != 0 {
         crate::comparison::branch("cqb_5 retires through injury");
         exe::player_regen_schedule_injury_retirement(read_usize(G_PLAYER_REGEN), p, read_i16(read_usize(this + injury_fields::INJURY_ENTRIES) + off + 0x2a));
@@ -1283,7 +1283,7 @@ pub(crate) unsafe fn roll_training_injuries(this: usize) {
             if exe::awol_is_player_awol(read_usize(G_AWOL), p, 0) != 0 {
                 break 'proximo;
             }
-            if read_i8(p.player().addr() + 0xf) == 0x14 {
+            if read_i8(p.player().addr() + player_sheet::GOALKEEPER) == 0x14 {
                 let r5 = friendly_random(5);
                 let r2 = friendly_random(2);
                 if r5 > r2 {
@@ -1297,13 +1297,13 @@ pub(crate) unsafe fn roll_training_injuries(this: usize) {
             if read_i8(rec + physical_record::RECURRING_TYPE) > -1 {
                 let rec = physical_record_by_index(this, idx);
                 let r = friendly_random(100);
-                let lim = ((read_i8(p.player().addr() + 0x2d) as i32 - 3) * 5 + read_i8(rec + physical_record::PRONENESS) as i32 + read_i8(rec + physical_record::RECURRENCE_GRADE) as i32) * 2;
+                let lim = ((read_i8(p.player().addr() + player_sheet::INJURY_PRONENESS) as i32 - 3) * 5 + read_i8(rec + physical_record::PRONENESS) as i32 + read_i8(rec + physical_record::RECURRENCE_GRADE) as i32) * 2;
                 if r > lim {
                     break 'proximo;
                 }
             } else {
                 let r = friendly_random(0xa0);
-                let lim = ((read_i8(p.player().addr() + 0x2d) as i32 - 3) * 5 + read_i8(physical_record_by_index(this, idx) + 0x1e) as i32) * 2; // cpw9: the risk without recurrence
+                let lim = ((read_i8(p.player().addr() + player_sheet::INJURY_PRONENESS) as i32 - 3) * 5 + read_i8(physical_record_by_index(this, idx) + 0x1e) as i32) * 2; // cpw9: the risk without recurrence
                 if r > lim {
                     break 'proximo;
                 }
@@ -1340,7 +1340,7 @@ pub(crate) unsafe fn roll_training_injuries(this: usize) {
                     }
                 }
             }
-            if read_i8(p.player().addr() + 0xf) < 0xf && category == 7 {
+            if read_i8(p.player().addr() + player_sheet::GOALKEEPER) < 0xf && category == 7 {
                 i -= 1;
                 break 'proximo;
             }

@@ -24,8 +24,8 @@ use super::*;
 /// +0xba. Devolve 1.
 pub(crate) unsafe fn set_up_rules(this: League) -> u32 {
     this.set_win_points(3);
-    write_u8(this.addr() + league::SUBSTITUTIONS_ALLOWED, 3);
-    write_i16(this.addr() + league::LEGS, 2); // cqs8: dois turnos
+    this.set_substitutions_allowed(3);
+    this.set_legs(2); // cqs8: dois turnos
     this.set_draw_points(1);
     this.set_match_category(0xa);
     this.set_comp_type(2);
@@ -36,17 +36,17 @@ pub(crate) unsafe fn set_up_rules(this: League) -> u32 {
     this.set_promotion_playoff_count(1);
     this.set_relegation_playoff_count(0);
     this.set_relegated_count(0);
-    write_u8(this.addr() + league::SUBSTITUTES_NAMED, 7);
-    write_u16(this.addr() + league::GAMES_PER_CLUB, 0xffff);
+    this.set_substitutes_named(7);
+    this.set_games_per_club(0xffffu16 as i16);
     let mut data = [0u32; 2];
     // simplification: the original pushes the year in ecx with the high 16 bits of the cup pointer; 0x549f70 reads the word
     exe::date_date_549f70((&mut data) as *mut [u32; 2] as *mut [u16; 4], 0xa, 2, this.year() as u16 as u32, 5); // cqs8: the draw date
-    write_u16(this.addr() + league::NEXT_DRAW_DAY, data[0] as u16);
-    write_u16(this.addr() + league::NEXT_DRAW_YEAR_OFFSET, 0);
+    this.set_next_draw_day((data[0] as u16) as i16);
+    this.set_next_draw_year_offset((0) as i16);
     crate::comparison::branch("cqs_8 euro rules");
     let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     let t = rounds(this.addr(), 0xffff_ffff, this.addr() + league::ROUND_COUNT, this.addr() + league::STAGE_ID, 0);
-    write_u32(this.addr() + league::ROUND_DATES, t as u32);
+    this.set_round_dates((t as u32) as usize);
     1
 }
 

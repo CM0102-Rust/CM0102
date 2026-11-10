@@ -8192,7 +8192,7 @@ pub(crate) unsafe fn off_ball_decide_injected(j: MatchPlayer, call: &mut dyn FnM
     }
     if testar_c {
         if exe::formation_get_player_instructions(block, j.position()) & 0x200000 != 0 {
-            let r1 = random(*((j.player().addr() + 0x1a) as *const i8) as i32);
+            let r1 = random(*((j.player().addr() + player_sheet::FREE_ROLE) as *const i8) as i32);
             if r1 >= random(5) && subir(call, 0xc, 0x6a, false) {
                 return;
             }
@@ -8404,7 +8404,7 @@ pub(crate) unsafe extern "thiscall" fn evolve_moment(this: usize) {
         return;
     }
     let ff = (this.addr() + match_player::ANGER) as *mut i8;
-    let h = (this.frustration() as i32 / 2 + read_i8(this.player().addr() + 0x25) as i32 + 10) / 4;
+    let h = (this.frustration() as i32 / 2 + read_i8(this.player().addr() + player_sheet::DIRTINESS) as i32 + 10) / 4;
     if *ff as i32 > h {
         *ff = (*ff).wrapping_sub(1);
     }

@@ -975,7 +975,7 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
     // the chairman’s random rolls and the cup’s league
     let bf = club.chairman().addr();
     if read_u8(ln() + 2) & 1 == 0 && call_comp_virtual(club_division_comp(club), 0x98) == 0 && bf != 0 && read_usize(bf + 0x69) != 0 {
-        let p1d = || read_i8(club.chairman().non_player().addr() + 0x1d) as i32;
+        let p1d = || read_i8(club.chairman().non_player().addr() + non_player::PATIENCE) as i32;
         crate::comparison::branch("cqc_9 chairman draw");
         let r = friendly_random(0x32); // cqc9: the chairman random draw
         if r > p1d() + meta() * 5 {
@@ -1607,7 +1607,7 @@ pub(crate) unsafe extern "thiscall" fn board_named_players_after_match(this: usi
         if cl == 0 || cl != club.addr() {
             continue;
         }
-        let rating = read_i16(p.player().addr() + 0xb);
+        let rating = read_i16(p.player().addr() + player_sheet::CURRENT_REPUTATION);
         let rep = club.reputation();
         let passes = if preferidos { (p.age() as i8) < 0x24 && rating as i32 > rep as i32 - 0x2ee } else { rating < rep };
         if passes && exe::get_player_match_rating_verdict(this, p, fixture) == 0xff {
@@ -1859,7 +1859,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
                 let a = exe::utils_random(n());
                 let b = exe::utils_random(200);
                 if a > b {
-                    let a = exe::utils_random(read_u8(j.player().addr() + 0x2d) as i8 as i32);
+                    let a = exe::utils_random(read_u8(j.player().addr() + player_sheet::INJURY_PRONENESS) as i8 as i32);
                     let b = exe::utils_random(200);
                     if a > b {
                         return 0x2000;

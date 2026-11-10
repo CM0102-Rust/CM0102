@@ -19,7 +19,7 @@ MUTACOES = [
     ('cqr9_segundos_sem_classificacao', 'exe::league_sort_table(league, 0); // cqr9: the ranking of the runners-up', '// mutacao', 'cqr_9 serie c cup knockout'),
     ('cqr9_sementes_iguais', '        *s = 3 - (k / 8) as u8;', '        *s = 1 + 0 * k as u8; // mutacao', 'cqr_9 italy cup knockout'),
     ('cqs8_sorteio_duas_semanas_depois', 'exe::date_date_549f70((&mut data) as *mut [u32; 2] as *mut [u16; 4], 0xa, 2, this.year() as u16 as u32, 5); // cqs8: the draw date', 'exe::date_date_549f70((&mut data) as *mut [u32; 2] as *mut [u16; 4], 0x18, 2, this.year() as u16 as u32, 5); // mutacao: 24 de março', 'cqs_8 euro rules'),
-    ('cqs8_um_turno', 'write_i16(this.addr() + league::LEGS, 2); // cqs8: dois turnos', 'write_i16(this.addr() + league::LEGS, 1); // mutacao', 'cqs_8 euro rules'),
+    ('cqs8_um_turno', 'this.set_legs(2); // cqs8: dois turnos', 'this.set_legs(1); // mutacao', 'cqs_8 euro rules'),
     ('cqs8_grupo_um_com_rodada_a_mais', 'this.set_games_per_club(n.wrapping_sub(1).wrapping_mul(this.legs())); // cqs8: the group 1 rounds', 'this.set_games_per_club(n.wrapping_mul(this.legs())); // mutacao', 'cqs_8 euro group 1'),
     ('cqs9_classe_zero', 'write_u8(this.team_table() + e + 4, read_u8(c + 0x1df));', 'write_u8(this.team_table() + e + 4, 0); // mutacao', 'cqs_9 uefa entrants'),
     ('cqs9_sem_ordem_pela_classe', 'exe::crt_qsort(this.team_table(), k as i32 as u32, 6, 0x522190);', '// mutacao', 'cqs_9 uefa entrants'),

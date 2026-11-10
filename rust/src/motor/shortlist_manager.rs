@@ -874,7 +874,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         }
         c1 = read_i8(c + 0x3d);
     }
-    let pos20 = || read_u8(p1.player().addr() + 0xf) == 0x14;
+    let pos20 = || read_u8(p1.player().addr() + player_sheet::GOALKEEPER) == 0x14;
     let jovem = age < 0x20 && (p1.int_apps() as i8) != 0;
     let mut signed_byte_at: i16; // ebx: the reputation of the current club (or the person’s, without a club) on the comparison scale
     let mut e8: i32 = 0; // [base+0x1c]: the new club’s
@@ -3624,12 +3624,12 @@ pub(crate) unsafe extern "stdcall" fn shortlist_manager_predict_selling_club_res
         }
         let listed: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_LOAN_LISTED);
         let rep = buyer.reputation() as f64;
-        if listed(player.addr(), 0) != 0 && rep * read_f64(rdata::F64_1_25) > read_i16(player.player().addr() + 0xb) as f64 {
+        if listed(player.addr(), 0) != 0 && rep * read_f64(rdata::F64_1_25) > read_i16(player.player().addr() + player_sheet::CURRENT_REPUTATION) as f64 {
             return 0;
         }
         let st = k.squad_status() & 0xf0;
-        if st == 0x60 || st == 0x70 || read_u8(player.player().addr() + 0xf) == 0x14 {
-            let v = read_i16(player.player().addr() + 0xb) as f64 * read_f64(rdata::F64_0_75);
+        if st == 0x60 || st == 0x70 || read_u8(player.player().addr() + player_sheet::GOALKEEPER) == 0x14 {
+            let v = read_i16(player.player().addr() + player_sheet::CURRENT_REPUTATION) as f64 * read_f64(rdata::F64_0_75);
             if rep > v && ((k.happiness() as u8) as i8) < -50 && (seller.continental_comp_id() as usize) != read_usize(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE) {
                 return 0;
             }

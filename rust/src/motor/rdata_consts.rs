@@ -11,15 +11,23 @@ pub(crate) mod rdata {
     pub(crate) const F32_0: usize = 0x968970; // f32 = 0.0
     pub(crate) const F32_0_0001999999949: usize = 0x96f968; // f32 = 0.00019999999494757503
     pub(crate) const F32_0_002499999944: usize = 0x96d758; // f32 = 0.0024999999441206455
+    pub(crate) const F32_0_003333333414: usize = 0x96d6e8; // f32 = 0.0033333334140479565
     pub(crate) const F32_0_00800000038: usize = 0x96d5d8; // f32 = 0.00800000037997961
     pub(crate) const F32_0_009999999776: usize = 0x96bac8; // f32 = 0.009999999776482582
+    pub(crate) const F32_0_01999999955: usize = 0x96d6c4; // f32 = 0.019999999552965164
+    pub(crate) const F32_0_03333333507: usize = 0x96d694; // f32 = 0.03333333507180214
+    pub(crate) const F32_0_04166666791: usize = 0x96d6f0; // f32 = 0.0416666679084301
     pub(crate) const F32_0_05000000075: usize = 0x96d424; // f32 = 0.05000000074505806
     pub(crate) const F32_0_05000000075_AT_96D61C: usize = 0x96d61c; // f32 = 0.05000000074505806
     pub(crate) const F32_0_09090909362: usize = 0x96d780; // f32 = 0.09090909361839294
     pub(crate) const F32_0_1000000015: usize = 0x96afc4; // f32 = 0.10000000149011612
+    pub(crate) const F32_0_1000000015_AT_96AFC4: usize = 0x96afc4; // f32 = 0.10000000149011612
+    pub(crate) const F32_0_1333333403: usize = 0x96d660; // f32 = 0.13333334028720856
+    pub(crate) const F32_0_200000003: usize = 0x96d668; // f32 = 0.20000000298023224
     pub(crate) const F32_0_25: usize = 0x96d22c; // f32 = 0.25
     pub(crate) const F32_0_3333333433: usize = 0x968f08; // f32 = 0.3333333432674408
     pub(crate) const F32_0_5: usize = 0x968f18; // f32 = 0.5
+    pub(crate) const F32_0_5263158083: usize = 0x96d6ec; // f32 = 0.5263158082962036
     pub(crate) const F32_0_6000000238: usize = 0x96d3d0; // f32 = 0.6000000238418579
     pub(crate) const F32_0_6499999762: usize = 0x96d320; // f32 = 0.6499999761581421
     pub(crate) const F32_0_6700000167: usize = 0x96f980; // f32 = 0.6700000166893005
@@ -27,12 +35,17 @@ pub(crate) mod rdata {
     pub(crate) const F32_0_75: usize = 0x96d248; // f32 = 0.75
     pub(crate) const F32_0_8000000119: usize = 0x96d38c; // f32 = 0.800000011920929
     pub(crate) const F32_0_8500000238: usize = 0x96d364; // f32 = 0.8500000238418579
+    pub(crate) const F32_0_8999999762: usize = 0x96a32c; // f32 = 0.8999999761581421
+    pub(crate) const F32_0_9090908766: usize = 0x96d48c; // f32 = 0.9090908765792847
+    pub(crate) const F32_0_9250000119: usize = 0x96d66c; // f32 = 0.925000011920929
     pub(crate) const F32_0_9499999881: usize = 0x96b014; // f32 = 0.949999988079071
+    pub(crate) const F32_0_9523810148: usize = 0x96d488; // f32 = 0.9523810148239136
     pub(crate) const F32_1: usize = 0x968e70; // f32 = 1.0
     pub(crate) const F32_10: usize = 0x968a78; // f32 = 10.0
     pub(crate) const F32_100: usize = 0x968960; // f32 = 100.0
     pub(crate) const F32_1000: usize = 0x96d2dc; // f32 = 1000.0
     pub(crate) const F32_10000: usize = 0x96d1b0; // f32 = 10000.0
+    pub(crate) const F32_12: usize = 0x96d690; // f32 = 12.0
     pub(crate) const F32_1200: usize = 0x96a588; // f32 = 1200.0
     pub(crate) const F32_125: usize = 0x96d7c0; // f32 = 125.0
     pub(crate) const F32_15: usize = 0x96b020; // f32 = 15.0
@@ -50,6 +63,7 @@ pub(crate) mod rdata {
     pub(crate) const F32_1_149999976: usize = 0x96d390; // f32 = 1.149999976158142
     pub(crate) const F32_1_25: usize = 0x96b010; // f32 = 1.25
     pub(crate) const F32_1_299999952: usize = 0x96d490; // f32 = 1.2999999523162842
+    pub(crate) const F32_1_350000024: usize = 0x96d6f4; // f32 = 1.350000023841858
     pub(crate) const F32_1_399999976: usize = 0x96d3d4; // f32 = 1.399999976158142
     pub(crate) const F32_1_5: usize = 0x96b004; // f32 = 1.5
     pub(crate) const F32_1_75: usize = 0x96b00c; // f32 = 1.75
@@ -76,6 +90,7 @@ pub(crate) mod rdata {
     pub(crate) const F32_40: usize = 0x96d664; // f32 = 40.0
     pub(crate) const F32_400: usize = 0x96d830; // f32 = 400.0
     pub(crate) const F32_4000: usize = 0x96d40c; // f32 = 4000.0
+    pub(crate) const F32_418: usize = 0x96d710; // f32 = 418.0
     pub(crate) const F32_45: usize = 0x96d64c; // f32 = 45.0
     pub(crate) const F32_48: usize = 0x96d3c8; // f32 = 48.0
     pub(crate) const F32_5: usize = 0x968990; // f32 = 5.0
@@ -92,12 +107,15 @@ pub(crate) mod rdata {
     pub(crate) const F32_667: usize = 0x96d7e0; // f32 = 667.0
     pub(crate) const F32_6750: usize = 0x96d30c; // f32 = 6750.0
     pub(crate) const F32_68: usize = 0x96d80c; // f32 = 68.0
+    pub(crate) const F32_6_5: usize = 0x96e2b8; // f32 = 6.5
     pub(crate) const F32_6_800000191: usize = 0x96d618; // f32 = 6.800000190734863
+    pub(crate) const F32_7: usize = 0x96d6c0; // f32 = 7.0
     pub(crate) const F32_71: usize = 0x96d808; // f32 = 71.0
     pub(crate) const F32_740: usize = 0x96d7d8; // f32 = 740.0
     pub(crate) const F32_75: usize = 0x96d750; // f32 = 75.0
     pub(crate) const F32_7500: usize = 0x96d1a4; // f32 = 7500.0
     pub(crate) const F32_7750: usize = 0x96b040; // f32 = 7750.0
+    pub(crate) const F32_7_5: usize = 0x969078; // f32 = 7.5
     pub(crate) const F32_8: usize = 0x96d784; // f32 = 8.0
     pub(crate) const F32_80: usize = 0x96ff70; // f32 = 80.0
     pub(crate) const F32_8000: usize = 0x96d308; // f32 = 8000.0
@@ -116,7 +134,9 @@ pub(crate) mod rdata {
     pub(crate) const F32_NEG_500: usize = 0x96d3f4; // f32 = -500.0
     pub(crate) const F64_0: usize = 0x9689a0; // f64 = 0.0
     pub(crate) const F64_0_0001: usize = 0x96a5c0; // f64 = 0.0001
+    pub(crate) const F64_0_000125: usize = 0x96a6b8; // f64 = 0.000125
     pub(crate) const F64_0_0001333333333: usize = 0x968dd0; // f64 = 0.00013333333333333334
+    pub(crate) const F64_0_0001612903226: usize = 0x96f960; // f64 = 0.00016129032258064516
     pub(crate) const F64_0_0001666666667: usize = 0x968f40; // f64 = 0.00016666666666666666
     pub(crate) const F64_0_0002: usize = 0x96a600; // f64 = 0.0002
     pub(crate) const F64_0_00025: usize = 0x96a680; // f64 = 0.00025
@@ -126,6 +146,7 @@ pub(crate) mod rdata {
     pub(crate) const F64_0_0008: usize = 0x96a618; // f64 = 0.0008
     pub(crate) const F64_0_0008333333333: usize = 0x96d268; // f64 = 0.0008333333333333334
     pub(crate) const F64_0_001: usize = 0x96a350; // f64 = 0.001
+    pub(crate) const F64_0_001111111111: usize = 0x96f9b8; // f64 = 0.0011111111111111111
     pub(crate) const F64_0_001428571429: usize = 0x968e78; // f64 = 0.0014285714285714286
     pub(crate) const F64_0_002: usize = 0x969048; // f64 = 0.002
     pub(crate) const F64_0_0025: usize = 0x969028; // f64 = 0.0025
@@ -137,31 +158,45 @@ pub(crate) mod rdata {
     pub(crate) const F64_0_006666666667: usize = 0x96d1d0; // f64 = 0.006666666666666667
     pub(crate) const F64_0_0075: usize = 0x96a738; // f64 = 0.0075
     pub(crate) const F64_0_0078125: usize = 0x96d818; // f64 = 0.0078125
+    pub(crate) const F64_0_008: usize = 0x96d260; // f64 = 0.008
     pub(crate) const F64_0_01: usize = 0x967898; // f64 = 0.01
     pub(crate) const F64_0_0125: usize = 0x96a740; // f64 = 0.0125
+    pub(crate) const F64_0_01333333333: usize = 0x968ef8; // f64 = 0.013333333333333334
+    pub(crate) const F64_0_015: usize = 0x96d370; // f64 = 0.015
     pub(crate) const F64_0_01666666667: usize = 0x968958; // f64 = 0.016666666666666666
     pub(crate) const F64_0_01_AT_96F910: usize = 0x96f910; // f64 = 0.010000000000000002
     pub(crate) const F64_0_02: usize = 0x968a98; // f64 = 0.02
     pub(crate) const F64_0_025: usize = 0x967878; // f64 = 0.025
+    pub(crate) const F64_0_02857142857: usize = 0x96a348; // f64 = 0.028571428571428574
     pub(crate) const F64_0_03: usize = 0x96d2c8; // f64 = 0.03
     pub(crate) const F64_0_03333333333: usize = 0x969020; // f64 = 0.03333333333333333
     pub(crate) const F64_0_034: usize = 0x968ee8; // f64 = 0.034
+    pub(crate) const F64_0_0395: usize = 0x96d738; // f64 = 0.0395
     pub(crate) const F64_0_04: usize = 0x968a90; // f64 = 0.04
     pub(crate) const F64_0_05: usize = 0x967888; // f64 = 0.05
+    pub(crate) const F64_0_05263157895: usize = 0x96a578; // f64 = 0.05263157894736842
     pub(crate) const F64_0_06: usize = 0x96d1e0; // f64 = 0.06
     pub(crate) const F64_0_06666666667: usize = 0x96d438; // f64 = 0.06666666666666667
     pub(crate) const F64_0_075: usize = 0x96a730; // f64 = 0.075
+    pub(crate) const F64_0_08: usize = 0x968920; // f64 = 0.08
     pub(crate) const F64_0_08333333333: usize = 0x968f00; // f64 = 0.08333333333333333
+    pub(crate) const F64_0_08771929825: usize = 0x96f930; // f64 = 0.08771929824561403
     pub(crate) const F64_0_1: usize = 0x967880; // f64 = 0.1
     pub(crate) const F64_0_1111111111: usize = 0x96d3d8; // f64 = 0.1111111111111111
     pub(crate) const F64_0_1200480192: usize = 0x968a88; // f64 = 0.12004801920768307
     pub(crate) const F64_0_125: usize = 0x968fd0; // f64 = 0.125
+    pub(crate) const F64_0_13: usize = 0x96d708; // f64 = 0.13
     pub(crate) const F64_0_1333333333: usize = 0x96afe0; // f64 = 0.13333333333333333
     pub(crate) const F64_0_15: usize = 0x968f20; // f64 = 0.15
+    pub(crate) const F64_0_1538461538: usize = 0x96d720; // f64 = 0.15384615384615385
     pub(crate) const F64_0_1639344262: usize = 0x96ff88; // f64 = 0.1639344262295082
     pub(crate) const F64_0_1666666667: usize = 0x96a7a8; // f64 = 0.16666666666666666
     pub(crate) const F64_0_17: usize = 0x968ed0; // f64 = 0.17
+    pub(crate) const F64_0_175: usize = 0x96f990; // f64 = 0.175
     pub(crate) const F64_0_2: usize = 0x968918; // f64 = 0.2
+    pub(crate) const F64_0_200000003: usize = 0x96d6a8; // f64 = 0.20000000298023224
+    pub(crate) const F64_0_225: usize = 0x96d6d8; // f64 = 0.225
+    pub(crate) const F64_0_2298850575: usize = 0x96d728; // f64 = 0.2298850574712644
     pub(crate) const F64_0_23: usize = 0x96d0e0; // f64 = 0.23
     pub(crate) const F64_0_2380952381: usize = 0x970418; // f64 = 0.23809523809523808
     pub(crate) const F64_0_25: usize = 0x9689e0; // f64 = 0.25
@@ -175,23 +210,28 @@ pub(crate) mod rdata {
     pub(crate) const F64_0_33: usize = 0x968f78; // f64 = 0.33
     pub(crate) const F64_0_3333333333: usize = 0x968a80; // f64 = 0.3333333333333333
     pub(crate) const F64_0_35: usize = 0x969510; // f64 = 0.35
+    pub(crate) const F64_0_375: usize = 0x968fb0; // f64 = 0.375
     pub(crate) const F64_0_4: usize = 0x968e00; // f64 = 0.4
     pub(crate) const F64_0_43: usize = 0x96e2b0; // f64 = 0.43
     pub(crate) const F64_0_4444444444: usize = 0x96d0d8; // f64 = 0.4444444444444444
     pub(crate) const F64_0_45: usize = 0x96a6a8; // f64 = 0.45
     pub(crate) const F64_0_5: usize = 0x968968; // f64 = 0.5
     pub(crate) const F64_0_55: usize = 0x96a5d8; // f64 = 0.55
+    pub(crate) const F64_0_5555555556: usize = 0x96afd8; // f64 = 0.5555555555555556
     pub(crate) const F64_0_5714285714: usize = 0x96d698; // f64 = 0.5714285714285714
     pub(crate) const F64_0_5882352941: usize = 0x96fe38; // f64 = 0.5882352941176471
     pub(crate) const F64_0_6: usize = 0x968e48; // f64 = 0.6
+    pub(crate) const F64_0_6060606061: usize = 0x96d6f8; // f64 = 0.6060606060606061
     pub(crate) const F64_0_625: usize = 0x968fe0; // f64 = 0.625
     pub(crate) const F64_0_65: usize = 0x96a5d0; // f64 = 0.65
     pub(crate) const F64_0_6666666667: usize = 0x96a670; // f64 = 0.6666666666666666
     pub(crate) const F64_0_67: usize = 0x968f80; // f64 = 0.67
+    pub(crate) const F64_0_675: usize = 0x96a698; // f64 = 0.675
     pub(crate) const F64_0_7: usize = 0x968e40; // f64 = 0.7
     pub(crate) const F64_0_7142857143: usize = 0x96f9c0; // f64 = 0.7142857142857143
     pub(crate) const F64_0_725: usize = 0x96a6a0; // f64 = 0.725
     pub(crate) const F64_0_75: usize = 0x969040; // f64 = 0.75
+    pub(crate) const F64_0_775: usize = 0x96a6e8; // f64 = 0.775
     pub(crate) const F64_0_8: usize = 0x9689b0; // f64 = 0.8
     pub(crate) const F64_0_825: usize = 0x96afb8; // f64 = 0.825
     pub(crate) const F64_0_83: usize = 0x96d0e8; // f64 = 0.83
@@ -218,6 +258,7 @@ pub(crate) mod rdata {
     pub(crate) const F64_1080: usize = 0x96d7f0; // f64 = 1080.0
     pub(crate) const F64_10_5: usize = 0x96d418; // f64 = 10.5
     pub(crate) const F64_11680: usize = 0x968d88; // f64 = 11680.0
+    pub(crate) const F64_12: usize = 0x96d6a0; // f64 = 12.0
     pub(crate) const F64_120: usize = 0x96afe8; // f64 = 120.0
     pub(crate) const F64_1200: usize = 0x96a580; // f64 = 1200.0
     pub(crate) const F64_12000: usize = 0x96f938; // f64 = 12000.0
@@ -232,10 +273,12 @@ pub(crate) mod rdata {
     pub(crate) const F64_150: usize = 0x968f50; // f64 = 150.0
     pub(crate) const F64_15000: usize = 0x96a728; // f64 = 15000.0
     pub(crate) const F64_1500000: usize = 0x96f8d0; // f64 = 1500000.0
+    pub(crate) const F64_16: usize = 0x969508; // f64 = 16.0
     pub(crate) const F64_1600: usize = 0x96a590; // f64 = 1600.0
     pub(crate) const F64_1650000: usize = 0x96f8f8; // f64 = 1650000.0
     pub(crate) const F64_1666_67: usize = 0x96f900; // f64 = 1666.67
     pub(crate) const F64_1680: usize = 0x96d810; // f64 = 1680.0
+    pub(crate) const F64_17: usize = 0x96d4e8; // f64 = 17.0
     pub(crate) const F64_1750: usize = 0x96a5f8; // f64 = 1750.0
     pub(crate) const F64_18: usize = 0x969550; // f64 = 18.0
     pub(crate) const F64_180: usize = 0x96d2a8; // f64 = 180.0
@@ -246,21 +289,29 @@ pub(crate) mod rdata {
     pub(crate) const F64_1_02: usize = 0x968f88; // f64 = 1.02
     pub(crate) const F64_1_025: usize = 0x968fa0; // f64 = 1.025
     pub(crate) const F64_1_03: usize = 0x969098; // f64 = 1.03
+    pub(crate) const F64_1_0325: usize = 0x96d6b0; // f64 = 1.0325
+    pub(crate) const F64_1_04: usize = 0x96d6c8; // f64 = 1.04
     pub(crate) const F64_1_05: usize = 0x9689b8; // f64 = 1.05
+    pub(crate) const F64_1_079: usize = 0x96d730; // f64 = 1.079
     pub(crate) const F64_1_1: usize = 0x9689c0; // f64 = 1.1
+    pub(crate) const F64_1_111111111: usize = 0x96f998; // f64 = 1.1111111111111112
+    pub(crate) const F64_1_15: usize = 0x968980; // f64 = 1.15
     pub(crate) const F64_1_2: usize = 0x968978; // f64 = 1.2
     pub(crate) const F64_1_25: usize = 0x968928; // f64 = 1.25
     pub(crate) const F64_1_3: usize = 0x968de8; // f64 = 1.3
     pub(crate) const F64_1_32: usize = 0x96af38; // f64 = 1.32
     pub(crate) const F64_1_33: usize = 0x968ee0; // f64 = 1.33
+    pub(crate) const F64_1_333333333: usize = 0x96f9a0; // f64 = 1.3333333333333333
     pub(crate) const F64_1_35: usize = 0x969588; // f64 = 1.35
     pub(crate) const F64_1_375: usize = 0x968fa8; // f64 = 1.375
     pub(crate) const F64_1_4: usize = 0x968dc0; // f64 = 1.4
     pub(crate) const F64_1_41: usize = 0x96d7a8; // f64 = 1.41
     pub(crate) const F64_1_5: usize = 0x968940; // f64 = 1.5
+    pub(crate) const F64_1_538461538: usize = 0x96f9b0; // f64 = 1.5384615384615383
     pub(crate) const F64_1_55: usize = 0x96d748; // f64 = 1.55
     pub(crate) const F64_1_6: usize = 0x969018; // f64 = 1.6
     pub(crate) const F64_1_65: usize = 0x96af20; // f64 = 1.65
+    pub(crate) const F64_1_666666667: usize = 0x96f9a8; // f64 = 1.6666666666666667
     pub(crate) const F64_1_666666667ENEG_07: usize = 0x968e88; // f64 = 1.6666666666666668e-07
     pub(crate) const F64_1_7: usize = 0x96d2e0; // f64 = 1.7
     pub(crate) const F64_1_75: usize = 0x968f98; // f64 = 1.75
@@ -285,11 +336,14 @@ pub(crate) mod rdata {
     pub(crate) const F64_2ENEG_05: usize = 0x96d2f8; // f64 = 2e-05
     pub(crate) const F64_2_1: usize = 0x96d700; // f64 = 2.1
     pub(crate) const F64_2_2: usize = 0x96d7d0; // f64 = 2.2
+    pub(crate) const F64_2_200000048: usize = 0x96d6d0; // f64 = 2.200000047683716
     pub(crate) const F64_2_25: usize = 0x968ec8; // f64 = 2.25
     pub(crate) const F64_2_5: usize = 0x968e18; // f64 = 2.5
     pub(crate) const F64_2_5ENEG_05: usize = 0x96d240; // f64 = 2.5e-05
     pub(crate) const F64_2_625: usize = 0x96f8c0; // f64 = 2.625
+    pub(crate) const F64_2_666666667: usize = 0x96f988; // f64 = 2.6666666666666665
     pub(crate) const F64_2_75: usize = 0x9690a8; // f64 = 2.75
+    pub(crate) const F64_2_9: usize = 0x96f978; // f64 = 2.9
     pub(crate) const F64_3: usize = 0x968930; // f64 = 3.0
     pub(crate) const F64_30: usize = 0x968dd8; // f64 = 30.0
     pub(crate) const F64_300: usize = 0x96a6b0; // f64 = 300.0
@@ -330,6 +384,7 @@ pub(crate) mod rdata {
     pub(crate) const F64_50000: usize = 0x968880; // f64 = 50000.0
     pub(crate) const F64_55: usize = 0x96d1b8; // f64 = 55.0
     pub(crate) const F64_550: usize = 0x96a620; // f64 = 550.0
+    pub(crate) const F64_5500: usize = 0x96d468; // f64 = 5500.0
     pub(crate) const F64_57: usize = 0x96d3a8; // f64 = 57.0
     pub(crate) const F64_5750: usize = 0x96e298; // f64 = 5750.0
     pub(crate) const F64_57_29577951: usize = 0x96d2b8; // f64 = 57.29577951471995
@@ -337,6 +392,7 @@ pub(crate) mod rdata {
     pub(crate) const F64_5_5: usize = 0x96d298; // f64 = 5.5
     pub(crate) const F64_5_56: usize = 0x96d798; // f64 = 5.56
     pub(crate) const F64_5_714285714: usize = 0x970400; // f64 = 5.714285714285714
+    pub(crate) const F64_5_75: usize = 0x96d680; // f64 = 5.75
     pub(crate) const F64_5_811479333ENEG_315: usize = 0x96d1b0; // f64 = 5.811479333e-315
     pub(crate) const F64_6: usize = 0x969000; // f64 = 6.0
     pub(crate) const F64_60: usize = 0x96d5f0; // f64 = 60.0
@@ -353,6 +409,7 @@ pub(crate) mod rdata {
     pub(crate) const F64_6_666666667ENEG_05: usize = 0x968d78; // f64 = 6.666666666666667e-05
     pub(crate) const F64_6_67: usize = 0x96d2e8; // f64 = 6.67
     pub(crate) const F64_6_6ENEG_05: usize = 0x968d80; // f64 = 6.6e-05
+    pub(crate) const F64_6_75: usize = 0x96d678; // f64 = 6.75
     pub(crate) const F64_6_8: usize = 0x968998; // f64 = 6.8
     pub(crate) const F64_7: usize = 0x968988; // f64 = 7.0
     pub(crate) const F64_7000: usize = 0x96d470; // f64 = 7000.0
@@ -361,9 +418,11 @@ pub(crate) mod rdata {
     pub(crate) const F64_750: usize = 0x96a5f0; // f64 = 750.0
     pub(crate) const F64_7500: usize = 0x9690b8; // f64 = 7500.0
     pub(crate) const F64_76: usize = 0x96d380; // f64 = 76.0
+    pub(crate) const F64_7_25: usize = 0x96d670; // f64 = 7.25
     pub(crate) const F64_7_3: usize = 0x96d610; // f64 = 7.3
     pub(crate) const F64_7_5: usize = 0x968eb0; // f64 = 7.5
     pub(crate) const F64_8: usize = 0x968f10; // f64 = 8.0
+    pub(crate) const F64_80: usize = 0x96d6e0; // f64 = 80.0
     pub(crate) const F64_8000: usize = 0x968dc8; // f64 = 8000.0
     pub(crate) const F64_8000000: usize = 0x96d850; // f64 = 8000000.0
     pub(crate) const F64_8250: usize = 0x96d760; // f64 = 8250.0
@@ -373,6 +432,7 @@ pub(crate) mod rdata {
     pub(crate) const F64_8_333333333ENEG_05: usize = 0x96fe30; // f64 = 8.333333333333333e-05
     pub(crate) const F64_8_5: usize = 0x96a790; // f64 = 8.5
     pub(crate) const F64_90: usize = 0x96d2b0; // f64 = 90.0
+    pub(crate) const F64_NEG_0_0002: usize = 0x96f970; // f64 = -0.0002
     pub(crate) const F64_NEG_0_0035: usize = 0x96bac0; // f64 = -0.0035
     pub(crate) const F64_NEG_0_05: usize = 0x96d280; // f64 = -0.05
     pub(crate) const F64_NEG_0_1: usize = 0x969518; // f64 = -0.1
@@ -382,79 +442,19 @@ pub(crate) mod rdata {
     pub(crate) const F64_NEG_0_35: usize = 0x96d7c8; // f64 = -0.35
     pub(crate) const F64_NEG_0_4: usize = 0x968fe8; // f64 = -0.4
     pub(crate) const F64_NEG_0_5: usize = 0x969540; // f64 = -0.5
+    pub(crate) const F64_NEG_0_75: usize = 0x969530; // f64 = -0.75
     pub(crate) const F64_NEG_1: usize = 0x968948; // f64 = -1.0
     pub(crate) const F64_NEG_1000: usize = 0x96d7f8; // f64 = -1000.0
     pub(crate) const F64_NEG_1_1: usize = 0x96d278; // f64 = -1.1
     pub(crate) const F64_NEG_1_25: usize = 0x96a5c8; // f64 = -1.25
     pub(crate) const F64_NEG_1_3: usize = 0x96f878; // f64 = -1.3
+    pub(crate) const F64_NEG_1_5: usize = 0x96d740; // f64 = -1.5
     pub(crate) const F64_NEG_200: usize = 0x96d828; // f64 = -200.0
     pub(crate) const F64_NEG_25: usize = 0x96d578; // f64 = -25.0
+    pub(crate) const F64_NEG_4: usize = 0x96d220; // f64 = -4.0
     pub(crate) const F64_NEG_5: usize = 0x96d410; // f64 = -5.0
     pub(crate) const F64_NEG_6: usize = 0x96fe28; // f64 = -6.0
     pub(crate) const F64_NEG_600: usize = 0x96d800; // f64 = -600.0
     pub(crate) const F64_NEG_750: usize = 0x96d838; // f64 = -750.0
     pub(crate) const F64_NEG_7_5: usize = 0x96d2d0; // f64 = -7.5
-    pub(crate) const F32_0_003333333414: usize = 0x96d6e8; // f32 = 0.0033333334140479565
-    pub(crate) const F32_0_03333333507: usize = 0x96d694; // f32 = 0.03333333507180214
-    pub(crate) const F32_0_04166666791: usize = 0x96d6f0; // f32 = 0.0416666679084301
-    pub(crate) const F32_0_1000000015_AT_96AFC4: usize = 0x96afc4; // f32 = 0.10000000149011612
-    pub(crate) const F32_0_1333333403: usize = 0x96d660; // f32 = 0.13333334028720856
-    pub(crate) const F32_0_200000003: usize = 0x96d668; // f32 = 0.20000000298023224
-    pub(crate) const F32_0_5263158083: usize = 0x96d6ec; // f32 = 0.5263158082962036
-    pub(crate) const F32_0_8999999762: usize = 0x96a32c; // f32 = 0.8999999761581421
-    pub(crate) const F32_0_9090908766: usize = 0x96d48c; // f32 = 0.9090908765792847
-    pub(crate) const F32_0_9250000119: usize = 0x96d66c; // f32 = 0.925000011920929
-    pub(crate) const F32_0_9523810148: usize = 0x96d488; // f32 = 0.9523810148239136
-    pub(crate) const F32_1_350000024: usize = 0x96d6f4; // f32 = 1.350000023841858
-    pub(crate) const F32_418: usize = 0x96d710; // f32 = 418.0
-    pub(crate) const F32_6_5: usize = 0x96e2b8; // f32 = 6.5
-    pub(crate) const F32_7_5: usize = 0x969078; // f32 = 7.5
-    pub(crate) const F64_0_001111111111: usize = 0x96f9b8; // f64 = 0.0011111111111111111
-    pub(crate) const F64_0_02857142857: usize = 0x96a348; // f64 = 0.028571428571428574
-    pub(crate) const F64_0_0395: usize = 0x96d738; // f64 = 0.0395
-    pub(crate) const F64_0_13: usize = 0x96d708; // f64 = 0.13
-    pub(crate) const F64_0_1538461538: usize = 0x96d720; // f64 = 0.15384615384615385
-    pub(crate) const F64_0_175: usize = 0x96f990; // f64 = 0.175
-    pub(crate) const F64_0_225: usize = 0x96d6d8; // f64 = 0.225
-    pub(crate) const F64_0_2298850575: usize = 0x96d728; // f64 = 0.2298850574712644
-    pub(crate) const F64_0_5555555556: usize = 0x96afd8; // f64 = 0.5555555555555556
-    pub(crate) const F64_0_675: usize = 0x96a698; // f64 = 0.675
-    pub(crate) const F64_0_775: usize = 0x96a6e8; // f64 = 0.775
-    pub(crate) const F64_12: usize = 0x96d6a0; // f64 = 12.0
-    pub(crate) const F64_16: usize = 0x969508; // f64 = 16.0
-    pub(crate) const F64_17: usize = 0x96d4e8; // f64 = 17.0
-    pub(crate) const F64_1_0325: usize = 0x96d6b0; // f64 = 1.0325
-    pub(crate) const F64_1_04: usize = 0x96d6c8; // f64 = 1.04
-    pub(crate) const F64_1_079: usize = 0x96d730; // f64 = 1.079
-    pub(crate) const F64_1_111111111: usize = 0x96f998; // f64 = 1.1111111111111112
-    pub(crate) const F64_1_15: usize = 0x968980; // f64 = 1.15
-    pub(crate) const F64_1_333333333: usize = 0x96f9a0; // f64 = 1.3333333333333333
-    pub(crate) const F64_1_538461538: usize = 0x96f9b0; // f64 = 1.5384615384615383
-    pub(crate) const F64_1_666666667: usize = 0x96f9a8; // f64 = 1.6666666666666667
-    pub(crate) const F64_2_666666667: usize = 0x96f988; // f64 = 2.6666666666666665
-    pub(crate) const F64_2_9: usize = 0x96f978; // f64 = 2.9
-    pub(crate) const F64_5500: usize = 0x96d468; // f64 = 5500.0
-    pub(crate) const F64_5_75: usize = 0x96d680; // f64 = 5.75
-    pub(crate) const F64_6_75: usize = 0x96d678; // f64 = 6.75
-    pub(crate) const F64_7_25: usize = 0x96d670; // f64 = 7.25
-    pub(crate) const F64_80: usize = 0x96d6e0; // f64 = 80.0
-    pub(crate) const F64_NEG_0_0002: usize = 0x96f970; // f64 = -0.0002
-    pub(crate) const F64_NEG_0_75: usize = 0x969530; // f64 = -0.75
-    pub(crate) const F64_NEG_1_5: usize = 0x96d740; // f64 = -1.5
-    pub(crate) const F64_NEG_4: usize = 0x96d220; // f64 = -4.0
-    pub(crate) const F32_0_01999999955: usize = 0x96d6c4; // f32 = 0.019999999552965164
-    pub(crate) const F32_12: usize = 0x96d690; // f32 = 12.0
-    pub(crate) const F32_7: usize = 0x96d6c0; // f32 = 7.0
-    pub(crate) const F64_0_000125: usize = 0x96a6b8; // f64 = 0.000125
-    pub(crate) const F64_0_0001612903226: usize = 0x96f960; // f64 = 0.00016129032258064516
-    pub(crate) const F64_0_008: usize = 0x96d260; // f64 = 0.008
-    pub(crate) const F64_0_01333333333: usize = 0x968ef8; // f64 = 0.013333333333333334
-    pub(crate) const F64_0_015: usize = 0x96d370; // f64 = 0.015
-    pub(crate) const F64_0_05263157895: usize = 0x96a578; // f64 = 0.05263157894736842
-    pub(crate) const F64_0_08: usize = 0x968920; // f64 = 0.08
-    pub(crate) const F64_0_08771929825: usize = 0x96f930; // f64 = 0.08771929824561403
-    pub(crate) const F64_0_200000003: usize = 0x96d6a8; // f64 = 0.20000000298023224
-    pub(crate) const F64_0_375: usize = 0x968fb0; // f64 = 0.375
-    pub(crate) const F64_0_6060606061: usize = 0x96d6f8; // f64 = 0.6060606060606061
-    pub(crate) const F64_2_200000048: usize = 0x96d6d0; // f64 = 2.200000047683716
 }

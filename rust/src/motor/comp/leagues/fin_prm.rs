@@ -386,7 +386,7 @@ pub(crate) unsafe fn upgrade_ai_training_ground(this: usize, club: Club, goal_di
     if ((club.training() as u8) as i8 as i32) <= q || goal_difference <= 0x225510 {
         return;
     }
-    if friendly_random(0x28) >= read_u8(club.manager().non_player().addr() + 0x22) as i8 as i32 {
+    if friendly_random(0x28) >= read_u8(club.manager().non_player().addr() + non_player::YOUNGSTERS) as i8 as i32 {
         return;
     }
     let level = (club.addr() + club::TRAINING) as *mut i8;
@@ -881,7 +881,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
                     }
                 } else if rr > 0x109a {
                     if near() {
-                        let cx = read_i16(person.player().addr() + 0xb);
+                        let cx = read_i16(person.player().addr() + player_sheet::CURRENT_REPUTATION);
                         let al = read_u8(contract + contract::SQUAD_STATUS) & 0xf0;
                         if cx > 0x1a5e {
                             Some(0x9689b8)
@@ -890,7 +890,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
                         } else {
                             None
                         }
-                    } else if read_i16(person.player().addr() + 0xb) > 0x1e46 {
+                    } else if read_i16(person.player().addr() + player_sheet::CURRENT_REPUTATION) > 0x1e46 {
                         Some(0x968f88)
                     } else {
                         None
@@ -903,7 +903,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
                 }
             }
             let presence = club.chairman().addr();
-            if presence != 0 && read_usize(presence + staff::NON_PLAYER) != 0 && (club.reputation() as i32) < read_i16(person.player().addr() + 0xb) as i32 + 0x4e2 {
+            if presence != 0 && read_usize(presence + staff::NON_PLAYER) != 0 && (club.reputation() as i32) < read_i16(person.player().addr() + player_sheet::CURRENT_REPUTATION) as i32 + 0x4e2 {
                 crate::comparison::branch("cqc_2 chairman");
                 s = ftol(((read_u8(presence + staff::AMBITION) as i8 as i32) as f64 * read_f64(rdata::F64_0_01) + read_f64(rdata::F64_0_9)) * s as f64); // cqc2: o presidente;
                 // 0x547810 (push pres; push person; add esp, 8 -> cdecl), 0x547790 (push club; push person; add esp, 8 -> cdecl)
@@ -922,7 +922,7 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
                 }
                 if club.plc() == 0 && ((pc.resources() as u8) as i8) > 0xf && (read_u8(presence + staff::AMBITION) as i8) > 0xf {
                     let rr = club.reputation();
-                    let k = if rr >= 0xabe && read_i16(person.player().addr() + 0xb) >= 0x1c52 {
+                    let k = if rr >= 0xabe && read_i16(person.player().addr() + player_sheet::CURRENT_REPUTATION) >= 0x1c52 {
                         if rr < 0x1676 { 0x9689c0 } else { 0x96a5a8 }
                     } else {
                         0x9689b8
@@ -1585,14 +1585,14 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
             return 0;
         }
         let (lo, hi) = balance_halves(fin);
-        let n = read_i8(club.chairman().non_player().addr() + 0x20) as i32;
+        let n = read_i8(club.chairman().non_player().addr() + non_player::RESOURCES) as i32;
         let r3 = friendly_random(n.wrapping_mul(1_000_000)) as i64;
         let debt = ((hi as i64) << 32 | lo as i64).wrapping_neg();
         if r3 <= debt {
             return 0;
         }
         let rep = rep as i32;
-        let n = read_i8(club.chairman().non_player().addr() + 0x20) as i32;
+        let n = read_i8(club.chairman().non_player().addr() + non_player::RESOURCES) as i32;
         if rep >= n.wrapping_mul(750) {
             return 0;
         }
@@ -1795,9 +1795,9 @@ pub(crate) unsafe extern "thiscall" fn try_board_takeover(this: usize, club: usi
                 let x = (friendly_random(0x14) as u8).wrapping_add(1);
                 write_u8(club.chairman().non_player().addr() + o, x);
             }
-            if read_i8(club.chairman().non_player().addr() + 0x20) < 5 {
+            if read_i8(club.chairman().non_player().addr() + non_player::RESOURCES) < 5 {
                 let x = (friendly_random(0x14) as u8).wrapping_add(1);
-                write_u8(club.chairman().non_player().addr() + 0x20, x);
+                write_u8(club.chairman().non_player().addr() + non_player::RESOURCES, x);
             }
         }
     }
@@ -2873,7 +2873,7 @@ pub(crate) unsafe extern "thiscall" fn try_cash_injection(this: usize, club: usi
         if (est.business() as i8 as i32) <= r {
             return 0;
         }
-        let e = read_u8(club.chairman().non_player().addr() + 0x20) as i8 as i32;
+        let e = read_u8(club.chairman().non_player().addr() + non_player::RESOURCES) as i8 as i32;
         if e <= friendly_random(5).wrapping_add(10) {
             return 0;
         }

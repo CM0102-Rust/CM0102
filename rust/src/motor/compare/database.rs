@@ -1464,7 +1464,7 @@ pub(crate) unsafe extern "C" fn compare_staff_adjust_morale(person: usize, delta
     }
     // rolls (0x90cfc0): the generator state goes back between the sides and the copy does not count the rolls
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.push((person.player().addr() + 0x45, 1));
+    reg.push((person.player().addr() + player_sheet::PLAYER_MORALE, 1));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&reg, || o(person.addr(), delta, limitar),
         || crate::rng::without_counting(|| staff_adjust_morale(person.addr(), delta, limitar)));
     SCOREBOARD.record(igual && r == n, || format!("staff_adjust_morale({:x}, {}, {}) original={} rust={} {:x?} x {:x?}", person.addr(), delta as u8 as i8, limitar, r, n, mo, mr));

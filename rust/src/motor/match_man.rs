@@ -982,7 +982,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
         let a = |k: u32| exe::staff_get_player_attribute(u(j, match_player::STAFF), k) as i32;
         let tb = || exe::match_player_get_position(j);
         let fb = |o: usize| read_i8(u(j, match_player::PLAYER) + o);
-        let div = 13 - ((exe::non_player_attribute_rating(u(c.addr(), match_manager::MANAGER_SHEET), (0xb) as i8) as i8) as i32) / 2;
+        let div = 13 - ((exe::non_player_attribute_rating(u(c.addr(), match_manager::MANAGER_SHEET), 0xbu8 as i8) as i8) as i32) / 2;
         let rest = read_i32(u(c.addr(), match_manager::MANAGER_SHEET)).wrapping_add(read_i32(f)) % div;
         let mut f38 = (rest as f64 * 0.05 + 1.0) * f40 * 1.2;
         if f38 < 0.6 {
@@ -1299,10 +1299,10 @@ pub(crate) unsafe fn substitution_order_ends(a: MatchPlayer, b: MatchPlayer) -> 
     if b.position() == -2 {
         return Some(1);
     }
-    if exe::match_player_get_position(a) == 1 && read_i8(a.player().addr() + 0xf) < 20 {
+    if exe::match_player_get_position(a) == 1 && read_i8(a.player().addr() + player_sheet::GOALKEEPER) < 20 {
         return Some(-1);
     }
-    if exe::match_player_get_position(b) == 1 && read_i8(b.player().addr() + 0xf) < 20 {
+    if exe::match_player_get_position(b) == 1 && read_i8(b.player().addr() + player_sheet::GOALKEEPER) < 20 {
         return Some(1);
     }
     None
@@ -1370,7 +1370,7 @@ pub(crate) unsafe extern "thiscall" fn starters(c: usize) -> u8 {
 ///
 /// [pt] `titulares` com a 0x6e0d00 (poe na vaga) injetada.
 pub(crate) unsafe fn starters_with(c: MatchManager, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
-    let total = || (read_u8(c.fixture().addr() + 0x4d) & 0xf) as i32 + 11;
+    let total = || (read_u8(c.fixture().addr() + fixture::SQUAD_RULES) & 0xf) as i32 + 11;
     let mut n = 0u8;
     let mut k = 0i8;
     while (k as i32) < total() {

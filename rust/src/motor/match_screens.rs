@@ -4919,16 +4919,17 @@ pub(crate) unsafe extern "thiscall" fn match_player_row_assign(this: usize, src:
 /// a 1 no primeiro); 8 e os outros: nada. Zera antes +0x43..+0x46 e +0x4b/+0x4c. Resultado ou partida
 /// nulos: nada.
 pub(crate) unsafe extern "C" fn match_screens_tally_live_score(fixture: usize, index: u32, res: usize) {
-    if res == 0 || fixture == 0 {
+    let res = Fixture(res);
+    if res.is_null() || fixture == 0 {
         return;
     }
     for k in [0x43, 0x44, 0x4b, 0x4c] {
-        write_u8(res + k, 0);
+        write_u8(res.addr() + k, 0);
     }
-    write_u8(res + fixture::HOME_PENALTIES, 0xff);
-    write_u8(res + fixture::AWAY_PENALTIES, 0xff);
-    write_u8(res + fixture::AWAY_GOALS_HALF_TIME, 0);
-    write_u8(res + fixture::HOME_GOALS_HALF_TIME, 0);
+    res.set_home_penalties(0xffu8 as i8);
+    res.set_away_penalties(0xffu8 as i8);
+    res.set_away_goals_half_time(0);
+    res.set_home_goals_half_time(0);
     let day = read_u32(read_usize(G_MATCH_DAY) + 0x19);
     let game = MatchRecord(read_usize(day.wrapping_add(index.wrapping_mul(0x69)).wrapping_add(0x5f) as usize));
     if game.is_null() {
@@ -4952,10 +4953,10 @@ pub(crate) unsafe extern "C" fn match_screens_tally_live_score(fixture: usize, i
                 _ => None,
             };
             if let Some(k) = field {
-                write_u8(res + k, read_u8(res + k).wrapping_add(1));
+                write_u8(res.addr() + k, read_u8(res.addr() + k).wrapping_add(1));
             } else if kind == 7 {
                 let k = if side == 0 { 0x49 } else { 0x4a };
-                write_u8(res + k, if read_u8(res + k) == 0xff { 1 } else { read_u8(res + k) + 1 });
+                write_u8(res.addr() + k, if read_u8(res.addr() + k) == 0xff { 1 } else { read_u8(res.addr() + k) + 1 });
             }
         }
         lance += 4;

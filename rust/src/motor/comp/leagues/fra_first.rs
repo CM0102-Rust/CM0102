@@ -1036,9 +1036,9 @@ pub(crate) unsafe fn fra_first_fill_league_table(this: League, file: usize, row:
 /// 1 (0 sem encher). Fonte 0x9ccb5c, linha 0x1d3.
 pub(crate) unsafe extern "thiscall" fn fra_first_create_table(this: usize) -> u32 {
     let this = League(this);
-    let n: i16 = if read_u16(this.addr() + league::YEAR) == 0x7d1 { 0x12 } else { 0x14 };
-    write_i16(this.addr() + league::CLUB_COUNT, n);
-    write_u16(this.addr() + league::GAMES_PER_CLUB, 0xffff);
+    let n: i16 = if (this.year() as u16) == 0x7d1 { 0x12 } else { 0x14 };
+    this.set_club_count(n);
+    this.set_games_per_club(0xffffu16 as i16);
     if fra_first_fill_league_table(this, 0x9ccb5c, 0x1d3, KEY_CLUB_COMP_FRENCH_FIRST_DIVISION) != Some(true) {
         return 0;
     }

@@ -428,7 +428,7 @@ pub(crate) unsafe fn compare_champion_update(name: &str, this: usize, club: Club
             continue;
         }
         let k = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club);
-        let m = p.player().addr() + 0x45;
+        let m = p.player().addr() + player_sheet::PLAYER_MORALE;
         sheets.push((m, k, read_i8(m)));
         if k != 0 {
             contracts.push(k);

@@ -339,7 +339,7 @@ pub(crate) unsafe fn player_vs_manager_check(p: Staff) {
             e -= 0xf;
         }
     }
-    let rep = read_i16(p.player().addr() + 0xb);
+    let rep = read_i16(p.player().addr() + player_sheet::CURRENT_REPUTATION);
     if rep > 0x1194 && rep > club.reputation() {
         e -= 5;
     }
@@ -555,7 +555,7 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
         }
         let mut and_foul = false;
         let a = (p.professionalism() as u8);
-        if (a as i8) < 8 && (read_u8(p.player().addr() + 0x2f) as i8) < 8 && (bl as i8) < 0x2b {
+        if (a as i8) < 8 && (read_u8(p.player().addr() + player_sheet::LEADERSHIP) as i8) < 8 && (bl as i8) < 0x2b {
             let mut s = a;
             if days_since_staff_date(p) < 0x1e {
                 s = s.wrapping_add(0x64);

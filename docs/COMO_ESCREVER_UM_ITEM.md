@@ -29,7 +29,15 @@ Um item é um pacote de até 3 rotinas portadas, escrito antes da hora em `levas
 - Rótulo de contador de ramo em inglês, com o código do item na frente: `crate::comparison::branch("cqx_3 rival offer")` (o mesmo texto no quarto campo da lista de mutação).
 - Função do exe chamada pela cópia: `exe::nome(...)` (o invólucro tipado em `rust/src/motor/exe_calls.rs`, gerado pelo `involucros_exe.py`; quando a assinatura foi conferida na desmontagem, ela está em `levas/reorganizacao/assinaturas_conferidas.json` e vence), não `let f: unsafe extern "thiscall" fn(..) = core::mem::transmute(FN_X);` repetido.
 - Campos com nome também nas variáveis de uma letra: `p + staff::NATION`, não `p + 0x..`, quando a variável guarda um registro do docs/FORMATOS.md a função inteira (o `aplicar_tipos_variaveis.py` faz isso depois, mas o item já pode vir assim).
-- Use o que já tem nome: `read_u32`/`write_u8` (`mem.rs`), `KEY_*` (`keys.rs`), `G_*` (`globals.rs`), `club::DIVISION` e `club::SIZE` (`fields.rs`), `FN_*` (`exe_fns.rs`) e `original_fn::<F>(IDX_<NOME>)`; constante de ponto flutuante lida do exe com o valor em comentário.
+- Use o que já tem nome: `read_u32`/`write_u8` (`mem.rs`), `KEY_*` (`keys.rs`), `G_*` (`globals.rs`), `club::DIVISION` e `club::SIZE` (`fields.rs`), `FN_*` (`exe_fns.rs`) e `original_fn::<F>(IDX_<NOME>)`; constante de ponto flutuante lida do exe pelo nome do valor
+  (`read_f64(rdata::F64_0_5)`, `rdata_consts.rs`).
+- **O estilo dos registros tipados (desde 10/11/2026):** o registro com o tipo dele e os campos como métodos
+  (`club.reputation()`, `p.set_age(..)`, `person.club_job().manager()`), não `read_i16(club + club::REPUTATION)`; as tabelas
+  do jogo por `club_at(i)` e `staff_at(id)`; o jogador em campo por `m.player(lado, k)` e a casa da grade por `m.cell(x, y)`;
+  os códigos de narração por `event::NOME` e os do motor por `match_codes.rs`; o acesso cru que sobrar como `read_T(E)` /
+  `write_T(E, v)`, nunca `*((E) as *const T)`. Nomes locais, mensagens de log e de comparador em inglês. O
+  `padronizar.sh` passa tudo isso no código de uma leva logo depois de integrá-la (o `publicar_leva.py` chama), mas o item
+  já pode vir assim.
 - O `DOCS` do `rotinas.py` continua em português e inglês (é a fonte do ROTINAS e do glossário).
 
 ## Comparar

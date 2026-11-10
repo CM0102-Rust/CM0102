@@ -383,7 +383,7 @@ pub(crate) unsafe extern "thiscall" fn compare_check_squad_limits(this: usize, c
         regions.push((reason as usize, 2));
     }
     if !o.exchange_players().is_null() {
-        regions.push((o.exchange_players().addr() + 0xa, 4));
+        regions.push((o.exchange_players().addr() + llist::CURSOR, 4));
     }
     let before = crate::comparison::MemorySnapshot::read(&regions);
     SQUAD_LIMITS_DRY_RUN = true;
@@ -1433,7 +1433,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_exchange_offers_for_player(ma
             for i in 0..((manager.offer_capacity() as i32)).max(0) as usize {
                 let offer = Offer(read_usize(read_usize(manager.addr()) + 4 * i));
                 if !offer.is_null() && (offer.buyer_club_id() as u32) == club && !offer.exchange_players().is_null() {
-                    regions.push((offer.exchange_players().addr() + 0xa, 4));
+                    regions.push((offer.exchange_players().addr() + llist::CURSOR, 4));
                 }
             }
         }
@@ -1511,7 +1511,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_exchange_negotiations_for_pla
             for i in 0..read_i32(manager.addr() + staff::DATE_OF_BIRTH).max(0) as usize {
                 let neg = Offer(read_usize(negotiations + i * 4));
                 if !neg.is_null() && (neg.buyer_club_id() as u32) == club && !neg.exchange_players().is_null() {
-                    regions.push((neg.exchange_players().addr() + 0xa, 4));
+                    regions.push((neg.exchange_players().addr() + llist::CURSOR, 4));
                 }
             }
         }

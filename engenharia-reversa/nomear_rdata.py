@@ -40,11 +40,14 @@ def main():
         for m in LEITURA.finditer(open(p, encoding='utf-8').read()):
             usos[(int(m.group(3), 16), m.group(2))] += 1
     nomes, usados = {}, set()
-    # the constants already named stay (a run only adds the new raw reads; 10/11/2026)
+    # the constants already named stay, every line of them (an address can carry two names); a run only adds the new
+    # raw reads, which take the first name of their address (10/11/2026)
+    existentes = []
     arq = os.path.join(SRC, 'motor', 'rdata_consts.rs')
     if os.path.exists(arq):
         for m in re.finditer(r'pub\(crate\) const (\w+): usize = (0x[0-9a-f]+); // f(32|64) = (\S+)', open(arq, encoding='utf-8').read()):
-            nomes[(int(m.group(2), 16), m.group(3))] = (m.group(1), float(m.group(4)))
+            existentes.append((m.group(1), int(m.group(2), 16), m.group(3), float(m.group(4))))
+            nomes.setdefault((int(m.group(2), 16), m.group(3)), (m.group(1), float(m.group(4))))
             usados.add(m.group(1))
     for (end, bits), _ in sorted(usos.items()):
         if (end, bits) in nomes:
@@ -63,7 +66,10 @@ def main():
          '// [pt] As constantes com casas decimais que as cópias leem do .rdata do exe, com o valor no nome; o valor continua',
          '// sendo lido do exe (um patch que mude a constante continua valendo).', '',
          '#[allow(dead_code)]', 'pub(crate) mod rdata {']
-    for (end, bits), (nome, v) in sorted(nomes.items(), key=lambda x: x[1][0]):
+    linhas = {nome: (end, bits, v) for nome, end, bits, v in existentes}
+    for (end, bits), (nome, v) in nomes.items():
+        linhas.setdefault(nome, (end, bits, v))
+    for nome, (end, bits, v) in sorted(linhas.items()):
         L.append('    pub(crate) const %s: usize = %#x; // f%s = %r' % (nome, end, bits, v))
     L.append('}')
     por_end = {end: nome for (end, bits), (nome, v) in nomes.items()}

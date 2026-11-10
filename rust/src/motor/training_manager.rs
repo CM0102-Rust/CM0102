@@ -357,7 +357,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
                     geral = k;
                 }
             }
-            let slot = if read_i8(p.player().addr() + 0xf) >= 0xf && goleiro != -1 {
+            let slot = if read_i8(p.player().addr() + player_sheet::GOALKEEPER) >= 0xf && goleiro != -1 {
                 goleiro
             } else if geral != -1 {
                 geral
@@ -422,7 +422,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_training(this: usize, p: us
         let middle = training_nibble(e, k);
         for _ in 0..weeks {
             let v = middle.wrapping_add(d[k]);
-            if read_i8(p.player().addr() + 0xf) > 0x12 {
+            if read_i8(p.player().addr() + player_sheet::GOALKEEPER) > 0x12 {
                 let r = if k == 4 { friendly_random(2) } else { friendly_random(4) };
                 if r != 0 {
                     continue; // goalkeeper: the category barely moves
