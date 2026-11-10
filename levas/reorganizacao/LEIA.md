@@ -28,6 +28,16 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 18: deslocamentos com nome e mais oito registros
+
+`nomear_deslocamentos.py`: numa função, o deslocamento cru sobre uma variável tipada (`x.addr() + 0x27`, ou uma cadeia
+`x.club_job().addr() + 0xcf`) vira o nome do campo quando o módulo do registro tem exatamente um campo naquele
+deslocamento; `--acessos` transforma o acesso em método. 108 nomeados (club 43, staff 30, engine 12, nation 9,
+competition 9...). Os registros `TransferManagerFields`, `Llist`, `MatchRecord`, `ManagerRecord`, `Friendly`,
+`NonPlayer`, `MatchManager` e `LeagueTableRow` passaram pelo `tipar_leva.sh`. Deslocamentos crus 5.090 → 4.982. Âncoras
+de mutação 82 → 81 (a `l_conta`, ambígua, ganhou contexto). Prova: 7cc445c2 ×2, detector igual, comparação 0; as 65
+mutações mudadas compilam.
+
 ## Migração para os registros tipados, leva 17: ofertas, copas e fichas de jogador
 
 `tipar_leva.sh MÓDULO=Tipo ...` roda o padrão completo de uma leva para cada par (`tipar_registros.py MÓDULO`, `--exe`,

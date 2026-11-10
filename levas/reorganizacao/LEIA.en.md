@@ -29,6 +29,15 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 18: named offsets and eight more records
+
+`nomear_deslocamentos.py`: in a function, a raw offset on a typed variable (`x.addr() + 0x27`, or a chain
+`x.club_job().addr() + 0xcf`) becomes the field's name when the record's module has exactly one field at that offset;
+`--acessos` turns the access into a method. 108 named (club 43, staff 30, engine 12, nation 9, competition 9...). The
+records `TransferManagerFields`, `Llist`, `MatchRecord`, `ManagerRecord`, `Friendly`, `NonPlayer`, `MatchManager` and
+`LeagueTableRow` went through `tipar_leva.sh`. Raw offsets 5,090 → 4,982. Mutation anchors 82 → 81 (the ambiguous
+`l_conta` got context). Proof: 7cc445c2 ×2, detector equal, comparison 0; the 65 changed mutations compile.
+
 ## Migration to typed records, batch 17: offers, cups and player sheets
 
 `tipar_leva.sh MODULE=Type ...` runs the full pattern of a batch for each pair (`tipar_registros.py MODULE`, `--exe`,
