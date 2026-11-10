@@ -28,6 +28,16 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 34 da legibilidade: leitores de campo no manager_manager.rs (piloto da decisão (e))
+
+Dois agentes leitores deram um veredito para cada um dos 205 `+ 0x..` crus do `manager_manager.rs` (registro, nome,
+largura, confiança com evidência): 125 nomes que já existiam, 51 novos (15 campos distintos, um módulo novo `names` para o
+TNames), 24 que não são campo e 5 desconhecidos. `nomear_por_linha.py` aplica por linha; o `fields.rs` leva a marca de
+confiança. Deslocamentos crus no arquivo: 205 → 33. Os vereditos ficam em `leitores_de_campo/`. Leitor de fora
+(`leitor_de_fora_piloto_campos.txt`): 3/10 antes, 6/10 depois; o que falta são os bits sem nome dentro dos campos de
+flags, campos ainda crus no mesmo registro e limites mágicos em hexadecimal. Prova: aa7e9c95 ×2, detector igual,
+comparação 0; as 6 mutações mudadas compilam.
+
 ## Leva 33 da legibilidade: as correções do próprio compilador
 
 `cargo fix` aplica as 975 sugestões do compilador (parênteses desnecessários, importações e `mut` sem uso): os avisos

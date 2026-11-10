@@ -29,6 +29,16 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 34: field readers on manager_manager.rs (pilot of decision (e))
+
+Two reader agents gave a verdict on each of the 205 raw `+ 0x..` of `manager_manager.rs` (record, name, width,
+confidence with evidence): 125 existing names, 51 new (15 distinct fields, a new `names` module for TNames), 24 not
+fields and 5 unknown. `nomear_por_linha.py` applies them per line; `fields.rs` carries the confidence mark. Raw offsets
+in the file: 205 -> 33. The verdicts are kept in `leitores_de_campo/`. Outside reader
+(`leitor_de_fora_piloto_campos.txt`): 3/10 before, 6/10 after; what is left are the unnamed bits inside flag fields,
+fields still raw in the same record and magic limits in hex. Proof: aa7e9c95 ×2, detector equal, comparison 0; the 6
+changed mutations compile.
+
 ## Readability batch 33: the compiler's own fixes
 
 `cargo fix` applies the compiler's 975 suggestions (unnecessary parentheses, unused imports and `mut`): warnings go from

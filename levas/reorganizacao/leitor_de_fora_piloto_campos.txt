@@ -1,0 +1,15 @@
+Outside reader on the field-naming pilot (readability batch 34, manager_manager.rs, 10/11/2026)
+[pt] Leitor de fora sobre o piloto da decisão (e).
+
+Verdict: 3/10 before, 6/10 after. Largest gains: set_season_expectations (SPENDING = rep^2/4, expected position
+by danger_position, bounded by CLUB_COUNT and best/worst position) and consider_sacking_manager (winning/unbeaten/
+winless/losing runs). Remaining obstacles, by impact:
+1. bit values inside flag fields have no names (EXPECTATION_FLAGS 2/4/0x10/0x40/0x80/0x200; FLAGS & 0xe0/0x1f);
+2. EXPECTATION_FLAGS + 1 & 4 (byte access to a 2-byte field: 0x400);
+3. partial naming inside one record: board_record +6/+8/+0x10 and the [0x10,0x12,0x14,0x16] loops;
+   player_sheet +9; comp_stats_club +4 and +0x14..+0x18 (last 5 results); ban_appeal +0x18; llist +2;
+4. magic limits in hex (0xdac, 0xe42, 0x10b3, 0x1388) would read better in decimal;
+5. mixed styles: `ln() + board_record::X` next to `BoardRecord(l).x()`.
+Suspicious: local `conf` holding CURRENT_REPUTATION; FLAGS comment "bit 8" (mask 8); SPENDING_CEILING
+[inference] decays by 0.25 at season start; stale comment in board_named_players_after_match; closure `city`
+next to path `city::NATION`; TARGET_POSITION read as u8 and set to 0xffffffff on the national-team path.
