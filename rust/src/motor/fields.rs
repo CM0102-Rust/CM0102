@@ -605,7 +605,9 @@ pub(crate) mod engine {
     pub(crate) const SIDE_PLAYED_BALL: usize = 0x1a5; // 2 byte(s): per-side flag set when a player of that side deliberately plays or takes the ball (cleared for the other side and on interceptions); while clear the goalkeeper may pick it up [inference: back-pass rule]
     pub(crate) const SHOT_PENDING: usize = 0x1a7; // 1 byte(s): set when a shot is taken, cleared when the ball is released [inference]
     pub(crate) const GOLDEN_GOAL_SCORED: usize = 0x1a8; // 1 byte(s): set when a goal is scored in a golden-goal period (marked_moment); the match then ends and restarts are skipped
+    pub(crate) const SHOOTOUT_SHOTS: usize = 0x1a9; // 1 byte(s): side 1 shootout shot count, zeroed
     pub(crate) const SIDE_STANCE: usize = 0x1ab; // 2 byte(s): current stance code per side (+0x1ab + side), from the match manager's stance; -1 at preparation
+    pub(crate) const SIDE_PITCH_HANDICAP: usize = 0x1ad; // 1 byte(s): side 1 pitch handicap (0..10; floor 1 when the venue is not a home ground of either club) [inference]
     pub(crate) const PENALTY_TAKER_ORDER: usize = 0x1af; // 22 byte(s): shootout taker order, 11 signed bytes per side (-1 empty)
     pub(crate) const BALL_TRANSIT_TICKS: usize = 0x1c5; // 1 byte(s): ticks left until the ball in flight reaches its target (0 = not in transit)
     pub(crate) const TRANSIT_TARGET_X: usize = 0x1c6; // 1 byte(s): column the ball in transit is heading to
@@ -690,6 +692,7 @@ pub(crate) mod engine {
     pub(crate) const STOPPAGE_TIME: usize = 0x8eb7; // 1 byte(s): stoppage time added to the current period, in ticks (period ends when CLOCK passes PERIOD_END + this)
     pub(crate) const ACTIVE_LIST_COUNT: usize = 0x8eb8; // 1 byte(s): count of the active-player action list at +0x8f7e
     pub(crate) const PASS_TARGET_X: usize = 0x8eb9; // 1 byte(s): column the current pass is aimed at (0xff none)
+    pub(crate) const MATCH_ALREADY_OVER: usize = 0x8eba; // 1 byte(s): the match ended before being played: preparation returns 0 when set after the squads [inference]
     pub(crate) const LIVE_MATCH: usize = 0x8ebb; // 1 byte(s): the match is watched live (narrated): enables crowd chants, extra commentary and per-tick team stats
     pub(crate) const POSITION_TABLE: usize = 0x8ebc; // 8 byte(s): pointer per side to the position table (11 words by tactical position)
     pub(crate) const POSITION_TABLE_SIDE1: usize = 0x8ec0; // 4 byte(s): side 1 entry of POSITION_TABLE: pointer to side 1's position table (set to POSITION_TABLE_DATA_SIDE1 at preparation)
@@ -747,6 +750,7 @@ pub(crate) mod engine {
     pub(crate) const REFEREE_RATING: usize = 0xf5ba; // 2 byte(s): referee base rating used for the post-match grade (/1000); referee object +8 [inference]
     pub(crate) const SIDE_STATS: usize = 0xf5bc; // 108 byte(s): per-side match stats block, 0x36 bytes per side (+0xf5bc + 0x36 x side); +0 shootout goals
     pub(crate) const SCORE: usize = 0xf5bd; // 1 byte(s): side 0 goals (side 1 at +0xf5f3); SIDE_STATS +1
+    pub(crate) const SHOTS_ON_TARGET: usize = 0xf5bf; // 1 byte(s): side 0 shots on target (side 1 at +0x36); SIDE_STATS +3
     pub(crate) const SIDE_SUMMARY: usize = 0xf5c0; // ? byte(s): side summary (player ratings) in SIDE_STATS +4
     pub(crate) const CORNER_GOALS: usize = 0xf5c3; // 1 byte(s): side 0 goals from corners (set piece kind 3); side 1 at +0x36
     pub(crate) const FREE_KICK_PLAY_GOALS: usize = 0xf5c4; // 1 byte(s): side 0 goals from free-kick plays (set piece kind 7 or -1); side 1 at +0x36 [inference]
@@ -907,6 +911,7 @@ pub(crate) mod match_player {
     pub(crate) const LAST_FOULED_BY: usize = 0x1a6; // 4 byte(s): match player who last fouled him (stored by the referee's foul decision); value_by_condition uses its own formula against him
     pub(crate) const MARKING_TARGET: usize = 0x1aa; // 4 byte(s): match player he man-marks (0 none)
     pub(crate) const MARKERS: usize = 0x1ae; // 12 byte(s): match players marking him (up to 3 pointers, count in MARKER_COUNT)
+    pub(crate) const STARTING_POSITION: usize = 0x1bc; // 2 byte(s): position mask the match set him up in (MATCH_PLAYER::get_starting_position)
 }
 
 /// `TNonPlayer` record. [pt] Registro `TNonPlayer`.
@@ -1383,6 +1388,7 @@ pub(crate) mod day_match {
     pub(crate) const AWAY_CLUB: usize = 0x24; // 4 byte(s): away club pointer (copy of fixture AWAY_CLUB)
     pub(crate) const HOME_SIDE_MARK: usize = 0x44; // 1 byte(s): copy of fixture HOME_SIDE_MARK
     pub(crate) const AWAY_SIDE_MARK: usize = 0x45; // 1 byte(s): copy of fixture AWAY_SIDE_MARK
+    pub(crate) const STAGE_INDEX: usize = 0x46; // 1 byte(s): copy of fixture STAGE_INDEX (fixture +0x42 shifted by 4), second sort key of the day matches
     pub(crate) const HOME_GOALS: usize = 0x47; // 1 byte(s): copy of fixture HOME_GOALS: -1 pending, -2 decided earlier, -3 recorded as an away game
     pub(crate) const AWAY_GOALS: usize = 0x48; // 1 byte(s): copy of fixture AWAY_GOALS
     pub(crate) const HOME_AGGREGATE: usize = 0x4b; // 1 byte(s): copy of fixture HOME_AGGREGATE
@@ -2641,4 +2647,13 @@ pub(crate) mod recovery_news_entry {
 
     pub(crate) const FORCE_DELIVERY: usize = 0x14; // 1 byte(s): deliver the news even when the club has no human manager
     pub(crate) const INJURY_TYPE: usize = 0x15; // 1 byte(s): injury type of the news (post_recovery_news kind)
+}
+
+/// 0x28-byte per-tactic result statistics entry (tactics_fields::TACTIC_STATS): +0 tactic index u16, +2 games count i16, three f64 scores by stance
+#[allow(dead_code)]
+pub(crate) mod tactic_stats {
+    pub(crate) const ALL_OUT_ATTACK_SCORE: usize = 0x10; // 8 byte(s): f64 score of the tactic used when the stance is 1 (all-out attack) [inference]
+
+    pub(crate) const ATTACK_SCORE: usize = 0x18; // 8 byte(s): f64 score of the tactic used for stance 2 (attack) and any other value [inference]
+    pub(crate) const DEFENSIVE_SCORE: usize = 0x20; // 8 byte(s): f64 score of the tactic used for stances 3..5 (balanced, defend, park the bus) [inference]
 }

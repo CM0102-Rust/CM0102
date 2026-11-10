@@ -5,6 +5,6 @@ MUTACOES = [
     ('a_posicao', "                    j.set_position(-2);", "                    j.set_position(-3);"),
     ('a_sorteio', "            } else if random(4) == 0 || j.injury_culprit() != 0 {", "            } else if random(4) == 1 || j.injury_culprit() != 0 {"),
     ('a_par', "                call(FN_MATCH_EVENTS_ADD_EVENT, m.commentator(), [event::PLAYER_INJURED_BY_OPPONENT, m.addr() as u32, a3, a4, a5 | a6 << 8]);", "                call(FN_MATCH_EVENTS_ADD_EVENT, m.commentator(), [event::PLAYER_INJURED_BY_OPPONENT, m.addr() as u32, a5, a4, a3 | a6 << 8]);"),
-    ('a_minuto', "        *((m.addr() as isize + lado as isize * 2 + 0x8ecc) as *mut i16) = m.clock();\n        exe::cm3_match_engine_recalc_side_score(m, lado);", "        *((m.addr() as isize + lado as isize * 2 + 0x8ecc) as *mut i16) = m.clock() + 1;\n        exe::cm3_match_engine_recalc_side_score(m, lado);"),
+    ('a_minuto', "        *((m.addr() as isize + lado as isize * 2 + (engine::LAST_SUBSTITUTION_TICK as isize)) as *mut i16) = m.clock();\n        exe::cm3_match_engine_recalc_side_score(m, lado);", "        *((m.addr() as isize + lado as isize * 2 + (engine::LAST_SUBSTITUTION_TICK as isize)) as *mut i16) = m.clock() + 1;\n        exe::cm3_match_engine_recalc_side_score(m, lado);"),
     ('a_capitao', "            if jv.position() < 0 {", "            if jv.position() <= 0 {"),
 ]

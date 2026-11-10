@@ -53,6 +53,26 @@ pub(crate) mod expectation_flags_byte1 {
     pub(crate) const EUROPEAN_SUCCESS: u8 = 0x4;
 }
 
+/// Bits of `formation_fields::FLAGS`.
+#[allow(dead_code)]
+pub(crate) mod formation_fields_flags {
+    /// set_team_instruction 0x5b50d0 groups 1/2/4/8 (mask 0xfffffff0); instructions() picks 2,1,4,8 for directness <=8,<=14,<=18,<=20, so 8 is the most direct passing. Name: inferred.
+    pub(crate) const LONG_BALL: i32 = 0x8;
+}
+
+/// Bits of `staff::PLAYING_SQUAD`.
+#[allow(dead_code)]
+pub(crate) mod playing_squad {
+    /// docs/MAPA_ESTATISTICAS_E_ELENCO B.2: bit 0 club first team. Name: verified.
+    pub(crate) const FIRST_TEAM: u8 = 0x1;
+    /// docs/MAPA_ESTATISTICAS_E_ELENCO B.2: bit 1 club reserves (pick_team skips 0x02). Name: verified.
+    pub(crate) const RESERVES: u8 = 0x2;
+    /// docs/MAPA_ESTATISTICAS_E_ELENCO B.2: bit 2 called up to the national side. Name: verified.
+    pub(crate) const NATIONAL_SQUAD: u8 = 0x4;
+    /// docs/MAPA_ESTATISTICAS_E_ELENCO B.2: bit 3 called up to the B national side. Name: verified.
+    pub(crate) const NATIONAL_B_SQUAD: u8 = 0x8;
+}
+
 /// Bits of `board_record::REQUEST_STATE`.
 #[allow(dead_code)]
 pub(crate) mod request_state {
@@ -60,4 +80,27 @@ pub(crate) mod request_state {
     pub(crate) const EXTRA_TIME_GRANTED: u32 = 0x1;
     /// bits 1..4 (signed 4-bit) hold the id of the last board request: handle_board_request 0x6a892c..0x6a8961. Name: read.
     pub(crate) const LAST_REQUEST: u32 = 0x1e;
+}
+
+/// Bits of `staff_state::STATUS_FLAGS`.
+#[allow(dead_code)]
+pub(crate) mod staff_state_status_flags {
+    /// docs/MARCA_DO_REGEN: bits 0x30 retirement state (0x10 announced, 0x20 retired); tested as a whole mask. Name: verified.
+    pub(crate) const RETIREMENT_STATE: u8 = 0x30;
+}
+
+/// Bits of `tactics_fields::FLAGS`.
+#[allow(dead_code)]
+pub(crate) mod tactics_fields_flags {
+    /// pressiona = ... || est & 0x4000 (team-wide pressing). Name: inferred.
+    pub(crate) const PRESSING: u32 = 0x4000;
+}
+
+/// Bits of `engine::TACTICS_FLAGS`.
+#[allow(dead_code)]
+pub(crate) mod tactics_flags {
+    /// tested on the defending side: the offside distance grows by one; match_pl narrates BREAKS_THE_OFFSIDE_TRAP (events_eng.cfg) when it is set. Name: verified.
+    pub(crate) const OFFSIDE_TRAP: u32 = 0x400;
+    /// with it set the player's row follows the ball line (row +-2..4); in off_ball_decide (line 7938) est & 0x4000 alone makes the player press. Name: inferred.
+    pub(crate) const PRESSING: u32 = 0x4000;
 }

@@ -20,8 +20,8 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 |---|---|
 | comunidade | 247 |
 | conferido | 27 |
-| lido | 1381 |
-| inferido | 146 |
+| lido | 1385 |
+| inferido | 151 |
 
 ## Por registro
 
@@ -63,7 +63,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `cup_tie` | 0 | 0 | 10 | 0 |
 | `day_competition` | 0 | 0 | 5 | 1 |
 | `day_group` | 0 | 0 | 5 | 0 |
-| `day_match` | 0 | 0 | 16 | 1 |
+| `day_match` | 0 | 0 | 17 | 1 |
 | `decision_date` | 0 | 0 | 3 | 0 |
 | `discipline_fields` | 0 | 0 | 11 | 0 |
 | `discipline_record` | 0 | 0 | 3 | 0 |
@@ -71,7 +71,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `eng_auto_cup` | 0 | 0 | 1 | 1 |
 | `eng_cc_cup` | 0 | 0 | 1 | 0 |
 | `eng_fa_cup` | 0 | 0 | 3 | 0 |
-| `engine` | 0 | 0 | 155 | 20 |
+| `engine` | 0 | 0 | 157 | 22 |
 | `english_name_tables` | 0 | 0 | 7 | 0 |
 | `euro_champ_qual` | 0 | 0 | 1 | 0 |
 | `event_type` | 0 | 0 | 3 | 0 |
@@ -116,7 +116,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `match_events_fields` | 0 | 0 | 3 | 0 |
 | `match_incident` | 0 | 0 | 5 | 0 |
 | `match_manager` | 0 | 0 | 15 | 7 |
-| `match_player` | 0 | 3 | 110 | 22 |
+| `match_player` | 0 | 3 | 111 | 22 |
 | `match_record` | 0 | 2 | 68 | 11 |
 | `match_record_row` | 0 | 0 | 20 | 5 |
 | `match_record_team` | 0 | 0 | 28 | 4 |
@@ -181,6 +181,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `staff_records_fields` | 0 | 0 | 7 | 0 |
 | `staff_state` | 0 | 0 | 4 | 1 |
 | `story_log_entry` | 0 | 0 | 6 | 0 |
+| `tactic_stats` | 0 | 0 | 0 | 3 |
 | `tactics_fields` | 0 | 0 | 10 | 2 |
 | `tactics_row` | 0 | 0 | 4 | 0 |
 | `tally_record` | 0 | 0 | 1 | 0 |
@@ -227,6 +228,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `engine::PENDING_INCIDENT_PLAY` | +0xba | 1 byte(s): first pending incident entry +9: play code of the incident (minus 0x25 selects the codes without commentary) [inference] |
 | `engine::SIDE_PLAYED_BALL` | +0x1a5 | 2 byte(s): per-side flag set when a player of that side deliberately plays or takes the ball (cleared for the other side and on interceptions); while clear the goalkeeper may pick it up [inference: back-pass rule] |
 | `engine::SHOT_PENDING` | +0x1a7 | 1 byte(s): set when a shot is taken, cleared when the ball is released [inference] |
+| `engine::SIDE_PITCH_HANDICAP` | +0x1ad | 1 byte(s): side 1 pitch handicap (0..10; floor 1 when the venue is not a home ground of either club) [inference] |
 | `engine::SHOT_REBOUND` | +0x1cd | 1 byte(s): set when a shot leaves the ball loose (blocked, saved or stopped); picking it up in front of goal gets the rebound commentary [inference] |
 | `engine::BALL_TIME_THIRD_1` | +0x1f6 | 10 byte(s): five i16 counters (indexed by side, 0..4) of ball time in the first pitch third; copied to the match record +0xc [inference] |
 | `engine::BALL_TIME_THIRD_2` | +0x200 | 10 byte(s): five i16 counters of ball time in the second pitch third; copied to the match record +0x16 [inference] |
@@ -235,6 +237,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `engine::MOMENTUM_A` | +0x4782 | 4 byte(s): signed momentum score changed by shots and goals (i32) [inference] |
 | `engine::MOMENTUM_B` | +0x4786 | 4 byte(s): second signed momentum score changed by shots and goals (i32) [inference] |
 | `engine::FOULED_PLAYER` | +0x478a | 4 byte(s): player who suffered the last foul/tackle (0 none) [inference] |
+| `engine::MATCH_ALREADY_OVER` | +0x8eba | 1 byte(s): the match ended before being played: preparation returns 0 when set after the squads [inference] |
 | `engine::SUB_TICK` | +0x8ed2 | 2 byte(s): step counter within the current clock tick; when it reaches 1 the clock advances and it is cleared [inference] |
 | `engine::REFEREE_RATING` | +0xf5ba | 2 byte(s): referee base rating used for the post-match grade (/1000); referee object +8 [inference] |
 | `engine::FREE_KICK_PLAY_GOALS` | +0xf5c4 | 1 byte(s): side 0 goals from free-kick plays (set piece kind 7 or -1); side 1 at +0x36 [inference] |
@@ -345,3 +348,6 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `oceania_club_champ::DRAWN_CLUB_COUNT` | +0xf2 | ? byte(s): Number of clubs in DRAWN_CLUBS, zeroed with the list [inference] |
 | `display::FOCUS_FLAGS` | +0x12f4fe | 1 byte(s): flag byte written with the focus (0x20 here) [inference] |
 | `screen_manager::NETWORK_SLOT` | +0x7d4 | 2 byte(s): nonzero when slot k's screen updates go over the network (+0x300 x k) [inference] |
+| `tactic_stats::ALL_OUT_ATTACK_SCORE` | +0x10 | 8 byte(s): f64 score of the tactic used when the stance is 1 (all-out attack) [inference] |
+| `tactic_stats::ATTACK_SCORE` | +0x18 | 8 byte(s): f64 score of the tactic used for stance 2 (attack) and any other value [inference] |
+| `tactic_stats::DEFENSIVE_SCORE` | +0x20 | 8 byte(s): f64 score of the tactic used for stances 3..5 (balanced, defend, park the bus) [inference] |

@@ -1,7 +1,7 @@
 # Mutacoes da leva86 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva86.py --jogo 2001-08-20
 # (a 0x6eecb0 roda para cada jogador em cada partida; o autoteste sintetico nao cobre o contexto dela)
 MUTACOES = [
-    ('d_bl', "    let bl: i8 = if (read_i8(sheet().addr() + 0xf) as i32) > 15 { 20 }", "    let bl: i8 = if (read_i8(sheet().addr() + 0xf) as i32) > 14 { 20 }"),
+    ('d_bl', "    let bl: i8 = if (sheet().goalkeeper() as i32) > 15 { 20 }", "    let bl: i8 = if (sheet().goalkeeper() as i32) > 14 { 20 }"),
     ('d_15', "        soma37(ftol(x * read_f64(rdata::F64_NEG_1_5)) as i16 as i32);", "        soma37(ftol(x * read_f64(rdata::F64_NEG_0_75)) as i16 as i32);"),
     ('d_b75', "        let tres_quartos = |v: i32| soma37(ftol(v as f64 * read_f64(rdata::F64_NEG_0_75)) as i16 as i32);", "        let tres_quartos = |v: i32| soma37(ftol(v as f64 * read_f64(rdata::F64_NEG_1_5)) as i16 as i32);"),
     ('d_meio', "    let middle = |v: i32| soma37(v / 2 - 10);", "    let middle = |v: i32| soma37(v / 2 - 9);"),

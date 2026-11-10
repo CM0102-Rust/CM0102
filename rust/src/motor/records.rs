@@ -5000,6 +5000,15 @@ impl Engine {
     pub(crate) unsafe fn set_golden_goal_scored(self, v: i8) {
         write_i8(self.0 + engine::GOLDEN_GOAL_SCORED, v)
     }
+    /// `engine::SHOOTOUT_SHOTS` (+0x1a9). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn shootout_shots(self) -> u8 {
+        read_u8(self.0 + engine::SHOOTOUT_SHOTS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_shootout_shots(self, v: u8) {
+        write_u8(self.0 + engine::SHOOTOUT_SHOTS, v)
+    }
     /// `engine::SIDE_STANCE` (+0x1ab). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn side_stance(self) -> i16 {
@@ -5008,6 +5017,15 @@ impl Engine {
     #[inline(always)]
     pub(crate) unsafe fn set_side_stance(self, v: i16) {
         write_i16(self.0 + engine::SIDE_STANCE, v)
+    }
+    /// `engine::SIDE_PITCH_HANDICAP` (+0x1ad). Name: inferred.
+    #[inline(always)]
+    pub(crate) unsafe fn side_pitch_handicap(self) -> u8 {
+        read_u8(self.0 + engine::SIDE_PITCH_HANDICAP)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_side_pitch_handicap(self, v: u8) {
+        write_u8(self.0 + engine::SIDE_PITCH_HANDICAP, v)
     }
     /// `engine::PENALTY_TAKER_ORDER` (+0x1af). Name: read.
     #[inline(always)]
@@ -5729,6 +5747,15 @@ impl Engine {
     pub(crate) unsafe fn set_pass_target_x(self, v: u8) {
         write_u8(self.0 + engine::PASS_TARGET_X, v)
     }
+    /// `engine::MATCH_ALREADY_OVER` (+0x8eba). Name: inferred.
+    #[inline(always)]
+    pub(crate) unsafe fn match_already_over(self) -> u8 {
+        read_u8(self.0 + engine::MATCH_ALREADY_OVER)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_match_already_over(self, v: u8) {
+        write_u8(self.0 + engine::MATCH_ALREADY_OVER, v)
+    }
     /// `engine::LIVE_MATCH` (+0x8ebb). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn live_match(self) -> i8 {
@@ -6209,6 +6236,15 @@ impl Engine {
     #[inline(always)]
     pub(crate) unsafe fn set_score(self, v: i8) {
         write_i8(self.0 + engine::SCORE, v)
+    }
+    /// `engine::SHOTS_ON_TARGET` (+0xf5bf). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn shots_on_target(self) -> u8 {
+        read_u8(self.0 + engine::SHOTS_ON_TARGET)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_shots_on_target(self, v: u8) {
+        write_u8(self.0 + engine::SHOTS_ON_TARGET, v)
     }
     /// `engine::SIDE_SUMMARY` (+0xf5c0). Name: read.
     #[inline(always)]
@@ -7635,6 +7671,15 @@ impl MatchPlayer {
     #[inline(always)]
     pub(crate) unsafe fn set_markers(self, v: usize) {
         write_usize(self.0 + match_player::MARKERS, v)
+    }
+    /// `match_player::STARTING_POSITION` (+0x1bc). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn starting_position(self) -> u16 {
+        read_u16(self.0 + match_player::STARTING_POSITION)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_starting_position(self, v: u16) {
+        write_u16(self.0 + match_player::STARTING_POSITION, v)
     }
 }
 
@@ -11429,6 +11474,15 @@ impl DayMatch {
     #[inline(always)]
     pub(crate) unsafe fn set_away_side_mark(self, v: u8) {
         write_u8(self.0 + day_match::AWAY_SIDE_MARK, v)
+    }
+    /// `day_match::STAGE_INDEX` (+0x46). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn stage_index(self) -> i8 {
+        read_i8(self.0 + day_match::STAGE_INDEX)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_stage_index(self, v: i8) {
+        write_i8(self.0 + day_match::STAGE_INDEX, v)
     }
     /// `day_match::HOME_GOALS` (+0x47). Name: read.
     #[inline(always)]
@@ -20848,6 +20902,64 @@ impl Addr for RecoveryNewsEntry {
 }
 
 impl core::fmt::LowerHex for RecoveryNewsEntry {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `tactic_stats` record in the game's memory (fields in `fields::tactic_stats`). [pt] Um registro `tactic_stats` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct TacticStats(pub(crate) usize);
+
+#[allow(dead_code)]
+impl TacticStats {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `tactic_stats::ALL_OUT_ATTACK_SCORE` (+0x10). Name: inferred.
+    #[inline(always)]
+    pub(crate) unsafe fn all_out_attack_score(self) -> f64 {
+        read_f64(self.0 + tactic_stats::ALL_OUT_ATTACK_SCORE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_all_out_attack_score(self, v: f64) {
+        write_f64(self.0 + tactic_stats::ALL_OUT_ATTACK_SCORE, v)
+    }
+    /// `tactic_stats::ATTACK_SCORE` (+0x18). Name: inferred.
+    #[inline(always)]
+    pub(crate) unsafe fn attack_score(self) -> f64 {
+        read_f64(self.0 + tactic_stats::ATTACK_SCORE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_attack_score(self, v: f64) {
+        write_f64(self.0 + tactic_stats::ATTACK_SCORE, v)
+    }
+    /// `tactic_stats::DEFENSIVE_SCORE` (+0x20). Name: inferred.
+    #[inline(always)]
+    pub(crate) unsafe fn defensive_score(self) -> f64 {
+        read_f64(self.0 + tactic_stats::DEFENSIVE_SCORE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_defensive_score(self, v: f64) {
+        write_f64(self.0 + tactic_stats::DEFENSIVE_SCORE, v)
+    }
+}
+
+impl Addr for TacticStats {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for TacticStats {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         core::fmt::LowerHex::fmt(&self.0, f)
     }
