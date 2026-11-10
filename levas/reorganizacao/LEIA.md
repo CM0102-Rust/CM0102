@@ -28,6 +28,14 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 27 da legibilidade: as mensagens de depuração em inglês
+
+`textos_em_ingles.py --todos`: as mensagens de depuração fora dos comparadores (as auxiliares das competições:
+"returned", "stage", "without stage", "differences in") passam pela mesma tradução; só textos com um marcador `{}` e
+sem caminho ou nome de arquivo; palavras acentuadas são procuradas sem o acento. Mais 217 mensagens; os textos em
+português no código caíram de 777 para menos de 80 (quase todos nomes de variáveis de ambiente). Prova: 7cc445c2 ×2,
+detector igual, comparação 0.
+
 ## Leva 26 da legibilidade: o log da DLL em inglês
 
 As linhas do log que as ferramentas leem mudaram junto com os leitores, que aceitam as duas formas (logs e diários antigos

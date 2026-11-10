@@ -29,6 +29,13 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 27: the debug messages in English
+
+`textos_em_ingles.py --todos`: the debug messages outside the comparers (the competition helpers: "returned", "stage",
+"without stage", "differences in") go through the same translation; only texts with a `{}` placeholder and no path or
+file name; accented words are looked up without the accent. 217 more messages; the Portuguese texts in the code went
+from 777 to under 80 (mostly environment variable names). Proof: 7cc445c2 ×2, detector equal, comparison 0.
+
 ## Readability batch 26: the DLL's log in English
 
 The log lines the tools read changed together with their readers, which accept both forms (old logs and diaries stay
