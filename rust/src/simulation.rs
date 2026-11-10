@@ -619,7 +619,7 @@ pub unsafe fn install() {
         linha(&format!("simulacao: veneno {:08x}", crate::detours::POISON.load(Ordering::Relaxed)));
         crate::allocator::instalar();
         if crate::win::ambiente("CM_FERIAS") {
-            if let Some(t) = crate::detours::hook("ferias depois do -load (CM_FERIAS)", &PROLOGUE_RESTORE_HUMANS,
+            if let Some(t) = crate::detours::hook("holiday after -load (CM_FERIAS)", &PROLOGUE_RESTORE_HUMANS,
                                                      restore_humans_on_holiday as *const () as usize) {
                 RESTORE_ORIGINAL = t;
             }
@@ -628,17 +628,17 @@ pub unsafe fn install() {
             install_coverage();
         }
         if rastro().is_some() {
-            if let Some(t) = crate::detours::hook("qsort (rastro)", &PROLOGUE_QSORT, traced_qsort as *const () as usize) {
+            if let Some(t) = crate::detours::hook("qsort (trace)", &PROLOGUE_QSORT, traced_qsort as *const () as usize) {
                 QSORT_ORIGINAL = t;
             }
         }
-        crate::detours::hook("time (relogio fixo da simulacao)", &PROLOGUE_TIME, fixed_time as *const () as usize);
-        crate::detours::hook("clock (relogio da simulacao)", &PROLOGUE_CLOCK, fixed_clock as *const () as usize);
-        crate::detours::hook("disco livre (fixo na simulacao)", &PROLOGUE_DISK, fixed_disk as *const () as usize);
+        crate::detours::hook("time (fixed clock of the simulation)", &PROLOGUE_TIME, fixed_time as *const () as usize);
+        crate::detours::hook("clock (the simulation clock)", &PROLOGUE_CLOCK, fixed_clock as *const () as usize);
+        crate::detours::hook("free disk (fixed in the simulation)", &PROLOGUE_DISK, fixed_disk as *const () as usize);
         crate::iat_hooks::replace_import("KERNEL32.dll", "GetLogicalDriveStringsA", fixed_drives as *const () as usize);
-        crate::detours::hook("RAM total (fixa na simulacao)", &PROLOGUE_RAM_TOTAL, fixed_memory as *const () as usize);
-        crate::detours::hook("RAM livre (fixa na simulacao)", &PROLOGUE_RAM_FREE, fixed_memory as *const () as usize);
-        if let Some(t) = crate::detours::hook("rand (observado na simulacao)", &PROLOGUE_RAND, observed_rand as *const () as usize) {
+        crate::detours::hook("total RAM (fixed in the simulation)", &PROLOGUE_RAM_TOTAL, fixed_memory as *const () as usize);
+        crate::detours::hook("free RAM (fixed in the simulation)", &PROLOGUE_RAM_FREE, fixed_memory as *const () as usize);
+        if let Some(t) = crate::detours::hook("rand (watched in the simulation)", &PROLOGUE_RAND, observed_rand as *const () as usize) {
             RAND_ORIGINAL = t;
         }
         isolate_imports();

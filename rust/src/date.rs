@@ -578,7 +578,7 @@ pub unsafe fn install(comparing: bool) {
 /// na pilha particular como a versao Rust (ver `detours::isolar`).
 pub unsafe fn install_passthrough() {
     for (i, p) in PROLOGUES.iter().enumerate() {
-        detours::hook(&format!("data {} (original isolada)", i), p, detours::PASSTHROUGH);
+        detours::hook(&format!("date {} (original, isolated)", i), p, detours::PASSTHROUGH);
     }
 }
 

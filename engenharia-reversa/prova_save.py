@@ -306,11 +306,19 @@ LACO = '\n    ];\n    for i in 0..N {\n'  # o laco da instalacao dos desvios (a 
 
 
 def rotinas_da_leva(n):
-    """Os nomes do motor.rs ("motor_<nome>") do ROTINAS = [...] de levas/N/integrar.py, sem executa-lo."""
+    """The motor.rs names (the Rust function's, since 10/11/2026) of the ROTINAS = [...] of levas/N/integrar.py,
+    without running it; an old batch's Portuguese label ("motor_<nome>") goes through docs/NOMES_ROTULOS.csv.
+    [pt] Os nomes do motor.rs do ROTINAS de levas/N/integrar.py; o rótulo antigo passa pelo NOMES_ROTULOS.csv."""
+    mapa = {}
+    with open(os.path.join(mutacoes.RAIZ, 'docs', 'NOMES_ROTULOS.csv'), encoding='utf-8') as f:
+        for l in list(f)[1:]:
+            velho, novo = l.strip().split(',')
+            mapa[velho] = novo
     arv = ast.parse(open(os.path.join(mutacoes.RAIZ, 'levas', str(n), 'integrar.py'), encoding='utf-8').read())
     for no in arv.body:
         if isinstance(no, ast.Assign) and any(isinstance(t, ast.Name) and t.id == 'ROTINAS' for t in no.targets):
-            return ['motor_' + (r[0] if isinstance(r, (tuple, list)) else r) for r in ast.literal_eval(no.value)]
+            nomes = [r[0] if isinstance(r, (tuple, list)) else r for r in ast.literal_eval(no.value)]
+            return [mapa.get('motor_' + r, r) for r in nomes]
     falha('levas/%s/integrar.py sem ROTINAS = [...]' % n)
 
 

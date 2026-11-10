@@ -2,7 +2,7 @@ r"""A tabela das rotinas desviadas do motor.rs, num lugar só (etapa 4 da reorga
 rodada 9: PROLOGOS, a lista `rust`, a lista `comp` e os nomes eram quatro tabelas de 2.092 entradas alinhadas só pela
 posição). Agora cada rotina é uma linha da macro `routines!`:
 
-    Prologue { address: 0x6c38c0, bytes: &[..] } => side_lookup_a, compare_side_lookup_a, "motor_tabela_a";
+    Prologue { address: 0x6c38c0, bytes: &[..] } => side_lookup_a, compare_side_lookup_a;
 
 e a macro gera PROLOGOS, `rust_table()`, `compare_table()` e NAMES. Este módulo é também o leitor único da tabela
 para as ferramentas: `rotinas(texto_do_motor_rs)` devolve [(endereço, bytes, rotina, comparador, nome)].
@@ -15,7 +15,8 @@ import sys
 
 R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MOTOR = os.path.join(R, 'rust', 'src', 'motor.rs')
-ENTRADA = re.compile(r'Prologue \{ address: (0x[0-9a-f]+), bytes: &\[([^\]]*)\] \} => ([\w:]+), ([\w:]+), "([^"]*)";')
+# the label went on 10/11/2026: the name is the Rust function's (an old table still parses, with its label)
+ENTRADA = re.compile(r'Prologue \{ address: (0x[0-9a-f]+), bytes: &\[([^\]]*)\] \} => ([\w:]+), ([\w:]+)(?:, "([^"]*)")?;')
 
 
 def rotinas(s=None):
@@ -23,7 +24,7 @@ def rotinas(s=None):
     s = s if s is not None else open(MOTOR, encoding='utf-8').read()
     i = s.index('routines! {')
     fim = s.index('\n}\n', i)
-    return [(int(a, 16), [int(x, 16) for x in b.split(',') if x.strip()], r, c, n) for a, b, r, c, n in ENTRADA.findall(s[i:fim])]
+    return [(int(a, 16), [int(x, 16) for x in b.split(',') if x.strip()], r, c, n or r.split('::')[-1]) for a, b, r, c, n in ENTRADA.findall(s[i:fim])]
 
 
 def nomes_rust(s=None):

@@ -48,7 +48,7 @@ BASE = {base}
 m = re.search(r'\n\}}\nconst N: usize = (\d+);', s)
 assert m and int(m.group(1)) == BASE, ('o motor.rs mudou desde a materialização', m and m.group(1), BASE)
 # one line per routine in `routines! {{ .. }}` (rust/src/motor.rs; read by engenharia-reversa/tabela_motor.py)
-linhas = ''.join('\n    Prologue {{ address: %#x, bytes: &[%s] }} => %s, compare_%s, "motor_%s";' % (e, ', '.join('0x%02x' % b for b in bs), a, a, a)
+linhas = ''.join('\n    Prologue {{ address: %#x, bytes: &[%s] }} => %s, compare_%s;' % (e, ', '.join('0x%02x' % b for b in bs), a, a)
                  for a, e, bs in ROTINAS)
 s = s[:m.start()] + linhas + '\n}}\nconst N: usize = %d;' % (BASE + len(ROTINAS)) + s[m.end():]
 anc = 'compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, () -> u32);\n'

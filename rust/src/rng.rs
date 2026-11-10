@@ -264,7 +264,7 @@ pub unsafe fn install(mode: Mode) {
         Mode::Compare => compare as *const () as usize,
         Mode::Observe => observe as *const () as usize,
     };
-    if let Some(t) = detours::hook("aleatorio", &PROLOGUE, target) {
+    if let Some(t) = detours::hook("random", &PROLOGUE, target) {
         ORIGINAL = t;
         match mode {
             Mode::Compare => linha("aleatorio: modo comparacao (original x Rust)"),
