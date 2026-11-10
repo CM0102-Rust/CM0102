@@ -1784,11 +1784,11 @@ pub(crate) unsafe extern "thiscall" fn try_board_takeover(this: usize, club: usi
         };
         write_usize(presence + staff::NATION, new);
         // 0x539c60, 0x53a5b0, 0x53a1b0: push nation; call (add esp, 0xc after the three) -> cdecl(nation)
-        let x = (exe::database_pick_first_name_for_nation(club.chairman().nation().addr()) as u32);
+        let x = exe::database_pick_first_name_for_nation(club.chairman().nation().addr()) as u32;
         club.chairman().set_first_name((x) as usize);
-        let x = (exe::database_get_empty_common_name(club.chairman().nation().addr()) as u32);
+        let x = exe::database_get_empty_common_name(club.chairman().nation().addr()) as u32;
         club.chairman().set_common_name((x) as usize);
-        let x = (exe::database_pick_second_name_for_nation(club.chairman().nation().addr()) as u32);
+        let x = exe::database_pick_second_name_for_nation(club.chairman().nation().addr()) as u32;
         club.chairman().set_second_name((x) as usize);
         if !club.chairman().non_player().is_null() {
             for o in [0x1dusize, 0xf, 0x16, 0x20] {
@@ -2484,7 +2484,7 @@ pub(crate) unsafe fn transfer_budget(fin: Finance) -> u32 {
     if RARE_FINANCE_EVENT_DRY_RUN.load(Relaxed) {
         return 0;
     }
-    (exe::finance_get_transfer_budget(fin, 0, 0, 0, 1, 0) as u32)
+    exe::finance_get_transfer_budget(fin, 0, 0, 0, 1, 0) as u32 
 }
 
 /// Posts the end-of-crisis news (`exe::finance_post_receivers_appeased_news`, receivers appeased) for the club id.
@@ -3074,7 +3074,7 @@ pub(crate) unsafe extern "thiscall" fn adjust_max_wage(this: usize, percentage: 
 /// −2.500.000 − 1500·R: −2; abaixo de −250·R (R < 5000) ou de (3750 − R)·1000 (R ≥ 5000): −1; senão 0.
 pub(crate) unsafe extern "thiscall" fn get_wealth_band(this: usize) -> u8 {
     let this = Finance(this);
-    let id = (this.club_id() as u32);
+    let id = this.club_id() as u32;
     let club = club_at(id as isize);
     if exe::database_is_national_team(club) != 0 {
         return 0;

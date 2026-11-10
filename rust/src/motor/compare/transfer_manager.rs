@@ -1129,7 +1129,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pay_transfer_instalments(this: us
 pub(crate) unsafe extern "thiscall" fn compare_remove_offer(this: usize, offer: usize) {
     let this = TransferManagerFields(this);
     let offer = Offer(offer);
-    let slot = (offer.slot_index() as i32);
+    let slot = offer.slot_index() as i32;
     let on = (offer.negotiation_index() as i32) != -1;
     let (n8, n14, livre) = ((this.offer_count() as i32), this.negotiation_count(), this.lowest_free_slot());
     let q = this.person_flags().wrapping_add(offer.target_staff_id().wrapping_mul(8)) + 1;

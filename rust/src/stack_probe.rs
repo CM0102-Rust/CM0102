@@ -110,7 +110,7 @@ pub unsafe fn build_stub(tramp: usize, inside: bool) -> usize {
             v.extend([0x89, 0x0d]); v.extend(a(&raw mut TMP_ENTRY)); // mov [TMP_ENTRY], ecx
             v.push(0xbc); v.extend(stack.to_le_bytes());
             v.push(0x51);
-            v.push(0xb8); v.extend((show_chain as usize as u32).to_le_bytes());
+            v.push(0xb8); v.extend((show_chain as *const () as usize as u32).to_le_bytes());
             v.extend([0xff, 0xd0]); // call eax
             v.extend([0x8b, 0x25]); v.extend(a(&raw mut SAVED_ESP));
             v.extend([0x8b, 0x15]); v.extend(a(&raw mut TMP_EDX));

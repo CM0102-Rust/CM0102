@@ -220,7 +220,7 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_update_staff_records_for_
 pub(crate) unsafe extern "thiscall" fn compare_usa_mls_add_result(this: usize, game: usize, stats: u32) -> u32 {
     let game = Fixture(game);
     let this = League(this);
-    let mark = (game.stage_index() as i8);
+    let mark = game.stage_index() as i8;
     let block = this.comp_stats();
     let expected = if this.current_stage() == 1 { 1 } else if mark < 2 { -1 } else { mark };
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_USA_MLS_ADD_RESULT)(this.addr(), game.addr(), stats);

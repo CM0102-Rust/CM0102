@@ -227,7 +227,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_round(cup: usize, round: u32
         }
         a[0..2].copy_from_slice(&dia.to_le_bytes());
         a[2..4].copy_from_slice(&ano.to_le_bytes());
-        let mut plan = vec![(round_record_by_dword(cup, round), dia, a[2].wrapping_sub((cup.year() as u8)))];
+        let mut plan = vec![(round_record_by_dword(cup, round), dia, a[2].wrapping_sub(cup.year() as u8))];
         let mut k = round.wrapping_add(1);
         while (k as i16) < n {
             let rk = round_record_by_dword(cup, k as i16 as i32 as u32);
@@ -235,7 +235,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_round(cup: usize, round: u32
             let anob = (read_u8(rk + 2) as i8 as i16).wrapping_add(cup.year()) as u16;
             b[0..2].copy_from_slice(&read_i16(rk).to_le_bytes());
             b[2..4].copy_from_slice(&anob.to_le_bytes());
-            plan.push(if cup_date_is_after(&a, &b) { (rk, dia, a[2].wrapping_sub((cup.year() as u8))) } else { (rk, read_i16(rk), read_u8(rk + 2)) });
+            plan.push(if cup_date_is_after(&a, &b) { (rk, dia, a[2].wrapping_sub(cup.year() as u8)) } else { (rk, read_i16(rk), read_u8(rk + 2)) });
             k = k.wrapping_add(1);
         }
         let r = o(cup.addr(), round);

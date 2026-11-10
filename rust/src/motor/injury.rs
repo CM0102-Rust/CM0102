@@ -316,7 +316,7 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
 ///
 /// [pt] { 0x62ec00 } (ret 4, injury.cpp): o byte de gravidade do tipo de lesao `tipo` (tabela de 13 bytes
 /// por tipo em 0x9e7ad9).
-pub(crate) unsafe extern "thiscall" fn injury_severity(injuries: usize, kind: i8) -> u8 {
+pub(crate) unsafe extern "thiscall" fn injury_severity(_injuries: usize, kind: i8) -> u8 {
     read_u8(0x9e7ad9 + kind as isize as usize * 13)
 }
 
@@ -1023,8 +1023,8 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
     }
     // retirement by age and by a long return to training
     let volta = || read_i16(read_usize(this + injury_fields::INJURY_ENTRIES) + off + 0x2a) as i32;
-    let propensao = || (p.player().injury_proneness() as i32);
-    let years = || ((p.age() as i8) as i32);
+    let propensao = || p.player().injury_proneness() as i32;
+    let years = || (p.age() as i8) as i32;
     let encerra = (age > 0x24 && volta() > 0x78 - propensao() - years() && friendly_random(volta()) > 0x5a - years())
         || (age > 0x21 && volta() > 0x96 - propensao() - years() && friendly_random(volta()) > 0x5a - years())
         || (age > 0x1f && volta() > 0x12c - years() && friendly_random(volta()) > 0xc8 - years())
@@ -1613,7 +1613,7 @@ pub(crate) unsafe fn slot_rhythm_level(fixture: MatchRecord, slot: usize) -> i8 
     if b >= 0 {
         b
     } else {
-        (fixture.minute() as i8)
+        fixture.minute() as i8 
     }
 }
 
@@ -1717,7 +1717,7 @@ pub(crate) unsafe extern "thiscall" fn apply_match_effects(this: usize, game: us
 /// ao que era.
 pub(crate) unsafe fn has_injury_hit(this: usize, id: i32, person: Staff) -> bool {
     let list = Llist(read_i32(this + injury_fields::MATCH_HIT_LIST) as usize);
-    let cursor = (list.cursor() as u32);
+    let cursor = list.cursor() as u32;
     list.set_cursor(((list.head() as u32)) as usize);
     let mut found = false;
     let mut e = exe::llist_get_next(list);
@@ -2421,7 +2421,7 @@ pub(crate) unsafe fn plan_recurring_injury(this: usize, record: usize, injury: *
             let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add(i as usize * staff::SIZE));
             let v = friendly_random(0x65) as u8;
             let player = p.player();
-            let rating = if player.is_null() { 0x64 } else { v.wrapping_add(read_u8(r + physical_record::RECURRENCE_GRADE).wrapping_mul(0xfb)).wrapping_sub((player.injury_proneness() as u8)) };
+            let rating = if player.is_null() { 0x64 } else { v.wrapping_add(read_u8(r + physical_record::RECURRENCE_GRADE).wrapping_mul(0xfb)).wrapping_sub(player.injury_proneness() as u8) };
             if rating as i8 > melhor {
                 (melhor, escolhido, pessoa) = (rating as i8, r, p.addr());
             }
@@ -2934,7 +2934,7 @@ pub(crate) unsafe extern "thiscall" fn daily_wear(t: usize, id: i32) {
         core::ptr::write_unaligned(e, v.wrapping_sub(1));
     }
     let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)));
-    let age = (p.age() as i8);
+    let age = p.age() as i8;
     if age < 0x13 && core::ptr::read_unaligned(e) < 0 {
         core::ptr::write_unaligned(e, 0);
     } else if core::ptr::read_unaligned(e) >= -500 && age as i32 >= exe::utils_random(0x19) {

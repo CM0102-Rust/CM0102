@@ -14,7 +14,7 @@ pub(crate) unsafe extern "thiscall" fn compare_on_friendly_fixture_cancelled(thi
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ON_FRIENDLY_FIXTURE_CANCELLED);
     let mut slot = 0usize;
     if game.competition() == Competition(read_usize(this.addr() + 4)) && this.scheduled_slot_list() != 0 {
-        slot = exe::friendly_find_scheduled_friendly_slot(this, replace_low_word(game.home_club().addr(), (game.day() as i16)), replace_low_word(game.competition().addr(), (game.year() as i16)), (game.away_club().addr() as u32) as usize, (game.home_club().addr() as u32) as usize);
+        slot = exe::friendly_find_scheduled_friendly_slot(this, replace_low_word(game.home_club().addr(), game.day() as i16), replace_low_word(game.competition().addr(), game.year() as i16), (game.away_club().addr() as u32) as usize, (game.home_club().addr() as u32) as usize);
     }
     o(this.addr(), game.addr(), who);
     let free = slot == 0 || (read_usize(slot + scheduled_friendly_slot::OPPONENT) == 0 && read_u8(slot + scheduled_friendly_slot::STATUS) == 0);
@@ -710,7 +710,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_club_from_ai_plans(amistos
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REMOVE_CLUB_FROM_AI_PLANS);
     let mut regions = vec![];
     let array = amistosos.planned_friendlies();
-    let n = (amistosos.planned_count() as i32);
+    let n = amistosos.planned_count() as i32;
     if array != 0 && n > 0 {
         regions.push((array, n as usize * 0x14));
     }

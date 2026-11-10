@@ -290,7 +290,7 @@ pub(crate) unsafe extern "thiscall" fn send_scout_report_news(this: usize, r: us
     exe::new_newsitem(nt, 0x138e, 0);
     exe::newsitem_set_slot(nt, (0) as u32 as i8, n as i32 as u32);
     let mut idx: u8 = 1;
-    let mut pr = |idx: &mut u8, v: u32| {
+    let pr = |idx: &mut u8, v: u32| {
         exe::newsitem_set_slot(nt, (*idx as u32) as u32 as i8, v);
         *idx = idx.wrapping_add(1);
     };
@@ -658,7 +658,7 @@ pub(crate) unsafe fn update_friendlies_body(this: Friendly, dry_run: bool) -> Op
     let mut lixo = [0u8; 8];
     exe::date_operator_3d(d, (&mut lixo) as *mut [u8; 8] as usize, lim.as_ptr() as usize);
     let base = this.intl_date_table();
-    let n = (this.intl_date_count() as usize);
+    let n = this.intl_date_count() as usize;
     let p = exe::crt_bsearch(key.as_ptr() as usize, base, n as u32, 0x14, 0x5cc610);
     if p == 0 {
         return None;

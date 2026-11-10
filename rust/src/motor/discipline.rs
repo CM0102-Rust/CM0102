@@ -795,7 +795,7 @@ pub(crate) unsafe extern "thiscall" fn discipline_new_season(this: usize, id: *c
     if competition.is_null() {
         return;
     }
-    let k = (competition.discipline_rule() as i8);
+    let k = competition.discipline_rule() as i8;
     if k == -1 {
         return;
     }
@@ -866,7 +866,7 @@ pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: 
     if exe::rulingbody_is_player_banned(read_usize(tribunais), player, 1, extra, fixture) != 0 {
         return 1; // the general suspension
     }
-    let t = (c.discipline_rule() as i8);
+    let t = c.discipline_rule() as i8;
     if t == -1 {
         return 0;
     }
@@ -1007,7 +1007,7 @@ pub(crate) unsafe extern "thiscall" fn process_match(this: usize, fixture: usize
     let id = read_usize(fixture.addr()) as i32;
     if id > -1 {
         if let Some(b) = comp_tribunal(this, id) {
-            return (exe::rulingbody_process_match(b, fixture, result, 1, 1, 1) as u32);
+            return exe::rulingbody_process_match(b, fixture, result, 1, 1, 1) as u32;
         }
     }
     if exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), fixture.competition().addr()) == 0 && read_usize(fixture.addr()) != read_usize(KEY_CLUB_COMP_RESERVE) {

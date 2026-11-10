@@ -1065,7 +1065,7 @@ pub(crate) unsafe fn round_draw_date(cup: Cup, reg: usize, d: *mut [u8; 8]) {
 /// [pt] Grava a data `d` como a do sorteio da rodada: a palavra do dia e o byte do ano menos o byte baixo de +0x40.
 pub(crate) unsafe fn set_round_draw_date(cup: Cup, reg: usize, d: &[u8; 8]) {
     core::ptr::write_unaligned(reg as *mut [u8; 2], [d[0], d[1]]);
-    write_u8(reg + 2, d[2].wrapping_sub((cup.year() as u8)));
+    write_u8(reg + 2, d[2].wrapping_sub(cup.year() as u8));
 }
 
 /// True when date a is after date b (unsigned year, then signed day), as `draw_round` compares.
@@ -1463,7 +1463,7 @@ pub(crate) unsafe fn season_honours(cup: Cup) -> (usize, usize, usize, usize) {
     if has(o) != 0 {
         let (mut a, mut b) = (0i32, 0i32);
         // simplification: the year goes in a register with garbage in the high 16 bits; 0x5fa730 receives a short
-        let k = (exe::hostcountry_find_hosts(read_usize(G_HOST_COUNTRY), read_i32(read_usize(cup.addr() + 4)) as usize, cup.year() as u16 as u32, &mut a, &mut b, 0) as u8);
+        let k = exe::hostcountry_find_hosts(read_usize(G_HOST_COUNTRY), read_i32(read_usize(cup.addr() + 4)) as usize, cup.year() as u16 as u32, &mut a, &mut b, 0) as u8;
         let nation = |x: i32| read_usize(G_NATION_TABLE).wrapping_add((x as isize * 0x122) as usize);
         if k == 2 {
             let (na, nb) = (nation(a), nation(b));
@@ -1947,7 +1947,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_round(this: usize, round: u32) -> 
         crate::comparison::branch("cps_13 round postponed");
         let r = round_record_at(this, ri as isize);
         core::ptr::write_unaligned(r as *mut u16, day);
-        *((r + 2) as *mut u8) = (year as u8).wrapping_sub((this.year() as u8));
+        *((r + 2) as *mut u8) = (year as u8).wrapping_sub(this.year() as u8);
         let mut k = ri + 1;
         while (k as i16) < (this.round_count() as u16) as i16 {
             let r = round_record_at(this, k as i16 as isize);
@@ -1956,7 +1956,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_round(this: usize, round: u32) -> 
             if year > oano || (year == oano && day as i16 > odia as i16) {
                 let r = round_record_at(this, k as i16 as isize);
                 core::ptr::write_unaligned(r as *mut u16, day);
-                *((r + 2) as *mut u8) = (year as u8).wrapping_sub((this.year() as u8));
+                *((r + 2) as *mut u8) = (year as u8).wrapping_sub(this.year() as u8);
             }
             k += 1;
         }
@@ -2856,13 +2856,13 @@ pub(crate) unsafe extern "thiscall" fn find_tree_slot_for_fixture(cup: usize, ga
 pub(crate) unsafe extern "thiscall" fn cup_match_importance(cup: usize, fixture: usize, second: u8, margin: *mut u8) -> u8 {
     let cup = Cup(cup);
     let fixture = Fixture(fixture);
-    let mut al = (fixture.round_number() as u8).wrapping_sub((cup.round_count() as u8)).wrapping_add(cup.importance_bias());
+    let mut al = (fixture.round_number() as u8).wrapping_sub(cup.round_count() as u8).wrapping_add(cup.importance_bias());
     if (al as i8) < 1 {
         al = 1;
     }
-    let first_leg = (fixture.home_aggregate() as u8);
+    let first_leg = fixture.home_aggregate() as u8;
     if first_leg != 0xff {
-        let volta = (fixture.away_aggregate() as u8);
+        let volta = fixture.away_aggregate() as u8;
         *margin = if second == 0 { volta.wrapping_sub(first_leg) } else { first_leg.wrapping_sub(volta) }.wrapping_add(1);
         if (*margin as i8) < 1 {
             *margin = 0xff;

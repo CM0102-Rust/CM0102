@@ -2007,7 +2007,7 @@ pub(crate) unsafe extern "thiscall" fn find_manager_of_the_month(this: usize, in
             } else {
                 let r = ManagerRecord(exe::staff_records_get_manager_record(this, manager, 1));
                 if !r.is_null() {
-                    let points = (r.month_league_points() as i32);
+                    let points = r.month_league_points() as i32;
                     if points > best_points { // the best of the month
                         crate::comparison::branch("cpo_3 best of the month");
                         best_points = points;

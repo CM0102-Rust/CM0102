@@ -528,7 +528,7 @@ pub(crate) unsafe extern "thiscall" fn is_watching_fixture(this: usize, fixture:
 /// ([0xb64738]), nenhuma partida da lista do dia dela (data +0x28/+0x2a, fatia +0x3f; 0x5ae6a0) tem um clube dele: 1.
 /// Senão 0. Partida nula: a caixa "Error" (0x707) e 0. Pela limpeza das partidas assistidas (0x5fe8d0) e pela escolha
 /// da partida (0x5fe500).
-pub(crate) unsafe extern "thiscall" fn can_watch_fixture(this: usize, fixture: usize, human: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn can_watch_fixture(_this: usize, fixture: usize, human: usize) -> u32 {
     let fixture = Fixture(fixture);
     if fixture.is_null() {
         show_error_at(0x9cf11c, 0x707);

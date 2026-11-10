@@ -33,7 +33,7 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let this = League(this);
     if full == 0 {
-        return (exe::league_update_for_date(this, today, 0) as u32);
+        return exe::league_update_for_date(this, today, 0) as u32;
     }
     let day = this.next_draw_day() as u16;
     let year = (this.next_draw_year_offset() as u16).wrapping_add(this.year() as u16);
@@ -69,7 +69,7 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
         write_u16(this.addr() + 0xf2, 0);
         this.set_active(1);
     }
-    (exe::league_update_for_date(this, today, full) as u32)
+    exe::league_update_for_date(this, today, full) as u32 
 }
 
 // simplification: the draw, the predictions, the tables, the matches and the league day do not run twice. Original only; the plan
@@ -123,7 +123,7 @@ pub(crate) unsafe fn draw_african_nations_finalists(this: League) -> u32 {
     let mut ids = [-1i32; 2];
     let (a, b) = ids.split_at_mut(1);
     // simplification: the original pushes eax with the year in the low 16 bits and leftovers in the high ones; 0x5fa730 only reads the word
-    let how_many = (exe::hostcountry_find_hosts(read_usize(G_HOST_COUNTRY), read_usize(KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS), this.year() as u16 as u32, a.as_mut_ptr(), b.as_mut_ptr(), 1) as i8);
+    let how_many = exe::hostcountry_find_hosts(read_usize(G_HOST_COUNTRY), read_usize(KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS), this.year() as u16 as u32, a.as_mut_ptr(), b.as_mut_ptr(), 1) as i8;
     let mut n = 0usize;
     if how_many > 0 {
         for &id in ids.iter().take(how_many as usize) {
@@ -235,15 +235,15 @@ pub(crate) unsafe extern "thiscall" fn african_nations_create_group_stage(this: 
             this.competition().addr(),
             table,
             rodadas as u16 as u32,
-            (this.win_points() as u32),
-            (this.draw_points() as u32),
-            (this.match_category() as u32),
+            this.win_points() as u32 ,
+            this.draw_points() as u32 ,
+            this.match_category() as u32 ,
             this.addr() + league::TIEBREAKS,
             this.addr() + league::PROMOTED_COUNT,
             this.year() as u16 as u32,
             g as u32,
             id as u16 as u32,
-            (this.importance() as u32),
+            this.importance() as u32 ,
             4,
             0,
             this.league_flags() as u16 as u32,

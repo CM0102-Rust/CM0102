@@ -28,7 +28,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_b_create_schedule(this: usize, st
 /// +0xe6 = 0 e a virtual +0x94.
 pub(crate) unsafe extern "thiscall" fn ita_ser_b_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let this = League(this);
-    let r = (exe::league_update_for_date(this, today, full) as u32);
+    let r = exe::league_update_for_date(this, today, full) as u32;
     if this.complete() == 0 || this.stage_count() != 0 || full == 0 || this.tiebreak_matches() == 0 {
         return r;
     }

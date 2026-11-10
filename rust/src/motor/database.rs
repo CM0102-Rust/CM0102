@@ -81,7 +81,7 @@ pub(crate) unsafe fn match_wrap_up_with(m: Engine, call: &mut dyn FnMut(usize, u
     let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let list_global = || read_usize(G_MATCH_DAY_PLAYER_INCIDENT_LIST);
     // puts a copy of the block (0x19 bytes) in the events list (the content is checked on the tape)
-    let mut event = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, p: usize| {
+    let event = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, p: usize| {
         request_buffers(&[(p, 0x19)], &[]);
         call(FN_LLIST_ADD_TAIL, list_global(), [0, 0x19, 0, 0, 0]);
     };
@@ -767,7 +767,7 @@ pub(crate) unsafe fn clear_attr_vector(v: usize) {
 /// [pt] A idade da 0x535a80: byte do ano da data − byte do ano de nascimento (+0x12), menos 1 se o dia do ano de
 /// nascimento (+0x10) passa o da data.
 pub(crate) unsafe fn age_at_date(p: Staff, data: usize) -> i8 {
-    let a = read_u8(data + 2).wrapping_sub((p.date_of_birth_year() as u8));
+    let a = read_u8(data + 2).wrapping_sub(p.date_of_birth_year() as u8);
     let d = p.date_of_birth() as i32 - read_i16(data) as i32;
     (if d > 0 { a.wrapping_sub(1) } else { a }) as i8
 }
@@ -1629,7 +1629,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                     s16(100).wrapping_add(1)
                 });
             }
-            if !in_range((nj.potential_ability() as i16), 1, 200) {
+            if !in_range(nj.potential_ability() as i16 , 1, 200) {
                 let r = s16(200).wrapping_add(1);
                 let x = nj.current_ability();
                 ww(nj.addr() + non_player::POTENTIAL_ABILITY, if x > r { x } else { r });
@@ -1818,7 +1818,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                 wb(nj.addr() + non_player::BUSINESS, 1);
                 wb(nj.addr() + non_player::PHYSIOTHERAPY, 1);
             } else if job == 0xa && exe::utils_random(100) != 0 {
-                let a1e = (nj.physiotherapy() as i8);
+                let a1e = nj.physiotherapy() as i8;
                 wb(nj.addr() + non_player::BUSINESS, 1);
                 if a1e < 5 {
                     wb(nj.addr() + non_player::PHYSIOTHERAPY, (exe::utils_random(10) as u8).wrapping_add(4));
@@ -2846,7 +2846,7 @@ pub(crate) unsafe extern "C" fn write_player_description(person: i32, position: 
         return g;
     }
     let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add((person as usize).wrapping_mul(110)));
-    let age = ((p.age() as i8) as i32);
+    let age = (p.age() as i8) as i32;
     if q & 1 == 0 && age > person % 3 + 0x21 {
         return write(0x9b7d70, 4); // veteran
     }
@@ -2881,7 +2881,7 @@ pub(crate) unsafe fn favourite_colleague_score(person: Staff, club: Club, o: Sta
     if contract.is_null() {
         return None;
     }
-    let rep = (o.player().current_reputation() as i32);
+    let rep = o.player().current_reputation() as i32;
     if rep <= 0x109a || rep <= (club.reputation() as i32) - 0x2ee {
         return None;
     }
@@ -2891,7 +2891,7 @@ pub(crate) unsafe fn favourite_colleague_score(person: Staff, club: Club, o: Sta
     let l0 = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), o.player(), 6, 0x11, 6.5) as f32 as f64; // fstp dword
     let m1 = exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), o.player(), 6, 1, 6.5);
     let data = o.player();
-    let mut n = (data.current_reputation() as i32);
+    let mut n = data.current_reputation() as i32;
     if m1 > read_f32(rdata::F32_5) as f64 {
         let g = read_usize(G_PLAYER_STATS);
         let ratio = || {
@@ -2908,13 +2908,13 @@ pub(crate) unsafe fn favourite_colleague_score(person: Staff, club: Club, o: Sta
     if pref != 0 && (0..3).any(|j| read_usize(pref + preferences::STAFF_FAVOURITE_STAFF1 + 4 * j) == o.addr()) {
         n += 1250; // already favorite
     }
-    let c = (data.consistency() as i32);
+    let c = data.consistency() as i32;
     if c == 20 {
         n += 75;
     } else if c > 15 {
         n += 50;
     }
-    let a = (o.professionalism() as i32);
+    let a = o.professionalism() as i32;
     if a > 15 {
         n += 250;
     } else if a < 6 {
@@ -5398,7 +5398,7 @@ pub(crate) unsafe extern "C" fn database_get_club_assistant(club: usize) -> usiz
     if club.is_null() {
         return original_fn::<unsafe extern "C" fn(usize) -> usize>(IDX_DATABASE_GET_CLUB_ASSISTANT)(club.addr());
     }
-    let rd = |a: usize| read_usize(a);
+    let _rd = |a: usize| read_usize(a);
     let a = club.assistant_manager();
     if a != 0 {
         return a;
@@ -5848,7 +5848,7 @@ pub(crate) unsafe extern "C" fn database_generate_extra_non_playing_staff() -> u
     let gi = |a: usize| read_i32(a);
     let rd = |a: usize| read_usize(a);
     let rep = |c: Club| c.reputation() as i32;
-    let byte = |a: usize| read_u8(a);
+    let _byte = |a: usize| read_u8(a);
     if any_coach_missing_from_club() {
         database_error_box(0x62f);
     }
@@ -5962,7 +5962,7 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
     let wr = |a: usize, v: usize| write_usize(a, v);
     let rep = |c: Club| c.reputation();
     let rep_id = |id: i32| rep(Club(rd(G_CLUB_TABLE).wrapping_add((id as usize).wrapping_mul(581))));
-    let byte = |a: usize| read_u8(a);
+    let _byte = |a: usize| read_u8(a);
     let new = exe::crt_operator_new((gi(G_CLUB_COUNT) as u32).wrapping_mul(4));
     if new == 0 {
         return;
@@ -7047,7 +7047,7 @@ pub unsafe fn autoteste_dbj_2() {
 /// a local `eh_a` só é lida quando 0x540a50 devolve parceiro (e então ela foi gravada).
 pub(crate) unsafe extern "C" fn database_trim_senior_and_b_team_squads() {
     let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
-    let rd = |a: usize| read_usize(a);
+    let _rd = |a: usize| read_usize(a);
     let goalkeeper = |q: Staff| {
         let j = PlayerSheet(q.player().addr());
         !j.is_null() && j.goalkeeper() >= 0xf
@@ -7555,7 +7555,7 @@ pub(crate) unsafe extern "C" fn database_get_comp_colours(competition: usize, fr
     let owner = competition.nation();
     let (a, b) = if !owner.is_null() { (owner.foreground_colour1(), owner.background_colour1()) } else { (competition.foreground_colour(), competition.background_colour()) };
     let pixel = |c: usize| {
-        exe::graphics_rgb_to_pixel((read_u8(c + 0x37) as u32), (read_u8(c + 0x38) as u32), (read_u8(c + 0x39) as u32), (0) as u32) as u16
+        exe::graphics_rgb_to_pixel(read_u8(c + 0x37) as u32 , read_u8(c + 0x38) as u32 , read_u8(c + 0x39) as u32 , (0) as u32) as u16
     };
     if a != 0 {
         core::ptr::write_unaligned(front, pixel(a));
@@ -7916,7 +7916,7 @@ pub(crate) unsafe extern "C" fn club_can_be_managed(club: usize) -> u8 {
 /// [pt] { 0x53a980 } (cdecl, Database.cpp): o inverso de 0x53a8b0: o byte de baixo de cada uma das 21
 /// células de 3 bytes do `vetor` volta ao `nao_jogador` na ordem `NON_PLAYER_ATTRIBUTE_ORDER`. A pessoa não
 /// é usada. eax na saída: o vetor com o último byte copiado no byte de baixo (os chamadores não usam).
-pub(crate) unsafe extern "C" fn database_vector_to_non_player(not_player: usize, person: usize, array: usize) -> u32 {
+pub(crate) unsafe extern "C" fn database_vector_to_non_player(not_player: usize, _person: usize, array: usize) -> u32 {
     let mut last = 0u8;
     for (k, &d) in NON_PLAYER_ATTRIBUTE_ORDER.iter().enumerate() {
         last = read_u8(array + 3 * k);
@@ -8152,10 +8152,10 @@ pub(crate) unsafe extern "C" fn staff_compute_non_player_attribute(person: usize
         ftol(if !(y > 1.0) { 1.0 } else if !(y < 20.0) { 20.0 } else { y }) as u8
     };
     match a {
-        1 => (person.adaptability() as u8),
+        1 => person.adaptability() as u8 ,
         2 => formula(0x11),
         3 => formula(0x10),
-        4 => (person.determination() as u8),
+        4 => person.determination() as u8 ,
         5 => formula(0x17),
         6 => formula(0x18),
         7 => not_player.discipline(),
@@ -8163,7 +8163,7 @@ pub(crate) unsafe extern "C" fn staff_compute_non_player_attribute(person: usize
         9 => formula(0x1b),
         10 => formula(0x1e),
         11 => formula(0x21),
-        _ => (not_player.youngsters() as u8),
+        _ => not_player.youngsters() as u8 ,
     }
 }
 
@@ -8482,7 +8482,7 @@ pub(crate) unsafe extern "C" fn database_get_club_kit_colours(club: usize, kit: 
         _ => return 1,
     };
     let pixel = |c: usize| {
-        exe::graphics_rgb_to_pixel((read_u8(c + 0x37) as u32), (read_u8(c + 0x38) as u32), (read_u8(c + 0x39) as u32), (0) as u32) as u16
+        exe::graphics_rgb_to_pixel(read_u8(c + 0x37) as u32 , read_u8(c + 0x38) as u32 , read_u8(c + 0x39) as u32 , (0) as u32) as u16
     };
     if a != 0 {
         core::ptr::write_unaligned(front, pixel(a));
@@ -8625,7 +8625,7 @@ pub(crate) const NON_PLAYER_ATTRIBUTE_ORDER: [usize; 21] = [
 /// baixo das 21 células de 3 bytes do `vetor` (o 3º byte de cada uma fica como está) e grava 13 (o
 /// corte) em `fim` se não nulo. A pessoa não é usada. eax na saída: os 16 bits altos do ponteiro do não
 /// jogador e o último atributo estendido (os chamadores não usam).
-pub(crate) unsafe extern "C" fn database_non_player_to_attribute_vector(not_player: usize, person: usize, array: usize, end: *mut u8) -> u32 {
+pub(crate) unsafe extern "C" fn database_non_player_to_attribute_vector(not_player: usize, _person: usize, array: usize, end: *mut u8) -> u32 {
     let mut last = 0u16;
     for (k, &d) in NON_PLAYER_ATTRIBUTE_ORDER.iter().enumerate() {
         if k == 13 && !end.is_null() {
@@ -9256,7 +9256,7 @@ pub(crate) unsafe extern "C" fn staff_compute_player_attribute(person: usize, pl
         7 => if goalkeeper == 20 { rating_h(0x43) } else { rating(0x43) },
         8 => if goalkeeper == 20 { rating_h(0x23) } else { rating(0x23) },
         9 => rating(0x24),
-        10 => (person.determination() as u8),
+        10 => person.determination() as u8 ,
         11 => if goalkeeper == 20 { rating_h(0x26) } else { rating(0x26) },
         12 => if goalkeeper == 20 { exe::player_attribute_rating_with_scaled_ability(player, byte(0x27) as u32) } else { exe::player_attribute_rating(player, byte(0x27) as u32) },
         13 => byte(0x28),

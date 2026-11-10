@@ -518,7 +518,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
 /// find_club_entry 0x4a4850: thiscall(+8, clube), ret 4) grava a posição atual (+0x73), a melhor possível (+0x74;
 /// 17 e 18 viram 16) e a pior (+0x75; 17 e 18 viram 19): a faixa de 17 a 18 da Primera não conta como faixa própria
 /// [inferência: as posições de 17 a 18 juntam-se à vizinha de cima na melhor e à de baixo na pior].
-pub(crate) unsafe extern "thiscall" fn spa_first_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) {
+pub(crate) unsafe extern "thiscall" fn spa_first_set_club_progress(this: usize, club: usize, _stage: u32, current: u32, best: u32, worst: u32) {
     let e = exe::comp_stats_find_club_entry(read_usize(this + 8), club);
     let m = match best as u8 {
         0x11 | 0x12 => 0x10,

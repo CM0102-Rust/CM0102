@@ -31,7 +31,7 @@ pub(crate) unsafe extern "thiscall" fn club_in_competition(this: usize, club: us
             return 0;
         }
     }
-    let n = (this.current_stage() as i32);
+    let n = this.current_stage() as i32;
     let (mut grupo, mut outra) = (0usize, 0usize);
     let mut i = -1i32;
     while i <= n {
@@ -123,7 +123,7 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: 
     exe::newsitem_set_slot(p, (3) as u32 as i8, position as u8 as i8 as i32 as u32);
     exe::newsitem_set_slot(p, (4) as u32 as i8, round as u16 as i16 as i32 as u32);
     exe::newsitem_set_slot(p, (7) as u32 as i8, kind as u8 as i8 as i32 as u32);
-    let b = |a: usize| read_i8(a);
+    let _b = |a: usize| read_i8(a);
     let won = if !fixture.is_null() {
         if fixture.home_club() == club {
             exe::newsitem_set_slot(p, (5) as u32 as i8, read_usize(fixture.away_club().addr()) as u32);
@@ -749,7 +749,7 @@ pub(crate) unsafe extern "thiscall" fn are_round_fixtures_known(this: usize, sta
 /// [pt] { 0x48e360 } (thiscall, ret 8, comp.cpp): `Comp::counts_for_fixture_clash(jogo, outro)` (a virtual +0x60 das
 /// competições, do conflito de datas 0x5adba0): 1 se o algarismo das unidades (0x4b0850) da rodada (+0x30, com sinal)
 /// é 0 (rodada de 1000 em diante também dá 0), senão 0. `outro` não é lido.
-pub(crate) unsafe extern "thiscall" fn counts_for_fixture_clash(_this: usize, game: usize, other: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn counts_for_fixture_clash(_this: usize, game: usize, _other: usize) -> u32 {
     (exe::comp_util_get_round_variant(read_i16(game + 0x30) as i32) == 0) as u32
 }
 

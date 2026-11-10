@@ -25,7 +25,7 @@ pub(crate) unsafe extern "C" fn competition_counts(id: i32) -> u32 {
         return 0;
     }
     let first = Club(read_usize(r));
-    let target = (c.competition().addr() as i32);
+    let target = c.competition().addr() as i32;
     ((first.division().addr() as i32) == target || (first.reserve_division().addr() as i32) == target) as u32
 }
 
@@ -283,7 +283,7 @@ pub(crate) unsafe fn set_final_positions_by_round(this: Cup, v: *const u32, writ
 pub(crate) unsafe extern "C" fn comp_util_get_fixture_venue_side(club: usize, game: usize) -> u8 {
     let game = Fixture(game);
     let club = Club(club);
-    let field = (game.stadium() as u32);
+    let field = game.stadium() as u32;
     let home = read_ptr(game.addr() + fixture::HOME_CLUB);
     if field == 0 {
         if read_u32(home + club::STADIUM) == 0 {
@@ -305,7 +305,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_fixture_venue_side(club: usize, ga
     }
     let home = read_ptr(game.addr() + fixture::HOME_CLUB);
     let other = if home == club.addr() { read_ptr(game.addr() + fixture::AWAY_CLUB) } else { home };
-    let field = (game.stadium() as u32);
+    let field = game.stadium() as u32;
     if field != (club.stadium().addr() as u32) {
         return if field != read_u32(other + club::STADIUM) { 3 } else { 2 };
     }

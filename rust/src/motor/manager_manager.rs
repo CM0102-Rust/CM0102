@@ -83,7 +83,7 @@ pub(crate) unsafe fn lineup_rating(game: MatchRecord, e: usize, k: i32, rating: 
             return v;
         }
         let v = read_i8(e + swap);
-        if v > -1 { v } else { (game.minute() as i8) }
+        if v > -1 { v } else { game.minute() as i8  }
     };
     if k < 11 {
         return Some(choose());
@@ -190,7 +190,7 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
                     v
                 } else {
                     let v = read_i8(e - 4);
-                    if v > -1 { v } else { (game.minute() as i8) }
+                    if v > -1 { v } else { game.minute() as i8  }
                 }
             } else {
                 let dl = read_i8(e - 2);
@@ -203,7 +203,7 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
                     v.wrapping_sub(dl)
                 } else {
                     let v = read_i8(e - 4);
-                    (if v > -1 { v } else { (game.minute() as i8) }).wrapping_sub(dl)
+                    (if v > -1 { v } else { game.minute() as i8  }).wrapping_sub(dl)
                 }
             };
             if al == 0 {
@@ -847,7 +847,7 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
     }
     let lg = exe::comp_stats_find_club_entry(read_usize(club_division_comp(club) + 8), club);
     let mut cup: usize = 0;
-    let id = (club.continental_comp_id() as i32);
+    let id = club.continental_comp_id() as i32;
     if id > -1 && id != read_i32(KEY_CLUB_COMP_INTER_TOTO_CUP) {
         let cid = read_i32(read_usize(G_CLUB_COMP_TABLE).wrapping_add((id as usize).wrapping_mul(0x6b)));
         let co = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((cid as usize).wrapping_mul(4)));
@@ -3897,7 +3897,7 @@ pub(crate) unsafe extern "thiscall" fn get_departure_reason(this: usize, id: u32
     }
     let manager = Staff((club.manager().addr() as u32) as usize);
     if !manager.is_null() {
-        let d = exe::date_days_since(G_CURRENT_DATE, (manager.date_joined_club() as u32), (manager.date_joined_club_leap_year() as u32));
+        let d = exe::date_days_since(G_CURRENT_DATE, manager.date_joined_club() as u32 , manager.date_joined_club_leap_year() as u32);
         if d > random(0x7d0) + 0x3e8 {
             return 6;
         }
@@ -3965,7 +3965,7 @@ pub(crate) unsafe fn board_row_at(this: usize, id: usize) -> usize {
 /// com o clube do jogador (+0x39) quando ele tem; senão o `clube`, com o último argumento 1 se o `clube` é de humano
 /// (0x600a50).
 pub(crate) unsafe fn player_value_for_club(person: Staff, club: Club) -> i32 {
-    let h = (exe::human_manager_is_human_club(club, 0, 1, 0, 0) as i32);
+    let h = exe::human_manager_is_human_club(club, 0, 1, 0, 0) as i32;
     let current = person.club_job();
     let (alvo, ultimo) = if h != 0 {
         (if !current.is_null() { current } else { club }, 1)
@@ -4514,7 +4514,7 @@ pub(crate) unsafe fn detach_staff_from_club(person: usize, s: Staff, club: usize
 pub(crate) unsafe extern "thiscall" fn remove_staff_from_club(_this: usize, person: usize, club: usize) -> usize {
     exe::contract_manager_remove_contract(read_usize(G_CONTRACT_MANAGER), person);
     detach_staff_from_club(person, Staff(person), club, Club(club));
-    let mut r = (exe::shortlist_manager_update_staff_status(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), person, club, 4, 2) as usize);
+    let mut r = exe::shortlist_manager_update_staff_status(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), person, club, 4, 2) as usize;
     if read_i32(person) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10) {
         (exe::scout_manager_sync_scout_lists(read_usize(G_SCOUT_MANAGER), person) as usize);
         r = exe::training_manager_reassign_squad_schedules(read_usize(G_TRAINING_MANAGER), person, club, 0);
@@ -4756,7 +4756,7 @@ pub(crate) unsafe fn comp_tribunal(this: usize, id: i32) -> Option<usize> {
     if comp.is_null() {
         return None;
     }
-    let t = (comp.discipline_rule() as i8);
+    let t = comp.discipline_rule() as i8;
     if t == -1 {
         return None;
     }
@@ -4811,7 +4811,7 @@ pub(crate) unsafe fn is_offer_eligible(o: Offer, club: u32) -> bool {
 /// devolvida no fim)? Lista que acaba antes da quantidade: a original (caixa de erro). Devolve só `al`.
 pub(crate) unsafe extern "thiscall" fn person_in_list(t: usize, p: *const i32) -> u8 {
     let list = Llist(read_usize(t + 8));
-    let stored = (list.cursor() as u32);
+    let stored = list.cursor() as u32;
     list.set_cursor(((list.head() as u32)) as usize);
     let mut i = 0i32;
     while i < read_i16(list.addr()) as i32 {
@@ -4887,7 +4887,7 @@ pub(crate) unsafe extern "thiscall" fn is_staff_suitable_for_job(_this: usize, p
             return 0;
         }
     }
-    let team = |p: Staff| exe::date_days_since(G_CURRENT_DATE, (p.date_joined_club() as u32), (p.date_joined_club_leap_year() as u32));
+    let team = |p: Staff| exe::date_days_since(G_CURRENT_DATE, p.date_joined_club() as u32 , p.date_joined_club_leap_year() as u32);
     let limit = |p: Staff| (read_u8_volatile(p.addr() + staff::LOYALTY) as i8 as i32 + 0x15) * 10;
     if read_u8_volatile(person.addr() + staff::JOB_FOR_CLUB) == 0xb {
         let player = PlayerSheet((person.player().addr() as u32) as usize);
@@ -5132,7 +5132,7 @@ pub(crate) unsafe extern "thiscall" fn post_job_rumour_news(_this: usize, person
     exe::newsitem_set_slot(n, 7, s as u32);
     let mut clubs = [0usize; 30];
     let manager = read_usize(G_TRANSFER_MANAGER);
-    let q = if manager != 0 { (exe::transfer_manager_collect_player_news_recipients(manager, person, 0x52, clubs.as_mut_ptr(), 0x1e) as i8) } else { 0 };
+    let q = if manager != 0 { exe::transfer_manager_collect_player_news_recipients(manager, person, 0x52, clubs.as_mut_ptr(), 0x1e) as i8  } else { 0 };
     for &c in clubs.iter().take(if q > 0 { q as usize } else { 0 }) {
         exe::news_send_to_club_manager(read_usize(G_NEWS), n, c);
     }

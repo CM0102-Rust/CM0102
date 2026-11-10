@@ -341,7 +341,7 @@ pub(crate) unsafe extern "thiscall" fn collect_european_clubs(this: usize, out: 
                     let row = Competition(read_u32(c + club::LAST_DIVISION) as usize);
                     if !row.is_null() {
                         crate::comparison::branch("cqi_2 division level");
-                        write_u16(r + 9, (row.reputation() as u16)); // cqi2: the division level
+                        write_u16(r + 9, row.reputation() as u16); // cqi2: the division level
                         write_u8(r + 0xb, read_u8(c + club::LAST_POSITION));
                         let comp = Nation(read_u32(read_u32(c + club::LAST_DIVISION) as usize + 0x5d) as usize);
                         if comp.is_null() || comp.league_selected() == 0 {
@@ -885,7 +885,7 @@ pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
         exe::uefaseeding_roll_coefficients(this);
         exe::uefaseeding_set_place_counts(this);
         let mut t = 0usize;
-        let n = (exe::uefaseeding_collect_european_clubs(this, &mut t) as u32);
+        let n = exe::uefaseeding_collect_european_clubs(this, &mut t) as u32;
         if n as u16 == 0 {
             show_error_at(0xaa1a1c, 0x2b7);
         } else {

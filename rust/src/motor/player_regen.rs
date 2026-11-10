@@ -981,7 +981,7 @@ pub(crate) unsafe fn process_due_retirement(this: usize, item: usize, p: usize, 
         let clear: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_CLEAR_MANAGER_RECORD);
         clear(read_usize(G_STAFF_RECORDS), nj);
         let c = read_usize(p + staff::CLUB_JOB);
-        let job = |p: Staff| (p.job_for_club() as i8);
+        let job = |p: Staff| p.job_for_club() as i8;
         let exit = if c == 0 || job(Staff(p)) == 5 {
             true
         } else {
@@ -1117,7 +1117,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize
     if p.is_null() {
         return;
     }
-    if !p.player().is_null() && matches!((p.job_for_club() as i8), 8 | 5) {
+    if !p.player().is_null() && matches!(p.job_for_club() as i8 , 8 | 5) {
         return;
     }
     let club = p.club_job();
@@ -1141,7 +1141,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize
     let c = p.club_job();
     exe::newsitem_set_slot(nw, 6, if !c.is_null() { read_usize(c.addr()) as u32 } else { u32::MAX });
     exe::newsitem_set_slot(nw, 7, if p.int_apps() != 0 { read_usize(p.nation().addr()) as u32 } else { u32::MAX });
-    let job = match (p.job_for_club() as i8) {
+    let job = match p.job_for_club() as i8  {
         0xf => 8,
         0xd => 6,
         v => v,
@@ -1368,7 +1368,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_sign_for_club(person: usize, 
         (exe::utils_random(0x1c), month, a)
     };
     let day = (day_and_year.0 as u8).wrapping_add(1) as i8 as i16 as u16 as u32;
-    let p = (exe::date_date_549f70((d.as_mut_ptr()) as *mut [u16; 4], day, day_and_year.1, day_and_year.2, 0xffff_ffff) as *mut u8);
+    let p = exe::date_date_549f70((d.as_mut_ptr()) as *mut [u16; 4], day, day_and_year.1, day_and_year.2, 0xffff_ffff) as *mut u8;
     (exe::date_operator_3d(person.addr() + staff::DATE_EXPIRES_CLUB, (ret.as_mut_ptr()) as usize, (p) as usize) as *mut u8);
     exe::contract_manager_add_staff_contract(manager, person, (person.value() as i32) as u32);
     if exe::human_manager_is_human_club(club, 1, 1, 0, 0) != 0 {
@@ -1427,7 +1427,7 @@ pub(crate) unsafe extern "thiscall" fn schedule_injury_retirement(this: usize, p
     core::ptr::write_unaligned(rp.add(4) as *mut i32, if club == 0 { -1 } else { read_i32(club) });
     let q = exe::utils_random(days as i32 / 2);
     let (mut t, mut t2) = ([0u8; 8], [0u8; 8]);
-    let d = (exe::date_add_days(G_CURRENT_DATE, (t.as_mut_ptr()) as usize, q.wrapping_add(1) as u32) as *mut u8);
+    let d = exe::date_add_days(G_CURRENT_DATE, (t.as_mut_ptr()) as usize, q.wrapping_add(1) as u32) as *mut u8;
     (exe::date_operator_3d((rp.add(8)) as usize, (t2.as_mut_ptr()) as usize, (d) as usize) as *mut u8);
     (exe::date_operator_3d((rp.add(0x10)) as usize, (t2.as_mut_ptr()) as usize, (rp.add(8)) as usize) as *mut u8);
     r[0x18] = 8;
@@ -1567,9 +1567,9 @@ pub(crate) unsafe fn contract_status(c2: usize) -> i8 {
 /// o byte baixo do ponteiro da saída, que ela lê da vaga errada da pilha): 1, 2 e 4: 70 + sorteio(10); 8 e 9:
 /// 60 + sorteio(5); os outros: 61 + sorteio(5) com clube (+0x39) ou seleção (+0x24), senão 55 + sorteio(10). Byte.
 pub(crate) unsafe fn non_player_age_limit(person: Staff, out: usize) -> i8 {
-    let mut t = (person.job_for_club() as i8);
+    let mut t = person.job_for_club() as i8;
     if t == 0 {
-        t = (person.job_for_nation() as i8);
+        t = person.job_for_nation() as i8;
         if t == 0 {
             t = out as u8 as i8; // simplification: the original reads the low byte of the `saida` argument here
         }
@@ -1667,7 +1667,7 @@ pub(crate) unsafe fn set_dates_no_key_nation(out: usize) {
 pub(crate) unsafe fn set_retirement_dates(person: Staff, out: usize, away: unsafe fn(usize)) {
     let club = person.club_job();
     let k = if !club.is_null() {
-        (exe::key_nation_index_of_club(club) as i8)
+        exe::key_nation_index_of_club(club) as i8 
     } else {
         let nation = person.nation();
         if nation.is_null() {
@@ -1736,7 +1736,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_initial_retirement(_th
     }
     let c2 = contract_with_current_club(person);
     let status = contract_status(c2);
-    let age = (person.age() as i8);
+    let age = person.age() as i8;
     let j = person.player();
     let reason: u8 = 'm: {
         if j.is_null() {
@@ -1833,7 +1833,7 @@ pub(crate) unsafe extern "thiscall" fn player_regen_check_retirement(_this: usiz
     let person = Staff(person);
     let c2 = Contract(contract_with_current_club(person));
     let status = contract_status(c2.addr());
-    let age = (person.age() as i8);
+    let age = person.age() as i8;
     let j = person.player();
     let reason: u8 = 'm: {
         if j.is_null() {
@@ -2142,12 +2142,12 @@ pub(crate) unsafe extern "stdcall" fn player_regen_retire_from_non_playing_staff
     let person = Staff(person);
     let c = person.club_job();
     if !c.is_null() {
-        leave_job_slot(person, c, (person.job_for_club() as i8), 0x39);
+        leave_job_slot(person, c, person.job_for_club() as i8 , 0x39);
         zero_dword(person.addr() + staff::CLUB_JOB);
     }
     let s = person.national_job();
     if !s.is_null() {
-        leave_job_slot(person, s, (person.job_for_nation() as i8), 0x24);
+        leave_job_slot(person, s, person.job_for_nation() as i8 , 0x24);
         zero_dword(person.addr() + staff::NATIONAL_JOB);
     }
     person.set_job_for_club(0);
@@ -2214,14 +2214,14 @@ pub(crate) unsafe extern "stdcall" fn player_regen_score_non_player_candidate(pe
     if read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(79)) + 0xb) & 0x30 != 0 {
         return -10000;
     }
-    let age = ((person.age() as i8) as i32);
+    let age = (person.age() as i8) as i32;
     if age < 31 {
         return -10000;
     }
     let mut rating = random((age - 31) * 150); // a idade
     let club = person.club_job();
     if !club.is_null() {
-        let injury_word_0c = (club.reputation() as i32);
+        let injury_word_0c = club.reputation() as i32;
         let player = person.player();
         if injury_word_0c != 0 && !player.is_null() {
             rating = rating.wrapping_add(((player.current_reputation() as i32) / injury_word_0c).wrapping_mul(250));

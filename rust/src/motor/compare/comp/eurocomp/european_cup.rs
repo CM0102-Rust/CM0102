@@ -139,9 +139,9 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_update_staff_records
     } else {
         false
     };
-    let before = if !club.is_null() { (club.continental_comp_id() as i32) } else { 0 };
+    let before = if !club.is_null() { club.continental_comp_id() as i32  } else { 0 };
     let r = o(this, club.addr(), outcome, stage, a, game, end);
-    let after = if !club.is_null() { (club.continental_comp_id() as i32) } else { 0 };
+    let after = if !club.is_null() { club.continental_comp_id() as i32  } else { 0 };
     let same = r == 0 && (club.is_null() || after == if sai { -1 } else { before });
     SCOREBOARD.record(same, || format!("european_cup_update_staff_records_for_status({:#x}, {:#x}, {}, {}) original={} +0x1db {} -> {} sai={}", this, club.addr(), d, f, r, before, after, sai));
     r
@@ -298,7 +298,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_fixture(this: usize, game
     }
     let check = [(ca, 2), (cb, 2)];
     let before = crate::comparison::MemorySnapshot::read(&[(ca, 2), (cb, 2), (fa, 0x167), (fb, 0x167)]);
-    let stage = (this.current_stage() as i32);
+    let stage = this.current_stage() as i32;
     EUROPEAN_CUP_FIXTURE_DRY_RUN.store(true, Relaxed);
     crate::rng::pause_trace(|| crate::rng::without_counting(|| process_fixture(this.addr(), game.addr(), arg)));
     EUROPEAN_CUP_FIXTURE_DRY_RUN.store(false, Relaxed);

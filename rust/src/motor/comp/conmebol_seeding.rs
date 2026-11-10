@@ -222,7 +222,7 @@ pub(crate) unsafe extern "stdcall" fn collect_conmebol_clubs(out: *mut usize) ->
                     let division = Competition(read_u32(c + club::LAST_DIVISION) as usize);
                     if !division.is_null() {
                         crate::comparison::branch("cqj_2 division level");
-                        write_u16(r + 9, (division.reputation() as u16)); // cqj2: the division level
+                        write_u16(r + 9, division.reputation() as u16); // cqj2: the division level
                         write_u8(r + 0xb, read_u8(c + club::LAST_POSITION));
                         let comp = Nation(read_u32(read_u32(c + club::LAST_DIVISION) as usize + 0x5d) as usize);
                         if comp.is_null() || comp.league_selected() == 0 {
@@ -278,7 +278,7 @@ pub(crate) unsafe extern "thiscall" fn update_for_new_season(this: usize, skip: 
     crate::comparison::branch("cqj_2 year rollover");
     write_u16(this + 0x6f, year);
     let mut t = 0usize;
-    let n = (exe::collect_conmebol_clubs(&mut t) as u32);
+    let n = exe::collect_conmebol_clubs(&mut t) as u32;
     if n as u16 == 0 {
         show_error_at(0x9a7ed8, 0x9b);
         return;

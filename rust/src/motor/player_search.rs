@@ -558,7 +558,7 @@ pub(crate) unsafe extern "thiscall" fn player_search_find_or_claim_player_slot(t
 /// No mínimo 500. A base vai em `*base` (se não nulo). As contas de ponto flutuante em f64 (o x87 do jogo em 53 bits).
 pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize, base: *mut i32, forced: *const i16) -> i32 {
     let club = Club(club);
-    let li = (club.continental_comp_id() as i32);
+    let li = club.continental_comp_id() as i32;
     let league = Competition(if li > -1 { (read_i32(G_CLUB_COMP_TABLE) as usize).wrapping_add((li as usize).wrapping_mul(0x6b)) } else { 0 });
     let nation = (club.division().addr() as i32) as usize;
     let mut esi: i32;
@@ -607,7 +607,7 @@ pub(crate) unsafe extern "C" fn player_search_get_club_target_rating(club: usize
         ftol(esi as f64 * read_f64(rdata::F64_1_6) + read_f64(rdata::F64_5000))
     };
     if forced.is_null() {
-        let squad = (exe::database_count_club_squad(club, 0, 0) as i8);
+        let squad = exe::database_count_club_squad(club, 0, 0) as i8;
         let with_nation = |c: usize| c != 0 && read_i32((read_i32(G_COMP_OBJECT_TABLE) as usize).wrapping_add(read_i32(c) as usize * 4)) != 0;
         if squad < 16 && with_nation(nation) {
             edi /= 2;

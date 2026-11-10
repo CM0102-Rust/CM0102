@@ -4240,7 +4240,7 @@ pub unsafe fn autoteste(casos: u64) {
             // batch 6: distances and the two blocks of 20 players in the engine
             let e = s.next_u64();
             for k in 0..40usize {
-                let p = Engine(m).player(((k / 20)) as i8, (k % 20)).addr();
+                let p = Engine(m).player(((k / 20)) as i8, k % 20).addr();
                 let z = e.rotate_left(k as u32 * 3);
                 *((p + 0x19) as *mut i8) = (z % 13) as i8 - 2;
                 *((p + 0x27) as *mut i8) = (k / 20) as i8;
@@ -4325,7 +4325,7 @@ pub unsafe fn autoteste(casos: u64) {
             // batch 9: defensive lines over the two blocks of 20 (already filled above), varied y
             let y2 = s.next_u64();
             for k in 0..40usize {
-                let p = Engine(m).player(((k / 20)) as i8, (k % 20)).addr();
+                let p = Engine(m).player(((k / 20)) as i8, k % 20).addr();
                 *((p + 0x103) as *mut i8) = (y2.rotate_left(k as u32 * 2) % 16) as i8 - 2;
                 *((p + 0x19) as *mut i8) = (y2.rotate_left(k as u32 * 3 + 1) % 13) as i8 - 2;
             }
@@ -4378,7 +4378,7 @@ pub unsafe fn autoteste(casos: u64) {
                 }
             }
             for k in 0..40usize {
-                let p = Engine(m).player(((k / 20)) as i8, (k % 20)).addr();
+                let p = Engine(m).player(((k / 20)) as i8, k % 20).addr();
                 let r = q2.rotate_left(k as u32 * 3);
                 *((p + 0x19) as *mut i8) = [(r % 13) as i8 - 2, -2, -1, 0][((r >> 8) % 4) as usize];
                 *((p + 0x1a) as *mut i8) = (r >> 12) as i8 % 12;
@@ -4425,7 +4425,7 @@ pub unsafe fn autoteste(casos: u64) {
             // batch 13 (blocks already filled; some 0x2b zeroed; grid with counts)
             let h3 = s.next_u64();
             for k in 0..40usize {
-                let p = Engine(m).player(((k / 20)) as i8, (k % 20)).addr();
+                let p = Engine(m).player(((k / 20)) as i8, k % 20).addr();
                 if (h3 >> (k % 60)) & 1 == 0 {
                     *((p + 0x2b) as *mut i8) = 0;
                 }
@@ -4501,7 +4501,7 @@ pub unsafe fn autoteste(casos: u64) {
             }
             compare_clear_move(m);
             for k in 0..40usize {
-                let p = Engine(m).player(((k / 20)) as i8, (k % 20)).addr();
+                let p = Engine(m).player(((k / 20)) as i8, k % 20).addr();
                 *((p + 0x19) as *mut i8) = (h6.rotate_left(k as u32) % 12) as i8 - 1;
             }
             compare_add_disposition(m, ((h5 >> 60) % 2) as i8, (h6 >> 7) as i16);
@@ -4540,7 +4540,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0x475c) as *mut i8) = ((h9 >> 13) % 14) as i8 - 1;
             compare_check_move(m);
             for k in 0..40usize {
-                let p = Engine(m).player(((k / 20)) as i8, (k % 20)).addr();
+                let p = Engine(m).player(((k / 20)) as i8, k % 20).addr();
                 let r = h10.rotate_left(k as u32 * 5);
                 *((p + 0x19) as *mut i8) = (r % 12) as i8 - 1;
                 *((p + 0x102) as *mut i8) = ((r >> 4) % 9) as i8;
@@ -4577,7 +4577,7 @@ pub unsafe fn autoteste(casos: u64) {
                 }
             }
             for k in 0..40usize {
-                let p = Engine(m).player(((k / 20)) as i8, (k % 20)).addr();
+                let p = Engine(m).player(((k / 20)) as i8, k % 20).addr();
                 let r = h11.rotate_left(k as u32 * 3) ^ h12.rotate_right(k as u32);
                 *((p + 0x19) as *mut i8) = (r % 13) as i8 - 2;
                 *((p + 0x20) as *mut u8) = if (r >> 4) % 3 == 0 { 0xff } else { (r >> 6) as u8 };
@@ -4614,7 +4614,7 @@ pub unsafe fn autoteste(casos: u64) {
             }
             compare_compute_percentages(m, ((h13 >> 3) % 6) as i8 - 1);
             for k in 0..40usize {
-                let p = Engine(m).player(((k / 20)) as i8, (k % 20)).addr();
+                let p = Engine(m).player(((k / 20)) as i8, k % 20).addr();
                 for (n, o) in [0xc9usize, 0xa1, 0x9d, 0x95, 0xb1, 0x7d, 0x99, 0xd9, 0xad, 0xa9].iter().enumerate() {
                     let r = h14.rotate_left((k * 10 + n) as u32 % 64);
                     *((p + o) as *mut f32) = (r % 3000) as f32 / 100.0 - if r % 17 == 0 { 40.0 } else { 0.0 };
@@ -4634,7 +4634,7 @@ pub unsafe fn autoteste(casos: u64) {
                 pe[0x5d] = (h15.rotate_left(k as u32 * 11) % 34) as u8;
             }
             for k in 0..40usize {
-                let p = Engine(m).player(((k / 20)) as i8, (k % 20)).addr();
+                let p = Engine(m).player(((k / 20)) as i8, k % 20).addr();
                 let r = h15.rotate_left(k as u32 * 3) ^ h16.rotate_right(k as u32 * 5);
                 *((p + 0x1a2) as *mut f32) = [100.0f32, 0.0, 50.0, 99.5][(r % 4) as usize] + ((r >> 2) % 400) as f32 / 8.0 - 25.0;
                 *((p + 0x69) as *mut usize) = if (r >> 12) % 5 == 0 { 0 } else { pessoas[k % 4].as_ptr() as usize };
@@ -4818,7 +4818,7 @@ pub unsafe fn autoteste(casos: u64) {
             *((m + 0x475a) as *mut u8) = if (h28 >> 9) % 4 == 0 { 3 } else { 0 };
             pe24.add(0x29).write(((h28 >> 11) % 30) as u8);
             for k in 0..40usize {
-                let p = Engine(m).player(((k / 20)) as i8, (k % 20)).addr();
+                let p = Engine(m).player(((k / 20)) as i8, k % 20).addr();
                 let r = h29.rotate_left(k as u32 * 3);
                 let base = if k < 20 { lin0 } else { lin1 };
                 *((p + 0x103) as *mut i8) = base + (r % 6) as i8 - 2;
@@ -4883,7 +4883,7 @@ pub unsafe fn autoteste(casos: u64) {
             // batch 31: summary (ratings at the limits 1 and 10, sums that overflow)
             let h34 = s.next_u64();
             for k in 0..40usize {
-                let p = Engine(m).player(((k / 20)) as i8, (k % 20)).addr();
+                let p = Engine(m).player(((k / 20)) as i8, k % 20).addr();
                 let r = h34.rotate_left(k as u32 * 7);
                 *((p + 0x35) as *mut i16) = [-600i16, 499, 500, 1499, 1500, 10499, 10500, 12000, (r >> 8) as i16][(r % 9) as usize];
                 for o in [1usize, 2, 4, 5, 7, 8, 9, 0xa, 0xb, 0xd, 0xe, 0xf, 0x12, 0x23, 0x24] {
@@ -4897,7 +4897,7 @@ pub unsafe fn autoteste(casos: u64) {
             // batch 32: the closest on the side (including the own cell: distance zero)
             let h35 = s.next_u64();
             for k in 0..40usize {
-                let p = Engine(m).player(((k / 20)) as i8, (k % 20)).addr();
+                let p = Engine(m).player(((k / 20)) as i8, k % 20).addr();
                 let r = h35.rotate_left(k as u32 * 3);
                 *((p + 0x19) as *mut i8) = (r % 13) as i8 - 2;
                 *((p + 0x2b) as *mut i8) = ((r >> 4) % 4) as i8 - 1;
@@ -5177,7 +5177,7 @@ pub unsafe fn autoteste(casos: u64) {
             let desloc = (h50 % 13) as usize;
             for k in 0..40usize {
                 let l = k / 20;
-                let p = Engine(m).player(l as i8, (k % 20)).addr();
+                let p = Engine(m).player(l as i8, k % 20).addr();
                 let r = h51.rotate_left(k as u32 * 3) ^ h50.rotate_right(k as u32);
                 *((p + 0x27) as *mut i8) = l as i8;
                 *((p + 0x19) as *mut i8) = if r % 6 == 0 { -1 } else { ((k + desloc) % 13) as i8 };
@@ -5223,7 +5223,7 @@ pub unsafe fn autoteste(casos: u64) {
             }
             // batch 47: fine positions (the kick-off grid stays consistent; positions 0..=10)
             for k in 0..40usize {
-                let p = Engine(m).player(((k / 20)) as i8, (k % 20)).addr();
+                let p = Engine(m).player(((k / 20)) as i8, k % 20).addr();
                 let v = read_i8(p + 0x19);
                 if !(0..=10).contains(&v) {
                     *((p + 0x19) as *mut i8) = (k % 11) as i8;
@@ -5242,7 +5242,7 @@ pub unsafe fn autoteste(casos: u64) {
                 let lj = ((h60 >> 1) % 2) as usize;
                 let jt = Engine(m).player(lj as i8, ((h60 >> 2) % 20) as usize).addr();
                 for k in 0..40usize {
-                    let p = Engine(m).player(((k / 20)) as i8, (k % 20)).addr();
+                    let p = Engine(m).player(((k / 20)) as i8, k % 20).addr();
                     *((p + 0x1aa) as *mut usize) = 0;
                     *((p + 0x101) as *mut i8) = 0;
                 }
@@ -6204,7 +6204,7 @@ pub unsafe fn autoteste(casos: u64) {
                 }
             }
             for k in 0..40usize {
-                let p = Engine(m).player(((k / 20)) as i8, (k % 20)).addr();
+                let p = Engine(m).player(((k / 20)) as i8, k % 20).addr();
                 let r = h58.rotate_left(k as u32 * 5);
                 *((p + 0x19) as *mut i8) = if r % 5 == 0 { -1 } else { ((r >> 3) % 11) as i8 };
                 *((p + 0x27) as *mut i8) = (k / 20) as i8;
@@ -6335,7 +6335,7 @@ pub unsafe fn autoteste(casos: u64) {
                 }
             }
             for k in 0..40usize {
-                let p = Engine(m).player(((k / 20)) as i8, (k % 20)).addr();
+                let p = Engine(m).player(((k / 20)) as i8, k % 20).addr();
                 let r = s.next_u64();
                 *((p + 0x69) as *mut usize) = if r % 5 == 0 { 0 } else { fichas.as_ptr().add(k) as usize };
             }

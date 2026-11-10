@@ -70,7 +70,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c2a_update_staff_records_for_stat
                         return 0;
                     }
                     2 | 0xff => {
-                        let weight = (exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, 2) as u32);
+                        let weight = exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, 2) as u32;
                         // simplification: the original pushes the match’s stage (+0x32) and round (+0x30) as words in
                         // registers with garbage in the high 16 bits; 0x86c000 only reads the words.
                         exe::staff_records_add_knocked_out_record(eng_second_staff_records(), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);

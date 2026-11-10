@@ -37,30 +37,30 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(game: usize, club
     let d = exe::new_date(p0, game.day() as u32, game.year() as u32);
     exe::date_operator_3d(out, p1, d);
     core::ptr::write_unaligned(((out + 8) as *mut u8) as *mut u32, read_u32(game.addr()));
-    core::ptr::write_unaligned(((out + 0xc) as *mut u8) as *mut u16, (game.round_prefix() as u16));
-    core::ptr::write_unaligned(((out + 0xe) as *mut u8) as *mut u16, (game.round_name() as u16));
+    core::ptr::write_unaligned(((out + 0xc) as *mut u8) as *mut u16, game.round_prefix() as u16);
+    core::ptr::write_unaligned(((out + 0xe) as *mut u8) as *mut u16, game.round_name() as u16);
     *((out + 0x10) as *mut u8) = exe::comp_util_get_fixture_venue_side(club, game);
     core::ptr::write_unaligned(((out + 0x11) as *mut u8) as *mut u32, read_u32(club));
-    core::ptr::write_unaligned(((out + 0x1b) as *mut u8) as *mut u32, (game.match_stats_slot() as u32));
+    core::ptr::write_unaligned(((out + 0x1b) as *mut u8) as *mut u32, game.match_stats_slot() as u32);
     if club as u32 == (game.home_club().addr() as u32) { // cpz7: the club is the home team
-        core::ptr::write_unaligned(((out + 0x15) as *mut u8) as *mut u32, (game.away_club_id() as u32));
+        core::ptr::write_unaligned(((out + 0x15) as *mut u8) as *mut u32, game.away_club_id() as u32);
         if (game.home_goals_extra_time() as u8) as i8 > -1 {
-            *((out + 0x19) as *mut u8) = (game.home_goals_extra_time() as u8);
-            *((out + 0x1a) as *mut u8) = (game.away_goals_extra_time() as u8);
+            *((out + 0x19) as *mut u8) = game.home_goals_extra_time() as u8;
+            *((out + 0x1a) as *mut u8) = game.away_goals_extra_time() as u8;
         } else {
             crate::comparison::branch("cpz_7 home side score");
-            *((out + 0x19) as *mut u8) = (game.home_goals() as u8); // cpz7: the home team goals
-            *((out + 0x1a) as *mut u8) = (game.away_goals() as u8);
+            *((out + 0x19) as *mut u8) = game.home_goals() as u8; // cpz7: the home team goals
+            *((out + 0x1a) as *mut u8) = game.away_goals() as u8;
         }
     } else {
-        core::ptr::write_unaligned(((out + 0x15) as *mut u8) as *mut u32, (game.home_club_id() as u32));
+        core::ptr::write_unaligned(((out + 0x15) as *mut u8) as *mut u32, game.home_club_id() as u32);
         if (game.away_goals_extra_time() as u8) as i8 > -1 {
-            *((out + 0x19) as *mut u8) = (game.away_goals_extra_time() as u8);
-            *((out + 0x1a) as *mut u8) = (game.home_goals_extra_time() as u8);
+            *((out + 0x19) as *mut u8) = game.away_goals_extra_time() as u8;
+            *((out + 0x1a) as *mut u8) = game.home_goals_extra_time() as u8;
         } else {
             crate::comparison::branch("cpz_7 away side score");
-            *((out + 0x19) as *mut u8) = (game.away_goals() as u8);
-            *((out + 0x1a) as *mut u8) = (game.home_goals() as u8); // cpz7: the goals conceded by the away team
+            *((out + 0x19) as *mut u8) = game.away_goals() as u8;
+            *((out + 0x1a) as *mut u8) = game.home_goals() as u8; // cpz7: the goals conceded by the away team
         }
     }
     1

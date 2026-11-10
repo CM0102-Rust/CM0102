@@ -12,7 +12,7 @@ MUTACOES = [
     ('c_desafiante', "if nota >= rating_shot || random(5) == 0 {", "if nota > rating_shot || random(5) == 0 {"),
     ('c_chutador', "if checar_chutador && (rating_shot > nota || random(5) == 0) {", "if checar_chutador && (rating_shot >= nota || random(5) == 0) {"),
     ('c_ajuste_penalti', "if ajustar_no_penalti && random(e.staff().pressure()", "if !ajustar_no_penalti && random(e.staff().pressure()", "shot penalty do desafiante"),
-    ('c_ganho', "more(((e + match_player::MATCH_RATING) as *mut i16), if far { gain.wrapping_mul(2) } else { gain });", "more(((e + match_player::MATCH_RATING) as *mut i16), if far { gain.wrapping_mul(3) } else { gain });"),
+    ('c_ganho', "more((e + match_player::MATCH_RATING) as *mut i16 , if far { gain.wrapping_mul(2) } else { gain });", "more((e + match_player::MATCH_RATING) as *mut i16 , if far { gain.wrapping_mul(3) } else { gain });"),
     ('c_cabeca_216', "if r + pj.jumping() as i32 + 3 < read_i8(pe + player_sheet::JUMPING) as i32 {", "if r + pj.jumping() as i32 + 4 < read_i8(pe + player_sheet::JUMPING) as i32 {", "shot header with challenger"),
     ('c_longe', "let code = if strength < -500 {", "let code = if strength < -400 {", "shot narrates from distance"),
     ('c_posse', "let v = ftol(rating_shot as f64 * read_f64(rdata::F64_NEG_0_1818181818));", "let v = ftol(rating_shot as f64 * read_f64(rdata::F64_NEG_0_1818181818) * 1.01);"),

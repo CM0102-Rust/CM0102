@@ -224,7 +224,7 @@ pub(crate) unsafe fn rebuild_season(this: League, table: usize, file: usize, row
 pub(crate) unsafe fn set_expectations_and_renew_officials(this: League) -> u32 {
     let expectations: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_SET_CLUB_SEASON_EXPECTATIONS);
     expectations(this.addr());
-    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), this.competition().addr()) as u32) // cqq8: os árbitros
+    exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), this.competition().addr()) as u32  // cqq8: os árbitros
 }
 
 /// The season turnovers of the other fourteen competitions in Brazil, in the original routine's order.
@@ -289,7 +289,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_start_new_season(this: usiz
 /// (league_promote_and_relegate 0x689c80, thiscall(this, de cima, de baixo, 1, 1, −1, −1), ret 0x18: a original põe
 /// o ecx da Série A e a rotina o guarda) entre A e B, entre B e C e entre a B e cada uma das sete fases da C. Devolve o
 /// eax da última.
-pub(crate) unsafe extern "thiscall" fn bra_nat_first_process_promotion_relegation_chain(this: usize, pairs: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn bra_nat_first_process_promotion_relegation_chain(this: usize, _pairs: u32) -> u32 {
     let (a, b, c) = (KEY_CLUB_COMP_BRAZILIAN_NATIONAL_FIRST_DIVISION, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_SECOND_DIVISION, KEY_CLUB_COMP_BRAZILIAN_NATIONAL_THIRD_DIVISION);
     bra_nat_first_call_virtual_no_args(comp_by_global(a), 0xa4);
     bra_nat_first_call_virtual_no_args(comp_by_global(b), 0xa4);
@@ -725,7 +725,7 @@ pub(crate) unsafe fn baiano_staff_records(this: League, club: usize, status: u32
                     // simplification: the original pushes the whole registers (eax with the caller’s garbage above the
                     // word, ecx with the upper half of the table pointer); 0x4bf850 and 0x86c000 only read the
                     // words (0x4b0870 / `as u16`): the words go.
-                    let weight = (exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, 2) as u32);
+                    let weight = exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, 2) as u32;
                     exe::staff_records_add_knocked_out_record(read_usize(G_STAFF_RECORDS), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
                 }
                 let l = this.table() + 0x3b * i as usize;

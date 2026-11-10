@@ -27,4 +27,7 @@ for par in club=Club staff=Staff fixture=Fixture match_player=MatchPlayer contra
 done
 python tipar_registros.py --exe --gravar 2>&1 | tail -1
 python limpar_tipos.py --gravar 2>&1 | grep -v "^volta" | tail -1
+# the compiler's own fixes (unnecessary parentheses, unused imports and mut), checked by it (readability batch 33)
+(cd ../rust && cargo fix --lib --release --allow-dirty 2>&1 | tail -1)
+python espacos_do_cargo_fix.py HEAD
 echo "padronizado"

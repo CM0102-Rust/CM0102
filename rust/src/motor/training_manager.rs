@@ -679,13 +679,13 @@ pub(crate) unsafe extern "thiscall" fn get_training_attribute_change(this: usize
         return 0;
     }
     let e = player_training_entry(this, p);
-    let before = (exe::staff_get_player_attribute(p, attribute) as u8);
+    let before = exe::staff_get_player_attribute(p, attribute) as u8;
     let mut d = [0i8; 8];
     for k in 0..5 {
         d[k] = training_nibble(e, k).wrapping_neg();
     }
     training_manager_apply_training_progress(this, p, &d);
-    let without = (exe::staff_get_player_attribute(p, attribute) as u8);
+    let without = exe::staff_get_player_attribute(p, attribute) as u8;
     let mut v = [0i8; 8];
     for k in 0..5 {
         v[k] = d[k].wrapping_neg();

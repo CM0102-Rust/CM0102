@@ -397,7 +397,7 @@ pub(crate) unsafe fn tie_on_zone_boundary(league: League, z: &[u8; 64]) -> bool 
 /// Intertoto [inferência], rebaixamento) não se decide pelo saldo: vai a um jogo extra.
 pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let this = League(this);
-    let r = (exe::league_update_for_date(this, today, full) as u32);
+    let r = exe::league_update_for_date(this, today, full) as u32;
     // simplification: the original returns the league day byte with the upper bits of eax left over from the last call; the
     // the competitions loop only reads the byte.
     if this.complete() == 0 || this.stage_count() != 0 || full == 0 || this.tiebreak_matches() == 0 {

@@ -100,14 +100,14 @@ pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_update_staff_record
     if club.is_null() {
         return o(this, club.addr(), outcome, a3, a4, game, a6);
     }
-    let before = (club.continental_comp_id() as usize);
+    let before = club.continental_comp_id() as usize;
     let predicted = match outcome as u8 {
         1 => read_usize(KEY_CLUB_COMP_UEFA_CUP),
         0xff | 2 => 0xffff_ffff,
         _ => before,
     };
     let r = o(this, club.addr(), outcome, a3, a4, game, a6);
-    let after = (club.continental_comp_id() as usize);
+    let after = club.continental_comp_id() as usize;
     SCOREBOARD.record(r == 0 && after == predicted, || format!("intertoto_cup_update_staff_records_for_status({:#x}, outcome {}) +0x1db {:x} -> {:x}, predicted {:x}, returned {}", club.addr(), outcome as u8, before, after, predicted, r));
     r
 }

@@ -353,7 +353,7 @@ pub(crate) unsafe extern "thiscall" fn step_day_match(day: usize, until_end: u32
 /// (0x62c080) e, fora do -3, a historia ([0xb74434] metodo 1, fora da [0x9cf684]), 0x7c0d70,
 /// 0x8c39f0, 0x444930, 0x868830, 0x4134c0, 0x6951e0, 0x59a5d0, 0x7f8c00 e o clube de cada lado
 /// (0x6b79a0 com a rodada). Sem `p`, erro 0x73f e 0.
-pub(crate) unsafe extern "thiscall" fn close_day_match(day: usize, p: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn close_day_match(_day: usize, p: usize) -> u32 {
     let u = |q: usize, o: usize| *((q + o) as *const usize);
     if p == 0 {
         show_error_at(0xa15708, 0x73f);
@@ -551,7 +551,7 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
                             por(u(p, day_match::SCOREBOARD), o, v);
                         }
                         // the highest level (0x5fcff0) between the stored one and that of this human
-                        let greater = |s: u8, h: usize| if s as i16 > exe::human_manager_get_commentary_speed(manager(), h as u32) { s } else { (exe::human_manager_get_commentary_speed(manager(), h as u32) as u8) };
+                        let greater = |s: u8, h: usize| if s as i16 > exe::human_manager_get_commentary_speed(manager(), h as u32) { s } else { exe::human_manager_get_commentary_speed(manager(), h as u32) as u8  };
                         for i in 0..16 {
                             let h = humano_a(i);
                             if b(h, staff::CLASSIFICATION) == 0 {
@@ -1803,7 +1803,7 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
 /// (0x7293f0), libera o motor, tira da fila e marca +0x119; se for, avisa o narrador (+0x8f7a = 3),
 /// cria o resumo e registra para ver (0x729ff0) e devolve 1. Erros 0x4b8 (sem partida), 0x4d0, 0x4ea,
 /// 0x511 (sem memoria).
-pub(crate) unsafe extern "thiscall" fn confirm_network_match(day: usize, p: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn confirm_network_match(_day: usize, p: usize) -> u32 {
     let u = |q: usize, o: usize| read_usize(q + o);
     let por = |q: usize, o: usize, v: usize| write_usize(q + o, v);
     const FONTE: usize = 0xa15708; // match_day.cpp

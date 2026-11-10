@@ -1108,7 +1108,7 @@ pub(crate) unsafe extern "thiscall" fn fra_first_create_schedule(this: usize, st
     if stage as u8 != 0xff {
         return 0;
     }
-    let year = (this.year() as u16);
+    let year = this.year() as u16;
     let n: i16 = if year == 0x7d1 { 0x22 } else { 0x26 }; // cqo6: 34 rodadas em 2001, 38 depois
     if !league.is_null() {
         *league = 1;

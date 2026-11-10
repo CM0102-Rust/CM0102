@@ -255,7 +255,7 @@ pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
         if a.is_null() || b == 0 || a.addr() == b {
             continue;
         }
-        if friendly_random((a.professionalism() as i32)) != 0 {
+        if friendly_random(a.professionalism() as i32) != 0 {
             continue;
         }
         if is_disliked_by(b, a) != 0 {
@@ -325,17 +325,17 @@ pub(crate) unsafe fn player_vs_manager_check(p: Staff) {
     }
     let mut e = (p.professionalism() as i32) + ((p.pressure() as i32) + (p.loyalty() as i32)) + ((p.sportsmanship() as i32) + ((p.age() as i8) as i32));
     crate::comparison::branch("cps_5 drawn manager");
-    if friendly_random((p.loyalty() as i32)) == 0 { // cps5: the first discount
+    if friendly_random(p.loyalty() as i32) == 0 { // cps5: the first discount
         e -= 3;
     }
-    if friendly_random((p.pressure() as i32)) == 0 {
+    if friendly_random(p.pressure() as i32) == 0 {
         e -= 5;
     }
     if read_usize(k.addr() + 0x45) != 0 || friendly_random(0x64) == 0 {
-        if friendly_random((p.professionalism() as i32)) == 0 {
+        if friendly_random(p.professionalism() as i32) == 0 {
             e -= 0xf;
         }
-        if friendly_random((p.temperament() as i32)) == 0 {
+        if friendly_random(p.temperament() as i32) == 0 {
             e -= 0xf;
         }
     }
@@ -538,9 +538,9 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
             continue;
         }
         let jog = p.player();
-        let cl = (p.professionalism() as u8);
-        let dl = (jog.work_rate() as u8);
-        let mut bl = (jog.leadership() as u8).wrapping_add((p.age() as u8)).wrapping_add(cl).wrapping_add(dl);
+        let cl = p.professionalism() as u8;
+        let dl = jog.work_rate() as u8;
+        let mut bl = (jog.leadership() as u8).wrapping_add(p.age() as u8).wrapping_add(cl).wrapping_add(dl);
         if cl == 1 {
             bl = bl.wrapping_add(0xfb);
         }
@@ -554,7 +554,7 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
             bl = bl.wrapping_add(2);
         }
         let mut and_foul = false;
-        let a = (p.professionalism() as u8);
+        let a = p.professionalism() as u8;
         if (a as i8) < 8 && ((p.player().leadership() as u8) as i8) < 8 && (bl as i8) < 0x2b {
             let mut s = a;
             if days_since_staff_date(p) < 0x1e {
@@ -578,12 +578,12 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
             if v == 0 {
                 continue;
             }
-            if read_usize(v + 0x45) & 0x8000 != 0 && friendly_random((p.professionalism() as i32)) == 0 {
+            if read_usize(v + 0x45) & 0x8000 != 0 && friendly_random(p.professionalism() as i32) == 0 {
                 and_foul = true;
-            } else if read_usize(v + 0x45) & 0x30000 != 0 && friendly_random((p.professionalism() as i32)) == 0 {
+            } else if read_usize(v + 0x45) & 0x30000 != 0 && friendly_random(p.professionalism() as i32) == 0 {
                 and_foul = true;
             } else {
-                let a = (p.professionalism() as i32);
+                let a = p.professionalism() as i32;
                 if a >= 5 || read_usize(v + 0x45) & 0x7800 == 0 || friendly_random(a) != 0 {
                     continue;
                 }

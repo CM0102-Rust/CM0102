@@ -14,5 +14,5 @@ MUTACOES = [
     ('cpc_lista_da_data', 'exe::fixture_manager_get_fixture_list(read_usize(G_FIXTURE_MANAGER), year, day, slice, group) // the match manager', 'exe::fixture_manager_get_fixture_list(read_usize(0xae2a58), year, day, (slice + 1) % 3, group) // mutacao: a fatia seguinte'),
     ('cpc_proxima_competicao', '(comp == -1 || comp == f.comp_id()) // the competition', '(comp == -1 || comp != f.comp_id()) // mutacao: a competicao trocada'),
     ('cpc_estadio_em_uso', 'if e != 0 && e == stadium { // the match stadium', 'if e != 0 && e != stadium { // mutacao: outro estadio'),
-    ('cpc_data_amistoso', '(exe::date_set(this + 3, high | b(1), month, year, (week) as i32) as u32) // the date with the given year', '(exe::date_set(this + 3, high | b(1), month, year.wrapping_add(1), (week) as i32) as u32) // mutacao: o ano seguinte'),
+    ('cpc_data_amistoso', 'exe::date_set(this + 3, high | b(1), month, year, (week) as i32) as u32  // the date with the given year', '(exe::date_set(this + 3, high | b(1), month, year.wrapping_add(1), (week) as i32) as u32) // mutacao: o ano seguinte'),
 ]

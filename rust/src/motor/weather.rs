@@ -54,7 +54,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
     if home.division().addr() == 0 {
         return 0;
     }
-    let k: i8 = if !home.is_null() { (exe::key_nation_index_of_club(home) as i8) } else { -1 };
+    let k: i8 = if !home.is_null() { exe::key_nation_index_of_club(home) as i8  } else { -1 };
     if game.competition() != home.division() || read_u8(est + stadium::COVERED) != 0 {
         return 0;
     }
@@ -286,7 +286,7 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
         *s.add(3) = 0;
     }
     let day = if !game.is_null() {
-        (game.day() as i16)
+        game.day() as i16 
     } else {
         read_i16(G_CURRENT_DATE)
     };

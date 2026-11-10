@@ -51,7 +51,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_for_date(this: usiz
             this.set_active(1);
         }
     }
-    (exe::league_update_for_date(this, today, full) as u32)
+    exe::league_update_for_date(this, today, full) as u32 
 }
 
 // simplification: the clubs (shuffled), the tables, the matches and the league day do not run twice. Original only; the plan
@@ -152,15 +152,15 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_group_stage(this: u
             this.competition().addr(),
             table,
             rodadas as u16 as u32,
-            (this.win_points() as u32),
-            (this.draw_points() as u32),
-            (this.match_category() as u32),
+            this.win_points() as u32 ,
+            this.draw_points() as u32 ,
+            this.match_category() as u32 ,
             this.addr() + league::TIEBREAKS,
             this.addr() + league::PROMOTED_COUNT,
             this.year() as u16 as u32,
             g as u32,
             id as u16 as u32,
-            (this.importance() as u32),
+            this.importance() as u32 ,
             2,
             0,
             this.league_flags() as u16 as u32,
@@ -264,8 +264,8 @@ pub(crate) unsafe fn check_cup_rules(name: &str, this: League, g: &ContinentalGr
             k += 1;
         }
     }
-    let b6 = (this.next_draw_day() as u16);
-    let b8 = (this.next_draw_year_offset() as u16);
+    let b6 = this.next_draw_day() as u16;
+    let b8 = this.next_draw_year_offset() as u16;
     let premio = g.prize.map_or(true, |p| (this.prize_fund() as u32) == p);
     SCOREBOARD.record(r == 1 && k == 0 && b6 == word && b8 == 0 && premio, || format!("{}({:#x}) returned {} fields errados {:x?} date {:#x} prevista {:#x} +0xb8 {} prize ok {}", name, this.addr(), r, &errados[..k], b6, word, b8, premio));
     r

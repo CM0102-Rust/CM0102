@@ -68,7 +68,7 @@ pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, h
         f
     };
     exe::crt_fseek(f, 0, 2);
-    *desc = (exe::crt_ftell(f) as u32);
+    *desc = exe::crt_ftell(f) as u32;
     let n = *((e + 6) as *const i16) as i32;
     *desc.add(1) = n as u32;
     *desc.add(2) = numero as u32;

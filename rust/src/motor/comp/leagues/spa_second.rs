@@ -318,7 +318,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u
     if k as i8 as i16 != this.club_count() {
         return 0;
     }
-    let f = (exe::league_calc_prize_fund(this, (0xc350) as i32) as u32);
+    let f = exe::league_calc_prize_fund(this, (0xc350) as i32) as u32;
     this.set_prize_fund((f as usize) as i32);
     this.set_prize_mode(1);
     1

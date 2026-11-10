@@ -793,7 +793,7 @@ pub(crate) unsafe extern "C" fn european_cup_compare_phase2_draw_entries(a: usiz
 /// [pt] comp_util_scale_by_round (0x4bf850, cdecl(baixo, alto, rodada, rodadas)): a faixa pela rodada, de 0 a 100.
 pub(crate) unsafe fn scale_by_round(low: u32, high: u32, round: i16, rounds: u32) -> u32 {
     // simplification: the original pushes the round in a register with garbage in the high 16 bits; 0x4bf850 only reads the word.
-    (exe::comp_util_scale_by_round(low, high, round as u16 as u32, rounds) as u32)
+    exe::comp_util_scale_by_round(low, high, round as u16 as u32, rounds) as u32 
 }
 
 /// Staff_Records add_qualified_for_round_record for the club.
@@ -1083,7 +1083,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_collect_club_list(this: usiz
         2 => (0x7cf, false),
         3 if (this.current_stage() as i32) == 0xb => (0x7e9, false),
         _ => {
-            return (exe::comp_collect_club_list(this, out, 0) as u32);
+            return exe::comp_collect_club_list(this, out, 0) as u32;
         }
     };
     let v = exe::crt_malloc(0x11c);
@@ -1272,7 +1272,7 @@ pub(crate) unsafe extern "thiscall" fn build_qualifying_entry_table(this: usize)
 /// ret 4); na 12, as quartas (0x586330, thiscall(this)). Quem chama não lê a devolução.
 pub(crate) unsafe extern "thiscall" fn european_cup_advance_stage(this: usize) {
     let this = Cup(this);
-    let f = (this.current_stage() as i32);
+    let f = this.current_stage() as i32;
     if f >= (this.stage_count() as i32).wrapping_sub(1) {
         return show_error_at(0x9c4900, 0x495);
     }

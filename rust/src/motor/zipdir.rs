@@ -217,10 +217,10 @@ pub(crate) unsafe extern "C" fn zadd_matching_files(path: usize, folder: usize, 
             exe::crt_fclose(f);
             return 0;
         }
-        let mut n = (exe::crt_fread(z + 0x41705, 1, 0x30d40, f) as i32);
+        let mut n = exe::crt_fread(z + 0x41705, 1, 0x30d40, f) as i32;
         while n > 0 {
             (exe::zwrite(z + 0x41705, (1) as u32, (n) as u32, z) as i32);
-            n = (exe::crt_fread(z + 0x41705, 1, 0x30d40, f) as i32);
+            n = exe::crt_fread(z + 0x41705, 1, 0x30d40, f) as i32;
         }
         exe::crt_fclose(f);
         exe::zclose(&mut z);
@@ -328,10 +328,10 @@ pub(crate) unsafe extern "C" fn zextract_matching_files(path: usize, folder: usi
         if g == 0 {
             return error(nomes, &mut z);
         }
-        let mut n = (exe::zread(z + 0x72445, (1) as u32, (0x30d40) as u32, z) as i32);
+        let mut n = exe::zread(z + 0x72445, (1) as u32, (0x30d40) as u32, z) as i32;
         while n > 0 {
             exe::crt_fwrite(z + 0x72445, 1, (n) as u32, g);
-            n = (exe::zread(z + 0x72445, (1) as u32, (0x30d40) as u32, z) as i32);
+            n = exe::zread(z + 0x72445, (1) as u32, (0x30d40) as u32, z) as i32;
         }
         exe::crt_fclose(g);
         exe::zclose(&mut z);
@@ -380,7 +380,7 @@ pub(crate) unsafe fn zf_next_byte(z: usize) -> u8 {
     }
     // simplification: the branch marks the block, not each call (zread runs millions of times during loading)
     crate::comparison::branch("save zread block");
-    zf_write_i32(z, 0xa318d, (exe::crt_fread(z + 0x41705, 1, 0x30d40, zf_read_i32(z, 0) as usize) as i32));
+    zf_write_i32(z, 0xa318d, exe::crt_fread(z + 0x41705, 1, 0x30d40, zf_read_i32(z, 0) as usize) as i32);
     let b = read_u8(z + 0x41705);
     zf_write_i32(z, 0xa3185, 1);
     b
@@ -418,7 +418,7 @@ pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, size: i32, how_many: 
         crate::comparison::branch("save zread type 3");
         let q = request / size;
         zf_write_i32(z, 8, size.wrapping_mul(q).wrapping_sub(request).wrapping_add(end));
-        return (exe::crt_fread((buf) as usize, (size) as u32, (q) as u32, zf_read_i32(z, 0) as usize) as i32);
+        return exe::crt_fread((buf) as usize, (size) as u32, (q) as u32, zf_read_i32(z, 0) as usize) as i32;
     }
     let mut k = 0i32;
     if request > 0 {
@@ -515,7 +515,7 @@ pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, size: i32, how_man
     zf_write_i32(z, 8, zf_read_i32(z, 8).wrapping_add(total));
     if zf_read_i32(z, 0x19) != 4 {
         crate::comparison::branch("save zwrite type 3");
-        return (exe::crt_fwrite((buf) as usize, (size) as u32, (how_many) as u32, zf_read_i32(z, 0) as usize) as i32);
+        return exe::crt_fwrite((buf) as usize, (size) as u32, (how_many) as u32, zf_read_i32(z, 0) as usize) as i32;
     }
     let repeated = (z + 0x18) as *mut u8;
     let mut k = 0i32;

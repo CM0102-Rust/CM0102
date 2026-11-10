@@ -888,7 +888,7 @@ pub(crate) unsafe fn would_request_transfer(c: Contract, marks: u32) -> bool {
     if (c.morale() as i32) < 0 || c.leaving_on_bosman() != 0 {
         return false;
     }
-    let before = (c.grievances() as usize);
+    let before = c.grievances() as usize;
     c.set_grievances((before | marks as usize) as u32);
     let exit = exe::staff_contract_wants_to_leave(c) != 0;
     c.set_grievances((before) as u32);
@@ -965,7 +965,7 @@ pub(crate) unsafe fn squad_spokesman(club: Club, p: Staff) -> usize {
             continue;
         }
         let mut x = (r as i32).wrapping_add(((m.professionalism() as i32) + (m.loyalty() as i32)) * 20);
-        let age = ((m.age() as i8) as i32);
+        let age = (m.age() as i8) as i32;
         x += if age < 0x13 {
             -0x5dc
         } else if age < 0x17 {
@@ -1251,7 +1251,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
             clear_contract_flags(c, 0x200);
         }
         let remove_800 = if strength < lim2 {
-            let r1 = friendly_random((p.pressure() as i32));
+            let r1 = friendly_random(p.pressure() as i32);
             (r1 > friendly_random(10) && equal()) || same < 2
         } else {
             same < 2
@@ -2244,8 +2244,8 @@ pub(crate) unsafe extern "thiscall" fn rate_player_form_for_story(_this: usize, 
 pub(crate) unsafe extern "thiscall" fn write_financial_trouble_news_text(_this: usize, news: usize, body: u32, out: usize) {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     crate::comparison::branch("cpn_3 financial crisis text");
-    let id = (exe::newsitem_get_slot(news, 0) as i32);
-    let severity = (exe::newsitem_get_slot(news, 1) as i32);
+    let id = exe::newsitem_get_slot(news, 0) as i32;
+    let severity = exe::newsitem_get_slot(news, 1) as i32;
     (exe::newsitem_get_slot(news, 2) as i32);
     let club = Club(read_usize(G_CLUB_TABLE).wrapping_add((id as usize).wrapping_mul(club::SIZE)));
     let name = club.addr() + club::SHORT_NAME;
@@ -2787,7 +2787,7 @@ pub(crate) unsafe extern "thiscall" fn pick_former_international_pundit(_this: u
     if subject.is_null() && club.is_null() {
         return 0;
     }
-    let u = |p: usize| read_usize(p);
+    let _u = |p: usize| read_usize(p);
     let injury_word_0c = |nation: Nation| nation.reputation() as i32;
     let (mut melhor, mut maior) = (0usize, 0i32);
     for _ in 0..150 {
@@ -2911,7 +2911,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
     }
     if k == 0x82 {
         if exe::staff_is_disliked_by(player, manager) != 0 {
-            let a = (manager.professionalism() as i32);
+            let a = manager.professionalism() as i32;
             if a < 0xf && exe::utils_random(a) == 0 {
                 let x = exe::utils_random(ch(0x19));
                 let y = exe::utils_random(0x14);
@@ -2919,7 +2919,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
                     return 2;
                 }
             }
-            let a = (manager.professionalism() as i32);
+            let a = manager.professionalism() as i32;
             if a <= 0xe || exe::utils_random(a) <= 10 {
                 return 3;
             }
@@ -2928,7 +2928,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             return if x <= y { 3 } else { 1 };
         }
         if exe::staff_is_favoured_by(player, manager) != 0 {
-            let x = exe::utils_random((manager.professionalism() as i32));
+            let x = exe::utils_random(manager.professionalism() as i32);
             let y = exe::utils_random(10);
             if x >= y {
                 return 3;
@@ -2958,7 +2958,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
         if exe::staff_is_transfer_listed_or_requested(player, club) != 0 {
             return 2;
         }
-        let b = (contract.happiness() as i32);
+        let b = contract.happiness() as i32;
         if b <= exe::utils_random(100) {
             return 3;
         }
@@ -2969,7 +2969,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
     }
     // the manager’s preferences with the rating
     if exe::staff_is_disliked_by(player, manager) != 0 && rating < 5 {
-        if exe::utils_random((manager.professionalism() as i32)) != 0 {
+        if exe::utils_random(manager.professionalism() as i32) != 0 {
             return 3;
         }
         let x = exe::utils_random(ch(0x19));
@@ -2977,7 +2977,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
         return if x >= y { 3 } else { 2 };
     }
     if exe::staff_is_favoured_by(player, manager) != 0 && rating > -5 {
-        let x = exe::utils_random((manager.professionalism() as i32));
+        let x = exe::utils_random(manager.professionalism() as i32);
         let y = exe::utils_random(10);
         if x >= y {
             return 3;
@@ -2999,10 +2999,10 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
                     return 2;
                 }
             }
-            if exe::utils_random((manager.pressure() as i32)) == 0 {
+            if exe::utils_random(manager.pressure() as i32) == 0 {
                 return 1;
             }
-            let x = exe::utils_random((manager.loyalty() as i32));
+            let x = exe::utils_random(manager.loyalty() as i32);
             let y = exe::utils_random(0x28);
             if x > y {
                 return 1;
@@ -3012,7 +3012,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             if x <= y { 3 } else { 1 }
         }
         0x28..=0x3b => {
-            let x = exe::utils_random((player.professionalism() as i32));
+            let x = exe::utils_random(player.professionalism() as i32);
             let y = exe::utils_random(0x14);
             if x > y {
                 let a = exe::utils_random(ch(0x19));
@@ -3041,10 +3041,10 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
                     return 2;
                 }
             }
-            if exe::utils_random((player.player().player_morale() as i32)) == 0 {
+            if exe::utils_random(player.player().player_morale() as i32) == 0 {
                 return 1;
             }
-            let x = exe::utils_random((manager.loyalty() as i32));
+            let x = exe::utils_random(manager.loyalty() as i32);
             let y = exe::utils_random(0x14 - rating);
             if x <= y { 3 } else { 1 }
         }
@@ -3055,19 +3055,19 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
                 let e = exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), club, player, 0, 0);
                 if e != 0 && read_usize(e + 0xf) == read_usize(player.addr()) && rating > -10 {
                     crate::comparison::branch("cpo_6 draw discarded");
-                    exe::utils_random((manager.loyalty() as i32)); // the original discards the result
+                    exe::utils_random(manager.loyalty() as i32); // the original discards the result
                 }
             }
             let x = exe::utils_random(ch(0x19));
             let y = exe::utils_random(10);
             if x < y {
-                let x = exe::utils_random((manager.temperament() as i32));
+                let x = exe::utils_random(manager.temperament() as i32);
                 let y = exe::utils_random(10);
                 if x < y {
                     let x = exe::utils_random(read_i8_as_i32(f().addr() + 0x1d));
                     let y = exe::utils_random(10);
                     if x < y {
-                        let x = exe::utils_random((manager.loyalty() as i32));
+                        let x = exe::utils_random(manager.loyalty() as i32);
                         let y = exe::utils_random(10);
                         if x < y {
                             let x = exe::utils_random(rating);
@@ -3093,7 +3093,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
                 exe::staff_add_disliked_staff(manager, player, 1);
             }
             if ch(0x19) < 0xa {
-                let x = exe::utils_random((manager.temperament() as i32));
+                let x = exe::utils_random(manager.temperament() as i32);
                 let y = exe::utils_random(10);
                 if x < y {
                     let x = exe::utils_random(read_i8_as_i32(f().addr() + 0x1d));
@@ -3109,7 +3109,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
         }
         1 => {
             if exe::utils_random(ch(0x19)) == 0 {
-                let x = exe::utils_random((manager.temperament() as i32));
+                let x = exe::utils_random(manager.temperament() as i32);
                 let y = exe::utils_random(10);
                 if x < y {
                     let x = exe::utils_random(read_i8_as_i32(f().addr() + 0x1d));
@@ -3124,7 +3124,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             if x <= y { 3 } else { 1 }
         }
         0x1e | 0x20 => {
-            let x = exe::utils_random((manager.temperament() as i32));
+            let x = exe::utils_random(manager.temperament() as i32);
             let y = exe::utils_random(0x14);
             if x < y {
                 let x = exe::utils_random(read_i8_as_i32(f().addr() + 0x1d));
@@ -3159,7 +3159,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
                 0x62 => -7,
                 _ => 0,
             };
-            if exe::utils_random((manager.pressure() as i32)) == 0 {
+            if exe::utils_random(manager.pressure() as i32) == 0 {
                 base += exe::utils_random(10);
                 base -= exe::utils_random(10);
             }
@@ -3168,7 +3168,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             if x > y {
                 return 2;
             }
-            let x = exe::utils_random((manager.ambition() as i32));
+            let x = exe::utils_random(manager.ambition() as i32);
             let y = exe::utils_random(base + 0xf);
             if x <= y { 3 } else { 1 }
         }
@@ -3185,7 +3185,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             }
             let t = contract_squad_status(contract);
             if t != 0 && t != 0x70 && t != 0x80 && exe::staff_is_transfer_listed(player, 0) == 0 {
-                let x = exe::utils_random((manager.loyalty() as i32));
+                let x = exe::utils_random(manager.loyalty() as i32);
                 let y = exe::utils_random(6);
                 if x > y {
                     let x = exe::utils_random(ch(0x19));
@@ -3203,12 +3203,12 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             if t != 0x70 && t != 0x40 {
                 return 3;
             }
-            let x = exe::utils_random((manager.loyalty() as i32));
+            let x = exe::utils_random(manager.loyalty() as i32);
             let y = exe::utils_random(5);
             if x >= y {
                 return 3;
             }
-            let x = exe::utils_random((manager.professionalism() as i32));
+            let x = exe::utils_random(manager.professionalism() as i32);
             let y = exe::utils_random(5);
             if x >= y {
                 return 3;
@@ -3218,7 +3218,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             if x >= y { 3 } else { 2 }
         }
         5 => {
-            if exe::utils_random((manager.loyalty() as i32)) != 0 && exe::utils_random(ch(0x19)) != 0 && exe::utils_random((player.professionalism() as i32)) != 0 {
+            if exe::utils_random(manager.loyalty() as i32) != 0 && exe::utils_random(ch(0x19)) != 0 && exe::utils_random(player.professionalism() as i32) != 0 {
                 let x = exe::utils_random(rating);
                 let y = exe::utils_random(-5);
                 if x > y {
@@ -3228,7 +3228,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             if exe::utils_random(ch(0x19)) != 0 {
                 return 3;
             }
-            let x = exe::utils_random((player.pressure() as i32));
+            let x = exe::utils_random(player.pressure() as i32);
             let y = exe::utils_random(10);
             if x >= y {
                 return 3;
@@ -3238,14 +3238,14 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             if x >= y { 3 } else { 2 }
         }
         6 => {
-            if exe::utils_random((manager.loyalty() as i32)) != 0 {
+            if exe::utils_random(manager.loyalty() as i32) != 0 {
                 let x = exe::utils_random(read_i8_as_i32(f().addr() + 0x1f));
                 let y = exe::utils_random(10);
                 if x > y {
-                    let x = exe::utils_random((player.professionalism() as i32));
+                    let x = exe::utils_random(player.professionalism() as i32);
                     let y = exe::utils_random(5);
                     if x > y {
-                        let x = exe::utils_random((player.player().dirtiness() as i32));
+                        let x = exe::utils_random(player.player().dirtiness() as i32);
                         let y = exe::utils_random(0x1e);
                         if x < y {
                             let x = exe::utils_random(rating);
@@ -3260,7 +3260,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             if exe::utils_random(ch(0x19)) != 0 || exe::utils_random(read_i8_as_i32(f().addr() + 0x1f)) != 0 {
                 return 3;
             }
-            let x = exe::utils_random((player.player().dirtiness() as i32));
+            let x = exe::utils_random(player.player().dirtiness() as i32);
             let y = exe::utils_random(0x32);
             if x <= y {
                 return 3;

@@ -199,7 +199,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
     let mark = if club.is_null() || club.nation().addr() == 0 {
         true
     } else {
-        let k = ((exe::key_nation_index_of_nation(club.nation().addr()) as u32) as i8);
+        let k = (exe::key_nation_index_of_nation(club.nation().addr()) as u32) as i8;
         if !(0..0x23).contains(&k) {
             true
         } else {
@@ -1117,7 +1117,7 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
     };
     if !club.is_null() {
         let n = club.nation();
-        if !n.is_null() && fala((n.first_language() as u8)) {
+        if !n.is_null() && fala(n.first_language() as u8) {
             return 10;
         }
     }

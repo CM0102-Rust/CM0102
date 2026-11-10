@@ -287,7 +287,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, toda
         write_usize(this.addr() + 0xf2, 0);
         this.set_active(1);
     }
-    (exe::league_update_for_date(this, today, full) as u32)
+    exe::league_update_for_date(this, today, full) as u32 
 }
 
 // simplification: the list, the predictions, the tables, the matches and the league day do not run twice. Original only; the plan in the
@@ -385,15 +385,15 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g
             this.competition().addr(),
             table,
             rodadas as u16 as u32,
-            (this.win_points() as u32),
-            (this.draw_points() as u32),
-            (this.match_category() as u32),
+            this.win_points() as u32 ,
+            this.draw_points() as u32 ,
+            this.match_category() as u32 ,
             this.addr() + league::TIEBREAKS,
             this.addr() + league::PROMOTED_COUNT,
             this.year() as u16 as u32,
             g as u32,
             id as u16 as u32,
-            (this.importance() as u32),
+            this.importance() as u32 ,
             4,
             0,
             this.league_flags() as u16 as u32,

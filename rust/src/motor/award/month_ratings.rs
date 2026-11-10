@@ -106,7 +106,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
     write_u32(r, id as u32);
     write_u32(r + 4, league as u32);
     write_u16(r + 8, 0);
-    write_u8(r + 0xb, (p.age() as u8));
+    write_u8(r + 0xb, p.age() as u8);
     crate::comparison::branch("cpw_5 new player in the month");
     write_u8(r + 0xa, 0); // cpw5: starts with no matches
     write_u32(this + 4, n.wrapping_add(1) as u32);

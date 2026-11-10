@@ -852,7 +852,7 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
         return;
     }
     crate::comparison::branch("cpz_9 fine evaluated");
-    let a = friendly_random(((np.discipline() as i8) as i32));
+    let a = friendly_random((np.discipline() as i8) as i32);
     let b = friendly_random(10); // cpz9: the fine random draw
     if a <= b {
         return;

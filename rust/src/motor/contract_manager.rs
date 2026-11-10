@@ -211,7 +211,7 @@ pub(crate) unsafe extern "thiscall" fn sign_contract(this: usize, contract: usiz
     }
     // the end at least 4 weeks after the start
     let (ini_dia, ini_ano) = ((c.date_started() as i16), c.date_started_year());
-    let end_year = (c.contract_expires_year() as u16);
+    let end_year = c.contract_expires_year() as u16;
     if ini_ano > end_year || (ini_ano == end_year && !(ini_dia < c.contract_expires())) {
         crate::comparison::branch("cqg_1 ends in 4 weeks");
         let p = exe::date_add_weeks(c.addr() + contract::DATE_STARTED, (tmp2.as_mut_ptr()) as *mut [u8; 8], 4); // cqg1: as 4 semanas
@@ -300,7 +300,7 @@ pub(crate) unsafe extern "thiscall" fn sign_contract(this: usize, contract: usiz
         copy_contract(Contract(r), c);
     }
     crate::comparison::branch("cqg_1 value on the person");
-    person.set_wage((c.wage() as usize)); // cqg1: the contract value in the person
+    person.set_wage(c.wage() as usize); // cqg1: the contract value in the person
     if c.contract_type() & 0x3f == 2 && !person.player().is_null() {
         exe::staff_adjust_morale(person, 0x14, 0);
     }
@@ -621,7 +621,7 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_offer_contract(this: usi
         let mut d = [0u8; 8];
         let p = exe::date_add_days(G_CONTRACT_DATE_PLUS_365_DAYS, (d.as_mut_ptr()) as *mut u8 as usize, 0x96);
         let (dia, ano_d) = (read_i16(p), read_u16(p + cm_date::YEAR));
-        let ano_a = (current.contract_expires_year() as u16);
+        let ano_a = current.contract_expires_year() as u16;
         ano_d < ano_a || (ano_d == ano_a && dia < current.contract_expires())
     };
     if enviar {
@@ -1042,7 +1042,7 @@ pub(crate) unsafe extern "thiscall" fn calc_player_value(this: usize, person: us
     } else {
         (8_000_000.0, 0x1d)
     };
-    let age = (person.age() as i8);
+    let age = person.age() as i8;
     let dif = auge as i32 - age as i32;
     let mut t = dif as f64;
     if t > read_f64(rdata::F64_5) {
@@ -1135,7 +1135,7 @@ pub(crate) unsafe extern "thiscall" fn calc_player_value(this: usize, person: us
             if !div.is_null() {
                 t = (t + c890) * read_f64(rdata::F64_0_5);
             }
-            match (club.professional_status() as i8) {
+            match club.professional_status() as i8  {
                 2 => t = t + t,
                 3 => t *= read_f64(rdata::F64_7_5),
                 _ => {}
@@ -1836,7 +1836,7 @@ pub(crate) unsafe extern "thiscall" fn handle_transfer_request(this: usize, cont
     exe::staff_adjust_morale(person, 0xffff_fff4, 0); // cps1: a moral cai 12
     // reread after the calls, as in the original (the 8-bit `imul` keeps the low byte)
     let al = (person.loyalty() as u8).wrapping_mul(5).wrapping_add(0x38);
-    let cl = (contract.morale() as u8);
+    let cl = contract.morale() as u8;
     let s = cl as i8 as i32 + al as i8 as i32;
     let m = (contract.addr() + contract::MORALE) as *mut u8;
     *m = if s > 100 {
@@ -2133,12 +2133,12 @@ pub(crate) unsafe extern "thiscall" fn sign_loan_contract(this: usize, contract:
     if sheet.is_null() {
         return;
     }
-    let owner = contract_manager_club_by_id((sheet.club() as u32));
+    let owner = contract_manager_club_by_id(sheet.club() as u32);
     if owner.is_null() {
         return;
     }
     contract_manager_assign_date(stored.as_mut_ptr() as usize, person.addr() + staff::DATE_JOINED_CLUB);
-    let new = contract_manager_club_by_id((contract.club() as u32));
+    let new = contract_manager_club_by_id(contract.club() as u32);
     contract_manager_archive_player_stats(person, 1, read_u32(new.addr()) as i32);
     let main = Contract(if !person.is_null() && (read_u32(person.addr()) as i32) < read_u32(G_STAFF_COUNT) as i32 && (read_u32(staff_state_entry(person)) as i32) >= 0 {
         contract_at_index(read_u32(this), read_u32(staff_state_entry(person)) as i32)
@@ -2250,7 +2250,7 @@ pub(crate) unsafe extern "thiscall" fn end_loan(this: usize, person: usize) {
     crate::comparison::branch("cpp_2 end loan");
     let sheet = Contract(contract_at_index(read_u32(read_u32(G_CONTRACT_MANAGER) as usize), read_u32(staff_state_entry(person)) as i32));
     write_u32(G_CONTRACT_LOOKUP_RESULT, sheet.addr() as u32);
-    let owner = if sheet.is_null() { 0 } else { (contract_manager_club_by_id((sheet.club() as u32))).addr() };
+    let owner = if sheet.is_null() { 0 } else { (contract_manager_club_by_id(sheet.club() as u32)).addr() };
     contract_manager_archive_player_stats(person, 0, read_u32(owner) as i32);
     exe::discipline_restore_held_bans(read_u32(G_DISCIPLINE) as usize, person);
     remove_from_tactics_selection((person.club_job().addr() as u32) as usize, person, 0, 1);
@@ -2447,7 +2447,7 @@ pub(crate) unsafe extern "stdcall" fn staff_can_take_job(job: u32, person: usize
     }
     let p = Staff(person);
     let age = read_u8_volatile(p.addr() + staff::AGE) as i8;
-    let not_player = (p.non_player().addr() as u32);
+    let not_player = p.non_player().addr() as u32;
     let function = read_u8_volatile(p.addr() + staff::JOB_FOR_CLUB);
     let strength = || read_u8_volatile((p.player().addr() as u32) as usize + 0x2f) as i8; // +0x2f of the player
     // the common end (0x4cb9db): non-player in jobs 8, 6 or 5
@@ -2802,7 +2802,7 @@ pub(crate) unsafe extern "stdcall" fn contract_manager_season_end_month(club: us
     exe::date_date_54a110((d1.as_mut_ptr()) as usize);
     exe::key_nation_club_in_season(club, 0, (d1.as_mut_ptr()) as *mut u32 as usize);
     let p = exe::date_add_days((d1.as_mut_ptr()) as usize, (d2.as_mut_ptr()) as usize, (0xa) as u32); // dez dias depois
-    (exe::date_get_month(p) as u32)
+    exe::date_get_month(p) as u32 
 }
 
 /// Shows the CONTRACT_MANAGER "cannot create space" box for a line and text; the game continues.
@@ -3352,13 +3352,13 @@ pub(crate) unsafe fn squad_contract_of_staff(object: usize, person: Staff) -> Co
 /// `clube`), 3 com o bit e 4 sem. O jogo lê só o al.
 pub(crate) unsafe extern "thiscall" fn get_squad_placement(this: usize, person: usize, club: usize) -> u8 {
     let person = Staff(person);
-    let kind = (person.job_for_club() as i8);
+    let kind = person.job_for_club() as i8;
     if kind == 12 || exe::database_is_player_job(kind) == 0 {
         return 0;
     }
     let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let own = (person.club_job().addr() as u32) as usize;
-    if own != 0 && own == club && exe::database_is_player_job((person.job_for_club() as i8)) != 0 && exe::database_club_has_reserve_squad(club) != 0 {
+    if own != 0 && own == club && exe::database_is_player_job(person.job_for_club() as i8) != 0 && exe::database_club_has_reserve_squad(club) != 0 {
         return if person.playing_squad() & 1 != 0 { 2 } else { 1 }; // main or reserves
     }
     let mut slot = person.addr() as u32; // the argument’s slot: 0x540a50 may not write it
@@ -3723,7 +3723,7 @@ pub(crate) unsafe extern "thiscall" fn contract_value(t: usize, p: *const i32) -
     if sheet.is_null() {
         return 0;
     }
-    (sheet.wage() as u32)
+    sheet.wage() as u32 
 }
 
 /// `CONTRACT_MANAGER::schedule_offer_decision(id, slot)` (SEH only for the local date, with an empty destructor): finds
@@ -3866,7 +3866,7 @@ pub(crate) unsafe extern "stdcall" fn contract_category(p: usize, c: usize) -> u
     }
     let k = c.squad_status() >> 4;
     let v = c.happiness();
-    let age = (p.age() as i8);
+    let age = p.age() as i8;
     let ambicao = p.ambition();
     let rep = |o: usize| read_i16(sheet.addr() + o);
     let low = |limit: i8| if v <= limit { 7 } else { 4 };

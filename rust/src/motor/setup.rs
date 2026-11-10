@@ -676,9 +676,9 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
     let u = |a: usize| read_u32(a);
     let i = |a: usize| read_i32(a);
     let mut temporary = [0u8; 0x104];
-    copy_text(temporary.as_mut_ptr(), (exe::utils_build_file_path(0x987da0, 0xad9c64) as *const u8));
+    copy_text(temporary.as_mut_ptr(), exe::utils_build_file_path(0x987da0, 0xad9c64) as *const u8);
     let mut dados = [0u8; 0x104];
-    copy_text(dados.as_mut_ptr(), (exe::utils_build_file_path(0x9b5348, 0xad9c64) as *const u8));
+    copy_text(dados.as_mut_ptr(), exe::utils_build_file_path(0x9b5348, 0xad9c64) as *const u8);
     if cfg.is_null() {
         setup_warning(0x1c13);
         return 0;
@@ -898,8 +898,8 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
     });
     let nation = club.nation().addr();
     write_usize(p + staff::NATION, nation);
-    write_u32(p + staff::FIRST_NAME, (exe::database_pick_first_name_for_nation(nation) as u32));
-    let n2 = (exe::database_pick_second_name_for_nation(read_usize(p + staff::NATION)) as u32);
+    write_u32(p + staff::FIRST_NAME, exe::database_pick_first_name_for_nation(nation) as u32);
+    let n2 = exe::database_pick_second_name_for_nation(read_usize(p + staff::NATION)) as u32;
     write_u32(p + staff::SECOND_NAME, n2);
     exe::appoint_human_manager_to_club(p, club);
     1

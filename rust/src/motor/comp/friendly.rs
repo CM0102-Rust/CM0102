@@ -59,7 +59,7 @@ pub(crate) unsafe extern "thiscall" fn on_friendly_fixture_cancelled(this: usize
     if game.competition() == Competition(read_usize(this + 4)) && read_usize(this + friendly::SCHEDULED_SLOT_LIST) != 0 {
         // 0x5c6740: push +0x1c; push +0x20; push (dx = +0x28); push (ax = +0x2a); mov ecx, this -> thiscall, ret 0x10;
         // the registers carry in the high words what they already had (the pointer +0x14 and the +0x1c)
-        let v = exe::friendly_find_scheduled_friendly_slot(this, replace_low_word(game.home_club().addr(), (game.day() as i16)), replace_low_word(game.competition().addr(), (game.year() as i16)), (game.away_club().addr() as u32) as usize, (game.home_club().addr() as u32) as usize);
+        let v = exe::friendly_find_scheduled_friendly_slot(this, replace_low_word(game.home_club().addr(), game.day() as i16), replace_low_word(game.competition().addr(), game.year() as i16), (game.away_club().addr() as u32) as usize, (game.home_club().addr() as u32) as usize);
         if v != 0 {
             crate::comparison::branch("cqg_10 friendly slot free");
             write_u32(v + scheduled_friendly_slot::OPPONENT, 0); // cqg10: the place stays free
@@ -2533,7 +2533,7 @@ pub(crate) unsafe extern "stdcall" fn friendly_is_club_free_on_date(data: usize,
 /// nações) só lê e cai sempre no `xor eax, eax`.
 pub(crate) unsafe extern "thiscall" fn is_banned_nation_pair(this: usize, a: i32, b: i32) -> u32 {
     let this = Friendly(this);
-    let n = (this.banned_pair_count() as i8);
+    let n = this.banned_pair_count() as i8;
     let mut k: i8 = 0;
     while k < n {
         let p = this.banned_nation_pairs().wrapping_add(k as isize as usize * 8);
@@ -3303,6 +3303,6 @@ pub(crate) unsafe extern "thiscall" fn friendly_international_date_resolve(this:
     let high = year & 0xffff_0000;
     let week = high | b(0);
     let month = high | (b(0) & 0xff00) | read_u8(this + 2) as u32;
-    (exe::date_set(this + 3, high | b(1), month, year, (week) as i32) as u32) // the date with the given year
+    exe::date_set(this + 3, high | b(1), month, year, (week) as i32) as u32  // the date with the given year
 }
 

@@ -2,7 +2,7 @@
 MUTACOES = [
     ('cqg1_renovacao_como_nova', 'if read_usize(r + 4) == c.club() { // cqg1: the same club', 'if read_usize(r + 4) == c.club() && false { // mutacao: renovacao como contrato novo', 'cqg_1 same club'),
     ('cqg1_sem_vaga_livre', 'if read_usize(r) as i32 == -1 { // cqg1: the free place', 'if read_usize(r) as i32 == -1 && false { // mutacao: sem a vaga livre', 'cqg_1 free slot'),
-    ('cqg1_valor_zero_na_pessoa', 'person.set_wage((c.wage() as usize)); // cqg1: the contract value in the person', 'person.set_wage(0); // mutacao: valor zero', 'cqg_1 value on the person'),
+    ('cqg1_valor_zero_na_pessoa', 'person.set_wage(c.wage() as usize); // cqg1: the contract value in the person', 'person.set_wage(0); // mutacao: valor zero', 'cqg_1 value on the person'),
     ('cqg7_habilidade_mais_5', 'f.set_current_ability(ftol(r as f64 + pa * read_f64(m2)) as i16); // cqg7: the ability drawn by the PA', 'f.set_current_ability((ftol(r as f64 + pa * read_f64(m2)) as i16).wrapping_add(5)); // mutacao: a habilidade sorteada pela PA', 'cqg_7 ability'),
     ('cqg7_idade_17_a_19', 'age = (friendly_random(3) as i8).wrapping_add(0x10); // cqg7: the age from 16 to 18', 'age = (friendly_random(3) as i8).wrapping_add(0x11); // mutacao: a idade de 16 a 18', 'cqg_7 age 16 to 18'),
     ('cqg7_reputacao_x30', 'f.set_home_reputation(r.wrapping_add(f.current_ability().wrapping_mul(0x14)).wrapping_add(0xfa)); // cqg7: the +9 reputation of the regen', 'f.set_home_reputation(r.wrapping_add(f.current_ability().wrapping_mul(0x1e)).wrapping_add(0xfa)); // mutacao: a reputação +9 do regen', 'cqg_7 reputacao do regen'),

@@ -230,7 +230,7 @@ pub(crate) unsafe fn state_league_new_season(this: League, table: usize, file: u
     }
     let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
     predicted(this.addr());
-    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), this.competition().addr()) as u32)
+    exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), this.competition().addr()) as u32 
 }
 
 /// The next stage of a state league (`advance_stage`, slot 11, +0x28).

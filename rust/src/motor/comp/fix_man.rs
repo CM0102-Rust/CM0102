@@ -1531,7 +1531,7 @@ pub(crate) unsafe fn date_assign_ptr(target: *mut u8, source: usize) {
 /// cada data (só a palavra baixa conta), o clube, a lista, comp −1, tipo −2 e lado 1.
 pub(crate) unsafe fn find_club_fixtures_between(this: usize, a: *const u8, b: *const u8, club: u32, list: usize) -> u32 {
     let (a, b) = (a as usize, b as usize);
-    (exe::fixture_manager_find_fixtures(this, read_u32(a), read_u32(a + 2), read_u32(b), read_u32(b + 2), club, list, u32::MAX, 0xffff_fffe, 1) as u32)
+    exe::fixture_manager_find_fixtures(this, read_u32(a), read_u32(a + 2), read_u32(b), read_u32(b + 2), club, list, u32::MAX, 0xffff_fffe, 1) as u32 
 }
 
 /// Removes a fixture from the calendar (`remove_fixture`).
@@ -1613,7 +1613,7 @@ pub(crate) unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, ga
     let mut l = [0u8; 0xe];
     let lp = l.as_mut_ptr() as usize;
     list_init(lp);
-    if fix_man_is_friendly_comp((game.competition().addr() as u32)) {
+    if fix_man_is_friendly_comp(game.competition().addr() as u32) {
         list_destroy(lp);
         return;
     }
@@ -2003,12 +2003,12 @@ pub(crate) unsafe fn fixture_matches_filter(f: Fixture, club: u32, comp: u32, ki
         return false;
     }
     if club != u32::MAX {
-        let home = (f.home_club_id() as u32);
+        let home = f.home_club_id() as u32;
         if club != home && club != (f.away_club_id() as u32) {
             return false;
         }
         if side != 0xff {
-            let o_dele = if club == home { f.home_side_mark() } else { (f.away_side_mark() as u8) };
+            let o_dele = if club == home { f.home_side_mark() } else { f.away_side_mark() as u8  };
             if o_dele != side {
                 return false;
             }

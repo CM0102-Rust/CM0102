@@ -222,7 +222,7 @@ pub(crate) unsafe extern "thiscall" fn update_league_position_records(this: usiz
             let s = club_all_time_record(this, club, 1);
             let summary = read_usize(this + club_records_fields::CLUB_ENTRIES).wrapping_add(read_usize(club).wrapping_mul(0x6a));
             let year = (exe::key_nation_get_club_season_year(club) as i16) as u16;
-            let pos = (row.position() as u8);
+            let pos = row.position() as u8;
             let away = |v: i32| v < 0 || v > read_usize(G_CLUB_COMP_COUNT) as i32;
             if exe::club_records_record_type_applies(1, club, 1) != 0 {
                 let v = read_usize(t + club_record::BEST_POSITION_COMP) as i32;
@@ -464,17 +464,17 @@ pub(crate) unsafe fn copy_transfer_record(a: usize, o: usize, d: usize) {
 pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, t: usize) -> u32 {
     let t = Offer(t);
     let person = read_usize(G_STAFF_TABLE).wrapping_add(((t.target_staff_id() as i32) as usize).wrapping_mul(staff::SIZE));
-    let buyer = Club((injury_club_by_index((t.buyer_club_id() as i32))).addr());
+    let buyer = Club((injury_club_by_index(t.buyer_club_id() as i32)).addr());
     let contract = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
     write_usize(G_CONTRACT_LOOKUP_RESULT, contract.addr());
-    let seller = if !contract.is_null() { injury_club_by_index((contract.club() as i32)) } else { Club(0) };
+    let seller = if !contract.is_null() { injury_club_by_index(contract.club() as i32) } else { Club(0) };
     let mut draft = [0u8; 8];
     let s = exe::club_records_get_season_record(this, buyer, 1);
     let a = exe::club_records_get_all_time_record(this, buyer, 1);
     if seller.is_null() {
         return 1;
     }
-    let value = (t.fee() as i32);
+    let value = t.fee() as i32;
     if value != 0 && value > read_i32(s + club_record::FEE_PAID) {
         crate::comparison::branch("cpp_10 record fee paid");
         write_i32(s + club_record::FEE_PAID, value);
@@ -495,7 +495,7 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
     }
     let s = exe::club_records_get_season_record(this, seller, 1);
     let a = exe::club_records_get_all_time_record(this, seller, 1);
-    let value = (t.fee() as i32);
+    let value = t.fee() as i32;
     if value == 0 || value <= read_i32(s + club_record::FEE_RECEIVED) {
         return 1;
     }

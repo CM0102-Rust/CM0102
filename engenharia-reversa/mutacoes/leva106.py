@@ -12,7 +12,7 @@ MUTACOES = [
     ('e_clamp', "    let delta = random(m.clamp(-20, 20) as i32);", "    let delta = random(m.clamp(-19, 20) as i32);"),
     ('e_lim', "    let lim = (level as i16 as i32 * 300 + 4000) as i16;", "    let lim = (level as i16 as i32 * 300 + 4100) as i16;"),
     ('e_pot', "    let lo = pot * 50 - 3750;", "    let lo = pot * 50 - 3700;"),
-    ('e_teto9', "    let r9 = preso(c9, f_9, (read_f32(rdata::F32_250) as f64), (read_f32(rdata::F32_375) as f64), t9);", "    let r9 = preso(c9, f_9, (read_f32(rdata::F32_250) as f64), (read_f32(rdata::F32_300) as f64), t9);"),
+    ('e_teto9', "    let r9 = preso(c9, f_9, read_f32(rdata::F32_250) as f64 , read_f32(rdata::F32_375) as f64 , t9);", "    let r9 = preso(c9, f_9, (read_f32(rdata::F32_250) as f64), (read_f32(rdata::F32_300) as f64), t9);"),
     ('e_10000', "        let v = (v as i16).min(10000);", "        let v = (v as i16).min(9999);"),
     ('e_rep', "                rb = ftol(target as i16 as f64 * read_f64(rdata::F64_0_1) + rb as i16 as f64 * read_f64(rdata::F64_0_9));", "                rb = ftol(target as i16 as f64 * read_f64(rdata::F64_0_1) + rb as i16 as f64);"),
 ]

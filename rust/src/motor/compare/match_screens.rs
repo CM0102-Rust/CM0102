@@ -99,7 +99,7 @@ pub(crate) unsafe extern "C" fn compare_build_match_screen() {
     }
     let p = get_screen_param(0);
     if p != 0 && get_screen_param(1) as u8 != 1 {
-        let rd = |a: usize| read_usize(a);
+        let _rd = |a: usize| read_usize(a);
         let espectadores = read_usize(p + live_match::SPECTATORS);
         extra.push(((espectadores as isize + 0xc5 + read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize * 4) as usize, 4));
         extra.push((espectadores + match_spectators::COUNT, 1));

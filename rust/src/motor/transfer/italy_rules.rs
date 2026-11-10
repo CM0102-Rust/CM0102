@@ -12,7 +12,7 @@ use super::*;
 /// motivo)`: fora das duas primeiras janelas (0x8e8c40 com [this+4] e [this+4] + 0xc): motivo 9. Um clube de uma das
 /// cinco divisões ([0x9cf578] a [0x9cf588]) com quatro jogadores emprestados de outros clubes (ids abaixo de
 /// [0xae2364], contrato de empréstimo 0x4cf6d0) não pode (0x25).
-pub(crate) unsafe extern "thiscall" fn italy_rules_can_loan_player(this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
+pub(crate) unsafe extern "thiscall" fn italy_rules_can_loan_player(this: usize, club: usize, _player: usize, msg: usize, reason: *mut u16) -> u32 {
     let club = Club(club);
     // 0x8e8c40: push janela; push 0xae2c90; ecx = this -> thiscall, ret 8
     if exe::transfer_window_contains_date(this, G_CURRENT_DATE, read_usize(this + 4)) == 0 && exe::transfer_window_contains_date(this, G_CURRENT_DATE, read_usize(this + 4) + 0xc) == 0 {

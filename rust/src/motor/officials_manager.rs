@@ -781,7 +781,7 @@ pub(crate) unsafe extern "C" fn officials_manager_validate_officials() {
         fix_official_attribute(e, 0x29, || band((0xd, 8), (0xe, 7), (0xf, 6)));
         fix_official_attribute(e, 0x2a, || if random(0x64) != 0 { random_byte_plus(0xa, 0xb) } else { random_byte_plus(0xa, 5) });
         let mut limit = [0u8; 8];
-        let d = (exe::date_date_549f70((limit.as_mut_ptr()) as *mut u8 as *mut [u16; 4], 1, 1, 0x776, (-1) as i32 as u32) as *const u8);
+        let d = exe::date_date_549f70((limit.as_mut_ptr()) as *mut u8 as *mut [u16; 4], 1, 1, 0x776, (-1) as i32 as u32) as *const u8;
         let (dia, ano) = (read_i16(d as usize), read_i16(d as usize + 2) as u16);
         let year_and = read_i16(e + official::BIRTH_YEAR) as u16;
         if ano > year_and || (ano == year_and && dia > read_i16(e + official::BIRTH_DAY)) {

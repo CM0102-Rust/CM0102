@@ -167,7 +167,7 @@ pub(crate) unsafe extern "thiscall" fn init_from_current_contract(this: usize, p
     core::ptr::write_unaligned((this.addr() + contract::DATE_STARTED) as *mut [u8; 8], core::ptr::read_unaligned(G_CURRENT_DATE as *const [u8; 8])); // hoje
     core::ptr::write_unaligned((this.addr() + contract::CONTRACT_EXPIRES) as *mut [u8; 8], core::ptr::read_unaligned(end as *const [u8; 8])); // the end of the contract
     let b = (this.contract_type() & 0xc6) | 6;
-    this.set_previous_wage((this.wage() as usize));
+    this.set_previous_wage(this.wage() as usize);
     this.set_contract_type(b);
     this.set_squad_number(0);
     this.set_leaving_on_bosman(0);
@@ -272,7 +272,7 @@ pub(crate) unsafe fn staff_of_contract(contract: Contract) -> usize {
 /// só a palavra; devolve o eax inteiro da 0x54cdb0.
 pub(crate) unsafe extern "thiscall" fn days_to_end_date(this: usize) -> u32 {
     let this = Contract(this);
-    (exe::date_days_since(this.addr() + contract::CONTRACT_EXPIRES, read_u32(G_CURRENT_DATE), read_u32(G_CURRENT_DATE_LEAP)) as u32) // the contract end date
+    exe::date_days_since(this.addr() + contract::CONTRACT_EXPIRES, read_u32(G_CURRENT_DATE), read_u32(G_CURRENT_DATE_LEAP)) as u32  // the contract end date
 }
 
 /// Clears the grievances (+0x45), the opinion links (`staff_clear_opinion_links`) and, when asked, checks the withdrawal (`check_transfer_request_withdrawal`).
@@ -561,7 +561,7 @@ pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
     let t = Contract(t);
     let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add((read_i32(t.addr()) as usize).wrapping_mul(staff::SIZE)));
     let club = Club(read_usize(G_CLUB_TABLE).wrapping_add(((t.club() as i32) as usize).wrapping_mul(club::SIZE)));
-    let u = |a: usize| read_usize(a);
+    let _u = |a: usize| read_usize(a);
     let manager = club.manager().addr();
     if manager != 0 && p.addr() == manager {
         return 0;

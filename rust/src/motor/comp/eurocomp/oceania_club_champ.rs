@@ -69,7 +69,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
         write_usize(this.addr() + 0xf2, 0);
         this.set_active(1);
     }
-    (exe::league_update_for_date(this, today, full) as u32)
+    exe::league_update_for_date(this, today, full) as u32 
 }
 
 // simplification: the clubs, the predictions, the tables, the matches and the league day do not run twice. Original only; the plan
@@ -165,15 +165,15 @@ pub(crate) unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 
             this.competition().addr(),
             table,
             rodadas as u16 as u32,
-            (this.win_points() as u32),
-            (this.draw_points() as u32),
-            (this.match_category() as u32),
+            this.win_points() as u32 ,
+            this.draw_points() as u32 ,
+            this.match_category() as u32 ,
             this.addr() + league::TIEBREAKS,
             this.addr() + league::PROMOTED_COUNT,
             this.year() as u16 as u32,
             0,
             id as u16 as u32,
-            (this.importance() as u32),
+            this.importance() as u32 ,
             2,
             0,
             this.league_flags() as u16 as u32,

@@ -389,7 +389,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_post_call_up_news(this: us
     let mut news = [0u32; 0x38];
     let nt = news.as_mut_ptr() as usize;
     for idx in 1..=0x32usize {
-        let p = Staff(national_team.squad((idx - 1)));
+        let p = Staff(national_team.squad(idx - 1));
         if p.is_null() || p.playing_squad() & mark == 0 || p.club_job().is_null() || exe::news_club_has_human_manager(read_usize(G_NEWS), p.club_job()) == 0 {
             continue;
         }
@@ -486,7 +486,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_collect_fixture_opponents(
             nl = exe::new_llist(m);
         }
     }
-    let mut por = |v: usize| {
+    let por = |v: usize| {
         if dry_run {
             if let Some(p) = &mut *core::ptr::addr_of_mut!(FIXTURE_OPPONENTS_PLAN) {
                 p.push(read_usize(v) as u32);
