@@ -294,12 +294,12 @@ pub(crate) unsafe extern "thiscall" fn compare_discipline_set_slot(this: usize, 
 /// Comparer for `is_player_suspended`.
 ///
 /// [pt] Comparador: lado a lado pelas 20 vagas (+0x1e0) do clube do jogador (a 0x7e85b0 e a 0x600a50 só leem).
-pub(crate) unsafe extern "thiscall" fn compare_is_player_suspended(this: usize, player: usize, comp: *const i32, extra: u32, partida: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_is_player_suspended(this: usize, player: usize, comp: *const i32, extra: u32, fixture: usize) -> u32 {
     let player = Staff(player);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32, usize) -> u32>(IDX_IS_PLAYER_SUSPENDED);
     let club = Club(if !player.is_null() { player.club_job().addr() } else { 0 });
     let regions: &[(usize, usize)] = if !club.is_null() { &[(club.addr() + club::TEAM_SELECTED, 80)] } else { &[] };
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(regions, || o(this, player.addr(), comp, extra, partida), || is_player_suspended(this, player.addr(), comp, extra, partida));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(regions, || o(this, player.addr(), comp, extra, fixture), || is_player_suspended(this, player.addr(), comp, extra, fixture));
     SCOREBOARD.record(igual && r == n, || format!("is_player_suspended({:x}, {}) original={} rust={} {:x?} x {:x?}", player.addr(), *comp, r, n, mo, mr));
     r
 }
@@ -357,9 +357,9 @@ pub(crate) unsafe extern "thiscall" fn compare_is_one_booking_from_ban(this: usi
 /// Comparer for `process_match`.
 ///
 /// [pt] Comparador: o tribunal (0x7e7ff0) dá as suspensões: só a original.
-pub(crate) unsafe extern "thiscall" fn compare_process_match(this: usize, partida: usize, result: u32) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_process_match(this: usize, fixture: usize, result: u32) -> u32 {
     crate::comparison::branch("process_match");
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_PROCESS_MATCH)(this, partida, result)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_PROCESS_MATCH)(this, fixture, result)
 }
 
 /// Comparer for `discipline_remove_player`.

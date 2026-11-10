@@ -55,8 +55,8 @@ pub(crate) unsafe extern "thiscall" fn compare_process_retirements(this: usize) 
 }
 
 /// Comparer for `player_regen_post_retirement_news`.
-pub(crate) unsafe extern "stdcall" fn compare_player_regen_post_retirement_news(p: usize, reason: u32, anunciada: u32) {
-    original_fn::<unsafe extern "stdcall" fn(usize, u32, u32)>(IDX_PLAYER_REGEN_POST_RETIREMENT_NEWS)(p, reason, anunciada)
+pub(crate) unsafe extern "stdcall" fn compare_player_regen_post_retirement_news(p: usize, reason: u32, announced: u32) {
+    original_fn::<unsafe extern "stdcall" fn(usize, u32, u32)>(IDX_PLAYER_REGEN_POST_RETIREMENT_NEWS)(p, reason, announced)
 }
 
 /// Comparer for `player_regen_post_youth_promotion_news`.

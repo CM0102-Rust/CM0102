@@ -48,7 +48,7 @@ pub(crate) unsafe extern "C" fn compare_match_stats_compare_events(a: *const u8,
 /// [pt] As montagens da tela da partida são comparadas pela lista de exibição: as regiões da tela, o bloco
 /// de parâmetros sem o 0x14 (a hora que o redesenho dos últimos placares 0x724520 grava na aba 8), as
 /// marcas 0xb6b7a8/ac/b0, o texto 0xde1f64 e a posição do buffer de rede ([0xae290c]), mais `extra`.
-pub(crate) unsafe fn compare_montagem_da_partida(name: &str, extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce()) {
+pub(crate) unsafe fn compare_match_screen_build(name: &str, extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce()) {
     let mut reg = screen_build_regions();
     reg.push((G_MATCH_SCREEN_PANEL_REFRESHED_FLAG, 12));
     let slot = *((SCREEN_MANAGER + 0x382a) as *const i16) as isize;
@@ -108,7 +108,7 @@ pub(crate) unsafe extern "C" fn compare_build_match_screen() {
             extra.push((pm.commentator() + 0x2db0, 1));
         }
     }
-    compare_montagem_da_partida("build_match_screen", &extra, || o(), || build_match_screen());
+    compare_match_screen_build("build_match_screen", &extra, || o(), || build_match_screen());
 }
 
 /// Comparer for `handle_match_screen_input`.
@@ -134,7 +134,7 @@ pub(crate) unsafe extern "C" fn compare_build_match_details_screen() {
         // simplification: allocating, freeing and narrating do not run twice; those cases are proven in Rust mode
         return o();
     }
-    compare_montagem_da_partida("build_match_details_screen", &[], || o(), || build_match_details_screen());
+    compare_match_screen_build("build_match_details_screen", &[], || o(), || build_match_details_screen());
 }
 
 /// Comparer for `refresh_possession_bar`.
@@ -218,7 +218,7 @@ pub(crate) unsafe extern "C" fn compare_match_screens_draw_live_league_table(lea
     if table != 0 && n > 0 {
         extra.push((table, n as usize * 59));
     }
-    compare_pela_lista_com("match_screens_draw_live_league_table", &extra, || o(league.addr(), top, base), || match_screens_draw_live_league_table(league.addr(), top, base));
+    compare_by_display_list_with("match_screens_draw_live_league_table", &extra, || o(league.addr(), top, base), || match_screens_draw_live_league_table(league.addr(), top, base));
 }
 
 /// Comparer for `match_screens_draw_team_selection`.
@@ -227,7 +227,7 @@ pub(crate) unsafe extern "C" fn compare_match_screens_draw_live_league_table(lea
 /// dentro de cada execução).
 pub(crate) unsafe extern "C" fn compare_match_screens_draw_team_selection() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_MATCH_SCREENS_DRAW_TEAM_SELECTION);
-    compare_painel_pela_lista("match_screens_draw_team_selection", || o(), || match_screens_draw_team_selection());
+    compare_panel_by_display_list("match_screens_draw_team_selection", || o(), || match_screens_draw_team_selection());
 }
 
 /// Comparer for `match_screens_load`.
@@ -306,8 +306,8 @@ pub(crate) unsafe extern "C" fn compare_match_screens_handle_waiting_screen() ->
 
 /// Comparer for `pela_lista_com`.
 ///
-/// [pt] Como `compare_painel_pela_lista`, com mais regiões (o que a rotina grava fora da tela).
-pub(crate) unsafe fn compare_pela_lista_com(name: &str, extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce()) {
+/// [pt] Como `compare_panel_by_display_list`, com mais regiões (o que a rotina grava fora da tela).
+pub(crate) unsafe fn compare_by_display_list_with(name: &str, extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce()) {
     let mut reg = screen_build_regions();
     reg.extend(screen_param_regions());
     reg.push((0xde1f64, 0x100));
@@ -343,7 +343,7 @@ pub(crate) unsafe extern "C" fn compare_draw_action_zones_panel(top: *mut i32, b
         return o(top, base);
     }
     let extra = [(top as usize, 4), (G_ACTION_ZONES_STATIC_COLOUR, 2), (G_ACTION_ZONES_STATIC_GUARD, 1), (photo, 0xd7a)];
-    compare_pela_lista_com("draw_action_zones_panel", &extra, || o(top, base), || draw_action_zones_panel(top, base));
+    compare_by_display_list_with("draw_action_zones_panel", &extra, || o(top, base), || draw_action_zones_panel(top, base));
 }
 
 /// Comparer for `draw_match_report_panel`.
@@ -356,7 +356,7 @@ pub(crate) unsafe extern "C" fn compare_draw_match_report_panel(top: *mut i32, b
         // simplification: the report allocation does not run twice; this path is proven in Rust mode
         return o(top, base);
     }
-    compare_painel_pela_lista("draw_match_report_panel", || o(top, base), || draw_match_report_panel(top, base));
+    compare_panel_by_display_list("draw_match_report_panel", || o(top, base), || draw_match_report_panel(top, base));
 }
 
 /// Comparer for `build_day_fixtures_screen`.
@@ -365,7 +365,7 @@ pub(crate) unsafe extern "C" fn compare_draw_match_report_panel(top: *mut i32, b
 pub(crate) unsafe extern "C" fn compare_build_day_fixtures_screen() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_BUILD_DAY_FIXTURES_SCREEN);
     let mark = (get_screen_param(1) as isize + 0x14 + read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize * 4) as usize;
-    compare_pela_lista_com("build_day_fixtures_screen", &[(mark, 4)], || o(), || build_day_fixtures_screen());
+    compare_by_display_list_with("build_day_fixtures_screen", &[(mark, 4)], || o(), || build_day_fixtures_screen());
 }
 
 /// Comparer for `valores_da_partida`, the match values.
@@ -382,7 +382,7 @@ pub(crate) unsafe extern "C" fn compare_build_day_fixtures_screen() {
 /// em +0x3802, que cada atualização de item zera e preenche), o `Display` da tela atual, o bloco de
 /// parâmetros, a cópia do estado (0xd7a bytes) e o texto 0xde1f64 têm de sair iguais. O conteúdo do
 /// buffer de mensagens ([gerente + 0x37fe]) não entra (como na leva das listas).
-pub(crate) unsafe fn compare_valores_da_partida(name: &str, original: impl FnOnce(), rust: impl FnOnce()) {
+pub(crate) unsafe fn compare_match_values(name: &str, original: impl FnOnce(), rust: impl FnOnce()) {
     let copy = get_screen_param(0x1d);
     if copy == 0 {
         // simplification: without a copy the routine allocates the copy (0x944cf1) and writes it to parameter 0x1d; it cannot
@@ -406,19 +406,19 @@ pub(crate) unsafe fn compare_valores_da_partida(name: &str, original: impl FnOnc
 /// Comparer for `refresh_match_stats_values`.
 pub(crate) unsafe extern "C" fn compare_refresh_match_stats_values() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_REFRESH_MATCH_STATS_VALUES);
-    compare_valores_da_partida("refresh_match_stats_values", || o(), || refresh_match_stats_values());
+    compare_match_values("refresh_match_stats_values", || o(), || refresh_match_stats_values());
 }
 
 /// Comparer for `refresh_action_zones_values`.
 pub(crate) unsafe extern "C" fn compare_refresh_action_zones_values() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_REFRESH_ACTION_ZONES_VALUES);
-    compare_valores_da_partida("refresh_action_zones_values", || o(), || refresh_action_zones_values());
+    compare_match_values("refresh_action_zones_values", || o(), || refresh_action_zones_values());
 }
 
 /// Comparer for `refresh_player_ratings_rows`.
 pub(crate) unsafe extern "C" fn compare_refresh_player_ratings_rows() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_REFRESH_PLAYER_RATINGS_ROWS);
-    compare_valores_da_partida("refresh_player_ratings_rows", || o(), || refresh_player_ratings_rows());
+    compare_match_values("refresh_player_ratings_rows", || o(), || refresh_player_ratings_rows());
 }
 
 /// Comparer for `painel_pela_lista`.
@@ -435,7 +435,7 @@ pub(crate) unsafe extern "C" fn compare_refresh_player_ratings_rows() {
 /// 0xde1f64 têm de sair iguais. A lista (0x55fba0) também escreve num buffer de rede ([0xae2908] na
 /// posição [0xae290c]): a posição entra nas regiões (volta para a segunda rodada escrever no mesmo
 /// lugar e o tamanho escrito é comparado); o conteúdo desse buffer não.
-pub(crate) unsafe fn compare_painel_pela_lista(name: &str, original: impl FnOnce(), rust: impl FnOnce()) {
+pub(crate) unsafe fn compare_panel_by_display_list(name: &str, original: impl FnOnce(), rust: impl FnOnce()) {
     let mut reg = screen_build_regions();
     reg.extend(screen_param_regions());
     reg.push((0xde1f64, 0x100));
@@ -453,7 +453,7 @@ pub(crate) unsafe fn compare_painel_pela_lista(name: &str, original: impl FnOnce
 /// Comparer for `draw_team_stats_panel`.
 pub(crate) unsafe extern "C" fn compare_draw_team_stats_panel(side: u32, top: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(u32, *mut i32, *mut i32)>(IDX_DRAW_TEAM_STATS_PANEL);
-    compare_painel_pela_lista("draw_team_stats_panel", || o(side, top, base), || draw_team_stats_panel(side, top, base));
+    compare_panel_by_display_list("draw_team_stats_panel", || o(side, top, base), || draw_team_stats_panel(side, top, base));
 }
 
 /// Comparer for `draw_player_ratings_panel`.
@@ -464,7 +464,7 @@ pub(crate) unsafe extern "C" fn compare_draw_player_ratings_panel(top: *mut i32,
     if get_screen_param(0x1d) == 0 {
         return o(top, base);
     }
-    compare_painel_pela_lista("draw_player_ratings_panel", || o(top, base), || draw_player_ratings_panel(top, base));
+    compare_panel_by_display_list("draw_player_ratings_panel", || o(top, base), || draw_player_ratings_panel(top, base));
 }
 
 /// Comparer for `draw_match_stats_panel`.
@@ -475,7 +475,7 @@ pub(crate) unsafe extern "C" fn compare_draw_match_stats_panel(top: *mut i32, ba
     if get_screen_param(0x1d) == 0 {
         return o(top, base);
     }
-    compare_painel_pela_lista("draw_match_stats_panel", || o(top, base), || draw_match_stats_panel(top, base));
+    compare_panel_by_display_list("draw_match_stats_panel", || o(top, base), || draw_match_stats_panel(top, base));
 }
 
 /// Comparer for `match_screens_handle_continue_command`.
@@ -510,14 +510,14 @@ pub(crate) unsafe extern "thiscall" fn compare_match_player_row_assign(this: usi
 }
 
 /// Comparer for `match_screens_tally_live_score`.
-pub(crate) unsafe extern "C" fn compare_match_screens_tally_live_score(partida: usize, index: u32, res: usize) {
+pub(crate) unsafe extern "C" fn compare_match_screens_tally_live_score(fixture: usize, index: u32, res: usize) {
     let res = Fixture(res);
     let o = original_fn::<unsafe extern "C" fn(usize, u32, usize)>(IDX_MATCH_SCREENS_TALLY_LIVE_SCORE);
     if res.is_null() {
-        return o(partida, index, res.addr());
+        return o(fixture, index, res.addr());
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(res.addr() + fixture::HOME_GOALS, 0xa)], || o(partida, index, res.addr()), || match_screens_tally_live_score(partida, index, res.addr()));
-    SCOREBOARD.record(igual, || format!("match_screens_tally_live_score(match {:#x}, index {}): {:02x?} / {:02x?}", partida, index, mo.0, mr.0));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(res.addr() + fixture::HOME_GOALS, 0xa)], || o(fixture, index, res.addr()), || match_screens_tally_live_score(fixture, index, res.addr()));
+    SCOREBOARD.record(igual, || format!("match_screens_tally_live_score(match {:#x}, index {}): {:02x?} / {:02x?}", fixture, index, mo.0, mr.0));
 }
 
 /// Comparer for `fixture_entry_matches`.
@@ -564,8 +564,8 @@ pub(crate) unsafe extern "C" fn compare_match_screens_find_best_rated_starter_sl
 }
 
 /// Comparer for `open_match_screen`.
-pub(crate) unsafe extern "C" fn compare_open_match_screen(slot: u32, partida: usize) {
-    original_fn::<unsafe extern "C" fn(u32, usize)>(IDX_OPEN_MATCH_SCREEN)(slot, partida)
+pub(crate) unsafe extern "C" fn compare_open_match_screen(slot: u32, fixture: usize) {
+    original_fn::<unsafe extern "C" fn(u32, usize)>(IDX_OPEN_MATCH_SCREEN)(slot, fixture)
 }
 
 /// Comparer for `resposta`.
@@ -602,8 +602,8 @@ pub(crate) unsafe extern "C" fn compare_handle_team_stats_input(item: u32) -> i3
 }
 
 /// Comparer for `open_match_details`.
-pub(crate) unsafe extern "C" fn compare_open_match_details(partida: usize) {
-    original_fn::<unsafe extern "C" fn(usize)>(IDX_OPEN_MATCH_DETAILS)(partida)
+pub(crate) unsafe extern "C" fn compare_open_match_details(fixture: usize) {
+    original_fn::<unsafe extern "C" fn(usize)>(IDX_OPEN_MATCH_DETAILS)(fixture)
 }
 
 /// Comparer for `match_details_input`.

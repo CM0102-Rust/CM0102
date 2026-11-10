@@ -44,15 +44,15 @@ pub(crate) struct BraRegRioStateChampionship {
 /// 0), ret 4); as estatísticas (operator new 0x944cf1 de 0x5ce e Comp_Stats::Comp_Stats 0x49ee70, thiscall(novo,
 /// this), ret 4; o quadro SEH da original cobre só esse new) em +8 (sem elas: a caixa); por fim as posições previstas.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: League, ano: u32, registro: usize, e: &BraRegRioStateChampionship, disciplina: u8, predicted_yes: bool, ramo: &'static str) -> usize {
+pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: League, year: u32, registro: usize, e: &BraRegRioStateChampionship, discipline: u8, predicted_yes: bool, ramo: &'static str) -> usize {
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.rules);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.table);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.predicted);
     exe::new_league(this);
     write_usize(this.addr() + league::COMPETITION, registro);
     write_usize(this.addr(), e.vtabela);
-    write_u16(this.addr() + league::YEAR, ano as u16);
-    this.set_discipline_rule(disciplina);
+    write_u16(this.addr() + league::YEAR, year as u16);
+    this.set_discipline_rule(discipline);
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this.addr();
     }
@@ -262,7 +262,7 @@ pub(crate) unsafe fn cap_attendance(c: Club, lim: i32) {
 /// - os outros: + exe::utils_random(r × d × 5 × f), × 10 para o dono com d > 0 ou com +0x80 acima de 500 × r; a mistura com o
 ///   público real (sem o peso f); o piso pela reputação; e o teto de 2000 r (r ≤ 7), 3000 r (r ≤ 12) ou 5000 r.
 /// No fim de cada um: no mínimo 500, e dentro de [+0x77, +0x7b]. A tabela é liberada (free 0x9452ca).
-pub(crate) unsafe extern "C" fn cqt4_atualizar_media_de_publico(league: usize) {
+pub(crate) unsafe extern "C" fn cqt4_update_average_attendance(league: usize) {
     let league = League(league);
     let table_c = read_usize(G_COMP_OBJECT_TABLE);
     let cima = if league.upper_division_id() == -1 { 0 } else { read_usize(table_c + 4 * (league.upper_division_id() as usize)) };

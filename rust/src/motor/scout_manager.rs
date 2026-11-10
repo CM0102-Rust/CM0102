@@ -761,10 +761,10 @@ pub(crate) unsafe extern "thiscall" fn set_selected_list(this: usize, list: u32,
 /// é um dos dois da partida (+0x1c primeiro, depois +0x20), que não está cedida (0x8c7560, fora de seleção 0x53b900),
 /// nem lesionada (0x62c400 = 2), nem suspensa (0x55d270), nem impedida (0x7757d0), e que ainda não jogou (0x8cf5e0
 /// = 0), dá 1. Senão 0.
-pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, partida: usize) -> u32 {
-    let partida = Fixture(partida);
-    let (c1, c2) = (partida.home_club(), partida.away_club());
-    if read_i32(partida.addr()) < 0 {
+pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, fixture: usize) -> u32 {
+    let fixture = Fixture(fixture);
+    let (c1, c2) = (fixture.home_club(), fixture.away_club());
+    if read_i32(fixture.addr()) < 0 {
         crate::comparison::branch("cps_8 negative competition");
         return 0; // cps8: negative competition
     }
@@ -772,7 +772,7 @@ pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, p
     let mut e = exe::llist_get_next(G_SCOUT_CLUB_TABLE_LIST);
     while e != 0 {
         let v = read_usize(e);
-        if partida.home_club_id() == v || partida.away_club_id() == v {
+        if fixture.home_club_id() == v || fixture.away_club_id() == v {
             return 1;
         }
         e = exe::llist_get_next(G_SCOUT_CLUB_TABLE_LIST);
@@ -803,13 +803,13 @@ pub(crate) unsafe extern "thiscall" fn fixture_has_scouted_player(this: usize, p
         if exe::injury_get_player_injury_status(read_usize(G_INJURY), p) == 2 {
             continue;
         }
-        if exe::discipline_is_player_banned(read_usize(G_DISCIPLINE), p, partida.competition(), 1, 0) != 0 {
+        if exe::discipline_is_player_banned(read_usize(G_DISCIPLINE), p, fixture.competition(), 1, 0) != 0 {
             continue;
         }
         if exe::nationalteams_get_international_duty_club(read_usize(G_NATIONAL_TEAMS), p, G_CURRENT_DATE, x, 0, 0) != 0 {
             continue;
         }
-        if exe::transfer_manager_get_ineligibility_code(read_usize(G_TRANSFER_MANAGER), p, partida) == 0 {
+        if exe::transfer_manager_get_ineligibility_code(read_usize(G_TRANSFER_MANAGER), p, fixture) == 0 {
             return 1;
         }
     }

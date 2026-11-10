@@ -120,17 +120,17 @@ pub(crate) unsafe extern "C" fn compare_comp_util_get_latest_placed_club(comp: u
 }
 
 /// Comparer for `comp_util_read_fixture_from_news_slots`.
-pub(crate) unsafe extern "C" fn compare_comp_util_read_fixture_from_news_slots(news: usize, partida: usize, cursor: *mut u8) {
+pub(crate) unsafe extern "C" fn compare_comp_util_read_fixture_from_news_slots(news: usize, fixture: usize, cursor: *mut u8) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, *mut u8)>(IDX_COMP_UTIL_READ_FIXTURE_FROM_NEWS_SLOTS);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(partida, 0x4d), (cursor as usize, 1)],
-        || o(news, partida, cursor), || comp_util_read_fixture_from_news_slots(news, partida, cursor));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(fixture, 0x4d), (cursor as usize, 1)],
+        || o(news, fixture, cursor), || comp_util_read_fixture_from_news_slots(news, fixture, cursor));
     SCOREBOARD.record(igual, || format!("comp_util_read_fixture_from_news_slots {:x?} x {:x?}", mo, mr));
 }
 
 /// Comparer for `comp_util_classify_tie_result_for_news`.
-pub(crate) unsafe extern "C" fn compare_comp_util_classify_tie_result_for_news(club: usize, partida: usize) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_COMP_UTIL_CLASSIFY_TIE_RESULT_FOR_NEWS)(club, partida);
-    let n = comp_util_classify_tie_result_for_news(club, partida);
+pub(crate) unsafe extern "C" fn compare_comp_util_classify_tie_result_for_news(club: usize, fixture: usize) -> u8 {
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_COMP_UTIL_CLASSIFY_TIE_RESULT_FOR_NEWS)(club, fixture);
+    let n = comp_util_classify_tie_result_for_news(club, fixture);
     SCOREBOARD.record(r == n, || format!("comp_util_classify_tie_result_for_news original={} rust={}", r, n));
     r
 }

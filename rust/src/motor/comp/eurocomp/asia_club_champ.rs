@@ -485,8 +485,8 @@ pub(crate) const LDV_VANS_TROPHY_FINAL: [AsiaClubChampScheduleOp; 18] = [
 /// [pt] A Liga dos Campeões asiática [inferência: o Campeonato Asiático de Clubes], as fases: −1 e 0 as eliminatórias de
 /// cada zona (2 rodadas de ida e volta em agosto e setembro), 1 e 2 os grupos finais (3 rodadas em março), 3 a fase
 /// final (semifinal, terceiro lugar e final em maio).
-pub(crate) fn asian_club_champ_stage(fase: u32) -> Option<ScheduleStage> {
-    let f = fase as u8 as i8;
+pub(crate) fn asian_club_champ_stage(stage: u32) -> Option<ScheduleStage> {
+    let f = stage as u8 as i8;
     match f {
         -1 | 0 => Some(ScheduleStage { league: 0, rounds: 2, extra: 0x480 + (f != -1) as i16, extra_check: false, size: 0xd0, row: 0xc5,
             ops: &ASIAN_CHAMPIONS_LEAGUE_ZONE_KNOCKOUT_OPS, name: "cqp_11 eliminatorias da liga dos campeoes asiatica" }),
@@ -516,8 +516,8 @@ pub(crate) unsafe extern "thiscall" fn asia_club_champ_create_round_table(this: 
 ///
 /// [pt] A Recopa asiática, as fases: −1 e 0 as eliminatórias de cada zona (3 rodadas de agosto a março), 1 a fase final
 /// (semifinal, terceiro lugar e final em maio).
-pub(crate) fn asian_cup_winners_stage(fase: u32) -> Option<ScheduleStage> {
-    let f = fase as u8 as i8;
+pub(crate) fn asian_cup_winners_stage(stage: u32) -> Option<ScheduleStage> {
+    let f = stage as u8 as i8;
     match f {
         -1 | 0 => Some(ScheduleStage { league: 0, rounds: 3, extra: 0x480 + (f != -1) as i16, extra_check: false, size: 0x138, row: 0xc6,
             ops: &ASIAN_CUP_WINNERS_KNOCKOUT_OPS, name: "cqp_11 eliminatorias da recopa asiatica" }),
@@ -531,8 +531,8 @@ pub(crate) fn asian_cup_winners_stage(fase: u32) -> Option<ScheduleStage> {
 ///
 /// [pt] O LDV Vans Trophy (o troféu da liga inglesa de baixo), as fases: −1 e 0 as chaves do Norte e do Sul (5 rodadas em
 /// jogo único de dezembro a fevereiro e a final da chave em ida e volta em março), 1 a final (abril, mando 4).
-pub(crate) fn ldv_trophy_stage(fase: u32) -> Option<ScheduleStage> {
-    let f = fase as u8 as i8;
+pub(crate) fn ldv_trophy_stage(stage: u32) -> Option<ScheduleStage> {
+    let f = stage as u8 as i8;
     match f {
         -1 | 0 => Some(ScheduleStage { league: 0, rounds: 5, extra: 0x41d + (f != -1) as i16, extra_check: false, size: 0x208, row: 0xca,
             ops: &LDV_VANS_TROPHY_SECTION_OPS, name: "cqp_11 chaves do trofeu" }),

@@ -754,13 +754,13 @@ pub(crate) static mut ROUND_PRIZE_MONEY_DRY_RUN: bool = false;
 ///
 /// [pt] A notícia do prêmio (Comp 0x48e3e0: 7 pushes; ecx = a copa; sem add esp -> thiscall(copa, clube, valor, alto do
 /// valor, −1, rodada seguinte, partida, desfecho), ret 0x1c); no ensaio, nada.
-pub(crate) unsafe fn send_prize_news(cup: Cup, club: usize, value: i32, next: u32, partida: Fixture, outcome: u8) {
+pub(crate) unsafe fn send_prize_news(cup: Cup, club: usize, value: i32, next: u32, fixture: Fixture, outcome: u8) {
     if ROUND_PRIZE_MONEY_DRY_RUN {
         return;
     }
     // simplification: the original pushes the dword of a local of which it writes only the low byte (the high bits are stack leftover);
     // the news item only reads the read_i8(movsx ecx + (byte [esp+0x114])): here, the clean byte.
-    exe::comp_send_prize_money_news(cup, club, value, value >> 31, -1, next, partida, (outcome as u32) as i32);
+    exe::comp_send_prize_money_news(cup, club, value, value >> 31, -1, next, fixture, (outcome as u32) as i32);
 }
 
 /// Round r's prize (to winner, to loser), from the round record (+0x60/+0x64) or from the prize fund; None where the
@@ -816,16 +816,16 @@ pub(crate) unsafe fn round_prizes(cup: Cup, r: i32, count: bool) -> Option<(i32,
 /// desfecho +5 do time, 3 se era 1 na partida 0x136, e a rodada seguinte: a palavra +7 dela se não é a última nem
 /// 0x8c, sobre os 16 bits altos do ponteiro da rodada, como a original deixa no ebp) e o dinheiro (0x5999a0 nas
 /// finanças 0x5a0590); o perdedor só o dinheiro; o fundo perde os dois.
-pub(crate) unsafe extern "thiscall" fn pay_round_prize_money(cup: usize, winner: usize, loser: usize, round: u32, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn pay_round_prize_money(cup: usize, winner: usize, loser: usize, round: u32, fixture: usize) {
     let cup = Cup(cup);
-    let partida = Fixture(partida);
+    let fixture = Fixture(fixture);
     let r = round as i16 as i32;
     let (ao_vencedor, ao_perdedor) = match round_prizes(cup, r, true) {
         Some(p) => p,
-        None => return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, usize)>(IDX_PAY_ROUND_PRIZE_MONEY)(cup.addr(), winner, loser, round, partida.addr()), // simplification: the original crashes on the division; let it crash there
+        None => return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, usize)>(IDX_PAY_ROUND_PRIZE_MONEY)(cup.addr(), winner, loser, round, fixture.addr()), // simplification: the original crashes on the division; let it crash there
     };
     let mut outcome = read_u8(winner + 5);
-    if partida.round_name() == 0x136 && outcome == 1 {
+    if fixture.round_name() == 0x136 && outcome == 1 {
         outcome = 3;
     }
     let e = round_record(cup, r);
@@ -837,7 +837,7 @@ pub(crate) unsafe extern "thiscall" fn pay_round_prize_money(cup: usize, winner:
         }
     }
     if ao_vencedor != 0 {
-        send_prize_news(cup, read_usize(winner), ao_vencedor, next, partida, outcome);
+        send_prize_news(cup, read_usize(winner), ao_vencedor, next, fixture, outcome);
         crate::comparison::branch("cqa_1 winner prize");
         european_cup_add_prize_money(european_cup_club_finance(read_usize(winner)), ao_vencedor); // cqa1: the winner’s prize
         cup.set_prize_fund(cup.prize_fund().wrapping_sub(ao_vencedor));
@@ -2853,16 +2853,16 @@ pub(crate) unsafe extern "thiscall" fn find_tree_slot_for_fixture(cup: usize, ga
 /// [pt] { 0x5221f0 } (thiscall, ret 0xc, Cup.cpp): a importância da partida da copa (a fase +0x34 da
 /// partida menos +0x3c mais +0x51 da copa, pelo menos 1) e em `margem` a diferença do placar da ida
 /// (+0x4b/+0x4c, 0xff sem ida) para o lado `segundo`, mais 1 (0xff abaixo de 1). Devolve só `al`.
-pub(crate) unsafe extern "thiscall" fn cup_match_importance(cup: usize, partida: usize, second: u8, margin: *mut u8) -> u8 {
+pub(crate) unsafe extern "thiscall" fn cup_match_importance(cup: usize, fixture: usize, second: u8, margin: *mut u8) -> u8 {
     let cup = Cup(cup);
-    let partida = Fixture(partida);
-    let mut al = (partida.round_number() as u8).wrapping_sub((cup.round_count() as u8)).wrapping_add(cup.importance_bias());
+    let fixture = Fixture(fixture);
+    let mut al = (fixture.round_number() as u8).wrapping_sub((cup.round_count() as u8)).wrapping_add(cup.importance_bias());
     if (al as i8) < 1 {
         al = 1;
     }
-    let first_leg = (partida.home_aggregate() as u8);
+    let first_leg = (fixture.home_aggregate() as u8);
     if first_leg != 0xff {
-        let volta = (partida.away_aggregate() as u8);
+        let volta = (fixture.away_aggregate() as u8);
         *margin = if second == 0 { volta.wrapping_sub(first_leg) } else { first_leg.wrapping_sub(volta) }.wrapping_add(1);
         if (*margin as i8) < 1 {
             *margin = 0xff;

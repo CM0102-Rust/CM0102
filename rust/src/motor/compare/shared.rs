@@ -13,9 +13,9 @@ pub(crate) unsafe extern "C" fn compare_buscar_no_conteiner(z: usize, desloc: i3
     original_fn::<unsafe extern "C" fn(usize, i32, u32) -> i32>(IDX_BUSCAR_NO_CONTEINER)(z, desloc, source)
 }
 
-/// Comparer for `posicao_no_conteiner`.
-pub(crate) unsafe extern "C" fn compare_posicao_no_conteiner(z: usize) -> i32 {
-    original_fn::<unsafe extern "C" fn(usize) -> i32>(IDX_POSICAO_NO_CONTEINER)(z)
+/// Comparer for `position_in_container`.
+pub(crate) unsafe extern "C" fn compare_position_in_container(z: usize) -> i32 {
+    original_fn::<unsafe extern "C" fn(usize) -> i32>(IDX_POSITION_IN_CONTAINER)(z)
 }
 
 /// Comparer for `table_a`.
@@ -69,7 +69,7 @@ pub(crate) unsafe extern "stdcall" fn compare_limit(l: u8, v: i8) -> u8 {
 }
 
 /// Comparer for `condicao`.
-pub(crate) unsafe extern "thiscall" fn compare_condicao(this: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_player_condition(this: usize) -> u8 {
     let this = MatchPlayer(this);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_PLAYER_CONDITION)(this.addr());
     let n = player_condition(this.addr());
@@ -280,7 +280,7 @@ pub(crate) unsafe extern "thiscall" fn compare_mais_perto(this: usize, j: usize)
 }
 
 /// Comparer for `na_linha`.
-pub(crate) unsafe extern "thiscall" fn compare_na_linha(this: usize, x1: i8, y1: i8, x2: i8, y2: i8) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_players_in_line(this: usize, x1: i8, y1: i8, x2: i8, y2: i8) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, i8) -> u8>(IDX_PLAYERS_IN_LINE)(this, x1, y1, x2, y2);
     let n = players_in_line(this, x1, y1, x2, y2);
     SCOREBOARD.record(r == n, || format!("players_in_line({}, {}) -> ({}, {}) original={} rust={}", x1, y1, x2, y2, r, n));
@@ -324,7 +324,7 @@ pub(crate) unsafe extern "thiscall" fn compare_marcas(this: usize, position: i8)
 }
 
 /// Comparer for `papel_ataque`.
-pub(crate) unsafe extern "thiscall" fn compare_papel_ataque(j: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_attacking_role(j: usize) -> u8 {
     let j = MatchPlayer(j);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_ATTACKING_ROLE)(j.addr());
     let n = attacking_role(j.addr());
@@ -333,7 +333,7 @@ pub(crate) unsafe extern "thiscall" fn compare_papel_ataque(j: usize) -> u8 {
 }
 
 /// Comparer for `papel_defesa`.
-pub(crate) unsafe extern "thiscall" fn compare_papel_defesa(j: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_defending_role(j: usize) -> u8 {
     let j = MatchPlayer(j);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_DEFENDING_ROLE)(j.addr());
     let n = defending_role(j.addr());
@@ -374,7 +374,7 @@ pub(crate) unsafe extern "thiscall" fn compare_atualizar(this: usize) {
 }
 
 /// Comparer for `momento`.
-pub(crate) unsafe extern "thiscall" fn compare_momento(this: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_draw_moment(this: usize) {
     let this = MatchPlayer(this);
     let f = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_DRAW_MOMENT);
     let mut regions = vec![(this.addr() + match_player::MOMENT_PACE, 10)];
@@ -384,7 +384,7 @@ pub(crate) unsafe extern "thiscall" fn compare_momento(this: usize) {
 }
 
 /// Comparer for `posicao_um`.
-pub(crate) unsafe extern "thiscall" fn compare_posicao_um(this: usize, l: i8) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_hold_position_one(this: usize, l: i8) -> usize {
     let this = Engine(this);
     let f = original_fn::<unsafe extern "thiscall" fn(usize, i8) -> usize>(IDX_HOLD_POSITION_ONE);
     let mut regions = vec![(this.addr() + engine::GOALKEEPER, 8)];
@@ -516,7 +516,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pressao_area(this: usize, l: i8) 
 }
 
 /// Comparer for `mais_proximo`.
-pub(crate) unsafe extern "thiscall" fn compare_mais_proximo(this: usize, j: usize, a: i8, b: i8) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_nearest_to_point(this: usize, j: usize, a: i8, b: i8) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, i8) -> u8>(IDX_NEAREST_TO_POINT)(this, j, a, b);
     let n = nearest_to_point(this, j, a, b);
     SCOREBOARD.record(r == n, || format!("nearest_to_point({}, {}) original={} rust={}", a, b, r, n));

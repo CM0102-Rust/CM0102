@@ -84,7 +84,7 @@ pub const STATE_REGIONS: [(usize, usize); 2] = [(0xde1f5c, 8), (0xad6c30, 4)];
 unsafe fn count_draw(n: i32) {
     detours::recheck_on_day();
     if COUNTING.with(|c| c.get()) {
-        simulation::sorteio(n, *POINTER, *OFFSET, *RAND_STATE);
+        simulation::record_draw(n, *POINTER, *OFFSET, *RAND_STATE);
     }
 }
 

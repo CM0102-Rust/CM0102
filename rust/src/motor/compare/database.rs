@@ -1021,7 +1021,7 @@ pub(crate) unsafe extern "C" fn compare_compare_staff_by_player_ability_desc(a: 
 /// [pt] Comparador de 0x538bc0 e 0x538ec0: o jogador inteiro (70 bytes) e o byte +0x58 da pessoa, com o gerente
 /// do treino ([0xde1f44]) zerado nos dois lados (o tirar e devolver do progresso mexe nas tabelas do treino,
 /// fora das regiões); com gerente, a original roda depois de verdade a partir do mesmo estado.
-pub(crate) unsafe fn compare_normalizacao_do_jogador(o: unsafe extern "C" fn(usize), rust: unsafe extern "C" fn(usize), person: usize,
+pub(crate) unsafe fn compare_player_normalisation(o: unsafe extern "C" fn(usize), rust: unsafe extern "C" fn(usize), person: usize,
                                            name: &'static str) {
     let person = Staff(person);
     let player = if person.is_null() { 0 } else { person.player().addr() };
@@ -1043,7 +1043,7 @@ pub(crate) unsafe fn compare_normalizacao_do_jogador(o: unsafe extern "C" fn(usi
 
 /// Comparer for `staff_normalise_player_physical_attributes`.
 pub(crate) unsafe extern "C" fn compare_staff_normalise_player_physical_attributes(person: usize) {
-    compare_normalizacao_do_jogador(original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_NORMALISE_PLAYER_PHYSICAL_ATTRIBUTES), staff_normalise_player_physical_attributes, person,
+    compare_player_normalisation(original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_NORMALISE_PLAYER_PHYSICAL_ATTRIBUTES), staff_normalise_player_physical_attributes, person,
         "staff_normalise_player_physical_attributes");
 }
 
@@ -1059,7 +1059,7 @@ pub(crate) unsafe extern "C" fn compare_database_pick_second_name_by_weight(nati
 
 /// Comparer for `staff_normalise_player_attributes`.
 pub(crate) unsafe extern "C" fn compare_staff_normalise_player_attributes(person: usize) {
-    compare_normalizacao_do_jogador(original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_NORMALISE_PLAYER_ATTRIBUTES), staff_normalise_player_attributes, person,
+    compare_player_normalisation(original_fn::<unsafe extern "C" fn(usize)>(IDX_STAFF_NORMALISE_PLAYER_ATTRIBUTES), staff_normalise_player_attributes, person,
         "staff_normalise_player_attributes");
 }
 

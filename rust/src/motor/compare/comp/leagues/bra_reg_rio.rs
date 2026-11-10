@@ -9,7 +9,7 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_bra_reg_rio(this: usize
     bra_reg_rio_compare_state_league_ctor("construct_bra_reg_rio", League(this), year, record, &CARIOCA_CHAMPIONSHIP, || o(this, year, record))
 }
 
-/// Comparer for `cqt4_atualizar_media_de_publico` (comparison mode: see the header of motor.rs): the comparer of the
+/// Comparer for `cqt4_update_average_attendance` (comparison mode: see the header of motor.rs): the comparer of the
 /// average attendance, side by side.
 ///
 /// The copy runs without counting the random draws, with the random-draw state restored between the two, over the whole
@@ -19,12 +19,12 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_bra_reg_rio(this: usize
 /// [pt] O comparador da média de público: lado a lado (a cópia sem contar os sorteios, com o estado do sorteador
 /// restaurado entre as duas) sobre a tabela dos clubes inteira (onde ficam +0x73, +0x77 e +0x7b) e o estado do
 /// sorteador; a tabela final (0x4a4b20) é alocada e liberada nas duas.
-pub(crate) unsafe extern "C" fn compare_cqt4_atualizar_media_de_publico(league: usize) {
-    let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_CQT4_ATUALIZAR_MEDIA_DE_PUBLICO);
+pub(crate) unsafe extern "C" fn compare_cqt4_update_average_attendance(league: usize) {
+    let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_CQT4_UPDATE_AVERAGE_ATTENDANCE);
     let mut regions = vec![(read_usize(G_CLUB_TABLE), read_usize(G_CLUB_COUNT) * club::SIZE)];
     regions.extend_from_slice(&crate::rng::STATE_REGIONS);
-    let (_, _, igual, _, _) = crate::comparison::side_by_side(&regions, || o(league), || crate::rng::without_counting(|| cqt4_atualizar_media_de_publico(league)));
-    SCOREBOARD.record(igual, || format!("cqt4_atualizar_media_de_publico({:#x}): o attendance of the clubs not bate", league));
+    let (_, _, igual, _, _) = crate::comparison::side_by_side(&regions, || o(league), || crate::rng::without_counting(|| cqt4_update_average_attendance(league)));
+    SCOREBOARD.record(igual, || format!("cqt4_update_average_attendance({:#x}): o attendance of the clubs not bate", league));
 }
 
 /// Comparer for `bra_reg_rio_create_half_season_stage`.

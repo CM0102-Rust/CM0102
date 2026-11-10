@@ -41,7 +41,7 @@ static mut TOP: u32 = 0;
 ///
 /// [pt] Alvo da sonda (0 = desligada), se envenena na entrada (`dentro`) e, para rotina fora da tabela de prólogos, o
 /// tamanho do prólogo a copiar (`dentro:5ae380:7`: instruções inteiras, sem salto relativo; ver com o desmonta.py).
-pub fn alvo() -> (usize, bool, usize) {
+pub fn target() -> (usize, bool, usize) {
     let t = win::texto_ambiente("CM_SONDA_PILHA");
     let (inside, e) = match t.split_once(':') {
         Some(("dentro", e)) => (true, e),

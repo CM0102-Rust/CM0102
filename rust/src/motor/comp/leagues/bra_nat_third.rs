@@ -236,7 +236,7 @@ pub(crate) type LeagueStageCtorFn = unsafe extern "thiscall" fn(usize, usize, u3
 ///    dword inteiro), o extra (word), +0x51, 1, 0, +0xd9 (word), −1, 0, 2; words e bytes limpos). Sem memória: 0.
 /// 4) [+0xc][g] = a fase. Sem fase: a caixa da linha 0x487 e volta (sem liberar o vetor nem a tabela). Com ela: o vetor
 ///    e a tabela liberados (free 0x9452ca) e +0x30 = g (o byte com sinal).
-pub(crate) unsafe fn bra_nat_third_create_group_stage_cqs3_grupo(this: League, g: u32, pv: usize) {
+pub(crate) unsafe fn bra_nat_third_create_group_stage_cqs3_group(this: League, g: u32, pv: usize) {
     let construct: LeagueStageCtorFn = core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
     let (mut rodadas, mut extra) = (0i16, 0i16);
@@ -274,7 +274,7 @@ pub(crate) unsafe fn bra_nat_third_create_group_stage_cqs3_grupo(this: League, g
 ///
 /// [pt] { 0x42ee80 } (acima): o grupo g da primeira fase da Série C.
 pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_group_stage(this: usize, g: u32) {
-    bra_nat_third_create_group_stage_cqs3_grupo(League(this), g, 0xc2) // cqs3: the points per win in the groups
+    bra_nat_third_create_group_stage_cqs3_group(League(this), g, 0xc2) // cqs3: the points per win in the groups
 }
 
 /// A ordem da segunda fase: o k-ésimo melhor (pelos pontos) vai à vaga `SECOND_ROUND_SEEDS[k]` da lista dos dezesseis.

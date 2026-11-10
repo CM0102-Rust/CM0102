@@ -134,25 +134,25 @@ pub(crate) unsafe extern "thiscall" fn compare_cup_start_new_season(cup: usize) 
 /// [pt] Comparador da 0x522240, em ensaio: a cópia sem a notícia e a original inteira, a partir do mesmo estado (o fundo e
 /// os registros de finanças dos dois clubes, restaurados depois do ensaio); confere o fundo e as finanças. Sem clube,
 /// sem finanças ou com a divisão que cai: só a original.
-pub(crate) unsafe extern "thiscall" fn compare_pay_round_prize_money(cup: usize, winner: usize, loser: usize, round: u32, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_pay_round_prize_money(cup: usize, winner: usize, loser: usize, round: u32, fixture: usize) {
     let cup = Cup(cup);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, usize)>(IDX_PAY_ROUND_PRIZE_MONEY);
     let (cv, cp) = (read_usize(winner), read_usize(loser));
     if cv == 0 || cp == 0 || cv == cp || round_prizes(cup, round as i16 as i32, false).is_none() {
-        return o(cup.addr(), winner, loser, round, partida); // simplification: with no club or with the falling division, original only
+        return o(cup.addr(), winner, loser, round, fixture); // simplification: with no club or with the falling division, original only
     }
     let (fv, fp) = (european_cup_club_finance(cv), european_cup_club_finance(cp));
     if fv == 0 || fp == 0 {
-        return o(cup.addr(), winner, loser, round, partida); // simplification: without finances, original only
+        return o(cup.addr(), winner, loser, round, fixture); // simplification: without finances, original only
     }
     let regions = [(cup.addr() + cup::PRIZE_FUND, 4), (fv, 0x167), (fp, 0x167)];
     let before = crate::comparison::MemorySnapshot::read(&regions);
     ROUND_PRIZE_MONEY_DRY_RUN = true;
-    crate::rng::pause_trace(|| crate::rng::without_counting(|| pay_round_prize_money(cup.addr(), winner, loser, round, partida)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| pay_round_prize_money(cup.addr(), winner, loser, round, fixture)));
     ROUND_PRIZE_MONEY_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
-    o(cup.addr(), winner, loser, round, partida);
+    o(cup.addr(), winner, loser, round, fixture);
     let mo = crate::comparison::MemorySnapshot::read(&regions);
     SCOREBOARD.record(mo == mr, || format!("pay_round_prize_money(round {}, winner {:x}, loser {:x}) o bottom and the finances diferem", round as i16, cv, cp));
 }
@@ -528,9 +528,9 @@ pub(crate) unsafe extern "thiscall" fn compare_find_tree_slot_for_fixture(cup: u
 }
 
 /// Comparer for `cup_match_importance`.
-pub(crate) unsafe extern "thiscall" fn compare_cup_match_importance(cup: usize, partida: usize, second: u8, margin: *mut u8) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_cup_match_importance(cup: usize, fixture: usize, second: u8, margin: *mut u8) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u8, *mut u8) -> u8>(IDX_CUP_MATCH_IMPORTANCE);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(margin as usize, 1)], || o(cup, partida, second, margin), || cup_match_importance(cup, partida, second, margin));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(margin as usize, 1)], || o(cup, fixture, second, margin), || cup_match_importance(cup, fixture, second, margin));
     SCOREBOARD.record(igual && r == n, || format!("cup_match_importance(side {}) original={} rust={} {:x?} x {:x?}", second, r, n, mo, mr));
     r
 }

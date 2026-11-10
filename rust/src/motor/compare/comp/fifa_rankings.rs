@@ -44,11 +44,11 @@ pub(crate) unsafe extern "C" fn compare_compare_result_points_desc(a: usize, b: 
 }
 
 /// Comparer for `append_result`.
-pub(crate) unsafe extern "thiscall" fn compare_append_result(this: usize, nation: usize, points: u32, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_append_result(this: usize, nation: usize, points: u32, fixture: usize) {
     let e = ranking_entry(this, nation);
     let (conta, cap) = (read_i16(e + 0xa), read_i16(e + 8));
-    let (mes, ano) = match_month_year(Fixture(partida));
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_APPEND_RESULT)(this, nation, points, partida);
+    let (mes, ano) = match_month_year(Fixture(fixture));
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_APPEND_RESULT)(this, nation, points, fixture);
     let p = read_usize(e + 4).wrapping_add(conta as isize as usize * 5);
     let cap_n = if conta == cap { cap.wrapping_add(5) } else { cap };
     let lido = (read_i16(e + 0xa), read_i16(e + 8), read_u16(p), read_u8(p + 2), read_u16(p + 3));

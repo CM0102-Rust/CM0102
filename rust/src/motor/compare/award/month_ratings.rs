@@ -7,15 +7,15 @@ use super::*;
 ///
 /// [pt] O comparador das notas da partida: lado a lado (cabeçalho e as vagas da tabela que podem mudar) quando cabem as 40
 /// vagas sem crescer a tabela; senão só a original (a 0x767fa0 realoca e a original não pode rodar duas vezes).
-pub(crate) unsafe extern "thiscall" fn compare_record_match_ratings(this: usize, game: usize, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_record_match_ratings(this: usize, game: usize, fixture: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RECORD_MATCH_RATINGS);
     let (tab, n, cap) = (read_usize(this), read_i32(this + 4), read_i32(this + 8));
     if tab == 0 || n < 0 || cap.wrapping_sub(n) < 40 {
         // simplification: the table may grow (realloc): original only; 0x767fa0 compares each rating
-        return o(this, game, partida);
+        return o(this, game, fixture);
     }
     let regions = [(this, 12), (tab, (n as usize + 40) * 12)];
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, game, partida), || record_match_ratings(this, game, partida));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, game, fixture), || record_match_ratings(this, game, fixture));
     SCOREBOARD.record(igual, || format!("record_match_ratings(this {:#x}) original={:x?} rust={:x?}", this, mo, mr));
 }
 

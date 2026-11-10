@@ -17,7 +17,7 @@ pub(crate) unsafe fn ita_ser_c1a_league_row_club(league: League, i: usize) -> us
 /// [pt] A passagem de fase das três (League::advance_stage, o slot +0x28; o corpo de 0x64b9e0, 0x64fba0 e 0x578330): com a
 /// fase atual (+0x30) já na última (+0x2c − 1, com sinal), a caixa do fonte `arquivo` na linha `linha`; senão +0x30 + 1
 /// e, ao chegar à fase 0 (a primeira depois da liga), cria as fases (`criar`: mov ecx, this -> thiscall, ret 0).
-pub(crate) unsafe fn ita_ser_c1a_advance_stage_cql5_passar_de_fase(this: League, file: usize, row: u32, create: usize) {
+pub(crate) unsafe fn ita_ser_c1a_advance_stage_cql5_advance_stage(this: League, file: usize, row: u32, create: usize) {
     let stage = this.current_stage() as i32;
     if stage >= (this.stage_count() as i32).wrapping_sub(1) {
         show_error_at(file, row);
@@ -39,7 +39,7 @@ pub(crate) unsafe fn ita_ser_c1a_advance_stage_cql5_passar_de_fase(this: League,
 /// [pt] { 0x64b9e0 } (thiscall, ret 0, ita_ser_c1a.cpp): `ItaSerC1a::advance_stage()`; cria o play-off e o play-out pela
 /// 0x64ba70. Fonte 0x9ea474, linha 0x250.
 pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_advance_stage(this: usize) {
-    ita_ser_c1a_advance_stage_cql5_passar_de_fase(League(this), 0x9ea474, 0x250, 0x64ba70)
+    ita_ser_c1a_advance_stage_cql5_advance_stage(League(this), 0x9ea474, 0x250, 0x64ba70)
 }
 
 /// Comparer of advance_stage: side by side on +0x30 when no stage is created; else only the original.
@@ -213,8 +213,8 @@ pub(crate) unsafe fn compare_end_of_league_stages(name: &str, this: League, orig
 ///
 /// [pt] { 0x64ad80 } (thiscall, ret 0x10, ita_ser_c1a.cpp, 2.279 bytes, método +0x3c): `ItaSerC1a::create_schedule(fase,
 /// &rodadas, &extra, &é_liga)`: a chave A da Série C1. Fonte 0x9ea474, linhas 0xab, 0x155, 0x18f.
-pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_create_schedule(this: usize, fase: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    create_c1_schedule(League(this), fase, rounds, extra, league, &C1BracketVariant { file: 0x9ea474, rows: [0xab, 0x155, 0x18f] })
+pub(crate) unsafe extern "thiscall" fn ita_ser_c1a_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    create_c1_schedule(League(this), stage, rounds, extra, league, &C1BracketVariant { file: 0x9ea474, rows: [0xab, 0x155, 0x18f] })
 }
 
 /// the club's place forecast in C1/A: in the league, best and worst place become bands (2 to 5 = the promotion

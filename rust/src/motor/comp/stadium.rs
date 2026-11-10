@@ -67,7 +67,7 @@ pub(crate) unsafe fn call_stadium_compare(f: usize, a: usize, b: usize) -> i32 {
 /// clube cuja posição (contada) módulo 9 é a da marca (0x40 → 0, 0x80 → 1, 0x100 → 2 ... 0x4000 → 8), livre na data
 /// (ou na competição [0x9cf76c] sem conferir) é reservada e devolvida. Sem nada: com nação, marcas sem 2 e com
 /// 4/8/0x20, o estádio nacional dela (+0x80); senão 0.
-pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: u32, cont: usize, nation: usize, data: usize, home: usize, away: usize, partida: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: u32, cont: usize, nation: usize, data: usize, home: usize, away: usize, fixture: usize) -> usize {
     let nation = Nation(nation);
     let home = Club(home);
     let away = Club(away);
@@ -160,7 +160,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
                     if !is_stadium_free(this, read_usize(e + 0xc), data) {
                         break 'vaga;
                     }
-                    let n = exe::stadium_score_venue_for_fixture(this, read_usize(e + 0xc), marks, home, away, partida);
+                    let n = exe::stadium_score_venue_for_fixture(this, read_usize(e + 0xc), marks, home, away, fixture);
                     if n > best {
                         best = n; // cqo1: a melhor nota
                         chosen = e;
@@ -180,7 +180,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
                         || (marks & 0x1000 != 0 && p == 6)
                         || (marks & 0x2000 != 0 && p == 7)
                         || (marks & 0x4000 != 0 && p == 8);
-                    if team && ((partida != 0 && read_usize(partida) == read_usize(KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION)) || is_stadium_free(this, read_usize(e + 0xc), data)) {
+                    if team && ((fixture != 0 && read_usize(fixture) == read_usize(KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION)) || is_stadium_free(this, read_usize(e + 0xc), data)) {
                         crate::comparison::branch("cqo_1 rotation");
                         add_stadium_booking(this, read_usize(e + 0xc), data);
                         return read_usize(e + 0xc);
@@ -200,7 +200,7 @@ pub(crate) unsafe extern "thiscall" fn find_available_venue(this: usize, marks: 
         }
         if best > 0 {
             crate::comparison::branch("cqo_1 neutral by rating");
-            if partida != 0 {
+            if fixture != 0 {
                 add_stadium_booking(this, read_usize(chosen + 0xc), data);
             }
             return read_usize(chosen + 0xc);
@@ -291,11 +291,11 @@ pub(crate) unsafe fn stadium_choice_regions(this: usize, extra: Option<(usize, u
 ///   sem nenhuma, a nação da competição (+0x5d). Com 0x20, a seleção joga no próprio país. Com 4, o estádio nacional
 ///   da nação (reservado); sem ele, 0x20 (seleção) ou 0x40. Depois a busca do estádio neutro (0x85c800) na nação e, sem
 ///   achar, na alternativa (marcas 0x40..0x200 → 0x400..0x2000).
-pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marks: u32, partida: usize, estadio: u32) {
-    if partida == 0 {
+pub(crate) unsafe extern "thiscall" fn set_fixture_venue(this: usize, marks: u32, fixture: usize, estadio: u32) {
+    if fixture == 0 {
         return show_error_at(0xa835b0, 0x1f0);
     }
-    let fx = Fixture(partida);
+    let fx = Fixture(fixture);
     fx.set_stadium(0);
     fx.set_stadium_id(u32::MAX as usize);
     let ano = fx.year();

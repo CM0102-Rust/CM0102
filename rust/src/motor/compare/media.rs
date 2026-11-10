@@ -301,11 +301,11 @@ pub(crate) unsafe extern "thiscall" fn compare_has_logged_story(this: usize, a: 
 ///
 /// [pt] Comparador: a original pode alocar e realocar (não roda duas vezes): o plano antes (já está? o registro novo);
 /// confere a conta e que o registro novo está no vetor (a ordem é a do qsort).
-pub(crate) unsafe extern "thiscall" fn compare_add_transfer_interest(this: usize, player: usize, club: usize, value: i32, avaliacao: f64) {
+pub(crate) unsafe extern "thiscall" fn compare_add_transfer_interest(this: usize, player: usize, club: usize, value: i32, rating: f64) {
     let n = read_usize(this + media_fields::INTEREST_COUNT);
     let ja_esta = has_interest(this, &interest_key(player, club));
-    let expected = if ja_esta { None } else { Some(build_interest_record(player, club, value, avaliacao)) };
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, f64)>(IDX_ADD_TRANSFER_INTEREST)(this, player, club, value, avaliacao);
+    let expected = if ja_esta { None } else { Some(build_interest_record(player, club, value, rating)) };
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, f64)>(IDX_ADD_TRANSFER_INTEREST)(this, player, club, value, rating);
     let m = read_usize(this + media_fields::INTEREST_COUNT);
     let ok = match &expected {
         None => m == n,
@@ -313,7 +313,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_transfer_interest(this: usize
             core::slice::from_raw_parts(read_usize(this + media_fields::TRANSFER_INTERESTS).wrapping_add(k * 0x19) as *const u8, 0x19) == &e[..]
         }),
     };
-    SCOREBOARD.record(ok, || format!("add_transfer_interest(value {}, rating {}) count {} -> {}, expected {:x?}", value, avaliacao, n, m, expected));
+    SCOREBOARD.record(ok, || format!("add_transfer_interest(value {}, rating {}) count {} -> {}, expected {:x?}", value, rating, n, m, expected));
 }
 
 /// Comparer for `compare_id_pair_keys`.

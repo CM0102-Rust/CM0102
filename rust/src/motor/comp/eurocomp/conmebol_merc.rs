@@ -441,6 +441,6 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_select_invited_clubs(this: 
 /// [pt] { 0x4c5140 } (thiscall, ret 0, conmebol_merc.cpp; a virtual +0x28): `ConmebolMerc::advance_stage()`, a fase seguinte
 /// da Mercosul: a caixa da linha 0x1d9 na última; chegando a 4 (depois dos 4 grupos-fase), as quartas (0x4c53d0).
 pub(crate) unsafe extern "thiscall" fn conmebol_merc_advance_stage(this: usize) {
-    con_merc_cup_advance_stage_cqs11_fase_seguinte(League(this), 0x9a7e5c, 0x1d9, 4, 0x4c53d0, "cqs_11 quartas da mercosul");
+    con_merc_cup_advance_stage_cqs11_next_stage(League(this), 0x9a7e5c, 0x1d9, 4, 0x4c53d0, "cqs_11 quartas da mercosul");
 }
 

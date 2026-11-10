@@ -19,9 +19,9 @@ pub(crate) unsafe fn month_ratings_staff_by_id(id: i32) -> usize {
 /// 0x7683a0 a cada partida das ligas com prêmio do mês. Os dois lados da partida (+0x190 e +0x190 + 0x625), 20 vagas de
 /// 0x49 bytes cada: fora a vaga marcada 0xfb em +0x1d e, da 12ª em diante, a reserva que não entrou (+0x32 = 0xff), a
 /// pessoa (id em +0) abaixo da conta de pessoas [0xae2364] vai para as notas do mês (0x767fa0).
-pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, game: usize, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, game: usize, fixture: usize) {
     let _ = game;
-    let mut side = partida.wrapping_add(0x190);
+    let mut side = fixture.wrapping_add(0x190);
     for l in 0..2 { // cpw5: os dois lados
         for k in 0..0x14usize {
             let e = side + k * 0x49;

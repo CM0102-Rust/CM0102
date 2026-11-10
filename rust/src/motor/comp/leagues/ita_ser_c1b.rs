@@ -5,8 +5,8 @@ use super::*;
 ///
 /// [pt] { 0x64ef30 } (thiscall, ret 0x10, ita_ser_c1b.cpp, 2.279 bytes, método +0x3c): `ItaSerC1b::create_schedule`: a
 /// chave B, o mesmo código. Fonte 0x9ea558, linhas 0xac, 0x156, 0x190.
-pub(crate) unsafe extern "thiscall" fn ita_ser_c1b_create_schedule(this: usize, fase: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
-    create_c1_schedule(League(this), fase, rounds, extra, league, &C1BracketVariant { file: 0x9ea558, rows: [0xac, 0x156, 0x190] })
+pub(crate) unsafe extern "thiscall" fn ita_ser_c1b_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    create_c1_schedule(League(this), stage, rounds, extra, league, &C1BracketVariant { file: 0x9ea558, rows: [0xac, 0x156, 0x190] })
 }
 
 /// the same rule in C1/B
@@ -63,7 +63,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c1b_create_table(this: usize) -> 
 /// [pt] { 0x64fba0 } (thiscall, ret 0, ita_ser_c1b.cpp): `ItaSerC1b::advance_stage()`; pela 0x64fc30. Fonte 0x9ea558, linha
 /// 0x255.
 pub(crate) unsafe extern "thiscall" fn ita_ser_c1b_advance_stage(this: usize) {
-    ita_ser_c1a_advance_stage_cql5_passar_de_fase(League(this), 0x9ea558, 0x255, 0x64fc30)
+    ita_ser_c1a_advance_stage_cql5_advance_stage(League(this), 0x9ea558, 0x255, 0x64fc30)
 }
 
 /// the same rule in C1/B

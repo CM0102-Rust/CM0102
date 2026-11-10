@@ -3170,10 +3170,10 @@ pub(crate) unsafe extern "thiscall" fn transfer_list_player(this: usize, player:
     let desgostar = if exe::staff_favours_club(player, player.club_job()) != 0 {
         true
     } else {
-        let lealdade = (c.morale() as u8) as i8 as i32;
+        let loyalty = (c.morale() as u8) as i8 as i32;
         let s1 = exe::utils_random(100);
         let s2 = exe::utils_random(100);
-        lealdade > s1.wrapping_sub(s2)
+        loyalty > s1.wrapping_sub(s2)
     };
     if desgostar {
         exe::staff_add_disliked_staff(player, read_usize(player.club_job().addr() + club::MANAGER), 1);

@@ -346,14 +346,14 @@ pub(crate) unsafe fn scouting_targets_of_club(this: usize, id: u32) -> Vec<usize
 /// [pt] { 0x5fe420 } (thiscall, ret 4, human_manager.cpp): 1 se algum dos 16 técnicos humanos ativos
 /// (registros de 110 bytes em [0xae23bc], a partir de [0xae2364] − 16, +0x5f não nulo) escolheu
 /// assistir a `partida` (0x5fe290); senão 0. Partida nula: a original (caixa de erro e 0).
-pub(crate) unsafe extern "thiscall" fn is_fixture_watched(this: usize, partida: usize) -> u32 {
-    if partida == 0 {
-        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_IS_FIXTURE_WATCHED)(this, partida);
+pub(crate) unsafe extern "thiscall" fn is_fixture_watched(this: usize, fixture: usize) -> u32 {
+    if fixture == 0 {
+        return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_IS_FIXTURE_WATCHED)(this, fixture);
     }
     for k in 0..16i32 {
         let i = k.wrapping_add(read_i32(G_STAFF_COUNT)).wrapping_sub(0x10);
         let h = Staff(read_usize(G_STAFF_TABLE).wrapping_add((i as isize * 110) as usize));
-        if h.classification() != 0 && exe::human_manager_is_watching_fixture(this, partida, h) != 0 {
+        if h.classification() != 0 && exe::human_manager_is_watching_fixture(this, fixture, h) != 0 {
             return 1;
         }
     }
@@ -491,21 +491,21 @@ pub(crate) unsafe extern "C" fn human_manager_get_stand_in_manager(club: usize) 
 /// assistir: o registro dele (+0x9ad4..) com a mesma competição (+0x3f), datas (+0x2a, +0x28), clube
 /// (+0), +0x34 e os dois lados (+0xc, +0x10). Partida nula ou humano fora da faixa: a original (caixa
 /// de erro e 0).
-pub(crate) unsafe extern "thiscall" fn is_watching_fixture(this: usize, partida: usize, human: usize) -> u32 {
-    let partida = Fixture(partida);
+pub(crate) unsafe extern "thiscall" fn is_watching_fixture(this: usize, fixture: usize, human: usize) -> u32 {
+    let fixture = Fixture(fixture);
     let r = match formation_watched_match_record(this, human) {
-        Err(()) => return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_WATCHING_FIXTURE)(this, partida.addr(), human),
-        Ok(_) if partida.is_null() => return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_WATCHING_FIXTURE)(this, partida.addr(), human),
+        Err(()) => return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_WATCHING_FIXTURE)(this, fixture.addr(), human),
+        Ok(_) if fixture.is_null() => return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_WATCHING_FIXTURE)(this, fixture.addr(), human),
         Ok(0) => return 0,
         Ok(r) => r,
     };
-    let same = partida.time_slice() == read_u8(r + 0x9b13)
-        && partida.day() == read_u16(r + 0x9afe)
-        && partida.year() == read_u16(r + 0x9afc)
-        && (partida.comp_id() as u32) == read_u32(r + 0x9ad4)
-        && (partida.round_number() as u16) == read_u16(r + 0x9b08)
-        && (partida.home_club_id() as u32) == read_u32(r + 0x9ae0)
-        && (partida.away_club_id() as u32) == read_u32(r + 0x9ae4);
+    let same = fixture.time_slice() == read_u8(r + 0x9b13)
+        && fixture.day() == read_u16(r + 0x9afe)
+        && fixture.year() == read_u16(r + 0x9afc)
+        && (fixture.comp_id() as u32) == read_u32(r + 0x9ad4)
+        && (fixture.round_number() as u16) == read_u16(r + 0x9b08)
+        && (fixture.home_club_id() as u32) == read_u32(r + 0x9ae0)
+        && (fixture.away_club_id() as u32) == read_u32(r + 0x9ae4);
     if same { 1 } else { 0 } // another match
 }
 
@@ -528,9 +528,9 @@ pub(crate) unsafe extern "thiscall" fn is_watching_fixture(this: usize, partida:
 /// ([0xb64738]), nenhuma partida da lista do dia dela (data +0x28/+0x2a, fatia +0x3f; 0x5ae6a0) tem um clube dele: 1.
 /// Senão 0. Partida nula: a caixa "Error" (0x707) e 0. Pela limpeza das partidas assistidas (0x5fe8d0) e pela escolha
 /// da partida (0x5fe500).
-pub(crate) unsafe extern "thiscall" fn can_watch_fixture(this: usize, partida: usize, human: usize) -> u32 {
-    let partida = Fixture(partida);
-    if partida.is_null() {
+pub(crate) unsafe extern "thiscall" fn can_watch_fixture(this: usize, fixture: usize, human: usize) -> u32 {
+    let fixture = Fixture(fixture);
+    if fixture.is_null() {
         show_error_at(0x9cf11c, 0x707);
         return 0;
     }
@@ -541,22 +541,22 @@ pub(crate) unsafe extern "thiscall" fn can_watch_fixture(this: usize, partida: u
             return 0;
         }
     }
-    if (partida.home_goals() as u8) as i8 > -1 {
+    if (fixture.home_goals() as u8) as i8 > -1 {
         return 0;
     }
     let dele = |p: usize| manager_manager_is_human_club(read_usize(p + 0x1c), read_u8(p + 0x40), human) != 0
         || manager_manager_is_human_club(read_usize(p + 0x20), read_u8(p + 0x41), human) != 0;
-    if dele(partida.addr()) {
+    if dele(fixture.addr()) {
         return 0;
     }
     let list_of: unsafe extern "stdcall" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_FIX_MAN_GET_FIXTURE_LIST_FOR_DATE);
     let mut group = 0u8;
     while (group as i8) < read_u8(G_KEY_NATION_ACTIVE_COUNT) as i8 {
         let mut d = [0u8; 8];
-        let data = exe::new_date(d.as_mut_ptr() as usize, (partida.day() as i16) as u16 as u32, (partida.year() as i16) as u16 as u32);
+        let data = exe::new_date(d.as_mut_ptr() as usize, (fixture.day() as i16) as u16 as u32, (fixture.year() as i16) as u16 as u32);
         // simplification: the original pushes the group as a whole word (the upper bytes are stack leftover); 0x5ae6a0
         // passes the type (char) on and 0x5abf10 reads only the byte.
-        let list = list_of(data, partida.time_slice() as u32, group as u32);
+        let list = list_of(data, fixture.time_slice() as u32, group as u32);
         if list != 0 {
             write_u32(list + 0xa, read_usize(list + 2) as u32);
             let mut p = exe::llist_get_next(list);

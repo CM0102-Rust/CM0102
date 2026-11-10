@@ -224,8 +224,8 @@ pub(crate) unsafe fn play_with(j: MatchPlayer, strength: i16, height: f32, style
                 if random(4) == 0 {
                     let a = random(grav as i8 as i32);
                     if a > random(0x14) {
-                        let partida = m.r#match();
-                        let club = Club(read_usize(partida + if j.side() == 0 { 0x20 } else { 0x1c }));
+                        let fixture = m.r#match();
+                        let club = Club(read_usize(fixture + if j.side() == 0 { 0x20 } else { 0x1c }));
                         let k = club.nation().addr();
                         if k != 0 && read_i8(k + 0x77) == 8 {
                             narrate(call, event::SILENT_OFF_OFF_OFF, 0, 0, u32::MAX);
@@ -323,7 +323,7 @@ pub(crate) unsafe fn play_with(j: MatchPlayer, strength: i16, height: f32, style
     1
 }
 
-pub(crate) use crate::conteiner::{abrir_no_conteiner, buscar_no_conteiner, posicao_no_conteiner};
+pub(crate) use crate::conteiner::{abrir_no_conteiner, buscar_no_conteiner, posicao_no_conteiner as position_in_container};
 
 // simplification: the container opens files, allocates 650 KB per item and reads from disk; without its own comparison,
 // validated by the career (Rust x original; the database and the histories pass through here all the time) and
@@ -369,7 +369,7 @@ pub(crate) use crate::conteiner::{abrir_no_conteiner, buscar_no_conteiner, posic
 /// [0x9cf300]) ou sorteio(10) == 0: o 0x20 no contrato (0x867560). Por fim o tecnico (pessoa em
 /// +0x184): a ficha dele (+0x69) recebe +0x188/+0x18a/+0x18c em +0xa/+8/+0xc, e o auxiliar (+0xd3)
 /// e os 5 de +0x19f ganham um quarto da diferenca (entre 1 e 10000); +0x80 do clube = +0x18e.
-pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn post_match_players_with(fixture: usize, t: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let ch = core::cell::RefCell::new(call);
     let register = |r: usize, pa: usize, t: usize| (ch.borrow_mut())(0x5afe00, r, [pa as u32, t as u32, 0, 0, 0]);
     let news = |n: usize, p: usize, c: usize, tp: u32, pa: usize, z: u32| (ch.borrow_mut())(0x72c1f0, n, [p as u32, c as u32, tp, pa as u32, z]);
@@ -388,11 +388,11 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
         let d = read_f64(b + 0x18);
         if d != 0.0 { read_f64(b + 0x10) / d } else { 6.8 }
     };
-    let esp = exe::national_teams_is_finals_comp(g(G_NATIONAL_TEAMS), (read(partida + 0x14) as u32) as u32 as usize);
+    let esp = exe::national_teams_is_finals_comp(g(G_NATIONAL_TEAMS), (read(fixture + 0x14) as u32) as u32 as usize);
     if read_u8(G_ATTRIBUTE_MASKING_ENABLED) != 0 && g(G_FOG_OF_WAR) != 0 {
-        register(g(G_FOG_OF_WAR), partida, t);
+        register(g(G_FOG_OF_WAR), fixture, t);
     }
-    let comp = if read(partida) > -1 { g(g(g(G_COMP_OBJECT_TABLE) + read(partida) as usize * 4) + 8) } else { 0 };
+    let comp = if read(fixture) > -1 { g(g(g(G_COMP_OBJECT_TABLE) + read(fixture) as usize * 4) + 8) } else { 0 };
     let mut ja_34 = false;
     for lado in 0..2usize {
         let club = Club(club_of(read(t + 4 * lado)));
@@ -409,7 +409,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
             if read_usize(p + staff::PLAYER) == 0 || (p != 0 && read(p) >= read(G_STAFF_COUNT)) {
                 continue;
             }
-            if comp != 0 && read(partida + 0x14) == (club.division().addr() as i32) && *((t + 0x4c) as *const u8) == 0 {
+            if comp != 0 && read(fixture + 0x14) == (club.division().addr() as i32) && *((t + 0x4c) as *const u8) == 0 {
                 let c = contract(g(G_CONTRACT_MANAGER), p, club.addr());
                 let nota1 = exe::comp_stats_get_player_stat(comp, read_usize(p + staff::PLAYER), 1);
                 let nota11 = exe::comp_stats_get_player_stat(comp, read_usize(p + staff::PLAYER), 0x11);
@@ -428,7 +428,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                         && average() - 0.2 < nota11
                     {
                         crate::comparison::branch("players news 0x11");
-                        news(g(G_MEDIA), p, club.addr(), 0x11, partida, 0);
+                        news(g(G_MEDIA), p, club.addr(), 0x11, fixture, 0);
                     }
                 }
             }
@@ -440,7 +440,7 @@ pub(crate) unsafe fn post_match_players_with(partida: usize, t: usize, call: &mu
                     let r = random(9);
                     if r as f64 * 0.1 + m + 0.5 < nota11 {
                         crate::comparison::branch("players news 0x34");
-                        news_34(g(G_MEDIA), p, club.addr(), 0x34, partida);
+                        news_34(g(G_MEDIA), p, club.addr(), 0x34, fixture);
                         ja_34 = true;
                     }
                 }

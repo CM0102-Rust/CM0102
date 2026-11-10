@@ -1604,7 +1604,7 @@ pub(crate) unsafe fn staff_of_match_slot(slot: usize) -> Option<(i32, usize)> {
 /// Slot level used for match rhythm: +4 if not negative, else +0, else the match default (+0x4d) [inference].
 ///
 /// [pt] O nível da vaga para o ritmo: +4 se não for negativo, senão +0, senão o padrão da partida (+0x4d).
-pub(crate) unsafe fn slot_rhythm_level(partida: MatchRecord, slot: usize) -> i8 {
+pub(crate) unsafe fn slot_rhythm_level(fixture: MatchRecord, slot: usize) -> i8 {
     let b = read_i8(slot + 4);
     if b >= 0 {
         return b;
@@ -1613,7 +1613,7 @@ pub(crate) unsafe fn slot_rhythm_level(partida: MatchRecord, slot: usize) -> i8 
     if b >= 0 {
         b
     } else {
-        (partida.minute() as i8)
+        (fixture.minute() as i8)
     }
 }
 
@@ -1643,24 +1643,24 @@ pub(crate) unsafe fn slot_rhythm_level(partida: MatchRecord, slot: usize) -> i8 
 /// (−0x11) e a lista das batidas da partida (+0x28): cada batida da pessoa (o tipo 7 só com a ficha +0xf de 15 ou
 /// mais) tem a gravidade por +5 (acima de 95: 2; de 66: 1; de 51: 0; senão a da batida anterior) e o tipo da lesão
 /// (0x62d140); tipo válido: fim da lesão atual (0x62e700) e a lesão nova (0x62d250 com o jogo, ou 0 no jogo −2).
-pub(crate) unsafe extern "thiscall" fn apply_match_effects(this: usize, game: usize, partida: usize) {
-    let partida = MatchRecord(partida);
+pub(crate) unsafe extern "thiscall" fn apply_match_effects(this: usize, game: usize, fixture: usize) {
+    let fixture = MatchRecord(fixture);
     let game = Fixture(game);
     // simplification: the severity is a local of the original that carries over from one hit to the next; with no hit above 51 before,
     // the original reads a stack leftover and the copy uses 0 (the comparer leaves every match with a clash to the original).
     let mut severity: i8 = 0;
     for lado in 0..2usize {
-        let base = partida.addr() + match_record::ROW_MINUTE_OFF + 0x625 * lado;
+        let base = fixture.addr() + match_record::ROW_MINUTE_OFF + 0x625 * lado;
         for k in 0..0x14i8 {
             let slot = base + 0x49 * k as usize;
             let Some((id, pessoa)) = staff_of_match_slot(slot) else { continue };
-            let mark = (partida.no_statistics() as i8) != 0;
+            let mark = (fixture.no_statistics() as i8) != 0;
             let level: i8 = if k < 0xb {
-                if mark { 0x5a } else { slot_rhythm_level(partida, slot) }
+                if mark { 0x5a } else { slot_rhythm_level(fixture, slot) }
             } else if read_u8(slot + 2) == 0xff {
                 0
             } else {
-                slot_rhythm_level(partida, slot).wrapping_sub(read_i8(slot + 2))
+                slot_rhythm_level(fixture, slot).wrapping_sub(read_i8(slot + 2))
             };
             let c = 0x2710i32.wrapping_sub(read_i16(slot + 6) as i32);
             // simplification: the original adds the whole ecx: the level in the low 16, the upper 16 of 10000 − condition
@@ -2010,7 +2010,7 @@ pub(crate) unsafe fn outbreak_takes_hold(kind: u8, club_i: i32) -> bool {
 /// é o byte baixo; se o surto entra (`outbreak_takes_hold`), cresce o vetor de 30 em 30 quando cheio (0x945667, ou
 /// 0x944e46 sem vetor; sem memória, a caixa "Error" da linha 0xd01 e nada), grava o surto no fim (data pela 0x417c10)
 /// e reordena pela data (qsort 0x945333 com 0x778e90).
-pub(crate) unsafe extern "thiscall" fn add_illness_outbreak(this: usize, data: usize, kind: u32, club_i: i32, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn add_illness_outbreak(this: usize, data: usize, kind: u32, club_i: i32, fixture: usize) {
     let kind = kind as u8;
     if !outbreak_takes_hold(kind, club_i) {
         return;
@@ -2038,7 +2038,7 @@ pub(crate) unsafe extern "thiscall" fn add_illness_outbreak(this: usize, data: u
     exe::date_operator_3d(e, (draft.as_mut_ptr()) as usize, data);
     write_u8(e + 8, kind);
     write_i32(e + 9, club_i);
-    let id = if partida != 0 { read_i32(partida) } else { -1 };
+    let id = if fixture != 0 { read_i32(fixture) } else { -1 };
     write_i32(e + illness_outbreak::CLUB_ID, id);
     let n = read_i32(this + injury_fields::OUTBREAK_COUNT).wrapping_add(1);
     write_i32(this + injury_fields::OUTBREAK_COUNT, n);

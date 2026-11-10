@@ -620,7 +620,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_latest_placed_club(comp: usize, pl
 /// +4 o estádio, +0 a competição, +0x42, +0x32, +0x30, +0x43/+0x44, +0x4b/+0x4c e +0x47/+0x48 os
 /// placares, +0x2a, +0x28 e +8. Depois os ponteiros: clubes (0xae23b4, 0x245 bytes) em +0x1c/+0x20,
 /// estádio (0xae23b0, 0x4e) em +0x18 e competição (0xae23d0, 0x6b) em +0x14; id −1: 0.
-pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(news: usize, partida: usize, cursor: *mut u8) {
+pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(news: usize, fixture: usize, cursor: *mut u8) {
     // simplification: the original pushes the whole eax (remainder of the previous slot in the high bits); 0x785830 only reads the byte
     let mut v = *cursor;
     let mut read = || {
@@ -628,9 +628,9 @@ pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(news: usi
         v = v.wrapping_add(1);
         r
     };
-    let d = |o: usize, x: u32| write_u32(partida + o, x);
-    let w = |o: usize, x: u32| write_u16(partida + o, x as u16);
-    let b = |o: usize, x: u32| write_u8(partida + o, x as u8);
+    let d = |o: usize, x: u32| write_u32(fixture + o, x);
+    let w = |o: usize, x: u32| write_u16(fixture + o, x as u16);
+    let b = |o: usize, x: u32| write_u8(fixture + o, x as u8);
     d(0xc, read());
     d(0x10, read());
     b(0x3d, read());
@@ -651,7 +651,7 @@ pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(news: usi
     d(8, read());
     *cursor = v;
     let pointer = |o: usize, table: usize, size: u32| {
-        let i = read_u32(partida + o);
+        let i = read_u32(fixture + o);
         if i == 0xffff_ffff { 0 } else { read_u32(table).wrapping_add(i.wrapping_mul(size)) }
     };
     d(0x1c, pointer(0xc, G_CLUB_TABLE, 0x245)); // home club
@@ -673,18 +673,18 @@ pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(news: usi
 /// primeiro sem 0xff) do lado do clube (da casa = +0x1c) e as reputações (+0x80 / 500) dos clubes.
 /// 1 goleada, 2 e 3 vitórias contra mais fortes, 4 comum, 5 e 7 derrotas para mais fracos, 6
 /// zebra. Só o al é fiel (quem chama usa al).
-pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(club: usize, partida: usize) -> u8 {
-    let partida = Fixture(partida);
-    let home = partida.home_club();
-    let away = partida.away_club();
+pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(club: usize, fixture: usize) -> u8 {
+    let fixture = Fixture(fixture);
+    let home = fixture.home_club();
+    let away = fixture.away_club();
     let h = (home.reputation() as i32 / 500) as i8 as i32;
     let a = (away.reputation() as i32 / 500) as i8 as i32;
-    let (g1, g2) = if (partida.home_aggregate() as u8) != 0xff {
-        ((partida.home_aggregate() as u8), (partida.away_aggregate() as u8))
-    } else if (partida.home_goals_extra_time() as u8) != 0xff {
-        ((partida.home_goals_extra_time() as u8), (partida.away_goals_extra_time() as u8))
+    let (g1, g2) = if (fixture.home_aggregate() as u8) != 0xff {
+        ((fixture.home_aggregate() as u8), (fixture.away_aggregate() as u8))
+    } else if (fixture.home_goals_extra_time() as u8) != 0xff {
+        ((fixture.home_goals_extra_time() as u8), (fixture.away_goals_extra_time() as u8))
     } else {
-        ((partida.home_goals() as u8), (partida.away_goals() as u8))
+        ((fixture.home_goals() as u8), (fixture.away_goals() as u8))
     };
     let m = g1.wrapping_sub(g2) as i8;
     // from the club’s point of view: `eu` and `ele` the reputations, `vitoria` the margin in its favour

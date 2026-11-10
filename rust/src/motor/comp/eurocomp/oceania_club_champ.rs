@@ -210,7 +210,7 @@ pub(crate) struct SourceClubList {
 }
 
 impl SourceClubList {
-    fn novo() -> Self {
+    fn new() -> Self {
         SourceClubList { clubs: [0; 20], n: 0 }
     }
 
@@ -244,7 +244,7 @@ impl SourceClubList {
     ///
     /// [pt] O primeiro da lista e o primeiro depois dele de outra nação (+0x53), como a original: percorre as `n` vagas; vaga
     /// vazia não conta como primeiro.
-    unsafe fn dois_de_nacoes_diferentes(&self) -> (usize, usize) {
+    unsafe fn two_from_different_nations(&self) -> (usize, usize) {
         let (mut a, mut b) = (0usize, 0usize);
         for &c in self.clubs.iter().take(self.n.max(0) as usize) {
             if a == 0 {
@@ -319,7 +319,7 @@ pub(crate) unsafe fn select_qualified_clubs(this: usize) -> u32 {
     }
     let mut champion = exe::comp_util_get_latest_placed_club(read_usize(G_CLUB_COMP_TABLE) + read_usize(KEY_CLUB_COMP_AUSTRALIAN_NATIONAL_SOCCER_LEAGUE) * 0x6b, 0);
     let (mut nz, mut aus, mut tai, mut fij, mut mel, mut pol) =
-        (SourceClubList::novo(), SourceClubList::novo(), SourceClubList::novo(), SourceClubList::novo(), SourceClubList::novo(), SourceClubList::novo());
+        (SourceClubList::new(), SourceClubList::new(), SourceClubList::new(), SourceClubList::new(), SourceClubList::new(), SourceClubList::new());
     let mut i = 0i32;
     let mut c = read_usize(G_CLUB_TABLE);
     while i < (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2)) {
@@ -356,10 +356,10 @@ pub(crate) unsafe fn select_qualified_clubs(this: usize) -> u32 {
     tai.ordenar(1);
     place_pot_pair(this, 1, fij.clubs[0], tai.clubs[0], exe::utils_random(2)); // cqt11: Fiji e Taiti
     mel.ordenar(2);
-    let (a, b) = mel.dois_de_nacoes_diferentes();
+    let (a, b) = mel.two_from_different_nations();
     place_pot_pair(this, 2, a, b, exe::utils_random(2)); // cqt11: os dois melanésios
     pol.ordenar(2);
-    let (a, b) = pol.dois_de_nacoes_diferentes();
+    let (a, b) = pol.two_from_different_nations();
     place_pot_pair(this, 3, a, b, exe::utils_random(2));
     1
 }
@@ -667,16 +667,16 @@ pub(crate) const OCEANIA_CLUB_KNOCKOUT_OPS: [OceaniaClubChampScheduleOp; 54] = [
 ///
 /// [pt] A fase do Campeonato de Clubes da Oceania: abaixo de 1 os grupos (id 0x420 + fase; os jogos de cada grupo para −1
 /// e 0), 1 o mata-mata, acima nada.
-pub(crate) fn oceania_stage_spec(fase: u32) -> Option<OceaniaStage> {
-    let f = fase as u8 as i8;
+pub(crate) fn oceania_stage_spec(stage: u32) -> Option<OceaniaStage> {
+    let f = stage as u8 as i8;
     if f < 1 {
-        let jogos: &'static [OceaniaClubChampScheduleOp] = match f {
+        let games: &'static [OceaniaClubChampScheduleOp] = match f {
             -1 => &OCEANIA_GROUP_A_MATCHES,
             0 => &OCEANIA_GROUP_B_OPS,
             _ => &[],
         };
         Some(OceaniaStage { league: 1, rounds: 3, extra: (f as i16).wrapping_add(0x420), extra_check: false, size: 0xc3, row: 0x93,
-            ops: &OCEANIA_CLUB_GROUP_OPS, ops2: jogos, name: "cqq_12 grupos da oceania" })
+            ops: &OCEANIA_CLUB_GROUP_OPS, ops2: games, name: "cqq_12 grupos da oceania" })
     } else if f == 1 {
         Some(OceaniaStage { league: 0, rounds: 3, extra: 0, extra_check: false, size: 0x138, row: 0xc5,
             ops: &OCEANIA_CLUB_KNOCKOUT_OPS, ops2: &[], name: "cqq_12 mata-mata da oceania" })

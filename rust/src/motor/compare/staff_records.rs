@@ -17,16 +17,16 @@ pub(crate) unsafe extern "thiscall" fn compare_add_league_champions_record(this:
 }
 
 /// Comparer for `add_cup_winners_record`.
-pub(crate) unsafe extern "thiscall" fn compare_add_cup_winners_record(this: usize, club: usize, game: usize, partida: usize) {
-    let partida = MatchRecord(partida);
+pub(crate) unsafe extern "thiscall" fn compare_add_cup_winners_record(this: usize, club: usize, game: usize, fixture: usize) {
+    let fixture = MatchRecord(fixture);
     let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ADD_CUP_WINNERS_RECORD);
-    if club == 0 || game.is_null() || partida.is_null() {
-        return o(this, club, game.addr(), partida.addr());
+    if club == 0 || game.is_null() || fixture.is_null() {
+        return o(this, club, game.addr(), fixture.addr());
     }
-    let notes = (partida.addr() + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (game.away_club() == Club(club)) as usize, 6);
-    compare_champion_update("add_cup_winners_record", this, Club(club), notes, false, || o(this, club, game.addr(), partida.addr()),
-        || add_cup_winners_record(this, club, game.addr(), partida.addr()));
+    let notes = (fixture.addr() + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (game.away_club() == Club(club)) as usize, 6);
+    compare_champion_update("add_cup_winners_record", this, Club(club), notes, false, || o(this, club, game.addr(), fixture.addr()),
+        || add_cup_winners_record(this, club, game.addr(), fixture.addr()));
 }
 
 /// Comparer for `clear_human_manager_record`.
@@ -104,17 +104,17 @@ pub(crate) unsafe extern "thiscall" fn compare_add_supporters_player_of_year_rec
 }
 
 /// Comparer for `add_cup_runners_up_record`.
-pub(crate) unsafe extern "thiscall" fn compare_add_cup_runners_up_record(this: usize, club: usize, game: usize, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_add_cup_runners_up_record(this: usize, club: usize, game: usize, fixture: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ADD_CUP_RUNNERS_UP_RECORD);
-    compare_cup_placed("add_cup_runners_up_record", Club(club), Fixture(game), MatchRecord(partida), || o(this, club, game, partida),
-        || add_cup_runners_up_record(this, club, game, partida))
+    compare_cup_placed("add_cup_runners_up_record", Club(club), Fixture(game), MatchRecord(fixture), || o(this, club, game, fixture),
+        || add_cup_runners_up_record(this, club, game, fixture))
 }
 
 /// Comparer for `add_cup_third_place_record`.
-pub(crate) unsafe extern "thiscall" fn compare_add_cup_third_place_record(this: usize, club: usize, game: usize, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_add_cup_third_place_record(this: usize, club: usize, game: usize, fixture: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ADD_CUP_THIRD_PLACE_RECORD);
-    compare_cup_placed("add_cup_third_place_record", Club(club), Fixture(game), MatchRecord(partida), || o(this, club, game, partida),
-        || add_cup_third_place_record(this, club, game, partida))
+    compare_cup_placed("add_cup_third_place_record", Club(club), Fixture(game), MatchRecord(fixture), || o(this, club, game, fixture),
+        || add_cup_third_place_record(this, club, game, fixture))
 }
 
 /// Comparer for `record_manager_job_change`.

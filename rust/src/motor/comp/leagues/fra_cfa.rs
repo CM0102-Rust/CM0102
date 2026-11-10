@@ -50,8 +50,8 @@ pub(crate) struct SinglePhaseLeague {
 /// (−1; as outras devolvem 0 sem gravar nada): é_liga (se pedido) = 1, as rodadas, extra = 0, a tabela de rodadas × 0x41
 /// bytes (malloc 0x944e46: push; add esp, 4 -> cdecl; sem memória: a caixa e 0) com as datas e as faixas da liga.
 /// Devolve a tabela.
-pub(crate) unsafe fn create_cfa_schedule(this: League, fase: u32, rodadas: *mut i16, extra: *mut i16, league: *mut i32, p: &SinglePhaseLeague) -> usize {
-    if fase as u8 != 0xff {
+pub(crate) unsafe fn create_cfa_schedule(this: League, stage: u32, rodadas: *mut i16, extra: *mut i16, league: *mut i32, p: &SinglePhaseLeague) -> usize {
+    if stage as u8 != 0xff {
         return 0;
     }
     if !league.is_null() {
@@ -385,11 +385,11 @@ pub(crate) struct BackgroundLeague {
 /// (League::free_table 0x687970: push 0; mov ecx -> thiscall, ret 4): os jogos do grupo ficam no calendário do jogo e a
 /// liga segue sem tabela. A lista é um registro local de 72 ou 40 ponteiros; a cópia usa um vetor zerado (a carreira
 /// enche a lista; a original leria lixo da pilha sem clubes bastantes).
-pub(crate) unsafe fn construct_group_league(this: League, ano: u32, p: &BackgroundLeague) -> usize {
+pub(crate) unsafe fn construct_group_league(this: League, year: u32, p: &BackgroundLeague) -> usize {
     let tabela: unsafe extern "thiscall" fn(usize, usize) -> u32 = core::mem::transmute(p.table);
     exe::new_league(this);
     write_usize(this.addr(), p.vtabela);
-    this.set_year((ano as u16) as i16);
+    this.set_year((year as u16) as i16);
     this.set_stage_count(0);
     this.set_discipline_rule(0xff);
     write_usize(this.addr() + league::COMPETITION, comp_record_of_key(p.competition));

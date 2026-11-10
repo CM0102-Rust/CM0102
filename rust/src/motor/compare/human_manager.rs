@@ -45,14 +45,14 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_invalid_watched_fixtures(th
 }
 
 /// Comparer for `is_fixture_watched`.
-pub(crate) unsafe extern "thiscall" fn compare_is_fixture_watched(this: usize, partida: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_is_fixture_watched(this: usize, fixture: usize) -> u32 {
     // 0x5fe290 only reads: can run on both sides
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_IS_FIXTURE_WATCHED);
-    if partida == 0 {
-        return o(this, partida);
+    if fixture == 0 {
+        return o(this, fixture);
     }
-    let r = o(this, partida);
-    let n = is_fixture_watched(this, partida);
+    let r = o(this, fixture);
+    let n = is_fixture_watched(this, fixture);
     SCOREBOARD.record(r == n, || format!("is_fixture_watched original={} rust={}", r, n));
     r
 }
@@ -100,14 +100,14 @@ pub(crate) unsafe extern "C" fn compare_human_manager_get_stand_in_manager(club:
 }
 
 /// Comparer for `is_watching_fixture`.
-pub(crate) unsafe extern "thiscall" fn compare_is_watching_fixture(this: usize, partida: usize, human: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_is_watching_fixture(this: usize, fixture: usize, human: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_IS_WATCHING_FIXTURE);
-    let r = o(this, partida, human);
+    let r = o(this, fixture, human);
     // simplification: the error cases (message box) only in the original
-    if partida == 0 || formation_watched_match_record(this, human).is_err() {
+    if fixture == 0 || formation_watched_match_record(this, human).is_err() {
         return r;
     }
-    let n = is_watching_fixture(this, partida, human);
+    let n = is_watching_fixture(this, fixture, human);
     SCOREBOARD.record(r == n, || format!("is_watching_fixture original={} rust={}", r, n));
     r
 }
@@ -115,13 +115,13 @@ pub(crate) unsafe extern "thiscall" fn compare_is_watching_fixture(this: usize, 
 /// Comparer for `can_watch_fixture`.
 ///
 /// [pt] Comparador: a original e a cópia (as duas só leem; a volta da lista recomeça o cursor), pelo valor.
-pub(crate) unsafe extern "thiscall" fn compare_can_watch_fixture(this: usize, partida: usize, human: usize) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_CAN_WATCH_FIXTURE)(this, partida, human);
-    if partida == 0 {
+pub(crate) unsafe extern "thiscall" fn compare_can_watch_fixture(this: usize, fixture: usize, human: usize) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_CAN_WATCH_FIXTURE)(this, fixture, human);
+    if fixture == 0 {
         return r;
     }
-    let n = can_watch_fixture(this, partida, human);
-    SCOREBOARD.record(r == n, || format!("can_watch_fixture(match {:x}, human {:x}) original={} rust={}", partida, human, r, n));
+    let n = can_watch_fixture(this, fixture, human);
+    SCOREBOARD.record(r == n, || format!("can_watch_fixture(match {:x}, human {:x}) original={} rust={}", fixture, human, r, n));
     r
 }
 

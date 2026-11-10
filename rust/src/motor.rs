@@ -74,7 +74,7 @@ routines! {
     // 0x6cb930: mov al, byte ptr [esp + 4]; cmp al, 1
     Prologue { address: 0x6cb930, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x3c, 0x01] } => limit, compare_limit;
     // 0x70dfa0: mov al, byte ptr [ecx + 0x27]; mov dl, 6
-    Prologue { address: 0x70dfa0, bytes: &[0x8a, 0x41, 0x27, 0xb2, 0x06] } => player_condition, compare_condicao;
+    Prologue { address: 0x70dfa0, bytes: &[0x8a, 0x41, 0x27, 0xb2, 0x06] } => player_condition, compare_player_condition;
     // 0x717410: mov eax, ecx; mov ecx, dword ptr [eax + 0x19e]
     Prologue { address: 0x717410, bytes: &[0x8b, 0xc1, 0x8b, 0x88, 0x9e, 0x01, 0x00, 0x00] } => player_table, compare_player_table;
     // 0x6c4130: push ebx; push esi; mov esi, ecx; mov ecx, dword ptr [esp + 0xc]
@@ -110,7 +110,7 @@ routines! {
     // 0x6cb780: push ebx; push ebp; push esi; push edi; mov edi, dword ptr [esp + 0x14]
     Prologue { address: 0x6cb780, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] } => closest_to_goal, compare_mais_perto;
     // 0x6cbc00: sub esp, 0xc; movsx eax, byte ptr [esp + 0x18]
-    Prologue { address: 0x6cbc00, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x44, 0x24, 0x18] } => players_in_line, compare_na_linha;
+    Prologue { address: 0x6cbc00, bytes: &[0x83, 0xec, 0x0c, 0x0f, 0xbe, 0x44, 0x24, 0x18] } => players_in_line, compare_players_in_line;
     // 0x6f9f90: push ebx; push ebp; push esi; mov esi, ecx
     Prologue { address: 0x6f9f90, bytes: &[0x53, 0x55, 0x56, 0x8b, 0xf1] } => can_play, compare_consegue;
     // 0x6f4650: mov al, byte ptr [ecx + 0x27]; test al, al
@@ -118,9 +118,9 @@ routines! {
     // 0x5b5270: movsx edx, byte ptr [esp + 4]
     Prologue { address: 0x5b5270, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] } => position_marks, compare_marcas;
     // 0x716270: push esi; mov esi, ecx; mov al, byte ptr [esi + 0x19]
-    Prologue { address: 0x716270, bytes: &[0x56, 0x8b, 0xf1, 0x8a, 0x46, 0x19] } => attacking_role, compare_papel_ataque;
+    Prologue { address: 0x716270, bytes: &[0x56, 0x8b, 0xf1, 0x8a, 0x46, 0x19] } => attacking_role, compare_attacking_role;
     // 0x716310: push esi; mov esi, ecx; mov ecx, dword ptr [esi + 0x19e]
-    Prologue { address: 0x716310, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x8e, 0x9e, 0x01, 0x00, 0x00] } => defending_role, compare_papel_defesa;
+    Prologue { address: 0x716310, bytes: &[0x56, 0x8b, 0xf1, 0x8b, 0x8e, 0x9e, 0x01, 0x00, 0x00] } => defending_role, compare_defending_role;
     // 0x6c2be0: sub esp, 8; push ebx; push ebp
     Prologue { address: 0x6c2be0, bytes: &[0x83, 0xec, 0x08, 0x53, 0x55] } => position_place_players, compare_position_place_players;
     // 0x6c3aa0: push ebx; push esi; push edi; mov edi, ecx
@@ -128,9 +128,9 @@ routines! {
     // 0x6f4aa0: sub esp, 0x10; push ebx; push esi
     Prologue { address: 0x6f4aa0, bytes: &[0x83, 0xec, 0x10, 0x53, 0x56] } => update_player, compare_atualizar;
     // 0x6f44a0: push esi; mov esi, ecx; push edi; fld dword ptr [esi + 0x4d]
-    Prologue { address: 0x6f44a0, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0xd9, 0x46, 0x4d] } => draw_moment, compare_momento;
+    Prologue { address: 0x6f44a0, bytes: &[0x56, 0x8b, 0xf1, 0x57, 0xd9, 0x46, 0x4d] } => draw_moment, compare_draw_moment;
     // 0x6ce110: mov eax, dword ptr [ecx + 0xf59e]
-    Prologue { address: 0x6ce110, bytes: &[0x8b, 0x81, 0x9e, 0xf5, 0x00, 0x00] } => hold_position_one, compare_posicao_um;
+    Prologue { address: 0x6ce110, bytes: &[0x8b, 0x81, 0x9e, 0xf5, 0x00, 0x00] } => hold_position_one, compare_hold_position_one;
     // 0x6bd5b0: push ebx; push esi; mov esi, dword ptr [esp + 0xc]
     Prologue { address: 0x6bd5b0, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => clear_path, compare_caminho;
     // 0x6cbad0: push ebx; push ebp; push esi; push edi; mov edi, dword ptr [esp + 0x14]
@@ -162,7 +162,7 @@ routines! {
     Prologue { address: 0x6cd5f0, bytes: &[0x56, 0x57, 0x8b, 0x7c, 0x24, 0x0c] } => behind_the_extreme, compare_atras;
     Prologue { address: 0x6d4280, bytes: &[0x8b, 0x81, 0x92, 0x47, 0x00, 0x00] } => no_match, compare_no_match;
     Prologue { address: 0x6bd6b0, bytes: &[0x8a, 0x44, 0x24, 0x04, 0x53] } => pressure_in_box, compare_pressao_area;
-    Prologue { address: 0x6c3010, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] } => nearest_to_point, compare_mais_proximo;
+    Prologue { address: 0x6c3010, bytes: &[0x53, 0x55, 0x56, 0x57, 0x8b, 0x7c, 0x24, 0x14] } => nearest_to_point, compare_nearest_to_point;
     Prologue { address: 0x6c3a00, bytes: &[0x0f, 0xbe, 0x54, 0x24, 0x04] } => pressure_at_point, compare_pressao_ponto;
     Prologue { address: 0x6c3950, bytes: &[0x51, 0x0f, 0xbe, 0x54, 0x24, 0x08] } => smallest_distance, compare_smallest_distance;
     // batch 14
@@ -499,7 +499,7 @@ routines! {
     Prologue { address: 0x6d7b00, bytes: &[0xb8, 0x18, 0x26, 0x00, 0x00] } => commentate_on_panel, compare_commentate_on_panel;
     Prologue { address: 0x9326e0, bytes: &[0x81, 0xec, 0x08, 0x02, 0x00, 0x00] } => abrir_no_conteiner, compare_abrir_no_conteiner;
     Prologue { address: 0x933080, bytes: &[0x53, 0x56, 0x8b, 0x74, 0x24, 0x0c] } => buscar_no_conteiner, compare_buscar_no_conteiner;
-    Prologue { address: 0x933170, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => posicao_no_conteiner, compare_posicao_no_conteiner;
+    Prologue { address: 0x933170, bytes: &[0x56, 0x8b, 0x74, 0x24, 0x08] } => position_in_container, compare_position_in_container;
     Prologue { address: 0x5b7d20, bytes: &[0x8b, 0x4c, 0x24, 0x04, 0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => position_mask, compare_position_mask;
     Prologue { address: 0x5b7e60, bytes: &[0x8a, 0x44, 0x24, 0x08, 0x81, 0xec, 0x10, 0x02, 0x00, 0x00] } => pitch_cell, compare_pitch_cell;
     Prologue { address: 0x5b8960, bytes: &[0x81, 0xec, 0x04, 0x0e, 0x00, 0x00] } => slots_without_conflict, compare_slots_without_conflict;
@@ -2209,7 +2209,7 @@ routines! {
     Prologue { address: 0x439a40, bytes: &[0x6a, 0xff, 0x68, 0x19, 0x4a, 0x95, 0x00] } => construct_bra_reg_rio, compare_construct_bra_reg_rio;
     Prologue { address: 0x43b130, bytes: &[0x6a, 0xff, 0x68, 0xa9, 0x4a, 0x95, 0x00] } => construct_bra_reg_santa, compare_construct_bra_reg_santa;
     Prologue { address: 0x43c280, bytes: &[0x6a, 0xff, 0x68, 0x19, 0x4b, 0x95, 0x00] } => construct_bra_reg_sp, compare_construct_bra_reg_sp;
-    Prologue { address: 0x5d6280, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => cqt4_atualizar_media_de_publico, compare_cqt4_atualizar_media_de_publico;
+    Prologue { address: 0x5d6280, bytes: &[0x55, 0x8b, 0xec, 0x83, 0xe4, 0xf8] } => cqt4_update_average_attendance, compare_cqt4_update_average_attendance;
     Prologue { address: 0x797b40, bytes: &[0x6a, 0xff, 0x68, 0x16, 0xeb, 0x95, 0x00] } => oceania_club_champ_update_for_date, compare_oceania_club_champ_update_for_date;
     Prologue { address: 0x7978c0, bytes: &[0x81, 0xec, 0x04, 0x02, 0x00, 0x00] } => create_group_a_table, compare_create_group_a_table;
     Prologue { address: 0x797e80, bytes: &[0x64, 0xa1, 0x00, 0x00, 0x00, 0x00] } => create_group_b_stage, compare_create_group_b_stage;
@@ -4011,8 +4011,8 @@ unsafe extern "thiscall" fn diag_mark(c: usize, f: u32) -> u32 {
 /// Simulation in original mode: the same routines detoured to the original itself (private stack).
 ///
 /// [pt] Simulacao no modo original: as mesmas rotinas desviadas para a propria original (pilha particular).
-pub unsafe fn instalar_passagem() {
-    let (sonda, dentro, prologo) = crate::stack_probe::alvo();
+pub unsafe fn install_passthrough() {
+    let (sonda, dentro, prologo) = crate::stack_probe::target();
     if sonda != 0 && prologo >= 5 && !PROLOGOS.iter().any(|p| p.address == sonda) {
         // routine outside the table: the prologue comes from the exe itself (the size, from the variable)
         let bytes: &'static [u8] = Box::leak(core::slice::from_raw_parts(sonda as *const u8, prologo).to_vec().into_boxed_slice());
@@ -4115,7 +4115,7 @@ pub unsafe fn autoteste(casos: u64) {
             compare_band(lado, ((y >> 40) % 10) as i8 - 1, ((y >> 44) % 14) as i8 - 1);
             compare_limit(lado, ((y >> 48) % 14) as i8 - 2);
             *((j + 0x27) as *mut i8) = [0i8, 1, 2, -1][((y >> 52) % 4) as usize];
-            compare_condicao(j);
+            compare_player_condition(j);
             // coordinates with differences of -5..=5 (the global table is read from the game itself)
             let z = s.next_u64();
             let (a, b) = ((z % 20) as i8, ((z >> 8) % 20) as i8);
@@ -4257,7 +4257,7 @@ pub unsafe fn autoteste(casos: u64) {
                 1 => (((w2 >> 20) % 11) as i8 - 1, y1),
                 _ => pt(w2 >> 24),
             };
-            compare_na_linha(m, x1, y1, x2, y2);
+            compare_players_in_line(m, x1, y1, x2, y2);
             let v2 = s.next_u64();
             *((j + 0x19e) as *mut usize) = m;
             *((j + 0x27) as *mut i8) = (v2 % 2) as i8;
@@ -4300,8 +4300,8 @@ pub unsafe fn autoteste(casos: u64) {
             *((j + 0x103) as *mut i8) = ((p2 >> 9) % 15) as i8 - 2;
             *((j + 0x19e) as *mut usize) = m;
             compare_marcas(m + 0x91e2, ((p2 >> 14) % 14) as i8);
-            compare_papel_ataque(j);
-            compare_papel_defesa(j);
+            compare_attacking_role(j);
+            compare_defending_role(j);
             let (mut sx, mut sy) = (0x55i8, 0x55i8);
             compare_position_place_players(m, j, &mut sx, &mut sy, 0);
             // batch 9: defensive lines over the two blocks of 20 (already filled above), varied y
@@ -4350,7 +4350,7 @@ pub unsafe fn autoteste(casos: u64) {
             for o in 0x10eusize..=0x117 {
                 *((j + o) as *mut i8) = (q1.rotate_left(o as u32) % 30) as i8 - 3;
             }
-            compare_momento(j);
+            compare_draw_moment(j);
             // tables with several 1s (position 1 and substitute), blocks with positions, substitutes and 0x20
             for t in tabelas.iter_mut() {
                 for (k, v) in t.iter_mut().enumerate() {
@@ -4371,7 +4371,7 @@ pub unsafe fn autoteste(casos: u64) {
             let algum = |sh: u32| Engine(m).player((((q2 >> sh) % 2)) as i8, (((q2 >> (sh + 1)) % 20)) as usize).addr();
             *((m + 0xf59e) as *mut usize) = if (q2 >> 40) % 3 == 0 { 0 } else { algum(41) };
             *((m + 0xf5a2) as *mut usize) = if (q2 >> 47) % 3 == 0 { 0 } else { algum(48) };
-            compare_posicao_um(m, ((q2 >> 55) % 3) as i8);
+            compare_hold_position_one(m, ((q2 >> 55) % 3) as i8);
             let jj = algum(57);
             compare_caminho(m, jj, ((q2 >> 63) & 1) as i8);
             compare_espaco(m, jj);
@@ -4428,8 +4428,8 @@ pub unsafe fn autoteste(casos: u64) {
             compare_no_match(m);
             compare_pressao_area(m, ((h3 >> 19) % 2) as i8);
             let (a3, b3) = (((h3 >> 20) % 10) as i8 - 1, ((h3 >> 24) % 13) as i8 - 1);
-            compare_mais_proximo(m, jj3, a3, b3);
-            compare_mais_proximo(m, jj3, read_i8(jj3 + 0x102), read_i8(jj3 + 0x103));
+            compare_nearest_to_point(m, jj3, a3, b3);
+            compare_nearest_to_point(m, jj3, read_i8(jj3 + 0x102), read_i8(jj3 + 0x103));
             compare_pressao_ponto(m, ((h3 >> 28) % 2) as i8, a3, b3, ((h3 >> 29) & 1) as i8);
             compare_smallest_distance(m, ((h3 >> 30) % 2) as i8, a3, b3, ((h3 >> 31) & 1) as i8);
             // batch 14 (tables with varied role bits, including none and 0x700)

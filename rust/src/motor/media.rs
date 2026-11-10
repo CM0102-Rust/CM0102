@@ -2482,7 +2482,7 @@ pub(crate) fn cap_interest_value(value: i32) -> i32 {
 /// `valor` até 50.000.000 (+0x11) e a `avaliacao` × 100 truncada (+0x15, _ftol 0x945640); a conta sobe e reordena (qsort
 /// com 0x757ea0). Sem vetor, aloca 20 (0x944e46; sem memória, caixa 0x665d e fim); cheio, cresce 20 (realloc 0x945667;
 /// caixa 0x6668). A data padrão (0x54a110) da chave na pilha, como a original.
-pub(crate) unsafe extern "thiscall" fn add_transfer_interest(this: usize, player: usize, club: usize, value: i32, avaliacao: f64) {
+pub(crate) unsafe extern "thiscall" fn add_transfer_interest(this: usize, player: usize, club: usize, value: i32, rating: f64) {
     let mut data = [0u8; 8];
     exe::date_date_54a110(data.as_mut_ptr() as usize);
     let key = interest_key(player, club);
@@ -2516,7 +2516,7 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_interest(this: usize, player
     copy_record_date(item() + 8, G_CURRENT_DATE);
     write_u8(item() + 0x10, 0); // the rumour has not come out yet
     write_usize(item() + 0x11, cap_interest_value(value) as usize);
-    write_usize(item() + 0x15, ftol(avaliacao * 100.0) as usize); // [0x9688a8] = 100.0
+    write_usize(item() + 0x15, ftol(rating * 100.0) as usize); // [0x9688a8] = 100.0
     let n = read_usize(this + media_fields::INTEREST_COUNT).wrapping_add(1);
     write_usize(this + media_fields::INTEREST_COUNT, n); // mais um interesse
     exe::crt_qsort(read_usize(this + media_fields::TRANSFER_INTERESTS), n as u32, 0x19, 0x757ea0);
@@ -2574,13 +2574,13 @@ pub(crate) unsafe extern "C" fn compare_story_log_records(a: usize, b: usize) ->
 /// Builds the 25-byte interest record `add_transfer_interest` appends (player, club, today, capped value, rating x 100).
 ///
 /// [pt] Os 25 bytes que a 0x754740 acrescenta.
-pub(crate) unsafe fn build_interest_record(player: usize, club: usize, value: i32, avaliacao: f64) -> [u8; 0x19] {
+pub(crate) unsafe fn build_interest_record(player: usize, club: usize, value: i32, rating: f64) -> [u8; 0x19] {
     let mut r = [0u8; 0x19];
     r[..4].copy_from_slice(&(read_usize(player) as u32).to_le_bytes());
     r[4..8].copy_from_slice(&(read_usize(club) as u32).to_le_bytes());
     r[8..0x10].copy_from_slice(core::slice::from_raw_parts(G_CURRENT_DATE as *const u8, 8));
     r[0x11..0x15].copy_from_slice(&cap_interest_value(value).to_le_bytes());
-    r[0x15..].copy_from_slice(&ftol(avaliacao * 100.0).to_le_bytes());
+    r[0x15..].copy_from_slice(&ftol(rating * 100.0).to_le_bytes());
     r
 }
 

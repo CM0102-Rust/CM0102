@@ -55,10 +55,10 @@ pub(crate) unsafe extern "thiscall" fn know_person(this: usize, person: usize, f
 /// +0x1c) controlado por humano (0x600a50) com tecnico e quadro de conhecimento (0xae2a60, pelo
 /// id do tecnico): as 20 vagas da escalacao (`dados` + lado x 0x625 + 0x190, 0x49 bytes cada) com
 /// pessoa e +4 validos (reservas, da 11a em diante, so com +0x32 != 0xff) ficam conhecidas (0x5b09d0).
-pub(crate) unsafe extern "stdcall" fn fog_after_match(partida: usize, data: usize) {
+pub(crate) unsafe extern "stdcall" fn fog_after_match(fixture: usize, data: usize) {
     let n = || read_i32(G_STAFF_COUNT);
     for lado in 0..2usize {
-        let club = Club(read_usize(partida + if lado == 0 { 0x20 } else { 0x1c }));
+        let club = Club(read_usize(fixture + if lado == 0 { 0x20 } else { 0x1c }));
         if exe::human_manager_is_human_club(club, 0, (1) as u32, (0) as u32, 0) == 0 {
             continue;
         }

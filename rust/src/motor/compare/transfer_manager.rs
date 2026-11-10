@@ -428,23 +428,23 @@ pub(crate) unsafe extern "thiscall" fn compare_find_next_sale_percentage(this: u
 /// [pt] Comparador: a cópia em ensaio (sem pagar os prêmios) e a original a partir do mesmo estado do vetor das permissões
 /// de trabalho; os jogos (+4) e as faltas (+6) têm de bater. Seleção em casa: o elenco local da original começa com o
 /// lixo da pilha, só a original roda. Os prêmios se provam pela própria 0x8cb340 (comparada) e pela carreira.
-pub(crate) unsafe extern "thiscall" fn compare_update_appearance_clauses_after_match(this: usize, game: usize, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_update_appearance_clauses_after_match(this: usize, game: usize, fixture: usize) {
     let this = TransferManagerFields(this);
     let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_UPDATE_APPEARANCE_CLAUSES_AFTER_MATCH);
     let v = this.work_permits();
     let n = this.work_permit_count() as i32;
     if exe::database_is_national_team(game.home_club()) != 0 || v == 0 || n <= 0 {
-        return o(this.addr(), game.addr(), partida); // simplification: original only (stack garbage or no permissions)
+        return o(this.addr(), game.addr(), fixture); // simplification: original only (stack garbage or no permissions)
     }
     let regions = [(v, n as usize * 0xe)];
     let before = crate::comparison::MemorySnapshot::read(&regions);
     APPEARANCE_CLAUSES_DRY_RUN = true;
-    crate::rng::pause_trace(|| crate::rng::without_counting(|| update_appearance_clauses_after_match(this.addr(), game.addr(), partida)));
+    crate::rng::pause_trace(|| crate::rng::without_counting(|| update_appearance_clauses_after_match(this.addr(), game.addr(), fixture)));
     APPEARANCE_CLAUSES_DRY_RUN = false;
     let mr = crate::comparison::MemorySnapshot::read(&regions);
     before.write_back();
-    o(this.addr(), game.addr(), partida);
+    o(this.addr(), game.addr(), fixture);
     // the original does not reallocate the vector (the awards touch other vectors)
     let mo = crate::comparison::MemorySnapshot::read(&regions);
     SCOREBOARD.record(mo == mr, || {
@@ -762,17 +762,17 @@ pub(crate) unsafe extern "stdcall" fn compare_transfer_manager_get_squad_status_
 /// Comparer for `fill_squad_restrictions`.
 ///
 /// [pt] Comparador: lado a lado pelos 42 bytes da tabela (o alcance e a virtual das regras só escrevem nela).
-pub(crate) unsafe extern "thiscall" fn compare_fill_squad_restrictions(this: usize, partida: usize, t: *mut u8, so_main: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_fill_squad_restrictions(this: usize, fixture: usize, t: *mut u8, so_main: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, u32)>(IDX_FILL_SQUAD_RESTRICTIONS);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(t as usize, 42)], || o(this, partida, t, so_main), || fill_squad_restrictions(this, partida, t, so_main));
-    SCOREBOARD.record(igual, || format!("fill_squad_restrictions({:x}, {}) {:x?} x {:x?}", partida, so_main, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(t as usize, 42)], || o(this, fixture, t, so_main), || fill_squad_restrictions(this, fixture, t, so_main));
+    SCOREBOARD.record(igual, || format!("fill_squad_restrictions({:x}, {}) {:x?} x {:x?}", fixture, so_main, mo, mr));
 }
 
 /// Comparer for `transfer_manager_check_matchday_squad_limit`.
 ///
 /// [pt] Comparador: lado a lado pela saída (6 bytes) e pelo aviso (0x100 bytes, com `msg`), e pela devolução. A 0x8968f0 pode
 /// pôr −1 numa vaga sem pessoa válida: a original já deixou assim e a cópia acha a mesma vaga vazia.
-pub(crate) unsafe extern "thiscall" fn compare_transfer_manager_check_matchday_squad_limit(this: usize, club: usize, partida: usize, msg: usize, players: usize, not_used: u32, out: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn compare_transfer_manager_check_matchday_squad_limit(this: usize, club: usize, fixture: usize, msg: usize, players: usize, not_used: u32, out: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32, usize) -> u32>(IDX_TRANSFER_MANAGER_CHECK_MATCHDAY_SQUAD_LIMIT);
     let mut regions = [(0usize, 0usize); 2];
     let mut n = 0;
@@ -784,8 +784,8 @@ pub(crate) unsafe extern "thiscall" fn compare_transfer_manager_check_matchday_s
         regions[n] = (msg, 0x100);
         n += 1;
     }
-    let (r, c, igual, mo, mr) = crate::comparison::side_by_side(&regions[..n], || o(this, club, partida, msg, players, not_used, out), || transfer_manager_check_matchday_squad_limit(this, club, partida, msg, players, not_used, out));
-    SCOREBOARD.record(igual && r == c, || format!("transfer_manager_check_matchday_squad_limit(club {:x}, match {:x}) original={} rust={} {:x?} x {:x?}", club, partida, r, c, mo, mr));
+    let (r, c, igual, mo, mr) = crate::comparison::side_by_side(&regions[..n], || o(this, club, fixture, msg, players, not_used, out), || transfer_manager_check_matchday_squad_limit(this, club, fixture, msg, players, not_used, out));
+    SCOREBOARD.record(igual && r == c, || format!("transfer_manager_check_matchday_squad_limit(club {:x}, match {:x}) original={} rust={} {:x?} x {:x?}", club, fixture, r, c, mo, mr));
     r
 }
 
@@ -1298,25 +1298,25 @@ pub(crate) unsafe extern "thiscall" fn compare_add_first_team_appearance_money(t
 /// Comparer for `get_fixture_rules_scope`.
 ///
 /// [pt] Comparador: lado a lado pelas três saídas (a 0x669470 e a 0x5c6710 só leem).
-pub(crate) unsafe extern "thiscall" fn compare_get_fixture_rules_scope(this: usize, partida: usize, kind: *mut u8, nation: *mut usize, continent: *mut usize) {
+pub(crate) unsafe extern "thiscall" fn compare_get_fixture_rules_scope(this: usize, fixture: usize, kind: *mut u8, nation: *mut usize, continent: *mut usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut usize, *mut usize)>(IDX_GET_FIXTURE_RULES_SCOPE);
     let regions = [(kind as usize, 1), (nation as usize, 4), (continent as usize, 4)];
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(this, partida, kind, nation, continent), || get_fixture_rules_scope(this, partida, kind, nation, continent));
-    SCOREBOARD.record(igual, || format!("get_fixture_rules_scope({:x}) {:x?} x {:x?}", partida, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&regions, || o(this, fixture, kind, nation, continent), || get_fixture_rules_scope(this, fixture, kind, nation, continent));
+    SCOREBOARD.record(igual, || format!("get_fixture_rules_scope({:x}) {:x?} x {:x?}", fixture, mo, mr));
 }
 
 /// Comparer for `get_ineligibility_code`.
 ///
 /// [pt] Comparador: pelo valor. Jogador com a marca de ausente (0x418f60 com 1, que só lê): só a original (com 0 ela tira
 /// a marca de quem está sem clube e a segunda chamada veria outro estado).
-pub(crate) unsafe extern "thiscall" fn compare_get_ineligibility_code(this: usize, player: usize, partida: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_get_ineligibility_code(this: usize, player: usize, fixture: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(IDX_GET_INELIGIBILITY_CODE);
     if exe::awol_is_player_awol(read_usize(G_AWOL), player, 1) != 0 {
-        return o(this, player, partida);
+        return o(this, player, fixture);
     }
-    let r = o(this, player, partida);
-    let n = get_ineligibility_code(this, player, partida);
-    SCOREBOARD.record(r == n, || format!("get_ineligibility_code({:x}, {:x}) original={} rust={}", player, partida, r, n));
+    let r = o(this, player, fixture);
+    let n = get_ineligibility_code(this, player, fixture);
+    SCOREBOARD.record(r == n, || format!("get_ineligibility_code({:x}, {:x}) original={} rust={}", player, fixture, r, n));
     r
 }
 
@@ -1507,9 +1507,9 @@ pub(crate) unsafe extern "thiscall" fn compare_get_exchange_negotiations_for_pla
         if p != 0 {
             // the cursors of the swap lists of the club’s negotiations (the ones the routine may traverse)
             let club = read_u32(p);
-            let negociacoes = manager.common_name();
+            let negotiations = manager.common_name();
             for i in 0..read_i32(manager.addr() + staff::DATE_OF_BIRTH).max(0) as usize {
-                let neg = Offer(read_usize(negociacoes + i * 4));
+                let neg = Offer(read_usize(negotiations + i * 4));
                 if !neg.is_null() && (neg.buyer_club_id() as u32) == club && !neg.exchange_players().is_null() {
                     regions.push((neg.exchange_players().addr() + 0xa, 4));
                 }
@@ -1539,7 +1539,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_offers_for_player(this: usize
 }
 
 /// Comparer for `lista_de_pagamentos`.
-pub(crate) unsafe fn compare_lista_de_pagamentos(name: &str, k: usize, rust: unsafe extern "thiscall" fn(usize, *const i32), manager: usize, id: *const i32, list: usize, how_many: usize) {
+pub(crate) unsafe fn compare_payment_list(name: &str, k: usize, rust: unsafe extern "thiscall" fn(usize, *const i32), manager: usize, id: *const i32, list: usize, how_many: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *const i32)>(k);
     let reg = payment_list_regions(TransferManagerFields(manager), id, list, how_many);
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(manager, id), || rust(manager, id));
@@ -1548,17 +1548,17 @@ pub(crate) unsafe fn compare_lista_de_pagamentos(name: &str, k: usize, rust: uns
 
 /// Comparer for `remove_next_sale_percentage`.
 pub(crate) unsafe extern "thiscall" fn compare_remove_next_sale_percentage(manager: usize, id: *const i32) {
-    compare_lista_de_pagamentos("remove_next_sale_percentage", 451, remove_next_sale_percentage, manager, id, 0x880, 0x888);
+    compare_payment_list("remove_next_sale_percentage", 451, remove_next_sale_percentage, manager, id, 0x880, 0x888);
 }
 
 /// Comparer for `remove_first_team_appearance_money`.
 pub(crate) unsafe extern "thiscall" fn compare_remove_first_team_appearance_money(manager: usize, id: *const i32) {
-    compare_lista_de_pagamentos("remove_first_team_appearance_money", 452, remove_first_team_appearance_money, manager, id, 0x88c, 0x894);
+    compare_payment_list("remove_first_team_appearance_money", 452, remove_first_team_appearance_money, manager, id, 0x88c, 0x894);
 }
 
 /// Comparer for `remove_international_team_appearance_money`.
 pub(crate) unsafe extern "thiscall" fn compare_remove_international_team_appearance_money(manager: usize, id: *const i32) {
-    compare_lista_de_pagamentos("remove_international_team_appearance_money", 453, remove_international_team_appearance_money, manager, id, 0x898, 0x8a0);
+    compare_payment_list("remove_international_team_appearance_money", 453, remove_international_team_appearance_money, manager, id, 0x898, 0x8a0);
 }
 
 /// Comparer for `get_agreed_contract_club`.
@@ -1608,10 +1608,10 @@ pub(crate) unsafe extern "thiscall" fn compare_offer_slot(table: usize, k: i32) 
 /// Comparer for `get_selection_limit`.
 ///
 /// [pt] Comparador: lado a lado pelos 6 bytes da saída (a 0x8cf6b0 só escreve na tabela local).
-pub(crate) unsafe extern "thiscall" fn compare_get_selection_limit(this: usize, partida: usize, out: *mut u8) {
+pub(crate) unsafe extern "thiscall" fn compare_get_selection_limit(this: usize, fixture: usize, out: *mut u8) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8)>(IDX_GET_SELECTION_LIMIT);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(out as usize, 6)], || o(this, partida, out), || get_selection_limit(this, partida, out));
-    SCOREBOARD.record(igual, || format!("get_selection_limit({:x}) {:x?} x {:x?}", partida, mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(out as usize, 6)], || o(this, fixture, out), || get_selection_limit(this, fixture, out));
+    SCOREBOARD.record(igual, || format!("get_selection_limit({:x}) {:x?} x {:x?}", fixture, mo, mr));
 }
 
 /// Comparer for `find_work_permit`.

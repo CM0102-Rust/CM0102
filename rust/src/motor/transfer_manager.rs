@@ -3619,7 +3619,7 @@ pub(crate) unsafe fn pay_appearance_money_unless_dry_run(this: usize, p: usize, 
 /// o jogador marcado soma um jogo (+4 da permissão) e sai da lista; os que sobram, sem lesão (0x62c400), suspensão
 /// (0x55d270), convocação (0x7757d0) nem inelegibilidade (0x8cf5e0), e não emprestados por outro clube (0x4cf6d0 com o
 /// contrato guardado em [0xae1080]), somam uma falta (+6).
-pub(crate) unsafe extern "thiscall" fn update_appearance_clauses_after_match(this: usize, game: usize, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn update_appearance_clauses_after_match(this: usize, game: usize, fixture: usize) {
     let game = Fixture(game);
     // simplification: the original’s local squad (esp+0x110) is not filled on the national team side and keeps whatever the stack had
     // (the one from the other side or garbage); here it starts zeroed (empty slot, which the game also produces) and passes from one side to the other
@@ -3646,7 +3646,7 @@ pub(crate) unsafe extern "thiscall" fn update_appearance_clauses_after_match(thi
                 }
             }
         }
-        let base = partida + side as usize * 0x625;
+        let base = fixture + side as usize * 0x625;
         let mut k: i8 = 0;
         while k < 0x14 {
             let v = base + k as usize * 0x49;
@@ -6344,14 +6344,14 @@ pub(crate) unsafe fn clear_restriction_table(t: *mut u8) {
 /// do tipo 4, a primeira das 28 regras de +0x8ac do continente (+0xe, tipo 2) ou da nação (+0xa) com o mesmo tipo
 /// (+0x12) enche a tabela (virtual +0x1c com a partida e `t`). Com `so_a_principal`, fica só o primeiro limite que
 /// existe: +5 ou +3 (gravado em +5), +2 ou +0 (gravado em +2), ou +0x16 com +0x17; o resto volta a 0xff.
-pub(crate) unsafe extern "thiscall" fn fill_squad_restrictions(this: usize, partida: usize, t: *mut u8, so_main: u32) {
+pub(crate) unsafe extern "thiscall" fn fill_squad_restrictions(this: usize, fixture: usize, t: *mut u8, so_main: u32) {
     let this = TransferManagerFields(this);
     clear_restriction_table(t);
-    if partida == 0 {
+    if fixture == 0 {
         return;
     }
     let (mut tipo, mut nacao, mut continente) = (0u8, 0usize, 0usize);
-    exe::transfer_manager_get_fixture_rules_scope(this, partida, &mut tipo, &mut nacao, &mut continente);
+    exe::transfer_manager_get_fixture_rules_scope(this, fixture, &mut tipo, &mut nacao, &mut continente);
     if tipo == 0xff {
         return;
     }
@@ -6365,7 +6365,7 @@ pub(crate) unsafe extern "thiscall" fn fill_squad_restrictions(this: usize, part
             };
             if home {
                 let encher: unsafe extern "thiscall" fn(usize, usize, *mut u8) -> u32 = core::mem::transmute(read_usize(read_usize(r) + 0x1c));
-                encher(r, partida, t);
+                encher(r, fixture, t);
                 break;
             }
         }
@@ -6413,25 +6413,25 @@ pub(crate) unsafe extern "thiscall" fn fill_squad_restrictions(this: usize, part
 /// [0xde1d08] 0x8968f0) conta se é estrangeira na nação do clube (0x53d980 com 1; tipo 1, também fora da UE, 0x53d740)
 /// ou passa da idade (+0x18, tipo 3): +2 (titulares) ou +3 (as outras) e +4 (todas). A conta vai a `saida`; passando da
 /// quantidade, 1 e, com `msg`, o aviso (0x66f4e0) pelo tipo, pela conta e pela quantidade.
-pub(crate) unsafe extern "thiscall" fn transfer_manager_check_matchday_squad_limit(this: usize, club: usize, partida: usize, msg: usize, players: usize, not_used: u32, out: usize) -> u32 {
-    let partida = Fixture(partida);
+pub(crate) unsafe extern "thiscall" fn transfer_manager_check_matchday_squad_limit(this: usize, club: usize, fixture: usize, msg: usize, players: usize, not_used: u32, out: usize) -> u32 {
+    let fixture = Fixture(fixture);
     let club = Club(club);
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let mut l = [0u8; 6];
-    exe::transfer_manager_get_selection_limit(this, partida, l.as_mut_ptr());
+    exe::transfer_manager_get_selection_limit(this, fixture, l.as_mut_ptr());
     let kind = l[0];
     if kind == 0 {
         return 0;
     }
-    let human = ((club == partida.home_club() && partida.home_side_mark() == 0) || (club == partida.away_club() && (partida.away_side_mark() as u8) == 0)) as u32;
+    let human = ((club == fixture.home_club() && fixture.home_side_mark() == 0) || (club == fixture.away_club() && (fixture.away_side_mark() as u8) == 0)) as u32;
     if kind == 1 {
         crate::comparison::branch("cpr_1 count non-EU players");
     }
     let mut k: i8 = 0;
-    while k < (((partida.squad_rules() as u8) & 0xf).wrapping_add(0xb)) as i8 {
+    while k < (((fixture.squad_rules() as u8) & 0xf).wrapping_add(0xb)) as i8 {
         let p = Staff(if players == 0 {
             // simplification: the original pushes the match pair with the low byte replaced by the slot (0x8968f0 reads the byte)
-            exe::tactics_get_selected_player(read_usize(G_TACTICS), club, ((partida.addr() & !0xff) | k as u8 as usize) as u32, (human) as i32)
+            exe::tactics_get_selected_player(read_usize(G_TACTICS), club, ((fixture.addr() & !0xff) | k as u8 as usize) as u32, (human) as i32)
         } else {
             read_usize(players + (k as isize * 4) as usize)
         });
@@ -8944,11 +8944,11 @@ pub(crate) unsafe fn vector_contains_record(v: usize, n: usize, size: usize, tar
 /// continente dela (+0x71, ou 0) e tipo 1. Amistoso (0x5c6710 sobre [0xae2c74]): 0, 0 e 0xff. Senão, pela nação-chave
 /// da competição (0x669470, com sinal): a nação da tabela 0xb63d60 (72 bytes cada), o continente da competição (+0x59)
 /// e tipo 4 (chaves 0 e 1), 2 (3 a 7) ou 1.
-pub(crate) unsafe extern "thiscall" fn get_fixture_rules_scope(_this: usize, partida: usize, kind: *mut u8, nation: *mut usize, continent: *mut usize) {
-    let partida = Fixture(partida);
-    let comp = partida.competition();
+pub(crate) unsafe extern "thiscall" fn get_fixture_rules_scope(_this: usize, fixture: usize, kind: *mut u8, nation: *mut usize, continent: *mut usize) {
+    let fixture = Fixture(fixture);
+    let comp = fixture.competition();
     if read_usize(comp.addr()) == read_usize(KEY_CLUB_COMP_RESERVE) {
-        let n = Nation(read_usize(partida.home_club().addr() + club::NATION));
+        let n = Nation(read_usize(fixture.home_club().addr() + club::NATION));
         *nation = n.addr();
         *continent = if !n.is_null() { n.continent() } else { 0 };
         *kind = 1;
@@ -8962,7 +8962,7 @@ pub(crate) unsafe extern "thiscall" fn get_fixture_rules_scope(_this: usize, par
     }
     let k = exe::key_nation_index_of_comp(comp) as i8;
     *nation = read_usize((0xb63d60isize + k as isize * 72) as usize);
-    *continent = read_usize(partida.competition().addr() + competition::CONTINENT);
+    *continent = read_usize(fixture.competition().addr() + competition::CONTINENT);
     *kind = match k {
         0 | 1 => 4,
         3..=7 => 2,
@@ -8988,18 +8988,18 @@ pub(crate) unsafe extern "thiscall" fn get_fixture_rules_scope(_this: usize, par
 /// que tira a marca de quem está sem clube): 9. Senão, pelo alcance das regras (0x8d2fa0; 0xff e 4: 0): a primeira das
 /// 28 regras de +0x8ac do continente (+0xe, tipo 2) ou da nação (+0xa) com o mesmo tipo (+0x12) responde (virtual
 /// +0x18 com jogador e partida). Nenhuma: 0.
-pub(crate) unsafe extern "thiscall" fn get_ineligibility_code(this: usize, player: usize, partida: usize) -> u8 {
+pub(crate) unsafe extern "thiscall" fn get_ineligibility_code(this: usize, player: usize, fixture: usize) -> u8 {
     let this = TransferManagerFields(this);
-    let partida = Fixture(partida);
-    if !partida.is_null() {
-        if exe::database_is_national_team(partida.home_club()) == 0 {
+    let fixture = Fixture(fixture);
+    if !fixture.is_null() {
+        if exe::database_is_national_team(fixture.home_club()) == 0 {
             if exe::awol_is_player_awol(read_usize(G_AWOL), player, 0) != 0 {
                 return 9;
             }
         }
     }
     let (mut tipo, mut nacao, mut continente) = (0u8, 0usize, 0usize);
-    exe::transfer_manager_get_fixture_rules_scope(this, partida, &mut tipo, &mut nacao, &mut continente);
+    exe::transfer_manager_get_fixture_rules_scope(this, fixture, &mut tipo, &mut nacao, &mut continente);
     if tipo == 0xff || tipo == 4 {
         return 0;
     }
@@ -9013,7 +9013,7 @@ pub(crate) unsafe extern "thiscall" fn get_ineligibility_code(this: usize, playe
         if home {
             crate::comparison::branch("cpk_4 match rule");
             let respond: unsafe extern "thiscall" fn(usize, usize, usize) -> u8 = core::mem::transmute(read_usize(read_usize(r) + 0x18));
-            return respond(r, player, partida.addr());
+            return respond(r, player, fixture.addr());
         }
     }
     0
@@ -9469,11 +9469,11 @@ pub(crate) unsafe extern "thiscall" fn get_exchange_negotiations_for_player(mana
         return 0;
     }
     let club = read_u32(p);
-    let negociacoes = manager.common_name();
+    let negotiations = manager.common_name();
     let mut total = 0;
     let mut i = 0;
     while i < read_i32(manager.addr() + staff::DATE_OF_BIRTH) {
-        let neg = Offer(read_usize(negociacoes + i as usize * 4));
+        let neg = Offer(read_usize(negotiations + i as usize * 4));
         i += 1;
         if neg.is_null() || (neg.buyer_club_id() as u32) != club {
             continue;
@@ -9749,11 +9749,11 @@ pub(crate) unsafe extern "thiscall" fn offer_slot(table: usize, k: i32) -> usize
 /// saída, pede a tabela de 42 bytes das restrições da partida (0x8cf6b0 com 1; o `this` passa direto) e fica com a
 /// primeira que existe (≠ 0xff): +5 ou +3 (tipo 1), +2 ou +0 (tipo 2), +0x16 com a quantidade em +0x17 (tipo 3, a
 /// idade em +1). O tipo vai em +0 e a quantidade em +5.
-pub(crate) unsafe extern "thiscall" fn get_selection_limit(this: usize, partida: usize, out: *mut u8) {
+pub(crate) unsafe extern "thiscall" fn get_selection_limit(this: usize, fixture: usize, out: *mut u8) {
     core::ptr::write_unaligned(out as *mut u32, 0);
     core::ptr::write_unaligned(out.add(4) as *mut u16, 0);
     let mut t = [0u8; 0x2c];
-    exe::transfer_manager_fill_squad_restrictions(this, partida, t.as_mut_ptr(), 1);
+    exe::transfer_manager_fill_squad_restrictions(this, fixture, t.as_mut_ptr(), 1);
     let (tipo, n) = if t[5] != 0xff {
         (1, t[5])
     } else if t[3] != 0xff {

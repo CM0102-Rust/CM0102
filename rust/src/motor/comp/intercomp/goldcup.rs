@@ -709,17 +709,17 @@ pub(crate) const CONFED_CUP_KNOCKOUT: [GoldcupScheduleOp; 57] = [
 ///
 /// [pt] A fase da Copa América pelo byte com sinal: abaixo de 2 os grupos (id 0x420 + fase; os jogos de cada grupo para −1,
 /// 0 e 1), 2 o mata-mata, acima nada.
-pub(crate) fn copa_america_phase(fase: u32) -> Option<GoldcupStagePlan> {
-    let f = fase as u8 as i8;
+pub(crate) fn copa_america_phase(stage: u32) -> Option<GoldcupStagePlan> {
+    let f = stage as u8 as i8;
     if f < 2 {
-        let jogos: &'static [GoldcupScheduleOp] = match f {
+        let games: &'static [GoldcupScheduleOp] = match f {
             -1 => &COPA_AMERICA_GROUP_GAMES,
             0 => &COPA_AMERICA_GROUP_B_MATCHES,
             1 => &COPA_AMERICA_GROUP_C_OPS,
             _ => &[],
         };
         Some(GoldcupStagePlan { league: 1, rounds: 3, extra: (f as i16).wrapping_add(0x420), extra_check: false, size: 0xc3, row: 0x9c,
-            ops: &COPA_AMERICA_GROUP_DATE_OPS, ops2: jogos, name: "cqp_12 grupos da copa america" })
+            ops: &COPA_AMERICA_GROUP_DATE_OPS, ops2: games, name: "cqp_12 grupos da copa america" })
     } else if f == 2 {
         Some(GoldcupStagePlan { league: 0, rounds: 4, extra: 0, extra_check: false, size: 0x1a0, row: 0xd6,
             ops: &COPA_AMERICA_KNOCKOUT_OPS, ops2: &[], name: "cqp_12 mata-mata da copa america" })
@@ -745,10 +745,10 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_schedule(this: usize, stag
 ///
 /// [pt] A fase da Copa Africana: abaixo de 3 os grupos (id 0x3e9 + fase; os jogos de cada grupo para −1, 0, 1 e 2), 3 o
 /// mata-mata, acima nada.
-pub(crate) fn african_nations_phase(fase: u32) -> Option<GoldcupStagePlan> {
-    let f = fase as u8 as i8;
+pub(crate) fn african_nations_phase(stage: u32) -> Option<GoldcupStagePlan> {
+    let f = stage as u8 as i8;
     if f < 3 {
-        let jogos: &'static [GoldcupScheduleOp] = match f {
+        let games: &'static [GoldcupScheduleOp] = match f {
             -1 => &AFRICAN_NATIONS_GROUP_A_OPS,
             0 => &AFRICAN_NATIONS_GROUP_GAMES,
             1 => &AFRICAN_NATIONS_GROUP_C_MATCHES,
@@ -756,7 +756,7 @@ pub(crate) fn african_nations_phase(fase: u32) -> Option<GoldcupStagePlan> {
             _ => &[],
         };
         Some(GoldcupStagePlan { league: 1, rounds: 3, extra: (f as i16).wrapping_add(0x3e9), extra_check: false, size: 0xc3, row: 0x9e,
-            ops: &AFRICAN_NATIONS_GROUP_ROUNDS, ops2: jogos, name: "cqp_12 grupos da copa africana" })
+            ops: &AFRICAN_NATIONS_GROUP_ROUNDS, ops2: games, name: "cqp_12 grupos da copa africana" })
     } else if f == 3 {
         Some(GoldcupStagePlan { league: 0, rounds: 4, extra: 0, extra_check: false, size: 0x1a0, row: 0xe0,
             ops: &AFRICAN_NATIONS_KNOCKOUT_OPS, ops2: &[], name: "cqp_12 mata-mata da copa africana" })
@@ -769,16 +769,16 @@ pub(crate) fn african_nations_phase(fase: u32) -> Option<GoldcupStagePlan> {
 ///
 /// [pt] A fase da Copa das Confederações: abaixo de 1 os grupos (id 0x3e9 + fase; os jogos de cada grupo para −1 e 0), 1 o
 /// mata-mata, acima nada.
-pub(crate) fn confed_cup_phase(fase: u32) -> Option<GoldcupStagePlan> {
-    let f = fase as u8 as i8;
+pub(crate) fn confed_cup_phase(stage: u32) -> Option<GoldcupStagePlan> {
+    let f = stage as u8 as i8;
     if f < 1 {
-        let jogos: &'static [GoldcupScheduleOp] = match f {
+        let games: &'static [GoldcupScheduleOp] = match f {
             -1 => &CONFED_CUP_GROUP_A_OPS,
             0 => &CONFED_CUP_GROUP_GAMES,
             _ => &[],
         };
         Some(GoldcupStagePlan { league: 1, rounds: 3, extra: (f as i16).wrapping_add(0x3e9), extra_check: false, size: 0xc3, row: 0x95,
-            ops: &CONFED_CUP_GROUP_ROUNDS, ops2: jogos, name: "cqp_12 grupos da copa das confederacoes" })
+            ops: &CONFED_CUP_GROUP_ROUNDS, ops2: games, name: "cqp_12 grupos da copa das confederacoes" })
     } else if f == 1 {
         Some(GoldcupStagePlan { league: 0, rounds: 3, extra: 0, extra_check: false, size: 0x138, row: 0xc7,
             ops: &CONFED_CUP_KNOCKOUT, ops2: &[], name: "cqp_12 mata-mata da copa das confederacoes" })
@@ -875,7 +875,7 @@ pub(crate) const OCEANIA_RULE_FIELDS: [(usize, u8, u32); 14] = [(0xc2, 1, 3), (0
 /// [pt] { 0x5e1620 } (thiscall, ret 0, goldcup.cpp; a virtual +0x28): `GoldCup::advance_stage()`, a fase seguinte da Copa
 /// América: a caixa da linha 0x29d na última; chegando a 2 (depois dos 2 grupos-fase), o mata-mata (0x5e18a0).
 pub(crate) unsafe extern "thiscall" fn goldcup_advance_stage(this: usize) {
-    con_merc_cup_advance_stage_cqs11_fase_seguinte(League(this), 0x9cd640, 0x29d, 2, 0x5e18a0, "cqs_11 mata-mata da copa america");
+    con_merc_cup_advance_stage_cqs11_next_stage(League(this), 0x9cd640, 0x29d, 2, 0x5e18a0, "cqs_11 mata-mata da copa america");
 }
 
 /// rule: the Copa America follows the African Nations Cup rule with two group stages (the knockout at stage 2)

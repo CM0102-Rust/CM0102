@@ -489,9 +489,9 @@ pub(crate) unsafe extern "thiscall" fn foul_decision(
             factor *= (read_f64(rdata::F64_6) - z as f64) * read_f64(rdata::F64_0_1) + read_f64(rdata::F64_1);
         }
     }
-    let partida = m.r#match();
-    if partida != 0 {
-        let comp = *((partida + 0x14) as *const usize);
+    let fixture = m.r#match();
+    if fixture != 0 {
+        let comp = *((fixture + 0x14) as *const usize);
         let friendly = *(G_FRIENDLY as *const usize);
         if comp != 0 && friendly != 0 {
             if exe::friendly_is_friendly_competition(friendly, comp) != 0 {

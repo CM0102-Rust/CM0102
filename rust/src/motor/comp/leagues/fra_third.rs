@@ -71,8 +71,8 @@ pub(crate) struct FraThirdSingleStageLeague {
 /// (−1; as outras devolvem 0 sem gravar nada): é_liga (se pedido) = 1, as rodadas, extra = 0, a tabela de rodadas × 0x41
 /// bytes (malloc 0x944e46: push; add esp, 4 -> cdecl; sem memória: a caixa e 0) com as datas e as faixas da liga.
 /// Devolve a tabela.
-pub(crate) unsafe fn create_league_schedule(this: League, fase: u32, rodadas: *mut i16, extra: *mut i16, league: *mut i32, p: &FraThirdSingleStageLeague) -> usize {
-    if fase as u8 != 0xff {
+pub(crate) unsafe fn create_league_schedule(this: League, stage: u32, rodadas: *mut i16, extra: *mut i16, league: *mut i32, p: &FraThirdSingleStageLeague) -> usize {
+    if stage as u8 != 0xff {
         return 0;
     }
     if !league.is_null() {

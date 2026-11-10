@@ -182,10 +182,10 @@ pub(crate) unsafe extern "thiscall" fn compare_set_selected_list(this: usize, li
 }
 
 /// Comparer for `fixture_has_scouted_player`.
-pub(crate) unsafe extern "thiscall" fn compare_fixture_has_scouted_player(this: usize, partida: usize) -> u32 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_FIXTURE_HAS_SCOUTED_PLAYER)(this, partida);
-    let n = fixture_has_scouted_player(this, partida);
-    SCOREBOARD.record(r == n, || format!("fixture_has_scouted_player(match {:x}) original={} rust={}", partida, r, n));
+pub(crate) unsafe extern "thiscall" fn compare_fixture_has_scouted_player(this: usize, fixture: usize) -> u32 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_FIXTURE_HAS_SCOUTED_PLAYER)(this, fixture);
+    let n = fixture_has_scouted_player(this, fixture);
+    SCOREBOARD.record(r == n, || format!("fixture_has_scouted_player(match {:x}) original={} rust={}", fixture, r, n));
     r
 }
 

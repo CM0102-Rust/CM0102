@@ -173,7 +173,7 @@ pub(crate) struct NationClubList {
 }
 
 impl NationClubList {
-    fn novo() -> Self {
+    fn new() -> Self {
         NationClubList { clubs: [0; 30], n: 0 }
     }
 
@@ -236,7 +236,7 @@ pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
         show_error_at(0x9a7d6c, 0x262);
         return 0;
     }
-    let (mut mexico, mut colombia, mut peru, mut bolivia) = (NationClubList::novo(), NationClubList::novo(), NationClubList::novo(), NationClubList::novo());
+    let (mut mexico, mut colombia, mut peru, mut bolivia) = (NationClubList::new(), NationClubList::new(), NationClubList::new(), NationClubList::new());
     let mut mls = [0usize; 12];
     let mut n_mls = 0i8;
     let mut i = 0i32;
@@ -325,7 +325,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_select_invited_clubs(this: u
 /// [pt] A fase seguinte de um torneio com grupos e mata-mata (`advance_stage`, a virtual +0x28): na última fase (+0x30 ≥
 /// +0x2c − 1, com sinal), a caixa da linha e volta; senão +0x30 sobe e, chegando a `mata`, o mata-mata (call direto com
 /// o ecx da copa -> thiscall, ret 0).
-pub(crate) unsafe fn con_merc_cup_advance_stage_cqs11_fase_seguinte(this: League, file: usize, row: u32, knockout: i32, routine: usize, ramo: &'static str) {
+pub(crate) unsafe fn con_merc_cup_advance_stage_cqs11_next_stage(this: League, file: usize, row: u32, knockout: i32, routine: usize, ramo: &'static str) {
     let f = this.current_stage() as i32;
     if f >= (this.stage_count() as i32).wrapping_sub(1) {
         return show_error_at(file, row);

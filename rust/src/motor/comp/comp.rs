@@ -102,8 +102,8 @@ pub(crate) unsafe fn finalize_league_table(league: League) {
 /// a reputação (+0x80), a notícia 0x1a (0x77bbe0): 0 a competição ([this+4]), 1 o valor, 2 o clube, 3 a posição, 4 a
 /// rodada, 7 o tipo; com a partida, 5 o adversário e 6 se o clube venceu (+0x3d/+0x3e o vencedor nos pênaltis
 /// [inferência], senão +0x4b/+0x4c, senão +0x43/+0x44 o placar); sem ela −1 e 0. Entregue a ele (0x7861e0).
-pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: usize, lo: u32, hi: i32, position: u32, round: u32, partida: usize, kind: u32) {
-    let partida = Fixture(partida);
+pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: usize, lo: u32, hi: i32, position: u32, round: u32, fixture: usize, kind: u32) {
+    let fixture = Fixture(fixture);
     let club = Club(club);
     if !club_has_human_manager(club.addr()) {
         return;
@@ -124,13 +124,13 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: 
     exe::newsitem_set_slot(p, (4) as u32 as i8, round as u16 as i16 as i32 as u32);
     exe::newsitem_set_slot(p, (7) as u32 as i8, kind as u8 as i8 as i32 as u32);
     let b = |a: usize| read_i8(a);
-    let won = if !partida.is_null() {
-        if partida.home_club() == club {
-            exe::newsitem_set_slot(p, (5) as u32 as i8, read_usize(partida.away_club().addr()) as u32);
-            partida.home_result_mark() != 0 || partida.home_aggregate() > partida.away_aggregate() || partida.home_goals() > partida.away_goals()
+    let won = if !fixture.is_null() {
+        if fixture.home_club() == club {
+            exe::newsitem_set_slot(p, (5) as u32 as i8, read_usize(fixture.away_club().addr()) as u32);
+            fixture.home_result_mark() != 0 || fixture.home_aggregate() > fixture.away_aggregate() || fixture.home_goals() > fixture.away_goals()
         } else {
-            exe::newsitem_set_slot(p, (5) as u32 as i8, read_usize(partida.home_club().addr()) as u32);
-            partida.away_result_mark() != 0 || partida.home_aggregate() < partida.away_aggregate() || partida.home_goals() < partida.away_goals()
+            exe::newsitem_set_slot(p, (5) as u32 as i8, read_usize(fixture.home_club().addr()) as u32);
+            fixture.away_result_mark() != 0 || fixture.home_aggregate() < fixture.away_aggregate() || fixture.home_goals() < fixture.away_goals()
         }
     } else {
         exe::newsitem_set_slot(p, (5) as u32 as i8, u32::MAX);
@@ -658,8 +658,8 @@ pub(crate) unsafe extern "thiscall" fn get_stage(this: usize, k: i32) -> usize {
 /// bytes cada, escolhida em +0x11c), o byte +0x14 da linha; senão 0 com o mandante seleção e 3 sem. Senão, competição de
 /// nação (+0x5d): o byte +0x14 da linha dela, ou 3. Sem nação: Copa do Mundo e eliminatórias (0x669a10), 0; torneio
 /// internacional (0x669ae0), 1; senão o índice da nação-chave (0x669470). TapeCall a cada jogo procurado: sem contador.
-pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, partida: usize) -> u8 {
-    let partida = Fixture(partida);
+pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, fixture: usize) -> u8 {
+    let fixture = Fixture(fixture);
     let comp = Competition(comp);
     let row = |nation: usize| (0..0x23usize).find(|&k| {
         let n = Nation(read_usize(G_LEAGUE_TABLE + 72 * k));
@@ -667,15 +667,15 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_fixture(comp: usize, p
     });
     let nation = comp.nation();
     let reservas = read_usize(KEY_CLUB_COMP_RESERVE);
-    if (exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), comp) != 0 || read_usize(comp.addr()) == reservas) && !partida.is_null() {
-        let pc = partida.competition();
+    if (exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), comp) != 0 || read_usize(comp.addr()) == reservas) && !fixture.is_null() {
+        let pc = fixture.competition();
         if pc == Competition(read_usize(read_usize(G_FRIENDLY) + 4)) || read_usize(pc.addr()) == reservas {
-            if exe::database_is_national_team(partida.home_club()) != 0 || exe::database_is_national_team(partida.away_club()) != 0 {
+            if exe::database_is_national_team(fixture.home_club()) != 0 || exe::database_is_national_team(fixture.away_club()) != 0 {
                 return 1;
             }
-            let home = partida.home_club();
+            let home = fixture.home_club();
             let a = home.nation();
-            if a.addr() != read_usize(partida.away_club().addr() + club::NATION) || a.league_selected() == 0 {
+            if a.addr() != read_usize(fixture.away_club().addr() + club::NATION) || a.league_selected() == 0 {
                 return 3;
             }
             if let Some(k) = row(a.addr()) {

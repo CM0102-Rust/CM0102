@@ -206,17 +206,17 @@ pub(crate) unsafe extern "thiscall" fn compare_post_due_recovery_news(this: usiz
 /// [pt] Comparador: lado a lado no estado do sorteio, no cursor da lista das batidas e na recuperação (+0xa, 4 bytes, do
 /// registro de 31 bytes em [this]) de cada pessoa das vagas. Partida com batida que chega ao tipo da lesão: só a original (a lesão nova aloca e manda a
 /// notícia; a gravidade da primeira batida pode ser sobra de pilha).
-pub(crate) unsafe extern "thiscall" fn compare_apply_match_effects(this: usize, game: usize, partida: usize) {
-    let partida = MatchRecord(partida);
+pub(crate) unsafe extern "thiscall" fn compare_apply_match_effects(this: usize, game: usize, fixture: usize) {
+    let fixture = MatchRecord(fixture);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_APPLY_MATCH_EFFECTS);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     let mut taken = false;
     for lado in 0..2usize {
         for k in 0..0x14usize {
-            let slot = partida.addr() + match_record::ROW_MINUTE_OFF + 0x625 * lado + 0x49 * k;
+            let slot = fixture.addr() + match_record::ROW_MINUTE_OFF + 0x625 * lado + 0x49 * k;
             let Some((id, pessoa)) = staff_of_match_slot(slot) else { continue };
             if pessoa == 0 {
-                return o(this, game, partida.addr());
+                return o(this, game, fixture.addr());
             }
             reg.push(((read_i32(this) as u32).wrapping_add((id as u32).wrapping_mul(31)).wrapping_add(0xa) as usize, 4));
             if read_u8(slot - 0x11) != 0 && read_i32(this + injury_fields::MATCH_HIT_LIST) != 0 && has_injury_hit(this, id, Staff(pessoa)) {
@@ -226,13 +226,13 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_match_effects(this: usize, 
     }
     if taken {
         crate::comparison::branch("apply_match_effects with collision");
-        return o(this, game, partida.addr());
+        return o(this, game, fixture.addr());
     }
     if read_i32(this + injury_fields::MATCH_HIT_LIST) != 0 {
         reg.push((read_i32(this + injury_fields::MATCH_HIT_LIST) as usize + 0xa, 4)); // the cursor of the kicks list
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, game, partida.addr()), || crate::rng::without_counting(|| apply_match_effects(this, game, partida.addr())));
-    SCOREBOARD.record(igual, || format!("apply_match_effects({:x}, {:x}) {:x?} x {:x?}", game, partida.addr(), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(this, game, fixture.addr()), || crate::rng::without_counting(|| apply_match_effects(this, game, fixture.addr())));
+    SCOREBOARD.record(igual, || format!("apply_match_effects({:x}, {:x}) {:x?} x {:x?}", game, fixture.addr(), mo, mr));
 }
 
 /// Comparer for `find_match_injury`.
@@ -312,7 +312,7 @@ pub(crate) unsafe extern "thiscall" fn compare_get_player_injury_status(this: us
 /// [pt] Comparador: a original sorteia, aloca e reordena: o plano antes (os sorteios e a seleção, com o estado do sorteio
 /// guardado e devolvido); a original roda. Confere o mesmo estado do sorteio e, se o surto entrou, a conta +1 e o surto
 /// (data, tipo, clube, partida) no vetor; senão a conta igual.
-pub(crate) unsafe extern "thiscall" fn compare_add_illness_outbreak(this: usize, data: usize, kind: u32, club_i: i32, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_add_illness_outbreak(this: usize, data: usize, kind: u32, club_i: i32, fixture: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32, usize)>(IDX_ADD_ILLNESS_OUTBREAK);
     let state = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     let enters = crate::rng::pause_trace(|| crate::rng::without_counting(|| outbreak_takes_hold(kind as u8, club_i)));
@@ -323,9 +323,9 @@ pub(crate) unsafe extern "thiscall" fn compare_add_illness_outbreak(this: usize,
     expected[..8].copy_from_slice(&*(data as *const [u8; 8]));
     expected[8] = kind as u8;
     expected[9..13].copy_from_slice(&club_i.to_le_bytes());
-    let id = if partida != 0 { read_i32(partida) } else { -1 };
+    let id = if fixture != 0 { read_i32(fixture) } else { -1 };
     expected[13..17].copy_from_slice(&id.to_le_bytes());
-    o(this, data, kind, club_i, partida);
+    o(this, data, kind, club_i, fixture);
     let n = read_i32(this + injury_fields::OUTBREAK_COUNT);
     let same_draw = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS) == after_of_plan;
     let v = read_usize(this + injury_fields::OUTBREAKS);

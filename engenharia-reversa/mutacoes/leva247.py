@@ -8,7 +8,7 @@ MUTACOES = [
     ('cpk_fila_regen_conta', 'write_usize(this + player_regen_fields::REGEN_QUEUE_COUNT, read_usize(this + player_regen_fields::REGEN_QUEUE_COUNT).wrapping_add(1)); // one more in the regen queue', '// mutacao: a conta nao sobe'),
     ('cpk_clausula_estado', 'contract.set_relegation_rc(2); // the triggered clause', '*((contract.addr() + 0x1f) as *mut u8) = 3; // mutacao: 3', 'cpk_3 relegation clause'),
     ('cpk_oferta_pendente', '*n = (*n).wrapping_sub(1); // one fewer pending', '// mutacao: sem descontar', 'cpk_3 remove contract offer'),
-    ('cpk_suspenso_competicao', 'if b == 0 || exe::rulingbody_is_player_banned(b, player, 0, extra, partida) == 0 { // without the competition suspension', 'if b == 0 || b != 0 { // mutacao: sem a da competicao', 'cpk_3 suspended by the competition'),
+    ('cpk_suspenso_competicao', 'if b == 0 || exe::rulingbody_is_player_banned(b, player, 0, extra, fixture) == 0 { // without the competition suspension', 'if b == 0 || b != 0 { // mutacao: sem a da competicao', 'cpk_3 suspended by the competition'),
     ('cpk_escopo_nacao', '1 // the competition’s nation', '2 // mutacao: o tipo 2', 'cpk_4 nation scope'),
     ('cpk_regra_nacao', 'read_usize(r + transfer_rules::NATION_ID) == nacao && *((r + transfer_rules::SCOPE) as *const u8) == tipo // the nation’s rule', 'read_usize(r + transfer_rules::NATION_ID) != nacao && *((r + transfer_rules::SCOPE) as *const u8) == tipo // mutacao: outra nacao', 'cpk_4 match rule'),
     ('cpk_amistoso_vaga', 'return e + 25 * i + 9; // place i', 'return e + 9; // mutacao: a primeira vaga', 'cpk_4 friendly slot'),

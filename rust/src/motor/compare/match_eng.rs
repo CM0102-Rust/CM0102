@@ -992,17 +992,17 @@ pub(crate) unsafe extern "C" fn compare_new_reputation(this: usize, side: i8, va
 }
 
 /// Comparer for `player_reputation`.
-pub(crate) unsafe extern "C" fn compare_player_reputation(reg: usize, my: usize, other: usize, partida: usize, value: f32, alt: u8, bonus: u8) {
+pub(crate) unsafe extern "C" fn compare_player_reputation(reg: usize, my: usize, other: usize, fixture: usize, value: f32, alt: u8, bonus: u8) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, usize, f32, u8, u8)>(IDX_PLAYER_REPUTATION);
     if is_recording_wrap_up_calls() {
-        call_recording(FN_UPDATE_MANAGER_REPUTATION_AFTER_MATCH, reg, [my as u32, other as u32, partida as u32, value.to_bits(), alt as u32 | (bonus as u32) << 8], || {
-            o(reg, my, other, partida, value, alt, bonus);
+        call_recording(FN_UPDATE_MANAGER_REPUTATION_AFTER_MATCH, reg, [my as u32, other as u32, fixture as u32, value.to_bits(), alt as u32 | (bonus as u32) << 8], || {
+            o(reg, my, other, fixture, value, alt, bonus);
             0
         });
         return;
     }
     let regions = [(reg, 6)];
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(reg, my, other, partida, value, alt, bonus), || player_reputation(reg, my, other, partida, value, alt, bonus));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(reg, my, other, fixture, value, alt, bonus), || player_reputation(reg, my, other, fixture, value, alt, bonus));
     SCOREBOARD.record(igual, || format!("player_reputation value {} alt {} bonus {}: {:?} x {:?}", value, alt, bonus, mo.0[0].1, mr.0[0].1));
 }
 

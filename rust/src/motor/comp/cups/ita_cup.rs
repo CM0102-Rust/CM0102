@@ -165,7 +165,7 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_advance_stage_63d950(this: usize)
 /// altos, que o construtor não lê: a cópia passa os valores limpos) guardada em [+0xc][g]; o vetor e a tabela das
 /// rodadas liberados (0x9452ca). Sem fase: a caixa da `linhas[1]` e 0. Com ela: a notícia do sorteio do grupo (0x684230
 /// na fase), +0x30 = g e 1.
-pub(crate) unsafe fn ita_cup_create_group_stage_cqr8_fase_do_grupo(this: League, g: u32, file: usize, rows: [u32; 2], ramo: &'static str) -> u32 {
+pub(crate) unsafe fn ita_cup_create_group_stage_cqr8_group_stage(this: League, g: u32, file: usize, rows: [u32; 2], ramo: &'static str) -> u32 {
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
         core::mem::transmute(FN_LEAGUE_STAGE_LEAGUE_STAGE);
@@ -286,18 +286,18 @@ pub(crate) unsafe fn compare_group_stage(name: &str, this: League, g: u32, origi
 /// box) when allocation fails.
 ///
 /// [pt] { 0x63f640 } (thiscall, ret 4, ita_cup.cpp): `ItaCup::create_group_stage(g)`: a fase do grupo g da Copa da Itália
-/// (`ita_cup_create_group_stage_cqr8_fase_do_grupo`; as caixas do ita_cup.cpp nas linhas 0x263 e 0x27c).
+/// (`ita_cup_create_group_stage_cqr8_group_stage`; as caixas do ita_cup.cpp nas linhas 0x263 e 0x27c).
 pub(crate) unsafe extern "thiscall" fn ita_cup_create_group_stage(this: usize, g: u32) -> u32 {
-    ita_cup_create_group_stage_cqr8_fase_do_grupo(League(this), g, 0x9ea23c, [0x263, 0x27c], "cqr_8 time do grupo da copa da italia")
+    ita_cup_create_group_stage_cqr8_group_stage(League(this), g, 0x9ea23c, [0x263, 0x27c], "cqr_8 time do grupo da copa da italia")
 }
 
 /// ItaCCup::create_group_stage(g): builds the stage of group `g` of the Serie C Italian Cup through the shared
 /// group-stage builder (error boxes at ita_c_cup.cpp lines 0x265 and 0x27e). Returns the builder's result.
 ///
 /// [pt] { 0x63d9e0 } (thiscall, ret 4, ita_c_cup.cpp): `ItaCCup::create_group_stage(g)`: a fase do grupo g da Copa da Itália
-/// da Série C (`ita_cup_create_group_stage_cqr8_fase_do_grupo`; as caixas do ita_c_cup.cpp nas linhas 0x265 e 0x27e).
+/// da Série C (`ita_cup_create_group_stage_cqr8_group_stage`; as caixas do ita_c_cup.cpp nas linhas 0x265 e 0x27e).
 pub(crate) unsafe extern "thiscall" fn ita_cup_create_group_stage_63d9e0(this: usize, g: u32) -> u32 {
-    ita_cup_create_group_stage_cqr8_fase_do_grupo(League(this), g, 0x9ea204, [0x265, 0x27e], "cqr_8 time do grupo da copa da serie c")
+    ita_cup_create_group_stage_cqr8_group_stage(League(this), g, 0x9ea204, [0x265, 0x27e], "cqr_8 time do grupo da copa da serie c")
 }
 
 /// League table (+0xb1, 0x3b-byte rows) of group i: group 0 is the cup itself, group i ≥ 1 is stage [+0xc][i - 1].

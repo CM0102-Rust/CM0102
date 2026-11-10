@@ -7,7 +7,7 @@ MUTACOES = [
     ('c_e9', "1 | 2 => ftol(f(j.addr(), if kind == 1 { 0xdd } else { 0xe9 }) - 2.0 * exe::match_player_distance_to_cell(j, a7, a8) as f64) as i16,", "1 | 2 => ftol(f(j.addr(), if kind == 1 { 0xdd } else { 0xdd }) - 2.0 * exe::match_player_distance_to_cell(j, a7, a8) as f64) as i16,"),
     ('c_2x', "1 | 2 => ftol(f(j.addr(), if kind == 1 { 0xdd } else { 0xe9 }) - 2.0 *", "1 | 2 => ftol(f(j.addr(), if kind == 1 { 0xdd } else { 0xe9 }) - 1.0 *"),
     ('c_t4', "            4 => if table_a(this.addr(), j.addr()) == 1 { 100 } else { 0 },", "            4 => if table_a(this.addr(), j.addr()) & 1 != 0 { 100 } else { 0 },"),
-    ('c_lista_sel', "                        || is_national_team(read_usize(partida + (if side == 0 { 0x1c } else { 0x20 }))) != 0", "                        || is_national_team(read_usize(partida + (if side == 0 { 0x20 } else { 0x1c }))) != 0"),
+    ('c_lista_sel', "                        || is_national_team(read_usize(fixture + (if side == 0 { 0x1c } else { 0x20 }))) != 0", "                        || is_national_team(read_usize(fixture + (if side == 0 { 0x20 } else { 0x1c }))) != 0"),
     ('c_5f', "                    && (manager.classification() as i8) != 0\n", "\n"),
     ('c_lista_ordem', "                            v = 10000 - b as i16;", "                            v = 10000 + b as i16;"),
     ('c_menos20', "(read_i8(j.player().addr() + 0xf) as i32 * 20 - 20) as f64) as i16;", "(read_i8(j.player().addr() + 0xf) as i32 * 20) as f64) as i16;"),

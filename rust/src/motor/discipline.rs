@@ -82,8 +82,8 @@ pub(crate) struct AppealPlan {
 
 /// Plan of a discipline appeal for person id under a rule: finds the entry and ban, computes reduced matches/days and
 /// whether the ban is lifted.
-pub(crate) unsafe fn appeal_plan(this: usize, id: u32, regra: u32, reduces: u32, minus_games: u32, minus_days: u32, new: u32, days_fixed: u32) -> AppealPlan {
-    let orgao = read_usize(read_usize(this).wrapping_add((regra as i8 as isize as usize).wrapping_mul(4)));
+pub(crate) unsafe fn appeal_plan(this: usize, id: u32, rule: u32, reduces: u32, minus_games: u32, minus_days: u32, new: u32, days_fixed: u32) -> AppealPlan {
+    let orgao = read_usize(read_usize(this).wrapping_add((rule as i8 as isize as usize).wrapping_mul(4)));
     let entrada = exe::rulingbody_find_or_add_discipline_entry(orgao, id, 0);
     let mut r = AppealPlan { body: orgao, entry: entrada, suspensao: 0, games: 0, days: 0, solta: false };
     if entrada == 0 || read_i16(entrada + ruling_body_entry::BAN_INDEX) == -1 {
@@ -536,11 +536,11 @@ pub(crate) enum SuspensionPlan {
 /// full.
 pub(crate) unsafe fn add_ban_plan(this: usize, id: u32, ban: usize) -> SuspensionPlan {
     for k in 0..4usize {
-        let regra = read_u8(ban + ban_record::RULES + k);
-        if regra == 0xff {
+        let rule = read_u8(ban + ban_record::RULES + k);
+        if rule == 0xff {
             continue;
         }
-        let e = ruling_body_entry(ruling_body_of_rule(this, regra), id);
+        let e = ruling_body_entry(ruling_body_of_rule(this, rule), id);
         if e != 0 && read_i16(e + ruling_body_entry::BAN_INDEX) > -1 {
             let s = read_usize(this + discipline_fields::BANS).wrapping_add((read_i16(e + ruling_body_entry::BAN_INDEX) as i32 as usize).wrapping_mul(20));
             let (jogos, novos) = (read_u8(s), read_u8(ban));
@@ -849,7 +849,7 @@ pub(crate) unsafe extern "thiscall" fn discipline_set_slot(this: usize, id: i32,
 /// Suspenso pelo tribunal geral ([[this]], 0x7e85b0 com 1): 1. Senão, pelo tribunal da competição (+0x50, ≠ −1, com
 /// 0): 1, e se o clube dele (+0x39) é de humano (0x600a50 com 0, 1, 0, 0), ele sai da vaga que ocupa entre as 20 de
 /// +0x1e0. Senão 0.
-pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: usize, comp: *const i32, extra: u32, partida: usize) -> u32 {
+pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: usize, comp: *const i32, extra: u32, fixture: usize) -> u32 {
     let player = Staff(player);
     if !player.is_null() && read_usize(player.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
         return 0;
@@ -863,7 +863,7 @@ pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: 
         return 0;
     }
     let tribunais = read_usize(this);
-    if exe::rulingbody_is_player_banned(read_usize(tribunais), player, 1, extra, partida) != 0 {
+    if exe::rulingbody_is_player_banned(read_usize(tribunais), player, 1, extra, fixture) != 0 {
         return 1; // the general suspension
     }
     let t = (c.discipline_rule() as i8);
@@ -871,7 +871,7 @@ pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: 
         return 0;
     }
     let b = read_usize(tribunais.wrapping_add((t as isize as usize).wrapping_mul(4)));
-    if b == 0 || exe::rulingbody_is_player_banned(b, player, 0, extra, partida) == 0 { // without the competition suspension
+    if b == 0 || exe::rulingbody_is_player_banned(b, player, 0, extra, fixture) == 0 { // without the competition suspension
         return 0;
     }
     crate::comparison::branch("cpk_3 suspended by the competition");
@@ -1002,24 +1002,24 @@ pub(crate) unsafe extern "thiscall" fn table_penalty(t: usize, row: i32, column:
 /// competição da partida (+0, id > −1) julga (0x7e7ff0 com 1, 1, 1). Sem ele, num amistoso (0x5c6710 sobre [0xae2c74]
 /// com +0x14) ou na competição [0x9cf684]: o tribunal da liga (+0x57) do mandante (+0x1c, com 1, 0, 0) e o do
 /// visitante (+0x20, com 0, 1, 0). Devolve o que o primeiro tribunal devolve (os outros caminhos, 0; ninguém lê).
-pub(crate) unsafe extern "thiscall" fn process_match(this: usize, partida: usize, result: u32) -> u32 {
-    let partida = Fixture(partida);
-    let id = read_usize(partida.addr()) as i32;
+pub(crate) unsafe extern "thiscall" fn process_match(this: usize, fixture: usize, result: u32) -> u32 {
+    let fixture = Fixture(fixture);
+    let id = read_usize(fixture.addr()) as i32;
     if id > -1 {
         if let Some(b) = comp_tribunal(this, id) {
-            return (exe::rulingbody_process_match(b, partida, result, 1, 1, 1) as u32);
+            return (exe::rulingbody_process_match(b, fixture, result, 1, 1, 1) as u32);
         }
     }
-    if exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), partida.competition().addr()) == 0 && read_usize(partida.addr()) != read_usize(KEY_CLUB_COMP_RESERVE) {
+    if exe::friendly_is_friendly_competition(read_usize(G_FRIENDLY), fixture.competition().addr()) == 0 && read_usize(fixture.addr()) != read_usize(KEY_CLUB_COMP_RESERVE) {
         return 0;
     }
     for (lado, a, b) in [(0x1cusize, 1u32, 0u32), (0x20, 0, 1)] {
-        let league = read_usize(read_usize(partida.addr() + lado) + 0x57);
+        let league = read_usize(read_usize(fixture.addr() + lado) + 0x57);
         if league == 0 {
             continue;
         }
         if let Some(t) = comp_tribunal(this, read_usize(league) as i32) { // the tribunal of the club’s league
-            (exe::rulingbody_process_match(t, partida, result, a, b, 0) as u32);
+            (exe::rulingbody_process_match(t, fixture, result, a, b, 0) as u32);
         }
     }
     0

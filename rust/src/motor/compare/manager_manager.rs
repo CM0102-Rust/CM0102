@@ -4,14 +4,14 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../manager_manager.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `update_board_confidence_after_match`.
-pub(crate) unsafe extern "thiscall" fn compare_update_board_confidence_after_match(this: usize, club: usize, partida: usize, game: usize, home: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32)>(IDX_UPDATE_BOARD_CONFIDENCE_AFTER_MATCH)(this, club, partida, game, home)
+pub(crate) unsafe extern "thiscall" fn compare_update_board_confidence_after_match(this: usize, club: usize, fixture: usize, game: usize, home: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32)>(IDX_UPDATE_BOARD_CONFIDENCE_AFTER_MATCH)(this, club, fixture, game, home)
 }
 
 /// Comparer for `post_board_match_reaction_news`.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn compare_post_board_match_reaction_news(this: usize, club: usize, other: usize, partida: usize, marks: u32, a: i32, b: i32, c: i32, d: i32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, i32, i32, i32, i32)>(IDX_POST_BOARD_MATCH_REACTION_NEWS)(this, club, other, partida, marks, a, b, c, d)
+pub(crate) unsafe extern "thiscall" fn compare_post_board_match_reaction_news(this: usize, club: usize, other: usize, fixture: usize, marks: u32, a: i32, b: i32, c: i32, d: i32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, i32, i32, i32, i32)>(IDX_POST_BOARD_MATCH_REACTION_NEWS)(this, club, other, fixture, marks, a, b, c, d)
 }
 
 /// Comparer for `post_fa_performance_news`.
@@ -44,7 +44,7 @@ pub(crate) unsafe extern "thiscall" fn compare_post_job_offer_news(this: usize, 
 /// 3 ids e das 5 saídas; a devolução também (a lista do técnico, a tabela da liga e o registro da partida só leem). A
 /// cópia sem contar os sorteios.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe extern "thiscall" fn compare_board_named_players_after_match(this: usize, game: usize, club: usize, ids: *mut i32, partida: u32, elogio: *const u8,
+pub(crate) unsafe extern "thiscall" fn compare_board_named_players_after_match(this: usize, game: usize, club: usize, ids: *mut i32, fixture: u32, elogio: *const u8,
                                                                   a6: *mut u8, a7: *mut u8, a8: *mut u8, a9: *mut u8, a10: *mut u8) -> u8 {
     type F = unsafe extern "thiscall" fn(usize, usize, usize, *mut i32, u32, *const u8, *mut u8, *mut u8, *mut u8, *mut u8, *mut u8) -> u8;
     let o = original_fn::<F>(IDX_BOARD_NAMED_PLAYERS_AFTER_MATCH);
@@ -59,8 +59,8 @@ pub(crate) unsafe extern "thiscall" fn compare_board_named_players_after_match(t
     for s in [a6, a7, a8, a9, a10] {
         regions.push((s as usize, 1));
     }
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, game, club, ids, partida, elogio, a6, a7, a8, a9, a10),
-        || crate::rng::without_counting(|| board_named_players_after_match(this, game, club, ids, partida, elogio, a6, a7, a8, a9, a10)));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(this, game, club, ids, fixture, elogio, a6, a7, a8, a9, a10),
+        || crate::rng::without_counting(|| board_named_players_after_match(this, game, club, ids, fixture, elogio, a6, a7, a8, a9, a10)));
     SCOREBOARD.record(igual && r == n, || format!("board_named_players_after_match(club {:x}, elogio {}) original={} rust={} {:x?} x {:x?}", club, *elogio, r, n, mo, mr));
     r
 }
@@ -68,10 +68,10 @@ pub(crate) unsafe extern "thiscall" fn compare_board_named_players_after_match(t
 /// Comparer for `get_player_match_rating_verdict`.
 ///
 /// [pt] Comparador: pelo valor (o registro é lido do arquivo temporário e o vetor local se constrói e destrói nos dois).
-pub(crate) unsafe extern "thiscall" fn compare_get_player_match_rating_verdict(this: usize, person: usize, partida: u32) -> u8 {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(IDX_GET_PLAYER_MATCH_RATING_VERDICT)(this, person, partida);
-    let n = get_player_match_rating_verdict(this, person, partida);
-    SCOREBOARD.record(r == n, || format!("get_player_match_rating_verdict({:x}, match {}) original={} rust={}", person, partida as i32, r as i8, n as i8));
+pub(crate) unsafe extern "thiscall" fn compare_get_player_match_rating_verdict(this: usize, person: usize, fixture: u32) -> u8 {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(IDX_GET_PLAYER_MATCH_RATING_VERDICT)(this, person, fixture);
+    let n = get_player_match_rating_verdict(this, person, fixture);
+    SCOREBOARD.record(r == n, || format!("get_player_match_rating_verdict({:x}, match {}) original={} rust={}", person, fixture as i32, r as i8, n as i8));
     r
 }
 
@@ -462,9 +462,9 @@ pub(crate) unsafe extern "thiscall" fn compare_best_manager_candidate_score(this
 /// Comparer for `update_board_after_fixture`.
 ///
 /// [pt] Comparador: a 0x695240 mexe na diretoria (e pode dar notícia): só a original (a prova é a carreira e o modo Rust).
-pub(crate) unsafe extern "thiscall" fn compare_update_board_after_fixture(this: usize, partida: usize, game: usize) {
+pub(crate) unsafe extern "thiscall" fn compare_update_board_after_fixture(this: usize, fixture: usize, game: usize) {
     crate::comparison::branch("update_board_after_fixture");
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_UPDATE_BOARD_AFTER_FIXTURE)(this, partida, game)
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_UPDATE_BOARD_AFTER_FIXTURE)(this, fixture, game)
 }
 
 /// Comparer for `is_staff_suitable_for_job`.

@@ -142,36 +142,36 @@ pub(crate) unsafe extern "thiscall" fn compare_load_from_save(this: usize, save:
 ///
 /// [pt] Comparador da 0x59a5d0: lado a lado nos dois registros de finanças e no estado do sorteio (os sorteios de 10, dos
 /// gastos e da manutenção). Sem resultado, sem partida, sem um dos clubes ou com seleção: só a original.
-pub(crate) unsafe extern "thiscall" fn compare_process_match_income(table: usize, partida: usize, result: usize) {
-    let partida = Fixture(partida);
+pub(crate) unsafe extern "thiscall" fn compare_process_match_income(table: usize, fixture: usize, result: usize) {
+    let fixture = Fixture(fixture);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_PROCESS_MATCH_INCOME);
-    if result == 0 || partida.is_null() || partida.home_club().is_null() || partida.away_club().is_null() {
-        return o(table, partida.addr(), result);
+    if result == 0 || fixture.is_null() || fixture.home_club().is_null() || fixture.away_club().is_null() {
+        return o(table, fixture.addr(), result);
     }
-    let (Some(fm), Some(fv)) = (match_club_finance(table, partida, 0x1c), match_club_finance(table, partida, 0x20)) else {
-        return o(table, partida.addr(), result); // national team: the original does nothing
+    let (Some(fm), Some(fv)) = (match_club_finance(table, fixture, 0x1c), match_club_finance(table, fixture, 0x20)) else {
+        return o(table, fixture.addr(), result); // national team: the original does nothing
     };
     if fm == fv {
-        return o(table, partida.addr(), result); // simplification: the same record on both sides, original only
+        return o(table, fixture.addr(), result); // simplification: the same record on both sides, original only
     }
     let mut reg = vec![(fm, 0x167), (fv, 0x167)];
     reg.extend(crate::rng::STATE_REGIONS);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(table, partida.addr(), result), || crate::rng::without_counting(|| process_match_income(table, partida.addr(), result)));
-    SCOREBOARD.record(igual, || format!("process_match_income(match {:x}) original={:x?} rust={:x?}", partida.addr(), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(table, fixture.addr(), result), || crate::rng::without_counting(|| process_match_income(table, fixture.addr(), result)));
+    SCOREBOARD.record(igual, || format!("process_match_income(match {:x}) original={:x?} rust={:x?}", fixture.addr(), mo, mr));
 }
 
 /// Comparer for `calc_gate_receipts`.
 ///
 /// [pt] Comparador da 0x59af40: a devolução (só lê; a 0x540a50 pode zerar a marca +0x244 do clube, igual nas duas). Sem
 /// partida: só a original (a caixa).
-pub(crate) unsafe extern "thiscall" fn compare_calc_gate_receipts(table: usize, partida: usize, attendance: i32) -> i32 {
+pub(crate) unsafe extern "thiscall" fn compare_calc_gate_receipts(table: usize, fixture: usize, attendance: i32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32) -> i32>(IDX_CALC_GATE_RECEIPTS);
-    if partida == 0 {
-        return o(table, partida, attendance);
+    if fixture == 0 {
+        return o(table, fixture, attendance);
     }
-    let r = o(table, partida, attendance);
-    let n = calc_gate_receipts(table, partida, attendance);
-    SCOREBOARD.record(r == n, || format!("calc_gate_receipts(match {:x}, attendance {}) original={} rust={}", partida, attendance, r, n));
+    let r = o(table, fixture, attendance);
+    let n = calc_gate_receipts(table, fixture, attendance);
+    SCOREBOARD.record(r == n, || format!("calc_gate_receipts(match {:x}, attendance {}) original={} rust={}", fixture, attendance, r, n));
     r
 }
 

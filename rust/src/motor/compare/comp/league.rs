@@ -586,11 +586,11 @@ pub(crate) unsafe extern "C" fn compare_league_round_set_date(rounds: usize, i: 
 }
 
 /// Comparer for `get_match_importance`.
-pub(crate) unsafe extern "thiscall" fn compare_get_match_importance(league: usize, partida: usize, side: u32, out: *mut u8) -> u8 {
+pub(crate) unsafe extern "thiscall" fn compare_get_match_importance(league: usize, fixture: usize, side: u32, out: *mut u8) -> u8 {
     // 0x68a4d0 only reads the league and writes to the local and to `saida`: it can run on both sides
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, *mut u8) -> u8>(IDX_GET_MATCH_IMPORTANCE);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(out as usize, 1)], || o(league, partida, side, out),
-        || get_match_importance(league, partida, side, out));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(out as usize, 1)], || o(league, fixture, side, out),
+        || get_match_importance(league, fixture, side, out));
     SCOREBOARD.record(igual && r == n, || format!("get_match_importance original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
     r
 }

@@ -126,10 +126,10 @@ pub(crate) unsafe fn ranking_entry(this: usize, nation: usize) -> usize {
 /// Month and year of a match: Date from day of year (+0x2a) and year (+0x28), then its month.
 ///
 /// [pt] O mês e o ano do jogo `partida`: a data (0x549ef0) do dia do ano (+0x2a) e do ano (+0x28), o mês dela (0x54cfb0).
-pub(crate) unsafe fn match_month_year(partida: Fixture) -> (u8, u16) {
+pub(crate) unsafe fn match_month_year(fixture: Fixture) -> (u8, u16) {
     let mut d = [0u8; 8];
-    let p = exe::new_date((d.as_mut_ptr()) as *mut u8 as usize, partida.day() as u32, partida.year() as u32);
-    (exe::date_get_month(p), partida.year())
+    let p = exe::new_date((d.as_mut_ptr()) as *mut u8 as usize, fixture.day() as u32, fixture.year() as u32);
+    (exe::date_get_month(p), fixture.year())
 }
 
 /// Appends the points, month and year of the match to the national side's history, growing the array by 5 entries when
@@ -147,7 +147,7 @@ pub(crate) unsafe fn match_month_year(partida: Fixture) -> (u8, u16) {
 /// com a conta (+0xa) igual à capacidade (+8), a capacidade cresce 5 e o histórico (+4) é realocado (0x945667) ou
 /// alocado (0x944e46) com capacidade × 5 bytes. A entrada nova, no lugar da conta antiga: os pontos (16 bits), o mês do
 /// jogo (+2) e o ano (+3).
-pub(crate) unsafe extern "thiscall" fn append_result(this: usize, nation: usize, points: u32, partida: usize) {
+pub(crate) unsafe extern "thiscall" fn append_result(this: usize, nation: usize, points: u32, fixture: usize) {
     let e = ranking_entry(this, nation);
     if read_u16(e + 0xa) == read_u16(e + 8) {
         write_u16(e + 8, read_u16(e + 8).wrapping_add(5));
@@ -164,7 +164,7 @@ pub(crate) unsafe extern "thiscall" fn append_result(this: usize, nation: usize,
     write_i16(e + 0xa, c.wrapping_add(1)); // cpt2: mais um resultado
     let p = read_usize(e + 4).wrapping_add(c as isize as usize * 5);
     write_u16(p, points as u16);
-    let (mes, ano) = match_month_year(Fixture(partida));
+    let (mes, ano) = match_month_year(Fixture(fixture));
     write_u8(p + 2, mes); // cpt2: the match month
     write_u16(p + 3, ano); // cpt2: the match year
     crate::comparison::branch("cpt_2 result");

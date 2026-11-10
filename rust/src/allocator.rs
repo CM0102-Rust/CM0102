@@ -82,7 +82,7 @@ fn class_of(cap: usize) -> Option<usize> {
 }
 
 impl Allocator {
-    pub const fn novo(start: usize, size: usize) -> Self {
+    pub const fn new(start: usize, size: usize) -> Self {
         Allocator { start, top: start, end: start + size, free: [0; CLASSES], peak: 0, merged: None }
     }
 
@@ -281,7 +281,7 @@ impl Allocator {
     }
 }
 
-static HEAP: Mutex<Allocator> = Mutex::new(Allocator::novo(0, 0));
+static HEAP: Mutex<Allocator> = Mutex::new(Allocator::new(0, 0));
 static mut ORIGINALS: [usize; 6] = [0; 6]; // Create, Alloc, Free, ReAlloc, Size, Destroy
 static mut HANDLE: usize = 0; // "handle" returned by HeapCreate (= start of the region)
 
@@ -367,7 +367,7 @@ pub fn pico() -> usize {
 
 const VISIBLE_REGION: usize = 0x0800_0000; // 128 MB, just below the game region
 const VISIBLE_BASES: [usize; 1] = [0x1000_0000];
-static VISIBLE: Mutex<Allocator> = Mutex::new(Allocator::novo(0, 0));
+static VISIBLE: Mutex<Allocator> = Mutex::new(Allocator::new(0, 0));
 static IN_VISIBLE: AtomicBool = AtomicBool::new(false);
 
 /// The `visivel` pair for the hook of `cm0102-base` (the video layer's allocations): what is created in between
@@ -401,7 +401,7 @@ pub fn visivel<R>(f: impl FnOnce() -> R) -> R {
 // 96 KB), there is no free low space with room for that, and its criterion is divergence, not the fingerprint.
 const DLL_REGION: usize = 0x0400_0000; // 64 MB; the career up to 2002-06-01 uses 145 KB
 const DLL_BASES: [usize; 1] = [0x0b00_0000]; // up to 0x0f000000, below the private stack (0x0ff00000)
-static DLL: Mutex<Allocator> = Mutex::new(Allocator::novo(0, 0));
+static DLL: Mutex<Allocator> = Mutex::new(Allocator::new(0, 0));
 static DLL_RANGE: [AtomicUsize; 2] = [AtomicUsize::new(0), AtomicUsize::new(0)]; // (start, end): dealloc checks without the lock
 static DLL_THREAD: AtomicU32 = AtomicU32::new(0);
 static DLL_EXHAUSTED: AtomicBool = AtomicBool::new(false);
@@ -536,7 +536,7 @@ static DATABASE_BLOCKS: Mutex<Vec<(usize, usize)>> = Mutex::new(Vec::new());
 /// [pt] O tamanho do bloco que comeca em `p` na regiao fixa, se `p` parece mesmo o inicio de um bloco
 /// (cabecalho coerente: capacidade de classe, nao menor que a do tamanho pedido; o realocar mantem
 /// a capacidade ao encolher).
-pub unsafe fn bloco(p: usize) -> Option<usize> {
+pub unsafe fn block_at(p: usize) -> Option<usize> {
     let (start, top) = game_region();
     if p < start + HEADER || p >= top || p & 15 != 0 {
         return None;
@@ -625,7 +625,7 @@ mod tests {
         let mut mem = vec![0u8; 1 << 20];
         let base = (mem.as_mut_ptr() as usize + 15) & !15;
         let run = |base: usize| unsafe {
-            let mut a = Allocator::novo(base, (1 << 20) - 16);
+            let mut a = Allocator::new(base, (1 << 20) - 16);
             let x = a.alocar(10, false);
             let y = a.alocar(5000, true);
             assert_eq!((x % 16, a.tamanho(x), a.tamanho(y)), (0, 10, 5000));
@@ -651,7 +651,7 @@ mod tests {
         let mut mem = vec![0u8; 1 << 20];
         let base = (mem.as_mut_ptr() as usize + 15) & !15;
         unsafe {
-            let mut a = Allocator::novo(base, (1 << 20) - 16);
+            let mut a = Allocator::new(base, (1 << 20) - 16);
             let fixed = a.alocar(100, false); // at the start, never freed
             // the list that grows 3200 bytes at a time (like the players' statistics one): without merging, it runs out
             let mut p = a.alocar(3200, false);

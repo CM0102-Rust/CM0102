@@ -325,7 +325,7 @@ pub(crate) unsafe fn tape_fully_consumed() -> bool {
 }
 
 impl FriendlyComparerTrial {
-    fn usada(&self, id: usize) -> bool {
+    fn used(&self, id: usize) -> bool {
         self.usadas.get(id).is_some_and(|&b| b != 0)
     }
     fn usar(&mut self, id: usize) {
@@ -497,7 +497,7 @@ pub(crate) unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u
         let a = Nation(nation(this, i));
         let first_leg = read_usize(a.addr());
         let free = match ens.as_deref() {
-            Some(e) => !e.usada(first_leg),
+            Some(e) => !e.used(first_leg),
             None => read_u8(usadas.wrapping_add(first_leg)) == 0,
         };
         if free && how_many > 0 && nation_in_date_confederations(datas, how_many, a) && !is_african_excluded(datas, a) {
@@ -509,7 +509,7 @@ pub(crate) unsafe fn pair_nations_for_friendlies(this: usize, datas: usize, n: u
                 let b = Nation(nation(this, j));
                 let idb = read_usize(b.addr());
                 let free_b = match ens.as_deref() {
-                    Some(e) => !e.usada(idb),
+                    Some(e) => !e.used(idb),
                     None => read_u8(usadas.wrapping_add(idb)) == 0,
                 };
                 if free_b {
@@ -3070,11 +3070,11 @@ pub(crate) unsafe extern "thiscall" fn is_own_comp_record(friendly: usize, compe
 ///
 /// [pt] { 0x5cb9b0 } (thiscall, ret 0x18, friendly.cpp): preenche a data internacional de 20 bytes: dia,
 /// mês e duração (+0..+2), o ano a somar (+0xb), o continente (+0xc) e a competição (+0x10).
-pub(crate) unsafe extern "thiscall" fn friendly_international_date_set(data: usize, day: u8, month: u8, duracao: u8, year: u8, continent: u32, competition: u32) {
+pub(crate) unsafe extern "thiscall" fn friendly_international_date_set(data: usize, day: u8, month: u8, duration: u8, year: u8, continent: u32, competition: u32) {
     let b = data as *mut u8;
     *b = day;
     *b.add(1) = month;
-    *b.add(2) = duracao;
+    *b.add(2) = duration;
     *b.add(0xb) = year;
     core::ptr::write_unaligned(b.add(0xc) as *mut u32, continent);
     core::ptr::write_unaligned(b.add(0x10) as *mut u32, competition);

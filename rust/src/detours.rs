@@ -741,7 +741,7 @@ unsafe fn install_engine() {
         rng::install(rng::Mode::Observe);
         if ISOLATE.load(std::sync::atomic::Ordering::Relaxed) {
             date::install_passthrough();
-            crate::motor::instalar_passagem();
+            crate::motor::install_passthrough();
         }
         crate::stack_probe::install_list();
         snapshot_bodies();

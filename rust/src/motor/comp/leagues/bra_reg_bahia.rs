@@ -47,15 +47,15 @@ pub(crate) struct BraRegBahiaStateChampionship {
 /// 0), ret 4); as estatísticas (operator new 0x944cf1 de 0x5ce e Comp_Stats::Comp_Stats 0x49ee70, thiscall(novo,
 /// this), ret 4; o quadro SEH da original cobre só esse new) em +8 (sem elas: a caixa); por fim as posições previstas.
 #[allow(clippy::too_many_arguments)]
-pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: League, ano: u32, registro: usize, e: &BraRegBahiaStateChampionship, disciplina: u8, predicted_yes: bool, ramo: &'static str) -> usize {
+pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: League, year: u32, registro: usize, e: &BraRegBahiaStateChampionship, discipline: u8, predicted_yes: bool, ramo: &'static str) -> usize {
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.rules);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.table);
     let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.predicted);
     exe::new_league(this);
     write_usize(this.addr() + league::COMPETITION, registro);
     write_usize(this.addr(), e.vtabela);
-    write_u16(this.addr() + league::YEAR, ano as u16);
-    this.set_discipline_rule(disciplina);
+    write_u16(this.addr() + league::YEAR, year as u16);
+    this.set_discipline_rule(discipline);
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this.addr();
     }

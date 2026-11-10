@@ -209,7 +209,7 @@ pub unsafe fn game_blocks() -> Vec<(usize, usize)> {
         pointers.push(**(0xb67a44 as *const *const usize));
     }
     for p in pointers {
-        if let Some(n) = crate::allocator::bloco(p) {
+        if let Some(n) = crate::allocator::block_at(p) {
             if !v.iter().any(|b| b.0 == p) {
                 v.push((p, n));
             }
@@ -245,7 +245,7 @@ unsafe fn hash_whole_game() -> String {
     format!(" heap={:016x} date={:016x}", if start == 0 { 0 } else { hash_range(start, top & !7) }, hash_range(0x987000, 0xde4638))
 }
 
-pub unsafe fn sorteio(requested: i32, pointer: u32, offset: i32, rand: u32) {
+pub unsafe fn record_draw(requested: i32, pointer: u32, offset: i32, rand: u32) {
     let n = DRAWS.fetch_add(1, Ordering::Relaxed);
     let Some((year, day)) = target_date() else { return };
     check_thread("aleatorio");

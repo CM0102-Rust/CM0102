@@ -11,10 +11,10 @@ use super::*;
 /// numa copia da tabela (0x687710) preenchida (0x685f60) e ordenada (0x6827d0), o clube tem de estar
 /// na frente (+4 zero) e nenhum outro alcanca-lo com os jogos que faltam (+0xa7 - +0x11 vezes os
 /// pontos por vitoria +0xc2, contra os pontos +0x19). A copia volta (0x687970).
-pub(crate) unsafe extern "thiscall" fn group_decided(this: usize, club: usize, partida: usize) -> u32 {
-    let partida = Fixture(partida);
+pub(crate) unsafe extern "thiscall" fn group_decided(this: usize, club: usize, fixture: usize) -> u32 {
+    let fixture = Fixture(fixture);
     let this = League(this);
-    if partida.stage_index() != 0xff {
+    if fixture.stage_index() != 0xff {
         return 0;
     }
     if exe::comp_util_is_league_division(read_i32(this.competition().addr())) == 0 {
@@ -37,7 +37,7 @@ pub(crate) unsafe extern "thiscall" fn group_decided(this: usize, club: usize, p
     if t.is_null() {
         return 0;
     }
-    exe::league_apply_result_to_table(this, partida, t, ((this.club_count() as u16) as i32) as u32, 0, (0) as usize, (0) as usize);
+    exe::league_apply_result_to_table(this, fixture, t, ((this.club_count() as u16) as i32) as u32, 0, (0) as usize, (0) as usize);
     exe::league_sort_table(this, t);
     let n = this.club_count();
     // the original reads +4 from address 0 if the club is not in the copy (never happens in the game)
@@ -3315,11 +3315,11 @@ pub(crate) unsafe extern "C" fn league_round_set_date(rounds: usize, i: u32, day
 /// com o clube na tabela (+0xb1, linhas de 59 bytes, +0x3e clubes) e mais de 10 rodadas (+0xa9): +1
 /// com +0x34 da partida abaixo de 3; senão, linha sem marca (+0x37 = 0xff), +1 e a margem do último
 /// dia (0x68a4d0, que pode trocar a importância) em `saida`. Só o al é devolvido (quem chama usa al).
-pub(crate) unsafe extern "thiscall" fn get_match_importance(league: usize, partida: usize, side: u32, out: *mut u8) -> u8 {
-    let partida = Fixture(partida);
+pub(crate) unsafe extern "thiscall" fn get_match_importance(league: usize, fixture: usize, side: u32, out: *mut u8) -> u8 {
+    let fixture = Fixture(fixture);
     let league = League(league);
     *out = 0xff;
-    let club = read_usize(partida.addr() + if side as u8 == 0 { 0x1c } else { 0x20 });
+    let club = read_usize(fixture.addr() + if side as u8 == 0 { 0x1c } else { 0x20 });
     let mut imp = (((league.importance() as i8) as i32 - 10) / 4) as u8;
     imp = imp.wrapping_add(10); // base importance
     let clubs = league.club_count();
@@ -3338,7 +3338,7 @@ pub(crate) unsafe extern "thiscall" fn get_match_importance(league: usize, parti
     if league.round_count() <= 10 {
         return imp;
     }
-    if partida.round_number() < 3 {
+    if fixture.round_number() < 3 {
         return imp.wrapping_add(1);
     }
     let r = LeagueTableRow(row(i));

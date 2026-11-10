@@ -104,5 +104,5 @@ pub(crate) unsafe extern "thiscall" fn eng_third_set_club_progress(this: usize, 
 /// [pt] { 0x578330 } (thiscall, ret 0, eng_third.cpp): `EngThird::advance_stage()`; cria o play-off da Third Division pela
 /// 0x5783c0 (já em Rust). Fonte 0x9c4424, linha 0x29c.
 pub(crate) unsafe extern "thiscall" fn eng_third_advance_stage(this: usize) {
-    ita_ser_c1a_advance_stage_cql5_passar_de_fase(League(this), 0x9c4424, 0x29c, 0x5783c0)
+    ita_ser_c1a_advance_stage_cql5_advance_stage(League(this), 0x9c4424, 0x29c, 0x5783c0)
 }

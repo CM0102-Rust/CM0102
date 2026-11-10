@@ -4,8 +4,8 @@ use super::*;
 // [pt] Os comparadores das rotinas de ../comp/comp.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `send_prize_money_news`.
-pub(crate) unsafe extern "thiscall" fn compare_send_prize_money_news(this: usize, club: usize, lo: u32, hi: i32, position: u32, round: u32, partida: usize, kind: u32) {
-    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, u32, usize, u32)>(IDX_SEND_PRIZE_MONEY_NEWS)(this, club, lo, hi, position, round, partida, kind)
+pub(crate) unsafe extern "thiscall" fn compare_send_prize_money_news(this: usize, club: usize, lo: u32, hi: i32, position: u32, round: u32, fixture: usize, kind: u32) {
+    original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, i32, u32, u32, usize, u32)>(IDX_SEND_PRIZE_MONEY_NEWS)(this, club, lo, hi, position, round, fixture, kind)
 }
 
 /// Comparer for `send_tv_rights_news`.
@@ -129,10 +129,10 @@ pub(crate) unsafe extern "thiscall" fn compare_get_stage(this: usize, k: i32) ->
 }
 
 /// Comparer for `comp_active_key_nation_of_fixture`.
-pub(crate) unsafe extern "C" fn compare_comp_active_key_nation_of_fixture(comp: usize, partida: usize) -> u8 {
-    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_COMP_ACTIVE_KEY_NATION_OF_FIXTURE)(comp, partida);
-    let n = comp_active_key_nation_of_fixture(comp, partida);
-    SCOREBOARD.record(r == n, || format!("comp_active_key_nation_of_fixture(competition {}, match {:x}) original={} rust={}", read_usize(comp) as i32, partida, r, n));
+pub(crate) unsafe extern "C" fn compare_comp_active_key_nation_of_fixture(comp: usize, fixture: usize) -> u8 {
+    let r = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_COMP_ACTIVE_KEY_NATION_OF_FIXTURE)(comp, fixture);
+    let n = comp_active_key_nation_of_fixture(comp, fixture);
+    SCOREBOARD.record(r == n, || format!("comp_active_key_nation_of_fixture(competition {}, match {:x}) original={} rust={}", read_usize(comp) as i32, fixture, r, n));
     r
 }
 

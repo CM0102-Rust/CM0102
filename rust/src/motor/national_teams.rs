@@ -2443,8 +2443,8 @@ pub(crate) struct NationCurrentCompUpdate {
 /// [pt] O plano da 0x775220 (só lê): com competição atual (≠ −1) que é fase final grande, a nova vai para a fila e a atual
 /// fica (sem aviso); senão, se a nova é fase final grande e há atual, a atual vai para a fila; a nova vira a atual e o
 /// gerenciador dos técnicos ([0xb67a44], se existe) é avisado.
-pub(crate) unsafe fn current_comp_plan(this: usize, nacao: usize, comp: usize) -> NationCurrentCompUpdate {
-    let id = read_usize(nacao);
+pub(crate) unsafe fn current_comp_plan(this: usize, nation: usize, comp: usize) -> NationCurrentCompUpdate {
+    let id = read_usize(nation);
     let vaga = read_usize(this + national_teams_fields::NATION_RECORDS).wrapping_add(id.wrapping_mul(110)) + 4;
     let fila = read_usize(this + national_teams_fields::NEXT_COMPETITIONS).wrapping_add(id.wrapping_mul(4));
     let current = read_usize(vaga) as u32;

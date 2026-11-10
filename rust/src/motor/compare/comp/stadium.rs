@@ -6,14 +6,14 @@ use super::*;
 /// Comparer for `find_available_venue`.
 ///
 /// [pt] Lado a lado (a cópia sem contar os sorteios) pelas regiões de `stadium_choice_regions` e pela devolução; com reserva que pode alocar, só a original.
-pub(crate) unsafe extern "thiscall" fn compare_find_available_venue(this: usize, marks: u32, count: usize, nation: usize, data: usize, home: usize, away: usize, partida: usize) -> usize {
+pub(crate) unsafe extern "thiscall" fn compare_find_available_venue(this: usize, marks: u32, count: usize, nation: usize, data: usize, home: usize, away: usize, fixture: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, usize, usize, usize) -> usize>(IDX_FIND_AVAILABLE_VENUE);
     let Some((r, m)) = stadium_choice_regions(this, None) else {
         // simplification: the reserve may allocate the list; original only
-        return o(this, marks, count, nation, data, home, away, partida);
+        return o(this, marks, count, nation, data, home, away, fixture);
     };
-    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&r[..m], || o(this, marks, count, nation, data, home, away, partida), || {
-        crate::rng::without_counting(|| find_available_venue(this, marks, count, nation, data, home, away, partida))
+    let (ro, rr, igual, mo, mr) = crate::comparison::side_by_side(&r[..m], || o(this, marks, count, nation, data, home, away, fixture), || {
+        crate::rng::without_counting(|| find_available_venue(this, marks, count, nation, data, home, away, fixture))
     });
     SCOREBOARD.record(igual && ro == rr, || format!("find_available_venue(marks {:x}, nation {:x}, count {:x}): original {:x} rust {:x} {:x?} x {:x?}", marks, nation, count, ro, rr, mo, mr));
     ro
@@ -23,17 +23,17 @@ pub(crate) unsafe extern "thiscall" fn compare_find_available_venue(this: usize,
 ///
 /// [pt] Lado a lado pela partida (0x44 bytes) e pelas regiões de `stadium_choice_regions`; partida nula ou reserva que pode alocar:
 /// só a original.
-pub(crate) unsafe extern "thiscall" fn compare_set_fixture_venue(this: usize, marks: u32, partida: usize, stadium: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_set_fixture_venue(this: usize, marks: u32, fixture: usize, stadium: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, u32)>(IDX_SET_FIXTURE_VENUE);
-    if partida == 0 {
-        return o(this, marks, partida, stadium);
+    if fixture == 0 {
+        return o(this, marks, fixture, stadium);
     }
-    let Some((r, m)) = stadium_choice_regions(this, Some((partida, 0x44))) else {
+    let Some((r, m)) = stadium_choice_regions(this, Some((fixture, 0x44))) else {
         // simplification: the reserve may allocate the list; original only
-        return o(this, marks, partida, stadium);
+        return o(this, marks, fixture, stadium);
     };
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&r[..m], || o(this, marks, partida, stadium), || crate::rng::without_counting(|| set_fixture_venue(this, marks, partida, stadium)));
-    SCOREBOARD.record(igual, || format!("set_fixture_venue(marks {:x}, comp {:x}): {:x?} x {:x?}", marks, read_usize(partida), mo, mr));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&r[..m], || o(this, marks, fixture, stadium), || crate::rng::without_counting(|| set_fixture_venue(this, marks, fixture, stadium)));
+    SCOREBOARD.record(igual, || format!("set_fixture_venue(marks {:x}, comp {:x}): {:x?} x {:x?}", marks, read_usize(fixture), mo, mr));
 }
 
 /// Comparer for `calculate_match_attendance`.

@@ -25,7 +25,7 @@ D = dict(x.split(':') for x in '''clube:club clubes:clubs pessoa:person pessoas:
 velho:old nacao:nation nacoes:nations nac:nation tipo:kind jogador:player jogadores:players linha:row linhas:rows vaga:slot vagas:slots
 saida:out saidas:outs tabela:table tab:table nome:name liga:league jogo:game jogos:games lado:side humano:human rodadas:rounds
 rodada:round antes:before construir:construct dia:day dias:days contrato:contract novo:new nova:new soltar:release
-noticia:news noticias:news texto:text fim:end valor:value gravar:write registro:record registros:records partida:match
+noticia:news noticias:news texto:text fim:end valor:value gravar:write registro:record registros:records partida:fixture
 tecnico:manager tec:manager regioes:regions codigo:code selecao:national_team proximo:next prox:next oferta:offer ofertas:offers
 ficha:sheet conta:count alvo:target casa:home marca:mark marcas:marks igual:same liberar:free depois:after copa:cup
 ordenar:sort tirar:remove outro:other outra:other nota:rating motivo:reason hoje:today atual:current entrada:entry
@@ -59,7 +59,7 @@ rebaixados:relegated promovidos:promoted pontuacao:score empate:draw vitoria:win
 reputacao:reputation publico:attendance capacidade:capacity financeiro:financial receita:income despesa:expense
 diretoria:board torcida:fans moral:morale felicidade:happiness habilidade:ability potencial:potential atual:current
 pai:parent filho:child primeiros:first ultimos:last novos:new velhos:old vazio:empty cheio:full ativo:active ativa:active
-dentro:inside chegada:arrival partida:match ponto:point unidade:unit unidades:units dezena:ten
+dentro:inside chegada:arrival partida:fixture ponto:point unidade:unit unidades:units dezena:ten
 alocar:alloc mais:more motor:engine ramo:branch mata:knockout forcar:force ajuste:adjust checa:check referencia:reference
 janela:window janelas:windows colunas:columns coluna:column altura:height largura:width futura:future genero:gender
 variante:variant posicoes:positions campos:fields fonte:font ataque:attack lesoes:injuries todas:all aceita:accepted
@@ -165,6 +165,8 @@ def topo_global():
     # tipo (`club + club::DIVISION` compila: o caminho `club::` é procurado entre os módulos)
     s = set()
     for p in renomear_rotinas.fontes():
+        if os.path.basename(p) in ('records.rs', 'exe_calls.rs', 'fields.rs'):
+            continue  # methods (`x.club()`) and path-qualified items (`exe::f`, `club::F`) do not clash with a local
         t = open(p, encoding='utf-8').read()
         s |= set(re.findall(r'^\s*(?:pub(?:\(crate\))? )?(?:unsafe )?(?:extern "\w+" )?(?:fn|const|static(?: mut)?|use) ([A-Za-z_]\w*)', t, re.M))
     return s

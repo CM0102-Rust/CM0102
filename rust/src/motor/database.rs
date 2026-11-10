@@ -85,10 +85,10 @@ pub(crate) unsafe fn match_wrap_up_with(m: Engine, call: &mut dyn FnMut(usize, u
         request_buffers(&[(p, 0x19)], &[]);
         call(FN_LLIST_ADD_TAIL, list_global(), [0, 0x19, 0, 0, 0]);
     };
-    let partida = || m.r#match();
+    let fixture = || m.r#match();
     let person_of = |id: i32| read_usize(G_STAFF_TABLE).wrapping_add(id as usize * staff::SIZE);
     let list = Llist(m.event_list());
-    if !list.is_null() && list_global() != 0 && partida() != 0 && read_i8(partida() + 0x40) != 0 {
+    if !list.is_null() && list_global() != 0 && fixture() != 0 && read_i8(fixture() + 0x40) != 0 {
         list.set_cursor(((list.head() as u32)) as usize);
         let mut i: i8 = 0;
         while (i as i16) < read_i16(list.addr()) {
@@ -102,7 +102,7 @@ pub(crate) unsafe fn match_wrap_up_with(m: Engine, call: &mut dyn FnMut(usize, u
                 write_u8(e + match_incident::OUTCOME, value);
                 write_u32(e + match_incident::RESPONDER_ID, who);
             };
-            let pt = partida();
+            let pt = fixture();
             let club_ev = || read_usize(G_CLUB_TABLE).wrapping_add(read_usize(e + match_incident::CLUB_ID) * club::SIZE);
             let injury_word_0c = || read_i16(read_usize((person_of(read_i32(e))) + 0x61) + 0xb);
             if kind == 0x82 {
@@ -179,7 +179,7 @@ pub(crate) unsafe fn match_wrap_up_with(m: Engine, call: &mut dyn FnMut(usize, u
     let mut average = 0f64;
     for side in 0..2usize {
         let (mut soma, mut somap) = (0i32, 0i32);
-        let pt = partida();
+        let pt = fixture();
         let (meu, outro) = if side == 0 { (read_usize(pt + fixture::HOME_CLUB), read_usize(pt + fixture::AWAY_CLUB)) } else { (read_usize(pt + fixture::AWAY_CLUB), read_usize(pt + fixture::HOME_CLUB)) };
         for k in 0..20usize {
             let p = m.addr() + engine::PLAYERS + (k + side * 20) * 0x1be;
@@ -200,8 +200,8 @@ pub(crate) unsafe fn match_wrap_up_with(m: Engine, call: &mut dyn FnMut(usize, u
                         && read_i8(p + match_player::INJURY_MINUTE) == -1
                         && read_i8(ct + 0x3d) > 0
                         && read_i16(read_usize(p + match_player::PLAYER) + 0xb) > 0x109a
-                        && partida() != 0
-                        && read_i8(partida() + 0x40) != 0
+                        && fixture() != 0
+                        && read_i8(fixture() + 0x40) != 0
                     {
                         let r1 = random(ftol(read_f32(p + match_player::CONFIDENCE) as f64));
                         if r1 > random(100) {
@@ -650,17 +650,17 @@ pub(crate) unsafe extern "thiscall" fn aggregate_score(this: usize, side_b: i8, 
     };
     *este = this.score();
     *outro = this.score_side1();
-    let partida = Fixture(this.r#match());
-    if exe::comp_util_get_round_variant(partida.round_name() as i32) == 3 {
+    let fixture = Fixture(this.r#match());
+    if exe::comp_util_get_round_variant(fixture.round_name() as i32) == 3 {
         *fase3 = 1;
     }
-    let first_leg_home = partida.home_aggregate();
+    let first_leg_home = fixture.home_aggregate();
     if first_leg_home != -1 {
         *este = (*este).wrapping_add(first_leg_home);
-        *outro = (*outro).wrapping_add(partida.away_aggregate());
+        *outro = (*outro).wrapping_add(fixture.away_aggregate());
         *first_leg = 1;
         if *este as i32 + bonus_este as i32 == *outro as i32 + bonus_outro as i32 {
-            let f = partida.tie_rules();
+            let f = fixture.tie_rules();
             let team_ok = f & 0x4000 == 0 || this.period_end() > 0x3de;
             if f & 4 == 0 && team_ok {
                 let goals_away = (this.score_side1() as u8) as i32;

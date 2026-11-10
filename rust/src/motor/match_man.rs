@@ -549,12 +549,12 @@ pub(crate) unsafe extern "thiscall" fn stance(c: usize) -> u8 {
         }
     }
     let factor = (m.addr() + engine::STANCE_FACTOR + 4 * lu) as *mut f32;
-    let time = w(m.addr(), engine::PERIOD_END);
-    if tt > 85.0 - h * 10.0 && time == 0x3de && (x11 as i32 + 1 == x12 as i32 || (x17 != 0 && x14 == 0 && x16 == 0 && x11 == x12)) {
+    let team = w(m.addr(), engine::PERIOD_END);
+    if tt > 85.0 - h * 10.0 && team == 0x3de && (x11 as i32 + 1 == x12 as i32 || (x17 != 0 && x14 == 0 && x16 == 0 && x11 == x12)) {
         *factor = 10.0;
         return 1;
     }
-    if sum < 5 && tt > 82.0 - h * 10.0 && time == 0x3de && x11 == x12 && x16 == 0 && (h > 1.0 || read_i8(m.addr() + (0x1ab + lu)) == 1) {
+    if sum < 5 && tt > 82.0 - h * 10.0 && team == 0x3de && x11 == x12 && x16 == 0 && (h > 1.0 || read_i8(m.addr() + (0x1ab + lu)) == 1) {
         *factor = 10.0;
         return 1;
     }

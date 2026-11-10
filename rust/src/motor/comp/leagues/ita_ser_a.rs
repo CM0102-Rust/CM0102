@@ -49,8 +49,8 @@ pub(crate) struct ItaSerASingleStageLeague {
 /// (−1; as outras devolvem 0 sem gravar nada): é_liga (se pedido) = 1, as rodadas, extra = 0, a tabela de rodadas × 0x41
 /// bytes (malloc 0x944e46: push; add esp, 4 -> cdecl; sem memória: a caixa e 0) com as datas e as faixas da liga.
 /// Devolve a tabela.
-pub(crate) unsafe fn build_league_schedule(this: League, fase: u32, rodadas: *mut i16, extra: *mut i16, league: *mut i32, p: &ItaSerASingleStageLeague) -> usize {
-    if fase as u8 != 0xff {
+pub(crate) unsafe fn build_league_schedule(this: League, stage: u32, rodadas: *mut i16, extra: *mut i16, league: *mut i32, p: &ItaSerASingleStageLeague) -> usize {
+    if stage as u8 != 0xff {
         return 0;
     }
     if !league.is_null() {
@@ -235,9 +235,9 @@ pub(crate) struct ItalianLeagueWithTiebreak {
 /// [pt] O corpo comum das duas (thiscall(liga, fase, &rodadas, &extra, &é_liga), ret 0x10; sem estado salvo): a fase −1 é a
 /// principal (`build_league_schedule`); a 0, o jogo-desempate: é_liga (se pedido) = 0, 1 rodada, extra 0, a tabela de 0x68
 /// bytes (malloc 0x944e46; sem memória: a caixa e 0); as outras devolvem 0 sem gravar nada. Devolve a tabela.
-pub(crate) unsafe fn italian_schedule(this: League, fase: u32, rounds: *mut i16, extra: *mut i16, liga: *mut i32, p: &ItalianLeagueWithTiebreak) -> usize {
-    match fase as u8 {
-        0xff => build_league_schedule(this, fase, rounds, extra, liga, p.league),
+pub(crate) unsafe fn italian_schedule(this: League, stage: u32, rounds: *mut i16, extra: *mut i16, liga: *mut i32, p: &ItalianLeagueWithTiebreak) -> usize {
+    match stage as u8 {
+        0xff => build_league_schedule(this, stage, rounds, extra, liga, p.league),
         0 => {
             if !liga.is_null() {
                 *liga = 0;
@@ -598,14 +598,14 @@ pub(crate) struct ItalianDivision {
 /// estatísticas (operator new 0x944cf1 de 0x5ce: push; add esp, 4 -> cdecl; Comp_Stats::Comp_Stats 0x49ee70: push
 /// liga; mov ecx, novo -> thiscall, ret 4) em +8 e as posições previstas (0x68a850: mov ecx -> thiscall, ret 0).
 /// Devolve this.
-pub(crate) unsafe fn construct_italian_division(this: League, ano: u32, registro: usize, p: &ItalianDivision) -> usize {
+pub(crate) unsafe fn construct_italian_division(this: League, year: u32, registro: usize, p: &ItalianDivision) -> usize {
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.rules);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.table);
     let fixos: unsafe extern "thiscall" fn(usize) = core::mem::transmute(p.fixed);
     exe::new_league(this);
     write_usize(this.addr() + league::COMPETITION, registro);
     write_usize(this.addr(), p.vtabela);
-    this.set_year((ano as u16) as i16);
+    this.set_year((year as u16) as i16);
     this.set_discipline_rule(0x11); // cqm4: the discipline rule of the Italian leagues
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this.addr();

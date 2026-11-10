@@ -275,14 +275,14 @@ pub(crate) unsafe extern "thiscall" fn position_place_players(this: usize, j: us
         return;
     }
     let marks = (this.addr() as isize + 6371 * lado1 as isize + 0x9766) as *const u32;
-    let parado = read_i8(this.addr() + (lado1 as usize + 6)) == 0;
+    let stopped = read_i8(this.addr() + (lado1 as usize + 6)) == 0;
     let step_towards = |for_front: bool| {
         let d: i8 = if for_front { 1 } else { -1 };
         *out_y = limit_y((*out_y).wrapping_add(d));
         *out_x = limit_x(*out_x);
     };
     let m = *marks;
-    if m & 0x1000 != 0 && parado {
+    if m & 0x1000 != 0 && stopped {
         step_towards(lado1 != 0);
     } else if m & 0x10000 != 0 && atacando != 0 {
         step_towards(lado1 == 0);
@@ -292,7 +292,7 @@ pub(crate) unsafe extern "thiscall" fn position_place_players(this: usize, j: us
     if *marks & 0x4000 == 0 {
         return;
     }
-    if atacando != 0 && parado {
+    if atacando != 0 && stopped {
         if lado1 != 0 {
             let v = (*out_y).wrapping_add(2);
             *out_y = if v > 0xb { 0xb } else { v };
@@ -834,8 +834,8 @@ pub(crate) unsafe extern "thiscall" fn table_a_1a(this: usize, player: usize) ->
 pub(crate) unsafe extern "thiscall" fn marked_moment(this: usize) -> u32 {
     let this = Engine(this);
     let m = (this.period_end() as u16);
-    let partida = Fixture(this.r#match());
-    (m != 0x1ef && m != 0x3de && (partida.tie_rules() as i8) as u8 & 0x80 != 0) as u32
+    let fixture = Fixture(this.r#match());
+    (m != 0x1ef && m != 0x3de && (fixture.tie_rules() as i8) as u8 & 0x80 != 0) as u32
 }
 
 /// Returns the state byte of the match player's own side (engine `engine::SCORE` for side 0, `engine::SCORE_SIDE1` otherwise).
@@ -2128,8 +2128,8 @@ pub(crate) unsafe fn punish_contester_foul_injected(j: MatchPlayer, mut t: u8, c
         if random(4) == 0 {
             let a = random(grav as i8 as i32);
             if a > random(0x14) {
-                let partida = m.r#match();
-                let club = Club(read_usize(partida + if j.side() == 0 { 0x20 } else { 0x1c }));
+                let fixture = m.r#match();
+                let club = Club(read_usize(fixture + if j.side() == 0 { 0x20 } else { 0x1c }));
                 let k = club.nation();
                 if !k.is_null() && k.first_language() == 8 {
                     narrate(call, event::SILENT_OFF_OFF_OFF, 0, 0, u32::MAX);
@@ -2386,8 +2386,8 @@ pub(crate) unsafe fn contest_ball_injected(j: MatchPlayer, strength: i16, kind_i
                 if random(4) == 0 {
                     let a = random(grav as i8 as i32);
                     if a > random(0x14) {
-                        let partida = m.r#match();
-                        let club = Club(read_usize(partida + if j.side() == 0 { 0x20 } else { 0x1c }));
+                        let fixture = m.r#match();
+                        let club = Club(read_usize(fixture + if j.side() == 0 { 0x20 } else { 0x1c }));
                         let k = club.nation();
                         if !k.is_null() && k.first_language() == 8 {
                             narrate(call, event::SILENT_OFF_OFF_OFF, 0, 0, u32::MAX);
@@ -2779,8 +2779,8 @@ pub(crate) unsafe fn shoot_injected(j: MatchPlayer, strength_in: i16, x_in: i8, 
                         if random(4) == 0 {
                             let g = random(grav as i8 as i32);
                             if g > random(0x14) {
-                                let partida = m.r#match();
-                                let club = Club(read_usize(partida + if j.side() == 0 { 0x20 } else { 0x1c }));
+                                let fixture = m.r#match();
+                                let club = Club(read_usize(fixture + if j.side() == 0 { 0x20 } else { 0x1c }));
                                 let k = club.nation().addr();
                                 if k != 0 && read_i8(k + nation::FIRST_LANGUAGE) == 8 {
                                     narrate(call, event::SILENT_OFF_OFF_OFF, 0, 0, u32::MAX);
@@ -6898,7 +6898,7 @@ pub(crate) unsafe fn compare_execute_pass_inner(p: MatchPlayer, x: u32, y: u32, 
 /// do clube em [[0xb67a44]] (linhas de 0x49 bytes); senao -75 em +0xa e +0xc (entre 1 e 10000).
 /// Os outros: por sorteio(+0x5a) < sorteio(15, 8 ou 6 pela idade +0x18 e +0x5b) o 0x40000, e a
 /// noticia com o tipo.
-pub(crate) unsafe fn post_match_events_injected(partida: Fixture, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
+pub(crate) unsafe fn post_match_events_injected(fixture: Fixture, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     // those that touch the database go through `chamar` (in Rust mode the game routine; in comparison, the tape)
     let ch = core::cell::RefCell::new(call);
     let duas = |n: usize, a: usize, b: usize, p: usize| (ch.borrow_mut())(0x759610, n, [a as u32, b as u32, p as u32, 0, 0]);
@@ -6938,18 +6938,18 @@ pub(crate) unsafe fn post_match_events_injected(partida: Fixture, call: &mut dyn
         }
         k += 1;
         let club = club_at(read(ev + 4) as isize).addr();
-        if (club != partida.home_club().addr() && club != partida.away_club().addr()) || away(club) != 0 {
+        if (club != fixture.home_club().addr() && club != fixture.away_club().addr()) || away(club) != 0 {
             continue;
         }
         let kind = read_u16(ev + 0x13);
         match kind {
             0x82 => {
                 crate::comparison::branch("events 0x82");
-                duas(noticias(), person(read(ev)), person(read(ev + 0x15)), partida.addr());
+                duas(noticias(), person(read(ev)), person(read(ev + 0x15)), fixture.addr());
             }
             0x0b => {
                 crate::comparison::branch("events 0x0b");
-                kind_0b(person(read(ev)), club, partida.addr());
+                kind_0b(person(read(ev)), club, fixture.addr());
             }
             _ => {
                 let p = person(read(ev));
@@ -6976,7 +6976,7 @@ pub(crate) unsafe fn post_match_events_injected(partida: Fixture, call: &mut dyn
                             }
                         } else {
                             crate::comparison::branch("events 0x13 news");
-                            news(noticias(), p, club, 0x13, partida.addr(), 0);
+                            news(noticias(), p, club, 0x13, fixture.addr(), 0);
                             if c45(c) & 0x2000000 == 0 {
                                 por(c, 0x2000000, 0);
                             }
@@ -6995,7 +6995,7 @@ pub(crate) unsafe fn post_match_events_injected(partida: Fixture, call: &mut dyn
                             let sheet = PlayerSheet(read_usize(p + staff::PLAYER));
                             if sheet.current_reputation() as i32 > r {
                                 crate::comparison::branch("events 0x0a news");
-                                news(noticias(), p, club, 0xa, partida.addr(), 0);
+                                news(noticias(), p, club, 0xa, fixture.addr(), 0);
                             }
                         }
                     }
@@ -7005,7 +7005,7 @@ pub(crate) unsafe fn post_match_events_injected(partida: Fixture, call: &mut dyn
                         if a < random(10) {
                             por(c, 0x40000, 0);
                         }
-                        kind_1e(noticias(), ev, partida.addr());
+                        kind_1e(noticias(), ev, fixture.addr());
                         let r = test_600a50(club, 1, 1, 0, 0);
                         let t = read_usize(club + club::MANAGER);
                         if r == 0 && t != 0 && *((t + staff::NON_PLAYER) as *const usize) != 0 && read_i8(read_usize(t + staff::NON_PLAYER) + 0x14) > 0xf {
@@ -7034,7 +7034,7 @@ pub(crate) unsafe fn post_match_events_injected(partida: Fixture, call: &mut dyn
                         if a < b {
                             por(c, 0x40000, 0);
                         }
-                        news(noticias(), p, club, kind as u32, partida.addr(), 0);
+                        news(noticias(), p, club, kind as u32, fixture.addr(), 0);
                     }
                 }
             }
@@ -10017,8 +10017,8 @@ pub(crate) unsafe extern "thiscall" fn designated_marked(this: usize) -> usize {
         return target.addr();
     }
     let o = other as usize;
-    let fechada = read_u32(engine.addr() + 0xaa5d + 0x18e3 * o) & 0x1000_0000 != 0 || read_i8(engine.addr() + o + 0xaf) > 1;
-    if fechada && this.moment_decisions() != 0 {
+    let closed = read_u32(engine.addr() + 0xaa5d + 0x18e3 * o) & 0x1000_0000 != 0 || read_i8(engine.addr() + o + 0xaf) > 1;
+    if closed && this.moment_decisions() != 0 {
         return 0;
     }
     let m_target = target.engine();

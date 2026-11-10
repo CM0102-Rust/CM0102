@@ -1112,7 +1112,7 @@ pub(crate) unsafe extern "thiscall" fn process_retirements(this: usize) {
 /// nação e da do clube (0x7863f0); técnico de cargo 5 de clube com divisão: aos da divisão (0x7862d0); não jogador: ao
 /// clube (0x7861e0); jogador: aos interessados. Motivo 8 com +0xb da ficha acima de 4250 e clube de contrato
 /// (0x4cf5a0, guardado em [0xae1080]): o seguro (0x58a980 com +0x52).
-pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize, reason: u32, anunciada: u32) {
+pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize, reason: u32, announced: u32) {
     let p = Staff(p);
     if p.is_null() {
         return;
@@ -1137,7 +1137,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_news(p: usize
         exe::newsitem_set_slot(nw, k as i8, read_usize(read_usize(p.addr() + staff::FIRST_NAME * k) + 0x33) as u32);
     }
     exe::newsitem_set_slot(nw, 4, reason as u8 as i8 as i32 as u32);
-    exe::newsitem_set_slot(nw, 5, anunciada as u8 as i8 as i32 as u32);
+    exe::newsitem_set_slot(nw, 5, announced as u8 as i8 as i32 as u32);
     let c = p.club_job();
     exe::newsitem_set_slot(nw, 6, if !c.is_null() { read_usize(c.addr()) as u32 } else { u32::MAX });
     exe::newsitem_set_slot(nw, 7, if p.int_apps() != 0 { read_usize(p.nation().addr()) as u32 } else { u32::MAX });

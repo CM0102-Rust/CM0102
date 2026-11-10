@@ -633,10 +633,10 @@ pub(crate) unsafe extern "thiscall" fn compare_is_own_comp_record(friendly: usiz
 }
 
 /// Comparer for `friendly_international_date_set`.
-pub(crate) unsafe extern "thiscall" fn compare_friendly_international_date_set(data: usize, day: u8, month: u8, duracao: u8, year: u8, continent: u32, competition: u32) {
+pub(crate) unsafe extern "thiscall" fn compare_friendly_international_date_set(data: usize, day: u8, month: u8, duration: u8, year: u8, continent: u32, competition: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u8, u8, u8, u8, u32, u32)>(IDX_FRIENDLY_INTERNATIONAL_DATE_SET);
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(data, 0x14)], || o(data, day, month, duracao, year, continent, competition),
-        || friendly_international_date_set(data, day, month, duracao, year, continent, competition));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(data, 0x14)], || o(data, day, month, duration, year, continent, competition),
+        || friendly_international_date_set(data, day, month, duration, year, continent, competition));
     SCOREBOARD.record(igual, || format!("friendly_international_date_set {:x?} x {:x?}", mo, mr));
 }
 

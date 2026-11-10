@@ -52,16 +52,16 @@ pub(crate) unsafe extern "thiscall" fn compare_match_day_interest(d: usize) -> u
 }
 
 /// Comparer for `match_without_human`.
-pub(crate) unsafe extern "C" fn compare_match_without_human(partida: usize) -> u32 {
+pub(crate) unsafe extern "C" fn compare_match_without_human(fixture: usize) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_MATCH_WITHOUT_HUMAN);
     if is_recording_top_level() {
-        return o(partida);
+        return o(fixture);
     }
     let mut reg = vec![(0xa15704usize, 4usize)];
     if read_usize(G_QUICK_SIM_COMP_FLAGS_PENDING) != 0 {
         reg.extend(human_national_team_marks().into_iter().map(|e| (e, 1)));
     }
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(partida), || match_without_human(partida));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(fixture), || match_without_human(fixture));
     SCOREBOARD.record(igual && r == n, || format!("match_without_human original={} rust={} {:x?} x {:x?}", r, n, mo, mr));
     r
 }
@@ -78,8 +78,8 @@ pub(crate) unsafe fn compare_pos(name: &str, reg: Vec<(usize, usize)>, original:
 }
 
 /// Comparer for `post_match_events`.
-pub(crate) unsafe extern "C" fn compare_post_match_events(partida: usize) {
-    let partida = Fixture(partida);
+pub(crate) unsafe extern "C" fn compare_post_match_events(fixture: usize) {
+    let fixture = Fixture(fixture);
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_POST_MATCH_EVENTS);
     // the list cursor, the two clubs’ rows in [[0xb67a44]] and the flags of the events’ contracts
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
@@ -97,7 +97,7 @@ pub(crate) unsafe extern "C" fn compare_post_match_events(partida: usize) {
                 break;
             }
             let club = club_at(read_i32(ev + 4) as isize).addr();
-            if club == partida.home_club().addr() || club == partida.away_club().addr() {
+            if club == fixture.home_club().addr() || club == fixture.away_club().addr() {
                 reg.extend(contract_flags_region(person(read_i32(ev)), club));
             }
         }
@@ -105,17 +105,17 @@ pub(crate) unsafe extern "C" fn compare_post_match_events(partida: usize) {
     let table = read_usize(G_MANAGER_MANAGER);
     if table != 0 {
         for o in [0x1c, 0x20] {
-            let club = read_usize(partida.addr() + o);
+            let club = read_usize(fixture.addr() + o);
             if club != 0 {
                 reg.push(((read_usize(table) as isize + read_i32(club) as isize * 0x49) as usize, 0x49));
             }
         }
     }
-    compare_pos("post_match_events", reg, || o(partida.addr()), |chamar| post_match_events_injected(partida, chamar));
+    compare_pos("post_match_events", reg, || o(fixture.addr()), |chamar| post_match_events_injected(fixture, chamar));
 }
 
 /// Comparer for `post_match_players`.
-pub(crate) unsafe extern "C" fn compare_post_match_players(partida: usize, t: usize) {
+pub(crate) unsafe extern "C" fn compare_post_match_players(fixture: usize, t: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize)>(IDX_POST_MATCH_PLAYERS);
     // the player records (+0x45, +9 to +0xe), the contracts, +0x80 of the clubs and the records of the
     // manager and of the assistants (+8 to +0xd)
@@ -152,15 +152,15 @@ pub(crate) unsafe extern "C" fn compare_post_match_players(partida: usize, t: us
             }
         }
     }
-    compare_pos("post_match_players", reg, || o(partida, t), |chamar| post_match_players_with(partida, t, chamar));
+    compare_pos("post_match_players", reg, || o(fixture, t), |chamar| post_match_players_with(fixture, t, chamar));
 }
 
 /// Comparer for `post_match_club`.
-pub(crate) unsafe extern "C" fn compare_post_match_club(club: usize, other: usize, partida: usize, n: u32, t: usize) {
+pub(crate) unsafe extern "C" fn compare_post_match_club(club: usize, other: usize, fixture: usize, n: u32, t: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, usize, u32, usize)>(IDX_POST_MATCH_CLUB);
     // the copy does not write to the database: only the calls and the random rolls
     let reg = crate::rng::STATE_REGIONS.to_vec();
-    compare_pos("post_match_club", reg, || o(club, other, partida, n, t), |chamar| post_match_club_with(Club(club), other, Fixture(partida), n, t, chamar));
+    compare_pos("post_match_club", reg, || o(club, other, fixture, n, t), |chamar| post_match_club_with(Club(club), other, Fixture(fixture), n, t, chamar));
 }
 
 /// Comparer for `match_day_drop_viewer_and_finish_match`.
