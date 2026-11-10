@@ -28,6 +28,16 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Migração para os registros tipados, leva 21: locais em português e transmutes repetidos
+
+`traduzir_locais.py` ganhou 160 palavras (rodada 20): 364 nomes locais em 285 funções passaram ao inglês (locais em
+português 856 → 474; a contagem deixou de tomar `data` como português, porque se lê como inglês e o tradutor a mantém).
+`usar_involucros.py`: 186 `transmute` inline que repetiam um invólucro `exe::` com a mesma convenção de chamada, o mesmo
+número de argumentos e o mesmo retorno viraram o invólucro (25 funções voltaram: tipos de argumento que o invólucro
+recebe de outro jeito). `compilar_mutacoes.py` confere as mutações mudadas em lotes de âncoras que não se sobrepõem, um
+`cargo check` por lote, e volta ao um-a-um nas funções onde cai um erro (provado com uma mutação estragada de propósito).
+Prova: 7cc445c2 ×2, detector igual, comparação 0; as 45 mutações mudadas compilam.
+
 ## Migração para os registros tipados, leva 20: as funções devolvem o tipo do registro
 
 `tipar_retornos.py`: 29 funções nossas que devolviam um registro em `usize` (`contract_of_staff`, `friendly_club_by_id`,

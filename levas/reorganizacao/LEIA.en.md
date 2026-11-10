@@ -29,6 +29,16 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Migration to typed records, batch 21: Portuguese locals and repeated transmutes
+
+`traduzir_locais.py` got 160 words (round 20): 364 local names in 285 functions are now English (Portuguese locals 856 →
+474; the count no longer takes `data` as Portuguese, since it reads as English and the translator keeps it).
+`usar_involucros.py`: 186 inline `transmute`s that repeated an `exe::` wrapper with the same calling convention, the same
+number of arguments and the same return type became the wrapper (25 functions went back: argument types the wrapper
+takes differently). `compilar_mutacoes.py` checks the changed mutations in batches of non-overlapping anchors, one
+`cargo check` per batch, and goes back to one by one for the functions an error lands in (proved with a deliberately
+broken mutation). Proof: 7cc445c2 ×2, detector equal, comparison 0; the 45 changed mutations compile.
+
 ## Migration to typed records, batch 20: functions return their record type
 
 `tipar_retornos.py`: 29 of our functions that returned a record as a bare `usize` (`contract_of_staff`,
