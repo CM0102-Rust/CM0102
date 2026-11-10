@@ -29,6 +29,15 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 23: the global club and person tables by name
+
+`club_at(i)` and `staff_at(id)` (in `motor/mem.rs`) replace the hand arithmetic on the game's tables
+(`read_usize(G_CLUB_TABLE) + i * 0x245` and variants, 27 places, `tabelas_globais.py`); a club pointer walking the table
+uses `club::SIZE`. The parameter `percentual` had been renamed to `write_percent_pair` (the name of something else) in
+six files: it is `percentage` now. A compile of all 3,250 mutations (in batches) found 20 replacement texts gone stale
+over the batches (types, translated locals, transmute locals that went): fixed, all 20 compile. Proof: 7cc445c2 ×2,
+detector equal, comparison 0.
+
 ## Readability batch 22: one memory dialect
 
 `unificar_acessos.py`: 5,697 raw pointer accesses in 1,558 functions became the unaligned accessors of `motor/mem.rs`

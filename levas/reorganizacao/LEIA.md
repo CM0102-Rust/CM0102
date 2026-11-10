@@ -28,6 +28,15 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 23 da legibilidade: as tabelas globais de clubes e de pessoas com nome
+
+`club_at(i)` e `staff_at(id)` (no `motor/mem.rs`) substituem a conta à mão nas tabelas do jogo
+(`read_usize(G_CLUB_TABLE) + i * 0x245` e variantes, 27 lugares, `tabelas_globais.py`); o ponteiro de clube que anda
+pela tabela usa `club::SIZE`. O parâmetro `percentual` tinha sido renomeado para `write_percent_pair` (nome de outra
+coisa) em seis arquivos: agora é `percentage`. A compilação de todas as 3.250 mutações (em lotes) achou 20 textos de troca
+envelhecidos ao longo das levas (tipos, locais traduzidos, locais de transmute que saíram): consertados, os 20 compilam.
+Prova: 7cc445c2 ×2, detector igual, comparação 0.
+
 ## Leva 22 da legibilidade: um dialeto de memória só
 
 `unificar_acessos.py`: 5.697 acessos crus por ponteiro em 1.558 funções viraram os acessos sem alinhamento do
