@@ -63,11 +63,11 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_first_create_table(this: usiz
 /// nos 3 bytes dela. Sem entrada (a original gravaria no nulo): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_spa_first_set_club_progress(this: usize, club: usize, stage: u32, current: u32, best: u32, worst: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_SPA_FIRST_SET_CLUB_PROGRESS);
-    let e = exe::comp_stats_find_club_entry(read_usize(this + 8), club);
-    if e == 0 {
+    let e = CompStatsClub(exe::comp_stats_find_club_entry(read_usize(this + 8), club));
+    if e.is_null() {
         return o(this, club, stage, current, best, worst);
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e + comp_stats_club::CURRENT_POSITION, 3)], || o(this, club, stage, current, best, worst), || spa_first_set_club_progress(this, club, stage, current, best, worst));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e.addr() + comp_stats_club::CURRENT_POSITION, 3)], || o(this, club, stage, current, best, worst), || spa_first_set_club_progress(this, club, stage, current, best, worst));
     SCOREBOARD.record(igual, || format!("spa_first_set_club_progress({:#x}, {:#x}) original={:x?} rust={:x?}", this, club, mo, mr));
 }
 

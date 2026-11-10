@@ -8,13 +8,13 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 
 | Medida | Quantidade |
 |---|---:|
-| deslocamentos crus | 4876 |
+| deslocamentos crus | 4700 |
 | chaves fixas cruas | 1821 |
 | chamadas por endereço | 0 |
 | cópias de acesso à memória | 0 |
 | rotinas sem cabeçalho | 0 |
 | locais/parâmetros em português | 241 |
-| linhas | 228561 |
+| linhas | 228746 |
 
 ## Por arquivo (os 40 piores, pelos deslocamentos crus)
 
@@ -22,7 +22,6 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 |---|---:|---:|---:|---:|---:|---:|---:|
 | `motor.rs` | 587 | 0 | 0 | 0 | 0 | 104 | 6424 |
 | `motor/match_screens.rs` | 233 | 4 | 0 | 0 | 0 | 6 | 5878 |
-| `motor/manager_manager.rs` | 209 | 2 | 0 | 0 | 0 | 0 | 5140 |
 | `motor/match_eng.rs` | 206 | 7 | 0 | 0 | 0 | 13 | 11686 |
 | `motor/match_man.rs` | 173 | 1 | 0 | 0 | 0 | 1 | 4498 |
 | `motor/match_pl.rs` | 171 | 5 | 0 | 0 | 0 | 7 | 10183 |
@@ -58,5 +57,6 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/db_files.rs` | 37 | 0 | 0 | 0 | 0 | 0 | 1282 |
 | `motor/comp/cups/eng_cc_cup.rs` | 34 | 12 | 0 | 0 | 0 | 1 | 620 |
 | `motor/comp/cups/ita_cup.rs` | 34 | 19 | 0 | 0 | 0 | 1 | 1155 |
+| `motor/manager_manager.rs` | 33 | 2 | 0 | 0 | 0 | 0 | 5143 |
 | `motor/zipdir.rs` | 33 | 0 | 0 | 0 | 0 | 0 | 604 |
 | `motor/awol.rs` | 32 | 0 | 0 | 0 | 0 | 0 | 896 |

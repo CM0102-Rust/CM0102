@@ -94,6 +94,7 @@ pub(crate) mod contract {
     pub(crate) const RELEASE_FEE: usize = 0x21; // 4 byte(s), int
     pub(crate) const DATE_STARTED: usize = 0x25; // 8 byte(s), TCMDate
     pub(crate) const DATE_STARTED_YEAR: usize = 0x27; // 2 byte(s): Year half of DATE_STARTED (TCMDate at +0x25: day +0x25, year +0x27), same pattern as CONTRACT_EXPIRES_YEAR [verified: sign_contract 0x4cf720 compares (+0x25 day, +0x27 year) against CONTRACT_EXPIRES (+0x2d day, +0x2f year); database_is_staff_foreign 0x53d980 compares +0x27 with]
+    pub(crate) const DATE_STARTED_LEAP_YEAR: usize = 0x29; // 4 byte(s): second dword of DATE_STARTED (the TCMDate leap-year field) [verified: TCMDate at +0x25 (8 bytes); passed with +0x25 as the two dwords to date_days_since; same pattern as staff::DATE_JOINED_CLUB_LEAP_YEAR]
     pub(crate) const CONTRACT_EXPIRES: usize = 0x2d; // 8 byte(s), TCMDate
     pub(crate) const CONTRACT_EXPIRES_YEAR: usize = 0x2f; // 2 byte(s): Year half of CONTRACT_EXPIRES
     pub(crate) const CONTRACT_TYPE: usize = 0x35; // 1 byte(s), byte
@@ -1115,6 +1116,11 @@ pub(crate) mod ban_appeal {
     pub(crate) const RESULT: usize = 0x4; // 1 byte(s): appeal result (0 none yet)
     pub(crate) const DATE: usize = 0x5; // 8 byte(s): date the appeal is heard (TCMDate)
     pub(crate) const RULES: usize = 0xd; // 4 byte(s): up to 4 discipline rule indexes (signed bytes, negative unused)
+    pub(crate) const REVOKE_BY_LENGTH: usize = 0x11; // 1 byte(s): nonzero: an upheld appeal takes the appealed ban length (BAN_MATCHES/BAN_DAYS) off the ban instead of releasing it whole
+    pub(crate) const BAN_MATCHES: usize = 0x12; // 1 byte(s): matches of the appealed ban (from the ban news)
+    pub(crate) const BAN_DAYS: usize = 0x13; // 2 byte(s): days of the appealed ban (from the ban news)
+    pub(crate) const MATCHES_CUT: usize = 0x15; // 1 byte(s): matches taken off by the appeal (0xff none; 1 or 1..2)
+    pub(crate) const DAYS_CUT: usize = 0x16; // 2 byte(s): days taken off by the appeal (10/20/30/40; -1 none)
 }
 
 /// Fields of the `ban_record` object, named from how the routines use them. [pt] Campos do objeto `ban_record`.
@@ -1150,9 +1156,12 @@ pub(crate) mod board_record {
     pub(crate) const TRANSFER_MOOD: usize = 0x14; // 2 byte(s): board mood changed by the transfer deal reasons (signed) [inference]
     pub(crate) const FAVOURITES_MOOD: usize = 0x16; // 2 byte(s): board mood changed by sales of favoured or rejected players and media stories, floor -10000 [inference]
     pub(crate) const LAST_REVIEW_DATE: usize = 0x18; // 8 byte(s): date of the last board review news (TCMDate)
+    pub(crate) const LAST_REVIEW_DATE_LEAP_YEAR: usize = 0x1c; // 4 byte(s): second dword of LAST_REVIEW_DATE (the TCMDate leap-year field, cm_date::LEAP_YEAR) [verified: passed with +0x18 as the two dwords of one date to date_days_since 0x54cdb0 (also 0x69aba0 pseudocode); same pattern as staff::DATE_JOINED_CLUB_LEAP_YEAR]
+    pub(crate) const EXTRA_FUNDS_GRANTED: usize = 0x28; // 4 byte(s): money the board granted on a funds request or a funds ultimatum (0 none; cleared at season start and on a manager change) [inference]
     pub(crate) const TARGET_POSITION: usize = 0x2c; // 4 byte(s): league position the board expects this season
     pub(crate) const SPENDING: usize = 0x30; // 8 byte(s): double spending figure, reputation squared / 4 at the season start [inference]
     pub(crate) const SPENDING_CEILING: usize = 0x38; // 8 byte(s): double compared with SPENDING for the debt departure reason [inference]
+    pub(crate) const DISCIPLINE_COUNTERS: usize = 0x40; // 1 byte(s): two bitfields: bits 0..2 = FA disciplinary fine level (signed 3-bit, 0..4, picks the fine and is raised after each fine); bits 3..7 = ban appeals made (+8 per appeal); & 7 clears the appeals (season expectations), & 0xf8 clears the fine level
 }
 
 /// Fields of the `career_entry` object, named from how the routines use them. [pt] Campos do objeto `career_entry`.
@@ -1254,6 +1263,10 @@ pub(crate) mod commentary_queue {
 /// Fields of the `comp_stats_club` object, named from how the routines use them. [pt] Campos do objeto `comp_stats_club`.
 #[allow(dead_code)]
 pub(crate) mod comp_stats_club {
+    pub(crate) const WINNING_RUN: usize = 0x19; // 4 byte(s): current run of consecutive wins in the competition [verified: Comp_Stats::record_match_result 0x49fc4f increments +0x19 on a win and then clears +0x2d/+0x55 (0x49fe9d); restore_team_runs 0x4a22f0 restores the four runs +0x]
+    pub(crate) const LOSING_RUN: usize = 0x2d; // 4 byte(s): current run of consecutive defeats in the competition [verified: record_match_result 0x49feb9 increments +0x2d on the defeat path and the win path clears it; TEAM_LOSING_AGAIN commentary (match_eng context_commentary) reads +]
+    pub(crate) const UNBEATEN_RUN: usize = 0x41; // 4 byte(s): current unbeaten run (run record: game count +0, dates +0x45/+0x4d)
+    pub(crate) const WINLESS_RUN: usize = 0x55; // 4 byte(s): current winless run (run record: game count +0, dates +0x59/+0x61)
     pub(crate) const DANGER_POSITION: usize = 0x72; // 1 byte(s): danger position used as the board target (0 none) [inference]
     pub(crate) const CURRENT_POSITION: usize = 0x73; // 1 byte(s): club's current position in the competition statistics
     pub(crate) const BEST_POSITION: usize = 0x74; // 1 byte(s): best position reached
@@ -1809,6 +1822,7 @@ pub(crate) mod match_record {
     pub(crate) const ROW_POSITION: usize = 0x1ad; // 1 byte(s): position of a player row; 0xfb = empty row (same base)
     pub(crate) const ROW_MINUTE_OFF: usize = 0x1c0; // 1 byte(s): minute substituted off of a player row (base record + 0x625 x side + 0x49 x idx)
     pub(crate) const ROW_MINUTE_LEFT_PITCH: usize = 0x1c4; // 1 byte(s): minute a player row left the pitch (same base as ROW_MINUTE_OFF)
+    pub(crate) const SIDE_SIZE: usize = 0x625; // stride between the home and away team blocks of the match record (0x625 bytes; AWAY_TEAM = HOME_TEAM + SIDE_SIZE) [verified: AWAY_TEAM 0x744 - HOME_TEAM 0x11f = 0x625; same constant as match_stats_record::SIDE_SIZE; used as 0x625 * side]
     pub(crate) const AWAY_TEAM: usize = 0x744; // 1573 byte(s): away team block (match_record_team); its first byte is the goals, 0xfd before kick-off
     pub(crate) const AWAY_SHOOTOUT_GOALS: usize = 0x745; // 1 byte(s): away penalty shoot-out goals
     pub(crate) const AWAY_SHOTS: usize = 0x74c; // 1 byte(s): away shots on goal
@@ -2554,4 +2568,10 @@ pub(crate) mod oceania_club_champ {
 pub(crate) mod uefa_seeding {
     pub(crate) const INTERTOTO_VOLUNTEERS: usize = 0x43b; // 4 byte(s): Pointer to the list of up to 30 club ids volunteering for the Intertoto (0x78 bytes; count at +0x43f), freed after the places are given
     pub(crate) const CUP_FINALS: usize = 0x440; // 600 byte(s): 50 records of 12 bytes (cup, winner, runner-up) of national cup finals, written by register_semi_final_losers_for_uefa and read when giving UEFA places
+}
+
+/// `TNames` record (first_names/second_names/common_names.dat, 60 bytes). [pt] Registro `TNames`.
+#[allow(dead_code)]
+pub(crate) mod names {
+    pub(crate) const ID: usize = 0x33; // 4 byte(s): TNames record (first_names/second_names/common_names.dat, 60 bytes: Name[51] at 0, ID 0x33, Nation 0x37, Count 0x3b); +0x33 is the name id [verified: docs/FORMATOS TNames +0x33 ID (community format); person_transfer_record::FIRST_NAME_ID says +0x33 of the staff FIRST_NAME record]
 }

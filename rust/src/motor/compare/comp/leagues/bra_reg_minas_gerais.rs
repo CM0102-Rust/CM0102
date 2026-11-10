@@ -79,8 +79,8 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_minas_gerais_record_seaso
 /// [pt] Comparador: lado a lado pela entrada do clube (+0x73..+0x75), achada antes (a 0x4a4850 ordena na primeira vez e só
 /// busca depois; a original e a cópia a chamam de novo); a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_minas_gerais_set_club_progress(this: usize, club: usize, stage: u32, a: u32, b: u32, c: u32) -> usize {
-    let e = bra_reg_minas_gerais_comp_stats_club_entry(this, club);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(e + comp_stats_club::CURRENT_POSITION, 3)], || original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_BRA_REG_MINAS_GERAIS_SET_CLUB_PROGRESS)(this, club, stage, a, b, c), || bra_reg_minas_gerais_set_club_progress(this, club, stage, a, b, c));
+    let e = CompStatsClub(bra_reg_minas_gerais_comp_stats_club_entry(this, club));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(e.addr() + comp_stats_club::CURRENT_POSITION, 3)], || original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_BRA_REG_MINAS_GERAIS_SET_CLUB_PROGRESS)(this, club, stage, a, b, c), || bra_reg_minas_gerais_set_club_progress(this, club, stage, a, b, c));
     SCOREBOARD.record(igual && r == n, || format!("bra_reg_minas_gerais_set_club_progress({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, club, stage as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
     r
 }

@@ -1,0 +1,128 @@
+r"""Applies the field readers' verdicts given per source line (10/11/2026, decision (e), pilot on manager_manager.rs).
+
+Each entry of the JSON files: `{line, offset, base, module, verdict, name, width, rust_type, description, confidence,
+evidence[, new_module]}` for a raw `base + 0xOFF` at that line of FILE:
+- `new`: the field goes into rust/src/motor/fields.rs, in `module` (created at the end when `new_module`), ordered by
+  offset, with the reliability mark of docs/CONFIANCA_DOS_CAMPOS.md (`[verified: ..]`, nothing for `read`, `[inference]`);
+- `existing`: the name already in `module` (`NAME` or `NAME + k`);
+- `not_field` / `unknown`: left alone.
+The same (module, offset) given two names is a conflict: reported, nothing applied for it. Then, at each line,
+every `+ 0xOFF` becomes `+ module::NAME` when all the entries for that line and offset agree. Run registros.py, then
+`tipar_registros.py --acessos module` and metodos_em_cadeia.py so typed values read them as methods.
+Usage: python nomear_por_linha.py FILE.rs VERDICTS.json [...] [--gravar]
+[pt] Aplica os vereditos dos leitores de campo dados por linha: campos novos no fields.rs com a marca de confiança e
+o hexadecimal cru da linha vira `modulo::NOME`.
+"""
+import collections
+import json
+import os
+import re
+import sys
+
+R = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+FIELDS = os.path.join(R, 'rust', 'src', 'motor', 'fields.rs')
+
+
+def marca(e):
+    ev = re.sub(r'\s+', ' ', (e.get('evidence') or '')).strip().rstrip('.')
+    if e.get('confidence') == 'verified':
+        return ' [verified: %s]' % ev[:160]
+    if e.get('confidence') == 'inferred':
+        return ' [inference]'
+    return ''
+
+
+def inserir(s, e, off, nome):
+    mod = e['module']
+    m = re.search(r'pub\(crate\) mod %s \{\n' % mod, s)
+    if not m:
+        if not e.get('new_module'):
+            return s, 'módulo %s não existe' % mod
+        s = s.rstrip('\n') + '\n\n/// %s\n#[allow(dead_code)]\npub(crate) mod %s {\n}\n' % (
+            re.sub(r'\s+', ' ', e.get('record') or ('`%s` record, named by the field readers' % mod)), mod)
+        m = re.search(r'pub\(crate\) mod %s \{\n' % mod, s)
+    fim = s.index('\n}', m.end() - 1)
+    corpo = s[m.end():fim]
+    achado = re.search(r'pub\(crate\) const (\w+): usize = %s;' % hex(off), corpo)
+    if achado:
+        return s, achado.group(1)
+    if re.search(r'const %s: usize' % nome, corpo):
+        return s, 'nome %s já usado com outro deslocamento' % nome
+    desc = re.sub(r'\s+', ' ', e.get('description') or '').strip().rstrip('.')
+    linha = '    pub(crate) const %s: usize = %s; // %s byte(s): %s%s' % (nome, hex(off), e.get('width') or '?', desc, marca(e))
+    linhas = corpo.split('\n') if corpo else []
+    k = 0
+    while k < len(linhas):
+        mm = re.match(r'\s*pub\(crate\) const \w+: usize = (0x[0-9a-f]+|\d+);', linhas[k])
+        if mm and int(mm.group(1), 0) > off:
+            break
+        k += 1
+    linhas.insert(k, linha)
+    return s[:m.end()] + '\n'.join(linhas) + ('\n' if not corpo else '') + s[fim:], nome
+
+
+def main():
+    args = [a for a in sys.argv[1:] if not a.startswith('--')]
+    alvo, jsons = args[0], args[1:]
+    grava = '--gravar' in sys.argv
+    ent = []
+    for j in jsons:
+        ent += json.load(open(j, encoding='utf-8'))
+    usar = [e for e in ent if e.get('verdict') in ('new', 'existing') and e.get('name') and e.get('module')]
+    print(collections.Counter(e.get('verdict') for e in ent), collections.Counter(e.get('confidence') for e in usar))
+    nomes = collections.defaultdict(set)
+    for e in usar:
+        nomes[(e['module'], int(e['offset'], 16))].add(e['name'].split('::')[-1].strip())
+    conflito = {k for k, v in nomes.items() if len(v) > 1}
+    for k in sorted(conflito):
+        print('CONFLITO', k[0], hex(k[1]), sorted(nomes[k]))
+    s = open(FIELDS, encoding='utf-8').read()
+    troca, novos = {}, 0
+    for e in usar:
+        off = int(e['offset'], 16)
+        k = (e['module'], off)
+        if k in conflito or k in troca:
+            continue
+        nome = e['name'].split('::')[-1].strip()
+        if e['verdict'] == 'existing':
+            base = nome.split('+')[0].strip()
+            if not re.search(r'pub\(crate\) mod %s \{[^}]*const %s: usize' % (e['module'], base), s):
+                print('existente não achado:', e['module'], nome)
+                continue
+            troca[k] = '%s::%s' % (e['module'], nome)
+            continue
+        antes = s
+        s, r = inserir(s, e, off, nome)
+        if not re.fullmatch(r'[A-Z][A-Z0-9_]*', r):
+            print('pulado:', e['module'], hex(off), r)
+            continue
+        novos += s != antes
+        troca[k] = '%s::%s' % (e['module'], r)
+    p = os.path.join(R, 'rust', 'src', alvo) if not os.path.isabs(alvo) else alvo
+    linhas = open(p, encoding='utf-8', newline='').read().split('\n')
+    # the readers describe the base in words, so the line is matched by the offset alone: every `+ 0xOFF` of that
+    # line, when all the entries for (line, offset) agree (a not_field there, or two names, leaves it alone)
+    por_linha = collections.defaultdict(set)
+    for e in ent:
+        k = (e.get('module'), int(e['offset'], 16))
+        por_linha[(int(e['line']), e['offset'])].add(troca.get(k) if e in usar else None)
+    feitas = 0
+    for (ln, off), alvos in sorted(por_linha.items()):
+        if len(alvos) != 1 or None in alvos:
+            continue
+        nome = alvos.pop()
+        cod, sep, com = linhas[ln - 1].partition('//')
+        pat = r'(\+\s*)' + re.escape(off) + r'(?![0-9a-fA-Fx])(?!\s*\*)'
+        if not re.search(pat, cod):
+            print('linha %d: `+ %s` não achado' % (ln, off))
+            continue
+        linhas[ln - 1] = re.sub(pat, lambda m: m.group(1) + nome, cod) + sep + com
+        feitas += 1
+    print('%d campos novos; %d deslocamentos com nome; %d linhas trocadas' % (novos, len(troca), feitas))
+    if grava:
+        open(FIELDS, 'w', encoding='utf-8').write(s)
+        open(p, 'w', encoding='utf-8', newline='').write('\n'.join(linhas))
+
+
+if __name__ == '__main__':
+    main()

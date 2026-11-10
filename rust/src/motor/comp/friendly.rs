@@ -1761,7 +1761,7 @@ pub(crate) unsafe extern "thiscall" fn friendly_update_for_date(this: usize, tod
     let l = this.pending_tournament_list();
     if !l.is_null() {
         let count = read_u16(l.addr()) as i16;
-        l.set_cursor(Llist::head(l));
+        l.set_cursor(l.head());
         if count > 0 {
             let mut n = count as i32;
             loop {
@@ -1773,7 +1773,7 @@ pub(crate) unsafe extern "thiscall" fn friendly_update_for_date(this: usize, tod
                 }
                 let l = this.pending_tournament_list();
                 n -= 1;
-                l.set_cursor(Llist::head(l));
+                l.set_cursor(l.head());
                 if n == 0 {
                     break;
                 }
@@ -1791,7 +1791,7 @@ pub(crate) unsafe extern "thiscall" fn friendly_update_for_date(this: usize, tod
     }
     let l = this.friendly_match_list();
     if !l.is_null() {
-        l.set_cursor(Llist::head(l));
+        l.set_cursor(l.head());
         let mut p = exe::llist_get_next(this.friendly_match_list());
         while p != 0 {
             if read_usize(p + friendly_match::HOME_CLUB) == 0 || read_usize(p + friendly_match::AWAY_CLUB) == 0 {

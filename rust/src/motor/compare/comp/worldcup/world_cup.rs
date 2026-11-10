@@ -137,8 +137,8 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_set_predicted_positions
     o(this.addr());
     const FAIXAS: [u8; 32] = [1, 2, 3, 4, 5, 5, 5, 5, 9, 9, 9, 9, 9, 9, 9, 9, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19];
     let wrong = (0..32).find(|&k| {
-        let e = if v[k] != 0 { exe::comp_stats_find_club_entry(this.comp_stats(), v[k]) } else { 0 };
-        e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != FAIXAS[k]
+        let e = CompStatsClub(if v[k] != 0 { exe::comp_stats_find_club_entry(this.comp_stats(), v[k]) } else { 0 });
+        e.is_null() || e.danger_position() != FAIXAS[k]
     });
     SCOREBOARD.record(wrong.is_none(), || format!("world_cup_set_predicted_positions: a position prevista of the slot {:?} not bate", wrong));
 }

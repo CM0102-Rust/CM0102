@@ -73,8 +73,8 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_rank_teams(this: usi
     let wrong = plan.iter().find(|&&(k, p)| {
         let c = v[k as usize] as usize;
         c != 0 && {
-            let e = exe::comp_stats_find_club_entry(read_usize(this.addr() + 8), c);
-            e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != p
+            let e = CompStatsClub(exe::comp_stats_find_club_entry(read_usize(this.addr() + 8), c));
+            e.is_null() || e.danger_position() != p
         }
     });
     SCOREBOARD.record(wrong.is_none(), || format!("european_cup_rank_teams: a position {:?} not bate", wrong));
@@ -318,12 +318,12 @@ pub(crate) unsafe extern "thiscall" fn compare_process_fixture(this: usize, game
 /// cai), só a original.
 pub(crate) unsafe extern "thiscall" fn compare_european_cup_set_club_progress(this: usize, club: usize, stage: u32, p1: u32, p2: u32, p3: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_EUROPEAN_CUP_SET_CLUB_PROGRESS);
-    let e = exe::comp_stats_find_club_entry(read_usize(this + 8), club);
-    if e == 0 {
+    let e = CompStatsClub(exe::comp_stats_find_club_entry(read_usize(this + 8), club));
+    if e.is_null() {
         return o(this, club, stage, p1, p2, p3); // simplification: without a record, original only
     }
     let (_, _, igual, mo, mr) = crate::comparison::side_by_side(
-        &[(e + comp_stats_club::CURRENT_POSITION, 3)],
+        &[(e.addr() + comp_stats_club::CURRENT_POSITION, 3)],
         || o(this, club, stage, p1, p2, p3),
         || european_cup_set_club_progress(this, club, stage, p1, p2, p3),
     );

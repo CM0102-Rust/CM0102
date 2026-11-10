@@ -19,9 +19,9 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | Nível | Campos |
 |---|---|
 | comunidade | 247 |
-| conferido | 14 |
-| lido | 1339 |
-| inferido | 143 |
+| conferido | 20 |
+| lido | 1347 |
+| inferido | 144 |
 
 ## Por registro
 
@@ -31,10 +31,10 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `age_record` | 0 | 0 | 2 | 0 |
 | `appearance_clause` | 0 | 0 | 3 | 0 |
 | `awol_fields` | 0 | 0 | 0 | 1 |
-| `ban_appeal` | 0 | 0 | 3 | 0 |
+| `ban_appeal` | 0 | 0 | 8 | 0 |
 | `ban_record` | 0 | 0 | 7 | 0 |
 | `ban_slot` | 0 | 0 | 1 | 1 |
-| `board_record` | 0 | 0 | 9 | 5 |
+| `board_record` | 0 | 1 | 10 | 6 |
 | `bra_nat_third` | 0 | 0 | 1 | 0 |
 | `career_entry` | 0 | 0 | 7 | 0 |
 | `city` | 6 | 0 | 0 | 0 |
@@ -47,13 +47,13 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `cm_date` | 2 | 0 | 0 | 0 |
 | `commentary_queue` | 0 | 0 | 10 | 1 |
 | `comp_history_row` | 0 | 0 | 3 | 1 |
-| `comp_stats_club` | 0 | 0 | 3 | 1 |
+| `comp_stats_club` | 0 | 2 | 5 | 1 |
 | `competition` | 9 | 0 | 0 | 0 |
 | `con_merc_cup` | 0 | 0 | 2 | 0 |
 | `conmebol_liber` | 0 | 0 | 1 | 1 |
 | `conmebol_merc` | 0 | 0 | 1 | 1 |
 | `conmebol_seeding` | 0 | 0 | 2 | 0 |
-| `contract` | 19 | 2 | 6 | 3 |
+| `contract` | 19 | 3 | 6 | 3 |
 | `contract_manager_fields` | 0 | 0 | 10 | 1 |
 | `contract_offer` | 0 | 0 | 8 | 3 |
 | `contract_talks` | 0 | 0 | 2 | 0 |
@@ -116,7 +116,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `match_incident` | 0 | 0 | 5 | 0 |
 | `match_manager` | 0 | 0 | 15 | 7 |
 | `match_player` | 0 | 3 | 110 | 22 |
-| `match_record` | 0 | 0 | 68 | 11 |
+| `match_record` | 0 | 1 | 68 | 11 |
 | `match_record_row` | 0 | 0 | 14 | 4 |
 | `match_record_team` | 0 | 0 | 27 | 4 |
 | `match_spectators` | 0 | 0 | 3 | 1 |
@@ -125,6 +125,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `match_stats_record` | 0 | 0 | 6 | 0 |
 | `match_summary` | 0 | 0 | 1 | 0 |
 | `media_fields` | 0 | 0 | 6 | 0 |
+| `names` | 0 | 1 | 0 | 0 |
 | `nation` | 34 | 0 | 1 | 0 |
 | `nation_club_bucket` | 0 | 0 | 2 | 0 |
 | `nation_index_item` | 0 | 0 | 1 | 0 |
@@ -279,6 +280,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `board_record::FLAGS` | +0x2 | 1 byte(s): status bits (bit 2 departure recorded, bit 8 in season; cleared on a manager change) [inference] |
 | `board_record::TRANSFER_MOOD` | +0x14 | 2 byte(s): board mood changed by the transfer deal reasons (signed) [inference] |
 | `board_record::FAVOURITES_MOOD` | +0x16 | 2 byte(s): board mood changed by sales of favoured or rejected players and media stories, floor -10000 [inference] |
+| `board_record::EXTRA_FUNDS_GRANTED` | +0x28 | 4 byte(s): money the board granted on a funds request or a funds ultimatum (0 none; cleared at season start and on a manager change) [inference] |
 | `board_record::SPENDING` | +0x30 | 8 byte(s): double spending figure, reputation squared / 4 at the season start [inference] |
 | `board_record::SPENDING_CEILING` | +0x38 | 8 byte(s): double compared with SPENDING for the debt departure reason [inference] |
 | `club_record::SEASON_RATING_YEAR` | +0x20e | 2 byte(s): SEASON_RATING + rating_record YEAR (0 in the season record) [inference] |

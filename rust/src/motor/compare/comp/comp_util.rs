@@ -30,10 +30,10 @@ pub(crate) unsafe extern "thiscall" fn compare_set_club_final_position(this: usi
         return o(this, club, pos); // simplification: the box, original only
     }
     let before = exe::comp_stats_find_club_entry(this, club);
-    let r = o(this, club, pos);
-    let same = r != 0 && (before == 0 || r == before) && *((r + comp_stats_club::DANGER_POSITION) as *const u8) == pos as u8;
-    SCOREBOARD.record(same, || format!("set_club_final_position(club {:x}, {}) before={:x} original={:x}", club, pos as u8, before, r));
-    r
+    let r = CompStatsClub(o(this, club, pos));
+    let same = !r.is_null() && (before == 0 || r.addr() == before) && r.danger_position() == pos as u8;
+    SCOREBOARD.record(same, || format!("set_club_final_position(club {:x}, {}) before={:x} original={:x}", club, pos as u8, before, r.addr()));
+    r.addr()
 }
 
 /// Comparer for `comp_util_get_fixture_venue_side`.

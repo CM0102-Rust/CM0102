@@ -180,8 +180,8 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_set_predicted_positions(t
     o(this.addr());
     const LUGARES: [u8; 12] = [1, 4, 7, 10, 1, 4, 7, 10, 1, 4, 7, 10];
     let wrong = (0..12).find(|&k| {
-        let e = if v[k] != 0 { exe::comp_stats_find_club_entry(this.comp_stats(), v[k]) } else { 0 };
-        e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != LUGARES[k]
+        let e = CompStatsClub(if v[k] != 0 { exe::comp_stats_find_club_entry(this.comp_stats(), v[k]) } else { 0 });
+        e.is_null() || e.danger_position() != LUGARES[k]
     });
     SCOREBOARD.record(wrong.is_none(), || format!("usa_mls_set_predicted_positions({:#x}): a position of the slot {:?} not bate ({:x?})", this.addr(), wrong, v));
 }
@@ -255,8 +255,8 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_set_up_rules(this: usize)
 
 /// Comparador: como o do Mineiro.
 pub(crate) unsafe extern "thiscall" fn compare_usa_mls_set_club_progress(this: usize, club: usize, stage: u32, a: u32, b: u32, c: u32) -> usize {
-    let e = bra_reg_minas_gerais_comp_stats_club_entry(this, club);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(e + comp_stats_club::CURRENT_POSITION, 3)], || original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_USA_MLS_SET_CLUB_PROGRESS)(this, club, stage, a, b, c), || usa_mls_set_club_progress(this, club, stage, a, b, c));
+    let e = CompStatsClub(bra_reg_minas_gerais_comp_stats_club_entry(this, club));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(e.addr() + comp_stats_club::CURRENT_POSITION, 3)], || original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_USA_MLS_SET_CLUB_PROGRESS)(this, club, stage, a, b, c), || usa_mls_set_club_progress(this, club, stage, a, b, c));
     SCOREBOARD.record(igual && r == n, || format!("usa_mls_set_club_progress({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, club, stage as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
     r
 }

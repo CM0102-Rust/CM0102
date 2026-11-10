@@ -63,8 +63,8 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_set_predicted_posit
     exe::crt_qsort((v.as_mut_ptr()) as usize, 0x38, 4, 0x4b07d0);
     o(this);
     let wrong = (0..0x38).find(|&k| {
-        let e = if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this + 8), v[k]) } else { 0 };
-        read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + 4 * k) != v[k] || e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != place_for_index(k)
+        let e = CompStatsClub(if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this + 8), v[k]) } else { 0 });
+        read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + 4 * k) != v[k] || e.is_null() || e.danger_position() != place_for_index(k)
     });
     SCOREBOARD.record(wrong.is_none(), || format!("bra_nat_third_set_predicted_positions({:#x}): a slot {:?} not bate", this, wrong));
 }
@@ -245,8 +245,8 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_update_staff_record
 
 /// Comparador: como o do Mineiro.
 pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_set_club_progress(this: usize, club: usize, stage: u32, a: u32, b: u32, c: u32) -> usize {
-    let e = bra_reg_minas_gerais_comp_stats_club_entry(this, club);
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(e + comp_stats_club::CURRENT_POSITION, 3)], || original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_BRA_NAT_THIRD_SET_CLUB_PROGRESS)(this, club, stage, a, b, c), || bra_nat_third_set_club_progress(this, club, stage, a, b, c));
+    let e = CompStatsClub(bra_reg_minas_gerais_comp_stats_club_entry(this, club));
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(e.addr() + comp_stats_club::CURRENT_POSITION, 3)], || original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_BRA_NAT_THIRD_SET_CLUB_PROGRESS)(this, club, stage, a, b, c), || bra_nat_third_set_club_progress(this, club, stage, a, b, c));
     SCOREBOARD.record(igual && r == n, || format!("bra_nat_third_set_club_progress({:x}, {:x}, {}, {}, {}, {}) original={:x} rust={:x} {:?} {:?}", this, club, stage as u8 as i8, a as u8, b as u8, c as u8, r, n, mo, mr));
     r
 }

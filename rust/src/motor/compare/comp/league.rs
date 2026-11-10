@@ -339,9 +339,9 @@ pub(crate) unsafe extern "thiscall" fn compare_league_set_predicted_positions(le
             continue;
         }
         let p = (i as u8).wrapping_add(1);
-        let e = exe::comp_stats_find_club_entry(league.comp_stats(), c as usize);
-        if e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != p {
-            erros.push(format!("club {:x} expected {} got {}", c, p, if e == 0 { -1 } else { read_u8(e + comp_stats_club::DANGER_POSITION) as i32 }));
+        let e = CompStatsClub(exe::comp_stats_find_club_entry(league.comp_stats(), c as usize));
+        if e.is_null() || e.danger_position() != p {
+            erros.push(format!("club {:x} expected {} got {}", c, p, if e.is_null() { -1 } else { e.danger_position() as i32 }));
         }
     }
     SCOREBOARD.record(erros.is_empty(), || format!("league_set_predicted_positions({:x}) {} clubs: {}", league.addr(), n, erros.join("; ")));
@@ -382,11 +382,11 @@ pub(crate) unsafe extern "C" fn compare_compare_projection_by_points_desc(a: usi
 pub(crate) unsafe extern "thiscall" fn compare_update_projected_positions(this: usize, club: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_UPDATE_PROJECTED_POSITIONS);
     let stats = read_usize(this + 8);
-    let reg = if stats != 0 { exe::comp_stats_find_club_entry(stats, club) } else { 0 };
-    if reg == 0 {
+    let reg = CompStatsClub(if stats != 0 { exe::comp_stats_find_club_entry(stats, club) } else { 0 });
+    if reg.is_null() {
         return o(this, club); // simplification: no record to look at, original only
     }
-    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(reg + comp_stats_club::CURRENT_POSITION, 3)], || o(this, club),
+    let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(reg.addr() + comp_stats_club::CURRENT_POSITION, 3)], || o(this, club),
         || update_projected_positions(this, club));
     SCOREBOARD.record(igual && r == n, || format!("update_projected_positions(league {:x}, club {:x}) original={} rust={} {:x?} x {:x?}",
         this, club, r, n, mo, mr));

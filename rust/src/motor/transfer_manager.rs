@@ -1317,7 +1317,7 @@ pub(crate) unsafe extern "thiscall" fn accept_transfer_bid(this: usize, slot: us
             exe::shortlist_manager_clear_bid_markers_for_player(this.shortlist_manager(), transfer_manager_club_by_id(o.buyer_club_id()), a2);
             let l = o.exchange_players();
             if !l.is_null() {
-                l.set_cursor(Llist::head(l));
+                l.set_cursor(l.head());
                 loop {
                     let p = transfer_manager_llist_next(o.exchange_players());
                     if p == 0 {
@@ -1361,7 +1361,7 @@ pub(crate) unsafe extern "thiscall" fn accept_transfer_bid(this: usize, slot: us
     }
     if !o.exchange_players().is_null() {
         let l = o.exchange_players();
-        l.set_cursor(Llist::head(l));
+        l.set_cursor(l.head());
         let mut p = transfer_manager_llist_next(o.exchange_players());
         while p != 0 {
             let person = transfer_manager_staff_by_id(read_usize(p));
@@ -1402,7 +1402,7 @@ pub(crate) unsafe extern "thiscall" fn accept_transfer_bid(this: usize, slot: us
         return;
     }
     let l = o.exchange_players();
-    l.set_cursor(Llist::head(l));
+    l.set_cursor(l.head());
     loop {
         let p = transfer_manager_llist_next(o.exchange_players());
         if p == 0 {

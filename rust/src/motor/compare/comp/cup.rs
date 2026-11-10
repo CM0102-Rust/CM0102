@@ -188,11 +188,11 @@ pub(crate) unsafe extern "thiscall" fn compare_record_team_progress(cup: usize, 
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32)>(IDX_RECORD_TEAM_PROGRESS);
     let stats = read_usize(cup + 8);
     let club = read_usize(team_entry(Cup(cup), team as i16 as i32));
-    let reg = if stats != 0 && club != 0 { exe::comp_stats_find_club_entry(stats, club) } else { 0 };
-    if reg == 0 {
+    let reg = CompStatsClub(if stats != 0 && club != 0 { exe::comp_stats_find_club_entry(stats, club) } else { 0 });
+    if reg.is_null() {
         return o(cup, team, round); // simplification: no record to look at, original only
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(reg + comp_stats_club::CURRENT_POSITION, 3)], || o(cup, team, round), || record_team_progress(cup, team, round));
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(reg.addr() + comp_stats_club::CURRENT_POSITION, 3)], || o(cup, team, round), || record_team_progress(cup, team, round));
     SCOREBOARD.record(igual, || format!("record_team_progress(team {}, round {}) original={:x?} rust={:x?}", team as i16, round as i16, mo, mr));
 }
 
@@ -675,9 +675,9 @@ pub(crate) unsafe extern "thiscall" fn compare_cup_rank_teams(this: usize) {
         if c == 0 || plan[i + 1..].iter().any(|x| x.0 == c) {
             continue;
         }
-        let e = exe::comp_stats_find_club_entry(read_usize(this.addr() + 8), c);
-        if e == 0 || read_u8(e + comp_stats_club::DANGER_POSITION) != p {
-            erros.push(format!("club {:x} expected {} got {}", c, p, if e == 0 { -1 } else { read_u8(e + comp_stats_club::DANGER_POSITION) as i32 }));
+        let e = CompStatsClub(exe::comp_stats_find_club_entry(read_usize(this.addr() + 8), c));
+        if e.is_null() || e.danger_position() != p {
+            erros.push(format!("club {:x} expected {} got {}", c, p, if e.is_null() { -1 } else { e.danger_position() as i32 }));
         }
     }
     SCOREBOARD.record(erros.is_empty(), || format!("cup_rank_teams({:x}) {} positions: {}", this.addr(), plan.len(), erros.join("; ")));

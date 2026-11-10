@@ -773,6 +773,15 @@ impl Contract {
     pub(crate) unsafe fn set_date_started_year(self, v: u16) {
         write_u16(self.0 + contract::DATE_STARTED_YEAR, v)
     }
+    /// `contract::DATE_STARTED_LEAP_YEAR` (+0x29). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn date_started_leap_year(self) -> u32 {
+        read_u32(self.0 + contract::DATE_STARTED_LEAP_YEAR)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_date_started_leap_year(self, v: u32) {
+        write_u32(self.0 + contract::DATE_STARTED_LEAP_YEAR, v)
+    }
     /// `contract::CONTRACT_EXPIRES` (+0x2d). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn contract_expires(self) -> i16 {
@@ -9352,6 +9361,51 @@ impl BanAppeal {
     pub(crate) unsafe fn set_rules(self, v: i32) {
         write_i32(self.0 + ban_appeal::RULES, v)
     }
+    /// `ban_appeal::REVOKE_BY_LENGTH` (+0x11). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn revoke_by_length(self) -> u8 {
+        read_u8(self.0 + ban_appeal::REVOKE_BY_LENGTH)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_revoke_by_length(self, v: u8) {
+        write_u8(self.0 + ban_appeal::REVOKE_BY_LENGTH, v)
+    }
+    /// `ban_appeal::BAN_MATCHES` (+0x12). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn ban_matches(self) -> u8 {
+        read_u8(self.0 + ban_appeal::BAN_MATCHES)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_ban_matches(self, v: u8) {
+        write_u8(self.0 + ban_appeal::BAN_MATCHES, v)
+    }
+    /// `ban_appeal::BAN_DAYS` (+0x13). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn ban_days(self) -> i16 {
+        read_i16(self.0 + ban_appeal::BAN_DAYS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_ban_days(self, v: i16) {
+        write_i16(self.0 + ban_appeal::BAN_DAYS, v)
+    }
+    /// `ban_appeal::MATCHES_CUT` (+0x15). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn matches_cut(self) -> u8 {
+        read_u8(self.0 + ban_appeal::MATCHES_CUT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_matches_cut(self, v: u8) {
+        write_u8(self.0 + ban_appeal::MATCHES_CUT, v)
+    }
+    /// `ban_appeal::DAYS_CUT` (+0x16). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn days_cut(self) -> i16 {
+        read_i16(self.0 + ban_appeal::DAYS_CUT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_days_cut(self, v: i16) {
+        write_i16(self.0 + ban_appeal::DAYS_CUT, v)
+    }
 }
 
 impl Addr for BanAppeal {
@@ -9625,6 +9679,24 @@ impl BoardRecord {
     pub(crate) unsafe fn set_last_review_date(self, v: usize) {
         write_usize(self.0 + board_record::LAST_REVIEW_DATE, v)
     }
+    /// `board_record::LAST_REVIEW_DATE_LEAP_YEAR` (+0x1c). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn last_review_date_leap_year(self) -> usize {
+        read_usize(self.0 + board_record::LAST_REVIEW_DATE_LEAP_YEAR)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_last_review_date_leap_year(self, v: usize) {
+        write_usize(self.0 + board_record::LAST_REVIEW_DATE_LEAP_YEAR, v)
+    }
+    /// `board_record::EXTRA_FUNDS_GRANTED` (+0x28). Name: inferred.
+    #[inline(always)]
+    pub(crate) unsafe fn extra_funds_granted(self) -> u32 {
+        read_u32(self.0 + board_record::EXTRA_FUNDS_GRANTED)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_extra_funds_granted(self, v: u32) {
+        write_u32(self.0 + board_record::EXTRA_FUNDS_GRANTED, v)
+    }
     /// `board_record::TARGET_POSITION` (+0x2c). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn target_position(self) -> u32 {
@@ -9651,6 +9723,15 @@ impl BoardRecord {
     #[inline(always)]
     pub(crate) unsafe fn set_spending_ceiling(self, v: f64) {
         write_f64(self.0 + board_record::SPENDING_CEILING, v)
+    }
+    /// `board_record::DISCIPLINE_COUNTERS` (+0x40). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn discipline_counters(self) -> u8 {
+        read_u8(self.0 + board_record::DISCIPLINE_COUNTERS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_discipline_counters(self, v: u8) {
+        write_u8(self.0 + board_record::DISCIPLINE_COUNTERS, v)
     }
 }
 
@@ -10404,6 +10485,42 @@ impl CompStatsClub {
     #[inline(always)]
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
+    }
+    /// `comp_stats_club::WINNING_RUN` (+0x19). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn winning_run(self) -> usize {
+        read_usize(self.0 + comp_stats_club::WINNING_RUN)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_winning_run(self, v: usize) {
+        write_usize(self.0 + comp_stats_club::WINNING_RUN, v)
+    }
+    /// `comp_stats_club::LOSING_RUN` (+0x2d). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn losing_run(self) -> usize {
+        read_usize(self.0 + comp_stats_club::LOSING_RUN)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_losing_run(self, v: usize) {
+        write_usize(self.0 + comp_stats_club::LOSING_RUN, v)
+    }
+    /// `comp_stats_club::UNBEATEN_RUN` (+0x41). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn unbeaten_run(self) -> i32 {
+        read_i32(self.0 + comp_stats_club::UNBEATEN_RUN)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_unbeaten_run(self, v: i32) {
+        write_i32(self.0 + comp_stats_club::UNBEATEN_RUN, v)
+    }
+    /// `comp_stats_club::WINLESS_RUN` (+0x55). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn winless_run(self) -> i32 {
+        read_i32(self.0 + comp_stats_club::WINLESS_RUN)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_winless_run(self, v: i32) {
+        write_i32(self.0 + comp_stats_club::WINLESS_RUN, v)
     }
     /// `comp_stats_club::DANGER_POSITION` (+0x72). Name: inferred.
     #[inline(always)]
@@ -14715,6 +14832,11 @@ impl MatchRecord {
     #[inline(always)]
     pub(crate) unsafe fn set_row_minute_left_pitch(self, v: u8) {
         write_u8(self.0 + match_record::ROW_MINUTE_LEFT_PITCH, v)
+    }
+    /// `match_record::SIDE_SIZE` (+0x625). Name: verified.
+    #[inline(always)]
+    pub(crate) fn side_size_addr(self) -> usize {
+        self.0 + match_record::SIDE_SIZE
     }
     /// `match_record::AWAY_TEAM` (+0x744). Name: read.
     #[inline(always)]
@@ -20211,6 +20333,46 @@ impl Addr for UefaSeeding {
 }
 
 impl core::fmt::LowerHex for UefaSeeding {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `names` record in the game's memory (fields in `fields::names`). [pt] Um registro `names` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct Names(pub(crate) usize);
+
+#[allow(dead_code)]
+impl Names {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `names::ID` (+0x33). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn id(self) -> usize {
+        read_usize(self.0 + names::ID)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_id(self, v: usize) {
+        write_usize(self.0 + names::ID, v)
+    }
+}
+
+impl Addr for Names {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for Names {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         core::fmt::LowerHex::fmt(&self.0, f)
     }

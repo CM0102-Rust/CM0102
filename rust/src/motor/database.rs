@@ -4979,18 +4979,18 @@ pub(crate) unsafe extern "C" fn club_reputation_for_staff(club: usize, person: u
     let division = comp.reputation();
     let high = (division as i32).wrapping_mul(500);
     if !league.is_null() && high > rep as i32 {
-        let e = exe::comp_stats_find_club_entry(league.comp_stats(), club);
-        if e == 0 {
+        let e = CompStatsClub(exe::comp_stats_find_club_entry(league.comp_stats(), club));
+        if e.is_null() {
             return 0;
         }
         let n = league.club_count() as i32;
         let weight = |k: i32| read_f64(0x9b59c0 + 8 * k.clamp(0, 19) as usize);
-        let mut position = read_u8(e + comp_stats_club::CURRENT_POSITION) as i32 - 1;
+        let mut position = e.current_position() as i32 - 1;
         if n != 0 && n != 20 {
             position = position * 20 / n;
         }
         let mut v = weight(position);
-        let games = read_u8(e + 4) as i32;
+        let games = read_u8(e.addr() + 4) as i32;
         if games < 20 {
             let before = (club.last_position() as i8) as i32;
             let w = if club.last_division() != comp {
