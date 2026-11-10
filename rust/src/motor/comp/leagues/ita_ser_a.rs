@@ -1671,7 +1671,7 @@ pub(crate) unsafe fn ita_ser_a_fill_league_table(this: League, n: i16, file: usi
             }
         }
         i = i.wrapping_add(1);
-        club = club.wrapping_add(0x245);
+        club = club.wrapping_add(club::SIZE);
     }
     Some(k as i8 as i16 == this.club_count())
 }

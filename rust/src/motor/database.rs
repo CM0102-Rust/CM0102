@@ -153,12 +153,12 @@ pub(crate) unsafe fn match_wrap_up_with(m: Engine, call: &mut dyn FnMut(usize, u
                 if person != 0 {
                     // the event’s player on one of the two sides
                     let achar = |side: usize| (0..20usize).find(|&k| {
-                        let p = m.addr() + engine::PLAYERS + (k + side * 20) * 0x1be;
+                        let p = m.player(side as i8, k).addr();
                         read_usize(p + match_player::STAFF) == person && read_i8(p + match_player::POSITION) >= 0
                     });
                     let found = achar(0).map(|k| (k, 0)).or_else(|| achar(1).map(|k| (k, 1)));
                     if let Some((k, side)) = found {
-                        let p = m.addr() + engine::PLAYERS + (k + side * 20) * 0x1be;
+                        let p = m.player(side as i8, k).addr();
                         let vale = if kind == 6 {
                             crate::comparison::branch("match_wrap_up type 6 event");
                             read_i8(p + match_player::YELLOW_CARDS) == 2 || read_i8(p + match_player::RED_CARDS) != 0
@@ -182,7 +182,7 @@ pub(crate) unsafe fn match_wrap_up_with(m: Engine, call: &mut dyn FnMut(usize, u
         let pt = fixture();
         let (meu, outro) = if side == 0 { (read_usize(pt + fixture::HOME_CLUB), read_usize(pt + fixture::AWAY_CLUB)) } else { (read_usize(pt + fixture::AWAY_CLUB), read_usize(pt + fixture::HOME_CLUB)) };
         for k in 0..20usize {
-            let p = m.addr() + engine::PLAYERS + (k + side * 20) * 0x1be;
+            let p = m.player(side as i8, k).addr();
             if k > 10 && read_i8(p + match_player::MINUTE_ON) == -1 {
                 continue;
             }
@@ -2881,7 +2881,7 @@ pub(crate) unsafe fn favourite_colleague_score(person: Staff, club: Club, o: Sta
     if contract.is_null() {
         return None;
     }
-    let rep = read_i16_as_i32(o.player().addr() + player_sheet::CURRENT_REPUTATION);
+    let rep = (o.player().current_reputation() as i32);
     if rep <= 0x109a || rep <= (club.reputation() as i32) - 0x2ee {
         return None;
     }
@@ -4069,7 +4069,7 @@ pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(person: usize, clu
         if contract.is_null() {
             continue;
         }
-        let rep = read_i16(o.player().addr() + player_sheet::CURRENT_REPUTATION) as i32;
+        let rep = o.player().current_reputation() as i32;
         if rep <= 0x109a || rep <= club.reputation() as i32 - 0x2ee {
             continue;
         }
@@ -7049,7 +7049,7 @@ pub(crate) unsafe extern "C" fn database_trim_senior_and_b_team_squads() {
     let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let rd = |a: usize| read_usize(a);
     let goalkeeper = |q: Staff| {
-        let j = PlayerSheet(read_usize(q.addr() + staff::PLAYER));
+        let j = PlayerSheet(q.player().addr());
         !j.is_null() && j.goalkeeper() >= 0xf
     };
     let mut club = read_usize(G_CLUB_TABLE);

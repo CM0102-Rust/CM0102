@@ -501,7 +501,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_collect_fixture_opponents(
     let home = game.addr() + fixture::HOME_CLUB;
     if read_usize(read_usize(home) + 0x53) == national_team.nation().addr() {
         if exe::club_is_national_team(national_team) != 0 {
-            cell = exe::database_get_national_u21_team(read_usize(game.away_club().addr() + club::NATION));
+            cell = exe::database_get_national_u21_team(game.away_club().nation().addr());
             por(&cell as *const usize as usize);
         } else {
             por(game.addr() + fixture::AWAY_CLUB);
@@ -744,7 +744,7 @@ pub(crate) unsafe fn is_squad_candidate(this: usize, nation: Nation, t: i8, data
                 return false;
             }
         } else if other_nation(c) && c.division().addr() != 0
-            && (read_i16(p.competition().addr() + competition::REPUTATION) as f64) < read_i16(c.division().addr() + competition::REPUTATION) as f64 * 0.7
+            && (p.competition().reputation() as f64) < c.division().reputation() as f64 * 0.7
         {
             // in the other competitions, a club from another nation whose league (+0x57) has +0x69 above the competition’s / 0.7
             return false;
@@ -1519,8 +1519,8 @@ pub(crate) unsafe extern "thiscall" fn select_squads_for_fixture(this: usize, p:
     }
     refresh_minor_squads(this, p, fora, reg);
     if !SELECT_SQUADS_DRY_RUN {
-        exe::national_teams_remove_duplicate_squad_entries(read_usize(p.home_club().addr() + club::NATION));
-        exe::national_teams_remove_duplicate_squad_entries(read_usize(p.away_club().addr() + club::NATION));
+        exe::national_teams_remove_duplicate_squad_entries(p.home_club().nation().addr());
+        exe::national_teams_remove_duplicate_squad_entries(p.away_club().nation().addr());
     }
 }
 
@@ -2172,7 +2172,7 @@ pub(crate) unsafe extern "thiscall" fn national_teams_can_change_squad(this: usi
             if msg != 0 {
                 let mut name = [0u8; 0x12c];
                 exe::database_format_staff_name(p, (name.as_mut_ptr()) as *mut u8 as usize, 0x12c, 1);
-                let other = Nation(read_usize(p.national_job().addr() + club::NATION));
+                let other = Nation(p.national_job().nation().addr());
                 let g = other.short_gender_name() as i8 as i32;
                 text(msg, 0xa5b460, g, g, name.as_ptr(), other.addr() + nation::SHORT_NAME);
             }

@@ -1263,7 +1263,7 @@ pub(crate) unsafe extern "C" fn compare_database_add_staff_to_club(club: usize, 
         return o(club, person, job, data, write, reduzir); // message box: original only
     }
     // writes only to the club (581 bytes) and the person (110); 0x600a50 only queries
-    let regions = [(club, 0x245), (person, 0x6e)];
+    let regions = [(club, club::SIZE), (person, staff::SIZE)];
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&regions, || o(club, person, job, data, write, reduzir),
         || database_add_staff_to_club(club, person, job, data, write, reduzir));
     SCOREBOARD.record(igual && r == n, || format!("database_add_staff_to_club({:x}, {:x}, {}, {:x}, {}, {}) original={} rust={} {:x?} x {:x?}",

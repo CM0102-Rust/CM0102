@@ -1317,7 +1317,7 @@ pub(crate) unsafe extern "thiscall" fn accept_transfer_bid(this: usize, slot: us
             exe::shortlist_manager_clear_bid_markers_for_player(this.shortlist_manager(), transfer_manager_club_by_id(o.buyer_club_id()), a2);
             let l = o.exchange_players();
             if !l.is_null() {
-                write_usize(l.addr() + llist::CURSOR, read_usize(l.addr() + llist::HEAD));
+                l.set_cursor(Llist::head(l));
                 loop {
                     let p = transfer_manager_llist_next(o.exchange_players());
                     if p == 0 {
@@ -1361,7 +1361,7 @@ pub(crate) unsafe extern "thiscall" fn accept_transfer_bid(this: usize, slot: us
     }
     if !o.exchange_players().is_null() {
         let l = o.exchange_players();
-        write_usize(l.addr() + llist::CURSOR, read_usize(l.addr() + llist::HEAD));
+        l.set_cursor(Llist::head(l));
         let mut p = transfer_manager_llist_next(o.exchange_players());
         while p != 0 {
             let person = transfer_manager_staff_by_id(read_usize(p));
@@ -1402,7 +1402,7 @@ pub(crate) unsafe extern "thiscall" fn accept_transfer_bid(this: usize, slot: us
         return;
     }
     let l = o.exchange_players();
-    write_usize(l.addr() + llist::CURSOR, read_usize(l.addr() + llist::HEAD));
+    l.set_cursor(Llist::head(l));
     loop {
         let p = transfer_manager_llist_next(o.exchange_players());
         if p == 0 {
@@ -4577,7 +4577,7 @@ pub(crate) unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o:
     if n >= -4000 && (p.professionalism() as i32) + (p.loyalty() as i32) >= 0xf {
         return;
     }
-    if read_i16(p.player().addr() + player_sheet::CURRENT_REPUTATION) <= 0xdac {
+    if p.player().current_reputation() <= 0xdac {
         return;
     }
     let value: unsafe extern "thiscall" fn(usize, usize, usize, u32, i32, u32) -> i32 = core::mem::transmute(FN_CONTRACT_MANAGER_CALC_PLAYER_VALUE);
@@ -4596,7 +4596,7 @@ pub(crate) unsafe extern "thiscall" fn unsettle_player_after_bid(this: usize, o:
     crate::comparison::branch("cpx_2 unsettled");
     exe::staff_contract_apply_event_flags(c2, 0x80, 0);
     let age = ((p.age() as i8) as i32);
-    if read_i16(p.player().addr() + player_sheet::CURRENT_REPUTATION) > 0x1482 && age > 0x12 && age < 0x20 && n < -8000 {
+    if p.player().current_reputation() > 0x1482 && age > 0x12 && age < 0x20 && n < -8000 {
         if exe::staff_contract_wants_to_leave(c2) != 0
             && read_u8(this.person_flags().wrapping_add(read_usize(p.addr()).wrapping_mul(8)) + 1) == 0
             && exe::awol_is_player_awol(read_usize(G_AWOL), p, 0) == 0
@@ -6216,7 +6216,7 @@ pub(crate) unsafe extern "thiscall" fn build_clause_offer_option(_this: usize, c
     *apelo = 0x32;
     let rep = (club.reputation() as u16) as i16;
     // the record’s reputation (+0xb) / 500, with the sign (the original’s magic multiplication)
-    let fama = || (read_u16(player.player().addr() + player_sheet::CURRENT_REPUTATION) as i16 as i32) / 500;
+    let fama = || ((player.player().current_reputation() as u16) as i16 as i32) / 500;
     if rep < 0xf && fama() - (rep as i32) > 2 {
         crate::comparison::branch("cps_4 percentage of the sale");
         let o = *out;
@@ -8402,7 +8402,7 @@ pub(crate) unsafe extern "thiscall" fn remove_offer(this: usize, offer: usize) {
     }
     if !offer.exchange_players().is_null() {
         let l = offer.exchange_players();
-        write_u32(l.addr() + llist::CURSOR, read_usize(l.addr() + llist::HEAD) as u32);
+        write_u32(l.addr() + llist::CURSOR, l.head() as u32);
         loop {
             let e = exe::llist_get_next(offer.exchange_players());
             if e == 0 {
@@ -8948,7 +8948,7 @@ pub(crate) unsafe extern "thiscall" fn get_fixture_rules_scope(_this: usize, fix
     let fixture = Fixture(fixture);
     let comp = fixture.competition();
     if read_usize(comp.addr()) == read_usize(KEY_CLUB_COMP_RESERVE) {
-        let n = Nation(read_usize(fixture.home_club().addr() + club::NATION));
+        let n = Nation(fixture.home_club().nation().addr());
         *nation = n.addr();
         *continent = if !n.is_null() { n.continent() } else { 0 };
         *kind = 1;
@@ -8962,7 +8962,7 @@ pub(crate) unsafe extern "thiscall" fn get_fixture_rules_scope(_this: usize, fix
     }
     let k = exe::key_nation_index_of_comp(comp) as i8;
     *nation = read_usize((0xb63d60isize + k as isize * 72) as usize);
-    *continent = read_usize(fixture.competition().addr() + competition::CONTINENT);
+    *continent = fixture.competition().continent();
     *kind = match k {
         0 | 1 => 4,
         3..=7 => 2,

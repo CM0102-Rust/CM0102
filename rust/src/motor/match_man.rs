@@ -17,6 +17,15 @@ use super::*;
 /// 100 voltas). A memoria de trabalho e a do jogo (0x945501/0x9452ca), na mesma ordem. Devolve 1, ou 0
 /// sem pessoas ou sem vagas.
 #[allow(clippy::too_many_arguments)]
+impl MatchManager {
+    /// Match player k (0..20) of the manager's side: the 20-player block at `match_manager::PLAYERS`, 0x1be bytes each.
+    ///
+    /// [pt] O jogador k (0..20) do lado do técnico: o bloco de 20 jogadores em `match_manager::PLAYERS`.
+    pub(crate) unsafe fn player(self, k: usize) -> MatchPlayer {
+        MatchPlayer(self.players().wrapping_add(k.wrapping_mul(MATCH_PLAYER_SIZE)))
+    }
+}
+
 pub(crate) unsafe extern "C" fn pick(
     persons: usize, a2: u32, codes: usize, a4: u32, a5: u32, out: usize, mode: u32, club: usize, staff: usize,
     a10: u32, _a11: u32, mut marks: usize, mut bytes: usize, a14: u32, mut curtos: usize,
@@ -1249,7 +1258,7 @@ pub(crate) unsafe fn place_in_slot_with(c: MatchManager, pos: u32, person: usize
     if person == 0 || !(0..=19).contains(&p) {
         return 0;
     }
-    let j = c.players() + 0x1be * p as usize;
+    let j = c.player(p as usize).addr();
     call(FN_MATCH_PLAYER_SETUP, j, [c.engine().addr() as u32, person as u32, (c.side() as u8) as u32, pos, extra]);
     1
 }
@@ -1299,10 +1308,10 @@ pub(crate) unsafe fn substitution_order_ends(a: MatchPlayer, b: MatchPlayer) -> 
     if b.position() == -2 {
         return Some(1);
     }
-    if exe::match_player_get_position(a) == 1 && read_i8(a.player().addr() + player_sheet::GOALKEEPER) < 20 {
+    if exe::match_player_get_position(a) == 1 && a.player().goalkeeper() < 20 {
         return Some(-1);
     }
-    if exe::match_player_get_position(b) == 1 && read_i8(b.player().addr() + player_sheet::GOALKEEPER) < 20 {
+    if exe::match_player_get_position(b) == 1 && b.player().goalkeeper() < 20 {
         return Some(1);
     }
     None
@@ -1370,7 +1379,7 @@ pub(crate) unsafe extern "thiscall" fn starters(c: usize) -> u8 {
 ///
 /// [pt] `titulares` com a 0x6e0d00 (poe na vaga) injetada.
 pub(crate) unsafe fn starters_with(c: MatchManager, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
-    let total = || (read_u8(c.fixture().addr() + fixture::SQUAD_RULES) & 0xf) as i32 + 11;
+    let total = || ((c.fixture().squad_rules() as u8) & 0xf) as i32 + 11;
     let mut n = 0u8;
     let mut k = 0i8;
     while (k as i32) < total() {
@@ -2156,7 +2165,7 @@ pub(crate) unsafe fn substitute_with(c: MatchManager, goalkeeper: u8, call: &mut
     let mut list = [0usize; 20];
     let mut n = 0usize;
     for k in 0..20 {
-        let j = c.players() + k * 0x1be;
+        let j = c.player(k).addr();
         let e = read_i8(j + match_player::POSITION);
         if e >= 0 || (e == -2 && read_i8(j + match_player::SUBSTITUTED_OFF) == 0) {
             list[n] = j;
@@ -2432,7 +2441,7 @@ pub(crate) unsafe fn rebuild_team_with(c: MatchManager, call: &mut dyn FnMut(usi
     let mut sheets = [0usize; 20];
     let mut n = 0usize;
     for k in 0..20 {
-        let j = c.players() + k * 0x1be;
+        let j = c.player(k).addr();
         if read_i8(j + match_player::POSITION) >= 0 {
             sheets[n] = read_usize(j + match_player::STAFF);
             n += 1;
@@ -2452,7 +2461,7 @@ pub(crate) unsafe fn rebuild_team_with(c: MatchManager, call: &mut dyn FnMut(usi
     let mut bpos = [0u8; 20];
     let mut n = 0usize;
     for k in 0..20 {
-        let j = c.players() + k * 0x1be;
+        let j = c.player(k).addr();
         if read_i8(j + match_player::POSITION) < 0 || exe::match_player_get_position(j) == 1 {
             continue;
         }
@@ -3675,7 +3684,7 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
     if flags & 0x10 != 0 {
         count += 1;
         let a = f.home_reputation() as f64;
-        let b = read_i16(p.nation().addr() + nation::REPUTATION) as f64;
+        let b = p.nation().reputation() as f64;
         sum += ftol(a / ((read_f64(rdata::F64_1_8) - b * read_f64(rdata::F64_0_0001)) * read_f64(rdata::F64_50)));
         if cut(sum, count) {
             return -10000;

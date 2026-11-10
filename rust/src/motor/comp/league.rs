@@ -211,7 +211,7 @@ pub(crate) unsafe extern "thiscall" fn set_club_season_expectations(this: usize)
 /// Moves the club down to the division (keeping the previous one), applies the relegation clauses and makes the human
 /// manager leave when the division is not played.
 ///
-/// Ret 0xc; this is not read: `League::relegate_club_to_division(club, division, _)`: the club's competition (+0x57)
+/// Ret 0xc; this is not read: `club.relegate_club_to_division(division, _)`: the club's competition (+0x57)
 /// becomes the division and the previous one goes to +0x5b; the relegation clauses (`trigger_relegation_clauses` push old; push club; mov
 /// ecx, `[0xae1050]` -> thiscall, ret 8); if the division is not played (no competition table `[0xadadfc]`, no division
 /// or no competition with its id) and the club has a human manager who decides (`exe::human_manager_is_human_club` push 0; push 0; push 1; push
@@ -219,8 +219,7 @@ pub(crate) unsafe extern "thiscall" fn set_club_season_expectations(this: usize)
 /// `[0xb67a44]` -> thiscall, ret 0x10).
 /// Original: `League::relegate_club_to_division` (0x6831a0, league.cpp, thiscall, ret 0xc).
 ///
-/// [pt] { 0x6831a0 } (thiscall, ret 0xc, league.cpp; this não é lido): `League::relegate_club_to_division(clube, divisão,
-/// _)`: a competição do clube (+0x57) vira a divisão e a anterior vai para +0x5b; as cláusulas de rebaixamento (0x4cd030
+/// [pt] { 0x6831a0 } (thiscall, ret 0xc, league.cpp; this não é lido): `clube.relegate_club_to_division(divisão, /// _)`: a competição do clube (+0x57) vira a divisão e a anterior vai para +0x5b; as cláusulas de rebaixamento (0x4cd030
 /// push antiga; push clube; mov ecx, [0xae1050] -> thiscall, ret 8); se a divisão não é jogada (sem a tabela das
 /// competições [0xadadfc], sem divisão ou sem a competição do id dela) e o clube tem técnico humano que decide
 /// (0x600a50 push 0; push 0; push 1; push 1; push clube; add esp, 0x14 -> cdecl), o técnico sai (0x69b790 push 0; push
@@ -278,7 +277,7 @@ pub(crate) unsafe fn tv_date_entry(this: League, data: usize) -> Option<usize> {
 /// and time slot of the slot, with the news, the stadium and the calendar.
 ///
 /// Ret 4; SEH frame with no destructor on the normal path (the local dates and list):
-/// `League::move_fixtures_for_tv(date)`, from the league day (`league_update_for_date`) and from building the calendar (0x683e30).
+/// `date.move_fixtures_for_tv()`, from the league day (`league_update_for_date`) and from building the calendar (0x683e30).
 /// Through the date's entry (tv_date_entry), the league matches on the entry's day and time slot (+4) go to a local
 /// list (`exe::new_llist`; `collect_comp_fixtures_on_day`: push list; push league +0x44; push -1; push id; push slot; push day; push year; mov ecx,
 /// `[0xae2a58]` -> thiscall, ret 0x1c). With matches: the entry's slots (7 bytes from +5, up to the first with +0xb =
@@ -295,7 +294,7 @@ pub(crate) unsafe fn tv_date_entry(this: League, data: usize) -> Option<usize> {
 /// Original: `League::move_fixtures_for_tv` (0x685640, league.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x685640 } (thiscall, ret 4, league.cpp, quadro SEH sem destrutor no caminho normal: as datas e a lista locais):
-/// `League::move_fixtures_for_tv(data)`, do dia da liga (0x6847c0) e da montagem do calendário (0x683e30). Pela
+/// `data.move_fixtures_for_tv()`, do dia da liga (0x6847c0) e da montagem do calendário (0x683e30). Pela
 /// entrada da data (tv_date_entry), os jogos da liga no dia e fatia da entrada (+4) vão a uma lista local (0x68d020;
 /// 0x5abd90: push lista; push liga +0x44; push -1; push id; push fatia; push dia; push ano; mov ecx, [0xae2a58] ->
 /// thiscall, ret 0x1c). Com jogos: as vagas da entrada (7 bytes a partir de +5, até a primeira com +0xb = 0xff) são
@@ -531,7 +530,7 @@ pub(crate) unsafe extern "thiscall" fn send_group_draw_news(this: usize) {
 /// Sends news 0xd with the first three fixtures (date, opponent, venue) to each human-managed club not yet told, and
 /// does the same in the following stages.
 ///
-/// Ret 4; SEH frame with no destructor on the normal path (the local lists): `League::send_fixture_list_news(list)`,
+/// Ret 4; SEH frame with no destructor on the normal path (the local lists): `list.send_fixture_list_news()`,
 /// from creating the calendar (0x5cd1e0) and from the league day in its year. Uses the local list (`exe::new_llist`) if the
 /// league is a first stage (+0x44 = 0xff) or there is no list. With the competition counting (`exe::comp_util_is_league_division`: push id; add
 /// esp, 4 -> cdecl) and a first stage: the date of the first entry of table `[+0xba]` minus 5 days (0x54c8e0,
@@ -545,7 +544,7 @@ pub(crate) unsafe extern "thiscall" fn send_group_draw_news(this: usize) {
 /// Original: `League::send_fixture_list_news` (0x683ee0, league.cpp, thiscall, ret 4).
 ///
 /// [pt] { 0x683ee0 } (thiscall, ret 4, league.cpp, quadro SEH sem destrutor no caminho normal: as listas locais):
-/// `League::send_fixture_list_news(lista)`, da criação do calendário (0x5cd1e0) e do dia da liga no ano dela. Usa a
+/// `lista.send_fixture_list_news()`, da criação do calendário (0x5cd1e0) e do dia da liga no ano dela. Usa a
 /// lista local (0x68d020) se a liga é de primeira fase (+0x44 = 0xff) ou sem lista. Com a competição contando
 /// (0x4b0700: push id; add esp, 4 -> cdecl) e de primeira fase: a data da primeira entrada da tabela [+0xba] menos 5 dias
 /// (0x54c8e0, 0x417c10); para cada clube de técnico humano (times de 0x3b bytes em [+0xb1]) que não esteja na lista (ids
@@ -673,7 +672,7 @@ pub(crate) unsafe fn same_date(a: usize, b: usize) -> bool {
 /// stage, history, records), the TV fixtures four weeks ahead, the registration deadline 5/20/14 days before the first
 /// date and the +0xd1 date.
 ///
-/// Ret 8; SEH frame with no destructor on the normal path (the local dates): `League::update_for_date(date, full)`, the
+/// Ret 8; SEH frame with no destructor on the normal path (the local dates): `date.update_for_date(full)`, the
 /// day of each league (through the competitions, 46522 calls up to 2002-06-01). League stopped (+0xb5) or without clubs
 /// (+0x45 = 0): 0. Otherwise (returns 1, in the byte):
 ///
@@ -704,7 +703,7 @@ pub(crate) unsafe fn same_date(a: usize, b: usize) -> bool {
 /// Original: `League::update_for_date` (0x6847c0, league.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x6847c0 } (thiscall, ret 8, league.cpp, quadro SEH sem destrutor no caminho normal: as datas locais):
-/// `League::update_for_date(data, completo)`, o dia de cada liga (pelas competições, 46522 chamadas até 2002-06-01).
+/// `data.update_for_date(completo)`, o dia de cada liga (pelas competições, 46522 chamadas até 2002-06-01).
 /// Liga parada (+0xb5) ou sem clubes (+0x45 = 0): 0. Senão (devolve 1, no byte):
 /// - +0xa7 = -1 com times (+0x3e) > 0: +0xa7 = (times − 1) · turnos (+0x3c), na palavra;
 /// - na primeira fase (+0x44 = 0xff) com tabela (+0xb1, +0x11 = 0), completo e a data nova (≠ +0xd1): no dia seguinte ao
@@ -1736,13 +1735,12 @@ pub(crate) unsafe extern "thiscall" fn pay_prize_money(league: usize) {
 /// Updates the staff records by status: 5 the title (`add_league_champions_record`), 0 promotion (`add_promotion_record`, weight 100), 3 relegation
 /// (`add_relegation_record`); returns 0.
 ///
-/// Ret 0x18: `League::update_staff_records_for_status(club, status, stage, out, _, _)` (virtual +0x44 of the league):
+/// Ret 0x18: `club.update_staff_records_for_status(status, stage, out, _, _)` (virtual +0x44 of the league):
 /// status 5, the title (Staff_Records `add_league_champions_record` of `[0xdd7f00]` with the club and competition +4); 0, promotion
 /// (`add_promotion_record` with weight 100); 3, relegation (`add_relegation_record`). Returns 0 and does not write the output.
 /// Original: `League::update_staff_records_for_status` (0x686940, league.cpp, thiscall, ret 0x18).
 ///
-/// [pt] { 0x686940 } (thiscall, ret 0x18, league.cpp): `League::update_staff_records_for_status(clube, situação, fase,
-/// saída, _, _)` (a virtual +0x44 da liga): situação 5, o título (Staff_Records 0x868c50 de [0xdd7f00] com o clube e
+/// [pt] { 0x686940 } (thiscall, ret 0x18, league.cpp): `clube.update_staff_records_for_status(situação, fase, /// saída, _, _)` (a virtual +0x44 da liga): situação 5, o título (Staff_Records 0x868c50 de [0xdd7f00] com o clube e
 /// a competição +4); 0, o acesso (0x869480 com peso 100); 3, o rebaixamento (0x86a1c0). Devolve 0 e não grava a saída.
 pub(crate) unsafe extern "thiscall" fn league_update_staff_records_for_status(league: usize, club: usize, status: u32, stage: u32, out: usize, _a: u32, _b: u32) -> u32 {
     let records = read_usize(G_STAFF_RECORDS);
@@ -1772,7 +1770,7 @@ pub(crate) unsafe extern "thiscall" fn league_update_staff_records_for_status(le
 /// competition, stage, status, round, what the virtual returned), delivered by scope or, by status, to the nation, the
 /// division (and the promotion or relegation one) or the club's manager.
 ///
-/// Ret 0x14; SEH frame with no destructor: `League::announce_team_status(club, status, stage, _, _)`: friendly
+/// Ret 0x14; SEH frame with no destructor: `club.announce_team_status(status, stage, _, _)`: friendly
 /// (`exe::friendly_is_friendly_competition`), 0. Virtual +0x44 of the competition (`[0xadadfc]` by the id of +4) with the club, the status, the stage
 /// and the output (0xff); −1 from it: 0. The round (+0x3a; with stages, +0x44 = 0xff, and stage ≠ 0xff: that of the
 /// stage). News 0xc (local): 0 the club, 1 the competition, 2 the stage, 3 the status, 4 the round, 5 what the virtual
@@ -1782,8 +1780,7 @@ pub(crate) unsafe extern "thiscall" fn league_update_staff_records_for_status(le
 /// division; 6, 7 and 0xfe, to the club's manager (`send_to_club_manager`). Returns 1.
 /// Original: `League::announce_team_status` (0x686670, league.cpp, thiscall, ret 0x14).
 ///
-/// [pt] { 0x686670 } (thiscall, ret 0x14, league.cpp, quadro SEH sem destrutor): `League::announce_team_status(clube,
-/// situação, fase, _, _)`: amistoso (0x5c6710), 0. A virtual +0x44 da competição ([0xadadfc] pelo id de +4) com o
+/// [pt] { 0x686670 } (thiscall, ret 0x14, league.cpp, quadro SEH sem destrutor): `clube.announce_team_status(/// situação, fase, _, _)`: amistoso (0x5c6710), 0. A virtual +0x44 da competição ([0xadadfc] pelo id de +4) com o
 /// clube, a situação, a fase e a saída (0xff); −1 dela: 0. A rodada (+0x3a; com fases, +0x44 = 0xff, e fase ≠ 0xff:
 /// a da fase). A notícia 0xc (local): 0 o clube, 1 a competição, 2 a fase, 3 a situação, 4 a rodada, 5 o que a
 /// virtual devolveu. Saída ≠ 0xff: a entrega pelo alcance (0x786090 com a nação do clube e o continente). Senão pela
@@ -1879,7 +1876,7 @@ pub(crate) static mut LEAGUE_ADD_RESULT_DRY_RUN: bool = false;
 /// Adds a result to the league: stamps today's date on the league; a stage fixture goes to its stage; otherwise adds
 /// the fixture to the table (`apply_result_to_table`) and to the competition stats (`exe::comp_stats_record_match_result`) and returns 1.
 ///
-/// Ret 8: `League::add_result(fixture, match)`: stores the day's date in +0xc9 (`exe::date_operator_3d` of `[0xae2c90]`); league with
+/// Ret 8: `fixture.add_result(match)`: stores the day's date in +0xc9 (`exe::date_operator_3d` of `[0xae2c90]`); league with
 /// stages (+0x44 = 0xff) and a fixture of a stage (+0x42 ≠ 0xff): the stage (`[+0xc]` + 4 × stage, up to +0x30)
 /// receives the fixture through virtual +4 and what it returns is returned; stage out of range: the boxes and 0.
 /// Fixture of another stage (+0x42 ≠ +0x44, which is not 0xfe): 0. Otherwise adds the fixture to the table (`apply_result_to_table` on
@@ -1888,7 +1885,7 @@ pub(crate) static mut LEAGUE_ADD_RESULT_DRY_RUN: bool = false;
 /// −1.
 /// Original: `League::add_result` (0x685d30, league.cpp, thiscall, ret 8).
 ///
-/// [pt] { 0x685d30 } (thiscall, ret 8, league.cpp): `League::add_result(partida, jogo)`: grava a data do dia em +0xc9
+/// [pt] { 0x685d30 } (thiscall, ret 8, league.cpp): `partida.add_result(jogo)`: grava a data do dia em +0xc9
 /// (0x417c10 de [0xae2c90]); liga com fases (+0x44 = 0xff) e partida de uma fase (+0x42 ≠ 0xff): a fase
 /// ([+0xc] + 4 × fase, até +0x30) recebe a partida pela virtual +4 e o que ela devolve sai; fase fora da faixa: as
 /// caixas e 0. Partida de outra fase (+0x42 ≠ +0x44, que não é 0xfe): 0. Senão soma a partida na tabela (0x685f60 na
@@ -2086,7 +2083,7 @@ pub(crate) unsafe fn apply_form_factor(this: League, e: usize, factor: f64) -> i
 /// them and hands the club's positions in normal, better (× 1.5) and worse (× 0.444) form to virtual +0x68.
 ///
 /// Ret 4; virtual +0x84 of the leagues, called only by Comp_Stats `exe::comp_stats_get_club_projected_positions`, which the board uses in the weekly
-/// confidence 0x697c40 and in the reason for the manager leaving `get_departure_reason`: `League::update_projected_positions(club)`:
+/// confidence 0x697c40 and in the reason for the manager leaving `get_departure_reason`: `club.update_projected_positions()`:
 /// with the club in the table (+0xb1, 0x3b bytes, count +0x3e: +0 the club, +0x11 the matches, +0x19 the points),
 /// builds in a block (`exe::crt_operator_new`) one 0xe-byte entry per row with the points per match; in the first third of the season
 /// (club's matches × 3 < +0xa7), replaces them with a scale by reputation (0.83 × +0xc2 for the first down to 0.23 ×
@@ -2098,7 +2095,7 @@ pub(crate) unsafe fn apply_form_factor(this: League, e: usize, factor: f64) -> i
 ///
 /// [pt] { 0x68ac40 } (thiscall, ret 4, league.cpp; virtual +0x84 das ligas, chamada só por Comp_Stats 0x4ae300, que a
 /// diretoria usa na confiança semanal 0x697c40 e no motivo da saída do técnico 0x69b350):
-/// `League::update_projected_positions(clube)`: com o clube na tabela (+0xb1, 0x3b bytes, conta +0x3e: +0 o clube,
+/// `clube.update_projected_positions()`: com o clube na tabela (+0xb1, 0x3b bytes, conta +0x3e: +0 o clube,
 /// +0x11 os jogos, +0x19 os pontos), monta num bloco (0x944cf1) uma entrada de 0xe bytes por linha com os pontos por
 /// jogo; no primeiro terço da temporada (jogos do clube × 3 < +0xa7), troca-os por uma escala pela reputação
 /// (0,83 × +0xc2 do primeiro ao 0,23 × +0xc2 abaixo do último). Projeta os pontos no fim da temporada, ordena e acha a
@@ -2210,7 +2207,7 @@ pub(crate) unsafe fn uses_head_to_head_rule(this: League) -> bool {
 /// Puts the club in table row i: totals cleared, status 0xff, flag, total rounds (+0xa7) if still −1, position history
 /// and, under rule 4, the head-to-head entries (the last row fills every row's opponents).
 ///
-/// Ret 0x10: `League::init_table_row(i, club, flag, rows)`: puts the club in row `i` (char) of table `rows` (null: the
+/// Ret 0x10: `i.init_table_row(club, flag, rows)`: puts the club in row `i` (char) of table `rows` (null: the
 /// league's, +0xb1): a club with status +0x64 = 3 changes to 2; total rounds +0xa7 still −1 becomes (clubs +0x3e − 1) ×
 /// legs +0x3c (more than 50 clubs: box and continues); the row gets the club, position `i`, the three totals blocks
 /// zeroed, the flag (+0x38), status 0xff, 1 in +0x39 and the clubs (+0x3a); with legs, the position history (+9, +0xa7
@@ -2218,7 +2215,7 @@ pub(crate) unsafe fn uses_head_to_head_rule(this: League) -> bool {
 /// the last row with head-to-head, each row receives the opponents in table order.
 /// Original: `League::init_table_row` (0x687430, league.cpp, thiscall, ret 0x10).
 ///
-/// [pt] { 0x687430 } (thiscall, ret 0x10, league.cpp): `League::init_table_row(i, clube, marca, linhas)`: põe o clube na
+/// [pt] { 0x687430 } (thiscall, ret 0x10, league.cpp): `i.init_table_row(clube, marca, linhas)`: põe o clube na
 /// linha `i` (char) da tabela `linhas` (nula: a da liga, +0xb1): o clube com situação +0x64 = 3 passa a 2; o total de
 /// rodadas +0xa7 ainda −1 vira (clubes +0x3e − 1) × turnos +0x3c (mais de 50 clubes: caixa e segue); a linha recebe o
 /// clube, a posição `i`, os três blocos de totais zerados, a marca (+0x38), situação 0xff, 1 em +0x39 e os clubes
@@ -2298,7 +2295,7 @@ pub(crate) unsafe extern "thiscall" fn init_table_row(this: usize, i: u32, club:
 /// a new array with the table clubs and the count; without memory, error box and count 0
 /// Original: `League::get_club_array` (0x687a20, league.cpp, thiscall, ret 8).
 ///
-/// [pt] { 0x687a20 } (thiscall, ret 8, league.cpp): `League::get_club_array(saida, n)`: um vetor novo (malloc 0x944e46) com
+/// [pt] { 0x687a20 } (thiscall, ret 8, league.cpp): `saida.get_club_array(n)`: um vetor novo (malloc 0x944e46) com
 /// os clubes das linhas da tabela (+0xb1) em `*saida` e a conta (+0x3e) em `*n`; sem memória, caixa e `*n` = 0.
 pub(crate) unsafe extern "thiscall" fn league_get_club_array(this: usize, out: *mut usize, n: *mut i16) {
     let this = League(this);
@@ -2357,7 +2354,7 @@ pub(crate) const RESULT_TABLE_ROW_SIZE: usize = 0x3b;
 /// win/draw/loss, by extra time and penalties, marking +0x3d/+0x3e), the win points by the +0x90 virtual and the draw
 /// points +0xc3; redoes the totals, returns both rows' points and adds the head-to-head (`update_head_to_head`).
 ///
-/// Ret 0x18: `League::apply_result_to_table(fixture, table, n, mark, home_pts*, away_pts*)`: finds the rows of the home
+/// Ret 0x18: `fixture.apply_result_to_table(table, n, mark, home_pts*, away_pts*)`: finds the rows of the home
 /// side (+0x1c) and the away side (+0x20) among the `n` (short) of the table (stops at the first club that is neither
 /// after finding both) and adds the game: matches (+0x1f/+0x2d), goals (+0x23/+0x25 and +0x31/+0x33: the score of
 /// +0x47/+0x48 when ≠ 0xff, otherwise that of +0x43/+0x44). The result from score +0x43/+0x44; level: by extra time
@@ -2369,8 +2366,7 @@ pub(crate) const RESULT_TABLE_ROW_SIZE: usize = 0x3b;
 /// SEH, no random draw, no box, all locals written before being read.
 /// Original: `League::apply_result_to_table` (0x685f60, league.cpp, thiscall, ret 0x18).
 ///
-/// [pt] { 0x685f60 } (thiscall, ret 0x18, league.cpp): `League::apply_result_to_table(partida, tabela, n, marcar,
-/// pts_casa*, pts_fora*)`: acha as linhas do mandante (+0x1c) e do visitante (+0x20) entre as `n` (curto) da tabela
+/// [pt] { 0x685f60 } (thiscall, ret 0x18, league.cpp): `partida.apply_result_to_table(tabela, n, marcar, /// pts_casa*, pts_fora*)`: acha as linhas do mandante (+0x1c) e do visitante (+0x20) entre as `n` (curto) da tabela
 /// (para no primeiro clube que não é nenhum dos dois depois de achar ambos) e soma o jogo: jogos (+0x1f/+0x2d), gols
 /// (+0x23/+0x25 e +0x31/+0x33: o placar de +0x47/+0x48 quando ≠ 0xff, senão o de +0x43/+0x44). O resultado pelo placar
 /// +0x43/+0x44; empatado: pela prorrogação (+0x38 bit 2, +0x47/+0x48; `marcar` grava 3 em +0x3d/+0x3e) e pelos pênaltis
@@ -2564,13 +2560,13 @@ pub(crate) unsafe fn result_update_regions(p: Fixture, table: usize, n: u32, pts
 /// Returns the points for a result: the win points (+0xc2) to the winner, 0 to the loser; when level, by extra time
 /// (+0xab bit 2), by penalties (bits 0x21: the draw points +0xc3 to the winner) or the draw points.
 ///
-/// Ret 8: `League::points_for_result(club, fixture)`: the win points (+0xc2) if the club won (home side +0x1c with
+/// Ret 8: `club.points_for_result(fixture)`: the win points (+0xc2) if the club won (home side +0x1c with
 /// +0x43 > +0x44, away side +0x20 with fewer), otherwise 0; level: by extra time (+0xab bit 2, +0x47/+0x48, the win
 /// points), by penalties (bits 0x21, +0x49/+0x4a: the draw points +0xc3 to the winner, 0 to the loser) or the draw
 /// points. Only al is written: the 3 high bytes of eax are those of the fixture.
 /// Original: `League::points_for_result` (0x68aad0, league.cpp, thiscall, ret 8).
 ///
-/// [pt] { 0x68aad0 } (thiscall, ret 8, league.cpp): `League::points_for_result(clube, partida)`: os pontos de vitória
+/// [pt] { 0x68aad0 } (thiscall, ret 8, league.cpp): `clube.points_for_result(partida)`: os pontos de vitória
 /// (+0xc2) se o clube venceu (mandante +0x1c com +0x43 > +0x44, visitante +0x20 com menos), senão 0; empatado: pela
 /// prorrogação (+0xab bit 2, +0x47/+0x48, os de vitória), pelos pênaltis (bits 0x21, +0x49/+0x4a: os de empate +0xc3
 /// a quem venceu, 0 a quem perdeu) ou os de empate. Só o al é escrito: os 3 bytes altos do eax são os da partida.
@@ -2669,7 +2665,7 @@ pub(crate) unsafe extern "C" fn league_compare_dates(a: usize, b: usize) -> i32 
 /// the club row in the given rows (null: the league table), or 0
 /// Original: `League::find_club_row` (0x68ab70, league.cpp, thiscall, ret 8).
 ///
-/// [pt] { 0x68ab70 } (thiscall, ret 8, league.cpp): `League::find_club_row(clube, linhas)`: a linha (0x3b bytes) do
+/// [pt] { 0x68ab70 } (thiscall, ret 8, league.cpp): `clube.find_club_row(linhas)`: a linha (0x3b bytes) do
 /// clube entre as +0x3e (curto) de `linhas` (nula: a tabela da liga, +0xb1), ou 0.
 pub(crate) unsafe extern "thiscall" fn find_club_row(league: usize, club: usize, rows: usize) -> usize {
     let league = League(league);
@@ -2696,7 +2692,7 @@ compare_value!(compare_find_club_row, find_club_row, IDX_FIND_CLUB_ROW, (clube: 
 /// 1 when the club has a row in the league table
 /// Original: `League::contains_club` (0x68abd0, league.cpp, thiscall, ret 4).
 ///
-/// [pt] { 0x68abd0 } (thiscall, ret 4, league.cpp; virtual +0x80 das ligas): `League::contains_club(clube)`: 1 se o
+/// [pt] { 0x68abd0 } (thiscall, ret 4, league.cpp; virtual +0x80 das ligas): `clube.contains_club()`: 1 se o
 /// clube tem linha na tabela da liga (+0xb1, +0x3e linhas; a linha no endereço 0 conta como não), senão 0.
 pub(crate) unsafe extern "thiscall" fn contains_club(league: usize, club: usize) -> u32 {
     let league = League(league);
@@ -2733,7 +2729,7 @@ pub(crate) const LEAGUE_TABLE_ROW_SIZE: usize = 0x3b;
 /// sorts by head-to-head (`league_compare_table_rows_h2h`) and bubbles the ties; stores the position (+4) and the position history (+9);
 /// returns 1.
 ///
-/// `League::sort_table(rows)`: sorts the table (`rows` null: the league's, +0xb1). First fixes total rounds +0xa7 (−1:
+/// `rows.sort_table()`: sorts the table (`rows` null: the league's, +0xb1). First fixes total rounds +0xa7 (−1:
 /// (+0x3e − 1) × +0x3c, with clubs and +0x45). Rule 6 (+0xc5, without column +0xad) only sorts (qsort `exe::crt_qsort` with
 /// `league_compare_table_rows`); rule 4 with head-to-head builds the mini table (`build_h2h_table`) and, being the first rule, sorts with `league_compare_table_rows_h2h`
 /// and runs a bubble pass over the league rows (+0xb1) while there are swaps: a tie on points (or on the own comparison
@@ -2742,7 +2738,7 @@ pub(crate) const LEAGUE_TABLE_ROW_SIZE: usize = 0x3b;
 /// in `[0xb67a00]`. Returns 1. No SEH, no random draw.
 /// Original: `League::sort_table` (0x6827d0, league.cpp, thiscall).
 ///
-/// [pt] { 0x6827d0 } (thiscall, league.cpp): `League::sort_table(linhas)`: ordena a tabela (`linhas` nula: a da liga,
+/// [pt] { 0x6827d0 } (thiscall, league.cpp): `linhas.sort_table()`: ordena a tabela (`linhas` nula: a da liga,
 /// +0xb1). Antes acerta o total de rodadas +0xa7 (−1: (+0x3e − 1) × +0x3c, com clubes e +0x45). A regra 6 (+0xc5,
 /// sem coluna +0xad) só ordena (qsort 0x945333 com 0x683210); a regra 4 com confrontos monta a minitabela
 /// (0x682b30) e, sendo a primeira regra, ordena com 0x683410 e passa bolha nas linhas da liga (+0xb1) enquanto
@@ -2916,7 +2912,7 @@ pub(crate) unsafe fn sort_regions(league: League, rows: usize) -> Vec<(usize, us
 /// Builds the head-to-head mini table of the clubs level on points with their summed head-to-head results, sorted by
 /// `league_compare_h2h_rows`; the position (+4) starts at the club count and drops at each separated pair.
 ///
-/// `League::build_h2h_table(rows)` (unnamed in the community map): a mini table (calloc `exe::crt_calloc` of +0x3e rows) with
+/// `rows.build_h2h_table()` (unnamed in the community map): a mini table (calloc `exe::crt_calloc` of +0x3e rows) with
 /// the club of each row and, for each other club with the same points (+0x19), the sum of the head-to-head against it
 /// (entry of +5: bytes +4..+7 into +0x11..+0x14, words +8/+0xa/+0xc into +0x15/+0x17/+0x19); sorts with `league_compare_h2h_rows` and
 /// writes in +4 of each row the position, which starts at the number of clubs and drops at each pair of the mini table
@@ -2924,7 +2920,7 @@ pub(crate) unsafe fn sort_regions(league: League, rows: usize) -> Vec<(usize, us
 /// TapeCall through `sort_table` under rule 4.
 /// Original: `League::build_h2h_table` (0x682b30, league.cpp, thiscall).
 ///
-/// [pt] { 0x682b30 } (thiscall, league.cpp): `League::build_h2h_table(linhas)` (sem nome no mapa da comunidade): uma
+/// [pt] { 0x682b30 } (thiscall, league.cpp): `linhas.build_h2h_table()` (sem nome no mapa da comunidade): uma
 /// minitabela (calloc 0x945501 de +0x3e linhas) com o clube de cada linha e, para cada outro clube com os mesmos
 /// pontos (+0x19), a soma do confronto direto contra ele (entrada de +5: bytes +4..+7 em +0x11..+0x14, palavras
 /// +8/+0xa/+0xc em +0x15/+0x17/+0x19); ordena com 0x6834f0 e grava em +4 de cada linha a posição, que começa no
@@ -3006,12 +3002,12 @@ pub(crate) unsafe extern "thiscall" fn build_h2h_table(league: usize, rows: usiz
 
 /// Frees the +5 and +9 row buffers and the table (null: the league's, then clears +0x3e and +0xb1).
 ///
-/// `League::free_table(table)`: a null `table` = the league's (+0xb1). With clubs (+0x3e ≥ 1) and a table: frees
+/// `table.free_table()`: a null `table` = the league's (+0xb1). With clubs (+0x3e ≥ 1) and a table: frees
 /// (`exe::crt_free`) the +5 vectors of each row (if the first row's is not null), then the +9 ones (likewise) and the table;
 /// if it is the league's, zeroes +0x3e and +0xb1. No SEH, no random draw.
 /// Original: `League::free_table` (0x687970, league.cpp, thiscall).
 ///
-/// [pt] { 0x687970 } (thiscall, league.cpp): `League::free_table(tabela)`: `tabela` nula = a da liga (+0xb1). Com clubes
+/// [pt] { 0x687970 } (thiscall, league.cpp): `tabela.free_table()`: `tabela` nula = a da liga (+0xb1). Com clubes
 /// (+0x3e ≥ 1) e tabela: solta (0x9452ca) os vetores +5 de cada linha (se o da primeira não é nulo), depois os +9
 /// (idem) e a tabela; sendo a da liga, zera +0x3e e +0xb1. Sem SEH, sem sorteio.
 pub(crate) unsafe extern "thiscall" fn free_table(league: usize, table: usize) {
@@ -3046,7 +3042,7 @@ pub(crate) unsafe extern "thiscall" fn free_table(league: usize, table: usize) {
 /// Returns 1 when every club has played the +0xa7 rounds (and the stages, if asked); at the end of the league, the
 /// records (`add_league_finish_records`), the prize money (`pay_prize_money`), the notice (+0x94) and +0xdd.
 ///
-/// `League::check_complete(stages, notify)`: 0 without a table, closed (+0xb5) or without +0x45. Outside the single
+/// `stages.check_complete(notify)`: 0 without a table, closed (+0xb5) or without +0x45. Outside the single
 /// stage (+0x44 ≠ 0xff) already complete (+0xdd): 1. Not complete: fixes total rounds +0xa7 (−1) and, if some club has
 /// not yet played them all (+0x11 < +0xa7), 0; otherwise, in league divisions (`exe::comp_util_is_league_division`) with +0xa9 > 8 and without
 /// +0xe6, the end-of-league records (`add_league_finish_records`), and without +0xe6 the prizes (`pay_prize_money`). With `stages` = 1 in the
@@ -3054,7 +3050,7 @@ pub(crate) unsafe extern "thiscall" fn free_table(league: usize, table: usize) {
 /// otherwise 0. Marks +0xdd (before that, with `notify`, virtual +0x94) and returns 1. No SEH, no random draw.
 /// Original: `League::check_complete` (0x689ad0, league.cpp, thiscall).
 ///
-/// [pt] { 0x689ad0 } (thiscall, league.cpp): `League::check_complete(fases, avisar)`: 0 sem tabela, encerrada (+0xb5) ou
+/// [pt] { 0x689ad0 } (thiscall, league.cpp): `fases.check_complete(avisar)`: 0 sem tabela, encerrada (+0xb5) ou
 /// sem +0x45. Fora da fase única (+0x44 ≠ 0xff) já completa (+0xdd): 1. Não completa: acerta o total de rodadas
 /// +0xa7 (−1) e, se algum clube ainda não jogou todas (+0x11 < +0xa7), 0; senão, nas divisões de liga (0x4b0700)
 /// com +0xa9 > 8 e sem +0xe6, os registros de fim de liga (0x86a070), e sem +0xe6 os prêmios (0x682e10). Com
@@ -3174,12 +3170,12 @@ pub(crate) unsafe fn pay_tv_money(league: League, value: i32, filter: usize, new
 /// Pays TV rights: adds the amount to the TV revenue of every club in the table (with a filter, only those with +0x5b
 /// equal to it) and sends the news (`send_tv_rights_news`).
 ///
-/// `League::pay_tv_rights(amount, filter)`: with the finance table `[0xae2a38]`, for each club in the table (+0xb1;
+/// `amount.pay_tv_rights(filter)`: with the finance table `[0xae2a38]`, for each club in the table (+0xb1;
 /// with `filter`, only those whose +0x5b equals it) adds `amount` to the TV revenue (`get_club_finance` → `add_tv_revenue`) and sends the
 /// news (Comp::send_tv_rights_news `send_tv_rights_news`, only for a club with a human manager). No SEH, no random draw, no locals.
 /// Original: `League::pay_tv_rights` (0x683010, league.cpp, thiscall).
 ///
-/// [pt] { 0x683010 } (thiscall, league.cpp): `League::pay_tv_rights(valor, filtro)`: com a tabela de finanças
+/// [pt] { 0x683010 } (thiscall, league.cpp): `valor.pay_tv_rights(filtro)`: com a tabela de finanças
 /// [0xae2a38], a cada clube da tabela (+0xb1; com `filtro`, só os de +0x5b igual a ele) soma `valor` à receita de TV
 /// (0x5a0590 → 0x5987c0) e manda a notícia (Comp::send_tv_rights_news 0x48ea40, só para clube de técnico humano).
 /// Sem SEH, sem sorteio, sem locais.
@@ -3217,7 +3213,7 @@ pub(crate) unsafe extern "thiscall" fn league_record_season_honours(league: usiz
         let how_many = || read_i32(G_CLUB_COUNT).wrapping_sub(read_i32(G_NATION_COUNT));
         let mut k = 0i32;
         while k < how_many() {
-            let p = read_usize(G_CLUB_TABLE).wrapping_add(0x245 * k as usize + 0x5b);
+            let p = club_at(k as isize).addr() + club::LAST_DIVISION;
             if read_usize(p) == league.competition().addr() {
                 write_usize(p, 0); // the previous division
             }
@@ -3828,7 +3824,7 @@ pub(crate) unsafe extern "thiscall" fn calc_prize_fund(league: usize, quota: i32
 /// (`league_promote_and_relegate`, with contract clauses, pairwise or as a block, without checking counts)
 /// Original: `League::process_promotion_relegation_chain` (0x689c20, league.cpp, thiscall, ret 4).
 ///
-/// [pt] { 0x689c20 } (thiscall, ret 4, league.cpp, `League::process_promotion_relegation_chain(aos_pares)`; pelo slot do
+/// [pt] { 0x689c20 } (thiscall, ret 4, league.cpp, `aos_pares.process_promotion_relegation_chain()`; pelo slot do
 /// fim de temporada da liga): só na liga do topo da pirâmide (+0x1c, a liga de cima, negativo): fecha a temporada
 /// dela (slot 0xa4) e, descendo a cadeia (+0x20 o índice da liga de baixo na tabela [0xadadfc], até negativo), fecha a
 /// de baixo e troca os que sobem e descem entre as duas (0x689c80 com contratos = 1, `aos_pares`, sem contagem
@@ -3855,7 +3851,7 @@ pub(crate) unsafe extern "thiscall" fn league_process_promotion_relegation_chain
 /// clauses (and the squad numbers when the new one uses them), opens the requested manager vacancy, upgrades the
 /// stadium to the league minimum and turns status 3 into 2.
 ///
-/// Ret 0xc; `this` is not read: `League::move_club_to_division(club, division, vacancy)`: the current division (+0x57)
+/// Ret 0xc; `this` is not read: `club.move_club_to_division(division, vacancy)`: the current division (+0x57)
 /// becomes last season's (+0x5b) and the new one goes in; the players' division clauses are cleared (`exe::contract_manager_reset_division_clauses` on
 /// `[0xae1050]`), also the squad numbers if the old division did not use them and the new one does (`club_uses_squad_numbers` on
 /// `[0xdd7ef0]`, before and after); with `vacancy` and no manager (+0xcf), the manager vacancy (`add_job_vacancy` on
@@ -3864,8 +3860,7 @@ pub(crate) unsafe extern "thiscall" fn league_process_promotion_relegation_chain
 /// +0xe2); and, with the competition loaded, status +0x64 = 3 changes to 2.
 /// Original: `League::move_club_to_division` (0x6830b0, league.cpp, thiscall, ret 0xc).
 ///
-/// [pt] { 0x6830b0 } (thiscall, ret 0xc, league.cpp; `this` não é lido): `League::move_club_to_division(clube, divisao,
-/// vaga)`: a divisão atual (+0x57) vira a da última temporada (+0x5b) e a nova entra; as cláusulas de divisão dos
+/// [pt] { 0x6830b0 } (thiscall, ret 0xc, league.cpp; `this` não é lido): `clube.move_club_to_division(divisao, /// vaga)`: a divisão atual (+0x57) vira a da última temporada (+0x5b) e a nova entra; as cláusulas de divisão dos
 /// jogadores são limpas (0x4cd120 em [0xae1050]), com os números da camisa também se a divisão velha não os usava e a
 /// nova usa (0x85add0 em [0xdd7ef0], antes e depois); com `vaga` e sem técnico (+0xcf), a vaga de técnico (0x69ba50 em
 /// [0xb67a44]); numa divisão de liga (+0x43 = 2 na competição [0xadadfc][id]) com estádio mínimo (+0xe2 ≠ −1) e ficha
@@ -3908,7 +3903,7 @@ pub(crate) unsafe extern "thiscall" fn move_club_to_division(_this: usize, club:
 /// Shuffles the league table with the seeded rand and puts clubs sharing a ground, clubs with linked grounds, and
 /// Celtic and Rangers in paired slots.
 ///
-/// Ret 4: `League::draw_team_order(clubs)`: shuffles the league table (`[+0xb1]`, +0x3e records of 59 bytes) for the
+/// Ret 4: `clubs.draw_team_order()`: shuffles the league table (`[+0xb1]`, +0x3e records of 59 bytes) for the
 /// fixture grid: keeps a random draw (`exe::utils_random`, 30000), seeds the CRT rand with +0x40 + `[0xdd7120]` and swaps n random
 /// pairs (rand × n / 0x8000), then restores the seed (draw + 1). League with flag 0x100 in +0xd9: each club goes to the
 /// slot that virtual table +0xa8 says (if free), the others to the first free ones, and +0xac receives each slot.
@@ -3918,7 +3913,7 @@ pub(crate) unsafe extern "thiscall" fn move_club_to_division(_this: usize, club:
 /// free slots. The grid (`exe::crt_operator_new`, freed with `exe::crt_operator_delete`) goes back to the table. Out of memory: the box (line 0xed3).
 /// Original: `League::draw_team_order` (0x686a70, league.cpp, thiscall, ret 4).
 ///
-/// [pt] { 0x686a70 } (thiscall, ret 4, league.cpp): `League::draw_team_order(clubes)`: embaralha a tabela da liga
+/// [pt] { 0x686a70 } (thiscall, ret 4, league.cpp): `clubes.draw_team_order()`: embaralha a tabela da liga
 /// ([+0xb1], +0x3e registros de 59 bytes) para a grade de jogos: guarda um sorteio (0x90cfc0, 30000), semeia o rand
 /// da CRT com +0x40 + [0xdd7120] e troca n pares sorteados (rand × n / 0x8000), e volta a semente (sorteio + 1). Liga
 /// com a marca 0x100 em +0xd9: cada clube vai à vaga que a tabela virtual +0xa8 diz (se livre), os outros às
@@ -4106,14 +4101,14 @@ pub(crate) unsafe extern "thiscall" fn draw_team_order(this: usize, clubs: i32) 
 /// For each table row, moves the club byte +0x64 to the value (down or up) when the row status is not the excluded one
 /// and when it is the included one (0xfd = none).
 ///
-/// Ret 0x10: `League::limit_club_division_tier(value, excluded, included, lower)` (called by the season end of each
+/// Ret 0x10: `value.limit_club_division_tier(excluded, included, lower)` (called by the season end of each
 /// league: Argentina, Belgium, Brazil, Croatia, Denmark, England, France, Germany, Netherlands, Italy, Russia,
 /// Scotland, Sweden and Turkey): for each table row (+0xb1, 0x3b bytes, count +0x3e), adjusts byte +0x64 of the club
 /// (+0) to `value` when the row status (+0x37) is not `excluded` (0xfd = none) and again when it is `included` (0xfd =
 /// none). The first three arguments are bytes pushed as dwords: only the low byte counts.
 /// Original: `League::limit_club_division_tier` (0x68a980, league.cpp, thiscall, ret 0x10).
 ///
-/// [pt] { 0x68a980 } (thiscall, ret 0x10, league.cpp): `League::limit_club_division_tier(valor, fora, dentro, baixar)`
+/// [pt] { 0x68a980 } (thiscall, ret 0x10, league.cpp): `valor.limit_club_division_tier(fora, dentro, baixar)`
 /// (chamada pelo fim de temporada de cada liga: Argentina, Bélgica, Brasil, Croácia, Dinamarca, Inglaterra, França,
 /// Alemanha, Holanda, Itália, Rússia, Escócia, Suécia e Turquia): para cada linha da tabela (+0xb1, 0x3b bytes, conta
 /// +0x3e), ajusta o byte +0x64 do clube (+0) a `valor` quando a situação da linha (+0x37) não é `fora` (0xfd = nenhuma)

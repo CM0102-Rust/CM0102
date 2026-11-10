@@ -426,7 +426,7 @@ pub(crate) unsafe fn mls_start_new_season(this: League, year: i16) -> u32 {
     let l = this.round_dates();
     if l != 0 {
         exe::crt_free(l);
-        write_usize(this.addr() + league::ROUND_DATES, 0);
+        this.set_round_dates(0);
     }
     if (this.current_stage() as i32) >= 0 {
         let mut i = 0i32;
@@ -443,12 +443,12 @@ pub(crate) unsafe fn mls_start_new_season(this: League, year: i16) -> u32 {
         }
     }
     write_i32(this.addr() + league::CURRENT_STAGE, -1);
-    let stats = read_usize(this.addr() + league::COMP_STATS);
+    let stats = this.comp_stats();
     if stats != 0 {
         exe::comp_stats_archive_season_and_reset(stats, 1);
     }
     let a = this.year();
-    write_i16(this.addr() + league::YEAR, a.wrapping_add(year));
+    this.set_year(a.wrapping_add(year));
     crate::comparison::branch("cqs_2 mls rollover");
     let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x8c));
     if rules(this.addr()) == 0 {
@@ -470,7 +470,7 @@ pub(crate) unsafe fn mls_start_new_season(this: League, year: i16) -> u32 {
     let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
     predicted(this.addr());
     exe::league_set_club_season_expectations(this);
-    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this.addr() + league::COMPETITION)) as u32) // cqs2: the renewal of the MLS referees
+    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), this.competition().addr()) as u32) // cqs2: the renewal of the MLS referees
 }
 
 /// The MLS turnover: clears the table, the schedule and the stages (the other two divisions, the play-off and the

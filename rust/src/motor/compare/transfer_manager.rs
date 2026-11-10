@@ -1642,7 +1642,7 @@ pub(crate) unsafe extern "stdcall" fn compare_fill_vacated_staff_job(club: usize
         crate::comparison::branch("fill_vacated_staff_job nobody");
         return o(club, job);
     };
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(club, 0x245), (p, 0x6e)], || o(club, job),
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side(&[(club, club::SIZE), (p, staff::SIZE)], || o(club, job),
         || fill_vacated_staff_job(club, job));
     if read_usize(p + staff::CLUB_JOB) != club {
         crate::comparison::branch("fill_vacated_staff_job without joining the club");

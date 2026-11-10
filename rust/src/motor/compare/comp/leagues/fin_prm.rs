@@ -74,7 +74,7 @@ pub(crate) unsafe extern "thiscall" fn compare_season_end_club_update(this: usiz
         return o(this, club.addr()); // simplification: the stadium purchase may touch the owner; original only
     }
     let own = read_usize(this).wrapping_add((read_i32(club.addr()) as u32).wrapping_mul(0x167) as usize);
-    let mut reg = vec![(fin.addr(), 0x167), (club.addr(), 0x245), (board_requests_row(club), 0x49)];
+    let mut reg = vec![(fin.addr(), 0x167), (club.addr(), club::SIZE), (board_requests_row(club), 0x49)];
     if own != fin.addr() {
         reg.push((own, 0x167));
     }

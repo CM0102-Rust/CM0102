@@ -11,7 +11,7 @@ pub(crate) unsafe fn selected_club(this: League, k: usize) -> usize {
 /// the 8 clubs, the predicted positions, group A in the cup's own table, the fixtures and group B as a stage; before
 /// that day the cup does not even run the league day; an error while building returns 1 without the league day.
 ///
-/// `OceaniaClubChamp::update_for_date(today, completo)` (virtual +0x14; SEH frame only for the local dates, no
+/// `today.update_for_date(completo)` (virtual +0x14; SEH frame only for the local dates, no
 /// destructor): the Oceania Club Championship's day. The draw date is that of 0x549ef0(+0xb6, +0xb8 + +0x40) (lea ecx,
 /// local; push year; push day -> thiscall, ret 8, pure). Before it (today's year lower, unsigned; or the same year and
 /// today's day lower, signed) the routine returns 0 without the league day. On the draw day, if the draw is not done
@@ -25,7 +25,7 @@ pub(crate) unsafe fn selected_club(this: League, k: usize) -> usize {
 /// Original: `OceaniaClubChamp::update_for_date` (0x797b40, oceania_club_champ.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x797b40 } (thiscall, ret 8, oceania_club_champ.cpp; a virtual +0x14; quadro SEH só das datas locais, sem
-/// destrutor): `OceaniaClubChamp::update_for_date(hoje, completo)`, o dia do Campeonato de Clubes da Oceania. A data do
+/// destrutor): `hoje.update_for_date(completo)`, o dia do Campeonato de Clubes da Oceania. A data do
 /// sorteio é a de 0x549ef0(+0xb6, +0xb8 + +0x40) (lea ecx, local; push ano; push dia -> thiscall, ret 8, pura). Antes
 /// dela (o ano de hoje menor, sem sinal; ou o mesmo ano e o dia de hoje menor, com sinal) a rotina volta 0 sem o dia de
 /// liga. No dia do sorteio, fora do sorteio feito (+0x45 = 0) e SEM `completo`: os 8 clubes (0x798220: mov ecx ->
@@ -691,8 +691,7 @@ pub(crate) fn oceania_stage_spec(stage: u32) -> Option<OceaniaStage> {
 /// the semi-final and 0x83 after; no prizes
 /// Original: `OceaniaClubChamp::create_schedule` (0x797230, oceania_club_champ.cpp, thiscall, ret 0x10).
 ///
-/// [pt] { 0x797230 } (thiscall, ret 0x10, oceania_club_champ.cpp; a virtual +0x3c): `OceaniaClubChamp::create_schedule(fase,
-/// &rodadas, &extra, &é_liga)`: a fase de `oceania_stage_spec`.
+/// [pt] { 0x797230 } (thiscall, ret 0x10, oceania_club_champ.cpp; a virtual +0x3c): `fase.create_schedule(/// &rodadas, &extra, &é_liga)`: a fase de `oceania_stage_spec`.
 pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     build_stage_table(League(this), oceania_stage_spec(stage), rounds, extra, league, 0xa6a068)
 }

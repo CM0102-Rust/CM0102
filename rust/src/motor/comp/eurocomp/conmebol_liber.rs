@@ -329,7 +329,7 @@ pub(crate) unsafe fn libertadores_entrants(this: usize, max: i32, out: &mut [usi
                 n += 1;
             }
             i = i.wrapping_add(1);
-            club = club.wrapping_add(0x245);
+            club = club.wrapping_add(club::SIZE);
             if i as i32 >= read_usize(G_CLUB_COUNT) as i32 {
                 break;
             }

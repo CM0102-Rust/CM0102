@@ -44,7 +44,7 @@ pub(crate) fn ban_days(code: i32, e: i8) -> Option<u16> {
 /// Builds the red card ban: the matches or days from the offence code (9 to 12) and the body's scale, today's date and
 /// the player; 0 when there is no ban.
 ///
-/// Ret 0xc: `RulingBody::make_points_ban(record, player, by_matches)`, from each country's bodies (rb_*.cpp, when
+/// Ret 0xc: `record.make_points_ban(player, by_matches)`, from each country's bodies (rb_*.cpp, when
 /// processing a match's red card): the offence code (+0x2e with +0x2c = 0, +0x2f with +0x2c = 1; another type: 0)
 /// gives, through the body's scale (+6), the matches (by_matches ≠ 0; the days stay 0xffff) or the days (the matches
 /// stay 0xff) of the ban. In the record: +0 matches, +1 = 0, +2 days, +4 today's date (`[0xae2c90]`, `exe::date_operator_3d`), +0x10 =
@@ -52,7 +52,7 @@ pub(crate) fn ban_days(code: i32, e: i8) -> Option<u16> {
 /// anything.
 /// Original: `RulingBody::make_points_ban` (0x7e8e10, ruling_body.cpp, thiscall, ret 0xc).
 ///
-/// [pt] { 0x7e8e10 } (thiscall, ret 0xc, ruling_body.cpp): `RulingBody::make_points_ban(registro, jogador, por_jogos)`, pelos
+/// [pt] { 0x7e8e10 } (thiscall, ret 0xc, ruling_body.cpp): `registro.make_points_ban(jogador, por_jogos)`, pelos
 /// órgãos de cada país (rb_*.cpp, ao processar o cartão vermelho de uma partida): o código da falta (+0x2e com +0x2c =
 /// 0, +0x2f com +0x2c = 1; outro tipo: 0) dá, pela escala do órgão (+6), os jogos (por_jogos ≠ 0; os dias ficam
 /// 0xffff) ou os dias (os jogos ficam 0xff) da suspensão. No registro: +0 jogos, +1 = 0, +2 dias, +4 a data de hoje

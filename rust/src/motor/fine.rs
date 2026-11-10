@@ -77,7 +77,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     set_news_slot(nt, 6, r as u32);
     let p = (player.temperament() as i32) + (player.professionalism() as i32) < 0xc
         && (player.loyalty() as i32) < 6
-        && read_i16(player.player().addr() + player_sheet::CURRENT_REPUTATION) > 0x1482;
+        && player.player().current_reputation() > 0x1482;
     set_news_slot(nt, 7, p as u32);
     set_news_slot(nt, 8, (deadline as u8 == 1) as u32);
     let kind = c.squad_status() & 0xf0;

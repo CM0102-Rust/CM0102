@@ -5,7 +5,7 @@ MUTACOES = [
     ('f_oito', "        m.set_restart_type(restart::INDIRECT_FREE_KICK);\n        m.set_possession_side((zero(j) as u8) as i8);", "        m.set_restart_type((6) as i8);\n        m.set_possession_side((zero(j) as u8) as i8);"),
     ('f_codigo', "0x2d => 0x20fd,", "0x2d => 0x20fc,"),
     ('f_cartao', "6 if !sofreu => 0x1ff5,", "6 if !sofreu => 0x1ff6,"),
-    ('f_area', "read_i8(m.pending_play_offender().addr() + match_player::SIDE) == 1 { (10..=11).contains(&y) }", "read_i8(m.pending_play_offender().addr() + match_player::SIDE) == 1 { (9..=11).contains(&y) }"),
+    ('f_area', "m.pending_play_offender().side() == 1 { (10..=11).contains(&y) }", "m.pending_play_offender().side() == 1 { (9..=11).contains(&y) }"),
     ('f_penalti', "*d = (*d).wrapping_sub(500);\n            sound = 0x1f7a;", "*d = (*d).wrapping_sub(499);\n            sound = 0x1f7a;"),
     ('f_parada', "matches!(k, 0 | 5..=13 | 0x3b | 0x3c)", "matches!(k, 0 | 5..=12 | 0x3b | 0x3c)"),
     ('f_nove', "if random(9) == 0 {\n        narrate(call, event::HARSH_DECISION", "if random(8) == 0 {\n        narrate(call, event::HARSH_DECISION"),

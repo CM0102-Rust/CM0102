@@ -65,7 +65,7 @@ pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: League, year: u3
     write_i32(this.addr() + league::CURRENT_STAGE, -1);
     write_u32(this.addr() + league::STAGE_COUNT, e.stages);
     let v = exe::crt_malloc(e.stages * 4);
-    write_usize(this.addr() + league::STAGES, v);
+    this.set_stages(v);
     if regras(this.addr()) == 0 {
         show_error_at(e.file, e.rows[0]);
         return this.addr();
@@ -84,7 +84,7 @@ pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: League, year: u3
     }
     let n = exe::crt_operator_new(0x5ce);
     let s = if n != 0 { exe::new_comp_stats(n, this) } else { 0 };
-    write_usize(this.addr() + league::COMP_STATS, s);
+    this.set_comp_stats(s);
     if s == 0 {
         show_error_at(e.file, e.rows[4]);
         return this.addr();
@@ -186,9 +186,9 @@ pub(crate) unsafe fn state_league_new_season(this: League, table: usize, file: u
     let l = this.round_dates();
     if l != 0 {
         exe::crt_free(l);
-        write_usize(this.addr() + league::ROUND_DATES, 0);
+        this.set_round_dates(0);
     }
-    let stats = read_usize(this.addr() + league::COMP_STATS);
+    let stats = this.comp_stats();
     if stats != 0 {
         exe::comp_stats_archive_season_and_reset(stats, 1);
     }
@@ -206,8 +206,8 @@ pub(crate) unsafe fn state_league_new_season(this: League, table: usize, file: u
             }
         }
     }
-    let a = read_i16(this.addr() + league::YEAR);
-    write_i16(this.addr() + league::YEAR, a.wrapping_add(year));
+    let a = this.year();
+    this.set_year(a.wrapping_add(year));
     crate::comparison::branch(ramo);
     write_i32(this.addr() + league::CURRENT_STAGE, -1);
     let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x8c));
@@ -230,7 +230,7 @@ pub(crate) unsafe fn state_league_new_season(this: League, table: usize, file: u
     }
     let predicted: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
     predicted(this.addr());
-    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this.addr() + league::COMPETITION)) as u32)
+    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), this.competition().addr()) as u32)
 }
 
 /// The next stage of a state league (`advance_stage`, slot 11, +0x28).
@@ -347,7 +347,7 @@ pub(crate) unsafe fn fill_state_league_table(this: League, n: i16, file: usize, 
             }
         }
         i = i.wrapping_add(1);
-        club = club.wrapping_add(0x245);
+        club = club.wrapping_add(club::SIZE);
     }
     if k as i8 as i16 != this.club_count() {
         return 0;

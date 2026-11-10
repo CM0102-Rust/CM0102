@@ -203,7 +203,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_set_predicted_positions(thi
 #[allow(clippy::type_complexity)]
 pub(crate) type LeagueStageCtorFn = unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize;
 
-/// `BraNatThird::create_group_stage(g)` (`bra_nat_third_create_group_stage`, thiscall, ret 4, bra_nat_third.cpp; SEH frame only for the new):
+/// `g.create_group_stage()` (`bra_nat_third_create_group_stage`, thiscall, ret 4, bra_nat_third.cpp; SEH frame only for the new):
 /// group g (0 to 6) of the first stage of Série C, from the season rollover and the constructor (g from 0 to 6; the
 /// league is the top group, and the seven groups are stages 0 to 6). Round table, the 7 clubs of group g, League_Stage
 /// in slot g, +0x30 = g.
@@ -223,7 +223,7 @@ pub(crate) type LeagueStageCtorFn = unsafe extern "thiscall" fn(usize, usize, u3
 /// 4) [+0xc][g] = the stage. No stage: the box for line 0x487 and return (without freeing the vector or the table).
 /// With it: the vector and the table freed (free `exe::crt_free`) and +0x30 = g (the signed byte).
 ///
-/// [pt] { 0x42ee80 } (thiscall, ret 4, bra_nat_third.cpp; quadro SEH só para o new): `BraNatThird::create_group_stage(g)`, o
+/// [pt] { 0x42ee80 } (thiscall, ret 4, bra_nat_third.cpp; quadro SEH só para o new): `g.create_group_stage()`, o
 /// grupo g (0 a 6) da primeira fase da Série C, da virada e do construtor (g de 0 a 6; a liga é o grupo de cima, e os
 /// sete grupos são as fases 0 a 6).
 /// 1) A tabela das rodadas pela virtual +0x3c (create_round_table: thiscall(this, g inteiro, &rodadas, &extra, 0), ret
@@ -488,7 +488,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_create_table(this: usize) -
             k = k.wrapping_add(1);
         }
         i += 1;
-        club = club.wrapping_add(0x245);
+        club = club.wrapping_add(club::SIZE);
     }
     crate::comparison::branch("cql_7 serie c draw");
     exe::comp_util_shuffle_pointer_array(read_usize(this.addr() + bra_nat_third::CLUB_LIST), (k as i8 as i32) as u32); // cql7: the random draw of the Serie C clubs
@@ -532,7 +532,7 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_third_update_staff_records_for_st
 /// they come
 /// Original: `BraNatThird::set_club_progress` (0x42e100, bra_nat_third.cpp, thiscall).
 ///
-/// [pt] { 0x42e100 } (thiscall, ret 0x14, bra_nat_third.cpp): `BraNatThird::set_club_progress(clube, fase, a, b, c)`: nos
+/// [pt] { 0x42e100 } (thiscall, ret 0x14, bra_nat_third.cpp): `clube.set_club_progress(fase, a, b, c)`: nos
 /// grupos (fase < 7), a e b: 1, 2 → 1, 3 → 0x11 ... 7 → 0x31; c: 1, 2 → 9, depois igual; nas fases 7 em diante, os
 /// códigos como vêm (o trecho das fases 1 a 3 que a original tem depois do teste `fase >= 7` nunca roda). Devolve a
 /// entrada.

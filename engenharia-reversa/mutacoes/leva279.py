@@ -1,6 +1,6 @@
 # Mutações da 279a leva (itens cqo_1, cqo_2, cqo_4, cqo_5, cqo_6, cqo_7, cqo_8, cqo_9, cqo_10, cqo_11, cqo_12, cqo_13, cqp_4). Uso: python mutacoes.py mutacoes\leva279.py --carreira 2002-06-01
 MUTACOES = [
-    ('cqo1_mandante_neutro', 'fixar(read_usize(fx.home_club().addr() + club::STADIUM)); // cqo1: the home team stadium', '*neutro = 1; // mutacao: o jogo comum marcado como neutro\n                fixar(read_usize(fx.home_club().addr() + club::STADIUM));', 'cqo_1 home team stadium'),
+    ('cqo1_mandante_neutro', 'fixar(fx.home_club().stadium().addr()); // cqo1: the home team stadium', '*neutro = 1; // mutacao: o jogo comum marcado como neutro\n                fixar(fx.home_club().stadium().addr());', 'cqo_1 home team stadium'),
     ('cqo1_primeiro_neutro', 'best = n; // cqo1: a melhor nota\n                        chosen = e;', 'best = n; // mutacao: o primeiro com nota\n                        if chosen == 0 {\n                            chosen = e;\n                        }', 'cqo_1 neutral by rating'),
     ('cqo1_rodizio_sem_reserva', 'crate::comparison::branch("cqo_1 rotation");\n                        add_stadium_booking(this, read_usize(e + 0xc), data);', 'crate::comparison::branch("cqo_1 rotation"); // mutacao: sem a reserva', 'cqo_1 rotation'),
     ('cqo2_classico_sem_bonus', 'pc = ftol(pc as f64 * read_f64(rdata::F64_1_5)); // cqo2: o clássico', 'pc = ftol(pc as f64 * 1.0); // mutacao: o clássico sem o bônus', 'cqo_2 derby'),

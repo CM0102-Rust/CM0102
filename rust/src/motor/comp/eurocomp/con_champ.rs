@@ -62,7 +62,7 @@ pub(crate) unsafe fn concacaf_club_lists() -> ConcacafClubLists {
             }
         }
         i += 1;
-        club = club.wrapping_add(0x245);
+        club = club.wrapping_add(club::SIZE);
     }
     l.n = [a as u32, b as u32, c as u32, m as u8 as u32];
     l

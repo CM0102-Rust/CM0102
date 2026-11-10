@@ -275,11 +275,11 @@ pub(crate) const HISTORY_ENTRY_SIZE: usize = 0x2b;
 pub(crate) struct PlayerStatsEntry(pub(crate) [u8; HISTORY_ENTRY_SIZE]);
 
 impl PlayerStatsEntry {
-    fn nova(ano: u16, clube: u32, cat: u8, transf: u32) -> PlayerStatsEntry {
+    fn new(year: u16, club: u32, cat: u8, transfer: u32) -> PlayerStatsEntry {
         let mut r = [0u8; HISTORY_ENTRY_SIZE];
-        r[0..2].copy_from_slice(&ano.to_le_bytes());
-        r[2..6].copy_from_slice(&clube.to_le_bytes());
-        r[0x26..0x2a].copy_from_slice(&transf.to_le_bytes());
+        r[0..2].copy_from_slice(&year.to_le_bytes());
+        r[2..6].copy_from_slice(&club.to_le_bytes());
+        r[0x26..0x2a].copy_from_slice(&transfer.to_le_bytes());
         r[0x2a] = cat << 3;
         PlayerStatsEntry(r)
     }
@@ -366,12 +366,12 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
     }
     let mut cap: i32 = 500;
     let club = p.club_job();
-    let mut last = PlayerStatsEntry::nova(0, 0, 0, 0);
+    let mut last = PlayerStatsEntry::new(0, 0, 0, 0);
     for cat in 1..=6u8 {
         let year = exe::key_nation_get_club_season_year(club);
         let id = if club.is_null() { 0xffff_ffff } else { read_usize(club.addr()) as u32 }; // cqf8: the club of the current season
         crate::comparison::branch("cqf_8 current season");
-        let mut r = PlayerStatsEntry::nova(year, id, cat, 0xffff_ffff);
+        let mut r = PlayerStatsEntry::new(year, id, cat, 0xffff_ffff);
         let c = exe::playerstats_get_category_record(this, f, cat as u32);
         if c != 0 {
             core::ptr::copy_nonoverlapping(c as *const u8, r.0.as_mut_ptr().add(6), 32);
@@ -397,7 +397,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
                     loop {
                         let mut size = cap as usize * HISTORY_ENTRY_SIZE;
                         for cat in 1..=6u8 {
-                            let r = PlayerStatsEntry::nova(year_current, 0xffff_ffff, cat, 0xffff_ffff);
+                            let r = PlayerStatsEntry::new(year_current, 0xffff_ffff, cat, 0xffff_ffff);
                             if *count + cat as i32 - 1 >= cap {
                                 size += 0x53fc;
                                 cap += 500;
@@ -423,7 +423,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
                 let year_in = read_u16(in_the); // cqf8: the year of the group of the node
                 let club_in = read_usize(in_the + career_entry::CLUB_ID) as u32; // cqf8: the club of the group of the node
                 for cat in 1..=6u8 {
-                    let mut r = PlayerStatsEntry::nova(year_in, club_in, cat, read_usize(in_the + career_entry::TRANSFER_FEE) as u32);
+                    let mut r = PlayerStatsEntry::new(year_in, club_in, cat, read_usize(in_the + career_entry::TRANSFER_FEE) as u32);
                     r.0[0x2a] = (cat << 3) | (kind & 7);
                     crate::comparison::branch("cqf_8 history season");
                     if *count + cat as i32 - 1 >= cap {
@@ -1097,7 +1097,7 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
     let club = Club(club);
     let language = language as u8;
     if !person.is_null() && read_usize(person.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
-        return if read_u8(person.nation().addr() + nation::FIRST_LANGUAGE) == language { 10 } else { 0 }; // the human manager
+        return if (person.nation().first_language() as u8) == language { 10 } else { 0 }; // the human manager
     }
     if by_contract != 0 {
         let c = Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club));
@@ -1109,7 +1109,7 @@ pub(crate) unsafe extern "thiscall" fn get_language_fluency(this: usize, person:
         }
     }
     let fala = |l: u8| {
-        if read_u8(person.nation().addr() + nation::FIRST_LANGUAGE) == l {
+        if (person.nation().first_language() as u8) == l {
             return true;
         }
         let s = person.second_nation();

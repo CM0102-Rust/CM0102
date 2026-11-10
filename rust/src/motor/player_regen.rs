@@ -209,9 +209,9 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
     let f = p.player();
     let nation = p.nation();
     let age: i8;
-    if !nation.is_null() && *((nation.addr() + nation::LEAGUE_SELECTED) as *const u8) == 0 && read_i32(nation.addr() + nation::NUMBER_STAFF) < 0x15e {
+    if !nation.is_null() && *((nation.addr() + nation::LEAGUE_SELECTED) as *const u8) == 0 && nation.number_staff() < 0x15e {
         // the small nation: age by its reputation and ability by PA
-        let r1 = friendly_random(read_i32(nation.addr() + nation::NUMBER_STAFF));
+        let r1 = friendly_random(nation.number_staff());
         let r2 = friendly_random(1000);
         age = if r1 < r2 {
             (friendly_random(5) as i8).wrapping_add(0x17)
@@ -548,7 +548,7 @@ pub(crate) unsafe extern "thiscall" fn regenerate_as_youth_player(this: usize, p
                 let t = Staff(read_usize(c + club::CHAIRMAN));
                 if !t.is_null() && !t.non_player().is_null() {
                     let r = friendly_random(100);
-                    if read_i8(t.non_player().addr() + non_player::INTERFERENCE) as i32 > r {
+                    if t.non_player().interference() as i32 > r {
                         exe::staff_add_favoured_staff(t, p, 0);
                     }
                 }
@@ -813,7 +813,7 @@ pub(crate) unsafe fn maybe_become_coach(this: usize, p: Staff) {
     let r1 = friendly_random(t);
     let passes = r1 > friendly_random(50000) || { // cqd10: the random draw to become a manager
         let r3 = friendly_random(0x30d40).wrapping_add(0x30d40);
-        let v = (read_i16(p.nation().addr() + nation::REPUTATION) as i32).wrapping_mul(p.int_apps() as i32);
+        let v = (p.nation().reputation() as i32).wrapping_mul(p.int_apps() as i32);
         v > r3
     };
     if !passes || read_i32(this + player_regen_fields::SPARE_NON_PLAYER_COUNT) <= 2 {
@@ -823,12 +823,12 @@ pub(crate) unsafe fn maybe_become_coach(this: usize, p: Staff) {
     let id = read_i32(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS));
     p.set_non_player(NonPlayer((read_usize(G_NON_PLAYER_TABLE).wrapping_add((id as isize * 0x44) as usize) as u32) as usize));
     exe::player_regen_remove_spare_non_player_record(this, read_i32(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS)) as i32 as u32);
-    if read_i8(p.player().addr() + player_sheet::GOALKEEPER) == 0x14 {
+    if p.player().goalkeeper() == 0x14 {
         let nj = p.non_player();
         let (a, b) = (nj.coaching(), nj.coaching_gks());
         if a > b {
             nj.set_coaching_gks(a);
-            write_i8(p.non_player().addr() + non_player::COACHING, b);
+            p.non_player().set_coaching(b);
             if friendly_random(4) == 0 {
                 let v = (friendly_random(0x32) as u8).wrapping_add(0x32);
                 write_u8(p.non_player().addr() + non_player::COACHING_GKS, v);
@@ -1473,7 +1473,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_post_retirement_announcement_
     let mut club = -1i32;
     if !c.is_null() && c.contract_type() & 0x3f != 5 {
         let idx = (c.club() as i32) as u32;
-        let record = (read_i32(G_CLUB_TABLE) as u32).wrapping_add(idx.wrapping_mul(0x245)) as usize;
+        let record = club_at(idx as isize).addr();
         if record != 0 {
             club = read_i32(record);
         }
@@ -2178,7 +2178,7 @@ pub(crate) unsafe fn job_exit_is_memory_only(person: usize) -> bool {
 
 /// Regions of leaving jobs: the person (0x6e) and his club and national team records (0x245).
 pub(crate) unsafe fn job_exit_regions(person: Staff) -> Vec<(usize, usize)> {
-    vec![(person.addr(), 0x6e), (person.club_job().addr(), 0x245), (person.national_job().addr(), 0x245)]
+    vec![(person.addr(), staff::SIZE), (person.club_job().addr(), club::SIZE), (person.national_job().addr(), club::SIZE)]
 }
 
 // simplification: the history goes to the file (does not run twice) and the copy without it only writes [0xae1080]: only the
@@ -2251,7 +2251,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_score_non_player_candidate(pe
     let b = person.int_apps() as i32;
     rating = rating.wrapping_add(b * b);
     let r = random(10000); // no club
-    if read_i16_as_i32(person.player().addr() + player_sheet::WORLD_REPUTATION) > r {
+    if (person.player().world_reputation() as i32) > r {
         rating = rating.wrapping_add(rating);
     }
     random(rating)
@@ -3275,7 +3275,7 @@ pub(crate) unsafe extern "thiscall" fn process_regen_queue(this: usize) {
                 let (cl, dl) = (nj.coaching(), nj.coaching_gks());
                 if cl > dl {
                     nj.set_coaching_gks(cl);
-                    write_i8(s.non_player().addr() + non_player::COACHING, dl);
+                    s.non_player().set_coaching(dl);
                     if friendly_random(4) == 0 {
                         let r = friendly_random(0x32) as u8;
                         write_u8(s.non_player().addr() + non_player::COACHING_GKS, r.wrapping_add(0x32));
@@ -3284,7 +3284,7 @@ pub(crate) unsafe extern "thiscall" fn process_regen_queue(this: usize) {
             }
             exe::staff_normalise_non_player_attributes(s);
             place_coach_at_ai_club(s);
-            let rep = read_i16(s.player().addr() + player_sheet::CURRENT_REPUTATION);
+            let rep = s.player().current_reputation();
             let (k, teto) = if rep > 0x1d4c {
                 (0x9689d8, 0x9690b8)
             } else if friendly_random(s.ambition() as i32) != 0 {
@@ -3296,7 +3296,7 @@ pub(crate) unsafe extern "thiscall" fn process_regen_queue(this: usize) {
             write_u16(s.non_player().addr() + non_player::CURRENT_REPUTATION, a);
             let b = rebuilt_coach_rating(s, read_i16(s.player().addr() + 9), None, k, teto);
             write_u16(s.non_player().addr() + 8, b);
-            let c = rebuilt_coach_rating(s, read_i16(s.player().addr() + player_sheet::WORLD_REPUTATION), Some(0x969040), k, teto);
+            let c = rebuilt_coach_rating(s, s.player().world_reputation(), Some(0x969040), k, teto);
             write_u16(s.non_player().addr() + non_player::WORLD_REPUTATION, c);
         }
         exe::player_regen_remove_spare_non_player_record(this, read_i32(read_usize(this + player_regen_fields::SPARE_NON_PLAYER_RECORDS)) as i32 as u32);

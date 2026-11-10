@@ -170,9 +170,9 @@ pub(crate) unsafe fn rebuild_season(this: League, table: usize, file: usize, row
     let l = this.round_dates();
     if l != 0 {
         exe::crt_free(l);
-        write_usize(this.addr() + league::ROUND_DATES, 0);
+        this.set_round_dates(0);
     }
-    let stats = read_usize(this.addr() + league::COMP_STATS);
+    let stats = this.comp_stats();
     if stats != 0 {
         exe::comp_stats_archive_season_and_reset(stats, 1);
     }
@@ -190,8 +190,8 @@ pub(crate) unsafe fn rebuild_season(this: League, table: usize, file: usize, row
             }
         }
     }
-    let a = read_i16(this.addr() + league::YEAR);
-    write_i16(this.addr() + league::YEAR, a.wrapping_add(year));
+    let a = this.year();
+    this.set_year(a.wrapping_add(year));
     write_i32(this.addr() + league::CURRENT_STAGE, -1);
     if bra_nat_first_call_virtual_no_args(this.addr(), 0x8c) == 0 {
         show_error_at(file, rows[0]);
@@ -353,7 +353,7 @@ pub(crate) unsafe fn create_division_table(this: League, n: i16, file: usize, ro
             }
         }
         i = i.wrapping_add(1);
-        club = club.wrapping_add(0x245);
+        club = club.wrapping_add(club::SIZE);
     }
     if k as i8 as i16 != this.club_count() {
         return 0;
@@ -564,9 +564,9 @@ pub(crate) unsafe fn bra_nat_first_add_promotion_record(club: usize, comp: usize
     exe::staff_records_add_promotion_record(read_usize(G_STAFF_RECORDS), club, comp, weight);
 }
 
-/// League::find_club_row(club, 0): the club's row in the league table.
+/// club.find_club_row(0): the club's row in the league table.
 ///
-/// [pt] 0x68ab70 `League::find_club_row(clube, 0)` (thiscall, ret 8): a linha do clube na tabela da liga.
+/// [pt] 0x68ab70 `clube.find_club_row(0)` (thiscall, ret 8): a linha do clube na tabela da liga.
 pub(crate) unsafe fn bra_nat_first_find_club_row(league: usize, club: usize) -> usize {
     exe::league_find_club_row(league, club, 0)
 }

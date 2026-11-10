@@ -42,7 +42,7 @@ pub(crate) unsafe fn match_weight(club: Club, fixture: Fixture, factor: &mut f64
     if fixture.home_side_mark() == 0 {
         return read_f64(rdata::F64_0_1);
     }
-    if comp.addr() == read_usize(fixture.home_club().addr() + club::DIVISION) {
+    if comp.addr() == fixture.home_club().division().addr() {
         *factor = comp.reputation() as i32 as f64 * read_f64(rdata::F64_0_06) + read_f64(rdata::F64_0_27);
         return read_f64(rdata::F64_1);
     }
@@ -975,7 +975,7 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
     // the chairman’s random rolls and the cup’s league
     let bf = club.chairman().addr();
     if read_u8(ln() + 2) & 1 == 0 && call_comp_virtual(club_division_comp(club), 0x98) == 0 && bf != 0 && read_usize(bf + 0x69) != 0 {
-        let p1d = || read_i8(club.chairman().non_player().addr() + non_player::PATIENCE) as i32;
+        let p1d = || (club.chairman().non_player().patience() as i8) as i32;
         crate::comparison::branch("cqc_9 chairman draw");
         let r = friendly_random(0x32); // cqc9: the chairman random draw
         if r > p1d() + meta() * 5 {
@@ -1048,16 +1048,16 @@ pub(crate) unsafe fn finish_board_update(this: usize, club: Club) {
             let t = ftol((rep() as i32 - a as i32) as f64 * read_f64(rdata::F64_NEG_0_1));
             write_i16(fx + non_player::CURRENT_REPUTATION, a.wrapping_sub(t as i16));
             let fx = club.manager().non_player();
-            if read_i16(fx.addr() + non_player::CURRENT_REPUTATION) > 0x2710 {
-                write_i16(fx.addr() + non_player::CURRENT_REPUTATION, 0x2710);
+            if fx.current_reputation() > 0x2710 {
+                fx.set_current_reputation(0x2710);
             }
             let fx = club.manager().non_player();
-            let c = read_i16(fx.addr() + non_player::WORLD_REPUTATION);
+            let c = fx.world_reputation();
             let t = ftol((rep() as i32 - c as i32) as f64 * read_f64(rdata::F64_NEG_0_05));
-            write_i16(fx.addr() + non_player::WORLD_REPUTATION, c.wrapping_sub(t as i16));
+            fx.set_world_reputation(c.wrapping_sub(t as i16));
             let fx = club.manager().non_player();
-            if read_i16(fx.addr() + non_player::WORLD_REPUTATION) > 0x2710 {
-                write_i16(fx.addr() + non_player::WORLD_REPUTATION, 0x2710);
+            if fx.world_reputation() > 0x2710 {
+                fx.set_world_reputation(0x2710);
             }
         }
     }
@@ -1607,7 +1607,7 @@ pub(crate) unsafe extern "thiscall" fn board_named_players_after_match(this: usi
         if cl == 0 || cl != club.addr() {
             continue;
         }
-        let rating = read_i16(p.player().addr() + player_sheet::CURRENT_REPUTATION);
+        let rating = p.player().current_reputation();
         let rep = club.reputation();
         let passes = if preferidos { (p.age() as i8) < 0x24 && rating as i32 > rep as i32 - 0x2ee } else { rating < rep };
         if passes && exe::get_player_match_rating_verdict(this, p, fixture) == 0xff {
@@ -1859,7 +1859,7 @@ pub(crate) unsafe extern "thiscall" fn check_board_transfer_veto(this: usize, j:
                 let a = exe::utils_random(n());
                 let b = exe::utils_random(200);
                 if a > b {
-                    let a = exe::utils_random(read_u8(j.player().addr() + player_sheet::INJURY_PRONENESS) as i8 as i32);
+                    let a = exe::utils_random((j.player().injury_proneness() as u8) as i8 as i32);
                     let b = exe::utils_random(200);
                     if a > b {
                         return 0x2000;
@@ -4210,7 +4210,7 @@ pub(crate) unsafe extern "thiscall" fn apply_transfer_confidence_changes(this: u
     }
     clamp_board_row(e);
     crate::comparison::branch("cpo_1 remove favourite");
-    exe::staff_remove_favoured_staff(read_usize(person.club_job().addr() + club::CHAIRMAN), person); // the seller’s chairman
+    exe::staff_remove_favoured_staff(person.club_job().chairman().addr(), person); // the seller’s chairman
 }
 
 /// Removes the club from the ultimatum list and, when the manager has been in the job over 100 days, queues his

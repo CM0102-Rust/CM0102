@@ -582,8 +582,7 @@ pub(crate) unsafe fn eng_cc_cup_cup_update_for_date(this: Cup, today: usize, sta
 /// then, every day, the cup update (draws and matches on the table dates)
 /// Original: `EngCcCup::update_for_date` (0x56caf0, eng_cc_cup.cpp, thiscall, ret 8).
 ///
-/// [pt] { 0x56caf0 } (thiscall, ret 8, eng_cc_cup.cpp; a virtual +0x14 da Copa da Liga): `EngCcCup::update_for_date(hoje,
-/// fase)`. Uma vez (+0x45 = 0), quando o ano do jogo ([0xde1f58] +0x439, palavra sem sinal) chega ao da copa (+0x40, com
+/// [pt] { 0x56caf0 } (thiscall, ret 8, eng_cc_cup.cpp; a virtual +0x14 da Copa da Liga): `hoje.update_for_date(/// fase)`. Uma vez (+0x45 = 0), quando o ano do jogo ([0xde1f58] +0x439, palavra sem sinal) chega ao da copa (+0x40, com
 /// sinal) e a fase não é 0: libera as tabelas (`free_season_tables`), +0x45 = 1, os inscritos (0x56ccc0, thiscall), as
 /// rodadas (virtual +0x8c), a árvore dos confrontos (virtual +0x94) e a ordem prevista (virtual +0x5c); uma devolução
 /// negativa dá a caixa (linhas 0x161, 0x168, 0x16f) e 0. Sempre, no fim, a atualização da copa.

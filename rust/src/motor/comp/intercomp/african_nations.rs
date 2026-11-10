@@ -1,6 +1,6 @@
 use super::*;
 
-/// `AfricanNations::update_for_date(hoje, completo)` (0x4025a0, thiscall, ret 8, african_nations.cpp; virtual +0x14;
+/// `hoje.update_for_date(completo)` (0x4025a0, thiscall, ret 8, african_nations.cpp; virtual +0x14;
 /// the SEH frame is only for the local dates, with no destructor): the daily update of the African Nations Cup.
 ///
 /// Without `completo`, only the league day runs. With it: the draw date is that of 0x549ef0(+0xb6, +0xb8 + +0x40) (lea
@@ -19,7 +19,7 @@ use super::*;
 /// passes on.
 ///
 /// [pt] { 0x4025a0 } (thiscall, ret 8, african_nations.cpp; a virtual +0x14; quadro SEH só das datas locais, sem destrutor):
-/// `AfricanNations::update_for_date(hoje, completo)`, o dia da Copa Africana. Sem `completo`, só o dia de liga. Com ele:
+/// `hoje.update_for_date(completo)`, o dia da Copa Africana. Sem `completo`, só o dia de liga. Com ele:
 /// a data do sorteio é a de 0x549ef0(+0xb6, +0xb8 + +0x40) (lea ecx, local; push ano; push dia -> thiscall, ret 8,
 /// pura); antes dela (o ano de hoje menor, sem sinal; ou o mesmo ano e o dia de hoje menor, com sinal) a rotina volta 0
 /// sem o dia de liga. No dia do sorteio, fora do sorteio feito (+0x45 = 0): o sorteio dos 16 (0x4022c0: mov ecx ->
@@ -180,7 +180,7 @@ pub(crate) unsafe extern "thiscall" fn draw_finalists(this: usize) -> u32 {
     draw_african_nations_finalists(League(this))
 }
 
-/// `AfricanNations::create_group_stage(g)` (`0x401ea0`, thiscall, ret 4, `african_nations.cpp`): creates the stage of
+/// `g.create_group_stage()` (`0x401ea0`, thiscall, ret 4, `african_nations.cpp`): creates the stage of
 /// group g + 1 (B to D, g = 0..2) of the African Nations Cup on draw day.
 ///
 /// SEH frame only for the stage's `new`, with no destructor on the normal path.
@@ -198,7 +198,7 @@ pub(crate) unsafe extern "thiscall" fn draw_finalists(this: usize) -> u32 {
 /// 1.
 ///
 /// [pt] { 0x401ea0 } (thiscall, ret 4, african_nations.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
-/// normal): `AfricanNations::create_group_stage(g)`, a fase do grupo g + 1 (B a D, g = 0..2, do dia do sorteio). Os
+/// normal): `g.create_group_stage()`, a fase do grupo g + 1 (B a D, g = 0..2, do dia do sorteio). Os
 /// times num vetor de 4 ponteiros (0x944e46(0x10): push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x2dc e 0):
 /// os sorteados 4g + 4 a 4g + 7 (+0xee); a tabela das rodadas pela virtual +0x3c (push 0; push &id; push &rodadas; push
 /// g; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xee) push; add esp, 4 -> cdecl; o construtor League_Stage

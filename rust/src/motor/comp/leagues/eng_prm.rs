@@ -362,7 +362,7 @@ pub(crate) unsafe fn eng_prm_fill_league_table(this: League, n: i16, file: usize
             }
         }
         i = i.wrapping_add(1);
-        club = club.wrapping_add(0x245);
+        club = club.wrapping_add(club::SIZE);
     }
     if k as i8 as i16 != this.club_count() {
         return 0;

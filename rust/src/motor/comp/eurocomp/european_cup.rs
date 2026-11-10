@@ -1171,7 +1171,7 @@ pub(crate) unsafe fn fill_champions_league_entrants(t: usize) -> i32 {
                 _ => {}
             }
         }
-        c = c.wrapping_add(0x245);
+        c = c.wrapping_add(club::SIZE);
         i += 1;
         if i as i16 as i32 >= clubs {
             break;
@@ -1365,7 +1365,7 @@ pub(crate) unsafe extern "thiscall" fn process_fixture(this: usize, game: usize,
         (game.away_club(), game.home_club())
     } else {
         add_uefa_coefficient(read_usize(a.addr() + 0x53), 1);
-        add_uefa_coefficient(read_usize(game.away_club().addr() + club::NATION), 1);
+        add_uefa_coefficient(game.away_club().nation().addr(), 1);
         (Club(0), Club(0))
     };
     let _ = perdedor;

@@ -1102,9 +1102,9 @@ pub(crate) unsafe fn set_cup_league_rules(this: League, g: &GroupStageRules, rou
     b(0xc0, 0);
     b(0xc1, 0);
     b(0x42, 1);
-    write_i32(this.addr() + league::UPPER_DIVISION_ID, -1);
+    this.set_upper_division_id(-1);
     write_i32(this.addr() + league::LOWER_DIVISION_ID, -1);
-    write_i16(this.addr() + league::LEGS, rounds);
+    this.set_legs(rounds);
     if let Some(p) = g.prize {
         write_u32(this.addr() + league::PRIZE_FUND, p);
     }

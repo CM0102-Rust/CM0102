@@ -404,13 +404,13 @@ pub(crate) unsafe extern "thiscall" fn has_urgent_items(this: usize, manager: us
 /// Copies the text into the news item's slots from the given slot and returns the first free slot after it (at most
 /// 50).
 ///
-/// `NewsItem::set_slot_string(slot, text, next)`: copies the `text` into the news item's slots from `slot` (strncpy
+/// `slot.set_slot_string(text, next)`: copies the `text` into the news item's slots from `slot` (strncpy
 /// `exe::at_9466d0` at +5 + 4·slot, up to 200 − 4·slot bytes), terminates the area (+0xcc = 0) and, with `next`, writes the
 /// first free slot after the text (the length with the terminating zero rounded up to 4, in slots, plus `slot`; at most
 /// 50). Slot outside 0..49 or no text: the "Error" box and 0; otherwise 1.
 /// Original: `NewsItem::set_slot_string` (0x7858c0, news.cpp, thiscall, ret 0xc).
 ///
-/// [pt] { 0x7858c0 } (thiscall, ret 0xc, news.cpp): `NewsItem::set_slot_string(campo, texto, proximo)`: copia o `texto` nos
+/// [pt] { 0x7858c0 } (thiscall, ret 0xc, news.cpp): `campo.set_slot_string(texto, proximo)`: copia o `texto` nos
 /// campos da notícia a partir do `campo` (strncpy 0x9466d0 em +5 + 4·campo, até 200 − 4·campo bytes), termina a área
 /// (+0xcc = 0) e, com `proximo`, grava o primeiro campo livre depois do texto (o tamanho com o zero arredondado para
 /// 4, em campos, mais o `campo`; no máximo 50). Campo fora de 0..49 ou sem texto: a caixa "Error" e 0; senão 1.
@@ -515,7 +515,7 @@ pub(crate) unsafe fn manager_of_news_club(news: usize, o: usize) -> usize {
 /// Tells whether the news item is important for the person, by category and type (bids on the person's club, the
 /// humans...).
 ///
-/// `NewsItem::is_important_for(person)`: is the news important for the person (the byte +4 that the delivery `deliver_to_manager`
+/// `person.is_important_for()`: is the news important for the person (the byte +4 that the delivery `deliver_to_manager`
 /// writes)? By the category (`get_category`) and the type (+0): category 2, types 7 to 0xb, 0x27 and 0x28; category 4, 0xbb8,
 /// 0xbb9 and 0xbc4; category 5, a fixed list, 0xfa1 if the person is the manager of the club in data 5 (+0x19) and
 /// 0xfb6 if he is that of data 4 (+0x15) or of data 5; category 6, 0x1770 if data 0 (+5) is one of the 16 human
@@ -523,7 +523,7 @@ pub(crate) unsafe fn manager_of_news_club(news: usize, o: usize) -> usize {
 /// calls it once. Null person or type outside 1..0x1790 (`get_category`'s box): as in the original.
 /// Original: `NewsItem::is_important_for` (0x784eb0, news.cpp, thiscall, ret 4).
 ///
-/// [pt] { 0x784eb0 } (thiscall, ret 4, news.cpp): `NewsItem::is_important_for(pessoa)`: a notícia é importante para a
+/// [pt] { 0x784eb0 } (thiscall, ret 4, news.cpp): `pessoa.is_important_for()`: a notícia é importante para a
 /// pessoa (o byte +4 que a entrega 0x785d40 grava)? Pela categoria (0x785670) e o tipo (+0): categoria 2, os tipos 7 a
 /// 0xb, 0x27 e 0x28; categoria 4, 0xbb8, 0xbb9 e 0xbc4; categoria 5, uma lista fixa, 0xfa1 se a pessoa é o técnico do
 /// clube do dado 5 (+0x19) e 0xfb6 se é o do dado 4 (+0x15) ou do 5; categoria 6, 0x1770 se o dado 0 (+5) é um dos
@@ -555,12 +555,12 @@ pub(crate) unsafe extern "thiscall" fn is_important_for(news: usize, person: usi
 
 /// Copies the text stored from the slot (+5 + 4 × slot) into the buffer (strncpy) and clears the last byte; returns 1.
 ///
-/// `NewsItem::get_slot_string(slot, dest, n)`: copies the text stored from slot `slot` (+5 + 4 × slot) into `dest` like
+/// `slot.get_slot_string(dest, n)`: copies the text stored from slot `slot` (+5 + 4 × slot) into `dest` like
 /// strncpy (`exe::at_9466d0`: up to the zero, padding with zeros up to `n`) and zeroes the last byte (`dest[n − 1]`). Returns
 /// 1. Slot outside 0..49, null destination or `n` < 1: as in the original ("Error" box and 0).
 /// Original: `NewsItem::get_slot_string` (0x785a20, news.cpp, thiscall, ret 0xc).
 ///
-/// [pt] { 0x785a20 } (thiscall, ret 0xc, news.cpp): `NewsItem::get_slot_string(dado, destino, n)`: copia o texto guardado a
+/// [pt] { 0x785a20 } (thiscall, ret 0xc, news.cpp): `dado.get_slot_string(destino, n)`: copia o texto guardado a
 /// partir do dado `dado` (+5 + 4 × dado) para `destino` como o strncpy (0x9466d0: até o zero, completando com zeros
 /// até `n`) e zera o último byte (`destino[n − 1]`). Devolve 1. Dado fora de 0..49, destino nulo ou `n` < 1: a
 /// original (caixa "Error" e 0).

@@ -1018,7 +1018,7 @@ pub(crate) unsafe fn fra_first_fill_league_table(this: League, file: usize, row:
             }
         }
         i = i.wrapping_add(1);
-        club = club.wrapping_add(0x245);
+        club = club.wrapping_add(club::SIZE);
     }
     Some(k as i8 as i16 == this.club_count())
 }
@@ -1098,8 +1098,7 @@ pub(crate) unsafe fn fra_first_compare_league_table(name: &str, this: League, n:
 /// matches in TV slots (days 6, 4 or 1, slots 1 and 2); main stage only
 /// Original: `FraFirst::create_schedule` (0x5bb690, fra_first.cpp, thiscall, ret 0x10).
 ///
-/// [pt] { 0x5bb690 } (thiscall, ret 0x10, fra_first.cpp, 3.090 bytes, método +0x3c): `FraFirst::create_schedule(fase,
-/// &rodadas, &extra, &é_liga)`: só a fase −1 (as outras devolvem 0). Em 2001 (o ano +0x40 = 0x7d1) 34 rodadas (18
+/// [pt] { 0x5bb690 } (thiscall, ret 0x10, fra_first.cpp, 3.090 bytes, método +0x3c): `fase.create_schedule(/// &rodadas, &extra, &é_liga)`: só a fase −1 (as outras devolvem 0). Em 2001 (o ano +0x40 = 0x7d1) 34 rodadas (18
 /// clubes); nos outros anos 38 (20 clubes). é_liga (se pedido) = 1, as rodadas, extra 0, a tabela de rodadas × 0x41
 /// bytes (sem memória: a caixa da linha 0xd1 e 0); as rodadas de `FRENCH_FIRST_DIVISION_ROUNDS` em sequência (as marcadas só
 /// entram com 38); no fim, se a conta não bate com as rodadas, a caixa da linha 0x1b2 (e devolve a tabela assim mesmo).

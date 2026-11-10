@@ -3595,9 +3595,9 @@ pub(crate) unsafe extern "C" fn draw_action_zones_panel(top: *mut i32, base: *mu
     let (mut c1a, mut c1b, mut c2a, mut c2b) = (0u32, 0u32, 0u32, 0u32);
     let clubs = read_usize(G_CLUB_TABLE);
     let id1 = read_i32(data.addr());
-    exe::database_get_club_kit_colours((clubs as isize + id1 as isize * 0x245) as usize, data.home_kit() as u32, &mut c1a, &mut c1b);
+    exe::database_get_club_kit_colours(club_at(id1 as isize).addr(), data.home_kit() as u32, &mut c1a, &mut c1b);
     let id2 = data.away_club_id();
-    exe::database_get_club_kit_colours((clubs as isize + id2 as isize * 0x245) as usize, data.away_kit() as u32, &mut c2a, &mut c2b);
+    exe::database_get_club_kit_colours(club_at(id2 as isize).addr(), data.away_kit() as u32, &mut c2a, &mut c2b);
 
     // a zone: the frame, the panel from `l` to `r`, the bars of the two colors and the middle line; returns that of the line
     let zona = |a: (i32, i32), colour: usize, l: i32, r: i32, colour_b: (usize, usize)| -> usize {
@@ -5020,7 +5020,7 @@ pub(crate) unsafe extern "stdcall" fn match_stats_get_record_bucket(game: usize,
         if game.home_side_mark() == 0 {
             return 2;
         }
-        let v = read_i16(game.home_club().addr() + club::REPUTATION);
+        let v = game.home_club().reputation();
         return if v as i32 * 2 >= 10000 || v >= 0x157c { 0 } else { 2 };
     }
     // simplification: the two byte tables of the jumps are read from the exe itself (the hook only replaces the start of the routine)
@@ -5035,7 +5035,7 @@ pub(crate) unsafe extern "stdcall" fn match_stats_get_record_bucket(game: usize,
             }
             match table(0x729d94, c) {
                 0 => 0,
-                1 => (read_i16(game.competition().addr() + competition::REPUTATION) <= 0xc) as u8,
+                1 => (game.competition().reputation() <= 0xc) as u8,
                 _ => 1,
             }
         }
@@ -5047,7 +5047,7 @@ pub(crate) unsafe extern "stdcall" fn match_stats_get_record_bucket(game: usize,
             if c as u32 > 0x23 { 1 } else { (table(0x729d64, c) != 0) as u8 }
         }
         _ => {
-            let n = read_i8(game.competition().addr() + competition::REPUTATION);
+            let n = (game.competition().reputation() as i8);
             if n > 0xd { 1 } else { (n <= 6) as u8 + 2 }
         }
     }

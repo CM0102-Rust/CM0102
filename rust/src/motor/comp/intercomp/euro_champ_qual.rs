@@ -56,14 +56,14 @@ pub(crate) unsafe extern "thiscall" fn euro_champ_qual_set_up_rules(this: usize)
     set_up_rules(League(this))
 }
 
-/// `EuroChampQual::get_group_team_count(g)` (`exe::eurochampqual_get_group_team_count`, thiscall, ret 4, euro_champ_qual.cpp): the number of teams in
+/// `g.get_group_team_count()` (`exe::eurochampqual_get_group_team_count`, thiscall, ret 4, euro_champ_qual.cpp): the number of teams in
 /// group `g`, 6 or 5 depending on the format (+0xf6).
 ///
 /// With format 1 (9 groups [inference]), groups 0, 2 and 5 have 6 national teams and the others 5; with format 2 (10
 /// groups [inference]), groups 0, 2, 5 and 7 have 6 and the others 5; any other format shows the error box for line
 /// 0x245 and returns 5. `g` is the argument's byte.
 ///
-/// [pt] { 0x57d9d0 } (thiscall, ret 4, euro_champ_qual.cpp): `EuroChampQual::get_group_team_count(g)`: com o formato +0xf6 = 1
+/// [pt] { 0x57d9d0 } (thiscall, ret 4, euro_champ_qual.cpp): `g.get_group_team_count()`: com o formato +0xf6 = 1
 /// (9 grupos [inferência]), os grupos 0, 2 e 5 têm 6 seleções e os outros 5; com o formato 2 (10 grupos [inferência]), os
 /// grupos 0, 2, 5 e 7 têm 6 e os outros 5; outro formato, a caixa da linha 0x245 e 5. `g` é o byte do argumento.
 pub(crate) unsafe fn group_team_count(this: usize, g: u32) -> i16 {
@@ -78,13 +78,13 @@ pub(crate) unsafe fn group_team_count(this: usize, g: u32) -> i16 {
     }
 }
 
-/// EuroChampQual::get_group_team_count(g): number of nations in qualifying group g of the European Championship (6 or 5
+/// g.get_group_team_count(): number of nations in qualifying group g of the European Championship (6 or 5
 /// depending on the format at +0xf6; see group_team_count).
 pub(crate) unsafe extern "thiscall" fn get_group_team_count(this: usize, g: u32) -> i16 {
     group_team_count(this, g)
 }
 
-/// `EuroChampQual::get_qualification_status(clube)` (`0x580b50`, thiscall, ret 4, `euro_champ_qual.cpp`; the virtual
+/// `clube.get_qualification_status()` (`0x580b50`, thiscall, ret 4, `euro_champ_qual.cpp`; the virtual
 /// giving a club's status): −2 if the low byte of the club's stat `0x12` is below 14, otherwise −3.
 ///
 /// Reads the club's stat `0x12` from the cup statistics (Comp_Stats::get_club_stat `0x4a2e10`: push 0x12; push club;
@@ -100,7 +100,7 @@ pub(crate) unsafe fn qualification_status(this: usize, club: usize) -> i16 {
     ((((x as u8 as i8) < 0xe) as i32) - 3) as i16 // cqs8: the situation by statistic 0x12
 }
 
-/// EuroChampQual::get_qualification_status(club): the club's qualification status in the European Championship
+/// club.get_qualification_status(): the club's qualification status in the European Championship
 /// qualifiers, from its competition stat 0x12 (Comp_Stats): -2 if that value (low byte, signed) is below 14, else -3.
 pub(crate) unsafe extern "thiscall" fn get_qualification_status(this: usize, club: usize) -> i16 {
     qualification_status(this, club)

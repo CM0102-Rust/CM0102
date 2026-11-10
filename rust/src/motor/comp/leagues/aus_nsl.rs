@@ -275,7 +275,7 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_create_table(this: usize) -> u32 
             k = k.wrapping_add(1);
         }
         i = i.wrapping_add(1);
-        club = club.wrapping_add(0x245);
+        club = club.wrapping_add(club::SIZE);
     }
     if k as i16 != this.club_count() {
         show_error_at(0x987c20, 0x252);

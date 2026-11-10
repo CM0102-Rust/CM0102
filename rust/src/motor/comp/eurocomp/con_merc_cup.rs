@@ -548,8 +548,7 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_group_stage(this: usi
 /// over two legs (7 days), final drawn on 3/12 and a single match on 9/12; category 8; tie-break 3
 /// Original: `ConMercCup::create_schedule` (0x4c1960, con_merc_cup.cpp, thiscall, ret 0x10).
 ///
-/// [pt] { 0x4c1960 } (thiscall, ret 0x10, con_merc_cup.cpp; a virtual +0x3c da Merconorte): `ConMercCup::create_schedule(fase,
-/// &rodadas, &extra, &é_liga)`: os grupos ou o mata-mata (`merconorte_stage`).
+/// [pt] { 0x4c1960 } (thiscall, ret 0x10, con_merc_cup.cpp; a virtual +0x3c da Merconorte): `fase.create_schedule(/// &rodadas, &extra, &é_liga)`: os grupos ou o mata-mata (`merconorte_stage`).
 pub(crate) unsafe extern "thiscall" fn con_merc_cup_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     build_stage_schedule(Cup(this), merconorte_stage(stage), rounds, extra, league, 0x9a7d6c)
 }

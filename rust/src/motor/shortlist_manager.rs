@@ -874,7 +874,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         }
         c1 = read_i8(c + 0x3d);
     }
-    let pos20 = || read_u8(p1.player().addr() + player_sheet::GOALKEEPER) == 0x14;
+    let pos20 = || (p1.player().goalkeeper() as u8) == 0x14;
     let jovem = age < 0x20 && (p1.int_apps() as i8) != 0;
     let mut signed_byte_at: i16; // ebx: the reputation of the current club (or the person’s, without a club) on the comparison scale
     let mut e8: i32 = 0; // [base+0x1c]: the new club’s
@@ -1054,7 +1054,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         e8 = ftol(w as f64 * read_f64(rdata::F64_1_5) - read_f64(rdata::F64_5000));
         if p2.nation().addr() != 0 {
             let (m, f) = language_fluency_factor(p1, p2, e8 as i16);
-            if age < 0x12 && f < read_f64(rdata::F64_5) && read_usize(p1.nation().addr() + nation::CONTINENT) != p2.nation().continent() {
+            if age < 0x12 && f < read_f64(rdata::F64_5) && p1.nation().continent() != p2.nation().continent() {
                 return zero;
             }
             f8 = m * f8;
@@ -1294,7 +1294,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
     }
     // the reputation of the current club (or of the person, without a club) on the same scale
     if d4 == 0 {
-        let mut aev = read_i8(p1.nation().addr() + nation::STATE_OF_DEVELOPMENT);
+        let mut aev = (p1.nation().state_of_development() as i8);
         if aev < 1 || aev > 3 {
             aev = 3;
         }
@@ -1480,7 +1480,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
             }
         } else if d4 != 0 {
             if ae == ad {
-                let t = read_usize(p1.nation().addr() + nation::CONTINENT);
+                let t = p1.nation().continent();
                 if t != 0 && read_usize(t) == read_usize(KEY_CONTINENT_EUROPE) {
                     let u = p2.nation().continent();
                     if u != 0 && read_usize(u) != read_usize(KEY_CONTINENT_EUROPE) && u != read_usize(read_usize(d4 + club::NATION) + 0x71) {
@@ -3086,7 +3086,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_to_club_shortlists(this: usize
         let recente = if ano != year_j { ano < year_j } else { dia < day_j };
         if recente {
             let c = get_contract(player.addr());
-            if !c.is_null() && read_u8(c.addr() + contract::SQUAD_STATUS) & 0xf0 != 0x70 && read_usize(c.addr() + 0x45) == 0 {
+            if !c.is_null() && c.squad_status() & 0xf0 != 0x70 && read_usize(c.addr() + 0x45) == 0 {
                 return;
             }
         }
@@ -3175,7 +3175,7 @@ pub(crate) unsafe extern "thiscall" fn transfer_list_player(this: usize, player:
         loyalty > s1.wrapping_sub(s2)
     };
     if desgostar {
-        exe::staff_add_disliked_staff(player, read_usize(player.club_job().addr() + club::MANAGER), 1);
+        exe::staff_add_disliked_staff(player, player.club_job().manager().addr(), 1);
     }
     if news != 0 {
         exe::shortlist_manager_add_player_to_club_shortlists(this, player, 1);
@@ -3624,12 +3624,12 @@ pub(crate) unsafe extern "stdcall" fn shortlist_manager_predict_selling_club_res
         }
         let listed: unsafe extern "C" fn(usize, usize) -> u32 = core::mem::transmute(FN_STAFF_IS_LOAN_LISTED);
         let rep = buyer.reputation() as f64;
-        if listed(player.addr(), 0) != 0 && rep * read_f64(rdata::F64_1_25) > read_i16(player.player().addr() + player_sheet::CURRENT_REPUTATION) as f64 {
+        if listed(player.addr(), 0) != 0 && rep * read_f64(rdata::F64_1_25) > player.player().current_reputation() as f64 {
             return 0;
         }
         let st = k.squad_status() & 0xf0;
-        if st == 0x60 || st == 0x70 || read_u8(player.player().addr() + player_sheet::GOALKEEPER) == 0x14 {
-            let v = read_i16(player.player().addr() + player_sheet::CURRENT_REPUTATION) as f64 * read_f64(rdata::F64_0_75);
+        if st == 0x60 || st == 0x70 || (player.player().goalkeeper() as u8) == 0x14 {
+            let v = player.player().current_reputation() as f64 * read_f64(rdata::F64_0_75);
             if rep > v && ((k.happiness() as u8) as i8) < -50 && (seller.continental_comp_id() as usize) != read_usize(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE) {
                 return 0;
             }

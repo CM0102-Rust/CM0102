@@ -24,7 +24,7 @@ pub(crate) unsafe extern "thiscall" fn eng_fa_cup_create_round_table(this: usize
 /// marks the question); then, every day, the cup update.
 ///
 /// Ret 8; virtual +0x14 of the English cup; SEH frame for the news of the 1999 path, no destructor on the normal path:
-/// `EngFaCup::update_for_date(today, stage)`. With +0x45 = 0 and the stage different from 0: on Date(1, 9, 1999) (month
+/// `today.update_for_date(stage)`. With +0x45 = 0 and the stage different from 0: on Date(1, 9, 1999) (month
 /// 9 is October) with +0xb2 = 0, the question to the human manager about entering at the 5th round (only in 1999: the
 /// original routine through the trampoline); on Date(3, 9, today's year) (3 October), frees the tables, +0x45 = 1, the
 /// entrants (`exe::engfacup_collect_entrants`, thiscall), the rounds (virtual +0x8c), the tree (virtual +0x94) (a negative return gives the
@@ -33,7 +33,7 @@ pub(crate) unsafe extern "thiscall" fn eng_fa_cup_create_round_table(this: usize
 /// Original: `EngFaCup::update_for_date` (0x570550, eng_fa_cup.cpp, thiscall, ret 8).
 ///
 /// [pt] { 0x570550 } (thiscall, ret 8, eng_fa_cup.cpp; a virtual +0x14 da Copa da Inglaterra; quadro SEH pela notícia do
-/// caminho de 1999, sem destrutor no caminho normal): `EngFaCup::update_for_date(hoje, fase)`. Com +0x45 = 0 e a fase
+/// caminho de 1999, sem destrutor no caminho normal): `hoje.update_for_date(fase)`. Com +0x45 = 0 e a fase
 /// diferente de 0: em Date(1, 9, 1999) (o mês 9 é outubro) com +0xb2 = 0, a pergunta ao técnico humano sobre a entrada na
 /// 5ª rodada (só em 1999: a original pelo trampolim); em Date(3, 9, ano de hoje) (3 de outubro), libera as tabelas, +0x45
 /// = 1, os inscritos (0x56fab0, thiscall), as rodadas (virtual +0x8c), a árvore (virtual +0x94) — uma devolução negativa

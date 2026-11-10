@@ -119,9 +119,9 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
     let l = this.round_dates();
     if l != 0 {
         exe::crt_free(l);
-        write_usize(this.addr() + league::ROUND_DATES, 0);
+        this.set_round_dates(0);
     }
-    let stats = read_usize(this.addr() + league::COMP_STATS);
+    let stats = this.comp_stats();
     if stats != 0 {
         exe::comp_stats_archive_season_and_reset(stats, 1);
     }
@@ -142,7 +142,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
     exe::crt_free(this.stages());
     write_u32(this.addr() + league::STAGE_COUNT, 3);
     let v = exe::crt_malloc(0xc);
-    write_usize(this.addr() + league::STAGES, v);
+    this.set_stages(v);
     if v == 0 {
         show_error_at(0x9eabc8, 0x1b4);
         for f in [0x5cc7d0usize, 0x5a8f60] {
@@ -151,8 +151,8 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
         }
         exe::crt_exit(-1);
     }
-    let a = read_i16(this.addr() + league::YEAR);
-    write_i16(this.addr() + league::YEAR, a.wrapping_add(1)); // cqq9: the next year of the J1
+    let a = this.year();
+    this.set_year(a.wrapping_add(1)); // cqq9: the next year of the J1
     write_i32(this.addr() + league::CURRENT_STAGE, -1);
     crate::comparison::branch("cqq_9 j1 rollover");
     let error = if virtual_(this.addr(), 0x8c) == 0 {
@@ -173,7 +173,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
     virtual_(read_usize(read_usize(G_COMP_OBJECT_TABLE) + 4 * read_usize(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_2)), 8);
     virtual_(this.addr(), 0x5c);
     exe::league_set_club_season_expectations(this);
-    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), read_usize(this.addr() + league::COMPETITION)) as u32)
+    (exe::officialsmanager_renew_officials(read_usize(G_OFFICIALS_MANAGER), this.competition().addr()) as u32)
 }
 
 /// True if the club's division (+0x57) is non-null and its id equals the competition id in global g.
@@ -231,7 +231,7 @@ pub(crate) unsafe fn fill_japanese_table(this: League, g: usize, girar: u8, ramo
             }
         }
         i = i.wrapping_add(1);
-        club = club.wrapping_add(0x245);
+        club = club.wrapping_add(club::SIZE);
     }
     if k as i8 as i16 != this.club_count() {
         return 0;

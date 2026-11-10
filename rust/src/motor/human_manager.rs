@@ -466,7 +466,7 @@ pub(crate) unsafe extern "C" fn human_manager_get_stand_in_manager(club: usize) 
     if auxiliar != 0 {
         return auxiliar;
     }
-    let injury_word_0c = |p: Staff| read_i16(p.non_player().addr() + non_player::CURRENT_REPUTATION);
+    let injury_word_0c = |p: Staff| p.non_player().current_reputation();
     let mut best = 0usize;
     for k in 0..5 {
         let c = Staff(club.coaches(k));

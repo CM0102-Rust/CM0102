@@ -15,8 +15,7 @@ pub(crate) const INTERTOTO_ROUNDS: [EngCcCupCupRound; 5] = [
 /// prizes
 /// Original: `IntertotoCup::create_round_table` (0x633300, intertoto_cup.cpp, thiscall, ret 0x10).
 ///
-/// [pt] { 0x633300 } (thiscall, ret 0x10, intertoto_cup.cpp; a virtual +0x3c): `IntertotoCup::create_round_table(fase,
-/// &rodadas, &extra, &saida)`: na fase −1, as 5 rodadas; a caixa da linha 0xe4 sem memória.
+/// [pt] { 0x633300 } (thiscall, ret 0x10, intertoto_cup.cpp; a virtual +0x3c): `fase.create_round_table(/// &rodadas, &extra, &saida)`: na fase −1, as 5 rodadas; a caixa da linha 0xe4 sem memória.
 pub(crate) unsafe extern "thiscall" fn intertoto_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     eng_cc_cup_create_single_stage_round_table(Cup(this), stage, rounds, extra, out, &INTERTOTO_ROUNDS, 0x9e9e14, 0xe4, "cqp_13 tabela da intertoto")
 }
@@ -246,7 +245,7 @@ pub(crate) unsafe fn intertoto_winners_for_uefa(this: Cup, uefa: Cup) -> ([usize
 /// Daily Intertoto update: once a season, when the Intertoto ends, its final winners (up to three, in August) enter the
 /// UEFA Cup; every day, the cup update.
 ///
-/// `IntertotoCup::update_for_date(today, stage)`, virtual +0x14 of the Intertoto. Once (+0xb2 = 0), when the cup has
+/// `today.update_for_date(stage)`, virtual +0x14 of the Intertoto. Once (+0xb2 = 0), when the cup has
 /// ended (virtual +0x10 with 0, 1: push 1; push 0; mov ecx, this -> thiscall, ret 8; the low byte): without the UEFA
 /// Cup, the box for line 0x29e; with it, each Intertoto team with +5 = 1 (the winners of the finals) goes, in order,
 /// into the places from +0x3e − 27 on of the UEFA Cup's table +0xa7 (the last three places; up to three: the club, +4
@@ -256,8 +255,7 @@ pub(crate) unsafe fn intertoto_winners_for_uefa(this: Cup, uefa: Cup) -> ([usize
 /// update (`cup_update_for_date`: push stage; push today; mov ecx, this -> thiscall, ret 8), whose return value is returned.
 /// Original: `IntertotoCup::update_for_date` (0x633d40, intertoto_cup.cpp, thiscall, ret 8).
 ///
-/// [pt] { 0x633d40 } (thiscall, ret 8, intertoto_cup.cpp; a virtual +0x14 do Intertoto): `IntertotoCup::update_for_date(hoje,
-/// fase)`. Uma vez (+0xb2 = 0), quando a copa acabou (virtual +0x10 com 0, 1: push 1; push 0; mov ecx, this ->
+/// [pt] { 0x633d40 } (thiscall, ret 8, intertoto_cup.cpp; a virtual +0x14 do Intertoto): `hoje.update_for_date(/// fase)`. Uma vez (+0xb2 = 0), quando a copa acabou (virtual +0x10 com 0, 1: push 1; push 0; mov ecx, this ->
 /// thiscall, ret 8; o byte de baixo): sem a Copa da UEFA, a caixa da linha 0x29e; com ela, cada time do Intertoto com
 /// +5 = 1 (os vencedores das finais) vai, em ordem, para as vagas de +0x3e − 27 em diante da tabela +0xa7 da UEFA (até
 /// três: o clube, +4 e +5 zerados) e para o livro de inscritos dela (+0x14, 6 bytes: o clube e a situação 4 em +4;
@@ -323,7 +321,7 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize
 /// Records a club's Intertoto outcome in the staff records: the final winner qualifies for the UEFA Cup, a club going
 /// through gets the next round record, a club knocked out leaves European competition.
 ///
-/// `IntertotoCup::update_staff_records_for_status(club, outcome, _, _, match, _)`, virtual +0x44 of the Intertoto;
+/// `club.update_staff_records_for_status(outcome, _, _, match, _)`, virtual +0x44 of the Intertoto;
 /// returns 0. Weight = `comp_util_scale_by_round`(low, high, match round +0x34, rounds +0x3c) (cdecl, 4 pushes; add esp, 0x10).
 ///
 /// - 1 (won the final): the qualification record (`add_qualified_for_round_record`) for the UEFA Cup (the competition [0xae23d0] + 0x6b ×

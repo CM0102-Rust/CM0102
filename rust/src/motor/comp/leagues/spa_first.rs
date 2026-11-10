@@ -472,7 +472,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
             write_usize(field, comp_record_of(KEY_CLUB_COMP_A_LOWER_DIVISION));
         }
         i = i.wrapping_add(1);
-        field = field.wrapping_add(0x245);
+        field = field.wrapping_add(club::SIZE);
     }
     let mut k: u8 = 0;
     let mut i: i16 = 0;
@@ -490,7 +490,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
             }
         }
         i = i.wrapping_add(1);
-        club = club.wrapping_add(0x245);
+        club = club.wrapping_add(club::SIZE);
     }
     if k as i8 as i16 != this.club_count() {
         return 0;

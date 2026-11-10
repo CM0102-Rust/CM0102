@@ -260,7 +260,7 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
         return;
     }
     let nation = read_usize(club + club::NATION);
-    if nation == 0 || read_i16(player.player().addr() + player_sheet::CURRENT_REPUTATION) <= 0x1c52 {
+    if nation == 0 || player.player().current_reputation() <= 0x1c52 {
         return;
     }
     if dry_run {
@@ -495,11 +495,11 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
                 let a = friendly_random((s.professionalism() as u8) as i8 as i32);
                 let b = friendly_random(0x1e);
                 let f = ct.squad_status() & 0xf0;
-                if a > b && (f == 0x10 || f == 0x20) && (s.age() as u8) as i8 > 0x17 && read_i16(s.player().addr() + player_sheet::CURRENT_REPUTATION) > 0x1482 {
+                if a > b && (f == 0x10 || f == 0x20) && (s.age() as u8) as i8 > 0x17 && s.player().current_reputation() > 0x1482 {
                     exe::staff_contract_set_flags(ct, 2);
                 }
             }
-            if (s.age() as u8) as i8 >= 0x15 || read_i16(s.player().addr() + player_sheet::CURRENT_REPUTATION) <= 0x1482 {
+            if (s.age() as u8) as i8 >= 0x15 || s.player().current_reputation() <= 0x1482 {
                 continue;
             }
             maybe_drop_attribute(s.addr() + staff::PROFESSIONALISM, true);
@@ -714,7 +714,7 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
     let c = exe::injury_get_condition(read_usize(G_INJURY), person, 0);
     // the original’s calculations are 32-bit with high bytes from other values in the register, but only the low word
     // arrives (the condition is short in 0x62bd10)
-    let queda = 0x15i16.wrapping_sub(read_u8(person.player().addr() + player_sheet::NATURAL_FITNESS) as i8 as i16).wrapping_mul(25);
+    let queda = 0x15i16.wrapping_sub((person.player().natural_fitness() as u8) as i8 as i16).wrapping_mul(25);
     let r = friendly_random(queda as i32);
     let new = (c as u16).wrapping_sub((queda as u16).wrapping_add(r as u16).wrapping_add(0x64));
     exe::injury_set_match_condition(read_usize(G_INJURY), person, new as i16, 0);
@@ -852,7 +852,7 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
         return;
     }
     crate::comparison::branch("cpz_9 fine evaluated");
-    let a = friendly_random(read_i8_as_i32(np.addr() + non_player::DISCIPLINE));
+    let a = friendly_random(((np.discipline() as i8) as i32));
     let b = friendly_random(10); // cpz9: the fine random draw
     if a <= b {
         return;

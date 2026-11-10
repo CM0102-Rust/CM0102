@@ -62,7 +62,7 @@ pub(crate) unsafe fn bra_reg_northeast_construct_state_league(this: League, year
     write_i32(this.addr() + league::CURRENT_STAGE, -1);
     write_u32(this.addr() + league::STAGE_COUNT, e.stages);
     let v = exe::crt_malloc(e.stages * 4);
-    write_usize(this.addr() + league::STAGES, v);
+    this.set_stages(v);
     if regras(this.addr()) == 0 {
         show_error_at(e.file, e.rows[0]);
         return this.addr();
@@ -81,7 +81,7 @@ pub(crate) unsafe fn bra_reg_northeast_construct_state_league(this: League, year
     }
     let n = exe::crt_operator_new(0x5ce);
     let s = if n != 0 { exe::new_comp_stats(n, this) } else { 0 };
-    write_usize(this.addr() + league::COMP_STATS, s);
+    this.set_comp_stats(s);
     if s == 0 {
         show_error_at(e.file, e.rows[4]);
         return this.addr();

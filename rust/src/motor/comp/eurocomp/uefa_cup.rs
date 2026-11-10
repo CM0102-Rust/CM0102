@@ -150,8 +150,7 @@ pub(crate) unsafe extern "thiscall" fn build_entrants(this: usize) -> i32 {
 /// and the round of 16); category 7 in qualifying and 8 after
 /// Original: `UefaCup::create_round_table` (0x9025c0, uefa_cup.cpp, thiscall, ret 0x10).
 ///
-/// [pt] { 0x9025c0 } (thiscall, ret 0x10, uefa_cup.cpp; a virtual +0x3c da Copa da UEFA): `UefaCup::create_round_table(fase,
-/// &rodadas, &extra, &saida)`: na fase −1, saida (se pedida) = 0, rodadas = 9, extra = 0; a tabela (0x944e46 de 0x3a8;
+/// [pt] { 0x9025c0 } (thiscall, ret 0x10, uefa_cup.cpp; a virtual +0x3c da Copa da UEFA): `fase.create_round_table(/// &rodadas, &extra, &saida)`: na fase −1, saida (se pedida) = 0, rodadas = 9, extra = 0; a tabela (0x944e46 de 0x3a8;
 /// sem memória, a caixa da linha 0xe0 e 0) com as rodadas de `uefa_cup_rounds` e rodadas = as gravadas. Fora da −1,
 /// 0.
 pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {

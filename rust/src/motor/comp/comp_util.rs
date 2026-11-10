@@ -655,7 +655,7 @@ pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(news: usi
         if i == 0xffff_ffff { 0 } else { read_u32(table).wrapping_add(i.wrapping_mul(size)) }
     };
     d(0x1c, pointer(0xc, G_CLUB_TABLE, 0x245)); // home club
-    d(0x20, pointer(0x10, G_CLUB_TABLE, 0x245));
+    d(0x20, pointer(0x10, G_CLUB_TABLE, club::SIZE as u32));
     d(0x18, pointer(4, G_STADIUM_TABLE, 0x4e));
     d(0x14, pointer(0, G_CLUB_COMP_TABLE, 0x6b));
 }

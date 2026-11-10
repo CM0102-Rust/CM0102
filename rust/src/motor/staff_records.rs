@@ -536,7 +536,7 @@ pub(crate) unsafe fn match_rating_for_manager(p: Fixture, side: u32, out: &mut u
     let i = (exe::comp_get_fixture_match_importance(comp, p, side, out as *mut u32) as u32) as u8 as i8 as i32;
     let x = i
         .wrapping_mul(opponent.reputation() as i32 / 500)
-        .wrapping_mul(read_i16(p.competition().addr() + competition::REPUTATION) as i32)
+        .wrapping_mul(p.competition().reputation() as i32)
         .wrapping_mul(points)
         .wrapping_mul(50);
     x / 100000
@@ -1333,7 +1333,7 @@ pub(crate) unsafe extern "thiscall" fn add_promotion_record(this: usize, club: u
 /// renovação (a 0x4cda70 faz a oferta: não roda duas vezes; no acesso os tipos 1, 2, 3 e 5, no rebaixamento 1 e 2).
 pub(crate) unsafe fn promotion_regions(this: usize, club: Club, promotion: bool) -> Option<Vec<(usize, usize)>> {
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
-    reg.push((club.addr(), 0x245));
+    reg.push((club.addr(), club::SIZE));
     let manager = club.manager();
     if !manager.is_null() {
         if !manager.non_player().is_null() {
