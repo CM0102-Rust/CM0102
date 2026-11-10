@@ -28,6 +28,15 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 29 da legibilidade: assinaturas tipadas e as últimas constantes de ponto flutuante cruas
+
+`tipar_registros.py --assinaturas` para os 25 tipos de registro em uso e `--propagar` sobre eles (`.addr()` 8.079 → 8.017:
+o resto são funções com chamadas mistas). `expandir_leitoras.py` expande 596 chamadas de fechos locais que só leem um
+endereço fixo do exe (`let k = |a: usize| read_f64(a); k(0x968dc0)`), e o `nomear_rdata.py` dá nome pelo valor: 63
+constantes novas, nenhuma leitura de ponto flutuante crua no código. O `nomear_rdata.py` mantinha só as constantes das
+leituras cruas da vez e apagava as que já tinham nome: agora mantém e só acrescenta. Prova: 7cc445c2 ×2, detector igual,
+comparação 0; as 28 mutações mudadas compilam.
+
 ## Leva 28 da legibilidade: nomes de função em português e mais locais
 
 `nomes_em_ingles.py`: as funções e os comparadores que tinham ficado com nome em português ganharam nome em inglês

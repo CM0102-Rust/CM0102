@@ -29,6 +29,15 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 29: typed signatures and the last raw float constants
+
+`tipar_registros.py --assinaturas` for the 25 record types in use and `--propagar` over them (`.addr()` 8,079 → 8,017: the
+rest is functions with mixed callers). `expandir_leitoras.py` expands 596 calls of local closures that only read a fixed
+exe address (`let k = |a: usize| read_f64(a); k(0x968dc0)`), and `nomear_rdata.py` names them by value: 63 new
+constants, no raw float read left in the code. `nomear_rdata.py` kept only the constants of the current raw reads and
+dropped the named ones: it now keeps them and only adds. Proof: 7cc445c2 ×2, detector equal, comparison 0; the 28
+changed mutations compile.
+
 ## Readability batch 28: Portuguese function names and more locals
 
 `nomes_em_ingles.py`: the functions and comparers left with Portuguese names got English ones (`compare_condicao` →
