@@ -14,7 +14,7 @@
 //! # How to read a routine file
 //! `motor/<folder>/<file>.rs` holds the routines of the game's source file of the same name (`comp/leagues/eng_prm.rs`
 //! for `eng_prm.cpp`). Each rewritten routine has a header: what it does, then `Original: Class::method (address,
-//! source file, calling convention)`, then the Portuguese notes (`[pt]`). The vocabulary:
+//! source file, calling convention)` (the Portuguese notes are in docs/ROTINAS.md). The vocabulary:
 //! - `compare_<name>`: the comparer. In comparison mode (`CM_COMPARAR=1`) it runs the original and our copy side by
 //!   side (or the original only, checking the outcome it planned) and records any difference (`PLACAR`).
 //! - `comparison::branch("...")`: a branch counter; the tests use it to know which paths a career went through.

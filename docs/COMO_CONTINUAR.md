@@ -1,6 +1,6 @@
 # Como continuar o trabalho
 
-Guia para quem pega o projeto (pessoa ou Claude Code). Montagem do jogo: `README.md`, seção "Montar do zero". Método e visão: `PROJETO.md`. Tudo o que se sabe do binário: `DESCOMPILACAO.md`. Cada rotina reescrita e as provas dela: `ROTINAS.md`. Estado atual e próximos passos: `wiki/index.md`.
+Guia para quem pega o projeto (pessoa ou Claude Code). Montagem do jogo: `README.pt.md`, seção "Montar do zero" (em inglês: `README.md`, "Building from scratch"). Método e visão: `PROJETO.md`. Tudo o que se sabe do binário: `DESCOMPILACAO.md`. Cada rotina reescrita e as provas dela: `ROTINAS.md`. Estado atual e próximos passos: `wiki/index.md`.
 
 ## Pré-requisitos
 
@@ -41,7 +41,7 @@ as chamadas ao exe dos itens da fila que não batem com o original (corrija no i
 4. os auxiliares e itens novos: nomes em inglês propostos por leitura (agentes que só leem) e aplicados por
    `aplicar_nomes_auxiliares.py` e `aplicar_nomes_itens.py`; depois `restaurar_palavras.py <commit de antes>` se algum
    nome de uma palavra só tiver caído em comentário em português;
-5. `cabecalhos.py --gravar` (pelo ROTINAS) ou `aplicar_cabecalhos.py` (resumos propostos): o cabeçalho bilíngue;
+5. `cabecalhos.py --gravar` (pelo ROTINAS) ou `aplicar_cabecalhos.py` (resumos propostos): o cabeçalho em inglês (o português fica no ROTINAS);
 6. `nomear_chaves.py`, `nomear_globais.py`, `nomear_campos.py`, `arrumar_rodada4.py --fase a` e `--fase b`,
    `anotar_constantes.py`: chaves, globais, campos, tamanhos e constantes com nome ou valor;
 7. `nomear_funcoes_chamadas.py` (endereços passados a `chamar`/`call_thiscall*`), `aplicar_campos_classes.py` (campos de

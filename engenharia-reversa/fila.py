@@ -146,7 +146,7 @@ def materializar(nomes, n, base, antes):
 def estado():
     s = open(os.path.join(R, 'rust', 'src', 'motor.rs'), encoding='utf-8').read()
     base = int(re.search(r'\n\}\nconst N: usize = (\d+);', s).group(1))
-    leia = open(os.path.join(R, 'README.md'), encoding='utf-8').read()
+    leia = open(os.path.join(R, 'README.pt.md'), encoding='utf-8').read()
     n, total = map(int, re.search(r'\*\*Estado:\*\* (\d+) levas, (\d+) rotinas', leia).groups())
     return n, total, base
 

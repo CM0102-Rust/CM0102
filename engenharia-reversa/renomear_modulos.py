@@ -54,7 +54,7 @@ def main():
                 open(p, 'w', encoding='utf-8', newline='').write(novo)
     outros = (glob.glob(os.path.join(R, 'engenharia-reversa', '*.py')) + glob.glob(os.path.join(R, 'engenharia-reversa', '*.sh'))
               + glob.glob(os.path.join(R, 'levas', 'carreira_ampla', '*.ps1')) + glob.glob(os.path.join(R, 'docs', '*.md'))
-              + [os.path.join(R, x) for x in ('CLAUDE.md', 'CLAUDE.en.md', 'README.md', 'README.en.md')])
+              + [os.path.join(R, x) for x in ('CLAUDE.md', 'CLAUDE.en.md', 'README.md', 'README.pt.md')])
     for p in outros:
         if os.path.basename(p) == 'renomear_modulos.py':
             continue

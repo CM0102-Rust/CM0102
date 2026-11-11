@@ -2,7 +2,7 @@
 
 # How to continue the work
 
-Guide for whoever picks up the project (a person or Claude Code). Setting up the game: `README.md`, section "Montar do zero". Method and vision: `PROJETO.md`. Everything known about the binary: `DESCOMPILACAO.md`. Each rewritten routine and its proofs: `ROTINAS.md`. Current state and next steps: `wiki/index.md`.
+Guide for whoever picks up the project (a person or Claude Code). Setting up the game: `README.md`, section "Building from scratch". Method and vision: `PROJETO.md`. Everything known about the binary: `DESCOMPILACAO.md`. Each rewritten routine and its proofs: `ROTINAS.md`. Current state and next steps: `wiki/index.md`.
 
 ## Prerequisites
 
@@ -43,7 +43,7 @@ shows the queue items' exe calls that do not match the original (fix them in the
 4. new helpers and items: English names proposed by reading (read-only agents) and applied by
    `aplicar_nomes_auxiliares.py` and `aplicar_nomes_itens.py`; then `restaurar_palavras.py <commit before>` if a
    single-word name landed in a Portuguese comment;
-5. `cabecalhos.py --gravar` (from ROTINAS) or `aplicar_cabecalhos.py` (proposed summaries): the bilingual header;
+5. `cabecalhos.py --gravar` (from ROTINAS) or `aplicar_cabecalhos.py` (proposed summaries): the English header (the Portuguese stays in ROTINAS);
 6. `nomear_chaves.py`, `nomear_globais.py`, `nomear_campos.py`, `arrumar_rodada4.py --fase a` and `--fase b`,
    `anotar_constantes.py`: named keys, globals, fields, sizes and constants with their value;
 7. `nomear_funcoes_chamadas.py` (addresses passed to `chamar`/`call_thiscall*`), `aplicar_campos_classes.py` (fields of
