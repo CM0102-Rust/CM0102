@@ -4,6 +4,8 @@
 
 Made on 11/11/2026 for the Rust Tweaks release 1.5 (rebalancing the market), by four readers of the original's disassembly and of the Rust code. Every claim is marked **[proved]** (disassembly or a test) or **[inferred]**. Routines not yet in Rust were ported as queue items (`levas/fila/mka_*`, `mkb_*`, `mkc_*`, `mkd_*`); their proof status is in each item's `PRONTO.txt`. Sources: `levas/reorganizacao/mercado/`.
 
+**Updated 11/11/2026: inferred claims closed** (`levas/reorganizacao/mercado/fechamento_inferidos.en.md`): the [inferred] marks outside the routines still being read (0x4d1600, 0x85fc50, 0x864550, 0x4ce4e0, 0x4c7ac0, 0x862720, 0x844780) were proved in the disassembly or kept with the reason. Main points: the loan stuck in state 8 is a proved defect of the original, without holidays (section C §8); bit 4 of `contract::TRANSFER_STATUS` = automatic asking price, bit 8 = listed at the player's request; the squad statuses (high nibble of +0x4f); the `edi` of the youngsters filter is the person's id + the club's id; the future-transfer +0x10 = 1 when the person leaves; the rules of 0x83cb40 and 0x83f3a0 from items `mkb_2`/`mkb_3`; `get_max_wage` is not inverted.
+
 Corrections found after the sections were written: 0x83f3a0 is called by `allocate_transfer_budget` 0x83b6e0 (0x83bab7), `update_staff_status` 0x843e10 (0x844108) and itself, not by 0x83cb40; 0x83cb40 is now item `mkb_2` and 0x83f3a0 item `mkb_3`; in 0x83cb40 the target base (+0x74, from 0x7bca90) sets the slot states and the cut (base/68 − 35), the rating itself (+0x64) prices the slots.
 
 Sections: [A. The money side](#a) · [B. How the AI buys and sells](#b) · [C. Loans, windows and limits](#c) · [D. The player's side and who decides](#d)
@@ -43,8 +45,14 @@ Ghidra's pseudo-C, from the use or from the community map, without proof.
 0x8e6330, 0x8e74a2, 0x8e839c, 0x8ea2af, 0x8ecf7f..0x8ee61d), the shortlists (budget per slot, `shortlist_manager.rs`
 2486), the board (`manager_manager.rs` 837 and 1820: funds requests, the veto), the finance events
 (0x59e329..0x59ed38), the contracts (0x4d753c, 0x4de3a6), the screens (0x463af8, 0x6a3b87, 0x7b6d5a...). Today's Rust
-callers pass `(fin, 0, 0, 0, 1, 0)`: no player, no listed players, nothing pending. The computer's bids run every day
-of the window for every computer club that buys **[inferred]** from the callers.
+callers pass `(fin, 0, 0, 0, 1, 0)`: no player, no listed players, nothing pending. The budget is computed for every
+bid built (`TRANSFER_OFFER::build_bid` 0x8e5d60, which calls 0x598800 at 0x8e6330) and in each offer's restrictions
+check (0x8cfe2d). The AI's new bids come only from `make_club_bids` 0x84a020 (single call at 0x5cdd6d, in the day loop),
+at the rhythm of section B §2 (every day, or only when (random(2) + id) % 7 = 0), **without looking at the window**:
+reason 9 (outside the window) of `can_club_bid_for_player` is accepted (offers outside the window are held by 0x8c4e10)
+**[proved: refs of 0x598800 and of `add_transfer_offer` 0x8be300 (0x84a728 in 0x84a020; the others are reviews
+0x8c0810/0x8c0f40, the loan 0x8bed60, 0x8bf060 and screens); 0x84a020 in Rust compared (cqe_3); the rhythm at
+0x5cdc6e..0x5cdd6d]**.
 
 The rule, in order **[proved]** (disassembly 0x598800..0x5997f9, 1240 instructions):
 
@@ -52,7 +60,7 @@ The rule, in order **[proved]** (disassembly 0x598800..0x5997f9, 1240 instructio
    each of the 50 squad places (`club::SQUAD` +0xd7) whose person is transfer listed (0x5444a0).
 2. `*adjusted` = 0.
 3. With `pending` and a human club (0x600a50 with 1, 1): the club's future transfers (0x8ccb80, 27-byte rows: person
-   +8, sale +0x10, fee +0x14, stage +0x19): a purchase adds its fee to the committed money (except the `player`
+   +8, sale +0x10, fee +0x14, stage +0x19; see the +0x10 note below): a purchase adds its fee to the committed money (except the `player`
    himself); a stage 3 to 6 sale takes its fee off (once per person) and the wage of the contract with the club
    (0x4cf5f0, `contract::WAGE` +0xc) off the wages. Then the open contract offers (0x4ca300, 111-byte copies: person
    +0, fee +8, wage +0xc, state +0x50; state 4 does not count): each adds its wage and its fee; a person already
@@ -104,17 +112,33 @@ The rule, in order **[proved]** (disassembly 0x598800..0x5997f9, 1240 instructio
     standard × 0.05, 0.25 to 1); with a negative balance, see the defect below. Above V the budget becomes V + an
     eighth of the excess [0x96a628 = −0.125], at most 1.75 V when that passes 125000, and `*adjusted` = 1.
 
+**The future-transfer field +0x10 [proved]:** 1 when the person **leaves** the club asked about, 0 when he **arrives**.
+In `get_club_future_transfer_list` 0x8ccb80, for each open offer of the club (0x8ccbf3..0x8ccc1b, those it made; plus
+the ones received, from 0x8c6100 at 0x8ccc4d; loans, `offer::OFFER_TYPE` +0x1f = 1, are skipped at 0x8ccc78), the
+target's row (0x8ccdb7..0x8cce4d): +8 = the target (`offer+0xc`); if the club is the buyer (`[club] = offer+8`,
+0x8ccdca..0x8ccdcf), +0xc = the target's current club (−1 none) and +0x10 = 0 (0x8ccdda/0x8cce02); otherwise +0xc = the
+buyer and +0x10 = 1 (0x8cce0b..0x8cce0e); +0x14 = the fee (`offer+0x1b`); +0x18 = 4 for a pre-contract without a fee
+(completion 3/4), 1 with an exchange, else 0; +0x19 = the stage through the table 0x8cd134/0x8cd114 (1 to 6, 0
+otherwise); +0x1a = `offer+0x2d`; +0 the date. The exchange players' rows (0x8cce89..0x8ccf33) are the reverse: for the
+buying club, +0x10 = 1 (it gives the exchange player away), otherwise 0; fee 0, +0x18 = 1. In step 3, +0x10 = 0 adds
+the fee to the purchases; ≠ 0 takes the sale branch in stages 3 to 6.
+
 #### Defects of the original
 - **[proved] Negative balance in step 16:** with a player sheet, V becomes `_ftol(ratio × 0.65)` (the player's
   reputation over the club's, 0.15 to 0.85): V is lost and becomes 0. The budget becomes an eighth of itself when that
-  is at most 125000, otherwise **0** (the cap 1.75 × 0). For a non-player, V × 0.65 (what looks like the intent)
-  **[inferred]**.
+  is at most 125000, otherwise **0** (the cap 1.75 × 0). Without a player sheet, V × 0.65 **[proved]**: 0x59970b
+  (+0x61 null) → 0x599759 `fild V` → 0x59975d `fmul [0x96a5d0]` (= 0.65, read from the exe) → `_ftol` 0x599763; with a
+  sheet, the reputation ratio (0.15 [0x968f20] to 0.85 [0x969520]) takes V's place (0x599712..0x599757) and is
+  multiplied by the same 0.65. That the intent was V × ratio × 0.65 is still **[inferred]** (intent cannot be proved
+  from the code).
 - **[proved] Step 3, a repeated person:** after finding the person in an earlier row, the wage taken off is that of
   the contract of the person in the row after the first match, not of this row.
 - **[proved] Step 12:** the season's net spending enters by its low dword only (above 2.1 billion it turns negative
   and vanishes); the committed money S also comes off by its low dword.
-- **[inferred]** Step 4 returns the budget with no reserve for a club without a league (background clubs with no
-  competition).
+- **[proved]** Step 4 returns the budget with no reserve for a club without a league: `club::DIVISION` (+0x57) null
+  (0x598af3..0x598afc) or no object in `G_COMP_OBJECT_TABLE` (0x598b02..0x598b0d) jumps to the return 0x5997ec with step
+  1's value; it is the same test the shortlist uses for "league not loaded" (0x83cc68..0x83cc86). Which clubs these are
+  in a given career is still **[inferred]** (it depends on the loaded leagues; not counted).
 
 #### Extension points
 - **The multiplier m (step 5):** the only place the board (Business, Ambition) enters. In the Rust copy, one line; in
@@ -140,9 +164,25 @@ Rule **[proved]**: the player's main contract (in 0xae1080) gives the club; a cl
 (`contract::CONTRACT_TYPE` +0x35 & 0x3f) ≠ 2 or leaving on a Bosman (`contract::LEAVING_ON_BOSMAN` +0x49): 0. The
 floor = the stored value (`staff::VALUE`), limited by the release fee (`contract::RELEASE_FEE` +0x21) when the clause
 is active (0x867b50). The price = 0x4d1600(seller, buyer, player, 0, 1, 1), raised to the floor and limited by the
-fee. Listed or requesting a move (0x544520), or without bit 4 of `contract::TRANSFER_STATUS` (+0x4e) **[inferred: the
-manager set the price]**: the floor. By squad status (`contract::SQUAD_STATUS` +0x4f & 0xf0): 0x10 and 0x50 the
-price; 0x20 and 0x30 the mean (signed, truncated); the others, the floor.
+fee. Listed or requesting a move (0x544520), or without bit 4 of `contract::TRANSFER_STATUS` (+0x4e): the floor. **Bit
+4 = automatic asking price [proved]**: without it the manager set the price by hand, and `staff::VALUE` (+0x52) is that
+price. By squad status (`contract::SQUAD_STATUS` +0x4f & 0xf0): **0x10 Key and 0x50 Prospect** the price; **0x20 First
+Team and 0x30 Rotation** the mean (signed, truncated); 0 Undefined, 0x40 Backup, 0x60 Youngster and 0x70+ Not Needed,
+the floor **[proved]**.
+
+- **Proof of bit 4:** the "Set Staff Transfer Status" screen (0x8f6770, transfer_screens.cpp): control 0xa comes from
+  bit 4 (0x8f6923..0x8f6936: `and edx, 4; shr edx, 2`); the "Auto<…automatic asking price>" button (text at 0x8f6fe9)
+  is event 5 of handler 0x8f7640, which toggles control 0xa and, when switching it on, puts `calc_player_value`
+  0x4d0c60 in control 1 (the price) (0x8f772b..0x8f77bb); editing the price (event 0xb) switches control 0xa off
+  (0x8f780d..0x8f781e); on confirmation control 0xa becomes bit 4 (0x8f80b0..0x8f80da). A new contract is born with
+  +0x4e = 4 (0x866f14, in 0x866ee0, called by 0x4cfb13/0x4cfccb/0x4cfef4). With bit 4, the day (0x4c7f9e..0x4c7fbe)
+  and 0x84ae17..0x84ae30 recompute `staff::VALUE` with 0x4d0c60; without it, they do not. `set_player_squad_status`
+  0x8ce0e0 (screens only: 0x8efc88, 0x8f08b5, 0x8f0902, 0x8f0af6, 0x8f7fbc) writes the price at +0x52 (0x8ce1e9) and
+  clears bit 4 when its 8th argument ≠ 0 and the club is not in the crisis state (0x8ce8af..0x8ce8bf).
+- **Proof of the statuses (high nibble of +0x4f):** 0x867f6d..0x867ffa (staff_contracts.cpp) reads `+0x4f >> 4` and
+  jumps through the table 0x868000 (0x867f81 Undefined, 0x867f90 Key, 0x867f97 First Team, 0x867fa6 Rotation, 0x867fb5
+  Backup, 0x867fbc Prospect, 0x867fcb Youngster; above 6, "Not Needed" at 0x867fda). So 0x84af00's "status 6 or 7" is
+  Youngster/Not Needed, and 0x83cb40 sets Youngster (6) under 20 and Not Needed (7) otherwise.
 
 Note: inside 0x4d1600, a human seller whose manager is **on holiday** (0x5fd210, 0x5fea50 with option 0) and without
 bit 4 returns the stored value at once **[proved: 0x4d16xx]**: in the test career (manager on holiday) the human
@@ -293,7 +333,11 @@ Neighbours used by the rules below: 0x83a730 `update_club_shortlist` (Rust), 0x8
   `[KEY_CLUB_COMP_A_LOWER_DIVISION]` (0x9cf764); otherwise every day if the reputation is above 6250 (0x186a). In the
   other cases only when (random(2) + club id) % 7 = 0, with random(2) drawn **once a day** before the loop (0x5cdc76).
   **Defect:** the test does not use the date; only clubs with id ≡ 0 or 6 (mod 7) pass, each on half the days; the other
-  5/7 of those clubs **never** bid from their shortlist [proved; effect: inferred, most likely meant "once a week"].
+  5/7 of those clubs **never** bid from their shortlist [proved: 0x5cdc6e..0x5cdc7b, random(2) once a day before the
+  loop; 0x5cdd32..0x5cdd42 and 0x5cdd58.., (r + id) % 7. Effect proved for the shortlist: the shortlist's new bids and
+  loan requests come only from 0x84a020 (0x842740 has a single caller, 0x84ab5a, inside 0x84a020; the AI's new bids,
+  0x84a728); those clubs can still receive/answer offers and review their own. The intent ("once a week") is still
+  inferred: it cannot be proved from the code].
 - **The answer to an AI bid** (`process_due_offer` 0x8c63a0) [proved]: status `offer::STATUS` 0 with an AI seller: loan
   (`offer::OFFER_TYPE` = 1) → 0x84af00(seller, player, 0, buyer, −1, 1): ≠ 0 refuses the loan (0x8bfa30), 0 goes on to
   acceptance (0x4cc930, status 8, and the player's willingness 0x8d8310); transfer → 0x8c8090. Status 1
@@ -314,45 +358,68 @@ Neighbours used by the rules below: 0x83a730 `update_club_shortlist` (Rust), 0x8
 - **The showcase 0x842c00** [proved, refs.py]: 16 call sites, among them `transfer_list_player` 0x842320 (with news),
   `CONTRACT_MANAGER::daily_update` 0x4c7ac0 (3), `handle_transfer_request` 0x4d8610, `game_daily_staff_update` 0x5ce2d0
   (2), `Media::post_player_praise_story` 0x744240, `award_raise_winner_reputation` 0x412f00, `NewsItem::auto_respond`,
-  `move_player_to_club` 0x8c9720, `set_player_squad_status` 0x8ce0e0 and the person screens (2). One in
-  `CONTRACT_MANAGER::save_to_disk` 0x4dc3a0 (0x4dd0a1) is odd: maybe the map's boundary [inferred].
+  `move_player_to_club` 0x8c9720, `set_player_squad_status` 0x8ce0e0 and the person screens (2). The one the community
+  map puts in `CONTRACT_MANAGER::save_to_disk` 0x4dc3a0 (0x4dd0a1) is the map's boundary [proved]: the 0x4dc3a0 range
+  (3408 bytes) covers several routines; 0x4dd0a1 is in the handler 0x4dcd70 of the **"Transfer Request"** dialog
+  (builder 0x4dcb30; both registered at 0x4dcab5/0x4dcaba; texts "Put <…> on the transfer list at his own request ?",
+  "Yes", "No"). On "Yes": it clears the loan list (0x4dd060..0x4dd069), **sets bit 8** of +0x4e (0x4dd06c..0x4dd075;
+  bit 8 = listed at the player's request), event 0xc (0x544710), forced showcase (0x842c00 with 1, at 0x4dd0a1) and
+  0x4d71b0.
 - **The AI transfer list**: `transfer_list_player` 0x842320 has 3 call sites: 0x83dc42 (inside `assess_club_squad`, the
   only AI one) and the screens 0x8f8030/0x8f8607 [proved]. **The loan list**: the only `or byte [r+0x4e], 2` of `.text`
   are 0x83e49c and 0x83e651 (`assess_club_squad`) and 0x8442c4 (`add_to_loan_list`, called only by the screens:
-  0x8f806c, 0x8f8538); plus two through a register in `assess_club_squad` (0x83dd42, 0x83dd98) [proved by the scan;
-  writes through other instruction forms were not scanned: inferred there are none].
+  0x8f806c, 0x8f8538); plus two through a register in `assess_club_squad` (0x83dd42, 0x83dd98) [proved by the scan of
+  the whole `.text` for **byte** writes to `[reg + 0x4e]` (mov/or/and/add, immediate or register): bit 2 is only set at
+  these five points; the other register writes are contract copies (0x4cc6dc, 0x4cc903, 0x4ce39f, 0x4cf9d8, 0x4cfc10,
+  0x4cfdb9, 0x4d000f, 0x4d0546, 0x4d06a5, 0x5fbb51), clears (0x83d287 `& 0xfc`, 0x8442ef `& 0xfd`,
+  0x4d8747/0x4dd069/0x784848/0x8f80a1 `& 0xfd`, `& 0xf7`, `& 0xfe`), constructor zeros (0x85e458, 0x85e4f4, 0x85e6a4,
+  0x85e9db, 0x866eeb) or touch bits 1, 4 and 8. Still inferred: the wider writes covering +0x4e (265 `mov dword/word`
+  at +0x4b..+0x4e in all structures) were not looked at one by one].
 
 ### 3. The rules
 
 #### 3.1 The squad assessment (0x83cb40, original)
 
-`assess_club_squad(this, entry, club, daily, reset)`, thiscall, ret 0x10. Order [proved where marked; the rest
-pseudo-C, inferred]:
+`assess_club_squad(this, entry, club, daily, reset)`, thiscall, ret 0x10. Order [proved: disassembly
+0x83cb40..0x83f3a0 (3168 lines), read whole for item `mkb_2`; the cited points checked; where there is no address, the
+text is the `mkb_2` header]:
 
-1. DAYS (+8 of the entry) = 0. Leaves (and ACTIVE = 0) if the club is a national team, without a nation, human with
-   daily, or `club::PROFESSIONAL_STATUS` = 3; with a linked B team (`club_get_linked_b_team` 0x540a50) without the
-   partner, leaves [inferred; the call at 0x83cc04 proved].
+1. DAYS (+8 of the entry) = 0 (0x83cbc4); reset is forced when slot 0's +0x23 is 0xff (0x83cbb4..0x83cbbb). Leaves with
+   ACTIVE 0 (0x83cc16) if the club is a national team (0x53b900), without a nation, human with daily (0x600a50 with 0,
+   1), `club::PROFESSIONAL_STATUS` = 3, or when `club_get_linked_b_team` 0x540a50 finds the pair and says this club **is
+   the B one** (0x83cc04..0x83cc14: return ≠ 0 and the "is the A" flag 0): the A club runs the list [proved].
 2. No bid in a slot: if ACTIVE was 2, it becomes 1 and reset = 1. If the nation's league is not loaded or the club's
    league is not active in `[0xadadfc]`, and the reputation < 4000: if random(reputation + 1000) < random(5000), ACTIVE =
    0 and leaves (small clubs of unloaded leagues switch their shortlist off) [proved: 0x83cc6b..0x83ccab].
 3. With reset: the 40 slots are rebuilt (`shortlist_set_up_formation_slots` 0x83c090; each slot's status by its index
    and by the target rating `local_840` from `player_search_get_club_target_rating` 0x7bca90: up to 6000 or 8500, with
-   or without a continental competition). Without reset: the slots are only sorted (qsort 0x945333) [inferred].
-4. Slots without a target, or with a target, no offer and an expired date (or a target with job 0x10): target and
-   replacement = −1, price = 0, and the player slots go to the lists of positions to fill by status (2/3, 4, 5)
-   [inferred].
+   or without a continental competition). Without reset: the slots are only sorted, `qsort(slots, 40, 0x25, 0x83b6c0)`
+   at 0x83cfe5..0x83cff1 (order by the slot index) [proved].
+4. A slot without a target, or with a target, no offer (`OFFER_REF` −1) and a passed date or retired (job 0x10), loses
+   target, replacement and ceiling (the target, if in the staff pairs, gets event 3 in 0x843e10); its position goes to
+   its status's list (2 and 3, 4, 5) [mkb_2, 0x83cff9..0x83d1c7].
 5. **The squad** (`database_collect_club_squad` 0x541f90, 50): for each player with a sheet, job ≠ 0x10, not on the
    club's shortlist, with a contract at the club, no future transfer (0x8cca10) and no `contract::LEAVING_ON_BOSMAN`: at
    an AI club with no manager on holiday, **clears the transfer and loan marks** (`contract::TRANSFER_STATUS` & 0xfc),
    sets the status (`contract::SQUAD_STATUS` high nibble) 6 under 20 or 7 (AI club) and sends him to the first team
-   (`move_to_first_team` 0x4cc0b0) [proved: 0x83d281..0x83d2d7]. Injured (`Injury::get_player_injury` 0x62ed70) for more
-   than 30/300/400 days (by the rating 0x6e6340 against the target rating × 0.75) goes to the reserves
-   (`move_to_reserves` 0x4cc0f0); the others go to one of two lists (with or without a loan contract at another club)
-   [inferred].
-6. Selection by status (`match_man_assign_players_to_positions` 0x6e2000) for each list of slots; whoever is chosen
-   leaves the list of the rest; those older than goalkeeper/10 + 22 go to the end [inferred].
+   (`move_to_first_team` 0x4cc0b0) [proved: 0x83d281..0x83d2d7]. Injury (`Injury::get_player_injury` 0x62ed70): the
+   threshold is **150 days** (0x83d32d); **30** when random(recurrence level 0x62ece0 + 1) ≠ 0 (0x83d33e..0x83d34b);
+   otherwise, injured with a score (0x6e6340) ≥ the target: **400** (0x83d37f..0x83d387); score ≥ ¾ of the target
+   (0x969040 = 0.75): **300** (0x83d391..0x83d3a8). Days left ≥ threshold, or a retirement announcement (0x7a7ed0),
+   sends him to the reserves (`move_to_reserves` 0x4cc0f0, at 0x83d3f4; with a B team only above 300 days,
+   0x83d3d8..0x83d3ea) and, at a human club, clears the status (0x83d40e). The others go to the rest or to the list of
+   those on loan elsewhere (0x4cf6d0 at 0x83d41b), and with `reset` happiness goes to 0 [proved].
+6. Selection by status (`match_man_assign_players_to_positions` 0x6e2000, calls at 0x83d512, 0x83d636, 0x83d7f9): the
+   rest goes to the status 2 and 3 positions, then 4; those on loan elsewhere join the rest; those older than
+   `player_sheet::GOALKEEPER` / 10 + 22 (24 for a goalkeeper rated 20, 22 for the others) leave it (the swapped-in one
+   is looked at again); the rest goes to the status 5 positions; the old ones come back [mkb_2, 0x83d474..0x83d8ac].
 7. **The rest** (the end of the squad), for each player of the club, without a loan contract and not queued for a free
-   transfer (0x8c1870) [inferred as a whole; the marked points proved]:
+   transfer (0x8c1870) [mkb_2, 0x83d8bf..0x83de6b]: the threshold is ftol((age × 0.13 − 1.98) × base × 0.02), the cut
+   base/68 − 35 and the level ftol(reputation × 0.25 + PA × 12.5 + CA × 12.5 + club reputation × 0.25); "surplus" =
+   judged below the threshold (0x6e86d0 mode 1, 0x83da02) and a type 2 contract with less than professionalism +
+   pressure + 450 days at the club or an end 450 days or more away, or `staff::VALUE` ≥ reputation × 50, or the value ≥
+   the wages left (days × wage / 30). With a B team or at a human club, under 27 (goalkeeper 20) or 23, status 5 when ¾
+   of the level passes the threshold + 20, else 6. The points already proved:
    - a player below the manager's rating (`match_man_judge_player_ability` 0x6e86d0 < threshold) and (contract type 2
      with little time, or reputation × 50 ≤ `staff::VALUE`, or remaining wages/30 ≤ value) and the squad
      (`database_count_club_squad`) > reputation/500 + 20: with reset, happiness −100 (0x9c); at an AI club with rating 2
@@ -367,53 +434,84 @@ pseudo-C, inferred]:
      player aged ≥ 18 with happiness ≤ age × 50/3 − 400; under 24 also status 6 [proved: 0x83dce6..0x83ddb2]. E.g. at
      20 the goalkeeper needs −100 and an outfield player −34; at 24, −33 and +0 (any negative happiness); at 30, any
      negative. **A youngster only gets in when very unhappy.**
-8. The slots receive the chosen: the replacement target and, with no manager on holiday, the contract's status from the
-   slot's (except 1 and 2) [inferred]. In lists 4 and 5 (reserves, rest):
+8. The slots receive the chosen [mkb_2, 0x83e185..0x83e66f]: the replacement is the pick; with no manager on holiday
+   the contract takes the slot's status, except in list 2/3 over statuses 1 and 2; the slot date comes from his arrival
+   (+120 days, with `reset` and a manager). Status 4: at slot 24, with a B team or at a human club and not a big club,
+   the pick (not the manager) goes to the reserves. In lists 4 and 5 (reserves, rest):
    - list 4: **loan** if fatigue (`Injury::get_fatigue` 0x62c3d0) < −1000, `CURRENT_REPUTATION` < 4500,
      `player_sheet::WORK_RATE` (+0x44) < 3250 and happiness < −50 [proved: 0x83e46a..0x83e49c]. **Defect:** +0x44 is a
-     signed byte compared with 3250 (0xcb2): always true; probably meant `WORLD_REPUTATION` (+0xd, word) [code proved;
-     intent inferred];
+     signed byte compared with 3250 (0xcb2): always true; probably meant `WORLD_REPUTATION` (+0xd, word) [code proved:
+     `movsx edx, byte [eax+0x44]; cmp edx, 0xcb2` at 0x83e482..0x83e486; the intent is still inferred: that
+     `WORLD_REPUTATION` was meant cannot be proved from the code];
    - list 5: **loan** if fatigue < −500 − random(300) and happiness < 0 [proved: 0x83e613..0x83e651].
-9. The player slots' price (`shortlist_slot::VALUATION`, `shortlist_slot::PRICE`) from the target rating (up to 36000)
-   and the status; with the target's rating below, or grievances 0x100/1, or a contract with less than 365 days, the
-   slot is redone with adjusted happiness [inferred].
+9. The player slots' price (`shortlist_slot::VALUATION`, `shortlist_slot::PRICE`) [mkb_2, 0x83e66f..0x83ebfb]: p =
+   min(target, 36000) (× 0.75 in a goalkeeper slot with no replacement). Without a replacement: valuation p and price p
+   × 2.5 + reputation, 2p + rep., p × 1.8 + rep., p × 0.8 or p × 0.5 by status 1, 2, 3, 4/5, other (× 3 in a goalkeeper
+   slot). With one: to the team (2, 3, 4; with `reset` happiness + 50, 10 matches left out) or the reserves (5), scored
+   for the position (in the first 200 days × (1.25 − days × 0.00125)), within −10000..60000; score ≥ p, no grievances
+   0x100 or 1 and more than 364 days of contract: he stays the target. Otherwise happiness moves by ftol((1 − score/p)
+   × −100) (with `reset`; statuses 2 and 3 at least 25 and the slot loses him; the others at least 0; status 5 gets
+   status 6), and the price is (rep. × f + p × k) − score × k.
 10. Staff slots (jobs 6 to 10) with the person in the job (assistant +0xd3, `club::COACHES`, `club::PHYSIOS`,
-    `club::SCOUTS`) scored by `score_staff_for_job` 0x69d1b0 against target rating/5 (up to 5000); below it and with no
-    offer (0x4cc9e0), **sacked** (`MANAGER_MANAGER::remove_staff_from_club` 0x690890) [inferred].
+    `club::SCOUTS`): the sacking only happens with the local flag [esp+0x60] set (zeroed at 0x83cb6c), and it is only
+    set at 0x83cc44..0x83cc64: **the list was at ACTIVE 2, with no bids, and the club is not human** (0x600a50 with 1,
+    1). Then a `score_staff_for_job` 0x69d1b0 score below min(target/5, 5000) and no contract offer (0x4cc9e0):
+    **sacked** (`MANAGER_MANAGER::remove_staff_from_club` 0x690890; 0x83ee28..0x83ee72, the same for the other 4 jobs at
+    0x83ef46, 0x83f056, 0x83f15f, 0x83f275). Otherwise, price (threshold − score) × 2.5 [proved].
 
 #### 3.2 Choosing the target (0x83f3a0, original)
 
-`fill_shortlist_slot(this, slot, club, excluded)`, thiscall, ret 0xc, recursive [inferred except where marked]:
+`fill_shortlist_slot(this, slot, club, excluded)`, thiscall, ret 0xc, recursive [proved: disassembly
+0x83f3a0..0x840d80 (2048 lines), read whole for item `mkb_3`; the cited points checked; where there is no address, the
+text is the `mkb_3` header]:
 
-1. Leaves: no nation; human club; manager on holiday with rule 4 = 1; slot with an offer; national team.
+1. Leaves: no nation; human (0x600a50 with 0, 1); a human (1, 1) on holiday with rule 4 = 1; a slot with an offer; a
+   national team.
 2. **The knowledge divisor k** [proved: 0x83f4d8..0x83f5b8]: 100; reputation < 3500 → (6025 − reputation) × 4;
    Belgium, Holland, Sweden, Denmark, Norway → 50. Each of the 7 scout places (`club::SCOUTS`): empty +5 (+10 with the
    league active); with a scout, + 30 − 2 × `chance_to_know`(scout, 6) − `chance_to_know`(scout, 5). k = k/10, minimum
    2. **Probable defect:** 0x544410 gets the constants 6 and 5, not the scout's attributes; the result depends only on
-   his current ability (+4 of the non-player sheet): `JUDGEMENT`/`JUDGING_POTENTIAL` never count [code proved; intent
-   inferred].
-3. Reputation factor (×0.0008, or ×1/1175, 1/1125, 1/1050 by the wealth band 0x5986b0 in ITA, ENG, GER, FRA, ESP), the
-   slot's ceiling (`max_fee_for_squad_status` 0x84b230).
-4. Walks the position lists (`POSITION_LISTS_BY_PERSON`) of the slot's position. A candidate passes: not excluded, job
-   ≠ 5, no job 5 at a national team, no manager vacancy (0x69fc60); a player with a sheet, no retirement announced, not
-   Saudi; under 24 in status-5 slots; **price × 1.3 ≤ the slot's ceiling** (`shortlist_slot::MAX_PRICE`) or loan
-   listed; not of the club itself; on fewer than 10 shortlists; arrived more than 200 days ago (or status 7,
-   grievances, listed); not on another of the club's slots; work permit (0x84b180, 0x8c7560); for a loan, can loan
-   (0x8d0040) and a human's only if listed.
-5. **Whom the club knows**: (person id + club id) % k = 0; or a foreigner of another nation older than 22, or world
-   reputation > 3249, or not foreign (0x53d980), and the same region (+0x75 of the nation) or a club of reputation >
-   2749 with…, and then the reputation as seen (0x5407e0) ≥ 2750 + random(2000) (slots 5/6) or ≥ 3250 + random(2000);
-   a youngster (< 20) with home reputation < 3250 at a club < 3250: (id + club) % 15, or % (25 − the manager's
-   `non_player::YOUNGSTERS`) = 0. The human's scouts (0x7f7490) count for a club on holiday.
-6. The score (0x840d80, the player's value for the club) ≥ the slot's value and ≥ value − 10000; the asking price
-   (0x4d1600, 0x4d42d0 human; compensation exchange 0x84b6f0); **the prediction 0x84af00** with the predicted bid: 2
-   discards. Injury: (days − 15)² or (days − 10)² × 200 off.
-7. The best by score with a draw; **willingness** (0x846920) ≥ 3.15 (0x968e58) and wages: (3.5/willingness, minimum
-   0.9) × the desired wage (0x864550) ≤ 1.2 × the wage cap (0x5968d0). Interest news (0x754740) with draws.
+   his current ability (+4 of the non-player sheet): `JUDGEMENT`/`JUDGING_POTENTIAL` never count [code proved (mkb_3,
+   0x83f4d8..0x83f5b8); the intent is still inferred: it cannot be proved from the disassembly].
+3. Reputation factor: reputation × 0.0008; in ITA, ENG, GER, FRA and ESP with finances, by the wealth band (0x5986b0):
+   band 1, × 1/1175 (× 1/1125 above 6250); band 2, × 1/1125 (× 1/1050 above 4750). The slot's ceiling
+   (`max_fee_for_squad_status` 0x84b230).
+4. Walks the position lists (`POSITION_LISTS_BY_PERSON`) of the slot's position. A candidate passes: not excluded, id <
+   the number of people − 16, job ≠ 5, no job 5 at a national team (`job_for_club`/`job_for_nation`), no manager
+   vacancy (0x69fc60); a player with a sheet, no retirement announcement (0x83fb53..0x83fb5d), not Saudi
+   (0x83fb63..0x83fb73); status 5 (`(+0x24 & 0x1e) = 0xa`) and age > 23 skips (0x83fb79..0x83fb8d); purchase: the
+   ceiling (+7) below **price × 1.3** (0x968de8) skips (0x83fb97..0x83fbad); loan: passes with a club and a price ≤ 0,
+   otherwise must be loan listed (0x83fbb8..0x83fbd7) [proved]; not of the club itself; on fewer than 10 shortlists;
+   arrived more than 200 days ago (or status 7, grievances, listed); not on another of the club's slots; work permit
+   (0x84b180, 0x8c7560); for a loan, can loan (0x8d0040); a loan from a human only if listed (bit 2, 0x83feb8). A human
+   on holiday with rule 4 = 2 only considers his scout list. Non-player: the rest of a type 2 contract (days × wage /
+   7) ≥ the ceiling or > (reputation + 500) × 10 skips.
+5. **Whom the club knows** [proved: 0x83fed8..0x8400d4]: known when (0x83fed8) the human's scout list has him, or
+   (0x83feea..0x83fefd) (person id + club id) % k = 0. Otherwise, **of another nation** (0x83ff03) without caps (+0x22,
+   0x83ff11) and whose club is not of the club's nation (0x83ff1c..0x83ff26): a player under 23, foreign for the club
+   (0x53d980 with 1) and with world reputation (+0xd) < 3250 is skipped (0x83ff2c..0x83ff4f); from another region
+   (+0x75) he needs club reputation ≥ 2750 and (his club with no nation or of the same region, or club reputation ≥
+   4250, or the nation's `league_standard` +0x85 ≥ 12) (0x83ff55..0x83ffa3); and then his reputation as the manager
+   sees it (0x5407e0) ≥ 2750 + random(2000) in status 5/6 slots (with world reputation ≥ 1750) or ≥ 3250 +
+   random(2000) in the others (world ≥ 2750) (0x83ffa9..0x840058). **Of the same nation** (or with caps, or at a club
+   of the nation; 0x840060): a non-player, a loan slot, no sheet, home reputation (+9) ≥ 3250, his club ≥ 3250 or 20
+   years or more: known; otherwise the youngsters filter (section D §3, 0x8400ae: fixed per person-club pair).
+6. Score and price: below the valuation or the score to beat − 10000 skips; a purchase at a seller in crisis: at most
+   the seller's value; a compensation deal (0x84b6f0): its fee; otherwise the asking price (0x4d42d0 human at 0x8402e6,
+   0x4d1600 AI at 0x8402fe); status 4 under 28 or status 5: the excess over the value adds min(asking − value,
+   (rep./13000 + 0.5) × value, 2,500,000) to the offer; **the prediction 0x84af00** = 2 skips; a price above the ceiling
+   skips; score × y, y = 1 − (asking − value)/(max price × factor) (above 1 → y/3 + 0.67; 0.01..3); injury > 15 days:
+   − (days − 15)²; loan: the owner's prediction 2 skips, injury > 10 days − (days − 10)² × 200; without
+   `can_club_bid_for_player` skips; finally score × (92 + random(17))/100.
+7. **Willingness** (0x846920; non-player: 0x844780 at 0x840682); interest news with random(79 − rep./150) = 0 and
+   (rep. > 5000 + random(2000) or a human club); willingness ≥ 3.15 (0x968e58): the desired wage (0x864550 at
+   0x840893, as f32) × max(3.5/willingness, 0.9) above 1.2 × the wage cap (0x5968d0 at 0x84091d) skips; otherwise he is
+   the best so far. The scout story (0x587220) by draw.
 8. The chosen becomes the target (`shortlist_slot::TARGET_STAFF_ID`) and enters the shortlist (`add_shortlist_entry`
    0x8423f0). With nobody, a status 2/3 slot becomes a **loan slot** (bit 0) and starts again if (reputation² × 4e-9
-   + 0.6) × value < price, or ceiling < 50000, or Italy with a draw and reputation 3000..6000; an unloaded nation with
-   random ≤ random(20000). Otherwise the target stays −1.
+   + 0.6) × value < price, or ceiling < 50000, or Italy with a draw and reputation 3000..6000; only with the season
+   flag (key nation: between the season start − 28 and its end − 28; other nations always; non-player slot never), and
+   the nation's league loaded **or** random(reputation) > random(20000). Otherwise the target stays −1.
 
 #### 3.3 Bids and requests (0x84a020, Rust)
 
@@ -498,9 +596,12 @@ offered**, and high-reputation clubs get him first.
 | 79-byte record | `STATUS_FLAGS` +0xb (low nibble = on how many shortlists; 0x30 retirement) | 0x83f3a0, 0x842c00, 0x84a020 | R |
 | offer | `NEGOTIATION_INDEX` +0x28, `STATUS` +0x2c, `FEE` +0x1b, `EXCHANGE_PLAYERS` +4, `OFFER_KIND` +0x31, `JOB_TYPE` +0x11 | 0x8c0810, 0x8c8090 | R/W |
 
-The chairman and the directors (`club::CHAIRMAN` +0xbf, `club::DIRECTORS` +0xc3) are **not read** by any of this
-section's 7 routines [proved for the 4 in Rust and for 0x8c0810; inferred for 0x83cb40 and 0x83f3a0 from the pseudo-C].
-Of the manager only `non_player::YOUNGSTERS` (0x83f3a0) and his judgement in the rating
+The chairman and the directors (`club::CHAIRMAN` +0xbf, `club::DIRECTORS` +0xc3) are **not read directly** by any of
+this section's 7 routines [proved: for the 4 in Rust and 0x8c0810; and no access to `[club + 0xbf]` or `[club + 0xc3]`
+in 0x83cb40..0x83f3a0 or in 0x83f3a0..0x840d80]. **But they come in through the calls:** 0x83cb40 calls
+`update_club_target_reputation` 0x83bf40 (0x83cda7), which reads the chairman's Patience (+0x1d) and Resources (+0x20)
+(section D §3); 0x83f3a0 calls `get_max_wage` 0x5968d0 (0x84091d: the chairman's Business +0xf and Resources) and the
+asking price 0x4d1600 (0x8402fe, 0x840bfb). Of the manager only `non_player::YOUNGSTERS` (0x83f3a0) and his judgement in the rating
 (`match_man_judge_player_ability` 0x6e86d0 gets `club::MANAGER`) count; of the scouts, only their current ability
 (§3.2).
 
@@ -528,6 +629,9 @@ Of the manager only `non_player::YOUNGSTERS` (0x83f3a0) and his judgement in the
 | immediates | 17,500,000, 250,000, 1250 | 0x8c0810 |
 
 ### 6. Defects of the original
+
+In items 2 to 5 the code is proved; the intent is still **[inferred]** in all of them: whether it was meant cannot be
+proved from the disassembly.
 
 1. **Bids from only 2/7 of the clubs** outside loaded leagues (or with no league, or in the league of key 0x9cf764)
    with reputation ≤ 6250: (random(2) + id) % 7 without the date [proved].
@@ -688,7 +792,9 @@ career (counters of item cqe_6).
 ### 5. Windows [proved]
 
 Transfer rules: +4 the window table (12 bytes: +0 opening, +6 closing; each date 6 bytes: +0 rule, +1 number, +2 the
-weekday it moves to (0xff none) [inferred], +3 day, +4 month (0 = January), +5 1 opens / 0 closes), +8 how many, +0xa
+weekday it moves to (0xff none) [proved: `transfer_window_get_date` 0x40a7d0 passes byte +2 sign-extended (0x40a7d1
+`movsx ax, byte [ecx+2]`) as the 4th argument of `Date::Date` 0x549f70, which with a value ≠ 0xffff calls
+`Date::get_nearest_weekday` 0x54a2d0 (0x54a0ea..0x54a0fc): the date moves to the nearest such weekday], +3 day, +4 month (0 = January), +5 1 opens / 0 closes), +8 how many, +0xa
 the nation, +0x13 foreign player limit, +0x14 non-EU limit.
 
 - `transfer_window_contains_date` 0x8e8c40 (**mkc_1**): the two dates in the date's year, both ends included; a window
@@ -730,13 +836,16 @@ the nation, +0x13 foreign player limit, +0x14 non-EU limit.
   = end):
   - `can_loan_player` returns 1 (start = end);
   - the AI computes 0 months to the end < 1: never asks;
-  - the human gets a zero-month period (return this month) [what the screen does with it: inferred].
+  - the human gets a zero-month period (return this month) [what the screen does with it: inferred; screen only, no
+    change to the automatic career: the builder 0x8f9690 puts the period in controls 3-6 and 0xc/0xd
+    (0x8f980f..0x8f98ac), the handler is 0x8fac30 (registered at 0x8f9747) and the confirmation goes through 0x8fb5e0;
+    not followed to where the 1972 end or the zero period becomes (or not) a refusal].
 - A contract ending **next month**: a one-month loan; the AI asks if the return is 3 weeks away or more.
 
 **A defect of the original?** Yes, of consistency [proved]: `get_loan_period` uses 1972 to say "impossible", but
 `can_loan_player` only blocks through the owner's end rule and accepts start = end, so the human is allowed to open a
 proposal with an impossible (or zero-month) end, while the AI silently refuses. That this is exactly the forum's "I
-can't loan players at the end of their contract" (58.2) is **inferred** (not reproduced in the game).
+can't loan players at the end of their contract" (58.2) is **inferred**: only reproducing it in the game proves it.
 
 **Small fix:** a detour on 0x8d0040 (Rust here already; in the Tweaks, prologue `6a ff 68 1b 40 96 00`, 7 bytes) that,
 after the period, returns 0 with a clear message when the end year is the default date's (1972) or the end is before
@@ -762,25 +871,59 @@ month and the start to the month after today, if it fits.
 - `process_due_offer` **has no branch** for 8, 9, 0xb, 0xc, 0xd and 0x13 (0x13 belongs to the future transfers; 8 to
   the contract manager; 0xa to the permits). The weekly sweep of `daily_update` (day a multiple of 7) reschedules for
   tomorrow every overdue offer **except** 0x13, 7, 8 and 0xa: 9, 0xb, 0xc and 0xd come back every day and nothing
-  happens.
+  happens. Proof: `process_due_offer` does not compare 8, 9, 0xb, 0xc, 0xd (the status comparisons are those of
+  0x8c6708..0x8c6972 and there is no jump table); the sweep skips 0x13, 7, 8 and 0xa at 0x8c5964..0x8c5973. Writers
+  (scan of `mov byte [reg+0x2c], imm`): 9 only at 0x8c6a8c (`process_due_offer`, human buyer); 0xb at 0x8c31e7
+  (0x8c2f50); 0xc/0xd in 0x8c3310 (0x8c336e/0x8c335b). Register writes not scanned.
 
-**The defect [inferred, not reproduced]:** an offer that was waiting for the human (9: the human buyer must offer the
+**The defect [mechanism proved; effect in the game inferred, not reproduced]:** an offer that was waiting for the human (9: the human buyer must offer the
 contract; 0xb–0xd: the clubs' confirmations) when he goes on holiday only moves if its news item is still in the
 inbox; if it left the 100-slot ring (or he deleted it), it stays put for the whole holiday, and the player stays
 "under offer" (bit 0 of the 8-byte record in `PERSON_FLAGS`), which blocks other offers for him. It is a defect of the
 original: the dispatch depends on the news item, not on the offer's state.
 
 **And loans?** A loan never goes through 9 or 0xb–0xd: it completes the moment the player accepts (0x8c2180). The loan
-states that wait for someone are 0 (human owner: 14 days and it lapses), 1 (negotiation with a human borrower: lapses)
-and 8 (the player's decision, in the contract manager 0x4cc930/0x4cd9c0). The only one that **does not lapse** is 8,
-and the weekly sweep leaves it out; a loan whose player decision never comes stays stuck. That this is xeno's item 88
-is **inferred**; the exact path that loses the decision was not found.
+states that wait for someone are 0 (human owner: state 4 in 14 days, it lapses), 1 (human borrower: state 4 in 10
+days, it lapses), 0xf (removed on its return with round 3) and 8 (the player's decision, in the contract manager
+0x4cc930/0x4cd9c0). The only one that **does not lapse** is 8, and the weekly sweep leaves it out.
 
-**Small fix:** in `process_due_offer` (Rust here; in the Tweaks, prologue `6a ff 68 00 3d 96 00`), for state
-9/0xb/0xc/0xd with the human involved on holiday (`news_club_has_human_manager` ≠ 0 and
-`human_manager_is_human_club(…, 0, 1, 0, 0)` = 0), do what `auto_respond` would: 9 → `offer_contract_to_offer_player`;
-0xb–0xd → `check_offer_restrictions` and `confirm_offer_by_club` or `club_rejects_offer`. For 8, a deadline: a loan offer
-in 8 for more than N days (`DUE_DATE` a week overdue) → `reject_loan_offer`.
+**Defect of the original: the loan stuck in state 8 [proved, code path; not reproduced in the game].** A loan can stay
+in 8 forever, **without holidays**:
+
+1. The (AI) owner accepts: `contract_manager_schedule_decision_for_transfer` 0x4cc930, state 8 and **no
+   rescheduling** (0x8c6577..0x8c6592 in `process_due_offer`; 0x8c0680/0x8c068b in `accept_loan_offer`). 0x4cc930 marks
+   the (person, club) contract offer that has +0x62 = 0 and schedules the decision (0x4cc975 is the only write of 1 to
+   +0x62 outside `add_contract_offer`).
+2. The loan's contract offer is type 6 (`init_from_current_contract` 0x85e590: `& 0xc6 | 6`), and `add_contract_offer`
+   0x4cc490 writes +0x62 = (type ≠ 6): 0 for the loan (0x4cc597..0x4cc5b7 for a new offer; 0x4cc741..0x4cc761 for an
+   updated one).
+3. The player's decision (0x4ce4e0) only looks at offers with +0x62 ≠ 0 (0x4ce63c..0x4ce641). If he picks **another**
+   offer tied to a transfer, the loan's becomes state 1 and `handle_player_rejected_terms` 0x8c28c0
+   (0x4ced1b..0x4ced32: the transfer goes to 0xf, round 3, back in 10 days); and the loan's contract offer is **held**
+   in the list at +0x38 (0x4cf0b5..0x4cf13d, a club other than the chosen one's and the chosen one tied to a slot ≠ −1)
+   and leaves the live list (0x4cf35d..0x4cf383).
+4. If the chosen transfer is **withdrawn** at state ≥ 0xb (`withdraw_transfer_offer` 0x8bfcb0, 0x8bfd3a; the only
+   caller of 0x4cf4a0, at 0x8bfd4a) while the loan still exists (the 10 days of step 3), `resubmit_held_offers`
+   0x4cf4a0 puts the transfer from 0xf into **8** (0x4cf4fb..0x4cf501) and resubmits the offer with
+   `add_contract_offer(…, decides 1, agreed 0)` (0x4cf505..0x4cf52a): type 6, so +0x62 = 0.
+5. The scheduled decision skips that offer (step 3); 0x4cc930 is not called again (only on the state 0 acceptances);
+   `process_due_offer` has no branch for 8; the sweep skips 8. **The loan stays in 8 for good** and the player stays
+   "under offer" (bit 0 of the 8-byte record is only cleared with the offers resolved, and 8 does not count).
+
+The decision is also put off 2 days at a time while the player has another offer in 0, 1, 5 or 6
+(`player_has_pending_offer` 0x8cd150 at 0x4ce5ce), but that ends when the other one lapses. **The holidays play no
+part** in this path (neither 0x4ce4e0 nor 0x4cf4a0 looks at the human). That it is xeno's item 88 is still
+**[inferred]** (not reproduced in the game).
+
+**Small fix (offer stuck on holiday):** in `process_due_offer` (Rust here; in the Tweaks, prologue
+`6a ff 68 00 3d 96 00`), for state 9/0xb/0xc/0xd with the human involved on holiday (`news_club_has_human_manager` ≠ 0
+and `human_manager_is_human_club(…, 0, 1, 0, 0)` = 0), do what `auto_respond` would: 9 →
+`offer_contract_to_offer_player`; 0xb–0xd → `check_offer_restrictions` and `confirm_offer_by_club` or
+`club_rejects_offer`.
+
+**Small fix (stuck loan):** in `resubmit_held_offers` 0x4cf4a0, for a loan transfer (`offer_type` 1), call 0x4cc930
+after the resubmission (or write +0x62 = 1); or, in `process_due_offer` (Rust), treat an overdue loan in 8 as a refusal
+(`reject_loan_offer`).
 
 ### 9. How a loan ends and returns [proved, Rust]
 
@@ -823,11 +966,16 @@ the type**, +0x1d the date. The types, by their writers: **0 paid**, **1 with ex
 
 ### 12. Doubts
 
-- The exact point of the human's screen that turns the 1972 end (or the zero-month period) into a refusal.
-- Which state traps the loan on holiday (8 is the candidate; the path that loses the decision was not found).
-- Do contract types 3 and 4 (N/A on the screen) exist in the data?
+- The exact point of the human's screen that turns the 1972 end (or the zero-month period) into a refusal [still
+  inferred, see §7].
+- ~~Which state traps the loan on holiday~~: answered in §8 (state 8, without holidays, through the withdrawal of a
+  held transfer).
+- Do contract types 3 and 4 (N/A on the screen) exist in the data? [still inferred: needs a scan of the contracts of a
+  save or of the database, outside the disassembly]
 - The loop of `ENGLAND_RULES::can_loan_player` tests the id of the target `player`, not of the squad player, to skip
-  invalid slots (the Rust reproduces it; no effect in practice) [inferred].
+  invalid slots (the Rust reproduces it; no effect in practice) [proved: at 0x579ea8..0x579ec2 the test reads
+  `[esp+0x84]` (the 2nd argument, the target player, also read at 0x579d65) and not `esi` (the slot's player); with a
+  target of valid id the test always passes].
 
 
 <a id="d"></a>
@@ -1016,7 +1164,7 @@ Interference are read in the market. ManHandling is not. Scan of the whole `.tex
 | Business (+0xf), chairman | 0x597a0d | `Finance::get_max_wage` 0x5968d0 | yes | < 6: wage cap × 1.05 (× 1.1 with a manager of ambition > 15 and reputation > 7250); > 15: × 0.95 |
 | Resources (+0x20), chairman | 0x597a6e | same | yes | > 15 with the chairman's ambition > 15 (and +0x82 = 0): × 1.1 / × 1.125 / × 1.05 by the club's reputation (2750, 5750) and the player's (7250) |
 | Business (+0xf), chairman | 0x598b24 | `Finance::get_transfer_budget` 0x598800 | no | budget divisor = business + 6 (+ (15 − ambition) with ambition > 15; 16 without a chairman; +5 in one nation) |
-| Youngsters (+0x22), manager | 0x8400ae | `fill_shortlist_slot` 0x83f3a0 (rest at 0x840084) | no | a non-loan slot, under 20 with home reputation (+9) < 3250 and current club < 3250: goes on only if edi mod (25 − youngsters) = 0 (no manager, mod 15); youngsters 20 lets 1 in 5 through, 1 lets 1 in 24 [the test proved; what edi is, inferred: a counter or id] |
+| Youngsters (+0x22), manager | 0x8400ae | `fill_shortlist_slot` 0x83f3a0 (rest at 0x840084) | no | a non-loan slot, under 20 with home reputation (+9) < 3250 and current club < 3250: goes on only if edi mod (25 − youngsters) = 0 (no non-player sheet on the manager, mod 15) [proved: 0x8400ae..0x8400d4]; `edi` = person id + club id (0x83fee7..0x83feee, the same sum as the % k test; no write to `edi` up to 0x8400b9 on the three paths 0x83ff0b, 0x83ff16, 0x83ff26) [proved]: **fixed per (person, club) pair**, the same youngster is always accepted or always ignored by the same club while the manager is the same; youngsters 20 lets through the pairs whose sum is a multiple of 5. Only someone who already failed the % k test gets here |
 | Youngsters (+0x22), manager | 0x4d3ccb | `contract_manager_calc_asking_price` 0x4d1600/0x4d2070 | no | AI club (0x600a50 = 0): adds (youngsters − 10) to a threshold compared with the player's potential ability (sheet +7); below it, (potential − threshold) × 0.5 enters the price [the term proved; its role in the price, inferred] |
 | JudgingPotential (+0x18), manager | via `perceived_ability` 0x6e86d0 (branch `kind` ≠ 2) | `calc_player_value` 0x4d0c60; `value_player_for_club` 0x840d80 (`young_player_adjustment`, under 27) | yes | the potential ability the manager sees enters the player value and the list |
 | Judgement (+0x17) | 0x6e86d0 (`kind` = 2); `know_person` 0x5b0a28 | `perceived_ability`; fog of war (`FOG_OF_WAR_MAP::raise_knowledge`) | yes | the current ability seen; the observer's (scout's) knowledge rises |
@@ -1046,11 +1194,15 @@ Interference (daily morale; it calls the contract satisfaction).
 1. `calc_contract_value` (0x866830): without an offer it reads the offer's clauses through a null pointer
    (0x866df6); no caller passes null [proved]. Without a player sheet the age stands for "band − age" (a = age, 5
    after the limit) [proved]. The non-promotion clause (case 0) looks at the offer's minimum fee clause and uses the
-   7.5 million band, the others 5 million [proved; intent inferred].
+   7.5 million band, the others 5 million [proved (mkd_1); the intent is still inferred: it cannot be proved from the
+   code].
 2. `staff_interest_in_joining_club`: at his own club it divides by a stack float nobody wrote (no effect, the path
    does not use the result; already noted in the Rust).
 3. `get_max_wage`: a chairman with **little** business sense (< 6) pays **more** (× 1.05/× 1.1) and a good one (> 15)
-   pays less (× 0.95) [proved]; looks inverted [inferred].
+   pays less (× 0.95) [proved]. **It is not inverted** by the code: in both money routines a chairman with high
+   Business spends less: in the budget he keeps more weeks of wages in reserve (Business + 6, 0x598b24..0x598b2a) and
+   in the wage cap he pays × 0.95 (0x597a0d). A prudent chairman, consistent in both [proved]. Whether that was meant is
+   still unproved [inferred].
 4. Rust documentation: the header of `young_player_adjustment` (shortlist_manager.rs) says "current ability seen", but
    it calls `perceived_ability` with `kind` 1, which is the potential (reads JudgingPotential +0x18) [proved].
 

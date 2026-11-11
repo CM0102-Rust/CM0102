@@ -4,6 +4,8 @@
 
 Feito em 11/11/2026 para a release 1.5 do Rust Tweaks (o rebalanceamento do mercado), por quatro leitores da desmontagem do original e do código Rust. Cada afirmação está marcada **[provado]** (desmontagem ou teste) ou **[inferido]**. As rotinas que ainda não eram Rust foram portadas como itens da fila (`levas/fila/mka_*`, `mkb_*`, `mkc_*`, `mkd_*`); a prova de cada um está no `PRONTO.txt` dele. Fontes: `levas/reorganizacao/mercado/`.
 
+**Atualizado em 11/11/2026: fechamento dos inferidos** (`levas/reorganizacao/mercado/fechamento_inferidos.md`): as marcas [inferido] fora das rotinas ainda em leitura (0x4d1600, 0x85fc50, 0x864550, 0x4ce4e0, 0x4c7ac0, 0x862720, 0x844780) foram provadas na desmontagem ou ficaram com o motivo. Principais: o empréstimo preso no estado 8 é um defeito provado do original, sem férias (seção C §8); bit 4 de `contract::TRANSFER_STATUS` = preço pedido automático, bit 8 = listado a pedido; os estados do elenco (nibble alto de +0x4f); o `edi` do filtro de jovens é id da pessoa + id do clube; +0x10 das transferências futuras = 1 quando a pessoa sai; as regras da 0x83cb40 e da 0x83f3a0 pelos itens `mkb_2`/`mkb_3`; o `get_max_wage` não é invertido.
+
 Correções achadas depois das seções: a 0x83f3a0 é chamada pela `allocate_transfer_budget` 0x83b6e0 (0x83bab7), pela `update_staff_status` 0x843e10 (0x844108) e por ela mesma, não pela 0x83cb40; a 0x83cb40 virou o item `mkb_2` e a 0x83f3a0 o `mkb_3`; na 0x83cb40 a base do alvo (+0x74, da 0x7bca90) decide os estados das vagas e o corte (base/68 − 35), e a nota (+0x64) dá o preço das vagas.
 
 Seções: [A. O lado do dinheiro](#a) · [B. Como a IA compra e vende](#b) · [C. Empréstimos, janelas e limites](#c) · [D. O lado do jogador e quem decide](#d)
@@ -43,8 +45,14 @@ Ghidra, pelo uso ou pelo mapa da comunidade, sem prova.
 vizinhos 0x8e6330, 0x8e74a2, 0x8e839c, 0x8ea2af, 0x8ecf7f..0x8ee61d), as listas de observação (verba por vaga,
 `shortlist_manager.rs` 2486), a diretoria (`manager_manager.rs` 837 e 1820: pedido de verbas, o veto), os eventos
 financeiros (0x59e329..0x59ed38), o contrato (0x4d753c, 0x4de3a6), as telas (0x463af8, 0x6a3b87, 0x7b6d5a...). As
-chamadas Rust de hoje passam `(fin, 0, 0, 0, 1, 0)`: sem jogador, sem listados, sem pendentes. Os lances da IA rodam
-todo dia na janela, para cada clube do computador que compra **[inferido]** pelos chamadores.
+chamadas Rust de hoje passam `(fin, 0, 0, 0, 1, 0)`: sem jogador, sem listados, sem pendentes. A verba é calculada a
+cada lance montado (`TRANSFER_OFFER::build_bid` 0x8e5d60, que chama a 0x598800 em 0x8e6330) e na conferência das
+restrições de cada oferta (0x8cfe2d). Os lances novos da IA saem só de `make_club_bids` 0x84a020 (chamada única em
+0x5cdd6d, no laço do dia), no ritmo da seção B §2 (todo dia ou só quando (sorteio(2) + id) % 7 = 0), **sem olhar a
+janela**: o motivo 9 (fora da janela) de `can_club_bid_for_player` é aceito (as ofertas fora da janela ficam guardadas
+pela 0x8c4e10) **[provado: refs da 0x598800 e da `add_transfer_offer` 0x8be300 (0x84a728 na 0x84a020; as outras são
+revisão 0x8c0810/0x8c0f40, empréstimo 0x8bed60, 0x8bf060 e telas); 0x84a020 em Rust comparado (cqe_3); o ritmo em
+0x5cdc6e..0x5cdd6d]**.
 
 A regra, na ordem **[provado]** (desmontagem 0x598800..0x5997f9, 1240 instruções):
 
@@ -52,7 +60,7 @@ A regra, na ordem **[provado]** (desmontagem 0x598800..0x5997f9, 1240 instruçõ
    uma das 50 vagas do elenco (`club::SQUAD` +0xd7) com pessoa listada para venda (0x5444a0).
 2. `*ajustada` = 0.
 3. Com `pendentes` e clube humano (0x600a50 com 1, 1): as transferências futuras do clube (0x8ccb80, linhas de 27
-   bytes: pessoa +8, venda +0x10, taxa +0x14, estágio +0x19): compra soma a taxa ao comprometido (menos a do próprio
+   bytes: pessoa +8, venda +0x10, taxa +0x14, estágio +0x19; ver a nota do +0x10 abaixo): compra soma a taxa ao comprometido (menos a do próprio
    `jogador`); venda de estágio 3 a 6 tira a taxa (uma vez por pessoa) e o salário do contrato com o clube (0x4cf5f0,
    `contract::WAGE` +0xc) dos salários. Depois as ofertas de contrato abertas (0x4ca300, cópias de 111 bytes: pessoa
    +0, taxa +8, salário +0xc, estado +0x50; o estado 4 não conta): cada uma soma salário e taxa; quem já tem contrato
@@ -104,15 +112,32 @@ A regra, na ordem **[provado]** (desmontagem 0x598800..0x5997f9, 1240 instruçõ
     liga × 0,05, entre 0,25 e 1); com saldo negativo, ver o defeito abaixo. Acima de V, a verba vira V + um oitavo do
     excesso [0x96a628 = −0,125], no máximo 1,75 V se passar de 125000, e `*ajustada` = 1.
 
+**O campo +0x10 das transferências futuras [provado]:** 1 quando a pessoa **sai** do clube consultado, 0 quando
+**chega**. Em `get_club_future_transfer_list` 0x8ccb80, para cada oferta aberta do clube (0x8ccbf3..0x8ccc1b, as que ele
+fez; mais as recebidas pela 0x8c6100 em 0x8ccc4d; puladas as de empréstimo, `offer::OFFER_TYPE` +0x1f = 1, em
+0x8ccc78), a linha do alvo (0x8ccdb7..0x8cce4d): +8 = o alvo (`offer+0xc`); se o clube é o comprador (`[clube] =
+offer+8`, 0x8ccdca..0x8ccdcf), +0xc = o clube atual do alvo (−1 sem) e +0x10 = 0 (0x8ccdda/0x8cce02); senão +0xc = o
+comprador e +0x10 = 1 (0x8cce0b..0x8cce0e); +0x14 = a taxa (`offer+0x1b`); +0x18 = 4 pré-contrato sem taxa
+(completamento 3/4), 1 com troca, 0 senão; +0x19 = o estágio pela tabela 0x8cd134/0x8cd114 (1 a 6, 0 fora); +0x1a =
+`offer+0x2d`; +0 a data. As linhas dos jogadores de troca (0x8cce89..0x8ccf33) invertem: com o clube comprador, +0x10 =
+1 (ele cede o jogador de troca), senão 0; taxa 0, +0x18 = 1. No passo 3, +0x10 = 0 soma a taxa às compras; ≠ 0 entra no
+ramo da venda nos estágios 3 a 6.
+
 #### Defeitos do original
 - **[provado] Saldo negativo no passo 16:** com ficha de jogador, V vira `_ftol(razão × 0,65)` (a razão da reputação
   do jogador pela do clube, entre 0,15 e 0,85): o V se perde e fica 0. A verba vira um oitavo dela se isso for até
-  125000, senão **0** (o teto 1,75 × 0). Para não jogador, V × 0,65 (o que parece ser a intenção) **[inferido]**.
+  125000, senão **0** (o teto 1,75 × 0). Sem ficha de jogador, V × 0,65 **[provado]**: 0x59970b (+0x61 nulo) →
+  0x599759 `fild V` → 0x59975d `fmul [0x96a5d0]` (= 0,65, lido do exe) → `_ftol` 0x599763; com ficha, a razão de
+  reputação (0,15 [0x968f20] a 0,85 [0x969520]) entra no lugar de V (0x599712..0x599757) e é multiplicada pelo mesmo
+  0,65. Que a intenção fosse V × razão × 0,65 segue **[inferido]** (intenção não se prova pelo código).
 - **[provado] Passo 3, pessoa repetida:** depois de achar a pessoa numa linha anterior, o salário descontado é o do
   contrato da pessoa da linha seguinte à primeira ocorrência, não o desta linha.
 - **[provado] Passo 12:** o gasto líquido da temporada entra só pelo dword baixo (acima de 2,1 bilhões vira
   negativo e some); o comprometido S sai também pelo dword baixo.
-- **[inferido]** O passo 4 devolve a verba sem nenhuma reserva para clube sem liga (clubes de fundo sem competição).
+- **[provado]** O passo 4 devolve a verba sem nenhuma reserva para clube sem liga: `club::DIVISION` (+0x57) nulo
+  (0x598af3..0x598afc) ou sem objeto em `G_COMP_OBJECT_TABLE` (0x598b02..0x598b0d) salta para o retorno 0x5997ec com o
+  valor do passo 1; é o mesmo teste que a lista de compras usa para "liga não carregada" (0x83cc68..0x83cc86). Quais
+  clubes são esses numa carreira dada segue **[inferido]** (depende das ligas carregadas; não contado).
 
 #### Pontos de extensão
 - **O multiplicador m (passo 5):** o único lugar onde a diretoria (Negócios, Ambição) entra. Na cópia Rust, uma linha;
@@ -139,9 +164,25 @@ Regra **[provado]**: o contrato principal do jogador (em 0xae1080) dá o clube; 
 (`contract::CONTRACT_TYPE` +0x35 & 0x3f) ≠ 2 ou saindo pela Bosman (`contract::LEAVING_ON_BOSMAN` +0x49): 0. O piso =
 o valor guardado (`staff::VALUE`), limitado pela multa rescisória (`contract::RELEASE_FEE` +0x21) se a cláusula está
 ativa (0x867b50). O preço = 0x4d1600(vendedor, comprador, jogador, 0, 1, 1), elevado ao piso e limitado pela multa.
-Listado ou pedindo saída (0x544520), ou sem o bit 4 de `contract::TRANSFER_STATUS` (+0x4e) **[inferido: o técnico
-fixou o preço]**: o piso. Pelo papel no elenco (`contract::SQUAD_STATUS` +0x4f & 0xf0): 0x10 e 0x50 o preço; 0x20 e
-0x30 a média (com sinal, truncada); os outros, o piso.
+Listado ou pedindo saída (0x544520), ou sem o bit 4 de `contract::TRANSFER_STATUS` (+0x4e): o piso. **Bit 4 = preço
+pedido automático [provado]**: sem ele o técnico fixou o preço à mão, e `staff::VALUE` (+0x52) é esse preço. Pelo papel
+no elenco (`contract::SQUAD_STATUS` +0x4f & 0xf0): **0x10 Key e 0x50 Prospect** o preço; **0x20 First Team e 0x30
+Rotation** a média (com sinal, truncada); 0 Undefined, 0x40 Backup, 0x60 Youngster e 0x70+ Not Needed, o piso
+**[provado]**.
+
+- **Prova do bit 4:** a tela "Set Staff Transfer Status" (0x8f6770, transfer_screens.cpp): o controle 0xa nasce do
+  bit 4 (0x8f6923..0x8f6936: `and edx, 4; shr edx, 2`); o botão "Auto<…automatic asking price>" (texto em 0x8f6fe9) é
+  o evento 5 do tratador 0x8f7640, que inverte o controle 0xa e, ao ligar, põe no controle 1 (o preço) o
+  `calc_player_value` 0x4d0c60 (0x8f772b..0x8f77bb); mexer no preço (evento 0xb) desliga o controle 0xa
+  (0x8f780d..0x8f781e); na confirmação o controle 0xa vira o bit 4 (0x8f80b0..0x8f80da). O contrato novo nasce com
+  +0x4e = 4 (0x866f14, em 0x866ee0, chamado por 0x4cfb13/0x4cfccb/0x4cfef4). Com o bit 4, o dia (0x4c7f9e..0x4c7fbe) e
+  0x84ae17..0x84ae30 recalculam `staff::VALUE` pela 0x4d0c60; sem ele, não. `set_player_squad_status` 0x8ce0e0 (só
+  telas: 0x8efc88, 0x8f08b5, 0x8f0902, 0x8f0af6, 0x8f7fbc) grava o preço em +0x52 (0x8ce1e9) e apaga o bit 4 com o 8º
+  argumento ≠ 0 e o clube fora do estado de crise (0x8ce8af..0x8ce8bf).
+- **Prova dos estados (nibble alto de +0x4f):** 0x867f6d..0x867ffa (staff_contracts.cpp) lê `+0x4f >> 4` e salta pela
+  tabela 0x868000 (0x867f81 Undefined, 0x867f90 Key, 0x867f97 First Team, 0x867fa6 Rotation, 0x867fb5 Backup, 0x867fbc
+  Prospect, 0x867fcb Youngster; acima de 6, "Not Needed" em 0x867fda). Logo o "estatuto 6 ou 7" da 0x84af00 é
+  Youngster/Not Needed, e a 0x83cb40 põe Youngster (6) abaixo de 20 anos e Not Needed (7) no resto.
 
 Nota: dentro da 0x4d1600, vendedor humano com o técnico **de férias** (0x5fd210, 0x5fea50 com a opção 0) e sem o bit
 4 devolve logo o valor guardado **[provado: 0x4d16xx]**: na carreira de testes (técnico de férias) o preço pedido do
@@ -291,7 +332,11 @@ Vizinhas que entram nas regras abaixo: 0x83a730 `update_club_shortlist` (Rust), 
   (0x9cf764); fora disso, todo dia se a reputação passar de 6250 (0x186a). Nos outros casos só quando
   (sorteio(2) + id do clube) % 7 = 0, com o sorteio(2) feito **uma vez por dia** antes do laço (0x5cdc76). **Defeito:**
   a conta não usa a data; só os clubes de id ≡ 0 ou 6 (mod 7) passam, metade dos dias cada; os outros 5/7 desses
-  clubes **nunca** fazem lance pela lista [provado; efeito: inferido, provavelmente a intenção era "uma vez por semana"].
+  clubes **nunca** fazem lance pela lista [provado: 0x5cdc6e..0x5cdc7b, sorteio(2) uma vez por dia antes do laço;
+  0x5cdd32..0x5cdd42 e 0x5cdd58.., (r + id) % 7. Efeito provado para a lista: os lances novos e os pedidos de
+  empréstimo da lista só saem da 0x84a020 (a 0x842740 tem um chamador só, 0x84ab5a, dentro da 0x84a020; os lances novos
+  da IA, 0x84a728); esses clubes ainda podem receber/responder ofertas e rever as suas. A intenção ("uma vez por
+  semana") segue inferida: não se prova pelo código].
 - **A resposta a um lance da IA** (`process_due_offer` 0x8c63a0) [provado]: estado `offer::STATUS` 0 com vendedor da
   IA: empréstimo (`offer::OFFER_TYPE` = 1) → 0x84af00(vendedor, jogador, 0, comprador, −1, 1): ≠ 0 recusa o empréstimo
   (0x8bfa30), 0 segue para o aceite (0x4cc930, estado 8, e a vontade do jogador 0x8d8310); transferência → 0x8c8090.
@@ -312,44 +357,69 @@ Vizinhas que entram nas regras abaixo: 0x83a730 `update_club_shortlist` (Rust), 
 - **A vitrine 0x842c00** [provado, refs.py]: 16 chamadas, entre elas `transfer_list_player` 0x842320 (com news),
   `CONTRACT_MANAGER::daily_update` 0x4c7ac0 (3), `handle_transfer_request` 0x4d8610, `game_daily_staff_update` 0x5ce2d0
   (2), `Media::post_player_praise_story` 0x744240, `award_raise_winner_reputation` 0x412f00, `NewsItem::auto_respond`,
-  `move_player_to_club` 0x8c9720, `set_player_squad_status` 0x8ce0e0 e as telas de pessoa (2). Uma em
-  `CONTRACT_MANAGER::save_to_disk` 0x4dc3a0 (0x4dd0a1) é estranha: pode ser a fronteira do mapa [inferido].
+  `move_player_to_club` 0x8c9720, `set_player_squad_status` 0x8ce0e0 e as telas de pessoa (2). A que o mapa da
+  comunidade põe em `CONTRACT_MANAGER::save_to_disk` 0x4dc3a0 (0x4dd0a1) é a fronteira do mapa [provado]: o intervalo
+  da 0x4dc3a0 (3408 bytes) cobre várias rotinas; 0x4dd0a1 está no tratador 0x4dcd70 do diálogo **"Transfer Request"**
+  (construtor 0x4dcb30; os dois registrados em 0x4dcab5/0x4dcaba; textos "Put <…> on the transfer list at his own
+  request ?", "Yes", "No"). No "Yes": tira a lista de empréstimo (0x4dd060..0x4dd069), **liga o bit 8** de +0x4e
+  (0x4dd06c..0x4dd075; bit 8 = listado a pedido do jogador), evento 0xc (0x544710), vitrine forçada (0x842c00 com 1, em
+  0x4dd0a1) e 0x4d71b0.
 - **A lista de transferência pela IA**: `transfer_list_player` 0x842320 tem 3 chamadas: 0x83dc42 (dentro da
   `assess_club_squad`, a única da IA) e as telas 0x8f8030/0x8f8607 [provado]. **A lista de empréstimos**: os únicos
   `or byte [r+0x4e], 2` do `.text` são 0x83e49c e 0x83e651 (`assess_club_squad`) e 0x8442c4 (`add_to_loan_list`, que
   só as telas chamam: 0x8f806c, 0x8f8538); mais dois por registrador na `assess_club_squad` (0x83dd42, 0x83dd98)
-  [provado pela varredura; escritas por outras formas de instrução não foram varridas: inferido que não há].
+  [provado pela varredura de todo o `.text` por escritas de **byte** em `[reg + 0x4e]` (mov/or/and/add, imediato ou
+  registrador): o bit 2 só é ligado nesses cinco pontos; as outras escritas por registrador são cópias de contrato
+  (0x4cc6dc, 0x4cc903, 0x4ce39f, 0x4cf9d8, 0x4cfc10, 0x4cfdb9, 0x4d000f, 0x4d0546, 0x4d06a5, 0x5fbb51), limpezas
+  (0x83d287 `& 0xfc`, 0x8442ef `& 0xfd`, 0x4d8747/0x4dd069/0x784848/0x8f80a1 `& 0xfd`, `& 0xf7`, `& 0xfe`), zeros de
+  construtores (0x85e458, 0x85e4f4, 0x85e6a4, 0x85e9db, 0x866eeb) ou mexem nos bits 1, 4 e 8. Segue inferido: as
+  escritas mais largas que cobrem +0x4e (265 `mov dword/word` em +0x4b..+0x4e em todas as estruturas) não foram olhadas
+  uma a uma].
 
 ### 3. As regras
 
 #### 3.1 A avaliação do elenco (0x83cb40, original)
 
-`assess_club_squad(this, entrada, clube, daily, reset)`, thiscall, ret 0x10. Ordem [provado onde marcado; o resto
-pseudocódigo, inferido]:
+`assess_club_squad(this, entrada, clube, daily, reset)`, thiscall, ret 0x10. Ordem [provado: desmontagem
+0x83cb40..0x83f3a0 (3168 linhas), lida inteira para o item `mkb_2`; os pontos citados conferidos; onde não há endereço,
+o texto é o cabeçalho do `mkb_2`]:
 
-1. DAYS (+8 da entrada) = 0. Sai (e ACTIVE = 0) se o clube é seleção, sem nação, humano com daily, ou
-   `club::PROFESSIONAL_STATUS` = 3; com time B ligado (`club_get_linked_b_team` 0x540a50) sem o par, sai [inferido;
-   a chamada em 0x83cc04 provada].
+1. DAYS (+8 da entrada) = 0 (0x83cbc4); o reset é forçado quando o +0x23 da vaga 0 é 0xff (0x83cbb4..0x83cbbb). Sai
+   com ACTIVE 0 (0x83cc16) se o clube é seleção (0x53b900), sem nação, humano com daily (0x600a50 com 0, 1),
+   `club::PROFESSIONAL_STATUS` = 3, ou quando `club_get_linked_b_team` 0x540a50 acha o par e diz que este clube **é o
+   B** (0x83cc04..0x83cc14: retorno ≠ 0 e o indicador de "é o A" 0): quem cuida da lista é o A [provado].
 2. Sem lance em vaga: se ACTIVE era 2, vira 1 e reset = 1. Se a liga da nação não está carregada ou a liga do clube não
    está ativa em `[0xadadfc]`, e a reputação < 4000: se sorteio(reputação + 1000) < sorteio(5000), ACTIVE = 0 e sai
    (clubes pequenos de ligas não carregadas desligam a lista) [provado: 0x83cc6b..0x83ccab].
 3. Com reset: as 40 vagas refeitas (`shortlist_set_up_formation_slots` 0x83c090; o estatuto de cada vaga pelo índice
    e pela reputação-alvo `local_840` de `player_search_get_club_target_rating` 0x7bca90: até 6000 ou 8500 e com/sem
-   competição continental). Sem reset: só ordena as vagas (qsort 0x945333) [inferido].
-4. As vagas sem alvo, ou com alvo sem oferta e data vencida (ou alvo com cargo 0x10): alvo e substituto = −1, preço =
-   0, e as vagas de jogador vão para as listas de posições a preencher por estatuto (2/3, 4, 5) [inferido].
+   competição continental). Sem reset: só ordena as vagas, `qsort(vagas, 40, 0x25, 0x83b6c0)` em 0x83cfe5..0x83cff1
+   (ordem pelo índice da vaga) [provado].
+4. A vaga sem alvo, ou com alvo sem oferta (`OFFER_REF` −1) e com a data passada ou aposentado (cargo 0x10), perde
+   alvo, substituto e teto (o alvo, se está nos pares da comissão, recebe o evento 3 na 0x843e10); a posição vai para a
+   lista do seu estatuto (2 e 3, 4, 5) [mkb_2, 0x83cff9..0x83d1c7].
 5. **O elenco** (`database_collect_club_squad` 0x541f90, 50): para cada jogador com ficha, cargo ≠ 0x10, fora da lista
    do clube, com contrato no clube, sem transferência futura (0x8cca10) e sem `contract::LEAVING_ON_BOSMAN`: num clube da
    IA sem técnico de férias, **apaga as marcas de transferência e de empréstimo** (`contract::TRANSFER_STATUS` & 0xfc),
    põe o estatuto (`contract::SQUAD_STATUS` nibble alto) 6 abaixo de 20 anos ou 7 (clube da IA) e manda ao time
-   principal (`move_to_first_team` 0x4cc0b0) [provado: 0x83d281..0x83d2d7]. Lesionado (`Injury::get_player_injury`
-   0x62ed70) com dias acima de 30/300/400 (pela nota 0x6e6340 contra a reputação-alvo × 0,75) vai às reservas
-   (`move_to_reserves` 0x4cc0f0); os outros vão a uma de duas listas (com ou sem contrato de empréstimo em outro
-   clube) [inferido].
-6. Escalação por estatuto (`match_man_assign_players_to_positions` 0x6e2000) para cada lista de vagas; quem foi
-   escolhido sai da lista dos sobrantes; os de idade > goleiro/10 + 22 vão para o fim [inferido].
+   principal (`move_to_first_team` 0x4cc0b0) [provado: 0x83d281..0x83d2d7]. Lesão (`Injury::get_player_injury`
+   0x62ed70): o limite é **150 dias** (0x83d32d); **30** quando sorteio(nível de recaída 0x62ece0 + 1) ≠ 0
+   (0x83d33e..0x83d34b); senão, lesionado com nota (0x6e6340) ≥ alvo: **400** (0x83d37f..0x83d387); nota ≥ ¾ do alvo
+   (0x969040 = 0,75): **300** (0x83d391..0x83d3a8). Dias restantes ≥ limite, ou anúncio de aposentadoria (0x7a7ed0), vai
+   às reservas (`move_to_reserves` 0x4cc0f0, em 0x83d3f4; com time B só acima de 300 dias, 0x83d3d8..0x83d3ea) e, no
+   clube humano, perde o estatuto (0x83d40e). Os outros vão para o resto ou para a lista dos emprestados a outro clube
+   (0x4cf6d0 em 0x83d41b), e com `reset` a felicidade vai a 0 [provado].
+6. Escalação por estatuto (`match_man_assign_players_to_positions` 0x6e2000, chamadas em 0x83d512, 0x83d636,
+   0x83d7f9): o resto vai para as posições de estatuto 2 e 3, depois 4; os emprestados a outro clube entram no resto;
+   os mais velhos que `player_sheet::GOALKEEPER` / 10 + 22 (24 para um goleiro nota 20, 22 para os outros) saem dele (o
+   trocado é olhado de novo); o resto vai às posições de estatuto 5; os velhos voltam [mkb_2, 0x83d474..0x83d8ac].
 7. **Quem sobra** (o fim do elenco), para cada jogador do clube, sem contrato de empréstimo e sem fila de transferência
-   livre (0x8c1870) [inferido no conjunto; os pontos marcados provados]:
+   livre (0x8c1870) [mkb_2, 0x83d8bf..0x83de6b]: o limite é ftol((idade × 0,13 − 1,98) × base × 0,02), o corte
+   base/68 − 35 e o nível ftol(reputação × 0,25 + PA × 12,5 + CA × 12,5 + reputação do clube × 0,25); "sobra" = julgado
+   abaixo do limite (0x6e86d0 modo 1, 0x83da02) e contrato tipo 2 com menos de profissionalismo + pressão + 450 dias no
+   clube ou fim a 450 dias ou mais, ou `staff::VALUE` ≥ reputação × 50, ou o valor ≥ os salários que faltam (dias ×
+   salário / 30). Com time B ou no clube humano, abaixo de 27 (goleiro 20) ou 23, o estatuto 5 quando ¾ do nível passa
+   o limite + 20, senão 6. Os pontos já provados:
    - jogador abaixo da nota do técnico (`match_man_judge_player_ability` 0x6e86d0 < limiar) e (contrato tipo 2 com
      pouco tempo, ou reputação × 50 ≤ `staff::VALUE`, ou o salário restante/30 ≤ valor) e o elenco (`database_count_club_squad`)
      > reputação/500 + 20: com reset, felicidade −100 (0x9c); clube da IA com nota 2 < reputação/68 − 35 e (idade >
@@ -364,53 +434,83 @@ pseudocódigo, inferido]:
      outro com idade ≥ 18 e felicidade ≤ idade × 50/3 − 400; abaixo de 24 anos também estatuto 6 [provado:
      0x83dce6..0x83ddb2]. Ex.: aos 20 anos o goleiro precisa de −100 e o de linha de −34; aos 24, −33 e +0 (qualquer
      felicidade negativa); aos 30, qualquer negativa. **O jovem só entra muito infeliz.**
-8. As vagas recebem os escolhidos: alvo do substituto e, sem técnico de férias, estatuto do contrato pelo da vaga
-   (salvo 1 e 2) [inferido]. Nas listas 4 e 5 (reservas, sobra):
+8. As vagas recebem os escolhidos [mkb_2, 0x83e185..0x83e66f]: o substituto é o escolhido; sem técnico de férias o
+   contrato recebe o estatuto da vaga, menos na lista 2/3 sobre os estatutos 1 e 2; a data da vaga sai da chegada dele
+   (+120 dias, com `reset` e técnico). Estatuto 4: na vaga 24, com time B ou no humano e fora dos grandes, o escolhido
+   (não o técnico) vai para os reservas. Nas listas 4 e 5 (reservas, sobra):
    - lista 4: **empréstimo** se a fadiga (`Injury::get_fatigue` 0x62c3d0) < −1000, `CURRENT_REPUTATION` < 4500,
      `player_sheet::WORK_RATE` (+0x44) < 3250 e felicidade < −50 [provado: 0x83e46a..0x83e49c]. **Defeito:** +0x44 é um
      byte com sinal comparado com 3250 (0xcb2): sempre verdadeiro; provavelmente era `WORLD_REPUTATION` (+0xd, palavra)
-     [provado o código; a intenção é inferida];
+     [provado o código: `movsx edx, byte [eax+0x44]; cmp edx, 0xcb2` em 0x83e482..0x83e486; a intenção segue
+     inferida: que fosse `WORLD_REPUTATION` não se prova pelo código];
    - lista 5: **empréstimo** se a fadiga < −500 − sorteio(300) e felicidade < 0 [provado: 0x83e613..0x83e651].
-9. Preço das vagas de jogador (`shortlist_slot::VALUATION`, `shortlist_slot::PRICE`) pela reputação-alvo (até 36000)
-   e pelo estatuto; com a nota do alvo abaixo, ou queixas 0x100/1, ou contrato a menos de 365 dias, a vaga é refeita
-   com felicidade ajustada [inferido].
+9. Preço das vagas de jogador (`shortlist_slot::VALUATION`, `shortlist_slot::PRICE`) [mkb_2, 0x83e66f..0x83ebfb]:
+   p = min(alvo, 36000) (× 0,75 numa vaga de goleiro sem substituto). Sem substituto: valor p e preço p × 2,5 +
+   reputação, 2p + rep., p × 1,8 + rep., p × 0,8 ou p × 0,5 pelos estatutos 1, 2, 3, 4/5, outro (× 3 numa vaga de
+   goleiro). Com substituto: vai ao time (2, 3, 4; com `reset` felicidade + 50, 10 jogos de fora) ou aos reservas (5) e
+   recebe nota para a posição (nos primeiros 200 dias × (1,25 − dias × 0,00125)), entre −10000 e 60000; nota ≥ p, sem
+   queixas 0x100 ou 1 e mais de 364 dias de contrato: ele fica como alvo. Senão a felicidade muda ftol((1 − nota/p) ×
+   −100) (com `reset`; estatutos 2 e 3 ao menos 25 e a vaga o perde; os outros ao menos 0; estatuto 5 recebe o
+   estatuto 6), e o preço (rep. × f + p × k) − nota × k.
 10. As vagas de comissão (cargos 6 a 10) com a pessoa do cargo (auxiliar +0xd3, `club::COACHES`, `club::PHYSIOS`,
-    `club::SCOUTS`) avaliada por `score_staff_for_job` 0x69d1b0 contra reputação-alvo/5 (até 5000); abaixo e sem
-    proposta (0x4cc9e0), **demitida** (`MANAGER_MANAGER::remove_staff_from_club` 0x690890) [inferido].
+    `club::SCOUTS`): a demissão só acontece quando o indicador local [esp+0x60] está ligado (zerado em 0x83cb6c), e ele
+    só liga em 0x83cc44..0x83cc64: **a lista estava em ACTIVE 2, sem lances, e o clube não é humano** (0x600a50 com
+    1, 1). Aí, nota de `score_staff_for_job` 0x69d1b0 abaixo de min(alvo/5, 5000) e sem oferta de contrato (0x4cc9e0):
+    **demitida** (`MANAGER_MANAGER::remove_staff_from_club` 0x690890; 0x83ee28..0x83ee72, igual para os outros 4 cargos
+    em 0x83ef46, 0x83f056, 0x83f15f, 0x83f275). Sem isso, preço (limite − nota) × 2,5 [provado].
 
 #### 3.2 A escolha do alvo (0x83f3a0, original)
 
-`fill_shortlist_slot(this, vaga, clube, excluído)`, thiscall, ret 0xc, recursiva [inferido salvo onde marcado]:
+`fill_shortlist_slot(this, vaga, clube, excluído)`, thiscall, ret 0xc, recursiva [provado: desmontagem
+0x83f3a0..0x840d80 (2048 linhas), lida inteira para o item `mkb_3`; os pontos citados conferidos; onde não há endereço,
+o texto é o cabeçalho do `mkb_3`]:
 
-1. Sai: sem nação; clube humano; técnico de férias com regra 4 = 1; vaga com oferta; clube seleção.
+1. Sai: sem nação; humano (0x600a50 com 0, 1); humano (1, 1) de férias com a regra 4 = 1; vaga com oferta; seleção.
 2. **O divisor de conhecimento k** [provado: 0x83f4d8..0x83f5b8]: 100; reputação < 3500 → (6025 − reputação) × 4;
    Bélgica, Holanda, Suécia, Dinamarca, Noruega → 50. Cada uma das 7 vagas de olheiro (`club::SCOUTS`): vazia +5 (+10
    com a liga ativa); com olheiro, + 30 − 2 × `chance_to_know`(olheiro, 6) − `chance_to_know`(olheiro, 5). k = k/10,
    mínimo 2. **Defeito provável:** a 0x544410 recebe as constantes 6 e 5, não atributos do olheiro; o resultado depende
    só da habilidade atual dele (+4 da ficha de não jogador): `JUDGEMENT`/`JUDGING_POTENTIAL` não entram [provado o
-   código; a intenção é inferida].
-3. Fator de reputação (×0,0008, ou ×1/1175, 1/1125, 1/1050 pela faixa de riqueza 0x5986b0 em ITA, ENG, GER, FRA,
-   ESP), teto da vaga (`max_fee_for_squad_status` 0x84b230).
+   código (mkb_3, 0x83f4d8..0x83f5b8); a intenção segue inferida: não se prova pela desmontagem].
+3. Fator de reputação: reputação × 0,0008; na ITA, ENG, GER, FRA e ESP com finanças, pela faixa de riqueza (0x5986b0):
+   faixa 1, × 1/1175 (× 1/1125 acima de 6250); faixa 2, × 1/1125 (× 1/1050 acima de 4750). Teto da vaga
+   (`max_fee_for_squad_status` 0x84b230).
 4. Percorre as listas de posição (`POSITION_LISTS_BY_PERSON`) da posição da vaga. O candidato passa por: não excluído,
-   cargo ≠ 5, sem cargo 5 na seleção, sem vaga de técnico (0x69fc60); jogador com ficha, sem aposentadoria anunciada,
-   não saudita; idade < 24 nas vagas de estatuto 5; **preço × 1,3 ≤ teto da vaga** (`shortlist_slot::MAX_PRICE`) ou
-   listado para empréstimo; não do próprio clube; em menos de 10 listas; chegou há mais de 200 dias (ou estatuto 7,
-   queixas, listado); fora de outra lista do clube; permissão de trabalho (0x84b180, 0x8c7560); no empréstimo, pode
-   emprestar (0x8d0040) e humano só se listado.
-5. **Quem o clube conhece**: (id da pessoa + id do clube) % k = 0; ou estrangeiro de outra nação com idade > 22, ou
-   reputação mundial > 3249, ou não estrangeiro (0x53d980), e mesma região (+0x75 da nação) ou clube de reputação >
-   2749 com…, e então a reputação vista (0x5407e0) ≥ 2750 + sorteio(2000) (vagas 5/6) ou ≥ 3250 + sorteio(2000); jovem
-   (< 20) de reputação doméstica < 3250 em clube < 3250: (id + clube) % 15, ou % (25 − `non_player::YOUNGSTERS` do
-   técnico) = 0. Os olheiros do humano (0x7f7490) contam para o clube de férias.
-6. A nota (0x840d80, o valor do jogador para o clube) ≥ o valor da vaga e ≥ valor − 10000; o preço pedido (0x4d1600,
-   0x4d42d0 humano; troca com compensação 0x84b6f0); **a previsão 0x84af00** com o lance previsto: 2 descarta. Lesão:
-   (dias − 15)² ou (dias − 10)² × 200 a menos.
-7. O melhor por nota com sorteio; **vontade** (0x846920) ≥ 3,15 (0x968e58) e salário: (3,5/vontade, mínimo 0,9) × o
-   salário desejado (0x864550) ≤ 1,2 × o teto salarial (0x5968d0). Notícia de interesse (0x754740) com sorteios.
+   id < número de pessoas − 16, cargo ≠ 5, sem cargo 5 na seleção (`job_for_club`/`job_for_nation`), sem vaga de
+   técnico (0x69fc60); jogador com ficha, sem anúncio de aposentadoria (0x83fb53..0x83fb5d), não saudita
+   (0x83fb63..0x83fb73); estatuto 5 (`(+0x24 & 0x1e) = 0xa`) e idade > 23 sai (0x83fb79..0x83fb8d); compra: teto (+7)
+   menor que **preço × 1,3** (0x968de8) sai (0x83fb97..0x83fbad); empréstimo: passa com clube e preço ≤ 0, senão
+   precisa estar listado para empréstimo (0x83fbb8..0x83fbd7) [provado]; não do próprio clube; em menos de 10 listas;
+   chegou há mais de 200 dias (ou estatuto 7, queixas, listado); fora de outra lista do clube; permissão de trabalho
+   (0x84b180, 0x8c7560); no empréstimo, pode emprestar (0x8d0040); empréstimo de humano só listado (bit 2, 0x83feb8). Um
+   humano de férias com a regra 4 = 2 só considera a lista de observação dele. Não-jogador: o resto de um contrato tipo
+   2 (dias × salário / 7) ≥ teto ou > (reputação + 500) × 10 sai.
+5. **Quem o clube conhece** [provado: 0x83fed8..0x8400d4]: conhecido quando (0x83fed8) a lista do olheiro humano o
+   tem, ou (0x83feea..0x83fefd) (id da pessoa + id do clube) % k = 0. Senão, de **outra nação** (0x83ff03) sem jogos
+   pela seleção (+0x22, 0x83ff11) e cujo clube não é da nação do clube (0x83ff1c..0x83ff26): um jogador de menos de 23
+   anos estrangeiro para o clube (0x53d980 com 1) e reputação mundial (+0xd) < 3250 sai (0x83ff2c..0x83ff4f); de outra
+   região (+0x75) precisa reputação do clube ≥ 2750 e (clube dele sem nação ou da mesma região, ou reputação do clube ≥
+   4250, ou `league_standard` +0x85 da nação ≥ 12) (0x83ff55..0x83ffa3); e então a reputação vista pelo técnico
+   (0x5407e0) ≥ 2750 + sorteio(2000) nas vagas de estatuto 5/6 (com reputação mundial ≥ 1750) ou ≥ 3250 +
+   sorteio(2000) nas outras (mundial ≥ 2750) (0x83ffa9..0x840058). Da **mesma nação** (ou com jogos pela seleção, ou
+   num clube da nação; 0x840060): não-jogador, vaga de empréstimo, sem ficha, reputação em casa (+9) ≥ 3250, clube dele
+   ≥ 3250 ou 20 anos ou mais: conhecido; senão o filtro de jovens (seção D §3, 0x8400ae: fixo por par pessoa-clube).
+6. A nota e o preço: abaixo da avaliação ou da nota a bater − 10000 sai; compra num vendedor em crise: no máximo o
+   valor do vendedor; troca por compensação (0x84b6f0): a taxa dela; senão o preço pedido (0x4d42d0 humano em
+   0x8402e6, 0x4d1600 IA em 0x8402fe); estatuto 4 abaixo de 28 ou estatuto 5: o excesso sobre o valor soma
+   min(pedido − valor, (rep./13000 + 0,5) × valor, 2.500.000) à oferta; **a previsão 0x84af00** = 2 sai; preço acima do
+   teto sai; nota × y, y = 1 − (pedido − valor)/(preço máx. × fator) (acima de 1 → y/3 + 0,67; 0,01..3); lesão > 15
+   dias: − (dias − 15)²; empréstimo: previsão do dono 2 sai, lesão > 10 dias − (dias − 10)² × 200; sem
+   `can_club_bid_for_player` sai; por fim nota × (92 + sorteio(17))/100.
+7. **Vontade** (0x846920; não-jogador: 0x844780 em 0x840682); notícia de interesse com sorteio(79 − rep./150) = 0 e
+   (rep. > 5000 + sorteio(2000) ou clube humano); vontade ≥ 3,15 (0x968e58): salário desejado (0x864550 em 0x840893,
+   como f32) × max(3,5/vontade, 0,9) acima de 1,2 × o teto salarial (0x5968d0 em 0x84091d) sai; senão é o melhor até
+   ali. Notícia do olheiro (0x587220) por sorteio.
 8. O escolhido vira o alvo (`shortlist_slot::TARGET_STAFF_ID`) e entra na lista (`add_shortlist_entry` 0x8423f0).
    Sem ninguém, vaga de estatuto 2/3 vira **vaga de empréstimo** (bit 0) e recomeça se (reputação² × 4e-9 + 0,6) ×
-   valor < preço, ou teto < 50000, ou Itália com sorteio e reputação 3000..6000; nação não carregada com
-   sorteio ≤ sorteio(20000). Senão o alvo fica −1.
+   valor < preço, ou teto < 50000, ou Itália com sorteio e reputação 3000..6000; só com o indicador da temporada
+   (nação-chave: entre o início − 28 e o fim − 28 da temporada; outras nações sempre; vaga de não-jogador nunca), e a
+   liga da nação carregada **ou** sorteio(reputação) > sorteio(20000). Senão o alvo fica −1.
 
 #### 3.3 Os lances e os pedidos (0x84a020, Rust)
 
@@ -496,9 +596,12 @@ oferecido**, e os clubes de reputação alta ficam com ele primeiro.
 | registro de 79 bytes | `STATUS_FLAGS` +0xb (nibble baixo = em quantas listas; 0x30 aposentadoria) | 0x83f3a0, 0x842c00, 0x84a020 | L |
 | oferta | `NEGOTIATION_INDEX` +0x28, `STATUS` +0x2c, `FEE` +0x1b, `EXCHANGE_PLAYERS` +4, `OFFER_KIND` +0x31, `JOB_TYPE` +0x11 | 0x8c0810, 0x8c8090 | L/G |
 
-O presidente e os diretores (`club::CHAIRMAN` +0xbf, `club::DIRECTORS` +0xc3) **não são lidos** por nenhuma das 7
-rotinas desta seção [provado para as 4 em Rust e para a 0x8c0810; inferido para a 0x83cb40 e a 0x83f3a0 pelo
-pseudocódigo]. Do técnico entram só `non_player::YOUNGSTERS` (0x83f3a0) e o julgamento dele na nota
+O presidente e os diretores (`club::CHAIRMAN` +0xbf, `club::DIRECTORS` +0xc3) **não são lidos diretamente** por
+nenhuma das 7 rotinas desta seção [provado: para as 4 em Rust e a 0x8c0810; e nenhum acesso a `[clube + 0xbf]` ou
+`[clube + 0xc3]` em 0x83cb40..0x83f3a0 nem em 0x83f3a0..0x840d80]. **Mas entram pelas chamadas:** a 0x83cb40 chama
+`update_club_target_reputation` 0x83bf40 (0x83cda7), que lê a Paciência (+0x1d) e os Recursos (+0x20) do presidente
+(seção D §3); a 0x83f3a0 chama `get_max_wage` 0x5968d0 (0x84091d: Negócios +0xf e Recursos do presidente) e o preço
+pedido 0x4d1600 (0x8402fe, 0x840bfb). Do técnico entram só `non_player::YOUNGSTERS` (0x83f3a0) e o julgamento dele na nota
 (`match_man_judge_player_ability` 0x6e86d0 recebe `club::MANAGER`); dos olheiros, só a habilidade atual (§3.2).
 
 ### 5. Constantes (lidas do exe)
@@ -525,6 +628,9 @@ pseudocódigo]. Do técnico entram só `non_player::YOUNGSTERS` (0x83f3a0) e o j
 | imediatos | 17.500.000, 250.000, 1250 | 0x8c0810 |
 
 ### 6. Defeitos do original
+
+Nos itens 2 a 5 o código está provado; a intenção segue **[inferido]** em todos: se era o pretendido não se prova pela
+desmontagem.
 
 1. **Lances só de 2/7 dos clubes** fora das ligas carregadas (ou sem liga, ou na liga da chave 0x9cf764) com reputação
    ≤ 6250: (sorteio(2) + id) % 7 sem a data [provado].
@@ -682,7 +788,9 @@ mensagem), 0x8f9690 (tela do humano, com mensagem em 0xde1f64).
 ### 5. Janelas [provado]
 
 Regras de transferência: +4 a tabela das janelas (12 bytes: +0 abertura, +6 fechamento; cada data 6 bytes: +0 regra,
-+1 número, +2 dia da semana para onde anda (0xff nenhum) [inferido], +3 dia, +4 mês (0 = janeiro), +5 1 abre / 0
++1 número, +2 dia da semana para onde anda (0xff nenhum) [provado: `transfer_window_get_date` 0x40a7d0 passa o byte
++2 com sinal (0x40a7d1 `movsx ax, byte [ecx+2]`) como 4º argumento de `Date::Date` 0x549f70, que com valor ≠ 0xffff
+chama `Date::get_nearest_weekday` 0x54a2d0 (0x54a0ea..0x54a0fc): a data vai para o dia da semana mais próximo], +3 dia, +4 mês (0 = janeiro), +5 1 abre / 0
 fecha), +8 quantas, +0xa a nação, +0x13 limite de estrangeiros, +0x14 limite de não comunitários.
 
 - `transfer_window_contains_date` 0x8e8c40 (**mkc_1**): as duas datas no ano da data, pontas incluídas; a janela que
@@ -723,13 +831,16 @@ fecha), +8 quantas, +0xa a nação, +0x13 limite de estrangeiros, +0x14 limite d
 - Contrato tipo 2 que **termina no mês corrente**: o fim recua até este mês e o início acompanha (início = fim):
   - `can_loan_player` devolve 1 (início = fim);
   - a IA calcula meses até o fim 0 < 1: nunca pede;
-  - o humano recebe um período de zero meses (volta neste mês) [o que a tela faz com ele: inferido].
+  - o humano recebe um período de zero meses (volta neste mês) [o que a tela faz com ele: inferido; só tela, não muda
+    a carreira automática: o construtor 0x8f9690 põe o período nos controles 3-6 e 0xc/0xd (0x8f980f..0x8f98ac), o
+    tratador é 0x8fac30 (registrado em 0x8f9747) e a confirmação passa pela 0x8fb5e0; não foi seguido até o ponto em
+    que o fim 1972 ou o período zero viram (ou não) recusa].
 - Contrato que termina **no mês seguinte**: um mês de empréstimo, a IA pede se a volta ficar a 3 semanas ou mais.
 
 **É defeito do original?** Sim, de consistência [provado]: o `get_loan_period` usa 1972 para dizer "não dá", mas o
 `can_loan_player` só barra pela regra de encerrar do dono e aceita início = fim, então o humano é liberado a abrir
 uma proposta com fim impossível (ou de zero meses), enquanto a IA recusa calada. Que isso é exatamente o "não consigo
-pegar emprestado jogador em fim de contrato" do fórum (58.2) é **inferido** (não reproduzido no jogo).
+pegar emprestado jogador em fim de contrato" do fórum (58.2) é **inferido**: só se prova reproduzindo no jogo.
 
 **Correção pequena:** um desvio na 0x8d0040 (aqui já é Rust; no Tweaks, prólogo `6a ff 68 1b 40 96 00`, 7 bytes)
 que, depois do período, devolve 0 com uma mensagem clara quando o ano do fim é o da data padrão (1972) ou o fim fica
@@ -755,25 +866,59 @@ contrato e o início no mês seguinte a hoje, se couber.
 - O `process_due_offer` **não tem ramo** para 8, 9, 0xb, 0xc, 0xd e 0x13 (a 0x13 é das transferências futuras; a 8 é
   do gerente de contratos; a 0xa das licenças). A varredura semanal do `daily_update` (dia múltiplo de 7) reagenda
   para amanhã toda oferta vencida, **menos** 0x13, 7, 8 e 0xa: as 9, 0xb, 0xc e 0xd voltam todo dia e nada acontece.
+  Prova: o `process_due_offer` não compara 8, 9, 0xb, 0xc, 0xd (as comparações de estado são as de 0x8c6708..0x8c6972
+  e não há tabela de saltos); a varredura pula 0x13, 7, 8 e 0xa em 0x8c5964..0x8c5973. Escritores (varredura de
+  `mov byte [reg+0x2c], imm`): 9 só em 0x8c6a8c (`process_due_offer`, comprador humano); 0xb em 0x8c31e7 (0x8c2f50);
+  0xc/0xd na 0x8c3310 (0x8c336e/0x8c335b). Escritas por registrador não varridas.
 
-**O defeito [inferido, não reproduzido]:** uma oferta que esperava o humano (9: o comprador humano tem de oferecer o
+**O defeito [mecanismo provado; efeito no jogo inferido, não reproduzido]:** uma oferta que esperava o humano (9: o comprador humano tem de oferecer o
 contrato; 0xb–0xd: as confirmações dos clubes) quando ele entra de férias só anda se a notícia correspondente ainda
 estiver na caixa; se saiu do anel de 100 (ou ele apagou), fica parada as férias inteiras, e o jogador continua "com
 oferta" (bit 0 do registro de 8 bytes em `PERSON_FLAGS`), o que barra outras ofertas por ele. É defeito do original:
 o despacho depende da notícia, não do estado da oferta.
 
 **E os empréstimos?** O empréstimo não passa por 9 nem por 0xb–0xd: completa na hora em que o jogador aceita
-(0x8c2180). Os estados de empréstimo que esperam gente são 0 (dono humano: 14 dias e caduca), 1 (negociação com
-comprador humano: caduca) e 8 (decisão do jogador, no gerente de contratos 0x4cc930/0x4cd9c0). O único que **não
-caduca** é o 8, e a varredura semanal o exclui; um empréstimo cuja decisão do jogador não chega fica preso. Que é isso
-o item 88 do xeno é **inferido**; o caminho exato que perde a decisão não foi achado.
+(0x8c2180). Os estados de empréstimo que esperam gente são 0 (dono humano: estado 4 em 14 dias, caduca), 1 (comprador
+humano: estado 4 em 10 dias, caduca), 0xf (removido na volta com rodada 3) e 8 (decisão do jogador, no gerente de
+contratos 0x4cc930/0x4cd9c0). O único que **não caduca** é o 8, e a varredura semanal o exclui.
 
-**Correção pequena:** no `process_due_offer` (aqui Rust; no Tweaks, prólogo `6a ff 68 00 3d 96 00`), para o estado
-9/0xb/0xc/0xd com o humano envolvido de férias (`news_club_has_human_manager` ≠ 0 e
-`human_manager_is_human_club(…, 0, 1, 0, 0)` = 0), fazer o que o `auto_respond` faria: 9 →
+**Defeito do original: o empréstimo preso no estado 8 [provado, caminho de código; não reproduzido no jogo].** Um
+empréstimo pode ficar em 8 para sempre, **sem férias**:
+
+1. O dono (IA) aceita: `contract_manager_schedule_decision_for_transfer` 0x4cc930, estado 8 e **nenhum
+   reagendamento** (0x8c6577..0x8c6592 no `process_due_offer`; 0x8c0680/0x8c068b no `accept_loan_offer`). A 0x4cc930
+   marca a oferta de contrato (pessoa, clube) que tem +0x62 = 0 e agenda a decisão (0x4cc975 é a única escrita de 1 em
+   +0x62 fora da `add_contract_offer`).
+2. A oferta de contrato do empréstimo é tipo 6 (`init_from_current_contract` 0x85e590: `& 0xc6 | 6`), e a
+   `add_contract_offer` 0x4cc490 grava +0x62 = (tipo ≠ 6): 0 para o empréstimo (0x4cc597..0x4cc5b7 na oferta nova;
+   0x4cc741..0x4cc761 na atualizada).
+3. A decisão do jogador (0x4ce4e0) só olha ofertas com +0x62 ≠ 0 (0x4ce63c..0x4ce641). Se ele escolhe **outra**
+   proposta ligada a uma transferência, a do empréstimo vira estado 1 e `handle_player_rejected_terms` 0x8c28c0
+   (0x4ced1b..0x4ced32: a transferência vai a 0xf, rodada 3, volta em 10 dias); e a oferta de contrato do empréstimo é
+   **guardada** na lista +0x38 (0x4cf0b5..0x4cf13d, clube diferente do escolhido e escolhido com vaga ≠ −1) e sai da
+   lista viva (0x4cf35d..0x4cf383).
+4. Se a transferência escolhida é **retirada** com estado ≥ 0xb (`withdraw_transfer_offer` 0x8bfcb0, 0x8bfd3a; único
+   chamador da 0x4cf4a0, em 0x8bfd4a) enquanto o empréstimo ainda existe (os 10 dias do passo 3),
+   `resubmit_held_offers` 0x4cf4a0 põe a transferência de 0xf em **8** (0x4cf4fb..0x4cf501) e reenvia a oferta com
+   `add_contract_offer(…, decide 1, combinado 0)` (0x4cf505..0x4cf52a): tipo 6, então +0x62 = 0.
+5. A decisão agendada pula essa oferta (passo 3); a 0x4cc930 não volta a ser chamada (só nas aceitações do estado 0);
+   o `process_due_offer` não tem ramo para 8; a varredura pula 8. **O empréstimo fica em 8 para sempre** e o jogador
+   segue "sob oferta" (o bit 0 do registro de 8 bytes só é limpo com as ofertas resolvidas, e 8 não conta).
+
+A decisão também é adiada de 2 em 2 dias enquanto o jogador tiver outra oferta em 0, 1, 5 ou 6
+(`player_has_pending_offer` 0x8cd150 em 0x4ce5ce), mas isso termina quando a outra caduca. **As férias não entram**
+nesse caminho (nem a 0x4ce4e0 nem a 0x4cf4a0 olham o humano). Que é isso o item 88 do xeno segue **[inferido]** (não
+reproduzido no jogo).
+
+**Correção pequena (oferta presa nas férias):** no `process_due_offer` (aqui Rust; no Tweaks, prólogo
+`6a ff 68 00 3d 96 00`), para o estado 9/0xb/0xc/0xd com o humano envolvido de férias (`news_club_has_human_manager` ≠
+0 e `human_manager_is_human_club(…, 0, 1, 0, 0)` = 0), fazer o que o `auto_respond` faria: 9 →
 `offer_contract_to_offer_player`; 0xb–0xd → `check_offer_restrictions` e `confirm_offer_by_club` ou
-`club_rejects_offer`. Para o 8, um prazo: oferta de empréstimo em 8 há mais de N dias (a data `DUE_DATE` já vencida há
-uma semana) → `reject_loan_offer`.
+`club_rejects_offer`.
+
+**Correção pequena (empréstimo preso):** na `resubmit_held_offers` 0x4cf4a0, para uma transferência de empréstimo
+(`offer_type` 1), chamar a 0x4cc930 depois do reenvio (ou gravar +0x62 = 1); ou, no `process_due_offer` (Rust), tratar
+o 8 vencido de empréstimo como recusa (`reject_loan_offer`).
 
 ### 9. Como o empréstimo termina e volta [provado, Rust]
 
@@ -816,11 +961,16 @@ valor, **+0x1c o tipo**, +0x1d a data. Os tipos, pelos gravadores: **0 pago**, *
 
 ### 12. Dúvidas
 
-- O ponto exato da tela do humano que transforma o fim 1972 (ou o período de zero meses) em recusa.
-- Qual estado prende o empréstimo nas férias (o 8 é o candidato; o caminho que perde a decisão não foi achado).
-- O tipo 3 e 4 de contrato (N/A na tela) existem nos dados?
+- O ponto exato da tela do humano que transforma o fim 1972 (ou o período de zero meses) em recusa [segue inferido,
+  ver §7].
+- ~~Qual estado prende o empréstimo nas férias~~: respondido em §8 (estado 8, sem férias, pela retirada de uma
+  transferência guardada).
+- O tipo 3 e 4 de contrato (N/A na tela) existem nos dados? [segue inferido: precisa varrer os contratos de um save
+  ou do banco, fora da desmontagem]
 - O laço do `ENGLAND_RULES::can_loan_player` testa o id do `player` alvo, não o do jogador do elenco, para pular
-  vagas inválidas (o Rust reproduz; efeito nulo na prática) [inferido].
+  vagas inválidas (o Rust reproduz; efeito nulo na prática) [provado: em 0x579ea8..0x579ec2 o teste lê `[esp+0x84]`
+  (o 2º argumento, o jogador-alvo, também lido em 0x579d65) e não `esi` (o jogador da vaga); com um alvo de id válido o
+  teste sempre passa].
 
 
 <a id="d"></a>
@@ -1011,7 +1161,7 @@ acerto do mercado conferido na desmontagem [provado]:
 | Business (+0xf), presidente | 0x597a0d | `Finance::get_max_wage` 0x5968d0 | sim | < 6: teto do salário × 1,05 (× 1,1 com técnico de ambição > 15 e reputação > 7250); > 15: × 0,95 |
 | Resources (+0x20), presidente | 0x597a6e | idem | sim | > 15 com ambição do presidente > 15 (e +0x82 = 0): × 1,1 / × 1,125 / × 1,05 pela reputação do clube (2750, 5750) e do jogador (7250) |
 | Business (+0xf), presidente | 0x598b24 | `Finance::get_transfer_budget` 0x598800 | não | divisor do orçamento = negócios + 6 (+ (15 − ambição) com ambição > 15; 16 sem presidente; +5 numa nação) |
-| Youngsters (+0x22), técnico | 0x8400ae | `fill_shortlist_slot` 0x83f3a0 (resto em 0x840084) | não | vaga que não é de empréstimo, menor de 20 com reputação doméstica (+9) < 3250 e clube atual < 3250: só segue se edi mod (25 − jovens) = 0 (sem técnico, mod 15); com jovens 20 passa 1 em 5, com 1, 1 em 24 [provado o teste; o que é edi, inferido: um contador ou id] |
+| Youngsters (+0x22), técnico | 0x8400ae | `fill_shortlist_slot` 0x83f3a0 (resto em 0x840084) | não | vaga que não é de empréstimo, menor de 20 com reputação doméstica (+9) < 3250 e clube atual < 3250: só segue se edi mod (25 − jovens) = 0 (sem ficha de não-jogador no técnico, mod 15) [provado: 0x8400ae..0x8400d4]; `edi` = id da pessoa + id do clube (0x83fee7..0x83feee, a mesma soma do teste % k; nenhuma escrita em `edi` até 0x8400b9 nos três caminhos 0x83ff0b, 0x83ff16, 0x83ff26) [provado]: **fixo por par (pessoa, clube)**, o mesmo jovem é sempre aceito ou sempre ignorado pelo mesmo clube enquanto o técnico for o mesmo; com jovens 20 passam os pares de soma múltipla de 5. Só chega aqui quem já falhou no % k |
 | Youngsters (+0x22), técnico | 0x4d3ccb | `contract_manager_calc_asking_price` 0x4d1600/0x4d2070 | não | clube da IA (0x600a50 = 0): soma (jovens − 10) a um limiar comparado com a habilidade potencial do jogador (+7 da ficha); abaixo dela, (potencial − limiar) × 0,5 entra no preço [provado o termo; o papel no preço, inferido] |
 | JudgingPotential (+0x18), técnico | via `perceived_ability` 0x6e86d0 (ramo `kind` ≠ 2) | `calc_player_value` 0x4d0c60; `value_player_for_club` 0x840d80 (`young_player_adjustment`, menores de 27) | sim | a habilidade potencial vista pelo técnico entra no valor do jogador e na lista |
 | Judgement (+0x17) | 0x6e86d0 (`kind` = 2); `know_person` 0x5b0a28 | `perceived_ability`; névoa (`FOG_OF_WAR_MAP::raise_knowledge`) | sim | habilidade atual vista; o conhecimento do observador (olheiro) sobe |
@@ -1041,11 +1191,14 @@ mudar a `.rdata` muda o jogo inteiro.
 1. `calc_contract_value` (0x866830): sem oferta, lê as cláusulas da oferta por ponteiro nulo (0x866df6); nenhum
    chamador passa nulo [provado]. Sem ficha de jogador a idade entra no lugar de "faixa − idade" (a = idade, 5 depois
    do limite) [provado]. A cláusula de não promoção (caso 0) olha a cláusula de multa mínima da oferta e usa a faixa
-   de 7,5 milhões, as outras 5 milhões [provado; intenção inferida].
+   de 7,5 milhões, as outras 5 milhões [provado (mkd_1); a intenção segue inferida: não se prova pelo código].
 2. `staff_interest_in_joining_club`: no próprio clube divide por um float da pilha que ninguém escreveu (sem efeito,
    o caminho não usa o resultado; já anotado no Rust).
 3. `get_max_wage`: o presidente com **pouco** tino para negócios (< 6) paga **mais** (× 1,05/× 1,1) e o bom (> 15)
-   paga menos (× 0,95) [provado]; parece invertido [inferido].
+   paga menos (× 0,95) [provado]. **Não é invertido** pelo código: nas duas rotinas do dinheiro um presidente de
+   Negócios alto gasta menos: no orçamento guarda mais semanas de salário de reserva (Negócios + 6, 0x598b24..0x598b2a)
+   e no teto salarial paga × 0,95 (0x597a0d). É um presidente prudente, coerente nas duas [provado]. Se era o
+   pretendido segue sem prova [inferido].
 4. Documentação Rust: o cabeçalho de `young_player_adjustment` (shortlist_manager.rs) diz "current ability seen", mas
    chama `perceived_ability` com `kind` 1, que é a potencial (lê JudgingPotential +0x18) [provado].
 
