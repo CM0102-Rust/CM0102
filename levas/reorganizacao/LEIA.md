@@ -28,6 +28,17 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 48 da legibilidade: registros secundários tipados, renomes da revisão
+
+O obstáculo 1 do leitor de fora da rodada 12 (registros secundários ainda em `usize`): as variáveis de `offer`,
+`league_table_row`, `manager_record`, `cup_round`, `shortlist_slot`, `physical_record`, `stadium`, `match_record`,
+`cup_tie`, `retirement_entry`, `live_match`, `match_record_row`, `injury_entry` e `comp_stats_club` ganham o tipo do
+registro e os campos viram métodos (306 acessos). Três deslocamentos relativos que a ferramenta tinha embrulhado como
+registro (`ShortlistSlot(k * 0x25)`) voltaram a número. Renomes conferidos na desmontagem: `manager_record::MONTH_AWARDS`
+→ `AWARDS` (0x86c8c0 e 0x86c390 incrementam), `club::EURO_FLAG` saiu (sinônimo de `CONTINENTAL_COMP_ID`). Locais,
+rodada 30 (16 nomes). Prova: aa7e9c95 ×2, detector igual, comparação 0; as 32 mutações mudadas compilam (duas trocas
+acompanharam o tipo novo).
+
 ## Levas 42 a 47 da legibilidade: leitores de campo no resto do motor
 
 Vereditos dos leitores em mais 107 arquivos, dos auxiliares compartilhados aos menores arquivos de competição, com 2 a

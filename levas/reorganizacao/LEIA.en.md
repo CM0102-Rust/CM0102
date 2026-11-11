@@ -29,6 +29,17 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 48: secondary records typed, review renames
+
+The outside reader's round 12 obstacle 1 (secondary records still `usize`): the variables of `offer`, `league_table_row`,
+`manager_record`, `cup_round`, `shortlist_slot`, `physical_record`, `stadium`, `match_record`, `cup_tie`,
+`retirement_entry`, `live_match`, `match_record_row`, `injury_entry` and `comp_stats_club` get their record type and
+their fields become methods (306 accesses). Three relative offsets the tool had wrapped as a record
+(`ShortlistSlot(k * 0x25)`) went back to numbers. Renames checked in the disassembly: `manager_record::MONTH_AWARDS` ->
+`AWARDS` (0x86c8c0 and 0x86c390 increment it), `club::EURO_FLAG` removed (synonym of `CONTINENTAL_COMP_ID`). Locals,
+round 30 (16 names). Proof: aa7e9c95 ×2, detector equal, comparison 0; the 32 changed mutations compile (two replacements
+followed the new type).
+
 ## Readability batches 42 to 47: field readers on the rest of the engine
 
 Reader verdicts on 107 more files, from the shared helpers to the smallest competition files, with 2 to 4 files per

@@ -10,7 +10,7 @@ MUTACOES = [
     ('p_6', "    } else if *level == 0 && r < 6 {", "    } else if r < 6 {"),
     ('p_17', "    let c = exe::non_player_attribute_rating(obs, obs.judgement()) as i8;", "    let c = exe::non_player_attribute_rating(obs, obs.interference()) as i8;"),
     ('n_lados', "        let club = Club(read_usize(fixture + if lado == 0 { 0x20 } else { 0x1c }));\n        if exe::human_manager_is_human_club", "        let club = Club(read_usize(fixture + if lado == 0 { 0x1c } else { 0x20 }));\n        if exe::human_manager_is_human_club"),
-    ('n_625', "            let e = MatchRecordRow(data + lado * 0x625 + match_record::ROW_STAFF_ID + vaga * 0x49);", "            let e = data + lado * 0x624 + match_record::ROW_STAFF_ID + vaga * 0x49;"),
+    ('n_625', "            let e = MatchRecordRow(data + lado * 0x625 + match_record::ROW_STAFF_ID + vaga * 0x49);", "            let e = MatchRecordRow(data + lado * 0x624 + match_record::ROW_STAFF_ID + vaga * 0x49);"),
     ('n_reserva', "(vaga > 10 && (e.minute_on() as u8) == 0xff)", "(vaga >= 10 && (e.minute_on() as u8) == 0xff)"),
     ('n_mais4', "            if i == -1 || read_i32(e.addr() + 4) == -1 ||", "            if i == -1 ||"),
     ('n_limite', "            if p == 0 || read_i32(p) < n() {", "            if p == 0 || read_i32(p) <= n() {"),
