@@ -279,7 +279,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule(this: usize, s
                 show_error_at(0x9c43e8, 0xae);
                 return 0;
             }
-            crate::comparison::branch("cqp_4 english second division calendar");
+            covered!("cqp_4 english second division calendar");
             let year = (this.year() as u16) as u32;
             eng_second_set_christmas_rounds(t, year, &DIVISION_TWO_CHRISTMAS, 0x9c43e8);
             t
@@ -295,7 +295,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_create_schedule(this: usize, s
                 show_error_at(0x9c43e8, 0x1b5);
                 return 0;
             }
-            crate::comparison::branch("cqp_4 english second division play-offs");
+            covered!("cqp_4 english second division play-offs");
             let year = this.year() as i32 as u32;
             eng_cc_cup_write_cup_round(t, 0, &DIVISION_TWO_PLAYOFF_0, year);
             eng_cc_cup_write_cup_round(t, 1, &SECOND_DIVISION_PLAYOFF_1, year);
@@ -346,17 +346,17 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
                 exe::staff_records_add_league_champions_record(eng_second_staff_records(), club, comp);
             }
             0 => {
-                crate::comparison::branch("cpz_2 promotion in the table");
+                covered!("cpz_2 promotion in the table");
                 let promotion: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
                 promotion(eng_second_staff_records(), club, comp, 0x64); // cpz2: promotion by the table weighs 0x64
             }
             1 => {
-                crate::comparison::branch("cpz_2 knockout place");
+                covered!("cpz_2 knockout place");
                 let slot: unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_QUALIFIED_FOR_ROUND_RECORD);
                 slot(eng_second_staff_records(), club, comp, 0xa0, 0x82, 0x1e); // cpz2: the knockout slot weighs 0x1e
             }
             3 => {
-                crate::comparison::branch("cpz_2 relegation in the table");
+                covered!("cpz_2 relegation in the table");
                 exe::staff_records_add_relegation_record(eng_second_staff_records(), club, comp); // cpz2: relegation by the table
             }
             _ => {}
@@ -369,7 +369,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
         if read_usize(row) == club {
             match s {
                 1 => {
-                    crate::comparison::branch("cpz_2 won the knockout");
+                    covered!("cpz_2 won the knockout");
                     let promotion: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
                     promotion(eng_second_staff_records(), club, comp, 0x32);
                     write_u8(this.table() + (i as usize) * league_table_row::SIZE + league_table_row::STATUS, 0);
@@ -483,7 +483,7 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_second(this: usize, year: u
 /// [pt] { 0x576780 } (thiscall, ret 0, eng_second.cpp): `EngSecond::set_up_rules()`. A Second: como a First, mas 4
 /// caem (+0xc1); a First acima ([0x9cf5c0]) e a Third abaixo ([0x9cf5c8]).
 pub(crate) unsafe extern "thiscall" fn eng_second_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqi_4 second division rules");
+    covered!("cqi_4 second division rules");
     eng_prm_apply_league_rules(League(this), &eng_prm_second_division_rules())
 }
 

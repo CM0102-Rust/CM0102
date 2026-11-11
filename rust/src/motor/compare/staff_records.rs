@@ -416,7 +416,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_year_award_record(this: usize
     }
     let (t3d, t28) = (p.job_for_club(), p.job_for_nation());
     if !(t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc) {
-        crate::comparison::branch("add_year_award_record player");
+        covered!("add_year_award_record player");
         return o(this, p.addr(), club, prize, a4, a5, credito);
     }
     let r = staff_records_manager_record(this, p);
@@ -452,7 +452,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_month_award_record(this: usiz
     }
     let (t3d, t28) = (p.job_for_club(), p.job_for_nation());
     if !(t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc) {
-        crate::comparison::branch("add_month_award_record player");
+        covered!("add_month_award_record player");
         return o(this, p.addr(), club, prize, a4, a5);
     }
     let r = staff_records_manager_record(this, p);

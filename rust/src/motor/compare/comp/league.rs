@@ -683,7 +683,7 @@ pub(crate) unsafe extern "thiscall" fn compare_league_process_promotion_relegati
 /// [pt] Comparador: a mudança chama as notícias, a vaga de técnico e a obra (não podem rodar duas vezes): só a original (a
 /// prova é a carreira e o modo Rust).
 pub(crate) unsafe extern "thiscall" fn compare_move_club_to_division(this: usize, club: usize, division: usize, slot: u32) {
-    crate::comparison::branch("move_club_to_division");
+    covered!("move_club_to_division");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_MOVE_CLUB_TO_DIVISION)(this, club, division, slot)
 }
 

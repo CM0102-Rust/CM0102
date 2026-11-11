@@ -479,7 +479,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
     }
     let su = s as usize;
     let cel = this + formation_fields::SLOT_COORDINATES + 4 * (zy as usize + 4 * (zx as usize + 3 * (f as usize + 2 * su)));
-    crate::comparison::branch("cpu_11 coordinate recorded");
+    covered!("cpu_11 coordinate recorded");
     write_u32(cel, coord); // cpu11: a coordenada
     // the output of 0x5b7e60 is the coord argument itself in the original (a single slot, for the whole function)
     let mut out: [i16; 2] = [cx, cy];
@@ -507,14 +507,14 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
                 }
             }
             if pos & 2 != 0 {
-                crate::comparison::branch("cpu_11 distance doubled");
+                covered!("cpu_11 distance doubled");
                 dist = dist.wrapping_add(dist); // cpu11: o dobro
             }
             if dist <= best[p] { // cpu11: the tie goes into the list
                 if dist < best[p] {
                     count[p] = 0;
                 } else {
-                    crate::comparison::branch("cpu_11 tie in the list");
+                    covered!("cpu_11 tie in the list");
                 }
                 best[p] = dist;
                 cand[(count[p] as i32 + p as i32 * 11) as usize] = pos;
@@ -936,7 +936,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
             write_u32(this + 0x188b + 8 * k, *x);
             write_u32(this + 0x188b + 8 * k + 4, 0xa); // cqg8: the default instruction of the old versions
         }
-        crate::comparison::branch("cqg_8 old instructions");
+        covered!("cqg_8 old instructions");
     } else if crt_fread_one(this + 0x188b, 0x58, f) == 1 {
         if !nativo {
             exe::swap_bytes_64_array(this + 0x188b, 0xb);
@@ -951,7 +951,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
     if v & 0x4000 == 0 {
         v |= 0x2000; // cqg8: instruction 0x2000 without 0x4000
         write_u32(team, v);
-        crate::comparison::branch("cqg_8 instruction 0x2000");
+        covered!("cqg_8 instruction 0x2000");
     }
     if id < 0x98ec5d {
         write_u32(team, read_u32(team) | 0x20000);
@@ -959,7 +959,7 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
     let mut c = 0u32;
     for vaga in 0..0xbi32 {
         exe::formation_get_slot_coordinate(this, vaga as i8, 0, 0, &mut c); // cqg8: the stored home side of stage 0
-        crate::comparison::branch("cqg_8 positions redone");
+        covered!("cqg_8 positions redone");
         exe::formation_set_slot_coordinate(this, vaga, 0, 0, c); // cqg8: the positions redone by home side
     }
     exe::crt_strtok(path, 0, 0, (this) as *mut u8, (0) as *mut u8);
@@ -1047,9 +1047,9 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
     // right on the first one: zero here)
     let (mut setor_geral, mut setor_extra, mut lado, mut saida) = (0u16, 0u16, 0u16, 0u32);
     if read_i16(general) == read_i16(extra_of_home) {
-        crate::comparison::branch("cpk_7 formation same position");
+        covered!("cpk_7 formation same position");
     } else {
-        crate::comparison::branch("cpk_7 formation extra position");
+        covered!("cpk_7 formation extra position");
     }
     for band in 0..3usize {
         for altura in 0..4usize {

@@ -463,7 +463,7 @@ pub(crate) unsafe extern "thiscall" fn compare_best_manager_candidate_score(this
 ///
 /// [pt] Comparador: a 0x695240 mexe na diretoria (e pode dar notícia): só a original (a prova é a carreira e o modo Rust).
 pub(crate) unsafe extern "thiscall" fn compare_update_board_after_fixture(this: usize, fixture: usize, game: usize) {
-    crate::comparison::branch("update_board_after_fixture");
+    covered!("update_board_after_fixture");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_UPDATE_BOARD_AFTER_FIXTURE)(this, fixture, game)
 }
 

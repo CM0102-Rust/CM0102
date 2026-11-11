@@ -10,7 +10,7 @@ use super::*;
 ///
 /// [pt] { 0x7cd830 } (thiscall, ret 0x14, poland_rules.cpp, `POLAND_RULES::POLAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Polônia (regra 18): a base (0x8e84a0), a vtable 0x96e61c, 1 janela(s) de `POLAND_TRANSFER_WINDOWS`; o +0x13 = 5 (o padrão da base é 50) [inferência: o limite de estrangeiros]; o +0x14 = 5 (o padrão é 30). Devolve o objeto.
 pub(crate) unsafe extern "thiscall" fn construct_poland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparison::branch("cqm_3 poland");
+    covered!("cqm_3 poland");
     construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x96e61c, 1, &POLAND_TRANSFER_WINDOWS, 0xa786b8, 0x51);
     write_u8(this + transfer_rules::FOREIGN_PLAYER_LIMIT, 5);
     write_u8(this + transfer_rules::NON_EU_PLAYER_LIMIT, 5);

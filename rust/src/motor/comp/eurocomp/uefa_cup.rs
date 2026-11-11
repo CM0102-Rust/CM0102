@@ -86,7 +86,7 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: Cup) -> i32 {
                 let c = base + j as u16 as usize * club::SIZE;
                 let nation = read_usize(c + club::NATION);
                 if nation != 0 && *((nation + nation::LEAGUE_SELECTED) as *const u8) == 0 && read_i16(nation + nation::REPUTATION) < 0x7d0 && read_usize(c + club::CONTINENTAL_COMP_ID) as i32 == -1 {
-                    crate::comparison::branch("cqs_9 club filling uefa");
+                    covered!("cqs_9 club filling uefa");
                     let e = k as i32 as usize * 6;
                     k = k.wrapping_add(1);
                     write_usize(this.team_table() + e, c);
@@ -110,7 +110,7 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: Cup) -> i32 {
     if b2 < 0 || b2 % 2 != 0 {
         return 0;
     }
-    crate::comparison::branch("cqs_9 uefa entrants");
+    covered!("cqs_9 uefa entrants");
     this.set_entrant_count(0);
     let n = k.wrapping_add(0x1b);
     this.set_entrant_capacity(n);
@@ -168,7 +168,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, 
         show_error_at(0xaa19e0, 0xe0);
         return 0;
     }
-    crate::comparison::branch("cqq_10 uefa fixtures");
+    covered!("cqq_10 uefa fixtures");
     let year = this.year() as i32 as u32;
     let (tab, n) = uefa_cup_rounds(read_i8(this.addr() + uefa_cup::PRELIMINARY_CLUB_COUNT));
     for (i, r) in tab[..n].iter().enumerate() {
@@ -192,7 +192,7 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_update_staff_records_for_status(
     let d = outcome as u8;
     if d == 1 || d == 2 || d == 0xff {
         if d == 0xff {
-            crate::comparison::branch("cqi_10 dropped into uefa");
+            covered!("cqi_10 dropped into uefa");
         }
         write_i32(club.addr() + club::CONTINENTAL_COMP_ID, -1); // cqi10: whoever finishes in the UEFA leaves the European competition
     }

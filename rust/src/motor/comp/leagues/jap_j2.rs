@@ -8,7 +8,7 @@ use super::*;
 /// [pt] { 0x665140 } (thiscall, jap_j2.cpp): `JapJ2::set_up_rules`, as regras da J2 e o calendário; devolve 1.
 pub(crate) unsafe extern "thiscall" fn jap_j2_set_up_rules(this: usize) -> u32 {
     j2_rules(this);
-    crate::comparison::branch("cqj_7 j2 rules");
+    covered!("cqj_7 j2 rules");
     create_main_schedule(League(this));
     1
 }

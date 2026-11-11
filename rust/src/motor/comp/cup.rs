@@ -185,7 +185,7 @@ pub(crate) unsafe extern "thiscall" fn create_tie_fixtures(this: usize, round: u
     }
     let stadium: unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32 = core::mem::transmute(FN_STADIUM_SET_FIXTURE_VENUE);
     stadium(read_usize(G_STADIUM), read_usize(e + cup_round::VENUE_VALUE), p.addr(), this.venue_stadium_id());
-    crate::comparison::branch("cqc_5 tie match");
+    covered!("cqc_5 tie match");
     add_fixture_to_calendar(p);
     let (home, away) = (p.home_club(), p.away_club());
     if (cup_has_human_manager(home.addr()) || cup_has_human_manager(away.addr())) && read_i16(round_entry(this, ri) + cup_round::TIE_RULES) as u16 & (tie_rules::FIXED_DATES as u16) == 0 {
@@ -213,7 +213,7 @@ pub(crate) unsafe extern "thiscall" fn create_tie_fixtures(this: usize, round: u
     if read_usize(read_usize(G_COMP_OBJECT_TABLE) + id * 4) == 0 || read_u8(e + cup_round::LEGS) != 2 {
         return 1;
     }
-    crate::comparison::branch("cqc_5 return leg");
+    covered!("cqc_5 return leg");
     if (read_u8(e + cup_round::SINGLE_LEG_FLAG) as i8) < 1 {
         p.set_flags(p.flags() & !4);
     } else {
@@ -343,7 +343,7 @@ pub(crate) unsafe extern "thiscall" fn post_draw_news(this: usize, round: u32, t
     } else {
         away = read_usize(cup_team_entry(this, v));
     }
-    crate::comparison::branch("cqc_5 pending tie");
+    covered!("cqc_5 pending tie");
     let mut noticia = [0u32; 0x38];
     let n = noticia.as_mut_ptr() as usize;
     exe::new_newsitem(n, 0x26, 0);
@@ -524,7 +524,7 @@ pub(crate) unsafe extern "thiscall" fn sort_round_teams(cup: usize, round: u32) 
     }
     let mut nation = read_u8(round_entry(Cup(cup), r) + cup_round::DRAW_RULES) & (draw_rules::SEPARATE_NATIONS as u8) != 0; // rule 4 (+0xb) of the round
     let n = take_round_teams(cup, r, array, |_| {}) as i16;
-    crate::comparison::branch("cqb_11 sorts by seed");
+    covered!("cqb_11 sorts by seed");
     exe::crt_qsort(array, (n as i32) as u32, 7, 0x51ebc0); // cqb11: by seed, highest first
     let mut second = false;
     let mut j: i16 = 0;
@@ -555,7 +555,7 @@ pub(crate) unsafe extern "thiscall" fn sort_round_teams(cup: usize, round: u32) 
             } else if casa < 0 && fora < 0 {
                 if fora == -2 {
                     if casa == -2 && exe::utils_random(2) != 0 {
-                        crate::comparison::branch("cqb_11 seed drawn side");
+                        covered!("cqb_11 seed drawn side");
                         side = Some(true); // cqb11: the drawn side
                     } else {
                         side = Some(false);
@@ -636,7 +636,7 @@ pub(crate) unsafe extern "thiscall" fn check_round_teams_for_nation(cup: usize, 
                 // simplification: without checking the null club, like the original routine (which would read its +0x53)
                 let nation = read_ptr(read_ptr(cup_team_entry(Cup(cup), read_i16(e))) + club::NATION);
                 if nation != 0 {
-                    crate::comparison::branch("cqb_11 nation count");
+                    covered!("cqb_11 nation count");
                     write_u8(e + 6, read_u8(read_ptr(nation).wrapping_add(contas))); // cqb11: the level becomes the nation’s count
                 }
             }
@@ -781,7 +781,7 @@ pub(crate) unsafe fn round_prizes(cup: Cup, r: i32, count: bool) -> Option<(i32,
             return None;
         }
         if count {
-            crate::comparison::branch("cqa_1 prize from the fund");
+            covered!("cqa_1 prize from the fund");
         }
         let q = q0 / confrontos; // cqa1: the fund by the remaining rounds and by the ties
         if ao_perdedor == -1 {
@@ -838,7 +838,7 @@ pub(crate) unsafe extern "thiscall" fn pay_round_prize_money(cup: usize, winner:
     }
     if ao_vencedor != 0 {
         send_prize_news(cup, read_usize(winner), ao_vencedor, next, fixture, outcome);
-        crate::comparison::branch("cqa_1 winner prize");
+        covered!("cqa_1 winner prize");
         european_cup_add_prize_money(european_cup_club_finance(read_usize(winner)), ao_vencedor); // cqa1: the winner’s prize
         cup.set_prize_fund(cup.prize_fund().wrapping_sub(ao_vencedor));
     }
@@ -1143,7 +1143,7 @@ pub(crate) unsafe extern "thiscall" fn draw_round(cup: usize, round: u32) -> u32
         let more: unsafe extern "thiscall" fn(*mut [u8; 8], *mut [u8; 8], u32) -> *mut [u8; 8] = core::mem::transmute(FN_DATE_ADD_DAYS);
         let (mut a, mut b, mut c) = ([0u8; 8], [0u8; 8], [0u8; 8]);
         round_draw_date(cup, reg, &mut a);
-        crate::comparison::branch("cqa_3 draw postponed");
+        covered!("cqa_3 draw postponed");
         let r = more(&mut a, &mut b, 1); // cqa3: the deferred random draw
         exe::date_operator_3d((&mut a) as *mut [u8; 8] as usize, (&mut c) as *mut [u8; 8] as usize, (r) as *mut [u8; 8] as usize); // push &b; push &c; ecx = &a -> thiscall, ret 8
         set_round_draw_date(cup, reg, &a);
@@ -1165,12 +1165,12 @@ pub(crate) unsafe extern "thiscall" fn draw_round(cup: usize, round: u32) -> u32
     };
     let rule = read_i16(reg + cup_round::TIE_RULES);
     if rule & tie_rules::SEEDED_DRAW != 0 {
-        crate::comparison::branch("cqa_3 seeded draw");
+        covered!("cqa_3 seeded draw");
         sorteio(0x51d2d0); // cqa3: by the seed
     } else if read_u8(reg + cup_round::DRAW_RULES) & 4 != 0 {
         sorteio(0x51d9f0);
     } else if rule & tie_rules::FIXED_BRACKET == 0 {
-        crate::comparison::branch("cqa_3 open draw");
+        covered!("cqa_3 open draw");
         sorteio(0x51e220); // cqa3: the free random draw
     }
     // push -1; push round; ecx = the cup -> thiscall, ret 8
@@ -1355,14 +1355,14 @@ pub(crate) unsafe extern "thiscall" fn cup_update_staff_records_for_status(cup: 
     let comp = read_usize(cup.addr() + 4);
     match outcome as u8 {
         1 => {
-            crate::comparison::branch("cqa_4 champion");
+            covered!("cqa_4 champion");
             cup_record_final_result(0x86a800, club, game, final_); // cqa4: the champion record
             if wins_uefa_cup_place(Competition(comp), club) {
                 write_i32(club_state_record(club), read_i32(KEY_CLUB_COMP_UEFA_CUP));
             }
         }
         2 => {
-            crate::comparison::branch("cqa_4 runner-up");
+            covered!("cqa_4 runner-up");
             cup_record_final_result(0x86b0b0, club, game, final_); // cqa4: the runner-up record
         }
         3 => cup_record_final_result(0x86b710, club, game, final_),
@@ -1832,7 +1832,7 @@ pub(crate) unsafe extern "thiscall" fn cup_update_for_date(this: usize, today: u
             if year > hano || (year == hano && day as i16 > hdia as i16) { // cps13: the draw date
                 return 0;
             }
-            crate::comparison::branch("cps_13 round draw");
+            covered!("cps_13 round draw");
             exe::cup_draw_round(this, this.next_draw_round() as i8 as i32 as u32);
             let new = this.next_draw_round() as i8;
             if new == k || new as i16 == (this.round_count() as u16) as i16 {
@@ -1868,7 +1868,7 @@ pub(crate) unsafe extern "thiscall" fn cup_update_for_date(this: usize, today: u
                 return 0; // nem a data nem pendente
             }
         }
-        crate::comparison::branch("cps_13 round setup");
+        covered!("cps_13 round setup");
         exe::cup_set_up_round(this, this.current_round() as i8 as i32 as u32);
         let new = this.current_round() as i8;
         if new == k || new as i16 == (this.round_count() as u16) as i16 {
@@ -1944,7 +1944,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_round(this: usize, round: u32) -> 
         let p = exe::date_add_days((&mut d) as *mut [u8; 8] as usize, (&mut amanha) as *mut [u8; 8] as usize, 1);
         exe::date_operator_3d((&mut d) as *mut [u8; 8] as usize, (&mut copia) as *mut [u8; 8] as usize, p);
         let (day, year) = cup_date_day_year(&d);
-        crate::comparison::branch("cps_13 round postponed");
+        covered!("cps_13 round postponed");
         let r = round_record_at(this, ri as isize);
         core::ptr::write_unaligned(r as *mut u16, day);
         *((r + 2) as *mut u8) = (year as u8).wrapping_sub(this.year() as u8);
@@ -1986,7 +1986,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_round(this: usize, round: u32) -> 
     } else {
         0
     };
-    crate::comparison::branch("cps_13 round matches");
+    covered!("cps_13 round matches");
     exe::cup_move_round_fixtures_to_set_dates(this, data, current as i32 as u32);
     if data != 0 {
         exe::crt_operator_delete(data);
@@ -2196,7 +2196,7 @@ pub(crate) unsafe extern "thiscall" fn randomize_round_teams(cup: usize, round: 
                 let home_free = casa == -2;
                 if fora == -2 {
                     if home_free && exe::utils_random(2) != 0 {
-                        crate::comparison::branch("cpq_11 home side draw");
+                        covered!("cpq_11 home side draw");
                         break true;
                     }
                     break false;
@@ -2276,7 +2276,7 @@ pub(crate) unsafe extern "thiscall" fn separate_shared_stadium_ties(cup: usize, 
                 let a = if lado == 0 { home_i } else { read_i16(fi + 2) };
                 let b = read_i16(fj.addr() + lado);
                 if a != -1 && b != -1 {
-                    crate::comparison::branch("cpq_11 stadium compared");
+                    covered!("cpq_11 stadium compared");
                     let (sa, signed_byte_at) = (stadium(a), stadium(b));
                     if sa == signed_byte_at && sa != 0 {
                         dividem = true;
@@ -2374,7 +2374,7 @@ pub(crate) unsafe fn cap_professional_status(club: Club, value: i8, baixar: u32)
     let p = (club.addr() + club::PROFESSIONAL_STATUS) as *mut i8;
     let muda = if baixar != 0 { *p > value } else { *p < value };
     if muda {
-        crate::comparison::branch("cpp_13 division ceiling");
+        covered!("cpp_13 division ceiling");
         *p = value; // o teto novo
     }
 }
@@ -2416,7 +2416,7 @@ pub(crate) unsafe fn fixture_winner_side(this: Cup, f: Fixture) -> Option<u32> {
     if fl & 2 != 0 {
         let (a1, a2) = (f.home_goals_extra_time(), f.away_goals_extra_time());
         if a1 > a2 {
-            crate::comparison::branch("cpm_1 match in extra time");
+            covered!("cpm_1 match in extra time");
             let c = f.home_result_mark();
             if c == 1 {
                 f.set_home_result_mark(result_mark::WON);
@@ -2621,7 +2621,7 @@ pub(crate) unsafe fn tie_winner_side(conf: usize, j: Fixture) -> Option<u32> {
     if tot1 < tot2 {
         return Some(1);
     }
-    crate::comparison::branch("cpm_1 tie level on aggregate");
+    covered!("cpm_1 tie level on aggregate");
     if fl & 0x800 != 0 {
         j.set_home_result_mark(result_mark::WALKOVER);
         return Some(1);
@@ -2716,7 +2716,7 @@ pub(crate) unsafe extern "thiscall" fn decide_tie_winner(this: usize, tie: usize
 /// [pt] { 0x51ebc0 } (cdecl, Cup.cpp): `cup_compare_draw_entries_by_seed(a, b)`: a comparação do qsort das entradas de 7
 /// bytes do sorteio (0x51d2d0 e 0x51d9f0): o cabeça de chave (byte com sinal +6) de `b` menos o de `a` (maior primeiro).
 pub(crate) unsafe extern "C" fn cup_compare_draw_entries_by_seed(a: usize, b: usize) -> i32 {
-    crate::comparison::branch("cpm_1 seeding order");
+    covered!("cpm_1 seeding order");
     read_i8(b + 6) as i32 - read_i8(a + 6) as i32 // the largest first
 }
 
@@ -2907,7 +2907,7 @@ pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: us
     if r == -1 || p.is_null() {
         return 0;
     }
-    crate::comparison::branch("cpx_13 outcome news");
+    covered!("cpx_13 outcome news");
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let n = local.as_mut_ptr() as usize;
     exe::new_newsitem(n, 0x10, 0);
@@ -3079,7 +3079,7 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
                             exe::news_send_to_club_manager(read_usize(G_NEWS), n2, r.away_club());
                         }
                         exe::fixture_manager_remove_fixture(read_usize(G_FIXTURE_MANAGER), r);
-                        crate::comparison::branch("cqc_7 match moved to the date");
+                        covered!("cqc_7 match moved to the date");
                         r.set_day(read_i16(pt) as u16); // cqc7: the set day
                         r.set_year(read_i16(pt + 2) as u16);
                         let v = CupRound(cup_round_entry(this, round) + j);
@@ -3273,7 +3273,7 @@ pub(crate) unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
                     None
                 };
                 if let Some(a) = side {
-                    crate::comparison::branch("cqd_7 place in the next round");
+                    covered!("cqd_7 place in the next round");
                     write_u16(v + if a { 0xa } else { 0xc }, p as u16);
                     write_u16(v + if a { 0xe } else { 0x10 }, r as u16);
                     write_u16(c + cup_tie::FEEDER_TIE, s as u16);
@@ -3385,7 +3385,7 @@ pub(crate) unsafe extern "thiscall" fn map_fixture_tree(this: usize) -> i32 {
                         None
                     };
                     if let Some(o) = side {
-                        crate::comparison::branch("cqd_7 team in the first round");
+                        covered!("cqd_7 team in the first round");
                         write_u16(c + o, (read_i16(comp_cup_round(this, r) + cup_round::FIRST_NEW_TEAM) as u16).wrapping_add(q as u16));
                         break;
                     }
@@ -3510,7 +3510,7 @@ pub(crate) unsafe extern "thiscall" fn has_club(this: usize, club: u32) -> u32 {
     let teams = (this.team_table() as u32) as usize;
     for i in 0..n.max(0) as usize {
         if read_u32(teams + i * 6) == club {
-            crate::comparison::branch("cpr_13 cup has the club");
+            covered!("cpr_13 cup has the club");
             return 1; // is in the cup
         }
     }

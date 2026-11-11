@@ -65,7 +65,7 @@ pub(crate) unsafe fn match_stats_category(p: Fixture, side: i32, warn: bool, err
         2 => 4,
         1 => {
             if warn {
-                crate::comparison::branch("cpx_12 league category");
+                covered!("cpx_12 league category");
             }
             if exe::comp_util_is_league_division(read_usize(p.addr()) as i32) != 0 { 2 } else { 3 } // cpx12: the league category
         }
@@ -233,7 +233,7 @@ pub(crate) unsafe extern "thiscall" fn update_league_position_records(this: usiz
                 }
                 let v = read_usize(s + club_record::BEST_POSITION_COMP) as i32;
                 if always != 0 && (away(v) || competition_reputation(comp) > competition_reputation(v) || (comp == v && pos < read_u8(s))) {
-                    crate::comparison::branch("cpx_12 best position ever");
+                    covered!("cpx_12 best position ever");
                     write_u8(s, pos);
                     write_i32(s + club_record::BEST_POSITION_COMP, comp);
                     write_u16(s + club_record::BEST_POSITION_YEAR, year);
@@ -294,7 +294,7 @@ pub(crate) unsafe extern "thiscall" fn send_record_news(this: usize) -> u32 {
         if human(club.addr()) == 0 && exe::database_is_national_team(club) == 0 {
             continue;
         }
-        crate::comparison::branch("cpx_12 record news");
+        covered!("cpx_12 record news");
         let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
         let n = local.as_mut_ptr() as usize;
         exe::new_newsitem(n, 0x3e8, 0);
@@ -335,7 +335,7 @@ pub(crate) unsafe fn fan_rating(p: Staff, club: Club, st: usize) -> f64 {
     let mut rating = average + read_u8(st + player_category_stats::GOALS) as i32 as f64 * read_f64(rdata::F64_0_025);
     rating = rating + read_u8(st + 6) as i32 as f64 * read_f64(rdata::F64_0_01666666667);
     if exe::club_favours_staff(p, club) != 0 {
-        crate::comparison::branch("cpp_10 club favourite");
+        covered!("cpp_10 club favourite");
         rating = rating + read_f64(rdata::F64_0_2); // the club likes him
     } else if exe::club_dislikes_staff(p, club) != 0 {
         rating = rating - read_f64(rdata::F64_2);
@@ -476,7 +476,7 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
     }
     let value = t.fee() as i32;
     if value != 0 && value > read_i32(s + club_record::FEE_PAID) {
-        crate::comparison::branch("cpp_10 record fee paid");
+        covered!("cpp_10 record fee paid");
         write_i32(s + club_record::FEE_PAID, value);
         exe::fill_staff_name_ref(person, s + club_record::FEE_PAID_HOLDER);
         write_usize(s + club_record::FEE_PAID_OTHER_CLUB_ID, read_usize(seller.addr()));
@@ -485,7 +485,7 @@ pub(crate) unsafe extern "thiscall" fn update_transfer_fee_records(this: usize, 
         if (t.fee() as i32) > read_i32(a + club_record::FEE_PAID) {
             copy_transfer_record(a, s, 0x313);
             if is_big_transfer(read_i32(a + club_record::FEE_PAID), buyer) {
-                crate::comparison::branch("cpp_10 big transfer");
+                covered!("cpp_10 big transfer");
                 if !record_news_queued(this, read_usize(buyer.addr()), 0x1c) {
                     exe::club_records_queue_record_news(this, read_usize(buyer.addr()) as u32, 0x1c);
                 }
@@ -560,7 +560,7 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_totals(this: usize, value: i
     if (read_usize(s + club_record::TRANSFER_INCOME) as i32) < read_usize(t + club_record::TRANSFER_INCOME) as i32 {
         let minimum = (seller.reputation() as i32 + 500).wrapping_mul(1000);
         if read_usize(t + club_record::TRANSFER_INCOME) as i32 >= minimum && year != read_i16(s + club_record::TRANSFER_INCOME_YEAR) && !is_record_news_queued(this, read_usize(seller.addr()), 0x1f) {
-            crate::comparison::branch("cpm_6 record fee received news");
+            covered!("cpm_6 record fee received news");
             exe::club_records_queue_record_news(this, read_usize(seller.addr()) as u32, 0x1f); // record fee received
         }
         write_usize(s + club_record::TRANSFER_INCOME, read_usize(t + club_record::TRANSFER_INCOME));
@@ -576,7 +576,7 @@ pub(crate) unsafe extern "thiscall" fn add_transfer_totals(this: usize, value: i
         let minimum = (buyer.reputation() as i32 + 500).wrapping_mul(1000);
         // the original checks the minimum against the old record (the ecx that still holds the all-time one)
         if read_usize(s + club_record::TRANSFER_SPENDING) as i32 >= minimum && !is_record_news_queued(this, read_usize(buyer.addr()), 0x1e) {
-            crate::comparison::branch("cpm_6 record fee paid news");
+            covered!("cpm_6 record fee paid news");
             exe::club_records_queue_record_news(this, read_usize(buyer.addr()) as u32, 0x1e); // record fee paid
         }
         write_usize(s + club_record::TRANSFER_SPENDING, read_usize(t + club_record::TRANSFER_SPENDING));
@@ -681,7 +681,7 @@ pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, 
         let average = exe::player_stats_get_record_value(reg, 0x11, 6.5);
         // fcomp with −1.0 (double) and fcom with the stored float: passes only with the higher average
         if *rating as f64 == read_f64(rdata::F64_NEG_1) || average > *rating as f64 {
-            crate::comparison::branch("cpm_6 season rating record");
+            covered!("cpm_6 season rating record");
             *rating = average as f32;
             write_u8(r + club_record::SEASON_RATING_GAMES, jogou);
             exe::fill_staff_name_ref(p, r + club_record::SEASON_RATING + 4);
@@ -727,7 +727,7 @@ pub(crate) unsafe extern "thiscall" fn get_all_time_record(this: usize, club: us
     }
     let e = club_records_entry(this, club);
     if read_usize(e) as i32 == -1 && create != 0 {
-        crate::comparison::branch("cpk_1 new all-time records");
+        covered!("cpk_1 new all-time records");
         if read_usize(this + club_records_fields::ALL_TIME_COUNT) == read_usize(this + club_records_fields::ALL_TIME_CAPACITY) {
             let cap = read_usize(this + club_records_fields::ALL_TIME_CAPACITY).wrapping_add(50);
             write_usize(this + club_records_fields::ALL_TIME_CAPACITY, cap);
@@ -763,7 +763,7 @@ pub(crate) unsafe extern "thiscall" fn get_season_record(this: usize, club: usiz
     }
     let e = club_records_entry(this, club) + 4;
     if read_usize(e) as i32 == -1 && create != 0 {
-        crate::comparison::branch("cpk_1 new season records");
+        covered!("cpk_1 new season records");
         if read_usize(this + club_records_fields::SEASON_COUNT) == read_usize(this + club_records_fields::SEASON_CAPACITY) {
             let cap = read_usize(this + club_records_fields::SEASON_CAPACITY).wrapping_add(50);
             write_usize(this + club_records_fields::SEASON_CAPACITY, cap);
@@ -797,7 +797,7 @@ pub(crate) unsafe extern "thiscall" fn get_season_record(this: usize, club: usiz
 /// lidas pela 0x448e30. Cheio (conta +0x2c = capacidade +0x28): cresce de 5 em 5 (realloc 0x945667); sem memória,
 /// caixa 0x174f e devolve 0 (o jogo segue, sem o vetor). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn queue_record_news(this: usize, id: u32, kind: u32) -> u32 {
-    crate::comparison::branch("cpk_1 record news");
+    covered!("cpk_1 record news");
     if read_usize(this + club_records_fields::NEWS_QUEUE_COUNT) == read_usize(this + club_records_fields::NEWS_QUEUE_CAPACITY) {
         let cap = read_usize(this + club_records_fields::NEWS_QUEUE_CAPACITY).wrapping_add(5);
         write_usize(this + club_records_fields::NEWS_QUEUE_CAPACITY, cap);

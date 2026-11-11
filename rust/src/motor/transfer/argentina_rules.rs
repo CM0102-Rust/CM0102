@@ -20,7 +20,7 @@ pub(crate) const ARGENTINA_TRANSFER_WINDOWS: [[u8; 6]; 4] = [
 /// [pt] { 0x40a620 } (thiscall, ret 0, argentina_rules.cpp, `ARGENTINA_RULES::init_transfer_windows`; chamada pelo construtor das regras da Argentina (regra 1), depois da base e da vtable): as
 /// 2 janelas de transferência de `ARGENTINA_TRANSFER_WINDOWS`.
 pub(crate) unsafe extern "thiscall" fn argentina_rules_init_transfer_windows(this: usize) {
-    crate::comparison::branch("cqn_1 argentina");
+    covered!("cqn_1 argentina");
     set_transfer_windows(this, 2, &ARGENTINA_TRANSFER_WINDOWS, 0x987960, 0x50);
 }
 

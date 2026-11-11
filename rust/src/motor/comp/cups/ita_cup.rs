@@ -28,7 +28,7 @@ pub(crate) unsafe fn create_first_group_table(this: League, n: i16, file: usize,
         show_error_at(file, row);
         return 0;
     }
-    crate::comparison::branch(ramo);
+    covered!(ramo);
     let mut i: i8 = 0;
     while (i as i16) < this.club_count() {
         let slot = read_usize(this.addr() + ita_cup_fields::ENTRANT_CLUBS) + i as isize as usize * 4;
@@ -96,7 +96,7 @@ pub(crate) unsafe fn advance_cup_stage(this: League, file: usize, row: u32, end_
     let stage = stage + 1;
     this.set_current_stage((stage) as usize);
     if stage == end_of_groups {
-        crate::comparison::branch("cqr_7 italian cups knockout");
+        covered!("cqr_7 italian cups knockout");
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(knockout_knockout);
         f(this.addr()); // cqr7: monta o mata-mata
     }
@@ -183,7 +183,7 @@ pub(crate) unsafe fn ita_cup_create_group_stage_cqr8_group_stage(this: League, g
         loop {
             let c = read_usize(read_usize(this.addr() + ita_cup_fields::ENTRANT_CLUBS) + o);
             if c != 0 {
-                crate::comparison::branch(ramo);
+                covered!(ramo);
                 write_usize(teams + k as usize * 4, c); // cqr8: the team in slot k of the group
                 write_usize(read_usize(this.addr() + ita_cup_fields::ENTRANT_CLUBS) + o, 0);
                 k += 1;
@@ -399,7 +399,7 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage(this: usize
     if teams == 0 {
         return show_error_at(0x9ea23c, 0x29c);
     }
-    crate::comparison::branch("cqr_9 italy cup knockout");
+    covered!("cqr_9 italy cup knockout");
     for i in 0..8usize {
         write_usize(teams + i * 4, read_usize(group_table(League(this), i))); // cqr9: the winner of group i
     }
@@ -486,7 +486,7 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this
     if teams == 0 {
         return show_error_at(0x9ea204, 0x2ba);
     }
-    crate::comparison::branch("cqr_9 serie c cup knockout");
+    covered!("cqr_9 serie c cup knockout");
     for i in 0..16usize {
         write_usize(teams + i * 4, read_usize(group_table(this, i)));
     }
@@ -562,7 +562,7 @@ pub(crate) unsafe fn create_schedule(this: League, stage: u32, rounds: *mut i16,
             show_error_at(file, row_g);
             return 0;
         }
-        crate::comparison::branch(name_g);
+        covered!(name_g);
         // the year goes with garbage in the high bytes in the original (the previous register with the word +0x40 over it); the
         // 0x68a160 only uses the low 16 bits: the copy passes the clean year
         let year = (this.year() as u16) as u32;
@@ -585,7 +585,7 @@ pub(crate) unsafe fn create_schedule(this: League, stage: u32, rounds: *mut i16,
         show_error_at(file, row_m);
         return 0;
     }
-    crate::comparison::branch(name);
+    covered!(name);
     let year = this.year() as i32 as u32;
     for (i, r) in knockout.iter().enumerate() {
         eng_cc_cup_write_cup_round(t, i as u32, r, year);
@@ -835,7 +835,7 @@ pub(crate) unsafe fn select_coppa_italia_entrants(this: usize) -> (i32, i32) {
                 }
                 let before = comp_id_at(c, 0x5b);
                 if (before == Some(c1a) || before == Some(c1b)) && last_season_position(c) == place {
-                    crate::comparison::branch("cqo_11 fill with c1");
+                    covered!("cqo_11 fill with c1");
                     v[k] = c;
                     k += 1;
                     if k == 32 {
@@ -851,7 +851,7 @@ pub(crate) unsafe fn select_coppa_italia_entrants(this: usize) -> (i32, i32) {
     for _ in 0..8 {
         let mut pot = 0usize;
         while pot < 32 {
-            crate::comparison::branch("cqo_11 italy cup pots");
+            covered!("cqo_11 italy cup pots");
             let mut r = jap_j_cup_random(8) as i8 as i32; // cqo11: the club drawn from each pot
             while v[pot + r as usize] == 0 {
                 r += 1;
@@ -1003,7 +1003,7 @@ pub(crate) unsafe fn select_serie_c_cup_entrants(this: usize) -> (i32, i32) {
         };
         let p = last_season_position(c);
         if before == serie_b || (before == c1a || before == c1b) && (p == 3 || p == 4 || p == 5) {
-            crate::comparison::branch("cqo_11 serie c cup final places");
+            covered!("cqo_11 serie c cup final places");
             let e = l + (j as i16 as isize * 4) as usize;
             let t = read_usize(e);
             write_u32(e, c as u32);
@@ -1016,7 +1016,7 @@ pub(crate) unsafe fn select_serie_c_cup_entrants(this: usize) -> (i32, i32) {
     }
     shuffle_pointers(l, 0x50);
     sort_pointers(l, 0x50, 0x53fe50);
-    crate::comparison::branch("cqo_11 serie c cup tens");
+    covered!("cqo_11 serie c cup tens");
     for k in 0..8usize {
         shuffle_pointers(l + k * 0x28, 0xa); // cqo11: the tens of the Serie C Cup
     }
@@ -1049,12 +1049,12 @@ pub(crate) unsafe fn init_supercoppa_teams(this: usize) -> (i32, i32) {
         return (0, 0);
     }
     if a == b {
-        crate::comparison::branch("cqo_11 italian double");
+        covered!("cqo_11 italian double");
         if !set_team_slot(l, 1, latest_placed_club(KEY_CLUB_COMP_ITALIAN_CUP, 1), F, 0xe0) {
             return (0, 0);
         }
     }
-    crate::comparison::branch("cqo_11 italian super cup clubs");
+    covered!("cqo_11 italian super cup clubs");
     finish_two_team_list(l)
 }
 
@@ -1140,7 +1140,7 @@ pub(crate) unsafe fn check_cup_league_rules(name: &str, this: League, g: &GroupS
 /// em turno único, 3 pontos a vitória e 1 o empate, a categoria 4 (copa nacional), o desempate (4, 1, 2), um
 /// classificado por grupo e o fundo de prêmios de 800.000; depois a tabela das rodadas.
 pub(crate) unsafe extern "thiscall" fn ita_cup_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqi_12 italy cup rules");
+    covered!("cqi_12 italy cup rules");
     let mut g = ITALIAN_CUP_GROUP_RULES;
     g.win = 3; // cqi12: the win in the Coppa Italia groups
     g.category = 4; // cqi12: the category of the Coppa Italia matches

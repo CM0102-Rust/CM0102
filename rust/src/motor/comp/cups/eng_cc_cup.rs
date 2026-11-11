@@ -89,7 +89,7 @@ pub(crate) unsafe fn eng_cc_cup_create_single_stage_round_table(this: Cup, stage
         show_error_at(file, row);
         return 0;
     }
-    crate::comparison::branch(name);
+    covered!(name);
     let year = this.year() as i32 as u32;
     for (i, r) in table.iter().enumerate() {
         eng_cc_cup_write_cup_round(t, i as u32, r, year);
@@ -319,7 +319,7 @@ pub(crate) unsafe fn collect_league_cup_entrants(this: Cup) -> (i32, i32) {
     eng_cc_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION, |c| {
         let pos = read_u8(c + club::LAST_POSITION);
         if came_from_division(c, KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) {
-            crate::comparison::branch("cqm_10 relegated from premier");
+            covered!("cqm_10 relegated from premier");
             0x46u8.wrapping_sub(pos) // cqm10: quem caiu da Premier
         } else if came_from_division(c, KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION) {
             0x28u8.wrapping_sub(pos)
@@ -345,7 +345,7 @@ pub(crate) unsafe fn collect_league_cup_entrants(this: Cup) -> (i32, i32) {
                 && (d == read_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) || d == read_usize(KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION) || d == read_usize(KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION) || d == read_usize(KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION))
                 && read_usize(c + club::CONTINENTAL_COMP_ID) as i32 != -1
             {
-                crate::comparison::branch("cqm_10 club in european cups");
+                covered!("cqm_10 club in european cups");
                 write_u8(this.addr() + eng_cc_cup::EUROPEAN_ENTRANT_COUNT, read_u8(this.addr() + eng_cc_cup::EUROPEAN_ENTRANT_COUNT).wrapping_add(1));
                 eng_cc_cup_write_entrant(this, n, c, 0x78);
                 n += 1;
@@ -357,7 +357,7 @@ pub(crate) unsafe fn collect_league_cup_entrants(this: Cup) -> (i32, i32) {
         i = i.wrapping_add(1);
     }
     exe::crt_qsort(this.team_table(), n as u32, 6, 0x5221c0);
-    crate::comparison::branch("cqm_10 league cup entrants");
+    covered!("cqm_10 league cup entrants");
     let mut k: i16 = 0;
     while (k as i32) < n {
         let e = this.team_table() + k as usize * 6;
@@ -451,7 +451,7 @@ pub(crate) unsafe fn collect_auto_cup_entrants(this: Cup) -> (i32, i32) {
         show_error_at(0x9c4180, 0x19f);
         return (-1, 0);
     }
-    crate::comparison::branch("cqm_10 league trophy second section");
+    covered!("cqm_10 league trophy second section");
     let mut k: i16 = 0;
     if this.team_count() > 0 {
         loop {
@@ -507,7 +507,7 @@ pub(crate) unsafe fn select_charity_shield_teams(this: Cup) -> (i32, i32) {
         return (0, 0);
     }
     if a == b {
-        crate::comparison::branch("cqm_10 english double");
+        covered!("cqm_10 english double");
         let b = latest_placed_club(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, 1);
         write_u32(l + 6, b as u32);
         if b == 0 {
@@ -515,7 +515,7 @@ pub(crate) unsafe fn select_charity_shield_teams(this: Cup) -> (i32, i32) {
             return (0, 0);
         }
     }
-    crate::comparison::branch("cqm_10 english super cup clubs");
+    covered!("cqm_10 english super cup clubs");
     write_u8(l + 4, 0);
     write_u8(l + 5, 0);
     write_u8(l + 0xa, 0);
@@ -590,7 +590,7 @@ pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date(this: usize, t
     let this = Cup(this);
     if this.season_set_up() == 0 && read_i16(read_usize(G_UEFA_SEEDING) + uefa_seeding::SEASON_YEAR) as u16 as i32 == this.year() as i32 && stage != 0 {
         free_season_tables(this);
-        crate::comparison::branch("cqn_10 league cup rollover");
+        covered!("cqn_10 league cup rollover");
         this.set_season_set_up((1) as usize); // cqn10: the League Cup redone once
         // simplification: in the message boxes the original zeroes only al (the rest of eax comes from the box); the caller reads the byte
         if exe::engcccup_collect_entrants(this) < 0 {

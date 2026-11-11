@@ -144,7 +144,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_playoff_stage(this: usize)
     if stage == 0 {
         return show_error_at(0xaa1fb4, 0x5c4);
     }
-    crate::comparison::branch("cqr_4 play-off");
+    covered!("cqr_4 play-off");
     exe::cup_set_up_round(stage, 0);
 }
 
@@ -203,7 +203,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_final_stage(this: usize) {
     if stage == 0 {
         return show_error_at(0xaa1fb4, 0x5fe);
     }
-    crate::comparison::branch("cqr_4 final");
+    covered!("cqr_4 final");
     exe::cup_set_up_round(stage, 0);
     exe::crt_free(list);
 }
@@ -252,7 +252,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_create_table(this: usize) -> u32 
         }
         i = i.wrapping_add(1);
     }
-    crate::comparison::branch("cqs_1 mls fixtures");
+    covered!("cqs_1 mls fixtures");
     (n == this.club_count()) as u32
 }
 
@@ -329,7 +329,7 @@ pub(crate) unsafe fn create_division_stage(this: League, code: i16, k: u32, curr
         return show_error_at(0xaa1fb4, rows[1]);
     }
     this.set_current_stage((current) as usize);
-    crate::comparison::branch(ramo);
+    covered!(ramo);
     write_i16(stage + league::STAGE_ID, code);
 }
 
@@ -449,7 +449,7 @@ pub(crate) unsafe fn mls_start_new_season(this: League, year: i16) -> u32 {
     }
     let a = this.year();
     this.set_year(a.wrapping_add(year));
-    crate::comparison::branch("cqs_2 mls rollover");
+    covered!("cqs_2 mls rollover");
     let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_UP_RULES));
     if rules(this.addr()) == 0 {
         show_error_at(0xaa1fb4, 0x4af);
@@ -533,7 +533,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_set_predicted_positions(this: usi
     for (k, p) in places.iter().enumerate() {
         exe::comp_stats_set_club_final_position(this.comp_stats(), read_usize(v + 4 * k), *p);
     }
-    crate::comparison::branch("cqs_2 expected positions");
+    covered!("cqs_2 expected positions");
     exe::crt_free(v);
 }
 
@@ -571,7 +571,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_get_club_array(this: usize, list:
         write_usize(*list + 4 * k as usize, aus_nsl_table_row_club(League(read_usize(this.stages() + 4)), i as usize));
         i += 1;
     }
-    crate::comparison::branch("cqs_2 mls clubs");
+    covered!("cqs_2 mls clubs");
 }
 
 /// Staff_Records::add_failed_to_qualify_record (`add_failed_to_qualify_record`) for a club.
@@ -599,7 +599,7 @@ pub(crate) unsafe fn mls_stage_outcome(this: usize, club: usize, status: u32, st
         // the season (-1) and the first two play-off rounds
         if st == 6 {
             if fazer {
-                crate::comparison::branch("cqk_9 mls qualified");
+                covered!("cqk_9 mls qualified");
                 bra_nat_first_add_qualified_record(club, comp, 0xa0, 0x78, 0x28); // cqk9: the MLS qualifier
             }
             return 0;
@@ -689,7 +689,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_add_result(this: usize, game: usi
     f0(e0, game, stats);
     write_u8(game + fixture::STAGE_INDEX, 1);
     let (e1, f1) = estagio(1);
-    crate::comparison::branch("cqk_9 mls second conference");
+    covered!("cqk_9 mls second conference");
     f1(e1, game, stats); // cqk9: the match in the second conference table
     this.set_comp_stats((stored as u32) as usize);
     1
@@ -719,7 +719,7 @@ pub(crate) unsafe extern "C" fn usa_mls_get_club_all_star_conference(club: usize
     const LESTE: [usize; 6] = [0x9d0390, 0x9d0394, 0x9d0388, 0x9d0384, 0x9d03a4, 0x9d0380];
     const OESTE: [usize; 6] = [0x9d03a8, 0x9d03a0, 0x9d039c, 0x9d0398, 0x9d038c, 0x9d037c];
     if LESTE.iter().any(|&k| read_usize(k) == id) {
-        crate::comparison::branch("cqk_9 conference 0x413");
+        covered!("cqk_9 conference 0x413");
         return 0x413; // cqk9: the first conference
     }
     if OESTE.iter().any(|&k| read_usize(k) == id) {
@@ -738,7 +738,7 @@ pub(crate) unsafe extern "C" fn usa_mls_get_club_all_star_conference(club: usize
 /// valor).
 pub(crate) unsafe extern "thiscall" fn usa_mls_set_up_rules(this: usize) -> u32 {
     set_mls_rules(this);
-    crate::comparison::branch("cqj_8 mls rules");
+    covered!("cqj_8 mls rules");
     1
 }
 
@@ -758,7 +758,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_set_club_progress(this: usize, cl
         let a = match a {
             1 => 1,
             2 => {
-                crate::comparison::branch("cqk_8 mls second");
+                covered!("cqk_8 mls second");
                 3 // cqk8: the MLS code 2
             }
             3 => 7,

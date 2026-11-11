@@ -99,7 +99,7 @@ pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
         while count[r as i16 as usize] >= lim {
             r = exe::utils_random(8);
         }
-        crate::comparison::branch("cqf_4 place in the group");
+        covered!("cqf_4 place in the group");
         write_usize(dst, read_usize(src));
         src += 5;
         write_u8(dst + 4, (r as u8).wrapping_add(1));
@@ -111,7 +111,7 @@ pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
     if read_i16(this + league::YEAR) != 0x7d2 {
         return list;
     }
-    crate::comparison::branch("cqf_4 2002 draw");
+    covered!("cqf_4 2002 draw");
     for (i, &chave) in WORLD_CUP_2002_DRAW.iter().enumerate() { // cqf4: the nations of the real random draw
         let nation = read_usize(G_NATION_TABLE).wrapping_add((read_usize(chave) as i32).wrapping_mul(0x122) as usize);
         write_usize(list + i * 5, read_usize(exe::database_get_national_team(nation)));
@@ -201,7 +201,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_update_for_date(this: usize, to
     }
     let day_of_draw = this.next_draw_day() as u16; // cqf4: the random draw day
     if day_of_draw == day && this.next_draw_year_offset() as i32 + this.year() as i32 == year && full != 0 && this.table() == 0 {
-        crate::comparison::branch("cqf_4 draw day");
+        covered!("cqf_4 draw day");
         exe::worldcup_run_group_draw(this);
     }
     exe::league_update_for_date(this, today, full) as u32 
@@ -246,7 +246,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_table(this: usize,
     while row < 4 {
         let e = i as usize; // cqf5: the list entry
         if read_u8(list + e * 5 + 4) == 1 {
-            crate::comparison::branch("cqf_5 group one team");
+            covered!("cqf_5 group one team");
             let club = draw_list_club(list, e);
             exe::league_init_table_row(this, row as u8 as u32, club, 0, (0) as u32);
             row += 1;
@@ -309,7 +309,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_group_stage(this: usize,
     while n < 4 {
         let e = list + i as usize * 5;
         if read_u8(e + 4) as i8 as i32 == g + 2 {
-            crate::comparison::branch("cqf_5 group team");
+            covered!("cqf_5 group team");
             write_usize(teams + n as usize * 4, draw_list_club(list, i as usize)); // cqf5: the team in the group slot
             n += 1;
         }
@@ -410,7 +410,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_set_predicted_positions(this: u
     }
     let mut i = 0i16;
     while i < read_i16(this + league::ENTRANT_COUNT) {
-        crate::comparison::branch("cqf_5 nation competition");
+        covered!("cqf_5 nation competition");
         exe::nationalteams_set_current_competition(read_usize(G_NATIONAL_TEAMS), read_usize(read_usize(v + i as usize * 4) + club::NATION), read_usize(this + 4));
         i += 1; // cqf5: the next nation
     }
@@ -468,7 +468,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_schedule(this: usize, st
         show_error_at(0xad5888, 0xcc);
         return 0;
     }
-    crate::comparison::branch("cqf_6 round fixtures");
+    covered!("cqf_6 round fixtures");
     // the year carries garbage in the high bytes in the original (the year’s cx over the previous ecx); 0x68a160 only uses the 16 bits
     // low (0x549f70 reads the year as a word and the word at +2 holds year − base): the copy passes the clean year
     let year = this.year() as u16 as u32;
@@ -522,7 +522,7 @@ pub(crate) unsafe extern "thiscall" fn add_qualified_team(this: usize, club: usi
         show_error_at(0xad5888, 0x456);
         return;
     }
-    crate::comparison::branch("cqf_6 qualified nation");
+    covered!("cqf_6 qualified nation");
     let e = read_usize(this + league::ENTRANT_BOOK).wrapping_add((n as i32 * 6) as usize);
     write_u8(e + 4, 6);
     write_usize(read_usize(this + league::ENTRANT_BOOK).wrapping_add((read_i16(this + league::ENTRANT_COUNT) as i32 * 6) as usize), club);
@@ -561,7 +561,7 @@ pub(crate) unsafe extern "thiscall" fn add_qualified_team(this: usize, club: usi
 pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
     let this = League(this);
     if this.year() == 0x7d2 {
-        crate::comparison::branch("cqf_6 no seeds in 2002");
+        covered!("cqf_6 no seeds in 2002");
         return;
     }
     this.set_entrants_are_qualifiers(0);

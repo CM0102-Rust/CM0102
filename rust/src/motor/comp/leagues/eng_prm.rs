@@ -68,7 +68,7 @@ pub(crate) unsafe fn construct_english_division(this: League, year: u32, registr
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this.addr();
     }
-    crate::comparison::branch("cql_6 new english division");
+    covered!("cql_6 new english division");
     this.set_stage_index(stage_index::MAIN);
     this.set_current_stage(0xffff_ffff);
     this.set_stage_count(p.extra_stages as usize);
@@ -223,7 +223,7 @@ pub(crate) fn english_common_rules() -> Vec<(usize, u8, u32)> {
 /// (as palavras copiadas em cada partida), ninguém sobe (+0xbe = 0, +0xbf = 0, +0xc0 = 0), 3 caem direto (+0xc1),
 /// nenhuma liga acima (+0x1c = −1) e a First abaixo (+0x20 = [0x9cf5c0]).
 pub(crate) unsafe extern "thiscall" fn eng_prm_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqi_4 premier rules");
+    covered!("cqi_4 premier rules");
     eng_prm_apply_league_rules(League(this), &premier_rules())
 }
 
@@ -367,7 +367,7 @@ pub(crate) unsafe fn eng_prm_fill_league_table(this: League, n: i16, file: usize
     if k as i8 as i16 != this.club_count() {
         return 0;
     }
-    crate::comparison::branch("cqi_5 full table");
+    covered!("cqi_5 full table");
     let f = exe::league_calc_prize_fund(this, quota);
     this.set_prize_fund(f);
     this.set_prize_mode(1);
@@ -447,7 +447,7 @@ pub(crate) unsafe extern "thiscall" fn eng_prm_create_schedule(this: usize, stag
                 show_error_at(0x9c43b0, 0xa7);
                 return 0;
             }
-            crate::comparison::branch("cqp_5 premiership calendar");
+            covered!("cqp_5 premiership calendar");
             let year = (this.year() as u16) as u32;
             eng_first_set_christmas_rounds(t, year, &PREMIERSHIP_CHRISTMAS, 0x9c43b0);
             t

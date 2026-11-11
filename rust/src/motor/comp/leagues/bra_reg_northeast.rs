@@ -56,7 +56,7 @@ pub(crate) unsafe fn bra_reg_northeast_construct_state_league(this: League, year
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this.addr();
     }
-    crate::comparison::branch(ramo);
+    covered!(ramo);
     this.set_importance(0xf);
     this.set_stage_index(stage_index::MAIN);
     write_i32(this.addr() + league::CURRENT_STAGE, -1);

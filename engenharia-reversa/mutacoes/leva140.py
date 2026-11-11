@@ -8,7 +8,7 @@ MUTACOES = [
     ('s_duelo3', "let r = random((word(0x1f2, other) + 100) / 7);", "let r = random((word(0x1f2, other) + 100) / 8);"),
     ('s_desgaste', "add(MatchPlayer(p), -0xf);\n                more((m + engine::OFFSIDES", "add(MatchPlayer(p), -0xe);\n                more((m + engine::OFFSIDES"),
     ('s_expulsao', "add(MatchPlayer(jog(other, c as i8)), -0xfa);", "add(MatchPlayer(jog(other, c as i8)), -0xf9);", "quick simulation sending off"),
-    ('s_amarelo', "if read_i8(p + match_player::YELLOW_CARDS) == 2 {\n                        crate::comparison::branch(\"quick simulation second give_yellow_card\");", "if read_i8(p + match_player::YELLOW_CARDS) == 3 {\n                        crate::comparison::branch(\"quick simulation second give_yellow_card\");", "quick simulation give_yellow_card"),
+    ('s_amarelo', "if read_i8(p + match_player::YELLOW_CARDS) == 2 {\n                        covered!(\"quick simulation second give_yellow_card\");", "if read_i8(p + match_player::YELLOW_CARDS) == 3 {\n                        covered!(\"quick simulation second give_yellow_card\");", "quick simulation give_yellow_card"),
     ('s_abandono', "if read_u8(mo + engine::RED_CARDS) > 4 {", "if read_u8(mo + engine::RED_CARDS) > 5 {", "quick simulation abandonment"),
     ('s_fator', "} else if read_i16(m + engine::CLOCK) > 0x3c {\n                read_f32(rdata::F32_0_6499999762) as f64", "} else if read_i16(m + engine::CLOCK) > 0x3d {\n                read_f32(rdata::F32_0_6499999762) as f64"),
     ('s_chute', "if us + 0xa5 > random(0x172)", "if us + 0xa6 > random(0x172)"),

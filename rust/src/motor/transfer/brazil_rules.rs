@@ -17,7 +17,7 @@ pub(crate) const BRAZIL_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
 /// [pt] { 0x43f0e0 } (thiscall, ret 0x14, brazil_rules.cpp, `BRAZIL_RULES::BRAZIL_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
 /// transferência do Brasil (regra 4): a base (0x8e84a0), a vtable 0x968838, 1 janela(s) de `BRAZIL_TRANSFER_WINDOWS` e o +0x13 = 3 (o padrão da base é 50) [inferência: o limite de estrangeiros contratados]. Devolve o objeto.
 pub(crate) unsafe extern "thiscall" fn construct_brazil_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparison::branch("cqk_3 brazil");
+    covered!("cqk_3 brazil");
     construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x968838, 1, &BRAZIL_TRANSFER_WINDOWS, 0x98b104, 0x50);
     write_u8(this + 0x13, 3); // cqk3: the Brazil limit
     this

@@ -163,13 +163,13 @@ pub(crate) unsafe extern "thiscall" fn compare_set_slot_string(this: usize, fiel
 /// [pt] Comparadores: a entrega (0x785d40) põe a notícia nas caixas dos técnicos: só a original (a prova é a carreira e o
 /// modo Rust).
 pub(crate) unsafe extern "thiscall" fn compare_send_to_continent_managers(this: usize, news: usize, continent: usize) -> u32 {
-    crate::comparison::branch("send_to_continent_managers");
+    covered!("send_to_continent_managers");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_CONTINENT_MANAGERS)(this, news, continent)
 }
 
 /// Comparer for `send_to_comp_region`.
 pub(crate) unsafe extern "thiscall" fn compare_send_to_comp_region(this: usize, news: usize, comp: usize) -> u32 {
-    crate::comparison::branch("send_to_comp_region");
+    covered!("send_to_comp_region");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_COMP_REGION)(this, news, comp)
 }
 
@@ -205,19 +205,19 @@ pub(crate) unsafe extern "thiscall" fn compare_get_slot_string(news: usize, give
 /// [pt] Comparadores: a entrega (0x785d40) põe a notícia nas caixas dos técnicos: só a original (a prova é a carreira e o
 /// modo Rust).
 pub(crate) unsafe extern "thiscall" fn compare_send_to_all_managers(this: usize, news: usize) -> u32 {
-    crate::comparison::branch("send_to_all_managers");
+    covered!("send_to_all_managers");
     original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SEND_TO_ALL_MANAGERS)(this, news)
 }
 
 /// Comparer for `send_to_division_managers`.
 pub(crate) unsafe extern "thiscall" fn compare_send_to_division_managers(this: usize, news: usize, division: usize) -> u32 {
-    crate::comparison::branch("send_to_division_managers");
+    covered!("send_to_division_managers");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_DIVISION_MANAGERS)(this, news, division)
 }
 
 /// Comparer for `send_to_nation_managers`.
 pub(crate) unsafe extern "thiscall" fn compare_send_to_nation_managers(this: usize, news: usize, nation: usize) -> u32 {
-    crate::comparison::branch("send_to_nation_managers");
+    covered!("send_to_nation_managers");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_MANAGERS)(this, news, nation)
 }
 
@@ -226,7 +226,7 @@ pub(crate) unsafe extern "thiscall" fn compare_send_to_nation_managers(this: usi
 /// [pt] Comparador: a entrega (0x785d40) põe a notícia nas caixas dos técnicos: só a original (a prova é a carreira e o
 /// modo Rust).
 pub(crate) unsafe extern "thiscall" fn compare_send_to_nation_club_managers(this: usize, news: usize, nation: usize) -> u32 {
-    crate::comparison::branch("send_to_nation_club_managers");
+    covered!("send_to_nation_club_managers");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_CLUB_MANAGERS)(this, news, nation)
 }
 

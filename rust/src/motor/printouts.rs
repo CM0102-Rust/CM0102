@@ -42,7 +42,7 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, club: usi
                 break;
             }
             if read_u32(p + pundit::CITY_ID) == read_u32(club.stadium().city()) { // cpz10: o comentarista local
-                crate::comparison::branch("cpz_10 local commentator");
+                covered!("cpz_10 local commentator");
                 ids[n] = read_i16_as_i32(p) as i16;
                 n += 1;
                 if n >= 20 {
@@ -68,7 +68,7 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, club: usi
             }
             if read_i8(p + pundit::MEDIA_TYPE) == t {
                 let accepted = if nation == -1 {
-                    crate::comparison::branch("cpz_10 commentator of any nation");
+                    covered!("cpz_10 commentator of any nation");
                     true // cpz10: any nation
                 } else {
                     read_u32(p + pundit::NATION_ID) as i32 == nation
@@ -90,7 +90,7 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, club: usi
     if n == 0 {
         return -1;
     }
-    crate::comparison::branch("cpz_10 commentator draw");
+    covered!("cpz_10 commentator draw");
     let r = exe::utils_random(n as i32); // cpz10: the commentator random draw
     ids[r as usize] as i32
 }

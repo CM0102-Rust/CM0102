@@ -35,7 +35,7 @@ pub(crate) unsafe extern "thiscall" fn ita_c_cup_select_entrants(this: usize) ->
 /// [pt] { 0x63d6e0 } (thiscall, ret 0, ita_c_cup.cpp; a virtual +0x8c): `ItaCCup::set_up_rules()`: os grupos da Copa da
 /// Itália da Série C, com as mesmas regras da Copa da Itália e o fundo de prêmios de 300.000.
 pub(crate) unsafe extern "thiscall" fn ita_c_cup_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqi_12 serie c cup rules");
+    covered!("cqi_12 serie c cup rules");
     let rounds = 1i16; // cqi12: the single round-robin of the Serie C groups
     set_cup_league_rules(League(this), &SERIE_C_CUP_RULES, rounds)
 }

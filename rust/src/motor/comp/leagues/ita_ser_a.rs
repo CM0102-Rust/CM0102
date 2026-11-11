@@ -63,7 +63,7 @@ pub(crate) unsafe fn build_league_schedule(this: League, stage: u32, rodadas: *m
         show_error_at(p.file, p.row);
         return 0;
     }
-    crate::comparison::branch(p.branch);
+    covered!(p.branch);
     let ano = (this.year() as u16) as u32;
     ita_ser_a_set_league_rounds(t, ano, 0, p.table);
     t
@@ -249,7 +249,7 @@ pub(crate) unsafe fn italian_schedule(this: League, stage: u32, rounds: *mut i16
                 show_error_at(p.league.file, p.row_tiebreak);
                 return 0;
             }
-            crate::comparison::branch("cqo_6 italian tiebreak match");
+            covered!("cqo_6 italian tiebreak match");
             let ano = this.year() as i32 as u32;
             eng_cc_cup_write_cup_round(t, 0, &italian_playoff_round(p.draw, p.game, read_i8(this.addr() + italian_league::TIEBREAK_TIE_COUNT)), ano);
             t
@@ -406,7 +406,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date(this: usize, to
     let z = serie_a_zones(this);
     let n = this.club_count() as i32 - 1;
     this.set_season_closed(0);
-    crate::comparison::branch("cql_4 serie a end");
+    covered!("cql_4 serie a end");
     let mut i: i16 = 0;
     if n > 0 {
         loop {
@@ -495,7 +495,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
     if status as u8 != 1 {
         return 0xffff_ffff;
     }
-    crate::comparison::branch("cql_4 tiebreak result");
+    covered!("cql_4 tiebreak result");
     this.set_table_column(0);
     exe::league_sort_table(this, (0) as u32 as usize);
     let t = this.table();
@@ -610,7 +610,7 @@ pub(crate) unsafe fn construct_italian_division(this: League, year: u32, registr
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this.addr();
     }
-    crate::comparison::branch("cqm_4 new italian division");
+    covered!("cqm_4 new italian division");
     if p.series {
         write_u8(this.addr() + italian_league::TIEBREAK_TIE_COUNT, 0);
         this.set_season_closed(1); // cqm4: the history mark of A and B
@@ -780,7 +780,7 @@ pub(crate) unsafe fn set_up_fixed_fixtures(this: League, table: &[(u8, u8, u16, 
     for (k, &(dia, mes, ano, casa, fora)) in table.iter().enumerate() {
         exe::fixed_fixture_set_by_club_names(this.fixed_fixtures() + k * 0x10, this, dia as u32, mes as u32, ano as u32, casa, fora); // cqn5: each fixed match
     }
-    crate::comparison::branch("cqn_5 fixed calendar");
+    covered!("cqn_5 fixed calendar");
     let n = league_match_count(this);
     if n <= 0 {
         return;
@@ -1564,7 +1564,7 @@ pub(crate) unsafe fn italian_common_rules(this: League) -> Vec<(usize, u8, u32)>
 /// nenhuma liga acima (+0x1c = −1), a Série B abaixo (+0x20 = [0x9cf574]), +0x52 = 2 [sem nome] e +0xe6 = 1 (o
 /// empate em pontos na fronteira de uma vaga não se decide pelos critérios: vai ao jogo-desempate, ver 0x642880).
 pub(crate) unsafe extern "thiscall" fn ita_ser_a_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqi_6 serie a rules");
+    covered!("cqi_6 serie a rules");
     ita_ser_a_apply_league_rules(League(this), &serie_a_rules(this))
 }
 
@@ -1702,7 +1702,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_create_table(this: usize) -> u3
         Some(true) => {}
         _ => return 0,
     }
-    crate::comparison::branch("cqj_4 serie a fixtures");
+    covered!("cqj_4 serie a fixtures");
     set_prize_fund(League(this), 0x3d090); // cqj4: the Serie A quota
     exe::league_pay_tv_rights(this, 0x4c4b40, 0); // cqj4: the Serie A TV money
     1

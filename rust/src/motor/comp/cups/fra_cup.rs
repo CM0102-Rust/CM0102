@@ -90,7 +90,7 @@ pub(crate) unsafe fn single_stage_round_table(this: Cup, stage: u32, rounds: *mu
         show_error_at(file, row);
         return 0;
     }
-    crate::comparison::branch(name);
+    covered!(name);
     let year = this.year() as i32 as u32;
     for (i, r) in table.iter().enumerate() {
         fra_cup_write_cup_round(t, i as u32, r, year);
@@ -248,7 +248,7 @@ pub(crate) unsafe fn french_cup_collect_entrants(this: Cup) -> (i32, i32) {
         read_usize(c + club::NATION) != 0 && exe::database_is_national_team(c) == 0 && read_usize(c + club::DIVISION) == 0 && comp_id_at(c, 0x53) == Some(read_usize(KEY_NATION_FRANCE))
             && n < french_cup_amateur_limit(this)
     });
-    crate::comparison::branch("cqm_11 french cup entrants");
+    covered!("cqm_11 french cup entrants");
     fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION); // cqm11: the French Second Division in the Coupe de France
     fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_FIRST_DIVISION); // cqm11: the French First Division in the Coupe de France
     ((n == this.team_count() as i32) as i32, n)
@@ -313,7 +313,7 @@ pub(crate) unsafe fn french_league_cup_collect_entrants(this: Cup) -> (i32, i32)
         }
         i = i.wrapping_add(1);
     }
-    crate::comparison::branch("cqm_11 french league cup entrants");
+    covered!("cqm_11 french league cup entrants");
     fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_SECOND_DIVISION); // cqm11: the French Second Division in the League Cup
     fra_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_FRENCH_FIRST_DIVISION); // cqm11: the French First Division in the League Cup
     ((n == this.team_count() as i32) as i32, n)
@@ -354,7 +354,7 @@ pub(crate) unsafe fn french_super_cup_select_teams(this: Cup) -> (i32, i32) {
         return (0, 0);
     }
     if a == b {
-        crate::comparison::branch("cqm_11 french double");
+        covered!("cqm_11 french double");
         let b = latest_placed_club(KEY_CLUB_COMP_FRENCH_FIRST_DIVISION, 1);
         write_u32(l + 6, b as u32);
         if b == 0 {
@@ -362,7 +362,7 @@ pub(crate) unsafe fn french_super_cup_select_teams(this: Cup) -> (i32, i32) {
             return (0, 0);
         }
     }
-    crate::comparison::branch("cqm_11 french super cup clubs");
+    covered!("cqm_11 french super cup clubs");
     write_u8(l + 4, 0);
     write_u8(l + 5, 0);
     write_u8(l + 0xa, 0);

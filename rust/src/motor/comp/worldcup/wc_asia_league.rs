@@ -8,7 +8,7 @@ use super::*;
 /// `WcAsiaLeague::set_up_rules()`: os grupos asiáticos em dois turnos, 3/1 pontos, a categoria 0xa, os desempates (1, 2,
 /// 3), um classificado por grupo, seleções, começo em 25 do mês 2 num dia da semana 5, +0xb8 = 1.
 pub(crate) unsafe extern "thiscall" fn wc_asia_league_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqj_12 asia rules");
+    covered!("cqj_12 asia rules");
     wc_europe_league_write_rule_fields(League(this), &ASIA_QUALIFIER_RULE_FIELDS);
     let day = 0x19; // cqj12: the start day of the Asian qualifiers
     let word = comp_date_word(League(this), day, 2, 5);

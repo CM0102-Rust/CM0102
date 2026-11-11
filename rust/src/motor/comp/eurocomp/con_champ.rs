@@ -95,7 +95,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
     exe::comp_util_sort_and_shuffle_top_clubs(l.mls.as_mut_ptr() as usize, l.n[3], 1);
     let t = |k: usize| this.team_table().wrapping_add(k * 6);
     let pd = |a: usize, v: usize| write_u32(a, v as u32);
-    crate::comparison::branch("cqi_11 qualified");
+    covered!("cqi_11 qualified");
     pd(t(2), l.mex[0]);
     pd(t(3), l.mex[1]); // cqi11: the Mexican runner-up
     pd(t(4), l.centro[0]);
@@ -106,7 +106,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
         pd(t(0), l.mls[0]);
         pd(t(1), l.mls[1]);
     } else {
-        crate::comparison::branch("cqi_11 mls champion");
+        covered!("cqi_11 mls champion");
         let mls = club_comp_record(read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE));
         pd(t(0), exe::comp_util_get_latest_placed_club(mls, 0));
         pd(t(1), exe::comp_util_get_latest_placed_club(read_usize(other + 4), 0));
@@ -144,7 +144,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, to
             show_error_at(0x9a7d30, 0x1ba);
             return 0;
         }
-        crate::comparison::branch("cqi_11 national team day");
+        covered!("cqi_11 national team day");
         let prever: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
         prever(this.addr());
     }
@@ -205,7 +205,7 @@ pub(crate) unsafe extern "thiscall" fn con_champ_create_round_table(this: usize,
         show_error_at(0x9a7d30, 0x97);
         return 0;
     }
-    crate::comparison::branch("cqp_13 concacaf fixtures");
+    covered!("cqp_13 concacaf fixtures");
     let year = this.year() as i32 as u32;
     for (i, r) in CONCACAF_CHAMPIONS_CUP_ROUNDS.iter().enumerate() {
         eng_cc_cup_write_cup_round(t, i as u32, r, year);

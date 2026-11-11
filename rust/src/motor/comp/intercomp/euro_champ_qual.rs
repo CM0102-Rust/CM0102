@@ -43,7 +43,7 @@ pub(crate) unsafe fn set_up_rules(this: League) -> u32 {
     exe::date_date_549f70((&mut data) as *mut [u32; 2] as *mut [u16; 4], 0xa, 2, this.year() as u16 as u32, 5); // cqs8: the draw date
     this.set_next_draw_day((data[0] as u16) as i16);
     this.set_next_draw_year_offset((0) as i16);
-    crate::comparison::branch("cqs_8 euro rules");
+    covered!("cqs_8 euro rules");
     let rounds: unsafe extern "thiscall" fn(usize, u32, usize, usize, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let t = rounds(this.addr(), 0xffff_ffff, this.addr() + league::ROUND_COUNT, this.addr() + league::STAGE_ID, 0);
     this.set_round_dates((t as u32) as usize);
@@ -129,7 +129,7 @@ pub(crate) unsafe extern "thiscall" fn init_group_one_table(this: usize) -> u32 
     }
     let n = this.club_count();
     this.set_games_per_club(n.wrapping_sub(1).wrapping_mul(this.legs())); // cqs8: the group 1 rounds
-    crate::comparison::branch("cqs_8 euro group 1");
+    covered!("cqs_8 euro group 1");
     let mut i: i8 = 0;
     if n > 0 {
         loop {

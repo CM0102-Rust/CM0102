@@ -92,7 +92,7 @@ pub(crate) unsafe fn fra_super_create_single_stage_round_table(this: Cup, stage:
         show_error_at(file, row);
         return 0;
     }
-    crate::comparison::branch(name);
+    covered!(name);
     let mut t0 = table[0];
     adjust(&mut t0);
     let year = this.year() as i32 as u32;

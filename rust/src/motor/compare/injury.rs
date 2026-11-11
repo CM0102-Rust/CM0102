@@ -177,7 +177,7 @@ pub(crate) unsafe extern "thiscall" fn compare_injury_daily_update(this: usize) 
     let mr = crate::comparison::MemorySnapshot::read(&reg);
     before.write_back();
     if INJURY_DAILY_STOPPED.load(Relaxed) {
-        crate::comparison::branch("cpw_9 new injury only in the original");
+        covered!("cpw_9 new injury only in the original");
         return o(this);
     }
     *core::ptr::addr_of_mut!(INJURY_DAILY_PENDING_REGIONS) = Some((reg, mr));
@@ -225,7 +225,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_match_effects(this: usize, 
         }
     }
     if taken {
-        crate::comparison::branch("apply_match_effects with collision");
+        covered!("apply_match_effects with collision");
         return o(this, game, fixture.addr());
     }
     if read_i32(this + injury_fields::MATCH_HIT_LIST) != 0 {
@@ -550,7 +550,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_player_fitness(this: usize
         END_INJURY_DRY_RUN.store(false, Relaxed);
     });
     if END_INJURY_REACHED.load(Relaxed) {
-        crate::comparison::branch("cpw_8 end of injury only in the original");
+        covered!("cpw_8 end of injury only in the original");
         return;
     }
     SCOREBOARD.record(igual, || format!("update_player_fitness(person {:x}) {:x?} x {:x?}", person.addr(), mo, mr));

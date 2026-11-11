@@ -49,7 +49,7 @@ pub(crate) unsafe extern "thiscall" fn eng_fa_cup_update_for_date(this: usize, t
         // simplification: the year goes in ax with the rest of eax in the high bytes; 0x549f70 reads it as a word
         if is_date_today(make_date_dword(3, 9, read_i16(today + 2) as u16 as u32, 0xffff_ffff), today) { // cqn10: the FA Cup entries on 3/10
             free_season_tables(this);
-            crate::comparison::branch("cqn_10 fa cup entries");
+            covered!("cqn_10 fa cup entries");
             this.set_season_set_up((1) as usize);
             if exe::engfacup_collect_entrants(this) < 0 {
                 show_error_at(0x9c42cc, 0x3d6);

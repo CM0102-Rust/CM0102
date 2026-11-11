@@ -147,7 +147,7 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
     while k < n {
         let o = (k as i32 * 0x22) as usize;
         let p = read_usize(this) + o + host_entry::DECISION_DAY;
-        crate::comparison::branch("cqo_3 day draw");
+        covered!("cqo_3 day draw");
         let r = exe::utils_random((0x46) as u32 as i32); // cqo3: the random draw of the decision day
         write_u16(p, read_u16(p).wrapping_add((r - 0x23) as u16));
         let e = read_usize(this) + o;
@@ -179,7 +179,7 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
 /// duas sedes dela, a primeira na padrão fixa), montadas por 0x77bbe0/0x785790 e entregues aos técnicos do continente
 /// da competição (tabela [0xae23d0], 0x6b bytes, +0x59; 0x786640) ou a todos (0x786780).
 pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize) {
-    crate::comparison::branch("cqo_3 hosts news");
+    covered!("cqo_3 hosts news");
     write_u32(list + llist::CURSOR, read_usize(list + 2) as u32);
     let mut it = exe::llist_get_next(list);
     while it != 0 {
@@ -240,7 +240,7 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize)
 pub(crate) unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
     let f = exe::crt_fopen(exe::utils_build_file_path(0x987da0, 0x9cf10c), 0x98f928);
     if f == 0 {
-        crate::comparison::branch("cqo_3 without the file");
+        covered!("cqo_3 without the file");
         return 0;
     }
     if exe::crt_fread(this + 4, 2, 1, f) != 1 {
@@ -313,7 +313,7 @@ pub(crate) unsafe extern "thiscall" fn find_hosts(this: usize, comp: u32, year: 
                     return host_pair(e, k, a, b) as u32;
                 }
                 if k == -3 || k == -1 || default != 0 {
-                    crate::comparison::branch("cqj_3 default host");
+                    covered!("cqj_3 default host");
                     return host_pair(e, -1, a, b) as u32; // cqj3: the default venue
                 }
             }
@@ -425,7 +425,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
                 *k = 0xff; // cqj3: voting opens
             }
             if *k == 0xff {
-                crate::comparison::branch("cqj_3 voting open");
+                covered!("cqj_3 voting open");
                 exe::llist_add_tail(l, (&p) as *const usize as usize, 4);
             }
             p += 0x22;
@@ -437,7 +437,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
             exe::llist_add_tail(l, (&p) as *const usize as usize, 4);
             let k = (p + host_entry::CHOSEN_BID) as *mut u8;
             if *k == 0xff || *k == 0xfe {
-                crate::comparison::branch("cqj_3 host drawn");
+                covered!("cqj_3 host drawn");
                 *k = exe::utils_random(3) as u8; // cqj3: a candidatura vencedora
             }
             p += 0x22;
@@ -449,7 +449,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
             let e = (read_u32(this) as usize).wrapping_add(i as i32 as usize * 0x22);
             let ae = read_u16(e + 4);
             if ae < year && ae != 0 {
-                crate::comparison::branch("cqj_3 next edition");
+                covered!("cqj_3 next edition");
                 write_u16(e + 4, ae.wrapping_add(read_i8(e + host_entry::EDITION_INTERVAL) as i16 as u16)); // cqj3: o intervalo
                 if read_u8(e + host_entry::CHOSEN_BID) != 0xfd {
                     write_u8(e + host_entry::CHOSEN_BID, 0xfe);
@@ -471,7 +471,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
 /// a quantidade (+4, i16) e os registros de 0x22 bytes de [+0], sem conferir a gravação. Erro ao abrir: a caixa
 /// "Error" (host_country.cpp 0x475).
 pub(crate) unsafe extern "thiscall" fn save_temp_file(this: usize) {
-    crate::comparison::branch("cpx_6 save host countries");
+    covered!("cpx_6 save host countries");
     let f = open_temp_file_for_write(0x9cf10c);
     if f == 0 {
         show_error_at(0x9cf0d8, 0x475);

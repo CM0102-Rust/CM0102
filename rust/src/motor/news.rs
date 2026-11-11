@@ -49,7 +49,7 @@ pub(crate) unsafe extern "thiscall" fn mark_item_read(this: usize, manager: usiz
         if read_usize(v + news_item::ID) as u32 == id && read_usize(v + news_item::READ) == 0 {
             let mut tratador = 0u32;
             if exe::newsitem_get_action_button(v, manager, 0xde1f64, 0x7d0, &mut tratador) != 2 {
-                crate::comparison::branch("cpo_6 news read");
+                covered!("cpo_6 news read");
                 write_u32(v + news_item::READ, 1);
                 write_i32(e + 8, read_i32(e + 8) - 1);
                 break;
@@ -144,7 +144,7 @@ pub(crate) unsafe extern "thiscall" fn send_by_scope(this: usize, news: usize, c
     let two: unsafe extern "thiscall" fn(usize, usize, usize) -> u32;
     let target = match reach as u8 as i8 {
         0 => {
-            crate::comparison::branch("cpn_1 club reach");
+            covered!("cpn_1 club reach");
             two = core::mem::transmute(FN_NEWS_SEND_TO_CLUB_MANAGER);
             club // the club’s manager
         }
@@ -201,7 +201,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_club_manager(this: usize, news: u
     if read_i32(manager) < read_i32(G_STAFF_COUNT).wrapping_sub(0x10) { // the machine
         return 0;
     }
-    crate::comparison::branch("cpn_1 news to the human manager");
+    covered!("cpn_1 news to the human manager");
     exe::news_deliver_to_manager(this, news, manager, 0)
 }
 
@@ -278,7 +278,7 @@ pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, news: usi
         write_usize(e + 4, start as usize);
     }
     if read_i16(G_NEWS_SCREEN_AUTO_OPEN_BLOCKED_FLAG) != 0 || exe::human_manager_is_on_holiday(read_usize(G_HUMAN_MANAGER), manager) != 0 {
-        crate::comparison::branch("cpn_1 automatic reply");
+        covered!("cpn_1 automatic reply");
         exe::newsitem_auto_respond(slot(current), manager, manager.club_job()); // the club
         let national_team = manager.national_job();
         if !national_team.is_null() {
@@ -346,7 +346,7 @@ pub(crate) unsafe extern "thiscall" fn auto_respond_all(this: usize, manager: us
         if read_usize(slot + news_item::ID) == 0 {
             return 1;
         }
-        crate::comparison::branch("cpn_2 respond all");
+        covered!("cpn_2 respond all");
         exe::newsitem_auto_respond(slot, manager, club); // the automatic reply
         k -= 1;
         if k == read_i32(e + 4) - 1 {
@@ -434,7 +434,7 @@ pub(crate) unsafe extern "thiscall" fn set_slot_string(this: usize, field: u32, 
         }
         let quartos = ((n + 1 + 3) & !3) / 4; // the size including the zero, in 4-byte fields
         let mut p = (quartos as u8).wrapping_add(field as u8);
-        crate::comparison::branch("cpn_2 next text field");
+        covered!("cpn_2 next text field");
         if p as i8 > 0x32 {
             p = 0x32;
         }
@@ -464,7 +464,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_continent_managers(this: usize, n
         if !c.is_null() {
             let n = c.nation();
             if !n.is_null() && n.continent() == continent { // the continent of the club’s nation
-                crate::comparison::branch("cpk_5 continent by club");
+                covered!("cpk_5 continent by club");
                 return true;
             }
         }
@@ -492,7 +492,7 @@ pub(crate) unsafe extern "thiscall" fn send_to_comp_region(this: usize, news: us
     }
     let nation = comp.nation();
     if !nation.is_null() {
-        crate::comparison::branch("cpk_5 news of the competition nation");
+        covered!("cpk_5 news of the competition nation");
         let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(FN_NEWS_SEND_TO_NATION_CLUB_MANAGERS);
         return f(this, news, nation.addr());
     }
@@ -540,7 +540,7 @@ pub(crate) unsafe extern "thiscall" fn is_important_for(news: usize, person: usi
         5 => match t {
             0xfa0 | 0xfa4 | 0xfad | 0xfae | 0xfaf | 0xfb0 | 0xfb2 | 0xfb4 | 0xfb7 | 0xfb8 | 0xfbb | 0xfbf | 0xfc0 => true,
             0xfa1 => {
-                crate::comparison::branch("cpk_5 important offer by club");
+                covered!("cpk_5 important offer by club");
                 manager_of_news_club(news, 0x19) == person // the manager of the offering club
             }
             0xfb6 => manager_of_news_club(news, 0x15) == person || manager_of_news_club(news, 0x19) == person,
@@ -569,7 +569,7 @@ pub(crate) unsafe extern "thiscall" fn get_slot_string(news: usize, given: u32, 
     if !(0..0x32).contains(&k) || target.is_null() || n < 1 {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut u8, i32) -> u32>(IDX_GET_SLOT_STRING)(news, given, target, n); // message box: original only
     }
-    crate::comparison::branch("cpk_6 data text");
+    covered!("cpk_6 data text");
     let source = (news + 5 + 4 * k as usize) as *const u8; // o dado
     let mut end = false;
     for i in 0..n as usize {
@@ -888,7 +888,7 @@ pub(crate) unsafe extern "thiscall" fn clear_inbox(this: usize, manager: usize) 
     write_i32(caixa + 8, 0);
     write_i32(caixa + 4, first);
     if first != -1 {
-        crate::comparison::branch("clear_inbox");
+        covered!("clear_inbox");
         for k in 0..0x64u32 {
             let n = (read_i32(this) as u32).wrapping_add(k.wrapping_add(read_i32(caixa) as u32).wrapping_mul(0xdf)) as usize;
             write_i32(n + news_item::ID, 0);

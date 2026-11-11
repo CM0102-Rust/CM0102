@@ -48,7 +48,7 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(game: usize, club
             *((out + club_match_record::GOALS_FOR) as *mut u8) = game.home_goals_extra_time() as u8;
             *((out + club_match_record::GOALS_AGAINST) as *mut u8) = game.away_goals_extra_time() as u8;
         } else {
-            crate::comparison::branch("cpz_7 home side score");
+            covered!("cpz_7 home side score");
             *((out + club_match_record::GOALS_FOR) as *mut u8) = game.home_goals() as u8; // cpz7: the home team goals
             *((out + club_match_record::GOALS_AGAINST) as *mut u8) = game.away_goals() as u8;
         }
@@ -58,7 +58,7 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(game: usize, club
             *((out + club_match_record::GOALS_FOR) as *mut u8) = game.away_goals_extra_time() as u8;
             *((out + club_match_record::GOALS_AGAINST) as *mut u8) = game.home_goals_extra_time() as u8;
         } else {
-            crate::comparison::branch("cpz_7 away side score");
+            covered!("cpz_7 away side score");
             *((out + club_match_record::GOALS_FOR) as *mut u8) = game.away_goals() as u8;
             *((out + club_match_record::GOALS_AGAINST) as *mut u8) = game.home_goals() as u8; // cpz7: the goals conceded by the away team
         }
@@ -148,7 +148,7 @@ pub(crate) unsafe fn add_year_award(this: usize, p: Staff, club: usize, prize: u
     if t3d == 5 || t3d == 0xc || t28 == 5 || t28 == 0xc {
         let r = ManagerRecord(staff_records_manager_record(this, p));
         if !r.is_null() {
-            crate::comparison::branch("cpy_10 manager award");
+            covered!("cpy_10 manager award");
             let a = (r.addr() + manager_record::AWARDS) as *mut u16;
             core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(1));
         }
@@ -174,13 +174,13 @@ pub(crate) unsafe fn add_year_award(this: usize, p: Staff, club: usize, prize: u
             let owner = contract_club_except_type5(p);
             let x = ShortlistSlot(exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SHORTLIST_MANAGER), owner, p, 0, 0));
             if !x.is_null() && x.target_staff_id() == read_usize(p.addr()) {
-                crate::comparison::branch("cpy_10 renewal");
+                covered!("cpy_10 renewal");
                 offer_renewal(p.addr());
             }
         }
     }
     if credito as u8 != 1 {
-        crate::comparison::branch("cpy_10 without credit");
+        covered!("cpy_10 without credit");
         return; // cpy10: só o creditado
     }
     if (k.grievances() as usize) != 0 {
@@ -193,7 +193,7 @@ pub(crate) unsafe fn add_year_award(this: usize, p: Staff, club: usize, prize: u
     if (p.professionalism() as u8) as i8 <= 0xa {
         return;
     }
-    crate::comparison::branch("cpy_10 thanks draw");
+    covered!("cpy_10 thanks draw");
     if random(v59 as i32) <= 5 {
         return;
     }

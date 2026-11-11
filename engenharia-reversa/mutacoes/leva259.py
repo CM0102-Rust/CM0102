@@ -35,5 +35,5 @@ MUTACOES = [
     ('cpw12_reservas_contam', 'if k >= 11 && (slot.minute_on() as u8) == 0xff { // cpw12: the substitute who did not come on', 'if k >= 11 && (slot.minute_on() as u8) == 0xff && false { // mutacao: a reserva que nao entrou conta', 'cpw_12 reserve not coming on'),
     ('cpw13_um_a_mais', '*((e + 8) as *mut u8) = count; // cpw13: the count of the new record', '*((e + 8) as *mut u8) = count.wrapping_add(1); // mutacao: um a mais', 'cpw_13 new record'),
     ('cpw13_sem_somar', '*((e + 8) as *mut u8) = (*((e + 8) as *const u8)).wrapping_add(count); // cpw13: adds to the date', 'let _ = count; // mutacao: sem somar na data', 'cpw_13 sum at the date'),
-    ('cpw13_ultimo_clube', 'crate::comparison::branch("cpw_13 last club without record"); // cpw13: the last club is left without a record', 'crate::comparison::branch("cpw_13 last club without record"); add_club_callups(this, previous, count, d.as_mut_ptr()); // mutacao: o ultimo clube registrado', 'cpw_13 last club without record'),
+    ('cpw13_ultimo_clube', 'covered!("cpw_13 last club without record"); // cpw13: the last club is left without a record', 'covered!("cpw_13 last club without record"); add_club_callups(this, previous, count, d.as_mut_ptr()); // mutacao: o ultimo clube registrado', 'cpw_13 last club without record'),
 ]

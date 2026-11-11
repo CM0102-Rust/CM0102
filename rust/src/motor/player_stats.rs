@@ -188,7 +188,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
         }
         let data = read_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add((id as isize * 0x20) as usize);
         let in_the = career_history_node(club, Some(data), value, (((cat + 1) as u8) << 3) | kind); // cqh8: the category and the node type
-        crate::comparison::branch("cqh_8 archived category");
+        covered!("cqh_8 archived category");
         append_history_node(this, reg, &in_the);
         if cat == 5 {
             sexta = true;
@@ -224,7 +224,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
         };
         if write {
             let in_the = career_history_node(club, None, value, 0x30 | kind); // cqh8: the empty node of the sixth category
-            crate::comparison::branch("cqh_8 on empty");
+            covered!("cqh_8 on empty");
             append_history_node(this, reg, &in_the);
         }
     }
@@ -237,7 +237,7 @@ pub(crate) unsafe extern "thiscall" fn archive_player_stats(this: usize, p: usiz
             let mut in_the = exe::llist_get_next(list);
             while in_the != 0 {
                 if read_usize(in_the + career_entry::CLUB_ID) as u32 == club_id && *((in_the + career_entry::KIND) as *const u8) & 0xf8 == 0x10 {
-                    crate::comparison::branch("cqh_8 matches by club");
+                    covered!("cqh_8 matches by club");
                     let a = (reg + player_stats_entry::CLUB_LEAGUE_GAMES) as *mut u16;
                     core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(read_u8(in_the + career_entry::STATS) as u16)); // cqh8: the matches for the club
                     let g = (reg + player_stats_entry::CLUB_LEAGUE_GOALS) as *mut u16;
@@ -370,7 +370,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
     for cat in 1..=6u8 {
         let year = exe::key_nation_get_club_season_year(club);
         let id = if club.is_null() { 0xffff_ffff } else { read_usize(club.addr()) as u32 }; // cqf8: the club of the current season
-        crate::comparison::branch("cqf_8 current season");
+        covered!("cqf_8 current season");
         let mut r = PlayerStatsEntry::new(year, id, cat, 0xffff_ffff);
         let c = exe::playerstats_get_category_record(this, f, cat as u32);
         if c != 0 {
@@ -425,7 +425,7 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
                 for cat in 1..=6u8 {
                     let mut r = PlayerStatsEntry::new(year_in, club_in, cat, read_usize(in_the + career_entry::TRANSFER_FEE) as u32);
                     r.0[0x2a] = (cat << 3) | (kind & 7);
-                    crate::comparison::branch("cqf_8 history season");
+                    covered!("cqf_8 history season");
                     if *count + cat as i32 - 1 >= cap {
                         size += 0x53fc;
                         cap += 500;
@@ -925,7 +925,7 @@ pub(crate) unsafe extern "thiscall" fn create_stats(this: usize, player: usize, 
         while i < n {
             let r = read_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add((i as usize) << 5);
             if read_u16(r + player_category_stats::RATING_TOTAL) == 0xffff {
-                crate::comparison::branch("cpq_10 record freed");
+                covered!("cpq_10 record freed");
                 core::ptr::write_bytes(r as *mut u8, 0, 0x20);
                 write_usize(slot, i as usize);
                 write_usize(this + player_stats_fields::FREE_CATEGORY_COUNT, read_usize(this + player_stats_fields::FREE_CATEGORY_COUNT).wrapping_sub(1));
@@ -945,7 +945,7 @@ pub(crate) unsafe extern "thiscall" fn create_stats(this: usize, player: usize, 
             return 0;
         }
     }
-    crate::comparison::branch("cpq_10 new record");
+    covered!("cpq_10 new record");
     write_usize(slot, read_usize(this + player_stats_fields::CATEGORY_COUNT)); // the new index
     write_usize(this + player_stats_fields::CATEGORY_COUNT, read_usize(this + player_stats_fields::CATEGORY_COUNT).wrapping_add(1));
     let r = read_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add(read_usize(slot) << 5);
@@ -999,7 +999,7 @@ pub(crate) unsafe extern "thiscall" fn add_language(this: usize, person: usize, 
         }
         write_u32(this + player_stats_fields::LANGUAGE_CAPACITY, (read_usize(this + player_stats_fields::LANGUAGE_CAPACITY) as u32).wrapping_add(0x64));
     }
-    crate::comparison::branch("cpo_12 new language");
+    covered!("cpo_12 new language");
     let n = read_usize(this + player_stats_fields::LANGUAGE_COUNT);
     let r = read_usize(this + player_stats_fields::LANGUAGES).wrapping_add(n.wrapping_mul(6));
     write_u32(r, read_usize(person) as u32);
@@ -1008,7 +1008,7 @@ pub(crate) unsafe extern "thiscall" fn add_language(this: usize, person: usize, 
     write_u8(r + language_entry::FLUENCY, if (f as i8) > 10 { 10 } else { f });
     write_u32(this + player_stats_fields::LANGUAGE_COUNT, (n as u32).wrapping_add(1));
     if sort != 0 {
-        crate::comparison::branch("cpo_12 languages sorted");
+        covered!("cpo_12 languages sorted");
         exe::crt_qsort(read_usize(this + player_stats_fields::LANGUAGES), read_usize(this + player_stats_fields::LANGUAGE_COUNT) as u32, 6, 0x7c6d40);
     }
 }
@@ -1030,7 +1030,7 @@ pub(crate) unsafe extern "thiscall" fn improve_language(this: usize, person: usi
         exe::playerstats_add_language(this, person, language, raise, sort);
         return;
     }
-    crate::comparison::branch("cpo_12 language improved");
+    covered!("cpo_12 language improved");
     let f = read_u8(r + language_entry::FLUENCY).wrapping_add(raise as u8);
     write_u8(r + language_entry::FLUENCY, f);
     if (f as i8) > 10 {
@@ -1194,7 +1194,7 @@ pub(crate) unsafe extern "thiscall" fn player_stats_record_match(this: usize, p:
             }
             if !contou {
                 contou = true;
-                crate::comparison::branch("cpx_12 match recorded");
+                covered!("cpx_12 match recorded");
             }
             for c in stats_categories_for(cat).into_iter().flatten() {
                 let mut r = player_category_record(this, dados, c);
@@ -1300,7 +1300,7 @@ pub(crate) unsafe extern "thiscall" fn end_season_for_key_nation(this: usize, na
                     continue;
                 }
                 if exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), p) == 0 || p.club_job() == club {
-                    crate::comparison::branch("cpp_10 archive");
+                    covered!("cpp_10 archive");
                     exe::playerstats_archive_player_stats(this, p, -1, 0, 0, -1, 0);
                 }
             }

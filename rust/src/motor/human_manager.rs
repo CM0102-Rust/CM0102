@@ -674,7 +674,7 @@ pub(crate) unsafe extern "C" fn human_runs_club(club: usize, any: u32, force: i8
                 }
             }
             if force != 0 || exe::database_is_national_team(c) != 0 || exe::human_manager_controls_reserve_team(humanos, human) != 0 {
-                crate::comparison::branch("human runs the club");
+                covered!("human runs the club");
                 return 1;
             }
         }
@@ -709,7 +709,7 @@ pub(crate) unsafe extern "thiscall" fn set_human_field(t: usize, value: u32, man
     if i < 0 || i > read_i32(t + 4).wrapping_sub(1) {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32, *const i32) -> u32>(IDX_SET_HUMAN_FIELD)(t, value, manager);
     }
-    crate::comparison::branch("human data saved");
+    covered!("human data saved");
     write_u32(read_usize(t) + i as usize * 0xa6ef + human_manager_record::HOLIDAY_STAMP, value);
     1
 }
@@ -756,7 +756,7 @@ pub(crate) unsafe extern "thiscall" fn set_on_holiday(this: usize, holiday: u32,
         *count = (*count).wrapping_sub(1);
     }
     write_u32(mark, holiday);
-    crate::comparison::branch("cpy_13 human on holiday");
+    covered!("cpy_13 human on holiday");
     if holiday != 0 {
         if read_usize(t + staff::CLUB_JOB) != 0 {
             exe::news_auto_respond_all(read_usize(G_NEWS), t, read_usize(t + staff::CLUB_JOB));

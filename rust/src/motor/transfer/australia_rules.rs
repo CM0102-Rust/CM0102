@@ -11,7 +11,7 @@ use super::*;
 /// [pt] { 0x412c80 } (thiscall, ret 0x14, australia_rules.cpp, `AUSTRALIA_RULES::Australia_rules`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
 /// transferência da Austrália (regra 2): a base (0x8e84a0), a vtable 0x967830, 1 janela(s) de `AUSTRALIA_TRANSFER_WINDOWS` e o +0x13 = 6 [inferência: o limite de estrangeiros]. Devolve o objeto.
 pub(crate) unsafe extern "thiscall" fn australia_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparison::branch("cqk_1 australia");
+    covered!("cqk_1 australia");
     construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x967830, 1, &AUSTRALIA_TRANSFER_WINDOWS, 0x987cfc, 0x51);
     write_u8(this + 0x13, 6);
     this

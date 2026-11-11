@@ -32,7 +32,7 @@ pub(crate) unsafe extern "thiscall" fn remove_dispute(this: usize, p: usize) {
             return;
         }
         if read_i32(in_the) == read_i32(p) {
-            crate::comparison::branch("cqg_7 left the contest");
+            covered!("cqg_7 left the contest");
             exe::llist_remove(read_usize(this), in_the);
             return;
         }

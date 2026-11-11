@@ -13,6 +13,11 @@ path = "src/lib.rs"
 [dependencies]
 cm0102-base = { path = "../cm0102-base" }
 
+[features]
+# the test coverage markers (`covered!`, motor/macros.rs); off: --no-default-features
+default = ["coverage"]
+coverage = []
+
 [profile.release]
 panic = "abort"
 opt-level = 2

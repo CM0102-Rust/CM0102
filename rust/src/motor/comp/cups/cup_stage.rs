@@ -64,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
         show_error_at(F, 0x53);
         return this.addr();
     }
-    crate::comparison::branch("cqs_7 cup stage");
+    covered!("cqs_7 cup stage");
     let m = this.team_count() as i32;
     let mut i = 0i32;
     while i < m {
@@ -121,7 +121,7 @@ pub(crate) unsafe extern "thiscall" fn destroy_cup_stage(this: usize) -> usize {
         }
         exe::crt_free(this.tie_tables());
     }
-    crate::comparison::branch("cqs_7 end of cup stage");
+    covered!("cqs_7 end of cup stage");
     exe::drop_cup(this)
 }
 

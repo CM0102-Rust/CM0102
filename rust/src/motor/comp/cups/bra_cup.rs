@@ -59,7 +59,7 @@ pub(crate) unsafe fn start_new_cup_season(this: Cup, entrants: usize, file: usiz
     }
     let a = this.year();
     this.set_year(a.wrapping_add(year));
-    crate::comparison::branch(ramo);
+    covered!(ramo);
     this.set_current_round(0);
     this.set_run_by_stages(0);
     let entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(entrants);
@@ -155,7 +155,7 @@ pub(crate) unsafe fn build_brazil_cup_teams(this: Cup) -> i32 {
         show_error_at(0x98a3bc, 0x143);
         return -1;
     }
-    crate::comparison::branch("cqo_12 copa do brasil teams");
+    covered!("cqo_12 copa do brasil teams");
     let mut i = 0i16;
     while i < this.team_count() {
         let o = i as usize * 6;
@@ -191,7 +191,7 @@ pub(crate) unsafe extern "thiscall" fn bra_cup_build_team_table(this: usize) -> 
 /// substituições (+0x4a), o fundo de prêmios de 500 mil (+0x28) e a tabela das rodadas (a virtual +0x3c com a fase −1,
 /// as rodadas em +0x3c e o extra em +0x3a, sem saída) em +0xa3. Devolve 1.
 pub(crate) unsafe fn set_up_brazil_cup_rounds(this: Cup) -> i32 {
-    crate::comparison::branch("cqo_12 copa do brasil rules");
+    covered!("cqo_12 copa do brasil rules");
     this.set_substitutes_named(7);
     this.set_substitutions_allowed(3); // cqo12: the Copa do Brasil substitutions
     this.set_prize_fund((0x7a120) as i32);

@@ -130,7 +130,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
             if group <= limit {
                 ficam += 1;
                 *m = 1;
-                crate::comparison::branch("cqg_9 referee kept");
+                covered!("cqg_9 referee kept");
             } else {
                 *m = 0;
             }
@@ -187,7 +187,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
         let v = b.wrapping_add((read_i16(b + officials_nation_block::COMP_COUNT) as isize * 0x10) as usize);
         write_u32(v + 0x1e, k as u32);
         let request = read_i16(read_usize(read_usize(G_COMP_OBJECT_TABLE) + 4 * k as usize) + league::CLUB_COUNT) as i32 / 2 + 0xa; // cqg9: the slot request
-        crate::comparison::branch("cqg_9 competition slot");
+        covered!("cqg_9 competition slot");
         write_u32(v + 0x1a, request as u32);
         if read_i32(v + 0x1a) > read_i32(b + officials_nation_block::DEMAND) {
             write_u32(b + officials_nation_block::DEMAND, read_usize(v + 0x1a) as u32);
@@ -236,7 +236,7 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
         let mut j = 0i32;
         while j < read_i16(b + officials_nation_block::COMP_COUNT) as i32 {
             let c = read_i16(b + officials_nation_block::COMP_COUNT) as i32;
-            crate::comparison::branch("cqg_9 part of the slot");
+            covered!("cqg_9 part of the slot");
             write_u32(b + 0x16 + 16 * j as usize, (read_i32(b + officials_nation_block::REFEREE_COUNT) / c) as u32); // cqg9: the share of each slot
             let c = read_i16(b + officials_nation_block::COMP_COUNT) as i32;
             write_u32(b + officials_nation_block::COMP_SLOTS + 16 * j as usize, (read_i32(b + officials_nation_block::REFEREE_COUNT).wrapping_mul(j) / c).wrapping_add(read_i32(b + officials_nation_block::FIRST_REFEREE)) as u32);
@@ -312,7 +312,7 @@ pub(crate) unsafe extern "C" fn officials_manager_compare_nation_then_quality_de
         return na.wrapping_sub(nb);
     }
     let (ka, kb) = (official_quality(a), official_quality(b));
-    crate::comparison::branch("cqh_7 descending order");
+    covered!("cqh_7 descending order");
     if ka == kb {
         return read_i32(b).wrapping_sub(read_i32(a)); // cqh7: the tie by the index
     }
@@ -334,7 +334,7 @@ pub(crate) unsafe extern "C" fn officials_manager_compare_nation_then_quality_as
         return na.wrapping_sub(nb);
     }
     let (ka, kb) = (official_quality(a), official_quality(b));
-    crate::comparison::branch("cqh_7 ascending order");
+    covered!("cqh_7 ascending order");
     if ka == kb {
         return read_i32(a).wrapping_sub(read_i32(b));
     }
@@ -442,7 +442,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                     }
                     let b = nation_officials_block(this, k);
                     let count = read_i32(b + officials_nation_block::REFEREE_COUNT) as f64;
-                    crate::comparison::branch("cpy_8 neutral referee");
+                    covered!("cpy_8 neutral referee");
                     (read_i32(b + officials_nation_block::FIRST_REFEREE).wrapping_sub(ftol(count * -0.75)), ftol(count * 0.25)) // cpy8: the top quarter
                 } else {
                     let nacao = if !comp.nation().is_null() {
@@ -465,7 +465,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
                     }
                     match found {
                         Some(band) => {
-                            crate::comparison::branch("cpy_8 league band");
+                            covered!("cpy_8 league band");
                             band // cpy8: the league band
                         }
                         None => (read_i32(b + officials_nation_block::FIRST_REFEREE), read_i32(b + officials_nation_block::REFEREE_COUNT)),
@@ -477,7 +477,7 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
     let drawn = if n == 1 {
         ini
     } else {
-        crate::comparison::branch("cpy_8 drawn referee");
+        covered!("cpy_8 drawn referee");
         ini.wrapping_add(random(n.wrapping_sub(1))) // cpy8: the random draw within the band
     };
     let occupied = |k: i32| {
@@ -578,7 +578,7 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
         if age <= 0x28 || (age <= 0x2d && random(3) != 0) {
             continue;
         }
-        crate::comparison::branch("cpy_8 referee renewed");
+        covered!("cpy_8 referee renewed");
         let nation = referee.nation();
         let n1 = exe::database_pick_first_name_for_nation(nation);
         referee.set_first_name(n1);
@@ -676,13 +676,13 @@ pub(crate) unsafe extern "thiscall" fn officials_manager_add_random_officials(_t
     }
     let mut r = t.wrapping_add(before.wrapping_mul(0x2b) as usize);
     for _ in 0..count.max(0) {
-        crate::comparison::branch("cpy_9 new referee");
+        covered!("cpy_9 new referee");
         generate_official(r, nation);
         r += 0x2b;
     }
     let n = read_i32(G_OFFICIAL_COUNT).wrapping_add(count);
     write_i32(G_OFFICIAL_COUNT, n);
-    crate::comparison::branch("cpy_9 sort");
+    covered!("cpy_9 sort");
     exe::crt_qsort(read_usize(G_OFFICIAL_TABLE), (n) as u32, 0x2b, 0x79d480); // cpy9: ordenar a tabela
 }
 
@@ -755,7 +755,7 @@ pub(crate) unsafe extern "C" fn officials_manager_validate_officials() {
         }
         for o in [0x1eusize, 0x20] {
             if away(o) {
-                crate::comparison::branch("cpy_9 rating fixed");
+                covered!("cpy_9 rating fixed");
                 let nation = read_usize(e + official::NATION);
                 let v = if nation != 0 {
                     let s = random(0x50) as u8;
@@ -839,7 +839,7 @@ pub(crate) unsafe extern "thiscall" fn save_official_stats(this: usize, save: us
     const FONTE: usize = 0xa6a22c;
     let arbitros = || read_u32(G_OFFICIAL_COUNT);
     let nations = || read_u32(G_NATION_COUNT);
-    crate::comparison::branch("cpx_7 save referee stats");
+    covered!("cpx_7 save referee stats");
     if save == 0 {
         show_error_at(FONTE, 0x142);
         return 0;

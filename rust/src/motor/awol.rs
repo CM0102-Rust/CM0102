@@ -42,7 +42,7 @@ pub(crate) unsafe fn toggle_mark_and_unlist(this: usize, person: usize, bit: u8,
         return;
     }
     if foul {
-        crate::comparison::branch("cqd_11 absence removed");
+        covered!("cqd_11 absence removed");
     }
     write_u8(p, m ^ bit);
     let l = read_usize(this + list);
@@ -62,7 +62,7 @@ pub(crate) unsafe fn toggle_mark_and_unlist(this: usize, person: usize, bit: u8,
         }
         if read_usize(item) == read_usize(person) {
             if foul {
-                crate::comparison::branch("cqd_11 absence record removed");
+                covered!("cqd_11 absence record removed");
             }
             exe::llist_remove(read_usize(this + list), item);
             return;
@@ -207,13 +207,13 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
     exe::newsitem_set_slot(nt, 2, read_usize(player.second_name() + names::ID) as u32);
     exe::newsitem_set_slot(nt, 3, read_usize(player.common_name() + names::ID) as u32);
     exe::newsitem_set_slot(nt, 4, read_usize(club) as u32);
-    crate::comparison::branch("cqd_11 absence news");
+    covered!("cqd_11 absence news");
     let r = taped_random(3); // cqd11: the news random draw
     exe::newsitem_set_slot(nt, 5, r as u32);
     exe::newsitem_set_slot(nt, 6, exe::human_manager_is_human_club(club, 0, 1, 0, 0));
     let manager = read_usize(club + club::MANAGER);
     if manager != 0 && exe::human_manager_is_human_club(club, 1, 1, 0, 0) == 0 { // cqd11: the AI manager reports
-        crate::comparison::branch("cqd_11 technical reporter");
+        covered!("cqd_11 technical reporter");
         let t = Staff(read_usize(club + club::MANAGER));
         exe::newsitem_set_slot(nt, 7, read_usize(t.addr()) as u32);
         exe::newsitem_set_slot(nt, 8, read_usize(t.first_name() + names::ID) as u32);
@@ -319,7 +319,7 @@ pub(crate) unsafe fn close_awol_case(this: usize, r: usize) {
         return;
     }
     *m ^= person_flags::MISSED_TRAINING as u8;
-    crate::comparison::branch("cpw_7 absence removed from the list");
+    covered!("cpw_7 absence removed from the list");
     exe::llist_remove(read_usize(this + 4), r); // cpw7: removes the case from the list
 }
 
@@ -392,7 +392,7 @@ pub(crate) unsafe extern "thiscall" fn awol_daily_update(this: usize) {
                     return;
                 }
                 if weeks_after_have_passed(r + 4, 1) { // cpw7: one week later
-                    crate::comparison::branch("cpw_7 absence expired");
+                    covered!("cpw_7 absence expired");
                     resolve_awol_case(this, r);
                     break;
                 }
@@ -465,7 +465,7 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
     if read_u8(r + awol_missed_training::REPEAT_CASE) != 0 {
         // o caso repetido
         if !person.player().is_null() {
-            crate::comparison::branch("cpw_7 repeated case");
+            covered!("cpw_7 repeated case");
             if friendly_random((person.professionalism() as u8) as i8 as i32) == 0 && friendly_random((person.temperament() as u8) as i8 as i32) == 0 { // cpw7: the random draws of the repeated case
                 maybe_drop_attribute(person.addr() + staff::PROFESSIONALISM, true);
                 maybe_drop_attribute(person.addr() + staff::TEMPERAMENT, true);
@@ -477,7 +477,7 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
         return close_awol_case(this, r);
     }
     // the new case: the club’s teammates
-    crate::comparison::branch("cpw_7 new case");
+    covered!("cpw_7 new case");
     let k = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
     write_u32(G_CONTRACT_LOOKUP_RESULT, k.addr() as u32);
     let club = Club(if !k.is_null() { read_usize(G_CLUB_TABLE).wrapping_add(k.club().wrapping_mul(club::SIZE)) } else { 0 });
@@ -689,7 +689,7 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
                 && friendly_random((person.professionalism() as u8) as i8 as i32 + 10) == 0
                 && friendly_random((person.loyalty() as u8) as i8 as i32 + 10) == 0
             {
-                crate::comparison::branch("cpw_7 vanished instead of missing");
+                covered!("cpw_7 vanished instead of missing");
                 if MISS_TRAINING_DRY_RUN.load(Relaxed) {
                     MISS_TRAINING_DECISION.store(1, Relaxed);
                     return;
@@ -699,7 +699,7 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
             }
         }
     }
-    crate::comparison::branch("cpw_7 marked the absence");
+    covered!("cpw_7 marked the absence");
     if MISS_TRAINING_DRY_RUN.load(Relaxed) {
         MISS_TRAINING_DECISION.store(2, Relaxed);
         return;
@@ -736,7 +736,7 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
     }
     let a = friendly_random((exe::non_player_attribute_rating(np, (np.man_handling() as u32) as i8) as i8) as i32);
     let b = friendly_random(5);
-    crate::comparison::branch("cpw_7 fine for absence");
+    covered!("cpw_7 fine for absence");
     exe::fine_fine_player(read_usize(G_FINE), person, if a > b { 1 } else { 2 }, 1);
 }
 
@@ -759,7 +759,7 @@ pub(crate) unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
     if *m == 0 {
         return;
     }
-    crate::comparison::branch("cpw_7 end of absence");
+    covered!("cpw_7 end of absence");
     let person = read_usize(G_STAFF_TABLE).wrapping_add((read_i32(r) as usize).wrapping_mul(staff::SIZE));
     let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     write_u32(G_CONTRACT_LOOKUP_RESULT, k as u32);
@@ -851,14 +851,14 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
     if np.is_null() {
         return;
     }
-    crate::comparison::branch("cpz_9 fine evaluated");
+    covered!("cpz_9 fine evaluated");
     let a = friendly_random((np.discipline() as i8) as i32);
     let b = friendly_random(10); // cpz9: the fine random draw
     if a <= b {
         return;
     }
     let np = read_usize(read_usize(club + club::MANAGER) + staff::NON_PLAYER);
-    crate::comparison::branch("cpz_9 fine by form");
+    covered!("cpz_9 fine by form");
     // simplification: the original pushes ecx with byte +0x19 only in cl (the high ones are leftover); 0x544410 only reads the byte
     let c =friendly_random((exe::non_player_attribute_rating(np, (read_u8(np + non_player::MAN_HANDLING) as u32) as i8) as i8) as i32);
     let e = friendly_random(5); // cpz9: the deadline random draw
@@ -887,7 +887,7 @@ pub(crate) unsafe extern "thiscall" fn is_player_awol(this: usize, p: usize, so_
     if so_read == 0 && mark() != 0 {
         let c = injury_main_contract_stored(p);
         if c.is_null() || injury_club_of_contract(c.addr()) == 0 {
-            crate::comparison::branch("cqb_5 absence ends without club");
+            covered!("cqb_5 absence ends without club");
             exe::awol_clear_awol(this, p);
         }
     }

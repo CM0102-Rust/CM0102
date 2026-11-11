@@ -47,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
         return 0;
     }
     if year_of_today == year && day_of_today == day && this.active() == 0 && full == 0 {
-        crate::comparison::branch("cqt_10 oceania draw");
+        covered!("cqt_10 oceania draw");
         exe::oceaniaclubchamp_select_qualified_clubs(this);
         let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
         predicted(this.addr());
@@ -102,7 +102,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_a_table(this: usize) -> u32 
     }
     let mut i = 0i8;
     while (i as i16) < this.club_count() {
-        crate::comparison::branch("cqt_10 group a row");
+        covered!("cqt_10 group a row");
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         exe::league_init_table_row(this, i as u8 as u32, selected_club(this, i as usize), 0, 0); // cqt10: row i of group A
         i = i.wrapping_add(1);
@@ -148,7 +148,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_b_stage(this: usize) -> u32 
         return 0;
     }
     for n in 0..4usize {
-        crate::comparison::branch("cqt_10 group b team");
+        covered!("cqt_10 group b team");
         write_usize(teams + n * 4, selected_club(this, 4 + n)); // cqt10: the team in the group B slot
     }
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
@@ -345,7 +345,7 @@ pub(crate) unsafe fn select_qualified_clubs(this: usize) -> u32 {
         i += 1;
         c += club::SIZE;
     }
-    crate::comparison::branch("cqt_11 oceania clubs");
+    covered!("cqt_11 oceania clubs");
     if champion == 0 {
         aus.ordenar(1);
         champion = aus.clubs[0];
@@ -394,7 +394,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_advance_stage(this: us
     let f = f + 1;
     this.set_current_stage(f as usize);
     if f == 1 {
-        crate::comparison::branch("cqt_11 oceania semifinals");
+        covered!("cqt_11 oceania semifinals");
         exe::oceaniaclubchamp_create_knockout_stage(this);
     }
 }
@@ -441,7 +441,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_create_knockout_stage(
     if list == 0 {
         return show_error_at(0xa6a068, 0x2cb);
     }
-    crate::comparison::branch("cqt_11 oceania pairings");
+    covered!("cqt_11 oceania pairings");
     for (k, &c) in semifinalists(this).iter().enumerate() {
         write_usize(list + k * 4, c);
     }
@@ -546,7 +546,7 @@ pub(crate) unsafe fn build_stage_table(this: League, f: Option<OceaniaStage>, ro
         show_error_at(file, f.row);
         return 0;
     }
-    crate::comparison::branch(f.name);
+    covered!(f.name);
     let ano16 = (this.year() as u16) as u32;
     let ano = this.year() as i32 as u32;
     for op in f.ops.iter().chain(f.ops2.iter()) {
@@ -714,7 +714,7 @@ pub(crate) unsafe fn build_team_table(this: Cup, file: usize, row: u32, name: &'
         show_error_at(file, row);
         return -1;
     }
-    crate::comparison::branch(name);
+    covered!(name);
     let mut i: i16 = 0;
     while i < this.team_count() {
         let c = read_usize(read_usize(this.addr() + asia_club_champ_fields::QUALIFIED_CLUBS) + order(i) as usize * 4);
@@ -769,7 +769,7 @@ pub(crate) unsafe fn compare_team_table(name: &str, this: Cup, o: impl FnOnce() 
 /// desempates (1, 2, 4, 0), dois classificados, categoria 8, 3 no banco e 3 substituições, +0x43 = 2, os bits de regra
 /// 0x28 (os de cima classificados, os outros eliminados), começo no dia 20 do mês 7 num dia da semana 5; sem prêmio.
 pub(crate) unsafe extern "thiscall" fn oceania_club_champ_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqj_11 oceania rules");
+    covered!("cqj_11 oceania rules");
     let day = 0x14; // cqj11: the start day in Oceania
     apply_cup_rules(League(this), &OCEANIA_RULES, day, 3)
 }

@@ -53,7 +53,7 @@ pub(crate) unsafe fn usa_mls_all_stars_cup_start_new_season(this: Cup, entrants:
     }
     let a = this.year();
     this.set_year(a.wrapping_add(year));
-    crate::comparison::branch(ramo);
+    covered!(ramo);
     this.set_current_round(0);
     this.set_run_by_stages(0);
     let entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(entrants);
@@ -148,7 +148,7 @@ pub(crate) unsafe fn set_up_all_star_teams(this: Cup) -> i32 {
         let league = read_usize(c + club::DIVISION);
         if league != 0 && read_usize(league) == read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && ((exe::usa_mls_get_club_division(c) as u32) as i16) as i32 == conferencia {
             if k == 0 {
-                crate::comparison::branch("cqr_6 all-star game stadium");
+                covered!("cqr_6 all-star game stadium");
                 let first = read_usize(this.team_table());
                 write_usize(first + club::STADIUM, read_usize(c + club::STADIUM)); // cqr6: the stadium of the drawn club
                 write_u8(read_usize(this.team_table()) + club::OWN_STADIUM, 0);
@@ -195,7 +195,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_update_for_date(this: u
     let year = read_i16(today + 2) as u16 as u32;
     let d = make_date_dword(0x1a, 6, year, 6); // cqn10: the All-Star Game call-up
     if stage != 0 && is_date_today(d, today) {
-        crate::comparison::branch("cqn_10 all-star game call-up");
+        covered!("cqn_10 all-star game call-up");
         exe::usamlsallstars_select_squads(this);
     }
     eng_cc_cup_cup_update_for_date(Cup(this), today, stage)
@@ -233,7 +233,7 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this
         show_error_at(0xaa20a0, 0x9a);
         return 0;
     }
-    crate::comparison::branch("cqm_12 all-star game fixture");
+    covered!("cqm_12 all-star game fixture");
     let year = this.year() as i32 as u32;
     exe::cup_set_round_draw_date(t.addr(), 0, 0xf, 5, 0, 5, year);
     exe::cup_set_round_match_date(t.addr(), 0, 2, 7, 0, 6, 1, year, 0); // cqm12: the All-Star Game on 2 August

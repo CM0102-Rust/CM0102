@@ -358,7 +358,7 @@ pub(crate) unsafe extern "thiscall" fn compare_is_one_booking_from_ban(this: usi
 ///
 /// [pt] Comparador: o tribunal (0x7e7ff0) dá as suspensões: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_process_match(this: usize, fixture: usize, result: u32) -> u32 {
-    crate::comparison::branch("process_match");
+    covered!("process_match");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_PROCESS_MATCH)(this, fixture, result)
 }
 

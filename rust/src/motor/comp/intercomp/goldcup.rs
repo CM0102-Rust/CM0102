@@ -56,7 +56,7 @@ pub(crate) unsafe fn build_gold_cup_team_list(this: League) -> u32 {
     }
     let year = this.year() as u16;
     if year == 0x7d1 {
-        crate::comparison::branch("cqs_12 2001 national teams");
+        covered!("cqs_12 2001 national teams");
         for (k, &g) in COPA_AMERICA_2001_NATIONS.iter().enumerate() {
             write_usize(read_usize(this.addr() + goldcup::DRAWN_CLUBS) + k * 4, national_team_of_nation_id(read_usize(g)));
         }
@@ -145,7 +145,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_set_predicted_positions(this: usi
     let n = read_usize(this + goldcup::DRAWN_CLUB_COUNT) << 2;
     core::ptr::copy_nonoverlapping(read_usize(this + goldcup::DRAWN_CLUBS) as *const u8, v as *mut u8, n);
     exe::crt_qsort(v, read_usize(this + goldcup::DRAWN_CLUB_COUNT) as u32, 4, 0x4b07d0);
-    crate::comparison::branch("cqs_12 copa america expected");
+    covered!("cqs_12 copa america expected");
     for (k, &p) in COPA_AMERICA_PREDICTED_PLACES.iter().enumerate() {
         exe::comp_stats_set_club_final_position(read_usize(this + 8), read_usize(v + k * 4), p);
     }
@@ -198,7 +198,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_start_new_season(this: usize) {
             }
         }
     }
-    crate::comparison::branch("cqs_12 copa america new season");
+    covered!("cqs_12 copa america new season");
     this.set_year(this.year().wrapping_add(2)); // cqs12: the Copa América every 2 years
     this.set_active(0);
     this.set_current_stage(usize::MAX);
@@ -263,7 +263,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_update_for_date(this: usize, toda
         return 0;
     }
     if year_of_today == year && day_of_today == day && this.active() == 0 && full == 0 {
-        crate::comparison::branch("cqr_13 copa america draw");
+        covered!("cqr_13 copa america draw");
         exe::goldcup_set_up_team_list(this);
         let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_PREDICTED_POSITIONS));
         predicted(this.addr());
@@ -320,7 +320,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_table(this: usize) -
     }
     let mut i = 0i8;
     while (i as i16) < this.club_count() {
-        crate::comparison::branch("cqr_13 first group row");
+        covered!("cqr_13 first group row");
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         exe::league_init_table_row(this, i as u8 as u32, drawn_team(this, i as usize * 3), 0, 0);
         i = i.wrapping_add(1);
@@ -368,7 +368,7 @@ pub(crate) unsafe extern "thiscall" fn goldcup_create_group_stage(this: usize, g
         return 0;
     }
     for n in 0..4usize {
-        crate::comparison::branch("cqr_13 group team");
+        covered!("cqr_13 group team");
         write_usize(teams + n * 4, drawn_team(this, (g + 1) as usize + n * 3)); // cqr13: the team in the group slot
     }
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, i32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
@@ -497,7 +497,7 @@ pub(crate) unsafe fn build_phase_table(this: League, f: Option<GoldcupStagePlan>
         show_error_at(file, f.row);
         return 0;
     }
-    crate::comparison::branch(f.name);
+    covered!(f.name);
     let ano16 = (this.year() as u16) as u32;
     let ano = this.year() as i32 as u32;
     for op in f.ops.iter().chain(f.ops2.iter()) {
@@ -848,7 +848,7 @@ pub(crate) const COPA_AMERICA_RULE_FIELDS: [(usize, u8, u32); 15] = [(0xc2, 1, 3
 /// (seleções), os desempates (1, 2, 3, 0), dois classificados por grupo, seleções (+0x43 = 2), 7 no banco e 3
 /// substituições, começo em 20 do mês 2 do ano da competição num dia da semana 5; depois a tabela das rodadas.
 pub(crate) unsafe extern "thiscall" fn goldcup_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqk_10 copa america rules");
+    covered!("cqk_10 copa america rules");
     let win = 3; // cqk10: the win in the Copa América groups
     goldcup_write_rule_fields(this, &COPA_AMERICA_RULE_FIELDS, win);
     let day = 0x14; // cqk10: the day of the Copa América date

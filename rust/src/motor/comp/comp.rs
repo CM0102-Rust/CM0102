@@ -113,7 +113,7 @@ pub(crate) unsafe extern "thiscall" fn send_prize_money_news(this: usize, club: 
     if value < minimum {
         return;
     }
-    crate::comparison::branch("cqp_1 prize news");
+    covered!("cqp_1 prize news");
     let mut n = [0u8; 0xe8];
     let p = n.as_mut_ptr() as usize;
     exe::new_newsitem(p, 0x1a, 0);
@@ -157,7 +157,7 @@ pub(crate) unsafe extern "thiscall" fn send_tv_rights_news(this: usize, club: us
     if !club_has_human_manager(club) {
         return;
     }
-    crate::comparison::branch("cqp_1 tv news");
+    covered!("cqp_1 tv news");
     let mut n = [0u8; 0xe8];
     let p = n.as_mut_ptr() as usize;
     exe::new_newsitem(p, 0x1f, 0);
@@ -198,7 +198,7 @@ pub(crate) unsafe extern "thiscall" fn all_stages_complete(this: usize) -> u8 {
         if completa(c) == 0 {
             return 0;
         }
-        crate::comparison::branch("cqh_6 lower league complete");
+        covered!("cqh_6 lower league complete");
         i = read_usize(c + league::LOWER_DIVISION_ID) as i32; // cqh6: the lower league
     }
     1
@@ -235,7 +235,7 @@ pub(crate) unsafe extern "thiscall" fn comp_collect_club_list(this: usize, list:
         while i < read_i16(f + league::CLUB_COUNT) {
             let club = if league { read_usize(read_usize(f + league::TABLE) + i as usize * league_table_row::SIZE) } else { read_usize(read_usize(f + cup::TEAM_TABLE) + i as usize * 6) };
             if club != 0 && !(0..n).any(|k| read_usize(v + k as usize * 4) == club) && n < 0xc8 { // cqh6: up to 200 clubs
-                crate::comparison::branch("cqh_6 club in the list");
+                covered!("cqh_6 club in the list");
                 write_u32(v + n as usize * 4, club as u32); // cqh6: the club in the list
                 n += 1;
             }
@@ -286,7 +286,7 @@ pub(crate) unsafe extern "thiscall" fn find_club_progress(this: usize, club: usi
                     let t = read_usize(s + cup::TEAM_TABLE) + k as usize * 6;
                     if read_usize(t) == club {
                         *stage_id = read_i16(s + cup::STAGE_LABEL);
-                        crate::comparison::branch("cqh_6 cup progress");
+                        covered!("cqh_6 cup progress");
                         *status = read_u8(t + 5); // cqh6: the team’s situation
                         team = k;
                     }
@@ -469,7 +469,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_club(club: usize) -> u
     let nation = club.nation().addr();
     if nation != 0 {
         if let Some(k) = find_key_nation_index(nation) {
-            crate::comparison::branch("cqb_12 club key nation");
+            covered!("cqb_12 club key nation");
             return read_u8(key_nation_entry(k) + key_nation_record::ACTIVE_INDEX); // cqb12: the active index of the club’s nation
         }
     }
@@ -477,7 +477,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_club(club: usize) -> u
     if exe::database_is_national_team(club) != 0 {
         return 0;
     }
-    crate::comparison::branch("cqb_12 club without key nation");
+    covered!("cqb_12 club without key nation");
     3 // cqb12: club outside the key nations
 }
 
@@ -495,7 +495,7 @@ pub(crate) unsafe extern "C" fn comp_active_key_nation_of_stadium(stadium: usize
     }
     match find_key_nation_index(u(stadium.city() + city::NATION)) {
         Some(k) => {
-            crate::comparison::branch("cqb_12 stadium key nation");
+            covered!("cqb_12 stadium key nation");
             read_u8(key_nation_entry(k) + key_nation_record::ACTIVE_INDEX) // cqb12: the active index of the stadium’s nation
         }
         None => 3,
@@ -563,7 +563,7 @@ pub(crate) unsafe fn add_club_callups(this: usize, c: usize, count: u8, d: *mut 
     while k < how_many {
         let e = read_usize(rec).wrapping_add(9 * k as i32 as usize);
         if core::ptr::read_unaligned((e + 2) as *const u16) == ano && core::ptr::read_unaligned(e as *const u16) == dia {
-            crate::comparison::branch("cpw_13 sum at the date");
+            covered!("cpw_13 sum at the date");
             *((e + 8) as *mut u8) = (*((e + 8) as *const u8)).wrapping_add(count); // cpw13: adds to the date
             return true;
         }
@@ -583,7 +583,7 @@ pub(crate) unsafe fn add_club_callups(this: usize, c: usize, count: u8, d: *mut 
     let e = read_usize(rec).wrapping_add(9 * q as usize);
     let mut t = [0u8; 8];
     exe::date_operator_3d(e, (t.as_mut_ptr()) as usize, (d) as usize);
-    crate::comparison::branch("cpw_13 new record");
+    covered!("cpw_13 new record");
     *((e + 8) as *mut u8) = count; // cpw13: the count of the new record
     let q = (*((rec + 5) as *const i8)).wrapping_add(1);
     *((rec + 5) as *mut i8) = q;

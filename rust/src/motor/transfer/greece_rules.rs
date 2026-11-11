@@ -18,7 +18,7 @@ pub(crate) const GREECE_TRANSFER_WINDOWS: [[u8; 6]; 4] = [
 /// [pt] { 0x5ecf20 } (thiscall, ret 0, greece_rules.cpp, `GREECE_RULES::init_transfer_windows`; chamada pelo construtor das regras da Grécia (regra 11), depois da base e da vtable): as
 /// 2 janelas de transferência de `GREECE_TRANSFER_WINDOWS`.
 pub(crate) unsafe extern "thiscall" fn greece_rules_init_transfer_windows(this: usize) {
-    crate::comparison::branch("cqn_2 greece");
+    covered!("cqn_2 greece");
     set_transfer_windows(this, 2, &GREECE_TRANSFER_WINDOWS, 0x9cdbc8, 0x51);
 }
 

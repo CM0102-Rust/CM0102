@@ -452,7 +452,7 @@ pub(crate) unsafe extern "thiscall" fn compare_build_nation_club_lists(this: usi
 pub(crate) unsafe extern "thiscall" fn compare_process_regen_queue(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_PROCESS_REGEN_QUEUE);
     if read_i32(this + player_regen_fields::SPARE_NON_PLAYER_COUNT) > 2 {
-        crate::comparison::branch("cpw_10 reserves only in the original");
+        covered!("cpw_10 reserves only in the original");
         return o(this);
     }
     let c0 = read_i32(this + player_regen_fields::REGEN_QUEUE_COUNT);
@@ -477,7 +477,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_regen_queue(this: usize) 
         return;
     }
     // the regen (0x7abac0) may put new entries in the queue (on save load, 4 expired out of 10 and the count dropped only 1)
-    crate::comparison::branch("cpw_10 expired only in the original");
+    covered!("cpw_10 expired only in the original");
     o(this);
 }
 

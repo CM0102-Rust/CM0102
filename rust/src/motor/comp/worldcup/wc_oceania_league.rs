@@ -38,7 +38,7 @@ pub(crate) unsafe extern "thiscall" fn wc_oceania_league_update_staff_records_fo
         }
     } else if f == 2 {
         if d == 1 {
-            crate::comparison::branch("cqj_10 oceania in the world cup");
+            covered!("cqj_10 oceania in the world cup");
             let id = read_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP);
             european_cup_add_qualified_record(club, read_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b)), 0, 0, 0x64);
             exe::worldcup_add_qualified_team(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(id.wrapping_mul(4))), club);
@@ -59,7 +59,7 @@ pub(crate) unsafe extern "thiscall" fn wc_oceania_league_update_staff_records_fo
 /// os desempates (1, 2, 3), um classificado por grupo, seleções, 7 no banco e 3 substituições, começo em 15 do mês 0
 /// do ano da competição num dia da semana 5.
 pub(crate) unsafe extern "thiscall" fn wc_oceania_league_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqk_10 oceania rules");
+    covered!("cqk_10 oceania rules");
     goldcup_write_rule_fields(this, &OCEANIA_RULE_FIELDS, 3);
     let day = 0xf; // cqk10: the start day in Oceania
     let word = competition_date_word(League(this), day, 0, 0, 5);

@@ -24,7 +24,7 @@ pub(crate) unsafe fn select_european_super_cup_teams(this: Cup) -> (i32, i32) {
     if !set_team_slot(l, 1, b, F, 0xd5) {
         return (0, 0);
     }
-    crate::comparison::branch("cqq_11 european super cup clubs");
+    covered!("cqq_11 european super cup clubs");
     finish_two_team_list(l)
 }
 
@@ -65,10 +65,10 @@ pub(crate) unsafe fn select_asian_super_cup_teams(this: usize) -> (i32, i32) {
         return (0, 0);
     }
     if a == b {
-        crate::comparison::branch("cqq_11 asian double");
+        covered!("cqq_11 asian double");
         write_u32(l, latest_placed_club(KEY_CLUB_COMP_ASIAN_CHAMPIONS_CUP, 1) as u32);
     }
-    crate::comparison::branch("cqq_11 asian super cup clubs");
+    covered!("cqq_11 asian super cup clubs");
     finish_two_team_list(l)
 }
 
@@ -86,7 +86,7 @@ pub(crate) unsafe fn init_c1_super_cup_list(this: usize) -> (i32, i32) {
         Some(l) => l,
         None => return (-1, 0),
     };
-    crate::comparison::branch("cqq_11 c1 super cup places");
+    covered!("cqq_11 c1 super cup places");
     write_u32(l, 0);
     write_u32(l + 6, 0);
     finish_two_team_list(l)

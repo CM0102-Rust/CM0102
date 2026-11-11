@@ -57,7 +57,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
         let day = this.next_draw_day() as u16; // cqr11: the draw day
         let year = (this.next_draw_year_offset() as u16).wrapping_add(this.year() as u16);
         if year == core::ptr::read_unaligned((today + 2) as *const u16) && day == core::ptr::read_unaligned(today as *const u16) {
-            crate::comparison::branch("cqr_11 mercosul draw");
+            covered!("cqr_11 mercosul draw");
             exe::conmebolmerc_select_invited_clubs(this);
             if exe::conmebolmerc_create_first_group_table(this) == 0 {
                 show_error_at(0x9a7e5c, 0x396);
@@ -121,7 +121,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_first_group_table(th
     }
     let mut i = 0i8;
     while (i as i16) < this.club_count() {
-        crate::comparison::branch("cqr_11 first group row");
+        covered!("cqr_11 first group row");
         // simplification: the index goes in a dword whose 3 high bytes are stack leftovers; 0x687430 reads only the byte (char)
         exe::league_init_table_row(this, i as u8 as u32, conmebol_merc_drawn_club(this, i as usize), 0, 0);
         i = i.wrapping_add(1);
@@ -170,7 +170,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_group_stage(this: us
     let mut k = g * 4 + 4;
     while k < g * 4 + 8 {
         let n = (k - (g * 4 + 4)) as usize;
-        crate::comparison::branch("cqr_11 group team");
+        covered!("cqr_11 group team");
         write_usize(teams + n * 4, conmebol_merc_drawn_club(this, k as usize)); // cqr11: the team in the group slot
         k += 1;
     }
@@ -267,7 +267,7 @@ pub(crate) unsafe fn south_american_cup_schedule(this: League, stage: u32, round
             show_error_at(file, row_g);
             return 0;
         }
-        crate::comparison::branch(name_g);
+        covered!(name_g);
         // the year goes with garbage in the high bytes in the original (the previous register with the word +0x40 over it); the
         // 0x68a160 only uses the low 16 bits: the copy passes the clean year
         let year = (this.year() as u16) as u32;
@@ -290,7 +290,7 @@ pub(crate) unsafe fn south_american_cup_schedule(this: League, stage: u32, round
         show_error_at(file, row_m);
         return 0;
     }
-    crate::comparison::branch(name);
+    covered!(name);
     let year = this.year() as i32 as u32;
     for (i, r) in knockout.iter().enumerate() {
         eng_cc_cup_write_cup_round(t, i as u32, r, year);
@@ -418,7 +418,7 @@ pub(crate) unsafe fn mercosur_select_invited_clubs(this: usize) -> (i32, i32) {
         }
         i += 1;
     }
-    crate::comparison::branch("cqo_13 mercosul guests");
+    covered!("cqo_13 mercosul guests");
     // simplification: the original pushes the word +0xf2 with garbage in the high 16 bits (the previous eax); 0x4afb40 reads the word
     exe::comp_util_shuffle_pointer_array(read_usize(this + conmebol_merc::DRAWN_CLUBS), read_u16(this + conmebol_merc::DRAWN_CLUB_COUNT) as u32); // cqo13: embaralha os convidados
     (1, k as i32)

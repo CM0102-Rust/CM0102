@@ -69,7 +69,7 @@ pub(crate) unsafe extern "thiscall" fn process_euro_registration(this: usize, st
             if exe::news_club_has_human_manager(read_u32(G_NEWS) as usize, c) != 0 {
                 exe::squad_manager_send_euro_registration_news(this, c, id, step);
             } else {
-                crate::comparison::branch("cqn_3 registers the club");
+                covered!("cqn_3 registers the club");
                 exe::squad_manager_select_euro_registered_players(read_u32(G_SQUAD_MANAGER) as usize, c, step, 0); // cqn3: enters the club
             }
         });
@@ -120,7 +120,7 @@ pub(crate) unsafe extern "thiscall" fn get_squad_number(_this: usize, p: usize, 
     }
     let k = exe::contract_manager_get_contract(read_u32(G_CONTRACT_MANAGER) as usize, p);
     if k != 0 && exe::database_is_player_job(p.job_for_club() as i8) != 0 && contract_valid_for_club(k, c) {
-        crate::comparison::branch("cql_1 contract number");
+        covered!("cql_1 contract number");
         return read_i8(k + contract::SQUAD_NUMBER); // cql1: the contract number
     }
     let k = exe::contract_manager_get_loan_contract(read_u32(G_CONTRACT_MANAGER) as usize, p);
@@ -165,7 +165,7 @@ pub(crate) unsafe extern "thiscall" fn club_uses_squad_numbers(_this: usize, c: 
             return 0;
         }
     }
-    crate::comparison::branch("cql_1 uses numbers");
+    covered!("cql_1 uses numbers");
     1 // cql1: usa números
 }
 
@@ -190,7 +190,7 @@ pub(crate) unsafe extern "thiscall" fn set_squad_number(_this: usize, p: usize, 
     }
     let k = exe::contract_manager_get_contract(read_u32(G_CONTRACT_MANAGER) as usize, p);
     if k != 0 && contract_valid_for_club(k, c) {
-        crate::comparison::branch("cql_1 writes into contract");
+        covered!("cql_1 writes into contract");
         write_i8(k + contract::SQUAD_NUMBER, n); // cql1: writes to the contract
         return;
     }
@@ -307,7 +307,7 @@ pub(crate) unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usi
         if used[k as i8 as usize] == 0 {
             exe::squad_manager_set_squad_number(this, p, c, sign(k));
             used[k as usize] = 1;
-            crate::comparison::branch("cql_2 position number");
+            covered!("cql_2 position number");
             return; // cql2: the position number
         }
         b += 1;
@@ -402,7 +402,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
         }
     }
     let slots = SQUAD_MANAGER_REFERENCE_LINEUP_SLOTS;
-    crate::comparison::branch("cql_2 picks the team");
+    covered!("cql_2 picks the team");
     pick(all.as_ptr() as usize, n as u32, slots.as_ptr() as usize, 0xb, 9, order.as_mut_ptr() as usize, 0x5840, c.addr(), 0, 0, 0, 0, 0, 0, 0);
     let mut free = 0usize;
     for &x in all[..n].iter() {
@@ -463,7 +463,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
         if keep != 0 {
             exe::squad_manager_set_squad_number(this, x, c, nb.wrapping_neg() as u8 as u32);
         } else if (nb < 12 && team < -11) || (nb >= 12 && team > -12) {
-            crate::comparison::branch("cql_2 loses the number");
+            covered!("cql_2 loses the number");
             exe::squad_manager_set_squad_number(this, x, c, 0); // cql2: the out-of-place number
             continue;
         }
@@ -498,7 +498,7 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
         let mut v = -1i8;
         for &x in stored.iter() {
             if x != 0 {
-                crate::comparison::branch("cql_2 rewrites negative");
+                covered!("cql_2 rewrites negative");
                 exe::squad_manager_set_squad_number(this, x, c, v as u8 as u32); // cql2: regrava negativo
             }
             v = v.wrapping_sub(1);
@@ -523,7 +523,7 @@ pub(crate) unsafe fn for_each_numbered_league(mut cada: impl FnMut(usize)) {
     while i < read_u32(G_COMP_OBJECT_COUNT) as i32 {
         let c = League(read_u32(read_u32(G_COMP_OBJECT_TABLE) as usize + 4 * i as usize) as usize);
         if !c.is_null() && exe::comp_util_is_league_division(read_u32((c.competition().addr() as u32) as usize) as i32) != 0 && c.squad_flags() & 2 != 0 {
-            crate::comparison::branch("cql_3 numbers the league");
+            covered!("cql_3 numbers the league");
             cada(c.addr()); // cql3: numera a liga
         }
         i += 1;
@@ -595,7 +595,7 @@ pub(crate) unsafe extern "thiscall" fn assign_league_squad_numbers(this: usize, 
                 }
                 let b = read_i8(f + 4);
                 let k = if b < 0 { 0 } else if b > 0x32 { 0x32 } else { b as i32 };
-                crate::comparison::branch("cql_3 bench number");
+                covered!("cql_3 bench number");
                 exe::squad_manager_set_squad_number(this, p, c, k as u32); // cql3: the bench number
             }
         }
@@ -706,13 +706,13 @@ pub(crate) unsafe extern "thiscall" fn select_euro_registered_players(_this: usi
         if p != 0 {
             let v = if mark != 0 { 1 } else { 2 };
             if step == 1 {
-                crate::comparison::branch("cql_3 registers in stage 1");
+                covered!("cql_3 registers in stage 1");
                 *m6d(Staff(p)) = v; // cql3: inscreve
                 count = count.wrapping_add(1);
             } else {
                 let a = *m6d(Staff(p));
                 if a != 2 && a & 8 == 0 && (count as i32) < total {
-                    crate::comparison::branch("cql_3 registers later");
+                    covered!("cql_3 registers later");
                     *m6d(Staff(p)) = v; // cql3: inscreve depois
                     count = count.wrapping_add(1);
                 }
@@ -735,7 +735,7 @@ pub(crate) unsafe extern "thiscall" fn select_euro_registered_players(_this: usi
 /// ao abrir ou ao gravar: a caixa "Error" (squad_manager.cpp 0x68, 0x6f) e 0, sem fechar o item. Não confere o
 /// contêiner nulo (o 0x9326e0 recebe como vier).
 pub(crate) unsafe extern "thiscall" fn squad_manager_save(this: usize, save: usize) -> u32 {
-    crate::comparison::branch("cpx_5 save squad manager");
+    covered!("cpx_5 save squad manager");
     let mut v = read_u16(this) as u32; // cpx5: the squad manager value
     let mut z = exe::zopen(save, 0xa82bc0, 1, 0x16, 4);
     if z == 0 {

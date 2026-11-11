@@ -60,7 +60,7 @@ pub(crate) unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
         exe::reservecomp_schedule_reserve_fixtures(read_usize(G_RESERVE_COMP), pa);
         if day == 3 {
             exe::date_add_days(G_CURRENT_DATE, pb, 1);
-            crate::comparison::branch("cqd_6 tomorrow reserves");
+            covered!("cqd_6 tomorrow reserves");
             exe::reservecomp_schedule_reserve_fixtures(read_usize(G_RESERVE_COMP), pb); // cqd6: tomorrow’s reservations
         }
     }
@@ -104,7 +104,7 @@ pub(crate) unsafe extern "thiscall" fn fix_man_daily_update(this: usize) {
                         }
                         if !fix_man_is_human_club(read_usize(f + fixture::HOME_CLUB)) && !fix_man_is_human_club(read_usize(f + fixture::AWAY_CLUB)) {
                             exe::llist_get_prev(list);
-                            crate::comparison::branch("cqd_6 friendly discarded");
+                            covered!("cqd_6 friendly discarded");
                             exe::llist_remove_node(list, in_the); // cqd6: yesterday’s friendly leaves the list
                         } else {
                             exe::llist_get_prev(list);
@@ -258,7 +258,7 @@ pub(crate) unsafe extern "thiscall" fn load_fixtures(this: usize) {
         let k = exe::comp_active_key_nation_of_fixture(comp, j) as i8;
         let day = (j.day() as i16) as u16 as usize; // cqd6: the day of the loaded match
         let list = read_usize(read_usize(this + (day * 3 + j.time_slice() as usize) * 4) + k as isize as usize * 4);
-        crate::comparison::branch("cqd_6 match loaded");
+        covered!("cqd_6 match loaded");
         if (exe::llist_add_tail(list, j, 0x4f) as u32) == 0 {
             fatal_error_at(0x9cc208, 0x785);
         }
@@ -437,7 +437,7 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
         let nc = if !comp.is_null() { comp.nation() } else { Nation(0) };
         let and_of_the = |g: usize| !nc.is_null() && read_i32(nc.addr()) == read_i32(g);
         if same(day_of_year(0x19, 0xb, year())) && !and_of_the(KEY_NATION_JAPAN) {
-            crate::comparison::branch("cqc_3 Christmas");
+            covered!("cqc_3 Christmas");
             return dezenove();
         }
         if and_of_the(KEY_NATION_NORTHERN_IRELAND) && exe::date_get_weekday((&day) as *const [u8; 8] as usize) as i16 == 6 {
@@ -480,7 +480,7 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
                         let c2 = Club(read_usize(x + fixture::AWAY_CLUB));
                         let (sx0, sx1, s0, s1b) = (read_u8(x + fixture::HOME_SIDE_MARK), read_u8(x + fixture::AWAY_SIDE_MARK), game.home_side_mark(), (game.away_side_mark() as u8));
                         if (c1 == h && sx0 == s0) || (c1 == a && sx0 == s1b) || (c2 == h && sx1 == s0) || (c2 == a && sx1 == s1b) {
-                            crate::comparison::branch("cqc_3 same club in the same pot");
+                            covered!("cqc_3 same club in the same pot");
                             add_clash_by_type(grav, list, Fixture(x), true); // cqc3: the same club in the same slice
                         } else if (flag == 0 && c1 == h && sx0 != s0) || (c1 == a && sx0 != s1b) || (c2 == h && sx1 != s0) || (c2 == a && sx1 != s1b) {
                             if read_u8(x + fixture::HOME_GOALS) != 0xff {
@@ -489,7 +489,7 @@ pub(crate) unsafe extern "thiscall" fn collect_day_clashes(this: usize, game: us
                                 append_fixture(list, x);
                                 if game.time_slice() == read_u8(x + fixture::TIME_SLICE) || read_u8(x + fixture::CATEGORY) != 1 {
                                     if *grav == 0 {
-                                        crate::comparison::branch("cqc_3 same club in another pot");
+                                        covered!("cqc_3 same club in another pot");
                                     }
                                     default_clash_severity(grav, true); // cqc3: the same club in another pot
                                 } else if game.category() != match_category::FRIENDLY {
@@ -654,7 +654,7 @@ pub(crate) unsafe extern "thiscall" fn find_fixture_clashes(this: usize, game: u
         exe::fixture_manager_collect_day_clashes(this, game, &mut g, list, pa, n as u32, pd, -1i32 as u32);
     }
     exe::fixture_manager_collect_day_clashes(this, game, &mut g, list, pa, n as u32, pd, 0);
-    crate::comparison::branch("cqc_3 next day");
+    covered!("cqc_3 next day");
     exe::fixture_manager_collect_day_clashes(this, game, &mut g, list, pa, n as u32, pd, 1); // cqc3: o dia seguinte
     if two != 0 {
         exe::fixture_manager_collect_day_clashes(this, game, &mut g, list, pa, n as u32, pd, -2i32 as u32);
@@ -889,7 +889,7 @@ pub(crate) unsafe extern "thiscall" fn find_new_fixture_date(this: usize, game: 
                     let t = [read_usize(t), read_usize(t + 4)];
                     let pt = t.as_ptr() as usize;
                     if !fix_man_date_is_after(pt, ph) && !fix_man_date_is_after(ph, pe) {
-                        crate::comparison::branch("cqc_4 new date");
+                        covered!("cqc_4 new date");
                         game.set_year(read_u16(ph + 2));
                         game.set_day(read_u16(ph));
                         game.set_time_slice(fixture_time_slice(this, game.competition().addr(), target as u16 as u32));
@@ -987,7 +987,7 @@ pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, cle
             if preferred != day && (day == 5 || day == 6) {
                 let mut t = [0u8; 8];
                 date_default(&mut t);
-                crate::comparison::branch("cqc_4 home side preferred day");
+                covered!("cqc_4 home side preferred day");
                 nearest_weekday(pd, preferred as i8 as i16 as u16 as u32, &mut t); // cqc4: the home side’s preferred day
                 let pt = t.as_ptr() as usize;
                 game.set_year(read_u16(pt + 2));
@@ -1010,7 +1010,7 @@ pub(crate) unsafe extern "thiscall" fn add_fixture(this: usize, game: usize, cle
         if l != 0 || g != 0 {
             *count = (*count).wrapping_add(1);
             if g == 0x14 {
-                crate::comparison::branch("cqc_4 same day");
+                covered!("cqc_4 same day");
                 exe::fixture_manager_resolve_same_day_clash(this, game, l); // cqc4: the same-day conflict
                 if l != 0 {
                     free_list(l);
@@ -1191,7 +1191,7 @@ pub(crate) unsafe extern "thiscall" fn set_year(this: usize, year: u32) -> u32 {
     }
     write_u16(this + fixture_manager::YEAR, a);
     write_u8(this + fixture_manager::LEAP_YEAR, (exe::date_is_leap_year(year) != 0) as u8);
-    crate::comparison::branch("cqc_4 calendar new year");
+    covered!("cqc_4 calendar new year");
     for dia in 0..0x16eusize {
         if n() > 0 {
             let e = this + dia * 0xc;
@@ -1245,7 +1245,7 @@ pub(crate) unsafe extern "C" fn fix_man_save_club_dates() {
     if f == 0 {
         return;
     }
-    crate::comparison::branch("cpy_7 save club dates");
+    covered!("cpy_7 save club dates");
     if exe::crt_fwrite(read_usize(G_CLUB_FIXTURE_YEAR_TABLE), 2, club_count(), f) != club_count() { // cpy7: the club dates
         show_error_at(0x9cc208, 0x101b);
     }
@@ -1278,11 +1278,11 @@ pub(crate) unsafe extern "C" fn fix_man_load_club_dates() {
     }
     let f = open_temp_file(0x9cc248, 0x98f928);
     if f == 0 {
-        crate::comparison::branch("cpy_7 club dates zeroed");
+        covered!("cpy_7 club dates zeroed");
         core::ptr::write_bytes(read_usize(G_CLUB_FIXTURE_YEAR_TABLE) as *mut u8, 0, club_count().wrapping_mul(2) as usize);
         return;
     }
-    crate::comparison::branch("cpy_7 club dates read");
+    covered!("cpy_7 club dates read");
     if exe::crt_fread(read_usize(G_CLUB_FIXTURE_YEAR_TABLE), 2, club_count(), f) != club_count() { // cpy7: the reading of the dates
         show_error_at(0x9cc208, 0xff6);
     }
@@ -1311,7 +1311,7 @@ pub(crate) unsafe extern "C" fn fix_man_save_fixture_leg_checks() {
     if f == 0 {
         return;
     }
-    crate::comparison::branch("cpy_7 save leg check");
+    covered!("cpy_7 save leg check");
     exe::crt_fwrite(&count as *const usize as usize, 2, 1, f);
     write_usize(G_FIXTURE_LEGS_LIST_CURSOR, read_usize(G_FIXTURE_LEGS_LIST_HEAD));
     loop {
@@ -1390,7 +1390,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
         4 | 6 => 5,
         _ => severity,
     };
-    crate::comparison::branch("cqb_13 target day");
+    covered!("cqb_13 target day");
     exe::date_get_nearest_weekday((&mut a) as *mut [u8; 8] as usize, target, (&mut b) as *mut [u8; 8] as usize); // cqb13: the target weekday
     let n = novo.as_mut_ptr() as usize;
     let v = Fixture(velho.as_mut_ptr() as usize);
@@ -1405,7 +1405,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
     let new_wins = pn > pv // cqb13: the higher priority stays
         || (pn == pv && read_i16(read_usize(n + fixture::HOME_CLUB) + club::REPUTATION) > v.home_club().reputation());
     if new_wins {
-        crate::comparison::branch("cqb_13 new one wins");
+        covered!("cqb_13 new one wins");
     }
     let sai_old = new_wins && (v.home_goals() as u8) == 0xff; // cqb13: the one in the list not yet played
     if SAME_DAY_CLASH_DRY_RUN.load(Relaxed) {
@@ -1415,7 +1415,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
     // push 0; push &gravidade; push the match (0x5ad780; ret 0xc), push 0; push causa; push the match (0x5aac70; ret 0xc);
     // 0x68d040: ecx = the list; 0x944c94: push list; add esp, 4 -> cdecl
     let (sai, causa) = if sai_old {
-        crate::comparison::branch("cqb_13 match leaves the list");
+        covered!("cqb_13 match leaves the list");
         exe::fixture_manager_remove_fixture(this, other);
         exe::fixture_manager_add_fixture(this, game, 0);
         (v.addr(), game)
@@ -1635,7 +1635,7 @@ pub(crate) unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, ga
         if find_club_fixtures_between(this, d.as_ptr(), d.as_ptr(), read_u32(club.addr()), lp) as u16 != 0 {
             copy_first_fixture(lp, &mut f1, &mut f2);
             if !fix_man_is_friendly_comp(read_u32(f1.as_ptr() as usize + fixture::COMPETITION)) {
-                crate::comparison::branch("cpz_8 match two days before");
+                covered!("cpz_8 match two days before");
                 if f2[0x43] == 0xff { // cpz8: the match from two days before without the mark
                     let mut v = [0u8; 8];
                     let r = date_sub_days(d.as_ptr() as usize, v.as_mut_ptr(), 1); // cpz8: um dia antes
@@ -1643,7 +1643,7 @@ pub(crate) unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, ga
                     f2[0x2a..0x2c].copy_from_slice(&d[0..2]);
                     f2[0x28..0x2a].copy_from_slice(&d[2..4]);
                     if !new_date_has_clash(this, f2.as_mut_ptr(), f1.as_ptr()) {
-                        crate::comparison::branch("cpz_8 match brought forward");
+                        covered!("cpz_8 match brought forward");
                         fix_man_remove_fixture(this, f1.as_ptr() as usize);
                         fix_man_add_fixture(this, f2.as_mut_ptr() as usize, 0);
                         fix_man_queue_fixture_moved_news(this, f2.as_mut_ptr() as usize, game, 0);
@@ -1671,7 +1671,7 @@ pub(crate) unsafe extern "thiscall" fn move_nearby_club_fixtures(this: usize, ga
         f2[0x2a..0x2c].copy_from_slice(&d[0..2]);
         f2[0x28..0x2a].copy_from_slice(&d[2..4]);
         if !new_date_has_clash(this, f2.as_mut_ptr(), f1.as_ptr()) {
-            crate::comparison::branch("cpz_8 match postponed");
+            covered!("cpz_8 match postponed");
             fix_man_remove_fixture(this, f1.as_ptr() as usize);
             fix_man_add_fixture(this, f2.as_mut_ptr() as usize, 0);
             fix_man_queue_fixture_moved_news(this, f2.as_mut_ptr() as usize, game, 0);
@@ -1714,7 +1714,7 @@ pub(crate) unsafe extern "thiscall" fn reschedule_club_fixtures_near_date(this: 
         let mut old = [0u8; 8];
         date_from_day_year_ptr(old.as_mut_ptr(), read_u16(p + fixture::DAY) as u32, read_u16(p + fixture::YEAR) as u32);
         if fix_man_remove_fixture(this, p) != 0 {
-            crate::comparison::branch("cpz_8 match rescheduled by national team");
+            covered!("cpz_8 match rescheduled by national team");
             exe::fixture_manager_find_new_fixture_date(this, p);
             fix_man_add_fixture(this, p, 1);
             fix_man_queue_fixture_moved_news(this, p, Fixture(0), old.as_ptr() as usize);
@@ -1793,7 +1793,7 @@ pub(crate) unsafe extern "thiscall" fn queue_fixture_moved_news(this: usize, f: 
             return;
         }
     }
-    crate::comparison::branch("cpz_8 rescheduled match news");
+    covered!("cpz_8 rescheduled match news");
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     exe::new_newsitem(nt, 1, 0);
@@ -1901,7 +1901,7 @@ pub(crate) unsafe extern "thiscall" fn find_stored_fixture(this: usize, f: usize
     let mut item = list_next_item(l);
     while item != 0 {
         if core::slice::from_raw_parts(item as *const u8, 0x4f) == target {
-            crate::comparison::branch("cps_11 found the stored match");
+            covered!("cps_11 found the stored match");
             return item; // cps11: the saved copy
         }
         item = list_next_item(l);
@@ -1928,7 +1928,7 @@ pub(crate) unsafe extern "thiscall" fn insert_fixture(this: usize, f: usize) {
     if exe::llist_add_tail(l, f, 0x4f) == 0 { // cps11: guardar
         return show_error_at(0x9cc208, 0x3eb);
     }
-    crate::comparison::branch("cps_11 stored match");
+    covered!("cps_11 stored match");
 }
 
 /// Removes the first item with the same bytes from the fixture's day, slice and key-nation list; returns 1 if removed.
@@ -1949,7 +1949,7 @@ pub(crate) unsafe extern "thiscall" fn remove_fixture(this: usize, f: usize) -> 
     }
     let r = exe::llist_remove(fixture_list_in_block(b, Fixture(f)), f); // cps11: tirar
     if r != 0 {
-        crate::comparison::branch("cps_11 match removed");
+        covered!("cps_11 match removed");
     }
     (r != 0) as u32
 }
@@ -2139,7 +2139,7 @@ pub(crate) unsafe extern "thiscall" fn collect_comp_fixtures_on_day(this: usize,
                 show_error_at(0x9cc208, 0x634);
                 return total & 0xffff;
             }
-            crate::comparison::branch("cpr_12 round match");
+            covered!("cpr_12 round match");
             total = total.wrapping_add(1);
         }
         f = list_next_item(l);
@@ -2482,13 +2482,13 @@ pub(crate) unsafe extern "thiscall" fn add_away_trip_illness_risk(_this: usize, 
     }
     let home = f.home_club();
     if !home.is_null() && home.nation() != nation {
-        crate::comparison::branch("cps_13 home side illness");
+        covered!("cps_13 home side illness");
         // the original pushes the year in the club’s eax and the day in the nation’s ecx (high halves of the pointers)
         add_illness_risk_before_match(f, f.home_club_id(), read_usize(read_usize(f.stadium() + stadium::CITY) + city::NATION), nation.addr() as u32, home.addr() as u32);
     }
     let away = f.away_club();
     if !away.is_null() && away.nation().addr() != read_usize(read_usize(f.stadium() + stadium::CITY) + city::NATION) {
-        crate::comparison::branch("cps_13 away side illness");
+        covered!("cps_13 away side illness");
         // the year in the stadium’s ecx and the day in the city’s edx
         let (e, c) = (f.stadium(), read_usize(f.stadium() + stadium::CITY));
         add_illness_risk_before_match(f, f.away_club_id(), read_usize(c + city::NATION), c as u32, e as u32);

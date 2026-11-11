@@ -68,7 +68,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
     let b = half_champion(this, 1);
     write_usize(list + 4, b);
     if a == b {
-        crate::comparison::branch("cqo_8 same champion");
+        covered!("cqo_8 same champion");
         this.set_current_stage((1) as usize);
         this.set_stage_count((2) as usize);
         for k in 0..2 {
@@ -104,7 +104,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
     if stage == 0 {
         return show_error_at(0x98af98, 0x250);
     }
-    crate::comparison::branch("cqo_8 final");
+    covered!("cqo_8 final");
     exe::cup_set_up_round(stage, 0);
     exe::crt_free(t);
     exe::crt_free(list);
@@ -144,7 +144,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_record_season_honours(this
         let f = read_usize(this.stages() + 8);
         let history: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(f) + comp_vtable::RECORD_SEASON_HONOURS));
         history(f);
-        crate::comparison::branch("cqo_8 final history");
+        covered!("cqo_8 final history");
         return exe::bra_nat_first_fill_champions_cup_entrants();
     }
     let history: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_RECORD_SEASON_HONOURS);
@@ -154,7 +154,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_record_season_honours(this
         exe::finance_add_prize_money(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c), valor);
         exe::comp_send_prize_money_news(this, read_usize(this.table() + linha), valor, 0, posicao, 0, 0, -2);
     }
-    crate::comparison::branch("cqo_8 prizes");
+    covered!("cqo_8 prizes");
     exe::bra_nat_first_fill_champions_cup_entrants()
 }
 
@@ -226,7 +226,7 @@ pub(crate) unsafe fn carioca_rules(o: usize) {
 /// devolve 1.
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_set_up_rules(this: usize) -> u32 {
     parana_rules(this);
-    crate::comparison::branch("cqi_9 paranaense rules");
+    covered!("cqi_9 paranaense rules");
     create_main_schedule(League(this));
     1
 }

@@ -50,7 +50,7 @@ pub(crate) unsafe fn build_stage_schedule(this: Cup, f: BraChampCupStagePlan, ro
                 show_error_at(file, linha);
                 return 0;
             }
-            crate::comparison::branch(nome);
+            covered!(nome);
             // the year goes with garbage in the high bytes in the original (the previous register with the word +0x40 over it); the
             // 0x68a160 only uses the low 16 bits: the copy passes the clean year
             let year = (this.year() as u16) as u32;
@@ -71,7 +71,7 @@ pub(crate) unsafe fn build_stage_schedule(this: Cup, f: BraChampCupStagePlan, ro
                 show_error_at(file, linha);
                 return 0;
             }
-            crate::comparison::branch(nome);
+            covered!(nome);
             let year = this.year() as i32 as u32;
             for (i, r) in mata.iter().enumerate() {
                 eng_cc_cup_write_cup_round(t, i as u32, r, year);
@@ -227,7 +227,7 @@ pub(crate) const ASIAN_SUPER_CUP: [EngCcCupCupRound; 1] = [
 /// campeões), o desempate (3, 1, 2, 4), dois classificados e os bits de regra 8 (quem garante as vagas vai à fase
 /// seguinte); sem fundo de prêmios. Depois a tabela das rodadas.
 pub(crate) unsafe extern "thiscall" fn bra_champ_cup_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqi_12 champions cup rules");
+    covered!("cqi_12 champions cup rules");
     set_cup_league_rules(League(this), &CHAMPIONS_CUP_RULES, 1)
 }
 

@@ -56,7 +56,7 @@ pub(crate) unsafe fn bra_reg_goias_construct_state_league(this: League, year: u3
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this.addr();
     }
-    crate::comparison::branch(ramo);
+    covered!(ramo);
     this.set_importance(0xf);
     this.set_stage_index(stage_index::MAIN);
     write_i32(this.addr() + league::CURRENT_STAGE, -1);
@@ -268,7 +268,7 @@ pub(crate) unsafe fn j2_rules(o: usize) {
 /// calendário; devolve 1.
 pub(crate) unsafe extern "thiscall" fn bra_reg_goias_set_up_rules(this: usize) -> u32 {
     goiano_rules(this);
-    crate::comparison::branch("cqj_7 goiano rules");
+    covered!("cqj_7 goiano rules");
     create_main_schedule(League(this));
     1
 }

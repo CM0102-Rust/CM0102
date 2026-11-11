@@ -31,7 +31,7 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, toda
             }
             exe::crt_free(this.tie_tables());
         }
-        crate::comparison::branch("cqt_5 copa del rey redone");
+        covered!("cqt_5 copa del rey redone");
         this.set_season_set_up((1) as usize); // cqt5: the Copa del Rey redone once
         // simplification: in the message boxes the original zeroes only al (the rest of eax comes from the box); the caller reads the byte
         if exe::spacup_collect_entrants(this) < 0 {
@@ -59,7 +59,7 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, toda
 /// [pt] O histórico da temporada de uma copa (`record_season_honours`, 11 bytes: mov eax, [ecx+0xc]; mov ecx, [eax+o]; mov
 /// edx, [ecx]; jmp [edx+0x30]): a virtual +0x30 da fase [+0xc][o/4] (a última fase da copa: a final), com o eax dela.
 pub(crate) unsafe fn record_season_honours(this: Cup, o: usize, ramo: &'static str) -> i32 {
-    crate::comparison::branch(ramo);
+    covered!(ramo);
     let stage = read_usize(this.stages() + o);
     call_cup_virtual(Cup(stage), comp_vtable::RECORD_SEASON_HONOURS)
 }

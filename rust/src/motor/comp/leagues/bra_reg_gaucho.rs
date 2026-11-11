@@ -38,7 +38,7 @@ pub(crate) unsafe fn create_knockout_from_table(this: League, rows: &[usize], se
     for (k, &l) in rows.iter().enumerate() {
         write_usize(list + 4 * k, bra_reg_bahia_table_row_club(this, l));
     }
-    crate::comparison::branch(ramo);
+    covered!(ramo);
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this.addr(), 0, &mut rodadas, &mut extra, 0);
@@ -89,7 +89,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_create_knockout_stage(this
 /// estaduais terminam, põe os campeões na Copa dos Campeões); devolve o eax dela.
 pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_record_season_honours(this: usize) -> u32 {
     record_first_stage_honours(League(this)); // cqj8: the state championship history
-    crate::comparison::branch("cqj_8 state league history");
+    covered!("cqj_8 state league history");
     exe::bra_nat_first_fill_champions_cup_entrants()
 }
 
@@ -145,7 +145,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_load_region_clubs(this: us
 /// Nordeste (0x9683ec) e do Paulista (0x968770); devolve 1.
 pub(crate) unsafe extern "thiscall" fn bra_reg_gaucho_set_up_rules(this: usize) -> u32 {
     gaucho_rules(this);
-    crate::comparison::branch("cqi_8 gaucho rules");
+    covered!("cqi_8 gaucho rules");
     create_main_schedule(League(this));
     1
 }

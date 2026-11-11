@@ -20,7 +20,7 @@ pub(crate) unsafe extern "thiscall" fn wc_south_american_league_set_up_rules(thi
             write_u8(this.addr() + wc_south_american_league_fields::OCEANIA_EXEMPT_COUNT, read_u8(o + wc_oceania_league_fields::EXEMPT_COUNT));
         }
     }
-    crate::comparison::branch("cqj_12 south america rules");
+    covered!("cqj_12 south america rules");
     wc_europe_league_write_rule_fields(this, &SOUTH_AMERICA_QUALIFIER_RULE_FIELDS);
     this.set_win_points(3); // cqj12: the win in the South American qualifiers
     this.set_promoted_count(4u8.wrapping_sub(read_u8(this.addr() + wc_south_american_league_fields::OCEANIA_EXEMPT_COUNT)).wrapping_sub(read_u8(this.addr() + wc_south_american_league_fields::EXEMPT_COUNT))); // cqj12: the direct places of South America

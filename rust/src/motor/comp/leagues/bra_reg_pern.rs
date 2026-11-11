@@ -92,7 +92,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_pern_create_table(this: usize) ->
 /// Pernambucano (0x968554); devolve 1.
 pub(crate) unsafe extern "thiscall" fn bra_reg_pern_set_up_rules(this: usize) -> u32 {
     pernambucano_rules(this);
-    crate::comparison::branch("cqi_9 pernambucano rules");
+    covered!("cqi_9 pernambucano rules");
     create_main_schedule(League(this));
     1
 }

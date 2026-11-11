@@ -72,7 +72,7 @@ pub(crate) unsafe extern "thiscall" fn create_championship_final_stage(this: usi
     if read_usize(this.stages() + 8) == 0 {
         return show_error_at(0x9eabc8, 0x25c);
     }
-    crate::comparison::branch("cqq_9 final");
+    covered!("cqq_9 final");
     this.set_current_stage((2) as usize);
 }
 
@@ -154,7 +154,7 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
     let a = this.year();
     this.set_year(a.wrapping_add(1)); // cqq9: the next year of the J1
     write_i32(this.addr() + league::CURRENT_STAGE, -1);
-    crate::comparison::branch("cqq_9 j1 rollover");
+    covered!("cqq_9 j1 rollover");
     let error = if virtual_(this.addr(), comp_vtable::SET_UP_RULES) == 0 {
         0x1be
     } else if core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize) -> u32>(0x6634e0usize)(this.addr()) == 0 {
@@ -236,7 +236,7 @@ pub(crate) unsafe fn fill_japanese_table(this: League, g: usize, girar: u8, ramo
     if k as i8 as i16 != this.club_count() {
         return 0;
     }
-    crate::comparison::branch(ramo);
+    covered!(ramo);
     1
 }
 
@@ -321,7 +321,7 @@ pub(crate) unsafe fn compare_japanese_table(name: &str, this: League, n: i16, g:
 /// [pt] { 0x663620 } (thiscall, jap_j1.cpp): `JapJ1::set_up_rules`, as regras da J1 e o calendário; devolve 1.
 pub(crate) unsafe extern "thiscall" fn jap_j1_set_up_rules(this: usize) -> u32 {
     j1_rules(this);
-    crate::comparison::branch("cqj_7 j1 rules");
+    covered!("cqj_7 j1 rules");
     create_main_schedule(League(this));
     1
 }

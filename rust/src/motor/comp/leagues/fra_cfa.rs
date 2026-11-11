@@ -64,7 +64,7 @@ pub(crate) unsafe fn create_cfa_schedule(this: League, stage: u32, rodadas: *mut
         show_error_at(p.file, p.row);
         return 0;
     }
-    crate::comparison::branch(p.branch);
+    covered!(p.branch);
     let ano = (this.year() as u16) as u32;
     fra_cfa_set_league_rounds(t, ano, 0, p.table);
     t
@@ -275,10 +275,10 @@ pub(crate) unsafe fn create_c1_schedule(this: League, stage: u32, rounds: *mut i
     }
     let year = this.year();
     if k == 0 {
-        crate::comparison::branch("cqo_5 c1 calendar");
+        covered!("cqo_5 c1 calendar");
         fra_cfa_set_league_rounds(t, year as u16 as u32, 0, &SERIE_C1_ROUNDS);
     } else {
-        crate::comparison::branch("cqo_5 c1 play-offs");
+        covered!("cqo_5 c1 play-offs");
         let year = year as i32 as u32;
         if k == 1 {
             eng_cc_cup_write_cup_round(t, 0, &CFA_SEMIFINAL_ROUND, year);
@@ -399,7 +399,7 @@ pub(crate) unsafe fn construct_group_league(this: League, year: u32, p: &Backgro
         show_error_at(p.file, p.rows[0]);
         return this.addr();
     }
-    crate::comparison::branch("cqn_4 french bottom league");
+    covered!("cqn_4 french bottom league");
     let mut list = vec![0usize; p.maximo as usize];
     let mut k: i16 = 0;
     let mut genericos: i16 = 0;
@@ -555,7 +555,7 @@ pub(crate) unsafe fn destroy_group_league(this: League, vtabela: usize) {
 ///
 /// [pt] { 0x5b9460 } (thiscall, ret 0, fra_cfa.cpp): `FraCfa::~FraCfa()`.
 pub(crate) unsafe extern "thiscall" fn destroy_fra_cfa(this: usize) {
-    crate::comparison::branch("cqn_4 cfa destructor");
+    covered!("cqn_4 cfa destructor");
     destroy_group_league(League(this), 0x96a7b0)
 }
 
@@ -594,7 +594,7 @@ pub(crate) unsafe fn create_french_table(this: League, clubs: usize, n: i16, fil
         k = k.wrapping_add(1);
         i = i.wrapping_add(1);
     }
-    crate::comparison::branch("cqk_6 french lower fixtures");
+    covered!("cqk_6 french lower fixtures");
     (k as i8 as i16 == this.club_count()) as u32
 }
 
@@ -657,7 +657,7 @@ pub(crate) unsafe fn set_c1_club_progress(this: usize, club: usize, stage: u8, c
         m = match m {
             2..=5 => 2,
             14..=17 => {
-                crate::comparison::branch("cqk_6 play-out band");
+                covered!("cqk_6 play-out band");
                 0xe // cqk6: the best in the play-out band
             }
             v => v,

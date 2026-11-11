@@ -138,7 +138,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_transfer_squad_reactions(
     let mr = crate::comparison::MemorySnapshot::read(&reg);
     before.write_back();
     if MEDIA_REACTION_STOPPED.load(Relaxed) {
-        crate::comparison::branch("cqa_13 reactions only in the original");
+        covered!("cqa_13 reactions only in the original");
         return o(this, p.addr(), new, old, flag);
     }
     o(this, p.addr(), new, old, flag);
@@ -414,7 +414,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pick_ai_manager_response(this: us
 /// [pt] Comparador: a notícia sorteia (0x90cfc0) e vai para as caixas dos técnicos: só a original (a prova é a carreira e o
 /// modo Rust).
 pub(crate) unsafe extern "thiscall" fn compare_post_financial_trouble_news(this: usize, club: usize) {
-    crate::comparison::branch("post_financial_trouble_news");
+    covered!("post_financial_trouble_news");
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_POST_FINANCIAL_TROUBLE_NEWS)(this, club)
 }
 

@@ -75,7 +75,7 @@ pub(crate) const EUROPE_RULE_FIELDS: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0x
 /// substituições, começo em 25 do mês 2 num dia da semana 5; depois a tabela das rodadas.
 pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules(this: usize) -> u32 {
     let this = League(this);
-    crate::comparison::branch("cqj_12 europe rules");
+    covered!("cqj_12 europe rules");
     wc_europe_league_write_rule_fields(this, &EUROPE_RULE_FIELDS);
     this.set_win_points(3); // cqj12: the win in the European qualifiers
     this.set_match_category(match_category::NATIONAL_TEAMS); // cqj12: the match category of the European qualifiers

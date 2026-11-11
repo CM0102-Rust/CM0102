@@ -302,7 +302,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_schedule(this: usize, st
                 show_error_at(0xa82844, 0xb0);
                 return 0;
             }
-            crate::comparison::branch("cqp_6 primera calendar");
+            covered!("cqp_6 primera calendar");
             let year = (this.year() as u16) as u32;
             if (year as i16) % 2 != 0 {
                 write_rounds_winter_break(t, year, &PRIMERA_ODD_YEAR_CHRISTMAS, 0xa82844);
@@ -369,7 +369,7 @@ pub(crate) fn spanish_common_rules() -> Vec<(usize, u8, u32)> {
 /// +0x52 = 2 [sem nome].
 pub(crate) unsafe extern "thiscall" fn spa_first_set_up_rules(this: usize) -> u32 {
     let this = League(this);
-    crate::comparison::branch("cqk_4 primera rules");
+    covered!("cqk_4 primera rules");
     this.set_round_count((0x26) as i16);
     spa_first_apply_league_rules(this, &primera_rules())
 }
@@ -495,7 +495,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
     if k as i8 as i16 != this.club_count() {
         return 0;
     }
-    crate::comparison::branch("cqk_5 primera fixtures");
+    covered!("cqk_5 primera fixtures");
     let f = exe::league_calc_prize_fund(this, 0x3d090); // cqk5: the Primera quota
     this.set_prize_fund(f);
     this.set_prize_mode(1); // cqk5: the table prize at the end of the league

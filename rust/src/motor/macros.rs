@@ -1,5 +1,17 @@
 // The match-engine macros (textual scope: included first).
 
+/// Test coverage marker, not game logic: counts how often this path ran (ddraw.log, `branch NAME: N`), so the mutation
+/// tests (engenharia-reversa/mutacoes.py) skip a mutation whose path never ran. Compiled out without the `coverage`
+/// feature (on by default; `cargo build --release --no-default-features` builds the DLL without the markers).
+/// [pt] Marca de cobertura dos testes, não é lógica do jogo: conta quantas vezes o caminho rodou, para as mutações.
+macro_rules! covered {
+    ($name:expr) => {
+        if cfg!(feature = "coverage") {
+            crate::comparison::branch($name)
+        }
+    };
+}
+
 macro_rules! reader {
     ($nome:ident, $campo:expr) => {
         /// Leitor de um byte do estado da partida no motor (match_pl.cpp, 0x7003xx).

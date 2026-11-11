@@ -1,7 +1,7 @@
 # Mutações da 250a leva (itens cpn_1, cpn_2, cpn_3, cpn_4, cpn_5, cpn_6, cpn_7). Uso: python mutacoes.py mutacoes\leva250.py --carreira 2002-06-01
 MUTACOES = [
     ('cpn_resposta_do_clube', 'exe::newsitem_auto_respond(slot(current), manager, manager.club_job()); // the club', '// mutacao: sem a resposta automatica pelo clube', 'cpn_1 automatic reply'),
-    ('cpn_alcance_clube', 'crate::comparison::branch("cpn_1 club reach");', 'crate::comparison::branch("cpn_1 club reach"); return 0; // mutacao: o alcance do clube sem entrega', 'cpn_1 club reach'),
+    ('cpn_alcance_clube', 'covered!("cpn_1 club reach");', 'covered!("cpn_1 club reach"); return 0; // mutacao: o alcance do clube sem entrega', 'cpn_1 club reach'),
     ('cpn_tecnico_do_clube', 'let manager = club.manager().addr();\n    write_u8(news + news_item::REACH, 0);', 'let manager = club.assistant_manager(); // mutacao: o auxiliar\n    write_u8(news + news_item::REACH, 0);', 'cpn_1 news to the human manager'),
     ('cpn_responder_todas', 'exe::newsitem_auto_respond(slot, manager, club); // the automatic reply', '// mutacao: sem a resposta automatica', 'cpn_2 responder todas'),
     ('cpn_responder_so_a_nova', 'k -= 1;\n        if k == read_i32(e + 4) - 1 {\n            return 1;', 'k -= 1;\n        if true { // mutacao: so a mais nova\n            return 1;', 'cpn_2 respond all'),

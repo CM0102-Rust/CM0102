@@ -34,7 +34,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_b_update_for_date(this: usize, to
     }
     let z = serie_b_zones();
     this.set_season_closed(0);
-    crate::comparison::branch("cql_4 serie b end");
+    covered!("cql_4 serie b end");
     let mut found = false;
     let mut i: i16 = 0;
     while (i as i32) < this.club_count() as i32 - 1 {
@@ -124,7 +124,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_b_set_up_fixed_fixtures(this: usi
 /// [pt] { 0x6468a0 } (thiscall, ret 0, ita_ser_b.cpp): `ItaSerB::set_up_rules()`. A Série B: como a A, mas 4 sobem
 /// direto (+0xbe) e 4 caem (+0xc1); a A acima ([0x9cf570]) e a C1/A abaixo ([0x9cf578]).
 pub(crate) unsafe extern "thiscall" fn ita_ser_b_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqi_6 serie b rules");
+    covered!("cqi_6 serie b rules");
     ita_ser_a_apply_league_rules(League(this), &serie_b_rules(this))
 }
 

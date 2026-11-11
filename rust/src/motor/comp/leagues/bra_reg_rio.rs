@@ -56,7 +56,7 @@ pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: League, year: u32,
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this.addr();
     }
-    crate::comparison::branch(ramo);
+    covered!(ramo);
     this.set_importance(0xf);
     this.set_stage_index(stage_index::MAIN);
     write_i32(this.addr() + league::CURRENT_STAGE, -1);
@@ -324,7 +324,7 @@ pub(crate) unsafe extern "C" fn cqt4_update_average_attendance(league: usize) {
                     add(v);
                 }
                 raise_attendance_floor(c, league_comp_reputation(League(cima)), f);
-                crate::comparison::branch("cqt_4 attendance of promoted");
+                covered!("cqt_4 attendance of promoted");
             }
         } else if (league.promotion_playoff_count() as i8) != 0 && pos as i32 <= (league.promotion_playoff_count() as i8) as i32 {
             let a = (prevista as i16).wrapping_sub(pos as i16);
@@ -370,7 +370,7 @@ pub(crate) unsafe extern "C" fn cqt4_update_average_attendance(league: usize) {
                 let rb = league_comp_reputation(League(low));
                 let lim = if rb > 7 { ftol(rb.wrapping_mul(3000) as f64 * f) } else { ftol(rb.wrapping_mul(2000) as f64 * f) };
                 cap_attendance(c, lim);
-                crate::comparison::branch("cqt_4 attendance of relegated");
+                covered!("cqt_4 attendance of relegated");
             }
         } else {
             let r16 = league.competition().reputation();
@@ -389,7 +389,7 @@ pub(crate) unsafe extern "C" fn cqt4_update_average_attendance(league: usize) {
                 let val = (read_i32(e.addr() + 6) / games as i32).wrapping_add(c.attendance().wrapping_mul(4));
                 c.set_attendance(ftol(val as f64 * 0.2)); // cqt4: the mix with the real attendance
             }
-            crate::comparison::branch("cqt_4 attendance of mid-table");
+            covered!("cqt_4 attendance of mid-table");
             raise_attendance_floor(c, league_comp_reputation(league), f);
             let r = league_comp_reputation(league);
             let ceiling = if r > 12 { r.wrapping_mul(5000) } else if r > 7 { r.wrapping_mul(3000) } else { r.wrapping_mul(2000) };
@@ -471,7 +471,7 @@ pub(crate) unsafe fn create_half_season_stage(this: League, k: u32, file: usize,
     let k = k as u8 as i8 as i32;
     write_usize(this.stages() + 4 * k as usize, stage);
     this.set_current_stage((k) as usize);
-    crate::comparison::branch(ramo);
+    covered!(ramo);
     exe::crt_free(clubs);
 }
 
@@ -566,7 +566,7 @@ pub(crate) unsafe fn start_new_season_two_halves(this: League, table: usize, fil
     let v = exe::crt_malloc(0xc);
     let a = this.year();
     this.set_year(a.wrapping_add(year));
-    crate::comparison::branch(ramo);
+    covered!(ramo);
     this.set_stages(v);
     write_i32(this.addr() + league::CURRENT_STAGE, -1);
     let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_UP_RULES));
@@ -683,7 +683,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
     let b = half_champion(this, 1);
     write_usize(list + 4, b);
     if a == b {
-        crate::comparison::branch("cqo_9 same champion");
+        covered!("cqo_9 same champion");
         this.set_current_stage((1) as usize);
         this.set_stage_count((2) as usize);
         for k in 0..2 {
@@ -719,7 +719,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
     if stage == 0 {
         return show_error_at(0x98b014, 0x250);
     }
-    crate::comparison::branch("cqo_9 final");
+    covered!("cqo_9 final");
     exe::cup_set_up_round(stage, 0);
     exe::crt_free(t);
     exe::crt_free(list);
@@ -758,7 +758,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_record_season_honours(this: u
         let f = read_usize(this.stages() + 8);
         let history: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(f) + comp_vtable::RECORD_SEASON_HONOURS));
         history(f);
-        crate::comparison::branch("cqo_9 final history");
+        covered!("cqo_9 final history");
         return exe::bra_nat_first_fill_champions_cup_entrants();
     }
     let history: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_RECORD_SEASON_HONOURS);
@@ -768,7 +768,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_record_season_honours(this: u
         exe::finance_add_prize_money(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c), valor);
         exe::comp_send_prize_money_news(this, read_usize(this.table() + linha), valor, 0, posicao, 0, 0, -2);
     }
-    crate::comparison::branch("cqo_9 prizes");
+    covered!("cqo_9 prizes");
     exe::bra_nat_first_fill_champions_cup_entrants()
 }
 
@@ -829,7 +829,7 @@ pub(crate) unsafe fn bra_reg_rio_compare_state_league_table(name: &str, this: Le
 /// Carioca (0x968608); devolve 1.
 pub(crate) unsafe extern "thiscall" fn bra_reg_rio_set_up_rules(this: usize) -> u32 {
     carioca_rules(this);
-    crate::comparison::branch("cqi_9 carioca rules");
+    covered!("cqi_9 carioca rules");
     create_main_schedule(League(this));
     1
 }

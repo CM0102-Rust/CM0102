@@ -316,7 +316,7 @@ pub(crate) unsafe extern "thiscall" fn compare_withdraw_injured_player(this: usi
 ///
 /// [pt] Comparador: a notícia aloca e vai para a caixa de entrada: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_national_teams_post_player_withdrawn_news(this: usize, p: usize, nation: usize, kind: u32) {
-    crate::comparison::branch("national_teams_post_player_withdrawn_news");
+    covered!("national_teams_post_player_withdrawn_news");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_NATIONAL_TEAMS_POST_PLAYER_WITHDRAWN_NEWS)(this, p, nation, kind)
 }
 
@@ -324,7 +324,7 @@ pub(crate) unsafe extern "thiscall" fn compare_national_teams_post_player_withdr
 ///
 /// [pt] Comparador: a notícia aloca e vai para a caixa de entrada: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_national_teams_post_replacement_needed_news(this: usize, p: usize, nation: usize, kind: u32, level: u32) {
-    crate::comparison::branch("national_teams_post_replacement_needed_news");
+    covered!("national_teams_post_replacement_needed_news");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_NATIONAL_TEAMS_POST_REPLACEMENT_NEEDED_NEWS)(this, p, nation, kind, level)
 }
 

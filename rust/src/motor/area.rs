@@ -60,7 +60,7 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
         // simplification: the original writes the owner and +0xb76 before the error; repeating is harmless (same values)
         return original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_AREA_LAYOUT)(area);
     }
-    crate::comparison::branch("screens arrange the area");
+    covered!("screens arrange the area");
     let owner = core::ptr::read_unaligned((area + area_fields::OWNER_ITEM) as *const i16);
     if owner != -1 {
         *((area + area_fields::IS_OPEN) as *mut u32) = 0;
@@ -154,7 +154,7 @@ pub(crate) unsafe extern "thiscall" fn init(
     area: usize, areas: usize, items: usize, index: u32, x1: i32, y1: i32, x2: i32, y2: i32, columns: u32,
     weights_columns: usize, rows: u32, weights_rows: usize, marks: u32, colour: u32, owner: u32,
 ) {
-    crate::comparison::branch("screens start the area");
+    covered!("screens start the area");
     let rows = cap_area_rows(rows);
     let (mut x1, mut y1, mut x2, mut y2) = (x1, y1, x2, y2);
     let (mut columns, mut weights_columns, mut rows, mut weights_rows) = (columns as u8, weights_columns, rows as u8, weights_rows);
@@ -239,7 +239,7 @@ pub(crate) unsafe extern "thiscall" fn init(
 /// Caps an area grid's row count (low byte) at 30, the fixed array size; extra rows go to the scroll bar.
 pub(crate) fn cap_area_rows(rows: u32) -> u32 {
     if rows & 0xff > 30 {
-        crate::comparison::branch("screens area lines locked at 30");
+        covered!("screens area lines locked at 30");
         (rows & !0xff) | 30
     } else {
         rows
@@ -269,7 +269,7 @@ pub(crate) unsafe extern "thiscall" fn draw(area: usize, redraw: u32) {
     if read_i16(area + area_fields::FIRST_VISIBLE_ITEM) == -1 {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DRAW)(area, redraw);
     }
-    crate::comparison::branch("screens draw the area");
+    covered!("screens draw the area");
     let image = (area + area_fields::SAVED_IMAGE) as *mut usize;
     if redraw != 0 && *image != 0 {
         exe::gui_free_image(*image);

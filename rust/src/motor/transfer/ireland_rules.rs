@@ -9,7 +9,7 @@ use super::*;
 ///
 /// [pt] { 0x63c210 } (thiscall, ret 0x14, ireland_rules.cpp, `IRELAND_RULES::IRELAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Irlanda (regra 13): a base (0x8e84a0), a vtable 0x96c190, 1 janela(s) de `IRELAND_TRANSFER_WINDOWS`. Devolve o objeto.
 pub(crate) unsafe extern "thiscall" fn construct_ireland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
-    crate::comparison::branch("cqm_1 ireland");
+    covered!("cqm_1 ireland");
     construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x96c190, 1, &IRELAND_TRANSFER_WINDOWS, 0x9ea12c, 0x4e);
     this
 }
@@ -28,7 +28,7 @@ pub(crate) unsafe extern "thiscall" fn ireland_rules_can_loan_player(this: usize
     let club = Club(club);
     let count = read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SEASON_LOAN_COUNTS).wrapping_add(read_usize(club.addr()).wrapping_mul(16));
     if read_u8(count) as i8 >= 5 {
-        crate::comparison::branch("cqe_6 ireland five in the season");
+        covered!("cqe_6 ireland five in the season");
         if msg != 0 {
             let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
             let g = club.short_gender_name() as i8 as i32;
@@ -44,7 +44,7 @@ pub(crate) unsafe extern "thiscall" fn ireland_rules_can_loan_player(this: usize
         Some(d) => d,
     });
     if club.division() == owner.division() {
-        crate::comparison::branch("cqe_6 ireland same division");
+        covered!("cqe_6 ireland same division");
         return refuse_loan(msg, reason, 0x9ea168, read_usize(this + transfer_rules::NATION_ID), 0x1d);
     }
     1

@@ -319,7 +319,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, st
                 show_error_at(0x9c4374, 0xae);
                 return 0;
             }
-            crate::comparison::branch("cqp_5 english first division calendar");
+            covered!("cqp_5 english first division calendar");
             let year = (this.year() as u16) as u32;
             eng_first_set_christmas_rounds(t, year, &DIVISION_ONE_CHRISTMAS, 0x9c4374);
             t
@@ -335,7 +335,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, st
                 show_error_at(0x9c4374, 0x1ed);
                 return 0;
             }
-            crate::comparison::branch("cqp_5 english first division play-offs");
+            covered!("cqp_5 english first division play-offs");
             let year = this.year() as i32 as u32;
             eng_cc_cup_write_cup_round(t, 0, &DIVISION_ONE_PLAYOFF_0, year);
             eng_cc_cup_write_cup_round(t, 1, &FIRST_DIVISION_PLAYOFF_1, year);
@@ -388,7 +388,7 @@ pub(crate) unsafe fn create_playoff_stage(this: League, rows: [usize; 4], file: 
     for (k, &l) in rows.iter().enumerate() {
         write_usize(list + 4 * k, eng_first_league_row_club(this, l));
     }
-    crate::comparison::branch(name);
+    covered!(name);
     let table: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut extra) = (0i16, 0i16);
     let t = table(this.addr(), 0, &mut rodadas, &mut extra, 0);
@@ -493,7 +493,7 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_first(this: usize, year: u3
 /// (+0xc1), a Premier acima (+0x1c = [0x9cf5bc]) e a Second abaixo (+0x20 = [0x9cf5c4]), 5 reservas no banco
 /// (+0x49) e 3 substituições (+0x4a).
 pub(crate) unsafe extern "thiscall" fn eng_first_set_up_rules(this: usize) -> u32 {
-    crate::comparison::branch("cqi_4 first division rules");
+    covered!("cqi_4 first division rules");
     eng_prm_apply_league_rules(League(this), &eng_prm_first_division_rules())
 }
 

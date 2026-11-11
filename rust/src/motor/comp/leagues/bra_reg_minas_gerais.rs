@@ -74,7 +74,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_final_stage(t
     let b = half_champion(this, 1);
     write_usize(list + 4, b);
     if a == b {
-        crate::comparison::branch("cqo_7 same champion");
+        covered!("cqo_7 same champion");
         this.set_current_stage((1) as usize);
         this.set_stage_count((2) as usize);
         for k in 0..2 {
@@ -110,7 +110,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_final_stage(t
     if stage == 0 {
         return show_error_at(0x98aed0, 0x250);
     }
-    crate::comparison::branch("cqo_7 final");
+    covered!("cqo_7 final");
     exe::cup_set_up_round(stage, 0);
     exe::crt_free(t);
     exe::crt_free(list);
@@ -149,7 +149,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_record_season_honour
         let f = read_usize(this.stages() + 8);
         let history: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(f) + comp_vtable::RECORD_SEASON_HONOURS));
         history(f);
-        crate::comparison::branch("cqo_7 final history");
+        covered!("cqo_7 final history");
         return exe::bra_nat_first_fill_champions_cup_entrants();
     }
     let history: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_LEAGUE_RECORD_SEASON_HONOURS);
@@ -159,7 +159,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_record_season_honour
         exe::finance_add_prize_money(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), c), valor);
         exe::comp_send_prize_money_news(this, read_usize(this.table() + linha), valor, 0, posicao, 0, 0, -2);
     }
-    crate::comparison::branch("cqo_7 prizes");
+    covered!("cqo_7 prizes");
     exe::bra_nat_first_fill_champions_cup_entrants()
 }
 
@@ -196,12 +196,12 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_set_club_progress(th
             b = 1;
         }
         if c < 3 {
-            crate::comparison::branch("cqk_8 mineiro third below 3");
+            covered!("cqk_8 mineiro third below 3");
             write_progress_codes(e, a, b, 2); // cqk8: the third Mineiro code
             return e;
         }
     }
-    crate::comparison::branch("cqk_8 mineiro as it comes");
+    covered!("cqk_8 mineiro as it comes");
     write_progress_codes(e, a, b, c); // cqk8: the Mineiro codes as they come
     e
 }

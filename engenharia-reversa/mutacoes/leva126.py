@@ -3,7 +3,7 @@ MUTACOES = [
     ('d_folego', "let folego = random(d.wrapping_mul(d) / 50000);\n    let (mut a", "let folego = random(d.wrapping_mul(d) / 40000);\n    let (mut a"),
     ('d_ataque', "let r = random(m.ball_height() as i32 * 50);", "let r = random(m.ball_height() as i32 * 40);"),
     ('d_limpa', "if !(nota < at && random(5) != 0) {", "if !(nota < at && random(4) != 0) {"),
-    ('d_registra', "if random(0x1e) == 0 && arriscado == 0 {\n                    crate::comparison::branch(\"tackle only records", "if random(0x1d) == 0 && arriscado == 0 {\n                    crate::comparison::branch(\"tackle only records"),
+    ('d_registra', "if random(0x1e) == 0 && arriscado == 0 {\n                    covered!(\"tackle only records", "if random(0x1d) == 0 && arriscado == 0 {\n                    covered!(\"tackle only records"),
     ('d_cansa', "                nb(call, event::TEAM_ARGUES_WITH_REFEREE, zero);\n            }\n        }\n        apply_to_team(m.addr(), e.addr(), weight);\n        call(FN_MATCH_PLAYER_REACT_TO_FOUL_DECISION, e.addr(), [0; 5]);\n    }\n    e.set_match_rating((e.match_rating()).wrapping_sub(0x19));", "                nb(call, event::TEAM_ARGUES_WITH_REFEREE, zero);\n            }\n        }\n        apply_to_team(m.addr(), e.addr(), weight);\n        call(FN_MATCH_PLAYER_REACT_TO_FOUL_DECISION, e.addr(), [0; 5]);\n    }\n    e.set_match_rating((e.match_rating()).wrapping_sub(0x18));"),
     ('d_limpa_folego', "{ 0x3b } else { 0x46 }", "{ 0x3b } else { 0x45 }"),
     ('d_nota', "rating.wrapping_sub(at).wrapping_sub(200).clamp(-200, 200)", "rating.wrapping_sub(at).wrapping_sub(199).clamp(-200, 200)"),

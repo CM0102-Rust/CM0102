@@ -29,7 +29,7 @@ pub(crate) unsafe extern "C" fn award_raise_winner_reputation(person: usize, clu
     let world = world as u16 as i16;
     let p = person.player();
     if !p.is_null() && player != 0 {
-        crate::comparison::branch("cpw_6 player award");
+        covered!("cpw_6 player award");
         add_to_word(p.addr() + player_sheet::WORLD_REPUTATION, ftol(world as i32 as f64 * read_f64(rdata::F64_0_05))); // cpw6: the worldwide increase;
         if p.world_reputation() > 10000 {
             p.set_world_reputation(10000);

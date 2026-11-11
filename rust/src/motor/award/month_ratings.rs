@@ -36,7 +36,7 @@ pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, game: u
                 continue;
             }
             if l == 1 {
-                crate::comparison::branch("cpw_5 away side ratings");
+                covered!("cpw_5 away side ratings");
             }
             exe::month_ratings_add_player_rating(this, e.addr());
         }
@@ -108,7 +108,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
     write_u32(r + 4, league as u32);
     write_u16(r + 8, 0);
     write_u8(r + month_rating_entry::AGE, p.age() as u8);
-    crate::comparison::branch("cpw_5 new player in the month");
+    covered!("cpw_5 new player in the month");
     write_u8(r + month_rating_entry::MATCHES, 0); // cpw5: starts with no matches
     write_u32(this + 4, n.wrapping_add(1) as u32);
     add_match_rating(r, e);
@@ -129,7 +129,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
 /// os acima dela só contam e o mais novo só vale depois de 3 contados; com liga, a liga atual do clube da pessoa (+0x39,
 /// +0x57) também tem de ser a pedida. Nenhum: 0.
 pub(crate) unsafe extern "thiscall" fn find_best_player(this: usize, league: i32, age: u32) -> usize {
-    crate::comparison::branch("cpw_5 sorted the ratings");
+    covered!("cpw_5 sorted the ratings");
     exe::crt_qsort(read_usize(this), read_usize(this + 4) as u32, 0xc, 0x768200); // cpw5: sorts by the average
     let table = read_usize(this);
     let n = read_i32(this + 4);

@@ -62,7 +62,7 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
     if !current.is_null() && !club_has_human_manager(current.addr()) {
         return;
     }
-    crate::comparison::branch("cpz_9 news of the reaction to the fine");
+    covered!("cpz_9 news of the reaction to the fine");
     if FINE_NEWS_DRY_RUN.load(Relaxed) {
         FINE_NEWS_WOULD_BUILD.store(true, Relaxed);
         return;
@@ -111,7 +111,7 @@ pub(crate) unsafe extern "stdcall" fn post_coach_fine_feedback_news(player: usiz
     if coach.is_null() || coach.player().is_null() || coach.nation().is_null() {
         return;
     }
-    crate::comparison::branch("cpz_9 news of the coach return");
+    covered!("cpz_9 news of the coach return");
     let mut local = [0u32; 0x38]; // the local news item (0xe0 bytes)
     let nt = local.as_mut_ptr() as usize;
     exe::new_newsitem(nt, 0x1394, 0);

@@ -61,7 +61,7 @@ pub(crate) unsafe extern "thiscall" fn serve_international_bans(this: usize, tea
         list.set_cursor(list.head());
         let mut p = exe::llist_get_next(list);
         while p != 0 {
-            crate::comparison::branch("cqb_9 match served");
+            covered!("cqb_9 match served");
             exe::discipline_update_ban_progress(this, read_usize(p) as u32, 0, 1); // cqb9: the match served under rule 0
             p = exe::llist_get_next(list);
         }
@@ -144,7 +144,7 @@ pub(crate) unsafe extern "thiscall" fn apply_appeal_result(this: usize, id: u32,
     if r.suspensao == 0 {
         return;
     }
-    crate::comparison::branch("cqb_9 appeal");
+    covered!("cqb_9 appeal");
     exe::rulingbody_remove_pending_bans(r.body, id);
     let s = r.suspensao;
     write_u8(s, r.games);
@@ -274,7 +274,7 @@ pub(crate) unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize)
         }
         let e = ruling_body_entry(ruling_body_of_rule(this, rule), id);
         if e != 0 && read_i16(e + ruling_body_entry::BAN_INDEX) > -1 {
-            crate::comparison::branch("cpo_11 suspension extended");
+            covered!("cpo_11 suspension extended");
             let s = read_usize(this + discipline_fields::BANS).wrapping_add((read_i16(e + ruling_body_entry::BAN_INDEX) as i32 as usize).wrapping_mul(20));
             let games = read_u8(s);
             let novos = read_u8(ban);
@@ -337,7 +337,7 @@ pub(crate) unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize)
             }
         }
     }
-    crate::comparison::branch("cpo_11 new suspension");
+    covered!("cpo_11 new suspension");
     for k in 0..4usize {
         let rule = read_u8(ban + ban_record::RULES + k);
         if rule != 0xff {
@@ -392,7 +392,7 @@ pub(crate) unsafe extern "thiscall" fn clear_bans_invalid_for_club(this: usize, 
         if e == 0 {
             continue;
         }
-        crate::comparison::branch("cpo_11 transferred frees the slot");
+        covered!("cpo_11 transferred frees the slot");
         release_entry_ban(this, id, e);
         if read_u8(r + discipline_record::HELD_BAN_COUNT) != 0 {
             show_error_at(0x9b8f18, 0x239);
@@ -496,7 +496,7 @@ pub(crate) unsafe extern "thiscall" fn restore_held_bans(this: usize, person: us
                     clear_discipline_slot(this, id, k, e);
                 }
             }
-            crate::comparison::branch("cpo_11 stored one returned");
+            covered!("cpo_11 stored one returned");
             marks[k & 3] = 1;
             let v = r.wrapping_add(k.wrapping_mul(5));
             write_u32(v, read_usize(item + held_ban::SLOT_DATA) as u32);
@@ -517,7 +517,7 @@ pub(crate) unsafe extern "thiscall" fn restore_held_bans(this: usize, person: us
         }
         let e = ruling_body_entry(body, id);
         if e != 0 {
-            crate::comparison::branch("cpo_11 loan end frees the slot");
+            covered!("cpo_11 loan end frees the slot");
             release_entry_ban(this, id, e);
             clear_discipline_slot(this, id, k, e);
         }
@@ -642,13 +642,13 @@ pub(crate) unsafe fn serve_ban_match_plan(this: usize, id: u32, rule: u32, count
     if games != 0xff {
         let (dia0, ano0) = (read_i16(s + ban_record::START_DATE), read_i16(s + 6) as u16);
         if ano < ano0 || (ano == ano0 && dia < dia0) { // has not started yet
-            crate::comparison::branch("cpm_4 before the start");
+            covered!("cpm_4 before the start");
             return j;
         }
         if count == 0 {
             return j;
         }
-        crate::comparison::branch("cpm_4 match served");
+        covered!("cpm_4 match served");
         let n = read_u8(s + ban_record::MATCHES_SERVED).wrapping_add(1); // one more match served
         j.counter = Some(n);
         j.cumprida = n == games;
@@ -711,7 +711,7 @@ pub(crate) unsafe extern "thiscall" fn release_ban(this: usize, id: u32, index: 
         if rule == 0xff {
             continue;
         }
-        crate::comparison::branch("cpm_4 release from the body");
+        covered!("cpm_4 release from the body");
         exe::rulingbody_detach_ban(ruling_body_for_rule(this, rule), id); // the ruling body forgets the suspension
         if k != 3 {
             continue;
@@ -874,7 +874,7 @@ pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: 
     if b == 0 || exe::rulingbody_is_player_banned(b, player, 0, extra, fixture) == 0 { // without the competition suspension
         return 0;
     }
-    crate::comparison::branch("cpk_3 suspended by the competition");
+    covered!("cpk_3 suspended by the competition");
     let club = player.club_job();
     if !club.is_null() {
         if exe::human_manager_is_human_club(club, 0, 1, (0) as u32, 0) != 0 {
@@ -1050,7 +1050,7 @@ pub(crate) unsafe extern "thiscall" fn discipline_remove_player(this: usize, id:
         if e == 0 {
             continue;
         }
-        crate::comparison::branch("cpo_13 regen frees the slot");
+        covered!("cpo_13 regen frees the slot");
         let i = read_i16(e + ruling_body_entry::BAN_INDEX);
         if i > -1 {
             // the index in ax; the high part of eax is that of the entry pointer (0x556d00 only reads the word)

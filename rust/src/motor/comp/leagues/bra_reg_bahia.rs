@@ -59,7 +59,7 @@ pub(crate) unsafe fn bra_reg_bahia_construct_state_league(this: League, year: u3
     if exe::league_load_from_temp_file(this, 1) != 0 {
         return this.addr();
     }
-    crate::comparison::branch(ramo);
+    covered!(ramo);
     this.set_importance(0xf);
     this.set_stage_index(stage_index::MAIN);
     write_i32(this.addr() + league::CURRENT_STAGE, -1);
@@ -208,7 +208,7 @@ pub(crate) unsafe fn state_league_new_season(this: League, table: usize, file: u
     }
     let a = this.year();
     this.set_year(a.wrapping_add(year));
-    crate::comparison::branch(ramo);
+    covered!(ramo);
     write_i32(this.addr() + league::CURRENT_STAGE, -1);
     let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_UP_RULES));
     if rules(this.addr()) == 0 {
@@ -352,7 +352,7 @@ pub(crate) unsafe fn fill_state_league_table(this: League, n: i16, file: usize, 
     if k as i8 as i16 != this.club_count() {
         return 0;
     }
-    crate::comparison::branch(ramo);
+    covered!(ramo);
     1
 }
 
