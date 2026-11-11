@@ -38,5 +38,5 @@ MUTACOES = [
     ('cpt12_tres_dias', 'let r = exe::date_add_days(d1.as_ptr() as usize, (&mut t) as *mut [u8; 8] as usize, 2); // cpt12: the next match', 'let r = exe::date_add_days(d1.as_ptr() as usize, (&mut t) as *mut [u8; 8] as usize, 3); // mutacao: de 3 em 3 dias', 'cpt_12 next match date'),
     ('cpt13_ordem_invertida', 'if *k.add(i) < *k.add(j) { // cpt13: a força maior sobe', 'if *k.add(i) > *k.add(j) { // mutacao: a menor sobe', 'cpt_13 clubs sorted'),
     ('cpt13_rodada_mais_um', 'a = b; // cpt13: the round’s position', 'a = b.wrapping_add(1); // mutacao: uma a mais', 'cpt_13 position by round'),
-    ('cpt13_posicao_mais_um', 'core::ptr::write_volatile((e + 0x72) as *mut u8, pos as u8); // cpt13: the position', 'core::ptr::write_volatile((e + 0x72) as *mut u8, (pos as u8).wrapping_add(1)); // mutacao: uma a mais', 'cpt_13 position recorded'),
+    ('cpt13_posicao_mais_um', 'core::ptr::write_volatile((e + comp_stats_club::FINAL_POSITION) as *mut u8, pos as u8); // cpt13: the position', 'core::ptr::write_volatile((e + comp_stats_club::FINAL_POSITION) as *mut u8, (pos as u8).wrapping_add(1)); // mutacao: uma a mais', 'cpt_13 position recorded'),
 ]

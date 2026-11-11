@@ -43,29 +43,29 @@ pub(crate) unsafe fn convert_staff_state(font: usize, size: usize, n: i32) {
     for i in 0..n.max(0) as usize {
         let (o, f) = (i * 0x4f, i * size);
         write_u32(d() + o, read_u32(font + f));
-        let x = d() + o + 0xb;
-        write_u8(x, mesclar(read_u8(font + (f + 0xb)), read_u8(x), 0x7f));
-        write_u8(d() + o + 0xa, read_u8(font + (f + 0xa)));
+        let x = d() + o + staff_state::STATUS_FLAGS;
+        write_u8(x, mesclar(read_u8(font + (f + staff_state::STATUS_FLAGS)), read_u8(x), 0x7f));
+        write_u8(d() + o + staff_state::INJURY_COUNTER, read_u8(font + (f + staff_state::INJURY_COUNTER)));
         write_u32(d() + o + 4, read_u32(font + f + 4));
         write_u8(d() + o + 9, read_u8(font + (f + 9)));
         write_u8(d() + o + 8, read_u8(font + (f + 8)));
         for m in [0xfu8, 0x40, 0x30] {
-            let x = d() + o + 0xb;
-            write_u8(x, mesclar(read_u8(x), read_u8(font + (f + 0xb)), m));
+            let x = d() + o + staff_state::STATUS_FLAGS;
+            write_u8(x, mesclar(read_u8(x), read_u8(font + (f + staff_state::STATUS_FLAGS)), m));
         }
-        let c = d() + o + 0xc;
-        write_u8(c, mesclar(read_u8(c), read_u8(font + (f + 0xc)), 1));
+        let c = d() + o + staff_state::EXTRA_FLAGS;
+        write_u8(c, mesclar(read_u8(c), read_u8(font + (f + staff_state::EXTRA_FLAGS)), 1));
         if size == 0x26 {
-            write_u8(d() + o + 0xd, 0);
-            *((d() + o + 0xc) as *mut u8) &= 0xfd;
+            write_u8(d() + o + staff_state::B_INTERNATIONAL_PLAYED, 0);
+            *((d() + o + staff_state::EXTRA_FLAGS) as *mut u8) &= !extra_flags::PLAYED_U21_INTERNATIONAL;
         } else {
-            write_u8(d() + o + 0xd, read_u8(font + (f + 0xd)));
-            let c = d() + o + 0xc;
-            write_u8(c, mesclar(read_u8(c), read_u8(font + (f + 0xc)), 2));
+            write_u8(d() + o + staff_state::B_INTERNATIONAL_PLAYED, read_u8(font + (f + staff_state::B_INTERNATIONAL_PLAYED)));
+            let c = d() + o + staff_state::EXTRA_FLAGS;
+            write_u8(c, mesclar(read_u8(c), read_u8(font + (f + staff_state::EXTRA_FLAGS)), extra_flags::PLAYED_U21_INTERNATIONAL));
         }
         for j in 0..5 {
-            write_u8(d() + o + 0x12 + 5 * j, 0);
-            write_u32(d() + o + 0xe + 5 * j, 0xffffffff);
+            write_u8(d() + o + staff_state::FORMER_CLUB_WEIGHT + 5 * j, 0);
+            write_u32(d() + o + staff_state::FORMER_CLUB_ID + 5 * j, 0xffffffff);
         }
         for j in 0..2 {
             for c in [0x33usize, 0x2b, 0x2f, 0x27, 0x37] {
@@ -406,7 +406,7 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
     }
     if v < 0x3e018 {
         for i in 0..u(G_STAFF_COUNT) as i32 {
-            *((u(G_STAFF_STATE_TABLE) as usize + 0x4f * i as usize + 0xb) as *mut u8) &= 0x7f;
+            *((u(G_STAFF_STATE_TABLE) as usize + 0x4f * i as usize + staff_state::STATUS_FLAGS) as *mut u8) &= 0x7f;
         }
     }
     *(G_CLUB_STATE_COUNT as *mut u32) = u(G_CLUB_COUNT);
@@ -701,7 +701,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
         let mut d = 0usize;
         while k < i(G_NATION_COUNT) {
             k += 1;
-            write_u8(u(G_NATION_TABLE) as usize + d + 0x11c, 0);
+            write_u8(u(G_NATION_TABLE) as usize + d + nation::LEAGUE_SELECTED, 0);
             d += 0x122;
         }
         write_u32(G_NATIONS_TO_LOAD_COUNT, 0);
@@ -853,7 +853,7 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
         exe::free_game_data(1);
         return 1;
     }
-    copy_text((options() + 0x113) as *mut u8, 0xa81288 as *const u8);
+    copy_text((options() + config::SAVE_NAME) as *mut u8, 0xa81288 as *const u8);
     write_u32(G_GAME_HAS_SAVE_FILE_FLAG, 1);
     let mut data = [0u8; 8];
     exe::date_operator_3d(G_LAST_AUTOSAVE_DATE, (data.as_mut_ptr()) as usize, G_CURRENT_DATE);
@@ -1357,7 +1357,7 @@ pub(crate) unsafe extern "C" fn valid_saved_game_version(path: usize) -> u32 {
     crate::comparison::branch("save saved game version");
     let mut summary = [0u8; 0xf74];
     let mut v = 0i32;
-    exe::date_date_54a110(summary.as_mut_ptr() as usize + 0xf64);
+    exe::date_date_54a110(summary.as_mut_ptr() as usize + save_summary::GAME_DATE);
     let mut z = exe::zopen(path, 0x9c7b84, 0, 0x15, 4);
     if z == 0 {
         load_version_error_box(0x3a36, 0xa82494);

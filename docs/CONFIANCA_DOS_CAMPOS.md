@@ -19,9 +19,9 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | Nível | Campos |
 |---|---|
 | comunidade | 247 |
-| conferido | 128 |
-| lido | 1523 |
-| inferido | 164 |
+| conferido | 131 |
+| lido | 1532 |
+| inferido | 163 |
 
 ## Por registro
 
@@ -54,9 +54,10 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `commentary_queue` | 0 | 0 | 11 | 1 |
 | `commentary_slot` | 0 | 0 | 1 | 0 |
 | `comp_history_row` | 0 | 0 | 3 | 1 |
-| `comp_stats_club` | 0 | 3 | 5 | 1 |
+| `comp_stats_club` | 0 | 4 | 7 | 0 |
 | `competition` | 9 | 0 | 0 | 0 |
 | `con_merc_cup` | 0 | 0 | 2 | 0 |
+| `config` | 0 | 1 | 0 | 0 |
 | `conmebol_liber` | 0 | 0 | 1 | 1 |
 | `conmebol_merc` | 0 | 0 | 1 | 1 |
 | `conmebol_seeding` | 0 | 0 | 2 | 0 |
@@ -109,6 +110,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `guio` | 0 | 0 | 1 | 0 |
 | `h2h_entry` | 0 | 0 | 1 | 0 |
 | `held_ban` | 0 | 0 | 2 | 0 |
+| `host_entry` | 0 | 0 | 7 | 0 |
 | `human_manager_fields` | 0 | 2 | 0 | 0 |
 | `human_manager_record` | 0 | 11 | 0 | 0 |
 | `human_manager_sheet` | 0 | 0 | 2 | 1 |
@@ -188,6 +190,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `ruling_body` | 0 | 0 | 5 | 0 |
 | `ruling_body_entry` | 0 | 0 | 1 | 1 |
 | `run_record` | 0 | 0 | 2 | 0 |
+| `save_summary` | 0 | 1 | 0 | 0 |
 | `scheduled_friendly_slot` | 0 | 0 | 4 | 0 |
 | `scout_manager_fields` | 0 | 0 | 4 | 0 |
 | `scout_report` | 0 | 3 | 6 | 4 |
@@ -327,7 +330,6 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `club_shortlist::ACTIVE` | +0x4 | 1 byte(s): Shortlist state of the club (1 active; 2 also seen) [inference] |
 | `club_shortlist::DAYS` | +0x8 | 1 byte(s): Day counter; set to 100 when the club suspends a player, bids skipped at 100 or more [inference] |
 | `commentary_queue::LOOP_CHANNELS` | +0x20 | 16 byte(s): channels of the crowd loops (-1 none; side's loop at +0x20 + side) [inference] |
-| `comp_stats_club::DANGER_POSITION` | +0x72 | 1 byte(s): danger position used as the board target (0 none) [inference] |
 | `contract_offer::DECISION_VALID` | +0x62 | 1 byte(s): 1 when the offer counts for a decision (set outside type 6 contracts and when scheduled for a transfer) [inference] |
 | `contract_offer::RESERVED_RECORD_ARG1` | +0x67 | 4 byte(s): First extra argument returned with RESERVED_RECORD (add_spare_non_player_record) [inference] |
 | `contract_offer::RESERVED_RECORD_ARG2` | +0x6b | 4 byte(s): Second extra argument returned with RESERVED_RECORD [inference] |

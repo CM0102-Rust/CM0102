@@ -480,8 +480,8 @@ pub(crate) unsafe fn reputation_by_competition(club: Club, by_division: i16) -> 
             let s: i16 = if id == read_usize(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE) { 15000 } else { read_i16(reg + competition::REPUTATION).wrapping_mul(600) };
             // 0x4a4850: push club; mov ecx, [[0xadadfc] + 4 × id] + 8 -> thiscall, ret 4
             let r = exe::comp_stats_find_club_entry(read_usize(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(id.wrapping_mul(4))) + 8), club);
-            if r != 0 && read_u8(r + 4) == 0 && (1..=0x10).contains(&read_u8(r + comp_stats_club::DANGER_POSITION)) {
-                let p = read_u8(r + comp_stats_club::DANGER_POSITION) as f64;
+            if r != 0 && read_u8(r + 4) == 0 && (1..=0x10).contains(&read_u8(r + comp_stats_club::FINAL_POSITION)) {
+                let p = read_u8(r + comp_stats_club::FINAL_POSITION) as f64;
                 return (ftol((read_f64(rdata::F64_1_32) - p * read_f64(rdata::F64_0_02)) * s as f64), reg);
             }
             return (s as i32, reg);

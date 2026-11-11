@@ -9,7 +9,7 @@ MUTACOES = [
     ('cqk10_copa_africana_uma_semana_depois', 'let day = 5; // cqk10: the day of the African Cup date', 'let day = 12; // mutacao: uma semana depois', 'cqk_10 african cup rules'),
     ('cqk10_copa_america_uma_semana_depois', 'let day = 0x14; // cqk10: the day of the Copa América date', 'let day = 0x1b; // mutacao: uma semana depois', 'cqk_10 copa america rules'),
     ('cqk10_oceania_uma_semana_depois', 'let day = 0xf; // cqk10: the start day in Oceania', 'let day = 0x16; // mutacao: uma semana depois', 'cqk_10 oceania rules'),
-    ('cqk11_embaralha_so_31', 'exe::comp_util_shuffle_pointer_array(list, read_i16(this + 0xf2) as u16 as u32); // cqk11: the 32 of the Libertadores shuffled', 'exe::comp_util_shuffle_pointer_array(list, 0x1f); // mutacao: embaralha so 31', 'cqk_11 libertadores qualified'),
+    ('cqk11_embaralha_so_31', 'exe::comp_util_shuffle_pointer_array(list, read_i16(this + conmebol_liber::DRAWN_CLUB_COUNT) as u16 as u32); // cqk11: the 32 of the Libertadores shuffled', 'exe::comp_util_shuffle_pointer_array(list, 0x1f); // mutacao: embaralha so 31', 'cqk_11 libertadores qualified'),
     ('cqk11_campeao_na_vaga_1', 'write_u32(t, club as u32); // cqk11: the champion in the South American slot', 'write_u32(t + 6, club as u32); // mutacao: o campeao na outra vaga', 'cqk_11 libertadores champion'),
     ('cqk11_classificados_trocados_aos_pares', 'write_u32(list + k * 4, c as u32); // cqk11: the club in database order', 'write_u32(list + (k ^ 1) * 4, c as u32); // mutacao: trocados aos pares', 'cqk_11 libertadores qualified'),
     ('cqk12_mata_mata_uma_fase_antes', 'if f == 3 { // cqk12: the African Cup knockout after the groups', 'if f == 2 { // mutacao: o mata-mata uma fase antes', 'cqk_12 african cup knockout'),

@@ -47,7 +47,7 @@ pub(crate) unsafe extern "thiscall" fn compare_goldcup_set_predicted_positions(t
     o(this);
     let wrong = (0..12).find(|&k| {
         let e = CompStatsClub(if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this + 8), v[k]) } else { 0 });
-        e.is_null() || e.danger_position() as u32 != COPA_AMERICA_PREDICTED_PLACES[k]
+        e.is_null() || e.final_position() as u32 != COPA_AMERICA_PREDICTED_PLACES[k]
     });
     SCOREBOARD.record(wrong.is_none(), || format!("goldcup_set_predicted_positions: a position prevista of the slot {:?} not bate", wrong));
 }

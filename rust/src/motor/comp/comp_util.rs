@@ -34,7 +34,7 @@ pub(crate) unsafe extern "C" fn competition_counts(id: i32) -> u32 {
 ///
 /// [pt] { 0x4b0780 } (comparacao do qsort): byte +0x5f do segundo menos o do primeiro (nulo vale 0).
 pub(crate) unsafe extern "C" fn order_by_5f(a: *const usize, b: *const usize) -> i32 {
-    let v = |p: usize| if p == 0 { 0 } else { read_i8(p + 0x5f) as i32 };
+    let v = |p: usize| if p == 0 { 0 } else { read_i8(p + club::LAST_POSITION) as i32 };
     v(*b) - v(*a)
 }
 
@@ -42,7 +42,7 @@ pub(crate) unsafe extern "C" fn order_by_5f(a: *const usize, b: *const usize) ->
 ///
 /// [pt] { 0x4b07b0 } (comparacao do qsort): palavra +0x80 do segundo menos a do primeiro.
 pub(crate) unsafe extern "C" fn order_by_80(a: *const usize, b: *const usize) -> i32 {
-    read_i16(*b + 0x80) as i32 - read_i16(*a + 0x80) as i32
+    read_i16(*b + club::REPUTATION) as i32 - read_i16(*a + club::REPUTATION) as i32
 }
 
 /// qsort comparator for club pointers: sorts by the club's word at +0x80 (reputation) in descending order, with null
@@ -58,7 +58,7 @@ pub(crate) unsafe extern "C" fn order_by_80_desc(a: *const usize, b: *const usiz
     if y == 0 {
         return -1;
     }
-    read_i16(y + 0x80) as i32 - read_i16(x + 0x80) as i32
+    read_i16(y + club::REPUTATION) as i32 - read_i16(x + club::REPUTATION) as i32
 }
 
 /// qsort comparator: orders records by their 16-bit word at +0x80 (the club reputation) in ascending order, null
@@ -73,7 +73,7 @@ pub(crate) unsafe extern "C" fn order_by_80_asc(a: *const usize, b: *const usize
     if y == 0 {
         return -1;
     }
-    read_i16(x + 0x80) as i32 - read_i16(y + 0x80) as i32
+    read_i16(x + club::REPUTATION) as i32 - read_i16(y + club::REPUTATION) as i32
 }
 
 /// Returns the units digit of round code `n` (n % 10) when `n` is below 1000, else 0; used to read the round variant
@@ -203,7 +203,7 @@ pub(crate) unsafe extern "thiscall" fn set_club_final_position(this: usize, club
         e = exe::comp_stats_add_club_entry(this, club);
     }
     crate::comparison::branch("cpt_13 position recorded");
-    core::ptr::write_volatile((e + 0x72) as *mut u8, pos as u8); // cpt13: the position
+    core::ptr::write_volatile((e + comp_stats_club::FINAL_POSITION) as *mut u8, pos as u8); // cpt13: the position
     e
 }
 
@@ -231,7 +231,7 @@ pub(crate) unsafe fn set_final_positions_by_round(this: Cup, v: *const u32, writ
         if *v.offset(s as isize) == 0 {
             break;
         }
-        let count = |r: i32| read_i16(this.round_table() + r as usize * 0x68 + 0x1a) as i32;
+        let count = |r: i32| read_i16(this.round_table() + r as usize * 0x68 + cup_round::TIES) as i32;
         if r == this.round_count() as i32 - 2 {
             let mut j = 0;
             while j < count(r) {
@@ -292,7 +292,7 @@ pub(crate) unsafe extern "C" fn comp_util_get_fixture_venue_side(club: usize, ga
         return if club.addr() != home { 2 } else { 1 };
     }
     if exe::database_is_national_team(club) != 0 {
-        let nation = read_ptr(field as usize + 0x38);
+        let nation = read_ptr(field as usize + stadium::CITY);
         if nation != 0 && read_u32(nation + city::NATION) == (club.nation().addr() as u32) {
             return 1;
         }
@@ -422,7 +422,7 @@ pub(crate) unsafe fn league_stats_rating(e: usize, b73: f64) -> f64 {
         k73 = v * read_f64(rdata::F64_0_04);
         k72 = read_f64(rdata::F64_4) - v * read_f64(rdata::F64_0_1200480192);
     }
-    let s = read_u8(e + 0x75) as f64 * p + read_u8(e + 0x72) as f64 * k72 + b73 * k73 + read_u8(e + 0x74) as f64 * p;
+    let s = read_u8(e + comp_stats_club::WORST_POSITION) as f64 * p + read_u8(e + comp_stats_club::FINAL_POSITION) as f64 * k72 + b73 * k73 + read_u8(e + comp_stats_club::BEST_POSITION) as f64 * p;
     s / (p + p + k72 + k73)
 }
 
@@ -465,13 +465,13 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
     if ea == 0 || eb == 0 || league.current_stage() as i32 != -1 || league.comp_type() != 2 {
         return 0;
     }
-    let (a73, b73) = (read_u8(ea + 0x73) as i32, read_u8(eb + 0x73) as i32);
+    let (a73, b73) = (read_u8(ea + comp_stats_club::CURRENT_POSITION) as i32, read_u8(eb + comp_stats_club::CURRENT_POSITION) as i32);
     let clubs = league.club_count() as i32;
     if (a73 - b73).abs() > ftol(clubs as f64 * read_f64(rdata::F64_0_25)) as i16 as i32 {
         return 0;
     }
     let (na, nb) = (league_stats_rating(ea, a73 as f64), league_stats_rating(eb, b73 as f64));
-    let (a74, b74) = (read_u8(ea + 0x74) as f64, read_u8(eb + 0x74) as f64);
+    let (a74, b74) = (read_u8(ea + comp_stats_club::BEST_POSITION) as f64, read_u8(eb + comp_stats_club::BEST_POSITION) as f64);
     let virtual98 = || {
         let f: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(league.addr()) + 0x98));
         f(league.addr())
@@ -762,8 +762,8 @@ pub(crate) unsafe extern "C" fn comp_util_write_fixture_to_news_slots(game: usiz
     let b = |o: usize| read_i8(game + o) as i32 as u32;
     let s = |o: usize| read_i16(game + o) as i32 as u32;
     let values = [
-        read_u32(game + 0xc), read_u32(game + 0x10), b(0x3d), b(0x3e), read_u32(game + 4), read_u32(game + 0), b(0x42), s(0x32), s(0x30),
-        b(0x43), b(0x44), b(0x4b), b(0x4c), b(0x47), b(0x48), (read_u16(game + 0x2a) as u32), (read_u16(game + 0x28) as u32), read_u32(game + 8),
+        read_u32(game + fixture::HOME_CLUB_ID), read_u32(game + fixture::AWAY_CLUB_ID), b(0x3d), b(0x3e), read_u32(game + 4), read_u32(game + 0), b(0x42), s(0x32), s(0x30),
+        b(0x43), b(0x44), b(0x4b), b(0x4c), b(0x47), b(0x48), (read_u16(game + fixture::DAY) as u32), (read_u16(game + fixture::YEAR) as u32), read_u32(game + 8),
     ];
     let mut k = *cursor;
     let mut r = 0;
@@ -865,7 +865,7 @@ pub(crate) unsafe extern "C" fn comp_util_add_history_record(league: usize, a: u
     write_usize(r + 4, read_usize(league + 4));
     write_u16(r + 8, read_u16(G_CURRENT_DATE_YEAR)); // o ano
     for (k, v) in [a, b, c, d].into_iter().enumerate() {
-        write_u32(r + 0xa + 4 * k, v);
+        write_u32(r + comp_history_row::CHAMPION + 4 * k, v);
     }
     r
 }

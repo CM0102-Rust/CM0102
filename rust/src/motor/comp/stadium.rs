@@ -738,7 +738,7 @@ pub(crate) unsafe extern "thiscall" fn calculate_match_attendance(this: usize, g
                     let dl = read_u8(p + comp_stats_club::BEST_POSITION);
                     if dl != read_u8(p + comp_stats_club::WORST_POSITION) && read_u8(p + 4) > 4 {
                         let cl = read_u8(p + comp_stats_club::CURRENT_POSITION);
-                        let bl = read_u8(p + comp_stats_club::DANGER_POSITION);
+                        let bl = read_u8(p + comp_stats_club::FINAL_POSITION);
                         let mut ax = (bl as i16).wrapping_sub(cl as i16);
                         if bl < 4 && ax <= 0 {
                             ax = if cl == 1 {

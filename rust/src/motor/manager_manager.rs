@@ -501,7 +501,7 @@ pub(crate) unsafe extern "thiscall" fn update_board_confidence_after_match(this:
         if co != 0 && read_usize(co + 8) != 0 {
             let ln = CompStatsClub(exe::comp_stats_find_club_entry(read_usize(co + 8), club));
             if fl & 0x100 == 0 {
-                let n = ln.danger_position();
+                let n = ln.final_position();
                 if n < 9 && n != 0 && ln.best_position() == 1 && (aj as i16 as i32) > (n as i32 * n as i32) / 2 + 0x32 {
                     exe::media_post_team_media_story(read_usize(G_MEDIA), club, 0x5c, 0, fixture, 0, -1);
                 }
@@ -853,7 +853,7 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
         let co = read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((cid as usize).wrapping_mul(4)));
         cup = exe::comp_stats_find_club_entry(read_usize(co + 8), club);
     }
-    if lg.is_null() || lg.danger_position() < 1 {
+    if lg.is_null() || lg.final_position() < 1 {
         write_u32(ln() + board_record::TARGET_POSITION, 8);
         write_u8(ln() + board_record::EXPECTATION_FLAGS, read_u8(ln() + board_record::EXPECTATION_FLAGS) | (expectation_flags::RESPECTABLE_POSITION as u8));
         // simplification: the original pushes the word with the high half of the register (garbage); 0x6a4a20 reads the word
@@ -862,7 +862,7 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
     }
     let meta = || read_i32(ln() + board_record::TARGET_POSITION);
     let por = |v: i32| write_u32(ln() + board_record::TARGET_POSITION, v as u32);
-    por(lg.danger_position() as i32); // cqc9: the target by the danger position
+    por(lg.final_position() as i32); // cqc9: the target by the danger position
     let n = read_i16(club_division_comp(club) + league::CLUB_COUNT) as i32;
     if meta() == n {
         por(n - 1);
@@ -993,7 +993,7 @@ pub(crate) unsafe extern "thiscall" fn set_season_expectations(this: usize, club
         }
         if cup != 0 && read_u8(cup + comp_stats_club::BEST_POSITION) <= 1 {
             let t = (0x1d - p1d()) / 5;
-            let p = read_u8(cup + comp_stats_club::DANGER_POSITION) as i32;
+            let p = read_u8(cup + comp_stats_club::FINAL_POSITION) as i32;
             if p <= t {
                 write_u8(ln() + board_record::EXPECTATION_FLAGS + 1, read_u8(ln() + board_record::EXPECTATION_FLAGS + 1) | expectation_flags_byte1::EUROPEAN_SUCCESS);
             } else if p <= t + 4 {

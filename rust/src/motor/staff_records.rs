@@ -42,9 +42,9 @@ pub(crate) unsafe fn raise_champion_reputation(club: Club, weight: i16, champion
 ///
 /// [pt] O moral do contrato (+0x44, byte com sinal) sobe `d`, preso em −100..100.
 pub(crate) unsafe fn add_contract_morale(k: usize, d: i32) {
-    let c = read_i8(k + 0x44);
+    let c = read_i8(k + contract::MORALE);
     let x = c as i32 + d;
-    write_i8(k + 0x44, if x > 100 { 100 } else if x < -100 { -100 } else { c.wrapping_add(d as i8) });
+    write_i8(k + contract::MORALE, if x > 100 { 100 } else if x < -100 { -100 } else { c.wrapping_add(d as i8) });
 }
 
 /// Offers a contract renewal (`contract_manager_offer_contract`, factor 1.0) to an own-club player when the transfer manager exists, the
@@ -62,7 +62,7 @@ pub(crate) unsafe fn offer_renewal_if_due(club: Club, p: Staff, k: Contract) {
         return;
     }
     // 0x849ce0: push 0; push 0; push p; push club; mov ecx, [[0xde1f54]+0x856] -> thiscall (ret 0x10)
-    let v = exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), club, p, 0, 0);
+    let v = exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SHORTLIST_MANAGER), club, p, 0, 0);
     if v == 0 || read_i32(v + shortlist_slot::TARGET_STAFF_ID) != read_i32(p.addr()) {
         return;
     }
@@ -436,7 +436,7 @@ pub(crate) unsafe fn compare_champion_update(name: &str, this: usize, club: Club
     }
     let mut todas = fixas.clone();
     todas.extend(sheets.iter().map(|&(m, _, _)| (m, 1)));
-    todas.extend(contracts.iter().map(|&k| (k + 0x44, 1)));
+    todas.extend(contracts.iter().map(|&k| (k + contract::MORALE, 1)));
     todas.extend(crate::rng::STATE_REGIONS.iter().copied());
     let before = crate::comparison::MemorySnapshot::read(&todas);
     (*core::ptr::addr_of_mut!(DRY_RUN_RENEWED_CONTRACTS)).clear();
@@ -453,7 +453,7 @@ pub(crate) unsafe fn compare_champion_update(name: &str, this: usize, club: Club
     // comes from another point of the random generator; his and the previous ones enter the count.
     let cut = renovados.first().and_then(|r| sheets.iter().position(|&(_, k, _)| k == *r)).unwrap_or(sheets.len());
     count.extend(sheets.iter().take(cut + 1).map(|&(m, _, _)| (m, 1)));
-    count.extend(contracts.iter().filter(|k| !renovados.contains(k)).map(|&k| (k + 0x44, 1)));
+    count.extend(contracts.iter().filter(|k| !renovados.contains(k)).map(|&k| (k + contract::MORALE, 1)));
     // The later ones, by the range of 0x544710: morale m rises from 0 to 20 (+20 or +10 drawn), clamped to 1..20.
     let band = |&(m, _, m0): &(usize, usize, i8)| -> bool {
         let (m0, v) = (m0 as i32, read_i8(m) as i32);
@@ -1256,9 +1256,9 @@ pub(crate) unsafe fn apply_promotion(this: usize, club: Club, comp: Competition,
             let x = read_i16(pela + competition::REPUTATION) as i32;
             let nj = || club.manager().non_player();
             crate::comparison::branch("cpq_3 manager promotion");
-            raise_promotion_rating(nj().addr() + 0xa, x, 400);
+            raise_promotion_rating(nj().addr() + non_player::CURRENT_REPUTATION, x, 400);
             raise_promotion_rating(nj().addr() + 8, x, p2);
-            raise_promotion_rating(nj().addr() + 0xc, x, p1);
+            raise_promotion_rating(nj().addr() + non_player::WORLD_REPUTATION, x, p1);
         }
         append_person_history(write, this, club.manager(), &e);
         let r = ManagerRecord(exe::staff_records_get_manager_record(this, club.manager().addr(), 1));
@@ -1399,9 +1399,9 @@ pub(crate) unsafe fn apply_relegation(this: usize, club: Club, comp: Competition
             let nj = || club.manager().non_player();
             let x = || comp.reputation();
             crate::comparison::branch("cpq_3 manager relegation");
-            add_rating_clamped(nj().addr() + 0xa, x().wrapping_mul(-16));
+            add_rating_clamped(nj().addr() + non_player::CURRENT_REPUTATION, x().wrapping_mul(-16));
             add_rating_clamped(nj().addr() + 8, x().wrapping_mul(factor));
-            add_rating_clamped(nj().addr() + 0xc, x().wrapping_mul(-8));
+            add_rating_clamped(nj().addr() + non_player::WORLD_REPUTATION, x().wrapping_mul(-8));
         }
         append_person_history(write, this, club.manager(), &e);
     }
@@ -1575,7 +1575,7 @@ pub(crate) unsafe fn staff_records_id_or_minus_one(p: usize) -> i32 {
 pub(crate) unsafe fn put_person_keys(e: &mut [u8; 0x40], o: usize, p: usize) {
     put_i32(e, o, read_i32(p));
     for k in 0..3usize {
-        put_i32(e, o + 4 + 4 * k, read_i32(read_usize(p + 4 + 4 * k) + 0x33));
+        put_i32(e, o + 4 + 4 * k, read_i32(read_usize(p + 4 + 4 * k) + names::ID));
     }
 }
 
@@ -1638,7 +1638,7 @@ pub(crate) unsafe fn record_transfer(this: usize, t: Offer, write: bool) {
             if value > read_i32(r + manager_record::BIGGEST_PURCHASE_FEE) {
                 crate::comparison::branch("cpq_4 biggest purchase");
                 for k in 0..4usize {
-                    write_i32(r + 4 * k, if k == 0 { read_i32(pessoa) } else { read_i32(read_usize(pessoa + staff::FIRST_NAME * k) + 0x33) });
+                    write_i32(r + 4 * k, if k == 0 { read_i32(pessoa) } else { read_i32(read_usize(pessoa + staff::FIRST_NAME * k) + names::ID) });
                 }
                 stamp_game_date((r + manager_record::BIGGEST_PURCHASE_DATE) as *mut u8);
                 write_i32(r + manager_record::BIGGEST_PURCHASE_FEE, value);
@@ -1650,7 +1650,7 @@ pub(crate) unsafe fn record_transfer(this: usize, t: Offer, write: bool) {
             staff_records_add_i64(r + manager_record::PURCHASES_TOTAL, value);
             if !t.exchange_players().is_null() {
                 write_i16(r + manager_record::PLAYERS_SOLD, read_i16(r + manager_record::PLAYERS_SOLD).wrapping_add(read_i16(t.exchange_players().addr())));
-                for_each_swap_item(t, |x| staff_records_add_i64(r + manager_record::SALES_TOTAL, read_i32((staff_records_staff_by_id(read_usize(x))).addr() + 0x52)));
+                for_each_swap_item(t, |x| staff_records_add_i64(r + manager_record::SALES_TOTAL, read_i32((staff_records_staff_by_id(read_usize(x))).addr() + staff::VALUE)));
             }
         }
         // the buying manager’s history: the purchase and each player given in the swap
@@ -1680,7 +1680,7 @@ pub(crate) unsafe fn record_transfer(this: usize, t: Offer, write: bool) {
             crate::comparison::branch("cpq_4 sale");
             if value > read_i32(r + manager_record::BIGGEST_SALE_FEE) {
                 for k in 0..4usize {
-                    write_i32(r + manager_record::BIGGEST_SALE_PERSON + 4 * k, if k == 0 { read_i32(pessoa) } else { read_i32(read_usize(pessoa + staff::FIRST_NAME * k) + 0x33) });
+                    write_i32(r + manager_record::BIGGEST_SALE_PERSON + 4 * k, if k == 0 { read_i32(pessoa) } else { read_i32(read_usize(pessoa + staff::FIRST_NAME * k) + names::ID) });
                 }
                 stamp_game_date((r + manager_record::BIGGEST_SALE_DATE) as *mut u8);
                 write_i32(r + manager_record::BIGGEST_SALE_FEE, value);
@@ -1692,7 +1692,7 @@ pub(crate) unsafe fn record_transfer(this: usize, t: Offer, write: bool) {
             staff_records_add_i64(r + manager_record::SALES_TOTAL, value);
             if !t.exchange_players().is_null() {
                 write_i16(r + manager_record::PLAYERS_BOUGHT, read_i16(r + manager_record::PLAYERS_BOUGHT).wrapping_add(read_i16(t.exchange_players().addr())));
-                for_each_swap_item(t, |x| staff_records_add_i64(r + manager_record::PURCHASES_TOTAL, read_i32((staff_records_staff_by_id(read_usize(x))).addr() + 0x52)));
+                for_each_swap_item(t, |x| staff_records_add_i64(r + manager_record::PURCHASES_TOTAL, read_i32((staff_records_staff_by_id(read_usize(x))).addr() + staff::VALUE)));
             }
         }
         // the selling manager’s history: the sale and each player received in the swap
@@ -1945,7 +1945,7 @@ pub(crate) unsafe extern "thiscall" fn staff_records_end_season_for_nation(this:
     let base = read_usize(this + staff_records_fields::MANAGER_RECORDS);
     let mut k = 0i32;
     while k < manager_record_count() {
-        let s = base.wrapping_add((k as usize).wrapping_mul(MANAGER_RECORD_SIZE)) + 0xba;
+        let s = base.wrapping_add((k as usize).wrapping_mul(MANAGER_RECORD_SIZE)) + manager_record::SEASON_POINTS;
         let cup = read_i32(s + 0xc);
         if read_i32(s + 8) == id {
             crate::comparison::branch("cpo_3 end of the league");
@@ -2045,7 +2045,7 @@ pub(crate) unsafe extern "thiscall" fn get_manager_of_year_candidates(this: usiz
         if k as i8 >= 3 {
             break;
         }
-        let manager = Staff(read_usize(read_usize(clubs + 4 * i) + 0xcf));
+        let manager = Staff(read_usize(read_usize(clubs + 4 * i) + club::MANAGER));
         if manager.is_null() {
             continue;
         }

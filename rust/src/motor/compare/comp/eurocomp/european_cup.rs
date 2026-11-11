@@ -74,7 +74,7 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_rank_teams(this: usi
         let c = v[k as usize] as usize;
         c != 0 && {
             let e = CompStatsClub(exe::comp_stats_find_club_entry(read_usize(this.addr() + 8), c));
-            e.is_null() || e.danger_position() != p
+            e.is_null() || e.final_position() != p
         }
     });
     SCOREBOARD.record(wrong.is_none(), || format!("european_cup_rank_teams: a position {:?} not bate", wrong));

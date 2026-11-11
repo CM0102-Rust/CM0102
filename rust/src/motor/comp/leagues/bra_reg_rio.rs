@@ -269,8 +269,8 @@ pub(crate) unsafe extern "C" fn cqt4_update_average_attendance(league: usize) {
     let low = if (league.lower_division_id() as i32) == -1 { 0 } else { read_usize(table_c + 4 * league.lower_division_id()) };
     let mut f = 1.0f64;
     let reg = league.competition().addr();
-    if reg != 0 && read_usize(reg + 0x5d) != 0 {
-        let n = read_usize(read_usize(reg + 0x5d));
+    if reg != 0 && read_usize(reg + competition::NATION) != 0 {
+        let n = read_usize(read_usize(reg + competition::NATION));
         let em = |gs: &[usize]| gs.iter().any(|&g| n == read_usize(g));
         if em(&[KEY_NATION_WALES, KEY_NATION_REPUBLIC_OF_IRELAND, KEY_NATION_NORTHERN_IRELAND, KEY_NATION_AUSTRALIA]) {
             f = f64::from_bits(0x3fb9_9999_9999_999a);
@@ -297,8 +297,8 @@ pub(crate) unsafe extern "C" fn cqt4_update_average_attendance(league: usize) {
     while i < n {
         let e = t + 0x76 * i as usize;
         let c = club_at(read_usize(e) as isize);
-        let pos = read_u8(e + 0x73);
-        let prevista = read_u8(e + 0x72);
+        let pos = read_u8(e + comp_stats_club::CURRENT_POSITION);
+        let prevista = read_u8(e + comp_stats_club::FINAL_POSITION);
         let owner = c.own_stadium() != 0;
         let add = |v: i32| c.set_attendance(c.attendance().wrapping_add(v));
         let d = (prevista as i16).wrapping_sub(pos as i16).wrapping_add(1);
@@ -312,7 +312,7 @@ pub(crate) unsafe extern "C" fn cqt4_update_average_attendance(league: usize) {
             add(ftol(val as f64 * f));
         } else if promotion() != 0 && pos as i32 <= (league.promoted_count() as i8) as i32 {
             if cima != 0 {
-                let mut a = read_i16(read_usize(cima + 4) + 0x69).wrapping_sub(league.competition().reputation());
+                let mut a = read_i16(read_usize(cima + 4) + competition::REPUTATION).wrapping_sub(league.competition().reputation());
                 if a < 1 {
                     a = 1;
                 }
@@ -356,12 +356,12 @@ pub(crate) unsafe extern "C" fn cqt4_update_average_attendance(league: usize) {
             && pos as i32 > league.club_count() as i32 - (league.relegated_count() as i8) as i32
         {
             if low != 0 {
-                let mut a = read_i16(read_usize(low + 4) + 0x69).wrapping_sub(league.competition().reputation());
+                let mut a = read_i16(read_usize(low + 4) + competition::REPUTATION).wrapping_sub(league.competition().reputation());
                 if a > -1 {
                     a = -1;
                 }
                 let mut v = ftol(c.reputation() as f64 * a as f64 * f * 0.2).min(-100);
-                if read_i32(low + 0x20) == -1 {
+                if read_i32(low + league::LOWER_DIVISION_ID) == -1 {
                     let r = exe::utils_random(0x2ee);
                     v = v.wrapping_mul(2).wrapping_sub(0xfa).wrapping_sub(r);
                 }
@@ -687,13 +687,13 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
         this.set_current_stage((1) as usize);
         this.set_stage_count((2) as usize);
         for k in 0..2 {
-            write_u8(read_usize(read_usize(this.stages() + 4 * k) + 0xb1) + 0x37, 5); // cqo9: champion of both halves
+            write_u8(read_usize(read_usize(this.stages() + 4 * k) + league::TABLE) + league_table_row::STATUS, 5); // cqo9: champion of both halves
         }
         let mut i: i16 = 0;
         while i < this.club_count() {
             let row = this.table() + i as usize * 0x3b;
             if read_usize(row) == read_usize(list) {
-                write_u8(row + 0x37, 5);
+                write_u8(row + league_table_row::STATUS, 5);
             }
             i += 1;
         }

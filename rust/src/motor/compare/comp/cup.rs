@@ -676,8 +676,8 @@ pub(crate) unsafe extern "thiscall" fn compare_cup_rank_teams(this: usize) {
             continue;
         }
         let e = CompStatsClub(exe::comp_stats_find_club_entry(read_usize(this.addr() + 8), c));
-        if e.is_null() || e.danger_position() != p {
-            erros.push(format!("club {:x} expected {} got {}", c, p, if e.is_null() { -1 } else { e.danger_position() as i32 }));
+        if e.is_null() || e.final_position() != p {
+            erros.push(format!("club {:x} expected {} got {}", c, p, if e.is_null() { -1 } else { e.final_position() as i32 }));
         }
     }
     SCOREBOARD.record(erros.is_empty(), || format!("cup_rank_teams({:x}) {} positions: {}", this.addr(), plan.len(), erros.join("; ")));

@@ -181,7 +181,7 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_set_predicted_positions(t
     const LUGARES: [u8; 12] = [1, 4, 7, 10, 1, 4, 7, 10, 1, 4, 7, 10];
     let wrong = (0..12).find(|&k| {
         let e = CompStatsClub(if v[k] != 0 { exe::comp_stats_find_club_entry(this.comp_stats(), v[k]) } else { 0 });
-        e.is_null() || e.danger_position() != LUGARES[k]
+        e.is_null() || e.final_position() != LUGARES[k]
     });
     SCOREBOARD.record(wrong.is_none(), || format!("usa_mls_set_predicted_positions({:#x}): a position of the slot {:?} not bate ({:x?})", this.addr(), wrong, v));
 }

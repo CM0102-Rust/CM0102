@@ -64,7 +64,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_set_predicted_posit
     o(this);
     let wrong = (0..0x38).find(|&k| {
         let e = CompStatsClub(if v[k] != 0 { exe::comp_stats_find_club_entry(read_usize(this + 8), v[k]) } else { 0 });
-        read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + 4 * k) != v[k] || e.is_null() || e.danger_position() != place_for_index(k)
+        read_usize(read_usize(this + bra_nat_third::CLUB_LIST) + 4 * k) != v[k] || e.is_null() || e.final_position() != place_for_index(k)
     });
     SCOREBOARD.record(wrong.is_none(), || format!("bra_nat_third_set_predicted_positions({:#x}): a slot {:?} not bate", this, wrong));
 }

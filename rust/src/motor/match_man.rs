@@ -464,10 +464,10 @@ pub(crate) unsafe extern "thiscall" fn stance(c: usize) -> u8 {
                         x18 = 0.0;
                     }
                     let mut base = h;
-                    let pe = read_u8(e + comp_stats_club::DANGER_POSITION);
+                    let pe = read_u8(e + comp_stats_club::FINAL_POSITION);
                     if pe < 5 && (x11 as i32 - 3) < x12 as i32 {
                         let e2 = exe::comp_stats_find_club_entry(u(u(u(G_COMP_OBJECT_TABLE, 0), 4 * u(game, 0)), 8), clube_b);
-                        if e2 != 0 && *((e2 + comp_stats_club::DANGER_POSITION) as *const u8) > pe {
+                        if e2 != 0 && *((e2 + comp_stats_club::FINAL_POSITION) as *const u8) > pe {
                             let comp = u(u(G_COMP_OBJECT_TABLE, 0), 4 * u(game, 0));
                             let cx = w(comp, 0x3e);
                             let mut x30 = if cx > 0 { 22.0 / cx as f64 } else { 1.0 };
@@ -478,7 +478,7 @@ pub(crate) unsafe extern "thiscall" fn stance(c: usize) -> u8 {
                                     x30 *= ((rep_a - lim) as f64 + (rep_a - 5000) as f64) * 0.0002 + 1.0;
                                 }
                             }
-                            let p = game_pow(x30, 1.5) * (read_u8(e2 + comp_stats_club::DANGER_POSITION) as i32 - pe as i32) as f64;
+                            let p = game_pow(x30, 1.5) * (read_u8(e2 + comp_stats_club::FINAL_POSITION) as i32 - pe as i32) as f64;
                             let p3 = p * p * p;
                             let q = p3 / ((k as i32 * k as i32) as f64 * 50.0 + 250.0) + 1.0;
                             let q = if 1.0 > q { 1.0 } else if 10.0 < q { 10.0 } else { q };
@@ -1565,7 +1565,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
                     let c = competition(*(x as *const i32));
                     if c != 0 && u(c, 8) != 0 {
                         let r = exe::comp_stats_find_club_entry(u(c, 8), club);
-                        let k = if r != 0 { *((r + comp_stats_club::DANGER_POSITION) as *const u8) } else { 0 };
+                        let k = if r != 0 { *((r + comp_stats_club::FINAL_POSITION) as *const u8) } else { 0 };
                         if k == 0 {
                             l18 = esi / 2;
                         } else if k > 6 {

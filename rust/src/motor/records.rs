@@ -10739,6 +10739,24 @@ impl CompStatsClub {
     pub(crate) unsafe fn set_matches_played(self, v: u8) {
         write_u8(self.0 + comp_stats_club::MATCHES_PLAYED, v)
     }
+    /// `comp_stats_club::HOME_MATCHES_PLAYED` (+0x5). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn home_matches_played(self) -> u8 {
+        read_u8(self.0 + comp_stats_club::HOME_MATCHES_PLAYED)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_home_matches_played(self, v: u8) {
+        write_u8(self.0 + comp_stats_club::HOME_MATCHES_PLAYED, v)
+    }
+    /// `comp_stats_club::HOME_ATTENDANCE_TOTAL` (+0x6). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn home_attendance_total(self) -> i32 {
+        read_i32(self.0 + comp_stats_club::HOME_ATTENDANCE_TOTAL)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_home_attendance_total(self, v: i32) {
+        write_i32(self.0 + comp_stats_club::HOME_ATTENDANCE_TOTAL, v)
+    }
     /// `comp_stats_club::WINNING_RUN` (+0x19). Name: verified.
     #[inline(always)]
     pub(crate) unsafe fn winning_run(self) -> usize {
@@ -10775,14 +10793,14 @@ impl CompStatsClub {
     pub(crate) unsafe fn set_winless_run(self, v: i32) {
         write_i32(self.0 + comp_stats_club::WINLESS_RUN, v)
     }
-    /// `comp_stats_club::DANGER_POSITION` (+0x72). Name: inferred.
+    /// `comp_stats_club::FINAL_POSITION` (+0x72). Name: verified.
     #[inline(always)]
-    pub(crate) unsafe fn danger_position(self) -> u8 {
-        read_u8(self.0 + comp_stats_club::DANGER_POSITION)
+    pub(crate) unsafe fn final_position(self) -> u8 {
+        read_u8(self.0 + comp_stats_club::FINAL_POSITION)
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_danger_position(self, v: u8) {
-        write_u8(self.0 + comp_stats_club::DANGER_POSITION, v)
+    pub(crate) unsafe fn set_final_position(self, v: u8) {
+        write_u8(self.0 + comp_stats_club::FINAL_POSITION, v)
     }
     /// `comp_stats_club::CURRENT_POSITION` (+0x73). Name: read.
     #[inline(always)]
@@ -24198,6 +24216,176 @@ impl Addr for ItalianLeague {
 }
 
 impl core::fmt::LowerHex for ItalianLeague {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `config` record in the game's memory (fields in `fields::config`). [pt] Um registro `config` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct Config(pub(crate) usize);
+
+#[allow(dead_code)]
+impl Config {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `config::SAVE_NAME` (+0x113). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn save_name(self) -> u8 {
+        read_u8(self.0 + config::SAVE_NAME)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_save_name(self, v: u8) {
+        write_u8(self.0 + config::SAVE_NAME, v)
+    }
+}
+
+impl Addr for Config {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for Config {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `save_summary` record in the game's memory (fields in `fields::save_summary`). [pt] Um registro `save_summary` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct SaveSummary(pub(crate) usize);
+
+#[allow(dead_code)]
+impl SaveSummary {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `save_summary::GAME_DATE` (+0xf64). Name: verified.
+    #[inline(always)]
+    pub(crate) fn game_date_addr(self) -> usize {
+        self.0 + save_summary::GAME_DATE
+    }
+}
+
+impl Addr for SaveSummary {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for SaveSummary {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `host_entry` record in the game's memory (fields in `fields::host_entry`). [pt] Um registro `host_entry` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct HostEntry(pub(crate) usize);
+
+#[allow(dead_code)]
+impl HostEntry {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `host_entry::COMP` (+0x0). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn comp(self) -> i32 {
+        read_i32(self.0 + host_entry::COMP)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_comp(self, v: i32) {
+        write_i32(self.0 + host_entry::COMP, v)
+    }
+    /// `host_entry::YEAR` (+0x4). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn year(self) -> i16 {
+        read_i16(self.0 + host_entry::YEAR)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_year(self, v: i16) {
+        write_i16(self.0 + host_entry::YEAR, v)
+    }
+    /// `host_entry::HOST` (+0x6). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn host(self) -> i32 {
+        read_i32(self.0 + host_entry::HOST)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_host(self, v: i32) {
+        write_i32(self.0 + host_entry::HOST, v)
+    }
+    /// `host_entry::CO_HOST` (+0xa). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn co_host(self) -> usize {
+        read_usize(self.0 + host_entry::CO_HOST)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_co_host(self, v: usize) {
+        write_usize(self.0 + host_entry::CO_HOST, v)
+    }
+    /// `host_entry::CHOSEN_BID` (+0x1e). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn chosen_bid(self) -> u8 {
+        read_u8(self.0 + host_entry::CHOSEN_BID)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_chosen_bid(self, v: u8) {
+        write_u8(self.0 + host_entry::CHOSEN_BID, v)
+    }
+    /// `host_entry::DECISION_DAY` (+0x1f). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn decision_day(self) -> u16 {
+        read_u16(self.0 + host_entry::DECISION_DAY)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_decision_day(self, v: u16) {
+        write_u16(self.0 + host_entry::DECISION_DAY, v)
+    }
+    /// `host_entry::EDITION_INTERVAL` (+0x21). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn edition_interval(self) -> u8 {
+        read_u8(self.0 + host_entry::EDITION_INTERVAL)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_edition_interval(self, v: u8) {
+        write_u8(self.0 + host_entry::EDITION_INTERVAL, v)
+    }
+}
+
+impl Addr for HostEntry {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for HostEntry {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         core::fmt::LowerHex::fmt(&self.0, f)
     }

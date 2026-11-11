@@ -16,7 +16,7 @@ MUTACOES = [
     ('cqj2_sem_tirar_a_vaga', 'write_u32(c + club::CONTINENTAL_COMP_ID, u32::MAX); // cqj2: no continental place', '// mutacao: a vaga de antes fica', 'cqj_2 removes the place'),
     ('cqj2_sem_nivel_da_divisao', 'write_u16(r + 9, division.reputation() as u16); // cqj2: the division level', 'write_u16(r + 9, 0); // mutacao: sem o nível da divisão', 'cqj_2 division level'),
     ('cqj3_sem_sorteio_da_sede', '*k = exe::utils_random(3) as u8; // cqj3: a candidatura vencedora', '*k = 0; // mutacao: sem o sorteio', 'cqj_3 host drawn'),
-    ('cqj3_intervalo_mais_um', 'write_u16(e + 4, ae.wrapping_add(read_i8(e + 0x21) as i16 as u16)); // cqj3: o intervalo', 'write_u16(e + 4, ae.wrapping_add(read_i8(e + 0x21) as i16 as u16).wrapping_add(1)); // mutacao: um ano a mais', 'cqj_3 next edition'),
+    ('cqj3_intervalo_mais_um', 'write_u16(e + 4, ae.wrapping_add(read_i8(e + host_entry::EDITION_INTERVAL) as i16 as u16)); // cqj3: o intervalo', 'write_u16(e + 4, ae.wrapping_add(read_i8(e + host_entry::EDITION_INTERVAL) as i16 as u16).wrapping_add(1)); // mutacao: um ano a mais', 'cqj_3 next edition'),
     ('cqj3_padrao_sem_segunda', 'return host_pair(e, -1, a, b) as u32; // cqj3: the default venue', '{ let r = host_pair(e, -1, a, b) as u32; *b = u32::MAX; return r; } // mutacao: sem a segunda', 'cqj_3 default host'),
     ('cqk1_inglaterra_abre_em_agosto', '[0x07, 0x00, 0x01, 0x02, 0x05, 0x01], // cqk1: England opens in June', '[0x07, 0x00, 0x01, 0x02, 0x07, 0x01], // mutacao: agosto', 'cqk_1 england'),
     ('cqk1_eua_fecham_em_julho', '[0x19, 0x00, 0xff, 0x0f, 0x07, 0x00], // cqk1: the USA close in August', '[0x19, 0x00, 0xff, 0x0f, 0x06, 0x00], // mutacao: julho', 'cqk_1 usa'),

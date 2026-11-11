@@ -134,8 +134,8 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
                 for _ in 0..n {
                     write_u16(e + 4, y);
                     write_u32(e, read_usize(g as usize) as u32);
-                    write_u16(e + 0x1f, d.day as u16);
-                    write_u8(e + 0x21, intervalo);
+                    write_u16(e + host_entry::DECISION_DAY, d.day as u16);
+                    write_u8(e + host_entry::EDITION_INTERVAL, intervalo);
                     e += 0x22;
                     y = y.wrapping_add(step_towards);
                 }
@@ -146,12 +146,12 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
     let mut k: i16 = 0;
     while k < n {
         let o = (k as i32 * 0x22) as usize;
-        let p = read_usize(this) + o + 0x1f;
+        let p = read_usize(this) + o + host_entry::DECISION_DAY;
         crate::comparison::branch("cqo_3 day draw");
         let r = exe::utils_random((0x46) as u32 as i32); // cqo3: the random draw of the decision day
         write_u16(p, read_u16(p).wrapping_add((r - 0x23) as u16));
         let e = read_usize(this) + o;
-        if read_u8(e + 0x1e) != 0xfd && (read_usize(e + 0x12) as u32 != u32::MAX || read_usize(e + 0x1a) as u32 != u32::MAX) {
+        if read_u8(e + host_entry::CHOSEN_BID) != 0xfd && (read_usize(e + 0x12) as u32 != u32::MAX || read_usize(e + 0x1a) as u32 != u32::MAX) {
             show_error_at(0x9cf0d8, 0x226);
             write_u32(read_usize(this) + o + 0x12, u32::MAX);
             write_u32(read_usize(this) + o + 0x1a, u32::MAX);
@@ -180,11 +180,11 @@ pub(crate) unsafe extern "thiscall" fn init_default_table(this: usize) {
 /// da competição (tabela [0xae23d0], 0x6b bytes, +0x59; 0x786640) ou a todos (0x786780).
 pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize) {
     crate::comparison::branch("cqo_3 hosts news");
-    write_u32(list + 0xa, read_usize(list + 2) as u32);
+    write_u32(list + llist::CURSOR, read_usize(list + 2) as u32);
     let mut it = exe::llist_get_next(list);
     while it != 0 {
         let e = read_usize(it);
-        let k = read_i8(e + 0x1e);
+        let k = read_i8(e + host_entry::CHOSEN_BID);
         let skip = ((k > 0 || k == -3) && read_u16(G_CURRENT_DATE_YEAR) as u32 == (read_u16(e + 4) as u32).wrapping_sub(8))
             || read_usize(e) == read_usize(KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES)
             || (read_usize(e) == read_usize(KEY_CLUB_COMP_FIFA_WORLD_CUP) && read_u16(e + 4) == 0x7d6 && read_usize(e + 6) == read_usize(KEY_NATION_GERMANY));
@@ -201,7 +201,7 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize)
                 }
             } else {
                 exe::new_newsitem(p, 5, 0);
-                let mut b = read_i8(read_usize(it) + 0x1e);
+                let mut b = read_i8(read_usize(it) + host_entry::CHOSEN_BID);
                 if b == -3 {
                     b = 0;
                 }
@@ -209,10 +209,10 @@ pub(crate) unsafe extern "thiscall" fn post_host_news(_this: usize, list: usize)
                 exe::newsitem_set_slot(p, (1) as u32 as i8, read_u16(read_usize(it) + 4) as u32);
                 let o = (b as i32 * 8) as usize;
                 exe::newsitem_set_slot(p, (2) as u32 as i8, read_usize(read_usize(it).wrapping_add(o) + 6) as u32);
-                exe::newsitem_set_slot(p, (3) as u32 as i8, read_usize(read_usize(it).wrapping_add(o) + 0xa) as u32);
+                exe::newsitem_set_slot(p, (3) as u32 as i8, read_usize(read_usize(it).wrapping_add(o) + host_entry::CO_HOST) as u32);
             }
             let id = read_usize(read_usize(it));
-            let c = read_usize(read_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b)) + 0x59);
+            let c = read_usize(read_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b)) + competition::CONTINENT);
             if c != 0 {
                 exe::news_send_to_continent_managers(read_usize(G_NEWS), p, c);
             } else {
@@ -283,7 +283,7 @@ pub(crate) unsafe extern "thiscall" fn load_temp_file(this: usize) -> u32 {
 pub(crate) unsafe fn host_pair(e: usize, k: i8, a: *mut u32, b: *mut u32) -> u8 {
     let off = if k >= 0 { k as i32 * 8 } else { 0 } as usize;
     *a = read_u32(e + 6 + off);
-    let second = read_u32(e + 0xa + off);
+    let second = read_u32(e + host_entry::CO_HOST + off);
     *b = second;
     (*a != u32::MAX) as u8 + (second != u32::MAX) as u8
 }
@@ -308,7 +308,7 @@ pub(crate) unsafe extern "thiscall" fn find_hosts(this: usize, comp: u32, year: 
         if read_u32(e) == comp {
             let ae = read_u16(e + 4);
             if ae == year as u16 || ae == 0 {
-                let k = read_i8(e + 0x1e);
+                let k = read_i8(e + host_entry::CHOSEN_BID);
                 if k > -1 {
                     return host_pair(e, k, a, b) as u32;
                 }
@@ -340,7 +340,7 @@ pub(crate) unsafe extern "thiscall" fn find_next_hosts(this: usize, comp: u32, a
     let mut i = 0i16;
     while i < n {
         if read_u32(e) == comp {
-            let k = read_i8(e + 0x1e);
+            let k = read_i8(e + host_entry::CHOSEN_BID);
             if k > -1 {
                 return host_pair(e, k, a, b) as u32;
             }
@@ -364,7 +364,7 @@ pub(crate) fn compare_year_day(e: usize, year: u16, day: u16) -> i32 {
         if ae != year {
             ae as i32 - year as i32
         } else {
-            read_u16(e + 0x1f) as i32 - day as i32
+            read_u16(e + host_entry::DECISION_DAY) as i32 - day as i32
         }
     }
 }
@@ -420,7 +420,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
     let mut p = first_entry_for_date(start, n, year.wrapping_add(8), day);
     if p != 0 {
         while p <= end && compare_year_day(p, year.wrapping_add(8), day) == 0 {
-            let k = (p + 0x1e) as *mut u8;
+            let k = (p + host_entry::CHOSEN_BID) as *mut u8;
             if *k == 0xfe {
                 *k = 0xff; // cqj3: voting opens
             }
@@ -435,7 +435,7 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
     if p != 0 {
         while p <= end && compare_year_day(p, year.wrapping_add(5), day) == 0 {
             exe::llist_add_tail(l, (&p) as *const usize as usize, 4);
-            let k = (p + 0x1e) as *mut u8;
+            let k = (p + host_entry::CHOSEN_BID) as *mut u8;
             if *k == 0xff || *k == 0xfe {
                 crate::comparison::branch("cqj_3 host drawn");
                 *k = exe::utils_random(3) as u8; // cqj3: a candidatura vencedora
@@ -450,9 +450,9 @@ pub(crate) unsafe extern "thiscall" fn host_country_daily_update(this: usize, to
             let ae = read_u16(e + 4);
             if ae < year && ae != 0 {
                 crate::comparison::branch("cqj_3 next edition");
-                write_u16(e + 4, ae.wrapping_add(read_i8(e + 0x21) as i16 as u16)); // cqj3: o intervalo
-                if read_u8(e + 0x1e) != 0xfd {
-                    write_u8(e + 0x1e, 0xfe);
+                write_u16(e + 4, ae.wrapping_add(read_i8(e + host_entry::EDITION_INTERVAL) as i16 as u16)); // cqj3: o intervalo
+                if read_u8(e + host_entry::CHOSEN_BID) != 0xfd {
+                    write_u8(e + host_entry::CHOSEN_BID, 0xfe);
                 }
             }
             i += 1;

@@ -1292,11 +1292,13 @@ pub(crate) mod commentary_queue {
 #[allow(dead_code)]
 pub(crate) mod comp_stats_club {
     pub(crate) const MATCHES_PLAYED: usize = 0x4; // 1 byte(s): matches the club has played in the competition [verified: Comp_Stats::record_match_result 0x49f570 increments byte +4 of the club entry for every match it records (0x49f6b0..0x49f6ba); the board compares it with 8, 25 ]
+    pub(crate) const HOME_MATCHES_PLAYED: usize = 0x5; // 1 byte(s): home matches the club has played in the competition
+    pub(crate) const HOME_ATTENDANCE_TOTAL: usize = 0x6; // 4 byte(s): summed attendance of the club's home matches in the competition
     pub(crate) const WINNING_RUN: usize = 0x19; // 4 byte(s): current run of consecutive wins in the competition [verified: Comp_Stats::record_match_result 0x49fc4f increments +0x19 on a win and then clears +0x2d/+0x55 (0x49fe9d); restore_team_runs 0x4a22f0 restores the four runs +0x]
     pub(crate) const LOSING_RUN: usize = 0x2d; // 4 byte(s): current run of consecutive defeats in the competition [verified: record_match_result 0x49feb9 increments +0x2d on the defeat path and the win path clears it; TEAM_LOSING_AGAIN commentary (match_eng context_commentary) reads +]
     pub(crate) const UNBEATEN_RUN: usize = 0x41; // 4 byte(s): current unbeaten run (run record: game count +0, dates +0x45/+0x4d)
     pub(crate) const WINLESS_RUN: usize = 0x55; // 4 byte(s): current winless run (run record: game count +0, dates +0x59/+0x61)
-    pub(crate) const DANGER_POSITION: usize = 0x72; // 1 byte(s): danger position used as the board target (0 none) [inference]
+    pub(crate) const FINAL_POSITION: usize = 0x72; // 1 byte(s): the club's final league position of the previous season (0 none) [verified: written by Comp_Stats::set_club_final_position 0x4a2540 (community name); read before any match is played, its weight falling as the season goes on]
     pub(crate) const CURRENT_POSITION: usize = 0x73; // 1 byte(s): club's current position in the competition statistics
     pub(crate) const BEST_POSITION: usize = 0x74; // 1 byte(s): best position reached
     pub(crate) const WORST_POSITION: usize = 0x75; // 1 byte(s): worst position reached
@@ -3112,4 +3114,31 @@ pub(crate) mod commentary_slot {
 pub(crate) mod italian_league {
     pub(crate) const TIEBREAK_TIE_COUNT: usize = 0xee; // 1 byte(s): number of tie-break matches to play (pairs of clubs level on points across a band boundary); the play-off round gets 2n teams and n ties
 
+}
+
+/// Config object (g_config 0xae3138, size 0x31b): game options, language, currency, display settings and save name
+#[allow(dead_code)]
+pub(crate) mod config {
+    pub(crate) const SAVE_NAME: usize = 0x113; // ? byte(s): current save game name (text) [verified: community data map: menubar_handle_command copies Config +0x113 as the save game name; here set to 'auto setup game']
+
+}
+
+/// save summary block of general.dat (0xf74 bytes; 0xf70 before 0x3e027), built by build_save_game_summary 0x591f80
+#[allow(dead_code)]
+pub(crate) mod save_summary {
+    pub(crate) const GAME_DATE: usize = 0xf64; // 8 byte(s): game date when saved [verified: build_save_game_summary (0x591f80, file_screens.rs) writes G_CURRENT_DATE at +0xf64; +0x7d0 version text, +0xf6c play time, +0xf70 time()]
+
+}
+
+/// one 0x22-byte entry of the HostCountry table (HostCountry.tmp): competition, edition year, three bids of host/co-host nations, chosen bid, decision day, interval
+#[allow(dead_code)]
+pub(crate) mod host_entry {
+    pub(crate) const COMP: usize = 0x0; // 4 byte(s): competition id (value of the competition key)
+    pub(crate) const YEAR: usize = 0x4; // 2 byte(s): edition year (0 = no edition)
+    pub(crate) const HOST: usize = 0x6; // 4 byte(s): host nation of bid k (+8*k; bid 0 = the default host); -1 none
+    pub(crate) const CO_HOST: usize = 0xa; // 4 byte(s): co-host nation of the second bid
+
+    pub(crate) const CHOSEN_BID: usize = 0x1e; // 1 byte(s): chosen bid 0..2; -1 voting open, -2 voting closed, -3 fixed default host
+    pub(crate) const DECISION_DAY: usize = 0x1f; // 2 byte(s): day of year of the host decision (+ random -35..+34)
+    pub(crate) const EDITION_INTERVAL: usize = 0x21; // 1 byte(s): years between editions; added to the year on 1 January
 }
