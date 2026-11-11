@@ -8,6 +8,14 @@ Made on 11/11/2026 for the Rust Tweaks release 1.5 (rebalancing the market), by 
 
 **Updated 11/11/2026: reader D2 closed** (`levas/reorganizacao/mercado/fechamento_mkd2.en.md`): 0x4ce4e0 (the player picks an offer; now item `mkd_4`) and 0x4c7ac0 (contract end, AI renewals, free agents; not ported) proved in the disassembly (section D §2.2, §2.4, §2.6, §5, §7); the natural end of a loan too (section C §9).
 
+**Updated 11/11/2026: reader D3 closed** (`levas/reorganizacao/mercado/fechamento_mkd3.en.md`): 0x862720 (the default wage of the initial shortlists and the regens; item `mkd_6`) and 0x844780 (the staff's will; item `mkd_7`) proved and ported (section D §1, §2.1b, §2.3, §5, §6, §7); no market routine is left only mapped.
+
+**Updated 11/11/2026: the nations' loan rules closed** (`levas/reorganizacao/mercado/fechamento_mkc.en.md`): the 29 rules virtual tables checked against the code (section C §1); the shared routines (three run in the 8 leagues: 0x902240 through the USA, 0x90f1a0 through France and Australia, 0x7ec8e0 through Brazil); the periods, `can_loan_player` and `can_end_loan` of Finland, Germany, Ireland, Northern Ireland and Norway proved (§3, §4); the §7 correction; items `mkc_3` to `mkc_6`.
+
+**Updated 11/11/2026: section A §3 closed** (`levas/reorganizacao/mercado/fechamento_mka.en.md`): 0x4d1600 (the asking price) disassembled whole and proved, now item `mka_2` (section A §3, 18 steps; corrections: morale was inverted, step 7 is the recent signing, the reasons 0x800/0x1000/0x2000, the return to the value without a shortlist entry, the goalkeeper's cap at 32); the manager's Youngsters at 0x4d3ccb proved in the youngster floor (section D §3).
+
+**Updated 11/11/2026: reader D1 closed** (`levas/reorganizacao/mercado/fechamento_mkd1.en.md`): 0x864550 (the default wage) proved and ported as item `mkd_2`; 0x85fc50 (the desired contract) proved and later ported as item `mkd_3`, with five corrections in §2.3 (the cheap renewal requires not leaving on a Bosman; the 6th argument is the reasons; the q caps by grievance; the clause fees; finances +0x10 [inferred]); the "250,000 cap" and 150000 are "not available" markers (section D §2.3, §5, §6, §7).
+
 Corrections found after the sections were written: 0x83f3a0 is called by `allocate_transfer_budget` 0x83b6e0 (0x83bab7), `update_staff_status` 0x843e10 (0x844108) and itself, not by 0x83cb40; 0x83cb40 is now item `mkb_2` and 0x83f3a0 item `mkb_3`; in 0x83cb40 the target base (+0x74, from 0x7bca90) sets the slot states and the cut (base/68 − 35), the rating itself (+0x64) prices the slots.
 
 Sections: [A. The money side](#a) · [B. How the AI buys and sells](#b) · [C. Loans, windows and limits](#c) · [D. The player's side and who decides](#d)
@@ -27,7 +35,7 @@ Ghidra's pseudo-C, from the use or from the community map, without proof.
 |---|---|---|---|
 | 0x598800 | `Finance::get_transfer_budget` | no → **item `mka_1`** | `get_transfer_budget` |
 | 0x4d42d0 | `contract_manager_get_human_asking_price` | no → **item `mka_1`** | `get_human_asking_price` |
-| 0x4d1600 | `contract_manager_calc_asking_price` | no; **left out of this round** (11.3 KB of x87, see below) | — |
+| 0x4d1600 | `contract_manager_calc_asking_price` | no → **item `mka_2`** (disassembled whole, see §3) | `calc_asking_price` |
 | 0x840d80 | `Shortlist_Manager::value_player_for_club` | yes (`value_player_for_club`, shortlist_manager.rs) | — |
 | 0x4d0c60 | `CONTRACT_MANAGER::calc_player_value` | yes (`calc_player_value`, contract_manager.rs) | — |
 | 0x544410 | `non_player_attribute_rating` | yes (`chance_to_know`, fog_of_war.rs) | — |
@@ -187,65 +195,163 @@ the floor **[proved]**.
   Youngster/Not Needed, and 0x83cb40 sets Youngster (6) under 20 and Not Needed (7) otherwise.
 
 Note: inside 0x4d1600, a human seller whose manager is **on holiday** (0x5fd210, 0x5fea50 with option 0) and without
-bit 4 returns the stored value at once **[proved: 0x4d16xx]**: in the test career (manager on holiday) the human
+bit 4 returns the stored value at once **[proved: 0x4d1697..0x4d16e7]**: in the test career (manager on holiday) the human
 club's asking price is the stored value.
 
 **Extension point:** the return; or the floor (`staff::VALUE` +0x52, which the game itself updates).
 
-### 3. The asking price: `contract_manager_calc_asking_price` (0x4d1600) — map, no item
+### 3. The asking price: `contract_manager_calc_asking_price` (0x4d1600) — item **`mka_2`**
 
-`thiscall(contract manager, seller, buyer, player, *reasons, adjust, flag)`, `ret 0x18`, 0x4d1600..0x4d4258 (11.3 KB,
-~3200 instructions, x87 with dozens of `_ftol` whose argument Ghidra hides) **[proved: size and convention]**. 20
-callers: the transfer request (0x4d8705, already Rust), the board veto (0x696ec5, Rust), the human's price (0x4d4429),
-the computer's bids (0x8e6533, 0x8e6554, 0x8c8c6e, 0x8c8291...), the restrictions check (0x8cd391), the shortlists and
-the screens. It is **left out of this round**: a bit-faithful port needs the whole disassembly (the pseudo-C's `_ftol`
-calls do not say what they truncate) and does not fit in the time; the map below is **[inferred]** from the pseudo-C,
-except where marked.
+`thiscall(contract manager, seller, buyer, player, *reasons, adjust, flag)`, `ret 0x18`, 0x4d1600..0x4d4257
+**[proved]**: disassembled whole, instruction by instruction (`desmonta.py jogo/cm0102.exe 0x4d1600 0x4d4260`, 3135
+lines), with the x87 stack operands followed by hand and the magic-constant divisions checked by brute force (/50, /500,
+/1000, /20, /670, /−1000). Item `levas/fila/mka_2` (compiled; the proof on the benches is left to the main session).
+`reasons` is a `ushort*` (set with `or byte [edi+1], k`, cleared with `and word [edi], 0x800`); `adjust` is read as a
+byte [0x4d19c6]; `flag` as a dword [0x4d3891]. 20 callers (`refs.py`): 0x4d4429, 0x4d739c, 0x4d8705, 0x696ec5,
+0x7847d4, 0x7b6df1, 0x8402fe, 0x840bfb, 0x8433a8, 0x843574, 0x843b17, 0x84b0e0, 0x8c0adc, 0x8c1542, 0x8c8291,
+0x8c8c6e, 0x8cd391, 0x8e6533, 0x8e6554, 0x8f4ba4. The routine draws nothing; it only writes `*reasons` (and
+`G_CONTRACT_LOOKUP_RESULT` inside `calc_player_value`).
 
-The rule, broadly:
-1. No seller, no contract with him, a contract that is not type 2 or a Bosman leaver: 0 **[proved]**. A human seller
-   on holiday without bit 4: the stored value **[proved]**.
-2. **League factor** (no visible later use; probably inside an `_ftol`): by `nation::STATE_OF_DEVELOPMENT` (+0x7e,
-   1 to 3), `club::PROFESSIONAL_STATUS` (2 → ×2 or ×4, 3 → ×7.5) and (league reputation² × 25 + club reputation) /
-   (factor × 1000); gives 1 − (20 − x)² × 0.2 / 60, between 0.1 and 1.1.
-3. **Age** above 28: a power factor (0x945ff0).
-4. **Happiness and role** (`contract::HAPPINESS` +0x3d, `SQUAD_STATUS` +0x4f >> 4): the shortfall up to 75/50/40/25/0
-   for roles 1, 2 and 5, 3, 4, 6; role 7 → happiness −100. A player absent without leave (0x418f60): the seller
-   manager's discipline zeroes the terms.
-5. **Morale** (`contract::MORALE` +0x44): × 0.00746 (negative) or 0.00333; × 0.8333 without grievances (`GRIEVANCES`
-   +0x45 = 0) or 1.2 with.
-6. **The value** = `calc_player_value(player, seller, 0, ability seen by the manager (0x6e86d0), 0)` (0x4d1a5a); 0 →
-   returns 0 **[proved]**.
-7. **Contract running out** (with `adjust`, computer seller, not listed): a factor by role (7.5; 6.0; 5.5; 3.5 as
-   f32) minus days to the end (121 to 365) / (365 / (f − 1)); above 2 sets reason 0x100.
-8. **High happiness** (≥ 61 reason 0x200; 21..60 reason 0x400): (shortfall/2 + happiness) × 0.01167 + 1.4165, and
-   above 49 at a computer club × (… × 0.006 + 0.7).
-9. **The seller's finances** (0x5a0590): the balance against the table 0x9a7f48 by reputation / 500 (50 thousand to
-   25 million): rich, balance / table; poor, damped. Added to happiness × 0.002 and the observation nibble² × 0.05
-   (79-byte record +0xb): ≤ 1 → × 0.2125 + 0.7875, else × 0.25 + 0.75; at least happiness × 0.0025 + 0.5, at most 2.5.
-10. **The buyer:** Celtic × Rangers (`g_key_club_glasgow_celtic`/`rangers` 0x9d0118/0x9d011c): 2.3 + …; a derby
-    (0x4b02e0) or rivals (`club::RIVAL1..3` +0xb3/+0xb7/+0xbb), same stadium city or not: 1.3 to 2; same division
-    (outside 0x9cf764): 1 + … × 0.005 (reasons 8 and 0x10).
-11. **Squad importance:** ability above reputation/50 × 17/20, age < 25, role < 7: 1 + … × 0.04 (reason 0x20).
-12. **The price** = value + value × (product of the factors, capped 4.25..10 and 6 × the finance factor), between −3
-    and 50 million; minimum 1000. Work permit (0x8c7560) and listed: the reasons keep only 0x800. A rich club
-    (0x5986b0) with reputation > 4250 and age > 18: adjusted by the wealth band.
-13. **Grievances** (`GRIEVANCES` & 0x6b or 0x100) with less than a year of contract: the price goes down towards the
-    value.
-14. **Big nations** (England, Italy, Spain, Germany, Scotland, Japan, the USA, Holland, Portugal...) with reputation
-    ≥ 4001: multipliers by role (1.25; 1.1; 1.4; 1.15; 1.5; 1.75; ×2 up to +2M; ×5 up to +5M) and 1.025..1.1 more when
-    the buyer is in the same division; plus the contract flags (0x8676f0) and the staff ones (Loyalty +0x59,
-    Professionalism +0x5b, morale).
-15. **Age cap** **[proved in the pseudo-C, constants]**: 29 (26 for a goalkeeper, `player_sheet::GOALKEEPER` = 20,
-    −3): value + 5M; 30: +4M; 31: +3.25M; 32: +2.5M; 33: +1.75M; 34: +1M; 35: +500k; 36: +200k; 37: +100k; 38 to 45:
-    the value.
-16. **Portugal** above the value: < 6M → × (price × 1.667e−7 × 0.6 + 0.3); else × 0.9. **South Korea** above the
-    value and 50000: an adjustment.
-17. **The active release fee** (0x867b50) caps the price **[proved]**.
+The rule, in order **[proved]** (addresses in brackets):
 
-**Extension points:** the return of 0x4d1600 (all 20 callers go through it; the reasons in `*reasons` explain a
-refusal); the value call at 0x4d1a5a (the price is value + premium: scaling the value scales everything); the age cap
-(step 15) and the fee (step 17).
+1. **Early exits** [0x4d160d..0x4d16e7]: `get_contract_for_club(this, player, seller)` [0x4d1663]; no seller, no
+   contract, `+0x35 & 0x3f` ≠ 2 [0x4d1676] or `+0x49` ≠ 0 [0x4d1683]: 0. A human club (1, 1) [0x4d1697] on holiday
+   (`HUMAN_MANAGER::is_on_holiday` [0x4d16b3], `get_holiday_option(0, manager)` ≠ 0 [0x4d16ce]) and without bit 4
+   (`test [contract+0x4e], 4` [0x4d16d7]): `staff::VALUE` (+0x52). Value (step 6) 0 → 0 [0x4d1a69].
+2. **The league factor L** = 1 − (20 − y)² × 0.2 × (1/60) [0x4d17fc..0x4d1812], between 0.1 and 1.1
+   [0x4d1818..0x4d1852]. x = `nation::STATE_OF_DEVELOPMENT` (+0x7e), 3 outside 1..3 [0x4d170c..0x4d1728]. With a
+   division: x = (x + 1) × 0.5, × 4 (`PROFESSIONAL_STATUS` 2) or × 7.5 (3) [0x4d172e..0x4d174e]; y = (division
+   reputation² × 25 + club reputation) / (x × 1000) [0x4d1754..0x4d177a]. Without one: x × 2 or × 7.5, without the
+   (x + 1)/2, and y = (`nation::LEAGUE_STANDARD` (+0x85)² × 25 + club reputation) / (x × 1000) [0x4d17b3..0x4d17f2]. No
+   nation: y = 1. L multiplies the premium [0x4d23c1] and the reputation premium [0x4d2482] (it is used).
+3. **Age:** A = (1 − (age − 28) × 0.1)^2.0 (`_CIpow`, exponent 2.0 [0x968950]) [0x4d1865..0x4d188a]; it multiplies the
+   premium [0x4d23c5] and the reputation premium [0x4d2486]. Age = byte `staff+0x18`.
+4. **Happiness and role** (role = `SQUAD_STATUS` >> 4, jump table 0x4d4258) [0x4d188e..0x4d1932]: 1 → max(75 − h, 0); 2
+   and 5 → max(50 − h, 0); 3 → max(40 − h, 0); 4 → max(25 − h, 0); **6 → max(−h, 0)**; 7 → h = −100 and shortfall 0; 0
+   and 8+ → shortfall 0 (h = `contract::HAPPINESS` +0x3d). **Absent without leave** (`AWOL::is_player_awol(player, 1)`
+   [0x4d1944]): shortfall 0, the adjust switched off and h ≤ −5 × the seller manager's `non_player::DISCIPLINE` (+0x14)
+   (h = −100 without a manager) [0x4d194d..0x4d19c4]; otherwise the adjust comes from the 5th argument [0x4d19c6].
+5. **Morale** [0x4d19cd..0x4d1a1a]: M = 1 + morale × 1/300 [0x968e60] (positive) or × 1/134 [0x969090] (zero or
+   negative); **× 1.2 without grievances** (`GRIEVANCES` +0x45 = 0) [0x968978] and **× 0.8333 with grievances**
+   [0x969088] (the old map had it inverted).
+6. **The value V** [0x4d1a5a]: the "seen" figure is the **potential** as seen: `perceived_ability(the seller's manager
+   (+0xcf), player, seller, 1, rep)` [0x4d1a43], kind 1 (potential), rep = `player_sheet::CURRENT_REPUTATION` (+0xb) /
+   2 + `POTENTIAL_ABILITY` (+7) × 25 in 16 bits [0x4d1a21..0x4d1a35]; then `calc_player_value(this, player, seller, 0,
+   seen, 0)` (only the low 16 bits of "seen" count). "Seen" is the only place the seller manager's judgement enters.
+7. **Recent signing** (formerly read as "contract running out") [0x4d1aff..0x4d1b7c]: the days are **since the player
+   joined the club** (`staff::DATE_JOINED_CLUB` +0x3e/+0x40), d = 365 × (current year − joining year) + current day −
+   joining day, between 121 and 365 (negative → 121). f by role (table 0x4d4274, f32): 2 → 6.0; 3 → 5.5; 4 and 5 → 3.5;
+   the others → 7.5; roles 7 and 8 out [0x4d1abc..0x4d1ac8]. C = f − d / (365 / (f − 1)): f up to 4 months after
+   joining, 1 after a year; above 2 it sets 0x100. Conditions: adjust on, an AI seller, not listed nor asking to leave
+   (0x544520). C enters Q, the cap D²C, the premium (× min(C², 25)) and the cap 3V × D × C.
+8. **High happiness** [0x4d1b80..0x4d1c11]: H = (shortfall/2 + h) × 0.01167 + 1.4165; with h ≥ 50 and an AI seller, H =
+   ((shortfall/2 + h)² / 50 × 0.006 + 0.7) × H. Reasons: h > 60 → 0x200, otherwise h > 20 → 0x400.
+9. **The seller's finances** [0x4d1c15..0x4d1d6c]: the table 0x9a7f48 (21 doubles, by reputation / 500): 50 thousand,
+   100 thousand, 200, 300, 400, 500, 750 thousand, 1, 1.25, 1.5, 2, 4, 6, 8, 10, 12.5, 15, 17.5, 20, 22.5, 25 million.
+   B = `finance::BALANCE` (0 without finances). B ≥ T: B / T; B < T: ((B − T)/T + x) / (x + 1), x = B × 1.25e-6 between
+   0 and 10. G = (that + n² × 0.05) + h × 0.002, n = the low nibble of +0xb of the 79-byte record [what n means is still
+   **inferred**: the knowledge/scouting level]. G > 1 → × 0.25 + 0.75; otherwise × 0.2125 + 0.7875. Floor h × 0.0025 +
+   0.5 (when the floor wins there is **no** cap); otherwise a cap of 2.5. G also caps Q (≤ 6G).
+10. **The buyer** [0x4d1d83..0x4d2002]: D = 1 without a buyer. h' = h, or ftol(h × 1.5) when h > 20 without grievances.
+    Celtic × Rangers: D = max(h' × 0.04 + 2.3, 2.3); league clash (`comp_util_get_league_clash_type(buyer, seller)` ≠
+    0): same city (`stadium::CITY` +0x38) max(h'/30 + 2, 2), otherwise max(h' × 0.02 + 1.6, 1.3); the seller's rival
+    (`club::RIVAL1..3`): same city max(h' × 0.02 + 1.6, 1.3), otherwise max(h' × 0.01 + 1.3, 1.3); these three set
+    **0x800** with D ≥ 1.3; same division (outside `KEY_CLUB_COMP_A_LOWER_DIVISION`): max(h' × 0.005 + 1, 1), sets
+    **0x1000** with D > 1.3. (The reasons are 0x800 and 0x1000, not 8 and 0x10: the `or` is on the high byte.)
+11. **Importance in the squad** [0x4d2006..0x4d211c]: k = reputation/50 + 1, threshold = k × 17 / 20. With `reasons`,
+    role 5 sets **0x2000** and does not compute. Seen > threshold, age < 25, role < 7: with `reasons`, role 6 sets
+    0x2000 and does not compute; otherwise S = 1 + ftol((seen − threshold) × k × 0.005) × 0.04, at least 1; **role 4
+    also multiplies H by S**; S > 1.6 sets 0x2000.
+12. **The price:**
+    - Q = G × H × M × S × D × C, at most clamp(D² × C, **4.25 is the floor** [0x969008], 10) and at most 6G
+      [0x4d2124..0x4d21b5]. With D = C = 1 the cap is 4.25.
+    - R = ftol((current reputation + `HOME_REPUTATION`) × 0.3 + `WORLD_REPUTATION` × 0.4); e = (club rep + R − 4000) ×
+      225 between 150 thousand and 2 million; E = (((1 + (R − (1.2 rep − 2000)) × R × 5e-8) × u + 100) − u) × 0.01, u =
+      h × 0.5 + 50; above 1, E⁵; E between 1 and 3 [0x4d21bd..0x4d22f2].
+    - raw premium p = ftol(V × Q − V). Negative: max(p, −0.4 V), at least −3 million. Positive: min(p × C, ftol(e × Q))
+      × min(C², 25) × L × A; half if listed or asking to leave; up to 50 million [0x4d2307..0x4d2403].
+    - price = V + premium; with E > 1, + ftol(L × A × t), t = ftol(price × E − price), above 5 million 0.625 t + 1.875
+      million, above 10 million 0.125 t + 8.75 million; at least 1000 [0x4d2410..0x4d2499].
+    - **Work permit** (`player_needs_work_permit` [0x4d24bb]): at most V. **Listed or asking to leave:** the reasons keep
+      only 0x800 and the price ≤ `staff::VALUE` × D. **An A team with a linked B team** and a role outside 1, 5, 2, 3:
+      the same [0x4d24c4..0x4d257a].
+    - **Rich club floor:** an AI seller, reason 0x800 already set, reputation > 4250, age > 18, role ≠ 7, wealth band ≠
+      −1 and −2: if the price < (seller rep + 25000) × 100, it becomes (rep **of the player's club** + 25000) × 100
+      [0x4d2585..0x4d261b]. The band only filters (it is not "an adjustment by the band").
+    - At most max(3V, V + 5 million) × D × C [0x4d261f..0x4d267a].
+13. **Grievances** [0x4d267e..0x4d27e3]: price > V and `GRIEVANCES` & 0x16b: days to the contract end
+    (`CONTRACT_EXPIRES` +0x2d/+0x2f); V' = V (≥ 365 days) or ftol(days/365 × V); w = days × 0.0027 − 0.485 between 0
+    and 1; p' = ftol((1 − w) V' + w × price); ratio = (V' + p') / max(2 × B × D, 1) between 1 and 3; y = 1.375 − 0.375
+    ratio; price = ftol((1 − y) V' + y p'). It also applies with more than a year of contract (then only the balance
+    pulls).
+14. **Ladders A and B and the return to the value** [0x4d27ff..0x4d387e]: the **seller's** shortlist entry for the
+    player (`find_club_shortlist_entry(seller, player, 0, 1)`). "Big nation": reputation > 4000, nation in {England,
+    Italy, Spain, France, Germany, Scotland, USA, Japan, Holland, Portugal}, (`LEAGUE_STANDARD` > 12 or reputation ≥
+    7000), finances with a band ≠ −1/−2, the player neither listed (0x5444a0) nor listed at his request (0x544600).
+    - **Ladder A** (the entry targets the player, or `staff::SQUAD_SELECTED_FOR` = 2 with a continental competition): the
+      youngster step (under 25, role outside 6/7, seen × 50 > reputation): min(seen / (125 − morale/4) × price, price −
+      |age − 20| × 1,333,333 + 5 million). Small club (rep ≤ 6750 and division reputation ≤ 15): with grievances and
+      morale ≤ 0, only with grievances 0x101 and more than 425 days of contract: role 1 +375 thousand/×1.25 (same
+      division +50 thousand/×1.05), role 2 +200 thousand/×1.2 (+37.5 thousand/×1.025); otherwise: role 1 +750
+      thousand/×1.75 (+100 thousand/×1.1), 2 +400 thousand/×1.4 (+75 thousand/×1.075), 3 +150 thousand/×1.15 (+25
+      thousand/×1.025). Big club: with grievances and morale ≤ −50 (0x101 and > 425 days): role 1 min(+2.5M, ×2)
+      (+1M/×2), 2 +1.5M/×1.5 (+750 thousand/×1.75), 3 +1M/×1.25 (+400 thousand/×1.25); otherwise, with a buyer, > 225
+      days, role ≠ 7, professionalism and loyalty > 5, current reputation > 6250, happiness > −loyalty, aged 23 to 30:
+      +1M/×1.25 and, in the same division with a league clash, +400 thousand/×1.25; without serious grievances: role 1
+      min(+5M, ×5) (+1M/×2), 2 +2.5M/×2.5 (+750 thousand/×1.75), 3 min(+1.5M, ×2) (+400 thousand/×1.4). Each step is
+      min(price + K, price × f).
+    - **Ladder B** (empty entry, target −1): the youngster step under 22; small club without (grievances and morale ≤
+      0): role 1 +250 thousand/×1.25 (+50 thousand/×1.05); role 2, or another with happiness > 40 − loyalty, +100
+      thousand/×1.1 (+25 thousand/×1.025). Big club: with grievances and morale ≤ 0 (0x101, > 425 days): role 1 +500
+      thousand/×1.25 (+250 thousand/×1.1), 2 +1M/×1.2 (+200 thousand/×1.05), 3 +750 thousand/×1.15 (+150
+      thousand/×1.02); otherwise (> 225 days, role ≠ 7, loyalty + professionalism > 10, current reputation > 5250,
+      happiness > 10 − loyalty, aged 23 to 30) +750 thousand/×1.15 (+150 thousand/×1.02); without: role 1 min(+2M, ×2)
+      (+100 thousand/×1.1), 2 +1.5M/×1.5 (+75 thousand/×1.075), 3 +1M/×1.5 (+20 thousand/×1.02).
+    - A big nation with an entry targeting someone else: nothing.
+    - **No entry** and outside the big nation (or a big nation without an entry that does not fall in ladder A), price >
+      V: h < 60 → 0.67 V + 0.33 price; otherwise t = 1.27 − h × 0.01 and (1 − t) price + t V [0x4d3826..0x4d387e]. It
+      is the common case outside the big leagues: the price goes two thirds of the way back to the value.
+    - The contract flags (0x8676f0), loyalty, professionalism and morale are not in the ladders: they are in the
+      youngster floor (step 15).
+15. **The youngster floor and the manager's Youngsters** [0x4d3886..0x4d402a]: with `flag` (6th argument), age < 24,
+    seen > 110, a nation and role ≠ 7: si = seen; outside goalkeepers, age factor a = 2.6 − 0.07 age; physical =
+    ftol(((stamina × 1.2 + strength) × a + teamwork × 0.8) + work rate × 1.2 + jumping × 0.75); dribbling and finishing
+    (attributes 11 and 12) × a, up to 20; by pace + acceleration: 40 → +15/+10/+8/+5/+3 by physical (85/75/65/50/35) and
+    + (dribbling − 13)², + (finishing − 14)²; > 34 → +8/+5/+3/+1, (dribbling − 15)², 0.8 × (finishing − 15)²; > 25 →
+    +5/+3/+1, −3 with physical < 35, 0.8 × (dribbling − 15)², 0.5 × (finishing − 15)²; < 15 → −5/−8/−10
+    [0x4d38d3..0x4d3ba2]. With the entry targeting the player: + rep/1000. Role 1: + rep/500 (under 19 at least 121); 2
+    and 3: + rep/670 (19+) or rep/500; 4 under 19: + rep/670; over 20 with current ability < 45: − rep/1000; seen > 120
+    and `club::TRAINING` > 10: + training − 10 [0x4d3ba5..0x4d3c98]. **The Youngsters** [0x4d3c9c..0x4d3cd0]: with a
+    manager (`club::MANAGER`) and a non-player sheet, at an **AI club** (`is_human_club(seller, 1, 1)` = 0): si +=
+    `non_player::YOUNGSTERS` (+0x22) − 10 (in 16 bits); it is the manager's only input besides the judgement in "seen".
+    Then, if the player joined the club after the manager and si < potential: + half the difference
+    [0x4d3cd4..0x4d3d15]. si > 120: si ≤ clamp(rep × 0.0167 + 100, 150, 220); bonus (si > 150, an entry, rep ≥ 2500,
+    league standard > 10) = (min(4 si − 600, 200))² × 250 × rep / 6000; Y = ftol((si² − 14400) × 250 × 0.6153846 +
+    bonus); standard < 13 or status 3: × r/5250 (× 0.75 at status 3 below 5250; standard < 5 above 4000: 4000 + (r −
+    4000)/5); grievances: × 0.75 (morale < −50), × 0.8 (0x800000), × 0.95 (contract flag 8), × 0.9 (1), × 0.9 (0x40);
+    loyalty < 6 and professionalism < 10: × 0.9 (morale < 0) and × 0.9 (buyer 750 above); loyalty > 15 without negative
+    morale: × 1.1. The price is at least Y, with reason 0x2000 [0x4d3d17..0x4d402a].
+16. **Age cap** [0x4d402e..0x4d4153], table 0x4d4288: a goalkeeper (`GOALKEEPER` = 20) counts 3 years less, so his cap
+    starts at **32** (not 26); 29: value + 5M; 30: +4M; 31: +3.25M; 32: +2.5M; 33: +1.75M; 34: +1M; 35: +500 thousand;
+    36: +200 thousand; 37: +100 thousand; 38 to 45: the value; above 45, nothing.
+17. **Portugal**, price > V: < 6 million, x = (price × 1.667e−7 × 0.6 + 0.3) × price; otherwise 0.9 × price; the price
+    = max(V, x) [0x4d416b..0x4d41eb]. **South Korea**, price > V and > 50000: (price − 50000) × 0.15 + 50000
+    [0x4d41ed..0x4d421d].
+18. **The active release fee** [0x4d422a..0x4d423e]: `has_active_release_clause` and price ≥ `RELEASE_FEE` (+0x21) →
+    the fee.
+
+**Defects of the original [proved]:** in step 4 with an absence without leave, the high 16 bits of `[esp+0x24]` keep
+garbage (the `movsx ax` over the manager pointer), but only the low 16 are read: no effect. The rich club floor compares
+with the seller's reputation and writes with that of **the player's club** (`staff::CLUB_JOB`), which differs for a
+loanee or a player of another club [0x4d25ea / 0x4d2603]. The B team's `b` is not initialised; no effect because the
+callee writes it whenever it returns a club [0x5412a7, 0x54187c → 0x541e42].
+
+**Extension points:** the return of 0x4d1600 (20 callers) and `*reasons` (0x100 recent, 0x200/0x400 happiness, 0x800
+rival/derby, 0x1000 same division, 0x2000 important/youngster); the value call [0x4d1a5a] (V enters linearly: scaling V
+scales everything); the 4.25 floor of the cap [0x969008] and 6G (with D = C = 1, Q ≤ 4.25: the premium reaches 3.25 V);
+the return to the value without an entry [0x968f80 = 0.67, 0x968f78 = 0.33], the rule that weighs most outside the big
+leagues; the Youngsters [0x4d3ccb] (`movsx cx, [eax+0x22]` and `lea esi, [esi+ecx−0xa]`, the −10 is an immediate); the
+wealth table 0x9a7f48 and the age cap (immediates 0x4d4067..0x4d4133).
 
 ### 4. The player's value for a club: `value_player_for_club` (0x840d80, in Rust)
 
@@ -292,6 +398,8 @@ game stores from it). 58 callers.
 - **`mka_1`** (`levas/fila/mka_1/`): `get_transfer_budget` (0x598800) and `get_human_asking_price` (0x4d42d0),
   side-by-side comparers from the draw state; mutations: Business + 1 instead of + 6, half the excess at the soft cap,
   the human price floor doubled. The proof is in `PRONTO.txt`.
+- **`mka_2`** (`levas/fila/mka_2/`): `calc_asking_price` (0x4d1600), from the whole disassembly (§3). Compiled; the
+  proof on the benches is left to the main session.
 
 
 <a id="b"></a>
@@ -712,12 +820,61 @@ in Rust already compared (0 divergences); **[inferred]** = a conclusion from the
 | 0x7f6530 / 0x7f6650 | Scotland: period, `can_loan_player` | yes | — |
 | 0x661770 / 0x63c3d0 / 0x859630 | `can_loan_player` of Italy, Ireland, Spain | yes | — |
 | 0x40a600 / 0x40a610 | base `can_loan_player` / `can_end_loan` (`mov eax, 1; ret`) | no | cannot be detoured (2 bytes) |
-| 0x5a9a80 / 0x5a9af0 / 0x5a9ba0 | Finland: period, `can_loan_player`, `can_end_loan` | no | out: does not run in the 8 leagues |
-| 0x794760 / 0x902240 | Norway, Turkey `can_loan_player` | no | out (same) |
-| 0x793870 / 0x793900 / 0x7ec8e0 / 0x90f1a0 | Northern Ireland (period, `can_loan_player`), Russia and Wales (period) | no | out (same) |
-| 0x5e0210 / 0x63c530 / 0x63c4e0 | Germany `can_end_loan`, Ireland `can_end_loan` and `record_loan` | no | out (same) |
+| 0x5a9a80 / 0x5a9af0 / 0x5a9ba0 | Finland: period, `can_loan_player`, `can_end_loan` (only the Finnish table 0x96a75c; as the borrower's rule they do not run in the 8 leagues, `can_end_loan` only if the AI borrows from a Finnish club) [proved] | no | **mkc_4** |
+| 0x902240 / 0x90f1a0 / 0x7ec8e0 | `can_loan_player` of Turkey **and the USA**; the "Welsh" period of **11 nations** (Australia, Belgium, Croatia, **France**, Germany, Greece, Holland, Ireland, Korea, Turkey, Wales); the "Russian" period of **Brazil**, Poland and Russia: **they run in the 8 leagues** [proved] | no | **mkc_3** (8 leagues) |
+| 0x794760 / 0x793870 / 0x793900 | `can_loan_player` of Norway **and Holland**; Northern Ireland's period (only it); `can_loan_player` of Denmark, Korea, Northern Ireland and Wales [proved] | no | **mkc_5** |
+| 0x5e0210 / 0x63c530 / 0x63c4e0 | Germany `can_end_loan`, Ireland `can_end_loan` and `record_loan` (only their own tables, 0x96b3cc and 0x96c190) [proved] | no | **mkc_6** |
+| 0x5ed060 | `can_loan_player` of Greece, Croatia and Poland: `mov eax, 1; ret 0x10` (8 bytes) [proved: 0x5ed060..0x5ed065] | no | nothing to port |
 | 0x8e8560 / 0x8e8800 | base `can_sign_player` / `can_make_offer` (foreign player limits) | no | mapped here, not ported (they belong to signings, reader B) |
 | 0x784100 / 0x7874b0 / 0x5fd2f0 | `NewsItem::auto_respond`, `News::auto_respond_all`, `HUMAN_MANAGER::set_on_holiday` | no | mapped (the holiday defect) |
+
+Items mkc_4, mkc_5 and mkc_6 run with LIGAS = `ENG FIN NOR NIR GER IRL`; mkc_3 with the 8 leagues. All compiled in a
+copy (with mkc_1 and mkc_2), mutations compiled, nothing run in the game.
+
+**The 29 rules virtual tables [proved].** The list above came from the community map (`*_RULES::` names); checked
+against the code: every rules virtual table has 0x40a5f0 in slot +0x14, and a scan of `.rdata` for that dword finds
+**29 tables** (28 nations + the base), each written by a single constructor (`refs.py`; 15 by the constructors already
+in Rust, `construct_nation_rules`, the others by the community map's names in the constructors 0x5c1570 France,
+0x7ec770 Russia, 0x555460 Denmark etc.). Loan slots: +0 `daily_update`, +8 `record_loan`, +0x20 `CAN_LOAN_PLAYER`,
++0x24 `CAN_END_LOAN`, +0x28 `GET_LOAN_PERIOD`; "base" = 0x40a600 / 0x40a610 / 0x8e8bd0, "none" = 0x583470.
+
+| Table | Nation | +0 | +8 | +0x20 | +0x24 | +0x28 |
+|---|---|---|---|---|---|---|
+| 0x9674a0 | Argentina | 0x40a710 | none | base | base | base |
+| 0x967830 | Australia | none | none | 0x412dd0 | base | **0x90f1a0** |
+| 0x967c10 | Belgium | none | none | base | base | 0x90f1a0 |
+| 0x968838 | Brazil | none | none | base | base | **0x7ec8e0** |
+| 0x969394 | Croatia | none | none | 0x5ed060 | base | 0x90f1a0 |
+| 0x969860 | Denmark | none | none | 0x793900 | base | base |
+| 0x969f4c | England | 0x57a020 | 0x579fd0 | 0x579d60 | base | 0x579c70 |
+| 0x96a188 | Europe (generic) | none | none | base | base | base |
+| 0x96a75c | Finland | none | none | 0x5a9af0 | 0x5a9ba0 | 0x5a9a80 |
+| 0x96ae48 | France | 0x5c1710 | none | **0x412dd0** | 0x5c1ed0 | **0x90f1a0** |
+| 0x96b3cc | Germany | none | none | base | 0x5e0210 | 0x90f1a0 |
+| 0x96b784 | Greece | none | none | 0x5ed060 | base | 0x90f1a0 |
+| 0x96ba88 | Holland | none | none | 0x794760 | base | 0x90f1a0 |
+| 0x96c190 | Ireland | **0x57a020** | 0x63c4e0 | 0x63c3d0 | 0x63c530 | 0x90f1a0 |
+| 0x96c96c | Italy | none | none | 0x661770 | 0x6618f0 | base |
+| 0x96ccfc | Japan | none | none | base | base | base |
+| 0x96cfec | Korea | none | none | 0x793900 | base | 0x90f1a0 |
+| 0x96df9c | Northern Ireland | none | none | 0x793900 | base | 0x793870 |
+| 0x96dfe4 | Norway | none | none | 0x794760 | base | base |
+| 0x96e61c | Poland | none | none | 0x5ed060 | base | 0x7ec8e0 |
+| 0x96e9c0 | Portugal | none | none | base | base | base |
+| 0x96f340 | Russia | none | none | 0x412dd0 | base | 0x7ec8e0 |
+| 0x96f838 | Scotland | none | none | 0x7f6650 | base | 0x7f6530 |
+| 0x96fdec | Spain | none | none | 0x859630 | base | base |
+| 0x970368 | Sweden | none | none | base | base | base |
+| 0x970458 | base `TRANSFER_RULES` | none | none | base | base | base |
+| 0x97075c | Turkey | none | none | 0x902240 | base | 0x90f1a0 |
+| 0x970a38 | USA | none | none | **0x902240** | base | base |
+| 0x970a9c | Wales | none | none | 0x793900 | base | 0x90f1a0 |
+
+Consequences: several "one nation" routines belong to several, and **three run in the 8 leagues** (0x902240 through
+the USA, 0x90f1a0 through France and Australia, 0x7ec8e0 through Brazil). 0x412dd0 (`AUSTRALIA_RULES::can_loan_player`,
+mkc_2) is also the `CAN_LOAN_PLAYER` of **France** and Russia (tables 0x96ae48 and 0x96f340 +0x20): in the 8-league
+career it also runs for French clubs. Ireland uses the English 0x57a020 (already in Rust) as its `daily_update` (+0):
+the Irish clubs' season loan count is also zeroed on 20 June.
 
 ### 2. The AI loan request (0x842740) [proved, Rust]
 
@@ -752,8 +909,25 @@ career (counters of item cqe_6).
    - base 0x8e8bd0 (**mkc_1**): from next month to the season end month of the club's nation (0x4d45f0), this year if
      still ahead of the start, otherwise next year;
    - England 0x579c70: from next month to 3 months later; after 19 June and a player under 24, the base;
-   - Finland 0x5a9a80: as the base; Russia 0x7ec8e0: start in 3 months, end at season end; Northern Ireland 0x793870:
-     the same, and the start never passes the end; Wales 0x90f1a0: start = end (season end).
+   - The common part of the rules below [proved]: `thiscall(rule, club, a2, &start_month, &start_year, &end_month,
+     &end_year, player)`, `ret 0x1c`; start = today's month (0x54cfb0 on 0xae2c90) + k; year = [0xae2c92]; start > 11
+     (signed): −12 and year + 1; end month = `contract_manager_season_end_month(club)` (0x4d45f0 with ecx =
+     [0xae1050]); start < end (signed): end year = start year, otherwise today's year + 1. `a2` and `player` are not
+     read;
+   - Finland 0x5a9a80 (**mkc_4**): k = 1, the same computation as 0x8e8bd0 (which zeroes the month instead of
+     subtracting 12: same result) [proved: 0x5a9a80..0x5a9aeb];
+   - "Russian" 0x7ec8e0 (**mkc_3**; Brazil, Poland and Russia): k = 3. **Latent defect**: with the start rolling into
+     the next year (today October to December) and the season end month ≤ the start month, the end falls in the start's
+     year and before it (or on it); whether it happens with these nations' data was not checked [proved in the code:
+     0x7ec8f4 `add al, 3`, 0x7ec924..0x7ec947];
+   - Northern Ireland 0x793870 (**mkc_5**, only it): k = 3 and then, start after the end (unsigned year, then signed
+     month), the start becomes the end: the Russian one with the fix for the defect above [proved: 0x793885,
+     0x7938d7..0x7938f3];
+   - "Welsh" 0x90f1a0 (**mkc_3**; 11 nations: Australia, Belgium, Croatia, France, Germany, Greece, Holland, Ireland,
+     Korea, Turkey, Wales): k = 1 and then start = end (month and year) [proved: 0x90f1b4, 0x90f1ff..0x90f206].
+     Consequence: in `can_loan_player` (§4 step 5) start = end returns 1 at once, without asking the owner's
+     `CAN_END_LOAN`, unless 0x8d0590 moves the end by the contract (steps 2–4); in the AI (0x842740) the months to the
+     start and to the end are the same.
 2. The player's main contract (0x4cf5a0). **No contract, a type (+0x35 & 0x3f) other than 2, or today after the
    contract end: the end year becomes 1972** (the year of the default date 0x54a110), an "impossible" sentinel.
    The types (screen 0x87cee0, jump table 0x87dd58) [proved]: 0 invalid, 1 monthly, **2 normal contract**, 5 trial,
@@ -773,23 +947,62 @@ career (counters of item cqe_6).
 2. `can_club_bid_for_player` (reasons 0x21 under negotiation, 0x27, 7, 1, 0x12/0x13, 0x19/0x28/0x1a nation): 0 with
    the text.
 3. The rule of the **borrowing club's** nation, virtual +0x20 (`CAN_LOAN_PLAYER`) = 0: 0. By nation:
-   - base 0x40a600 / Greece 0x5ed060: 1; Northern Ireland 0x793900: 1 (writes `[0xae1080]`);
+   - signature: `thiscall(rule, club, player, message, &reason)`, `ret 0x10` [proved];
+   - base 0x40a600 (Argentina, Belgium, Brazil, Europe, Germany, Japan, Portugal, Sweden) and 0x5ed060 (Croatia,
+     Greece, Poland): 1; 0x793900 (**mkc_5**; Denmark, Korea, Northern Ireland and Wales): looks up the player's main
+     contract (0x4cf5a0), stores it in `[0xae1080]`, computes his club and does not use it; 1 [proved:
+     0x793900..0x793934];
    - England 0x579d60: same division (Premier only) 0x1d; **5 a season** (byte 0 of `[[0xde1f54]+0x91c] + id·16`,
      zeroed on 20 June by 0x57a020, counted by 0x579fd0) 0x1e; **more than 1** loanee from elsewhere already in the
      squad (the 3rd is refused) 0x26; outside the window (0x8e8e50) 9;
-   - Australia 0x412dd0 (**mkc_2**), Norway 0x794760, Turkey 0x902240: outside the window, 9 ("The deadline for loans
-     to ... clubs has passed."); Finland 0x5a9af0: the same and, for an AI club, only between days 90 and 300 of the
-     year;
+   - Australia 0x412dd0 (**mkc_2**; also France and Russia), Norway 0x794760 (**mkc_5**; also Holland), Turkey
+     0x902240 (**mkc_3**; also the USA): `find_open_window(today, 0)` (0x8e8e50); closed: with a message the text with
+     the rule nation's adjective (+0xa, form 2; "The deadline for loans to ... clubs has passed."), reason 9 (even
+     without a message) and 0; open: 1. The Norwegian one uses text 0x9cf088 (example "Dutch", same format); the
+     Turkish one, with the window open, looks up the contract and writes `[0xae1080]` before the 1 [proved:
+     0x794760..0x7947cb; 0x902240..0x9022da];
+   - Finland 0x5a9af0 (**mkc_4**): a closed window as above (text 0x987d38). Open: with a club and not human
+     (`human_manager_is_human_club(club, 1, 1, 0, 0)` = 0), today's day of the year (signed word at 0xae2c90; 0 = 1
+     January) > 300 or < 90: **0 with no text and no reason**. 90 = 1 April, 300 = 28 October (31 March and 27 October in
+     a leap year); together with the window (16/11–15/8), the Finnish AI only borrows from 1 April to 15 August [proved:
+     0x5a9b52..0x5a9b89];
    - Italy 0x661770, Spain 0x859630, Scotland 0x7f6650, Ireland 0x63c3d0: in Rust (windows and division limits).
 4. The rule of the **current club's** nation (the lender): none, 1.
 5. The period (§3). **Start = end: 1** (nothing else). Otherwise, month by month from the start to the end
    (inclusive), the owner rule's virtual +0x24 (`CAN_END_LOAN`, flag 1); the first month that lets the loan end gives
-   1; past the end: 0, "This loan deal cannot go ahead". By nation (+0x24):
+   1; past the end: 0, "This loan deal cannot go ahead". By nation (+0x24; `thiscall(rule, club, player, message,
+   date, flag)`, `ret 0x14`; callers of 0x8d0530: screen 0x8fa341 with flag 1 and no message, the end-loan screen
+   0x8fbcf9 with **flag 0**, message 0xde1f64, today's date and club = the player's `club_job`, AI 0x8429ae with flag 1;
+   0x8d0040 always with flag 1):
    - base 0x40a610: 1 (England, Scotland, Spain...: the loop answers 1 on the first month);
-   - France 0x5c1ed0 (**mkc_2**) and Ireland 0x63c530: the date inside a window of the nation;
+   - France 0x5c1ed0 (**mkc_2**) and Ireland 0x63c530 (**mkc_6**, the same code with the Irish key): a null date =
+     today; `find_open_window(date, 0)`; closed: 0 and, with a message, the nation's adjective ([0x9cf2dc] for Ireland,
+     form 10) in 0x9cd030 ("sent back", when `club` is the player's `club_job`) or 0x9ccfbc ("recalled"). The Irish
+     window: 10 May to 31 January [proved: 0x63c530..0x63c5d9];
    - Italy 0x6618f0 (**mkc_2**): with the flag, June; otherwise the date in the 1st or 2nd Italian window;
-   - Finland 0x5a9ba0: refuses between 18 August and 15 November;
-   - Germany 0x5e0210: without the flag, refuses ending loans between German clubs (with the flag, 1).
+   - Finland 0x5a9ba0 (**mkc_4**): refuses with 18/8 of the date's year **before** the date and the date **before**
+     15/11 (strict at both ends; unsigned year, then signed day; dates by 0x549f70(18, 7, year, −1) and (15, 10, year,
+     −1)). Texts 0x9cc1a4 ("cannot be sent back until 15th November") / 0x9cc170 ("recalled"), with no adjective. The
+     date is not checked (a null one would crash; no caller passes null); the flag is not read [proved:
+     0x5a9bb9..0x5a9ca5];
+   - Germany 0x5e0210 (**mkc_6**): flag ≠ 0: 1. Otherwise it refuses when the player's club (`club_job`, +0x39) is
+     German ([0x9cf314]) **or has no club or nation**; another country: 1. With a message, the German adjective (form 2)
+     in 0x9cd5cc ("Players on loan from other German clubs cannot be sent back until the end of the loan.") or 0x9cd574
+     ("...cannot be recalled."). Since 0x8d0530 only calls the rule with the owner and the club in the same nation, it
+     is "between German clubs". **Only the end-loan screen (flag 0) refuses**: in the loan check (0x8d0040) and in the
+     AI request Germany never refuses. The date is not read [proved: 0x5e0210..0x5e02bf; flag 0 at 0x8fbce2].
+6. **Ireland's `record_loan`** 0x63c4e0 (**mkc_6**, +8 of the Irish table): the offer's club (id at +8 in the table
+   [0xae23b4], 0x245 bytes) with nation id [0x9cf2dc] (Ireland): byte 0 of the 16-byte row `[[0xde1f54]+0x91c] + id·16`
+   + 1. The same code as the English 0x579fd0 with the Irish key; it is the count that the Irish `can_loan_player`
+   (0x63c3d0) caps at 5, zeroed on 20 June by 0x57a020 [proved: 0x63c4e0..0x63c521].
+
+**Defects and surprises of the rules [proved in the code]:** (1) the "Russian" period (Brazil, Poland, Russia), with
+the start in the next year and the season ending in January or February, puts the end before the start (or on it); the
+Northern Irish copy fixes it, the Russian one does not; latent: it depends on these nations' season end month (not
+checked). (2) A player without `club_job` (or with a club without a nation) falls into the German refusal with the
+"recalled" text; in practice 0x8d0530 does not call the rule in that case. (3) Not a defect, but a surprise: the Welsh
+period gives start = end for 11 nations, so for France and Australia (and the others) `can_loan_player` accepts without
+the owner's rule.
 
 ### 5. Windows [proved]
 
@@ -833,7 +1046,10 @@ the nation, +0x13 foreign player limit, +0x14 non-EU limit.
   - `can_loan_player` **does not recognise the sentinel**: start ≠ end, so it tests the start month with the owner's
     `CAN_END_LOAN`; with an English owner (base = 1) **it returns 1**. The human's screen (0x8f9690) opens with fields
     5/6 (end) = the month and **1972** [proved: the values go to fields 3–6 and 0xc/0xd of the screen]. With a French/
-    Italian/Irish/Finnish owner outside the window, "This loan deal cannot go ahead".
+    Italian/Irish owner outside the window, or a Finnish one in the autumn (18/8–15/11, §4), "This loan deal cannot go
+    ahead"; a German owner never refuses there (flag 1). And, for a borrower under the Welsh period (11 nations, France
+    and Australia included), the start equals the end and the owner is only asked if 0x8d0590 moves the end by the
+    contract [proved, §3 and §4].
 - A type 2 contract that **ends in the current month**: the end steps back to this month and the start follows (start
   = end):
   - `can_loan_player` returns 1 (start = end);
@@ -959,7 +1175,7 @@ the type**, +0x1d the date. The types, by their writers: **0 paid**, **1 with ex
 |---|---|---|
 | 0x8d0590 `get_loan_period` | default length; the end-of-contract sentinel | detour, call the original and adjust the 4 outputs |
 | 0x8d0040 `can_loan_player` | who can borrow | detour: original + the new rule (e.g. refuse the sentinel; allow outside the window) |
-| rule vtables (+0x20, +0x24, +0x28) | one nation's rule | swap the slot pointer in the nation's table (England 0x969f4c, Scotland 0x96f838, Italy 0x96c96c, Ireland 0x96c190, Spain 0x96fdec) |
+| rule vtables (+0x20, +0x24, +0x28) | one nation's rule | swap the slot pointer in the nation's table (the 29 tables in §1; e.g. England 0x969f4c, Scotland 0x96f838, Italy 0x96c96c, Ireland 0x96c190, Spain 0x96fdec): it changes only that nation; detouring the shared routine (e.g. 0x90f1a0) changes all that use it (11). The Irish season count sits in the same table as the English one (`[[0xde1f54]+0x91c] + id·16`) |
 | rules +4/+8 (memory) | the window dates | data, no code: rewrite the table after the constructors |
 | rules +0x13/+0x14 (memory) | foreign/non-EU limits | data |
 | `[[0xde1f54]+0x91c] + id·16` | the English season loan count | data (the limits 5 and 2 are immediates in 0x579d60) |
@@ -1000,11 +1216,11 @@ of 0x85fc50, 0x4c7ac0, 0x864550, 0x862720 and 0x844780 (`descompilar.py`), `refs
 | Address | Name | File | In Rust | Item | Callers / when |
 |---|---|---|---|---|---|
 | 0x846920 | `Shortlist_Manager::staff_interest_in_joining_club` (the will) | shortlist_manager.cpp | yes | — | bids (0x84a020, 0x842e10, 0x843800, 0x840084), loans (0x842740), accepting a bid (0x8c0080), response delay (0x8cc5b0), unsettled player (0x8c1290), exchange (0x8c8860), budget (0x83b6e0), contract decision (0x4ce4e0), desired wage (0x85fc50), scouts (0x7b0050, 0x7b62a0), filters and screens |
-| 0x844780 | `staff_interest_in_job_at_club` (the staff's will) | shortlist_manager.cpp | no | — | 0x4ce4e0, 0x85fc50, `is_staff_suitable_for_job` (0x69f810), 0x840084, filters |
+| 0x844780 | `staff_interest_in_job_at_club` (the staff's will, §2.1b) | shortlist_manager.cpp | no (item mkd_7) | **mkd_7** | 0x4ce92c (`resolve_contract_offers`, check 0), 0x860339 (0x85fc50), 0x69fc3d (`is_staff_suitable_for_job` 0x69f810: job 5, check 0), 0x840682 (0x840084: check 1), 0x807ebc (search filter 0x807450, check 1) [proved] |
 | 0x4ce4e0 | `CONTRACT_MANAGER::resolve_contract_offers` (the player picks an offer) | contract_manager.cpp | no | **mkd_4** | `process_due_decision_dates` (0x4cd9c0, single caller at 0x4cda4c), type 3 decision dates |
-| 0x85fc50 | `STAFF_CONTRACT::set_to_desired_contract` (wage demand and length) | staff_contracts.cpp | no | — | `offer_contract` (0x4cda70), `lowest_wage_demand` (0x4ce450), 0x4ce4e0, `make_club_bids` (0x84a020), `accept_transfer_bid` (0x8c0080), `move_player_to_club` (0x8c9720), `get_contract_satisfaction` (0x866620), `calc_contract_value` (0x866830), screens |
-| 0x864550 | `STAFF_CONTRACT::default_staff_contract` (default wage) | staff_contracts.cpp | no | — | 0x846920 (wage gate), 0x85fc50 (×3), 0x844780, 0x842e10, 0x840084, `update_wage_bill` (0x598370), 0x85e960 |
-| 0x862720 | `staff_contract_calc_unset_default_wage` | staff_contracts.cpp | no | — | `set_default_wage` (0x8626e0), `create_initial_shortlists` (0x83a1b0) |
+| 0x85fc50 | `STAFF_CONTRACT::set_to_desired_contract` (wage demand and length) | staff_contracts.cpp | no (item mkd_3) | **mkd_3** | `offer_contract` (0x4cda70), `lowest_wage_demand` (0x4ce450), 0x4ce4e0, `make_club_bids` (0x84a020), `accept_transfer_bid` (0x8c0080), `move_player_to_club` (0x8c9720), `get_contract_satisfaction` (0x866620), `calc_contract_value` (0x866830), screens |
+| 0x864550 | `STAFF_CONTRACT::default_staff_contract` (default wage) | staff_contracts.cpp | no (item mkd_2) | **mkd_2** | 0x846920 (wage gate, 0x849957), 0x85fc50 (×3: 0x860310, 0x8604ad, 0x860523), 0x844780 (0x84668f), 0x842e10 (0x84371d), 0x83f3a0 (0x840893), `update_wage_bill` (0x5983ee), 0x85e960 (0x85eca3) [proved: `refs.py`, 9 calls] |
+| 0x862720 | `staff_contract_calc_unset_default_wage` (§2.3) | staff_contracts.cpp | no (item mkd_6) | **mkd_6** | `set_default_wage` (0x8626f6: person, `club_job`, 1, −1, 11, 0), `create_initial_shortlists` (0x83a2c3, only contracts with wage −1, with the contract's status) [proved] |
 | 0x8626e0 | `STAFF_CONTRACT::set_default_wage` | staff_contracts.cpp | yes | — | regens (0x7a70e4) |
 | 0x866830 | `STAFF_CONTRACT::calc_contract_value` (value of a contract against another) | staff_contracts.cpp | no | **mkd_1** | `get_contract_satisfaction` (0x866620, ×2), 0x4ce4e0 (×2), 0x4d4830 (screen) |
 | 0x866620 | `get_contract_satisfaction` (1..3) | staff_contracts.cpp | yes | — | the staff's daily pass (0x5ce2d0, random(50) = 0), screen |
@@ -1076,6 +1292,90 @@ the exe, the match engine included: do not patch `.rdata`); 2.75 = `F64_2_75` (0
 Caller thresholds: 0x4ce4e0 picks above 2.75 and 3.15 (`F64_3_15`, 0x968e58); `try_loan_offer_for_player` requires
 3.5; `make_club_bids` uses 3.15 (`F64_3_15`).
 
+#### 2.1b The staff's will (0x844780, original; item **mkd_7**) [proved]
+
+The will of a person with a staff sheet to take a job (jobs, `enums.rs` `job_kind`: 5 manager, 6 assistant manager, 7
+reserve team manager, 8 coach, 9 scout, 10 physio, 11 player, 12 player-manager, 13 player-assistant, 15 player-coach,
+16 retired player, 17 media pundit). Ghidra's pseudo-C is misleading here: the `_ftol` calls show no argument and the
+ambition weights (0x844a9f..0x844b25), the weighted reputations and the board's confidence disappear; everything below
+is from the disassembly.
+
+Convention: thiscall(shortlist manager, person, club, check, job, &reasons), `ret 0x14` (0x84680b), SEH frame, f64 in
+st0; ecx is only read for the clubs' shortlists (+0xdc, 0x845809, 0x84600a). Callers (`refs.py`): 0x4ce92c
+(`resolve_contract_offers`, check 0), 0x69fc3d (`is_staff_suitable_for_job` 0x69f810: job 5, check 0), 0x840682
+(0x840084, the AI offers: check 1), 0x860339 (`set_to_desired_contract` 0x85fc50) and 0x807ebc (search filter
+0x807450, check 1). Same in cm0102-1080.exe (0x21a0 bytes).
+
+- **Callers:** **[proved]**, with the sites and arguments: 0x4ce92c, 0x860339, 0x69fc3d (job 5, check 0), 0x840682
+  (check 1), 0x807ebc (search_filters.cpp, check 1) (proof: `refs.py`; 0x69fc2a..0x69fc3d, 0x84066f..0x840682,
+  0x807ea5..0x807ebc)
+- **The filters that give 0:** **[proved]**: no staff sheet, no club or person nation; **Dario Gradi, Pat Nevin and
+  Kevin Keegan with a club job** (by the formatted name, 0x53dba0); club or national job 17; outside job 5, the last
+  16 records (id ≥ count − 16); a national manager (job 5 for the nation); with a job offered ≠ 0: a manager (5/12
+  at club or nation) with current reputation > 4250 or ability > 100 wanting a job other than 5; a physio (10) asked
+  for another job, or someone with another job asked to be physio; a player (11) with a club asked by another club
+  (outside jobs 5, 12, 15); a manager whose current club has a division of reputation greater or equal to the new
+  one's, or a reputation above the new one's − 750; a club below 2750 of the current club's nation or that finds him
+  foreign (0x53d980) (proof: 0x8447d2..0x844a84)
+- **The weights:** **[proved]**: w_stadium = 1.4 − ambition × 0.025 − professionalism × 0.025; w_division = ambition
+  × 0.02 + 0.8; w_competition = ambition × 0.05 + 0.5; w_manager = 0 for jobs 5 and 12, else 1; denominator = the
+  sum + 1 (0.5 if ≤ 0) (proof: 0x844a87..0x844b25)
+- **The current club:** **[proved]**: the `club_job`; without one, or when the club offered is a national side
+  (0x53b900), the national side (except job 11 there); a current club without a nation: returns 3.5 (proof:
+  0x844b30..0x844b8c)
+- **The base:** **[proved]**: 3.5 at his own club; otherwise 0 with a current contract of the same language and
+  grievance 0x20; 2.25 (jobs 5, 12) or 1.5, plus, without a club, (days since the later of the game's start
+  [0xdd6ec8] and joining the club, at most 500)² / (current reputation + 900), at most 12 (proof:
+  0x844b97..0x844d22)
+- **Likes, rivals, managers:** **[proved]**: dislikes the club × 0.33 (2); the current one × 2 (4); favours the
+  current one × 0.85 (current amateur and new professional) or × 0.5 (8 with a contract without Bosman); favours the
+  new one × 3 (0x10); rival or league clash (0x4b02e0): Celtic × Rangers 0.5 − loyalty × 0.025, Italy 1 − loyalty /
+  60, a rival of the same division 0.75 − loyalty × 0.025 (difference < 1250) or 0.8 − loyalty / 60, else 0.85 −
+  loyalty × 0.025 (0x20 below 0.7); without a rival, Croatia × Yugoslavia × 0.05 / 0.1 (2); the new club's manager
+  favours × 2 (0x40), dislikes × 0.33 (0x80), outside jobs 5 and 12; the current manager dislikes × 2 (0x100),
+  favours × 0.5 (0x200); with a future transfer: 0 (0x10000000) (proof: 0x844d34..0x8450d3)
+- **Morale and jobs:** **[proved]**: the current contract's morale: at his own club × (1 + morale × 0.0025), else ×
+  (1 − morale × 0.0025) (0x400 above 1.5, 0x800 below 0.5); at his own club the routine jumps from here to the end.
+  By the current job (table 0x846810): chairman × 0.01; directors × 0.01 (× 0.5 if offered manager at a club ≥
+  6000); manager × 0.45 (0x4000000) or × 0.65 without a club; assistant × 1.5, reserves × 2.2, coach × (ambition ×
+  0.05 + 0.8) (0x8000000 if offered manager); 16 (retired) × 10 / ambition; player and others × 10 (0x8000000). By
+  the one offered (table 0x846850): 0 → 0; chairman × 10; directors × 1/0.85; manager × 1/0.45 (× 1.5 if already a
+  manager); assistant × 0.5; reserves and coach × 0.4; scout and physio × 0.4 (already one of them) or 0.25, × 0.25
+  with a player sheet; player and others × 0.1; a current manager × 0.4 in the other jobs. A manager with the
+  board's confidence (+6 + +8 of the 0xb67a44 row + 500 × (loyalty + determination)) below 8000: × 1.4 (proof:
+  0x845127..0x845438)
+- **The weighted reputations:** **[proved]**: for the new club, e = ftol(1.5 × (w_comp × competition + w_div ×
+  division + w_man × manager + w_stad × stadium + shortlists) / den − 5000), with the stadium and the division of
+  0x846920, competition = 600 × the continental one's reputation (16 bits) or 0.8 × division up to 7000, the manager
+  = his reputation as the person sees it (0x5407e0) weighed by the board's confidence (0.67 × +6 + 0.33 × +8),
+  shortlists = 0.4 × the shortlists' reputation + 0.6 × the reputation by wealth band (0.7 / 0.85 / 1.25 min. 4250 /
+  1.5 min. 5750), × 1.45 at a national side of his nation; a non-professional club: min(e/2, e − 5 × (international
+  caps² + 400)), status 3 again min(e/2, e − 2000). For the current club the same with other constants: the manager
+  by his current reputation (div × 0.75 without a manager), bands 0.75 / 0.9 / 1.25 min. 4750 / 1.5, national side ×
+  1.35, the Intertoto rule. Without a current club: the average of the sheet's three reputations (proof:
+  0x84543c..0x845955, 0x845bd8..0x846122)
+- **Language, foreigner, time:** **[proved]**: × max(F × 0.1, (e + 5000)² / 15000 / (12000 − 200 F)) + 0.2 (F =
+  fluency, 10 without a player sheet) at the new club (0x10000 below 0.6), ÷ the same at the current one; a
+  foreigner (no club, or foreign in the club's nation with a nation other than the current club's): × 0.85 / 0.75 /
+  0.65 / 0.5 / 0.01 by job when the club's manager is his compatriot, else × 0.25 / 0.3 / 0.225 / 0.2 / 0.001;
+  without a club × 2.5; with a club, 0 below (loyalty + 8) × 15 days at the club, and t = min(days² / 20 / (loyalty
+  + 6), 400) × 0.0025 (proof: 0x845955..0x845bd0, 0x846122..0x8461ce)
+- **The scales' difference:** **[proved]**: a null division or the key division 0x9cf764: × 0.1; g = 1 + (club
+  reputation − the sheet's average) × 0.000125; y = (e_new − e_current) × (ambition × 0.0877 + 0.75) going up, × 1.5
+  going down (jobs other than 5/12), or for a manager × min(max(1.1 − will × 0.01, 0.1), 1) with a will > 10; y > 0
+  with t < 1: × ((150 − min(y × 0.02, 100)) × t + y × 0.02) / 150 (0x100000 below 0.6); a manager offer to a
+  non-manager, y < 0: y × max(1 − will × 0.04, 0.4) (coach, assistant) or max(1 − will × 0.1, 0.2); × max(1 + y /
+  4500, 0.001) (0x400000 / 0x800000 / 0x200000 by ambition and the competitions); the nations' development: equal, a
+  European going outside Europe × 0.4; different, × (dev_current² × div_new) / (max(div_current, 500) × dev_new²)
+  within 0.01..10, × 0.2 if from another continent and < 1 (0x2000000); × g (0x800000 below 0.6) (proof:
+  0x8461d7..0x846628)
+- **The wage:** **[proved]**: when checking with a will ≥ 1.75: no finances, 0; q = max(3.5 / max(will, 0.1), 0.9);
+  asked = q × the default wage (0x864550 with a local contract, check 0, status −1); above the staff cap (0x597db0):
+  will × cap / asked and the asked wage becomes the cap; with a current contract: ratio = asked / max(wage, 10);
+  below 0.1 or below 1, the will; above 10, × 10 / q; otherwise × ratio / q (proof: 0x84662e..0x8467ec)
+- **In §2.1 (the call at 0x840682):** **[proved]**: 0x840682 calls 0x844780 with (person, club, 1, the vacancy's
+  job, 0) (proof: 0x84066f..0x840682)
+
 #### 2.2 The player picks among contract offers (0x4ce4e0, original; item **mkd_4**) [proved]
 
 `thiscall(contract manager, person)`, `ret 4` (0x4cf493), SEH frame; single caller 0x4cda4c, in
@@ -1133,17 +1433,249 @@ bytes). Constants read from the exe: 1/300 (0x968e60), 3.15 (0x968e58), 0.99 (0x
    the job dword +0x61, the clubs list), first a staff record for a staff job without a sheet; without a transfer →
    news 0x4d49a0 of the copy.
 
-#### 2.3 Wage demand and length [proved where in Rust; inferred elsewhere]
+#### 2.3 Wage demand and length [proved]
 
-- **0x85fc50 `set_to_desired_contract`** (original, 10,896 bytes): the contract the person wants at the club. Reads
-  `ambition`, `loyalty`, `pressure`, `professionalism`, `int_apps`; the player value (`calc_player_value` 0x4d0c60,
-  ×7, which uses the manager's `JudgingPotential`, §3); the default wage (0x864550, ×3); the will (0x846920 and
-  0x844780); the cap (`get_max_wage`, ×4); the window (0x8cf470, 0x8cf0e0); the month of the season end (0x4d45f0); a
-  draw. Writes type 2 at +0x35, the status at +0x4f (high nibble), the wage/value at +8/+0xc, clauses and the end date.
-  [inferred] An absolute cap of 250,000 in the staff branch (`fVar27 = 250000.0`). It is the best place to change the
-  wage demand without porting: a detour that calls the original and adjusts +0xc/+8 on the way out.
-- **0x864550 `default_staff_contract`** and **0x862720 `calc_unset_default_wage`** (originals): the default wage by
-  ambition, loyalty, pressure, the major nation (0x549e50), the season (0x547770) and the cap (0x5968d0). [inferred]
+- **0x85fc50 `set_to_desired_contract`** (original, 10,896 bytes; item **`mkd_3`**, ported from the whole
+  disassembly) [proved, `pacotes/0x85fc50`]: the contract the person wants at the club.
+  `thiscall(contract; person, club, offer, squad status, job, reasons, &will)`, `ret 0x1c` (0x862688), returns an int
+  (the contract value). The 6th argument is not a "kind": it is the pointer to the reason bits, passed whole as the
+  last argument of 0x844780 (0x860329) and 0x846920 (0x8609db); 0x85fc50 does not use it otherwise [proved]; arguments at [esp+0x278..0x290] after the prologue; C++ handler 0x962a76. The counts match:
+  `calc_player_value` at 0x85ffc8, 0x8615e5, 0x8617c5, 0x8618cd, 0x8619ed, 0x861af2, 0x861c53; the default wage at
+  0x860310, 0x8604ad, 0x860523; `get_max_wage` at 0x861274, 0x8612a2, 0x8612d4, 0x861302. The order:
+  1. Clears +0x21 and +0x20; without a club, the club becomes the current one (or the linked B team,
+     `club_get_linked_b_team` 0x540a50) (0x85fcb0..0x85fd18); the contract with the current club
+     (`get_contract_for_club`, 0x85fd2b) is "the current contract".
+  2. +0x35 = (+0x35 & 0x40) | 2 (type 2), +0x49 = 0, +0x4a = −1, +0x3b = 0, +0 = id, +0x3a = 0 (0x85fd34..0x85fd56).
+  3. Status −1 with a sheet: the deserved one (`get_deserved_squad_status` 0x4ca470) against the current contract
+     (grievance 0x10 and not 1 → 2) or `get_squad_status_for_club` (0x849f00); goes to the high nibble of +0x4f
+     (0x85fd73..0x85fe40).
+  4. Level (byte): with a club, reputation / 500 + 1 (professional status 2: −1, within 1..4), +4 = the club id;
+     without a club, the national team's / 500 + 1 (at least 3) or the world reputation / 500; + ftol(league × 0.25 ×
+     int_apps × 0.125) (1..4) for internationals (0x85fe3e..0x85ff42).
+  5. A player's signing-on value (+8): `calc_player_value` / 5 (0x85ffc8..0x85ffe2), × 0.25 (no club_job, current
+     < 2750, club < 2000), × 0.5 (< 4250) or × 0.75 (< 4750); renewal: 0 (< 19 years and < 3750), × 0.1/0.25/0.5 under
+     21, × 0.5 at a club < 3500; × 0.9 / 0.75 / 0.75 / 0.5 / 0.25 by the deserved status (table 0x86268c); new club:
+     × 0.5 (current < 4250) and × 0.5 (league < 10) (0x85ffe5..0x86016b). Staff: 0 (0x860177).
+  6. Without `job_for_club`: the "has no job for club" message and +0x3d = 11 (with a sheet) or 9
+     (0x86017e..0x8601a6, 0x8602f4).
+  7. Staff (0x8602f8): w = the default wage (flag 0, kind 0); will = `staff_interest_in_job_at_club` (0x844780),
+     written to *&will; w + 2500 with will < 1.75; value = w × max(0.9; 3.5 / max(will; 0.1)) (0x861333..0x86137e); job
+     6: 250000 if > 2 × reputation + 1200 and > 4100; 8: > reputation + 500 and > 3200; 9: > 0.75 × reputation + 250 and
+     > 2100; 10: the same with 1500; and always at most 250000 (0x861375..0x861492). **The "250,000 cap" is the "not
+     available" marker (0x48742400 = 250000), not a wage cap.**
+  8. Player, renewal at the own club (0x8601e2..0x86045a): the default wage with flag 1 (at most the club's cap) when
+     the renewal is "cheap" (no grievance, without the 0xf mark of the 79-byte record 0xae2d0c, current < 7250, fewer
+     than loyalty × 12 + 182 days to the end and **not** leaving on a Bosman (the first test requires +0x49 = 0 in the
+     contract: `test al, al; je 0x86041f` at 0x860240..0x860245 [proved]); or pressure < 6, < 24 years, no future
+     transfer, not listed, < 3250 and below the club's reputation + 250, < 200 − pressure days; or a grievance without
+     the 0x161a8 bits and few days; or loyalty > 18 / current < 5250 without the mark, with world < 3500); else flag 0.
+     New club (0x86045f..0x860528): kind 3 with current > 6750, else 0 (the tests ambition + loyalty > 80 and > 100,
+     which would give kind 1/2 and status 1/2, never hold with attributes 1..20).
+  9. Player: a demand above the current wage: at most max(2 × current; current + 8000), and for the famous (world >
+     6750, > 10000) above that, the cap 75000 (England/Spain/Italy) or 50000, 25% above (0x86052c..0x860699). The
+     ambition: t = world + 25 × (ambition − loyalty) + 10 × pressure (16 bits); the boost at a major nation for 19..31
+     years (finances +0x10 [inferred: the map reads it as the wage budget; `fields.rs` names it
+     `finance::HIGHEST_WAGE`, the highest wage on the payroll], up to 0.0001 × t × 85000/105000 in England/Spain/Italy, goalkeeper up to
+     60000) × (0.9..1.0 + adjustments by age, position and (ambition − professionalism − loyalty + 4) × 0.0075 within
+     −0.25..0.15) (0x8606c7..0x8609cc).
+  10. Will = `staff_interest_in_joining_club` (0x846920), written to *&will; q = 3.5 / max(will; 0.1); w + 5000 with
+      will < 1.75 (no current contract, or a grievance and young/listed/...); q at least 0.9; grievance 2 already gives
+      1.25 at 0x860a35, for any current contract; on renewal, grievance 2, or exactly 0x10 with age < 21 and reputation
+      < 4250, gives 1.2 (0x860b9d..0x860bcf); the caps 1.75 / 1.5 / 4.0 apply to grievances 1 / 0x8400 / others
+      [proved]; 1.25/1.5/2.0/1.35/1.15 by age and deserved status
+      (tables 0x86269c, 0x8626b0), 1.1 for the young (< 20, ability < 125 − pressure − ambition, current < 4250, < 120 −
+      pressure − ambition days), 3.0 without a contract (0x8609ce..0x860e27); value = q × w (0x860e2f).
+  11. At least the current wage × (club reputation / the current club's, at least 0.5) when the club is weaker
+      (0x860e4b..0x860ed6); with grievance 0x1000000, up to 95% of finances +0x10 (wage budget or highest wage on the payroll, see step 9 [inferred])
+      (0x860ed8..0x860f0c).
+  12. "Not available" markers (250000): value > 200000; > 35000 at 35+; > 75000 at 32+; goalkeeper 20 > 105000; status
+      7 > 5000, 6 > 8250, 5 > 17500, 4 > 35000, 3 > 57500 (world < 6750; human club `human_manager_is_human_club`
+      0x600a50, or outside the 85000/105000/125000 bands), 2 > 125000 (world < 7250) (0x860f10..0x8610f0).
+  13. A dearer current contract at another club: value = ((20 − a) × current wage + a × min(w; max(get_max_wage; w ×
+      0.5))) × 0.05, a within 0..20 (grievance 0x100 +10, listed +10, wage > 40000, age 34+, happiness and morale)
+      (0x86110b..0x86132a).
+  14. Clauses (only a player with job 11): +0x1d=0/+0x20=1 for the veteran; non-promotion (+0x1c), relegation (+0x1f),
+      minimum fee (+0x1d), non-playing (+0x1e), with the fee (+0x21) by `calc_player_value` and minimums 150000 / 50000
+      / 150000 / 1500000; the league ones through the competition virtuals +0x98/+0x9c (type 2) (0x86149a..0x861d1b).
+      The fees of the no-promotion, minimum-fee and no-play clauses [proved]: extra = ftol(max(value × 0.95 + 150000, 2 ×
+      value)), a **maximum** (0x861636..0x861647); above 2,500,000 the extra becomes ftol(e × 0.21): the original subtracts and adds the same 2,500,000 (0x861657..0x861667), which looks like a slip for (e − 2,500,000) × 0.21 + 2,500,000; the fee drops from ~2.5M to ~525 thousand [proved; the intent, inferred];
+      the extra applies only without a grievance (for no-promotion, without bit 1 of the current contract's grievance).
+      The relegation clause uses value + ftol(value × random × −0.5), at least 50000, × 0.5 / 0.75 / 0.85 by ambition
+      and loyalty.
+  15. Dates (0x861d1f..0x862371): `date_started` (+0x25) by the window (0x8cf470, or 0x8cf0e0 by the offer) and right
+      away rewritten with today (0x861e14); end = day `utils_random(0x1c)` + 1 of the season-end month (0x4d45f0) of the
+      year (the next one, by the table 0xb63d77 of the key nation 0x669360) + ftol(L + 1) years; L by age (3; 4;
+      3/2/1.5 by position; 1 or 4), × 0.75 with a clause, by level and loyalty, by status (table 0x8626c4), by
+      reputation, Finland/Turkey × 0.5 (at most 3), wage < 500/1000/2000 → at most 2/3/4, at most [0xa83608] − 1 = 9, at
+      least 1; type 2 with bit 0x80 (no `club_job`, level < 2 and ftol(fixed draw × 4, or × 5 below level × 500 + 1250
+      of reputation) = 0); in that last case, up to 20 years, type 1 (+0x35 & 0xc1 | 1) with no extra years; on renewal
+      the end never moves back (`date_expires_club` +0x46).
+  16. Bonuses (+0x10/+0x14/+0x18) = ftol(value × fixed draw × 0.025 + value × 0.025 + 25) for attacker / midfield /
+      goalkeeper 20, else −1; +0x35 |= 0x80 with value < 125 at a club of status 2, cleared above 1250; **+0xc =
+      ftol(value)** (0x86237a..0x862493).
+  17. Return: ftol(wage (× 0.5 for type 1, × 1.05 with 0x80) + min(sum of bonuses/5 and of clauses × 0.013..0.1;
+      value × 0.1)) (0x862496..0x86266d).
+- **0x864550 `default_staff_contract`** (original; item **`mkd_2`**, compiles, proof on the benches) [proved, whole
+  disassembly, `pacotes/0x864550`]: the default wage. `stdcall(person, club, flag, squad status, job, kind)`, `ret 0x18`
+  (0x8665b4), returns the float in st0 loaded from an f32 ([esp+0x4c], 0x8665a9). ecx is overwritten on entry (`mov
+  ecx, [0xae1050]`, 0x864550): the thiscall wrapper in `exe_calls.rs` passes an ecx that does not count. The argument
+  slots are reused as scratch, always after their last read. The order:
+  1. The person's contract (`get_contract` 0x864562) goes to [0xae1080] (0x864569); the current club = the contract's,
+     except type 5 (0x864570..0x864591).
+  2. The level: with a club, reputation / 500 + 1 in a byte (0x8645d2..0x8645eb); with a current club and professional
+     status 2, minus one, within 1..4 (0x8645fe..0x864613). Without a club, the world reputation of the player sheet
+     (+0xd) or of the non-player sheet (+0xc) / 500, at least 1 (0x86461e..0x86465b).
+  3. The job: `job_for_club` (+0x3d) when there is a current club; else `job_for_nation` (+0x28) with a national team
+     (+0x24); else +0x3d; else 11 for a player; else +0x28; else 9 (0x864669..0x8646a2). Jump table 0x8665b8 on job − 5.
+  4. Staff (jobs 5..10): the level rises to the current club's or the national team's (non-player, national job ≠ 11)
+     (0x8646ba..0x864714); base = the non-player current reputation (+0xa)³ × k1 or, without a non-player sheet,
+     (id / staff count × 4 + 1) × k2 × 0.0001; wage = level × base × 0.25 (0x864718..0x864761). By job: 5 (k1 2.5e-8
+     0x96ff38, k2 25000): at least 750, above 25000 → **150000** (0x864767..0x8649f0); 6 and 7 (1e-8, 10000): at least
+     500; 8 (5e-9, 5000): 275..5000; 9 (1e-9, 1000): 250..1000; 10: 200..1000 (0x864cd2..0x864ce3). With a current club
+     other than the club: jobs 6, 7 and 8 give 150000 when the current club is more than three levels above (reputation
+     / 500 + 4 > level) — for 6 also when the asked job is neither 11 nor 6; without that, 6 below 2500 × 1.35
+     (0x86485b..0x8648c3, 0x86498e..0x8649ba, 0x864ade..0x864b2e); 6 and 7 otherwise: above 25000 → 150000 unless the
+     asked job is 11 or 6 (0x8649c7..0x8649f0). Job 14 and the others: 1000 (0x864ce3). **150000 is the "not
+     available" marker**, not a wage.
+  5. Players (jobs 11, 12, 13, 15): without a sheet, the "No player data" message goes to the text 0xde1f64 and the
+     wage is `rand() × 4 / 32768 × 550` (0, 550, 1100 or 1650; 0x865699..0x8656e1). With a sheet:
+     - status −1 with a club: 1 (current reputation > the club's, 24..33 years), 2 (> 0.75 × the club's, 21+), 4 (> 0.5
+       × the club's and 17+, or 25+), 5 (potential × 50 > 0.75 × the club's), 6 (0x864d40..0x864e00); the low byte of
+       the argument is rewritten and goes whole to `get_max_wage`;
+     - the base: kind 3 85000; kind 1 92500 (loyalty < 15 and pressure > 15) or 75000; kind 2 75000 (23..31 years) or
+       82500; asked job 13 or 15 at 36+ 10000; status 5/6: 9350 (current reputation < 2500), 11000 (< 6250); attacker
+       ≥ 15: 82500 / 70000 (reputation > 6750, < 31 years, loyalty < 15 / ≥ 15) or 55000; defensive, central or
+       attacking midfielder ≥ 15: 67750 / 60000 (> 7250, < 31, loyalty < 14) or 44000; goalkeeper 20: 37500 (world
+       > 7250, loyalty < 3, < 34) or 22000; sweeper and defender < 15: 27500; else 50000 (> 7500, loyalty < 6, < 33) or
+       27500 (0x864e04..0x864fc6). **The kind 0x14244 of the third test (0x8651bc) never holds: a defect, the 6500
+       floor does not exist;**
+     - the young (19..31) not tied to the club or the club's nation (club reputation < 5750 or league < 12) with world
+       > (loyalty + 230) × 25 − ambition × 10 rises to 75000 / 92500 / 105000 (0x864fca..0x8650c9);
+     - FIFA rules ([0xae233c] = 1), above 11000, club of a major nation (0x549e50): × 1.15 / 1.125 / 1.1 (current
+       reputation > 6750, by loyalty 1 / < 6 / other) or × 1.025 (> 4250) (0x8650cd..0x865141), not rounded to f32;
+     - m = the highest reputation (current, home, world); world < 1750 and m > 3250: m = 3250 − ftol((m − 3250) ×
+       −0.2); kind 1 at least 7250, kind 2 at least 6750; base 75000/92500/105000 at least 7250 (0x865145..0x865201);
+     - u = (current + home + world + 4m + 50 × (ability + potential)) / 9 + ftol(id / count × 8 − 4); a foreigner
+       (another region, `actual_region` +0x76, than the club's and the current club's): at least 1500 or × 1.05; at
+       least 1 (0x865206..0x8652c3);
+     - wage = base × u² × 1e-8, at least 175 (compared before rounding, 0x8652c8..0x8652f8); × 0.75 or × 0.5 by the
+       `state_of_development` (+0x7e) of the current club's nation (or 1 with world > 4250, or the person's, or 3)
+       (0x865300..0x865345); × world × 0.0004 (club < 2500) or world / (level × 500), within 0.85..1.15
+       (0x865349..0x8653b7);
+     - level caps: < 10 → 2500 × level; < 15 → 2750 × level; else 10% above 5250 × level (England, Spain, Italy with
+       PLC +0x82), 7500 × level (without PLC) or 3250 × level (others) (0x8653c1..0x865513);
+     - position cap: 20% above 150000 (attacker 20), 125000 (midfielders 20), 100000 (defender 20) or 80000; × 1.1 with
+       FIFA at a major nation and current > 7250 (0x865515..0x8655ae);
+     - without `club_job` (+0x39), except the old (33+) international with work rate + determination ≤ 30, id % 15 ≠ 0,
+       at a club ≤ 4500: × (1.375 − d × 0.0125), at least 0.2, d = days since `date_joined_club` (+0x3e, at most 250),
+       + 60 in season (0x547770), 20% above 30 (0x8655b2..0x865690).
+  6. With a club (0x864ceb; without one it returns right away): for a sheet holder, r = (club reputation × 0.00017 /
+     0.00012 / 0.0001)⁶ (pow 0x945ff0), at most 1; by status (table 0x8665e4) the wage goes half-way up to 3 ×
+     reputation × r × (1: 0.6 / 1.5 / 1.25; 2: 0.3 / 1 / 0.6; 3: 0.25 and 0.6 / 0.3; 4: 0.1 / 0.3 / 0.15; 5: 0.05; 6:
+     0.02, for < 20 years / 24+ at a major nation / others) (0x864cf7..0x86598a); with the contract grievance 0x10
+     (+0x45): × 0.67 / 0.67 / 0.85 / 2.5 / 3.5 / 7.5 (table 0x8665fc, 0x86598c..0x8659ec).
+  7. The club's nation, when the person works there (`club_job` of the same nation, and is from there or loyalty > 3
+     or ambition < 15) or is from there without a club (0x8659f0..0x865a47): Japan at least level² × 10 and 25% above
+     7500; England, Italy, Spain nothing; USA × 0.75, MLS 15% above 250, natives 20% above 1250 (32+ or < 24 with world
+     < 3750) or 2750, foreigners 25% above 3250; Korea, Scotland, Germany/France/Holland, Sweden, Denmark/Norway,
+     Belgium, Portugal/Croatia/Poland, Brazil/Argentina × the factor (club reputation / 50 / `league_standard`) × 0.1 × k
+     (k = 0.25 / 0.25 / 0.75 / 0.25 / 0.5 / 0.45 / 0.5 / 0.45), at most 1, when reputation / 50 > league × 10, and
+     each one's caps; Wales/Finland/Ireland/Northern Ireland/Australia only caps (200 / 100 × 0.15); the others × 0.3
+     and 25% above 15000 (0x865a4d..0x86635b).
+  8. Players: at most the wage of the contract with the current club of status 7 (`get_contract_for_club`,
+     0x866377..); with `flag`, or without a current club and current < 2250, at most `get_max_wage` (without finances
+     it returns the value as it is, without the minimums) (0x8663af..0x866414); without `flag` and with a current club,
+     the ambitious (> 10), disloyal (< 6), famous (> 6750) attacker/midfielder/attacking midfielder 20 aged 21+: × 1.15/
+     1.1 (attacking midfielder) or, if wage × 1.25 < maximum, × 1.1/1.05 (midfielder) or × 1.2/1.15 (0x866428..0x8664ff).
+  9. Minimum: club of status 1: 75 under 20 years, else 100; others: 75 at a club > 2250, else 50 (0x866503..0x8665a9).
+- **0x862720 `staff_contract_calc_unset_default_wage`** (original; item **`mkd_6`**, ported) [proved, disassembly;
+  Ghidra's pseudo-C loses the FIFA adjustment (0x86315d..0x8631d9) and says `return 0` where the routine returns the
+  value (0x864320)]: the default wage of the initial shortlists and of the regens.
+  Convention: stdcall(person, club, check, status, job, floor), `ret 0x18` (0x8644e7), float in st0 (the f32 at
+  [esp+0x14]); the first instruction overwrites ecx (both callers, thiscall, pass the contract in it and it is not
+  read). Callers (`refs.py`): `set_default_wage` 0x8626f6 (person, `club_job`, 1, −1, 11, 0) and
+  `create_initial_shortlists` 0x83a2c3 (person, club, 1, the high nibble of the contract's +0x4f with the rest of edx,
+  11, 0), the latter for the contracts with wage −1 (0x83a2a8). Same in cm0102-1080.exe (0x1e30 bytes).
+  Constants (read from the exe): 750 = 0x96ff30, 25000 = 0x96ff34 (f32); 500 = 0x96d1a8, 10000 = 0x96d1b0, 275 =
+  0x96ff20, 5000 = 0x968db0, 250 = 0x96d210, 1000 = 0x96d2dc, 200 = 0x96d834, 2500 = 0x968dac (f32); 2.5e-8 =
+  0x96ff38, 1e-8 = 0x968eb8, 5e-9 = 0x96ff28, 1e-9 = 0x96ff18, 0.0001 = 0x96a5c0, 1.35 = 0x969588 (f64); the bases
+  50000 / 55000 / 65000 = 0x96ff04 / 0x96ff08 / 0x96ff0c, 40000 / 45000 / 52500 = 0x96fef0 / 0x96fef4 / 0x96fef8,
+  20000 = 0x96ff00, 30000 = 0x96fefc, 8500 = 0x96d4e0, 11000 = 0x96feec, 175 = 0x96fee8, 550 = 0x96fed8, 1.375 =
+  0x96fedc, 0.0125 = 0x96fee0, 0.0004 = 0x96fee4, 0.2 = 0x96b028 (f32); 0.00017 = 0x96fed0, 0.00012 = 0x96ff10, 6 =
+  0x969000, 1.125 = 0x96a5a8, 2750 = 0x96fec8, 3250 = 0x96fec0, 1500 = 0x96feb8, 350 = 0x96f870 (f64). The immediates
+  150000 (0x48127c00), 85000 (0x47a60400), 75000 (0x47927c00), 65000 (0x477de800), 50000 (0x47435000), 40000
+  (0x471c4000), 75 (0x42960000), 50 (0x42480000) and 100 (0x42c80000) are not in `.rdata`.
+  - **Callers:** **[proved]**, with the arguments: both pass check = 1 and job = 11; 0x83a1b0 only for contracts with
+    wage −1, with the contract's status (proof: 0x8626e0..0x8626f6, 0x83a2a8..0x83a2c3)
+  - **What it reads (corrected):** **corrected [proved]**: it reads neither pressure nor professionalism; it reads
+    loyalty (base and market), ambition (market and bonus), determination and work rate (the veteran), international
+    caps, age, the three reputations, ability and potential; it uses 0x549e50, 0x547770 (with today's date) and
+    0x5968d0 with the status dword
+  - **The contract and the current club:** **[proved]**: `get_contract` (stored in [0xae1080]); the contract's club,
+    none for a loan (type 5) (proof: 0x862720..0x86276d)
+  - **The level:** **[proved]**: with a club, reputation / 500 + 1 in byte arithmetic; with a current club and a club
+    of professional status 2, one less, within 1..4; without a club, the world reputation of the player (or staff)
+    sheet / 500, at least 1 (proof: 0x86279c..0x862838)
+  - **The job computed:** **[proved]**: the club job (with a current club), else the national job, else the club job,
+    else 11 with a player sheet, else the national job or 9; the `job` argument only matters for jobs 6 and 8 (6 or 11
+    offered) and for coaches of 36 or more (13, 15) (proof: 0x86283c..0x86288e, table 0x8644ec)
+  - **Staff (5 to 10):** **[proved]**: the level rises to the current club's reputation / 500 + 1 (or the national
+    side's, outside job 11); wage = level × (current reputation³ × k with a staff sheet, else (id / number of people ×
+    4 + 1) × m × 0.0001) × 0.25; manager: k 2.5e-8, m 25000, at least 750, above 25000 it becomes 150000; assistant
+    and reserve manager: 1e-8 / 10000, at least 500; coach: 5e-9 / 5000, 275..5000; scout: 1e-9 / 1000, 250..1000;
+    physio: 200..1000. At another club: the assistant is worth 150000 (except job 6/11 offered with the level reaching
+    the current reputation / 500 + 4: below 2500, × 1.35); reserve manager and coach are worth 150000 when the current
+    club's reputation / 500 + 4 is above the level; otherwise above 25000 becomes 150000 (job offered other than 6 and
+    11) (proof: 0x862895..0x862f06)
+  - **Player (11, 12, 13, 15) without a sheet:** **[proved]**: writes "No player data..." into 0xde1f64 (sprintf with
+    dwords +4, +8 and the id) and returns `rand()` × 4 / 32768 × 550 (proof: 0x863660..0x8636b0)
+  - **Player: status −1:** **[proved]**: with a club: 1 (current reputation above the club's, 24..33 years), 2 (above
+    0.75 × the club's, 21+), 4 (above 0.5 × and 17+, or 25+), 5 (potential × 50 above 0.75 × the club's), 6; the
+    argument's byte is rewritten and goes whole to `get_max_wage` (proof: 0x862f5b..0x86302f)
+  - **Player: the base:** **[proved]**: job offered 13/15 at 36+: 10000; status 5/6: 8500 (current reputation < 2500)
+    or 10000 (< 6250); attacker ≥ 15: 65000 / 55000 (reputation > 6750, loyalty < 15 / ≥ 15) or 50000; defensive,
+    central or attacking midfielder ≥ 15: 52500 / 45000 (> 7250, loyalty < 14) or 40000; goalkeeper 20: 25000 (world >
+    7750, loyalty < 3) or 20000; sweeper < 15 and defender 0: 25000; else 30000 (world > 7500, loyalty < 6) or 25000.
+    With the FIFA rules ([0xae233c] = 1), a base above 11000 and a club of a major nation: × 1.15 / 1.125 / 1.1
+    (reputation > 6750, loyalty 1 / < 6 / other) or × 1.025 (> 4250), not rounded to f32 (proof: 0x86303d..0x8631d9)
+  - **Player: the score and the wage:** **[proved]**: m = the highest reputation (current, home, world), floor 7250
+    (floor 1) or 6750 (floor 2); s = (current + home + world + 4m + 50 × (ability + potential)) / 9 + ftol(id / count
+    × 8 − 4); a foreigner (region +0x76 other than the club's and the current club's): at least 1500, otherwise ×
+    1.05; at least 1; wage = base × s² × 1e-8, at least 175 (compared before rounding); × 0.75 or × 0.5 by the
+    development of the current club's (or the person's) nation; × current reputation × 0.0004 (club < 2500) or /
+    (level × 500), within 0.85..1.15 (proof: 0x8631d9..0x8633b7)
+  - **Player: the caps:** **[proved]**: level < 10: 2500 × level; < 15: 2750 × level; else 3250 × level, or 10% above
+    (soft) 3250 × level (England, Spain, Italy with PLC) or 5000 × level (without PLC); position: 20% above 85000
+    (attacker 20), 75000 (central or attacking midfielder 20), 65000 (defensive midfielder 20), 50000 (defender 20) or
+    40000, × 1.1 with FIFA, a major nation and current > 7250 (proof: 0x8633bb..0x8635a9)
+  - **Player without a club:** **[proved]**: without `club_job`, except the veteran (33+, international, work rate +
+    determination ≤ 30, id % 15 ≠ 0, club ≤ 4500): × (1.375 − d × 0.0125), at least 0.2, d = days since +0x3e (no
+    cap), + 60 in season (0x547770) (proof: 0x8635ad..0x86365b)
+  - **With a club: the offer by status:** **[proved]**: with a player sheet, r = (club reputation × 0.00017 (amateur)
+    / 0.00012 (> 2250) / 0.0001)⁶ (pow 0x945ff0), at most 1; by status (table 0x864518) the wage rises to the average
+    with 3 × reputation × r × (1: 0.6 / 1.25 / 1.5; 2: 0.3 / 0.6 / 1; 3: 0.25 and then 0.3 / 0.6; 4: 0.1 / 0.15 / 0.3;
+    5: 0.05; 6: 0.02, for < 20 years / < 24 or outside a major nation / others); with the contract's grievance 0x10: ×
+    0.67 / 0.67 / 0.85 / 2.5 / 3.5 / 7.5 (table 0x864530) (proof: 0x862f12..0x8639b7)
+  - **The market of the club's nation:** **[proved]**, the same as step 7 of 0x864550 in the map: when the person
+    works there (`club_job` of the same nation and is from there or loyalty > 3 or ambition < 15) or is from there
+    without a club; Japan floor level² × 10 and 25% above 7500; England, Italy, Spain nothing; USA × 0.75, MLS 15%
+    above 250, natives 20% above 1250 (32+, or < 24 with world < 3750) or 2750, foreigners 25% above 3250; Korea,
+    Scotland, Germany/France/Holland, Sweden, Denmark/Norway/Poland, Belgium, Portugal/Croatia, Brazil/Argentina × the
+    league-standard factor (reputation / 50 / standard × 0.1 × k, at most 1, when reputation / 50 > standard × 10) and
+    each one's caps; Wales, Finland, Ireland, Northern Ireland, Australia only caps; the others × 0.3 and 25% above
+    15000 (compared before rounding) (proof: 0x8639bb..0x864291)
+  - **The final limits:** **[proved]**: player: at most the wage of the current contract of status 7; when checking,
+    or without a current club with reputation < 2250: at most `get_max_wage` (without finances it returns the value as
+    it is, without the floors); without checking and with a current club, the ambitious (> 10), disloyal (< 6), famous
+    (> 6750) attacker/midfielder/attacking midfielder 20 aged 21+: × 1.1 (attacking midfielder) / 1.05 (midfielder) /
+    1.15 if wage × 1.25 < cap; floors: club of status 1: 75 under 20 years, else 100; others: 75 at a club > 2250,
+    else 50; without a club: the value without floors (proof: 0x864295..0x8644e7)
+  - **Differences from 0x864550:** **[proved]**, and the differences from 0x864550 (map, item mkd_2): lower bases
+    (without kinds 1..3 of 75000..105000, without the young rising, without the world < 1750 cut, attacker
+    50000..65000 instead of 55000..82500); level caps 3250 / 5000 instead of 5250 / 7500; position caps 40000..85000
+    instead of 80000..150000; the ratio by the **current** reputation (0x864550 uses the world one); the development
+    without the "1 with world > 4250"; the free agent without the day cap nor the 20% above 30; staff with the 150000
+    (proof: comparison with the 0x864550 text in the map)
 - **0x4cda70 `offer_contract`** (Rust) [proved]: the club's offer = the desired one × factor; minimum release fee by
   the offer (bands 50 thousand / 1 million / 5 million); cap = `get_max_wage` × (factor + 1) × 0.5 (status 11) or
   `get_max_staff_wage`; **length by age** (age in days × k − a fitness/professionalism weight: above 34 the end next
@@ -1266,7 +1798,7 @@ Interference are read in the market. ManHandling is not. Scan of the whole `.tex
 | Resources (+0x20), chairman | 0x597a6e | same | yes | > 15 with the chairman's ambition > 15 (and +0x82 = 0): × 1.1 / × 1.125 / × 1.05 by the club's reputation (2750, 5750) and the player's (7250) |
 | Business (+0xf), chairman | 0x598b24 | `Finance::get_transfer_budget` 0x598800 | no | budget divisor = business + 6 (+ (15 − ambition) with ambition > 15; 16 without a chairman; +5 in one nation) |
 | Youngsters (+0x22), manager | 0x8400ae | `fill_shortlist_slot` 0x83f3a0 (rest at 0x840084) | no | a non-loan slot, under 20 with home reputation (+9) < 3250 and current club < 3250: goes on only if edi mod (25 − youngsters) = 0 (no non-player sheet on the manager, mod 15) [proved: 0x8400ae..0x8400d4]; `edi` = person id + club id (0x83fee7..0x83feee, the same sum as the % k test; no write to `edi` up to 0x8400b9 on the three paths 0x83ff0b, 0x83ff16, 0x83ff26) [proved]: **fixed per (person, club) pair**, the same youngster is always accepted or always ignored by the same club while the manager is the same; youngsters 20 lets through the pairs whose sum is a multiple of 5. Only someone who already failed the % k test gets here |
-| Youngsters (+0x22), manager | 0x4d3ccb | `contract_manager_calc_asking_price` 0x4d1600/0x4d2070 | no | AI club (0x600a50 = 0): adds (youngsters − 10) to a threshold compared with the player's potential ability (sheet +7); below it, (potential − threshold) × 0.5 enters the price [the term proved; its role in the price, inferred] |
+| Youngsters (+0x22), manager | 0x4d3ccb | `contract_manager_calc_asking_price` 0x4d1600 (item `mka_2`) | no | in the youngster floor (section A §3 step 15: `flag` set, age < 24, seen > 110): with a manager with a non-player sheet, at an AI club (`is_human_club(seller, 1, 1)` = 0), si += youngsters − 10 (16 bits; `movsx cx, [eax+0x22]`, `lea esi, [esi+ecx−0xa]`); then, a player who joined after the manager and si < potential: + half the difference; si becomes the floor Y = ftol((si² − 14400) × 250 × 0.6153846 + bonus), with step 15's adjustments, and the price is at least Y (reason 0x2000) [proved: 0x4d3c9c..0x4d3cd0, 0x4d3cd4..0x4d3d15, 0x4d3d17..0x4d402a] |
 | JudgingPotential (+0x18), manager | via `perceived_ability` 0x6e86d0 (branch `kind` ≠ 2) | `calc_player_value` 0x4d0c60; `value_player_for_club` 0x840d80 (`young_player_adjustment`, under 27) | yes | the potential ability the manager sees enters the player value and the list |
 | Judgement (+0x17) | 0x6e86d0 (`kind` = 2); `know_person` 0x5b0a28 | `perceived_ability`; fog of war (`FOG_OF_WAR_MAP::raise_knowledge`) | yes | the current ability seen; the observer's (scout's) knowledge rises |
 | Interference (+0x16), chairman | 0x8c9a26 | `move_player_to_club` 0x8c9720 | no | a sale above 2.5 million and above (resources + ambition + 750) × club reputation: with interference > random(30), the chairman adds the player to his favoured (0x547a10) |
@@ -1320,14 +1852,52 @@ Interference (daily morale; it calls the contract satisfaction).
    **for every player** in the loop, not once a day (same result, wasted work) [proved: 0x4c81a3..0x4c827c].
 10. 0x4c7ac0: the AI player's value is recomputed only on **odd** days of the year (`movsx eax, word [date]; and
     0x80000001`), the human one every day [proved: 0x4c7ffe..0x4c8010]; the intent [inferred].
+11. 0x864550: `cmp edx, 0x14244` (0x8651bf) compares the kind byte with a number that does not fit in a byte: the 6500
+    floor never applies [proved].
+12. 0x864550: without a club, a player with a nation reads the club through a null pointer at 0x865270 (and at level
+    ≥ 15 at 0x86541b); no caller passes a null club for a player [proved].
+13. 0x85fc50: 0x861d64..0x861d70 has `if (!slot && !*slot)` instead of `||`: with an offer without a slot (0x8c61e0
+    returns 0) it reads address 0 before the error box; with a slot and `*slot == 0` it passes 0 to 0x8cf0e0 [proved].
+14. 0x85fc50: [esp+0x48] (the reputation used for the clauses and the length) is only written with a sheet + a player
+    job or with a non-player sheet (0x85ff46..0x85ff7c); a person with a sheet, a staff job and no non-player sheet
+    reads stack garbage (which becomes 1 if it is 0) [proved].
+15. 0x85fc50: the tests (100 − ambition − loyalty) × 125000 < 0 and (80 − ...) < 0 (0x86045f..0x8604df) never hold
+    with attributes 1..20: kind 1/2 and status 1/2 of that branch never happen [proved].
+16. 0x85fc50: `date_started` computed from the window is overwritten with today right after (0x861e14) [proved].
+17. 0x862720: **150000 is a marker**, like the 250000 of 0x85fc50: the manager above 25000 and the assistant / coach
+    of a stronger club are worth 150000, not a wage **[proved]** 0x862bea, 0x862a80, 0x862bb4, 0x862d33.
+18. 0x862720: The defender test is `!= 0` (0x86310f): every player has a defender rating, so the "sweeper < 15 and
+    defender 0" branch never holds and the base stays at 25000 / 30000 **[proved]**; the same result in practice.
+19. 0x862720: Without a club and with level 15 or more (world ≥ 7500), a player reads +0x53 of the null club
+    (0x863403): an access fault **[proved]**; both callers pass a club (a regen has one) **[inferred]**.
+20. 0x862720: Without a player sheet in a player job, the sprintf uses `%s` with the person's dwords +4 and +8
+    (0x863660) **[proved]**; the wage comes from the CRT `rand()`, outside the game's generator.
+21. 0x844780: **Three fixed names**: Dario Gradi, Pat Nevin and Kevin Keegan never leave a club job (will 0); the
+    comparison is by the formatted name, so anyone with that name too **[proved]** 0x8447fb..0x8448f5.
+22. 0x844780: **The last 16 person records** (id ≥ [0xae2364] − 16) only accept the manager's job **[proved]**
+    0x84491a; [inferred] they are the regens' spare records.
+23. 0x844780: **Job 0 only at his own club**: the job offered 0 gives 0 at another club (0x84532a), but at his own
+    club the routine skips the job tables and computes the will **[proved]** 0x8451ca.
+24. 0x844780: **The manager's asymmetry**: a new club without a manager weighs 0 on the scale; the current one without
+    a manager weighs 0.75 × the division **[proved]** 0x8455f4 against 0x845ded; the wealth bands, the national side
+    factor (1.45 against 1.35) and the Intertoto rule (only the current club) differ too **[proved]**.
+25. 0x844780: **No finances, 0**: when checking with a will ≥ 1.75, a club without a finance record gives will 0, even
+    a positive one **[proved]** 0x846671..0x846673.
+26. 0x85fc50: in the no-promotion, minimum-fee and no-play clause fees, above 2,500,000 the extra becomes ftol(e ×
+    0.21): the original subtracts and adds the same 2,500,000 (0x861657 `fild e`; `fmul 0.21` [0x96d398]; `fsub
+    2500000` [0x96a650]; `fadd 2500000`; 0x861657..0x861667), which looks like a slip for (e − 2,500,000) × 0.21 +
+    2,500,000; the fee drops from ~2.5M to ~525 thousand [proved; the intent, inferred].
 
 ### 6. Extension points (the smallest hook that changes the policy)
 
 1. **0x846920 (Rust)**: a factor on the return of `staff_interest_in_joining_club` changes the will on every path
    (bids, loans, renewal, AI lists). For groups (age, reputation, nation), multiply the return; the callers'
    thresholds (2.75, 3.15, 3.5) stay.
-2. **0x85fc50 (original)**: a detour that calls the original and adjusts the wage (+0xc) and the value (+8) on the way
-   out changes the wage demand without porting the 10,896 bytes.
+2. **0x85fc50 (mkd_3; original in the exe)**: a detour that calls the original and adjusts the wage (+0xc) and the value (+8) on the way
+   out changes the wage demand without porting the 10,896 bytes [proved: +0xc is written once, at the end (0x862493),
+   and +8 before (0x85ffe2..0x86016b); the return does not reread +0xc]. Note: the return (the contract value) is
+   computed with the wage from before the adjustment; a caller that uses the return instead of +0xc does not see the
+   adjustment (check caller by caller before detouring).
 3. **0x5968d0 (Rust)**: the club's wage cap (and where the chairman weighs in through Business/Resources).
 4. **0x866830 (mkd_1)** and **0x866620 (Rust)**: the satisfaction (50/80) and the ratio of the renewal decision.
 5. **0x4cda70 (Rust)**: the AI offer (factor, length by age, cap × 1.4).
@@ -1340,6 +1910,17 @@ Interference (daily morale; it calls the contract satisfaction).
    detour on `contract_manager_offer_contract` (Rust) adjusting the factor by player changes all of them without
    porting 0x4c7ac0. The Bosman rule (loyalty < 15, age 19..30, reputations 3750/1750) sits in one stretch
    (0x4c89ea..0x4c8a4a).
+10. **0x864550 (mkd_2)**: the default wage is a float returned in st0: a detour that calls the original and multiplies
+    the result changes all callers (the demand, the will gate and the wage bill) in one place. With the Rust copy of
+    mkd_2, the fine-tuning points are the base by position (step 5), u² and the caps by nation (step 7).
+11. **0x862720 (mkd_6, Rust once integrated)**: the wage of the regens (`set_default_wage`) and of the initial
+    shortlists; the bases by position, the s² score and the market by nation are in one function. For the Tweaks, a
+    detour on the way out that scales the value for the regens only changes their wage without touching the desired
+    contract (0x85fc50).
+12. **0x844780 (mkd_7, Rust once integrated)**: the whole staff movement (managers, assistants, scouts) in one
+    function: the base 1.5 / 2.25, the job tables (× 0.01 to × 10), the minimum time at the club ((loyalty + 8) × 15
+    days), the board's confidence (8000) and the wage gate (1.75). For the Tweaks: changing how much managers change
+    club by groups (reputation, age) without touching the players' will (0x846920).
 
 ### 7. Queue items
 
@@ -1348,7 +1929,15 @@ Interference (daily morale; it calls the contract satisfaction).
   refused (2.3 GB free, minimum 4). See `PRONTO.txt`.
 - **mkd_4** — `CONTRACT_MANAGER::resolve_contract_offers` (0x4ce4e0, §2.2): `levas/fila/mkd_4/`. Compiled; the proof
   is left to the main session.
+- **mkd_2** — `STAFF_CONTRACT::default_staff_contract` (0x864550, §2.3): `levas/fila/mkd_2/`. Compiles; the proof on
+  the benches is left to the main session.
+- **mkd_3** — `STAFF_CONTRACT::set_to_desired_contract` (0x85fc50, §2.3): `levas/fila/mkd_3/`. Ported from the whole
+  disassembly; the proof on the benches is left to the main session.
+- **mkd_6** — `staff_contract_calc_unset_default_wage` (0x862720, §2.3): `levas/fila/mkd_6/`. Ported; the proof on
+  the benches is left to the main session.
+- **mkd_7** — `staff_interest_in_job_at_club` (0x844780, §2.1b): `levas/fila/mkd_7/`. Ported; the proof on the
+  benches is left to the main session.
 
-Not ported because of size (for another round): 0x85fc50 (10,896 bytes), 0x864550 (8,400), 0x862720 (7,728), 0x844780
-(8,608), 0x4c7ac0 (9,376; see the end of §2.4). Screens only (no effect on the automatic career): 0x4d4660, 0x4d4830,
+Not ported because of size (for another round): only 0x4c7ac0 (9,376 bytes), proved in the disassembly (§2.4),
+with the proposal to port it in pieces. No market routine is left only mapped. Screens only (no effect on the automatic career): 0x4d4660, 0x4d4830,
 0x4d44e0, 0x867ad0, 0x85f7a0.

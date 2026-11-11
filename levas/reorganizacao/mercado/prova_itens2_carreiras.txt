@@ -1,0 +1,13 @@
+  aguardando: so 2.9 GB de RAM livre (minimo 4.0)
+  aguardando: so 3.2 GB de RAM livre (minimo 4.0)
+  aguardando: so 3.5 GB de RAM livre (minimo 4.0)
+  aguardando: so 2.3 GB de RAM livre (minimo 4.0)
+  aguardando: so 1.5 GB de RAM livre (minimo 4.0)
+  aguardando: so 3.3 GB de RAM livre (minimo 4.0)
+    pool nao paginado 2.87 -> 2.91 GB, paginado 5.74 -> 5.74 GB
+execucao 1: parou em 2002-151, 475930137 sorteios, impressao 694677f1f1188d14, partidas 19433/1a5dbb3e18568c69, banco c55f9040689ec169, 91 s
+    pool nao paginado 2.91 -> 2.88 GB, paginado 5.74 -> 5.75 GB
+execucao 2: parou em 2002-151, 475930137 sorteios, impressao 694677f1f1188d14, partidas 19433/1a5dbb3e18568c69, banco c55f9040689ec169, 91 s
+detector de lixo: nao rodou (so 3.8 GB de RAM livre (minimo 4.0))
+game.cfg restaurado; auto_setup.cfg removido
+determinismo: OK, todas as execucoes iguais

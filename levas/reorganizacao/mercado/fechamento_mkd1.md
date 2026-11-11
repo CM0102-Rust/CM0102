@@ -13,7 +13,7 @@ Para cada afirmação: o texto antigo, o novo e a prova. A sessão principal tro
 ### 1.1 Tabela da seção D
 
 - **Antigo:** `| 0x864550 | ... | não | — | 0x846920 (portão do salário), 0x85fc50 (×3), 0x844780, 0x842e10, 0x840084, update_wage_bill (0x598370), 0x85e960 |`
-- **Novo:** `| 0x864550 | ... | não (item mkd_2) | mkd_2 | 0x846920 (portão do salário, 0x84668f), 0x85fc50 (×3: 0x860310, 0x8604ad, 0x860523), 0x844780 (0x849957), 0x842e10 (0x84371d), 0x83f3a0 (0x840893), update_wage_bill (0x5983ee), 0x85e960 (0x85eca3) |`
+- **Novo:** `| 0x864550 | ... | não (item mkd_2) | mkd_2 | 0x846920 (portão do salário, 0x849957), 0x85fc50 (×3: 0x860310, 0x8604ad, 0x860523), 0x844780 (0x84668f), 0x842e10 (0x84371d), 0x83f3a0 (0x840893), update_wage_bill (0x5983ee), 0x85e960 (0x85eca3) |`
 - **Prova:** `refs.py jogo/cm0102.exe 0x864550` (9 chamadas relativas); as fronteiras de função do `pacote.py` põem a
   chamada 0x840893 na 0x83f3a0 (o mapa dizia 0x840084).
 
