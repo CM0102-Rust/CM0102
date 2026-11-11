@@ -35,18 +35,20 @@ def main():
     rodar(sys.executable, os.path.join('engenharia-reversa', 'glossario.py'))
     rodar(sys.executable, os.path.join('engenharia-reversa', 'placar_arquivos.py'))
     rodar(sys.executable, os.path.join('engenharia-reversa', 'competicoes.py'))  # o mapa das competições acompanha cada leva
-    titulo = open(os.path.join(RAIZ, 'levas', str(n), 'LEIA.md'), encoding='utf-8').readline().split('—', 1)[1].strip()
+    leia_en = os.path.join(RAIZ, 'levas', str(n), 'LEIA.en.md')
+    titulo = open(leia_en if os.path.exists(leia_en) else os.path.join(RAIZ, 'levas', str(n), 'LEIA.md'), encoding='utf-8').readline().split('—', 1)[-1].strip()
     total = re.search(r'\*\*Estado:\*\* \d+ levas, (\d+) rotinas', open(os.path.join(RAIZ, 'README.pt.md'), encoding='utf-8').read()).group(1)
     rodar('git', 'add', '-A', 'docs', 'README.md', 'README.pt.md', os.path.join('levas', str(n)),
           os.path.join('engenharia-reversa', 'glossario.py'), os.path.join('engenharia-reversa', 'mutacoes', f'leva{n}.py'),
           'CLAUDE.md', 'CLAUDE.en.md', os.path.join('engenharia-reversa', 'gen_docs.py'), os.path.join('engenharia-reversa', 'publicar_leva.py'),
           os.path.join('engenharia-reversa', 'fila.py'), os.path.join('engenharia-reversa', 'molde_docs.py'), os.path.join('levas', 'fila'),
-          os.path.join('rust', 'src', 'motor.rs'), os.path.join('rust', 'src', 'signatures.rs'), os.path.join('levas', 'carreira_ampla', 'pendentes.txt'), os.path.join('engenharia-reversa', 'fila_continua.sh'))
-    prefixo = 'Motor' if 'Motor de partidas' in open(os.path.join(RAIZ, 'levas', str(n), 'docs.py'), encoding='utf-8').read() else 'Simulacao'
+          os.path.join('rust', 'src'), os.path.join('levas', 'carreira_ampla', 'pendentes.txt'), os.path.join('engenharia-reversa', 'fila_continua.sh'))
+    prefixo = 'Match engine' if 'Motor de partidas' in open(os.path.join(RAIZ, 'levas', str(n), 'docs.py'), encoding='utf-8').read() else 'Simulation'
     adiado = '=== JOGO REAL ADIADO' in open(os.path.join(RAIZ, 'levas', str(n), 'cadeia.txt'), encoding='utf-8', errors='replace').read()
-    real = 'jogo real adiado para a comparacao acumulada da auditoria (05/11/2026)' if adiado else 'jogo real 0 divergencias'
-    msg = (f'{prefixo}: {n}a leva ({total} rotinas): {titulo}\n\nComparacao de verdade em cada rotina; cadeia completa '
-           f'(levas/{n}/cadeia.txt): {real}, carreiras Rust x2 iguais (criterio de 31/10/2026: a original so registrada).\n\n'
+    real = 'real-game comparison deferred to the audit' if adiado else 'real game 0 divergences'
+    # commit messages in English since 07/11/2026
+    msg = (f'{prefixo}: batch {n} ({total} routines): {titulo}\n\nEach routine compared with the original; full chain '
+           f'(levas/{n}/cadeia.txt): {real}, Rust careers x2 equal.\n\n'
            'Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\n')
     rodar('git', 'commit', '-q', '-m', msg)
     rodar('git', 'push', '-q')
@@ -63,6 +65,8 @@ def main():
         # the readability style for the code that came in (10/11/2026): typed records, read_T/write_T, English names
         # and messages, named constants; the batch's chain then tests it in that form
         rodar('bash', os.path.join('engenharia-reversa', 'padronizar.sh'))
+        # each routine to the module of its source file (the header's Original: line); helpers stay (11/11/2026)
+        rodar(sys.executable, os.path.join('engenharia-reversa', 'mover_rotinas.py'), '--gravar')
     # a tabela das assinaturas acompanha a PROLOGOS (a DLL não desvia rotina que não seja a do exe original/1080)
     rodar(sys.executable, os.path.join('engenharia-reversa', 'assinaturas.py'))
     # every exe function the copies call, checked against the original machine code (stack, ecx, return width)
