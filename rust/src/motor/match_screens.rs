@@ -3353,7 +3353,7 @@ pub(crate) unsafe extern "C" fn refresh_latest_scores_rows() {
                         j += 1;
                     }
 
-                    // o agregado (ida e volta)
+                    // the aggregate (both legs)
                     if (m4.home_aggregate() as u8) as i8 > -1 {
                         let (r, do_fora, prox);
                         if casa <= fora {

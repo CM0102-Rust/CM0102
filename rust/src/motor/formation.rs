@@ -316,7 +316,7 @@ pub(crate) unsafe extern "C" fn pitch_cell(mask: u32, attack: i8, band: u32, out
     let a = high as usize;
     let throw_in = lado & 0x80 != 0 || lado & 0x800 != 0;
     let at = attack != 0;
-    // a linha (saida[1])
+    // the row (output[1])
     let row: i16 = if setor & 1 != 0 {
         if at { [0, 2, 4, 6][a] } else { [0, 1, 2, 3][a] }
     } else if setor & 2 != 0 {

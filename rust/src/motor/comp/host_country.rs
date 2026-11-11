@@ -33,7 +33,7 @@ pub(crate) const HOST_COUNTRY_LOOPS: [(u16, u8, u32, u16, u16, u8); 7] = [
     (0x110, 8, KEY_CLUB_COMP_EUROPEAN_FOOTBALL_CHAMPIONSHIP as u32, 2000, 4, 0x20), // cqo3: a Eurocopa
     (0x220, 8, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS as u32, 2000, 2, 0x10), // cqo3: a Copa Africana
     (0x330, 8, KEY_CLUB_COMP_FOOTBALL_TOURNAMENT_OF_THE_OLYMPIC_GAMES as u32, 2000, 4, 0x20),
-    (0x462, 6, KEY_CLUB_COMP_COPA_AMERICA as u32, 1999, 2, 0xc), // cqo3: a Copa América
+    (0x462, 6, KEY_CLUB_COMP_COPA_AMERICA as u32, 1999, 2, 0xc), // cqo3: the Copa América
     (0x5fa, 6, KEY_CLUB_COMP_INTER_AMERICAN_CUP as u32, 1999, 1, 0x6), // cqo3: the annual editions
     (0x6c6, 5, KEY_CLUB_COMP_ASIAN_CUP as u32, 2000, 4, 0x14),
 ];

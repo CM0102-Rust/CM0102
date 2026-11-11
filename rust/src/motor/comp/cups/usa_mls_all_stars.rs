@@ -141,7 +141,7 @@ pub(crate) unsafe fn set_up_all_star_teams(this: Cup) -> i32 {
         write_usize(this.team_table(), usa_mls_all_stars_club_by_index(b));
         0x414
     };
-    let mut k = exe::utils_random(6) as u8; // cqr6: o estádio sorteado entre 6
+    let mut k = exe::utils_random(6) as u8; // cqr6: the stadium drawn among 6
     let mut i = 0usize;
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let c = usa_mls_all_stars_club_by_index(i);

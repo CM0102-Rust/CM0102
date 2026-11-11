@@ -1792,7 +1792,7 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                 }
             }
             (exe::database_attribute_vector_to_non_player(nj, p, v1.as_mut_ptr() as usize) as u32);
-            // ---- o cargo: olheiro (9), fisioterapeuta (8), treinador (10) ----
+            // ---- the job: scout (9), physio (8), coach (10) ----
             let ate = |o: usize, max: i8, n: i32, base: u8| {
                 if signed_byte_at(nj.addr() + o) > max {
                     wb(nj.addr() + o, (exe::utils_random(n) as u8).wrapping_add(base));

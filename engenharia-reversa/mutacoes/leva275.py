@@ -2,7 +2,7 @@
 MUTACOES = [
     ('cqk9_sem_registro_classificado_mls', 'bra_nat_first_add_qualified_record(club, comp, 0xa0, 0x78, 0x28); // cqk9: the MLS qualifier', '// mutacao: sem o registro do classificado da MLS', 'cqk_9 mls qualified'),
     ('cqk9_sem_segunda_conferencia', 'f1(e1, game, stats); // cqk9: the match in the second conference table', 'let _ = (e1, f1); // mutacao: o jogo na tabela da segunda conferência', 'cqk_9 mls second conference'),
-    ('cqk9_conferencia_trocada', 'return 0x413; // cqk9: a primeira conferência', 'return 0x414; // mutacao: a primeira conferência', 'cqk_9 conference 0x413'),
+    ('cqk9_conferencia_trocada', 'return 0x413; // cqk9: the first conference', 'return 0x414; // mutacao: the first conference', 'cqk_9 conference 0x413'),
     ('cqi4_premier_rebaixa_4', 'v.push((0xc1, 1, 3)); // cqi4: a Premier rebaixa 3', 'v.push((0xc1, 1, 4)); // mutacao: rebaixa 4', 'cqi_4 premier rules'),
     ('cqi4_first_um_turno', 'v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi4: a First joga 2 turnos', 'v.extend_from_slice(&[(0x3c, 2, 1), (0xc2, 1, 3)]); // mutacao: 1 turno', 'cqi_4 first division rules'),
     ('cqi4_second_vitoria_vale_2', 'v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqi4: the Second gives 3 points per win', 'v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 2)]); // mutacao: 2 pontos', 'cqi_4 second division rules'),

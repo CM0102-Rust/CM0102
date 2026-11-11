@@ -399,7 +399,7 @@ pub(crate) unsafe fn link_nations_near_date(this: usize, datas: usize, usadas: u
     let (mut x, mut y, mut t, mut u) = ([0u8; 8], [0u8; 8], [0u8; 8], [0u8; 8]);
     let (px, py, pt, pu) = (x.as_mut_ptr() as usize, y.as_mut_ptr() as usize, t.as_mut_ptr() as usize, u.as_mut_ptr() as usize);
     let data = datas + 3;
-    exe::date_operator_3d(px, pu, exe::date_sub_days(data, pt, 4)); // a primeira data: 4 dias antes
+    exe::date_operator_3d(px, pu, exe::date_sub_days(data, pt, 4)); // the first date: 4 days before
     exe::date_operator_3d(py, pu, exe::date_add_days(data, pt, 4)); // the last one: 4 days later
     while read_u16(py + 2) > read_u16(px + 2) || (read_u16(py + 2) == read_u16(px + 2) && read_i16(py) >= read_i16(px)) {
         for fatia in 0u32..3 {
@@ -2391,7 +2391,7 @@ pub(crate) unsafe extern "thiscall" fn plan_friendly_on_free_date(this: usize, h
     if start >= end {
         return 0;
     }
-    let n = (start as i32).wrapping_add(exe::utils_random(end as i32 - start as i32)); // cps12: o dia sorteado
+    let n = (start as i32).wrapping_add(exe::utils_random(end as i32 - start as i32)); // cps12: the drawn day
     let mut data = [0u8; 8];
     // simplification: the original pushes the whole esi (the low word is the sum, on top a register leftover); 0x54c5b0 reads
     // a palavra

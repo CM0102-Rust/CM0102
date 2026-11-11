@@ -52,7 +52,7 @@ pub(crate) unsafe fn judge_scout_request(request: usize, catorze: usize) -> (boo
     if scout_manager_date_after(dia, ano, year_after) {
         return (true, false, 0, 0, 0);
     }
-    if (read_u8(request + scout_request::REPORT_COUNT) as i8) >= 3 { // cqf12: três relatórios
+    if (read_u8(request + scout_request::REPORT_COUNT) as i8) >= 3 { // cqf12: three reports
         return (true, false, 0, 0, 0);
     }
     let mut t2 = [0u32; 2];

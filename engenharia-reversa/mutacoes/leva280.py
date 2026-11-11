@@ -30,5 +30,5 @@ MUTACOES = [
     ('cqq9_virada_dois_anos', 'a.wrapping_add(1)); // cqq9: the next year of the J1', 'a.wrapping_add(2)); // mutacao: dois anos adiante', 'cqq_9 j1 rollover'),
     ('cqo3_sorteio_a_menos', 'let r = exe::utils_random((0x46) as u32 as i32); // cqo3: the random draw of the decision day', 'let r = if k == 0 { 0x23 } else { exe::utils_random((0x46) as u32 as i32) }; // mutacao: o primeiro sem o sorteio', 'cqo_3 day draw'),
     ('cqo3_africana_de_4_em_4', '(0x220, 8, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS as u32, 2000, 2, 0x10), // cqo3: a Copa Africana', '(0x220, 8, KEY_CLUB_COMP_AFRICAN_CUP_OF_NATIONS as u32, 2000, 4, 0x10), // mutacao: de 4 em 4', 'cqo_3 day draw'),
-    ('cqo3_copa_america_2001', '(0x462, 6, KEY_CLUB_COMP_COPA_AMERICA as u32, 1999, 2, 0xc), // cqo3: a Copa América', '(0x462, 6, KEY_CLUB_COMP_COPA_AMERICA as u32, 2001, 2, 0xc), // mutacao: desde 2001', 'cqo_3 day draw'),
+    ('cqo3_copa_america_2001', '(0x462, 6, KEY_CLUB_COMP_COPA_AMERICA as u32, 1999, 2, 0xc), // cqo3: the Copa América', '(0x462, 6, KEY_CLUB_COMP_COPA_AMERICA as u32, 2001, 2, 0xc), // mutacao: desde 2001', 'cqo_3 day draw'),
 ]

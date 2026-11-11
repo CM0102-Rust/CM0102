@@ -3516,7 +3516,7 @@ pub(crate) unsafe fn restart_play_with(m: Engine, call: &mut dyn FnMut(usize, us
             cantos_de(call, 0);
         }
     }
-    // a bola parada
+    // the set piece
     match *b(engine::RESTART_TYPE) {
         1 => {}
         2..=8 => {
@@ -3758,7 +3758,7 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
         if read_i8(m + engine::PUNISHMENT_STATE) == 2 {
             write_u8(m + engine::PUNISHMENT_STATE, 0);
         }
-        // o lance marcado
+        // the play called
         let q = read_usize(m + engine::PENDING_PLAY_OFFENDER);
         if read_i8(m + engine::PENDING_PLAY_KIND) != 0 && q != 0 {
             let cl = read_i8(q + match_player::SIDE);
@@ -5571,7 +5571,7 @@ pub(crate) unsafe fn goal_stands_with(c: &mut ShotLocals, call: &mut dyn FnMut(u
             to_the_side(0x3fb9999a);
         }
     }
-    // 0x708844: o lance marcado ainda anula
+    // 0x708844: the play called still disallows
     if side_of_move(m) as i8 > -1 {
         disallowed_goal_with(c, call);
         return;
@@ -7438,7 +7438,7 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
             2 => (0x2b, 0x2c),
             _ => (0x2e, 0x2c),
         };
-        // (codigo, lance, alternativo)
+        // (code, play, alternative)
         let won: Option<(i8, i8, i8)> = match kind {
             0xc..=0xe => {
                 let k = if atacante_t1() { 3 } else if bit100 { 10 } else { 20 };
@@ -10905,7 +10905,7 @@ pub(crate) unsafe extern "thiscall" fn team_strength(this: usize, side_b: i8) {
         exe::match_player_drain_stamina(p, (30 - person.stamina() as i32) as f32, -1);
         let role = match_player_position(MatchPlayer(p)) as u8;
         let palavra5 = |pe: usize| read_i16(pe + 5) as f64;
-        // S: chute e finalizacao
+        // S: shooting and finishing
         let mut s = ((((((f(p, match_player::TACKLING) + f(p, match_player::POSITIONING)) + f(p, match_player::PACE)) + f(p, match_player::ANTICIPATION)) + cinquenta) * meio + read_f32(rdata::F32_48) as f64)
             + f(p, match_player::STAMINA) * k898
             - k8a8) as f32 as f64;

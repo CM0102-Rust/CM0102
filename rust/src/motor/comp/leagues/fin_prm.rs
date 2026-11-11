@@ -1351,7 +1351,7 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, fixtur
         add(mandante, 0x158, 0xb8, ftol(x * read_f64(rdata::F64_0_75)));
         add(visitante, 0x158, 0xb8, ftol(x * read_f64(rdata::F64_0_25)));
         crate::comparison::branch("cqb_1 net to the home side");
-        add(mandante, 0x140, 0xa0, net); // cqb1: o líquido ao mandante
+        add(mandante, 0x140, 0xa0, net); // cqb1: the net to the home side
         let home = fixture.home_club();
         let est = home.stadium().addr();
         if home.own_stadium() != 0 && est != 0 {
@@ -3089,7 +3089,7 @@ pub(crate) unsafe extern "thiscall" fn get_wealth_band(this: usize) -> u8 {
     }
     if goal_difference > r.wrapping_mul(1000).wrapping_add(3_500_000) as i64 {
         crate::comparison::branch("cpu_7 comfortable");
-        return 1; // cpu7: a faixa confortável
+        return 1; // cpu7: the comfortable range
     }
     if goal_difference < (-2_500_000i32).wrapping_sub(r.wrapping_mul(1500)) as i64 {
         return 0xfe;

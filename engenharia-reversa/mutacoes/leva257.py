@@ -19,7 +19,7 @@ MUTACOES = [
     ('cpu6_vento_moderado_forte', '            2 // cpu6: o vento moderado', '            3 // mutacao: forte', 'cpu_6 moderate wind'),
     ('cpu6_vento_forte_mais', '            3 // cpu6: o vento forte', '            4 // mutacao: o mais forte', 'cpu_6 strong wind'),
     ('cpu7_rica_vira_confortavel', '        return 2; // cpu7: a faixa rica', '        return 1; // mutacao: confortavel', 'cpu_7 rich'),
-    ('cpu7_confortavel_vira_normal', '        return 1; // cpu7: a faixa confortável', '        return 0; // mutacao: normal', 'cpu_7 comfortable'),
+    ('cpu7_confortavel_vira_normal', '        return 1; // cpu7: the comfortable range', '        return 0; // mutacao: normal', 'cpu_7 comfortable'),
     ('cpu7_devendo_vira_normal', '        return 0xff; // cpu7: a faixa devendo', '        return 0; // mutacao: normal', 'cpu_7 in debt'),
     ('cpu8_geral_mais_forte', 'set_schedule_levels(this, [0x19, 0x19, 0x19, 0x19, 0]); // cpu8: o treino geral', 'set_schedule_levels(this, [0x32, 0x19, 0x19, 0x19, 0]); // mutacao: 50 na primeira categoria', 'cpu_8 general'),
     ('cpu8_goleiros_mais_fraco', 'set_schedule_levels(this, [0xa, 0xa, 0, 0xa, 0x32]); // cpu8: the goalkeeper training', 'set_schedule_levels(this, [0xa, 0xa, 0, 0xa, 0x19]); // mutacao: 25 na quinta categoria', 'cpu_8 goalkeepers'),

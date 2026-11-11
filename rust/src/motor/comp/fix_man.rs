@@ -1402,7 +1402,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
     if exe::database_is_national_team(v.home_club()) != 0 {
         pv = pv.wrapping_add(0x15);
     }
-    let new_wins = pn > pv // cqb13: a prioridade maior fica
+    let new_wins = pn > pv // cqb13: the higher priority stays
         || (pn == pv && read_i16(read_usize(n + fixture::HOME_CLUB) + club::REPUTATION) > v.home_club().reputation());
     if new_wins {
         crate::comparison::branch("cqb_13 new one wins");
@@ -1413,7 +1413,7 @@ pub(crate) unsafe extern "thiscall" fn resolve_same_day_clash(this: usize, game:
     }
     // the calendar ones: ecx = this; push the match (0x5abc30, 0x5ab510; ret 4), push 0; push the match (0x5aa680; ret 8),
     // push 0; push &gravidade; push the match (0x5ad780; ret 0xc), push 0; push causa; push the match (0x5aac70; ret 0xc);
-    // 0x68d040: ecx = a lista; 0x944c94: push lista; add esp, 4 -> cdecl
+    // 0x68d040: ecx = the list; 0x944c94: push list; add esp, 4 -> cdecl
     let (sai, causa) = if sai_old {
         crate::comparison::branch("cqb_13 match leaves the list");
         exe::fixture_manager_remove_fixture(this, other);
@@ -2335,7 +2335,7 @@ pub(crate) unsafe extern "thiscall" fn find_next_fixture(this: usize, pano: *mut
                         }
                         slice = slice.wrapping_sub(1);
                     }
-                    slice = 2; // o dia anterior
+                    slice = 2; // the previous day
                     day = day.wrapping_sub(1);
                 }
                 year = year.wrapping_sub(1);

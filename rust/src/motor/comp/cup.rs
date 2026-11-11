@@ -709,7 +709,7 @@ pub(crate) unsafe extern "thiscall" fn check_round_teams_for_nation(cup: usize, 
                 return;
             }
         };
-        place_team_in_tie(cup, r, round, e, cur, home_side); // cqb11: a entrada vai ao confronto sorteado
+        place_team_in_tie(cup, r, round, e, cur, home_side); // cqb11: the entry goes to the drawn tie
         j = j.wrapping_add(1);
     }
     exe::crt_free(array);
@@ -1173,7 +1173,7 @@ pub(crate) unsafe extern "thiscall" fn draw_round(cup: usize, round: u32) -> u32
         crate::comparison::branch("cqa_3 open draw");
         sorteio(0x51e220); // cqa3: the free random draw
     }
-    // push −1; push rodada; ecx = a copa -> thiscall, ret 8
+    // push -1; push round; ecx = the cup -> thiscall, ret 8
     exe::cup_set_home_teams_for_round(cup, round, u32::MAX);
     if read_u8(round_record_by_dword(cup, round) + cup_round::LEGS) == 2 {
         sorteio(0x522610);
@@ -3080,7 +3080,7 @@ pub(crate) unsafe extern "thiscall" fn move_round_fixtures_to_set_dates(this: us
                         }
                         exe::fixture_manager_remove_fixture(read_usize(G_FIXTURE_MANAGER), r);
                         crate::comparison::branch("cqc_7 match moved to the date");
-                        r.set_day(read_i16(pt) as u16); // cqc7: o dia marcado
+                        r.set_day(read_i16(pt) as u16); // cqc7: the set day
                         r.set_year(read_i16(pt + 2) as u16);
                         let v = CupRound(cup_round_entry(this, round) + j);
                         r.set_time_slice(v.slot_time_slice()); // cqc7: a fatia marcada

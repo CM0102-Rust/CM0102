@@ -1,7 +1,7 @@
 # Mutações da 264a leva (itens cqb_1, cqb_2, cqb_3, cqb_4, cqb_5, cqb_6, cqb_7, cqb_8, cqb_9, cqb_10, cqb_11, cqb_12, cqb_13). Uso: python mutacoes.py mutacoes\leva264.py --carreira 2002-06-01
 MUTACOES = [
     ('cqb1_tv_menor', 'tv = ftol((q as f64 + read_f64(rdata::F64_1_75)) * publico as f64);', 'tv = ftol((q as f64 + read_f64(rdata::F64_1_25)) * publico as f64);', 'cqb_1 paying attendance'),
-    ('cqb1_liquido_pela_metade', 'add(mandante, 0x140, 0xa0, net); // cqb1: o líquido ao mandante', 'add(mandante, 0x140, 0xa0, net / 2); // mutacao: o liquido pela metade', 'cqb_1 net to the home side'),
+    ('cqb1_liquido_pela_metade', 'add(mandante, 0x140, 0xa0, net); // cqb1: the net to the home side', 'add(mandante, 0x140, 0xa0, net / 2); // mutacao: o liquido pela metade', 'cqb_1 net to the home side'),
     ('cqb1_preco_por_400', 'let price = div_trunc(home.reputation() as i32, 500); // cqb1: the price by reputation', 'let price = div_trunc(home.reputation() as i32, 400); // mutacao: por 400', 'cqb_1 preco pela reputacao'),
     ('cqb2_divisor_maior', 'read_f64(rdata::F64_0_0075)', 'read_f64(rdata::F64_0_1)', 'cqb_2 divisor da faixa 0 baixa'),
     ('cqb2_sorteio_a_mais_com_ficha', 'let r1 = friendly_random(ftol(read_f64(rdata::F64_30) / div));', 'let r1 = { friendly_random(5); friendly_random(ftol(read_f64(rdata::F64_30) / div)) };', 'cqb_2 with the record'),
@@ -28,7 +28,7 @@ MUTACOES = [
     ('cqb9_regra_1', '            exe::discipline_update_ban_progress(this, read_usize(p) as u32, 0, 1); // cqb9: the match served under rule 0', '            exe::discipline_update_ban_progress(this, read_usize(p) as u32, 1, 1); // mutacao: o jogo cumprido na regra 0', 'cqb_9 match served'),
     ('cqb9_conta_duas_vezes', '            exe::discipline_update_ban_progress(this, read_usize(p) as u32, 0, 1); // cqb9: the match served under rule 0', '            exe::discipline_update_ban_progress(this, read_usize(p) as u32, 0, 1); exe::discipline_update_ban_progress(this, read_usize(p) as u32, 0, 1); // mutacao: o jogo cumprido na regra 0', 'cqb_9 match served'),
     ('cqb10_busca_pelo_segundo', '    let mut in_the = read_usize(this.addr() + 2); // cqb10: the search starts at the head', '    let mut in_the = { let c = read_usize(this.addr() + 2); if c != 0 { read_usize(c + 6) } else { 0 } }; // mutacao: a busca começa no segundo', 'cqb_10 removed'),
-    ('cqb10_cauda_parada', '        this.set_tail(ant); // cqb10: a cauda volta ao anterior', '        // mutacao: a cauda volta ao anterior', 'cqb_10 tail'),
+    ('cqb10_cauda_parada', '        this.set_tail(ant); // cqb10: the tail goes back to the previous one', '        // mutacao: the tail goes back to the previous one', 'cqb_10 tail'),
     ('cqb10_cursor_parado', '        this.set_cursor(read_usize(in_the + llist_node::NEXT)); // cqb10: o cursor anda', '        // mutacao: o cursor anda', 'cqb_10 cursor'),
     ('cqb11_sem_ordenar', '    exe::crt_qsort(array, (n as i32) as u32, 7, 0x51ebc0); // cqb11: by seed, highest first', '    exe::crt_qsort(array, (0) as u32, 7, 0x51ebc0); // mutacao: sem ordenar', 'cqb_11 sorts by seed'),
     ('cqb11_lado_visitante', '                        side = Some(true); // cqb11: the drawn side', '                        side = Some(false); // mutacao: sempre visitante', 'cqb_11 seed drawn side'),
@@ -37,6 +37,6 @@ MUTACOES = [
     ('cqb12_estadio_sem_indice', '            read_u8(key_nation_entry(k) + key_nation_record::ACTIVE_INDEX) // cqb12: the active index of the stadium’s nation', '            3 + 0 * read_u8(key_nation_entry(k) + key_nation_record::ACTIVE_INDEX) // mutacao: como fora das nacoes-chave', 'cqb_12 stadium key nation'),
     ('cqb12_clube_de_fora_0', '    3 // cqb12: club outside the key nations', '    0 // mutacao: clube de fora na primeira nacao-chave', 'cqb_12 club without key nation'),
     ('cqb13_alvo_mais_1', '    exe::date_get_nearest_weekday((&mut a) as *mut [u8; 8] as usize, target, (&mut b) as *mut [u8; 8] as usize); // cqb13: the target weekday', '    exe::date_get_nearest_weekday((&mut a) as *mut [u8; 8] as usize, target % 7 + 1, (&mut b) as *mut [u8; 8] as usize); // mutacao: um dia a frente', 'cqb_13 target day'),
-    ('cqb13_prioridade_invertida', '    let new_wins = pn > pv // cqb13: a prioridade maior fica', '    let new_wins = pn < pv // mutacao: a prioridade menor fica', 'cqb_13 target day'),
+    ('cqb13_prioridade_invertida', '    let new_wins = pn > pv // cqb13: the higher priority stays', '    let new_wins = pn < pv // mutacao: a prioridade menor fica', 'cqb_13 target day'),
     ('cqb13_ja_jogado', '    let sai_old = new_wins && (v.home_goals() as u8) == 0xff; // cqb13: the one in the list not yet played', '    let sai_old = new_wins && (v.home_goals() as u8) != 0xff; // mutacao: so o ja jogado sai', 'cqb_13 new one wins'),
 ]

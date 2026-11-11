@@ -2449,7 +2449,7 @@ pub(crate) unsafe fn process_due_offer_body(this: TransferManagerFields, slot: u
             schedule_offer_days(this, o, 0xa);
         } else {
             crate::comparison::branch("cqd_1 contract to the player");
-            exe::transfer_manager_offer_contract_to_offer_player(this, buyer, transfer_manager_staff_by_id(o.target_staff_id()), o); // cqd1: o contrato ao alvo
+            exe::transfer_manager_offer_contract_to_offer_player(this, buyer, transfer_manager_staff_by_id(o.target_staff_id()), o); // cqd1: the contract to the target
         }
         return;
     }
@@ -5902,7 +5902,7 @@ pub(crate) unsafe extern "thiscall" fn init_work_permits(this: usize) {
                         break; // club from another nation
                     }
                     let a = read_u16(e - 2);
-                    if a < year { // cps2: o ano mais antigo
+                    if a < year { // cps2: the oldest year
                         crate::comparison::branch("cps_2 oldest year");
                         year = a;
                     }
@@ -6576,7 +6576,7 @@ pub(crate) unsafe fn can_club_bid_body(this: TransferManagerFields, player: Staf
     if read_u8(mark) & 0x40 != 0 {
         if exe::contract_manager_find_agreed_contract_offer(read_usize(G_CONTRACT_MANAGER), read_usize(player.addr()) as i32) != 0 {
             crate::comparison::branch("cpr_2 contract agreed");
-            return (0x21, 0); // contrato acertado
+            return (0x21, 0); // contract agreed
         }
         let m = this.person_flags().wrapping_add(read_usize(player.addr()).wrapping_mul(8)) as *mut u8;
         *m &= 0xbf;
@@ -10108,7 +10108,7 @@ pub(crate) unsafe extern "thiscall" fn hold_offers_at_window_close(this: usize, 
             if exe::human_manager_is_human_club(friendly_club_by_id(read_usize(o + offer::BUYER_CLUB_ID)), 0, 1, 0, 0) == 0 {
                 crate::comparison::branch("cpv_3 rescheduled in the window");
                 write_u8(o + offer::STATUS, 3); // cpv3: status 3
-                exe::transfer_manager_schedule_offer(this, o, 1, 0); // cpv3: de volta amanhã
+                exe::transfer_manager_schedule_offer(this, o, 1, 0); // cpv3: back tomorrow
             }
             continue;
         }

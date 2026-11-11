@@ -720,7 +720,7 @@ pub(crate) unsafe extern "C" fn usa_mls_get_club_all_star_conference(club: usize
     const OESTE: [usize; 6] = [0x9d03a8, 0x9d03a0, 0x9d039c, 0x9d0398, 0x9d038c, 0x9d037c];
     if LESTE.iter().any(|&k| read_usize(k) == id) {
         crate::comparison::branch("cqk_9 conference 0x413");
-        return 0x413; // cqk9: a primeira conferência
+        return 0x413; // cqk9: the first conference
     }
     if OESTE.iter().any(|&k| read_usize(k) == id) {
         return 0x414;

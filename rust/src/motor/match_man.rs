@@ -1225,7 +1225,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
                 }
             }
         }
-        // bola parada
+        // set piece
         if (tb() & 0x10 != 0 || tb() & 8 != 0 || tb() & 0x20 != 0) && tb() & 0x80 == 0 && tb() & 0x800 == 0 && (exe::match_player_get_secondary_position(j) as u8) & 0x40 == 0 {
             let ca = u(c.addr(), match_manager::CLUB);
             let s = a(0x16) + a(9) + a(7);

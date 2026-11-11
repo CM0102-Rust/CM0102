@@ -15,7 +15,7 @@ MUTACOES = [
     ('cqe5_um_ao_mesmo_tempo', 'if n > 1 { // cqe5: dois ao mesmo tempo', 'if n > 0 { // mutacao: um ao mesmo tempo', 'cqe_5 two at the same time'),
     ('cqe5_mesma_divisao_qualquer', 'if comp == owner.division().addr() && comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) {', 'if comp == owner.division().addr() && comp != 0 { // mutacao: qualquer divisao', 'cqe_5 same division'),
     ('cqe5_conta_tres', 'write_u8(p, read_u8(p).wrapping_add(1)); // cqe5: the season calculation', 'write_u8(p, read_u8(p).wrapping_add(3)); // mutacao: soma 3', 'cqe_5 loan counted'),
-    ('cqe6_quatro_meses', '*end_month = (*start_month).wrapping_add(3); // cqe6: três meses', '*end_month = (*start_month).wrapping_add(4); // mutacao: quatro meses', 'cqe_6 england three months'),
+    ('cqe6_quatro_meses', '*end_month = (*start_month).wrapping_add(3); // cqe6: three months', '*end_month = (*start_month).wrapping_add(4); // mutacao: quatro meses', 'cqe_6 england three months'),
     ('cqe6_comeco_dois_meses', '*start_month = (exe::date_get_month(G_CURRENT_DATE) as i8).wrapping_add(1); // cqe6: o mês seguinte (Inglaterra)', '*start_month = (exe::date_get_month(G_CURRENT_DATE) as i8).wrapping_add(2); // mutacao: dois meses adiante', 'cqe_6 england three months'),
     ('cqe6_base_abaixo_de_21', '< 0x18 { // cqe6: abaixo de 24 anos', '< 0x15 { // mutacao: abaixo de 21 anos', 'cqe_6 england youth period'),
 ]

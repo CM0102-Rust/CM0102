@@ -2444,9 +2444,9 @@ pub(crate) unsafe fn block_slot_for_person(v: usize, entry: usize, person: Staff
 /// solta +0x13 e o alvo, data de hoje − 120. Devolve 1.
 pub(crate) unsafe extern "thiscall" fn update_staff_status(this: usize, person: usize, club: usize, event: u32, kind: u32) -> u8 {
     let person = Staff(person);
-    // 0x68d020/0x68d040/0x68d1b0: thiscall(lista); 0x842180: thiscall(this, pessoa, lista, 0, 3, 0) (5 push); a
+    // 0x68d020/0x68d040/0x68d1b0: thiscall(list); 0x842180: thiscall(this, person, list, 0, 3, 0) (5 pushes); the
     // recursion: thiscall(this, person, club, 1, 2) (4 pushes); 0x600a50: cdecl(club, 0, 1, 0, 0) (add esp, 0x14);
-    // 0x4cf5f0: thiscall([0xae1050], pessoa, clube) (2 push); 0x83f3a0: thiscall(this, vaga, clube, pessoa) (3 push)
+    // 0x4cf5f0: thiscall([0xae1050], person, club) (2 pushes); 0x83f3a0: thiscall(this, slot, club, person) (3 pushes)
     let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     let mut list = [0u8; 0x10]; // a LLIST local (0xe bytes)
     let l = Llist(list.as_mut_ptr() as usize);
@@ -2642,8 +2642,8 @@ pub(crate) unsafe extern "thiscall" fn allocate_transfer_budget(this: usize, clu
     // 0x600a50: cdecl(club, 0, 1, 0, 0) (add esp, 0x14); 0x53b900: cdecl(club) (add esp, 4); 0x5a0590:
     // thiscall([0xae2a38], club); 0x598800: thiscall(finances, 0, 0, 0, 1, 0) (5 push); 0x945333: cdecl(vector, 0x28,
     // 0x25, 0x83b690) (add esp, 0x10); 0x8c61e0: thiscall([0xde1f54], lance) (1 push); 0x83f3a0: thiscall(this, vaga,
-    // clube, 0) (mov ecx, [this local]; 3 push); 0x4cf5a0: thiscall([0xae1050], pessoa); 0x544590: cdecl(pessoa, 0)
-    // (add esp, 8); 0x4cf5f0: thiscall([0xae1050], pessoa, clube) (2 push); 0x846920: thiscall(this, pessoa, clube, 1, 0,
+    // club, 0) (mov ecx, [this local]; 3 pushes); 0x4cf5a0: thiscall([0xae1050], person); 0x544590: cdecl(person, 0)
+    // (add esp, 8); 0x4cf5f0: thiscall([0xae1050], person, club) (2 pushes); 0x846920: thiscall(this, person, club, 1, 0,
     // status, 0) (6 pushes, returns in st0); 0x90cfc0: cdecl(n) (add esp, 4); 0x85fa00: thiscall(contract) (no push,
     // movsx ax); 0x8c5cf0: thiscall([0xde1f54], person, 0, 0) (3 push); 0x54c8e0: thiscall(0xae2c90, output, days)
     if exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0 || exe::database_is_national_team(club) != 0 {

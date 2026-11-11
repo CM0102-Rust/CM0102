@@ -5011,7 +5011,7 @@ pub(crate) unsafe extern "thiscall" fn manager_manager_remove(this: usize, given
     }
     if in_the == this.tail() {
         crate::comparison::branch("cqb_10 tail");
-        this.set_tail(ant); // cqb10: a cauda volta ao anterior
+        this.set_tail(ant); // cqb10: the tail goes back to the previous one
     } else {
         write_usize(prox + llist_node::PREV, ant);
     }

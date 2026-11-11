@@ -517,7 +517,7 @@ pub(crate) unsafe fn original_fn<F: Copy>(i: usize) -> F {
     core::mem::transmute_copy(&ORIGINAIS[i])
 }
 
-// --- gravar e reproduzir: 0x6f5c30 (3,9 KB, sorteia e altera jogadores) chamada por 0x6cd330 ---
+// --- record and replay: 0x6f5c30 (3.9 KB, draws and changes players) called by 0x6cd330 ---
 //
 // In comparison mode the original runs and each of its calls to 0x6f5c30 goes onto the tape (port below, only
 // during this comparison); the Rust copy receives the recorded return value and effect (0x6f5c30 changes the

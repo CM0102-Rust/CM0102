@@ -1266,7 +1266,7 @@ pub(crate) unsafe extern "thiscall" fn has_fast_position_training(this: usize, p
 pub(crate) unsafe extern "thiscall" fn advance_week_counter(this: usize, day: *const i16) -> i32 {
     let v = *day as i32;
     let rest = v % 7; // cpt10: the 7-day week
-    if rest == 0 { // cpt10: o sétimo dia
+    if rest == 0 { // cpt10: the seventh day
         crate::comparison::branch("cpt_10 week");
         let s = (this + training_manager_fields::WEEK_COUNTER) as *mut u16;
         *s = (*s).wrapping_add(1); // cpt10: one more week

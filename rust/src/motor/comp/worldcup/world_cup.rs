@@ -472,11 +472,11 @@ pub(crate) unsafe extern "thiscall" fn world_cup_create_schedule(this: usize, st
     // the year carries garbage in the high bytes in the original (the year’s cx over the previous ecx); 0x68a160 only uses the 16 bits
     // low (0x549f70 reads the year as a word and the word at +2 holds year − base): the copy passes the clean year
     let year = this.year() as u16 as u32;
-    exe::league_round_set_date(t, 0, 0xc, 5, 0, 4, 1, year, 1); // cqf6: a primeira rodada
+    exe::league_round_set_date(t, 0, 0xc, 5, 0, 4, 1, year, 1); // cqf6: the first round
     exe::league_round_set_match_slot(t, 0, 2, -1, -1, -1, 0);
     exe::league_round_set_date(t, 1, 0x13, 5, 0, 4, 1, year, 1); // cqf6: a segunda rodada
     exe::league_round_set_match_slot(t, 1, 2, -1, -1, -1, 0);
-    exe::league_round_set_date(t, 2, 0x18, 5, 0, 2, 1, year, 1); // cqf6: a terceira rodada
+    exe::league_round_set_date(t, 2, 0x18, 5, 0, 2, 1, year, 1); // cqf6: the third round
     exe::league_round_set_match_slot(t, 2, 2, -1, -1, -1, 0);
     let k = (f as i32 + 1) as u32;
     if k <= 7 {

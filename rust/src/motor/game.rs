@@ -34,7 +34,7 @@ pub(crate) unsafe fn roll_coefficient_year(na: Nation, h: &mut [f64; 6], mark: &
     h[2] = h[3];
     h[3] = h[4];
     h[4] = h[5];
-    h[5] = 0.0; // cpt6: o ano corrente zerado
+    h[5] = 0.0; // cpt6: the current year zeroed
     *mark = 0;
 }
 

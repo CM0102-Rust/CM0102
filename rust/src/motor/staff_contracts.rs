@@ -350,7 +350,7 @@ pub(crate) unsafe extern "thiscall" fn check_transfer_request_withdrawal(this: u
     let this = Contract(this);
     let Some(pessoa) = should_withdraw_transfer_request(this) else { return };
     exe::contract_manager_post_transfer_request_withdrawn_news(read_u32(G_CONTRACT_MANAGER) as usize, this, ctx);
-    this.set_transfer_status(this.transfer_status() & 0xf7); // o pedido retirado
+    this.set_transfer_status(this.transfer_status() & 0xf7); // the request withdrawn
     this.set_morale((read_u8(pessoa + staff::PROFESSIONALISM).wrapping_add(read_u8(pessoa + staff::LOYALTY)).wrapping_add(5)) as i8);
     if (this.unhappy_flag() as u8) != 0 {
         this.set_unhappy_flag((0) as i8);

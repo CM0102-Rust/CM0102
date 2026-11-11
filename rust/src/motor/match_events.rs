@@ -241,7 +241,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
         write_u8(BUF + n, 0);
         c
     };
-    // a linha inteira (virgulas inclusive) num texto alocado; marcas `<X` desconhecidas avisam
+    // the whole line (commas included) into an allocated text; unknown `<X` marks warn
     let text = |row_allocation: u32, row_mark: u32| -> usize {
         let mut c = pula_brancos_e_le();
         let mut n = 0usize;

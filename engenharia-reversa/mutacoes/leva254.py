@@ -4,7 +4,7 @@ MUTACOES = [
     ('cpr1_conta_comunitarios', '1 => exe::database_is_staff_foreign(p, club.nation().addr(), 1) != 0 && exe::database_is_staff_eu_national(p, club.nation().addr()) == 0,', '1 => exe::database_is_staff_foreign(p, club.nation().addr(), 1) != 0, // mutacao: conta os da UE', 'cpr_1 count non-EU players'),
     ('cpr1_permissao_ignorada', 'return 0; // has the permission', 'return 1; // mutacao: a permissao nao vale', 'cpr_1 permit found'),
     ('cpr2_negociacao_livre', 'return (0x12, 0); // already in negotiation', 'return (0, 1); // mutacao: pode mesmo em negociacao', 'cpr_2 offer under negotiation'),
-    ('cpr2_acerto_livre', 'return (0x21, 0); // contrato acertado', 'let _ = 0x21; // mutacao: o acerto nao segura', 'cpr_2 contract agreed'),
+    ('cpr2_acerto_livre', 'return (0x21, 0); // contract agreed', 'let _ = 0x21; // mutacao: o acerto nao segura', 'cpr_2 contract agreed'),
     ('cpr2_futura_livre', 'return (0x20, 0); // future transfer agreed', 'return (0, 1); // mutacao: pode mesmo com a futura', 'cpr_2 future transfer'),
     ('cpr3_futura_ignorada', '1 // the future transfer exists', '0 // mutacao: nao acha a futura', 'cpr_3 future found'),
     ('cpr3_estado_futura', 'offer.set_status(offer_status::FUTURE_TRANSFER); // future transfer', 'offer.set_status(0x12); // mutacao: estado errado', 'cpr_3 add future'),

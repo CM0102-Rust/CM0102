@@ -152,7 +152,7 @@ pub(crate) unsafe fn sort_clubs_by_strength(v: *mut u32, k: *mut i32, n: i32) {
     let mut i = 0usize;
     while (i as i32) < n - 1 {
         for j in i + 1..n as usize {
-            if *k.add(i) < *k.add(j) { // cpt13: a força maior sobe
+            if *k.add(i) < *k.add(j) { // cpt13: the stronger one moves up
                 core::ptr::swap(k.add(i), k.add(j));
                 core::ptr::swap(v.add(i), v.add(j));
             }

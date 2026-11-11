@@ -74,7 +74,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
 
 // simplification: the clubs, the predictions, the tables, the matches and the league day do not run twice. Original only; the plan
 // on the draw day (the copy’s condition): +0x45 = 1, the list +0xee and +0xf2 zeroed, the group A table and the stage of
-// grupo B criadas e a fase atual (+0x30) = 0.
+// group B created and the current stage (+0x30) = 0.
 
 /// Rule: group A of the Oceania Club Championship has the first 4 chosen clubs, each in the row of its order; human
 /// managers get the group draw news.

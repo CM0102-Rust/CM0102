@@ -1126,7 +1126,7 @@ pub(crate) unsafe extern "thiscall" fn process_transfer_squad_reactions(this: us
                 changed = true;
                 if strength > 0x28 || friendly_random(read_i8_as_i32(m + staff::PRESSURE)) != 0 {
                     crate::comparison::branch("cqa_13 complaint cleared");
-                    if clear_grievances_or_stop(c, 0x20000000) { // cqa13: chega alguém maior
+                    if clear_grievances_or_stop(c, 0x20000000) { // cqa13: someone bigger arrives
                         return;
                     }
                 }
@@ -1426,7 +1426,7 @@ pub(crate) unsafe extern "thiscall" fn queue_sale_unrest_story(_this: usize, old
 ///
 /// [pt] A data da entrada `e` da fila dos regens (+4) é antes de hoje (0x456770)?
 pub(crate) unsafe fn is_regen_entry_due(e: usize) -> bool {
-    exe::date_operator_3c(e + 4, read_usize(G_CURRENT_DATE) as u32, read_usize(G_CURRENT_DATE_LEAP) as u32) != 0 // cpw10: a entrada vencida
+    exe::date_operator_3c(e + 4, read_usize(G_CURRENT_DATE) as u32, read_usize(G_CURRENT_DATE_LEAP) as u32) != 0 // cpw10: the entry is due
 }
 
 /// One rating of the rebuilt coach (`process_regen_queue`): max(pow(+0x22, 0x968950) x factor, record value v) x k, capped and

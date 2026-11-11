@@ -322,7 +322,7 @@ pub(crate) unsafe extern "thiscall" fn england_rules_get_loan_period(this: usize
         *start_year = (*start_year).wrapping_add(1);
     }
     crate::comparison::branch("cqe_6 england three months");
-    *end_month = (*start_month).wrapping_add(3); // cqe6: três meses
+    *end_month = (*start_month).wrapping_add(3); // cqe6: three months
     *end_year = *start_year;
     if *end_month > 0xb {
         *end_month = (*end_month).wrapping_sub(0xc);

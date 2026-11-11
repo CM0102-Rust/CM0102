@@ -2836,7 +2836,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
     if l34 != 0 {
         crate::comparison::branch("cpw_8 loss");
     }
-    let mut x = f.wrapping_sub(66i32.wrapping_mul(l34)); // cpw8: a perda por dia parado
+    let mut x = f.wrapping_sub(66i32.wrapping_mul(l34)); // cpw8: the loss per day out
     if x < floor {
         x = 4000;
     }

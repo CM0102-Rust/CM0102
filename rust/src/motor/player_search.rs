@@ -342,7 +342,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
     // 0x5afde0: push owner; mov ecx, [0xae2a60] -> thiscall, ret 4; 0x5b09d0: push scout; push player; mov ecx, eax ->
     // thiscall, ret 8; 0x7f8d70: push 0; push club; push player; mov ecx, [0xb74448] -> thiscall, ret 0xc; 0x5407e0:
     // push 0; push olheiro; push jogador; add esp, 0xc -> cdecl; 0x7b62a0: 7 pushes; mov ecx, this -> thiscall, ret 0x1c;
-    // 0x68d0d0: push 0x67; push &registro; mov ecx, saida -> thiscall, ret 8
+    // 0x68d0d0: push 0x67; push &record; mov ecx, output -> thiscall, ret 8
     // the local record (0x67 bytes), reused between players as in the original, with the parts that the constructor of the
     // original builds on entry: the date at +0 (0x54a110) and the two record holders at +0x1f and +0x37 (0x450d40); the rest
     // starts zeroed (in the original, a stack leftover that 0x7b62a0 overwrites)

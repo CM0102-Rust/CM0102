@@ -9751,7 +9751,7 @@ pub(crate) unsafe extern "thiscall" fn shot_value(this: usize, kind: *mut i8, so
         random(c.wrapping_mul(c) / 50000)
     };
     if t == -1 {
-        // tipo desconhecido: o original mostra um erro antes
+        // unknown kind: the original shows an error first
         e = random(0x32);
         *q39 = 0;
     } else if t == 0x3a {

@@ -95,7 +95,7 @@ pub(crate) unsafe extern "C" fn key_nation_get_club_season_year(club: usize) -> 
         let e = (0xb63d60isize + 72 * k) as usize;
         let start = read_u16(e + key_nation_record::SEASON_END_DAY);
         if (read_usize(e + key_nation_record::SPLIT_SEASON_FLAG) != 0 || start < 0x3c) && (read_i16(G_CURRENT_DATE) as i32) < start as i32 {
-            return year.wrapping_sub(1); // cpu1: o ano anterior
+            return year.wrapping_sub(1); // cpu1: the previous year
         }
     }
     year

@@ -882,14 +882,14 @@ pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, game: u
         let (pro, contra) = (reg[0x19] as i8, reg[0x1a] as i8);
         if pro > contra {
             write_i16(l + 4, read_i16(l + 4).wrapping_add(1));
-            write_i16(l + tactic_stats::POINTS, read_i16(l + tactic_stats::POINTS).wrapping_add(3)); // cpz5: a vitória vale 3 pontos
+            write_i16(l + tactic_stats::POINTS, read_i16(l + tactic_stats::POINTS).wrapping_add(3)); // cpz5: a win is worth 3 points
         } else if pro == contra {
             write_i16(l + 6, read_i16(l + 6).wrapping_add(1));
             write_i16(l + tactic_stats::POINTS, read_i16(l + tactic_stats::POINTS).wrapping_add(1));
         } else {
             write_i16(l + 8, read_i16(l + 8).wrapping_add(1));
         }
-        write_i16(l + tactic_stats::GOALS_FOR, read_i16(l + tactic_stats::GOALS_FOR).wrapping_add(pro as i16)); // cpz5: os gols pró
+        write_i16(l + tactic_stats::GOALS_FOR, read_i16(l + tactic_stats::GOALS_FOR).wrapping_add(pro as i16)); // cpz5: the goals for
         write_i16(l + tactic_stats::GOALS_AGAINST, read_i16(l + tactic_stats::GOALS_AGAINST).wrapping_add(contra as i16));
         let a = at_least_one(read_i16(l + tactic_stats::GOALS_FOR));
         let b = at_least_one(read_i16(l + tactic_stats::GOALS_AGAINST));
@@ -1304,12 +1304,12 @@ pub(crate) unsafe extern "thiscall" fn get_club_tactic(this: usize, club: usize,
     let id = read_i32(club.addr());
     let index = read_i16(read_usize(this + tactics_fields::ROWS).wrapping_add(id.wrapping_mul(0x91) as usize)) as i32;
     let prontas = read_i32(this + tactics_fields::PRESET_TACTIC_COUNT);
-    if index < prontas { // cpx8: tática pronta ou própria
+    if index < prontas { // cpx8: preset or own tactic
         crate::comparison::branch("cpx_8 preset tactic");
         read_usize(this + tactics_fields::PRESET_TACTICS).wrapping_add(index.wrapping_mul((formation_fields::SIZE as i32)) as usize) // cpx8: o bloco pronto
     } else {
         crate::comparison::branch("cpx_8 own tactic");
-        read_usize(this + tactics_fields::CUSTOM_TACTICS).wrapping_add(index.wrapping_sub(prontas).wrapping_mul((formation_fields::SIZE as i32)) as usize) // cpx8: o bloco próprio
+        read_usize(this + tactics_fields::CUSTOM_TACTICS).wrapping_add(index.wrapping_sub(prontas).wrapping_mul((formation_fields::SIZE as i32)) as usize) // cpx8: the own block
     }
 }
 
