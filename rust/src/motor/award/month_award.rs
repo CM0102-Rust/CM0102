@@ -45,9 +45,9 @@ pub(crate) unsafe extern "thiscall" fn award_best_rated_player(this: usize, note
     crate::comparison::branch("cpw_6 awarded the best of the month");
     let id = read_i32(r);
     let table = read_usize(G_STAFF_TABLE) as u32;
-    let club = read_usize(month_ratings_staff_by_id(id) + 0x39);
-    let year = (table & 0xffff0000) | read_i16(notes + 0xd) as u16 as u32;
-    let month = read_u8(notes + 0xc) as u32;
+    let club = read_usize(month_ratings_staff_by_id(id) + staff::CLUB_JOB);
+    let year = (table & 0xffff0000) | read_i16(notes + month_ratings_fields::YEAR) as u16 as u32;
+    let month = read_u8(notes + month_ratings_fields::MONTH) as u32;
     if club != 0 {
         exe::month_award_set_winner(this, id, read_i32(club), (year & 0xffffff00) | month, year);
     } else {
@@ -85,7 +85,7 @@ pub(crate) unsafe extern "thiscall" fn set_winner(this: usize, id: i32, club_id:
     let mut slot = None;
     for k in 0..12usize {
         let v = this + k * 11;
-        if read_u8(v + 0x25) == month as u8 && read_i16(v + 0x26) == year as u16 as i16 {
+        if read_u8(v + month_award_fields::SLOT_MONTH) == month as u8 && read_i16(v + month_award_fields::SLOT_YEAR) == year as u16 as i16 {
             slot = Some(k);
             break;
         }
@@ -95,23 +95,23 @@ pub(crate) unsafe extern "thiscall" fn set_winner(this: usize, id: i32, club_id:
         None => return,
     };
     let v = this + k * 11;
-    write_u32(v + 0x1d, id as u32);
-    write_u32(v + 0x21, club_id as u32);
+    write_u32(v + month_award_fields::SLOT_WINNER_ID, id as u32);
+    write_u32(v + month_award_fields::SLOT_CLUB_ID, club_id as u32);
     if id > -1 {
         let club = if club_id > -1 { month_award_club_by_id(club_id) } else { Club(0) };
         // the high bytes of the reputations come from dword +0x19 in the register, as the original pushes
-        let mark = read_usize(this + 0x19) as u32;
+        let mark = read_usize(this + award_fields::FOR_PLAYERS) as u32;
         let high = mark & 0xffff0000;
         crate::comparison::branch("cpw_6 winner of the month");
-        raise_winner_reputation(month_ratings_staff_by_id(id), club.addr(), high | read_i16(this + 0x15) as u16 as u32, high | read_i16(this + 0x17) as u16 as u32, mark);
+        raise_winner_reputation(month_ratings_staff_by_id(id), club.addr(), high | read_i16(this + award_fields::NATIONAL_REPUTATION) as u16 as u32, high | read_i16(this + award_fields::WORLD_REPUTATION) as u16 as u32, mark);
     }
     if MONTH_AWARD_DRY_RUN.load(Relaxed) {
         return;
     }
     exe::month_award_post_winner_news(this, (this as u32 & 0xffffff00) | k as u32);
-    let cid = read_i32(v + 0x21);
+    let cid = read_i32(v + month_award_fields::SLOT_CLUB_ID);
     let club = if cid != -1 { month_award_club_by_id(cid) } else { Club(0) };
-    exe::staff_records_add_month_award_record(read_usize(G_STAFF_RECORDS), month_ratings_staff_by_id(read_i32(v + 0x1d)), club, read_usize(this + 5) as u32, month, year);
+    exe::staff_records_add_month_award_record(read_usize(G_STAFF_RECORDS), month_ratings_staff_by_id(read_i32(v + month_award_fields::SLOT_WINNER_ID)), club, read_usize(this + 5) as u32, month, year);
 }
 
 /// Adds the regions the winner's reputation writes: player record +9..+0xe, non-player record +8..+0xd and the club's

@@ -597,7 +597,7 @@ pub(crate) unsafe fn find_in_nation_index(this: usize, id: u32) -> usize {
     if e != 0 {
         return e;
     }
-    let second = read_usize(read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)) + 0x1e);
+    let second = read_usize(read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)) + staff::SECOND_NATION);
     if second == 0 {
         return 0;
     }
@@ -1014,7 +1014,7 @@ pub(crate) unsafe extern "thiscall" fn process_match(this: usize, fixture: usize
         return 0;
     }
     for (lado, a, b) in [(0x1cusize, 1u32, 0u32), (0x20, 0, 1)] {
-        let league = read_usize(read_usize(fixture.addr() + lado) + 0x57);
+        let league = read_usize(read_usize(fixture.addr() + lado) + club::DIVISION);
         if league == 0 {
             continue;
         }

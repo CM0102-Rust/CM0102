@@ -46,8 +46,8 @@ pub(crate) unsafe extern "thiscall" fn construct_cup_stage(this: usize, parent: 
     this.set_next_draw_round(0);
     this.set_round_count((rounds as u16) as i16);
     this.set_stage_label((id as u16) as i16);
-    this.set_substitutes_named(read_u8(parent + 0x49));
-    this.set_substitutions_allowed(read_u8(parent + 0x4a));
+    this.set_substitutes_named(read_u8(parent + cup::SUBSTITUTES_NAMED));
+    this.set_substitutions_allowed(read_u8(parent + cup::SUBSTITUTIONS_ALLOWED));
     this.set_prize_fund((a14 as usize) as i32);
     let size = (rounds as u16 as i16 as i32 * 0x68) as u32;
     let t = exe::crt_malloc(size);

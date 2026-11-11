@@ -475,7 +475,7 @@ pub(crate) unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pe
     } else {
         v1 as f64 * read_f32(rdata::F32_100) as f64 / v2
     };
-    let years = (read_i16(G_CURRENT_DATE_YEAR) as u16 as i32).wrapping_sub(read_i16(this + 0x27) as u16 as i32);
+    let years = (read_i16(G_CURRENT_DATE_YEAR) as u16 as i32).wrapping_sub(read_i16(this + contract::DATE_STARTED_YEAR) as u16 as i32);
     let days = years.wrapping_mul(365).wrapping_sub(read_i16(this + contract::DATE_STARTED) as i32).wrapping_add(read_i16(G_CURRENT_DATE) as i32).clamp(0, 500);
     let adapt = (person.loyalty() as u8) as i8 as i32;
     if days < adapt.wrapping_mul(15).wrapping_add(100) {

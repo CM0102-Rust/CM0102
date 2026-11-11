@@ -1,0 +1,43 @@
+[
+ {
+  "line": 9,
+  "offset": "0x382a",
+  "base": "manager",
+  "module": "screen_manager",
+  "verdict": "existing",
+  "name": "CURRENT_SLOT",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "index of the slot whose screen is being worked on",
+  "confidence": "verified",
+  "evidence": "G_SCREEN_MANAGER_CURRENT_SLOT 0xb77c7a = 0xb74450 + 0x382a"
+ },
+ {
+  "line": 10,
+  "offset": "0x7e2",
+  "base": "manager",
+  "module": "screen_manager",
+  "verdict": "existing",
+  "name": "PARAM_BLOCK",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "current screen node of slot k (+0x300 x k)",
+  "confidence": "verified",
+  "evidence": "same pattern as match_screens.rs (screen_manager::PARAM_BLOCK + slot * 0x300)"
+ },
+ {
+  "line": 14,
+  "offset": "0x1f8",
+  "base": "block (current screen node)",
+  "module": "screen_node",
+  "verdict": "new",
+  "name": "NEXT_NODE",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "next screen history node (0 = nothing to go forward to)",
+  "confidence": "verified",
+  "evidence": "community ScreenManager::is_forward_unavailable 0x7febb0 (high): true when the current screen history node has no next node; tests this dword for 0",
+  "new_module": true,
+  "record": "Screen history node (the current screen block of a ScreenManager slot, screen_manager::PARAM_BLOCK; params at +0x14 + 8n): +0x1f8 next node"
+ }
+]

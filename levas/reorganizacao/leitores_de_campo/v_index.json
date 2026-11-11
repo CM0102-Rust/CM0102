@@ -1,0 +1,17 @@
+[
+ {
+  "line": 412,
+  "offset": "0x23",
+  "base": "continent",
+  "module": "continent",
+  "verdict": "new",
+  "name": "ADJECTIVE",
+  "width": 26,
+  "rust_type": "[u8; 26]",
+  "description": "continent adjective text (ContinentNameContinentality)",
+  "confidence": "verified",
+  "evidence": "docs/FORMATOS TContinent +0x23 ContinentNameContinentality (26 bytes); get_continent_adjective copies it as the record's own adjective",
+  "new_module": true,
+  "record": "TContinent record (continent.dat, 198 bytes): +0 id, +4 name, +0x1f three-letter name, +0x23 adjective, +0x3d federation name"
+ }
+]

@@ -103,7 +103,7 @@ pub(crate) unsafe fn record_state_knockout(this: League, club: usize, st: u8, ga
                 }
                 let l = this.table() + 0x3b * i as usize;
                 if fazer {
-                    write_u8(l + 0x37, 5);
+                    write_u8(l + league_table_row::STATUS, 5);
                 }
                 return (l, 5);
             }
@@ -112,12 +112,12 @@ pub(crate) unsafe fn record_state_knockout(this: League, club: usize, st: u8, ga
                     // simplification: the original pushes eax (caller garbage above the word) and whole ecx/edx; the
                     // 0x4bf850 and 0x86c000 only read the words: the words are passed.
                     crate::comparison::branch("cqk_7 state league eliminated");
-                    let weight = exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, rounds) as u32;
-                    exe::staff_records_add_knocked_out_record(read_usize(G_STAFF_RECORDS), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight); // cqk7: the eliminated club record
+                    let weight = exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + fixture::ROUND_NUMBER) as u16 as u32, rounds) as u32;
+                    exe::staff_records_add_knocked_out_record(read_usize(G_STAFF_RECORDS), club, comp, read_i16(game + fixture::ROUND_PREFIX) as u16 as u32, read_i16(game + fixture::ROUND_NAME) as u16 as u32, weight); // cqk7: the eliminated club record
                 }
                 let l = this.table() + 0x3b * i as usize;
                 if fazer {
-                    write_u8(l + 0x37, 0xfe);
+                    write_u8(l + league_table_row::STATUS, 0xfe);
                 }
                 return (l, 0xfe);
             }

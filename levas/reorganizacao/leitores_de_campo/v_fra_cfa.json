@@ -1,0 +1,93 @@
+[
+ {
+  "line": 324,
+  "offset": "0x3c",
+  "base": "vtable of this",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": null,
+  "evidence": "vtable slot +0x3c (create round table virtual)"
+ },
+ {
+  "line": 506,
+  "offset": "0xb1",
+  "base": "string",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": null,
+  "evidence": "text inside a log format string; value from this.table() (league::TABLE)"
+ },
+ {
+  "line": 631,
+  "offset": "0x38",
+  "base": "t + k*0x3b (table row)",
+  "module": "league_table_row",
+  "verdict": "existing",
+  "name": "MARK",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "flag given at init_table_row (here 1 when the club's division is one of the marked competitions)",
+  "confidence": "read",
+  "evidence": "compared with the plan: 1 when the club's division id is among the marker competitions; existing MARK"
+ },
+ {
+  "line": 681,
+  "offset": "0x73",
+  "base": "e (Comp_Stats entry)",
+  "module": "comp_stats_club",
+  "verdict": "existing",
+  "name": "CURRENT_POSITION",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "club's current position in the competition statistics",
+  "confidence": "verified",
+  "evidence": "e = Comp_Stats::find_club_entry (0x4a4850) entry, 0x76-byte comp_stats_club; current/best/worst written together (as v_comp_util, v_bra_reg_rio)"
+ },
+ {
+  "line": 682,
+  "offset": "0x74",
+  "base": "e (Comp_Stats entry)",
+  "module": "comp_stats_club",
+  "verdict": "existing",
+  "name": "BEST_POSITION",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "best position reached",
+  "confidence": "verified",
+  "evidence": "e = Comp_Stats::find_club_entry (0x4a4850) entry, 0x76-byte comp_stats_club; current/best/worst written together (as v_comp_util, v_bra_reg_rio)"
+ },
+ {
+  "line": 683,
+  "offset": "0x75",
+  "base": "e (Comp_Stats entry)",
+  "module": "comp_stats_club",
+  "verdict": "existing",
+  "name": "WORST_POSITION",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "worst position reached",
+  "confidence": "verified",
+  "evidence": "e = Comp_Stats::find_club_entry (0x4a4850) entry, 0x76-byte comp_stats_club; current/best/worst written together (as v_comp_util, v_bra_reg_rio)"
+ },
+ {
+  "line": 696,
+  "offset": "0x73",
+  "base": "e (Comp_Stats entry)",
+  "module": "comp_stats_club",
+  "verdict": "existing",
+  "name": "CURRENT_POSITION",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "start of the 3 position bytes (current, best, worst) compared side by side",
+  "confidence": "verified",
+  "evidence": "comparer span (e + 0x73, 3) over CURRENT/BEST/WORST_POSITION of the Comp_Stats entry"
+ }
+]

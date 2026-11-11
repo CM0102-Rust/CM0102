@@ -26,7 +26,7 @@ pub(crate) unsafe extern "thiscall" fn construct_ireland_rules(this: usize, a1: 
 /// clube que pede e o dono na mesma divisão (+0x57, sem conferir o nulo, como a original): 0x1d, com o nome da nação.
 pub(crate) unsafe extern "thiscall" fn ireland_rules_can_loan_player(this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
     let club = Club(club);
-    let count = read_usize(read_usize(G_TRANSFER_MANAGER) + 0x91c).wrapping_add(read_usize(club.addr()).wrapping_mul(16));
+    let count = read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SEASON_LOAN_COUNTS).wrapping_add(read_usize(club.addr()).wrapping_mul(16));
     if read_u8(count) as i8 >= 5 {
         crate::comparison::branch("cqe_6 ireland five in the season");
         if msg != 0 {
@@ -45,7 +45,7 @@ pub(crate) unsafe extern "thiscall" fn ireland_rules_can_loan_player(this: usize
     });
     if club.division() == owner.division() {
         crate::comparison::branch("cqe_6 ireland same division");
-        return refuse_loan(msg, reason, 0x9ea168, read_usize(this + 0xa), 0x1d);
+        return refuse_loan(msg, reason, 0x9ea168, read_usize(this + transfer_rules::NATION_ID), 0x1d);
     }
     1
 }

@@ -68,7 +68,7 @@ pub(crate) unsafe extern "thiscall" fn euro_champ_qual_set_up_rules(this: usize)
 /// grupos 0, 2, 5 e 7 têm 6 e os outros 5; outro formato, a caixa da linha 0x245 e 5. `g` é o byte do argumento.
 pub(crate) unsafe fn group_team_count(this: usize, g: u32) -> i16 {
     let g = g as u8;
-    match read_i8(this + 0xf6) {
+    match read_i8(this + euro_champ_qual::GROUP_FORMAT) {
         1 => if matches!(g, 0 | 2 | 5) { 6 } else { 5 }, // cqs8: the groups of 6 in format 1
         2 => if matches!(g, 0 | 2 | 5 | 7) { 6 } else { 5 },
         _ => {
@@ -133,7 +133,7 @@ pub(crate) unsafe extern "thiscall" fn init_group_one_table(this: usize) -> u32 
     let mut i: i8 = 0;
     if n > 0 {
         loop {
-            let c = read_usize(read_usize(this.addr() + 0xf7) + i as isize as usize * 4);
+            let c = read_usize(read_usize(this.addr() + euro_champ_qual::DRAWN_TEAMS) + i as isize as usize * 4);
             exe::league_init_table_row(this, i as u8 as u32, c, 0, 0);
             i = i.wrapping_add(1);
             if (i as i16) >= this.club_count() {

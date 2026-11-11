@@ -1,0 +1,41 @@
+[
+ {
+  "line": 27,
+  "offset": "0xa",
+  "base": "this",
+  "module": "transfer_rules",
+  "verdict": "existing",
+  "name": "NATION_ID",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "Nation record the transfer rules apply to",
+  "confidence": "read",
+  "evidence": "transfer_rules::NATION_ID; passed as the nation to the adjective/name text and compared with club.nation().addr()"
+ },
+ {
+  "line": 42,
+  "offset": "0x37",
+  "base": "r (nation record from read_usize(this + 0xa), or the Scottish Premier competition record)",
+  "module": "nation",
+  "verdict": "new",
+  "name": "GENDER_NAME",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "Grammatical gender byte of the nation's NAME (+4), passed twice to the text formatter",
+  "confidence": "verified",
+  "evidence": "TNation +0x37 GenderName byte in docs/FORMATOS (nation.dat); NAME +4 passed with it; the same layout as competition::GENDER_NAME (existing), which the Scottish caller passes"
+ },
+ {
+  "line": 125,
+  "offset": "0x15",
+  "base": "this",
+  "module": "transfer_rules",
+  "verdict": "new",
+  "name": "SKIP_CONTRACT_TYPE_5_INELIGIBILITY",
+  "width": 4,
+  "rust_type": "u32",
+  "description": "Nonzero: get_ineligibility_code does not rule out (code 3) a player whose contract type is 5 in non-friendly, non-minor matches (base 0; Scotland and Finland 1)",
+  "confidence": "read",
+  "evidence": "0x8e8a60 TRANSFER_RULES::get_ineligibility_code reads dword +0x15 first; when 0 and the competition is not friendly/minor and contract +0x35 & 0x3f == 5, returns 3; base ctor zeroes it"
+ }
+]

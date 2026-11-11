@@ -49,7 +49,7 @@ pub(crate) unsafe extern "thiscall" fn process_euro_registration(this: usize, st
         write_u16(this, read_u16(G_CURRENT_DATE_YEAR));
         let mut i = 0i32;
         while i < read_u32(G_STAFF_COUNT) as i32 {
-            let m = (staff_at(i as isize).addr() + 0x6d) as *mut u8;
+            let m = (staff_at(i as isize).addr() + staff::SQUAD_SELECTED_FOR) as *mut u8;
             if *m != 0 {
                 *m = 0;
             }
@@ -121,11 +121,11 @@ pub(crate) unsafe extern "thiscall" fn get_squad_number(_this: usize, p: usize, 
     let k = exe::contract_manager_get_contract(read_u32(G_CONTRACT_MANAGER) as usize, p);
     if k != 0 && exe::database_is_player_job(p.job_for_club() as i8) != 0 && contract_valid_for_club(k, c) {
         crate::comparison::branch("cql_1 contract number");
-        return read_i8(k + 0x3a); // cql1: the contract number
+        return read_i8(k + contract::SQUAD_NUMBER); // cql1: the contract number
     }
     let k = exe::contract_manager_get_loan_contract(read_u32(G_CONTRACT_MANAGER) as usize, p);
     if k != 0 && contract_valid_for_club(k, c) {
-        return read_i8(k + 0x3a);
+        return read_i8(k + contract::SQUAD_NUMBER);
     }
     0
 }
@@ -191,12 +191,12 @@ pub(crate) unsafe extern "thiscall" fn set_squad_number(_this: usize, p: usize, 
     let k = exe::contract_manager_get_contract(read_u32(G_CONTRACT_MANAGER) as usize, p);
     if k != 0 && contract_valid_for_club(k, c) {
         crate::comparison::branch("cql_1 writes into contract");
-        write_i8(k + 0x3a, n); // cql1: writes to the contract
+        write_i8(k + contract::SQUAD_NUMBER, n); // cql1: writes to the contract
         return;
     }
     let k = exe::contract_manager_get_loan_contract(read_u32(G_CONTRACT_MANAGER) as usize, p);
     if k != 0 && contract_valid_for_club(k, c) {
-        write_i8(k + 0x3a, n);
+        write_i8(k + contract::SQUAD_NUMBER, n);
     }
 }
 
@@ -337,8 +337,8 @@ pub(crate) unsafe fn squad_number_regions(ps: &[usize]) -> Vec<(usize, usize)> {
             continue;
         }
         for k in [exe::contract_manager_get_contract(read_u32(G_CONTRACT_MANAGER) as usize, p), exe::contract_manager_get_loan_contract(read_u32(G_CONTRACT_MANAGER) as usize, p)] {
-            if k != 0 && !reg.contains(&(k + 0x3a, 1)) {
-                reg.push((k + 0x3a, 1));
+            if k != 0 && !reg.contains(&(k + contract::SQUAD_NUMBER, 1)) {
+                reg.push((k + contract::SQUAD_NUMBER, 1));
             }
         }
     }

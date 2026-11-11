@@ -25,7 +25,7 @@ MUTACOES = [
     ('cqn4_sorteio_com_um_a_menos', 'exe::comp_util_shuffle_pointer_array(list.as_mut_ptr() as usize, k as u16 as u32); // cqn4: the list random draw', 'exe::comp_util_shuffle_pointer_array(list.as_mut_ptr() as usize, (k - 1) as u16 as u32); // mutacao: um a menos', 'cqn_4 french bottom league'),
     ('cqn4_rodadas_sem_ordem_fixa', 'this.set_league_flags((0x43) as i16); // cqn4: the rule bits of the lower leagues', 'this.set_league_flags((3) as i16); // mutacao: sem a ordem fixa', 'cqn_4 french bottom league'),
     ('cqn5_lista_nunca_cai', 'if read_usize(f + 8) == 0xffff_ffff || read_usize(f + fixed_fixture::AWAY_CLUB_ID) == 0xffff_ffff { // cqn5: a club not found drops the list', 'if false { // mutacao: a lista nunca cai', 'cqn_5 fixed calendar'),
-    ('cqn6_lista_nunca_cai', 'if read_usize(f + 8) == 0xffff_ffff || read_usize(f + 0xc) == 0xffff_ffff { // cqn6: a club not found drops the list', 'if false { // mutacao: a lista nunca cai', 'cqn_6 fixed calendar'),
+    ('cqn6_lista_nunca_cai', 'if read_usize(f + 8) == 0xffff_ffff || read_usize(f + fixed_fixture::AWAY_CLUB_ID) == 0xffff_ffff { // cqn6: a club not found drops the list', 'if false { // mutacao: a lista nunca cai', 'cqn_6 fixed calendar'),
     ('cqn6_toco_de_dois_devolve_zero', '    1 // cqn6: the stub returns 1', '    0 // mutacao: o toco devolve 0'),
     ('cqn6_toco_de_um_devolve_zero', 'unsafe extern "thiscall" fn stub_return_one_ret4(_this: usize, _a: u32) -> u32 {\n    1\n}', 'unsafe extern "thiscall" fn stub_return_one_ret4(_this: usize, _a: u32) -> u32 {\n    0\n}'),
 ]

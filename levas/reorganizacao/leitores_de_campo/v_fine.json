@@ -1,0 +1,41 @@
+[
+ {
+  "line": 13,
+  "offset": "0x33",
+  "base": "p.first_name()",
+  "module": "names",
+  "verdict": "existing",
+  "name": "ID",
+  "width": 4,
+  "rust_type": "u32",
+  "description": "name id",
+  "confidence": "verified",
+  "evidence": "TNames +0x33 ID (docs/FORMATOS); first/second/common name records of the person"
+ },
+ {
+  "line": 14,
+  "offset": "0x33",
+  "base": "p.second_name()",
+  "module": "names",
+  "verdict": "existing",
+  "name": "ID",
+  "width": 4,
+  "rust_type": "u32",
+  "description": "name id",
+  "confidence": "verified",
+  "evidence": "TNames +0x33 ID (docs/FORMATOS); first/second/common name records of the person"
+ },
+ {
+  "line": 15,
+  "offset": "0x33",
+  "base": "p.common_name()",
+  "module": "names",
+  "verdict": "existing",
+  "name": "ID",
+  "width": 4,
+  "rust_type": "u32",
+  "description": "name id",
+  "confidence": "verified",
+  "evidence": "TNames +0x33 ID (docs/FORMATOS); first/second/common name records of the person"
+ }
+]

@@ -1,0 +1,58 @@
+[
+ {
+  "line": 20,
+  "offset": "0xef",
+  "base": "this",
+  "module": "wc_south_american_league_fields",
+  "verdict": "new",
+  "name": "OCEANIA_EXEMPT_COUNT",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "number of exempt nations (finals hosts and holder) that belong to Oceania",
+  "confidence": "verified",
+  "evidence": "community map: count_exempt_nations 0x920d10 counts hosts/holder of Oceania into +0xef (zeroed there); set_up_rules copies the Oceania section's exempt count here",
+  "new_module": true,
+  "record": "WcSouthAmericanLeague (South American World Cup qualifying league): League base plus the exempt nation counts"
+ },
+ {
+  "line": 20,
+  "offset": "0xee",
+  "base": "o",
+  "module": "wc_oceania_league_fields",
+  "verdict": "new",
+  "name": "EXEMPT_COUNT",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "number of Oceania nations exempt from qualifying (finals hosts and holder)",
+  "confidence": "verified",
+  "evidence": "o = comp object of the Oceania qualifying section; build_entrant_pool 0x91fa80 zeroes +0xee before leaving out hosts and holder; community map: load_extra_data 0x91fd20 reads the exempt count (+0xee)",
+  "new_module": true,
+  "record": "WcOceaniaLeague (Oceania World Cup qualifying section): League base plus the exempt count and the entrant pool"
+ },
+ {
+  "line": 26,
+  "offset": "0xef",
+  "base": "this",
+  "module": "wc_south_american_league_fields",
+  "verdict": "new",
+  "name": "OCEANIA_EXEMPT_COUNT",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "number of exempt nations that belong to Oceania",
+  "confidence": "verified",
+  "evidence": "subtracted from the 4 direct places"
+ },
+ {
+  "line": 26,
+  "offset": "0xee",
+  "base": "this",
+  "module": "wc_south_american_league_fields",
+  "verdict": "new",
+  "name": "EXEMPT_COUNT",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "number of South American nations exempt (finals hosts and holder)",
+  "confidence": "verified",
+  "evidence": "community map: count_exempt_nations 0x920d10 counts the South American hosts/holder into +0xee; load_extra_data 0x921590 reads this one-byte exempt count; build_team_slots allocates ten minus it"
+ }
+]

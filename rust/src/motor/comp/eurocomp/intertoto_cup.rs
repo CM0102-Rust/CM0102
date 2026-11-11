@@ -115,7 +115,7 @@ pub(crate) unsafe fn collect_intertoto_entrants(this: Cup) -> (i32, i32) {
             break;
         }
         let c = club_at(i as isize).addr();
-        if read_usize(c + 0x1db) == read_usize(KEY_CLUB_COMP_INTER_TOTO_CUP) {
+        if read_usize(c + club::CONTINENTAL_COMP_ID) == read_usize(KEY_CLUB_COMP_INTER_TOTO_CUP) {
             write_u32(v + k as usize * 4, c as u32);
             k += 1;
         }
@@ -138,7 +138,7 @@ pub(crate) unsafe fn collect_intertoto_entrants(this: Cup) -> (i32, i32) {
         let c = read_usize(v + j as usize * 4);
         let e = this.team_table() + j as usize * 6;
         write_u32(e, c as u32);
-        write_u8(e + 4, read_u8(c + 0x1df)); // cqq10: the class by coefficient
+        write_u8(e + 4, read_u8(c + club::EURO_SEEDING)); // cqq10: the class by coefficient
         write_u8(e + 5, 0);
         j = j.wrapping_add(1);
     }
@@ -350,14 +350,14 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_st
     let club = Club(club);
     match outcome as u8 {
         1 => {
-            let weight = scale_by_round(0x3c, 0x64, read_i16(game + 0x34), this.round_count() as u16 as u32);
+            let weight = scale_by_round(0x3c, 0x64, read_i16(game + fixture::ROUND_NUMBER), this.round_count() as u16 as u32);
             let uefa = read_usize(G_CLUB_COMP_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_UEFA_CUP).wrapping_mul(0x6b));
             european_cup_add_qualified_record(club.addr(), uefa, 0, 0xa, weight);
             crate::comparison::branch("cqi_10 intertoto winner");
             club.set_continental_comp_id(read_usize(KEY_CLUB_COMP_UEFA_CUP) as u32); // cqi10: o vencedor passa à UEFA
         }
         0 => {
-            let r = read_i16(game + 0x34);
+            let r = read_i16(game + fixture::ROUND_NUMBER);
             let n = this.round_count();
             let next = r.wrapping_add(1);
             if next >= n {
@@ -371,12 +371,12 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_st
             let weight = (q as u32 & !0xff) | (q as u8).wrapping_add(1) as u32; // inc al
             let round = read_u16(this.round_table().wrapping_add((next as isize * 0x68) as usize) + 7) as u32;
             // simplification: the stage goes in a register whose high 16 bits are those of the next round’s movsx (zero); clears
-            european_cup_add_qualified_record(club.addr(), read_usize(this.addr() + 4), read_u16(game + 0x32) as u32, round, weight);
+            european_cup_add_qualified_record(club.addr(), read_usize(this.addr() + 4), read_u16(game + fixture::ROUND_PREFIX) as u32, round, weight);
         }
         0xff | 2 => {
-            let weight = scale_by_round(0x14, 0x50, read_i16(game + 0x34), this.round_count() as u16 as u32);
+            let weight = scale_by_round(0x14, 0x50, read_i16(game + fixture::ROUND_NUMBER), this.round_count() as u16 as u32);
             // simplification: round +0x30 goes in a register with garbage in the high 16 bits; 0x86c000 only uses the word
-            european_cup_add_knocked_out_record(club.addr(), read_usize(this.addr() + 4), 0, read_u16(game + 0x30) as u32, weight);
+            european_cup_add_knocked_out_record(club.addr(), read_usize(this.addr() + 4), 0, read_u16(game + fixture::ROUND_NAME) as u32, weight);
             crate::comparison::branch("cqi_10 dropped into intertoto");
             leave_euro_competition(club); // cqi10: whoever is knocked out in the Intertoto leaves the European competition
         }

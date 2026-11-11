@@ -48,7 +48,7 @@ pub(crate) unsafe extern "thiscall" fn assign_libertadores_places(this: usize, c
                 if enter_libertadores(Club(c), 2) {
                     n = 1;
                 }
-                let id = read_u32(this + 0x71);
+                let id = read_u32(this + conmebol_seeding::BRA_CHAMP_CUP_WINNER_ID);
                 if id != u32::MAX && enter_libertadores(contract_manager_club_by_id(id), 2) {
                     n = n.wrapping_add(1);
                 }
@@ -223,15 +223,15 @@ pub(crate) unsafe extern "stdcall" fn collect_conmebol_clubs(out: *mut usize) ->
                     if !division.is_null() {
                         crate::comparison::branch("cqj_2 division level");
                         write_u16(r + 9, division.reputation() as u16); // cqj2: the division level
-                        write_u8(r + 0xb, read_u8(c + club::LAST_POSITION));
-                        let comp = Nation(read_u32(read_u32(c + club::LAST_DIVISION) as usize + 0x5d) as usize);
+                        write_u8(r + european_club_entry::LAST_POSITION, read_u8(c + club::LAST_POSITION));
+                        let comp = Nation(read_u32(read_u32(c + club::LAST_DIVISION) as usize + competition::NATION) as usize);
                         if comp.is_null() || comp.league_selected() == 0 {
                             write_u32(c + club::LAST_DIVISION, 0);
                             write_u8(c + club::LAST_POSITION, 0);
                         }
                     } else {
                         write_u16(r + 9, 0xffff);
-                        write_u8(r + 0xb, 0x7f);
+                        write_u8(r + european_club_entry::LAST_POSITION, 0x7f);
                     }
                     k += 1;
                 }
@@ -272,11 +272,11 @@ pub(crate) unsafe extern "thiscall" fn update_for_new_season(this: usize, skip: 
         return;
     }
     let year = read_u16(G_CURRENT_DATE_YEAR);
-    if year == read_u16(this + 0x6f) {
+    if year == read_u16(this + conmebol_seeding::LAST_SEASON_YEAR) {
         return;
     }
     crate::comparison::branch("cqj_2 year rollover");
-    write_u16(this + 0x6f, year);
+    write_u16(this + conmebol_seeding::LAST_SEASON_YEAR, year);
     let mut t = 0usize;
     let n = exe::collect_conmebol_clubs(&mut t) as u32;
     if n as u16 == 0 {
@@ -293,7 +293,7 @@ pub(crate) unsafe extern "thiscall" fn update_for_new_season(this: usize, skip: 
 /// [pt] { 0x4c6960 } (thiscall, ret 4, conmebol_seeding.cpp, `ConmebolSeeding::set_bra_champ_cup_winner`): guarda o id do
 /// campeão da Copa dos Campeões em +0x71 (a vaga dele na Libertadores, de 2003 em diante).
 pub(crate) unsafe extern "thiscall" fn set_bra_champ_cup_winner(this: usize, club: usize) {
-    write_u32(this + 0x71, read_u32(club));
+    write_u32(this + conmebol_seeding::BRA_CHAMP_CUP_WINNER_ID, read_u32(club));
 }
 
 /// writes CM3_TEMP\conmebol_seeding.tmp: the country count (+0x6e), 0xa bytes per country from +0, +0x6f (u16) and
@@ -311,19 +311,19 @@ pub(crate) unsafe extern "thiscall" fn conmebol_seeding_save_to_temp_file(this: 
         show_error_at(FONTE, 0x2ee);
         return;
     }
-    if crt_fwrite(this + 0x6e, 1, 1, f) != 1 {
+    if crt_fwrite(this + conmebol_seeding::NATION_COUNT, 1, 1, f) != 1 {
         show_error_at(FONTE, 0x2f6);
         return;
     }
-    if crt_fwrite(this, 0xa, signed_byte_count(this + 0x6e), f) != signed_byte_count(this + 0x6e) { // cpx6: the country records
+    if crt_fwrite(this, 0xa, signed_byte_count(this + conmebol_seeding::NATION_COUNT), f) != signed_byte_count(this + conmebol_seeding::NATION_COUNT) { // cpx6: the country records
         show_error_at(FONTE, 0x2ff);
         return;
     }
-    if crt_fwrite(this + 0x6f, 2, 1, f) != 1 {
+    if crt_fwrite(this + conmebol_seeding::LAST_SEASON_YEAR, 2, 1, f) != 1 {
         show_error_at(FONTE, 0x307);
         return;
     }
-    if crt_fwrite(this + 0x71, 4, 1, f) != 1 {
+    if crt_fwrite(this + conmebol_seeding::BRA_CHAMP_CUP_WINNER_ID, 4, 1, f) != 1 {
         show_error_at(FONTE, 0x30f);
         return;
     }

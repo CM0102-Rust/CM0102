@@ -54,8 +54,8 @@ pub(crate) unsafe fn check_qualifier_rules(name: &str, this: usize, fields: &[(u
             k += 1;
         }
     }
-    let b6 = read_u16(this + 0xb6);
-    let lido8 = read_u16(this + 0xb8);
+    let b6 = read_u16(this + league::NEXT_DRAW_DAY);
+    let lido8 = read_u16(this + league::NEXT_DRAW_YEAR_OFFSET);
     SCOREBOARD.record(r == 1 && k == 0 && b6 == word && lido8 == b8, || format!("{}({:#x}) returned {} fields errados {:x?} date {:#x} prevista {:#x} +0xb8 {}", name, this, r, &errados[..k], b6, word, lido8));
     r
 }

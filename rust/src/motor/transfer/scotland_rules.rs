@@ -24,7 +24,7 @@ pub(crate) unsafe fn refuse_outside_window(this: usize, msg: usize, reason: *mut
         // 0x66f4e0: push ...; push format; push destination; add esp, 0x14 -> variadic cdecl
         let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
         let mut buf = [0u8; 100];
-        adjective(read_usize(this + 0xa), buf.as_mut_ptr(), 100, 2);
+        adjective(read_usize(this + transfer_rules::NATION_ID), buf.as_mut_ptr(), 100, 2);
         text(msg, 0x987d38, 100, 100, buf.as_ptr());
     }
     if !reason.is_null() {
@@ -39,7 +39,7 @@ pub(crate) unsafe fn refuse_outside_window(this: usize, msg: usize, reason: *mut
 pub(crate) unsafe fn refuse_loan(msg: usize, reason: *mut u16, formato: usize, r: usize, m: u16) -> u32 {
     if msg != 0 {
         let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
-        let g = read_u8(r + 0x37) as i8 as i32;
+        let g = read_u8(r + nation::GENDER_NAME) as i8 as i32;
         text(msg, formato, g, g, r + 4);
     }
     if !reason.is_null() {
@@ -122,7 +122,7 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usi
 pub(crate) unsafe extern "thiscall" fn construct_scotland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparison::branch("cqk_3 scotland");
     construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x96f838, 1, &SCOTLAND_TRANSFER_WINDOWS, 0xa7b058, 0x50);
-    write_u32(this + 0x15, 1);
+    write_u32(this + transfer_rules::SKIP_CONTRACT_TYPE_5_INELIGIBILITY, 1);
     this
 }
 

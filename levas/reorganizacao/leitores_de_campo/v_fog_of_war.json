@@ -1,0 +1,28 @@
+[
+ {
+  "line": 75,
+  "offset": "0x190",
+  "base": "data (match record)",
+  "module": "match_record",
+  "verdict": "existing",
+  "name": "ROW_STAFF_ID",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "first lineup row (staff id of row k; record + 0x625 x side + 0x49 x k)",
+  "confidence": "verified",
+  "evidence": "same pattern as v_national_teams 1622 / v_match_screens; row +0 read as staff id, +4 as player id"
+ },
+ {
+  "line": 77,
+  "offset": "0x32",
+  "base": "e (lineup row)",
+  "module": "match_record_row",
+  "verdict": "existing",
+  "name": "MINUTE_ON",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "minute brought on; 0xff = did not come on",
+  "confidence": "verified",
+  "evidence": "substitutes (slot > 10) skipped when 0xff, as match_record::ROW_MINUTE_ON"
+ }
+]

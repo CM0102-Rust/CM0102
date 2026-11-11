@@ -10,9 +10,9 @@ pub(crate) unsafe fn set_news_slot(n: usize, k: i8, v: u32) {
 /// [pt] O id e as três chaves (+0x33 de +4, +8, +0xc) da pessoa `p` nos dados `k`..`k + 3`.
 pub(crate) unsafe fn set_news_person_slots(n: usize, k: i8, p: Staff) {
     set_news_slot(n, k, read_u32(p.addr()));
-    set_news_slot(n, k + 1, read_u32(p.first_name() + 0x33));
-    set_news_slot(n, k + 2, read_u32(p.second_name() + 0x33));
-    set_news_slot(n, k + 3, read_u32(p.common_name() + 0x33));
+    set_news_slot(n, k + 1, read_u32(p.first_name() + names::ID));
+    set_news_slot(n, k + 2, read_u32(p.second_name() + names::ID));
+    set_news_slot(n, k + 3, read_u32(p.common_name() + names::ID));
 }
 
 /// The rehearsal of the news items: the copy stops at the point where it would build the news item (which draws at

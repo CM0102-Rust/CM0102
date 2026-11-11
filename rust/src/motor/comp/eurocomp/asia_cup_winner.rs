@@ -123,7 +123,7 @@ pub(crate) unsafe fn asian_cup_winners_finalists(this: Cup) -> [usize; 4] {
     let mut v = [0usize; 4];
     let mut n = 0i16;
     let teams = this.team_count();
-    for tabela in [this.team_table(), read_usize(read_usize(this.stages()) + 0xa7)] {
+    for tabela in [this.team_table(), read_usize(read_usize(this.stages()) + cup::TEAM_TABLE)] {
         let mut i = 0i16;
         while i < teams && n < 4 {
             let e = tabela + i as usize * 6;

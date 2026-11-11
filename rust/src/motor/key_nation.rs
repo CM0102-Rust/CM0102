@@ -93,8 +93,8 @@ pub(crate) unsafe extern "C" fn key_nation_get_club_season_year(club: usize) -> 
     if club != 0 && exe::database_is_national_team(club) == 0 {
         let k = exe::key_nation_index_of_club(club) as i8 as isize;
         let e = (0xb63d60isize + 72 * k) as usize;
-        let start = read_u16(e + 0x15);
-        if (read_usize(e + 0x17) != 0 || start < 0x3c) && (read_i16(G_CURRENT_DATE) as i32) < start as i32 {
+        let start = read_u16(e + key_nation_record::SEASON_END_DAY);
+        if (read_usize(e + key_nation_record::SPLIT_SEASON_FLAG) != 0 || start < 0x3c) && (read_i16(G_CURRENT_DATE) as i32) < start as i32 {
             return year.wrapping_sub(1); // cpu1: o ano anterior
         }
     }
@@ -150,10 +150,10 @@ pub(crate) unsafe extern "C" fn key_nation_club_in_season(club: usize, start: us
     if nation != 0 {
         if let Some(k) = (0..0x23usize).find(|&k| read_usize(G_LEAGUE_TABLE + 72 * k) == nation) {
             row = G_LEAGUE_TABLE + 72 * k;
-            c = read_i16(row + 0x39);
+            c = read_i16(row + key_nation_record::END_DATE);
         }
     }
-    let a = read_i16(row + 0x2a);
+    let a = read_i16(row + key_nation_record::START_DATE);
     let t = read_i16(G_CURRENT_DATE);
     let y = read_u16(G_CURRENT_DATE_YEAR);
     if a > c {

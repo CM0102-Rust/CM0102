@@ -1,0 +1,28 @@
+[
+ {
+  "line": 49,
+  "offset": "0x49",
+  "base": "parent",
+  "module": "cup",
+  "verdict": "existing",
+  "name": "SUBSTITUTES_NAMED",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "substitutes named on the bench (Comp base)",
+  "confidence": "verified",
+  "evidence": "parent competition's Comp base byte copied to the stage with set_substitutes_named; same offset in league and cup"
+ },
+ {
+  "line": 50,
+  "offset": "0x4a",
+  "base": "parent",
+  "module": "cup",
+  "verdict": "existing",
+  "name": "SUBSTITUTIONS_ALLOWED",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "substitutions allowed (Comp base)",
+  "confidence": "verified",
+  "evidence": "copied to the stage with set_substitutions_allowed; same offset in league and cup"
+ }
+]

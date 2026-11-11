@@ -17,13 +17,13 @@ pub(crate) unsafe extern "thiscall" fn wc_south_american_league_set_up_rules(thi
     if list != 0 {
         let o = read_usize(list + read_usize(KEY_CLUB_COMP_WORLD_CUP_OCEANIA_QUALIFYING_SECTION).wrapping_mul(4));
         if o != 0 {
-            write_u8(this.addr() + 0xef, read_u8(o + 0xee));
+            write_u8(this.addr() + wc_south_american_league_fields::OCEANIA_EXEMPT_COUNT, read_u8(o + wc_oceania_league_fields::EXEMPT_COUNT));
         }
     }
     crate::comparison::branch("cqj_12 south america rules");
     wc_europe_league_write_rule_fields(this, &SOUTH_AMERICA_QUALIFIER_RULE_FIELDS);
     this.set_win_points(3); // cqj12: the win in the South American qualifiers
-    this.set_promoted_count(4u8.wrapping_sub(read_u8(this.addr() + 0xef)).wrapping_sub(read_u8(this.addr() + 0xee))); // cqj12: the direct places of South America
+    this.set_promoted_count(4u8.wrapping_sub(read_u8(this.addr() + wc_south_american_league_fields::OCEANIA_EXEMPT_COUNT)).wrapping_sub(read_u8(this.addr() + wc_south_american_league_fields::EXEMPT_COUNT))); // cqj12: the direct places of South America
     let day = 0x19; // cqj12: the start day of the South American qualifier
     let word = comp_date_word(this, day, 0, 5);
     finish_rules_setup(this, word, 0)

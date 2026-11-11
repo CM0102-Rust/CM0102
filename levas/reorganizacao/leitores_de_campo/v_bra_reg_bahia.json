@@ -1,0 +1,30 @@
+[
+ {
+  "line": 111,
+  "offset": "0x2c",
+  "base": "",
+  "verdict": "not_field",
+  "evidence": "offset only inside the log string literal of the comparer"
+ },
+ {
+  "line": 111,
+  "offset": "0xc",
+  "base": "",
+  "verdict": "not_field",
+  "evidence": "offset only inside the log string literal of the comparer"
+ },
+ {
+  "line": 213,
+  "offset": "0x8c",
+  "base": "vtable",
+  "verdict": "not_field",
+  "evidence": "vtable slot: read_usize(vtable + 0x8c) called as a thiscall virtual"
+ },
+ {
+  "line": 231,
+  "offset": "0x5c",
+  "base": "vtable",
+  "verdict": "not_field",
+  "evidence": "vtable slot: read_usize(vtable + 0x5c) called as a thiscall virtual"
+ }
+]

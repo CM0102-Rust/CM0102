@@ -33,10 +33,10 @@ pub(crate) unsafe extern "thiscall" fn club_history_save(this: usize, save: usiz
     if z == 0 {
         fatal_error_at(FONTE, 0x331);
     }
-    if zip_write(this + 0xc, 4, 1, z) != 1 {
+    if zip_write(this + club_history_fields::RECORD_COUNT, 4, 1, z) != 1 {
         fatal_error_at(FONTE, 0x338);
     }
-    if zip_write(read_usize(this + 8), 0x10, read_usize(this + 0xc) as u32, z) != read_usize(this + 0xc) as u32 { // cpx7: the history records
+    if zip_write(read_usize(this + 8), 0x10, read_usize(this + club_history_fields::RECORD_COUNT) as u32, z) != read_usize(this + club_history_fields::RECORD_COUNT) as u32 { // cpx7: the history records
         fatal_error_at(FONTE, 0x340);
     }
     zip_close(&mut z);

@@ -145,13 +145,13 @@ pub(crate) unsafe fn set_up_all_star_teams(this: Cup) -> i32 {
     let mut i = 0usize;
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let c = usa_mls_all_stars_club_by_index(i);
-        let league = read_usize(c + 0x57);
+        let league = read_usize(c + club::DIVISION);
         if league != 0 && read_usize(league) == read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && ((exe::usa_mls_get_club_division(c) as u32) as i16) as i32 == conferencia {
             if k == 0 {
                 crate::comparison::branch("cqr_6 all-star game stadium");
                 let first = read_usize(this.team_table());
-                write_usize(first + 0x69, read_usize(c + 0x69)); // cqr6: the stadium of the drawn club
-                write_u8(read_usize(this.team_table()) + 0x6d, 0);
+                write_usize(first + club::STADIUM, read_usize(c + club::STADIUM)); // cqr6: the stadium of the drawn club
+                write_u8(read_usize(this.team_table()) + club::OWN_STADIUM, 0);
                 break;
             }
             k = k.wrapping_sub(1);
@@ -160,8 +160,8 @@ pub(crate) unsafe fn set_up_all_star_teams(this: Cup) -> i32 {
     }
     let nation = read_usize(G_NATION_TABLE).wrapping_add(read_usize(KEY_NATION_UNITED_STATES).wrapping_mul(nation::SIZE));
     let l = this.team_table();
-    write_usize(read_usize(l + 6) + 0x53, nation);
-    write_usize(read_usize(l) + 0x53, read_usize(read_usize(l + 6) + 0x53));
+    write_usize(read_usize(l + 6) + club::NATION, nation);
+    write_usize(read_usize(l) + club::NATION, read_usize(read_usize(l + 6) + club::NATION));
     for o in [4usize, 5, 0xa, 0xb] {
         write_u8(this.team_table() + o, 0);
     }
@@ -245,13 +245,13 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this
     w(9, 0);
     w(0xb, 0);
     w(0xd, 0x20);
-    write_u8(t + 0x17, 8);
+    write_u8(t + cup_round::MATCH_CATEGORY, 8);
     w(0x1a, 1);
     w(0xf, 0);
     w(0x1e, 0);
-    write_u8(t + 0x20, 0);
-    write_u8(t + 0x21, 1);
-    write_u8(t + 0x22, 0);
+    write_u8(t + cup_round::SINGLE_LEG_FLAG, 0);
+    write_u8(t + cup_round::LEGS, 1);
+    write_u8(t + cup_round::LEG_GAP_DAYS, 0);
     d(0x5c, 0);
     d(0x60, 0);
     d(0x64, 0);

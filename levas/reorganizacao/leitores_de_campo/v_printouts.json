@@ -1,0 +1,62 @@
+[
+ {
+  "line": 44,
+  "offset": "0xcb",
+  "base": "p (pundit)",
+  "module": "pundit",
+  "verdict": "new",
+  "name": "CITY_ID",
+  "width": 4,
+  "rust_type": "u32",
+  "description": "id of the pundit's city (local media)",
+  "confidence": "verified",
+  "evidence": "PunditList::read_pundit_line 0x7da6e0 builds the 0xd4-byte record: media type from parse_media_type_name at +0xca, city index (or the club's stadium city id) at +0xcb, nation index at +0xcf, a parsed byte at +0xd3; compared with the club's stadium city id",
+  "new_module": true,
+  "record": "Pundit record (0xd4 bytes, PunditList national [this] and local [this+4] lists): +0 id (i16), +2 name (100 chars), +0xca media type, +0xcb city id, +0xcf nation id, +0xd3 gender"
+ },
+ {
+  "line": 69,
+  "offset": "0xca",
+  "base": "p (pundit)",
+  "module": "pundit",
+  "verdict": "new",
+  "name": "MEDIA_TYPE",
+  "width": 1,
+  "rust_type": "i8",
+  "description": "media type of the pundit (1 national daily, 2 local paper, 3 radio, 4 local radio, 5 magazine, 7 Sunday paper...)",
+  "confidence": "verified",
+  "evidence": "PunditList::read_pundit_line 0x7da6e0 builds the 0xd4-byte record: media type from parse_media_type_name at +0xca, city index (or the club's stadium city id) at +0xcb, nation index at +0xcf, a parsed byte at +0xd3; compared with the requested media type (community pick_random_pundit(club, media_type, nation))",
+  "new_module": true,
+  "record": "Pundit record (0xd4 bytes, PunditList national [this] and local [this+4] lists): +0 id (i16), +2 name (100 chars), +0xca media type, +0xcb city id, +0xcf nation id, +0xd3 gender"
+ },
+ {
+  "line": 74,
+  "offset": "0xcf",
+  "base": "p (pundit)",
+  "module": "pundit",
+  "verdict": "new",
+  "name": "NATION_ID",
+  "width": 4,
+  "rust_type": "i32",
+  "description": "id of the pundit's nation",
+  "confidence": "verified",
+  "evidence": "PunditList::read_pundit_line 0x7da6e0 builds the 0xd4-byte record: media type from parse_media_type_name at +0xca, city index (or the club's stadium city id) at +0xcb, nation index at +0xcf, a parsed byte at +0xd3; compared with the nation id (-1 any)",
+  "new_module": true,
+  "record": "Pundit record (0xd4 bytes, PunditList national [this] and local [this+4] lists): +0 id (i16), +2 name (100 chars), +0xca media type, +0xcb city id, +0xcf nation id, +0xd3 gender"
+ },
+ {
+  "line": 143,
+  "offset": "0xd3",
+  "base": "p (pundit)",
+  "module": "pundit",
+  "verdict": "new",
+  "name": "GENDER",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "gender byte of the pundit's name (for the news text grammar)",
+  "confidence": "verified",
+  "evidence": "community PunditList::get_pundit_name(..., char* out_name, char* out_gender) returns this byte through out_gender; PunditList::read_pundit_line 0x7da6e0 builds the 0xd4-byte record: media type from parse_media_type_name at +0xca, city index (or the club's stadium city id) at +0xcb, nation index at +0xcf, a parsed byte at +0xd3",
+  "new_module": true,
+  "record": "Pundit record (0xd4 bytes, PunditList national [this] and local [this+4] lists): +0 id (i16), +2 name (100 chars), +0xca media type, +0xcb city id, +0xcf nation id, +0xd3 gender"
+ }
+]

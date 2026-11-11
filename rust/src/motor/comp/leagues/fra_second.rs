@@ -93,9 +93,9 @@ pub(crate) unsafe fn construct_division_league(this: League, ano: u32, registro:
             // simplification: the original pushes the year in the low word of ecx, with the rest of the record pointer in
             // above; 0x851020 only reads the word (mov ax, word ptr [esp + 0x21c]).
             let b = if e != 0 { exe::new_spalower(e, (this.year() as u16) as u32) } else { 0 };
-            write_usize(this.addr() + 0xee, b);
+            write_usize(this.addr() + spa_first_fields::LOWER_DIVISION, b);
         } else {
-            write_usize(this.addr() + 0xee, 0);
+            write_usize(this.addr() + spa_first_fields::LOWER_DIVISION, 0);
         }
     }
     this.addr()
@@ -162,7 +162,7 @@ pub(crate) unsafe fn compare_division_league_ctor(name: &str, this: League, year
         ok = ok && this.stage_count() == 0 && this.stages() == 0;
         if p.low {
             let nation = this.competition().nation();
-            let has = read_usize(this.addr() + 0xee) != 0;
+            let has = read_usize(this.addr() + spa_first_fields::LOWER_DIVISION) != 0;
             ok = ok && has == (nation.league_selected() & 4 == 0);
         }
     }

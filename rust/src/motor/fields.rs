@@ -117,6 +117,7 @@ pub(crate) mod contract {
 /// `TNation` record. [pt] Registro `TNation`.
 #[allow(dead_code)]
 pub(crate) mod nation {
+    pub(crate) const GENDER_NAME: usize = 0x37; // 1 byte(s): Grammatical gender byte of the nation's NAME (+4), passed twice to the text formatter [verified: TNation +0x37 GenderName byte in docs/FORMATOS (nation.dat); NAME +4 passed with it; the same layout as competition::GENDER_NAME (existing), which the Scottish ]
     pub(crate) const SHORT_NAME: usize = 0x38; // 26 byte(s), byte[][26]
     pub(crate) const SHORT_GENDER_NAME: usize = 0x52; // 1 byte(s), byte
     pub(crate) const THREE_LETTER_NAME: usize = 0x53; // 4 byte(s), byte[][4]
@@ -127,6 +128,7 @@ pub(crate) mod nation {
     pub(crate) const FIRST_LANGUAGE: usize = 0x77; // 1 byte(s), sbyte
     pub(crate) const SECOND_LANGUAGE: usize = 0x78; // 1 byte(s), sbyte
     pub(crate) const THIRD_LANGUAGE: usize = 0x79; // 1 byte(s), sbyte
+    pub(crate) const CAPITAL_CITY: usize = 0x7a; // 4 byte(s): capital city of the nation (city record pointer after load, 0 none) [verified: docs/FORMATOS TNation +0x7a CapitalCity (int); used as a city record (weather_region by city) when the stadium has no city]
     pub(crate) const STATE_OF_DEVELOPMENT: usize = 0x7e; // 1 byte(s), sbyte
     pub(crate) const GROUP_MEMBERSHIP: usize = 0x7f; // 1 byte(s), sbyte
     pub(crate) const NATIONAL_STADIUM: usize = 0x80; // 4 byte(s), int
@@ -485,6 +487,7 @@ pub(crate) mod transfer_manager_fields {
     pub(crate) const TRANSFER_WINDOWS: usize = 0x8a4; // 4 byte(s): Pointer to the array of TRANSFER_WINDOW pointers (+0 rules index, +4 month, +5 closes)
     pub(crate) const TRANSFER_WINDOW_COUNT: usize = 0x8a8; // 4 byte(s): Number of transfer windows
     pub(crate) const TRANSFER_RULES: usize = 0x8ac; // 112 byte(s): 28 pointers to per-nation transfer rule objects (nation id at rule +0xa)
+    pub(crate) const SEASON_LOAN_COUNTS: usize = 0x91c; // 4 byte(s): Pointer to the per-club 16-byte season loan table (indexed by club id; byte +0 = loans taken this season)
     pub(crate) const FUTURE_TRANSFERS: usize = 0x920; // 4 byte(s): Pointer to the future-transfer array (12-byte records: date +0, offer slot +8; sorted)
     pub(crate) const FUTURE_TRANSFER_COUNT: usize = 0x928; // 4 byte(s): Number of future-transfer records
     pub(crate) const FREE_TRANSFER_QUEUE: usize = 0x92c; // 14 byte(s): Inline LLIST of 9-byte free-transfer queue records (person id, reason, compensation)
@@ -1225,6 +1228,7 @@ pub(crate) mod club_record {
     pub(crate) const SEASON_RATING_YEAR: usize = 0x20e; // 2 byte(s): SEASON_RATING + rating_record YEAR (0 in the season record) [inference]
     pub(crate) const LEAGUE_APPEARANCES: usize = 0x247; // 2 byte(s): Most league appearances for the club (-1 none); holder reference at +0x249
     pub(crate) const LEAGUE_GOALS: usize = 0x261; // 2 byte(s): Most league goals for the club (-1 none); holder reference at +0x263
+    pub(crate) const INTERNATIONAL_CAPS: usize = 0x2f9; // 2 byte(s): most international caps held by a player while at the club (-1 none); holder reference at +0x2fb
     pub(crate) const FEE_PAID: usize = 0x313; // 41 byte(s): Highest transfer fee paid (transfer_fee_record layout; fee -1 none)
     pub(crate) const FEE_PAID_HOLDER: usize = 0x317; // 24 byte(s): FEE_PAID + transfer_fee_record HOLDER
     pub(crate) const FEE_PAID_OTHER_CLUB_ID: usize = 0x32f; // 4 byte(s): FEE_PAID + transfer_fee_record OTHER_CLUB_ID
@@ -2575,6 +2579,9 @@ pub(crate) mod transfer_rules {
     pub(crate) const NATION_ID: usize = 0xa; // 4 byte(s): Nation the transfer rules apply to (matched against the club's nation)
     pub(crate) const CONTINENT_ID: usize = 0xe; // 4 byte(s): Continent of the rules, used when the fixture scope is continental (SCOPE 2)
     pub(crate) const SCOPE: usize = 0x12; // 1 byte(s): Scope of the squad restriction rules (2 continental; otherwise compared with the fixture rules type) [inference]
+    pub(crate) const FOREIGN_PLAYER_LIMIT: usize = 0x13; // 1 byte(s): Maximum foreign players in the squad (base default 50, 0xff = no limit); written 50 by this constructor [verified: TRANSFER_RULES::can_sign_player 0x8e8560 counts squad players for whom database_is_staff_foreign holds and refuses (reason 0x14) at this byte; base ctor 0x8e84a]
+    pub(crate) const NON_EU_PLAYER_LIMIT: usize = 0x14; // 1 byte(s): Maximum non-EU foreign players in the squad, applied when the rules nation is in Europe (base default 30, 0xff = no limit); written 50 here [verified: 0x8e8560 second loop counts foreign squad players failing database_is_staff_eu_national (0x53d740) against this byte, only when the nation's continent is Europe]
+    pub(crate) const SKIP_CONTRACT_TYPE_5_INELIGIBILITY: usize = 0x15; // 4 byte(s): Nonzero: get_ineligibility_code does not rule out (code 3) a player whose contract type is 5 in non-friendly, non-minor matches (base 0; Scotland and Finland 1)
 }
 
 /// Fields of the `transfer_window` object, named from how the routines use them. [pt] Campos do objeto `transfer_window`.
@@ -2655,6 +2662,7 @@ pub(crate) mod conmebol_merc {
 /// Fields of the `conmebol_seeding` object, named from how the routines use them. [pt] Campos do objeto `conmebol_seeding`.
 #[allow(dead_code)]
 pub(crate) mod conmebol_seeding {
+    pub(crate) const NATION_COUNT: usize = 0x6e; // 1 byte(s): number of 10-byte nation quota rows at the start of the object (+0 nation id, +8 quota); 11 [verified: save_to_temp_file writes it first (1 byte) then that many 10-byte rows from +0; MAPA_SAVE conmebol_seeding.tmp: count (+0x6E, u8); assign_libertadores_places wa]
     pub(crate) const LAST_SEASON_YEAR: usize = 0x6f; // 2 byte(s): Game year of the last update_for_new_season; the club table and the Libertadores places are rebuilt only when the year changes
     pub(crate) const BRA_CHAMP_CUP_WINNER_ID: usize = 0x71; // 4 byte(s): Club id of the Copa dos Campeoes winner (its Libertadores place from 2003 on), set by set_bra_champ_cup_winner
 }
@@ -2663,6 +2671,7 @@ pub(crate) mod conmebol_seeding {
 #[allow(dead_code)]
 pub(crate) mod euro_champ_qual {
     pub(crate) const GROUP_FORMAT: usize = 0xf6; // 1 byte(s): Group format (1 or 2): decides whether group g has 6 or 5 teams (get_group_team_count)
+    pub(crate) const DRAWN_TEAMS: usize = 0xf7; // 4 byte(s): pointer to the malloc'd array of drawn national teams, group by group (group 1 first)
 }
 
 /// Fields of the `formation` object, named from how the routines use them. [pt] Campos do objeto `formation`.
@@ -3174,5 +3183,93 @@ pub(crate) mod cup_team_entry {
 #[allow(dead_code)]
 pub(crate) mod pending_ban {
     pub(crate) const PERSON_ID: usize = 0x1c; // 4 byte(s): staff id of the banned person [verified: written from the row's staff id (+0); docs/MAPA_DISCIPLINA: remove_pending_bans 0x7e91d0 drops nodes with [node+0x1c] == staff id]
+
+}
+
+/// MONTH_RATINGS object (month ratings table): +0 pointer to 12-byte month_rating_entry records, +4 count, +8 capacity, +0xc month (u8), +0xd year (i16)
+#[allow(dead_code)]
+pub(crate) mod month_ratings_fields {
+    pub(crate) const MONTH: usize = 0xc; // 1 byte(s): month the ratings cover (-1 before the first reset) [verified: community MONTH_RATINGS::reset(month, year) / constructor month -1; read as the month passed to set_winner]
+    pub(crate) const YEAR: usize = 0xd; // 2 byte(s): year of the month the ratings cover [verified: community MONTH_RATINGS::reset(month, year) stores the new month and year; constructor sets month -1 and year 0; read as the year passed to set_winner]
+
+}
+
+/// MONTH_AWARD (month award, on the AWARD base fields of award_fields): from +0x1d twelve 11-byte month slots (+0 winner staff id, +4 winner club id, +8 month, +9 year)
+#[allow(dead_code)]
+pub(crate) mod month_award_fields {
+    pub(crate) const SLOT_WINNER_ID: usize = 0x1d; // 4 byte(s): staff id of the winner of month slot k (-1 none) [verified: MONTH_AWARD::set_winner 0x7671c0 (community: thiscall(this, staff_id, club_id, char month, short year)): 12 slots of 11 bytes, matches month at +0x25 and year a]
+    pub(crate) const SLOT_CLUB_ID: usize = 0x21; // 4 byte(s): club id of the winner of month slot k (-1 none) [verified: MONTH_AWARD::set_winner 0x7671c0 (community: thiscall(this, staff_id, club_id, char month, short year)): 12 slots of 11 bytes, matches month at +0x25 and year a]
+    pub(crate) const SLOT_MONTH: usize = 0x25; // 1 byte(s): month of month slot k (slot stride 11, 12 slots) [verified: MONTH_AWARD::set_winner 0x7671c0 (community: thiscall(this, staff_id, club_id, char month, short year)): 12 slots of 11 bytes, matches month at +0x25 and year a]
+
+    pub(crate) const SLOT_YEAR: usize = 0x26; // 2 byte(s): year of month slot k (slot stride 11) [verified: MONTH_AWARD::set_winner 0x7671c0 (community: thiscall(this, staff_id, club_id, char month, short year)): 12 slots of 11 bytes, matches month at +0x25 and year a]
+}
+
+/// AWARD base object (shared by month, year and team awards): +5 staff competition pointer, +9 club competition pointer, +0xd/+0x11 constructor args, +0x15 national reputation, +0x17 world reputation, +0x19 player award flag
+#[allow(dead_code)]
+pub(crate) mod award_fields {
+    pub(crate) const NATIONAL_REPUTATION: usize = 0x15; // 2 byte(s): national reputation of the award (winner's home/current reputation bonus and floor) [verified: AWARD::AWARD 0x412e40 stores rep_bonus_a at +0x15, rep_bonus_b at +0x17 and arg8 at +0x19 (community signature: staff_comp_index, short rep_bonus_a, short rep_b]
+    pub(crate) const WORLD_REPUTATION: usize = 0x17; // 2 byte(s): world reputation of the award (winner's world reputation bonus and floor) [verified: AWARD::AWARD 0x412e40 stores rep_bonus_a at +0x15, rep_bonus_b at +0x17 and arg8 at +0x19 (community signature: staff_comp_index, short rep_bonus_a, short rep_b]
+    pub(crate) const FOR_PLAYERS: usize = 0x19; // 4 byte(s): nonzero for a player award, 0 for a non-player (manager) award [verified: AWARD::AWARD 0x412e40 stores rep_bonus_a at +0x15, rep_bonus_b at +0x17 and arg8 at +0x19 (community signature: staff_comp_index, short rep_bonus_a, short rep_b]
+
+}
+
+/// Month rating entry (12 bytes, array at MONTH_RATINGS +0): +0 staff id, +4 league comp id of the person's club (-1 none), +8 u16 sum of match ratings, +0xa matches, +0xb age
+#[allow(dead_code)]
+pub(crate) mod month_rating_entry {
+    pub(crate) const MATCHES: usize = 0xa; // 1 byte(s): matches counted for the person this month [verified: community MONTH_RATINGS::add_player_rating: adds the match rating and counts one more match; incremented here, zeroed on append; find_best_player needs at least]
+
+    pub(crate) const AGE: usize = 0xb; // 1 byte(s): age of the person when the entry was created
+}
+
+/// Pundit record (0xd4 bytes, PunditList national [this] and local [this+4] lists): +0 id (i16), +2 name (100 chars), +0xca media type, +0xcb city id, +0xcf nation id, +0xd3 gender
+#[allow(dead_code)]
+pub(crate) mod pundit {
+    pub(crate) const MEDIA_TYPE: usize = 0xca; // 1 byte(s): media type of the pundit (1 national daily, 2 local paper, 3 radio, 4 local radio, 5 magazine, 7 Sunday paper...) [verified: PunditList::read_pundit_line 0x7da6e0 builds the 0xd4-byte record: media type from parse_media_type_name at +0xca, city index (or the club's stadium city id) at]
+    pub(crate) const CITY_ID: usize = 0xcb; // 4 byte(s): id of the pundit's city (local media) [verified: PunditList::read_pundit_line 0x7da6e0 builds the 0xd4-byte record: media type from parse_media_type_name at +0xca, city index (or the club's stadium city id) at]
+
+    pub(crate) const NATION_ID: usize = 0xcf; // 4 byte(s): id of the pundit's nation [verified: PunditList::read_pundit_line 0x7da6e0 builds the 0xd4-byte record: media type from parse_media_type_name at +0xca, city index (or the club's stadium city id) at]
+    pub(crate) const GENDER: usize = 0xd3; // 1 byte(s): gender byte of the pundit's name (for the news text grammar) [verified: community PunditList::get_pundit_name(..., char* out_name, char* out_gender) returns this byte through out_gender; PunditList::read_pundit_line 0x7da6e0 builds ]
+}
+
+/// Club_History object (club history store): +8 pointer to the 16-byte per-club history records, +0xc number of records (club count)
+#[allow(dead_code)]
+pub(crate) mod club_history_fields {
+    pub(crate) const RECORD_COUNT: usize = 0xc; // 4 byte(s): number of per-club history records (the club count) [verified: community Club_History::save/load 0x443f50/0x443cd0: writes the club count and the per-club history records; save writes the dword +0xc then +0xc records of 0x1]
+
+}
+
+/// Screen history node (the current screen block of a ScreenManager slot, screen_manager::PARAM_BLOCK; params at +0x14 + 8n): +0x1f8 next node
+#[allow(dead_code)]
+pub(crate) mod screen_node {
+    pub(crate) const NEXT_NODE: usize = 0x1f8; // 4 byte(s): next screen history node (0 = nothing to go forward to) [verified: community ScreenManager::is_forward_unavailable 0x7febb0 (high): true when the current screen history node has no next node; tests this dword for 0]
+
+}
+
+/// TContinent record (continent.dat, 198 bytes): +0 id, +4 name, +0x1f three-letter name, +0x23 adjective, +0x3d federation name
+#[allow(dead_code)]
+pub(crate) mod continent {
+    pub(crate) const ADJECTIVE: usize = 0x23; // 26 byte(s): continent adjective text (ContinentNameContinentality) [verified: docs/FORMATOS TContinent +0x23 ContinentNameContinentality (26 bytes); get_continent_adjective copies it as the record's own adjective]
+
+}
+
+/// SpaFirst (Spanish Primera Division league): League base plus the pointer to the background lower division
+#[allow(dead_code)]
+pub(crate) mod spa_first_fields {
+    pub(crate) const LOWER_DIVISION: usize = 0xee; // 4 byte(s): pointer to the background Spanish lower division league (SpaLower), 0 when the lower division is playable
+
+}
+
+/// WcSouthAmericanLeague (South American World Cup qualifying league): League base plus the exempt nation counts
+#[allow(dead_code)]
+pub(crate) mod wc_south_american_league_fields {
+    pub(crate) const EXEMPT_COUNT: usize = 0xee; // 1 byte(s): number of South American nations exempt (finals hosts and holder) [verified: community map: count_exempt_nations 0x920d10 counts the South American hosts/holder into +0xee; load_extra_data 0x921590 reads this one-byte exempt count; build]
+    pub(crate) const OCEANIA_EXEMPT_COUNT: usize = 0xef; // 1 byte(s): number of exempt nations (finals hosts and holder) that belong to Oceania [verified: community map: count_exempt_nations 0x920d10 counts hosts/holder of Oceania into +0xef (zeroed there); set_up_rules copies the Oceania section's exempt count he]
+
+}
+
+/// WcOceaniaLeague (Oceania World Cup qualifying section): League base plus the exempt count and the entrant pool
+#[allow(dead_code)]
+pub(crate) mod wc_oceania_league_fields {
+    pub(crate) const EXEMPT_COUNT: usize = 0xee; // 1 byte(s): number of Oceania nations exempt from qualifying (finals hosts and holder) [verified: o = comp object of the Oceania qualifying section; build_entrant_pool 0x91fa80 zeroes +0xee before leaving out hosts and holder; community map: load_extra_data ]
 
 }

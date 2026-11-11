@@ -1,0 +1,68 @@
+[
+ {
+  "line": 42,
+  "offset": "0x19",
+  "base": "l = table row i",
+  "module": "league_table_row",
+  "verdict": "existing",
+  "name": "POINTS",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "points of row i",
+  "confidence": "read",
+  "evidence": "compared with the next row points to find a tie on a zone boundary (as v_ita_ser_a)"
+ },
+ {
+  "line": 43,
+  "offset": "0x54",
+  "base": "l = table row i",
+  "module": "league_table_row",
+  "verdict": "existing",
+  "name": "POINTS",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "points of the next row",
+  "confidence": "read",
+  "evidence": "0x54 = 0x3b + 0x19: row i+1 POINTS (as v_ita_ser_a)",
+  "field_offset": "0x19"
+ },
+ {
+  "line": 53,
+  "offset": "0x28",
+  "base": "vtable of this",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": null,
+  "evidence": "vtable slot +0x28 (next stage)"
+ },
+ {
+  "line": 59,
+  "offset": "0x94",
+  "base": "vtable of this",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": null,
+  "evidence": "vtable slot +0x94 (update_positions_and_status)"
+ },
+ {
+  "line": 87,
+  "offset": "0x19",
+  "base": "l (table row)",
+  "module": "league_table_row",
+  "verdict": "existing",
+  "name": "POINTS",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "points of the row",
+  "confidence": "read",
+  "evidence": "rows with the given points form the block sorted by head-to-head"
+ }
+]

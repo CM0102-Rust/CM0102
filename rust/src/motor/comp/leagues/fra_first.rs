@@ -13,9 +13,9 @@ pub(crate) unsafe fn new_marker_comp(vtabela: usize, g: usize) -> usize {
     }
     exe::new_comp(c);
     write_usize(c, vtabela);
-    write_u8(c + 0x42, 1);
+    write_u8(c + league::CLUB_SIDES, 1);
     write_usize(c + 4, comp_record_of_key(g));
-    write_u8(c + 0x50, 0xff);
+    write_u8(c + league::DISCIPLINE_RULE, 0xff);
     c
 }
 
@@ -80,7 +80,7 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_first(this: usize, year: u3
     crate::comparison::branch("cqq_6 new french first division");
     let n = || (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
     if n() > 0 {
-        let mut p = read_usize(G_CLUB_TABLE) + 0x57;
+        let mut p = read_usize(G_CLUB_TABLE) + club::DIVISION;
         let mut i: i32 = 0;
         loop {
             let comp = read_usize(p);
@@ -197,7 +197,7 @@ pub(crate) unsafe fn set_up_fixed_fixtures_body(this: League, table: &[(u8, u8, 
     let v = this.fixed_fixtures();
     for i in 0..n as usize {
         let f = v + i * 0x10;
-        if read_usize(f + 8) == 0xffff_ffff || read_usize(f + 0xc) == 0xffff_ffff { // cqn6: a club not found drops the list
+        if read_usize(f + 8) == 0xffff_ffff || read_usize(f + fixed_fixture::AWAY_CLUB_ID) == 0xffff_ffff { // cqn6: a club not found drops the list
             if v != 0 {
                 exe::crt_vector_destructor_iterator(v, 0x10, read_usize(v - 4) as u32, 0x5a53c0);
                 exe::crt_operator_delete(v - 4);
@@ -216,7 +216,7 @@ pub(crate) unsafe fn fra_first_compare_fixed_fixtures(name: &str, this: League, 
     original();
     let v = this.fixed_fixtures();
     let n = league_match_count(this);
-    let ok = v == 0 || (read_usize(v - 4) as i32 == n && (0..n.max(0) as usize).all(|i| read_usize(v + i * 0x10 + 8) != 0xffff_ffff && read_usize(v + i * 0x10 + 0xc) != 0xffff_ffff));
+    let ok = v == 0 || (read_usize(v - 4) as i32 == n && (0..n.max(0) as usize).all(|i| read_usize(v + i * 0x10 + 8) != 0xffff_ffff && read_usize(v + i * 0x10 + fixed_fixture::AWAY_CLUB_ID) != 0xffff_ffff));
     SCOREBOARD.record(ok, || format!("{}({:#x}): a list of the games fixed (+0xea = {:#x}) away of the expected", name, this.addr(), v));
 }
 

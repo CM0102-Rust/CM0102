@@ -6,12 +6,12 @@ use super::*;
 /// [pt] { 0x7febb0 } (thiscall, scrman.cpp): o gerente de telas não tem para onde avançar? (o bloco de
 /// parâmetros da tela atual sem a tela seguinte em +0x1f8). Sem bloco: a original (caixa de erro e saída).
 pub(crate) unsafe extern "thiscall" fn is_forward_unavailable(manager: usize) -> u32 {
-    let slot = *((manager + 0x382a) as *const i16) as isize;
-    let block = core::ptr::read_unaligned((manager as isize + 0x7e2 + slot * 0x300) as *const usize);
+    let slot = *((manager + screen_manager::CURRENT_SLOT) as *const i16) as isize;
+    let block = core::ptr::read_unaligned((manager as isize + (screen_manager::PARAM_BLOCK as isize) + slot * 0x300) as *const usize);
     if block == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_IS_FORWARD_UNAVAILABLE)(manager);
     }
-    (*((block + 0x1f8) as *const usize) == 0) as u32
+    (*((block + screen_node::NEXT_NODE) as *const usize) == 0) as u32
 }
 
 /// Copies C string origem (with terminator) to the work text 0xde1f64.

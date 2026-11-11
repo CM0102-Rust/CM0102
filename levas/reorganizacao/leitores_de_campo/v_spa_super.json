@@ -1,0 +1,56 @@
+[
+ {
+  "line": 24,
+  "offset": "0xa",
+  "base": "l",
+  "module": "cup_team_entry",
+  "verdict": "existing",
+  "name": "SEED_LEVEL + 6",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "seed level of the second 6-byte entry",
+  "confidence": "read",
+  "evidence": "two-entry team list of 6-byte cup_team_entry; l+4/l+5 the first entry, l+0xa/l+0xb the second (club at l+6)",
+  "field_offset": "0x4"
+ },
+ {
+  "line": 25,
+  "offset": "0xb",
+  "base": "l",
+  "module": "cup_team_entry",
+  "verdict": "existing",
+  "name": "STATUS + 6",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "status of the second 6-byte entry",
+  "confidence": "read",
+  "evidence": "second entry's status (+5) at l+6+5",
+  "field_offset": "0x5"
+ },
+ {
+  "line": 143,
+  "offset": "0x53",
+  "base": "a",
+  "module": "club",
+  "verdict": "existing",
+  "name": "NATION",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "club nation",
+  "confidence": "verified",
+  "evidence": "a = latest placed club of the J1; TClub +0x53 Nation (database format); 0 = no nation"
+ },
+ {
+  "line": 150,
+  "offset": "0x53",
+  "base": "b",
+  "module": "club",
+  "verdict": "existing",
+  "name": "NATION",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "club nation",
+  "confidence": "verified",
+  "evidence": "b = latest placed club of the Emperor's Cup; TClub +0x53 Nation"
+ }
+]

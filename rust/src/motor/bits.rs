@@ -148,6 +148,8 @@ pub(crate) mod league_flags {
 pub(crate) mod league_selected {
     /// club_can_be_managed requires it; key_nation_get_main_continent picks the first league nation with it; the save summary (file_screens.rs) lists bit-2 nations first and bit-1 nations in the second string. Name: read.
     pub(crate) const PLAYABLE: u8 = 0x2;
+    /// set: the Conference is played and its clubs enter by category; eng_prm/ita_ser_a/spa_first use the same bit to link the division below the bottom one (Conference, Serie C2, Segunda B). Name: read.
+    pub(crate) const LOWER_DIVISIONS_LOADED: u8 = 0x4;
 }
 
 /// Bits of `awol_fields::PERSON_FLAGS`.

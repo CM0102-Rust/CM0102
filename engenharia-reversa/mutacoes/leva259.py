@@ -13,7 +13,7 @@ MUTACOES = [
     ('cpw4_sem_termos', '            exe::transfer_manager_note_terms_offered_to_main_player(read_usize(G_TRANSFER_MANAGER), slot); // cpw4: the terms offered to the player', '            // mutacao: sem marcar os termos', 'cpw_4 terms to the player'),
     ('cpw4_sem_decisao', '        exe::contract_manager_schedule_offer_decision(this, read_usize(terms.addr()) as u32, (slot) as i32 as u32); // cpw4: the scheduled decision', '        // mutacao: sem a decisao', 'cpw_4 schedule decision'),
     ('cpw5_so_a_casa', '    for l in 0..2 { // cpw5: os dois lados', '    for l in 0..1 { // mutacao: so a casa', 'cpw_5 away side ratings'),
-    ('cpw5_comeca_com_um_jogo', '    write_u8(r + 0xa, 0); // cpw5: starts with no matches', '    write_u8(r + 0xa, 1); // mutacao: comeca com um jogo', 'cpw_5 new player in the month'),
+    ('cpw5_comeca_com_um_jogo', '    write_u8(r + month_rating_entry::MATCHES, 0); // cpw5: starts with no matches', '    write_u8(r + month_rating_entry::MATCHES, 1); // mutacao: comeca com um jogo', 'cpw_5 new player in the month'),
     ('cpw5_sem_ordenar', '    exe::crt_qsort(read_usize(this), read_usize(this + 4) as u32, 0xc, 0x768200); // cpw5: sorts by the average', '    // mutacao: sem ordenar', 'cpw_5 sorted the ratings'),
     ('cpw6_aumento_mundial', '        add_to_word(p.addr() + player_sheet::WORLD_REPUTATION, ftol(world as i32 as f64 * read_f64(rdata::F64_0_05)));', '        add_to_word(p.addr() + player_sheet::WORLD_REPUTATION, ftol(world as i32 as f64 * read_f64(rdata::F64_0_1)));', 'cpw_6 player award'),
     ('cpw6_sem_piso_mundial', '        if p.world_reputation() <= world { // cpw6: o piso mundial', '        if false { // mutacao: sem o piso', 'cpw_6 player award'),

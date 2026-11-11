@@ -72,13 +72,13 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
         this.set_current_stage((1) as usize);
         this.set_stage_count((2) as usize);
         for k in 0..2 {
-            write_u8(read_usize(read_usize(this.stages() + 4 * k) + 0xb1) + 0x37, 5); // cqo8: champion of both halves
+            write_u8(read_usize(read_usize(this.stages() + 4 * k) + league::TABLE) + league_table_row::STATUS, 5); // cqo8: champion of both halves
         }
         let mut i: i16 = 0;
         while i < this.club_count() {
             let row = this.table() + i as usize * 0x3b;
             if read_usize(row) == read_usize(list) {
-                write_u8(row + 0x37, 5);
+                write_u8(row + league_table_row::STATUS, 5);
             }
             i += 1;
         }

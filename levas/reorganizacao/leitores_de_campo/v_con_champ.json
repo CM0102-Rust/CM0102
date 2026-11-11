@@ -1,0 +1,16 @@
+[
+ {
+  "line": 148,
+  "offset": "0x5c",
+  "base": "vtable",
+  "verdict": "not_field",
+  "evidence": "vtable slot: read_usize(vtable + 0x5c) called as a thiscall virtual"
+ },
+ {
+  "line": 171,
+  "offset": "0x3c",
+  "base": "vtable",
+  "verdict": "not_field",
+  "evidence": "vtable slot: read_usize(vtable + 0x3c) called as a thiscall virtual"
+ }
+]

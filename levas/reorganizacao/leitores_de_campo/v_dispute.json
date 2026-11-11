@@ -1,0 +1,15 @@
+[
+ {
+  "line": 27,
+  "offset": "0xa",
+  "base": "list (LLIST)",
+  "module": "llist",
+  "verdict": "existing",
+  "name": "CURSOR",
+  "width": 4,
+  "rust_type": "u32",
+  "description": "iteration cursor, reset by copying HEAD (+2)",
+  "confidence": "verified",
+  "evidence": "list = [this]; cursor = head before walking with llist_get_next, as llist::CURSOR"
+ }
+]

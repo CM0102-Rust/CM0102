@@ -21,8 +21,8 @@ pub(crate) unsafe fn alloc_two_team_list(this: Cup, file: usize, row: u32) -> Op
 pub(crate) unsafe fn finish_two_team_list(l: usize) -> (i32, i32) {
     write_u8(l + 4, 0);
     write_u8(l + 5, 0);
-    write_u8(l + 0xa, 0);
-    write_u8(l + 0xb, 0);
+    write_u8(l + cup_team_entry::SEED_LEVEL + 6, 0);
+    write_u8(l + cup_team_entry::STATUS + 6, 0);
     (1, 2)
 }
 
@@ -140,14 +140,14 @@ pub(crate) unsafe fn select_japanese_super_cup_teams(this: usize) -> (i32, i32) 
     if !set_team_slot(l, 0, a, F, 0xca) {
         return (0, 0);
     }
-    if read_usize(a + 0x53) == 0 && !set_team_slot(l, 0, latest_placed_club(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 1), F, 0xd6) {
+    if read_usize(a + club::NATION) == 0 && !set_team_slot(l, 0, latest_placed_club(KEY_CLUB_COMP_JAPANESE_J_LEAGUE_1, 1), F, 0xd6) {
         return (0, 0);
     }
     let b = latest_placed_club(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 0);
     if !set_team_slot(l, 1, b, F, 0xe0) {
         return (0, 0);
     }
-    if read_usize(b + 0x53) == 0 && !set_team_slot(l, 1, latest_placed_club(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 1), F, 0xec) {
+    if read_usize(b + club::NATION) == 0 && !set_team_slot(l, 1, latest_placed_club(KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP, 1), F, 0xec) {
         return (0, 0);
     }
     if read_usize(l) == read_usize(l + 6) {

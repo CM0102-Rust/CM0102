@@ -1,0 +1,42 @@
+[
+ {
+  "line": 36,
+  "offset": "0x3c",
+  "base": "vt",
+  "verdict": "not_field",
+  "evidence": "vtable slot: read_usize(vtable + 0x3c) called as a thiscall virtual"
+ },
+ {
+  "line": 57,
+  "offset": "0xb6",
+  "base": "this",
+  "module": "league",
+  "verdict": "existing",
+  "name": "NEXT_DRAW_DAY",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "day word of the start date",
+  "confidence": "read",
+  "evidence": "finish_rules_setup writes the date word with set_next_draw_day (league +0xb6)"
+ },
+ {
+  "line": 58,
+  "offset": "0xb8",
+  "base": "this",
+  "module": "league",
+  "verdict": "existing",
+  "name": "NEXT_DRAW_YEAR_OFFSET",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "year offset of the start date",
+  "confidence": "read",
+  "evidence": "finish_rules_setup writes b8 with set_next_draw_year_offset (league +0xb8)"
+ },
+ {
+  "line": 59,
+  "offset": "0xb8",
+  "base": "",
+  "verdict": "not_field",
+  "evidence": "offset only inside the log string literal of the comparer"
+ }
+]

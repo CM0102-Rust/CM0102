@@ -1,0 +1,67 @@
+[
+ {
+  "line": 59,
+  "offset": "0x3c",
+  "base": "vtable of this",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": null,
+  "evidence": "vtable slot +0x3c (create round table virtual)"
+ },
+ {
+  "line": 71,
+  "offset": "0xc",
+  "base": "this.stages() (stage pointer array)",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": null,
+  "evidence": "index 3 of the stage pointer array (4 bytes per stage): the knockout stage slot, not a field of the cup"
+ },
+ {
+  "line": 74,
+  "offset": "0xc",
+  "base": "this.stages() (stage pointer array)",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": null,
+  "evidence": "index 3 of the stage pointer array (4 bytes per stage): the knockout stage slot, not a field of the cup"
+ },
+ {
+  "line": 126,
+  "offset": "0xa7",
+  "base": "read_usize(this.stages()) (stage 0 cup object)",
+  "module": "cup",
+  "verdict": "existing",
+  "name": "TEAM_TABLE",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the cup team table (6-byte entries)",
+  "confidence": "verified",
+  "evidence": "stage 0 is a Cup_Stage; entries read with +5 status and +0 club (stride 6), as cup::TEAM_TABLE in v_comp"
+ },
+ {
+  "line": 177,
+  "offset": "0x3c",
+  "base": "vtable of this",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": null,
+  "evidence": "vtable slot +0x3c (create round table virtual)"
+ }
+]

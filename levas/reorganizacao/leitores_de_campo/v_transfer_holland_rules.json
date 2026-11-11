@@ -1,0 +1,28 @@
+[
+ {
+  "line": 20,
+  "offset": "0x13",
+  "base": "this",
+  "module": "transfer_rules",
+  "verdict": "new",
+  "name": "FOREIGN_PLAYER_LIMIT",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "Maximum foreign players in the squad (base default 50, 0xff = no limit); written 50 by this constructor",
+  "confidence": "verified",
+  "evidence": "TRANSFER_RULES::can_sign_player 0x8e8560 counts squad players for whom database_is_staff_foreign holds and refuses (reason 0x14) at this byte; base ctor 0x8e84a0 sets 0x32; community map: foreign limit at +0x13"
+ },
+ {
+  "line": 21,
+  "offset": "0x14",
+  "base": "this",
+  "module": "transfer_rules",
+  "verdict": "new",
+  "name": "NON_EU_PLAYER_LIMIT",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "Maximum non-EU foreign players in the squad, applied when the rules nation is in Europe (base default 30, 0xff = no limit); written 50 here",
+  "confidence": "verified",
+  "evidence": "0x8e8560 second loop counts foreign squad players failing database_is_staff_eu_national (0x53d740) against this byte, only when the nation's continent is Europe; base ctor sets 0x1e; community map: Holland 50 foreign and 50 non-EU"
+ }
+]

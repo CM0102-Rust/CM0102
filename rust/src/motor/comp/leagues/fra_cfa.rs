@@ -628,7 +628,7 @@ pub(crate) unsafe fn compare_french_table(name: &str, this: League, clubs: usize
     let mut found: Vec<(usize, u8)> = Vec::new();
     let mut same = r == 1 && this.club_count() == n && t != 0;
     if same {
-        found = (0..n as usize).map(|k| (read_usize(t + k * 0x3b), read_u8(t + k * 0x3b + 0x38))).collect();
+        found = (0..n as usize).map(|k| (read_usize(t + k * 0x3b), read_u8(t + k * 0x3b + league_table_row::MARK))).collect();
         same = found == plan;
     }
     SCOREBOARD.record(same, || format!("{}({:#x}) original={} plan={:x?} table={:x?}", name, this.addr(), r, plan, found));
@@ -678,9 +678,9 @@ pub(crate) unsafe fn set_c1_club_progress(this: usize, club: usize, stage: u8, c
             v => v,
         };
     }
-    write_u8(e + 0x73, a);
-    write_u8(e + 0x74, m);
-    write_u8(e + 0x75, p);
+    write_u8(e + comp_stats_club::CURRENT_POSITION, a);
+    write_u8(e + comp_stats_club::BEST_POSITION, m);
+    write_u8(e + comp_stats_club::WORST_POSITION, p);
 }
 
 /// Comparer of set_club_progress: finds the stats entry first and runs both side by side on its 3 bytes; without entry,
@@ -693,7 +693,7 @@ pub(crate) unsafe fn compare_c1_club_progress(name: &str, this: usize, club: usi
     if e == 0 {
         return original();
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e + 0x73, 3)], original, copy);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e + comp_stats_club::CURRENT_POSITION, 3)], original, copy);
     SCOREBOARD.record(igual, || format!("{}({:#x}, {:#x}) original={:x?} rust={:x?}", name, this, club, mo, mr));
 }
 

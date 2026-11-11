@@ -4,7 +4,7 @@ use super::*;
 ///
 /// [pt] Os inscritos menos a metade (truncada, com sinal) dos clubes da preliminar (+0xb2, byte com sinal).
 pub(crate) unsafe fn entrants_minus_half_prelim(this: Cup, k: i16) -> i32 {
-    k as i32 - (read_i8(this.addr() + 0xb2) as i32) / 2
+    k as i32 - (read_i8(this.addr() + uefa_cup::PRELIMINARY_CLUB_COUNT) as i32) / 2
 }
 
 /// `UefaCup::build_entrants()` (0x902b90, thiscall, ret 0, uefa_cup.cpp; called from the constructor, 2001-000): builds
@@ -52,21 +52,21 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: Cup) -> i32 {
         show_error_at(F, 0x1bf);
         return -1;
     }
-    write_u8(this.addr() + 0xb2, 0);
+    write_u8(this.addr() + uefa_cup::PRELIMINARY_CLUB_COUNT, 0);
     let base = read_usize(G_CLUB_TABLE);
     let mut k: i16 = 0;
     let mut i: i16 = 0;
     if (read_usize(G_CLUB_COUNT) as i32) > 0 {
         loop {
             let c = base + i as u16 as usize * club::SIZE;
-            if read_usize(c + 0x1db) == read_usize(KEY_CLUB_COMP_UEFA_CUP) {
+            if read_usize(c + club::CONTINENTAL_COMP_ID) == read_usize(KEY_CLUB_COMP_UEFA_CUP) {
                 let e = k as i32 as usize * 6;
                 k = k.wrapping_add(1);
                 write_usize(this.team_table() + e, c);
-                write_u8(this.team_table() + e + 4, read_u8(c + 0x1df));
+                write_u8(this.team_table() + e + 4, read_u8(c + club::EURO_SEEDING));
                 write_u8(this.team_table() + e + 5, 0);
-                if read_i8(c + 0x1df) >= 0xa { // cqs9: those in the preliminary
-                    write_u8(this.addr() + 0xb2, read_u8(this.addr() + 0xb2).wrapping_add(1));
+                if read_i8(c + club::EURO_SEEDING) >= 0xa { // cqs9: those in the preliminary
+                    write_u8(this.addr() + uefa_cup::PRELIMINARY_CLUB_COUNT, read_u8(this.addr() + uefa_cup::PRELIMINARY_CLUB_COUNT).wrapping_add(1));
                 }
             }
             i = i.wrapping_add(1);
@@ -84,15 +84,15 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: Cup) -> i32 {
                     break;
                 }
                 let c = base + j as u16 as usize * club::SIZE;
-                let nation = read_usize(c + 0x53);
-                if nation != 0 && *((nation + 0x11c) as *const u8) == 0 && read_i16(nation + 0x8e) < 0x7d0 && read_usize(c + 0x1db) as i32 == -1 {
+                let nation = read_usize(c + club::NATION);
+                if nation != 0 && *((nation + nation::LEAGUE_SELECTED) as *const u8) == 0 && read_i16(nation + nation::REPUTATION) < 0x7d0 && read_usize(c + club::CONTINENTAL_COMP_ID) as i32 == -1 {
                     crate::comparison::branch("cqs_9 club filling uefa");
                     let e = k as i32 as usize * 6;
                     k = k.wrapping_add(1);
                     write_usize(this.team_table() + e, c);
                     write_u8(this.team_table() + e + 4, 3); // cqs9: the class of those who complete it
                     write_u8(this.team_table() + e + 5, 0);
-                    write_usize(c + 0x1db, read_usize(read_usize(this.addr() + 4)));
+                    write_usize(c + club::CONTINENTAL_COMP_ID, read_usize(read_usize(this.addr() + 4)));
                 }
                 j = j.wrapping_add(1);
                 if j as i32 >= lim(()) {
@@ -106,7 +106,7 @@ pub(crate) unsafe fn uefa_cup_build_entrants(this: Cup) -> i32 {
         k = k.wrapping_sub(1);
     }
     exe::crt_qsort(this.team_table(), k as i32 as u32, 6, 0x522190);
-    let b2 = read_i8(this.addr() + 0xb2);
+    let b2 = read_i8(this.addr() + uefa_cup::PRELIMINARY_CLUB_COUNT);
     if b2 < 0 || b2 % 2 != 0 {
         return 0;
     }

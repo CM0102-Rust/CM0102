@@ -1,0 +1,81 @@
+[
+ {
+  "line": 92,
+  "offset": "0x190",
+  "base": "game",
+  "module": "match_stats_record",
+  "verdict": "existing",
+  "name": "HOME_LINEUP",
+  "width": 1460,
+  "rust_type": "usize",
+  "description": "home side lineup, 20 rows of 0x49 bytes (away at + SIDE_SIZE)",
+  "confidence": "verified",
+  "evidence": "same line uses match_stats_record::SIDE_SIZE; rows read with lineup_row fields (equals match_record::ROW_STAFF_ID)"
+ },
+ {
+  "line": 92,
+  "offset": "0x49",
+  "base": "game",
+  "module": "",
+  "verdict": "not_field",
+  "name": "",
+  "width": 0,
+  "rust_type": "",
+  "description": "",
+  "confidence": "read",
+  "evidence": "row stride of the lineup (0x49 bytes per row)"
+ },
+ {
+  "line": 135,
+  "offset": "0x69",
+  "base": "comp",
+  "module": "competition",
+  "verdict": "existing",
+  "name": "REPUTATION",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "competition reputation",
+  "confidence": "verified",
+  "evidence": "G_CLUB_COMP_TABLE + id * 0x6b (TComp); TComp Reputation +0x69"
+ },
+ {
+  "line": 372,
+  "offset": "0x10",
+  "base": "club entry",
+  "module": "club_record_entry",
+  "verdict": "existing",
+  "name": "SEASON_GAMES",
+  "width": 1,
+  "rust_type": "i8",
+  "description": "games played this season (signed)",
+  "confidence": "verified",
+  "evidence": "base is [this + CLUB_ENTRIES] + club id * 106 (0x6a-byte club entries)"
+ },
+ {
+  "line": 687,
+  "offset": "0x1f5",
+  "base": "r (club record)",
+  "module": "club_record",
+  "verdict": "existing",
+  "name": "SEASON_RATING + 4",
+  "width": 24,
+  "rust_type": "usize",
+  "description": "holder reference of the season rating record",
+  "confidence": "read",
+  "evidence": "SEASON_RATING 0x1f1 + rating_record::HOLDER 4; fill_staff_name_ref writes the person's reference there right after the rating",
+  "field_offset": "0x1f1"
+ },
+ {
+  "line": 1209,
+  "offset": "0x2f9",
+  "base": "r (club record)",
+  "module": "club_record",
+  "verdict": "new",
+  "name": "INTERNATIONAL_CAPS",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "most international caps held by a player while at the club (-1 none); holder reference at +0x2fb",
+  "confidence": "read",
+  "evidence": "0x444930 (club_records.cpp) compares and stores the staff byte +0x22 (TStaff IntApps) here and fills the holder reference at +0x2fb (record news type 0x1b); reset_records sets it to -1; same layout as LEAGUE_APPEARANCES/LEAGUE_GOALS (word + 24-byte holder; next field FEE_PAID 0x313)"
+ }
+]

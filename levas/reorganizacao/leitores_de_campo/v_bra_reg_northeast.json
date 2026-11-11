@@ -1,0 +1,16 @@
+[
+ {
+  "line": 108,
+  "offset": "0x2c",
+  "base": "",
+  "verdict": "not_field",
+  "evidence": "offset only inside the log string literal of the comparer"
+ },
+ {
+  "line": 108,
+  "offset": "0xc",
+  "base": "",
+  "verdict": "not_field",
+  "evidence": "offset only inside the log string literal of the comparer"
+ }
+]

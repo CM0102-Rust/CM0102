@@ -1,0 +1,47 @@
+[
+ {
+  "line": 36,
+  "offset": "0xc",
+  "base": "this",
+  "module": "club_history_fields",
+  "verdict": "new",
+  "name": "RECORD_COUNT",
+  "width": 4,
+  "rust_type": "u32",
+  "description": "number of per-club history records (the club count)",
+  "confidence": "verified",
+  "evidence": "community Club_History::save/load 0x443f50/0x443cd0: writes the club count and the per-club history records; save writes the dword +0xc then +0xc records of 0x10 bytes from [+8]",
+  "new_module": true,
+  "record": "Club_History object (club history store): +8 pointer to the 16-byte per-club history records, +0xc number of records (club count)"
+ },
+ {
+  "line": 39,
+  "offset": "0xc",
+  "base": "this",
+  "module": "club_history_fields",
+  "verdict": "new",
+  "name": "RECORD_COUNT",
+  "width": 4,
+  "rust_type": "u32",
+  "description": "number of per-club history records (the club count)",
+  "confidence": "verified",
+  "evidence": "community Club_History::save/load 0x443f50/0x443cd0: writes the club count and the per-club history records; save writes the dword +0xc then +0xc records of 0x10 bytes from [+8]",
+  "new_module": true,
+  "record": "Club_History object (club history store): +8 pointer to the 16-byte per-club history records, +0xc number of records (club count)"
+ },
+ {
+  "line": 39,
+  "offset": "0xc",
+  "base": "this",
+  "module": "club_history_fields",
+  "verdict": "new",
+  "name": "RECORD_COUNT",
+  "width": 4,
+  "rust_type": "u32",
+  "description": "number of per-club history records (the club count)",
+  "confidence": "verified",
+  "evidence": "community Club_History::save/load 0x443f50/0x443cd0: writes the club count and the per-club history records; save writes the dword +0xc then +0xc records of 0x10 bytes from [+8]",
+  "new_module": true,
+  "record": "Club_History object (club history store): +8 pointer to the 16-byte per-club history records, +0xc number of records (club count)"
+ }
+]

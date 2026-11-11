@@ -1,0 +1,50 @@
+[
+ {
+  "line": 96,
+  "offset": "0xee",
+  "base": "this",
+  "module": "spa_first_fields",
+  "verdict": "new",
+  "name": "LOWER_DIVISION",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the background Spanish lower division league (SpaLower), 0 when the lower division is playable",
+  "confidence": "read",
+  "evidence": "only for the Primera (p.low): operator new(0xee) + SpaLower::SpaLower 0x851020 stored here when nation league_selected bit 4 is clear, else 0; spa_first.rs header: the Spanish lower division at +0xee",
+  "new_module": true,
+  "record": "SpaFirst (Spanish Primera Division league): League base plus the pointer to the background lower division"
+ },
+ {
+  "line": 98,
+  "offset": "0xee",
+  "base": "this",
+  "module": "spa_first_fields",
+  "verdict": "new",
+  "name": "LOWER_DIVISION",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the background Spanish lower division league",
+  "confidence": "read",
+  "evidence": "written 0 when the lower division is selected (playable)"
+ },
+ {
+  "line": 165,
+  "offset": "0xee",
+  "base": "this",
+  "module": "spa_first_fields",
+  "verdict": "new",
+  "name": "LOWER_DIVISION",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the background Spanish lower division league",
+  "confidence": "read",
+  "evidence": "comparer: nonzero exactly when nation league_selected bit 4 is clear"
+ },
+ {
+  "line": 169,
+  "offset": "0x2c",
+  "base": "",
+  "verdict": "not_field",
+  "evidence": "offset only inside the log string literal of the comparer"
+ }
+]

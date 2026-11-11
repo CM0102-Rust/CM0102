@@ -372,7 +372,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
                     crate::comparison::branch("cpz_2 won the knockout");
                     let promotion: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
                     promotion(eng_second_staff_records(), club, comp, 0x32);
-                    write_u8(this.table() + (i as usize) * 0x3b + 0x37, 0);
+                    write_u8(this.table() + (i as usize) * 0x3b + league_table_row::STATUS, 0);
                     write_u8(left, 1);
                     return 0;
                 }
@@ -381,7 +381,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
                     slot(eng_second_staff_records(), club, comp, 0xa0, 0x96, 0xf);
                 }
                 0xff | 2 => {
-                    write_u8(this.table() + (i as usize) * 0x3b + 0x37, 0xfe);
+                    write_u8(this.table() + (i as usize) * 0x3b + league_table_row::STATUS, 0xfe);
                     return 0;
                 }
                 _ => {}
@@ -432,9 +432,9 @@ pub(crate) unsafe fn set_club_stage_status(this: usize, club: usize, stage: u8, 
         p = map(p);
         a = map(a);
     }
-    write_u8(e + 0x73, a);
-    write_u8(e + 0x74, m);
-    write_u8(e + 0x75, p);
+    write_u8(e + comp_stats_club::CURRENT_POSITION, a);
+    write_u8(e + comp_stats_club::BEST_POSITION, m);
+    write_u8(e + comp_stats_club::WORST_POSITION, p);
 }
 
 /// Comparer of the stage status: side by side on the entry's 3 bytes; only the original without an entry.
@@ -446,7 +446,7 @@ pub(crate) unsafe fn compare_club_stage_status(name: &str, this: usize, club: us
     if e == 0 {
         return original();
     }
-    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e + 0x73, 3)], original, copy);
+    let (_, _, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e + comp_stats_club::CURRENT_POSITION, 3)], original, copy);
     SCOREBOARD.record(igual, || format!("{}({:#x}, {:#x}) original={:x?} rust={:x?}", name, this, club, mo, mr));
 }
 

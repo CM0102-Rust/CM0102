@@ -1,0 +1,28 @@
+[
+ {
+  "line": 23,
+  "offset": "0x32",
+  "base": "game",
+  "module": "fixture",
+  "verdict": "existing",
+  "name": "ROUND_PREFIX",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "round name prefix code",
+  "confidence": "read",
+  "evidence": "game is the match; passed as the stage word of add_knocked_out_record, as in european_cup/african_nations with fixture::ROUND_PREFIX"
+ },
+ {
+  "line": 23,
+  "offset": "0x30",
+  "base": "game",
+  "module": "fixture",
+  "verdict": "existing",
+  "name": "ROUND_NAME",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "round name code",
+  "confidence": "read",
+  "evidence": "passed as the round of add_knocked_out_record, as elsewhere with fixture::ROUND_NAME"
+ }
+]

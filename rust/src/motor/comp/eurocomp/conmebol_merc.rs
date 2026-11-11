@@ -4,7 +4,7 @@ use super::*;
 ///
 /// [pt] O clube k da lista dos sorteados (+0xee, ponteiros), a que o primeiro grupo e as fases dos outros leem.
 pub(crate) unsafe fn conmebol_merc_drawn_club(this: League, k: usize) -> usize {
-    read_usize(read_usize(this.addr() + 0xee) + k * 4) // cqr11: o sorteado k
+    read_usize(read_usize(this.addr() + conmebol_merc::DRAWN_CLUBS) + k * 4) // cqr11: o sorteado k
 }
 
 /// `update_for_date(today, full)` (virtual +0x14): the Copa Mercosur's day. Rule: the Mercosur has 20 invited clubs
@@ -73,8 +73,8 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_update_for_date(this: usize
             }
             let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
             predicted(this.addr());
-            exe::crt_free(read_usize(this.addr() + 0xee));
-            write_usize(this.addr() + 0xee, 0);
+            exe::crt_free(read_usize(this.addr() + conmebol_merc::DRAWN_CLUBS));
+            write_usize(this.addr() + conmebol_merc::DRAWN_CLUBS, 0);
             this.set_active(1);
         }
     }
@@ -400,9 +400,9 @@ pub(crate) unsafe extern "thiscall" fn conmebol_merc_create_schedule(this: usize
 /// [0xae235c] − 2 × [0xae2350]) que as regras ([0xae1000], 0x4c6890: thiscall com o clube) convidam entra na lista, sem
 /// conferir o espaço; a lista é embaralhada (0x4afb40 com +0xf2). Devolve 1.
 pub(crate) unsafe fn mercosur_select_invited_clubs(this: usize) -> (i32, i32) {
-    write_u32(this + 0xf2, 0x14);
+    write_u32(this + conmebol_merc::DRAWN_CLUB_COUNT, 0x14);
     let l = exe::crt_malloc(0x50);
-    write_u32(this + 0xee, l as u32);
+    write_u32(this + conmebol_merc::DRAWN_CLUBS, l as u32);
     if l == 0 {
         show_error_at(0x9a7e5c, 0x2c6);
         return (0, 0);
@@ -413,14 +413,14 @@ pub(crate) unsafe fn mercosur_select_invited_clubs(this: usize) -> (i32, i32) {
     while i < clubs() {
         let c = club_at(i as isize).addr();
         if exe::conmebolseeding_is_mercosur_invited_club(read_usize(G_CONMEBOL_SEEDING), c) != 0 {
-            write_u32(read_usize(this + 0xee) + k as usize * 4, c as u32);
+            write_u32(read_usize(this + conmebol_merc::DRAWN_CLUBS) + k as usize * 4, c as u32);
             k = k.wrapping_add(1);
         }
         i += 1;
     }
     crate::comparison::branch("cqo_13 mercosul guests");
     // simplification: the original pushes the word +0xf2 with garbage in the high 16 bits (the previous eax); 0x4afb40 reads the word
-    exe::comp_util_shuffle_pointer_array(read_usize(this + 0xee), read_u16(this + 0xf2) as u32); // cqo13: embaralha os convidados
+    exe::comp_util_shuffle_pointer_array(read_usize(this + conmebol_merc::DRAWN_CLUBS), read_u16(this + conmebol_merc::DRAWN_CLUB_COUNT) as u32); // cqo13: embaralha os convidados
     (1, k as i32)
 }
 

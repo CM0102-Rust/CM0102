@@ -1,0 +1,30 @@
+[
+ {
+  "line": 76,
+  "offset": "0x3c",
+  "base": "vtable",
+  "verdict": "not_field",
+  "evidence": "vtable slot: read_usize(vtable + 0x3c) called as a thiscall virtual"
+ },
+ {
+  "line": 136,
+  "offset": "0x3c",
+  "base": "vtable",
+  "verdict": "not_field",
+  "evidence": "vtable slot: read_usize(vtable + 0x3c) called as a thiscall virtual"
+ },
+ {
+  "line": 220,
+  "offset": "0x3c",
+  "base": "vt",
+  "verdict": "not_field",
+  "evidence": "vtable slot: read_usize(vtable + 0x3c) called as a thiscall virtual"
+ },
+ {
+  "line": 233,
+  "offset": "0x30",
+  "base": "vt",
+  "verdict": "not_field",
+  "evidence": "vtable slot: read_usize(vtable + 0x30) called as a thiscall virtual"
+ }
+]

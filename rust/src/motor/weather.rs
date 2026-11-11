@@ -78,7 +78,7 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
             let f = exe::finance_get_wealth_band(fin) as i8;
             let n = if f == -2 {
                 1000
-            } else if f == -1 && (read_u8(fin + 0x166) as i8) > 0xf {
+            } else if f == -1 && (read_u8(fin + finance::SQUEEZE_COUNTER) as i8) > 0xf {
                 0x9c4
             } else {
                 5000
@@ -258,8 +258,8 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
                 cid = read_usize(c + stadium::CITY);
             } else {
                 let n = home.nation().addr();
-                if n != 0 && read_usize(n + 0x7a) != 0 {
-                    cid = read_usize(n + 0x7a);
+                if n != 0 && read_usize(n + nation::CAPITAL_CITY) != 0 {
+                    cid = read_usize(n + nation::CAPITAL_CITY);
                 }
             }
         }
@@ -274,7 +274,7 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
         } else {
             let n = read_usize(cid + city::NATION);
             if n != 0 {
-                let capital = read_usize(n + 0x7a);
+                let capital = read_usize(n + nation::CAPITAL_CITY);
                 if capital != 0 {
                     if let Some(r) = weather_region(this, capital) {
                         reg = r;
@@ -444,13 +444,13 @@ pub(crate) unsafe extern "thiscall" fn get_pitch_condition(_this: usize, clima: 
     if game == 0 {
         return 0;
     }
-    let est = read_usize(game + 0x18);
+    let est = read_usize(game + fixture::STADIUM);
     if est == 0 || read_u8(est + stadium::COVERED) != 0 {
         return 0;
     }
-    let sum = (read_u16(game + 0x2a) as i32)
-        .wrapping_add(read_i32(game + 0x10))
-        .wrapping_add(read_i32(game + 0xc))
+    let sum = (read_u16(game + fixture::DAY) as i32)
+        .wrapping_add(read_i32(game + fixture::AWAY_CLUB_ID))
+        .wrapping_add(read_i32(game + fixture::HOME_CLUB_ID))
         .wrapping_add(read_i32(game));
     let h = sum % 20;
     let chuva = *clima.add(1);

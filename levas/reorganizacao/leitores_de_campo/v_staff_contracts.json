@@ -1,0 +1,15 @@
+[
+ {
+  "line": 478,
+  "offset": "0x27",
+  "base": "this (contract)",
+  "module": "contract",
+  "verdict": "existing",
+  "name": "DATE_STARTED_YEAR",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "year half of the contract start date",
+  "confidence": "verified",
+  "evidence": "next line reads this + contract::DATE_STARTED as the day; contract::CLUB used on the same object"
+ }
+]

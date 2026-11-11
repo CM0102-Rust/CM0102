@@ -1,0 +1,28 @@
+[
+ {
+  "line": 600,
+  "offset": "0x1e",
+  "base": "staff",
+  "module": "staff",
+  "verdict": "existing",
+  "name": "SECOND_NATION",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "second nation of the person (0 none)",
+  "confidence": "verified",
+  "evidence": "base is G_STAFF_TABLE + id * staff::SIZE; doc: the second nation (+0x1e)"
+ },
+ {
+  "line": 1017,
+  "offset": "0x57",
+  "base": "club (fixture home/away club)",
+  "module": "club",
+  "verdict": "existing",
+  "name": "DIVISION",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "club's division (league competition pointer)",
+  "confidence": "verified",
+  "evidence": "base = [fixture + 0x1c/0x20] (HOME_CLUB/AWAY_CLUB pointers); used as the league"
+ }
+]

@@ -89,7 +89,7 @@ pub(crate) unsafe fn match_stats_category(p: Fixture, side: i32, warn: bool, err
 /// pessoa (+0) e jogador (+4) ≠ −1 e a pessoa na tabela ([0xae23bc], 0x6e; id abaixo de [0xae2364]). Devolve
 /// (linha, pessoa, dados do jogador em [0xae23c4], 0x46).
 pub(crate) unsafe fn match_lineup_row(game: usize, side: usize, k: usize) -> Option<(usize, usize, usize)> {
-    let e = game + match_stats_record::SIDE_SIZE * side + 0x190 + 0x49 * k;
+    let e = game + match_stats_record::SIDE_SIZE * side + match_stats_record::HOME_LINEUP + 0x49 * k;
     if k > 10 && read_u8(e + lineup_row::ENTRY_MINUTE) == 0xff {
         return None;
     }
@@ -132,7 +132,7 @@ pub(crate) unsafe fn club_all_time_record(this: usize, club: usize, create: u32)
 ///
 /// [pt] A reputação (+0x69, palavra com sinal) da competição `id` (registros de 0x6b em [0xae23d0]).
 pub(crate) unsafe fn competition_reputation(id: i32) -> i16 {
-    read_i16(read_usize(G_CLUB_COMP_TABLE).wrapping_add((id as usize).wrapping_mul(0x6b)) + 0x69)
+    read_i16(read_usize(G_CLUB_COMP_TABLE).wrapping_add((id as usize).wrapping_mul(0x6b)) + competition::REPUTATION)
 }
 
 /// For a human club or national team with 5+ seasons, queues the all-time record news (club id, type) unless already
@@ -369,7 +369,7 @@ pub(crate) unsafe fn fan_rating(p: Staff, club: Club, st: usize) -> f64 {
 /// (`fan_rating`, acima de −1000). Ninguém: 0; senão a referência dele (0x7e4920) em registro +0x371 e 1.
 pub(crate) unsafe extern "thiscall" fn pick_fans_player_of_year(this: usize, club: usize, record: usize) -> u32 {
     let club = Club(club);
-    let games_of_club = || read_u8(read_usize(this + club_records_fields::CLUB_ENTRIES).wrapping_add((read_i32(club.addr()) as usize).wrapping_mul(106)) + 0x10) as i8;
+    let games_of_club = || read_u8(read_usize(this + club_records_fields::CLUB_ENTRIES).wrapping_add((read_i32(club.addr()) as usize).wrapping_mul(106)) + club_record_entry::SEASON_GAMES) as i8;
     if games_of_club() == 0 && club.reputation() < 0xbb8 {
         return 0;
     }
@@ -684,7 +684,7 @@ pub(crate) unsafe extern "thiscall" fn update_season_rating_record(this: usize, 
             crate::comparison::branch("cpm_6 season rating record");
             *rating = average as f32;
             write_u8(r + club_record::SEASON_RATING_GAMES, jogou);
-            exe::fill_staff_name_ref(p, r + 0x1f5);
+            exe::fill_staff_name_ref(p, r + club_record::SEASON_RATING + 4);
             write_i16(r + club_record::SEASON_RATING_YEAR, 0);
             found = 1;
         }
@@ -1206,7 +1206,7 @@ pub(crate) unsafe extern "C" fn reset_records(r: usize) -> u32 {
     }
     d(0x2a3);
     d(0x2e2);
-    write_u16(r + 0x2f9, 0xffff);
+    write_u16(r + club_record::INTERNATIONAL_CAPS, 0xffff);
     for o in [0x313, 0x33c, 0x365, 0x36b, 0x37d] {
         d(o);
     }

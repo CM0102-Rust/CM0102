@@ -4,7 +4,7 @@ use super::*;
 ///
 /// [pt] O clube `c` está na competição de id [`g`] (+0x57 a divisão, ponteiro para o registro; +0 o id)?
 pub(crate) unsafe fn eng_auto_cup_is_in_comp(c: usize, g: usize) -> bool {
-    let l = read_usize(c + 0x57);
+    let l = read_usize(c + club::DIVISION);
     l != 0 && read_usize(l) == read_usize(g)
 }
 
@@ -88,7 +88,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
     if n > 0 {
         loop {
             let c = base + i as u16 as usize * club::SIZE;
-            let before = read_usize(c + 0x5b);
+            let before = read_usize(c + club::LAST_DIVISION);
             if eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_ENGLISH_CONFERENCE) && before != 0 && read_usize(before) == read_usize(KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION) {
                 crate::comparison::branch("cqs_5 relegated to the conference");
                 push_section_club(this, &mut k, c); // cqs5: o rebaixado entra
@@ -104,8 +104,8 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
             }
         }
     }
-    let nacao = Nation(read_usize(read_usize(this + 4) + 0x5d));
-    if nacao.league_selected() & 4 != 0 {
+    let nacao = Nation(read_usize(read_usize(this + 4) + competition::NATION));
+    if nacao.league_selected() & league_selected::LOWER_DIVISIONS_LOADED != 0 {
         // 3a) the Conference by category
         let mut cat: i8 = 6;
         if k < read_usize(this + eng_auto_cup::SELECTED_COUNT) as i32 {
@@ -117,9 +117,9 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
                             break;
                         }
                         let c = base + i as u16 as usize * club::SIZE;
-                        let before = read_usize(c + 0x5b);
+                        let before = read_usize(c + club::LAST_DIVISION);
                         if before != 0 && read_usize(before) == read_usize(KEY_CLUB_COMP_ENGLISH_CONFERENCE) && eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_ENGLISH_CONFERENCE) {
-                            let v = read_i8(c + 0x5f);
+                            let v = read_i8(c + club::LAST_POSITION);
                             if ((cat == 6 && v <= cat) || v == cat) && c != 0 && c != found {
                                 push_section_club(this, &mut k, c);
                             }
@@ -163,7 +163,7 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
             if lim > 0 {
                 loop {
                     let c = base + j as u16 as usize * club::SIZE;
-                    let nation = read_usize(c + 0x53);
+                    let nation = read_usize(c + club::NATION);
                     if nation != 0 && read_usize(nation) == read_usize(KEY_NATION_ENGLAND) && !eng_auto_cup_is_in_comp(c, KEY_CLUB_COMP_A_LOWER_DIVISION) {
                         local[m as u8 as usize] = c;
                         m = m.wrapping_add(1);
@@ -333,7 +333,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usi
     if let Some(c) = first_entrant_with_status(this.team_table(), this.team_count() as i32, 1) { // cqs6: the cup finalist
         write_usize(l, c);
     }
-    if let Some(c) = first_entrant_with_status(read_usize(read_usize(this.stages()) + 0xa7), this.team_count() as i32, 1) { // cqs6: the brackets finalist
+    if let Some(c) = first_entrant_with_status(read_usize(read_usize(this.stages()) + cup::TEAM_TABLE), this.team_count() as i32, 1) { // cqs6: the brackets finalist
         write_usize(l + 4, c);
     }
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x3c));
@@ -400,7 +400,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
         let e = d as i32 as usize * 6;
         write_usize(v + d as i32 as usize * 4, read_usize(this.team_table() + e));
         let n = this.team_count() as i32;
-        write_usize(v + (n + d as i32) as usize * 4, read_usize(read_usize(read_usize(this.stages()) + 0xa7) + e));
+        write_usize(v + (n + d as i32) as usize * 4, read_usize(read_usize(read_usize(this.stages()) + cup::TEAM_TABLE) + e));
         d = d.wrapping_add(1);
     }
     let n = this.team_count() as i32;
@@ -410,7 +410,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
     let a = read_usize(v);
     let b = read_usize(v + this.team_count() as i32 as usize * 4);
     crate::comparison::branch("cqs_6 trophy standings");
-    if read_i16(a + 0x80) > read_i16(b + 0x80) {
+    if read_i16(a + club::REPUTATION) > read_i16(b + club::REPUTATION) {
         exe::comp_stats_set_club_final_position(read_usize(this.addr() + 8), a, 1);
         exe::comp_stats_set_club_final_position(read_usize(this.addr() + 8), read_usize(v + this.team_count() as i32 as usize * 4), 2);
     } else {
@@ -428,7 +428,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
         while r >= 0 {
             let p = pos;
             let mut j: i16 = 0;
-            while j < read_i16(this.round_table() + r as usize * 0x68 + 0x1a) {
+            while j < read_i16(this.round_table() + r as usize * 0x68 + cup_round::TIES) {
                 let c = read_usize(v + k as i32 as usize * 4);
                 k = k.wrapping_add(1);
                 exe::comp_stats_set_club_final_position(read_usize(this.addr() + 8), c, p as u32);

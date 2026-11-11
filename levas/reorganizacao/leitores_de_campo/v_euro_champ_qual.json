@@ -1,0 +1,35 @@
+[
+ {
+  "line": 47,
+  "offset": "0x3c",
+  "base": "vtable",
+  "verdict": "not_field",
+  "evidence": "vtable slot: read_usize(vtable + 0x3c) called as a thiscall virtual"
+ },
+ {
+  "line": 71,
+  "offset": "0xf6",
+  "base": "this",
+  "module": "euro_champ_qual",
+  "verdict": "existing",
+  "name": "GROUP_FORMAT",
+  "width": 1,
+  "rust_type": "i8",
+  "description": "group format (1 or 2)",
+  "confidence": "read",
+  "evidence": "get_group_team_count switches on the byte: 1 or 2"
+ },
+ {
+  "line": 136,
+  "offset": "0xf7",
+  "base": "this",
+  "module": "euro_champ_qual",
+  "verdict": "new",
+  "name": "DRAWN_TEAMS",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the malloc'd array of drawn national teams, group by group (group 1 first)",
+  "confidence": "read",
+  "evidence": "draw_groups 0x57dab0 mallocs it and stores the drawn nations; init_group_one_table reads group 1 rows from [+0xf7] + 4i; create_group_stage reads its group's slice"
+ }
+]

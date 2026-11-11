@@ -7,5 +7,5 @@ MUTACOES = [
     ('dbu_atributo', 'let (s, vazio) = if abbreviated != 0 { (c, cv) } else { (l, lv) }; // (dbu)', 'let (s, vazio) = if abbreviated == 0 { (c, cv) } else { (l, lv) }; // mutacao: abreviado e inteiro trocados'),
     ('dbu_posicoes', 'sprintf(text, 0x9a3d8c, buf, side); // "%s (%s)" (dbu)', 'sprintf(text, 0x98f0b8, buf, side); // mutacao: sem os parenteses'),
     ('dbu_regiao', 'let uses_adjective = if group { fb == 0xff } else { fb != 0xff }; // (dbu)', 'let uses_adjective = if group { fb == 0xff } else { fb == 0xff }; // mutacao: adjetivo e substantivo trocados'),
-    ('dbu_continente', '    let own = continent + 0x23; // the record’s adjective (dbu)', '    let own = continent + 0x24; // mutacao: sem a primeira letra'),
+    ('dbu_continente', '    let own = continent + continent::ADJECTIVE; // the record’s adjective (dbu)', '    let own = continent + 0x24; // mutacao: sem a primeira letra'),
 ]

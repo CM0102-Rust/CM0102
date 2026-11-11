@@ -389,7 +389,7 @@ pub(crate) unsafe fn segunda_rules(this: usize) -> Vec<(usize, u8, u32)> {
     let mut v = spanish_common_rules();
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3)]); // cqk4: a Segunda joga 2 turnos
     v.extend_from_slice(&[(0xc8, 1, 3), (0xbe, 1, 3), (0xbf, 1, 0), (0xc1, 1, 4), (0x1c, 4, read_usize(KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) as u32)]);
-    let nation = Nation(read_usize(read_usize(this + 4) + 0x5d));
+    let nation = Nation(read_usize(read_usize(this + 4) + competition::NATION));
     let below = if nation.league_selected() & 4 != 0 { read_usize(KEY_CLUB_COMP_SPANISH_SECOND_DIVISION_B) as u32 } else { 0xffff_ffff };
     v.extend_from_slice(&[(0x20, 4, below), (0x52, 1, 2)]);
     v
@@ -465,7 +465,7 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
     }
     // the Spanish lower division becomes the generic one
     let mut i: i16 = 0;
-    let mut field = read_usize(G_CLUB_TABLE) + 0x57;
+    let mut field = read_usize(G_CLUB_TABLE) + club::DIVISION;
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let comp = read_usize(field);
         if comp != 0 && read_usize(comp) == read_usize(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION) {
@@ -528,9 +528,9 @@ pub(crate) unsafe extern "thiscall" fn spa_first_set_club_progress(this: usize, 
         0x11 | 0x12 => 0x13,
         v => v,
     };
-    write_u8(e + 0x73, current as u8);
-    write_u8(e + 0x74, m);
-    write_u8(e + 0x75, p);
+    write_u8(e + comp_stats_club::CURRENT_POSITION, current as u8);
+    write_u8(e + comp_stats_club::BEST_POSITION, m);
+    write_u8(e + comp_stats_club::WORST_POSITION, p);
 }
 
 /// the Primera: discipline 0x1a, only the league; finally, if the nation lacks bit 4 of +0x11c [inference: the lower

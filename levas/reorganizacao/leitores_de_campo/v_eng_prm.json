@@ -1,0 +1,36 @@
+[
+ {
+  "line": 172,
+  "offset": "0x2c",
+  "base": "",
+  "verdict": "not_field",
+  "evidence": "offset only inside the log string literal of the comparer"
+ },
+ {
+  "line": 172,
+  "offset": "0xc",
+  "base": "",
+  "verdict": "not_field",
+  "evidence": "offset only inside the log string literal of the comparer"
+ },
+ {
+  "line": 197,
+  "offset": "0x3c",
+  "base": "vtable",
+  "verdict": "not_field",
+  "evidence": "vtable slot: read_usize(vtable + 0x3c) called as a thiscall virtual"
+ },
+ {
+  "line": 261,
+  "offset": "0x5d",
+  "base": "read_usize(this + 4)",
+  "module": "competition",
+  "verdict": "existing",
+  "name": "NATION",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "nation of the competition record",
+  "confidence": "verified",
+  "evidence": "this +4 is the competition record (TClubComp); +0x5d Nation in the database format; wrapped as Nation"
+ }
+]

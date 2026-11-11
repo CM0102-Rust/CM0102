@@ -12,7 +12,7 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn construct_poland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     crate::comparison::branch("cqm_3 poland");
     construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x96e61c, 1, &POLAND_TRANSFER_WINDOWS, 0xa786b8, 0x51);
-    write_u8(this + 0x13, 5);
-    write_u8(this + 0x14, 5);
+    write_u8(this + transfer_rules::FOREIGN_PLAYER_LIMIT, 5);
+    write_u8(this + transfer_rules::NON_EU_PLAYER_LIMIT, 5);
     this
 }

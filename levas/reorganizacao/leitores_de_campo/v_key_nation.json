@@ -1,0 +1,54 @@
+[
+ {
+  "line": 96,
+  "offset": "0x15",
+  "base": "e (key nation row)",
+  "module": "key_nation_record",
+  "verdict": "existing",
+  "name": "SEASON_END_DAY",
+  "width": 2,
+  "rust_type": "u16",
+  "description": "day of year the nation's season ends",
+  "confidence": "verified",
+  "evidence": "e = 0xb63d60 + 72 * k (key nation table); before this day the club's season year is the previous one"
+ },
+ {
+  "line": 97,
+  "offset": "0x17",
+  "base": "e (key nation row)",
+  "module": "key_nation_record",
+  "verdict": "existing",
+  "name": "SPLIT_SEASON_FLAG",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "1 when the season spans two calendar years",
+  "confidence": "verified",
+  "evidence": "community data map g_league_table+0x17 split_season_flag (u32)"
+ },
+ {
+  "line": 153,
+  "offset": "0x39",
+  "base": "row (key nation row)",
+  "module": "key_nation_record",
+  "verdict": "existing",
+  "name": "END_DATE",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "season end date (day half read)",
+  "confidence": "verified",
+  "evidence": "community data map g_league_table+0x39 end_date; read_i16 takes the day"
+ },
+ {
+  "line": 156,
+  "offset": "0x2a",
+  "base": "row (key nation row)",
+  "module": "key_nation_record",
+  "verdict": "existing",
+  "name": "START_DATE",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "season start date (day half read)",
+  "confidence": "verified",
+  "evidence": "community data map g_league_table+0x2a start_date"
+ }
+]

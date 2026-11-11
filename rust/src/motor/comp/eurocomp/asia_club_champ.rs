@@ -51,7 +51,7 @@ pub(crate) unsafe fn group_stage_qualifiers(this: Cup) -> [usize; 8] {
     }
     let mut i = 0i16;
     while i < teams && n < 8 {
-        let e = read_usize(read_usize(this.stages()) + 0xa7) + i as usize * 6;
+        let e = read_usize(read_usize(this.stages()) + cup::TEAM_TABLE) + i as usize * 6;
         if read_u8(e + 5) == 1 {
             v[n] = read_usize(e);
             n += 1;
@@ -158,7 +158,7 @@ pub(crate) unsafe extern "thiscall" fn create_group_stages(this: usize) {
 /// [pt] Os 4 das semifinais, na ordem da lista: o 1º do grupo 1 ([+0xc][1], tabela +0xb1), o 2º do grupo 2 ([+0xc][2]), o
 /// 1º do grupo 2 e o 2º do grupo 1 (os cruzamentos: as chaves são os pares da lista).
 pub(crate) unsafe fn asia_semi_finalists(this: Cup) -> [usize; 4] {
-    let l = |g: usize, p: usize| read_usize(read_usize(read_usize(this.stages() + g * 4) + 0xb1) + p * 0x3b);
+    let l = |g: usize, p: usize| read_usize(read_usize(read_usize(this.stages() + g * 4) + league::TABLE) + p * 0x3b);
     [l(1, 0), l(2, 1), l(2, 0), l(1, 1)] // cqt12: 1st of 1 × 2nd of 2, 1st of 2 × 2nd of 1
 }
 

@@ -39,7 +39,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_b_update_for_date(this: usize, to
     let mut i: i16 = 0;
     while (i as i32) < this.club_count() as i32 - 1 {
         let l = ita_ser_a_table_row(this, i as usize);
-        let points = read_i16(l + 0x19);
+        let points = read_i16(l + league_table_row::POINTS);
         if points == read_i16(l + 0x54) && z[(i as usize).min(63)] != z[(i as usize + 1).min(63)] { // cql4: the Serie B pair at the boundary
             found = true;
             exe::ita_league_sort_clubs_level_on_points(this, points as u16 as u32);
@@ -84,7 +84,7 @@ pub(crate) unsafe extern "thiscall" fn ita_league_sort_clubs_level_on_points(thi
     if n > 0 {
         let mut l = this.table();
         for _ in 0..n as i32 {
-            if read_i16(l + 0x19) == points as u16 as i16 {
+            if read_i16(l + league_table_row::POINTS) == points as u16 as i16 {
                 if first == 0 {
                     first = l;
                 }

@@ -1,0 +1,93 @@
+[
+ {
+  "line": 69,
+  "offset": "0x37",
+  "base": "this.table() + i*0x3b",
+  "module": "league_table_row",
+  "verdict": "existing",
+  "name": "STATUS",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "decided table status of the row (0: promoted here)",
+  "confidence": "verified",
+  "evidence": "row of the 0x3b-byte league TABLE; same STATUS writes as in the league.rs and bra_reg_rio verdicts"
+ },
+ {
+  "line": 73,
+  "offset": "0x34",
+  "base": "game (fixture)",
+  "module": "fixture",
+  "verdict": "existing",
+  "name": "ROUND_NUMBER",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "round number of the match",
+  "confidence": "verified",
+  "evidence": "game = the club's match (fixture record); words passed to comp_util_scale_by_round / staff_records_add_knocked_out_record (as v_african_nations)"
+ },
+ {
+  "line": 76,
+  "offset": "0x32",
+  "base": "game (fixture)",
+  "module": "fixture",
+  "verdict": "existing",
+  "name": "ROUND_PREFIX",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "round name prefix code of the match",
+  "confidence": "verified",
+  "evidence": "game = the club's match (fixture record); words passed to comp_util_scale_by_round / staff_records_add_knocked_out_record (as v_african_nations)"
+ },
+ {
+  "line": 76,
+  "offset": "0x30",
+  "base": "game (fixture)",
+  "module": "fixture",
+  "verdict": "existing",
+  "name": "ROUND_NAME",
+  "width": 2,
+  "rust_type": "i16",
+  "description": "round name code of the match",
+  "confidence": "verified",
+  "evidence": "game = the club's match (fixture record); words passed to comp_util_scale_by_round / staff_records_add_knocked_out_record (as v_african_nations)"
+ },
+ {
+  "line": 77,
+  "offset": "0x37",
+  "base": "this.table() + i*0x3b",
+  "module": "league_table_row",
+  "verdict": "existing",
+  "name": "STATUS",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "decided table status of the row (0xfe: knocked out here)",
+  "confidence": "verified",
+  "evidence": "row of the 0x3b-byte league TABLE; same STATUS writes as in the league.rs and bra_reg_rio verdicts"
+ },
+ {
+  "line": 85,
+  "offset": "0x37",
+  "base": "this.table() + i*0x3b",
+  "module": "league_table_row",
+  "verdict": "existing",
+  "name": "STATUS",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "decided table status of the row (0xfe here)",
+  "confidence": "verified",
+  "evidence": "row of the 0x3b-byte league TABLE; same STATUS writes as in the league.rs and bra_reg_rio verdicts"
+ },
+ {
+  "line": 91,
+  "offset": "0x37",
+  "base": "this.table() + i*0x3b",
+  "module": "league_table_row",
+  "verdict": "existing",
+  "name": "STATUS",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "decided table status of the row (3: relegated here)",
+  "confidence": "verified",
+  "evidence": "row of the 0x3b-byte league TABLE; same STATUS writes as in the league.rs and bra_reg_rio verdicts"
+ }
+]

@@ -19,8 +19,8 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | Nível | Campos |
 |---|---|
 | comunidade | 247 |
-| conferido | 140 |
-| lido | 1539 |
+| conferido | 165 |
+| lido | 1545 |
 | inferido | 163 |
 
 ## Por registro
@@ -32,6 +32,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `appearance_clause` | 0 | 0 | 3 | 0 |
 | `area_fields` | 0 | 6 | 14 | 0 |
 | `asia_club_champ_fields` | 0 | 1 | 0 | 0 |
+| `award_fields` | 0 | 3 | 0 | 0 |
 | `awol_fields` | 0 | 0 | 0 | 1 |
 | `awol_fitness_incident` | 0 | 0 | 0 | 1 |
 | `awol_missed_training` | 0 | 0 | 1 | 0 |
@@ -45,8 +46,9 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `city` | 6 | 0 | 0 | 0 |
 | `club` | 43 | 0 | 2 | 0 |
 | `club_discipline_record` | 0 | 0 | 3 | 0 |
+| `club_history_fields` | 0 | 1 | 0 | 0 |
 | `club_match_record` | 0 | 4 | 5 | 0 |
-| `club_record` | 0 | 0 | 24 | 1 |
+| `club_record` | 0 | 0 | 25 | 1 |
 | `club_record_entry` | 0 | 0 | 3 | 0 |
 | `club_records_fields` | 0 | 0 | 10 | 0 |
 | `club_shortlist` | 0 | 0 | 0 | 2 |
@@ -61,7 +63,8 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `config` | 0 | 1 | 0 | 0 |
 | `conmebol_liber` | 0 | 0 | 1 | 1 |
 | `conmebol_merc` | 0 | 0 | 1 | 1 |
-| `conmebol_seeding` | 0 | 0 | 2 | 0 |
+| `conmebol_seeding` | 0 | 1 | 2 | 0 |
+| `continent` | 0 | 1 | 0 | 0 |
 | `contract` | 19 | 3 | 6 | 3 |
 | `contract_manager_fields` | 0 | 0 | 10 | 1 |
 | `contract_offer` | 0 | 0 | 8 | 3 |
@@ -85,7 +88,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `eng_fa_cup` | 0 | 0 | 3 | 0 |
 | `engine` | 0 | 1 | 165 | 22 |
 | `english_name_tables` | 0 | 0 | 7 | 0 |
-| `euro_champ_qual` | 0 | 0 | 1 | 0 |
+| `euro_champ_qual` | 0 | 0 | 2 | 0 |
 | `european_club_entry` | 0 | 0 | 1 | 0 |
 | `event_type` | 0 | 0 | 3 | 0 |
 | `event_variant` | 0 | 2 | 0 | 0 |
@@ -153,8 +156,11 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `match_stats_record` | 0 | 0 | 7 | 0 |
 | `match_summary` | 0 | 0 | 1 | 0 |
 | `media_fields` | 0 | 0 | 6 | 0 |
+| `month_award_fields` | 0 | 4 | 0 | 0 |
+| `month_rating_entry` | 0 | 1 | 1 | 0 |
+| `month_ratings_fields` | 0 | 2 | 0 | 0 |
 | `names` | 0 | 3 | 0 | 0 |
-| `nation` | 34 | 1 | 1 | 0 |
+| `nation` | 34 | 3 | 1 | 0 |
 | `nation_club_bucket` | 0 | 0 | 2 | 0 |
 | `nation_index_item` | 0 | 0 | 1 | 0 |
 | `nation_name_index` | 0 | 0 | 9 | 0 |
@@ -183,6 +189,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `player_stats_fields` | 0 | 0 | 13 | 0 |
 | `preferences` | 7 | 0 | 0 | 0 |
 | `preseason_candidate` | 0 | 0 | 7 | 0 |
+| `pundit` | 0 | 4 | 0 | 0 |
 | `rating_record` | 0 | 0 | 2 | 1 |
 | `record_holder` | 0 | 1 | 1 | 0 |
 | `record_news_item` | 0 | 0 | 2 | 0 |
@@ -201,12 +208,14 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `scouted_match_entry` | 0 | 1 | 2 | 0 |
 | `scouted_player_slot` | 0 | 0 | 2 | 0 |
 | `screen_manager` | 0 | 1 | 3 | 1 |
+| `screen_node` | 0 | 1 | 0 | 0 |
 | `search_result` | 0 | 0 | 2 | 0 |
 | `sell_on_clause` | 0 | 0 | 3 | 0 |
 | `shortlist_manager_fields` | 0 | 0 | 10 | 0 |
 | `shortlist_pair` | 0 | 0 | 1 | 0 |
 | `shortlist_slot` | 0 | 0 | 8 | 1 |
 | `side_stats` | 0 | 0 | 5 | 0 |
+| `spa_first_fields` | 0 | 0 | 1 | 0 |
 | `stadium` | 10 | 0 | 1 | 0 |
 | `stadium_obj` | 0 | 0 | 7 | 0 |
 | `stadium_venue` | 0 | 1 | 0 | 0 |
@@ -224,13 +233,15 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `training_schedule` | 0 | 0 | 1 | 0 |
 | `transfer_fee_record` | 0 | 0 | 4 | 1 |
 | `transfer_interest` | 0 | 0 | 7 | 0 |
-| `transfer_manager_fields` | 0 | 0 | 34 | 0 |
-| `transfer_rules` | 0 | 0 | 2 | 1 |
+| `transfer_manager_fields` | 0 | 0 | 35 | 0 |
+| `transfer_rules` | 0 | 2 | 3 | 1 |
 | `transfer_window` | 0 | 0 | 2 | 0 |
 | `uefa_cup` | 0 | 0 | 1 | 0 |
 | `uefa_seeding` | 0 | 0 | 5 | 0 |
 | `uefa_seeding_nation` | 0 | 0 | 5 | 0 |
 | `undo_slot` | 0 | 0 | 4 | 0 |
+| `wc_oceania_league_fields` | 0 | 1 | 0 | 0 |
+| `wc_south_american_league_fields` | 0 | 2 | 0 | 0 |
 | `work_permit` | 0 | 0 | 4 | 0 |
 | `world_cup_fields` | 0 | 0 | 4 | 0 |
 | `zfile` | 0 | 4 | 0 | 0 |

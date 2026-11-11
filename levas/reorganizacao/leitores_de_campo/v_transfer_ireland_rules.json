@@ -1,0 +1,28 @@
+[
+ {
+  "line": 29,
+  "offset": "0x91c",
+  "base": "read_usize(G_TRANSFER_MANAGER)",
+  "module": "transfer_manager_fields",
+  "verdict": "new",
+  "name": "SEASON_LOAN_COUNTS",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "Pointer to the per-club 16-byte season loan table (indexed by club id; byte +0 = loans taken this season)",
+  "confidence": "read",
+  "evidence": "club id x 16 into it, byte +0 compared >= 5 (refusal 0x1e, five loans this season) and reset to 0; the comparator covers club count x 16 bytes; right after TRANSFER_RULES (0x8ac + 112)"
+ },
+ {
+  "line": 48,
+  "offset": "0xa",
+  "base": "this",
+  "module": "transfer_rules",
+  "verdict": "existing",
+  "name": "NATION_ID",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "Nation record the transfer rules apply to",
+  "confidence": "read",
+  "evidence": "transfer_rules::NATION_ID; passed as the nation to the adjective/name text and compared with club.nation().addr()"
+ }
+]

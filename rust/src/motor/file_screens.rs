@@ -78,7 +78,7 @@ pub(crate) unsafe extern "C" fn build_save_game_summary(summary: *mut u8) {
         }
     }
     let mut copy = [0u8; 8];
-    exe::date_operator_3d(summary as usize + 0xf64, (copy.as_mut_ptr()) as usize, G_CURRENT_DATE);
+    exe::date_operator_3d(summary as usize + save_summary::GAME_DATE, (copy.as_mut_ptr()) as usize, G_CURRENT_DATE);
     copy_text(summary.add(0x7d0), exe::utils_get_version_string());
     let mut now = 0i32;
     let t = exe::at_946ebb(&mut now);

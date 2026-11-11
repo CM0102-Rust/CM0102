@@ -1,0 +1,93 @@
+[
+ {
+  "line": 16,
+  "offset": "0x42",
+  "base": "c (marker Comp object, 0xa3 bytes)",
+  "module": "league",
+  "verdict": "existing",
+  "name": "CLUB_SIDES",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "1 = played by club sides (Comp base field)",
+  "confidence": "read",
+  "evidence": "set to 1 right after Comp::Comp on the marker competition; same Comp base offset as league/cup CLUB_SIDES"
+ },
+ {
+  "line": 18,
+  "offset": "0x50",
+  "base": "c (marker Comp object)",
+  "module": "league",
+  "verdict": "existing",
+  "name": "DISCIPLINE_RULE",
+  "width": 1,
+  "rust_type": "u8",
+  "description": "discipline rule set code; 0xff = none (Comp base field)",
+  "confidence": "read",
+  "evidence": "header: no discipline (+0x50 = 0xff); same Comp base offset as league::DISCIPLINE_RULE / cup::DISCIPLINE_INDEX"
+ },
+ {
+  "line": 83,
+  "offset": "0x57",
+  "base": "read_usize(G_CLUB_TABLE) (club 0, stepped by club size)",
+  "module": "club",
+  "verdict": "existing",
+  "name": "DIVISION",
+  "width": 4,
+  "rust_type": "usize",
+  "description": "pointer to the club's division competition record (its +0 is the id)",
+  "confidence": "verified",
+  "evidence": "p walks the clubs' +0x57; its +0 compared with the French CFA / lower division keys; p + 9 = RESERVE_DIVISION"
+ },
+ {
+  "line": 200,
+  "offset": "0xc",
+  "base": "f (fixed fixture, 0x10-byte entry)",
+  "module": "fixed_fixture",
+  "verdict": "existing",
+  "name": "AWAY_CLUB_ID",
+  "width": 4,
+  "rust_type": "i32",
+  "description": "away club id of a fixed fixture (-1 = club not found)",
+  "confidence": "verified",
+  "evidence": "0x10-byte fixed fixture entries; +8 home and +0xc away ids, -1 drops the list (as v_league, v_ita_ser_a)"
+ },
+ {
+  "line": 219,
+  "offset": "0xc",
+  "base": "v + i*0x10 (fixed fixture)",
+  "module": "fixed_fixture",
+  "verdict": "existing",
+  "name": "AWAY_CLUB_ID",
+  "width": 4,
+  "rust_type": "i32",
+  "description": "away club id of a fixed fixture (-1 = club not found)",
+  "confidence": "verified",
+  "evidence": "same as line 200"
+ },
+ {
+  "line": 220,
+  "offset": "0xea",
+  "base": "string",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": null,
+  "evidence": "text inside a log format string; value from this.fixed_fixtures() (league::FIXED_FIXTURES)"
+ },
+ {
+  "line": 888,
+  "offset": "0x3c",
+  "base": "vtable of this",
+  "module": null,
+  "verdict": "not_field",
+  "name": null,
+  "width": null,
+  "rust_type": null,
+  "description": null,
+  "confidence": null,
+  "evidence": "vtable slot +0x3c (create round table virtual)"
+ }
+]

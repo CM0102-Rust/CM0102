@@ -50,14 +50,14 @@ pub(crate) unsafe fn fra_cup_write_cup_round(t: usize, i: u32, r: &FraCupCupRoun
     w(0xb, r.bits.0);
     w(0xd, r.bits.1);
     w(0xf, r.bits.2);
-    write_u8(e + 0x17, r.category);
+    write_u8(e + cup_round::MATCH_CATEGORY, r.category);
     w(0x18, r.teams.0);
     w(0x1a, r.teams.1);
     w(0x1c, r.teams.2);
     w(0x1e, r.teams.3);
-    write_u8(e + 0x20, r.tie.0);
-    write_u8(e + 0x21, r.tie.1);
-    write_u8(e + 0x22, r.tie.2);
+    write_u8(e + cup_round::SINGLE_LEG_FLAG, r.tie.0);
+    write_u8(e + cup_round::LEGS, r.tie.1);
+    write_u8(e + cup_round::LEG_GAP_DAYS, r.tie.2);
     d(0x5c, r.prizes.0);
     d(0x60, r.prizes.1);
     d(0x64, r.prizes.2);
@@ -241,11 +241,11 @@ pub(crate) unsafe fn french_cup_collect_entrants(this: Cup) -> (i32, i32) {
         comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)) && comp_id_at(c, 0x60) == Some(read_usize(KEY_CLUB_COMP_FRENCH_CFA)) && n < french_cup_amateur_limit(this)
     });
     enter_clubs_pass(this, &mut n, all, true, |c, n| {
-        comp_id_at(c, 0x53) == Some(read_usize(KEY_NATION_FRANCE)) && comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)) && read_usize(c + 0x60) == 0
+        comp_id_at(c, 0x53) == Some(read_usize(KEY_NATION_FRANCE)) && comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_A_LOWER_DIVISION)) && read_usize(c + club::RESERVE_DIVISION) == 0
             && n < french_cup_amateur_limit(this)
     });
     enter_clubs_pass(this, &mut n, || read_usize(G_CLUB_COUNT) as i32 - 2 * read_usize(G_NATION_COUNT) as i32, true, |c, n| {
-        read_usize(c + 0x53) != 0 && exe::database_is_national_team(c) == 0 && read_usize(c + 0x57) == 0 && comp_id_at(c, 0x53) == Some(read_usize(KEY_NATION_FRANCE))
+        read_usize(c + club::NATION) != 0 && exe::database_is_national_team(c) == 0 && read_usize(c + club::DIVISION) == 0 && comp_id_at(c, 0x53) == Some(read_usize(KEY_NATION_FRANCE))
             && n < french_cup_amateur_limit(this)
     });
     crate::comparison::branch("cqm_11 french cup entrants");
@@ -299,7 +299,7 @@ pub(crate) unsafe fn french_league_cup_collect_entrants(this: Cup) -> (i32, i32)
     let all = || read_usize(G_CLUB_COUNT) as i32;
     let limit = if this.year() == 0x7d1 { 0x10 } else { 0xe };
     enter_clubs_pass(this, &mut n, all, true, |c, n| {
-        comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_FRENCH_NATIONAL)) && read_usize(c + 0x5b) != 0 && comp_id_at(c, 0x5b) != Some(read_usize(KEY_CLUB_COMP_FRENCH_CFA)) && n < limit
+        comp_id_at(c, 0x57) == Some(read_usize(KEY_CLUB_COMP_FRENCH_NATIONAL)) && read_usize(c + club::LAST_DIVISION) != 0 && comp_id_at(c, 0x5b) != Some(read_usize(KEY_CLUB_COMP_FRENCH_CFA)) && n < limit
     });
     // the original tests the size before each club: the pass stops when the list reaches 16
     let mut i: i16 = 0;

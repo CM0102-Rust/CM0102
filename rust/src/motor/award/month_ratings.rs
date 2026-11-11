@@ -25,10 +25,10 @@ pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, game: u
     for l in 0..2 { // cpw5: os dois lados
         for k in 0..0x14usize {
             let e = side + k * 0x49;
-            if read_u8(e + 0x1d) == 0xfb {
+            if read_u8(e + match_record_row::POSITION) == 0xfb {
                 continue;
             }
-            if k >= 0xb && read_u8(e + 0x32) == 0xff {
+            if k >= 0xb && read_u8(e + match_record_row::MINUTE_ON) == 0xff {
                 continue;
             }
             let p = month_ratings_staff_by_id(read_i32(e));
@@ -50,8 +50,8 @@ pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, game: u
 /// jogo.
 pub(crate) unsafe fn add_match_rating(r: usize, e: usize) {
     let s = (r + 8) as *mut u16;
-    core::ptr::write_unaligned(s, core::ptr::read_unaligned(s).wrapping_add(read_u8(e + 0x35) as u16));
-    write_u8(r + 0xa, read_u8(r + 0xa).wrapping_add(1));
+    core::ptr::write_unaligned(s, core::ptr::read_unaligned(s).wrapping_add(read_u8(e + match_record_row::MATCH_GRADE) as u16));
+    write_u8(r + month_rating_entry::MATCHES, read_u8(r + month_rating_entry::MATCHES).wrapping_add(1));
 }
 
 /// Finds or appends the person's record in the month ratings table, adds the rating and counts one match.
@@ -106,9 +106,9 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
     write_u32(r, id as u32);
     write_u32(r + 4, league as u32);
     write_u16(r + 8, 0);
-    write_u8(r + 0xb, p.age() as u8);
+    write_u8(r + month_rating_entry::AGE, p.age() as u8);
     crate::comparison::branch("cpw_5 new player in the month");
-    write_u8(r + 0xa, 0); // cpw5: starts with no matches
+    write_u8(r + month_rating_entry::MATCHES, 0); // cpw5: starts with no matches
     write_u32(this + 4, n.wrapping_add(1) as u32);
     add_match_rating(r, e);
 }
@@ -141,11 +141,11 @@ pub(crate) unsafe extern "thiscall" fn find_best_player(this: usize, league: i32
             if league != -1 && read_i32(r + 4) != league {
                 continue;
             }
-            if (read_u8(r + 0xa) as i8) < minimum {
+            if (read_u8(r + month_rating_entry::MATCHES) as i8) < minimum {
                 continue;
             }
             if age != 0xff {
-                if read_u8(r + 0xb) as i8 > age as i8 {
+                if read_u8(r + month_rating_entry::AGE) as i8 > age as i8 {
                     contados += 1;
                     continue;
                 }
@@ -156,7 +156,7 @@ pub(crate) unsafe extern "thiscall" fn find_best_player(this: usize, league: i32
             if league == -1 {
                 return r;
             }
-            let c = Club(read_usize(month_ratings_staff_by_id(read_i32(r)) + 0x39));
+            let c = Club(read_usize(month_ratings_staff_by_id(read_i32(r)) + staff::CLUB_JOB));
             if !c.is_null() {
                 let l = c.division().addr();
                 if l != 0 && read_i32(l) == league {
