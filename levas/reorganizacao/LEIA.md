@@ -28,6 +28,15 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 50 da legibilidade: os passos de vetor com nome
+
+O obstáculo 3 do leitor de fora da rodada 12: `nomear_passos.py` troca o literal de passo numa multiplicação (`k * 0x3b`,
+`0x49 * j`, `wrapping_mul(0x4f)`) pelo tamanho do registro com nome (`league_table_row::SIZE`, `match_record_row::SIZE`,
+`staff_state::SIZE`, `match_record::SIDE_SIZE`, `formation_fields::SIZE`...) só nas linhas que já citam o registro; 317
+linhas. Constantes SIZE novas no `fields.rs` para a linha da tabela, a linha do registro da partida, o estado da pessoa,
+o jogo, a rodada de copa, os blocos por lado de estatísticas e de tática e a data de rodada da liga. Prova: aa7e9c95 ×2,
+detector igual, comparação 0; as 18 mutações mudadas compilam.
+
 ## Leva 49 da legibilidade: os valores de enumeração com nome
 
 O obstáculo 2 do leitor de fora da rodada 12 (valores de enumeração sem constante): dois agentes leitores deram nome aos

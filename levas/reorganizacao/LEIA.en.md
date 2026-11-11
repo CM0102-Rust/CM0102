@@ -29,6 +29,15 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 50: raw array strides by name
+
+The outside reader's round 12 obstacle 3: `nomear_passos.py` turns a stride literal in a multiplication (`k * 0x3b`,
+`0x49 * j`, `wrapping_mul(0x4f)`) into the record's size constant (`league_table_row::SIZE`, `match_record_row::SIZE`,
+`staff_state::SIZE`, `match_record::SIDE_SIZE`, `formation_fields::SIZE`...) only on lines that already name that
+record; 317 lines. New SIZE constants in `fields.rs` for the table row, the match record row, the staff state, the
+fixture, the cup round, the per-side stats and tactics blocks and the league round date. Proof: aa7e9c95 ×2, detector
+equal, comparison 0; the 18 changed mutations compile.
+
 ## Readability batch 49: enum values by name
 
 The outside reader's round 12 obstacle 2 (enum values without constants): two reader agents named the values of 35 enum
