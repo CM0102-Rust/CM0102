@@ -130,16 +130,17 @@ pub(crate) unsafe extern "thiscall" fn construct_eng_prm(this: usize, year: u32,
 /// Comparer of the four constructors: runs only the original and checks return value, vtable, year, record, discipline,
 /// stadium and, for a new league, stages and stats.
 pub(crate) unsafe fn compare_english_constructor(name: &str, this: League, year: u32, record: usize, p: &EnglishDivision, original: impl FnOnce() -> usize) -> usize {
+    let loaded = league_will_load_saved_state(record);
     let r = original();
     let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtable && (this.year() as u16) == year as u16
         && this.competition().addr() == record && this.discipline_rule() == discipline_rule::ENGLAND;
     if let Some((c, s)) = p.stadium {
         ok = ok && this.required_capacity() == c && this.required_seats() == s;
     }
-    if this.stage_index() == stage_index::MAIN && this.comp_stats() != 0 {
+    if this.stage_index() == stage_index::MAIN && this.comp_stats() != 0 && !loaded {
         ok = ok && this.stage_count() == p.extra_stages as usize && (this.stages() != 0) == (p.extra_stages != 0);
     }
-    SCOREBOARD.record(ok, || format!("{}({:#x}): returned {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.stages(), this.comp_stats()));
+    SCOREBOARD.record(ok, || format!("{}({:#x}) [year {} arg {}, record {:#x} arg {:#x}, discipline {}, importance {}, stage index {}]: returned {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this.addr(), this.year(), year as u16, this.competition().addr(), record, this.discipline_rule(), this.importance(), this.stage_index() as i32, r, read_usize(this.addr()), this.stage_count(), this.stages(), this.comp_stats()));
     r
 }
 

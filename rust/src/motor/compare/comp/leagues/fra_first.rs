@@ -6,12 +6,13 @@ use super::*;
 pub(crate) unsafe extern "thiscall" fn compare_construct_fra_first(this: usize, year: u32, record: usize) -> usize {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_FRA_FIRST);
+    let loaded = league_will_load_saved_state(record);
     let r = o(this.addr(), year, record);
     let marker = |m: League, vt: usize, g: usize| m.is_null() || (read_usize(m.addr()) == vt && m.competition().addr() == comp_record_of_key(g) && m.discipline_rule() == discipline_rule::NONE);
     let mut ok = r == this.addr() && read_usize(this.addr()) == 0x96aa24 && (this.year() as u16) == year as u16
         && this.competition().addr() == record && this.discipline_rule() == discipline_rule::FRANCE
         && marker(League(read_usize(this.addr() + fra_first::CFA_MARKER)), 0x96a994, KEY_CLUB_COMP_FRENCH_CFA) && marker(League(read_usize(this.addr() + fra_first::LOWER_MARKER)), 0x96a904, KEY_CLUB_COMP_FRENCH_LOWER_DIVISION);
-    if this.stage_index() == stage_index::MAIN && this.comp_stats() != 0 {
+    if this.stage_index() == stage_index::MAIN && this.comp_stats() != 0 && !loaded {
         ok = ok && this.stage_count() == 0 && this.stages() == 0;
     }
     SCOREBOARD.record(ok, || format!("construct_fra_first({:#x}): returned {:#x}, vtable {:#x}, +0xee = {:#x}, +0xf2 = {:#x}, +8 = {:#x}", this.addr(), r, read_usize(this.addr()), read_usize(this.addr() + 0xee), read_usize(this.addr() + 0xf2), this.comp_stats()));

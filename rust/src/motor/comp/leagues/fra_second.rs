@@ -134,10 +134,11 @@ pub(crate) unsafe extern "thiscall" fn construct_fra_second(this: usize, year: u
 /// Comparer for the four constructors: only the original runs; checks return, vtable, year, record, discipline, stage
 /// fields and the lower division at +0xee.
 pub(crate) unsafe fn compare_division_league_ctor(name: &str, this: League, year: u32, record: usize, p: &LeagueDivision, original: impl FnOnce() -> usize) -> usize {
+    let loaded = league_will_load_saved_state(record);
     let r = original();
     let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtabela && (this.year() as u16) == year as u16
         && this.competition().addr() == record && this.discipline_rule() == p.discipline;
-    if this.stage_index() == stage_index::MAIN && this.comp_stats() != 0 {
+    if this.stage_index() == stage_index::MAIN && this.comp_stats() != 0 && !loaded {
         ok = ok && this.stage_count() == 0 && this.stages() == 0;
         if p.low {
             let nation = this.competition().nation();
@@ -145,7 +146,7 @@ pub(crate) unsafe fn compare_division_league_ctor(name: &str, this: League, year
             ok = ok && has == (nation.league_selected() & 4 == 0);
         }
     }
-    SCOREBOARD.record(ok, || format!("{}({:#x}): returned {:#x}, vtable {:#x}, +0x2c = {}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.comp_stats()));
+    SCOREBOARD.record(ok, || format!("{}({:#x}) [year {} arg {}, record {:#x} arg {:#x}, discipline {}, importance {}, stage index {}]: returned {:#x}, vtable {:#x}, +0x2c = {}, +8 = {:#x}", name, this.addr(), this.year(), year as u16, this.competition().addr(), record, this.discipline_rule(), this.importance(), this.stage_index() as i32, r, read_usize(this.addr()), this.stage_count(), this.comp_stats()));
     r
 }
 

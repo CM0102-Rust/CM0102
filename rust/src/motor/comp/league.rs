@@ -3774,3 +3774,23 @@ pub(crate) unsafe extern "thiscall" fn limit_club_division_tier(this: usize, val
     }
 }
 
+
+/// Whether a league about to be constructed will load its state from a saved game: League::load_from_temp_file
+/// (0x687b10, called by every league constructor with 1) opens `<record name>_<record id>.tmp` in the game folder ('/'
+/// and '.' in the name become '_'), which exists only while a save is being loaded. The constructor comparers use it to
+/// check the new-career values only in a new career (a loaded Mineiro can have 2 stages where a new one has 3; found
+/// 11/11/2026 on Lucas's save).
+pub(crate) unsafe fn league_will_load_saved_state(record: usize) -> bool {
+    if record == 0 {
+        return false;
+    }
+    let mut name = Vec::new();
+    let mut p = record + 4;
+    while read_u8(p) != 0 && name.len() < 256 {
+        let c = read_u8(p);
+        name.push(if c == b'/' || c == b'.' { b'_' } else { c });
+        p += 1;
+    }
+    let file = format!("{}_{}.tmp", String::from_utf8_lossy(&name), read_i32(record));
+    std::path::Path::new(&file).exists()
+}

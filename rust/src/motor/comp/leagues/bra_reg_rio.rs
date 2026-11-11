@@ -81,13 +81,14 @@ pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: League, year: u32,
 /// Comparer for state league constructors: runs only the original and checks return, vtable, year, record, discipline
 /// and, for a new league, stages, stage vector and importance.
 pub(crate) unsafe fn bra_reg_rio_compare_state_league_ctor(name: &str, this: League, year: u32, record: usize, e: &BraRegRioStateChampionship, original: impl FnOnce() -> usize) -> usize {
+    let loaded = league_will_load_saved_state(record);
     let r = original();
     let mut ok = r == this.addr() && read_usize(this.addr()) == e.vtabela && (this.year() as u16) == year as u16
         && this.competition().addr() == record && this.discipline_rule() == discipline_rule::BRAZIL_REGIONAL;
-    if this.stage_index() == stage_index::MAIN && this.comp_stats() != 0 {
+    if this.stage_index() == stage_index::MAIN && this.comp_stats() != 0 && !loaded {
         ok = ok && this.stage_count() == e.stages as usize && this.stages() != 0 && this.importance() == 0xf;
     }
-    SCOREBOARD.record(ok, || format!("{}({:#x}): returned {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.stages(), this.comp_stats()));
+    SCOREBOARD.record(ok, || format!("{}({:#x}) [year {} arg {}, record {:#x} arg {:#x}, discipline {}, importance {}, stage index {}]: returned {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this.addr(), this.year(), year as u16, this.competition().addr(), record, this.discipline_rule(), this.importance(), this.stage_index() as i32, r, read_usize(this.addr()), this.stage_count(), this.stages(), this.comp_stats()));
     r
 }
 
