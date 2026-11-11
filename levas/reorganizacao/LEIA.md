@@ -28,6 +28,14 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 40 da legibilidade: leitores de campo na classificação da UEFA, copas europeias, dia de jogo e treino
+
+Vereditos dos leitores no `comp/uefa_seeding.rs`, `comp/eurocomp/european_cup.rs`, `match_day.rs` e
+`training_manager.rs`. Registros novos: `uefa_seeding_nation`, `european_club_entry`, `training_manager_fields`,
+`training_schedule`; os vetores por humano dos espectadores da partida e os bits da atualização em rede. Prova:
+aa7e9c95 ×2, comparação 0; o detector de lixo não rodou (memória livre abaixo de 4 GB com os leitores rodando) e fica
+coberto pela prova da leva 41, que contém este código; as 7 mutações mudadas compilam.
+
 ## Leva 39 da legibilidade: leitores de campo em contratos, observação, táticas e áreas da interface
 
 Vereditos dos leitores no `contract_manager.rs`, `player_search.rs`, `tactics.rs` e `area.rs`. Registros novos:

@@ -29,6 +29,14 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 40: field readers on UEFA seeding, European cups, match day and training
+
+Reader verdicts on `comp/uefa_seeding.rs`, `comp/eurocomp/european_cup.rs`, `match_day.rs` and `training_manager.rs`.
+New records: `uefa_seeding_nation`, `european_club_entry`, `training_manager_fields`, `training_schedule`; the match
+spectators' per-human vectors and the network update bits. Proof: aa7e9c95 ×2, comparison 0; the garbage detector did
+not run (free memory under 4 GB with the readers running) and is covered by batch 41's proof, which contains this code;
+the 7 changed mutations compile.
+
 ## Readability batch 39: field readers on contracts, scouting, tactics and UI areas
 
 Reader verdicts on `contract_manager.rs`, `player_search.rs`, `tactics.rs` and `area.rs`. New records: `area_fields` (the

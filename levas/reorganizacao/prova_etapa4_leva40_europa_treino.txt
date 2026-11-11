@@ -1,0 +1,7 @@
+    pool nao paginado 2.64 -> 2.64 GB, paginado 5.09 -> 5.09 GB
+execucao 1: parou em 2002-000, 256491499 sorteios, impressao aa7e9c95dd489fcc, partidas 10326/d8a49d7b31cbf8ce, banco bd13ee9be6a91e75, 40 s
+    pool nao paginado 2.64 -> 2.64 GB, paginado 5.09 -> 5.09 GB
+execucao 2: parou em 2002-000, 256491499 sorteios, impressao aa7e9c95dd489fcc, partidas 10326/d8a49d7b31cbf8ce, banco bd13ee9be6a91e75, 44 s
+detector de lixo: nao rodou (so 3.6 GB de RAM livre (minimo 4.0))
+game.cfg restaurado; auto_setup.cfg removido
+determinismo: OK, todas as execucoes iguais
