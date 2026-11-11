@@ -19,7 +19,7 @@ Projeto pessoal do Lucas: Championship Manager 01/02 (3.9.68) revertido e reescr
 - **Base de trabalho: `cm0102.exe` (DirectDraw).** É nele que estão os endereços mapeados pela comunidade. O `cm0102_GDI.exe` é a referência para o caminho de vídeo por GDI.
 - **Os exe originais nunca são alterados.** Correções vão para cópias geradas por ferramenta (`*-portatil.exe`), que confere o MD5 do original e falha se um padrão esperado não bater.
 - **Fora do git (07/11/2026, Lucas, antes da abertura):** a `wiki/` e o `log`, as postagens, e os protótipos ficam só no disco. Créditos em `CREDITOS.md`.
-- **Nada do jogo no git:** nem exe, nem `Data/`, nem código descompilado em bruto. O repositório `CM0102-Rust/CM0102` (organização; antes `lucastmpacheco/CM0102`) é privado.
+- **Nada do jogo no git:** nem exe, nem `Data/`, nem código descompilado em bruto. O repositório `CM0102-Rust/CM0102` é público desde 11/11/2026 (licença MIT); tudo o que entra nele é público.
 - `referencias/CM0102Patcher` e `referencias/cm0102-function-map` (nomes de funções e globais, CC BY 4.0; ver `docs/ENDERECOS_COMUNIDADE.md`) são fontes de endereços e formatos; não copiar o código dele (as ferramentas leem os dados de lá).
 - **Versão de trabalho: 1920×1080 nativo** (`cm0102-1080.exe`, gerado por `resolucao.py`). Fotos de fundo desligadas nas definições do jogo ("trocar = não") até a camada de vídeo ajustar as fotos à resolução.
 - **Os cliques no jogo são do Lucas.** Eu abro o jogo e ele conduz; diagnóstico pelo código (desmontagem, registro de falhas do Windows, `ddraw.log`), não por tentativa e erro clicando.
