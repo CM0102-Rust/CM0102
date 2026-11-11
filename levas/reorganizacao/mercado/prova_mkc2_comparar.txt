@@ -1,0 +1,3 @@
+    pool nao paginado 2.84 -> 2.84 GB, paginado 5.65 -> 5.65 GB
+execucao 1: o jogo saiu sem chegar na data (codigo 3221225622); veja jogo\ddraw.log (281 s)
+game.cfg restaurado; auto_setup.cfg removido
