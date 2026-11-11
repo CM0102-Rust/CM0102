@@ -4,11 +4,6 @@ use super::*;
 /// and +0xa the fouls and the grade, +0x10 the last grade, +0xc the matches and +4 the average (+0xa / +0xc, float).
 /// Compared side by side (the record)
 /// Original: `record_referee_grade` (0x79ce10, officials_manager.cpp (208 bytes), thiscall, ret 4).
-///
-/// [pt] { 0x79ce10 } (ret 4, officials_manager.cpp): soma a nota `r` (dword id, bytes: cartoes, faltas,
-/// nota) na ficha do arbitro (17 bytes em [this] + id x 17, id em 0..[0xae2390]): +0xf os cartoes,
-/// as palavras +8 e +0xa as faltas e a nota, +0x10 a ultima nota, +0xc os jogos e +4 a media
-/// (+0xa / +0xc, float).
 pub(crate) unsafe extern "thiscall" fn record_referee_grade(this: usize, r: *const u8) {
     let base = *(this as *const usize);
     if base == 0 || r.is_null() {
@@ -30,8 +25,6 @@ pub(crate) unsafe extern "thiscall" fn record_referee_grade(this: usize, r: *con
 }
 
 /// Region of the official's 17-byte record that `record_referee_grade` touches (empty if id invalid).
-///
-/// [pt] A ficha do arbitro que a 0x79ce10 mexe (vazia se o id nao vale).
 pub(crate) unsafe fn official_record_region(manager: usize, id: i32) -> Vec<(usize, usize)> {
     let base = read_usize(manager);
     if base == 0 || id < 0 || id >= read_i32(G_OFFICIAL_COUNT) {
@@ -41,16 +34,11 @@ pub(crate) unsafe fn official_record_region(manager: usize, id: i32) -> Vec<(usi
 }
 
 /// Record of official i (0x2b bytes in [0xae23e8]).
-///
-/// [pt] O registro do árbitro `i` (0x2b bytes em [0xae23e8], [0xae2390] deles).
 pub(crate) unsafe fn official_record(i: i32) -> usize {
     read_usize(G_OFFICIAL_TABLE).wrapping_add((i as isize * 0x2b) as usize)
 }
 
 /// Original's fatal out-of-memory end: box at officials_manager.cpp line, cleanup and exit(-1).
-///
-/// [pt] O fim fatal da original sem memória: a caixa (linha `linha` de officials_manager.cpp, 0xa6a22c), 0x5cc7d0, 0x5a8f60
-/// e exit(−1) (0x945934).
 pub(crate) unsafe fn officials_out_of_memory(row: u32) -> ! {
     show_error_at(0xa6a22c, row);
     let exit: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
@@ -60,22 +48,16 @@ pub(crate) unsafe fn officials_out_of_memory(row: u32) -> ! {
 }
 
 /// Calls the game's qsort (`exe::crt_qsort`) with the given comparison routine.
-///
-/// [pt] O qsort do jogo (0x945333) pela rotina de comparação `cmp`.
 pub(crate) unsafe fn officials_manager_crt_qsort(base: usize, n: u32, size: u32, cmp: usize) {
     exe::crt_qsort(base, n, size, cmp);
 }
 
 /// Calls the game's calloc (`exe::crt_calloc`).
-///
-/// [pt] calloc (0x945501, cdecl).
 pub(crate) unsafe fn crt_calloc(n: u32, size: u32) -> usize {
     exe::crt_calloc(n, size)
 }
 
 /// Calls the game's free (`exe::crt_free`).
-///
-/// [pt] free (0x9452ca, cdecl).
 pub(crate) unsafe fn crt_free(p: usize) {
     exe::crt_free(p);
 }
@@ -95,16 +77,6 @@ pub(crate) unsafe fn crt_free(p: usize) {
 /// nation and, per nation, the slots sorted (qsort `officials_manager_compare_comp_level`) with each one's share; this+4 the count and this+8 the
 /// flags (calloc).
 /// Original: `OfficialsManager::set_up_officials` (0x79bf60, officials_manager.cpp, thiscall).
-///
-/// [pt] { 0x79bf60 } (thiscall, ret 0, officials_manager.cpp): `OfficialsManager::set_up_officials()`, pelo construtor
-/// (0x79b580) no jogo novo. Revê os registros (0x79caa0), ordena por nação e pela qualidade (qsort 0x79d4e0) e, por
-/// nação, fica com os 6 primeiros (nação com +0x11c zero) ou 61 (o primeiro de cada nação depois da primeira não fica:
-/// a conta recomeça nele), copiados (0x79c530) numa tabela nova; os blocos por nação (this+0xc, 0x102 bytes: +0 a nação,
-/// +4 os árbitros, +8 o primeiro, +0xc o pedido, +0x10 as competições e 15 vagas de 16 bytes em +0x12): cada liga
-/// (0x4b0700, não amistosa 0x5c6710, com nação +0x5d) ganha uma vaga com o pedido (+0x3e da competição) / 2 + 10; a nação
-/// com competições pede o maior × a quantidade e, faltando, sorteia os que faltam (0x79c5c0); sem competições e menos de
-/// 5, sorteia até o +0x8e da nação (1..5). Os índices (+0), o primeiro de cada nação e, por nação, as vagas ordenadas
-/// (qsort 0x79d410) com a parte de cada uma; this+4 a conta e this+8 as marcas (calloc).
 pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
     exe::officials_manager_validate_officials();
     officials_manager_crt_qsort(read_usize(G_OFFICIAL_TABLE), read_i32(G_OFFICIAL_COUNT) as u32, 0x2b, 0x79d4e0);
@@ -259,11 +231,6 @@ pub(crate) unsafe extern "thiscall" fn set_up_officials(this: usize) {
 /// 16-byte entries with the competition at +0xc): `a`'s competition outside 0..[0xae2378]: 1; `b`'s outside: −1; by
 /// level (+0x69, word, of the 0x6b-byte competition in [0xae23d0]); same level: the difference of the ids.
 /// Original: `officials_manager_compare_comp_level` (0x79d410, officials_manager.cpp, cdecl).
-///
-/// [pt] { 0x79d410 } (cdecl, officials_manager.cpp): `officials_manager_compare_comp_level(a, b)`, a ordem das vagas de
-/// competição de uma nação (qsort da 0x79bf60, entradas de 16 bytes com a competição em +0xc): competição de `a` fora de
-/// 0..[0xae2378]: 1; a de `b` fora: −1; pelo nível (+0x69, palavra, da competição de 0x6b bytes em [0xae23d0]); mesmo
-/// nível: a diferença dos ids.
 pub(crate) unsafe extern "C" fn officials_manager_compare_comp_level(a: usize, b: usize) -> i32 {
     let (ca, cb) = (read_i32(a + officials_comp_slot::COMP_ID), read_i32(b + officials_comp_slot::COMP_ID));
     let max = read_i32(G_CLUB_COMP_COUNT);
@@ -283,15 +250,11 @@ pub(crate) unsafe extern "C" fn officials_manager_compare_comp_level(a: usize, b
 }
 
 /// Official's sorting quality: byte +0x28 x 50 + word +0x22, in 16 bits.
-///
-/// [pt] A qualidade do árbitro na ordem: o byte +0x28 × 50 + a palavra +0x22, em 16 bits.
 pub(crate) unsafe fn official_quality(r: usize) -> i16 {
     (read_i8(r + official::REFEREEING) as i16).wrapping_mul(0x32).wrapping_add(read_i16(r + official::REPUTATION)) // cqh7: the quality weight
 }
 
 /// Nation id of the official ([+0x16] + 0).
-///
-/// [pt] O id da nação do árbitro ([+0x16] + 0).
 pub(crate) unsafe fn official_nation_id(r: usize) -> i32 {
     read_i32(read_i32(r + official::NATION) as u32 as usize)
 }
@@ -302,10 +265,6 @@ pub(crate) unsafe fn official_nation_id(r: usize) -> i32 {
 /// `officials_manager_compare_nation_then_quality_desc(a, b)` (cdecl), the qsort order of `set_up_officials` (those kept per
 /// nation): by nation (id) and, within it, by quality from highest to lowest; tie: `b`'s index +0 minus `a`'s.
 /// Original: `officials_manager_compare_nation_then_quality_desc` (0x79d4e0, officials_manager.cpp, cdecl).
-///
-/// [pt] { 0x79d4e0 } (cdecl, officials_manager.cpp): `officials_manager_compare_nation_then_quality_desc(a, b)`, a ordem do
-/// qsort da 0x79bf60 (os que ficam por nação): pela nação (id) e, na mesma, pela qualidade da maior para a menor; empate:
-/// o índice +0 de `b` menos o de `a`.
 pub(crate) unsafe extern "C" fn officials_manager_compare_nation_then_quality_desc(a: usize, b: usize) -> i32 {
     let (na, nb) = (official_nation_id(a), official_nation_id(b));
     if na != nb {
@@ -324,10 +283,6 @@ pub(crate) unsafe extern "C" fn officials_manager_compare_nation_then_quality_de
 /// `officials_manager_compare_nation_then_quality_asc(a, b)` (cdecl), the qsort order of `officials_manager_add_random_officials` (after the new
 /// referees): by nation and by quality from lowest to highest; tie: `a`'s index +0 minus `b`'s.
 /// Original: `officials_manager_compare_nation_then_quality_asc` (0x79d480, officials_manager.cpp, cdecl).
-///
-/// [pt] { 0x79d480 } (cdecl, officials_manager.cpp): `officials_manager_compare_nation_then_quality_asc(a, b)`, a ordem do
-/// qsort da 0x79c5c0 (depois dos árbitros novos): pela nação e pela qualidade da menor para a maior; empate: o índice +0
-/// de `a` menos o de `b`.
 pub(crate) unsafe extern "C" fn officials_manager_compare_nation_then_quality_asc(a: usize, b: usize) -> i32 {
     let (na, nb) = (official_nation_id(a), official_nation_id(b));
     if na != nb {
@@ -342,16 +297,11 @@ pub(crate) unsafe extern "C" fn officials_manager_compare_nation_then_quality_as
 }
 
 /// The nation's officials block in the manager (0x102 bytes in [this+0xc]: counts, first index, league bands).
-///
-/// [pt] O bloco de árbitros da nação `nacao` no gerenciador (0x102 bytes em [this+0xc]: +4 conta, +8 primeiro índice, +0x10
-/// palavra com o número de faixas de liga, +0x12 faixas de 16 bytes: +0 primeiro, +4 conta, +0xc id da competição).
 pub(crate) unsafe fn nation_officials_block(this: usize, nation: i32) -> usize {
     read_usize(this + officials_manager_fields::NATION_BLOCKS).wrapping_add(nation.wrapping_mul(0x102) as usize)
 }
 
 /// Nation id of the club (+0x53), or None without nation.
-///
-/// [pt] O id da nação do clube (+0x53, ponteiro) ou, sem nação, `sem`.
 pub(crate) unsafe fn officials_manager_club_nation_id(club: Club) -> Option<i32> {
     let n = club.nation().addr();
     if n != 0 { Some(read_i32(n)) } else { None }
@@ -371,17 +321,6 @@ pub(crate) unsafe fn officials_manager_club_nation_id(club: Club) -> Option<i32>
 /// all busy, the drawn one. Writes the index (word) and returns 1 in al (the rest of eax with the index, as in the
 /// original).
 /// Original: `OfficialsManager::choose_match_official` (0x79c7b0, officials_manager.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x79c7b0 } (thiscall, ret 8, officials_manager.cpp): `OfficialsManager::choose_match_official(jogo, saida)`, pela
-/// montagem do dia (0x6b3c10, saída em +0x2e do jogo). Jogo tirado (−2): 0 (eax 0xffffff00, como a original). A faixa
-/// de árbitros: sem competição, a nação do mandante (+0x1c, +0x53) ou uma sorteada; amistoso (0x5c6710 em [0xae2c74]),
-/// a do mandante; competição sem objeto ([0xadadfc]), como sem competição; competição dos tipos 2 e 4 (+0x42), o quarto
-/// de cima (ftol de 0,75 e 0,25 da conta) da primeira nação, a partir de uma sorteada, do continente (+0x59 da
-/// competição, ou +0x71 da nação do mandante, do visitante, ou um sorteado) que não seja a de nenhum dos dois clubes;
-/// nas outras, a faixa da competição no bloco da nação dela (+0x5d; ou do mandante, do visitante, ou sorteada), a última
-/// que bater, ou o bloco inteiro. Conta 1: o primeiro; senão primeiro + sorteio(conta − 1). Ocupado (o byte do id do
-/// árbitro em [this+8]): o seguinte da faixa, dando a volta; todos ocupados, o sorteado. Grava o índice (palavra) e
-/// devolve 1 no al (o resto do eax com o índice, como a original).
 pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: usize, out: usize) -> u32 {
     let game = Fixture(game);
     if read_i32(game.addr()) == -2 {
@@ -507,10 +446,6 @@ pub(crate) unsafe extern "thiscall" fn choose_match_official(this: usize, game: 
 /// zeroes the [this+4] busy bytes at [this+8] (the count and the vector re-read at each step). Returns the count (0 if
 /// not positive), like the original's eax.
 /// Original: `OfficialsManager::clear_busy_flags` (0x79bf40, officials_manager.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x79bf40 } (thiscall, ret 0, officials_manager.cpp): `OfficialsManager::clear_busy_flags`, no laço do dia
-/// (0x5cccd0) e na corrida até a data de início (0x5cc850): zera os [this+4] bytes de ocupado em [this+8] (a conta e o
-/// vetor relidos a cada passo). Devolve a conta (0 se não positiva), como o eax da original.
 pub(crate) unsafe extern "thiscall" fn clear_busy_flags(this: usize) -> u32 {
     let mut i = 0i32;
     while i < read_i32(this + officials_manager_fields::BUSY_COUNT) {
@@ -533,16 +468,6 @@ pub(crate) unsafe extern "thiscall" fn clear_busy_flags(this: usize) -> u32 {
 /// the range (+4, +8, +0xa, +0xc, +0xf; the `add eax, 0x11` at 0x79d149 stays inside the loop). Returns 1 (only al
 /// counts).
 /// Original: `OfficialsManager::renew_officials` (0x79cee0, officials_manager.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x79cee0 } (thiscall, ret 4, officials_manager.cpp): `OfficialsManager::renew_officials(comp)`, no começo da
-/// temporada de cada liga (83 chamadores). Sem competição, sem objeto ([0xadadfc]), dos tipos 4 e 2 (+0x42) ou sem
-/// conta (0x4b0700): 0. A faixa da competição no bloco da nação dela (+0x5d, ou uma sorteada), a primeira que bater,
-/// ou o bloco inteiro. Cada árbitro da faixa (fichas de 0x2b bytes em [0xae23e8]; ficha nula: a caixa "Error"): com
-/// mais de 45 anos (o ano em byte, menos 1 antes do dia dele), ou mais de 40 e sorteio(3) zero, vira outro: dois nomes
-/// da nação dele (0x539c60, +4 e +8), +0x25 sorteio(16) + 5 (ou, com sorteio(10) zero, sorteio(11) + sorteio(11)), o
-/// ano (+0xe) ano do jogo − 27 + sorteio(5) e o dia (+0xc) sorteio(340). Depois zera as linhas de estatísticas (17
-/// bytes em [this]) de cada árbitro da faixa (+4, +8, +0xa, +0xc, +0xf; o `add eax, 0x11` em 0x79d149 fica dentro do
-/// laço). Devolve 1 (só o al vale).
 pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize) -> u8 {
     let comp = Competition(comp);
     if comp.is_null() {
@@ -608,8 +533,6 @@ pub(crate) unsafe extern "thiscall" fn renew_officials(this: usize, comp: usize)
 }
 
 /// Random byte: random(n) + k.
-///
-/// [pt] Um byte sorteado: sorteio(n) + k no al.
 pub(crate) unsafe fn random_byte_plus(n: i32, k: u8) -> u8 {
     (random(n) as u8).wrapping_add(k)
 }
@@ -622,12 +545,6 @@ pub(crate) unsafe fn random_byte_plus(n: i32, k: u8) -> u8 {
 /// random draw(300) + 1.
 ///
 /// It does not write `+0` and `+0x10`..`+0x15` (the original routine leaves whatever the realloc brought).
-///
-/// [pt] Uma ficha de árbitro nova em `r` (0x2b bytes) da nação `nacao`, na ordem da 0x79c6aa: primeiro e segundo nome pelo
-/// peso (0x539b90, 0x53a0e0), a nação (+0x16), as palavras +0x22 sorteio(80) + 1, +0x1e e +0x20 sorteio(80) + 40 (o
-/// byte estendido), os bytes +0x24..+0x26 sorteio(10) + 5 e +0x27..+0x2a sorteio(10) + 7, +0x1a zero, o ano (+0xe)
-/// 1960 + sorteio(10) e o dia (+0xc) sorteio(300) + 1. Não grava +0, +0x10..+0x15 (a original deixa o que o realloc
-/// trouxe).
 pub(crate) unsafe fn generate_official(r: usize, nation: Nation) {
     write_usize(r + 4, exe::database_pick_first_name_by_weight(nation));
     write_usize(r + 8, exe::database_pick_second_name_by_weight(nation));
@@ -657,12 +574,6 @@ pub(crate) unsafe fn generate_official(r: usize, nation: Nation) {
 /// born in the 1960s), adds the count to [0xae2390] and sorts the whole table (qsort `exe::crt_qsort` with `officials_manager_compare_nation_then_quality_asc`: nation,
 /// +0x28 × 50 + +0x22, id).
 /// Original: `officials_manager_add_random_officials` (0x79c5c0, officials_manager.cpp, thiscall (this sem uso), ret 8).
-///
-/// [pt] { 0x79c5c0 } (thiscall com o this sem uso, ret 8, officials_manager.cpp): `officials_manager_add_random_officials(
-/// conta, nacao)`, pela montagem dos árbitros do jogo novo (0x79bf60, nas nações com poucos árbitros). Nação sem
-/// continente (+0x71): nada. Realoca a tabela ([0xae23e8], 0x945667) para [0xae2390] + conta fichas (sem memória: erro
-/// e o jogo para), gera `conta` fichas novas no fim (generate_official), soma a conta em [0xae2390] e ordena a tabela inteira
-/// (qsort 0x945333 com 0x79d480: nação, +0x28 × 50 + +0x22, id).
 pub(crate) unsafe extern "thiscall" fn officials_manager_add_random_officials(_this: usize, count: i32, nation: usize) {
     let nation = Nation(nation);
     if !nation.is_null() && nation.continent() == 0 {
@@ -687,16 +598,12 @@ pub(crate) unsafe extern "thiscall" fn officials_manager_add_random_officials(_t
 }
 
 /// Does the dry-run generated record match the table record in the fields `officials_manager_add_random_officials` writes (+4..+0x10, +0x16..+0x2b)?
-///
-/// [pt] A ficha `g` (gerada no ensaio) bate com a `f` da tabela nos campos que a 0x79c5c0 grava (+4..+0x10, +0x16..+0x2b)?
 pub(crate) unsafe fn same_official_record(g: &[u8; 0x2b], f: usize) -> bool {
     let t = core::slice::from_raw_parts(f as *const u8, 0x2b);
     g[4..0x10] == t[4..0x10] && g[0x16..] == t[0x16..]
 }
 
 /// If an attribute byte is outside 1..20, replaces it with the value from f.
-///
-/// [pt] O ajuste de um atributo em byte (+0x24..+0x2a) fora de 1..20: o valor sorteado por `f` (lê a ficha antes).
 pub(crate) unsafe fn fix_official_attribute(e: usize, o: usize, f: impl FnOnce() -> u8) {
     let v = read_u8(e + o) as i8;
     if v <= 0 || v > 0x14 {
@@ -715,14 +622,6 @@ pub(crate) unsafe fn fix_official_attribute(e: usize, o: usize, f: impl FnOnce()
 /// born before the date `exe::date_date_549f70`(1, 1, 1910, −1) (year unsigned, then the day signed), year 1960 + random(10) and day
 /// random(300) + 1.
 /// Original: `officials_manager_validate_officials` (0x79caa0, officials_manager.cpp, cdecl).
-///
-/// [pt] { 0x79caa0 } (cdecl, officials_manager.cpp): `officials_manager_validate_officials()`, no começo da montagem dos
-/// árbitros do jogo novo (0x79bf60). Para cada uma das [0xae2390] fichas (0x2b bytes em [0xae23e8]): sem nação (+0x16),
-/// a da tabela das nações pelo índice (+0x37) do primeiro nome (+4), do segundo (+8) ou sorteado; as palavras +0x22,
-/// +0x1e e +0x20 fora de 1..200: sorteio(80) + 1 mais o byte +0x8e da nação (+0x22) ou 4 vezes ele (+0x1e, +0x20; a
-/// +0x20 refeita fica no mínimo na +0x1e); os bytes +0x24..+0x2a fora de 1..20 sorteados pelas faixas de +0x1e (acima de
-/// 120, de 80); nascido antes da data 0x549f70(1, 1, 1910, −1) (ano sem sinal, depois o dia com sinal), ano 1960 +
-/// sorteio(10) e dia sorteio(300) + 1.
 pub(crate) unsafe extern "C" fn officials_manager_validate_officials() {
     let base = read_usize(G_OFFICIAL_TABLE);
     let mut i = 0i32;
@@ -799,10 +698,6 @@ pub(crate) unsafe extern "C" fn officials_manager_validate_officials() {
 /// the 0x2b-byte record field by field (+0, +4, +8; the date at +0xc through `exe::date_operator_3d`; +0x14, +0x16, +0x1a, +0x1e,
 /// +0x20, +0x22, the bytes +0x24..+0x2a). Returns `this`.
 /// Original: `Official::operator=` (0x79c530, officials_manager.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x79c530 } (thiscall, ret 4, officials_manager.cpp): `Official::operator=(src)`, pela montagem dos árbitros do
-/// jogo novo (0x79bf60, as fichas que ficam). Copia a ficha de 0x2b bytes campo a campo (+0, +4, +8; a data de +0xc
-/// pela 0x417c10; +0x14, +0x16, +0x1a, +0x1e, +0x20, +0x22, os bytes +0x24..+0x2a). Devolve `this`.
 pub(crate) unsafe extern "thiscall" fn officials_manager_operator(this: usize, src: usize) -> usize {
     for o in [0usize, 4, 8] {
         write_usize(this + o, read_usize(src + o));
@@ -829,12 +724,6 @@ pub(crate) unsafe extern "thiscall" fn officials_manager_operator(this: usize, s
 /// opening: the "Error" box (officials_manager.cpp 0x142, 0x14a) and 0; no referees or an error on writing: the box
 /// (0x150, 0x156, 0x15c, 0x164, 0x16c, 0x174), it closes the item and 0.
 /// Original: `OfficialsManager::save_official_stats` (0x79bb80, officials_manager.cpp, thiscall).
-///
-/// [pt] { 0x79bb80 } (thiscall, ret 4, officials_manager.cpp): `OfficialsManager::save_official_stats(save)`: grava no item
-/// `off.dat` a quantidade de árbitros [0xae2390], os registros de 0x11 bytes de [+0] (um por árbitro), a quantidade de
-/// nações [0xae2350], os registros de 0x102 bytes de [+0xc] (um por nação) e um byte por árbitro de [+8]; devolve 1
-/// (no byte baixo). Sem contêiner ou erro ao abrir: a caixa "Error" (officials_manager.cpp 0x142, 0x14a) e 0; sem
-/// árbitros ou erro ao gravar: a caixa (0x150, 0x156, 0x15c, 0x164, 0x16c, 0x174), fecha o item e 0.
 pub(crate) unsafe extern "thiscall" fn save_official_stats(this: usize, save: usize) -> u8 {
     const FONTE: usize = 0xa6a22c;
     let arbitros = || read_u32(G_OFFICIAL_COUNT);

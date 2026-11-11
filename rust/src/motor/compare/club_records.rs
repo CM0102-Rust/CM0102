@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../club_records.rs.
-// [pt] Os comparadores das rotinas de ../club_records.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `update_league_position_records`.
 ///
@@ -11,11 +10,6 @@ use super::*;
 ///
 /// A null league or one with +0x44 ≠ 0xff, a record to be created (`get_season_record`/`get_all_time_record` allocate) or a queue that may
 /// grow: only the original.
-///
-/// [pt] Comparador: a original roda antes (ordena as tabelas, que a 0x6827d0 confere por conta própria) e a cópia depois,
-/// em ensaio (sem ordenar), a partir dos mesmos recordes: os 14 primeiros bytes dos registros da temporada e de sempre
-/// de cada clube da cadeia, o cabeçalho da fila (+0x24..+0x30) e a fila; e a devolução. Liga nula ou com +0x44 ≠ 0xff,
-/// registro a criar (0x4528d0/0x452710 alocam) ou fila que pode crescer: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_update_league_position_records(this: usize, liga0: usize, always: u32) -> u32 {
     let liga0 = League(liga0);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_UPDATE_LEAGUE_POSITION_RECORDS);
@@ -63,9 +57,6 @@ pub(crate) unsafe extern "thiscall" fn compare_update_league_position_records(th
 }
 
 /// Comparer for `send_record_news`.
-///
-/// [pt] Comparador: a cópia em ensaio (sem preencher nem entregar, sem soltar) roda antes, enquanto a fila está viva, e a
-/// original depois a partir do mesmo cabeçalho (+0x24..+0x30): o cabeçalho e a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_send_record_news(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SEND_RECORD_NEWS);
     let regions = [(this + club_records_fields::NEWS_QUEUE, 0xc)];
@@ -82,8 +73,6 @@ pub(crate) unsafe extern "thiscall" fn compare_send_record_news(this: usize) -> 
 }
 
 /// Comparer for `pick_fans_player_of_year`.
-///
-/// [pt] Comparador: lado a lado pela referência do escolhido (registro +0x371, 0x18 bytes) e pela devolução.
 pub(crate) unsafe extern "thiscall" fn compare_pick_fans_player_of_year(this: usize, club: usize, record: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_PICK_FANS_PLAYER_OF_YEAR);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(record + club_record::FANS_PLAYER, 0x18)], || o(this, club, record), || pick_fans_player_of_year(this, club, record));
@@ -97,10 +86,6 @@ pub(crate) unsafe extern "thiscall" fn compare_pick_fans_player_of_year(this: us
 /// first (the four records created in the same order as the original, and the expected paid and received records); the
 /// original runs; it fetches the records again (the vector may have been reallocated) and checks the values and the
 /// club of each record and [0xae1080].
-///
-/// [pt] Comparador: a original põe na fila de notícias (realoca) e o gostar sorteia: o plano antes (os quatro registros
-/// criados na mesma ordem da original, e os recordes pago e recebido esperados); a original roda; pega os registros
-/// de novo (o vetor pode ter sido realocado) e confere os valores e o clube de cada recorde e o [0xae1080].
 pub(crate) unsafe extern "thiscall" fn compare_update_transfer_fee_records(this: usize, t: usize) -> u32 {
     let t = Offer(t);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_UPDATE_TRANSFER_FEE_RECORDS);
@@ -157,11 +142,6 @@ pub(crate) unsafe extern "thiscall" fn compare_update_transfer_fee_records(this:
 /// the original's order (seller: season, all-time; buyer: season, all-time; the second time only finds them), and if
 /// the news queue has no room for two, only the original runs. Otherwise side by side over the four records (+0x365, 12
 /// bytes), the news count and the next two slots.
-///
-/// [pt] Comparador: os registros podem ser criados (realloc) e a notícia realoca: os quatro registros são pedidos antes, na
-/// ordem da original (vendedor: temporada, sempre; comprador: temporada, sempre; a segunda vez só acha), e com a fila
-/// de notícias sem folga para duas, só a original. Lado a lado pelos quatro registros (+0x365, 12 bytes), a conta das
-/// notícias e as duas vagas seguintes.
 pub(crate) unsafe extern "thiscall" fn compare_add_transfer_totals(this: usize, value: i32, buyer: usize, seller: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize, usize) -> u32>(IDX_ADD_TRANSFER_TOTALS);
     if buyer == 0 || seller == 0 || (read_usize(this + club_records_fields::NEWS_QUEUE_CAPACITY).wrapping_sub(read_usize(this + club_records_fields::NEWS_QUEUE_COUNT)) as i32) < 2 {
@@ -178,9 +158,6 @@ pub(crate) unsafe extern "thiscall" fn compare_add_transfer_totals(this: usize, 
 }
 
 /// Comparer for `club_records_update_career_records`.
-///
-/// [pt] Comparador: o registro de sempre é pedido antes (pode ser criado; a segunda vez só acha); lado a lado pelos dois
-/// recordes e as referências (+0x247 a +0x27b). Nulos ou sem registro: só a original (a caixa).
 pub(crate) unsafe extern "thiscall" fn compare_club_records_update_career_records(this: usize, player: usize, club: usize, games: u32, goals: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(IDX_CLUB_RECORDS_UPDATE_CAREER_RECORDS);
     if player == 0 || club == 0 {
@@ -196,8 +173,6 @@ pub(crate) unsafe extern "thiscall" fn compare_club_records_update_career_record
 }
 
 /// Comparer for `update_season_rating_record`.
-///
-/// [pt] Comparador: lado a lado pelo recorde de nota (+0x1f1 a +0x210 do registro da temporada, pedido antes sem criar).
 pub(crate) unsafe extern "thiscall" fn compare_update_season_rating_record(this: usize, club: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_UPDATE_SEASON_RATING_RECORD);
     if club == 0 {
@@ -211,8 +186,6 @@ pub(crate) unsafe extern "thiscall" fn compare_update_season_rating_record(this:
 }
 
 /// Comparer for `get_all_time_record`.
-///
-/// [pt] Comparador: a criação realoca e não pode rodar duas vezes: o plano da cópia antes, a original roda, confere.
 pub(crate) unsafe extern "thiscall" fn compare_get_all_time_record(this: usize, club: usize, create: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_ALL_TIME_RECORD);
     if club == 0 {
@@ -239,8 +212,6 @@ pub(crate) unsafe extern "thiscall" fn compare_get_season_record(this: usize, cl
 }
 
 /// Comparer for `queue_record_news`.
-///
-/// [pt] Comparador: a original acrescenta (pode realocar); confere a conta, o item novo (id, tipo) e a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_queue_record_news(this: usize, id: u32, kind: u32) -> u32 {
     let n = read_usize(this + club_records_fields::NEWS_QUEUE_COUNT);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(IDX_QUEUE_RECORD_NEWS)(this, id, kind);
@@ -256,9 +227,6 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_record_news(this: usize, id
 }
 
 /// Comparer for `offer_breaks_fee_record`.
-///
-/// [pt] Comparador: a 0x452710 cria os recordes do clube na primeira vez (a original primeiro; a cópia acha os mesmos):
-/// pelo valor.
 pub(crate) unsafe extern "thiscall" fn compare_offer_breaks_fee_record(this: usize, offer: usize, exigir: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(IDX_OFFER_BREAKS_FEE_RECORD)(this, offer, exigir);
     let n = offer_breaks_fee_record(this, offer, exigir);

@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/intercomp/african_nations.rs.
-// [pt] Os comparadores das rotinas de ../comp/intercomp/african_nations.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `african_nations_update_for_date`.
 pub(crate) unsafe extern "thiscall" fn compare_african_nations_update_for_date(this: usize, today: usize, full: u32) -> u32 {
@@ -31,10 +30,6 @@ pub(crate) unsafe extern "thiscall" fn compare_african_nations_update_for_date(t
 /// Side by side: +0xf2, [0xb67a34] and the random generator state from the same state (the copy draws without
 /// counting); the original leaves its groups at +0xee, the copy builds its own, compared over the 16 slots and freed
 /// (without the 16, the lists of 50 are compared over the first 16 slots).
-///
-/// [pt] Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
-/// original deixa os grupos dela em +0xee, a cópia faz os seus, comparados nas 16 vagas e liberados (sem os 16, as listas
-/// de 50 comparadas nas 16 primeiras vagas).
 pub(crate) unsafe extern "thiscall" fn compare_draw_finalists(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_DRAW_FINALISTS);
     let lo = core::cell::Cell::new(0usize);

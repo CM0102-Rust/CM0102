@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../match_events.rs.
-// [pt] Os comparadores das rotinas de ../match_events.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `record_events`.
 pub(crate) unsafe extern "thiscall" fn compare_record_events(e: usize, desc: *mut u32, human: u8) -> u8 {
@@ -29,9 +28,6 @@ pub(crate) unsafe extern "C" fn compare_read_events_cfg() {
 }
 
 /// Comparer for `event_text`.
-///
-/// [pt] O texto do evento so escreve nos buffers de texto ([0xb67ea0], [0xb67dd8]) e no `qual` do evento:
-/// a original e a copia montam o mesmo texto e o resultado e conferido.
 pub(crate) unsafe extern "stdcall" fn compare_event_text(ev: usize, ctx: usize, comp: i32, variant: u32) -> usize {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize, i32, u32) -> usize>(IDX_EVENT_TEXT);
     if ev == 0 {

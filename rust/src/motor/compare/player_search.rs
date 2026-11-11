@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../player_search.rs.
-// [pt] Os comparadores das rotinas de ../player_search.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `player_search_record_scouted_club_match`.
 ///
@@ -10,10 +9,6 @@ use super::*;
 /// With the masks on and the club's manager human, `exe::fog_of_war_map_raise_knowledge` writes what is known about the player and draws at random:
 /// then only the original routine runs (simplification: the case of a human scouting their own club; the automatic
 /// career never reaches this routine).
-///
-/// [pt] Comparador da 0x7bd310: lado a lado nas 50 vagas (o registro inteiro). Com as máscaras ligadas e o técnico do clube
-/// humano, a 0x5b09d0 grava o que se sabe do jogador e sorteia: aí só a original roda (simplification: o caso de um humano
-/// observando o próprio clube; a carreira automática não chega a esta rotina).
 pub(crate) unsafe extern "thiscall" fn compare_player_search_record_scouted_club_match(this: usize, game: usize, result: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_PLAYER_SEARCH_RECORD_SCOUTED_CLUB_MATCH);
     let club_obs = friendly_club_by_id(read_usize(this));
@@ -33,10 +28,6 @@ pub(crate) unsafe extern "thiscall" fn compare_player_search_record_scouted_club
 /// runs. Beforehand, the copy as a dry run decides up to the report without the side effects (no history and no report,
 /// with the random generator state saved and restored) and states the return value and whether the start of the list
 /// moves to tomorrow; the original must match.
-///
-/// [pt] Comparador da 0x7b5be0: o relatório sorteia (0x7b62a0, 0x5b09d0) e põe registros na saída (aloca): só a original
-/// roda. Antes, a cópia em ensaio decide até o relatório sem os efeitos (sem o histórico e sem o relatório, com o estado
-/// do sorteador guardado e devolvido) e diz a devolução e se o começo da lista vai a amanhã; a original tem de bater.
 pub(crate) unsafe extern "thiscall" fn compare_player_search_scout_match(this: usize, game: usize, result: usize, out: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize) -> u32>(IDX_PLAYER_SEARCH_SCOUT_MATCH);
     if game == 0 || result == 0 {
@@ -65,8 +56,6 @@ pub(crate) unsafe extern "thiscall" fn compare_player_search_scout_match(this: u
 }
 
 /// Comparer for `contains_player`.
-///
-/// [pt] Comparador da 0x7af600: pela devolução (só lê; as datas e a chave são locais). Pessoa nula: a caixa, só a original.
 pub(crate) unsafe extern "thiscall" fn compare_contains_player(this: usize, person: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_CONTAINS_PLAYER);
     if person == 0 {
@@ -79,8 +68,6 @@ pub(crate) unsafe extern "thiscall" fn compare_contains_player(this: usize, pers
 }
 
 /// Comparer for `player_search_find_or_claim_player_slot`.
-///
-/// [pt] Comparador da 0x7bd700: sem `reservar`, pela devolução (só lê); com ele, lado a lado nas 50 vagas e na devolução.
 pub(crate) unsafe extern "thiscall" fn compare_player_search_find_or_claim_player_slot(this: usize, person: usize, reservar: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_PLAYER_SEARCH_FIND_OR_CLAIM_PLAYER_SLOT);
     if person == 0 {
@@ -98,8 +85,6 @@ pub(crate) unsafe extern "thiscall" fn compare_player_search_find_or_claim_playe
 }
 
 /// Comparer for `player_search_get_club_target_rating`.
-///
-/// [pt] Comparador: pura (lê o clube, o elenco e as finanças; grava só `*base`): as duas sobre bases próprias.
 pub(crate) unsafe extern "C" fn compare_player_search_get_club_target_rating(club: usize, base: *mut i32, forced: *const i16) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(usize, *mut i32, *const i16) -> i32>(IDX_PLAYER_SEARCH_GET_CLUB_TARGET_RATING);
     let (mut bo, mut br) = (0x7fff_0001_i32, 0x7fff_0002_i32);
@@ -113,8 +98,6 @@ pub(crate) unsafe extern "C" fn compare_player_search_get_club_target_rating(clu
 }
 
 /// Comparer for `player_search_slot_get_match_entry`.
-///
-/// [pt] Comparador: pura: compara a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_player_search_slot_get_match_entry(this: usize, i: u32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_PLAYER_SEARCH_SLOT_GET_MATCH_ENTRY)(this, i);
     let n = player_search_slot_get_match_entry(this, i);
@@ -123,8 +106,6 @@ pub(crate) unsafe extern "thiscall" fn compare_player_search_slot_get_match_entr
 }
 
 /// Comparer for `player_search_slot_sum_goals`.
-///
-/// [pt] Comparador: pura: compara a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_player_search_slot_sum_goals(this: usize) -> u16 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u16>(IDX_PLAYER_SEARCH_SLOT_SUM_GOALS)(this);
     let n = player_search_slot_sum_goals(this);
@@ -155,8 +136,6 @@ pub(crate) unsafe extern "thiscall" fn compare_set_list_type(search: usize, kind
 }
 
 /// Comparer for `set_scout`.
-///
-/// [pt] Comparador: lado a lado pelo olheiro e as missões (+0x174 a +0x199; a 0x53e990 só lê).
 pub(crate) unsafe extern "thiscall" fn compare_set_scout(this: usize, scout: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SET_SCOUT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(this + player_search_fields::SCOUT_NAME_REF, 0x25)], || o(this, scout), || set_scout(this, scout));
@@ -176,8 +155,6 @@ pub(crate) unsafe extern "thiscall" fn compare_set_manager(search: usize, person
 }
 
 /// Comparer for `get_scout_assignment`.
-///
-/// [pt] Comparador: lado a lado pelas seis saídas (a 0x53e990 só lê); com a caixa, só a original.
 pub(crate) unsafe extern "thiscall" fn compare_get_scout_assignment(this: usize, club: *mut u32, nation: *mut u32, region: *mut u8, comp: *mut u32, base: *mut u32, opponent: *mut u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut u32, *mut u32, *mut u8, *mut u32, *mut u32, *mut u32) -> u32>(IDX_GET_SCOUT_ASSIGNMENT);
     if check_search_scout(this).is_none() {
@@ -191,8 +168,6 @@ pub(crate) unsafe extern "thiscall" fn compare_get_scout_assignment(this: usize,
 }
 
 /// Comparer for `scout_covers_nation`.
-///
-/// [pt] Comparador: lado a lado pelo valor e pelas missões +0x18c..+0x1a0 (a 0x7aefd0 as copia sobre elas mesmas).
 pub(crate) unsafe extern "thiscall" fn compare_scout_covers_nation(this: usize, nation: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SCOUT_COVERS_NATION);
     let reg = [(this + player_search_fields::ASSIGNED_NATION, 0x15)];

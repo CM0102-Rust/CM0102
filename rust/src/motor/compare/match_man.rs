@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../match_man.rs.
-// [pt] Os comparadores das rotinas de ../match_man.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `select_automatically`.
 pub(crate) unsafe extern "thiscall" fn compare_select_automatically(t: usize, other: usize, mode: u32) -> i8 {

@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/ita_ser_c1a.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/ita_ser_c1a.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `ita_ser_c1a_advance_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_ita_ser_c1a_advance_stage(this: usize) {

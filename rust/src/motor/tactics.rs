@@ -6,13 +6,6 @@ use super::*;
 /// link `exe::nationalteams_is_national_or_all_star_team` they are returned; otherwise it clears. Null club, type or side out of range: the original (error
 /// box). Compared side by side (the cell)
 /// Original: `stored_taker` (0x897990, tactics.cpp (544 bytes, called by the taker choice 0x6ceb90), thiscall, ret 0x10).
-///
-/// [pt] { 0x897990 } (ret 0x10, tactics.cpp): quem bate a bola parada `tipo` (0..=4) no lado `lado`
-/// (0..=1) pelo clube: a celula (dword) na linha tatica do clube (0x8982b0 com `humano`) em +0x601 +
-/// linha x 0x91 + 0x5e + (lado + tipo x 2) x 4. Acima de [0xae2364] + 0x52d a celula vira -1 (0);
-/// negativa, 0. A pessoa (0x6e bytes em [0xae23bc]) sem +0x61 apaga a celula (0); do clube (+0x39),
-/// numa selecao (0x53b900) ou com o vinculo das selecoes (0x775790 em [0xb74318]) e devolvida; senao
-/// a celula vira -1 (0). Clube nulo, tipo ou lado fora: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn stored_taker(this: usize, club: usize, kind: u32, side: u32, human: u32) -> usize {
     let (t, l) = (kind as u8 as i8, side as u8 as i8);
     if club == 0 || !(0..=4).contains(&t) || !(0..=1).contains(&l) {
@@ -66,15 +59,6 @@ pub(crate) unsafe extern "thiscall" fn stored_taker(this: usize, club: usize, ki
 /// the table and is freed; without `use`, frees all the spaces of the club and person. Null club: the original routine
 /// (error box); row -1: 0; otherwise 1.
 /// Original: `store_instructions` (0x896fe0, tactics.cpp (624 bytes, called by the engine step 0x6b98c0 and others), thiscall, ret 0x10).
-///
-/// [pt] { 0x896fe0 } (ret 0x10, tactics.cpp): guarda (`volta` 0) ou devolve (`volta` != 0) as 20
-/// instrucoes (dwords em +0x601 + linha x 0x91 + 2, linha da 0x8982b0 com `pessoa`) do clube num dos
-/// 16 espacos de 0x5c bytes a partir de +0x30 (clube +0x30, pessoa +0x34, ocupado +0x38, instrucoes
-/// +0x3c; ocupados em +0x5f0). O espaco e o do humano da vez ([0xb74c26 + [0xb77c7a] x 0x300]):
-/// [0xae2364] - id dele - 1, em 0..16. Guardando (com `usar`), marca o espaco e copia; depois as 20
-/// instrucoes viram -1. Devolvendo com `usar`, o espaco do mesmo clube e pessoa volta para a tabela
-/// e e liberado; sem `usar`, libera todos os espacos do clube e pessoa. Clube nulo: a original (caixa
-/// de erro); linha -1: 0; senao 1.
 pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, club: usize, person: u32, usar: u32, volta: u32) -> u32 {
     if club == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32) -> u32>(IDX_STORE_INSTRUCTIONS)(this, club, person, usar, volta);
@@ -147,10 +131,6 @@ pub(crate) unsafe extern "thiscall" fn store_instructions(this: usize, club: usi
 /// copies the club's tactics row (0x91 bytes at +0x601, row from 0x8982b0) to the destination. Null club: the original
 /// (error box); row -1: 0. Compared side by side
 /// Original: `read_tactics_row` (0x8983f0, tactics.cpp, thiscall, ret 0xc).
-///
-/// [pt] { 0x8983f0 } (ret 0xc, tactics.cpp): copia a linha tatica do clube (0x91 bytes em +0x601 + linha
-/// x 0x91, linha da 0x8982b0 com `humano`) para `destino`. Clube nulo: a original (caixa de erro);
-/// linha -1: 0; senao 1.
 pub(crate) unsafe extern "thiscall" fn read_tactics_row(this: usize, club: usize, target: *mut u8, human: u32) -> u32 {
     if club == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, u32) -> u32>(IDX_READ_TACTICS_ROW)(this, club, target, human);
@@ -168,9 +148,6 @@ pub(crate) unsafe extern "thiscall" fn read_tactics_row(this: usize, club: usize
 /// the reverse, writes the 0x91 bytes into the row (row -1 or beyond the total +0x605: 0). Called by `store_tactic`
 /// (`store_tactic`). Compared side by side
 /// Original: `write_tactics_row` (0x8984d0, tactics.cpp, thiscall, ret 0xc).
-///
-/// [pt] { 0x8984d0 } (ret 0xc, tactics.cpp): o inverso da 0x8983f0, grava `origem` (0x91 bytes) na linha
-/// tatica do clube. Linha -1 ou alem do total (+0x605): 0.
 pub(crate) unsafe extern "thiscall" fn write_tactics_row(this: usize, club: usize, source: *const u8, human: u32) -> u32 {
     if club == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, *const u8, u32) -> u32>(IDX_WRITE_TACTICS_ROW)(this, club, source, human);
@@ -187,8 +164,6 @@ pub(crate) unsafe extern "thiscall" fn write_tactics_row(this: usize, club: usiz
 
 /// Memory regions of the tactics copy routines: the source/destination (0x91 bytes) and the club's tactics row, if any,
 /// plus the RNG global.
-///
-/// [pt] Regioes das duas: o destino/origem e a linha do clube (se houver).
 pub(crate) unsafe fn tactics_row_regions(this: usize, club: usize, p: usize, human: u32) -> Vec<(usize, usize)> {
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let k = row(club, human);
@@ -220,23 +195,6 @@ pub(crate) unsafe fn tactics_row_regions(this: usize, club: usize, p: usize, hum
 ///
 /// Afterwards: the home goal (random(4) with the score level), the injuries of the last side in turn (`injure`), the
 /// ratings (friendly −2: adjustment by the club's reputation) and the counters +0xf5e2/+0xf618.
-///
-/// [pt] { 0x6beeb0 } (match_eng.cpp, chamada pelo passo do motor 0x6b98c0) com as chamadas que mexem fora
-/// do motor injetadas (0x6d6f70 narra, 0x6d0980 lesiona; e as da saida do jogador 0x6cda20): a
-/// partida simulada sem lances, em periodos de duas rodadas (contador +0x8ed0, codigo do periodo
-/// +0x8ed4). Por periodo: a forca dos times (0x6c0c60) com quatro pares limitados entre metade e o
-/// dobro do lado 1, e o lado que comeca (sorteio(2)). Por rodada, do lado da vez: tres ataques (o
-/// terceiro so se o lado vencer o sorteio de forca) com duelo de um jogador ativo (+0xc5 + 20 contra
-/// a forca do outro); o segundo duelo (0x6c2880, +0xdd + 15) e o terceiro (+0xad + 15); o desgaste
-/// (0x6c2750, +0xb9 + 20); os cartoes do outro lado (expulsao 0x6c2310 modo 4, amarelo modo 2, o
-/// segundo amarelo expulsa; mais de 4 expulsos e abandono, 3 x 0); o tipo do lance; o fator do placar
-/// (diferenca, 1, 0,65 depois dos 60 ou 0,75), a disputa (0x6c06b0/0x6c07a0 ou 0x6c0a70) e, com
-/// vantagem, o chute (0x6c23f0, 0x6c0890/0x6c0980) e o gol (0x6c2050; goleiros 0x717410; narra
-/// 0x1fcc ou 0x1fcf, ou 0x1fce no erro do penalti). Nos minutos 45, 90, 105 e 120 grava os placares
-/// (+0x45, +0x43, +0x47) e decide prorrogacao, gol de ouro (+0x38 & 0x80) e penaltis (+0x49/+0x4a,
-/// sorteio(5)); o agregado (+0x4b/+0x4c). Depois: o gol do mando (sorteio(4) com placar igual), as
-/// lesoes do ultimo lado da vez (0x6d0980), as notas (amistoso -2: ajuste pela reputacao do clube) e
-/// os contadores +0xf5e2/+0xf618.
 pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let more = |p: *mut u8| *p = (*p).wrapping_add(1);
     let mais16 = |p: *mut i16| *p = (*p).wrapping_add(1);
@@ -693,9 +651,6 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
 }
 
 /// Club's tactics row index (0x8982b0) and its start in the table at +0x601 (0x91 bytes per row), or None for row −1.
-///
-/// [pt] Linha tatica do clube (0x8982b0) e o inicio dela na tabela em +0x601 (0x91 bytes por linha), ou
-/// `None` na linha -1.
 pub(crate) unsafe fn tactics_row_of_club(this: usize, club: usize, human: u32) -> Option<usize> {
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     let l = row(club, human);
@@ -705,10 +660,6 @@ pub(crate) unsafe fn tactics_row_of_club(this: usize, club: usize, human: u32) -
 /// Returns the squad slot (0..19) of the club's tactics row whose person id matches the id stored at +0x52 of the row
 /// (the designated player, captain per the function map [inference]); none: -1 with `menos_um`, else 0; no row: 0. A
 /// null club calls the original (error box).
-///
-/// [pt] { 0x897590 } (tactics.cpp): a vaga (0..20) cuja pessoa (indice em +2 + 4 x vaga, no vetor de
-/// 0xae23bc) tem o id guardado em +0x52 da linha; sem nenhuma: -1 com `menos_um`, senao 0. Linha
-/// -1: 0. Clube nulo: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn marked_slot(this: usize, club: usize, human: u32, minus_one: u32) -> i8 {
     if club == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> i8>(IDX_MARKED_SLOT)(this, club, human, minus_one);
@@ -727,9 +678,6 @@ pub(crate) unsafe extern "thiscall" fn marked_slot(this: usize, club: usize, hum
 /// Sets the captain in the club's tactic: stores in the tactics row (+0x52) the person index of slot `vaga` (0..19).
 /// Returns 1 if the slot was filled, 0 if empty (-1) or the row is missing; a null club or bad slot goes to the
 /// original (error box).
-///
-/// [pt] { 0x897760 } (tactics.cpp): guarda em +0x52 da linha o indice da pessoa da vaga (0..20); 1 se
-/// havia alguem (-1 = vazia). Linha -1: 0. Clube nulo ou vaga fora: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn mark_slot(this: usize, club: usize, slot: i8, human: u32) -> u32 {
     if club == 0 || !(0..20).contains(&slot) {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> u32>(IDX_MARK_SLOT)(this, club, slot, human);
@@ -746,10 +694,6 @@ pub(crate) unsafe extern "thiscall" fn mark_slot(this: usize, club: usize, slot:
 /// Returns the person (staff table 0xae23bc, 110 bytes each) referenced by the club's tactics row at +0x56 + 4 x `qual`
 /// (0 or 1); 0 when the index is negative or the club has no row. Null club or `qual` out of range go to the original
 /// (error box).
-///
-/// [pt] { 0x897dc0 } (tactics.cpp): a pessoa (vetor de 0xae23bc, 110 bytes cada) do indice em +0x56 +
-/// 4 x `qual` (0 ou 1) da linha; indice negativo ou linha -1: 0. Clube nulo ou `qual` fora: a
-/// original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn row_person(this: usize, club: usize, which: i8, human: u32) -> usize {
     if club == 0 || !(0..2).contains(&which) {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> usize>(IDX_ROW_PERSON)(this, club, which, human);
@@ -765,12 +709,6 @@ pub(crate) unsafe extern "thiscall" fn row_person(this: usize, club: usize, whic
 /// Returns the club's row in the tactics table: for a human-managed club with `humano` set, -1 for a second national
 /// team, else the human manager's row after the clubs (staff count - manager id - 1, +15 for a national team; out of
 /// range: the original); in other cases the club id.
-///
-/// [pt] { 0x8982b0 } (tactics.cpp; o `this` nao e usado, ret 8): a linha do clube na tabela tatica.
-/// Clube dirigido por humano (0x600a50 com 1, 1) e `humano` ligado: segunda selecao, -1; senao a
-/// linha do tecnico, depois dos clubes (0xae235c): quantidade de pessoas (0xae2364) - id do tecnico
-/// (+0xcf) - 1, ou + 15 numa selecao (0x53b900), fora da faixa: a original (caixa de erro). Nos
-/// outros casos, o id do clube.
 pub(crate) unsafe extern "stdcall" fn tactics_row(club: usize, human: u32) -> i32 {
     let club = Club(club);
     if exe::human_manager_is_human_club(club, 1, (1) as u32, (0) as u32, 0) != 0 && human != 0 {
@@ -795,10 +733,6 @@ pub(crate) unsafe extern "stdcall" fn tactics_row(club: usize, human: u32) -> i3
 /// Returns byte `pos` (0..10) of the club's tactics row (index from 0x8982b0, for the human manager when `humano`) in
 /// the table at +0x601 (0x91 bytes per row, from +0x86); row -1: 0. Null club or position out of range: falls back to
 /// the original (error box).
-///
-/// [pt] { 0x898040 } (tactics.cpp): byte `pos` (0..=10) da linha tatica do clube (0x8982b0) na tabela
-/// em +0x601 (0x91 bytes por linha, a partir de +0x86); linha -1: 0. Clube nulo ou posicao fora:
-/// a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn tactics_byte(this: usize, club: usize, pos: i8, human: u32) -> u8 {
     if club == 0 || !(0..=10).contains(&pos) {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, u32) -> u8>(IDX_TACTICS_BYTE)(this, club, pos, human);
@@ -814,9 +748,6 @@ pub(crate) unsafe extern "thiscall" fn tactics_byte(this: usize, club: usize, po
 
 /// Row of the tactic statistics table ([this], 0x28 bytes per tactic) used by the club: word +0 of the club's 0x91-byte
 /// tactics row.
-///
-/// [pt] A linha da tabela de estatísticas das táticas ([this], 0x28 bytes por tática) usada pelo clube: a palavra +0 do
-/// registro de 0x91 bytes do clube (id em +0) na tabela tática (+0x601).
 pub(crate) unsafe fn tactic_stats_row(this: usize, club: Club) -> usize {
     let id = read_usize(club.addr());
     let k = read_i16(read_usize(this + tactics_fields::ROWS).wrapping_add(id.wrapping_mul(0x91))) as i32;
@@ -824,8 +755,6 @@ pub(crate) unsafe fn tactic_stats_row(this: usize, club: Club) -> usize {
 }
 
 /// Returns x as f64, or 1.0 when x < 1.
-///
-/// [pt] x < 1 vale 1 (palavra com sinal), como as três comparações antes de cada `fild`.
 pub(crate) fn at_least_one(x: i16) -> f64 {
     if x < 1 { 1.0 } else { x as f64 }
 }
@@ -844,16 +773,6 @@ pub(crate) fn at_least_one(x: i16) -> f64 {
 /// r·g·q²·q, +0x20 = r·r·h (the order of the x87 operations). The computer's formation choice (`exe::match_man_choose_computer_tactic`) reads +2 and
 /// the three ratios. Returns 1.
 /// Original: `Tactics::record_tactic_result` (0x896290, tactics.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x896290 } (thiscall, ret 4, tactics.cpp): `Tactics::record_tactic_result(jogo)`, do fim de cada partida no laço
-/// do motor (0x6ba9a0, com o placar agregado; fixture +0 ≠ −2). Jogo nulo: a caixa da linha 0x1f9 e 0. Mandante (+0x1c)
-/// ou visitante (+0x20) dirigido por humano (0x600a50 com 0, 1, 0, 0; cdecl 5): 0. Senão, para cada lado (clube nulo:
-/// a caixa da linha 0x20a e segue), o registro da partida pelo clube (0x7e4750, num registro local que começa com a
-/// data padrão 0x54a110) soma na linha da tática do clube (tactic_stats_row): +2 jogos, +4 vitórias (+3 pontos em +0xe), +6
-/// empates (+1 ponto), +8 derrotas, +0xa gols pró (+0x19 do registro, com sinal), +0xc contra (+0x1a); com p = jogos,
-/// a = pró, b = contra e c = pontos (cada um pelo menos 1), q = c/p, g = a/p, h = g·q², r = p/b: +0x10 = r·h·g, +0x18
-/// = r·g·q²·q, +0x20 = r·r·h (a ordem das contas do x87). A escolha da formação do computador (0x6e0230) lê +2 e as
-/// três razões. Devolve 1.
 pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, game: usize) -> u32 {
     let game = Fixture(game);
     if game.is_null() {
@@ -913,10 +832,6 @@ pub(crate) unsafe extern "thiscall" fn record_tactic_result(this: usize, game: u
 /// 0. The club's exe::tactics_get_club_tactics_index(0x8982b0, thiscall(this, club, team), ret 8; −1: 0); returns dword +0x52 of the row's 0x91-byte
 /// record in the tactics table (+0x601).
 /// Original: `Tactics::get_captain` (0x8976a0, tactics.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x8976a0 } (thiscall, ret 8, tactics.cpp): `Tactics::get_captain(clube, time)`, das telas de tática (0x8a7440). Clube
-/// nulo: a caixa da linha 0x527 e 0. A linha do clube (0x8982b0, thiscall(this, clube, time), ret 8; −1: 0); devolve o
-/// dword +0x52 do registro de 0x91 bytes da linha na tabela tática (+0x601).
 pub(crate) unsafe extern "thiscall" fn get_captain(this: usize, club: usize, team: u32) -> u32 {
     if club == 0 {
         show_error_at(0xa8b908, 0x527);
@@ -935,10 +850,6 @@ pub(crate) unsafe extern "thiscall" fn get_captain(this: usize, club: usize, tea
 /// Null club: the box at line 0x579; null pointer: that of 0x581; 0. The club's row (0x8982b0; −1: 0); writes the
 /// pointed dword into +0x52 of the row's record (+0x601) and returns 1.
 /// Original: `Tactics::set_captain` (0x897880, tactics.cpp, thiscall, ret 0xc).
-///
-/// [pt] { 0x897880 } (thiscall, ret 0xc, tactics.cpp): `Tactics::set_captain(clube, &pessoa, time)`, ao aplicar as mudanças da
-/// tela de tática (0x8a80d0). Clube nulo: a caixa da linha 0x579; ponteiro nulo: a da 0x581; 0. A linha do clube
-/// (0x8982b0; −1: 0); grava o dword apontado em +0x52 do registro da linha (+0x601) e devolve 1.
 pub(crate) unsafe extern "thiscall" fn set_captain(this: usize, club: usize, person: usize, team: u32) -> u32 {
     if club == 0 {
         show_error_at(0xa8b908, 0x579);
@@ -958,24 +869,17 @@ pub(crate) unsafe extern "thiscall" fn set_captain(this: usize, club: usize, per
 }
 
 /// Club's row in the tactics table (FN_TACTICS_GET_CLUB_TACTICS_INDEX, stdcall(club, human)); −1 without one.
-///
-/// [pt] A linha do clube na tabela tática (0x8982b0, stdcall(clube, humano); −1 sem linha).
 pub(crate) unsafe fn club_tactics_index(club: usize, human: u32) -> i32 {
     let f: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     f(club, human)
 }
 
 /// Start of tactics row l (0x91 bytes each, from [this+0x601]).
-///
-/// [pt] O começo da linha `l` (0x91 bytes cada, a partir de [this+0x601]).
 pub(crate) unsafe fn tactics_row_start(this: usize, l: i32) -> usize {
     read_usize(this + tactics_fields::ROWS).wrapping_add(l.wrapping_mul(0x91) as usize)
 }
 
 /// Clears the undo copies (16 × 0x5c bytes at this+0x30) of the club and team and decrements the count at +0x5f0.
-///
-/// [pt] As 16 cópias para desfazer (0x5c bytes a partir de this+0x30: +0 clube, +4 time, +8 a cópia; conta em +0x5f0): a do
-/// clube e do time some (+8 = 0) e a conta desce.
 pub(crate) unsafe fn drop_undo_copies(this: usize, club: usize, team: u32) {
     if read_u8(this + tactics_fields::UNDO_COUNT) == 0 {
         return;
@@ -990,8 +894,6 @@ pub(crate) unsafe fn drop_undo_copies(this: usize, club: usize, team: u32) {
 }
 
 /// Memory regions of the club's lineup routines: its tactics row (if any) and the undo copies with their count.
-///
-/// [pt] As regiões da escalação do clube: a linha dele na tabela tática (se houver) e as cópias para desfazer com a conta.
 pub(crate) unsafe fn lineup_regions(this: usize, club: usize, team: u32) -> Vec<(usize, usize)> {
     let mut reg = vec![(this + tactics_fields::UNDO_SLOTS, 0x5c1)];
     let l = club_tactics_index(club, team);
@@ -1013,14 +915,6 @@ pub(crate) unsafe fn lineup_regions(this: usize, club: usize, team: u32) -> Vec<
 /// undo copies of the club and team are dropped. Returns 1 if it removed the person from a slot or set piece. Null club
 /// or person: the original routine ("Error" box, 0).
 /// Original: `Tactics::remove_player_from_selection` (0x896c60, tactics.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x896c60 } (thiscall, ret 0x10, tactics.cpp): `Tactics::remove_player_from_selection(clube, pessoa, time,
-/// papeis)`, pelos contratos (troca de lugar no elenco, empréstimo e o fim dele), pelas saídas do elenco, pela escalação
-/// automática (0x6dbc50), pelas seleções, pela aposentadoria e pelas transferências. Sem linha tática (0x8982b0): 0. As
-/// 20 vagas da escalação (+2 da linha, ids) com a pessoa (id em +0) viram −1. Com `papeis`: as duas vagas extras (+0x56,
-/// +0x5a: 0x897dc0 e 0x897ee0) e os batedores das cinco bolas paradas nos dois lados (0x897990 e 0x897bb0) que são ela
-/// ficam vazios. As cópias para desfazer do clube e do time somem. Devolve 1 se a tirou de uma vaga ou de bola parada.
-/// Clube ou pessoa nulos: a original (caixa "Error", 0).
 pub(crate) unsafe extern "thiscall" fn remove_player_from_selection(this: usize, club: usize, person: usize, team: u32, papeis: u32) -> u32 {
     if club == 0 || person == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u32>(IDX_REMOVE_PLAYER_FROM_SELECTION)(this, club, person, team, papeis); // message box: original only
@@ -1067,11 +961,6 @@ pub(crate) unsafe extern "thiscall" fn remove_player_from_selection(this: usize,
 /// bytes) and the undo copies of the club and team are dropped; returns 1. No row (0x8982b0): 0. Null club or slot out
 /// of range: the original routine ("Error" box, 0).
 /// Original: `Tactics::swap_selection_slots` (0x8973e0, tactics.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x8973e0 } (thiscall, ret 0x10, tactics.cpp): `Tactics::swap_selection_slots(clube, a, b, time)`, pela tela do
-/// elenco (0x46835e). Vagas `a` e `b` (bytes com sinal, 0..19): troca os ids das duas vagas da escalação (+2 + 4 × vaga
-/// da linha tática, 0x90ba90 com 4 bytes) e as cópias para desfazer do clube e do time somem; devolve 1. Sem linha
-/// (0x8982b0): 0. Clube nulo ou vaga fora: a original (caixa "Error", 0).
 pub(crate) unsafe extern "thiscall" fn swap_selection_slots(this: usize, club: usize, a: u32, b: u32, team: u32) -> u32 {
     let (va, vb) = (a as u8 as i8, b as u8 as i8);
     if club == 0 || !(0..=0x13).contains(&va) || !(0..=0x13).contains(&vb) {
@@ -1093,10 +982,6 @@ pub(crate) unsafe extern "thiscall" fn swap_selection_slots(this: usize, club: u
 /// human whose turn it is (`[0xb74c26 + 0x300 × (i16)[0xb77c7a]]`): his copy (index `[0xae2364]` − id − 1, from 0 to
 /// 15) exists (+8) and is of this club (+0) and team (+4): 1; otherwise 0.
 /// Original: `Tactics::has_selection_undo` (0x897250, tactics.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x897250 } (thiscall, ret 8, tactics.cpp): `Tactics::has_selection_undo(clube, time)`, pela tela do elenco
-/// (0x458a58). Com cópias (+0x5f0) e o humano da vez ([0xb74c26 + 0x300 × (i16)[0xb77c7a]]): a cópia dele (índice
-/// [0xae2364] − id − 1, de 0 a 15) existe (+8) e é deste clube (+0) e time (+4): 1; senão 0.
 pub(crate) unsafe extern "thiscall" fn has_selection_undo(this: usize, club: usize, team: u32) -> u32 {
     if read_u8(this + tactics_fields::UNDO_COUNT) == 0 {
         return 0;
@@ -1114,16 +999,12 @@ pub(crate) unsafe extern "thiscall" fn has_selection_undo(this: usize, club: usi
 }
 
 /// Club's row in the tactics table (FN_TACTICS_GET_CLUB_TACTICS_INDEX); −1 without one (duplicate of club_tactics_index).
-///
-/// [pt] A linha do clube na tabela tática (0x8982b0, o `this` não é usado; −1 sem linha).
 pub(crate) unsafe fn club_tactics_row(club: usize, team: u32) -> i32 {
     let row: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
     row(club, team)
 }
 
 /// Address of dword cell c of tactics row k: [this + 0x601] + 0x91 × k + c.
-///
-/// [pt] A célula `c` (dword) da linha `k` da tabela tática: [this + 0x601] + 0x91 × k + `c`.
 pub(crate) unsafe fn tactics_cell(this: usize, k: i32, c: usize) -> usize {
     (read_u32(this + tactics_fields::ROWS) as usize).wrapping_add((k as isize * 0x91) as usize).wrapping_add(c)
 }
@@ -1136,11 +1017,6 @@ pub(crate) unsafe fn tactics_cell(this: usize, k: i32, c: usize) -> usize {
 /// team (16 spaces of 0x5c bytes starting at +0x30: club +0x30, team +0x34, used +0x38) are released (+0x38 = 0, +0x5f0
 /// − 1). Returns 1; no row, 0. Null club or slot out of range: the original routine (box).
 /// Original: `Tactics::clear_selection_slot` (0x896e90, tactics.cpp, thiscall, ret 0xc).
-///
-/// [pt] { 0x896e90 } (thiscall, ret 0xc, tactics.cpp): `Tactics::clear_selection_slot(clube, vaga, time)`: a vaga (0..=19)
-/// da escalação do clube na tabela tática (linha da 0x8982b0, dword em +2 + 4 × vaga) fica −1 e, com espaços guardados
-/// (+0x5f0), os do mesmo clube e time (16 espaços de 0x5c bytes a partir de +0x30: clube +0x30, time +0x34, ocupado
-/// +0x38) são soltos (+0x38 = 0, +0x5f0 − 1). Devolve 1; sem linha, 0. Clube nulo ou vaga fora: a original (caixa).
 pub(crate) unsafe extern "thiscall" fn clear_selection_slot(this: usize, club: usize, slot: u32, team: u32) -> u32 {
     let v = slot as u8 as i8;
     if club == 0 || !(0..=0x13).contains(&v) {
@@ -1173,12 +1049,6 @@ pub(crate) unsafe extern "thiscall" fn clear_selection_slot(this: usize, club: u
 /// (> −1) moves up to it and becomes −1. Returns 1; no row, 0. Null club, role or choice out of range: the original
 /// routine (box).
 /// Original: `Tactics::set_set_piece_taker` (0x897bb0, tactics.cpp, thiscall, ret 0x14).
-///
-/// [pt] { 0x897bb0 } (thiscall, ret 0x14, tactics.cpp): `Tactics::set_set_piece_taker(clube, papel, escolha, pessoa, time)`:
-/// o batedor `escolha` (0..=1) da bola parada `papel` (0..=4) na linha tática do clube (0x8982b0; dword em +0x5e +
-/// 4 × (escolha + 2 × papel)). Com `pessoa` (ponteiro para o id), grava o id. Sem ela, a célula fica −1 e, sendo a
-/// primeira escolha, a seguinte com batedor (> −1) sobe para ela e fica −1. Devolve 1; sem linha, 0. Clube nulo,
-/// papel ou escolha fora: a original (caixa).
 pub(crate) unsafe extern "thiscall" fn set_set_piece_taker(this: usize, club: usize, role: u32, choice: u32, person: usize, team: u32) -> u32 {
     let (p, e) = (role as u8 as i8, choice as u8 as i8);
     if club == 0 || !(0..=4).contains(&p) || !(0..=1).contains(&e) {
@@ -1213,10 +1083,6 @@ pub(crate) unsafe extern "thiscall" fn set_set_piece_taker(this: usize, club: us
 
 /// the formation record (0x18e3 bytes) in the two tables
 /// Original: `formation_record` (0x896570, tactics.cpp, thiscall).
-///
-/// [pt] { 0x896570 } (thiscall, ret 8, tactics.cpp): o registro (0x18e3 bytes) da formação `f`: as
-/// [+0x5fd] primeiras em [+0x5f9], as seguintes (até [+0x5f5] mais, só sem `humano`) em [+0x5f1].
-/// Formação negativa ou fora: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn formation_record(t: usize, f: i16, human: u32) -> usize {
     let primeiras = read_i32(t + tactics_fields::PRESET_TACTIC_COUNT);
     let limit = if human != 0 { primeiras } else { read_i32(t + tactics_fields::CUSTOM_TACTIC_COUNT).wrapping_add(primeiras) };
@@ -1239,11 +1105,6 @@ compare_value!(compare_formation_record, formation_record, IDX_FORMATION_RECORD,
 /// row, 0): with `person`, `*person` goes into slot `which` 0/1; without it, the slot becomes −1 and, for slot 0, slot
 /// 1 moves down to 0 and becomes −1. Returns 1. Null `club` or `which` out of range: the original routine (error box).
 /// Original: `extra_tactic_slot` (0x897ee0, tactics.cpp, thiscall).
-///
-/// [pt] { 0x897ee0 } (thiscall, ret 0x10, tactics.cpp): as duas vagas extras (+0x56 e +0x5a) da linha do
-/// `clube` na tabela tática (0x8982b0 com `humano`; sem linha, 0): com `pessoa`, `*pessoa` na vaga
-/// `qual` 0/1; sem, a vaga vira −1 e, na 0, a 1 desce para a 0 e fica −1. Devolve 1. `clube` nulo ou
-/// `qual` fora: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn extra_tactic_slot(t: usize, club: usize, which: i8, person: *const u32, human: u32) -> u32 {
     if club == 0 || !(0..=1).contains(&which) {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, *const u32, u32) -> u32>(IDX_EXTRA_TACTIC_SLOT)(t, club, which, person, human);
@@ -1281,13 +1142,6 @@ pub(crate) unsafe extern "thiscall" fn extra_tactic_slot(t: usize, club: usize, 
 /// count of preset tactics (`[this+0x5fd]`) the preset block (`[this+0x5f9]`), otherwise its own (`[this+0x5f1]`, index
 /// − count); blocks of 0x18e3 bytes. Null club: the original routine ("Error" box, 0).
 /// Original: `Tactics::get_club_tactic` (0x896660, tactics.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x896660 } (thiscall, ret 8, tactics.cpp): `Tactics::get_club_tactic(clube, time)`, pela formação de cada jogo
-/// (0x6e0230), pelas fraquezas do jogador (0x5470d0), pela mídia e pelas telas. Clube humano (0x600a50 com 1, 1) cujo
-/// técnico (+0xcf) não tem +0x9a01 (0x5fd210) ou tem a opção 2 das férias (0x5fea50): a vaga pelo time (0x5fbe20) e o
-/// bloco ativo dele (0x5fbd00). Nos outros, o índice (palavra com sinal) na linha do clube (id × 0x91 em [this+0x601]):
-/// abaixo da conta das táticas prontas ([this+0x5fd]) o bloco pronto ([this+0x5f9]), senão o próprio ([this+0x5f1],
-/// índice − conta); blocos de 0x18e3 bytes. Clube nulo: a original (caixa "Error", 0).
 pub(crate) unsafe extern "thiscall" fn get_club_tactic(this: usize, club: usize, team: u32) -> usize {
     let club = Club(club);
     if club.is_null() {
@@ -1319,11 +1173,6 @@ pub(crate) unsafe extern "thiscall" fn get_club_tactic(this: usize, club: usize,
 /// returns 0) and the 20 slots (dwords at +0x601 + row × 0x91 + 2) compared with the id; not there: 0xff. Null club or
 /// person: the original routine (error box).
 /// Original: `Tactics::find_selection_slot` (0x8972c0, tactics.cpp, thiscall).
-///
-/// [pt] { 0x8972c0 } (thiscall, ret 0xc, tactics.cpp): a vaga (0..19) da escalação do clube em que está a
-/// pessoa: linha tática do clube (0x8982b0 com `time`; -1 devolve 0) e as 20 vagas (dwords em +0x601 +
-/// linha x 0x91 + 2) comparadas com o id; não está: 0xff. Clube ou pessoa nulos: a original (caixa
-/// de erro).
 pub(crate) unsafe extern "thiscall" fn find_selection_slot(tactic: usize, club: usize, person: *const i32, team: u32) -> u8 {
     if club == 0 || person.is_null() {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32) -> u8>(IDX_FIND_SELECTION_SLOT)(tactic, club, person, team);
@@ -1348,11 +1197,6 @@ pub(crate) unsafe extern "thiscall" fn find_selection_slot(tactic: usize, club: 
 /// and `human`, decrementing counter +0x5f0. Returns 1. Null `club` or `person`, slot out of range: the original
 /// routine (error box).
 /// Original: `set_tactic_slot` (0x896a90, tactics.cpp, thiscall).
-///
-/// [pt] { 0x896a90 } (thiscall, ret 0x10, tactics.cpp): grava `*pessoa` na vaga `vaga` 0..19 da linha do
-/// `clube` (0x8982b0 com `humano`; sem linha, 0) e apaga, entre as 16 instruções pendentes
-/// (+0x30, 0x5c bytes: clube, humano, ativa), as ativas desse clube e `humano`, descontando o
-/// contador +0x5f0. Devolve 1. `clube` ou `pessoa` nulos, vaga fora: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn set_tactic_slot(t: usize, club: usize, slot: i8, person: *const u32, human: u32) -> u32 {
     if club == 0 || !(0..=19).contains(&slot) || person.is_null() {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, i8, *const u32, u32) -> u32>(IDX_SET_TACTIC_SLOT)(t, club, slot, person, human);
@@ -1384,11 +1228,6 @@ pub(crate) unsafe extern "thiscall" fn set_tactic_slot(t: usize, club: usize, sl
 /// person without a nation (+0x24) or from another nation (+0x53): the slot becomes −1 and returns 0. Null `club` or
 /// slot out of range: the original routine (error box).
 /// Original: `tactic_slot_person` (0x8968f0, tactics.cpp, thiscall).
-///
-/// [pt] { 0x8968f0 } (thiscall, ret 0xc, tactics.cpp): a pessoa (em [0xae23bc], 0x6e bytes) da vaga `vaga`
-/// 0..19 da linha do `clube`; 0 sem linha ou vaga vazia (negativa). Vaga com pessoa sem ficha
-/// (+0x61), ou, numa seleção (0x53b900), pessoa sem nação (+0x24) ou de outra nação (+0x53): a vaga
-/// vira −1 e devolve 0. `clube` nulo ou vaga fora: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, club: usize, slot: i8, human: u32) -> usize {
     let club = Club(club);
     if club.is_null() || !(0..=19).contains(&slot) {
@@ -1422,10 +1261,6 @@ pub(crate) unsafe extern "thiscall" fn tactic_slot_person(t: usize, club: usize,
 
 /// stores the formation in the club row
 /// Original: `set_tactic_formation` (0x8967d0, tactics.cpp, thiscall).
-///
-/// [pt] { 0x8967d0 } (thiscall, ret 0xc, tactics.cpp): grava a formação `formacao` (palavra) na linha do
-/// `clube`; 0 sem linha, senão 1. `clube` nulo ou formação fora de 0..[+0x5fd]+[+0x5f5]−1: a
-/// original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn set_tactic_formation(t: usize, club: usize, formation: i16, human: u32) -> u32 {
     let limit = read_i32(t + tactics_fields::PRESET_TACTIC_COUNT)
         .wrapping_add(read_i32(t + tactics_fields::CUSTOM_TACTIC_COUNT))

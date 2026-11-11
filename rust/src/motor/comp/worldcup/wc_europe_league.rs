@@ -1,9 +1,6 @@
 use super::*;
 
 /// Writes byte/word rule fields (offset, size, value) of a qualifier league.
-///
-/// [pt] Os campos de byte e palavra de uma eliminatória (a virtual +0x8c, set_up_rules, na liga do grupo): (deslocamento,
-/// tamanho 1 ou 2, valor). Os pontos da vitória (+0xc2) e a categoria (+0xc4) vêm à parte, para as mutações.
 pub(crate) unsafe fn wc_europe_league_write_rule_fields(this: League, fields: &[(usize, u8, u32)]) {
     for &(o, n, v) in fields {
         if n == 1 {
@@ -15,9 +12,6 @@ pub(crate) unsafe fn wc_europe_league_write_rule_fields(this: League, fields: &[
 }
 
 /// First word of Date(day, month, competition year +0x40, weekday).
-///
-/// [pt] A primeira palavra da Date(dia, mês, ano da competição +0x40, dia da semana) (0x549f70: push semana; push ano; push
-/// mês; push dia; lea ecx, local -> thiscall, ret 0x10).
 pub(crate) unsafe fn comp_date_word(this: League, day: u32, month: u32, week: u32) -> u16 {
     let mut d = [0u8; 8];
     // simplification: the year goes in a register with garbage in the high 16 bits; 0x549f70 reads it as a word
@@ -26,9 +20,6 @@ pub(crate) unsafe fn comp_date_word(this: League, day: u32, month: u32, week: u3
 }
 
 /// Shared end of rule setup: +0xb6 = date word, +0xb8 = b8, round table (virtual +0x3c) at +0xba; returns 1.
-///
-/// [pt] O fim comum: +0xb6 = a palavra da data, +0xb8 = `b8`, e a tabela das rodadas da virtual +0x3c (push 0; push &+0x3a;
-/// push &+0xa9; push −1; mov ecx, this -> thiscall, ret 0x10) em +0xba. Devolve 1.
 pub(crate) unsafe fn finish_rules_setup(this: League, word: u16, b8: u16) -> u32 {
     this.set_next_draw_day((word) as i16);
     this.set_next_draw_year_offset((b8) as i16);
@@ -40,8 +31,6 @@ pub(crate) unsafe fn finish_rules_setup(this: League, word: u16, b8: u16) -> u32
 }
 
 /// Comparer: runs the original and checks fields, +0xb6 date, +0xb8 and return 1.
-///
-/// [pt] O plano: os campos, +0xb6 (a data, calculada antes), +0xb8 e a devolução 1, lidos depois da original `o`.
 pub(crate) unsafe fn check_qualifier_rules(name: &str, this: usize, fields: &[(usize, u8, u32)], data: (u32, u32, u32), b8: u16, o: impl FnOnce() -> u32) -> u32 {
     let word = comp_date_word(League(this), data.0, data.1, data.2);
     let r = o();
@@ -68,11 +57,6 @@ pub(crate) const EUROPE_RULE_FIELDS: [(usize, u8, u32); 15] = [(0xc2, 1, 3), (0x
 /// teams (+0x43 = 2); category 10 (national teams) on each match; 7 substitutes and 3 changes; starts on 25 of month 2
 /// [inference: 25 March] moved to weekday 5
 /// Original: `WcEuropeLeague::set_up_rules` (0x9191e0, wc_europe_league.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x9191e0 } (thiscall, ret 0, wc_europe_league.cpp; a virtual +0x8c; quadro SEH só da data local, sem destrutor):
-/// `WcEuropeLeague::set_up_rules()`: os grupos europeus em dois turnos, 3 pontos a vitória e 1 o empate, a categoria
-/// 0xa (seleções), os desempates (1, 2, 4, 5), um classificado direto por grupo, seleções (+0x43 = 2), 7 no banco e 3
-/// substituições, começo em 25 do mês 2 num dia da semana 5; depois a tabela das rodadas.
 pub(crate) unsafe extern "thiscall" fn wc_europe_league_set_up_rules(this: usize) -> u32 {
     let this = League(this);
     covered!("cqj_12 europe rules");

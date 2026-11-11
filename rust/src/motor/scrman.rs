@@ -2,9 +2,6 @@ use super::*;
 
 /// the screen manager has no next screen to go forward to
 /// Original: `ScreenManager::is_forward_unavailable` (0x7febb0, scrman.cpp, thiscall).
-///
-/// [pt] { 0x7febb0 } (thiscall, scrman.cpp): o gerente de telas não tem para onde avançar? (o bloco de
-/// parâmetros da tela atual sem a tela seguinte em +0x1f8). Sem bloco: a original (caixa de erro e saída).
 pub(crate) unsafe extern "thiscall" fn is_forward_unavailable(manager: usize) -> u32 {
     let slot = *((manager + screen_manager::CURRENT_SLOT) as *const i16) as isize;
     let block = core::ptr::read_unaligned((manager as isize + (screen_manager::PARAM_BLOCK as isize) + slot * 0x300) as *const usize);
@@ -15,8 +12,6 @@ pub(crate) unsafe extern "thiscall" fn is_forward_unavailable(manager: usize) ->
 }
 
 /// Copies C string origem (with terminator) to the work text 0xde1f64.
-///
-/// [pt] Copia o texto C de `origem` (com o zero) para o texto de trabalho 0xde1f64.
 pub(crate) unsafe fn copy_to_work_text(source: usize) {
     let mut i = 0;
     loop {
@@ -31,10 +26,6 @@ pub(crate) unsafe fn copy_to_work_text(source: usize) {
 
 /// Writes the competition name to 0xde1f64 for the panel: "Friendlies"/"Reserves" for those with more than one round,
 /// else the name (+0x38).
-///
-/// [pt] O nome da competição do registro `c` (107 bytes) no texto 0xde1f64 do jeito do painel: "Friendlies"
-/// e "Reserves" para as dos amistosos ([0x9cf668]) e reservas ([0x9cf684]) com mais de uma rodada
-/// (+8 > +4 de `rodadas`); senão o nome (+0x38).
 pub(crate) unsafe fn panel_competition_name(c: Competition, rounds: usize) {
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let more_of_one = read_i32(rounds + 8) > read_i32(rounds + 4);

@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/eurocomp/oceania_club_champ.rs.
-// [pt] Os comparadores das rotinas de ../comp/eurocomp/oceania_club_champ.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `oceania_club_champ_update_for_date`.
 pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_update_for_date(this: usize, today: usize, full: u32) -> u32 {
@@ -71,9 +70,6 @@ pub(crate) unsafe extern "thiscall" fn compare_create_group_b_stage(this: usize)
 }
 
 /// Comparer for `oceania_club_champ_select_qualified_clubs`.
-///
-/// [pt] Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
-/// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nas 8 vagas e liberada.
 pub(crate) unsafe extern "thiscall" fn compare_oceania_club_champ_select_qualified_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_OCEANIA_CLUB_CHAMP_SELECT_QUALIFIED_CLUBS);
     let lo = core::cell::Cell::new(0usize);

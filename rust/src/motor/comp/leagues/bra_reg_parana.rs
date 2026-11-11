@@ -4,11 +4,6 @@ use super::*;
 /// 2): the next stage moves the current stage on and, at the end of the second half, builds the final; past the last
 /// stage it is an error (the box)
 /// Original: `BraRegParana::advance_stage` (0x438230, bra_reg_parana.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x438230 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::advance_stage()`, a fase seguinte do Paranaense (dois turnos, as fases 0
-/// e 1, cada um um League_Stage, e a final, a fase 2). Na última fase (+0x30 ≥ +0x2c − 1, com sinal): a caixa de
-/// erro da linha 0x202 e nada mais. Senão +0x30 sobe um e, ao chegar a 2 (o fim do segundo turno), monta a final
-/// (0x4382c0, call direto com o ecx da liga).
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_advance_stage(this: usize) {
     let this = League(this);
     let stage = this.current_stage() as i32;
@@ -42,20 +37,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_advance_stage(this: usize)
 /// freeing). With it: Cup::set_up_round (`0x51c800`, thiscall(stage, 0), ret 4), the table and the list freed (free
 /// `0x9452ca`, in that order) and `+0x30` = 2. The original's SEH frame only covers the constructor (no destructor).
 /// Original: `BraRegParana::create_final_stage` (0x4382c0, bra_reg_parana.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x4382c0 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::create_final_stage()`, da fase seguinte quando o segundo turno
-/// acaba. Os dois campeões dos turnos (o clube da primeira linha da tabela de cada League_Stage) vão para uma lista
-/// de 2 (malloc 0x944e46 de 8; sem memória: a caixa da linha 0x226 e volta).
-/// - O mesmo clube nos dois turnos: é o campeão sem final. +0x30 = 1, +0x2c = 2 (a temporada acaba com as duas fases),
-///   a situação 5 (+0x37, campeão) na primeira linha da tabela de cada turno e na linha dele da tabela da liga
-///   (+0xb1, as +0x3e linhas). A lista não é liberada (a original a deixa vazar; a cópia também).
-/// - Campeões diferentes: a final, em dois jogos [inferência: ida e volta]. A virtual +0x3c (create_round_table:
-///   thiscall(this, fase 2, &rodadas, &extra, 0), ret 0x10) monta a tabela de rodadas; a fase nova (operator new
-///   0x944cf1 de 0xb2; Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: a liga, 2, a lista, as rodadas, +4, a tabela,
-///   o ano +0x40, 2, 1, o extra, 0x14, 0, 1, 0 e as sementes {0, 1}: o campeão do primeiro turno é a semente 0) vai
-///   para a terceira vaga das fases ([+0xc]+8; sem fase: a caixa da linha 0x250 e volta, sem liberar). Com ela:
-///   Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4), a tabela e a lista liberadas (free 0x9452ca, nessa
-///   ordem) e +0x30 = 2. O quadro SEH da original só cobre o construtor (sem destrutor).
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: usize) {
     let this = League(this);
     let seeds: [u8; 4] = [0, 1, 0, 0];
@@ -128,16 +109,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_final_stage(this: u
 /// thiscall(this, club, 64-bit value, position 1 or 2, round 0, match 0, type −2), ret `0x1c`); then `0x42bba0`, as
 /// above.
 /// Original: `BraRegParana::record_season_honours` (0x4384e0, bra_reg_parana.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x4384e0 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::record_season_honours()` (slot 13), o fim da temporada do Paranaense.
-/// - Com final (+0x30 = 2): o histórico da final (o slot 13, +0x30, da fase [+0xc]+8) e, em salto final, a 0x42bba0
-///   (`bra_nat_first_fill_champions_cup_entrants`, cdecl sem argumentos: quando os doze estaduais terminam, põe os
-///   campeões na Copa dos Campeões); devolve o eax dela.
-/// - Sem final (o mesmo campeão nos dois turnos): o histórico da liga (League::record_season_honours 0x684640,
-///   thiscall, ret 0); os prêmios, 175.000 ao campeão (primeira linha da tabela +0xb1) e 100.000 ao vice (segunda linha),
-///   cada um no saldo (0x5a0590 em [0xae2a38] -> as finanças do clube, thiscall, ret 4; 0x5999a0 Finance::add_prize_money,
-///   thiscall, ret 4) e na notícia do prêmio (0x48e3e0 Comp::send_prize_money_news: thiscall(this, clube, valor em 64
-///   bits, posição 1 ou 2, rodada 0, partida 0, tipo −2), ret 0x1c); depois a 0x42bba0, como acima.
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_record_season_honours(this: usize) -> u32 {
     let this = League(this);
     if this.current_stage() == 2 {
@@ -167,11 +138,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_record_season_honours(this
 /// Win 3, draw 1, category 2 (league), national club, tie-breakers head-to-head and goal difference, no play-offs in
 /// the table, no league above or below, rules word 8, 7 substitutes and 3 substitutions, and the words +0xab and +0xdb
 /// at 0.
-///
-/// [pt] As regras comuns destes estaduais (as três rotinas gravam o mesmo conjunto; mudam as vagas de cima +0xbe e os
-/// rebaixados +0xc1; os três têm dois turnos): vitória 3, empate 1, categoria 2 (liga), clube nacional, desempates
-/// confronto direto e saldo, sem play-offs na tabela, sem liga acima nem abaixo, palavra de regras 8, 7 reservas e
-/// 3 substituições, e as palavras +0xab e +0xdb em 0.
 pub(crate) unsafe fn bra_reg_parana_set_state_league_rules(o: usize, cima: u8, relegated: u8) {
     write_u16_at(o, 0x3c, 2);
     write_u8_at(o, 0xc4, 2);
@@ -195,22 +161,16 @@ pub(crate) unsafe fn bra_reg_parana_set_state_league_rules(o: usize, cima: u8, r
 }
 
 /// State league rules for Paranaense (`bra_reg_parana_set_up_rules`): no top places, 4 relegated.
-///
-/// [pt] O Paranaense (0x437fc0): nenhuma vaga de cima na tabela geral (os turnos têm estágios próprios), 4 rebaixados.
 pub(crate) unsafe fn parana_rules(o: usize) {
     bra_reg_parana_set_state_league_rules(o, 0, 4); // cqi9: o Paranaense
 }
 
 /// State league rules for Pernambucano (`bra_reg_pern_set_up_rules`, also Norte): 4 top places, 2 relegated.
-///
-/// [pt] O Pernambucano (0x439430, também o Norte): 4 vagas de cima, 2 rebaixados.
 pub(crate) unsafe fn pernambucano_rules(o: usize) {
     bra_reg_parana_set_state_league_rules(o, 4, 2); // cqi9: o Pernambucano
 }
 
 /// State league rules for Carioca (`bra_reg_rio_set_up_rules`, also Mineiro): no top places, 2 relegated.
-///
-/// [pt] O Carioca (0x43a600, também o Mineiro): nenhuma vaga de cima na tabela geral, 2 rebaixados.
 pub(crate) unsafe fn carioca_rules(o: usize) {
     bra_reg_parana_set_state_league_rules(o, 0, 2); // cqi9: o Carioca
 }
@@ -221,9 +181,6 @@ pub(crate) unsafe fn carioca_rules(o: usize) {
 /// [inference]); rule word 8 (the top places lead to the next stage; no champion band); 7 bench substitutes and 3
 /// substitutions; category 2 (league) matches. Then the main stage schedule
 /// Original: `BraRegParana::set_up_rules` (0x437fc0, bra_reg_parana.cpp, thiscall).
-///
-/// [pt] { 0x437fc0 } (thiscall, bra_reg_parana.cpp): `BraRegParana::set_up_rules` (slot 36), as regras e o calendário;
-/// devolve 1.
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_set_up_rules(this: usize) -> u32 {
     parana_rules(this);
     covered!("cqi_9 paranaense rules");
@@ -235,8 +192,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_set_up_rules(this: usize) 
 /// saved state, importance 15, two halves and the final (three stages besides the league), the rules, the table with
 /// the state clubs, the fixtures, the order, the statistics and the predicted positions
 /// Original: `BraRegParana::BraRegParana` (0x437400, bra_reg_parana.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x437400 } (thiscall, ret 8, bra_reg_parana.cpp): `BraRegParana::BraRegParana(ano, registro)`: o Paranaense (três fases além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_parana(this: usize, year: u32, record: usize) -> usize {
     bra_reg_northeast_construct_state_league(League(this), year, record, &PARANA_CHAMPIONSHIP, 7, true, "cqt_3 paranaense novo") // cqt3: the discipline and expected positions of the Paranaense
 }
@@ -244,9 +199,6 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_parana(this: usize, yea
 /// the Parana league has 12 clubs: those with it as their reserve division in the database (the field that holds the
 /// state or regional league), in database order; the table only counts when full; no TV money nor prize fund
 /// Original: `BraRegParana::create_table` (0x437ec0, bra_reg_parana.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x437ec0 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::create_table()`: o Paranaense tem 12 clubes (divisão reserva +0x60 = [0x9cf9d0]).
-/// Fonte 0x98af98, linha 0x169.
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_table(this: usize) -> u32 {
     fill_state_league_table(League(this), 0xc, 0x98af98, 0x169, KEY_CLUB_COMP_BRAZILIAN_PARANA_STATE_CHAMPIONSHIP, 0, "cqm_7 paranaense cheio")
 }
@@ -256,9 +208,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_parana_create_table(this: usize) 
 /// the league, and one top place, the half winner's); the first half goes to stage 0 and the second (from round 12, by
 /// the match +0x34) to stage 1; each half winner (the top of the stage table) goes to the final
 /// Original: `BraRegParana::create_half_stage` (0x438760, bra_reg_parana.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x438760 } (thiscall, ret 4, bra_reg_parana.cpp): `BraRegParana::create_half_stage(k)`, um turno do Paranaense (a
-/// caixa da linha 0x3d5).
 pub(crate) unsafe extern "thiscall" fn create_half_stage(this: usize, k: u32) {
     create_half_season_stage(League(this), k, 0x98af98, 0x3d5, 0xb, 0xc2, "cqr_1 turno do paranaense") // cqr1: the points per win in the Paranaense
 }
@@ -268,8 +217,6 @@ pub(crate) unsafe extern "thiscall" fn create_half_stage(this: usize, k: u32) {
 /// rules, the table with the twelve state clubs, the fixtures and the order; then the predicted positions and the
 /// referee renewal. The halves are only built at each one's first game (cqr_1)
 /// Original: `BraRegParana::start_new_season` (0x438060, bra_reg_parana.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x438060 } (thiscall, ret 0, bra_reg_parana.cpp): `BraRegParana::start_new_season()`, a virada do Paranaense (a tabela: 0x437ec0).
 pub(crate) unsafe extern "thiscall" fn bra_reg_parana_start_new_season(this: usize) -> u32 {
     start_new_season_two_halves(League(this), 0x437ec0, 0x98af98, 1, "cqr_2 virada do paranaense") // cqr2: the next year of the Paranaense
 }

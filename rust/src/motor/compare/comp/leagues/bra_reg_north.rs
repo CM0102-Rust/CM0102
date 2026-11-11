@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/bra_reg_north.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/bra_reg_north.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `bra_reg_north_create_semi_final_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_north_create_semi_final_stage(this: usize) {

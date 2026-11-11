@@ -1,8 +1,6 @@
 use super::*;
 
 /// Calls a no-argument thiscall virtual method of the cup at vtable offset o.
-///
-/// [pt] A virtual `o` da copa (thiscall, sem argumentos; mov edx, [esi]; mov ecx, esi; call [edx + o]).
 pub(crate) unsafe fn call_cup_virtual(this: Cup, o: usize) -> i32 {
     let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(read_usize(read_usize(this.addr()) + o));
     f(this.addr())
@@ -22,15 +20,6 @@ pub(crate) unsafe fn call_cup_virtual(this: Cup, o: usize) -> i32 {
 /// Then, each with its own error box if it returns negative: the entrants (`inscritos`, mov ecx, esi; direct call ->
 /// thiscall, ret 0), the rounds (virtual +0x8c, create_round_table for stage −1) and the tie tree (virtual +0x94);
 /// finally the predicted positions (virtual +0x5c), whose eax it returns.
-///
-/// [pt] A virada da temporada de uma copa de mata-mata (`start_new_season`, slot 3, +0x08; o mesmo molde nas copas, conferido
-/// instrução a instrução: só mudam o fonte das caixas, as linhas e a rotina dos inscritos): +0x4c = 0; a lista dos
-/// inscritos (+0xa7) e a das rodadas (+0xa3) liberadas (0x9452ca, cdecl) e zeradas; os confrontos por rodada (+0xad: um
-/// vetor por rodada, +0x3c rodadas, word com sinal) liberados e zerados um a um e o vetor liberado e zerado; com
-/// estatísticas (+8), Comp_Stats::archive_season_and_reset (0x4a1c50, push 1; mov ecx -> thiscall, ret 4); o ano (+0x40,
-/// word) sobe `ano` (1); +0xab = 0 e +0xb1 = 0 (bytes); então, cada um com a sua caixa se devolver negativo: os inscritos
-/// (`inscritos`, mov ecx, esi; call direto -> thiscall, ret 0), as rodadas (virtual +0x8c, create_round_table pela fase
-/// −1) e a árvore dos confrontos (virtual +0x94); por fim as posições previstas (virtual +0x5c), cujo eax ela devolve.
 pub(crate) unsafe fn start_new_cup_season(this: Cup, entrants: usize, file: usize, rows: [u32; 3], year: i16, ramo: &'static str) -> u32 {
     this.set_season_closed((0) as usize);
     for o in [0xa7usize, 0xa3] {
@@ -80,9 +69,6 @@ pub(crate) unsafe fn start_new_cup_season(this: Cup, entrants: usize, file: usiz
 }
 
 /// Comparer for the cup season change: only the original runs; checks the year (+0x40) went up by one.
-///
-/// [pt] O comparador da virada: só a original (simplification: libera as tabelas e refaz os inscritos, as rodadas e a árvore, que
-/// alocam e sorteiam; não pode rodar duas vezes), conferindo o que só ela garante: o ano (+0x40) sobe um.
 pub(crate) unsafe fn compare_cup_new_season(name: &str, this: Cup, original: impl FnOnce() -> u32) -> u32 {
     let before = this.year();
     let r = original();
@@ -95,10 +81,6 @@ pub(crate) unsafe fn compare_cup_new_season(name: &str, this: Cup, original: imp
 /// history is archived (Comp_Stats), the year goes up by one and the cup builds again its entrants (the team table),
 /// the rounds and the fixture tree, and the predicted positions
 /// Original: `BraCup::start_new_season` (0x427d10, bra_cup.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x427d10 } (thiscall, ret 0, bra_cup.cpp; a virtual +0x08 da Copa do Brasil): `BraCup::start_new_season()`, a
-/// virada (`start_new_cup_season`) com os inscritos de BraCup::build_team_table (0x427c20) e as caixas do bra_cup.cpp nas linhas
-/// 0x189, 0x190 e 0x197.
 pub(crate) unsafe extern "thiscall" fn bra_cup_start_new_season(this: usize) -> u32 {
     start_new_cup_season(Cup(this), 0x427c20, 0x98a3bc, [0x189, 0x190, 0x197], 1, "cqr_5 virada da copa do brasil") // cqr5: the Copa do Brasil
 }
@@ -107,9 +89,6 @@ pub(crate) unsafe extern "thiscall" fn bra_cup_start_new_season(this: usize) -> 
 ///
 /// The second leg is 14 days after the first up to the round of 16, 21 in the quarter-finals and 7 in the semi-final; 4
 /// days in the last three, midweek [inference].
-///
-/// [pt] A Copa do Brasil: sete rodadas em ida e volta de fevereiro a julho do ano da copa (o jogo de volta 14 dias depois do
-/// de ida até as oitavas, 21 nas quartas e 7 na semifinal; 4 dias nas três últimas, ao meio da semana [inferência]).
 pub(crate) const COPA_DO_BRASIL_ROUNDS: [EngCcCupCupRound; 7] = [
     cql10r((0x12, 0, 0, 6), (0x17, 1, 0, 2, 2, 0), 0xa, (0, 0, 1), 4, (0x36, 0x1b, 0x36, 0), (0, 2, 0xe), (0, 0xffff_ffff, 0)), // cqo12: the 1st round of the Copa do Brasil
     cql10r((9, 2, 0, 3), (0x16, 2, 0, 2, 2, 0), 0x14, (0, 0, 1), 4, (0x22, 0x11, 7, 0x36), (0, 2, 0xe), (0, 0xffff_ffff, 0)),
@@ -128,9 +107,6 @@ pub(crate) const COPA_DO_BRASIL_ROUNDS: [EngCcCupCupRound; 7] = [
 /// two-leg tie-break 1 (away goals [inference]); category 4 in the first two and 6 after; final prize 1 million to the
 /// winner and 800 thousand to the runner-up
 /// Original: `BraCup::create_round_table` (0x427700, bra_cup.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x427700 } (thiscall, ret 0x10, bra_cup.cpp; a virtual +0x3c da Copa do Brasil): `BraCup::create_round_table(fase,
-/// &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa4 sem memória.
 pub(crate) unsafe extern "thiscall" fn bra_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     eng_cc_cup_create_single_stage_round_table(Cup(this), stage, rounds, extra, out, &COPA_DO_BRASIL_ROUNDS, 0x98a3bc, 0xa4, "cqo_12 tabela da copa do brasil")
 }
@@ -143,10 +119,6 @@ pub(crate) unsafe extern "thiscall" fn bra_cup_create_round_table(this: usize, s
 /// class +4 = 0.
 ///
 /// Returns 1.
-///
-/// [pt] { 0x427c20 } (thiscall, ret 0, bra_cup.cpp): `BraCup::build_team_table()`: +0x3e = 71 e a tabela dos times (0x944e46
-/// de 0x1aa em +0xa7; sem memória, a caixa da linha 0x143 e −1); cada vaga i (6 bytes) recebe o clube da inscrição i da
-/// lista +0x14 (6 bytes), a situação +5 = 0xff e a classe +4 = 0. Devolve 1.
 pub(crate) unsafe fn build_brazil_cup_teams(this: Cup) -> i32 {
     this.set_team_count(0x47);
     let l = exe::crt_malloc(0x1aa);
@@ -173,9 +145,6 @@ pub(crate) unsafe fn build_brazil_cup_teams(this: Cup) -> i32 {
 /// rule: the Brazilian Cup has 71 places, one per entrant, in the entrant list order, all with class 0 and status 0xff
 /// (no match yet [inference])
 /// Original: `BraCup::build_team_table` (0x427c20, bra_cup.cpp, thiscall, ret 0).
-///
-/// [pt] regra: a Copa do Brasil tem 71 vagas, uma por inscrito, na ordem da lista dos inscritos, todas com a classe 0 e a
-/// situação 0xff (ainda sem jogo [inferência])
 pub(crate) unsafe extern "thiscall" fn bra_cup_build_team_table(this: usize) -> i32 {
     build_brazil_cup_teams(Cup(this))
 }
@@ -186,10 +155,6 @@ pub(crate) unsafe extern "thiscall" fn bra_cup_build_team_table(this: usize) -> 
 /// 7 substitutes on the bench (`+0x49`), 3 substitutions (`+0x4a`), the 500,000 prize fund (`+0x28`) and the round
 /// table in `+0xa3` (virtual `+0x3c` with stage −1, the rounds in `+0x3c` and the extra in `+0x3a`, no output). Returns
 /// 1.
-///
-/// [pt] { 0x427ec0 } (thiscall, ret 0, bra_cup.cpp; uma virtual da copa): `BraCup::set_up_rounds()`: 7 reservas (+0x49), 3
-/// substituições (+0x4a), o fundo de prêmios de 500 mil (+0x28) e a tabela das rodadas (a virtual +0x3c com a fase −1,
-/// as rodadas em +0x3c e o extra em +0x3a, sem saída) em +0xa3. Devolve 1.
 pub(crate) unsafe fn set_up_brazil_cup_rounds(this: Cup) -> i32 {
     covered!("cqo_12 copa do brasil rules");
     this.set_substitutes_named(7);
@@ -204,9 +169,6 @@ pub(crate) unsafe fn set_up_brazil_cup_rounds(this: Cup) -> i32 {
 /// rule: Brazilian Cup matches have 7 substitutes on the bench and 3 substitutions; the prize fund is 500 thousand;
 /// builds the round table
 /// Original: `BraCup::set_up_rounds` (0x427ec0, bra_cup.cpp, thiscall, ret 0).
-///
-/// [pt] regra: os jogos da Copa do Brasil têm 7 reservas no banco e 3 substituições; o fundo de prêmios é de 500 mil; monta
-/// a tabela das rodadas
 pub(crate) unsafe extern "thiscall" fn bra_cup_set_up_rounds(this: usize) -> i32 {
     set_up_brazil_cup_rounds(Cup(this))
 }

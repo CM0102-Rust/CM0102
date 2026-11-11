@@ -1,12 +1,8 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/jap_j1.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/jap_j1.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `jap_j1_advance_stage`.
-///
-/// [pt] O comparador da fase seguinte: só a original (simplification: ao chegar a 2 monta a final, que aloca e sorteia), com o
-/// plano: na última fase, +0x30 igual; senão +0x30 + 1 (a final grava 2, o mesmo valor).
 pub(crate) unsafe extern "thiscall" fn compare_jap_j1_advance_stage(this: usize) {
     let this = League(this);
     let before = this.current_stage() as i32;
@@ -21,10 +17,6 @@ pub(crate) unsafe extern "thiscall" fn compare_jap_j1_advance_stage(this: usize)
 /// Only the original runs (it allocates the list, the table and the stage and draws the round), checked against the
 /// plan made beforehand: the champions of the two halves. Afterwards, the stage of the third slot exists, with +0x3e =
 /// 2, +4 = the league's +4 and the two champions in its list (+0xa7, 6 bytes; as a set), and +0x30 = 2.
-///
-/// [pt] O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito antes:
-/// os campeões dos turnos. Depois, a fase da terceira vaga existe, com +0x3e = 2, +4 = o +4 da liga e os dois campeões
-/// na lista dela (+0xa7, 6 bytes; como conjunto), e +0x30 = 2.
 pub(crate) unsafe extern "thiscall" fn compare_create_championship_final_stage(this: usize) {
     let this = League(this);
     let (a, b) = (half_champion(this, 0), half_champion(this, 1));
@@ -39,9 +31,6 @@ pub(crate) unsafe extern "thiscall" fn compare_create_championship_final_stage(t
 }
 
 /// Comparer for `jap_j1_start_new_season`.
-///
-/// [pt] O comparador da virada: só a original (simplification: libera e aloca tabelas e fases, sorteia jogos e árbitros e vira a
-/// J2; não pode rodar duas vezes), conferindo o que só ela garante: o ano sobe um e +0x2c = 3.
 pub(crate) unsafe extern "thiscall" fn compare_jap_j1_start_new_season(this: usize) -> u32 {
     let this = League(this);
     let before = this.year();

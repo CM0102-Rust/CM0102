@@ -1,8 +1,6 @@
 use super::*;
 
 /// The club's nation (+0x53).
-///
-/// [pt] A nação do clube (+0x53).
 pub(crate) unsafe fn club_nation(club: Club) -> usize {
     club.nation().addr()
 }
@@ -48,36 +46,6 @@ pub(crate) unsafe fn club_nation(club: Club) -> usize {
 /// table (from +0x3e − 24), with +4 and +5 cleared, into its +0x14 table with status 5 (+0x36 goes up) and with the
 /// club's European competition (+0x1db) = `[0x9cf6f0]`; then the UEFA Cup's predicted positions (its method +0x5c).
 /// Original: `EuropeanCup::draw_phase1_groups` (0x585290, european_cup.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x585290 } (thiscall, ret 0, european_cup.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
-/// normal): `EuropeanCup::draw_phase1_groups()`, da fase seguinte da Liga dos Campeões (0x5851d0, fase 0).
-/// 1) A lista dos 32 (0x945501(0x20, 9) push 9; push 0x20; add esp, 8 -> cdecl; 9 bytes: +0 o clube, +4 o parceiro da
-///    mesma nação, +8 a metade: 1 grupos A..D, 2 grupos E..H; sem memória, a caixa da linha 0x4cc): os 16 primeiros da
-///    tabela [+0x14] (6 bytes) e os times da tabela [+0xa7] (6 bytes) com +5 = 1 (os vencedores da terceira
-///    preliminar). Menos de 32: a caixa da linha 0x4ee, +0x30 = −1, a lista liberada e +0xb1 = 0.
-/// 2) A lista ordenada pelo pote (qsort 0x945333 com 0x586f60: +0x1df do clube e a reputação) e cada clube sem parceiro
-///    ganha o primeiro seguinte sem parceiro da mesma nação (os dois se apontam).
-/// 3) Os grupos (0x945501(0x20, 4): 8 grupos × 4 potes; sem memória, a caixa da linha 0x515 e o jogo para): para cada
-///    pote de 8 (k = 0..3) começam livres 4 vagas em cada metade, menos as já marcadas; 8 vezes um clube do pote
-///    sorteado (0x90cfc0(8) + 8k, de novo enquanto a vaga já saiu); sem metade, sorteia uma (0x90cfc0(livres A +
-///    livres B) < livres B: a segunda) e o parceiro, se é do mesmo pote, fica na outra metade (sem vaga lá, não marca);
-///    entra no primeiro grupo da metade com o pote livre.
-/// 4) Em cada metade e pote, um clube com outro da mesma nação no grupo troca de lugar com o do mesmo pote do primeiro
-///    outro grupo da metade sem a nação dele.
-/// 5) Cada grupo: os 4 clubes ganham 1 ponto do coeficiente da nação (0x9058b0 em [0xde1f58]: push 1; push nação ->
-///    thiscall, ret 8), o prêmio de 1.800.000 (0x5a0590 em [0xae2a38] push clube -> thiscall, ret 4; 0x5999a0 push
-///    valor; mov ecx, finanças -> thiscall, ret 4) e a notícia do prêmio (0x48e3e0: push −2; push 0; push 0x449; push
-///    −1; push 0; push valor; push clube; mov ecx, this -> thiscall, ret 0x1c); a tabela das rodadas do método +0x3c
-///    (push 0; push &id; push &rodadas; push g; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xee) e o
-///    construtor League_Stage 0x68b100: this, 4, o grupo, 2, +4, a tabela, as rodadas (word), 3, 1, 8, &{4,1,2,0},
-///    &{2,0,0,0}, o ano (word), g, o id (word), 0xf, 2, 0, 8, −1, 0, 2; a original empurra o ano com lixo nos bytes
-///    altos do edx, que o construtor não lê: a cópia passa o ano limpo) em [+0xc][g] (sem fase, a caixa da linha 0x5c9
-///    e volta, sem liberar a tabela nem os grupos); a tabela das rodadas liberada, +0x30 = g e a notícia do grupo
-///    (0x684230).
-/// 6) Os grupos liberados; os times de +0xa7 com +5 = 2 (os perdedores da terceira preliminar) vão para a Copa da UEFA
-///    ([[0xadadfc] + 4 × [0x9cf6f0]]; sem ela, a caixa da linha 0x5d8): nas últimas 24 vagas da tabela +0xa7 dela (a
-///    partir de +0x3e − 24), +4 e +5 zerados, na tabela +0x14 dela com a situação 5 (+0x36 sobe) e com a competição
-///    europeia do clube (+0x1db) = [0x9cf6f0]; depois as posições previstas da UEFA (método +0x5c dela).
 pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
     let this = Cup(this);
     #[allow(clippy::type_complexity)]
@@ -311,8 +279,6 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
 
 /// The 32 clubs the draw puts in groups: the first 16 entrants of [+0x14] plus table entries (+0xa7) with +5 = 1,
 /// sorted.
-///
-/// [pt] Os 32 clubes que o sorteio põe nos grupos: os 16 primeiros de [+0x14] e os de +0xa7 com +5 = 1.
 pub(crate) unsafe fn group_draw_clubs(this: Cup) -> Vec<usize> {
     let mut v: Vec<usize> = (0..16usize).map(|k| read_usize(this.entrant_book() + k * 6)).collect();
     for k in 0..this.team_count().max(0) as usize {
@@ -327,10 +293,6 @@ pub(crate) unsafe fn group_draw_clubs(this: Cup) -> Vec<usize> {
 
 /// the pot comparison: the club's European seed (+0x1df), and on a tie the higher reputation first
 /// Original: `european_cup_compare_clubs_by_seed` (0x586f60, european_cup.cpp, cdecl).
-///
-/// [pt] { 0x586f60 } (cdecl, european_cup.cpp): `european_cup_compare_clubs_by_seed(a, b)`, a comparação da qsort dos potes
-/// do sorteio (0x585290): o byte +0x1df (a semente europeia) de a menos o de b; empate: a reputação (+0x80, word) de b
-/// menos a de a.
 pub(crate) unsafe extern "C" fn european_cup_compare_clubs_by_seed(a: *const usize, b: *const usize) -> i32 {
     let (x, y) = (*a, *b);
     let r = read_u8(x + club::EURO_SEEDING) as i8 as i32 - read_u8(y + club::EURO_SEEDING) as i8 as i32;
@@ -355,14 +317,6 @@ pub(crate) unsafe extern "C" fn european_cup_compare_clubs_by_seed(a: *const usi
 ///
 /// 4) The preliminaries, from the last to the first: each club of the round gets the counter value from the start of
 /// that round (it goes up with each one).
-///
-/// [pt] As posições que a 0x586900 grava, na ordem das chamadas à 0x4a2540: (índice do clube no vetor ordenado, posição).
-/// `mata` é a tabela das rodadas do mata-mata (0x68 bytes por rodada, +0x1a a conta de confrontos) com `nm` rodadas;
-/// as preliminares vêm de [+0xa3] com +0x3c rodadas.
-/// 1) O mata-mata, da final para trás: na final, os da primeira volta ganham a posição 1 (o contador sobe a cada um);
-///    em toda rodada, cada um dos seguintes ganha o contador do começo da rodada (que sobe a cada um).
-/// 2) A segunda fase: 2 × (4 clubes com o contador; o contador sobe 4). 3) A primeira fase: 2 × (8 clubes; sobe 8).
-/// 4) As preliminares, da última para a primeira: cada clube da rodada com o contador do começo dela (sobe a cada um).
 pub(crate) unsafe fn planned_final_positions(this: Cup, knockout: usize, nm: i16) -> (Vec<(i16, u8)>, usize) {
     let mut v = Vec::new();
     let mut i = 0i16;
@@ -428,14 +382,6 @@ pub(crate) unsafe fn planned_final_positions(this: Cup, knockout: usize, nm: i16
 /// the original pushes the stack dword with the position in the low byte and garbage in the others, and `set_club_final_position` writes
 /// only the byte: the copy passes the clean byte) following the plan in `planned_final_positions`; the array freed.
 /// Original: `EuropeanCup::rank_teams` (0x586900, european_cup.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x586900 } (thiscall, ret 0, european_cup.cpp, método +0x5c da Liga dos Campeões): `EuropeanCup::rank_teams()`, as
-/// posições previstas. Sem estatística (+8): a caixa da linha 0x81b. Os inscritos da tabela [+0x14] (6 bytes, +0x36
-/// deles) num vetor (0x944e46; sem memória, a caixa da linha 0x823), ordenado pela força (0x4c08f0: push n; push vetor;
-/// add esp, 8 -> cdecl); a tabela do mata-mata pelo método +0x3c (push 0; push &id; push &rodadas; push 0xc; mov ecx ->
-/// thiscall, ret 0x10), liberada depois; a posição de cada um, na ordem do vetor, pela 0x4a2540 (push posição; push
-/// clube; mov ecx, [+8] -> thiscall, ret 8; a original empurra o dword da pilha com a posição no byte de baixo e lixo
-/// nos outros, e a 0x4a2540 só grava o byte: a cópia passa o byte limpo) no plano de `planned_final_positions`; o vetor liberado.
 pub(crate) unsafe extern "thiscall" fn european_cup_rank_teams(this: usize) {
     let this = Cup(this);
     if read_usize(this.addr() + 8) == 0 {
@@ -471,9 +417,6 @@ pub(crate) unsafe extern "thiscall" fn european_cup_rank_teams(this: usize) {
 }
 
 /// Copies a 7-byte group entry (club, same-nation count, first-stage group, winner/runner-up) as the original does.
-///
-/// [pt] Copia a entrada de 7 bytes `de` (+0 o clube, +4 os da mesma nação, +5 o grupo da primeira fase, +6 0 vencedor / 1
-/// segundo) para `para`, como a original: o dword, o word +4 e o byte +6.
 pub(crate) unsafe fn copy_group_entry(para: usize, of: usize) {
     write_usize(para, read_usize(of));
     write_u16(para + 4, read_i16(of + 4) as u16);
@@ -515,29 +458,6 @@ pub(crate) unsafe fn copy_group_entry(para: usize, of: usize) {
 /// with status 5 and with the club's European competition = the UEFA Cup; the fourth places (push 3) are left without a
 /// European competition (−1); then the UEFA Cup's predicted positions (method +0x5c).
 /// Original: `EuropeanCup::draw_phase2_groups` (0x585ab0, european_cup.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x585ab0 } (thiscall, ret 4, european_cup.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
-/// normal): `EuropeanCup::draw_phase2_groups(tentativa)`, da fase seguinte da Liga dos Campeões (0x5851d0, fase 8,
-/// tentativa 0).
-/// 1) Os 16 classificados (0x945501(0x10, 7); sem memória, a caixa da linha 0x61c): de cada grupo b da primeira fase
-///    ([+0xc][b]) o primeiro e o segundo da tabela (0x6826d0 push 0 / push 1; mov ecx, fase -> thiscall, ret 4), com o
-///    grupo b e 0/1; +4 conta os da lista com a mesma nação (o próprio incluído); a lista ordenada (qsort 0x945333 com
-///    0x5871e0) e os cartões de cada um zerados no órgão da competição (0x7e9180, como no sorteio da Copa do Mundo).
-/// 2) Os pares do mesmo grupo da primeira fase (duas listas zeradas de 16, sem memória as caixas 0x649 e 0x651): cada
-///    clube ainda na lista vai para a vaga k (vencedor) ou k + 1 (segundo) e o outro do grupo dele para a outra; k sobe 2.
-/// 3) Cada um dos 16, na ordem dos pares: a ordem dos 4 grupos embaralhada (5 trocas de 0x90cfc0(4) e 0x90cfc0(4));
-///    o grupo com menos times entre os que têm vaga na metade dele (vencedores nas vagas 0/1, segundos nas 2/3) e não
-///    têm time do mesmo grupo da primeira fase nem da mesma nação recebe o clube.
-/// 4) Sobrou clube sem grupo: com a tentativa < 20, as listas liberadas e o sorteio de novo com a tentativa + 1 (a
-///    chamada fica dentro desta); na 20ª, cada sobra ocupa a primeira vaga livre (o clube continua na lista dos pares).
-/// 5) Cada grupo h (0..3): os 4 clubes ganham 1 ponto do coeficiente, o prêmio de 1.200.000 e a notícia (0x48e3e0 com a
-///    rodada 0x44a); a fase h + 8 (o método +0x3c, 0x944cf1(0xee) e o construtor 0x68b100 com os mesmos argumentos do
-///    sorteio da primeira fase, a lista dos 4 clubes copiada num vetor de 0x40 bytes (0x944e46); sem fase, a caixa da
-///    linha 0x715), +0x30 = h + 8 e a notícia do grupo. As quatro listas liberadas.
-/// 6) Os terceiros da primeira fase (0x6826d0 push 2) vão para a Copa da UEFA ([[0xadadfc] + 4 × [0x9cf6f0]]; sem ela, a
-///    caixa da linha 0x729): nas últimas 8 vagas da tabela +0xa7 dela, de trás para a frente, na tabela +0x14 com a
-///    situação 5 e com a competição europeia do clube = a UEFA; os quartos (push 3) ficam sem competição europeia (−1);
-///    depois as posições previstas da UEFA (método +0x5c).
 pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: u32) {
     let this = Cup(this);
     #[allow(clippy::type_complexity)]
@@ -752,8 +672,6 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
 }
 
 /// The 16 clubs that go to the second stage (top two of each first-stage group), sorted.
-///
-/// [pt] Os 16 clubes que vão para a segunda fase (o primeiro e o segundo de cada grupo da primeira).
 pub(crate) unsafe fn second_stage_clubs(this: Cup) -> Vec<usize> {
     let mut v = Vec::with_capacity(16);
     for b in 0..8usize {
@@ -772,10 +690,6 @@ pub(crate) unsafe fn second_stage_clubs(this: Cup) -> Vec<usize> {
 /// count (+4) minus a's; on a tie: the nation's word +0x8e (the club's +0x53) of b minus a's; on a tie: a's +6 (the
 /// runner-up flag) minus b's.
 /// Original: `european_cup_compare_phase2_draw_entries` (0x5871e0, european_cup.cpp, cdecl).
-///
-/// [pt] { 0x5871e0 } (cdecl, european_cup.cpp): `european_cup_compare_phase2_draw_entries(a, b)`, a comparação da qsort dos
-/// classificados (0x585ab0): os da mesma nação (+4) de b menos os de a; empate: o word +0x8e da nação (+0x53 do clube) de
-/// b menos o de a; empate: +6 (o segundo) de a menos o de b.
 pub(crate) unsafe extern "C" fn european_cup_compare_phase2_draw_entries(a: usize, b: usize) -> i32 {
     let r = read_u8(b + 4) as i8 as i32 - read_u8(a + 4) as i8 as i32;
     if r != 0 {
@@ -789,38 +703,27 @@ pub(crate) unsafe extern "C" fn european_cup_compare_phase2_draw_entries(a: usiz
 }
 
 /// comp_util_scale_by_round (`comp_util_scale_by_round`): a value between low and high by round, 0..100.
-///
-/// [pt] comp_util_scale_by_round (0x4bf850, cdecl(baixo, alto, rodada, rodadas)): a faixa pela rodada, de 0 a 100.
 pub(crate) unsafe fn scale_by_round(low: u32, high: u32, round: i16, rounds: u32) -> u32 {
     // simplification: the original pushes the round in a register with garbage in the high 16 bits; 0x4bf850 only reads the word.
     exe::comp_util_scale_by_round(low, high, round as u16 as u32, rounds) as u32 
 }
 
 /// Staff_Records add_qualified_for_round_record for the club.
-///
-/// [pt] Staff_Records::add_qualified_for_round_record (0x86bdd0: thiscall(registros, clube, comp, fase, rodada, peso),
-/// ret 0x14).
 pub(crate) unsafe fn european_cup_add_qualified_record(club: usize, comp: usize, stage: u32, round: u32, weight: u32) {
     exe::staff_records_add_qualified_for_round_record(eng_second_staff_records(), club, comp, stage, round, weight);
 }
 
 /// Staff_Records add_failed_to_qualify_record for the club.
-///
-/// [pt] Staff_Records::add_failed_to_qualify_record (0x86c1d0: thiscall(registros, clube, comp, fase, _), ret 0x10).
 pub(crate) unsafe fn european_cup_add_failed_to_qualify_record(club: usize, comp: usize, stage: u32, x: u32) {
     exe::staff_records_add_failed_to_qualify_record(eng_second_staff_records(), club, comp, stage, x);
 }
 
 /// Staff_Records add_knocked_out_record for the club.
-///
-/// [pt] Staff_Records::add_knocked_out_record (0x86c000: thiscall(registros, clube, comp, fase, rodada, _), ret 0x14).
 pub(crate) unsafe fn european_cup_add_knocked_out_record(club: usize, comp: usize, stage: u32, round: u32, x: u32) {
     exe::staff_records_add_knocked_out_record(eng_second_staff_records(), club, comp, stage, round, x);
 }
 
 /// Removes the club from its European competition this season (CONTINENTAL_COMP_ID +0x1db = -1).
-///
-/// [pt] O clube sai da competição europeia da temporada (+0x1db = −1).
 pub(crate) unsafe fn leave_euro_competition(club: Club) {
     write_i32(club.addr() + club::CONTINENTAL_COMP_ID, -1);
 }
@@ -850,19 +753,6 @@ pub(crate) unsafe fn leave_euro_competition(club: Club) {
 /// bytes), `comp_util_scale_by_round`(0x4b, 0x64, round, 2)); 0xff, the elimination (0, the fixture's +0x30, `comp_util_scale_by_round`(0x4b, 0x64, round,
 /// 2)) and the club leaves.
 /// Original: `EuropeanCup::update_staff_records_for_status` (0x584ae0, european_cup.cpp, thiscall, ret 0x18).
-///
-/// [pt] { 0x584ae0 } (thiscall, ret 0x18, european_cup.cpp): `EuropeanCup::update_staff_records_for_status(clube,
-/// desfecho, fase, _, jogo, final)`, a virtual +0x44 da Liga dos Campeões. Devolve 0. Comp = +4.
-/// - Na qualificação (fase 0xff): desfecho 0 ou 1, a classificação pela rodada do jogo (+0x34): na rodada 0, com a
-///   fase +0x3a e o +0x6f da primeira rodada (+0xa3) e o peso 0x4bf850(1, 0x14, 0, 2); noutra, 0x41c, 0 e
-///   0x4bf850(1, 0x14, rodada, 2). Desfecho 0xff ou 2: a eliminação (0x86c000) com +0x32 e +0x30 do jogo e o peso
-///   0x4bf850(1, 0x14, rodada, 2), e o clube sai (+0x1db = −1).
-/// - Na fase 1 (fase < 8): 6, a classificação (0x44a, −1, 0x32); 0xfe, a não classificação (0x449, 0x32) e sai.
-/// - Na fase 2 (8 a 11): 6, a classificação (0, 0x78, 0x32); 0xfe, a não classificação (0x44a, 0x32) e sai.
-/// - No mata-mata (12): 1, o título (Staff_Records::add_cup_winners_record 0x86a800, thiscall(registros, clube, jogo,
-///   final), ret 0xc) e sai; 2, o vice (0x86b0b0, idem) e sai; 0, a classificação (0, o +0x6f da rodada do jogo na
-///   tabela de rodadas da fase do mata-mata ([+0xc] + 0x30, +0xa3, 0x68 bytes), 0x4bf850(0x4b, 0x64, rodada, 2));
-///   0xff, a eliminação (0, +0x30 do jogo, 0x4bf850(0x4b, 0x64, rodada, 2)) e sai.
 pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, _a: u32, game: usize, end: u32) -> u32 {
     let this = Cup(this);
     let d = outcome as u8;
@@ -942,9 +832,6 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
 // club: −1 in the cases where it leaves, untouched in the others).
 
 /// Draws four distinct group indices (rand 4 each until unused).
-///
-/// [pt] Os quatro sorteados da fase 2 (os índices dos grupos, todos diferentes): a, b ≠ a, c ≠ a, b e d ≠ a, b, c, cada um
-/// com sorteio(4) (0x90cfc0) até sair um que serve (a d sorteia pelo menos uma vez: começa igual à a).
 pub(crate) unsafe fn draw_four_groups() -> [i8; 4] {
     let a = random(4) as i8;
     let mut b = random(4) as i8;
@@ -963,9 +850,6 @@ pub(crate) unsafe fn draw_four_groups() -> [i8; 4] {
 }
 
 /// Club in row k of second-stage group g (League get_table_row).
-///
-/// [pt] O clube da linha `k` do grupo `g` da fase 2 (a fase [+0xc] + 0x20 + 4 × g; League::get_table_row 0x6826d0,
-/// thiscall(grupo, k), ret 4).
 pub(crate) unsafe fn second_stage_group_club(this: Cup, g: i8, k: u32) -> Club {
     Club(read_usize(exe::league_get_table_row(read_usize(this.stages() + 0x20 + 4 * (g as i32 as usize)), (k) as i32)))
 }
@@ -983,15 +867,6 @@ pub(crate) unsafe fn second_stage_group_club(this: Cup, g: i8, k: u32) -> Club {
 /// freed (`exe::crt_free`). Without a stage: the error box at line 0x78a. Otherwise the 3rd and 4th of each phase 2 group
 /// leave (+0x1db = −1), the round is set up (Cup::set_up_round `set_up_round`, thiscall(stage, 0)) and +0x30 = 12.
 /// Original: `EuropeanCup::draw_quarter_finals` (0x586330, european_cup.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x586330 } (thiscall, ret 0, european_cup.cpp): `EuropeanCup::draw_quarter_finals()`, da fase seguinte 0x5851d0
-/// na fase 12. A lista das 8 (calloc 0x945501 de 8 × 4; sem memória: a caixa da linha 0x762) com os grupos sorteados
-/// a, b, c e d: o 1º de a × o 2º de b, o 2º de a × o 1º de b, o 1º de c × o 2º de d e o 2º de c × o 1º de d. Cada um
-/// passa pela 0x7e9180 (thiscall(o objeto [[0xae28f0]] + 4 × +0x50, clube), ret 4). A virtual +0x3c (create_round_table:
-/// fase 12) e a fase do mata-mata (operator new 0x944cf1 de 0xb2; Cup_Stage::Cup_Stage 0x522e00 com a copa, 8, a lista,
-/// as rodadas, +4, a tabela, +0x40, 0xc, 2, o extra, 0x14, 1, 0, 0, 0) na vaga [+0xc] + 0x30; a lista e a tabela
-/// liberadas (0x9452ca). Sem fase: a caixa da linha 0x78a. Senão o 3º e o 4º de cada grupo da fase 2 saem (+0x1db =
-/// −1), a rodada montada (Cup::set_up_round 0x51c800, thiscall(fase, 0)) e +0x30 = 12.
 pub(crate) unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
     let this = Cup(this);
     let list = exe::crt_calloc(8, 4);
@@ -1042,9 +917,6 @@ pub(crate) unsafe extern "thiscall" fn draw_quarter_finals(this: usize) {
 
 /// Entrants (+0x14, 6 bytes each) still in the competition (+0x1db = the cup id), optionally excluding entry round 7;
 /// writes them to v and returns the count.
-///
-/// [pt] A lista dos inscritos (+0x14, 6 bytes: +0 o clube, +4 a rodada de entrada; +0x38 deles) que seguem na competição
-/// (+0x1db = o id da copa, [+4]); com `sem_7`, fora os de rodada de entrada 7. Grava em `v` (até 71) e devolve a conta.
 pub(crate) unsafe fn active_entrants(this: Cup, without_7: bool, v: *mut usize) -> i16 {
     let mut n: i16 = 0;
     let mut i: i16 = 0;
@@ -1069,12 +941,6 @@ pub(crate) unsafe fn active_entrants(this: Cup, without_7: bool, v: *mut usize) 
 /// 0x11c bytes; out of memory: the error box at line 0x7b5, 0x7cf or 0x7e9, null list and 0) goes into `list`; returns
 /// the count in the low word (the high word is the list pointer's).
 /// Original: `EuropeanCup::collect_club_list` (0x586660, european_cup.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x586660 } (thiscall, ret 8, european_cup.cpp): `EuropeanCup::collect_club_list(&lista, tipo)`, a virtual +0x58
-/// da Liga dos Campeões. Tipo 1: os inscritos que seguem, fora os da rodada 7; tipo 2: todos os que seguem; tipo 3 na
-/// fase 11: os que seguem; noutro caso a da competição (Comp::collect_club_list 0x48e1c0, thiscall(this, &lista, 0),
-/// ret 8). A lista (malloc 0x944e46 de 0x11c bytes; sem memória: a caixa das linhas 0x7b5, 0x7cf ou 0x7e9, lista
-/// nula e 0) vai em `lista`; devolve a conta na palavra de baixo (a de cima é a do ponteiro da lista).
 pub(crate) unsafe extern "thiscall" fn european_cup_collect_club_list(this: usize, out: usize, kind: u32) -> u32 {
     let this = Cup(this);
     let t = kind as u8;
@@ -1104,9 +970,6 @@ pub(crate) unsafe fn european_cup_malloc(n: u32) -> usize {
 }
 
 /// Writes a 6-byte entrant record: club (+0), +5 = 0, entry round (+4), in the original's order.
-///
-/// [pt] Uma entrada de 6 bytes da lista dos inscritos: o clube (+0), a rodada em que entra (+4) e +5 = 0 (nesta ordem,
-/// como a original).
 pub(crate) unsafe fn european_cup_write_entrant(p: usize, club: usize, round: u8) {
     write_usize(p, club);
     write_u8(p + 5, 0);
@@ -1119,11 +982,6 @@ pub(crate) unsafe fn european_cup_write_entrant(p: usize, club: usize, round: u8
 /// Clubs whose European competition (+0x1db) is the Champions League ([0x9cf6e8]) enter list `t` by band (+0x1df): 1 at
 /// +0 (up to 16, round 7), 2 at +0x60 (up to 18, round 8), 3 at +0xcc (up to 19, round 0xd), 4 at +0x13e (up to 18,
 /// round 0). Returns the sum of the four counts.
-///
-/// [pt] O laço da 0x584fa0 sobre os clubes ([0xae23b4], 0x245 bytes, [0xae235c] deles): quem tem a competição europeia
-/// (+0x1db) da Liga dos Campeões ([0x9cf6e8]) entra pela banda (+0x1df) na lista `t`: 1 em +0 (até 16, rodada 7),
-/// 2 em +0x60 (até 18, rodada 8), 3 em +0xcc (até 19, rodada 0xd), 4 em +0x13e (até 18, rodada 0). Devolve a soma
-/// das quatro contas.
 pub(crate) unsafe fn fill_champions_league_entrants(t: usize) -> i32 {
     let clubs = read_i32(G_CLUB_COUNT);
     let (mut n1, mut n2, mut n3, mut n4) = (0i32, 0i32, 0i32, 0i32);
@@ -1184,11 +1042,6 @@ pub(crate) unsafe fn fill_champions_league_entrants(t: usize) -> i32 {
 /// [0x9cf6e8]) by band (+0x1df): 1 up to 16 (round 7), 2 up to 18 (8), 3 up to 19 (0xd), 4 up to 18 (0); short of 71,
 /// +0x36 = 0 and returns 0
 /// Original: `EuropeanCup::collect_entrants` (0x584fa0, european_cup.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x584fa0 } (thiscall, ret 0, european_cup.cpp): `EuropeanCup::collect_entrants()`, do construtor (0x583888, na
-/// carreira nova) e do começo da temporada (0x584e5d). +0x36 e +0x38 = 71; libera a lista antiga (+0x14, free
-/// 0x9452ca) e aloca 6 × 71 bytes (0x944e46; sem memória: a caixa da linha 0x44e e 0, com +0x14 nulo); preenche as
-/// quatro bandas (fill_champions_league_entrants). Sem as 71 entradas: +0x36 = 0 e 0; senão 1.
 pub(crate) unsafe extern "thiscall" fn european_cup_collect_entrants(this: usize) -> u32 {
     let this = Cup(this);
     this.set_entrant_count(0x47);
@@ -1212,10 +1065,6 @@ pub(crate) unsafe extern "thiscall" fn european_cup_collect_entrants(this: usize
 
 /// Loop of `build_qualifying_entry_table` over the 55 table rows: each row gets an entrant from the list (reverse order) and a code from the
 /// entry round (8 -> 2, 0xd -> 1, else 0).
-///
-/// [pt] O laço da 0x584990 sobre as 55 linhas (+0x3e) da tabela `t`: a linha i leva o clube da entrada (+0x36) − i − 1 da
-/// lista (+0x14; lista vazia: 0) e a rodada pela entrada (+0x36) − i, byte +4 da anterior (8 → 2, 0xd → 1, outra →
-/// 0); +5 = 0. Com +0x36 = 0 a original lê antes da lista (índice negativo), como aqui.
 pub(crate) unsafe fn fill_qualifying_table(this: Cup, t: usize) {
     let mut i: i32 = 0;
     let mut k = 0usize;
@@ -1240,10 +1089,6 @@ pub(crate) unsafe fn fill_qualifying_table(this: Cup, t: usize) {
 /// allocates the 55 qualifying rows (+0xa7, +0x3e = 55): row i takes the club of entry 70 - i and its entry round (8 ->
 /// 2, 0xd -> 1, other -> 0); out of memory, -1
 /// Original: `EuropeanCup::build_qualifying_entry_table` (0x584990, european_cup.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x584990 } (thiscall, ret 0, european_cup.cpp): `EuropeanCup::build_qualifying_entry_table()`, logo depois da
-/// 0x584fa0 (0x58388f, 0x584e9a). +0x3e = 55; aloca 6 × 55 bytes em +0xa7 (sem memória: a caixa da linha 0x2f6 e −1)
-/// e monta as linhas da qualificação de trás para a frente (fill_qualifying_table); devolve 1.
 pub(crate) unsafe extern "thiscall" fn build_qualifying_entry_table(this: usize) -> i32 {
     let this = Cup(this);
     this.set_team_count(0x37);
@@ -1265,11 +1110,6 @@ pub(crate) unsafe extern "thiscall" fn build_qualifying_entry_table(this: usize)
 /// thiscall(this)); at 8, the phase 2 draw (`draw_phase2_groups`, thiscall(this, 0), ret 4); at 12, the quarter-finals (`draw_quarter_finals`,
 /// thiscall(this)). The caller does not read the return value.
 /// Original: `EuropeanCup::advance_stage` (0x5851d0, european_cup.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x5851d0 } (thiscall, ret 0, european_cup.cpp): `EuropeanCup::advance_stage()` (a virtual +0x28, do passe da
-/// copa 0x51f904). Na última fase (+0x30 ≥ +0x2c − 1, com sinal): a caixa da linha 0x495. Senão +0x30 + 1 e, na fase
-/// 0, o sorteio dos grupos da fase 1 (0x585290, thiscall(this)); na 8, os da fase 2 (0x585ab0, thiscall(this, 0),
-/// ret 4); na 12, as quartas (0x586330, thiscall(this)). Quem chama não lê a devolução.
 pub(crate) unsafe extern "thiscall" fn european_cup_advance_stage(this: usize) {
     let this = Cup(this);
     let f = this.current_stage() as i32;
@@ -1299,23 +1139,16 @@ pub(crate) unsafe extern "thiscall" fn european_cup_advance_stage(this: usize) {
 // simplification: the draws roll, allocate the stages and send news: original only; the copy takes the branch.
 
 /// Club's finance record (FINANCETABLE get_club_finance on G_FINANCE_TABLE).
-///
-/// [pt] O registro de finanças do clube (0x5a0590: thiscall(tabela [0xae2a38], clube), ret 4).
 pub(crate) unsafe fn european_cup_club_finance(club: usize) -> usize {
     exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club)
 }
 
 /// Adds prize money to the finance record (balance, +0xa8 and +0x148).
-///
-/// [pt] Soma no saldo, em +0xa8 e em +0x148 (0x5999a0: thiscall(finanças, valor), ret 4).
 pub(crate) unsafe fn european_cup_add_prize_money(fin: usize, value: i32) {
     exe::finance_add_prize_money(fin, value)
 }
 
 /// Adds coefficient points for the nation (UEFASEEDING add_nation_points).
-///
-/// [pt] Os pontos do coeficiente da UEFA para a nação (0x9058b0: thiscall(tabela [0xde1f58], nação, pontos), ret 8; soma
-/// o byte dos pontos na palavra +0xf + 18 × índice (+0x1df da seleção 0x53b3d0 da nação)).
 pub(crate) unsafe fn add_uefa_coefficient(nation: usize, points: u32) {
     exe::uefaseeding_add_nation_points(read_usize(G_UEFA_SEEDING), nation, points);
 }
@@ -1324,14 +1157,9 @@ pub(crate) unsafe fn add_uefa_coefficient(nation: usize, points: u32) {
 ///
 /// The copy runs without the prize news (`0x48e3e0`, which allocates) and without the cup base (`0x51a150`, which
 /// processes the whole match and cannot run twice).
-///
-/// [pt] O ensaio do comparador da 0x583b10: a cópia roda sem a notícia do prêmio (0x48e3e0, que aloca) e sem a base da copa
-/// (0x51a150, que processa o jogo inteiro e não pode rodar duas vezes).
 pub(crate) static EUROPEAN_CUP_FIXTURE_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// Sends the prize money news (Comp `send_prize_money_news`); nothing in dry run.
-///
-/// [pt] A notícia do prêmio (Comp 0x48e3e0: thiscall(this, clube, valor, 0, −1, 0, jogo, −2), ret 0x1c); no ensaio, nada.
 pub(crate) unsafe fn european_cup_send_prize_money_news(this: usize, club: Club, value: u32, game: Fixture) {
     if EUROPEAN_CUP_FIXTURE_DRY_RUN.load(Relaxed) {
         return;
@@ -1343,12 +1171,6 @@ pub(crate) unsafe fn european_cup_send_prize_money_news(this: usize, club: Club,
 /// (0x9058b0); in the group stage (+0x42 from 0 to 11), 200 thousand to the winner or 100 thousand each, with the prize
 /// news item (`send_prize_money_news`); then the cup base (`exe::cup_process_fixture`)
 /// Original: `EuropeanCup::process_fixture` (0x583b10, european_cup.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x583b10 } (thiscall, ret 8, european_cup.cpp): `EuropeanCup::process_fixture(jogo, arg)` (a virtual +4 da Liga dos
-/// Campeões, a cada jogo dela). O placar: +0x47/+0x48 (com +0x47 = −1, +0x43/+0x44), com sinal. O vencedor ganha 2
-/// pontos no coeficiente da sua nação (+0x53; 0x9058b0), o empate 1 para cada. Na fase de grupos (+0x42 de 0 a 11):
-/// 200 mil ao vencedor ou 100 mil a cada um no empate (0x5a0590 + 0x5999a0), com a notícia do prêmio (0x48e3e0;
-/// no empate, as duas somas antes das duas notícias). Depois a base da copa (0x51a150 com o jogo e `arg`).
 pub(crate) unsafe extern "thiscall" fn process_fixture(this: usize, game: usize, arg: u32) {
     let game = Fixture(game);
     let (ga, gb) = if (game.home_goals_extra_time() as u8) != 0xff {
@@ -1391,9 +1213,6 @@ pub(crate) unsafe extern "thiscall" fn process_fixture(this: usize, game: usize,
 
 /// Address of the club nation's UEFA coefficient word ([G_UEFA_SEEDING] + 18 x national-team +0x1df + 0xf); 0 if
 /// missing.
-///
-/// [pt] A palavra do coeficiente da nação do clube: [0xde1f58] + 18 × (+0x1df da seleção 0x53b3d0 da nação +0x53) + 0xf,
-/// como a 0x9058b0 calcula; 0 sem tabela, sem nação ou sem seleção.
 pub(crate) unsafe fn nation_coefficient_word(club: Club) -> usize {
     let table = read_usize(G_UEFA_SEEDING);
     let nation = club.nation().addr();
@@ -1416,13 +1235,6 @@ pub(crate) unsafe fn nation_coefficient_word(club: Club) -> usize {
 /// (p2: 1), 17 → 0x21, 33 → 0x31, 47 → 0x3f; stage below 8 (signed): 1 and 2 → 1 (p3: 0xd), 3 → 0x11, 4 → 0x19; below
 /// 12: 1 and 2 → 1 (p3: 7), 3 → 9, 4 → 0xd; the other codes and the stages from 12 on pass through unchanged.
 /// Original: `EuropeanCup::set_club_progress` (0x586c00, european_cup.cpp, thiscall, ret 0x14).
-///
-/// [pt] { 0x586c00 } (thiscall, ret 0x14, european_cup.cpp): `EuropeanCup::set_club_progress(clube, fase, p1, p2, p3)` (a
-/// virtual +0x68, da base da copa 0x521b30): converte os três códigos de progresso pela fase e grava no registro do
-/// clube na estatística da competição (0x4a4850 de +8, sem conferir o nulo, como a original) +0x73 ← p1, +0x74 ← p2,
-/// +0x75 ← p3. Fase −1 (a qualificação): 1 → 0x19 (p2: 1), 17 → 0x21, 33 → 0x31, 47 → 0x3f; fase abaixo de 8 (com
-/// sinal): 1 e 2 → 1 (p3: 0xd), 3 → 0x11, 4 → 0x19; abaixo de 12: 1 e 2 → 1 (p3: 7), 3 → 9, 4 → 0xd; os outros
-/// códigos e as fases de 12 em diante passam como estão.
 pub(crate) unsafe extern "thiscall" fn european_cup_set_club_progress(this: usize, club: usize, stage: u32, p1: u32, p2: u32, p3: u32) {
     let e = CompStatsClub(exe::comp_stats_find_club_entry(read_usize(this + 8), club));
     let (stage, p1, p2, p3) = (stage as u8 as i8, p1 as u8, p2 as u8, p3 as u8);
@@ -1474,16 +1286,6 @@ pub(crate) unsafe extern "thiscall" fn european_cup_set_club_progress(this: usiz
 /// −1). The qualifying rounds (−1) and the knockout (12 onwards): the original through the trampoline. Returns the
 /// table.
 /// Original: `EuropeanCup::create_round_table` (0x583c50, european_cup.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x583c50 } (thiscall, ret 0x10, european_cup.cpp, método +0x3c da Liga dos Campeões, quadro SEH pelas datas locais
-/// sem destrutor no caminho normal): `EuropeanCup::create_round_table(fase, &rodadas, &id, &é_liga)`, dos sorteios dos
-/// grupos (0x585290, 0x585ab0) e das posições previstas (0x586900). Nas fases de grupos (char 0..11, e as negativas
-/// abaixo de −1, que caem no mesmo ramo): é_liga (se pedido) = 1, rodadas = 6, id = 0x43d + fase; a tabela de 6 rodadas
-/// de 0x41 bytes (0x944e46(0x186); sem memória, a caixa da linha 0x17a ou 0x1aa e devolve 0); na segunda fase, antes, a
-/// data de 1º de março do ano seguinte levada à terça (0x549f70), um dia antes (0x54c8e0, que grava a data estática dela)
-/// e a cópia (0x417c10), sem uso depois (a cópia as chama do mesmo jeito); as datas de `GROUP_STAGE_DATES` (0x68a160 com o ano
-/// +0x40 da copa) e o jogo 0 de cada rodada vazio (0x68a1c0 com −1). As preliminares (−1) e o mata-mata (12 em diante):
-/// a original pelo trampolim. Devolve a tabela.
 pub(crate) unsafe extern "thiscall" fn european_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, id: *mut i16, league: *mut i32) -> usize {
     let this = Cup(this);
     let f = stage as u8 as i8;

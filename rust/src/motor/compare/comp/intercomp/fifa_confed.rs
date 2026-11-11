@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/intercomp/fifa_confed.rs.
-// [pt] Os comparadores das rotinas de ../comp/intercomp/fifa_confed.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `fifa_confed_create_schedule`.
 pub(crate) unsafe extern "thiscall" fn compare_fifa_confed_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {

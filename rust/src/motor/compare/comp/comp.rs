@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/comp.rs.
-// [pt] Os comparadores das rotinas de ../comp/comp.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `send_prize_money_news`.
 pub(crate) unsafe extern "thiscall" fn compare_send_prize_money_news(this: usize, club: usize, lo: u32, hi: i32, position: u32, round: u32, fixture: usize, kind: u32) {
@@ -14,17 +13,11 @@ pub(crate) unsafe extern "thiscall" fn compare_send_tv_rights_news(this: usize, 
 }
 
 /// Comparer for `all_stages_complete`.
-///
-/// [pt] Só a original (o método +0x10 marca a liga completa, grava recordes e paga prêmios: não roda duas vezes): a cópia
-/// leva os ramos.
 pub(crate) unsafe extern "thiscall" fn compare_all_stages_complete(this: usize) -> u8 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> u8>(IDX_ALL_STAGES_COMPLETE)(this)
 }
 
 /// Comparer for `comp_collect_club_list`.
-///
-/// [pt] Lado a lado: a original com a saída de quem chama, a cópia com saída própria, a partir do mesmo [0xb67a34]; a conta
-/// e os clubes das duas listas iguais (a da cópia é liberada).
 pub(crate) unsafe extern "thiscall" fn compare_comp_collect_club_list(this: usize, list: *mut usize, x: u32) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16>(IDX_COMP_COLLECT_CLUB_LIST);
     let mut l2 = 0usize;
@@ -39,8 +32,6 @@ pub(crate) unsafe extern "thiscall" fn compare_comp_collect_club_list(this: usiz
 }
 
 /// Comparer for `find_club_progress`.
-///
-/// [pt] Lado a lado nas três saídas (a original e a cópia com saídas próprias, começando dos valores de quem chama).
 pub(crate) unsafe extern "thiscall" fn compare_find_club_progress(this: usize, club: usize, stage_id: *mut i16, round: *mut i16, status: *mut u8) {
     let (mut f2, mut r2, mut s2) = (*stage_id, *round, *status);
     original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i16, *mut i16, *mut u8)>(IDX_FIND_CLUB_PROGRESS)(this, club, stage_id, round, status);
@@ -50,9 +41,6 @@ pub(crate) unsafe extern "thiscall" fn compare_find_club_progress(this: usize, c
 }
 
 /// Comparer for `get_first_stage_of_group`.
-///
-/// [pt] O comparador da primeira fase do grupo: com o índice válido (−1..+0x30), as duas (só leem) e o mesmo índice; fora
-/// dele só a original (a caixa).
 pub(crate) unsafe extern "thiscall" fn compare_get_first_stage_of_group(this: usize, k: i32) -> i32 {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> i32>(IDX_GET_FIRST_STAGE_OF_GROUP);
@@ -66,9 +54,6 @@ pub(crate) unsafe extern "thiscall" fn compare_get_first_stage_of_group(this: us
 }
 
 /// Comparer for `get_current_stage`.
-///
-/// [pt] O comparador da fase atual: só a original (simplification: o método 0x10 das fases pode refazer a tabela; não roda duas
-/// vezes); a cópia se prova no modo Rust pelas telas.
 pub(crate) unsafe extern "thiscall" fn compare_get_current_stage(this: usize) -> usize {
     original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_GET_CURRENT_STAGE)(this)
 }
@@ -90,8 +75,6 @@ pub(crate) unsafe extern "C" fn compare_comp_active_key_nation_of_stadium(stadiu
 }
 
 /// Comparer for `comp_key_nation_entry_from_active_index`.
-///
-/// [pt] Comparador: rotina pura; compara a entrada devolvida. Sem entrada (a caixa): só a original.
 pub(crate) unsafe extern "C" fn compare_comp_key_nation_entry_from_active_index(active: i8) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(i8) -> i32>(IDX_COMP_KEY_NATION_ENTRY_FROM_ACTIVE_INDEX);
     if key_nation_by_active_index(active).is_none() {
@@ -104,8 +87,6 @@ pub(crate) unsafe extern "C" fn compare_comp_key_nation_entry_from_active_index(
 }
 
 /// Comparer for `get_fixture_match_importance`.
-///
-/// [pt] Comparador: pelo valor (a virtual da fase só lê; roda duas vezes).
 pub(crate) unsafe extern "thiscall" fn compare_get_fixture_match_importance(this: usize, p: usize, a: u32, b: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(IDX_GET_FIXTURE_MATCH_IMPORTANCE)(this, p, a, b);
     let n = get_fixture_match_importance(this, p, a, b);
@@ -114,8 +95,6 @@ pub(crate) unsafe extern "thiscall" fn compare_get_fixture_match_importance(this
 }
 
 /// Comparer for `get_stage`.
-///
-/// [pt] Comparador: pelo valor (só lê). A caixa: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_get_stage(this: usize, k: i32) -> usize {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(IDX_GET_STAGE);
@@ -137,8 +116,6 @@ pub(crate) unsafe extern "C" fn compare_comp_active_key_nation_of_fixture(comp: 
 }
 
 /// Comparer for `are_round_fixtures_known`.
-///
-/// [pt] Comparador: pelo valor (só lê). A caixa: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_are_round_fixtures_known(this: usize, stage: i32, round: i32) -> u32 {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32) -> u32>(IDX_ARE_ROUND_FIXTURES_KNOWN);

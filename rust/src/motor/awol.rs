@@ -1,8 +1,6 @@
 use super::*;
 
 /// The items (node +0 pointers) of an LLIST, without touching its cursor.
-///
-/// [pt] Os itens da lista (o ponteiro em +0 de cada nó, da cabeça +2 seguindo o +6), sem mexer no cursor.
 pub(crate) unsafe fn llist_items(list: usize) -> Vec<usize> {
     let mut v = Vec::new();
     if list == 0 {
@@ -23,11 +21,6 @@ pub(crate) unsafe fn llist_items(list: usize) -> Vec<usize> {
 /// with the list ([this + `lista`]), the cursor goes back to the head and, among the first `conta` (+0, signed word)
 /// items, the first one with the person's id at +0 is removed (`manager_manager_remove`, which frees the node). A list that ends before
 /// the count is reached stops the loop.
-///
-/// [pt] O corpo comum de { 0x4196a0 } e { 0x4197c0 }: com a marca `bit` da pessoa ([this+0xc] + id), a marca troca (o
-/// `or bit` da original nunca dá zero) e, com a lista ([this + `lista`]), o cursor volta à cabeça e, entre os primeiros
-/// `conta` (+0, palavra com sinal) itens, o primeiro com o id da pessoa em +0 sai (0x68d1f0, que libera o nó). Uma lista
-/// que acaba antes da conta encerra.
 pub(crate) unsafe fn toggle_mark_and_unlist(this: usize, person: usize, bit: u8, list: usize, foul: bool) {
     if person == 0 {
         return;
@@ -80,10 +73,6 @@ pub(crate) unsafe fn toggle_mark_and_unlist(this: usize, person: usize, bit: u8,
 /// With the person and the flag table ([this+0xc]) not null and bit 1 of the person's flag set: flips the bit and
 /// removes the person's record from the absence list ([this]).
 /// Original: `AWOL::clear_awol` (0x4196a0, awol.cpp, thiscall).
-///
-/// [pt] { 0x4196a0 } (thiscall, ret 4, awol.cpp): `AWOL::clear_awol(pessoa)`, pelo fim da ausência sem contrato (0x418f60),
-/// pelas aposentadorias (0x7a59e0) e pelas transferências (0x8c1af0, 0x8c2180, 0x8c9720). Pessoa e tabela de marcas
-/// ([this+0xc]) não nulas e o bit 1 da marca: troca o bit e tira o registro da pessoa da lista das ausências ([this]).
 pub(crate) unsafe extern "thiscall" fn clear_awol(this: usize, person: usize) {
     toggle_mark_and_unlist(this, person, 1, 0, false);
 }
@@ -94,18 +83,11 @@ pub(crate) unsafe extern "thiscall" fn clear_awol(this: usize, person: usize) {
 /// With the person and the flag table not null and bit 2 of the flag set: flips the bit and removes the person's record
 /// from the missed training list ([this+4]).
 /// Original: `AWOL::clear_missed_training` (0x4197c0, awol.cpp, thiscall).
-///
-/// [pt] { 0x4197c0 } (thiscall, ret 4, awol.cpp): `AWOL::clear_missed_training(pessoa)`, pela falta ao treino de quem ficou
-/// sem contrato (0x418ff0, que os jogadores do dia consultam) e pelas aposentadorias (0x7a59e0). Pessoa e tabela de
-/// marcas não nulas e o bit 2 da marca: troca o bit e tira o registro da pessoa da lista das faltas ([this+4]).
 pub(crate) unsafe extern "thiscall" fn clear_missed_training(this: usize, person: usize) {
     toggle_mark_and_unlist(this, person, 2, 4, true);
 }
 
 /// Plans toggle_mark_and_unlist: the mark value after and the list items that remain.
-///
-/// [pt] O plano das duas: a marca depois e os itens que ficam na lista (o primeiro com o id da pessoa entre os `conta`
-/// primeiros sai). Sem nada a fazer: o estado de antes.
 pub(crate) unsafe fn plan_toggle_mark_and_unlist(this: usize, person: usize, bit: u8, list: usize) -> (Option<(usize, u8)>, usize, Vec<usize>) {
     let l = read_usize(this + list);
     let items = llist_items(l);
@@ -129,9 +111,6 @@ pub(crate) unsafe fn plan_toggle_mark_and_unlist(this: usize, person: usize, bit
 }
 
 /// Comparer of the two: runs only the original and checks the mark and remaining list against the plan.
-///
-/// [pt] Comparador das duas: a original tira e libera o nó da lista (não pode rodar duas vezes): só ela roda, com o plano
-/// montado antes (a marca e os itens que ficam, sem ler o item tirado depois).
 pub(crate) unsafe fn compare_toggle_mark_and_unlist(this: usize, person: usize, bit: u8, list: usize, o: unsafe extern "thiscall" fn(usize, usize), name: &str) {
     let (marca, l, fica) = plan_toggle_mark_and_unlist(this, person, bit, list);
     o(this, person);
@@ -144,9 +123,6 @@ pub(crate) unsafe fn compare_toggle_mark_and_unlist(this: usize, person: usize, 
 /// The rehearsal of the news item. The random draws come from the original routine's tape (n and the answer) and,
 /// instead of delivering the news, the copy records the destination (1 the player's club, 2 the club's nation, 0 none).
 /// The tape keeps the next position and whether any n did not match.
-///
-/// [pt] O ensaio da notícia: os sorteios vêm da fita da original (n e resposta) e, em vez de entregar, a cópia anota o
-/// destino (1 o clube do jogador, 2 a nação do clube, 0 nenhum). A fita fica com o próximo e se algum n não bateu.
 pub(crate) static mut AWOL_NEWS_TAPE: Option<(Vec<(i32, i32)>, usize, bool)> = None;
 pub(crate) static mut AWOL_NEWS_DESTINATION: (u32, usize) = (0, 0);
 
@@ -182,15 +158,6 @@ pub(crate) unsafe fn taped_random(n: i32) -> i32 {
 /// Human-run club (`news_club_has_human_manager`): sent to the player's club (+0x39, `send_to_club_manager`); otherwise, if the player has a nation
 /// (+0x53) and his reputation (+0x61, +0xb) is above 7250, to the nation's inboxes (`send_to_nation_managers`).
 /// Original: `awol_post_missed_training_news` (0x41a630, awol.cpp, thiscall).
-///
-/// [pt] { 0x41a630 } (thiscall, ret 8, awol.cpp, SEH da notícia local, sem destrutor): `awol_post_missed_training_news(jogador,
-/// clube)`, pela falta ao treino (0x41a360). Jogador com ficha (+0x61) e clube com técnico (+0xcf): a notícia 0xbc9
-/// (0x77bbe0) com o jogador (id e as chaves +0x33 de +4, +8, +0xc), o id do clube, sorteio(3), o clube de humano que
-/// decide (0x600a50 com 0, 1) e quem relata: o técnico, se o clube tem técnico e não é de humano (0x600a50 com 1, 1;
-/// id e chaves); senão, com sorteio(2), um dos 5 treinadores (+0x19f, sorteio(5) até achar ou mil voltas), sem
-/// sorteio o auxiliar (+0xd3); sem ninguém (ou id −1), −1 nos quatro. Clube de humano (0x7875e0): ao clube do jogador
-/// (+0x39, 0x7861e0); senão, com nação (+0x53) e reputação do jogador (+0x61, +0xb) acima de 7250, às caixas da nação
-/// (0x7863f0).
 pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usize, player: usize, club: usize) {
     let player = Staff(player);
     let _ = this;
@@ -271,8 +238,6 @@ pub(crate) unsafe extern "thiscall" fn awol_post_missed_training_news(this: usiz
 }
 
 /// Decrements a signed attribute byte (above 1) depending on whether random(attribute) is zero.
-///
-/// [pt] O byte com sinal `a` (atributo de 1 a 20) cai um com o sorteio dele: zero (`zero`) ou não zero, se for maior que 1.
 pub(crate) unsafe fn maybe_drop_attribute(a: usize, zero: bool) {
     let v = read_u8(a) as i8;
     if v > 1 && (friendly_random(v as i32) == 0) == zero {
@@ -286,15 +251,11 @@ pub(crate) unsafe fn awol_llist_next(list: usize) -> usize {
 }
 
 /// Resets an LLIST cursor (+0xa) to the first node (+2).
-///
-/// [pt] O cursor da lista volta ao primeiro nó (+0xa = +2).
 pub(crate) unsafe fn awol_llist_rewind(list: usize) {
     write_u32(list + llist::CURSOR, read_usize(list + 2) as u32);
 }
 
 /// True if today is after date d (day signed +0, year unsigned +2).
-///
-/// [pt] A data `d` (dia com sinal em +0, ano sem sinal em +2) já passou: hoje ([0xae2c90]) é depois dela.
 pub(crate) unsafe fn date_has_passed(d: usize) -> bool {
     let (dia, ano) = (read_i16(G_CURRENT_DATE), read_i16(G_CURRENT_DATE_YEAR) as u16);
     let a = read_i16(d + 2) as u16;
@@ -302,17 +263,12 @@ pub(crate) unsafe fn date_has_passed(d: usize) -> bool {
 }
 
 /// True if date d plus `semanas` weeks (Date add_weeks) has passed.
-///
-/// [pt] Uma semana depois da data `d` (0x54c770), já passou?
 pub(crate) unsafe fn weeks_after_have_passed(d: usize, weeks: u32) -> bool {
     let mut t = [0u8; 8];
     date_has_passed(exe::date_add_weeks(d, &mut t, weeks))
 }
 
 /// Ends an AWOL case: flips bit 2 of the person's mark byte and removes the record from the AWOL list (this + 4).
-///
-/// [pt] O fim do caso de falta ao treino `r` (pessoa em +0): com o byte da pessoa na tabela de marcas ([this+0xc]) não zero,
-/// troca o bit 2 dele (o `or 2` da original nunca dá zero) e tira o registro da lista das faltas ([this+4], 0x68d1f0).
 pub(crate) unsafe fn close_awol_case(this: usize, r: usize) {
     let m = read_usize(this + awol_fields::PERSON_FLAGS).wrapping_add(read_i32(r) as usize) as *mut u8;
     if *m == 0 {
@@ -346,17 +302,6 @@ pub(crate) unsafe fn awol_miss_training(this: usize, person: Staff) {
 /// Each resolved case leaves its list (`manager_manager_remove`) and bit 2 of the flag flips. A list that ends before the count ends
 /// the day.
 /// Original: `AWOL::daily_update` (0x4190d0, awol.cpp, thiscall).
-///
-/// [pt] { 0x4190d0 } (thiscall, awol.cpp): `AWOL::daily_update()`, todo dia pelo laço do jogo (0x5cccd0). Três listas com o
-/// cursor em +0xa: (1) ausências ([this]): a primeira cuja volta (data em +4) já passou acaba (0x419710); (2) faltas ao
-/// treino ([this+4]): a primeira com uma semana passada da data (+4) é resolvida: caso repetido (byte +0xc) com dois
-/// sorteios zero pelo profissionalismo (+0x5b) e pelo temperamento (+0x5d) da pessoa, os dois caem pelo sorteio e ela
-/// falta de novo (0x41a360); caso novo: os colegas do clube (50 vagas em +0xd7) com o contrato do faltoso podem pedir a
-/// saída (0x867560 com 2) ou perder profissionalismo, moral (+0x44 do jogador) e temperamento; e o faltoso, por
-/// sorteio(profissionalismo) abaixo de sorteio(15) + 1, perde profissionalismo e moral, falta de novo e briga com o
-/// clube (0x72c1f0 com 8); (3) atrasos ([this+8]): o primeiro com uma semana passada (+8) que vença os sorteios perde
-/// profissionalismo e temperamento ou moral. Cada caso resolvido sai da lista (0x68d1f0) e a marca do bit 2 troca. Uma
-/// lista que acaba antes da conta encerra o dia.
 pub(crate) unsafe extern "thiscall" fn awol_daily_update(this: usize) {
     // (1) the absences
     let l = read_usize(this);
@@ -458,8 +403,6 @@ pub(crate) unsafe extern "thiscall" fn awol_daily_update(this: usize) {
 
 /// Resolves an AWOL case one week on: a repeat case may drop professionalism and temperament; a new one involves
 /// teammates' reactions; then closes it.
-///
-/// [pt] A falta ao treino `r` com uma semana passada (o meio da lista (2) de `awol_daily_update`).
 pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
     let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add((read_i32(r) as usize).wrapping_mul(staff::SIZE)));
     if read_u8(r + awol_missed_training::REPEAT_CASE) != 0 {
@@ -538,10 +481,6 @@ pub(crate) unsafe fn resolve_awol_case(this: usize, r: usize) {
 /// Null person or beyond the count [0xae2364]: false. With bit 2 of her flag ([this+0xc] + id) set and no contract
 /// (`exe::contract_manager_get_contract`, stored in [0xae1080]), clears the miss (`clear_missed_training`) first. Returns bit 2 of the flag.
 /// Original: `AWOL::has_missed_training` (0x418ff0, awol.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x418ff0 } (thiscall, ret 4, awol.cpp): `AWOL::has_missed_training(pessoa)`, pelos jogadores do dia (0x5a69b0) e
-/// pelas telas. Pessoa nula ou fora da conta [0xae2364]: falso. Com o bit 2 da marca dela ([this+0xc] + id) e sem
-/// contrato (0x4cf5a0, guardado em [0xae1080]), tira a falta (0x4197c0) antes. Devolve o bit 2 da marca.
 pub(crate) unsafe extern "thiscall" fn has_missed_training(this: usize, person: usize) -> u32 {
     if person == 0 {
         return 0;
@@ -567,10 +506,6 @@ pub(crate) unsafe extern "thiscall" fn has_missed_training(this: usize, person: 
 /// at +0xa) looking for the person's record (id at +0). True in the low byte; the high bytes as the original leaves
 /// them in the register.
 /// Original: `AWOL::has_fitness_incident` (0x419070, awol.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x419070 } (thiscall, ret 4, awol.cpp): `AWOL::has_fitness_incident(pessoa)`, pelos jogadores do dia (0x5a69b0).
-/// Pessoa nula, fora da conta [0xae2364] ou sem a lista dos atrasos ([this+8]): falso; senão percorre a lista (cursor em
-/// +0xa) atrás do registro da pessoa (id em +0). Verdadeiro no byte baixo; os altos como a original deixa no registrador.
 pub(crate) unsafe extern "thiscall" fn has_fitness_incident(this: usize, person: usize) -> u32 {
     if person == 0 {
         return 0;
@@ -610,15 +545,10 @@ pub(crate) unsafe extern "thiscall" fn has_fitness_incident(this: usize, person:
 ///
 /// The copy stops before the calls that allocate, send news or cannot run twice, and leaves in `MISS_TRAINING_DECISION`
 /// what it would have done.
-///
-/// [pt] O ensaio dos comparadores de `miss_training`, `end_absence` e `set_flags`: a cópia para antes
-/// das chamadas que alocam, dão notícia ou não podem rodar duas vezes e deixa em MISS_TRAINING_DECISION o que faria.
 pub(crate) static MISS_TRAINING_DRY_RUN: AtomicBool = AtomicBool::new(false);
 pub(crate) static MISS_TRAINING_DECISION: AtomicU32 = AtomicU32::new(0);
 
 /// Club record of contract k (id +4, G_CLUB_TABLE), or 0.
-///
-/// [pt] O clube do contrato `k` (+4 id, [0xae23b4], 0x245 bytes), ou 0.
 pub(crate) unsafe fn awol_club_of_contract(k: Contract) -> usize {
     if k.is_null() {
         return 0;
@@ -635,12 +565,6 @@ pub(crate) unsafe fn awol_club_of_contract(k: Contract) -> usize {
 ///
 /// The copy uses that value (a repeated case); the comparer does not compare it (the original's value is genuine
 /// residue).
-///
-/// [pt] O byte +0xc (caso repetido) do registro da falta. A 0x41a360 não o grava: o registro de 13 bytes é montado num local
-/// e o +0xc fica com o que a chamada anterior deixou no dword E−0x10 da pilha (E: o esp na entrada). No caminho normal
-/// da original, pela game_check_players_missing_training (0x5d6aa0), a chamada anterior que alcança essa altura é a 0x54cdb0 (dias desde a
-/// chegada), que guarda ali o seu `this`, a data do jogo 0xae2c90: o byte baixo é 0x90. A cópia usa esse valor (um caso
-/// repetido); o comparador não o compara (o da original é resíduo de verdade).
 pub(crate) const AWOL_RESIDUE_BYTE: u8 = 0x90;
 
 /// `AWOL::miss_training(person)`: the player misses training (or, if very unhappy, may go AWOL). Called by the day's
@@ -656,16 +580,6 @@ pub(crate) const AWOL_RESIDUE_BYTE: u8 = 0x90;
 /// unset in the original, goes 0x90. AI club (`exe::human_manager_is_human_club`) with a manager (+0xcf, +0x69) and draw(his +0x14) not zero: the
 /// fine (`exe::fine_fine_player`, period 1 if draw(manager rating `exe::non_player_attribute_rating` with +0x19) beats draw(5), else 2; reason 1).
 /// Original: `AWOL::miss_training` (0x41a360, awol.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x41a360 } (thiscall, ret 4, awol.cpp, SEH só com a data local, sem destrutor): `AWOL::miss_training(pessoa)`,
-/// pelas faltas ao treino do dia (0x5d6aa0) e pela awol_daily_update. Jogador (+0x61) dentro da conta, com contrato
-/// (0x4cf5a0, em [0xae1080]) num clube e sem a marca 2: contrato com moral (+0x44) até −100 e o bit 0x2000 (depois o
-/// 0x800) em +0x45, com sorteio(profissionalismo + 10) e sorteio(+0x59 + 10) zero, some (0x419840 com 0, 0). Senão
-/// marca o bit 2, notícia da falta (0x41a630, com o clube do contrato), o byte +0xa da linha de 79 bytes ([0xae2d0c])
-/// soma sorteio(10), a condição (0x62c590) cai 25 × (21 − o +0x34 do jogador) + sorteio + 100 (0x62bd10), o registro
-/// (pessoa, hoje, caso) entra na lista das faltas ([this+4], 0x68d0d0); clube da IA (0x600a50) com técnico (+0xcf, +0x69)
-/// e sorteio(+0x14 dele) não zero: a multa (0x5a5980, prazo 1 se sorteio(nota do técnico 0x544410 com o +0x19) passar
-/// de sorteio(5), senão 2; motivo 1).
 pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize) {
     let person = Staff(person);
     if person.is_null() || person.player().is_null() || read_i32(person.addr()) >= read_i32(G_STAFF_COUNT) {
@@ -746,11 +660,6 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
 /// the return news (`exe::awol_post_news` with the person's club +0x39, 0 and −1); flips bit 1 of the flag (the original's `or 1`
 /// never gives zero) and removes the record from the absence list ([this], `manager_manager_remove`). Does not read an unset local.
 /// Original: `AWOL::end_absence` (0x419710, awol.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x419710 } (thiscall, ret 4, awol.cpp): `AWOL::end_absence(registro)`, pela awol_daily_update. Registro com a marca
-/// da pessoa (+0 id; [this+0xc] + id) não zero: com contrato (0x4cf5a0, em [0xae1080]) num clube, a notícia da volta
-/// (0x419ad0 com o clube +0x39 da pessoa, 0 e −1); troca o bit 1 da marca (o `or 1` da original nunca dá zero) e tira o
-/// registro da lista das ausências ([this], 0x68d1f0). Não lê local sem valor.
 pub(crate) unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
     if r == 0 {
         return;
@@ -791,14 +700,6 @@ pub(crate) unsafe extern "thiscall" fn end_absence(this: usize, r: usize) {
 /// AI club (`exe::human_manager_is_human_club`) with a manager (+0xcf, +0x69): draw(his +0x14) above draw(10) leads to the fine (`exe::fine_fine_player`, period
 /// 1 if draw(rating `exe::non_player_attribute_rating` with +0x19) beats draw(5), else 2; reason 1).
 /// Original: `AWOL::report_poor_fitness` (0x41add0, awol.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x41add0 } (thiscall, ret 8, awol.cpp, SEH da data e da notícia local, sem destrutor): `AWOL::
-/// report_poor_fitness(jogador, clube)`, pelo diário das pessoas (0x5ce2d0: a queda de condição grande do dia). O
-/// registro (jogador, clube, hoje e um byte que na original é sobra de pilha) entra na lista dos incidentes ([this+8],
-/// 0x68d0d0, 0x11 bytes). Clube de humano (0x7875e0): um treinador das 5 vagas (+0x19f, sorteio(5), até achar um ou
-/// sorteio(20) dar zero) e a notícia 0x138f ao clube (o jogador, sorteio(2), as chaves dele e do treinador ou −1).
-/// Clube da IA (0x600a50) com técnico (+0xcf, +0x69): sorteio(+0x14 dele) acima de sorteio(10) leva à multa (0x5a5980,
-/// prazo 1 se sorteio(nota 0x544410 com o +0x19) passar de sorteio(5), senão 2; motivo 1).
 pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: usize, club: usize) {
     let player = Staff(player);
     let mut reg = [0u8; 0x11];
@@ -874,11 +775,6 @@ pub(crate) unsafe extern "thiscall" fn report_poor_fitness(this: usize, player: 
 /// Otherwise, with the bit set and no contract (`exe::contract_manager_get_contract`, stored in [0xae1080]) or no club on the contract, the absence
 /// ends (`clear_awol`); returns the bit read again.
 /// Original: `AWOL::is_player_awol` (0x418f60, awol.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x418f60 } (thiscall, ret 8, awol.cpp): `AWOL::is_player_awol(pessoa, só_ler)`, pela seleção, pelo treino, pelo
-/// preço pedido, pelo dia da comissão e pelas transferências. Pessoa nula ou id além de [0xae2364]: 0 (só o al). Com
-/// `só_ler`, o bit 0 da marca da pessoa ([this+0xc] + id). Senão, com o bit e sem contrato (0x4cf5a0, guardado em
-/// [0xae1080]) ou sem clube do contrato, a ausência acaba (0x4196a0); devolve o bit relido.
 pub(crate) unsafe extern "thiscall" fn is_player_awol(this: usize, p: usize, so_read: u32) -> u32 {
     if p == 0 || read_usize(p) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
         return 0;

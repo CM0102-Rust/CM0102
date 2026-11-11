@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/eurocomp/eur_super_cup.rs.
-// [pt] Os comparadores das rotinas de ../comp/eurocomp/eur_super_cup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `eur_super_cup_select_teams`.
 pub(crate) unsafe extern "thiscall" fn compare_eur_super_cup_select_teams(this: usize) -> i32 {

@@ -7,11 +7,6 @@ use super::*;
 /// `[this+4]` and `[this+4]` + 0xc): reason 9. A club of one of the five divisions (`[0x9cf578]` to `[0x9cf588]`) with
 /// four players on loan from other clubs (ids below `[0xae2364]`, loan contract `contract_record`) may not (0x25).
 /// Original: `ITALY_RULES::can_loan_player` (0x661770, italy_rules.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x661770 } (thiscall, ret 0x10, italy_rules.cpp): `ITALY_RULES::can_loan_player(clube, jogador, mensagem,
-/// motivo)`: fora das duas primeiras janelas (0x8e8c40 com [this+4] e [this+4] + 0xc): motivo 9. Um clube de uma das
-/// cinco divisões ([0x9cf578] a [0x9cf588]) com quatro jogadores emprestados de outros clubes (ids abaixo de
-/// [0xae2364], contrato de empréstimo 0x4cf6d0) não pode (0x25).
 pub(crate) unsafe extern "thiscall" fn italy_rules_can_loan_player(this: usize, club: usize, _player: usize, msg: usize, reason: *mut u16) -> u32 {
     let club = Club(club);
     // 0x8e8c40: push janela; push 0xae2c90; ecx = this -> thiscall, ret 8
@@ -58,9 +53,6 @@ pub(crate) unsafe extern "thiscall" fn italy_rules_can_loan_player(this: usize, 
 /// the Italian rule (14): three windows, from 1 July to 27 September (moved to the Thursday [inference]), from 2 to 31
 /// January, and from 1 July to 30 April [inference: the free-agent one]
 /// Original: `ITALY_RULES::init_transfer_windows` (0x6613f0, italy_rules.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x6613f0 } (thiscall, ret 0, italy_rules.cpp, `ITALY_RULES::init_transfer_windows`; chamada pelo construtor das regras da Itália (regra 14), depois da base e da vtable): as
-/// 3 janelas de transferência de `ITALY_TRANSFER_WINDOWS`.
 pub(crate) unsafe extern "thiscall" fn italy_rules_init_transfer_windows(this: usize) {
     covered!("cqk_2 italy");
     set_transfer_windows(this, 3, &ITALY_TRANSFER_WINDOWS, 0x9ea9a4, 0x52);

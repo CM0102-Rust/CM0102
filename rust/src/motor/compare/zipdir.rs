@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../zipdir.rs.
-// [pt] Os comparadores das rotinas de ../zipdir.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `zipdir_match_filename_pattern`.
 pub(crate) unsafe extern "C" fn compare_zipdir_match_filename_pattern(default: *const u8, name: *const u8) -> u32 {

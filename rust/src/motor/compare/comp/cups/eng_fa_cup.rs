@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/cups/eng_fa_cup.rs.
-// [pt] Os comparadores das rotinas de ../comp/cups/eng_fa_cup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `eng_fa_cup_create_round_table`.
 pub(crate) unsafe extern "thiscall" fn compare_eng_fa_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {

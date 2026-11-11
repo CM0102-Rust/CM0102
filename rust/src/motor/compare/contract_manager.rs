@@ -1,20 +1,13 @@
 use super::*;
 
 // The comparers of the routines in ../contract_manager.rs.
-// [pt] Os comparadores das rotinas de ../contract_manager.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `sign_contract`.
-///
-/// [pt] Comparador da 0x4cf720: só a original (inclui e tira a pessoa dos clubes, realoca o vetor dos contratos, entrega
-/// notícias, sorteia a segunda nacionalidade, recalcula a folha).
 pub(crate) unsafe extern "thiscall" fn compare_sign_contract(this: usize, contract: usize, job: u32) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_SIGN_CONTRACT)(this, contract, job) // simplification: original only
 }
 
 /// Comparer for `contract_manager_offer_contract`.
-///
-/// [pt] Comparador da 0x4cda70: com `saida`, lado a lado (a saída, [0xae1080] e o estado do sorteador; a cópia sem contar os
-/// sorteios); sem `saida` (pode propor o contrato, que aloca), só a original.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn compare_contract_manager_offer_contract(this: usize, person: usize, club: usize, out: usize, slot: i32, factor: f64, mode: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, i32, f64, u32) -> u32>(IDX_CONTRACT_MANAGER_OFFER_CONTRACT);
@@ -51,11 +44,6 @@ pub(crate) unsafe extern "thiscall" fn compare_contract_manager_offer_contract(t
 /// what the routine guarantees before any random draw: the bonuses each club pays (`+0x138` of the finances adds up to
 /// the total predicted by the same rules as the copy, computed beforehand). The copy is proven by the branches and by
 /// the mutations in the career.
-///
-/// [pt] Comparador: a moral (0x4cb0a0, 0x4cb250: queixas, pedido de transferência), a evolução (0x6d26b0) e a troca de
-/// elenco (0x4cbd20) sorteiam e alocam (não podem rodar duas vezes): só a original roda. Confere o que a rotina garante
-/// antes de qualquer sorteio: os bônus que cada clube paga (+0x138 das finanças soma o total previsto pelas mesmas
-/// regras da cópia, calculado antes). A cópia é provada pelos ramos e pelas mutações na carreira.
 pub(crate) unsafe extern "thiscall" fn compare_update_after_match(this: usize, game: usize, summary: usize) {
     let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_UPDATE_AFTER_MATCH);
@@ -104,9 +92,6 @@ pub(crate) unsafe extern "stdcall" fn compare_contract_manager_get_player_morale
 }
 
 /// Comparer for `contract_manager_write_morale_text`.
-///
-/// [pt] Comparador: a original escreve a palavra; a cópia escreve de novo (o texto se sobrescreve) e as duas têm de bater;
-/// fica o texto da original.
 pub(crate) unsafe extern "stdcall" fn compare_contract_manager_write_morale_text(person: usize, out: usize, x: u32) {
     original_fn::<unsafe extern "stdcall" fn(usize, usize, u32)>(IDX_CONTRACT_MANAGER_WRITE_MORALE_TEXT)(person, out, x);
     let r = c_string_bytes(out);
@@ -118,9 +103,6 @@ pub(crate) unsafe extern "stdcall" fn compare_contract_manager_write_morale_text
 }
 
 /// Comparer for `calc_player_value`.
-///
-/// [pt] Comparador: lado a lado (sem alocar) com o estado do sorteador (sem clube, sorteio(3)), o [0xae1080] e as estáticas
-/// das datas da compensação; a cópia sem contar os sorteios. Quente (5,6 milhões de chamadas): sem contador.
 pub(crate) unsafe extern "thiscall" fn compare_calc_player_value(this: usize, person: usize, club: usize, mode: u32, ability: u32, x: u32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32) -> i32>(IDX_CALC_PLAYER_VALUE);
     let regions = player_value_regions();
@@ -131,9 +113,6 @@ pub(crate) unsafe extern "thiscall" fn compare_calc_player_value(this: usize, pe
 }
 
 /// Comparer for `contract_manager_write_morale_comparison_text`.
-///
-/// [pt] Comparador: a original escreve; a cópia escreve de novo (sobrescreve) e o texto e a diferença têm de bater; fica o
-/// texto da original.
 pub(crate) unsafe extern "stdcall" fn compare_contract_manager_write_morale_comparison_text(a: usize, b: usize, out: usize, x: u32) -> u8 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize, usize, usize, u32) -> u8>(IDX_CONTRACT_MANAGER_WRITE_MORALE_COMPARISON_TEXT)(a, b, out, x);
     let tr = c_string_bytes(out);
@@ -184,11 +163,6 @@ pub(crate) unsafe extern "thiscall" fn compare_post_bosman_departure_news(this: 
 ///
 /// New offer (appended, which allocates): the copy as a dry run builds the record; the original appends it, and the new
 /// node (the player's last one for the club) must have the same first 0x63 bytes, with the counter + 1.
-///
-/// [pt] Comparador. Oferta já na lista (achada antes, sem mexer no cursor): a cópia em ensaio e a original a partir do mesmo
-/// estado, comparando a oferta (0x63 bytes), o contador e a cabeça da lista (o cursor). Oferta nova (acrescentada, aloca):
-/// a cópia em ensaio monta o registro; a original acrescenta, e o nó novo (o último do jogador pelo clube) tem de ter os
-/// mesmos 0x63 primeiros bytes, com o contador + 1.
 pub(crate) unsafe extern "thiscall" fn compare_add_contract_offer(this: usize, terms: usize, slot: i32, value: u32, mark: u32, a5: u32, decides: u32, agreed: u32) {
     let terms = Contract(terms);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32, u32, u32, u32, u32, u32)>(IDX_ADD_CONTRACT_OFFER);
@@ -238,9 +212,6 @@ pub(crate) unsafe extern "thiscall" fn compare_add_contract_offer(this: usize, t
 }
 
 /// Comparer for `remove_contract_offer_for_transfer`.
-///
-/// [pt] Comparador: a original tira o item da lista (libera): só ela, conferindo o plano feito antes: com a oferta da pessoa
-/// pela vaga na lista, o contador desce 1; sem ela, fica.
 pub(crate) unsafe extern "thiscall" fn compare_remove_contract_offer_for_transfer(this: usize, person: usize, slot: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, i32)>(IDX_REMOVE_CONTRACT_OFFER_FOR_TRANSFER);
     let l = Llist(read_usize(this + contract_manager_fields::CONTRACT_OFFERS));
@@ -266,9 +237,6 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_contract_offer_for_transfe
 }
 
 /// Comparer for `contract_manager_lowest_wage_demand`.
-///
-/// [pt] Comparador: a original e a cópia a partir do mesmo estado (o sorteio e o último contrato pedido [0xae1080]); a
-/// devolução e a memória.
 pub(crate) unsafe extern "stdcall" fn compare_contract_manager_lowest_wage_demand(person: usize, club: usize) -> i32 {
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> i32>(IDX_CONTRACT_MANAGER_LOWEST_WAGE_DEMAND);
     let mut regions = vec![(G_CONTRACT_LOOKUP_RESULT, 4usize)];
@@ -284,8 +252,6 @@ pub(crate) unsafe extern "thiscall" fn compare_handle_transfer_request(this: usi
 }
 
 /// Comparer for `is_contract_staff_job`.
-///
-/// [pt] Comparador: pelo valor.
 pub(crate) unsafe extern "stdcall" fn compare_is_contract_staff_job(job: u32) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(u32) -> u32>(IDX_IS_CONTRACT_STAFF_JOB)(job);
     let n = is_contract_staff_job(job);
@@ -294,8 +260,6 @@ pub(crate) unsafe extern "stdcall" fn compare_is_contract_staff_job(job: u32) ->
 }
 
 /// Comparer for `staff_is_not_board_member`.
-///
-/// [pt] Comparador: pelo valor.
 pub(crate) unsafe extern "stdcall" fn compare_staff_is_not_board_member(person: usize) -> u32 {
     let person = Staff(person);
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_STAFF_IS_NOT_BOARD_MEMBER)(person.addr());
@@ -319,10 +283,6 @@ pub(crate) unsafe extern "C" fn compare_compare_decision_dates(a: usize, b: usiz
 /// beforehand, without running anything) tells whether any type-3 entry with a person falls due; if so, only the
 /// original runs. If not (the everyday case), side by side over index +0x18 and the entries that fall due (they become
 /// −1).
-///
-/// [pt] Comparador: a decisão das ofertas (0x4ce4e0) mexe nos contratos, nas ofertas e no próprio vetor: o plano (as datas
-/// lidas antes, sem rodar nada) diz se alguma entrada do tipo 3 com pessoa vence; com ela, só a original. Sem ela (o
-/// caso de todo dia), lado a lado pelo índice +0x18 e pelas entradas que vencem (ficam com −1).
 pub(crate) unsafe extern "thiscall" fn compare_process_due_decision_dates(this: usize, data: usize, slice: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_PROCESS_DUE_DECISION_DATES);
     let (i0, n) = (read_u32(this + contract_manager_fields::DECISION_NEXT_INDEX) as i32, read_u32(this + contract_manager_fields::DECISION_COUNT) as i32);
@@ -349,9 +309,6 @@ pub(crate) unsafe extern "thiscall" fn compare_process_due_decision_dates(this: 
 }
 
 /// Comparer for `get_current_contract_offers`.
-///
-/// [pt] Comparador: a original aloca o vetor que quem chama libera: roda só ela e confere o plano feito antes (as ofertas
-/// do clube lidas da lista, sem alocar): a conta e os 111 bytes de cada uma, na ordem.
 pub(crate) unsafe extern "thiscall" fn compare_get_current_contract_offers(this: usize, club: usize, out: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(IDX_GET_CURRENT_CONTRACT_OFFERS);
     let list = Llist(read_u32(this + contract_manager_fields::CONTRACT_OFFERS) as usize);
@@ -403,9 +360,6 @@ pub(crate) unsafe extern "stdcall" fn compare_staff_can_take_job(job: u32, perso
 }
 
 /// Comparer for `contract_manager_lower_match_morale`.
-///
-/// [pt] Comparador: as queixas (0x867700) sorteiam e podem abrir pedido de transferência: só a original; o plano (a queda
-/// `m`, calculada antes, sem efeito) diz a moral +0x44 que ela deixa (as queixas não a gravam) ou que ela não mexe.
 pub(crate) unsafe extern "thiscall" fn compare_contract_manager_lower_match_morale(this: usize, person: usize, club: usize, contract: usize) {
     let contract = Contract(contract);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_CONTRACT_MANAGER_LOWER_MATCH_MORALE);
@@ -426,9 +380,6 @@ pub(crate) unsafe extern "thiscall" fn compare_contract_manager_lower_match_mora
 }
 
 /// Comparer for `remove_contract`.
-///
-/// [pt] Comparador: lado a lado pela vaga da pessoa e pela entrada do contrato (a folha 0x598370 refeita duas vezes dá o
-/// mesmo, pelo contrato já tirado).
 pub(crate) unsafe extern "thiscall" fn compare_remove_contract(this: usize, person: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REMOVE_CONTRACT);
     let slot = main_contract_slot(person);
@@ -443,9 +394,6 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_contract(this: usize, pers
 }
 
 /// Comparer for `resubmit_held_offers`.
-///
-/// [pt] Comparador: a original reenvia (0x4cc490, ofertas e transferências) e tira as ofertas da lista (libera): roda só ela
-/// e confere o plano feito antes: devolve quantas ofertas da pessoa havia na lista.
 pub(crate) unsafe extern "thiscall" fn compare_resubmit_held_offers(this: usize, id: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_RESUBMIT_HELD_OFFERS);
     let list = Llist(read_usize(this + contract_manager_fields::HELD_OFFERS));
@@ -468,8 +416,6 @@ pub(crate) unsafe extern "thiscall" fn compare_resubmit_held_offers(this: usize,
 }
 
 /// Comparer for `contract_manager_season_end_month`.
-///
-/// [pt] Comparador: pelo valor (datas e a 0x669bd0 só calculam).
 pub(crate) unsafe extern "stdcall" fn compare_contract_manager_season_end_month(club: usize) -> u32 {
     let r = original_fn::<unsafe extern "stdcall" fn(usize) -> u32>(IDX_CONTRACT_MANAGER_SEASON_END_MONTH)(club);
     let n = contract_manager_season_end_month(club);
@@ -478,8 +424,6 @@ pub(crate) unsafe extern "stdcall" fn compare_contract_manager_season_end_month(
 }
 
 /// Comparer for `get_free_staff_contract_space`.
-///
-/// [pt] Comparador: a vaga esperada (a primeira vazia, ou a do fim com a conta + 1 e a capacidade + 200 se cheio).
 pub(crate) unsafe extern "thiscall" fn compare_get_free_staff_contract_space(this: usize, so_in_end: u32) -> i32 {
     let (n, cap, p) = (read_usize(this + contract_manager_fields::CONTRACT_COUNT), read_usize(this + contract_manager_fields::CONTRACT_CAPACITY), read_usize(this));
     let mut free = -1i32;
@@ -504,8 +448,6 @@ pub(crate) unsafe extern "thiscall" fn compare_get_free_staff_contract_space(thi
 }
 
 /// Comparer for `add_staff_contract`.
-///
-/// [pt] Comparador: a vaga é a do fim (a conta de antes); confere a ligação da pessoa, o id no contrato e a conta.
 pub(crate) unsafe extern "thiscall" fn compare_add_staff_contract(this: usize, person: usize, value: u32) -> u32 {
     let n = read_usize(this + contract_manager_fields::CONTRACT_COUNT);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_ADD_STAFF_CONTRACT)(this, person, value);
@@ -548,9 +490,6 @@ pub(crate) unsafe extern "thiscall" fn compare_add_decision_date(this: usize, pe
 }
 
 /// Comparer for `trigger_relegation_clauses`.
-///
-/// [pt] Comparador: os contratos que a cópia acionaria (antes); a original aciona e dá as notícias (não roda duas vezes);
-/// confere que todos ficaram com 2.
 pub(crate) unsafe extern "thiscall" fn compare_trigger_relegation_clauses(this: usize, club: usize, league: usize) {
     let mut alvos = Vec::new();
     for c in club_and_b_team(club) {
@@ -580,8 +519,6 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_contract_offer(this: usize
 }
 
 /// Comparer for `remove_pending_offers_for_staff`.
-///
-/// [pt] Comparador: o mesmo plano pelo byte de pendentes; a original tira (e desmarca); confere os itens e o byte.
 pub(crate) unsafe extern "thiscall" fn compare_remove_pending_offers_for_staff(this: usize, person: *const u32) {
     let l = read_usize(this + contract_manager_fields::CONTRACT_OFFERS);
     if l == 0 {
@@ -604,9 +541,6 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_pending_offers_for_staff(t
 }
 
 /// Comparer for `schedule_decision_for_transfer`.
-///
-/// [pt] Comparador: a oferta que a cópia marcaria antes; a original marca e agenda (a 0x4cd230 pode acrescentar na lista
-/// das decisões); confere a marca e o valor.
 pub(crate) unsafe extern "thiscall" fn compare_schedule_decision_for_transfer(this: usize, offer: usize) -> u32 {
     let target = offer_to_schedule(read_usize(this + contract_manager_fields::CONTRACT_OFFERS), Offer(offer));
     let n = ability_above_club_reputation(Offer(offer));
@@ -617,9 +551,6 @@ pub(crate) unsafe extern "thiscall" fn compare_schedule_decision_for_transfer(th
 }
 
 /// Comparer for `remove_held_offers`.
-///
-/// [pt] Comparador: o plano antes (a 0x68d1f0 libera o item tirado, que não pode mais ser lido); a original tira; confere
-/// que ficaram os itens de antes menos os da pessoa, na mesma ordem.
 pub(crate) unsafe extern "thiscall" fn compare_remove_held_offers(this: usize, person: u32) {
     let l = read_usize(this + contract_manager_fields::HELD_OFFERS);
     let before: Vec<usize> = if l != 0 { list_items_capped(l) } else { Vec::new() };
@@ -630,8 +561,6 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_held_offers(this: usize, p
 }
 
 /// Comparer for `get_squad_placement`.
-///
-/// [pt] Comparador: lado a lado pela ficha [0xae1080] (a vaga da saída é o argumento na pilha de cada uma).
 pub(crate) unsafe extern "thiscall" fn compare_get_squad_placement(this: usize, person: usize, club: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u8>(IDX_GET_SQUAD_PLACEMENT);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(G_CONTRACT_LOOKUP_RESULT, 4)], || o(this, person, club), || get_squad_placement(this, person, club));
@@ -703,9 +632,6 @@ pub(crate) unsafe extern "thiscall" fn compare_agreed_contract_offer(manager: us
 }
 
 /// Comparer for `schedule_offer_decision`.
-///
-/// [pt] Comparador: sem a entrada (a 0x4cd6d0 acrescenta e pode realocar) só a original; com ela, lado a lado pelo sorteio,
-/// as datas estáticas, o vetor das decisões e +0x1c (a cópia sem contar).
 pub(crate) unsafe extern "thiscall" fn compare_schedule_offer_decision(this: usize, id: i32, slot: i32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32)>(IDX_SCHEDULE_OFFER_DECISION);
     let mut limit = [0u8; 8];
@@ -731,15 +657,11 @@ pub(crate) unsafe extern "stdcall" fn compare_contract_category(p: usize, c: usi
 }
 
 /// Comparer for `post_transfer_listed_news`.
-///
-/// [pt] Comparador da 0x4d71b0: só a original (sorteia, entrega a notícia, que aloca).
 pub(crate) unsafe extern "thiscall" fn compare_post_transfer_listed_news(this: usize, player: usize, club: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_POST_TRANSFER_LISTED_NEWS)(this, player, club) // simplification: original only
 }
 
 /// Comparer for `schedule_loan_end`.
-///
-/// [pt] Comparador da 0x4ccca0: só a original (a volta do empréstimo entrega notícias e mexe no elenco).
 pub(crate) unsafe extern "thiscall" fn compare_schedule_loan_end(this: usize, person: usize, club: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_SCHEDULE_LOAN_END)(this, person, club) // simplification: original only
 }

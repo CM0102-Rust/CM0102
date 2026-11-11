@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/fra_lower.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/fra_lower.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `construct_fra_lower`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_fra_lower(this: usize, year: u32) -> usize {

@@ -3,11 +3,6 @@ use super::*;
 /// Looks through side `lado`'s players in grid cell group `grupo`: in mode 2 it only counts the able ones; otherwise it
 /// asks each one to try to intercept the ball and, at the first success, clears engine +0x1a5/+0x1a6 and returns 1.
 /// Returns the count (mode 2) or 0.
-///
-/// [pt] { 0x6cd330 } (match_eng.cpp): percorre os jogadores do lado `lado` no grupo `grupo` (quantidade
-/// em grupo[0x58 + lado], ponteiros em grupo + lado x 44). Para cada um ativo (0x2b <= 1, posicao
-/// >= 0): com `modo` 2 so conta; senao pergunta a 0x6f5c30 (pelo endereco do jogo) e, ao primeiro
-/// sim, zera 0x1a5/0x1a6 deste objeto e devolve 1. Devolve a contagem (so cresce no modo 2).
 pub(crate) unsafe extern "thiscall" fn search_on_side(this: usize, side: i8, group: usize, a3: u32, a4: u32, a5: u32, a6: u32, mode: i8) -> u8 {
     search_cell_side_with(Engine(this), side, group, a3, a4, a5, a6, mode, &mut |p, w, x, y, z| exe::match_player_try_intercept_ball(p, w, x, y, z))
 }
@@ -41,10 +36,6 @@ pub(crate) unsafe fn search_cell_side_with(
 /// Is player `j` in position to reach cell (b, c) inside the opponents' penalty area (by his side)? Coordinate-band
 /// checks and finally the distance table value (12 x 9 floats at 0xa15e44; 1000 outside) must exceed 1.5. Returns 1 or
 /// 0.
-///
-/// [pt] { 0x6cb9b0 } (match_eng.cpp): o jogador (pelo lado dele) esta em posicao de alcancar (b, c)?
-/// Faixas de coordenadas e, no fim, o valor da tabela de distancias (float, 12 x 9 em 0xa15e44;
-/// fora dela, 1000) tem de passar de 1,5.
 pub(crate) unsafe extern "stdcall" fn reaches(j: usize, b: i8, c: i8) -> u8 {
     let j = MatchPlayer(j);
     let s = side_of_player(j);
@@ -85,11 +76,6 @@ pub(crate) const IGNORED_MOVES: [i16; 11] = [0x5b, 0x5c, 0x3d, 0x36, 0x34, 0x37,
 /// tolerance 90 - (18 x `forca` - +0xe5) it returns the player's byte +0x2c; outside it returns 0 or 1 by side and
 /// writes into `saida` a penalty of (20 - attribute) x 12 using the person's attribute +0x30 or +0x3b. Some move codes
 /// are ignored and return 2.
-///
-/// [pt] { 0x713e90 } (match_pl.cpp): classifica um lance pelo angulo entre a direcao do jogador (0x19a)
-/// e o alvo (0x6cb6c0 do motor, pelo endereco do jogo). Dentro da tolerancia
-/// 90 - (18 x `forca` - float de 0xe5): devolve o byte 0x2c. Fora: 0 (um lado) ou 1 (outro), e
-/// grava em `saida` (20 - atributo da pessoa) x 12 (0x30 ou 0x3b do registro).
 pub(crate) unsafe extern "thiscall" fn classify_move(this: usize, code: i16, a: i8, b: i8, c: i8, d: i8, strength: f32, out: *mut u16) -> u8 {
     let this = MatchPlayer(this);
     *out = 0;
@@ -119,9 +105,6 @@ pub(crate) unsafe extern "thiscall" fn classify_move(this: usize, code: i16, a: 
 
 /// Counts the players of the attacking side in grid cell (x, y) through the exe's search_on_side
 /// (FN_CM3_MATCH_ENGINE_TRY_CELL_INTERCEPTION) in mode 2.
-///
-/// [pt] Jogadores numa casa (x, y) da grade do motor, pelo `search_on_side` em modo 2 (so conta),
-/// chamado pelo endereco do jogo. O 3o argumento e um float (bits), que o modo 2 nao usa.
 pub(crate) unsafe fn count_players_in_cell(engine: Engine, x: i8, y: i8, value: f32) -> u8 {
     let group = engine.cell(x as i8, y as i8).addr();
     let side = (engine.possession_side() == 0) as i8;
@@ -129,8 +112,6 @@ pub(crate) unsafe fn count_players_in_cell(engine: Engine, x: i8, y: i8, value: 
 }
 
 /// Distance from the 12x9 float table at 0xa15e44 for (|dx|, |dy|); 1000.0 outside the table.
-///
-/// [pt] Distancia da tabela para (|dx|, |dy|) dentro dela (coluna 0..=8, linha 0..=11); fora, 1000.
 pub(crate) unsafe fn grid_distance_or_1000(dx: i32, dy: i32) -> f32 {
     let (col, lin) = (dx.abs() as i8, dy.abs() as i8);
     if (0..=8).contains(&col) && (0..=11).contains(&lin) {
@@ -142,20 +123,12 @@ pub(crate) unsafe fn grid_distance_or_1000(dx: i32, dy: i32) -> f32 {
 
 /// Counts the players standing on the grid cells along the line from (x1, y1) to (x2, y2) (Bresenham-style walk on the
 /// 9 x 12 grid, stopping at the first cell off the pitch). Returns the count as a byte.
-///
-/// [pt] { 0x6cbc00 } (match_eng.cpp): quantos jogadores ha nas casas da linha de (x1, y1) a (x2, y2),
-/// percorrida ao estilo de Bresenham. Grade de 9 x 12 casas; a contagem para na primeira casa fora.
-/// Vertical/horizontal: do menor ao maior, sem a ultima casa. Diagonais: as duas pontas incluidas,
-/// a partir da de menor x (rasa) ou menor y (ingreme). Contagem em byte (soma com estouro).
 pub(crate) unsafe extern "thiscall" fn players_in_line(this: usize, x1: i8, y1: i8, x2: i8, y2: i8) -> u8 {
     walk_line_cells(x1, y1, x2, y2, false, 8, &|x, y, v| count_players_in_cell(Engine(this), x, y, v))
 }
 
 /// Match engine: counts the opponents that may block a shot along the line of cells (x1, y1)-(x2, y2), both ends
 /// included on straight lines (cell check `exe::cm3_match_engine_try_cell_shot_block` in mode 2). Returns the count.
-///
-/// [pt] { 0x6cc070 } (match_eng.cpp): como 0x6cbc00, contando pela 0x6cd3d0 (modo 2) e com as duas
-/// pontas nas linhas retas (na horizontal, x ate 11).
 pub(crate) unsafe extern "thiscall" fn players_on_path(this: usize, x1: i8, y1: i8, x2: i8, y2: i8) -> u8 {
     let this = Engine(this);
     let side = (this.possession_side() == 0) as i8;
@@ -167,9 +140,6 @@ pub(crate) unsafe extern "thiscall" fn players_on_path(this: usize, x1: i8, y1: 
 
 /// Walks the grid cells on the line (x1,y1)-(x2,y2) as `exe::cm3_match_engine_count_interceptors_on_line`/0x6cc070 do (straight lines and Bresenham diagonals),
 /// summing `contar` for each cell; stops at the pitch edge.
-///
-/// [pt] O percurso de 0x6cbc00 e 0x6cc070: `ate_o_fim` inclui a ultima casa nas linhas retas e a
-/// horizontal aceita x ate `x_horizontal`; `contar` da os jogadores de cada casa.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn walk_line_cells(x1: i8, y1: i8, x2: i8, y2: i8, until_end: bool, x_horizontal: i8, count: &dyn Fn(i8, i8, f32) -> u8) -> u8 {
     let dx = (x2 as i32 - x1 as i32).abs() as i8;
@@ -249,11 +219,6 @@ pub(crate) unsafe fn walk_line_cells(x1: i8, y1: i8, x2: i8, y2: i8, until_end: 
 /// exactly; otherwise the angle must be within a tolerance (75, or with `calcular` one computed from his skill +0x10b,
 /// `forca`, distance and `ajuste`, clamped to 30..=135). With `saida`, writes how many opponents are on the line and
 /// returns 1 only if +0x10b beats random(count^2).
-///
-/// [pt] { 0x6f9f90 } (match_pl.cpp): o jogador consegue jogar a bola para (a, b) com a direcao atual?
-/// 1 se ja esta virado exatamente para o alvo. Senao, tolerancia de angulo: 75 (sem `calcular`) ou
-/// ftol(10 x 0x10b ... ) - ftol(...), limitada a 30..=135. Fora dela, 0. Com `saida`, grava quantos
-/// jogadores ha na linha (0x6cbc00) e sorteia: 1 se 0x10b >= sorteio(c x c).
 pub(crate) unsafe extern "thiscall" fn can_play(this: usize, a: i8, b: i8, calcular: i8, strength: f32, adjust: f32, out: *mut u8) -> u8 {
     let this = MatchPlayer(this);
     let target = *((GLOBAL_TABLE as isize + 2 * (a.wrapping_sub(this.cell_x()) as isize * 24 + b.wrapping_sub(this.cell_y()) as isize)) as *const i16);
@@ -293,9 +258,6 @@ pub(crate) unsafe extern "thiscall" fn can_play(this: usize, a: i8, b: i8, calcu
 /// goal line and columns 3..5; otherwise `exe::match_player_is_cell_in_view` facing the middle of the goal, with no calculation and no output
 /// (does not draw)
 /// Original: `in_the_box` (0x6f4650, thiscall, `al`).
-///
-/// [pt] { 0x6f4650 } (match_pl.cpp): na entrada da area (linha do gol, colunas 3..=5)? Senao,
-/// 0x6f9f90 (pelo endereco) virado para o meio do gol, sem calculo nem saida (nao sorteia).
 pub(crate) unsafe extern "thiscall" fn in_the_box(this: usize) -> u8 {
     let this = MatchPlayer(this);
     let row: i8 = if side_of_player(this) == 0 { 0xb } else { 0 };
@@ -307,9 +269,6 @@ pub(crate) unsafe extern "thiscall" fn in_the_box(this: usize) -> u8 {
 
 /// the moment's attributes (0x104 to 0x10d), several "best of two draws"; 15 draws in the original's order
 /// Original: `draw_moment` (0x6f44a0, thiscall).
-///
-/// [pt] { 0x6f44a0 } (match_pl.cpp): atributos do momento, sorteados no inicio do lance. Varios sao
-/// "o melhor de dois sorteios". A ordem dos 15 sorteios e a do original.
 pub(crate) unsafe extern "thiscall" fn draw_moment(this: usize) {
     let this = MatchPlayer(this);
     let write = |o: usize, v: i32| write_u8(this.addr() + o, v as u8);
@@ -332,8 +291,6 @@ pub(crate) unsafe extern "thiscall" fn draw_moment(this: usize) {
 }
 
 /// Reads the u16 position-table entry [engine + 0x8ebc + 4 x side][position] for player p, without range check.
-///
-/// [pt] `table_a` direta: [motor + 0x8ebc + 4 x lado do jogador][posicao] (sem a checagem de faixa).
 pub(crate) unsafe fn position_table_entry(engine: usize, p: usize, position: i8) -> u16 {
     let t = *((engine as isize + (engine::POSITION_TABLE as isize) + 4 * side_of_player(MatchPlayer(p)) as isize) as *const usize) as *const u16;
     *t.offset(position as isize)
@@ -342,11 +299,6 @@ pub(crate) unsafe fn position_table_entry(engine: usize, p: usize, position: i8)
 /// Match engine: keeps track of each side's player in position 1 (the goalkeeper) at `engine::GOALKEEPER` / `engine::GOALKEEPER_SIDE1`: drops one who
 /// left the pitch, otherwise finds the first player whose position role is 1, or else promotes the first active player,
 /// swapping with the reserve who held position 1. Returns the one for side `lado_pedido`.
-///
-/// [pt] { 0x6ce110 } (match_eng.cpp): mantem o jogador de posicao 1 de cada lado (0xf59e: bloco 0;
-/// 0xf5a2: bloco 1). Perdido (posicao < 0) zera; sem ninguem, o primeiro com `tabela` 1 na posicao;
-/// se ainda nao houver, promove o primeiro ativo, trocando com quem guardava a posicao 1 em
-/// reserva (0x1a, com posicao -2 e 0x20 = -1). Devolve o do lado pedido.
 pub(crate) unsafe extern "thiscall" fn hold_position_one(this: usize, side_request: i8) -> usize {
     for (campo, side) in [(0xf59eusize, 0i8), (0xf5a2, 1)] {
         let stored = (this + campo) as *mut usize;
@@ -387,9 +339,6 @@ pub(crate) unsafe extern "thiscall" fn hold_position_one(this: usize, side_reque
 
 /// Match engine: tells whether player `j` has a clear path forward: 0 if his cell is marked by the opponents (unless
 /// `ignorar_casa`) or an active opposing outfield player ahead of him is in the same column; otherwise 1.
-///
-/// [pt] { 0x6bd5b0 } (match_eng.cpp): caminho livre para avancar? 0 se a casa dele estiver marcada (sem
-/// `ignorar_casa`) ou se algum adversario ativo a frente estiver na mesma coluna; senao 1.
 pub(crate) unsafe extern "thiscall" fn clear_path(this: usize, j: usize, ignore_home: i8) -> u8 {
     let j = MatchPlayer(j);
     let s = side_of_player(j);
@@ -415,9 +364,6 @@ pub(crate) unsafe extern "thiscall" fn clear_path(this: usize, j: usize, ignore_
 /// Returns 1 if there is free space in the row ahead of player `j` (towards his attack), checking the opposing side's
 /// occupancy grids: diagonal x + 1, then x - 1, then straight ahead; 0 when the row ahead is off the pitch or all
 /// taken.
-///
-/// [pt] { 0x6cbad0 } (match_eng.cpp): ha espaco livre na casa a frente (diagonais primeiro)? Fora do
-/// campo, 0. Casas marcadas na grade do lado oposto: x + 1 (se x < 8), x - 1 (se x > 0), x.
 pub(crate) unsafe extern "thiscall" fn space_ahead(this: usize, j: usize) -> u8 {
     let j = MatchPlayer(j);
     let x = j.cell_x();
@@ -447,17 +393,12 @@ pub(crate) unsafe extern "thiscall" fn space_ahead(this: usize, j: usize) -> u8 
 }
 
 /// Returns 1 if column `v` is outside 2..=6 (outside the penalty-area width).
-///
-/// [pt] { 0x6cb910 } (match_eng.cpp): 1 fora da faixa 2..=6.
 pub(crate) unsafe extern "stdcall" fn off_centre(v: i8) -> u8 {
     !(2..=6).contains(&v) as u8
 }
 
 /// Counts the active players of side `lado_b` beyond grid row `y` (side 1: row lower than y; side 0: higher; other
 /// sides: none), optionally skipping the player stored at engine `engine::BALL_HOLDER`. Returns the count.
-///
-/// [pt] { 0x6cb700 } (match_eng.cpp): quantos jogadores ativos do `lado` estao alem da linha `y` (lado
-/// 1: y menor; lado 0: y maior; outros lados: nenhum), opcionalmente sem o guardado em 0xf582.
 pub(crate) unsafe extern "thiscall" fn beyond_the_line(this: usize, y: i8, side_b: i8, without_stored: i8) -> u8 {
     let this = Engine(this);
     let mut n = 0u8;
@@ -475,8 +416,6 @@ pub(crate) unsafe extern "thiscall" fn beyond_the_line(this: usize, y: i8, side_
 }
 
 /// Grid distance between cells (a, b) and (c, d) from the distance table; 1000 when the offset falls outside the table.
-///
-/// [pt] { 0x6cc4e0 } (match_eng.cpp): distancia (tabela) entre (a, b) e (c, d); fora da tabela, 1000.
 pub(crate) unsafe extern "stdcall" fn distance_between(a: i8, b: i8, c: i8, d: i8) -> f32 {
     grid_distance_or_1000(a as i32 - c as i32, b as i32 - d as i32)
 }
@@ -489,8 +428,6 @@ pub(crate) const MATCH_SIDE_SIZE: usize = 20 * MATCH_PLAYER_SIZE;
 impl Engine {
     /// Match player k (0..20) of side `side` (0 home, 1 away): engine + `engine::PLAYERS` + 8920 x side + 0x1be x k.
     /// Negative k or side wrap like the original's signed arithmetic.
-    ///
-    /// [pt] O jogador k (0..20) do lado (0 casa, 1 fora) no bloco de jogadores do motor.
     pub(crate) fn player(self, side: i8, k: usize) -> MatchPlayer {
         MatchPlayer(
             (self.0 + engine::PLAYERS)
@@ -512,8 +449,6 @@ pub(crate) unsafe fn match_player_distance_to_cell(p: usize, a: i8, b: i8) -> f3
 
 /// Counts the side's active players (position +0x19 >= 0) among its 20, stores the count in engine byte +4 + side and
 /// returns it.
-///
-/// [pt] { 0x6cbbb0 } (match_eng.cpp): quantos ativos (posicao >= 0) o lado tem; guarda em motor[4 + lado].
 pub(crate) unsafe extern "thiscall" fn count_active(this: usize, side_b: i8) -> u8 {
     let n = (0..20).filter(|&k| read_i8(Engine(this).player(side_b, k).addr() + match_player::POSITION) >= 0).count() as u8;
     *((this as isize + 4 + side_b as isize) as *mut u8) = n;
@@ -522,9 +457,6 @@ pub(crate) unsafe extern "thiscall" fn count_active(this: usize, side_b: i8) -> 
 
 /// Returns 1 for certain match-event codes (37, 42..=50, 96, 97), following the original switch tables read from the
 /// exe, else 0.
-///
-/// [pt] { 0x6cb650 } (match_eng.cpp): 1 para alguns codigos de lance (37, 42..=50, 96, 97), pelo switch
-/// do original (tabelas lidas do exe: indices em 0x6cb680, destinos em 0x6cb678).
 pub(crate) unsafe extern "stdcall" fn special_code(code: i8) -> u8 {
     let i = code as i32 - 0x25;
     if !(0..=0x3c).contains(&i) {
@@ -537,9 +469,6 @@ pub(crate) unsafe extern "stdcall" fn special_code(code: i8) -> u8 {
 /// Is player `j` behind the stored extreme player of his side (`this` = match engine)? Side 0: his y (+0x103) <= the y
 /// of the stored lowest player (`engine::LOWEST_Y_PLAYER`; 12 without one); side 1: y >= the y of the stored highest (`engine::LOWEST_Y_PLAYER_SIDE1`; -1 without
 /// one). Returns 1 or 0.
-///
-/// [pt] { 0x6cd5f0 } (match_eng.cpp): o jogador esta atras do extremo guardado do lado dele?
-/// Lado 0: y <= y do menor (0xf58e; sem ele, 12). Outros: y >= y do maior (0xf592; sem ele, -1).
 pub(crate) unsafe extern "thiscall" fn behind_the_extreme(this: usize, j: usize) -> u8 {
     let this = Engine(this);
     let j = MatchPlayer(j);
@@ -555,8 +484,6 @@ pub(crate) unsafe extern "thiscall" fn behind_the_extreme(this: usize, j: usize)
 
 /// `*[0x4792] == −2`
 /// Original: `no_match` (0x6d4280, thiscall, `al`).
-///
-/// [pt] { 0x6d4280 } (match_eng.cpp): o ponteiro em 0x4792 aponta para -2?
 pub(crate) unsafe extern "thiscall" fn no_match(this: usize) -> u8 {
     let this = Engine(this);
     (**((this.addr() + engine::MATCH) as *const *const i32) == -2) as u8
@@ -564,10 +491,6 @@ pub(crate) unsafe extern "thiscall" fn no_match(this: usize) -> u8 {
 
 /// Match engine: decides whether side `lado_b`'s penalty area is under pressure: sums the opponents in the six rows
 /// nearest its goal (closer rows weigh 6..1) and sets engine flag +6 + side when the sum exceeds random(15) + 30.
-///
-/// [pt] { 0x6bd6b0 } (match_eng.cpp): pressao sobre a area do lado. Soma os adversarios nas linhas
-/// perto do gol (grade de contagem, lado oposto), pesando mais as mais proximas (6..1), e marca
-/// motor[6 + lado] se a soma (16 bits) passar de sorteio(15) + 30.
 pub(crate) unsafe extern "thiscall" fn pressure_in_box(this: usize, side_b: i8) {
     let mark = (this as isize + 6 + side_b as isize) as *mut u8;
     *mark = 0;
@@ -597,10 +520,6 @@ pub(crate) unsafe extern "thiscall" fn pressure_in_box(this: usize, side_b: i8) 
 /// Is player `j` the closest of his available team-mates (active, not himself, +0x2b = 0) to cell (a, b)? Returns 0 if
 /// anyone is strictly closer (or equally close when `j` is the goalkeeper), 1 otherwise; an outfield player already on
 /// the cell returns 1 at once.
-///
-/// [pt] { 0x6c3010 } (match_eng.cpp): o jogador e o mais proximo de (a, b) entre os colegas disponiveis
-/// (ativos, diferentes dele, 0x2b = 0)? 0 se algum estiver estritamente mais perto (ou na mesma
-/// distancia, quando ele tem `tabela` 1). Na propria casa (distancia 0) e sem `tabela` 1: 1 direto.
 pub(crate) unsafe extern "thiscall" fn nearest_to_point(this: usize, j: usize, a: i8, b: i8) -> u8 {
     let d = match_player_distance_to_cell(j, a, b);
     let zero = read_f64(rdata::F64_0);
@@ -626,9 +545,6 @@ pub(crate) unsafe extern "thiscall" fn nearest_to_point(this: usize, j: usize, a
 
 /// Pressure of side `lado_b` on cell (a, b): each active outfield player (only free ones, +0x2b = 0, unless `todos`)
 /// adds 3 when on the cell and 1 when within distance 1.5. Returns the total.
-///
-/// [pt] { 0x6c3a00 } (match_eng.cpp): pressao no ponto (a, b): para cada jogador ativo do lado (sem
-/// `tabela` 1; 0x2b = 0 salvo `todos`), +3 na propria casa (distancia 0), +1 a distancia <= 1,5.
 pub(crate) unsafe extern "thiscall" fn pressure_at_point(this: usize, side_b: i8, a: i8, b: i8, all: i8) -> u8 {
     let mut n = 0u8;
     for k in 0..20 {
@@ -648,9 +564,6 @@ pub(crate) unsafe extern "thiscall" fn pressure_at_point(this: usize, side_b: i8
 
 /// Match engine: the smallest distance from cell (a, b) to an active outfield player of side `lado_b` (skipping those
 /// with +0x2b set unless `todos`), starting from 5000; 0 if one of them is on that cell.
-///
-/// [pt] { 0x6c3950 } (match_eng.cpp): menor distancia ao ponto (a, b) entre os jogadores do lado (bit 0
-/// de `tabela` zerado; 0x2b = 0 salvo `todos`), partindo de 5000; 0 se algum estiver na casa.
 pub(crate) unsafe extern "thiscall" fn smallest_distance(this: usize, side_b: i8, a: i8, b: i8, all: i8) -> f32 {
     let mut smaller = f32::from_bits(0x459c4000);
     for k in 0..20 {
@@ -681,9 +594,6 @@ pub(crate) enum RoleBitEffect {
 
 /// Adds a share of `delta` to the disposition word (+0x35) of each active player of a side, chosen by the first role
 /// bit of the player's position (Skip, Factor, Whole, Double).
-///
-/// [pt] Soma a cada jogador ativo do lado uma parte de `delta` na palavra 0x35 (disposicao), pelo
-/// primeiro bit do papel (`tabela`, ordem 1, 2, 4, 8, 0x10, 0x20, 0x40); sem bit, nada.
 pub(crate) unsafe fn spread_disposition_delta(this: usize, side_b: i8, delta: i16, partes: [RoleBitEffect; 7]) {
     for k in 0..20 {
         let p = Engine(this).player(side_b, k);
@@ -704,8 +614,6 @@ pub(crate) unsafe fn spread_disposition_delta(this: usize, side_b: i8, delta: i1
 
 /// Spreads a disposition change `delta` over side `lado_b`'s active players (word +0x35), with a share factor per role
 /// from the first table; the goalkeeper is skipped.
-///
-/// [pt] { 0x6c06b0 } (match_eng.cpp): reparte a disposicao (papel 1 fica de fora).
 pub(crate) unsafe extern "thiscall" fn split_a(this: usize, side_b: i8, delta: i16) {
     use RoleBitEffect::*;
     spread_disposition_delta(this, side_b, delta, [Pula, Fator(0x968918), Fator(0x968f20), Fator(0x96d328), Fator(0x969040), Fator(0x968978), Fator(0x968f88)]);
@@ -713,8 +621,6 @@ pub(crate) unsafe extern "thiscall" fn split_a(this: usize, side_b: i8, delta: i
 
 /// Match engine: spreads `delta` over the disposition (+0x35) of side `lado_b`'s active players, with a factor per role
 /// (the role 4 players get the whole delta).
-///
-/// [pt] { 0x6c07a0 } (match_eng.cpp): reparte a disposicao (papel 4 recebe o delta inteiro).
 pub(crate) unsafe extern "thiscall" fn split_b(this: usize, side_b: i8, delta: i16) {
     use RoleBitEffect::*;
     spread_disposition_delta(this, side_b, delta, [Fator(0x96d330), Fator(0x9689b8), Inteiro, Fator(0x969520), Fator(0x968e00), Fator(0x968f20), Fator(0x967888)]);
@@ -722,8 +628,6 @@ pub(crate) unsafe extern "thiscall" fn split_b(this: usize, side_b: i8, delta: i
 
 /// Spreads a disposition change `delta` over the side's active players (word +0x35) using the third table of role
 /// factors.
-///
-/// [pt] { 0x6c0a70 } (match_eng.cpp): reparte a disposicao (terceira tabela de fatores).
 pub(crate) unsafe extern "thiscall" fn split_c(this: usize, side_b: i8, delta: i16) {
     use RoleBitEffect::*;
     spread_disposition_delta(this, side_b, delta, [Fator(0x96d330), Fator(0x968968), Fator(0x968968), Fator(0x968968), Fator(0x968968), Fator(0x969510), Fator(0x968918)]);
@@ -733,11 +637,6 @@ pub(crate) unsafe extern "thiscall" fn split_c(this: usize, side_b: i8, delta: i
 /// a factor (0.1 for defenders, 0.2, 0.5, 0.75, 1.0 or 1.05 for forwards), skipping goalkeepers and players off the
 /// pitch; ties keep the first. Like the original, a player with no role bit reuses the previous factor (the first one
 /// comes from the raw argument bits).
-///
-/// [pt] { 0x6c2750 } (match_eng.cpp): escolhe um jogador do lado (indice 0..19, -1 sem candidato) por
-/// sorteio ponderado pelo papel: maior sorteio(25) x fator (0,1 / 0,1 / 0,2 / 0,5 / 0,75 / 1,05 ou
-/// 1,0). O original guarda o fator no lugar do argumento na pilha: jogador sem bit de papel usa o
-/// fator anterior, e o primeiro, os bits da palavra inteira empilhada pelo chamador (por isso u32).
 pub(crate) unsafe extern "thiscall" fn choose_by_role(this: usize, argument: u32) -> u8 {
     let side_b = argument as i8;
     let mut factor = f32::from_bits(argument);
@@ -777,8 +676,6 @@ pub(crate) unsafe extern "thiscall" fn choose_by_role(this: usize, argument: u32
 
 /// Spreads a disposition change `delta` over the active players of side `lado_b` by role (goalkeeper skipped; fourth
 /// factor table).
-///
-/// [pt] { 0x6c0890 } (match_eng.cpp): reparte a disposicao (papel 1 de fora; quarta tabela de fatores).
 pub(crate) unsafe extern "thiscall" fn split_d(this: usize, side_b: i8, delta: i16) {
     use RoleBitEffect::*;
     let f = Fator(0x969040);
@@ -787,8 +684,6 @@ pub(crate) unsafe extern "thiscall" fn split_d(this: usize, side_b: i8, delta: i
 
 /// Spreads a disposition change `delta` over side `lado_b`'s active players (word +0x35), with a share factor per role
 /// from the fifth table; the goalkeeper is skipped.
-///
-/// [pt] { 0x6c0980 } (match_eng.cpp): reparte a disposicao (papel 1 de fora; quinta tabela).
 pub(crate) unsafe extern "thiscall" fn split_e(this: usize, side_b: i8, delta: i16) {
     use RoleBitEffect::*;
     spread_disposition_delta(this, side_b, delta, [Pula, Fator(0x967880), Fator(0x967880), Fator(0x96d340), Fator(0x96d338), Fator(0x9689d0), Fator(0x968940)]);
@@ -796,8 +691,6 @@ pub(crate) unsafe extern "thiscall" fn split_e(this: usize, side_b: i8, delta: i
 
 /// Match engine: spreads `delta` over the disposition (+0x35) of side `lado_b`'s active players, with a factor per role
 /// (the role 1 players get double).
-///
-/// [pt] { 0x6c0b70 } (match_eng.cpp): reparte a disposicao (papel 1 recebe o dobro; sexta tabela).
 pub(crate) unsafe extern "thiscall" fn split_f(this: usize, side_b: i8, delta: i16) {
     use RoleBitEffect::*;
     spread_disposition_delta(this, side_b, delta, [Dobro, Fator(0x9689e0), Fator(0x968918), Fator(0x968f20), Fator(0x967888), Fator(0x968a98), Fator(0x968a98)]);
@@ -805,8 +698,6 @@ pub(crate) unsafe extern "thiscall" fn split_f(this: usize, side_b: i8, delta: i
 
 /// Match engine: records the current move (code, player, other player and six flag bytes at `engine::PENDING_PLAY_KIND`..`engine::PENDING_PLAY_SERIOUS`) unless a
 /// move with a player is already recorded.
-///
-/// [pt] { 0x6bb9a0 } (match_eng.cpp): registra o lance (0x475a..=0x4769) se nao houver jogador nele.
 pub(crate) unsafe extern "thiscall" fn record_move(this: usize, code: u16, player: u32, other: u32, b4769: u8, b475a: u8, b475b: u8, b475c: u8, b475d: u8, b475e: u8) {
     let this = Engine(this);
     if (this.pending_play_offender().addr() as u32) != 0 {
@@ -822,9 +713,6 @@ pub(crate) unsafe extern "thiscall" fn record_move(this: usize, code: u16, playe
 
 /// Removes pointer `alvo` from the player's list (+0x1ae, count at +0x101) by moving the last item into its place;
 /// returns the new count (the old count if not found, 0 if the list is empty).
-///
-/// [pt] { 0x714ca0 } (match_pl.cpp): tira o ponteiro da lista (0x1ae, quantidade em 0x101) pondo o
-/// ultimo no lugar; devolve a nova quantidade (sem achar, a quantidade; lista vazia, 0).
 pub(crate) unsafe extern "thiscall" fn remove_from_list(this: usize, target: usize) -> u8 {
     let this = MatchPlayer(this);
     let n = this.marker_count();
@@ -844,9 +732,6 @@ pub(crate) unsafe extern "thiscall" fn remove_from_list(this: usize, target: usi
 
 /// Puts the player on the pitch at cell (8, 6) and appends him to his side's on-pitch list (`engine::ON_PITCH_PLAYERS`, 11 per side, count
 /// at `engine::ON_PITCH_COUNT` + side), storing his order in +0x28; returns the new count.
-///
-/// [pt] { 0x6cdd00 } (match_eng.cpp): poe o jogador no meio do campo (8, 6) e na lista do lado
-/// (0x453a, 11 por lado; quantidade em 0x4592 + lado), guardando a ordem em 0x28.
 pub(crate) unsafe extern "thiscall" fn take_the_field(this: usize, player: usize) -> u8 {
     let player = MatchPlayer(player);
     let l = side_of_player(player) as isize;
@@ -863,9 +748,6 @@ pub(crate) unsafe extern "thiscall" fn take_the_field(this: usize, player: usize
 
 /// 12 × 9 float table (0xa15e44) ≤ 1.0, otherwise `behind_the_extreme`
 /// Original: `in_danger` (0x70d630, thiscall, `al`).
-///
-/// [pt] { 0x70d630 } (match_pl.cpp): perigo pela tabela de floats 12 x 9 em 0xa15e44 (distancia em y a
-/// propria linha de fundo, em x ao centro): valor <= 1,0 (ou NaN) da 1; senao, `behind_the_extreme`.
 pub(crate) unsafe extern "thiscall" fn in_danger(this: usize) -> u8 {
     let this = MatchPlayer(this);
     let bottom = if side_of_player(this) != 0 { 11 } else { 0 };
@@ -880,10 +762,6 @@ pub(crate) unsafe extern "thiscall" fn in_danger(this: usize) -> u8 {
 
 /// 1/2 according to the move's side and area; draw(200) decides whether to clear
 /// Original: `check_move` (0x6bba80, thiscall, `al`).
-///
-/// [pt] { 0x6bba80 } (match_eng.cpp): confere o lance registrado. 1 sem lance; 2 se o jogador do lance
-/// e do lado em 0x8eae, se o lance (codigo diferente de 8) esta na faixa 2..=6 x area do lado, ou
-/// se sorteio(200) der 0; senao limpa o lance e da 1.
 pub(crate) unsafe extern "thiscall" fn check_move(this: usize) -> u8 {
     let this = Engine(this);
     let code = this.pending_play_kind();
@@ -910,10 +788,6 @@ pub(crate) unsafe extern "thiscall" fn check_move(this: usize) -> u8 {
 
 /// Returns 1 if cell (x, y) is in side `lado_b`'s useful area and no active opponent stands on it or, for outfield
 /// opponents, in the neighbouring columns between the cell and the goal; else 0.
-///
-/// [pt] { 0x6c41b0 } (match_eng.cpp): 0 se (x, y) esta fora do campo util do lado (lado 0: y > 8;
-/// outros: y < 3) ou se um adversario ativo esta na casa, ou (sem `tabela` 1) na mesma coluna
-/// entre o ponto e o gol (lado 1: y maior que o dele; lado 0: menor); senao 1.
 pub(crate) unsafe extern "thiscall" fn clear_path_to(this: usize, side_b: i8, x: i8, y: i8) -> u8 {
     if (side_b != 0 && y < 3) || (side_b == 0 && y > 8) {
         return 0;
@@ -945,10 +819,6 @@ pub(crate) unsafe extern "thiscall" fn clear_path_to(this: usize, side_b: i8, x:
 /// Can the match player reach cell (x, y)? 1 if he is already on it; otherwise compares the direction from the point to
 /// the centre of his goal line with the direction from the point to him (must differ by less than +0x10c + 10) and
 /// checks the point's distance to the goal line against the 12 x 9 distance table (0xa15e44).
-///
-/// [pt] { 0x713d90 } (match_pl.cpp): o jogador alcanca (x, y)? Na propria casa, 1. Senao compara as
-/// palavras de `by_difference` do ponto ao centro da linha de fundo e do ponto ao jogador (diferenca
-/// abaixo de 0x10c + 10) e a distancia do ponto a linha de fundo com a tabela 12 x 9 (0xa15e44).
 pub(crate) unsafe extern "thiscall" fn reaches_the_point(this: usize, x: i8, y: i8) -> u8 {
     let this = MatchPlayer(this);
     let (jx, jy) = (this.cell_x(), this.cell_y());
@@ -976,11 +846,6 @@ pub(crate) unsafe extern "thiscall" fn reaches_the_point(this: usize, x: i8, y: 
 /// a higher score and ftol(disposition × factor) not lower. Stores the first dword of the player sheet (0x69) at
 /// 0x477a.
 /// Original: `choose_standout` (0x6d0f80, among the (match byte 0x4d & 0xf) + 11 of each side, thiscall).
-///
-/// [pt] { 0x6d0f80 } (match_eng.cpp): o destaque entre os (byte 0x4d da partida & 0xf) + 11 primeiros
-/// de cada lado (inativos com 0x20 = 0xff de fora): pontuacao (16 bits) = disposicao 0x35 +
-/// 125 x (0x10 + 2 x 0x0c) + 50 x 0x03 + 35 x 0x06; troca so com pontuacao maior e
-/// ftol(disposicao x fator) nao menor. Guarda o primeiro dword da ficha (0x69) em 0x477a.
 pub(crate) unsafe extern "thiscall" fn choose_standout(this: usize) {
     let this = Engine(this);
     let fixture = Fixture(this.r#match());
@@ -1015,10 +880,6 @@ pub(crate) unsafe extern "thiscall" fn choose_standout(this: usize) {
 /// factor set by the role bits of his tactical position (1.2/1.2/0.65/0.5/0.35; role 0x40: 0.25 or 0.15) and scaled by
 /// work rate (+0x44), positioning (+0x39) and tackling (+0x3e). As in the original, the factor reuses the argument slot
 /// and carries over to players without a role bit.
-///
-/// [pt] { 0x6c2880 } (match_eng.cpp): como `choose_by_role`, com outros fatores (1,2 / 1,2 / 0,65 /
-/// 0,5 / 0,35; papel 0x40: 0,25 com 0x700, senao 0,15) ajustados pelos atributos da pessoa (0x6d:
-/// 0x44, 0x39 e 0x3e). O fator, inclusive os ajustes, fica no lugar do argumento e passa adiante.
 pub(crate) unsafe extern "thiscall" fn choose_by_role_b(this: usize, argument: u32) -> u8 {
     let side_b = argument as i8;
     let mut factor = f32::from_bits(argument);
@@ -1080,11 +941,6 @@ pub(crate) unsafe extern "thiscall" fn choose_by_role_b(this: usize, argument: u
 /// Writes into `x`/`y` the formation cell of `jogador` (`this` = match engine), read from his side's formation table
 /// (`engine::FORMATION_TABLE`, 216 bytes per position; low and high nibble of one byte), using a different field depending on whether his
 /// side has the ball (`engine::POSSESSION_SIDE`), the other side has it, or nobody does.
-///
-/// [pt] { 0x6c2a40 } (match_eng.cpp): casa (x, y) da formacao do jogador (tabela 0xf56e do lado, 216
-/// bytes por posicao; nibble baixo e alto de um byte): campo 0x9f/0xa4 quando o lado em 0x8eae
-/// (0 ou 1) e o do jogador; 0x30/0x3b quando e o outro; 0x35 com 0x8eae fora de 0/1. O byte e
-/// relido para o segundo nibble, depois de gravar o primeiro.
 pub(crate) unsafe extern "thiscall" fn formation_square(this: usize, player: usize, x: *mut u8, y: *mut u8) {
     let this = Engine(this);
     let player = MatchPlayer(player);
@@ -1107,8 +963,6 @@ pub(crate) unsafe extern "thiscall" fn formation_square(this: usize, player: usi
 
 /// Writes ftol(a / total x 100) and its complement to 100 into the engine bytes pa and pb; 50/50 when total is not
 /// positive.
-///
-/// [pt] Grava ftol(a / (a + b) x 100) e o complemento a 100 nos bytes `pa` e `pb`; 50 e 50 sem total positivo.
 pub(crate) unsafe fn write_percent_pair(this: usize, a: i32, total: i32, pa: isize, pb: isize) {
     let (x, y) = if total > 0 {
         let v = ftol(a as f64 / total as f64 * read_f32(rdata::F32_100) as f64) as u8;
@@ -1122,9 +976,6 @@ pub(crate) unsafe fn write_percent_pair(this: usize, a: i32, total: i32, pa: isi
 
 /// Computes the match percentages (possession and similar stats) for index `i` and the totals 3 and 4, from the
 /// counters in the engine's six tables at +0x8f02..+0x8f66, writing each complementary pair of percentages.
-///
-/// [pt] { 0x6ce9c0 } (match_eng.cpp): percentuais da partida (posse e afins) para os indices `i`, 3 e 4,
-/// a partir das contagens em 0x8f02..0x8f66 (seis tabelas de dwords).
 pub(crate) unsafe extern "thiscall" fn compute_percentages(this: usize, i: i8) {
     for s in [i as isize, 3, 4] {
         let c = |o: isize| *((this as isize + o + 4 * s) as *const i32);
@@ -1141,12 +992,6 @@ pub(crate) unsafe extern "thiscall" fn compute_percentages(this: usize, i: i8) {
 /// outfield player, a role weight (0.4 to 1.1) adjusted by his player data and a roll, times a random score from his
 /// float match attributes (+0xc9 with `modo`, else various weighted sums); returns the slot (0..19) of the highest
 /// score, 0xff with none, and leaves the factor in the argument.
-///
-/// [pt] { 0x6c2050 } (match_eng.cpp): terceira escolha ponderada pelo papel (0,4 / 0,45 / 0,5 / 0,75 /
-/// 0,85; papel 0x40: 1,1 com 0x700, senao 1,0), ajustada pela pessoa (palavra 5 e sorteio contra o
-/// byte 0x21). O sorteio base vem de atributos em float do jogador: com `modo`, 0xc9; senao, 1 em
-/// 7, 0xa1 + c; 2 em 3 (dos restantes), uma soma ponderada de cinco; o resto, de tres. Nos dois
-/// primeiros o fator nao entra. Acima de um limite, perde sorteio(5). O fator fica no argumento.
 pub(crate) unsafe extern "thiscall" fn choose_by_role_c(this: usize, argument: u32, mode: u32) -> u8 {
     let side_b = argument as i8;
     let mut factor = f32::from_bits(argument);
@@ -1220,9 +1065,6 @@ pub(crate) unsafe extern "thiscall" fn choose_by_role_c(this: usize, argument: u
 
 /// Multiplies the match player's condition (+0x1a2, float) by `fator`, with a floor of 2 x (25 - the person byte +0x5d)
 /// and set to 100 when the product exceeds a ceiling.
-///
-/// [pt] { 0x716450 } (match_pl.cpp): multiplica a condicao (0x1a2) pelo fator; o produto (em double) fica
-/// no minimo em 2 x (25 - byte 0x5d da ficha 0x69) e, passando de um teto, vira 100.
 pub(crate) unsafe extern "thiscall" fn apply_factor(this: usize, factor: f32) {
     let this = MatchPlayer(this);
     let c = (this.addr() + match_player::CONFIDENCE) as *mut f32;
@@ -1237,8 +1079,6 @@ pub(crate) unsafe extern "thiscall" fn apply_factor(this: usize, factor: f32) {
 }
 
 /// Calls MATCH_PLAYER scale_anger (`exe::match_player_scale_anger`, FN_MATCH_PLAYER_SCALE_ANGER) for player p with a factor.
-///
-/// [pt] { 0x716450 } pelo endereco do jogo (Rust ou original, conforme o modo).
 pub(crate) unsafe fn match_player_scale_anger(p: MatchPlayer, factor: f32) {
     exe::match_player_scale_anger(p, factor)
 }
@@ -1246,9 +1086,6 @@ pub(crate) unsafe fn match_player_scale_anger(p: MatchPlayer, factor: f32) {
 /// Match player: a value from his physical condition (+0x1a2) and byte +0xff; when `alvo` is the player stored at
 /// +0x1a6 [inference: the last one who fouled him] it uses its own formula with (byte +0xff + 5). Returns the truncated
 /// value.
-///
-/// [pt] { 0x7165b0 } (match_pl.cpp): valor pela condicao e pelo byte 0xff; com `alvo` igual ao guardado
-/// em 0x1a6, formula propria (0xff + 5).
 pub(crate) unsafe extern "thiscall" fn value_by_condition(this: usize, target: usize) -> i32 {
     let this = MatchPlayer(this);
     let base = this.confidence() as f64 * read_f64(rdata::F64_0_01) + read_f64(rdata::F64_0_75);
@@ -1262,9 +1099,6 @@ pub(crate) unsafe extern "thiscall" fn value_by_condition(this: usize, target: u
 
 /// Match engine: applies factor `fator` to player `jogador` and a derived factor to his team-mates who have a player
 /// record (on the pitch: (f + c) x c'; off it: f x c + c') through the match player's anger scaling [inference].
-///
-/// [pt] { 0x6bb8d0 } (match_eng.cpp): aplica o fator ao jogador e um derivado aos colegas com ficha
-/// (ativos: (f + c) x c'; inativos: f x c + c').
 pub(crate) unsafe extern "thiscall" fn apply_to_team(this: usize, player: usize, factor: f32) {
     for k in 0..20 {
         let p = Engine(this).player(side_of_player(MatchPlayer(player)), k);
@@ -1284,8 +1118,6 @@ pub(crate) unsafe extern "thiscall" fn apply_to_team(this: usize, player: usize,
 
 /// Applies the factor to every player of side `lado_b` who has a person record (+0x69), scaling each one's
 /// anger/aggression via match_player_scale_anger.
-///
-/// [pt] { 0x6bb950 } (match_eng.cpp): aplica o fator a todos os jogadores com ficha do lado.
 pub(crate) unsafe extern "thiscall" fn apply_to_side(this: usize, side_b: i8, factor: f32) {
     for k in 0..20 {
         let p = Engine(this).player(side_b, k);
@@ -1298,9 +1130,6 @@ pub(crate) unsafe extern "thiscall" fn apply_to_side(this: usize, side_b: i8, fa
 /// Picks a player of side `lado_b`: each active player draws a random number up to his foul-chance value + 5 (+25 in
 /// mode 2), weighted 0.2 for the goalkeeper and 1.0 otherwise; the highest wins. Returns the player's slot (0..19) or
 /// 0xff.
-///
-/// [pt] { 0x6c2310 } (match_eng.cpp): escolha pelo valor da condicao: maior sorteio(valor + 5, ou + 25
-/// no modo 2) x fator (0,2 com papel 1, senao 1,0).
 pub(crate) unsafe extern "thiscall" fn choose_by_condition(this: usize, side_b: i8, mode: u32) -> u8 {
     let mut best = 0.0f32;
     let mut chosen: u8 = 0xff;
@@ -1322,8 +1151,6 @@ pub(crate) unsafe extern "thiscall" fn choose_by_condition(this: usize, side_b: 
 
 /// Forwards to the match referee's decide_foul (referee object at engine + 0xf5b2) for player `j` and code `codigo`,
 /// writing the foul type and value; returns its result.
-///
-/// [pt] { 0x6cfca0 } (match_eng.cpp): `decide_foul` do arbitro do motor (this + 0xf5b2).
 pub(crate) unsafe extern "thiscall" fn engine_decide_foul(this: usize, j: usize, code: u16, kind: *mut u8, value: *mut u8) -> u8 {
     let this = Engine(this);
     exe::match_official_check_foul(this.addr() + engine::REFEREE, j, code, kind, value)
@@ -1331,16 +1158,12 @@ pub(crate) unsafe extern "thiscall" fn engine_decide_foul(this: usize, j: usize,
 
 /// Match engine: asks the engine's referee (`engine::REFEREE`) to decide the punishment for a foul by `j` on `outro` (card type,
 /// severity, weight and sending-off flag), via MatchOfficial::punish_move.
-///
-/// [pt] { 0x6cfcd0 } (match_eng.cpp): `punish_move` do arbitro do motor.
 pub(crate) unsafe extern "thiscall" fn engine_punish_move(this: usize, j: usize, other: usize, kind: *mut u8, x: i8, sev: i8, flag: u8, weight: *mut f32, send_off: u8) {
     let this = Engine(this);
     exe::match_official_decide_foul_punishment(this.addr() + engine::REFEREE, j, other, kind, x, sev, flag, weight, send_off)
 }
 
 /// Forwards the foul punishment to the match engine's referee (this + 0xf5b2), i.e. calls punish_foul there.
-///
-/// [pt] { 0x6cfd10 } (match_eng.cpp): `punish_foul` do arbitro do motor.
 pub(crate) unsafe extern "thiscall" fn engine_punish_foul(this: usize, j: usize, kind: *mut u8, x: i8, sev: i8, flag: u8, weight: *mut f32) {
     let this = Engine(this);
     exe::match_official_decide_booking(this.addr() + engine::REFEREE, j, kind, x, sev, flag, weight)
@@ -1350,12 +1173,6 @@ pub(crate) unsafe extern "thiscall" fn engine_punish_foul(this: usize, j: usize,
 /// defenders to 1.05 for forwards), adjusted by his rating (+5) and attributes, and a random draw based on his
 /// attributes; with `modo` a different draw is used. The best draw wins, but 1 time in 5 the choice is discarded
 /// (0xff). Returns the slot or 0xff.
-///
-/// [pt] { 0x6c23f0 } (match_eng.cpp): quinta escolha ponderada pelo papel (0,15 / 0,2 / 0,5 ou 0,3 /
-/// 0,65 ou 0,8 / 1,05 / 0,95 ou 0,85), ajustada pela pessoa (palavra 5, bytes 0x37 e 0x43; sem
-/// `modo`, a soma 0x40 + 0x36 + 0x26 + 0x1b; sorteio contra 0x21). Sorteio base: com `modo`,
-/// 0xa1 - 0x99 - 0xad + c (sem fator); senao 4 em 5, 0xf1 + 0xc5 + 0x8d + c, ou 0xa9 + c. No fim,
-/// 1 em 5 descarta a escolha (0xff). O fator fica no argumento e passa adiante.
 pub(crate) unsafe extern "thiscall" fn choose_by_role_e(this: usize, argument: u32, mode: u32) -> u8 {
     let side_b = argument as i8;
     let mut factor = f32::from_bits(argument);
@@ -1453,10 +1270,6 @@ pub(crate) const POSSESSION_ZONES: [([usize; 4], [usize; 4], [usize; 3]); 3] = [
 /// Counts one possession tick for side `lado_b` in the ball's zone (by ball row: defence, midfield, attack), per period
 /// (first half, second half, extra time, from engine `engine::PERIOD_END`). With `janela`, also keeps rolling totals over the last
 /// 55 ticks (circular index `engine::POSSESSION_WINDOW_INDEX`), removing the outgoing tick; without it, side -1 is not counted.
-///
-/// [pt] { 0x6cf750 } (match_eng.cpp): conta um instante de posse do `lado` na zona da bola, por periodo
-/// (0x8ed4: 0x1ef, 0x3de ou outro). Com `janela`, mantem tambem os totais dos ultimos 55 instantes
-/// (janela circular em 0x8e9b): tira o que sai, poe o que entra. Sem janela, lado -1 nao conta.
 pub(crate) unsafe extern "thiscall" fn possession_statistic(this: usize, side_b: i8, window: u8) {
     let this = Engine(this);
     let w16 = |o: isize| (this.addr() as isize + o) as *mut u16;
@@ -1520,9 +1333,6 @@ pub(crate) unsafe extern "thiscall" fn possession_statistic(this: usize, side_b:
 
 /// Builds each side's summary at engine + 0xf5c0 + 0x36 x side: each player's 1..10 match rating (+0x1b from
 /// disposition +0x35) and sums of several attribute bytes and words.
-///
-/// [pt] Resumo de cada lado (0xf5c0 + 0x36 x lado): nota de cada um dos 20 jogadores do bloco
-/// (0x1b = (disposicao + 500) / 1000, em 1..=10) e somas de atributos (bytes e palavras).
 pub(crate) unsafe fn summarize_sides(engine: Engine) {
     for lado_b in 0..2usize {
         let c = engine.addr() + engine::SIDE_SUMMARY + 0x36 * lado_b;
@@ -1561,10 +1371,6 @@ pub(crate) unsafe fn summarize_sides(engine: Engine) {
 /// Match summary at time `momento` (`this` = match engine): at 0 or 1 rolls the tempo values (`engine::TEMPO_ROLL_A`, `engine::TEMPO_ROLL_B` in
 /// 3..=9; `engine::TEMPO_GOALS_ROLL` from a roll plus the goals, at least 10) and summarizes both sides; at 0x3de (full time) only
 /// summarizes; always recomputes the possession percentages for the current period (`engine::PERIOD_END`).
-///
-/// [pt] { 0x6ce460 } (match_eng.cpp): resumo da partida no `momento`: 0 e 1 sorteiam o ritmo (0xf628 e
-/// 0xf62c: 3..=9; 0xf630: sorteio(5) + estados dos lados, minimo 10, senao novo sorteio) e
-/// resumem os lados; 0x3de so resume. Sempre recalcula os percentuais do periodo (0x8ed4).
 pub(crate) unsafe extern "thiscall" fn match_summary(this: usize, moment: i16) {
     let this = Engine(this);
     let per = match this.period_end() as u16  {
@@ -1590,10 +1396,6 @@ pub(crate) unsafe extern "thiscall" fn match_summary(this: usize, moment: i16) {
 
 /// Returns the active player of side `lado_b` closest to cell (a, b) (excluding goalkeepers, and without `todos` those
 /// with +0x2b > 1); zero distance returns immediately; 0 if none.
-///
-/// [pt] { 0x6c30e0 } (match_eng.cpp, laco desenrolado 20 vezes no original): o jogador ativo do `lado`
-/// mais perto de (a, b) pela tabela (`f6f09b0`), sem `tabela` 1 e, sem `todos`, so com 0x2b <= 1.
-/// Distancia zero devolve na hora; partindo de 5000, o menor estritamente. Sem candidato, 0.
 pub(crate) unsafe extern "thiscall" fn closest_on_side(this: usize, side_b: i8, a: i8, b: i8, all: u8) -> usize {
     let mut best = 5000.0f32;
     let mut chosen = 0;
@@ -1616,8 +1418,6 @@ pub(crate) unsafe extern "thiscall" fn closest_on_side(this: usize, side_b: i8, 
 
 /// Scores grid cell (x, y) for player j in choose_square (turn arc, tactics table, blockers, side bias...); None when
 /// the cell is not eligible.
-///
-/// [pt] Pontua a casa (x, y) para o jogador em `choose_square`; None quando a casa nem entra.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn score_cell_for_player(engine: Engine, j: MatchPlayer, x: i8, y: i8, v: f32, d: i8, flags: u8, target: (i8, i8)) -> Option<f64> {
     let (jx, jy) = (j.cell_x(), j.cell_y());
@@ -1737,12 +1537,6 @@ pub(crate) unsafe fn score_cell_for_player(engine: Engine, j: MatchPlayer, x: i8
 /// score above 7.5, weighing opponents in or near the cell, retreat, the offside line (flag 4), the central band and
 /// the previous target (`*sx`, `*sy` with flag 2). Writes the cell (or -1) to `*sx`/`*sy` and returns whether one was
 /// found; without flag 2 a player lacking +0x107 and +0x105 does not move (returns 0).
-///
-/// [pt] { 0x6bce80 } (match_eng.cpp): escolhe a casa vizinha (3 x 3 em volta do jogador) com a maior
-/// pontuacao, partindo de 7,5 (empate fica com a ultima): adversarios na casa ou o mais perto
-/// dela, recuo, linha de impedimento (flag 4), faixa central e o alvo anterior (`x`, `y` na entrada,
-/// com flag 2). Grava a casa (ou -1) e devolve se achou. Sem flag 2, o jogador sem 0x107 nem 0x105
-/// nao escolhe (devolve 0 sem gravar); com 0x105, um sorteio de -5..5 entra na base.
 pub(crate) unsafe extern "thiscall" fn choose_square(this: usize, j: usize, sx: *mut i8, sy: *mut i8, flags: u32) -> u8 {
     let j = MatchPlayer(j);
     let engine = Engine(this);
@@ -1825,12 +1619,6 @@ pub(crate) type SearchOnSideCall<'a> = &'a mut dyn FnMut(i8, usize, u32, u32, u3
 /// point. In each cell it asks `search_on_side` for a player of a randomly drawn side and then of the other, with the
 /// distance from the origin (12 × 9 table; outside it, 1000). The first hit returns 1; leaving the pitch or reaching
 /// the end returns 0. The type (by `codigo`) is passed along.
-///
-/// [pt] { 0x6ccb60 } com a chamada a 0x6cd330 injetada: percorre as casas da linha de (x0, y0) a
-/// (x1, y1) (eixo maior, erro acumulado como Bresenham; a casa final so entra se a linha for um
-/// ponto) e, em cada uma, pergunta a `search_on_side` por um jogador de um lado sorteado e
-/// depois do outro, com a distancia desde a origem (tabela 12 x 9; fora, 1000). Primeiro que
-/// achar, 1; sair do campo ou chegar ao fim, 0. O tipo (por `codigo`) vai junto.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn trace_line_interception_with(engine: usize, x0: i8, y0: i8, x1: i8, y1: i8, code: i8, a6: u32, a7: u32, call: SearchOnSideCall) -> u8 {
     let kind: u8 = match code {
@@ -1896,8 +1684,6 @@ pub(crate) unsafe fn trace_line_interception_with(engine: usize, x0: i8, y0: i8,
 
 /// Traces a move (pass or shot) from cell (x0, y0) to (x1, y1), checking each cell on the way for a player of either
 /// side who intercepts it. Returns 1 on the first interception, 0 if the ball leaves the pitch or reaches the end.
-///
-/// [pt] { 0x6ccb60 } (match_eng.cpp): tracado do lance de (x0, y0) a (x1, y1).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn trace_move(this: usize, x0: i8, y0: i8, x1: i8, y1: i8, code: i8, a6: u32, a7: u32) -> u8 {
     trace_line_interception_with(this, x0, y0, x1, y1, code, a6, a7, &mut |l, c, d, a, t, b| exe::cm3_match_engine_try_cell_interception(this, l, c, d, a, t, b, 1))
@@ -1920,19 +1706,6 @@ pub(crate) unsafe extern "thiscall" fn trace_move(this: usize, x0: i8, y0: i8, x
 ///
 /// On the tape, the commentary's 6th argument goes in byte 1 of the 5th (0x6d6f70 reads both as bytes; only byte 0 is
 /// checked).
-///
-/// [pt] { 0x6d0b60 } (match_eng.cpp) com as chamadas que mexem fora do motor injetadas (0x6d6f70 narra,
-/// 0x6e1090 e 0x6e1aa0 da comissao, 0x897760 grava o capitao): aplica as trocas marcadas (+0x1d) dos
-/// dois lados. Quem esta em campo (ou -3) e marcado: com +0x1c sai (em campo: narra 0x1f56, 0x6cdd50
-/// com -1 ou -2 conforme +0x9049 do lado, +0x1a = posicao, +0x19 = -2; com -3: narra 0x1f57 e 0x6cdd50
-/// com 0) e grava o minuto em +0x22 (no maximo o fim do periodo); sem +0x1c narra 0x1f58 por sorteio(4)
-/// ou com +0x55. Com +0x55 narra 0x20f6 (os dois e o lado de cada um, 0x714d30). Havendo marcados, fora
-/// dos jogos com tecnico humano que nao delega (como na 0x6cda20): com +0x9049 a comissao substitui
-/// (0x6e1090); senao refaz o time (0x6e1aa0), e se o capitao (0x897590) saiu de campo o mais bem
-/// avaliado (0x6e1a40) vira capitao (0x897760), zera +0xf59e/+0xf5a2 e recompoe (0x6ce110). Guarda o
-/// minuto da troca (+0x8ecc + 2 x lado), refaz a forca do lado (0x6bbb60) e a marcacao (0x6bbf60). No
-/// fim zera +0x8eb5. Na fita, o 6o argumento da narracao vai no byte 1 do 5o (a 0x6d6f70 le os dois
-/// como bytes; so o byte 0 e conferido).
 pub(crate) unsafe fn apply_substitutions_with(m: Engine, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     for lado in 0..2i8 {
         let lu = lado as usize;
@@ -2017,8 +1790,6 @@ pub(crate) unsafe fn apply_substitutions_with(m: Engine, call: &mut dyn FnMut(us
 /// end clears `engine::SUBSTITUTION_PENDING`. Compared through the tape (narration, staff and captain as units); the 6th argument of narration
 /// 0x20f6 goes in byte 1 of the 5th (0x6d6f70 reads both as bytes)
 /// Original: `apply_substitutions` (0x6d0b60, match_eng.cpp (~1 KB), thiscall).
-///
-/// [pt] { 0x6d0b60 } (match_eng.cpp): ver `apply_substitutions_with`.
 pub(crate) unsafe extern "thiscall" fn apply_substitutions(m: usize) {
     apply_substitutions_with(Engine(m), &mut |rotina, this, a| {
         match rotina {
@@ -2067,22 +1838,6 @@ pub(crate) unsafe extern "thiscall" fn apply_substitutions(m: usize) {
 /// recomputes strength and marking.
 ///
 /// Ends with +0x1a3 = 0 and `engine::PUNISHMENT_STATE` = 2.
-///
-/// [pt] { 0x6d1210 } (ret 4, match_eng.cpp) com as chamadas que mexem fora do motor injetadas (0x6d6f70
-/// narra; dentro da 0x6cda20 e no fim, 0x6e1aa0/0x6e1090 da comissao e 0x897760 do capitao): na 1a
-/// chamada (+0x8eb4 = 0) so prepara `primeiro` (0x716630 com 0) e marca +0x8eb4 = 1 se houver
-/// pendentes. Depois aplica cada um dos +0x1a3 lances pendentes (11 bytes a partir de +0xb1: jogador,
-/// outro, severidade, codigo, x): a punicao do arbitro (0x6ea4e0, tipo 1) da o cartao; 2 narra
-/// 0x1ff9, 3 e 4 (expulsao) narram 0x1ff7/0x1ff8 e marcam +0x1cb do lado (goleiro: tabela 1); sem
-/// cartao, severidade acima de sorteio(7) + 2 com o jogador em campo narra 0x210a. Narrando, antes vem
-/// 0x20f5 (sorteio(severidade) > sorteio(20)) e 0x2109. Fora dos codigos 0x25, 0x2a..0x32, 0x60 e 0x61:
-/// por sorteio(9) narra 0x20df (e 0x20e0 por sorteio(3); tipos 3 a 6 marcam +0x16 e 0x20d9 por
-/// sorteio(7)), passa o peso da punicao aos do lado (0x716450: o proprio, os em campo (p + 1) / 2, os
-/// de fora p / 6 + 0,83) e 0x716e10 (1 na expulsao); expulsao tira o jogador (0x6cda20). No fim, para
-/// cada lado marcado e fora dos jogos com tecnico humano que nao delega: com +0x9049 a comissao troca o
-/// goleiro (0x6e1090 com 1), senao refaz o time (0x6e1aa0), da a braçadeira ao mais bem avaliado
-/// (0x6e1a40/0x897760), zera +0xf59e/+0xf5a2 e recompoe (0x6ce110); guarda o minuto e refaz a forca e
-/// a marcacao. Termina com +0x1a3 = 0 e +0x8eb4 = 2.
 pub(crate) unsafe fn apply_pending_punishments_with(m: Engine, first: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     if m.punishment_state() == 0 {
         call(FN_MATCH_PLAYER_START_FIGHT, first, [0; 5]);
@@ -2293,20 +2048,6 @@ pub(crate) unsafe extern "thiscall" fn punishments(m: usize, first: usize) {
 ///
 /// States 3 and 6 narrate the result (0x2004), write the shootout score into the match (`+0x49`/`+0x4a`) and give the
 /// commentator back.
-///
-/// [pt] { 0x6be710 } (ret 4, match_eng.cpp) com as chamadas que mexem fora do motor injetadas (0x6d6f70
-/// narra, 0x702050 cobra, 0x7109f0 move o goleiro): um passo da disputa de penaltis pelo estado
-/// +0x8eb3. 1 e 4 preparam (zeram o lance, guardam e calam o narrador em +0x8ea4, cinco cobrancas
-/// por lado em +0x8ea1/+0x8ea2, comeca o lado 1 ou o sorteado, 0x6be520) e vao para 2 e 5. 2 e 5: sem
-/// cobrancas sobrando vem a morte subita (uma de cada, +0x8ea3); o batedor e o da vez na lista do lado
-/// (+0x1af + 11 x lado, +0x8e9f conta), o goleiro e o do outro lado (0x6ce110); marca quem bateu
-/// (+0x8eda), a forca sai de sorteio(+0x35 da ficha) e das cobrancas que faltam, e cresce (x2,25 com
-/// narracao 0x2005 quando o lado precisa marcar, x0,75 com 0x2006 quando pode decidir). Com `modo` 3
-/// o chute (0x700bd0 e 0x702050) sai direto; senao posiciona batedor, goleiro e os outros (0x6f46b0,
-/// 0x7160e0), a direcao do chute pela forca, e o goleiro reage (0x714d40, ate 4 vezes 0x7109f0) antes
-/// do chute. Passa a vez e, decidido o placar (+0xf5bc x +0xf5f2 com as cobrancas que faltam), vai
-/// para 3 (modo 4) ou 6. 3 e 6 narram o resultado (0x2004), gravam o placar dos penaltis na partida
-/// (+0x49/+0x4a) e devolvem o narrador.
 pub(crate) unsafe fn penalty_shootout_step_with(m: Engine, mode: u32, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let narrate = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, a3: u32, a4: u32| {
         call(FN_MATCH_EVENTS_ADD_EVENT, m.commentator(), [code, m.addr() as u32, a3, a4, u32::MAX]);
@@ -2456,8 +2197,6 @@ pub(crate) unsafe fn penalty_shootout_step_with(m: Engine, mode: u32, call: &mut
 
 /// One step of the penalty shoot-out in mode `modo` (taker and keeper chosen and positioned, shot power and keeper
 /// reaction, score and end of shoot-out); thin wrapper over penalty_shootout_step_with with the real calls.
-///
-/// [pt] { 0x6be710 } (ret 4, match_eng.cpp): ver `penalty_shootout_step_with`.
 pub(crate) unsafe extern "thiscall" fn penalties(m: usize, mode: u32) {
     penalty_shootout_step_with(Engine(m), mode, &mut |rotina, this, a| match rotina {
         0x6d6f70 => {
@@ -2508,23 +2247,6 @@ pub(crate) unsafe extern "thiscall" fn penalties(m: usize, mode: u32) {
 /// sending-off or penalty, marks +0x16 of the offender (1 in 7 commentates 0x20d9); the offender's team is worn down by
 /// the punishment's weight (`exe::match_player_scale_anger`: the offender himself by the weight, those outside p / 6 + 0.83, the others (p +
 /// 1) / 2) and the offender tires (0x716e10). Clears the incident and returns 1.
-///
-/// [pt] { 0x6bac40 } (match_eng.cpp) com as chamadas que mexem fora do motor injetadas (0x6d6f70 narra,
-/// 0x716e10 cansa): aplica o lance pendente em +0x475a (tipo; +0x4761 quem fez, +0x4765 quem sofreu,
-/// +0x475b/+0x475c onde, +0x475d/+0x475e/+0x4769 para a punicao, +0x475f o codigo). Sem tipo devolve
-/// 0. Com bola parada em andamento (+0x8eb2) e o lance do lado que ja tinha a vantagem (+0x8eae)
-/// atras da posicao marcada (+0x8ea8), descarta o lance e devolve 0; senao narra 0x20f0. Tipo 8:
-/// narra 0x20ee, conta no placar do lado (+0xf5ca) e no jogador (+0x13) e marca a bola parada 7. Sem
-/// quem sofreu, a punicao da falta (0x6e9630) e a narracao 0x20fb; com ele, a punicao do lance
-/// (0x6ea4e0) e a narracao pelo codigo +0x475f (0x20fc a 0x2107). O tipo devolvido escolhe o cartao
-/// (0x1ff9 amarelo, 0x1ff7/0x1ff8 vermelho, 0x1ff5 ou 0x1ff6 conforme o caso, 0x210a pela severidade
-/// contra sorteio(7) + 2). Tipo 7 e bola parada 7; perto da area adversaria (+0x475b de 2 a 6 e
-/// +0x475c na faixa do gol) e penalti (5, 0x1f7a, -500 em +0x35 de quem sofreu ou fez); senao falta
-/// (6, 0x1f79). Com cartao: 1 em 4 narra 0x2109 (e 0x20f5 pela severidade), narra o cartao e a
-/// expulsao tira o jogador (0x6cda20). Fora dos codigos de bola parada, 1 em 9 narra 0x20df (1 em 3
-/// tambem 0x20e0) e, com expulsao ou penalti, marca +0x16 de quem fez (1 em 7 narra 0x20d9); o time
-/// de quem fez se desgasta pelo peso da punicao (0x716450: o proprio pelo peso, os de fora p / 6 +
-/// 0,83, os outros (p + 1) / 2) e quem fez cansa (0x716e10). Limpa o lance e devolve 1.
 pub(crate) unsafe fn apply_pending_foul_with(m: Engine, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
     let zero = |p: MatchPlayer| (p.side() == 0) as u32;
     let narrate = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32, a3: u32, a4: u32, a5: u32| {
@@ -2708,8 +2430,6 @@ pub(crate) unsafe fn apply_pending_foul_with(m: Engine, call: &mut dyn FnMut(usi
 /// (`exe::match_player_scale_anger`) and the offender tires (0x716e10). Clears the incident and returns 1. Compared through the tape:
 /// narration and tiring (0x716e10) are units
 /// Original: `apply_foul` (0x6bac40, match_eng.cpp (~3.2 KB), thiscall, returns al).
-///
-/// [pt] { 0x6bac40 } (match_eng.cpp): ver `apply_pending_foul_with`.
 pub(crate) unsafe extern "thiscall" fn apply_foul(m: usize) -> u8 {
     apply_pending_foul_with(Engine(m), &mut |rotina, this, a| {
         match rotina {
@@ -2754,25 +2474,6 @@ pub(crate) unsafe extern "thiscall" fn apply_foul(m: usize) -> u8 {
 /// carries on (`decide_player`). Returns the winner.
 ///
 /// The mark is set in the advantage before `exe::match_official_judge_tackle` (which only writes 0 or 1).
-///
-/// [pt] { 0x6c9cd0 } (ret 8, match_eng.cpp) com as chamadas que mexem fora do motor injetadas (0x6d6f70
-/// narra, 0x716e10 cansa, 0x6cd490 bola fora, 0x6f0630 dominio, 0x7103e0 o lance de quem ganhou; e
-/// as de dentro da lesao, da defesa e da saida de campo): a bola solta na casa (x, y) disputada pelos
-/// desafiantes dos dois lados (0x6c87e0, lance 0x15, a nota corrigida pelo angulo da direcao contra
-/// +0x8ed8). Fora do campo e bola fora (0x6cd490). Sem desafiante, guarda a casa e devolve 0. O de
-/// nota maior ganha; a lesao na dividida (0x6cfe10) vem logo. Com os dois, o arbitro olha a falta do
-/// vencedor (0x6e9820, +4 de folego antes; 0x2168 na area com +0x8ebb) e depois a do perdedor; sem
-/// falta, a 0x6e9540 (lance "valendo") pode marcar uma. A falta marcada vai para +0x475a (lance
-/// pendente) por sorteio(distancia ao gol x 10 + 2) == 0 sem risco, ou e punida na hora (0x6ea4e0 /
-/// 0x6e9630): narracao pelo lance (0x1fe8 a 0x1ff4), cartao, bola parada 7, penalti (5) ou falta (6),
-/// expulsao (0x6cda20), as narracoes de sempre, o time de quem fez se desgasta (0x716450) e quem fez
-/// cansa; os lances especiais saem antes do desgaste. Sem falta, a disputa limpa: no lance 1 a
-/// defesa (0x70d430, que pode encerrar); com os dois, narra pela leitura (+0xad: 0x2164, 0x214f ou
-/// 0x1f5d), conta tentativas (+7, +8, +9 com perigo) e mexe no folego. O vencedor marca o lance,
-/// vira para a jogada (0x6f4920), domina (0x6f0630) com +0x19c = nota - nota do outro - 225
-/// (+-200), o perdedor soma o segundo byte do desafio a +0x2b (0x7160d0) e o vencedor segue (0x7103e0).
-/// Devolve o vencedor.
-/// Marca posta na vantagem antes da 0x6e9820 (que so escreve 0 ou 1).
 pub(crate) const NO_ANSWER_MARK: u8 = 0xa5;
 /// A disputa em andamento leu a vantagem sem resposta do juiz (lixo da pilha na original).
 pub(crate) static ADVANTAGE_UNANSWERED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
@@ -3108,8 +2809,6 @@ pub(crate) unsafe fn tackle_contest_with(m: Engine, x: i8, y: i8, call: &mut dyn
 /// Match engine: the contest for the ball at cell (x, y): picks the challengers from both sides, judges tackle and foul
 /// through the referee, narrates and applies the outcome; returns the winner [inference]. Wrapper of
 /// `tackle_contest_with` with the real outside calls.
-///
-/// [pt] { 0x6c9cd0 } (ret 8, match_eng.cpp): ver `tackle_contest_with`.
 pub(crate) unsafe extern "thiscall" fn contest(m: usize, x: u32, y: u32) -> usize {
     tackle_contest_with(Engine(m), x as i8, y as i8, &mut |rotina, this, a| dispatch_tackle_calls(rotina, this, a))
 }
@@ -3121,8 +2820,6 @@ pub(crate) const SET_PIECES: [usize; 6] = [0x6c4290, 0x6c4470, 0x6c4ec0, 0x6c50d
 pub(crate) static RECORD_RESTART: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// True inside the restart comparison with the tape open (set pieces are recorded as one unit).
-///
-/// [pt] Dentro da comparacao do reinicio, com a fita aberta: as bolas paradas se gravam como unidade.
 pub(crate) fn is_recording_restart() -> bool {
     RECORD_RESTART.load(std::sync::atomic::Ordering::Relaxed) && is_recording()
 }
@@ -3160,30 +2857,6 @@ pub(crate) fn is_recording_restart() -> bool {
 /// 4/12, 13, 14) or the "Ruud Gullit" one (`0x84b8b0`);
 ///
 /// - and the set piece by `+0x8eb2`.
-///
-/// [pt] { 0x6c54a0 } (thiscall, match_eng.cpp) com as chamadas que mexem fora injetadas (0x6d6f70 narra,
-/// 0x6e1090 substitui, as bolas paradas): o reinicio do lance. Zera o estado do lance (+0x1c5,
-/// +0x4782.., +0x8ea9/+0x8eaa, +0xf576.., o lance pendente em +0x475a..) e, sem +0x1a8:
-/// - os 15 minutos desde a ultima mudanca de cada lado (+0x1d2/+0x1d4; com +0x8eb2 = 8, os dois e
-///   -1000 em +0x476a/+0x476e);
-/// - depois dos 60 minutos, 1 em 6, o primeiro jogador sem folego (+0x4d < 6750, +0x10d zerado) e
-///   narrado (0x21cf);
-/// - a postura de cada lado (0x6df460 em +0x9032 + 0xd0 x lado): mudou (ou no inicio) e guardada em
-///   +0x1ab, com a anterior;
-/// - postura 3/4 do lado com a bola (+0x8eae): sorteio(10) de acrescimo em +0x8ed0 e metade em
-///   +0x8eb7; o outro lado, na postura 1, cansa (0x716450 com 1 + n/9);
-/// - a substituicao da IA de cada lado (0x6e1090; sem humano, ou humano com +0x904b fora de selecao
-///   e sem 0x5fd480): minuto > sorteio(50) + 10 e 55 de jogo desde a ultima, depois 0x6bbb60 e
-///   0x6bbf60;
-/// - perto do fim de cada tempo (+0x8ed4 = 495 ou 990) a narracao 0x21c1 com o acrescimo;
-/// - a tatica de cada lado (sem humano) que mudou de postura, pelas marcas 0x5b50d0 no objeto em
-///   +0x91e2 + 0x18e3 x lado, conforme a postura (1 a 5), o +0xe/+0x13 do tecnico (+0x9051), a
-///   formacao (+0x905d: 3-4-3 e 3-5-2 Attacking ja sao de ataque) e +0x476a; as narracoes 0x2135 a
-///   0x213d (0x6ce310 decide 0x213b/0x213d), 0x6d10a0 e a marca 0x400000 das casas (0x5b5290);
-/// - com +0x8ebb (partida narrada), fora do escanteio e do penalti, e na falta so perto do gol
-///   (tabela 0xa15e44 >= 5): os cantos da torcida pelo placar (0x6ce310), pelos clubes fixos
-///   ([0x9d0230]..), pela nacao (+0x76: 4/12, 13, 14) ou o "Ruud Gullit" (0x84b8b0);
-/// - e a bola parada por +0x8eb2.
 pub(crate) unsafe fn restart_play_with(m: Engine, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let b = |o: usize| (m.addr() + o) as *mut u8;
     let w = |o: usize| (m.addr() + o) as *mut i16;
@@ -3539,9 +3212,6 @@ pub(crate) unsafe fn restart_play_with(m: Engine, call: &mut dyn FnMut(usize, us
 
 /// Rust-mode dispatch of the restart's recorded calls: set pieces go to the game address, the rest as in the tackle
 /// dispatch.
-///
-/// [pt] O despacho do reinicio no modo Rust: narracao e substituicao como na dividida; as bolas paradas
-/// pelo endereco do jogo.
 pub(crate) unsafe fn dispatch_restart_call(routine: usize, this: usize, a: [u32; 5]) -> u32 {
     if SET_PIECES.contains(&routine) {
         let f: unsafe extern "thiscall" fn(usize) = core::mem::transmute(routine);
@@ -3565,8 +3235,6 @@ pub(crate) unsafe fn dispatch_restart_call(routine: usize, this: usize, a: [u32;
 /// disassembly. Compared through the tape (set pieces are units with `RECORD_RESTART`, since they reposition players
 /// through `player_move`)
 /// Original: `restart_play` (0x6c54a0, match_eng.cpp (3.2 KB, called by 0x6b98c0), thiscall).
-///
-/// [pt] { 0x6c54a0 } (thiscall, match_eng.cpp): ver `restart_play_with`.
 pub(crate) unsafe extern "thiscall" fn restart_play(m: usize) {
     restart_play_with(Engine(m), &mut |r, t, a| dispatch_restart_call(r, t, a))
 }
@@ -3595,9 +3263,6 @@ pub(crate) unsafe fn call_thiscall4(a: usize, this: usize, x: u32, y: u32, z: u3
 
 /// End of match from the loop: runs fechamento (post-match reputations) and restores the saved tactics (`store_instructions`) of
 /// each human-managed club whose manager lacks the `exe::human_manager_controls_reserve_team` flag.
-///
-/// [pt] Fim da partida pelo laco: o fechamento (0x6d1cc0) e, para cada clube que um humano dirige
-/// (0x600a50) sem o registro +0x9a05 do tecnico (0x5fd480), as instrucoes guardadas voltam (0x896fe0).
 pub(crate) unsafe fn finish_match_for_clubs(m: usize) {
     let u = |q: usize, o: usize| read_usize(q + o);
     exe::match_eng_update_post_match_reputations(m);
@@ -3611,9 +3276,6 @@ pub(crate) unsafe fn finish_match_for_clubs(m: usize) {
 
 /// Stores each side's player nearest the ball (0x6c30e0, engine `engine::NEAREST_TO_BALL`/`engine::NEAREST_TO_BALL_SIDE1`) and whether each side's goalkeeper is
 /// nearest (0x6c3010, `engine::GOALKEEPER_NEAREST`/`engine::GOALKEEPER_NEAREST_SIDE1`).
-///
-/// [pt] Os mais perto da bola de cada lado (0x6c30e0, so dentro da area quando a bola esta nela) e se o
-/// guarda da posicao 1 e o mais proximo dela (0x6ce110 + 0x6c3010).
 pub(crate) unsafe fn update_nearest_to_ball(m: Engine) {
     let (bx, by) = (m.ball_x(), m.ball_y());
     let a0 = (2..=6).contains(&bx) && (0..=1).contains(&by);
@@ -3645,19 +3307,6 @@ pub(crate) unsafe fn update_nearest_to_ball(m: Engine) {
 /// areas (0x6bd6b0), the marking (`designated_marked`/0x6bc030) and each active player's decision (`decide_player`), with the pending
 /// shot (`shot`) and the contest (0x6c9cd0). Returns 1 at the end of the `n` instants.
 /// Original: `engine_loop` (0x6b98c0, match_eng.cpp (4.8 KB), thiscall, ret 4).
-///
-/// [pt] { 0x6b98c0 } (ret 4, match_eng.cpp): o laco do motor, `n` instantes da partida. Partida ja
-/// decidida (+0): simulacao rapida (0x6beeb0), destaque (0x6d0f80), fechamento, instrucoes dos
-/// humanos de volta e nota do arbitro (0x6d4a20); devolve 2. Senao limpa as fichas e os ponteiros
-/// de quem saiu e, a cada instante: punicoes pendentes (0x6d1210), disputa de penaltis (0x6be710;
-/// no fim, 2), o pontape inicial narrado (0x212f/0x1f74), a substituicao sorteada, o lance marcado
-/// (0x6bac40/0x6bba10), o reinicio (0x6c54a0) e o cobrador da bola parada (0x6ceb90). No relogio
-/// (+0x8ed0): fim por abandono (8), o periodo (0x6bd930: 4 nos intervalos; fim da partida com o
-/// placar agregado, 0x896290 e 2 ou 4). Bola rolando (0x6bbe40) ou parada somam acrescimos; senao
-/// a posse (0x6cf750), o tempo de cada jogador (0x6f4aa0), as linhas (0x6c3aa0, 0x6cd660, 0x6bd760),
-/// os mais perto da bola, a pressao nas areas (0x6bd6b0), as marcacoes (0x7160f0/0x6bc030) e a
-/// decisao de cada jogador ativo (0x7103e0), com o chute pendente (0x6f6c00) e a disputa (0x6c9cd0).
-/// Devolve 1 ao fim dos `n` instantes.
 #[allow(clippy::cognitive_complexity)]
 pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
     let narrate = |code: u32, a4: u32| {
@@ -4033,9 +3682,6 @@ pub(crate) unsafe extern "thiscall" fn engine_loop(m: usize, n_in: u32) -> u32 {
 /// the side is losing on aggregate (`exe::cm3_match_engine_get_goal_margin` without bonus) or, in a first leg with no third phase and no qualified
 /// side, level
 /// Original: `behind_on_aggregate` (0x6d5950, match_eng.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x6d5950 } (ret 4, match_eng.cpp): o lado `lado` esta atras no agregado (0x6ce310 sem bonus): perde
-/// no placar somado ou, no jogo de ida sem terceira fase nem classificado, empata.
 pub(crate) unsafe extern "thiscall" fn behind_on_aggregate(m: usize, side: i8) -> u8 {
     let (mut casa, mut fora, mut classificado, mut ida, mut fase3) = (0i8, 0i8, 0u8, 0u8, 0u8);
     aggregate_score(m, side, &mut casa, &mut fora, &mut classificado, &mut ida, &mut fase3, 0);
@@ -4047,9 +3693,6 @@ pub(crate) unsafe extern "thiscall" fn behind_on_aggregate(m: usize, side: i8) -
 
 /// the first active teammate in the deep attack (`player_limit`), central (`x_off_centre`) and unpressed (0x6bcbd0)
 /// Original: `free_teammate` (0x6d5a70, match_eng.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x6d5a70 } (ret 4, match_eng.cpp): o primeiro companheiro de `p` (os 20 do lado dele, ativos) no
-/// ataque fundo (0x70df40), no meio (0x70df20) e sem ninguem pressionando (0x6bcbd0 sem lista), ou 0.
 pub(crate) unsafe extern "thiscall" fn free_teammate(m: usize, p: usize) -> usize {
     let l = side_of_player(MatchPlayer(p));
     for k in 0..20 {
@@ -4112,8 +3755,6 @@ pub(crate) struct ShotLocals {
 }
 
 /// Sends a 7-argument commentary call (0x6d6f70) through the tape, packing code | a7 << 16 and a5 | a6 << 8.
-///
-/// [pt] Narracao com sete argumentos pela fita (codigo | a7 << 16, a5 | a6 << 8).
 pub(crate) fn narrate_packed7(call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, m: usize, code: u32, a3: u32, a4: u32, a5: u32, a6: u32, a7: i8) {
     let m = Engine(m);
     unsafe {
@@ -4124,10 +3765,6 @@ pub(crate) fn narrate_packed7(call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u3
 
 /// `shoot` (MATCH_PLAYER shoot) with outside calls injected: the full shot of player p by type, value, commentary and
 /// mode (play, no challenger, shootout, set piece, retake).
-///
-/// [pt] { 0x702050 } (ret 0x18, match_pl.cpp, ~35 KB) com as chamadas que mexem fora do motor injetadas:
-/// o chute de `p` (tipo a1, valor a2, narracao a3, modo a4: 1 jogo, 2 sem desafiante, 3 penaltis, 4
-/// cobranca, 5/6 repetir; a5/a6 a lista dos companheiros da pressao).
 #[allow(clippy::too_many_arguments, clippy::cognitive_complexity)]
 pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32, a6: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let m = read_usize(p + match_player::ENGINE);
@@ -4505,9 +4142,6 @@ pub(crate) unsafe fn shoot_with(p: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5
 
 /// Maps a shot commentary code to its class variant (0x1f86, 0x1f8e, 0x1f93, 0x1f96, 0x1f99 become the next code, +1
 /// when class is non-zero); class 0xff keeps it.
-///
-/// [pt] A narracao do chute pela classe (0x7037ee): os codigos 0x1f86, 0x1f8e, 0x1f93, 0x1f96 e 0x1f99
-/// passam ao seguinte (+1 com a classe diferente de zero); a classe 0xff (a do lance repetido) nao muda.
 pub(crate) fn shot_commentary_by_class(sound: u32, class: u8) -> u32 {
     if class == 0xff {
         return sound;
@@ -4525,9 +4159,6 @@ pub(crate) fn shot_commentary_by_class(sound: u32, class: u8) -> u32 {
 
 /// The challenger's foul on the shot (part of `shoot`): penalty or free kick, card, narration and disposition loss for
 /// the fouled player.
-///
-/// [pt] A falta do desafiante no chute (0x702050, de 0x702934 a 0x702f1a): como a do passe, sem o evento
-/// 0x82 e sem as narracoes do lance 0x2c/0x2f; o perto do gol vem de 0x70df70.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn shot_foul_with(m: Engine, e: MatchPlayer, p: MatchPlayer, kind: u8, grav: i8, advantage: u8, lance: i8, weight: f32, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let side = p.side();
@@ -4653,11 +4284,6 @@ pub(crate) unsafe fn shot_foul_with(m: Engine, e: MatchPlayer, p: MatchPlayer, k
 /// 0x70d430 on incident 1); he controls it (`take_ball`, 0x70a890 with rating − shot − 200), the ball deflects below the
 /// incident's threshold (`exe::cm3_match_engine_move_ball_to_cell`) or he aims for the side of the pitch; then the gains and the +0x2b of the player who
 /// shot.
-///
-/// [pt] O desafiante tirou a bola no chute (0x702050, de 0x702f35 a 0x70353b): a narracao (na area dele,
-/// 1 em 2, a da falta e 0x20e8/0x20ea/0x20eb; senao pelo lance, com a defesa 0x70d430 no lance 1),
-/// ele domina (0x6f0630, 0x70a890 com nota - chute - 200), a bola espirra abaixo do limite do lance
-/// (0x6cd770) ou ele aponta para o lado do campo; os ganhos e o +0x2b de quem chutou.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn shot_tackled_with(m: Engine, p: MatchPlayer, e: MatchPlayer, lance: i8, rating: i16, v: i32, a: u8, advantage: u8, penalty: bool, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let side = p.side();
@@ -4746,8 +4372,6 @@ pub(crate) unsafe fn shot_tackled_with(m: Engine, p: MatchPlayer, e: MatchPlayer
 }
 
 /// True if the player's record name (+0x69 -> +8) is "Shearer" (his special goal celebration).
-///
-/// [pt] O nome (+0x69 -> +8) da ficha e "Shearer" (0xa16110): a comemoracao dele.
 pub(crate) unsafe fn is_shearer(p: MatchPlayer) -> bool {
     let sheet = p.staff();
     let name = *((sheet.addr() + staff::SECOND_NAME) as *const *const u8);
@@ -4756,8 +4380,6 @@ pub(crate) unsafe fn is_shearer(p: MatchPlayer) -> bool {
 
 /// Narrates the first of the given highlight codes that MATCH_PLAYER highlight (`player_highlight`) accepts for player q; returns
 /// whether one was narrated.
-///
-/// [pt] Os destaques do jogador (0x717470), na ordem: o primeiro que valer e narrado com (q.2e, a4, 0).
 pub(crate) unsafe fn narrate_first_highlight(call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, m: usize, q: usize, a4: u32, codes: &[u32]) -> bool {
     let q = MatchPlayer(q);
     for &c in codes {
@@ -4775,8 +4397,6 @@ pub(crate) const GOAL_HIGHLIGHTS: [u32; 7] = [0x219f, 0x21a0, 0x21a1, 0x21b0, 0x
 
 /// The shot on target (end of `shoot`): goal by the shot/(save + shot) ratio, else the goalkeeper's save; ratings and
 /// narration.
-///
-/// [pt] O chute no alvo (0x702050 de 0x706cba ao fim): a defesa do goleiro ou o gol.
 #[allow(clippy::cognitive_complexity)]
 pub(crate) unsafe fn shot_on_target_with(mut c: ShotLocals, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let (p, m, g, lado) = (c.p, c.m, c.g, c.side);
@@ -4932,10 +4552,6 @@ pub(crate) unsafe fn shot_on_target_with(mut c: ShotLocals, call: &mut dyn FnMut
 
 /// Goal commentary by context (part of `shoot`): comeback, aggregate, Shearer celebration, marker, assist and
 /// goalkeeper.
-///
-/// [pt] As narracoes do gol pelo momento (0x70724d a 0x707cc6): a virada no placar (+0x4782, +0x4786), o
-/// gol de quem esta atras no agregado, a comemoracao do Shearer, quem marcava, a assistencia e o
-/// goleiro.
 #[allow(clippy::cognitive_complexity)]
 pub(crate) unsafe fn narrate_goal_with(c: &mut ShotLocals, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let (p, m, g, lado) = (c.p, c.m, c.g, c.side);
@@ -5132,9 +4748,6 @@ pub(crate) unsafe fn narrate_goal_with(c: &mut ShotLocals, call: &mut dyn FnMut(
 
 /// Retake (modes 5 and 6): restores engine `engine::MOMENTUM_B`/`engine::MOMENTUM_A` and the shooter's cell and +0x39, optionally undoes the
 /// goal, narrates 0x20f7 and shoots again in mode 1.
-///
-/// [pt] Repetir o lance (modos 5 e 6): o motor volta aos +0x4786/+0x4782 de antes, narra 0x20f7, o
-/// chutador volta a casa e ao +0x39 de antes, domina e chuta de novo no modo 1 (0x704a57 e iguais).
 pub(crate) unsafe fn retake_shot_with(c: &ShotLocals, apply: bool, desfazer: bool, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let (p, m) = (c.p, c.m);
     write_i32(m + engine::MOMENTUM_B, c.l60);
@@ -5154,8 +4767,6 @@ pub(crate) unsafe fn retake_shot_with(c: &ShotLocals, apply: bool, desfazer: boo
 
 /// Decrements the goal counters of player p (+0x3d..+0x45 words and the +0xc byte) when a goal is disallowed or
 /// retaken.
-///
-/// [pt] Desfaz as contas do gol (+0x3d..+0x45 e +0xc) quando ele e anulado ou repetido.
 pub(crate) unsafe fn undo_goal_stats(p: usize) {
     for o in [0x3d, 0x3f, 0x41, 0x43, 0x45] {
         let w = (p + o) as *mut i16;
@@ -5167,10 +4778,6 @@ pub(crate) unsafe fn undo_goal_stats(p: usize) {
 
 /// Narrates the teammates in the shot's pressure list (0x2154, 0x2155 or 0x2132) by a random draw, then their
 /// highlights; returns false if the draw skips it.
-///
-/// [pt] Os companheiros na lista da pressao (a5 = quantos, a6 a lista): com sorteio(n x n + k), 1 narra
-/// 0x2154 com o primeiro, 2 (1 em 2) 0x2155 com os dois, senao 0x2132; depois os destaques deles.
-/// Com `assistencia`, a de quem marcava (0x21c6) entra como na 0x704d4b.
 pub(crate) unsafe fn narrate_pressure_teammates_with(c: &ShotLocals, k: i32, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> bool {
     let (p, m, lado) = (c.p, c.m, c.side);
     let n = c.count as i32;
@@ -5200,9 +4807,6 @@ pub(crate) unsafe fn narrate_pressure_teammates_with(c: &ShotLocals, k: i32, cal
 
 /// True when the 0x21c6 "assist against the marker" commentary applies: the marker (0x6d5a10) equals teammate r and the
 /// shooter's goals, shots, minute and condition fit.
-///
-/// [pt] A assistencia contra quem marcava (0x21c6): o marcador (0x6d5a10) e o companheiro da lista, no
-/// jogo (modo 1, nao 0x33/0x35), sem gols nem chutes demais do artilheiro, nos minutos e folegos.
 pub(crate) unsafe fn is_assist_against_marker(c: &ShotLocals, r: usize) -> bool {
     let (p, m) = (c.p, c.m);
     let mk = MatchPlayer(who_marks(m, p));
@@ -5224,9 +4828,6 @@ pub(crate) unsafe fn is_assist_against_marker(c: &ShotLocals, r: usize) -> bool 
 
 /// The goalkeeper's save (part of `shoot`): by ratio he holds, tips for a corner or parries; narration, keeper gains
 /// and the ball.
-///
-/// [pt] A defesa do goleiro (0x708e84 ao fim): pela razao, ele segura (ate 51), espalma para escanteio
-/// (ate 61) ou rebate; as narracoes, os ganhos dele e a bola.
 #[allow(clippy::cognitive_complexity)]
 pub(crate) unsafe fn goalkeeper_save_with(mut c: ShotLocals, ratio: f32, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let (p, m, g, lado) = (c.p, c.m, c.g, c.side);
@@ -5360,9 +4961,6 @@ pub(crate) unsafe fn goalkeeper_save_with(mut c: ShotLocals, ratio: f32, call: &
 
 /// Corner to the opponent after a shot: ball on the shooter's goal line (`engine::BALL_Y`), restart 3 with the shooter's side,
 /// narration 0x1f75; aborts on an invalid side.
-///
-/// [pt] Escanteio para o adversario (0x70961e): a bola na linha de fundo do lado de quem chutou, a
-/// reposicao 3 com a bola do lado dele e a narracao 0x1f75.
 pub(crate) unsafe fn corner_from_shot(c: &ShotLocals, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let (p, m, lado) = (c.p, c.m, c.side);
     match lado {
@@ -5382,9 +4980,6 @@ pub(crate) unsafe fn corner_from_shot(c: &ShotLocals, call: &mut dyn FnMut(usize
 
 /// Goal in a shootout or set-piece kick: +1 on the side's count (`engine::SIDE_STATS` + 0x36 x side), narration 0x2000 and, in
 /// shootouts, 0x212e.
-///
-/// [pt] O gol nos penaltis e na cobranca (0x707db2): +1 na conta do lado (+0xf5bc), 0x2000 e, nos
-/// penaltis, 0x212e.
 pub(crate) unsafe fn shootout_goal_with(c: &ShotLocals, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let (p, m, lado) = (c.p, c.m, c.side);
     let k = (m + engine::SIDE_STATS + (lado as isize * (side_stats::SIZE as isize)) as usize) as *mut u8;
@@ -5397,10 +4992,6 @@ pub(crate) unsafe fn shootout_goal_with(c: &ShotLocals, call: &mut dyn FnMut(usi
 
 /// Disallowed goal (0x20ed): applies the pending incident (`apply_foul`), narration, team anger factor, shooter tired
 /// (0x716e10) and goal stats undone.
-///
-/// [pt] O gol anulado (0x20ed): o lance marcado antes (0x6bba50) e aplicado (0x6bac40). Contra o proprio
-/// lado, 0x20df, talvez 0x20d9 e fator 3; senao, empatado ou um a frente, 1 em 40 0x20d9, fator
-/// 1,45. Quem chutou leva o fator (0x6bb8d0) e cansa (0x716e10); as contas do gol sao desfeitas.
 pub(crate) unsafe fn disallowed_goal_with(c: &ShotLocals, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let (p, m, lado) = (c.p, c.m, c.side);
     let nb = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32, code: u32| narrate_packed7(call, m, code, 0xff, lado as u8 as u32, 0xff, 0xff, 0);
@@ -5430,9 +5021,6 @@ pub(crate) unsafe fn disallowed_goal_with(c: &ShotLocals, call: &mut dyn FnMut(u
 
 /// After the goal commentary: possible disallowance, milestone and record commentary, the score, comeback and end state
 /// (`engine::RESTART_TYPE` = 8).
-///
-/// [pt] Depois das narracoes do gol (0x707cc7): o gol pode ser anulado (1 em 3 a cada passo, com lance
-/// marcado), as narracoes de marca e recorde, o placar, a virada e o fim (+0x8eb2 = 8).
 #[allow(clippy::cognitive_complexity)]
 pub(crate) unsafe fn goal_stands_with(c: &mut ShotLocals, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let (p, m, g, lado) = (c.p, c.m, c.g, c.side);
@@ -5636,9 +5224,6 @@ pub(crate) unsafe fn goal_stands_with(c: &mut ShotLocals, call: &mut dyn FnMut(u
 
 /// The shot that missed (part of `shoot`): blocked for a corner, hit the post (ball loose) or wide (goal kick), with
 /// commentary by class and context.
-///
-/// [pt] O chute que nao foi no alvo (0x7040cb a 0x706cb7): bloqueado (escanteio), na trave (a bola
-/// espirra) ou para fora (tiro de meta); as narracoes pela classe e pelo momento.
 #[allow(clippy::cognitive_complexity)]
 pub(crate) unsafe fn shot_off_target_with(c: &ShotLocals, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let (p, m, g, lado) = (c.p, c.m, c.g, c.side);
@@ -5772,8 +5357,6 @@ pub(crate) unsafe fn shot_off_target_with(c: &ShotLocals, call: &mut dyn FnMut(u
 }
 
 /// Ball out over the goal line after a shot: puts the ball on the other line and calls ball-out (`exe::cm3_match_engine_ball_out_of_play`).
-///
-/// [pt] A bola saiu pela linha de fundo (0x705d15 e 0x706c5d): a linha do outro lado e a bola fora.
 pub(crate) unsafe fn goal_kick_from_shot(c: &ShotLocals, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let m = Engine(c.m);
     match c.side {
@@ -5785,8 +5368,6 @@ pub(crate) unsafe fn goal_kick_from_shot(c: &ShotLocals, call: &mut dyn FnMut(us
 }
 
 /// Commentary for a weak shot wide (classes 2 to 4, 0x704c6d..0x705cb2).
-///
-/// [pt] As narracoes do chute fraco para fora (classes 2 a 4, 0x704c6d a 0x705cb2).
 #[allow(clippy::cognitive_complexity)]
 pub(crate) unsafe fn narrate_weak_miss_with(c: &ShotLocals, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let (p, m, lado) = (c.p, c.m, c.side);
@@ -5904,8 +5485,6 @@ pub(crate) unsafe fn narrate_weak_miss_with(c: &ShotLocals, call: &mut dyn FnMut
 }
 
 /// Commentary for a shot wide (classes 5 to 0xb, 0x705d52..0x706c5c).
-///
-/// [pt] As narracoes do chute para fora (classes 5 a 0xb, 0x705d52 a 0x706c5c).
 pub(crate) unsafe fn narrate_miss_with(c: &ShotLocals, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let (p, m, g, lado) = (c.p, c.m, c.g, c.side);
     let lp = lado as u8 as u32;
@@ -5946,9 +5525,6 @@ pub(crate) unsafe fn narrate_miss_with(c: &ShotLocals, call: &mut dyn FnMut(usiz
 
 /// Rust-mode dispatch of the shot's recorded calls to the game (interception, ball deflection, re-shoot, move),
 /// unpacking the packed arguments.
-///
-/// [pt] Modo Rust: as chamadas do chute vao para o jogo (a interceptacao com x | y << 8; a bola desviada
-/// com dentro | sem cansar << 8; o chute de novo sem a lista).
 pub(crate) unsafe fn dispatch_shot_call(routine: usize, this: usize, a: [u32; 5]) -> u32 {
     match routine {
         0x6cc540 => {
@@ -6036,11 +5612,6 @@ pub(crate) unsafe fn compare_shoot_tape(p: MatchPlayer, a1: u32, a2: u32, a3: u3
 /// the engine constructor (the player, tactics and tactical line vectors through the runtime vector constructor
 /// `exe::crt_vector_constructor_iterator`; the referee strictness `construct_referee`; the empty list)
 /// Original: `build_engine` (0x6b7e50, match_eng.cpp, thiscall).
-///
-/// [pt] { 0x6b7e50 } (match_eng.cpp): o construtor do motor. Os vetores de objetos pelo construtor de
-/// vetores do runtime (0x9463af): os 40 jogadores (0x1be bytes, 0x6eada0), as duas taticas (0xd0,
-/// 0x5961c0) e as duas copias das linhas taticas (0x18e3, 0x5b27c0); o rigor do arbitro (0x6e9460) e
-/// a lista de eventos vazia (+0x478e).
 pub(crate) unsafe extern "thiscall" fn build_engine(m: usize) -> usize {
     let m = Engine(m);
     exe::crt_vector_constructor_iterator(m.addr() + engine::PLAYERS, 0x1be, 0x28, 0x6eada0, 0x6ebd60);
@@ -6054,9 +5625,6 @@ pub(crate) unsafe extern "thiscall" fn build_engine(m: usize) -> usize {
 
 /// the destructor (its own commentator, the list, the strictness and the vectors)
 /// Original: `destroy_engine` (0x6b97a0, match_eng.cpp, thiscall).
-///
-/// [pt] { 0x6b97a0 } (match_eng.cpp): o destrutor do motor. O narrador proprio (+0x8e9d) e a lista de
-/// eventos (+0x478e) sao destruidos e liberados; depois o rigor e os vetores, na ordem inversa.
 pub(crate) unsafe extern "thiscall" fn destroy_engine(m: usize) {
     let m = Engine(m);
     let destroy: unsafe extern "thiscall" fn(usize) = core::mem::transmute(FN_SHARED_NOOP_RET0_5A8F60);
@@ -6082,9 +5650,6 @@ pub(crate) unsafe extern "thiscall" fn destroy_engine(m: usize) {
 
 /// Angle in degrees (0..359) of cell (i, j) seen from the centre, for the global table 0xb67c30 used by ball
 /// deflection.
-///
-/// [pt] O angulo (graus, 0..=359) da casa (i, j) vista do centro, para a tabela global 0xb67c30 que a
-/// bola desviada usa (+0x8ed8); a original calcula com fpatan, o Rust com atan.
 pub(crate) unsafe fn cell_angle_degrees(i: i32, j: i32) -> u16 {
     let graus = read_f64(rdata::F64_57_29577951);
     let mut a: i32 = if i == 0 {
@@ -6120,9 +5685,6 @@ pub(crate) unsafe fn cell_angle_degrees(i: i32, j: i32) -> u16 {
 
 /// Builds the 0x19-byte pre-match event (record, club, flags, starter, side, code) and appends it to the engine's event
 /// list (`engine::EVENT_LIST`, LLIST::add_tail).
-///
-/// [pt] Monta e poe na lista de eventos (+0x478e, 0x68d0d0) o evento de pre-jogo de 0x19 bytes: a ficha,
-/// o clube, as bandeiras, o titular, o lado (ou a vaga), o codigo e -1 nos campos livres.
 pub(crate) unsafe fn push_prematch_event(m: Engine, sheet: Staff, club: Club, bandeiras: u32, starter: u8, side: u8, code: u16) {
     let mut ev = [0u8; 0x19];
     ev[0..4].copy_from_slice(&*(sheet.addr() as *const [u8; 4]));
@@ -6149,14 +5711,6 @@ pub(crate) unsafe fn push_prematch_event(m: Engine, sheet: Staff, club: Club, ba
 ///
 /// Without `rapida`, it draws who kicks off (`engine::NEXT_KICKOFF_SIDE`/`engine::POSSESSION_SIDE`) and set piece 8. Returns 0 if the match had already ended
 /// (+0x8eba).
-///
-/// [pt] { 0x6b7f20 } (ret 0x10, match_eng.cpp, 6 KB): prepara a partida `jogo` no motor. Zera o estado,
-/// o clima (+0x4756: 0x923010, 0x923970, 0x923630 na original), os uniformes (0x6d47e0), o arbitro
-/// (0x6e9470) e as condicoes do gramado (0x85cba0, +0x91d2), os dois elencos (0x6db500, com a caixa de
-/// erro abaixo de 11), o narrador (dado ou novo, 0x6d5bf0), a forca dos lados e a marcacao; a lista
-/// de eventos de pre-jogo (0x68d020) recebe os jogadores insatisfeitos com o contrato (0x13), o
-/// interesse de outro clube (0x1e), a forma (5, 4) e o fim de contrato (6). Sem `rapida`, sorteia
-/// quem comeca (+0x8eb6/+0x8eae) e a bola parada 8. Devolve 0 se a partida acabou antes (+0x8eba).
 #[allow(clippy::cognitive_complexity)]
 pub(crate) unsafe fn prepare_match_with(m: usize, game: usize, fast: u8, commentator: usize, ao_vivo: u8) -> u8 {
     let clear = |of: usize, ate: usize| core::ptr::write_bytes((m + of) as *mut u8, 0, ate - of);
@@ -6438,11 +5992,6 @@ pub(crate) unsafe fn prepare_match_with(m: usize, game: usize, fast: u8, comment
 /// The contract (`exe::contract_manager_get_contract_for_club`) and the position marks (`staff_get_natural_position_mask` against `read_1bc`/`exe::match_player_get_secondary_position`) give contract unhappiness (0x13,
 /// with points from the player sheet); his reputation against the club's, the other club's interest (0x1e); the form
 /// from the average (`get_stat`) and the index of [0xb74350], 5 or 4; the contract ending soon (`exe::date_days_since`), 6.
-///
-/// [pt] Os eventos de pre-jogo de cada jogador em campo (0x6b8d9b a 0x6b9745): o contrato (0x4cf5f0) e as
-/// marcas da posicao (0x5481a0 contra 0x717400/0x717450) dao a insatisfacao (0x13, com pontos pela
-/// ficha); a reputacao dele contra a do clube, o interesse (0x1e); a forma pela media (0x7c1e30) e
-/// pelo indice de [0xb74350], 5 ou 4; o fim de contrato perto (0x54cdb0), 6.
 #[allow(clippy::cognitive_complexity)]
 pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
     let contracts = read_usize(G_CONTRACT_MANAGER);
@@ -6647,8 +6196,6 @@ pub(crate) unsafe fn add_prematch_player_events(m: Engine, game: Fixture) {
 /// +0x1ad/+0x1ae), the squads (`select_side`), the commentator (given or new), the side strength, the marking, the angle
 /// table and the pre-match event list (unhappiness 0x13, interest 0x1e, form 5/4, contract end 6); draws who kicks off
 /// Original: `prepare_match` (0x6b7f20, match_eng.cpp (6 KB), thiscall, ret 0x10).
-///
-/// [pt] { 0x6b7f20 } (ret 0x10, match_eng.cpp): ver `prepare_match_with`.
 pub(crate) unsafe extern "thiscall" fn prepare_match(m: usize, game: usize, fast: u32, commentator: usize, ao_vivo: u32) -> u8 {
     prepare_match_with(m, game, fast as u8, commentator, ao_vivo as u8)
 }
@@ -6671,17 +6218,6 @@ pub(crate) unsafe extern "thiscall" fn prepare_match(m: usize, game: usize, fast
 ///
 /// Outside matches with a human manager it stores the substitution minute (`engine::LAST_SUBSTITUTION_TICK` + 2 x side). At the end it rebuilds
 /// the side's strength (`exe::cm3_match_engine_recalc_side_score`) and the individual marking (`individual_marking`).
-///
-/// [pt] { 0x6cda20 } (ret 8, match_eng.cpp) com as chamadas que mexem fora do motor injetadas (0x6e1aa0
-/// e 0x6e1090 da comissao, 0x897760 grava o capitao): `j` sai de campo (lesao ou expulsao). Sem
-/// `ja_fora`, soma +0x23, grava o minuto (+0x8ed0 / 11, no maximo o fim do periodo: 45, 90, 105, 120)
-/// em +0x21 e tira da grade (0x6cdd50 com -3). Fica com +0x19 = -3. Nos jogos com tecnico humano
-/// (+0x904d do lado, 0x5fd210/0x5fd480), so segue com +0x904b e fora de selecao. Com +0x1a3 para.
-/// Goleiro (tabela 1) com +0x9049 do lado: a comissao troca o goleiro (0x6e1090 com 1). Senao a
-/// comissao refaz o time (0x6e1aa0 e 0x6e1090 com 0); se ele era o capitao (0x897590), o mais bem
-/// avaliado (0x6e1a40) vira capitao (0x897760); zera o jogador de posicao 1 do lado e o recompoe
-/// (0x6ce110). Fora dos jogos com tecnico humano guarda o minuto da troca (+0x8ecc + 2 x lado). No
-/// fim refaz a forca do lado (0x6bbb60) e a marcacao individual (0x6bbf60).
 pub(crate) unsafe fn player_left_pitch_with(m: Engine, j: MatchPlayer, ja_away: u8, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let b = |o: usize| (j.addr() + o) as *mut i8;
     if ja_away == 0 {
@@ -6751,8 +6287,6 @@ pub(crate) unsafe fn player_left_pitch_with(m: Engine, j: MatchPlayer, ja_away: 
 /// minute, removes him from the grid and, unless a human manager handles it, the staff replace the goalkeeper or
 /// rebuild the team and pick a new captain; finally recomputes the side's strength and man-marking. `ja_fora` skips the
 /// minute and grid steps.
-///
-/// [pt] { 0x6cda20 } (ret 8, match_eng.cpp): ver `player_left_pitch_with`.
 pub(crate) unsafe extern "thiscall" fn player_left(m: usize, j: usize, ja_away: u32) {
     player_left_pitch_with(Engine(m), MatchPlayer(j), ja_away as u8, &mut |rotina, this, a| {
         match rotina {
@@ -6793,18 +6327,6 @@ pub(crate) const RISK_BY_MOVE: [u8; 0x2f] = [0, 10, 10, 10, 10, 10, 10, 10, 10, 
 /// Otherwise each one is at risk: whoever has the ball adds risk from the other's incident (the other's +0xd9 × table
 /// factor), incident 5 divides by +0x79; an injured player picks the type by severity (with the other player, 1..=9;
 /// without, 1..=5) or at random, and incident 5 has its own types (6, 9, 10).
-///
-/// [pt] { 0x6cfe10 } (ret 0x14, match_eng.cpp, ~2,6 KB) com as chamadas que mexem no jogo injetadas
-/// (0x62ed70 lesao atual, que antes a atualiza; 0x6d0980 aplica a lesao): a dividida entre `a` e
-/// `b` (lances `tipo_a`/`tipo_b`) pode machucar. Cada um tem uma chance (sorteio(sorteio(102)),
-/// acima de 50 refeita por sorteio(sorteio(76)) em 2/3) e um risco 4 (6 ja machucado, com a
-/// gravidade 0x62ec00 do tipo e a chance dobrada em 24/25), ajustado pelo folego (10000 /
-/// max(1000, +0x4d/2 + 5000)), pela ficha (+0x2d, sempre a de `a` decidindo o ramo) e pelo grau
-/// da lesao (0x62ece0). `a` sem folego (< 4000) se machuca na hora (-1). Com `direto`, so `a`
-/// arrisca: sorteio(50000) abaixo de 10 x risco machuca pela gravidade, ou por sorteio(11).
-/// Senao cada um arrisca: quem tem a bola soma o risco pelo lance do outro (+0xd9 do outro x
-/// fator da tabela), o lance 5 divide por +0x79; machucado escolhe o tipo pela gravidade (com o
-/// outro jogador, 1..=9; sem, 1..=5) ou por sorteio, e o lance 5 tem tipos proprios (6, 9, 10).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn tackle_injury_with(m: Engine, a: MatchPlayer, tipo_a: i16, b: usize, kind_b: i16, direct: u8, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let injuries = read_usize(G_INJURY);
@@ -6955,8 +6477,6 @@ pub(crate) unsafe fn tackle_injury_with(m: Engine, a: MatchPlayer, tipo_a: i16, 
 
 /// Decides whether players `a` and/or `b` get injured in a tackle (risk by move type, stamina, injury proneness; with
 /// `direto` only `a` risks it) and injures them; thin wrapper over tackle_injury_with with the real calls.
-///
-/// [pt] { 0x6cfe10 } (ret 0x14, match_eng.cpp): ver `tackle_injury_with`.
 pub(crate) unsafe extern "thiscall" fn tackle_injury(m: usize, a: usize, kind: u32, b: usize, kind_b: u32, direct: u32) {
     tackle_injury_with(Engine(m), MatchPlayer(a), kind as u16 as i16, b, kind_b as u16 as i16, direct as u8, &mut |rotina, this, x| match rotina {
         0x62ed70 => {
@@ -6989,13 +6509,6 @@ pub(crate) unsafe extern "thiscall" fn gate_get_player_injury(l: usize, person: 
 /// the first whose second colour does not clash with the opponent's colour (or any kit when `qualquer`). Returns 1, 2
 /// or 3; 1 if a pair has a zero colour or none fits, 2 if the 2nd or 3rd kit is missing; 0 (with an error) for a
 /// missing club.
-///
-/// [pt] { 0x6d47e0 } (cdecl, match_eng.cpp): qual dos tres uniformes do `clube` (pares de cores +0x83/+0x87,
-/// +0x8b/+0x8f, +0x93/+0x97) usar contra o `outro`. Sem clube ou sem outro, registra o erro e devolve 0.
-/// Para cada par, a 0x48ce70 (que devolve 0) decide se troca as cores (0x48ce90). Sem `qualquer`, o
-/// par vale se a segunda cor nao choca (0x540490) com a do outro (+0x87 dele, ou a da tabela 0xae23ec
-/// pelo indice 0x9cf17c); devolve 1, 2 ou 3 conforme o par, 1 se o par tiver cor zero, 2 se faltar
-/// o 2o ou o 3o uniforme, 1 se nenhum servir.
 pub(crate) unsafe extern "C" fn kit(club: usize, other: usize, any: u32) -> u8 {
     let other = Club(other);
     let club = Club(club);
@@ -7048,19 +6561,6 @@ pub(crate) unsafe extern "C" fn kit(club: usize, other: usize, any: u32) -> u8 {
 /// random draw, up to ±20. Then the ratings are clamped to the band of the potential (+0x5) and of age (250/300/375/500
 /// × (2 − rating/10000)), and +0xb pulls the club reputation (`exe::contract_manager_get_contract_for_club`, age +0x18 up to 19, CRT power 3). With `jm`
 /// (the match player) the new values are also written to its +0x47/+0x49/+0x4b.
-///
-/// [pt] { 0x6d26b0 } (cdecl, match_eng.cpp, ~3,9 KB): depois do jogo, as tres notas da ficha da pessoa
-/// (+0x61: +0x9, +0xb, +0xd, ate 10000) andam pela `nota` do jogo. O `nivel` vem da competicao
-/// (`comp`: -2 da 5; com +0x40 a media da reputacao do clube/500 e do +0x69 do jogo; senao o +0x69,
-/// 15 no minimo nas selecoes 0x76d940; ate 20). Cada nota converge para a nota + (nivel/2 + 5) x
-/// desvio x 50, com o desvio da `nota` contra a media do campeonato (0xb74350; ao quadrado com o
-/// sinal quando abaixo) e divisores pela idade da nota (/1000 + 16) menos o nivel; com `forte`, o
-/// valor 250 x nivel x nota / media entra como piso. Pisos A/B/C sobem com reputacao (+0x80 do
-/// `rep`) e nota em jogos grandes da selecao ou de copas (codigos +0x30/+0x32 da competicao). A
-/// diferenca na nota +0xb da o ajuste do moral (0x7172d0 no jogador do jogo, ou 0x544710 na
-/// pessoa) por sorteio, ate +-20. Depois as notas ficam presas a faixa do potencial (+0x5) e da
-/// idade (250/300/375/500 x (2 - nota/10000)), e a +0xb puxa a reputacao do clube (0x4cf5f0,
-/// idade +0x18 ate 19, potencia 3 da CRT). Com `jm` grava em +0x47/+0x49/+0x4b dele.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: usize, rep: usize, comp: usize, rating: f32, average_b: u32, strong: u32) {
     let jm = MatchPlayer(jm);
@@ -7323,20 +6823,6 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
 /// receives a code and the alternative moves; offside (`0x6cb780`) and position decide `*arriscado`, the value
 /// (`0x7165b0`, `0x5407e0`, `0x6f5b20`) chooses between the moves, and control (`0x70d690`) gives the score. The one
 /// with the highest score is written to `*nota`/`*lance` and tires (`0x6f56c0` with −1). Returns that opponent or 0.
-///
-/// [pt] { 0x6c87e0 } (ret 0x24, match_eng.cpp, `CM3_MATCH_ENGINE::get_opposition_challenge`, ~5,3 KB):
-/// quem, entre os adversarios ativos na casa da bola, desafia o lance `tipo` de `atacante` (ou do
-/// `lado`, sem atacante). A distancia da bola ao gol (tabela 0xa15e44, 1000 fora dela) da a
-/// dificuldade `dist`; cada adversario em pe (+0x2b < 2) tem um peso: 3,5 com +0x8ea9 = 4, senao
-/// pelas marcas taticas (0x7163c0, ou o byte de estrategia do lado com 0x200) 0,5, 4 ou 2; vezes
-/// 0,05 longe do gol, 2,25 se marca o atacante (+0x1a6), dobrado se o persegue (+0x1aa), o sorteio
-/// pela leitura (+0x106) e o +0x19c do atacante, a forma (+0x24, +0x106, +0x75), o folego (+0x4d,
-/// fora da tabela 1), 1/4 com a estrategia 5 do lado; no minimo 0,05. Cada `tipo` tem a sua
-/// disputa: sorteio(k / peso) contra +0x10d + +0x10a - dist (variantes para 0x11/0x12, 0x15 com a
-/// potencia 5 (pow da CRT) de quantos estao na casa, 0x6c com 10,5 - dist). Quem vence recebe um codigo e os
-/// lances alternativos; o impedimento (0x6cb780) e a posicao decidem `*arriscado`, o valor
-/// (0x7165b0, 0x5407e0, 0x6f5b20) escolhe entre os lances, e o dominio (0x70d690) da a nota. O de
-/// maior nota fica em `*nota`/`*lance` e cansa (0x6f56c0 com -1).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: usize, side: i8, kind: i8, a: *mut u8, b: *mut u8, rating: *mut i16, lance: *mut i8, risky: *mut i8, free: u8) -> usize {
     let m = Engine(m);
@@ -7701,13 +7187,6 @@ pub(crate) unsafe extern "thiscall" fn opposition_challenge(m: usize, atacante: 
 /// + 1).
 ///
 /// With `lista`, the two that weigh the most (above 5) go into it as a 0x1be-byte copy.
-///
-/// [pt] { 0x6bcbd0 } (ret 0xc, match_eng.cpp) com a copia na lista injetada (0x68d0d0), sem sortear:
-/// soma em `*saida` a pressao dos adversarios ativos na casa de `j` (a lista do lado de la na grade)
-/// e devolve quantos pesam (2 por marcador). Quem marca `j` (0x714c60) vale (0x6f4600 + 0x10a -
-/// +0x19c de `j` / 20 - +0x107 de `j`) x 1,7; os outros em pe (+0x2b >= 0), fora da tabela 1
-/// (0x717410) e com +0x10a ou o bit 0x100 de +0x198, valem (0x10a - ...) x 1,7 / (+0x2b + 1). Com
-/// `lista`, os dois que mais pesam (acima de 5) vao para ela como copia de 0x1be bytes.
 pub(crate) unsafe fn pressure_on_player_with(m: Engine, j: MatchPlayer, out: *mut i16, list: usize, copy: &mut dyn FnMut(usize, usize)) -> u8 {
     *out = 0;
     let mut count = 0u8;
@@ -7763,8 +7242,6 @@ pub(crate) unsafe fn pressure_on_player_with(m: Engine, j: MatchPlayer, out: *mu
 
 /// Sums into `*saida` the pressure on player `j` from the active opponents in his cell and returns how many weigh; with
 /// `lista`, copies the two heaviest into it. Calls pressure_on_player_with with the game's list append.
-///
-/// [pt] { 0x6bcbd0 } (ret 0xc, match_eng.cpp): ver `pressure_on_player_with`.
 pub(crate) unsafe extern "thiscall" fn pressure(m: usize, j: usize, out: *mut i16, list: usize) -> u8 {
     pressure_on_player_with(Engine(m), MatchPlayer(j), out, list, &mut |l, p| {
         exe::llist_add_tail(l, p, 0x1be);
@@ -7815,18 +7292,6 @@ pub(crate) unsafe extern "thiscall" fn gate_llist_add_tail(l: usize, p: usize, n
 /// +0x47/+0x48 and ends, with penalties when the aggregate after extra time is level.
 ///
 /// Unknown period: logs the error (0x944c9f) and returns 0, as when the clock has not passed.
-///
-/// [pt] { 0x6bd930 } (match_eng.cpp, `CM3_MATCH_ENGINE::period_completed`) com as chamadas que mexem no
-/// jogo injetadas (comentarios 0x6d6f70, classificacao 0x6be120, resumo 0x6ce460): fecha o periodo
-/// de +0x8ed4 quando o relogio (+0x8ed0) passa do fim dele mais os acrescimos (+0x8eb7). Com +0x8eb2
-/// = 5 nada. Periodo 0 ou 1: devolve 4. 0x1ef (1o tempo): grava o placar do intervalo no jogo
-/// (+0x4792: +0x45/+0x46), narra 0x20f1, recupera o folego e passa ao 2o tempo (devolve 1). 0x3de
-/// (2o tempo): grava o placar (+0x43/+0x44); pela regra do jogo (+0x38: 2 jogo de volta, 4, 0x4000;
-/// 1 e 0x20 decidem por penaltis 4 ou 1 em +0x8eb3) e o agregado (+0x4b, +0x4c), encerra (4, com a
-/// classificacao narrada, teto do folego e resumo) ou vai a prorrogacao (narra 0x20f2, devolve 2).
-/// 0x483 (prorrogacao, 1o tempo): com +0x1a8 encerra; senao narra 0x20f3 e passa ao 2o (3). 0x528:
-/// grava +0x47/+0x48 e encerra, com penaltis quando o agregado da prorrogacao empata. Periodo
-/// desconhecido: registra o erro (0x944c9f) e devolve 0, como quando o relogio nao passou.
 pub(crate) unsafe fn period_completed_with(m: Engine, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
     if m.restart_type() == restart::PENALTY {
         return 0;
@@ -8018,8 +7483,6 @@ pub(crate) unsafe fn period_completed_with(m: Engine, call: &mut dyn FnMut(usize
 /// Unknown period: logs the error (0x944c9f). Standings and summary become tape units when called directly by the
 /// compared routine
 /// Original: `period_completed` (0x6bd930, match_eng.cpp (`period_completed`), thiscall).
-///
-/// [pt] { 0x6bd930 } (match_eng.cpp): ver `period_completed_with`.
 pub(crate) unsafe extern "thiscall" fn period_completed(m: usize) -> u8 {
     period_completed_with(Engine(m), &mut |rotina, this, a| {
         match rotina {
@@ -8050,17 +7513,6 @@ pub(crate) unsafe extern "thiscall" fn period_completed(m: usize) -> u8 {
 /// With `cansa`, each player on the pitch without +0x105 adds random draw(2) to +0x2b (`exe::match_player_add_action_delay`) if random draw(3) is
 /// zero. On the goal line (column 4, row −1 or 12) with `chutador`, by random draw(4): `shot_outcome` or `shot_on_goal` depending
 /// on his side and the row; then, without `engine::RESTART_TYPE`, ball out (`exe::cm3_match_engine_ball_out_of_play`).
-///
-/// [pt] { 0x6cd770 } (ret 0x1c, match_eng.cpp) com as chamadas que mexem no jogo injetadas (0x70a910,
-/// 0x70c040 lances na linha de fundo, 0x6cd490 bola fora): a bola espirra de (x, y). Solta a bola do
-/// dono, ninguem a tem (+0x8eae = -1); `lado` -1 vira sorteio(2) = 0. Sem `dentro`, fora do miolo e
-/// por sorteio(4), sai pela lateral (coluna 9 ou -1) com a linha +- sorteio(espalhar + 1); senao cai
-/// em x e y +- sorteio(espalhar + 1) (com `dentro`, ate a linha ficar em 0..=11). Altura (+0x8eaa)
-/// 1 + sorteio(espalhar + 1), ou 0 sem espalhar; efeito (+0x8ed8) pela tabela 0xb67c30 do desvio (o
-/// mesmo sem desvio); +0x8ea9 = sorteio(4); a bola fica na casa e o `lado` conta a posse (+0x8d46, o
-/// outro perde 10). Com `cansa`, quem esta em campo sem +0x105 soma sorteio(2) em +0x2b (0x7160d0) se
-/// sorteio(3) for zero. Na linha de fundo (coluna 4, linha -1 ou 12) com `chutador`, por sorteio(4):
-/// 0x70c040 ou 0x70a910 pelo lado dele e a linha; depois, sem +0x8eb2, a bola fora (0x6cd490).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn deflect_ball_with(this: Engine, x: i8, y: i8, spread: i8, mut side: i8, inside: u8, cansa: u8, shooter: MatchPlayer, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let owner = this.ball_holder();
@@ -8138,8 +7590,6 @@ pub(crate) unsafe fn deflect_ball_with(this: Engine, x: i8, y: i8, spread: i8, m
 /// The ball deflects from cell (x, y): releases it, scatters it (or out for a throw-in), sets height, spin and
 /// possession, optionally tires players, and handles goal-line cases and ball out of play; calls deflect_ball_with with
 /// the game's real calls.
-///
-/// [pt] { 0x6cd770 } (ret 0x1c, match_eng.cpp): ver `deflect_ball_with`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn deflect_ball(this: usize, x: i8, y: i8, spread: i8, side: i8, inside: u8, cansa: u8, shooter: usize) {
     deflect_ball_with(Engine(this), x, y, spread, side, inside, cansa, MatchPlayer(shooter), &mut |rotina, alvo, a| match rotina {
@@ -8158,10 +7608,6 @@ pub(crate) unsafe extern "thiscall" fn deflect_ball(this: usize, x: i8, y: i8, s
 // Ports of 0x70a910 and 0x70c040 (plays on the byline, ~6 and 5 KB): tape units.
 
 /// After a move: whether player j (or the ball holder) is past his side's defensive line (engine `engine::OFFSIDE_LINE_SIDE1` / `engine::OFFSIDE_LINE`).
-///
-/// [pt] Depois de mover para a casa nova: o jogador sem a bola passou da linha defensiva do lado dele
-/// (+0x8eb0 menos y no lado 1, y menos +0x8eaf no outro, nao negativo)? Quem tem a bola (+0xf582)
-/// conta como passou. Trecho repetido de 0x6c4ec0 e 0x6c4820.
 pub(crate) unsafe fn is_past_defensive_line(engine: Engine, j: MatchPlayer) -> bool {
     if j == engine.ball_holder() {
         return true;
@@ -8192,21 +7638,6 @@ pub(crate) unsafe fn is_past_defensive_line(engine: Engine, j: MatchPlayer) -> b
 /// At the end the taker (`exe::cm3_match_engine_pick_restart_taker` with type `engine::RESTART_TYPE`) goes to the spot, takes the ball (`take_ball`) and aims (`exe::match_player_set_facing_direction`, 4,
 /// 1 on side 1 or 10), with +0x19c = 200. Everyone zeroes +0x2b (`exe::match_player_set_action_delay`).
 /// Original: `line_up_set_piece` (0x6c4820, match_eng.cpp, thiscall).
-///
-/// [pt] { 0x6c4820 } (match_eng.cpp): arruma os times para a bola parada do lado +0x8eae (contador
-/// +0xf5c6 + 54 x lado sobe; +0x8eae = -1; a bola e solta, 0x6f0970).
-/// Bola na area do proprio lado (linha < 3 no lado 0, > 8 no lado 1): cada um vai a casa da formacao
-/// (como 0x6c4ec0), e quem do outro lado cair na marca da bola sai uma linha; no lado que cobra,
-/// quem passou da linha volta uma (0x6f5b80).
-/// Senao (marca limitada a 0..=8 x 0..=11): longe do gol (+0x8eb1 = 7) ou perto (-1); coluna base 4 -
-/// sorteio(2) + sorteio(2) e linha base a 3 (perto) ou 4 (longe) da marca para o lado do gol. Perto,
-/// todos pela tabela de bola parada do lado (+0xf56e, 12 linhas por coluna, 9 colunas por posicao e
-/// lado que cobra). Longe, pelo papel: no ataque (0x716270) 1 vai ao fundo e 2 ao meio, na defesa
-/// (0x716310) 4 ao fundo e 3 ao meio, os outros pela tabela. Meio: x 4 +- sorteio, linha 6 (lado 1) ou 5.
-/// Fundo: x da coluna base +- sorteio e linha 0..1 ou 10..11 junto ao gol atacado ou defendido. Quem
-/// passou da linha volta uma (0x6f5b80). Casa fora da grade: a original encerra o jogo (erro fatal).
-/// No fim o cobrador (0x6ceb90 com o tipo +0x8eb2) vai a marca, pega a bola (0x6f0630) e aponta
-/// (0x6f4920, 4, 1 no lado 1 ou 10), com +0x19c = 200. Todos zeram +0x2b (0x7160e0).
 pub(crate) unsafe extern "thiscall" fn line_up_set_piece(this: usize) {
     let this = Engine(this);
     let side_b = this.possession_side();
@@ -8326,15 +7757,6 @@ pub(crate) unsafe extern "thiscall" fn line_up_set_piece(this: usize) {
 /// the ball (`take_ball`), +0x19c = 200, +0x19a = 180 off row 0. Without him: the original (error box). Compared with
 /// `lado_a_lado` over the engine from 0x1a0, the grid, the 40 players and the 0xf56e pointers
 /// Original: `line_up_kickoff` (0x6c4ec0, match_eng.cpp, thiscall).
-///
-/// [pt] { 0x6c4ec0 } (match_eng.cpp): arruma os times para a saida de bola do lado +0x8eae. Quem sai
-/// jogando: +0xf59e (lado 0, centro 4, 0) ou +0xf5a2 (lado 1, centro 4, 11; outro lado nao mexe no
-/// centro). Solta a bola (0x6f0970) de quem a tem; cada jogador em campo (+0x19 >= 0) vai para a casa
-/// da formacao (tabela +0xf56e do lado da direcao +0x27, byte +0xa2 da posicao: x no nibble baixo, y no
-/// alto), as linhas defensivas sao refeitas (0x6c3aa0) e, no lado que sai jogando, quem nao tem a bola
-/// e passou da linha (+0x8eb0 / +0x8eaf) volta uma linha (0x6f5b80 direto); +0x2b zera (0x7160e0). No
-/// fim, quem sai jogando vai ao centro (+0x8ea9 = 0) e pega a bola (0x6f0630), com +0x19c = 200 e
-/// +0x19a = 180 se o centro nao for a linha 0. Sem ele: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn line_up_kickoff(this: usize) {
     let this = Engine(this);
     let side_ball = this.possession_side();
@@ -8384,12 +7806,6 @@ pub(crate) unsafe extern "thiscall" fn line_up_kickoff(this: usize) {
 /// side that tries first and searches both (table distance from the start, or 1000).
 ///
 /// Returns the first non-zero code; 0 on leaving the grid or arriving. The engine's `engine::SHOT_BLOCKER` is zeroed at the start.
-///
-/// [pt] { 0x6cc540 } (ret 0x18, match_eng.cpp) com a procura (0x6cd3d0 em modo 1) injetada: alguem
-/// intercepta no caminho de (x, y) ate o centro do gol (x 4; y 11 com `gol` = 1, senao 0)? As casas
-/// saem ao estilo de Bresenham, da de saida ate a do gol; em cada uma sorteia (2) o lado que tenta
-/// primeiro e procura nos dois (distancia da tabela desde a saida, ou 1000). Volta o primeiro codigo
-/// diferente de zero; 0 ao sair da grade ou ao chegar. +0xf5ae do motor zera no inicio.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn find_interception_with(this: Engine, x: i8, y: i8, a3: u32, goal: i8, a5: u32, a6: u32, procurar: &mut dyn FnMut(i8, usize, u32, u32, u32, u32) -> u8) -> u8 {
     this.set_shot_blocker(0);
@@ -8455,19 +7871,12 @@ pub(crate) unsafe fn find_interception_with(this: Engine, x: i8, y: i8, a3: u32,
 /// Does anyone intercept on the path from (x, y) to the goal centre (`gol` picks which goal)? Walks the cells
 /// Bresenham-style trying both sides; returns the first non-zero code, else 0. Calls find_interception_with with the
 /// game's shot-block search.
-///
-/// [pt] { 0x6cc540 } (ret 0x18, match_eng.cpp): ver `find_interception_with`.
 pub(crate) unsafe extern "thiscall" fn intercept(this: usize, x: i8, y: i8, a3: u32, goal: i8, a5: u32, a6: u32) -> u8 {
     find_interception_with(Engine(this), x, y, a3, goal, a5, a6, &mut |lado, grupo, v, a3, a5, a6| exe::cm3_match_engine_try_cell_shot_block(this, lado, grupo, v, a3, 1, a5, a6))
 }
 
 /// `exe::cm3_match_engine_try_cell_shot_block` with the play (`exe::match_player_try_block_shot` try_block_shot) injected: walks the side's list in the cell group; mode 2 counts,
 /// else each able player tries; on 1 or 2 stores him in engine `engine::SHOT_BLOCKER` and returns the code.
-///
-/// [pt] { 0x6cd3d0 } (ret 0x1c, match_eng.cpp) com a jogada (0x70dfd0) injetada: percorre a lista do
-/// lado no grupo (+0x58 jogadores) atras de quem pode agir (+0x2b ate 1 e +0x19 nao negativo). Com
-/// modo 2 so conta. Senao cada um tenta a jogada (argumentos 4, 3, 6 e 7): 1 = conseguiu (+0x12
-/// sobe), 2 = outra saida; nos dois casos o jogador fica em +0xf5ae do motor e o codigo volta.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn try_side_block_with(this: Engine, side: i8, group: usize, a3: u32, a4: u32, mode: u8, a6: u32, a7: u32, play: &mut dyn FnMut(usize, [u32; 4]) -> u8) -> u8 {
     let list = (group as isize + side as isize * 44) as *const usize;
@@ -8502,8 +7911,6 @@ pub(crate) unsafe fn try_side_block_with(this: Engine, side: i8, group: usize, a
 /// Hook entry for `exe::cm3_match_engine_try_cell_shot_block` (try_side_block_with with try_block_shot `exe::match_player_try_block_shot` as the play): walks the side's players in
 /// the cell group; mode 2 only counts, otherwise each able player tries to block and on 1 or 2 is stored in engine
 /// `engine::SHOT_BLOCKER` and the code is returned.
-///
-/// [pt] { 0x6cd3d0 } (ret 0x1c, match_eng.cpp): ver `try_side_block_with`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn look_for_play(this: usize, side: i8, group: usize, a3: u32, a4: u32, mode: u8, a6: u32, a7: u32) -> u8 {
     try_side_block_with(Engine(this), side, group, a3, a4, mode, a6, a7, &mut |p, a| exe::match_player_try_block_shot(p, a[0], a[1], a[2], a[3]))
@@ -8523,8 +7930,6 @@ pub(crate) fn tape_lock() -> std::sync::MutexGuard<'static, Option<(Vec<(usize, 
 }
 
 /// True when a recording tape is open.
-///
-/// [pt] Ha uma gravacao aberta (uma comparacao de fora ja grava estas chamadas)?
 pub(crate) fn is_recording() -> bool {
     tape_lock().is_some()
 }
@@ -8533,10 +7938,6 @@ pub(crate) fn is_recording() -> bool {
 ///
 /// Then the routine is called directly by the one being compared and goes into the tape (or just passes through).
 /// Inside a unit, it can be compared on its own (the outer tape is kept aside).
-///
-/// [pt] Gravacao aberta e no nivel de cima dela (fora de qualquer unidade gravada em andamento): a
-/// rotina e chamada direto pela que esta sendo comparada e entra na fita (ou so repassa). Dentro de
-/// uma unidade, ela pode ser comparada por conta propria (a fita de fora fica guardada).
 pub(crate) fn is_recording_top_level() -> bool {
     is_recording() && RECORDABLE_DEPTH.load(std::sync::atomic::Ordering::Relaxed) == 0
 }
@@ -8547,8 +7948,6 @@ pub(crate) static RECORDABLE_DEPTH: std::sync::atomic::AtomicU32 = std::sync::at
 
 /// Runs a recordable call and, at top level, pushes it on the open tape with memory snapshots before and after (random
 /// draws inside paused from the trace).
-///
-/// [pt] Roda uma chamada gravavel e guarda-a na fita aberta, com a foto das regioes depois dela.
 pub(crate) unsafe fn call_recording(routine: usize, this: usize, a: [u32; 5], call: impl FnOnce() -> u32) -> u32 {
     use std::sync::atomic::Ordering::Relaxed;
     let level = RECORDABLE_DEPTH.fetch_add(1, Relaxed);
@@ -8573,8 +7972,6 @@ pub(crate) unsafe fn push_tape_call(routine: usize, this: usize, a: [u32; 5], r:
 }
 
 /// Concatenates the bytes of the (address, size) buffers, skipping null addresses.
-///
-/// [pt] Os bytes dos vetores (endereco, tamanho), em sequencia.
 pub(crate) unsafe fn read_buffers(v: &[(usize, usize)]) -> Vec<u8> {
     let mut b = Vec::new();
     for &(a, n) in v {
@@ -8600,10 +7997,6 @@ pub(crate) unsafe fn write_buffers(v: &[(usize, usize)], bytes: &[u8]) {
 /// regions): records the bytes of the `entradas` (inputs) before and of the `saidas` (outputs) after.
 ///
 /// The Rust copy requests its own (`request_buffers`) before calling: the inputs are checked and the outputs written.
-///
-/// [pt] Como `call_recording`, para uma unidade que le e escreve vetores por ponteiro (na pilha de quem
-/// chama, fora das regioes): grava os bytes das `entradas` antes e das `saidas` depois. A copia Rust
-/// pede os seus (`request_buffers`) antes de chamar: as entradas sao conferidas e as saidas escritas.
 pub(crate) unsafe fn call_recording_buffers(routine: usize, this: usize, a: [u32; 5], entries: &[(usize, usize)], outs: &[(usize, usize)], call: impl FnOnce() -> u32) -> u32 {
     use std::sync::atomic::Ordering::Relaxed;
     let level = RECORDABLE_DEPTH.fetch_add(1, Relaxed);
@@ -8633,11 +8026,6 @@ pub(crate) fn request_buffers(entries: &[(usize, usize)], outs: &[(usize, usize)
 ///
 /// What diverged in the last tape comparison (recorded call vs requested call, different regions), for the divergence
 /// message. It is only built when there is a difference.
-///
-/// [pt] Roda a original gravando as chamadas e a copia Rust reproduzindo-as (`reproduzir`). Devolve as
-/// duas respostas, se as regioes ficaram iguais e se a sequencia de chamadas bateu.
-/// O que divergiu na ultima comparacao com fita (chamada gravada x pedida, regioes diferentes),
-/// para a mensagem de divergencia. So e montado quando ha diferenca.
 pub(crate) static TAPE_DETAIL: std::sync::Mutex<String> = std::sync::Mutex::new(String::new());
 
 /// Returns a copy of the last tape comparison's detail text (TAPE_DETAIL).
@@ -8675,15 +8063,6 @@ pub(crate) const XY_ARG_MASK: [u32; 5] = [0xff, 0xff, u32::MAX, u32::MAX, u32::M
 /// each active player's influence score, -500 for duplicated formation positions, and penalties when a player with a
 /// contract flag, high reputation and lucky rolls underperforms (triple for the tactics' designated player); finally
 /// recomputes each active player's ratings.
-///
-/// [pt] { 0x6bbb60 } (ret 4, match_eng.cpp): a forca do lado (palavra +0x1ce + 2 x lado do motor,
-/// recomeca do zero, assim como o byte +0xaf do lado). Para cada um dos 20 ativos: -500 quando o bit
-/// da casa (0x717410, 0x5b5a60) ja apareceu (a mascara soma, nao junta); com o contrato (0xae1050:
-/// 0x4cf5a0, guardado em 0xae1080; 0x4cf5f0 com o clube dele) e tres sorteios favoraveis (20 contra
-/// +0x2f da ficha, 7000 contra a palavra +0xb, 6 contra +0x5b da pessoa), a palavra +0xb acima de
-/// +0x80 do clube - 750 e os bits 0x17a0b do contrato, perde 3x a nota (0x6ebd70) se for o designado
-/// da tatica (0x897590), senao 2x ou 1x (sorteio pelo +0x5b). Quem nao e o designado soma a nota. No
-/// fim, o desempenho de cada ativo (0x6eecb0 com marca).
 pub(crate) unsafe extern "thiscall" fn side_strength(this: usize, side: i8) {
     let this = Engine(this);
     let l = side as isize;
@@ -8746,8 +8125,6 @@ pub(crate) unsafe extern "thiscall" fn side_strength(this: usize, side: i8) {
 
 /// returns the node's +0 and advances to its +6
 /// Original: `next_list_item` (0x68d1b0, cursor at +0xa (unaligned), thiscall).
-///
-/// [pt] { 0x68d1b0 }: o proximo item da lista (cursor em +0xa: devolve o +0 do no e avanca para o +6), ou 0.
 pub(crate) unsafe extern "thiscall" fn next_list_item(this: usize) -> u32 {
     let in_the = read_usize(this + llist::CURSOR);
     if in_the == 0 {
@@ -8759,9 +8136,6 @@ pub(crate) unsafe extern "thiscall" fn next_list_item(this: usize) -> u32 {
 
 /// Returns the signed word +0xc of the person `id`'s 31-byte injury record in the array [this]; 0 when the id is beyond
 /// the person count (0xae2364).
-///
-/// [pt] { 0x62c3d0 } (ret 4, injury.cpp): a palavra com sinal +0xc do registro de 31 bytes da pessoa `id`
-/// em [this]; id a partir de 0xae2364: 0.
 pub(crate) unsafe extern "thiscall" fn word_0c(this: usize, id: i32) -> i32 {
     if id >= read_i32(G_STAFF_COUNT) {
         return 0;
@@ -8771,9 +8145,6 @@ pub(crate) unsafe extern "thiscall" fn word_0c(this: usize, id: i32) -> i32 {
 
 /// Returns `v` with the units digit of its low word removed (v - w % 10) when that signed word is below 1000, else `v`
 /// unchanged: the round code without its variant.
-///
-/// [pt] { 0x4b0870 } (comp_util.cpp): `v` menos o resto por 10 da palavra baixa, quando ela (com sinal)
-/// e menor que 1000.
 pub(crate) unsafe extern "C" fn round_below_1000(v: i32) -> i32 {
     let w = v as i16;
     v.wrapping_sub(if w < 1000 { w as i32 % 10 } else { 0 })
@@ -8781,9 +8152,6 @@ pub(crate) unsafe extern "C" fn round_below_1000(v: i32) -> i32 {
 
 /// Is the nation (id at +0) one of the six special pseudo-nations used for club competitions (B internationals,
 /// reserves, under-21 internationals, Spanish lower division, French CFA, French lower division)? Returns 1 or 0.
-///
-/// [pt] { 0x7e6f20 } (stdcall): a nacao (id em +0) e uma das seis de 0x9cf794, 0x9cf684, 0x9cf798,
-/// 0x9cf6b0, 0x9cf5d8 e 0x9cf548?
 pub(crate) unsafe extern "stdcall" fn group_nation(nation: usize) -> u32 {
     if nation == 0 {
         return 0;
@@ -8793,9 +8161,6 @@ pub(crate) unsafe extern "stdcall" fn group_nation(nation: usize) -> u32 {
 }
 
 /// Counts how many active players of the opposing side man-mark `alvo` (`designated_marked`).
-///
-/// [pt] { 0x6d59b0 } (ret 4): quantos dos 20 jogadores do outro lado (ativos, +0x19 >= 0) marcam
-/// `alvo` individualmente (0x7160f0).
 pub(crate) unsafe extern "thiscall" fn how_many_mark(this: usize, target: usize) -> u8 {
     let other = (side_of_player(MatchPlayer(target)) == 0) as i8;
     (0..20).filter(|&k| {
@@ -8805,8 +8170,6 @@ pub(crate) unsafe extern "thiscall" fn how_many_mark(this: usize, target: usize)
 }
 
 /// Returns the first active player of the opposing side who man-marks `alvo`, or 0.
-///
-/// [pt] { 0x6d5a10 } (ret 4): o primeiro dos 20 jogadores do outro lado (ativos) que marca `alvo`, ou 0.
 pub(crate) unsafe extern "thiscall" fn who_marks(this: usize, target: usize) -> usize {
     let other = (side_of_player(MatchPlayer(target)) == 0) as i8;
     for k in 0..20 {
@@ -8820,9 +8183,6 @@ pub(crate) unsafe extern "thiscall" fn who_marks(this: usize, target: usize) -> 
 
 /// Smallest table distance from an active player of a side (excluding position bit 1) to (x, y), starting at 5000; 0 if
 /// one is on it.
-///
-/// [pt] Menor distancia (tabela) de um jogador ativo do bloco `lado` (fora os de `table_a` com o bit
-/// 1) ao ponto (x, y), comecando de 5000; 0 se algum esta a distancia 0.
 pub(crate) unsafe fn nearest_active_distance(m: Engine, side: usize, x: i8, y: i8) -> f32 {
     let mut smaller = 5000.0f32;
     for k in 0..20 {
@@ -8846,15 +8206,6 @@ pub(crate) unsafe fn nearest_active_distance(m: Engine, side: usize, x: i8, y: i
 /// tactical instructions, the manager's playmaker and personal likes/dislikes, then picks the ball type by distance (or
 /// tests `pedido`), keeping the best score above `*melhor`. Writes the type, whether the target moves and the target
 /// cell; returns the teammate or 0.
-///
-/// [pt] { 0x6c6a30 } (match_eng.cpp): escolhe o companheiro e a jogada (passe, cruzamento, lancamento,
-/// tabela...) para quem esta com a bola (0xf582), a partir da casa (bx, by). Para cada colega ativo
-/// soma notas pelo espaco (adversario mais proximo dele e do ponto para onde ele pode se deslocar,
-/// 0x6bce80), pelo papel na formacao, pela posicao em relacao a linha de impedimento (0x8eaf/0x8eb0),
-/// pelo cerco, pelas marcas taticas (0x7163c0), pela preferencia do tecnico (0x897dc0) e por
-/// gostos pessoais (0x547840/0x547810); depois escolhe o tipo de jogada pela distancia ate o alvo
-/// (ou testa o tipo `pedido`) e fica com a maior nota acima de `*melhor`. Escreve o tipo, se o alvo
-/// se desloca e a casa alvo; devolve o colega (ou 0).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn choose_teammate(
     m: usize,
@@ -9418,11 +8769,6 @@ pub(crate) unsafe extern "thiscall" fn choose_teammate(
 /// side goes first. Sorts with the CRT `qsort` (`exe::crt_qsort`) and the game's own compare (`action_order`, which reads the engine
 /// at 0xb67a64)
 /// Original: `player_order` (0x6bd760, match_eng.cpp, thiscall).
-///
-/// [pt] { 0x6bd760 } (match_eng.cpp): a lista dos jogadores ativos (+0x19 >= 0) em +0x8f7e (contagem em
-/// +0x8eb8): para cada vaga 0..20 sorteia qual lado entra primeiro (0x90cfc0(2)) e poe o daquele lado
-/// e depois o do outro. Ordena com o `qsort` da CRT (0x945333) e a comparacao do proprio jogo
-/// (0x6bd840, que le o motor em 0xb67a64).
 pub(crate) unsafe extern "thiscall" fn player_order(m: usize) {
     let m = Engine(m);
     let n = (m.addr() + engine::ACTIVE_LIST_COUNT) as *mut i8;
@@ -9447,14 +8793,6 @@ pub(crate) unsafe extern "thiscall" fn player_order(m: usize) {
 /// `engine::SIDE0_MANAGER_TACTIC_SLOT`) national team or with 0x9a05: the order comes from the tactics table (`exe::tactics_get_shootout_taker_slot` on [0xde1d08]). Otherwise,
 /// `choose_taker` type 5; with no one, clears the side's marks and repeats the turn
 /// Original: `penalty_order` (0x6be520, match_eng.cpp, thiscall).
-///
-/// [pt] { 0x6be520 } (match_eng.cpp): monta a ordem dos 11 cobradores de penalti de cada lado em
-/// +0x1af + 11 x lado (-1 antes), marcando os escolhidos nas 20 casas de cada lado em +0x8eda
-/// (zeradas antes). Se o tecnico do lado (+0x904d + 208 x lado) e um dos 16 humanos, tem a marca
-/// +0x5f, nao tem 0x9a01 (0x5fd210) e, com +0x904b, e de selecao (0x53b900) ou tem 0x9a05
-/// (0x5fd480): a ordem vem da tabela tatica do clube (0x898040 sobre [0xde1d08], com `humano` =
-/// byte +0x40/+0x41 da partida igual a 0). Senao, `choose_taker` tipo 5; sem ninguem, zera as
-/// marcas do lado e tenta a mesma vez de novo.
 pub(crate) unsafe extern "thiscall" fn penalty_order(m: usize) {
     let m = Engine(m);
     core::ptr::write_bytes((m.addr() + engine::SHOOTOUT_TAKEN) as *mut u8, 0, 40);
@@ -9505,11 +8843,6 @@ pub(crate) unsafe extern "thiscall" fn penalty_order(m: usize) {
 /// Is side `lado` currently controlled by its decision-maker? Never in match types 1 or 9; for a human-managed club, by
 /// flag 0x4000 of the side's tactics block (0x9766 + 6371 x side); otherwise when the side's mode (+0x1ab) is 3 or 4.
 /// Returns 1 or 0.
-///
-/// [pt] { 0x6d42a0 } (match_eng.cpp): o lado esta sob controle de quem decide por ele? Nao nas
-/// partidas de tipo +0x3a 1 ou 9. Clube do lado dirigido por humano (0x600a50, `qualquer` = byte
-/// +0x40 da partida): pela marca 0x4000 do bloco do lado (0x9766 + 6371 x lado). Senao: o modo do
-/// lado em +0x1ab e 3 ou 4.
 pub(crate) unsafe extern "thiscall" fn side_under_control(m: usize, side: i8) -> u8 {
     let m = Engine(m);
     let fixture = Fixture(m.r#match());
@@ -9528,9 +8861,6 @@ pub(crate) unsafe extern "thiscall" fn side_under_control(m: usize, side: i8) ->
 }
 
 /// Distance (plus the 0x968990 offset) from (x, y) to the goal that player j's side attacks, from the 0xa15e44 table.
-///
-/// [pt] Distancia (mais o ajuste 0x968990) do ponto (x, y) ao gol que o lado do jogador `j` ataca
-/// (coluna 4; linha 0 para o lado 0, 11 para o lado 1), arredondada para float.
 pub(crate) unsafe fn match_eng_distance_to_goal(j: MatchPlayer, x: i32, y: i32) -> f32 {
     let dl = if side_of_player(j) == 0 { y } else { y - 11 };
     let (c, l) = ((x - 4).wrapping_abs() as i8, dl.wrapping_abs() as i8);
@@ -9544,9 +8874,6 @@ pub(crate) unsafe fn match_eng_distance_to_goal(j: MatchPlayer, x: i32, y: i32) 
 
 /// How many opponents of side s surround (x, y): 3 for each at distance zero, 1 for each within 0x968940; inactive and
 /// goalkeepers excluded.
-///
-/// [pt] Quantos adversarios (bloco do lado `s`) cercam o ponto (x, y): 3 para cada um a distancia
-/// igual a 0x9689a0, 1 para cada um ate 0x968940. Ficam de fora os inativos e os de `table_a` 1.
 pub(crate) unsafe fn surround_count(m: Engine, s: usize, x: i8, y: i8) -> i8 {
     let mut n = 0i8;
     for i in 0..20 {
@@ -9568,17 +8895,12 @@ pub(crate) static mut TABELA65: Vec<u8> = Vec::new();
 pub(crate) static mut CLUBES74: Vec<u8> = Vec::new();
 
 /// Fatigue bonus of the draw: ftol(0x96d2d8 - goal distance x 0x968a78).
-///
-/// [pt] Bonus de fadiga do sorteio: 0x96d2d8 - distancia ao gol x 0x968a78.
 pub(crate) unsafe fn goal_distance_bonus(d: f32) -> i32 {
     ftol(read_f32(rdata::F32_225) as f64 - d as f64 * read_f32(rdata::F32_10) as f64)
 }
 
 /// Reputation used in the target rating: home if same nation as the player, current if both clubs share a nation, else
 /// world; in hundreds minus 50.
-///
-/// [pt] Reputacao usada na nota do alvo: a de casa se ele e da nacao do jogador, a atual se os dois
-/// clubes da partida sao da mesma nacao, senao a mundial; em centenas, menos 50.
 pub(crate) unsafe fn target_reputation(j: MatchPlayer, p: MatchPlayer, clubs: (Club, Club)) -> i32 {
     let sheet = p.player();
     let nation = |q: MatchPlayer| read_u32(q.staff().addr() + staff::NATION);
@@ -9596,15 +8918,6 @@ pub(crate) unsafe fn target_reputation(j: MatchPlayer, p: MatchPlayer, clubs: (C
 /// man-marking target if active; otherwise scores the ball holder (if near) and the opponents in the 3 x 3 cells around
 /// his formation cell (rolls, surrounding players, distance to goal, attributes, role, reputation) and returns the
 /// best; the one stored in +0x1aa may be picked at once.
-///
-/// [pt] { 0x6bc030 } (match_eng.cpp): o adversario que o jogador `j` vai marcar, ou 0. Nao marca se a
-/// casa dele tem a marca 1; o marcado designado (0x7160f0) ativo vem antes de tudo. Senao, pela
-/// casa (x, y) onde ele deve estar (0x6c2be0), avalia primeiro quem esta com a bola (0xf582, se
-/// perto) e depois os adversarios das casas das linhas y-1..y+1 e colunas x-1..x+1 (listas em
-/// motor + 0x215e, 90 bytes por casa). Cada um recebe uma nota (sorteios, cerco de adversarios,
-/// distancia ao gol, atributos 0x0a/0x0b/0x10/0x35/0x101, papel na formacao, reputacao) e fica o
-/// de maior nota (comparada em 16 bits; o primeiro empate fica). O guardado em 0x1aa do jogador
-/// pode ser escolhido na hora.
 pub(crate) unsafe extern "thiscall" fn who_to_mark(m: usize, j: usize) -> usize {
     let m = Engine(m);
     let j = MatchPlayer(j);
@@ -9795,12 +9108,6 @@ pub(crate) unsafe fn pick_restart_taker(this: Engine, side: i8, kind: i8) -> Mat
 /// side taking?, position, ball column and row; byte = column + 16 × row) and puts the taker on the ball, facing
 /// inwards (90 or 270). With no taker the original shows an error box (no box here) and marks the engine (+0 = 1)
 /// Original: `throw_in` (0x6c4290, match_eng.cpp, thiscall).
-///
-/// [pt] { 0x6c4290 } (match_eng.cpp): lateral do lado 0x8eae. Conta (0xf5c8 + 54 x lado), poe a bola
-/// (0x8ea7, 0x8ea8) dentro do campo, escolhe o cobrador (tipo 2), arruma os 40 jogadores pela tabela
-/// da formacao (0xf56e/0xf572 pelo lado do jogador; indice: do lado que cobra?, posicao, coluna e
-/// linha da bola; byte = coluna | linha << 4) e poe o cobrador na bola, virado para dentro (90 ou 270).
-/// Sem cobrador o original mostra uma caixa de erro (sem a caixa aqui) e marca o motor (+0 = 1).
 pub(crate) unsafe extern "thiscall" fn throw_in(this: usize) {
     let this = Engine(this);
     let t = this.possession_side();
@@ -9841,13 +9148,6 @@ pub(crate) unsafe extern "thiscall" fn throw_in(this: usize) {
 /// drawn 0..1/10..11), the others by the formation table (+0x3b or +0x30). Off the pitch: fatal error. Taker (type 3)
 /// at the flag (column 0 or 8 by a draw against 0x8ea7; row 0 or 11)
 /// Original: `corner` (0x6c4470, match_eng.cpp, thiscall).
-///
-/// [pt] { 0x6c4470 } (match_eng.cpp): escanteio do lado 0x8eae. Conta (0xf5c7 + 54 x lado), marca o
-/// lance (0x8eb1 = 3, 0x8eae = -1) e arruma os 40 jogadores: pelo papel no ataque (0x716270, do lado
-/// que cobra) ou na defesa (0x716310), alguns vao para casas sorteadas na area (coluna 4 +- 1; linha
-/// 5/6, ou 0..1/10..11 sorteada), os outros pela tabela da formacao (0xf56e lado 0, 0xf572 lado 1;
-/// +0x3b ou +0x30). Fora do campo: erro fatal. Depois escolhe o cobrador (tipo 3) e o poe na
-/// bandeira (coluna 0 ou 8 pelo sorteio contra 0x8ea7; linha 0 ou 11).
 pub(crate) unsafe extern "thiscall" fn corner(this: usize) {
     let this = Engine(this);
     let t = this.possession_side();
@@ -9912,11 +9212,6 @@ pub(crate) unsafe extern "thiscall" fn corner(this: usize) {
 /// taker (type 5) with the ball on the spot (column 4; row 1 or 10, also in 0x8ea7/0x8ea8); the stored goalkeepers go
 /// to goal, those on rows 0..1 go to row 2 and those on 10..11 to row 9
 /// Original: `penalty` (0x6c50d0, match_eng.cpp, thiscall).
-///
-/// [pt] { 0x6c50d0 } (match_eng.cpp): penalti do lado 0x8eae. Escolhe o cobrador (tipo 5), da a bola a
-/// ele na marca (coluna 4; linha 1 ou 10, tambem em 0x8ea7/0x8ea8) e tira os outros da area: os
-/// goleiros guardados (0xf59e, 0xf5a2) vao para o gol (linha 0 / 11), quem esta nas linhas 0..1 vai
-/// para a 2 e quem esta nas 10..11 para a 9, na mesma coluna.
 pub(crate) unsafe extern "thiscall" fn penalty(this: usize) {
     let this = Engine(this);
     let t = this.possession_side();
@@ -9947,9 +9242,6 @@ pub(crate) unsafe extern "thiscall" fn penalty(this: usize) {
 
 /// The original's fatal error exit without the message: clears the mouse flag, runs the fatal cleanup and exits with
 /// -1.
-///
-/// [pt] Caixa de erro do original (match_eng.cpp, linha) sem a mensagem: zera 0xb67a34, 0x5cc7d0,
-/// 0x5a8f60 e exit(-1).
 pub(crate) unsafe fn fatal_exit() -> ! {
     write_u32(G_MOUSE_LEFT_BUTTON_DOWN, 0);
     let exit: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
@@ -9971,17 +9263,6 @@ pub(crate) unsafe fn fatal_exit() -> ! {
 /// taker or the person's set-piece ability (+0x29) and 0x109; far away, 0xa1 − distances; 8: 100 − distance.
 ///
 /// Returns the match player; with nobody: 0 with `excluidos` (penalty shoot-out list), otherwise a fatal error.
-///
-/// [pt] { 0x6ceb90 } (match_eng.cpp): escolhe o cobrador do lado para a bola parada `tipo` (1..=8),
-/// pela maior pontuacao entre os 20 do bloco (o primeiro empate fica). Fora: posicao < 0, ou
-/// marcado em `excluidos` (tipo 5). Posicao > 10 ou sem pessoa (+0x6d): posicao vira -1. O goleiro
-/// guardado (0xf59e/0xf5a2) nao cobra 1, 2, 3, 8, nem 6/7 longe da area adversaria. Pontuacoes:
-/// 1 e 2: atributo (0xdd, 0xe9) - 2 x distancia a bola; 3 (escanteio): o cobrador designado na tatica
-/// (0x897990 sobre 0xde1d08; 10000/9000, com sorteio no lado contrario) ou 0x89 - 0xad/2, x 0,75
-/// (1,25 se negativo) com a marca 0x40 da tabela; 4: 100 com a tabela = 1; 5 (penalti): a lista do
-/// tecnico humano (10000 - ordem, 0x601070) ou 0xc9 pela idade, sorteio de +0x5a e +0xb da pessoa;
-/// 6/7 (falta): perto do gol, o designado ou bola parada da pessoa (+0x29) e 0x109; longe,
-/// 0xa1 - distancias; 8: 100 - distancia. Sem ninguem: 0 com `excluidos`, senao erro fatal.
 pub(crate) unsafe extern "thiscall" fn choose_taker(this: usize, side: i8, kind: i8, excluidos: usize) -> usize {
     let this = Engine(this);
     let f = |p: usize, o: usize| read_f32(p + o) as f64;
@@ -10148,14 +9429,6 @@ pub(crate) unsafe extern "thiscall" fn choose_taker(this: usize, side: i8, kind:
 /// Updates a player's three reputations (current +8, home +0xa, world +0xc of his person record) after a match from his
 /// rating `valor`, weighted by the competition/opponent level and whether it is a national team, his club or a world
 /// competition, with per-match change limits and ceilings; writes the new values into `reg` (home, current, world).
-///
-/// [pt] { 0x6d3610 } (match_eng.cpp): reputacoes do jogador depois da partida, na mesma conta da do
-/// clube (0x6d3de0), para as tres da ficha (+0x69 do jogador): atual (+8), em casa (+0xa) e mundial
-/// (+0xc). Grava em `reg` (casa, atual, mundial). Pesos: casa = (reputacao/1000 + 16, minimo 22) -
-/// nivel; atual = o mesmo, se o clube e selecao ou o do jogador (+0x1a) e o do clube (+0x53) ou o da
-/// competicao (+0x5d), senao a media disso com 202 - 10 x nivel (minimo 4); mundial como a do clube
-/// (minimo 21). Faixas por partida: casa -250/+300, atual -250/+375, mundial -500/+100 x nivel (x
-/// 2 - reputacao/10000). Tetos: 400 x nivel (/2 sem o caso especial), entre 5000 (mundial 3000) e 10000.
 pub(crate) unsafe extern "C" fn player_reputation(reg: usize, my: usize, other: usize, fixture: usize, value: f32, alt: u8, bonus: u8) {
     let reg = MatchManager(reg);
     let fixture = Fixture(fixture);
@@ -10257,8 +9530,6 @@ pub(crate) unsafe extern "C" fn player_reputation(reg: usize, my: usize, other: 
 
 /// Ratio of the global player stats (G_PLAYER_STATS): +0x20/+0x28 or +0x10/+0x18; zero divisor gives the 0x968998
 /// default.
-///
-/// [pt] Razao das estatisticas globais (0xb74350): +0x20/+0x28 ou +0x10/+0x18; divisor zero da 6,8.
 pub(crate) unsafe fn global_stats_ratio(alt: bool) -> f64 {
     let g = read_usize(G_PLAYER_STATS);
     let (a, b) = if alt { (0x20, 0x28) } else { (0x10, 0x18) };
@@ -10274,12 +9545,6 @@ pub(crate) unsafe fn global_stats_ratio(alt: bool) -> f64 {
 /// reputation) and the weight from that level or, for national teams and some international competitions, from the
 /// club's reputation. `valor` against the global stats ratio gives the gain (squared when negative); `bonus` allows a
 /// minimum from the level.
-///
-/// [pt] { 0x6d3de0 } (match_eng.cpp): reputacao do clube do lado depois da partida, gravada em
-/// 0x1d6 + 2 x lado (1..=10000). `nivel` (ate 20) vem da competicao (+0x69), media com a reputacao
-/// do adversario /500 quando a partida tem +0x40; 5 na partida -2. O peso `n` da media movel: 202 -
-/// 10 x nivel, ou, para selecao (e certos codigos de competicao internacional, tipo 8), reputacao/1000
-/// + 16 (no minimo 21) - nivel. `valor` contra a razao global da o ganho (negativo ao quadrado).
 pub(crate) unsafe extern "C" fn new_reputation(this: usize, side: i8, value: f32, alt: u8, bonus: u8) {
     let this = Engine(this);
     let fixture = Fixture(this.r#match());
@@ -10356,11 +9621,6 @@ pub(crate) unsafe extern "C" fn new_reputation(this: usize, side: i8, value: f32
 /// marker (`exe::cm3_match_engine_find_marking_target`) and stores his record (+0x69) in the per-position table (0x5b5910). Marker −1 reads the "player"
 /// before the block, like the original
 /// Original: `individual_marking` (0x6bbf60, match_eng.cpp, thiscall).
-///
-/// [pt] { 0x6bbf60 } (match_eng.cpp): marcacao individual. Para cada lado e jogador ativo cuja posicao
-/// tem as marcas 0x10 e 4 na tabela do lado (0x5b57c0), acha o marcador direto (0x6d4330) e grava
-/// a ficha dele (0x69) na tabela por posicao (0x5b5910). Marcador -1 le o "jogador" anterior ao
-/// bloco, como o original.
 pub(crate) unsafe extern "thiscall" fn individual_marking(this: usize) {
     let this = Engine(this);
     for l in 0..2i8 {
@@ -10384,17 +9644,6 @@ pub(crate) unsafe extern "thiscall" fn individual_marking(this: usize) {
 /// forward, it chooses who takes over his position by score (forwards 70,000, attacking midfielders 50,000, ...; a
 /// removed goalkeeper's replacement becomes the side's goalkeeper); a human manager's team only does this automatically
 /// under certain settings. No candidate: the game exits with an error, like the original.
-///
-/// [pt] { 0x6cdd50 } (match_eng.cpp): tira o jogador de campo (expulsao ou substituicao). Sai da lista
-/// da casa dele na grade (o ultimo ocupa a vaga), desfaz as marcacoes (o marcado em 0x1aa e a lista
-/// 0x1ae dos que o marcam). Com `modo` = -1, so isso. Senao, se `modo` = -3 ou se ele e o guardado
-/// em 0xf59e/0xf5a2, e nao e atacante (0x40/0x20): escolhe quem assume a posicao dele (0x19), pela
-/// maior pontuacao (atacante 70 mil, meia ofensivo 50 mil, 0x10 15 mil, outros -5 mil; +5 mil pelos
-/// lados 0x80/0x800); o primeiro candidato entra sem filtro, os seguintes nao podem ser goleiro nem
-/// papel 2 ou 4. Goleiro tirado: o escolhido vira o guardado do lado. Time de tecnico humano (pessoa
-/// em 0x904d + 208 x lado entre os 16 tecnicos humanos, com classificacao em 0x5f e 0x5fd210 = 0) so
-/// escolhe sozinho com a marca 0x904b, sem ser selecao e sem 0x5fd480.
-/// Sem candidato: o original mostra uma caixa de erro e encerra o jogo (aqui, o mesmo encerramento).
 pub(crate) unsafe extern "thiscall" fn take_off_pitch(this: usize, j: usize, mode: i8) {
     let j = MatchPlayer(j);
     let position = j.position();
@@ -10505,12 +9754,6 @@ pub(crate) unsafe extern "thiscall" fn take_off_pitch(this: usize, j: usize, mod
 /// Match engine: returns the direct marker of player `k` of side `lado_b` (index in the other side's block; 0xff for a
 /// goalkeeper or a player off the pitch). First looks for the opponent in the mirrored role (defender vs forward, etc.)
 /// and mirrored flank; if none, takes the nearest by the distance table using the mirrored formation position.
-///
-/// [pt] { 0x6d4330 } (match_eng.cpp): o marcador direto do jogador `k` do lado (indice no bloco do outro
-/// lado; -1 para goleiro ou jogador fora). Primeiro procura o papel espelhado: cada setor do jogador
-/// exige o oposto (2 ou 4 -> 0x40, 8 -> 0x20, 0x10 -> 0x10, 0x20 -> 8, 0x40 -> 4 ou 2) e um lado
-/// espelhado (0x80 <-> 0x800, 0x100 <-> 0x400, 0x200 <-> 0x200). Sem ninguem, o mais perto pela
-/// tabela de distancias, com a formacao espelhada (linha e coluna pela mascara, 0x5b73a0).
 pub(crate) unsafe extern "thiscall" fn direct_marker(this: usize, side_b: i8, k: i8) -> u8 {
     let p = Engine(this).player(side_b, k as usize);
     if p.position() < 0 || match_player_position(p) & 1 != 0 {
@@ -10604,15 +9847,6 @@ pub(crate) unsafe extern "thiscall" fn direct_marker(this: usize, side_b: i8, k:
 /// tactical position the fine x/y, the player's id byte, his role and a presence mark. Each grid cell becomes 3 x 3
 /// sub-cells: the ball holder takes the centre, the others draw a random free sub-cell (accepting an occupied one only
 /// after 50 tries per occupant); which side places first in each cell is random.
-///
-/// [pt] { 0x6d1770 } (match_eng.cpp): posicoes finas (grade 27 x 36) de cada jogador para desenhar a
-/// partida. `saida`: bola (x, y) e, para cada lado e posicao tatica (6 bytes a partir de
-/// saida + 2 + 6 x (posicao + 11 x lado)): x e y finos, byte 0 do jogador, papel (0x717410) e
-/// a marca 1. Cada casa da grade vira 3 x 3 subcasas: quem tem a bola fica no centro; os outros
-/// sorteiam uma subcasa (nunca o centro da casa de quem tem a bola), aceitando uma ja ocupada
-/// so depois de 50 tentativas por ocupante. O lado que comeca em cada casa e sorteado.
-/// Saida nula ou jogador sem posicao: o original mostra uma caixa de erro e zera 0xb67a34 (aqui,
-/// so zera; nunca ocorre em jogo).
 pub(crate) unsafe extern "thiscall" fn fine_positions(this: usize, out: *mut u8) {
     let this = Engine(this);
     if out.is_null() {
@@ -10683,13 +9917,6 @@ pub(crate) unsafe extern "thiscall" fn fine_positions(this: usize, out: *mut u8)
 /// When it moves, it spends one impulse (and one of 0x8ea9, if any) and takes a step by the direction (0x8ed8,
 /// degrees): (220, 320) x - 1; (40, 140) x + 1; (130, 230) y - 1; below 50 or above 310, y + 1. Off the pitch (x
 /// outside 0..9 or y outside 0..12): ball out (`exe::cm3_match_engine_ball_out_of_play`) on the side of 0x8eab.
-///
-/// [pt] { 0x6bbe40 } (match_eng.cpp) com o comentario injetado: bola solta rolando. So sem dono
-/// (0xf582), sem 0xf57a e com impulso (0x8eaa). Lance parado (0x8eb2): zera o impulso e 0x8ea9.
-/// Senao, com impulso 1 a bola so anda se sorteio(1) >= sorteio(2); impulso <= 0 nao anda. Ao andar,
-/// gasta um de impulso (e um de 0x8ea9, se houver) e da um passo pela direcao (0x8ed8, graus):
-/// (220, 320) x - 1; (40, 140) x + 1; (130, 230) y - 1; abaixo de 50 ou acima de 310, y + 1.
-/// Fora do campo (x fora de 0..9 ou y fora de 0..12): bola fora (0x6cd490) pelo lado de 0x8eab.
 pub(crate) unsafe fn roll_loose_ball_with(this: Engine, call: AddEventCall) {
     if !this.ball_holder().is_null() || this.set_piece_taker() != 0 || this.ball_roll() == 0 {
         return;
@@ -10735,8 +9962,6 @@ pub(crate) unsafe fn roll_loose_ball_with(this: Engine, call: AddEventCall) {
 /// one of 0x8ea9) and takes a step along direction 0x8ed8: (220, 320) x − 1, (40, 140) x + 1, (130, 230) y − 1, below
 /// 50 or above 310 y + 1. Out of the pitch: ball out (`exe::cm3_match_engine_ball_out_of_play`) for the side in 0x8eab
 /// Original: `roll_ball` (0x6bbe40, match_eng.cpp, thiscall).
-///
-/// [pt] { 0x6bbe40 } (match_eng.cpp): bola rolando (ver `roll_loose_ball_with`).
 pub(crate) unsafe extern "thiscall" fn roll_ball(this: usize) {
     roll_loose_ball_with(Engine(this), &mut |t, a| add_match_event(t, a))
 }
@@ -10748,13 +9973,6 @@ pub(crate) unsafe extern "thiscall" fn roll_ball(this: usize) {
 /// the last formation square used (same point: the low byte of 0x8ed8, sign-extended). With nobody available, it sets
 /// byte 0 of the engine
 /// Original: `kick_off` (0x6c51e0, match_eng.cpp, thiscall).
-///
-/// [pt] { 0x6c51e0 } (match_eng.cpp): pontape inicial. Quem sai jogando: 0x8eae (fora de 0..=1, o lado
-/// 0); bola no centro (4, 5 ou 6). Todos os ativos vao para a casa da formacao (tabela 0xf56e + 0x9e
-/// do lado 0 ou 0xf572 + 0xa6 do lado 1, 216 bytes por posicao; nibble baixo x, alto y, cada um no
-/// seu campo) e olham para a frente. Do lado que sai, o mais perto da bola (posicao > 10 vira -1)
-/// pega a bola e olha para a casa calculada com a ultima casa da formacao usada (mesmo ponto: o
-/// byte baixo de 0x8ed8). Sem ninguem, marca o byte 0 do motor.
 pub(crate) unsafe extern "thiscall" fn kick_off(this: usize) {
     let this = Engine(this);
     let mut sai = this.possession_side();
@@ -10830,10 +10048,6 @@ pub(crate) unsafe extern "thiscall" fn kick_off(this: usize) {
 
 /// Multiplies v by the float constant of the first rule (>, <, always) that matches attribute x, optionally rounding to
 /// f32 as the original's fld/fmul/fstp.
-///
-/// [pt] Degrau de multiplicadores pelo atributo `x` (byte com sinal): a primeira regra que vale
-/// multiplica pela constante float `k` (0: nenhuma). Regras: ('>', limite), ('<', limite) ou
-/// ('*', _) (sempre). `arredondar`: o original guarda em float a cada passo (fld/fmul/fstp).
 pub(crate) unsafe fn apply_attribute_step(v: f64, x: i8, rules: &[(char, i8, usize)], arredondar: bool) -> f64 {
     for &(op, lim, k) in rules {
         let vale = match op {
@@ -10853,8 +10067,6 @@ pub(crate) unsafe fn apply_attribute_step(v: f64, x: i8, rules: &[(char, i8, usi
 }
 
 /// If random(person attribute 0x21) < random(20), multiplies v by 0x96d248 (rounded to f32).
-///
-/// [pt] sorteio(atributo 0x21 da pessoa) < sorteio(20): multiplica por 0x96d248.
 pub(crate) unsafe fn luck_multiplier(v: f64, person: PlayerSheet) -> f64 {
     let a = random(person.consistency() as i32);
     if a < random(0x14) {
@@ -10865,8 +10077,6 @@ pub(crate) unsafe fn luck_multiplier(v: f64, person: PlayerSheet) -> f64 {
 }
 
 /// Multiplies a signed engine word by k and stores the truncated result in another engine word.
-///
-/// [pt] Palavra do motor (com sinal) vezes `k`, truncada de volta na palavra `destino`.
 pub(crate) unsafe fn scale_engine_word(this: Engine, source: usize, k: f64, target: usize) {
     let v = read_i16(this.addr() + source) as f64;
     write_i16(this.addr() + target, ftol(v * k) as i16);
@@ -10876,13 +10086,6 @@ pub(crate) unsafe fn scale_engine_word(this: Engine, source: usize, k: f64, targ
 /// players of the block: wear, components combining the player's float attributes adjusted by his player data and
 /// rolls, and per tactical role adjustments; then competition, club reputation and side adjustments. A player without
 /// person (+0x69) clears the mouse-button global and aborts (the original shows an error box).
-///
-/// [pt] { 0x6c0c60 } (match_eng.cpp): forca do time por lado em sete palavras (0x1da, 0x1de ... 0x1f2,
-/// de 4 em 4, + 2 x lado), somando os 20 jogadores do bloco. Por jogador ativo: desgaste,
-/// componentes (combinacoes dos floats do jogador, ajustadas pelos atributos da pessoa e por
-/// sorteios) e, pelo papel tatico (bits 1..0x40), ajuste da palavra 0x35 e as parcelas.
-/// Depois, ajustes pela competicao, pela reputacao dos clubes e pelo lado.
-/// Jogador sem ficha (0x69): o original mostra uma caixa de erro e zera 0xb67a34 (aqui, so isso).
 pub(crate) unsafe extern "thiscall" fn team_strength(this: usize, side_b: i8) {
     let this = Engine(this);
     let w = |o: usize| (this.addr() as isize + o as isize + 2 * side_b as isize) as *mut i16;
@@ -11130,9 +10333,6 @@ pub(crate) unsafe extern "thiscall" fn team_strength(this: usize, side_b: i8) {
 
 /// `centre_backs_without_conflict` on the side's formation
 /// Original: `side_centre_backs_without_conflict` (0x6d5b20, match_eng.cpp, thiscall).
-///
-/// [pt] { 0x6d5b20 } (thiscall, ret 4, match_eng.cpp): os zagueiros do lado `lado` sem conflito (0x5b8dc0
-/// na formação +0xaac5, ou +0x91e2 com lado 0).
 pub(crate) unsafe extern "thiscall" fn side_centre_backs_without_conflict(m: usize, side: i8) -> u8 {
     exe::formation_has_no_wide_defenders(m + if side != 0 { 0xaac5 } else { 0x91e2 })
 }
@@ -11141,9 +10341,6 @@ compare_value!(compare_side_centre_backs_without_conflict, side_centre_backs_wit
 
 /// 1 with the ball in the top box, −1 in the bottom one, otherwise 0; returns only `al`
 /// Original: `ball_goal_end` (0x6d58f0, match_eng.cpp, thiscall).
-///
-/// [pt] { 0x6d58f0 } (thiscall, match_eng.cpp): a bola numa área (casas centrais +0x8ea7 de 2 a 6): 1 na
-/// área de cima (linha +0x8ea8 0 ou 1), −1 na de baixo (10 ou 11), senão 0. Devolve só `al`.
 pub(crate) unsafe extern "thiscall" fn ball_goal_end(m: usize) -> i8 {
     let m = Engine(m);
     let row = m.ball_y();
@@ -11161,9 +10358,6 @@ pub(crate) unsafe extern "thiscall" fn ball_goal_end(m: usize) -> i8 {
 
 /// the abandonment minute × 11 below the clock (16-bit); returns only `al`
 /// Original: `match_abandoned` (0x6d5930, match_eng.cpp, thiscall).
-///
-/// [pt] { 0x6d5930 } (thiscall, match_eng.cpp): a partida foi abandonada? O minuto do abandono (+0xf638,
-/// −1 sem abandono) × 11 abaixo do relógio (+0x8ed0), em 16 bits. Devolve só `al`.
 pub(crate) unsafe extern "thiscall" fn match_abandoned(m: usize) -> u8 {
     let m = Engine(m);
     let minute = m.abandon_minute();
@@ -11175,9 +10369,6 @@ pub(crate) unsafe extern "thiscall" fn match_abandoned(m: usize) -> u8 {
 
 /// `slots_without_conflict` on the side's formation
 /// Original: `side_slots_without_conflict` (0x6d5af0, match_eng.cpp, thiscall).
-///
-/// [pt] { 0x6d5af0 } (thiscall, ret 4, match_eng.cpp): as vagas do lado `lado` sem conflito (0x5b8960 na
-/// formação +0xaac5, ou +0x91e2 com lado 0).
 pub(crate) unsafe extern "thiscall" fn side_slots_without_conflict(m: usize, side: i8) -> u8 {
     exe::formation_has_no_wide_midfield_or_attack(m + if side != 0 { 0xaac5 } else { 0x91e2 })
 }
@@ -11196,8 +10387,6 @@ compare_value!(compare_side_slots_without_conflict, side_slots_without_conflict,
 /// garbage; the zeroing at entry leaves them at zero in every mode. Compared through the tape (the record, the
 /// reputations and the event copy are units; the event's content is checked)
 /// Original: `match_wrap_up` (0x6d1cc0, match_eng.cpp (2.5 KB, called by the engine step 0x6b98c0), cdecl).
-///
-/// [pt] { 0x6d1cc0 } (cdecl, match_eng.cpp): ver `match_wrap_up_with`.
 pub(crate) unsafe extern "C" fn match_wrap_up(m: usize) {
     match_wrap_up_with(Engine(m), &mut |r, t, a| dispatch_wrap_up_call(r, t, a))
 }
@@ -11208,8 +10397,6 @@ pub(crate) unsafe extern "C" fn match_wrap_up(m: usize) {
 /// (`exe::match_player_set_action_delay` with 5 or 3) by the person's strength. Compared through the tape when it runs outside another tape (the
 /// injury list and the 0x68d0d0 copy); inside, it is a unit
 /// Original: `injure` (0x6d0980, match_eng.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x6d0980 }: ver `injure_with`.
 pub(crate) unsafe extern "thiscall" fn injure(m: usize, kind: u32, chance: u32, p: usize, o: usize) {
     injure_with(Engine(m), kind, chance, MatchPlayer(p), o, &mut |r, t, a| dispatch_injury_list_call(r, t, a))
 }
@@ -11220,10 +10407,6 @@ pub(crate) unsafe extern "thiscall" fn injure(m: usize, kind: u32, chance: u32, 
 /// (words) and, when everything ties, by the name of the first club (+0x20 → +0x38) with the text comparison `exe::utils_string_compare`
 /// (case-insensitive).
 /// Original: `day_match_order` (0x6b6510, match_eng.cpp, cdecl).
-///
-/// [pt] { 0x6b6510 } (cdecl, qsort): a ordem das partidas do dia (registros de 0x69 bytes): pela
-/// competição (+4), depois +0x46 (byte), +0x36, +0x38 e +0x34 (palavras) e, empatando tudo, pelo nome
-/// do primeiro clube (+0x20 → +0x38) na comparação de textos 0x90c1d0 (sem maiúsculas).
 pub(crate) unsafe extern "C" fn day_match_order(a: usize, b: usize) -> i32 {
     let d = read_i32(a + 4).wrapping_sub(read_i32(b + 4));
     if d != 0 {
@@ -11249,10 +10432,6 @@ pub(crate) unsafe extern "C" fn day_match_order(a: usize, b: usize) -> i32 {
 /// the one in `engine::ACTION_FIRST_PLAYER`; the rest by strength (+0x104 + +0x105) × (+0x3b × 0.005 + 0.5) × +0x4d (f32), truncated, from
 /// highest to lowest.
 /// Original: `action_order` (0x6bd840, match_eng.cpp, cdecl).
-///
-/// [pt] { 0x6bd840 } (cdecl, qsort, match_eng.cpp): a ordem dos jogadores na vez do motor ([0xb67a64]):
-/// com +0x8eb2 ligado, o de +0xf582 vem primeiro; depois o de +0x91de; os demais pela força
-/// (+0x104 + +0x105) × (+0x3b × 0,005 + 0,5) × +0x4d (f32), truncada, do maior para o menor.
 pub(crate) unsafe extern "C" fn action_order(a: *const usize, b: *const usize) -> i32 {
     let (pa, pb) = (*a, *b);
     let m = Engine(read_usize(G_ACTION_ORDER_MATCH_ENGINE));
@@ -11289,14 +10468,6 @@ pub(crate) unsafe extern "C" fn action_order(a: *const usize, b: *const usize) -
 /// `[0xb6b7c8]`) and the average of the side's 20 players (+0x47cb, step 0x1be, the marked ones at −0x1c); those in the
 /// table write the value into `out`. The events in the range outside the 13 cases: yes.
 /// Original: `context_commentary` (0x6d4b70, match_eng.cpp, thiscall).
-///
-/// [pt] { 0x6d4b70 } (thiscall, ret 0xc, match_eng.cpp): o comentário de contexto `evento` (0x21a3..=0x21af:
-/// a corrida da liga, as notícias recentes do clube) pode tocar agora para o `lado`? Fora da faixa
-/// 8000..=0x21e4, já tocado (tabela de +0x21e por lado) ou sem competição (+0x4792 → +0x14), não. Pesa
-/// o placar agregado (0x6ce310), a linha do clube na tabela da liga (0x4a4850: +0x19/+0x41 e
-/// +0x2d/+0x55), o minuto (+0x8ed0 / 11), as notícias do clube nos últimos 10 ou 30 dias (0x757da0 na
-/// mídia [0xb6b7c8]) e a média dos 20 jogadores do lado (+0x47cb, passo 0x1be, os marcados em −0x1c);
-/// os da tabela gravam o valor em `saida`. Os eventos da faixa fora dos 13 casos: sim.
 pub(crate) unsafe extern "thiscall" fn context_commentary(m: usize, side: u32, event: u32, out: *mut i32) -> u32 {
     let m = Engine(m);
     let today = G_CURRENT_DATE;
@@ -11481,13 +10652,6 @@ pub(crate) unsafe extern "thiscall" fn context_commentary(m: usize, side: u32, e
 /// [0xb74340] (8-byte record: id, cards, fouls, grade; the 8th byte is stack garbage and is not read). Compared side by
 /// side (draws and the referee's record)
 /// Original: `referee_grade` (0x6d4a20, match_eng.cpp (336 bytes, called by 0x6b98c0), thiscall).
-///
-/// [pt] { 0x6d4a20 } (match_eng.cpp, chamada pela 0x6b98c0): a nota do arbitro da partida (+0xf5b6, id
-/// != -1), fora das competicoes amistosas (0x5c6710 em [0xae2c74]). Os cartoes (+0xf5cb e +0xf601 dos
-/// dois lados) e as faltas (+0xf5cc e +0xf602); a nota parte de +0xf5ba / 1000, perde 2 com mais de 2
-/// cartoes, 1 com 2, ganha 1 sem cartao; perde 1 com mais de 5 faltas, ganha 1 com menos de 3. Abaixo
-/// de 4 vira 4 (salvo 1 em 500), acima de 8 vira 8 (salvo 1 em 25), e fica entre 1 e 10. Grava pela
-/// 0x79ce10 em [0xb74340].
 pub(crate) unsafe extern "thiscall" fn referee_grade(m: usize) {
     let m = Engine(m);
     let referee = m.referee_id();
@@ -11553,8 +10717,6 @@ pub(crate) unsafe extern "thiscall" fn referee_grade(m: usize) {
 /// Used to read high bytes of stack dwords with no value (determinized original). Compared through the tape
 /// (commentary, injuries and the player-leaving calls are units)
 /// Original: `quick_simulation` (0x6beeb0, match_eng.cpp (6 KB, called by the engine step 0x6b98c0), thiscall).
-///
-/// [pt] { 0x6beeb0 } (match_eng.cpp): ver `quick_simulation_with`.
 pub(crate) unsafe extern "thiscall" fn quick_simulation(m: usize) {
     quick_simulation_with(m, &mut |r, t, a| dispatch_tackle_calls(r, t, a))
 }
@@ -11562,8 +10724,6 @@ pub(crate) unsafe extern "thiscall" fn quick_simulation(m: usize) {
 /// Returns the player's entry in the engine's per-side position table (`engine::POSITION_TABLE`, 11 words by tactical position, from the
 /// loaded tactic) [inference: the role code of his position; 1 = goalkeeper].
 /// Original: `table_a` (0x6c38c0, match_eng.cpp).
-///
-/// [pt] { 0x6c38c0 } (match_eng.cpp)
 pub(crate) unsafe extern "thiscall" fn table_a(this: usize, player: usize) -> u16 {
     table_by_position(this, MatchPlayer(player), 0x8ebc)
 }
@@ -11571,8 +10731,6 @@ pub(crate) unsafe extern "thiscall" fn table_a(this: usize, player: usize) -> u1
 /// Returns the player's value in tactical table B (per-side table of 11 words at engine + 0x8ec4), by his position
 /// 0..=10; 0 outside.
 /// Original: `table_b` (0x6c38f0, match_eng.cpp).
-///
-/// [pt] { 0x6c38f0 } (match_eng.cpp)
 pub(crate) unsafe extern "thiscall" fn table_b(this: usize, player: usize) -> u16 {
     table_by_position(this, MatchPlayer(player), 0x8ec4)
 }
@@ -11580,8 +10738,6 @@ pub(crate) unsafe extern "thiscall" fn table_b(this: usize, player: usize) -> u1
 /// Distance of row `v` from side `lado`'s line (side 1: engine `engine::OFFSIDE_LINE_SIDE1` - v; otherwise v - engine `engine::OFFSIDE_LINE`) [inference:
 /// the side's defensive line].
 /// Original: `side_difference` (0x6c4180, match_eng.cpp).
-///
-/// [pt] { 0x6c4180 } (match_eng.cpp): diferenca entre um byte do lado e o valor dado.
 pub(crate) unsafe extern "thiscall" fn side_difference(this: usize, side: u8, v: u8) -> u8 {
     let this = Engine(this);
     if side == 1 {
@@ -11594,8 +10750,6 @@ pub(crate) unsafe extern "thiscall" fn side_difference(this: usize, side: u8, v:
 /// Returns 1 if cell (b, c) lies in the penalty-area zone of side `lado`'s own goal: column b in 2..=6 and row c in
 /// 10..=11 for side 1 or 0..=1 for side 0.
 /// Original: `band` (0x6cb960, match_eng.cpp).
-///
-/// [pt] { 0x6cb960 } (match_eng.cpp): faixa 2..=6 em `b` e, conforme o lado, 10..=11 ou 0..=1 em `c`.
 pub(crate) unsafe extern "stdcall" fn band(side: u8, b: i8, c: i8) -> u8 {
     let target = if side == 1 { 10..=11 } else { 0..=1 };
     ((2..=6).contains(&b) && target.contains(&c)) as u8
@@ -11604,8 +10758,6 @@ pub(crate) unsafe extern "stdcall" fn band(side: u8, b: i8, c: i8) -> u8 {
 /// Match engine: returns the direction (angle word from the global direction table) from cell (a, b) to cell (c, d);
 /// for the same cell, the current ball direction (`engine::BALL_DIRECTION`).
 /// Original: `by_difference` (0x6cb6c0, match_eng.cpp).
-///
-/// [pt] { 0x6cb6c0 } (match_eng.cpp): palavra pela diferenca de duas coordenadas.
 pub(crate) unsafe extern "thiscall" fn by_difference(this: usize, a: i8, b: i8, c: i8, d: i8) -> u16 {
     let this = Engine(this);
     let (dl, dc) = (c.wrapping_sub(a), d.wrapping_sub(b));
@@ -11618,8 +10770,6 @@ pub(crate) unsafe extern "thiscall" fn by_difference(this: usize, a: i8, b: i8, 
 /// Match engine: tells whether row `v` is in the final third near the goal side `lado` attacks (side 1: row < 3; side
 /// 0: row > 8) [inference].
 /// Original: `limit` (0x6cb930, match_eng.cpp).
-///
-/// [pt] { 0x6cb930 } (match_eng.cpp)
 pub(crate) unsafe extern "stdcall" fn limit(side: u8, v: i8) -> u8 {
     (if side == 1 { v < 3 } else { side == 0 && v > 8 }) as u8
 }
@@ -11627,9 +10777,6 @@ pub(crate) unsafe extern "stdcall" fn limit(side: u8, v: i8) -> u8 {
 /// Match engine: the distance in rows between player `jogador` (+0x103) and his side's line (`engine::OFFSIDE_LINE` / `engine::OFFSIDE_LINE_SIDE1`)
 /// [inference: the defensive/offside line]; 0 for the ball holder (`engine::BALL_HOLDER`).
 /// Original: `player_difference` (0x6c4130, match_eng.cpp).
-///
-/// [pt] { 0x6c4130 } (match_eng.cpp): como `side_difference`, com o valor e o lado tirados do jogador;
-/// 0 se o jogador for o guardado em 0xf582.
 pub(crate) unsafe extern "thiscall" fn player_difference(this: usize, player: usize) -> u8 {
     let this = Engine(this);
     let player = MatchPlayer(player);
@@ -11647,8 +10794,6 @@ pub(crate) unsafe extern "thiscall" fn player_difference(this: usize, player: us
 /// Match engine: tells whether player `jogador` is his side's player nearest to the ball (`engine::NEAREST_TO_BALL` / `engine::NEAREST_TO_BALL_SIDE1`); for a
 /// goalkeeper, whether the side's goalkeeper is nearest (`engine::GOALKEEPER_NEAREST` / `engine::GOALKEEPER_NEAREST_SIDE1`).
 /// Original: `side_byte` (0x6cfda0, match_eng.cpp).
-///
-/// [pt] { 0x6cfda0 } (match_eng.cpp)
 pub(crate) unsafe extern "thiscall" fn side_byte(this: usize, player: usize) -> u8 {
     let this = Engine(this);
     let s = side_of_player(MatchPlayer(player));
@@ -11668,10 +10813,6 @@ pub(crate) unsafe extern "thiscall" fn side_byte(this: usize, player: usize) -> 
 /// ball holder (engine `engine::BALL_HOLDER`) nor the set-piece taker (`engine::SET_PIECE_TAKER`), a nonzero marking rating (`field_by_position`) and no set piece
 /// pending (engine `engine::RESTART_TYPE` zero).
 /// Original: `can_choose` (0x6bce20, match_eng.cpp).
-///
-/// [pt] { 0x6bce20 } (match_eng.cpp): 1 se o jogador pode ser escolhido (fora do ponto (b, c), campo
-/// 0x2b abaixo de 2, nao e um dos guardados em 0xf582/0xf57a, 0x6f4600 nao zero e 0x8eb2 zerado).
-/// Devolve eax inteiro.
 pub(crate) unsafe extern "thiscall" fn can_choose(this: usize, j: usize, b: i8, c: i8) -> u32 {
     let this = Engine(this);
     let j = MatchPlayer(j);

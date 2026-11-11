@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/eurocomp/intertoto_cup.rs.
-// [pt] Os comparadores das rotinas de ../comp/eurocomp/intertoto_cup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `intertoto_cup_create_round_table`.
 pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
@@ -11,9 +10,6 @@ pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_create_round_table(
 }
 
 /// Comparer for `intertoto_cup_collect_entrants`.
-///
-/// [pt] Lado a lado: o +0x3e e o [0xb67a34] a partir do mesmo estado; a original deixa a lista dela em +0xa7, a cópia faz a
-/// sua, comparada nos inscritos (com a devolução 1) e liberada.
 pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_collect_entrants(this: usize) -> i32 {
     let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_INTERTOTO_CUP_COLLECT_ENTRANTS);
@@ -49,9 +45,6 @@ pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_collect_entrants(th
 }
 
 /// Comparer for `intertoto_cup_collect_club_list`.
-///
-/// [pt] Lado a lado: a original grava a lista dela em `saida` (de quem chama, que a libera); a cópia faz a sua numa saída
-/// própria, comparada na conta e nos ponteiros, e a libera.
 pub(crate) unsafe extern "thiscall" fn compare_intertoto_cup_collect_club_list(this: usize, out: *mut usize, ativos: u32) -> u16 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16>(IDX_INTERTOTO_CUP_COLLECT_CLUB_LIST);
     let mut s2 = 0usize;

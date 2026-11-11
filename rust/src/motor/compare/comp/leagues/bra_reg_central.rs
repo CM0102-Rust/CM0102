@@ -1,12 +1,8 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/bra_reg_central.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/bra_reg_central.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `bra_reg_central_set_up_rules`.
-///
-/// [pt] Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto menos as
-/// saídas do calendário; a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_central_set_up_rules(this: usize) -> u32 {
     let reg = league_regions_without_schedule(this);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_CENTRAL_SET_UP_RULES)(this), || {
@@ -18,9 +14,6 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_central_set_up_rules(this
 }
 
 /// Comparer for `bra_reg_central_update_staff_records_for_status`.
-///
-/// [pt] Comparador: só a original (simplification: os registros de carreira alocam e vão para o histórico; não rodam duas vezes),
-/// com o plano do ensaio (a cópia sem os registros nem a gravação, rodada antes): a devolução e o destino na linha.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_central_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, game: usize, a6: u32) -> u32 {
     let (n, l, dest) = centro_oeste_end_of_stage(this, club, status, stage, game, false);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_BRA_REG_CENTRAL_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, status, stage, a4, game, a6);

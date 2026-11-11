@@ -3,8 +3,6 @@ use super::*;
 /// Argentina's transfer windows: two windows, from 24 July (moved to the Sunday [inference]) to 6 August (moved to the
 /// Wednesday [inference]); and from 14 December (moved to the Sunday [inference]) to 4 March (moved to the Wednesday
 /// [inference]).
-///
-/// [pt] As janelas da Argentina: duas janelas, de 24 de julho (andando para o domingo [inferência]) a 6 de agosto (andando para a quarta-feira [inferência]); de 14 de dezembro (andando para o domingo [inferência]) a 4 de março (andando para a quarta-feira [inferência]).
 pub(crate) const ARGENTINA_TRANSFER_WINDOWS: [[u8; 6]; 4] = [
     [0x01, 0x00, 0x00, 0x18, 0x06, 0x01],
     [0x01, 0x00, 0x03, 0x06, 0x07, 0x00], // cqn1: a Argentina
@@ -16,9 +14,6 @@ pub(crate) const ARGENTINA_TRANSFER_WINDOWS: [[u8; 6]; 4] = [
 /// Wednesday [inference]); from 14 December (moved to the Sunday [inference]) to 4 March (moved to the Wednesday
 /// [inference])
 /// Original: `ARGENTINA_RULES::init_transfer_windows` (0x40a620, argentina_rules.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x40a620 } (thiscall, ret 0, argentina_rules.cpp, `ARGENTINA_RULES::init_transfer_windows`; chamada pelo construtor das regras da Argentina (regra 1), depois da base e da vtable): as
-/// 2 janelas de transferência de `ARGENTINA_TRANSFER_WINDOWS`.
 pub(crate) unsafe extern "thiscall" fn argentina_rules_init_transfer_windows(this: usize) {
     covered!("cqn_1 argentina");
     set_transfer_windows(this, 2, &ARGENTINA_TRANSFER_WINDOWS, 0x987960, 0x50);
@@ -33,8 +28,6 @@ pub(crate) const PORTUGAL_TRANSFER_WINDOWS: [[u8; 6]; 4] = [
 ];
 
 /// South Korea's transfer windows: one window, from 25 November (moved to the Sunday [inference]) to 25 July.
-///
-/// [pt] As janelas da Coreia do Sul: uma janela, de 25 de novembro (andando para o domingo [inferência]) a 25 de julho.
 pub(crate) const SOUTH_KOREA_TRANSFER_WINDOWS: [[u8; 6]; 2] = [
     [0x1b, 0x00, 0x00, 0x19, 0x0a, 0x01],
     [0x1b, 0x00, 0xff, 0x19, 0x06, 0x00], // cqn1: South Korea

@@ -2,15 +2,9 @@ use super::*;
 
 /// The three European cups of squad registration, in order: the Champions League, the UEFA Cup and the Cup Winners' Cup
 /// [inference] (the keys of the competition ids).
-///
-/// [pt] As três copas europeias da inscrição, na ordem: a Liga dos Campeões, a Copa da UEFA e a Recopa [inferência] (as
-/// chaves dos ids das competições).
 pub(crate) const EUROPEAN_REGISTRATION_CUPS: [usize; 3] = [KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE, KEY_CLUB_COMP_UEFA_CUP, KEY_CLUB_COMP_INTER_TOTO_CUP];
 
 /// Gets the competition's club list via its virtual +0x58 (stage), calls f for each club and frees the list.
-///
-/// [pt] Os clubes da competição `comp` pelo método +0x58 dela (thiscall(comp, &lista, etapa), devolve a conta em ax); a
-/// lista alocada é solta pela 0x9452ca depois de `cada` passar por todos.
 pub(crate) unsafe fn for_each_comp_club(comp: usize, step: u32, mut cada: impl FnMut(usize)) {
     let metodo: unsafe extern "thiscall" fn(usize, *mut usize, u32) -> u16 = core::mem::transmute(read_u32(read_u32(comp) as usize + 0x58) as usize);
     let mut list = 0usize;
@@ -36,14 +30,6 @@ pub(crate) unsafe fn for_each_comp_club(comp: usize, step: u32, mut cada: impl F
 /// [0xb7431c]) gets the registration news (`exe::squad_manager_send_euro_registration_news`(this, club, id, stage), original); otherwise the registration is
 /// done (`select_euro_registered_players`(club, stage, 0), with ecx = [0xdd7ef0]).
 /// Original: `SQUAD_MANAGER::process_euro_registration` (0x85a9b0, squad_manager.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x85a9b0 } (thiscall, ret 4, squad_manager.cpp, `SQUAD_MANAGER::process_euro_registration`): a etapa `etapa`
-/// (byte) da inscrição nas copas europeias. Na etapa 1, o ano das inscrições (+0, word) fica o ano do jogo e a marca de
-/// inscrição (+0x6d) de todas as pessoas com contrato (registros de 0x6e bytes em [0xae23bc]) é zerada. Depois, em cada
-/// uma das três copas (`EUROPEAN_REGISTRATION_CUPS`; a competição pela tabela [0xadadfc]), cada clube da lista (o método +0x58 com a
-/// etapa) que está nela (+0x1db = o id): com técnico humano (0x7875e0, ecx = [0xb7431c]) recebe a notícia da inscrição
-/// (0x85b020(this, clube, id, etapa), original); senão a inscrição é feita (0x85aae0(clube, etapa, 0), com ecx =
-/// [0xdd7ef0]).
 pub(crate) unsafe extern "thiscall" fn process_euro_registration(this: usize, step: u32) {
     if step as u8 == 1 {
         write_u16(this, read_u16(G_CURRENT_DATE_YEAR));
@@ -81,10 +67,6 @@ pub(crate) unsafe extern "thiscall" fn process_euro_registration(this: usize, st
 /// [inference: the parent club of a B team].
 ///
 /// The contract's id is re-read after the call, as in the original.
-///
-/// [pt] O contrato `k` (não nulo) vale no clube `c`: o clube do contrato (+4, id) é o próprio `c` ([c] = id), ou é o clube
-/// que a 0x540a50(c, 0, 1) devolve (cdecl de 3, conferida: push 1; push 0; push clube; add esp, 0xc) [inferência: o
-/// clube principal de um time B]. O id do contrato é relido depois da chamada, como na original.
 pub(crate) unsafe fn contract_valid_for_club(k: usize, c: usize) -> bool {
     if read_u32(k + 4) == read_u32(c) {
         return true;
@@ -103,13 +85,6 @@ pub(crate) unsafe fn contract_valid_for_club(k: usize, c: usize) -> bool {
 /// with +0x3d, cdecl of 1) and the contract is valid at the club: the contract's +0x3a; otherwise the loan contract
 /// (`contract_record`, thiscall on [0xae1050], push person), if valid at the club: its +0x3a; otherwise 0.
 /// Original: `SQUAD_MANAGER::get_squad_number` (0x85a760, squad_manager.cpp, thiscall, ret 8 (this não lido)).
-///
-/// [pt] { 0x85a760 } (thiscall, ret 8, squad_manager.cpp, `SQUAD_MANAGER::get_squad_number`; o this não é lido): o número
-/// de camisa (char, negativo nos clubes sem técnico humano) da pessoa `p` no clube `c`. Sem um dos dois, 0. Pessoa fora
-/// da tabela das pessoas com contrato (id ≥ [0xae2364]): o byte +4 da ficha de jogador (+0x61). Senão o contrato
-/// (0x4cf5a0, thiscall em [0xae1050], push pessoa), se a pessoa é jogador (0x53b620 com o +0x3d, cdecl de 1) e o
-/// contrato vale no clube: o +0x3a do contrato; senão o contrato de empréstimo (0x4cf6d0, thiscall em [0xae1050], push
-/// pessoa), se vale no clube: o +0x3a dele; senão 0.
 pub(crate) unsafe extern "thiscall" fn get_squad_number(_this: usize, p: usize, c: usize) -> i8 {
     let p = Staff(p);
     if p.is_null() || c == 0 {
@@ -136,11 +111,6 @@ pub(crate) unsafe extern "thiscall" fn get_squad_number(_this: usize, p: usize, 
 /// of +0x52 and, with `other` (Comp*, e.g. a cup), the other competition (the one in the table by id [other]) also has
 /// the bit. No division or no competition, 0; no club, the error box at line 0x4b0 and 0.
 /// Original: `SQUAD_MANAGER::club_uses_squad_numbers` (0x85add0, squad_manager.cpp, thiscall, ret 8 (this não lido)).
-///
-/// [pt] { 0x85add0 } (thiscall, ret 8, squad_manager.cpp, `SQUAD_MANAGER::club_uses_squad_numbers`; o this não é lido):
-/// 1 se o clube usa números de camisa: a competição da divisão do clube (o id em [[c+0x57]], o objeto na tabela
-/// [0xadadfc]) existe e tem o bit 2 do +0x52 e, com `outra` (Comp*), a outra competição (a da tabela pelo id [outra])
-/// também tem o bit. Sem divisão ou sem a competição, 0; sem clube, a caixa da linha 0x4b0 e 0.
 pub(crate) unsafe extern "thiscall" fn club_uses_squad_numbers(_this: usize, c: usize, other: usize) -> u32 {
     let c = Club(c);
     if c.is_null() {
@@ -175,10 +145,6 @@ pub(crate) unsafe extern "thiscall" fn club_uses_squad_numbers(_this: usize, c: 
 /// Written to +0x3a of person `p`'s contract (`exe::contract_manager_get_contract`) if it is valid at club `c`, otherwise to that of the loan
 /// contract (`contract_record`) if it is valid at the club. No person or no club, nothing.
 /// Original: `SQUAD_MANAGER::set_squad_number` (0x85a850, squad_manager.cpp, thiscall, ret 0xc (this não lido)).
-///
-/// [pt] { 0x85a850 } (thiscall, ret 0xc, squad_manager.cpp, `SQUAD_MANAGER::set_squad_number`; o this não é lido): grava o
-/// número `n` (char de −50 a 50; fora disso a caixa da linha 0x332) no +0x3a do contrato da pessoa `p` (0x4cf5a0) se ele
-/// vale no clube `c`, senão no do contrato de empréstimo (0x4cf6d0) se ele vale no clube. Sem pessoa ou sem clube, nada.
 pub(crate) unsafe extern "thiscall" fn set_squad_number(_this: usize, p: usize, c: usize, n: u32) {
     if p == 0 || c == 0 {
         return;
@@ -201,8 +167,6 @@ pub(crate) unsafe extern "thiscall" fn set_squad_number(_this: usize, p: usize, 
 }
 
 /// True if the person's id is below G_STAFF_COUNT (in the table of contracted people).
-///
-/// [pt] A pessoa `p` está na tabela das pessoas com contrato (id < [0xae2364], com sinal).
 pub(crate) unsafe fn is_contracted_staff(p: usize) -> bool {
     (read_u32(p) as i32) < read_u32(G_STAFF_COUNT) as i32
 }
@@ -216,12 +180,6 @@ pub(crate) unsafe fn is_contracted_staff(p: usize) -> bool {
 ///
 /// None of the positions good: `None` (the original then reads the 4-byte list with no value on the stack, see
 /// `compare_allocate_squad_number`).
-///
-/// [pt] Os números preferidos (índice = número − 1) pela posição da ficha de jogador `f` (as notas de posição de 1 a 20,
-/// "boa" = 15 ou mais): goleiro (+0xf) o 1; zagueiro ou líbero (+0x11, +0x10) o 2 se joga pela direita (+0x17), o 3 se
-/// pela esquerda (+0x18), senão o 4, o 5 ou o 6; volante, meia ou meia-atacante (+0x12, +0x13, +0x14) o 6, o 7 ou o 8;
-/// atacante (+0x15) o 8, o 9, o 10 ou o 11. Termina em 0xff. Nenhuma das posições boas: `None` (a original lê então a
-/// lista de 4 bytes sem valor na pilha, ver `compare_allocate_squad_number`).
 pub(crate) unsafe fn preferred_squad_numbers(f: usize) -> Option<[u8; 5]> {
     let b = |o: usize| read_i8(f + o) >= 15;
     if b(player_sheet::GOALKEEPER) {
@@ -256,14 +214,6 @@ pub(crate) unsafe fn preferred_squad_numbers(f: usize) -> Option<[u8; 5]> {
 /// without a number, the highest free one from 11 down. The number goes positive for a club with a human manager
 /// (`exe::human_manager_is_human_club`(c, 0, 1, 0, 0), cdecl of 5) and negative for the others (`set_squad_number`). No person, nothing.
 /// Original: `SQUAD_MANAGER::allocate_squad_number` (0x85a470, squad_manager.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x85a470 } (thiscall, ret 8, squad_manager.cpp, `SQUAD_MANAGER::allocate_squad_number`): dá um número de camisa
-/// à pessoa `p` que chega ao clube `c`. Marca os números ocupados pelo elenco (0x541f90(c, lista, 0), cdecl de 3; a
-/// lista ordenada pela idade com o qsort 0x945333 e a 0x540130; quem está fora da tabela das pessoas com contrato ou sem
-/// ficha de jogador não conta) com o número de cada um (0x85a760, em módulo). Se `p` está na tabela e ainda não tem
-/// número: o primeiro número livre entre os preferidos da posição (`preferred_squad_numbers`); senão o primeiro livre de 12 a
-/// 50; e, se ainda sem número, o maior livre de 11 para baixo. O número vai positivo para o clube de técnico humano
-/// (0x600a50(c, 0, 1, 0, 0), cdecl de 5) e negativo para os outros (0x85a850). Sem a pessoa, nada.
 pub(crate) unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usize, p: usize) {
     let p = Staff(p);
     if p.is_null() {
@@ -328,8 +278,6 @@ pub(crate) unsafe extern "thiscall" fn allocate_squad_number(this: usize, c: usi
 }
 
 /// Memory regions: byte +0x3a of the club and loan contracts of the given people, plus the error-box flag [0xb67a34].
-///
-/// [pt] O +0x3a dos contratos (o do clube e o de empréstimo) das pessoas `ps` e a marca da caixa [0xb67a34].
 pub(crate) unsafe fn squad_number_regions(ps: &[usize]) -> Vec<(usize, usize)> {
     let mut reg = vec![(0xb67a34usize, 4usize)];
     for &p in ps {
@@ -347,9 +295,6 @@ pub(crate) unsafe fn squad_number_regions(ps: &[usize]) -> Vec<(usize, usize)> {
 
 /// The slots of the reference line-up that `assign_club_squad_numbers` passes to 0x6e2000: the 11 starters and the 9 substitutes, each
 /// with the positions that fit (masks: 1 goalkeeper, 4/0x10/0x40 the sectors, 0x80..0x800 the bands [inference]).
-///
-/// [pt] As vagas da escalação de referência da 0x859fe0 para a 0x6e2000: os 11 titulares e os 9 reservas, cada um com as
-/// posições que servem (máscaras: 1 goleiro, 4/0x10/0x40 os setores, 0x80..0x800 as faixas [inferência]).
 pub(crate) const SQUAD_MANAGER_REFERENCE_LINEUP_SLOTS: [u16; 20] = [
     0x1, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // cql2: os titulares
     0x10, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, 0x40, 0x4, // the reserves
@@ -362,18 +307,6 @@ pub(crate) const SQUAD_MANAGER_REFERENCE_LINEUP_SLOTS: [u16; 20] = [
 /// 7], he gets no number; the first 40 still without one get one by the new-arrival rule; at the end the kept numbers
 /// are rewritten (positive with a human manager, otherwise −1, −2... in number order)
 /// Original: `SQUAD_MANAGER::assign_club_squad_numbers` (0x859fe0, squad_manager.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x859fe0 } (thiscall, ret 8, squad_manager.cpp, `SQUAD_MANAGER::assign_club_squad_numbers`): numera o elenco do
-/// clube `c`. Junta os jogadores do elenco (+0xd7, 50 vagas; só os da tabela das pessoas com contrato) e os do clube
-/// ligado (0x540a50(c, 0, 1), cdecl de 3; até 50 no total); escala os 11 titulares e os 9 reservas de referência
-/// (0x6e2000, cdecl de 15, com `SQUAD_MANAGER_REFERENCE_LINEUP_SLOTS` e os modos 0x5840) e põe os outros depois, nas vagas livres; ordena os 30
-/// últimos pela idade (qsort 0x945333 com a 0x540130) e junta a lista. Depois, na ordem: do 22º em diante, quem não tem
-/// contrato com o clube (0x4cf5f0) ou tem contrato do tipo 6 ou 7 (+0x4f, nibble alto) [inferência: juvenil e amador]
-/// fica sem número; quem tem número (0x85a760) o guarda se ele está livre e, sem `manter`, se é de titular (até 11)
-/// entre os 11 primeiros ou de reserva (12 em diante) depois deles (senão fica sem número); com `manter`, guarda o número
-/// com o sinal trocado; quem não tem número ganha o da sua ordem (1º o 1...) se livre. Os 40 primeiros sem número que
-/// têm contrato com o clube (fora os tipos 6 e 7) ganham um pela 0x85a470. No fim, cada número guardado é regravado:
-/// positivo (o número) com técnico humano (0x600a50(c, 0, 1, 0, 0)), senão −1, −2... na ordem dos números.
 pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c: usize, keep: u32) {
     let c = Club(c);
     let pick: AssignPositionsFn = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
@@ -508,16 +441,10 @@ pub(crate) unsafe extern "thiscall" fn assign_club_squad_numbers(this: usize, c:
 
 /// The leagues that the original `init_new_game` asked to number (recorded by the comparer of `assign_league_squad_numbers` while the comparer of
 /// `init_new_game` runs the original), to check the copy's plan.
-///
-/// [pt] As ligas que a 0x859dc0 da original mandou numerar (gravadas pelo comparador da 0x859e20 enquanto o da 0x859dc0
-/// roda a original), para conferir o plano da cópia.
 pub(crate) static mut SQUAD_NUMBERS_PLAN: Option<Vec<usize>> = None;
 
 /// Calls f for each competition in G_COMP_OBJECT_TABLE that is a league division and uses squad numbers (bit 2 of
 /// +0x52), as `init_new_game` numbers them.
-///
-/// [pt] As ligas que a 0x859dc0 numera: as competições da tabela [0xadadfc] (conta [0xadadf8], relida a cada volta) que
-/// são liga de divisão (0x4b0700 com o id [[+4]], cdecl de 1) e usam números (bit 2 do +0x52).
 pub(crate) unsafe fn for_each_numbered_league(mut cada: impl FnMut(usize)) {
     let mut i = 0i32;
     while i < read_u32(G_COMP_OBJECT_COUNT) as i32 {
@@ -533,9 +460,6 @@ pub(crate) unsafe fn for_each_numbered_league(mut cada: impl FnMut(usize)) {
 /// the rule: at the start of the game, each division league that uses squad numbers (bit 2 of its options) is numbered
 /// from the database
 /// Original: `SQUAD_MANAGER::init_new_game` (0x859dc0, squad_manager.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x859dc0 } (thiscall, ret 0, squad_manager.cpp, `SQUAD_MANAGER::init_new_game`): zera o ano das inscrições (+0,
-/// word) e numera (0x859e20(this, liga, 1, 0)) cada liga de divisão que usa números (`for_each_numbered_league`).
 pub(crate) unsafe extern "thiscall" fn init_new_game(this: usize) {
     write_u16(this, 0);
     for_each_numbered_league(|c| exe::squad_manager_assign_league_squad_numbers(this, c, 1, 0));
@@ -552,14 +476,6 @@ pub(crate) unsafe extern "thiscall" fn init_new_game(this: usize) {
 /// people and with a player sheet) first gets the database number (+4 of the player sheet, between 0 and 50); and the
 /// squad is numbered (`assign_club_squad_numbers`(club, 1)).
 /// Original: `SQUAD_MANAGER::assign_league_squad_numbers` (0x859e20, squad_manager.cpp, thiscall, ret 0xc).
-///
-/// [pt] { 0x859e20 } (thiscall, ret 0xc, squad_manager.cpp, `SQUAD_MANAGER::assign_league_squad_numbers`): numera os clubes
-/// da liga `liga` (a lista do método +0x58 da competição, thiscall(liga, &lista, 0), devolve a conta em ax; a lista é
-/// solta no fim pela 0x9452ca). Em 1998 vale sempre `inicial`. Pula o time B (0x540a50(clube, &principal, 1) com o
-/// clube ligado e principal = 0). Clube de técnico humano (0x7875e0, com ecx = [0xb7431c]) sem `automatico`: os números
-/// negativos do elenco (0x541f90(clube, lista, 0)) viram positivos e o técnico recebe o pedido da lista de números
-/// (0x85aec0, original). Senão: com `inicial`, cada jogador do elenco (da tabela das pessoas com contrato e com ficha)
-/// recebe o número do banco (o +4 da ficha, entre 0 e 50); e o elenco é numerado (0x859fe0(clube, 1)).
 pub(crate) unsafe extern "thiscall" fn assign_league_squad_numbers(this: usize, league: usize, mut initial: u32, automatico: u32) {
     if read_u16(G_CURRENT_DATE_YEAR) == 0x7ce {
         initial = 1;
@@ -608,9 +524,6 @@ pub(crate) unsafe extern "thiscall" fn assign_league_squad_numbers(this: usize, 
 
 /// The slots of `select_euro_registered_players`'s reference lineup: the 11 starters and up to 14 substitutes (those of `assign_club_squad_numbers`,
 /// `SQUAD_MANAGER_REFERENCE_LINEUP_SLOTS`, up to the 19th; the 20th here is a goalkeeper's).
-///
-/// [pt] As vagas da escalação de referência da 0x85aae0: os 11 titulares e até 14 reservas (as da 0x859fe0, `SQUAD_MANAGER_REFERENCE_LINEUP_SLOTS`,
-/// até a 19ª; a 20ª aqui é de goleiro).
 pub(crate) const EURO_REFERENCE_LINEUP_SLOTS: [u16; 25] = [
     0x1, 0x804, 0x84, 0x210, 0x204, 0x204, 0x810, 0x210, 0x240, 0x240, 0x90, // the starters
     0x10, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, 0x40, 0x1, 0x4, 0x40, 0x40, 0x10, 0x4, // the reserves
@@ -630,18 +543,6 @@ pub(crate) const EURO_REFERENCE_LINEUP_SLOTS: [u16; 25] = [
 /// is registered the same way while the count is below the line-up's places. Returns the count of registered players
 /// (char).
 /// Original: `SQUAD_MANAGER::select_euro_registered_players` (0x85aae0, squad_manager.cpp, thiscall, ret 0xc (this não lido)).
-///
-/// [pt] { 0x85aae0 } (thiscall, ret 0xc, squad_manager.cpp, `SQUAD_MANAGER::select_euro_registered_players`; o this não é
-/// lido): a inscrição do clube `c` nas copas europeias na etapa `etapa` (1 a primeira; `marca` [inferência: a lista A
-/// ou B]), pela marca de inscrição da pessoa (+0x6d: 1 ou 2 inscrito, 4 e 8 outras marcas). Do elenco (0x541f90(c,
-/// lista, 0)), os candidatos são os da tabela das pessoas com contrato, sem contrato do tipo 5 (+0x35 & 0x3f; o
-/// contrato achado fica em [0xae1080]), sem contrato de empréstimo e sem as marcas 8 e 0x10 (+0x6d & 0x18); fora da
-/// etapa 1, a marca 1 cai para 0 e a 4 vira 2, e os 2 são contados. A escalação de referência (0x6e2000 com
-/// `EURO_REFERENCE_LINEUP_SLOTS`, os 11 titulares e 14 reservas, ou 9 na etapa 1 sem `marca`) escolhe os melhores. Na etapa 3, até 2
-/// inscritos (2) que ficaram fora da escalação perdem a inscrição (vão a 4 com `marca`, senão 0) e a conta baixa (no
-/// mínimo 21). Depois cada escalado: na etapa 1, é inscrito (1 com `marca`, senão 2) e contado; nas outras, quem ainda
-/// não é 2 nem tem a marca 8 é inscrito do mesmo jeito enquanto a conta for menor que as vagas da escalação. Devolve a
-/// conta dos inscritos (char).
 pub(crate) unsafe extern "thiscall" fn select_euro_registered_players(_this: usize, c: usize, step: u32, mark: u32) -> u8 {
     let contract: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT);
     let pick: AssignPositionsFn = core::mem::transmute(FN_MATCH_MAN_ASSIGN_PLAYERS_TO_POSITIONS);
@@ -729,11 +630,6 @@ pub(crate) unsafe extern "thiscall" fn select_euro_registered_players(_this: usi
 /// Error on opening or writing: the "Error" box (squad_manager.cpp 0x68, 0x6f) and 0, without closing the item. Does
 /// not check for a null container (`exe::zopen` receives it as it comes).
 /// Original: `SQUAD_MANAGER::save` (0x859cc0, squad_manager.cpp, thiscall).
-///
-/// [pt] { 0x859cc0 } (thiscall, ret 4, squad_manager.cpp): `SQUAD_MANAGER::save(save)`: grava no item `squad_manager.dat`
-/// o u16 em +0 do gerente de elencos, estendido a 4 bytes (a original zera eax antes do `mov ax`), e devolve 1. Erro
-/// ao abrir ou ao gravar: a caixa "Error" (squad_manager.cpp 0x68, 0x6f) e 0, sem fechar o item. Não confere o
-/// contêiner nulo (o 0x9326e0 recebe como vier).
 pub(crate) unsafe extern "thiscall" fn squad_manager_save(this: usize, save: usize) -> u32 {
     covered!("cpx_5 save squad manager");
     let mut v = read_u16(this) as u32; // cpx5: the squad manager value

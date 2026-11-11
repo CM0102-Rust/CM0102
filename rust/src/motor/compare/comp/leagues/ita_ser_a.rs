@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/ita_ser_a.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/ita_ser_a.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `ita_ser_a_create_schedule`.
 pub(crate) unsafe extern "thiscall" fn compare_ita_ser_a_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
@@ -16,9 +15,6 @@ pub(crate) unsafe extern "thiscall" fn compare_ita_ser_a_update_for_date(this: u
 }
 
 /// Comparer for `ita_ser_a_update_staff_records_for_status`.
-///
-/// [pt] Na liga e no desempate com a situação 1 há chamadas que não rodam duas vezes (os registros da base, a ordenação, as
-/// virtuais): só a original. Nas outras situações a cópia só devolve −1: compara a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_ita_ser_a_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, game: usize, a6: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_ITA_SER_A_UPDATE_STAFF_RECORDS_FOR_STATUS);
     let r = o(this, club, status, stage, a4, game, a6);

@@ -13,15 +13,6 @@ use super::*;
 /// award: the three rise to the floors (+0xc world, +8 by the club's nation, +0xa national) and, with a club, the board
 /// confidence (+6 of the 73-byte row) + 1000, between 6500 and 10000. Only the low words of the reputations count.
 /// Original: `award_raise_winner_reputation` (0x412f00, award_manager.cpp, cdecl).
-///
-/// [pt] { 0x412f00 } (cdecl, award_manager.cpp): `award_raise_winner_reputation(pessoa, clube, rep_nacional, rep_mundial,
-/// de_jogador)`, pela vaga do vencedor do mês (0x7671c0) e pelos prêmios do ano e das seleções. Jogador (+0x61) num
-/// prêmio de jogador: mundial (+0xd) + 5% da mundial do prêmio, até 10000 e pelo menos ela; nacional (+9): do clube da
-/// nação dele (+0x53 = +0x1a da pessoa), + 10% da nacional e pelo menos ela; senão + 2,5% da soma e pelo menos a média;
-/// atual (+0xb) + 10% da nacional, pelo menos ela; põe o jogador nas listas dos clubes (0x842c00, com 1) se houver o
-/// gerente das listas. Não jogador (+0x69) num prêmio que não é de jogador: as três sobem até os pisos (+0xc mundial,
-/// +8 pela nação do clube, +0xa nacional) e, com clube, a confiança da diretoria (+6 da linha de 73 bytes) + 1000, entre
-/// 6500 e 10000. Só as palavras baixas das reputações valem.
 pub(crate) unsafe extern "C" fn award_raise_winner_reputation(person: usize, club: usize, nation: u32, world: u32, player: u32) {
     let person = Staff(person);
     let club = Club(club);

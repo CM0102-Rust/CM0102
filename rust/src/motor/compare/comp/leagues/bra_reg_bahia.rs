@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/bra_reg_bahia.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/bra_reg_bahia.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `construct_bra_reg_bahia`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_bra_reg_bahia(this: usize, year: u32, record: usize) -> usize {
@@ -34,8 +33,6 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_bahia_create_semi_final_s
 }
 
 /// Comparer for `bra_reg_bahia_update_staff_records_for_status`.
-///
-/// [pt] Comparador: como o da Série A.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_bahia_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, game: usize, a6: u32) -> u32 {
     let (n, l, dest) = baiano_staff_records(League(this), club, status, stage, game, false);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, usize, u32) -> u32>(IDX_BRA_REG_BAHIA_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, status, stage, a4, game, a6);

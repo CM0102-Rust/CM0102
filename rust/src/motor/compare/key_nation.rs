@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../key_nation.rs.
-// [pt] Os comparadores das rotinas de ../key_nation.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `key_nation_index_of_nation`.
 pub(crate) unsafe extern "C" fn compare_key_nation_index_of_nation(nation: usize) -> u8 {

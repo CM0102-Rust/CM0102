@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/eurocomp/conmebol_liber.rs.
-// [pt] Os comparadores das rotinas de ../comp/eurocomp/conmebol_liber.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `conmebol_liber_update_for_date`.
 pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_update_for_date(this: usize, today: usize, full: u32) -> u32 {
@@ -81,10 +80,6 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_set_up_rules(this:
 /// The original runs and its list is kept; the random-draw state is restored, the copy runs without counting and its
 /// list is compared with the original's and freed (`0x9452ca`: push; add esp, 4 -> cdecl). With fewer than 32 entrants
 /// (the boxes): only the original routine.
-///
-/// [pt] Comparador da 0x4c3f40: lado a lado com as duas listas (a original aloca a dela, a cópia a sua): a original roda e a
-/// lista dela fica; o estado do sorteador volta, a cópia roda sem contar e a lista dela é comparada com a da original e
-/// liberada (0x9452ca: push; add esp, 4 -> cdecl). Com menos de 32 inscritos (as caixas): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_conmebol_liber_select_qualified_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CONMEBOL_LIBER_SELECT_QUALIFIED_CLUBS);
     let mut v = [0usize; 32];

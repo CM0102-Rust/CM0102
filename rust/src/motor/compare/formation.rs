@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../formation.rs.
-// [pt] Os comparadores das rotinas de ../formation.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `position_mask`.
 pub(crate) unsafe extern "C" fn compare_position_mask(p: usize) -> u16 {
@@ -21,8 +20,6 @@ pub(crate) unsafe extern "C" fn compare_pitch_cell(mask: u32, attack: i8, band: 
 }
 
 /// Comparer for `set_slot_coordinate`.
-///
-/// [pt] Comparador: grava só a formação (a 0x5b7e60 e a 0x5b73a0 são puras; a 0x5b59a0 refaz a máscara): lado a lado.
 pub(crate) unsafe extern "thiscall" fn compare_set_slot_coordinate(this: usize, home: u32, stage: u32, band: u32, coord: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32) -> u32>(IDX_SET_SLOT_COORDINATE);
     let reg = formation_regions(this);
@@ -32,8 +29,6 @@ pub(crate) unsafe extern "thiscall" fn compare_set_slot_coordinate(this: usize, 
 }
 
 /// Comparer for `check_duplicate_position`.
-///
-/// [pt] Comparador: pura (grava só a saída): as duas sobre saídas próprias.
 pub(crate) unsafe extern "thiscall" fn compare_check_duplicate_position(this: usize, home: u32, out: *mut u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut u32) -> u32>(IDX_CHECK_DUPLICATE_POSITION);
     if !(0..=10).contains(&(home as u8 as i8)) {
@@ -87,9 +82,6 @@ pub(crate) unsafe extern "thiscall" fn compare_set_formation_flag(t: usize, m: u
 }
 
 /// Comparer for `load_from_disk`.
-///
-/// [pt] Comparador: lado a lado na formação (0x18e3 bytes: até as instruções dos jogadores em +0x188b + 0x58) e na
-/// devolução; o arquivo é aberto e lido pelas duas (só leitura).
 pub(crate) unsafe extern "thiscall" fn compare_load_from_disk(this: usize, path: usize, quiet: u32, dimmed: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32) -> u32>(IDX_LOAD_FROM_DISK);
     if this == 0 {
@@ -106,9 +98,6 @@ pub(crate) unsafe extern "thiscall" fn compare_load_from_disk(this: usize, path:
 }
 
 /// Comparer for `set_slot_position`.
-///
-/// [pt] Comparador: lado a lado pela formação (+0x12d a +0x584: posições, marcas e casas no campo; a máscara +0x187b e
-/// +0x187f) e [0xb67a34] (a 0x5b73a0 zera quando falha).
 pub(crate) unsafe extern "thiscall" fn compare_set_slot_position(this: usize, home: u32, position: u32, extra: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(IDX_SET_SLOT_POSITION);
     if !(0..=10).contains(&(home as u8 as i8)) {

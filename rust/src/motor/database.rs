@@ -2,9 +2,6 @@ use super::*;
 
 /// does `b` have `a` among its three favourites (+0x9b, +0x9f, +0xa3)? Compared by the result
 /// Original: `favourite_of` (0x547790, cdecl).
-///
-/// [pt] { 0x547790 } (cdecl): `b` tem `a` entre os tres favoritos (+0x9b, +0x9f, +0xa3)? No fechamento,
-/// a pessoa e o clube adversario.
 pub(crate) unsafe extern "C" fn favourite_of(a: usize, b: usize) -> u32 {
     if a == 0 || b == 0 {
         return 0;
@@ -14,8 +11,6 @@ pub(crate) unsafe extern "C" fn favourite_of(a: usize, b: usize) -> u32 {
 
 /// does `b` have `a` among its three rejected (+0xa7, +0xab, +0xaf)? Compared by the result
 /// Original: `rejected_by` (0x5477d0, cdecl).
-///
-/// [pt] { 0x5477d0 } (cdecl): `b` tem `a` entre os tres rejeitados (+0xa7, +0xab, +0xaf)?
 pub(crate) unsafe extern "C" fn rejected_by(a: usize, b: usize) -> u32 {
     if a == 0 || b == 0 {
         return 0;
@@ -56,27 +51,6 @@ pub(crate) fn is_recording_wrap_up_calls() -> bool {
 /// `+0x1f`), −0.25 at home (`+0x18`) or +0.25 away, goes to `0x6d3610` and, outside national teams, `0x6d3de0`. Without
 /// minutes, the average stays that of the previous side (for the 1st side it was stack garbage: 0 in the determinized
 /// original, like the final 4 bytes of the event built on the stack).
-///
-/// [pt] { 0x6d1cc0 } (cdecl, match_eng.cpp, chamada pelo passo do motor 0x6b98c0) com as chamadas que
-/// mexem fora do motor injetadas (0x6d26b0 a ficha de cada jogador, 0x6d3610 e 0x6d3de0 as
-/// reputacoes, 0x68d0d0 a copia de um evento na lista [0xb67dc8]): o fechamento da partida. Com a
-/// lista de eventos do dia (+0x478e) e a partida (+0x4792, +0x40 ligado), percorre os eventos (0x68d1b0):
-/// 0x82 vai para a lista; 0x1e (proposta?) pelo placar (+0x43/+0x44, empate pela forca +0x80 dos
-/// clubes x 1,2/0,8) e pelo tecnico do outro lado (+0xd3, 0x544410 sorteado contra 20 ou 5, +0x14 > 5)
-/// marca o evento (+0xe 1, +0xf o tecnico) ou o compara com a forca do clube do evento (+0x80 com dois
-/// sorteios de 1000, ou acima de 7000; no outro lado, 1 em 4) e o marca (+0xe 0, +0xf -1); os outros,
-/// do jogador da partida: no 6 pelas marcas +0x24/+0x23, nos demais com +0x1b < 7 por sorteio(+0x17).
-/// Depois, por lado, cada jogador em campo (reservas so se entraram, +0x1f) com ficha e contrato:
-/// 0x6d26b0 com a nota +0x1b; com a lista: fora das selecoes e dos amistosos, sem ser o tecnico, quem
-/// saiu (+0x20) sem ser substituido de volta (+0x22) e com contrato (+0x3d) e reputacao (+0xb >
-/// 4250) pode pedir para sair (evento 0xa, 0x4000000) por sorteios de +0x1a2, +0x5d, folego (+0x4d) e
-/// +0x57/+0x5b; a insatisfacao (-+0x31, +10 contra o rival +0xb3/+0xb7/+0xbb ou rejeitado pelo
-/// adversario 0x5477d0, -10 favorito dele 0x547790, +10/-20 pelas preferencias 0x547d30/0x547d60) contra
-/// sorteio((+0x5a x +0x5b x +0x5d + 20) x 100) gera o evento 0xb. A media das notas pelos minutos
-/// jogados (90 no motor rapido; +0x21/+0x20/minuto, menos a entrada +0x1f) -0,25 em casa (+0x18) ou
-/// +0,25 fora vai para 0x6d3610 e, fora das selecoes, 0x6d3de0. Sem minutos, a media fica a do lado
-/// anterior (no 1o lado era lixo de pilha: 0 no original determinizado, como os 4 bytes finais do
-/// evento montado na pilha).
 pub(crate) unsafe fn match_wrap_up_with(m: Engine, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let contract: unsafe extern "thiscall" fn(usize, usize, usize) -> usize = core::mem::transmute(FN_CONTRACT_MANAGER_GET_CONTRACT_FOR_CLUB);
     let list_global = || read_usize(G_MATCH_DAY_PLAYER_INCIDENT_LIST);
@@ -299,8 +273,6 @@ pub(crate) unsafe fn match_wrap_up_with(m: Engine, call: &mut dyn FnMut(usize, u
 
 /// Real dispatcher for the calls injected into fechamento: player/manager reputation updates (`exe::update_player_reputation_after_match`, `exe::update_manager_reputation_after_match`),
 /// club reputation (`exe::match_eng_compute_club_reputation`) or adding the requested block to the incident list (0x68d0d0).
-///
-/// [pt] Despacho real das chamadas injetadas do fechamento.
 pub(crate) unsafe fn dispatch_wrap_up_call(routine: usize, this: usize, a: [u32; 5]) -> u32 {
     let m = |p: MatchPlayer| p.engine();
     match routine {
@@ -328,9 +300,6 @@ pub(crate) unsafe fn dispatch_wrap_up_call(routine: usize, this: usize, a: [u32;
 
 /// Zeroes 8 KB of stack just below the caller so the original routine called next runs with zeroed uninitialised locals
 /// during comparison.
-///
-/// [pt] Zera 8 KB da pilha logo abaixo (a rotina original chamada em seguida ocupa essa area): na
-/// comparacao, a original determinizada roda com as variaveis sem valor em zero, como no desvio.
 #[inline(never)]
 pub(crate) fn zero_stack_below() {
     let mut a = [0u8; 0x2000];
@@ -339,9 +308,6 @@ pub(crate) fn zero_stack_below() {
 
 /// Memory regions compared for fechamento: RNG state, the match engine, the day's incident list header/cursor and
 /// each 0x19-byte incident in it.
-///
-/// [pt] As regioes do fechamento: o sorteio, o motor, a lista de eventos do dia (cabecalho e cursor) e os
-/// eventos dela (+0xe e +0xf mudam).
 pub(crate) unsafe fn wrap_up_regions(m: Engine) -> Vec<(usize, usize)> {
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     reg.extend([(m.addr(), ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4)]);
@@ -364,24 +330,17 @@ pub(crate) unsafe fn wrap_up_regions(m: Engine) -> Vec<(usize, usize)> {
 }
 
 /// Returns 1 when the given type byte is not 11, else 0 [inference: a competition/club type filter].
-///
-/// [pt] { 0x53b610 } (Database.cpp): o tipo nao e 11?
 pub(crate) unsafe extern "C" fn type_not_11(kind: i8) -> u32 {
     (kind != 11) as u32
 }
 
 /// Returns 1 if type code `tipo` is 11, 12, 13 or 15, else 0 [inference: a class of club or competition types].
-///
-/// [pt] { 0x53b620 } (Database.cpp): o tipo e 11, 12, 13 ou 15?
 pub(crate) unsafe extern "C" fn type_11_to_15(kind: i8) -> u32 {
     matches!(kind, 11 | 12 | 13 | 15) as u32
 }
 
 /// Class of a national side for the national-teams blocks: 1 when `flag` is set, otherwise 2 for a nation's second team
 /// and 0 for any other club.
-///
-/// [pt] { 0x76d780 } (stdcall, national_teams.cpp): com `flag`, 1; sem ela, 2 para a segunda selecao
-/// (0x5409b0) e 0 para as outras.
 pub(crate) unsafe extern "stdcall" fn national_side_class(club: usize, flag: u32) -> u8 {
     let and_second = exe::club_is_national_team(club) != 0;
     if flag != 0 {
@@ -394,8 +353,6 @@ pub(crate) unsafe extern "stdcall" fn national_side_class(club: usize, flag: u32
 }
 
 /// Pointer to the per-person flag byte: [this+4] + staff id x 110 + k x 20 + 0x45.
-///
-/// [pt] O byte das marcas por pessoa: [this+4] + id x 110 + k x 20 + 0x45.
 pub(crate) unsafe fn person_flag_byte(this: usize, person: usize, k: i8) -> *mut u8 {
     read_usize(this + 4)
         .wrapping_add((read_i32(person) as usize).wrapping_mul(110))
@@ -404,15 +361,11 @@ pub(crate) unsafe fn person_flag_byte(this: usize, person: usize, k: i8) -> *mut
 }
 
 /// Returns flag `k` of the person in the national-teams table (`this`; byte at [this+4] + id x 110 + k x 20 + 0x45).
-///
-/// [pt] { 0x76d7b0 } (ret 8, national_teams.cpp): a marca `k` da pessoa.
 pub(crate) unsafe extern "thiscall" fn read_person_mark(this: usize, person: usize, k: i8) -> u8 {
     *person_flag_byte(this, person, k)
 }
 
 /// Clears flag `k` of the person in the national-teams table (`this`; byte at [this+4] + id x 110 + k x 20 + 0x45).
-///
-/// [pt] { 0x76d7e0 } (ret 8, national_teams.cpp): zera a marca `k` da pessoa.
 pub(crate) unsafe extern "thiscall" fn clear_person_mark(this: usize, person: usize, k: i8) {
     *person_flag_byte(this, person, k) = 0;
 }
@@ -420,9 +373,6 @@ pub(crate) unsafe extern "thiscall" fn clear_person_mark(this: usize, person: us
 /// the first record with +0 zero in table 0xae23f8 (60 bytes, 0xae23a0 records), cached at 0x9b59b4; with none, a
 /// random one
 /// Original: `free_record` (0x53a5b0, Database.cpp, cdecl).
-///
-/// [pt] { 0x53a5b0 } (Database.cpp): o registro livre (+0 zero) da tabela 0xae23f8 (60 bytes,
-/// 0xae23a0 registros), guardado em 0x9b59b4 na primeira vez; sem nenhum, um sorteado.
 pub(crate) unsafe extern "C" fn free_record() -> usize {
     let base = || read_usize(G_COMMON_NAME_TABLE);
     let mut i = read_i32(G_EMPTY_COMMON_NAME_INDEX);
@@ -441,9 +391,6 @@ pub(crate) unsafe extern "C" fn free_record() -> usize {
 
 /// Pairs of globals with the ids of clubs A and B (Spanish B teams and others), in the order of the original's tests
 /// (`exe::club_get_linked_b_team`); extracted from the disassembly.
-///
-/// [pt] Pares de globais com os ids dos clubes A e B (times B da Espanha e outros), na ordem dos testes
-/// do original (0x540a50); extraidos da desmontagem.
 pub(crate) const A_B_CLUB_PAIRS: [(usize, usize); 82] = [
     (0x9d012c, 0x9d0130), (0x9d0120, 0x9d0134), (0x9d0138, 0x9d013c), (0x9d0140, 0x9d0144), (0x9d0148, 0x9d014c), (0x9d0150, 0x9d0154),
     (0x9d0158, 0x9d015c), (0x9d0160, 0x9d0164), (0x9d0168, 0x9d016c), (0x9d0170, 0x9d0174), (0x9d0178, 0x9d017c), (0x9d0180, 0x9d0184),
@@ -481,12 +428,6 @@ pub(crate) const CLUB_PAIRS_B_A: [(usize, usize); 82] = [
 /// `ativo`, only if the club's linked-club flag +0x244 is set). For an A club sets `*eh_a` = 1 and returns its B club;
 /// for a B club sets `*eh_a` = 0 and returns its A club; a missing partner clears +0x244 and returns 0. Null club:
 /// falls back to the original.
-///
-/// [pt] { 0x540a50 } (Database.cpp): o clube parceiro (time A <-> time B). So para clubes de nacao com
-/// id em 0x9cf488, 0x9cf314 ou 0x9cf434 (e, com `ativo`, com a marca +0x244). Clube A: `eh_a` = 1 e
-/// o parceiro e o B do primeiro par que casa (aceito se o id dele for diferente de -1); clube B:
-/// `eh_a` = 0 e o parceiro e o A (aceito se o id for >= 0). Parceiro recusado: zera +0x244 e 0.
-/// Devolve o registro do parceiro (vetor 0xae23b4, 581 bytes cada). Clube nulo: a original.
 pub(crate) unsafe extern "C" fn partner_club(club: usize, eh_a: *mut u32, active: u32) -> usize {
     let club = Club(club);
     if club.is_null() {
@@ -529,8 +470,6 @@ pub(crate) unsafe extern "C" fn partner_club(club: usize, eh_a: *mut u32, active
 /// Match engine: asks the engine's referee (+0xf5b2) to judge a foul of player `j` on `outro` (MatchOfficial foul
 /// decision `exe::match_official_judge_tackle`), passing the foul type, who committed it and the out-parameters for card, severity and advantage.
 /// Returns the referee's decision.
-///
-/// [pt] { 0x6cfc60 } (match_eng.cpp): a decisao da falta (0x6e9820) com o arbitro do motor (+0xf5b2).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn foul_in_engine(
     m: usize, j: usize, other: usize, kind: i8, who: i8, card: *mut u8, grav: *mut i8, advantage: *mut u8,
@@ -541,9 +480,6 @@ pub(crate) unsafe extern "thiscall" fn foul_in_engine(
 
 /// Returns holiday option `i` (byte +0x9b23 + i) of the human manager record for the person (or the current human
 /// manager). Without a person or out of range, falls back to the original (error box).
-///
-/// [pt] { 0x5fea50 } (human_manager.cpp): byte +0x9b23 + `i` do registro do tecnico humano da pessoa (ou
-/// do atual). Sem pessoa ou fora da faixa: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn manager_9b23(this: usize, i: i8, person: usize) -> u8 {
     match person_and_human_record(this, person) {
         Some((_, r)) => *((r as isize + (human_manager_record::HOLIDAY_OPTIONS as isize) + i as isize) as *const u8),
@@ -552,26 +488,17 @@ pub(crate) unsafe extern "thiscall" fn manager_9b23(this: usize, i: i8, person: 
 }
 
 /// Is the club among the person's favourite clubs (preference slots +0x04, +0x08, +0x0c)? Returns 1 or 0.
-///
-/// [pt] { 0x547d60 }: `pessoa` gosta do clube (preferencias +0x04, +0x08, +0x0c)?
 pub(crate) unsafe extern "C" fn likes_club(person: usize, club: usize) -> u32 {
     is_in_preferences(club, Staff(person), 4)
 }
 
 /// Is the club among the person's disliked clubs (preference slots +0x10, +0x14, +0x18)? Returns 1 or 0.
-///
-/// [pt] { 0x547d30 }: `pessoa` nao gosta do clube (preferencias +0x10, +0x14, +0x18)?
 pub(crate) unsafe extern "C" fn dislikes_club(person: usize, club: usize) -> u32 {
     is_in_preferences(club, Staff(person), 0x10)
 }
 
 /// Club record of a nation's national team (or B team) at the end of the club table (581 bytes each), counted back
 /// `nacoes_antes` nations; falls back to the original when tables or nation are missing.
-///
-/// [pt] Clube da selecao da nacao: as selecoes ficam no fim do vetor de clubes (0xae23b4, 581 bytes
-/// cada), a principal `deslocamento` = 2 nacoes antes do fim e a B uma nacao antes. Sem nacao,
-/// sem clubes ou sem 0xae23a8: o original mostra a caixa de erro (Database.cpp) e zera 0xb67a34;
-/// esse caminho fica com ele.
 pub(crate) unsafe fn national_team_club(nation: usize, nations_before: i32, idx: usize) -> usize {
     let base = read_usize(G_CLUB_TABLE);
     if nation == 0 || base == 0 || read_usize(G_NATION_TABLE) == 0 {
@@ -584,15 +511,11 @@ pub(crate) unsafe fn national_team_club(nation: usize, nations_before: i32, idx:
 }
 
 /// Returns the club record of nation `nacao`'s main national team (stored near the end of the club table).
-///
-/// [pt] { 0x53b3d0 } (Database.cpp): o clube da selecao principal da nacao.
 pub(crate) unsafe extern "C" fn main_national_team(nation: usize) -> usize {
     national_team_club(nation, 2, 175)
 }
 
 /// Returns the club record of the nation's B national team (the national sides sit at the end of the club table).
-///
-/// [pt] { 0x53b4f0 } (Database.cpp): o clube da selecao B da nacao.
 pub(crate) unsafe extern "C" fn b_national_team(nation: usize) -> usize {
     national_team_club(nation, 1, 176)
 }
@@ -600,8 +523,6 @@ pub(crate) unsafe extern "C" fn b_national_team(nation: usize) -> usize {
 /// Match engine: checks whether the ball is out of play; if so releases it, sets the restart (throw-in, goal kick or
 /// corner, +0x8eb2) and the side taking it (+0x8eae), adds the commentary and returns 1; ball in play returns 0.
 /// `lado_b` is the side that last touched it. Wrapper of `ball_out_with` with the real commentary call.
-///
-/// [pt] { 0x6cd490 } (match_eng.cpp): bola fora do campo (ver `ball_out_with`).
 pub(crate) unsafe extern "thiscall" fn ball_out(this: usize, side_b: u8) -> u8 {
     ball_out_with(Engine(this), side_b, &mut |t, a| add_match_event(t, a))
 }
@@ -609,10 +530,6 @@ pub(crate) unsafe extern "thiscall" fn ball_out(this: usize, side_b: u8) -> u8 {
 /// Returns 1 if the club belongs to the second set of national teams (id at least club count minus nation count)
 /// [inference: the under-21/B national sides]. A null club goes to the original routine, whose error path changes the
 /// career.
-///
-/// [pt] { 0x5409b0 } (Database.cpp): o clube e do segundo conjunto de selecoes (id a partir de total de
-/// clubes 0xae235c menos nacoes 0xae2350)? Clube nulo: o original mostra uma caixa de erro e zera
-/// 0xb67a34 (aqui, sem a caixa).
 pub(crate) unsafe extern "C" fn is_second_national_team(club: usize) -> u32 {
     if club == 0 {
         // the original’s error path (message and box) has effects that change the career: the game
@@ -627,13 +544,6 @@ pub(crate) unsafe extern "C" fn is_second_national_team(club: usize) -> u32 {
 /// match's goals (+0xf5bd, +0xf5f3) plus the first-leg goals from the fixture (+0x4b/+0x4c, 0xff = no first leg, sets
 /// `ida`), sets `fase3` when the round variant is 3, and on a level aggregate (with optional `bonus` goal) decides on
 /// away goals (`classificado`). Returns 1 if qualified on away goals, else home minus away (byte).
-///
-/// [pt] { 0x6ce310 } (match_eng.cpp): placar agregado de um mata-mata. `casa`/`fora` recebem os gols
-/// desta partida (0xf5bd do lado 0, 0xf5f3 do lado 1; trocados com `lado` = 1), somados aos do jogo
-/// de ida guardados no objeto da partida (+0x4b, +0x4c; 0xff = sem ida, e `ida` fica 1 com ida).
-/// `fase3`: o algarismo das unidades de +0x30 e 3. Com o agregado empatado (mais 1 de bonus para o
-/// lado de `bonus`), sem o bit 4 de +0x38 e (com o bit 0x4000) so depois do tempo 0x3de: decide pelos
-/// gols fora (`classificado`). Devolve 1 classificado, senao casa - fora (byte).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn aggregate_score(this: usize, side_b: i8, home: *mut i8, away: *mut i8, qualified: *mut u8, first_leg: *mut u8, fase3: *mut u8, bonus: u8) -> u8 {
     let this = Engine(this);
@@ -683,9 +593,6 @@ pub(crate) unsafe extern "thiscall" fn aggregate_score(this: usize, side_b: i8, 
 
 /// 1 if `alvo` is one of the three people at offset `base` of the person's STAFF_PREFERENCES record, else 0 (0 on any
 /// null pointer).
-///
-/// [pt] Preferencias (`CM3_STAFF_PREFERENCES`, ponteiro em +0x65 da pessoa): `alvo` esta entre as tres
-/// pessoas em `base`, +4, +8? (0 com qualquer ponteiro nulo.)
 pub(crate) unsafe fn is_in_preferences(target: usize, person: Staff, base: usize) -> u32 {
     if target == 0 || person.is_null() {
         return 0;
@@ -699,25 +606,18 @@ pub(crate) unsafe fn is_in_preferences(target: usize, person: Staff, base: usize
 
 /// Does `pessoa` like `alvo`? True if `alvo` is one of the three favoured people in the person's preferences record
 /// (+0x1c, +0x20, +0x24). Returns 1 or 0.
-///
-/// [pt] { 0x547810 }: `pessoa` gosta de `alvo` (preferencias +0x1c, +0x20, +0x24)?
 pub(crate) unsafe extern "C" fn likes(target: usize, person: usize) -> u32 {
     is_in_preferences(target, Staff(person), 0x1c)
 }
 
 /// Does `pessoa` dislike `alvo`? True if `alvo` is one of the three disliked people in the person's preferences record
 /// (+0x28, +0x2c, +0x30). Returns 1 or 0.
-///
-/// [pt] { 0x547840 }: `pessoa` nao gosta de `alvo` (preferencias +0x28, +0x2c, +0x30)?
 pub(crate) unsafe extern "C" fn dislikes(target: usize, person: usize) -> u32 {
     is_in_preferences(target, Staff(person), 0x28)
 }
 
 /// Formation: stores the value pointed to by `ficha` (or -1 with none) in the per-position table (+0x5bf + 4 x
 /// position) and clears the changed flag (+0x187f). Returns 1.
-///
-/// [pt] { 0x5b5910 }: grava na tabela por posicao (+0x5bf + 4 x posicao) o valor apontado por `ficha`
-/// (-1 sem ficha) e zera +0x187f. Devolve 1.
 pub(crate) unsafe extern "thiscall" fn mark_position(this: usize, position: i8, sheet: *const u32) -> u32 {
     let target = (this as isize + (formation_fields::DESIGNATED_PEOPLE as isize) + 4 * position as isize) as *mut u32;
     *target = if sheet.is_null() { u32::MAX } else { *sheet };
@@ -726,8 +626,6 @@ pub(crate) unsafe extern "thiscall" fn mark_position(this: usize, position: i8, 
 }
 
 /// Reads the signed 16-bit value of cell k of a 3-byte-per-cell attribute vector (as built by `database_player_initialisation`).
-///
-/// [pt] Uma célula (3 bytes: palavra com sinal + peso) dos vetores de atributos da 0x535a80.
 pub(crate) fn attr_cell_value(v: &[u8; 189], k: isize) -> i16 {
     let i = (k * 3) as usize;
     i16::from_le_bytes([v[i], v[i + 1]])
@@ -745,15 +643,11 @@ pub(crate) fn attr_cell_weight(v: &[u8; 189], k: isize) -> u8 {
 }
 
 /// Weight that triggers a re-roll: 2 when cell 0 (goalkeeper) is at least 15, else 1.
-///
-/// [pt] O peso que manda sortear de novo: 2 com a célula 0 (goleiro) a partir de 15, senão 1.
 pub(crate) fn reroll_weight(v: &[u8; 189]) -> u8 {
     if attr_cell_value(v, 0) >= 0xf { 2 } else { 1 }
 }
 
 /// Fills the 63 attribute-vector cells with terminators (value 0xff81, weight 0x81) as `database_player_initialisation` prepares them.
-///
-/// [pt] Os 63 terminadores (palavra 0xff81, peso 0x81), como a 0x535a80 prepara os vetores.
 pub(crate) unsafe fn clear_attr_vector(v: usize) {
     for k in 0..63 {
         write_u16(v + 3 * k, 0xff81);
@@ -763,9 +657,6 @@ pub(crate) unsafe fn clear_attr_vector(v: usize) {
 
 /// Age of a person at a date as `database_player_initialisation` computes it: date year byte minus birth year byte (+0x12), minus 1 if the
 /// birth day-of-year (+0x10) is later.
-///
-/// [pt] A idade da 0x535a80: byte do ano da data − byte do ano de nascimento (+0x12), menos 1 se o dia do ano de
-/// nascimento (+0x10) passa o da data.
 pub(crate) unsafe fn age_at_date(p: Staff, data: usize) -> i8 {
     let a = read_u8(data + 2).wrapping_sub(p.date_of_birth_year() as u8);
     let d = p.date_of_birth() as i32 - read_i16(data) as i32;
@@ -774,8 +665,6 @@ pub(crate) unsafe fn age_at_date(p: Staff, data: usize) -> i8 {
 
 /// Free-agent (no club) reduction used by `database_player_initialisation`: x - x*0.25 when byte +0x22 is set, else x - x*0.6, truncated
 /// [inference: constants at 0x9689e0/0x968e48].
-///
-/// [pt] O ajuste do livre (sem clube) da 0x535a80: x − x × 0,25 (com +0x22) ou x − x × 0,6, truncado.
 pub(crate) unsafe fn free_agent_adjust(p: Staff, x: i16) -> i16 {
     let x = x as f64;
     let k = if p.int_apps() != 0 { 0x9689e0 } else { 0x968e48 };
@@ -812,22 +701,6 @@ pub(crate) fn in_range(x: i16, a: i16, b: i16) -> bool {
 /// the original; the best score ([esp+0x40], −31073 on entry) too. No people: the error box and the end, through the
 /// original. The local at [esp+0x114] (1, zeroed with a club of reputation 0) is never read.
 /// Original: `database_player_initialisation` (0x535a80, Database.cpp, cdecl).
-///
-/// [pt] { 0x535a80 } (cdecl, Database.cpp): `database_player_initialisation(data)`, uma vez na criação (create_game
-/// 0x828110), com a barra "Player Initialisation" (0x66f4e0, 0x802f80 a cada 1% das pessoas). Para cada pessoa: nome
-/// comum (+0xc = −2: a linha guardada em [0x9b59b4], a primeira vazia ou uma sorteada), primeiro e segundo nome (−2:
-/// 0x539c60, 0x53a1b0), as datas (+0x3e entrada no clube, +0x46, +0x31), os 8 atributos de pessoa (+0x56..+0x5d, fora
-/// de 1..20: sorteados), o ajuste pela região da nação (+0x76), a nação que falta (seleção, clube ou sorteada). Do
-/// jogador (+0x61): as habilidades (+0xb, +9, +0xd, nesta ordem, cada uma da que já existe), o potencial (+7: −2/−1/0
-/// raros pelos sorteios 2000/750/100) e a atual (+5), a idade (nascimento sorteado fora de 14..50), as posições e os
-/// lados no vetor (0x53a610), e os atributos fora de 1..20 por um molde: o jogador mais parecido entre 250 sorteados
-/// (vetores globais 0xae2044/0xae2114, bandeira 0x9b59b8) ou, sem molde, pela habilidade. Do não jogador (+0x69): as
-/// reputações (×50, +0xc/+0xa/+8), +4/+6, +0x13, o molde entre 250 (0xae18bc/0xae2238, 0x9b59b9), o cargo (+0x3d 8/9/10),
-/// os nomes famosos (0x84b8b0: +0x43) e o cargo que falta. No fim de cada pessoa a idade (+0x18). Depois, a segunda
-/// volta: os vetores relativos à habilidade (×10 − habilidade, ±200, /2) e as normalizações (0x538ec0, 0x538bc0,
-/// 0x539490). Os vetores da pilha (0x54, 0x290) só são limpos na entrada: o que uma pessoa deixa passa à seguinte, como
-/// na original; o melhor escore ([esp+0x40], −31073 na entrada) também. Sem pessoas: a caixa e o fim, pela original.
-/// A local de [esp+0x114] (1, zerada com clube de reputação 0) nunca é lida.
 pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
     if read_i32(G_STAFF_COUNT) == 0 || read_usize(G_STAFF_TABLE) == 0 {
         return original_fn::<unsafe extern "C" fn(usize)>(IDX_DATABASE_PLAYER_INITIALISATION)(data);
@@ -1917,8 +1790,6 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
 }
 
 /// strcpy: copies a null-terminated string from origem to destino.
-///
-/// [pt] strcpy (o `repne scasb` e os `rep movsd`/`rep movsb` da original).
 pub(crate) unsafe fn copy_c_string(target: usize, source: usize) {
     let mut k = 0;
     loop {
@@ -1944,15 +1815,6 @@ pub(crate) unsafe fn copy_c_string(target: usize, source: usize) {
 /// TapeCall through `database_format_name_from_ids` (already in Rust, through the game's address: the hook applies there too), through the
 /// club screens (0x45ccf0) and through manager_manager.
 /// Original: `database_format_name_from_strings` (0x53e2e0, Database.cpp, cdecl).
-///
-/// [pt] { 0x53e2e0 } (cdecl, Database.cpp): `database_format_name_from_strings(nome, sobrenome, comum, texto, tamanho,
-/// forma)`: o nome da pessoa em `texto` pela forma (byte) a partir dos três textos (nulos ou vazios contam como
-/// faltando). Formas 1 a 4: o nome comum, se houver; senão, com nome e sobrenome, 1 "%s %s", 2 "%c.%s", 3 "%s, %s"
-/// (sobrenome primeiro), 4 "%s, %c"; senão o sobrenome, senão o nome. 5: o comum, o sobrenome ou o nome. 6: as
-/// iniciais ("%c" do comum, "%c %c" do nome e do sobrenome, "%c" do sobrenome ou do nome). 7: "%s %s" primeiro, depois
-/// o comum, o sobrenome ou o nome. Sem nada: o texto vazio. Devolve 1. Texto nulo, tamanho (palavra) < 0x69 ou forma
-/// fora de 1..7: a original (caixa; as locais de 0x200 bytes só servem a ela). TapeCall pela 0x53e140 (já em Rust, pelo
-/// endereço do jogo: o desvio vale também lá), pelas telas do clube (0x45ccf0) e pelo manager_manager.
 pub(crate) unsafe extern "C" fn database_format_name_from_strings(name: usize, surname: usize, common: usize, text: usize, size: u32, form: u32) -> u32 {
     let f = form as u8;
     if text == 0 || (size as u16 as i16) < 0x69 || !(1..=7).contains(&f) {
@@ -2012,10 +1874,6 @@ pub(crate) unsafe extern "C" fn database_format_name_from_strings(name: usize, s
 ///
 /// The short ones use the empty text 0xad9c64 ("<%s - COMMENT - short name>"); of the full ones, only the player's
 /// (11). Role 14 does not exist (0).
-///
-/// [pt] Os textos dos cargos 0..0x11 da 0x53ad00 (imediatos do código, pelos endereços no exe): curto minúsculo, curto
-/// maiúsculo, inteiro minúsculo, inteiro maiúsculo e o gênero com o idioma 4 (0: não grava). Os curtos levam o
-/// vazio 0xad9c64 ("<%s - COMMENT - short name>"); dos inteiros, só o do jogador (11). O 14 não existe (0).
 pub(crate) const JOB_TITLE_TEXTS: [(usize, usize, usize, usize, u8); 18] = [
     (0x9b6b10, 0x9b6b38, 0x9b6af8, 0x9b6b04, 1), // unemployed
     (0x9b6ab0, 0x9b6ad4, 0x9b6aa4, 0x9b1234, 1), // chairman
@@ -2046,13 +1904,6 @@ pub(crate) const JOB_TITLE_TEXTS: [(usize, usize, usize, usize, u8); 18] = [
 /// Used in the club, contract, person and search screens, in the media (0x744f80, 0x74bbd0), in the regens (0x7a9650,
 /// 0x7aa4c0) and in transfers (0x8d3520, 0x8dc370).
 /// Original: `database_get_job_name` (0x53ad00, Database.cpp, cdecl).
-///
-/// [pt] { 0x53ad00 } (cdecl, Database.cpp): `database_get_job_name(cargo, curto, maiuscula, genero)`: o nome traduzido
-/// (0x66f4e0) do cargo (byte com sinal, 0..0x11 sem o 14) no texto [0xae19b4], que é o que devolve; curto ou inteiro e
-/// minúsculo ou maiúsculo pelos dois inteiros. Com `genero` não nulo e o idioma (0x66f4d0) 4, grava o gênero: 4 para
-/// diretor executivo, técnico, auxiliar, técnico dos reservas e olheiro; 1 para os outros; nada para o aposentado.
-/// Cargo fora da faixa: 0, sem escrever. Nas telas do clube, de contratos, da pessoa e de busca, na mídia
-/// (0x744f80, 0x74bbd0), nos regens (0x7a9650, 0x7aa4c0) e nas transferências (0x8d3520, 0x8dc370).
 pub(crate) unsafe extern "C" fn database_get_job_name(job: u32, short: u32, capital: u32, gender: usize) -> usize {
     let j = job as u8 as i8;
     if !(0..=0x11).contains(&j) || j == 14 {
@@ -2075,9 +1926,6 @@ pub(crate) unsafe extern "C" fn database_get_job_name(job: u32, short: u32, capi
 
 /// The names of languages 1..64 of `database_get_language_name` (code immediates, by their addresses in the exe; 34 repeats Albanian), all
 /// with the empty 0xad9c64 ("<%s - COMMENT - language>").
-///
-/// [pt] Os nomes dos idiomas 1..64 da 0x53cee0 (imediatos do código, pelos endereços no exe; o 34 repete o albanês),
-/// todos com o vazio 0xad9c64 ("<%s - COMMENT - language>").
 pub(crate) const LANGUAGE_NAMES: [usize; 64] = [
     0x9b73dc, 0x9b73bc, 0x9b7398, 0x9b7374, 0x9b7350, 0x9b7330, 0x9b7310, 0x9b72ec, // Albanian .. English
     0x9b72c8, 0x9b72a8, 0x9b7288, 0x9b7268, 0x9b7248, 0x9b7224, 0x9b7200, 0x9b71dc, // Finnish .. Japanese
@@ -2094,10 +1942,6 @@ pub(crate) const LANGUAGE_NAMES: [usize; 64] = [
 ///
 /// Used in the search (0x813210) and in the person screen (0x87dd80).
 /// Original: `database_get_language_name` (0x53cee0, Database.cpp, cdecl).
-///
-/// [pt] { 0x53cee0 } (cdecl, Database.cpp): `database_get_language_name(idioma)`: o nome traduzido (0x66f4e0) do idioma
-/// (byte com sinal, 1..64; fora disso "Unknown") no texto [0xae21d4] (100 bytes), que é o que devolve. Na busca
-/// (0x813210) e na tela da pessoa (0x87dd80).
 pub(crate) unsafe extern "C" fn database_get_language_name(language: u32) -> usize {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     let x = language as u8 as i8;
@@ -2112,8 +1956,6 @@ pub(crate) unsafe fn is_empty_text(t: usize) -> bool {
 }
 
 /// strcat: appends a null-terminated string to destino.
-///
-/// [pt] strcat (os `repne scasb` e os `rep movsd`/`rep movsb` da original).
 pub(crate) unsafe fn append_c_string(target: usize, source: usize) {
     let mut d = target;
     while read_u8(d) != 0 {
@@ -2144,17 +1986,6 @@ pub(crate) unsafe fn append_c_string(target: usize, source: usize) {
 /// Size < 0x47 or null club (with style 1..4): the original (error box). Used in the club, national team and manager
 /// screens, in the match line-up (`match_screens_open_team_selection`, in Rust), in the hall of fame, in the printouts and in Setup.
 /// Original: `club_get_national_team_name` (0x542100, Database.cpp, cdecl).
-///
-/// [pt] { 0x542100 } (cdecl, Database.cpp): `club_get_national_team_name(clube, variante, texto, tamanho, forma, aspas)`:
-/// o nome do clube de seleção em `texto` pela forma (byte, 1..4; fora disso não escreve). O nome é o de +0x38 com o
-/// gênero +0x52 (byte com sinal), na forma 3 o de +4 com o gênero +0x37. Fora das seleções (id < [0xae235c] −
-/// 2 × [0xae2350]): variante 0 copia o nome (forma 4: "Main Squad"); senão "Reserves" (formas 1 e 3), "Reserve" (2),
-/// "Reserve Squad" (4). Seleção com variante: "B" ou "'B'" (com `aspas`), na forma 4 "B Squad"/"'B' Squad". Seleção
-/// principal (id < clubes − nações): copia o nome (forma 4: "Squad"). As de base: sub-21 ou sub-23 pelo byte
-/// [[0xb74318] + 0x36] + id da nação (+0x53), "U21"/"U23" (1), "Under 21"/"Under 23" (2), "Under 21's"/"Under 23's"
-/// (3), "Under 21 Squad"/"Under 23 Squad" (4). Os formatos vão ao 0x66f4e0 com (gênero, gênero, nome). Devolve 1.
-/// Tamanho < 0x47 ou clube nulo (com forma 1..4): a original (caixa). Nas telas do clube, da seleção, do técnico, na
-/// escalação da partida (0x725f70, em Rust), no hall da fama, nas impressões e no Setup.
 pub(crate) unsafe extern "C" fn club_get_national_team_name(club: usize, variant: u32, text: usize, size: i32, form: u32, aspas: u32) -> u32 {
     let club = Club(club);
     let f = form as u8 as i8;
@@ -2254,12 +2085,6 @@ pub(crate) const PLAYER_ATTRIBUTE_NAMES: [(usize, bool, usize, bool); 31] = [
 /// out of range, null text or size (signed short) < 100: the original (error box and 0). Used in the club, search,
 /// person and training screens.
 /// Original: `database_get_player_attribute_name` (0x5428a0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5428a0 } (cdecl, Database.cpp; o mapa parte a rotina em 0x542f48, que é só o meio dela: a fronteira real vai
-/// até 0x5431e0): `database_get_player_attribute_name(atributo, texto, tamanho, abreviado)`: zera o texto e escreve o
-/// nome traduzido (0x66f4e0) do atributo de jogador (1..0x1f, byte com sinal), abreviado (`abreviado` não nulo) ou
-/// inteiro; devolve 1. Atributo fora da faixa, texto nulo ou tamanho (curto com sinal) < 100: a original (caixa e 0).
-/// Nas telas do clube, de busca, da pessoa e de treino.
 pub(crate) unsafe extern "C" fn database_get_player_attribute_name(attribute: u32, text: usize, size: u32, abbreviated: u32) -> u32 {
     let x = attribute as u8 as i8;
     if !(1..=0x1f).contains(&x) || text == 0 || (size as u16 as i16) < 100 {
@@ -2279,10 +2104,6 @@ pub(crate) unsafe extern "C" fn database_get_player_attribute_name(attribute: u3
 
 /// Appends one position to the position text built by `database_format_player_positions`: short or long form (translated via the global buffer
 /// 0xde1f64) with a "/" separator, or a single letter only while the text is empty.
-///
-/// [pt] Uma posição no texto da 0x53ee50: forma 1 o abreviado (com o vazio 0xad9c64), 2 e 3 o inteiro, com a barra antes
-/// quando o texto já tem algo; as outras formas, a letra só com o texto ainda vazio. O traduzido passa pelo texto
-/// global [0xde1f64] (0x66f4e0), como na original.
 pub(crate) unsafe fn append_position_text(buf: usize, f: u8, short: usize, long: usize, long_empty: bool, letra: usize) {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
     match f {
@@ -2340,18 +2161,6 @@ pub(crate) const POSITION_FORWARD: (usize, usize, bool, usize) = (0x9b74b4, 0x9b
 /// (signed short) < 30: the original (error box). The locals (line and sides, 2 KB each) are written before being read.
 /// Used in the club, search, person, tactics and training screens and in the printouts.
 /// Original: `database_format_player_positions` (0x53ee50, Database.cpp, cdecl).
-///
-/// [pt] { 0x53ee50 } (cdecl, Database.cpp): `database_format_player_positions(jogador, texto, tamanho, forma)`: o texto das
-/// posições do jogador (as notas +0xf..+0x1a, bytes com sinal) pela forma (byte): 1 abreviado ("D/DM RC"), 2 inteiro
-/// com os lados entre parênteses, 3 inteiro sem os lados, 4 e outras as letras. A linha: com a nota mínima de 15 a 10
-/// (para quando achar algo): goleiro (+0xf), líbero (+0x10), defensor (+0x11), volante (+0x12) ou meia-atacante (+0x14
-/// e +0x13) ou meia (+0x13), e atacante (+0x15; "avante" se também +0x14, +0x17, +0x18 ou +0x1a). Goleiro na nota:
-/// só a linha. Nada até 10: meia-atacante, e com +0x14 ≥ 15 a original GRAVA 15 em +0x13 do jogador (a cópia também).
-/// Os lados (nota ≥ 15): direito (+0x17), esquerdo (+0x18), centro (+0x19); forma 1 abreviados juntos, 2 inteiros com
-/// barra, 4 as letras A, B, C só com os lados vazios. Fim: forma 2 "%s (%s)", as outras "%s %s" ou só a linha.
-/// Devolve 1. Os textos traduzidos passam pelo global [0xde1f64] (o mesmo uso da original). Texto ou jogador nulos ou
-/// tamanho (curto com sinal) < 30: a original (caixa). As locais (linha e lados, 2 KB cada) são gravadas antes de lidas.
-/// Nas telas do clube, de busca, da pessoa, de tática e de treino e nas impressões.
 pub(crate) unsafe extern "C" fn database_format_player_positions(player: usize, text: usize, size: u32, form: u32) -> u32 {
     let player = PlayerSheet(player);
     if text == 0 || player.is_null() || (size as u16 as i16) < 0x1e {
@@ -2460,8 +2269,6 @@ pub(crate) unsafe extern "C" fn database_format_player_positions(player: usize, 
 }
 
 /// Text pointer is non-null and the text is not empty.
-///
-/// [pt] Texto não nulo e não vazio (os `repne scasb` da original).
 pub(crate) unsafe fn is_nonempty_text(t: usize) -> bool {
     t != 0 && *(t as *const u8) != 0
 }
@@ -2476,13 +2283,6 @@ pub(crate) unsafe fn is_nonempty_text(t: usize) -> bool {
 /// Null text or size (word) < 0x69: the original (error box). The 0x200-byte locals serve only the box message. Called
 /// through the game's address. ~126 callers (news, screens, contracts).
 /// Original: `database_format_name_from_ids` (0x53e140, Database.cpp, cdecl).
-///
-/// [pt] { 0x53e140 } (cdecl, Database.cpp): `database_format_name_from_ids(nome, sobrenome, comum, texto, tamanho, forma,
-/// pessoa)`: os registros dos nomes (60 bytes) pelos índices nas tabelas [0xae23f0], [0xae23f4] e [0xae23f8] (−1 ou
-/// menos: nulo) e o texto pela 0x53e2e0 (com −1 no fim), que é o que devolve. Com `pessoa` > −1 e [0xb63c98]: se um
-/// humano deu apelido à pessoa ([0xae23bc] + 110 × pessoa; 0x600740) e ela confere com os nomes (0x53e990), o apelido
-/// (0x6005e0) no lugar do nome comum. Texto nulo ou tamanho (palavra) < 0x69: a original (caixa). As locais de 0x200
-/// bytes só servem à mensagem da caixa. As chamadas pelo endereço do jogo. ~126 chamadores (notícias, telas, contratos).
 pub(crate) unsafe extern "C" fn database_format_name_from_ids(name: i32, surname: i32, common: i32, text: usize, size: u32, form: u32, person: i32) -> u32 {
     if text == 0 || (size as i16) < 0x69 {
         return original_fn::<unsafe extern "C" fn(i32, i32, i32, usize, u32, u32, i32) -> u32>(IDX_DATABASE_FORMAT_NAME_FROM_IDS)(name, surname, common, text, size, form, person);
@@ -2511,13 +2311,6 @@ pub(crate) unsafe extern "C" fn database_format_name_from_ids(name: i32, surname
 /// Null official or text, size (word) < 0x69 or style outside 1..6: the original (error box). Used in the events and
 /// the match panel (`event_text`, `commentate_on_panel`, `draw_match_overview_panel`).
 /// Original: `database_format_official_name` (0x53eab0, Database.cpp, cdecl).
-///
-/// [pt] { 0x53eab0 } (cdecl, Database.cpp): `database_format_official_name(oficial, texto, tamanho, forma)`: o nome do
-/// oficial (nome +4, sobrenome +8) em `texto` pela forma (byte): 1 "%s %s", 2 "%c.%s", 3 "%s, %s" (sobrenome
-/// primeiro), 4 "%s, %c", 5 só o sobrenome, 6 "%c %c" (as iniciais). Faltando um dos dois: o sobrenome (ou o nome);
-/// na forma 6, a inicial que houver. Oficial da nação +0x16 com id igual a [0x9cf488]: só o sobrenome, em qualquer
-/// forma. Devolve 1. Oficial ou texto nulos, tamanho (palavra) < 0x69 ou forma fora de 1..6: a original (caixa). Nos
-/// eventos e no painel da partida (0x6d8d10, 0x6d7b00, 0x71c270).
 pub(crate) unsafe extern "C" fn database_format_official_name(oficial: usize, text: usize, size: u32, form: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_DATABASE_FORMAT_OFFICIAL_NAME);
     if oficial == 0 || text == 0 || (size as i16) < 0x69 {
@@ -2586,14 +2379,6 @@ pub(crate) unsafe extern "C" fn database_format_official_name(oficial: usize, te
 /// Returns the gender byte by language (`exe::langlib_get_language`): 2 gives 2 or 5, 5 gives 1, 4 gives 1 or 4, the others 0 (substitute:
 /// always 0). Null text: 0. Used in the media (0x72d270) and in the person screen (0x87dd80).
 /// Original: `position_mask_get_text` (0x5482f0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5482f0 } (cdecl, Database.cpp): `position_mask_get_text(mascara, texto, maiuscula)`: o nome da posição da
-/// máscara (0x66f4e0 com o texto 0xad9c64; a forma com maiúscula se o byte `maiuscula` não é 0), na ordem: goleiro
-/// (1), jogador de apoio (0x260/0x160/0x460), atacante (0x40 com 0x700), ala (0x88/0x808), ponta esquerda (0x90/0xa0),
-/// ponta direita (0x810/0x820), meia central e meia-atacante (0x100/0x200/0x400 com 0x18 ou 0x20), zagueiro central
-/// (0x204/0x104/0x404), lateral esquerdo (0x84), lateral direito (0x804), líbero (2), reserva (0) e defensor. Devolve o
-/// byte do gênero pelo idioma (0x66f4d0): 2 dá 2 ou 5, 5 dá 1, 4 dá 1 ou 4, os outros 0 (reserva: sempre 0). Texto
-/// nulo: 0. Na mídia (0x72d270) e na tela da pessoa (0x87dd80).
 pub(crate) unsafe extern "C" fn position_mask_get_text(mask: u32, text: usize, capital: u32) -> u8 {
     if text == 0 {
         return 0;
@@ -2657,14 +2442,6 @@ pub(crate) unsafe extern "C" fn position_mask_get_text(mask: u32, text: usize, c
 /// others do not change it (starts at 0). Size < 30: the original (error box). Used in the media, contracts, player
 /// search, scouts and transfers (0x8dc370).
 /// Original: `write_position_name` (0x5461b0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5461b0 } (cdecl, Database.cpp): `write_position_name(mascara, texto, tamanho)`: o nome da posição (0x66f4e0;
-/// cada um escreve por cima do anterior) contando as posições: 1 goleiro, 2 líbero, 4 zagueiro central (com 0x200 sem
-/// 0x80/0x800), defensor (com 0x200) ou lateral, 8 lateral ofensivo (sem 4 e 0x200) ou volante (com 0x200), 0x10 meia,
-/// 0x20 sem nenhuma antes (conta 1) meia-atacante (0x200), ponta (0x80 e 0x800), ponta esquerda (0x80) ou direita, 0x40
-/// com 0x200 atacante; mais de 3: "utility player"; nenhuma: "player". Devolve o byte do gênero do último pelo idioma
-/// (0x66f4d0): 2 dá 2 ou 5, 5 dá 1, 4 dá 1 ou 4; os outros não mudam (começa em 0). Tamanho < 30: a original (caixa).
-/// Na mídia, nos contratos, na busca de jogadores, nos olheiros e nas transferências (0x8dc370).
 pub(crate) unsafe extern "C" fn write_position_name(mask: u32, text: usize, size: i32) -> u8 {
     if size < 0x1e {
         return original_fn::<unsafe extern "C" fn(u32, usize, i32) -> u8>(IDX_WRITE_POSITION_NAME)(mask, text, size);
@@ -2754,17 +2531,6 @@ pub(crate) unsafe extern "C" fn write_position_name(mask: u32, text: usize, size
 /// 5, which the original also writes into the argument itself; the copy does not write). Size < 30: the original (error
 /// box).
 /// Original: `write_player_description` (0x5465a0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5465a0 } (cdecl, Database.cpp): `write_player_description(pessoa, posicao, qualidades, texto, tamanho,
-/// genero)`: a descrição do jogador (0x66f4e0) pelas qualidades (as da 0x546ab0) e pela máscara da posição. Atacante
-/// (qualidades 0x40): matador letal, matador ou goleador veloz (pela soma índice + qualidades % 3), oportunista,
-/// matador ou artilheiro (% 4), atacante dinâmico, de força, forte, criativo, empolgante, habilidoso. Meia (posição
-/// 0x10): com 0x40000 "inspirational" e por cima "free-scoring" (devolve 0); armador, ladrão de bola, dinâmico,
-/// esforçado, confiável, veloz. Qualidades 2 (sem 4): lateral veloz ou empolgante; 4: defensor veloz ou técnico. Senão,
-/// pela idade (+0x18 da pessoa [0xae23bc] + 110 × índice): veterano acima de índice % 3 + 33 (sem a qualidade 1),
-/// revelação abaixo de índice % 3 + 18 com +0x22 nulo e a soma % 3 = 0. Devolve o gênero: com o idioma 4, 1, 3 ou 4
-/// conforme o texto; senão o byte `genero` (1 com o idioma 5, que a original grava também no próprio argumento; a
-/// cópia não grava). Tamanho < 30: a original (caixa).
 pub(crate) unsafe extern "C" fn write_player_description(person: i32, position: u32, qualidades: u32, text: usize, size: i32, gender: u32) -> u8 {
     if size < 0x1e {
         return original_fn::<unsafe extern "C" fn(i32, u32, u32, usize, i32, u32) -> u8>(IDX_WRITE_PLAYER_DESCRIPTION)(person, position, qualidades, text, size, gender);
@@ -2861,9 +2627,6 @@ pub(crate) unsafe extern "C" fn write_player_description(person: i32, position: 
 
 /// Score of colleague `o` as a favourite of `pessoa` at `clube` (filters and score of `staff_is_best_favoured_candidate`/`staff_pick_favoured_team_mate`: contract at
 /// the club, reputation, not leaving, stats), or None if he does not qualify.
-///
-/// [pt] A nota do colega `o` como favorito da `pessoa` no `clube` (os filtros e a nota da 0x548810, iguais aos da 0x548da0),
-/// ou `None` se ele não entra. As chamadas pelo endereço do jogo, na ordem da original.
 pub(crate) unsafe fn favourite_colleague_score(person: Staff, club: Club, o: Staff) -> Option<i32> {
     if o.player().is_null() {
         return None;
@@ -2948,12 +2711,6 @@ pub(crate) unsafe fn favourite_colleague_score(person: Staff, club: Club, o: Sta
 /// 14. The original stores the candidate's score in the argument `person` itself and a float in `candidate` (written
 /// before being read); the copy does not. Only `al`. Used in the media (`process_transfer_squad_reactions`).
 /// Original: `staff_is_best_favoured_candidate` (0x548810, Database.cpp, cdecl).
-///
-/// [pt] { 0x548810 } (cdecl, Database.cpp): `staff_is_best_favoured_candidate(pessoa, clube, candidato)`: 1 se o candidato
-/// passa nos filtros da escolha do companheiro favorito (os da 0x548da0 sem o da máscara da posição) e nenhum dos 50 do
-/// elenco do clube (+0xd7) tem nota estritamente maior; 0 se não. Antes, os da pessoa: [0xb74350], id % 6 = r: +0x59 ≥
-/// r + 6, +0x57 ≤ 15 − r, idade (0x54cdb0) ≥ id % 28 + 14. A original guarda a nota do candidato no próprio argumento
-/// `pessoa` e um float no `candidato` (gravados antes de lidos); a cópia não. Só `al`. Na mídia (0x758200).
 pub(crate) unsafe extern "C" fn staff_is_best_favoured_candidate(person: usize, club: usize, candidate: usize) -> u8 {
     let person = Staff(person);
     let club = Club(club);
@@ -2989,25 +2746,17 @@ pub(crate) unsafe extern "C" fn staff_is_best_favoured_candidate(person: usize, 
 
 /// Player stat average (PLAYERSTATS get_stat on [0xb74350]) for the person's player record, given stat type and
 /// attribute, weight 6.5.
-///
-/// [pt] A 0x7c1e30 das notas ([0xb74350]) do jogador (+0x61) da pessoa: `media(p, tipo, atributo)`, peso 6,5.
 pub(crate) unsafe fn player_stat_average(person: Staff, kind: u32, attribute: u32) -> f64 {
     exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), person.player().addr(), kind, attribute, 6.5)
 }
 
 /// Computed player attribute (`staff_compute_player_attribute`) of the person's player, as a signed byte.
-///
-/// [pt] O atributo calculado (0x543540) do jogador da pessoa, como byte com sinal.
 pub(crate) unsafe fn computed_player_attribute(person: Staff, attribute: u32) -> i32 {
     exe::staff_compute_player_attribute(person, person.player(), attribute) as i8 as i32
 }
 
 /// Bit mask of the positions where the player is natural (rating 20) - goalkeeper, wing-backs, defenders, midfielders -
 /// plus `soma` when the ten position ratings sum above 110.
-///
-/// [pt] Os bits das posições em que o jogador é natural (20), comuns às duas: goleiro (+0xf), lateral (+0x11, com +0x19
-/// ou com +0x17/+0x18), zagueiros (+0x12/+0x13 sem +0x17/+0x18 a 15), meias (+0x14, +0x15). `bits` = os valores
-/// de cada caso na ordem; mais o da soma das dez posições (+0x10..+0x19) acima de 110.
 pub(crate) unsafe fn natural_position_bits(j: usize, bits: [u32; 7], sum: u32) -> u32 {
     let b = |k: usize| signed_byte_at(j, k);
     let mut f = 0;
@@ -3054,17 +2803,6 @@ pub(crate) unsafe fn natural_position_bits(j: usize, bits: [u32; 7], sum: u32) -
 ///
 /// The original stores floats in the arguments themselves (written before being read); the copy does not. Nulls: 0.
 /// Original: `staff_get_player_strength_flags` (0x546ab0, Database.cpp, cdecl).
-///
-/// [pt] { 0x546ab0 } (cdecl): `staff_get_player_strength_flags(pessoa, outro)`: os bits das qualidades do jogador (+0x61)
-/// para a mídia, olheiros, busca e transferências; `outro` só precisa não ser nulo. Posições naturais (1, 4, 2, 8, 0x10,
-/// 0x20, 0x40), 0x1000000 se o nibble de [0xae2d0c] + 79 × id + 0xb passa um sorteio(3) e a 0x8cca10 ([0xde1f54]) dá 0,
-/// 0x80 pela soma das posições; depois 19 sorteios (0x90cfc0) contra bytes do jogador, atributos (0x543540) e médias
-/// (0x7c1e30 em [0xb74350], peso 6,5, x87 em precisão dupla com os `fstp dword` no meio): 0x100 (+0x3c), 0x200 (+0x37
-/// mais o ajuste das médias 0x16/0xd/5/1), 0x800000 (média 0xe acima de 8), 0x400 (+0x39, +0x3e e a média 0xe ou o
-/// atributo 0x17 com as médias 7 e 0x16), 0x800, 0x1000, 0x2000 (+0x2e, +0x40, +0x44), 0x4000, 0x20000, 0x100000,
-/// 0x200000, 0x400000 (atributos 4, 0xd, 0x14, 0x15, 1), 0x8000 (+0x21), 0x10000 (atributo 0xb e a média 0xf), 0x40000
-/// (reputação e as médias 6/2 e 6/1), 0x80000 (médias 0x15, 0x10, 2 e 1). A original guarda floats nos próprios
-/// argumentos (gravados antes de lidos); a cópia não. Nulos: 0.
 pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, other: usize) -> u32 {
     let person = Staff(person);
     if other == 0 || person.is_null() {
@@ -3169,16 +2907,6 @@ pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, o
 /// `exe::formation_get_slot_position` is the `club` argument with the slot byte over it, and the copy builds it the same way); the copy does not
 /// write into them. Nulls: 0. Used in the media (`exe::media_create_player_media_story`, 0x487c70).
 /// Original: `staff_get_player_weakness_flags` (0x5470d0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5470d0 } (cdecl): `staff_get_player_weakness_flags(pessoa, clube)`: os bits dos defeitos do jogador (+0x61) para
-/// a mídia. Posições naturais (0x20, 0x10, 0x40, 0x80, 0x100, 0x200), 0x800000 pela soma das posições; depois os
-/// sorteios (0x90cfc0, alguns com n = −50) contra bytes da pessoa e do jogador, atributos (0x543540), médias (0x7c1e30,
-/// peso 6,5) e a palavra 0x62c3d0 ([0xb63d28]): 1 (+0x5d da pessoa e as médias 0xb, 0xa e 1), 2 (+0x3c contra um
-/// sorteio de 4, 7, 8 ou 11 pelas +0x34 e 0x62c3d0), 4 (titular, vaga 0..10 da 0x8972c0 em [0xde1d08], com a nota
-/// 0x6e6340 da casa 0x5b2ae0 abaixo de 150 + sorteio(40)), 0x400, 0x800, 8, 0x1000, 0x2000, 0x4000, 0x8000, 0x10000,
-/// 0x20000, 0x40000, 0x80000, 0x100000, 0x200000, 0x400000. A original guarda bytes e floats nos próprios argumentos
-/// (gravados antes de lidos; a vaga passada à 0x5b2ae0 é o argumento `clube` com o byte da vaga por cima, e a cópia a
-/// monta igual); a cópia não grava neles. Nulos: 0. Na mídia (0x72c1f0, 0x487c70).
 pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, club: usize) -> u32 {
     let person = Staff(person);
     if club == 0 || person.is_null() {
@@ -3302,11 +3030,6 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
 /// different. So, on divergence, it redoes the comparison once from the same state (now warm, the original without
 /// counting) and restores the random draw state of the first run, which is the one the game continues with. Returns
 /// both results, whether they are equal, and a diagnostic.
-///
-/// [pt] O lado a lado das duas, com o estado do sorteio. A 0x6e6340 (pela 0x62ed70) sorteia só na primeira consulta do
-/// jogador e guarda: com essa memória fria a original sorteia a mais e a cópia, que roda depois, não, e os sorteios
-/// seguintes saem diferentes. Então, divergindo, refaz uma vez a comparação a partir do mesmo estado (agora quente, a
-/// original sem contar) e devolve o estado do sorteio da primeira, a que o jogo segue.
 pub(crate) unsafe fn compare_with_rng_retry(o: impl Fn() -> u32, n: impl Fn() -> u32) -> (u32, u32, bool, String) {
     let before = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     let (r, x, igual, _, _) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(),
@@ -3327,10 +3050,6 @@ pub(crate) unsafe fn compare_with_rng_retry(o: impl Fn() -> u32, n: impl Fn() ->
 ///
 /// When refused, `exe::club_get_linked_b_team` clears the club's mark +0x244: in the comparison the original routine comes first and the
 /// copy finds the mark already cleared (also 0).
-///
-/// [pt] O time B ligado ao `clube` (club_get_linked_b_team 0x540a50 pelo endereço do jogo, com `ativo` = 1): o registro
-/// do parceiro ou 0; `eh_a` recebe 1 (o clube é o A) ou 0 (o clube é o B) quando há parceiro. Recusado, a 0x540a50
-/// zera a marca +0x244 do clube: na comparação a original vem antes e a cópia acha a marca já zerada (também 0).
 pub(crate) unsafe fn database_linked_b_team(club: usize, eh_a: *mut u32) -> usize {
     exe::club_get_linked_b_team(club, eh_a, 1)
 }
@@ -3340,10 +3059,6 @@ pub(crate) unsafe fn database_linked_b_team(club: usize, eh_a: *mut u32) -> usiz
 ///
 /// Null club: the original (error box and 0). Used in the person screens (staff_screens, 0x8740c8 and 0x87412b).
 /// Original: `database_count_club_physios` (0x53c9b0, Database.cpp, cdecl).
-///
-/// [pt] { 0x53c9b0 } (cdecl, Database.cpp): `database_count_club_physios(clube)`: quantos dos 3 fisioterapeutas
-/// (+0x1cf) do clube e do time B ligado (0x540a50) são pessoas válidas (não nulas, id +0 < [0xae2364] com sinal).
-/// Só `al`. Clube nulo: a original (caixa e 0). Nas telas da pessoa (staff_screens, 0x8740c8 e 0x87412b).
 pub(crate) unsafe extern "C" fn database_count_club_physios(club: usize) -> u8 {
     if club == 0 {
         return original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_DATABASE_COUNT_CLUB_PHYSIOS)(club);
@@ -3364,10 +3079,6 @@ pub(crate) unsafe extern "C" fn database_count_club_physios(club: usize) -> u8 {
 /// The local `is_a` is only read when there is a partner, and then `exe::club_get_linked_b_team` has written it. Null club: the original
 /// (error box and 0). Used in the person screen (staff_screens, 0x87272d).
 /// Original: `club_is_b_team` (0x5448c0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5448c0 } (cdecl, Database.cpp): `club_is_b_team(clube)`: 1 se o clube tem parceiro (0x540a50 com `ativo`) e
-/// é o B dele (`eh_a` = 0), senão 0 (o eax inteiro). A local `eh_a` só é lida com parceiro, e então a 0x540a50 a
-/// escreveu. Clube nulo: a original (caixa e 0). Na tela da pessoa (staff_screens, 0x87272d).
 pub(crate) unsafe extern "C" fn club_is_b_team(club: usize) -> u32 {
     if club == 0 {
         return original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CLUB_IS_B_TEAM)(club);
@@ -3383,12 +3094,6 @@ pub(crate) unsafe extern "C" fn club_is_b_team(club: usize) -> u32 {
 /// Null club: the original (error box and 0). Used in the info tab of the club screen (club_screen_draw_info_tab
 /// 0x460590, 0x4616fa).
 /// Original: `club_collect_non_playing_staff` (0x544c70, Database.cpp, cdecl).
-///
-/// [pt] { 0x544c70 } (cdecl, Database.cpp): `club_collect_non_playing_staff(clube, saida, max)`: põe em `saida` as
-/// pessoas fora do elenco do clube e depois as do time B ligado (0x540a50 com `ativo`), na ordem dos cargos: os 6
-/// de +0xbf (técnico, auxiliar, ...) e os 15 de +0x19f (treinadores, olheiros, fisioterapeutas), as não nulas, até
-/// `max` (byte com sinal); devolve quantas em `al`. Clube nulo: a original (caixa e 0). Na aba de informações da
-/// tela do clube (club_screen_draw_info_tab 0x460590, 0x4616fa).
 pub(crate) unsafe extern "C" fn club_collect_non_playing_staff(club: usize, out: *mut usize, max: u32) -> u8 {
     if club == 0 {
         return original_fn::<unsafe extern "C" fn(usize, *mut usize, u32) -> u8>(IDX_CLUB_COLLECT_NON_PLAYING_STAFF)(club, out, max);
@@ -3423,15 +3128,6 @@ pub(crate) unsafe extern "C" fn club_collect_non_playing_staff(club: usize, out:
 /// `exe::fog_of_war_map_get_knowledge_level` stores the last club found in [0xae1080] (the same value in both). Used in the search and filter screens
 /// (search_screens, SearchFilters 0x807450), the person screen and the club screen.
 /// Original: `staff_is_player_attribute_visible` (0x543280, Database.cpp, cdecl).
-///
-/// [pt] { 0x543280 } (cdecl, Database.cpp): `staff_is_player_attribute_visible(quem_ve, pessoa, atributo)`: 1 se quem vê
-/// enxerga o atributo (byte com sinal) da pessoa. Visível sem conta: `quem_ve` ou `pessoa` nulos, sem a tabela da
-/// névoa ([0xae2a60]), névoa desligada ([0x9cc270] = 0), sem a ficha de quem vê (fog_of_war 0x5afde0, thiscall na
-/// tabela) ou conhecimento (0x5b02f0, thiscall na ficha) 3. Conhecimento 1 ou 2: os atributos 1, 0x11, 0x15, 0x1a e
-/// 0x1b sempre; os outros pelo resto do id da pessoa por 4 (`m`): o atributo deslocado (0, 1, 2 ou 3 conforme `m`)
-/// divisível por 4 (conhecimento 1) ou por 2 (conhecimento 2), ou o seguinte (m = 0) / o mesmo (m ≠ 0) divisível
-/// por 3. Outro conhecimento: 0. Só `al`. A 0x5b02f0 guarda o último clube achado em [0xae1080] (o mesmo valor
-/// nas duas). Nas telas de busca e filtros (search_screens, SearchFilters 0x807450), da pessoa e do clube.
 pub(crate) unsafe extern "C" fn staff_is_player_attribute_visible(who_ve: usize, person: usize, attribute: u32) -> u8 {
     let table = read_usize(G_FOG_OF_WAR);
     if who_ve == 0 || person == 0 || table == 0 || read_u8(G_ATTRIBUTE_MASKING_ENABLED) == 0 {
@@ -3471,13 +3167,6 @@ pub(crate) unsafe extern "C" fn staff_is_player_attribute_visible(who_ve: usize,
 /// Only `al`. Null person or attribute out of range: the original (error box and 0xff). Used in the player comparison
 /// and the person profile (staff_screens 0x877470, 0x879ac0, 0x87a754).
 /// Original: `staff_get_player_attribute_for_viewer` (0x543440, Database.cpp, cdecl).
-///
-/// [pt] { 0x543440 } (cdecl, Database.cpp): `staff_get_player_attribute_for_viewer(quem_ve, pessoa, atributo)`: o
-/// atributo (1 a 0x1f, byte com sinal) do jogador (+0x61) da pessoa como quem vê o enxerga: com a névoa ligada
-/// ([0x9cc270]), quem tem ficha (0x5afde0) e não vê o atributo (0x543280, pelo endereço do jogo) recebe 0xf9 (-7,
-/// "desconhecido"); senão o valor de staff_compute_player_attribute (0x543540). Só `al`. Pessoa nula ou atributo fora
-/// da faixa: a original (caixa e 0xff). Na comparação de jogadores e no perfil da pessoa (staff_screens 0x877470,
-/// 0x879ac0, 0x87a754).
 pub(crate) unsafe extern "C" fn staff_get_player_attribute_for_viewer(who_ve: usize, person: usize, attribute: u32) -> u8 {
     let person = Staff(person);
     let x = attribute as u8 as i8;
@@ -3495,9 +3184,6 @@ pub(crate) unsafe extern "C" fn staff_get_player_attribute_for_viewer(who_ve: us
 
 /// The names of the 12 manager attributes (abbreviated, full) of `database_get_non_player_attribute_name`, through the addresses of the texts in the
 /// exe. The abbreviated 8th (man management) is a format with the text of [0xad9c64].
-///
-/// [pt] Os nomes dos 12 atributos de técnico (abreviado, inteiro) da 0x543b10, pelos endereços dos textos no exe; o 8º
-/// (gestão de pessoas) abreviado é um formato com o texto de [0xad9c64].
 pub(crate) const STAFF_ATTRIBUTE_NAMES: [(usize, usize); 12] = [
     (0x9b7c90, 0x9b7c80), // Ada / Adaptability
     (0x9b7c7c, 0x9b7c64), // CGk / Coaching Goalkeepers
@@ -3520,12 +3206,6 @@ pub(crate) const STAFF_ATTRIBUTE_NAMES: [(usize, usize); 12] = [
 /// Attribute out of range, null text or size (signed short) below 100: the original (error box and 0). Used in the
 /// search screens (search_screens) and the person profile (staff_screens 0x87ad97).
 /// Original: `database_get_non_player_attribute_name` (0x543b10, Database.cpp, cdecl).
-///
-/// [pt] { 0x543b10 } (cdecl, Database.cpp): `database_get_non_player_attribute_name(atributo, texto, tamanho, abreviado)`:
-/// escreve em `texto` o nome do atributo de técnico (1 a 12, byte com sinal), abreviado ou inteiro, pelo texto
-/// traduzido do Langlib (0x66f4e0, pelo endereço do jogo); devolve 1. Atributo fora da faixa, texto nulo ou tamanho
-/// (curto com sinal) abaixo de 100: a original (caixa e 0). Nas telas de busca (search_screens) e no perfil da
-/// pessoa (staff_screens 0x87ad97).
 pub(crate) unsafe extern "C" fn database_get_non_player_attribute_name(attribute: u32, text: usize, size: u32, abbreviated: u32) -> u32 {
     let x = attribute as u8 as i8;
     if !(1..=12).contains(&x) || text == 0 || (size as u16 as i16) < 100 {
@@ -3550,11 +3230,6 @@ pub(crate) unsafe extern "C" fn database_get_non_player_attribute_name(attribute
 /// A null person counts as the empty text (the original zeroes the first byte of both locals beforehand). Used in the
 /// contract offer screen (contract_screens 0x4de5d0).
 /// Original: `database_compare_staff_by_surname` (0x53ff60, Database.cpp, cdecl).
-///
-/// [pt] { 0x53ff60 } (cdecl, Database.cpp): `database_compare_staff_by_surname(a, b)`: comparação do qsort de ponteiros
-/// de pessoa pelo nome no estilo 4 ("sobrenome, nome", 0x53dba0 em 0x7d0 bytes) na comparação de textos 0x90c1d0
-/// (sem maiúsculas, `compare_text_nocase`); pessoa nula vale o texto vazio (a original zera o primeiro byte das duas
-/// locais antes). Na tela de oferta de contrato (contract_screens 0x4de5d0).
 pub(crate) unsafe extern "C" fn database_compare_staff_by_surname(a: usize, b: usize) -> i32 {
     let mut na = [0u8; 0x7d0];
     let mut nb = [0u8; 0x7d0];
@@ -3574,11 +3249,6 @@ pub(crate) unsafe extern "C" fn database_compare_staff_by_surname(a: usize, b: u
 /// (0x540020, already in Rust, is the same order over ids.) Used in the club's teams menu (0x482070) and the Arrange
 /// Friendlies tabs (find_screens 0x5a1480, 0x5a1e10, 0x5a2250).
 /// Original: `database_compare_clubs_by_reputation` (0x53ffe0, Database.cpp, cdecl).
-///
-/// [pt] { 0x53ffe0 } (cdecl, Database.cpp): `database_compare_clubs_by_reputation(a, b)`: comparação do qsort de
-/// ponteiros de clube pela reputação (+0x80, curto com sinal; clube nulo = 0), a maior primeiro: a de `a` menor: 1;
-/// maior: -1; iguais: 0. (A 0x540020, já em Rust, é a mesma ordem sobre ids.) No menu dos times do clube
-/// (0x482070) e nas abas de Escolher Amistosos (find_screens 0x5a1480, 0x5a1e10, 0x5a2250).
 pub(crate) unsafe extern "C" fn database_compare_clubs_by_reputation(a: usize, b: usize) -> i32 {
     let injury_word_0c = |p: usize| {
         let c = Club(read_usize(p));
@@ -3600,10 +3270,6 @@ pub(crate) unsafe extern "C" fn database_compare_clubs_by_reputation(a: usize, b
 /// The club is not checked (the original reads its +0x53). Used in the info tab of the club screen (club_screens
 /// 0x462070, the foreigners).
 /// Original: `database_club_nation_is_eec` (0x53d7d0, Database.cpp, cdecl).
-///
-/// [pt] { 0x53d7d0 } (cdecl, Database.cpp): `database_club_nation_is_eec(clube)`: 1 se a nação do clube (+0x53) não é
-/// nula e está na CEE (+0x7f = 2), senão 0 (o eax inteiro). O clube não é conferido (a original lê o +0x53 dele).
-/// Na aba de informações da tela do clube (club_screens 0x462070, os estrangeiros).
 pub(crate) unsafe extern "C" fn database_club_nation_is_eec(club: usize) -> u32 {
     let club = Club(club);
     let nation = club.nation();
@@ -3616,11 +3282,6 @@ pub(crate) unsafe extern "C" fn database_club_nation_is_eec(club: usize) -> u32 
 ///
 /// Used in the search screens (search_screens 0x80970c, 0x814b7e, 0x815d5e: the region filter).
 /// Original: `get_regions_sorted_by_name` (0x545dc0, Database.cpp, cdecl).
-///
-/// [pt] { 0x545dc0 } (cdecl, Database.cpp): `get_regions_sorted_by_name(idioma)`: enche o vetor global de 14 regiões
-/// (0xae2104) com 1..14, guarda o `idioma` (byte) em [0xae232b] e o ordena pelo qsort da CRT (0x945333) com a
-/// comparação 0x545e00 (pelo endereço do jogo); devolve o vetor. Nas telas de busca (search_screens 0x80970c,
-/// 0x814b7e, 0x815d5e: o filtro de região).
 pub(crate) unsafe extern "C" fn get_regions_sorted_by_name(language: u32) -> usize {
     for k in 0..14u8 {
         write_u8(G_REGIONS_SORTED_BY_NAME + k as usize, k + 1);
@@ -3636,11 +3297,6 @@ pub(crate) unsafe extern "C" fn get_regions_sorted_by_name(language: u32) -> usi
 /// `get_region_name` zeroes the first byte of the text before anything else (the locals are never read unset). Called by
 /// `get_regions_sorted_by_name`.
 /// Original: `compare_region_names` (0x545e00, Database.cpp, cdecl).
-///
-/// [pt] { 0x545e00 } (cdecl, Database.cpp): `compare_region_names(a, b)`: comparação do qsort de bytes de região pelo
-/// nome (0x616f20, do index.cpp, em 0xc8 bytes, no idioma de [0xae232b]) na comparação de textos 0x90c1d0 (sem
-/// maiúsculas); `a` nulo: 1; `b` nulo: -1. A 0x616f20 zera o primeiro byte do texto antes de tudo (as locais nunca
-/// são lidas sem valor). Pela 0x545dc0.
 pub(crate) unsafe extern "C" fn compare_region_names(a: usize, b: usize) -> i32 {
     if a == 0 {
         return 1;
@@ -3662,11 +3318,6 @@ pub(crate) unsafe extern "C" fn compare_region_names(a: usize, b: usize) -> i32 
 /// target is +0x37, the person of index +0x27 ([0xae23bc] + 110 × index); otherwise, if the target is +0x4b, the one of
 /// index +0x3b; otherwise 0. Used in the transfers tab of the person profile (staff_screens 0x87dd80).
 /// Original: `staff_get_opinion_link_staff` (0x549dd0, Database.cpp, cdecl).
-///
-/// [pt] { 0x549dd0 } (cdecl, Database.cpp): `staff_get_opinion_link_staff(pessoa, alvo)`: o outro lado do laço de opinião
-/// da pessoa: no registro da pessoa ([0xae2d0c] + id × 79; pessoa nula ou id >= [0xae2364]: 0), com laço (+0x27 ≠
-/// -1), se o alvo é o +0x37: a pessoa de índice +0x27 ([0xae23bc] + 110 × índice); senão, se o alvo é o +0x4b: a de
-/// índice +0x3b; senão 0. Na aba de transferências do perfil da pessoa (staff_screens 0x87dd80).
 pub(crate) unsafe extern "C" fn staff_get_opinion_link_staff(person: usize, target: u32) -> usize {
     if person == 0 {
         return 0;
@@ -3692,18 +3343,12 @@ pub(crate) unsafe extern "C" fn staff_get_opinion_link_staff(person: usize, targ
 }
 
 /// True if the three-dword list at `lista` contains `quem`.
-///
-/// [pt] A lista de três dwords em `lista` tem `quem`?
 pub(crate) unsafe fn list3_contains(list: usize, who: usize) -> bool {
     (0..3).any(|k| read_usize(list + 4 * k) == who)
 }
 
 /// Core of the add-to-preferences routines: if already present do nothing; if in the opposite list remove it from
 /// there; else put it in the first free slot, or with `forcar` replace a random slot (rand 3).
-///
-/// [pt] O miolo das rotinas de acrescentar às preferências: já na lista (`ja`), nada; na lista `outra` (o oposto: favoritos
-/// x rejeitados), tira de lá a primeira ocorrência e para; senão entra na primeira vaga de `lista`; sem vaga, só com
-/// `forcar`: sorteia (0x90cfc0, 3) a vaga que troca (0, 1 ou 2).
 pub(crate) unsafe fn database_add_to_preference_list(list: usize, other: usize, who: usize, ja: bool, force: u32) {
     if ja {
         return;
@@ -3727,9 +3372,6 @@ pub(crate) unsafe fn database_add_to_preference_list(list: usize, other: usize, 
 
 /// Regions compared for the preference routines: RNG state plus the 24 bytes of favourite/disliked people at `base` (if
 /// non-null).
-///
-/// [pt] O estado do sorteio e as 6 pessoas (favoritas e rejeitadas) a partir de `base` (o clube +0x9b ou as preferências
-/// +0x1c); `base` nulo: só o sorteio.
 pub(crate) unsafe fn preference_regions(base: usize) -> Vec<(usize, usize)> {
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     if base != 0 {
@@ -3742,11 +3384,6 @@ pub(crate) unsafe fn preference_regions(base: usize) -> Vec<(usize, usize)> {
 /// (+0xa7..+0xaf), stops being; otherwise the first free slot; no free slot and the third argument set, a random slot
 /// (3)
 /// Original: `club_add_favoured_staff` (0x547870, Database.cpp, cdecl).
-///
-/// [pt] { 0x547870 } (cdecl, Database.cpp): `club_add_favoured_staff(clube, pessoa, forcar)`: põe a pessoa entre as três
-/// favoritas do clube (+0x9b/+0x9f/+0xa3): já favorita, nada; rejeitada (+0xa7..+0xaf), deixa de ser e para; senão a
-/// primeira vaga; sem vaga, com `forcar`, a vaga sorteada (3). Clube ou pessoa nulos: nada. Nos registros de clubes
-/// (0x445f45) e de pessoas (0x86dc30).
 pub(crate) unsafe extern "C" fn club_add_favoured_staff(club: usize, person: usize, force: u32) {
     let club = Club(club);
     if club.is_null() || person == 0 {
@@ -3759,11 +3396,6 @@ pub(crate) unsafe extern "C" fn club_add_favoured_staff(club: usize, person: usi
 /// (+0x9b..+0xa3), stops being; otherwise the first free slot; no free slot and the third argument set, a random slot
 /// (3)
 /// Original: `club_add_disliked_staff` (0x547940, Database.cpp, cdecl).
-///
-/// [pt] { 0x547940 } (cdecl, Database.cpp): `club_add_disliked_staff(clube, pessoa, forcar)`: põe a pessoa entre as três
-/// rejeitadas do clube (+0xa7/+0xab/+0xaf): já rejeitada, nada; favorita (+0x9b..+0xa3), deixa de ser e para; senão a
-/// primeira vaga; sem vaga, com `forcar`, a vaga sorteada (3). Nas audiências das disputas (0x569ed0), na mídia
-/// (0x755340) e em 0x7daf50 (do motor de partidas).
 pub(crate) unsafe extern "C" fn club_add_disliked_staff(club: usize, person: usize, force: u32) {
     let club = Club(club);
     if club.is_null() || person == 0 {
@@ -3776,12 +3408,6 @@ pub(crate) unsafe extern "C" fn club_add_disliked_staff(club: usize, person: usi
 /// nothing; disliked (+0x28..+0x30), stops being; otherwise the first free slot; no free slot and the third argument
 /// set, a random slot (3)
 /// Original: `staff_add_favoured_staff` (0x547a10, Database.cpp, cdecl).
-///
-/// [pt] { 0x547a10 } (cdecl, Database.cpp): `staff_add_favoured_staff(pessoa, outra, forcar)`: põe `outra` entre as três
-/// pessoas favoritas da pessoa (preferências +0x65: +0x1c/+0x20/+0x24): já favorita, nada; rejeitada (+0x28..+0x30),
-/// deixa de ser e para; senão a primeira vaga; sem vaga, com `forcar`, a vaga sorteada (3). Pessoa, preferências ou
-/// outra nulas: nada. Nas relações do elenco (0x5d6d10, diária), registros de clubes (0x445f45), volta da lesão
-/// (0x630ee0), mídia e outras.
 pub(crate) unsafe extern "C" fn staff_add_favoured_staff(person: usize, other: usize, force: u32) {
     let person = Staff(person);
     if person.is_null() {
@@ -3805,13 +3431,6 @@ pub(crate) unsafe extern "C" fn staff_add_favoured_staff(person: usize, other: u
 /// Used in the daily person update (game_daily_staff_update 0x5ce2d0, two calls), `exe::fine_fine_player`, MANAGER_MANAGER (0x69c030)
 /// and others.
 /// Original: `staff_add_disliked_club` (0x547e70, Database.cpp, cdecl).
-///
-/// [pt] { 0x547e70 } (cdecl, Database.cpp): `staff_add_disliked_club(pessoa, clube, forcar)`: põe o clube entre os três
-/// rejeitados da pessoa (preferências +0x65: +0x10/+0x14/+0x18). O clube já rejeita a pessoa (+0xa7..+0xaf): nada;
-/// o clube é favorito (+4..+0xc): deixa de ser e para; senão a primeira vaga (sem conferir se já está entre os
-/// rejeitados, como a original); sem vaga, com `forcar`, a vaga sorteada (0x90cfc0, 3). Pessoa, preferências ou clube
-/// nulos: nada. No diário das pessoas (game_daily_staff_update 0x5ce2d0, duas chamadas), 0x5a5980, MANAGER_MANAGER
-/// (0x69c030) e outras.
 pub(crate) unsafe extern "C" fn staff_add_disliked_club(person: usize, club: usize, force: u32) {
     let person = Staff(person);
     let club = Club(club);
@@ -3850,11 +3469,6 @@ pub(crate) unsafe extern "C" fn staff_add_disliked_club(person: usize, club: usi
 /// One draw per occupied slot, in order. Null person or preferences: nothing. Used in the daily person update
 /// (game_daily_staff_update 0x5ce2d0).
 /// Original: `staff_fade_staff_relationships` (0x547f90, Database.cpp, cdecl).
-///
-/// [pt] { 0x547f90 } (cdecl, Database.cpp): `staff_fade_staff_relationships(pessoa)`: cada uma das três pessoas favoritas
-/// (preferências +0x1c..+0x24) presente sai com o sorteio (0x90cfc0) de (+0x59 da pessoa, com sinal) + 15 dando 0;
-/// cada uma das três rejeitadas (+0x28..+0x30), com o de 35 − (+0x5d). Um sorteio por vaga ocupada, na ordem.
-/// Pessoa ou preferências nulas: nada. No diário das pessoas (game_daily_staff_update 0x5ce2d0).
 pub(crate) unsafe extern "C" fn staff_fade_staff_relationships(person: usize) {
     let person = Staff(person);
     if person.is_null() || person.staff_preferences() == 0 {
@@ -3881,12 +3495,6 @@ pub(crate) unsafe extern "C" fn staff_fade_staff_relationships(person: usize) {
 /// Null person, preferences or output: only the zero. Returns `n` (the original's eax); callers read only the byte.
 /// Used in the daily person update (0x5ce2d0, two calls), MANAGER_MANAGER (0x693850), the media and the person screens.
 /// Original: `staff_get_disliked_staff` (0x5480f0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5480f0 } (cdecl, Database.cpp): `staff_get_disliked_staff(pessoa, saida, n)`: zera o byte `*n` (sempre, antes
-/// de conferir a pessoa) e copia para `saida` as pessoas rejeitadas presentes (preferências +0x28/+0x2c/+0x30), na
-/// ordem, contando em `*n`. Pessoa, preferências ou saída nulas: só o zero. Devolve `n` (o eax da original); os
-/// chamadores leem só o byte. No diário das pessoas (0x5ce2d0, duas chamadas), MANAGER_MANAGER (0x693850), mídia e
-/// telas de pessoas.
 pub(crate) unsafe extern "C" fn staff_get_disliked_staff(person: usize, out: usize, n: usize) -> usize {
     let person = Staff(person);
     let count = n as *mut i8;
@@ -3918,16 +3526,6 @@ pub(crate) unsafe extern "C" fn staff_get_disliked_staff(person: usize, out: usi
 /// not. TapeCall at 37 points: the favoured team mate pick (`staff_pick_favoured_team_mate`, in the daily person update), the match engine
 /// (`prepare_match`), the media (`warn_squad_of_position_rival`/`process_transfer_squad_reactions`, `exe::media_create_player_media_story`), awards (0x768cf0) and the person screens.
 /// Original: `staff_get_natural_position_mask` (0x5481a0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5481a0 } (cdecl, Database.cpp): `staff_get_natural_position_mask(pessoa)`: a máscara das posições em que o
-/// jogador (pessoa +0x61) é natural (20). Sem pessoa ou jogador: 0; goleiro (+0xf) 20: 1. Senão, pelos bytes com sinal
-/// do jogador: +0x18 (0x80; 0x180 com +0x19 > 10), +0x17 (0x800; mais 0x400 com +0x19 > 10), +0x19 (0x700), +0x10 (2),
-/// +0x11 (4), +0x12 (0x18), +0x13 (0x38), +0x14 (0x30), +0x15 (0x40; mais 0x700 se nenhum de +0x10..+0x14 é 20). Sem
-/// nenhum: a primeira posição de +0x10 a +0x14 com 15 ou mais dá 2, 4, 0x18, 0x38 ou 0x30; +0x15 com 15 ou mais dá
-/// 0x740 (0x40 se algum de +0x10..+0x14 é 20, o que ali não acontece); senão 0x10. A original guarda três bytes numa
-/// local (gravados antes de lidos) e um no próprio argumento; a cópia não. TapeCall em 37 pontos: escolha do companheiro
-/// favorito (0x548da0, no diário das pessoas), motor de partidas (0x6b7f20), mídia (0x758010/0x758200, 0x72c1f0),
-/// prêmios (0x768cf0) e telas de pessoas.
 pub(crate) unsafe extern "C" fn staff_get_natural_position_mask(person: usize) -> u32 {
     let person = Staff(person);
     if person.is_null() {
@@ -3982,10 +3580,6 @@ pub(crate) unsafe extern "C" fn staff_get_natural_position_mask(person: usize) -
 ///
 /// Only `al` (the three callers, `warn_squad_of_position_rival` and `process_transfer_squad_reactions`, read the byte). Used in the media.
 /// Original: `club_count_squad_with_position_mask` (0x548150, Database.cpp, cdecl).
-///
-/// [pt] { 0x548150 } (cdecl, Database.cpp): `club_count_squad_with_position_mask(clube, mascara)`: quantos dos 50 do elenco
-/// (+0xd7) com jogador (+0x61) têm a máscara da posição natural (0x5481a0, pelo endereço do jogo) igual a `mascara`.
-/// Só `al` (os três chamadores, 0x758010 e 0x758200, leem o byte). Na mídia.
 pub(crate) unsafe extern "C" fn club_count_squad_with_position_mask(club: usize, mask: u32) -> u8 {
     let club = Club(club);
     let mut n = 0u8;
@@ -4018,21 +3612,6 @@ pub(crate) unsafe extern "C" fn club_count_squad_with_position_mask(club: usize,
 /// game's address. All locals are written before being read (the original uses the argument itself as a cursor). Used
 /// in the daily person update (game_daily_staff_update 0x5ce2d0) and the person screen (0x87dd80).
 /// Original: `staff_pick_favoured_team_mate` (0x548da0, Database.cpp, cdecl).
-///
-/// [pt] { 0x548da0 } (cdecl, Database.cpp): `staff_pick_favoured_team_mate(pessoa, clube)`: o colega do elenco do clube
-/// que a pessoa escolhe para favorito, ou 0. Precisa da pessoa, do clube e de [0xb74350]; id % 6 = r: +0x59 ≥ r + 6,
-/// +0x57 ≤ 15 − r e a idade (0x54cdb0 em 0xae2c90 com +0x3e/+0x42) ≥ id % 28 + 14. Cada um dos 50 (+0xd7) com jogador,
-/// id abaixo de [0xae2364], não a própria pessoa, (ids somados) % 3 ≠ 0, não rejeitado pela pessoa (+0x28..+0x30), com
-/// +0x5a ≥ 11 ou máscara (0x5481a0) diferente da da pessoa, com contrato (0x4cf5f0 em [0xae1050]), reputação (+0xb do
-/// jogador) acima de 4250 e de (+0x80 do clube) − 750, fora da 0x8cca10 ([0xde1f54], 0) e com +5 do jogador acima de
-/// 100 leva nota: a reputação; +500/+250 se a média 0x7c1e30(6, 17, 6,5), arredondada a float, passa a razão de
-/// [0xb74350] (+0x10/+0x18, ou 6,8) + 0,2/+0,1, quando a 0x7c1e30(6, 1, 6,5) passa de 5; +1250 se já favorito; +75/+50
-/// por +0x21 do jogador (20 / acima de 15); +250/−100 por +0x5b (acima de 15 / abaixo de 6); + (ids somados) % 500;
-/// +750/+300/+150 pelo nível do contrato (+0x4f >> 4 = 1/2/3); compatriota (+0x1a) de pessoa de fora do país do clube
-/// (+0x53): +1750 com o contrato +0x45 & 0x20020, senão +250 (idade abaixo de 350 e +0x18 abaixo de 24) ou +125. Fica o
-/// de nota mais alta (estritamente acima de −10000 e do anterior). As chamadas pelo endereço do jogo. Locais todas
-/// gravadas antes de lidas (a original usa o próprio argumento como cursor). No diário das pessoas
-/// (game_daily_staff_update 0x5ce2d0) e na tela da pessoa (0x87dd80).
 pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(person: usize, club: usize) -> usize {
     let person = Staff(person);
     let club = Club(club);
@@ -4134,8 +3713,6 @@ pub(crate) unsafe extern "C" fn staff_pick_favoured_team_mate(person: usize, clu
 }
 
 /// Id (+0) of the club's nation (+0x53); None if club or nation is null.
-///
-/// [pt] O id (+0) da nação do `clube` (+0x53); clube ou nação nulos: None.
 pub(crate) unsafe fn database_club_nation_id(club: Club) -> Option<u32> {
     if club.is_null() {
         return None;
@@ -4154,11 +3731,6 @@ pub(crate) unsafe fn database_club_nation_id(club: Club) -> Option<u32> {
 /// original. In the career: discipline (0x55e300), the daily manager update (manager_manager 0x6ab800) and the news
 /// (0x782f70).
 /// Original: `club_nation_is_not_argentina` (0x5487b0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5487b0 } (cdecl, Database.cpp): `club_nation_is_not_argentina(clube)`: 1 se a nação do clube não tem o id
-/// da chave Argentina 0x9cf218; clube ou nação nulos: 0. A resposta vai em `al` e o resto do eax é o do id (`setne
-/// al` depois do `mov eax, [eax]`), como na original. Na carreira: a disciplina (0x55e300), o diário dos técnicos
-/// (manager_manager 0x6ab800) e as notícias (0x782f70).
 pub(crate) unsafe extern "C" fn club_nation_is_not_argentina(club: usize) -> u32 {
     match database_club_nation_id(Club(club)) {
         None => 0,
@@ -4172,10 +3744,6 @@ pub(crate) unsafe extern "C" fn club_nation_is_not_argentina(club: usize) -> u32
 /// In `al`; the rest of eax is that of the id. In the career, through the daily manager update (manager_manager
 /// 0x6ab800).
 /// Original: `club_nation_not_argentina_france_croatia` (0x5487d0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5487d0 } (cdecl, Database.cpp): `club_nation_not_argentina_france_croatia(clube)`: 1 se a nação do clube não
-/// tem o id de Argentina 0x9cf218, França 0x9cf300 nem Croácia 0x9cf2ac; clube ou nação nulos: 0. Em `al`, o resto
-/// do eax é o do id. Na carreira, pelo diário dos técnicos (manager_manager 0x6ab800).
 pub(crate) unsafe extern "C" fn club_nation_not_argentina_france_croatia(club: usize) -> u32 {
     match database_club_nation_id(Club(club)) {
         None => 0,
@@ -4187,8 +3755,6 @@ pub(crate) unsafe extern "C" fn club_nation_not_argentina_france_croatia(club: u
 }
 
 /// 1 if the nation's id matches the id of any of the given KEY_* nations, else 0.
-///
-/// [pt] 1 se o id (+0) da `nacao` (não nula; a original não confere) é o de uma das `chaves`, senão 0 (o eax inteiro).
 pub(crate) unsafe fn nation_is_one_of(nation: usize, keys: &[usize]) -> u32 {
     let id = read_u32(nation);
     keys.iter().any(|&k| read_u32(k) == id) as u32
@@ -4199,10 +3765,6 @@ pub(crate) unsafe fn nation_is_one_of(nation: usize, keys: &[usize]) -> u32 {
 ///
 /// Used in the Oceania cups (oceania_club_champ `oceania_club_champ_select_qualified_clubs`, oceania_nations 0x799e30).
 /// Original: `database_is_melanesian_nation` (0x53d900, Database.cpp, cdecl).
-///
-/// [pt] { 0x53d900 } (cdecl, Database.cpp): `database_is_melanesian_nation(nacao)`: 1 se a nação tem o id de uma das
-/// chaves 0x9cf41c, 0x9cf478, 0x9cf530, 0x9cf2f8, 0x9cf500 (as melanésias), senão 0. Nas copas da Oceania
-/// (oceania_club_champ 0x798220, oceania_nations 0x799e30).
 pub(crate) unsafe extern "C" fn database_is_melanesian_nation(nation: usize) -> u32 {
     nation_is_one_of(nation, &[KEY_NATION_PAPUA_NEW_GUINEA, KEY_NATION_SOLOMON_ISLANDS, KEY_NATION_NEW_CALEDONIA, KEY_NATION_FIJI, KEY_NATION_VANUATU]) // Melanesian
 }
@@ -4212,10 +3774,6 @@ pub(crate) unsafe extern "C" fn database_is_melanesian_nation(nation: usize) -> 
 ///
 /// Used in the Oceania cups (oceania_club_champ `oceania_club_champ_select_qualified_clubs`, oceania_nations 0x799e30).
 /// Original: `database_is_polynesian_nation` (0x53d940, Database.cpp, cdecl).
-///
-/// [pt] { 0x53d940 } (cdecl, Database.cpp): `database_is_polynesian_nation(nacao)`: 1 se a nação tem o id de uma das
-/// chaves 0x9cf4d0, 0x9cf52c, 0x9cf4b4, 0x9cf2a4, 0x9cf514 (as polinésias), senão 0 (a nação não é conferida). Nas
-/// copas da Oceania (oceania_club_champ 0x798220, oceania_nations 0x799e30).
 pub(crate) unsafe extern "C" fn database_is_polynesian_nation(nation: usize) -> u32 {
     let id = read_u32(nation);
     let keys = [KEY_NATION_TONGA, KEY_NATION_AMERICAN_SAMOA, KEY_NATION_TAHITI, KEY_NATION_COOK_ISLANDS, KEY_NATION_WESTERN_SAMOA]; // Polynesian
@@ -4229,11 +3787,6 @@ pub(crate) unsafe extern "C" fn database_is_polynesian_nation(nation: usize) -> 
 /// With `gender` not null and the language (`exe::langlib_get_language`) 4, writes into it 4 (manager, assistant) or 1 (coach). Returns
 /// 0xae1980. Used in the regeneration (player_regen 0x7a9650).
 /// Original: `database_get_coaching_job_name` (0x53ac40, Database.cpp, cdecl).
-///
-/// [pt] { 0x53ac40 } (cdecl, Database.cpp): `database_get_coaching_job_name(cargo, genero)`: o nome do cargo (byte com
-/// sinal) no texto fixo 0xae1980, pela tabela de saltos 0x53acc8: 5 e 12 "Manager", 6 e 13 "Assistant Manager",
-/// 8 e 15 "Coach" (traduzidos pela 0x66f4e0); os demais, texto vazio. Com `genero` não nulo e o idioma (0x66f4d0)
-/// 4, grava nele 4 (técnico, auxiliar) ou 1 (treinador). Devolve 0xae1980. Na regeneração (player_regen 0x7a9650).
 pub(crate) unsafe extern "C" fn database_get_coaching_job_name(job: u32, gender: usize) -> usize {
     let (texto, marca) = match (job as i8 as i32).wrapping_sub(5) {
         0 | 7 => (0x9b6440usize, 4u8), // "Manager"
@@ -4259,12 +3812,6 @@ pub(crate) unsafe extern "C" fn database_get_coaching_job_name(job: u32, gender:
 /// Null text, size < 5 or one of the dates null: the original (error box and 0). Used in the club and competition
 /// records screens (0x44aa20, 0x4a5690, 0x4a7f50).
 /// Original: `database_format_years_between_dates` (0x540340, Database.cpp, cdecl).
-///
-/// [pt] { 0x540340 } (cdecl, Database.cpp): `database_format_years_between_dates(fim, inicio, texto, tamanho)`: os anos
-/// completos entre as datas (+0 dia do ano, +2 ano, palavras): ano(fim) − ano(início), menos 1 se o dia do início é
-/// maior (com sinal); escrito em `texto` com "%d" (0x98806c) como palavra sem sinal (negativo vira 65535). Devolve 1.
-/// Texto nulo, tamanho < 5 ou uma das datas nula: a original (caixa e 0). Nas telas de recordes do clube e das
-/// competições (0x44aa20, 0x4a5690, 0x4a7f50).
 pub(crate) unsafe extern "C" fn database_format_years_between_dates(end: usize, start: usize, text: usize, size: i32) -> u32 {
     if text == 0 || size < 5 || end == 0 || start == 0 {
         return original_fn::<unsafe extern "C" fn(usize, usize, usize, i32) -> u32>(IDX_DATABASE_FORMAT_YEARS_BETWEEN_DATES)(end, start, text, size);
@@ -4279,8 +3826,6 @@ pub(crate) unsafe extern "C" fn database_format_years_between_dates(end: usize, 
 }
 
 /// Case-insensitive string compare (Utils string compare `exe::utils_string_compare` with (a, b, 1, 0)) used by the Database.cpp sorts.
-///
-/// [pt] A comparação de textos sem maiúsculas 0x90c1d0(a, b, 1, 0) que as ordens do Database.cpp usam.
 pub(crate) unsafe fn compare_text_nocase(a: *const u8, b: *const u8) -> i32 {
     exe::utils_string_compare(a, b, 1, 0)
 }
@@ -4291,11 +3836,6 @@ pub(crate) unsafe fn compare_text_nocase(a: *const u8, b: *const u8) -> i32 {
 /// The original copies both names to the stack before comparing; the copy compares in place (`exe::utils_string_compare` only reads). Used
 /// in the club and search screens, in Setup (0x822260) and in the UEFA seeding (0x906410).
 /// Original: `database_compare_clubs_by_short_name` (0x540080, Database.cpp, cdecl).
-///
-/// [pt] { 0x540080 } (cdecl, Database.cpp): `database_compare_clubs_by_short_name(a, b)`: comparação do qsort de
-/// ponteiros de clube pelo nome curto (+0x38) na comparação de textos 0x90c1d0 (sem maiúsculas); clube nulo vale o
-/// texto vazio. A original copia os dois nomes para a pilha antes de comparar; a cópia compara no lugar (a 0x90c1d0
-/// só lê). Nas telas de clubes e de busca, no Setup (0x822260) e na semeadura da UEFA (0x906410).
 pub(crate) unsafe extern "C" fn database_compare_clubs_by_short_name(a: usize, b: usize) -> i32 {
     let name = |p: usize| {
         let c = Club(read_usize(p));
@@ -4310,10 +3850,6 @@ pub(crate) unsafe extern "C" fn database_compare_clubs_by_short_name(a: usize, b
 ///
 /// Used in the menu (0x7612c0) and the transfer manager (0x8e55f0).
 /// Original: `database_compare_staff_by_full_name` (0x540270, Database.cpp, cdecl).
-///
-/// [pt] { 0x540270 } (cdecl, Database.cpp): `database_compare_staff_by_full_name(a, b)`: comparação do qsort de
-/// ponteiros de pessoa pelo nome no estilo 1 ("nome sobrenome", 0x53dba0 em 0x7d0 bytes) na comparação de textos
-/// 0x90c1d0; pessoa nula vale o texto vazio. No menu (0x7612c0) e no gerente de transferências (0x8e55f0).
 pub(crate) unsafe extern "C" fn database_compare_staff_by_full_name(a: usize, b: usize) -> i32 {
     let mut na = [0u8; 0x7d0];
     let mut nb = [0u8; 0x7d0];
@@ -4333,11 +3869,6 @@ pub(crate) unsafe extern "C" fn database_compare_staff_by_full_name(a: usize, b:
 ///
 /// Null person: the original (error box and 0). Used by screens, regeneration and transfers (~137 callers).
 /// Original: `database_staff_matches_names` (0x53e990, Database.cpp, cdecl).
-///
-/// [pt] { 0x53e990 } (cdecl, Database.cpp): `database_staff_matches_names(pessoa, nome, sobrenome, comum, data)`: 1 se a
-/// pessoa, que tem de ter registro de jogador (+0x61) ou de não jogador (+0x69), confere: cada nome não nulo (+4, +8,
-/// +0xc) tem o id (+0x33) pedido e, com `data`, a data de nascimento (+0x10 dia, +0x12 ano) é a mesma (0x4a7f20);
-/// senão 0. Pessoa nula: a original (caixa e 0). Telas, regeneração e transferências (~137 chamadores).
 pub(crate) unsafe extern "C" fn database_staff_matches_names(person: usize, name: u32, surname: u32, common: u32, data: usize) -> u32 {
     let person = Staff(person);
     if person.is_null() {
@@ -4362,10 +3893,6 @@ pub(crate) unsafe extern "C" fn database_staff_matches_names(person: usize, name
 
 /// Orders two clubs by the f64 coordinate at offset d of their stadium's (+0x69) city (+0x38): -1, 0 or 1; a missing
 /// city uses [0x9689a0] for ca and 0 for cb.
-///
-/// [pt] A ordem dos clubes `ca` e `cb` (não nulos) pela coordenada f64 em `d` da cidade (+0x38) do estádio (+0x69); sem
-/// estádio ou sem cidade, a de `ca` vale [0x9689a0] e a de `cb` vale 0. −1 se a de `ca` é menor (ou NaN: o `fcom`
-/// com C0), 1 se maior, 0 se igual.
 pub(crate) unsafe fn order_by_city_coordinate(ca: usize, cb: usize, d: usize) -> i32 {
     let city = |c: Club| {
         let e = Stadium(c.stadium().addr());
@@ -4389,11 +3916,6 @@ pub(crate) unsafe fn order_by_city_coordinate(ca: usize, cb: usize, d: usize) ->
 /// Null club: the original (error box and 0). Used in the cups drawn by region (eng_auto_cup `select_section_clubs`, cro_a1, fin_prm,
 /// ita_ser_a, nor_prm, por_prm, spa_first, swe_cup).
 /// Original: `database_compare_clubs_by_latitude` (0x53fd40, Database.cpp, cdecl).
-///
-/// [pt] { 0x53fd40 } (cdecl, Database.cpp): `database_compare_clubs_by_latitude(a, b)`: comparação do qsort de ponteiros
-/// de clube pela latitude (+0x23, f64) da cidade do estádio, a menor primeiro. Clube nulo: a original (caixa e 0).
-/// Nas copas sorteadas por região (eng_auto_cup 0x56b730, cro_a1, fin_prm, ita_ser_a, nor_prm, por_prm, spa_first,
-/// swe_cup).
 pub(crate) unsafe extern "C" fn database_compare_clubs_by_latitude(a: usize, b: usize) -> i32 {
     let (ca, cb) = (read_usize(a), read_usize(b));
     if ca == 0 || cb == 0 {
@@ -4404,10 +3926,6 @@ pub(crate) unsafe extern "C" fn database_compare_clubs_by_latitude(a: usize, b: 
 
 /// the same comparison by longitude (+0x2b, f64)
 /// Original: `database_compare_clubs_by_longitude` (0x53fe50, Database.cpp, cdecl).
-///
-/// [pt] { 0x53fe50 } (cdecl, Database.cpp): `database_compare_clubs_by_longitude(a, b)`: a mesma comparação pela
-/// longitude (+0x2b, f64). Clube nulo: a original (caixa e 0). Nas copas sorteadas por região (bel_first, hol_cup,
-/// ita_c_cup, spa_first, tur_first).
 pub(crate) unsafe extern "C" fn database_compare_clubs_by_longitude(a: usize, b: usize) -> i32 {
     let (ca, cb) = (read_usize(a), read_usize(b));
     if ca == 0 || cb == 0 {
@@ -4424,11 +3942,6 @@ pub(crate) unsafe extern "C" fn database_compare_clubs_by_longitude(a: usize, b:
 ///
 /// The order of the tests is the original routine's (`get_player_injury_status` is only called for those of the position). 8-bit counter
 /// (at most 50).
-///
-/// [pt] Quantos dos 50 do elenco (+0xd7) contam para as três consultas da força do elenco pelo limite /65: pessoa não
-/// nula com jogador (+0x61) da `posicao`, sem lesão grave (INJURY 0x62c400 em [0xb63d28] ≠ 2), id (+0) < [0xae2364]
-/// (com sinal) e habilidade atual (+5 do jogador, curto com sinal) acima do `limite`. A ordem dos testes é a da
-/// original (a 0x62c400 só é chamada para os da posição). Contador de 8 bits (no máximo 50).
 pub(crate) unsafe fn count_squad_above_ability(club: Club, limit: i32, position: impl Fn(usize) -> bool) -> u8 {
     let rd = |a: usize| read_usize(a);
     let mut n = 0u8;
@@ -4452,8 +3965,6 @@ pub(crate) unsafe fn count_squad_above_ability(club: Club, limit: i32, position:
 }
 
 /// Ability threshold from club reputation: reputation/65 + 40, clamped to 40..teto.
-///
-/// [pt] O limite de habilidade das três: reputação do clube (+0x80, curto com sinal) / 65 + 40, entre 40 e `teto`.
 pub(crate) unsafe fn squad_ability_threshold(club: Club, ceiling: i32) -> i32 {
     (club.reputation() as i32 / 65 + 40).clamp(40, ceiling)
 }
@@ -4465,11 +3976,6 @@ pub(crate) unsafe fn squad_ability_threshold(club: Club, ceiling: i32) -> i32 {
 ///
 /// `exe::comp_stats_find_club_entry` sorts the competition table on the first call (mark +0x18) and stores the competition in [0xadae10]: in the
 /// comparison the original comes first and the copy finds the table already sorted.
-///
-/// [pt] A média de gols por jogo do clube na competição (+0x57): a estatística do clube (COMP_STATS 0x4a4850, thiscall
-/// no +8 da competição [[0xadadfc] + 4·id]); `None` sem competição, sem estatística ou sem jogos (+4); senão o byte
-/// `campo` / jogos (inteiros sem sinal). A 0x4a4850 ordena a tabela da competição na primeira chamada (marca +0x18)
-/// e guarda a competição em [0xadae10]: na comparação a original vem antes e a cópia acha a tabela já ordenada.
 pub(crate) unsafe fn club_goals_per_game(club: Club, field: usize) -> Option<i32> {
     let rd = |a: usize| read_usize(a);
     let comp = club.division().addr();
@@ -4498,11 +4004,6 @@ pub(crate) unsafe fn club_goals_per_game(club: Club, field: usize) -> Option<i32
 /// (reputation/65 + 40, from 40 to 145). Only `al`. Only by the scout (PLAYER_SEARCH::run_scout_day `exe::player_search_run_scout_day`, report on
 /// a club).
 /// Original: `club_has_enough_defenders` (0x549100, Database.cpp, cdecl).
-///
-/// [pt] { 0x549100 } (cdecl, Database.cpp): `club_has_enough_defenders(clube)`: clube nulo: 0. Se o clube toma mais de
-/// 1,35 gol por jogo ([0x969588]; gols sofridos +0x6a da estatística / jogos): 0. Senão, 1 se mais de 2 zagueiros
-/// (posição +0x11 = 20) passam do limite /65 (teto 145). Só `al`. Só pelo olheiro (PLAYER_SEARCH::run_scout_day
-/// 0x7b3e20, relatório de um clube).
 pub(crate) unsafe extern "C" fn club_has_enough_defenders(club: usize) -> u8 {
     if club == 0 {
         return 0;
@@ -4519,9 +4020,6 @@ pub(crate) unsafe extern "C" fn club_has_enough_defenders(club: usize) -> u8 {
 /// 1 when more than 2 midfielders (+0x14, +0x12 or +0x13 = 20) without serious injury are above the limit
 /// (reputation/65 + 40, 40 to 145)
 /// Original: `club_has_enough_midfielders` (0x549200, Database.cpp, cdecl).
-///
-/// [pt] { 0x549200 } (cdecl, Database.cpp): `club_has_enough_midfielders(clube)`: clube nulo: 0; senão 1 se mais de 2
-/// meias (posição +0x14, +0x12 ou +0x13 = 20, nessa ordem) passam do limite /65 (teto 145). Só `al`. Só pelo olheiro.
 pub(crate) unsafe extern "C" fn club_has_enough_midfielders(club: usize) -> u8 {
     if club == 0 {
         return 0;
@@ -4534,10 +4032,6 @@ pub(crate) unsafe extern "C" fn club_has_enough_midfielders(club: usize) -> u8 {
 /// club scoring fewer than 1.5 goals a game: 0; otherwise 1 when more than 1 striker (+0x15 = 20) without serious
 /// injury is above the limit (reputation/65 + 40, 40 to 150)
 /// Original: `club_has_enough_strikers` (0x5492c0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5492c0 } (cdecl, Database.cpp): `club_has_enough_strikers(clube)`: clube nulo: 0. Se o clube faz menos de
-/// 1,5 gol por jogo ([0x968940]; gols marcados +0x69 da estatística / jogos): 0. Senão, 1 se mais de 1 atacante
-/// (posição +0x15 = 20) passa do limite /65 (teto 150). Só `al`. Só pelo olheiro.
 pub(crate) unsafe extern "C" fn club_has_enough_strikers(club: usize) -> u8 {
     if club == 0 {
         return 0;
@@ -4557,11 +4051,6 @@ pub(crate) unsafe extern "C" fn club_has_enough_strikers(club: usize) -> u8 {
 ///
 /// Like count_squad_above_ability but also requiring `extra`. In the original's order (`get_player_injury_status` only for those of the
 /// position). 8-bit counter (at most 50).
-///
-/// [pt] Quantos dos 50 do elenco (+0xd7) contam: pessoa não nula com jogador (+0x61) da `posicao`, sem lesão grave
-/// (INJURY 0x62c400 em [0xb63d28] ≠ 2), id (+0) < [0xae2364] (com sinal), habilidade atual (+5 do jogador, curto com
-/// sinal) acima do `limite` e o `extra` (os atributos do jogador). Na ordem da original (a 0x62c400 só para os da
-/// posição). Contador de 8 bits (no máximo 50).
 pub(crate) unsafe fn count_squad_above_ability_with(club: Club, limit: i32, position: impl Fn(usize) -> bool, extra: impl Fn(usize) -> bool) -> u8 {
     let rd = |a: usize| read_usize(a);
     let mut n = 0u8;
@@ -4585,8 +4074,6 @@ pub(crate) unsafe fn count_squad_above_ability_with(club: Club, limit: i32, posi
 }
 
 /// Club reputation (+0x80, signed 16-bit).
-///
-/// [pt] A reputação do clube (+0x80, curto com sinal).
 pub(crate) unsafe fn club_reputation(club: Club) -> i32 {
     club.reputation() as i32
 }
@@ -4597,11 +4084,6 @@ pub(crate) unsafe fn club_reputation(club: Club) -> i32 {
 ///
 /// Only `al`. Only by the scout (PLAYER_SEARCH::run_scout_day `exe::player_search_run_scout_day`, report on a club).
 /// Original: `club_has_enough_hard_workers` (0x5493c0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5493c0 } (cdecl, Database.cpp): `club_has_enough_hard_workers(clube)`: clube nulo: 0; senão 1 se mais de 4
-/// jogadores (qualquer posição) passam do limite reputação/65 + 40 (de 40 a 140) com o atributo +0x44 (byte com
-/// sinal; o mesmo que a 0x549850 usa) acima de 14. Só `al`. Só pelo olheiro (PLAYER_SEARCH::run_scout_day 0x7b3e20,
-/// relatório de um clube).
 pub(crate) unsafe extern "C" fn club_has_enough_hard_workers(club: usize) -> u8 {
     if club == 0 {
         return 0;
@@ -4617,10 +4099,6 @@ pub(crate) unsafe extern "C" fn club_has_enough_hard_workers(club: usize) -> u8 
 ///
 /// No ability limit. Only `al`. Only by the scout.
 /// Original: `club_has_fit_goalkeeper` (0x549470, Database.cpp, cdecl).
-///
-/// [pt] { 0x549470 } (cdecl, Database.cpp): `club_has_fit_goalkeeper(clube)`: 1 assim que um dos 50 do elenco (+0xd7) é
-/// pessoa com jogador (+0x61) goleiro (+0xf = 20), sem lesão grave (0x62c400 ≠ 2) e id < [0xae2364]; nenhum ou clube
-/// nulo: 0. Sem limite de habilidade. Só `al`. Só pelo olheiro.
 pub(crate) unsafe extern "C" fn club_has_fit_goalkeeper(club: usize) -> u8 {
     let club = Club(club);
     if club.is_null() {
@@ -4646,11 +4124,6 @@ pub(crate) unsafe extern "C" fn club_has_fit_goalkeeper(club: usize) -> u8 {
 /// 1 when more than 1 midfielder without serious injury is above the limit (reputation/75 + 25, 40 to 135) with
 /// attributes +0x44 and +0x3e above reputation/500 + 5 (at most 14)
 /// Original: `club_has_ball_winning_midfielders` (0x549850, Database.cpp, cdecl).
-///
-/// [pt] { 0x549850 } (cdecl, Database.cpp): `club_has_ball_winning_midfielders(clube)`: clube nulo: 0; senão 1 se mais
-/// de 1 meia (posição +0x14, +0x12 ou +0x13 = 20) sem lesão grave passa do limite reputação/75 + 25 (de 40 a 135)
-/// com os atributos +0x44 e +0x3e (bytes com sinal) acima de reputação/500 + 5 (no máximo 14). Só `al`. Só pelo
-/// olheiro.
 pub(crate) unsafe extern "C" fn club_has_ball_winning_midfielders(club: usize) -> u8 {
     if club == 0 {
         return 0;
@@ -4672,11 +4145,6 @@ pub(crate) unsafe extern "C" fn club_has_ball_winning_midfielders(club: usize) -
 /// +0x80, signed short.
 ///
 /// In the original routine's order. 8-bit counter (at most 50).
-///
-/// [pt] Quantos dos 50 do elenco (+0xd7) são pessoa com jogador (+0x61) na `posicao` (byte = 20), sem lesão grave
-/// (INJURY 0x62c400 em [0xb63d28] ≠ 2), id (+0) < [0xae2364] (com sinal), habilidade atual (+5, curto com sinal)
-/// acima de reputação/75 + 25 (de 40 a 135) e o `atributo` (byte com sinal) acima de reputação/500 + 5 (no máximo
-/// `teto`). Reputação: +0x80 do clube, curto com sinal. Na ordem da original. Contador de 8 bits (no máximo 50).
 pub(crate) unsafe fn count_natural_at_position(club: Club, position: usize, attribute: usize, ceiling: i32) -> u8 {
     let rd = |a: usize| read_usize(a);
     let rep = club.reputation() as i32;
@@ -4705,10 +4173,6 @@ pub(crate) unsafe fn count_natural_at_position(club: Club, position: usize, attr
 /// 1 when at most 1 striker (+0x15 = 20) without serious injury is above the ability limit (reputation/75 + 25, 40 to
 /// 135) with attribute +0x2e above reputation/500 + 5 (at most 13)
 /// Original: `club_lacks_aerial_strikers` (0x5494d0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5494d0 } (cdecl, Database.cpp): `club_lacks_aerial_strikers(clube)`: clube nulo: 0; senão 1 se no máximo 1
-/// atacante (posição +0x15) passa dos limites com o atributo +0x2e (o jogo pelo alto) acima de reputação/500 + 5 (no
-/// máximo 13). Só `al`. Só pelo olheiro (PLAYER_SEARCH::run_scout_day 0x7b3e20, relatório de um clube).
 pub(crate) unsafe extern "C" fn club_lacks_aerial_strikers(club: usize) -> u8 {
     if club == 0 {
         return 0;
@@ -4718,10 +4182,6 @@ pub(crate) unsafe extern "C" fn club_lacks_aerial_strikers(club: usize) -> u8 {
 
 /// the same with defenders (+0x11 = 20) and attribute +0x2e (at most 13)
 /// Original: `club_lacks_aerial_defenders` (0x5495b0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5495b0 } (cdecl, Database.cpp): `club_lacks_aerial_defenders(clube)`: clube nulo: 0; senão 1 se no máximo 1
-/// zagueiro (posição +0x11) passa dos limites com o atributo +0x2e acima de reputação/500 + 5 (no máximo 13). Só
-/// `al`. Só pelo olheiro.
 pub(crate) unsafe extern "C" fn club_lacks_aerial_defenders(club: usize) -> u8 {
     if club == 0 {
         return 0;
@@ -4734,10 +4194,6 @@ pub(crate) unsafe extern "C" fn club_lacks_aerial_defenders(club: usize) -> u8 {
 ///
 /// Only `al`. Only by the scout.
 /// Original: `club_lacks_fast_defenders` (0x549690, Database.cpp, cdecl).
-///
-/// [pt] { 0x549690 } (cdecl, Database.cpp): `club_lacks_fast_defenders(clube)`: clube nulo: 0; senão 1 se no máximo 1
-/// zagueiro (posição +0x11) passa dos limites com o atributo +0x36 (a velocidade) acima de reputação/500 + 5 (no
-/// máximo 10). Só `al`. Só pelo olheiro.
 pub(crate) unsafe extern "C" fn club_lacks_fast_defenders(club: usize) -> u8 {
     if club == 0 {
         return 0;
@@ -4750,11 +4206,6 @@ pub(crate) unsafe extern "C" fn club_lacks_fast_defenders(club: usize) -> u8 {
 /// 25 (from 40 to 135), and pass `extra` with the attribute threshold reputation/500 + 5 (at most `teto`).
 ///
 /// Reputation: the club's +0x80, signed short. In the original's order. 8-bit counter (at most 50).
-///
-/// [pt] Quantos dos 50 do elenco (+0xd7) são pessoa com jogador (+0x61) da `posicao`, sem lesão grave (INJURY 0x62c400
-/// em [0xb63d28] ≠ 2), id (+0) < [0xae2364] (com sinal), habilidade atual (+5, curto com sinal) acima de
-/// reputação/75 + 25 (de 40 a 135) e o `extra` com o limite de atributo reputação/500 + 5 (no máximo `teto`).
-/// Reputação: +0x80 do clube, curto com sinal. Na ordem da original. Contador de 8 bits (no máximo 50).
 pub(crate) unsafe fn count_squad_by_rep_thresholds(club: Club, ceiling: i32, position: impl Fn(usize) -> bool, extra: impl Fn(usize, i32) -> bool) -> u8 {
     let rd = |a: usize| read_usize(a);
     let rep = club.reputation() as i32;
@@ -4783,11 +4234,6 @@ pub(crate) unsafe fn count_squad_by_rep_thresholds(club: Club, ceiling: i32, pos
 /// 1 when some striker (+0x15 = 20) without serious injury is above the ability limit (reputation/75 + 25, 40 to 135)
 /// with attribute +0x36 above reputation/500 + 5 (at most 17)
 /// Original: `club_has_fast_striker` (0x549770, Database.cpp, cdecl).
-///
-/// [pt] { 0x549770 } (cdecl, Database.cpp): `club_has_fast_striker(clube)`: clube nulo: 0; senão 1 se algum atacante
-/// (posição +0x15 = 20) passa dos limites com o atributo +0x36 (a velocidade, byte com sinal) acima de
-/// reputação/500 + 5 (no máximo 17). Só `al`. Só pelo olheiro (PLAYER_SEARCH::run_scout_day 0x7b3e20, relatório de
-/// um clube).
 pub(crate) unsafe extern "C" fn club_has_fast_striker(club: usize) -> u8 {
     if club == 0 {
         return 0;
@@ -4802,10 +4248,6 @@ pub(crate) unsafe extern "C" fn club_has_fast_striker(club: usize) -> u8 {
 ///
 /// Only `al`. Only by the scout.
 /// Original: `club_has_two_creative_midfielders` (0x549940, Database.cpp, cdecl).
-///
-/// [pt] { 0x549940 } (cdecl, Database.cpp): `club_has_two_creative_midfielders(clube)`: clube nulo: 0; senão 1 se mais de
-/// 1 meia (posição +0x14, +0x12 ou +0x13 = 20) passa dos limites com os atributos +0x43 e +0x37 (bytes com sinal)
-/// acima de reputação/500 + 5 (no máximo 14). Só `al`. Só pelo olheiro.
 pub(crate) unsafe extern "C" fn club_has_two_creative_midfielders(club: usize) -> u8 {
     if club == 0 {
         return 0;
@@ -4829,17 +4271,6 @@ pub(crate) unsafe extern "C" fn club_has_two_creative_midfielders(club: usize) -
 /// of 6 bytes per id: the other's ≥ 0 and the club's ≤ 0); < 1250 adds 1 (band < 5, the club's ≥ 0 and the other's ≤
 /// 0). At the end, between 0 and 6. Only `al`. Only by the scout.
 /// Original: `club_squad_strength_band` (0x549a30, Database.cpp, cdecl).
-///
-/// [pt] { 0x549a30 } (cdecl, Database.cpp): `club_squad_strength_band(clube, outro)`: a faixa de força do elenco, 0..6.
-/// Clube nulo: 3. Junta os do elenco (+0xd7) com jogador (+0x61) e id < [0xae2364] (lido uma vez) num vetor local de
-/// 50, ordena pelo qsort da CRT (0x945333) com a comparação 0x549c30 (pelo endereço do jogo) e soma a habilidade atual
-/// (+5 do jogador) dos primeiros min(n − 1, 16). Sem nenhum somado: pela reputação (+0x80; > 7250: 6, > 5750: 5,
-/// > 4750: 4, > 3250: 3, > 2250: 2, senão 1); senão pela média (> 155: 6, > 135: 5, > 110: 4, > 85: 3, > 60: 2,
-/// > 40: 1, senão 0). Com `outro` (o clube do olheiro): reputação dele > 7250 tira 2 se a do clube < 4250 e a faixa
-/// > 2, e mais 1 se a do clube < 7250 e a faixa > 0; senão, reputação dele < 4250 soma 1 se a faixa < 5. Na mesma
-/// competição (+0x57 igual), a diferença de reputação (16 bits) > 1250 tira 1 (faixa > 0, byte +4 da tabela
-/// [0xae2d14] de 6 bytes por id: do outro ≥ 0 e do clube ≤ 0); < 1250 soma 1 (faixa < 5, do clube ≥ 0 e do outro
-/// ≤ 0). No fim, entre 0 e 6. Só `al`. Só pelo olheiro.
 pub(crate) unsafe extern "C" fn club_squad_strength_band(club: usize, other: usize) -> u8 {
     let other = Club(other);
     let club = Club(club);
@@ -4912,9 +4343,6 @@ pub(crate) unsafe extern "C" fn club_squad_strength_band(club: usize, other: usi
 
 /// Club of the person's contract as `club_reputation_for_staff` finds it (contract via `exe::contract_manager_get_contract`, stored in G_CONTRACT_LOOKUP_RESULT; club
 /// id at contract +4); 0 without contract.
-///
-/// [pt] O clube do contrato da `pessoa` como a 0x545e90 o acha: o contrato pela 0x4cf5a0 (this = [0xae1050]), gravado
-/// em [0xae1080] como na original; com contrato, o clube de id +4 na tabela [0xae23b4] (581 bytes); sem: 0.
 pub(crate) unsafe fn database_club_of_contract(person: Staff) -> usize {
     let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person));
     write_usize(G_CONTRACT_LOOKUP_RESULT, c.addr());
@@ -4925,9 +4353,6 @@ pub(crate) unsafe fn database_club_of_contract(person: Staff) -> usize {
 }
 
 /// +500 if the club is one of the person's three favourite clubs, -500 if one of the three disliked, else 0.
-///
-/// [pt] +500 se o `clube` está entre os três clubes favoritos da pessoa (preferências +4/+8/+0xc), −500 se entre os três
-/// rejeitados (+0x10/+0x14/+0x18), senão 0; sem preferências: 0.
 pub(crate) unsafe fn club_preference_bonus(club: Club, person: Staff) -> i32 {
     let pref = person.staff_preferences();
     if pref == 0 {
@@ -4956,17 +4381,6 @@ pub(crate) unsafe fn club_preference_bonus(club: Club, person: Staff) -> i32 {
 /// Callers read only `ax`; the rest of eax follows the original (the register left over on each path). Writes
 /// [0xae1080] (the contract found). Used in the daily person update (game_daily_staff_update 0x5ce2d0, two calls).
 /// Original: `club_reputation_for_staff` (0x545e90, Database.cpp, cdecl).
-///
-/// [pt] { 0x545e90 } (cdecl, Database.cpp): `club_reputation_for_staff(clube, pessoa)`: a reputação do clube (+0x80) vista
-/// pela pessoa. Sem divisão (+0x57): a reputação. Com a liga da divisão ([0xadadfc][id]) e a reputação da divisão
-/// (+0x69) × 500 acima da do clube: a posição (0x4a4850 na tabela +8 da liga; sem linha: 0) escalada a 20 clubes
-/// (+0x3e) dá o peso da tabela 0x9b59c0; com menos de 20 jogos (+4 da linha) mistura com o peso da posição anterior
-/// (+0x5f, se +0x5b = +0x57; senão 1,3) × 0,05; se a pessoa joga (+0x61) e o contrato é com o clube, soma a média
-/// 0x7c1e30(dados, 6, 20, peso) e divide por 2, e ganha ±500 pelas preferências; o peso vira x = 14p − 18 entre 0 e
-/// 10 e o resultado é ((10 − x) × reputação + x × divisão × 500 (16 bits)) / 10 truncado, mais o ±500. Senão: a
-/// reputação ±500 (pessoa que joga, com contrato no clube). Os chamadores leem só `ax`; o resto do eax segue a
-/// original (o registro que sobrou em cada caminho). Grava [0xae1080] (o contrato achado). No diário das pessoas
-/// (game_daily_staff_update 0x5ce2d0, duas chamadas).
 pub(crate) unsafe extern "C" fn club_reputation_for_staff(club: usize, person: usize) -> u32 {
     let person = Staff(person);
     let club = Club(club);
@@ -5040,9 +4454,6 @@ pub(crate) unsafe extern "C" fn club_reputation_for_staff(club: usize, person: u
 }
 
 /// How many of the three people in the preference list at `base` belong (+0x39) to `clube`; 0 on null inputs.
-///
-/// [pt] Quantas das três pessoas da lista de preferências em `base` (+0x65 da pessoa) têm o clube (+0x39) igual a `clube`;
-/// pessoa, preferências ou clube nulos: 0. Só `al`.
 pub(crate) unsafe fn count_preferred_people_at_club(person: Staff, club: usize, base: usize) -> u8 {
     if person.is_null() {
         return 0;
@@ -5063,25 +4474,17 @@ pub(crate) unsafe fn count_preferred_people_at_club(person: Staff, club: usize, 
 
 /// how many of the three disliked staff (preferences +0x28..+0x30) are at the club (+0x39)
 /// Original: `staff_count_disliked_staff_at_club` (0x547c90, Database.cpp, cdecl).
-///
-/// [pt] { 0x547c90 } (cdecl, Database.cpp): `staff_count_disliked_staff_at_club(pessoa, clube)`: quantas das três pessoas
-/// que a pessoa rejeita (preferências +0x28/+0x2c/+0x30) estão no clube. No diário das pessoas (0x5ce2d0).
 pub(crate) unsafe extern "C" fn staff_count_disliked_staff_at_club(person: usize, club: usize) -> u8 {
     count_preferred_people_at_club(Staff(person), club, 0x28) // the rejected ones
 }
 
 /// how many of the three favoured staff (preferences +0x1c..+0x24) are at the club (+0x39)
 /// Original: `staff_count_favoured_staff_at_club` (0x547ce0, Database.cpp, cdecl).
-///
-/// [pt] { 0x547ce0 } (cdecl, Database.cpp): `staff_count_favoured_staff_at_club(pessoa, clube)`: quantas das três pessoas
-/// favoritas da pessoa (preferências +0x1c/+0x20/+0x24) estão no clube. No diário das pessoas (0x5ce2d0).
 pub(crate) unsafe extern "C" fn staff_count_favoured_staff_at_club(person: usize, club: usize) -> u8 {
     count_preferred_people_at_club(Staff(person), club, 0x1c) // the favorites
 }
 
 /// Zeroes the first of three dword slots that holds `alvo`.
-///
-/// [pt] Zera a primeira das três posições (`reg`, +4, +8) que tem `alvo` (a ordem da original: achou, zera e sai).
 pub(crate) unsafe fn remove_from_list3(reg: usize, target: usize) {
     for k in 0..3 {
         let a = (reg + 4 * k) as *mut usize;
@@ -5093,8 +4496,6 @@ pub(crate) unsafe fn remove_from_list3(reg: usize, target: usize) {
 }
 
 /// The person's STAFF_PREFERENCES pointer (+0x65), or 0 for a null person.
-///
-/// [pt] As preferências (+0x65) da pessoa não nula; pessoa nula: 0 (o eax que as 0x547c10/0x547c50/0x547f50 devolvem).
 pub(crate) unsafe fn staff_preferences(person: Staff) -> usize {
     if person.is_null() {
         0
@@ -5109,11 +4510,6 @@ pub(crate) unsafe fn staff_preferences(person: Staff) -> usize {
 /// Null person, preferences or club: nothing. Returns the original's eax (the preferences; null person: 0). Used in the
 /// daily person update (0x5ce2d0), when the attachment to the club ends.
 /// Original: `staff_remove_favoured_club` (0x547f50, Database.cpp, cdecl).
-///
-/// [pt] { 0x547f50 } (cdecl, Database.cpp): `staff_remove_favoured_club(pessoa, clube)`: tira o clube dos três clubes
-/// favoritos da pessoa (preferências +4/+8/+0xc, o primeiro que bate). Pessoa, preferências ou clube nulos: nada.
-/// Devolve o eax da original (as preferências; pessoa nula: 0). No diário das pessoas (0x5ce2d0), quando o
-/// apego ao clube acaba.
 pub(crate) unsafe extern "C" fn staff_remove_favoured_club(person: usize, club: usize) -> usize {
     let pref = staff_preferences(Staff(person));
     if pref != 0 && club != 0 {
@@ -5128,10 +4524,6 @@ pub(crate) unsafe extern "C" fn staff_remove_favoured_club(person: usize, club: 
 /// Null club or person: nothing. Returns the club (the original's eax). Used in the dispute hearings
 /// (DISPUTE::process_hearings 0x569ed0).
 /// Original: `club_remove_favoured_staff` (0x547bd0, Database.cpp, cdecl).
-///
-/// [pt] { 0x547bd0 } (cdecl, Database.cpp): `club_remove_favoured_staff(clube, pessoa)`: tira a pessoa das três pessoas
-/// favoritas do clube (+0x9b/+0x9f/+0xa3, o primeiro que bate). Clube ou pessoa nulos: nada. Devolve o clube (o eax
-/// da original). Nas audiências das disputas (DISPUTE::process_hearings 0x569ed0).
 pub(crate) unsafe extern "C" fn club_remove_favoured_staff(club: usize, person: usize) -> usize {
     let club = Club(club);
     if !club.is_null() && person != 0 {
@@ -5147,12 +4539,6 @@ pub(crate) unsafe extern "C" fn club_remove_favoured_staff(club: usize, person: 
 /// disputes (0x569ed0), squad relationships (game_update_squad_relationships `game_update_squad_relationships`, daily), the return from injury
 /// (`post_recovery_news`), MANAGER_MANAGER (0x697a7a) and the media (0x75a340).
 /// Original: `staff_remove_favoured_staff` (0x547c10, Database.cpp, cdecl).
-///
-/// [pt] { 0x547c10 } (cdecl, Database.cpp): `staff_remove_favoured_staff(pessoa, alvo)`: tira o alvo das três pessoas
-/// favoritas da pessoa (preferências +0x1c/+0x20/+0x24, o primeiro que bate). Pessoa, preferências ou alvo nulos:
-/// nada. Devolve o eax da original (as preferências; pessoa nula: 0). Nas disputas (0x569ed0), nas relações do
-/// elenco (game_update_squad_relationships 0x5d6d10, diária), na volta da lesão (0x630ee0), no MANAGER_MANAGER
-/// (0x697a7a) e na mídia (0x75a340).
 pub(crate) unsafe extern "C" fn staff_remove_favoured_staff(person: usize, target: usize) -> usize {
     let pref = staff_preferences(Staff(person));
     if pref != 0 && target != 0 {
@@ -5168,11 +4554,6 @@ pub(crate) unsafe extern "C" fn staff_remove_favoured_staff(person: usize, targe
 /// squad relationships (game_update_squad_relationships `game_update_squad_relationships`, daily), the return from injury (`post_recovery_news`) and the
 /// media (0x7414ac, 0x75a340).
 /// Original: `staff_remove_disliked_staff` (0x547c50, Database.cpp, cdecl).
-///
-/// [pt] { 0x547c50 } (cdecl, Database.cpp): `staff_remove_disliked_staff(pessoa, alvo)`: zera a primeira das três pessoas
-/// rejeitadas da pessoa (preferências +0x28/+0x2c/+0x30) que é o alvo. Pessoa, preferências ou alvo nulos: nada.
-/// Devolve o eax da original (as preferências; pessoa nula: 0). Nas relações do elenco (game_update_squad_relationships
-/// 0x5d6d10, diária), na volta da lesão (0x630ee0) e na mídia (0x7414ac, 0x75a340).
 pub(crate) unsafe extern "C" fn staff_remove_disliked_staff(person: usize, target: usize) -> usize {
     let person = Staff(person);
     if person.is_null() {
@@ -5199,12 +4580,6 @@ pub(crate) unsafe extern "C" fn staff_remove_disliked_staff(person: usize, targe
 /// Returns `n` (the original's eax). Used in MANAGER_MANAGER: the board's opinion of the squad (0x693850) and its
 /// reaction to the match (`board_named_players_after_match`).
 /// Original: `staff_get_favoured_staff` (0x548090, Database.cpp, cdecl).
-///
-/// [pt] { 0x548090 } (cdecl, Database.cpp): `staff_get_favoured_staff(pessoa, vetor, n)`: zera o byte `n` e, com pessoa,
-/// preferências e vetor não nulos, copia as pessoas favoritas não nulas (preferências +0x1c, +0x20, +0x24, nessa
-/// ordem) para `vetor[n]`, somando 1 a `n` a cada uma (a primeira vai direto em `vetor[0]`). Devolve `n` (o eax da
-/// original). No MANAGER_MANAGER: a opinião da diretoria sobre o elenco (0x693850) e a reação dela à partida
-/// (0x6aaee0).
 pub(crate) unsafe extern "C" fn staff_get_favoured_staff(person: usize, array: usize, n: *mut i8) -> *mut i8 {
     *n = 0;
     if person == 0 {
@@ -5232,12 +4607,6 @@ pub(crate) unsafe extern "C" fn staff_get_favoured_staff(person: usize, array: u
 /// At creation: the people's default contract (CONTRACT_MANAGER::initialise_all_staff_contracts → 0x85e960 → `exe::staff_contract_default_staff_contract`)
 /// and the default wage of the initial lists (0x83a1b0 → `exe::staff_contract_calc_unset_default_wage`).
 /// Original: `club_is_in_season` (0x547770, Database.cpp, cdecl).
-///
-/// [pt] { 0x547770 } (cdecl, Database.cpp): `club_is_in_season(clube)`: clube nulo, 0; senão o que
-/// `key_nation_club_in_season` 0x669bd0(clube, nulo, nulo) devolve (1 = hoje dentro da temporada da nação do clube),
-/// o eax inteiro (o contrato padrão 0x864550 testa o eax). Na criação: o contrato padrão das pessoas
-/// (CONTRACT_MANAGER::initialise_all_staff_contracts → 0x85e960 → 0x864550) e o salário padrão das listas iniciais
-/// (0x83a1b0 → 0x862720).
 pub(crate) unsafe extern "C" fn club_is_in_season(club: usize) -> u32 {
     if club == 0 {
         return 0;
@@ -5252,11 +4621,6 @@ pub(crate) unsafe extern "C" fn club_is_in_season(club: usize) -> u32 {
 /// Only `al` (the rest of eax is the nation's id). At creation, through the default contract (`exe::staff_contract_default_staff_contract`) and the default
 /// wage (`exe::staff_contract_calc_unset_default_wage`).
 /// Original: `club_is_in_major_nation` (0x549e50, Database.cpp, cdecl).
-///
-/// [pt] { 0x549e50 } (cdecl, Database.cpp): `club_is_in_major_nation(clube)`: 1 se a nação do clube (+0x53) tem o id
-/// (+0) de uma das chaves Inglaterra 0x9cf2e4, França 0x9cf300, Alemanha 0x9cf314, Itália 0x9cf360, Espanha 0x9cf488 ou
-/// Holanda 0x9cf338; clube ou nação nulos: 0. Só `al` (o resto do eax é o id da nação). Na criação, pelo contrato
-/// padrão (0x864550) e pelo salário padrão (0x862720).
 pub(crate) unsafe extern "C" fn club_is_in_major_nation(club: usize) -> u8 {
     let club = Club(club);
     if club.is_null() {
@@ -5275,10 +4639,6 @@ pub(crate) unsafe extern "C" fn club_is_in_major_nation(club: usize) -> u8 {
 ///
 /// Only `al`. In the career, through the youth regeneration (PLAYER_REGEN::regenerate_as_youth_player `regenerate_as_youth_player`).
 /// Original: `nation_is_major_nation` (0x549ea0, Database.cpp, cdecl).
-///
-/// [pt] { 0x549ea0 } (cdecl, Database.cpp): `nation_is_major_nation(nacao)`: o mesmo teste das seis chaves de 0x549e50
-/// sobre o id (+0) da própria nação; nula: 0. Só `al`. Na carreira, pela regeneração dos jovens
-/// (PLAYER_REGEN::regenerate_as_youth_player 0x7abac0).
 pub(crate) unsafe extern "C" fn nation_is_major_nation(nation: usize) -> u8 {
     if nation == 0 {
         return 0;
@@ -5290,10 +4650,6 @@ pub(crate) unsafe extern "C" fn nation_is_major_nation(nation: usize) -> u8 {
 
 /// The person's 79-byte record in the staff state table (G_STAFF_STATE_TABLE) holding the two relationship links
 /// (+0x27/+0x37, +0x3b/+0x4b); None for a null person or id >= staff count.
-///
-/// [pt] O registro de contrato (79 bytes, tabela [0xae2d0c]) da `pessoa` como as 0x549c90/0x549cf0/0x549d60 o acham:
-/// pessoa nula ou id (+0) ≥ [0xae2364] (comparação com sinal: id negativo passa, como na original): nenhum.
-/// Os dois vínculos ficam em +0x27/+0x37 e +0x3b/+0x4b (id da outra pessoa, valor), −1 = vazio.
 pub(crate) unsafe fn database_staff_state_record(person: usize) -> Option<usize> {
     if person == 0 {
         return None;
@@ -5321,10 +4677,6 @@ pub(crate) unsafe fn write_state_i32(c: usize, d: usize, v: i32) {
 /// At creation, for each generated contract (0x85e960, through CONTRACT_MANAGER::initialise_all_staff_contracts); in
 /// the career, in offers and complaints.
 /// Original: `staff_clear_opinion_links` (0x549c90, Database.cpp, cdecl).
-///
-/// [pt] { 0x549c90 } (cdecl, Database.cpp): `staff_clear_opinion_links(pessoa)`: −1 nos dois vínculos do contrato da
-/// pessoa (+0x27, +0x37, +0x3b, +0x4b). Na criação, a cada contrato gerado (0x85e960, por
-/// CONTRACT_MANAGER::initialise_all_staff_contracts); na carreira, nas propostas e nas queixas.
 pub(crate) unsafe extern "C" fn staff_clear_opinion_links(person: usize) {
     if let Some(c) = database_staff_state_record(person) {
         for k in [0usize, 0x14] {
@@ -5340,10 +4692,6 @@ pub(crate) unsafe extern "C" fn staff_clear_opinion_links(person: usize) {
 ///
 /// In the career, through the contract events (`exe::staff_contract_apply_event_flags`).
 /// Original: `staff_add_opinion_link` (0x549cf0, Database.cpp, cdecl).
-///
-/// [pt] { 0x549cf0 } (cdecl, Database.cpp): `staff_add_opinion_link(pessoa, outra, valor)`: com as duas pessoas válidas
-/// (não nulas, id < [0xae2364]), grava o id da `outra` e o `valor` no primeiro vínculo se ele está vazio (+0x27 = −1),
-/// senão no segundo (+0x3b/+0x4b, por cima do que houver). Na carreira, pelos eventos do contrato (0x867700).
 pub(crate) unsafe extern "C" fn staff_add_opinion_link(person: usize, other: usize, value: i32) {
     let Some(c) = database_staff_state_record(person) else { return };
     if other == 0 {
@@ -5367,10 +4715,6 @@ pub(crate) unsafe extern "C" fn staff_add_opinion_link(person: usize, other: usi
 ///
 /// In the career, when the complaint passes (`check_transfer_request_withdrawal`, `exe::staff_contract_clear_grievances`).
 /// Original: `staff_remove_opinion_link` (0x549d60, Database.cpp, cdecl).
-///
-/// [pt] { 0x549d60 } (cdecl, Database.cpp): `staff_remove_opinion_link(pessoa, valor)`: esvazia (−1 no id e no valor) o
-/// primeiro vínculo com esse `valor` (+0x37) ou, se não, o segundo (+0x4b); nenhum com o valor: nada. Na carreira,
-/// quando a queixa passa (0x867240, 0x8674e0).
 pub(crate) unsafe extern "C" fn staff_remove_opinion_link(person: usize, value: i32) {
     let Some(c) = database_staff_state_record(person) else { return };
     if read_state_i32(c, 0x37) == value {
@@ -5388,11 +4732,6 @@ pub(crate) unsafe extern "C" fn staff_remove_opinion_link(person: usize, value: 
 /// Null club: the original ("Error" box and 0). In the career, through the coach distribution (`update_coach_assignments`, in hirings and
 /// transfers), the regeneration (`process_regen_queue`) and the screens.
 /// Original: `database_get_club_assistant` (0x53cb80, Database.cpp, cdecl).
-///
-/// [pt] { 0x53cb80 } (cdecl, Database.cpp): `database_get_club_assistant(clube)`: o auxiliar (+0xd3) do clube; sem ele, o
-/// do time parceiro A/B (0x540a50 com nulo e 1, que zera a marca +0x244 do clube quando recusa o parceiro); nenhum: 0.
-/// Clube nulo: a original (caixa "Error" e 0). Na carreira, pela distribuição dos treinadores (0x8b2880, nas
-/// contratações e transferências), pela regeneração (0x7a65d0) e pelas telas.
 pub(crate) unsafe extern "C" fn database_get_club_assistant(club: usize) -> usize {
     let club = Club(club);
     if club.is_null() {
@@ -5417,12 +4756,6 @@ pub(crate) unsafe extern "C" fn database_get_club_assistant(club: usize) -> usiz
 /// original (at most 5). Returns 1. Null club: the original ("Error" box and 0). In the career, through the coach
 /// distribution (`update_coach_assignments`).
 /// Original: `database_get_club_coaches` (0x53cc30, Database.cpp, cdecl).
-///
-/// [pt] { 0x53cc30 } (cdecl, Database.cpp): `database_get_club_coaches(clube, vetor)`: os 5 treinadores (+0x19f) do clube no
-/// `vetor`. Sem parceiro A/B (0x540a50 com nulo e 1): as 5 casas como estão. Com parceiro: os não nulos do clube e
-/// depois os do parceiro até 5; o resto zerado só quando os dois juntos não enchem as 5. Contador de 8 bits na
-/// original (no máximo 5). Devolve 1. Clube nulo: a original (caixa "Error" e 0). Na carreira, pela distribuição dos
-/// treinadores (0x8b2880).
 pub(crate) unsafe extern "C" fn database_get_club_coaches(club: usize, array: *mut usize) -> u32 {
     let club = Club(club);
     if club.is_null() {
@@ -5467,11 +4800,6 @@ pub(crate) unsafe extern "C" fn database_get_club_coaches(club: usize, array: *m
 /// Only `al` (the rest of eax is the partner's). Null club: the original ("Error" box and 0). In the career, through
 /// the regeneration queue (PLAYER_REGEN::process_regen_queue `process_regen_queue`).
 /// Original: `database_count_club_coaches` (0x53c8d0, Database.cpp, cdecl).
-///
-/// [pt] { 0x53c8d0 } (cdecl, Database.cpp): `database_count_club_coaches(clube)`: quantos dos 5 treinadores (+0x19f) do
-/// clube são pessoas válidas (não nulas, id (+0) < [0xae2364], com sinal) mais os do time parceiro A/B (0x540a50 com
-/// nulo e 1, sempre chamada). Só `al` (o resto do eax é o do parceiro). Clube nulo: a original (caixa "Error" e 0).
-/// Na carreira, pela fila da regeneração (PLAYER_REGEN::process_regen_queue 0x7a65d0).
 pub(crate) unsafe extern "C" fn database_count_club_coaches(club: usize) -> u8 {
     if club == 0 {
         return original_fn::<unsafe extern "C" fn(usize) -> u8>(IDX_DATABASE_COUNT_CLUB_COACHES)(club);
@@ -5497,10 +4825,6 @@ pub(crate) unsafe extern "C" fn database_count_club_coaches(club: usize) -> u8 {
 /// Language ([0x9b5984]) 0 or 1: its own code (+0x53). Otherwise the eng.lng table ([0xae2408]): nations in 109-byte
 /// rows from +0x2c, by id (without checking the count), the code at +0x4f of the row. SEH frame only on first use.
 /// Original: `nation_get_english_three_letter_name` (0x5454c0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5454c0 } (cdecl, Database.cpp): `nation_get_english_three_letter_name(nação)`: idioma ([0x9b5984]) 0 ou
-/// 1: a própria sigla (+0x53). Senão a tabela do eng.lng ([0xae2408]): nações em linhas de 109 bytes a partir de
-/// +0x2c, pelo id (sem conferir a quantidade), a sigla em +0x4f da linha. Quadro SEH só no primeiro uso.
 pub(crate) unsafe extern "C" fn nation_get_english_three_letter_name(nation: usize) -> usize {
     let language = read_u32(G_DATABASE_NAMES_LANGUAGE);
     if language == 0 || language == 1 {
@@ -5518,10 +4842,6 @@ pub(crate) unsafe extern "C" fn nation_get_english_three_letter_name(nation: usi
 /// the competition's name, or its English one from eng.lng (83-byte rows: club ones by id, nation ones by id minus the
 /// club count) when another language is loaded
 /// Original: `comp_get_english_name` (0x5455a0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5455a0 } (cdecl, Database.cpp): `comp_get_english_name(competição)`: idioma 0 ou 1: o próprio nome (+4).
-/// Senão a tabela do eng.lng, linhas de 83 bytes: id ≥ [t+0x14] (quantas de clube): a de nação `id − [t+0x14]`
-/// em [t+0x28]; senão a de clube `id` em [t+0x38] (comparação com sinal). Quadro SEH só no primeiro uso.
 pub(crate) unsafe extern "C" fn comp_get_english_name(comp: usize) -> usize {
     let language = read_u32(G_DATABASE_NAMES_LANGUAGE);
     if language == 0 || language == 1 {
@@ -5543,9 +4863,6 @@ pub(crate) unsafe extern "C" fn comp_get_english_name(comp: usize) -> usize {
 
 /// the staff competition's name, or its English one from eng.lng (79-byte rows, by id) when another language is loaded
 /// Original: `staff_comp_get_english_name` (0x5456a0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5456a0 } (cdecl, Database.cpp): `staff_comp_get_english_name(competição de pessoal)`: idioma 0 ou 1: o
-/// próprio nome (+4). Senão a tabela do eng.lng, linhas de 79 bytes em [t+0x3c], pelo id. SEH só no primeiro uso.
 pub(crate) unsafe extern "C" fn staff_comp_get_english_name(comp: usize) -> usize {
     let language = read_u32(G_DATABASE_NAMES_LANGUAGE);
     if language == 0 || language == 1 {
@@ -5565,11 +4882,6 @@ pub(crate) unsafe extern "C" fn staff_comp_get_english_name(comp: usize) -> usiz
 ///
 /// 512 cases with language 0 to 13 and a fake eng.lng table (never null: the first use would load the real file), club
 /// counts 0 to 9, ids −2 to 13; the globals are restored at the end.
-///
-/// [pt] Autoteste (CM_AUTOTESTE=1 ou =banco, modo comparação): nem a carreira nem o save passam pelo caminho do eng.lng
-/// (o jogo dos testes está em inglês). 512 casos com o idioma de 0 a 13 e uma tabela do eng.lng falsa (nunca
-/// nula: o primeiro uso carregaria o arquivo de verdade), quantas de clube de 0 a 9, ids de −2 a 13; as globais
-/// voltam no fim.
 pub unsafe fn autoteste_dbm_1() {
     let (t0, d0) = SCOREBOARD.counts();
     let mut s = TestRng(0x4442_4d31_6964_696f);
@@ -5604,10 +4916,6 @@ pub unsafe fn autoteste_dbm_1() {
 /// Language ([0x9b5984]) 0 or 1: its own name (+4). Otherwise the eng.lng table ([0xae2408]), 52-byte rows at [t+0x34],
 /// by id. SEH frame only on first use (new 0x40 and the load 0x544fc0), which stays with the original.
 /// Original: `stadium_get_english_name` (0x545990, Database.cpp, cdecl).
-///
-/// [pt] { 0x545990 } (cdecl, Database.cpp): `stadium_get_english_name(estádio)`: idioma ([0x9b5984]) 0 ou 1: o próprio
-/// nome (+4). Senão a tabela do eng.lng ([0xae2408]), linhas de 52 bytes em [t+0x34], pelo id. Quadro SEH só no
-/// primeiro uso (new 0x40 e a carga 0x544fc0), que fica com a original.
 pub(crate) unsafe extern "C" fn stadium_get_english_name(stadium: usize) -> usize {
     let language = read_u32(G_DATABASE_NAMES_LANGUAGE);
     if language == 0 || language == 1 {
@@ -5630,10 +4938,6 @@ pub(crate) const LANGUAGE_FILES: [usize; 13] = [0x9b632c, 0x9b632c, 0x9b633c, 0x
 /// builds CM3_TEMP\<language>.lng (0, 1, 11 and 12: eng.lng; 2 to 10: fra, ger, ita, esp, dan, hol, nor, por, swe) and
 /// tells whether it exists; any other language, 0
 /// Original: `database_language_file_exists` (0x535930, Database.cpp, cdecl).
-///
-/// [pt] { 0x535930 } (cdecl, Database.cpp): `database_language_file_exists(idioma)`: o caminho `CM3_TEMP\<.lng>`
-/// (0x90bde0, no buffer 0xde279c) e se existe (0x90c120: `_access(.., 0) == 0`, 1 ou 0); idioma sem `.lng`, 0
-/// sem montar o caminho. TapeCall pelo `load_database` (0x5286e4, o idioma das preferências) e na criação.
 pub(crate) unsafe extern "C" fn database_language_file_exists(language: i32) -> i32 {
     match LANGUAGE_FILES.get(language as u32 as usize) {
         Some(&nome) => exe::utils_file_exists(exe::utils_build_file_path(0x987da0, nome)), // "CM3_TEMP"
@@ -5642,8 +4946,6 @@ pub(crate) unsafe extern "C" fn database_language_file_exists(language: i32) -> 
 }
 
 /// Calls `soltar` on each non-null of the 8 eng.lng table rows (+0x20..+0x3c) of the table.
-///
-/// [pt] As 8 linhas da tabela do eng.lng (+0x20 .. +0x3c), na ordem, cada uma não nula entregue a `soltar`.
 pub(crate) unsafe fn for_each_english_table(t: usize, mut soltar: impl FnMut(usize)) {
     for k in 0..8 {
         let p = read_usize(t + english_name_tables::CLUB_ROWS + 4 * k); // table row in English
@@ -5658,10 +4960,6 @@ pub(crate) unsafe fn for_each_english_table(t: usize, mut soltar: impl FnMut(usi
 /// The pointers stay; the callers, `load_database` 0x528503 and the language switch 0x533aa6, delete the table with
 /// `delete` `exe::crt_operator_delete` and zero [0xae2408].
 /// Original: `eng_lng_free_tables` (0x544f30, Database.cpp, thiscall).
-///
-/// [pt] { 0x544f30 } (thiscall, Database.cpp): `eng_lng_free_tables(tabela)`: `free` 0x9452ca de cada uma das 8 linhas
-/// não nulas, de +0x20 a +0x3c (os ponteiros ficam; quem chama, `load_database` 0x528503 e a troca de idioma
-/// 0x533aa6, apaga a tabela com `delete` 0x944c94 e zera [0xae2408]).
 pub(crate) unsafe extern "thiscall" fn eng_lng_free_tables(t: usize) {
     for_each_english_table(t, |p| exe::crt_free(p));
 }
@@ -5680,12 +4978,6 @@ pub(crate) unsafe extern "thiscall" fn eng_lng_free_tables(t: usize) {
 /// original really frees them, so the two cannot both run).
 ///
 /// The globals are restored at the end.
-///
-/// [pt] Autoteste (CM_AUTOTESTE=1 ou =banco, modo comparação). (1) O estádio: 256 casos com o idioma de 0 a 13 e uma
-/// tabela do eng.lng falsa (nunca nula), ids de −2 a 13. (2) O `.lng` do idioma: idiomas de −3 a 16 contra a
-/// original (resposta e caminho montado). (3) Soltar as tabelas: 64 tabelas falsas com linhas nulas ou não
-/// sorteadas; a cópia entrega a uma lista (sem soltar nada), que tem de ser as não nulas de +0x20 a +0x3c, na
-/// ordem da original (a original solta de verdade e não dá para rodar as duas). As globais voltam no fim.
 pub unsafe fn autoteste_dbm_2() {
     let (t0, d0) = SCOREBOARD.counts();
     let mut s = TestRng(0x4442_4d32_6573_7461);
@@ -5723,9 +5015,6 @@ pub unsafe fn autoteste_dbm_2() {
 
 /// Shows the Database.cpp error box ("v%s %s.%s %d" with the line) and clears G_MOUSE_LEFT_BUTTON_DOWN; the game
 /// continues.
-///
-/// [pt] A caixa de erro do Database.cpp: "v%s %s.%s %d" (0x90d130 com nome e extensão de Database.cpp e a `linha`) em
-/// 0xae24d0, a caixa "Error" (0x5e8290) e [0xb67a34] = 0. O jogo segue.
 pub(crate) unsafe fn database_error_box(row: u32) {
     let version: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
@@ -5738,8 +5027,6 @@ pub(crate) unsafe fn database_error_box(row: u32) {
 }
 
 /// Database.cpp error box followed by fatal cleanup and exit(-1).
-///
-/// [pt] A caixa do Database.cpp seguida do fim do jogo (0x5cc7d0, 0x5a8f60 e exit(−1)), como a original sem memória.
 pub(crate) unsafe fn database_fatal_error(row: u32) -> ! {
     let exit: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     database_error_box(row);
@@ -5750,8 +5037,6 @@ pub(crate) unsafe fn database_fatal_error(row: u32) -> ! {
 
 /// True for a club of England (KEY_NATION_ENGLAND) with reputation (+0x80) at most 500, which `database_generate_extra_non_playing_staff` and `database_trim_club_table`
 /// treat separately.
-///
-/// [pt] Clube da nação da chave 0x9cf2e4 com reputação (+0x80, 16 bits com sinal) até 500: 0x527240 e 0x5267c0 o tratam à parte.
 pub(crate) unsafe fn is_weak_english_club(c: Club) -> bool {
     let nation = c.nation().addr();
     nation != 0 && read_i32(nation) == read_i32(KEY_NATION_ENGLAND) && c.reputation() <= 500
@@ -5759,8 +5044,6 @@ pub(crate) unsafe fn is_weak_english_club(c: Club) -> bool {
 
 /// Initial check of `database_generate_extra_non_playing_staff`: some person with job 8 (+0x3d) and a club (+0x39) that is not in that club's 5 coach
 /// slots (+0x19f) [inference: job 8 = coach].
-///
-/// [pt] A conferência inicial da 0x527240: alguma pessoa de cargo 8 (+0x3d) com clube (+0x39) que não a tem nas 5 casas +0x19f.
 pub(crate) unsafe fn any_coach_missing_from_club() -> bool {
     let mut i = 0i32;
     while i < read_i32(G_STAFF_COUNT) {
@@ -5776,10 +5059,6 @@ pub(crate) unsafe fn any_coach_missing_from_club() -> bool {
 
 /// Fills an extra staff person (row staff_count - generated - 17): first and second names for the nation and a common
 /// name (stored row, first empty common name, or a random one); returns the record.
-///
-/// [pt] Uma pessoa do pessoal extra da 0x527240: a linha [0xae2364] − gerados − 17 (das reservas, de trás para a frente),
-/// primeiro e segundo nome da nação (0x539c60, 0x53a1b0) e o nome comum: a linha guardada em [0x9b59b4] ou, sem ela
-/// (−1), a primeira linha de nome comum vazia (guardada) ou, sem nenhuma, uma sorteada entre todas (sem guardar).
 pub(crate) unsafe fn make_extra_staff(nation: usize, gerados: i32) -> usize {
     let s = Staff(read_usize(G_STAFF_TABLE).wrapping_add((read_i32(G_STAFF_COUNT) - gerados - 0x11) as usize * staff::SIZE));
     s.set_first_name(exe::database_pick_first_name_for_nation(nation));
@@ -5804,9 +5083,6 @@ pub(crate) unsafe fn make_extra_staff(nation: usize, gerados: i32) -> usize {
 
 /// Sets the extra person's birth date (+0x10): year 1940 + rand(26), month rand(11), day rand(27)+1, drawn in that
 /// order.
-///
-/// [pt] A data de nascimento da pessoa extra (+0x10, 0x54a130): ano 1940 + exe::utils_random(26), mês exe::utils_random(11), dia exe::utils_random(27) + 1,
-/// sorteados nessa ordem.
 pub(crate) unsafe fn set_extra_staff_birth_date(s: Staff) {
     let year = exe::utils_random(0x1a) + 0x794; // 1940 + up to 25
     let month = exe::utils_random(0xb);
@@ -5832,17 +5108,6 @@ pub(crate) unsafe fn set_extra_staff_birth_date(s: Staff) {
 /// Over 23,000: box (0x65f, 0x6aa, 0x6f5, 0x734) and 0. Writes "generated %ld extra non playing staff" to 0xde1f64 and
 /// returns 1. The pair local is only read when `exe::club_get_linked_b_team` returns a partner.
 /// Original: `database_generate_extra_non_playing_staff` (0x527240, Database.cpp, cdecl).
-///
-/// [pt] { 0x527240 } (cdecl, Database.cpp): `database_generate_extra_non_playing_staff()`, uma vez na criação (chamada pela
-/// 0x524d70 no começo dos cortes). Confere as pessoas de cargo 8 (caixa 0x62f na primeira fora das casas do clube, e
-/// segue). Depois, em cada clube que não é seleção (id < [0xae235c] − 2 × [0xae2350]), não é fraco da chave 0x9cf2e4,
-/// tem nação escolhida (+0x11c) e não é time A de um par (0x540a50 com 1): completa técnicos (+0x19f, 5, cargo 8),
-/// olheiros (+0x1b3, 7, cargo 9) e fisioterapeutas (+0x1cf, 3, cargo 10) até (reputação + 500) × casas / 10000, entre 1
-/// e o número de casas, com pessoas das reservas (make_extra_staff, nação +0x1a, +0x5f = 1, nascimento sorteado) postas
-/// na primeira casa livre. Por fim, cada clube sem treinador (+0xcf) que seja seleção ou (com nação, divisão +0x57, nação
-/// escolhida e reputação ≠ 0) ou reputação > 7500, fora os fracos da 0x9cf2e4, ganha um treinador (cargo 5, +0x28 = 5)
-/// sem clube e sem seleção (não vai para a casa). Mais de 23.000: caixa (0x65f, 0x6aa, 0x6f5, 0x734) e 0. Grava "generated
-/// %ld extra non playing staff" em 0xde1f64 e devolve 1. A local do par só é lida quando 0x540a50 devolve parceiro.
 pub(crate) unsafe extern "C" fn database_generate_extra_non_playing_staff() -> u32 {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let gi = |a: usize| read_i32(a);
@@ -5938,18 +5203,6 @@ pub(crate) unsafe extern "C" fn database_generate_extra_non_playing_staff() -> u
 /// Without [0xae23a8] (box) or out of memory on new: the original; out of memory on the callocs: box and the end, as
 /// the original.
 /// Original: `database_trim_club_table` (0x5267c0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5267c0 } (cdecl, Database.cpp): `database_trim_club_table(tamanho)`, uma vez na criação (create_game). Pequena =
-/// tamanho 1 ou 2. Por nação (calloc de 0xd0 bytes por nação: 50 ids, quantidade +0xc8, índice do menor +0xcc), os
-/// clubes de maior reputação (+0x80, 16 bits com sinal): até 20 (15 na pequena); nação não escolhida (+0x11c) e fora das
-/// 15 chaves de nação: até 5 (tamanho 2) ou 11 (tamanho 1). Ficam também os clubes das pessoas (+0x39, +0x24), os dos
-/// históricos de competição (+0xa, +0xe, +0x12, na faixa) e, fora da pequena, os do histórico de pessoas com nação
-/// escolhida; as seleções; as chaves de clube (0x60ba80 recebe cada id com a linha nova e devolve 1 se é chave); e os
-/// de nação escolhida, menos (na pequena) os fracos da 0x9cf2e4. Troca os ponteiros de clube (clube +0xb3/+0xb7/+0xbb,
-/// pessoa +0x39/+0x24, preferências +4..+0x18, histórico de pessoas +0xa, histórico de competições +0xa..+0x16) pelos
-/// novos (nulo o que sai), monta [0xae23fc] (linha nova → id antigo, malloc), compacta a tabela (id = linha nova),
-/// realloc no lugar (outro endereço: caixa 0x4ca e fim) e grava "Club table has %d entries" em 0xde1f64. Sem [0xae23a8]
-/// (caixa) ou sem memória no new: a original; sem memória nos calloc: caixa e fim, como a original.
 pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
     if read_usize(G_NATION_TABLE) == 0 {
         return original_fn::<unsafe extern "C" fn(u32)>(IDX_DATABASE_TRIM_CLUB_TABLE)(size);
@@ -6144,12 +5397,6 @@ pub(crate) unsafe extern "C" fn database_trim_club_table(size: u32) {
 /// realloc (`exe::crt_realloc`) to the new size, which becomes [0xae23d4] (without checking the address); [0xae237c] = rows;
 /// [0xae23dc] (the national teams part) = table + (rows − [0xae2384]) × 26; qsort (`exe::crt_qsort`) with `database_compare_comp_history_rows`.
 /// Original: `database_prune_comp_history_table` (0x539ae0, Database.cpp, cdecl).
-///
-/// [pt] { 0x539ae0 } (cdecl, Database.cpp): `database_prune_comp_history_table()`, uma vez na criação. Compacta o histórico
-/// de competições de clube ([0xae23d4], [0xae237c] linhas de 26 bytes): fica a linha com competição (+4) cuja nação
-/// (+0x5d) é nula ou escolhida (+0x11c), copiada para a frente na própria tabela. realloc (0x945667) ao tamanho novo,
-/// que vira [0xae23d4] (sem conferir o endereço); [0xae237c] = linhas; [0xae23dc] (a parte das seleções) = tabela +
-/// (linhas − [0xae2384]) × 26; qsort (0x945333) com 0x540780.
 pub(crate) unsafe extern "C" fn database_prune_comp_history_table() {
     covered!("creation prune the competition history");
     let mut k = 0usize;
@@ -6175,8 +5422,6 @@ pub(crate) unsafe extern "C" fn database_prune_comp_history_table() {
 }
 
 /// First differing byte between the original's and the port's memory snapshots: (address, original, port).
-///
-/// [pt] O primeiro byte que difere entre as fotos da original e da cópia (endereço, original, cópia).
 pub(crate) fn first_memory_difference(mo: &crate::comparison::MemorySnapshot, mr: &crate::comparison::MemorySnapshot) -> Option<(usize, u8, u8)> {
     mo.0.iter().zip(&mr.0).find_map(|((e, x), (_, y))| x.iter().zip(y).position(|(a, b)| a != b).map(|k| (e + k, x[k], y[k])))
 }
@@ -6217,19 +5462,6 @@ pub(crate) const PERSON_RANGE_CHECK_FIELDS: [(usize, usize, usize, usize, usize,
 /// 0) and stays raw; the high neighbouring stadium (+0x48) zeroes the city (+0x38) and stays raw. Does not read the
 /// target records nor allocate.
 /// Original: `resolve_database_indexes` (0x5315a0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5315a0 } (cdecl, Database.cpp): `resolve_database_indexes(leniente)`, na carga (load_database, com 0) e na
-/// gravação (save_database, depois de gravar). Troca cada campo de id pelo ponteiro ao registro (tabela + id × bytes),
-/// na ordem da original e com as regras dela: negativo → nulo; alguns com teto "maior que a quantidade" (o id igual à
-/// quantidade passa), outros "a partir da quantidade", outros sem teto. Clube: nação, divisões, estádios, cores, pessoas
-/// e clubes (+0x53..+0xbb, teto inclusivo; registro em 0xde1f64 nos altos de nação, última divisão e estádio); elenco
-/// +0xd7 (50; com `leniente` = 0, a partir de [0xae2364] vira nulo, com registro acima de [0xae2364] + 0x52d), olheiros,
-/// técnicos, fisioterapeutas, diretores, treinador, presidente, auxiliar e os 20 escalados (+0x1e0), com registro.
-/// Depois nações, árbitros, estádios, preferências, não jogadores, pessoas (jogador, preferências e não jogador fora da
-/// faixa: registro, caixa e nulo), competições de pessoa, histórico de pessoas, cidades, histórico de competições e
-/// competições de clube. Erros do original, copiados: a última divisão alta do clube (+0x5b) zera +0x60 (que depois vira
-/// a competição 0) e fica crua; o estádio vizinho alto (+0x48) zera a cidade (+0x38) e fica cru. Não lê os registros
-/// alvo nem aloca.
 pub(crate) unsafe extern "C" fn resolve_database_indexes(leniente: u32) {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let gi = |a: usize| read_i32(a);
@@ -6417,11 +5649,6 @@ pub(crate) unsafe extern "C" fn resolve_database_indexes(leniente: u32) {
 /// With `rebuild` (byte) ≠ 0, the vector [0xae2d1c] receives the ids (+0) of the [0xae235c] clubs in table order; then
 /// qsort (`exe::crt_qsort`) of the [0xae235c] ids with 0x540020 (by reputation).
 /// Original: `database_sort_clubs_by_reputation` (0x53db40, Database.cpp, cdecl).
-///
-/// [pt] { 0x53db40 } (cdecl, Database.cpp): `database_sort_clubs_by_reputation(refazer)`, na criação, no load_game_data
-/// 0x82a9c0 (vetor ausente do save) e no laço diário 0x5cccd0. Com `refazer` (byte) ≠ 0, o vetor [0xae2d1c] recebe os
-/// ids (+0) dos [0xae235c] clubes na ordem da tabela; depois qsort (0x945333) dos [0xae235c] ids com 0x540020 (pela
-/// reputação).
 pub(crate) unsafe extern "C" fn database_sort_clubs_by_reputation(redo: u32) {
     let gi = |a: usize| read_i32(a);
     let rd = |a: usize| read_usize(a);
@@ -6437,9 +5664,6 @@ pub(crate) unsafe extern "C" fn database_sort_clubs_by_reputation(redo: u32) {
 
 /// Frees a database table with GlobalFree when the database uses the shared block (G_DATABASE_SHARED_ALLOC_MODE), else
 /// with CRT free.
-///
-/// [pt] Solta uma tabela do banco como 0x527ee0/0x527f20: `GlobalFree` (IAT 0x9670f4) com o banco no bloco
-/// compartilhado ([0xae2340] ≠ 0), senão `free` 0x9452ca.
 pub(crate) unsafe fn free_database_table(table: usize) {
     if read_u32(G_DATABASE_SHARED_ALLOC_MODE) != 0 {
         let global_free: unsafe extern "system" fn(usize) -> usize = core::mem::transmute(read_usize(0x9670f4));
@@ -6456,11 +5680,6 @@ pub(crate) unsafe fn free_database_table(table: usize) {
 /// TapeCall through PlayerStats::PlayerStats (0x7c0ccd): the history moves to `player stats history.tmp`. No stack
 /// frame.
 /// Original: `database_free_staff_history_table` (0x527ee0, Database.cpp, cdecl).
-///
-/// [pt] { 0x527ee0 } (cdecl, Database.cpp): `database_free_staff_history_table()`: com a tabela do histórico de
-/// pessoas ([0xae23cc], 17 bytes) presente, solta (0x9670f4 ou 0x9452ca, pelo modo do banco) e zera o ponteiro
-/// e a contagem [0xae2374]. TapeCall por PlayerStats::PlayerStats (0x7c0ccd): o histórico passa a viver no
-/// `player stats history.tmp`. Sem quadro de pilha.
 pub(crate) unsafe extern "C" fn database_free_staff_history_table() {
     let table = read_usize(G_STAFF_HISTORY_TABLE);
     if table == 0 {
@@ -6477,9 +5696,6 @@ pub(crate) unsafe extern "C" fn database_free_staff_history_table() {
 
 /// the same for the award (staff competition) history
 /// Original: `database_free_staff_comp_history_table` (0x527f20, Database.cpp, cdecl).
-///
-/// [pt] { 0x527f20 } (cdecl, Database.cpp): `database_free_staff_comp_history_table()`: o mesmo para o histórico
-/// de prêmios ([0xae23e4], 58 bytes; contagem [0xae238c]). TapeCall por AWARD_MANAGER::AWARD_MANAGER (0x413360).
 pub(crate) unsafe extern "C" fn database_free_staff_comp_history_table() {
     let table = read_usize(G_STAFF_COMP_HISTORY_TABLE);
     if table == 0 {
@@ -6501,12 +5717,6 @@ pub(crate) unsafe extern "C" fn database_free_staff_comp_history_table() {
 /// row [0xae2384]) and clears the `n` new rows (+0 = the row's index, the rest zero); returns 1. TapeCall through
 /// comp_util_add_history_record (0x4afd2c), at the end of a competition. No stack frame.
 /// Original: `database_grow_comp_history_table` (0x527f60, Database.cpp, cdecl).
-///
-/// [pt] { 0x527f60 } (cdecl, Database.cpp): `database_grow_comp_history_table(n)`: `realloc` 0x945667 do histórico de
-/// competições ([0xae23d4], 26 bytes) para [0xae237c] + `n` linhas; sem memória devolve 0 e nada muda. Senão soma
-/// `n` à contagem, guarda o bloco, refaz o ponteiro da parte das seleções [0xae23dc] (a partir da linha [0xae2384])
-/// e limpa as `n` linhas novas (+0 = o índice da linha, o resto zero); devolve 1. TapeCall por
-/// comp_util_add_history_record (0x4afd2c), no fim de competição. Sem quadro de pilha.
 pub(crate) unsafe extern "C" fn database_grow_comp_history_table(n: i32) -> u32 {
     covered!("database grow competition history");
     let total = (*(G_CLUB_COMP_HISTORY_COUNT as *const i32)).wrapping_add(n);
@@ -6528,8 +5738,6 @@ pub(crate) unsafe extern "C" fn database_grow_comp_history_table(n: i32) -> u32 
 }
 
 /// Comparer note: the `realloc` cannot be undone (growing twice would leave the table with 2n extra rows).
-///
-/// [pt] Comparador: o `realloc` não se desfaz (crescer duas vezes deixaria a tabela com 2n linhas a mais).
 // simplification: original only; the proof is the .qst (the table goes into the save) and the copy’s branch in Rust mode.
 
 /// qsort comparison of the club id vector (`database_sort_clubs_by_reputation`) by reputation, highest first.
@@ -6537,10 +5745,6 @@ pub(crate) unsafe extern "C" fn database_grow_comp_history_table(n: i32) -> u32 
 /// By the reputation (+0x80, signed word) of the club ([0xae23b4] + id × 581; id −1 or lower = reputation 0): `a`'s
 /// lower than `b`'s: 1; higher: −1; equal: 0.
 /// Original: `qsort comparator (club ids by reputation)` (0x540020, Database.cpp, cdecl).
-///
-/// [pt] { 0x540020 } (cdecl, Database.cpp): comparação do qsort do vetor de ids de clube (0x53db40): pela reputação
-/// (+0x80, palavra com sinal) do clube ([0xae23b4] + id × 581; id −1 ou menor = reputação 0), a maior primeiro:
-/// a de `a` menor que a de `b`: 1; maior: −1; iguais: 0.
 pub(crate) unsafe extern "C" fn qsort_comparator_club_ids_by_reputation(a: usize, b: usize) -> i32 {
     let clubs = read_usize(G_CLUB_TABLE);
     let injury_word_0c = |p: usize| {
@@ -6563,10 +5767,6 @@ pub(crate) unsafe extern "C" fn qsort_comparator_club_ids_by_reputation(a: usize
 /// A null person goes last (a null and b not: 1; a not and b null: −1; both: 0); then by the player's word +0xb (person
 /// +0x61; no player, 0), highest first (b − a).
 /// Original: `qsort comparator (squad by player +0xb)` (0x5402f0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5402f0 } (cdecl, Database.cpp): comparação do qsort dos elencos (corte do conjunto A+B em 0x541e60 e as
-/// seleções da MLS em 0x90a980): ponteiros de pessoa; nula vai para o fim (a nula e b não: 1; a não e b nula: −1;
-/// as duas: 0); depois pela palavra +0xb do jogador (pessoa +0x61; sem jogador, 0), a maior primeiro (b − a).
 pub(crate) unsafe extern "C" fn qsort_comparator_squad_by_player_0xb(a: usize, b: usize) -> i32 {
     let pa = read_usize(a);
     let pb = read_usize(b);
@@ -6588,11 +5788,6 @@ pub(crate) unsafe extern "C" fn qsort_comparator_squad_by_player_0xb(a: usize, b
 /// No person or no player record (+0x61) in `a`: 1 (even if `b` is the same); in `b`: −1; then by current ability
 /// (player +5, signed word) and, when tied, by the word +0xb, highest first (b − a).
 /// Original: `compare_staff_by_player_ability_desc` (0x549c30, Database.cpp, cdecl).
-///
-/// [pt] { 0x549c30 } (cdecl, Database.cpp): comparação do qsort do elenco na força do time (club_squad_strength_band
-/// 0x549a30): ponteiros de pessoa; sem pessoa ou sem jogador (+0x61) em `a`: 1 (mesmo com `b` igual); em `b`:
-/// −1; depois pela habilidade atual (jogador +5, palavra com sinal) e, empatada, pela palavra +0xb, a maior
-/// primeiro (b − a).
 pub(crate) unsafe extern "C" fn compare_staff_by_player_ability_desc(a: usize, b: usize) -> i32 {
     let player = |p: usize| {
         let s = Staff(read_usize(p));
@@ -6615,9 +5810,6 @@ pub(crate) unsafe extern "C" fn compare_staff_by_player_ability_desc(a: usize, b
 
 /// Calls TRAINING_MANAGER remove_or_restore_training_progress on G_TRAINING_MANAGER for the person (devolver 0 removes,
 /// 1 restores); nothing without a manager.
-///
-/// [pt] TRAINING_MANAGER::remove_or_restore_training_progress (0x8b3640, thiscall com o gerente [0xde1f44]): tira
-/// (`devolver` = 0) ou devolve (1) o progresso do treino dos atributos da `pessoa`. Sem gerente, nada.
 pub(crate) unsafe fn remove_or_restore_training(person: Staff, devolver: u32) {
     let manager = read_usize(G_TRAINING_MANAGER);
     if manager != 0 {
@@ -6626,9 +5818,6 @@ pub(crate) unsafe fn remove_or_restore_training(person: Staff, devolver: u32) {
 }
 
 /// Subtracts the mean of the player's signed bytes +0x2a and +0x3a from both (common tail of `staff_normalise_player_attributes`/`staff_normalise_player_physical_attributes`).
-///
-/// [pt] O fim comum de 0x538bc0 e 0x538ec0 com o jogador +0xf alto: tira de +0x2a e de +0x3a a média dos dois
-/// (bytes com sinal, divisão truncada).
 pub(crate) unsafe fn subtract_mean_2a_3a(player: PlayerSheet) {
     let (a, b) = ((player.addr() + player_sheet::HANDLING) as *mut u8, (player.addr() + player_sheet::REFLEXES) as *mut u8);
     let average = ((*a as i8 as i32 + *b as i8 as i32) / 2) as u8;
@@ -6647,15 +5836,6 @@ pub(crate) unsafe fn subtract_mean_2a_3a(player: PlayerSheet) {
 /// excess and sum > 85, takes (sum − 85) / count from the unmarked ones (minimum 0).
 ///
 /// The original's frame is not read uninitialised: the cells of the range all come from `database_player_to_attribute_vector`.
-///
-/// [pt] O reequilíbrio comum de 0x538bc0 e 0x538ec0 sobre o vetor de atributos do jogador (0x53a610: palavra com
-/// sinal + peso por célula), nas células de `inicio` (fim dos lados + 2) até antes de `fim` (fim dos
-/// ponderados), sem as de `pular`; duas passadas: (1) limite 30, +5 por volta, até 12 células com |valor| ≤
-/// limite (marcadas); a de maior valor fora do limite também é marcada; (2) soma `alvo` − média às marcadas
-/// (presas em −125..125); na 1ª passada, com o jogador +0xf < 15, as não marcadas positivas entram no
-/// excesso (as células 0x11 e 0x12 por `excesso`), as demais são marcadas; com a célula 0 < 15, as de peso 1
-/// viram −120; (3) com mais de uma no excesso e soma > 85, tira (soma − 85) / quantas das não marcadas
-/// (mínimo 0). O quadro da original não é lido sem valor: as células do intervalo vêm todas de 0x53a610.
 pub(crate) unsafe fn rebalance_attr_vector(v: *mut u8, start: i8, end: i8, player: PlayerSheet, target: i32, skip: &[i8],
                                         excesso: impl Fn(i16) -> i32) {
     let w = |i: i8| core::ptr::read_unaligned(v.add(3 * i as usize) as *const i16);
@@ -6733,8 +5913,6 @@ pub(crate) unsafe fn rebalance_attr_vector(v: *mut u8, start: i8, end: i8, playe
 }
 
 /// Fills the player's attribute vector (`database_player_to_attribute_vector`) and returns the group ends (sides end, weighted end).
-///
-/// [pt] O vetor de atributos do `jogador` (0x53a610) com os fins de grupo (lados, posições, ponderados).
 pub(crate) unsafe fn player_attr_vector(player: PlayerSheet, person: Staff, v: *mut u8) -> (u8, u8) {
     let (mut lados, mut posicoes, mut ponderados) = (0u8, 0u8, 0u8);
     exe::database_player_to_attribute_vector(player, person, v as usize, &mut lados, &mut posicoes, &mut ponderados);
@@ -6752,15 +5930,6 @@ pub(crate) unsafe fn player_attr_vector(player: PlayerSheet, person: Staff, v: *
 /// 0x18 and 0x1e (0x11/0x12 count double), back through `database_vector_to_player`; player +0xf = 20: removes the averages of +0x2a/+0x3a
 /// and the third of +0x1e, +0x24, +0x39 (pair and trio averages); restores the training progress.
 /// Original: `staff_normalise_player_physical_attributes` (0x538ec0, Database.cpp, cdecl).
-///
-/// [pt] { 0x538ec0 } (cdecl, Database.cpp): `staff_normalise_player_physical_attributes(pessoa)`: com o jogador
-/// (pessoa +0x61), tira o progresso do treino (0x8b3640); corte = (habilidade +5 / 2 − ftol(soma ponderada dos
-/// físicos × [0x969528]) + 0x37) / 2, a soma com as constantes do .rdata (+0x36, +0x2f, +0x2e, +0x1b, +0x3f,
-/// +0x40, o menor de +0x3b/+0x30, mais +0x44); corte < −14: soma max(corte / 15, −2) a +0x1b, +0x36, +0x40 e
-/// +0x44 (no mínimo 1); alvo = corte − 20 − min((+0x36 × +0x1b) / 2 − habilidade, 25) quando passa da
-/// habilidade, preso em −40..0; vetor (0xff81/0x81) pelo 0x53a610, `rebalance_attr_vector` sem as
-/// células 0x18 e 0x1e (0x11/0x12 contam em dobro), volta pelo 0x53aa10; jogador +0xf = 20: tira as médias
-/// de +0x2a/+0x3a e o terço de +0x1e, +0x24, +0x39; devolve o progresso do treino.
 pub(crate) unsafe extern "C" fn staff_normalise_player_physical_attributes(person: usize) {
     let person = Staff(person);
     if person.is_null() {
@@ -6817,12 +5986,6 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_physical_attributes(perso
 /// over the whole table ([0xae239c], at most 0x7fff). Only the CRT rand(). TapeCall through
 /// OfficialsManager::add_random_officials (0x79c6b4), when creating the referees of a new game.
 /// Original: `database_pick_second_name_by_weight` (0x53a0e0, Database.cpp, cdecl).
-///
-/// [pt] { 0x53a0e0 } (cdecl, Database.cpp): um segundo nome (linha de 60 bytes em [0xae23f4]) pelo peso. Nação com
-/// mais de 10 segundos nomes (`nation_name_index` +0x1c): 3 sorteios na faixa dela (a partir de +4),
-/// fica o de maior peso (+0x3b, com sinal; começa em −1 e a linha 0 se nenhum passar). Sem nação ou com até
-/// 10: sorteio na tabela inteira ([0xae239c], no máximo 0x7fff). Só o rand() da CRT. TapeCall por
-/// OfficialsManager::add_random_officials (0x79c6b4), na criação dos árbitros do jogo novo.
 pub(crate) unsafe extern "C" fn database_pick_second_name_by_weight(nation: usize) -> usize {
     let row = |i: i32| read_usize(G_SECOND_NAME_TABLE).wrapping_add((i as usize).wrapping_mul(60));
     if nation != 0 {
@@ -6854,12 +6017,6 @@ pub(crate) unsafe extern "C" fn database_pick_second_name_by_weight(nation: usiz
 ///
 /// Runs at creation (after `staff_normalise_player_physical_attributes`), at load and in training.
 /// Original: `staff_normalise_player_attributes` (0x538bc0, Database.cpp, cdecl).
-///
-/// [pt] { 0x538bc0 } (cdecl, Database.cpp): `staff_normalise_player_attributes(pessoa)`: com o jogador (pessoa
-/// +0x61), tira o progresso do treino (0x8b3640), monta o vetor pelo 0x53a610 (sem pré-encher: as células
-/// usadas vêm todas dele), `rebalance_attr_vector` com alvo −20 em todas as células do intervalo
-/// (0x11/0x12 contam ftol(valor × [0x968f98])), volta pelo 0x53aa10; jogador +0xf ≥ 15: tira as médias de
-/// +0x2a/+0x3a; devolve o progresso do treino. Roda na criação (depois de 0x538ec0) e na carga e no treino.
 pub(crate) unsafe extern "C" fn staff_normalise_player_attributes(person: usize) {
     let person = Staff(person);
     if person.is_null() {
@@ -6886,25 +6043,15 @@ pub(crate) unsafe extern "C" fn staff_normalise_player_attributes(person: usize)
 /// tamanho, quantos)` in file order.
 ///
 /// Gaps at +0x37 and +0x52; size 0 = the reputation in one byte, u16 at +0x69.
-///
-/// [pt] Competição (107 bytes) no club_comp.dat / nation_comp.dat versão 1 (104 no arquivo): `(deslocamento,
-/// tamanho, quantos)` na ordem do arquivo; buracos em +0x37 e +0x52; tamanho 0 = a reputação num byte, u16 em +0x69.
 pub(crate) const COMPETITION_V1_LAYOUT: [(usize, u32, usize); 7] = [(0, 4, 1), (4, 0x33, 1), (0x38, 0x1a, 1), (0x53, 4, 1), (0x57, 1, 2), (0x59, 4, 4), (0x69, 0, 1)];
 
 /// Comparer: with `fread` (use_zip = 0), the original routine reads, the file is rewound (`fseek` `exe::crt_fseek` to the
 /// position from `ftell` `exe::crt_ftell`) and the Rust routine reads again; it compares the records, the answer and where the
 /// file stopped.
-///
-/// [pt] Comparador: com `fread` (use_zip = 0), a original lê, o arquivo volta (`fseek` 0x946a22 à posição do `ftell`
-/// 0x946aae) e a Rust lê de novo; compara os registros, a resposta e onde o arquivo parou.
 // simplification: with zread (the container) original only; the save is version 2 and does not get here.
 
 /// the nation's name, or its English one from eng.lng (109-byte rows, by id) when another language is loaded
 /// Original: `nation_get_english_name` (0x5453f0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5453f0 } (cdecl, Database.cpp): `nation_get_english_name(nação)`: idioma ([0x9b5984]) 0 ou 1: o próprio
-/// nome (+4). Senão a tabela do eng.lng ([0xae2408]): nações em linhas de 109 bytes a partir de +0x2c, pelo id
-/// (sem conferir a quantidade).
 pub(crate) unsafe extern "C" fn nation_get_english_name(nation: usize) -> usize {
     let language = read_u32(G_DATABASE_NAMES_LANGUAGE);
     if language == 0 || language == 1 {
@@ -6926,11 +6073,6 @@ pub(crate) unsafe extern "C" fn nation_get_english_name(nation: usize) -> usize 
 /// +0x20, the short name at +0x34 of the row): through the id map [0xae23fc] if present, otherwise by id if < the count
 /// (+0), otherwise 0.
 /// Original: `club_get_english_short_name` (0x545770, Database.cpp, cdecl).
-///
-/// [pt] { 0x545770 } (cdecl, Database.cpp): `club_get_english_short_name(clube)`: idioma ([0x9b5984]) 0 ou 1: o
-/// próprio nome curto (+0x38). Senão a tabela do eng.lng ([0xae2408], linhas de 79 bytes a partir de +0x20, o
-/// nome curto em +0x34 da linha): pelo mapa de ids [0xae23fc] se houver, senão pelo id se < quantos (+0),
-/// senão 0.
 pub(crate) unsafe extern "C" fn club_get_english_short_name(club: usize) -> usize {
     let language = read_u32(G_DATABASE_NAMES_LANGUAGE);
     if language == 0 || language == 1 {
@@ -6964,14 +6106,6 @@ pub(crate) unsafe extern "C" fn club_get_english_short_name(club: usize) -> usiz
 /// (2) The English names: 256 cases with language 0, 1, 2, 3 or 13 and a fake `eng.lng` table (never null: the first
 /// use would load the real file), with and without the id map, ids from −2 to 11 (in the map, from 0 to 7); the globals
 /// are restored at the end.
-///
-/// [pt] Autoteste (CM_AUTOTESTE=1, modo comparação): nem a carreira nem o save passam por estas três (a base é
-/// versão 2; o jogo dos testes está em inglês). (1) O conversor das competições: 64 casos de sementes fixas,
-/// de 1 a 6 registros, arquivo temporário (`autoteste_banco_v1c.tmp` na pasta do jogo, apagado no fim) com
-/// bytes sorteados (1 em 4 só zeros), inteiro (1 em 3) ou cortado num ponto sorteado, buffer começando
-/// sorteado. (2) Os nomes em inglês: 256 casos com o idioma 0, 1, 2, 3 ou 13 e uma tabela do eng.lng falsa
-/// (nunca nula: o primeiro uso carregaria o arquivo de verdade), com e sem o mapa de ids, ids de −2 a 11 (no
-/// mapa, de 0 a 7); as globais voltam no fim.
 pub unsafe fn autoteste_dbj_2() {
     const ARQ: &str = "autoteste_banco_v1c.tmp";
     let fopen: unsafe extern "C" fn(usize, usize) -> usize = core::mem::transmute(FN_CRT_FOPEN);
@@ -7037,14 +6171,6 @@ pub unsafe fn autoteste_dbj_2() {
 /// Signed 8-bit counters, like the original's. No draw; the local `is_a` is only read when `exe::club_get_linked_b_team` returns a partner
 /// (and then it was written).
 /// Original: `database_trim_senior_and_b_team_squads` (0x541e60, Database.cpp, cdecl).
-///
-/// [pt] { 0x541e60 } (cdecl, Database.cpp): `database_trim_senior_and_b_team_squads()`, uma vez na criação (create_game
-/// 0x8282f1). Em cada clube, a marca +0x244 = tem parceiro (0x540a50 com 0) e o parceiro tem nação (+0x53). No time
-/// A (`eh_a`): o elenco conjunto A+B (0x541f90 com dobro: 100 ponteiros) em ordem de reputação (qsort 0x945333 com
-/// 0x5402f0); de trás para a frente, enquanto o conjunto tiver mais de 48, tira a pessoa do clube dela (0x53c190 com
-/// o clube +0x39, sem data, desligando a pessoa, não como jogador), pulando os goleiros (jogador +0x61 com +0xf ≥ 15,
-/// byte com sinal) enquanto restarem 3 ou menos. Contadores de 8 bits com sinal, como os da original. Sem sorteio;
-/// a local `eh_a` só é lida quando 0x540a50 devolve parceiro (e então ela foi gravada).
 pub(crate) unsafe extern "C" fn database_trim_senior_and_b_team_squads() {
     let partner: unsafe extern "C" fn(usize, *mut u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let _rd = |a: usize| read_usize(a);
@@ -7109,15 +6235,6 @@ pub(crate) unsafe extern "C" fn database_trim_senior_and_b_team_squads() {
 /// original pushes the byte with garbage above it, and `database_add_staff_to_club` uses only the byte), no date. Assistant (+0xd3): with
 /// both, B's leaves. No draw.
 /// Original: `database_merge_b_team_staff` (0x544970, Database.cpp, cdecl).
-///
-/// [pt] { 0x544970 } (cdecl, Database.cpp): `database_merge_b_team_staff()`, uma vez na criação (create_game 0x8283d9).
-/// Para cada time A com parceiro B (0x540a50 com 1, que exige a marca +0x244 de 0x541e60): conta as pessoas válidas
-/// (ponteiro não nulo e id < [0xae2364]) do elenco do A (+0xd7, 50), ordena o elenco do B (qsort com 0x540130) e tira
-/// do B as que passarem de 50 no conjunto. Depois, nas casas +0x19f (5, cargo 8), +0x1b3 (7, cargo 9) e +0x1cf (3,
-/// cargo 10): cada pessoa válida do B sai dele (0x53c190) e, enquanto o A tiver vaga, entra no A (0x53bd10 com a data
-/// do jogo 0xae2c90, gravando na pessoa). Treinador (+0xcf): com os dois, o do B só sai; só o do B: sai e entra no A
-/// com o cargo dele (+0x3d, lido depois da saída; a original empurra o byte com lixo em cima, e a 0x53bd10 só usa o
-/// byte), sem data. Auxiliar (+0xd3): com os dois, o do B sai. Sem sorteio.
 pub(crate) unsafe extern "C" fn database_merge_b_team_staff() {
     let rd = |a: usize| read_usize(a);
     let valid = |p: usize| p != 0 && *(p as *const i32) < read_i32(G_STAFF_COUNT);
@@ -7180,14 +6297,6 @@ pub(crate) unsafe extern "C" fn database_merge_b_team_staff() {
 ///
 /// Defect of the original, copied: the last group of each table is not written. Out of memory: the original.
 /// Original: `database_build_nation_name_index` (0x539750, Database.cpp, cdecl).
-///
-/// [pt] { 0x539750 } (cdecl, Database.cpp): `database_build_nation_name_index()`, na criação (create_game 0x82836c) e na
-/// carga do jogo. Aloca (malloc 0x944e46) [0xae2350] entradas de 0x24 bytes em [0xae2338]: primeira linha (+0, +4,
-/// +8 = −1), soma dos pesos (+0xc, +0x10, +0x14 = 0) e quantidade (+0x18, +0x1c, +0x20 = 0) dos primeiros, segundos
-/// e nomes comuns. Percorre os segundos nomes ([0xae23f4], [0xae239c]), os primeiros ([0xae23f0], [0xae2398]) e os
-/// comuns ([0xae23f8], [0xae23a0]), linhas de 60 bytes com a nação em +0x37 (0..[0xae2350]) e o peso em +0x3b
-/// (byte com sinal): linhas seguidas da mesma nação formam um grupo, gravado na entrada do id (+0) da nação quando
-/// a nação muda. Erro do original, copiado: o último grupo de cada tabela não é gravado. Sem memória: a original.
 pub(crate) unsafe extern "C" fn database_build_nation_name_index() {
     let nations = read_i32(G_NATION_COUNT);
     let t = exe::crt_malloc((nations as u32).wrapping_mul(0x24));
@@ -7201,9 +6310,6 @@ pub(crate) unsafe extern "C" fn database_build_nation_name_index() {
 
 /// Body of `database_build_nation_name_index`: resets the per-nation name index table and, for the first/second/common name tables, records each
 /// nation's first row, weight sum and count.
-///
-/// [pt] O corpo da 0x539750 sobre a tabela `t`, já em [0xae2338]. O comparador passa um buffer do Rust: montar a cópia
-/// com o malloc do jogo deslocava a heap e mudava a impressão das partidas no jogo real comparando (232a, sonda).
 pub(crate) unsafe fn fill_nation_name_index(t: usize) {
     let mut k = 0i32;
     while k < read_i32(G_NATION_COUNT) {
@@ -7254,10 +6360,6 @@ pub(crate) unsafe fn fill_nation_name_index(t: usize) {
 /// The whole club table (581 bytes per row: everyone's +0x244 mark and the pairs' slots) and the persons (110 bytes) in
 /// the slots of the A and B clubs of the `exe::club_get_linked_b_team` pairs, the only ones the two routines remove, add or switch off
 /// (`database_remove_staff_from_club` and `database_add_staff_to_club` only touch the club and the person).
-///
-/// [pt] As regiões dos comparadores de 0x541e60 e 0x544970: a tabela de clubes inteira (581 bytes por linha: a marca
-/// +0x244 de todos e as casas dos pares) e as pessoas (110 bytes) nas casas dos clubes A e B dos pares de 0x540a50,
-/// as únicas que as duas tiram, põem ou desligam (0x53c190 e 0x53bd10 só mexem no clube e na pessoa).
 pub(crate) unsafe fn ab_team_regions() -> Vec<(usize, usize)> {
     let table = read_usize(G_CLUB_TABLE);
     let n = read_i32(G_CLUB_COUNT);
@@ -7304,18 +6406,6 @@ pub(crate) unsafe fn ab_team_regions() -> Vec<(usize, usize)> {
 /// already zeroed, stays so). With `detach`: clears the club in the person (+0x24 for a national team, +0x39 for a
 /// club). Returns 1. Null club: 0. Null person: the original ("Error" box and 0).
 /// Original: `database_remove_staff_from_club` (0x53c190, Database.cpp, cdecl).
-///
-/// [pt] { 0x53c190 } (cdecl, Database.cpp): `database_remove_staff_from_club(clube, pessoa, data, desligar, como_jogador)`.
-/// Na criação (os cortes de 0x541e60, 0x544970 e 0x524d70) e na carreira (transferências, demissões). Seleção = id do
-/// clube ≥ [0xae235c] − 2 × [0xae2350]. Com `data`: os 8 bytes dela vão para a pessoa (+0x29 na seleção, senão +0x3e;
-/// 0x417c10 copia +2, +0 e +4 e repete numa local que ninguém lê), antes de olhar o cargo. Cargo = pessoa +0x28 (seleção)
-/// ou +0x3d (byte); com `como_jogador`, 11, 12, 13 e 15 viram 11 e os outros 0. Casas (tabela de salto 0x53c54c): 0
-/// nenhuma; 1 +0xbf; 2..4 +0xc3 (3); 5 +0xcf e, na seleção principal (id < [0xae235c] − [0xae2350]), o +0xcf da sub-21
-/// (0x53b4f0 com a nação +0x53) se for a mesma pessoa; 6, 7 +0xd3; 8 +0x19f (5); 9 +0x1b3 (7); 10 +0x1cf (3); 11 elenco
-/// +0xd7 (50); 12 +0xcf e o elenco; 13 +0xd3 e o elenco; 15 +0x19f e o elenco; 14, acima de 15 ou negativo: 0. A casa
-/// que tem a pessoa (a primeira) é zerada; pessoa fora da casa: 0 (nas 12, 13 e 15 a primeira casa já zerada fica).
-/// Com `desligar`: zera o clube na pessoa (+0x24 na seleção, +0x39 no clube). Devolve 1. Clube nulo: 0. Pessoa nula: a
-/// original (caixa "Error" e 0).
 pub(crate) unsafe extern "C" fn database_remove_staff_from_club(club: usize, person: usize, data: usize, disable: u32, how_player: u32) -> u32 {
     let person = Staff(person);
     if club == 0 {
@@ -7391,12 +6481,6 @@ pub(crate) unsafe extern "C" fn database_remove_staff_from_club(club: usize, per
 /// only when the two together do not fill the 7. 8-bit counter in the original (at most 7). Returns 1. Null club: the
 /// original ("Error" box and 0). In the career, through `sync_scout_lists` (the scouts' lists, in transfers and hirings).
 /// Original: `database_get_club_scouts` (0x53cd60, Database.cpp, cdecl).
-///
-/// [pt] { 0x53cd60 } (cdecl, Database.cpp): `database_get_club_scouts(clube, vetor)`: os 7 olheiros (+0x1b3) do `clube` no
-/// `vetor`. Sem parceiro A/B (0x540a50 com nulo e 1, que zera a marca +0x244 do clube quando recusa o parceiro): as 7
-/// casas como estão. Com parceiro: os não nulos do clube e depois os do parceiro até 7; o resto zerado só quando os
-/// dois juntos não enchem as 7. Contador de 8 bits na original (no máximo 7). Devolve 1. Clube nulo: a original
-/// (caixa "Error" e 0). Na carreira, pela 0x7f7270 (as listas dos olheiros, nas transferências e contratações).
 pub(crate) unsafe extern "C" fn database_get_club_scouts(club: usize, array: *mut usize) -> u32 {
     let club = Club(club);
     if club.is_null() {
@@ -7452,10 +6536,6 @@ pub(crate) const ADJECTIVE_FORMS_9: [u8; 35] = [
 /// the adjective form (0..4) for index 1..35 in the inflecting languages 3..10 (jump tables); any other language or
 /// index: 0xff
 /// Original: `get_adjective_form_index` (0x545a60, Database.cpp, cdecl).
-///
-/// [pt] { 0x545a60 } (cdecl, Database.cpp): a forma (0..4) do adjetivo para o `indice` (byte com sinal,
-/// 1..35) no `idioma` (0x66f4d0; os chamadores só chamam nos idiomas que flexionam). Idioma sem tabela
-/// ou índice fora: 0xff. Sem chamadas e sem caixa.
 pub(crate) unsafe extern "C" fn get_adjective_form_index(index: u32, language: u32) -> u8 {
     let row = match language {
         3 | 6 | 7 | 8 | 10 => &ADJECTIVE_FORMS_COMMON,
@@ -7473,10 +6553,6 @@ pub(crate) unsafe extern "C" fn get_adjective_form_index(index: u32, language: u
 
 /// the person's coaching attribute 1..12: `staff_compute_non_player_attribute` with their non-player record (+0x69)
 /// Original: `staff_get_non_player_attribute` (0x543f30, Database.cpp, cdecl).
-///
-/// [pt] { 0x543f30 } (cdecl, Database.cpp): o `atributo` (1..12) de treinador da `pessoa`: 0x543fd0 com o
-/// não jogador dela (+0x69) e o `atributo` inteiro como veio. Pessoa nula ou atributo (byte com sinal)
-/// fora de 1..12: a original (caixa "Error" e −1).
 pub(crate) unsafe extern "C" fn staff_get_non_player_attribute(person: usize, attribute: u32) -> u8 {
     let person = Staff(person);
     let a = attribute as u8 as i8;
@@ -7489,10 +6565,6 @@ pub(crate) unsafe extern "C" fn staff_get_non_player_attribute(person: usize, at
 
 /// the 1-to-20 rating of 2 × value + current ability × 0.1 (`player_attribute_rating` with the ability scaled down)
 /// Original: `player_attribute_rating_with_scaled_ability` (0x5442f0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5442f0 } (cdecl, Database.cpp): a nota de 1 a 20 (`attribute_rating`) de 2 × `valor` (byte com
-/// sinal) + habilidade atual (+5) do `jogador` × 0,1 ([0x967880]); a de 0x544380 com a habilidade
-/// reduzida (os goleiros de 0x543540). Termina no `_ftol`.
 pub(crate) unsafe extern "C" fn player_attribute_rating_with_scaled_ability(player: usize, value: u32) -> u32 {
     let ability = read_i16(player + 5) as f64;
     let v = (value as u8 as i8) as f64;
@@ -7505,11 +6577,6 @@ pub(crate) unsafe extern "C" fn player_attribute_rating_with_scaled_ability(play
 /// weight is kept (+0x3b, signed; starts at −1, and row 0 if none passes). No nation or up to 15: a draw over the whole
 /// table ([0xae2398], at most 0x7fff). Only the CRT rand().
 /// Original: `database_pick_first_name_by_weight` (0x539b90, Database.cpp, cdecl).
-///
-/// [pt] { 0x539b90 } (cdecl, Database.cpp): um primeiro nome (linha de 60 bytes em [0xae23f0]) pelo peso.
-/// Nação com mais de 15 primeiros nomes (`nation_name_index` +0x18): 3 sorteios na faixa dela,
-/// fica o de maior peso (+0x3b, com sinal; começa em −1 e a linha 0 se nenhum passar). Sem nação ou com
-/// até 15: sorteio na tabela inteira ([0xae2398], no máximo 0x7fff). Só o rand() da CRT.
 pub(crate) unsafe extern "C" fn database_pick_first_name_by_weight(nation: usize) -> usize {
     let row = |i: i32| read_usize(G_FIRST_NAME_TABLE).wrapping_add((i as usize).wrapping_mul(60));
     if nation != 0 {
@@ -7538,11 +6605,6 @@ pub(crate) unsafe extern "C" fn database_pick_first_name_by_weight(nation: usize
 /// The colours come from the +0x5d record (its +0x90 and +0x94) or, without it, from the competition itself (+0x61 and
 /// +0x65); a null colour leaves the default. Returns 1. Null competition: the original (defaults, "Error" box and 0).
 /// Original: `database_get_comp_colours` (0x53b7c0, Database.cpp, cdecl).
-///
-/// [pt] { 0x53b7c0 } (cdecl, Database.cpp): as cores da `competicao` em pixels (0x5e4800 com os bytes +0x37,
-/// +0x38, +0x39 da cor e formato 0): `frente` e `fundo`, que começam com [0xae3184] e [0xaebe04]. As
-/// cores vêm do registro +0x5d (+0x90 e +0x94 dele) ou, sem ele, da própria competição (+0x61 e +0x65);
-/// cor nula deixa o padrão. Devolve 1. Competição nula: a original (padrões, caixa "Error" e 0).
 pub(crate) unsafe extern "C" fn database_get_comp_colours(competition: usize, front: *mut u16, bottom: *mut u16) -> u32 {
     let competition = Competition(competition);
     if competition.is_null() {
@@ -7567,8 +6629,6 @@ pub(crate) unsafe extern "C" fn database_get_comp_colours(competition: usize, fr
 }
 
 /// True if any of the n club slots at clube+d is empty or already holds the person.
-///
-/// [pt] Há vaga para a `pessoa` nas `n` casas a partir de `clube + d`: alguma vazia ou já com ela.
 pub(crate) unsafe fn has_slot_for(club: usize, d: usize, n: usize, person: usize) -> bool {
     (0..n).any(|i| {
         let v = read_usize(club + d + 4 * i);
@@ -7582,11 +6642,6 @@ pub(crate) unsafe fn has_slot_for(club: usize, d: usize, n: usize, person: usize
 /// 13: +0xcf / +0xd3 free or hers and room in the squad; 15: room in +0x19f and in the squad. Null club or person, job
 /// 14 or outside 1..15: the original (error box and 0).
 /// Original: `database_club_has_room_for_job` (0x53b9a0, Database.cpp, cdecl).
-///
-/// [pt] { 0x53b9a0 } (cdecl, Database.cpp): 1 se o `clube` tem vaga para a `pessoa` no `cargo` (byte com
-/// sinal, tabela de salto 0x53bcc8): 1 +0xbf; 2..4 +0xc3 (3); 5 +0xcf; 6, 7 +0xd3; 8 +0x19f (5); 9 +0x1b3
-/// (7); 10 +0x1cf (3); 11 elenco +0xd7 (50); 12 e 13: +0xcf / +0xd3 livre ou dela e vaga no elenco; 15:
-/// vaga em +0x19f e no elenco. Clube ou pessoa nulos, cargo 14 ou fora de 1..15: a original (caixa e 0).
 pub(crate) unsafe extern "C" fn database_club_has_room_for_job(club: usize, job: u32, person: usize) -> u32 {
     let c = job as u8 as i8;
     if club == 0 || person == 0 || !(1..=15).contains(&c) || c == 14 {
@@ -7610,8 +6665,6 @@ pub(crate) unsafe extern "C" fn database_club_has_room_for_job(club: usize, job:
 }
 
 /// Puts the person in the first empty of the n club slots at clube+d; false if none.
-///
-/// [pt] Põe a `pessoa` na primeira das `n` casas vazias a partir de `clube + d`; false se não há.
 pub(crate) unsafe fn fill_club_slot(club: usize, d: usize, n: usize, person: Staff) -> bool {
     let home = |i: usize| (club + d + 4 * i) as *mut usize;
     match (0..n).find(|&i| core::ptr::read_unaligned(home(i)) == 0) {
@@ -7639,17 +6692,6 @@ pub(crate) unsafe fn fill_club_slot(club: usize, d: usize, n: usize, person: Sta
 /// With `write`: club and job into the person (+0x24/+0x28 national team, +0x39/+0x3d club). Returns 1. Null club or
 /// person: the original ("Error" box and 0).
 /// Original: `database_add_staff_to_club` (0x53bd10, Database.cpp, cdecl).
-///
-/// [pt] { 0x53bd10 } (cdecl, Database.cpp): põe a `pessoa` no `clube` no `cargo` (byte, tabela de salto
-/// 0x53c14c). Pessoa da faixa dos humanos (id ≥ [0xae2364] − 16) só no cargo 5. Com `data`: as 8 bytes
-/// dela vão para a pessoa (+0x29 se o clube é seleção, id ≥ [0xae235c] − 2 × [0xae2350]; senão +0x3e;
-/// 0x417c10 copia +2, +0 e +4 e repete numa local que ninguém lê). Com `reduzir`: cargos 11, 12, 13 e 15
-/// viram 11, os outros 0. Jogador (+0x61) com habilidade atual (+5) > 85 num clube sem técnico humano
-/// (0x600a50 com 0, 1, 0, 0): 6 vira 13 e 8 vira 15. Casas: 1 +0xbf; 2..4 +0xc3 (3); 5 +0xcf; 6, 7 +0xd3;
-/// 8 +0x19f (5); 9 +0x1b3 (7); 10 +0x1cf (3); 11 elenco +0xd7 (50); 12 +0xcf e o elenco (sem elenco: 0
-/// com o +0xcf já gravado); 13 +0xd3 e o elenco (sem elenco fica 6); 15 +0x19f e o elenco (sem elenco
-/// fica 8); 0 nenhuma; 14 e fora: 0. Com `gravar`: clube e cargo na pessoa (+0x24/+0x28 seleção,
-/// +0x39/+0x3d clube). Devolve 1. Clube ou pessoa nulos: a original (caixa "Error" e 0).
 pub(crate) unsafe extern "C" fn database_add_staff_to_club(club: usize, person: usize, job: u32, data: usize, write: u32, reduzir: u32) -> u32 {
     let person = Staff(person);
     if club == 0 || person.is_null() {
@@ -7738,15 +6780,11 @@ pub(crate) unsafe extern "C" fn database_add_staff_to_club(club: usize, person: 
 }
 
 /// Person pointer in squad slot i (+0xd7) of the club.
-///
-/// [pt] Um dos 50 lugares do elenco (+0xd7, ponteiros de pessoa) do `clube`.
 pub(crate) unsafe fn squad_slot(club: Club, i: usize) -> usize {
     club.squad(i)
 }
 
 /// Person is non-null and its id is below the staff count.
-///
-/// [pt] A pessoa do elenco conta: não nula e com id abaixo de [0xae2364] (com sinal).
 pub(crate) unsafe fn is_valid_squad_person(p: usize) -> bool {
     p != 0 && *(p as *const i32) < read_i32(G_STAFF_COUNT)
 }
@@ -7761,13 +6799,6 @@ pub(crate) unsafe fn is_valid_squad_person(p: usize) -> bool {
 /// the contract's club (`exe::contract_manager_get_contract`, stored in [0xae1080]; +4 = id) is also another one (the loanee filter). Null club:
 /// the original (error box).
 /// Original: `database_count_club_squad` (0x53c590, Database.cpp, cdecl).
-///
-/// [pt] { 0x53c590 } (cdecl, Database.cpp): quantas pessoas válidas há no elenco do `clube` (byte). Com
-/// parceiro A/B (0x540a50 com 1): `modo` 2 e clube A conta só o parceiro; senão conta o clube e, fora
-/// `modo` 1 com clube B, também o parceiro. Sem parceiro e com time reserva (0x542740): só as pessoas
-/// com bits `modo` nas marcas de elenco (+0x5e), se `modo` não for 0. Com `filtro`, quem tem ficha
-/// de contrato (0x4cf6d0) e clube (+0x39) diferente do `clube` só conta se o clube do contrato
-/// (0x4cf5a0, guardado em [0xae1080]; +4 = id) também for outro. Clube nulo: a original (caixa).
 pub(crate) unsafe extern "C" fn database_count_club_squad(club: usize, mode: u32, filter: u32) -> u8 {
     if club == 0 {
         return original_fn::<unsafe extern "C" fn(usize, u32, u32) -> u8>(IDX_DATABASE_COUNT_CLUB_SQUAD)(club, mode, filter);
@@ -7822,11 +6853,6 @@ pub(crate) unsafe extern "C" fn database_count_club_squad(club: usize, mode: u32
 /// partner: only the valid people of the club and then those of the partner, up to the limit (100 with `double`,
 /// otherwise 50), the rest up to the limit zeroed. Returns 1. Null club: the original (error box and 0).
 /// Original: `database_collect_club_squad` (0x541f90, Database.cpp, cdecl).
-///
-/// [pt] { 0x541f90 } (cdecl, Database.cpp): copia o elenco do `clube` (50 ponteiros em +0xd7) para o
-/// `vetor`. Sem parceiro A/B (0x540a50 com nulo e 1): os 50 como estão e, com `dobro`, mais 50 zeros.
-/// Com parceiro: só as pessoas válidas do clube e depois as do parceiro até o limite (100 com
-/// `dobro`, senão 50), o resto até o limite zerado. Devolve 1. Clube nulo: a original (caixa e 0).
 pub(crate) unsafe extern "C" fn database_collect_club_squad(club: usize, array: *mut usize, dobro: u32) -> u32 {
     if club == 0 {
         return original_fn::<unsafe extern "C" fn(usize, *mut usize, u32) -> u32>(IDX_DATABASE_COLLECT_CLUB_SQUAD)(club, array, dobro);
@@ -7874,11 +6900,6 @@ pub(crate) unsafe extern "C" fn database_collect_club_squad(club: usize, array: 
 /// nation with +0x88 > 150. Clubs: with a competition (+0x57), not the B team of a pair (`exe::club_get_linked_b_team` with 1), with the
 /// competition in the vector [[0xadadfc] + id × 4] (active) and the nation with bit 2 of +0x11c (flagged).
 /// Original: `club_can_be_managed` (0x544820, Database.cpp, cdecl).
-///
-/// [pt] { 0x544820 } (cdecl, Database.cpp): o `clube` pode ser dirigido? Precisa de nação (+0x53). Seleções
-/// (id ≥ [0xae235c] − 2 × [0xae2350], com sinal): só as principais (id < [0xae235c] − [0xae2350]) de
-/// nação com +0x88 > 150. Clubes: com competição (+0x57), que não sejam o time B de um par (0x540a50
-/// com 1), com a competição no vetor [[0xadadfc] + id × 4] e a nação com o bit 2 de +0x11c.
 pub(crate) unsafe extern "C" fn club_can_be_managed(club: usize) -> u8 {
     if club == 0 || read_usize(club + club::NATION) == 0 {
         return 0;
@@ -7912,10 +6933,6 @@ pub(crate) unsafe extern "C" fn club_can_be_managed(club: usize) -> u8 {
 ///
 /// The person is not used. eax on exit: the vector with the last copied byte in the low byte (callers do not use it).
 /// Original: `database_vector_to_non_player` (0x53a980, Database.cpp, cdecl).
-///
-/// [pt] { 0x53a980 } (cdecl, Database.cpp): o inverso de 0x53a8b0: o byte de baixo de cada uma das 21
-/// células de 3 bytes do `vetor` volta ao `nao_jogador` na ordem `NON_PLAYER_ATTRIBUTE_ORDER`. A pessoa não
-/// é usada. eax na saída: o vetor com o último byte copiado no byte de baixo (os chamadores não usam).
 pub(crate) unsafe extern "C" fn database_vector_to_non_player(not_player: usize, _person: usize, array: usize) -> u32 {
     let mut last = 0u8;
     for (k, &d) in NON_PLAYER_ATTRIBUTE_ORDER.iter().enumerate() {
@@ -7930,10 +6947,6 @@ pub(crate) unsafe extern "C" fn database_vector_to_non_player(not_player: usize,
 ///
 /// eax on exit: the vector with the last byte in the low byte (callers do not use it).
 /// Original: `database_vector_to_player` (0x53aa10, Database.cpp, cdecl).
-///
-/// [pt] { 0x53aa10 } (cdecl, Database.cpp): o inverso de 0x53a610: o byte de baixo das células 0..53 do
-/// `vetor` volta ao `jogador` nos deslocamentos de `ATTRIBUTE_VECTOR_CELLS` e o da célula 54 à `pessoa`
-/// +0x58. eax na saída: o vetor com o último byte no byte de baixo (os chamadores não usam).
 pub(crate) unsafe extern "C" fn database_vector_to_player(player: usize, person: usize, array: usize) -> u32 {
     let person = Staff(person);
     for (i, &(d, _)) in ATTRIBUTE_VECTOR_CELLS.iter().enumerate() {
@@ -7955,15 +6968,6 @@ pub(crate) unsafe extern "C" fn database_vector_to_player(player: usize, person:
 ///
 /// At the end, `database_vector_to_non_player` writes back. Null person or non-player: nothing.
 /// Original: `staff_normalise_non_player_attributes` (0x539490, Database.cpp, cdecl).
-///
-/// [pt] { 0x539490 } (cdecl, Database.cpp): reequilibra os atributos do não jogador (pessoa +0x69). Monta
-/// o vetor (63 células 0xff81/0x81, preenchidas por 0x53a8b0, que devolve o corte 13) e, duas vezes,
-/// a partir do corte: (1) com limite 40, +10 por volta, até 6 células com |valor| ≤ limite (marcadas);
-/// a célula 19 fora do limite também é marcada; (2) soma −5 − média às marcadas (presas em −125..125);
-/// na 1ª passada as não marcadas positivas entram na soma de excesso, as demais são marcadas; com
-/// cargo +0x3d ou +0x28 = 10, as células ficam ≤ −80 e a 19 ≥ 0; (3) na 1ª passada, com soma > 28,
-/// tira (soma − 28) / quantas das não marcadas (mínimo 0). No fim, 0x53a980 grava de volta. Pessoa
-/// ou não jogador nulos: nada.
 pub(crate) unsafe extern "C" fn staff_normalise_non_player_attributes(person: usize) {
     let person = Staff(person);
     if person.is_null() {
@@ -8070,9 +7074,6 @@ pub(crate) unsafe extern "C" fn staff_normalise_non_player_attributes(person: us
 
 /// The fixed colours (index.cpp keys at 0x9cf178..0x9cf1fc, ids) and the family of each one, in the order of the
 /// comparisons in `database_get_colour_family`.
-///
-/// [pt] As cores fixas (chaves do index.cpp em 0x9cf178..0x9cf1fc, ids) e a família de cada uma, na ordem
-/// das comparações de 0x540520.
 pub(crate) const COLOUR_FAMILIES: [(usize, u8); 34] = [
     (KEY_COLOUR_BROWN_1, 10), (KEY_COLOUR_BROWN_2, 10), (KEY_COLOUR_BLACK, 1), (KEY_COLOUR_BLUE_5, 1), (KEY_COLOUR_WHITE, 2), (KEY_COLOUR_GREY_1, 3), (KEY_COLOUR_GREY_2, 3),
     (KEY_COLOUR_GREY_3, 3), (KEY_COLOUR_RED_1, 8), (KEY_COLOUR_RED_2, 8), (KEY_COLOUR_RED_3, 8), (KEY_COLOUR_RED_4, 8), (KEY_COLOUR_ORANGE_1, 9), (KEY_COLOUR_ORANGE_2, 9),
@@ -8082,8 +7083,6 @@ pub(crate) const COLOUR_FAMILIES: [(usize, u8); 34] = [
 ];
 
 /// Colour family of a colour record via COLOUR_FAMILIES; None if its id matches no key.
-///
-/// [pt] A família da `cor` pela tabela; None se o id não está em nenhuma chave (caixa na original).
 pub(crate) unsafe fn colour_family(colour: usize) -> Option<u8> {
     let id = read_u32(colour);
     COLOUR_FAMILIES.iter().find(|&&(a, _)| read_u32(a) == id).map(|&(_, f)| f)
@@ -8091,10 +7090,6 @@ pub(crate) unsafe fn colour_family(colour: usize) -> Option<u8> {
 
 /// the colour's family (1..10) from the index.cpp colour keys
 /// Original: `database_get_colour_family` (0x540520, Database.cpp, cdecl).
-///
-/// [pt] { 0x540520 } (cdecl, Database.cpp): a família (1..10) da `cor` pelo id (+0), comparado com as chaves
-/// de cor em `COLOUR_FAMILIES` (a primeira que casa). Cor fora da lista: a original (caixa "Error",
-/// [0xb67a34] = 0 e 2).
 pub(crate) unsafe extern "C" fn database_get_colour_family(colour: usize) -> u8 {
     match colour_family(colour) {
         Some(f) => f,
@@ -8105,10 +7100,6 @@ pub(crate) unsafe extern "C" fn database_get_colour_family(colour: usize) -> u8 
 /// whether two colours clash: same family or the pairs 8-9, 8-7, 6-7 and family 6 against the colour keyed at
 /// [0x9cf1dc]
 /// Original: `database_colours_clash` (0x540490, Database.cpp, cdecl).
-///
-/// [pt] { 0x540490 } (cdecl, Database.cpp): as cores `a` e `b` se confundem? Pelas famílias (0x540520, `a`
-/// primeiro): iguais; 8 com 9; 8 com 7; 6 com 7, salvo quando a da família 6 está contra a cor com o id
-/// da chave [0x9cf1dc] (exceção: não se confundem).
 pub(crate) unsafe extern "C" fn database_colours_clash(a: usize, b: usize) -> u8 {
     let fa = exe::database_get_colour_family(a);
     let fb = exe::database_get_colour_family(b);
@@ -8132,12 +7123,6 @@ pub(crate) unsafe extern "C" fn database_colours_clash(a: usize, b: usize) -> u8
 ///
 /// Null person or non-player, or attribute outside 1..12: the original (error box and −1).
 /// Original: `staff_compute_non_player_attribute` (0x543fd0, Database.cpp, cdecl).
-///
-/// [pt] { 0x543fd0 } (cdecl, Database.cpp): o `atributo` (1..12) de treinador da `pessoa`, do `nao_jogador`
-/// (+0x69 dela). Diretos: 1 pessoa +0x56, 4 pessoa +0x58, 7 não jogador +0x14, 12 +0x22. Os outros
-/// (2 +0x11, 3 +0x10, 5 +0x17, 6 +0x18, 8 +0x19, 9 +0x1b, 10 +0x1e, 11 +0x21) pela fórmula de 0x544410:
-/// x = (palavra +4 + 2 × byte) × 0,05 + 10; (x + 0,1 x²) / 3 + 0,5, preso em 1..20 e truncado. Pessoa
-/// ou não jogador nulos ou atributo fora de 1..12: a original (caixa e −1).
 pub(crate) unsafe extern "C" fn staff_compute_non_player_attribute(person: usize, not_player: usize, attribute: u32) -> u8 {
     let not_player = NonPlayer(not_player);
     let person = Staff(person);
@@ -8168,34 +7153,23 @@ pub(crate) unsafe extern "C" fn staff_compute_non_player_attribute(person: usize
 }
 
 /// CRT rand() scaled to n: rand * n / 0x8000 (64-bit arithmetic, low 32 bits).
-///
-/// [pt] rand() da CRT (0x946a04) escalado a `n`: rand × n / 0x8000. As rotinas de nomes fazem a conta em
-/// 64 bits (0x945e40 multiplica, 0x945e80 divide com sinal) e ficam com os 32 bits de baixo.
 pub(crate) unsafe fn scaled_crt_rand(n: i32) -> i32 {
     ((exe::crt_rand() as i64 * n as i64) / 0x8000) as i32
 }
 
 /// Name count in the global at `a` (first or second names), capped at 0x7fff.
-///
-/// [pt] O total de nomes da global `a` ([0xae2398] primeiros, [0xae239c] segundos), no máximo 0x7fff.
 pub(crate) unsafe fn name_count_capped(a: usize) -> i32 {
     let t = read_i32(a);
     if t > 0x7fff { 0x7fff } else { t }
 }
 
 /// Nation's entry in the name index table ([0xae2338] + id x 36: first rows and counts of first/second names).
-///
-/// [pt] O índice de nomes da nação `n` (id em +0): [0xae2338] + id × 36 (+0 primeiro nome de onde começam os
-/// primeiros nomes, +4 o dos segundos, +0x18 quantos primeiros, +0x1c quantos segundos).
 pub(crate) unsafe fn nation_name_index(n: usize) -> usize {
     read_usize(G_NATION_NAME_INDEX_TABLE).wrapping_add((read_i32(n) as usize).wrapping_mul(36))
 }
 
 /// The nation that lends names to each language group (nation +0x77, 1..32): jump tables 0x53a060 and 0x53a528
 /// (identical). Group 17 (0) draws at random between [0x9cf484] and [0x9cf404].
-///
-/// [pt] A nação que empresta nomes a cada grupo de língua (nação +0x77, 1..32): tabelas de salto 0x53a060 e
-/// 0x53a528 (iguais). O grupo 17 (0) sorteia entre [0x9cf484] e [0x9cf404].
 pub(crate) const LANGUAGE_GROUP_NATIONS: [usize; 32] = [
     KEY_NATION_ALBANIA, KEY_NATION_SAUDI_ARABIA, KEY_NATION_RUSSIA, KEY_NATION_CHINA, KEY_NATION_CROATIA, KEY_NATION_CZECH_REPUBLIC, KEY_NATION_HOLLAND, KEY_NATION_ENGLAND, KEY_NATION_FINLAND, KEY_NATION_FRANCE, KEY_NATION_GERMANY,
     KEY_NATION_GREECE, KEY_NATION_ISRAEL, KEY_NATION_HUNGARY, KEY_NATION_ITALY, KEY_NATION_JAPAN, 0, KEY_NATION_POLAND, KEY_NATION_PORTUGAL, KEY_NATION_ROMANIA, KEY_NATION_RUSSIA, KEY_NATION_NORWAY,
@@ -8212,12 +7186,6 @@ pub(crate) const LANGUAGE_GROUP_NATIONS: [usize; 32] = [
 ///
 /// Returns (how many in `conta`, first in `inicio`) if the chosen nation has ≥ 5 names; otherwise `None` (draw from the
 /// whole table).
-///
-/// [pt] O trecho comum de 0x539c60 (0x539df0..) e 0x53a1b0 (0x53a2be..) para nação com até 100 nomes e
-/// grupo de língua: a nação do grupo (tabela) se ela tem ≥ sorteio(20) + 15 nomes em `conta`; senão até
-/// 40 nações sorteadas ([0xae2350], 0x122 bytes cada em [0xae23a8]) até achar uma do mesmo grupo com
-/// mais de 5 primeiros nomes (+0x18, nos dois casos). Devolve (quantos em `conta`, primeiro em `inicio`)
-/// se a nação escolhida tem ≥ 5 nomes; senão `None` (sorteio na tabela inteira).
 pub(crate) unsafe fn name_donor_nation(nation: Nation, count: usize, start: usize) -> Option<(i32, i32)> {
     let g = |a: usize| read_i32(a);
     let nations = read_usize(G_NATION_TABLE);
@@ -8258,8 +7226,6 @@ pub(crate) unsafe fn name_donor_nation(nation: Nation, count: usize, start: usiz
 }
 
 /// Name accepted by `database_pick_first_name_for_nation`'s draw: null/empty yes; a single letter or one containing '.' no.
-///
-/// [pt] Nome aceito no sorteio de 0x539c60: nulo ou vazio sim; uma letra só ou com ponto não.
 pub(crate) unsafe fn is_acceptable_name(name: usize) -> bool {
     if name == 0 || read_u8(name) == 0 {
         return true;
@@ -8275,12 +7241,6 @@ pub(crate) unsafe fn is_acceptable_name(name: usize) -> bool {
 /// group 0 draws over the whole table, but returns the row of the SECOND names table ([0xae23f4], as in the original);
 /// otherwise borrows from `name_donor_nation` (the language group). Only the CRT rand() (not `exe::utils_random`).
 /// Original: `database_pick_first_name_for_nation` (0x539c60, Database.cpp, cdecl).
-///
-/// [pt] { 0x539c60 } (cdecl, Database.cpp): um primeiro nome (linha de 60 bytes em [0xae23f0]) para a `nacao`.
-/// Sem nação: sorteio na tabela inteira. Nação com mais de 100 primeiros nomes: 20 sorteios na faixa
-/// dela, fica o de maior peso (+0x3b, com sinal) entre os aceitos (`is_acceptable_name`). Com até 100: grupo de
-/// língua 0 sorteia na tabela inteira, mas devolve a linha da tabela dos SEGUNDOS nomes ([0xae23f4],
-/// assim na original); senão `name_donor_nation`. Só o rand() da CRT (não o 0x90cfc0).
 pub(crate) unsafe extern "C" fn database_pick_first_name_for_nation(nation: usize) -> usize {
     let nation = Nation(nation);
     let row = |t: usize, i: i32| read_usize(t).wrapping_add((i as usize).wrapping_mul(60));
@@ -8314,10 +7274,6 @@ pub(crate) unsafe extern "C" fn database_pick_first_name_for_nation(nation: usiz
 
 /// draws a second name for the nation, the same way
 /// Original: `database_pick_second_name_for_nation` (0x53a1b0, Database.cpp, cdecl).
-///
-/// [pt] { 0x53a1b0 } (cdecl, Database.cpp): um segundo nome (linha de 60 bytes em [0xae23f4]) para a `nacao`.
-/// Como `database_pick_first_name_for_nation` com os segundos nomes (+4, +0x1c, [0xae239c]), sem filtrar os nomes
-/// no sorteio de 20 (só o maior peso).
 pub(crate) unsafe extern "C" fn database_pick_second_name_for_nation(nation: usize) -> usize {
     let nation = Nation(nation);
     let row = |i: i32| read_usize(G_SECOND_NAME_TABLE).wrapping_add((i as usize).wrapping_mul(60));
@@ -8349,15 +7305,11 @@ pub(crate) unsafe extern "C" fn database_pick_second_name_for_nation(nation: usi
 }
 
 /// Text pointer is non-null and the text is not empty.
-///
-/// [pt] Texto não nulo e não vazio.
 pub(crate) unsafe fn has_text(p: usize) -> bool {
     p != 0 && *(p as *const u8) != 0
 }
 
 /// strcpy of the formatted name into destino.
-///
-/// [pt] strcpy (a original copia com rep movsd/movsb o texto e o zero final).
 pub(crate) unsafe fn copy_formatted_name(target: usize, source: usize) {
     let mut i = 0;
     loop {
@@ -8378,12 +7330,6 @@ pub(crate) unsafe fn copy_formatted_name(target: usize, source: usize) {
 ///
 /// Null person or destination, size (i16) < 0x69 or style outside 1..7: the original (error box and 0).
 /// Original: `database_format_staff_name` (0x53dba0, Database.cpp, cdecl).
-///
-/// [pt] { 0x53dba0 } (cdecl, Database.cpp): o nome da `pessoa` em `destino` no `estilo` (byte, 1..7), com
-/// nome (+4), sobrenome (+8) e nome comum (+0xc, ou o apelido dado pelo humano: 0x600740/0x6005e0 em
-/// [0xb63c98]). 1 "nome sobrenome", 2 "N.sobrenome", 3 "sobrenome, nome", 4 "sobrenome, N", 5 só um
-/// nome, 6 iniciais, 7 como o 1 sem preferir o comum; sempre com recuos (o que houver). Devolve 1.
-/// Pessoa ou destino nulos, tamanho (i16) < 0x69 ou estilo fora de 1..7: a original (caixa e 0).
 pub(crate) unsafe extern "C" fn database_format_staff_name(person: usize, target: usize, size: u32, style: u32) -> u32 {
     let e = style as u8;
     if person == 0 || target == 0 || (size as i16) < 0x69 || !(1..=7).contains(&e) {
@@ -8458,12 +7404,6 @@ pub(crate) unsafe extern "C" fn database_format_staff_name(person: usize, target
 ///
 /// Any other kit: only the defaults. Returns 1. Null club: the original (defaults, "Error" box and 0).
 /// Original: `database_get_club_kit_colours` (0x53b640, Database.cpp, cdecl).
-///
-/// [pt] { 0x53b640 } (cdecl, Database.cpp): as cores do `uniforme` (byte: 1 casa +0x83/+0x87, 2 fora
-/// +0x8b/+0x8f, 3 terceiro +0x93/+0x97; 2 e 3 sem uma das duas cores: as de casa trocadas) do `clube`
-/// em pixels (0x5e4800 com os bytes +0x37, +0x38, +0x39 da cor e formato 0): `frente` e `fundo`, que
-/// começam com [0xaebdf0] e [0xae3184]. Outro uniforme: só os padrões. Devolve 1. Clube nulo: a
-/// original (padrões, caixa "Error" e 0).
 pub(crate) unsafe extern "C" fn database_get_club_kit_colours(club: usize, kit: u32, front: *mut u16, bottom: *mut u16) -> u32 {
     if club == 0 {
         return original_fn::<unsafe extern "C" fn(usize, u32, *mut u16, *mut u16) -> u32>(IDX_DATABASE_GET_CLUB_KIT_COLOURS)(club, kit, front, bottom);
@@ -8499,11 +7439,6 @@ pub(crate) unsafe extern "C" fn database_get_club_kit_colours(club: usize, kit: 
 ///
 /// Null club (at the start or coming from `exe::database_get_national_team`): the original with null ("Error" box and 0).
 /// Original: `database_get_club_manager` (0x53ca90, Database.cpp, cdecl).
-///
-/// [pt] { 0x53ca90 } (cdecl, Database.cpp): o técnico (+0xcf) do `clube`; sem ele, o do parceiro A/B
-/// (0x540a50 com 0 e 1); sem os dois, clube comum dá 0 e seleção (id ≥ [0xae235c] − [0xae2350]) repete
-/// com a seleção da nação dela (0x53b3d0 com +0x53, a sub-21 chega na principal). Clube nulo (no começo
-/// ou vindo da 0x53b3d0): a original com nulo (caixa "Error" e 0).
 pub(crate) unsafe extern "C" fn database_get_club_manager(club: usize) -> usize {
     let partner: unsafe extern "C" fn(usize, u32, u32) -> usize = core::mem::transmute(FN_CLUB_GET_LINKED_B_TEAM);
     let manager = |c: Club| c.manager().addr();
@@ -8532,10 +7467,6 @@ pub(crate) unsafe extern "C" fn database_get_club_manager(club: usize) -> usize 
 /// Language ([0x9b5984]) 0 or 1: its own name (+4). Otherwise the eng.lng table ([0xae2408], 79-byte rows from +0x20):
 /// through the id map [0xae23fc] if present, otherwise by id if < the count (+0), otherwise 0.
 /// Original: `club_get_english_name` (0x545880, Database.cpp, cdecl).
-///
-/// [pt] { 0x545880 } (cdecl, Database.cpp): o nome do `clube` em inglês. Idioma ([0x9b5984]) 0 ou 1: o próprio
-/// nome (+4). Senão a tabela do eng.lng ([0xae2408], linhas de 79 bytes a partir de +0x20): pelo mapa
-/// de ids [0xae23fc] se houver, senão pelo id se < quantos (+0), senão 0.
 pub(crate) unsafe extern "C" fn club_get_english_name(club: usize) -> usize {
     let language = read_u32(G_DATABASE_NAMES_LANGUAGE);
     if language == 0 || language == 1 {
@@ -8568,13 +7499,6 @@ pub(crate) unsafe extern "C" fn club_get_english_name(club: usize) -> usize {
 /// (signed byte); with `limit` and delta > 0, the link with the club (`exe::contract_manager_get_contract_for_club`, person +0x39) with +0x45 not null
 /// prevents going up. Returns 1 if the morale changed. Delta 0: 0, without reading anything.
 /// Original: `staff_adjust_morale` (0x544710, Database.cpp, cdecl).
-///
-/// [pt] { 0x544710 } (cdecl, Database.cpp): soma `delta` (byte com sinal) ao moral (+0x45) do jogador
-/// (pessoa +0x61), amortecido perto das pontas: subindo acima de 10, se exe::utils_random(21) < moral + delta
-/// soma só exe::utils_random(delta + 1); descendo abaixo de 10, se exe::utils_random((jogador +0x2f + pessoa +0x5a +
-/// pessoa +0x58) / 3) > moral + delta soma exe::utils_random(delta − 1). Prende em 1..20 (byte com sinal); com
-/// `limitar` e delta > 0, o vínculo com o clube (0x4cf5f0, pessoa +0x39) com +0x45 não nulo impede
-/// subir. Devolve 1 se o moral mudou. Delta 0: 0, sem ler nada.
 pub(crate) unsafe extern "C" fn staff_adjust_morale(person: usize, delta: u32, limitar: u32) -> u32 {
     let person = Staff(person);
     let d = delta as u8 as i8;
@@ -8606,9 +7530,6 @@ pub(crate) unsafe extern "C" fn staff_adjust_morale(person: usize, delta: u32, l
 }
 
 /// The non-player's bytes (+0x0e..+0x22) in the order of the 21 cells of `database_non_player_to_attribute_vector`'s array (13 before the cut, 8 after).
-///
-/// [pt] Os bytes do não jogador (+0x0e..+0x22) na ordem das 21 células do vetor de 0x53a8b0 (13 antes do
-/// corte, 8 depois).
 pub(crate) const NON_PLAYER_ATTRIBUTE_ORDER: [usize; 21] = [
     0x0e, 0x0f, 0x12, 0x13, 0x14, 0x15, 0x16, 0x1a, 0x1c, 0x1d, 0x1f, 0x20, 0x22, 0x11, 0x10, 0x17, 0x18, 0x19, 0x1b,
     0x1e, 0x21,
@@ -8620,11 +7541,6 @@ pub(crate) const NON_PLAYER_ATTRIBUTE_ORDER: [usize; 21] = [
 /// The person is not used. eax on exit: the high 16 bits of the non-player pointer and the last widened attribute
 /// (callers do not use it).
 /// Original: `database_non_player_to_attribute_vector` (0x53a8b0, Database.cpp, cdecl).
-///
-/// [pt] { 0x53a8b0 } (cdecl, Database.cpp): estende (movsx) os atributos do `nao_jogador` para os 16 bits de
-/// baixo das 21 células de 3 bytes do `vetor` (o 3º byte de cada uma fica como está) e grava 13 (o
-/// corte) em `fim` se não nulo. A pessoa não é usada. eax na saída: os 16 bits altos do ponteiro do não
-/// jogador e o último atributo estendido (os chamadores não usam).
 pub(crate) unsafe extern "C" fn database_non_player_to_attribute_vector(not_player: usize, _person: usize, array: usize, end: *mut u8) -> u32 {
     let mut last = 0u16;
     for (k, &d) in NON_PLAYER_ATTRIBUTE_ORDER.iter().enumerate() {
@@ -8642,10 +7558,6 @@ pub(crate) unsafe extern "C" fn database_non_player_to_attribute_vector(not_play
 ///
 /// The original writes twice (the mask and the result). Returns the person (eax).
 /// Original: `staff_set_squad_flags` (0x540980, Database.cpp, cdecl).
-///
-/// [pt] { 0x540980 } (cdecl, Database.cpp): o `elenco` (byte) nas marcas de elenco da pessoa (+0x5e): com
-/// bits de clube (& 3) mantém os de seleção (& 0xc), senão mantém os de clube; depois acrescenta. A
-/// original grava duas vezes (a máscara e o resultado). Devolve a pessoa (eax).
 pub(crate) unsafe extern "C" fn staff_set_squad_flags(person: usize, squad: u32) -> usize {
     let person = Staff(person);
     let e = squad as u8;
@@ -8662,11 +7574,6 @@ pub(crate) unsafe extern "C" fn staff_set_squad_flags(person: usize, squad: u32)
 /// then by the competition id (a − b); within the same one, by season (+8, word) from newest to oldest (b − a), unless
 /// one of them is −1 (0).
 /// Original: `database_compare_comp_history_rows` (0x540780, Database.cpp, cdecl).
-///
-/// [pt] { 0x540780 } (cdecl, Database.cpp): comparação do qsort das linhas do histórico de competições.
-/// Linha sem competição (+4) vai para o fim (a sem e b com: 1; a com e b sem: −1; as duas sem: 0);
-/// depois pelo id da competição (a − b); na mesma, pela temporada (+8, palavra) da mais nova para a
-/// mais velha (b − a), a não ser que uma delas seja −1 (0).
 pub(crate) unsafe extern "C" fn database_compare_comp_history_rows(a: usize, b: usize) -> i32 {
     let ca = read_usize(a + 4);
     if ca == 0 {
@@ -8707,12 +7614,6 @@ pub(crate) const ATTRIBUTE_VECTOR_CELLS: [(u8, u8); 54] = [
 /// attributes, weight 2 on those that count and 1 on +0x2a); cell 54 is byte +0x58 of `person`. The group ends go to
 /// the non-null outputs: positions 9, sides 0xc, weighted 0x20. Returns the vector (eax).
 /// Original: `database_player_to_attribute_vector` (0x53a610, Database.cpp, cdecl).
-///
-/// [pt] { 0x53a610 } (cdecl, Database.cpp): estende os bytes do registro de `jogador` num vetor de 63
-/// células de 3 bytes (palavra com sinal + peso): zera os 63 pesos; células 0..53 pela tabela
-/// `ATTRIBUTE_VECTOR_CELLS` (posições 0..8, lados 9..11, depois os atributos, peso 2 nos que contam e 1 no
-/// +0x2a); a célula 54 é o byte +0x58 da `pessoa`. Os fins de grupo vão às saídas não nulas:
-/// posições 9, lados 0xc, ponderados 0x20. Devolve o vetor (eax).
 pub(crate) unsafe extern "C" fn database_player_to_attribute_vector(player: usize, person: usize, array: usize, end_of_sides: *mut u8,
                                                    end_of_positions: *mut u8, end_of_the_weighted: *mut u8) -> usize {
     let person = Staff(person);
@@ -8735,9 +7636,6 @@ pub(crate) unsafe extern "C" fn database_player_to_attribute_vector(player: usiz
 
 /// whether the nation is England, Scotland, Ireland, Wales or Northern Ireland
 /// Original: `nation_is_uk_or_ireland` (0x5446d0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5446d0 } (cdecl, Database.cpp): 1 se a `nacao` (não nula) é Inglaterra, Escócia, Irlanda, País
-/// de Gales ou Irlanda do Norte (a regra das nações da casa).
 pub(crate) unsafe extern "C" fn nation_is_uk_or_ireland(nation: usize) -> u32 {
     let g = |a: usize| read_u32(a);
     let id = g(nation);
@@ -8753,9 +7651,6 @@ pub(crate) const BASQUE_CLUBS: [usize; 23] = [
 
 /// whether the club is Spanish and one of the 23 Basque clubs named in the code
 /// Original: `database_is_basque_club` (0x53d7f0, Database.cpp, cdecl).
-///
-/// [pt] { 0x53d7f0 } (cdecl, Database.cpp): 1 se o `clube` é da Espanha ([0x9cf488], nação +0x53) e o id
-/// dele é um dos 23 clubes bascos (`BASQUE_CLUBS`). Clube ou nação nulos: 0.
 pub(crate) unsafe extern "C" fn database_is_basque_club(club: usize) -> u32 {
     let club = Club(club);
     let g = |a: usize| read_u32(a);
@@ -8772,10 +7667,6 @@ pub(crate) unsafe extern "C" fn database_is_basque_club(club: usize) -> u32 {
 
 /// Contract link (`exe::contract_manager_get_contract_for_club`) of the person with the club; with no club given, uses the club of the person's contract
 /// (stored in G_CONTRACT_LOOKUP_RESULT); returns (link, club) or (0, 0).
-///
-/// [pt] O vínculo (0x4cf5f0) da `pessoa` (não nula) com o `clube` e o clube usado: sem clube, o do contrato
-/// (0x4cf5a0, guardado em [0xae1080]; contrato +4 = id na tabela [0xae23b4], 581 bytes por clube).
-/// Sem contrato ou clube: (0, 0). Comum a 0x5444a0 e 0x544590 (e 0x544520, 0x544600).
 pub(crate) unsafe fn contract_link_for_club(person: usize, club: usize) -> (usize, usize) {
     let mut club = club;
     if club == 0 {
@@ -8796,10 +7687,6 @@ pub(crate) unsafe fn contract_link_for_club(person: usize, club: usize) -> (usiz
 /// whether the person's link with the club (or the contract club) is transfer listed by the club; job 0xf at a club
 /// without a human manager does not count
 /// Original: `staff_is_transfer_listed` (0x5444a0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5444a0 } (cdecl, Database.cpp): 1 se o vínculo da `pessoa` com o `clube` (sem clube, o do
-/// contrato) está na lista de transferências pelo clube (vínculo +0x4e, bit 1), a não ser que o clube
-/// não seja de técnico humano (0x600a50 com 1, 1, 0, 0) e a função no clube da pessoa (+0x3d) seja 0xf.
 pub(crate) unsafe extern "C" fn staff_is_transfer_listed(person: usize, club: usize) -> u32 {
     let person = Staff(person);
     if person.is_null() {
@@ -8817,9 +7704,6 @@ pub(crate) unsafe extern "C" fn staff_is_transfer_listed(person: usize, club: us
 
 /// whether the person's link with the club (or the contract club) is loan listed
 /// Original: `staff_is_loan_listed` (0x544590, Database.cpp, cdecl).
-///
-/// [pt] { 0x544590 } (cdecl, Database.cpp): 1 se o vínculo da `pessoa` com o `clube` (sem clube, o do
-/// contrato) está na lista de empréstimos (vínculo +0x4e, bit 2).
 pub(crate) unsafe extern "C" fn staff_is_loan_listed(person: usize, club: usize) -> u32 {
     if person == 0 {
         return 0;
@@ -8833,10 +7717,6 @@ pub(crate) unsafe extern "C" fn staff_is_loan_listed(person: usize, club: usize)
 /// Without a club, the contract's club (`exe::contract_manager_get_contract`, stored in [0xae1080]; contract +4 = id in table [0xae23b4], 581 bytes
 /// per club).
 /// Original: `staff_is_listed_by_request` (0x544600, Database.cpp, cdecl).
-///
-/// [pt] { 0x544600 } (cdecl, Database.cpp): 1 se o vínculo (0x4cf5f0) da `pessoa` com o `clube` está na
-/// lista de transferências a pedido (vínculo +0x4e, bit 8). Sem clube, o do contrato (0x4cf5a0,
-/// guardado em [0xae1080]; contrato +4 = id na tabela [0xae23b4], 581 bytes por clube).
 pub(crate) unsafe extern "C" fn staff_is_listed_by_request(person: usize, club: usize) -> u32 {
     if person == 0 {
         return 0;
@@ -8860,9 +7740,6 @@ pub(crate) unsafe extern "C" fn staff_is_listed_by_request(person: usize, club: 
 
 /// the 1 to 20 rating of 2 × the attribute byte + the player's current ability
 /// Original: `player_attribute_rating` (0x544380, Database.cpp, cdecl).
-///
-/// [pt] { 0x544380 } (cdecl, Database.cpp): a nota de 1 a 20 (`attribute_rating`) de 2 × `valor` (byte com
-/// sinal) + habilidade atual (+5) do `jogador`. Termina no `_ftol` (eax inteiro, 1..20).
 pub(crate) unsafe extern "C" fn player_attribute_rating(player: usize, value: u32) -> u32 {
     let ability = read_i16(player + 5) as i32;
     attribute_rating((ability + 2 * (value as u8 as i8 as i32)) as f64) as u32
@@ -8875,12 +7752,6 @@ pub(crate) unsafe extern "C" fn player_attribute_rating(player: usize, value: u3
 /// Argentina, or continent (+0x71) [0x9cfa18] or [0x9cfa08]; in the others, nation Spain, Germany or Portugal. Null
 /// club: "Error" box and 0 (the original).
 /// Original: `database_club_has_reserve_squad` (0x542740, Database.cpp, cdecl).
-///
-/// [pt] { 0x542740 } (cdecl, Database.cpp): 1 se o `clube` pode ter time reserva. Não: seleções (id ≥
-/// [0xae235c] − [0xae2350]), clubes com parceiro A/B (0x540a50 com nulo e 1); na faixa das segundas
-/// seleções (id ≥ [0xae235c] − 2 × [0xae2350]), nação Espanha, Noruega, [0x9cf360], Brasil ou
-/// Argentina ou continente (+0x71) [0x9cfa18] ou [0x9cfa08]; nos demais, nação Espanha, Alemanha ou
-/// Portugal. Clube nulo: caixa "Error" e 0 (a original).
 pub(crate) unsafe extern "C" fn database_club_has_reserve_squad(club: usize) -> u32 {
     let club = Club(club);
     if club.is_null() {
@@ -8926,13 +7797,6 @@ pub(crate) unsafe extern "C" fn database_club_has_reserve_squad(club: usize) -> 
 ///
 /// Only al is returned (callers use al).
 /// Original: `database_get_reputation_scope` (0x5408c0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5408c0 } (cdecl, Database.cpp): de que distância `quem_ve` olha a `pessoa`, o que escolhe a
-/// reputação: 0 = mesmo clube ou clubes da mesma nação (+0x39, clube +0x53) → a nacional; 2 = mesma
-/// nação (+0x1a) ou não estrangeiro nela (0x53d980) → a atual; 3 = não estrangeiro na nação do clube
-/// da pessoa, ou reputação de jogador (+0x61, +9) + reputação do clube de quem vê (+0x80) ≥ 14000 →
-/// a média; 4 (sem quem vê, quem vê entre os 16 últimos ids = técnicos humanos, sem dados ou sem
-/// clube) → a mundial. Só o al é devolvido (quem chama usa al).
 pub(crate) unsafe extern "C" fn database_get_reputation_scope(person: usize, who_ve: usize) -> u8 {
     let who_ve = Staff(who_ve);
     let person = Staff(person);
@@ -8985,12 +7849,6 @@ pub(crate) unsafe extern "C" fn database_get_reputation_scope(person: usize, who
 /// 4 → world, 2 → current, 0 → home, 3 → half the world + half the current, other → half the home + half the current
 /// (truncating divisions). Only ax is returned.
 /// Original: `database_get_staff_reputation_for_viewer` (0x5407e0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5407e0 } (cdecl, Database.cpp): a reputação da `pessoa` vista por `quem_ve`, pelo alcance
-/// (0x5408c0): dos dados de jogador (+0x61: atual +9, nacional +0xb, mundial +0xd) ou, com
-/// `nao_jogador`, dos de não jogador (+0x69: +8, +0xa, +0xc). 4 → mundial, 2 → atual, 0 → nacional,
-/// 3 → metade da mundial + metade da atual, outro → metade da nacional + metade da atual (divisões
-/// truncadas). Só o ax é devolvido.
 pub(crate) unsafe extern "C" fn database_get_staff_reputation_for_viewer(person: usize, who_ve: usize, not_player: u32) -> u16 {
     let person = Staff(person);
     let e = exe::database_get_reputation_scope(person, who_ve);
@@ -9017,12 +7875,6 @@ pub(crate) unsafe extern "C" fn database_get_staff_reputation_for_viewer(person:
 /// [0x9cf360] with the nation [0x9cf4f0]; and in Portugal someone who is not from the EU (`database_is_staff_eu_national`) with a contract
 /// (`exe::contract_manager_get_contract`) that started up to 1/1/1998 (Date `exe::date_date_549f70`; contract +0x25 day, +0x27 year).
 /// Original: `database_is_staff_foreign` (0x53d980, Database.cpp, cdecl).
-///
-/// [pt] { 0x53d980 } (cdecl, Database.cpp): 1 se a `pessoa` é estrangeira na `nacao` (nula: 1). Não é com
-/// a nação na primeira (+0x1a) ou segunda nacionalidade (+0x1e). Com `grupos`, também não é: entre
-/// Inglaterra, Escócia, País de Gales, Irlanda do Norte e Irlanda; entre Austrália e [0x9cf3f4];
-/// em [0x9cf360] com a nação [0x9cf4f0]; e em Portugal quem não é da UE (0x53d740) com contrato
-/// (0x4cf5a0) que começou até 1/1/1998 (Date 0x549f70; contrato +0x25 dia, +0x27 ano).
 pub(crate) unsafe extern "C" fn database_is_staff_foreign(person: usize, nation: usize, groups: u32) -> u32 {
     let person = Staff(person);
     let g = |a: usize| read_u32(a);
@@ -9083,10 +7935,6 @@ pub(crate) unsafe extern "C" fn database_is_staff_foreign(person: usize, nation:
 ///
 /// Null person: "Error" box and 0xff (the original). Only ax is returned (callers use al).
 /// Original: `database_get_staff_age` (0x53ab90, Database.cpp, cdecl).
-///
-/// [pt] { 0x53ab90 } (cdecl, Database.cpp): a idade da `pessoa` em anos completos na `data` (palavra +0 dia
-/// do ano, +2 ano): ano − ano de nascimento (+0x12), menos 1 se o dia de nascimento (+0x10) ainda não
-/// chegou. Pessoa nula: caixa "Error" e 0xff (a original). Só o ax é devolvido (quem chama usa al).
 pub(crate) unsafe extern "C" fn database_get_staff_age(person: usize, data: *const u16) -> u16 {
     let person = Staff(person);
     if person.is_null() {
@@ -9103,10 +7951,6 @@ pub(crate) unsafe extern "C" fn database_get_staff_age(person: usize, data: *con
 
 /// whether the nation has free transfers: new FIFA rules, Brazil, or Europe except Poland, Turkey, Croatia and Russia
 /// Original: `nation_allows_free_transfers` (0x544670, Database.cpp, cdecl).
-///
-/// [pt] { 0x544670 } (cdecl, Database.cpp): 1 se a `nacao` tem transferência livre: com as regras novas da
-/// FIFA ([0xae233c] = 1), no Brasil ou numa nação da Europa (continente +0x71, [0x9cfa10]) fora de
-/// Polônia, Turquia, Croácia e Rússia.
 pub(crate) unsafe extern "C" fn nation_allows_free_transfers(nation: usize) -> u32 {
     let nation = Nation(nation);
     let g = |a: usize| read_u32(a);
@@ -9133,11 +7977,6 @@ pub(crate) unsafe extern "C" fn nation_allows_free_transfers(nation: usize) -> u
 /// in Germany, any European (nation +0x71 = the continent [0x9cfa10] in table [0xae23a4], 198 bytes); in [0x9cf360],
 /// everyone; in Denmark, [0x9cf348], Norway and [0x9cf3a0].
 /// Original: `database_is_staff_eu_national` (0x53d740, Database.cpp, cdecl).
-///
-/// [pt] { 0x53d740 } (cdecl, Database.cpp): 1 se a `pessoa` conta como da UE para um clube da
-/// `nacao_do_clube`: nacionalidade (+0x1a) ou segunda (+0x1e) com a marca de UE (nação +0x7f = 2) ou
-/// Suíça ([0x9cf4ac]); na Alemanha, qualquer europeu (nação +0x71 = o continente [0x9cfa10] na tabela
-/// [0xae23a4], 198 bytes); em [0x9cf360], todos; na Dinamarca, [0x9cf348], Noruega e [0x9cf3a0].
 pub(crate) unsafe extern "C" fn database_is_staff_eu_national(person: usize, nation_of_club: usize) -> u32 {
     let person = Staff(person);
     let g = |a: usize| read_u32(a);
@@ -9176,11 +8015,6 @@ pub(crate) unsafe extern "C" fn database_is_staff_eu_national(person: usize, nat
 /// Without a club, the contract's club (`exe::contract_manager_get_contract`, stored in [0xae1080]; contract +4 = club id in table [0xae23b4], 581
 /// bytes per club).
 /// Original: `staff_is_transfer_listed_or_requested` (0x544520, Database.cpp, cdecl).
-///
-/// [pt] { 0x544520 } (cdecl, Database.cpp): 1 se o vínculo (0x4cf5f0) da `pessoa` com o `clube` está na
-/// lista de transferências, pelo clube ou a pedido (vínculo +0x4e, bits 1 e 8). Sem clube, o do
-/// contrato (0x4cf5a0, guardado em [0xae1080]; contrato +4 = id do clube na tabela [0xae23b4], 581
-/// bytes por clube).
 pub(crate) unsafe extern "C" fn staff_is_transfer_listed_or_requested(person: usize, club: usize) -> u32 {
     if person == 0 {
         return 0;
@@ -9203,9 +8037,6 @@ pub(crate) unsafe extern "C" fn staff_is_transfer_listed_or_requested(person: us
 }
 
 /// 1-20 rating of a relative attribute value: x = v*0.05 + 10; (x^2*0.1 + x)/3 + 0.5, clamped 1..20, truncated.
-///
-/// [pt] A nota de 1 a 20 de um atributo relativo (de 0x543540, 0x544380 e 0x5442f0): x = v × 0,05 + 10;
-/// (x² × 0,1 + x) × 1/3 + 0,5, entre 1 e 20, truncada (`_ftol`).
 pub(crate) unsafe fn attribute_rating(v: f64) -> u8 {
     let x = v * read_f64(rdata::F64_0_05) + read_f64(rdata::F64_10);
     let z = (x * x * read_f64(rdata::F64_0_1) + x) * read_f64(rdata::F64_0_3333333333) + read_f64(rdata::F64_0_5); // arredonda;
@@ -9228,12 +8059,6 @@ pub(crate) unsafe fn attribute_rating(v: f64) -> u8 {
 /// +0x58 of `person`; some go to `player_attribute_rating` (or `player_attribute_rating_with_scaled_ability`). No person, no player or attribute out of range: "Error" box
 /// and 0xff (the original). Only al is returned.
 /// Original: `staff_compute_player_attribute` (0x543540, Database.cpp, cdecl).
-///
-/// [pt] { 0x543540 } (cdecl, Database.cpp): o `atributo` (1..31) de jogador de 1 a 20. Uns são o byte do
-/// registro de `jogador`; os relativos dão a nota (`attribute_rating`) de 2 × byte + habilidade atual
-/// (+5), ou de 2 × byte + habilidade × 0,1 conforme o goleiro (+0xf: = 20 ou < 15); o 10 é o byte
-/// +0x58 da `pessoa`; uns vão a 0x544380 (ou 0x5442f0). Sem pessoa, sem jogador ou atributo fora:
-/// caixa "Error" e 0xff (a original). Só o al é devolvido.
 pub(crate) unsafe extern "C" fn staff_compute_player_attribute(person: usize, player: usize, attribute: u32) -> u8 {
     let person = Staff(person);
     let a = attribute as u8 as i8;
@@ -9283,9 +8108,6 @@ pub(crate) unsafe extern "C" fn staff_compute_player_attribute(person: usize, pl
 
 /// a player attribute of the person, from the person's player data (`staff_compute_player_attribute`)
 /// Original: `staff_get_player_attribute` (0x5431e0, Database.cpp, cdecl).
-///
-/// [pt] { 0x5431e0 } (cdecl, Database.cpp): o `atributo` (1..31) de jogador da `pessoa`: 0x543540 com os
-/// dados de jogador (+0x61). Sem pessoa ou atributo fora: caixa "Error" e 0xff (a original).
 pub(crate) unsafe extern "C" fn staff_get_player_attribute(person: usize, attribute: u32) -> u8 {
     let person = Staff(person);
     let a = attribute as u8 as i8;
@@ -9303,12 +8125,6 @@ pub(crate) unsafe extern "C" fn staff_get_player_attribute(person: usize, attrib
 /// from +0x5cb); called from this copy it runs on the private stack and the garbage written changes (proof of the save
 /// of the 219th batch). It came back with the new criterion.
 /// Original: `save_database_for_game` (0x524d30, Database.cpp, cdecl).
-///
-/// [pt] { 0x524d30 } (cdecl, Database.cpp): `save_database_for_game(save, a4, tipo)`: o passo 1 do
-/// `save_game_data`: `save_database(save, 1, a4, tipo)` (0x52dad0, para o contêiner), devolvendo a
-/// resposta dela. Ficou desligada (DESLIGADAS) até 31/10/2026, quando o critério dos testes mudou e a lista ficou vazia: o save_database grava no index.dat 408 bytes de
-/// locais sem valor (lixo de ponteiro, a partir de +0x5cb); chamado desta cópia ele roda na pilha
-/// particular e o lixo gravado muda (prova do save da 219a). Voltou com o critério novo.
 pub(crate) unsafe extern "C" fn save_database_for_game(save: usize, a4: u32, kind: u32) -> u32 {
     covered!("save write database");
     exe::save_database(save, 1, a4, kind)
@@ -9319,10 +8135,6 @@ pub(crate) unsafe extern "C" fn save_database_for_game(save: usize, a4: u32, kin
 
 /// load_game_data step 2: load_database(save, shared, 1), the database read from the container
 /// Original: `load_database_from_stream` (0x524d10, Database.cpp, cdecl).
-///
-/// [pt] { 0x524d10 } (cdecl, Database.cpp): `load_database_from_stream(save, compartilhado)`: o passo 2
-/// do `load_game_data`: `load_database(save, compartilhado, 1)` (0x528540, do contêiner), devolvendo
-/// a resposta dela (1 = certo).
 pub(crate) unsafe extern "C" fn load_database_from_stream(save: usize, shared: u32) -> u32 {
     covered!("save load database");
     exe::load_database(save, shared, 1)
@@ -9336,8 +8148,6 @@ pub(crate) unsafe extern "C" fn load_database_from_stream(save: usize, shared: u
 
 /// reads global 0x9b5984
 /// Original: `database_global_9b5984` (0x535920, Database.cpp, cdecl).
-///
-/// [pt] { 0x535920 } (Database.cpp): a global 0x9b5984.
 pub(crate) unsafe extern "C" fn database_global_9b5984() -> u32 {
     read_u32(G_DATABASE_NAMES_LANGUAGE)
 }

@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/fra_cfa.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/fra_cfa.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `fra_cfa_create_schedule`.
 pub(crate) unsafe extern "thiscall" fn compare_fra_cfa_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
@@ -10,8 +9,6 @@ pub(crate) unsafe extern "thiscall" fn compare_fra_cfa_create_schedule(this: usi
 }
 
 /// Comparer for `fra_cfa_set_up_rules`.
-///
-/// [pt] O calendário (a virtual +0x3c) aloca: só a original, conferindo os campos e a devolução 1.
 pub(crate) unsafe extern "thiscall" fn compare_fra_cfa_set_up_rules(this: usize) -> u32 {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_FRA_CFA_SET_UP_RULES);
@@ -31,8 +28,6 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_fra_cfa(this: usize, ye
 }
 
 /// Comparer for `destroy_fra_cfa`.
-///
-/// [pt] Soltam memória: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_destroy_fra_cfa(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_DESTROY_FRA_CFA)(this)
 }

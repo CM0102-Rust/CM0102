@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../db_files.rs.
-// [pt] Os comparadores das rotinas de ../db_files.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `conversor_v1`.
 pub(crate) unsafe fn compare_conversor_v1(name: &str, o: V1Converter, rust: V1Converter, stream: usize, use_zip: i32,
@@ -81,9 +80,6 @@ pub(crate) unsafe extern "C" fn compare_db_files_write_or_read_records_0x3c(stre
 }
 
 /// Comparer for `db_files_open_for_read`.
-///
-/// [pt] Comparador: abrir duas vezes deixaria outro FILE aberto (ou alocaria um lugar novo na tabela de FILE da
-/// CRT, que fica). Roda a original e compara só o caminho (sem efeito colateral).
 pub(crate) unsafe extern "C" fn compare_db_files_open_for_read(folder: usize, name: usize) -> usize {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_DB_FILES_OPEN_FOR_READ)(folder, name);
     check_database_path("db_files_open_for_read", folder, name);
@@ -91,9 +87,6 @@ pub(crate) unsafe extern "C" fn compare_db_files_open_for_read(folder: usize, na
 }
 
 /// Comparer for `db_files_open_for_write`.
-///
-/// [pt] Comparador: criar duas vezes truncaria o arquivo com dois FILE abertos. Roda a original e compara só o
-/// caminho.
 pub(crate) unsafe extern "C" fn compare_db_files_open_for_write(folder: usize, name: usize) -> usize {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> usize>(IDX_DB_FILES_OPEN_FOR_WRITE)(folder, name);
     check_database_path("db_files_open_for_write", folder, name);

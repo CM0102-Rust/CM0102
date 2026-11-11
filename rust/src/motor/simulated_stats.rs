@@ -7,10 +7,6 @@ use super::*;
 /// records of `[+4]`. Error on open or write: the "Error" box (simulated_stats.cpp 0x209, 0x210, 0x218), without
 /// closing the item. Does not check for a null container.
 /// Original: `SimulatedStats::save` (0x84c680, simulated_stats.cpp, thiscall).
-///
-/// [pt] { 0x84c680 } (thiscall, ret 4, simulated_stats.cpp): `SimulatedStats::save(save)`: grava no item
-/// `simulated_stats.dat` a quantidade (+0, u32) e os registros de 0x44 bytes de [+4]. Erro ao abrir ou gravar: a caixa
-/// "Error" (simulated_stats.cpp 0x209, 0x210, 0x218), sem fechar o item. Não confere o contêiner nulo.
 pub(crate) unsafe extern "thiscall" fn simulated_stats_save(this: usize, save: usize) {
     const FONTE: usize = 0xa8278c;
     covered!("cpx_7 save simulated stats");

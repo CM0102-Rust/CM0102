@@ -2,8 +2,6 @@ use super::*;
 
 /// Common start: +0x3e = 2 and allocates the two-entry list (0xc bytes) at +0xa7; None with the error box on out of
 /// memory.
-///
-/// [pt] O começo comum: +0x3e = 2 e a lista de dois (0x944e46 de 0xc em +0xa7); sem memória, a caixa `linha` e None.
 pub(crate) unsafe fn alloc_two_team_list(this: Cup, file: usize, row: u32) -> Option<usize> {
     this.set_team_count(2);
     let l = exe::crt_malloc(0xc);
@@ -16,8 +14,6 @@ pub(crate) unsafe fn alloc_two_team_list(this: Cup, file: usize, row: u32) -> Op
 }
 
 /// Common end: class and status 0 for both entries; returns (1, 2).
-///
-/// [pt] O fim comum: classe e situação 0 nos dois; devolve 1.
 pub(crate) unsafe fn finish_two_team_list(l: usize) -> (i32, i32) {
     write_u8(l + 4, 0);
     write_u8(l + 5, 0);
@@ -27,8 +23,6 @@ pub(crate) unsafe fn finish_two_team_list(l: usize) -> (i32, i32) {
 }
 
 /// Writes club c into slot v of the list; with no club shows the error box and returns false.
-///
-/// [pt] Grava o clube `c` na vaga `v` da lista; sem clube, a caixa `linha` (fonte `arquivo`) e falso.
 pub(crate) unsafe fn set_team_slot(l: usize, v: usize, c: usize, file: usize, row: u32) -> bool {
     write_u32(l + 6 * v, c as u32);
     if c == 0 {
@@ -44,10 +38,6 @@ pub(crate) unsafe fn set_team_slot(l: usize, v: usize, c: usize, file: usize, ro
 /// Allocates the list (out of memory, the box of line `0xc2` and −1). The Copa del Rey winner ([`0x9cf740`]; without
 /// it, box `0xcb` and 0) and the league champion ([`0x9cf624`]; without it, `0xd4` and 0); if both are the same club,
 /// the first becomes the Copa del Rey runner-up (without it, `0xe0` and 0). Returns 1.
-///
-/// [pt] { 0x858aa0 } (thiscall, ret 0, spa_super.cpp): `SpaSuper::select_teams()`: a lista (sem memória, a caixa da linha
-/// 0xc2 e −1). O campeão da Copa do Rei ([0x9cf740]; sem ele, a caixa 0xcb e 0) e o da Liga ([0x9cf624]; sem ele, 0xd4
-/// e 0); se é o mesmo clube, o primeiro vira o vice da Copa do Rei (sem ele, 0xe0 e 0). Devolve 1.
 pub(crate) unsafe fn select_spanish_super_cup_teams(this: usize) -> (i32, i32) {
     const F: usize = 0xa82a58;
     let l = match alloc_two_team_list(Cup(this), F, 0xc2) {
@@ -75,18 +65,12 @@ pub(crate) unsafe fn select_spanish_super_cup_teams(this: usize) -> (i32, i32) {
 /// rule: the Spanish Super Cup is between the Copa del Rey winner (home in the first leg [inference]) and the League
 /// champion; if the same club won both, the Copa del Rey runner-up takes its place; if one is missing, the error box
 /// Original: `SpaSuper::select_teams` (0x858aa0, spa_super.cpp, thiscall, ret 0).
-///
-/// [pt] regra: a Supercopa da Espanha é entre o campeão da Copa do Rei (o mandante da ida [inferência]) e o campeão da Liga;
-/// se o mesmo clube ganhou as duas, entra o vice da Copa do Rei; sem algum deles, a caixa de erro
 pub(crate) unsafe extern "thiscall" fn spa_super_select_teams(this: usize) -> i32 {
     select_spanish_super_cup_teams(this).0
 }
 
 /// Side-by-side comparer for routines that allocate the list +0xa7: compares +0x3e, [0xb67a34] and the 12 list bytes
 /// (when returning 1); frees the port's list.
-///
-/// [pt] Lado a lado para as rotinas que alocam a lista +0xa7 (como `eng_cc_cup_compare_entrant_list`): o +0x3e e o [0xb67a34] a partir do
-/// mesmo estado; a lista da cópia é comparada nos 12 bytes (só com a devolução 1) e liberada.
 pub(crate) unsafe fn compare_team_list(name: &str, this: Cup, o: impl FnOnce() -> i32, c: impl FnOnce() -> (i32, i32)) -> i32 {
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
@@ -124,12 +108,6 @@ pub(crate) unsafe fn compare_team_list(name: &str, this: Cup, o: impl FnOnce() -
 ///
 /// If they are the same club, the second becomes the Emperor's Cup runner-up (without it, 0xf9 and 0) and, if still the
 /// same, the first becomes the J1 runner-up (without it, 0x105 and 0). Returns 1.
-///
-/// [pt] { 0x666160 } (thiscall, ret 0, jap_super.cpp): `JapSuper::select_teams()`: a lista (sem memória, a caixa da linha
-/// 0xc1 e −1). O campeão da J1 ([0x9cf65c]; sem ele, 0xca e 0) — sem nação (+0x53 = 0), o vice (sem ele, 0xd6 e 0); o da
-/// Copa do Imperador ([0x9cf660]; sem ele, 0xe0 e 0) — sem nação, o vice (sem ele, 0xec e 0). Se é o mesmo clube, o
-/// segundo vira o vice da Copa do Imperador (sem ele, 0xf9 e 0) e, se ainda é o mesmo, o primeiro vira o vice da J1
-/// (sem ele, 0x105 e 0). Devolve 1.
 pub(crate) unsafe fn select_japanese_super_cup_teams(this: usize) -> (i32, i32) {
     const F: usize = 0x9eaf4c;
     let l = match alloc_two_team_list(Cup(this), F, 0xc1) {
@@ -164,8 +142,6 @@ pub(crate) unsafe fn select_japanese_super_cup_teams(this: usize) -> (i32, i32) 
 }
 
 /// Bytes the original writes in a round: +0..+0x10, +0x13..+0x22 and +0x5c..+0x67.
-///
-/// [pt] Os bytes que a original grava na rodada: +0..+0x10, +0x13..+0x22 e +0x5c..+0x67.
 pub(crate) unsafe fn spa_super_written_round_bytes(t: usize) -> Vec<u8> {
     let mut v = Vec::new();
     for &(a, b) in &[(0usize, 0x11usize), (0x13, 0x23), (0x5c, 0x68)] {
@@ -178,9 +154,6 @@ pub(crate) unsafe fn spa_super_written_round_bytes(t: usize) -> Vec<u8> {
 /// the built order), drawn on 5/7 with the first leg on 20/8 (moved to weekday 6) at the home side [inference: venue
 /// 0]; two-leg tiebreak 1 [inference: away goals and penalties]; no prize; category 6
 /// Original: `SpaSuper::create_round_table` (0x858960, spa_super.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x858960 } (thiscall, ret 0x10, spa_super.cpp; a virtual +0x3c da Supercopa da Espanha): `SpaSuper::
-/// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, a rodada única; a caixa da linha 0x99 sem memória.
 pub(crate) unsafe extern "thiscall" fn spa_super_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     fra_super_create_single_stage_round_table(Cup(this), stage, rounds, extra, out, &SPANISH_SUPER_CUP, 0xa82a58, 0x99, "cql_12 tabela da supercopa da espanha", |_| {})
 }

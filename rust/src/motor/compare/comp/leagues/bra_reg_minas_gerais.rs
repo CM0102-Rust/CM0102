@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/bra_reg_minas_gerais.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/bra_reg_minas_gerais.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `bra_reg_minas_gerais_advance_stage`.
 ///
@@ -9,10 +8,6 @@ use super::*;
 /// allocates and draws at random; it cannot run twice), checking the plan: on the last stage, +0x30 unchanged;
 /// otherwise +0x30 + 1, or, on reaching 2, 2 (with a final) or 1 (the same champion in both halves, which the final
 /// writes).
-///
-/// [pt] O comparador da fase seguinte: só a original (simplification: ao chegar a 2 monta a final, que aloca e sorteia; não pode
-/// rodar duas vezes), conferindo o plano: na última fase, +0x30 igual; senão +0x30 + 1, ou, ao chegar a 2, 2 (com
-/// final) ou 1 (o mesmo campeão nos dois turnos, que a final grava).
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_minas_gerais_advance_stage(this: usize) {
     let this = League(this);
     let before = this.current_stage() as i32;
@@ -31,11 +26,6 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_minas_gerais_advance_stag
 /// The same club in both: +0x30 = 1, +0x2c = 2 and status 5 in the first row of each half and in its row of the league
 /// table. Different: the stage in the third slot exists, with +0x3e = 2, +4 = the league's +4 and the two champions in
 /// its list (+0xa7, 6 bytes; as a set: the round's draw may reorder them), and +0x30 = 2.
-///
-/// [pt] O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), conferindo o plano feito
-/// antes: os campeões dos turnos. O mesmo nos dois: +0x30 = 1, +0x2c = 2 e a situação 5 na primeira linha de cada turno
-/// e na linha dele da tabela da liga. Diferentes: a fase da terceira vaga existe, com +0x3e = 2, +4 = o +4 da liga e os
-/// dois campeões na lista dela (+0xa7, 6 bytes; como conjunto: o sorteio da rodada pode reordenar), e +0x30 = 2.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_minas_gerais_create_final_stage(this: usize) {
     let this = League(this);
     let (a, b) = (half_champion(this, 0), half_champion(this, 1));
@@ -66,18 +56,11 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_minas_gerais_create_final
 /// Only the original runs (simplification: it writes the history, which allocates the record, pays the prizes and sends
 /// the news item, and may set up the Champions Cup; it cannot run twice). The copy runs in Rust mode (counters "cqo_7
 /// historico da final" and "cqo_7 prizes") and is proved by the mutations and by the two Rust careers.
-///
-/// [pt] Comparador do fim da temporada: só a original (simplification: grava o histórico, que aloca o registro, paga os prêmios e
-/// manda a notícia, e pode montar a Copa dos Campeões; não pode rodar duas vezes). A cópia roda no modo Rust (contadores
-/// "cqo_7 final history" e "cqo_7 prizes") e é provada pelas mutações e pelas duas carreiras Rust.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_minas_gerais_record_season_honours(this: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_MINAS_GERAIS_RECORD_SEASON_HONOURS)(this)
 }
 
 /// Comparer for `bra_reg_minas_gerais_set_club_progress`.
-///
-/// [pt] Comparador: lado a lado pela entrada do clube (+0x73..+0x75), achada antes (a 0x4a4850 ordena na primeira vez e só
-/// busca depois; a original e a cópia a chamam de novo); a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_minas_gerais_set_club_progress(this: usize, club: usize, stage: u32, a: u32, b: u32, c: u32) -> usize {
     let e = CompStatsClub(bra_reg_minas_gerais_comp_stats_club_entry(this, club));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&[(e.addr() + comp_stats_club::CURRENT_POSITION, 3)], || original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32) -> usize>(IDX_BRA_REG_MINAS_GERAIS_SET_CLUB_PROGRESS)(this, club, stage, a, b, c), || bra_reg_minas_gerais_set_club_progress(this, club, stage, a, b, c));

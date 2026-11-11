@@ -1,11 +1,8 @@
 use super::*;
 
 // The comparers of the routines in ../human_manager.rs.
-// [pt] Os comparadores das rotinas de ../human_manager.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `get_active_tactic`.
-///
-/// [pt] Comparador: a devolução (rotina pura); sem técnico ou fora da conta, só a original (caixa).
 pub(crate) unsafe extern "thiscall" fn compare_get_active_tactic(this: usize, manager: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_ACTIVE_TACTIC);
     let t = manager_or_current_human(manager);
@@ -19,9 +16,6 @@ pub(crate) unsafe extern "thiscall" fn compare_get_active_tactic(this: usize, ma
 }
 
 /// Comparer for `select_tactic_slot`.
-///
-/// [pt] Comparador: lado a lado pelo byte da vaga ativa do registro; sem técnico (nada) ou fora da conta (caixa), só a
-/// original.
 pub(crate) unsafe extern "thiscall" fn compare_select_tactic_slot(this: usize, reserve: u32, club: usize, manager: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize)>(IDX_SELECT_TACTIC_SLOT);
     let t = manager_or_current_human(manager);
@@ -34,8 +28,6 @@ pub(crate) unsafe extern "thiscall" fn compare_select_tactic_slot(this: usize, r
 }
 
 /// Comparer for `clear_invalid_watched_fixtures`.
-///
-/// [pt] Comparador: lado a lado pelas 16 partidas assistidas (a 0x5fe700 só lê).
 pub(crate) unsafe extern "thiscall" fn compare_clear_invalid_watched_fixtures(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CLEAR_INVALID_WATCHED_FIXTURES);
     let reg: Vec<(usize, usize)> = (0..0x10).map(|i| (human_manager_watched_match_record(this, i), 79)).collect();
@@ -113,8 +105,6 @@ pub(crate) unsafe extern "thiscall" fn compare_is_watching_fixture(this: usize, 
 }
 
 /// Comparer for `can_watch_fixture`.
-///
-/// [pt] Comparador: a original e a cópia (as duas só leem; a volta da lista recomeça o cursor), pelo valor.
 pub(crate) unsafe extern "thiscall" fn compare_can_watch_fixture(this: usize, fixture: usize, human: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_CAN_WATCH_FIXTURE)(this, fixture, human);
     if fixture == 0 {
@@ -126,9 +116,6 @@ pub(crate) unsafe extern "thiscall" fn compare_can_watch_fixture(this: usize, fi
 }
 
 /// Comparer for `remove_nickname_from_all`.
-///
-/// [pt] Comparador: lado a lado pelos vetores de apelidos e contagens de todos os técnicos humanos; sem técnicos (o qsort
-/// leria pelo `id`), só a original.
 pub(crate) unsafe extern "thiscall" fn compare_remove_nickname_from_all(this: usize, id: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REMOVE_NICKNAME_FROM_ALL);
     let n = read_u32(this + 4) as i32;

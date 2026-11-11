@@ -1,12 +1,8 @@
 use super::*;
 
 // The comparers of the routines in ../game.rs.
-// [pt] Os comparadores das rotinas de ../game.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `game_update_nation_coefficients`.
-///
-/// [pt] Comparador: a original aloca e solta o vetor (e o ordena), então roda só ela, conferida contra o plano feito antes
-/// pelas mesmas contas da cópia: a história (+0xb0..+0xd8) e a marca (+0x121) de cada nação e [0x9cd218] zerado.
 pub(crate) unsafe extern "C" fn compare_game_update_nation_coefficients() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_GAME_UPDATE_NATION_COEFFICIENTS);
     let iniciar = read_u8(G_NATION_COEFFICIENT_HISTORY_NEEDS_INIT) != 0;
@@ -47,8 +43,6 @@ pub(crate) unsafe extern "C" fn compare_game_update_nation_coefficients() {
 }
 
 /// Comparer for `is_player_regen_day`.
-///
-/// [pt] Comparador: pelo al (o único byte que os chamadores leem).
 pub(crate) unsafe extern "C" fn compare_is_player_regen_day(day: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(u32) -> u32>(IDX_IS_PLAYER_REGEN_DAY)(day);
     let n = is_player_regen_day(day);
@@ -57,8 +51,6 @@ pub(crate) unsafe extern "C" fn compare_is_player_regen_day(day: u32) -> u32 {
 }
 
 /// Comparer for `clamp_char_sum`.
-///
-/// [pt] Comparador: pelo ax (os 16 bits altos do eax da original são os do chamador).
 pub(crate) unsafe extern "C" fn compare_clamp_char_sum(a: u32, b: u32, min: u32, max: u32) -> u32 {
     let r = original_fn::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(IDX_CLAMP_CHAR_SUM)(a, b, min, max);
     let n = clamp_char_sum(a, b, min, max);
@@ -92,8 +84,6 @@ pub(crate) unsafe extern "C" fn compare_game_update_comps_for_date(mark: u32) {
 }
 
 /// Comparer for `manager_manager_adjust_board_confidence`.
-///
-/// [pt] Comparador: lado a lado pela confiança (2 bytes).
 pub(crate) unsafe extern "thiscall" fn compare_manager_manager_adjust_board_confidence(this: usize, club: usize, delta: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_MANAGER_MANAGER_ADJUST_BOARD_CONFIDENCE);
     if club == 0 {
@@ -137,8 +127,6 @@ pub(crate) unsafe extern "C" fn compare_pow_double(base: f64, expoente: f64) -> 
 }
 
 /// Comparer for `compare_players_by_ability`.
-///
-/// [pt] Comparador: pelo valor.
 pub(crate) unsafe extern "C" fn compare_compare_players_by_ability(a: *const usize, b: *const usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(IDX_COMPARE_PLAYERS_BY_ABILITY)(a, b);
     let n = compare_players_by_ability(a, b);

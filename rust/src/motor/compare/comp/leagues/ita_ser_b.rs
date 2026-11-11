@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/ita_ser_b.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/ita_ser_b.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `ita_ser_b_create_schedule`.
 pub(crate) unsafe extern "thiscall" fn compare_ita_ser_b_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
@@ -16,9 +15,6 @@ pub(crate) unsafe extern "thiscall" fn compare_ita_ser_b_update_for_date(this: u
 }
 
 /// Comparer for `ita_league_sort_clubs_level_on_points`.
-///
-/// [pt] Lado a lado na tabela inteira (a 0x682b30 grava +4 de cada linha e solta a sua minitabela; o qsort só mexe no
-/// bloco).
 pub(crate) unsafe extern "thiscall" fn compare_ita_league_sort_clubs_level_on_points(this: usize, points: u32) {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_ITA_LEAGUE_SORT_CLUBS_LEVEL_ON_POINTS);

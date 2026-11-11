@@ -4,7 +4,6 @@ use super::*;
 // from the exe's .rdata (engenharia-reversa/nomear_vtables.py; levas/reorganizacao/vtables.json; method names from
 // the community function map). `read_usize(read_usize(comp) + comp_vtable::CREATE_SCHEDULE)` is the address of
 // the competition's create_schedule override.
-// [pt] Os slots dos métodos virtuais, com nome: o deslocamento de cada método na vtable da classe.
 
 /// Virtual method slots of Comp (League, Cup and subclasses, Friendly): slots 0x00..0x8c shared by every competition.
 #[allow(dead_code)]

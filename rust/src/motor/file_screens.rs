@@ -18,18 +18,6 @@ use super::*;
 /// - +0xf64 the game date (`exe::date_operator_3d` of 0xae2c90), +0x7d0 the version (0x90d130), +0xf6c the play time ([0xdd7140] +=
 /// time() − [0xdd7144]; [0xdd7144] = time()) and +0xf70 the time().
 /// Original: `build_save_game_summary` (0x591f80, file_screens.cpp, cdecl).
-///
-/// [pt] { 0x591f80 } (cdecl, file_screens.cpp): `build_save_game_summary(resumo)`: o resumo que o
-/// `save_game_data` grava no `general.dat` (logo depois da versão):
-/// - +0: as nações da tabela de ligas (0xb63d60, 0x23 de 0x48 bytes) com o bit 2 em +0x11c, a
-///   primeira pelo sprintf com o próprio nome como formato (0x944c9f), as outras por ", <%s>"
-///   traduzido (0x66f4e0); +1000 (0x3e8): o mesmo com o bit 1;
-/// - 16 técnicos, do último da tabela de pessoas (0xae23bc, 0x6e bytes) para trás: humano (+0x5f
-///   = 1) dá o nome em +0x7e4 + 0x78 × i (0x53dba0, 200) e em +0x820 + 0x78 × i "clube / nação"
-///   (+0x39 e +0x24, nome em +0x38 de cada), só um deles, ou nada; não humano só zera o nome (o
-///   clube fica como estava no buffer do chamador);
-/// - +0xf64 a data do jogo (0x417c10 de 0xae2c90), +0x7d0 a versão (0x90d130), +0xf6c o tempo de
-///   jogo ([0xdd7140] += time() − [0xdd7144]; [0xdd7144] = time()) e +0xf70 o time().
 pub(crate) unsafe extern "C" fn build_save_game_summary(summary: *mut u8) {
     let format: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let translate: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);

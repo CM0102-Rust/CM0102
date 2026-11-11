@@ -5,22 +5,9 @@ use super::*;
 /// each free person takes the position where he beats the holder; with more, each position takes the best and
 /// duplicates are resolved by least loss; extras get the leftovers recursively (mode | 0x200); finally pairs are
 /// swapped while the total improves. Returns 1, or 0 with no people or positions [inference: picking the line-up].
-///
-/// [pt] { 0x6e2000 } (cdecl, match_man.cpp, ~3,9 KB, recursiva): distribui as `n` pessoas de `pessoas`
-/// pelas `m` vagas (+ `x` extras) e grava em `saida` a pessoa de cada vaga. Cada par (pessoa, vaga)
-/// vale a nota da 0x6e2f20 (codigo da vaga `codigos`, `marcas`, `bytes`, `curtos`, modo, clube,
-/// comissao...). Com menos pessoas que vagas, cada pessoa livre procura a vaga onde rende mais do que
-/// o ocupante (ate 10000 voltas) e no fim saem as vagas pares com +0xf da ficha 20 e as impares com
-/// +0xf abaixo de 10. Com mais pessoas, cada vaga pega a melhor pessoa e os repetidos sao resolvidos
-/// trocando pela pessoa de menor perda (ate 10000 voltas). As extras recebem, pela propria 0x6e2000
-/// (modo | 0x200), as pessoas que sobraram. Por fim troca pares de vagas enquanto a soma melhorar (ate
-/// 100 voltas). A memoria de trabalho e a do jogo (0x945501/0x9452ca), na mesma ordem. Devolve 1, ou 0
-/// sem pessoas ou sem vagas.
 #[allow(clippy::too_many_arguments)]
 impl MatchManager {
     /// Match player k (0..20) of the manager's side: the 20-player block at `match_manager::PLAYERS`, 0x1be bytes each.
-    ///
-    /// [pt] O jogador k (0..20) do lado do técnico: o bloco de 20 jogadores em `match_manager::PLAYERS`.
     pub(crate) unsafe fn player(self, k: usize) -> MatchPlayer {
         MatchPlayer(self.players().wrapping_add(k.wrapping_mul(MATCH_PLAYER_SIZE)))
     }
@@ -335,15 +322,6 @@ pub(crate) unsafe extern "C" fn pick(
 /// and the end of the match (`engine::PERIOD_END` = 0x3de). Stores the factor in engine`engine::STANCE_FACTOR`[side] (10 and −1 at the extremes);
 /// with the engine running and the factor within 0.5 of the stored one, keeps the current stance (+0x1ab)
 /// Original: `stance` (0x6df460, match_man.cpp (~3 KB), thiscall).
-///
-/// [pt] { 0x6df460 } (thiscall, match_man.cpp): a postura que a comissao `c` (+0x12 motor, +0x18 lado,
-/// +0x1f tecnico, +0x2f clube, +0x33 adversario, +0x37 partida) pede ao time: 1 ataque total, 2
-/// ataque, 3 equilibrio, 4 defesa, 5 retranca. RoleBitEffect da forca dos dois lados (com o motor rodando
-/// (+0x8ea5), a soma das notas 0x6e86d0 dos que estao em campo * 50 / 11; senao a reputacao +0x80
-/// dos clubes), da posse (+0x1fc/+0x206/+0x210), do tempo (+0x8ed0), dos expulsos (+0x1ad) e do
-/// placar agregado (0x6ce310), e ajusta pela liga (posicoes na tabela, 0x4a4850), pelo tecnico e pelo
-/// fim do jogo (+0x8ed4 = 0x3de). Guarda o fator em motor+0x476a[lado] (10 e -1 nos extremos); com o
-/// motor rodando e o fator a menos de 0,5 do guardado, mantem a postura atual (+0x1ab).
 pub(crate) unsafe extern "thiscall" fn stance(c: usize) -> u8 {
     let c = MatchManager(c);
     let u = |p: usize, o: usize| read_usize(p + o);
@@ -608,19 +586,6 @@ pub(crate) unsafe extern "thiscall" fn stance(c: usize) -> u8 {
 /// It saves the best (`0x8967d0`), copies the tactic (`0x896660`) into the engine (`+0x91e2` of the side) and into
 /// `+0x2b` and sets the instructions (`0x6ddab0`). The formations' ratings are kept in a list from the game's CRT
 /// (`0x945501`/`0x9452ca`). Returns 0.
-///
-/// [pt] { 0x6e0230 } (thiscall, ret 0x10, match_man.cpp): a comissao `c` escolhe a formacao do clube
-/// (+0x2f) e carrega a tatica no motor. Com o motor em +0 sorteia a formacao; com `modo` != 2 so
-/// recarrega; com tecnico humano a ser consultado (0x5fd210/0x5fea50) usa a tatica dele (0x5fbe20,
-/// 0x5fbd00). Senao da nota (0x6e2f20) a cada setor (7, bits 1..0x40) e faixa (5, bits 0x80..0x800)
-/// pelas duas melhores das `n` pessoas de `fichas` (o goleiro so na faixa do meio; com menos de 11, o
-/// ultimo setor vale metade e as pontas dos setores 1 a 3 ficam com a menor), e julga cada formacao
-/// do banco de taticas (0xde1d08): o tempo (+2, ate 3000) e a postura (0x6df460) pesam a nota da
-/// formacao (+0x10/+0x18/+0x20, ate 3), o tecnico ajusta (+0x1c, +0xe, +0x1f; a favorita +0x43 vale
-/// x1,1 ou ate x3,75, as outras x0,1) e cada vaga soma a nota do seu setor e faixa (0x5b2ae0) e as
-/// marcas (0x5b5270/0x5b57c0); o equilibrio dos setores entra pela postura. Grava a melhor (0x8967d0),
-/// copia a tatica (0x896660) para o motor (+0x91e2 do lado) e para +0x2b e acerta as instrucoes
-/// (0x6ddab0). As notas das formacoes ficam numa lista da CRT do jogo (0x945501/0x9452ca). Devolve 0.
 pub(crate) unsafe extern "thiscall" fn choose_formation(c: usize, sheets: usize, a2: u32, a3: u32, a4: u32) -> u8 {
     let c = MatchManager(c);
     let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(FN_CRT_CALLOC);
@@ -669,8 +634,6 @@ pub(crate) unsafe extern "thiscall" fn choose_formation(c: usize, sheets: usize,
 
 /// Core of choose_formation (`exe::match_man_choose_computer_tactic`): rates each sector/band by the best two players and judges each formation;
 /// returns the best.
-///
-/// [pt] O miolo da 0x6e0230: as notas por setor e faixa e o julgamento de cada formacao; devolve a melhor.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn judge_formations(
     c: MatchManager, sheets: usize, a2: u32, a3: u32, pp: i8, escala: i32, calloc: unsafe extern "C" fn(u32, u32) -> usize, free: unsafe extern "C" fn(usize),
@@ -889,17 +852,6 @@ pub(crate) unsafe fn judge_formations(
 /// +0x2e), crosses by table and the set-piece taker (`extra_tactic_slot` for whoever is at +6/+0xa/+0xe of the staff). Quirk kept:
 /// the marked player's side comes from the player's +0x19 (position 0 becomes the other side)
 /// Original: `instructions` (0x6ddab0, match_man.cpp (~6.4 KB), thiscall).
-///
-/// [pt] { 0x6ddab0 } (thiscall, match_man.cpp, ~6,4 KB): a comissao `c` acerta as instrucoes da tatica
-/// copiada em +0x2b (0x5b50d0 gerais, 0x5b2ba0 posicao, 0x5b5290 marcas de 64 bits, 0x5b5910 marcacao
-/// individual no motor) e no banco de taticas (0x897ee0). Com tecnico humano a ser consultado nao
-/// mexe. Em casa (ou com sorteio contra a diferenca de reputacao nas competicoes +0x3a = 1 ou 9) pede
-/// 0x20; o tecnico (+0x13, +0x1f, +0x1c) escolhe o ritmo e a marcacao. Um fator (reputacoes dos dois
-/// clubes / 17000, o tecnico +0xe e um resto pelos ids) e comparado com os atributos (0x5431e0) de cada
-/// um dos 20 do lado em campo: avanco pelas pontas, marcacao individual do adversario de 0x6d4330
-/// (com 0x7c1e30 para os meias), passes, chutes de longe, dribles, desarmes, impedimento, cobrancas
-/// (acumulado dos que tem +0x2e alto), cruzamentos por tabela e o especialista de bola parada (0x897ee0
-/// para quem esta em +6/+0xa/+0xe da comissao).
 pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
     let c = MatchManager(c);
     let u = |p: usize, o: usize| read_usize(p + o);
@@ -1247,12 +1199,6 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
 ///
 /// `exe::match_player_setup` (initialises the player, with random draws and effects outside the engine) is injected: in the comparison
 /// it is a tape unit (the original records; the Rust copy checks and does not run it again).
-///
-/// [pt] { 0x6e0d00 } (thiscall, ret 0xc, match_man.cpp): poe `pessoa` na vaga `pos` (0..19) do bloco da
-/// comissao (+0x23) pela 0x6eaea0 (motor +0x12, lado +0x18, `extra`). Sem pessoa devolve 0; senao 1.
-/// simplification: vaga fora de 0..19 para o jogo com erro no original (match_man.cpp 0xc39); aqui so devolve 0.
-/// A 0x6eaea0 (inicia o jogador, com sorteios e efeitos fora do motor) vem injetada: na comparacao
-/// ela e unidade da fita (a original grava; a copia Rust confere e nao roda de novo).
 pub(crate) unsafe fn place_in_slot_with(c: MatchManager, pos: u32, person: usize, extra: u32, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
     let p = pos as u8 as i8;
     if person == 0 || !(0..=19).contains(&p) {
@@ -1292,9 +1238,6 @@ pub(crate) unsafe extern "thiscall" fn init_player_hook(j: usize, m: u32, person
 
 /// Comparator ends for the substitution sort: players without person go last, +0x19 = -2 and goalkeepers with +0xf < 20
 /// first; None when the rest decides.
-///
-/// [pt] As duas pontas das ordens da substituicao: sem pessoa (+0x6d) vai para o fim; +0x19 = -2 vem
-/// primeiro; goleiro (tabela 1) com ficha +0xf abaixo de 20 tambem. Devolve None quando o resto decide.
 pub(crate) unsafe fn substitution_order_ends(a: MatchPlayer, b: MatchPlayer) -> Option<i32> {
     if a.is_null() || a.player().is_null() {
         return Some(1);
@@ -1318,17 +1261,12 @@ pub(crate) unsafe fn substitution_order_ends(a: MatchPlayer, b: MatchPlayer) -> 
 }
 
 /// Player's condition: +0x35 (i16) + +0x4d (f32), truncated.
-///
-/// [pt] +0x35 (curto) + +0x4d (float), truncado.
 pub(crate) unsafe fn match_condition(j: MatchPlayer) -> i32 {
     ftol(j.match_rating() as f64 + j.stamina() as f64)
 }
 
 /// qsort comparator for substitutions: compares two match players by condition (+0x35 + +0x4d), weighted by the first
 /// player's position (x1.35 for 2 and 4, x1.2/x1.25 for 8, x1.1 for 0x10). Returns a - b.
-///
-/// [pt] { 0x6e0df0 } (cdecl, comparador do qsort da substituicao): pela condicao (+0x35 + +0x4d), pesada
-/// pela tabela de `a` (2 e 4: x1,35; 8: x1,2 em `a` e x1,25 em `b`; 0x10: x1,1) nos dois lados.
 pub(crate) unsafe extern "C" fn order_by_table(pa: *const usize, pb: *const usize) -> i32 {
     let (a, b) = (*pa, *pb);
     if let Some(r) = substitution_order_ends(MatchPlayer(a), MatchPlayer(b)) {
@@ -1349,8 +1287,6 @@ pub(crate) unsafe extern "C" fn order_by_table(pa: *const usize, pb: *const usiz
 
 /// qsort comparator for substitutions: after the fixed ends (players without person last, goalkeepers first...), orders
 /// by match condition (+0x35 + +0x4d), ascending.
-///
-/// [pt] { 0x6e0fe0 } (cdecl, comparador do qsort da substituicao): so pela condicao (+0x35 + +0x4d).
 pub(crate) unsafe extern "C" fn order_by_condition(pa: *const usize, pb: *const usize) -> i32 {
     let (a, b) = (*pa, *pb);
     if let Some(r) = substitution_order_ends(MatchPlayer(a), MatchPlayer(b)) {
@@ -1363,11 +1299,6 @@ pub(crate) unsafe extern "C" fn order_by_condition(pa: *const usize, pb: *const 
 /// for each place from 0 to 10 + (match +0x4d & 0xf), the person from the club's tactic (`tactic_slot_person`) comes in (`exe::match_man_place_player_in_team`)
 /// if able to play (`get_player_injury_status` ≠ 2, `is_player_suspended` and `get_international_duty_club` without impediment); returns how many
 /// Original: `starters` (0x6dbb80, match_man.cpp, thiscall).
-///
-/// [pt] { 0x6dbb80 } (thiscall, match_man.cpp): os titulares do inicio do jogo. Para cada vaga de 0 a
-/// 10 + (partida +0x4d & 0xf), a pessoa da tatica do clube (0x8968f0) entra (0x6e0d00) se puder jogar:
-/// 0x62c400 diferente de 2, e (partida sem competicao, -2, ou 0x55d270 sem impedimento) e 0x7757d0 sem
-/// impedimento. Devolve quantos entraram.
 pub(crate) unsafe extern "thiscall" fn starters(c: usize) -> u8 {
     starters_with(MatchManager(c), &mut |_, this, a| {
         exe::match_man_place_player_in_team(this, a[0], a[1] as usize, a[2]) as u32
@@ -1376,8 +1307,6 @@ pub(crate) unsafe extern "thiscall" fn starters(c: usize) -> u8 {
 
 /// Port of `starters` with `exe::match_man_place_player_in_team` injected: places each tactic-selected player who is not injured, banned or on
 /// international duty; returns how many.
-///
-/// [pt] `titulares` com a 0x6e0d00 (poe na vaga) injetada.
 pub(crate) unsafe fn starters_with(c: MatchManager, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) -> u8 {
     let total = || ((c.fixture().squad_rules() as u8) & 0xf) as i32 + 11;
     let mut n = 0u8;
@@ -1400,9 +1329,6 @@ pub(crate) unsafe fn starters_with(c: MatchManager, call: &mut dyn FnMut(usize, 
 /// stores the staff's tactic (+0x3f) in the bank (`write_tactics_row`); with a human manager only when `exe::human_manager_is_human_club` denies or `exe::human_manager_controls_reserve_team`
 /// confirms
 /// Original: `store_tactic` (0x6dbb10, match_man.cpp, thiscall, virtual).
-///
-/// [pt] { 0x6dbb10 } (thiscall, match_man.cpp, virtual): guarda a tatica da comissao (+0x3f) no banco de
-/// taticas (0x8984d0). Com tecnico humano (+0x19) so quando 0x600a50 nega ou 0x5fd480 confirma.
 pub(crate) unsafe extern "thiscall" fn store_tactic(c: usize) {
     let c = MatchManager(c);
     let u = |p: usize, o: usize| read_usize(p + o);
@@ -1420,9 +1346,6 @@ pub(crate) unsafe extern "thiscall" fn store_tactic(c: usize) {
 
 /// Shows the game's "v%s %s.%s %d" error box for source file `arquivo` and line (game continues), clearing
 /// G_MOUSE_LEFT_BUTTON_DOWN.
-///
-/// [pt] A caixa de erro "v%s %s.%s %d" do fonte `arquivo` (0xa15da4 match_man.cpp, 0xa15708
-/// match_day.cpp) na linha `linha` (o jogo segue).
 pub(crate) unsafe fn show_error_at(file: usize, row: u32) {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let join: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
@@ -1441,20 +1364,6 @@ pub(crate) unsafe fn show_error_at(file: usize, row: u32) {
 /// (`exe::match_man_place_player_in_team`), the captain (0x897760), the instructions (`instructions`) and the general orders by the stance (`set_formation_flag`). The
 /// locals live in a frame with the original stack offsets (zeroed, like the determinised original)
 /// Original: `select_automatically` (0x6dbc50, match_man.cpp (~7.7 KB), thiscall, ret 8).
-///
-/// [pt] { 0x6dbc50 } (thiscall, ret 8, match_man.cpp, ~7,7 KB): a escalacao automatica da comissao `t`
-/// (+0x12 motor, +0x18 lado, +0x19 humano, +0x1a peso do jogo, +0x1b tecnico, +0x1f ficha, +0x27
-/// linhas, +0x2b tatica, +0x2f clube, +0x37 partida) contra `outro`; `modo` 1 respeita as vagas
-/// marcadas na tatica do clube (0x8972c0), 2 refaz tudo. Fora do humano, com clube de reputacao
-/// (+0x80 >= 6000) e forca (0x53c590) > 30, mede o jogo contra o proximo da lista (0x5acbe0) para
-/// poupar (+0x1a 0/1/2, com as mascaras de 15 vagas). Filtra os 50 das linhas (estado 0x62c400,
-/// suspensao 0x55d270, ja jogou 0x8cf5e0, impedido 0x7757d0, emprestado 0x4cf6d0/0x4cf5a0), escala
-/// (0x6e2000), escolhe a formacao (0x6e0230), as tres referencias (+6/+0xa/+0xe pela ficha +0xd
-/// + +0xb), o rodizio (0x8cf880/0x6e8910), poe nas vagas (0x6e0d00, 0x896a90), o capitao (0x897760),
-/// as instrucoes (0x6ddab0) e as ordens gerais pela postura (0x6df460, 0x5b50d0). Devolve quantos
-/// escalou. Os locais vivem num quadro com os deslocamentos da pilha original (zerado, como a
-/// original determinizada): os vetores se sobrepoem como la (o curto da 1a vaga extra, as vagas
-/// marcadas alem de 20).
 pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usize, mode: u32) -> i8 {
     let t = MatchManager(t);
     let mut quadro = [0u8; 0x750];
@@ -2109,8 +2018,6 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
 // own, validated by the career (Rust x original), like those of the 145th, 148th and 149th.
 
 /// Match clock minute (`engine::CLOCK` / 11) capped at the end of the current period (`engine::PERIOD_END`: 45, 90, 105, 120).
-///
-/// [pt] Minuto do relogio (+0x8ed0 / 11), no maximo o fim do periodo (+0x8ed4: 45, 90, 105, 120).
 pub(crate) unsafe fn minute_in_period(m: Engine) -> i8 {
     let min = (m.clock() as i32 / 11) as i8;
     match m.period_end() {
@@ -2141,21 +2048,6 @@ pub(crate) unsafe fn minute_in_period(m: Engine) -> i8 {
 /// draw(+0x31) below −10) and injury comments (0x211e) of the outgoing and incoming players, and 0x20d7 or 0x1f5b
 /// (negative +0x22 of the outgoing one). Finally the best-rated player (`exe::match_man_get_captain_score`) becomes captain and the team is
 /// rebuilt.
-///
-/// [pt] { 0x6e1090 } (ret 4, match_man.cpp) com as chamadas que mexem no jogo injetadas (0x6e2000 escala,
-/// 0x6d6f70 narra, 0x897760 grava o capitao, 0x6e1aa0 refaz o time): a comissao `c` faz ate +0x17
-/// trocas. Os elegiveis (em campo, ou -2 sem +0x1e) vao para uma lista ordenada pelo qsort da CRT
-/// (0x945333 com 0x6e0df0, ou 0x6e0fe0 com 11 ou mais); os `m` primeiros dao as vagas (tabelas
-/// 0x717430 para os -2, 0x717410/0x717450; posicao +0x19 ou +0x1a; a primeira e 0 com `goleiro`;
-/// marcas 0x5b5270 e byte 0x5b57c0 da posicao); depois delas os reservas livres (+0x19 = -1) do 12o em diante, ate
-/// 11 + (+0x4d da competicao & 0xf), entram como candidatos. O modo da escala sai do clube (0x53b900),
-/// da forca contra o adversario (+0x80, com sorteios), da competicao (+0x3a, +0x1a = 3 e 0x48f150),
-/// de +0x16 e do tecnico humano. Quem ganha vaga e estava no banco entra (0x6cdd00, -1 em +0x17,
-/// minuto em +0x1f) com a posicao da vaga; quem fica sem vaga sai (0x6cdd50 com -1, +0x19 = -4, +0x1e
-/// = 1, minuto em +0x20). Recompoe as posicoes (0x6ce0f0, 0x6ce110) e narra as trocas (0x1f59 mais de
-/// 2, 0x1f5c duas, 0x1f5a uma; sem troca para), cada uma com os comentarios de cansaco (0x211d por
-/// sorteio(+0x31) abaixo de -10) e de lesao (0x211e) do que sai e do que entra, e 0x20d7 ou 0x1f5b
-/// (+0x22 negativo do que sai). Por fim o mais bem avaliado (0x6e1cf0) vira capitao e o time e refeito.
 pub(crate) unsafe fn substitute_with(c: MatchManager, goalkeeper: u8, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let qsort: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(FN_CRT_QSORT);
     let swaps = c.substitutions_left();
@@ -2387,8 +2279,6 @@ pub(crate) static NEXT_SIXTH_ARG: std::sync::atomic::AtomicU32 = std::sync::atom
 
 /// Makes the AI substitutions for a side (choosing who comes on and off, reassigning positions, commentary, new
 /// captain); thin wrapper over substitute_with with the real calls.
-///
-/// [pt] { 0x6e1090 } (ret 4, match_man.cpp): ver `substitute_with`.
 pub(crate) unsafe extern "thiscall" fn substitute(c: usize, goalkeeper: u32) {
     substitute_with(MatchManager(c), goalkeeper as u8, &mut |rotina, this, a| {
         match rotina {
@@ -2428,15 +2318,6 @@ pub(crate) type AssignPositionsFn = unsafe extern "C" fn(usize, u32, usize, u32,
 /// 0x408800 with a human manager to be consulted: `exe::human_manager_is_human_club`, the staff's +0x19, the club's +0xcf, `exe::human_manager_is_on_holiday`, `exe::human_manager_get_holiday_option`
 /// with 3) and gives each selected player sheet the position of the place it won, recomputing its performance
 /// (`exe::match_player_calc_ratings`).
-///
-/// [pt] { 0x6e1aa0 } (match_man.cpp) com as chamadas que mexem no jogo injetadas (0x6e0230 julga a
-/// escalacao, 0x6e2000 escala, 0x6d6f70 narra): a comissao (`c`: +0x12 motor, +0x23 primeiro dos 20
-/// jogadores, +0x2b tatica, +0x2f clube) refaz o time. Com exatamente 11 em campo e a escalacao
-/// reprovada (0x6e0230 com 0x8c1, 2) narra 0x2007. Depois junta os de linha em campo (fora a tabela
-/// 1): posicao +0x19, tabelas 0x717410/0x717450, marcas (0x5b5270) e byte (0x5b57c0) da posicao e a
-/// ficha +0x69; escala (0x6e2000 com 0x8800, ou 0x408800 com tecnico humano a ser consultado:
-/// 0x600a50, +0x19 da comissao, +0xcf do clube, 0x5fd210, 0x5fea50 com 3) e devolve a cada ficha
-/// escalada a posicao do lugar que ela ganhou, refazendo o desempenho (0x6eecb0).
 pub(crate) unsafe fn rebuild_team_with(c: MatchManager, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let mut sheets = [0usize; 20];
     let mut n = 0usize;
@@ -2521,8 +2402,6 @@ pub(crate) unsafe fn rebuild_team_with(c: MatchManager, call: &mut dyn FnMut(usi
 /// the bytes of the input and output vectors passed by pointer, checks the Rust copy's inputs and writes its outputs
 /// (`call_recording_buffers`, `request_buffers`). The provisional `redo_team` port from batch 114 is gone
 /// Original: `redo_team` (0x6e1aa0, match_man.cpp, thiscall).
-///
-/// [pt] { 0x6e1aa0 } (match_man.cpp): ver `rebuild_team_with`.
 pub(crate) unsafe extern "thiscall" fn redo_team(c: usize) {
     rebuild_team_with(MatchManager(c), &mut |rotina, this, a| match rotina {
         0x6e0230 => {
@@ -2544,12 +2423,6 @@ pub(crate) unsafe extern "thiscall" fn redo_team(c: usize) {
 /// Among the `n` people in `lista` with a player record (+0x61), returns the one best rated by the staff of club +0x2f
 /// (captain score `exe::match_man_get_captain_score`); with the object at +0x1f, a rating may drop to (1.1 - 0.01 x (object address mod 20)) x
 /// rating when its attribute is below the person's id mod 20, as in the original. Ties keep the first; 0 if none.
-///
-/// [pt] { 0x6e1940 } (ret 8, match_man.cpp): entre as `n` pessoas de `lista` (com ficha +0x61), a mais
-/// bem avaliada pela comissao (0x6e1cf0 com o clube +0x2f); 0 com `n` <= 0 ou nenhuma. Com o objeto
-/// +0x1f, se o valor dele (0x544410 com o byte +0x17) ficar abaixo do id da pessoa mod 20, a nota
-/// cai para (1,1 - 0,01 x (endereco do objeto mod 20)) x nota, como no original. Empate fica com
-/// a primeira.
 pub(crate) unsafe extern "thiscall" fn best_in_list(this: usize, list: *const usize, n: i8) -> usize {
     let this = MatchManager(this);
     let (mut melhor, mut nota) = (0usize, 0i16);
@@ -2576,11 +2449,6 @@ pub(crate) unsafe extern "thiscall" fn best_in_list(this: usize, list: *const us
 /// in the block starting at +0x23; the first active one counts even with a negative rating, then only strictly higher;
 /// −1 with none active
 /// Original: `best_rated` (0x6e1a40, match_man.cpp, thiscall).
-///
-/// [pt] { 0x6e1a40 } (match_man.cpp): o indice (0..20) do jogador ativo (+0x19 >= 0) mais bem avaliado
-/// pela comissao (0x6e1cf0 com o clube +0x2f) entre os 20 do bloco que comeca em +0x23 (de 0x1be em
-/// 0x1be); o primeiro ativo entra mesmo com nota negativa, depois so nota estritamente maior. -1 sem
-/// nenhum ativo.
 pub(crate) unsafe extern "thiscall" fn best_rated(this: usize) -> i8 {
     let this = MatchManager(this);
     let club = this.club();
@@ -2610,16 +2478,6 @@ pub(crate) unsafe extern "thiscall" fn best_rated(this: usize) -> i8 {
 ///
 /// Then by age +0x18 (x0.5 below 18, x0.75 below 21, x0.9 below 24, x1.05 above 25), x0.9 if the days fall below (50 -
 /// +0x59) x 10, and x(0.01 x +0x5b + 0.9) with +0x5b below 10.
-///
-/// [pt] { 0x6e1cf0 } (cdecl, match_man.cpp): a nota (i16) que a comissao da a `pessoa` (ou a pessoa do
-/// jogador `jogador` +0x69) para o `clube`; -10000 sem pessoa. Soma o encaixe (0x53ce90) em
-/// (encaixe^2 + 5) x 0,1 negativo, a diferenca da nota +0xd da ficha para a reputacao do clube
-/// (x 0,002 + 1,5, entre -4 e 4), o contrato (0x4cf5f0: +0x44 / 75 + 0,5, ajustado pelo tipo em +0x4f
-/// >> 4: -10, +2,5, +2, -3, -15, -20, -50) e a ficha +0x2f vezes o fator da idade (dias de vida pela
-/// data de hoje 0xae2c90 e a de nascimento +0x3e, 0x54cdb0; nas selecoes, +0x22 x 75): acima de 1000
-/// dias, 1 + (dias - 1000) x 0,000125. Depois pela idade +0x18 (x0,5 abaixo de 18, x0,75 abaixo de
-/// 21, x0,9 abaixo de 24, x1,05 acima de 25), x0,9 se os dias ficarem abaixo de (50 - +0x59) x 10 e
-/// x(0,01 x +0x5b + 0,9) com +0x5b abaixo de 10.
 pub(crate) unsafe extern "C" fn rate_player(person: usize, player: usize, club: usize) -> i16 {
     let player = MatchPlayer(player);
     let club = Club(club);
@@ -2699,14 +2557,6 @@ pub(crate) unsafe extern "C" fn rate_player(person: usize, player: usize, club: 
 /// smallest score loss (`0x6e2f20`), redoing the bench (`0x6e2000`) if a starter came from it; then it does the same on
 /// the bench (`saida` + `nt`) with the maximum `+3` (or `+4` − `+5`).
 /// Original: `apply_squad_rule` (0x6e8910, match_man.cpp, cdecl).
-///
-/// [pt] { 0x6e8910 } (cdecl, match_man.cpp): cumpre a `regra` do elenco (byte 0: 1 estrangeiro de fora da
-/// comunidade, 2 estrangeiro, 3 acima da idade em +1; +2 máximo em campo, +3 máximo no banco, +4 e +5
-/// o permitido e o atual) na escalação do `clube` (nação +0x53; 0x53d980/0x53d740): tira os restritos
-/// da lista de reserva (`reserva`, `nr`); se há mais restritos em campo que o máximo (+2), escolhe entre
-/// os titulares restritos e os candidatos (banco não restrito + reserva) pela 0x6e2000 e troca, um a
-/// um, o de menor perda na nota (0x6e2f20), refazendo o banco (0x6e2000) se um titular saiu dele;
-/// depois faz o mesmo no banco (`saida` + `nt`) com o máximo +3 (ou +4 − +5).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "C" fn apply_squad_rule(
     club: usize, manager: usize, rule: usize, mode: u32, nt: u32, nb: u32, nr: u32, starters: usize, bench: usize, reserve: usize,
@@ -2975,25 +2825,18 @@ pub(crate) unsafe extern "C" fn apply_squad_rule(
 // ---- the player ratings from match_man.cpp (0x6e6340 outside the match, 0x6e2f20 for a slot): common parts ----
 
 /// Date `a` (day +0 signed, year +2 unsigned) is before date `b`.
-///
-/// [pt] A data (dia +0, ano +2) de `a` vem antes da de `b`? (comparação do ano sem sinal, do dia com sinal)
 pub(crate) unsafe fn match_man_date_is_before(a: usize, b: usize) -> bool {
     let (aa, ab) = (read_u16(a + 2), read_u16(b + 2));
     aa < ab || (aa == ab && *(a as *const i16) < read_i16(b))
 }
 
 /// Days from the person's date (+0x3e/+0x40) to today, counting 365 per year.
-///
-/// [pt] Os dias desde a data de `p` (+0x3e) até hoje ([0xae2c90]), contando 365 por ano.
 pub(crate) unsafe fn match_man_days_since_date(p: Staff) -> i32 {
     let years = read_u16(G_CURRENT_DATE_YEAR) as i32 - p.date_joined_club_year() as i32;
     years * 365 - (p.date_joined_club() as i16) as i32 + read_i16(G_CURRENT_DATE) as i32
 }
 
 /// Observer's date (+0x3e) is before the player's, and the player's date is more than a year ago.
-///
-/// [pt] O observador `o` (+0x3e) chegou antes da data do jogador `p` (+0x3e) e esta data é de mais de um
-/// ano atrás (0x54c8e0 com 365)?
 pub(crate) unsafe fn scouted_over_a_year_ago(o: Staff, p: Staff) -> bool {
     if !match_man_date_is_before(o.addr() + staff::DATE_JOINED_CLUB, p.addr() + staff::DATE_JOINED_CLUB) {
         return false;
@@ -3005,25 +2848,17 @@ pub(crate) unsafe fn scouted_over_a_year_ago(o: Staff, p: Staff) -> bool {
 }
 
 /// Signed byte at p + k as i32.
-///
-/// [pt] Byte com sinal em `p + k`.
 pub(crate) unsafe fn signed_byte_at(p: usize, k: usize) -> i32 {
     read_i8(p + k) as i32
 }
 
 /// PLAYERSTATS get_stat (`get_stat` on G_PLAYER_STATS) for player data `f`.
-///
-/// [pt] A 0x7c1e30 das notas ([0xb74350]) da ficha `f`.
 pub(crate) unsafe fn player_stat(f: PlayerSheet, k: u32, c: u32, x: f32) -> f64 {
     exe::playerstats_get_stat(read_usize(G_PLAYER_STATS), f, k, c, x)
 }
 
 /// Rating of player data `f` for position mask `m` from its attributes via table `tab`, with the main-position special
 /// cases.
-///
-/// [pt] A nota da posição (máscara `m`) pelos atributos da ficha `f` na tabela `tab` (0xa15d50 ou
-/// 0xa15cfc). A posição principal tem os casos de `m` igual a 8 ou 0x10 e a exceção de lateral
-/// (0x800/0x80) na faixa 0x10; a secundária da 0x6e2f20 não.
 pub(crate) unsafe fn position_rating(f: PlayerSheet, m: u32, masc: u32, table: usize, main: bool) -> i32 {
     let fb = |k: usize| signed_byte_at(f.addr(), k);
     let t = |k: i32| *((table as isize + 4 * k as isize) as *const i32);
@@ -3069,8 +2904,6 @@ pub(crate) unsafe fn position_rating(f: PlayerSheet, m: u32, masc: u32, table: u
 }
 
 /// Adjustment of the position mask by the player's game attributes; 100 when no bit matches.
-///
-/// [pt] O ajuste da posição (máscara `m`) pelos atributos de jogo da ficha `f`; 100 sem nenhum.
 pub(crate) unsafe fn position_attribute_adjust(f: PlayerSheet, m: u32) -> i32 {
     let fb = |k: usize| signed_byte_at(f.addr(), k);
     if m & 0x1000 != 0 {
@@ -3092,9 +2925,6 @@ pub(crate) unsafe fn position_attribute_adjust(f: PlayerSheet, m: u32) -> i32 {
 
 /// Bonus from the recent-form exe::playerstats_get_recent_form(x0.2, weighted by days when the observer has known the player over a year) added
 /// to the sum, scaled by `cont`.
-///
-/// [pt] O acréscimo da média das notas (0x7c1950 x 0,2; com o observador `quem` de mais de um ano no
-/// clube do jogador, pesada pelos dias) à soma, por `cont`.
 pub(crate) unsafe fn recent_form_bonus(p: Staff, f: PlayerSheet, club: Club, who: Staff, count: i8) -> i32 {
     let mut x = (exe::playerstats_get_recent_form(read_usize(G_PLAYER_STATS), f) as f64 * read_f64(rdata::F64_0_2)) as f32;
     if club == p.club_job() && !who.is_null() && scouted_over_a_year_ago(who, p) {
@@ -3116,10 +2946,6 @@ pub(crate) unsafe fn recent_form_bonus(p: Staff, f: PlayerSheet, club: Club, who
 /// The rating `0x7c1e30(6)` capped by the average (or by `l3c`), limited for players over 33 when `teto_veterano`,
 /// weighted by the days with observer `quem`, plus the ratings `0x7c1e30(1)` and `0x7c1e30(6, 0x14, `ultimo`)` at the
 /// club (or the same nation).
-///
-/// [pt] O acréscimo da forma (flag 2) à soma: a nota 0x7c1e30(6) de um teto pela média (ou por `l3c`),
-/// limitado para os de mais de 33 anos quando `teto_veterano`, pesado pelos dias com o observador
-/// `quem`, e as notas 0x7c1e30(1) e 0x7c1e30(6, 0x14, `ultimo`) no clube (ou mesma nação).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn form_bonus(p: Staff, f: PlayerSheet, club: Club, who: Staff, age: i8, count: i8, sum: i32, l3c: i32, teto_veterano: bool, last: u32) -> i32 {
     let notes = read_usize(G_PLAYER_STATS);
@@ -3175,8 +3001,6 @@ pub(crate) unsafe fn form_bonus(p: Staff, f: PlayerSheet, club: Club, who: Staff
 }
 
 /// Penalty from the player's injury record (+0x28) subtracted from l4c.
-///
-/// [pt] O desconto do histórico do jogador (0x62ed70, +0x28).
 pub(crate) unsafe fn injury_history_penalty(p: Staff, l4c: i32) -> i32 {
     let h = InjuryEntry(exe::injury_get_player_injury(read_usize(G_INJURY), p));
     if h.is_null() {
@@ -3188,17 +3012,12 @@ pub(crate) unsafe fn injury_history_penalty(p: Staff, l4c: i32) -> i32 {
 
 /// Value from INJURY `exe::injury_get_fatigue` by person id (exe map: get_fatigue / word_0c; the code comment calls it reputation)
 /// [inference].
-///
-/// [pt] A reputação do jogador (0x62c3d0 pelo id).
 pub(crate) unsafe fn injury_word_0c(p: usize) -> i16 {
     exe::injury_get_fatigue(read_usize(G_INJURY), read_u32(p))
 }
 
 /// End of flag 0x4000: age penalty (flag 0x100), half-attribute sum bonus, +0x2f and the foreign player's
 /// language/continent factor.
-///
-/// [pt] O fim da flag 0x4000 (comum às duas notas): a idade com +0x100, a soma das metades dos
-/// atributos (sem goleiro), +0x2f e o fator do estrangeiro (0x7c6830 e a tabela por continente).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn age_and_foreigner_adjust(p: Staff, f: PlayerSheet, club: Club, flags: u32, pos: u32, masc: u32, age: i8, count: i8, mut l4c: i32) -> i32 {
     let fb = |k: usize| signed_byte_at(f.addr(), k);
@@ -3247,10 +3066,6 @@ pub(crate) unsafe fn age_and_foreigner_adjust(p: Staff, f: PlayerSheet, club: Cl
 
 /// Adjustment by contract (flag 0x2000000): days without club, wage vs owner and satisfaction, age, goalkeeper, injury
 /// and appearances.
-///
-/// [pt] O ajuste pelo contrato (flag 0x2000000): sem clube (+0x39) há mais de 60 dias, o salário (+0x80)
-/// do clube contra o do dono e a satisfação (+0x3d do contrato), a idade e o goleiro, a lesão
-/// (0x5444a0) e a idade com os jogos (+0x22).
 pub(crate) unsafe fn contract_adjust(p: Staff, f: PlayerSheet, club: Club, contract: usize, age: i8, mut l4c: i32) -> i32 {
     let fb = |k: usize| signed_byte_at(f.addr(), k);
     let mul = |l: i32, k: f64| ftol(l as f64 * k);
@@ -3381,10 +3196,6 @@ pub(crate) unsafe fn contract_adjust(p: Staff, f: PlayerSheet, club: Club, contr
 /// +0x13), the player's liking for the club and for `quem`, and the attributes of each position band.
 ///
 /// `craque_meia` also turns on the star players' bonus in band 0x20 (only in `off_match_score`).
-///
-/// [pt] O bônus do observador (flag 0x1000): o conhecimento `conhece` (+0x22 dos jovens, +0x14, +0x0e,
-/// +0x1a, +0x1f, +0x13), o gosto do jogador pelo clube e por `quem`, e os atributos de cada faixa de
-/// posição; `craque_meia` liga o bônus dos craques também na faixa 0x20 (só na 0x6e6340).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn scout_knowledge_bonus(p: Staff, f: PlayerSheet, club: Club, conhece: usize, obs: usize, who: Staff, pos: u32, masc: u32, age: i8, mut l4c: i32, craque_meia: bool) -> i32 {
     let fb = |k: usize| signed_byte_at(f.addr(), k);
@@ -3465,10 +3276,6 @@ pub(crate) unsafe fn scout_knowledge_bonus(p: Staff, f: PlayerSheet, club: Club,
 
 /// If the player has a work-permit record and needs a permit at the contract club: percentage +4/(+4 + +6) as a byte (0
 /// if none); None otherwise or at 70+.
-///
-/// [pt] Na lista de transferências ([0xde1f54], 0x8c7260/0x8c7560 com o clube do contrato, que fica em
-/// [0xae1080]): a porcentagem +4 / (+4 + +6) em byte (0 sem nenhum); None fora da lista ou de 70 em
-/// diante.
 pub(crate) unsafe fn work_permit_appearance_pct(p: Staff) -> Option<i8> {
     let list = read_usize(G_TRANSFER_MANAGER);
     let x = exe::transfer_manager_find_work_permit(list, p);
@@ -3491,9 +3298,6 @@ pub(crate) unsafe fn work_permit_appearance_pct(p: Staff) -> Option<i8> {
 
 /// Contract extra (flag 0x10000): +0x44 by the +0x45 flags, the squad status (+0x4f >> 4) and the work-permit
 /// percentage.
-///
-/// [pt] O extra do contrato (flag 0x10000): +0x44 pelas bandeiras +0x45, o tipo (+0x4f >> 4) e a lista
-/// de transferências.
 pub(crate) unsafe fn contract_extra(p: Staff, contract: Contract, flags: u32, l28: i32) -> i32 {
     let e = contract.grievances();
     let s44 = contract.morale() as f64;
@@ -3536,8 +3340,6 @@ pub(crate) unsafe fn contract_extra(p: Staff, contract: Contract, flags: u32, l2
 }
 
 /// Bond (flag 0x20000) by the contract's squad status: -25 to +25, or by the work-permit percentage.
-///
-/// [pt] O vínculo (flag 0x20000) pelo tipo do contrato `c`: -25 a +25, ou pela lista de transferências.
 pub(crate) unsafe fn contract_bond(p: Staff, c: Contract, flags: u32) -> i32 {
     let t = (c.squad_status() >> 4) as i8 as i32 - 1;
     match t {
@@ -3557,8 +3359,6 @@ pub(crate) unsafe fn contract_bond(p: Staff, c: Contract, flags: u32) -> i32 {
 }
 
 /// Adjusts l4c when the `exe::injury_get_fatigue` value is below -1000 or above 500.
-///
-/// [pt] O ajuste pela reputação (0x62c3d0) abaixo de -1000 ou acima de 500.
 pub(crate) unsafe fn injury_word_0c_adjust(p: Staff, l4c: i32) -> i32 {
     if injury_word_0c(p.addr()) < -1000 {
         l4c - ftol(injury_word_0c(p.addr()) as f64 * read_f64(rdata::F64_0_0125) + read_f64(rdata::F64_12_5))
@@ -3570,8 +3370,6 @@ pub(crate) unsafe fn injury_word_0c_adjust(p: Staff, l4c: i32) -> i32 {
 }
 
 /// Appearances penalty (+0x22, flag 0x100000) or club adjustment (flag 4: owner +0x39 and their manager's +0x69).
-///
-/// [pt] Os jogos (+0x22, flag 0x100000) ou o clube (flag 4: o dono +0x39 e o +0x69 do treinador dele).
 pub(crate) unsafe fn appearances_or_club_adjust(p: Staff, f: PlayerSheet, flags: u32, of_the_base: bool, l4c: i32) -> i32 {
     if flags & 0x100000 != 0 {
         return l4c - (p.int_apps() as i32 * 5).min(0x32);
@@ -3591,8 +3389,6 @@ pub(crate) unsafe fn appearances_or_club_adjust(p: Staff, f: PlayerSheet, flags:
 }
 
 /// At the player's own club (+0x39): rating up by 5 or 5%, whichever is larger.
-///
-/// [pt] No próprio clube (+0x39): a nota sobe 5 ou 5%.
 pub(crate) unsafe fn own_club_bonus(p: Staff, club: Club, l4c: i32) -> i32 {
     if p.club_job() != club {
         return l4c;
@@ -3603,8 +3399,6 @@ pub(crate) unsafe fn own_club_bonus(p: Staff, club: Club, l4c: i32) -> i32 {
 }
 
 /// Combines the position rating l40 with the adjustment l4c (only l40 when flags == 0x800).
-///
-/// [pt] A combinação da nota da posição `l40` com o ajuste `l4c` (só `l40` com as flags 0x800 sozinhas).
 pub(crate) fn combine_rating(flags: u32, l40: i32, l4c: i32) -> i32 {
     if flags == 0x800 {
         l40
@@ -3625,12 +3419,6 @@ pub(crate) fn combine_rating(flags: u32, l40: i32, l4c: i32) -> i32 {
 /// form, perceived ability, age, contract and the scout's knowledge. -10000 with no player sheet (`+0x61`) or below the
 /// cut-off.
 /// Original: `off_match_score` (0x6e6340, match_man.cpp, cdecl).
-///
-/// [pt] { 0x6e6340 } (cdecl, match_man.cpp): a nota do jogador `p` para a posição `pos` fora da partida
-/// (transferências, observação), pelas `flags`, para o `clube`, com o `limite` de corte e o
-/// observador `o`: a nota da posição (tabela 0xa15d50) vezes o ajuste da reputação, forma,
-/// habilidade vista, idade, contrato e conhecimento do observador. -10000 sem ficha (+0x61) ou
-/// abaixo do limite.
 pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, club: usize, limit: i32, o: usize) -> i32 {
     let p = Staff(p);
     let o = Staff(o);
@@ -3806,9 +3594,6 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
 
 /// Value for potential ability (flag 0x100): at the contract club, average x25 plus potential (+7) x25 (16-bit);
 /// elsewhere average x50.
-///
-/// [pt] O valor para a habilidade potencial (flag 0x100): no clube do contrato (0x4cf5a0, que fica em
-/// [0xae1080]) a média x 25 mais o potencial (+7) x 25 (em 16 bits); fora dele, a média x 50.
 pub(crate) unsafe fn potential_or_average_value(p: Staff, f: PlayerSheet, club: Club, sum: i32, count: i8) -> i32 {
     let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
     write_usize(G_CONTRACT_LOOKUP_RESULT, c);
@@ -3825,9 +3610,6 @@ pub(crate) unsafe fn potential_or_average_value(p: Staff, f: PlayerSheet, club: 
 
 /// Fame (flag 0x200000): -200 for famous players (value/100 >= 99) with high +0x3c, low +0x2d and `exe::injury_get_fatigue` value < 500;
 /// else 100 - value/100.
-///
-/// [pt] A fama (flag 0x200000): -200 para os famosos (valor/100 >= 99) de +0x3c alto, +0x2d baixo e
-/// reputação abaixo de 500; senão 100 - valor/100.
 pub(crate) unsafe fn fame_adjust(f: PlayerSheet, p: Staff, l28: i32, l4c: i32) -> i32 {
     let v = l28 as i16 as i32;
     if v >= 0x63 && signed_byte_at(f.addr(), 0x3c) > 0xe && signed_byte_at(f.addr(), 0x2d) < 8 && injury_word_0c(p.addr()) < 0x1f4 {
@@ -3838,8 +3620,6 @@ pub(crate) unsafe fn fame_adjust(f: PlayerSheet, p: Staff, l28: i32, l4c: i32) -
 }
 
 /// Flag 0x1000000: -50 if neither nationality (+0x1a, +0x1e) is the club's nation.
-///
-/// [pt] Fora da nação do clube (flag 0x1000000): -50 sem nenhuma das duas nacionalidades (+0x1a, +0x1e).
 pub(crate) unsafe fn outside_nation_penalty(p: Staff, club: Club, flags: u32, l4c: i32) -> i32 {
     if flags & 0x1000000 == 0 || club.is_null() {
         return l4c;
@@ -3861,13 +3641,6 @@ pub(crate) unsafe fn outside_nation_penalty(p: Staff, club: Club, flags: u32, l4
 /// position). Like `0x6e6340` (table `0xa15cfc`), plus the condition in the match (`reg`, the player in the match), the
 /// tactic, the veterans' age and the holiday bonus. -10000 with no person or player sheet; -1000000 if vetoed.
 /// Original: `lineup_slot_score` (0x6e2f20, match_man.cpp, cdecl).
-///
-/// [pt] { 0x6e2f20 } (cdecl, match_man.cpp): a nota do jogador `p` (ficha `f`) para uma vaga da escalação
-/// (`pos`, e a segunda posição `pos2` com peso 1/3), pelas `flags`, no `clube`, com o lado `lado`
-/// (+0x1b observador, +0x1f conhecimento), o técnico `tecnico`, o `limite`, as marcas da tática
-/// (`marca` e `bytes`, `tatica`) e a lista das férias `ferias` (16 pares id, posição). Como a
-/// 0x6e6340 (tabela 0xa15cfc), mais a condição na partida (`reg`, o jogador da partida), a tática,
-/// a idade dos veteranos e o bônus das férias. -10000 sem pessoa ou ficha; -1000000 vetado.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "C" fn lineup_slot_score(
     p: usize, f: usize, reg: usize, pos: u32, flags: u32, club: usize, side: usize, manager: usize, limit: i32, mark: u32, _marca_alta: u32,
@@ -4134,8 +3907,6 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
 }
 
 /// Flag 0x4000 penalty from the injury record (+0x2c).
-///
-/// [pt] O desconto da flag 0x4000 pelo histórico (0x62ed70, +0x2c).
 pub(crate) unsafe fn injury_history_penalty_2c(p: Staff, l4c: i32) -> i32 {
     let h = InjuryEntry(exe::injury_get_player_injury(read_usize(G_INJURY), p));
     if h.is_null() { l4c } else { l4c - h.days_left() as i32 }
@@ -4146,11 +3917,6 @@ pub(crate) unsafe fn injury_history_penalty_2c(p: Staff, l4c: i32) -> i32 {
 /// −2000 for the human manager (`+0x904d` of the side, without `0x5fd210`, national team or `0x5fd480`) with the player
 /// below 11 (`+0`); off the pitch (`+0x19` = −1) the remaining minutes × 150 (up to 3000; goalkeeper only +3500, the
 /// others at least −2000); on the pitch, the minutes played (minute − `+0x1f`) below 60 × 40.
-///
-/// [pt] O cansaço do jogador da partida `reg` a descontar do fôlego (+0x35): -2000 para o técnico humano
-/// (+0x904d do lado, sem 0x5fd210, seleção ou 0x5fd480) com o jogador abaixo de 11 (+0); fora de
-/// campo (+0x19 = -1) os minutos que faltam x 150 (até 3000; goleiro só +3500, os demais pelo menos
-/// -2000); em campo, os minutos jogados (minuto - +0x1f) abaixo de 60 x 40.
 pub(crate) unsafe fn match_fatigue_offset(reg: MatchPlayer, goalkeeper: i32) -> i32 {
     let m = reg.engine();
     let human = if m.period_end() == period::FIRST_HALF_END {
@@ -4193,9 +3959,6 @@ pub(crate) unsafe fn match_fatigue_offset(reg: MatchPlayer, goalkeeper: i32) -> 
 }
 
 /// Adjustment by tactic instructions (flag 0x8000): instruction bits, marking and tactic vs the player's attributes.
-///
-/// [pt] As marcas da tática (flag 0x8000): `marca` (o u64 das instruções, parte baixa), `bytes` (o
-/// byte das instruções) e `tatica` contra os atributos da ficha.
 pub(crate) unsafe fn tactic_instruction_adjust(f: PlayerSheet, lo: u32, b1: u8, tactic: u32, marked: bool, mut l4c: i32) -> i32 {
     let fb = |k: usize| signed_byte_at(f.addr(), k);
     let x = |k: usize, c: usize| ftol((fb(k) - 10) as f64 * read_f64(c));
@@ -4257,10 +4020,6 @@ pub(crate) unsafe fn tactic_instruction_adjust(f: PlayerSheet, lo: u32, b1: u8, 
 
 /// Holiday bonus: a player in the 16-pair holiday list gets 40000 + 200 x rating if in the 11 and position accepted,
 /// else 200 x rating; weighted by player value.
-///
-/// [pt] O bônus das férias: o jogador na lista (16 pares id, posição) ganha 40000 + 200 x a nota da
-/// posição (pelo menos 10000) se estiver entre os 11 e o técnico (0x5fea50) aceitar a posição; senão
-/// 200 x a nota (nunca negativa), com a nota negativa pela metade; pesado pelo valor do jogador.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn holiday_selection_bonus(p: Staff, club: Club, holiday: usize, pos: u32, base: i32, without_value: u32, value: i32, mut l4c: i32) -> i32 {
     let id = read_i32(p.addr());
@@ -4309,14 +4068,6 @@ pub(crate) unsafe fn holiday_selection_bonus(p: Staff, club: Club, holiday: usiz
 /// automatic mode 2 and the count of the home players; the substitutes by the bench and the club's tactical line.
 /// Returns how many it selected
 /// Original: `select_side` (0x6db500, match_man.cpp, thiscall, ret 0x24).
-///
-/// [pt] { 0x6db500 } (ret 0x24, match_man.cpp): monta a tatica `t` de um lado (+0x9032 ou +0x9102 do
-/// motor) e escala o time: o tecnico e a ficha dele, os jogadores do bloco, o lado, o clube, o
-/// adversario e a partida; o modo (+0x19 humano/+0x1a 3) pelo mando. No clube do humano, as linhas
-/// taticas guardadas (0x5fbe20/0x5fbd00) e, sem o tecnico humano, a escalacao automatica no modo 1
-/// (0x6dbc50, com o tecnico do clube 0x600e90) ou os titulares (0x6dbb80); fora isso, a automatica no
-/// modo 2 e a conta dos da casa. Os reservas (+0x17) pelo banco da partida; le a linha tatica do
-/// clube. Devolve quantos foram escalados; em `*vagas`, o tamanho do time.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn select_side(t: usize, m: usize, tecnico: usize, rows: usize, players: usize, side: u32, club: usize, other: usize, game: usize, slots: *mut i8) -> i8 {
     let m = Engine(m);
@@ -4437,13 +4188,6 @@ pub(crate) unsafe extern "thiscall" fn select_side(t: usize, m: usize, tecnico: 
 /// the observer's knowledge (`0x544410` of sheet `+0x69`, levels `+0x17`/`+0x18`, up to 20). With the observer's sheet,
 /// high knowledge and a favourable seed, the exact current ability.
 /// Original: `perceived_ability` (0x6e86d0, match_man.cpp, cdecl).
-///
-/// [pt] { 0x6e86d0 } (cdecl, match_man.cpp): a habilidade do jogador `p` (2 = atual, senão potencial) como
-/// o observador `o` (0 = o técnico do clube `c`, +0xcf) a vê: a reputação `rep` (negativa: pela
-/// 0x5407e0) / 50 mistura com a habilidade verdadeira (ficha +0x61: +5 atual, +7 potencial) e um
-/// ruído pseudoaleatório (id do jogador + [0xdd7120] + id do observador) que encolhe com o
-/// conhecimento do observador (0x544410 da ficha +0x69, níveis +0x17/+0x18, até 20). Com a ficha
-/// do observador, conhecimento alto e a semente favorável, a habilidade atual exata.
 pub(crate) unsafe extern "C" fn perceived_ability(o: usize, p: usize, c: usize, kind: i8, rep: i16) -> i16 {
     let p = Staff(p);
     let o = Staff(o);

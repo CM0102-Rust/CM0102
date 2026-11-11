@@ -1,8 +1,6 @@
 use super::*;
 
 /// Entrants k minus half (truncated) the preliminary-round count (+0xb2).
-///
-/// [pt] Os inscritos menos a metade (truncada, com sinal) dos clubes da preliminar (+0xb2, byte com sinal).
 pub(crate) unsafe fn entrants_minus_half_prelim(this: Cup, k: i16) -> i32 {
     k as i32 - (read_i8(this.addr() + uefa_cup::PRELIMINARY_CLUB_COUNT) as i32) / 2
 }
@@ -28,21 +26,6 @@ pub(crate) unsafe fn entrants_minus_half_prelim(this: Cup, k: i16) -> i32 {
 /// = the entrants + 27, the list of those coming from the Intertoto [inference] (`exe::crt_malloc` of +0x38 × 6 at +0x14; out of
 /// memory, the error box for line 0x21a and 0) with the class-1 entrants, each set to class 3 and counted in +0x36;
 /// +0x3e = +0x38; returns 1. With +0xb2 odd or negative, 0.
-///
-/// [pt] { 0x902b90 } (thiscall, ret 0, uefa_cup.cpp; do construtor, 2001-000): `UefaCup::build_entrants()`: +0x3e = 145; a
-/// lista (calloc 0x945501(161, 6) em +0xa7; sem memória, a caixa da linha 0x1bf e −1); +0xb2 = 0.
-/// 1) Pela ordem da tabela dos clubes, os que as regras europeias puseram na Copa da UEFA (+0x1db = [0x9cf6f0]), cada um
-///    com a classe = o seu coeficiente (+0x1df) e a situação 0; os de coeficiente 10 ou mais (com sinal) contam em +0xb2
-///    (os da preliminar [inferência]).
-/// 2) Se os inscritos menos a metade de +0xb2 não chegam a 118, completa (entre os [0xae235c] − 2 × [0xae2350] primeiros
-///    clubes, até chegar a 118) com os clubes sem copa europeia (+0x1db = −1) de nação (+0x53) sem a marca +0x11c e de
-///    coeficiente da nação (+0x8e, word com sinal) abaixo de 2000: cada um com a classe 3, a situação 0 e +0x1db = o id da
-///    copa ([+4] +0).
-/// 3) Passando de 118, tira os últimos (a vaga fica zerada) até 118.
-/// A lista vai ao qsort (0x945333, 6 bytes, 0x522190: pela classe). Com +0xb2 par (e não negativo): +0x36 = 0, +0x38 =
-/// os inscritos + 27, a lista dos que vêm da Intertoto [inferência] (0x944e46 de +0x38 × 6 em +0x14; sem memória, a
-/// caixa da linha 0x21a e 0) com os inscritos de classe 1, cada um com a classe 3, contados em +0x36; +0x3e = +0x38;
-/// devolve 1. Com +0xb2 ímpar ou negativo, 0.
 pub(crate) unsafe fn uefa_cup_build_entrants(this: Cup) -> i32 {
     const F: usize = 0xaa19e0;
     this.set_team_count(0x91);
@@ -149,10 +132,6 @@ pub(crate) unsafe extern "thiscall" fn build_entrants(this: usize) -> i32 {
 /// single-match final on 16/5 (venue 4, prize of 1.5 million to the winner); two legs 14 days apart (7 in the 3rd round
 /// and the round of 16); category 7 in qualifying and 8 after
 /// Original: `UefaCup::create_round_table` (0x9025c0, uefa_cup.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x9025c0 } (thiscall, ret 0x10, uefa_cup.cpp; a virtual +0x3c da Copa da UEFA): `fase.create_round_table(/// &rodadas, &extra, &saida)`: na fase −1, saida (se pedida) = 0, rodadas = 9, extra = 0; a tabela (0x944e46 de 0x3a8;
-/// sem memória, a caixa da linha 0xe0 e 0) com as rodadas de `uefa_cup_rounds` e rodadas = as gravadas. Fora da −1,
-/// 0.
 pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let this = Cup(this);
     if stage as u8 != 0xff {
@@ -182,11 +161,6 @@ pub(crate) unsafe extern "thiscall" fn uefa_cup_create_round_table(this: usize, 
 /// mark goes back to −1); the career records are the base cup ones (winner, runner-up, qualification and knock-out by
 /// round)
 /// Original: `UefaCup::update_staff_records_for_status` (0x9030e0, uefa_cup.cpp, thiscall, ret 0x18).
-///
-/// [pt] { 0x9030e0 } (thiscall, ret 0x18, uefa_cup.cpp; a virtual +0x44 da Copa da UEFA): `UefaCup::
-/// update_staff_records_for_status(clube, desfecho, a3, a4, jogo, a6)`: com o desfecho (byte) 1, 2 ou 0xff (campeão,
-/// vice ou eliminado) o clube sai da competição europeia (+0x1db = −1); depois os registros da base (0x519890: os seis
-/// argumentos como chegaram, o desfecho como dword; mov ecx, this -> thiscall, ret 0x18), cuja devolução sai.
 pub(crate) unsafe extern "thiscall" fn uefa_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, a3: u32, a4: u32, game: usize, a6: u32) -> u32 {
     let club = Club(club);
     let d = outcome as u8;

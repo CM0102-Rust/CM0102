@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/eng_prm.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/eng_prm.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `construct_eng_prm`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_eng_prm(this: usize, year: u32, record: usize) -> usize {

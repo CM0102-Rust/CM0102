@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../scrman.rs.
-// [pt] Os comparadores das rotinas de ../scrman.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `is_forward_unavailable`.
 pub(crate) unsafe extern "thiscall" fn compare_is_forward_unavailable(manager: usize) -> u32 {

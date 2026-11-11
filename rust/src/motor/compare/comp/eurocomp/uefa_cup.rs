@@ -1,12 +1,8 @@
 use super::*;
 
 // The comparers of the routines in ../comp/eurocomp/uefa_cup.rs.
-// [pt] Os comparadores das rotinas de ../comp/eurocomp/uefa_cup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `build_entrants`.
-///
-/// [pt] Lado a lado a partir do mesmo estado: +0x14, +0x36..+0x39, +0x3e, +0xb2, [0xb67a34] e o +0x1db de cada clube; as duas
-/// listas (+0xa7 com 161 vagas e +0x14 com +0x38 vagas) de cada lado comparadas e as da cópia liberadas.
 pub(crate) unsafe extern "thiscall" fn compare_build_entrants(this: usize) -> i32 {
     let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BUILD_ENTRANTS);

@@ -1,17 +1,12 @@
 use super::*;
 
 // The comparers of the routines in ../comp/eurocomp/european_cup.rs.
-// [pt] Os comparadores das rotinas de ../comp/eurocomp/european_cup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `draw_phase1_groups`.
 ///
 /// Only the original runs (it draws, pays prizes, allocates the stages and sends news), checked against the plan made
 /// beforehand: with 32 clubs, the 8 stages in [+0xc], +0x30 = 7, and the clubs of the stage tables (+0xb1, rows of 0x3b
 /// bytes, 4 per stage) are exactly the 32 of the plan.
-///
-/// [pt] Só a original (sorteia, paga prêmios, aloca as fases e manda notícias), conferindo o plano feito antes: com 32
-/// clubes, as 8 fases em [+0xc], +0x30 = 7 e os clubes das tabelas das fases (+0xb1, linhas de 0x3b bytes, 4 por
-/// fase) são exatamente os 32 do plano.
 pub(crate) unsafe extern "thiscall" fn compare_draw_phase1_groups(this: usize) {
     let this = Cup(this);
     let plan = group_draw_clubs(this);
@@ -38,8 +33,6 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_phase1_groups(this: usize) {
 }
 
 /// Comparer for `european_cup_compare_clubs_by_seed`.
-///
-/// [pt] Pura: a devolução.
 pub(crate) unsafe extern "C" fn compare_european_cup_compare_clubs_by_seed(a: *const usize, b: *const usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(*const usize, *const usize) -> i32>(IDX_EUROPEAN_CUP_COMPARE_CLUBS_BY_SEED)(a, b);
     let n = european_cup_compare_clubs_by_seed(a, b);
@@ -48,10 +41,6 @@ pub(crate) unsafe extern "C" fn compare_european_cup_compare_clubs_by_seed(a: *c
 }
 
 /// Comparer for `european_cup_rank_teams`.
-///
-/// [pt] Só a original (acrescenta registros à estatística), conferindo o plano feito antes (o vetor ordenado numa cópia e a
-/// tabela do mata-mata pedida ao método +0x3c e liberada): a posição (+0x72 do registro achado por 0x4a4850) de cada
-/// clube do plano.
 pub(crate) unsafe extern "thiscall" fn compare_european_cup_rank_teams(this: usize) {
     let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_EUROPEAN_CUP_RANK_TEAMS);
@@ -85,10 +74,6 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_rank_teams(this: usi
 /// Only the original routine runs (it draws, pays prize money, allocates the stages and sends news; and it calls itself
 /// again), checking the plan: on the outer call (attempt 0), stages 8..11 exist, +0x30 = 11 and the clubs of their
 /// tables (+0xb1, 0x3b-byte rows) are the 16 qualified clubs.
-///
-/// [pt] Só a original (sorteia, paga prêmios, aloca as fases e manda notícias; e se chama de novo), conferindo o plano: na
-/// chamada de fora (tentativa 0), as fases 8..11 existem, +0x30 = 11 e os clubes das tabelas delas (+0xb1, linhas de
-/// 0x3b bytes) são os 16 classificados.
 pub(crate) unsafe extern "thiscall" fn compare_draw_phase2_groups(this: usize, attempt: u32) {
     let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DRAW_PHASE2_GROUPS);
@@ -115,8 +100,6 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_phase2_groups(this: usize, a
 }
 
 /// Comparer for `european_cup_compare_phase2_draw_entries`.
-///
-/// [pt] Pura: a devolução.
 pub(crate) unsafe extern "C" fn compare_european_cup_compare_phase2_draw_entries(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_EUROPEAN_CUP_COMPARE_PHASE2_DRAW_ENTRIES)(a, b);
     let n = european_cup_compare_phase2_draw_entries(a, b);
@@ -182,10 +165,6 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_quarter_finals(this: usize) 
 /// list must be equal.
 ///
 /// For the types that go to `comp_collect_club_list` and without a list: the return value and the output as the original left them.
-///
-/// [pt] Comparador da 0x586660: a original aloca a lista (só ela roda; quem chama libera). O plano, feito antes numa lista
-/// local pelos mesmos inscritos: a conta (palavra de baixo da devolução) e os clubes da lista dela iguais. Nos tipos
-/// que vão para a 0x48e1c0 e sem lista: a devolução e a saída como a original deixou.
 pub(crate) unsafe extern "thiscall" fn compare_european_cup_collect_club_list(this: usize, out: usize, kind: u32) -> u32 {
     let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_EUROPEAN_CUP_COLLECT_CLUB_LIST);
@@ -218,10 +197,6 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_collect_club_list(th
 /// The original allocates (only it runs); the plan then checks everything it wrote: the new list, copied and refilled
 /// by the copy (fill_champions_league_entrants only reads the clubs, which the original does not change), must come out
 /// equal, as must +0x36, +0x38 and the return value.
-///
-/// [pt] Comparador da 0x584fa0: a original aloca (só ela roda); o plano confere depois tudo o que ela gravou: a lista nova
-/// copiada e repreenchida pela cópia (fill_champions_league_entrants só lê os clubes, que a original não muda) tem de sair igual,
-/// +0x36, +0x38 e a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_european_cup_collect_entrants(this: usize) -> u32 {
     let this = Cup(this);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_EUROPEAN_CUP_COLLECT_ENTRANTS)(this.addr());
@@ -242,9 +217,6 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_collect_entrants(thi
 }
 
 /// Comparer for `build_qualifying_entry_table`.
-///
-/// [pt] Comparador da 0x584990: a original aloca (só ela roda); depois a tabela dela, copiada e remontada pela cópia,
-/// tem de sair igual, com +0x3e = 55 e a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_build_qualifying_entry_table(this: usize) -> i32 {
     let this = Cup(this);
     let r = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BUILD_QUALIFYING_ENTRY_TABLE)(this.addr());
@@ -276,13 +248,6 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_advance_stage(this: 
 /// comparison. The finances are not compared (the base pays the cup round prize into the same fields, `0x51a2fe`); the
 /// prize follows the score branch that the coefficient points already check. Without a club, nation, national team or
 /// finances: only the original routine.
-///
-/// [pt] Comparador da 0x583b10, em ensaio: a cópia sem a notícia e sem a base, e a original inteira, a partir do mesmo
-/// estado (as palavras do coeficiente das duas nações e os registros de finanças dos dois clubes, restaurados depois
-/// do ensaio). Confere as palavras do coeficiente, que a base não toca, salvo pelo sorteio das fases (0x585290,
-/// 0x585ab0: o coeficiente dos classificados), que só roda quando a fase (+0x30) anda: aí, sem comparação. As
-/// finanças não entram (a base paga o prêmio da rodada da copa nos mesmos campos, 0x51a2fe); o prêmio segue o ramo do
-/// placar que os pontos do coeficiente já conferem. Sem clube, nação, seleção ou finanças: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_process_fixture(this: usize, game: usize, arg: u32) {
     let this = Cup(this);
     let game = Fixture(game);
@@ -313,9 +278,6 @@ pub(crate) unsafe extern "thiscall" fn compare_process_fixture(this: usize, game
 }
 
 /// Comparer for `european_cup_set_club_progress`.
-///
-/// [pt] Comparador da 0x586c00: lado a lado nos três bytes do registro do clube (+0x73..+0x75); sem registro (a original
-/// cai), só a original.
 pub(crate) unsafe extern "thiscall" fn compare_european_cup_set_club_progress(this: usize, club: usize, stage: u32, p1: u32, p2: u32, p3: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32)>(IDX_EUROPEAN_CUP_SET_CLUB_PROGRESS);
     let e = CompStatsClub(exe::comp_stats_find_club_entry(read_usize(this + 8), club));
@@ -336,10 +298,6 @@ pub(crate) unsafe extern "thiscall" fn compare_european_cup_set_club_progress(th
 /// from the same [0xb67a34]; the outputs and the bytes written to the two tables must be equal (the copy's is freed).
 ///
 /// The preliminaries and the knockout: only the original.
-///
-/// [pt] Lado a lado nas fases de grupos: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
-/// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada). As
-/// preliminares e o mata-mata: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_european_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, id: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_EUROPEAN_CUP_CREATE_ROUND_TABLE);
     let f = stage as u8 as i8;

@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/cups/spa_cup.rs.
-// [pt] Os comparadores das rotinas de ../comp/cups/spa_cup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `spa_cup_update_for_date`.
 pub(crate) unsafe extern "thiscall" fn compare_spa_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {

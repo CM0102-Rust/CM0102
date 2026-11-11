@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../match_screens.rs.
-// [pt] Os comparadores das rotinas de ../match_screens.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `construct_match_stats`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_match_stats(stats: usize, zip: usize, n: i32) -> usize {
@@ -44,10 +43,6 @@ pub(crate) unsafe extern "C" fn compare_match_stats_compare_events(a: *const u8,
 /// They are compared through the display list: the screen regions, the parameter block without 0x14 (the time that the
 /// redraw of the latest scores `refresh_latest_scores_rows` writes in tab 8), the marks 0xb6b7a8/ac/b0, the text 0xde1f64 and the network
 /// buffer position ([0xae290c]), plus `extra`.
-///
-/// [pt] As montagens da tela da partida são comparadas pela lista de exibição: as regiões da tela, o bloco
-/// de parâmetros sem o 0x14 (a hora que o redesenho dos últimos placares 0x724520 grava na aba 8), as
-/// marcas 0xb6b7a8/ac/b0, o texto 0xde1f64 e a posição do buffer de rede ([0xae290c]), mais `extra`.
 pub(crate) unsafe fn compare_match_screen_build(name: &str, extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce()) {
     let mut reg = screen_build_regions();
     reg.push((G_MATCH_SCREEN_PANEL_REFRESHED_FLAG, 12));
@@ -74,12 +69,6 @@ pub(crate) unsafe fn compare_match_screen_build(name: &str, extra: &[(usize, usi
 /// and the commentator volume (+0x2db0). Only the original runs when there is something that cannot run twice: the
 /// photo of parameter 0x1d to be freed, the highlight of parameter 7 to be commentated (sound, `commentate_on_panel`), or tabs 1
 /// (the summary also commentates), 3 (the zones allocate the photo) and 10 (the live table).
-///
-/// [pt] A tela da partida é comparada pela lista de exibição, com o que ela grava fora da tela: a ficha do
-/// humano (+0 e +0xea), a marca dele nos espectadores e a contagem, o foco das velocidades no `Display`
-/// do humano (+0x12f4fe) e o volume do narrador (+0x2db0). Só a original quando há o que não roda duas
-/// vezes: a foto do parâmetro 0x1d a liberar, o lance do parâmetro 7 a narrar (som, 0x6d7b00) ou as
-/// abas 1 (o resumo também narra), 3 (as zonas alocam a foto) e 10 (a tabela ao vivo).
 pub(crate) unsafe extern "C" fn compare_build_match_screen() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_BUILD_MATCH_SCREEN);
     let aba = get_screen_param(2) as u8;
@@ -122,10 +111,6 @@ pub(crate) unsafe extern "C" fn compare_handle_match_screen_input(item: u32) -> 
 /// (parameters `0x1f` and `0x20`) and there is no picture `0x1d` to free. Only the original routine when they are
 /// created here (allocation) or on tabs 1 (the summary narrates with sound), 3 (the zones allocate the picture) and 4
 /// (the report is created).
-///
-/// [pt] A tela de detalhes é comparada pela lista de exibição quando o registro e a foto da partida já
-/// existem (parâmetros 0x1f e 0x20) e não há foto 0x1d a liberar. Só a original quando eles nascem aqui
-/// (alocação) ou nas abas 1 (o resumo narra com som), 3 (as zonas alocam a foto) e 4 (o relatório nasce).
 pub(crate) unsafe extern "C" fn compare_build_match_details_screen() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_BUILD_MATCH_DETAILS_SCREEN);
     let aba = get_screen_param(2) as u8;
@@ -138,10 +123,6 @@ pub(crate) unsafe extern "C" fn compare_build_match_details_screen() {
 }
 
 /// Comparer for `refresh_possession_bar`.
-///
-/// [pt] A barra é comparada de verdade quando já existe a cópia do estado (parâmetro 0x1d) e a atualização
-/// é local: o `Display` do gerente, os parâmetros, a cópia (0xd7a bytes) e o texto 0xde1f64. Sem a cópia
-/// (nasce aqui) ou pela rede: só a original.
 pub(crate) unsafe extern "C" fn compare_refresh_possession_bar() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_REFRESH_POSSESSION_BAR);
     let p0 = get_screen_param(0);
@@ -167,11 +148,6 @@ pub(crate) unsafe extern "C" fn compare_refresh_possession_bar() {
 ///
 /// Only the original routine: with the error warning, with the commentator (parameter 7: writes the move and plays the
 /// sound), in a match without the state copy (the bar allocates it) and with the network update.
-///
-/// [pt] A visão geral é comparada de verdade pela lista de exibição, com `*topo`, `*base` e a barra da posse
-/// do fim (o `Display` do gerente e a cópia do estado). Só a original: com o aviso de erro, com o
-/// narrador (parâmetro 7: escreve o lance e toca o som), na partida sem a cópia do estado (a barra a
-/// aloca) e com a atualização pela rede.
 pub(crate) unsafe extern "C" fn compare_draw_match_overview_panel(top: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_MATCH_OVERVIEW_PANEL);
     let p0 = LiveMatch(get_screen_param(0));
@@ -202,10 +178,6 @@ pub(crate) unsafe extern "C" fn compare_draw_match_overview_panel(top: *mut i32,
 /// its table ([+0xb1], 59 bytes per club), which the routine reorders. The local copies are born and die inside it.
 ///
 /// Without a league or without parameter 0xe ("Error" box): only the original routine.
-///
-/// [pt] A tabela ao vivo é comparada de verdade pela lista de exibição, com a liga (0xee bytes: [+0xad]) e a
-/// tabela dela ([+0xb1], 59 bytes por clube), que a rotina reordena. As cópias locais nascem e morrem
-/// dentro dela. Sem liga ou sem o parâmetro 0xe (caixa "Error"): só a original.
 pub(crate) unsafe extern "C" fn compare_match_screens_draw_live_league_table(league: usize, top: i32, base: i32) {
     let league = League(league);
     let o = original_fn::<unsafe extern "C" fn(usize, i32, i32)>(IDX_MATCH_SCREENS_DRAW_LIVE_LEAGUE_TABLE);
@@ -222,9 +194,6 @@ pub(crate) unsafe extern "C" fn compare_match_screens_draw_live_league_table(lea
 }
 
 /// Comparer for `match_screens_draw_team_selection`.
-///
-/// [pt] A conferência é comparada de verdade pela lista de exibição (o Text local é alocado e liberado
-/// dentro de cada execução).
 pub(crate) unsafe extern "C" fn compare_match_screens_draw_team_selection() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_MATCH_SCREENS_DRAW_TEAM_SELECTION);
     compare_panel_by_display_list("match_screens_draw_team_selection", || o(), || match_screens_draw_team_selection());
@@ -260,10 +229,6 @@ pub(crate) unsafe extern "thiscall" fn compare_write_match_record(stats: usize, 
 /// The cells are really compared: building (`modo` ≠ 0) through the display list, local update through the manager's
 /// `Display`; the parameters (`0x1a`) and the text `0xde1f64` too. An update that goes over the network or parameter
 /// `0x1c` other than 1 and 2: only the original routine.
-///
-/// [pt] As células são comparadas de verdade: montagem (`modo` ≠ 0) pela lista de exibição, atualização
-/// local pelo `Display` do gerente; os parâmetros (o 0x1a) e o texto 0xde1f64 também. Atualização que
-/// vai pela rede ou parâmetro 0x1c fora de 1 e 2: só a original.
 pub(crate) unsafe extern "C" fn compare_fill_team_stats_rows(mode: u32, area: usize) {
     let o = original_fn::<unsafe extern "C" fn(u32, usize)>(IDX_FILL_TEAM_STATS_ROWS);
     let column = get_screen_param(0x1c) as u8;
@@ -278,9 +243,6 @@ pub(crate) unsafe extern "C" fn compare_fill_team_stats_rows(mode: u32, area: us
 }
 
 /// Comparer for `refresh_latest_scores_rows`.
-///
-/// [pt] O redesenho é comparado de verdade (atualização local): o `Display` do gerente, os parâmetros (menos
-/// o 0x14, a hora que a rotina grava no fim) e o texto 0xde1f64. Pela rede: só a original.
 pub(crate) unsafe extern "C" fn compare_refresh_latest_scores_rows() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_REFRESH_LATEST_SCORES_ROWS);
     let mut reg = match screen_update_regions(false) {
@@ -305,8 +267,6 @@ pub(crate) unsafe extern "C" fn compare_match_screens_handle_waiting_screen() ->
 }
 
 /// Comparer for `pela_lista_com`.
-///
-/// [pt] Como `compare_panel_by_display_list`, com mais regiões (o que a rotina grava fora da tela).
 pub(crate) unsafe fn compare_by_display_list_with(name: &str, extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce()) {
     let mut reg = screen_build_regions();
     reg.extend(screen_param_regions());
@@ -331,10 +291,6 @@ pub(crate) unsafe fn compare_by_display_list_with(name: &str, extra: &[(usize, u
 /// The action zones are compared for real, including `*topo` (+0x19), the fixed colour 0xb6b7a4, the guard 0xb6b7b4 and
 /// the match photo that the values routine (`refresh_action_zones_values`) compares and rewrites (parameter 0x1d, 0xd7a bytes). Without the
 /// photo yet (the first draw), the values routine allocates it: only the original runs.
-///
-/// [pt] As zonas de ação são comparadas de verdade, com o `*topo` (+0x19), a cor fixa 0xb6b7a4 e a guarda
-/// 0xb6b7b4 e a foto da partida que os valores (0x720320) comparam e regravam (parâmetro 0x1d, 0xd7a
-/// bytes). Sem a foto ainda (o primeiro desenho), os valores a alocam: só a original roda.
 pub(crate) unsafe extern "C" fn compare_draw_action_zones_panel(top: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_ACTION_ZONES_PANEL);
     let photo = get_screen_param(0x1d);
@@ -347,9 +303,6 @@ pub(crate) unsafe extern "C" fn compare_draw_action_zones_panel(top: *mut i32, b
 }
 
 /// Comparer for `draw_match_report_panel`.
-///
-/// [pt] O relatório é comparado de verdade quando já existe (na partida ou no parâmetro 0x2d); quando nasce
-/// aqui (alocação e construção) só a original roda.
 pub(crate) unsafe extern "C" fn compare_draw_match_report_panel(top: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_MATCH_REPORT_PANEL);
     if get_screen_param(0) == 0 && *((get_screen_param(0x20) + match_record::NO_STATISTICS) as *const u8) == 0 && get_screen_param(0x2d) == 0 {
@@ -360,8 +313,6 @@ pub(crate) unsafe extern "C" fn compare_draw_match_report_panel(top: *mut i32, b
 }
 
 /// Comparer for `build_day_fixtures_screen`.
-///
-/// [pt] A montagem é comparada de verdade, com a marca de vista do humano no grupo (+0x14 + 4h).
 pub(crate) unsafe extern "C" fn compare_build_day_fixtures_screen() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_BUILD_DAY_FIXTURES_SCREEN);
     let mark = (get_screen_param(1) as isize + (day_competition::PANEL as isize) + read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize * 4) as usize;
@@ -376,12 +327,6 @@ pub(crate) unsafe extern "C" fn compare_build_day_fixtures_screen() {
 /// come out equal.
 ///
 /// The content of the message buffer ([manager + 0x37fe]) is not included (as in the lists batch).
-///
-/// [pt] As três rotinas são comparadas de verdade quando já existe a cópia do estado (parâmetro 0x1d): as
-/// duas atualizam a partir do mesmo estado e o gerente de telas (com a posição do buffer de mensagens
-/// em +0x3802, que cada atualização de item zera e preenche), o `Display` da tela atual, o bloco de
-/// parâmetros, a cópia do estado (0xd7a bytes) e o texto 0xde1f64 têm de sair iguais. O conteúdo do
-/// buffer de mensagens ([gerente + 0x37fe]) não entra (como na leva das listas).
 pub(crate) unsafe fn compare_match_values(name: &str, original: impl FnOnce(), rust: impl FnOnce()) {
     let copy = get_screen_param(0x1d);
     if copy == 0 {
@@ -429,12 +374,6 @@ pub(crate) unsafe extern "C" fn compare_refresh_player_ratings_rows() {
 /// The list (0x55fba0) also writes into a network buffer ([0xae2908] at position [0xae290c]): the position is included
 /// in the regions (it is reset so the second run writes to the same place, and the size written is compared); the
 /// contents of that buffer are not.
-///
-/// [pt] Os três painéis são comparados de verdade: as duas desenham a partir do mesmo estado e o gerente de
-/// telas, o `Display` da tela atual, o bloco de parâmetros com as marcas 0xb6b7a8/ac/b0 e o texto
-/// 0xde1f64 têm de sair iguais. A lista (0x55fba0) também escreve num buffer de rede ([0xae2908] na
-/// posição [0xae290c]): a posição entra nas regiões (volta para a segunda rodada escrever no mesmo
-/// lugar e o tamanho escrito é comparado); o conteúdo desse buffer não.
 pub(crate) unsafe fn compare_panel_by_display_list(name: &str, original: impl FnOnce(), rust: impl FnOnce()) {
     let mut reg = screen_build_regions();
     reg.extend(screen_param_regions());
@@ -551,8 +490,6 @@ pub(crate) unsafe extern "C" fn compare_handle_day_fixtures_input(item: u32) -> 
 }
 
 /// Comparer for `match_screens_find_best_rated_starter_slot`.
-///
-/// [pt] Só lê: compara a vaga devolvida (tática nula: só a original, pela caixa de erro).
 pub(crate) unsafe extern "C" fn compare_match_screens_find_best_rated_starter_slot(tactic: usize, contexto: i32) -> u8 {
     let r = original_fn::<unsafe extern "C" fn(usize, i32) -> u8>(IDX_MATCH_SCREENS_FIND_BEST_RATED_STARTER_SLOT)(tactic, contexto);
     if tactic == 0 {
@@ -573,11 +510,6 @@ pub(crate) unsafe extern "C" fn compare_open_match_screen(slot: u32, fixture: us
 /// Both responses are really compared on clicks (the screen's parameter block and the marks `0xb6b7a8`/`ac`/`b0`, plus
 /// the return value); when there is a redraw (the 5-second switch of the scores, new statistics data) only the original
 /// routine runs, because the redraw writes the time into parameter `0x14` and touches the display list.
-///
-/// [pt] As duas respostas são comparadas de verdade nos cliques (o bloco de parâmetros da tela e as marcas
-/// 0xb6b7a8/ac/b0, mais a devolução); quando há redesenho (a troca de 5 s dos placares, os dados novos
-/// das estatísticas) só a original roda, porque o redesenho grava a hora no parâmetro 0x14 e mexe na
-/// lista de exibição.
 pub(crate) unsafe fn compare_resposta(name: &str, item: u32, o: unsafe extern "C" fn(u32) -> i32, r: unsafe extern "C" fn(u32) -> i32, redesenha: bool) -> i32 {
     if item as u16 == 0xffff || redesenha {
         return o(item);
@@ -622,9 +554,6 @@ pub(crate) unsafe extern "C" fn compare_open_latest_scores(slot: u32, entry: usi
 }
 
 /// Comparer for `build_latest_scores`.
-///
-/// [pt] A montagem é comparada de verdade: as duas montam a tela a partir do mesmo estado e o gerente de
-/// telas, o `Display` da tela atual (a lista de exibição) e o título (0xde1f64) têm de sair iguais.
 pub(crate) unsafe extern "C" fn compare_build_latest_scores() {
     let o = original_fn::<unsafe extern "C" fn()>(IDX_BUILD_LATEST_SCORES);
     let mut reg = screen_build_regions();
@@ -674,10 +603,6 @@ pub(crate) unsafe extern "C" fn compare_open_waiting_screen(slot: u32) {
 }
 
 /// Comparer for `draw_latest_scores_panel`.
-///
-/// [pt] O painel é comparado de verdade: as duas desenham a partir do mesmo estado e o gerente de telas, o
-/// `Display` da tela atual, os parâmetros (menos o 0x14, a hora que o redesenho 0x724520 grava), o
-/// `*topo` e o texto 0xde1f64 têm de sair iguais.
 pub(crate) unsafe extern "C" fn compare_draw_latest_scores_panel(top: *mut i32, base: *mut i32) {
     let o = original_fn::<unsafe extern "C" fn(*mut i32, *mut i32)>(IDX_DRAW_LATEST_SCORES_PANEL);
     let mut reg = screen_build_regions();

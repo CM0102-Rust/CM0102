@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../match_pl.rs.
-// [pt] Os comparadores das rotinas de ../match_pl.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `shot`.
 pub(crate) unsafe extern "thiscall" fn compare_shot(j: usize, strength: u32, x: u32, y: u32) {

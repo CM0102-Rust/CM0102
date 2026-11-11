@@ -11,15 +11,11 @@ use super::*;
 // (30 u8 each); +0xbe9 open; +0xbed has a scroll bar.
 
 /// Address of item k (0x18c bytes each) in the item table base.
-///
-/// [pt] O item `k` (i16) da tabela de itens `base` (0x18c bytes cada).
 pub(crate) fn area_item_at(base: usize, k: i16) -> usize {
     (base as isize).wrapping_add(k as isize * 0x18c) as usize
 }
 
 /// Item at position i of the area's item list (+0x212).
-///
-/// [pt] O item da posição `i` (i16) da lista da área (+0x212).
 pub(crate) unsafe fn area_list_item(area: usize, i: i16) -> usize {
     let k = core::ptr::read_unaligned((area as isize + i as isize * 2 + (area_fields::ITEM_LIST as isize)) as *const i16);
     area_item_at(*((area + area_fields::ITEMS) as *const usize), k)
@@ -45,13 +41,6 @@ pub(crate) unsafe fn write_i32_at(area: usize, desl: isize, v: i32) {
 ///
 /// More than 30 columns or rows: the original routine runs (error box, `Area.cpp 497` and `507`).
 /// Original: `Area::layout` (0x403350, Area.cpp, thiscall).
-///
-/// [pt] { 0x403350 } (thiscall, Area.cpp): organiza a grade da área. Grava o índice da área no item dono
-/// (+0x7c, se houver; e zera +0xbe9) e zera o primeiro item à mostra; fora das áreas só de grade
-/// (marca 0x80000), com colunas e linhas, calcula as margens (marca 1: 0; senão 2 nas laterais e, em
-/// cima e embaixo, 2 com a marca 0x10 ou uma linha só, 8 nas outras), liga a barra de rolagem (0x403600)
-/// quando os itens passam das linhas e reparte a largura e a altura pelos pesos. Mais de 30 colunas
-/// ou linhas: a original (caixa de erro, Area.cpp 497 e 507).
 pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
     let marks = *((area + area_fields::FLAGS) as *const u32);
     let columns = *((area + area_fields::COLUMN_COUNT) as *const u8);
@@ -142,13 +131,6 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
 /// original overruns the 30-entry array, and so does this code). The visible rows are clamped at 30 (the grid size);
 /// the rest goes to the scrollbar.
 /// Original: `Area::init` (0x402ac0, Area.cpp, thiscall).
-///
-/// [pt] { 0x402ac0 } (thiscall, Area.cpp): inicia a área. Área que abre por cima de um item (`dono` ≠ -1):
-/// pesos 1 nas 30 colunas e linhas, retângulo zero, 1 coluna e 0 linhas. Nas outras: ordena x1/x2 e
-/// y1/y2 (troca 0x90ba90), x1/y1 no mínimo 0 e x2/y2 no máximo a tela (0x31f/0x257 no exe de 800x600; o
-/// exe de 1920x1080 troca esses imediatos, lidos aqui do próprio exe). Grava os campos, zera a barra
-/// de rolagem e, fora das áreas só de grade (0x80000), copia os pesos (com 1..29 colunas/linhas e
-/// ponteiro) ou enche de 1 (inclusive com 30 ou mais: aí a original passa do vetor de 30, como aqui).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn init(
     area: usize, areas: usize, items: usize, index: u32, x1: i32, y1: i32, x2: i32, y2: i32, columns: u32,
@@ -227,12 +209,6 @@ pub(crate) unsafe extern "thiscall" fn init(
 ///
 /// It lives in Area::init because the start of Display::add_area (0x55fba0) is already a detour of the 1080 exe
 /// (coordinate scaling).
-///
-/// [pt] A trava das 30 linhas: a grade da área tem no máximo 30 linhas (vetor fixo em +0xbcb; o Area::layout
-/// mostra a caixa "Area.cpp 507" acima disso, e o Area::init já escreve os pesos fora do vetor). Em
-/// 1920 × 1080 o relatório de uma partida antiga pede mais; travadas em 30, o resto vai para a barra de
-/// rolagem, como em 800 × 600 (onde nunca passa de 30 e a trava não muda nada). Fica no Area::init porque
-/// o começo do Display::add_area (0x55fba0) já é desvio do exe de 1080 (escala das coordenadas).
 // simplification: the 30 rows spread over the height of the area (taller rows in 1080); layout by the
 // real resolution is left for the modernization (PLANO_LIMITE.md); the original and the copy get the lock
 // equal in the comparer, so the comparison remains valid
@@ -257,14 +233,6 @@ pub(crate) fn cap_area_rows(rows: u32) -> u32 {
 /// Without a first visible widget (`+0xb76` = -1): the original routine runs (error box `Area.cpp 245` and the layout
 /// `0x403350`).
 /// Original: `Area::draw` (0x402e70, Area.cpp, thiscall).
-///
-/// [pt] { 0x402e70 } (thiscall, Area.cpp): desenha a área. Com `redesenhar`, libera a imagem guardada
-/// (0x5e42b0); área que abre por cima guarda o fundo (0x5e3dd0); desenha o painel (0x5e5df0). Área só
-/// de grade (0x80000): as linhas da grade (0x5e3730, cor [0xae317e]) e fim. Nas outras: guarda o fundo
-/// da barra de rolagem, põe cada item à mostra na sua célula (as grades +0x1c/+0x10c e +0x94/+0x184,
-/// quando o item não tem retângulo próprio em +0x28/+0x30) e o desenha (0x5ee590) até passar da última
-/// linha; depois a barra (0x403c80). Sem o primeiro item à mostra (+0xb76 = -1): a original (caixa de
-/// erro Area.cpp 245 e a organização 0x403350).
 pub(crate) unsafe extern "thiscall" fn draw(area: usize, redraw: u32) {
     if read_i16(area + area_fields::FIRST_VISIBLE_ITEM) == -1 {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DRAW)(area, redraw);
@@ -326,9 +294,6 @@ pub(crate) unsafe extern "thiscall" fn draw(area: usize, redraw: u32) {
 
 /// Sets the item's screen rectangle (+0x10..+0x1c): its own (+0x28..+0x34) or, where 0, the grid cell (column +0x20,
 /// row = area's first row + d).
-///
-/// [pt] O retângulo do item na tela (+0x10 x1, +0x14 y1, +0x18 x2, +0x1c y2): o próprio (+0x28..+0x34)
-/// ou, onde for 0, a célula da grade (coluna +0x20; linha = primeira linha da área + `d`).
 pub(crate) unsafe fn position_area_item(area: usize, item: usize, d: i32) {
     let (mut x1, mut x2, mut y1, mut y2) = (read_i32_at(item, 0x28), read_i32_at(item, 0x2c), read_i32_at(item, 0x30), read_i32_at(item, 0x34));
     if x1 == 0 {

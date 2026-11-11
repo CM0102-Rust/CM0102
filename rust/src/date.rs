@@ -14,23 +14,6 @@
 //!   { 0x54c770 } mais_semanas(n)           /  first call, with an empty destructor in atexit)
 //!   { 0x54cdb0 } dias_ate(other)           this - other in days (other by value; uses the static Data
 //!                0xae2470, which ends up with this's date and other's year)
-//!
-//! [pt] Datas do jogo (`si/code/Date.cpp`). Classe de 8 bytes:
-//!   +0 i16 dia do ano (0 = 1o de janeiro), +2 u16 ano, +4 i32 bissexto (0/1).
-//! Metodos thiscall (o objeto vem em ecx); os que devolvem Data por valor recebem o endereco de
-//! retorno como primeiro argumento e o devolvem em eax.
-//!   { 0x54a110 } Data()                    dia 40 de 1972, bissexto
-//!   { 0x549ef0 } Data(dia, ano)            calcula o bissexto (regra gregoriana, ano de 16 bits)
-//!   { 0x549f70 } Data(dia_do_mes, mes, ano, dia_da_semana)  valida (erros Date.cpp 52 e 59),
-//!                converte pelas tabelas de dias acumulados e, se pedido, ajusta ao dia da semana
-//!   { 0x54a3f0 } dia_da_semana()           0..6, contado a partir de 1600
-//!   { 0x54a2d0 } ajustar_semana(alvo, dest)  dest = esta data levada ao dia `alvo` mais proximo (+-3)
-//!   { 0x417c10 } operator=(src) -> copia   (atribui e devolve uma copia)
-//!   { 0x54c5b0 } operator+(n dias)         \
-//!   { 0x54c8e0 } operator-(n dias)          > usam uma Data estatica local cada (inicializada na
-//!   { 0x54c770 } mais_semanas(n)           /  primeira chamada, com destrutor vazio no atexit)
-//!   { 0x54cdb0 } dias_ate(outra)           this - outra em dias (outra por valor; usa a Data estatica
-//!                0xae2470, que fica com a data de this e o ano de outra)
 
 use crate::comparison::{side_by_side_light as side_by_side, Scoreboard, TestRng};
 use crate::detours::{self, Prologue};
@@ -46,18 +29,12 @@ pub struct Data {
 }
 
 /// Path "E:\dev\CM3\cm3 00-01\si\code\Date.cpp" in the exe (for the error messages).
-///
-/// [pt] Caminho "E:\dev\CM3\cm3 00-01\si\code\Date.cpp" no exe (para as mensagens de erro).
 const SOURCE_PATH: usize = 0x9b8478;
 /// Cumulative days before each month (i16 x 12): normal and leap year.
-///
-/// [pt] Dias acumulados antes de cada mes (i16 x 12): ano normal e bissexto.
 const NORMAL_TABLE: *const i16 = 0x9b8448 as *const i16;
 const LEAP_TABLE: *const i16 = 0x9b8460 as *const i16;
 
 /// Local static Data of an operator: value, guard byte (bit 0 = already initialized) and destructor.
-///
-/// [pt] Data estatica local de um operador: valor, byte de guarda (bit 0 = ja inicializada) e destrutor.
 struct LocalStatic {
     value: usize,
     guard: usize,
@@ -70,8 +47,6 @@ const ST_WEEKS: LocalStatic = LocalStatic { value: 0xae2410, guard: 0xae2430, de
 const ST_DAYS: LocalStatic = LocalStatic { value: 0xae2470, guard: 0xae2418, destructor: 0x54cf60 };
 
 /// Memory the operators touch besides the arguments (for comparison mode).
-///
-/// [pt] Memoria que os operadores tocam alem dos argumentos (para o modo comparacao).
 const STATICS: [(usize, usize); 6] = [(0xae2420, 8), (0xae2469, 1), (0xae24c0, 8), (0xae249e, 1), (0xae2410, 8), (0xae2430, 1)];
 
 const PROLOGUES: [Prologue; 10] = [
@@ -99,9 +74,6 @@ const PROLOGUES: [Prologue; 10] = [
 
 /// Rule of { 0x549ef0 }: odd or not divisible by 4 -> no; not divisible by 100 -> yes;
 /// otherwise, only if divisible by 400.
-///
-/// [pt] Regra do { 0x549ef0 }: impar ou nao divisivel por 4 -> nao; nao divisivel por 100 -> sim;
-/// senao, so se divisivel por 400.
 pub fn is_leap_year(year: u16) -> i32 {
     let a = year as i32;
     if a % 2 == 1 || a % 4 != 0 {
@@ -120,8 +92,6 @@ pub unsafe extern "thiscall" fn default_date(this: *mut Data) -> *mut Data {
 }
 
 /// { 0x549ef0 } The two arguments take 4 bytes on the stack; only the low 16 bits count.
-///
-/// [pt] { 0x549ef0 } Os dois argumentos ocupam 4 bytes na pilha; so os 16 bits de baixo contam.
 pub unsafe extern "thiscall" fn new_date(this: *mut Data, day: u32, year: u32) -> *mut Data {
     let year = year as u16;
     *this = Data { day: day as u16 as i16, year: year, is_leap_year: is_leap_year(year) };
@@ -130,9 +100,6 @@ pub unsafe extern "thiscall" fn new_date(this: *mut Data, day: u32, year: u32) -
 
 /// { `exe::date_get_weekday` } Days since 1600 (years * 365 + leap years) + day of the year, minus 1 if the year is
 /// a leap year, signed modulo 7; 1..6 becomes 0..5, 0 becomes 6 and negative stays as is.
-///
-/// [pt] { 0x54a3f0 } Dias desde 1600 (anos * 365 + bissextos) + dia do ano, menos 1 se o ano e
-/// bissexto, modulo 7 com sinal; 1..6 vira 0..5, 0 vira 6 e negativo fica como esta.
 pub unsafe extern "thiscall" fn weekday(this: *const Data) -> i32 {
     let d = *this;
     let y = d.year as i32 - 1600;
@@ -151,8 +118,6 @@ pub unsafe extern "thiscall" fn weekday(this: *const Data) -> i32 {
 }
 
 /// { `exe::date_operator_3d` } this = *src (year, day, leap flag, in that order); *ret = *this; returns ret.
-///
-/// [pt] { 0x417c10 } this = *src (ano, dia, bissexto, nessa ordem); *ret = *this; devolve ret.
 pub unsafe extern "thiscall" fn copia(this: *mut Data, ret: *mut Data, src: *const Data) -> *mut Data {
     (*this).year = (*src).year;
     (*this).day = (*src).day;
@@ -162,8 +127,6 @@ pub unsafe extern "thiscall" fn copia(this: *mut Data, ret: *mut Data, src: *con
 }
 
 /// Initialization of the local static on the first call: guard |= 1, Data(), atexit(destructor).
-///
-/// [pt] Inicializacao da estatica local na primeira chamada: guarda |= 1, Data(), atexit(destrutor).
 unsafe fn prepare(e: &LocalStatic) -> *mut Data {
     let g = e.guard as *mut u8;
     if *g & 1 == 0 {
@@ -175,8 +138,6 @@ unsafe fn prepare(e: &LocalStatic) -> *mut Data {
 }
 
 /// Moves `day` (which may pass 365) forward into the following years. Comparisons in signed 16 bits.
-///
-/// [pt] Avanca `dia` (que pode passar de 365) para os anos seguintes. Comparacoes em 16 bits com sinal.
 fn normalize_forward(mut day: i16, mut year: u16) -> (i16, u16) {
     loop {
         let limit = if is_leap_year(year) == 1 { 365 } else { 364 };
@@ -189,8 +150,6 @@ fn normalize_forward(mut day: i16, mut year: u16) -> (i16, u16) {
 }
 
 /// Moves `day` (which may be negative) back into the previous years, adding the length of the previous year.
-///
-/// [pt] Volta `dia` (que pode ser negativo) para os anos anteriores, somando o tamanho do ano anterior.
 fn normalize_backward(mut day: i16, mut year: u16) -> (i16, u16) {
     loop {
         if day >= 0 {
@@ -213,10 +172,6 @@ unsafe fn store(st: *mut Data, ret: *mut Data, day: i16, year: u16) -> *mut Data
 /// { `exe::date_add_days` } n (16 bits) negative: static = *this and returns static - (-n).
 /// Quirk preserved: with n = -32768, -n stays -32768 and plus/minus call each other until the stack
 /// overflows (same in the original; the game never asks for that).
-///
-/// [pt] { 0x54c5b0 } n (16 bits) negativo: estatica = *this e devolve estatica - (-n).
-/// Esquisitice preservada: com n = -32768, -n continua -32768 e mais/menos se chamam ate estourar
-/// a pilha (igual na original; o jogo nunca pede isso).
 pub unsafe extern "thiscall" fn mais(this: *const Data, ret: *mut Data, n: u32) -> *mut Data {
     let st = prepare(&ST_PLUS);
     if (n as i16) < 0 {
@@ -232,8 +187,6 @@ pub unsafe extern "thiscall" fn mais(this: *const Data, ret: *mut Data, n: u32) 
 }
 
 /// { 0x54c8e0 } n (16 bits) negative: static = *this and returns static + (-n).
-///
-/// [pt] { 0x54c8e0 } n (16 bits) negativo: estatica = *this e devolve estatica + (-n).
 pub unsafe extern "thiscall" fn menos(this: *const Data, ret: *mut Data, n: u32) -> *mut Data {
     let st = prepare(&ST_MINUS);
     if (n as i16) < 0 {
@@ -249,8 +202,6 @@ pub unsafe extern "thiscall" fn menos(this: *const Data, ret: *mut Data, n: u32)
 }
 
 /// { `exe::date_add_weeks` } n (8 bits) weeks.
-///
-/// [pt] { 0x54c770 } n (8 bits) semanas.
 pub unsafe extern "thiscall" fn add_weeks(this: *const Data, ret: *mut Data, n: u32) -> *mut Data {
     let st = prepare(&ST_WEEKS);
     let days = ((n as u8) as u16).wrapping_mul(7) as i16;
@@ -260,9 +211,6 @@ pub unsafe extern "thiscall" fn add_weeks(this: *const Data, ret: *mut Data, n: 
 
 /// { `exe::date_get_nearest_weekday` } *dest = *this and, if the weekday is not `target`, moves dest to the nearest `target`
 /// (difference brought to -3..3). The return value is not used by the callers.
-///
-/// [pt] { 0x54a2d0 } *dest = *this e, se o dia da semana nao for `alvo`, move dest para o `alvo` mais
-/// proximo (diferenca levada a -3..3). O valor devolvido nao e usado pelos chamadores.
 pub unsafe extern "thiscall" fn adjust_week(this: *const Data, target: u32, dest: *mut Data) -> u32 {
     let weekday = weekday(this);
     let mut t = Data::default();
@@ -284,15 +232,11 @@ pub unsafe extern "thiscall" fn adjust_week(this: *const Data, target: u32, dest
 }
 
 /// Day of month and month out of range: the game shows the error (Date.cpp 52 / 59) and corrects it.
-///
-/// [pt] Dia do mes e mes fora do intervalo: o jogo mostra o erro (Date.cpp 52 / 59) e corrige.
 fn valid_input(day: u32, month: u32) -> bool {
     (1..=31).contains(&(day as i16)) && (0..=11).contains(&(month as u8 as i8))
 }
 
 /// { `exe::date_date_549f70` } Data(day_of_month, month 0..11, year, weekday or 0xffff).
-///
-/// [pt] { 0x549f70 } Data(dia_do_mes, mes 0..11, ano, dia_da_semana ou 0xffff).
 pub unsafe extern "thiscall" fn from_dmy(this: *mut Data, day: u32, month: u32, year: u32, weekday: u32) -> *mut Data {
     let mut di = day as i16;
     if !(1..=31).contains(&di) {
@@ -320,8 +264,6 @@ pub unsafe extern "thiscall" fn from_dmy(this: *mut Data, day: u32, month: u32, 
 }
 
 /// Days of year `year` by the rule of { `exe::date_days_since` } (the same Gregorian one, on the year as unsigned 32 bits).
-///
-/// [pt] Dias do ano `ano` pela regra do { 0x54cdb0 } (a mesma gregoriana, em 32 bits sem sinal do ano).
 fn days_in_year(year: u16) -> i32 {
     let a = year as i32;
     if a % 2 != 0 || a % 4 != 0 {
@@ -338,12 +280,6 @@ fn days_in_year(year: u16) -> i32 {
 /// and walks year by year to `other`'s, adding the days of each year: going back, those of the year
 /// reached itself, going forward, those of the year before each one (as in the original); at the end the static
 /// holds `other`'s year.
-///
-/// [pt] { 0x54cdb0 } (ret 8) this - outra em dias, com `outra` por valor (8 bytes na pilha). No mesmo
-/// ano e so a diferenca dos dias. Com anos diferentes, a estatica 0xae2470 recebe *this (0x417c10)
-/// e anda ano a ano ate o de `outra`, somando os dias de cada ano: para tras os do proprio ano
-/// alcancado, para a frente os do ano anterior a cada um (como no original); no fim a estatica fica
-/// com o ano de `outra`.
 pub unsafe extern "thiscall" fn days_until(this: *const Data, other: Data) -> i32 {
     let st = prepare(&ST_DAYS);
     let a = *this;
@@ -378,9 +314,6 @@ unsafe fn original_fn<F>(i: usize) -> F {
 
 /// The dates (8 bytes each, up to 3) and the statics, in a fixed array on the stack (no allocation: dates are
 /// compared billions of times in a career with all the leagues).
-///
-/// [pt] As datas (8 bytes cada, ate 3) e as estaticas, num vetor fixo na pilha (sem alocar: as datas sao
-/// comparadas bilhoes de vezes numa carreira com todas as ligas).
 struct Regions([(usize, usize); 9], usize);
 
 impl core::ops::Deref for Regions {
@@ -478,8 +411,6 @@ unsafe extern "thiscall" fn compare_days(this: *const Data, other: Data) -> i32 
 }
 
 /// Self-test (runs after the game's CRT is initialized: the operators call atexit).
-///
-/// [pt] Autoteste (roda depois de a CRT do jogo estar inicializada: os operadores chamam atexit).
 pub unsafe fn self_test() {
     let mut s = TestRng(0x1234_5678_9abc_def1);
     SCOREBOARD.self_test(|| {
@@ -573,9 +504,6 @@ pub unsafe fn install(comparing: bool) {
 
 /// Simulation in original mode: the same routines detoured to the original itself, which then runs
 /// on the private stack like the Rust version (see `detours::isolar`).
-///
-/// [pt] Simulacao no modo original: as mesmas rotinas desviadas para a propria original, que assim roda
-/// na pilha particular como a versao Rust (ver `detours::isolar`).
 pub unsafe fn install_passthrough() {
     for (i, p) in PROLOGUES.iter().enumerate() {
         detours::hook(&format!("date {} (original, isolated)", i), p, detours::PASSTHROUGH);

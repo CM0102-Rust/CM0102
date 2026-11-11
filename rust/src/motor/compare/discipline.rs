@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../discipline.rs.
-// [pt] Os comparadores das rotinas de ../discipline.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `serve_international_bans`.
 ///
@@ -10,10 +9,6 @@ use super::*;
 /// runs.
 ///
 /// It checks, person by person, the new counter or the released suspension (free: +0 = 0xff, +2 = −1).
-///
-/// [pt] Comparador: a contagem (0x556e90) grava o histórico no arquivo quando a suspensão termina e não pode rodar duas
-/// vezes: o plano antes (as pessoas da nação e, de cada uma, o que a 0x556e90 fará, serve_ban_match_plan), a original roda;
-/// confere, pessoa a pessoa, o contador novo ou a suspensão solta (livre: +0 = 0xff, +2 = −1).
 pub(crate) unsafe extern "thiscall" fn compare_serve_international_bans(this: usize, team: usize) {
     let (ini, fim) = nation_index_range(this, Club(team));
     let mut plan = Vec::new();
@@ -42,10 +37,6 @@ pub(crate) unsafe extern "thiscall" fn compare_serve_international_bans(this: us
 }
 
 /// Comparer for `apply_appeal_result`.
-///
-/// [pt] Comparador: o órgão tira as suspensões pendentes (0x7e91d0, lista que solta nós) e a 0x556d00 pode gravar o
-/// histórico: só a original, com o plano antes; confere a suspensão solta (+0 = 0xff, +2 = −1) ou os jogos e os dias
-/// novos.
 pub(crate) unsafe extern "thiscall" fn compare_apply_appeal_result(this: usize, id: u32, rule: u32, reduces: u32, minus_games: u32, minus_days: u32, new: u32, days_fixed: u32, x: u32) {
     let r = appeal_plan(this, id, rule, reduces, minus_games, minus_days, new, days_fixed);
     original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32, u32, u32, u32)>(IDX_APPLY_APPEAL_RESULT)(this, id, rule, reduces, minus_games, minus_days, new, days_fixed, x);
@@ -59,9 +50,6 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_appeal_result(this: usize, 
 }
 
 /// Comparer for `get_slot_text`.
-///
-/// [pt] Comparador: sem regra na vaga (ou pessoa fora da tabela), a devolução (0, sem gravar nada); com regra, o texto do órgão
-/// (0x7e88d0) pode contar a suspensão por dias (0x556e90, que grava o histórico no arquivo): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_get_slot_text(this: usize, person: usize, slot: u32, out: usize, size: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) -> u32>(IDX_GET_SLOT_TEXT);
     if person == 0 || (read_usize(person) as i32) < read_usize(G_STAFF_COUNT) as i32 && ban_slot_rule(this, person, slot) != 0xff {
@@ -80,10 +68,6 @@ pub(crate) unsafe extern "thiscall" fn compare_get_slot_text(this: usize, person
 /// The plan first, then the original routine runs; it checks the old ban extended (matches, days, bit 0 of both), or
 /// the new one in the slot (matches, days, the 4 rules), the count, the rule entries pointing to the slot and, with the
 /// fourth rule, the nations index with one more.
-///
-/// [pt] Comparador: a 0x556940 realoca os vetores e liga os órgãos (não pode rodar duas vezes): o plano antes, a original
-/// roda; confere a velha estendida (jogos, dias, bit 0 das duas), ou a nova na vaga (jogos, dias, as 4 regras), a
-/// conta, as entradas das regras apontando para a vaga e, com a quarta regra, o índice das nações com um a mais.
 pub(crate) unsafe extern "thiscall" fn compare_add_ban(this: usize, id: u32, ban: usize) {
     let plan = add_ban_plan(this, id, ban);
     let index = read_i16(this + discipline_fields::NATION_INDEX_COUNT);
@@ -121,10 +105,6 @@ pub(crate) unsafe extern "thiscall" fn compare_add_ban(this: usize, id: u32, ban
 /// `clear_bans_invalid_for_club` releases bans (nation index, governing bodies): the plan beforehand (the slots the club does not cover and
 /// the entries), then the original runs; it checks the freed slots (0xff, −1, entry −1) and that the others are intact.
 /// An entry repeated in two slots is not checked for the second one.
-///
-/// [pt] Comparador: a 0x556270 solta suspensões (índice das nações, órgãos): o plano antes (as vagas que o clube não cobre
-/// e as entradas), a original roda; confere as vagas liberadas (0xff, −1, a entrada −1) e as outras intactas. Uma
-/// entrada repetida em duas vagas não entra na conferência da segunda.
 pub(crate) unsafe extern "thiscall" fn compare_clear_bans_invalid_for_club(this: usize, person: usize, nada: u32, club: usize) {
     let id = read_usize(person) as u32;
     let r = discipline_record(this, id);
@@ -170,10 +150,6 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_bans_invalid_for_club(this:
 ///
 /// It checks [0xae1080], the restored slots (the 5 stored bytes), the released ones (0xff, −1, entry −1), the count of
 /// held ones and that the other slots are intact.
-///
-/// [pt] Comparador: a 0x556570 tira e libera itens da lista (lição 1: o esperado é montado ANTES; nenhum item é lido depois)
-/// e solta suspensões: o plano antes, a original roda; confere [0xae1080], as vagas devolvidas (os 5 bytes guardados), as
-/// soltas (0xff, −1, a entrada −1), a conta de guardadas e as outras vagas intactas.
 pub(crate) unsafe extern "thiscall" fn compare_restore_held_bans(this: usize, person: usize) {
     let id = read_usize(person) as u32;
     let r = discipline_record(this, id);
@@ -198,9 +174,6 @@ pub(crate) unsafe extern "thiscall" fn compare_restore_held_bans(this: usize, pe
 }
 
 /// Comparer for `update_ban_progress`.
-///
-/// [pt] Comparador: a 0x58e340 grava o histórico no arquivo (não pode rodar duas vezes): o plano antes, a original roda;
-/// confere o contador, ou a suspensão solta (livre e a entrada do órgão sem índice), ou nada mudado.
 pub(crate) unsafe extern "thiscall" fn compare_update_ban_progress(this: usize, id: u32, rule: u32, count: u32) {
     let j = serve_ban_match_plan(this, id, rule, count);
     let before = if j.suspensao != 0 { read_u8(j.suspensao + 1) } else { 0 };
@@ -222,9 +195,6 @@ pub(crate) unsafe extern "thiscall" fn compare_update_ban_progress(this: usize, 
 }
 
 /// Comparer for `release_ban`.
-///
-/// [pt] Comparador: lado a lado pela suspensão, o índice das nações (conta e itens) e as entradas da pessoa nos órgãos das
-/// regras (achadas antes, sem criar). Quarta regra sem o item no índice: só a original (caixa).
 pub(crate) unsafe extern "thiscall" fn compare_release_ban(this: usize, id: u32, index: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> usize>(IDX_RELEASE_BAN);
     let s = read_usize(this + discipline_fields::BANS).wrapping_add((index as u16 as i16 as i32 as usize).wrapping_mul(20));
@@ -251,8 +221,6 @@ pub(crate) unsafe extern "thiscall" fn compare_release_ban(this: usize, id: u32,
 }
 
 /// Comparer for `clear_ban_history`.
-///
-/// [pt] Comparador: lado a lado pelo começo e o último deslocamento do histórico (8 bytes; a 0x58f110 só grava o segundo).
 pub(crate) unsafe extern "thiscall" fn compare_clear_ban_history(this: usize, person: usize) -> usize {
     let person = Staff(person);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_CLEAR_BAN_HISTORY);
@@ -292,8 +260,6 @@ pub(crate) unsafe extern "thiscall" fn compare_discipline_set_slot(this: usize, 
 }
 
 /// Comparer for `is_player_suspended`.
-///
-/// [pt] Comparador: lado a lado pelas 20 vagas (+0x1e0) do clube do jogador (a 0x7e85b0 e a 0x600a50 só leem).
 pub(crate) unsafe extern "thiscall" fn compare_is_player_suspended(this: usize, player: usize, comp: *const i32, extra: u32, fixture: usize) -> u32 {
     let player = Staff(player);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *const i32, u32, usize) -> u32>(IDX_IS_PLAYER_SUSPENDED);
@@ -305,9 +271,6 @@ pub(crate) unsafe extern "thiscall" fn compare_is_player_suspended(this: usize, 
 }
 
 /// Comparer for `drop_held_bans`.
-///
-/// [pt] Comparador: o plano da cópia (os itens do id que saem até o contador zerar) antes; a original tira; confere os
-/// itens que ficaram e o contador.
 pub(crate) unsafe extern "thiscall" fn compare_drop_held_bans(this: usize, person: *const u32) {
     let l = this + discipline_fields::HELD_BANS;
     let n = stored_suspension_counter(this, *person as usize);
@@ -327,9 +290,6 @@ pub(crate) unsafe extern "thiscall" fn compare_drop_held_bans(this: usize, perso
 }
 
 /// Comparer for `hold_bans_for_loan`.
-///
-/// [pt] Comparador: o plano da cópia (as vagas que não valem no clube do empréstimo) antes; a original guarda; confere o
-/// registro do jogador: as vagas do plano em −1, as outras iguais e o contador somado.
 pub(crate) unsafe extern "thiscall" fn compare_hold_bans_for_loan(this: usize, player: usize) {
     let sheet = exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), (player as *const i32) as usize);
     if sheet == 0 {
@@ -355,17 +315,12 @@ pub(crate) unsafe extern "thiscall" fn compare_is_one_booking_from_ban(this: usi
 }
 
 /// Comparer for `process_match`.
-///
-/// [pt] Comparador: o tribunal (0x7e7ff0) dá as suspensões: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_process_match(this: usize, fixture: usize, result: u32) -> u32 {
     covered!("process_match");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_PROCESS_MATCH)(this, fixture, result)
 }
 
 /// Comparer for `discipline_remove_player`.
-///
-/// [pt] Comparador: a 0x556830 solta suspensões e tira (e libera) itens da lista: o plano antes (as entradas das vagas), a
-/// original roda; confere o registro (0xff, conta 0) e as entradas livres (+0 = −1).
 pub(crate) unsafe extern "thiscall" fn compare_discipline_remove_player(this: usize, id: u32) {
     let r = read_usize(this + discipline_fields::PERSON_RECORDS).wrapping_add((id as usize).wrapping_mul(29));
     let mut entries = Vec::new();

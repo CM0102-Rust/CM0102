@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../fog_of_war.rs.
-// [pt] Os comparadores das rotinas de ../fog_of_war.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `chance_to_know`.
 pub(crate) unsafe extern "C" fn compare_chance_to_know(person: usize, level: i8) -> i32 {

@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../awol.rs.
-// [pt] Os comparadores das rotinas de ../awol.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `clear_awol`.
 pub(crate) unsafe extern "thiscall" fn compare_clear_awol(this: usize, person: usize) {
@@ -21,10 +20,6 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_missed_training(this: usize
 ///
 /// It checks that the rehearsal's draws are the start of the original's tape (the rest belongs to the delivery) with
 /// the same n, and records the destination (the original does not expose it).
-///
-/// [pt] Comparador: a original monta a notícia e a entrega (aloca na caixa): só ela roda, com os sorteios rastreados; depois
-/// a cópia em ensaio refaz o caminho com os sorteios da fita, sem entregar. Confere que os sorteios do ensaio são o
-/// começo da fita da original (o resto é da entrega) com os mesmos n, e anota o destino (a original não o expõe).
 pub(crate) unsafe extern "thiscall" fn compare_awol_post_missed_training_news(this: usize, player: usize, club: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_AWOL_POST_MISSED_TRAINING_NEWS);
     let ((), tape_lock) = crate::rng::trace(|| o(this, player, club));
@@ -48,9 +43,6 @@ pub(crate) unsafe extern "thiscall" fn compare_awol_daily_update(this: usize) {
 }
 
 /// Comparer for `has_missed_training`.
-///
-/// [pt] O comparador da falta ao treino: lado a lado pela devolução (byte baixo) e pelo [0xae1080]; sem contrato com o bit 2,
-/// só a original (a 0x4197c0 tira e libera o nó da lista).
 pub(crate) unsafe extern "thiscall" fn compare_has_missed_training(this: usize, person: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_HAS_MISSED_TRAINING);
     if person != 0 && read_i32(person) < read_i32(G_STAFF_COUNT) && read_u8(read_usize(this + awol_fields::PERSON_FLAGS).wrapping_add(read_i32(person) as usize)) & 2 != 0 {
@@ -66,8 +58,6 @@ pub(crate) unsafe extern "thiscall" fn compare_has_missed_training(this: usize, 
 }
 
 /// Comparer for `has_fitness_incident`.
-///
-/// [pt] O comparador do atraso: lado a lado pela devolução (byte baixo) e pelo cursor da lista.
 pub(crate) unsafe extern "thiscall" fn compare_has_fitness_incident(this: usize, person: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_HAS_FITNESS_INCIDENT);
     let l = Llist(read_usize(this + 8));
@@ -84,11 +74,6 @@ pub(crate) unsafe extern "thiscall" fn compare_has_fitness_incident(this: usize,
 /// the same state (random draw, the person's mark, [`0xae1080`]); the original's decision is read from the mark (new
 /// bit 1: went missing; new bit 2: missed training). Without a decision, the whole state must match (the same random
 /// draws). The case byte (`+0xc` of the record) is not compared: in the original routine it is stack residue.
-///
-/// [pt] O comparador da falta marcada, em ensaio: a cópia para na decisão (0 nada, 1 some, 2 marca a falta) e a original roda
-/// a partir do mesmo estado (sorteio, marca da pessoa, [0xae1080]); a decisão da original sai da marca (bit 1 novo:
-/// sumiu; bit 2 novo: faltou). Sem decisão, o estado inteiro tem de bater (os mesmos sorteios). O byte do caso (+0xc do
-/// registro) não entra: na original é resíduo da pilha.
 pub(crate) unsafe extern "thiscall" fn compare_miss_training(this: usize, person: usize) {
     let person = Staff(person);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_MISS_TRAINING);
@@ -116,9 +101,6 @@ pub(crate) unsafe extern "thiscall" fn compare_miss_training(this: usize, person
 }
 
 /// Comparer for `end_absence`.
-///
-/// [pt] O comparador do fim da ausência, em ensaio: a cópia sem a notícia e sem tirar da lista; a marca da pessoa e, sem
-/// notícia, o [0xae1080] têm de bater com os da original.
 pub(crate) unsafe extern "thiscall" fn compare_end_absence(this: usize, r: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_END_ABSENCE);
     if r == 0 {
@@ -145,10 +127,6 @@ pub(crate) unsafe extern "thiscall" fn compare_end_absence(this: usize, r: usize
 /// The original runs alone (it puts the record in the list, gives the news item and fines) and the plan is checked:
 /// with non-null player and club, the record with the player, the club and today's date (16 bytes; byte +0x10 is stack
 /// leftover) is placed right after the previous tail (or at the head, if the list was empty).
-///
-/// [pt] O comparador do incidente: a original roda sozinha (põe o registro na lista, dá a notícia e multa) e confere o
-/// plano: jogador e clube não nulos põem logo depois da cauda de antes (ou na cabeça, lista vazia) o registro com o
-/// jogador, o clube e a data de hoje (16 bytes; o byte +0x10 é sobra de pilha).
 pub(crate) unsafe extern "thiscall" fn compare_report_poor_fitness(this: usize, player: usize, club: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_REPORT_POOR_FITNESS);
     let l = read_usize(this + 8);
@@ -168,9 +146,6 @@ pub(crate) unsafe extern "thiscall" fn compare_report_poor_fitness(this: usize, 
 }
 
 /// Comparer for `is_player_awol`.
-///
-/// [pt] Comparador da 0x418f60 (quente: sem alocar): lado a lado em [0xae1080] e no al devolvido; com o bit, sem `só_ler` e
-/// sem contrato ou clube (a 0x4196a0 tira e libera o nó da lista: não pode rodar duas vezes), só a original.
 pub(crate) unsafe extern "thiscall" fn compare_is_player_awol(this: usize, p: usize, so_read: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_IS_PLAYER_AWOL);
     if p != 0 && (read_usize(p) as i32) < read_usize(G_STAFF_COUNT) as i32 && so_read == 0 && read_u8(read_usize(this + awol_fields::PERSON_FLAGS) + read_usize(p)) & 1 != 0 {

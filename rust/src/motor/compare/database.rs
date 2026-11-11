@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../database.rs.
-// [pt] Os comparadores das rotinas de ../database.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `favourite_of`.
 pub(crate) unsafe extern "C" fn compare_favourite_of(a: usize, b: usize) -> u32 {
@@ -27,11 +26,6 @@ pub(crate) unsafe extern "C" fn compare_rejected_by(a: usize, b: usize) -> u32 {
 /// without counting draws).
 ///
 /// Without persons (error box and end): only the original.
-///
-/// [pt] Comparador de 0x535a80: original e cópia lado a lado sobre o banco que ela escreve (pessoas, jogadores e não
-/// jogadores inteiros, a tabela de 79 bytes por pessoa em [0xae2d0c]), [0x9b59b4], as bandeiras 0x9b59b8/9 e os quatro
-/// vetores globais dos moldes, o texto de 0xde1f64, a data guardada da 0x54cab0 e o estado do sorteador (a cópia sem
-/// contar sorteios). Sem pessoas (caixa e fim): só a original.
 pub(crate) unsafe extern "C" fn compare_database_player_initialisation(data: usize) {
     let o = original_fn::<unsafe extern "C" fn(usize)>(IDX_DATABASE_PLAYER_INITIALISATION);
     let gi = |a: usize| read_i32(a).max(0) as usize;
@@ -827,10 +821,6 @@ pub(crate) unsafe extern "C" fn compare_database_count_club_coaches(club: usize)
 /// allocates and loads under the SEH frame: only the original routine.
 ///
 /// Otherwise both run, comparing the returned pointer (no effect on memory).
-///
-/// [pt] Comparador dos nomes em inglês (0x5454c0, 0x5455a0, 0x5456a0): com o idioma dos nomes ([0x9b5984]) ≠ 0 e ≠ 1 e
-/// a tabela do eng.lng ([0xae2408]) ainda nula, o primeiro uso aloca e carrega sob o quadro SEH: só a original.
-/// Senão as duas, comparando o ponteiro devolvido (sem efeito na memória).
 pub(crate) unsafe fn compare_nome_em_ingles(name: &str, x: usize, o: unsafe extern "C" fn(usize) -> usize, r: unsafe extern "C" fn(usize) -> usize) -> usize {
     let language = read_u32(G_DATABASE_NAMES_LANGUAGE);
     if language != 0 && language != 1 && *(G_ENGLISH_NAME_TABLES as *const usize) == 0 {
@@ -890,10 +880,6 @@ pub(crate) unsafe extern "thiscall" fn compare_eng_lng_free_tables(t: usize) {
 /// random generator state (the copy without counting draws). With a person of job 8 outside the slots (error box), only
 /// the original runs. Overflowing the 23,000 (error box) is not anticipated here: the factory database generates far
 /// fewer.
-///
-/// [pt] Comparador de 0x527240: original e cópia lado a lado sobre as tabelas de clubes e de pessoas inteiras, [0x9b59b4], o
-/// texto de 0xde1f64 e o estado do sorteador (a cópia sem contar sorteios). Com a pessoa de cargo 8 fora das casas
-/// (caixa), só a original. O estouro das 23.000 (caixa) não é previsto aqui: a base de fábrica gera bem menos.
 pub(crate) unsafe extern "C" fn compare_database_generate_extra_non_playing_staff() -> u32 {
     let o = original_fn::<unsafe extern "C" fn() -> u32>(IDX_DATABASE_GENERATE_EXTRA_NON_PLAYING_STAFF);
     if any_coach_missing_from_club() {
@@ -928,9 +914,6 @@ pub(crate) unsafe extern "C" fn compare_database_prune_comp_history_table() {
 }
 
 /// Comparer for `resolve_database_indexes`.
-///
-/// [pt] Comparador de 0x5315a0: original e cópia lado a lado sobre as 12 tabelas inteiras (~50 MB na carga) e o texto de
-/// 0xde1f64. Pessoa com jogador, preferências ou não jogador fora da faixa (caixa): só a original.
 pub(crate) unsafe extern "C" fn compare_resolve_database_indexes(leniente: u32) {
     let o = original_fn::<unsafe extern "C" fn(u32)>(IDX_RESOLVE_DATABASE_INDEXES);
     let gi = |a: usize| read_i32(a);
@@ -958,8 +941,6 @@ pub(crate) unsafe extern "C" fn compare_resolve_database_indexes(leniente: u32) 
 }
 
 /// Comparer for `database_sort_clubs_by_reputation`.
-///
-/// [pt] Comparador de 0x53db40: original e cópia lado a lado sobre o vetor de ids [0xae2d1c].
 pub(crate) unsafe extern "C" fn compare_database_sort_clubs_by_reputation(redo: u32) {
     let o = original_fn::<unsafe extern "C" fn(u32)>(IDX_DATABASE_SORT_CLUBS_BY_REPUTATION);
     let v = read_usize(G_CLUB_REPUTATION_ORDER);
@@ -1017,10 +998,6 @@ pub(crate) unsafe extern "C" fn compare_compare_staff_by_player_ability_desc(a: 
 /// Compares the whole player (70 bytes) and byte `+0x58` of the person, with the training manager ([`0xde1f44`]) zeroed
 /// on both sides (taking away and giving back the progress touches the training tables, outside the regions); with a
 /// training manager, the original routine then runs for real from the same state.
-///
-/// [pt] Comparador de 0x538bc0 e 0x538ec0: o jogador inteiro (70 bytes) e o byte +0x58 da pessoa, com o gerente
-/// do treino ([0xde1f44]) zerado nos dois lados (o tirar e devolver do progresso mexe nas tabelas do treino,
-/// fora das regiões); com gerente, a original roda depois de verdade a partir do mesmo estado.
 pub(crate) unsafe fn compare_player_normalisation(o: unsafe extern "C" fn(usize), rust: unsafe extern "C" fn(usize), person: usize,
                                            name: &'static str) {
     let person = Staff(person);
@@ -1090,9 +1067,6 @@ pub(crate) unsafe extern "C" fn compare_club_get_english_short_name(club: usize)
 }
 
 /// Comparer for `times_a_e_b`.
-///
-/// [pt] Original e cópia lado a lado sobre as regiões dos times A e B; a mensagem dá o primeiro byte que difere (a
-/// tabela de clubes tem 8 MB: as fotos não vão para a mensagem nem voltam às sobras).
 pub(crate) unsafe fn compare_times_a_e_b(name: &'static str, original: impl FnOnce(), rust: impl FnOnce()) {
     let regions = ab_team_regions();
     let (_, _, igual, mut mo, mut mr) = crate::comparison::side_by_side(&regions, original, rust);
@@ -1125,10 +1099,6 @@ pub(crate) unsafe extern "C" fn compare_database_merge_b_team_staff() {
 /// copy's is freed (free `exe::crt_free`) and the original's goes back to [0xae2338].
 ///
 /// It changes the heap in comparison mode (its fingerprint is not a criterion).
-///
-/// [pt] Comparador: a original monta o índice; a cópia monta outro (novo malloc), os dois são comparados byte a byte, o
-/// da cópia é liberado (free 0x9452ca) e o da original volta a [0xae2338]. Muda a heap do modo de comparação (a
-/// impressão dele não é critério).
 pub(crate) unsafe extern "C" fn compare_database_build_nation_name_index() {
     original_fn::<unsafe extern "C" fn()>(IDX_DATABASE_BUILD_NATION_NAME_INDEX)();
     let t = read_usize(G_NATION_NAME_INDEX_TABLE);

@@ -6,11 +6,6 @@ use super::*;
 /// from the contracts' day 0x4c7ac0, the player value `calc_player_value`, the asking price 0x4d2070, the seller's expected answer
 /// `shortlist_manager_predict_selling_club_response`, the seller who has to accept `transfer_manager_selling_club_must_accept` and the bid `exe::transfer_offer_build_bid`. TapeCall on every contract: no counter.
 /// Original: `STAFF_CONTRACT::has_active_release_clause` (0x867b50, staff_contracts.cpp, thiscall).
-///
-/// [pt] { 0x867b50 } (thiscall, staff_contracts.cpp): `STAFF_CONTRACT::has_active_release_clause()`: 1 com a cláusula +0x1c
-/// = 2, a +0x1d = 1 ou a +0x1f = 2; senão 0. Pelo dia dos contratos 0x4c7ac0, pelo valor do jogador 0x4d0c60, pelo preço
-/// pedido 0x4d2070, pela resposta prevista do vendedor 0x84af00, pelo vendedor que tem de aceitar 0x8cd240 e pelo lance
-/// 0x8e5d60. TapeCall a cada contrato: sem contador.
 pub(crate) unsafe extern "thiscall" fn has_active_release_clause(c: usize) -> u32 {
     let c = Contract(c);
     if c.non_promotion_rc() == 2 || c.minimum_fee_rc() == 1 || c.relegation_rc() == 2 {
@@ -30,14 +25,6 @@ pub(crate) unsafe extern "thiscall" fn has_active_release_clause(c: usize) -> u3
 /// the exact years and 0 days, `at_limit` = 1; 0. Called from the contracts' day 0x4c7ac0, the bid `exe::transfer_offer_build_bid`, the swap
 /// with compensation `shortlist_manager_is_compensation_deal` and screens. No counter.
 /// Original: `STAFF_CONTRACT::check_fifa_protected_period` (0x868210, staff_contracts.cpp, thiscall).
-///
-/// [pt] { 0x868210 } (thiscall, ret 0xc, staff_contracts.cpp, quadro SEH só da data local):
-/// `STAFF_CONTRACT::check_fifa_protected_period(_, &no_limite, &anos)`: zera `no_limite` (se não nulo). Sem as regras
-/// novas da FIFA ([0xae233c] ≠ 1), 1. Contrato (data +0x25) anterior à data das regras ([0xae2330]: ano sem sinal, dia
-/// com sinal), 1. Senão o período protegido: 3 anos com a idade da pessoa ([0xae23bc] + 110 × [+0]) na data do contrato
-/// (0x53ab90) abaixo de 28, senão 2, em `anos` (se não nulo); a duração de hoje até a data (0x54cc30, duas vezes, como a
-/// original) com menos anos que o período, 1; com os anos exatos e 0 dias, `no_limite` = 1; 0. Pelo dia dos contratos
-/// 0x4c7ac0, pelo lance 0x8e5d60, pela troca com compensação 0x84b6f0 e por telas. Sem contador.
 pub(crate) unsafe extern "thiscall" fn check_fifa_protected_period(c: usize, _x: usize, in_the_limit: *mut u32, years: *mut u8) -> u32 {
     let c = Contract(c);
     if !in_the_limit.is_null() {
@@ -75,10 +62,6 @@ pub(crate) unsafe extern "thiscall" fn check_fifa_protected_period(c: usize, _x:
 
 /// whether the bonus type applies to the player: type 2 only for goalkeepers, the others only for non-goalkeepers
 /// Original: `staff_contract_is_bonus_type_allowed` (0x867aa0, staff_contracts.cpp, cdecl).
-///
-/// [pt] { 0x867aa0 } (cdecl, staff_contracts.cpp): `staff_contract_is_bonus_type_allowed(pessoa, tipo)`: sem a ficha de
-/// jogador (+0x61), 0; goleiro (+0xf da ficha = 0x14), 1 só para o tipo 2; senão 1 para os tipos que não são 2. Pela
-/// tela do contrato.
 pub(crate) unsafe extern "C" fn staff_contract_is_bonus_type_allowed(person: usize, kind: u32) -> u32 {
     let person = Staff(person);
     let f = person.player();
@@ -98,11 +81,6 @@ pub(crate) unsafe extern "C" fn staff_contract_is_bonus_type_allowed(person: usi
 /// the contract's person (`staff_clear_opinion_links` with record [0xae23bc] + id × 0x6e); zeroes +0x40, sets +0x4e to 4, zeroes the
 /// happiness (+0x3f) and +0x3e; with the club and its nation (+0x53), the nation's language (+0x77) level for the
 /// person (`get_language_fluency` on [0xb74350], without the contract; at most 10) goes in the low 4 bits of +0x4f.
-///
-/// [pt] A parte comum da 0x866ee0 e da 0x85e590 (inline nesta): zera a felicidade no contrato (+0x44), o estado +0x4e e as queixas (+0x45),
-/// limpa os vínculos de opinião da pessoa do contrato (0x549c90 com o registro [0xae23bc] + id × 0x6e), zera +0x40,
-/// põe 4 em +0x4e, zera a felicidade (+0x3f) e +0x3e; com o clube e a nação dele (+0x53), o nível do idioma da nação
-/// (+0x77) para a pessoa (0x7c6830 em [0xb74350], sem o contrato; no máximo 10) nos 4 bits baixos de +0x4f.
 pub(crate) unsafe fn reset_contract_morale(this: Contract, person: usize, club: Club) {
     covered!("cpl_5 morale zeroed");
     this.set_morale((0) as i8);
@@ -124,10 +102,6 @@ pub(crate) unsafe fn reset_contract_morale(this: Contract, person: usize, club: 
 /// clears the contract morale, grievances and happiness, the person's opinion links (`staff_clear_opinion_links`), sets +0x4e to 4 and the
 /// club nation language level (`get_language_fluency`, up to 10) in +0x4f
 /// Original: `STAFF_CONTRACT::reset_morale_state` (0x866ee0, staff_contracts.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x866ee0 } (thiscall, ret 8, staff_contracts.cpp): `STAFF_CONTRACT::reset_morale_state(pessoa, clube)`: o
-/// `reset_contract_morale`. Pela assinatura do contrato (CONTRACT_MANAGER::sign_contract 0x4cf720, nos termos que
-/// depois são copiados para o contrato guardado).
 pub(crate) unsafe extern "thiscall" fn reset_morale_state(this: usize, person: usize, club: usize) {
     reset_contract_morale(Contract(this), person, Club(club));
 }
@@ -142,14 +116,6 @@ pub(crate) unsafe extern "thiscall" fn reset_morale_state(this: usize, person: u
 /// the `reset_contract_morale`, 0 at +0x3b (16 bits), +0x1c..=+0x20 and +0x21, −1 at +0x10/+0x14/+0x18 and the clauses:
 /// +0x1c no access, +0x1d minimum fee. The date copies (`exe::date_operator_3d`, with no other effect) become 8-byte copies.
 /// Original: `STAFF_CONTRACT::init_from_current_contract` (0x85e590, staff_contracts.cpp, thiscall, ret 0x18).
-///
-/// [pt] { 0x85e590 } (thiscall, ret 0x18, staff_contracts.cpp): `STAFF_CONTRACT::init_from_current_contract(pessoa, clube,
-/// fim, percentual, sem_acesso, multa)`: a proposta de transferência ou empréstimo pelo contrato atual da pessoa
-/// (0x4cf5a0 em [0xae1050]; sem contrato, caixa 0xf5 e nada): id da pessoa +0, clube +4, 0 em +8, salário +0xc =
-/// salário atual × percentual (com sinal) / 100, a data de hoje (0xae2c90) em +0x25, o fim em +0x2d, os bits
-/// +0x35 (& 0xc6 | 6), o salário também em +0x36, 0 em +0x3a e +0x49, −1 em +0x4a, o `reset_contract_morale`, 0 em
-/// +0x3b (16 bits), +0x1c..=+0x20 e +0x21, −1 em +0x10/+0x14/+0x18 e as cláusulas: +0x1c sem acesso, +0x1d multa
-/// mínima. As cópias das datas (0x417c10, sem outro efeito) viram cópias de 8 bytes.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn init_from_current_contract(this: usize, person: usize, club: usize, end: usize, percentage: u32, without_promotion: u32, multa: u32) {
     let this = Contract(this);
@@ -195,13 +161,6 @@ pub(crate) unsafe extern "thiscall" fn init_from_current_contract(this: usize, p
 /// of the upper limit: `exe::date_operator_3d_3d`) and, before 0xae1030, 11 on the day, 13 on the day of 0xae1048, otherwise 12. "After"
 /// via `exe::date_operator_3e`. TapeCall on every contract in the daily pass (0x4c7ac0): no counter.
 /// Original: `STAFF_CONTRACT::get_expiry_band` (0x867d30, staff_contracts.cpp, thiscall).
-///
-/// [pt] { 0x867d30 } (thiscall, staff_contracts.cpp): `STAFF_CONTRACT::get_expiry_band()`: a faixa 0..=14 do fim do contrato
-/// (+0x2d) contra as datas de hoje (0xae2c90) e as 16 datas do CONTRACT_MANAGER (0xae1010..0xae1090, montadas na
-/// criação): tipo (+0x35 & 0x3f) 1 ou fim já passado, 14; tipo diferente de 2, 0; depois de [0xae1090], 0; os
-/// intervalos entre 0xae1040/0xae1060/0xae1010/0xae1058/0xae1030 dão os pares 1-2, 3-4, 5-6, 7-8, 9-10 (o ímpar no dia
-/// exato do limite de cima: 0x4a7f20) e, antes de 0xae1030, 11 no dia, 13 no dia de 0xae1048, senão 12. "Depois"
-/// pela 0x456740. TapeCall a cada contrato no passe diário (0x4c7ac0): sem contador.
 pub(crate) unsafe extern "thiscall" fn get_expiry_band(this: usize) -> u8 {
     let this = Contract(this);
     let end = this.addr() + contract::CONTRACT_EXPIRES;
@@ -242,9 +201,6 @@ pub(crate) unsafe extern "thiscall" fn get_expiry_band(this: usize) -> u8 {
 
 /// Memory regions the two morale-reset routines write: the contract (0x50 bytes), the person's 79-byte staff state
 /// record and 0xb67a34.
-///
-/// [pt] As regiões que as duas primeiras gravam: o contrato (0x50 bytes), o registro de 0x4f bytes da pessoa de id `id`
-/// em [0xae2d0c] (os vínculos da 0x549c90, se o id está na tabela) e [0xb67a34] (a caixa).
 pub(crate) unsafe fn morale_reset_regions(this: usize, id: usize) -> Vec<(usize, usize)> {
     let mut r = vec![(this, 0x50), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     let id = read_usize(read_usize(G_STAFF_TABLE).wrapping_add(id.wrapping_mul(staff::SIZE))) as i32;
@@ -255,8 +211,6 @@ pub(crate) unsafe fn morale_reset_regions(this: usize, id: usize) -> Vec<(usize,
 }
 
 /// Person record (110 bytes in G_STAFF_TABLE) of the contract's id (+0).
-///
-/// [pt] A pessoa do contrato: o id em +0 no vetor de pessoas [0xae23bc] (110 bytes cada).
 pub(crate) unsafe fn staff_of_contract(contract: Contract) -> usize {
     (read_u32(G_STAFF_TABLE) as usize).wrapping_add((read_u32(contract.addr()) as usize).wrapping_mul(staff::SIZE))
 }
@@ -266,10 +220,6 @@ pub(crate) unsafe fn staff_of_contract(contract: Contract) -> usize {
 /// `STAFF_CONTRACT::days_to_end_date`: the days from the game date (0xae2c90) to the contract end date (+0x2d), through
 /// `exe::date_days_since` (`dias_ate`, the game date by value). The game reads only the word; it returns `exe::date_days_since`'s whole eax.
 /// Original: `STAFF_CONTRACT::days_to_end_date` (0x85fa00, staff_contracts.cpp, thiscall).
-///
-/// [pt] { 0x85fa00 } (thiscall, staff_contracts.cpp): `STAFF_CONTRACT::days_to_end_date`: os dias da data do jogo
-/// (0xae2c90) até a data do fim do contrato (+0x2d), pela 0x54cdb0 (`dias_ate`, a data do jogo por valor). O jogo lê
-/// só a palavra; devolve o eax inteiro da 0x54cdb0.
 pub(crate) unsafe extern "thiscall" fn days_to_end_date(this: usize) -> u32 {
     let this = Contract(this);
     exe::date_days_since(this.addr() + contract::CONTRACT_EXPIRES, read_u32(G_CURRENT_DATE), read_u32(G_CURRENT_DATE_LEAP)) as u32  // the contract end date
@@ -280,10 +230,6 @@ pub(crate) unsafe extern "thiscall" fn days_to_end_date(this: usize) -> u32 {
 /// `STAFF_CONTRACT::clear_all_grievances(check)`: clears the grievances (+0x45), removes the person's opinion links
 /// (`staff_clear_opinion_links`) and, with `check`, checks the withdrawal of the transfer request (`check_transfer_request_withdrawal` with 0).
 /// Original: `STAFF_CONTRACT::clear_all_grievances` (0x867520, staff_contracts.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x867520 } (thiscall, ret 4, staff_contracts.cpp): `STAFF_CONTRACT::clear_all_grievances(conferir)`: zera as
-/// queixas (+0x45), tira os vínculos de opinião da pessoa (0x549c90) e, com `conferir`, confere a retirada do pedido de
-/// transferência (0x867240 com 0).
 pub(crate) unsafe extern "thiscall" fn clear_all_grievances(this: usize, check: u32) {
     let this = Contract(this);
     this.set_grievances(0); // the complaints
@@ -299,11 +245,6 @@ pub(crate) unsafe extern "thiscall" fn clear_all_grievances(this: usize, check: 
 /// Conditions: the contract's club (outside type 5) exists, the person is a player (+0x61), the contract is with that
 /// club (+4 = id), they requested a transfer (bit 3 of +0x4e), not in +0x49, the staff criterion (`staff_criterion`) gives 0,
 /// the high nibble of +0x4f is not 7, and there is no agreed contract with another club (`get_agreed_contract_club` on [0xde1f54]).
-///
-/// [pt] A decisão da 0x867240 (sem efeito além da ficha [0xae1080], gravada com o contrato da pessoa): o clube do contrato
-/// (fora do tipo 5) existe, a pessoa é jogador (+0x61), o contrato é desse clube (+4 = id), pediu transferência (bit 3
-/// de +0x4e), não está em +0x49, o critério da comissão (0x866f60) dá 0, o nibble alto de +0x4f não é 7 e não há
-/// contrato acertado com outro clube (0x8c5450 em [0xde1f54]). Devolve a pessoa quando retira.
 pub(crate) unsafe fn should_withdraw_transfer_request(this: Contract) -> Option<usize> {
     let person = Staff(staff_of_contract(this));
     let c = Contract(exe::contract_manager_get_contract(read_u32(G_CONTRACT_MANAGER) as usize, person));
@@ -340,12 +281,6 @@ pub(crate) unsafe fn should_withdraw_transfer_request(this: Contract) -> Option<
 /// again (`check_transfer_request_withdrawal` with the previous +0x45) and removes the opinion link (`staff_remove_opinion_link` with the bit). No SEH, no error box,
 /// no random draw.
 /// Original: `STAFF_CONTRACT::check_transfer_request_withdrawal` (0x867240, staff_contracts.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x867240 } (thiscall, ret 4, staff_contracts.cpp): `STAFF_CONTRACT::check_transfer_request_withdrawal(ctx)`:
-/// quando a decisão (`should_withdraw_transfer_request`) manda, retira o pedido (0x4d9460 em [0xae1050] com o contrato e `ctx`), apaga o
-/// bit 3 de +0x4e, a felicidade no contrato (+0x44) vira +0x5b + +0x59 + 5 da pessoa, zera +0x3e e sobe +0x3d a 15; e cada queixa
-/// acesa (bits 0x10, 1, 4, 8, 0x100, 0x80, 0x10000 de +0x45, nessa ordem) é apagada, confere de novo (0x867240 com o
-/// +0x45 de antes) e tira o vínculo de opinião (0x549d60 com o bit). Sem SEH, sem caixa, sem sorteio.
 pub(crate) unsafe extern "thiscall" fn check_transfer_request_withdrawal(this: usize, ctx: u32) {
     let this = Contract(this);
     let Some(pessoa) = should_withdraw_transfer_request(this) else { return };
@@ -382,14 +317,6 @@ compare_value!(compare_days_to_end_date, days_to_end_date, IDX_DAYS_TO_END_DATE,
 /// reputation (the player's +0xb) above 4250: the transfer request (`handle_transfer_request` on `[0xae1050]`). Does not read
 /// uninitialised locals.
 /// Original: `STAFF_CONTRACT::set_flags` (0x867560, staff_contracts.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x867560 } (thiscall, ret 4, staff_contracts.cpp): `STAFF_CONTRACT::set_flags(marcas)`, chamada por muitas rotinas
-/// (no motor.rs pelo endereço; antes só a porta do pós-jogo a desviava, no modo comparação). Marcas acima de 0x1000: a
-/// caixa "Error" e segue (aqui: a original inteira). Liga as marcas em +0x40; pessoa (+0 id) que não é das funções
-/// 0xc, 0xd e 0xf, contrato com +0x44 positivo, sem +0x49, que quer sair (0x866f60), sem transferência futura
-/// (0x8cca10 com 0), sem os bits 1 e 8 de +0x4e, fora da fila da transferência livre (0x8c1870) e com mais de 20 anos
-/// (+0x18) ou reputação atual (+0xb do jogador) acima de 4250: o pedido de transferência (0x4d8610 em [0xae1050]).
-/// Não lê local sem valor.
 pub(crate) unsafe extern "thiscall" fn set_flags(c: usize, marks: u32) {
     let c = Contract(c);
     if marks as i32 > 0x1000 {
@@ -437,14 +364,6 @@ pub(crate) unsafe extern "thiscall" fn set_flags(c: usize, marks: u32) {
 /// 0). Signed less than 15 × adaptability (+0x59) + 100 days ago (from +0x25, ceiling 500): ratio + 50 + 7.5 ×
 /// adaptability − days / 2. Ratio below 50: 1; below 80: 3; otherwise 2.
 /// Original: `get_contract_satisfaction` (0x866620, staff_contracts.cpp, thiscall).
-///
-/// [pt] { 0x866620 } (thiscall, ret 4, staff_contracts.cpp, quadro SEH sem destrutor): `STAFF_CONTRACT::
-/// get_contract_satisfaction(pessoa)`, pelo passe diário do pessoal (0x5ce2d0, com sorteio(50) zero) e pela tela do
-/// contrato: 1 a 3. Sem pessoa, 1. A situação no elenco que ela merece (0x4ca470) vale se for menor que a do contrato
-/// (+0x4f >> 4) e não for 0 nem 7; senão, a do contrato. O contrato desejado (0x85fc50 num contrato local, com o clube
-/// do contrato, −1, a situação e 0xb) e a razão 100 × valor do contrato atual (0x866830, em f32) / valor do desejado
-/// (valor zero: razão 0). Contratado há menos de 15 × adaptabilidade (+0x59) + 100 dias (de +0x25, teto 500): razão +
-/// 50 + 7,5 × adaptabilidade − dias / 2. Razão abaixo de 50: 1; abaixo de 80: 3; senão 2.
 pub(crate) unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, person: usize) -> u8 {
     let person = Staff(person);
     if person.is_null() {
@@ -499,10 +418,6 @@ pub(crate) unsafe extern "thiscall" fn get_contract_satisfaction(this: usize, pe
 /// `exe::staff_contract_calc_unset_default_wage` (stdcall, 6 arguments, float; ecx goes along, as in the original), truncated (0x945640), with a minimum of
 /// 55. Returns the truncated value (before the minimum).
 /// Original: `STAFF_CONTRACT::set_default_wage` (0x8626e0, staff_contracts.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x8626e0 } (thiscall, ret 4, staff_contracts.cpp): `STAFF_CONTRACT::set_default_wage(pessoa)`: o salário (+0xc) é
-/// o padrão da pessoa no clube dela ([+0x39]) pela 0x862720 (stdcall, 6 argumentos, float; o ecx vai junto, como na
-/// original), truncado (0x945640), com mínimo 55. Devolve o truncado (antes do mínimo).
 pub(crate) unsafe extern "thiscall" fn set_default_wage(this: usize, person: usize) -> u32 {
     let this = Contract(this);
     let person = Staff(person);
@@ -513,8 +428,6 @@ pub(crate) unsafe extern "thiscall" fn set_default_wage(this: usize, person: usi
 
 /// +0x40 (a 4-byte routine; the hook covers the first alignment nop)
 /// Original: `contract_flags` (0x8676f0, staff_contracts.cpp, thiscall).
-///
-/// [pt] { 0x8676f0 } (staff_contracts.cpp): as bandeiras do contrato (+0x40).
 pub(crate) unsafe extern "thiscall" fn contract_flags(this: usize) -> u32 {
     let this = Contract(this);
     this.flags()
@@ -523,9 +436,6 @@ pub(crate) unsafe extern "thiscall" fn contract_flags(this: usize) -> u32 {
 /// the empty contract: default dates at +0x25 and +0x2d, +4 and +0x4a = -1, +8, +0x3b, +0x40, +0x45, +0x49 and +0x4e =
 /// 0
 /// Original: `STAFF_CONTRACT::STAFF_CONTRACT` (0x85e410, staff_contracts.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x85e410 } (thiscall, ret 0, staff_contracts.cpp): `STAFF_CONTRACT::STAFF_CONTRACT()`: as duas datas (+0x25,
-/// +0x2d) padrão (0x54a110), +4 e +0x4a = −1, +0x49, +0x3b, +0x4e, +0x40, +0x45 e +8 = 0. Devolve o próprio contrato.
 pub(crate) unsafe extern "thiscall" fn construct_staff_contract(this: usize) -> usize {
     let this = Contract(this);
     exe::date_date_54a110(this.addr() + contract::DATE_STARTED);
@@ -550,13 +460,6 @@ pub(crate) unsafe extern "thiscall" fn construct_staff_contract(this: usize) -> 
 /// in bands, the club's reputation, minus the number of functions above one) decides, by the functions and the ratings,
 /// whether it returns 1.
 /// Original: `staff_criterion` (0x866f60, staff_contracts.cpp, thiscall).
-///
-/// [pt] { 0x866f60 } (thiscall, staff_contracts.cpp): o critério da comissão técnica `t` (pessoa [t] em
-/// [0xae23bc], 0x6e bytes; clube [t+4] em [0xae23b4], 0x245 bytes; funções em [t+0x45]): 0 se a
-/// pessoa é o técnico ou o auxiliar do clube (+0xcf, +0xd3) ou não tem função; senão uma nota em 8
-/// bits (id mod 7 + +0x59 + +0x5a + +0x5b, descontos pelas notas baixas e pela idade, +0x44 em
-/// faixas, a reputação do clube, e menos o número de funções acima de uma) decide pelas funções e
-/// pelas notas se devolve 1.
 pub(crate) unsafe extern "thiscall" fn staff_criterion(t: usize) -> u32 {
     let t = Contract(t);
     let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add((read_i32(t.addr()) as usize).wrapping_mul(staff::SIZE)));

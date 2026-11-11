@@ -2,10 +2,6 @@ use super::*;
 
 /// Returns the tactical grid cell code of formation slot 0..10 (word array +0x12d, or the second set at +0x14e when
 /// `segunda` is set). Out-of-range slots go to the original routine (error box).
-///
-/// [pt] { 0x5b2ae0 } (ret 8, formation.cpp): a casa da vaga 0..10 (palavra +0x12d, ou +0x14e com
-/// `segunda`). Vaga fora da faixa: a original (caixa de erro e 1). Devolve so `ax`: no caminho +0x12d
-/// a original deixa em cima de `eax` o que o chamador tinha ali.
 pub(crate) unsafe extern "thiscall" fn slot_code(this: usize, slot: i8, second: u32) -> u16 {
     if !(0..=10).contains(&slot) {
         return original_fn::<unsafe extern "thiscall" fn(usize, i8, u32) -> u16>(IDX_SLOT_CODE)(this, slot, second);
@@ -17,9 +13,6 @@ pub(crate) unsafe extern "thiscall" fn slot_code(this: usize, slot: i8, second: 
 /// Returns a grammatical attribute of a competition name [inference: its gender]: from the stage name id in the low
 /// word of `b` (or else of `a`) via the comp_util name routine `exe::comp_util_get_stage_name_gender`; without either, the byte +0x37 (when `tipo` is
 /// 1) or +0x52 of the competition record; with no record, 1.
-///
-/// [pt] { 0x4bff70 } (comp_util.cpp): com a palavra baixa de `b` (ou, sem ela, a de `a`), o resultado
-/// de 0x4ba8f0(palavra, 0); senao o byte +0x37 (`tipo` 1) ou +0x52 do registro; sem registro, 1.
 pub(crate) unsafe extern "C" fn competition_criterion(record: usize, a: u32, b: u32, kind: u8) -> u8 {
     if b as u16 != 0 {
         return exe::comp_util_get_stage_name_gender(b, 0);
@@ -35,9 +28,6 @@ pub(crate) unsafe extern "C" fn competition_criterion(record: usize, a: u32, b: 
 
 /// With attribute masking enabled and a valid person, resets that person's knowledge level (9-byte record) in each of
 /// the 16 knowledge maps of `this` that exist and are active (+4), so every manager forgets him.
-///
-/// [pt] { 0x5afd00 } (ret 4, fog_of_war.cpp): com a nevoa ligada (0x9cc270) e a pessoa valida, zera o
-/// nivel dela (registro de 9 bytes) nos 16 quadros de [this] que existem e estao ativos (+4).
 pub(crate) unsafe extern "thiscall" fn forget_person(this: usize, person: usize) {
     let valid = || read_i32(person) < read_i32(G_STAFF_COUNT) && *(G_ATTRIBUTE_MASKING_ENABLED as *const u8) != 0;
     if person == 0 || !valid() {
@@ -53,9 +43,6 @@ pub(crate) unsafe extern "thiscall" fn forget_person(this: usize, person: usize)
 
 /// Fog of war: returns the knowledge map of manager `tecnico` (pointer table indexed backwards from the staff count:
 /// [this + (staff_count - id) x 4 - 4]); 0 with no manager.
-///
-/// [pt] { 0x5afde0 } (ret 4, fog_of_war.cpp): o quadro do tecnico, [this + (0xae2364 - id) x 4 - 4];
-/// sem tecnico, 0.
 pub(crate) unsafe extern "thiscall" fn manager_table(this: usize, manager: usize) -> usize {
     if manager == 0 {
         return 0;
@@ -67,10 +54,6 @@ pub(crate) unsafe extern "thiscall" fn manager_table(this: usize, manager: usize
 /// Splits the position mask into sector and side (`exe::formation_split_position_code`), finds the first of the 11 formation slots (+0x12d) of that
 /// sector flagged 0x200 and returns 0 if none; with no player list returns 1, otherwise 1 if any of the 20 players
 /// (0x1be-byte records, slot in +0x19, or +0x1a when +0x19 is 0xfe) occupies that slot.
-///
-/// [pt] { 0x5b2e80 } (ret 8, formation.cpp): a primeira das 11 casas (+0x12d) com o setor da mascara
-/// (0x5b73a0) e o bit 0x200; sem ela, 0. Sem `jogadores`, 1; senao 1 se algum dos 20 (+0x19, ou
-/// +0x1a com 0xfe em +0x19) esta naquela vaga.
 pub(crate) unsafe extern "thiscall" fn sector_slot_taken(this: usize, mask: u32, players: usize) -> u32 {
     let (mut setor, mut lado) = (0u16, 0u16);
     exe::formation_split_position_code(mask, &mut setor, &mut lado);
@@ -91,18 +74,12 @@ pub(crate) unsafe extern "thiscall" fn sector_slot_taken(this: usize, mask: u32,
 
 /// Formation: returns the slot (0..10) whose 16-bit position code among the 11 at +0x12d equals `codigo`, or 0xff if
 /// none.
-///
-/// [pt] { 0x5b2f10 } (ret 4, formation.cpp): a vaga (0..10) da casa `codigo` entre as 11 de +0x12d; 0xff
-/// se nao estiver.
 pub(crate) unsafe extern "thiscall" fn slot_of_code(this: usize, code: u16) -> u32 {
     (0..11u32).find(|&k| read_u16(this + formation_fields::SLOT_CELLS + 2 * k as usize) == code).unwrap_or(0xff)
 }
 
 /// marks (+0x5b4) with 4 and 8 become 2; assigned records (+0x5bf) go back to −1; returns 1
 /// Original: `clear_assigned` (0x5b5960, formation.cpp, thiscall).
-///
-/// [pt] { 0x5b5960 } (formation.cpp): as 11 marcas (+0x5b4) com 4 e 8 viram 2, e as fichas designadas
-/// (+0x5bf) voltam a -1. Devolve 1.
 pub(crate) unsafe extern "thiscall" fn clear_assigned(this: usize) -> u32 {
     for k in 0..11usize {
         let b = (this + formation_fields::MARKING_TYPES + k) as *mut u8;
@@ -116,10 +93,6 @@ pub(crate) unsafe extern "thiscall" fn clear_assigned(this: usize) -> u32 {
 
 /// +0x187b = OR of the bits of the 11 slots (`exe::formation_position_to_shape_bit`), with 11 masks swapped for 4 reference formations
 /// Original: `formation_mask` (0x5b59a0, formation.cpp, thiscall).
-///
-/// [pt] { 0x5b59a0 } (formation.cpp): a mascara da formacao (+0x187b) = OU dos bits das 11 casas
-/// (0x5b5a60), com onze mascaras trocadas por quatro formacoes de referencia. Devolve a mascara
-/// antes da troca (o eax da original).
 pub(crate) unsafe extern "thiscall" fn formation_mask(this: usize) -> u32 {
     let m = (this + formation_fields::FORMATION_MASK) as *mut u32;
     core::ptr::write_unaligned(m, 0);
@@ -142,9 +115,6 @@ pub(crate) unsafe extern "thiscall" fn formation_mask(this: usize) -> u32 {
 
 /// Formation: returns the person record designated for position `posicao` (index at +0x5bf + 4 x position into the
 /// person table at 0xae23bc, 110 bytes each), or 0 when the index is negative.
-///
-/// [pt] { 0x5b58e0 } (formation.cpp): a pessoa designada para a posicao (indice em +0x5bf + 4 x posicao,
-/// no vetor de pessoas de 0xae23bc, 110 bytes cada); indice negativo: 0.
 pub(crate) unsafe extern "thiscall" fn designated_for_position(this: usize, position: i8) -> usize {
     let i = *((this as isize + (formation_fields::DESIGNATED_PEOPLE as isize) + 4 * position as isize) as *const i32);
     if i > -1 {
@@ -158,11 +128,6 @@ pub(crate) unsafe extern "thiscall" fn designated_for_position(this: usize, posi
 /// position), first clearing the mutually exclusive bits of its group, and clears the changed flag (+0x187f). Returns
 /// 1; position outside 0..=10 or unknown bit: clears the mouse-button global and returns 0 (the original also shows an
 /// error box).
-///
-/// [pt] { 0x5b5290 } (formation.cpp): liga o bit `mascara` (um so) na mascara de casas da posicao
-/// (+0x188b + 8 x posicao, 64 bits), apagando antes o grupo dele (bits que se excluem), e zera
-/// +0x187f. Posicao fora de 0..=10 ou bit desconhecido: o original mostra uma caixa de erro (sem a
-/// caixa aqui), zera 0xb67a34 e devolve 0.
 pub(crate) unsafe extern "thiscall" fn set_square(this: usize, position: i8, mask: u64) -> u32 {
     let group: u64 = match mask {
         0x1 | 0x2 | 0x4 | 0x8 | 0x10 => 0x1f,
@@ -193,11 +158,6 @@ pub(crate) unsafe extern "thiscall" fn set_square(this: usize, position: i8, mas
 /// Marks the standout players of side `lado` in the side's formation (instruction bit 0x800000): each active outfield
 /// player scores 10 x (three person attributes +0x43, +0x33, +0x27) plus current form (+0x4d), adjusted by role
 /// (defenders down, attacking roles up); those above 8500 are flagged. Goalkeepers are skipped.
-///
-/// [pt] { 0x6d10a0 } (match_eng.cpp): marca (bit 0x800000 da formacao do lado, 0x5b5290) os jogadores
-/// ativos cuja nota passa de 8500: 10 x (+0x43 + +0x33 + +0x27 da pessoa) + forma (+0x4d), com o
-/// papel (0x717410): goleiro fica de fora; 2 +500; 4 -1000 (-500 com 0x800 ou 0x80); 8 -300 (sem
-/// 0x800 e 0x80); 0x10 +1000; 0x20 +2000.
 pub(crate) unsafe extern "thiscall" fn mark_stars(this: usize, side: i8) {
     for k in 0..20 {
         let j = Engine(this).player(side, k);
@@ -240,13 +200,6 @@ pub(crate) unsafe extern "thiscall" fn mark_stars(this: usize, side: i8) {
 /// the same test at each level). Returns only `ax` (the callers use 16 bits). Null `p`: as in the original (error box
 /// and 0).
 /// Original: `position_mask` (0x5b7d20, formation.cpp, cdecl).
-///
-/// [pt] { 0x5b7d20 } (cdecl, formation.cpp): a máscara das posições fortes do jogador `p` pelas notas de
-/// posição (bytes com sinal): a partir de 15, descendo até 10, o primeiro nível em que alguma passa
-/// dá os bits do setor (+0xf goleiro 1, +0x10 líbero 2, +0x11 zagueiro 4, +0x12 volante 8 ou, sem
-/// ele, +0x14 meia 0x20 ou +0x13 0x10, +0x15 atacante 0x40); os lados (+0x17 0x800, +0x18 0x80,
-/// +0x19 0x200) só contam com nota 15 ou mais (a original repete o mesmo teste a cada nível).
-/// Devolve só `ax` (os chamadores usam 16 bits). `p` nulo: a original (caixa de erro e 0).
 pub(crate) unsafe extern "C" fn position_mask(p: usize) -> u16 {
     if p == 0 {
         return original_fn::<unsafe extern "C" fn(usize) -> u16>(IDX_POSITION_MASK)(p);
@@ -298,13 +251,6 @@ pub(crate) unsafe extern "C" fn position_mask(p: usize) -> u16 {
 /// up 1, or 1/4 in sectors 2 and 4); the column, from the side (tables of 5); then the nudges (of 1 or 5) in the bands
 /// and the limits. Arguments out of range: as in the original (error box and 0). Returns 1.
 /// Original: `pitch_cell` (0x5b7e60, formation.cpp, cdecl).
-///
-/// [pt] { 0x5b7e60 } (cdecl, formation.cpp): a casa no campo (`saida[0]` = coluna 0..26, `saida[1]` =
-/// linha 0..35) da posição `mascara` (separada pela 0x5b73a0 em setor e lado), com `ataque` 0/1 e
-/// `faixa` = palavra baixa 0..2 (esquerda, meio, direita) e palavra alta 0..3 (a altura na
-/// formação). A linha vem do setor (tabelas de 4 pela altura; no ataque, os laterais 0x80/0x800
-/// sobem 1, ou 1/4 nos setores 2 e 4); a coluna, do lado (tabelas de 5); depois os encostos nas
-/// faixas e os limites. Argumentos fora da faixa: a original (caixa de erro e 0). Devolve 1.
 pub(crate) unsafe extern "C" fn pitch_cell(mask: u32, attack: i8, band: u32, out: *mut i16) -> u32 {
     let low = band as u16 as i16;
     let high = (band >> 16) as u16 as i16;
@@ -409,11 +355,6 @@ pub(crate) unsafe extern "C" fn pitch_cell(mask: u32, attack: i8, band: u32, out
 /// through `exe::formation_get_slot_position`) or a defensive midfielder's and attacking midfielder's through `exe::formation_get_slot_position` (8 and 0x10); otherwise 1.
 /// Returns only `al`.
 /// Original: `slots_without_conflict` (0x5b8960, formation.cpp, thiscall).
-///
-/// [pt] { 0x5b8960 } (thiscall, formation.cpp): as 11 vagas da formação `this` sem conflito: devolve 0
-/// se alguma vaga com lado aberto (0x880 na casa +0x12d ou +0x14e, ver 0x5b2ae0) é também de
-/// atacante (0x40, nas duas), de meia (0x20 na +0x12d e na +0x14e pela 0x5b2ae0) ou de volante e
-/// meia-atacante pela 0x5b2ae0 (8 e 0x10); senão 1. Devolve só `al`.
 pub(crate) unsafe extern "thiscall" fn slots_without_conflict(this: usize) -> u8 {
     for i in 0..=10u32 {
         let a = read_u16(this + (0x12d + 2 * i as usize));
@@ -458,16 +399,6 @@ compare_value!(compare_slots_without_conflict, slots_without_conflict, IDX_SLOTS
 /// the same position, or one with the same side (`exe::formation_split_position_code`), or the first, or, with two, the middle of the two's bits.
 /// Zeroes +0x187f. Arguments out of range: as in the original (box and 0). Returns 1.
 /// Original: `Formation::set_slot_coordinate` (0x5b3560, formation.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x5b3560 } (thiscall, ret 0x10, formation.cpp): `Formation::set_slot_coordinate(casa, fase, faixa, coord)`:
-/// grava a coordenada (dword: x 0..0x1a, y 0..0x23) da casa na fase e na faixa da bola (+0x164, 11 × 2 × 3 × 4
-/// dwords) e, para cada fase, acha as posições da tabela 0x9cc368 (palavras até 0xffff) mais perto das 12 coordenadas
-/// da casa nessa fase (|Δx·9/27| + |Δy·12/36| contra a casa de cada posição pela 0x5b7e60; dobrada nas posições com o
-/// bit 2; os empates entram na lista da fase, até 11 em [esp+0x64] contíguas). A posição geral (+0x12d) fica se
-/// estiver numa das listas; senão vira a primeira da fase de menor distância (a 0x5b59a0 refaz a máscara, a casa
-/// ganha a marca +0x143 e as outras casas com a mesma posição a perdem). A posição extra (+0x14e) sai da lista da
-/// outra fase: a mesma posição, ou a de mesmo lado (0x5b73a0), ou a primeira, ou com duas o meio dos bits das duas.
-/// Zera +0x187f. Argumentos fora da faixa: a original (caixa e 0). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u32, stage: u32, band: u32, coord: u32) -> u32 {
     let (s, f) = (home as u8 as i8, stage as u8 as i8);
     let (zx, zy) = (band as u16 as i16, (band >> 16) as u16 as i16);
@@ -618,10 +549,6 @@ pub(crate) unsafe extern "thiscall" fn set_slot_coordinate(this: usize, home: u3
 /// position (+0x12d) decides: with a flag (+0x143, signed byte) lower than the cell's, output 1 and returns 1;
 /// otherwise returns 0. With no duplicate, 1. Cell outside 0..10: as in the original (box and 0).
 /// Original: `Formation::check_duplicate_position` (0x5b3460, formation.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x5b3460 } (thiscall, ret 8, formation.cpp): `Formation::check_duplicate_position(casa, *saida)`: zera a saída;
-/// a primeira outra casa com a mesma posição geral (+0x12d) decide: com marca (+0x143, byte com sinal) menor que a da
-/// casa, saída 1 e devolve 1; senão devolve 0. Sem repetida, 1. Casa fora de 0..10: a original (caixa e 0).
 pub(crate) unsafe extern "thiscall" fn check_duplicate_position(this: usize, home: u32, out: *mut u32) -> u32 {
     let s = home as u8 as i8;
     if !(0..=10).contains(&s) {
@@ -647,10 +574,6 @@ pub(crate) unsafe extern "thiscall" fn check_duplicate_position(this: usize, hom
 /// 0x10, bits 3..4; it zeroes +0x187f and returns 1. Any other marking: as in the original (box and 0). The cell is not
 /// checked.
 /// Original: `Formation::set_marking_type` (0x5b57d0, formation.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x5b57d0 } (thiscall, ret 8, formation.cpp): `Formation::set_marking_type(casa, marca)`: as marcas 1, 2 e 4
-/// trocam os bits 0..2 do byte +0x5b4 da casa; 8 e 0x10, os bits 3..4; zera +0x187f e devolve 1. Outra marca: a
-/// original (caixa e 0). A casa não é conferida.
 pub(crate) unsafe extern "thiscall" fn set_marking_type(this: usize, home: u32, mark: u32) -> u32 {
     let m = mark as u8;
     let limpa = match m {
@@ -666,9 +589,6 @@ pub(crate) unsafe extern "thiscall" fn set_marking_type(this: usize, home: u32, 
 
 /// Formation memory regions the three slot setters write: positions/marks/coordinates (+0x12d..+0x584), marking types
 /// (+0x5b4) and the mask (+0x187b).
-///
-/// [pt] As regiões da formação que as três gravam: as posições, as marcas, as extras e as coordenadas (+0x12d..+0x584),
-/// os tipos de marcação (+0x5b4, 11) e a máscara com +0x187f (+0x187b, 8).
 pub(crate) fn formation_regions(this: usize) -> [(usize, usize); 3] {
     [(this + formation_fields::SLOT_CELLS, 0x584 - 0x12d), (this + formation_fields::MARKING_TYPES, 11), (this + formation_fields::FORMATION_MASK, 8)]
 }
@@ -681,12 +601,6 @@ pub(crate) fn formation_regions(this: usize) -> [(usize, usize); 3] {
 /// rows per k); the mirror at +0xf9e (row and column inverted) receives (0xb0 − row × 16) with (0xf8 − column) & 0xf.
 /// Returns 1.
 /// Original: `Formation::build_position_lookup` (0x5b7160, formation.cpp, thiscall).
-///
-/// [pt] { 0x5b7160 } (thiscall, formation.cpp): o mapa de casas da formação. Para cada uma das 22 linhas
-/// k (11 casas × 2 fases) e bloco 3 × 4 (a18, a14) com a posição (i = 12k + 4·a18 + a14) em +0x164
-/// (coluna, palavra) e +0x166 (linha), as 3 × 3 células do bloco ganham a coluna × 9 / 27 no nibble
-/// baixo e a linha × 12 / 36 no alto da tabela +0x5eb (12 por fila, 9 filas por k); o espelho em +0xf9e
-/// (fila e coluna invertidas) recebe (0xb0 − linha × 16) com (0xf8 − coluna) & 0xf. Devolve 1.
 pub(crate) unsafe extern "thiscall" fn build_position_lookup(this: usize) -> u32 {
     for k in 0..22i32 {
         for a18 in 0..3i32 {
@@ -713,9 +627,6 @@ pub(crate) unsafe extern "thiscall" fn build_position_lookup(this: usize) -> u32
 
 /// Record (42735 bytes in [this]) of the match the human manager (or the on-screen one) is watching: Ok(0) without
 /// human, Err when the index is out of range.
-///
-/// [pt] O registro (42735 bytes em [this]) da partida que o `humano` (ou o da tela, 0xb74c26 + 0x300 ×
-/// [0xb77c7a]) assiste: Ok(0) sem humano; Err se o índice (id − [0xae2364] + 0x10) sai de 0..[this+4].
 pub(crate) unsafe fn formation_watched_match_record(this: usize, human: usize) -> Result<usize, ()> {
     let h = if human != 0 {
         human
@@ -737,10 +648,6 @@ pub(crate) unsafe fn formation_watched_match_record(this: usize, human: usize) -
 /// The stored cell of slot `slot` 0..10 with `attack` 0/1 and `band` (low word 0..2, high word 0..3): the dword +0x164
 /// + 4×(high + 4×(low + 3×(attack + 2×slot))) goes to `*out`. Returns 1. Out of range: as in the original (error box).
 /// Original: `stored_cell` (0x5b3c70, formation.cpp, thiscall).
-///
-/// [pt] { 0x5b3c70 } (thiscall, ret 0x10, formation.cpp): a casa guardada da vaga `vaga` 0..10 com
-/// `ataque` 0/1 e `faixa` (palavra baixa 0..2, alta 0..3): o dword +0x164 + 4×(alta + 4×(baixa +
-/// 3×(ataque + 2×vaga))) vai para `*saida`. Devolve 1. Fora das faixas: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn stored_cell(t: usize, slot: i8, attack: i8, band: u32, out: *mut u32) -> u32 {
     let low = band as u16 as i16;
     let high = (band >> 16) as u16 as i16;
@@ -758,11 +665,6 @@ pub(crate) unsafe extern "thiscall" fn stored_cell(t: usize, slot: i8, attack: i
 /// 0x800/0x1000; 0x2000/0x4000; 0x8000/0x10000/0x20000) and zeroes +0x187f. Returns 1. Flag outside the groups: as in
 /// the original (error box).
 /// Original: `set_formation_flag` (0x5b50d0, formation.cpp, thiscall).
-///
-/// [pt] { 0x5b50d0 } (thiscall, ret 4, formation.cpp): liga a marca `m` em +0x584 apagando antes as do
-/// mesmo grupo (1/2/4/8; 0x10/0x20/0x40; 0x80/0x100; 0x200/0x400; 0x800/0x1000; 0x2000/0x4000;
-/// 0x8000/0x10000/0x20000) e zera +0x187f. Devolve 1. Marca fora dos grupos: a original (caixa de
-/// erro).
 pub(crate) unsafe extern "thiscall" fn set_formation_flag(t: usize, m: u32) -> u32 {
     let group: u32 = match m {
         1 | 2 | 4 | 8 => 0xf,
@@ -800,22 +702,6 @@ pub(crate) unsafe extern "thiscall" fn set_formation_flag(t: usize, m: u32) -> u
 /// +0x1883 = password not empty, +0x1887 = 1. Closes and returns 1. Non-native files swap the byte order (`swap_bytes_16_array`
 /// words, `swap_bytes_32_array` dwords, `exe::swap_bytes_64_array` qwords).
 /// Original: `Formation::load_from_disk` (0x5b5d10, formation.cpp, thiscall).
-///
-/// [pt] { 0x5b5d10 } (thiscall, ret 0xc, formation.cpp): `Formation::load_from_disk(caminho, quieto, ofuscado)`, pela
-/// criação das táticas (0x893dc0: as formações da IA e as pré-definidas, 45 na carreira) e pelas telas de tática.
-/// Caminho nulo (linha 0x8d8) ou o arquivo que não abre (0x8e0): 0 (sem `quieto`, a caixa). Lê o identificador (4 bytes;
-/// invertido se o marcador do arquivo 0x90c140 não é o nativo; menos 123456789 se ofuscado): fora de 0x98ec54..0x98ec5e
-/// "não é formação" (0x8f7), abaixo de 0x98ec59 "versão antiga" (0x900). Depois, na ordem: a senha (+0x33, 50 bytes,
-/// cada byte invertido, 0xff fica), o criador (+0x65, 200), a máscara (+0x187b, a partir de 0x98ec5a; antes 0), as 11
-/// posições gerais (+0x12d, palavras) e a máscara refeita (0x5b59a0), a ordem de exibição (+0x143, 11 bytes, a partir de
-/// 0x98ec5c; antes zeros), as 11 posições extras (+0x14e), as casas (+0x164, 0x420 bytes = 0x210 palavras), nas versões
-/// 0x98ec59/0x98ec5a 0x108 bytes descartados, as instruções do time (+0x584, dword), as instruções dos jogadores (abaixo
-/// de 0x98ec5e 11 dwords, cada um com 10 ao lado, em +0x188b de 8 em 8; depois 0x58 bytes em +0x188b) e os tipos de
-/// marcação (+0x5b4, 11 bytes); as três últimas, se falham, só mostram a caixa. As instruções do time ganham 0x2000
-/// (sem 0x4000) e, abaixo de 0x98ec5d, 0x20000. As 11 vagas refazem as posições pela casa guardada (0x5b3c70 e
-/// 0x5b3560 com a fase 0 e a faixa 0); o nome (+0) é o do arquivo (_splitpath 0x944cff); o mapa das casas (0x5b7160);
-/// +0x187f = 1, +0x1883 = senha não vazia, +0x1887 = 1. Fecha e devolve 1. Os arquivos não nativos trocam a ordem dos
-/// bytes (0x43f2d0 palavras, 0x43f300 dwords, 0x43f350 qwords).
 pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, quiet: u32, dimmed: u32) -> u32 {
     if path == 0 {
         if quiet == 0 {
@@ -978,10 +864,6 @@ pub(crate) unsafe extern "thiscall" fn load_from_disk(this: usize, path: usize, 
 /// centre-back's (4, in cell +0x12d or +0x14e) or a defensive midfielder's (8 in +0x12d; in +0x14e through `exe::formation_get_slot_position`);
 /// otherwise 1. Returns only `al`.
 /// Original: `centre_backs_without_conflict` (0x5b8dc0, formation.cpp, thiscall).
-///
-/// [pt] { 0x5b8dc0 } (thiscall, formation.cpp): como a 0x5b8960, para os zagueiros: devolve 0 se alguma
-/// das 11 vagas com lado aberto (0x880) é de zagueiro (4, na casa +0x12d ou +0x14e) ou de volante
-/// (8 na +0x12d; na +0x14e pela 0x5b2ae0); senão 1. Devolve só `al`.
 pub(crate) unsafe extern "thiscall" fn centre_backs_without_conflict(this: usize) -> u8 {
     for i in 0..=10u32 {
         let a = read_u16(this + (0x12d + 2 * i as usize));
@@ -1014,14 +896,6 @@ pub(crate) unsafe extern "thiscall" fn centre_backs_without_conflict(this: usize
 /// the ball; otherwise the reverse. Finally +0x187f = 0. Returns 1. Cell outside 0..10: as in the original ("Error" box
 /// and 0).
 /// Original: `Formation::set_slot_position` (0x5b2ba0, formation.cpp, thiscall, ret 0xc).
-///
-/// [pt] { 0x5b2ba0 } (thiscall, ret 0xc, formation.cpp): `Formation::set_slot_position(casa, posicao, extra)`: sem `extra`,
-/// a posição geral da casa (+0x12d, palavras) muda para `posicao` (se mudar: a máscara 0x5b59a0, a marca +0x143 da casa
-/// = 1 e a das outras casas com a mesma posição = 0); com ou sem, a posição extra (+0x14e) = `posicao`. Depois, para
-/// cada faixa 0..2 e altura 0..3 (a palavra baixa e a alta do argumento da 0x5b7e60), as casas no campo sem e com a
-/// bola (+0x164 e +0x194 + 4 × (altura + 4 × faixa + 24 × casa)): com geral = extra, as duas da geral; senão, pelos
-/// setores (0x5b73a0): extra de setor abaixo do da geral, sem a bola a extra e com a bola a geral; senão o contrário.
-/// Por fim +0x187f = 0. Devolve 1. Casa fora de 0..10: a original (caixa "Error" e 0).
 pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32, position: u32, extra: u32) -> u32 {
     let k = home as u8 as i8;
     if !(0..=10).contains(&k) {
@@ -1081,8 +955,6 @@ pub(crate) unsafe extern "thiscall" fn set_slot_position(this: usize, home: u32,
 /// Formation: returns byte `i` of the per-position table at +0x5b4 [inference: the role flags of position `i`; bit 1
 /// marks the goalkeeper].
 /// Original: `position_byte` (0x5b57c0, formation.cpp).
-///
-/// [pt] { 0x5b57c0 }: byte `i` de uma tabela em +0x5b4 (por posicao; ver 0x6f4600).
 pub(crate) unsafe extern "thiscall" fn position_byte(this: usize, i: i8) -> u8 {
     *((this as isize + (formation_fields::MARKING_TYPES as isize) + i as isize) as *const u8)
 }

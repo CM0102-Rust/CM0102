@@ -6,8 +6,6 @@ use super::*;
 /// rules (rule 13): the base (`exe::new_transfer_rules`), the vtable 0x96c190, 1 window from `IRELAND_TRANSFER_WINDOWS`. Returns the
 /// object.
 /// Original: `IRELAND_RULES::IRELAND_RULES` (0x63c210, ireland_rules.cpp, thiscall, ret 0x14).
-///
-/// [pt] { 0x63c210 } (thiscall, ret 0x14, ireland_rules.cpp, `IRELAND_RULES::IRELAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de transferência da Irlanda (regra 13): a base (0x8e84a0), a vtable 0x96c190, 1 janela(s) de `IRELAND_TRANSFER_WINDOWS`. Devolve o objeto.
 pub(crate) unsafe extern "thiscall" fn construct_ireland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     covered!("cqm_1 ireland");
     construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x96c190, 1, &IRELAND_TRANSFER_WINDOWS, 0x9ea12c, 0x4e);
@@ -20,10 +18,6 @@ pub(crate) unsafe extern "thiscall" fn construct_ireland_rules(this: usize, a1: 
 /// [[0xde1f54] + 0x91c]): 0x1e; with a contract, the requesting club and the owner in the same division (+0x57, without
 /// checking for null, as in the original): 0x1d, with the nation's name.
 /// Original: `IRELAND_RULES::can_loan_player` (0x63c3d0, ireland_rules.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x63c3d0 } (thiscall, ret 0x10, ireland_rules.cpp): `IRELAND_RULES::can_loan_player(clube, jogador, mensagem,
-/// motivo)`: cinco empréstimos na temporada (a conta de 16 bytes em [[0xde1f54] + 0x91c]): 0x1e; com contrato, o
-/// clube que pede e o dono na mesma divisão (+0x57, sem conferir o nulo, como a original): 0x1d, com o nome da nação.
 pub(crate) unsafe extern "thiscall" fn ireland_rules_can_loan_player(this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
     let club = Club(club);
     let count = read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SEASON_LOAN_COUNTS).wrapping_add(read_usize(club.addr()).wrapping_mul(16));

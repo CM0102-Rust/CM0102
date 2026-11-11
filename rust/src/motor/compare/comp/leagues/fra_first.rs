@@ -1,13 +1,8 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/fra_first.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/fra_first.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `construct_fra_first`.
-///
-/// [pt] Sorteia (as ligas de fundo), aloca e mexe nos clubes: só a original, conferindo a devolução, a vtable, o ano, o
-/// registro, a disciplina e os dois marcadores (vtable e registro) e, na liga nova, os campos do começo e as
-/// estatísticas.
 pub(crate) unsafe extern "thiscall" fn compare_construct_fra_first(this: usize, year: u32, record: usize) -> usize {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(IDX_CONSTRUCT_FRA_FIRST);
@@ -24,8 +19,6 @@ pub(crate) unsafe extern "thiscall" fn compare_construct_fra_first(this: usize, 
 }
 
 /// Comparer for `stub_return_one_ret8`.
-///
-/// [pt] Os dois tocos: compara a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_stub_return_one_ret8(this: usize, a: u32, b: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(IDX_STUB_RETURN_ONE_RET8)(this, a, b);
     let n = stub_return_one_ret8(this, a, b);

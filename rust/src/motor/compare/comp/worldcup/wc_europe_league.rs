@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/worldcup/wc_europe_league.rs.
-// [pt] Os comparadores das rotinas de ../comp/worldcup/wc_europe_league.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `wc_europe_league_set_up_rules`.
 pub(crate) unsafe extern "thiscall" fn compare_wc_europe_league_set_up_rules(this: usize) -> u32 {

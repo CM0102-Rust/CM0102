@@ -1,12 +1,8 @@
 use super::*;
 
 // The comparers of the routines in ../award/month_ratings.rs.
-// [pt] Os comparadores das rotinas de ../award/month_ratings.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `record_match_ratings`.
-///
-/// [pt] O comparador das notas da partida: lado a lado (cabeçalho e as vagas da tabela que podem mudar) quando cabem as 40
-/// vagas sem crescer a tabela; senão só a original (a 0x767fa0 realoca e a original não pode rodar duas vezes).
 pub(crate) unsafe extern "thiscall" fn compare_record_match_ratings(this: usize, game: usize, fixture: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RECORD_MATCH_RATINGS);
     let (tab, n, cap) = (read_usize(this), read_i32(this + 4), read_i32(this + 8));
@@ -20,9 +16,6 @@ pub(crate) unsafe extern "thiscall" fn compare_record_match_ratings(this: usize,
 }
 
 /// Comparer for `add_player_rating`.
-///
-/// [pt] O comparador da nota do mês: lado a lado (cabeçalho e os registros até o novo) quando a tabela não precisa crescer;
-/// senão só a original (realloc).
 pub(crate) unsafe extern "thiscall" fn compare_add_player_rating(this: usize, e: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_PLAYER_RATING);
     let (tab, n, cap) = (read_usize(this), read_i32(this + 4), read_i32(this + 8));
@@ -38,8 +31,6 @@ pub(crate) unsafe extern "thiscall" fn compare_add_player_rating(this: usize, e:
 }
 
 /// Comparer for `find_best_player`.
-///
-/// [pt] O comparador do melhor do mês: lado a lado pela tabela ordenada e pelo registro devolvido.
 pub(crate) unsafe extern "thiscall" fn compare_find_best_player(this: usize, league: i32, age: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, u32) -> usize>(IDX_FIND_BEST_PLAYER);
     let (tab, n) = (read_usize(this), read_i32(this + 4));

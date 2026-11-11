@@ -1,8 +1,6 @@
 use super::*;
 
 /// Contract squad status (high nibble of +0x4f).
-///
-/// [pt] O tipo do contrato (+0x4f, nibble alto).
 pub(crate) unsafe fn contract_squad_status(contract: Contract) -> u8 {
     contract.squad_status() & 0xf0
 }
@@ -19,12 +17,6 @@ pub(crate) const STORED_NEWS_SIZE: usize = 0xdf;
 /// repeats (without sync) for the other humans (+0x5f = 1) on the same network machine (`exe::screenmanager_find_manager_channel`) as the current human;
 /// returns 1. No manager, no id, or a manager of the machine: the "Error" box and 0.
 /// Original: `News::mark_item_read` (0x787140, news.cpp, thiscall, ret 0xc).
-///
-/// [pt] { 0x787140 } (thiscall, ret 0xc, news.cpp): `News::mark_item_read(tecnico, id, sincronizar)`: no anel de 100 vagas
-/// do humano (News +8, pelo id − [0xae2364] + 16), a primeira vaga com o `id` ainda não lida (+0xda = 0) cujo botão
-/// (0x782b70 em 0xde1f64) não pede resposta (2) fica lida e sai da conta (+8 da entrada). Sem anel: 0. Senão (mesmo
-/// sem achar), com `sincronizar`, repete (sem sincronizar) para os outros humanos (+0x5f = 1) da mesma máquina da rede
-/// (0x7fffa0) que o humano da vez; devolve 1. Sem técnico, sem id ou técnico da máquina: a caixa "Error" e 0.
 pub(crate) unsafe extern "thiscall" fn mark_item_read(this: usize, manager: usize, id: u32, sincronizar: u32) -> u32 {
     if manager == 0 {
         show_error_at(0xa693ec, 0x2358);
@@ -79,10 +71,6 @@ pub(crate) unsafe extern "thiscall" fn mark_item_read(this: usize, manager: usiz
 /// among the 100 slots of his ring (no ring: 0); without a manager, among all slots (News +4). Found: 1; otherwise 0.
 /// No id, no output, or a manager of the machine: the "Error" box and 0.
 /// Original: `News::find_item_by_id` (0x786b70, news.cpp, thiscall, ret 0xc).
-///
-/// [pt] { 0x786b70 } (thiscall, ret 0xc, news.cpp): `News::find_item_by_id(tecnico, id, saida)`: copia (0x786010) em `saida`
-/// a notícia com o `id`: com técnico, entre as 100 vagas do anel dele (sem anel: 0); sem técnico, entre todas as vagas
-/// (News +4). Achou: 1; senão 0. Sem id, sem saída ou técnico da máquina: a caixa "Error" e 0.
 pub(crate) unsafe extern "thiscall" fn find_item_by_id(this: usize, manager: usize, id: u32, out: usize) -> u32 {
     if id == 0 {
         show_error_at(0xa693ec, 0x2252);
@@ -120,9 +108,6 @@ pub(crate) unsafe extern "thiscall" fn find_item_by_id(this: usize, manager: usi
 pub(crate) const NEWS_NEWS_RECORD_SIZE: usize = 0xdf;
 
 /// Index of a human manager in News' inbox table: person id - staff count + 16 (negative = not human).
-///
-/// [pt] A entrada do técnico humano na tabela das caixas (News +8, 12 bytes: início do anel, a próxima vaga, a conta):
-/// índice = id da pessoa − [0xae2364] + 16 (os humanos são as 16 últimas pessoas). Negativo: não é humano.
 pub(crate) unsafe fn news_human_manager_index(manager: usize) -> i32 {
     read_i32(manager).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10)
 }
@@ -135,11 +120,6 @@ pub(crate) unsafe fn news_human_manager_index(manager: usize) -> i32 {
 /// by the nation), 3 those of the continent (`send_to_continent_managers`), 4 all (`send_to_all_managers`), 5 those of the competition's region
 /// (`send_to_comp_region`). Anything else: the "Error" box and 0. Returns what the delivery returns.
 /// Original: `News::send_by_scope` (0x786090, news.cpp, thiscall, ret 0x18).
-///
-/// [pt] { 0x786090 } (thiscall, ret 0x18, news.cpp): `News::send_by_scope(noticia, clube, competicao, nacao, continente,
-/// alcance)`: o alcance (char) escolhe a entrega: 0 o técnico do clube (0x7861e0), 1 os da divisão (0x7862d0, pela
-/// competição), 2 os do país (0x7863f0, pela nação), 3 os do continente (0x786640), 4 todos (0x786780), 5 os da região
-/// da competição (0x786860). Fora disso, a caixa "Error" e 0. Devolve o que a entrega devolve.
 pub(crate) unsafe extern "thiscall" fn send_by_scope(this: usize, news: usize, club: usize, competition: usize, nation: usize, continent: usize, reach: u32) -> u32 {
     let two: unsafe extern "thiscall" fn(usize, usize, usize) -> u32;
     let target = match reach as u8 as i8 {
@@ -179,10 +159,6 @@ pub(crate) unsafe extern "thiscall" fn send_by_scope(this: usize, news: usize, c
 /// last 16 people); turned off (DESLIGADAS) from 2026-10-29 to 2026-10-31, when the test criterion changed and the list was emptied (the detour, even passing through, changes the stack residue a later
 /// original reads: the career left be54a138); the copy stays in the code and does not run
 /// Original: `News::send_to_club_manager` (0x7861e0, news.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x7861e0 } (thiscall, ret 8, news.cpp): `News::send_to_club_manager(noticia, clube)`: marca o alcance da notícia
-/// como clube (+0xde = 0) e a entrega (0x785d40) ao técnico do clube (+0xcf) se ele for humano (id entre as 16 últimas
-/// pessoas). Sem notícia ou sem clube: a caixa "Error" e 0; sem técnico ou técnico da máquina: 0.
 pub(crate) unsafe extern "thiscall" fn send_to_club_manager(this: usize, news: usize, club: usize) -> u32 {
     let club = Club(club);
     if news == 0 {
@@ -210,14 +186,6 @@ pub(crate) unsafe extern "thiscall" fn send_to_club_manager(this: usize, news: u
 /// team; turned off (DESLIGADAS) from 2026-10-29 to 2026-10-31, when the test criterion changed and the list was emptied (the detour, even passing through, changes the stack residue a later original
 /// reads: the career left be54a138); the copy stays in the code and does not run
 /// Original: `News::deliver_to_manager` (0x785d40, news.cpp, thiscall, ret 0xc).
-///
-/// [pt] { 0x785d40 } (thiscall, ret 0xc, news.cpp): `News::deliver_to_manager(noticia, tecnico, _)`: grava se a notícia é
-/// importante para ele (+4, 0x784eb0) e zera +0xda; acha a entrada do humano (News +8); na primeira notícia dele, o anel
-/// de 100 vagas no fim do vetor das notícias (News +0, conta de vagas em +4, realloc 0x945667; sem memória, caixa e 0)
-/// com as vagas zeradas (+0xd6 = 0, +0xda = 1). Notícia sem id (+0xd6) recebe o próximo (News +0x10). Se a vaga anterior
-/// tem o mesmo id, não repete (devolve 1). Senão copia a notícia (0x786010) na próxima vaga (a vaga ainda não lida, +0xda
-/// = 0, sai da conta), avança o anel e, com todos de férias ([0xdd6bec]) ou o técnico de férias (0x5fd210), dá a
-/// resposta automática (0x784100) pelo clube (+0x39) e pela seleção (+0x24). Soma 1 na conta e devolve 1.
 pub(crate) unsafe extern "thiscall" fn deliver_to_manager(this: usize, news: usize, manager: usize, _free: u32) -> u32 {
     let manager = Staff(manager);
     if news == 0 {
@@ -295,9 +263,6 @@ pub(crate) const NEWS_NEWS_ITEM_SIZE: usize = 0xdf;
 
 /// Human manager's 12-byte inbox entry (News +8: ring start, next slot, count), or None with the error box when not one
 /// of the last 16 people.
-///
-/// [pt] A entrada do humano na tabela das caixas (News +8, 12 bytes: início do anel, próxima vaga, conta), ou None (com a
-/// caixa "Error" da `linha`) se a pessoa não está entre as 16 últimas.
 pub(crate) unsafe fn human_inbox_entry(this: usize, manager: usize, row: u32) -> Option<usize> {
     let idx = read_i32(manager).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10);
     if idx < 0 {
@@ -308,8 +273,6 @@ pub(crate) unsafe fn human_inbox_entry(this: usize, manager: usize, row: u32) ->
 }
 
 /// Wraps a ring slot k below inicio to inicio + 99 (100-slot inbox ring).
-///
-/// [pt] A vaga anterior a `k` no anel que começa em `inicio` (100 vagas).
 pub(crate) fn ring_prev_wrap(k: i32, start: i32) -> i32 {
     if k < start { start + 0x63 } else { k }
 }
@@ -322,11 +285,6 @@ pub(crate) fn ring_prev_wrap(k: i32, start: i32) -> i32 {
 /// machine: the "Error" box and 0; no ring or at the end: 1. TapeCall when going on holiday, when sacked and when
 /// hired.
 /// Original: `News::auto_respond_all` (0x7874b0, news.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x7874b0 } (thiscall, ret 8, news.cpp): `News::auto_respond_all(tecnico, clube)`: da notícia mais nova para a mais
-/// antiga do anel do humano, até a primeira vaga vazia (+0xd6 = 0), dá a resposta automática (0x784100) pelo `clube`.
-/// Sem técnico ou técnico da máquina: a caixa "Error" e 0; sem anel ou no fim: 1. TapeCall ao sair de férias, ao ser
-/// demitido e ao ser contratado.
 pub(crate) unsafe extern "thiscall" fn auto_respond_all(this: usize, manager: usize, club: usize) -> u32 {
     if manager == 0 {
         show_error_at(0xa693ec, 0x2460);
@@ -363,11 +321,6 @@ pub(crate) unsafe extern "thiscall" fn auto_respond_all(this: usize, manager: us
 /// needs a reply (the text `exe::newsitem_get_action_button` on 0xde1f64 returns 2) or is important (+4 = 1) and unread (+0xda = 0). A manager
 /// of the machine: the "Error" box and 0.
 /// Original: `News::has_urgent_items` (0x787350, news.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x787350 } (thiscall, ret 8, news.cpp): `News::has_urgent_items(tecnico, so_urgentes)`: sem `so_urgentes`, se há
-/// notícia não lida (0x786fe0 > 0). Com ele, da mais nova para a mais antiga do anel do humano, até a primeira vaga vazia:
-/// 1 se uma pede resposta (o texto 0x782b70 em 0xde1f64 devolve 2) ou é importante (+4 = 1) e não lida (+0xda = 0).
-/// Técnico da máquina: a caixa "Error" e 0.
 pub(crate) unsafe extern "thiscall" fn has_urgent_items(this: usize, manager: usize, so_urgentes: u32) -> u32 {
     if so_urgentes == 0 {
         return (exe::news_count_unread(this, manager, 0) > 0) as u32;
@@ -409,11 +362,6 @@ pub(crate) unsafe extern "thiscall" fn has_urgent_items(this: usize, manager: us
 /// first free slot after the text (the length with the terminating zero rounded up to 4, in slots, plus `slot`; at most
 /// 50). Slot outside 0..49 or no text: the "Error" box and 0; otherwise 1.
 /// Original: `NewsItem::set_slot_string` (0x7858c0, news.cpp, thiscall, ret 0xc).
-///
-/// [pt] { 0x7858c0 } (thiscall, ret 0xc, news.cpp): `campo.set_slot_string(texto, proximo)`: copia o `texto` nos
-/// campos da notícia a partir do `campo` (strncpy 0x9466d0 em +5 + 4·campo, até 200 − 4·campo bytes), termina a área
-/// (+0xcc = 0) e, com `proximo`, grava o primeiro campo livre depois do texto (o tamanho com o zero arredondado para
-/// 4, em campos, mais o `campo`; no máximo 50). Campo fora de 0..49 ou sem texto: a caixa "Error" e 0; senão 1.
 pub(crate) unsafe extern "thiscall" fn set_slot_string(this: usize, field: u32, text: *const u8, next: *mut u8) -> u32 {
     let field = field as u8 as i8;
     if !(0..0x32).contains(&field) {
@@ -450,11 +398,6 @@ pub(crate) unsafe extern "thiscall" fn set_slot_string(this: usize, field: u32, 
 /// each active human manager whose club (+0x39) has its nation (+0x53) in the `continent` (+0x71) or whose nation
 /// (+0x1a) is in it. Returns 1, or 0 on the first refusal. Null news or continent: as in the original ("Error" box).
 /// Original: `News::send_to_continent_managers` (0x786640, news.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x786640 } (thiscall, ret 8, news.cpp): `News::send_to_continent_managers(noticia, continente)`: alcance do
-/// continente (+0xde = 3) e a entrega (0x785d40 com 0) a cada técnico humano ativo cujo clube (+0x39) tem a nação
-/// (+0x53) no `continente` (+0x71) ou cuja nação (+0x1a) está nele. Devolve 1, ou 0 na primeira recusada. Notícia ou
-/// continente nulos: a original (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn send_to_continent_managers(this: usize, news: usize, continent: usize) -> u32 {
     if news == 0 || continent == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_CONTINENT_MANAGERS)(this, news, continent); // message box: original only
@@ -480,11 +423,6 @@ pub(crate) unsafe extern "thiscall" fn send_to_continent_managers(this: usize, n
 /// otherwise, with the continent (+0x59), to the continent's (`send_to_continent_managers`); otherwise to all (`send_to_all_managers`). Returns what the
 /// delivery returns. Null news or competition: as in the original ("Error" box).
 /// Original: `News::send_to_comp_region` (0x786860, news.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x786860 } (thiscall, ret 8, news.cpp): `News::send_to_comp_region(noticia, comp)`: com a nação da competição
-/// (+0x5d), para os técnicos da nação (0x786520); senão, com o continente (+0x59), para os do continente (0x786640);
-/// senão para todos (0x786780). Devolve o que a entrega devolve. Notícia ou competição nulas: a original (caixa
-/// "Error").
 pub(crate) unsafe extern "thiscall" fn send_to_comp_region(this: usize, news: usize, comp: usize) -> u32 {
     let comp = Competition(comp);
     if news == 0 || comp.is_null() {
@@ -506,8 +444,6 @@ pub(crate) unsafe extern "thiscall" fn send_to_comp_region(this: usize, news: us
 }
 
 /// Manager (+0xcf) of the club whose id is in the news data at offset o.
-///
-/// [pt] O técnico (+0xcf) do clube cujo id está no dado da notícia em `o` ([0xae23b4], 0x245 bytes por clube).
 pub(crate) unsafe fn manager_of_news_club(news: usize, o: usize) -> usize {
     read_usize(read_usize(G_CLUB_TABLE).wrapping_add(read_usize(news + o).wrapping_mul(club::SIZE)) + 0xcf)
 }
@@ -522,13 +458,6 @@ pub(crate) unsafe fn manager_of_news_club(news: usize, o: usize) -> usize {
 /// managers; category 1, 0x1388; the rest, 0. The original calls `get_category` up to six times (it only reads): the port
 /// calls it once. Null person or type outside 1..0x1790 (`get_category`'s box): as in the original.
 /// Original: `NewsItem::is_important_for` (0x784eb0, news.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x784eb0 } (thiscall, ret 4, news.cpp): `pessoa.is_important_for()`: a notícia é importante para a
-/// pessoa (o byte +4 que a entrega 0x785d40 grava)? Pela categoria (0x785670) e o tipo (+0): categoria 2, os tipos 7 a
-/// 0xb, 0x27 e 0x28; categoria 4, 0xbb8, 0xbb9 e 0xbc4; categoria 5, uma lista fixa, 0xfa1 se a pessoa é o técnico do
-/// clube do dado 5 (+0x19) e 0xfb6 se é o do dado 4 (+0x15) ou do 5; categoria 6, 0x1770 se o dado 0 (+5) é um dos
-/// 16 técnicos humanos; categoria 1, 0x1388; o resto, 0. A original chama a 0x785670 até seis vezes (só lê): a cópia,
-/// uma. Pessoa nula ou tipo fora de 1..0x1790 (caixa da 0x785670): a original.
 pub(crate) unsafe extern "thiscall" fn is_important_for(news: usize, person: usize) -> u8 {
     let t = read_usize(news) as i32;
     if person == 0 || !(1..=0x1790).contains(&t) {
@@ -559,11 +488,6 @@ pub(crate) unsafe extern "thiscall" fn is_important_for(news: usize, person: usi
 /// strncpy (`exe::at_9466d0`: up to the zero, padding with zeros up to `n`) and zeroes the last byte (`dest[n − 1]`). Returns
 /// 1. Slot outside 0..49, null destination or `n` < 1: as in the original ("Error" box and 0).
 /// Original: `NewsItem::get_slot_string` (0x785a20, news.cpp, thiscall, ret 0xc).
-///
-/// [pt] { 0x785a20 } (thiscall, ret 0xc, news.cpp): `dado.get_slot_string(destino, n)`: copia o texto guardado a
-/// partir do dado `dado` (+5 + 4 × dado) para `destino` como o strncpy (0x9466d0: até o zero, completando com zeros
-/// até `n`) e zera o último byte (`destino[n − 1]`). Devolve 1. Dado fora de 0..49, destino nulo ou `n` < 1: a
-/// original (caixa "Error" e 0).
 pub(crate) unsafe extern "thiscall" fn get_slot_string(news: usize, given: u32, target: *mut u8, n: i32) -> u32 {
     let k = given as u8 as i8;
     if !(0..0x32).contains(&k) || target.is_null() || n < 1 {
@@ -582,8 +506,6 @@ pub(crate) unsafe extern "thiscall" fn get_slot_string(news: usize, given: u32, 
 }
 
 /// The given club, or the current human manager's club when null.
-///
-/// [pt] O clube que a 0x7f9190 usa: o `clube`, ou o do técnico humano da vez ([0xb74c26 + 0x300 × [0xb77c7a]] + 0x39).
 pub(crate) unsafe fn club_or_current_human(club: usize) -> usize {
     if club != 0 {
         return club;
@@ -592,8 +514,6 @@ pub(crate) unsafe fn club_or_current_human(club: usize) -> usize {
 }
 
 /// Human manager i (0..15, last 16 people of G_STAFF_TABLE) if active (+0x5f = 1).
-///
-/// [pt] O técnico humano `i` (0 a 15: os últimos 16 de [0xae23bc], 0x6e bytes), se ativo (+0x5f = 1).
 pub(crate) unsafe fn active_human_manager(i: usize) -> Option<usize> {
     let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add(read_usize(G_STAFF_COUNT).wrapping_sub(0x10).wrapping_add(i).wrapping_mul(staff::SIZE)));
     (p.classification() == 1).then_some(p.addr())
@@ -601,9 +521,6 @@ pub(crate) unsafe fn active_human_manager(i: usize) -> Option<usize> {
 
 /// Delivers the news to every active human manager that passa accepts, with reach alcance in +0xde; false at the first
 /// refusal.
-///
-/// [pt] Entrega a notícia a cada técnico humano ativo que `passa` (0x785d40 com 0), com o alcance `alcance` em +0xde.
-/// Devolve se todas as entregas foram aceitas (a primeira recusada encerra).
 pub(crate) unsafe fn deliver_to_human_managers(this: usize, news: usize, reach: u8, passes: impl Fn(usize) -> bool) -> bool {
     write_u8(news + news_item::REACH, reach);
     for i in 0..0x10 {
@@ -618,10 +535,6 @@ pub(crate) unsafe fn deliver_to_human_managers(this: usize, news: usize, reach: 
 
 /// all scope (+0xde = 4) and delivery (`deliver_to_manager`) to every active human manager; 1, or 0 on the first refusal
 /// Original: `News::send_to_all_managers` (0x786780, news.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x786780 } (thiscall, ret 4, news.cpp): `News::send_to_all_managers(noticia)`: alcance de todos (+0xde = 4) e a
-/// entrega (0x785d40) a cada técnico humano ativo. Devolve 1, ou 0 na primeira recusada. Notícia nula: a original
-/// (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn send_to_all_managers(this: usize, news: usize) -> u32 {
     if news == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_SEND_TO_ALL_MANAGERS)(this, news); // message box: original only
@@ -636,10 +549,6 @@ pub(crate) unsafe extern "thiscall" fn send_to_all_managers(this: usize, news: u
 /// manager with a club (+0x39) in the `division` (+0x57). Returns 1, or 0 on the first refusal. Null news or division:
 /// as in the original ("Error" box).
 /// Original: `News::send_to_division_managers` (0x7862d0, news.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x7862d0 } (thiscall, ret 8, news.cpp): `News::send_to_division_managers(noticia, divisao)`: alcance da divisão
-/// (+0xde = 1) e a entrega a cada técnico humano ativo com clube (+0x39) na `divisao` (+0x57). Devolve 1, ou 0 na
-/// primeira recusada. Notícia ou divisão nulas: a original (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn send_to_division_managers(this: usize, news: usize, division: usize) -> u32 {
     if news == 0 || division == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_DIVISION_MANAGERS)(this, news, division); // message box: original only
@@ -657,10 +566,6 @@ pub(crate) unsafe extern "thiscall" fn send_to_division_managers(this: usize, ne
 /// whose club (+0x39) or national team (+0x24) belongs to the `nation` (+0x53). Returns 0. Null news or nation: as in
 /// the original ("Error" box).
 /// Original: `News::send_to_nation_managers` (0x7863f0, news.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x7863f0 } (thiscall, ret 8, news.cpp): `News::send_to_nation_managers(noticia, nacao)`: alcance da nação (+0xde
-/// = 2) e a entrega a cada técnico humano ativo cujo clube (+0x39) ou seleção (+0x24) é da `nacao` (+0x53). Devolve 0.
-/// Notícia ou nação nulas: a original (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn send_to_nation_managers(this: usize, news: usize, nation: usize) -> u32 {
     if news == 0 || nation == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_MANAGERS)(this, news, nation); // message box: original only
@@ -680,11 +585,6 @@ pub(crate) unsafe extern "thiscall" fn send_to_nation_managers(this: usize, news
 /// club (+0x39) of the `nation` (+0x53); the first refused delivery (0) stops it. Returns 0. Null news or nation: as in
 /// the original ("Error" box).
 /// Original: `News::send_to_nation_club_managers` (0x786520, news.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x786520 } (thiscall, ret 8, news.cpp): `News::send_to_nation_club_managers(noticia, nacao)`: a notícia fica com
-/// o alcance da nação (+0xde = 2) e vai (0x785d40 com 0) para cada um dos 16 técnicos humanos (os últimos 16 de
-/// [0xae23bc], 0x6e bytes) ativos (+0x5f = 1) com clube (+0x39) da `nacao` (+0x53); a primeira entrega recusada (0)
-/// encerra. Devolve 0. Notícia ou nação nulas: a original (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn send_to_nation_club_managers(this: usize, news: usize, nation: usize) -> u32 {
     if news == 0 || nation == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_SEND_TO_NATION_CLUB_MANAGERS)(this, news, nation); // message box: original only
@@ -708,9 +608,6 @@ pub(crate) unsafe extern "thiscall" fn send_to_nation_club_managers(this: usize,
 
 /// Returns the scout of a search if it still checks out (type 4, index ≥ 0, names/date match), else None (the original
 /// shows a box).
-///
-/// [pt] O olheiro da busca confere (o tipo +0xa é 4, o índice +0x180 > −1 e a pessoa ainda confere com os nomes e a data
-/// guardados pela 0x53e990)? Devolve a pessoa, ou nenhuma (a original mostra a caixa).
 pub(crate) unsafe fn check_search_scout(this: usize) -> Option<usize> {
     let i = read_usize(this + player_search_fields::SCOUT_ID) as i32;
     if read_u8(this + player_search_fields::LIST_TYPE) != 4 || i <= -1 {
@@ -724,9 +621,6 @@ pub(crate) unsafe fn check_search_scout(this: usize) -> Option<usize> {
 }
 
 /// Human manager's 12-byte inbox entry: [news+8] + 12 × (id - staff count + 16); None when negative.
-///
-/// [pt] A entrada (12 bytes) da caixa de notícias do técnico humano: [noticias+8] + 12 × (id − [0xae2364] +
-/// 0x10); None quando o índice fica negativo (a original abre a caixa de erro).
 pub(crate) unsafe fn manager_inbox_entry(news: usize, manager: usize) -> Option<usize> {
     let i = read_i32(manager).wrapping_sub(read_i32(G_STAFF_COUNT)).wrapping_add(0x10);
     if i < 0 {
@@ -736,8 +630,6 @@ pub(crate) unsafe fn manager_inbox_entry(news: usize, manager: usize) -> Option<
 }
 
 /// News item k of the inbox starting at inicio: [news] + 0xdf × (inicio + k).
-///
-/// [pt] A notícia `k` da caixa que começa em `inicio`: [noticias] + 0xdf × (inicio + k).
 pub(crate) unsafe fn inbox_news_item(news: usize, start: i32, k: i32) -> usize {
     read_usize(news).wrapping_add((start.wrapping_add(k) as usize).wrapping_mul(0xdf))
 }
@@ -748,11 +640,6 @@ pub(crate) unsafe fn inbox_news_item(news: usize, start: i32, k: i32) -> usize {
 /// inbox (start at entry +0; −1 = empty, 0), the occupied ones (+0xd6) of the category (`get_category`) not yet read (+0xda =
 /// 0). Null manager or out of range: as in the original (error box).
 /// Original: `News::count_unread` (0x786fe0, news.cpp, thiscall).
-///
-/// [pt] { 0x786fe0 } (thiscall, ret 8, news.cpp): as notícias não lidas do técnico humano. Sem categoria (0):
-/// o total da entrada (+8, negativo vira 0). Com categoria: das 100 notícias da caixa (início na entrada
-/// +0; −1 = vazia, 0), as ocupadas (+0xd6) da categoria (0x785670) ainda não lidas (+0xda = 0). Técnico
-/// nulo ou fora da faixa: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn count_unread(news: usize, manager: usize, category: u32) -> i32 {
     let entry = match if manager == 0 { None } else { manager_inbox_entry(news, manager) } {
         Some(e) => e,
@@ -783,10 +670,6 @@ pub(crate) unsafe extern "thiscall" fn count_unread(news: usize, manager: usize,
 }
 
 /// Where `set_item_slot` writes: Err on its error-box cases, Ok(None) for an empty inbox, Ok(Some(item)) when found.
-///
-/// [pt] Onde a 0x786d30 grava: Err nos casos da caixa de erro (técnico nulo, id 0, vaga fora de 0..49, cópia
-/// de outro id, índice negativo, id fora das 100 da caixa); Ok(None) com a caixa vazia (início −1);
-/// Ok(Some(notícia)) achada.
 pub(crate) unsafe fn set_slot_target(news: usize, manager: usize, id: u32, slot: i32, copy: usize) -> Result<Option<usize>, ()> {
     if manager == 0 || id == 0 || !(0..0x32).contains(&slot) {
         return Err(());
@@ -812,10 +695,6 @@ pub(crate) unsafe fn set_slot_target(news: usize, manager: usize, id: u32, slot:
 /// into the `copy` (if any) and then into the inbox one; 1 if found. Empty inbox: only the copy, 0. Error cases: as in
 /// the original.
 /// Original: `News::set_item_slot` (0x786d30, news.cpp, thiscall).
-///
-/// [pt] { 0x786d30 } (thiscall, ret 0x14, news.cpp): grava `valor` na vaga `vaga` (dword +5 + 4 × vaga) da
-/// notícia `id` (+0xd6) da caixa do técnico humano, primeiro na `copia` (se houver) e depois na da caixa;
-/// 1 se achou. Caixa vazia: só a cópia, 0. Casos de erro: a original.
 pub(crate) unsafe extern "thiscall" fn set_item_slot(news: usize, manager: usize, id: u32, slot: i32, value: u32, copy: usize) -> u32 {
     let target = match set_slot_target(news, manager, id, slot, copy) {
         Ok(a) => a,
@@ -835,10 +714,6 @@ pub(crate) unsafe extern "thiscall" fn set_item_slot(news: usize, manager: usize
 
 /// whether a human manager runs the club, ignoring holidays
 /// Original: `news_club_has_human_manager` (0x7875e0, news.cpp, stdcall).
-///
-/// [pt] { 0x7875e0 } (stdcall, ret 4, news.cpp): 1 se um humano dirige o `clube` (0x600a50 com férias
-/// ignoradas); antes de devolver, consulta as férias (0x5fd210 em [0xb63c98]) do técnico do clube
-/// (0x53ca90), sem usar a resposta. Clube nulo: 0.
 pub(crate) unsafe extern "stdcall" fn news_club_has_human_manager(club: usize) -> u32 {
     if club == 0 {
         return 0;
@@ -861,12 +736,6 @@ pub(crate) unsafe extern "stdcall" fn news_club_has_human_manager(club: usize) -
 /// bytes from it ([this]) with +0xd6 = 0 and +0xda = 1. No manager or a negative index: the error box (lines 0x24c1 and
 /// 0x24cc).
 /// Original: `News::clear_inbox` (0x787630, news.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x787630 } (thiscall, ret 4, news.cpp): `News::clear_inbox(tecnico)`, pela 0x6b28b0 e pela carga do jogo
-/// (0x82a9c0): as respostas padrão das notícias do clube (+0x39) e da seleção (+0x24) do técnico (0x7874b0); depois a
-/// caixa do humano (registro de 12 bytes em [this+8], pelo id − [0xae2364] + 16): +4 = +0 e +8 = 0; com a primeira
-/// notícia (+0, −1 nenhuma), as 100 notícias de 0xdf bytes a partir dela ([this]) com +0xd6 = 0 e +0xda = 1. Sem técnico
-/// ou com índice negativo: a caixa de erro (linhas 0x24c1 e 0x24cc).
 pub(crate) unsafe extern "thiscall" fn clear_inbox(this: usize, manager: usize) {
     if manager == 0 {
         show_error_at(0xa693ec, 0x24c1);
@@ -903,11 +772,6 @@ pub(crate) unsafe extern "thiscall" fn clear_inbox(this: usize, manager: usize) 
 /// later crashed in `player_stats_reset_player` on a broken index); the cause (stack residue or a difference in the copy) is not isolated
 /// yet; the copy stays in the code and does not run
 /// Original: `NewsItem::NewsItem` (0x77bbe0, news.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x77bbe0 } (thiscall, ret 8, news.cpp, quadro SEH só da data, destrutor vazio 0x5a53c0): `NewsItem::NewsItem(tipo,
-/// importante)`: inicia a data (+0xcd, 0x54a110), grava o tipo (+0), o byte importante (+4) e zera os 50 dados (+5);
-/// a data de hoje ([0xae2c90], pela atribuição 0x417c10 com retorno numa temporária), o byte [0xae2c88] em +0xd5, o id
-/// (+0xd6) e +0xda zerados. Devolve a notícia.
 pub(crate) unsafe extern "thiscall" fn construct_news_item(this: usize, kind: u32, importante: u32) -> usize {
     exe::date_date_54a110(this + news_item::DATE);
     write_usize(this, kind as usize);
@@ -931,12 +795,6 @@ pub(crate) unsafe extern "thiscall" fn construct_news_item(this: usize, kind: u3
 /// slot, only those of the `category` (`get_category`) if it is not 0, copied (`news_operator`); `*count` adds one per news item.
 /// Returns the vector (0 if none; `*count` untouched). No manager or a manager of the machine: the "Error" box and 0.
 /// Original: `News::get_inbox_items` (0x786960, news.cpp, thiscall, ret 0xc).
-///
-/// [pt] { 0x786960 } (thiscall, ret 0xc, news.cpp): `News::get_inbox_items(tecnico, conta, categoria)`: um vetor novo de 100
-/// notícias (malloc 0x944e46 de 0x571c, na primeira achada; `*conta` = 0) com as notícias do anel do humano, da mais nova
-/// para a mais antiga até a vaga vazia, só as da `categoria` (0x785670) se ela não for 0, copiadas (0x786010); `*conta`
-/// soma uma por notícia. Devolve o vetor (0 sem nenhuma; `*conta` intocada). Sem técnico ou técnico da máquina: a caixa
-/// "Error" e 0.
 pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, manager: usize, count: *mut i32, category: u32) -> usize {
     if manager == 0 {
         show_error_at(0xa693ec, 0x21fa);
@@ -987,10 +845,6 @@ pub(crate) unsafe extern "thiscall" fn get_inbox_items(this: usize, manager: usi
 /// 4000.. → 5, 5000.. → 1, 6000..0x1790 → 6. Anything else: as in the original (error box). Returns the whole eax like
 /// the original (the type with al replaced).
 /// Original: `NewsItem::get_category` (0x785670, news.cpp, thiscall).
-///
-/// [pt] { 0x785670 } (thiscall, news.cpp): a categoria da notícia pelo milhar do tipo (+0): 1..999 → 2,
-/// 1000.. → 7, 2000.. → 3, 3000.. → 4, 4000.. → 5, 5000.. → 1, 6000..0x1790 → 6. Fora disso: a original
-/// (caixa de erro). Devolve o eax inteiro como a original (o tipo com o al trocado).
 pub(crate) unsafe extern "thiscall" fn get_category(news: usize) -> u32 {
     let t = read_i32(news);
     let c = match t {
@@ -1008,9 +862,6 @@ pub(crate) unsafe extern "thiscall" fn get_category(news: usize) -> u32 {
 
 /// the value of one of the 50 news item slots
 /// Original: `NewsItem::get_slot` (0x785830, news.cpp, thiscall).
-///
-/// [pt] { 0x785830 } (thiscall, ret 4, news.cpp): o valor da vaga `vaga` (0 a 49) da notícia (+5, 4 bytes
-/// cada). Fora da faixa: a original (caixa de erro, devolve 0).
 pub(crate) unsafe extern "thiscall" fn get_slot(news: usize, slot: i8) -> u32 {
     if !(0..0x32).contains(&slot) {
         return original_fn::<unsafe extern "thiscall" fn(usize, i8) -> u32>(IDX_GET_SLOT)(news, slot);
@@ -1020,9 +871,6 @@ pub(crate) unsafe extern "thiscall" fn get_slot(news: usize, slot: i8) -> u32 {
 
 /// stores news field 0..49
 /// Original: `set_news_field` (0x785790, news.cpp, thiscall).
-///
-/// [pt] { 0x785790 } (thiscall, ret 8, news.cpp): grava `valor` no dado `k` 0..49 da notícia (+5, 4 bytes
-/// cada). Devolve 1. `k` fora: a original (caixa de erro).
 pub(crate) unsafe extern "thiscall" fn set_news_field(t: usize, k: i8, value: u32) -> u32 {
     if !(0..0x32).contains(&k) {
         return original_fn::<unsafe extern "thiscall" fn(usize, i8, u32) -> u32>(IDX_SET_NEWS_FIELD)(t, k, value);
@@ -1036,10 +884,6 @@ pub(crate) unsafe extern "thiscall" fn set_news_field(t: usize, k: i8, value: u3
 /// `NewsItem::operator=`: copies the news item (0xdf bytes) from `source`: +0 (dword), +4 (byte), the 50 tokens from +5
 /// (dwords, in order), the date at +0xcd, +0xd5 (byte), +0xd6 and +0xda (dwords) and +0xde (byte). Returns `this`.
 /// Original: `NewsItem::operator=` (0x786010, news.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x786010 } (thiscall, ret 4, news.cpp): `NewsItem::operator=`: copia a notícia (0xdf bytes) de `origem`: +0
-/// (dupla), +4 (byte), as 50 fichas de +5 (duplas, na ordem), a data em +0xcd, +0xd5 (byte), +0xd6 e +0xda (duplas) e
-/// +0xde (byte). Devolve `this`.
 pub(crate) unsafe extern "thiscall" fn news_operator(this: usize, source: usize) -> usize {
     let d = |o: usize| write_u32(this + o, read_u32(source + o));
     let b = |o: usize| write_u8(this + o, read_u8(source + o));

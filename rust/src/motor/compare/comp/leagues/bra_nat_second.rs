@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/bra_nat_second.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/bra_nat_second.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `bra_nat_second_advance_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_nat_second_advance_stage(this: usize) {
@@ -28,8 +27,6 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_second_create_table(this:
 }
 
 /// Comparer for `bra_nat_second_set_up_rules`.
-///
-/// [pt] Comparador: como o da Série A.
 pub(crate) unsafe extern "thiscall" fn compare_bra_nat_second_set_up_rules(this: usize) -> u32 {
     let reg = league_regions_without_schedule(this);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_NAT_SECOND_SET_UP_RULES)(this), || {

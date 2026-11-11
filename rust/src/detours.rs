@@ -8,17 +8,6 @@
 //!
 //! Environment variables: `CM_SEM_DESVIOS=1` installs none; `CM_COMPARAR=1` runs the original and the
 //! Rust version side by side and logs divergences (the game goes on with the original's result).
-//!
-//! [pt] Desvios em rotinas do jogo: o inicio da rotina original vira um `jmp` para a versao em Rust.
-//!
-//! Os bytes deslocados vao para um trampolim (memoria executavel nossa) seguido de um `jmp` de
-//! volta para o resto da rotina; chamar o trampolim e chamar a rotina original.
-//! A tabela de prologos vem de `engenharia-reversa/desvios.py`, que confere que os bytes copiados
-//! nao tem instrucao relativa nem salto do jogo para o meio deles. Antes de escrever, o nucleo
-//! confere os bytes no exe carregado e recusa o desvio se nao baterem (exe diferente do esperado).
-//!
-//! Variaveis de ambiente: `CM_SEM_DESVIOS=1` nao instala nenhum; `CM_COMPARAR=1` roda a original e a
-//! versao Rust lado a lado e registra divergencias (o jogo segue com o resultado da original).
 
 use core::ffi::c_void;
 
@@ -39,25 +28,17 @@ pub struct Prologue {
 // stack of ours: the game's stack stays untouched and the garbage it finds is the same in all modes.
 
 /// Return address of the game's last call to a detoured routine (written on entry).
-///
-/// [pt] Endereco de retorno da ultima chamada do jogo a uma rotina desviada (gravado na entrada).
 pub static mut RETURN_TO: u32 = 0;
 static mut GAME_ESP: u32 = 0;
 /// The game's ECX on entry: third-party patch code (NickPatcher) relies on ECX being preserved after
 /// calling a routine that preserves it (`exe::utils_random` does push ecx/pop ecx); the exit stub used ECX and the
 /// patch's 9-iteration loop at 0x602610 never reached 0 (CLZ, 25/10/2026).
-///
-/// [pt] O ECX do jogo na entrada: o código de patch de terceiros (NickPatcher) conta com o ECX preservado depois de
-/// chamar uma rotina que o preserva (a 0x90cfc0 faz push ecx/pop ecx); o trecho de saída usava o ECX e o laço de
-/// 9 voltas do patch em 0x602610 nunca chegava a 0 (CLZ, 25/10/2026).
 static mut GAME_ECX: u32 = 0;
 const STACK: usize = 1 << 20;
 const STACK_BASE: usize = 0x0ff0_0000;
 const ARG_DWORDS: u32 = 16; // dwords copied from the game's stack (enough for any detoured routine)
 
 /// Switches on the private stack for detours installed from here on.
-///
-/// [pt] Liga a pilha particular para os desvios instalados daqui em diante.
 pub static ISOLATE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// Garbage detector (diagnosis only, the chain's third Rust career; `jogo\veneno.txt`, read by
@@ -65,21 +46,11 @@ pub static ISOLATE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBoo
 /// at the top of the private stack with that value before calling the routine. An original that reads a local variable
 /// without a value then reads the poison, and the career comes out different from the two normal ones. It is not part of
 /// the product and decides nothing: it only flags (see docs/COMO_CONTINUAR.md).
-///
-/// [pt] Detector de lixo (so diagnostico, a terceira carreira Rust da cadeia; `jogo\veneno.txt`, lido por
-/// `simulation::instalar`): diferente de 0, toda entrada vinda de fora numa rotina desviada enche os VENENO_FAIXA bytes
-/// do alto da pilha particular com esse valor antes de chamar a rotina. Uma original que le variavel local sem valor
-/// passa a ler o veneno, e a carreira sai diferente das duas normais. Nao entra no produto nem decide nada: so acusa
-/// (ver docs/COMO_CONTINUAR.md).
 pub static POISON: AtomicU32 = AtomicU32::new(0);
 static mut SAVED_EDI: u32 = 0;
 /// The career with the engine uses up to 33 KB of the private stack (measured up to 2001-09-01) and enters it ~158 million
 /// times up to 2002-06-01: filling 1 MB on every entry made the career 6 times slower. simplification: fixed span; if the
 /// line "pilha particular usou ate" goes past it, increase it.
-///
-/// [pt] A carreira com motor usa ate 33 KB da pilha particular (medido ate 2001-09-01) e entra nela ~158 milhoes de vezes ate
-/// 2002-06-01: encher 1 MB a cada entrada deixava a carreira 6 vezes mais lenta. simplification: faixa fixa; se a linha
-/// "pilha particular usou ate" passar dela, aumentar.
 const POISON_SPAN: u32 = 64 << 10;
 
 // ---------- executable memory for the stubs ----------
@@ -91,8 +62,6 @@ const BLOCK: usize = 2 << 20; // ~7,000 detours in the simulation (288 bytes eac
 static STUBS: std::sync::Mutex<(usize, usize, usize, usize)> = std::sync::Mutex::new((0, 0, 0, 0)); // (free, end, blocks, used)
 
 /// `n` bytes of executable memory (aligned to 16; 0 if Windows refuses).
-///
-/// [pt] `n` bytes de memoria executavel (alinhados em 16; 0 se o Windows recusar).
 unsafe fn executable(n: usize) -> usize {
     let n = (n + 15) & !15;
     let mut g = STUBS.lock().unwrap_or_else(|e| e.into_inner());
@@ -110,8 +79,6 @@ unsafe fn executable(n: usize) -> usize {
 }
 
 /// The stubs line in ddraw.log: how many blocks, how much used and where the last one is.
-///
-/// [pt] A linha dos trechos no ddraw.log: quantos blocos, quanto usado e onde esta o ultimo.
 pub fn stub_summary() {
     let g = *STUBS.lock().unwrap_or_else(|e| e.into_inner());
     if ISOLATE.load(std::sync::atomic::Ordering::Relaxed) {
@@ -130,19 +97,12 @@ pub fn stub_summary() {
 /// Entry stub: writes the return address; if already on the private stack (nested call), it just
 /// jumps; otherwise switches stacks, copies the arguments, calls `target` and returns discounting the
 /// arguments the routine popped (works for cdecl, stdcall and thiscall; ecx = this is preserved).
-///
-/// [pt] Trecho de entrada: grava o retorno; se ja estiver na pilha particular (chamada aninhada), so
-/// salta; senao troca de pilha, copia os argumentos, chama `destino` e volta descontando os
-/// argumentos que a rotina retirou (vale para cdecl, stdcall e thiscall; ecx = this e preservado).
 pub unsafe fn isolate(target: usize) -> usize {
     isolate_with(target, true)
 }
 
 /// The same for Windows functions (IAT entries): the garbage detector does not fill the stack before them, because
 /// Windows code does not read the game's garbage and the next detoured routine coming from outside poisons again.
-///
-/// [pt] O mesmo para as funcoes do Windows (entradas da IAT): o detector de lixo nao enche a pilha antes delas, porque o
-/// codigo do Windows nao le o lixo do jogo e a proxima rotina desviada vinda de fora envenena de novo.
 pub unsafe fn isolate_import(target: usize) -> usize {
     isolate_with(target, false)
 }
@@ -236,11 +196,6 @@ static mut SAVED_EAX: u32 = 0;
 /// do not preserve it; the game's compiled code does not rely on that, but the third-party patch does). Swaps the
 /// return address for ours, saves ECX and the return address on ECX_STACK and, on the way back, restores both; EAX (the
 /// result) passes untouched. The depth of the game's stack does not change.
-///
-/// [pt] Trecho em volta de `destino` que devolve o ECX como estava na chamada (as cópias Rust e o caminho de saída
-/// não o preservam; o código compilado do jogo não conta com isso, mas o patch de terceiros conta). Troca o
-/// endereço de retorno pelo nosso, guarda ECX e retorno na PILHA_ECX e, na volta, restaura os dois; EAX (o
-/// resultado) passa intacto. A profundidade da pilha do jogo não muda.
 pub unsafe fn preserve_ecx(target: usize) -> usize {
     let code = executable(96);
     if code == 0 {
@@ -279,11 +234,6 @@ pub unsafe fn preserve_ecx(target: usize) -> usize {
 /// arguments; call; add esp; pop ecx; ret. Keeps calls and returns matched (the return swap of
 /// `preservar_ecx` defeats the processor's return prediction and doubled the career's time, with the draw
 /// `exe::utils_random` called billions of times).
-///
-/// [pt] O mesmo para uma rotina cdecl de `n` argumentos, sem trocar o endereço de retorno: push ecx; copia os
-/// argumentos; call; add esp; pop ecx; ret. Fica com as chamadas e retornos casados (a troca do retorno do
-/// `preservar_ecx` desfaz a previsão de retorno do processador e dobrava o tempo da carreira, com o sorteio
-/// 0x90cfc0 chamado bilhões de vezes).
 pub unsafe fn preserve_ecx_cdecl(target: usize, n: u8) -> usize {
     let code = executable(64);
     if code == 0 {
@@ -303,14 +253,9 @@ pub unsafe fn preserve_ecx_cdecl(target: usize, n: u8) -> usize {
 
 /// Special `target`: the original routine itself (only makes sense with the private stack, so the
 /// original runs isolated like the rewritten ones and the simulation modes are comparable).
-///
-/// [pt] `destino` especial: a propria rotina original (so faz sentido com a pilha particular, para a
-/// original rodar isolada como as reescritas e os modos da simulacao serem comparaveis).
 pub const PASSTHROUGH: usize = 0;
 
 /// Detours `p.address` to `target`. Returns the trampoline (the original routine), or None if refused.
-///
-/// [pt] Desvia `p.address` para `destino`. Devolve o trampolim (a rotina original), ou None se recusou.
 pub unsafe fn hook(name: &str, p: &Prologue, target: usize) -> Option<usize> {
     hook_with(name, p, |tramp| {
         let target = if target == PASSTHROUGH { tramp } else { target };
@@ -323,17 +268,12 @@ pub unsafe fn hook(name: &str, p: &Prologue, target: usize) -> Option<usize> {
 }
 
 /// Stack probe detour (`CM_SONDA_PILHA`, diagnosis): the original runs on the game's stack between the probe stubs.
-///
-/// [pt] Desvio da sonda de pilha (`CM_SONDA_PILHA`, diagnóstico): a original roda na pilha do jogo entre os trechos da sonda.
 pub unsafe fn hook_probe(name: &str, p: &Prologue, inside: bool) -> Option<usize> {
     hook_with(name, p, |tramp| crate::stack_probe::build_stub(tramp, inside))
 }
 
 /// Call counter (coverage): `inc dword [counter]; jmp original`. Touches neither stack nor
 /// registers (only the flags, which do not survive a call), so the career does not change.
-///
-/// [pt] Contador de chamadas (cobertura): `inc dword [contador]; jmp original`. Nao toca pilha nem
-/// registradores (so os flags, que nao sobrevivem a um call), entao a carreira nao muda.
 pub unsafe fn count_calls(name: &str, p: &Prologue, counter: *mut u32) -> bool {
     hook_with(name, p, |tramp| {
         let c = executable(16) as *mut u8;
@@ -362,8 +302,6 @@ use std::sync::atomic::AtomicU32;
 static mut VERDICTS: Vec<bool> = Vec::new();
 
 /// The snapshot: the verdict of each ASSINATURAS line with the current bytes (call before detouring anything).
-///
-/// [pt] A foto: o veredicto de cada linha de ASSINATURAS com os bytes de agora (chamar antes de desviar qualquer coisa).
 pub unsafe fn check_signatures() {
     use crate::signatures::ASSINATURAS;
     let v: Vec<bool> = ASSINATURAS.iter().map(|a| check_range(a.0)).collect();
@@ -371,8 +309,6 @@ pub unsafe fn check_signatures() {
 }
 
 /// false = the routine is in the table and the bytes match neither of the two versions.
-///
-/// [pt] false = a rotina esta na tabela e os bytes nao batem com nenhuma das duas versoes.
 unsafe fn signature_matches(address: usize) -> bool {
     use crate::signatures::ASSINATURAS;
     let Ok(k) = ASSINATURAS.binary_search_by_key(&address, |a| a.0) else { return true };
@@ -400,8 +336,6 @@ unsafe fn check_range(address: usize) -> bool {
 }
 
 /// The final line of the check in ddraw.log.
-///
-/// [pt] A linha final da conferencia no ddraw.log.
 pub fn signature_summary() {
     use std::sync::atomic::Ordering::Relaxed;
     linha(&format!("assinaturas: {} conferidas, {} ficam com o exe ({} us)",
@@ -409,8 +343,6 @@ pub fn signature_summary() {
 }
 
 /// Core of the detours: checks the routine and the bytes, builds the trampoline and jumps to `target(trampoline)`.
-///
-/// [pt] Miolo dos desvios: confere a rotina e os bytes, monta o trampolim e salta para `destino(trampolim)`.
 unsafe fn hook_with(name: &str, p: &Prologue, target: impl FnOnce(usize) -> usize) -> Option<usize> {
     if !signature_matches(p.address) {
         linha(&format!("routine {:#x} stays with the exe (changed)", p.address));
@@ -447,17 +379,10 @@ unsafe fn hook_with(name: &str, p: &Prologue, target: impl FnOnce(usize) -> usiz
 /// Prologues that end in a relative instruction (`call rel32` or `jcc rel8`), with its position
 /// in the bytes: the trampoline redoes the instruction with the absolute target. `engenharia-reversa/prologos.py`
 /// reads this table and accepts the relative instruction only at that position.
-///
-/// [pt] Prologos que terminam numa instrucao relativa (`call rel32` ou `jcc rel8`), com a posicao dela
-/// nos bytes: o trampolim refaz a instrucao com o destino absoluto. `engenharia-reversa/prologos.py`
-/// le esta tabela e aceita a instrucao relativa so nessa posicao.
 pub const RELATIVAS: &[(usize, usize)] = &[(0x714d00, 4), (0x6f55c0, 4)];
 
 /// Copies the prologue to the trampoline, redoing the relative instruction from RELATIVAS. Returns the size
 /// written (the `jmp` back comes after).
-///
-/// [pt] Copia o prologo para o trampolim, refazendo a instrucao relativa de RELATIVAS. Devolve o tamanho
-/// escrito (o `jmp` de volta vem depois).
 unsafe fn build_trampoline(p: &Prologue, tramp: *mut u8) -> usize {
     let n = p.bytes.len();
     let Some(&(_, k)) = RELATIVAS.iter().find(|&&(a, _)| a == p.address) else {
@@ -498,12 +423,6 @@ unsafe fn write_jmp(at: *mut u8, to: usize) {
 /// Runs in DllMain before everything (before WinMain and the exe's CRT, so the swaps in .data hold from the
 /// start, and before the detours, which then see the same as in cm0102-1080.exe). A swap whose bytes are not the
 /// "before" ones (nor already the "after" ones) is left out and goes to the log (exe with a third-party patch).
-///
-/// [pt] Com `CM_RESOLUCAO=1080`, aplica em memoria as trocas de `resolution.rs` (geradas por `resolucao.py --rust`:
-/// patch_portatil.py + resolucao.py 1920x1080), e o cm0102.exe original fica igual ao cm0102-1080.exe.
-/// Roda no DllMain antes de tudo (antes do WinMain e da CRT do exe, entao as trocas em .data valem desde o
-/// inicio, e antes dos desvios, que entao veem o mesmo que no cm0102-1080.exe). Troca cujos bytes nao sao os
-/// "antes" (nem ja os "depois") fica de fora e vai para o log (exe com patch de terceiros).
 pub unsafe fn apply_resolution() {
     if win::texto_ambiente("CM_RESOLUCAO") != "1080" {
         return;
@@ -539,9 +458,6 @@ pub unsafe fn apply_resolution() {
 
 /// Diagnosis (`CM_RESOLUCAO_CONFERIR=1`): compares each section of the in-memory image with the cm0102-1080.exe next
 /// to the exe (except the IAT, which the loader fills). Uses the heap: only in the proofs, never in the career.
-///
-/// [pt] Diagnostico (`CM_RESOLUCAO_CONFERIR=1`): compara cada secao da imagem em memoria com o cm0102-1080.exe ao
-/// lado do exe (fora a IAT, que o carregador preenche). Usa a heap: so nas provas, nunca na carreira.
 unsafe fn check_resolution() {
     let Ok(disk) = std::env::current_exe().and_then(|p| std::fs::read(p.with_file_name("cm0102-1080.exe"))) else {
         linha("resolution: check without cm0102-1080.exe");
@@ -579,28 +495,18 @@ unsafe fn check_resolution() {
 
 /// FNV-1a 64 of 0x401000..0x401000+TEXT_LEN in cm0102.exe, cm0102-portatil.exe and cm0102-1080.exe (the exes never
 /// change; CM_RESOLUCAO=1080 takes the first to the third before this check).
-///
-/// [pt] FNV-1a 64 de 0x401000..0x401000+TEXTO no cm0102.exe, no cm0102-portatil.exe e no cm0102-1080.exe (os exes nunca
-/// mudam; o CM_RESOLUCAO=1080 leva o primeiro ao terceiro antes desta conferencia).
 const TEXT_LEN: usize = 0x5650e5;
 const OUR_TEXTS: [u64; 3] = [0x7af14da1f595ae30, 0x62afeb6b1b407585, 0xfd25058c59d683d5];
 const OUR_ENTRY: u32 = 0x547a13; // AddressOfEntryPoint (RVA; VA 0x947a13)
 
 static DEFERRED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 /// Only the deferred box (CM_SEM_DESVIOS in a patched exe): the engine detours stay off.
-///
-/// [pt] Só a caixa adiada (CM_SEM_DESVIOS num exe com patch): os desvios do motor ficam desligados.
 static BOX_DEFERRED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 /// Permanent (DEFERRED is only "installation pending" and goes back to false on installation; checking it after that
 /// switched off the preserved ECX and the system video in the patched exe, 25/10/2026).
-///
-/// [pt] Permanente (o ADIADO é só "instalação pendente" e volta a falso na instalação; consultá-lo depois dela
-/// desligava o ECX preservado e o vídeo do sistema no exe com patch, 25/10/2026).
 static PATCHED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 /// The exe has a third-party patch (the .text or the entry are not ours): deferred installation.
-///
-/// [pt] O exe tem patch de terceiros (o .text ou a entrada não são os nossos): instalação adiada.
 pub fn exe_is_patched() -> bool {
     PATCHED.load(std::sync::atomic::Ordering::Relaxed)
 }
@@ -631,8 +537,6 @@ unsafe fn our_exe() -> bool {
 // game's address, so they also go through here.
 
 /// The original box (or the jump of another DLL that detoured it before), through the trampoline.
-///
-/// [pt] A caixa original (ou o salto de outra DLL que a desviou antes), pelo trampolim.
 static mut ORIGINAL_BOX: usize = 0;
 
 unsafe extern "C" fn message_box(title: *const u8, text: *const u8, allow_exit: u32) -> u32 {
@@ -652,10 +556,6 @@ unsafe extern "C" fn message_box(title: *const u8, text: *const u8, allow_exit: 
 /// Detours `exe::gui_show_message_box` to `message_box`. The original entry (`sub esp,0x6c; mov ecx,[0xb67a30]`, 9 bytes with no
 /// relative instruction) goes to the trampoline; a `jmp` from another DLL there (CLZ's LaMOHatesCD swaps those 9 bytes) is
 /// chained to its target; anything else, leave it alone and say so in the log. Only once (again, it would chain to itself).
-///
-/// [pt] Desvia a 0x5e8290 para `caixa_de_mensagem`. A entrada original (`sub esp,0x6c; mov ecx,[0xb67a30]`, 9 bytes sem
-/// instrucao relativa) vai para o trampolim; um `jmp` de outra DLL ali (a LaMOHatesCD do CLZ troca esses 9 bytes) e
-/// encadeado no destino dele; outra coisa, nao mexe e diz no log. Uma vez so (de novo, encadearia em si mesma).
 unsafe fn install_box() {
     static DONE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
     if DONE.swap(true, std::sync::atomic::Ordering::Relaxed) {
@@ -691,8 +591,6 @@ unsafe fn install_box() {
 }
 
 /// Installs all the detours. Called when the DLL loads, before the game's WinMain.
-///
-/// [pt] Instala todos os desvios. Chamado no carregamento da DLL, antes do WinMain do jogo.
 pub unsafe fn install() {
     if win::ambiente("CM_SEM_DESVIOS") {
         linha("desvios: desligados (CM_SEM_DESVIOS)");
@@ -720,8 +618,6 @@ pub unsafe fn install() {
 }
 
 /// First DirectDrawCreate: the deferred installation of the patched exe (nothing in our exes).
-///
-/// [pt] Primeira DirectDrawCreate: a instalacao adiada do exe com patch (nada nos exes nossos).
 pub unsafe fn install_deferred() {
     if BOX_DEFERRED.swap(false, std::sync::atomic::Ordering::Relaxed) {
         install_box();
@@ -770,8 +666,6 @@ unsafe fn install_engine() {
 // simulation have no range).
 
 /// (start, original prologue, end of range, body hash, our jmp); hash 0 = no snapshot or already undone.
-///
-/// [pt] (inicio, prologo original, fim da faixa, hash do corpo, o nosso jmp); hash 0 = sem foto ou ja desfeito.
 static mut INSTALLED: Vec<(usize, &'static [u8], usize, u64, [u8; 5])> = Vec::new();
 static mut CHECKED_DAY: [u16; 2] = [0; 2];
 
@@ -796,9 +690,6 @@ unsafe fn snapshot_bodies() {
 
 /// Called on every draw: only works when the game day changes. Inline and without a stack frame on the common path (the
 /// game reads stack leftovers; one more frame on every draw would change what it finds outside the private stack).
-///
-/// [pt] Chamado a cada sorteio: so trabalha quando o dia do jogo muda. Inline e sem quadro de pilha no caminho comum (o
-/// jogo le sobras de pilha; um quadro a mais em cada sorteio mudaria o que ele encontra fora da pilha particular).
 #[inline(always)]
 pub unsafe fn recheck_on_day() {
     let today = *(0xae2c90 as *const [u16; 2]);
@@ -834,11 +725,6 @@ unsafe fn recheck_bodies(today: [u16; 2]) {
 /// (result in ddraw.log). `CM_AUTOTESTE=motor:N` runs only the engine, with N cases (the mutations of
 /// an engine batch do not touch the rng nor the date). Called on the first DirectDrawCreate: by then WinMain is already
 /// running and the game's CRT is initialized (some routines call atexit, malloc...).
-///
-/// [pt] CM_AUTOTESTE=1: cada rotina reescrita se compara com a original em entradas sinteticas
-/// (resultado em ddraw.log). `CM_AUTOTESTE=motor:N` roda so o motor, com N casos (as mutacoes de
-/// uma leva do motor nao mexem no aleatorio nem na data). Chamado na primeira DirectDrawCreate: a essa altura o WinMain ja
-/// esta rodando e a CRT do jogo esta inicializada (algumas rotinas chamam atexit, malloc...).
 pub unsafe fn self_tests() {
     static DONE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
     if !win::ambiente("CM_AUTOTESTE") || DONE.swap(true, std::sync::atomic::Ordering::Relaxed) {

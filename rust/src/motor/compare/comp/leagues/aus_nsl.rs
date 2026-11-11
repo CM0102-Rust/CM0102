@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/aus_nsl.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/aus_nsl.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `aus_nsl_advance_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_advance_stage(this: usize) {
@@ -20,10 +19,6 @@ pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_advance_stage(this: usize
 ///
 /// Afterwards, return value 1, the stage in slot 0 with +0x3e = 6, +4 = the league's +4 and the six in its table
 /// (+0xb1, as a set), and +0x30 = 0.
-///
-/// [pt] O comparador da série final: só a original (aloca a tabela das rodadas e a fase e manda a notícia), com o plano feito
-/// antes: os seis primeiros da tabela. Depois, a devolução 1, a fase na vaga 0 com +0x3e = 6, +4 = o +4 da liga e os
-/// seis na tabela dela (+0xb1, como conjunto), e +0x30 = 0.
 pub(crate) unsafe extern "thiscall" fn compare_create_finals_series_stage(this: usize) -> u32 {
     let this = League(this);
     let mut six = [0usize; 6];
@@ -53,10 +48,6 @@ pub(crate) unsafe extern "thiscall" fn compare_create_finals_series_stage(this: 
 ///
 /// Afterwards, the stage in the second slot exists, with +0x3e = 2, +4 = the league's +4 and the two in its list
 /// (+0xa7, 6 bytes; as a set).
-///
-/// [pt] O comparador da grande final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), com o plano feito
-/// antes: os dois primeiros da série final. Depois, a fase da segunda vaga existe, com +0x3e = 2, +4 = o +4 da liga e
-/// os dois na lista dela (+0xa7, 6 bytes; como conjunto).
 pub(crate) unsafe extern "thiscall" fn compare_create_grand_final_stage(this: usize) {
     let this = League(this);
     let series = read_usize(this.stages());
@@ -72,10 +63,6 @@ pub(crate) unsafe extern "thiscall" fn compare_create_grand_final_stage(this: us
 }
 
 /// Comparer for `aus_nsl_set_up_rules`.
-///
-/// [pt] Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto da liga
-/// (0xee) menos as saídas do calendário (+0x3a, +0xa9, +0xba; a 0x4111a0 não grava nada no objeto além delas); a
-/// devolução.
 pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_set_up_rules(this: usize) -> u32 {
     let o = League(this);
     let reg = [(o.addr(), 0x3a), (o.addr() + league::LEGS, 0xa9 - 0x3c), (o.addr() + league::MATCH_RULES, 0xba - 0xab), (o.addr() + league::PROMOTED_COUNT, 0xee - 0xbe)];
@@ -88,8 +75,6 @@ pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_set_up_rules(this: usize)
 }
 
 /// Comparer for `aus_nsl_update_staff_records_for_status`.
-///
-/// [pt] Comparador: só a original (os registros alocam) com a devolução prevista pelo ensaio.
 pub(crate) unsafe extern "thiscall" fn compare_aus_nsl_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let (n, _, _) = nsl_end_of_stage(this, club, status, stage, false);
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_AUS_NSL_UPDATE_STAFF_RECORDS_FOR_STATUS)(this, club, status, stage, a4, a5, a6);

@@ -1,19 +1,13 @@
 use super::*;
 
 // The comparers of the routines in ../comp/league.rs.
-// [pt] Os comparadores das rotinas de ../comp/league.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `set_club_season_expectations`.
-///
-/// [pt] Só a original (as expectativas mudam a diretoria e mandam notícias; não rodam duas vezes): a cópia leva o ramo.
 pub(crate) unsafe extern "thiscall" fn compare_set_club_season_expectations(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SET_CLUB_SEASON_EXPECTATIONS)(this)
 }
 
 /// Comparer for `relegate_club_to_division`.
-///
-/// [pt] Só a original (cláusulas de contrato e o técnico que sai não rodam duas vezes), conferindo o que ela grava: +0x57 =
-/// a divisão e +0x5b = a competição de antes.
 pub(crate) unsafe extern "thiscall" fn compare_relegate_club_to_division(this: usize, club: usize, division: usize, x: u32) {
     let club = Club(club);
     let old = club.division().addr();
@@ -30,12 +24,6 @@ pub(crate) unsafe extern "thiscall" fn compare_relegate_club_to_division(this: u
 /// temporary list) and the valid slots (slice 0..2) before the first empty one; each valid slot takes one match while
 /// the list has any (every rating gets past the initial −1), and the slot becomes 0xff: the 0xff slots of the block
 /// after the original are min(valid slots, matches).
-///
-/// [pt] Comparador da 0x685640: só a original (os jogos saem do calendário e voltam pela 0x5aa680, que aloca, as notas
-/// sorteiam e as notícias vão aos técnicos). O plano, feito antes: pela entrada da data, os jogos da liga no dia e fatia
-/// dela (0x5abd90 numa lista provisória) e as vagas válidas (fatia 0..2) antes da primeira vazia; cada vaga válida leva
-/// um jogo enquanto a lista tiver (toda nota passa do −1 inicial), e a vaga fica 0xff: as vagas 0xff do bloco depois da
-/// original são min(válidas, jogos).
 pub(crate) unsafe extern "thiscall" fn compare_move_fixtures_for_tv(this: usize, data: usize) {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_MOVE_FIXTURES_FOR_TV);
@@ -65,15 +53,11 @@ pub(crate) unsafe extern "thiscall" fn compare_move_fixtures_for_tv(this: usize,
 }
 
 /// Comparer for `send_group_draw_news`.
-///
-/// [pt] Comparador da 0x684230: só a original (aloca a notícia e a entrega aos técnicos).
 pub(crate) unsafe extern "thiscall" fn compare_send_group_draw_news(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SEND_GROUP_DRAW_NEWS)(this) // simplification: only the news item
 }
 
 /// Comparer for `send_fixture_list_news`.
-///
-/// [pt] Comparador da 0x683ee0: só a original (as notícias vão aos técnicos e a lista dos avisados cresce, alocando).
 pub(crate) unsafe extern "thiscall" fn compare_send_fixture_list_news(this: usize, list: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEND_FIXTURE_LIST_NEWS)(this, list) // simplification: only the news
 }
@@ -85,10 +69,6 @@ pub(crate) unsafe extern "thiscall" fn compare_send_fixture_list_news(this: usiz
 ///
 /// It checks what the routine guarantees: 0 only with the league stopped or without clubs and, when complete, +0xd1
 /// with the date.
-///
-/// [pt] O comparador do dia da liga: só a original (simplification: chama os métodos de cada fase e da liga, as notícias, os
-/// recordes e os jogos para a TV, que mexem no calendário: não roda duas vezes). Confere o que a rotina garante: 0 só
-/// com a liga parada ou sem clubes e, completo, +0xd1 com a data.
 pub(crate) unsafe extern "thiscall" fn compare_league_update_for_date(this: usize, data: usize, full: u32) -> u32 {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_LEAGUE_UPDATE_FOR_DATE);
@@ -105,10 +85,6 @@ pub(crate) unsafe extern "thiscall" fn compare_league_update_for_date(this: usiz
 /// Only the original runs (simplification: it allocates the grid, draws the club order and puts the matches in the
 /// calendar, which allocates: it does not run twice). It checks what the routine guarantees: with the year's own list,
 /// that list is freed (+0xea = 0) when it returns 1.
-///
-/// [pt] O comparador da criação dos jogos: só a original (simplification: aloca a grade, sorteia a ordem dos clubes e põe os
-/// jogos no calendário, que aloca: não roda duas vezes). Confere o que a rotina garante: com a lista própria do ano, ela
-/// é liberada (+0xea = 0) quando devolve 1.
 pub(crate) unsafe extern "thiscall" fn compare_create_fixtures(this: usize) -> u32 {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CREATE_FIXTURES);
@@ -121,9 +97,6 @@ pub(crate) unsafe extern "thiscall" fn compare_create_fixtures(this: usize) -> u
 }
 
 /// Comparer for `league_promote_and_relegate`.
-///
-/// [pt] O comparador da promoção e do rebaixamento: só a original (simplification: os contratos, o técnico demitido e as notícias
-/// não rodam duas vezes); a cópia leva o ramo.
 pub(crate) unsafe extern "thiscall" fn compare_league_promote_and_relegate(ecx: usize, above: usize, below: usize, contracts: u32, aos_pairs: u32, sobem: u32, descem: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_LEAGUE_PROMOTE_AND_RELEGATE)(ecx, above, below, contracts, aos_pairs, sobem, descem)
 }
@@ -138,12 +111,6 @@ pub(crate) unsafe extern "thiscall" fn compare_league_promote_and_relegate(ecx: 
 ///
 /// Both start from the same state of the table, of `+0xa7` and of the European places of the table's clubs, which must
 /// come out equal; at the end the original's state is kept. Without rows or with `+0xdd`: only the original routine.
-///
-/// [pt] Comparador da 0x684cd0, em ensaio (modelo RARE_FINANCE_EVENT_DRY_RUN): a original roda inteira primeiro, gravando a fita dos
-/// anúncios (STATUS_ANNOUNCE_TAPE); a memória volta e a cópia roda sem as virtuais +0x40 e +0x68 nem as cláusulas (que mandam
-/// notícia, gravam registros e sorteiam o moral), repondo da fita o que a +0x44 de cada anúncio gravou na tabela. As
-/// duas a partir do mesmo estado da tabela, de +0xa7 e das vagas europeias dos clubes da tabela, que têm de sair
-/// iguais; no fim fica o estado da original. Sem linhas ou com +0xdd: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_update_positions_and_status(this: usize) {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_UPDATE_POSITIONS_AND_STATUS);
@@ -173,10 +140,6 @@ pub(crate) unsafe extern "thiscall" fn compare_update_positions_and_status(this:
 ///
 /// Otherwise, the dry run: the copy without the prize news item (`send_prize_money_news` allocates) and the original from the same
 /// state, on the finance records (0x167 bytes) of all the clubs in the table.
-///
-/// [pt] Comparador: com +0xe1 = 3 (a virtual da competição paga por conta própria) ou o divisor zero: só a original. Nos
-/// outros casos, o ensaio: a cópia sem a notícia do prêmio (0x48e3e0 aloca) e a original a partir do mesmo estado, nos
-/// registros de finanças (0x167 bytes) de todos os clubes da tabela.
 pub(crate) unsafe extern "thiscall" fn compare_pay_prize_money(league: usize) {
     let league = League(league);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_PAY_PRIZE_MONEY);
@@ -233,11 +196,6 @@ pub(crate) unsafe extern "thiscall" fn compare_announce_team_status(league: usiz
 /// original. In the other cases, a dry run: the copy without the stats (`exe::comp_stats_record_match_result` finds or creates records) and the
 /// original from the same state: the date at +0xc9, the table rows with the head-to-heads (the regions of `apply_result_to_table`),
 /// the match's +0x3d/+0x3e and the return value.
-///
-/// [pt] Comparador: a partida nula e a da fase (a virtual da fase recebe a partida e compara por conta própria): só a
-/// original. Nos outros casos, o ensaio: a cópia sem a estatística (0x49f570 acha ou cria registros) e a original a
-/// partir do mesmo estado: a data em +0xc9, as linhas da tabela com os confrontos (as regiões da 0x685f60), o +0x3d/+0x3e
-/// da partida e a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_league_add_result(league: usize, p: usize, game: usize) -> i32 {
     let p = Fixture(p);
     let league = League(league);
@@ -265,10 +223,6 @@ pub(crate) unsafe extern "thiscall" fn compare_league_add_result(league: usize, 
 /// It allocates (it cannot run twice), so only the original routine runs, with the full plan checked afterwards: the
 /// expected +0xa7 (computed beforehand) and the returned copy equal to the table, row by row (except the pointers of
 /// the new vectors), with the head-to-head and form vectors equal to the table's.
-///
-/// [pt] Comparador: aloca (não roda duas vezes): só a original, com o plano completo conferido depois: o +0xa7 esperado
-/// (calculado antes) e a cópia devolvida igual à tabela, linha a linha (fora os ponteiros dos vetores novos), com os
-/// vetores de confrontos e de forma iguais aos da tabela.
 pub(crate) unsafe extern "thiscall" fn compare_copy_table(league: usize) -> usize {
     let league = League(league);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_COPY_TABLE);
@@ -318,10 +272,6 @@ pub(crate) unsafe extern "thiscall" fn compare_copy_table(league: usize) -> usiz
 /// The routine writes and may create records in the stats (it does not run twice): the plan is made first, over a copy
 /// of the vector sorted by the core of `comp_util_sort_clubs_by_strength` (keys in a Vec); afterwards, each club's record (the last time it
 /// appears) must have the planned position in +0x72.
-///
-/// [pt] Comparador: grava e pode criar registros na estatística (não roda duas vezes): o plano sai antes, sobre uma cópia
-/// do vetor ordenada pelo núcleo da 0x4c08f0 (chaves num Vec); depois, o registro de cada clube (a última vez que ele
-/// aparece) tem de ter em +0x72 a posição planejada.
 pub(crate) unsafe extern "thiscall" fn compare_league_set_predicted_positions(league: usize) {
     let league = League(league);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_LEAGUE_SET_PREDICTED_POSITIONS);
@@ -348,8 +298,6 @@ pub(crate) unsafe extern "thiscall" fn compare_league_set_predicted_positions(le
 }
 
 /// Comparer for `compare_projection_by_reputation_desc`.
-///
-/// [pt] Comparador: pelo valor (só lê).
 pub(crate) unsafe extern "C" fn compare_compare_projection_by_reputation_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_PROJECTION_BY_REPUTATION_DESC)(a, b);
     let n = compare_projection_by_reputation_desc(a, b);
@@ -358,8 +306,6 @@ pub(crate) unsafe extern "C" fn compare_compare_projection_by_reputation_desc(a:
 }
 
 /// Comparer for `compare_projection_by_points_desc`.
-///
-/// [pt] Comparador: pelo valor (só lê).
 pub(crate) unsafe extern "C" fn compare_compare_projection_by_points_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_PROJECTION_BY_POINTS_DESC)(a, b);
     let n = compare_projection_by_points_desc(a, b);
@@ -374,11 +320,6 @@ pub(crate) unsafe extern "C" fn compare_compare_projection_by_points_desc(a: usi
 /// inside `0x4ae300` returns its temporary record): compared side by side on those 3 bytes and on the return value. The
 /// two versions that forward to the other competition (`0x48e380`, `0x7ef100`) write outside the region: there only the
 /// return value counts.
-///
-/// [pt] Comparador: o bloco da projeção é alocado e liberado dentro (não fica nada dele); o efeito é a virtual +0x68, que
-/// grava os bytes +0x73..+0x75 do registro do clube no Comp_Stats da liga (+8, achado pela 0x4a4850, que dentro da
-/// 0x4ae300 devolve o registro provisório dela): lado a lado nesses 3 bytes e na devolução. As duas versões que repassam
-/// a outra competição (0x48e380, 0x7ef100) gravam fora da região: aí só a devolução pesa.
 pub(crate) unsafe extern "thiscall" fn compare_update_projected_positions(this: usize, club: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_UPDATE_PROJECTED_POSITIONS);
     let stats = read_usize(this + 8);
@@ -398,10 +339,6 @@ pub(crate) unsafe extern "thiscall" fn compare_update_projected_positions(this: 
 /// The original allocates (history and head-to-heads): only it runs, and the row is checked against the plan made
 /// beforehand (the total rounds, the club's status, the fields, the zeroed blocks, the arrays present and, on the last
 /// row, each row's opponents).
-///
-/// [pt] Comparador: a original aloca (histórico e confrontos): roda só ela e confere a linha com o plano feito antes (o
-/// total de rodadas, a situação do clube, os campos, os blocos zerados, os vetores presentes e, na última linha, os
-/// adversários de cada linha).
 pub(crate) unsafe extern "thiscall" fn compare_init_table_row(this: usize, i: u32, club: usize, mark: u32, rows: usize) {
     let this = League(this);
     let club = Club(club);
@@ -441,8 +378,6 @@ pub(crate) unsafe extern "thiscall" fn compare_init_table_row(this: usize, i: u3
 }
 
 /// Comparer for `league_get_club_array`.
-///
-/// [pt] Comparador: a original aloca o vetor: roda só ela e confere a conta e os clubes, na ordem da tabela.
 pub(crate) unsafe extern "thiscall" fn compare_league_get_club_array(this: usize, out: *mut usize, n: *mut i16) {
     let this = League(this);
     original_fn::<unsafe extern "thiscall" fn(usize, *mut usize, *mut i16)>(IDX_LEAGUE_GET_CLUB_ARRAY)(this.addr(), out, n);
@@ -456,8 +391,6 @@ pub(crate) unsafe extern "thiscall" fn compare_league_get_club_array(this: usize
 }
 
 /// Comparer for `record_final_positions`.
-///
-/// [pt] Comparador: lado a lado pela divisão da última temporada e pela posição (+0x5b..+0x5f) de cada clube da tabela.
 pub(crate) unsafe extern "thiscall" fn compare_record_final_positions(this: usize) {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_RECORD_FINAL_POSITIONS);
@@ -533,9 +466,6 @@ pub(crate) unsafe extern "thiscall" fn compare_league_check_complete(league: usi
 }
 
 /// Comparer for `pay_tv_rights`.
-///
-/// [pt] Comparador: as finanças (0x167 bytes) de cada clube da tabela; a cópia roda sem a notícia (a da original fica, uma
-/// vez só). Clube nulo na tabela (a caixa da 0x5a0590): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_pay_tv_rights(league: usize, value: i32, filter: usize) {
     let league = League(league);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize)>(IDX_PAY_TV_RIGHTS);
@@ -551,9 +481,6 @@ pub(crate) unsafe extern "thiscall" fn compare_pay_tv_rights(league: usize, valu
 }
 
 /// Comparer for `league_record_season_honours`.
-///
-/// [pt] Comparador: os clubes (o +0x5b) e o histórico de competições. Sem linha livre no histórico (a 0x4afce0 faria
-/// realloc): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_league_record_season_honours(league: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_LEAGUE_RECORD_SEASON_HONOURS);
     if free_comp_history_row() == 0 {
@@ -679,25 +606,18 @@ pub(crate) unsafe extern "thiscall" fn compare_league_process_promotion_relegati
 }
 
 /// Comparer for `move_club_to_division`.
-///
-/// [pt] Comparador: a mudança chama as notícias, a vaga de técnico e a obra (não podem rodar duas vezes): só a original (a
-/// prova é a carreira e o modo Rust).
 pub(crate) unsafe extern "thiscall" fn compare_move_club_to_division(this: usize, club: usize, division: usize, slot: u32) {
     covered!("move_club_to_division");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_MOVE_CLUB_TO_DIVISION)(this, club, division, slot)
 }
 
 /// Comparer for `draw_team_order`.
-///
-/// [pt] Comparador: embaralha com o sorteio e o rand, aloca e chama a tabela virtual: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_draw_team_order(this: usize, clubs: i32) {
     // simplification: rolls and allocates (does not run twice); the copy is proven by the career (the fixture grid of every league)
     original_fn::<unsafe extern "thiscall" fn(usize, i32)>(IDX_DRAW_TEAM_ORDER)(this, clubs)
 }
 
 /// Comparer for `limit_club_division_tier`.
-///
-/// [pt] Comparador: grava só o byte +0x64 dos clubes da tabela: lado a lado nesses bytes.
 pub(crate) unsafe extern "thiscall" fn compare_limit_club_division_tier(this: usize, value: u32, away: u32, inside: u32, baixar: u32) {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32)>(IDX_LIMIT_CLUB_DIVISION_TIER);

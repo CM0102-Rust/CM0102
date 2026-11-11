@@ -1,12 +1,8 @@
 use super::*;
 
 // The comparers of the routines in ../comp/comp_util.rs.
-// [pt] Os comparadores das rotinas de ../comp/comp_util.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `comp_util_sort_clubs_by_strength`.
-///
-/// [pt] Comparador: ordena no lugar (aloca e libera o temporário): o esperado sai do núcleo sobre uma cópia (chaves num
-/// Vec) antes da original; depois, o vetor tem de ser igual.
 pub(crate) unsafe extern "C" fn compare_comp_util_sort_clubs_by_strength(v: usize, n: i32) {
     let o = original_fn::<unsafe extern "C" fn(usize, i32)>(IDX_COMP_UTIL_SORT_CLUBS_BY_STRENGTH);
     if v == 0 || n <= 1 {
@@ -21,9 +17,6 @@ pub(crate) unsafe extern "C" fn compare_comp_util_sort_clubs_by_strength(v: usiz
 }
 
 /// Comparer for `set_club_final_position`.
-///
-/// [pt] Comparador: acha ou acrescenta o registro (não roda duas vezes): o registro visto antes (se havia) tem de ser o
-/// devolvido, com a posição em +0x72.
 pub(crate) unsafe extern "thiscall" fn compare_set_club_final_position(this: usize, club: usize, pos: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_SET_CLUB_FINAL_POSITION);
     if club == 0 {
@@ -37,8 +30,6 @@ pub(crate) unsafe extern "thiscall" fn compare_set_club_final_position(this: usi
 }
 
 /// Comparer for `comp_util_get_fixture_venue_side`.
-///
-/// [pt] Comparador: pura (consulta 0x53b900, sem efeitos): pelo lado.
 pub(crate) unsafe extern "C" fn compare_comp_util_get_fixture_venue_side(club: usize, game: usize) -> u8 {
     let o = original_fn::<unsafe extern "C" fn(usize, usize) -> u8>(IDX_COMP_UTIL_GET_FIXTURE_VENUE_SIDE);
     let r = o(club, game);
@@ -57,8 +48,6 @@ pub(crate) unsafe extern "C" fn compare_compare_nation_coefficients_desc(a: usiz
 }
 
 /// Comparer for `comp_util_shuffle_pointer_array`.
-///
-/// [pt] Comparador: sorteia (0x90cfc0): lado a lado pelo estado do sorteio e pelo vetor, a cópia em sem_contar.
 pub(crate) unsafe extern "C" fn compare_comp_util_shuffle_pointer_array(items: usize, n: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, u32)>(IDX_COMP_UTIL_SHUFFLE_POINTER_ARRAY);
     let k = (n as u16 as i16).max(0) as usize;
@@ -72,9 +61,6 @@ pub(crate) unsafe extern "C" fn compare_comp_util_shuffle_pointer_array(items: u
 }
 
 /// Comparer for `comp_util_sort_and_shuffle_top_clubs`.
-///
-/// [pt] Comparador: ordena (qsort, determinístico) e sorteia: lado a lado pelo estado do sorteio e pelos `n` clubes, a cópia
-/// em sem_contar. Caixa (`n` negativo ou menor que `escolhas`): só a original.
 pub(crate) unsafe extern "C" fn compare_comp_util_sort_and_shuffle_top_clubs(clubs: usize, n: u32, escolhas: u32) {
     let o = original_fn::<unsafe extern "C" fn(usize, u32, u32)>(IDX_COMP_UTIL_SORT_AND_SHUFFLE_TOP_CLUBS);
     let (nn, e) = (n as u16 as i16, escolhas as u16 as i16);
@@ -150,8 +136,6 @@ pub(crate) unsafe extern "C" fn compare_comp_util_write_fixture_to_news_slots(ga
 }
 
 /// Comparer for `comp_util_format_stage_round_name`.
-///
-/// [pt] Comparador da 0x4bffc0: lado a lado na saída (até o tamanho, no máximo 0x400 bytes) e na devolução.
 pub(crate) unsafe extern "C" fn compare_comp_util_format_stage_round_name(stage: u32, round: u32, out: *mut u8, size: i32, style: u32) -> i32 {
     let o = original_fn::<unsafe extern "C" fn(u32, u32, *mut u8, i32, u32) -> i32>(IDX_COMP_UTIL_FORMAT_STAGE_ROUND_NAME);
     if out.is_null() || size < 0xc8 {
@@ -164,8 +148,6 @@ pub(crate) unsafe extern "C" fn compare_comp_util_format_stage_round_name(stage:
 }
 
 /// Comparer for `comp_util_scale_by_round`.
-///
-/// [pt] Comparador: pura (pelo eax inteiro). Fora da faixa (a caixa de erro) só a original.
 pub(crate) unsafe extern "C" fn compare_comp_util_scale_by_round(low: u32, high: u32, round: u32, rounds: u32) -> u32 {
     let o = original_fn::<unsafe extern "C" fn(u32, u32, u32, u32) -> u32>(IDX_COMP_UTIL_SCALE_BY_ROUND);
     if !(0..=100).contains(&interpolate_by_round(low, high, round, rounds).1) {
@@ -190,8 +172,6 @@ pub(crate) unsafe extern "C" fn compare_comp_util_add_history_record(league: usi
 }
 
 /// Comparer for `comp_util_get_parent_stage_id`.
-///
-/// [pt] Pura: a devolução.
 pub(crate) unsafe extern "C" fn compare_comp_util_get_parent_stage_id(id: i32) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(i32) -> i32>(IDX_COMP_UTIL_GET_PARENT_STAGE_ID)(id);
     let n = comp_util_get_parent_stage_id(id);

@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/worldcup/wc_oceania_league.rs.
-// [pt] Os comparadores das rotinas de ../comp/worldcup/wc_oceania_league.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `wc_oceania_league_update_staff_records_for_status`.
 pub(crate) unsafe extern "thiscall" fn compare_wc_oceania_league_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, out: usize, game: usize, a6: u32) -> u32 {

@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../shared.rs.
-// [pt] Os comparadores das rotinas de ../shared.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `abrir_no_conteiner`.
 pub(crate) unsafe extern "C" fn compare_abrir_no_conteiner(path: usize, name: *const u8, mode: u32, a4: u32, kind: u32) -> usize {
@@ -147,8 +146,6 @@ pub(crate) unsafe extern "thiscall" fn compare_can_choose(this: usize, j: usize,
 }
 
 /// Comparer for `aim_set_facing_direction`.
-///
-/// [pt] Sorteia: original e Rust partem do mesmo estado do gerador e o jogo segue com o da original.
 pub(crate) unsafe extern "thiscall" fn compare_aim_set_facing_direction(this: usize, a: i8, b: i8, c: i8, d: i8) {
     let this = MatchPlayer(this);
     let f = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, i8)>(IDX_AIM_SET_FACING_DIRECTION);
@@ -288,8 +285,6 @@ pub(crate) unsafe extern "thiscall" fn compare_players_in_line(this: usize, x1: 
 }
 
 /// Comparer for `consegue`.
-///
-/// [pt] Sorteia e grava `saida`: mesmo estado do gerador para as duas, o jogo segue com o da original.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn compare_consegue(this: usize, a: i8, b: i8, calcular: i8, strength: f32, adjust: f32, out: *mut u8) -> u8 {
     let f = original_fn::<unsafe extern "thiscall" fn(usize, i8, i8, i8, f32, f32, *mut u8) -> u8>(IDX_CAN_PLAY);
@@ -361,8 +356,6 @@ pub(crate) unsafe extern "thiscall" fn compare_linhas(this: usize) {
 }
 
 /// Comparer for `atualizar`.
-///
-/// [pt] Sorteia e grava (0x2b, 0x1a2, 0x35): mesmo estado do gerador, o jogo segue com o da original.
 pub(crate) unsafe extern "thiscall" fn compare_atualizar(this: usize) {
     let this = MatchPlayer(this);
     let f = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_UPDATE_PLAYER);

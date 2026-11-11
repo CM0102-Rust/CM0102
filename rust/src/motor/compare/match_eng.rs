@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../match_eng.rs.
-// [pt] Os comparadores das rotinas de ../match_eng.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `restart_play`.
 pub(crate) unsafe extern "thiscall" fn compare_restart_play(m: usize) {

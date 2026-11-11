@@ -2,10 +2,6 @@ use super::*;
 
 /// Does the club play in today's fixture list ([this+0x19], count at +0x21, 0x69 bytes per match, home at +0x20 and
 /// away at +0x24)? With `so_marcados`, only fixtures with +0x5b set count. Returns 1 or 0 (0 for a null club).
-///
-/// [pt] { 0x6b59a0 } (match_day.cpp): o clube tem jogo na lista do dia ([this + 0x19], quantidade em
-/// 0x21, 0x69 bytes por jogo; mandante em 0x20, visitante em 0x24)? Com `so_marcados`, so os jogos
-/// com 0x5b preenchido. Clube nulo: o original mostra uma caixa de erro e devolve 0 (aqui, so 0).
 pub(crate) unsafe extern "thiscall" fn has_match(this: usize, club: u32, so_marked: u32) -> u32 {
     if club == 0 {
         return 0;
@@ -27,10 +23,6 @@ pub(crate) unsafe extern "thiscall" fn has_match(this: usize, club: u32, so_mark
 /// Did the club win the match? Decides on penalties (+0x49/+0x4a), else extra time (+0x47/+0x48), else normal time
 /// (+0x43/+0x44), using the first score that is not -1. Returns 1 or 0; a null match or club, or a club not in the
 /// match, gives 0.
-///
-/// [pt] { 0x6b7cf0 } (match_day.cpp, cdecl): o clube venceu o jogo? Decide pelos penaltis (0x49/0x4a),
-/// senao pela prorrogacao (0x47/0x48), senao pelo tempo normal (0x43/0x44); placar -1 nao conta.
-/// Jogo ou clube nulo, ou clube fora do jogo: o original mostra uma caixa de erro e devolve 0.
 pub(crate) unsafe extern "C" fn won_the_match(game: usize, club: u32) -> u8 {
     let game = Fixture(game);
     if game.is_null() || club == 0 {
@@ -50,8 +42,6 @@ pub(crate) unsafe extern "C" fn won_the_match(game: usize, club: u32) -> u8 {
 }
 
 /// Shows the "v%s %s.%s %d" error box for match_man.cpp at a line and exits the game, as the original.
-///
-/// [pt] A caixa de erro "v%s %s.%s %d" de match_man.cpp na linha `linha`, e o jogo para (como a original).
 pub(crate) unsafe fn match_man_fatal_error(row: u32) -> ! {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let join: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
@@ -74,11 +64,6 @@ pub(crate) unsafe fn match_man_fatal_error(row: u32) -> ! {
 /// each, `+0x21` of them), the engine (`0x6b97a0` and freed; the match leaves `[0xde2f70]` via `0x90d6b0`), the summary
 /// (`+0x5b`) and the object at `+0x5f` (`0x453bc0`); finally the match array.
 /// Original: `end_day` (0x6b4190, match_day.cpp, thiscall).
-///
-/// [pt] { 0x6b4190 } (match_day.cpp): o fim do dia de jogos. Libera a lista global [0xb67dc8], os dois
-/// vetores do dia (+1, +0xd) e, para cada partida (+0x19, 0x69 bytes cada, +0x21 delas), o motor
-/// (0x6b97a0 e liberado; a partida sai de [0xde2f70] por 0x90d6b0), o resumo (+0x5b) e o objeto de
-/// +0x5f (0x453bc0); por fim o vetor das partidas.
 pub(crate) unsafe extern "thiscall" fn end_day(day: usize) {
     let list = read_usize(G_MATCH_DAY_PLAYER_INCIDENT_LIST);
     if list != 0 {
@@ -132,11 +117,6 @@ pub(crate) unsafe extern "thiscall" fn end_day(day: usize) {
 /// from `+0x14` and picks the human's (`+0x10`; otherwise the first with `+0xc`) for the screen (`0x717cc0` and
 /// `0x7fc7e0` with `[0xb67a48]` on).
 /// Original: `pick_day_match` (0x6b42a0, match_day.cpp, thiscall).
-///
-/// [pt] { 0x6b42a0 } (match_day.cpp): com partidas no dia (+0x2b), limpa os 0x40 bytes de cada uma
-/// (+0xd, 0x54 bytes, +0x15 delas) a partir de +0x14 e escolhe a do humano (+0x10; senao a primeira
-/// com +0xc) para a tela (0x717cc0 e 0x7fc7e0 com [0xb67a48] ligado). Devolve 1 se havia uma do
-/// humano.
 pub(crate) unsafe extern "thiscall" fn pick_day_match(day: usize) -> u32 {
     if read_usize(day + match_day_fields::HAS_INTEREST) == 0 {
         return 0;
@@ -184,14 +164,6 @@ pub(crate) unsafe extern "thiscall" fn pick_day_match(day: usize) -> u32 {
 /// `0x6b66a0`); `+0x2f` = it, returns 1. With none: in the 1st pass (`+0x33` 1) it moves to 2 and starts again from the
 /// beginning; otherwise `+0x2f` = -2 and returns 0.
 /// Original: `start_next_match` (0x6b5a70, match_day.cpp, thiscall).
-///
-/// [pt] { 0x6b5a70 } (thiscall, match_day.cpp): comeca a proxima partida do dia (+0x19, 0x69 bytes cada,
-/// +0x21 delas) depois da atual (+0x2f; -2 = acabou). A atual ainda com motor (+0x57) e erro 0x68d.
-/// Pula as ja decididas (+0x47 -2), as sem jogo marcado na 2a volta (+0x33 1 e +0x63.+0x10 zero), as
-/// de clube humano (0x600a50 com +0x44/+0x45) e as ja comecadas (+0x47 != -1, +0x57, +0x53). Na
-/// escolhida: tira da fila [0xde2f70] (0x90d2f0 com -3), cria o motor (0xf63b bytes, 0x6b7e50; sem
-/// ele erro 0x6b2 e segue) e o prepara (0x6b7f20 com a rapida de 0x6b66a0); +0x2f = ela, devolve 1.
-/// Sem nenhuma: na 1a volta (+0x33 1) passa a 2 e recomeca do inicio; senao +0x2f = -2 e devolve 0.
 pub(crate) unsafe extern "thiscall" fn start_next_match(day: usize) -> u32 {
     let read = |o: usize| read_i32(day + o);
     let por = |o: usize, v: i32| write_i32(day + o, v);
@@ -252,13 +224,6 @@ pub(crate) unsafe extern "thiscall" fn start_next_match(day: usize) -> u32 {
 /// objects of `0x625` at `+0x11f`; without it error `0x713`), records it (`0x7293f0`), frees the engine and takes the
 /// match off queue `[0xde2f70]` (`0x90d6b0`).
 /// Original: `step_day_match` (0x6b5ce0, match_day.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x6b5ce0 } (thiscall, ret 4, match_day.cpp): faz andar a partida atual do dia (+0x2f). Sem
-/// `ate_o_fim`, so 1 de cada 3 (0x40000 em [0xae3138]+4) ou 6 (0x80000) chamadas, pelo contador
-/// [0xb67a54] (0..100), e um passo do motor (0x6b98c0 com 1); com `ate_o_fim`, passos (-1) ate o
-/// fim. O estado vai em +0x67; ao terminar (2 ou 8) conta em +0x25, cria o resumo (+0x5f, 0xd7a
-/// bytes com 2 objetos de 0x625 em +0x11f; sem ele erro 0x713), registra (0x7293f0), libera o motor
-/// e tira a partida da fila [0xde2f70] (0x90d6b0). Devolve 1 se a partida terminou.
 pub(crate) unsafe extern "thiscall" fn step_day_match(day: usize, until_end: u32) -> u32 {
     let u = |p: usize, o: usize| read_usize(p + o);
     let counter = G_STEP_BACKGROUND_MATCH_COUNTER as *mut i32;
@@ -342,17 +307,6 @@ pub(crate) unsafe extern "thiscall" fn step_day_match(day: usize, until_end: u32
 /// `0x6951e0`, `0x59a5d0`, `0x7f8c00` and the club of each side (`0x6b79a0` with the round). Without `p`, error `0x73f`
 /// and 0.
 /// Original: `close_day_match` (0x6b5f00, match_day.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x6b5f00 } (thiscall, ret 4, match_day.cpp): o fechamento de uma partida do dia `p` (0x69
-/// bytes): copia os 0x4f bytes de p+4 para a partida (+0) e, com competicao (+0x14), le o numero da
-/// rodada de um clube humano ([adadfc] da competicao +8, 0x4a4850, +0x2d acima de 1; como na
-/// original, olha so o visitante +0x20 nas duas voltas) e registra o resultado: p+0x47 = -3 (jogo de
-/// fora, 0x924050 com os bits 12-13 de +0x4d e a copia com placares -1 em 0x5ab510/0x5aa680) ou o
-/// metodo 1 da competicao. Depois o pos-jogo com o resumo (p+0x5f): jogadores (0x6b6cc0), eventos
-/// (0x6b74a0), contratos (0x4ca6d0), suspensoes (0x55ca00), 0x76b600 (fora do -3), estados
-/// (0x62c080) e, fora do -3, a historia ([0xb74434] metodo 1, fora da [0x9cf684]), 0x7c0d70,
-/// 0x8c39f0, 0x444930, 0x868830, 0x4134c0, 0x6951e0, 0x59a5d0, 0x7f8c00 e o clube de cada lado
-/// (0x6b79a0 com a rodada). Sem `p`, erro 0x73f e 0.
 pub(crate) unsafe extern "thiscall" fn close_day_match(_day: usize, p: usize) -> u32 {
     let u = |q: usize, o: usize| *((q + o) as *const usize);
     if p == 0 {
@@ -459,19 +413,6 @@ pub(crate) unsafe extern "thiscall" fn close_day_match(_day: usize, p: usize) ->
 /// tactics (`0x5fbe20`, `0x5fbd00`, `0x5b5960`) and frees the summaries; with a score written, the date on the bar
 /// (`0x54ba20`).
 /// Original: `play_the_day` (0x6b4360, match_day.cpp (~3.3 KB), thiscall).
-///
-/// [pt] { 0x6b4360 } (thiscall, match_day.cpp, ~3,3 KB): joga o dia `dia` (+0x19 partidas de 0x69 bytes,
-/// +0x21 delas, +0x25 terminadas, +0x34 a do humano). Comeca a proxima (0x6b5a70). Em rede
-/// ([0xa5a390]): para cada partida pendente com humano (+0x53) cria o placar dos humanos (+0x5b,
-/// 0x11d bytes), liga cada humano ao seu lado (0x765480 +0xe2/+0xe6, 0x4542f0, 0x727f00), guarda o
-/// maior nivel (0x5fcff0) e o repassa (0x5fd100); depois avisa os que nao jogam (0x71b1b0), solta os
-/// humanos e joga ate o fim as partidas deles. Depois, cada partida ainda sem motor (+0x47 -1): com
-/// humano em rede, anda a atual ate o fim (0x6b5ce0) e recomeca tudo; senao cria o motor (0x6b7e50,
-/// 0x6b7f20), joga ate o fim (0x6b98c0 -1, contando em +0x25), cria o resumo (0xd7a bytes), registra
-/// (0x7293f0), libera o motor e, se o motor nao era rapido (+0 do motor zero), escreve o placar com
-/// a porcentagem do dia na barra (0x66f4e0, 0x802f80). Por fim anda a atual (0x6b5ce0 com 1), fecha
-/// cada partida (0x6b5f00), refaz as taticas guardadas dos humanos (0x5fbe20, 0x5fbd00, 0x5b5960) e
-/// libera os resumos; com placar escrito, a data na barra (0x54ba20). Devolve 1.
 pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
     let u = |p: usize, o: usize| core::ptr::read_unaligned((p + o) as *const usize);
     let por = |p: usize, o: usize, v: usize| core::ptr::write_unaligned((p + o) as *mut usize, v);
@@ -784,17 +725,6 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
 /// Finally the global list `[0xb67dc8]` (`0x68d020`) and the day's interest (`0x6b5040`). The arrays grow 5 at a time
 /// (`0x945667`; out of memory, errors `0xd6`, `0xf4`, `0x140`).
 /// Original: `set_up_the_day` (0x6b3c10, match_day.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x6b3c10 } (thiscall, ret 8, match_day.cpp): monta o dia `dia` com as partidas da data `data`
-/// no modo `modo` (0, 1 ou 2; fora disso ou sem data, erro 0x93). Zera o dia (+0 modo; vetores +1
-/// grupos de 24 bytes, +0xd competicoes de 0x54, +0x19 partidas de 0x69, cada um com capacidade e
-/// contagem; +0x2f -1, +0x33 1). Para cada uma das [0xb64738] listas (0x5ae6a0): as partidas
-/// pendentes (+0x43 <= -1, fora -2) entram no dia (copia de 0x4f bytes; +0x67 -1), as decididas
-/// antes (0x923630 bit 0) registradas e marcadas -2 (0x923cc0, 0x5ab510/0x5aa680), as outras
-/// avisadas (0x79c7b0); o grupo da lista (0x48dcd0) guarda a faixa das partidas, que e ordenada
-/// (qsort com 0x6b6510) e repartida por competicao (+4 da copia), e cada partida aponta a sua
-/// (+0x63). Por fim a lista global [0xb67dc8] (0x68d020) e o interesse do dia (0x6b5040). Os vetores
-/// crescem de 5 em 5 (0x945667; sem memoria, erros 0xd6, 0xf4, 0x140). Devolve `dia`.
 pub(crate) unsafe extern "thiscall" fn set_up_the_day(day: usize, data: usize, mode: u32) -> usize {
     let por = |p: usize, o: usize, v: u32| write_u32(p + o, v);
     let modo8 = mode as u8;
@@ -946,9 +876,6 @@ pub(crate) unsafe extern "thiscall" fn set_up_the_day(day: usize, data: usize, m
 
 /// Memory regions `exe::match_day_refresh_human_interest_flags` marks for a match day: day +0x29..+0x2e, each group +0x14, each competition +0xc..+0x13 and
 /// each match +0x53.
-///
-/// [pt] As regioes que a 0x6b5040 marca no dia `d`: +0x29 a +0x2e do dia, +0x14 de cada grupo, +0xc a
-/// +0x13 de cada competicao e +0x53 de cada partida.
 pub(crate) unsafe fn match_day_marked_regions(d: usize) -> Vec<(usize, usize)> {
     let read = |a: usize| read_i32(a);
     let mut v = vec![(d + match_day_fields::MARKED_GROUP_COUNT, 6)];
@@ -971,16 +898,6 @@ pub(crate) unsafe fn match_day_marked_regions(d: usize) -> Vec<(usize, usize)> {
 /// clubs (+0x39 or +0x24) plays in it, and flags each fixture (+0x53) involving a human club or watched by a human,
 /// counting the groups and competitions with such fixtures; other fixtures of human interest (`exe::match_day_is_fixture_of_human_interest`) only flag the
 /// competition. Any flag sets +0x2b. Returns 1.
-///
-/// [pt] { 0x6b5040 } (thiscall, match_day.cpp): marca no dia de jogos `d` o que interessa ao humano.
-/// Primeiro a lista dos humanos (0x5fe8d0 em [0xb63c98]); zera +0x29, +0x2a e +0x2b. Para cada grupo
-/// (+1, de 0x18 em 0x18, quantos em +9) e cada competicao dele (+4 a +8; em +0xd, de 0x54 em 0x54):
-/// a competicao interessa (+0xc) se um dos 16 humanos no fim da tabela de pessoas tem o clube (+0x39)
-/// ou o outro vinculo (+0x24) nela (0x48db80 da competicao em [[0xadadfc] + id x 4]). Cada partida
-/// dela (+4 a +8; em +0x19, de 0x69 em 0x69): com clube humano (0x600a50 com +0x20/+0x44 ou
-/// +0x24/+0x45) ou pela 0x5fe420 a partida e marcada (+0x53) e conta o grupo (+0x29) e a competicao
-/// (+0x2a) na primeira vez (+0x14 do grupo, +0x10 da competicao); senao, pela 0x6b61e0, so a
-/// competicao interessa. Qualquer marca liga +0x2b do dia. Devolve 1.
 pub(crate) unsafe extern "thiscall" fn match_day_interest(d: usize) -> u32 {
     let g = |a: usize| read_usize(a);
     let read = |a: usize| read_i32(a);
@@ -1049,10 +966,6 @@ pub(crate) unsafe extern "thiscall" fn match_day_interest(d: usize) -> u32 {
 }
 
 /// Addresses of the national-team marks (0xb67a58 + id) of human managers with flag bit 2 and a national team.
-///
-/// [pt] As marcas das selecoes dos tecnicos humanos (0xb67a58 + id), que a 0x6b66a0 poe uma vez
-/// (com [0xa15704] ligado): para cada vaga de humano em 0xb63d60 (de 0x48 em 0x48 ate 0xb64738) com
-/// +0x11c bit 2 e selecao (+0x71).
 pub(crate) unsafe fn human_national_team_marks() -> Vec<usize> {
     let mut v = Vec::new();
     for e in (0xb63d60usize..G_KEY_NATION_ACTIVE_COUNT).step_by(0x48) {
@@ -1072,17 +985,6 @@ pub(crate) unsafe fn human_national_team_marks() -> Vec<usize> {
 /// flagged), when a human manages a club of the same nation, in some cases when the clubs' reputations (+0x80) add up
 /// to more than 12000, or when the competition's national team is flagged for a human; otherwise 1 if no scouted player
 /// is involved (`fixture_has_scouted_player`). First marks the human managers' national teams once.
-///
-/// [pt] { 0x6b66a0 } (cdecl, match_day.cpp): 1 se a `partida` nao envolve o humano, pela 0x7f9720. Antes,
-/// uma vez ([0xa15704]), marca as selecoes dos humanos em 0xb67a58. Sem [0xdd7118]: 1. Devolve 0 se:
-/// algum dos clubes (+0x1c, +0x20) e de humano (0x600a50), ou o clube ligado a ele (0x540a50); a
-/// competicao (+0) e uma de duas fixas ([0x9cf7bc], [0x9cf6e4]); e a de [0x9cf958] com um dos dois
-/// clubes fixos ([0x9cf2e4], [0x9cf510], linhas de 0x122 em [0xae23a8]) humano (+0x11c bit 2); um dos
-/// 16 humanos no fim da tabela de pessoas (+0x5f = 1) treina clube da mesma nacao (+0x57) de um dos
-/// dois. Na competicao [0x9cf684] sem clube humano, direto a 0x7f9720. Fora de selecao (0x53b900) com
-/// 0x5c2990, ou na competicao [0x9cf6f8]: 0 se o +0x80 dos dois somar mais de 12000. Senao a vaga da
-/// 0x48dd70 (pela tabela em 0xb63d74): 0 ou 1 da 0; nas 3 a 7 com a selecao da competicao marcada, 0;
-/// vaga de humano com +0x11c bit 2, 0. No fim: 1 se a 0x7f9720 der 0.
 pub(crate) unsafe extern "C" fn match_without_human(fixture: usize) -> u32 {
     let fixture = Fixture(fixture);
     let human: unsafe extern "C" fn(usize, u32, u32, u32, u32) -> i32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
@@ -1182,18 +1084,6 @@ pub(crate) unsafe extern "C" fn match_without_human(fixture: usize) -> u32 {
 /// the club's competition (+0x14 = +0x57, with +0x40/+0x41), the club not out, +0x59 above 15, +0x57 above random(5) +
 /// 10, the player sheet's +0xb below 4250 and 0x7c3a40 zero: 0x589bc0 and, without `exe::staff_favours_club`, `exe::staff_add_favoured_club`(person, club, 1),
 /// and end (a pleased youngster favouring the club).
-///
-/// [pt] { 0x6b79a0 } (cdecl, match_day.cpp; chamada duas vezes em 0x6b61a9/0x6b61bd, uma por clube): o
-/// `clube` depois da partida contra `outro`. Sem clube, outro ou partida: caixa de erro. Sem tecnico
-/// (+0xcf) nada; sem 0x600a50, com +0x80 abaixo de 4750 e sorteio(100) != 0, nada. Com 0x6b7cf0,
-/// partida +0x40 e +0x41 e o clube nao fora (0x53b900): entre os 50 de +0xd7, com contrato (0x4cf5a0)
-/// sem +0x45, +0xb da ficha acima de 4250, +0x59 acima de 5, +0x57 acima de 15, +0x58 acima de 10,
-/// `n` acima de 2 e sorteio(n) != 0: 0x5896d0(pessoa, clube, outro, n) e fim. Depois, os 20 da
-/// linha do clube no registro `t` (lado pelo clube em t+0; linhas de 0x49 a partir de +0x1ce, pessoa
-/// em -0x3e, so os com +0 na linha): ficha, da base, idade (+0x18) ate 20, contrato sem +0x45, a
-/// partida da competicao do clube (+0x14 = +0x57, com +0x40/+0x41), o clube nao fora, +0x59 acima
-/// de 15, +0x57 acima de sorteio(5) + 10, +0xb da ficha abaixo de 4250 e 0x7c3a40 zero: 0x589bc0 e,
-/// sem 0x547d60, 0x547d90(pessoa, clube, 1), e fim.
 pub(crate) unsafe fn post_match_club_with(club: Club, other: usize, fixture: Fixture, n: u32, t: usize, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let ch = core::cell::RefCell::new(call);
     let out = |s: usize, c: usize, o: usize, n: i32| (ch.borrow_mut())(0x5896d0, 0, [s as u32, c as u32, o as u32, n as u32, 0]);
@@ -1284,8 +1174,6 @@ pub(crate) unsafe fn post_match_club_with(club: Club, other: usize, fixture: Fix
 
 /// After a match, processes the post-match events of `partida` (injuries, news, morale and contract effects per event
 /// type); thin wrapper over post_match_events_injected with the real calls.
-///
-/// [pt] { 0x6b74a0 }: ver `post_match_events_injected`.
 pub(crate) unsafe extern "C" fn post_match_events(fixture: usize) {
     post_match_events_injected(Fixture(fixture), &mut |r, t, a| dispatch_post_match_call(r, t, a))
 }
@@ -1293,23 +1181,17 @@ pub(crate) unsafe extern "C" fn post_match_events(fixture: usize) {
 /// After a match: updates the players and staff of team `t` in fixture `partida` (form and ratings copied to the player
 /// records, possible contract clauses, the manager's and assistants' stats and the club's reputation +0x80). Wrapper of
 /// `post_match_players_with` with the real outside calls.
-///
-/// [pt] { 0x6b6cc0 }: ver `post_match_players_with`.
 pub(crate) unsafe extern "C" fn post_match_players(fixture: usize, t: usize) {
     post_match_players_with(fixture, t, &mut |r, tt, a| dispatch_post_match_call(r, tt, a))
 }
 
 /// Post-match news for `clube` after the match `partida` against `outro` (turnaround story for a senior player, or a
 /// pleased youngster favouring the club); calls post_match_club_with with the game's real calls.
-///
-/// [pt] { 0x6b79a0 }: ver `post_match_club_with`.
 pub(crate) unsafe extern "C" fn post_match_club(club: usize, other: usize, fixture: usize, n: u32, t: usize) {
     post_match_club_with(Club(club), other, Fixture(fixture), n, t, &mut |r, tt, a| dispatch_post_match_call(r, tt, a))
 }
 
 /// Calls one of the post-match routines with effects by game address, with the right convention and argument count.
-///
-/// [pt] As rotinas do banco com efeitos chamadas pelo pos-jogo, pelo endereco do jogo (`this` 0: cdecl).
 pub(crate) unsafe fn dispatch_post_match_call(routine: usize, this: usize, a: [u32; 5]) -> u32 {
     type T1 = unsafe extern "thiscall" fn(usize, u32) -> u32;
     type T2 = unsafe extern "thiscall" fn(usize, u32, u32) -> u32;
@@ -1355,15 +1237,11 @@ pub(crate) const POS_PROLOGUES: [Prologue; 15] = [
 ];
 
 /// True inside a post-match comparison with the tape open.
-///
-/// [pt] Dentro de uma comparacao do pos-jogo, com a fita aberta.
 pub(crate) fn is_recording_post_match() -> bool {
     RECORD_POST_MATCH.load(std::sync::atomic::Ordering::Relaxed) && is_recording()
 }
 
 /// Runs a post-match call directly, or records it on the tape during a post-match comparison.
-///
-/// [pt] Repassa ou grava (durante uma comparacao do pos-jogo, no nivel de cima da fita).
 pub(crate) unsafe fn pass_or_record_post_match(routine: usize, this: usize, a: [u32; 5], f: impl FnOnce() -> u64) -> u64 {
     use std::sync::atomic::Ordering::Relaxed;
     if RECORD_POST_MATCH.load(Relaxed) && is_recording() {
@@ -1466,8 +1344,6 @@ pub(crate) fn post_match_gates() -> [usize; 15] {
 }
 
 /// The flags (+0x40..+0x48) of the person's contract at a club as a comparer region, or None.
-///
-/// [pt] As flags do contrato (+0x40 a +0x48) de `pessoa` no `clube`, como regiao.
 pub(crate) unsafe fn contract_flags_region(person: usize, club: usize) -> Option<(usize, usize)> {
     let c = exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), person, club);
     (c != 0).then_some((c + contract::FLAGS, 9))
@@ -1487,16 +1363,6 @@ pub(crate) unsafe fn contract_flags_region(person: usize, club: usize) -> Option
 /// creates the summary (`+0x5f`, `0xd7a` bytes with 2 objects of `0x625` at `+0x11f`; without it error `0xa68`) and
 /// records it (`0x7293f0`), frees the engine and takes the match off queue `[0xde2f70]` (`0x90d6b0`).
 /// Original: `match_day_drop_viewer_and_finish_match` (0x6b6970, match_day.cpp, cdecl).
-///
-/// [pt] { 0x6b6970 } (cdecl, match_day.cpp): o humano da vez ([0xb77c7a]) deixa a partida que assistia
-/// (chamada só quando um jogador da rede sai, 0x838c00). A partida dele ([0xb74c26 + 0x300 × vez],
-/// 0x765480 → +0xe2): se outro dos 16 humanos (as últimas 16 fichas de [0xae23bc], 110 bytes, +0x5f
-/// ativo) assiste a mesma e é a vez dele (0x7fffa0 no gerente), sai calado; senão tira a vez dos
-/// quatro vetores do resumo (+0x5b: +5/+0x45/+0x85/+0xc5, os contadores +0x105..+0x108). Ninguém mais
-/// assistindo: cria o motor (+0x57, 0xf63b bytes, 0x6b7e50 + 0x6b7f20; sem ele erro 0xa4b), anda até
-/// o fim (0x6b98c0 com −1; estado +0x67, 2 ou 8 contam em [[0xb67a50]+0x25]), fora do 8 cria o resumo
-/// (+0x5f, 0xd7a bytes com 2 objetos de 0x625 em +0x11f; sem ele erro 0xa68) e registra (0x7293f0),
-/// libera o motor e tira a partida da fila [0xde2f70] (0x90d6b0).
 pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
     covered!("screens leave the watched match");
     let team = || read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize;
@@ -1589,12 +1455,6 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
 /// competition in a local list (`0x68d020`) and copies to `saida` the first one with club `+4` at home (`+0xc`) or away
 /// (`+0x10`). Index outside 0..`[this+0x1c]` or null output: the original routine runs (error box, 0).
 /// Original: `Match_Stats::find_record_fixture` (0x729e30, match_stats.cpp, thiscall).
-///
-/// [pt] { 0x729e30 } (thiscall, ret 8, match_stats.cpp): a ficha do jogo (0x4f bytes) do registro `k` do
-/// índice de estatísticas ([this], 12 bytes: +0 competição, +4 um dos clubes, +8/+0xa a data): pede
-/// à agenda [0xae2a58] (0x5acbe0) os jogos daquela data e competição numa lista local (0x68d020) e copia
-/// para `saida` o primeiro com o clube +4 na casa (+0xc) ou fora (+0x10). Devolve 1 se achou. Índice
-/// fora de 0..[this+0x1c] ou saída nula: a original (caixa de erro, 0).
 pub(crate) unsafe extern "thiscall" fn find_record_fixture(stats: usize, k: i32, out: usize) -> u32 {
     if k < 0 || k > read_i32(stats + match_stats::CAPACITY).wrapping_sub(1) || out == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(IDX_FIND_RECORD_FIXTURE)(stats, k, out);
@@ -1643,16 +1503,6 @@ pub(crate) unsafe extern "thiscall" fn find_record_fixture(stats: usize, k: i32,
 /// (`+0x8ed0` / 11) against the summary (wait `0x226` - 50 x `+0x51`); with a state, it records it (`0x729ff0`) and the
 /// day's human match (`+0x34`) becomes the one with the highest competition (`0x6b6570`) or the furthest along.
 /// Original: `network_step` (0x6b55c0, match_day.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x6b55c0 } (thiscall, ret 4, match_day.cpp): um passo da partida do humano `p` em rede, pelo
-/// relogio (0x90c510) e pelo placar dos humanos (+0x5b: +0 estado, +1 evento, +0x85 quem ja viu,
-/// +0x105 humanos, +0x107 vistos, +0x108 pausa, +0x109 espera, +0x10d hora, +0x111 pode andar,
-/// +0x115 lance). Sem `p`, anda a atual (0x6b5ce0) e comeca a proxima (0x6b5a70). Espera todos verem
-/// o estado; depois os sons (0x6d8c70) e o tempo; mostra o proximo evento (0x6d78b0, lance pela
-/// tabela 0x6d5cd0) ou da um passo do motor (0x6b98c0 com 1) e marca o estado: fim (2/8), intervalo
-/// (4), gols de cada lado (+0xf5bd/+0xf5f3 contra o resumo), lance, +0x8eb2, o minuto (+0x8ed0 / 11)
-/// contra o resumo (espera 0x226 - 50 x +0x51); com estado, registra (0x729ff0) e a do humano do dia
-/// (+0x34) passa a ser a de maior competicao (0x6b6570) ou mais adiantada. Devolve 1 se mudou.
 pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32 {
     let u = |q: usize, o: usize| read_usize(q + o);
     let por = |q: usize, o: usize, v: u32| write_u32(q + o, v);
@@ -1795,14 +1645,6 @@ pub(crate) unsafe extern "thiscall" fn network_step(day: usize, p: usize) -> u32
 /// `+0x119`; if it is, it notifies the commentator (`+0x8f7a` = 3), creates the summary, records it for watching
 /// (`0x729ff0`) and returns 1. Errors `0x4b8` (no match), `0x4d0`, `0x4ea`, `0x511` (out of memory).
 /// Original: `confirm_network_match` (0x6b5260, match_day.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x6b5260 } (thiscall, ret 4, match_day.cpp): o humano da vez ([0xb77c7a]) confirma a partida
-/// `p` em rede (placar dos humanos +0x5b: +0x45 quem confirmou, +0x105 humanos, +0x106 confirmados).
-/// Com todos: cria o motor (0x6b7e50) e o prepara para ver (0x6b7f20 com o ultimo 1). Se ele nao
-/// for de ver (devolve 0), joga ate o fim (contando em [0xb67a50]+0x25), cria o resumo, registra
-/// (0x7293f0), libera o motor, tira da fila e marca +0x119; se for, avisa o narrador (+0x8f7a = 3),
-/// cria o resumo e registra para ver (0x729ff0) e devolve 1. Erros 0x4b8 (sem partida), 0x4d0, 0x4ea,
-/// 0x511 (sem memoria).
 pub(crate) unsafe extern "thiscall" fn confirm_network_match(_day: usize, p: usize) -> u32 {
     let u = |q: usize, o: usize| read_usize(q + o);
     let por = |q: usize, o: usize, v: usize| write_usize(q + o, v);
@@ -1879,10 +1721,6 @@ pub(crate) unsafe extern "thiscall" fn confirm_network_match(_day: usize, p: usi
 /// the number by code (0: 5/4, 1: 11/10, 0x1ef: 1/0, 0x3de: 3/2, 0x483: 7/6, 0x528: 9/8; the first with the second
 /// argument 1); any other code: the original (error box). Compared by the result
 /// Original: `competition_number` (0x6b6570, match_day.cpp (304 bytes), cdecl).
-///
-/// [pt] { 0x6b6570 } (cdecl, match_day.cpp): o numero da competicao pelo codigo (0: 5/4, 1: 11/10, 0x1ef:
-/// 1/0, 0x3de: 3/2, 0x483: 7/6, 0x528: 9/8; o primeiro com `segunda` 1). Outro codigo: a original
-/// (caixa de erro).
 pub(crate) unsafe extern "C" fn competition_number(code: u32, second: u32) -> u32 {
     let s = (second as u8 == 1) as u32;
     covered!("competition number");

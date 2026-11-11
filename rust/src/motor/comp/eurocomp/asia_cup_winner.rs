@@ -2,9 +2,6 @@ use super::*;
 
 /// The group each African Cup quarter-final slot comes from (−1 = group A, the cup's own table; 0..2 = the stages of
 /// groups B to D) and the position: the keys are the pairs of the list.
-///
-/// [pt] O grupo de onde sai cada vaga das quartas da Copa Africana (−1 = o grupo A, a tabela da própria copa; 0..2 = as fases
-/// dos grupos B a D) e a posição: as chaves são os pares da lista.
 pub(crate) const AFRICAN_NATIONS_QUARTER_FINAL_SLOTS: [(i32, i32); 8] = [
     (-1, 0), (0, 1), // cqt13: 1º A × 2º B
     (1, 0), (2, 1), // cqt13: 1º C × 2º D
@@ -13,8 +10,6 @@ pub(crate) const AFRICAN_NATIONS_QUARTER_FINAL_SLOTS: [(i32, i32); 8] = [
 ];
 
 /// Club at position p of group g (or the cup itself when g < 0) via League::get_table_row.
-///
-/// [pt] O clube da posição `p` do grupo `g` (pela 0x6826d0 League::get_table_row: push p; mov ecx, grupo -> thiscall, ret 4).
 pub(crate) unsafe fn group_table_club(this: League, g: i32, p: i32) -> usize {
     let group = if g < 0 { this.addr() } else { read_usize(this.stages() + g as usize * 4) };
     read_usize(exe::league_get_table_row(group, p))
@@ -36,16 +31,6 @@ pub(crate) unsafe fn group_table_club(this: League, g: i32, p: i32) -> usize {
 ///
 /// Without the stage: the box of line `0x32c` and return. With it: the round is set up (`0x51c800` Cup::set_up_round:
 /// push 0; mov ecx, stage -> thiscall, ret 4) and `+0x30` = 3.
-///
-/// [pt] { 0x402090 } (thiscall, ret 0, african_nations.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
-/// normal): `AfricanNations::create_knockout_stage()`, as quartas da Copa Africana (da fase seguinte 0x401e10, ao chegar
-/// a 3): a lista dos 8 (0x944e46(0x20): push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x311 e volta) pelos
-/// cruzamentos de AFRICAN_NATIONS_QUARTER_FINAL_SLOTS, na ordem das chamadas; a tabela das rodadas pela virtual +0x3c (push 0; push &id; push
-/// &rodadas; push 3; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xb2) push; add esp, 4 -> cdecl;
-/// Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: a copa, 8, a lista, as rodadas, +4, a tabela, o ano +0x40, 3, 4, o
-/// id, 0x14, 0, 0, 0 e nenhuma semente; a original empurra as rodadas, o id e o ano com lixo nos 16 bits altos, que o
-/// construtor não lê) em [+0xc][3]; a lista e a tabela liberadas (0x9452ca). Sem fase: a caixa da linha 0x32c e volta.
-/// Com ela: a rodada montada (0x51c800 Cup::set_up_round: push 0; mov ecx, fase -> thiscall, ret 4) e +0x30 = 3.
 pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_knockout_stage(this: usize) {
     let this = League(this);
     let list = exe::crt_malloc(0x20);
@@ -85,10 +70,6 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_knockout_stage(thi
 
 /// AsiaCupWinner::advance_stage(): moves the Asian Cup Winners' Cup to its next stage (+0x30); on reaching stage 1
 /// (after both zones' knockouts) it creates the finals. Shows the original error box if already at the last stage.
-///
-/// [pt] { 0x40dfa0 } (thiscall, ret 0, asia_cup_winner.cpp; a virtual +0x28): `AsiaCupWinner::advance_stage()`: na última
-/// fase (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x328; senão +0x30 sobe e, chegando a 1 (depois dos mata-matas
-/// das duas zonas), as finais (0x40e030: mov ecx, this -> thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn asia_cup_winner_advance_stage(this: usize) {
     let this = Cup(this);
     let f = this.current_stage() as i32;
@@ -114,11 +95,6 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_advance_stage(this: usize
 /// word). The 2nd and 3rd swap places (the pairings: the brackets are the pairs of the list).
 ///
 /// Slots left over stay 0 (the original routine leaves them with whatever malloc returned).
-///
-/// [pt] Os 4 finalistas da Recopa asiática: os vivos (+5 = 1 na tabela de 6 bytes) do mata-mata da primeira zona (a tabela da
-/// copa, +0xa7) e depois os da segunda (a tabela +0xa7 da fase [+0xc][0]), até 4 ao todo, as duas buscas até o +0x3e da
-/// copa (palavra com sinal); o 2º e o 3º trocam de lugar (os cruzamentos: as chaves são os pares da lista). As vagas
-/// que sobrarem ficam 0 (a original as deixa com o que o malloc deu).
 pub(crate) unsafe fn asian_cup_winners_finalists(this: Cup) -> [usize; 4] {
     let mut v = [0usize; 4];
     let mut n = 0i16;
@@ -153,16 +129,6 @@ pub(crate) unsafe fn asian_cup_winners_finalists(this: Cup) -> [usize; 4] {
 ///
 /// No stage: the error box for line 0x375 and return (the list is not freed, as in the original). With it: the draw of
 /// round 0 (`draw_round` Cup::draw_round: push 0; mov ecx, stage -> thiscall, ret 4) and the list is freed.
-///
-/// [pt] { 0x40e030 } (thiscall, ret 0, asia_cup_winner.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
-/// normal): `AsiaCupWinner::create_finals_stage()`: a lista dos 4 (0x944e46(0x10): push; add esp, 4 -> cdecl; sem
-/// memória, a caixa da linha 0x34b e volta) de asian_cup_winners_finalists; a tabela das rodadas pela virtual +0x3c (push 0; push
-/// &id; push &rodadas; push 1; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xb2) push; add esp, 4 -> cdecl;
-/// Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: a copa, 4, a lista, as rodadas, +4, a tabela, o ano +0x40, 1, 2, o
-/// id, 0x14, 0, 0, 0 e nenhuma semente; a original empurra as rodadas, o id e o ano com lixo nos 16 bits altos, que o
-/// construtor não lê) em [+0xc][1]; a tabela liberada (0x9452ca). Sem fase: a caixa da linha 0x375 e volta (a lista não
-/// é liberada, como na original). Com ela: o sorteio da rodada 0 (0x51c410 Cup::draw_round: push 0; mov ecx, fase ->
-/// thiscall, ret 4) e a lista liberada.
 pub(crate) unsafe extern "thiscall" fn create_finals_stage(this: usize) {
     let this = Cup(this);
     let list = exe::crt_malloc(0x10);
@@ -204,9 +170,6 @@ pub(crate) unsafe extern "thiscall" fn create_finals_stage(this: usize) {
 /// in the 1st, 7 after); the final stage (stage 1) in May: semi-final on 24/5, third place and final on 26/5, single
 /// matches; category 4 in the qualifiers and 6 after
 /// Original: `AsiaCupWinner::create_round_table` (0x40cf90, asia_cup_winner.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x40cf90 } (thiscall, ret 0x10, asia_cup_winner.cpp; a virtual +0x3c): `AsiaCupWinner::create_round_table(fase,
-/// &rodadas, &extra, &é_liga)`: a fase de `asian_cup_winners_stage`.
 pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     create_round_table(Cup(this), asian_cup_winners_stage(stage), rounds, extra, league, 0x987b60)
 }
@@ -214,9 +177,6 @@ pub(crate) unsafe extern "thiscall" fn asia_cup_winner_create_round_table(this: 
 /// rule: the Asian Cup Winners' Cup has 16 teams, the qualified clubs (+0xb2) in the order they were picked, all with
 /// class and status 0
 /// Original: `AsiaCupWinner::create_team_entries` (0x40d4d0, asia_cup_winner.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x40d4d0 } (thiscall, ret 0, asia_cup_winner.cpp): `AsiaCupWinner::create_team_entries()`: os 16 times (a caixa
-/// da linha 0x185 sem memória).
 pub(crate) unsafe extern "thiscall" fn create_team_entries(this: usize) -> i32 {
     build_team_table(Cup(this), 0x987b60, 0x185, "cqq_12 times da recopa asiatica", |i| i) // cqq12: the Asian Cup Winners’ Cup teams
 }

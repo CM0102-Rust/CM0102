@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/conmebol_seeding.rs.
-// [pt] Os comparadores das rotinas de ../comp/conmebol_seeding.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Lado a lado: os clubes do jogo e a marca da caixa.
 pub(crate) unsafe extern "thiscall" fn compare_assign_libertadores_places(this: usize, clubs: usize, count: u32) {
@@ -25,8 +24,6 @@ pub(crate) unsafe extern "thiscall" fn compare_assign_libertadores_places(this: 
 }
 
 /// Comparer for `find_nth_unqualified_club_of_nation`.
-///
-/// [pt] A devolução das duas (a rotina só lê).
 pub(crate) unsafe extern "thiscall" fn compare_find_nth_unqualified_club_of_nation(this: usize, clubs: usize, count: u32, nation: u32, n: u32, without_slot: u32, without_human: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> usize>(IDX_FIND_NTH_UNQUALIFIED_CLUB_OF_NATION);
     let r = o(this, clubs, count, nation, n, without_slot, without_human);
@@ -36,8 +33,6 @@ pub(crate) unsafe extern "thiscall" fn compare_find_nth_unqualified_club_of_nati
 }
 
 /// Comparer for `is_mercosur_invited_club`.
-///
-/// [pt] A devolução das duas (a rotina só lê).
 pub(crate) unsafe extern "thiscall" fn compare_is_mercosur_invited_club(this: usize, club: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_IS_MERCOSUR_INVITED_CLUB);
     let r = o(this, club);
@@ -47,9 +42,6 @@ pub(crate) unsafe extern "thiscall" fn compare_is_mercosur_invited_club(this: us
 }
 
 /// Comparer for `collect_conmebol_clubs`.
-///
-/// [pt] Lado a lado: a original com a saída de quem chama, a cópia com uma saída própria (liberada depois); os clubes, a
-/// devolução e os registros das duas tabelas.
 pub(crate) unsafe extern "stdcall" fn compare_collect_conmebol_clubs(out: *mut usize) -> u32 {
     let o = original_fn::<unsafe extern "stdcall" fn(*mut usize) -> u32>(IDX_COLLECT_CONMEBOL_CLUBS);
     let mut t2 = 0usize;
@@ -66,8 +58,6 @@ pub(crate) unsafe extern "stdcall" fn compare_collect_conmebol_clubs(out: *mut u
 }
 
 /// Comparer for `update_for_new_season`.
-///
-/// [pt] Lado a lado: o ano gravado (+0x6f), os clubes e a marca da caixa (cada uma monta e solta a própria tabela).
 pub(crate) unsafe extern "thiscall" fn compare_update_for_new_season(this: usize, skip: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_UPDATE_FOR_NEW_SEASON);
     let mut reg = club_seeding_regions();
@@ -85,8 +75,6 @@ pub(crate) unsafe extern "thiscall" fn compare_set_bra_champ_cup_winner(this: us
 }
 
 /// Comparer for `conmebol_seeding_save_to_temp_file`.
-///
-/// [pt] Comparador da 0x4c6b70: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_conmebol_seeding_save_to_temp_file(this: usize) {
     // simplification: writes a file to CM3_TEMP (cannot run twice); the copy is proven by the save proof
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CONMEBOL_SEEDING_SAVE_TO_TEMP_FILE)(this)

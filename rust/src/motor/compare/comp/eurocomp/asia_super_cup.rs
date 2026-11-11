@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/eurocomp/asia_super_cup.rs.
-// [pt] Os comparadores das rotinas de ../comp/eurocomp/asia_super_cup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `asia_super_cup_create_round_table`.
 pub(crate) unsafe extern "thiscall" fn compare_asia_super_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {

@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/eurocomp/con_merc_cup.rs.
-// [pt] Os comparadores das rotinas de ../comp/eurocomp/con_merc_cup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `con_merc_cup_create_semi_final_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_create_semi_final_stage(this: usize) {
@@ -27,10 +26,6 @@ pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_advance_stage(this: 
 /// slots and freed.
 ///
 /// The draws of the nations' lists stay on each one's stack: only the final list and the random generator count.
-///
-/// [pt] Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
-/// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nas 16 vagas e liberada. Os sorteios das listas
-/// das nações ficam na pilha de cada uma: só a lista final e o sorteador contam.
 pub(crate) unsafe extern "thiscall" fn compare_con_merc_cup_select_invited_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_CON_MERC_CUP_SELECT_INVITED_CLUBS);
     let lo = core::cell::Cell::new(0usize);

@@ -1,8 +1,6 @@
 use super::*;
 
 /// What changes from one division to another in the constructor.
-///
-/// [pt] O que muda de uma divisão para outra no construtor.
 pub(crate) struct LeagueDivision {
     pub(crate) vtabela: usize,
     /// a regra de disciplina (+0x50): 0xc a francesa, 0x1a a espanhola
@@ -33,18 +31,6 @@ pub(crate) struct LeagueDivision {
 /// playable lower division], the Spanish lower division (operator new of 0xee; SpaLower::SpaLower `0x851020`: push
 /// year; mov ecx, new -> thiscall, ret 4) goes into `+0xee` (0 when out of memory); with the bit, `+0xee` = 0. Returns
 /// this.
-///
-/// [pt] O corpo dos quatro construtores (thiscall(this, ano, registro), ret 8, quadro SEH só para os operator new): a base
-/// (League::League 0x682200: mov ecx -> thiscall, ret 0), o registro (+4), a vtable, o ano (+0x40) e a disciplina
-/// (+0x50); tenta carregar o estado (League::load_from_temp_file 0x687b10: push 1; mov ecx -> thiscall, ret 4).
-/// Carregou: pronto. Senão, a liga nova, só a liga: fase 0xff (+0x44), fase atual −1 (+0x30), +0x2c = 0, +0xc = 0; as
-/// regras, a tabela, os jogos (League::create_fixtures 0x6835c0), a ordem (League::sort_table 0x6827d0: push 0 ->
-/// thiscall, ret 4), as estatísticas (operator new 0x944cf1 de 0x5ce: push; add esp, 4 -> cdecl; Comp_Stats 0x49ee70:
-/// push liga; mov ecx, novo -> thiscall, ret 4) em +8 e as posições previstas (0x68a850: mov ecx -> thiscall, ret 0);
-/// cada passo que falha mostra a caixa da sua linha e encerra. Na Primera, por fim: se a nação da competição
-/// ([+4]+0x5d) não tem o bit 4 de +0x11c [inferência: a divisão de baixo jogável], a divisão de baixo espanhola
-/// (operator new de 0xee; SpaLower::SpaLower 0x851020: push ano; mov ecx, novo -> thiscall, ret 4) vai para +0xee
-/// (0 sem memória); com o bit, +0xee = 0. Devolve this.
 pub(crate) unsafe fn construct_division_league(this: League, ano: u32, registro: usize, p: &LeagueDivision) -> usize {
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.rules);
     let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(p.table);
@@ -141,19 +127,12 @@ pub(crate) const SPAIN_PRIMERA_DIVISION: LeagueDivision = LeagueDivision {
 /// the French second division: discipline rule 0xc (the French one), only the league; with no saved state, the rules,
 /// the table, the fixtures, the order, the stats and the predicted positions
 /// Original: `FraSecond::FraSecond` (0x5be330, fra_second.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x5be330 } (thiscall, ret 8, fra_second.cpp): `FraSecond::FraSecond(ano, registro)`: a segunda divisão francesa
-/// (a Division 2), disciplina 0xc, só a liga.
 pub(crate) unsafe extern "thiscall" fn construct_fra_second(this: usize, year: u32, record: usize) -> usize {
     construct_division_league(League(this), year, record, &FRENCH_SECOND_DIVISION)
 }
 
 /// Comparer for the four constructors: only the original runs; checks return, vtable, year, record, discipline, stage
 /// fields and the lower division at +0xee.
-///
-/// [pt] O comparador dos quatro: alocam: só a original, conferindo a devolução, a vtable, o ano, o registro e a disciplina;
-/// na liga nova (+0x44 = 0xff, com as estatísticas), +0x2c = 0 e +0xc = 0; na Primera, a divisão de baixo em +0xee
-/// conforme o bit 4 da nação.
 pub(crate) unsafe fn compare_division_league_ctor(name: &str, this: League, year: u32, record: usize, p: &LeagueDivision, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this.addr() && read_usize(this.addr()) == p.vtabela && (this.year() as u16) == year as u16
@@ -177,10 +156,6 @@ pub(crate) unsafe fn compare_division_league_ctor(name: &str, this: League, year
 /// (`+0xc1`), afterwards 3 up and 3 down; the first division above (`[0x9cf5cc]`), the third below (`[0x9cf5d4]`),
 /// `+0x52` = 2 and 5 substitutes.
 /// Original: `FraSecond::set_up_rules` (0x5bf0a0, fra_second.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x5bf0a0 } (thiscall, ret 0, fra_second.cpp): `FraSecond::set_up_rules()`. A segunda: as comuns, 2 turnos, 3
-/// pontos; em 2001 sobem 4 (+0xbe) e caem 2 (+0xc1), depois sobem 3 e caem 3; a primeira acima ([0x9cf5cc]), a
-/// terceira abaixo ([0x9cf5d4]), +0x52 = 2 e 5 reservas.
 pub(crate) unsafe extern "thiscall" fn fra_second_set_up_rules(this: usize) -> u32 {
     covered!("cqj_5 second division rules");
     fra_first_apply_league_rules(League(this), &fra_first_second_division_rules(this))
@@ -189,11 +164,6 @@ pub(crate) unsafe extern "thiscall" fn fra_second_set_up_rules(this: usize) -> u
 /// the second has 20 clubs; no prize fund; TV pays by the division the club came from: 2,000,000 to those relegated
 /// from the top flight and 1,500,000 to those who stayed and those promoted from the National
 /// Original: `FraSecond::create_table` (0x5bef10, fra_second.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x5bef10 } (thiscall, ret 0, fra_second.cpp): `FraSecond::create_table()`: 20 clubes ([0x9cf5d0]); cheia, sem
-/// fundo (+0x28 = 0, +0xe1 = 2: nada a pagar no fim) e a TV pela divisão de onde o clube veio (+0x5b): 2.000.000 aos
-/// que caíram da primeira ([0x9cf5cc]), 1.500.000 aos que ficaram ([0x9cf5d0]) e 1.500.000 aos que subiram do
-/// National ([0x9cf5d4]); 1. Fonte 0x9ccc0c, linha 0x171.
 pub(crate) unsafe extern "thiscall" fn fra_second_create_table(this: usize) -> u32 {
     let this = League(this);
     this.set_club_count(0x14);
@@ -212,9 +182,6 @@ pub(crate) unsafe extern "thiscall" fn fra_second_create_table(this: usize) -> u
 /// the second division schedule: 38 rounds, from 31 July to 20 May; in 18 rounds one match goes to a TV slot (day 5,
 /// slot 1) [inference: the televised match]
 /// Original: `FraSecond::create_schedule` (0x5be620, fra_second.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x5be620 } (thiscall, ret 0x10, fra_second.cpp, 2.275 bytes, método +0x3c): `FraSecond::create_schedule`: a segunda divisão,
-/// 38 rodadas (`SECOND_DIVISION_ROUNDS`). Fonte 0x9ccc0c, linha 0xa7.
 pub(crate) unsafe extern "thiscall" fn fra_second_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     create_league_schedule(League(this), stage, rounds, extra, league, &FRENCH_SECOND_DIVISION_LEAGUE)
 }

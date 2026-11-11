@@ -1,8 +1,6 @@
 use super::*;
 
 /// Adds v to the month and year expense accumulators of a finance record and subtracts it from the i64 balance.
-///
-/// [pt] Soma `v` nos dois acumuladores do ano e do mês (`ano`, `mes`) e o tira do saldo (i64; o cdq/sub/sbb da original).
 pub(crate) unsafe fn charge_expense(fin: Finance, month: usize, year: usize, v: i32) {
     add_to_i32(fin.addr() + month, v);
     add_to_i32(fin.addr() + year, v);
@@ -10,17 +8,12 @@ pub(crate) unsafe fn charge_expense(fin: Finance, month: usize, year: usize, v: 
 }
 
 /// Calls FN_HUMAN_MANAGER_IS_HUMAN_CLUB (`exe::human_manager_is_human_club`) with (club, 0, 1, 0, 0).
-///
-/// [pt] O clube humano (0x600a50: 5 pushes; add esp, 0x14 -> cdecl(clube, 0, 1, 0, 0)).
 pub(crate) unsafe fn fin_prm_is_human_club(club: Club) -> u32 {
     exe::human_manager_is_human_club(club, 0, 1, 0, 0)
 }
 
 /// Finance record (0x167 bytes) of the club, using the linked parent when the club is a B team (`exe::club_get_linked_b_team`); writes the
 /// original's local flag.
-///
-/// [pt] O registro de finanças do clube (0x167 bytes) pelo parceiro: 0x540a50 (3 pushes; add esp, 0xc -> cdecl(clube, &a,
-/// 1)); o parceiro quando ele existe e o clube é o B (a = 0). `a` é a local da original (a 0x540a50 a grava).
 pub(crate) unsafe fn finance_of_parent_club(this: usize, club: Club, a: &mut u32) -> Finance {
     let p = exe::club_get_linked_b_team(club, a, 1);
     let c = if p != 0 && *a == 0 { p } else { club.addr() };
@@ -28,33 +21,22 @@ pub(crate) unsafe fn finance_of_parent_club(this: usize, club: Club, a: &mut u32
 }
 
 /// Posts the stadium works / training news (FN_FINANCE_POST_STADIUM_WORKS_NEWS) with club, value and type.
-///
-/// [pt] A notícia das obras e do treino (0x59ffb0: ecx = tabela; 3 pushes (tipo, valor, clube); sem add esp -> thiscall,
-/// ret 0xc).
 pub(crate) unsafe fn post_works_news(this: usize, club: Club, value: i32, kind: i32) {
     exe::finance_post_stadium_works_news(this, club, value, kind);
 }
 
 /// Posts the refused/cancelled works news (FN_FINANCE_POST_WORKS_CANCELLED_NEWS, may draw random numbers).
-///
-/// [pt] A notícia da obra recusada (0x59fae0: ecx = tabela; 3 pushes; sem add esp -> thiscall, ret 0xc; sorteia 2 fora do
-/// motivo 2).
 pub(crate) unsafe fn post_works_refused_news(this: usize, club: Club, subject: i32, reason: i32) {
     exe::finance_post_works_cancelled_news(this, club, subject, reason);
 }
 
 /// Club's row in the MANAGER_MANAGER board table ([[G_MANAGER_MANAGER]] + id × 0x49); byte +2 holds the board requests
 /// (bit 6 stadium, bit 7 training ground).
-///
-/// [pt] A linha do clube na tabela dos técnicos ([[0xb67a44]] + id × 0x49); o byte +2 tem os pedidos à diretoria (bit 6:
-/// estádio; bit 7: centro de treino).
 pub(crate) unsafe fn board_requests_row(club: Club) -> usize {
     read_usize(read_usize(G_MANAGER_MANAGER)).wrapping_add((read_i32(club.addr()) as u32).wrapping_mul(0x49) as usize)
 }
 
 /// True if the club's manager (club::MANAGER) is one of the 16 human managers.
-///
-/// [pt] O técnico do clube (+0xcf) é humano (entre as 16 últimas pessoas): a notícia vai para ele (0x7861e0).
 pub(crate) unsafe fn fin_prm_has_human_manager(club: Club) -> bool {
     let t = club.manager().addr();
     t != 0 && read_i32(t) >= read_i32(G_STAFF_COUNT).wrapping_sub(0x10)
@@ -73,15 +55,6 @@ pub(crate) unsafe fn fin_prm_has_human_manager(club: Club) -> bool {
 /// season end (`season_end_club_update`: ecx = table; push club -> thiscall, ret 4) and the year's totals (+0x110, 0x50 bytes) move
 /// into the previous year's (+0xc0) and are cleared, in the record whose index equals the club's.
 /// Original: `FinanceTable::end_season_for_nation` (0x59cdd0, fin_prm.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x59cdd0 } (thiscall, ret 4, fin_prm.cpp; os asserts citam finance.CPP): `FinanceTable::end_season_for_nation(entrada)`,
-/// pelo laço das temporadas (0x5d5ae0, no dia anterior ao início da temporada da nação-chave `entrada` da tabela
-/// 0xb63d60, 72 bytes cada). Nada antes da data de início do jogo ([0xdd6ec8] depois de hoje, 0x456770: ecx = 0xae2c90;
-/// 2 pushes; sem add esp -> thiscall, ret 8). Sem entrada: a caixa (a original). Para cada clube da tabela (0x245
-/// bytes; para no primeiro que for seleção, 0x53b900: push; add esp, 4 -> cdecl) com liga (+0x57) e nação (+0x53) ativa
-/// (+0x11c) ou reputação (+0x80) de 5000, cuja linha (0x669360: push; add esp, 4 -> cdecl) é a entrada: o fim de
-/// temporada do clube (0x59cfa0: ecx = tabela; push clube -> thiscall, ret 4) e os totais do ano (+0x110, 0x50 bytes)
-/// passam para os do ano anterior (+0xc0) e zeram, no registro de índice igual ao do clube.
 pub(crate) unsafe extern "thiscall" fn fin_prm_end_season_for_nation(this: usize, entry: usize) {
     if exe::date_operator_3c(G_CURRENT_DATE, read_usize(G_GAME_START_DATE) as u32, read_usize(G_GAME_START_DATE_FLAGS) as u32) != 0 {
         return;
@@ -148,27 +121,6 @@ pub(crate) unsafe extern "thiscall" fn fin_prm_end_season_for_nation(this: usize
 /// `news_dividend`: ecx = table; 2 pushes -> thiscall, ret 8) by reputation, balance and chairman (+0xbf), with random(501) in
 /// the two larger branches.
 /// Original: `FinanceTable::season_end_club_update` (0x59cfa0, fin_prm.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x59cfa0 } (thiscall, ret 4, fin_prm.cpp): `FinanceTable::season_end_club_update(clube)`, pelo fim de temporada da
-/// nação (0x59cdd0). Seleção: nada; sem clube: a caixa (a original). As finanças pelo parceiro (0x540a50) e o saldo
-/// (a palavra baixa, i32). Com estádio (+0x69):
-/// - sem ser dono (+0x6d = 0), com liga (+0x57) e saldo acima de 35 milhões: compra o estádio por 20 milhões (+0x8c,
-///   +0x12c, saldo; +0x6d = 1; notícia 4), sozinho ou do dono (outro clube com o mesmo estádio e +0x6d), se as finanças
-///   dele estão em crise (+0x165 = 1 ou 2): o dono deixa de ser (+0x6d = 0) e recebe os 20 milhões (+0xb4, +0x154,
-///   saldo; notícia 5);
-/// - dono e com liga: o aperto (+0x166 acima de 10, saldo acima de 750 mil) cobra 10 − aperto × 10000; o centro de
-///   treino (+0x7f abaixo de 20) do clube da máquina com técnico (+0xcf, +0x69 com o +0x22) sobe pelo sorteio(40),
-///   cobrado nas finanças do próprio clube (nível × 50000 + 75000, depois até 20 ou mais um nível pela reputação e
-///   pelo saldo); o pedido de estádio do humano (bit 6 do +2 da linha dos técnicos) vira o aviso; o aquecimento (+0x4d
-///   do estádio, 1,5 milhão, notícia 6) e o coberto (+0x4c, 7,5 milhões); a expansão (por saldo × 0,2 ou × 0,1 no
-///   +0x64 = 1, até o teto +0x44 e um terço dele; notícias 1 e 2) quando o público médio (0x4a4850 da tabela da liga:
-///   ecx = [comp + 8]; push clube; sem add esp -> thiscall) passa de 0,92 da capacidade (+0x3c), pela reputação ou
-///   pelo aviso; senão os lugares sentados (+0x40) pelo sorteio(20) e o tamanho da liga (+0x69), por saldo × 0,2 / 75
-///   (notícia 3); o teto sobe 1500 abaixo de 30 mil lugares; a recusa (0x59fae0) ao humano que pediu.
-/// Depois, o pedido de centro de treino do humano (bit 7): acima de (500 − reputação) × 500, a melhora (0x59b630: ecx =
-/// tabela; push clube -> thiscall, ret 4; notícia 8), senão a recusa; e o dividendo (+0x94, +0x134, saldo; notícia
-/// 0x59fe10: ecx = tabela; 2 pushes -> thiscall, ret 8) pela reputação, pelo saldo e pelo presidente (+0xbf), com
-/// sorteio(501) nos dois ramos maiores.
 pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club_addr: usize) {
     if club_addr == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_SEASON_END_CLUB_UPDATE)(this, club_addr); // a caixa
@@ -371,9 +323,6 @@ pub(crate) unsafe extern "thiscall" fn season_end_club_update(this: usize, club_
 
 /// End-of-season training ground upgrade for AI clubs (part of `season_end_club_update`): raises club::TRAINING by chance and
 /// reputation and charges the cost to the club's own finances.
-///
-/// [pt] O centro de treino do clube da máquina no fim da temporada (o trecho 0x59d32a..0x59d54d da 0x59cfa0), cobrado nas
-/// finanças do próprio clube ([tabela] + id × 0x167, sem o parceiro).
 pub(crate) unsafe fn upgrade_ai_training_ground(this: usize, club: Club, goal_difference: i32) {
     let manager = club.manager();
     if manager.is_null() || club.reputation() == 0 || (club.training() as u8) as i8 >= 0x14 || manager.non_player().is_null() {
@@ -414,8 +363,6 @@ pub(crate) unsafe fn upgrade_ai_training_ground(this: usize, club: Club, goal_di
 
 /// End-of-season dividend (part of `season_end_club_update`) by the i64 balance, reputation, PLC flag and chairman, charged to the
 /// finance record.
-///
-/// [pt] O dividendo do fim da temporada (o trecho 0x59db6f..0x59dd25 da 0x59cfa0), pelo saldo i64 das finanças.
 pub(crate) unsafe fn pay_dividend(this: usize, club: Club, fin: Finance) {
     let rep = club.reputation() as i32;
     let mut lim = rep.wrapping_mul(8000);
@@ -470,11 +417,6 @@ pub(crate) unsafe fn pay_dividend(this: usize, club: Club, fin: Finance) {
 /// ret 8) with the club id, the amount and the +0x82 flag (`set_news_field`: ecx = local; 2 pushes -> thiscall, ret 8),
 /// delivered to the club's manager (`send_to_club_manager`: ecx = `[0xb7431c]`; 2 pushes -> thiscall, ret 8).
 /// Original: `FinanceTable::news_dividend` (0x59fe10, fin_prm.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x59fe10 } (thiscall, ret 8, fin_prm.cpp; quadro SEH só da notícia local, sem destrutor no caminho normal):
-/// `FinanceTable::news_dividend(clube, valor)`, pelo fim de temporada do clube (0x59cfa0). A notícia 0x177c (0x77bbe0:
-/// ecx = local; 2 pushes -> thiscall, ret 8) com o id do clube, o valor e a marca +0x82 (0x785790: ecx = local; 2
-/// pushes -> thiscall, ret 8) entregue ao técnico do clube (0x7861e0: ecx = [0xb7431c]; 2 pushes -> thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn news_dividend(_this: usize, club: usize, value: i32) {
     let club = Club(club);
     let mut n = [0u8; 0xe0];
@@ -487,38 +429,27 @@ pub(crate) unsafe extern "thiscall" fn news_dividend(_this: usize, club: usize, 
 }
 
 /// Multiplies v by the exe double constant at k and truncates (_ftol).
-///
-/// [pt] `v` × a constante f64 em `k`, truncado (_ftol).
 pub(crate) unsafe fn mul_exe_f64(v: i32, k: usize) -> i32 {
     ftol(v as f64 * read_f64(k))
 }
 
 /// Calls FN_HUMAN_MANAGER_IS_HUMAN_CLUB (`exe::human_manager_is_human_club`) with (club, a, 1, 0, 0) (passes argument a as the second parameter).
-///
-/// [pt] O clube humano (0x600a50: 5 pushes; add esp, 0x14 -> cdecl(clube, a, 1, 0, 0)).
 pub(crate) unsafe fn is_human_club_with(club: Club, a: u32) -> u32 {
     exe::human_manager_is_human_club(club, a, 1, 0, 0)
 }
 
 /// True if the club is a national team (`exe::database_is_national_team`).
-///
-/// [pt] A seleção (0x53b900: push; add esp, 4 -> cdecl).
 pub(crate) unsafe fn fin_prm_is_national_team(club: Club) -> bool {
     exe::database_is_national_team(club) != 0
 }
 
 /// Person's contract wage via CONTRACT_MANAGER (`contract_value`, FN_CONTRACT_MANAGER_GET_WAGE), signed.
-///
-/// [pt] O valor do contrato da pessoa (0x4d0c20: mov ecx, [0xae1050]; push pessoa -> thiscall, ret 4), com sinal.
 pub(crate) unsafe fn contract_wage(person: Staff) -> i32 {
     exe::contract_manager_get_wage(read_usize(G_CONTRACT_MANAGER), person) as i32
 }
 
 /// Wage bonus for big-spending clubs (England, Italy or Spain, reputation above 4750, wealth band 0..2) by wage factor
 /// w and the PLC flag.
-///
-/// [pt] O bônus de quem paga mais (o trecho 0x596c0d..0x597238): clube da Inglaterra, Itália ou Espanha, reputação acima
-/// de 4750, faixa 0 a 2, pelo fator salarial `w` (a palavra, com sinal) e pela marca +0x82.
 pub(crate) unsafe fn big_spender_bonus(club: Club, band: i8, w: i32) -> i32 {
     let nation = club.nation().addr();
     if nation == 0 {
@@ -545,9 +476,6 @@ pub(crate) unsafe fn big_spender_bonus(club: Club, band: i8, w: i32) -> i32 {
 
 /// Wage cap of a human manager from the non-player reputations (+0xb, +0xd), experience (+5), the person's age, flag
 /// and job.
-///
-/// [pt] O teto do técnico humano pelas reputações (+0xb, +0xd) e pela experiência (+5) do não-jogador `np`, pela idade
-/// (+0x18) e pela marca +0x22 da pessoa e pelo cargo (o trecho 0x597405..0x597566).
 pub(crate) unsafe fn human_manager_wage_cap(person: Staff, np: PlayerSheet, job: i8) -> i32 {
     let age = (person.age() as u8) as i8;
     let mark = person.int_apps() != 0;
@@ -602,19 +530,6 @@ pub(crate) unsafe fn human_manager_wage_cap(person: Staff, np: PlayerSheet, job:
 /// minus (+0xc − (factor³ × nation / divisor + balance × 1.3) / 52), with the floor 0x9c83e8 or 0x9c8338, the band and
 /// the nation. Then the club with +0x64 1 and 2, the league minimum + 100 and the lower of the two.
 /// Original: `Finance::get_max_wage` (0x5968d0, fin_prm.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x5968d0 } (thiscall, ret 8, fin_prm.cpp; os asserts citam finance.CPP; 0x14ac bytes com x87):
-/// `pessoa.get_max_wage(cargo)`, pelas propostas de contrato e de transferência, pelas telas e pela folha
-/// salarial (0x598370, sem pessoa e cargo −1). Clube de +0x64 = 3: 0. O fator salarial pela reputação (/ 50, mais pela
-/// faixa de riqueza 0x5986b0 e pela tabela de salários da nação: 0x9c8498 nações pequenas, 0x9c8548 médias, 0x9c85f8
-/// França e clubes de +0x82, 0x9c86a8 as outras) × 47,6 (teto 10000). Com pessoa: o valor do contrato no clube
-/// (0x4d0c20, até 2 × o teto +0x14 das finanças, no mínimo ele; jogador limitado pelo tipo +0x3d), o bônus de quem
-/// paga mais, a reputação² × 0,25 × 0,0001 + o piso +0x10, as regras dos cargos 1 a 3, o teto do humano, a nação
-/// (clube basco 0x53d7f0, o mercado pela tabela do gerente de transferências, o contrato perto do fim 0x54cdb0), o
-/// presidente (+0xbf: o gosto 0x547810 e o favorito 0x547790, o perfil +0xf, o técnico +0xcf) e os cargos 1 a 6. Sem
-/// pessoa: o fator da nação (+0x85 / 20 × o tipo +0x7e, pelas nações do tipo 1), a liga (+0x57 e +0x5b, o tamanho
-/// +0x69 ao cubo), a tabela por (fator / 10) menos (+0xc − (fator³ × nação / divisor + saldo × 1,3) / 52), com o piso
-/// 0x9c83e8 ou 0x9c8338, a faixa e a nação. Depois o clube de +0x64 1 e 2, o mínimo da liga + 100 e o menor dos dois.
 pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, job_arg: u32) -> i32 {
     let fin = Finance(fin);
     let person = Staff(person);
@@ -1042,13 +957,6 @@ pub(crate) unsafe extern "thiscall" fn get_max_wage(fin: usize, person: usize, j
 /// pushes -> thiscall, ret 8), delivered to the club's manager (`send_to_club_manager`: ecx = `[0xb7431c]`; push club; push &local ->
 /// thiscall, ret 8).
 /// Original: `FinanceTable::news_ground_works` (0x59ffb0, fin_prm.cpp, thiscall, ret 0xc).
-///
-/// [pt] { 0x59ffb0 } (thiscall, ret 0xc, fin_prm.cpp; quadro SEH só da notícia local, sem destrutor no caminho normal):
-/// `FinanceTable::news_ground_works(clube, valor, tipo)`, pelo fim de temporada do clube (0x59cfa0: compra do estádio,
-/// aquecimento, expansão e lugares, centro de treino) e pelos eventos da semana (0x59ed70). A notícia 0x177d (0x77bbe0:
-/// lea ecx, local; push 0; push 0x177d -> thiscall, ret 8) com o id do clube, o valor e o tipo (byte com sinal; 0x785790:
-/// lea ecx, local; 2 pushes -> thiscall, ret 8) entregue ao técnico do clube (0x7861e0: ecx = [0xb7431c]; push clube;
-/// push &local -> thiscall, ret 8).
 pub(crate) unsafe extern "thiscall" fn news_ground_works(_this: usize, club: usize, value: u32, kind: u32) {
     let mut n = [0u8; 0xe0];
     let p = n.as_mut_ptr() as usize;
@@ -1067,12 +975,6 @@ pub(crate) unsafe extern "thiscall" fn news_ground_works(_this: usize, club: usi
 /// No club, nothing. News 0x1788 (`construct_news_item`) with the subject (signed word) in data slot 1 and, in data slot 2, reason 2
 /// or random(2) (`exe::utils_random`: push 2; add esp, 4 -> cdecl; the signed word), delivered to the club's manager (`send_to_club_manager`).
 /// Original: `FinanceTable::news_request_refused` (0x59fae0, fin_prm.cpp, thiscall, ret 0xc).
-///
-/// [pt] { 0x59fae0 } (thiscall, ret 0xc, fin_prm.cpp; quadro SEH só da notícia local, sem destrutor no caminho normal):
-/// `FinanceTable::news_request_refused(clube, assunto, motivo)`, pelo fim de temporada do clube (0x59cfa0: o pedido de
-/// estádio ou de centro de treino recusado). Sem clube, nada. A notícia 0x1788 (0x77bbe0) com o assunto (palavra com
-/// sinal) no dado 1 e no dado 2 o motivo 2 ou o sorteio(2) (0x90cfc0: push 2; add esp, 4 -> cdecl; a palavra com
-/// sinal), entregue ao técnico do clube (0x7861e0).
 pub(crate) unsafe extern "thiscall" fn news_request_refused(_this: usize, club: usize, subject: u32, reason: u32) {
     if club == 0 {
         return;
@@ -1094,11 +996,6 @@ pub(crate) unsafe fn club_count() -> u32 {
 /// writes the finances of every club into the finance.dat item (0x167 bytes × [0xae235c] from [this]); no container,
 /// nothing; on error the "Error" box (finance.CPP 0x115e, 0x1166) without closing the item
 /// Original: `FinanceTable::save_finance_dat` (0x59b3b0, fin_prm.cpp, thiscall).
-///
-/// [pt] { 0x59b3b0 } (thiscall, ret 4, fin_prm.cpp; o fonte se chama finance.CPP): `FinanceTable::save_finance_dat(save)`:
-/// grava no item `finance.dat` (0x9326e0 gravando) as finanças de todos os clubes, 0x167 bytes × [0xae235c] a partir
-/// de [this]. Sem contêiner, nada; erro ao abrir ou ao gravar: a caixa "Error" (finance.CPP 0x115e, 0x1166), sem
-/// fechar o item (como a original).
 pub(crate) unsafe extern "thiscall" fn save_finance_dat(this: usize, save: usize) {
     covered!("cpx_5 save finances");
     if save == 0 {
@@ -1124,11 +1021,6 @@ pub(crate) unsafe extern "thiscall" fn save_finance_dat(this: usize, save: usize
 /// read: the "Error" box (finance.CPP 0x1137, 0x113f), 0, and the item stays open (as the original). With 0, the
 /// constructor (0x59a55c) rebuilds each club's finances from scratch (0x5961d0).
 /// Original: `FinanceTable::load_from_save` (0x59b2a0, fin_prm.cpp, thiscall).
-///
-/// [pt] { 0x59b2a0 } (thiscall, ret 4, fin_prm.cpp): `FinanceTable::load_from_save(save)`: lê do item `finance.dat`
-/// (0x9326e0 lendo) as finanças de todos os clubes, 0x167 bytes × [0xae235c] em [this], e devolve 1. Sem contêiner,
-/// 0 sem caixa; erro ao abrir ou leitura curta: a caixa "Error" (finance.CPP 0x1137, 0x113f), 0 e o item fica aberto
-/// (como a original). Com 0, o construtor (0x59a55c) refaz as finanças de cada clube do zero (0x5961d0).
 pub(crate) unsafe extern "thiscall" fn load_from_save(this: usize, save: usize) -> u32 {
     covered!("cpx_5 load finances");
     if save == 0 {
@@ -1153,11 +1045,6 @@ pub(crate) unsafe extern "thiscall" fn load_from_save(this: usize, save: usize) 
 /// Uses the partner club (`0x540a50`: 3 pushes; add esp, 0xc -> cdecl(club, &a, 1)) if it exists and the club is the B
 /// team (a = 0), and [table] + id × 0x167. Some(0) without a club; None if it is a national team (`0x53b900`: push; add
 /// esp, 4 -> cdecl): the original routine exits without doing anything.
-///
-/// [pt] O registro de finanças (0x167 bytes) do clube da partida em `campo` (+0x1c o mandante, +0x20 o visitante), como a
-/// original o acha sem a 0x5a0590: o clube parceiro (0x540a50: 3 pushes; add esp, 0xc -> cdecl(clube, &a, 1)) se ele
-/// existe e o clube é o B (a = 0), e [tabela] + id × 0x167. Some(0) sem clube; None se for seleção (0x53b900: push;
-/// add esp, 4 -> cdecl): a original sai sem fazer nada.
 pub(crate) unsafe fn match_club_finance(table: usize, fixture: Fixture, field: usize) -> Option<usize> {
     let club = read_usize(fixture.addr() + field);
     if club == 0 {
@@ -1173,8 +1060,6 @@ pub(crate) unsafe fn match_club_finance(table: usize, fixture: Fixture, field: u
 }
 
 /// Signed division truncated toward zero, as the original's magic-number divisions.
-///
-/// [pt] A divisão com o arredondamento para zero da original (os imul por constante mágica e o cdq/sar).
 pub(crate) fn div_trunc(a: i32, b: i32) -> i32 {
     a.wrapping_div(b)
 }
@@ -1198,19 +1083,6 @@ pub(crate) fn div_trunc(a: i32, b: i32) -> i32 {
 /// upkeep ((random(15) + 1) × 0.01 + 0.85) × the stadium's +0x3c (+0x12c, +0x8c, subtracted from the balance). Outside
 /// it: half of each to both.
 /// Original: `FinanceTable::process_match_income` (0x59a5d0, fin_prm.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x59a5d0 } (thiscall, ret 8, fin_prm.cpp): `FinanceTable::process_match_income(partida, resultado)`, pelo fechamento
-/// da partida do dia (0x6b5f00). Sem resultado ou sem partida: a caixa (a original). Seleção de um dos lados: nada. Os
-/// valores: com público (+0x34 do resultado), a TV pelo público (1 / (sorteio(10) + 2) inteiro, que é 0, mais 1,75, ×
-/// público) e a renda do estádio (+0x38); os custos do jogo (sem os dois clubes de +0x64 = 1: público / 4; senão por
-/// faixas do público ou da capacidade +0x3c do estádio +0x18 da partida, com piso de 500 pela marca +0x40); os gastos
-/// do mandante (de +0x64 = 1: sorteio + público × 1,25 + reputação / 2 + 300, × 1,25 acima de 4750, ou sorteio(400) +
-/// público × 1,25 + 600 sem reputação; senão dois sorteios + público); o dinheiro da TV da competição pela fase (+0x3b)
-/// ou pelo tipo (+0x3a: as finais pelas reputações, 6 e 4 pelo +0x69 da competição); tudo dividido pelo tipo da nação
-/// (+0x7e: 2 e 3) e outra vez no País de Gales e nas Irlandas. Na liga do mandante (+0x57 = +0x14, fora de campo
-/// neutro +0x3c): a TV 3/4 ao mandante e 1/4 ao visitante (+0x158, +0xb8, saldo), o líquido ao mandante (+0x140,
-/// +0xa0, saldo) e, com estádio próprio (+0x6d, +0x69), a manutenção ((sorteio(15) + 1) × 0,01 + 0,85) × o +0x3c do
-/// estádio (+0x12c, +0x8c, menos no saldo). Fora dela: metade de cada um para os dois.
 pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, fixture: usize, result: usize) {
     let result = MatchRecord(result);
     let fixture = Fixture(fixture);
@@ -1386,15 +1258,6 @@ pub(crate) unsafe extern "thiscall" fn process_match_income(table: usize, fixtur
 /// 0x9d0250 (1.5), 0x9d0110 and 0x9d024c (1.3), 0x9d0248 (0.75) and 0x9d0244 (0.9), and × 1.2 in the nation of
 /// 0x9cf314.
 /// Original: `FinanceTable::calc_gate_receipts` (0x59af40, fin_prm.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x59af40 } (thiscall, ret 8, fin_prm.cpp): `FinanceTable::calc_gate_receipts(partida, publico)`, pelo registro da
-/// partida (0x729ff0, o +0x38 do resultado, que a 0x59a5d0 soma ao líquido do mandante). Sem partida: a caixa (a
-/// original); sem público: 0; seleção mandante: 0. Em campo neutro (+0x3c) da competição +0x14: (+0x69 dela + 8) ×
-/// público. Senão o preço pela reputação do mandante (+0x80 / 500): sem competição ou em amistoso (0x5c6710: push comp;
-/// ecx = [0xae2c74]; sem add esp -> thiscall, ret 4), × 0,5 × público; senão + 4 (um dos clubes de +0x64 = 1) ou + 3, ×
-/// público; na liga do mandante (+0x57), menos o desconto (float +0x160 das finanças) × o valor. Depois pelo tipo da
-/// nação (+0x7e: 2 → /4; 3 → /10), × 1,25 na liga de 0x9cf570 ou pelos clubes de 0x9d0250 (1,5), 0x9d0110 e 0x9d024c
-/// (1,3), 0x9d0248 (0,75) e 0x9d0244 (0,9), e × 1,2 na nação de 0x9cf314.
 pub(crate) unsafe extern "thiscall" fn calc_gate_receipts(table: usize, fixture: usize, attendance: i32) -> i32 {
     let fixture = Fixture(fixture);
     if fixture.is_null() {
@@ -1465,9 +1328,6 @@ pub(crate) unsafe extern "thiscall" fn calc_gate_receipts(table: usize, fixture:
 
 /// adds the fine to the season (+0x128) and month (+0x88) fines and takes it from the balance
 /// Original: `Finance::pay_league_fine` (0x599850, fin_prm.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x599850 } (thiscall, ret 4, fin_prm.cpp): `valor.pay_league_fine()`, pelas multas da liga (0x49f570,
-/// 0x6a9e60): soma o valor às multas do ano (+0x128) e do mês (+0x88) e o tira do saldo.
 pub(crate) unsafe extern "thiscall" fn pay_league_fine(this: usize, value: i32) {
     let this = Finance(this);
     this.set_season_fines(this.season_fines().wrapping_add(value));
@@ -1476,15 +1336,11 @@ pub(crate) unsafe extern "thiscall" fn pay_league_fine(this: usize, value: i32) 
 }
 
 /// Returns the finance i64 balance (+0) split as (low u32, high i32).
-///
-/// [pt] O saldo (i64 em +0) separado em (baixo, alto), como a original o lê em dois dwords.
 pub(crate) unsafe fn balance_halves(fin: Finance) -> (u32, i32) {
     (read_u32(fin.addr()), read_i32(fin.addr() + finance::BALANCE + 4))
 }
 
 /// Adds v to finance fields +0x154 and +0xb4 and to the i64 balance.
-///
-/// [pt] O valor entra em +0x154, +0xb4 e no saldo (estendido com sinal).
 pub(crate) unsafe fn credit_income(fin: Finance, v: i32) {
     fin.set_season_other_income(fin.season_other_income().wrapping_add(v));
     fin.set_month_other_income(fin.month_other_income().wrapping_add(v));
@@ -1492,8 +1348,6 @@ pub(crate) unsafe fn credit_income(fin: Finance, v: i32) {
 }
 
 /// True if the club's nation is Sweden, Norway or Denmark (event value drops to one third).
-///
-/// [pt] A nação do clube é uma das de 0x9cf4a8, 0x9cf408 ou 0x9cf2c0 (o valor do evento cai a um terço).
 pub(crate) unsafe fn is_scandinavian_club(club: Club) -> bool {
     let nation = club.nation().addr();
     if nation == 0 {
@@ -1520,18 +1374,6 @@ pub(crate) unsafe fn is_scandinavian_club(club: Club) -> bool {
 /// balance; the news (`exe::finance_post_finance_boost_news`) by type (by the budget 0x598800, the flag +0x82 and random draws of 4: 3, 5, 6, 7 with
 /// +0x82 = 1, or 1); with the record, its +0x20 drops by 1 above 5; ends the crisis (+0x165 = 0); returns 1.
 /// Original: `FinanceTable::try_finance_boost_event` (0x59e050, fin_prm.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x59e050 } (thiscall, ret 8, fin_prm.cpp): `FinanceTable::try_finance_boost_event(clube, finanças)`, pelo passe dos
-/// eventos da semana (0x59ed70). Fora do País de Gales, das Irlandas e das nações de 0x9cf408, 0x9cf2c0, 0x9cf4a8 e
-/// 0x9cf244, e sem a marca +0x64 em 2 ou 3. O divisor pela faixa (0x5986b0): ricos 0,001; 0 pela reputação (até 4250:
-/// 0,0125 com o presidente +0xbf de +0x57 e a ficha +0x69 de +0x20 acima de 15, senão 0,0075; até 6250: 0,05 ou 0,025
-/// do mesmo jeito; acima: 0,025); −1: 0,1 acima de 5250, 0,075 acima de 3250, 0,025; −2: 0,125 acima de 3750, 0,075. Com
-/// a ficha do presidente: sorteio(+0xf dela) acima de sorteio(30 / divisor), sorteio(+0x20 × 1 milhão) acima da dívida
-/// e reputação abaixo de 750 × +0x20: (3 × (+0x20)² + 750) × reputação + 1 milhão, mais o saldo baixo (menos se o saldo
-/// é negativo), com o teto de reputação² + 1,5 milhão abaixo de 2000. Sem ela: sorteio(15000 / divisor) abaixo da
-/// reputação e sorteio(8) zero: (reputação + 1000) × 1000. Um terço nas nações de 0x9cf4a8, 0x9cf408 e 0x9cf2c0. Em
-/// +0x154, +0xb4 e no saldo; a notícia (0x59f300) pelo tipo (pela verba 0x598800, a marca +0x82 e sorteios de 4: 3, 5,
-/// 6, 7 com +0x82 = 1, ou 1); com a ficha, o +0x20 dela cai 1 acima de 5; encerra a crise (+0x165 = 0); devolve 1.
 pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club: usize, fin: usize) -> u32 {
     let fin = Finance(fin);
     let club = Club(club);
@@ -1680,11 +1522,6 @@ pub(crate) unsafe extern "thiscall" fn try_finance_boost_event(this: usize, club
 /// The copy and the original start from the same state (the finance record, the random draw and the `extras`). With no
 /// event: everything equal; with an event: the return value, the balance, +0xb4, +0x154, +0x165 and the `conferir`
 /// regions (the news type and the +0x82 mark depend on the budget, and so do the random draws after it).
-///
-/// [pt] O comparador dos eventos raros, em ensaio (modelo RARE_FINANCE_EVENT_DRY_RUN: a cópia sem a notícia nem a verba, que alocam; sem a
-/// troca do presidente na 0x59e940): a cópia e a original a partir do mesmo estado (o registro de finanças, o sorteio e
-/// os `extras`). Sem evento: tudo igual; com evento: a devolução, o saldo, +0xb4, +0x154, +0x165 e os `conferir` (a
-/// tipo da notícia e a marca +0x82 dependem da verba, e os sorteios depois dela também).
 pub(crate) unsafe fn compare_rare_finance_event(name: &str, fin: usize, extras: &[(usize, usize)], check: &[usize], original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
     let mut regions = vec![(fin, 0x167)];
     regions.extend(crate::rng::STATE_REGIONS);
@@ -1723,16 +1560,6 @@ pub(crate) unsafe fn compare_rare_finance_event(name: &str, fin: usize, extras: 
 /// `database_pick_second_name_for_nation`) and the record (+0x1d, +0xf, +0x16, +0x20 = random(20) + 1; +0x20 drawn again if it came out below 5); the
 /// news (`exe::finance_post_finance_boost_news`, type 2, with the budget 0x598800); ends the crisis (+0x165 = 0); returns 1.
 /// Original: `FinanceTable::try_board_takeover` (0x59e940, fin_prm.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x59e940 } (thiscall, ret 8, fin_prm.cpp): `FinanceTable::try_board_takeover(clube, finanças)`, pelo passe dos
-/// eventos da semana (0x59ed70, clubes endividados). O divisor pela faixa (0x5986b0: −2: 0,4 acima de reputação 4250,
-/// senão 0,25; −1: 0,2 ou 0,05; outras: 0,001) e o fator (reputação × 0,002 / o +0x69 da liga +0x57, no mínimo 0,75;
-/// sem liga 0,5). Com a ficha (+0x69) do presidente (+0xbf): sorteio(+0x16 dela) zero; sem ela: sorteio(20) zero. Depois
-/// sorteio(15000 / divisor) abaixo de reputação × fator: (reputação + 1000) × 1000 menos o saldo baixo; acima de 40
-/// milhões, com a reputação abaixo de sorteio(2500) + 2000, só o que zera o saldo. Em +0xb4, +0x154 e no saldo; com a
-/// ficha, o presidente novo: a nação (a do clube se sorteio(1000) ≠ 0, senão uma sorteada), os nomes (0x539c60,
-/// 0x53a5b0, 0x53a1b0) e a ficha (+0x1d, +0xf, +0x16, +0x20 = sorteio(20) + 1; o +0x20 de novo se ficou abaixo de 5); a
-/// notícia (0x59f300, tipo 2, com a verba 0x598800); encerra a crise (+0x165 = 0); devolve 1.
 pub(crate) unsafe extern "thiscall" fn try_board_takeover(this: usize, club: usize, fin: usize) -> u32 {
     let fin = Finance(fin);
     let club = Club(club);
@@ -1809,9 +1636,6 @@ pub(crate) unsafe extern "thiscall" fn try_board_takeover(this: usize, club: usi
 
 /// adds the amount to the season (+0x120) and month (+0x80) other costs and takes it from the balance
 /// Original: `Finance::pay_other_costs` (0x5999e0, fin_prm.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x5999e0 } (thiscall, ret 4, fin_prm.cpp): `valor.pay_other_costs()`, pela 0x7e5b10: soma o valor aos
-/// outros custos do ano (+0x120) e do mês (+0x80) e o tira do saldo.
 pub(crate) unsafe extern "thiscall" fn pay_other_costs(this: usize, value: i32) {
     let this = Finance(this);
     this.set_season_other_costs(this.season_other_costs().wrapping_add(value));
@@ -1834,17 +1658,6 @@ pub(crate) unsafe extern "thiscall" fn pay_other_costs(this: usize, value: i32) 
 /// 0.0006 above 5250 / 3250; others 0.0004; outside type 1: 0.0002 above 3250, otherwise 0.0001), truncated. The wage
 /// ceiling (+0x14) is redone by Finance::get_max_wage (`get_max_wage`, 0, −1).
 /// Original: `Finance::update_wage_bill` (0x598370, finance.cpp, thiscall).
-///
-/// [pt] { 0x598370 } (thiscall, finance.cpp): `Finance::update_wage_bill()`, pelo passe diário das finanças (0x59b9c0, no
-/// sábado, clube com nação), pela assinatura de contrato (0x4cf720), pelo passe diário dos contratos (0x4c7ac0), pelo
-/// empréstimo (0x4d01e0, 0x4d07e0) e pelas folhas da criação (0x59cf50). Zera o maior salário (+0x10) e a folha (+0xc)
-/// e soma os salários (+0xc do contrato) das 50 vagas do elenco (+0xd7; contrato com o clube 0x4cf5f0; salário −1: o
-/// salário padrão 0x864550 truncado; emprestado (0x4cf6d0) fora do tipo 6: menos o salário do outro contrato) e do
-/// pessoal (+0x19f × 5, +0x1b3 × 7, +0x1cf × 3, contrato 0x4cf5a0). Elenco com menos de 15 vagas ocupadas: as que
-/// faltam a um salário pela reputação (+0x80: acima de 4750, rep − 1950; acima de 2250, (rep − 2250) × 0,5 + 550; senão
-/// rep × 0,25; fora do tipo 1 (+0x64), × 0,5; dividido pelo tipo da nação (+0x7e, entre 1 e 3)). Mais reputação² × k
-/// (tipo 1: Inglaterra e Itália 0,001 / 0,0008 / 0,0006 acima de 5250 / 3250; outras 0,0004; fora do tipo 1: 0,0002
-/// acima de 3250, senão 0,0001), truncado. O teto salarial (+0x14) refeito por Finance::get_max_wage (0x5968d0, 0, −1).
 pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
     let this = League(this);
     let ceiling: unsafe extern "thiscall" fn(usize, u32, i32) -> i32 = core::mem::transmute(FN_FINANCE_GET_MAX_WAGE);
@@ -1944,10 +1757,6 @@ pub(crate) unsafe extern "thiscall" fn update_wage_bill(this: usize) {
 
 /// at game creation, the wage bill of every club up to the first national team
 /// Original: `FinanceTable::refresh_all_wage_bills` (0x59cf50, finance.cpp, thiscall).
-///
-/// [pt] { 0x59cf50 } (thiscall, finance.cpp): `FinanceTable::refresh_all_wage_bills()`, só pela criação do jogo (0x828110):
-/// para cada clube de [0xae23b4] até a primeira seleção (0x53b900), a folha (0x598370) do registro de finanças dele
-/// ([this] + i × 0x167).
 pub(crate) unsafe extern "thiscall" fn refresh_all_wage_bills(this: usize) {
     let mut fin = read_usize(this);
     let mut i = 0i32;
@@ -1972,13 +1781,6 @@ pub(crate) unsafe extern "thiscall" fn refresh_all_wage_bills(this: usize) {
 /// (+0x2c), only after month 12 − start month; in another year, only before the start month; otherwise, only 0..2
 /// months before the start. Inside the window, the days until the start date (+0x2a, `exe::date_days_since`) if positive; outside, 0.
 /// Original: `finance_get_days_to_season_start` (0x59b4c0, finance.cpp, thiscall, ret 8 (o ecx não é lido)).
-///
-/// [pt] { 0x59b4c0 } (ret 8, finance.cpp): `finance_get_days_to_season_start(clube, &passou)`, pelo passe diário das
-/// finanças (0x59b9c0; ecx com a tabela, que ela não lê): dias até o começo da temporada da nação do clube (linha de
-/// 72 bytes em 0xb63d60 pela 0x669360; sem linha, a caixa "Error" da linha 0x1185 e 0). `passou` = 1 se o ano de hoje
-/// chega ao ano da temporada (2002 com +0x17, senão o ano de [0xdd6ec8] + 1). Mês do começo (+0x34) abaixo de 2: no ano
-/// do começo (+0x2c), só depois do mês 12 − mês do começo; noutro ano, só antes do mês do começo; senão, só a 0..2
-/// meses do começo. Na janela, os dias até a data do começo (+0x2a, 0x54cdb0) se positivos; fora, 0.
 pub(crate) unsafe extern "thiscall" fn finance_get_days_to_season_start(_this: usize, club: usize, passed: *mut u32) -> i32 {
     *passed = 0;
     let k = exe::key_nation_index_of_club(club) as i8;
@@ -2016,22 +1818,16 @@ pub(crate) unsafe extern "thiscall" fn finance_get_days_to_season_start(_this: u
 }
 
 /// Adds v to the i64 at address a.
-///
-/// [pt] Soma `v` (64 bits) ao i64 em `a` (o add/adc da original).
 pub(crate) unsafe fn fin_prm_add_i64(a: Finance, v: i64) {
     write_i64(a.addr(), read_i64(a.addr()).wrapping_add(v));
 }
 
 /// Adds v to the i32 at address a.
-///
-/// [pt] Soma `v` ao i32 em `a`.
 pub(crate) unsafe fn fin_prm_add_i32(a: usize, v: i32) {
     write_i32(a, read_i32(a).wrapping_add(v));
 }
 
 /// Builds an i64 from low and high dwords.
-///
-/// [pt] O valor de 64 bits que a original recebe em dois dwords (baixo primeiro).
 pub(crate) fn i64_from_halves(low: u32, high: u32) -> i64 {
     ((high as u64) << 32 | low as u64) as i64
 }
@@ -2043,11 +1839,6 @@ pub(crate) fn i64_from_halves(low: u32, high: u32) -> i64 {
 /// clubs' share (`pay_former_club_fee_cuts`): adds the amount to the sales of the month (+0x78) and of the year (+0x118), in 64 bits, and
 /// to the balance (i64 at +0).
 /// Original: `Finance::add_players_sold` (0x599800, finance.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x599800 } (thiscall, ret 8, finance.cpp): `valor.add_players_sold()` (valor de 64 bits), pelo pagamento
-/// da transferência (TRANSFER_MANAGER::pay_fee_and_record_clauses 0x8ca8a0 e as parcelas 0x8caf.., 0x8cb3..) e pela
-/// parte dos clubes anteriores (0x8e4f20): soma o valor às vendas do mês (+0x78) e do ano (+0x118), em 64 bits, e ao
-/// saldo (i64 em +0).
 pub(crate) unsafe extern "thiscall" fn add_players_sold(this: usize, low: u32, high: u32) {
     let this = Finance(this);
     let v = i64_from_halves(low, high);
@@ -2066,10 +1857,6 @@ pub(crate) unsafe extern "thiscall" fn add_players_sold(this: usize, low: u32, h
 /// instalments (0x8caf.., 0x8cb3..): adds the amount to the purchases of the month (+0x70) and of the year (+0x110), in
 /// 64 bits, and subtracts it from the balance.
 /// Original: `Finance::pay_players_bought` (0x599890, finance.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x599890 } (thiscall, ret 8, finance.cpp): `valor.pay_players_bought()` (valor de 64 bits), pelo pagamento
-/// da transferência (0x8ca8a0) e pelas parcelas (0x8caf.., 0x8cb3..): soma o valor às compras do mês (+0x70) e do ano
-/// (+0x110), em 64 bits, e o tira do saldo.
 pub(crate) unsafe extern "thiscall" fn pay_players_bought(this: usize, low: u32, high: u32) {
     let this = Finance(this);
     let v = i64_from_halves(low, high);
@@ -2087,10 +1874,6 @@ pub(crate) unsafe extern "thiscall" fn pay_players_bought(this: usize, low: u32,
 /// of club (`exe::transfer_manager_move_player_to_club`): adds the amount to the signing-on fees of the year (+0x13c) and of the month (+0x9c) and
 /// subtracts it from the balance (sign-extended).
 /// Original: `Finance::pay_sign_on_fee` (0x5998e0, finance.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x5998e0 } (thiscall, ret 4, finance.cpp): `valor.pay_sign_on_fee()`, pela oferta de contrato aceita
-/// (0x8c38b0) e pela mudança do jogador de clube (0x8c9720): soma o valor às luvas do ano (+0x13c) e do mês (+0x9c) e o
-/// tira do saldo (estendido com sinal).
 pub(crate) unsafe extern "thiscall" fn pay_sign_on_fee(this: usize, value: i32) {
     let this = Finance(this);
     this.set_season_sign_on_fees(this.season_sign_on_fees().wrapping_add(value));
@@ -2102,8 +1885,6 @@ pub(crate) unsafe extern "thiscall" fn pay_sign_on_fee(this: usize, value: i32) 
 }
 
 /// Adds v to the i64 balance at +0 of a finance record.
-///
-/// [pt] Soma `v` (estendido com sinal: o cdq/adc da original) ao saldo, i64 em +0.
 pub(crate) unsafe fn add_to_balance(fin: Finance, v: i64) {
     write_i64(fin.addr(), read_i64(fin.addr()).wrapping_add(v));
 }
@@ -2115,10 +1896,6 @@ pub(crate) unsafe fn add_to_balance(fin: Finance, v: i64) {
 /// and the season honours: adds the amount to the prize money of the year (+0x148) and of the month (+0xa8) and to the
 /// balance.
 /// Original: `Finance::add_prize_money` (0x5999a0, finance.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x5999a0 } (thiscall, ret 4, finance.cpp): `valor.add_prize_money()`, pelas copas (Cup::process_fixture
-/// 0x51a150, EuropeanCup::process_fixture 0x583b10, os sorteios das fases), pelo fim das ligas (League::pay_prize_money
-/// 0x682e10) e pelas honras da temporada: soma o valor aos prêmios do ano (+0x148) e do mês (+0xa8) e ao saldo.
 pub(crate) unsafe extern "thiscall" fn add_prize_money(this: usize, value: i32) {
     let this = Finance(this);
     this.set_season_prize_money(this.season_prize_money().wrapping_add(value));
@@ -2135,10 +1912,6 @@ pub(crate) unsafe extern "thiscall" fn add_prize_money(this: usize, value: i32) 
 /// league's table is built for the new season): adds the amount to the TV income of the year (+0x158) and of the month
 /// (+0xb8) and to the balance.
 /// Original: `Finance::add_tv_revenue` (0x5987c0, finance.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x5987c0 } (thiscall, ret 4, finance.cpp): `valor.add_tv_revenue()`, só pelos direitos de TV da liga
-/// (League::pay_tv_rights 0x683010, pela montagem da tabela de cada liga na temporada nova): soma o valor à TV do ano
-/// (+0x158) e do mês (+0xb8) e ao saldo.
 pub(crate) unsafe extern "thiscall" fn add_tv_revenue(this: usize, value: i32) {
     let this = Finance(this);
     this.set_season_tv_revenue(this.season_tv_revenue().wrapping_add(value));
@@ -2152,10 +1925,6 @@ pub(crate) unsafe extern "thiscall" fn add_tv_revenue(this: usize, value: i32) {
 /// adds the amount to the wages of the month (+0x90) and of the year (+0x130) and takes it from the balance (the free
 /// release compensation)
 /// Original: `Finance::pay_wages` (0x599920, finance.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x599920 } (thiscall, ret 4, finance.cpp): `valor.pay_wages()`, só pela liberação sem custo
-/// (TRANSFER_MANAGER::free_transfer_staff 0x8c1af0: a compensação do contrato ao clube): soma o valor aos salários do ano
-/// (+0x130) e do mês (+0x90) e o tira do saldo.
 pub(crate) unsafe extern "thiscall" fn pay_wages(this: usize, value: i32) {
     let this = Finance(this);
     this.set_season_wages(this.season_wages().wrapping_add(value));
@@ -2172,16 +1941,12 @@ pub(crate) unsafe fn add_to_i32(a: usize, v: i32) {
 }
 
 /// Adds sign-extended v to the i64 balance at +0 of a finance record (i32 amount).
-///
-/// [pt] O saldo (i64 em +0 do registro de finanças) mais `v` (estendido com sinal, como o cdq/adc da original).
 pub(crate) unsafe fn add_i32_to_balance(fin: usize, v: i32) {
     let s = read_i64(fin);
     write_i64(fin, s.wrapping_add(v as i64));
 }
 
 /// Returns the club's finance record (0x167 bytes) in FinanceTable this: [this] + club id × 0x167.
-///
-/// [pt] O registro de finanças (0x167 bytes) do clube na tabela `this` (FinanceTable), pelo id (+0) do clube.
 pub(crate) unsafe fn fin_prm_club_finance(this: usize, club: Club) -> usize {
     read_usize(this).wrapping_add((read_usize(club.addr()) as u32).wrapping_mul(0x167) as usize)
 }
@@ -2195,12 +1960,6 @@ pub(crate) unsafe fn fin_prm_club_finance(this: usize, club: Club) -> usize {
 /// picks it by 5250 and 3750 (one step higher in the nation of Japan 0x9cf36c). Attendance (+0x73) × reputation ×
 /// factor, truncated; × (random(11) + 95) × 0.01, truncated, added to +0xbc, +0x15c and the balance.
 /// Original: `FinanceTable::add_weekly_merchandising_income` (0x59b7e0, finance.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x59b7e0 } (thiscall, ret 4, finance.cpp): `FinanceTable::add_weekly_merchandising_income(clube)`, pelo passe
-/// diário das finanças (0x59b9c0, no dia 6 da semana, clubes de liga). A base: com o clube de +0xbf e o estádio dele
-/// (+0x69), o nível (+0xf) × 25 + a reputação (+0x80), × 0,65 truncado se o byte +0x6d for zero, escolhe o fator por
-/// 5500 e 4000; sem eles, a reputação escolhe por 5250 e 3750 (um degrau acima na nação do Japão 0x9cf36c). Público
-/// (+0x73) × reputação × fator, truncado; × (sorteio(11) + 95) × 0,01, truncado, soma em +0xbc, +0x15c e no saldo.
 pub(crate) unsafe extern "thiscall" fn add_weekly_merchandising_income(this: usize, club: usize) {
     let club = Club(club);
     let other = club.chairman();
@@ -2257,16 +2016,6 @@ pub(crate) unsafe extern "thiscall" fn add_weekly_merchandising_income(this: usi
 /// 0.9, Germany 1.2) is applied only with `apply`; then (random(rep) + random(rep) + 1) × 0.001 + 1, × new ones, into
 /// +0x15c.
 /// Original: `Finance::sell_season_tickets` (0x599a20, finance.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x599a20 } (thiscall, ret 4, finance.cpp): `aplicar.sell_season_tickets()`, pelo passe diário das finanças
-/// (0x59b9c0, no dia 6 da semana, quando finance_get_days_to_season_start 0x59b4c0 diz que a temporada ainda vai
-/// começar). O clube pelo id (+8, registro de 0x245 bytes); estádio (+0x69) com menos de 1500 lugares (+0x3c) passa a
-/// reputação × 2,5 (mínimo 1500). A procura: o valor do clube no gerente de técnicos ([[0xb67a44]] + 73·id + 8) × 0,0001
-/// (mínimo 0,15) × público (+0x73), × reputação × 0,00025 (mínimo 0,5), limitada a 87,5% dos lugares (1250 sem estádio).
-/// Acima dos já vendidos (+0x18): o passo (+0x164, até 8) escolhe a fração (0x9c8758) da diferença, × (sorteio(11) +
-/// 95) / 100 = os novos; a razão vendidos/lugares vai a +0x160 (f32, até 0,875). A receita (preço pela reputação × novos;
-/// /4 ou /10 pelo tipo da nação +0x7e; × 1,25 na série A, Chelsea 1,5, Arsenal e Tottenham 1,3, Everton 0,75, Liverpool
-/// 0,9, Alemanha 1,2) entra só com `aplicar`; depois (sorteio(rep) + sorteio(rep) + 1) × 0,001 + 1, × novos, em +0x15c.
 pub(crate) unsafe extern "thiscall" fn sell_season_tickets(this: usize, apply: i32) {
     let this = Finance(this);
     let id = this.club_id();
@@ -2370,8 +2119,6 @@ pub(crate) unsafe extern "thiscall" fn sell_season_tickets(this: usize, apply: i
 }
 
 /// Charges a works cost to the club's finance record (+0x8c, +0x12c and minus the balance).
-///
-/// [pt] O custo da obra (+0x8c e +0x12c, menos no saldo) no registro de finanças do clube.
 pub(crate) unsafe fn charge_works_cost(this: usize, club: Club, cost: i32) {
     let fin = fin_prm_club_finance(this, club);
     add_to_i32(fin + finance::SEASON_GROUND_COSTS, cost);
@@ -2389,13 +2136,6 @@ pub(crate) unsafe fn charge_works_cost(this: usize, club: Club, cost: i32) {
 /// 1 million); below 16 with reputation above 4250, or below 20 with reputation above 7250: above 7250 it goes to 20,
 /// otherwise up by 2 (minimum 12), and charges the new level × 50000 + 75000. Ceiling 20.
 /// Original: `FinanceTable::upgrade_training_facilities` (0x59b630, finance.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x59b630 } (thiscall, ret 4, finance.cpp): `FinanceTable::upgrade_training_facilities(clube)`, pelo fim da
-/// temporada do clube (0x59cfa0, com o pedido de treino aprovado pela diretoria). O nível (+0x7f) sobe 2 (1 a partir de
-/// 19) e cobra nível × 50000 + 75000. Depois, abaixo de 20: com reputação (+0x80) acima de 8250, vai a 20 e cobra
-/// (22 − nível) × 250000 (mínimo 2 milhões); abaixo de 14 com reputação acima de 5250, sobe 4 (mínimo 16) e cobra 3,5
-/// milhões − nível × 150000 (mínimo 1 milhão); abaixo de 16 com reputação acima de 4250, ou abaixo de 20 com reputação
-/// acima de 7250: acima de 7250 vai a 20, senão sobe 2 (mínimo 12), e cobra o novo nível × 50000 + 75000. Teto 20.
 pub(crate) unsafe extern "thiscall" fn upgrade_training_facilities(this: usize, club: usize) {
     let club = Club(club);
     let level = (club.addr() + club::TRAINING) as *mut i8;
@@ -2441,8 +2181,6 @@ pub(crate) unsafe fn balance(fin: Finance) -> i64 {
 }
 
 /// Adds sign-extended v to the i64 balance at +0 of a finance record (duplicate of add_i32_to_balance).
-///
-/// [pt] O saldo (i64 em +0) mais `v` estendido com sinal (o cdq/adc da original).
 pub(crate) unsafe fn credit_balance(fin: Finance, v: i32) {
     write_i64(fin.addr(), balance(fin).wrapping_add(v as i64));
 }
@@ -2453,8 +2191,6 @@ pub(crate) unsafe fn wealth_band(fin: Finance) -> i8 {
 }
 
 /// Calls a weekly finance event routine (thiscall(table, club, finance)); returns 1 if it happened.
-///
-/// [pt] Um evento da semana (0x59e050, 0x59dd40, 0x59e5a0, 0x59e940): thiscall(tabela, clube, finanças), 1 se aconteceu.
 pub(crate) unsafe fn run_weekly_event(routine: usize, this: usize, club: Club, fin: usize) -> u32 {
     let f: unsafe extern "thiscall" fn(usize, usize, usize) -> u32 = core::mem::transmute(routine);
     f(this, club.addr(), fin)
@@ -2462,14 +2198,9 @@ pub(crate) unsafe fn run_weekly_event(routine: usize, this: usize, club: Club, f
 
 /// The comparer's dry run: the copy runs without the news item (`exe::finance_post_finance_boost_news`) and without the funding (0x598800), which
 /// allocate and cannot run twice.
-///
-/// [pt] O ensaio do comparador: a cópia roda sem a notícia (0x59f300) e sem a verba (0x598800), que alocam e não podem
-/// rodar duas vezes.
 pub(crate) static RARE_FINANCE_EVENT_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// Posts the finance event news (FN_FINANCE_POST_FINANCE_BOOST_NEWS); nothing in rehearsal.
-///
-/// [pt] A notícia do evento (0x59f300: thiscall(tabela, clube, valor, verba, tipo), ret 0x10); no ensaio, nada.
 pub(crate) unsafe fn post_finance_boost_news(this: usize, club: Club, value: i32, budget: u32, kind: u32) {
     if RARE_FINANCE_EVENT_DRY_RUN.load(Relaxed) {
         return;
@@ -2478,9 +2209,6 @@ pub(crate) unsafe fn post_finance_boost_news(this: usize, club: Club, value: i32
 }
 
 /// Transfer budget for the news (Finance::get_transfer_budget 0x598800 with 0, 0, 0, 1, 0); 0 in rehearsal.
-///
-/// [pt] A verba de transferências (Finance::get_transfer_budget 0x598800 com 0, 0, 0, 1, 0) que vai na notícia; no
-/// ensaio, 0 (a notícia não sai).
 pub(crate) unsafe fn transfer_budget(fin: Finance) -> u32 {
     if RARE_FINANCE_EVENT_DRY_RUN.load(Relaxed) {
         return 0;
@@ -2489,15 +2217,11 @@ pub(crate) unsafe fn transfer_budget(fin: Finance) -> u32 {
 }
 
 /// Posts the end-of-crisis news (`exe::finance_post_receivers_appeased_news`, receivers appeased) for the club id.
-///
-/// [pt] O fim da semana do clube no estado de crise (0x5a02f0: thiscall(tabela, id)).
 pub(crate) unsafe fn post_receivers_appeased(this: usize, club: Club) {
     exe::finance_post_receivers_appeased_news(this, read_usize(club.addr()) as u32);
 }
 
 /// Resets the finance state (+0x165) to 0 from 1 or 2; from 1 (crisis) posts the end-of-crisis news first.
-///
-/// [pt] O estado (+0x165) volta a 0; se era 1 (crise), a notícia do fim da crise (0x5a02f0) antes.
 pub(crate) unsafe fn leave_crisis(this: usize, club: Club, fin: Finance) {
     let s = fin.crisis_state();
     if s == 1 {
@@ -2509,8 +2233,6 @@ pub(crate) unsafe fn leave_crisis(this: usize, club: Club, fin: Finance) {
 }
 
 /// A maxed training ground (club::TRAINING = 20) drops one level on random(10) = 0 if reputation is below 7250.
-///
-/// [pt] O centro de treino no máximo (20) cai um nível com sorteio(10) zero, se a reputação for menor que 7250.
 pub(crate) unsafe fn decay_training_ground(club: Club) {
     let level = (club.addr() + club::TRAINING) as *mut i8;
     if *level == 0x14 && club.reputation() < 0x1c52 && friendly_random(10) == 0 {
@@ -2534,18 +2256,6 @@ pub(crate) unsafe fn decay_training_ground(club: Club) {
 /// removes the heating (+0x4d, `news_ground_works`) of a club with reputation below 4250, or closes 10% of the places (+0x3c to
 /// +0x44, `exe::finance_post_stand_closed_news`, squeeze 20); the training facilities drop by random draw.
 /// Original: `FinanceTable::process_club_finance_events` (0x59ed70, finance.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x59ed70 } (thiscall, ret 8, finance.cpp): `FinanceTable::process_club_finance_events(clube, semana)`, pelo passe
-/// diário das finanças (0x59b9c0: na virada da semana com semana = 1 para todo clube de liga com reputação de 5000 ou
-/// nação ativa; nos outros dias só para o clube em crise, com semana = sorteio zero). As finanças do clube (do parceiro
-/// A, 0x540a50) e a faixa (0x5986b0): 2 e 1 (ricos) e 0 encerram a crise (+0x165) e baixam o contador de aperto (+0x166)
-/// até 5/0/10; 1 e 0 tentam o impulso (0x59e050), a dívida (0x59dd40) e a injeção (0x59e5a0); −1 marca o estado 2, sobe
-/// o aperto pelo byte +0x6d, desgasta o centro de treino e tenta a dívida, a injeção e a troca da diretoria (0x59e940);
-/// −2 entra em crise (notícia 0x59fc60, tira a marca +0x82, e no clube humano 0x600a50 baixa o valor dos contratos do
-/// elenco pela 0x4d0c60, marcando o bit 4 de +0x4e) ou, já em crise, tenta a troca, a injeção e o impulso, desgasta o
-/// centro e sobe o aperto 3. Depois, liga ativa ([0xadadfc]) e aperto acima de 50: tira o aquecimento (+0x4d, 0x59ffb0)
-/// do clube de reputação abaixo de 4250, ou fecha 10% dos lugares (+0x3c para +0x44, 0x59f900, aperto 20); o centro de
-/// treino cai pelo sorteio.
 pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, club: usize, week: u32) {
     let club = Club(club);
     if club.is_null() {
@@ -2724,13 +2434,6 @@ pub(crate) unsafe extern "thiscall" fn process_club_finance_events(this: usize, 
 /// reputation), 300 × (balance below −300 × reputation) or 150 ×: into +0x154, +0xb4 and the balance; the news
 /// (`exe::finance_post_finance_boost_news`, type 4); returns 1.
 /// Original: `FinanceTable::try_board_debt_payment` (0x59dd40, finance.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x59dd40 } (thiscall, ret 8, finance.cpp): `FinanceTable::try_board_debt_payment(clube, finanças)`, pelo passe dos
-/// eventos (0x59ed70). Faixa (0x5986b0) −2, −1 (divisor 2, ou 0,4 com reputação de 3500), ou 0 com reputação até 3500 e
-/// saldo abaixo de 25 × reputação (0,4); as outras: 0. Sorteio(7000) + 3500 acima da reputação; sorteio(6 / divisor)
-/// zero; sorteio(nível +0x20 do estádio do clube de +0xbf, ou 10) não zero. A diretoria paga 450 × reputação (abaixo de
-/// 1250 com saldo abaixo de −450 × reputação), 300 × (saldo abaixo de −300 × reputação) ou 150 ×: em +0x154, +0xb4 e no
-/// saldo; a notícia (0x59f300, tipo 4); devolve 1.
 pub(crate) unsafe extern "thiscall" fn try_board_debt_payment(this: usize, club: usize, fin: usize) -> u32 {
     let fin = Finance(fin);
     let club = Club(club);
@@ -2796,10 +2499,6 @@ pub(crate) unsafe extern "thiscall" fn try_board_debt_payment(this: usize, club:
 ///
 /// With no event: everything equal, including the random draws. With an event: the return value and the fields the
 /// event writes (balance, +0xb4, +0x154, +0x165), because the original's news item and budget may draw and write.
-///
-/// [pt] O comparador dos eventos: a cópia em ensaio (sem notícia nem verba) e a original a partir do mesmo estado (registro de
-/// finanças e sorteio). Sem evento: tudo igual, inclusive o sorteio; com evento: a devolução e os campos que o evento
-/// grava (saldo, +0xb4, +0x154, +0x165), porque a notícia e a verba da original podem sortear e gravar.
 pub(crate) unsafe fn compare_finance_event(name: &str, fin: usize, original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
     let mut regions = vec![(fin, 0x167)];
     regions.extend(crate::rng::STATE_REGIONS);
@@ -2833,14 +2532,6 @@ pub(crate) unsafe fn compare_finance_event(name: &str, fin: usize, original: imp
 /// if the amount exceeds reputation² / 4). Into +0x154, +0xb4 and the balance; the news (`exe::finance_post_finance_boost_news`, type 3, with the
 /// budget 0x598800); ends the crisis (+0x165 = 0); returns 1.
 /// Original: `FinanceTable::try_cash_injection` (0x59e5a0, finance.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x59e5a0 } (thiscall, ret 8, finance.cpp): `FinanceTable::try_cash_injection(clube, finanças)`, pelo passe dos
-/// eventos (0x59ed70). Reputação (+0x80) de 4750, sem a marca +0x82, fora do País de Gales e das Irlandas. Divisor pela
-/// faixa (−2: 0,25; −1: 0,1; outras: 0,001). Com o estádio do clube de +0xbf: sorteio(30 / divisor) abaixo do nível
-/// (+0xf) e o nível +0x20 acima de sorteio(5) + 10: (20 × nível + 150) × reputação + 750000; sem ele: sorteio(4 /
-/// divisor) zero: (5 × reputação + 15000) × 50. Dívida acima de 10 × o valor: 10% da dívida. Teto: reputação² + 1,5
-/// milhão abaixo de 2000; senão 4 milhões (+1 se o valor passar de reputação² / 4). Em +0x154, +0xb4 e no saldo; a
-/// notícia (0x59f300, tipo 3, com a verba 0x598800); encerra a crise (+0x165 = 0); devolve 1.
 pub(crate) unsafe extern "thiscall" fn try_cash_injection(this: usize, club: usize, fin: usize) -> u32 {
     let fin = Finance(fin);
     let club = Club(club);
@@ -2924,15 +2615,6 @@ pub(crate) unsafe extern "thiscall" fn try_cash_injection(this: usize, club: usi
 /// the league weight (+0x69) × 0.2. By the finance band (`get_wealth_band`): −2 × 0.75, −1 × 0.95, 1 × 1.5, 2 × 2. Limited to
 /// the club's ceiling (+0x14) and to the job's range.
 /// Original: `Finance::get_max_staff_wage` (0x597db0, finance.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x597db0 } (thiscall, ret 4, finance.cpp): `cargo.get_max_staff_wage()`, o maior salário semanal que o
-/// clube oferece a um membro do pessoal (renovação 0x4cda70, interesse pelo cargo 0x844780, telas de contrato). Clube
-/// pelo id (+8); tipo 3 (+0x64): 0. O padrão pelo cargo (5 a 7: 35000; 8: 20000; 9: 1500; 10: 1000; outros: 750);
-/// seleção (0x53b900): o padrão. Sem nação (+0x53): padrão × 0,25. Com nação: o nível (+0x85) / (20 × tipo +0x7e
-/// entre 1 e 3) × padrão; no tipo 1, Inglaterra, Itália e Espanha × 1,05 com reputação acima de 7250, Japão nada, EUA
-/// acima de 1750 com 0,75 do excedente, e os demais grupos com o excedente acima de 2500/1250/750 pelo fator (0,75/0,75/
-/// 0,3, ou reputação/50 / nível × 0,1 × ele, até 1); com liga (+0x57), × peso da liga (+0x69) × 0,2. Pela faixa das
-/// finanças (0x5986b0): −2 × 0,75, −1 × 0,95, 1 × 1,5, 2 × 2. Limitado ao teto do clube (+0x14) e à faixa do cargo.
 pub(crate) unsafe extern "thiscall" fn get_max_staff_wage(this: usize, job: i8) -> i32 {
     let this = Finance(this);
     let id = this.club_id();
@@ -3034,10 +2716,6 @@ pub(crate) unsafe extern "thiscall" fn get_max_staff_wage(this: usize, job: i8) 
 /// `update_after_match`, three calls): adds the amount to the bonus expenses (+0x138 and +0x98) and subtracts it from the balance
 /// (i64 at +0, sign-extended).
 /// Original: `Finance::pay_bonuses` (0x599960, finance.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x599960 } (thiscall, ret 4, finance.cpp): `valor.pay_bonuses()`, pelo fim do jogo dos contratos
-/// (CONTRACT_MANAGER::update_after_match 0x4ca6d0, três chamadas): soma o valor nas despesas de bônus (+0x138 e +0x98)
-/// e o tira do saldo (i64 em +0, estendido com sinal).
 pub(crate) unsafe extern "thiscall" fn pay_bonuses(this: usize, value: i32) {
     for o in [0x138usize, 0x98] {
         write_i32(this + o, read_i32(this + o).wrapping_add(value));
@@ -3049,10 +2727,6 @@ pub(crate) unsafe extern "thiscall" fn pay_bonuses(this: usize, value: i32) {
 
 /// wage ceiling (+0x14) × (percent + 100)%, truncated
 /// Original: `Finance::adjust_max_wage` (0x598340, finance.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x598340 } (thiscall, ret 4, finance.cpp): `percentual.adjust_max_wage()`, pela resposta da diretoria
-/// (MANAGER_MANAGER::handle_board_request 0x6a91b0) e pela 0x6acee8: o teto salarial (+0x14) vira (percentual + 100) ×
-/// 0,01 × teto, truncado.
 pub(crate) unsafe extern "thiscall" fn adjust_max_wage(this: usize, percentage: i8) {
     let this = Finance(this);
     let v = ftol((percentage as i32 + 100) as f64 * read_f64(rdata::F64_0_01) * this.wage_ceiling() as f64);
@@ -3068,11 +2742,6 @@ pub(crate) unsafe extern "thiscall" fn adjust_max_wage(this: usize, percentage: 
 /// (`exe::database_is_national_team`): 0. Above 2500·R + 5,000,000: 2; above 1000·R + 3,500,000: 1; below −2,500,000 − 1500·R: −2; below −250·R
 /// (R < 5000) or (3750 − R)·1000 (R ≥ 5000): −1; otherwise 0.
 /// Original: `Finance::get_wealth_band` (0x5986b0, finance.cpp, thiscall).
-///
-/// [pt] { 0x5986b0 } (thiscall, finance.cpp): `Finance::get_wealth_band()`, a faixa do saldo (64 bits em +0/+4) do clube (+8,
-/// vetor 0xae23b4) pela reputação R (+0x80), usada pelas transferências, pela diretoria, pelos técnicos, pelas finanças e
-/// pelo adiamento. Seleção (0x53b900): 0. Acima de 2500·R + 5.000.000: 2; acima de 1000·R + 3.500.000: 1; abaixo de
-/// −2.500.000 − 1500·R: −2; abaixo de −250·R (R < 5000) ou de (3750 − R)·1000 (R ≥ 5000): −1; senão 0.
 pub(crate) unsafe extern "thiscall" fn get_wealth_band(this: usize) -> u8 {
     let this = Finance(this);
     let id = this.club_id() as u32;

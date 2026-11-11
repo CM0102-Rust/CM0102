@@ -4,10 +4,6 @@ use super::*;
 /// (Spanish lower division, French CFA, French lower division); 0 if the competition record (107 bytes, +0x5d) is not
 /// flagged; otherwise 1 only if its stage object is at stage 2 (+0x43), has rounds (+0x3e) and the first table row's
 /// club (+0x57 or +0x60) is the stage's competition (+4).
-///
-/// [pt] { 0x4b0700 } (comp_util.cpp): a competicao `id` conta? As tres de 0x9cf6b0, 0x9cf5d8 e 0x9cf548
-/// sim; sem o +0x5d do registro (0xae23d0, 107 bytes) nao; senao so a do objeto em 0xadadfc com
-/// fase 2 (+0x43), rodadas (+0x3e) e a primeira rodada (+0xb1) com o clube +4 em +0x57 ou +0x60.
 pub(crate) unsafe extern "C" fn competition_counts(id: i32) -> u32 {
     let g = |a: usize| read_i32(a);
     if id == g(KEY_CLUB_COMP_SPANISH_LOWER_DIVISION) || id == g(KEY_CLUB_COMP_FRENCH_CFA) || id == g(KEY_CLUB_COMP_FRENCH_LOWER_DIVISION) {
@@ -31,25 +27,18 @@ pub(crate) unsafe extern "C" fn competition_counts(id: i32) -> u32 {
 
 /// qsort comparator: orders records by the signed byte at +0x5f, descending (second minus first; a null pointer counts
 /// as 0).
-///
-/// [pt] { 0x4b0780 } (comparacao do qsort): byte +0x5f do segundo menos o do primeiro (nulo vale 0).
 pub(crate) unsafe extern "C" fn order_by_5f(a: *const usize, b: *const usize) -> i32 {
     let v = |p: usize| if p == 0 { 0 } else { read_i8(p + club::LAST_POSITION) as i32 };
     v(*b) - v(*a)
 }
 
 /// qsort comparator: sorts records in descending order of their signed 16-bit word at +0x80 (b minus a).
-///
-/// [pt] { 0x4b07b0 } (comparacao do qsort): palavra +0x80 do segundo menos a do primeiro.
 pub(crate) unsafe extern "C" fn order_by_80(a: *const usize, b: *const usize) -> i32 {
     read_i16(*b + club::REPUTATION) as i32 - read_i16(*a + club::REPUTATION) as i32
 }
 
 /// qsort comparator for club pointers: sorts by the club's word at +0x80 (reputation) in descending order, with null
 /// entries placed last.
-///
-/// [pt] { 0x4b07d0 } (comparacao do qsort): como 0x4b07b0, com os nulos no fim (primeiro nulo: 1 se o
-/// segundo nao for; segundo nulo: -1).
 pub(crate) unsafe extern "C" fn order_by_80_desc(a: *const usize, b: *const usize) -> i32 {
     let (x, y) = (*a, *b);
     if x == 0 {
@@ -63,8 +52,6 @@ pub(crate) unsafe extern "C" fn order_by_80_desc(a: *const usize, b: *const usiz
 
 /// qsort comparator: orders records by their 16-bit word at +0x80 (the club reputation) in ascending order, null
 /// entries last.
-///
-/// [pt] { 0x4b0810 } (comparacao do qsort): como 0x4b07d0, em ordem crescente.
 pub(crate) unsafe extern "C" fn order_by_80_asc(a: *const usize, b: *const usize) -> i32 {
     let (x, y) = (*a, *b);
     if x == 0 {
@@ -78,8 +65,6 @@ pub(crate) unsafe extern "C" fn order_by_80_asc(a: *const usize, b: *const usize
 
 /// Returns the units digit of round code `n` (n % 10) when `n` is below 1000, else 0; used to read the round variant
 /// from a fixture's round code.
-///
-/// [pt] { 0x4b0850 } (comp_util.cpp): algarismo das unidades de `n` (abaixo de 1000; senao 0).
 pub(crate) unsafe extern "C" fn units_digit(n: i32) -> u8 {
     if n < 1000 {
         (n % 10) as u8
@@ -90,9 +75,6 @@ pub(crate) unsafe extern "C" fn units_digit(n: i32) -> u8 {
 
 /// Tells whether competition `comp` is a friendly: it is the one stored at +4 of the friendly manager `this`, or its id
 /// (+0) is among the last 127 club competitions (count at 0xae2378). Returns 1/0.
-///
-/// [pt] { 0x5c6710 } (friendly.cpp): a competicao e amistosa? E a guardada em +4 do objeto, ou o id dela
-/// (+0) esta entre as 127 ultimas competicoes de clubes (quantidade em 0xae2378).
 pub(crate) unsafe extern "thiscall" fn is_friendly(this: usize, comp: usize) -> u32 {
     if comp == read_usize(this + 4) {
         return 1;
@@ -103,10 +85,6 @@ pub(crate) unsafe extern "thiscall" fn is_friendly(this: usize, comp: usize) -> 
 /// Returns the person's contract inside a contract list: `this` points to an array of 80-byte contract records, and the
 /// index comes from the person's 79-byte staff-state record (table 0xae2d0c, indexed by person id). Returns 0 when
 /// there is no person, the id is out of range (person count 0xae2364) or the index is negative.
-///
-/// [pt] { 0x4cf5a0 } (contract_manager.cpp): contrato da pessoa (registros de 80 bytes a partir de +0
-/// do objeto), pelo indice na tabela 0xae2d0c (79 bytes por pessoa; quantidade em 0xae2364).
-/// Sem pessoa, id fora da tabela ou indice negativo: 0.
 pub(crate) unsafe extern "thiscall" fn contract_of(this: usize, person: usize) -> usize {
     if person == 0 {
         return 0;
@@ -126,10 +104,6 @@ pub(crate) unsafe extern "thiscall" fn contract_of(this: usize, person: usize) -
 /// Returns 1 if the club is a national team: national-team ids come after the clubs, so the id must be at least the
 /// club count minus twice the nation count. A null club returns 0 and clears the global at 0xb67a34 (the original also
 /// shows an error box, skipped here).
-///
-/// [pt] { 0x53b900 } (Database.cpp): o clube e uma selecao? Os ids das selecoes vem depois dos clubes
-/// (total de clubes em 0xae235c menos 2 x nacoes em 0xae2350). Clube nulo: o original mostra uma
-/// caixa de erro, zera 0xb67a34 e devolve 0 (aqui, sem a caixa).
 pub(crate) unsafe extern "C" fn is_national_team(club: usize) -> u32 {
     if club == 0 {
         write_u32(G_MOUSE_LEFT_BUTTON_DOWN, 0);
@@ -140,10 +114,6 @@ pub(crate) unsafe extern "C" fn is_national_team(club: usize) -> u32 {
 }
 
 /// Computes each club's strength key (`comp_util_get_club_strength_score`) and sorts clubs and keys descending by swapping, as `comp_util_sort_clubs_by_strength`.
-///
-/// [pt] O núcleo da 0x4c08f0 sobre os `n` clubes em `v` e as chaves em `k`: a chave de cada clube é a força
-/// (0x4c0720; clube nulo, 0); depois, para cada i, todo j > i com chave maior troca de lugar com i (chave e clube),
-/// com sinal.
 pub(crate) unsafe fn sort_clubs_by_strength(v: *mut u32, k: *mut i32, n: i32) {
     for i in 0..n.max(0) as usize {
         let c = *v.add(i);
@@ -167,10 +137,6 @@ pub(crate) unsafe fn sort_clubs_by_strength(v: *mut u32, k: *mut i32, n: i32) {
 /// keeping the keys in a temporary array (`exe::crt_malloc` / `exe::crt_free`; the original fills it with 0x60 beforehand, all of which
 /// is overwritten). Out of memory: the error box (line 0x292d) and nothing else.
 /// Original: `comp_util_sort_clubs_by_strength` (0x4c08f0, comp_util.cpp, cdecl).
-///
-/// [pt] { 0x4c08f0 } (cdecl, comp_util.cpp): `comp_util_sort_clubs_by_strength(clubes, n)`: ordena o vetor de `n` clubes
-/// pela força (0x4c0720), a maior primeiro, com as chaves num vetor temporário (0x944e46 / 0x9452ca; a original o
-/// enche de 0x60 antes, tudo sobrescrito). Sem memória: a caixa (linha 0x292d) e nada.
 pub(crate) unsafe extern "C" fn comp_util_sort_clubs_by_strength(v: usize, n: i32) {
     let k = exe::crt_malloc((n as u32).wrapping_mul(4));
     if k == 0 {
@@ -189,10 +155,6 @@ pub(crate) unsafe extern "C" fn comp_util_sort_clubs_by_strength(v: usize, n: i3
 /// competition statistics and stores the position (a byte) at +0x72; returns the record. Null club: the error box (line
 /// 0x680).
 /// Original: `Comp_Stats::set_club_final_position` (0x4a2540, comp_stats.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x4a2540 } (thiscall, ret 8, comp_stats.cpp): `Comp_Stats::set_club_final_position(clube, posição)`: acha
-/// (0x4a4850) ou acrescenta (0x4aceb0) o registro do clube na estatística da competição e grava a posição (byte) em
-/// +0x72; devolve o registro. Clube nulo: a caixa (linha 0x680).
 pub(crate) unsafe extern "thiscall" fn set_club_final_position(this: usize, club: usize, pos: u32) -> usize {
     if club == 0 {
         show_error_at(0x99ca94, 0x680);
@@ -216,11 +178,6 @@ pub(crate) unsafe extern "thiscall" fn set_club_final_position(this: usize, club
 /// null or not), skipping the nulls.
 ///
 /// `gravar` = 0 only builds the list. Returns the (club, position) list.
-///
-/// [pt] As chamadas da 0x5223a0 à 0x4a2540 (clube, posição), na ordem, com o vetor `v` já ordenado: da penúltima rodada
-/// (+0x3c − 2) para trás ([+0xa3] + r × 0x68, a conta de quem sai em +0x1a), até um clube nulo no começo da rodada.
-/// Na primeira rodada vista, os que saem nela ganham todos a posição 1 (sem olhar nulos); em cada rodada, os seguintes
-/// ganham a posição do contador (que sobe a cada vaga, nula ou não), pulando os nulos. `gravar` = 0 só monta a lista.
 pub(crate) unsafe fn set_final_positions_by_round(this: Cup, v: *const u32, write: usize) -> Vec<(usize, u8)> {
     let mut chamadas: Vec<(usize, u8)> = Vec::new();
     let mut s: i16 = 0; // the index into the vector (bp signed)
@@ -274,12 +231,6 @@ pub(crate) unsafe fn set_final_positions_by_round(this: Cup, v: *const u32, writ
 /// is the club's stadium and not the opponent's, 1; if it is both clubs' stadium, 1 for the home club and 2 for the
 /// other; if only the opponent's, 2; if neither's, 3. The caller reads only `al`.
 /// Original: `comp_util_get_fixture_venue_side` (0x4afa80, comp_util.cpp, cdecl).
-///
-/// [pt] { 0x4afa80 } (cdecl, comp_util.cpp): `comp_util_get_fixture_venue_side(clube, jogo)`: o lado do clube no jogo:
-/// 1 em casa, 2 fora, 3 neutro. Sem campo no jogo (+0x18): pelo mandante (+0x1c), 3 se ele não tem estádio (+0x69),
-/// senão 1 para o mandante e 2 para o outro. Seleção (0x53b900): 1 se a nação do campo (+0x38, +0x1f) é a do clube
-/// (+0x53), 2 se é a do adversário, senão 3. Clube: o campo é o estádio do clube e não o do adversário, 1; dos dois,
-/// 1 para o mandante e 2 para o outro; só do adversário, 2; de nenhum, 3. Quem chama lê só o al.
 pub(crate) unsafe extern "C" fn comp_util_get_fixture_venue_side(club: usize, game: usize) -> u8 {
     let game = Fixture(game);
     let club = Club(club);
@@ -324,11 +275,6 @@ pub(crate) unsafe extern "C" fn comp_util_get_fixture_venue_side(club: usize, ga
 /// sorts the array and frees it right afterwards, so the order never reaches the game (only the comparison run notices
 /// it).
 /// Original: `compare_nation_coefficients_desc` (0x4afba0, comp_util.cpp, cdecl).
-///
-/// [pt] { 0x4afba0 } (cdecl, comp_util.cpp): `compare_nation_coefficients_desc(a, b)`: a ordem do qsort (12 bytes por
-/// entrada, o coeficiente em double em +4) da game_update_nation_coefficients 0x5d6187 (no dia do mês da tabela
-/// 0x9cd200): maior antes (−1); menor ou sem ordem (NaN, a flag C0 do fcomp), 1; igual, 0. Quente (o qsort): sem
-/// contador. A original ordena e libera o vetor logo depois: a ordem não chega ao jogo (só o comparando acusa).
 pub(crate) unsafe extern "C" fn compare_nation_coefficients_desc(a: usize, b: usize) -> i32 {
     let x = read_f64(a + 4);
     let y = read_f64(b + 4);
@@ -342,9 +288,6 @@ pub(crate) unsafe extern "C" fn compare_nation_coefficients_desc(a: usize, b: us
 }
 
 /// Swaps two randomly drawn entries of a pointer array.
-///
-/// [pt] As trocas de `vezes` pares sorteados (0x90cfc0(n) duas vezes; a primeira dá o índice que recebe o item do segundo)
-/// no vetor de ponteiros `itens`, como as duas originais (índices de 16 bits com sinal).
 pub(crate) unsafe fn swap_random_pair(items: usize, n: i32) {
     let a = friendly_random(n) as i16 as isize;
     let b = friendly_random(n) as i16 as isize;
@@ -357,9 +300,6 @@ pub(crate) unsafe fn swap_random_pair(items: usize, n: i32) {
 
 /// shuffles an array of n pointers with 3 × n swaps of drawn pairs
 /// Original: `comp_util_shuffle_pointer_array` (0x4afb40, comp_util.cpp, cdecl).
-///
-/// [pt] { 0x4afb40 } (cdecl, comp_util.cpp): `comp_util_shuffle_pointer_array(itens, n)`: embaralha o vetor de `n` (curto)
-/// ponteiros com 3 × n trocas de pares sorteados (0x90cfc0(n) duas vezes cada).
 pub(crate) unsafe extern "C" fn comp_util_shuffle_pointer_array(items: usize, n: u32) {
     let n = n as u16 as i16 as i32;
     if 3 * n <= 0 {
@@ -382,11 +322,6 @@ pub(crate) unsafe extern "C" fn comp_util_shuffle_pointer_array(items: usize, n:
 /// at the end (qsort `exe::crt_qsort` with 0x4b07d0), and shuffles the first m = min(3 × picks, n) with m swaps of randomly
 /// drawn pairs among them. `n` negative or smaller than `picks`: the "Error" box (the original); `picks` < 1: nothing.
 /// Original: `comp_util_sort_and_shuffle_top_clubs` (0x4afbd0, comp_util.cpp, cdecl).
-///
-/// [pt] { 0x4afbd0 } (cdecl, comp_util.cpp): `comp_util_sort_and_shuffle_top_clubs(clubes, n, escolhas)`: ordena os `n`
-/// clubes pela reputação, maior primeiro e nulos no fim (qsort 0x945333 com 0x4b07d0), e embaralha os m = min(3 ×
-/// escolhas, n) primeiros com m trocas de pares sorteados entre eles. `n` negativo ou menor que `escolhas`: caixa
-/// "Error" (a original); `escolhas` < 1: nada.
 pub(crate) unsafe extern "C" fn comp_util_sort_and_shuffle_top_clubs(clubs: usize, n: u32, escolhas: u32) {
     let (nn, e) = (n as u16 as i16, escolhas as u16 as i16);
     if nn < 0 || nn < e {
@@ -410,9 +345,6 @@ pub(crate) unsafe extern "C" fn comp_util_sort_and_shuffle_top_clubs(clubs: usiz
 }
 
 /// A club's rating in the league stats (`comp_util_get_league_clash_type`): weighted average of 4 attributes, weights scaled by games under 25.
-///
-/// [pt] A nota de um clube na estatística da liga (0x4b02e0): pesos 1 nos 4 atributos (+0x72..+0x75; +0x75 e +0x74 com
-/// o peso [0x968968]) ou, com menos de 25 jogos (+4), proporcionais aos jogos; a média ponderada, na ordem do x87.
 pub(crate) unsafe fn league_stats_rating(e: usize, b73: f64) -> f64 {
     let e = CompStatsClub(e);
     let (mut p, mut k73, mut k72) = (read_f64(rdata::F64_0_5), 1.0f64, 1.0f64);
@@ -438,14 +370,6 @@ pub(crate) unsafe fn league_stats_rating(e: usize, b73: f64) -> f64 {
 /// + +0xbf, and the same cross-check of +0x74); otherwise 0. Returns only `al`. No SEH, no random draw; the virtual
 /// +0x98 is called up to three times, as in the original.
 /// Original: `comp_util_get_league_clash_type` (0x4b02e0, comp_util.cpp, cdecl).
-///
-/// [pt] { 0x4b02e0 } (cdecl, comp_util.cpp): `comp_util_get_league_clash_type(a, b)`: os dois clubes na mesma divisão
-/// (+0x57, não reserva nem menor: 0x7e6f20), a liga dela ([0xadadfc][id]) com estatística (+8, 0x4a4850 dos dois),
-/// sem fases (+0x30 = −1) e com +0x43 = 2, e a diferença de +0x73 até um quarto dos clubes (+0x3e). Com as notas
-/// (league_stats_rating): 1 = briga pelo título (virtual +0x98 = 0, as duas abaixo de um terço dos clubes e cada uma não abaixo
-/// do +0x74 do outro); 3 = briga na zona (+0x98 ≠ 0, as duas até 0,2 × clubes + +0xbe, ou com +0xbf até 0,2 × clubes
-/// + +0xbe + +0xbf, e o mesmo cruzamento do +0x74); senão 0. Devolve só `al`. Sem SEH, sem sorteio; a virtual +0x98
-/// é chamada até três vezes, como na original.
 pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usize) -> u8 {
     let b = Club(b);
     let a = Club(a);
@@ -520,13 +444,6 @@ pub(crate) unsafe extern "C" fn comp_util_get_league_clash_type(a: usize, b: usi
 /// The original pushes the number of players as a dword with only the low byte written (the rest is stack leftover);
 /// 0x6e2000 reads only the byte, and the copy passes the byte zero-extended.
 /// Original: `comp_util_get_club_strength_score` (0x4c0720, comp_util.cpp, cdecl).
-///
-/// [pt] { 0x4c0720 } (cdecl, comp_util.cpp): `comp_util_get_club_strength_score(clube)`: o dinheiro (sem tabela de
-/// finanças [0xae2a38]: +0x65 / 400; com ela, o saldo de 64 bits / 300 pela 0x5a0590), mais 16 × a reputação (+0x80),
-/// mais a nota fora da partida (0x6e6340, 0x840, limite −1) dos 15 escalados (0x6e2000, códigos 1, 0x804, 0x84,
-/// 3 × 0x204, 0x810, 0x90, 3 × 0x210, 4 × 0x40) entre os jogadores (+0x61) do elenco (0x541f90). Clube nulo:
-/// −10.000.000. Sem SEH, sem sorteio próprio. A original empurra o número de jogadores como dword com só o byte de
-/// baixo gravado (o resto é sobra de pilha); a 0x6e2000 só lê o byte, e a cópia passa o byte estendido.
 pub(crate) unsafe extern "C" fn comp_util_get_club_strength_score(club: usize) -> i32 {
     let club = Club(club);
     if club.is_null() {
@@ -577,12 +494,6 @@ pub(crate) unsafe extern "C" fn comp_util_get_club_strength_score(club: usize) -
 /// comp_util.cpp error box). The key on the original's stack has only +4 and +8 written, and `database_compare_comp_history_rows` reads only those
 /// two; the copy zeroes the rest.
 /// Original: `comp_util_get_latest_placed_club` (0x4afd80, comp_util.cpp, cdecl).
-///
-/// [pt] { 0x4afd80 } (cdecl, comp_util.cpp): `comp_util_get_latest_placed_club(comp, lugar)`: ordena o histórico de
-/// competições (qsort 0x945333 com 0x540780), busca (bsearch 0x946464) a competição com ano −1 (qualquer), volta até a
-/// primeira linha dela e devolve o clube do `lugar` (0 campeão +0xa, 1 vice +0xe, 2 terceiro +0x12); não achou: 0.
-/// Outro lugar: a original (a caixa do comp_util.cpp). A chave na pilha da original só tem +4 e +8 gravados, e a
-/// 0x540780 só lê esses dois; a cópia zera o resto.
 pub(crate) unsafe extern "C" fn comp_util_get_latest_placed_club(comp: usize, place: u32) -> usize {
     let place = place as u8;
     if place > 2 {
@@ -615,12 +526,6 @@ pub(crate) unsafe extern "C" fn comp_util_get_latest_placed_club(comp: usize, pl
 /// (0xae23b4, 0x245 bytes) at +0x1c/+0x20, stadium (0xae23b0, 0x4e) at +0x18 and competition (0xae23d0, 0x6b) at +0x14;
 /// id −1: 0.
 /// Original: `comp_util_read_fixture_from_news_slots` (0x4b0010, comp_util.cpp, cdecl).
-///
-/// [pt] { 0x4b0010 } (cdecl, comp_util.cpp): a partida (`partida`) refeita de 18 vagas seguidas da
-/// `noticia` (0x785830) a partir de `*cursor` (que avança 18): +0xc e +0x10 os clubes, +0x3d, +0x3e,
-/// +4 o estádio, +0 a competição, +0x42, +0x32, +0x30, +0x43/+0x44, +0x4b/+0x4c e +0x47/+0x48 os
-/// placares, +0x2a, +0x28 e +8. Depois os ponteiros: clubes (0xae23b4, 0x245 bytes) em +0x1c/+0x20,
-/// estádio (0xae23b0, 0x4e) em +0x18 e competição (0xae23d0, 0x6b) em +0x14; id −1: 0.
 pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(news: usize, fixture: usize, cursor: *mut u8) {
     // simplification: the original pushes the whole eax (remainder of the previous slot in the high bits); 0x785830 only reads the byte
     let mut v = *cursor;
@@ -668,12 +573,6 @@ pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(news: usi
 /// clubs' reputations (+0x80 / 500). 1 thrashing, 2 and 3 wins against stronger sides, 4 ordinary, 5 and 7 defeats to
 /// weaker sides, 6 upset. Only `al` is faithful (the caller uses `al`).
 /// Original: `comp_util_classify_tie_result_for_news` (0x4b0890, comp_util.cpp, cdecl).
-///
-/// [pt] { 0x4b0890 } (cdecl, comp_util.cpp): a categoria (1 a 7) do resultado da eliminatória para o
-/// `clube` na `partida`: a margem final (placar +0x4b/+0x4c, ou +0x47/+0x48, ou +0x43/+0x44, o
-/// primeiro sem 0xff) do lado do clube (da casa = +0x1c) e as reputações (+0x80 / 500) dos clubes.
-/// 1 goleada, 2 e 3 vitórias contra mais fortes, 4 comum, 5 e 7 derrotas para mais fracos, 6
-/// zebra. Só o al é fiel (quem chama usa al).
 pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(club: usize, fixture: usize) -> u8 {
     let fixture = Fixture(fixture);
     let home = fixture.home_club();
@@ -752,13 +651,6 @@ pub(crate) unsafe extern "C" fn comp_util_classify_tie_result_for_news(club: usi
 /// keeps the index of the 18th slot in the low byte of the `cursor` argument itself (only the low part reaches
 /// `set_news_field`).
 /// Original: `comp_util_write_fixture_to_news_slots` (0x4afeb0, comp_util.cpp, cdecl).
-///
-/// [pt] { 0x4afeb0 } (cdecl, comp_util.cpp; a convenção do mapa dá o 2º argumento como sem uso, mas é a
-/// notícia): grava o jogo em 18 dados seguidos da notícia (0x785790), a partir do dado [cursor], e
-/// avança o cursor 18. Ordem: +0xc, +0x10, +0x3d, +0x3e, +4, +0, +0x42, +0x32, +0x30, +0x43, +0x44,
-/// +0x4b, +0x4c, +0x47, +0x48, +0x2a, +0x28, +8 (bytes e palavras +0x30/+0x32 com sinal; +0x28 e
-/// +0x2a sem). Devolve o que a última gravação devolveu. A original guarda o índice do 18º dado no
-/// byte baixo do próprio argumento `cursor` (só a parte baixa chega à 0x785790).
 pub(crate) unsafe extern "C" fn comp_util_write_fixture_to_news_slots(game: usize, news: usize, cursor: *mut u8) -> u32 {
     let b = |o: usize| read_i8(game + o) as i32 as u32;
     let s = |o: usize| read_i16(game + o) as i32 as u32;
@@ -784,11 +676,6 @@ pub(crate) unsafe extern "C" fn comp_util_write_fixture_to_news_slots(game: usiz
 /// with template 0x9a7cfc, the 100-byte names from 0x4b4850 and the genders from `exe::comp_util_get_stage_name_gender`); with only one of them, its
 /// name directly in the output (0x4b4850 with the size); with neither, just the zero. Returns 1 (0 on the error box).
 /// Original: `comp_util_format_stage_round_name` (0x4bffc0, comp_util.cpp, cdecl).
-///
-/// [pt] { 0x4bffc0 } (cdecl, comp_util.cpp): `comp_util_format_stage_round_name(fase, rodada, saida, tamanho, estilo)`:
-/// sem saída ou com menos de 200 bytes, a caixa (linha 0x26a1) e 0. Zera a saída; com fase e rodada, "{fase} {rodada}"
-/// (0x66f4e0 com o modelo 0x9a7cfc, os nomes de 100 bytes da 0x4b4850 e os gêneros da 0x4ba8f0); só uma delas, o nome
-/// dela direto na saída (0x4b4850 com o tamanho); nenhuma, só o zero. Devolve 1 (0 na caixa).
 pub(crate) unsafe extern "C" fn comp_util_format_stage_round_name(stage: u32, round: u32, out: *mut u8, size: i32, style: u32) -> i32 {
     if out.is_null() || size < 0xc8 {
         return original_fn::<unsafe extern "C" fn(u32, u32, *mut u8, i32, u32) -> i32>(IDX_COMP_UTIL_FORMAT_STAGE_ROUND_NAME)(stage, round, out, size, style); // a caixa
@@ -823,12 +710,6 @@ pub(crate) unsafe extern "C" fn comp_util_format_stage_round_name(stage: u32, ro
 /// original's whole eax (the caller pushes the whole register to `add_qualified_for_round_record`/`add_knocked_out_record`): the byte in `al` over the sum
 /// (single round) or the quotient.
 /// Original: `comp_util_scale_by_round` (0x4bf850, comp_util.cpp, cdecl).
-///
-/// [pt] { 0x4bf850 } (cdecl, comp_util.cpp): `comp_util_scale_by_round(baixo, alto, rodada, rodadas)` (bytes e palavras com
-/// sinal; as palavras chegam em registradores com lixo acima, só a palavra é lida): com uma rodada só, a média
-/// (baixo + alto) / 2; senão (alto − baixo) × rodada / (rodadas − 1). Fora de 0..=100: a original (caixa da linha
-/// 0x256e, devolve 0 ou 100). Devolve o eax inteiro da original (quem chama empurra o registrador todo para
-/// 0x86bdd0/0x86c000): o byte em al sobre a soma (rodada única) ou o quociente.
 pub(crate) unsafe extern "C" fn comp_util_scale_by_round(low: u32, high: u32, round: u32, rounds: u32) -> u32 {
     let (eax, v) = interpolate_by_round(low, high, round, rounds);
     if !(0..=100).contains(&v) {
@@ -848,11 +729,6 @@ pub(crate) unsafe extern "C" fn comp_util_scale_by_round(low: u32, high: u32, ro
 /// competition (the league's +4), the year `[0xae2c92]` (+8), and the four values at +0xa, +0xe, +0x12, +0x16. Returns
 /// the row. No SEH, no random draw, no locals.
 /// Original: `comp_util_add_history_record` (0x4afce0, comp_util.cpp, cdecl).
-///
-/// [pt] { 0x4afce0 } (cdecl, comp_util.cpp): `comp_util_add_history_record(liga, primeiro, segundo, terceiro, extra)`:
-/// a linha livre do histórico de competições (sem ela, cresce 20 linhas pela 0x527f60 e usa a primeira nova; sem
-/// memória, 0) recebe a competição (+4 da liga), o ano [0xae2c92] (+8), e os quatro valores em +0xa, +0xe, +0x12,
-/// +0x16. Devolve a linha. Sem SEH, sem sorteio, sem locais.
 pub(crate) unsafe extern "C" fn comp_util_add_history_record(league: usize, a: u32, b: u32, c: u32, d: u32) -> usize {
     let mut r = free_comp_history_row();
     if r == 0 {
@@ -878,11 +754,6 @@ pub(crate) unsafe extern "C" fn comp_util_add_history_record(league: usize, a: u
 /// 0x1e; 0x40c..0x40e -> 0x82; 0x43d..0x444 -> 0x449; 0x445..0x448 -> 0x44a; 0x44d..0x450 -> 0x451; everything else −1
 /// (in the original's test order).
 /// Original: `comp_util_get_parent_stage_id` (0x4b01d0, comp_util.cpp, cdecl).
-///
-/// [pt] { 0x4b01d0 } (cdecl, comp_util.cpp): `comp_util_get_parent_stage_id(id)`, o grupo de uma fase pelo id: 0x3e8..0x3fb,
-/// 0x41f..0x42e, 0x413, 0x414, 0x47b e 0x3fc -> 0x41c; 0x473..0x474 -> 0x410; 0x475..0x479 -> 0x47a; 0x3fd..0x406 ->
-/// 0xa; 0x407..0x40b e 0x472 -> 0x14; 0x47e..0x47f -> 0x1e; 0x40c..0x40e -> 0x82; 0x43d..0x444 -> 0x449; 0x445..0x448
-/// -> 0x44a; 0x44d..0x450 -> 0x451; o resto −1 (na ordem dos testes da original).
 pub(crate) unsafe extern "C" fn comp_util_get_parent_stage_id(id: i32) -> i32 {
     let em = |a: i32, b: i32| id >= a && id <= b;
     if em(0x3e8, 0x3fb) {

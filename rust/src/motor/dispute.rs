@@ -7,10 +7,6 @@ use super::*;
 /// and searches, among the first `count` (+0, word), the entry with the person's id (`next_list_item`): if found, it removes it
 /// (`manager_manager_remove`).
 /// Original: `DISPUTE::remove_dispute` (0x56a090, dispute.cpp, thiscall).
-///
-/// [pt] { 0x56a090 } (thiscall, ret 4, dispute.cpp): `DISPUTE::remove_dispute(pessoa)`: sem pessoa ou sem a tabela de marcas
-/// (+4), ou com a marca da pessoa zerada: nada. Senão zera a marca e, com a lista (+0), volta o cursor ao começo (+0xa =
-/// +2) e procura, nas `conta` (+0, palavra) primeiras, a entrada do id da pessoa (0x68d1b0): achando, tira-a (0x68d1f0).
 pub(crate) unsafe extern "thiscall" fn remove_dispute(this: usize, p: usize) {
     if p == 0 || read_usize(this + 4) == 0 {
         return;

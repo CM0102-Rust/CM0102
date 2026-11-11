@@ -1,8 +1,5 @@
 //! Comparison-mode scoreboard (original x Rust): counts comparisons and divergences of a routine,
 //! logs the first divergences in detail and marks 10, 100, 1000... comparisons.
-//!
-//! [pt] Placar do modo comparacao (original x Rust): conta comparacoes e divergencias de uma rotina,
-//! registra as primeiras divergencias com detalhes e marca 10, 100, 1000... comparacoes.
 
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -10,14 +7,9 @@ use crate::registro::linha;
 
 /// How many times each marked branch of a ported routine ran (mutacoes.py reads it from the base and skips the
 /// mutation of a branch that did not run). In the log at each power of 2: "ramo <name>: N".
-///
-/// [pt] Quantas vezes cada ramo marcado de uma rotina portada rodou (mutacoes.py le da base e pula a
-/// mutacao de ramo que nao rodou). No registro a cada potencia de 2: "ramo <nome>: N".
 static BRANCHES: std::sync::Mutex<Vec<(&'static str, u64)>> = std::sync::Mutex::new(Vec::new());
 
 /// Counts one pass through branch `name` (for routines that do not run billions of times).
-///
-/// [pt] Conta uma passagem pelo ramo `nome` (para rotinas que nao rodam bilhoes de vezes).
 pub fn branch(name: &'static str) {
     let n = {
         let mut r = BRANCHES.lock().unwrap_or_else(|e| e.into_inner());
@@ -38,8 +30,6 @@ pub fn branch(name: &'static str) {
 }
 
 /// How many divergences of each routine are logged in detail.
-///
-/// [pt] Quantas divergencias de cada rotina saem detalhadas no registro.
 const DETAILED: u64 = 20;
 
 pub struct Scoreboard {
@@ -47,8 +37,6 @@ pub struct Scoreboard {
     total: AtomicU64,
     divergences: AtomicU64,
     /// the next milestone (10, 100, 1000...): no 64-bit division on every comparison
-    ///
-    /// [pt] o proximo marco (10, 100, 1000...): sem divisao de 64 bits a cada comparacao
     milestone: AtomicU64,
 }
 
@@ -58,8 +46,6 @@ impl Scoreboard {
     }
 
     /// Records one comparison. `detail` is only built if it is one of the first divergences.
-    ///
-    /// [pt] Registra uma comparacao. `detalhe` so e montado se for uma das primeiras divergencias.
     pub fn record(&self, equal: bool, detail: impl FnOnce() -> String) {
         let total = self.total.fetch_add(1, Ordering::Relaxed) + 1;
         if !equal {
@@ -79,8 +65,6 @@ impl Scoreboard {
     }
 
     /// Runs `f` (the self-test) and logs how many cases and divergences it added.
-    ///
-    /// [pt] Roda `f` (o autoteste) e registra quantos casos e divergencias ele somou.
     pub fn self_test(&self, f: impl FnOnce()) {
         let (t0, d0) = self.counts();
         f();
@@ -90,18 +74,12 @@ impl Scoreboard {
 }
 
 /// Copy of memory regions (address, size).
-///
-/// [pt] Copia de regioes de memoria (endereco, tamanho).
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct MemorySnapshot(pub Vec<(usize, Vec<u8>)>);
 
 /// Returned snapshot buffers (snapshots of the whole engine are 63 KB and used to be allocated and freed
 /// on every comparison: most of the comparison mode's time).
 /// Buffers returned by the snapshots (reused instead of allocating and freeing on every comparison).
-///
-/// [pt] Buffers de fotos devolvidos (as fotos do motor inteiro tem 63 KB e eram alocadas e liberadas
-/// a cada comparacao: a maior parte do tempo do modo comparacao).
-/// Buffers devolvidos pelas fotos (reaproveitados em vez de alocar e liberar a cada comparacao).
 static SPARE: std::sync::Mutex<Vec<Vec<u8>>> = std::sync::Mutex::new(Vec::new());
 
 fn buffer(n: usize) -> Vec<u8> {
@@ -144,9 +122,6 @@ impl MemorySnapshot {
 
 /// Runs the original and the Rust version from the same state of the `regions` and returns
 /// (original result, Rust result, memory equal?). On exit, memory is as the original left it.
-///
-/// [pt] Roda a original e a versao Rust a partir do mesmo estado das `regioes` e devolve
-/// (resultado original, resultado Rust, memoria igual?). Ao sair, a memoria fica como a original deixou.
 pub unsafe fn side_by_side<R>(regions: &[(usize, usize)], original: impl FnOnce() -> R, rust: impl FnOnce() -> R) -> (R, R, bool, MemorySnapshot, MemorySnapshot) {
     let before = MemorySnapshot::read(regions);
     let r_orig = original();
@@ -164,10 +139,6 @@ pub unsafe fn side_by_side<R>(regions: &[(usize, usize)], original: impl FnOnce(
 /// Like `side_by_side`, without allocating when the regions add up to at most 256 bytes: the copies stay on the stack and
 /// only become `MemorySnapshot` (for the message) if memory diverges; when equal, they come back empty. For the routines
 /// the game calls billions of times (dates), where the allocated copies took most of the time.
-///
-/// [pt] Como `lado_a_lado`, sem alocar quando as regioes somam ate 256 bytes: as copias ficam na pilha e
-/// so viram `Memoria` (para a mensagem) se a memoria divergir; iguais, voltam vazias. Para as rotinas
-/// que o jogo chama bilhoes de vezes (datas), em que as copias alocadas tomavam a maior parte do tempo.
 pub unsafe fn side_by_side_light<R>(regions: &[(usize, usize)], original: impl FnOnce() -> R, rust: impl FnOnce() -> R) -> (R, R, bool, MemorySnapshot, MemorySnapshot) {
     const MAX: usize = 256;
     let total: usize = regions.iter().map(|r| r.1).sum();
@@ -211,8 +182,6 @@ pub unsafe fn side_by_side_light<R>(regions: &[(usize, usize)], original: impl F
 }
 
 /// Simple generator for the self-tests (xorshift64); unrelated to the game's draw.
-///
-/// [pt] Gerador simples para os autotestes (xorshift64); nao tem relacao com o sorteio do jogo.
 pub struct TestRng(pub u64);
 
 impl TestRng {

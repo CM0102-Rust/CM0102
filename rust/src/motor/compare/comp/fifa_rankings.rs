@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/fifa_rankings.rs.
-// [pt] Os comparadores das rotinas de ../comp/fifa_rankings.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `count_results_in_period`.
 pub(crate) unsafe extern "thiscall" fn compare_count_results_in_period(this: usize, nation: usize, month_of: u32, year_of: u32, month_until: u32, year_until: u32) -> u16 {
@@ -12,9 +11,6 @@ pub(crate) unsafe extern "thiscall" fn compare_count_results_in_period(this: usi
 }
 
 /// Comparer for `update_rankings`.
-///
-/// [pt] Comparador: lado a lado pelo objeto (+0..+0xd), pela tabela das nações e por cada histórico (capacidade +8 × 5);
-/// a ordem é alocada e liberada pelas duas.
 pub(crate) unsafe extern "thiscall" fn compare_update_rankings(this: usize, data: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_UPDATE_RANKINGS);
     let t = read_usize(this);
@@ -99,9 +95,6 @@ pub(crate) unsafe extern "C" fn compare_compare_ranking_score_desc(a: usize, b: 
 }
 
 /// Comparer for `create_default_table`.
-///
-/// [pt] Lado a lado à mão: a original no objeto de quem chama (ela aloca a tabela em +0), a cópia num objeto de rascunho
-/// (aloca a dela); iguais as duas tabelas inteiras (a do rascunho é solta).
 pub(crate) unsafe extern "thiscall" fn compare_create_default_table(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_DEFAULT_TABLE);
     o(this);

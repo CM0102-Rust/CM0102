@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/bra_reg_sp.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/bra_reg_sp.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `bra_reg_sp_start_new_season`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_sp_start_new_season(this: usize) -> u32 {

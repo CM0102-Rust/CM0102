@@ -18,10 +18,6 @@ pub(crate) unsafe fn zip_close(z: &mut usize) {
 /// writes the count (+0xc) and the 0x10-byte records from [+8] into the "club history.dat" item and returns 1; no
 /// container the "Error" box and 0; on open or write error the box and the game stops
 /// Original: `Club_History::save` (0x443f50, club_history.cpp, thiscall).
-///
-/// [pt] { 0x443f50 } (thiscall, ret 4, club_history.cpp): `Club_History::save(save)`: grava no item `club history.dat` a
-/// quantidade (+0xc, u32) e os registros de 0x10 bytes de [+8], e devolve 1. Sem contêiner: a caixa "Error"
-/// (club_history.cpp 0x329) e 0; erro ao abrir ou gravar: a caixa (0x331, 0x338, 0x340) e o jogo para (`fatal_error_at`).
 pub(crate) unsafe extern "thiscall" fn club_history_save(this: usize, save: usize) -> u32 {
     const FONTE: usize = 0x98b644;
     covered!("cpx_7 save club history");
@@ -44,8 +40,6 @@ pub(crate) unsafe extern "thiscall" fn club_history_save(this: usize, save: usiz
 }
 
 /// Shows the officials_manager.cpp error box at the line, closes the item and returns 0.
-///
-/// [pt] A caixa de erro do officials_manager.cpp na linha `linha`, fechando o item; devolve 0.
 pub(crate) unsafe fn officials_save_error(row: u32, z: &mut usize) -> u8 {
     show_error_at(0xa6a22c, row);
     zip_close(z);

@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../manager_manager.rs.
-// [pt] Os comparadores das rotinas de ../manager_manager.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `update_board_confidence_after_match`.
 pub(crate) unsafe extern "thiscall" fn compare_update_board_confidence_after_match(this: usize, club: usize, fixture: usize, game: usize, home: u32) {
@@ -39,10 +38,6 @@ pub(crate) unsafe extern "thiscall" fn compare_post_job_offer_news(this: usize, 
 /// Side by side from the same state of the random generator, [0xae1080], the club's board record, the 3 ids and the 5
 /// outputs; the return value too (the manager's list, the league table and the match record are only read). The copy
 /// runs without counting the random draws.
-///
-/// [pt] Comparador: lado a lado a partir do mesmo estado do sorteador, do [0xae1080], do registro da diretoria do clube, dos
-/// 3 ids e das 5 saídas; a devolução também (a lista do técnico, a tabela da liga e o registro da partida só leem). A
-/// cópia sem contar os sorteios.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn compare_board_named_players_after_match(this: usize, game: usize, club: usize, ids: *mut i32, fixture: u32, elogio: *const u8,
                                                                   a6: *mut u8, a7: *mut u8, a8: *mut u8, a9: *mut u8, a10: *mut u8) -> u8 {
@@ -66,8 +61,6 @@ pub(crate) unsafe extern "thiscall" fn compare_board_named_players_after_match(t
 }
 
 /// Comparer for `get_player_match_rating_verdict`.
-///
-/// [pt] Comparador: pelo valor (o registro é lido do arquivo temporário e o vetor local se constrói e destrói nos dois).
 pub(crate) unsafe extern "thiscall" fn compare_get_player_match_rating_verdict(this: usize, person: usize, fixture: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(IDX_GET_PLAYER_MATCH_RATING_VERDICT)(this, person, fixture);
     let n = get_player_match_rating_verdict(this, person, fixture);
@@ -76,8 +69,6 @@ pub(crate) unsafe extern "thiscall" fn compare_get_player_match_rating_verdict(t
 }
 
 /// Comparer for `build_board_player_performance_text`.
-///
-/// [pt] Comparador: lado a lado nos primeiros 0x200 bytes da saída (o único chamador, 0x6a69c0, passa um texto de 1500).
 pub(crate) unsafe extern "stdcall" fn compare_build_board_player_performance_text(ids: *const i32, win: u32, out: usize, variant: u32) {
     let o = original_fn::<unsafe extern "stdcall" fn(*const i32, u32, usize, u32)>(IDX_BUILD_BOARD_PLAYER_PERFORMANCE_TEXT);
     if ids.is_null() || (*ids == -1 && (*ids.add(1) != -1 || *ids.add(2) != -1)) {
@@ -98,13 +89,6 @@ pub(crate) unsafe extern "stdcall" fn compare_build_board_player_performance_tex
 ///
 /// The comparer performs that same update beforehand (the game's own, at the same point: nothing before it draws), and
 /// both start from the injury already up to date.
-///
-/// [pt] Comparador: lado a lado a partir do mesmo estado do registro da diretoria do clube, do contrato guardado em
-/// [0xae1080] e do sorteio; a devolução e tudo isso têm de bater (o rand da CRT, só sem a semente do relógio).
-/// Comprando, a primeira coisa das duas é a lesão (0x62ed70), que antes põe em dia a lesão do jogador (0x62c680: uma
-/// vez por dia, pode sortear e grava a data no registro); a original, rodando primeiro, deixava-a em dia e a cópia não
-/// sorteava (um sorteio a menos). O comparador faz antes essa mesma atualização (a do jogo, no mesmo ponto: nada antes
-/// dela sorteia), e as duas partem da lesão já em dia.
 pub(crate) unsafe extern "thiscall" fn compare_check_board_transfer_veto(this: usize, j: usize, club: usize, value: i32, comprando: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, i32, u32) -> u32>(IDX_CHECK_BOARD_TRANSFER_VETO);
     if comprando as u8 != 0 && j != 0 {
@@ -126,8 +110,6 @@ pub(crate) unsafe extern "thiscall" fn compare_post_board_ultimatum_news(this: u
 }
 
 /// Comparer for `news_board_ultimatum_text`.
-///
-/// [pt] Comparador: o texto vai para o objeto de saída (0x4ae660/0x4ae8a0 acrescentam e alocam): roda só a original.
 pub(crate) unsafe extern "stdcall" fn compare_news_board_ultimatum_text(news: usize, body: u32, out: usize) {
     // simplification: the text object cannot receive the text twice; only the original runs here
     original_fn::<unsafe extern "stdcall" fn(usize, u32, usize)>(IDX_NEWS_BOARD_ULTIMATUM_TEXT)(news, body, out);
@@ -276,9 +258,6 @@ pub(crate) unsafe extern "thiscall" fn compare_reset_board_for_new_manager(this:
 }
 
 /// Comparer for `get_departure_reason`.
-///
-/// [pt] Comparador: lado a lado a partir do mesmo estado do sorteador (a rotina sorteia em vários caminhos), pela devolução;
-/// a cópia sem contar os sorteios.
 pub(crate) unsafe extern "thiscall" fn compare_get_departure_reason(this: usize, id: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u8>(IDX_GET_DEPARTURE_REASON);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&crate::rng::STATE_REGIONS, || o(this, id),
@@ -288,9 +267,6 @@ pub(crate) unsafe extern "thiscall" fn compare_get_departure_reason(this: usize,
 }
 
 /// Comparer for `assess_transfer_deal`.
-///
-/// [pt] Comparador: a avaliação pede o valor do jogador (0x4d0c60, que sorteia): lado a lado com o estado do sorteador, as
-/// duas palavras de marcas e os gastos líquidos do comprador e do vendedor; a cópia sem contar os sorteios.
 pub(crate) unsafe extern "thiscall" fn compare_assess_transfer_deal(this: usize, transf: usize, f1: usize, f2: usize) {
     let transf = Offer(transf);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize)>(IDX_ASSESS_TRANSFER_DEAL);
@@ -309,9 +285,6 @@ pub(crate) unsafe extern "thiscall" fn compare_assess_transfer_deal(this: usize,
 }
 
 /// Comparer for `apply_transfer_confidence_changes`.
-///
-/// [pt] Comparador: lado a lado com o estado do sorteador (a avaliação 0x696570 sorteia), as linhas da diretoria do
-/// comprador e do vendedor e as três pessoas favoritas do presidente do vendedor (0x547c10); a cópia sem contar.
 pub(crate) unsafe extern "thiscall" fn compare_apply_transfer_confidence_changes(this: usize, transf: usize) {
     let transf = Offer(transf);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_APPLY_TRANSFER_CONFIDENCE_CHANGES);
@@ -332,9 +305,6 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_transfer_confidence_changes
 }
 
 /// Comparer for `resolve_board_ultimatum`.
-///
-/// [pt] Comparador: a original tira o item da lista (e o libera) e acrescenta a saída: roda só ela e confere o plano: a
-/// lista das saídas (+4) cresce de 1 quando devolve 1 (e a linha da diretoria fica com o bit 2) e fica igual com 0.
 pub(crate) unsafe extern "thiscall" fn compare_resolve_board_ultimatum(this: usize, club: usize) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u8>(IDX_RESOLVE_BOARD_ULTIMATUM);
     let outs = read_usize(this + manager_manager_fields::DEPARTURE_LIST);
@@ -355,9 +325,6 @@ pub(crate) unsafe extern "thiscall" fn compare_process_pending_departures(this: 
 }
 
 /// Comparer for `manager_manager_remove_player_from_squad`.
-///
-/// [pt] Comparador: a original tira a pessoa das listas, da mídia e das táticas (não pode rodar duas vezes): roda só ela e
-/// confere o plano: a função e o clube (e a seleção) da pessoa e ela fora das 50 vagas do elenco.
 pub(crate) unsafe extern "thiscall" fn compare_manager_manager_remove_player_from_squad(this: usize, person: usize, club: usize) -> usize {
     let person = Staff(person);
     let club = Club(club);
@@ -394,10 +361,6 @@ pub(crate) unsafe extern "thiscall" fn compare_manager_manager_remove_player_fro
 /// Only it runs, and the plan made beforehand with the body (`detach_staff_from_club`) over copies of the person's
 /// fields and the club's slots is checked. A human person: only the original routine (the human's lists may touch the
 /// club).
-///
-/// [pt] Comparador: a original tira o contrato e tira a pessoa da mídia e das listas do humano (não pode rodar duas vezes):
-/// roda só ela e confere o plano feito antes com o corpo (`detach_staff_from_club`) sobre cópias dos campos da pessoa e das vagas
-/// do clube. Pessoa humana: só a original (as listas do humano podem mexer no clube).
 pub(crate) unsafe extern "thiscall" fn compare_remove_staff_from_club(this: usize, person: usize, club: usize) -> usize {
     let person = Staff(person);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(IDX_REMOVE_STAFF_FROM_CLUB);
@@ -419,9 +382,6 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_staff_from_club(this: usiz
 }
 
 /// Comparer for `fix_missing_jobs`.
-///
-/// [pt] Comparador: sem vaga a abrir (o plano pelo mesmo teste, com o cursor da lista devolvido), lado a lado pelo cursor
-/// da lista; com vaga a abrir (ou a caixa), só a original.
 pub(crate) unsafe extern "thiscall" fn compare_fix_missing_jobs(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_FIX_MISSING_JOBS);
     let l = Llist(read_usize(this + manager_manager_fields::VACANCY_LIST));
@@ -447,9 +407,6 @@ pub(crate) unsafe extern "thiscall" fn compare_fix_missing_jobs(this: usize) {
 }
 
 /// Comparer for `best_manager_candidate_score`.
-///
-/// [pt] Comparador: lado a lado a partir do mesmo estado do sorteio (a 0x69d1b0 e a 0x69f810 podem sortear), pela nota e
-/// pelo cursor da lista de vagas (a 0x69fc60 o devolve).
 pub(crate) unsafe extern "thiscall" fn compare_best_manager_candidate_score(this: usize, club: usize, current: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> i32>(IDX_BEST_MANAGER_CANDIDATE_SCORE);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
@@ -460,16 +417,12 @@ pub(crate) unsafe extern "thiscall" fn compare_best_manager_candidate_score(this
 }
 
 /// Comparer for `update_board_after_fixture`.
-///
-/// [pt] Comparador: a 0x695240 mexe na diretoria (e pode dar notícia): só a original (a prova é a carreira e o modo Rust).
 pub(crate) unsafe extern "thiscall" fn compare_update_board_after_fixture(this: usize, fixture: usize, game: usize) {
     covered!("update_board_after_fixture");
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_UPDATE_BOARD_AFTER_FIXTURE)(this, fixture, game)
 }
 
 /// Comparer for `is_staff_suitable_for_job`.
-///
-/// [pt] Comparador: a rotina só lê (o interesse 0x844780 sem a saída das razões): pela devolução.
 pub(crate) unsafe extern "thiscall" fn compare_is_staff_suitable_for_job(this: usize, person: usize, club: usize, rating_minimum: f64) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, f64) -> u8>(IDX_IS_STAFF_SUITABLE_FOR_JOB)(this, person, club, rating_minimum);
     let n = is_staff_suitable_for_job(this, person, club, rating_minimum);
@@ -478,10 +431,6 @@ pub(crate) unsafe extern "thiscall" fn compare_is_staff_suitable_for_job(this: u
 }
 
 /// Comparer for `manager_manager_remove`.
-///
-/// [pt] Comparador: a 0x68d1f0 libera o nó e o item (não roda duas vezes): o plano antes (o nó achado pela cópia, a cabeça,
-/// a cauda, a conta, o cursor e os vizinhos); a original tira; confere a devolução, o cabeçalho (14 bytes) e os elos
-/// dos vizinhos.
 pub(crate) unsafe extern "thiscall" fn compare_manager_manager_remove(this: usize, given: usize) -> u32 {
     let this = Llist(this);
     let in_the = find_list_node_by_bytes(this, given);
@@ -507,8 +456,6 @@ pub(crate) unsafe extern "thiscall" fn compare_manager_manager_remove(this: usiz
 }
 
 /// Comparer for `manager_manager_clear`.
-///
-/// [pt] Comparador: libera os nós (não roda duas vezes): só a original; confere o cabeçalho zerado (14 bytes).
 pub(crate) unsafe extern "thiscall" fn compare_manager_manager_clear(this: usize) {
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_MANAGER_MANAGER_CLEAR)(this);
     let after: [u8; 14] = core::ptr::read_unaligned(this as *const [u8; 14]);
@@ -524,9 +471,6 @@ pub(crate) unsafe extern "thiscall" fn compare_get_current(this: usize) -> usize
 }
 
 /// Comparer for `get_current_run`.
-///
-/// [pt] Comparador: a original grava nas saídas de verdade, a cópia em locais; a 0x4a4850 pode reordenar as estatísticas
-/// (a original primeiro; a cópia acha a tabela já em ordem e a mesma linha).
 pub(crate) unsafe extern "thiscall" fn compare_get_current_run(this: usize, club: usize, kind: *mut u8, size: *mut u8) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut u8, *mut u8)>(IDX_GET_CURRENT_RUN)(this, club, kind, size);
     let (mut t, mut n) = (0u8, 0u8);

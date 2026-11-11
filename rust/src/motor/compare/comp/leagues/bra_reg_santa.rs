@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/bra_reg_santa.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/bra_reg_santa.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparador: como o do Centro-Oeste.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_santa_set_up_rules(this: usize) -> u32 {

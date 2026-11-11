@@ -12,14 +12,6 @@ use super::*;
 /// `+0x3e`.
 ///
 /// Then the group draw news (League::send_group_draw_news `0x684230`, mov ecx -> thiscall, ret 0). Returns 1.
-///
-/// [pt] A tabela do grupo 1 de uma copa italiana (`create_first_group_table`; a copa é ela mesma a liga do grupo 1): +0x3e =
-/// `n` times; a tabela (0x944e46 de n × 0x3b, cdecl) em +0xb1; sem memória, a caixa da linha `linha` e 0. Cada um dos n
-/// primeiros inscritos (+0xee, vetor de ponteiros) vai à linha i da tabela (League::init_table_row 0x687430: push 0; push
-/// 0; push clube; push i (a original empurra o dword do byte local, com lixo da pilha em cima; a 0x687430 só lê o byte);
-/// mov ecx, copa -> thiscall, ret 0x10) e a vaga dele em +0xee é zerada (sai da lista dos que esperam a próxima fase); o
-/// índice é um byte com sinal comparado à palavra +0x3e. Depois a notícia do sorteio do grupo (League::send_group_draw_news
-/// 0x684230, mov ecx -> thiscall, ret 0). Devolve 1.
 pub(crate) unsafe fn create_first_group_table(this: League, n: i16, file: usize, row: u32, ramo: &'static str) -> u32 {
     this.set_club_count(n);
     let t = exe::crt_malloc(n as i32 as u32 * 0x3b);
@@ -47,10 +39,6 @@ pub(crate) unsafe fn create_first_group_table(this: League, n: i16, file: usize,
 ///
 /// The check: returns 1, +0x3e = n, the table at +0xb1 holds the first n entrants in its rows (of 0x3b bytes), in
 /// order, and the first n slots of +0xee are zeroed.
-///
-/// [pt] Só a original (simplification: a 0x687430 aloca a forma e o confronto direto de cada linha e a notícia vai aos humanos; não
-/// pode rodar duas vezes), conferindo o plano feito antes: devolve 1, +0x3e = n, a tabela em +0xb1 com os n primeiros
-/// inscritos nas linhas (de 0x3b bytes), na ordem, e as n primeiras vagas de +0xee zeradas.
 pub(crate) unsafe fn compare_first_group_table(name: &str, this: League, n: i16, original: impl FnOnce() -> u32) -> u32 {
     let plan: Vec<usize> = (0..n as usize).map(|k| read_usize(read_usize(this.addr() + ita_cup_fields::ENTRANT_CLUBS) + k * 4)).collect();
     let r = original();
@@ -63,18 +51,12 @@ pub(crate) unsafe fn compare_first_group_table(name: &str, this: League, n: i16,
 
 /// ItaCup::create_first_group_table: creates group 1 of the Coppa Italia with 4 teams (via the shared
 /// create_first_group_table, error box at line 0x19e of ita_cup.cpp); returns 1, or 0 when out of memory.
-///
-/// [pt] { 0x63f250 } (thiscall, ret 0, ita_cup.cpp; do construtor): `ItaCup::create_first_group_table()`: o grupo 1 da Copa
-/// da Itália com 4 times (`create_first_group_table`; a caixa do ita_cup.cpp na linha 0x19e).
 pub(crate) unsafe extern "thiscall" fn ita_cup_create_first_group_table(this: usize) -> u32 {
     create_first_group_table(League(this), 4, 0x9ea23c, 0x19e, "cqr_7 grupo 1 da copa da italia")
 }
 
 /// ItaCCup::init_first_group(), called from the constructor: builds the table of group 1 of the Italian Serie C cup
 /// with 5 teams (via create_first_group_table). Returns 1, or 0 when memory runs out.
-///
-/// [pt] { 0x63d5e0 } (thiscall, ret 0, ita_c_cup.cpp; do construtor): `ItaCCup::init_first_group()`: o grupo 1 da Copa da
-/// Itália da Série C com 5 times (`create_first_group_table`; a caixa do ita_c_cup.cpp na linha 0x1a0).
 pub(crate) unsafe extern "thiscall" fn init_first_group(this: usize) -> u32 {
     create_first_group_table(League(this), 5, 0x9ea204, 0x1a0, "cqr_7 grupo 1 da copa da serie c") // cqr7: 5 teams in group 1 of Serie C
 }
@@ -84,10 +66,6 @@ pub(crate) unsafe extern "thiscall" fn init_first_group(this: usize) -> u32 {
 /// On the last stage (+0x30 ≥ +0x2c − 1, signed), the error box and nothing else. Otherwise +0x30 goes up by one and,
 /// on reaching `ultimo_grupo` + 1 (the end of the groups), it builds the knockout (`mata_mata`, direct call with the
 /// cup's ecx -> thiscall, ret 0).
-///
-/// [pt] A fase seguinte de uma copa italiana (`advance_stage`, a virtual +0x28): na última fase (+0x30 ≥ +0x2c − 1, com
-/// sinal), a caixa de erro e nada mais; senão +0x30 sobe um e, ao chegar a `ultimo_grupo` + 1 (o fim dos grupos), monta o
-/// mata-mata (`mata_mata`, call direto com o ecx da copa -> thiscall, ret 0).
 pub(crate) unsafe fn advance_cup_stage(this: League, file: usize, row: u32, end_of_groups: i32, knockout_knockout: usize) {
     let stage = this.current_stage() as i32;
     if stage >= (this.stage_count() as i32).wrapping_sub(1) {
@@ -103,9 +81,6 @@ pub(crate) unsafe fn advance_cup_stage(this: League, file: usize, row: u32, end_
 }
 
 /// Comparer of advance_stage: original only, checking the stage (+0x30) goes up by one except on the last stage.
-///
-/// [pt] O comparador da fase seguinte: só a original (simplification: o mata-mata aloca a fase e sorteia; não pode rodar duas vezes),
-/// conferindo o plano: +0x30 sobe um fora da última fase e fica na última.
 pub(crate) unsafe fn ita_cup_compare_advance_stage(name: &str, this: League, original: impl FnOnce()) {
     let before = this.current_stage() as i32;
     let last = before >= (this.stage_count() as i32).wrapping_sub(1);
@@ -117,10 +92,6 @@ pub(crate) unsafe fn ita_cup_compare_advance_stage(name: &str, this: League, ori
 /// ItaCup::advance_stage: moves the Italian Cup to its next stage (shared `advance_cup_stage`, error box at ita_cup.cpp
 /// line 0x23e); after the group stages (stage 7) it builds the knockout rounds (ItaCup::create_knockout_stage
 /// 0x63f870).
-///
-/// [pt] { 0x63f5b0 } (thiscall, ret 0, ita_cup.cpp; a virtual +0x28): `ItaCup::advance_stage()`: a fase seguinte
-/// (`advance_cup_stage`; a caixa do ita_cup.cpp na linha 0x23e); depois da fase 6 (os 8 grupos: o grupo 1 e as fases
-/// 0..6), o mata-mata da Copa da Itália (ItaCup::create_knockout_stage 0x63f870).
 pub(crate) unsafe extern "thiscall" fn ita_cup_advance_stage(this: usize) {
     advance_cup_stage(League(this), 0x9ea23c, 0x23e, 7, 0x63f870) // cqr7: the Coppa Italia knockout in stage 7
 }
@@ -128,10 +99,6 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_advance_stage(this: usize) {
 /// ItaCCup::advance_stage() (virtual +0x28) for the Italian Serie C cup: moves the cup to its next stage (error box at
 /// the last stage) and, once the 14 group stages are over, builds the knockout stage (ItaCCup::create_knockout_stage,
 /// 0x63dc10).
-///
-/// [pt] { 0x63d950 } (thiscall, ret 0, ita_c_cup.cpp; a virtual +0x28): `ItaCCup::advance_stage()`: a fase seguinte
-/// (`advance_cup_stage`; a caixa do ita_c_cup.cpp na linha 0x240); depois da fase 14 (os 16 grupos), o mata-mata da Copa
-/// da Série C (ItaCCup::create_knockout_stage 0x63dc10).
 pub(crate) unsafe extern "thiscall" fn ita_cup_advance_stage_63d950(this: usize) {
     advance_cup_stage(League(this), 0x9ea204, 0x240, 0xf, 0x63dc10)
 }
@@ -153,18 +120,6 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_advance_stage_63d950(this: usize)
 /// in [+0xc][g]; the vector and the round table are freed (`exe::crt_free`).
 ///
 /// No stage: the box of `linhas[1]` and 0. With it: the group draw news (`send_group_draw_news` on the stage), +0x30 = g and 1.
-///
-/// [pt] A fase do grupo `g` de uma copa italiana (`create_group_stage(g)`, quadro SEH só para o new: sem destrutor no caminho
-/// normal; o molde da Copa da Itália e da Série C, conferido instrução a instrução: só mudam o fonte e as linhas das
-/// caixas). A tabela das rodadas pelo método +0x3c da copa (push 0; push &id; push &rodadas; push g; mov ecx -> thiscall,
-/// ret 0x10); um vetor de +0x3e ponteiros (0x944e46, cdecl; sem memória, a caixa da `linhas[0]` e 0) com os primeiros
-/// +0x3e inscritos ainda na lista (+0xee, vetor de ponteiros: os não nulos, na ordem, cada um zerado ao sair); a fase
-/// (0x944cf1(0xee), cdecl; o construtor League_Stage 0x68b100, thiscall, ret 0x58, 22 argumentos: a copa, os times (word
-/// +0x3e), o vetor, 1, +4, a tabela das rodadas, as rodadas (word), +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe, o ano +0x40
-/// (word), g, o id (word), +0x51, 1, 0, +0xd9 (word), −1, 0, 2; a original empurra os words e bytes com lixo nos bytes
-/// altos, que o construtor não lê: a cópia passa os valores limpos) guardada em [+0xc][g]; o vetor e a tabela das
-/// rodadas liberados (0x9452ca). Sem fase: a caixa da `linhas[1]` e 0. Com ela: a notícia do sorteio do grupo (0x684230
-/// na fase), +0x30 = g e 1.
 pub(crate) unsafe fn ita_cup_create_group_stage_cqr8_group_stage(this: League, g: u32, file: usize, rows: [u32; 2], ramo: &'static str) -> u32 {
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
@@ -244,11 +199,6 @@ pub(crate) unsafe fn ita_cup_create_group_stage_cqr8_group_stage(this: League, g
 /// year (+0x40); the first +0x3e non-null entrants of +0xee are zeroed and, in the stage table (+0xb1, rows of 0x3b
 /// bytes), those clubs are present (in any order: the stage sorts its own table [inference, as in the World Cup group
 /// stage]).
-///
-/// [pt] Só a original (aloca a fase, que aloca a tabela dela, e manda a notícia; não pode rodar duas vezes), conferindo o plano
-/// feito antes: devolve 1 com a fase em [+0xc][g] e +0x30 = g; a fase com os times (+0x3e) e o ano (+0x40) da copa; os
-/// primeiros +0x3e inscritos não nulos de +0xee zerados e, na tabela da fase (+0xb1, linhas de 0x3b bytes), esses clubes
-/// (em qualquer ordem: a fase ordena a tabela dela [inferência, como na fase dos grupos da Copa do Mundo]).
 pub(crate) unsafe fn compare_group_stage(name: &str, this: League, g: u32, original: impl FnOnce() -> u32) -> u32 {
     let n = this.club_count().max(0) as usize;
     let mut plan = Vec::new();
@@ -284,26 +234,17 @@ pub(crate) unsafe fn compare_group_stage(name: &str, this: League, g: u32, origi
 /// ItaCup::create_group_stage(g): creates the league stage of group g of the Italian Cup from the entrants still
 /// waiting, stores it in the cup's stage list and sends the group draw news. Returns 1, or 0 (after the original error
 /// box) when allocation fails.
-///
-/// [pt] { 0x63f640 } (thiscall, ret 4, ita_cup.cpp): `ItaCup::create_group_stage(g)`: a fase do grupo g da Copa da Itália
-/// (`ita_cup_create_group_stage_cqr8_group_stage`; as caixas do ita_cup.cpp nas linhas 0x263 e 0x27c).
 pub(crate) unsafe extern "thiscall" fn ita_cup_create_group_stage(this: usize, g: u32) -> u32 {
     ita_cup_create_group_stage_cqr8_group_stage(League(this), g, 0x9ea23c, [0x263, 0x27c], "cqr_8 time do grupo da copa da italia")
 }
 
 /// ItaCCup::create_group_stage(g): builds the stage of group `g` of the Serie C Italian Cup through the shared
 /// group-stage builder (error boxes at ita_c_cup.cpp lines 0x265 and 0x27e). Returns the builder's result.
-///
-/// [pt] { 0x63d9e0 } (thiscall, ret 4, ita_c_cup.cpp): `ItaCCup::create_group_stage(g)`: a fase do grupo g da Copa da Itália
-/// da Série C (`ita_cup_create_group_stage_cqr8_group_stage`; as caixas do ita_c_cup.cpp nas linhas 0x265 e 0x27e).
 pub(crate) unsafe extern "thiscall" fn ita_cup_create_group_stage_63d9e0(this: usize, g: u32) -> u32 {
     ita_cup_create_group_stage_cqr8_group_stage(League(this), g, 0x9ea204, [0x265, 0x27e], "cqr_8 time do grupo da copa da serie c")
 }
 
 /// League table (+0xb1, 0x3b-byte rows) of group i: group 0 is the cup itself, group i ≥ 1 is stage [+0xc][i - 1].
-///
-/// [pt] A tabela (+0xb1, linhas de 0x3b bytes) do grupo `i` de uma copa italiana: o grupo 0 é a própria copa; o grupo i ≥ 1 é
-/// a fase [+0xc][i − 1].
 pub(crate) unsafe fn group_table(this: League, i: usize) -> usize {
     if i == 0 {
         this.table()
@@ -313,9 +254,6 @@ pub(crate) unsafe fn group_table(this: League, i: usize) -> usize {
 }
 
 /// Copies the entrants still waiting in +0xee into the knockout team array from slot k up to fim, clearing each.
-///
-/// [pt] Os que entram direto no mata-mata: a partir da vaga `k` do vetor `times`, até `fim`, os inscritos ainda na lista (+0xee,
-/// até +0xf2 vagas: os não nulos, na ordem), cada um zerado ao sair.
 pub(crate) unsafe fn take_direct_entrants(this: usize, teams: usize, mut k: usize, end: usize) {
     let mut j = 0i32;
     if (read_usize(this + ita_cup_fields::ENTRANT_CLUB_COUNT) as i32) <= 0 {
@@ -349,13 +287,6 @@ pub(crate) unsafe fn take_direct_entrants(this: usize, teams: usize, mut k: usiz
 ///
 /// Without a stage, the error box for `linha`; with one, the draw of the first round (Cup::draw_round `draw_round`: push 0;
 /// mov ecx, stage -> thiscall, ret 4).
-///
-/// [pt] O mata-mata (Cup_Stage) com os `n` times de `times`: as rodadas pelo método +0x3c da copa (push 0; push &extra; push
-/// &rodadas; push fase; mov ecx -> thiscall, ret 0x10); a fase (0x944cf1(0xb2), cdecl; Cup_Stage::Cup_Stage 0x522e00,
-/// thiscall, ret 0x3c: a copa, n, o vetor, as rodadas (word), +4, a tabela das rodadas, o ano +0x40 (word), a fase, 1, o
-/// extra (word), 0x14, 0, 0, 0 e `sementes`; a original empurra os words com lixo nos 16 bits altos, que o construtor não
-/// lê) em [+0xc][fase]; o vetor e a tabela das rodadas liberados (0x9452ca, cdecl; nesta ordem). Sem fase, a caixa da
-/// `linha`; com ela, o sorteio da primeira rodada (Cup::draw_round 0x51c410: push 0; mov ecx, fase -> thiscall, ret 4).
 pub(crate) unsafe fn create_knockout_stage(this: League, n: u32, teams: usize, stage: u32, seeds: *const u8, file: usize, row: u32) {
     let rounds_of_cup: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, usize) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
     let (mut rodadas, mut extra) = (0i16, 0i16);
@@ -383,13 +314,6 @@ pub(crate) unsafe fn create_knockout_stage(this: League, n: u32, teams: usize, s
 /// winners (top row of each group table) followed by the 16 seeded clubs that enter directly, with seed 3 for the group
 /// winners and 2/1 for the direct entrants [inference: the draw pot of each slot]. Out of memory shows the error box
 /// and returns.
-///
-/// [pt] { 0x63f870 } (thiscall, ret 0, ita_cup.cpp; da fase seguinte, depois da fase 6; quadro SEH só para o new, sem
-/// destrutor): `ItaCup::create_knockout_stage()`: o mata-mata da Copa da Itália com 24 times: um vetor de 24 ponteiros
-/// (0x944e46 de 0x60; sem memória, a caixa da linha 0x29c) com os 8 campeões dos grupos (a primeira linha da tabela de
-/// cada grupo, `group_table`) e, nas vagas 8 a 23, os 16 cabeças de chave que entram direto (`take_direct_entrants`); a fase 7
-/// (`create_knockout_stage`) com as sementes {3 × 8, 2 × 8, 1 × 8} (os campeões dos grupos, depois os cabeças de chave
-/// [inferência: o pote de cada vaga no sorteio]) e a caixa da linha 0x2c0.
 pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage(this: usize) {
     let mut seeds = [0u8; 24];
     for (k, s) in seeds.iter_mut().enumerate() {
@@ -409,9 +333,6 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage(this: usize
 
 /// Comparer of the knockout creation: after the original, checks the stage in [+0xc][fase] and the planned entrants
 /// cleared from +0xee.
-///
-/// [pt] O plano dos dois mata-matas (feito antes): os campeões dos `grupos` grupos e os primeiros inscritos não nulos de +0xee
-/// que cabem; o comparador confere, depois da original, a fase em [+0xc][fase] e esses inscritos zerados em +0xee.
 pub(crate) unsafe fn ita_cup_compare_knockout_stage(name: &str, this: League, stage: usize, cabem: usize, original: impl FnOnce()) {
     let mut slots = Vec::new();
     let mut j = 0usize;
@@ -449,18 +370,6 @@ pub(crate) unsafe fn ita_cup_compare_knockout_stage(name: &str, this: League, st
 /// 4) In slots 22 to 31, the 10 seeded clubs that enter directly (`take_direct_entrants`).
 ///
 /// 5) Stage 15 (`create_knockout_stage`), with no seeds, and the box of line `0x304`.
-///
-/// [pt] { 0x63dc10 } (thiscall, ret 0, ita_c_cup.cpp; da fase seguinte, depois da fase 14; quadro SEH só para os dois new, sem
-/// destrutor no caminho normal): `ItaCCup::create_knockout_stage()`: o mata-mata da Copa da Itália da Série C com 32
-/// times. 1) A classificação dos segundos colocados: uma liga provisória (0x944cf1(0xee); League_Stage 0x68b100,
-/// thiscall, ret 0x58: a copa, 16, 0, 0, +4, 0, 0, +0xc2, +0xc3, 0, &{1, 2, 3, 0} (os critérios de desempate), &+0xbe, o
-/// ano +0x40 (word), −2, 0, 0, 1, 0, 2, −1, 0, 2) cuja tabela recebe, na linha i, a segunda linha (+0x3b) da tabela do
-/// grupo i (os 0x3b bytes copiados) com +5 e +9 zerados, ordenada (League::sort_table 0x6827d0: push 0; mov ecx -> thiscall,
-/// ret 4). 2) Um vetor de 32 ponteiros (0x944e46 de 0x80; sem memória, a caixa da linha 0x2ba) com os 16 campeões dos
-/// grupos (a primeira linha de cada tabela) e, nas vagas 16 a 21, os 6 melhores segundos (as 6 primeiras linhas da
-/// classificação): cada um, achado na tabela do seu grupo (o primeiro grupo em que aparece), marca o grupo (+0xbe = 2) e a
-/// linha dele (+0x37 = 6). 3) A liga provisória destruída (a virtual 0 com 1). 4) Nas vagas 22 a 31, os 10 cabeças de chave
-/// que entram direto (`take_direct_entrants`). 5) A fase 15 (`create_knockout_stage`), sem sementes, e a caixa da linha 0x304.
 pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this: usize) {
     let this = League(this);
     let tiebreak: [u8; 4] = [1, 2, 3, 0];
@@ -524,9 +433,6 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this
 ///
 /// The date goes through `league_round_set_date` (day, month with 0 = January, weekday, code), with no years to add and value 0; and
 /// match 0 is left empty (`store_round_match` with −1, −1, −1 and value 0).
-///
-/// [pt] Uma rodada de grupo (registro de 0x41 bytes, como as das ligas): a data pela 0x68a160 (dia, mês com 0 = janeiro,
-/// dia da semana, código), sem anos a somar e com valor 0; e o jogo 0 vazio (0x68a1c0 com −1, −1, −1 e valor 0).
 pub(crate) type ItaCupGroupRound = (u32, u32, u32, u32);
 
 /// The two stages of the Italian cups (virtual +0x3c, `create_schedule(fase, &rodadas, &extra, &é_liga)`, thiscall, ret
@@ -541,13 +447,6 @@ pub(crate) type ItaCupGroupRound = (u32, u32, u32, u32);
 /// year +0x40 (signed).
 ///
 /// Above `limite`: returns 0 without writing anything.
-///
-/// [pt] As duas fases das copas italianas (a virtual +0x3c, `create_schedule(fase, &rodadas, &extra, &é_liga)`, thiscall, ret
-/// 0x10; a fase lida como byte com sinal). Abaixo de `limite` (−1 inclusive), os grupos: é_liga (se pedido) = 1, rodadas
-/// = o número de rodadas de grupo, extra = fase + `id` (16 bits); a tabela de 0x41 bytes por rodada (0x944e46; sem
-/// memória, a caixa `linha_g` e devolve 0) com as datas de `grupos`. Na fase `limite`, o mata-mata: é_liga = 0, rodadas =
-/// o tamanho de `mata`, extra = 0; a tabela de 0x68 bytes por rodada (sem memória, a caixa `linha_m`), as rodadas pela
-/// `eng_cc_cup_write_cup_round` com o ano +0x40 da copa (com sinal). Acima de `limite`: devolve 0 sem gravar nada.
 pub(crate) unsafe fn create_schedule(this: League, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32, limit: i8, id: i16, groups: &[ItaCupGroupRound],
     knockout: &[EngCcCupCupRound], file: usize, row_g: u32, row_m: u32, name_g: &'static str, name: &'static str) -> usize {
     let f = stage as u8 as i8;
@@ -595,9 +494,6 @@ pub(crate) unsafe fn create_schedule(this: League, stage: u32, rounds: *mut i16,
 
 /// The bytes the original writes in a group schedule table of n 0x41-byte rounds (date/code, first match, value), for
 /// comparison.
-///
-/// [pt] Os bytes que a original grava numa tabela de grupos de `n` rodadas de 0x41 bytes (o resto fica como veio da
-/// alocação): de cada rodada, +0..+4 (a data e o código), o jogo 0 (+5..+0xb) e +0x3d..+0x40 (o valor).
 pub(crate) unsafe fn written_group_schedule_bytes(t: usize, n: i16) -> Vec<u8> {
     let mut v = Vec::new();
     for r in 0..n.max(0) as usize {
@@ -613,10 +509,6 @@ pub(crate) unsafe fn written_group_schedule_bytes(t: usize, n: i16) -> Vec<u8> {
 /// The original routine runs with the caller's outputs, the copy with its own outputs that start with the same values,
 /// both from the same [0xb67a34]; the outputs and the bytes written to the two tables (group or knockout tables,
 /// according to the copy's é_liga) must be equal; the copy's table is freed (`exe::crt_free`).
-///
-/// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
-/// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas (de grupos ou de mata-mata, pelo é_liga
-/// da cópia) têm de ser iguais; a tabela da cópia é liberada (0x9452ca).
 pub(crate) unsafe fn ita_cup_compare_schedule(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize, limit: i8) -> usize {
     if stage as u8 as i8 > limit {
@@ -661,10 +553,6 @@ pub(crate) const ITALIAN_CUP_KNOCKOUT_ROUNDS: [EngCcCupCupRound; 5] = [
 /// new), quarter-finals 29/11 and 12/12, semi-final 10/1 and 23/1, final draw 7/2 and legs on 6/3 and 57 days later;
 /// category 4 up to the 2nd round and 6 after; no per-round prize (−1)
 /// Original: `ItaCup::create_schedule` (0x63ec50, ita_cup.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x63ec50 } (thiscall, ret 0x10, ita_cup.cpp; a virtual +0x3c da Copa da Itália): `ItaCup::create_schedule(fase,
-/// &rodadas, &extra, &é_liga)`: grupos abaixo da fase 7 (extra = fase + 0x3e9; a caixa da linha 0xc1), o mata-mata na
-/// fase 7 (a caixa da linha 0xe1).
 pub(crate) unsafe extern "thiscall" fn ita_cup_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     create_schedule(League(this), stage, rounds, extra, league, 7, 0x3e9, &ITALIAN_CUP_GROUP_ROUNDS, &ITALIAN_CUP_KNOCKOUT_ROUNDS, 0x9ea23c, 0xc1, 0xe1,
         "cqo_10 grupos da copa da italia", "cqo_10 mata-mata da copa da italia")
@@ -695,45 +583,32 @@ pub(crate) const SERIE_C1_SUPER_CUP_ROUNDS: [EngCcCupCupRound; 1] = [
 ];
 
 /// Clubs of G_CLUB_TABLE the pass looks at: G_CLUB_COUNT - 2 × G_NATION_COUNT (without national teams [inference]).
-///
-/// [pt] Os clubes da tabela de clubes ([0xae23b4], 0x245 bytes) que a passada olha: [0xae235c] − 2 × [0xae2350] (sem as
-/// seleções [inferência]).
 pub(crate) unsafe fn ita_cup_club_count_without_nations() -> i32 {
     (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2))
 }
 
 /// True when the club's nation (+0x53) is Italy (KEY_NATION_ITALY).
-///
-/// [pt] O clube é da Itália (+0x53 a nação; [0x9cf360] o id da Itália).
 pub(crate) unsafe fn is_italian_club(c: usize) -> bool {
     comp_id_at(c, 0x53) == Some(read_usize(KEY_NATION_ITALY))
 }
 
 /// Club's previous-season league position (+0x5f, signed byte; 0 = champion [inference]).
-///
-/// [pt] A posição na temporada anterior (+0x5f, byte com sinal; 0 o campeão [inferência]).
 pub(crate) unsafe fn last_season_position(c: usize) -> i8 {
     read_i8(c + club::LAST_POSITION)
 }
 
 /// Shuffles n pointers from v (CompUtil shuffle_pointer_array, cdecl).
-///
-/// [pt] Embaralha `n` ponteiros a partir de `v` (0x4afb40: push n; push v; add esp junto -> cdecl; já em Rust).
 pub(crate) unsafe fn shuffle_pointers(v: usize, n: u32) {
     exe::comp_util_shuffle_pointer_array(v, n);
 }
 
 /// qsort of n pointers from v with comparison cmp (CRT qsort).
-///
-/// [pt] O qsort de `n` ponteiros a partir de `v` com a comparação `cmp` (0x945333: 4 pushes; add esp, 0x10 -> cdecl).
 pub(crate) unsafe fn sort_pointers(v: usize, n: u32, cmp: usize) {
     exe::crt_qsort(v, n, 4, cmp);
 }
 
 /// Allocates the entrant pointer list (+0xee) with max entries in +0xf2; on failure shows the error box for linha and
 /// returns None.
-///
-/// [pt] A lista de ponteiros (+0xee) com o máximo `max` em +0xf2 (dword): 0x944e46 de 4 × max; sem memória, a caixa `linha`.
 pub(crate) unsafe fn alloc_entrant_list(this: usize, max: u32, file: usize, row: u32) -> Option<usize> {
     write_u32(this + ita_cup_fields::ENTRANT_CLUB_COUNT, max);
     let l = exe::crt_malloc(max * 4);
@@ -746,8 +621,6 @@ pub(crate) unsafe fn alloc_entrant_list(this: usize, max: u32, file: usize, row:
 }
 
 /// Appends club c to the entrant list (+0xee); true when the count reaches the max (+0xf2).
-///
-/// [pt] Põe `c` no fim da lista (+0xee) e devolve verdadeiro quando a conta chega ao máximo +0xf2 (dword).
 pub(crate) unsafe fn push_entrant(this: usize, n: &mut i32, c: usize) -> bool {
     *n += 1;
     write_u32(read_usize(this + ita_cup_fields::ENTRANT_CLUBS) + (*n as usize - 1) * 4, c as u32);
@@ -767,16 +640,6 @@ pub(crate) unsafe fn push_entrant(this: usize, n: &mut i32, c: usize) -> bool {
 ///
 /// Then the top 3 of the previous Serie B and those of the previous Serie A from 10th to 15th (until reaching 48) and,
 /// without checking first, the top 9 of the previous Serie A.
-///
-/// [pt] { 0x63faf0 } (thiscall, ret 0, ita_cup.cpp): `ItaCup::select_entrants()`: os 48 inscritos da Copa da Itália (+0xf2 =
-/// 0x30; a lista de 0xc0 bytes em +0xee; sem memória, a caixa da linha 0x2e1 e 0). Os 32 dos grupos num vetor local:
-/// os clubes italianos da temporada (passada única) que não vieram da Série B ([0x9cf574]) entre os 3 primeiros nem da
-/// Série A ([0x9cf570]) entre os 15 primeiros: os da Série B atual, os que vieram da Série B em 4º, 5º ou abaixo do 17º,
-/// e os que vieram da C1 ([0x9cf578]/[0x9cf57c]) em 4º, 5º ou 6º; faltando, os da C1 fora da Série B pela posição (6º,
-/// 7º...). O vetor vai ao qsort (0x640590) e é repartido em 4 potes de 8: 8 voltas, cada uma tira um clube sorteado de
-/// cada pote (0x90cfc0(8), seguindo para o próximo do pote se já saiu). Depois os 3 primeiros da Série B anterior e os
-/// da Série A anterior do 10º ao 15º (até completar 48) e, sem conferir antes, os 9 primeiros da Série A anterior.
-/// Devolve 1.
 pub(crate) unsafe fn select_coppa_italia_entrants(this: usize) -> (i32, i32) {
     let l = match alloc_entrant_list(this, 0x30, 0x9ea23c, 0x2e1) {
         Some(l) => l,
@@ -902,23 +765,12 @@ pub(crate) unsafe fn select_coppa_italia_entrants(this: usize) -> (i32, i32) {
 /// season's Serie B (the promoted) and the Serie A clubs from 10th to 15th; last, the top 9 of Serie A, up to 48 (the
 /// rest are left out by table order)
 /// Original: `ItaCup::select_entrants` (0x63faf0, ita_cup.cpp, thiscall, ret 0).
-///
-/// [pt] regra: entram na Copa da Itália 48 clubes italianos. Os 32 da fase de grupos: os da Série B da temporada, os que
-/// vieram da Série B em 4º, 5º ou do 18º para baixo e os que vieram da C1 em 4º, 5º ou 6º (posições contadas de 0
-/// [inferência]); faltando, os da C1 pela posição (6º, 7º...). Os 32 são ordenados (qsort 0x640590) e repartidos em 4
-/// potes de 8, e cada uma das 8 voltas sorteia um clube de cada pote. Na 2ª rodada entram os 3 primeiros da Série B
-/// anterior (os que subiram) e os da Série A do 10º ao 15º; por último os 9 primeiros da Série A, até completar 48 (os
-/// que passam disso ficam de fora pela ordem da tabela)
 pub(crate) unsafe extern "thiscall" fn ita_cup_select_entrants(this: usize) -> i32 {
     select_coppa_italia_entrants(this).0
 }
 
 /// Side-by-side comparer for entrant selection routines that allocate +0xee and draw: compares +0xf2, 0xb67a34, RNG
 /// state and written entrants; frees the copy's list.
-///
-/// [pt] Lado a lado para as rotinas que alocam a lista de ponteiros +0xee e sorteiam: o +0xf2, o [0xb67a34] e o estado do
-/// sorteador a partir do mesmo estado (a cópia sorteia sem contar); a original deixa a lista dela em +0xee, a cópia faz
-/// a sua, comparada nos inscritos que ela gravou e liberada.
 pub(crate) unsafe fn compare_select_entrants(name: &str, this: usize, o: impl FnOnce() -> i32, c: impl FnOnce() -> (i32, i32)) -> i32 {
     let lo = core::cell::Cell::new(0usize);
     let lr = core::cell::Cell::new(0usize);
@@ -963,13 +815,6 @@ pub(crate) unsafe fn compare_select_entrants(name: &str, this: usize, o: impl Fn
 ///
 /// The first 80 are shuffled (`comp_util_shuffle_pointer_array`), sorted by longitude (qsort with `database_compare_clubs_by_longitude`) and each of their 8 groups of ten is
 /// shuffled (the regional groups [inference]); the last 10 slots stay as they are. Returns 1.
-///
-/// [pt] { 0x63dfe0 } (thiscall, ret 0, ita_c_cup.cpp): `ItaCCup::select_entrants()`: os 90 inscritos da Copa da Série C (+0xf2
-/// = 0x5a; a lista de 0x168 bytes em +0xee; sem memória, a caixa da linha 0x322 e 0): os clubes italianos da C1 e da C2
-/// ([0x9cf578]..[0x9cf588]) pela ordem da tabela, até 90. Dos 80 primeiros, os que vieram da Série B ([0x9cf574]) e os
-/// que vieram da C1 em 4º, 5º ou 6º vão, um a um, para as vagas 80, 81... (trocados com o que estava lá). Os 80 primeiros
-/// são embaralhados (0x4afb40), ordenados pela longitude (qsort com 0x53fe50) e cada uma das 8 dezenas deles
-/// embaralhada (os grupos por região [inferência]); as 10 últimas vagas ficam como estão. Devolve 1.
 pub(crate) unsafe fn select_serie_c_cup_entrants(this: usize) -> (i32, i32) {
     let l = match alloc_entrant_list(this, 0x5a, 0x9ea204, 0x322) {
         Some(l) => l,
@@ -1029,11 +874,6 @@ pub(crate) unsafe fn select_serie_c_cup_entrants(this: usize) -> (i32, i32) {
 /// champion ([0x9cf570]; if missing, error box 0xcb and 0) and the Coppa Italia winner ([0x9cf71c]; if missing, 0xd4
 /// and 0); if they are the same club, the second becomes the cup runner-up (if missing, 0xe0 and 0). Class and status 0
 /// for both; returns 1.
-///
-/// [pt] { 0x65fa60 } (thiscall, ret 0, ita_super.cpp): `ItaSuper::init_team_list()`: a lista de dois (+0x3e = 2, 0xc bytes
-/// em +0xa7; sem memória, a caixa da linha 0xc2 e −1). O campeão da Série A ([0x9cf570]; sem ele, a caixa 0xcb e 0) e o
-/// da Copa da Itália ([0x9cf71c]; sem ele, 0xd4 e 0); se é o mesmo clube, o segundo vira o vice da Copa (sem ele, 0xe0
-/// e 0). Classe e situação 0 nos dois; devolve 1.
 pub(crate) unsafe fn init_supercoppa_teams(this: usize) -> (i32, i32) {
     const F: usize = 0x9ea934;
     let l = match alloc_two_team_list(Cup(this), F, 0xc2) {
@@ -1062,9 +902,6 @@ pub(crate) unsafe fn init_supercoppa_teams(this: usize) -> (i32, i32) {
 /// round table.
 ///
 /// Tie-breakers: the four codes at `+0xc5`..`+0xc8` (`docs/.md` §2.7).
-///
-/// [pt] As regras que a virtual +0x8c (set_up_rules) de uma copa com fase de grupos grava na liga do grupo, antes da tabela
-/// das rodadas. Desempates: os quatro códigos de +0xc5..+0xc8 (docs/.md §2.7).
 #[derive(Clone, Copy)]
 pub(crate) struct GroupStageRules {
     pub(crate) win: u8,     // +0xc2: points per win
@@ -1085,10 +922,6 @@ pub(crate) const CHAMPIONS_CUP_RULES: GroupStageRules = GroupStageRules { win: 3
 /// Promotion/relegation targets set to none (+0x1c, +0x20 = −1), one leg (+0x3c = 1), type 1 (+0x42, clubs), no
 /// play-offs and no relegation (+0xbf, +0xc0, +0xc1 = 0); then the round table from virtual +0x3c (push 0; push &+0x3a;
 /// push &+0xa9; push −1; mov ecx, this -> thiscall, ret 0x10) stored at +0xba.
-///
-/// [pt] Grava as regras `g` na liga `this`: sobe/cai para nenhuma (+0x1c, +0x20 = −1), um turno (+0x3c = 1), o tipo 1
-/// (+0x42, clubes), sem play-offs nem rebaixamento (+0xbf, +0xc0, +0xc1 = 0); depois a tabela das rodadas da virtual
-/// +0x3c (push 0; push &+0x3a; push &+0xa9; push −1; mov ecx, this -> thiscall, ret 0x10) em +0xba. Devolve 1.
 pub(crate) unsafe fn set_cup_league_rules(this: League, g: &GroupStageRules, rounds: i16) -> u32 {
     let b = |o: usize, v: u8| write_u8(this.addr() + o, v);
     b(league::WIN_POINTS, g.win);
@@ -1119,8 +952,6 @@ pub(crate) unsafe fn set_cup_league_rules(this: League, g: &GroupStageRules, rou
 }
 
 /// Checks after the original that the fields set_cup_league_rules writes have the planned values.
-///
-/// [pt] O plano: os campos que `set_cup_league_rules` grava, lidos depois da original.
 pub(crate) unsafe fn check_cup_league_rules(name: &str, this: League, g: &GroupStageRules, r: u32) {
     let lido = (this.win_points(), this.draw_points(), this.match_category(), [(this.tiebreaks() as u8), read_u8(this.addr() + league::TIEBREAKS + 1), read_u8(this.addr() + league::TIEBREAKS + 2), read_u8(this.addr() + league::TIEBREAKS + 3)], this.promoted_count(), [this.promotion_playoff_count(), this.relegation_playoff_count(), this.relegated_count()], this.club_sides(),
         this.upper_division_id(), (this.lower_division_id() as i32),
@@ -1135,10 +966,6 @@ pub(crate) unsafe fn check_cup_league_rules(name: &str, this: League, g: &GroupS
 /// [inference: head-to-head, goal difference, goals for]; one qualifier per group (the winner); category 4 (national
 /// cup) on each match; no promotion or relegation; prize fund of 800,000
 /// Original: `ItaCup::set_up_rules` (0x63f350, ita_cup.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x63f350 } (thiscall, ret 0, ita_cup.cpp; a virtual +0x8c): `ItaCup::set_up_rules()`: os grupos da Copa da Itália
-/// em turno único, 3 pontos a vitória e 1 o empate, a categoria 4 (copa nacional), o desempate (4, 1, 2), um
-/// classificado por grupo e o fundo de prêmios de 800.000; depois a tabela das rodadas.
 pub(crate) unsafe extern "thiscall" fn ita_cup_set_up_rules(this: usize) -> u32 {
     covered!("cqi_12 italy cup rules");
     let mut g = ITALIAN_CUP_GROUP_RULES;

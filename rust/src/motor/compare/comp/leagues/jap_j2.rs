@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/jap_j2.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/jap_j2.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparador: como o do Goiano.
 pub(crate) unsafe extern "thiscall" fn compare_jap_j2_set_up_rules(this: usize) -> u32 {

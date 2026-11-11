@@ -4,13 +4,6 @@
 //! `Embrulho` with our vtable. Arguments that are wrappers are swapped for the real object
 //! before forwarding; outputs that create objects are wrapped.
 //! The first calls of each method are logged with arguments; after that, only the count.
-//!
-//! [pt] Embrulhos COM que repassam cada metodo do DirectDraw ao objeto verdadeiro e registram a chamada.
-//!
-//! Cada objeto entregue ao jogo (IDirectDraw, IDirectDrawSurface, IDirectDrawClipper) e um
-//! `Embrulho` com a nossa vtable. Argumentos que sejam embrulhos sao trocados pelo objeto
-//! verdadeiro antes de repassar; saidas que criam objetos sao embrulhadas.
-//! As primeiras chamadas de cada metodo saem com argumentos; depois, so a contagem.
 
 use core::ffi::c_void;
 use std::collections::HashMap;
@@ -19,8 +12,6 @@ use std::sync::{Mutex, OnceLock};
 use crate::registro::linha;
 
 /// How many calls of each method are logged in detail.
-///
-/// [pt] Quantas chamadas de cada metodo saem detalhadas no registro.
 const DETAILED: u64 = 25;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -41,12 +32,8 @@ pub struct Wrapper {
 #[derive(Default)]
 struct State {
     /// real object -> wrapper
-    ///
-    /// [pt] objeto verdadeiro -> embrulho
     by_real: HashMap<usize, usize>,
     /// wrapper -> real object
-    ///
-    /// [pt] embrulho -> objeto verdadeiro
     by_wrapper: HashMap<usize, usize>,
     counts: HashMap<&'static str, u64>,
     next_id: u32,
@@ -60,8 +47,6 @@ fn with_state<R>(f: impl FnOnce(&mut State) -> R) -> R {
 }
 
 /// Counts the call; returns true if it should still be logged in detail. Marks 100, 1000, 10000... in the log.
-///
-/// [pt] Conta a chamada; devolve true se ainda deve sair detalhada. Marca 100, 1000, 10000... no registro.
 fn count_call(name: &'static str) -> bool {
     let n = with_state(|e| {
         let c = e.counts.entry(name).or_insert(0);
@@ -98,8 +83,6 @@ pub unsafe fn wrap(real: *mut c_void, kind: Kind) -> *mut c_void {
 }
 
 /// If `v` is one of our wrappers, returns the real object; otherwise, returns `v`.
-///
-/// [pt] Se `v` for um embrulho nosso, devolve o objeto verdadeiro; senao, devolve `v`.
 fn unwrap_arg(v: usize) -> usize {
     if v == 0 {
         return 0;
@@ -118,8 +101,6 @@ macro_rules! usize_of {
 }
 
 /// Generic forwarding: unwraps all the arguments, calls method `$i` of the real object.
-///
-/// [pt] Repasse generico: desembrulha todos os argumentos, chama o metodo `$i` do objeto verdadeiro.
 macro_rules! forward {
     ($f:ident, $i:expr, $name:literal $(, $a:ident)*) => {
         unsafe extern "system" fn $f(this: *mut Wrapper $(, $a: usize)*) -> i32 {
@@ -139,8 +120,6 @@ macro_rules! forward {
 }
 
 /// Forwarding with a `**` output that creates an object (`$out` is the name of the pointer-to-pointer argument).
-///
-/// [pt] Repasse com uma saida `**` que cria objeto (`$saida` e o nome do argumento ponteiro-para-ponteiro).
 macro_rules! forward_create {
     ($f:ident, $i:expr, $name:literal, $kind:expr, $out:ident $(, $a:ident)*) => {
         unsafe extern "system" fn $f(this: *mut Wrapper $(, $a: usize)*) -> i32 {
@@ -217,8 +196,6 @@ unsafe fn dword(p: usize, off: usize) -> u32 {
 }
 
 /// DDSURFACEDESC (0x6c bytes): the fields that matter for the video.
-///
-/// [pt] DDSURFACEDESC (0x6c bytes): campos que importam para o video.
 unsafe fn surface_desc(p: usize) -> String {
     if p == 0 {
         return "null".into();

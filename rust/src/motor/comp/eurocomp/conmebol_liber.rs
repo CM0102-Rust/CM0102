@@ -1,8 +1,6 @@
 use super::*;
 
 /// Club k of the drawn list (+0xee pointers).
-///
-/// [pt] O clube k da lista dos sorteados (+0xee, ponteiros), a que o primeiro grupo e as fases dos outros leem.
 pub(crate) unsafe fn conmebol_liber_drawn_club(this: League, k: usize) -> usize {
     read_usize(read_usize(this.addr() + conmebol_liber::DRAWN_CLUBS) + k * 4) // cqr10: o sorteado k
 }
@@ -14,16 +12,6 @@ pub(crate) unsafe fn conmebol_liber_drawn_club(this: League, k: usize) -> usize 
 /// their season competition, shuffled)), the group 1 table, the fixtures, the sorted table, the other groups' stages
 /// and the predicted positions; then the league day
 /// Original: `ConmebolLiber::update_for_date` (0x4c4410, conmebol_liber.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x4c4410 } (thiscall, ret 8, conmebol_liber.cpp; a virtual +0x14): `update_for_date(hoje, completo)`, o dia de a Libertadores.
-/// Fora do sorteio feito (+0x45 = 0) e com `completo`, no dia do sorteio (a data de 0x549ef0(+0xb6, +0xb8 + +0x40): o
-/// dia do ano e o ano relativo; comparada com a de hoje, +0 o dia do ano e +2 o ano, sem sinal): os clubes (0x4c3f40:
-/// mov ecx, this -> thiscall, ret 0), a tabela do primeiro grupo (0x4c37a0, thiscall, ret 0; 0: a caixa da linha 0x365),
-/// os jogos (0x6835c0 League::create_fixtures, thiscall, ret 0; 0: a caixa da linha 0x36a), a tabela ordenada (0x6827d0
-/// push 0; mov ecx -> thiscall, ret 4; 0: a caixa da linha 0x370), as fases dos grupos 0..6 (0x4c3b10: push g; mov ecx
-/// -> thiscall, ret 4), as posições previstas (a virtual +0x5c, thiscall, ret 0), a lista +0xee liberada (0x9452ca:
-/// push; add esp, 4 -> cdecl) e zerada e +0x45 = 1. Um erro dá a caixa da linha e segue. Depois o dia de liga (0x6847c0: push completo; push
-/// hoje; mov ecx, this -> thiscall, ret 8), cuja devolução ela repassa.
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let this = League(this);
     if this.active() == 0 && full != 0 {
@@ -67,12 +55,6 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_for_date(this: usiz
 /// this -> thiscall, ret 0) and returns 1. The same body as `init_group_a_table` of the African Nations Cup (only the file and the
 /// box line change).
 /// Original: `ConmebolLiber::build_first_group_table` (0x4c37a0, conmebol_liber.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x4c37a0 } (thiscall, ret 0, conmebol_liber.cpp): a tabela do primeiro grupo da Libertadores: 4 times (+0x3e), a tabela +0xb1
-/// (0x944e46(0xec): push 0xec; add esp, 4 -> cdecl; 4 linhas de 0x3b bytes; sem memória, a caixa da linha 0x16f e
-/// devolve 0), cada linha i com o sorteado i (+0xee) (0x687430 League::init_table_row: push 0; push 0; push clube; push
-/// i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this -> thiscall, ret 0)
-/// e devolve 1. O mesmo corpo da 0x4019c0 da Copa Africana (só o arquivo e a linha da caixa mudam).
 pub(crate) unsafe extern "thiscall" fn build_first_group_table(this: usize) -> u32 {
     let this = League(this);
     this.set_club_count(4);
@@ -111,16 +93,6 @@ pub(crate) unsafe extern "thiscall" fn build_first_group_table(this: usize) -> u
 /// the vector and the round table are freed (`exe::crt_free`). No stage: the box at line 0x22e and 0. With it: the group news
 /// (`send_group_draw_news` on the stage), +0x30 = g and 1.
 /// Original: `ConmebolLiber::create_group_stage` (0x4c3b10, conmebol_liber.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x4c3b10 } (thiscall, ret 4, conmebol_liber.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal): a fase
-/// do grupo g + 1 (g de 0 a 6, do dia do sorteio). Os times num vetor de +0x3e ponteiros (0x944e46(+0x3e << 2): push; add esp, 4 -> cdecl; sem
-/// memória, a caixa da linha 0x218 e 0): os sorteados 4g + 4 a 4g + 7 (+0xee); a tabela das rodadas pela virtual +0x3c
-/// (push 0; push &id; push &rodadas; push g; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xee) push; add
-/// esp, 4 -> cdecl; o construtor League_Stage 0x68b100, thiscall, ret 0x58, 22 argumentos: a copa, os times (+0x3e, word), o vetor,
-/// +0x3c (word), +4, a tabela das rodadas, as rodadas (word), +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe, o ano +0x40 (word),
-/// g, o id (word), +0x51, 2, 0, +0xd9 (word), −1, 0, 2; a original empurra os words e bytes com lixo nos bytes altos,
-/// que o construtor não lê: a cópia passa os valores limpos) em [+0xc][g]; o vetor e a tabela das rodadas liberados
-/// (0x9452ca). Sem fase: a caixa da linha 0x22e e 0. Com ela: a notícia do grupo (0x684230 na fase), +0x30 = g e 1.
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_group_stage(this: usize, g: i32) -> u32 {
     let this = League(this);
     #[allow(clippy::type_complexity)]
@@ -191,10 +163,6 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_group_stage(this: u
 /// The rules of a continental group (virtual +0x8c, set_up_rules, on a group league): the byte and word fields written
 /// (offset, size 1 or 2, value), the start date (`exe::date_date_549f70`: day, month, competition year +0x40, weekday; −1 = any) and
 /// the prize fund (+0x28), when there is one.
-///
-/// [pt] As regras de um grupo continental (a virtual +0x8c, set_up_rules, numa liga de grupo): os campos de byte e palavra
-/// gravados (deslocamento, tamanho 1 ou 2, valor), a data de começo (0x549f70: dia, mês, ano da competição +0x40, dia da
-/// semana; −1 = qualquer) e o fundo de prêmios (+0x28), quando há.
 pub(crate) struct ContinentalGroupRules {
     pub(crate) fields: &'static [(usize, u8, u32)],
     pub(crate) day: u32,
@@ -209,11 +177,6 @@ pub(crate) struct ContinentalGroupRules {
 /// year; push month; push day; lea ecx, local -> thiscall, ret 0x10) and its first word into `+0xb6`, `+0xb8` = 0; then
 /// the prize; then the round table from virtual `+0x3c` (push 0; push &`+0x3a`; push &`+0xa9`; push −1; mov ecx, this
 /// -> thiscall, ret 0x10) into `+0xba`. Returns 1.
-///
-/// [pt] Grava os campos de `g` (os pontos da vitória, +0xc2, vêm de `vitoria`); a data de começo numa Date local (0x549f70: push semana; push ano; push mês; push dia; lea
-/// ecx, local -> thiscall, ret 0x10) e a primeira palavra dela em +0xb6, +0xb8 = 0; o prêmio; depois a tabela das
-/// rodadas da virtual +0x3c (push 0; push &+0x3a; push &+0xa9; push −1; mov ecx, this -> thiscall, ret 0x10) em +0xba.
-/// Devolve 1.
 pub(crate) unsafe fn apply_cup_rules(this: League, g: &ContinentalGroupRules, day: u32, win: u8) -> u32 {
     for &(o, n, v) in g.fields {
         let v = if o == 0xc2 { win as u32 } else { v };
@@ -241,9 +204,6 @@ pub(crate) unsafe fn apply_cup_rules(this: League, g: &ContinentalGroupRules, da
 }
 
 /// Comparer: runs the original and checks rule fields, date word, +0xb8, prize and return 1.
-///
-/// [pt] O plano: os campos de `g`, a palavra da data (calculada antes numa Date local pela 0x549f70, sem efeito fora dela),
-/// +0xb8 = 0, o prêmio e a devolução 1.
 pub(crate) unsafe fn check_cup_rules(name: &str, this: League, g: &ContinentalGroupRules, o: impl FnOnce() -> u32) -> u32 {
     let data: unsafe extern "thiscall" fn(*mut u8, u32, u32, u32, u32) -> usize = core::mem::transmute(FN_DATE_DATE_549F70);
     let mut d = [0u8; 8];
@@ -294,11 +254,6 @@ pub(crate) const OCEANIA_RULES: ContinentalGroupRules = ContinentalGroupRules {
 /// category 7 on each match; 7 substitutes on the bench and 3 changes; starts on day 15 of month 0 of the competition
 /// year [inference: 15 January, months counted from 0]; prize fund of 2,000,000
 /// Original: `ConmebolLiber::set_up_rules` (0x4c3890, conmebol_liber.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x4c3890 } (thiscall, ret 0, conmebol_liber.cpp; a virtual +0x8c; quadro SEH só da data local, sem destrutor):
-/// `ConmebolLiber::set_up_rules()`: os grupos da Libertadores em dois turnos, 3 pontos a vitória e 1 o empate, os
-/// desempates (1, 2, 3, 0), dois classificados por grupo, clubes internacionais (+0x42 = 2), categoria 7, 7 no banco e 3
-/// substituições, começo no dia 15 do mês 0 do ano da competição, prêmios de 2.000.000; depois a tabela das rodadas.
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_set_up_rules(this: usize) -> u32 {
     covered!("cqj_11 libertadores rules");
     let day = 0xf; // cqj11: the Libertadores start day
@@ -313,9 +268,6 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_set_up_rules(this: usize) 
 // simplification: virtual +0x3c allocates the rounds table: it does not run twice. Original only; the plan checks the rules.
 
 /// Clubs whose season continental competition (+0x1db) is this competition, in database order, up to max.
-///
-/// [pt] Os clubes da competição da Libertadores na ordem do banco ([0xae23b4], 0x245 bytes, [0xae235c] clubes): os que têm
-/// a competição europeia/continental da temporada (+0x1db) igual ao id da competição ([+4]), até `max`.
 pub(crate) unsafe fn libertadores_entrants(this: usize, max: i32, out: &mut [usize; 32]) -> i32 {
     let mut n = 0i32;
     let mut i = 0i16;
@@ -348,12 +300,6 @@ pub(crate) unsafe fn libertadores_entrants(this: usize, max: i32, out: &mut [usi
 /// the list is shuffled (`comp_util_shuffle_pointer_array`(list, 32): push n; push list; add esp, 8 -> cdecl; 3 × 32 random swaps) and returns
 /// 1.
 /// Original: `ConmebolLiber::select_qualified_clubs` (0x4c3f40, conmebol_liber.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x4c3f40 } (thiscall, ret 0, conmebol_liber.cpp): `ConmebolLiber::select_qualified_clubs()`: +0xf2 = 32 e a lista
-/// +0xee (0x944e46(0x80): push 0x80; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x285 e devolve 0) com os
-/// clubes, na ordem do banco, cuja competição da temporada (+0x1db) é a Libertadores, até 32; menos de 32, a caixa da
-/// linha 0x297 e devolve 0; senão a lista embaralhada (0x4afb40(lista, 32): push n; push lista; add esp, 8 -> cdecl; 3 ×
-/// 32 trocas sorteadas) e devolve 1.
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_select_qualified_clubs(this: usize) -> u32 {
     write_u32(this + conmebol_liber::DRAWN_CLUB_COUNT, 0x20);
     let list = exe::crt_malloc(0x80);
@@ -383,17 +329,6 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_select_qualified_clubs(thi
 /// there, otherwise place 1), with the Intercontinental season archive and predicted positions; the runner-up gets the
 /// runner-up record
 /// Original: `ConmebolLiber::update_staff_records_for_status` (0x4c4080, conmebol_liber.cpp, thiscall, ret 0x18).
-///
-/// [pt] { 0x4c4080 } (thiscall, ret 0x18, conmebol_liber.cpp; a virtual +0x44): `ConmebolLiber::
-/// update_staff_records_for_status(clube, desfecho, fase, _, jogo, a6)`; devolve 0. Fase (byte com sinal) abaixo de 7,
-/// os grupos: 6, a classificação (0x86bdd0: fase 0, rodada 0x14, peso 0x28); 0xfe, a não classificação (0x86c1d0:
-/// 0x41c, 0x28). Fase 7, o mata-mata: peso 0x4bf850(0x32, 0x64, rodada do jogo +0x34, 4); 0xff, a eliminação (0x86c000:
-/// +0x32, +0x30 do jogo, peso); 0, a classificação com +0x32 e o +0x6f da rodada do jogo na tabela de rodadas da fase 7
-/// ([+0xc] + 0x1c, +0xa3, 0x68 bytes; os 16 bits altos que a original empurra são os do ponteiro da fase); 1, o registro
-/// de campeão (0x86a800) e o clube vai ao Mundial Interclubes (o objeto [[0xadadfc] + 4 × [0x9cf6e4]]): na vaga 0 da
-/// tabela +0xa7 dele se o clube que lá está é do continente [0x9cfa1c] (a nação +0x53, o continente +0x71 da nação, +0
-/// o id), senão na vaga 1; depois o arquivo da temporada das estatísticas dele (0x4a1c50 em +8: push 1 -> thiscall, ret
-/// 4) e as posições previstas (virtual +0x5c); 2, o registro de vice (0x86b0b0).
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, _a4: u32, game: usize, a6: u32) -> u32 {
     let this = League(this);
     let (d, f) = (outcome as u8, stage as u8 as i8);
@@ -451,10 +386,6 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_s
 /// rule: the Libertadores has seven group stages (0 to 6) and the knockout at stage 7 (the top two of each group, 16
 /// clubs); going past the last stage is an error (the box)
 /// Original: `ConmebolLiber::advance_stage` (0x4c3a80, conmebol_liber.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x4c3a80 } (thiscall, ret 0, conmebol_liber.cpp; a virtual +0x28): `ConmebolLiber::advance_stage()`: na última
-/// fase (+0x30 ≥ +0x2c − 1), a caixa da linha 0x1f6; senão +0x30 sobe e, chegando a 7 (o fim dos sete grupos), o
-/// mata-mata (0x4c3d10: mov ecx, this -> thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_advance_stage(this: usize) {
     let this = League(this);
     let f = this.current_stage() as i32;
@@ -480,10 +411,6 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_advance_stage(this: usize)
 /// bit 4; category 7 in the round of 16 and 8 after; final prize 2 million to the winner and 800 thousand to the
 /// runner-up
 /// Original: `ConmebolLiber::create_schedule` (0x4c31c0, conmebol_liber.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x4c31c0 } (thiscall, ret 0x10, conmebol_liber.cpp; a virtual +0x3c da Libertadores): `ConmebolLiber::
-/// create_schedule(fase, &rodadas, &extra, &é_liga)`: grupos abaixo da fase 7 (a caixa da linha 0x9f), o mata-mata na
-/// fase 7 (a caixa da linha 0xc5).
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     south_american_cup_schedule(League(this), stage, rounds, extra, league, 7, &LIBERTADORES_GROUP_ROUNDS, &LIBERTADORES_KNOCKOUT_ROUNDS, &[], 0x9a7de4, 0x9f, 0xc5,
         "cqo_13 grupos da libertadores", "cqo_13 mata-mata da libertadores")
@@ -493,10 +420,6 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_schedule(this: usiz
 /// others by position in each stage's table), in a cup stage (stage 7) with the cup's round table and year; the first
 /// round is drawn at once
 /// Original: `ConmebolLiber::create_knockout_stage` (0x4c3d10, conmebol_liber.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x4c3d10 } (thiscall, ret 0, conmebol_liber.cpp): `ConmebolLiber::create_knockout_stage()`, o mata-mata da
-/// Libertadores: os 16 (os 2 primeiros do grupo 1 e das 7 fases de grupo) na fase 7; caixas nas linhas 0x24c (sem
-/// lista) e 0x26a (sem fase).
 pub(crate) unsafe extern "thiscall" fn conmebol_liber_create_knockout_stage(this: usize) {
     build_knockout_stage(League(this), 0x10, 7, 7, 0x9a7de4, 0x24c, 0x26a, "cqs_10 classificados da libertadores");
 }

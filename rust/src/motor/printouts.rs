@@ -9,12 +9,6 @@ use super::*;
 /// list `[this]` of the type (+0xca) and the nation (+0xcf; −1 accepts any). Up to 20; none: −1; otherwise the id (word
 /// +0, signed) of one of them by random(n).
 /// Original: `PunditList::pick_random_pundit` (0x7dab90, printouts.cpp, thiscall, ret 0xc).
-///
-/// [pt] { 0x7dab90 } (thiscall, ret 0xc, printouts.cpp, quadro de 0x1094 bytes pela 0x945610): `PunditList::
-/// pick_random_pundit(clube, tipo, nação)`, pelas histórias da imprensa (0x72c1f0, 0x733a60) e pelos textos das
-/// notícias. Tipo 1 no domingo (0x54a3f0 = 6) vira 7. Tipos 2 e 4 (locais): os da lista [this+4] cujo +0xcb é o id de
-/// [[clube+0x69]+0x38] (sem eles: −1); os outros: os da lista [this] do tipo (+0xca) e da nação (+0xcf; −1 aceita
-/// qualquer). Até 20; nenhum: −1; senão o id (palavra +0, com sinal) de um deles por sorteio(n).
 pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, club: usize, kind: u32, nation: i32) -> i32 {
     let club = Club(club);
     let mut t = kind as i8;
@@ -96,9 +90,6 @@ pub(crate) unsafe extern "thiscall" fn pick_random_pundit(this: usize, club: usi
 }
 
 /// Default media outlet name by type: 2 local paper, 3 radio, 4 local radio, 5 magazine, else national paper.
-///
-/// [pt] O nome padrão do veículo pelo tipo (as três tabelas da original são iguais): 2 jornal local, 3 rádio, 4 rádio
-/// local, 5 revista; os outros, jornal nacional.
 pub(crate) fn default_media_name(kind: i8) -> usize {
     match kind {
         2 => 0xa24284,
@@ -115,11 +106,6 @@ pub(crate) fn default_media_name(kind: i8) -> usize {
 /// the type's default name and flag 0. Otherwise the pundit with the id (word +0) in list `[this+4]` (types 2 and 4) or
 /// `[this]`: the name (+2, sprintf "%s" 0x944c9f) and the flag (+0xd3); without him, the default name and flag 0.
 /// Original: `PunditList::get_pundit_name` (0x7dad20, printouts.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x7dad20 } (thiscall, ret 0x10, printouts.cpp): `PunditList::get_pundit_name(tipo, id, nome, marca)`, pelos textos
-/// das notícias. Sem `nome`: marca 0. Id −1: o nome padrão do tipo e marca 0. Senão o comentarista do id (palavra +0)
-/// na lista [this+4] (tipos 2 e 4) ou [this]: o nome (+2, sprintf "%s" 0x944c9f) e a marca (+0xd3); sem ele, o nome
-/// padrão e marca 0.
 pub(crate) unsafe extern "thiscall" fn get_pundit_name(this: usize, kind: u32, id: u32, name: usize, mark: *mut u8) {
     if name == 0 {
         *mark = 0;

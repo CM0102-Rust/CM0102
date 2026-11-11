@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/eurocomp/asia_club_champ.rs.
-// [pt] Os comparadores das rotinas de ../comp/eurocomp/asia_club_champ.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `asia_club_champ_advance_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_asia_club_champ_advance_stage(this: usize) {

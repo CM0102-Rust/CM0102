@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../weather.rs.
-// [pt] Os comparadores das rotinas de ../weather.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `check_postponement`.
 pub(crate) unsafe extern "thiscall" fn compare_check_postponement(this: usize, game: usize) -> u8 {
@@ -9,8 +8,6 @@ pub(crate) unsafe extern "thiscall" fn compare_check_postponement(this: usize, g
 }
 
 /// Comparer for `get_club_finance`.
-///
-/// [pt] Comparador: pelo valor (clube nulo: só a original, com a caixa de erro).
 pub(crate) unsafe extern "thiscall" fn compare_get_club_finance(this: usize, club: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_CLUB_FINANCE);
     if club == 0 {
@@ -23,8 +20,6 @@ pub(crate) unsafe extern "thiscall" fn compare_get_club_finance(this: usize, clu
 }
 
 /// Comparer for `get_match_weather`.
-///
-/// [pt] Comparador: lado a lado nos 4 bytes da saída.
 pub(crate) unsafe extern "thiscall" fn compare_get_match_weather(this: usize, s: *mut u8, game: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, *mut u8, usize)>(IDX_GET_MATCH_WEATHER);
     let regions = [(s as usize, 4)];
@@ -33,8 +28,6 @@ pub(crate) unsafe extern "thiscall" fn compare_get_match_weather(this: usize, s:
 }
 
 /// Comparer for `get_temperature`.
-///
-/// [pt] Comparador: pelo valor.
 pub(crate) unsafe extern "thiscall" fn compare_get_temperature(this: usize, band: u32, game: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> u8>(IDX_GET_TEMPERATURE)(this, band, game);
     let n = get_temperature(this, band, game);
@@ -43,8 +36,6 @@ pub(crate) unsafe extern "thiscall" fn compare_get_temperature(this: usize, band
 }
 
 /// Comparer for `get_pitch_condition`.
-///
-/// [pt] Comparador: pelo valor.
 pub(crate) unsafe extern "thiscall" fn compare_get_pitch_condition(this: usize, clima: *const u8, game: usize) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, *const u8, usize) -> u8>(IDX_GET_PITCH_CONDITION)(this, clima, game);
     let n = get_pitch_condition(this, clima, game);

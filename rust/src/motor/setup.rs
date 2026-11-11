@@ -1,9 +1,6 @@
 use super::*;
 
 /// Unrecoverable load error box (setup warning with the line), fatal cleanup and exit(-1).
-///
-/// [pt] A caixa "Error" da carga sem volta (memória para os dados de execução): `setup_warning(linha)`,
-/// 0x5cc7d0, 0x5a8f60 e `exit(-1)` (0x945934).
 pub(crate) unsafe fn load_fatal_error(row: u32) -> ! {
     setup_warning(row);
     exe::game_fatal_cleanup();
@@ -13,9 +10,6 @@ pub(crate) unsafe fn load_fatal_error(row: u32) -> ! {
 }
 
 /// Failed general.dat read: "Load Game Error" box with line and text, closes the item; returns 0.
-///
-/// [pt] A leitura do `general.dat` que falhou: a caixa "Load Game Error" com a linha e o texto (como a
-/// `save_error_box`) e o item fechado (0x932b00). Devolve 0, a resposta da carga.
 pub(crate) unsafe fn load_read_error(row: u32, text: usize, z: &mut usize) -> u32 {
     save_error_box(row, text, 0x9af3e0, 0x9af334);
     exe::zclose(z);
@@ -29,14 +23,6 @@ pub(crate) unsafe fn load_read_error(row: u32, text: usize, z: &mut usize) -> u3
 /// bits 0xf, 0x40 and 0x30 of the old one; +0xc: bit 0 of the old one. `tam` 0x26 (version < 0x3e042): +0xd = 0 and bit
 /// 1 of +0xc cleared; 0x27 (0x3e042..0x3e044): +0xd from the old one and bit 1 of +0xc from the old one. The 5 pairs
 /// (+0x12 + 5j = 0, +0xe + 5j = −1) and the dwords +0x27/+0x2b/+0x2f/+0x33/+0x37 (+0x14j, j = 0, 1) = −1.
-///
-/// [pt] Os dados de execução das pessoas de um save antigo (registros de `tam` bytes) passados para o
-/// registro atual de 0x4f bytes em [0xae2d0c], na ordem da original (relê o global a cada campo):
-/// +0, +4, +8, +9, +0xa copiados; +0xb: o bit 7 do antigo e os bits 0x7f do destino (sobra do
-/// malloc), depois os bits 0xf, 0x40 e 0x30 do antigo; +0xc: o bit 0 do antigo. `tam` 0x26 (versão <
-/// 0x3e042): +0xd = 0 e o bit 1 de +0xc apagado; 0x27 (0x3e042..0x3e044): +0xd do antigo e o bit 1
-/// de +0xc do antigo. Os 5 pares (+0x12 + 5j = 0, +0xe + 5j = −1) e os dwords +0x27/+0x2b/+0x2f/
-/// +0x33/+0x37 (+0x14j, j = 0, 1) = −1.
 pub(crate) unsafe fn convert_staff_state(font: usize, size: usize, n: i32) {
     let d = || read_usize(G_STAFF_STATE_TABLE);
     let mesclar = |base: u8, other: u8, m: u8| base ^ ((base ^ other) & m);
@@ -88,9 +74,6 @@ pub(crate) enum SubsystemCtorArg {
     ///
     /// Without the save: the original routine pushes ebp, which is 0 there; the constructor reads the fixtures from the
     /// temporary folder.
-    ///
-    /// [pt] (this, ano do jogo, 0, 1): FIXTURE_MANAGER (sem o save: a original empurra ebp, que ali é 0;
-    /// o construtor lê os jogos da pasta temporária)
     Calendario,
     /// (this, idioma dos nomes [0x9b5984] (byte)): PunditList
     Idioma,
@@ -155,11 +138,6 @@ pub(crate) const LOAD_STEPS: [LoadStep; 0x2b] = [
 /// Looks for "<root>cm0102.exe" on each CD drive: with `exigir` (start of load, honouring no-CD patches in the exe)
 /// loops on the "Insert CD" box until found; without it (end of load) shows "CD Not Required" on a CD drive lacking the
 /// exe.
-///
-/// [pt] A busca do CD da carga ("<raiz>cm0102.exe" em cada unidade de CD; ver `construct_match_stats`).
-/// `exigir` = a do começo (com os patches sem CD do cm0102-1080 lidos do exe: 0x82aac4 e 0x82ab07):
-/// devolve só quando acha (sem achar, a caixa "Insert CD" e de novo, para sempre). Sem `exigir` = a do fim
-/// (0x82e31d, sem patch nos dois exes): numa unidade de CD sem o exe, a caixa "CD Not Required" e para.
 pub(crate) unsafe fn check_game_cd(exigir: bool) {
     let units_digit: unsafe extern "system" fn(u32, *mut u8) -> u32 = core::mem::transmute(read_usize(0x9670f8));
     let kind: unsafe extern "system" fn(usize) -> u32 = core::mem::transmute(read_usize(0x967100));
@@ -244,35 +222,6 @@ pub(crate) unsafe fn check_game_cd(exigir: bool) {
 /// unreachable (the comparisons are chained with `jge`): they are left out. The original's two-pass loop ([esp+0x24];
 /// the 1st only sets the total 0x2d) runs the body once.
 /// Original: `load_game_data` (0x82a9c0, Setup.cpp, cdecl).
-///
-/// [pt] { 0x82a9c0 } (cdecl, Setup.cpp, ~14,6 KB, SEH): `load_game_data(caminho)`: carrega o save inteiro.
-/// Devolve 1 se carregou.
-/// - Disco (0x7a1820(0) < 25 liga [0xdd7134]) e memória ([0x9cd1fc] e 0x7a1710() < 50 liga [0xdd7138]);
-///   a pasta temporária (0x90bde0 "CM3_TEMP"); o CD (`check_game_cd`); `caminho` nulo dá a caixa "Error"
-///   0x233b. O banco: 0x528080 se [0xae23a8] ≠ 0 e 0x524d10(caminho, 1) (a resposta não é olhada).
-/// - "Loading game data" e a barra 0x802f80 (passo de 0x2d); limpa os `*.tmp` (0x90cd50), o espaço
-///   deles (0x933860, em MB, 0 vira 25) contra o disco, desempacota (0x933320; falha: "Disk Space
-///   Error" 0x2382).
-/// - `general.dat` (0x9326e0 lendo, 0x15, tipo 4; sem ele: "Load Game Error" 0x2397): a versão
-///   ([0xdd7110]); o resumo (|v| ≥ 0x3e023; 0xf70 bytes até 0x3e026 com o tempo de jogo zerado, 0xf74
-///   depois, com [0xdd7140] = o tempo de jogo dele); [0xdd7144] = time(); o id único, o tamanho do banco,
-///   as datas e horas (a do jogo num local), as ligas, a nação padrão ([0xae2d08] = nação id, ou 0 se
-///   < 0), os dados de execução das pessoas ([0xae2d0c], 0x4f × [0xae2d10]; os saves antigos convertidos
-///   por `convert_staff_state`; |v| < 0x3e018 apaga o bit 7 de +0xb das [0xae2364] primeiras),
-///   dos clubes ([0xae2d14], 6 × [0xae2d18] = [0xae235c]; |v| < 0x3e022: −1, 0, 0) e a reputação
-///   ([0xae2d1c], 4 × [0xae235c]; |v| < 0x3e022 não lê e chama 0x53db40(1)). Leitura que falha: "Load
-///   Game Error" com a linha e o texto do campo, item fechado; sem memória: "Error" e o jogo fecha.
-/// - Os passos 4..=0x2d (`LOAD_STEPS`, disco e memória antes de cada um): no 5, a data do jogo
-///   (0x417c10 em 0xae2c90); antes do 9, os 16 últimos técnicos com +0x5f = 5 são desfeitos (News,
-///   HUMAN_MANAGER, CONTRACT_MANAGER, NationalTeams, Staff_Records; nomes vazios, data 1/0/1966, +0x24 e
-///   +0x39 = 0, 0x7ff990); depois do 0x22, 0x7e61c0; antes do último, |v| < 0x3e032 passa cada pessoa
-///   por 0x538bc0.
-/// - Regras FIFA (0x839760, |v| ≥ 0x3e039); 0xdd70a0 = a data do jogo; [0xdd711c] = [0xdd7130] = 1,
-///   [0xa801bc] = 0; com [0x9b5980], liga ou desliga as regras pela data de [0xae2330] (0x58a890(1) ao
-///   ligar); sem `auto_setup.cfg`, a busca do CD do fim.
-/// Os ramos da original para 0x3e042 ≤ |v| < 0x3e038 (registros de 0xd bytes) e 0x3e042 ≤ |v| <
-/// 0x3e034 (0xc) não são alcançáveis (as comparações estão encadeadas em `jge`): ficam de fora. O laço
-/// de duas voltas da original ([esp+0x24]; a 1ª só põe o total 0x2d) roda o corpo uma vez.
 pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
     let folder: unsafe extern "C" fn(usize, usize) -> *const u8 = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
     let translate: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
@@ -554,13 +503,6 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
 /// `0x4ccbf0`/`0x4d0b50`/`0x4d0bd0`, NationalTeams `0x775ba0`, Staff_Records `0x86fb80`/`0x86fc70` (each with the
 /// global as it is), the three names emptied, `+0x10` = date(1, 0, 1966, −1) (`0x54a130`), `+0x18` = 1966, `+0x24` =
 /// `+0x39` = 0 and `0x7ff990` (screen manager, person, −1).
-///
-/// [pt] Antes do passo 9 da carga: dos 16 últimos da tabela de pessoas ([0xae23bc], 0x6e bytes, do último
-/// para trás), os com +0x5f = 5 deixam de ser técnico humano: +0x5f = 0, News 0x787630, HUMAN_MANAGER
-/// 0x5fd2f0/0x5fd590/0x5fe140 (0, pessoa), CONTRACT_MANAGER 0x4ccbf0/0x4d0b50/0x4d0bd0,
-/// NationalTeams 0x775ba0, Staff_Records 0x86fb80/0x86fc70 (cada um com o global como está), os três
-/// nomes vazios, +0x10 = data(1, 0, 1966, −1) (0x54a130), +0x18 = 1966, +0x24 = +0x39 = 0 e 0x7ff990
-/// (gerente de telas, pessoa, −1).
 pub(crate) unsafe fn undo_holiday_managers() {
     let u = |a: usize| read_usize(a);
     for i in 0..0x10usize {
@@ -594,9 +536,6 @@ pub(crate) unsafe fn undo_holiday_managers() {
 // does not run twice. Original only; the copy carries the branch and is proven by the load in the save proof.
 
 /// Setup.cpp "Error" box (setup_warning) followed by fatal cleanup and exit(-1).
-///
-/// [pt] A caixa "Error" de Setup.cpp (`setup_warning`) e o jogo para, como a original: 0x5cc7d0,
-/// 0x5a8f60 e `exit(-1)` (0x945934).
 pub(crate) unsafe fn setup_fatal_error(row: u32) -> ! {
     let exit: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     setup_warning(row);
@@ -639,37 +578,6 @@ pub(crate) unsafe fn setup_fatal_error(row: u32) -> ! {
 /// nation of a foreground league (bit 2) and accepted by `club_can_be_managed`: its nation into +0x1a, the names (`database_pick_first_name_for_nation`,
 /// `database_pick_second_name_for_nation`) into +4 and +8, and `exe::appoint_human_manager_to_club`(person, club). Returns 1.
 /// Original: `create_game_from_setup_file` (0x827110, Setup.cpp, cdecl).
-///
-/// [pt] { 0x827110 } (cdecl, Setup.cpp, ~3 KB): `create_game_from_setup_file(cfg, qst)`: lê o arquivo de
-/// configuração `cfg` (`auto_setup.cfg` ou `quick_start.cfg`), cria o jogo e, com `qst`, grava o
-/// início rápido `CM3_QSTART\<qst>.qst`; sem `qst`, põe o técnico humano de férias num clube
-/// sorteado. Devolve 1 se criou.
-/// - Pastas CM3_TEMP (0x90bde0, só copiada, como a original) e CM3_DATA. `cfg` nulo ou que não abre
-///   (0x945b00 "r"): a caixa "Error" (0x1c13, 0x1c1b) e 0.
-/// - Cada linha (0x90cba0, buffer de 1000 bytes) passa por 0x90bb70 e perde os espaços (um a um,
-///   como o `strcpy` da original); o valor é procurado por `strstr` (0x945a60) depois do prefixo:
-///   `DATABASE=` NORMAL/MINIMUM/MAXIMUM → 0x5d7c60(1/2/4) em [0xae3138]; `MATCH_STATS=`
-///   NORMAL/SMALL/LARGE → 0x200/0x400/0x800; `FOREGROUND_LEAGUES=` e `BACKGROUND_LEAGUES=`: na
-///   primeira, sem banco ([0xae23a8] = 0), carrega o banco (0x524d50, CM3_DATA; falha para o jogo),
-///   aplica (0x5d8480), zera o byte +0x11c das nações, [0xae2d00], [0xae2d04] (e [0xae2d08] na
-///   de frente) e monta as nações-chave (0x667150; falha para o jogo); depois, para cada liga da
-///   tabela 0xb63d60 (0x23 de 0x48) com nação e +8, se o nome (0x5454c0) está na linha ou 0x839340
-///   aceita: de frente, marca 0/1 → ((~opções & 2) | 1) << 1 e conta (+0xae2d00 só do 0,
-///   +0xae2d04) e a 1ª que casa pelo `strncmp` (0x946fa0) ou 0x839340 vira [0xae2d08]; de fundo,
-///   0 → ((~opções & 2) << 1) | 1 (+[0xae2d00]) e 2 → o mesmo (−[0xae2d04]); `LANGUAGE=`: o 1º
-///   idioma i (tabela 0x9eb244, 19) que existe (0x66ea50), é o inglês, não tem banco ou o banco
-///   tem (0x535930) e está na linha: 0x5d8020(i) e 0x5d8480; `ENABLE_MATCH_ENGINE=` YES/NO →
-///   byte [0xa5a390]; `ENABLE_COMPUTER_BIDS=` → [0x9cd1f8]; `ON_HOLIDAY=` → as férias do técnico.
-/// - Fecha; sem liga marcada, sem liga de frente, sem nação padrão ou com ela sem o bit 2: 0.
-/// - [0xdd7124] = [0xdd713c] = 1; cria o jogo (0x828110(qst ≠ 0); falha para o jogo).
-/// - Com `qst`: 0x945b13 (CM3_QSTART, `qst`, ".qst"), 0x82e430(caminho, 0x17), 0x82ff40(1) e 1.
-/// - Sem: "auto_setup_game" em [0xae3138]+0x113, [0xdd7130] = 1, data em 0xdd70a0; se o humano da
-///   vez (0xb74c26 + 0x300 × (i16)[0xb77c7a]) já tem pessoa, 0. Senão, a 1ª das 16 últimas pessoas
-///   (0xae23bc, 0x6e) com +0x5f = 0 (sem tabela, a caixa 0x39b3 e pessoa 0) vira o humano: texto
-///   +0xc zerado, data +0x10 (0x54a130: 1, 0, 1966, −1), +0x18 = 1966, +0x24 e +0x39 = 0, +0x5f = 1,
-///   0x5fb810 e 0x5fd2f0(férias, 0) em [0xb63c98]; sorteia (0x90cfc0) clubes (0xae23b4, 0x245) até
-///   um fora de seleção (0x53b900) com nação de liga de frente (bit 2) e aceito por 0x544820: a
-///   nação dele em +0x1a, os nomes (0x539c60, 0x53a1b0) em +4 e +8, e 0x826f20(pessoa, clube). 1.
 pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst: *const u8) -> u32 {
     covered!("save create game from configuration");
     let options = || read_usize(G_CONFIG);
@@ -916,11 +824,6 @@ pub(crate) unsafe extern "C" fn create_game_from_setup_file(cfg: *const u8, qst:
 /// 0xae26c4 and the box `exe::gui_show_message_box`.
 ///
 /// The game continues ([0xb67a34], G_MOUSE_LEFT_BUTTON_DOWN, stays as it is, unlike `setup_warning`).
-///
-/// [pt] A caixa de erro da gravação: "v%s %s.%s %d (%s)" (versão 0x90d130, nome e extensão de Setup.cpp,
-/// `linha`, `texto`) em 0xae24d0; o título `titulo` traduzido (0x66f4e0) em 0xae28bc, o corpo
-/// `corpo` (com o texto de 0xae24d0) traduzido em 0xae26c4 e a caixa 0x5e8290. O jogo segue
-/// ([0xb67a34] fica como está, ao contrário do `setup_warning`).
 pub(crate) unsafe fn save_error_box(row: u32, text: usize, title: usize, body: usize) {
     let version: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
@@ -938,11 +841,6 @@ pub(crate) unsafe fn save_error_box(row: u32, text: usize, title: usize, body: u
 ///
 /// `this` is the global itself, except for 0x5afad0 (FOG_OF_WAR), which the original checks via [0xb6b7c8] (Media's)
 /// and calls with [0xae2a60]. Step 0x19 (`exe::key_nation_save_all_comps`, the competitions) has no global and returns 0 when it fails.
-///
-/// [pt] Os passos 2..=0x24 da gravação, na ordem da original: (global que tem de ser ≠ 0, rotina, como
-/// chamar). `this` é o próprio global, menos no 0x5afad0 (FOG_OF_WAR), que a original confere por
-/// [0xb6b7c8] (o de Media) e chama com [0xae2a60]. O passo 0x19 (0x6692f0, as competições) não
-/// tem global e devolve 0 quando falha.
 #[derive(Clone, Copy)]
 pub(crate) enum SaveStep {
     /// thiscall(this, caminho), ret 4
@@ -954,8 +852,6 @@ pub(crate) enum SaveStep {
     /// o método +0x1c da vtable de [global](1) (Friendly)
     Virtual(usize),
     /// Checks the 1st global and calls the routine with the 2nd (FOG_OF_WAR).
-    ///
-    /// [pt] confere o 1º global e chama a rotina com o 2º (FOG_OF_WAR)
     Outro(usize, usize, usize),
     /// cdecl() → 0 é erro (key_nation_save_all_comps)
     Competicoes,
@@ -1029,31 +925,6 @@ pub(crate) const SAVE_STEPS: [SaveStep; 0x23] = [
 /// buffer here; in the original, what `build_save_game_summary` does not write (the club of the 16 non-human managers, the rest of the
 /// texts) is leftover from its stack, saved into `general.dat`.
 /// Original: `save_game_data` (0x82e430, Setup.cpp, cdecl).
-///
-/// [pt] { 0x82e430 } (cdecl, Setup.cpp, ~6,8 KB, SEH): `save_game_data(caminho, a4)`: grava o jogo
-/// inteiro no contêiner `caminho` (a4 0x16 `.sav`, 0x17 `.qst`; tipo 3 com o bit 0x8000 do
-/// `game.cfg` [[0xae3138]+4], senão 4 = RLE). Devolve 1 se gravou.
-/// - [0xdd7110] = 0xfffc1fb9 (a versão do save). Em rede (bit 0x20000000), antes de tudo, disco
-///   (0x7a1820(0) < 25) liga [0xdd7134] e memória ([0x9cd1fc] e 0x7a1710() < 1) liga [0xdd7138]:
-///   apaga `caminho` e devolve 0.
-/// - Pasta temporária (0x90bde0 "CM3_TEMP"); `caminho` nulo dá a caixa "Error" (0x2958). O
-///   caminho de trabalho é `caminho` ou, em rede, o mesmo com o nome `temp_save_file`
-///   (0x944cff/0x945b13); se já exe::utils_file_exists((0x90c120) as usize) e não sai (0x94643a = −1), devolve 0. Com o bit
-///   0x40000000, disco e memória de novo (apagando `caminho`).
-/// - 0x524d30 (o banco, passo 1 do save); disco e memória (apagando o caminho de trabalho);
-///   "Saving game data" traduzido e a barra 0x802f80 (passo 1 de 0x25).
-/// - `general.dat` (0x9326e0): 16 campos (a versão, o resumo 0x591f80 de 0xf74 bytes, o id único,
-///   o tamanho do banco, as datas e horas, as ligas, a nação padrão ou −1, os dados de execução de
-///   pessoas, clubes e reputação); erro de escrita dá a caixa "Disk Space Error" com a linha do
-///   campo e fecha o item.
-/// - Os passos 2..=0x24 (`SAVE_STEPS`): disco e memória (antes do 0x11, sem apagar e com
-///   memória < 25), a barra e o `save` do subsistema; 0x25: empacota os `*.tmp` (0x933610).
-/// - Hall da fama (0x5f00c0, fora do save), regras FIFA (0x8395b0); em rede, troca o save antigo
-///   pelo novo (0x945ba4); [0xdd7130] = 1, [0xa801bc] = 0 e a data do último save (0xdd70a0).
-/// A data local da original ([esp+0x1758], 0x54a110, destrutor vazio 0x5a53c0 no SEH) não é usada:
-/// fica de fora. O laço da original ([esp+0x11c] de 1 a 2) roda o corpo uma vez, com o total 0x25.
-/// O resumo é um buffer zerado aqui; na original, o que o 0x591f80 não escreve (o clube dos 16
-/// técnicos não humanos, o resto dos textos) é sobra da pilha dela, gravada no `general.dat`.
 pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 {
     let folder: unsafe extern "C" fn(usize, usize) -> *const u8 = core::mem::transmute(FN_UTILS_BUILD_FILE_PATH);
     let translate: unsafe extern "C" fn(*mut u8, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
@@ -1266,11 +1137,6 @@ pub(crate) unsafe extern "C" fn save_game_data(path: *const u8, a4: u32) -> u32 
 /// The original only sets `ax`: the upper 16 bits of `eax` are those of the id answer, as here. A null path is the
 /// Setup.cpp error 0x3a1b ("Error" box): the port calls the original.
 /// Original: `check_saved_game_file` (0x838e10, Setup.cpp, cdecl).
-///
-/// [pt] { 0x838e10 } (cdecl, Setup.cpp): `check_saved_game_file(caminho)`: filtro da caixa de arquivos
-/// dos jogos salvos: 1 se o contêiner tem o id 0x16 (`.sav`, 0x9331c0), senão 2. A original só
-/// acerta `ax`: os 16 bits altos de `eax` ficam os da resposta do id, como aqui. Caminho nulo é o
-/// erro de Setup.cpp 0x3a1b (caixa "Error"): a cópia chama a original.
 pub(crate) unsafe extern "C" fn check_saved_game_file(path: usize) -> u32 {
     if path == 0 {
         return original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CHECK_SAVED_GAME_FILE)(path);
@@ -1288,11 +1154,6 @@ pub(crate) unsafe extern "C" fn check_saved_game_file(path: usize) -> u32 {
 /// Only `ax` is set: the upper 16 bits of `eax` are those of the last call (the id, or the version). A null path:
 /// Setup.cpp error 0x3a6d, the port calls the original.
 /// Original: `check_quick_start_file` (0x839290, Setup.cpp, cdecl).
-///
-/// [pt] { 0x839290 } (cdecl, Setup.cpp): `check_quick_start_file(caminho)`: filtro da caixa de arquivos
-/// do início rápido: 1 se o contêiner tem o id 0x17 (`.qst`) e a versão gravada é a do exe
-/// (0x838eb0), senão 2. Os 16 bits altos de `eax` são os da última chamada (o id, ou a versão).
-/// Caminho nulo: erro de Setup.cpp 0x3a6d, a cópia chama a original.
 pub(crate) unsafe extern "C" fn check_quick_start_file(path: usize) -> u32 {
     if path == 0 {
         return original_fn::<unsafe extern "C" fn(usize) -> u32>(IDX_CHECK_QUICK_START_FILE)(path);
@@ -1315,11 +1176,6 @@ pub(crate) unsafe extern "C" fn check_quick_start_file(path: usize) -> u32 {
 /// Text "v%s %s.%s %d (%s)" (version 0x90d130, file name and extension of Setup.cpp, line, reason) at 0xae24d0, the
 /// translated title at 0xae28bc, the translated message (0x9af334) at 0xae26c4, and the box `exe::gui_show_message_box`. Unlike
 /// `show_error_at`, it does not zero [0xb67a34].
-///
-/// [pt] A caixa "Load Game Error" de `valid_saved_game_version`: o texto "v%s %s.%s %d (%s)" (versão
-/// 0x90d130, arquivo e extensão de Setup.cpp, linha, motivo) em 0xae24d0, o título traduzido em
-/// 0xae28bc, a mensagem traduzida (0x9af334) em 0xae26c4 e a caixa 0x5e8290. Ao contrário do
-/// `show_error_at`, não zera [0xb67a34].
 pub(crate) unsafe fn load_version_error_box(row: u32, reason: usize) {
     let version: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
@@ -1345,14 +1201,6 @@ pub(crate) unsafe fn load_version_error_box(row: u32, reason: usize) {
 /// frame only protects the local date (`exe::date_date_54a110`, no destructor), which falls inside the summary (+0xf64) and is
 /// overwritten by the read.
 /// Original: `valid_saved_game_version` (0x838eb0, Setup.cpp, cdecl).
-///
-/// [pt] { 0x838eb0 } (cdecl, Setup.cpp): `valid_saved_game_version(caminho)`: abre o item `general.dat`
-/// do contêiner (0x9326e0 lendo, a4 0x15, tipo 4), lê a versão gravada (4 bytes) e o resumo do save
-/// (0xf70 bytes se |versão| < 0x3e027, senão 0xf74) e devolve 1 se o texto da versão do resumo
-/// (+0x7d0) é igual ao do exe (0x90d130), senão 0. Cada leitura que falha dá a caixa "Load Game
-/// Error" (Setup.cpp 0x3a36, 0x3a3d, 0x3a48, 0x3a55) e 0. Como a original, quando dá certo o item
-/// NÃO é fechado (o ZFILE e o arquivo ficam abertos). O quadro SEH da original só protege a data
-/// local (0x54a110, sem destrutor), que cai dentro do resumo (+0xf64) e é sobrescrita pela leitura.
 pub(crate) unsafe extern "C" fn valid_saved_game_version(path: usize) -> u32 {
     covered!("save saved game version");
     let mut summary = [0u8; 0xf74];
@@ -1395,10 +1243,6 @@ pub(crate) unsafe extern "C" fn valid_saved_game_version(path: usize) -> u32 {
 ///
 /// Like `show_error_at`, but with the arguments that the original routine's sprintf reads from the stack (name,
 /// extension and line) passed explicitly.
-///
-/// [pt] A caixa "Error" das regras FIFA: o texto "v%s %s.%s %d" (versão 0x90d130, arquivo e extensão de
-/// Setup.cpp, linha) em 0xae24d0, a caixa 0x5e8290 e [0xb67a34] = 0. Como o `show_error_at`, mas com os
-/// argumentos que o sprintf da original lê da pilha (nome, extensão e linha) passados explícitos.
 pub(crate) unsafe fn setup_warning(row: u32) {
     let version: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
@@ -1417,12 +1261,6 @@ pub(crate) unsafe fn setup_warning(row: u32) {
 /// null path, an item that does not open or a failed write: the "Error" box (Setup.cpp 0x3b24, 0x3b2c, 0x3b32, 0x3b38);
 /// on the writes, the item is closed after the box. The original returns nothing (`eax` is leftover).
 /// Original: `save_fifa_transfer_rules` (0x8395b0, Setup.cpp, cdecl).
-///
-/// [pt] { 0x8395b0 } (cdecl, Setup.cpp): `save_fifa_transfer_rules(save)`: o último item do save,
-/// `fifa_transfer_rules.zip` (0x9326e0 gravando, a4 0x16, tipo 4; no contêiner já criado vale o
-/// cabeçalho dele): 2 bytes, [0xae233c] e [0xa83608], e `zclose`. Caminho nulo, item que não abre
-/// ou escrita que falha: a caixa "Error" (Setup.cpp 0x3b24, 0x3b2c, 0x3b32, 0x3b38); nas escritas,
-/// depois da caixa o item é fechado. A original não devolve nada (`eax` sobra).
 pub(crate) unsafe extern "C" fn save_fifa_transfer_rules(save: usize) {
     covered!("save write fifa rules");
     if save == 0 {
@@ -1455,11 +1293,6 @@ pub(crate) unsafe extern "C" fn save_fifa_transfer_rules(save: usize) {
 ///
 /// Errors: the "Error" box (Setup.cpp 0x3b4f, 0x3b57, 0x3b5d, 0x3b63), as in the save.
 /// Original: `load_fifa_transfer_rules` (0x839760, Setup.cpp, cdecl).
-///
-/// [pt] { 0x839760 } (cdecl, Setup.cpp): `load_fifa_transfer_rules(save)`: lê os 2 bytes do item
-/// `fifa_transfer_rules.zip` (0x9326e0 lendo) em [0xae233c] e [0xa83608]; se [0xae233c] = 1, a
-/// regra em vigor [0xa83608] vira 5. Fecha o item. Erros: a caixa "Error" (Setup.cpp 0x3b4f, 0x3b57,
-/// 0x3b5d, 0x3b63), como na gravação.
 pub(crate) unsafe extern "C" fn load_fifa_transfer_rules(save: usize) {
     covered!("save load fifa rules");
     if save == 0 {
@@ -1491,16 +1324,12 @@ pub(crate) unsafe extern "C" fn load_fifa_transfer_rules(save: usize) {
 // (file = original only). The copy takes the branch; the load step of the save proof exercises it.
 
 /// strcat: appends fonte to the end of destino.
-///
-/// [pt] O `strcat` da original (repne scasb + rep movs): `fonte` com o zero no fim de `destino`.
 pub(crate) unsafe fn append_text(target: *mut u8, font: *const u8) {
     let d = target.add(core::ffi::CStr::from_ptr(target as *const core::ffi::c_char).to_bytes().len());
     copy_text(d, font);
 }
 
 /// strcpy: copies fonte with its terminator into destino.
-///
-/// [pt] O `strcpy` da original, com o zero.
 pub(crate) unsafe fn copy_text(target: *mut u8, font: *const u8) {
     let n = core::ffi::CStr::from_ptr(font as *const core::ffi::c_char).to_bytes_with_nul().len();
     core::ptr::copy(font, target, n);
@@ -1519,13 +1348,6 @@ pub(crate) unsafe fn copy_text(target: *mut u8, font: *const u8) {
 /// `*.tmp` files of the temporary folder (`utils_clear_temp_folder`), [0xae2338], the database tables (`exe::database_free_all_tables`), the game date
 /// (`exe::date_set`: 1, 0, 2001, −1) and three flags zeroed.
 /// Original: `free_game_data` (0x82ff40, Setup.cpp, cdecl).
-///
-/// [pt] { 0x82ff40 } (cdecl, Setup.cpp): `free_game_data(tela)`: o gerente de telas (0xb74450) solta as
-/// telas (0x7ff5f0) e, se `tela` ≠ 0, mais 0x7fc5e0; 0x6d5b50; depois cada subsistema guardado num
-/// global, na ordem da original: destrutor (thiscall) + `delete` (0x944c94) e o global zerado; os
-/// vetores soltos pelo `free` (0x9452ca); dois objetos pelo destrutor virtual (vtable[0](1)); os
-/// `*.tmp` da pasta temporária (0x90cd50), [0xae2338], as tabelas do banco (0x528080), a data do
-/// jogo (0x54a130: 1, 0, 2001, −1) e três marcas zeradas. Devolve 1.
 pub(crate) unsafe extern "C" fn free_game_data(tela: u32) -> u32 {
     covered!("save free game data");
     // destrutor + delete + global zerado
@@ -1603,9 +1425,6 @@ pub(crate) unsafe extern "C" fn free_game_data(tela: u32) -> u32 {
 
 /// the heading text colour (two colours by the flag)
 /// Original: `get_heading_colour` (0x839590, Setup.cpp, cdecl).
-///
-/// [pt] { 0x839590 } (cdecl, Setup.cpp): a cor do título: [0xae3184] com `x` ≠ 0, senão [0xae31a8]. A
-/// original só troca `ax`: os 16 bits de cima da devolução são os de `x`.
 pub(crate) unsafe extern "C" fn get_heading_colour(x: u32) -> u32 {
     let c = if x != 0 { read_u16(G_GUI_COLOUR_PALE_GREY) } else { read_u16(G_GUI_COLOUR_RED) };
     (x & 0xffff_0000) | c as u32

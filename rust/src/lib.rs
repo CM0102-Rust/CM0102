@@ -9,18 +9,6 @@
 //!   call (`espiao`), for diagnosis.
 //!
 //! The log goes to `ddraw.log`, next to the exe.
-//!
-//! [pt] Nucleo em Rust do CM 01/02.
-//!
-//! O cm0102.exe importa `DirectDrawCreate` da ddraw.dll, e o Windows procura a DLL primeiro na
-//! pasta do exe. Esta biblioteca e essa ddraw.dll: e por ela que o nosso codigo entra no jogo,
-//! sem alterar o executavel.
-//!
-//! - Padrao: camada de video propria (`video`), sem trocar o modo do Windows; desvios no exe (`ganchos`).
-//! - Com a variavel de ambiente `CM_ESPIAO=1`: repassa tudo a ddraw.dll do sistema e registra cada
-//!   chamada (`espiao`), para diagnostico.
-//!
-//! O registro sai em `ddraw.log`, ao lado do exe.
 
 #![allow(linker_messages)]
 
@@ -59,8 +47,6 @@ const DDERR_GENERIC: i32 = 0x8000_4005_u32 as i32;
 const DDERR_INVALIDPARAMS: i32 = 0x8007_0057_u32 as i32;
 
 /// Loads the real ddraw.dll by its full path (by name, Windows would return this one).
-///
-/// [pt] Carrega a ddraw.dll verdadeira pelo caminho completo (pelo nome, o Windows devolveria esta).
 unsafe fn system_ddraw_create() -> Option<FnDirectDrawCreate> {
     let mut buf = [0u16; 260];
     let n = GetSystemDirectoryW(buf.as_mut_ptr(), buf.len() as u32) as usize;
@@ -79,9 +65,6 @@ unsafe fn system_ddraw_create() -> Option<FnDirectDrawCreate> {
 
 /// DLL load: Windows loads ddraw.dll together with the exe, before the game's WinMain.
 /// This is where the detours in the game's routines are installed.
-///
-/// [pt] Carregamento da DLL: o Windows carrega a ddraw.dll junto com o exe, antes do WinMain do jogo.
-/// E aqui que os desvios nas rotinas do jogo sao instalados.
 #[no_mangle]
 pub unsafe extern "system" fn DllMain(_module: *mut c_void, reason: u32, _reserved: *mut c_void) -> i32 {
     const DLL_PROCESS_ATTACH: u32 = 1;

@@ -1,8 +1,6 @@
 use super::*;
 
 /// Postponement outcome: random(n) != 0 -> 0 (no change), 0 -> 6 (abandoned).
-///
-/// [pt] O fim do adiamento: sorteio(n) diferente de zero não adia (0), zero abandona (6).
 pub(crate) unsafe fn abandon_if_draw_zero(n: i32) -> u8 {
     if friendly_random(n) != 0 {
         0
@@ -12,8 +10,6 @@ pub(crate) unsafe fn abandon_if_draw_zero(n: i32) -> u8 {
 }
 
 /// Postponement outcome: random(n) == 0 -> 0, otherwise 5 (postponed).
-///
-/// [pt] O fim do adiamento: sorteio(n) zero não adia (0), diferente de zero adia (5).
 pub(crate) unsafe fn postpone_if_draw_nonzero(n: i32) -> u8 {
     if friendly_random(n) == 0 {
         0
@@ -35,15 +31,6 @@ pub(crate) unsafe fn postpone_if_draw_nonzero(n: i32) -> u8 {
 /// = 9 (postponement); rain 8 (up to 15000 places) and 9 (ice; by wind 4 and by 10000 places): a chain of random draws
 /// that returns 0, 5 or 6.
 /// Original: `Weather::check_postponement` (0x923630, weather.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x923630 } (thiscall, ret 4, weather.cpp): `Weather::check_postponement(jogo)`, pelo dia dos jogos (0x6b3c10) e
-/// pela preparação da partida (0x6b7f20). Sem estádio (+0x18) com cidade (+0x38) e lugares (+0x3c), sem competição
-/// (+0x14), com o mandante (+0x1c) fora de liga (+0x57) ou o jogo fora da liga dele, ou estádio coberto (+0x4c): 0. Na
-/// nação-chave do mandante (0x669360, tabela 0xb63d60 de 0x48 bytes), perto do fim da temporada do ano (+0x39/+0x3b): 0.
-/// Na fatia da noite (+0x3f = 2), pelas finanças do mandante (0x5a0590, faixa 0x5986b0): sorteio(1000/2500/5000) zero
-/// devolve 0x12. Depois o clima do jogo (0x923010, gravado na vaga do argumento como na original): chuva 5 com 1 a 13
-/// graus, estádio descoberto (+0x4d) de até 20000 lugares: sorteio por lugares e mandante (+0x64), zero = 9; chuva 8
-/// (até 15000 lugares) e 9 (pelo vento 4 e por 10000 lugares): uma cadeia de sorteios que devolve 0, 5 ou 6.
 pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usize) -> u8 {
     let game = Fixture(game);
     let est = game.stadium();
@@ -184,10 +171,6 @@ pub(crate) unsafe extern "thiscall" fn check_postponement(this: usize, game: usi
 /// (+0); a B club with an A partner (`exe::club_get_linked_b_team` with the returned byte 0): the A one's. Null club: the "Error" box of
 /// finance.CPP (as in the original).
 /// Original: `FinanceTable::get_club_finance` (0x5a0590, finance.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x5a0590 } (thiscall, ret 4, finance.cpp): `FinanceTable::get_club_finance(clube)`: o registro de finanças
-/// (0x167 bytes em [this]) do clube pelo id (+0); clube B com parceiro A (0x540a50 com o byte devolvido 0): o do A.
-/// Clube nulo: a caixa "Error" de finance.CPP (a original).
 pub(crate) unsafe extern "thiscall" fn get_club_finance(this: usize, club: usize) -> usize {
     if club == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_GET_CLUB_FINANCE)(this, club);
@@ -202,8 +185,6 @@ pub(crate) unsafe extern "thiscall" fn get_club_finance(this: usize, club: usize
 }
 
 /// City's weather region record ([this] + r x 0x6e) if 0 <= r < [this+8].
-///
-/// [pt] A região do clima de uma cidade (+0x34) se for válida (0 ≤ r < [this + 8]): [this] + r × 0x6e.
 pub(crate) unsafe fn weather_region(this: usize, city: usize) -> Option<usize> {
     let r = read_i32(city + city::WEATHER);
     if r >= 0 && r < read_i32(this + 8) {
@@ -227,17 +208,6 @@ pub(crate) unsafe fn weather_region(this: usize, city: usize) -> Option<usize> {
 /// 2..6, otherwise 3). Without a city: out[3], [0] and [1] = 0 and band 2. out[2] = the temperature (`get_temperature`); below
 /// zero, the rain becomes snow/ice: 1 → 6, 2 and 3 → 6/7/8 and 5 → 8/7/9 by the city's wind 0/1/other.
 /// Original: `Weather::get_match_weather` (0x923010, weather.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x923010 } (thiscall, ret 8, weather.cpp): `Weather::get_match_weather(saida, jogo)`, na preparação da partida
-/// (0x6b7f20, em +0x4756 do motor: o vento pesa nos chutes de longe), no adiamento (0x923630) e nas telas. Sem regiões
-/// ([this], [this + 8]): nada. A cidade: a do estádio (+0x18 → +0x38), senão a do estádio do mandante (+0x1c → +0x69 →
-/// +0x38), senão a capital da nação dele (+0x53 → +0x7a). Com cidade: saida[3] = o vento da cidade (tabela [this + 4], 4
-/// bytes por cidade, byte 3) e a região dela (senão a da capital da nação +0x1f, senão a primeira). O período pelo dia do
-/// jogo (+0x2a; sem jogo o dia do jogo) contra os limites +0x1e/+0x31/+0x44/+0x57 da região (3, 0, 1, 2, 3); no período
-/// (19 bytes a partir de +0x20): saida[0] = vento pela leitura 2 da cidade (+0x20..+0x24: 0..4), saida[1] = chuva pela
-/// leitura 1 (+0x25..+0x29: 0, 1, 2, 3, 5), e a faixa da temperatura pela leitura 2 (+0x2a..+0x30: 1, 0, 2..6, senão 3).
-/// Sem cidade: saida[3], [0] e [1] = 0 e a faixa 2. saida[2] = a temperatura (0x9232c0); abaixo de zero, a chuva vira
-/// neve/gelo: 1 → 6, 2 e 3 → 6/7/8 e 5 → 8/7/9 pelo vento da cidade 0/1/outro.
 pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8, game: usize) {
     let game = Fixture(game);
     if read_usize(this) == 0 || read_usize(this + 8) == 0 {
@@ -390,11 +360,6 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
 /// % 7 + 22; 5: x % 6 + 29; 6: x % 6 + 35; other: −100. A match in the evening slot (+0x3f = 2): below 10, − 2;
 /// otherwise × 0.8 truncated. (It reads the match's +0x3f even without a match, as the original does.)
 /// Original: `Weather::get_temperature` (0x9232c0, weather.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x9232c0 } (thiscall, ret 8, weather.cpp): `Weather::get_temperature(faixa, jogo)`, pelo clima da partida. Com o
-/// dia d (do jogo +0x2a, sem sinal; sem jogo o dia do jogo) e x = d × faixa: faixa 0: x % 6 + 1; 1: x % 6 − 5; 2:
-/// x % 7 + 7; 3: x % 8 + 14; 4: x % 7 + 22; 5: x % 6 + 29; 6: x % 6 + 35; outra: −100. Jogo da fatia da noite (+0x3f = 2):
-/// abaixo de 10, − 2; senão × 0,8 truncado. (Lê +0x3f do jogo mesmo sem jogo, como a original.)
 pub(crate) unsafe extern "thiscall" fn get_temperature(_this: usize, band: u32, game: usize) -> u8 {
     let game = Fixture(game);
     let f = band as u8 as i8 as i32;
@@ -433,13 +398,6 @@ pub(crate) unsafe extern "thiscall" fn get_temperature(_this: usize, band: u32, 
 /// 2 or 1/2; below 1 degree, rain 1 and 8: 2, 0x10 or 1; rain 9: 2, 1 or 0x20/1; no rain at 29 degrees or more: 0x40 or
 /// 4; otherwise 0.
 /// Original: `Weather::get_pitch_condition` (0x923970, weather.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x923970 } (thiscall, ret 8, weather.cpp): `Weather::get_pitch_condition(clima, jogo)`, na preparação da partida
-/// (0x6b7f20, em +1 do motor: o gramado 2 e 0x20 pesam nos chutes). Sem jogo, sem estádio (+0x18) ou estádio coberto
-/// (+0x4c): 0. h = (dia +0x2a + +0x10 + +0xc + +0) % 20. Pela chuva clima[1] e a temperatura clima[2] (1 a 28 graus),
-/// com o estádio de marca +0x4d e os lugares +0x3c: chuva 5: 2/1 ou 8/1; chuva 1: 2 ou 0 por h < 6/4; chuva 2 e 3: por
-/// h < 4/1/3; chuva 4: 2 ou 1/2; abaixo de 1 grau, chuva 1 e 8: 2, 0x10 ou 1; chuva 9: 2, 1 ou 0x20/1; sem chuva a 29
-/// graus ou mais: 0x40 ou 4; senão 0.
 pub(crate) unsafe extern "thiscall" fn get_pitch_condition(_this: usize, clima: *const u8, game: usize) -> u8 {
     if game == 0 {
         return 0;
@@ -508,8 +466,6 @@ pub(crate) unsafe extern "thiscall" fn get_pitch_condition(_this: usize, clima: 
 }
 
 /// Next line of the file into buf (utils read_config_line `exe::utils_read_config_line`); 0 at end.
-///
-/// [pt] A linha seguinte do arquivo (0x90cba0: FILE*, buffer), 0 no fim.
 pub(crate) unsafe fn read_config_line(f: usize, buf: *mut u8) -> i32 {
     exe::utils_read_config_line(f, buf)
 }
@@ -522,11 +478,6 @@ pub(crate) unsafe fn read_config_line(f: usize, buf: *mut u8) -> i32 {
 /// become (reading + random(100)) × 0.5 truncated, clamped to 0..100; random(10) zero gives the new wind (+3) =
 /// random(3).
 /// Original: `Weather::update_city_weather` (0x922ee0, weather.cpp, thiscall).
-///
-/// [pt] { 0x922ee0 } (thiscall, weather.cpp): `Weather::update_city_weather()`, todo dia pelo laço do dia do jogo (0x5cd9aa,
-/// [0xde2f74]). Sem a tabela das cidades (+4, 4 bytes por cidade): nada. Cada cidade ([0xae2354], relida a cada volta):
-/// as três medidas (+0, +1, +2) viram (medida + sorteio(100)) × 0,5 truncado, presas em 0..100; sorteio(10) zerado dá
-/// o vento novo (+3) = sorteio(3).
 pub(crate) unsafe extern "thiscall" fn update_city_weather(this: usize) {
     if read_usize(this + 4) == 0 || read_usize(G_CITY_COUNT) as i32 <= 0 {
         return;
@@ -567,10 +518,6 @@ pub(crate) unsafe extern "thiscall" fn update_city_weather(this: usize) {
 /// the id (+0) and the name (+4) of the region (0x6e bytes); then the four periods (`read_region_period`) at +0x1e, +0x31, +0x44
 /// and +0x57. Returns 1 if it read everything (only al, as in the original).
 /// Original: `Weather::read_region` (0x922c40, weather.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x922c40 } (thiscall, ret 8, weather.cpp): `Weather::read_region(f, regiao)`: uma linha do weather.cfg (0x90cba0,
-/// buffer de 2000) com "%ld %s" (0xad4e24) no id (+0) e no nome (+4) da região (0x6e bytes); depois os quatro
-/// períodos (0x922d20) em +0x1e, +0x31, +0x44 e +0x57. Devolve 1 se leu tudo (só o al, como a original).
 pub(crate) unsafe extern "thiscall" fn read_region(this: usize, f: usize, region: usize) -> u8 {
     let read: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(FN_946FD8);
     covered!("cpt_5 weather region");
@@ -599,11 +546,6 @@ pub(crate) unsafe extern "thiscall" fn read_region(this: usize, f: usize, region
 /// read, the period (0x13 bytes) receives the day (word at +0) and the next 17 bytes (+2..+0x12). Returns 1 if read
 /// (only al).
 /// Original: `Weather::read_region_period` (0x922d20, weather.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x922d20 } (thiscall, ret 8, weather.cpp): `Weather::read_region_period(f, periodo)`: arquivo nulo é a caixa
-/// "Error" (weather.cpp, 0xea) e 0. Uma linha (0x90cba0) com o formato de 0xad4e2c (o nome e 18 inteiros: o dia,
-/// cinco W, cinco P e sete H); com os 19 lidos, o período (0x13 bytes) recebe o dia (palavra em +0) e os 17 bytes
-/// seguintes (+2..+0x12). Devolve 1 se leu (só o al).
 pub(crate) unsafe extern "thiscall" fn read_region_period(_this: usize, f: usize, period: usize) -> u8 {
     let read: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(FN_946FD8);
     if f == 0 {
@@ -644,13 +586,6 @@ pub(crate) unsafe extern "thiscall" fn read_region_period(_this: usize, f: usize
 /// ((random(100) + random(100)) × 0.5) and the wind (random(3)). Closes the file (`exe::crt_fclose`). The errors (file, line,
 /// count, memory) give the "Error" box of weather.cpp and the game stops.
 /// Original: `Weather::load_config` (0x922810, weather.cpp, thiscall).
-///
-/// [pt] { 0x922810 } (thiscall, weather.cpp): `Weather::load_config()`, na criação do jogo (0x9226c0, Setup.cpp). Abre o
-/// CM3_DATA\weather.cfg (0x90bde0, fopen 0x945b00 "r"); a primeira linha (0x90cba0, buffer de 1000) dá quantas regiões
-/// ("%ld" em +8); as regiões (malloc de 0x6e bytes cada em +0) e a tabela das cidades (malloc de 4 bytes por cidade
-/// [0xae2354] em +4); cada região pela 0x922c40 (a primeira que falha para o jogo; as outras só encerram a leitura);
-/// cada cidade sorteia as três medidas ((sorteio(100) + sorteio(100)) × 0,5) e o vento (sorteio(3)). Fecha o arquivo
-/// (0x945a09). Os erros (arquivo, linha, contagem, memória) são a caixa "Error" de weather.cpp e o jogo para.
 pub(crate) unsafe extern "thiscall" fn load_config(this: usize) {
     let read: unsafe extern "C" fn(*const u8, usize, ...) -> i32 = core::mem::transmute(FN_946FD8);
     let f = exe::crt_fopen(exe::utils_build_file_path(0x9b5348, 0xad4e18), 0x9899fc);

@@ -6,10 +6,6 @@ use super::*;
 /// with two rounds and a final; the vector [+0xc] = malloc of 4 × stages), the rules (thiscall, ret 0), the table
 /// (thiscall, ret 0), the predicted positions (thiscall, ret 0), the source file and the error-box lines (rules, table,
 /// fixtures, order, statistics).
-///
-/// [pt] Um estadual: a vtable, as fases além da liga (+0x2c: 1 nos de pontos corridos com mata-mata, 3 nos de dois turnos e
-/// final; o vetor [+0xc] = malloc de 4 × fases), as regras (thiscall, ret 0), a tabela (thiscall, ret 0), as posições
-/// previstas (thiscall, ret 0), o fonte e as linhas das caixas (regras, tabela, jogos, ordem, estatísticas).
 pub(crate) struct BraRegRioStateChampionship {
     pub(crate) vtabela: usize,
     pub(crate) stages: u32,
@@ -33,16 +29,6 @@ pub(crate) struct BraRegRioStateChampionship {
 /// thiscall(this, 0), ret 4); the stats (operator new `exe::crt_operator_new` of 0x5ce and Comp_Stats::Comp_Stats `exe::new_comp_stats`,
 /// thiscall(new, this), ret 4; the original's SEH frame covers only that new) at +8 (without them: the error box);
 /// finally the predicted positions.
-///
-/// [pt] O construtor de um estadual (o mesmo molde de 544 bytes nos doze, conferido instrução a instrução: só mudam a
-/// vtable, as fases, as três rotinas próprias, o fonte e as linhas). League::League (0x682200, thiscall, ret 0); +4 = o
-/// registro da competição; a vtable; o ano (+0x40, word) = `ano`; a regra de disciplina (+0x50) = 7. Se o estado
-/// salvo carrega (League::load_from_temp_file 0x687b10, thiscall(this, 1), ret 4; devolve ≠ 0), devolve this. Senão
-/// (a carreira nova): +0x51 = 0xf (a importância), +0x44 = 0xff, +0x30 = −1, +0x2c = as fases e o vetor delas (malloc
-/// 0x944e46, sem conferir); então, cada um com a sua caixa (e devolvendo this) se devolver 0: as regras, a tabela, os
-/// jogos (League::create_fixtures 0x6835c0, thiscall, ret 0) e a ordem (League::sort_table 0x6827d0, thiscall(this,
-/// 0), ret 4); as estatísticas (operator new 0x944cf1 de 0x5ce e Comp_Stats::Comp_Stats 0x49ee70, thiscall(novo,
-/// this), ret 4; o quadro SEH da original cobre só esse new) em +8 (sem elas: a caixa); por fim as posições previstas.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: League, year: u32, registro: usize, e: &BraRegRioStateChampionship, discipline: u8, predicted_yes: bool, ramo: &'static str) -> usize {
     let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.rules);
@@ -94,10 +80,6 @@ pub(crate) unsafe fn bra_reg_rio_construct_state_league(this: League, year: u32,
 
 /// Comparer for state league constructors: runs only the original and checks return, vtable, year, record, discipline
 /// and, for a new league, stages, stage vector and importance.
-///
-/// [pt] O comparador dos três: alocam e sorteiam os jogos: só a original, conferindo o que ela grava: a devolução, a
-/// vtable, o ano, o registro e a disciplina; na liga nova (+0x44 = 0xff, com as estatísticas), +0x2c, o vetor das
-/// fases e a importância +0x51 = 0xf.
 pub(crate) unsafe fn bra_reg_rio_compare_state_league_ctor(name: &str, this: League, year: u32, record: usize, e: &BraRegRioStateChampionship, original: impl FnOnce() -> usize) -> usize {
     let r = original();
     let mut ok = r == this.addr() && read_usize(this.addr()) == e.vtabela && (this.year() as u16) == year as u16
@@ -143,15 +125,11 @@ pub(crate) const PAULISTA_STATE_LEAGUE: BraRegRioStateChampionship = BraRegRioSt
 /// saved state, importance 15, two halves and the final (three stages besides the league), the rules, the table with
 /// the state clubs, the fixtures, the order, the statistics and the predicted positions
 /// Original: `BraRegRio::BraRegRio` (0x439a40, bra_reg_rio.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x439a40 } (thiscall, ret 8, bra_reg_rio.cpp): `BraRegRio::BraRegRio(ano, registro)`: o Carioca (três fases além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_rio(this: usize, year: u32, record: usize) -> usize {
     bra_reg_rio_construct_state_league(League(this), year, record, &CARIOCA_CHAMPIONSHIP, 7, true, "cqt_4 carioca novo") // cqt4: the discipline and expected positions of the Carioca
 }
 
 /// Competition reputation of a league (word +0x69 of the competition record at +4).
-///
-/// [pt] A reputação da competição de uma liga (+0x69 do registro +4, word).
 pub(crate) unsafe fn league_comp_reputation(league: League) -> i32 {
     league.competition().reputation() as i32
 }
@@ -163,10 +141,6 @@ pub(crate) unsafe fn league_comp_reputation(league: League) -> i32 {
 /// (the original routine compares with the integer part + 1000 and writes the value with 1000 added before truncation).
 ///
 /// Below it, attendance goes up to it and the record (+0x7b) rises up to it.
-///
-/// [pt] O piso que sobe com a reputação `r` (dos ramos que puxam o público para cima): com r < 5, 250 × r × f; senão
-/// 750 × (r − 4) × f + 1000 (a original compara com a parte inteira + 1000 e grava a conta com 1000 somado antes do
-/// truncamento). Abaixo dele, o público vai a ele e o recorde (+0x7b) sobe até ele.
 pub(crate) unsafe fn raise_attendance_floor(c: Club, r: i32, f: f64) {
     let lim = if r < 5 {
         let lim = ftol((r.wrapping_mul(250)) as f64 * f);
@@ -188,8 +162,6 @@ pub(crate) unsafe fn raise_attendance_floor(c: Club, r: i32, f: f64) {
 }
 
 /// Caps club attendance (+0x73) at lim, lowering the minimum (+0x77) to it.
-///
-/// [pt] O teto `lim` do público: acima dele, o público cai a ele e o mínimo (+0x77) desce até ele.
 pub(crate) unsafe fn cap_attendance(c: Club, lim: i32) {
     if c.attendance() > lim {
         c.set_attendance(lim);
@@ -236,32 +208,6 @@ pub(crate) unsafe fn cap_attendance(c: Club, lim: i32) {
 ///
 /// At the end of each: at least 500, and within [+0x77, +0x7b]. The table is freed (free `exe::crt_free`).
 /// Original: `atualizar_media_de_publico (sem nome no mapa)` (0x5d6280, game.cpp, cdecl).
-///
-/// [pt] { 0x5d6280 } (cdecl, game.cpp, sem nome no mapa): `atualizar_media_de_publico(liga)`, do laço das temporadas
-/// (0x5d5ae0, em 0x5d5cfb: push liga; call; add esp, 4), no fim da temporada de cada liga da nação (a de cima e as de
-/// baixo, pela +0x20). A média de público do clube (+0x73, Attendance) anda com o resultado da temporada, entre o
-/// mínimo (+0x77) e o recorde (+0x7b).
-/// O peso `f` vem da nação da competição (o primeiro dword de [+4]+0x5d): 0,1 em [0x9cf510], [0x9cf2dc], [0x9cf3e4],
-/// [0x9cf224]; 0,25 em [0x9cf2c0], [0x9cf2fc], [0x9cf408], [0x9cf4a8], [0x9cf4f8]; 0,5 em [0x9cf45c]; 1 nas outras.
-/// `r` = a reputação da competição (+0x69 do registro, word). A tabela final vem das estatísticas (Comp_Stats::
-/// get_sorted_team_table 0x4a4b20, thiscall(+8, 1, &n, 1000), ret 0xc: registros de 0x76 bytes, +0 o id do clube,
-/// +0x72 a posição prevista, +0x73 a final, +5 os jogos em casa [inferência], +6 o público somado [inferência]);
-/// para cada clube (os ramos na ordem da original, com as mesmas chamadas às virtuais +0x98 "tem acesso" e +0x9c "tem
-/// rebaixamento"; d = prevista − final + 1, word):
-/// - campeão sem acesso: + (r + max(d, 0)) × 200 × f (dono do estádio, +0x6d) ou × 100 × f;
-/// - 2º (ou posição 0) sem acesso: + (r + max(d, 0)) × 125 × f ou × 65 × f;
-/// - subiu (posição ≤ +0xbe): pela liga de cima ([0xadadfc][+0x1c]; sem ela, nada): v = +0x80 do clube (a reputação,
-///   word) × max(r de cima − r, 1) × f × 0,1, no mínimo 100; + v + exe::utils_random(v) (dono) ou + v; e o piso pela reputação
-///   da liga de cima;
-/// - play-off de acesso (+0xbf ≠ 0 e posição ≤ +0xbf): com d − 1 > 0: + exe::utils_random(r(d − 1) × 75 × f) + r(d − 1) × 75 × f
-///   (dono) ou + exe::utils_random(r(d − 1) × 25 × f) + r(d − 1) × 10 × f; senão + exe::utils_random(r × 50 × f ou r × 25 × f); com
-///   jogos em casa, a mistura com o público real: (público somado / jogos + 4 × média) × f × 0,2;
-/// - caiu (posição > +0x3e − +0xc1): pela liga de baixo (sem ela, nada): v = +0x80 × min(r de baixo − r, −1) × f × 0,2,
-///   no máximo −100 (sem rebaixamento na de baixo, +0x20 = −1: v = 2v − 250 − exe::utils_random(750)); + v + exe::utils_random(v); e o
-///   teto de 2000 (r de baixo ≤ 7) ou 3000 vezes a r de baixo, × f;
-/// - os outros: + exe::utils_random(r × d × 5 × f), × 10 para o dono com d > 0 ou com +0x80 acima de 500 × r; a mistura com o
-///   público real (sem o peso f); o piso pela reputação; e o teto de 2000 r (r ≤ 7), 3000 r (r ≤ 12) ou 5000 r.
-/// No fim de cada um: no mínimo 500, e dentro de [+0x77, +0x7b]. A tabela é liberada (free 0x9452ca).
 pub(crate) unsafe extern "C" fn cqt4_update_average_attendance(league: usize) {
     let league = League(league);
     let table_c = read_usize(G_COMP_OBJECT_TABLE);
@@ -428,21 +374,6 @@ pub(crate) unsafe extern "C" fn cqt4_update_average_attendance(league: usize) {
 ///
 /// 3) [+0xc][k] = the stage, +0x30 = k (the signed byte) and the vector freed (free `exe::crt_free`). The original's SEH frame
 /// only covers the constructor (no destructor on the normal path).
-///
-/// [pt] O turno `k` de uma liga de dois turnos (o slot create_half_season_stage; o mesmo molde nos três estaduais e na J1,
-/// conferido instrução a instrução: só mudam o fonte, a linha da caixa e o 20º argumento do construtor, 0xb nos
-/// estaduais e 0xf na J1). Chamado do resultado de cada jogo (0x43af20 e as irmãs: push dl = +0x30 + 1; mov ecx ->
-/// thiscall, ret 4; a original lê o argumento inteiro, usa o byte baixo e o empurra inteiro ao construtor).
-/// 1) Os clubes da tabela da liga (+0xb1, linhas de 0x3b bytes, as +0x3e linhas) num vetor (malloc 0x944e46 de
-///    4 × +0x3e; sem memória: a caixa e volta).
-/// 2) A fase: operator new 0x944cf1(0xee) e o construtor League_Stage 0x68b100 (thiscall, ret 0x58, 22 argumentos, na
-///    ordem da original: a liga, +0x3e (word), o vetor, 1, +4, 0, 0, os pontos por vitória +0xc2 (`pv`), por empate +0xc3, a
-///    categoria dos jogos +0xc4, &+0xc5 (os critérios de desempate), &{1,0,0,0} (uma vaga de cima: o campeão do
-///    turno), o ano +0x40 (word), k, o id 0x439 (primeiro turno) ou 0x43a (segundo), 0, 1, 0, 8, `vinte`, 0, 2; a
-///    original empurra os words e bytes com lixo nos bytes altos, que o construtor não lê: a cópia passa os valores
-///    limpos; o k vai inteiro, como chegou). Sem memória para a fase: 0 na vaga, sem caixa.
-/// 3) [+0xc][k] = a fase, +0x30 = k (o byte com sinal) e o vetor liberado (free 0x9452ca). O quadro SEH da original só
-///    cobre o construtor (sem destrutor no caminho normal).
 pub(crate) unsafe fn create_half_season_stage(this: League, k: u32, file: usize, row: u32, twenty: u32, pv: usize, ramo: &'static str) {
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, u32, u32, u32, u32, u32, usize, *const u8, u32, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
@@ -477,9 +408,6 @@ pub(crate) unsafe fn create_half_season_stage(this: League, k: u32, file: usize,
 
 /// Comparer for a half-season stage: only the original runs; checks that slot k has the stage, +0x30 = k and the stage
 /// has the league's clubs.
-///
-/// [pt] O comparador de um turno: só a original (simplification: aloca o vetor e a fase, que monta a tabela do turno), com o plano:
-/// depois, a vaga k tem a fase (o operator new não falha na carreira), +0x30 = k e a fase tem os +0x3e clubes da liga.
 pub(crate) unsafe fn compare_half_season_stage(name: &str, this: League, k: u32, original: impl FnOnce()) {
     original();
     let kk = k as u8 as i8 as i32;
@@ -493,9 +421,6 @@ pub(crate) unsafe fn compare_half_season_stage(name: &str, this: League, k: u32,
 /// the league, and one top place, the half winner's); the first half goes to stage 0 and the second (from round 12, by
 /// the match +0x34) to stage 1; each half winner (the top of the stage table) goes to the final
 /// Original: `BraRegRio::create_half_season_stage` (0x43afa0, bra_reg_rio.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x43afa0 } (thiscall, ret 4, bra_reg_rio.cpp): `BraRegRio::create_half_season_stage(k)`, um turno do Carioca (os
-/// doze clubes; a caixa da linha 0x3d5).
 pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_half_season_stage(this: usize, k: u32) {
     create_half_season_stage(League(this), k, 0x98b014, 0x3d5, 0xb, 0xc2, "cqr_1 turno do carioca") // cqr1: the points per win in the Carioca
 }
@@ -521,20 +446,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_half_season_stage(this
 /// `0x79cee0`, thiscall([`0xb74340`], `+4`), ret 4), whose eax it returns.
 ///
 /// After a box, the copy returns 0 (the original routine returns the box's eax, which Brazil's rollover does not read).
-///
-/// [pt] A virada da temporada de um estadual de dois turnos e final (`start_new_season`, slot 3, +0x08; o mesmo molde no
-/// Carioca, no Mineiro e no Paranaense: só mudam o fonte e a rotina da tabela, conferido instrução a instrução):
-/// +0x4c = 0 e a tabela liberada (League::free_table 0x687970, thiscall(this, 0), ret 4); a lista de +0xba liberada
-/// (free 0x9452ca) e zerada; com estatísticas (+8), Comp_Stats::archive_season_and_reset (0x4a1c50, thiscall(+8, 1),
-/// ret 4); com a fase atual ≥ 0, as fases 0..=+0x30 que existem destruídas (a virtual 0, o destrutor com 1: libera);
-/// o vetor das fases liberado (free) e trocado por um novo de três vagas (+0x2c = 3, malloc 0x944e46 de 0xc, sem
-/// conferir nem zerar: os turnos e a final o preenchem); o ano (+0x40, word) sobe `ano` (o contador `ramo`) e
-/// +0x30 = −1; então, cada um com a sua caixa (linhas 0x1d4, 0x1db, 0x1e1 e 0x1e8) se devolver 0: as regras da
-/// temporada (virtual +0x8c), a tabela com os doze clubes (`tabela`, thiscall, ret 0), os jogos (League::create_fixtures
-/// 0x6835c0, thiscall, ret 0) e a ordem da tabela (League::sort_table 0x6827d0, thiscall(this, 0), ret 4); por fim as
-/// posições previstas (virtual +0x5c) e a renovação dos árbitros (OfficialsManager::renew_officials 0x79cee0,
-/// thiscall([0xb74340], +4), ret 4), cujo eax ela devolve. Com caixa, a cópia devolve 0 (a original devolve o eax da
-/// caixa, que a virada do Brasil não lê).
 pub(crate) unsafe fn start_new_season_two_halves(this: League, table: usize, file: usize, year: i16, ramo: &'static str) -> u32 {
     write_u32(this.addr() + league::SEASON_CLOSED, 0);
     exe::league_free_table(this, 0);
@@ -593,9 +504,6 @@ pub(crate) unsafe fn start_new_season_two_halves(this: League, table: usize, fil
 }
 
 /// Comparer for the season change: only the original runs; checks year +1, +0x2c = 3 and +0x30 = −1.
-///
-/// [pt] O comparador da virada: só a original (simplification: libera tabelas e fases, aloca as novas, sorteia os jogos e os
-/// árbitros; não pode rodar duas vezes), conferindo o que só ela garante: o ano (+0x40) sobe um, +0x2c = 3 e +0x30 = −1.
 pub(crate) unsafe fn compare_new_season(name: &str, this: League, original: impl FnOnce() -> u32) -> u32 {
     let before = this.year();
     let r = original();
@@ -610,8 +518,6 @@ pub(crate) unsafe fn compare_new_season(name: &str, this: League, original: impl
 /// the table with the twelve state clubs, the fixtures and the order; then the predicted positions and the referee
 /// renewal. The halves are only built at each one's first game (cqr_1)
 /// Original: `BraRegRio::start_new_season` (0x43a6a0, bra_reg_rio.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x43a6a0 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::start_new_season()`, a virada do Carioca (a tabela: 0x43a500).
 pub(crate) unsafe extern "thiscall" fn bra_reg_rio_start_new_season(this: usize) -> u32 {
     start_new_season_two_halves(League(this), 0x43a500, 0x98b014, 1, "cqr_2 virada do carioca") // cqr2: the next year of the Carioca
 }
@@ -620,11 +526,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_start_new_season(this: usize)
 /// (stage 2): the next stage moves the current stage on and, at the end of the second half, builds the final; past the
 /// last stage it is an error (the box)
 /// Original: `BraRegRio::advance_stage` (0x43a870, bra_reg_rio.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x43a870 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::advance_stage()`, a fase seguinte do Carioca (dois turnos, as fases 0
-/// e 1, cada um um League_Stage, e a final, a fase 2). Na última fase (+0x30 ≥ +0x2c − 1, com sinal): a caixa de
-/// erro da linha 0x202 e nada mais. Senão +0x30 sobe um e, ao chegar a 2 (o fim do segundo turno), monta a final
-/// (0x43a900, call direto com o ecx da liga).
 pub(crate) unsafe extern "thiscall" fn bra_reg_rio_advance_stage(this: usize) {
     let this = League(this);
     let stage = this.current_stage() as i32;
@@ -657,20 +558,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_advance_stage(this: usize) {
 /// Cup::set_up_round (`set_up_round`, thiscall(stage, 0), ret 4), the table and the list freed (free `exe::crt_free`, in that order)
 /// and +0x30 = 2. The original's SEH frame covers only the constructor (no destructor).
 /// Original: `BraRegRio::create_final_stage` (0x43a900, bra_reg_rio.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x43a900 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::create_final_stage()`, da fase seguinte quando o segundo turno
-/// acaba. Os dois campeões dos turnos (o clube da primeira linha da tabela de cada League_Stage) vão para uma lista
-/// de 2 (malloc 0x944e46 de 8; sem memória: a caixa da linha 0x226 e volta).
-/// - O mesmo clube nos dois turnos: é o campeão sem final. +0x30 = 1, +0x2c = 2 (a temporada acaba com as duas fases),
-///   a situação 5 (+0x37, campeão) na primeira linha da tabela de cada turno e na linha dele da tabela da liga
-///   (+0xb1, as +0x3e linhas). A lista não é liberada (a original a deixa vazar; a cópia também).
-/// - Campeões diferentes: a final, em dois jogos [inferência: ida e volta]. A virtual +0x3c (create_round_table:
-///   thiscall(this, fase 2, &rodadas, &extra, 0), ret 0x10) monta a tabela de rodadas; a fase nova (operator new
-///   0x944cf1 de 0xb2; Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: a liga, 2, a lista, as rodadas, +4, a tabela,
-///   o ano +0x40, 2, 1, o extra, 0x14, 0, 1, 0 e as sementes {0, 1}: o campeão do primeiro turno é a semente 0) vai
-///   para a terceira vaga das fases ([+0xc]+8; sem fase: a caixa da linha 0x250 e volta, sem liberar). Com ela:
-///   Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4), a tabela e a lista liberadas (free 0x9452ca, nessa
-///   ordem) e +0x30 = 2. O quadro SEH da original só cobre o construtor (sem destrutor).
 pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usize) {
     let this = League(this);
     let seeds: [u8; 4] = [0, 1, 0, 0];
@@ -742,16 +629,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_final_stage(this: usiz
 /// Finance::add_prize_money, thiscall, ret 4) and in the prize money news (`send_prize_money_news` Comp::send_prize_money_news:
 /// thiscall(this, club, 64-bit amount, position 1 or 2, round 0, match 0, type −2), ret 0x1c); then `exe::bra_nat_first_fill_champions_cup_entrants`, as above.
 /// Original: `BraRegRio::record_season_honours` (0x43ad20, bra_reg_rio.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x43ad20 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::record_season_honours()` (slot 13), o fim da temporada do Carioca.
-/// - Com final (+0x30 = 2): o histórico da final (o slot 13, +0x30, da fase [+0xc]+8) e, em salto final, a 0x42bba0
-///   (`bra_nat_first_fill_champions_cup_entrants`, cdecl sem argumentos: quando os doze estaduais terminam, põe os
-///   campeões na Copa dos Campeões); devolve o eax dela.
-/// - Sem final (o mesmo campeão nos dois turnos): o histórico da liga (League::record_season_honours 0x684640,
-///   thiscall, ret 0); os prêmios, 675.000 ao campeão (primeira linha da tabela +0xb1) e 250.000 ao vice (segunda linha),
-///   cada um no saldo (0x5a0590 em [0xae2a38] -> as finanças do clube, thiscall, ret 4; 0x5999a0 Finance::add_prize_money,
-///   thiscall, ret 4) e na notícia do prêmio (0x48e3e0 Comp::send_prize_money_news: thiscall(this, clube, valor em 64
-///   bits, posição 1 ou 2, rodada 0, partida 0, tipo −2), ret 0x1c); depois a 0x42bba0, como acima.
 pub(crate) unsafe extern "thiscall" fn bra_reg_rio_record_season_honours(this: usize) -> u32 {
     let this = League(this);
     if this.current_stage() == 2 {
@@ -775,9 +652,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_record_season_honours(this: u
 /// the Rio league has 12 clubs: those with it as their reserve division in the database (the field that holds the state
 /// or regional league), in database order; the table only counts when full; no TV money nor prize fund
 /// Original: `BraRegRio::create_table` (0x43a500, bra_reg_rio.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x43a500 } (thiscall, ret 0, bra_reg_rio.cpp): `BraRegRio::create_table()`: o Carioca tem 12 clubes (divisão reserva +0x60 = [0x9cf9dc]).
-/// Fonte 0x98b014, linha 0x169.
 pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_table(this: usize) -> u32 {
     fill_state_league_table(League(this), 0xc, 0x98b014, 0x169, KEY_CLUB_COMP_BRAZILIAN_RIO_DE_JANEIRO_STATE_CHAMPIONS, 0, "cqm_8 carioca cheio")
 }
@@ -790,10 +664,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_table(this: usize) -> 
 ///
 /// Afterwards: +0x3e = `n`, the return value = 1 if the plan filled up (otherwise 0) and the table rows (+0 the club,
 /// 0x3b bytes) hold the planned clubs, in order.
-///
-/// [pt] O comparador dos três: a original aloca a tabela (não roda duas vezes): só ela. O plano, feito antes: os clubes do
-/// estadual na ordem do banco (até `n`). Depois: +0x3e = `n`, a devolução = 1 se o plano encheu (senão 0) e as linhas
-/// da tabela (+0 o clube, 0x3b bytes) com os clubes do plano, na ordem.
 pub(crate) unsafe fn bra_reg_rio_compare_state_league_table(name: &str, this: League, n: i16, g: usize, original: impl FnOnce() -> u32) -> u32 {
     let mut plan: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
@@ -824,9 +694,6 @@ pub(crate) unsafe fn bra_reg_rio_compare_state_league_table(name: &str, this: Le
 /// the next stage; no champion band); 7 bench substitutes and 3 substitutions; category 2 (league) matches. Then the
 /// main stage schedule
 /// Original: `BraRegRio::set_up_rules` (0x43a600, bra_reg_rio.cpp, thiscall).
-///
-/// [pt] { 0x43a600 } (thiscall, bra_reg_rio.cpp): `BraRegRio::set_up_rules`, nas vtables do Mineiro (0x968284) e do
-/// Carioca (0x968608); devolve 1.
 pub(crate) unsafe extern "thiscall" fn bra_reg_rio_set_up_rules(this: usize) -> u32 {
     carioca_rules(this);
     covered!("cqi_9 carioca rules");

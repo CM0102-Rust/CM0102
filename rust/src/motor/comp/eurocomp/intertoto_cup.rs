@@ -14,8 +14,6 @@ pub(crate) const INTERTOTO_ROUNDS: [EngCcCupCupRound; 5] = [
 /// on 10/8 (6 teams: the 3 winners go to the UEFA Cup [inference]); category 7 in the first three and 8 after; no
 /// prizes
 /// Original: `IntertotoCup::create_round_table` (0x633300, intertoto_cup.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x633300 } (thiscall, ret 0x10, intertoto_cup.cpp; a virtual +0x3c): `fase.create_round_table(/// &rodadas, &extra, &saida)`: na fase −1, as 5 rodadas; a caixa da linha 0xe4 sem memória.
 pub(crate) unsafe extern "thiscall" fn intertoto_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     eng_cc_cup_create_single_stage_round_table(Cup(this), stage, rounds, extra, out, &INTERTOTO_ROUNDS, 0x9e9e14, 0xe4, "cqp_13 tabela da intertoto")
 }
@@ -58,10 +56,6 @@ pub(crate) const UEFA_CUP_PRELIMINARY_ROUND: EngCcCupCupRound =
 
 /// UEFA Cup round descriptions for b = +0xb2 (preliminary round when b > 0, then the qualifying and main rounds with
 /// new/entered team counts) → (rounds, count).
-///
-/// [pt] As rodadas da Copa da UEFA com `b` = +0xb2 (byte com sinal; as metades truncam como a original, cdq/sar): com b > 0
-/// a preliminar (b times, b/2 jogos, b novos) e depois as oito; na 1ª rodada de qualificação 0x52 − b/2 novos e b já
-/// inscritos, na 2ª b/2 + 0x52 inscritos, na 1ª rodada b/2 + 0x89 inscritos.
 pub(crate) fn uefa_cup_rounds(b: i8) -> ([EngCcCupCupRound; 9], usize) {
     let mut t = [UEFA_CUP_PRELIMINARY_ROUND; 9];
     let (b, m) = (b as i32, b as i32 / 2);
@@ -93,13 +87,6 @@ pub(crate) fn uefa_cup_rounds(b: i8) -> ([EngCcCupCupRound; 9], usize) {
 /// The list (`exe::crt_malloc` of 6 × 60 at +0xa7; out of memory, the box 0x17c and −1) takes each club with class = its
 /// coefficient (+0x1df) and status 0, goes to qsort (`cup_compare_entries_by_level_desc`) and the vector is freed. Returns 1 with the 60 (as the
 /// result pair).
-///
-/// [pt] { 0x6336c0 } (thiscall, ret 0, intertoto_cup.cpp): `IntertotoCup::collect_entrants()`: +0x3e = 60; um vetor local de
-/// 60 ponteiros (0x944e46 de 0xf0; sem memória, a caixa da linha 0x161 e 0) com os clubes da tabela ([0xae23b4], até
-/// [0xae235c]) cuja copa europeia (+0x1db) é a Intertoto ([0x9cf6f8]), até 60; faltando, a caixa da linha 0x172 e 0 (o
-/// vetor fica alocado, como na original). A lista (0x944e46 de 6 × 60 em +0xa7; sem memória, a caixa 0x17c e −1) leva
-/// cada clube com a classe = o seu coeficiente (+0x1df) e a situação 0, vai ao qsort (0x522190) e o vetor é liberado.
-/// Devolve 1 com os 60.
 pub(crate) unsafe fn collect_intertoto_entrants(this: Cup) -> (i32, i32) {
     const F: usize = 0x9e9e14;
     this.set_team_count(0x3c);
@@ -151,10 +138,6 @@ pub(crate) unsafe fn collect_intertoto_entrants(this: Cup) -> (i32, i32) {
 /// club table order; each with class = its coefficient (+0x1df), and the list is sorted by class (the seeds); with
 /// fewer than 60, the error box
 /// Original: `IntertotoCup::collect_entrants` (0x6336c0, intertoto_cup.cpp, thiscall, ret 0).
-///
-/// [pt] regra: entram na Intertoto os 60 clubes que as regras europeias puseram nela (copa europeia +0x1db = a Intertoto),
-/// pela ordem da tabela de clubes; cada um com a classe = o seu coeficiente (+0x1df), e a lista é ordenada pela classe
-/// (as sementes); com menos de 60, a caixa de erro
 pub(crate) unsafe extern "thiscall" fn intertoto_cup_collect_entrants(this: usize) -> i32 {
     collect_intertoto_entrants(Cup(this)).0
 }
@@ -165,11 +148,6 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_collect_entrants(this: usiz
 /// Allocates the list (`0x944e46` of 4 × `+0x3e`; out of memory, the box of line `0x2fb`, `saida` = 0 and returns 0)
 /// with the clubs of list `+0xa7` (non-null, up to `+0x3e`); with `ativos`, only those whose status (`+5`) is 0 or 1.
 /// Stores the list in `saida` and returns the count (word).
-///
-/// [pt] { 0x633f70 } (thiscall, ret 8, intertoto_cup.cpp; uma virtual): `IntertotoCup::collect_club_list(&saida, ativos)`:
-/// uma lista de ponteiros (0x944e46 de 4 × +0x3e; sem memória, a caixa da linha 0x2fb, saida = 0 e 0) com os clubes da
-/// lista +0xa7 (não nulos, até +0x3e): com `ativos`, só os de situação (+5) 0 ou 1. Grava a lista em saida e devolve a
-/// conta (palavra).
 pub(crate) unsafe fn collect_club_list(this: Cup, out: *mut usize, ativos: u32) -> u16 {
     let n = this.team_count();
     let l = exe::crt_malloc((n as i32 * 4) as u32);
@@ -197,25 +175,17 @@ pub(crate) unsafe fn collect_club_list(this: Cup, out: *mut usize, ativos: u32) 
 
 /// rule: the Intertoto club list (for the caller): all entrants, or only those still in (status 0 or 1) when asked
 /// Original: `IntertotoCup::collect_club_list` (0x633f70, intertoto_cup.cpp, thiscall, ret 8).
-///
-/// [pt] regra: a lista dos clubes da Intertoto (para quem chama): todos os inscritos, ou só os ainda vivos (situação 0 ou 1)
-/// quando pedido
 pub(crate) unsafe extern "thiscall" fn intertoto_cup_collect_club_list(this: usize, out: *mut usize, ativos: u32) -> u16 {
     collect_club_list(Cup(this), out, ativos)
 }
 
 /// The UEFA Cup competition object ([G_COMP_OBJECT_TABLE + 4 × KEY_CLUB_COMP_UEFA_CUP]), or 0.
-///
-/// [pt] O objeto da Copa da UEFA ([[0xadadfc] + 4 × [0x9cf6f0]]), ou 0.
 pub(crate) unsafe fn uefa_cup_object() -> usize {
     read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add(read_usize(KEY_CLUB_COMP_UEFA_CUP).wrapping_mul(4)))
 }
 
 /// The Intertoto winners (+5 = 1 in +0xa7) that fit the last three UEFA Cup slots, in the order `intertoto_cup_update_for_date` puts them →
 /// (clubs, count).
-///
-/// [pt] Os vencedores do Intertoto (+5 = 1 no registro de 6 bytes de +0xa7) que cabem nas três últimas vagas da UEFA, na
-/// ordem em que a 0x633d40 os põe: as vagas vão de +0x3e da UEFA − 27 até + 3 (palavras com sinal).
 pub(crate) unsafe fn intertoto_winners_for_uefa(this: Cup, uefa: Cup) -> ([usize; 3], usize) {
     let mut v = [0usize; 3];
     let mut k = 0usize;
@@ -254,14 +224,6 @@ pub(crate) unsafe fn intertoto_winners_for_uefa(this: Cup, uefa: Cup) -> ([usize
 /// +0xb2 = 1 and the predicted positions once more (the original re-reads the UEFA Cup). Always, at the end, the cup
 /// update (`cup_update_for_date`: push stage; push today; mov ecx, this -> thiscall, ret 8), whose return value is returned.
 /// Original: `IntertotoCup::update_for_date` (0x633d40, intertoto_cup.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x633d40 } (thiscall, ret 8, intertoto_cup.cpp; a virtual +0x14 do Intertoto): `hoje.update_for_date(/// fase)`. Uma vez (+0xb2 = 0), quando a copa acabou (virtual +0x10 com 0, 1: push 1; push 0; mov ecx, this ->
-/// thiscall, ret 8; o byte de baixo): sem a Copa da UEFA, a caixa da linha 0x29e; com ela, cada time do Intertoto com
-/// +5 = 1 (os vencedores das finais) vai, em ordem, para as vagas de +0x3e − 27 em diante da tabela +0xa7 da UEFA (até
-/// três: o clube, +4 e +5 zerados) e para o livro de inscritos dela (+0x14, 6 bytes: o clube e a situação 4 em +4;
-/// +0x36 sobe); depois as posições previstas da UEFA (virtual +0x5c: mov ecx, uefa -> thiscall, ret 0), +0xb2 = 1 e de
-/// novo as posições previstas (a original relê a UEFA). Sempre, no fim, a atualização da copa (0x51f890: push fase;
-/// push hoje; mov ecx, this -> thiscall, ret 8), cuja devolução sai.
 pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
     let this = Cup(this);
     if read_usize(this.addr() + intertoto_cup::WINNERS_SENT_TO_UEFA) == 0 {
@@ -334,17 +296,6 @@ pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_for_date(this: usize
 /// - 0xff or 2 (knocked out, or lost the final): the elimination record (`add_knocked_out_record`) in the Intertoto, stage 0, round
 /// +0x30 of the match, weight(0x14, 0x50), and the club leaves European competition (+0x1db = −1).
 /// Original: `IntertotoCup::update_staff_records_for_status` (0x633c10, intertoto_cup.cpp, thiscall, ret 0x18).
-///
-/// [pt] { 0x633c10 } (thiscall, ret 0x18, intertoto_cup.cpp; a virtual +0x44 do Intertoto): `IntertotoCup::
-/// update_staff_records_for_status(clube, desfecho, _, _, jogo, _)`; devolve 0. Peso = 0x4bf850(baixo, alto, rodada do
-/// jogo +0x34, rodadas +0x3c) (cdecl, 4 pushes; add esp, 0x10).
-/// - 1 (venceu a final): a classificação (0x86bdd0) para a Copa da UEFA (a competição [0xae23d0] + 0x6b × [0x9cf6f0]),
-///   fase 0, rodada 0xa, peso(0x3c, 0x64), e o clube passa à Copa da UEFA (+0x1db = [0x9cf6f0]).
-/// - 0 (passou de rodada): se a rodada seguinte existe (+0x34 + 1 < +0x3c), a classificação no Intertoto (+4) com a
-///   fase +0x32 do jogo, o +7 da rodada seguinte (+0xa3, 0x68 bytes) e o peso rodada × 99 / (rodadas − 1) + 1 (só o
-///   byte de baixo sobe: inc al).
-/// - 0xff ou 2 (caiu): a eliminação (0x86c000) no Intertoto, fase 0, rodada +0x30 do jogo, peso(0x14, 0x50), e o clube
-///   sai da competição europeia (+0x1db = −1).
 pub(crate) unsafe extern "thiscall" fn intertoto_cup_update_staff_records_for_status(this: usize, club: usize, outcome: u32, a3: u32, a4: u32, game: usize, a6: u32) -> u32 {
     let this = Cup(this);
     let club = Club(club);

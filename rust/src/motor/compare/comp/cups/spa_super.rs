@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/cups/spa_super.rs.
-// [pt] Os comparadores das rotinas de ../comp/cups/spa_super.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `spa_super_select_teams`.
 pub(crate) unsafe extern "thiscall" fn compare_spa_super_select_teams(this: usize) -> i32 {

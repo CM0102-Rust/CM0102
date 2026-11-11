@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/bra_reg_northeast.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/bra_reg_northeast.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `construct_bra_reg_northeast`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_bra_reg_northeast(this: usize, year: u32, record: usize) -> usize {

@@ -1,8 +1,6 @@
 use super::*;
 
 /// Champion of a half: club in row 0 of stage k's table.
-///
-/// [pt] O campeão de um turno: o clube da primeira linha da tabela (+0xb1) da fase `k` ([+0xc][k], um League_Stage).
 pub(crate) unsafe fn half_champion(this: League, k: usize) -> usize {
     read_usize(read_usize(read_usize(this.stages() + 4 * k) + league::TABLE))
 }
@@ -11,11 +9,6 @@ pub(crate) unsafe fn half_champion(this: League, k: usize) -> usize {
 /// (stage 2): the next stage moves the current stage on and, at the end of the second half, builds the final; past the
 /// last stage it is an error (the box)
 /// Original: `BraRegMinasGerais::advance_stage` (0x434ae0, bra_reg_minas_gerais.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x434ae0 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::advance_stage()`, a fase seguinte do Mineiro (dois turnos, as fases 0
-/// e 1, cada um um League_Stage, e a final, a fase 2). Na última fase (+0x30 ≥ +0x2c − 1, com sinal): a caixa de
-/// erro da linha 0x202 e nada mais. Senão +0x30 sobe um e, ao chegar a 2 (o fim do segundo turno), monta a final
-/// (0x434b70, call direto com o ecx da liga).
 pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_advance_stage(this: usize) {
     let this = League(this);
     let stage = this.current_stage() as i32;
@@ -48,20 +41,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_advance_stage(this: 
 /// Cup::set_up_round (`set_up_round`, thiscall(stage, 0), ret 4), the table and the list freed (free `exe::crt_free`, in that order)
 /// and +0x30 = 2. The original's SEH frame covers only the constructor (no destructor).
 /// Original: `BraRegMinasGerais::create_final_stage` (0x434b70, bra_reg_minas_gerais.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x434b70 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::create_final_stage()`, da fase seguinte quando o segundo turno
-/// acaba. Os dois campeões dos turnos (o clube da primeira linha da tabela de cada League_Stage) vão para uma lista
-/// de 2 (malloc 0x944e46 de 8; sem memória: a caixa da linha 0x226 e volta).
-/// - O mesmo clube nos dois turnos: é o campeão sem final. +0x30 = 1, +0x2c = 2 (a temporada acaba com as duas fases),
-///   a situação 5 (+0x37, campeão) na primeira linha da tabela de cada turno e na linha dele da tabela da liga
-///   (+0xb1, as +0x3e linhas). A lista não é liberada (a original a deixa vazar; a cópia também).
-/// - Campeões diferentes: a final, em dois jogos [inferência: ida e volta]. A virtual +0x3c (create_round_table:
-///   thiscall(this, fase 2, &rodadas, &extra, 0), ret 0x10) monta a tabela de rodadas; a fase nova (operator new
-///   0x944cf1 de 0xb2; Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: a liga, 2, a lista, as rodadas, +4, a tabela,
-///   o ano +0x40, 2, 1, o extra, 0x14, 0, 1, 0 e as sementes {0, 1}: o campeão do primeiro turno é a semente 0) vai
-///   para a terceira vaga das fases ([+0xc]+8; sem fase: a caixa da linha 0x250 e volta, sem liberar). Com ela:
-///   Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4), a tabela e a lista liberadas (free 0x9452ca, nessa
-///   ordem) e +0x30 = 2. O quadro SEH da original só cobre o construtor (sem destrutor).
 pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_final_stage(this: usize) {
     let this = League(this);
     let seeds: [u8; 4] = [0, 1, 0, 0];
@@ -133,16 +112,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_final_stage(t
 /// Finance::add_prize_money, thiscall, ret 4) and in the prize money news (`send_prize_money_news` Comp::send_prize_money_news:
 /// thiscall(this, club, 64-bit amount, position 1 or 2, round 0, match 0, type −2), ret 0x1c); then `exe::bra_nat_first_fill_champions_cup_entrants`, as above.
 /// Original: `BraRegMinasGerais::record_season_honours` (0x434ed0, bra_reg_minas_gerais.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x434ed0 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::record_season_honours()` (slot 13), o fim da temporada do Mineiro.
-/// - Com final (+0x30 = 2): o histórico da final (o slot 13, +0x30, da fase [+0xc]+8) e, em salto final, a 0x42bba0
-///   (`bra_nat_first_fill_champions_cup_entrants`, cdecl sem argumentos: quando os doze estaduais terminam, põe os
-///   campeões na Copa dos Campeões); devolve o eax dela.
-/// - Sem final (o mesmo campeão nos dois turnos): o histórico da liga (League::record_season_honours 0x684640,
-///   thiscall, ret 0); os prêmios, 350.000 ao campeão (primeira linha da tabela +0xb1) e 100.000 ao vice (segunda linha),
-///   cada um no saldo (0x5a0590 em [0xae2a38] -> as finanças do clube, thiscall, ret 4; 0x5999a0 Finance::add_prize_money,
-///   thiscall, ret 4) e na notícia do prêmio (0x48e3e0 Comp::send_prize_money_news: thiscall(this, clube, valor em 64
-///   bits, posição 1 ou 2, rodada 0, partida 0, tipo −2), ret 0x1c); depois a 0x42bba0, como acima.
 pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_record_season_honours(this: usize) -> u32 {
     let this = League(this);
     if this.current_stage() == 2 {
@@ -164,9 +133,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_record_season_honour
 }
 
 /// Comp_Stats::find_club_entry(club) on [this+8] (original routine).
-///
-/// [pt] 0x4a4850 `Comp_Stats::find_club_entry(clube)` (thiscall, ret 4): a entrada do clube nas estatísticas da competição
-/// ([this+8]); ordena a tabela pelo clube quando preciso (marca +0x18) e busca. Original (não portada).
 pub(crate) unsafe fn bra_reg_minas_gerais_comp_stats_club_entry(this: usize, club: usize) -> usize {
     exe::comp_stats_find_club_entry(read_u32(this + 8) as usize, club)
 }
@@ -183,11 +149,6 @@ pub(crate) unsafe fn write_progress_codes(e: usize, current: u8, minimum: u8, ma
 /// robin, the lowest under 3 becomes 1 and the highest under 3 becomes 2 [inference: the two halves have tables of
 /// their own and the overall one gives no title]
 /// Original: `BraRegMinasGerais::set_club_progress` (0x4350d0, bra_reg_minas_gerais.cpp, thiscall).
-///
-/// [pt] { 0x4350d0 } (thiscall, ret 0x14, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::set_club_progress(clube, fase, a,
-/// b, c)` (slot 27 do Mineiro, do Paranaense e do Carioca): grava os três códigos de progresso do clube na entrada dele
-/// (+0x73, +0x74, +0x75); na fase de pontos corridos (-1), o segundo abaixo de 3 vira 1 e o terceiro abaixo de 3 vira 2.
-/// Devolve a entrada.
 pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_set_club_progress(this: usize, club: usize, stage: u32, a: u32, b: u32, c: u32) -> usize {
     let e = bra_reg_minas_gerais_comp_stats_club_entry(this, club);
     let (a, mut b, c) = (a as u8, b as u8, c as u8);
@@ -207,8 +168,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_set_club_progress(th
 }
 
 /// MLS regular-season progress code: 1..3 -> ate_3, 4 -> 10, others unchanged.
-///
-/// [pt] O código da MLS na temporada regular: 1..=3 viram `ate_3`, 4 vira 10, os outros ficam.
 pub(crate) fn mls_progress_code(x: u8, ate_3: u8) -> u8 {
     match x {
         1..=3 => ate_3,
@@ -218,9 +177,6 @@ pub(crate) fn mls_progress_code(x: u8, ate_3: u8) -> u8 {
 }
 
 /// Serie C group progress code: 1,2 -> um_dois, 3..7 -> 0x11..0x31 in steps of 8, others unchanged.
-///
-/// [pt] O código da Série C nos grupos (fases até 6): 1 e 2 viram `um_dois`, 3 → 0x11, 4 → 0x19, 5 → 0x21, 6 → 0x29,
-/// 7 → 0x31 (a posição no grupo levada para a escala de 49 lugares [inferência]); os outros ficam.
 pub(crate) fn serie_c_progress_code(x: u8, one_two: u8) -> u8 {
     match x {
         1 | 2 => one_two,
@@ -237,10 +193,6 @@ pub(crate) fn serie_c_progress_code(x: u8, one_two: u8) -> u8 {
 /// and return -1; the final knockout (stage 2, a single round: weight 40 for the loser) gives the champion (fate 5) and
 /// the runner-up (fate -2)
 /// Original: `BraRegMinasGerais::update_staff_records_for_status` (0x434d90, bra_reg_minas_gerais.cpp, thiscall).
-///
-/// [pt] { 0x434d90 } (thiscall, ret 0x18, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::update_staff_records_for_status`
-/// (slot 18 do Mineiro, do Paranaense e do Carioca): os pontos corridos como no Centro-Oeste; os turnos (fases 0 e 1)
-/// devolvem -1; o mata-mata na fase 2 (peso pela escala de uma rodada só: 40). Devolve 0 ou -1.
 pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, game: usize, a6: u32) -> u32 {
     let _ = (a4, a6);
     mineiro_end_of_stage(this, club, status, stage, game, true).0
@@ -250,8 +202,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_update_staff_records
 /// with no saved state, importance 15, two halves and the final (three stages besides the league), the rules, the table
 /// with the state clubs, the fixtures, the order, the statistics and the predicted positions
 /// Original: `BraRegMinasGerais::BraRegMinasGerais` (0x433d50, bra_reg_minas_gerais.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x433d50 } (thiscall, ret 8, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::BraRegMinasGerais(ano, registro)`: o Mineiro (três fases além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_minas_gerais(this: usize, year: u32, record: usize) -> usize {
     bra_reg_goias_construct_state_league(League(this), year, record, &MINEIRO_STATE_LEAGUE, 7, true, "cqt_2 mineiro novo") // cqt2: the discipline and expected positions of the Mineiro
 }
@@ -259,9 +209,6 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_minas_gerais(this: usiz
 /// the Minas Gerais league has 12 clubs: those with it as their reserve division in the database (the field that holds
 /// the state or regional league), in database order; the table only counts when full; no TV money nor prize fund
 /// Original: `BraRegMinasGerais::create_table` (0x434810, bra_reg_minas_gerais.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x434810 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::create_table()`: o Mineiro tem 12 clubes (divisão reserva +0x60 = [0x9cf9d4]).
-/// Fonte 0x98aed0, linha 0x169.
 pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_table(this: usize) -> u32 {
     fill_state_league_table(League(this), 0xc, 0x98aed0, 0x169, KEY_CLUB_COMP_BRAZILIAN_MINAS_GERAIS_STATE_CHAMPIONSHI, 0, "cql_9 mineiro cheio")
 }
@@ -271,9 +218,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_table(this: u
 /// tie-breakers as the league, and one top place, the half winner's); the first half goes to stage 0 and the second
 /// (from round 12, by the match +0x34) to stage 1; each half winner (the top of the stage table) goes to the final
 /// Original: `BraRegMinasGerais::create_half_season_stage` (0x4351b0, bra_reg_minas_gerais.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x4351b0 } (thiscall, ret 4, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::create_half_season_stage(k)`, um turno
-/// do Mineiro (a caixa da linha 0x3d5).
 pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_half_season_stage(this: usize, k: u32) {
     create_half_season_stage(League(this), k, 0x98aed0, 0x3d5, 0xb, 0xc2, "cqr_1 turno do mineiro") // cqr1: the points per win in the Mineiro
 }
@@ -283,8 +227,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_create_half_season_s
 /// the rules, the table with the twelve state clubs, the fixtures and the order; then the predicted positions and the
 /// referee renewal. The halves are only built at each one's first game (cqr_1)
 /// Original: `BraRegMinasGerais::start_new_season` (0x434910, bra_reg_minas_gerais.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x434910 } (thiscall, ret 0, bra_reg_minas_gerais.cpp): `BraRegMinasGerais::start_new_season()`, a virada do Mineiro (a tabela: 0x434810).
 pub(crate) unsafe extern "thiscall" fn bra_reg_minas_gerais_start_new_season(this: usize) -> u32 {
     start_new_season_two_halves(League(this), 0x434810, 0x98aed0, 1, "cqr_2 virada do mineiro") // cqr2: the next year of the Mineiro
 }

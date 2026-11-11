@@ -5,10 +5,6 @@ use super::*;
 /// It holds the date (day, month 0..11, years to add to the league year +0x40, the weekday the date is moved to), the
 /// code of byte +4 ([inference] the half of the season) and the TV slots in order (weekday, half, how many matches; the
 /// list ends with −1).
-///
-/// [pt] Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
-/// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
-/// quantos jogos; a lista termina em −1).
 pub(crate) type SpaFirstLeagueRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
 /// Sets the dates and match slots of rounds `primeira`.. of table `t`, in the original routine's order.
@@ -16,10 +12,6 @@ pub(crate) type SpaFirstLeagueRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8
 /// For each round, the date (`league_round_set_date`: push 0; push year; push code; push week; push years; push month; push day; push
 /// i; push t; add esp -> cdecl: value 0) and the slots (`store_round_match`: push 0; push c; push b; push a; push j; push i; push
 /// t; add esp -> cdecl, value 0).
-///
-/// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
-/// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
-/// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
 pub(crate) unsafe fn spa_first_write_league_rounds(t: usize, year: u32, first: i32, table: &[SpaFirstLeagueRound]) {
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in table.iter().enumerate() {
         let i = first + k as i32;
@@ -37,12 +29,6 @@ pub(crate) unsafe fn spa_first_write_league_rounds(t: usize, year: u32, first: i
 /// word; a round of `casos` moved to the weekday): k = (round day − date day + 1, in 16 bits) − `ajuste`; from 0 to 6
 /// it picks the Christmas rounds; outside that, the error box for line `linha` and those of the default case (the
 /// eighth); then the closing rounds.
-///
-/// [pt] A fase principal com as rodadas do Natal: as do começo em sequência; depois a data de 1º de dezembro do ano
-/// (Date::Date 0x549f70: push −1; push ano; push 0xb; push 1; lea ecx, local -> thiscall, ret 0x10) e o caso pelo dia
-/// da rodada de referência (+0, palavra; uma rodada de `casos` levada ao dia da semana): k = (dia da rodada − dia da
-/// data + 1, em 16 bits) − `ajuste`; de 0 a 6 escolhe as rodadas do Natal; fora disso a caixa da linha `linha` e as do
-/// caso padrão (o oitavo); depois as do fim.
 pub(crate) struct SpaFirstChristmasSchedule {
     pub(crate) comeco: &'static [SpaFirstLeagueRound],
     pub(crate) reference: usize,
@@ -77,10 +63,6 @@ pub(crate) unsafe fn write_rounds_winter_break(t: usize, year: u32, n: &SpaFirst
 /// The outputs and the written bytes of both tables must be equal (at stage −1 the league rounds,
 /// `written_league_round_bytes`; at the others the cup rounds, `eng_cc_cup_written_round_bytes`); the copy's table is
 /// freed (`exe::crt_free`, cdecl).
-///
-/// [pt] Lado a lado em todas as fases: a original com as saídas de quem chama, a cópia com saídas próprias, a partir do
-/// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (na fase −1 as rodadas de liga,
-/// `written_league_round_bytes`; nas outras as de copa, `eng_cc_cup_written_round_bytes`); a tabela da cópia é solta (0x9452ca, cdecl).
 pub(crate) unsafe fn compare_league_round_table(name: &str, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32,
                        original: impl FnOnce() -> usize, copy: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let (mut r2, mut e2, mut l2) = (0i16, 0i16, 0i32);
@@ -284,10 +266,6 @@ pub(crate) const PRIMERA_ODD_YEAR_CHRISTMAS: SpaFirstChristmasSchedule = SpaFirs
 /// 6 June; in each, one fixed-date Christmas round (between 20 and 30 December, or 3 January) chosen by the day the
 /// mid-December round falls on
 /// Original: `SpaFirst::create_schedule` (0x84e450, spa_first.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x84e450 } (thiscall, ret 0x10, spa_first.cpp, 6.107 bytes, método +0x3c): `SpaFirst::create_schedule(fase,
-/// &rodadas, &extra, &é_liga)`: só a fase −1, 38 rodadas, a tabela pela paridade do ano +0x40 (o resto da divisão com
-/// sinal: `movsx; and 0x80000001; jns`), cada uma com a rodada do Natal; as outras devolvem 0. Fonte 0xa82944.
 pub(crate) unsafe extern "thiscall" fn spa_first_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let this = League(this);
     match stage as u8 {
@@ -317,16 +295,10 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_schedule(this: usize, st
 
 /// In the rehearsal (the comparer) the copy writes the rules and does not call virtual +0x3c (the round table, which
 /// allocates).
-///
-/// [pt] No ensaio (o comparador) a cópia grava as regras e não chama a virtual +0x3c (a tabela de rodadas, que aloca).
 pub(crate) static SPA_FIRST_RULES_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// Writes the (offset, size, value) rules into the league and builds the main stage round table via virtual +0x3c into
 /// +0xba (skipped in rehearsal); returns 1.
-///
-/// [pt] Grava as regras na liga (deslocamento, tamanho 1/2/4, valor), na ordem da lista, e monta a tabela de rodadas da
-/// fase principal: a virtual +0x3c (create_schedule: thiscall(liga, −1, &+0xa9, &+0x3a, 0), ret 0x10) com o
-/// resultado em +0xba. Devolve 1.
 pub(crate) unsafe fn spa_first_apply_league_rules(this: League, written: &[(usize, u8, u32)]) -> u32 {
     for &(d, t, v) in written {
         match t {
@@ -349,11 +321,6 @@ pub(crate) unsafe fn spa_first_apply_league_rules(this: League, written: &[(usiz
 /// (+0xc5..+0xc7: head-to-head first [inference from code 4], then goal difference and goals scored), no relegation
 /// play-off (+0xc0 = 0), rule bits +0xd9 = 0x43 (champion, top promotion places and the fixed round order), 7
 /// substitutes (+0x49) and 3 substitutions (+0x4a).
-///
-/// [pt] As regras comuns às três: 1 ponto pelo empate (+0xc3), categoria 2 nas partidas (+0xc4), clubes nacionais (+0x42
-/// = 1), os desempates 4, 1 e 2 (+0xc5..+0xc7: o confronto direto primeiro [inferência pelo código 4], depois o
-/// saldo e os gols pró), nenhum play-off de permanência (+0xc0 = 0), os bits de regra +0xd9 = 0x43 (campeão, vagas de
-/// cima de acesso e a ordem fixa das rodadas), 7 reservas (+0x49) e 3 substituições (+0x4a).
 pub(crate) fn spanish_common_rules() -> Vec<(usize, u8, u32)> {
     vec![(0xc3, 1, 1), (0xc4, 1, 2), (0x42, 1, 1), (0xc5, 1, 4), (0xc6, 1, 1), (0xc7, 1, 2), (0xc0, 1, 0), (0xd9, 2, 0x43), (0x49, 1, 7), (0x4a, 1, 3)]
 }
@@ -362,11 +329,6 @@ pub(crate) fn spanish_common_rules() -> Vec<(usize, u8, u32)> {
 /// down to the Segunda; tie-breaks 4, 1, 2 and 3 [codes; inference: head to head, goal difference, goals for, wins]; 7
 /// substitutes and 3 substitutions; fixed round order
 /// Original: `SpaFirst::set_up_rules` (0x84fdf0, spa_first.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x84fdf0 } (thiscall, ret 0, spa_first.cpp): `SpaFirst::set_up_rules()`. A Primera: +0xa9 = 38 (as rodadas;
-/// a virtual reescreve), as comuns, 2 turnos, 3 pontos, o 4º desempate 3 (+0xc8), +0xab e +0xdb = 0, ninguém sobe
-/// (+0xbe = +0xbf = 0), 3 caem (+0xc1), nenhuma liga acima (+0x1c = −1), a Segunda abaixo (+0x20 = [0x9cf628]) e
-/// +0x52 = 2 [sem nome].
 pub(crate) unsafe extern "thiscall" fn spa_first_set_up_rules(this: usize) -> u32 {
     let this = League(this);
     covered!("cqk_4 primera rules");
@@ -408,10 +370,6 @@ pub(crate) unsafe fn lower_division_rules() -> Vec<(usize, u8, u32)> {
 /// The original routine runs fully; the range `+0x1c`..`+0xec` is restored and the copy writes the rules without
 /// virtual `+0x3c`; the listed fields must equal the original's (the Primera's `+0xa9`, which the virtual rewrites, is
 /// left out), and the return value 1; at the end the original's range is kept.
-///
-/// [pt] O comparador das três (ensaio, como o da cqi_4): a original roda inteira; a faixa +0x1c..+0xec volta e a cópia
-/// grava as regras sem a virtual +0x3c; os campos da lista saem iguais aos da original (o +0xa9 da Primera, que a
-/// virtual reescreve, fica de fora), e a devolução 1; no fim fica a faixa da original.
 pub(crate) unsafe fn spa_first_compare_league_rules(name: &str, this: League, written: Vec<(usize, u8, u32)>, original: impl FnOnce() -> u32, copy: impl FnOnce() -> u32) -> u32 {
     let band = [(this.addr() + league::UPPER_DIVISION_ID, 0xd0)];
     let before = crate::comparison::MemorySnapshot::read(&band);
@@ -446,14 +404,6 @@ pub(crate) unsafe fn spa_first_compare_league_rules(name: &str, this: League, wr
 /// filled: 0). Full: the prize fund (+0x28 = League::calc_prize_fund `calc_prize_fund` with the share of 250,000), +0xe1 = 1,
 /// the TV money of 5,000,000 to each club (`pay_tv_rights`: thiscall(league, value, 0), ret 8) and 1.
 /// Original: `SpaFirst::create_table` (0x84fc70, spa_first.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x84fc70 } (thiscall, ret 0, spa_first.cpp): `SpaFirst::create_table()`. +0x3e = 20 e a tabela (malloc 0x944e46
-/// de 0x49c; sem memória: a caixa do fonte 0xa82844, linha 0x250, e 0). Antes de encher, os clubes da divisão de
-/// baixo espanhola ([0x9cf6b0]) passam à divisão de baixo genérica (+0x57 = o registro de [0x9cf764]). Depois os
-/// clubes da Primera ([0x9cf624]) na ordem do banco, cada um na linha seguinte (League::init_table_row 0x687430:
-/// thiscall(liga, linha, clube, 0, 0), ret 0x10), até encher (sem encher: 0). Cheia: o fundo de prêmios (+0x28 =
-/// League::calc_prize_fund 0x682f70 pela cota de 250.000), +0xe1 = 1, a TV de 5.000.000 a cada clube (0x683010:
-/// thiscall(liga, valor, 0), ret 8) e 1.
 pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u32 {
     let this = League(this);
     this.set_club_count(0x14);
@@ -512,12 +462,6 @@ pub(crate) unsafe extern "thiscall" fn spa_first_create_table(this: usize) -> u3
 /// 19): the 17 to 18 band of the Primera does not count as a band of its own [inference: positions 17 to 18 join the
 /// neighbouring band above for the best and the one below for the worst].
 /// Original: `SpaFirst::set_club_progress` (0x850880, spa_first.cpp, thiscall, ret 0x14).
-///
-/// [pt] { 0x850880 } (thiscall, ret 0x14, spa_first.cpp): `SpaFirst::set_club_progress(clube, fase, atual, melhor, pior)`,
-/// a virtual +0x68 (da 0x684cd0 a cada linha da tabela): na entrada do clube nas estatísticas (Comp_Stats::
-/// find_club_entry 0x4a4850: thiscall(+8, clube), ret 4) grava a posição atual (+0x73), a melhor possível (+0x74;
-/// 17 e 18 viram 16) e a pior (+0x75; 17 e 18 viram 19): a faixa de 17 a 18 da Primera não conta como faixa própria
-/// [inferência: as posições de 17 a 18 juntam-se à vizinha de cima na melhor e à de baixo na pior].
 pub(crate) unsafe extern "thiscall" fn spa_first_set_club_progress(this: usize, club: usize, _stage: u32, current: u32, best: u32, worst: u32) {
     let e = CompStatsClub(exe::comp_stats_find_club_entry(read_usize(this + 8), club));
     let m = match best as u8 {
@@ -536,9 +480,6 @@ pub(crate) unsafe extern "thiscall" fn spa_first_set_club_progress(this: usize, 
 /// the Primera: discipline 0x1a, only the league; finally, if the nation lacks bit 4 of +0x11c [inference: the lower
 /// division playable], it creates the Spanish lower division (the B teams and the best of Segunda B) at +0xee
 /// Original: `SpaFirst::SpaFirst` (0x84e130, spa_first.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x84e130 } (thiscall, ret 8, spa_first.cpp, 606 bytes): `SpaFirst::SpaFirst(ano, registro)`: a Primera,
-/// disciplina 0x1a, só a liga, e a divisão de baixo espanhola em +0xee.
 pub(crate) unsafe extern "thiscall" fn construct_spa_first(this: usize, year: u32, record: usize) -> usize {
     construct_division_league(League(this), year, record, &SPAIN_PRIMERA_DIVISION)
 }

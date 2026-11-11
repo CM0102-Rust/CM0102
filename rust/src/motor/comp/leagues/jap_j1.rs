@@ -3,10 +3,6 @@ use super::*;
 /// The J1 has two stages (0 and 1, each a round-robin league) and the final (stage 2): the next stage moves the current
 /// stage on and, at the end of the second stage, builds the final; past the last stage it is an error (the box)
 /// Original: `JapJ1::advance_stage` (0x6639c0, jap_j1.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x6639c0 } (thiscall, ret 0, jap_j1.cpp): `JapJ1::advance_stage()`, a fase seguinte da J1 (dois turnos, as fases 0
-/// e 1, e a final, a fase 2). Na última fase (+0x30 ≥ +0x2c − 1, com sinal): a caixa da linha 0x223 e nada mais. Senão
-/// +0x30 sobe um e, ao chegar a 2, monta a final (0x663a50, call direto com o ecx da liga).
 pub(crate) unsafe extern "thiscall" fn jap_j1_advance_stage(this: usize) {
     let this = League(this);
     let stage = this.current_stage() as i32;
@@ -33,16 +29,6 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_advance_stage(this: usize) {
 /// the original); with no stage, the box of line `0x25c`; with it, `+0x30` = 2. The original's SEH frame only covers
 /// the constructor (no destructor).
 /// Original: `JapJ1::create_championship_final_stage` (0x663a50, jap_j1.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x663a50 } (thiscall, ret 0, jap_j1.cpp): `JapJ1::create_championship_final_stage()`, a final da J1 entre os
-/// campeões dos dois turnos (o clube da primeira linha da tabela de cada um), sempre (sem conferir se é o mesmo clube):
-/// a lista de 2 (malloc 0x944e46 de 8; sem memória: a caixa da linha 0x245 e volta); a virtual +0x3c
-/// (create_round_table: thiscall(this, fase 2, &rodadas, &extra, 0), ret 0x10); a fase nova (operator new 0x944cf1 de
-/// 0xb2; Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: a liga, 2, a lista, as rodadas, +4, a tabela, o ano +0x40,
-/// 2, 1, o extra, 0x14, 0, 0, 0 e nenhuma semente) na terceira vaga das fases ([+0xc]+8); a lista e a tabela liberadas
-/// (free 0x9452ca, nessa ordem); Cup::set_up_round (0x51c800, thiscall(fase, 0), ret 4) chamada com a fase da terceira
-/// vaga mesmo nula (como na original); sem fase, a caixa da linha 0x25c; com ela, +0x30 = 2. O quadro SEH da original
-/// só cobre o construtor (sem destrutor).
 pub(crate) unsafe extern "thiscall" fn create_championship_final_stage(this: usize) {
     let this = League(this);
     let list = exe::crt_malloc(8);
@@ -94,18 +80,6 @@ pub(crate) unsafe extern "thiscall" fn create_championship_final_stage(this: usi
 /// the referee renewal (OfficialsManager::renew_officials `0x79cee0`, thiscall(`[0xb74340]`, `+4`), ret 4), whose eax
 /// it returns.
 /// Original: `JapJ1::start_new_season` (0x6636d0, jap_j1.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x6636d0 } (thiscall, ret 0, jap_j1.cpp): `JapJ1::start_new_season()`, a virada do futebol japonês (a J1 comanda):
-/// +0x4c = 0; o acesso e o rebaixamento (a virtual +0xb0, thiscall(this, 1), ret 4); a tabela liberada
-/// (League::free_table 0x687970, thiscall(this, 0), ret 4); a lista de +0xba liberada e zerada; com estatísticas (+8),
-/// Comp_Stats::archive_season_and_reset (0x4a1c50, thiscall(+8, 1), ret 4); com a fase atual ≥ 0, as fases 0..=+0x30
-/// que existem destruídas (a virtual 0 com 1); o vetor das fases liberado e um novo de 3 (malloc 0x944e46 de 0xc,
-/// +0x2c = 3; sem memória: a caixa da linha 0x1b4, a limpeza 0x5cc7d0, 0x5a8f60 e exit(−1) 0x945934, todas cdecl); o
-/// ano (+0x40) sobe um e +0x30 = −1; então, cada um com a sua caixa se devolver 0: as regras (virtual +0x8c, 0x1be), a
-/// tabela (0x6634e0, 0x1c5), os jogos (League::create_fixtures 0x6835c0, 0x1cb) e a ordem (League::sort_table 0x6827d0,
-/// thiscall(this, 0), 0x1d2); depois a virada da J2 (a virtual +8 da competição de id [0x9cf768]), as posições previstas
-/// (virtual +0x5c), as expectativas das diretorias (League::set_club_season_expectations 0x68aa80) e a renovação dos
-/// árbitros (OfficialsManager::renew_officials 0x79cee0, thiscall([0xb74340], +4), ret 4), cujo eax ela devolve.
 pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u32 {
     let this = League(this);
     let virtual_ = |c: usize, desl: usize| -> u32 {
@@ -177,17 +151,12 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_start_new_season(this: usize) -> u
 }
 
 /// True if the club's division (+0x57) is non-null and its id equals the competition id in global g.
-///
-/// [pt] O clube é da divisão do global `g`: a divisão do clube (+0x57) não é nula e o id do registro (+0) é o do global.
 pub(crate) unsafe fn is_in_division(club: Club, g: usize) -> bool {
     let comp = club.division().addr();
     comp != 0 && read_usize(comp) == read_usize(g)
 }
 
 /// Sets +0x3e = n and allocates the league table (n x 0x3b) at +0xb1; error box on out of memory; returns the table.
-///
-/// [pt] +0x3e = `n` e a tabela (malloc 0x944e46 de n × 0x3b, em +0xb1; sem memória: a caixa do fonte `arquivo` na linha
-/// `linha`). Devolve a tabela (0 sem memória).
 pub(crate) unsafe fn alloc_league_table(this: League, n: i16, file: usize, row: u32) -> usize {
     this.set_club_count(n);
     let t = exe::crt_malloc((n as i32 as u32).wrapping_mul(0x3b));
@@ -203,20 +172,12 @@ pub(crate) unsafe fn alloc_league_table(this: League, n: i16, file: usize, row: 
 ///
 /// `girar` is 0 (the original: row k); it exists only for each league's mutations. Simplification: the original routine
 /// pushes the row in eax with spare upper bits; `init_table_row` only reads the byte.
-///
-/// [pt] League::init_table_row (0x687430: thiscall(liga, linha, clube, 0, 0), ret 0x10). `girar` é 0 (o original: a linha
-/// k); existe só para as mutações de cada liga. simplification: a original empurra a linha no eax com bits de cima de sobra;
-/// a 0x687430 só lê o byte.
 pub(crate) unsafe fn jap_j1_init_table_row(this: League, k: u8, n: i16, girar: u8, club: usize) {
     exe::league_init_table_row(this, (k as u32 + girar as u32) % n as u32, club, 0, 0);
 }
 
 /// Japanese loop: every club of the division fills the next row while rows remain; the rest lose their division (+0x57
 /// = 0); returns 1 if full.
-///
-/// [pt] O laço do Japão: percorre todos os clubes de [0xae23b4] (0x245 bytes, [0xae235c] deles); cada clube da divisão do
-/// global `g`, na ordem do banco, entra na linha seguinte enquanto houver linha; os que sobram perdem a divisão
-/// (+0x57 = 0). Devolve 1 se a tabela encheu.
 pub(crate) unsafe fn fill_japanese_table(this: League, g: usize, girar: u8, ramo: &'static str) -> u32 {
     let mut k: u8 = 0;
     let mut i: i16 = 0;
@@ -248,12 +209,6 @@ pub(crate) unsafe fn fill_japanese_table(this: League, g: usize, girar: u8, ramo
 /// `+0x28`, `+0xe1` = 1, the TV money of 3,000,000 to each club (League::pay_tv_rights `0x683010`: push 0; push
 /// `0x2dc6c0`; mov ecx, edi -> thiscall, ret 8; it sends the TV news) and returns 1. Source `0x9eabc8`, line `0x148`.
 /// Original: `JapJ1::create_table` (0x6634e0, jap_j1.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x6634e0 } (thiscall, ret 0, jap_j1.cpp): `JapJ1::create_table()`: a J1 tem 16 clubes (+0x57 = [0x9cf65c]; os que
-/// sobram perdem a divisão); cheia, o fundo de prêmios com a cota 100.000 (League::calc_prize_fund 0x682f70: push
-/// 0x186a0; mov ecx, edi -> thiscall, ret 4) em +0x28, +0xe1 = 1, a TV 3.000.000 a cada clube (League::pay_tv_rights
-/// 0x683010: push 0; push 0x2dc6c0; mov ecx, edi -> thiscall, ret 8; manda a notícia da TV) e 1. Fonte 0x9eabc8, linha
-/// 0x148.
 pub(crate) unsafe extern "thiscall" fn jap_j1_create_table(this: usize) -> u32 {
     let this = League(this);
     if alloc_league_table(this, 0x10, 0x9eabc8, 0x148) == 0 {
@@ -276,11 +231,6 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_create_table(this: usize) -> u32 {
 /// the return value = 1 if the plan filled (otherwise 0), the table rows (+0 the club, 0x3b bytes) with the first `n`
 /// of the plan, in order; in Japan (`limpar`), the leftovers of the plan with their division zeroed; in a full J1,
 /// +0xe1 = 1 and +0x28 = the quota fund (prize fund).
-///
-/// [pt] O comparador dos três: a original aloca a tabela (e a J1 paga a TV com notícia): só ela. O plano, feito antes: os
-/// clubes da divisão na ordem do banco (todos). Depois: +0x3e = `n`, a devolução = 1 se o plano encheu (senão 0), as
-/// linhas da tabela (+0 o clube, 0x3b bytes) com os primeiros `n` do plano, na ordem; no Japão (`limpar`), os que
-/// sobram do plano com a divisão zerada; na J1 cheia, +0xe1 = 1 e +0x28 = o fundo da cota.
 pub(crate) unsafe fn compare_japanese_table(name: &str, this: League, n: i16, g: usize, clear: bool, quota: i32, original: impl FnOnce() -> u32) -> u32 {
     let mut plan: Vec<usize> = Vec::new();
     let mut i: i32 = 0;
@@ -317,8 +267,6 @@ pub(crate) unsafe fn compare_japanese_table(name: &str, this: League, n: i16, g:
 /// above; 5 bench substitutes and 3 substitutions; fixed squad numbers; the word +0xab = 0x82 copied to each match.
 /// Then the schedule
 /// Original: `JapJ1::set_up_rules` (0x663620, jap_j1.cpp, thiscall).
-///
-/// [pt] { 0x663620 } (thiscall, jap_j1.cpp): `JapJ1::set_up_rules`, as regras da J1 e o calendário; devolve 1.
 pub(crate) unsafe extern "thiscall" fn jap_j1_set_up_rules(this: usize) -> u32 {
     j1_rules(this);
     covered!("cqj_7 j1 rules");
@@ -331,9 +279,6 @@ pub(crate) unsafe extern "thiscall" fn jap_j1_set_up_rules(this: usize) -> u32 {
 /// one top place, the half winner's); the first half goes to stage 0 and the second (from round 16, by the match +0x34)
 /// to stage 1; each half winner (the top of the stage table) goes to the final
 /// Original: `JapJ1::create_half_season_stage` (0x663c20, jap_j1.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x663c20 } (thiscall, ret 4, jap_j1.cpp): `JapJ1::create_half_season_stage(k)`, um turno da J1 (a caixa da linha
-/// 0x278; o 20º argumento do construtor é 0xf).
 pub(crate) unsafe extern "thiscall" fn jap_j1_create_half_season_stage(this: usize, k: u32) {
     create_half_season_stage(League(this), k, 0x9eabc8, 0x278, 0xf, 0xc2, "cqr_1 turno da j1") // cqr1: the points per win in the J1
 }

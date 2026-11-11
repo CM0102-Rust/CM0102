@@ -8,10 +8,6 @@ use super::*;
 /// a round from 10 thousand to 400 thousand, and the final 2 million to the winner and 1 million to the runner-up;
 /// category 4 up to the 5th round and 6 from the quarter-finals
 /// Original: `EngFaCup::create_round_table` (0x56f320, eng_fa_cup.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x56f320 } (thiscall, ret 0x10, eng_fa_cup.cpp; a virtual +0x3c da Copa da Inglaterra): `EngFaCup::
-/// create_round_table(fase, &rodadas, &extra, &saida)`: na fase −1, as 9 rodadas (`fa_cup_rounds`);
-/// a caixa da linha 0xb6 sem memória.
 pub(crate) unsafe extern "thiscall" fn eng_fa_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let this = Cup(this);
     let t = fa_cup_rounds(read_i8(this.addr() + eng_fa_cup::EXEMPTION_COUNT) as i16, read_u8(this.addr() + eng_fa_cup::FIFTH_ROUND_ENTRY), this.team_count());
@@ -31,14 +27,6 @@ pub(crate) unsafe extern "thiscall" fn eng_fa_cup_create_round_table(this: usize
 /// box, lines 0x3d6, 0x3dd, 0x3e4, and 1), the predicted order (virtual +0x5c) and the draw of the 1st round (`set_up_round`:
 /// push 0; mov ecx, cup -> thiscall, ret 4). Always, at the end, the cup update.
 /// Original: `EngFaCup::update_for_date` (0x570550, eng_fa_cup.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x570550 } (thiscall, ret 8, eng_fa_cup.cpp; a virtual +0x14 da Copa da Inglaterra; quadro SEH pela notícia do
-/// caminho de 1999, sem destrutor no caminho normal): `hoje.update_for_date(fase)`. Com +0x45 = 0 e a fase
-/// diferente de 0: em Date(1, 9, 1999) (o mês 9 é outubro) com +0xb2 = 0, a pergunta ao técnico humano sobre a entrada na
-/// 5ª rodada (só em 1999: a original pelo trampolim); em Date(3, 9, ano de hoje) (3 de outubro), libera as tabelas, +0x45
-/// = 1, os inscritos (0x56fab0, thiscall), as rodadas (virtual +0x8c), a árvore (virtual +0x94) — uma devolução negativa
-/// dá a caixa (linhas 0x3d6, 0x3dd, 0x3e4) e 1 —, a ordem prevista (virtual +0x5c) e o sorteio da 1ª rodada (0x51c800:
-/// push 0; mov ecx, copa -> thiscall, ret 4). Sempre, no fim, a atualização da copa.
 pub(crate) unsafe extern "thiscall" fn eng_fa_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
     let this = Cup(this);
     if this.season_set_up() == 0 && stage != 0 {

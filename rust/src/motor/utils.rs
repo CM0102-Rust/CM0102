@@ -7,11 +7,6 @@ use super::*;
 /// `exe::crt_remove`) its files that match the pattern, in groups of 100 names (the search is closed before deleting and redone
 /// while the group fills up).
 /// Original: `utils_clear_temp_folder` (0x90cd50, utils.cpp, cdecl).
-///
-/// [pt] { 0x90cd50 } (cdecl, utils.cpp): `utils_clear_temp_folder(padrao)`: monta em [0xde279c] a pasta
-/// temporária (a variável `CM3_TEMP` pela 0x90bc50 + "\", se houver, e o texto de [0xad9c64], copiado
-/// com limite pela 0x90cf20) e apaga (`remove` 0x94643a) os arquivos dela que casam com o padrão,
-/// em grupos de 100 nomes (a busca é fechada antes de apagar e refeita enquanto o grupo enche).
 pub(crate) unsafe extern "C" fn utils_clear_temp_folder(default: usize) {
     covered!("save clear temporaries");
     let global = 0xde279c as *mut u8;

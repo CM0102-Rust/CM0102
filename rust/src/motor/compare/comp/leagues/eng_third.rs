@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/eng_third.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/eng_third.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `eng_third_create_play_off_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_eng_third_create_play_off_stage(this: usize) {

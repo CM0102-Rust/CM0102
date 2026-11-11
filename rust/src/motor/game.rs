@@ -1,8 +1,6 @@
 use super::*;
 
 /// The nation's coefficient history: five past years (+0xb0..+0xd0) and the current year (+0xd8).
-///
-/// [pt] A história do coeficiente da nação: +0xb0, +0xb8, +0xc0, +0xc8, +0xd0 (cinco anos) e +0xd8 (o ano corrente).
 pub(crate) unsafe fn nation_coefficient_history(na: Nation) -> [f64; 6] {
     let mut h = [0f64; 6];
     for (k, x) in h.iter_mut().enumerate() {
@@ -12,17 +10,12 @@ pub(crate) unsafe fn nation_coefficient_history(na: Nation) -> [f64; 6] {
 }
 
 /// Month of the game date (Date get_month on 0xae2c90).
-///
-/// [pt] O mês da data do jogo (0x54cfb0 sobre 0xae2c90, o al com sinal).
 pub(crate) unsafe fn current_month() -> i32 {
     (exe::date_get_month(G_CURRENT_DATE) as i8) as i32
 }
 
 /// December step: adds the reputation bonus if the mark is below 12, shifts the coefficient history one year and zeroes
 /// the current year and the mark.
-///
-/// [pt] Dezembro na história `h` da nação `na` (`marca` = +0x121): com marca < 12, o ano corrente ganha
-/// reputação (+0x8e) × 0,05 × (12 − marca) × 3; a história anda um ano, o ano corrente e a marca zeram.
 pub(crate) unsafe fn roll_coefficient_year(na: Nation, h: &mut [f64; 6], mark: &mut u8) {
     covered!("cpt_6 December");
     if (*mark as i8) < 0xc {
@@ -42,12 +35,6 @@ pub(crate) unsafe fn roll_coefficient_year(na: Nation, h: &mut [f64; 6], mark: &
 /// history sum in an array that is sorted and freed; on the December day, the current year gets reputation × 0.05 × (12
 /// − mark) × 3 (mark < 12), the history moves one year and the current year and the mark are cleared
 /// Original: `game_update_nation_coefficients` (0x5d5f20, game.cpp, cdecl).
-///
-/// [pt] { 0x5d5f20 } (cdecl, game.cpp): `game_update_nation_coefficients()`, todo dia pelo laço do dia do jogo (0x5cda10).
-/// Na primeira vez ([0x9cd218]), a história de cada nação (+0xb0..+0xd0) recebe o coeficiente de +0xa8. No dia do
-/// mês da tabela 0x9cd200 (palavra pelo mês 0x54cfb0): um vetor (malloc de 12 bytes por nação: a nação e a soma
-/// 0,6·c0 + 0,4·b8 + 0,2·b0 + 0,8·c8 + d8 + d0), ordenado (qsort 0x945333 com 0x4afba0) e solto; no dia de dezembro
-/// ([0x9cd216]) cada nação passa também pelo bônus e pelo deslocamento da história (`roll_coefficient_year`).
 pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
     if read_u8(G_NATION_COEFFICIENT_HISTORY_NEEDS_INIT) != 0 {
         if (read_usize(G_NATION_COUNT) as i32) > 0 {
@@ -114,10 +101,6 @@ pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
 /// from the game's day loop (0x5cda97, with the whole date: the day is the low word). The original returns only `al`
 /// (`ah` keeps the day's high byte).
 /// Original: `is_player_regen_day` (0x5d6250, game.cpp, cdecl).
-///
-/// [pt] { 0x5d6250 } (cdecl, game.cpp): `is_player_regen_day(dia)`: 1 nos dias 0, 80, 173 e 250 do ano (a busca das
-/// aposentadorias), senão 0. Pelo laço do dia do jogo (0x5cda97, com a data inteira: o dia é a palavra baixa).
-/// A original só devolve o al (o ah fica com o byte alto do dia).
 pub(crate) unsafe extern "C" fn is_player_regen_day(day: u32) -> u32 {
     let d = day as u16;
     (d == 0 || d == 0x50 || d == 0xad || d == 0xfa) as u32
@@ -129,10 +112,6 @@ pub(crate) unsafe extern "C" fn is_player_regen_day(day: u32) -> u32 {
 /// the original's `ax`: `min` or `max` extended, or the high byte of `max` extended with the sum in `al` (the 26
 /// callers, in the players' daily pass, write only `al`).
 /// Original: `clamp_char_sum` (0x5d61d0, game.cpp, cdecl).
-///
-/// [pt] { 0x5d61d0 } (cdecl, game.cpp): `clamp_char_sum(a, b, min, max)`: a soma dos dois bytes com sinal (16 bits),
-/// presa entre os outros dois. Devolve o ax da original: `min` ou `max` estendidos, ou o byte alto do `max`
-/// estendido com a soma no al (os 26 chamadores, no diário dos jogadores, só gravam o al).
 pub(crate) unsafe extern "C" fn clamp_char_sum(a: u32, b: u32, min: u32, max: u32) -> u32 {
     let s = (a as u8 as i8 as i16).wrapping_add(b as u8 as i8 as i16);
     let lo = min as u8 as i8 as i16;
@@ -147,8 +126,6 @@ pub(crate) unsafe extern "C" fn clamp_char_sum(a: u32, b: u32, min: u32, max: u3
 }
 
 /// get_contract for a person, stored in G_CONTRACT_LOOKUP_RESULT.
-///
-/// [pt] O contrato da pessoa (0x4cf5a0), guardado em [0xae1080] como a original faz a cada chamada.
 pub(crate) unsafe fn game_get_contract_and_store(p: usize) -> usize {
     let c = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
     write_usize(G_CONTRACT_LOOKUP_RESULT, c);
@@ -156,8 +133,6 @@ pub(crate) unsafe fn game_get_contract_and_store(p: usize) -> usize {
 }
 
 /// Club of a contract (by id at +4), or 0.
-///
-/// [pt] O clube do contrato (pelo id em +4), ou 0 sem contrato.
 pub(crate) unsafe fn game_club_of_contract(c: usize) -> Club {
     if c == 0 {
         Club(0)
@@ -167,15 +142,11 @@ pub(crate) unsafe fn game_club_of_contract(c: usize) -> Club {
 }
 
 /// CONTRACT_MANAGER get_contract_for_club (`exe::contract_manager_get_contract_for_club`).
-///
-/// [pt] O vínculo da pessoa com o clube (0x4cf5f0).
 pub(crate) unsafe fn game_contract_for_club(p: usize, club: Club) -> Contract {
     Contract(exe::contract_manager_get_contract_for_club(read_usize(G_CONTRACT_MANAGER), p, club))
 }
 
 /// staff_is_disliked_by (`exe::staff_is_disliked_by`): does `pessoa` dislike `alvo`.
-///
-/// [pt] `pessoa` não gosta de `alvo` (0x547840)?
 pub(crate) unsafe fn is_disliked_by(target: usize, person: Staff) -> u32 {
     exe::staff_is_disliked_by(target, person)
 }
@@ -187,11 +158,6 @@ pub(crate) unsafe fn is_disliked_by(target: usize, person: Staff) -> u32 {
 /// gives zero (in practice the person with id 0, every 14 days), the complaint (`exe::news_post_dressing_room_unrest`) against the manager (+0xcf,
 /// type 0), the assistant (+0xd3, 1) or someone else (2) and the mark on link `k` (`exe::staff_contract_apply_event_flags` with 0x2000, 0x1000 or
 /// 0x800).
-///
-/// [pt] O fim comum do atrito (0x5d6d10 e 0x5d7190): o primeiro colega do elenco (+0xd7, 50 vagas) de quem a pessoa não
-/// gosta; achado, e só quando dia % 14 + id da pessoa dá zero (na prática a pessoa de id 0 a cada 14 dias), a queixa
-/// (0x587c60) contra o técnico (+0xcf, tipo 0), o auxiliar (+0xd3, 1) ou outro (2) e a marca no vínculo `k` (0x867700
-/// com 0x2000, 0x1000 ou 0x800).
 pub(crate) unsafe fn dressing_room_friction(p: Staff, club: Club, k: usize) {
     let mut j = 0usize;
     loop {
@@ -237,16 +203,6 @@ pub(crate) unsafe fn dressing_room_friction(p: Staff, club: Club, k: usize) {
 /// attributes minus 3, 5, 15, 15 by draws that came out zero and 5 if the player's reputation (+0xb) exceeds 4500 and
 /// the club's (+0x80) gives the draw that, when zero, leads to friction with the manager.
 /// Original: `game_update_squad_relationships` (0x5d6d10, game.cpp, cdecl).
-///
-/// [pt] { 0x5d6d10 } (cdecl, game.cpp): `game_update_squad_relationships()`, todo dia pelo laço do dia do jogo. (1) Dez
-/// vezes: um clube sorteado e duas vagas do elenco sorteadas (50); pessoas diferentes e sorteio(+0x5b da primeira) = 0:
-/// se a primeira não gosta da segunda, deixa de não gostar (0x547c50) e, no mesmo clube de contrato e com o vínculo
-/// marcado em +0x45 & 0x800, a briga (0x5888a0); senão, 1/3 passa a não gostar (0x547af0), 1/3 do resto passa a gostar
-/// (0x547a10) e o resto deixa de gostar (0x547c10). (2) Dia múltiplo de 50: [0xae235c]/100 clubes sorteados passam
-/// pelo atrito no vestiário (0x5d7190). Nos outros dias, cada pessoa (menos as 17 últimas) com ficha de jogador e
-/// preferências, contrato e o vínculo do clube com a pessoa de +0xff: três sorteios (+0x5b, +0x5d, +0x5a, cada um + 5)
-/// filtram; a soma de cinco atributos menos 3, 5, 15, 15 por sorteios zerados e 5 se a reputação do jogador (+0xb)
-/// passa de 4500 e da do clube (+0x80) dá o sorteio que, zerado, leva ao atrito com o técnico.
 pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
     for _ in 0..10 {
         let club = club_record(friendly_random(read_usize(G_CLUB_COUNT) as i32) as usize);
@@ -301,8 +257,6 @@ pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
 
 /// One person of the non-50th-day loop: rolls the player's attitude toward the club's manager and ends with
 /// dressing_room_friction [inference].
-///
-/// [pt] Uma pessoa do laço de fora dos dias múltiplos de 50 (0x5d6f15..0x5d7115).
 pub(crate) unsafe fn player_vs_manager_check(p: Staff) {
     if p.player().is_null() || p.staff_preferences() == 0 {
         return;
@@ -358,10 +312,6 @@ pub(crate) unsafe fn player_vs_manager_check(p: Staff) {
 /// each squad player with a contract and preferences: the first team-mate he dislikes; with day % 14 + id = 0, the
 /// complaint against the manager, the assistant or another (`exe::news_post_dressing_room_unrest`) and the flag on the contract (`exe::staff_contract_apply_event_flags`)
 /// Original: `game_check_club_dressing_room_unrest` (0x5d7190, game.cpp, cdecl).
-///
-/// [pt] { 0x5d7190 } (cdecl, game.cpp): `game_check_club_dressing_room_unrest(clube)`: cada pessoa do elenco (+0xd7, 50
-/// vagas) com vínculo com o clube (0x4cf5f0) e preferências (+0x65) passa pelo atrito com o técnico (o primeiro colega
-/// de quem não gosta; a queixa só com dia % 14 + id = 0). Pelas relações do elenco (0x5d6d10) nos dias múltiplos de 50.
 pub(crate) unsafe extern "C" fn game_check_club_dressing_room_unrest(club: usize) {
     let club = Club(club);
     for i in 0..0x32usize {
@@ -384,8 +334,6 @@ pub(crate) unsafe extern "C" fn game_check_club_dressing_room_unrest(club: usize
 // friction branch.
 
 /// True if the person has a valid id, belongs to the club (+0x39) and has a player record.
-///
-/// [pt] A pessoa conta para a liderança do clube: id válido (< [0xae2364]), contrato com o clube (+0x39) e ficha de jogador.
 pub(crate) unsafe fn is_club_squad_player(p: Staff, club: usize) -> bool {
     !p.is_null() && (read_usize(p.addr()) as i32) < read_usize(G_STAFF_COUNT) as i32 && p.club_job() == Club(club) && !p.player().is_null()
 }
@@ -401,12 +349,6 @@ pub(crate) unsafe fn is_club_squad_player(p: Staff, club: usize) -> bool {
 /// negative, random(s) < random(−5) lowers the morale (`staff_adjust_morale` with −1); positive, random(s) > random(5) raises it
 /// (+1).
 /// Original: `game_spread_squad_morale_by_leadership` (0x5ce0b0, game.cpp, cdecl).
-///
-/// [pt] { 0x5ce0b0 } (cdecl, game.cpp): `game_spread_squad_morale_by_leadership()`, todo dia pelo laço do dia do jogo. Cada
-/// clube que não é seleção (0x53b900), com sorteio(7) = 0: soma a liderança (jogador +0x2f) e liderança × moral do
-/// vínculo (+0x44) do elenco (+0xd7, 50 vagas); menos de 16 jogadores contam 10 cada um que falta. Com soma não nula,
-/// cada jogador sorteia (2 × Σ liderança × moral) / (liderança dele + soma) mais sorteio(moral / 12), em byte com sinal:
-/// negativo, sorteio(s) < sorteio(−5) baixa o moral (0x544710 com −1); positivo, sorteio(s) > sorteio(5) sobe (+1).
 pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
     let morale: unsafe extern "C" fn(usize, i32, u32) -> u32 = core::mem::transmute(FN_STAFF_ADJUST_MORALE);
     let n = read_usize(G_CLUB_COUNT);
@@ -469,8 +411,6 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
 // simplification: rolls random numbers and changes morale (0x544710, which also rolls): original only; the copy takes the branches.
 
 /// Club record of a contract (G_CLUB_TABLE by id at +4), or 0.
-///
-/// [pt] O clube do contrato (registros de 0x245 bytes em [0xae23b4], pelo id em +4), ou 0 sem contrato.
 pub(crate) unsafe fn contract_club_record(c: usize) -> usize {
     if c == 0 {
         0
@@ -480,8 +420,6 @@ pub(crate) unsafe fn contract_club_record(c: usize) -> usize {
 }
 
 /// Days from the person's date at +0x3e to today.
-///
-/// [pt] Dias desde a data de +0x3e da pessoa até hoje (0x54cdb0 sobre a data do jogo 0xae2c90, a outra por valor).
 pub(crate) unsafe fn days_since_staff_date(p: Staff) -> i32 {
     exe::date_days_since(G_CURRENT_DATE, p.date_joined_club() as u32, p.date_joined_club_leap_year() as u32)
 }
@@ -499,14 +437,6 @@ pub(crate) unsafe fn days_since_staff_date(p: Staff) -> i32 {
 /// (+0x45: 0x8000, 0x30000; with +0x5b < 5, 0x7800) give random(+0x5b) draws that, when zero, are a miss. The miss:
 /// `miss_training`.
 /// Original: `game_check_players_missing_training` (0x5d6aa0, game.cpp, cdecl).
-///
-/// [pt] { 0x5d6aa0 } (cdecl, game.cpp): `game_check_players_missing_training()`, todo dia pelo laço do dia do jogo. A partir
-/// de uma pessoa sorteada (sorteio(n − n/250 − 1)), n/250 pessoas seguidas: jogador (+0x61, função +0x3d = 11) com
-/// contrato e clube, presente (0x418f60), com o registro de treino (0x8b39f0, +0x15) e sem lesão grave (0x62c400 ≠ 2).
-/// (1) Com +0x5b < 8, jogador +0x2f < 8 e a soma (jogador +0x2f, +0x18, +0x5b, vínculo +0x44, −5 se +0x5b ou o moral
-/// valem 1, −5 se não gosta do técnico, +2 se gosta) < 43: sorteio(+0x5b + 100, 50 ou 25 conforme os dias desde +0x3e:
-/// < 30, < 90, < 180) zerado é falta. (2) Senão, com +0x5b < 10 e vínculo com o clube: as marcas do vínculo (+0x45:
-/// 0x8000, 0x30000; com +0x5b < 5, 0x7800) dão sorteios(+0x5b) que, zerados, são falta. A falta: 0x41a360.
 pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
     let n = read_usize(G_STAFF_COUNT) as i32;
     let q = n / 250;
@@ -606,10 +536,6 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
 /// iteration) receives the day (virtual +0x14 with the game date 0xae2c90 and the flag); with the flag, the next step
 /// of `[0xae2a58]` (`fix_man_daily_update`, which the original calls as a tail jump). Called from the game's day loop (with 1).
 /// Original: `game_update_comps_for_date` (0x5ce060, game.cpp, cdecl).
-///
-/// [pt] { 0x5ce060 } (cdecl, game.cpp): `game_update_comps_for_date(marca)`: cada competição da lista ([0xadadfc], conta
-/// [0xadadf8] relida a cada volta) recebe o dia (virtual +0x14 com a data do jogo 0xae2c90 e a marca); com a marca, o
-/// passo seguinte do [0xae2a58] (0x5aaf00, que a original chama em salto de cauda). Pelo laço do dia do jogo (com 1).
 pub(crate) unsafe extern "C" fn game_update_comps_for_date(mark: u32) {
     let m = mark as u8 as i8;
     let mut i = 0i32;
@@ -630,8 +556,6 @@ pub(crate) unsafe extern "C" fn game_update_comps_for_date(mark: u32) {
 // simplification: advances the day of all competitions (virtual) and of [0xae2a58]: original only; the copy takes the branch.
 
 /// Address of the club's board confidence word (+6 of its 73-byte row in [this]).
-///
-/// [pt] A confiança da diretoria no clube: a palavra +6 da linha do clube (73 bytes por id em [this]).
 pub(crate) unsafe fn board_confidence_ptr(this: usize, club: usize) -> usize {
     read_usize(this).wrapping_add(read_usize(club).wrapping_mul(0x49)) + 6
 }
@@ -642,10 +566,6 @@ pub(crate) unsafe fn board_confidence_ptr(this: usize, club: usize) -> usize {
 /// (+6 of the MANAGER_MANAGER row `[0xb67a44]`), clamped to 1..10000. Null club: nothing. Called from the game's day
 /// loop (with −5).
 /// Original: `manager_manager_adjust_board_confidence` (0x5cdde0, game.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x5cdde0 } (thiscall, ret 8, game.cpp): `manager_manager_adjust_board_confidence(clube, delta)`: soma `delta`
-/// (palavra) à confiança da diretoria no clube (+6 da linha do MANAGER_MANAGER [0xb67a44]), presa em 1..10000. Clube
-/// nulo: nada. Pelo laço do dia do jogo (com −5).
 pub(crate) unsafe extern "thiscall" fn manager_manager_adjust_board_confidence(this: usize, club: usize, delta: u32) {
     if club == 0 {
         return;
@@ -662,9 +582,6 @@ pub(crate) unsafe extern "thiscall" fn manager_manager_adjust_board_confidence(t
 
 /// the shortlist manager kept in the transfer manager
 /// Original: `transfer_manager_get_shortlist_manager` (0x5d5ab0, game.cpp, thiscall).
-///
-/// [pt] { 0x5d5ab0 } (thiscall, game.cpp): o gerente da lista de observados guardado em +0x856 do gerente
-/// de transferências.
 pub(crate) unsafe extern "thiscall" fn transfer_manager_get_shortlist_manager(manager: usize) -> usize {
     let manager = TransferManagerFields(manager);
     manager.shortlist_manager()
@@ -672,9 +589,6 @@ pub(crate) unsafe extern "thiscall" fn transfer_manager_get_shortlist_manager(ma
 
 /// the player's 6-byte entry in the training table
 /// Original: `training_manager_get_player_entry` (0x5d5ac0, game.cpp, thiscall).
-///
-/// [pt] { 0x5d5ac0 } (thiscall, ret 4, game.cpp): a entrada de 6 bytes do jogador na tabela do treino
-/// ([treino+0x651d]), pelo id dos dados do jogador ([[jogador+0x61]]).
 pub(crate) unsafe extern "thiscall" fn training_manager_get_player_entry(training: usize, player: usize) -> usize {
     let player = Staff(player);
     let table = read_usize(training + training_manager_fields::PLAYER_ENTRIES);
@@ -683,17 +597,12 @@ pub(crate) unsafe extern "thiscall" fn training_manager_get_player_entry(trainin
 }
 
 /// Pointer to the training load byte (+0x1e) of a player's 31-byte condition record.
-///
-/// [pt] O byte da carga de treino do jogador `*id` no registro de condição (31 bytes por jogador, +0x1e).
 pub(crate) unsafe fn training_load_byte(injuries: usize, id: *const i32) -> *mut u8 {
     (read_usize(injuries) as isize + *id as isize * 31 + (physical_record::PRONENESS as isize)) as *mut u8
 }
 
 /// the f64 average +0x20/+0x28 or +0x10/+0x18 (zero divisor: 6.8)
 /// Original: `game_average` (0x5d5a60, game.cpp, thiscall).
-///
-/// [pt] { 0x5d5a60 } (thiscall, ret 4, game.cpp): a média +0x20/+0x28 (com `segunda`) ou +0x10/+0x18 (f64,
-/// como a original deixa no x87); com divisor zero (ou não comparável), 6.8.
 pub(crate) unsafe extern "thiscall" fn game_average(t: usize, second: u8) -> f64 {
     let (n, q) = if second != 0 { (read_f64(t + player_stats_fields::FLAGGED_RATING_SUM), read_f64(t + player_stats_fields::FLAGGED_RATED_COUNT)) } else { (read_f64(t + player_stats_fields::RATING_SUM), read_f64(t + player_stats_fields::RATED_COUNT)) };
     if q == read_f64(rdata::F64_0) || q.is_nan() {
@@ -706,17 +615,12 @@ compare_value!(compare_contract_value, contract_value, IDX_CONTRACT_VALUE, (p: *
 
 /// the game CRT pow (0x945ff0) of two doubles, result in st0
 /// Original: `pow_double` (0x5d5a20, game.cpp, cdecl).
-///
-/// [pt] { 0x5d5a20 } (cdecl, game.cpp): `pow_double(base, expoente)`: o pow da CRT do jogo (0x945ff0), resultado em st0.
 pub(crate) unsafe extern "C" fn pow_double(base: f64, expoente: f64) -> f64 {
     game_pow(base, expoente)
 }
 
 /// player data qsort: current ability (+5), then potential (+7), ascending
 /// Original: `compare_players_by_ability` (0x5d6220, game.cpp, cdecl).
-///
-/// [pt] { 0x5d6220 } (cdecl, game.cpp): `compare_players_by_ability(a, b)`, o qsort dos dados de jogador em
-/// game_daily_staff_update (0x5d588f): pela habilidade atual (+5), depois pela potencial (+7), crescente.
 pub(crate) unsafe extern "C" fn compare_players_by_ability(a: *const usize, b: *const usize) -> i32 {
     let (pa, pb) = (*a, *b);
     if (read_i16(pa + 5) as i32) == (read_i16(pb + 5) as i32) {

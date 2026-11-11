@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../award/month_award.rs.
-// [pt] Os comparadores das rotinas de ../award/month_award.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `award_best_rated_player`.
 pub(crate) unsafe extern "thiscall" fn compare_award_best_rated_player(this: usize, notes: usize, age: u32) {

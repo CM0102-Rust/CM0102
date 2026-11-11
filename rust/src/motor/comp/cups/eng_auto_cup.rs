@@ -1,16 +1,12 @@
 use super::*;
 
 /// True if the club's division (+0x57) has the competition id in global g.
-///
-/// [pt] O clube `c` está na competição de id [`g`] (+0x57 a divisão, ponteiro para o registro; +0 o id)?
 pub(crate) unsafe fn eng_auto_cup_is_in_comp(c: usize, g: usize) -> bool {
     let l = read_usize(c + club::DIVISION);
     l != 0 && read_usize(l) == read_usize(g)
 }
 
 /// Puts club c in the next slot of the list at +0xb2 and increments the count.
-///
-/// [pt] Põe o clube `c` na vaga `k` da lista (+0xb2, relida a cada vez) e conta.
 pub(crate) unsafe fn push_section_club(this: usize, k: &mut i32, c: usize) {
     *k += 1;
     write_usize(read_usize(this + eng_auto_cup::SELECTED_CLUBS) + (*k as usize - 1) * 4, c);
@@ -36,22 +32,6 @@ pub(crate) unsafe fn push_section_club(this: usize, k: &mut i32, c: usize) {
 /// Once full, the list is sorted by the latitude of the stadium's city (qsort `exe::crt_qsort` with `database_compare_clubs_by_latitude`) and each half
 /// (the North and the South [inference]) by reputation, lowest to highest (qsort with 0x4b0810); returns 1. If it does
 /// not fill, 0.
-///
-/// [pt] { 0x56b730 } (thiscall, ret 0, eng_auto_cup.cpp; da virada, n = 1 até 2002-06-01): `EngAutoCup::select_section_clubs()`:
-/// os 56 clubes do Troféu da Liga (+0xb6 = 0x38) numa lista (0x944e46 de 0xe0 em +0xb2; sem memória, a caixa da linha
-/// 0x24c e 0), em quatro passos, cada um até a lista encher (conta == +0xb6):
-/// 1) pela ordem da tabela dos clubes ([0xae23b4], [0xae235c] clubes), os das divisões [0x9cf5c4] e [0x9cf5c8] (a segunda
-///    e a terceira divisões inglesas [inferência]);
-/// 2) o primeiro clube da divisão [0x9cf69c] (a Conference [inferência]) que veio da [0x9cf5c8] (+0x5b, a divisão da
-///    temporada anterior [inferência]): o rebaixado; ele é lembrado (`achado`) para não entrar de novo;
-/// 3) se a nação da copa ([+4] +0x5d) tem o bit 4 em +0x11c, os clubes da [0x9cf69c] que já estavam nela (+0x5b), pela
-///    categoria +0x5f (com sinal): primeiro os de 6 ou menos, depois 7, 8... até encher; senão, até 30 clubes da
-///    [0x9cf69c] (fora o achado) e, faltando, os clubes ingleses (+0x53 = [0x9cf2e4]) fora da divisão genérica [0x9cf764]
-///    (entre os [0xae235c] − 2 × [0xae2350] primeiros), até 30, ordenados pela reputação com os 3 × faltam primeiros
-///    embaralhados (comp_util_sort_and_shuffle_top_clubs 0x4afbd0: push faltam; push quantos; push lista; add esp, 0xc
-///    -> cdecl; sorteia), e deles os primeiros que faltam.
-/// Cheia, a lista é ordenada pela latitude da cidade do estádio (qsort 0x945333 com 0x53fd40) e cada metade (a do Norte e
-/// a do Sul [inferência]) pela reputação, da menor para a maior (qsort com 0x4b0810); devolve 1. Sem encher, 0.
 pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
     write_usize(this + eng_auto_cup::SELECTED_COUNT, 0x38);
     let l = exe::crt_malloc(0xe0);
@@ -204,12 +184,6 @@ pub(crate) unsafe fn eng_auto_cup_select_section_clubs(this: usize) -> u32 {
 /// sorted by reputation with the best shuffled); the list is split into North and South by the latitude of the stadium
 /// city and each half goes from lowest reputation to highest
 /// Original: `EngAutoCup::select_section_clubs` (0x56b730, eng_auto_cup.cpp, thiscall, ret 0).
-///
-/// [pt] regra: o Troféu da Liga (LDV Vans) tem 56 clubes: todos os da segunda e da terceira divisões, o rebaixado da
-/// terceira para a Conference e, para completar, clubes da Conference (com a regra da nação ligada, os que já estavam
-/// nela pela categoria, 6 ou menos primeiro; senão até 30 da Conference ou outros ingleses fora da divisão genérica,
-/// ordenados pela reputação e com os melhores embaralhados); a lista é dividida em Norte e Sul pela latitude da cidade
-/// do estádio e cada metade vai da menor reputação para a maior
 pub(crate) unsafe extern "thiscall" fn select_section_clubs(this: usize) -> u32 {
     eng_auto_cup_select_section_clubs(this)
 }
@@ -226,14 +200,6 @@ pub(crate) unsafe extern "thiscall" fn select_section_clubs(this: usize) -> u32 
 /// read) into [+0xc][0]; the vector and the table are freed (`exe::crt_free`). Without a stage, the box for line 0x300; with
 /// it, +0x30 = 0.
 /// Original: `EngAutoCup::create_section_stage` (0x56bab0, eng_auto_cup.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x56bab0 } (thiscall, ret 0, eng_auto_cup.cpp; quadro SEH só para o new, sem destrutor): `EngAutoCup::
-/// create_section_stage()`: a fase das chaves (Norte e Sul) com os +0x3e clubes da lista +0xb2, na ordem: um vetor
-/// (0x944e46 de 4 × +0x3e; sem memória, a caixa da linha 0x2e9) com eles; as rodadas pelo método +0x3c (push 0; push
-/// &extra; push &rodadas; push 0; mov ecx -> thiscall, ret 0x10); a fase (0x944cf1(0xb2); Cup_Stage::Cup_Stage 0x522e00,
-/// thiscall, ret 0x3c: a copa, +0x3e (word), o vetor, as rodadas (word), +4, a tabela, o ano +0x40 (word), 0, 1, o extra
-/// (word), +0x51 (byte), 0, 0, 0, sem sementes; os words e bytes vão com lixo em cima, que o construtor não lê) em
-/// [+0xc][0]; o vetor e a tabela liberados (0x9452ca). Sem fase, a caixa da linha 0x300; com ela, +0x30 = 0.
 pub(crate) unsafe extern "thiscall" fn create_section_stage(this: usize) {
     let this = Cup(this);
     let teams = exe::crt_malloc(((this.team_count() as i32) << 2) as u32);
@@ -275,10 +241,6 @@ pub(crate) unsafe extern "thiscall" fn create_section_stage(this: usize) {
 /// and nothing else; otherwise +0x30 goes up by one and, on reaching 1 (the end of the sections), it builds the final
 /// (EngAutoCup::create_final_stage `eng_auto_cup_create_final_stage`, direct call with the cup's ecx -> thiscall, ret 0).
 /// Original: `EngAutoCup::advance_stage` (0x56bc50, eng_auto_cup.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x56bc50 } (thiscall, ret 0, eng_auto_cup.cpp; a virtual +0x28): `EngAutoCup::advance_stage()`: na última fase
-/// (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x314 e nada mais; senão +0x30 sobe um e, ao chegar a 1 (o fim das
-/// chaves), monta a final (EngAutoCup::create_final_stage 0x56bce0, call direto com o ecx da copa -> thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn eng_auto_cup_advance_stage(this: usize) {
     let this = Cup(this);
     let stage = this.current_stage() as i32;
@@ -294,9 +256,6 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_advance_stage(this: usize) {
 }
 
 /// First club among the first n 6-byte entrants whose status (+5) is s, or None.
-///
-/// [pt] O primeiro clube da lista de inscritos `l` (entradas de 6 bytes: +0 o clube, +5 a situação) com a situação `s`, entre
-/// as `n` primeiras (n = +0x3e da copa, word com sinal); sem ele, None.
 pub(crate) unsafe fn first_entrant_with_status(l: usize, n: i32, s: u8) -> Option<usize> {
     (0..n.max(0) as usize).find(|&i| read_u8(l + i * 6 + 5) == s).map(|i| read_usize(l + i * 6))
 }
@@ -314,16 +273,6 @@ pub(crate) unsafe fn first_entrant_with_status(l: usize, n: i32, s: u8) -> Optio
 /// vector is left allocated, as in the original). With it, the round draw (Cup::draw_round `draw_round`: push 0; mov ecx,
 /// stage -> thiscall, ret 4) and the vector is freed.
 /// Original: `EngAutoCup::create_final_stage` (0x56bce0, eng_auto_cup.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x56bce0 } (thiscall, ret 0, eng_auto_cup.cpp; da fase seguinte, quadro SEH só para o new, sem destrutor):
-/// `EngAutoCup::create_final_stage()`: a final do Troféu: um vetor de 2 (0x944e46 de 8; sem memória, a caixa da linha
-/// 0x337) com o primeiro clube de situação 1 (o que segue vivo [inferência]) da lista da copa (+0xa7) e o primeiro de
-/// situação 1 da lista da fase das chaves ([+0xc][0] +0xa7), ambos entre os +0x3e primeiros (da copa); as rodadas pelo
-/// método +0x3c (push 0; push &extra; push &rodadas; push 1; mov ecx -> thiscall, ret 0x10); a fase (0x944cf1(0xb2);
-/// Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: a copa, 2, o vetor, as rodadas (word), +4, a tabela, o ano +0x40
-/// (word), 1, 1, o extra (word), 0x14, 0, 0, 0, sem sementes) em [+0xc][1]; a tabela das rodadas liberada (0x9452ca). Sem
-/// fase, a caixa da linha 0x35a (o vetor fica, como na original). Com ela, o sorteio da rodada (Cup::draw_round 0x51c410:
-/// push 0; mov ecx, fase -> thiscall, ret 4) e o vetor liberado.
 pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usize) {
     let this = Cup(this);
     let l = exe::crt_malloc(8);
@@ -375,17 +324,6 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_final_stage(this: usi
 /// the dword of the position byte with stack garbage in the upper bits; `set_club_final_position` only reads the byte. The vector is
 /// freed.
 /// Original: `EngAutoCup::rank_teams` (0x56c010, eng_auto_cup.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x56c010 } (thiscall, ret 0, eng_auto_cup.cpp; a virtual da classificação final, n = 1 até 2002-06-01): `EngAutoCup::
-/// rank_teams()`: a posição final de cada clube nas estatísticas da copa (+8, Comp_Stats; sem elas, a caixa da linha 0x3bb).
-/// Um vetor de 2 × +0x3e ponteiros (0x944e46; sem memória, a caixa da linha 0x3c3): na primeira metade os clubes da lista
-/// da copa (+0xa7, entradas de 6 bytes), na segunda os da fase das chaves ([+0xc][0] +0xa7); cada metade ordenada pela
-/// reputação (+0x80, word), da maior para a menor (qsort 0x945333 com 0x4b07d0). Os dois primeiros (o de maior reputação
-/// de cada metade): o de reputação maior (com sinal, estritamente) fica em 1º e o outro em 2º (Comp_Stats::
-/// set_club_final_position 0x4a2540: push posição; push clube; mov ecx, +8 -> thiscall, ret 8). Depois, para cada metade,
-/// da última rodada (+0x3c − 1) para a primeira, tantos clubes (os seguintes da metade, a partir do 2º) quantos a rodada
-/// tem em +0x1a da tabela das rodadas (+0xa3, 0x68 bytes por rodada), com as posições 3, 5, 7... (a original empurra o
-/// dword do byte da posição com lixo da pilha em cima; a 0x4a2540 só lê o byte). O vetor é liberado.
 pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
     let this = Cup(this);
     if read_usize(this.addr() + 8) == 0 {
@@ -447,10 +385,6 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
 /// clubs (the array at +0xb2, already sorted by latitude and reputation: the southern section [inference]), in order,
 /// class and status 0
 /// Original: `EngAutoCup::collect_entrants` (0x56b3c0, eng_auto_cup.cpp, thiscall, ret 0).
-///
-/// [pt] regra: o Troféu da Liga (Auto Windscreens) tem duas chaves de 28 clubes; a segunda leva os 28 últimos dos 56
-/// escolhidos (o vetor em +0xb2, já ordenado pela latitude e pela reputação: a chave do sul [inferência]), na ordem,
-/// classe e situação 0
 pub(crate) unsafe extern "thiscall" fn eng_auto_cup_collect_entrants(this: usize) -> i32 {
     collect_auto_cup_entrants(Cup(this)).0
 }
@@ -461,9 +395,6 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_collect_entrants(this: usize
 /// of the following year with venue 4 (neutral ground [inference]); category 4 in the sections and 6 in the finals; no
 /// per-round prizes
 /// Original: `EngAutoCup::create_round_table` (0x56ade0, eng_auto_cup.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x56ade0 } (thiscall, ret 0x10, eng_auto_cup.cpp; a virtual +0x3c do LDV Vans Trophy): `EngAutoCup::
-/// create_round_table(fase, &rodadas, &extra, &é_liga)`: a fase de `ldv_trophy_stage`.
 pub(crate) unsafe extern "thiscall" fn eng_auto_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     create_round_table(Cup(this), ldv_trophy_stage(stage), rounds, extra, league, 0x9c4180)
 }

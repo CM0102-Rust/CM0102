@@ -3,11 +3,6 @@ use super::*;
 /// AsiaClubChamp::advance_stage: moves the Asian Club Championship to its next stage (+0x30); at the last stage (+0x30
 /// >= +0x2c - 1) it shows the error box instead. Reaching stage 1 (after the two zonal knockouts) it creates the two
 /// groups (`exe::asiaclubchamp_create_group_stages`); reaching stage 3 (after the groups) it creates the semi-finals (`exe::asiaclubchamp_create_semi_final_stage`).
-///
-/// [pt] { 0x40c070 } (thiscall, ret 0, asia_club_champ.cpp; a virtual +0x28): `AsiaClubChamp::advance_stage()`: na última
-/// fase (+0x30 ≥ +0x2c − 1, com sinal), a caixa da linha 0x355; senão +0x30 sobe e, chegando a 1 (depois dos mata-matas
-/// das duas zonas), os dois grupos (0x40c110), chegando a 3 (depois dos grupos), as semifinais (0x40c3d0); as duas mov
-/// ecx, this -> thiscall, ret 0.
 pub(crate) unsafe extern "thiscall" fn asia_club_champ_advance_stage(this: usize) {
     let this = Cup(this);
     let f = this.current_stage() as i32;
@@ -32,10 +27,6 @@ pub(crate) unsafe extern "thiscall" fn asia_club_champ_advance_stage(this: usize
 ///
 /// Both searches go up to the cup's +0x3e (signed word). Returns the 8 (leftover slots stay 0: the original routine
 /// leaves them with stack leftovers).
-///
-/// [pt] Os 8 dos grupos: os vivos (+5 = 1 na tabela de 6 bytes) do mata-mata da primeira zona (a tabela da copa, +0xa7) até 4
-/// e depois os do mata-mata da segunda zona (a tabela +0xa7 da fase [+0xc][0]) até 8; as duas buscas vão até o +0x3e da
-/// copa (palavra com sinal). Devolve os 8 (as vagas que sobrarem ficam 0: a original as deixa com sobra da pilha).
 pub(crate) unsafe fn group_stage_qualifiers(this: Cup) -> [usize; 8] {
     let mut v = [0usize; 8];
     let mut n = 0usize;
@@ -71,12 +62,6 @@ pub(crate) unsafe fn group_stage_qualifiers(this: Cup) -> [usize; 8] {
 /// table is freed (`exe::crt_free`).
 ///
 /// Returns the stage.
-///
-/// [pt] Um grupo: a tabela das rodadas pela virtual +0x3c (push 0; push &id; push &rodadas; push `g`; mov ecx, this ->
-/// thiscall, ret 0x10); a fase (0x944cf1(0xee) push; add esp, 4 -> cdecl; o construtor League_Stage 0x68b100, thiscall,
-/// ret 0x58, 22 argumentos: a copa, 4, os 4 times, 1, +4, a tabela das rodadas, as rodadas (word), 3, 1, 8, &{1, 2, 0,
-/// 0}, &{2, 0, 0, 0}, o ano +0x40 (word), `g`, o id (word), +0x51, `a17`, 0, 0x28, −1, 0, 2; a original empurra os words
-/// e bytes com lixo nos bytes altos, que o construtor não lê) em [+0xc][`g`]; a tabela liberada (0x9452ca). Devolve a fase.
 pub(crate) unsafe fn create_asia_group(this: Cup, g: u32, teams: *const usize, a17: u32) -> usize {
     #[allow(clippy::type_complexity)]
     let construct: unsafe extern "thiscall" fn(usize, usize, u32, *const usize, u32, usize, usize, u32, u32, u32, u32, *const u8, *const u8, u32, u32, u32, u32, u32, u32, u32, i32, u32, u32) -> usize =
@@ -124,12 +109,6 @@ pub(crate) unsafe fn create_asia_group(this: Cup, g: u32, teams: *const usize, a
 /// AsiaClubChamp::create_group_stages: takes the 8 survivors of the two zones, creates group 1 (the first 4) and group
 /// 2 (the next 4) of the Asian Club Championship, sends the group-draw news for each, and sets the current stage
 /// (+0x30) to 2; shows an error box and stops if a stage cannot be created.
-///
-/// [pt] { 0x40c110 } (thiscall, ret 0, asia_club_champ.cpp; quadro SEH só para o new das fases: sem destrutor no caminho
-/// normal): `AsiaClubChamp::create_group_stages()`: os 8 vivos das duas zonas (group_stage_qualifiers); o grupo 1 (fase 1, os 4
-/// primeiros, o 17º argumento 2; sem fase, a caixa da linha 0x39e e volta) e a notícia dele (0x684230 na fase, thiscall,
-/// ret 0); o grupo 2 (fase 2, os 4 seguintes, o 17º argumento 1; sem fase, a caixa da linha 0x3b4 e volta), a notícia e
-/// +0x30 = 2.
 pub(crate) unsafe extern "thiscall" fn create_group_stages(this: usize) {
     let this = Cup(this);
     let v = group_stage_qualifiers(this);
@@ -154,9 +133,6 @@ pub(crate) unsafe extern "thiscall" fn create_group_stages(this: usize) {
 // the constructor sorts the table) and +0x30 = 2.
 
 /// The 4 semi-finalists in list order: group 1 winner, group 2 runner-up, group 2 winner, group 1 runner-up.
-///
-/// [pt] Os 4 das semifinais, na ordem da lista: o 1º do grupo 1 ([+0xc][1], tabela +0xb1), o 2º do grupo 2 ([+0xc][2]), o
-/// 1º do grupo 2 e o 2º do grupo 1 (os cruzamentos: as chaves são os pares da lista).
 pub(crate) unsafe fn asia_semi_finalists(this: Cup) -> [usize; 4] {
     let l = |g: usize, p: usize| read_usize(read_usize(read_usize(this.stages() + g * 4) + league::TABLE) + p * league_table_row::SIZE);
     [l(1, 0), l(2, 1), l(2, 0), l(1, 1)] // cqt12: 1st of 1 × 2nd of 2, 1st of 2 × 2nd of 1
@@ -176,16 +152,6 @@ pub(crate) unsafe fn asia_semi_finalists(this: Cup) -> [usize; 4] {
 ///
 /// No stage: the box for line 0x3e6 and return (the list is not freed, as in the original). With it: the draw of round
 /// 0 (`draw_round` Cup::draw_round: push 0; mov ecx, stage -> thiscall, ret 4) and the list freed.
-///
-/// [pt] { 0x40c3d0 } (thiscall, ret 0, asia_club_champ.cpp, quadro SEH só para o new da fase: sem destrutor no caminho normal):
-/// `AsiaClubChamp::create_semi_final_stage()`: a lista dos 4 (0x944e46(0x10): push; add esp, 4 -> cdecl; sem memória, a
-/// caixa da linha 0x3d1 e volta), os cruzamentos de asia_semi_finalists; a tabela das rodadas pela virtual +0x3c (push
-/// 0; push &id; push &rodadas; push 3; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xb2) push; add esp, 4 ->
-/// cdecl; Cup_Stage::Cup_Stage 0x522e00, thiscall, ret 0x3c: a copa, 4, a lista, as rodadas, +4, a tabela, o ano +0x40,
-/// 3, 2, o id, 0x14, 0, 0, 0 e nenhuma semente; a original empurra as rodadas, o id e o ano com lixo nos 16 bits altos,
-/// que o construtor não lê) em [+0xc][3]; a tabela liberada (0x9452ca). Sem fase: a caixa da linha 0x3e6 e volta (a lista
-/// não é liberada, como na original). Com ela: o sorteio da rodada 0 (0x51c410 Cup::draw_round: push 0; mov ecx, fase ->
-/// thiscall, ret 4) e a lista liberada.
 pub(crate) unsafe extern "thiscall" fn asia_club_champ_create_semi_final_stage(this: usize) {
     let this = Cup(this);
     let list = exe::crt_malloc(0x10);
@@ -229,13 +195,6 @@ pub(crate) unsafe extern "thiscall" fn asia_club_champ_create_semi_final_stage(t
 /// cup round (`cup_set_round_draw_date`: round, day, month, years, weekday; records of 0x68 bytes), `J` the match of the cup round
 /// (`cup_set_round_match_date`: round, day, month, years, weekday, time, home side), `E` a day of the tie (`cup_set_round_match_day`: round, slot,
 /// weekday, time, code, home side) and `B`/`W`/`X` writing a byte/word/dword at the given offset of the table.
-///
-/// [pt] Uma operação da montagem da tabela das rodadas, na ordem da original: `D` a data de uma rodada de grupo (0x68a160:
-/// rodada, dia, mês com 0 = janeiro, anos a somar, dia da semana, código, valor; registros de 0x41 bytes), `L` um jogo
-/// da rodada de grupo (0x68a1c0: rodada, jogo, a, b, c, valor), `S` o sorteio de uma rodada de copa (0x521e60: rodada,
-/// dia, mês, anos, dia da semana; registros de 0x68 bytes), `J` o jogo da rodada de copa (0x521eb0: rodada, dia, mês,
-/// anos, dia da semana, horário, mando), `E` um dia do confronto (0x521f10: rodada, vaga, dia da semana, horário,
-/// código, mando) e `B`/`W`/`X` a gravação de um byte/palavra/dword no deslocamento dado da tabela.
 #[derive(Clone, Copy)]
 pub(crate) enum AsiaClubChampScheduleOp {
     D(i32, i32, i32, i32, i32, i32, i32),
@@ -254,10 +213,6 @@ pub(crate) use AsiaClubChampScheduleOp::{B as Cqp11B, D as Cqp11D, E as Cqp11E, 
 /// It holds the é_liga written (if requested), the rounds, the extra (only if the pointer is not null, when
 /// `extra_checa`), the table size, the error-box line when out of memory, the operations and the counter name. `None`:
 /// the stage returns 0 without writing anything.
-///
-/// [pt] Uma fase da virtual +0x3c (`create_schedule(fase, &rodadas, &extra, &é_liga)`): o é_liga gravado (se pedido), as
-/// rodadas, o extra (só se o ponteiro não é nulo, quando `extra_checa`), o tamanho da tabela, a linha da caixa sem
-/// memória, as operações e o nome do contador. `None`: a fase devolve 0 sem gravar nada.
 #[derive(Clone, Copy)]
 pub(crate) struct ScheduleStage {
     pub(crate) league: i32,
@@ -277,10 +232,6 @@ pub(crate) struct ScheduleStage {
 /// operations are applied in order. The cup's year (+0x40) is passed as a clean 16-bit value to `league_round_set_date` (the original
 /// pushes the register with garbage in the high 16 bits; `league_round_set_date` only uses the word) and as signed to the cup
 /// routines.
-///
-/// [pt] Executa a fase `f` (ou devolve 0 sem ela): as saídas, a tabela (0x944e46; sem memória, a caixa `linha` do fonte
-/// `arquivo` e 0) e as operações na ordem; o ano da copa (+0x40) vai em 16 bits limpos para a 0x68a160 (a original
-/// empurra o registrador com lixo nos 16 bits altos; a 0x68a160 só usa a palavra) e com sinal para as de copa.
 pub(crate) unsafe fn create_round_table(this: Cup, f: Option<ScheduleStage>, rodadas: *mut i16, extra: *mut i16, liga: *mut i32, file: usize) -> usize {
     let f = match f {
         Some(f) => f,
@@ -325,8 +276,6 @@ pub(crate) unsafe fn create_round_table(this: Cup, f: Option<ScheduleStage>, rod
 }
 
 /// The bytes the operations write in table t, in operation order, for comparison.
-///
-/// [pt] Os bytes que as operações gravam na tabela `t` (o resto fica como veio da alocação), na ordem das operações.
 pub(crate) unsafe fn written_round_table_bytes(ops: &[AsiaClubChampScheduleOp], t: usize) -> Vec<u8> {
     let mut v = Vec::new();
     let mut pega = |a: usize, n: usize| v.extend_from_slice(core::slice::from_raw_parts((t + a) as *const u8, n));
@@ -358,10 +307,6 @@ pub(crate) unsafe fn written_round_table_bytes(ops: &[AsiaClubChampScheduleOp], 
 /// is freed (`exe::crt_free`).
 ///
 /// In the stage without a table only the original runs (neither writes anything; the outputs may not even exist).
-///
-/// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
-/// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais; a tabela da cópia é
-/// liberada (0x9452ca). Na fase sem tabela só a original (nenhuma grava nada; as saídas podem nem existir).
 pub(crate) unsafe fn asia_club_champ_compare_round_table(name: &str, stage: u32, f: Option<ScheduleStage>, rounds: *mut i16, extra: *mut i16, league: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     let f = match f {
@@ -398,8 +343,6 @@ pub(crate) const ASIAN_CHAMPIONS_LEAGUE_ZONE_KNOCKOUT_OPS: [AsiaClubChampSchedul
 ];
 /// The Asian Champions League final groups: 3 rounds (21, 23 and 25 March of the following year, value 1) with the
 /// matches of each round.
-///
-/// [pt] A Liga dos Campeões asiática, grupos finais: 3 rodadas (21, 23 e 25 de março do ano seguinte, valor 1) com os jogos de cada rodada.
 pub(crate) const ASIAN_CLUB_CHAMPIONSHIP_GROUP_OPS: [AsiaClubChampScheduleOp; 12] = [
     Cqp11D(0, 0x15, 2, 1, 2, 1, 1), Cqp11L(0, 0, 2, 2, 3, 0x10), Cqp11L(0, 1, 2, 1, 3, 0x10),
     Cqp11L(0, 2, -1, -1, -1, 0), Cqp11D(1, 0x17, 2, 1, 4, 1, 1), Cqp11L(1, 0, 4, 2, 3, 0x10),
@@ -408,8 +351,6 @@ pub(crate) const ASIAN_CLUB_CHAMPIONSHIP_GROUP_OPS: [AsiaClubChampScheduleOp; 12
 ];
 /// The Asian Champions League final stage in May of the following year: semi-final (with ties `cup_set_round_match_day`), third place
 /// and final.
-///
-/// [pt] A Liga dos Campeões asiática, fase final em maio do ano seguinte: semifinal (com os confrontos 0x521f10), terceiro lugar e final.
 pub(crate) const ASIAN_CHAMPIONS_LEAGUE_FINALS: [AsiaClubChampScheduleOp; 57] = [
     Cqp11S(0, 0x1a, 2, 1, 0), Cqp11J(0, 0x18, 4, 1, 3, 2, 1), Cqp11E(0, 0, 3, 1, 3, 0x10),
     Cqp11E(0, 1, 3, 2, 3, 0x10), Cqp11E(0, 2, -1, -1, -1, 0), Cqp11W(0x7, 0x82), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
@@ -481,10 +422,6 @@ pub(crate) const LDV_VANS_TROPHY_FINAL: [AsiaClubChampScheduleOp; 18] = [
 ///
 /// −1 and 0 each zone's qualifiers (2 two-legged rounds in August and September), 1 and 2 the final groups (3 rounds in
 /// March), 3 the final stage (semi-final, third place and final in May).
-///
-/// [pt] A Liga dos Campeões asiática [inferência: o Campeonato Asiático de Clubes], as fases: −1 e 0 as eliminatórias de
-/// cada zona (2 rodadas de ida e volta em agosto e setembro), 1 e 2 os grupos finais (3 rodadas em março), 3 a fase
-/// final (semifinal, terceiro lugar e final em maio).
 pub(crate) fn asian_club_champ_stage(stage: u32) -> Option<ScheduleStage> {
     let f = stage as u8 as i8;
     match f {
@@ -505,17 +442,11 @@ pub(crate) fn asian_club_champ_stage(stage: u32) -> Option<ScheduleStage> {
 /// 24/5, third place and final on 26/5, single matches (tie-break 0x383 and 0x83); category 4 in the qualifiers and 6
 /// after
 /// Original: `AsiaClubChamp::create_round_table` (0x40ae90, asia_club_champ.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x40ae90 } (thiscall, ret 0x10, asia_club_champ.cpp; a virtual +0x3c): `AsiaClubChamp::create_round_table(fase,
-/// &rodadas, &extra, &é_liga)`: a fase de `asian_club_champ_stage`.
 pub(crate) unsafe extern "thiscall" fn asia_club_champ_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     create_round_table(Cup(this), asian_club_champ_stage(stage), rounds, extra, league, 0x987a40)
 }
 
 /// Stage description of the Asian Cup Winners' Cup: zone qualifiers (-1, 0) and the final stage (1).
-///
-/// [pt] A Recopa asiática, as fases: −1 e 0 as eliminatórias de cada zona (3 rodadas de agosto a março), 1 a fase final
-/// (semifinal, terceiro lugar e final em maio).
 pub(crate) fn asian_cup_winners_stage(stage: u32) -> Option<ScheduleStage> {
     let f = stage as u8 as i8;
     match f {
@@ -528,9 +459,6 @@ pub(crate) fn asian_cup_winners_stage(stage: u32) -> Option<ScheduleStage> {
 }
 
 /// Stage description of the LDV Vans Trophy: North/South sections (-1, 0) and the final (1).
-///
-/// [pt] O LDV Vans Trophy (o troféu da liga inglesa de baixo), as fases: −1 e 0 as chaves do Norte e do Sul (5 rodadas em
-/// jogo único de dezembro a fevereiro e a final da chave em ida e volta em março), 1 a final (abril, mando 4).
 pub(crate) fn ldv_trophy_stage(stage: u32) -> Option<ScheduleStage> {
     let f = stage as u8 as i8;
     match f {
@@ -545,9 +473,6 @@ pub(crate) fn ldv_trophy_stage(stage: u32) -> Option<ScheduleStage> {
 /// rule: the Asian Club Championship has 16 teams, the qualified clubs (+0xb2) in the order they were picked, all with
 /// class and status 0
 /// Original: `AsiaClubChamp::build_team_table` (0x40b620, asia_club_champ.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x40b620 } (thiscall, ret 0, asia_club_champ.cpp): `AsiaClubChamp::build_team_table()`: os 16 times (a caixa da
-/// linha 0x1cd sem memória).
 pub(crate) unsafe extern "thiscall" fn asia_club_champ_build_team_table(this: usize) -> i32 {
     build_team_table(Cup(this), 0x987a40, 0x1cd, "cqq_12 times da liga dos campeoes asiatica", |i| i) // cqq12: the Asian Champions League teams
 }

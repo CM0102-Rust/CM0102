@@ -9,14 +9,6 @@ include!("../nation_adjectives.rs");
 /// texts by address), with the name if the text stays empty (except in languages 4 and 5); returns 1 (0 with a null
 /// nation or text or a short size)
 /// Original: `nation_get_nationality_adjective` (0x6181d0, index.cpp, cdecl).
-///
-/// [pt] { 0x6181d0 } (cdecl, index.cpp; 0x6181d0..0x62a67a, o mapa de funções corta em 26.014 bytes):
-/// `nation_get_nationality_adjective(nacao, texto, tamanho, genero)`: o adjetivo da nação em `texto`. Zera o texto
-/// antes de tudo; nação nula, texto nulo ou tamanho (curto com sinal) < 50: 0. Gênero (byte) 0: o nome da nação
-/// (+0x57). Nos idiomas 9, 4, 5, 10 e 6 (0x66f4d0) a forma vem da 0x545a60(gênero, idioma) e as cadeias da tabela dão o
-/// texto: em cada cadeia a primeira chave igual ao id (+0) copia a fonte da forma (0..4, as outras pela 6ª coluna; 0
-/// não copia, 1 é o nome) e passa à cadeia seguinte; no fim, com o texto vazio, o nome (nos idiomas 4 e 5 não: fica
-/// vazio). Nos outros idiomas (o inglês, 0), o nome. Devolve 1. Sem SEH, sem locais, sem sorteio.
 pub(crate) unsafe extern "C" fn nation_get_nationality_adjective(nation: usize, text: usize, size: u32, gender: u32) -> u32 {
     let nation = Nation(nation);
     core::ptr::write_volatile(text as *mut u8, 0); // before the tests, like the original (null text: the same failure)
@@ -51,9 +43,6 @@ pub(crate) unsafe extern "C" fn nation_get_nationality_adjective(nation: usize, 
 include!("../fixed_keys.rs");
 
 /// A chain of _stricmp: the first text equal to the name writes the row index into its global.
-///
-/// [pt] Uma cadeia de _stricmp (0x951c50) em linha (cores, continentes): o primeiro texto igual ao `nome` grava `linha` na
-/// global dele e a cadeia acaba.
 pub(crate) unsafe fn match_key_name_chain(name: usize, pairs: &[(u32, u32)], row: u32) {
     for &(texto, global) in pairs {
         if exe::crt_stricmp(name, texto as usize) == 0 {
@@ -64,9 +53,6 @@ pub(crate) unsafe fn match_key_name_chain(name: usize, pairs: &[(u32, u32)], row
 }
 
 /// A set_key_ids loop: i from 0 while i < limit() (re-read each pass); returns whether it ran.
-///
-/// [pt] Um laço da set_key_ids: `i` de 0 enquanto `i < limite()` (relido a cada volta, com sinal). Devolve se rodou (a
-/// original só põe o -1 de volta no edi depois de um laço que rodou).
 pub(crate) unsafe fn key_ids_loop(limit: impl Fn() -> i32, mut f: impl FnMut(i32)) -> bool {
     let mut i = 0i32;
     while i < limit() {
@@ -77,9 +63,6 @@ pub(crate) unsafe fn key_ids_loop(limit: impl Fn() -> i32, mut f: impl FnMut(i32
 }
 
 /// The index.cpp fatal error box at a line and exit with the given code.
-///
-/// [pt] A caixa fatal do relato (index.cpp, `linha`): "v%s %s.%s %d" em 0xae24d0 (0x90d130 com o nome e a extensão do
-/// index.cpp), a caixa "Error" (0x5e8290), [0xb67a34] = 0, 0x5cc7d0, 0x5a8f60 e exit(marca). Não volta.
 pub(crate) unsafe fn index_fatal_error(row: u32, mark: u32) -> ! {
     let version: unsafe extern "C" fn(*mut u8, *mut u8, u32) -> usize = core::mem::transmute(FN_UTILS_GET_VERSION_STRING);
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
@@ -115,18 +98,6 @@ pub(crate) unsafe fn index_fatal_error(row: u32, mark: u32) -> ! {
 ///
 /// 4) The report (RELATO_DAS_CHAVES): `exe::report_missing_key_id` (the box "Unable to find the %s index"); the 7 fatal ones quit the game
 /// if the key's nation has byte +0x11c.
-///
-/// [pt] O miolo da set_key_ids depois do -1 (o -1 é de cada entrada). `marca` = o edi na entrada (-1 na original;
-/// MARCA_DAS_CHAVES_1080 no 1080, que só vale se nenhum laço rodar); `relatar` = o relato das chaves sem valor (no
-/// modo comparando a cópia roda sem ele, para a caixa não aparecer duas vezes). Devolve 1.
-/// 1) As cores ([0xae2394] de [0xae23ec] + 4, passo 0x3a): CORES_DAS_CHAVES. 2) Com [0x9b5984] ≠ 0 e
-/// CM3_TEMP\eng.lng aberto: 8 contagens (bytes invertidos se 0x90c140(f) = 0xf1fffff1) e as tabelas na ordem do
-/// arquivo: clubes c0 × 0x4f (0x6146b0; pela lista [0xae23fc] até [0xae235c], se houver), continentes c1 × 0xba,
-/// competições c2 × 0x53 (0x60efd0 com a linha c5 + i), nações c3 × 0x6d (0x60d810), pula c6 × 0x34 e c4 × 0x34,
-/// prêmios c7 × 0x4f (0x6115e0), competições c5 × 0x53 (0x60efd0); tabela sem memória: fseek por cima. 3) Senão, pela
-/// base: nações (0x60d810), competições de clube até [0xae2378] − 0x7f (0x60efd0), continentes, prêmios (0x6115e0) e
-/// clubes (0x6146b0). 4) O relato (RELATO_DAS_CHAVES): a 0x60d780 (a caixa "Unable to find the %s index"); as 7
-/// fatais saem do jogo se a nação da chave tiver o byte +0x11c.
 pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
     let gi = |a: usize| core::ptr::read_unaligned(a as *const i32);
     let rd = |a: usize| core::ptr::read_unaligned(a as *const u32);
@@ -224,8 +195,6 @@ pub(crate) unsafe fn set_fixed_key_ids(mark_entry: u32, relatar: bool) -> u32 {
 }
 
 /// Sets the key globals (MENOS_UM_DAS_CHAVES) to -1.
-///
-/// [pt] As globais em -1 na original (MENOS_UM_DAS_CHAVES).
 pub(crate) unsafe fn reset_key_globals() {
     for &g in MENOS_UM_DAS_CHAVES.iter() {
         *(g as *mut i32) = -1;
@@ -233,8 +202,6 @@ pub(crate) unsafe fn reset_key_globals() {
 }
 
 /// Fills the key global ranges (MENOS_UM_DAS_CHAVES_1080) with -1 in the 1080 exe.
-///
-/// [pt] As faixas inteiras em -1 no 1080 (MENOS_UM_DAS_CHAVES_1080, o rep stosd).
 pub(crate) unsafe fn reset_key_ranges_1080() {
     for &(a, n) in MENOS_UM_DAS_CHAVES_1080.iter() {
         core::ptr::write_bytes(a as *mut u8, 0xff, n as usize * 4);
@@ -245,10 +212,6 @@ pub(crate) unsafe fn reset_key_ranges_1080() {
 /// name (from eng.lng or from the database); the ones left without a value go to the "Unable to find the %s index" box
 /// (7 fatal by nation); in cm0102-1080.exe through the 0x603834 entry, with -1 over the whole ranges
 /// Original: `set_key_ids` (0x601a40, index.cpp, cdecl).
-///
-/// [pt] { 0x601a40 } (cdecl, index.cpp, set_key_ids): na carga da base (0x528540), as chaves fixas do jogo (cores,
-/// continentes, nações, competições, prêmios, clubes) recebem a linha da base pelo nome; as que ficam sem valor vão ao
-/// relato. A entrada do cm0102.exe: o -1 nas 1.282 globais de MENOS_UM_DAS_CHAVES e o miolo `set_fixed_key_ids`. Devolve 1.
 pub(crate) unsafe extern "C" fn set_key_ids() -> u32 {
     reset_key_globals();
     set_fixed_key_ids(u32::MAX, true)
@@ -257,18 +220,12 @@ pub(crate) unsafe extern "C" fn set_key_ids() -> u32 {
 /// The cm0102-1080.exe entry of set_key_ids: resets the fixed key globals to -1 over the whole ranges
 /// 0x9cf178..0x9d0527 and 0xb63c9c..0xb63d03, then gives each fixed key (colours, continents, nations, competitions,
 /// awards, clubs) its database row by name, reporting missing ones. Returns 1.
-///
-/// [pt] { 0x603834 } (cdecl, só no cm0102-1080.exe): a mesma rotina pela entrada do 1080 (a chamada de 0x52d8fa vai para
-/// ela): o -1 nas faixas inteiras 0x9cf178..0x9d0527 e 0xb63c9c..0xb63d03 (também as 4 globais que a original não toca)
-/// e o mesmo miolo. Devolve 1.
 pub(crate) unsafe extern "C" fn set_key_ids_1080() -> u32 {
     reset_key_ranges_1080();
     set_fixed_key_ids(MARCA_DAS_CHAVES_1080, true)
 }
 
 /// The regions of the fixed keys: the key globals, the high club keys and 0xde279c.
-///
-/// [pt] As regiões das chaves fixas: as globais das chaves, as chaves de clube altas e 0xde279c.
 pub(crate) const FIXED_KEY_REGIONS: [(usize, usize); 3] = [(KEY_COLOUR_BLACK, 0x13b0), (0xb63c9c, 0x68), (0xde279c, 0x104)];
 
 /// Os nomes das regiões 1..14 da `get_region_name` (imediatos do código, pelos endereços no exe): (adjetivo, substantivo). A
@@ -303,16 +260,6 @@ pub(crate) const REGION_NAMES: [(usize, usize); 14] = [
 /// < 100: the original (error box). Used in the region order (`get_regions_sorted_by_name`, in Rust), in the player search (player_search,
 /// search_screens) and in screens without a module (0x7db360, 0x7e13d0, 0x7e29e0).
 /// Original: `get_region_name` (0x616f20, index.cpp, cdecl).
-///
-/// [pt] { 0x616f20 } (cdecl, index.cpp): `get_region_name(regiao, texto, tamanho, forma)`: zera o texto e escreve o nome da
-/// região (1..14, byte com sinal). Forma (byte) diferente de 0xff com o idioma (0x66f4d0) 4, 5 ou 9: o texto da
-/// tabela do idioma, lida pelo endereço ([0x9d0518 + 4 × (4 × região + f)], [0x9d06d4 + 4 × (5 × região + f)],
-/// [0x9d05f8 + 4 × (4 × região + f)], com f a forma do adjetivo 0x545a60, já em Rust, chamada pelo endereço do
-/// jogo), copiado. Senão, pelo 0x66f4e0: nos idiomas 2, 4, 5 e 9 o adjetivo com a forma 0xff e o substantivo com as
-/// outras; nos demais o contrário; o Caribe: "Caribbean" nos idiomas 2, 4, 5 e 9, senão os textos de região (forma
-/// 0xff) ou de regionalidade, com o vazio 0xad9c64. Devolve 1. Texto nulo, região fora da faixa ou tamanho (curto
-/// com sinal) < 100: a original (caixa). Na ordem das regiões (0x545dc0, em Rust), na busca de jogadores
-/// (player_search, search_screens) e em telas sem módulo (0x7db360, 0x7e13d0, 0x7e29e0).
 pub(crate) unsafe extern "C" fn get_region_name(region: u32, text: usize, size: u32, form: u32) -> u32 {
     let r = region as u8 as i8;
     if text == 0 || !(1..=14).contains(&r) || (size as u16 as i16) < 100 {
@@ -395,13 +342,6 @@ pub(crate) const CONTINENT_NAMES_LANGUAGE_4: [[usize; 5]; 6] = [
 /// address). Returns 1. Null continent or text, or size (signed short) < 50: the original (0). Used in the search
 /// (find_screens), the Menubar, the day's matches (`open_day_fixtures_screen`, in Rust) and 0x7dd400.
 /// Original: `get_continent_adjective` (0x6177f0, index.cpp, cdecl).
-///
-/// [pt] { 0x6177f0 } (cdecl, index.cpp; o mapa dá 629 bytes, a rotina vai até 0x6181c5: 2518): `get_continent_adjective(
-/// continente, texto, tamanho, forma)`: zera o texto e copia o adjetivo do continente. Forma (byte) 0 ou idioma
-/// (0x66f4d0) fora de 9, 5 e 4: o adjetivo do próprio registro (+0x23). Senão o texto do idioma pelo continente (o id
-/// +0 comparado às chaves [0x9cfa08..0x9cfa18], nessa ordem) e pela forma do adjetivo (0x545a60, já em Rust, pelo
-/// endereço do jogo). Devolve 1. Continente ou texto nulos ou tamanho (curto com sinal) < 50: a original (0). Na
-/// busca (find_screens), no Menubar, nos jogos do dia (0x717cc0, em Rust) e em 0x7dd400.
 pub(crate) unsafe extern "C" fn get_continent_adjective(continent: usize, text: usize, size: u32, form: u32) -> u32 {
     if continent == 0 || text == 0 || (size as u16 as i16) < 0x32 {
         return original_fn::<unsafe extern "C" fn(usize, usize, u32, u32) -> u32>(IDX_GET_CONTINENT_ADJECTIVE)(continent, text, size, form);
@@ -1372,12 +1312,6 @@ pub(crate) static CLUB_KEYS_SWAP_ORDER: &[u32] = &[
 /// name (_stricmp `exe::crt_stricmp`, case-insensitive) stores the `row` in the key's global and the chain ends; with no hit, it
 /// moves on to the next. Returns the original's eax: the result of the last _stricmp (0 if the last chain hit).
 /// Original: `match_club_key_id` (0x6146b0, index.cpp, cdecl).
-///
-/// [pt] { 0x6146b0 } (cdecl, index.cpp, match_club_key_id): casa o nome de clube da base com as chaves fixas
-/// do jogo (CLUB_KEYS): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
-/// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
-/// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
-/// acertou).
 pub(crate) unsafe extern "C" fn match_club_key_id(name: usize, row: u32) -> u32 {
     let mut r = 0i32;
     for cadeia in CLUB_KEYS.iter() {
@@ -1397,10 +1331,6 @@ pub(crate) unsafe extern "C" fn match_club_key_id(name: usize, row: u32) -> u32 
 /// After the club table is trimmed to the database size (`database_trim_club_table`), the first club key (in CLUB_KEYS_SWAP_ORDER order)
 /// that holds the id `old` is set to `new` and the routine returns 1; none: 0.
 /// Original: `remap_club_key_id` (0x60ba80, index.cpp, cdecl).
-///
-/// [pt] { 0x60ba80 } (cdecl, index.cpp, remap_club_key_id): depois do corte da tabela de clubes pelo
-/// tamanho da base (0x5267c0), a primeira chave de clube (na ordem de CLUB_KEYS_SWAP_ORDER) que
-/// guarda o id `antigo` passa a guardar `novo` e devolve 1; nenhuma: 0.
 pub(crate) unsafe extern "C" fn remap_club_key_id(old: u32, new: u32) -> u32 {
     for &g in CLUB_KEYS_SWAP_ORDER.iter() {
         if *(g as *const u32) == old {
@@ -1417,12 +1347,6 @@ pub(crate) unsafe extern "C" fn remap_club_key_id(old: u32, new: u32) -> u32 {
 /// the name (_stricmp `exe::crt_stricmp`, case-insensitive) stores the `row` in the key's global and the chain ends; with no hit,
 /// it moves on to the next. Returns the original's eax: the result of the last _stricmp (0 if the last chain hit).
 /// Original: `match_nation_key_id` (0x60d810, index.cpp, cdecl).
-///
-/// [pt] { 0x60d810 } (cdecl, index.cpp, match_nation_key_id): casa o nome de nação da base com as chaves fixas
-/// do jogo (NATION_KEYS): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
-/// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
-/// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
-/// acertou).
 pub(crate) unsafe extern "C" fn match_nation_key_id(name: usize, row: u32) -> u32 {
     let mut r = 0i32;
     for cadeia in NATION_KEYS.iter() {
@@ -1438,8 +1362,6 @@ pub(crate) unsafe extern "C" fn match_nation_key_id(name: usize, row: u32) -> u3
 }
 
 /// Text listing the dword globals that differ between original and copy snapshots.
-///
-/// [pt] As globais (dword) que ficaram diferentes entre a original e a cópia: "[end] original x rust".
 pub(crate) fn describe_key_diffs(mo: &crate::comparison::MemorySnapshot, mr: &crate::comparison::MemorySnapshot) -> String {
     let mut s = String::new();
     for ((a, x), (_, y)) in mo.0.iter().zip(mr.0.iter()) {
@@ -1455,8 +1377,6 @@ pub(crate) fn describe_key_diffs(mo: &crate::comparison::MemorySnapshot, mr: &cr
 
 /// The club competition keys of index.cpp (`match_club_comp_key_id`), in code order: (long name text, global that receives the row), in
 /// 3 chains; (0, global) = one more global written in the same assignment.
-///
-/// [pt] As chaves de competição de clube do index.cpp (0x60efd0), na ordem do código: (texto do nome longo, global que recebe a linha), em 3 cadeias; (0, global) = mais uma global gravada no mesmo acerto.
 pub(crate) static CLUB_COMPETITION_KEYS: &[&[(u32, u32)]] = &[
     // cadeia 1
     &[
@@ -2291,12 +2211,6 @@ pub(crate) static PERSON_COMPETITION_KEYS: &[&[(u32, u32)]] = &[
 /// chain ends; with no hit, it moves on to the next. Returns the original's eax: the result of the last _stricmp (0 if
 /// the last chain hit).
 /// Original: `match_club_comp_key_id` (0x60efd0, index.cpp, cdecl).
-///
-/// [pt] { 0x60efd0 } (cdecl, index.cpp, match_club_comp_key_id): casa o nome de competição de clube da base com as chaves fixas
-/// do jogo (CLUB_COMPETITION_KEYS): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
-/// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
-/// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
-/// acertou).
 pub(crate) unsafe extern "C" fn match_club_comp_key_id(name: usize, row: u32) -> u32 {
     let mut r = 0i32;
     for cadeia in CLUB_COMPETITION_KEYS.iter() {
@@ -2329,12 +2243,6 @@ pub(crate) unsafe extern "C" fn match_club_comp_key_id(name: usize, row: u32) ->
 /// global and the chain ends; with no hit, it moves on to the next. Returns the original's eax: the result of the last
 /// _stricmp (0 if the last chain hit).
 /// Original: `match_staff_comp_key_id` (0x6115e0, index.cpp, cdecl).
-///
-/// [pt] { 0x6115e0 } (cdecl, index.cpp, match_staff_comp_key_id): casa o nome de competição ou prêmio de pessoa da base com as chaves fixas
-/// do jogo (PERSON_COMPETITION_KEYS): em cada cadeia, o primeiro texto igual ao nome (_stricmp 0x951c50, sem
-/// distinguir maiúsculas) grava a `linha` na global da chave e a cadeia acaba; sem acerto, segue
-/// para a próxima. Devolve o eax da original: o resultado do último _stricmp (0 se a última cadeia
-/// acertou).
 pub(crate) unsafe extern "C" fn match_staff_comp_key_id(name: usize, row: u32) -> u32 {
     let mut r = 0i32;
     for cadeia in PERSON_COMPETITION_KEYS.iter() {

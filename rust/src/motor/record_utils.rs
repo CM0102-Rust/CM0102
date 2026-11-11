@@ -11,13 +11,6 @@ use super::*;
 /// if it is not negative, otherwise the normal one (+0x43/+0x44); away side: +0x15 the +0xc and the score reversed.
 /// Returns 1.
 /// Original: `fill_match_record_from_fixture` (0x7e4750, record_utils.cpp, cdecl).
-///
-/// [pt] { 0x7e4750 } (cdecl, record_utils.cpp): `fill_match_record_from_fixture(jogo, clube, saida)`, da estatística da tática
-/// (0x896290, no fim de cada partida sem humano) e dos recordes. Jogo, clube ou saída nulos: a caixa (linhas 0x29, 0x31,
-/// 0x39) e 0. Senão a data (+0, 0x417c10 da Date(dia +0x2a, ano +0x28) da 0x549ef0), +8 o id do jogo (+0), +0xc a
-/// palavra +0x32, +0xe a +0x30, +0x10 o lado (0x4afa80, cdecl(clube, jogo)), +0x11 o id do clube, +0x1b o dword +8 do
-/// jogo; mandante (+0x1c): +0x15 o +0x10 do jogo e o placar (+0x19 pró, +0x1a contra) pelo da prorrogação (+0x47/+0x48)
-/// se ele não for negativo, senão o normal (+0x43/+0x44); visitante: +0x15 o +0xc e o placar ao contrário. Devolve 1.
 pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(game: usize, club: usize, out: usize) -> u32 {
     let game = Fixture(game);
     if game.is_null() {
@@ -67,8 +60,6 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(game: usize, club
 }
 
 /// Name id (+0x33 of a name record), or -1 without name.
-///
-/// [pt] O id do nome (+0x33 do registro de nome) ou −1 sem nome.
 pub(crate) unsafe fn name_id(p: u32) -> u32 {
     if p != 0 { read_u32(p as usize + names::ID) } else { u32::MAX }
 }
@@ -79,11 +70,6 @@ pub(crate) unsafe fn name_id(p: u32) -> u32 {
 /// player search. Null person or output: the box (lines 0x80, 0x88) and 0. Otherwise +0, +4, +8 the name ids (+4, +8,
 /// +0xc of the person; −1 with no name), +0xc the person's id and +0x10 the birth date (+0x10, `exe::date_operator_3d`); returns 1.
 /// Original: `fill_staff_name_ref` (0x7e4920, record_utils.cpp, cdecl).
-///
-/// [pt] { 0x7e4920 } (cdecl, record_utils.cpp): `fill_staff_name_ref(pessoa, saida)`, dos recordes do clube e da competição,
-/// da notícia da suspensão, do prêmio e da busca de jogadores. Pessoa ou saída nulas: a caixa (linhas 0x80, 0x88) e 0.
-/// Senão +0, +4, +8 os ids dos nomes (+4, +8, +0xc da pessoa; −1 sem nome), +0xc o id da pessoa e +0x10 a data de
-/// nascimento (+0x10, 0x417c10); devolve 1.
 pub(crate) unsafe extern "C" fn fill_staff_name_ref(person: usize, out: usize) -> u32 {
     let person = Staff(person);
     if person.is_null() {
@@ -109,10 +95,6 @@ pub(crate) unsafe extern "C" fn fill_staff_name_ref(person: usize, out: usize) -
 /// (line 0x25a) and 0. For (+0x19) > against (+0x1a), signed: 3; draw with goals: 2; goalless draw: 1; defeat: −3 (only
 /// the byte counts: the caller reads al).
 /// Original: `match_record_result_code` (0x7e56d0, record_utils.cpp, cdecl).
-///
-/// [pt] { 0x7e56d0 } (cdecl, record_utils.cpp): `match_record_result_code(registro)`, da estatística da competição
-/// (0x49f570, a cada partida). Registro nulo: a caixa (linha 0x25a) e 0. Pró (+0x19) > contra (+0x1a), com sinal: 3;
-/// empate com gols: 2; empate sem gols: 1; derrota: −3 (só o byte conta: quem chama lê al).
 pub(crate) unsafe extern "C" fn match_record_result_code(record: usize) -> u8 {
     if record == 0 {
         show_error_at(0xa7a088, 0x25a);
@@ -132,8 +114,6 @@ pub(crate) unsafe extern "C" fn match_record_result_code(record: usize) -> u8 {
 
 /// Body of Staff_Records::add_year_award_record (`add_year_award_record`); without gravar (the comparer's copy) skips the history file
 /// entry.
-///
-/// [pt] O corpo da 0x86c390; sem `gravar` (a cópia pelo comparador), sem a entrada no arquivo do histórico.
 pub(crate) unsafe fn add_year_award(this: usize, p: Staff, club: usize, prize: usize, a4: u32, a5: u32, credito: u32, write: bool) {
     let mut e = history_entry();
     stamp_game_date(e.as_mut_ptr());
@@ -207,10 +187,6 @@ pub(crate) unsafe fn add_year_award(this: usize, p: Staff, club: usize, prize: u
 /// (0x49fb93): 1 if `a` is a win (goals +0x19 > +0x1a, signed bytes) by a larger margin than that of `b`, or equal with
 /// more goals scored. Null record: the original routine ("Error" box, 0).
 /// Original: `match_record_is_bigger_win` (0x7e4a30, record_utils.cpp, cdecl).
-///
-/// [pt] { 0x7e4a30 } (cdecl, record_utils.cpp): `match_record_is_bigger_win(a, b)`, pelos recordes do clube depois de cada
-/// jogo (0x444930) e pelos da competição (0x49fb93): 1 se `a` é vitória (gols +0x19 > +0x1a, bytes com sinal) por
-/// diferença maior que a de `b`, ou igual com mais gols feitos. Registro nulo: a original (caixa "Error", 0).
 pub(crate) unsafe extern "C" fn match_record_is_bigger_win(a: usize, b: usize) -> u32 {
     if a == 0 || b == 0 {
         return original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_MATCH_RECORD_IS_BIGGER_WIN)(a, b);
@@ -230,10 +206,6 @@ pub(crate) unsafe extern "C" fn match_record_is_bigger_win(a: usize, b: usize) -
 /// (+0x19 < +0x1a) by a larger margin than that of `b`, or equal with more goals conceded. Null record: the original
 /// routine ("Error" box, 0).
 /// Original: `match_record_is_bigger_defeat` (0x7e4b00, record_utils.cpp, cdecl).
-///
-/// [pt] { 0x7e4b00 } (cdecl, record_utils.cpp): `match_record_is_bigger_defeat(a, b)`, pelos recordes do clube depois de cada
-/// jogo (0x444930): 1 se `a` é derrota (+0x19 < +0x1a) por diferença maior que a de `b`, ou igual com mais gols
-/// sofridos. Registro nulo: a original (caixa "Error", 0).
 pub(crate) unsafe extern "C" fn match_record_is_bigger_defeat(a: usize, b: usize) -> u32 {
     if a == 0 || b == 0 {
         return original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_MATCH_RECORD_IS_BIGGER_DEFEAT)(a, b);

@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../staff_records.rs.
-// [pt] Os comparadores das rotinas de ../staff_records.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `add_league_champions_record`.
 pub(crate) unsafe extern "thiscall" fn compare_add_league_champions_record(this: usize, club: usize, comp: usize) {
@@ -30,8 +29,6 @@ pub(crate) unsafe extern "thiscall" fn compare_add_cup_winners_record(this: usiz
 }
 
 /// Comparer for `clear_human_manager_record`.
-///
-/// [pt] Comparador: lado a lado pelo registro (os 0xd2 bytes que a rotina zera).
 pub(crate) unsafe extern "thiscall" fn compare_clear_human_manager_record(this: usize, person: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_CLEAR_HUMAN_MANAGER_RECORD);
     let id = read_i32(person);
@@ -48,9 +45,6 @@ pub(crate) unsafe extern "thiscall" fn compare_clear_human_manager_record(this: 
 }
 
 /// Comparer for `record_match_result`.
-///
-/// [pt] Comparador lado a lado nos dois registros (0xd2 bytes), criados antes pela 0x86f5b0 como a original faria (a segunda
-/// chamada acha o mesmo registro). Jogo não disputado: só a original (não cria nada).
 pub(crate) unsafe extern "thiscall" fn compare_record_match_result(this: usize, p: usize, m: usize) {
     let p = Fixture(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_RECORD_MATCH_RESULT);
@@ -75,10 +69,6 @@ pub(crate) unsafe extern "thiscall" fn compare_add_league_finish_records(this: u
 }
 
 /// Comparer for `add_supporters_player_of_year_record`.
-///
-/// [pt] Comparador em ensaio: a cópia sem o histórico e a original a partir do mesmo estado (sorteio, as pessoas favoritas e
-/// rejeitadas do clube +0x9b e os clubes favoritos e rejeitados da pessoa, preferências +0x65: +4..+0x18). Pessoa nula:
-/// só a original.
 pub(crate) unsafe extern "thiscall" fn compare_add_supporters_player_of_year_record(this: usize, person: usize, club: usize, a: u32, b: u32) {
     let person = Staff(person);
     let club = Club(club);
@@ -124,10 +114,6 @@ pub(crate) unsafe extern "thiscall" fn compare_add_cup_third_place_record(this: 
 /// bytes, and the static date of `exe::date_days_since`).
 ///
 /// Nulls: only the original.
-///
-/// [pt] Comparador em ensaio: o registro do técnico criado antes (0x86f5b0, como a original faria nos dois caminhos que o
-/// pedem), a cópia sem os históricos e a original a partir do mesmo estado (o registro, 0xd2 bytes, e a data estática da
-/// 0x54cdb0). Nulos: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_record_manager_job_change(this: usize, manager: usize, club: usize, signed: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_RECORD_MANAGER_JOB_CHANGE);
     if club == 0 || manager == 0 {
@@ -165,9 +151,6 @@ pub(crate) unsafe extern "C" fn compare_staff_records_compare_clubs_by_manager_p
 }
 
 /// Comparer for `add_promotion_record`.
-///
-/// [pt] Comparador: lado a lado pelas regiões (a cópia sem os históricos em arquivo, que a original já gravou, e sem contar
-/// os sorteios); com renovação de contrato ou clube/competição nulos, só a original.
 pub(crate) unsafe extern "thiscall" fn compare_add_promotion_record(this: usize, club: usize, comp: usize, weight: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32)>(IDX_ADD_PROMOTION_RECORD);
     let reg = if club != 0 && comp != 0 { promotion_regions(this, Club(club), true) } else { None };
@@ -181,8 +164,6 @@ pub(crate) unsafe extern "thiscall" fn compare_add_promotion_record(this: usize,
 }
 
 /// Comparer for `add_relegation_record`.
-///
-/// [pt] Comparador: como o do acesso (sem o registro de pontos, que o rebaixamento não usa).
 pub(crate) unsafe extern "thiscall" fn compare_add_relegation_record(this: usize, club: usize, comp: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize)>(IDX_ADD_RELEGATION_RECORD);
     let reg = if club != 0 && comp != 0 { promotion_regions(this, Club(club), false) } else { None };
@@ -196,9 +177,6 @@ pub(crate) unsafe extern "thiscall" fn compare_add_relegation_record(this: usize
 }
 
 /// Comparer for `add_qualified_for_round_record`.
-///
-/// [pt] Comparador: lado a lado pelo registro de pontos do técnico (criado antes, como a original faria), a cópia sem o
-/// histórico em arquivo; sem clube ou sem técnico, só a original.
 pub(crate) unsafe extern "thiscall" fn compare_add_qualified_for_round_record(this: usize, club: usize, comp: usize, stage: u32, round: u32, weight: u32) {
     let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(IDX_ADD_QUALIFIED_FOR_ROUND_RECORD);
@@ -220,10 +198,6 @@ pub(crate) unsafe extern "thiscall" fn compare_add_qualified_for_round_record(th
 /// transfer list (the cursor) and the records of the two managers (created beforehand only when the original asks for
 /// them); the copy runs without the file histories, which the original has already written, and without counting the
 /// random draws.
-///
-/// [pt] Comparador: lado a lado pela global [0xae1080], o estado do sorteador (o valor da oferta pode pedir a avaliação), a
-/// lista da troca (o cursor) e os registros dos dois técnicos (criados antes só quando a original os pede); a cópia
-/// sem os históricos em arquivo, que a original já gravou, e sem contar os sorteios.
 pub(crate) unsafe extern "thiscall" fn compare_add_transfer_records(this: usize, t: usize) {
     let t = Offer(t);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_TRANSFER_RECORDS);
@@ -257,9 +231,6 @@ pub(crate) unsafe extern "thiscall" fn compare_add_failed_to_qualify_record(this
 }
 
 /// Comparer for `staff_records_daily_update`.
-///
-/// [pt] Comparador: os pontos vão ao hall da fama (0x5ef270, soma): roda só a original e confere o plano: na virada, os pontos
-/// do mês zerados e o mês e o ano guardados; no primeiro dia do ano, os pontos do ano zerados.
 pub(crate) unsafe extern "thiscall" fn compare_staff_records_daily_update(this: usize, data: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_STAFF_RECORDS_DAILY_UPDATE);
     let turned = date_month(data) as i32 != read_i16(this + staff_records_fields::CURRENT_MONTH) as u16 as i32 || read_i16(data + 2) != read_i16(this + staff_records_fields::CURRENT_YEAR);
@@ -283,9 +254,6 @@ pub(crate) unsafe extern "thiscall" fn compare_staff_records_daily_update(this: 
 }
 
 /// Comparer for `staff_records_end_season_for_nation`.
-///
-/// [pt] Comparador: os pontos vão ao hall da fama (0x5ef330, soma): roda só a original e confere o plano feito antes: os
-/// quatro campos (+0xba, +0xbe, +0xc2, +0xc6) de cada registro.
 pub(crate) unsafe extern "thiscall" fn compare_staff_records_end_season_for_nation(this: usize, entry: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_STAFF_RECORDS_END_SEASON_FOR_NATION);
     let p = read_usize(entry + 4);
@@ -321,8 +289,6 @@ pub(crate) unsafe extern "thiscall" fn compare_staff_records_end_season_for_nati
 }
 
 /// Comparer for `find_manager_of_the_month`.
-///
-/// [pt] Comparador: pelo valor (o registro 0x86f5b0 criado pela original já existe para a cópia).
 pub(crate) unsafe extern "thiscall" fn compare_find_manager_of_the_month(this: usize, index: i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32) -> usize>(IDX_FIND_MANAGER_OF_THE_MONTH);
     let league = League(read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((index as usize).wrapping_mul(4))));
@@ -336,9 +302,6 @@ pub(crate) unsafe extern "thiscall" fn compare_find_manager_of_the_month(this: u
 }
 
 /// Comparer for `get_manager_of_year_candidates`.
-///
-/// [pt] Comparador: lado a lado pelo vetor dos clubes e pela data estática da 0x54cab0, e a devolução (os registros dos
-/// técnicos que a 0x86f5b0 cria na original já existem para a cópia).
 pub(crate) unsafe extern "thiscall" fn compare_get_manager_of_year_candidates(this: usize, clubs: usize, n: u32) -> u8 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u8>(IDX_GET_MANAGER_OF_YEAR_CANDIDATES);
     let k = (n as u16 as i16).max(0) as usize;
@@ -349,9 +312,6 @@ pub(crate) unsafe extern "thiscall" fn compare_get_manager_of_year_candidates(th
 }
 
 /// Comparer for `get_manager_record`.
-///
-/// [pt] Comparador: lado a lado pelo registro do técnico (e, quando a vaga é de outro, pelo registro que a original zera),
-/// pela devolução. Pessoa nula (a caixa) e o humano sem situação: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_get_manager_record(this: usize, person: usize, create: u32) -> usize {
     let person = Staff(person);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_MANAGER_RECORD);
@@ -385,8 +345,6 @@ pub(crate) unsafe extern "thiscall" fn compare_add_loan_records(this: usize, per
 }
 
 /// Comparer for `rewind_staff_history`.
-///
-/// [pt] Comparador: lado a lado pelo par da pessoa (8 bytes; a 0x58f110 só grava o segundo).
 pub(crate) unsafe extern "thiscall" fn compare_rewind_staff_history(this: usize, person: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REWIND_STAFF_HISTORY);
     if person == 0 {
@@ -404,10 +362,6 @@ pub(crate) unsafe extern "thiscall" fn compare_rewind_staff_history(this: usize,
 ///
 /// The player draws at random, renews the contract and sends a news item (it cannot run twice): only the original.
 /// Without a person or without an award (the error box): only the original.
-///
-/// [pt] Comparador: o técnico lado a lado pelo registro de pontos dele (criado antes pela 0x86f5b0, como a original faria;
-/// a cópia sem a entrada do histórico em arquivo). O jogador sorteia, renova contrato e manda notícia (não pode rodar
-/// duas vezes): só a original. Sem pessoa ou sem prêmio (a caixa): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_add_year_award_record(this: usize, p: usize, club: usize, prize: usize, a4: u32, a5: u32, credito: u32) {
     let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, u32)>(IDX_ADD_YEAR_AWARD_RECORD);
@@ -440,10 +394,6 @@ pub(crate) unsafe extern "thiscall" fn compare_add_first_cap_record(this: usize,
 ///
 /// The player case draws at random, renews the contract and sends a news item (it cannot run twice): only the original
 /// routine. No person or no award (the box): only the original.
-///
-/// [pt] Comparador: o técnico lado a lado pelo registro de pontos dele (criado antes pela 0x86f5b0, como a original faria;
-/// a cópia sem a entrada do histórico em arquivo). O jogador sorteia, renova contrato e manda notícia (não pode rodar
-/// duas vezes): só a original. Sem pessoa ou sem prêmio (a caixa): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_add_month_award_record(this: usize, p: usize, club: usize, prize: usize, a4: u32, a5: u32) {
     let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32)>(IDX_ADD_MONTH_AWARD_RECORD);

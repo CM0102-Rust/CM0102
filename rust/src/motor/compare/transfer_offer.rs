@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../transfer_offer.rs.
-// [pt] Os comparadores das rotinas de ../transfer_offer.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `transfer_offer_closed`.
 pub(crate) unsafe extern "system" fn compare_transfer_offer_closed(o: usize) -> u32 {

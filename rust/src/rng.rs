@@ -10,19 +10,6 @@
 //! - |n| > 0xffff: a floating-point part ((s % 0xffff) * (n * 1/65535), truncated) plus a
 //!   recursive call with n*10/65535 for the low digits, capped at n-1.
 //! The seed (0x90d0a0, option `-seed`) calls srand and picks the starting point in the table.
-//!
-//! [pt] Gerador de numeros aleatorios do jogo: `aleatorio(n)` { 0x90cfc0 }, cdecl, chamado de milhares
-//! de pontos (partidas, regens, transferencias, lesoes...).
-//!
-//! Como funciona (listagem original):
-//! - ha uma tabela fixa de numeros no exe (0xaa2454..=0xad4130, dwords); `[0xde1f60]` aponta para a
-//!   entrada atual e `[0xde1f5c]` guarda um deslocamento de 16 bits;
-//! - cada chamada avanca o ponteiro uma entrada; passando do fim (`[0xde2798]`), volta ao inicio e
-//!   sorteia um deslocamento novo com o `rand()` da CRT (0x946a04) & 0xffff;
-//! - |n| <= 0xffff: (deslocamento + entrada) % n (divisao com sinal; n negativo inverte o sinal);
-//! - |n| > 0xffff: parte em ponto flutuante ((s % 0xffff) * (n * 1/65535), truncado) mais uma
-//!   chamada recursiva com n*10/65535 para os digitos de baixo, limitado a n-1.
-//! A semente (0x90d0a0, opcao `-seed`) faz srand e escolhe o ponto inicial da tabela.
 
 use core::cell::Cell;
 
@@ -36,12 +23,8 @@ const OFFSET: *mut i32 = 0xde1f5c as *mut i32;
 const TABLE_END: *const u32 = 0xde2798 as *const u32;
 const TABLE_START: u32 = 0xaa2454;
 /// State of the CRT's rand() (single-threaded Visual C++ 6 version).
-///
-/// [pt] Estado do rand() da CRT (versao de uma thread so do Visual C++ 6).
 const RAND_STATE: *mut u32 = 0xad6c30 as *mut u32;
 /// 1/65535, double at 0x970a70.
-///
-/// [pt] 1/65535, double em 0x970a70.
 const ONE_OVER_65535: f64 = 1.0 / 65535.0;
 
 // 0x90cfc0: push ecx; push esi; mov esi, dword ptr [esp + 0xc]
@@ -50,8 +33,6 @@ const PROLOGUE: Prologue = Prologue { address: 0x90cfc0, bytes: &[0x51, 0x56, 0x
 static mut ORIGINAL: usize = 0;
 
 /// The game's own CRT rand() (same state the game uses).
-///
-/// [pt] rand() da CRT do proprio jogo (mesmo estado que o jogo usa).
 unsafe fn rand_crt() -> i32 {
     let f: unsafe extern "C" fn() -> i32 = core::mem::transmute(0x946a04usize);
     f()
@@ -60,15 +41,10 @@ unsafe fn rand_crt() -> i32 {
 thread_local! {
     /// Off during the Rust replica of comparison mode, so the simulation's draw count is
     /// the same in all three modes (entries into the routine, recursion included).
-    ///
-    /// [pt] Desligado durante a replica Rust do modo comparacao, para a contagem de sorteios da
-    /// simulacao ser a mesma nos tres modos (entradas na rotina, recursao incluida).
     static COUNTING: Cell<bool> = const { Cell::new(true) };
 }
 
 /// Runs `f` without counting its draws (Rust replica of routines that draw, in comparison mode).
-///
-/// [pt] Roda `f` sem contar os sorteios dela (replica Rust de rotinas que sorteiam, no modo comparacao).
 pub fn without_counting<R>(f: impl FnOnce() -> R) -> R {
     let before = COUNTING.with(|c| c.replace(false));
     let r = f();
@@ -77,8 +53,6 @@ pub fn without_counting<R>(f: impl FnOnce() -> R) -> R {
 }
 
 /// Generator state (table offset and pointer, CRT rand): regions for `side_by_side`.
-///
-/// [pt] Estado do gerador (deslocamento e ponteiro da tabela, rand da CRT): regioes para `lado_a_lado`.
 pub const STATE_REGIONS: [(usize, usize); 2] = [(0xde1f5c, 8), (0xad6c30, 4)];
 
 unsafe fn count_draw(n: i32) {
@@ -89,8 +63,6 @@ unsafe fn count_draw(n: i32) {
 }
 
 /// Rust version of { `exe::utils_random` }.
-///
-/// [pt] Versao Rust de { 0x90cfc0 }.
 pub unsafe extern "C" fn aleatorio(n: i32) -> i32 {
     count_draw(n);
     if n == 0 {
@@ -126,8 +98,6 @@ pub unsafe extern "C" fn aleatorio(n: i32) -> i32 {
 }
 
 /// What the compiler generated for `x / 65535` (signed): imul 0x80008001, add, sar 15, + sign.
-///
-/// [pt] O que o compilador gerou para `x / 65535` (com sinal): imul 0x80008001, add, sar 15, + sinal.
 fn div_by_65535(x: i32) -> i32 {
     let high = ((x as i64 * 0x8000_8001u32 as i32 as i64) >> 32) as i32;
     let t = high.wrapping_add(x) >> 15;
@@ -168,14 +138,10 @@ static SCOREBOARD: Scoreboard = Scoreboard::new("random");
 
 thread_local! {
     /// Draw trace (diagnosis): (n, answer) of each outside call, when on.
-    ///
-    /// [pt] Rastro de sorteios (diagnostico): (n, resposta) de cada chamada de fora, quando ligado.
     static TRACE: core::cell::RefCell<Option<Vec<(i32, i32)>>> = const { core::cell::RefCell::new(None) };
 }
 
 /// Runs `f` keeping the outside draws it makes (n and answer).
-///
-/// [pt] Roda `f` guardando os sorteios de fora que ela fizer (n e resposta).
 pub fn trace<R>(f: impl FnOnce() -> R) -> (R, Vec<(i32, i32)>) {
     let before = TRACE.with(|t| t.borrow_mut().replace(Vec::new()));
     let r = f();
@@ -185,9 +151,6 @@ pub fn trace<R>(f: impl FnOnce() -> R) -> (R, Vec<(i32, i32)>) {
 
 /// Runs `f` without keeping draws in the trace (those of a recorded unit: the Rust copy gets the result
 /// from the tape and does not redo them, so the original's list only has to hold what the routine itself draws).
-///
-/// [pt] Roda `f` sem guardar sorteios no rastro (os de uma unidade gravada: a copia Rust recebe o resultado
-/// da fita e nao os refaz, entao a lista da original so tem de conter o que a propria rotina sorteia).
 pub fn pause_trace<R>(f: impl FnOnce() -> R) -> R {
     let saved = TRACE.with(|t| t.borrow_mut().take());
     let r = f();
@@ -202,9 +165,6 @@ unsafe fn original(n: i32) -> i32 {
 
 /// Runs the original and the Rust version from the same state and compares result and final state.
 /// The game goes on with the original's result and state.
-///
-/// [pt] Roda a original e a versao Rust a partir do mesmo estado e compara resultado e estado final.
-/// O jogo segue com o resultado e o estado da original.
 unsafe extern "C" fn compare(n: i32) -> i32 {
     count_draw(n);
     // The original calls itself (recursion for large n) through this detour.
@@ -244,8 +204,6 @@ unsafe extern "C" fn compare(n: i32) -> i32 {
 }
 
 /// Observer mode (`CM_ORIGINAL=1`): runs the original and only counts/checks the simulation stop.
-///
-/// [pt] Modo observador (`CM_ORIGINAL=1`): roda a original e so conta/verifica a parada da simulacao.
 unsafe extern "C" fn observe(n: i32) -> i32 {
     count_draw(n);
     original(n)
@@ -277,10 +235,6 @@ pub unsafe fn install(mode: Mode) {
 /// Compares original and Rust on `cases` synthetic inputs (state and n drawn, covering small,
 /// large, negative n, edges and the table wrap). Requires comparison mode installed
 /// (the original's recursion has to land in the original).
-///
-/// [pt] Compara original e Rust em `casos` entradas sinteticas (estado e n sorteados, cobrindo n
-/// pequeno, grande, negativo, bordas e a volta da tabela). Exige o modo comparacao instalado
-/// (a recursao da original tem de cair na original).
 pub unsafe fn self_test(cases: u64) {
     if ORIGINAL == 0 {
         return;

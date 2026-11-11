@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/cups/jap_emp_cup.rs.
-// [pt] Os comparadores das rotinas de ../comp/cups/jap_emp_cup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `jap_emp_cup_start_new_season`.
 pub(crate) unsafe extern "thiscall" fn compare_jap_emp_cup_start_new_season(this: usize) -> u32 {

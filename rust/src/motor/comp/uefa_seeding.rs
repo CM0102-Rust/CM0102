@@ -4,10 +4,6 @@ use super::*;
 ///
 /// +0 nation id, +4 the nation, +8 the 5-season coefficient (float), +0xc Champions League slots, +0xd UEFA Cup slots,
 /// +0xe Intertoto slots, +0xf the season's points (short), +0x11 the nation's clubs in the cups (char).
-///
-/// [pt] A entrada `i` da tabela das nações da classificação (registros de 0x12 bytes a partir do objeto: +0 id da nação,
-/// +4 a nação, +8 o coeficiente das 5 temporadas (float), +0xc vagas na Liga dos Campeões, +0xd na Copa da UEFA,
-/// +0xe na Intertoto, +0xf os pontos da temporada (short), +0x11 os clubes da nação nas copas (char)).
 pub(crate) fn seeding_nation_entry(this: usize, i: i32) -> usize {
     this.wrapping_add((i * 0x12) as usize)
 }
@@ -17,13 +13,6 @@ pub(crate) fn seeding_nation_entry(this: usize, i: i32) -> usize {
 /// without shifting); the table is sorted from the highest coefficient down and the position is stored in the nation's
 /// national team
 /// Original: `UefaSeeding::roll_coefficients` (0x903b50, uefa_seeding.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x903b50 } (thiscall, ret 0, uefa_seeding.cpp, `UefaSeeding::roll_coefficients`): na virada do ano do jogo
-/// (0x9035a0), para cada nação da tabela (+0x438, char): fora de 2001, as 5 temporadas da nação (+0xe0..+0x108, double)
-/// andam uma casa e a última vira os pontos da temporada / os clubes nas copas (0 sem clubes); em todo ano, o
-/// coeficiente (+8, float) = a soma das 5 (na ordem +0x100, +0xf8, +0xf0, +0xe8, +0xe0, em double, arredondada para
-/// float) e os pontos e os clubes zeram. Depois ordena a tabela pelo coeficiente (qsort 0x945333 com 0x905cb0, do
-/// maior para o menor) e grava a posição de cada nação no +0x1df da seleção dela (0x53b3d0).
 pub(crate) unsafe extern "thiscall" fn roll_coefficients(this: usize) {
     let count = || read_i8(this + uefa_seeding::NATION_COUNT);
     let year = read_i16(G_CURRENT_DATE_YEAR);
@@ -60,16 +49,12 @@ pub(crate) unsafe extern "thiscall" fn roll_coefficients(this: usize) {
 }
 
 /// Up to 16 differing addresses between two memory snapshots.
-///
-/// [pt] As diferenças entre duas memórias (os 16 primeiros endereços).
 pub(crate) fn memory_diff_addresses(mo: &crate::comparison::MemorySnapshot, mr: &crate::comparison::MemorySnapshot) -> Vec<usize> {
     let (a, b) = (&mo.0, &mr.0);
     (0..a.len()).flat_map(|q| (0..a[q].1.len()).filter(move |&i| a[q].1[i] != b[q].1[i]).map(move |i| a[q].0 + i)).take(16).collect()
 }
 
 /// Comparer regions: the nation table and each nation's 5 seasons (+0xe0..+0x110) and national team +0x1df.
-///
-/// [pt] A tabela das nações e, de cada nação, as 5 temporadas (+0xe0..+0x110) e o +0x1df da seleção.
 pub(crate) unsafe fn seeding_regions(this: usize) -> Vec<(usize, usize)> {
     let n = read_i8(this + uefa_seeding::NATION_COUNT).max(0) as i32;
     let mut reg = vec![(this, 0x43b)];
@@ -90,17 +75,6 @@ pub(crate) unsafe fn seeding_regions(this: usize) -> Vec<(usize, usize)> {
 /// places are read by the distribution (`assign_intertoto_places`); the Champions League and UEFA Cup ones (and fair play) are stored,
 /// but the distribution uses fixed bands by position [inference: they feed the screens]
 /// Original: `UefaSeeding::set_place_counts` (0x903cc0, uefa_seeding.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x903cc0 } (thiscall, ret 0, uefa_seeding.cpp, `UefaSeeding::set_place_counts`): as vagas de cada nação pela
-/// posição `i` na tabela já ordenada (0x903b50). Liga dos Campeões (+0xc): 1ª a 3ª 4 vagas, 4ª a 6ª 3, 7ª a 15ª 2, 16ª
-/// a 48ª 1, o resto 0 (Liechtenstein antes zerado, mas a faixa grava por cima). Copa da UEFA (+0xd): Liechtenstein e
-/// San Marino 0, e por cima 1ª a 6ª 3, 7ª e 8ª 4, 9ª a 15ª 2, 16ª a 21ª 3, 22ª a 48ª 2, 49ª e 50ª 1 (da 51ª em diante
-/// fica o que estava). Intertoto (+0xe): Moldávia, San Marino, Andorra, Bósnia e Liechtenstein 0; Escócia 1; em 2001
-/// França 4, Alemanha 3, Portugal, Noruega, Espanha e Rússia 0, Itália e Portugal 1; fora de 2001 Inglaterra 1; as
-/// outras, na ordem da tabela, 2 vagas até a 16ª delas (e a Bélgica em 2000), 1 até a 43ª, depois 0. O prêmio do fair
-/// play: três nações ganham uma vaga a mais na Copa da UEFA; em 2001 a Finlândia, a Eslováquia e a Bielorrússia (sem
-/// uma delas na tabela, a caixa da linha 0x285 e o sorteio); fora de 2001, três sorteadas (0x90cfc0 com o número de
-/// nações, de três em três) distintas e fora a Itália.
 pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
     let g = |a: usize| read_u32(a);
     let count = || read_i8(this + uefa_seeding::NATION_COUNT);
@@ -213,14 +187,6 @@ pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
 /// if it gets there with the count at zero, that one is chosen without the tests. Returns the club if it belongs to the
 /// nation, otherwise 0.
 /// Original: `uefa_find_nth_unplaced_club_of_nation` (0x9050d0, uefa_seeding.cpp, thiscall, ret 0x18 (this não lido)).
-///
-/// [pt] { 0x9050d0 } (thiscall, ret 0x18, uefa_seeding.cpp, `uefa_find_nth_unplaced_club_of_nation`; o this não é lido):
-/// na tabela dos clubes europeus (registros de 12 bytes ordenados pela nação, 0x904040: +0 o clube, +4 o id da nação,
-/// +8, +9, +0xb), a busca binária (bsearch 0x946464 com 0x905ce0; a chave só com a nação e +8 = 0xff, então só a nação
-/// conta) acha um clube da nação; recua até o primeiro da nação; anda até o `n`-ésimo (char, 1 = o primeiro) que conta,
-/// pulando, se pedido, os que já têm vaga nas copas europeias (+0x1db ≠ −1) e os de técnico humano (0x600a50(clube, 0,
-/// 1, 0, 0)). O último registro da tabela nunca é examinado pela volta: se ela chega nele com a conta zerada, ele é o
-/// escolhido sem os testes. Devolve o clube se for da nação, senão 0.
 pub(crate) unsafe extern "thiscall" fn uefa_find_nth_unplaced_club_of_nation(_this: usize, clubs: usize, count: u32, nation: u32, n: u32, without_slot: u32, without_human: u32) -> usize {
     let search: unsafe extern "C" fn(*const u8, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let k = count as u16 as i16 as i32;
@@ -278,10 +244,6 @@ pub(crate) unsafe fn increment_byte(a: usize) {
 /// Sets +0x1db = comp, +0x1df = fase and counts one more club for nation `i` (+0x11). Returns whether it got the place.
 /// (The case of a nation with no entry, −1, which the original looks up by the club's nation, does not happen: `i`
 /// always comes from the loop over the nations.)
-///
-/// [pt] O clube `c` ganha a vaga na competição `comp`, na fase `fase`, se tem nação e ainda não tem vaga (+0x1db = −1):
-/// +0x1db = comp, +0x1df = fase e um clube a mais da nação `i` (+0x11). Devolve se ganhou. (O caso da nação sem entrada,
-/// −1, que a original procura pela nação do clube, não acontece: `i` vem sempre da volta pelas nações.)
 pub(crate) unsafe fn assign_comp_place(this: usize, c: Club, comp: u32, stage: u8, i: i32) -> bool {
     if c.is_null() || (c.nation().addr() as u32) == 0 || c.continental_comp_id() != u32::MAX {
         return false;
@@ -306,16 +268,6 @@ pub(crate) unsafe fn assign_comp_place(this: usize, c: Club, comp: u32, stage: u
 /// `exe::crt_qsort` with 0x905ce0) and, in 2001, applies the euro.cfg order (`exe::uefaseeding_apply_euro_cfg_order`, original). Returns the number of clubs
 /// (only the low 16 bits count: the caller reads si).
 /// Original: `UefaSeeding::collect_european_clubs` (0x904040, uefa_seeding.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x904040 } (thiscall, ret 4, uefa_seeding.cpp, `UefaSeeding::collect_european_clubs`): a tabela dos clubes
-/// europeus: aloca 12 bytes por clube do jogo (0x944e46; sem memória, a caixa da linha 0x2ed e devolve 0) e grava o
-/// ponteiro em `*saida`; para cada clube (registros de 0x245 em [0xae23b4], [0xae235c] clubes) com nação, que não é
-/// seleção (0x53b900) e cuja nação é da Europa (o continente +0x71 com o id de [0x9cfa10]): tira a vaga europeia (+0x1db
-/// = −1 e o dword da linha do clube em [0xae2d14], 6 bytes por clube, = −1) e grava o registro (+0 o clube, +4 o id da
-/// nação, +8 a reputação +0x80 / 500, +9 o +0x69 da divisão +0x5b [inferência: o nível da divisão], +0xb o +0x5f [inferência: a posição nela]; sem divisão, −1 e 0x7f;
-/// com a linha de uma competição sem o +0x11c, a linha e o +0x5f do clube zeram). Ordena pela nação (qsort 0x945333 com
-/// 0x905ce0) e, em 2001, aplica a ordem do euro.cfg (0x9059e0, original). Devolve o número de clubes (só os 16 bits
-/// baixos contam: quem chama lê o si).
 pub(crate) unsafe extern "thiscall" fn collect_european_clubs(this: usize, out: *mut usize) -> u32 {
     let t = exe::crt_malloc((read_u32(G_CLUB_COUNT) as i32).wrapping_mul(12) as u32);
     *out = t;
@@ -371,8 +323,6 @@ pub(crate) unsafe extern "thiscall" fn collect_european_clubs(this: usize, out: 
 }
 
 /// Comparer regions: club table, club state table, random seed and competition history table.
-///
-/// [pt] Os clubes do jogo, a linha de cada clube em [0xae2d14], a marca da caixa e o histórico das competições ([0xae23d4],\n/// [0xae237c] linhas de 0x1a: a 0x4afd80 o reordena, e com linhas empatadas a ordem de antes muda o clube achado).
 pub(crate) unsafe fn club_regions() -> Vec<(usize, usize)> {
     let n = (read_u32(G_CLUB_COUNT) as i32).max(0) as usize;
     vec![(read_u32(G_CLUB_TABLE) as usize, n * club::SIZE), (read_u32(G_CLUB_STATE_TABLE) as usize, n * 6), (G_MOUSE_LEFT_BUTTON_DOWN, 4), (read_u32(G_CLUB_COMP_HISTORY_TABLE) as usize, (read_u32(G_CLUB_COMP_HISTORY_COUNT) as i32).max(0) as usize * 0x1a)]
@@ -386,16 +336,6 @@ pub(crate) unsafe fn club_regions() -> Vec<(usize, usize)> {
 /// (champion, runner-up...); each round has a capacity (groups 16, or 15 with the holder; third 18, second 19, first
 /// 18) and a place in a full round moves to the next one; a club that already has a place loses its own
 /// Original: `UefaSeeding::assign_champions_league_places` (0x904210, uefa_seeding.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x904210 } (thiscall, ret 8, uefa_seeding.cpp, `UefaSeeding::assign_champions_league_places`): as vagas da Liga dos
-/// Campeões ([0x9cf6e8]). O campeão da última edição (0x4afd80 com a linha da competição em [0xae23d0], 0x6b bytes, e o
-/// lugar 0) vai direto à fase de grupos (fase 1; a fase de grupos fica com 15 vagas); sem ele, a caixa da linha 0x35d.
-/// Depois, nação por nação na ordem do coeficiente (a posição `r`), as vagas por fase (1 = grupos, 2 = terceira
-/// preliminar, 3 = segunda, 4 = primeira) pelas faixas fixas: 1ª a 3ª nação 2 nos grupos e 2 na terceira preliminar; 4ª
-/// a 6ª 2 e 1; 7ª a 9ª 1 e 1; 10ª 1 nos grupos e 1 na segunda; 11ª a 15ª 1 na terceira e 1 na segunda; 16ª 1 na
-/// terceira; 17ª a 29ª 1 na segunda; da 30ª em diante 1 na primeira. Para k = 1..7, o k-ésimo clube da nação
-/// (0x9050d0, sem pular ninguém) vai à primeira fase com vaga pedida; fase cheia (as capacidades 16/15, 18, 19 e 18) passa
-/// uma vaga para a fase seguinte; clube sem nação ou já com vaga perde a vaga.
 pub(crate) unsafe extern "thiscall" fn assign_champions_league_places(this: usize, clubs: usize, count: u32) {
     let lc = read_u32(KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE);
     let mut cap: [u8; 5] = [0, 0x10, 0x12, 0x13, 0x12];
@@ -473,13 +413,6 @@ pub(crate) unsafe extern "thiscall" fn assign_champions_league_places(this: usiz
 /// round 2, then round 3 (a nation's second club one round later). England puts in the volunteer club (`pick_english_intertoto_club`) or the
 /// first one without a place and without a human manager, and a second one when it has 2 places
 /// Original: `UefaSeeding::assign_intertoto_places` (0x904e30, uefa_seeding.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x904e30 } (thiscall, ret 8, uefa_seeding.cpp, `UefaSeeding::assign_intertoto_places`): as vagas da Intertoto
-/// ([0x9cf6f8]) até 60 clubes: dá voltas pelas nações na ordem do coeficiente (a conta vai a `n` e volta a 0, e a fase
-/// sai da conta antes de voltar: abaixo de 8 a fase 1, de 8 a 11 a 2, de 12 em diante a 3). A Inglaterra: um clube (o
-/// voluntário da 0x903890; sem ele, o primeiro sem vaga e sem humano, 0x9050d0) e, com 2 vagas (+0xe), o segundo, na
-/// fase seguinte; depois solta a lista dos voluntários (+0x43b, +0x43f). As outras: tantos clubes quanto as vagas +0xe,
-/// o primeiro sem vaga de cada vez (humanos podem), na fase + a ordem do clube, enquanto houver menos de 60.
 pub(crate) unsafe extern "thiscall" fn assign_intertoto_places(this: usize, clubs: usize, count: u32) {
     let it = read_u32(KEY_CLUB_COMP_INTER_TOTO_CUP);
     let mut colocados = 0i32;
@@ -539,9 +472,6 @@ pub(crate) unsafe extern "thiscall" fn assign_intertoto_places(this: usize, club
 }
 
 /// Club c (with nation, no place) enters the UEFA Cup at a phase; counts it for nation r.
-///
-/// [pt] O clube `c` (com nação e ainda sem vaga) entra na Copa da UEFA na fase `fase`; um clube a mais da nação `r`. Devolve
-/// se entrou. (O caso da nação −1, que a original procura pela nação do clube, não acontece: `r` vem da volta.)
 pub(crate) unsafe fn enter_uefa_cup(this: usize, c: Club, stage: u8, r: i32, colocados: &mut i32) -> bool {
     if (c.nation().addr() as u32) == 0 || c.continental_comp_id() != u32::MAX {
         return false;
@@ -563,21 +493,6 @@ pub(crate) unsafe fn enter_uefa_cup(this: usize, c: Club, stage: u8, r: i32, col
 /// be played stored in the seeding, except Spain and Belgium), the second to the league cup winner, the others to the
 /// top clubs of the table still without a place
 /// Original: `UefaSeeding::assign_uefa_cup_places` (0x904580, uefa_seeding.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x904580 } (thiscall, ret 8, uefa_seeding.cpp, `UefaSeeding::assign_uefa_cup_places`): as vagas da Copa da UEFA
-/// ([0x9cf6f0]). O campeão da última edição (0x4afd80 com a linha da competição e o lugar 0) na fase 1, e a nação dele
-/// com uma vaga a menos na fase 1. Três nações sorteadas (0x90cfc0 com o número de nações; a 2ª e a 3ª de novo até as
-/// três serem distintas) ganham uma vaga a mais na preliminar (o fair play). Por posição da nação no coeficiente, as
-/// vagas na fase 1 e na preliminar (fase 2): 1ª a 6ª 3 e 0, 7ª e 8ª 4 e 0, 9ª a 15ª 1 e 1, 16ª e 17ª 1 e 2, 18ª a 21ª 0
-/// e 3, 22ª a 48ª 0 e 2, da 49ª em diante 0 e 1. Os clubes de cada nação, na ordem: 1º o campeão da copa nacional (a
-/// copa da nação em 0xb63d7e + linha × 0x48, linha = 0x669340), ou o vice se o campeão já tem vaga (a Bélgica e o vice
-/// sem nação: o seguinte da tabela), e, com os dois já com vaga, a final guardada em +0x440 (50 registros: copa,
-/// campeão, vice) quando a copa da temporada ainda não foi disputada (o ano +0x40 da copa ≠ o da nação em 0xb63d7b;
-/// fora Espanha e Bélgica); 2º o campeão da copa da liga (0xb63d82), se ainda sem vaga; os outros, o primeiro sem vaga da
-/// tabela (0x9050d0(.., 1, 1, 0)); sem copa nacional na linha, a caixa da linha 0x418 e a vaga é tentada de novo.
-/// Com a final guardada e os dois finalistas: uma vaga a mais para quem dos dois ainda não tem (os dois sem vaga entram
-/// na fase 10 × a conta + 3; os dois com vaga, o primeiro sem vaga da tabela). Para quando os colocados menos a conta
-/// passam de 116.
 pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs: usize, count: u32) {
     let n8 = || read_i8(this + uefa_seeding::NATION_COUNT);
     let uc = read_u32(KEY_CLUB_COMP_UEFA_CUP);
@@ -774,14 +689,6 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
 /// +0x5f]); with none, it draws Premier clubs until one without a place. Delivers news item 0x17 with the club
 /// (`construct_news_item`, `set_news_field`, `send_to_division_managers` to the Premier division) and returns the club.
 /// Original: `UefaSeeding::pick_english_intertoto_club` (0x903890, uefa_seeding.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x903890 } (thiscall, ret 0, uefa_seeding.cpp, `UefaSeeding::pick_english_intertoto_club`; quadro SEH pela notícia
-/// local, sem destrutor no caminho normal): o clube inglês da Intertoto. Em 2001, ou sem a Premier ([0xadadfc] +
-/// [0x9cf5bc] × 4), devolve 0. Senão completa a lista dos voluntários (+0x43b, 30 ids, alocada com 0x78 bytes; +0x43f a
-/// conta) até 6, sorteando clubes da Premier (0x90cfc0 com +0x3e, até 80 sorteios) sem técnico humano e sem vaga
-/// europeia; escolhe o voluntário sem vaga da divisão mais alta (a da Premier +4 conta o +0x5f; as outras +30); sem
-/// nenhum, sorteia clubes da Premier até um sem vaga. Entrega a notícia 0x17 com o clube (0x77bbe0, 0x785790, 0x7862d0
-/// à divisão da Premier) e devolve o clube.
 pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) -> usize {
     if read_i16(G_CURRENT_DATE_YEAR) == 0x7d1 {
         return 0;
@@ -866,14 +773,6 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
 /// the game, news item 0x16 asking for volunteers (with the year) to each human manager of a Premier club (without the
 /// Premier, it returns with nothing else); and the European registration deadline (`exe::uefa_check_registration_deadlines`).
 /// Original: `UefaSeeding::update_season` (0x9035a0, uefa_seeding.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x9035a0 } (thiscall, ret 4, uefa_seeding.cpp, `UefaSeeding::update_season`; quadro SEH pela notícia local, sem
-/// destrutor no caminho normal): chamada pelas copas europeias. Sem `diario`: quando o ano do jogo ([0xae2c92]) é outro
-/// que o +0x439, grava o ano e refaz a classificação: os coeficientes (0x903b50), as vagas por nação (0x903cc0), a tabela
-/// dos clubes (0x904040; vazia, a caixa da linha 0x2b7), as vagas da Liga dos Campeões (0x904210), da Copa da UEFA
-/// (0x904580) e da Intertoto (0x904e30), solta a tabela e entrega a notícia dos classificados (0x905f00). Com `diario`:
-/// no dia 100 do ano, com a Premier e a Intertoto no jogo, a notícia 0x16 do pedido de voluntários (com o ano) a cada
-/// técnico humano de clube da Premier (sem a Premier, volta sem mais nada); e o prazo das inscrições europeias (0x9058e0).
 pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
     if diario == 0 {
         let year = read_i16(G_CURRENT_DATE_YEAR);
@@ -924,15 +823,11 @@ pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
 }
 
 /// Reads a signed byte count as u32 (movsx).
-///
-/// [pt] A contagem de um byte com sinal (a original usa `movsx`).
 pub(crate) unsafe fn signed_byte_count(a: usize) -> u32 {
     read_i8(a) as i32 as u32
 }
 
 /// Opens CM3_TEMP\<name> with "wb" through the game's path builder and fopen.
-///
-/// [pt] Abre `CM3_TEMP\<nome>` para gravar ("wb"): o caminho pela 0x90bde0 e o fopen do jogo (0x945b00).
 pub(crate) unsafe fn open_temp_file_for_write(name: usize) -> usize {
     exe::crt_fopen(exe::utils_build_file_path(0x987da0, name), 0x9a7f28)
 }
@@ -954,12 +849,6 @@ pub(crate) unsafe fn uefa_seeding_crt_fclose(f: usize) {
 /// box (uefa_seeding.cpp 0x64f, 0x657, 0x660, 0x668, 0x66f, 0x679, 0x682), without closing the file (as the original
 /// does).
 /// Original: `UefaSeeding::save_to_temp_file` (0x905510, uefa_seeding.cpp, thiscall).
-///
-/// [pt] { 0x905510 } (thiscall, ret 0, uefa_seeding.cpp): `UefaSeeding::save_to_temp_file`: grava `CM3_TEMP\uefa_seeding.tmp`:
-/// a quantidade de países (+0x438, i8), os registros de 0x12 bytes de +0, +0x439 (u16), a quantidade +0x43f (i8) e, se
-/// não for zero, essa quantidade de u32 de [+0x43b], e os 50 registros fixos de 0xc bytes de +0x440. Erro ao abrir ou
-/// gravar: a caixa "Error" (uefa_seeding.cpp 0x64f, 0x657, 0x660, 0x668, 0x66f, 0x679, 0x682), sem fechar o arquivo
-/// (como a original).
 pub(crate) unsafe extern "thiscall" fn uefa_seeding_save_to_temp_file(this: usize) {
     const FONTE: usize = 0xaa1a1c;
     covered!("cpx_6 save UEFA seeds");

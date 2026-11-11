@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/eng_second.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/eng_second.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `eng_second_create_schedule`.
 pub(crate) unsafe extern "thiscall" fn compare_eng_second_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
@@ -16,11 +15,6 @@ pub(crate) unsafe extern "thiscall" fn compare_eng_second_create_schedule(this: 
 /// (+0x37 = 0 and saiu = 1 with 1; +0x37 = 0xfe with 0xff or 2; nothing with 0, which keeps looking for another row of
 /// the same club); afterwards the row and `saiu` must be like that. In the league the routine writes nothing: only the
 /// return value is checked.
-///
-/// [pt] Comparador da 0x576c50: os registros gravam o histórico no arquivo, sorteiam o moral e podem renovar contratos
-/// (não rodam duas vezes): só a original. O plano, feito antes, no mata-mata: a primeira linha do clube decide o que a
-/// rotina grava (+0x37 = 0 e saiu = 1 com 1; +0x37 = 0xfe com 0xff ou 2; nada com 0, que segue procurando outra linha
-/// do mesmo clube); depois a linha e `saiu` têm de estar assim. Na liga a rotina não grava nada: a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_eng_second_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, left: usize, a: u32, b: u32) -> u32 {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, usize, u32, u32) -> u32>(IDX_ENG_SECOND_UPDATE_STAFF_RECORDS_FOR_STATUS);

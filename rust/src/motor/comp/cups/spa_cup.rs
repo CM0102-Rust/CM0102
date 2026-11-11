@@ -4,14 +4,6 @@ use super::*;
 /// seeding year matches the cup's year (+0x40) and the stage is not 0, it frees the old entrant, round and fixture
 /// lists and rebuilds the cup (entrants, rounds, bracket, predicted positions), returning 0 after an error box if a
 /// step fails. Always ends by calling the generic cup update for the date and returns its result.
-///
-/// [pt] { 0x84d740 } (thiscall, ret 8, spa_cup.cpp; a virtual +0x14 da Copa do Rei, todo dia): `SpaCup::update_for_date(hoje,
-/// fase)`. Uma vez (+0x45 = 0), quando o ano da classificação da UEFA ([0xde1f58] +0x439, palavra sem sinal) é o da copa
-/// (+0x40, com sinal) e a fase não é 0: a lista dos inscritos (+0xa7), a das rodadas (+0xa3) e os confrontos de cada
-/// rodada (+0xad, +0x3c rodadas) liberados (0x9452ca; os ponteiros ficam), +0x45 = 1, os inscritos (SpaCup::
-/// collect_entrants 0x84d910, thiscall), as rodadas (virtual +0x8c) e a árvore (virtual +0x94) — uma devolução negativa
-/// dá a caixa (linhas 0x161, 0x168, 0x16f) e 0 — e as posições previstas (virtual +0x5c). Sempre, no fim, a atualização da
-/// copa (0x51f890: push fase; push hoje; mov ecx -> thiscall, ret 8), cuja devolução sai.
 pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
     let this = Cup(this);
     if this.season_set_up() == 0 && read_i16(read_usize(G_UEFA_SEEDING) + 0x439) as u16 as i32 == this.year() as i32 && stage != 0 { // cqt5: the Copa del Rey year
@@ -55,9 +47,6 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_update_for_date(this: usize, toda
 // original; the plan: +0x45 goes to 1 when the condition holds, otherwise it stays.
 
 /// record_season_honours of a cup: calls virtual +0x30 of its final stage ([+0xc][o/4]) and returns its eax.
-///
-/// [pt] O histórico da temporada de uma copa (`record_season_honours`, 11 bytes: mov eax, [ecx+0xc]; mov ecx, [eax+o]; mov
-/// edx, [ecx]; jmp [edx+0x30]): a virtual +0x30 da fase [+0xc][o/4] (a última fase da copa: a final), com o eax dela.
 pub(crate) unsafe fn record_season_honours(this: Cup, o: usize, ramo: &'static str) -> i32 {
     covered!(ramo);
     let stage = read_usize(this.stages() + o);
@@ -66,34 +55,24 @@ pub(crate) unsafe fn record_season_honours(this: Cup, o: usize, ramo: &'static s
 
 /// EuropeanCup::record_season_honours(): records the season's honours by calling the honours routine of the cup's final
 /// stage (stage slot +0x30, the Champions League final). Returns that routine's result.
-///
-/// [pt] { 0x584ad0 } (thiscall, ret 0, european_cup.cpp): `EuropeanCup::record_season_honours()`: o histórico da fase 12
-/// (+0x30: a final da Liga dos Campeões).
 pub(crate) unsafe extern "thiscall" fn spa_cup_record_season_honours(this: usize) -> i32 {
     record_season_honours(Cup(this), 0x30, "cqt_5 historico da liga dos campeoes")
 }
 
 /// GreCup::record_season_honours (the Greek Cup, sharing code with the Spanish Cup): records the season's winners in
 /// the history from stage 10 (+0x28). Returns the shared routine's result.
-///
-/// [pt] { 0x5e93e0 } (thiscall, ret 0, gre_cup.cpp): `GreCup::record_season_honours()`: o histórico da fase 10 (+0x28).
 pub(crate) unsafe extern "thiscall" fn spa_cup_record_season_honours_5e93e0(this: usize) -> i32 {
     record_season_honours(Cup(this), 0x28, "cqt_5 historico da copa da grecia")
 }
 
 /// IreLgeCup::record_season_honours() (the Irish league cup, despite the file name): records the season's honours by
 /// calling virtual +0x30 of the final stage (stage 7, cup +0xc table entry +0x1c); returns its result.
-///
-/// [pt] { 0x637750 } (thiscall, ret 0, ire_lge_cup.cpp): `IreLgeCup::record_season_honours()`: o histórico da fase 7 (+0x1c).
 pub(crate) unsafe extern "thiscall" fn spa_cup_record_season_honours_637750(this: usize) -> i32 {
     record_season_honours(Cup(this), 0x1c, "cqt_5 historico da copa da liga irlandesa")
 }
 
 /// ItaCCup::record_season_honours (Italian Serie C cup, despite the file): records the season honours from stage 15
 /// (+0x3c, the cup's knockout) by calling its virtual +0x30; returns that call's result.
-///
-/// [pt] { 0x63d770 } (thiscall, ret 0, ita_c_cup.cpp): `ItaCCup::record_season_honours()`: o histórico da fase 15 (+0x3c: o
-/// mata-mata da Copa da Série C).
 pub(crate) unsafe extern "thiscall" fn spa_cup_record_season_honours_63d770(this: usize) -> i32 {
     record_season_honours(Cup(this), 0x3c, "cqt_5 historico da copa da serie c")
 }
@@ -106,9 +85,6 @@ pub(crate) unsafe extern "thiscall" fn spa_cup_record_season_honours_63d770(this
 /// ground [inference: venue 4]; up to the semi-final the lower-division club plays at home and clubs of the same nation
 /// are kept apart in the draw (+0xb = 3); no prize per round (−1); category 4 up to the last 16 and 6 after
 /// Original: `SpaCup::create_round_table` (0x84d220, spa_cup.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x84d220 } (thiscall, ret 0x10, spa_cup.cpp; a virtual +0x3c da Copa do Rei): `SpaCup::create_round_table(fase,
-/// &rodadas, &extra, &saida)`: na fase −1, as 7 rodadas; a caixa da linha 0xa8 sem memória.
 pub(crate) unsafe extern "thiscall" fn spa_cup_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     single_stage_round_table(Cup(this), stage, rounds, extra, out, &COPA_DEL_REY_ROUNDS, 0xa82810, 0xa8, "cql_11 tabela da copa do rei")
 }

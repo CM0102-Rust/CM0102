@@ -6,10 +6,6 @@ use super::*;
 /// the nation of `time` (+0x53), in index order: bsearch (`exe::crt_bsearch` with 0x55e5f0, cdecl) by the key (−1, nation), which
 /// matches any person of the nation; then it walks back to the first equal item and forward to the last. 0 items if not
 /// found.
-///
-/// [pt] Os itens (8 bytes: +0 id da pessoa, +4 id da nação) do índice das nações da disciplina ([this+0xc], conta +0x12
-/// com sinal) da nação do `time` (+0x53), na ordem do índice: bsearch (0x946464 com 0x55e5f0, cdecl) pela chave (−1,
-/// nação), que iguala qualquer pessoa da nação; volta até o primeiro igual e segue até o último. 0 itens sem achar.
 pub(crate) unsafe fn nation_index_range(this: usize, team: Club) -> (usize, usize) {
     let bsearch: unsafe extern "C" fn(*const u32, usize, i32, u32, usize) -> usize = core::mem::transmute(FN_CRT_BSEARCH);
     let key = [u32::MAX, read_usize(team.nation().addr()) as u32];
@@ -40,12 +36,6 @@ pub(crate) unsafe fn nation_index_range(this: usize, team: Club) -> (usize, usiz
 /// (`0x68d0d0` with the item and 4: a copy of the id, because the count can release the ban and reorder the index) and,
 /// for each one, one match served under rule 0 (`0x556e90` with 0 and 1). At the end the list is destroyed.
 /// Original: `Discipline::serve_international_bans` (0x557120, discipline.cpp, thiscall).
-///
-/// [pt] { 0x557120 } (thiscall, ret 4, discipline.cpp, quadro SEH da LLIST local 0x68d020/0x68d040):
-/// `Discipline::serve_international_bans(time)`, pelo jogo da seleção (0x7e8090, no órgão das suspensões). As pessoas da
-/// nação do time no índice das nações (nation_index_range) vão para uma lista (0x68d0d0 com o item e 4: a cópia do id, porque
-/// a contagem pode soltar a suspensão e reordenar o índice) e, para cada uma, um jogo cumprido na regra 0
-/// (0x556e90 com 0 e 1). No fim a lista é destruída.
 pub(crate) unsafe extern "thiscall" fn serve_international_bans(this: usize, team: usize) {
     let mut l = [0u8; 14];
     let list = Llist(l.as_mut_ptr() as usize);
@@ -132,13 +122,6 @@ pub(crate) unsafe fn appeal_plan(this: usize, id: u32, rule: u32, reduces: u32, 
 /// otherwise releases; by days: `dias_fixo` ≠ −1 removes `menos_dias` (down to 0: zero and release), otherwise `reduz`
 /// removes and releases at 0, otherwise releases. Release: `0x556d00` with the index.
 /// Original: `Discipline::apply_appeal_result` (0x557000, discipline.cpp, thiscall).
-///
-/// [pt] { 0x557000 } (thiscall, ret 0x20, discipline.cpp): `Discipline::apply_appeal_result(id, regra, reduz, menos_jogos,
-/// menos_dias, novo, dias_fixo, _)`, pelo resultado do recurso (0x6abf99, notícias do técnico humano). Com a entrada da
-/// pessoa no órgão (0x7e82e0 sem criar) e suspensão (+6): o órgão tira as suspensões pendentes dela (0x7e91d0); por
-/// jogos (+0 ≠ 0xff): `novo` ≠ 0xff tira `novo` jogos (abaixo de 0: zera e solta), senão `reduz` tira `menos_jogos` e
-/// solta se ficar até o contador (+1), senão solta; por dias: `dias_fixo` ≠ −1 tira `menos_dias` (até 0: zera e solta),
-/// senão `reduz` tira e solta até 0, senão solta. Soltar: 0x556d00 com o índice.
 pub(crate) unsafe extern "thiscall" fn apply_appeal_result(this: usize, id: u32, rule: u32, reduces: u32, minus_games: u32, minus_days: u32, new: u32, days_fixed: u32, _x: u32) {
     let r = appeal_plan(this, id, rule, reduces, minus_games, minus_days, new, days_fixed);
     if r.suspensao == 0 {
@@ -157,9 +140,6 @@ pub(crate) unsafe extern "thiscall" fn apply_appeal_result(this: usize, id: u32,
 }
 
 /// Rule (ruling body byte, 0xff none) of ban slot `vaga` in the person's 29-byte discipline record ([this+0x14]).
-///
-/// [pt] A vaga `vaga` (byte com sinal) da suspensão da pessoa no registro de 29 bytes ([this+0x14]: 5 bytes por vaga): o
-/// órgão da regra (0xff = sem vaga).
 pub(crate) unsafe fn ban_slot_rule(this: usize, person: usize, slot: u32) -> u8 {
     let id = read_usize(person);
     read_u8(read_usize(this + discipline_fields::PERSON_RECORDS) + id.wrapping_mul(29) + (slot as i8 as isize as usize).wrapping_mul(5))
@@ -172,11 +152,6 @@ pub(crate) unsafe fn ban_slot_rule(this: usize, person: usize, slot: u32) -> u8 
 /// otherwise its ruling body's text (`[[this] + 4 × rule]`, `0x7e88d0` with the person, the output and the size). Null
 /// person: the original routine runs (it reads the id from 0).
 /// Original: `Discipline::get_slot_text` (0x55d3c0, discipline.cpp, thiscall).
-///
-/// [pt] { 0x55d3c0 } (thiscall, ret 0x10, discipline.cpp): `Discipline::get_slot_text(pessoa, vaga, saída, tamanho)`, pela
-/// tela da pessoa (0x87618a, com 0xc8). Pessoa de id a partir de [0xae2364]: 0. A regra da vaga (ban_slot_rule) 0xff: 0;
-/// senão o texto do órgão dela ([[this] + 4 × regra], 0x7e88d0 com a pessoa, a saída e o tamanho). Pessoa nula: a
-/// original (lê o id de 0).
 pub(crate) unsafe extern "thiscall" fn get_slot_text(this: usize, person: usize, slot: u32, out: usize, size: u32) -> u32 {
     if person == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize, u32) -> u32>(IDX_GET_SLOT_TEXT)(this, person, slot, out, size);
@@ -192,24 +167,16 @@ pub(crate) unsafe extern "thiscall" fn get_slot_text(this: usize, person: usize,
 }
 
 /// Ruling body of rule (signed byte): [[this] + 4 x rule].
-///
-/// [pt] O órgão disciplinar da regra `regra` (byte com sinal): [[this] + 4 × regra].
 pub(crate) unsafe fn ruling_body_of_rule(this: usize, rule: u8) -> usize {
     read_usize(read_usize(this).wrapping_add((rule as i8 as isize as usize).wrapping_mul(4)))
 }
 
 /// Person id's 29-byte discipline record in [this+0x14] (4 slots of 5 bytes, history, stored ban count).
-///
-/// [pt] O registro de 29 bytes da pessoa `id` em [this+0x14] (4 vagas de 5 bytes: a regra e o índice da entrada; +0x14/+0x18
-/// o histórico; +0x1c quantas suspensões guardadas).
 pub(crate) unsafe fn discipline_record(this: usize, id: u32) -> usize {
     read_usize(this + discipline_fields::PERSON_RECORDS).wrapping_add((id as usize).wrapping_mul(29))
 }
 
 /// Does the ruling body apply to the club (by nation +0x17, else continent +0x1b, else always)?
-///
-/// [pt] O órgão vale para o clube? Com nação (+0x17 ≠ −1): a nação do clube (+0x53) é ela; sem nação, com continente
-/// (+0x1b ≠ −1): o continente da nação do clube (+0x71) é ele; sem os dois, vale sempre. Clube nulo ou sem nação: não.
 pub(crate) unsafe fn ruling_body_covers_club(body: usize, club: Club) -> bool {
     let nation = read_usize(body + ruling_body::NATION_ID) as u32;
     if nation == 0xffff_ffff {
@@ -227,9 +194,6 @@ pub(crate) unsafe fn ruling_body_covers_club(body: usize, club: Club) -> bool {
 }
 
 /// Releases the entry's ban (if +6 > -1) via release_ban with the original's dirty high bits.
-///
-/// [pt] Solta a suspensão da entrada (se tem: +6 > −1) e libera a vaga `k` do registro da pessoa (regra 0xff, índice −1) e a
-/// entrada (+0 = −1). O índice vai no ax; o alto do eax é o do ponteiro da entrada (a 0x556d00 só lê a palavra).
 pub(crate) unsafe fn release_entry_ban(this: usize, id: u32, e: usize) {
     let i = read_i16(e + ruling_body_entry::BAN_INDEX);
     if i > -1 {
@@ -258,14 +222,6 @@ pub(crate) unsafe fn clear_discipline_slot(this: usize, id: u32, k: usize, e: us
 /// nation index (`+0xc`, capacity `+0x10`, count `+0x12`; grows by 20; qsort `0x55e5f0`). "Error" boxes (capacity at
 /// maximum, out of memory) via show_error_at.
 /// Original: `Discipline::add_ban` (0x556940, discipline.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x556940 } (thiscall, ret 8, discipline.cpp): `Discipline::add_ban(id, suspensao)`: se alguma das 4 regras da
-/// suspensão nova (+0xc..+0xf) já tem suspensão da pessoa (a entrada do órgão com +6 > −1), estende a velha (jogos +0
-/// somados, ou, com algum dos dois por dias (0xff), os dias +2) e marca as duas (+0x13 bit 0); senão (o bit 0 da nova
-/// limpo a cada regra sem suspensão) copia a nova (0x556c70) na primeira vaga livre do vetor (+0 = 0xff e +2 = −1), ou
-/// no fim (conta +0xa, capacidade +8; cresce 100, até 0x7d00, malloc/realloc, as vagas novas livres), liga cada regra
-/// ao índice (0x7e8510) e, com a quarta regra, põe {id, nação} no índice das nações (+0xc, capacidade +0x10, conta
-/// +0x12; cresce 20; qsort 0x55e5f0). Caixas "Error" (capacidade no máximo, sem memória) pela show_error_at.
 pub(crate) unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize) {
     for k in 0..4usize {
         let rule = read_u8(ban + ban_record::RULES + k);
@@ -371,11 +327,6 @@ pub(crate) unsafe extern "thiscall" fn add_ban(this: usize, id: u32, ban: usize)
 /// on a club move, frees each of the person's 4 record slots whose ruling body (nation +0x17 or continent +0x1b) does
 /// not cover the new club: releases the ban, frees the slot and the entry; with held bans, shows the "Error" box
 /// Original: `Discipline::clear_bans_invalid_for_club` (0x556270, discipline.cpp, thiscall, ret 0xc).
-///
-/// [pt] { 0x556270 } (thiscall, ret 0xc, discipline.cpp): `Discipline::clear_bans_invalid_for_club(pessoa, _, clube)`: cada
-/// vaga ocupada das 4 do registro da pessoa cujo órgão não vale para o clube novo (`ruling_body_covers_club`) é liberada: a
-/// suspensão solta (0x556d00), a vaga livre e a entrada do órgão livre. Com suspensões guardadas (+0x1c ≠ 0), a caixa
-/// "Error" antes (e segue). Da troca de clube (0x8c9720).
 pub(crate) unsafe extern "thiscall" fn clear_bans_invalid_for_club(this: usize, person: usize, _nada: u32, club: usize) {
     let id = read_usize(person) as u32;
     let r = discipline_record(this, id);
@@ -404,9 +355,6 @@ pub(crate) unsafe extern "thiscall" fn clear_bans_invalid_for_club(this: usize, 
 /// What `restore_held_bans` is going to do, read beforehand (the list of held bans loses and frees its items): the contract and
 /// the club, the person's held items (the slot and the 5 bytes) and, after them, the slots 0..2 not restored that the
 /// club does not cover.
-///
-/// [pt] O que a 0x556570 vai fazer, lido antes (a lista das guardadas perde e libera os itens): o contrato e o clube, os
-/// itens guardados da pessoa (a vaga e os 5 bytes) e, depois deles, as vagas 0..2 não devolvidas que o clube não cobre.
 pub(crate) struct ContractReturnPlan {
     pub(crate) contract: usize,
     pub(crate) club: usize,
@@ -417,8 +365,6 @@ pub(crate) struct ContractReturnPlan {
 
 /// Read-only plan of `restore_held_bans`: the person's contract and club, stored bans restored from the list, and bans to release
 /// for bodies not covering the club.
-///
-/// [pt] O plano da 0x556570 (o cursor da lista é zerado pela original na entrada; a busca sem criar só lê).
 pub(crate) unsafe fn return_bans_plan(this: usize, person: usize) -> ContractReturnPlan {
     let id = read_usize(person) as u32;
     let r = discipline_record(this, id);
@@ -468,13 +414,6 @@ pub(crate) unsafe fn return_bans_plan(this: usize, person: usize) -> ContractRet
 /// count drops. Then the slots 0..2 not restored (never the fourth: the original's `k != 3`) whose ruling body does not
 /// cover the club are freed.
 /// Original: `Discipline::restore_held_bans` (0x556570, discipline.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x556570 } (thiscall, ret 4, discipline.cpp): `Discipline::restore_held_bans(pessoa)`: no fim do empréstimo
-/// (0x4d07e0): o contrato (0x4cf5a0, guardado em [0xae1080]) dá o clube; cada suspensão guardada da pessoa na lista
-/// [this+0x1c] (id, vaga +4, os 5 bytes +5), enquanto houver guardadas (+0x1c do registro, com sinal): a vaga ocupada é
-/// liberada antes (a suspensão solta, 0x556d00), a guardada volta para a vaga, sai da lista (0x68d1f0, que a libera) e a
-/// conta cai. Depois, as vagas 0..2 não devolvidas (a quarta nunca: `k != 3` da original) cujo órgão não vale para o
-/// clube são liberadas.
 pub(crate) unsafe extern "thiscall" fn restore_held_bans(this: usize, person: usize) {
     let id = read_usize(person) as u32;
     let r = discipline_record(this, id);
@@ -565,31 +504,22 @@ pub(crate) unsafe fn add_ban_plan(this: usize, id: u32, ban: usize) -> Suspensio
 }
 
 /// Person id's 29-byte discipline record in [this+0x14].
-///
-/// [pt] O registro de 29 bytes da pessoa `id` em [this+0x14] (+0x14/+0x18: o começo e o último deslocamento do histórico).
 pub(crate) unsafe fn person_discipline_record(this: usize, id: usize) -> usize {
     read_usize(this + discipline_fields::PERSON_RECORDS).wrapping_add(id.wrapping_mul(29))
 }
 
 /// Ruling body of rule (signed byte): [[this] + 4 x rule].
-///
-/// [pt] O órgão disciplinar da regra `regra` (byte com sinal): [[this] + 4 × regra].
 pub(crate) unsafe fn ruling_body_for_rule(this: usize, rule: u8) -> usize {
     read_usize(read_usize(this).wrapping_add((rule as i8 as isize as usize).wrapping_mul(4)))
 }
 
 /// The person's 14-byte entry in a ruling body (`exe::rulingbody_find_or_add_discipline_entry` without creating; +6 ban index).
-///
-/// [pt] A entrada (14 bytes; +6 o índice da suspensão, −1 sem) da pessoa no órgão: 0x7e82e0 sem criar (só lê).
 pub(crate) unsafe fn ruling_body_entry(body: usize, id: u32) -> usize {
     exe::rulingbody_find_or_add_discipline_entry(body, id, 0)
 }
 
 /// Person's item (id, nation) in the discipline nation index by bsearch on his nation, then on his second nation; 0 if
 /// absent.
-///
-/// [pt] O item (id, nação) da pessoa no índice das nações (+0xc, 8 bytes por item, conta +0x12 com sinal): bsearch
-/// (0x946464 com 0x55e5f0) pela nação (+0x1a) e, sem achar, pela segunda nação (+0x1e, se houver). 0 sem achar.
 pub(crate) unsafe fn find_in_nation_index(this: usize, id: u32) -> usize {
     let person = Staff(read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)));
     let mut key = [id, read_usize(person.nation().addr()) as u32];
@@ -621,11 +551,6 @@ pub(crate) struct SuspensionMatchUpdate {
 /// counter (+1), and it ends on reaching +0.
 ///
 /// By days (+0 = 0xff): it ends when today reaches start + days (+2) (`exe::date_add_days`).
-///
-/// [pt] O plano do jogo (só lê; a 0x7e82e0 sem criar e a 0x54c5b0 só gravam a data de rascunho dela): a suspensão da
-/// pessoa no órgão da `regra`; por jogos (+0 ≠ 0xff): a partir do começo (dia +4, ano +6; hoje [0xae2c90]: dia +0,
-/// ano +2), com `conta`, +1 no contador (+1), e termina ao chegar em +0; por dias (+0 = 0xff): termina quando hoje
-/// chega ao começo + dias (+2) (0x54c5b0).
 pub(crate) unsafe fn serve_ban_match_plan(this: usize, id: u32, rule: u32, count: u32) -> SuspensionMatchUpdate {
     let mut j = SuspensionMatchUpdate { entry: 0, suspensao: 0, counter: None, cumprida: false };
     let e = ruling_body_entry(ruling_body_for_rule(this, rule as u8), id);
@@ -669,11 +594,6 @@ pub(crate) unsafe fn serve_ban_match_plan(this: usize, id: u32, rule: u32, count
 /// counter (+1); on reaching the total (+0), or day bans once today reaches start + days (+2, `exe::date_add_days`), it goes to the
 /// history (0x58e340) and is released (`release_ban`)
 /// Original: `Discipline::update_ban_progress` (0x556e90, discipline.cpp, thiscall, ret 0xc).
-///
-/// [pt] { 0x556e90 } (thiscall, ret 0xc, discipline.cpp): `Discipline::update_ban_progress(id, regra, conta)`: a suspensão
-/// da pessoa no órgão da `regra` (plano em `serve_ban_match_plan`): por jogos, grava o contador novo (+1); cumprida, vai para o
-/// histórico (0x58e340 sobre [this+0x18] com o começo e o último deslocamento do registro de 29 bytes) e é solta
-/// (0x556d00). Sem SEH, sem sorteio, sem caixa.
 pub(crate) unsafe extern "thiscall" fn update_ban_progress(this: usize, id: u32, rule: u32, count: u32) {
     let j = serve_ban_match_plan(this, id, rule, count);
     if let Some(n) = j.counter {
@@ -698,12 +618,6 @@ pub(crate) unsafe extern "thiscall" fn update_ban_progress(this: usize, id: u32,
 /// with `0x55e5f0`; if not found, "Error" box and it carries on). Finally the ban becomes free (`+0` = `0xff`, `+2` =
 /// −1).
 /// Original: `Discipline::release_ban` (0x556d00, discipline.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x556d00 } (thiscall, ret 8, discipline.cpp): `Discipline::release_ban(id, indice)`: a suspensão `indice` (20
-/// bytes em [this+4]; a palavra com sinal): para cada uma das 4 regras (+0xc..+0xf, 0xff = sem), o órgão a esquece
-/// (0x7e8590); na quarta, o item da pessoa sai do índice das nações (o último vem para o lugar, conta +0x12 − 1, qsort
-/// 0x945333 com 0x55e5f0; sem achar, caixa "Error" e segue). Por fim a suspensão fica livre (+0 = 0xff, +2 = −1).
-/// Devolve a suspensão.
 pub(crate) unsafe extern "thiscall" fn release_ban(this: usize, id: u32, index: u32) -> usize {
     let s = read_usize(this + discipline_fields::BANS).wrapping_add((index as u16 as i16 as i32 as usize).wrapping_mul(20));
     for k in 0..4usize {
@@ -740,10 +654,6 @@ pub(crate) unsafe extern "thiscall" fn release_ban(this: usize, id: u32, index: 
 /// `[this+0x14]`) loses its last entry (`0x58f110` on `[this+0x18]`: `+0x18` = −1). Returns what `0x58f110` returns.
 /// Null person or not a player (`+0x61`): the original routine runs (fatal box).
 /// Original: `Discipline::clear_ban_history` (0x55e1d0, discipline.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x55e1d0 } (thiscall, ret 4, discipline.cpp): `Discipline::clear_ban_history(pessoa)`: o histórico de suspensões
-/// da pessoa (registro de 29 bytes do id em [this+0x14]) fica sem o último (0x58f110 sobre [this+0x18]: +0x18 = −1).
-/// Devolve o que a 0x58f110 devolve. Pessoa nula ou não jogadora (+0x61): a original (caixa fatal).
 pub(crate) unsafe extern "thiscall" fn clear_ban_history(this: usize, person: usize) -> usize {
     let person = Staff(person);
     if person.is_null() || person.player().is_null() {
@@ -759,10 +669,6 @@ pub(crate) unsafe extern "thiscall" fn clear_ban_history(this: usize, person: us
 /// at `+4` (`0x417c10`, return value in a local), `+0xc..+0xf` (byte by byte), `+0x10` (byte), `+0x11` (word) and bits
 /// 0..2 of `+0x13` (the other bits are kept).
 /// Original: `BanRecord::operator=` (0x556c70, discipline.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x556c70 } (thiscall, ret 4, discipline.cpp): `BanRecord::operator=`: copia o registro de suspensão (0x14 bytes) de
-/// `origem`: +0 e +1 (bytes), +2 (palavra), a data em +4 (0x417c10, retorno numa local), +0xc..+0xf (byte a byte),
-/// +0x10 (byte), +0x11 (palavra) e os bits 0..2 de +0x13 (os outros bits ficam). Devolve `this`.
 pub(crate) unsafe extern "thiscall" fn discipline_operator(this: usize, source: usize) -> usize {
     let b = |o: usize| write_u8(this + o, read_u8(source + o));
     let w = |o: usize| write_u16(this + o, read_u16(source + o));
@@ -786,10 +692,6 @@ compare_value!(compare_get_match_condition, get_match_condition, IDX_GET_MATCH_C
 
 /// starts the new season of the competition's discipline rules (virtual method 0)
 /// Original: `discipline_new_season` (0x556210, discipline.cpp, thiscall).
-///
-/// [pt] { 0x556210 } (thiscall, ret 4, discipline.cpp): começa a temporada nova da competição `*id`: as
-/// regras da disciplina dela (índice +0x50 da competição em [0xadadfc], 0xff sem) recebem o método 0
-/// da tabela virtual.
 pub(crate) unsafe extern "thiscall" fn discipline_new_season(this: usize, id: *const i32) {
     let competition = League(*((*(G_COMP_OBJECT_TABLE as *const usize) as isize + 4 * *id as isize) as *const usize));
     if competition.is_null() {
@@ -808,9 +710,6 @@ pub(crate) unsafe extern "thiscall" fn discipline_new_season(this: usize, id: *c
 
 /// the day of each of the 43 discipline rules (virtual method 1)
 /// Original: `discipline_daily_update` (0x556240, discipline.cpp, thiscall).
-///
-/// [pt] { 0x556240 } (thiscall, ret 4, discipline.cpp): o dia da disciplina: cada uma das 43 regras ([this],
-/// as não nulas) recebe o método 1 da tabela virtual com a data `hoje`.
 pub(crate) unsafe extern "thiscall" fn discipline_daily_update(this: usize, today: usize) {
     for k in 0..43usize {
         let rules = read_usize(read_usize(this) + 4 * k);
@@ -823,9 +722,6 @@ pub(crate) unsafe extern "thiscall" fn discipline_daily_update(this: usize, toda
 
 /// writes the type and value of one of the person's slots in the discipline table
 /// Original: `discipline_set_slot` (0x55cb20, discipline.cpp, thiscall).
-///
-/// [pt] { 0x55cb20 } (thiscall, ret 0x10, discipline.cpp): grava a vaga `vaga` (5 bytes: o byte `tipo` e o
-/// valor) da pessoa `id` na tabela +0x14 (29 bytes por pessoa).
 pub(crate) unsafe extern "thiscall" fn discipline_set_slot(this: usize, id: i32, slot: i8, kind: u8, value: u32) {
     let a = (read_usize(this + discipline_fields::PERSON_RECORDS) as isize + id as isize * 29 + slot as isize * 5) as usize;
     write_u8(a, kind);
@@ -843,12 +739,6 @@ pub(crate) unsafe extern "thiscall" fn discipline_set_slot(this: usize, id: i32,
 /// 1, and if his club (`+0x39`) is human-managed (`0x600a50` with 0, 1, 0, 0), he leaves the slot he holds among the 20
 /// at `+0x1e0`. Otherwise 0.
 /// Original: `Discipline::is_player_suspended` (0x55d270, discipline.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x55d270 } (thiscall, ret 0x10, discipline.cpp): `Discipline::is_player_suspended(jogador, competição, extra,
-/// partida)`: jogador fora das pessoas ([0xae2364]) ou competição (id em `*comp`, vetor [0xadadfc]) inexistente: 0.
-/// Suspenso pelo tribunal geral ([[this]], 0x7e85b0 com 1): 1. Senão, pelo tribunal da competição (+0x50, ≠ −1, com
-/// 0): 1, e se o clube dele (+0x39) é de humano (0x600a50 com 0, 1, 0, 0), ele sai da vaga que ocupa entre as 20 de
-/// +0x1e0. Senão 0.
 pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: usize, comp: *const i32, extra: u32, fixture: usize) -> u32 {
     let player = Staff(player);
     if !player.is_null() && read_usize(player.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
@@ -893,10 +783,6 @@ pub(crate) unsafe extern "thiscall" fn is_player_suspended(this: usize, player: 
 /// the start `+2`), it removes (`0x68d1f0`) each item of id `*pessoa` while the counter of the person's record
 /// (`+0x1c`, signed) is positive, decrementing it for each item.
 /// Original: `Discipline::drop_held_bans` (0x5567d0, discipline.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x5567d0 } (thiscall, ret 4, discipline.cpp): `Discipline::drop_held_bans(pessoa)`: da lista das suspensões
-/// guardadas (+0x1c; o cursor +0xa volta ao começo +2), tira (0x68d1f0) cada item do id `*pessoa` enquanto o contador
-/// do registro dele (+0x1c, com sinal) for positivo, descontando um a cada item.
 pub(crate) unsafe extern "thiscall" fn drop_held_bans(this: usize, person: *const u32) {
     let l = Llist(this + discipline_fields::HELD_BANS);
     let n = stored_suspension_counter(this, *person as usize);
@@ -919,11 +805,6 @@ pub(crate) unsafe extern "thiscall" fn drop_held_bans(this: usize, person: *cons
 /// `0x68d0d0` with 10 bytes: the id, the slot and its 5 bytes), the slot becomes −1 and the record's `+0x1c` counter
 /// goes up. No contract sheet: the original routine runs ("Error" box).
 /// Original: `Discipline::hold_bans_for_loan` (0x5563f0, discipline.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x5563f0 } (thiscall, ret 4, discipline.cpp): `Discipline::hold_bans_for_loan(jogador)`: com a ficha de contrato
-/// do jogador (0x4cf6d0 sobre [0xae1050]), cada suspensão do registro dele (vagas 0 a 2) que não vale no clube do
-/// empréstimo vai para a lista das guardadas (+0x1c, 0x68d0d0 com 10 bytes: o id, a vaga e os 5 bytes dela), a vaga
-/// fica −1 e o contador +0x1c do registro sobe. Sem ficha: a original (caixa "Error").
 pub(crate) unsafe extern "thiscall" fn hold_bans_for_loan(this: usize, player: usize) {
     let sheet = exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), (player as *const i32) as usize);
     if sheet == 0 {
@@ -950,10 +831,6 @@ pub(crate) unsafe extern "thiscall" fn hold_bans_for_loan(this: usize, player: u
 /// (`[[0xadadfc] + 4 × id]`) and its ruling body (`+0x50`, `0xff` if none; `[this]` + 4 × body), the question to the
 /// body (`0x7e8d60` with the id, 0, 0 and the competition's `+4`); otherwise 0. Called by the club screen (`0x4849f0`).
 /// Original: `Discipline::is_one_booking_from_ban` (0x55d360, discipline.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x55d360 } (thiscall, ret 8, discipline.cpp): `Discipline::is_one_booking_from_ban(pessoa, competicao)`: com id
-/// válido, a competição ([[0xadadfc] + 4 × id]) e o órgão dela (+0x50, 0xff sem; [this] + 4 × órgão), a pergunta ao órgão
-/// (0x7e8d60 com o id, 0, 0 e o +4 da competição); senão 0. Pela tela do clube (0x4849f0).
 pub(crate) unsafe extern "thiscall" fn is_one_booking_from_ban(this: usize, person: usize, competition: usize) -> u32 {
     if person != 0 && read_i32(person) >= read_i32(G_STAFF_COUNT) {
         return 0;
@@ -975,9 +852,6 @@ pub(crate) unsafe extern "thiscall" fn is_one_booking_from_ban(this: usize, pers
 
 /// the penalty at the table row and column, if the type matches
 /// Original: `table_penalty` (0x55cae0, discipline.cpp, thiscall).
-///
-/// [pt] { 0x55cae0 } (thiscall, ret 0xc, discipline.cpp): a punição da linha `linha` (29 bytes) e da coluna
-/// `coluna` (5 bytes) da tabela [this+0x14]: o dword +1 se o byte +0 for `tipo`, senão −1.
 pub(crate) unsafe extern "thiscall" fn table_penalty(t: usize, row: i32, column: i8, kind: i8) -> i32 {
     let e = read_usize(t + discipline_fields::PERSON_RECORDS)
         .wrapping_add((row as usize).wrapping_mul(29))
@@ -997,11 +871,6 @@ pub(crate) unsafe extern "thiscall" fn table_penalty(t: usize, row: i32, column:
 /// or in competition `[0x9cf684]`: the league (`+0x57`) body of the home club (`+0x1c`, with 1, 0, 0) and that of the
 /// away club (`+0x20`, with 0, 1, 0). Returns what the first body returns (the other paths, 0; nobody reads it).
 /// Original: `Discipline::process_match` (0x55ca00, discipline.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x55ca00 } (thiscall, ret 8, discipline.cpp): `Discipline::process_match(partida, resultado)`: o tribunal da
-/// competição da partida (+0, id > −1) julga (0x7e7ff0 com 1, 1, 1). Sem ele, num amistoso (0x5c6710 sobre [0xae2c74]
-/// com +0x14) ou na competição [0x9cf684]: o tribunal da liga (+0x57) do mandante (+0x1c, com 1, 0, 0) e o do
-/// visitante (+0x20, com 0, 1, 0). Devolve o que o primeiro tribunal devolve (os outros caminhos, 0; ninguém lê).
 pub(crate) unsafe extern "thiscall" fn process_match(this: usize, fixture: usize, result: u32) -> u32 {
     let fixture = Fixture(fixture);
     let id = read_usize(fixture.addr()) as i32;
@@ -1033,11 +902,6 @@ pub(crate) unsafe extern "thiscall" fn process_match(this: usize, fixture: usize
 /// `+0` = −1), removes the person's held bans from list `[this+0x1c]` (`0x68d1f0`, while count `+0x1c` > 0) and the
 /// record becomes `0xff` with count 0.
 /// Original: `Discipline::remove_player` (0x556830, discipline.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x556830 } (thiscall, ret 4, discipline.cpp): `Discipline::remove_player(id)`: do regen (0x7abac0): apaga o
-/// histórico de suspensões (0x55e1d0), libera as 4 vagas do registro de 29 bytes (com entrada no órgão: a suspensão
-/// solta, 0x556d00, a vaga livre e a entrada +0 = −1), tira da lista [this+0x1c] as suspensões guardadas dele
-/// (0x68d1f0, enquanto a conta +0x1c > 0) e o registro fica 0xff com a conta 0.
 pub(crate) unsafe extern "thiscall" fn discipline_remove_player(this: usize, id: u32) {
     let r = read_usize(this + discipline_fields::PERSON_RECORDS).wrapping_add((id as usize).wrapping_mul(29));
     exe::discipline_clear_ban_history(this, read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)));
@@ -1081,10 +945,6 @@ pub(crate) unsafe extern "thiscall" fn discipline_remove_player(this: usize, id:
 /// while the player has any (byte `+0x1c` of the 29-byte record in `[+0x14]`) and returns the one with the same player
 /// and slot.
 /// Original: `Discipline::find_held_ban` (0x55cb60, discipline.cpp, thiscall).
-///
-/// [pt] { 0x55cb60 } (thiscall, ret 8, discipline.cpp): a punição guardada do jogador `id` na vaga `vaga`:
-/// percorre a lista das guardadas (+0x1c, do começo, 0x68d1b0) enquanto o jogador tem alguma
-/// (byte +0x1c do registro de 29 bytes em [+0x14]) e devolve a de mesmo jogador e vaga; 0 se nenhuma.
 pub(crate) unsafe extern "thiscall" fn find_held_ban(discipline: usize, id: i32, slot: i8) -> usize {
     let list = Llist(discipline + discipline_fields::HELD_BANS);
     let record = (read_usize(discipline + discipline_fields::PERSON_RECORDS) as isize + id as isize * 29) as usize;

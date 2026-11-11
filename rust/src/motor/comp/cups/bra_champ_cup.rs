@@ -4,18 +4,12 @@ use super::*;
 ///
 /// The date goes through `league_round_set_date` (day, month with 0 = January, weekday, code), with no years to add and value 0; and
 /// match 0 is left empty (`store_round_match` with −1, −1, −1 and value 0).
-///
-/// [pt] Uma rodada de grupo (registro de 0x41 bytes, como as das ligas): a data pela 0x68a160 (dia, mês com 0 = janeiro,
-/// dia da semana, código), sem anos a somar e com valor 0; e o jogo 0 vazio (0x68a1c0 com −1, −1, −1 e valor 0).
 pub(crate) type BraChampCupGroupRound = (u32, u32, u32, u32);
 
 /// What virtual `+0x3c` builds for a stage.
 ///
 /// Either nothing (returns 0 without writing), a group stage (the rounds, the extra value, the box line) or the
 /// knockout (the rounds, the extra words (round, offset, value), the box line).
-///
-/// [pt] O que a virtual +0x3c monta numa fase: nada (devolve 0 sem gravar), uma fase de grupos (as rodadas, o extra, a linha
-/// da caixa) ou o mata-mata (as rodadas, as palavras a mais (rodada, deslocamento, valor), a linha da caixa).
 #[derive(Clone, Copy)]
 pub(crate) enum BraChampCupStagePlan {
     Nada,
@@ -31,11 +25,6 @@ pub(crate) enum BraChampCupStagePlan {
 ///
 /// Knockout: é_liga = 0, rounds, extra = 0; the table of 0x68 bytes per round (out of memory, the box and 0), the
 /// rounds written by `eng_cc_cup_write_cup_round` with the year +0x40 signed and the extra words.
-///
-/// [pt] A virtual +0x3c (`create_schedule(fase, &rodadas, &extra, &é_liga)`, thiscall, ret 0x10) pela fase `f` escolhida. Nos
-/// grupos: é_liga (se pedido) = 1, rodadas, extra; a tabela de 0x41 bytes por rodada (0x944e46; sem memória, a caixa e
-/// 0) com as datas, o ano +0x40 em 16 bits. No mata-mata: é_liga = 0, rodadas, extra = 0; a tabela de 0x68 bytes por
-/// rodada (sem memória, a caixa e 0), as rodadas pela `eng_cc_cup_write_cup_round` com o ano +0x40 com sinal e as palavras a mais.
 pub(crate) unsafe fn build_stage_schedule(this: Cup, f: BraChampCupStagePlan, rounds: *mut i16, extra: *mut i16, league: *mut i32, file: usize) -> usize {
     match f {
         BraChampCupStagePlan::Nada => 0,
@@ -86,9 +75,6 @@ pub(crate) unsafe fn build_stage_schedule(this: Cup, f: BraChampCupStagePlan, ro
 
 /// Bytes the original writes in an n-round table for the stage: group rounds +0..+0xb and +0x3d..+0x40, knockout rounds
 /// the cup bytes plus the extra words.
-///
-/// [pt] Os bytes que a original grava na tabela de `n` rodadas da fase `f`: nos grupos (0x41 bytes), +0..+0xb e
-/// +0x3d..+0x40 de cada rodada; no mata-mata, os da eng_cc_cup_written_round_bytes e as palavras a mais.
 pub(crate) unsafe fn written_schedule_bytes(f: BraChampCupStagePlan, t: usize, n: i16) -> Vec<u8> {
     match f {
         BraChampCupStagePlan::Nada => Vec::new(),
@@ -118,10 +104,6 @@ pub(crate) unsafe fn written_schedule_bytes(f: BraChampCupStagePlan, t: usize, n
 /// is freed (`exe::crt_free`).
 ///
 /// In the stage without a table only the original runs (neither writes anything; the outputs may not even exist).
-///
-/// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam com os mesmos valores, a
-/// partir do mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais; a tabela da cópia é
-/// liberada (0x9452ca). Na fase sem tabela só a original (nenhuma grava nada; as saídas podem nem existir).
 pub(crate) unsafe fn compare_stage_schedule(name: &str, stage: u32, f: BraChampCupStagePlan, rounds: *mut i16, extra: *mut i16, league: *mut i32,
     o: impl FnOnce() -> usize, c: impl FnOnce(*mut i16, *mut i16, *mut i32) -> usize) -> usize {
     if let BraChampCupStagePlan::Nada = f {
@@ -156,9 +138,6 @@ pub(crate) const CHAMPIONS_CUP_KNOCKOUT_ROUNDS: [EngCcCupCupRound; 2] = [
 ];
 
 /// Stage plan of the Copa dos Campeoes by signed stage: -1 preliminary, below 2 groups, 2 onward knockout.
-///
-/// [pt] A fase da Copa dos Campeões pelo byte com sinal: −1 a preliminar (extra 0xe6, caixa 0xaa), abaixo de 2 os grupos
-/// (extra = fase + 0x3fd, caixa 0xcd), 2 em diante o mata-mata (caixa 0xed).
 pub(crate) fn champions_cup_stage(stage: u32) -> BraChampCupStagePlan {
     let f = stage as u8 as i8;
     if f == -1 {
@@ -176,9 +155,6 @@ pub(crate) fn champions_cup_stage(stage: u32) -> BraChampCupStagePlan {
 /// drawn on 26/7, match on 27/7, return 3 days later; category 6; two-leg tie-break 1; final prize 800 thousand to the
 /// winner and 400 thousand to the runner-up
 /// Original: `BraChampCup::create_schedule` (0x425c10, bra_champ_cup.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x425c10 } (thiscall, ret 0x10, bra_champ_cup.cpp; a virtual +0x3c da Copa dos Campeões): `BraChampCup::
-/// create_schedule(fase, &rodadas, &extra, &é_liga)`: a preliminar, os grupos ou o mata-mata (`champions_cup_stage`).
 pub(crate) unsafe extern "thiscall" fn bra_champ_cup_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     build_stage_schedule(Cup(this), champions_cup_stage(stage), rounds, extra, league, 0x98a1e8)
 }
@@ -193,9 +169,6 @@ pub(crate) const MERCONORTE_KNOCKOUT_ROUNDS: [EngCcCupCupRound; 2] = [
 ];
 
 /// Stage plan of the Merconorte: below 3 groups, 3 knockout, above nothing.
-///
-/// [pt] A fase da Merconorte: abaixo de 3 os grupos (extra = fase + 0x3e9, caixa 0x9b), 3 o mata-mata (caixa 0xc1), acima
-/// nada.
 pub(crate) fn merconorte_stage(stage: u32) -> BraChampCupStagePlan {
     let f = stage as u8 as i8;
     if f < 3 {
@@ -221,11 +194,6 @@ pub(crate) const ASIAN_SUPER_CUP: [EngCcCupCupRound; 1] = [
 /// 2 and 4 [inference: wins, goal difference, goals for, head-to-head]; two qualifiers; rule bits 8 (those who secure
 /// the places go to the next stage); category 23 on each match (the champions' finals one); no prize fund
 /// Original: `BraChampCup::set_up_rules` (0x426230, bra_champ_cup.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x426230 } (thiscall, ret 0, bra_champ_cup.cpp; a virtual +0x8c): `BraChampCup::set_up_rules()`: o grupo da
-/// Copa dos Campeões do Brasil em turno único, 3 pontos a vitória e 1 o empate, a categoria 0x17 (23, a das finais de
-/// campeões), o desempate (3, 1, 2, 4), dois classificados e os bits de regra 8 (quem garante as vagas vai à fase
-/// seguinte); sem fundo de prêmios. Depois a tabela das rodadas.
 pub(crate) unsafe extern "thiscall" fn bra_champ_cup_set_up_rules(this: usize) -> u32 {
     covered!("cqi_12 champions cup rules");
     set_cup_league_rules(League(this), &CHAMPIONS_CUP_RULES, 1)

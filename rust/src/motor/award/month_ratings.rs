@@ -1,8 +1,6 @@
 use super::*;
 
 /// Staff record of id (G_STAFF_TABLE, 0x6e bytes).
-///
-/// [pt] A pessoa `id` da tabela de pessoas ([0xae23bc], 0x6e bytes cada).
 pub(crate) unsafe fn month_ratings_staff_by_id(id: i32) -> usize {
     read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE))
 }
@@ -14,11 +12,6 @@ pub(crate) unsafe fn month_ratings_staff_by_id(id: i32) -> usize {
 /// marked 0xfb at +0x1d and, from the 12th slot on, the substitute who did not come on (+0x32 = 0xff), the person (id
 /// at +0) below the person count [0xae2364] goes to the month ratings (`add_player_rating`).
 /// Original: `MONTH_RATINGS::record_match_ratings` (0x767ee0, month_ratings.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x767ee0 } (thiscall, ret 8, month_ratings.cpp): `MONTH_RATINGS::record_match_ratings(jogo, partida)`, pelo
-/// 0x7683a0 a cada partida das ligas com prêmio do mês. Os dois lados da partida (+0x190 e +0x190 + 0x625), 20 vagas de
-/// 0x49 bytes cada: fora a vaga marcada 0xfb em +0x1d e, da 12ª em diante, a reserva que não entrou (+0x32 = 0xff), a
-/// pessoa (id em +0) abaixo da conta de pessoas [0xae2364] vai para as notas do mês (0x767fa0).
 pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, game: usize, fixture: usize) {
     let _ = game;
     let mut side = fixture.wrapping_add(0x190);
@@ -45,9 +38,6 @@ pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, game: u
 }
 
 /// Adds a slot's match rating (+0x35) to word +8 of a 12-byte record and counts one more game at +0xa.
-///
-/// [pt] A nota da partida (+0x35 da vaga, sem sinal) soma na palavra +8 do registro de 12 bytes e o byte +0xa conta mais um
-/// jogo.
 pub(crate) unsafe fn add_match_rating(r: usize, e: usize) {
     let e = MatchRecordRow(e);
     let s = (r + 8) as *mut u16;
@@ -62,11 +52,6 @@ pub(crate) unsafe fn add_match_rating(r: usize, e: usize) {
 /// appends it (growing by 300 with malloc `exe::crt_malloc` or realloc `exe::crt_realloc` when full; the league from the person's club
 /// +0x39 and that club's +0x57; the age from the person's +0x18) and adds the rating.
 /// Original: `MONTH_RATINGS::add_player_rating` (0x767fa0, month_ratings.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x767fa0 } (thiscall, ret 4, month_ratings.cpp): `MONTH_RATINGS::add_player_rating(vaga)`. A tabela em [this]
-/// (conta em +4, capacidade em +8) tem registros de 12 bytes: +0 pessoa, +4 liga do clube (ou −1), +8 soma das notas,
-/// +0xa jogos, +0xb idade. Acha a pessoa da vaga (+0) ou acrescenta (cresce 300 com malloc 0x944e46 ou realloc
-/// 0x945667 quando cheia; a liga pelo clube +0x39 da pessoa e o +0x57 dele; a idade pelo +0x18 da pessoa) e soma a nota.
 pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) {
     let id = read_i32(e);
     let n = read_i32(this + 4);
@@ -122,12 +107,6 @@ pub(crate) unsafe extern "thiscall" fn add_player_rating(this: usize, e: usize) 
 /// and the youngest only qualifies after 3 have been counted; with a league, the current league of the person's club
 /// (+0x39, +0x57) must also be the requested one. None: 0.
 /// Original: `MONTH_RATINGS::find_best_player` (0x768130, month_ratings.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x768130 } (thiscall, ret 8, month_ratings.cpp): `MONTH_RATINGS::find_best_player(liga, idade)`, pelo prêmio do
-/// mês (0x767150). Ordena a tabela pela média (qsort 0x945333 com 0x768200: quem tem menos de 3 jogos vai para o fim) e
-/// devolve o primeiro registro da liga (−1: qualquer) com pelo menos 3 jogos (depois 2, 1 e 0); com idade (não 0xff),
-/// os acima dela só contam e o mais novo só vale depois de 3 contados; com liga, a liga atual do clube da pessoa (+0x39,
-/// +0x57) também tem de ser a pedida. Nenhum: 0.
 pub(crate) unsafe extern "thiscall" fn find_best_player(this: usize, league: i32, age: u32) -> usize {
     covered!("cpw_5 sorted the ratings");
     exe::crt_qsort(read_usize(this), read_usize(this + 4) as u32, 0xc, 0x768200); // cpw5: sorts by the average

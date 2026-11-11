@@ -5,10 +5,6 @@ use super::*;
 /// It holds the date (day, month 0..11, years to add to the league year +0x40, the weekday the date is moved to), the
 /// code of byte +4 ([inference] the half of the season) and the TV slots in order (weekday, half, how many matches; the
 /// list ends with −1).
-///
-/// [pt] Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
-/// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
-/// quantos jogos; a lista termina em −1).
 pub(crate) type SpaSecondScheduleRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
 /// Writes rounds `primeira`.. into round table `t`, in the original routine's order.
@@ -16,10 +12,6 @@ pub(crate) type SpaSecondScheduleRound = (i8, i8, i8, i8, i8, &'static [(i8, i8,
 /// For each round: the date (`0x68a160`: push 0; push year; push code; push week; push years; push month; push day;
 /// push i; push t; add esp -> cdecl: value 0) and the slots (`0x68a1c0`: push 0; push c; push b; push a; push j; push
 /// i; push t; add esp -> cdecl, value 0).
-///
-/// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
-/// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
-/// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
 pub(crate) unsafe fn spa_second_set_league_rounds(t: usize, year: u32, first: i32, table: &[SpaSecondScheduleRound]) {
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in table.iter().enumerate() {
         let i = first + k as i32;
@@ -37,12 +29,6 @@ pub(crate) unsafe fn spa_second_set_league_rounds(t: usize, year: u32, first: i3
 /// word; a round of `casos` moved to the weekday): k = (round day − date day + 1, in 16 bits) − `ajuste`; from 0 to 6
 /// it picks the Christmas rounds; outside that, the error box for line `linha` and those of the default case (the
 /// eighth); then the closing rounds.
-///
-/// [pt] A fase principal com as rodadas do Natal: as do começo em sequência; depois a data de 1º de dezembro do ano
-/// (Date::Date 0x549f70: push −1; push ano; push 0xb; push 1; lea ecx, local -> thiscall, ret 0x10) e o caso pelo dia
-/// da rodada de referência (+0, palavra; uma rodada de `casos` levada ao dia da semana): k = (dia da rodada − dia da
-/// data + 1, em 16 bits) − `ajuste`; de 0 a 6 escolhe as rodadas do Natal; fora disso a caixa da linha `linha` e as do
-/// caso padrão (o oitavo); depois as do fim.
 pub(crate) struct SpaSecondChristmasSchedule {
     pub(crate) comeco: &'static [SpaSecondScheduleRound],
     pub(crate) reference: usize,
@@ -212,10 +198,6 @@ pub(crate) const SEGUNDA_EVEN_CHRISTMAS_SCHEDULE: SpaSecondChristmasSchedule = S
 /// 22 August to 4 June, with one TV slot; in even years, from 30 August to 6 June, with three TV slots and one
 /// fixed-date Christmas round chosen by the day the mid-December round falls on
 /// Original: `SpaSecond::create_schedule` (0x853c90, spa_second.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x853c90 } (thiscall, ret 0x10, spa_second.cpp, 7.827 bytes, método +0x3c): `SpaSecond::create_schedule(fase,
-/// &rodadas, &extra, &é_liga)`: só a fase −1, 42 rodadas, a tabela pela paridade do ano +0x40 (no ano par com a rodada
-/// do Natal; no ímpar sem); as outras devolvem 0. Fonte 0xa829bc.
 pub(crate) unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let this = League(this);
     match stage as u8 {
@@ -245,9 +227,6 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_schedule(this: usize, s
 
 /// the Spanish Segunda: discipline rule 0x1a (the Spanish one), only the league
 /// Original: `SpaSecond::SpaSecond` (0x8539a0, spa_second.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x8539a0 } (thiscall, ret 8, spa_second.cpp): `SpaSecond::SpaSecond(ano, registro)`: a Segunda espanhola,
-/// disciplina 0x1a, só a liga.
 pub(crate) unsafe extern "thiscall" fn construct_spa_second(this: usize, year: u32, record: usize) -> usize {
     construct_division_league(League(this), year, record, &SPANISH_SEGUNDA)
 }
@@ -259,11 +238,6 @@ pub(crate) unsafe extern "thiscall" fn construct_spa_second(this: usize, year: u
 /// divisions loaded (bit 4 of the nation's +0x11c [inference]), otherwise −1; +0x52 = 2. B teams cannot go up (marked
 /// by the table, `spa_second_create_table`).
 /// Original: `SpaSecond::set_up_rules` (0x855cc0, spa_second.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x855cc0 } (thiscall, ret 0, spa_second.cpp): `SpaSecond::set_up_rules()`. A Segunda: as comuns, 2 turnos, 3
-/// pontos, o 4º desempate 3, 3 sobem direto (+0xbe), nenhum play-off de acesso, 4 caem (+0xc1), a Primera acima
-/// ([0x9cf624]) e abaixo a Segunda B ([0x9cf7b8]) quando a nação tem as divisões de baixo carregadas (bit 4 de +0x11c
-/// da nação [inferência]), senão −1; +0x52 = 2.
 pub(crate) unsafe extern "thiscall" fn spa_second_set_up_rules(this: usize) -> u32 {
     covered!("cqk_4 segunda rules");
     spa_first_apply_league_rules(League(this), &segunda_rules(this))
@@ -278,14 +252,6 @@ pub(crate) unsafe extern "thiscall" fn spa_second_set_up_rules(this: usize) -> u
 /// the B team of a Primera club ([0x9cf624]) gets fate −4 (+0x37 = 0xfc: cannot go up). Full: the prize fund (+0x28 =
 /// League::calc_prize_fund `calc_prize_fund`: push 50000; mov ecx -> thiscall, ret 4), +0xe1 = 1 and 1; otherwise 0.
 /// Original: `SpaSecond::create_table` (0x855b40, spa_second.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x855b40 } (thiscall, ret 0, spa_second.cpp): `SpaSecond::create_table()`: a Segunda tem 22 clubes (+0x3e),
-/// a tabela (malloc 0x944e46 de 0x512: push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x298 e 0) recebe, na
-/// ordem do banco ([0xae23b4], [0xae235c] clubes de 0x245 bytes), os clubes da competição de id [0x9cf628] até encher
-/// (League::init_table_row 0x687430: push 0; push 0; push clube; push linha (a palavra empurrada tem o byte da linha e o
-/// lixo da pilha em cima; a 0x687430 só lê o byte); mov ecx, this -> thiscall, ret 0x10); o time B de um clube da
-/// Primera ([0x9cf624]) leva o destino −4 (+0x37 = 0xfc: não pode subir). Cheia: o fundo de prêmios (+0x28 =
-/// League::calc_prize_fund 0x682f70: push 50000; mov ecx -> thiscall, ret 4), +0xe1 = 1 e 1; senão 0.
 pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u32 {
     let this = League(this);
     this.set_club_count(0x16);

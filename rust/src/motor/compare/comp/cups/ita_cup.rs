@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/cups/ita_cup.rs.
-// [pt] Os comparadores das rotinas de ../comp/cups/ita_cup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `ita_cup_create_first_group_table`.
 pub(crate) unsafe extern "thiscall" fn compare_ita_cup_create_first_group_table(this: usize) -> u32 {

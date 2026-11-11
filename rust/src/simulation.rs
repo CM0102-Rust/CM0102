@@ -8,17 +8,6 @@
 //! Fingerprint: number of draws since the start + full generator state
 //! (table pointer, offset, CRT rand() state). Any difference in
 //! behaviour that changes the number or the order of the draws shows up here.
-//!
-//! [pt] Simulacao em lote (ver `docs/VERSAO_SEM_TELA.md` e `engenharia-reversa/simular.py`).
-//!
-//! `CM_PARAR_EM=AAAA-MM-DD`: na primeira chamada do sorteio depois de a data atual do jogo
-//! (`Data` em 0xae2c90) alcancar o alvo, grava a impressao digital em `ddraw.log` e encerra o
-//! processo. O ponto de parada e fixo na sequencia do jogo, entao duas execucoes com a mesma
-//! semente (`-seed`) e as mesmas rotinas tem de dar a mesma impressao.
-//!
-//! Impressao digital: quantidade de sorteios desde o inicio + estado completo do gerador
-//! (ponteiro da tabela, deslocamento, estado do rand() da CRT). Qualquer diferenca de
-//! comportamento que mude o numero ou a ordem dos sorteios aparece aqui.
 
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::OnceLock;
@@ -42,8 +31,6 @@ fn date_from_env(name: &str) -> Option<(u16, u16)> {
 }
 
 /// Target (year, day of the year from 0) read from CM_PARAR_EM.
-///
-/// [pt] Alvo (ano, dia do ano a partir de 0) lido de CM_PARAR_EM.
 fn target_date() -> Option<(u16, u16)> {
     static TARGET: OnceLock<Option<(u16, u16)>> = OnceLock::new();
     *TARGET.get_or_init(|| date_from_env("CM_PARAR_EM"))
@@ -51,9 +38,6 @@ fn target_date() -> Option<(u16, u16)> {
 
 /// `CM_RASTRO=AAAA-MM-DD`: every draw of that day goes to `rastro.log` (n, caller, generator
 /// state), to find the first call where two runs diverge.
-///
-/// [pt] `CM_RASTRO=AAAA-MM-DD`: cada sorteio desse dia vai para `rastro.log` (n, quem chamou, estado do
-/// gerador), para achar a primeira chamada em que duas execucoes divergem.
 pub fn rastro() -> Option<(u16, u16)> {
     static TRACE_DATE: OnceLock<Option<(u16, u16)>> = OnceLock::new();
     *TRACE_DATE.get_or_init(|| date_from_env("CM_RASTRO"))
@@ -81,8 +65,6 @@ fn close_trace() {
 }
 
 /// "AAAA-MM-DD" -> (year, day of the year from 0), with the game's leap-year rule.
-///
-/// [pt] "AAAA-MM-DD" -> (ano, dia do ano a partir de 0), com a regra de bissexto do jogo.
 pub fn interpret(s: &str) -> Option<(u16, u16)> {
     let mut p = s.trim().split('-').map(|x| x.parse::<u32>().ok());
     let (a, m, d) = (p.next()??, p.next()??, p.next()??);
@@ -97,10 +79,6 @@ pub fn interpret(s: &str) -> Option<(u16, u16)> {
 /// Called at the start of each draw (Rust version and comparison mode), with the generator state before the call.
 /// Thread that made the first draw; draws from other threads make the simulation depend on
 /// Windows scheduling and are logged.
-///
-/// [pt] Chamado no inicio de cada sorteio (versao Rust e modo comparacao), com o estado do gerador antes da chamada.
-/// Thread que fez o primeiro sorteio; sorteios de outras threads tornam a simulacao dependente
-/// do agendamento do Windows e sao registrados.
 static MAIN_THREAD: AtomicU64 = AtomicU64::new(0);
 static OTHER_THREADS: AtomicU64 = AtomicU64::new(0);
 
@@ -120,8 +98,6 @@ unsafe fn check_thread(origin: &str) {
 }
 
 /// FNV-1a of the people table (70-byte records at [0xae23c4], count at [0xae236c]).
-///
-/// [pt] FNV-1a da tabela de pessoas (registros de 70 bytes em [0xae23c4], quantidade em [0xae236c]).
 unsafe fn hash_people() -> u64 {
     let (base, count) = (*(0xae23c4 as *const usize), *(0xae236c as *const i32));
     if base == 0 || count <= 0 {
@@ -135,10 +111,6 @@ unsafe fn hash_people() -> u64 {
 /// Daily memory map in jogo\memoria.log (with the trace on): one line per day with the hash
 /// of each 4 KB block of .data and 64 KB block of the heap. Comparing runs, it separates the noise (blocks
 /// that vary even between identical runs) from the first data that really diverges.
-///
-/// [pt] Mapa diario da memoria em jogo\memoria.log (com o rastro ligado): uma linha por dia com o hash
-/// de cada bloco de 4 KB da .data e de 64 KB da heap. Comparando execucoes, separa o ruido (blocos
-/// que variam ate entre execucoes iguais) do primeiro dado que diverge de verdade.
 unsafe fn memory_map() {
     use std::io::Write;
     static FILE: std::sync::Mutex<Option<std::io::BufWriter<std::fs::File>>> = std::sync::Mutex::new(None);
@@ -166,8 +138,6 @@ unsafe fn memory_map() {
 }
 
 /// Fast hash of a memory range (8-byte words).
-///
-/// [pt] Hash rapido de um trecho de memoria (palavras de 8 bytes).
 unsafe fn hash_range(start: usize, end: usize) -> u64 {
     core::slice::from_raw_parts(start as *const u64, (end - start) / 8)
         .iter()
@@ -176,9 +146,6 @@ unsafe fn hash_range(start: usize, end: usize) -> u64 {
 
 /// Match fingerprint: the hash of each match engine when freed (the end-of-match state
 /// that does not reach the draw, like the players' fatigue), chained in match order.
-///
-/// [pt] Impressao das partidas: o hash de cada motor de partida ao ser liberado (o estado de fim de jogo
-/// que nao chega ao sorteio, como o desgaste dos jogadores), encadeado na ordem das partidas.
 static MATCHES: AtomicU64 = AtomicU64::new(0);
 static MATCH_COUNT: AtomicU64 = AtomicU64::new(0);
 
@@ -194,12 +161,6 @@ pub unsafe fn match_finished(engine: usize) {
 /// varies between Rust and the original without changing the game (13/10/2026). In go the blocks pointed to by the
 /// database pointer table (0xae2300..0xae2400: people, clubs, ...), the table at [[0xb67a44]]
 /// and the GlobalAlloc blocks.
-///
-/// [pt] A memoria do jogo, encadeada dia a dia: os blocos do banco de dados. A heap inteira mistura a
-/// interface (buffers de imagem, telas), que o jogo desenha em momentos que dependem da velocidade e
-/// varia entre o Rust e o original sem mudar o jogo (13/10/2026). Entram os blocos apontados pela
-/// tabela de ponteiros do banco (0xae2300..0xae2400: pessoas, clubes, ...), a tabela em [[0xb67a44]]
-/// e os blocos do GlobalAlloc.
 static MEMORY: AtomicU64 = AtomicU64::new(0);
 
 pub unsafe fn game_blocks() -> Vec<(usize, usize)> {
@@ -223,8 +184,6 @@ unsafe fn hash_game_blocks() -> u64 {
 }
 
 /// The hash chained so far, with the memory of this moment.
-///
-/// [pt] O hash encadeado ate agora, com a memoria deste momento.
 unsafe fn memory_of_day() -> u64 {
     let v = MEMORY.load(Ordering::Relaxed).rotate_left(5) ^ hash_game_blocks();
     MEMORY.store(v, Ordering::Relaxed);
@@ -233,9 +192,6 @@ unsafe fn memory_of_day() -> u64 {
 
 /// With the trace on, the daily log gets the hash of all of the game's memory (fixed heap and the exe's .data,
 /// 0x987000..0xde463c): finds the first day on which any data diverges, before it reaches the draw.
-///
-/// [pt] Com o rastro ligado, o diario ganha o hash de toda a memoria do jogo (heap fixa e .data do exe,
-/// 0x987000..0xde463c): acha o primeiro dia em que qualquer dado diverge, antes de chegar ao sorteio.
 unsafe fn hash_whole_game() -> String {
     if rastro().is_none() {
         return String::new();
@@ -311,8 +267,6 @@ pub unsafe fn record_draw(requested: i32, pointer: u32, offset: i32, rand: u32) 
 // ---------- fixed clock ----------
 
 /// Instant returned by the game's time() during the simulation (9/9/2001 01:46:40 UTC).
-///
-/// [pt] Instante devolvido pelo time() do jogo durante a simulacao (9/9/2001 01:46:40 UTC).
 const FIXED_CLOCK: u32 = 1_000_000_000;
 
 // 0x946ebb: push ebp; mov ebp, esp; sub esp, 0xcc
@@ -321,9 +275,6 @@ const PROLOGUE_TIME: crate::detours::Prologue =
 
 /// CRT time() { `exe::at_946ebb` } in the simulation: always the same instant. The game reseeds rand()
 /// with the clock (manager_manager.cpp, 0x696d4b), which would make the simulation irreproducible.
-///
-/// [pt] time() da CRT { 0x946ebb } na simulacao: sempre o mesmo instante. O jogo ressemeia o rand()
-/// com o relogio (manager_manager.cpp, 0x696d4b), o que tornaria a simulacao irreproduzivel.
 unsafe extern "C" fn fixed_time(out: *mut u32) -> u32 {
     if !out.is_null() {
         *out = FIXED_CLOCK;
@@ -337,8 +288,6 @@ const PROLOGUE_RAND: crate::detours::Prologue =
 static mut RAND_ORIGINAL: usize = 0;
 
 /// CRT rand() observed in the simulation: only checks which thread it comes from and calls the original.
-///
-/// [pt] rand() da CRT observado na simulacao: so confere de que thread vem e chama o original.
 unsafe extern "C" fn observed_rand() -> i32 {
     check_thread("rand");
     let f: unsafe extern "C" fn() -> i32 = core::mem::transmute(RAND_ORIGINAL);
@@ -349,8 +298,6 @@ unsafe extern "C" fn observed_rand() -> i32 {
 const PROLOGUE_CLOCK: crate::detours::Prologue =
     crate::detours::Prologue { address: 0x947299, bytes: &[0x55, 0x8b, 0xec, 0x51, 0x51] };
 /// Game functions that call clock() (via `exe::utils_get_time_ms`; return addresses checked with refs.py).
-///
-/// [pt] Funcoes do jogo que chamam clock() (via 0x90c510; enderecos de retorno conferidos com refs.py).
 const CLOCK_CALLERS: [u32; 13] = [
     0x497050, 0x569610, 0x5cccd0, 0x68d520, 0x6b55c0, 0x6d7b00, 0x6d8c70, 0x71b1b0, 0x724b53, 0x725860,
     0x75db00, 0x7615d0, 0x81b890,
@@ -361,11 +308,6 @@ static CLOCKS: [AtomicU64; 14] = [const { AtomicU64::new(0) }; 14];
 /// each of its queries. A single clock (or the real one) makes the waits of match day (match_day.cpp,
 /// "come back when clock() passes X") depend on how many times the menu bar and the screens
 /// queried the clock, which varies with the Windows messages.
-///
-/// [pt] clock() da CRT { 0x947299 } na simulacao: um relogio por rotina chamadora, que avanca 1 ms a
-/// cada consulta dela. Um relogio unico (ou o real) faz as esperas do dia de jogo (match_day.cpp,
-/// "volta quando clock() passar de X") dependerem de quantas vezes a barra de menus e as telas
-/// consultaram o relogio, o que varia com as mensagens do Windows.
 unsafe extern "C" fn fixed_clock() -> i32 {
     let r = crate::detours::RETURN_TO;
     let i = CLOCK_CALLERS.iter().rposition(|&f| f <= r).unwrap_or(13);
@@ -392,8 +334,6 @@ unsafe extern "C" fn fixed_disk(_drive: usize) -> i32 {
 }
 
 /// Drives seen by the 33 CD checks: only C:\ (pen drives and the like change nothing).
-///
-/// [pt] Unidades vistas pelas 33 checagens de CD: so C:\ (pen drives e afins nao mudam nada).
 unsafe extern "system" fn fixed_drives(size: u32, buf: *mut u8) -> u32 {
     let s = b"C:\\\0\0";
     if (size as usize) < s.len() {
@@ -404,8 +344,6 @@ unsafe extern "system" fn fixed_drives(size: u32, buf: *mut u8) -> u32 {
 }
 
 /// Memory seen by the game in the simulation: fixed (the GlobalMemoryStatus ceiling), so it does not depend on the machine.
-///
-/// [pt] Memoria vista pelo jogo na simulacao: fixa (o teto do GlobalMemoryStatus), para nao depender da maquina.
 unsafe extern "C" fn fixed_memory() -> i32 {
     2047
 }
@@ -417,8 +355,6 @@ const PROLOGUE_QSORT: crate::detours::Prologue =
 static mut QSORT_ORIGINAL: usize = 0;
 
 /// Hash of the array with pointers into the people table replaced by the index (the table's address varies).
-///
-/// [pt] Hash do vetor com ponteiros para a tabela de pessoas trocados pelo indice (o endereco da tabela varia).
 unsafe fn hash_array(base: *const u8, bytes: usize) -> u64 {
     let (people, count) = (*(0xae23c4 as *const u32), *(0xae236c as *const i32) as u32);
     let end = people.wrapping_add(count.wrapping_mul(70));
@@ -447,13 +383,9 @@ unsafe extern "C" fn traced_qsort(base: *mut u8, n: usize, width: usize, cmp: us
 // ---------- coverage ----------
 
 /// (address, file, counter) of each counted function (`CM_COBERTURA=1`, list in cobertura.txt).
-///
-/// [pt] (endereco, arquivo, contador) de cada funcao contada (`CM_COBERTURA=1`, lista em cobertura.txt).
 static COVERAGE: std::sync::Mutex<Vec<(usize, String, &'static mut u32)>> = std::sync::Mutex::new(Vec::new());
 
 /// Reads jogo\cobertura.txt (generated by engenharia-reversa\cobertura.py) and puts a counter on each function.
-///
-/// [pt] Le jogo\cobertura.txt (gerado por engenharia-reversa\cobertura.py) e poe um contador em cada funcao.
 unsafe fn install_coverage() {
     let path = std::env::current_exe().map(|p| p.with_file_name("cobertura.txt")).unwrap_or_default();
     let Ok(text) = std::fs::read_to_string(&path) else {
@@ -489,13 +421,6 @@ fn dump_coverage() {
 /// that handles the messages left garbage on the game's stack at moments that depend on the clock, and the
 /// game reads uninitialized variables (26/12/2001, training: the career changed in 1 of every 4-6
 /// runs with the generator identical up to the point of divergence).
-///
-/// [pt] PeekMessageA do jogo na simulacao: esvazia a fila de verdade (a janela segue respondendo ao
-/// Windows, inclusive a mensagens enviadas por outros programas) e responde sempre "nenhuma".
-/// Roda na pilha particular (instalada pela IAT atras de `detours::isolar`): o codigo do Windows
-/// que trata as mensagens deixava lixo na pilha do jogo em momentos que dependem do relogio, e o
-/// jogo le variaveis nao inicializadas (26/12/2001, treino: carreira mudava em 1 de cada 4-6
-/// execucoes com o gerador identico ate o ponto da divergencia).
 unsafe extern "system" fn isolated_peek(_msg: *mut [u32; 7], _hwnd: usize, _min: u32, _max: u32, _remove: u32) -> i32 {
     let mut m = [0u32; 7];
     while crate::win::PeekMessageA(&mut m, core::ptr::null_mut(), 0, 0, 1) != 0 {
@@ -511,13 +436,6 @@ unsafe extern "system" fn isolated_peek(_msg: *mut [u32; 7], _hwnd: usize, _min:
 /// variables: the career with the engine on changed in half the runs (26/12/2001,
 /// training). This way the game's stack only sees what the game itself writes. Left out are the exception
 /// and shutdown functions, which need the real stack.
-///
-/// [pt] Toda funcao do Windows chamada pelo jogo roda na pilha particular (`detours::isolar` em cada
-/// entrada da IAT, inclusive as ja trocadas acima). O codigo do Windows deixava na pilha do jogo
-/// valores que mudam a cada execucao (enderecos da heap do processo, alcas) e o jogo le variaveis
-/// nao inicializadas: a carreira com o motor ligado mudava em metade das execucoes (26/12/2001,
-/// treino). Assim a pilha do jogo so ve o que o proprio jogo escreve. Ficam de fora as funcoes de
-/// excecao e de encerramento, que precisam da pilha real.
 unsafe fn isolate_imports() {
     const EXCLUDED: [&str; 6] = ["RaiseException", "RtlUnwind", "ExitProcess", "TerminateProcess", "UnhandledExceptionFilter", "SetUnhandledExceptionFilter"];
     let n = crate::iat_hooks::for_each_import(|_dll, name, current| {
@@ -535,10 +453,6 @@ unsafe fn isolate_imports() {
 /// Logs the process's exceptions to ddraw.log (code, address, registers, stack) and lets
 /// handling go on as normal. In the simulation the game runs hidden and Windows does not always log the
 /// crash; this way the address is always at hand. Only the first 8 (handled exceptions also pass here).
-///
-/// [pt] Registra no ddraw.log as excecoes do processo (codigo, endereco, registradores, pilha) e deixa
-/// o tratamento seguir normal. Na simulacao o jogo roda oculto e o Windows nem sempre registra a
-/// queda; assim o endereco fica sempre a mao. So as 8 primeiras (excecoes tratadas tambem passam aqui).
 pub unsafe extern "system" fn record_exception(info: *const [usize; 2]) -> i32 {
     static SEEN: AtomicU64 = AtomicU64::new(0);
     if SEEN.fetch_add(1, Ordering::Relaxed) < 8 {
@@ -573,14 +487,6 @@ static mut RESTORE_ORIGINAL: usize = 0;
 /// holiday stamp (+0x9a65, setter `set_human_field`) goes back to 0, as after the reset `exe::human_manager_reset_human_record` of the automatic
 /// career: with the save's real-clock stamp, the simulation's fixed clock would never pass it + 2000 and the
 /// sidebar (`exe::menubar_handle_command`) would not move on its own. Same in both modes (it is not a ported routine).
-///
-/// [pt] CM_FERIAS=1 (prova do save, etapa de carregar): o jogo nao deixa gravar com o tecnico de ferias, e um save
-/// carregado com -load espera o Continuar. Na entrada da 0x8387e0 (Setup.cpp, os humanos restaurados; so o
-/// -load e a rede passam por ela, depois do load_game_data) cada humano ativo (+0x5f = 1, entre as 16 ultimas
-/// pessoas) sai de ferias como o ON_HOLIDAY=YES do auto_setup (0x827cc9: set_on_holiday 0x5fd2f0 com 1), e o
-/// carimbo das ferias (+0x9a65, setter 0x5fdd30) volta a 0, como depois do reset 0x5fb810 da carreira
-/// automatica: com o carimbo do relogio real do save, o clock fixo da simulacao nunca passaria dele + 2000 e a
-/// barra lateral (0x7615d0) nao andaria sozinha. Igual nos dois modos (nao e rotina portada).
 unsafe extern "C" fn restore_humans_on_holiday() -> i32 {
     let hm = *(0xb63c98 as *const usize);
     if hm != 0 {
@@ -601,8 +507,6 @@ unsafe extern "C" fn restore_humans_on_holiday() -> i32 {
 }
 
 /// Called when the DLL loads: only acts in simulation mode (CM_PARAR_EM set).
-///
-/// [pt] Chamado no carregamento da DLL: so age em modo simulacao (CM_PARAR_EM definido).
 pub unsafe fn install() {
     if target_date().is_some() {
         // Every routine detoured from here on runs on the private stack and records its caller.

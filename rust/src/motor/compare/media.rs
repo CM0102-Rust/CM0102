@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../media.rs.
-// [pt] Os comparadores das rotinas de ../media.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `process_transfer_interest`.
 pub(crate) unsafe extern "thiscall" fn compare_process_transfer_interest(this: usize) {
@@ -24,11 +23,6 @@ pub(crate) unsafe extern "thiscall" fn compare_queue_trophy_praise_story(this: u
 /// complaints (`exe::staff_contract_apply_event_flags`) run once, in the original, and the copy checks the call and receives the state afterwards.
 /// Regions: the random generator, [0xae1080], the six persons of the club (+0x9b, `club_add_disliked_staff`), the player's contract and,
 /// for each person of the array, the preferences (+0x1c..+0x33), +0x58..+0x5d and the club contract (+0 to +0x4f).
-///
-/// [pt] Comparador: pela fita das portas do pós-jogo (compare_pos): as desafeições (0x547af0), a marca (0x867560) e as
-/// queixas (0x867700) rodam uma vez, na original, e a cópia confere a chamada e recebe o estado de depois. Regiões: o
-/// sorteador, [0xae1080], as seis pessoas do clube (+0x9b, a 0x547940), o contrato do jogador e, de cada pessoa do
-/// vetor, as preferências (+0x1c..+0x33), o +0x58..+0x5d e o contrato no clube (+0 a +0x4f).
 pub(crate) unsafe extern "thiscall" fn compare_apply_squad_reaction_to_player_story(this: usize, topic: u32, player: usize, club: usize, ids: usize, n: u32) {
     let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize, usize, usize, u32)>(IDX_APPLY_SQUAD_REACTION_TO_PLAYER_STORY);
@@ -54,9 +48,6 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_squad_reaction_to_player_st
 }
 
 /// Comparer for `warn_squad_of_position_rival`.
-///
-/// [pt] Comparador: pela fita das portas do pós-jogo (a história 0x72c1f0 e a marca 0x867560 rodam só na original). Regiões:
-/// o sorteador, [0xae1080] e, de cada um dos 50 do elenco, o +0x58..+0x5d e o contrato no clube (+0 a +0x4f).
 pub(crate) unsafe extern "thiscall" fn compare_warn_squad_of_position_rival(this: usize, player: usize, club: usize, a: u32, b: u32) {
     let club = Club(club);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_WARN_SQUAD_OF_POSITION_RIVAL);
@@ -75,8 +66,6 @@ pub(crate) unsafe extern "thiscall" fn compare_warn_squad_of_position_rival(this
 }
 
 /// Comparer for `media_format_response_option_label`.
-///
-/// [pt] Comparador: lado a lado nos primeiros bytes da saída (até 0x50, o maior rótulo tem 61).
 pub(crate) unsafe extern "stdcall" fn compare_media_format_response_option_label(kind: u32, option: u32, out: usize, size: u32) {
     let o = original_fn::<unsafe extern "stdcall" fn(u32, u32, usize, u32)>(IDX_MEDIA_FORMAT_RESPONSE_OPTION_LABEL);
     let reg = if out != 0 && (size as i16) >= 0xf { vec![(out, (size as u16 as usize).min(0x50))] } else { Vec::new() };
@@ -91,11 +80,6 @@ pub(crate) unsafe extern "stdcall" fn compare_media_format_response_option_label
 /// club's supporters row in [[`0xb67a44`]] and, for each member of the two clubs' squads (and the person of the media
 /// story), the contract with the club (0x50 bytes) and the opinions row in [`0xae2d0c`] (0x4f bytes). When the copy
 /// stops: only the original routine.
-///
-/// [pt] Comparador em ensaio: a cópia sem notícia nem pedido de transferência (para quando chega a um) e a original a partir
-/// do mesmo estado: o sorteio, [0xae1080] (a ficha do último contrato), a data estática da 0x54cdb0, a linha da torcida
-/// do novo clube em [[0xb67a44]] e, de cada um dos elencos dos dois clubes (e da pessoa da história da mídia), o contrato
-/// com o clube (0x50 bytes) e a linha de opiniões em [0xae2d0c] (0x4f bytes). Quando a cópia para: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_process_transfer_squad_reactions(this: usize, p: usize, new: usize, old: usize, flag: u32) {
     let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32)>(IDX_PROCESS_TRANSFER_SQUAD_REACTIONS);
@@ -176,9 +160,6 @@ pub(crate) unsafe extern "C" fn compare_media_pick_outlet_type_for_person(person
 }
 
 /// Comparer for `adjust_supporter_confidence`.
-///
-/// [pt] Comparador: a original sorteia e entrega a notícia (não pode rodar duas vezes): roda só ela e confere o plano feito
-/// antes: a confiança da torcida nova (a variação é pura).
 pub(crate) unsafe extern "thiscall" fn compare_adjust_supporter_confidence(this: usize, club: usize, sujeito: usize, topic: u32, target: u32, variant: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32)>(IDX_ADJUST_SUPPORTER_CONFIDENCE);
     if club == 0 {
@@ -194,8 +175,6 @@ pub(crate) unsafe extern "thiscall" fn compare_adjust_supporter_confidence(this:
 }
 
 /// Comparer for `adjust_board_confidence`.
-///
-/// [pt] Comparador: como o da torcida, pela confiança da diretoria nova.
 pub(crate) unsafe extern "thiscall" fn compare_adjust_board_confidence(this: usize, club: usize, sujeito: usize, topic: u32, target: u32, variant: u32, sexto: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, u32, u32)>(IDX_ADJUST_BOARD_CONFIDENCE);
     if club == 0 {
@@ -211,31 +190,21 @@ pub(crate) unsafe extern "thiscall" fn compare_adjust_board_confidence(this: usi
 }
 
 /// Comparer for `queue_player_gratitude_news`.
-///
-/// [pt] Comparador: a gratidão sorteia, sobe +0x44 da ficha e entrega a notícia: só a original (a prova é a carreira e o
-/// modo Rust).
 pub(crate) unsafe extern "thiscall" fn compare_queue_player_gratitude_news(this: usize, player: usize, club: usize, kind: u32, variant: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_QUEUE_PLAYER_GRATITUDE_NEWS)(this, player, club, kind, variant)
 }
 
 /// Comparer for `post_player_backing_request_news`.
-///
-/// [pt] Comparador: a notícia vai à caixa do técnico (não pode rodar duas vezes): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_post_player_backing_request_news(this: usize, player: usize, club: usize, kind: u32, quarto: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_POST_PLAYER_BACKING_REQUEST_NEWS)(this, player, club, kind, quarto)
 }
 
 /// Comparer for `post_player_criticism_reaction_news`.
-///
-/// [pt] Comparador: a notícia vai às caixas dos técnicos (não pode rodar duas vezes): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_post_player_criticism_reaction_news(this: usize, player: usize, club: usize, topic: u32, reply: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32)>(IDX_POST_PLAYER_CRITICISM_REACTION_NEWS)(this, player, club, topic, reply)
 }
 
 /// Comparer for `rate_player_form_for_story`.
-///
-/// [pt] Comparador: a nota é pura (as estatísticas, as datas e o contrato só leem; nada sorteia): compara a devolução bit a
-/// bit (a original e a cópia na mesma precisão dupla do x87).
 pub(crate) unsafe extern "thiscall" fn compare_rate_player_form_for_story(this: usize, player: usize, club: usize, contract: usize, kind: u32, mode: u32, weight: f32) -> f64 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, u32, u32, f32) -> f64>(IDX_RATE_PLAYER_FORM_FOR_STORY)(this, player, club, contract, kind, mode, weight);
     let n = rate_player_form_for_story(this, player, club, contract, kind, mode, weight);
@@ -245,18 +214,12 @@ pub(crate) unsafe extern "thiscall" fn compare_rate_player_form_for_story(this: 
 }
 
 /// Comparer for `write_financial_trouble_news_text`.
-///
-/// [pt] Comparador: o texto vai para o objeto de saída (0x4ae660/0x4ae8a0 acrescentam e alocam): roda só a original (a cópia
-/// prova no modo Rust, pelo ramo).
 pub(crate) unsafe extern "thiscall" fn compare_write_financial_trouble_news_text(this: usize, news: usize, body: u32, out: usize) {
     // simplification: the text object cannot receive the text twice; only the original runs here
     original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, usize)>(IDX_WRITE_FINANCIAL_TROUBLE_NEWS_TEXT)(this, news, body, out);
 }
 
 /// Comparer for `log_story`.
-///
-/// [pt] Comparador: a original pode alocar e realocar (não roda duas vezes): o registro esperado antes; confere a conta e
-/// que o registro esperado está na lista (a ordem é a do qsort).
 pub(crate) unsafe extern "thiscall" fn compare_log_story(this: usize, a: usize, b: usize, kind: u32, subtype: u32, reply: u32) {
     let n = read_usize(this + media_fields::STORY_LOG_COUNT);
     let expected = build_news_log_record(a, b, kind, subtype, reply);
@@ -271,9 +234,6 @@ pub(crate) unsafe extern "thiscall" fn compare_log_story(this: usize, a: usize, 
 }
 
 /// Comparer for `expire_story_log`.
-///
-/// [pt] Comparador: lado a lado pelo registro (ponteiro, capacidade e conta; as histórias) e o estado do sorteio (a cópia
-/// sem contar os sorteios).
 pub(crate) unsafe extern "thiscall" fn compare_expire_story_log(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_EXPIRE_STORY_LOG);
     if read_usize(this) == 0 {
@@ -288,8 +248,6 @@ pub(crate) unsafe extern "thiscall" fn compare_expire_story_log(this: usize) {
 }
 
 /// Comparer for `has_logged_story`.
-///
-/// [pt] Comparador: pelo valor (a busca e a data padrão da chave só leem).
 pub(crate) unsafe extern "thiscall" fn compare_has_logged_story(this: usize, a: usize, b: usize, kind: u32, subtype: u32, desde: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32, usize) -> u32>(IDX_HAS_LOGGED_STORY)(this, a, b, kind, subtype, desde);
     let n = has_logged_story(this, a, b, kind, subtype, desde);
@@ -298,9 +256,6 @@ pub(crate) unsafe extern "thiscall" fn compare_has_logged_story(this: usize, a: 
 }
 
 /// Comparer for `add_transfer_interest`.
-///
-/// [pt] Comparador: a original pode alocar e realocar (não roda duas vezes): o plano antes (já está? o registro novo);
-/// confere a conta e que o registro novo está no vetor (a ordem é a do qsort).
 pub(crate) unsafe extern "thiscall" fn compare_add_transfer_interest(this: usize, player: usize, club: usize, value: i32, rating: f64) {
     let n = read_usize(this + media_fields::INTEREST_COUNT);
     let ja_esta = has_interest(this, &interest_key(player, club));
@@ -317,8 +272,6 @@ pub(crate) unsafe extern "thiscall" fn compare_add_transfer_interest(this: usize
 }
 
 /// Comparer for `compare_id_pair_keys`.
-///
-/// [pt] Comparador: pelo valor (só lê).
 pub(crate) unsafe extern "C" fn compare_compare_id_pair_keys(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_ID_PAIR_KEYS)(a, b);
     let n = compare_id_pair_keys(a, b);
@@ -327,8 +280,6 @@ pub(crate) unsafe extern "C" fn compare_compare_id_pair_keys(a: usize, b: usize)
 }
 
 /// Comparer for `compare_story_log_records`.
-///
-/// [pt] Comparador: pelo valor (só lê).
 pub(crate) unsafe extern "C" fn compare_compare_story_log_records(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_COMPARE_STORY_LOG_RECORDS)(a, b);
     let n = compare_story_log_records(a, b);
@@ -370,8 +321,6 @@ pub(crate) unsafe extern "thiscall" fn compare_has_story(average: usize, id: *co
 }
 
 /// Comparer for `media_queue_player_apology_news`.
-///
-/// [pt] Comparador: a notícia sorteia e vai para a caixa do técnico: só a original (a prova é a carreira e o modo Rust).
 pub(crate) unsafe extern "stdcall" fn compare_media_queue_player_apology_news(player: usize, club: usize, historia: i16) {
     original_fn::<unsafe extern "stdcall" fn(usize, usize, i16)>(IDX_MEDIA_QUEUE_PLAYER_APOLOGY_NEWS)(player, club, historia)
 }
@@ -390,9 +339,6 @@ pub(crate) unsafe extern "thiscall" fn compare_pick_former_international_pundit(
 }
 
 /// Comparer for `pick_ai_manager_response`.
-///
-/// [pt] Comparador: a resposta sorteia e pode pôr o jogador entre os rejeitados do técnico (0x547af0): lado a lado no
-/// estado do gerador e no bloco das preferências do técnico (+0x65, +0x1c..+0x34), a cópia sem contar os sorteios.
 pub(crate) unsafe extern "thiscall" fn compare_pick_ai_manager_response(this: usize, manager: usize, player: usize, kind: u32) -> u32 {
     let manager = Staff(manager);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_PICK_AI_MANAGER_RESPONSE);
@@ -410,18 +356,12 @@ pub(crate) unsafe extern "thiscall" fn compare_pick_ai_manager_response(this: us
 }
 
 /// Comparer for `post_financial_trouble_news`.
-///
-/// [pt] Comparador: a notícia sorteia (0x90cfc0) e vai para as caixas dos técnicos: só a original (a prova é a carreira e o
-/// modo Rust).
 pub(crate) unsafe extern "thiscall" fn compare_post_financial_trouble_news(this: usize, club: usize) {
     covered!("post_financial_trouble_news");
     original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_POST_FINANCIAL_TROUBLE_NEWS)(this, club)
 }
 
 /// Comparer for `pick_rival_manager_id`.
-///
-/// [pt] Comparador: sorteia (0x90cfc0): lado a lado pelo estado do sorteio, a cópia em sem_contar (as escritas são só nas
-/// locais da pilha de cada uma).
 pub(crate) unsafe extern "thiscall" fn compare_pick_rival_manager_id(this: usize, club: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_PICK_RIVAL_MANAGER_ID);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&crate::rng::STATE_REGIONS, || o(this, club),

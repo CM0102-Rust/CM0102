@@ -1,12 +1,8 @@
 use super::*;
 
 // The comparers of the routines in ../area.rs.
-// [pt] Os comparadores das rotinas de ../area.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `area_layout`.
-///
-/// [pt] A área inteira, o +0x7c do item dono (se houver) e o ponteiro da barra de rolagem do teclado
-/// (0xad9c58, que a 0x403600 grava) têm de sair iguais.
 pub(crate) unsafe extern "thiscall" fn compare_area_layout(area: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_AREA_LAYOUT);
     let marks = read_u32(area + area_fields::FLAGS);

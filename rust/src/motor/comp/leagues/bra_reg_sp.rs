@@ -4,9 +4,6 @@ use super::*;
 /// next year and rebuilds the rules, the table with the state clubs, the fixtures (round robin) and the table order;
 /// then the predicted positions and the renewal of the state referees
 /// Original: `BraRegSp::start_new_season` (0x43cd40, bra_reg_sp.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x43cd40 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::start_new_season()`, a virada da temporada do Paulista (a tabela:
-/// 0x43cc40; caixas nas linhas 0x1bc, 0x1c3, 0x1c9 e 0x1d0).
 pub(crate) unsafe extern "thiscall" fn bra_reg_sp_start_new_season(this: usize) -> u32 {
     state_league_new_season(League(this), 0x43cc40, 0x98b090, [0x1bc, 0x1c3, 0x1c9, 0x1d0], 1, "cqp_9 virada do paulista") // cqp9: the next year of the Paulista
 }
@@ -14,9 +11,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_sp_start_new_season(this: usize) 
 /// The Sao Paulo next stage: the round robin is stage −1; when it ends, the stage becomes 0 and the top 4 go to the
 /// semi-finals (1st v 4th, 2nd v 3rd); past the last stage it is an error (the box)
 /// Original: `BraRegSp::advance_stage` (0x43cef0, bra_reg_sp.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x43cef0 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::advance_stage()`, a fase seguinte do Paulista: no fim dos pontos corridos,
-/// o mata-mata de 4 (0x43cf80); a caixa da linha 0x1ea.
 pub(crate) unsafe extern "thiscall" fn bra_reg_sp_advance_stage(this: usize) {
     state_league_advance_stage(League(this), 0x98b090, 0x1ea, 0x43cf80);
 }
@@ -24,9 +18,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_sp_advance_stage(this: usize) {
 /// Sao Paulo: after the round robin, the top 4 go to the semi-finals: 1st v 4th, 2nd v 3rd (the better placed is the
 /// seed; the ties follow the seeds [inference: two legs, the decider at the better placed club])
 /// Original: `BraRegSp::create_semi_final_stage` (0x43cf80, bra_reg_sp.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x43cf80 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::create_semi_final_stage()`, da fase seguinte (advance_stage, quando a fase passa de −1 a
-/// 0). As semifinais: 1º × 4º, 2º × 3º (linhas 0, 3, 1, 2). Fonte 0x98b090, linhas 0x20d (sem lista) e 0x221 (sem fase).
 pub(crate) unsafe extern "thiscall" fn bra_reg_sp_create_semi_final_stage(this: usize) {
     create_knockout_from_table(League(this), &[0, 3, 1, 2], &[0, 3, 1, 2], 0x98b090, 0x20d, 0x221, "cqn_8 paulista"); // cqn8: 1º × 4º, 2º × 3º Paulista
 }
@@ -35,8 +26,6 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_sp_create_semi_final_stage(this: 
 /// no saved state, importance 15, a round robin and the knockout (one stage besides the league), the rules, the table
 /// with the state clubs, the fixtures, the order, the statistics and the predicted positions
 /// Original: `BraRegSp::BraRegSp` (0x43c280, bra_reg_sp.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x43c280 } (thiscall, ret 8, bra_reg_sp.cpp): `BraRegSp::BraRegSp(ano, registro)`: o Paulista (uma fase além da liga).
 pub(crate) unsafe extern "thiscall" fn construct_bra_reg_sp(this: usize, year: u32, record: usize) -> usize {
     bra_reg_rio_construct_state_league(League(this), year, record, &PAULISTA_STATE_LEAGUE, 7, true, "cqt_4 paulista novo") // cqt4: the discipline and expected positions of the Paulista
 }
@@ -44,9 +33,6 @@ pub(crate) unsafe extern "thiscall" fn construct_bra_reg_sp(this: usize, year: u
 /// the Sao Paulo league has 16 clubs: those with it as their reserve division in the database (the field that holds the
 /// state or regional league), in database order; the table only counts when full; no TV money nor prize fund
 /// Original: `BraRegSp::create_table` (0x43cc40, bra_reg_sp.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x43cc40 } (thiscall, ret 0, bra_reg_sp.cpp): `BraRegSp::create_table()`: o Paulista tem 16 clubes (divisão reserva +0x60 = [0x9cf9e4]).
-/// Fonte 0x98b090, linha 0x159.
 pub(crate) unsafe extern "thiscall" fn bra_reg_sp_create_table(this: usize) -> u32 {
     fill_state_league_table(League(this), 0x10, 0x98b090, 0x159, KEY_CLUB_COMP_BRAZILIAN_SAO_PAULO_STATE_CHAMP, 0, "cqm_8 paulista cheio")
 }

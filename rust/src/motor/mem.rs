@@ -2,8 +2,6 @@ use super::*;
 
 // Unaligned memory access for the game's records, one function per type (stage 4 of the reorganisation:
 // they replace the copies each batch item used to carry).
-// [pt] Acesso à memória dos registros do jogo, sem alinhamento, uma função por tipo (etapa 4 da reorganização:
-// replace the copies each batch item carried).
 
 pub unsafe fn read_f64(a: usize) -> f64 {
     core::ptr::read_unaligned(a as *const f64)
@@ -120,8 +118,6 @@ pub unsafe fn write_u64(a: usize, v: u64) {
 
 /// The club at index `i` of the game's club table (`G_CLUB_TABLE`, `club::SIZE` bytes each). No bounds check and
 /// 32-bit wrapping, like the original's inline arithmetic.
-///
-/// [pt] O clube no índice `i` da tabela de clubes do jogo (sem conferir limites, como a conta do original).
 #[inline(always)]
 pub unsafe fn club_at(i: isize) -> Club {
     Club(read_usize(G_CLUB_TABLE).wrapping_add((i as usize).wrapping_mul(club::SIZE)))
@@ -129,8 +125,6 @@ pub unsafe fn club_at(i: isize) -> Club {
 
 /// The person with id `id` in the game's person table (`G_STAFF_TABLE`, `staff::SIZE` bytes each). No bounds check
 /// and 32-bit wrapping, like the original's inline arithmetic.
-///
-/// [pt] A pessoa de id `id` na tabela de pessoas do jogo (sem conferir limites, como a conta do original).
 #[inline(always)]
 pub unsafe fn staff_at(id: isize) -> Staff {
     Staff(read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE)))

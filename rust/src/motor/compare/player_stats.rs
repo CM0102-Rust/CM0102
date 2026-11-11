@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../player_stats.rs.
-// [pt] Os comparadores das rotinas de ../player_stats.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `player_statistic`.
 pub(crate) unsafe extern "stdcall" fn compare_player_statistic(r: *const u8, which: i8, weight: f32) -> f64 {
@@ -20,11 +19,6 @@ pub(crate) unsafe extern "stdcall" fn compare_player_statistic(r: *const u8, whi
 ///
 /// The history positions (+0x18, +0x1c), which only the original's write moves, are left out. Null person or no player
 /// sheet: only the original.
-///
-/// [pt] Comparador em ensaio (modelo RARE_FINANCE_EVENT_DRY_RUN): a cópia roda primeiro sem gravar no arquivo (os nós que gravaria entram na
-/// soma dos jogos e gols), depois a original a partir do mesmo estado; compara a devolução, os seis registros de 32 bytes
-/// das categorias e os jogos e gols pelo clube (+0x20/+0x22 do registro da ficha). As posições do histórico (+0x18,
-/// +0x1c), que só a gravação da original move, ficam fora. Pessoa nula ou sem ficha: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_archive_player_stats(this: usize, p: usize, value: u32, loan: u32, end: u32, club_id: u32, other: u32) -> u32 {
     let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32, u32, u32) -> u32>(IDX_ARCHIVE_PLAYER_STATS);
@@ -60,10 +54,6 @@ pub(crate) unsafe extern "thiscall" fn compare_archive_player_stats(this: usize,
 ///
 /// The copy's table is freed (`0x9452ca`) and the game carries on with the original's. The error cases (box): only the
 /// original routine.
-///
-/// [pt] Comparador: as duas montam a tabela (a original e a cópia, a partir do mesmo estado; o arquivo de histórico só é
-/// lido) e comparam a conta e as entradas; a da cópia é liberada (0x9452ca) e o jogo segue com a da original. Os casos
-/// de erro (caixa): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_build_career_history(this: usize, p: usize, count: *mut i32) -> usize {
     let p = Staff(p);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, *mut i32) -> usize>(IDX_BUILD_CAREER_HISTORY);
@@ -94,8 +84,6 @@ pub(crate) unsafe extern "thiscall" fn compare_build_career_history(this: usize,
 }
 
 /// Comparer for `player_stats_years_since_at_club`.
-///
-/// [pt] Comparador: a devolução (16 bits); a tabela é montada e liberada pelas duas. Os casos de erro: só a original.
 pub(crate) unsafe extern "stdcall" fn compare_player_stats_years_since_at_club(p: usize, club: usize) -> i16 {
     let p = Staff(p);
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> i16>(IDX_PLAYER_STATS_YEARS_SINCE_AT_CLUB);
@@ -109,8 +97,6 @@ pub(crate) unsafe extern "stdcall" fn compare_player_stats_years_since_at_club(p
 }
 
 /// Comparer for `player_stats_compare_history_by_staff`.
-///
-/// [pt] Comparador: a devolução (só lê).
 pub(crate) unsafe extern "C" fn compare_player_stats_compare_history_by_staff(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_PLAYER_STATS_COMPARE_HISTORY_BY_STAFF)(a, b);
     let n = player_stats_compare_history_by_staff(a, b);
@@ -157,8 +143,6 @@ pub(crate) unsafe extern "C" fn compare_player_stats_compare_history_by_club(a: 
 }
 
 /// Comparer for `player_stats_get_career_goals`.
-///
-/// [pt] Comparador: a devolução (a tabela é montada e liberada pelas duas), sem os casos de erro (só a original).
 pub(crate) unsafe extern "stdcall" fn compare_player_stats_get_career_goals(person: usize) -> u16 {
     let person = Staff(person);
     let o = original_fn::<unsafe extern "stdcall" fn(usize) -> u16>(IDX_PLAYER_STATS_GET_CAREER_GOALS);
@@ -172,8 +156,6 @@ pub(crate) unsafe extern "stdcall" fn compare_player_stats_get_career_goals(pers
 }
 
 /// Comparer for `get_category_record`.
-///
-/// [pt] Comparador: pelo valor (só lê); os casos de erro só na original.
 pub(crate) unsafe extern "thiscall" fn compare_get_category_record(this: usize, player: usize, category: u32) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_GET_CATEGORY_RECORD)(this, player, category);
     if category_slot(this, player, category).is_none() {
@@ -191,10 +173,6 @@ pub(crate) unsafe extern "thiscall" fn compare_get_category_record(this: usize, 
 /// ones and the record zeroed when it is new.
 ///
 /// Simplification: the error cases and running out of memory only in the original, unchecked.
-///
-/// [pt] Comparador: a original realoca o vetor, então só ela roda; antes, o plano (o índice que o jogador vai ter, a
-/// conta e os soltos depois); depois, o registro devolvido, o índice na vaga, a conta, os soltos e o registro
-/// zerado quando é novo. simplification: os casos de erro e a falta de memória só na original, sem conferir.
 pub(crate) unsafe extern "thiscall" fn compare_create_stats(this: usize, player: usize, category: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> usize>(IDX_CREATE_STATS);
     let slot = match category_slot(this, player, category) {
@@ -230,10 +208,6 @@ pub(crate) unsafe extern "thiscall" fn compare_create_stats(this: usize, player:
 /// It allocates and reallocates the table (it cannot run twice): the plan beforehand (the count and capacity
 /// afterwards, the fluency), then the original runs; it checks the count, the capacity and the new record (at the end
 /// when not sorting; with `ordenar`, somewhere in the table).
-///
-/// [pt] Comparador: a 0x7c6a30 aloca e realoca a tabela (não pode rodar duas vezes): o plano antes (a conta e a
-/// capacidade depois, a fluência), a original roda; confere a conta, a capacidade e o registro novo (no fim sem ordenar;
-/// com `ordenar`, em algum lugar da tabela).
 pub(crate) unsafe extern "thiscall" fn compare_add_language(this: usize, person: usize, language: u32, fluencia: u32, sort: u32) {
     let (n, cap) = if read_usize(this + player_stats_fields::LANGUAGES) == 0 { (read_usize(this + player_stats_fields::LANGUAGE_COUNT), 100) } else { (read_usize(this + player_stats_fields::LANGUAGE_COUNT), read_usize(this + player_stats_fields::LANGUAGE_CAPACITY)) };
     let cap = if cap == n { cap.wrapping_add(100) } else { cap };
@@ -255,9 +229,6 @@ pub(crate) unsafe extern "thiscall" fn compare_add_language(this: usize, person:
 }
 
 /// Comparer for `improve_language`.
-///
-/// [pt] Comparador: sem tabela ou sem o registro, só a original (o acréscimo 0x7c6a30 tem o comparador dele); com o
-/// registro, lado a lado nos 6 bytes dele.
 pub(crate) unsafe extern "thiscall" fn compare_improve_language(this: usize, person: usize, language: u32, raise: u32, sort: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32, u32, u32)>(IDX_IMPROVE_LANGUAGE);
     let r = if read_usize(this + player_stats_fields::LANGUAGES) == 0 { 0 } else { find_language_record(this, person, language as u8) };
@@ -270,9 +241,6 @@ pub(crate) unsafe extern "thiscall" fn compare_improve_language(this: usize, per
 }
 
 /// Comparer for `player_stats_reset_player`.
-///
-/// [pt] Comparador: lado a lado no registro de 39 bytes, na conta dos livres (+0x38) e na marca +0xe dos registros de
-/// categoria liberados (a 0x58f110 só grava +0x1c, dentro do registro). Pessoa nula ou não jogadora: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_player_stats_reset_player(this: usize, person: usize) -> usize {
     let person = Staff(person);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> usize>(IDX_PLAYER_STATS_RESET_PLAYER);
@@ -293,8 +261,6 @@ pub(crate) unsafe extern "thiscall" fn compare_player_stats_reset_player(this: u
 }
 
 /// Comparer for `get_language_fluency`.
-///
-/// [pt] Comparador: pelo valor (a 0x4cf5f0 e a busca só leem).
 pub(crate) unsafe extern "thiscall" fn compare_get_language_fluency(this: usize, person: usize, club: usize, language: u32, by_contract: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, u32) -> u8>(IDX_GET_LANGUAGE_FLUENCY)(this, person, club, language, by_contract);
     let n = get_language_fluency(this, person, club, language, by_contract);
@@ -309,11 +275,6 @@ pub(crate) unsafe extern "thiscall" fn compare_get_language_fluency(this: usize,
 /// the random-draw state (and the two possible categories), with the copy's random draw left out of the count. A null
 /// match or fixture, the box of a competition with no known type, or a category record still to be created (`0x7c5d80`
 /// grows the vector): only the original routine.
-///
-/// [pt] Comparador lado a lado: as somas em double (+0x10..+0x30), os registros das categorias de cada linha que conta, o
-/// trecho +0x20..+0x27 do registro do jogador e o +0x3b do contrato; no jogo simulado (competição −2), também o estado
-/// do sorteio (e as duas categorias possíveis), com o sorteio da cópia fora da contagem. Partida ou jogo nulos, a caixa
-/// de uma competição sem tipo conhecido ou registro de categoria a criar (0x7c5d80 cresce o vetor): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_player_stats_record_match(this: usize, p: usize, game: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_PLAYER_STATS_RECORD_MATCH);
     if p == 0 || game == 0 {
@@ -359,9 +320,6 @@ pub(crate) unsafe extern "thiscall" fn compare_player_stats_record_match(this: u
 }
 
 /// Comparer for `end_season_for_key_nation`.
-///
-/// [pt] Comparador: a 0x7c5fe0 move as estatísticas para o histórico (aloca): roda só a original e confere a devolução
-/// (1, ou 0 sem nação).
 pub(crate) unsafe extern "thiscall" fn compare_end_season_for_key_nation(this: usize, nation: usize) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_END_SEASON_FOR_KEY_NATION)(this, nation);
     SCOREBOARD.record(r == (nation != 0) as u32, || format!("end_season_for_key_nation({:x}) returned {}", nation, r));
@@ -404,8 +362,6 @@ pub(crate) unsafe extern "thiscall" fn compare_get_last_match_rating(stats: usiz
 }
 
 /// Comparer for `player_stats_get_goals_for_club`.
-///
-/// [pt] Comparador: a devolução (a tabela é montada e liberada pelas duas), sem os casos de erro (só a original).
 pub(crate) unsafe extern "stdcall" fn compare_player_stats_get_goals_for_club(person: usize, club: usize) -> u16 {
     let person = Staff(person);
     let o = original_fn::<unsafe extern "stdcall" fn(usize, usize) -> u16>(IDX_PLAYER_STATS_GET_GOALS_FOR_CLUB);

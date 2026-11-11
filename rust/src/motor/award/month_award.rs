@@ -1,17 +1,12 @@
 use super::*;
 
 /// Club record with the given id (0x245 bytes each).
-///
-/// [pt] O clube `id` ([0xae23b4], 0x245 bytes cada).
 pub(crate) unsafe fn month_award_club_by_id(id: i32) -> Club {
     Club(read_usize(G_CLUB_TABLE).wrapping_add((id as usize).wrapping_mul(club::SIZE)))
 }
 
 /// The comparers' rehearsal run. The copy runs without the news item (`exe::month_award_post_winner_news`), without the award record (`add_month_award_record`)
 /// and without the club lists (`add_player_to_club_shortlists`), because these allocate and cannot run twice.
-///
-/// [pt] O ensaio dos comparadores: a cópia roda sem a notícia (0x767330), sem o registro do prêmio (0x86c8c0) e sem as
-/// listas dos clubes (0x842c00), que alocam e não podem rodar duas vezes.
 pub(crate) static MONTH_AWARD_DRY_RUN: AtomicBool = AtomicBool::new(false);
 
 /// Picks the best player of the month ratings with the requested age and records him as the month winner, with his
@@ -23,12 +18,6 @@ pub(crate) static MONTH_AWARD_DRY_RUN: AtomicBool = AtomicBool::new(false);
 /// −1), and the month (+0xc) and year (+0xd) of the ratings. The high bytes of the month and the year are passed
 /// exactly as the original pushes them (taken from the person table in the register).
 /// Original: `MONTH_AWARD::award_best_rated_player` (0x767150, month_award.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x767150 } (thiscall, ret 8, month_award.cpp): `MONTH_AWARD::award_best_rated_player(notas, idade)`, na virada do
-/// mês pelos prêmios das nações (os da Inglaterra em 0x579a37..0x579adc). O melhor das notas (0x768130) na liga do
-/// prêmio ([+9], ou −1) e com a idade pedida; achou: grava o vencedor (0x7671c0) com o clube da pessoa (+0x39, ou −1),
-/// o mês (+0xc) e o ano (+0xd) das notas. Os bytes altos do mês e do ano vão como a original os empurra (da tabela de
-/// pessoas no registrador).
 pub(crate) unsafe extern "thiscall" fn award_best_rated_player(this: usize, notes: usize, age: u32) {
     let league = {
         let l = read_usize(this + 9);
@@ -59,8 +48,6 @@ pub(crate) unsafe extern "thiscall" fn award_best_rated_player(this: usize, note
 // rehearsal); the slot calls the news and the award record, which allocate: original only; the copy takes the branch.
 
 /// Raises the award winner's reputation: the port directly in dry run, else the original `award_raise_winner_reputation`.
-///
-/// [pt] A reputação do premiado: no ensaio, a cópia direto (sem as listas dos clubes); senão pelo endereço (0x412f00).
 pub(crate) unsafe fn raise_winner_reputation(person: usize, club: usize, nation: u32, world: u32, player: u32) {
     if MONTH_AWARD_DRY_RUN.load(Relaxed) {
         return award_raise_winner_reputation(person, club, nation, world, player);
@@ -76,11 +63,6 @@ pub(crate) unsafe fn raise_winner_reputation(person: usize, club: usize, nation:
 /// is a person, it raises the award winner's reputation (`award_raise_winner_reputation`, with the award's reputations +0x15 and +0x17 and the
 /// player flag +0x19); then the news (`exe::month_award_post_winner_news`) and the award record (`add_month_award_record` on `[0xdd7f00]`, with the award's +5).
 /// Original: `MONTH_AWARD::set_winner` (0x7671c0, month_award.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x7671c0 } (thiscall, ret 0x10, month_award.cpp): `MONTH_AWARD::set_winner(pessoa, clube, mês, ano)`. Acha a vaga
-/// do mês (12 vagas de 11 bytes: mês em +0x25, ano em +0x26); sem ela, nada. Grava a pessoa (+0x1d) e o clube (+0x21);
-/// com pessoa, a reputação do premiado (0x412f00, com as reputações +0x15 e +0x17 do prêmio e a marca de jogador
-/// +0x19); a notícia (0x767330) e o registro do prêmio (0x86c8c0 em [0xdd7f00], com o +5 do prêmio).
 pub(crate) unsafe extern "thiscall" fn set_winner(this: usize, id: i32, club_id: i32, month: u32, year: u32) {
     let mut slot = None;
     for k in 0..12usize {
@@ -116,9 +98,6 @@ pub(crate) unsafe extern "thiscall" fn set_winner(this: usize, id: i32, club_id:
 
 /// Adds the regions the winner's reputation writes: player record +9..+0xe, non-player record +8..+0xd and the club's
 /// board row word (+6 of 73 bytes).
-///
-/// [pt] As regiões que a reputação do premiado grava: o registro do jogador (+0x61: +9..+0xe), o do não jogador (+0x69:
-/// +8..+0xd) e a linha da diretoria do clube (73 bytes em [[0xb67a44]], palavra +6).
 pub(crate) unsafe fn winner_reputation_regions(regions: &mut Vec<(usize, usize)>, person: usize, club: usize) {
     let person = Staff(person);
     let p = person.player();
@@ -137,8 +116,6 @@ pub(crate) unsafe fn winner_reputation_regions(regions: &mut Vec<(usize, usize)>
 
 /// Dry-run comparer: runs the port without allocating calls, then restores and runs the original from the same region
 /// state, comparing the regions.
-///
-/// [pt] O comparador em ensaio: a cópia sem as chamadas que alocam e a original a partir do mesmo estado das `regioes`.
 pub(crate) unsafe fn compare_month_award(name: &str, regions: &[(usize, usize)], original: impl FnOnce(), copy: impl FnOnce()) {
     let before = crate::comparison::MemorySnapshot::read(regions);
     MONTH_AWARD_DRY_RUN.store(true, Relaxed);
@@ -152,15 +129,11 @@ pub(crate) unsafe fn compare_month_award(name: &str, regions: &[(usize, usize)],
 }
 
 /// Adds the low 16 bits of v to the 16-bit word at a.
-///
-/// [pt] A palavra `a` mais o valor do _ftol (16 bits baixos, como o `add word` da original).
 pub(crate) unsafe fn add_to_word(a: usize, v: i32) {
     write_i16(a, read_i16(a).wrapping_add(v as i16));
 }
 
 /// Clamps the signed 16-bit word at a to at most 10000 and at least `piso`.
-///
-/// [pt] Teto de 10000 e piso `piso` na palavra `a` (as comparações com sinal da original).
 pub(crate) unsafe fn clamp_word(a: usize, floor: i16) {
     if read_i16(a) > 10000 {
         write_i16(a, 10000);

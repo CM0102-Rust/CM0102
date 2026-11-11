@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/bra_reg_parana.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/bra_reg_parana.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `bra_reg_parana_advance_stage` (comparison mode: see the header of motor.rs): the comparer of the next
 /// stage; only the original routine runs (simplification: on reaching 2 it builds the final, which allocates and makes
@@ -9,10 +8,6 @@ use super::*;
 ///
 /// At the last stage, `+0x30` unchanged; otherwise `+0x30` + 1, or, on reaching 2, 2 (with a final) or 1 (the same
 /// champion in both halves, which the final records).
-///
-/// [pt] O comparador da fase seguinte: só a original (simplification: ao chegar a 2 monta a final, que aloca e sorteia; não pode
-/// rodar duas vezes), conferindo o plano: na última fase, +0x30 igual; senão +0x30 + 1, ou, ao chegar a 2, 2 (com
-/// final) ou 1 (o mesmo campeão nos dois turnos, que a final grava).
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_parana_advance_stage(this: usize) {
     let this = League(this);
     let before = this.current_stage() as i32;
@@ -31,11 +26,6 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_parana_advance_stage(this
 /// Same club in both: +0x30 = 1, +0x2c = 2 and status 5 on the first row of each half and on its row of the league
 /// table. Different: the stage in the third slot exists, with +0x3e = 2, +4 = the league's +4 and the two champions in
 /// its list (+0xa7, 6 bytes; as a set: the round draw may reorder them), and +0x30 = 2.
-///
-/// [pt] O comparador da final: só a original (aloca a lista, a tabela e a fase e sorteia a rodada), conferindo o plano feito
-/// antes: os campeões dos turnos. O mesmo nos dois: +0x30 = 1, +0x2c = 2 e a situação 5 na primeira linha de cada turno
-/// e na linha dele da tabela da liga. Diferentes: a fase da terceira vaga existe, com +0x3e = 2, +4 = o +4 da liga e os
-/// dois campeões na lista dela (+0xa7, 6 bytes; como conjunto: o sorteio da rodada pode reordenar), e +0x30 = 2.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_parana_create_final_stage(this: usize) {
     let this = League(this);
     let (a, b) = (half_champion(this, 0), half_champion(this, 1));
@@ -65,18 +55,11 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_parana_create_final_stage
 /// Only the original runs (simplification: it writes the history, which allocates the record, pays the prizes and sends
 /// the news item, and may set up the Champions Cup; it cannot run twice). The copy runs in Rust mode (counters "cqo_8
 /// historico da final" and "cqo_8 prizes") and is proved by the mutations and by the two Rust careers.
-///
-/// [pt] Comparador do fim da temporada: só a original (simplification: grava o histórico, que aloca o registro, paga os prêmios e
-/// manda a notícia, e pode montar a Copa dos Campeões; não pode rodar duas vezes). A cópia roda no modo Rust (contadores
-/// "cqo_8 final history" e "cqo_8 prizes") e é provada pelas mutações e pelas duas carreiras Rust.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_parana_record_season_honours(this: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PARANA_RECORD_SEASON_HONOURS)(this)
 }
 
 /// Comparer for `bra_reg_parana_set_up_rules`.
-///
-/// [pt] Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto menos as
-/// saídas do calendário; a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_parana_set_up_rules(this: usize) -> u32 {
     let reg = league_regions_without_schedule(this);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_PARANA_SET_UP_RULES)(this), || {

@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/cups/usa_mls_all_stars.rs.
-// [pt] Os comparadores das rotinas de ../comp/cups/usa_mls_all_stars.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `usa_mls_all_stars_start_new_season_90a760`.
 pub(crate) unsafe extern "thiscall" fn compare_usa_mls_all_stars_start_new_season_90a760(this: usize) -> u32 {
@@ -15,10 +14,6 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_all_stars_start_new_seaso
 /// leaves its list at +0xa7, the copy builds its own (without counting the random draw), which is compared over the 12
 /// bytes and freed. The old list (+0xa7 on entry) is freed by neither of them (the season rollover has already freed
 /// it).
-///
-/// [pt] Lado a lado a partir do mesmo estado (o sorteador, +0x3e, os dois clubes das estrelas e [0xb67a34]); a original deixa
-/// a lista dela em +0xa7, a cópia faz a sua (sem contar o sorteio), comparada nos 12 bytes e liberada. A lista antiga
-/// (+0xa7 na entrada) não é liberada por nenhuma das duas (a virada já a liberou).
 pub(crate) unsafe extern "thiscall" fn compare_set_up_teams(this: usize) -> i32 {
     let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_SET_UP_TEAMS);
@@ -61,10 +56,6 @@ pub(crate) unsafe extern "thiscall" fn compare_usa_mls_all_stars_update_for_date
 /// The original routine runs with the caller's outputs, the copy with its own outputs that start equal, from the same
 /// [`0xb67a34`]; the outputs and the written bytes of both tables must be equal (the copy's is freed). Outside stage
 /// −1, only the original routine (neither writes anything).
-///
-/// [pt] Lado a lado: a original com as saídas de quem chama, a cópia com saídas próprias que começam iguais, a partir do
-/// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas têm de ser iguais (a da cópia é liberada). Fora da
-/// fase −1, só a original (nenhuma grava nada).
 pub(crate) unsafe extern "thiscall" fn compare_usa_mls_all_stars_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_USA_MLS_ALL_STARS_CREATE_ROUND_TABLE);
     if stage as u8 != 0xff {

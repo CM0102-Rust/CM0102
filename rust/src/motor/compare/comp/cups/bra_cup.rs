@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/cups/bra_cup.rs.
-// [pt] Os comparadores das rotinas de ../comp/cups/bra_cup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `bra_cup_start_new_season`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_cup_start_new_season(this: usize) -> u32 {
@@ -17,9 +16,6 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_cup_create_round_table(this: 
 }
 
 /// Comparer for `bra_cup_build_team_table`.
-///
-/// [pt] Lado a lado: o +0x3e e o [0xb67a34] a partir do mesmo estado; a original deixa a tabela dela em +0xa7, a cópia faz a
-/// sua, comparada nas 71 vagas (com a devolução 1) e liberada.
 pub(crate) unsafe extern "thiscall" fn compare_bra_cup_build_team_table(this: usize) -> i32 {
     let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BRA_CUP_BUILD_TEAM_TABLE);
@@ -51,9 +47,6 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_cup_build_team_table(this: us
 }
 
 /// Comparer for `bra_cup_set_up_rounds`.
-///
-/// [pt] Lado a lado: +0x28, +0x3a..+0x3d, +0x49/+0x4a e o [0xb67a34] a partir do mesmo estado; as tabelas das rodadas das
-/// duas (+0xa3) comparadas nos bytes gravados (eng_cc_cup_written_round_bytes) e a da cópia liberada.
 pub(crate) unsafe extern "thiscall" fn compare_bra_cup_set_up_rounds(this: usize) -> i32 {
     let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_BRA_CUP_SET_UP_ROUNDS);

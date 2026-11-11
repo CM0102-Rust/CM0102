@@ -6,8 +6,6 @@ pub(crate) unsafe fn set_news_slot(n: usize, k: i8, v: u32) {
 }
 
 /// Writes the person's id and the +0x33 keys of +4, +8, +0xc into news slots k..k+3.
-///
-/// [pt] O id e as três chaves (+0x33 de +4, +8, +0xc) da pessoa `p` nos dados `k`..`k + 3`.
 pub(crate) unsafe fn set_news_person_slots(n: usize, k: i8, p: Staff) {
     set_news_slot(n, k, read_u32(p.addr()));
     set_news_slot(n, k + 1, read_u32(p.first_name() + names::ID));
@@ -17,8 +15,6 @@ pub(crate) unsafe fn set_news_person_slots(n: usize, k: i8, p: Staff) {
 
 /// The rehearsal of the news items: the copy stops at the point where it would build the news item (which draws at
 /// random and goes to the managers' inboxes).
-///
-/// [pt] O ensaio das notícias: a cópia para no ponto em que montaria a notícia (que sorteia e vai às caixas dos técnicos).
 pub(crate) static FINE_NEWS_DRY_RUN: AtomicBool = AtomicBool::new(false);
 pub(crate) static FINE_NEWS_WOULD_BUILD: AtomicBool = AtomicBool::new(false);
 
@@ -32,14 +28,6 @@ pub(crate) static FINE_NEWS_WOULD_BUILD: AtomicBool = AtomicBool::new(false);
 /// below 12, +0x59 below 6 and reputation +0xb above 5250), period 1, the type 7 contract (+0x4f), the future transfer
 /// (`get_future_transfer`), the effects and the game by the type (+0x4f 1 with more than 23 years, or 2).
 /// Original: `post_fine_reaction_news` (0x5a74b0, Fine.cpp, stdcall, ret 0x14).
-///
-/// [pt] { 0x5a74b0 } (stdcall, ret 0x14, Fine.cpp, SEH da notícia local, sem destrutor): `post_fine_reaction_news(jogador,
-/// motivo, reação, prazo, efeitos)`, pela multa (0x5a5980, cinco chamadas). Sem jogador, sem contrato (0x4cf5a0, em
-/// [0xae1080]), sem o clube dele ou sem o contrato do clube (0x4cf5f0): nada; jogador de clube (+0x39) sem humano
-/// (0x7875e0): nada. A notícia 0xbc6 ao clube do contrato: o jogador (id e chaves), motivo, reação, sorteio(2), a
-/// personalidade (+0x5d + +0x5b abaixo de 12, +0x59 abaixo de 6 e reputação +0xb acima de 5250), prazo 1, o contrato
-/// de tipo 7 (+0x4f), a transferência futura (0x8cca10), os efeitos e o jogo pelo tipo (+0x4f 1 com mais de 23 anos,
-/// ou 2).
 pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, reason: u32, reaction: u32, deadline: u32, efeitos: u32) {
     let player = Staff(player);
     if player.is_null() {
@@ -97,11 +85,6 @@ pub(crate) unsafe extern "stdcall" fn post_fine_reaction_news(player: usize, rea
 /// injury; the original leaves the Fine in ecx). Both with a record (+0x61) and a nation (+0x1a), the player with a
 /// club (+0x39): news 0x1394 (the player and the coach, id and keys; the outcome; random(5)) to the player's club.
 /// Original: `post_coach_fine_feedback_news` (0x5a7f20, Fine.cpp, stdcall, ret 0xc).
-///
-/// [pt] { 0x5a7f20 } (stdcall, ret 0xc, Fine.cpp, SEH da notícia local, sem destrutor): `post_coach_fine_feedback_news
-/// (jogador, treinador, desfecho)`, pelo diário das multas (0x5a5820: o retorno marcado vencido, mais de 30 dias de
-/// casa e sem lesão grave; a original deixa o Fine em ecx). Os dois com ficha (+0x61) e nação (+0x1a), o jogador com
-/// clube (+0x39): a notícia 0x1394 (o jogador e o treinador, id e chaves; o desfecho; sorteio(5)) ao clube do jogador.
 pub(crate) unsafe extern "stdcall" fn post_coach_fine_feedback_news(player: usize, coach: usize, outcome: u32) {
     let coach = Staff(coach);
     let player = Staff(player);

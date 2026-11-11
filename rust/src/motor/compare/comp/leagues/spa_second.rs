@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/spa_second.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/spa_second.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `spa_second_create_schedule`.
 pub(crate) unsafe extern "thiscall" fn compare_spa_second_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
@@ -22,9 +21,6 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_second_set_up_rules(this: usi
 }
 
 /// Comparer for `spa_second_create_table`.
-///
-/// [pt] Aloca: só a original. O plano, feito antes: os clubes da Segunda na ordem do banco (até 22) e a marca dos times B.
-/// Depois: a devolução, +0x3e e as linhas (o clube e o destino −4 dos marcados).
 pub(crate) unsafe extern "thiscall" fn compare_spa_second_create_table(this: usize) -> u32 {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SPA_SECOND_CREATE_TABLE);

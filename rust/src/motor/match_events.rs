@@ -1,8 +1,6 @@
 use super::*;
 
 /// The two match event file names in CM3_TEMP (human or computer).
-///
-/// [pt] Os dois arquivos de eventos (humano ou computador) em CM3_TEMP.
 pub(crate) fn match_event_files(human: bool) -> (usize, usize) {
     if human { (0xa15a8c, 0xa15a78) } else { (0xa15a60, 0xa15a48) }
 }
@@ -11,12 +9,6 @@ pub(crate) fn match_event_files(human: bool) -> (usize, usize) {
 /// header version 1, number, count; with both full (2500), recreates the oldest. In `desc`: position, count, number,
 /// human
 /// Original: `record_events` (0x6d98b0, match_events.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x6d98b0 } (thiscall, ret 8, match_events.cpp): grava os +6 eventos (0xe bytes cada, em +0x720)
-/// do registro `e` num dos dois arquivos "events1/2.tmp" (humano ou computador). Cabecalho: versao 1
-/// (senao erro 0xb5c/0xb7b), numero, quantos. Usa o primeiro com menos de 2500; cheios os dois,
-/// recria o mais antigo com o numero seguinte de [0xb6b7c0]+0x18 (sem abrir, erro 0xba4). Em `desc`:
-/// posicao, quantos, numero e o byte `humano`. Devolve se gravou.
 pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, human: u8) -> u8 {
     if desc.is_null() {
         return 0;
@@ -87,11 +79,6 @@ pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, h
 /// count): looks for the file with the number (version 1, otherwise error 0xbf6/0xc11, with the file left open as in
 /// the original). Returns whether it read them.
 /// Original: `read_events` (0x6d9c40, match_events.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x6d9c40 } (thiscall, ret 4, match_events.cpp): le de volta os eventos descritos em `desc`
-/// (posicao, quantos, numero, humano) para +0x720 do registro `e` (+6 = quantos): procura o arquivo
-/// com o numero (versao 1, senao erro 0xbf6/0xc11, com o arquivo aberto como na original). Devolve
-/// se leu.
 pub(crate) unsafe extern "thiscall" fn read_events(e: usize, desc: *const u32) -> u8 {
     if desc.is_null() {
         return 0;
@@ -130,8 +117,6 @@ pub(crate) unsafe extern "thiscall" fn read_events(e: usize, desc: *const u32) -
 // own comparison, validated by the career (Rust x original).
 
 /// Like show_error_at (error box at file/line), then cleanup and exit(-1) like the original.
-///
-/// [pt] Como `show_error_at`, e o jogo para (como a original: 0x5cc7d0, 0x5a8f60 e sai com -1).
 pub(crate) unsafe fn fatal_error_at(file: usize, row: u32) -> ! {
     let exit: unsafe extern "C" fn(i32) -> ! = core::mem::transmute(FN_CRT_EXIT);
     show_error_at(file, row);
@@ -154,16 +139,6 @@ pub(crate) unsafe fn fatal_error_at(file: usize, row: u32) -> ! {
 /// become (largest × 10) / weight and +0xe the sum; an event without a sound gets the default sound (0xb68670). Reads
 /// through the game's `fgetc` and uses buffer `[0xde1f64]`, as the original.
 /// Original: `read_events_cfg` (0x6d9e50, match_events.cpp (~5.2 KB), cdecl).
-///
-/// [pt] { 0x6d9e50 } (match_events.cpp, ~5,2 KB): le o `events_<idioma>.cfg` (CM3_DATA; sem ele, o
-/// `events_eng.cfg`, e sem este o jogo para, erro 0xcc4) para a tabela dos 677 codigos de evento em
-/// [0xb68788] (0x12 bytes: 7 bytes de opcoes, +8 os sons de 0x110 bytes, +0xc quantos, +0xe o peso).
-/// Com outro idioma desde a ultima leitura, 0x6d5b50 limpa antes; ja lida ([0xb6b723]), nada.
-/// Linhas: `=id,o0..o6` abre um evento (o4 entre 0 e 11; o2 sem o0 avisa 0xd40), `>peso,tipo,nome`
-/// acrescenta um som (com `-verifysounds` na linha de comando, confere o arquivo em CM3_SOUNDS),
-/// `G`/`R` os dois textos do ultimo som (alocados; marcas `<X` desconhecidas avisam). No fim, os
-/// pesos viram (maior x 10) / peso e +0xe a soma; evento sem som ganha o som padrao (0xb68670).
-/// Le pelo `fgetc` do jogo e usa o buffer [0xde1f64], como a original.
 pub(crate) unsafe extern "C" fn read_events_cfg() {
     let format: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_CRT_SPRINTF);
     let format_text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
@@ -434,18 +409,6 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
 /// after each token, as the original; without an event, without text or without the requested segment, 0. An unknown
 /// token warns 0xb10.
 /// Original: `event_text` (0x6d8d10, match_events.cpp, stdcall, ret 0x10).
-///
-/// [pt] { 0x6d8d10 } (stdcall, ret 0x10, match_events.cpp): o texto do evento `ev` (+0 codigo, +2 qual
-/// som, +5/+6 e +7/+8 os dois jogadores (lado, indice), +9 um numero) da partida `ctx` (+0/+4 os
-/// clubes, +0x40 o arbitro), com `comp` a competicao (-1 sem) e `variante` o trecho entre `|` (0 o
-/// primeiro). Le o texto `R` (+0x10c) do som escolhido (no maximo o ultimo) e troca as marcas:
-/// `<P1>`/`<P>` jogador (0x6db2d0), `<T1>`/`<T2>` clube, `<C>` competicao, `<F>` a fase dela
-/// (0x4bfa30/0x4bff70), `<D>`/`<D1>` o numero (+1), `<N>` o numero por extenso (0x90c310), `<rf>`/`<Rf>`
-/// o arbitro ("Mr ..." ou "the referee" conforme o idioma e um resto de divisao por 5), `<O>`/`<Y>` nada.
-/// `{...}` antes ou depois da marca sao prefixo e sufixo (0x6701f0, que aplica artigo e genero);
-/// a letra seguinte `C` poe em maiusculas (0x90c2d0). Escreve em [0xb67ea0] (e devolve), recontando
-/// o tamanho por `strlen` depois de cada marca, como a original; sem evento, sem texto ou sem o
-/// trecho pedido, 0. Marca desconhecida avisa 0xb10.
 pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i32, variant: u32) -> usize {
     let ctx = MatchRecord(ctx);
     const BUF: usize = 0xb67ea0;
@@ -724,19 +687,6 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
 /// the channel from option 6, side from option 5), and marks the time and the sound duration (+0x2d6c, +0x2dac = weight
 /// × volume / 100).
 /// Original: `commentate_on_panel` (0x6d7b00, match_events.cpp (~4.4 KB), thiscall, ret 0x20).
-///
-/// [pt] { 0x6d7b00 } (thiscall, ret 0x20, match_events.cpp, ~4,4 KB): o narrador `nar` escreve o evento `ev`
-/// da partida `ctx` no `painel` (0xb74450) e toca o som dele. Antes, o ruido da torcida do humano da
-/// vez ([0xb77c7a]; canal +0x20, "fxloop2.wav") e reposto se parou. Com o codigo valido e a opcao 1
-/// zerada, monta o texto `G` (+0x108) do som escolhido (o trecho +0xd entre `|`) como a 0x6d8d10, mas
-/// numa linha propria e com cores: comeca nas do clube do lance (0x53b640 com o uniforme do lado),
-/// `<O>` passa as do outro, `<Y>` e `<R>`/`<r>` sem `f` as padrao ([0xaebdea]/[0xaebdec] ou
-/// [0xae31a8]); `<N>` e o numero, `<n>` por extenso; o nome do jogador e curto se o texto inteiro
-/// cabe em menos de 300 (0x5e5ad0 com a `fonte`). Larga demais para `largura` - 16: quebra (0x90cb20)
-/// ou corta numa palavra com "...". Desenha (0x801040, 0x801660, 0x801960, 0x801c70, 0x800d30,
-/// 0x800580 com a opcao 3). Por fim, sem trecho (+0xd) e com volume (+0x2db0 >= 101), toca o som do
-/// evento (0x8025e0 no canal pela opcao 6, lado pela opcao 5), e marca a hora e a duracao do som
-/// (+0x2d6c, +0x2dac = peso x volume / 100).
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize, ctx: usize, comp: i32, panel: u32, width: i32, quebrar: u32, font: usize, mode: u32) -> u32 {
     let ctx = MatchRecord(ctx);
@@ -1125,10 +1075,6 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
 
 /// Advances the commentary queue read position (+0xc, ring of 12), marks the slot and switches the queue off on
 /// reaching write/saved position; returns whether it did.
-///
-/// [pt] Avança a posição de leitura da fila da narração (+0xc, anel de 12): marca a nova vaga (+0x3d =
-/// −1, tira o bit 0x8000 do evento) e, chegando na de escrita (+8, e então +0x2d68 = −1) ou na
-/// guardada (+0xa), desliga a fila (+5 = 0). Devolve se desligou.
 pub(crate) unsafe fn advance_commentary_read(t: usize) -> bool {
     let c = (t + commentary_queue::READ_POS) as *mut i16;
     *c = if c.read().wrapping_add(1) > 0xb { 0 } else { c.read().wrapping_add(1) };
@@ -1155,12 +1101,6 @@ pub(crate) unsafe fn advance_commentary_read(t: usize) -> bool {
 /// `|` (the current part in +0xd; bit 0x8000 marks that there is more) and, when the text is finished, advances the
 /// reading. In `out`, the slot's 0x86-byte record (+0xd8).
 /// Original: `next_event` (0x6d78b0, match_events.cpp, thiscall).
-///
-/// [pt] { 0x6d78b0 } (thiscall, ret 4, match_events.cpp): o próximo evento da narração a mostrar (0 com a
-/// fila desligada, +5): pula as vagas vazias; no texto do evento (tabela [0xb68790 + 0x12 × (evento
-/// − 8000)], registro +2 de 0x110 bytes, +0x108) anda até a próxima parte separada por `|` (a parte
-/// atual em +0xd; o bit 0x8000 marca que há mais) e, acabado o texto, avança a leitura. Em `saida`,
-/// o registro de 0x86 bytes da vaga (+0xd8).
 pub(crate) unsafe extern "thiscall" fn next_event(t: usize, out: *mut usize) -> usize {
     if read_u8(t + commentary_queue::ACTIVE) == 0 {
         return 0;
@@ -1227,12 +1167,6 @@ pub(crate) unsafe extern "thiscall" fn next_event(t: usize, out: *mut usize) -> 
 /// 0, form 1; otherwise form 5, and if any of the 100 players of either club (+0, +4; list from `database_collect_club_squad`) with another
 /// id or another name has the same form 5, the `long` form.
 /// Original: `commentary_player_name` (0x6db2d0, match_events.cpp, cdecl).
-///
-/// [pt] { 0x6db2d0 } (cdecl, match_events.cpp): escreve em `buf` (`tam` bytes) o nome do jogador `jogador`
-/// do lado `lado` da partida `pt` (registro de 0x49 bytes em +0x190: id e os três nomes +0x198..+0x1a0,
-/// lados de 0x625 bytes) pela 0x53e140: com `curto` e sorteio(5) = 0 a forma 1; senão a forma 5, e se
-/// algum dos 100 jogadores de um dos dois clubes (+0, +4; lista da 0x541f90) com outro id ou outro
-/// nome tem a mesma forma 5, a forma `longa`.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "C" fn commentary_player_name(pt: usize, player: i8, side: i8, buf: *mut u8, size: u32, short: u8, _x: u32, longa: u32) {
     let r = (pt as isize + player as isize * 0x49 + side as isize * 0x625) as usize;
@@ -1269,8 +1203,6 @@ pub(crate) unsafe extern "C" fn commentary_player_name(pt: usize, player: i8, si
 // simplification: writes into `buf` and calls 0x53e140 and 0x541f90 (effects outside); comparison by the text
 
 /// The jump labels of `combine_with_previous` (the end of each one returns or continues to another).
-///
-/// [pt] Os rótulos de desvio da 0x6d60b0 (o fim de cada um devolve ou segue para outro).
 #[derive(Clone, Copy)]
 pub(crate) enum BranchLabel {
     R6cde,
@@ -1292,14 +1224,6 @@ pub(crate) enum BranchLabel {
 /// possession (`engine::LAST_POSSESSION_SIDE`) and the ball in the area (`ball_goal_end`). The original's two calls to `band` have no effect and
 /// their value is discarded (they are left out).
 /// Original: `combine_with_previous` (0x6d60b0, match_events.cpp, thiscall).
-///
-/// [pt] { 0x6d60b0 } (thiscall, ret 8, match_events.cpp): combina o evento novo `e` (14 bytes: palavra do
-/// evento; +5, +6 jogador e lado; +7, +8 o outro; +9 inteiro) com o último da fila (posição +8 − 1
-/// no anel de 12, registros de 14 bytes em +0x30): devolve o evento combinado (negativo = troca o
-/// anterior; 0 = sem combinação) e, nas combinações, copia o jogador, o lado, o outro e o inteiro do
-/// anterior para `e`. `m` é o motor (0 fora da partida): dá o lado da posse (+0x8eab) e a bola na
-/// área (0x6d58f0). As duas chamadas da 0x6cb960 do original não têm efeito e o valor delas é
-/// descartado (ficam de fora).
 pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize, m: usize) -> i16 {
     let m = Engine(m);
     let w = |p: usize| read_i16(p);
@@ -1633,14 +1557,6 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
 /// The random generator state and the ratings are restored, and the random draws are neither counted nor recorded in
 /// the trace of an ongoing tape comparison (the shot, `shoot`, calls this routine from inside): the trajectory of the
 /// game while comparing does not change.
-///
-/// [pt] Sonda de vizinhança do comentário de contexto: o jogo só pergunta pelo evento do gol, então cada
-/// chamada real compara também os 13 comentários (0x21a3..=0x21af) nos dois lados e, com as notas
-/// dos 20 jogadores do lado (+0x47cb) postas exatamente em cada limite de média (7501, 7001, 8000,
-/// 7750, 6699), as fronteiras de `>=`/`>`; e, com uma mídia falsa (uma notícia de hoje de cada tipo
-/// para os dois clubes) e o minuto 31, os caminhos que dependem das notícias. O estado do sorteador e as notas voltam ao que eram e os
-/// sorteios não contam nem entram no rastro de uma comparação pela fita em curso (o chute, 0x702050,
-/// chama esta rotina por dentro): a trajetória do jogo comparando não muda.
 pub(crate) unsafe fn probe_context_commentary(m: Engine, o: unsafe extern "thiscall" fn(usize, u32, u32, *mut i32) -> u32) {
     let state = crate::comparison::MemorySnapshot::read(&crate::rng::STATE_REGIONS);
     // the fake media: in the news log (0x757da0 searches by subject -1, club id, type -1 and
@@ -1710,11 +1626,6 @@ pub(crate) unsafe fn probe_context_commentary(m: Engine, o: unsafe extern "thisc
 /// queue (+6 items, word +0x712 of 14 bytes) is the same event as at the new position (+0x30), the queue loses one;
 /// then queues through 0x6d6f70 with the same 7 arguments.
 /// Original: `event_at_front` (0x6d5d00, match_events.cpp, thiscall).
-///
-/// [pt] { 0x6d5d00 } (thiscall, ret 0x1c, match_events.cpp): põe um evento na frente da fila da narração:
-/// a posição de escrita (+8, anel de 12) recua uma casa (de 0 vai a 11); se o último da fila (+6
-/// itens, palavra +0x712 de 14 bytes) é o mesmo evento da nova posição (+0x30), a fila perde um;
-/// depois enfileira pela 0x6d6f70 com os mesmos 7 argumentos.
 pub(crate) unsafe extern "thiscall" fn event_at_front(t: usize, a: u32, b: u32, c: u32, d: u32, e: u32, f: u32, g: u32) -> u32 {
     let pos = read_i16(t + 8);
     let pos = if pos == 0 { 0xb } else { pos.wrapping_sub(1) };
@@ -1733,11 +1644,6 @@ pub(crate) unsafe extern "thiscall" fn event_at_front(t: usize, a: u32, b: u32, 
 /// (+0x2d6c); with `crowd`, plays the crowd loop of the side whose turn it is (`[0xb77c7a]`) through `exe::screenmanager_play_sound`. Returns
 /// `this`.
 /// Original: `construct_commentary_queue` (0x6d5bf0, match_events.cpp, thiscall).
-///
-/// [pt] { 0x6d5bf0 } (thiscall, ret 4, match_events.cpp): o construtor da fila da narração: zera a fila e
-/// os campos (+0x2db0 = 125, +1 e +0xa = −1, +0x2d68 = −1), os globais de evento (0xb68670..), lê os
-/// eventos (0x6d9e50), marca as 16 vagas (+0x10, +0x20) com −1 e zera os 16 tempos (+0x2d6c); com
-/// `torcida`, toca o loop da torcida do lado da vez ([0xb77c7a]) pela 0x8025e0. Devolve `this`.
 pub(crate) unsafe extern "thiscall" fn construct_commentary_queue(t: usize, goal_crowd_reaction: u8) -> usize {
     let b = |o: usize, v: u8| write_u8(t + o, v);
     let w = |o: usize, v: u16| write_u16(t + o, v);
@@ -1779,11 +1685,6 @@ pub(crate) unsafe extern "thiscall" fn construct_commentary_queue(t: usize, goal
 /// 0xb68670), the two texts (+0x108, +0x10c) of each 0x110-byte record and the table; then zeroes 0xb6b723 and puts −1
 /// in 0xa1599c.
 /// Original: `free_event_tables` (0x6d5b50, match_events.cpp, cdecl).
-///
-/// [pt] { 0x6d5b50 } (cdecl, match_events.cpp): libera as tabelas de eventos carregadas: em cada uma das
-/// entradas de 0x12 bytes de 0xb68790 a 0xb6b72a com tabela própria (nem nula, nem a padrão
-/// 0xb68670), os dois textos (+0x108, +0x10c) de cada registro de 0x110 bytes e a tabela; depois
-/// zera 0xb6b723 e põe −1 em 0xa1599c.
 pub(crate) unsafe extern "C" fn free_event_tables() {
     let mut e = 0xb68790usize;
     while e < G_MATCH_EVENT_TABLE_END_MARKER {
@@ -1820,11 +1721,6 @@ pub(crate) unsafe extern "C" fn free_event_tables() {
 /// freed. Returns 1 only if all marked ones have passed their window (+0x2d6c + 4k up to + `[+0x2dac]`, by clock
 /// `exe::utils_get_time_ms`).
 /// Original: `sounds_finished` (0x6d8c70, match_events.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x6d8c70 } (thiscall, ret 4, match_events.cpp): os sons dos eventos `ativos` (16 marcas) ja
-/// tocaram? Para cada marcado, o canal (+0x10 + k; -1 livre, -2 espera) que ainda toca (0x8029f0 em
-/// 0xb74450) segura; o que acabou e parado (0x802a50) e liberado. Devolve 1 so se todos os marcados
-/// ja passaram da janela (+0x2d6c + 4k ate + [+0x2dac], pelo relogio 0x90c510).
 pub(crate) unsafe extern "thiscall" fn sounds_finished(e: usize, ativos: *const u32) -> u8 {
     let now = exe::utils_get_time_ms();
     covered!("event sounds");
@@ -1859,11 +1755,6 @@ pub(crate) unsafe extern "thiscall" fn sounds_finished(e: usize, ativos: *const 
 /// last with another random(3)) there are swap tables; plays 2..4 (low byte of `sides`) have their own, and the upper
 /// byte 3..5 swaps 0x1f4b for 0x217e.
 /// Original: `event_variant` (0x6d5d80, match_events.cpp, stdcall).
-///
-/// [pt] { 0x6d5d80 } (stdcall, ret 0xc, match_events.cpp): troca o evento da narração por uma variante:
-/// com exe::utils_random(3) ≠ 0 fica o mesmo; senão, pelo tipo do lance `tipo` (1, 2, 8, 0x10, 0x20 — este com
-/// outro exe::utils_random(3)) há tabelas de troca; os lances 2..4 (byte baixo de `lados`) têm as suas, e o
-/// byte de cima 3..5 troca 0x1f4b por 0x217e.
 pub(crate) unsafe extern "system" fn event_variant(e: *const i16, sides: u32, kind: u8) -> i16 {
     if exe::utils_random(3) != 0 {
         return *e;

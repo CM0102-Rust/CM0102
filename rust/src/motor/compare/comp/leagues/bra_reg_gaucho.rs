@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/bra_reg_gaucho.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/bra_reg_gaucho.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `bra_reg_gaucho_create_knockout_stage`.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_gaucho_create_knockout_stage(this: usize) {
@@ -15,10 +14,6 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_gaucho_create_knockout_st
 ///
 /// The copy runs in Rust mode (counter "cqj_8 state league history") and is proven by the mutations and by the two
 /// Rust careers.
-///
-/// [pt] Comparador: só a original (simplification: grava o histórico, aloca o registro dele e pode montar a Copa dos Campeões; não
-/// pode rodar duas vezes). A cópia roda no modo Rust (contador "cqj_8 state league history") e é provada pelas
-/// mutações e pelas duas carreiras Rust.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_gaucho_record_season_honours(this: usize) -> u32 {
     original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GAUCHO_RECORD_SEASON_HONOURS)(this)
 }

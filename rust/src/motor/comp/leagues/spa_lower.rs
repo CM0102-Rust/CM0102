@@ -5,10 +5,6 @@ use super::*;
 /// It holds the date (day, month 0..11, years to add to the league year +0x40, the weekday the date is moved to), the
 /// code of byte +4 ([inference] the half of the season) and the TV slots in order (weekday, half, how many matches; the
 /// list ends with −1).
-///
-/// [pt] Uma rodada da tabela de 0x41 bytes: a data (dia, mês 0..11, anos a somar ao ano da liga +0x40, dia da semana para
-/// onde a data é levada), o código do byte +4 ([inferência] o turno) e as faixas de TV em ordem (dia da semana, turno,
-/// quantos jogos; a lista termina em −1).
 pub(crate) type SpaLowerLeagueRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8)]);
 
 /// Sets the dates and match slots of rounds `primeira`.. of table `t`, in the original routine's order.
@@ -16,10 +12,6 @@ pub(crate) type SpaLowerLeagueRound = (i8, i8, i8, i8, i8, &'static [(i8, i8, i8
 /// For each round, the date (`league_round_set_date`: push 0; push year; push code; push week; push years; push month; push day; push
 /// i; push t; add esp -> cdecl: value 0) and the slots (`store_round_match`: push 0; push c; push b; push a; push j; push i; push
 /// t; add esp -> cdecl, value 0).
-///
-/// [pt] As rodadas `primeira`.. da tabela `t`, na ordem da original: para cada uma, a data (0x68a160: push 0; push ano;
-/// push código; push semana; push anos; push mês; push dia; push i; push t; add esp -> cdecl: o valor 0) e as
-/// faixas (0x68a1c0: push 0; push c; push b; push a; push j; push i; push t; add esp -> cdecl, valor 0).
 pub(crate) unsafe fn spa_lower_set_league_rounds(t: usize, year: u32, first: i32, table: &[SpaLowerLeagueRound]) {
     for (k, &(dia, mes, anos, semana, codigo, faixas)) in table.iter().enumerate() {
         let i = first + k as i32;
@@ -37,12 +29,6 @@ pub(crate) unsafe fn spa_lower_set_league_rounds(t: usize, year: u32, first: i32
 /// word; a round of `casos` moved to the weekday): k = (round day − date day + 1, in 16 bits) − `ajuste`; from 0 to 6
 /// it picks the Christmas rounds; outside that, the error box for line `linha` and those of the default case (the
 /// eighth); then the closing rounds.
-///
-/// [pt] A fase principal com as rodadas do Natal: as do começo em sequência; depois a data de 1º de dezembro do ano
-/// (Date::Date 0x549f70: push −1; push ano; push 0xb; push 1; lea ecx, local -> thiscall, ret 0x10) e o caso pelo dia
-/// da rodada de referência (+0, palavra; uma rodada de `casos` levada ao dia da semana): k = (dia da rodada − dia da
-/// data + 1, em 16 bits) − `ajuste`; de 0 a 6 escolhe as rodadas do Natal; fora disso a caixa da linha `linha` e as do
-/// caso padrão (o oitavo); depois as do fim.
 pub(crate) struct SpaLowerChristmasSchedule {
     pub(crate) comeco: &'static [SpaLowerLeagueRound],
     pub(crate) reference: usize,
@@ -256,10 +242,6 @@ pub(crate) const LOWER_ODD_YEAR_CHRISTMAS: SpaLowerChristmasSchedule = SpaLowerC
 /// from 16 August to 16 May, in even years from 30 August to 6 June; in each, one fixed-date Christmas round chosen by
 /// the day the mid-December round falls on
 /// Original: `SpaLower::create_schedule` (0x851260, spa_lower.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x851260 } (thiscall, ret 0x10, spa_lower.cpp, 8.495 bytes, método +0x3c): `SpaLower::create_schedule(fase,
-/// &rodadas, &extra, &é_liga)`: só a fase −1, 42 rodadas, a tabela pela paridade do ano +0x40, cada uma com a rodada
-/// do Natal; as outras devolvem 0. Fonte 0xa82980.
 pub(crate) unsafe extern "thiscall" fn spa_lower_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let this = League(this);
     match stage as u8 {
@@ -288,15 +270,11 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_schedule(this: usize, st
 }
 
 /// Competition record (0x6b bytes in [0xae23d0]) of key id [g].
-///
-/// [pt] O registro de competição de id [g] (vetor [0xae23d0], 0x6b bytes).
 pub(crate) unsafe fn comp_record_of_key(g: usize) -> usize {
     read_usize(G_CLUB_COMP_TABLE).wrapping_add(read_usize(g).wrapping_mul(0x6b))
 }
 
 /// Is the club's competition (+0x57) the one with key id [g]?
-///
-/// [pt] A competição do clube (+0x57, o id no +0) é a de id [g]?
 pub(crate) unsafe fn spa_lower_is_in_comp(c: Club, g: usize) -> bool {
     let comp = c.division().addr();
     comp != 0 && read_usize(comp) == read_usize(g)
@@ -312,14 +290,6 @@ pub(crate) unsafe fn spa_lower_is_in_comp(c: Club, g: usize) -> bool {
 /// nor predicted positions); each failure, the error box of its line (0x3f, 0x46, 0x4d of source 0xa82880) and the end.
 /// Returns this.
 /// Original: `SpaLower::SpaLower` (0x851020, spa_lower.cpp, thiscall, ret 4).
-///
-/// [pt] { 0x851020 } (thiscall, ret 4, spa_lower.cpp, quadro SEH só no caminho de exceção): `SpaLower::SpaLower(ano)`, a
-/// divisão de baixo espanhola (criada pela Primera quando a nação não tem o bit 4 de +0x11c): a base (League::League
-/// 0x682200: mov ecx -> thiscall, ret 0), a vtable 0x96fb1c, o ano (+0x40), a regra de disciplina 0xff (nenhuma) e o
-/// registro da competição de id [0x9cf6b0] (+4). Tenta carregar o estado (0x687b10: push 1 -> thiscall, ret 4);
-/// senão, só a liga (+0x44 = 0xff, +0x30 = −1, +0x2c = 0), as regras (0x853790), a tabela (0x8533d0) e os jogos
-/// (League::create_fixtures 0x6835c0), todos mov ecx -> thiscall, ret 0; cada falha, a caixa da sua linha (0x3f,
-/// 0x46, 0x4d do fonte 0xa82880) e fim. Devolve this.
 pub(crate) unsafe extern "thiscall" fn construct_spa_lower(this: usize, year: u32) -> usize {
     let this = League(this);
     exe::new_league(this);
@@ -349,9 +319,6 @@ pub(crate) unsafe extern "thiscall" fn construct_spa_lower(this: usize, year: u3
 }
 
 /// Is club c the B team of a parent club (club_get_linked_b_team) that plays in competition [g]?
-///
-/// [pt] O clube de cima do clube `c` (club_get_linked_b_team 0x540a50: push 1; push &eh_a; push c; add esp, 0xc -> cdecl),
-/// se `c` é o time B dele (eh_a = 0) e ele está na competição de id [g].
 pub(crate) unsafe fn is_b_team_of_comp_club(c: usize, g: usize) -> bool {
     let mut eh_a: u32 = 0;
     let p = exe::club_get_linked_b_team(c, &mut eh_a, 1);
@@ -364,11 +331,6 @@ pub(crate) unsafe fn is_b_team_of_comp_club(c: usize, g: usize) -> bool {
 /// [`0x9cf634`], [`0x9cf638`] [inference: the 4 Segunda B groups] or, if Spanish, of the one with id [`0x9cf764`]
 /// [inference: the generic lower division], that are neither a B team nor anyone's A team (club_get_linked_b_team
 /// returns 0).
-///
-/// [pt] Os candidatos da divisão de baixo espanhola, do registro local de 100 da original: os clubes (todos, na ordem do
-/// banco, até 100) das competições de id [0x9cf62c], [0x9cf630], [0x9cf634], [0x9cf638] [inferência: os 4 grupos da
-/// Segunda B] ou, se espanhóis, da de id [0x9cf764] [inferência: a divisão genérica de baixo], que não são time B nem
-/// time A de ninguém (club_get_linked_b_team devolve 0).
 pub(crate) unsafe fn spanish_lower_candidates() -> Vec<usize> {
     let mut v = Vec::new();
     let n = read_usize(G_CLUB_COUNT) as i32;
@@ -395,10 +357,6 @@ pub(crate) unsafe fn spanish_lower_candidates() -> Vec<usize> {
 
 /// Calls por(club, enters) for Spanish clubs outside Primera/Segunda; enters when its parent plays in competition [g]
 /// and rows remain (counts k).
-///
-/// [pt] Os times B espanhóis (fora da Primera e da Segunda) cujo clube de cima está na competição de id [g], na ordem do
-/// banco, até 22 linhas (`k` já usadas). Os últimos `2 × [0xae2350]` clubes do banco ficam de fora [inferência: os
-/// clubes criados depois, sem divisão].
 pub(crate) unsafe fn for_each_spanish_b_team(g: usize, k: &mut u8, rows: i16, mut por: impl FnMut(usize, bool)) {
     let n = (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
     let base = read_usize(G_CLUB_TABLE);
@@ -426,17 +384,6 @@ pub(crate) unsafe fn for_each_spanish_b_team(g: usize, k: &mut u8, rows: i16, mu
 /// keeps the competition at +0x60, but the Segunda B-team pass zeroes +0x60 of every Spanish side not entering it,
 /// including the Primera ones already placed [observed in the comparison]
 /// Original: `SpaLower::create_table` (0x8533d0, spa_lower.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x8533d0 } (thiscall, ret 0, spa_lower.cpp, 947 bytes): `SpaLower::create_table()`: a divisão de baixo tem 22
-/// clubes (+0x3e), a tabela (malloc de 0x512; sem memória, a caixa da linha 0x2ac e 0). Primeiro, os clubes que estão
-/// nela (a competição de id [0x9cf6b0]) passam à de id [0x9cf764] [inferência: a divisão genérica]. Depois enche, na
-/// ordem do banco: os times B espanhóis cujo clube de cima está na Primera, depois os da Segunda (cada um com +0x60 =
-/// o registro desta competição; os outros times espanhóis de fora das duas, com +0x60 = 0); o resto com os
-/// candidatos (spanish_lower_candidates), ordenados pela reputação e com os 3 × faltam primeiros embaralhados
-/// (comp_util_sort_and_shuffle_top_clubs 0x4afbd0: push faltam; push quantos; push lista; add esp, 0xc -> cdecl; sorteia),
-/// cada um com +0x60 = o registro. As linhas: League::init_table_row 0x687430 (push 0; push 0; push clube; push eax
-/// (al = a linha, os bits de cima são lixo de outra conta; a 0x687430 só lê o byte); mov ecx, this -> thiscall, ret
-/// 0x10). Devolve se encheu.
 pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u32 {
     let this = League(this);
     this.set_club_count(0x16);
@@ -492,10 +439,6 @@ pub(crate) unsafe extern "thiscall" fn spa_lower_create_table(this: usize) -> u3
 /// the lower division (22: B teams and the best minor clubs by reputation): 2 go up directly and 2 go to the promotion
 /// play-off, 4 go down; the league above stored is La Primera (as in the original)
 /// Original: `SpaLower::set_up_rules` (0x853790, spa_lower.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x853790 } (thiscall, ret 0, spa_lower.cpp): `SpaLower::set_up_rules()`. A divisão de baixo (os times B e os
-/// melhores das divisões menores): as comuns, 2 turnos, 3 pontos, 2 sobem direto (+0xbe) e 2 vão ao play-off de
-/// acesso (+0xbf), 4 caem (+0xc1), a Primera como liga de cima ([0x9cf624], assim no original) e nenhuma abaixo.
 pub(crate) unsafe extern "thiscall" fn spa_lower_set_up_rules(this: usize) -> u32 {
     covered!("cqk_4 lower division rules");
     spa_first_apply_league_rules(League(this), &lower_division_rules())

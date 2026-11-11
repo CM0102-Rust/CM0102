@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/cups/ita_c_cup.rs.
-// [pt] Os comparadores das rotinas de ../comp/cups/ita_c_cup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `ita_c_cup_create_schedule`.
 pub(crate) unsafe extern "thiscall" fn compare_ita_c_cup_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {

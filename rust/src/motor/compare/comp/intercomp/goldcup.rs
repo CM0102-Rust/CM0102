@@ -1,13 +1,9 @@
 use super::*;
 
 // The comparers of the routines in ../comp/intercomp/goldcup.rs.
-// [pt] Os comparadores das rotinas de ../comp/intercomp/goldcup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Side-by-side comparer: +0xf2 and [0xb67a34] from the same state (nothing is drawn at random); the original routine
 /// leaves its list in +0xee, the copy builds its own, compared over the 12 slots and freed.
-///
-/// [pt] Lado a lado: o +0xf2 e o [0xb67a34] a partir do mesmo estado (nada sorteia); a original deixa a lista dela em +0xee, a
-/// cópia faz a sua, comparada nas 12 vagas e liberada.
 pub(crate) unsafe extern "thiscall" fn compare_set_up_team_list(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SET_UP_TEAM_LIST);
     let lo = core::cell::Cell::new(0usize);

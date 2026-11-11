@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/leagues/bra_reg_goias.rs.
-// [pt] Os comparadores das rotinas de ../comp/leagues/bra_reg_goias.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `construct_bra_reg_goias`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_bra_reg_goias(this: usize, year: u32, record: usize) -> usize {
@@ -28,9 +27,6 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_reg_goias_create_table(this: 
 }
 
 /// Comparer for `bra_reg_goias_set_up_rules`.
-///
-/// [pt] Comparador: lado a lado com a cópia em ensaio (as regras sem o calendário, que aloca), sobre o objeto menos as
-/// saídas do calendário; a devolução.
 pub(crate) unsafe extern "thiscall" fn compare_bra_reg_goias_set_up_rules(this: usize) -> u32 {
     let reg = league_regions_without_schedule(this);
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_BRA_REG_GOIAS_SET_UP_RULES)(this), || {

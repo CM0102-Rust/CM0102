@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/eurocomp/conmebol_merc.rs.
-// [pt] Os comparadores das rotinas de ../comp/eurocomp/conmebol_merc.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `conmebol_merc_update_for_date`.
 pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_update_for_date(this: usize, today: usize, full: u32) -> u32 {
@@ -77,9 +76,6 @@ pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_create_schedule(thi
 }
 
 /// Comparer for `conmebol_merc_select_invited_clubs`.
-///
-/// [pt] Lado a lado: o +0xf2, o [0xb67a34] e o estado do sorteador a partir do mesmo estado (a cópia sorteia sem contar); a
-/// original deixa a lista dela em +0xee, a cópia faz a sua, comparada nos convidados que ela gravou e liberada.
 pub(crate) unsafe extern "thiscall" fn compare_conmebol_merc_select_invited_clubs(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_CONMEBOL_MERC_SELECT_INVITED_CLUBS);
     let lo = core::cell::Cell::new(0usize);

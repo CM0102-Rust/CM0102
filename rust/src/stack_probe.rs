@@ -9,18 +9,6 @@
 //! `sonda_pilha.py` bisects the range and then the calls. On the poisoned calls, `CM_SONDA_MOSTRAR=1` writes to
 //! ddraw.log the chain of return addresses above the entry (the live stack: who called). The debug registers did not
 //! work (the exception dispatcher runs on the same stack, and the triggers did not tell reads from writes).
-//!
-//! [pt] Sonda de pilha (diagnóstico): prova se o resíduo de pilha de uma faixa é lido e muda a carreira.
-//!
-//! `CM_SONDA_PILHA=depois:ENDERECO` (ou `dentro:ENDERECO`): a rotina roda na pilha do jogo, como sem desvio, entre
-//! dois trechos que não usam a pilha (o endereço de retorno do jogo volta ao seu dword, então sem veneno o resíduo é
-//! o de sem desvio e a carreira não muda). Com `CM_SONDA_FAIXA=ini-fim` (bytes abaixo da entrada, em hex), a faixa
-//! [entrada − fim, entrada − ini) recebe `CM_SONDA_VENENO` (hex) nas chamadas a..b (decimal,
-//! contadas desde 1; padrão todas; vão como CM_SONDA_FAIXA=ini-fim/a-b): `depois` na volta (o que ela deixou para quem vem depois), `dentro` na entrada (o
-//! que ela mesma lê sem ter gravado). Carreira diferente da sem veneno = alguém lê resíduo da faixa naquelas chamadas;
-//! `sonda_pilha.py` bissecta a faixa e depois as chamadas. Nas chamadas envenenadas, `CM_SONDA_MOSTRAR=1` grava no
-//! ddraw.log a cadeia de retornos acima da entrada (a pilha viva: quem chamou). Os registradores de depuração não
-//! serviram (o despachante de exceções roda na mesma pilha, e os disparos não distinguiam leitura de gravação).
 
 use crate::registro::linha;
 use crate::win;
@@ -38,9 +26,6 @@ static mut TOP: u32 = 0;
 
 /// Probe target (0 = off), whether it poisons on entry (`dentro`) and, for a routine outside the prologue table, the
 /// size of the prologue to copy (`dentro:5ae380:7`: whole instructions, no relative jump; check with desmonta.py).
-///
-/// [pt] Alvo da sonda (0 = desligada), se envenena na entrada (`dentro`) e, para rotina fora da tabela de prólogos, o
-/// tamanho do prólogo a copiar (`dentro:5ae380:7`: instruções inteiras, sem salto relativo; ver com o desmonta.py).
 pub fn target() -> (usize, bool, usize) {
     let t = win::texto_ambiente("CM_SONDA_PILHA");
     let (inside, e) = match t.split_once(':') {
@@ -57,8 +42,6 @@ fn hex(t: &str) -> u32 {
 }
 
 /// The live chain above the entry: dwords that point just after a call in the exe.
-///
-/// [pt] A cadeia viva acima da entrada: dwords que apontam logo depois de um call do exe.
 unsafe extern "C" fn show_chain(entry: u32) {
     let mut ret = Vec::new();
     for d in 0..0x1000u32 {
@@ -77,8 +60,6 @@ unsafe extern "C" fn show_chain(entry: u32) {
 }
 
 /// Builds the stubs around the routine's trampoline `tramp`; returns the detour target.
-///
-/// [pt] Monta os trechos em volta do trampolim `tramp` da rotina; devolve o destino do desvio.
 pub unsafe fn build_stub(tramp: usize, inside: bool) -> usize {
     // CM_SONDA_FAIXA=ini-fim[/from-to]: the calls go in the same variable (one extra variable shifts the heap and the career)
     let text = win::texto_ambiente("CM_SONDA_FAIXA");
@@ -174,11 +155,6 @@ pub unsafe fn build_stub(tramp: usize, inside: bool) -> usize {
 /// a stub that poisons its own frame on entry ([esp - frame, esp), with 0x5a5a5a5a) and goes on to the original.
 /// Without a mark there is no detour (the stub is transparent, proved with the probe of one routine). All in a single block (thousands of
 /// routines: one VirtualAlloc per trampoline would spend 64 KB of addresses each).
-///
-/// [pt] Lê `sonda_lista.txt` (endereço, bytes do prólogo, quadro, marcada; hex/dec/hex/0-1) e desvia cada rotina marcada para
-/// um trecho que envenena o próprio quadro na entrada ([esp − quadro, esp), com 0x5a5a5a5a) e segue para a original.
-/// Sem marca não há desvio (o trecho é transparente, provado com a sonda de uma rotina). Tudo num bloco só (milhares de
-/// rotinas: um VirtualAlloc por trampolim gastaria 64 KB de endereços cada).
 pub unsafe fn install_list() {
     if !win::ambiente("CM_SONDA_LISTA") {
         return;

@@ -1,8 +1,6 @@
 use super::*;
 
 /// Competition record id in the database (G_CLUB_COMP_TABLE + 0x6b × id).
-///
-/// [pt] O registro da competição `id` no banco ([0xae23d0] + 0x6b × id).
 pub(crate) unsafe fn club_comp_record(id: usize) -> usize {
     read_usize(G_CLUB_COMP_TABLE).wrapping_add(id.wrapping_mul(0x6b))
 }
@@ -11,9 +9,6 @@ pub(crate) unsafe fn club_comp_record(id: usize) -> usize {
 ///
 /// Built in the order of the club database ([0xae23b4], 0x245 bytes, [0xae235c] clubs; it stops at the first one that
 /// is a national team, `exe::database_is_national_team`).
-///
-/// [pt] As quatro listas da 0x4c11a0, na ordem do banco de clubes ([0xae23b4], 0x245 bytes, [0xae235c] clubes; para no
-/// primeiro que é seleção, 0x53b900): (mexicanos, centro-americanos, caribenhos, da MLS) com as contagens.
 pub(crate) struct ConcacafClubLists {
     pub(crate) mex: [usize; 200],
     pub(crate) centro: [usize; 200],
@@ -74,16 +69,6 @@ pub(crate) unsafe fn concacaf_club_lists() -> ConcacafClubLists {
 /// champion and its champion (if the same club, the place goes to the MLS runner-up); without it, two MLS clubs among
 /// the top 3 by reputation. Up to 200 clubs per region and 12 from the MLS are considered
 /// Original: `ConChamp::select_qualified_clubs` (0x4c11a0, con_champ.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x4c11a0 } (thiscall, ret 0, con_champ.cpp): `ConChamp::select_qualified_clubs()`; devolve 1. Oito times (+0x3e).
-/// Os clubes (até a primeira seleção) em quatro listas: os da nação [0x9cf3d0] (México, até 200); os da divisão
-/// [0x9cf590] (a MLS, +0x57 do clube; até 12); os de nação de região 7 (+0x75 da nação, América Central) fora da
-/// [0x9cf4f8] (até 200); os de região 6 (o Caribe, até 200). Cada lista ordenada pela reputação, com os 3 × k
-/// primeiros embaralhados (0x4afbd0: push k; push n; push lista; add esp, 0xc -> cdecl; k = 2, 3, 1 e 1, a contagem
-/// na palavra de baixo). Os times (+0xa7, 6 bytes): 2 e 3 os dois mexicanos; 4, 5 e 6 os três centro-americanos; 7 o
-/// caribenho; 0 e 1: sem o objeto da competição [0x9cf728], os dois primeiros da MLS; com ele, o último campeão da MLS
-/// (0x4afd80(competição [0x9cf590], 0): push 0; push comp; add esp, 8 -> cdecl) e o da [0x9cf728] (a mesma com +4 do
-/// objeto) e, se for o mesmo clube, o 0 passa ao último vice da MLS (lugar 1). Depois +4 e +5 de cada time zerados.
 pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: usize) -> u32 {
     let this = Cup(this);
     this.set_team_count(8);
@@ -131,11 +116,6 @@ pub(crate) unsafe extern "thiscall" fn con_champ_select_qualified_clubs(this: us
 /// line 0x1ba and returns 0) and the predicted positions (virtual +0x5c). Then the cup update (`cup_update_for_date`: push stage;
 /// push today; mov ecx, this -> thiscall, ret 8), whose return value is returned.
 /// Original: `ConChamp::update_for_date` (0x4c1620, con_champ.cpp, thiscall, ret 8).
-///
-/// [pt] { 0x4c1620 } (thiscall, ret 8, con_champ.cpp; a virtual +0x14 da copa): `ConChamp::update_for_date(hoje, fase)`.
-/// Com a tabela de times vazia (o clube do time 0 = 0) e fase ≠ 0: os classificados (0x4c11a0: mov ecx, this ->
-/// thiscall, ret 0; negativo, a caixa da linha 0x1ba e devolve 0) e as posições previstas (virtual +0x5c). Depois a
-/// atualização da copa (0x51f890: push fase; push hoje; mov ecx, this -> thiscall, ret 8), cuja devolução sai.
 pub(crate) unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
     let this = Cup(this);
     if read_usize(this.team_table()) == 0 && stage != 0 {
@@ -161,10 +141,6 @@ pub(crate) unsafe extern "thiscall" fn con_champ_update_for_date(this: usize, to
 /// Ret 0; virtual +0x8c: `ConChamp::set_up_rounds()`; returns 1. The prize fund (+0x28) of 2,000,000 and the round
 /// table (+0xa3) from virtual +0x3c (push 0; push &+0x3a; push &+0x3c; push −1; mov ecx, this -> thiscall, ret 0x10).
 /// Original: `ConChamp::set_up_rounds` (0x4c15f0, con_champ.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x4c15f0 } (thiscall, ret 0, con_champ.cpp; a virtual +0x8c): `ConChamp::set_up_rounds()`; devolve 1. O fundo de
-/// prêmios (+0x28) de 2.000.000 e a tabela das rodadas (+0xa3) da virtual +0x3c (push 0; push &+0x3a; push &+0x3c;
-/// push −1; mov ecx, this -> thiscall, ret 0x10).
 pub(crate) unsafe extern "thiscall" fn con_champ_set_up_rounds(this: usize) -> u32 {
     let this = Cup(this);
     this.set_prize_fund((0x1e8480) as i32);
@@ -185,11 +161,6 @@ pub(crate) unsafe extern "thiscall" fn con_champ_set_up_rounds(this: usize) -> u
 /// the 3 rounds and, in the first two, day 0 of the empty tie (`cup_set_round_match_day` with −1, −1, −1 and home 0; the original calls
 /// it between the match and the fields, which do not overlap). Outside −1, 0.
 /// Original: `ConChamp::create_round_table` (0x4c0f00, con_champ.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x4c0f00 } (thiscall, ret 0x10, con_champ.cpp; a virtual +0x3c): `ConChamp::create_round_table(fase, &rodadas,
-/// &extra, &saida)`: na fase −1, saida (se pedida) = 0, rodadas = 3, extra = 0; a tabela (0x944e46 de 0x138; sem
-/// memória, a caixa da linha 0x97 e 0) com as 3 rodadas e, nas duas primeiras, o dia 0 do confronto vazio (0x521f10
-/// com −1, −1, −1 e mando 0; a original o chama entre o jogo e os campos, que não se sobrepõem). Fora da −1, 0.
 pub(crate) unsafe extern "thiscall" fn con_champ_create_round_table(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, out: *mut i32) -> usize {
     let this = Cup(this);
     if stage as u8 != 0xff {

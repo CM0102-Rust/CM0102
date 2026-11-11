@@ -1,12 +1,8 @@
 use super::*;
 
 // The comparers of the routines in ../comp/cups/cup_stage.rs.
-// [pt] Os comparadores das rotinas de ../comp/cups/cup_stage.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `construct_cup_stage`.
-///
-/// [pt] Só a original (a base, as alocações e a árvore, que sorteia: não roda duas vezes), conferindo o plano feito antes: devolve
-/// this, +0x3e = n, +0x3c = as rodadas, +0x40 = o ano, as duas tabelas montadas e, na lista, os mesmos clubes.
 #[allow(clippy::too_many_arguments)]
 pub(crate) unsafe extern "thiscall" fn compare_construct_cup_stage(this: usize, parent: usize, n: u32, teams: usize, rounds: u32, a5: u32, template: usize, year: u32, stage: u32, b2: u32,
     id: u32, b3: u32, arvore: u32, by_order: u32, a14: u32, seeds: usize) -> usize {

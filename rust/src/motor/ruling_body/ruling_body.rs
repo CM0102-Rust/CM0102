@@ -1,9 +1,6 @@
 use super::*;
 
 /// Matches of ban by foul code (9..12) and ruling body scale (+6); None when no ban.
-///
-/// [pt] Os jogos de suspensão pelo código da falta (9 a 12) e pela escala do órgão (+6), na tabela de saltos 0x7e9028;
-/// None quando não há suspensão (escala abaixo de 3 nos códigos 9 e 10, código fora de 9..=12).
 pub(crate) fn ban_matches(code: i32, e: i8) -> Option<u8> {
     let x = e as i32;
     Some(match code {
@@ -22,8 +19,6 @@ pub(crate) fn ban_matches(code: i32, e: i8) -> Option<u8> {
 }
 
 /// Days of ban (same steps in weeks) by foul code and scale; None when no ban.
-///
-/// [pt] Os dias de suspensão (tabela 0x7e9038): os mesmos degraus em semanas.
 pub(crate) fn ban_days(code: i32, e: i8) -> Option<u16> {
     let x = e as i32;
     Some(match code {
@@ -51,13 +46,6 @@ pub(crate) fn ban_days(code: i32, e: i8) -> Option<u16> {
 /// 3, +0x1c the player's id (+0), +0x6f = (+0x48 of the player == 0). Returns 1; with no ban, 0 without writing
 /// anything.
 /// Original: `RulingBody::make_points_ban` (0x7e8e10, ruling_body.cpp, thiscall, ret 0xc).
-///
-/// [pt] { 0x7e8e10 } (thiscall, ret 0xc, ruling_body.cpp): `registro.make_points_ban(jogador, por_jogos)`, pelos
-/// órgãos de cada país (rb_*.cpp, ao processar o cartão vermelho de uma partida): o código da falta (+0x2e com +0x2c =
-/// 0, +0x2f com +0x2c = 1; outro tipo: 0) dá, pela escala do órgão (+6), os jogos (por_jogos ≠ 0; os dias ficam
-/// 0xffff) ou os dias (os jogos ficam 0xff) da suspensão. No registro: +0 jogos, +1 = 0, +2 dias, +4 a data de hoje
-/// ([0xae2c90], 0x417c10), +0x10 = 3, +0x1c o id do jogador (+0), +0x6f = (+0x48 do jogador == 0). Devolve 1; sem
-/// suspensão, 0 sem gravar nada.
 pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j: usize, by_games: u32) -> u32 {
     let j = MatchRecordRow(j);
     let code = match j.yellow_cards() {
@@ -100,14 +88,6 @@ pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j:
 /// the same +5 gets −1 in +6; without it, writes the slot (`discipline_set_slot`, type +5, −1); the entry's id becomes −1. At the
 /// end compacts the entries (`compact_entries`, in this batch).
 /// Original: `RulingBody::start_new_season` (0x7e7ed0, ruling_body.cpp, thiscall).
-///
-/// [pt] { 0x7e7ed0 } (thiscall, ret 0, ruling_body.cpp): `RulingBody::start_new_season()`: para cada entrada disciplinar
-/// ocupada (14 bytes em [this+0xb], conta +0x13; id −1 é vaga livre): com suspensão (+6, índice com sinal na tabela de
-/// 20 bytes da disciplina [[0xae28f0]+4]) de 2 anos ou mais (4 se o órgão não tem +0x17 nem +0x1b; o ano da suspensão
-/// em +6 contra o de hoje [0xae2c92]), solta a suspensão (0x556d00) e libera a entrada; sem suspensão, libera a
-/// entrada; senão zera os cartões (+4, +5, +8 e os 6 bits baixos de +0xd). Liberar: a vaga guardada do jogador no
-/// órgão (0x55cb60 pela vaga +4) com o mesmo +5 fica com −1 em +6; sem ela, grava a vaga (0x55cb20, tipo +5, −1); o id
-/// da entrada vira −1. No fim compacta as entradas (0x7e9050, nesta leva).
 pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize) {
     covered!("cpu_10 new season");
     let mut e = read_usize(this + ruling_body::ENTRIES);
@@ -166,12 +146,6 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
 /// capacity +0xf = n + 100 and reallocates (`exe::crt_realloc`) with (n + 100) × 14 bytes; out of memory, the box (line 0x594)
 /// and continues.
 /// Original: `RulingBody::compact_entries` (0x7e9050, ruling_body.cpp, thiscall).
-///
-/// [pt] { 0x7e9050 } (thiscall, ret 0, ruling_body.cpp): `RulingBody::compact_entries()`: tira as entradas livres (id −1)
-/// da tabela de 14 bytes [this+0xb], trazendo as ocupadas para a frente; cada uma que muda de lugar acerta o índice
-/// guardado do jogador (0x55cb60 pela vaga +4: com o mesmo +5, o novo índice em +6; sem ela, 0x55cb20 com o tipo +5 e
-/// o índice). Conta +0x13 = n, capacidade +0xf = n + 100 e realoca (0x945667) com (n + 100) × 14 bytes; sem memória, a
-/// caixa (linha 0x594) e segue.
 pub(crate) unsafe extern "thiscall" fn compact_entries(this: usize) {
     let mut target = read_usize(this + ruling_body::ENTRIES);
     let mut source = target;

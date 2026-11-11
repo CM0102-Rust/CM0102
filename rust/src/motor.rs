@@ -43,15 +43,6 @@
 //! What is still `static mut` (23 in the engine) is borrowed (`addr_of!`: the comparers' tapes, the records a dry run
 //! builds) or read by the original routine table (`ORIGINAIS`); the rest of the crate's `static mut` is the
 //! infrastructure the asm reads (`detours.rs`, `stack_probe.rs`, `allocator.rs`).
-//!
-//! [pt] Segurança: um contrato só vale para todas as `unsafe fn` daqui (dentro do exe 3.9.68 conferido, na thread do
-//! jogo, que é uma só, com registros vivos do jogo como argumento). As flags do motor são atômicos com `Relaxed`; o que
-//! ainda é `static mut` é emprestado (`addr_of!`) ou lido pelo asm.
-//!
-//! [pt] As rotinas do jogo reescritas em Rust e como elas substituem as originais. A DLL desvia o começo de cada rotina
-//! original para a cópia em Rust (`detours.rs`), depois de conferir os primeiros bytes (`PROLOGOS`) e o hash da rotina
-//! inteira (`signatures.rs`). Cada rotina desviada é uma linha da tabela `routines!` (endereço e primeiros bytes, cópia, comparador; o log usa o nome da função Rust); `original_fn::<F>(IDX_<NOME>)` chama a original
-//! `i`. Cada arquivo de `motor/` tem as rotinas do arquivo de origem do jogo de mesmo nome; o vocabulário está acima.
 
 use crate::comparison::{Scoreboard, TestRng};
 use crate::detours::{self, Prologue};
@@ -63,8 +54,6 @@ pub(crate) use core::sync::atomic::{AtomicBool, AtomicI32, AtomicU32, AtomicU8, 
 /// expected first bytes, checked before hooking), `rust_table()` and `compare_table()` (the Rust copy and the comparer
 /// of each routine, as addresses) and NAMES (the Rust function's name, the label in the log). Read by the tools through
 /// engenharia-reversa/tabela_motor.py.
-///
-/// [pt] As tabelas das rotinas desviadas, uma linha por rotina (eram quatro listas alinhadas só pela posição).
 macro_rules! routines {
     ($( $p:expr => $r:path, $c:path; )*) => {
         const PROLOGOS: [Prologue; N] = [$($p),*];
@@ -2267,16 +2256,11 @@ include!(concat!(env!("OUT_DIR"), "/indices.rs")); // IDX_<NAME>: the position o
 
 /// Size of the engine object (the game allocates it with new(0xf63b)): side 1's block (+0xf5f2, 0x36
 /// bytes) and the fields up to +0xf63a lie beyond 0xf5f8.
-///
-/// [pt] Tamanho do objeto do motor (o jogo o aloca com new(0xf63b)): o bloco do lado 1 (+0xf5f2, 0x36
-/// bytes) e os campos ate +0xf63a ficam alem de 0xf5f8.
 const ENGINE_SIZE: usize = 0xf63b;
 
 const GLOBAL_TABLE: usize = 0xb67c30;
 
 /// The player's value in a table of 11 words (one per side), by the player's position (0..=10).
-///
-/// [pt] Valor do jogador numa tabela de 11 palavras (uma por lado), pela posicao dele (0..=10).
 unsafe fn table_by_position(this: usize, jogador: MatchPlayer, campo: usize) -> u16 {
     let posicao = jogador.position();
     if !(0..=10).contains(&posicao) {
@@ -2288,8 +2272,6 @@ unsafe fn table_by_position(this: usize, jogador: MatchPlayer, campo: usize) -> 
 }
 
 /// { `player_side` } (match_pl.cpp, 4 bytes, not hookable): the player's side. Read directly.
-///
-/// [pt] { 0x714d30 } (match_pl.cpp, 4 bytes, nao desviavel): lado do jogador. Lido direto.
 unsafe fn side_of_player(player: MatchPlayer) -> i8 {
     player.side()
 }
@@ -2299,7 +2281,6 @@ unsafe fn random(n: i32) -> i32 {
 }
 
 // The rest of the engine, one module per source file of the game (reorganisation, 07/11/2026).
-// [pt] O resto do motor, um módulo por arquivo de origem do jogo (reorganização, 07/11/2026).
 include!("motor/macros.rs");
 #[path = "motor/area.rs"]
 pub(crate) mod area;
@@ -3387,18 +3368,12 @@ compare_value!(compare_staff_criterion, staff_criterion, IDX_STAFF_CRITERION, ()
 
 /// Row `linha` of the tactics table of object `t` ([t+0x601], 0x91 bytes per row: the formation
 /// word and 20 slots of 4 bytes from +2).
-///
-/// [pt] A linha `linha` da tabela tática do objeto `t` ([t+0x601], 0x91 bytes por linha: palavra da
-/// formação e 20 vagas de 4 bytes a partir de +2).
 unsafe fn table_row(t: usize, linha: i32) -> usize {
     read_usize(t + tactics_fields::ROWS).wrapping_add((linha as usize).wrapping_mul(0x91))
 }
 
 /// The regions the three can touch: the club's row in the table (if any) and the pending
 /// instructions with the counter (+0x30..+0x5f1).
-///
-/// [pt] As regiões que as três podem tocar: a linha do clube na tabela (se houver) e as instruções
-/// pendentes com o contador (+0x30..+0x5f1).
 unsafe fn table_regions(t: usize, clube: usize, humano: u32) -> Vec<(usize, usize)> {
     let mut r = vec![(t + tactics_fields::UNDO_SLOTS, 0x5c1)];
     if clube != 0 {
@@ -3703,8 +3678,6 @@ unsafe extern "C" fn compare_won_the_match(jogo: usize, clube: u32) -> u8 {
 static PORT_6D6F70: AtomicUsize = AtomicUsize::new(0);
 static RECORDING_6D6F70: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 /// In the comparison of `exe::match_player_try_block_shot` the tape keeps the seventh argument of the narration in the high part of the code.
-///
-/// [pt] Na comparacao da 0x70dfd0 a fita guarda o setimo argumento da narracao no alto do codigo.
 static RECORD_A7: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 static TAPE_6D6F70: std::sync::Mutex<Vec<(usize, [u32; 7], crate::comparison::MemorySnapshot)>> = std::sync::Mutex::new(Vec::new());
 const PROLOGUE_6D6F70: Prologue = Prologue { address: 0x6d6f70, bytes: &[0x8a, 0x44, 0x24, 0x10, 0x83, 0xec, 0x20] };
@@ -3737,15 +3710,11 @@ unsafe extern "thiscall" fn port_6d6f70(this: usize, a1: u32, a2: u32, a3: u32, 
 }
 
 /// Runs the original recording the comments and the Rust copy replaying them; returns (equal, how many).
-///
-/// [pt] Roda a original gravando os comentarios e a copia Rust reproduzindo-os; devolve (igual, quantos).
 unsafe fn compare_with_commentary(original: impl FnOnce(), rust: impl FnOnce(AddEventCall)) -> (bool, usize) {
     compare_with_commentary_at(&[], original, rust)
 }
 
 /// 0x6d6f70 reads the 1st argument as a word and the 3rd to 6th as bytes: the rest is stack garbage.
-///
-/// [pt] 0x6d6f70 le o 1o argumento como palavra e o 3o ao 6o como bytes: o resto e lixo da pilha.
 const MASK_6D6F70: [u32; 7] = [0xffff, u32::MAX, 0xff, 0xff, 0xff, 0xff, u32::MAX];
 
 fn same_arguments(a: &[u32; 7], b: &[u32; 7]) -> bool {
@@ -3753,8 +3722,6 @@ fn same_arguments(a: &[u32; 7], b: &[u32; 7]) -> bool {
 }
 
 /// Like `compare_com_comentarios`, also comparing the `extra` regions (besides the RNG state).
-///
-/// [pt] Como `compare_com_comentarios`, comparando tambem as `extra` (alem do estado do sorteio).
 unsafe fn compare_with_commentary_at(extra: &[(usize, usize)], original: impl FnOnce(), rust: impl FnOnce(AddEventCall)) -> (bool, usize) {
     use std::sync::atomic::Ordering::Relaxed;
     // inside another comparison that is recording (a ported routine calls another that narrates, or a
@@ -3845,8 +3812,6 @@ compare_value!(compare_national_side_byte_43, national_side_byte_43, IDX_NATIONA
 compare_value!(compare_ball_in_attack, ball_in_attack, IDX_BALL_IN_ATTACK, () -> u8);
 compare_value!(compare_group_decided, group_decided, IDX_GROUP_DECIDED, (clube: usize, partida: usize) -> u32);
 /// The rows of the staff's club in the tactics bank (0x8982b0 for human manager or not).
-///
-/// [pt] As linhas do clube da comissao no banco de taticas (0x8982b0 por tecnico humano ou nao).
 unsafe fn club_rows(clube: usize) -> Vec<(usize, usize)> {
     let taticas = read_usize(G_TACTICS);
     let linha: unsafe extern "stdcall" fn(usize, u32) -> i32 = core::mem::transmute(FN_TACTICS_GET_CLUB_TACTICS_INDEX);
@@ -3860,8 +3825,6 @@ unsafe fn club_rows(clube: usize) -> Vec<(usize, usize)> {
     v
 }
 /// The first differing byte between the memories (the engine regions are large).
-///
-/// [pt] O primeiro byte diferente entre as memorias (as regioes do motor sao grandes).
 fn first_difference(mo: &crate::comparison::MemorySnapshot, mr: &crate::comparison::MemorySnapshot) -> String {
     mo.0.iter()
         .zip(mr.0.iter())
@@ -3876,14 +3839,9 @@ compare_value!(compare_direct_marker, direct_marker, IDX_DIRECT_MARKER, (l: i8, 
 
 /// Diagnosis: routines that stay original (to isolate a career difference without touching the
 /// game environment, which shifts the heap). Empty in normal use.
-///
-/// [pt] Diagnostico: rotinas que ficam no original (para isolar uma diferenca de carreira sem mexer no
-/// ambiente do jogo, que desloca a heap). Vazio no uso normal.
 const SEM_ROTINAS: &[&str] = &[];
 
 /// Comparison of the set pieces of the 57th batch: whole engine and RNG.
-///
-/// [pt] Comparacao das bolas paradas da 57a leva: motor inteiro e sorteio.
 unsafe fn compare_restart(nome: &str, this: usize, o: unsafe extern "thiscall" fn(usize), r: unsafe extern "thiscall" fn(usize)) {
     let mut regioes = vec![(this, ENGINE_SIZE), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     regioes.extend(crate::rng::STATE_REGIONS);
@@ -3963,8 +3921,6 @@ pub unsafe fn instalar(comparando: bool) {
 static DIAG_PERSON: AtomicUsize = AtomicUsize::new(usize::MAX);
 static DIAG_COMPLAINT: AtomicUsize = AtomicUsize::new(0);
 /// CM_DIAG_CLUBE=C: also every contract of club C (+4), to find who in the club receives a complaint or mark.
-///
-/// [pt] CM_DIAG_CLUBE=C: também todo contrato do clube C (+4), para achar quem do clube recebe queixa ou marca
 static DIAG_CLUB: AtomicUsize = AtomicUsize::new(usize::MAX);
 static DIAG_MARK: AtomicUsize = AtomicUsize::new(0);
 
@@ -3976,9 +3932,6 @@ static DIAG_CALLS: AtomicU32 = AtomicU32::new(0);
 
 /// At every power of 2 of calls (from any person): the person of the current contract and person P's contract
 /// read directly from memory (`exe::contract_manager_get_contract` over [0xae1050], person = [0xae23bc] + id × 110), to check the save's writing.
-///
-/// [pt] A cada potência de 2 de chamadas (de qualquer pessoa): a pessoa do contrato da vez e o contrato da pessoa P lido
-/// direto na memória (0x4cf5a0 sobre [0xae1050], pessoa = [0xae23bc] + id × 110), para conferir a gravação do save.
 unsafe fn diag_sample(c: usize, qual: &str) {
     DIAG_CALLS.fetch_add(1, Relaxed);
     if !DIAG_CALLS.load(Relaxed).is_power_of_two() {
@@ -4036,8 +3989,6 @@ unsafe extern "thiscall" fn diag_mark(c: usize, f: u32) -> u32 {
 }
 
 /// Simulation in original mode: the same routines detoured to the original itself (private stack).
-///
-/// [pt] Simulacao no modo original: as mesmas rotinas desviadas para a propria original (pilha particular).
 pub unsafe fn install_passthrough() {
     let (sonda, dentro, prologo) = crate::stack_probe::target();
     if sonda != 0 && prologo >= 5 && !PROLOGOS.iter().any(|p| p.address == sonda) {
@@ -4056,9 +4007,6 @@ pub unsafe fn install_passthrough() {
 
 /// Autotest diagnosis: is the fake engine's grid consistent (counts 0..=11, each entry a player of
 /// the side's block, in the right cell and with the right index at 0x28)?
-///
-/// [pt] Diagnostico do autoteste: a grade do motor falso esta consistente (contagens 0..=11, cada
-/// entrada um jogador do bloco do lado, na casa certa e com o indice certo em 0x28)?
 unsafe fn grid_inconsistent(m: Engine) -> Option<String> {
     for x in 0..9i8 {
         for y in 0..12i8 {
@@ -4087,10 +4035,6 @@ unsafe fn grid_inconsistent(m: Engine) -> Option<String> {
 /// Synthetic inputs: a fake engine object and player, with their own tables; positions, sides and
 /// coordinates varying, including outside the valid ranges. Runs through the comparison functions,
 /// which call the original and the Rust version with the same inputs.
-///
-/// [pt] Entradas sinteticas: um objeto do motor e um jogador falsos, com tabelas proprias; posicoes,
-/// lados e coordenadas variando, inclusive fora das faixas validas. Roda pelas funcoes de
-/// comparacao, que chamam a original e a versao Rust com as mesmas entradas.
 pub unsafe fn autoteste(casos: u64) {
     let mut s = TestRng(0x4d4f544f52);
     let mut motor = vec![0u8; 0x10000]; // fields up to 0xf5f5 (side state)

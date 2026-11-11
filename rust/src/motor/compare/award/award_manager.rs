@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../award/award_manager.rs.
-// [pt] Os comparadores das rotinas de ../award/award_manager.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `award_raise_winner_reputation`.
 pub(crate) unsafe extern "C" fn compare_award_raise_winner_reputation(person: usize, club: usize, nation: u32, world: u32, player: u32) {

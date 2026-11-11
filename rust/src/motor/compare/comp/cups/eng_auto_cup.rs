@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/cups/eng_auto_cup.rs.
-// [pt] Os comparadores das rotinas de ../comp/cups/eng_auto_cup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `select_section_clubs`.
 ///
@@ -10,10 +9,6 @@ use super::*;
 ///
 /// When the original does not find the relegated club (the case where it reads the valueless dword from the stack),
 /// only the original.
-///
-/// [pt] Lado a lado a partir do mesmo estado (o sorteador, +0xb6, [0xb67a34]); a original deixa a lista dela em +0xb2, a cópia
-/// faz a sua (sem contar os sorteios), comparada nas +0xb6 vagas e liberada. Quando a original não acha o rebaixado (o
-/// caso em que ela lê a dword sem valor da pilha), só a original.
 pub(crate) unsafe extern "thiscall" fn compare_select_section_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(IDX_SELECT_SECTION_CLUBS);
     let base = read_usize(G_CLUB_TABLE);
@@ -56,8 +51,6 @@ pub(crate) unsafe extern "thiscall" fn compare_select_section_clubs(this: usize)
 }
 
 /// Comparer for `create_section_stage`.
-///
-/// [pt] Só a original (aloca a fase), conferindo o plano: a fase em [+0xc][0] e +0x30 = 0.
 pub(crate) unsafe extern "thiscall" fn compare_create_section_stage(this: usize) {
     let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CREATE_SECTION_STAGE);
@@ -67,8 +60,6 @@ pub(crate) unsafe extern "thiscall" fn compare_create_section_stage(this: usize)
 }
 
 /// Comparer for `eng_auto_cup_advance_stage`.
-///
-/// [pt] Só a original (a final aloca e sorteia), conferindo o plano: +0x30 sobe um fora da última fase e fica na última.
 pub(crate) unsafe extern "thiscall" fn compare_eng_auto_cup_advance_stage(this: usize) {
     let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_AUTO_CUP_ADVANCE_STAGE);
@@ -80,9 +71,6 @@ pub(crate) unsafe extern "thiscall" fn compare_eng_auto_cup_advance_stage(this: 
 }
 
 /// Comparer for `eng_auto_cup_create_final_stage`.
-///
-/// [pt] Só a original (aloca a fase e sorteia), conferindo o plano: a fase em [+0xc][1] (com o vetor dos dois finalistas
-/// achados antes, quando há fase).
 pub(crate) unsafe extern "thiscall" fn compare_eng_auto_cup_create_final_stage(this: usize) {
     let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_ENG_AUTO_CUP_CREATE_FINAL_STAGE);

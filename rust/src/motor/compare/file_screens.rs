@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../file_screens.rs.
-// [pt] Os comparadores das rotinas de ../file_screens.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `build_save_game_summary`.
 pub(crate) unsafe extern "C" fn compare_build_save_game_summary(summary: *mut u8) {

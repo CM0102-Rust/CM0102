@@ -1,13 +1,8 @@
 use super::*;
 
 // The comparers of the routines in ../dispute.rs.
-// [pt] Os comparadores das rotinas de ../dispute.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `remove_dispute`.
-///
-/// [pt] Comparador: sem a marca (nada a fazer), lado a lado na marca e no cursor da lista. Com a marca, só a original com o
-/// plano: a marca zerada e a conta da lista uma a menos quando a pessoa está nela (a procura feita antes, com o cursor
-/// devolvido).
 pub(crate) unsafe extern "thiscall" fn compare_remove_dispute(this: usize, p: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_REMOVE_DISPUTE);
     if p == 0 || read_usize(this + 4) == 0 {

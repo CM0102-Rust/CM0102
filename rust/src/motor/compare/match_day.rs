@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../match_day.rs.
-// [pt] Os comparadores das rotinas de ../match_day.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `end_day`.
 pub(crate) unsafe extern "thiscall" fn compare_end_day(day: usize) {
@@ -67,8 +66,6 @@ pub(crate) unsafe extern "C" fn compare_match_without_human(fixture: usize) -> u
 }
 
 /// Comparer for `pos`.
-///
-/// [pt] Roda a comparacao de uma rotina do pos-jogo pela fita: as 14 do banco entram como unidades.
 pub(crate) unsafe fn compare_pos(name: &str, reg: Vec<(usize, usize)>, original: impl FnOnce(), rust: impl FnOnce(&mut dyn FnMut(usize, usize, [u32; 5]) -> u32)) {
     use std::sync::atomic::Ordering::Relaxed;
     let write = RECORD_POST_MATCH.swap(true, Relaxed);

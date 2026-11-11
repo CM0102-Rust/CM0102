@@ -17,26 +17,6 @@
 //! a free list linked inside the blocks themselves (the last freed comes out first; nothing
 //! is allocated for bookkeeping, which lets it serve as the global allocator); with no free block, the top advances.
 //! Neighbouring free blocks are only merged when the region runs out (`alloc_merging`).
-//!
-//! [pt] Heap reproduzivel para a simulacao em lote (so com CM_PARAR_EM).
-//!
-//! O Windows muda a cada execucao o endereco da heap e, com o alocador de baixa fragmentacao, a
-//! ordem dos blocos pequenos. O jogo desempata algumas decisoes pela ordem dos ponteiros (no dia
-//! 2001-093 a escalacao mudava com o gerador identico), entao a mesma semente nao dava a mesma
-//! carreira. Aqui as funcoes Heap* do exe (IAT) passam a usar uma regiao de endereco fixo com um
-//! alocador deterministico: mesma sequencia de pedidos => mesmos enderecos.
-//!
-//! A memoria da DLL que o jogo enxerga (objetos DirectDraw, superficies e seus pixels) vai para
-//! uma segunda regiao fixa (`visivel`): o jogo guarda ponteiros para ela e o endereco na heap do
-//! processo variava (dia 2001-271). O resto da DLL vai para uma terceira regiao fixa, so dela (`REGIAO_DLL`):
-//! longe da do jogo, para que comparacoes, placares e registro (que mudam com o modo) nao desloquem o que o
-//! jogo ve, e em endereco fixo, porque os ponteiros dela ficam na pilha particular (01/11/2026).
-//!
-//! Blocos: cabecalho de 16 bytes {capacidade, tamanho pedido} + dados alinhados em 16.
-//! Ate 4 KB: classes de 16 em 16 bytes; acima: classes por pagina (ate 256 MB). Cada classe tem
-//! uma lista de livres encadeada dentro dos proprios blocos (o ultimo liberado sai primeiro; nada
-//! e alocado para controle, o que permite servir de alocador global); sem livre, avanca o topo.
-//! Os livres vizinhos so se juntam quando a regiao esgota (`alocar_juntando`).
 
 use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering};
@@ -60,9 +40,6 @@ pub struct Allocator {
     peak: usize,
     /// (free, top) of the last `merge_free`, for the caller to log after releasing the lock (logging allocates, and the
     /// DLL's allocator cannot allocate with its own lock held: the Mutex is not reentrant)
-    ///
-    /// [pt] (livres, topo) do ultimo `juntar`, para quem chamou registrar depois de soltar a trava (registrar aloca, e o
-    /// alocador da DLL nao pode alocar com a propria trava na mao: o Mutex nao e reentrante)
     merged: Option<(usize, usize)>,
 }
 
@@ -74,8 +51,6 @@ fn capacity(n: usize) -> usize {
 }
 
 /// Class of a capacity (None: too large to reuse).
-///
-/// [pt] Classe de uma capacidade (None: grande demais para reaproveitar).
 fn class_of(cap: usize) -> Option<usize> {
     let c = if cap <= SMALL { cap / 16 } else { SMALL / 16 + cap / 4096 };
     (c < CLASSES).then_some(c)
@@ -87,8 +62,6 @@ impl Allocator {
     }
 
     /// Switches to the given region (without moving the structure, which is large for the stack).
-    ///
-    /// [pt] Passa a usar a regiao dada (sem mover a estrutura, que e grande para a pilha).
     fn activate(&mut self, start: usize, size: usize) {
         (self.start, self.top, self.end) = (start, start, start + size);
     }
@@ -131,12 +104,6 @@ impl Allocator {
     /// (8 leagues) exhausted 1 GB in April 2002: the players' statistics list grows 100 at a time and the
     /// old copies were never reused (27/10/2026).
     /// simplification: scans all lists on each exhaustion; if it gets slow, merge only after N bytes freed.
-    ///
-    /// [pt] Regiao esgotada: junta os blocos livres vizinhos (os do fim voltam ao topo) e serve o pedido pelo topo ou
-    /// pelo menor livre que caiba, partindo o resto. Deterministico (pela ordem dos enderecos). A carreira ampla
-    /// (8 ligas) esgotava 1 GB em abril de 2002: a lista de estatisticas dos jogadores cresce de 100 em 100 e as
-    /// copias antigas nunca serviam de novo (27/10/2026).
-    /// simplification: varre todas as listas a cada esgotamento; se ficar lento, juntar so depois de N bytes liberados.
     unsafe fn alloc_merging(&mut self, n: usize, cap: usize, zero: bool) -> usize {
         let mut p = self.smallest_free(cap);
         if p == 0 {
@@ -159,8 +126,6 @@ impl Allocator {
     }
 
     /// The smallest free block with capacity >= `cap` (the first of each list), split if there is room left; 0 if none.
-    ///
-    /// [pt] O menor livre de capacidade >= `cap` (o primeiro de cada lista), partido se sobrar; 0 se nenhum.
     unsafe fn smallest_free(&mut self, cap: usize) -> usize {
         let Some(c0) = class_of(cap) else { return 0 };
         let Some(c) = (c0..CLASSES).find(|&c| self.free[c] != 0 && *((self.free[c] - 16) as *const usize) >= cap) else {
@@ -180,9 +145,6 @@ impl Allocator {
 
     /// Merges neighbouring free blocks; those that reach the top go back to it. Does not go through the global allocator (the list goes
     /// straight to the Windows heap) nor logs: it also serves the DLL region, which runs with its own lock held.
-    ///
-    /// [pt] Junta os livres vizinhos; os que chegam ao topo voltam para ele. Nao passa pelo alocador global (a lista vai
-    /// direto na heap do Windows) nem registra: serve tambem a regiao da DLL, que roda com a propria trava na mao.
     unsafe fn merge_free(&mut self) {
         let mut n = 0;
         for c in 0..CLASSES {
@@ -236,8 +198,6 @@ impl Allocator {
     }
 
     /// Logs the notice of the last `merge_free` (call after releasing the lock).
-    ///
-    /// [pt] Registra o aviso do ultimo `juntar` (chamar depois de soltar a trava).
     fn log_merged(notice: Option<(usize, usize)>, which: &str) {
         if let Some((k, top)) = notice {
             linha(&format!("allocator: region {} exhausted; {} free after merging, top at {:#x}", which, k, top));
@@ -349,16 +309,12 @@ unsafe extern "system" fn heap_destroy(h: usize) -> i32 {
 }
 
 /// Used range of the game region (start, top), for the simulation's daily hash.
-///
-/// [pt] RoleBitEffect usada da regiao do jogo (inicio, topo), para o hash diario da simulacao.
 pub fn game_region() -> (usize, usize) {
     let a = HEAP.lock().unwrap_or_else(|e| e.into_inner());
     (a.start, a.top)
 }
 
 /// Peak usage of the region (bytes), for the simulation's log.
-///
-/// [pt] Pico de uso da regiao (bytes), para o registro da simulacao.
 pub fn pico() -> usize {
     HEAP.lock().unwrap_or_else(|e| e.into_inner()).peak
 }
@@ -372,9 +328,6 @@ static IN_VISIBLE: AtomicBool = AtomicBool::new(false);
 
 /// The `visivel` pair for the hook of `cm0102-base` (the video layer's allocations): what is created in between
 /// is allocated in the region visible to the game (when the simulation switched it on).
-///
-/// [pt] Aloca o que `f` criar na regiao visivel ao jogo (quando a simulacao a ligou).
-/// The `visivel` pair for the hook of `cm0102-base` (the video layer's allocations).
 pub fn enter_visible() -> bool {
     IN_VISIBLE.swap(true, Ordering::Relaxed)
 }
@@ -409,9 +362,6 @@ static DLL_LIVE: [AtomicUsize; 2] = [AtomicUsize::new(0), AtomicUsize::new(0)]; 
 
 /// The DLL's global allocator: the process heap; in the simulation, the visible region inside `visivel(...)` and the DLL
 /// region for the rest.
-///
-/// [pt] Alocador global da DLL: heap do processo; na simulacao, a regiao visivel dentro de `visivel(...)` e a regiao da
-/// DLL no resto.
 pub struct Global;
 
 unsafe fn in_visible_region(l: Layout, zero: bool) -> Option<*mut u8> {
@@ -468,9 +418,6 @@ unsafe impl GlobalAlloc for Global {
 
 /// Peak usage of the DLL region and maximum bytes live in it (0 without it), for the simulation's log. The peak exceeds
 /// the live bytes because free blocks are only merged when the region runs out.
-///
-/// [pt] Pico de uso da regiao da DLL e maximo de bytes vivos nela (0 sem ela), para o registro da simulacao. O pico passa dos
-/// vivos porque os livres so se juntam com a regiao esgotada.
 pub fn dll_peak() -> (usize, usize) {
     (DLL.lock().unwrap_or_else(|e| e.into_inner()).peak, DLL_LIVE[1].load(Ordering::Relaxed))
 }
@@ -525,17 +472,11 @@ unsafe extern "system" fn virtual_alloc(end: usize, size: usize, kind: u32, prot
 const GMEM_ZEROINIT: u32 = 0x40;
 
 /// The live GlobalAlloc blocks (the game's database), for the memory fingerprint.
-///
-/// [pt] Os blocos vivos do GlobalAlloc (o banco de dados do jogo), para a impressao da memoria.
 static DATABASE_BLOCKS: Mutex<Vec<(usize, usize)>> = Mutex::new(Vec::new());
 
 /// The size of the block that starts at `p` in the fixed region, if `p` really looks like the start of a block
 /// (consistent header: a class capacity, not smaller than that of the requested size; realloc keeps
 /// the capacity when shrinking).
-///
-/// [pt] O tamanho do bloco que comeca em `p` na regiao fixa, se `p` parece mesmo o inicio de um bloco
-/// (cabecalho coerente: capacidade de classe, nao menor que a do tamanho pedido; o realocar mantem
-/// a capacidade ao encolher).
 pub unsafe fn block_at(p: usize) -> Option<usize> {
     let (start, top) = game_region();
     if p < start + HEADER || p >= top || p & 15 != 0 {
@@ -565,8 +506,6 @@ unsafe extern "system" fn global_free(p: usize) -> usize {
 }
 
 /// Reserves the fixed region and swaps the exe's Heap* functions. Called when the DLL loads, before the game's CRT.
-///
-/// [pt] Reserva a regiao fixa e troca as Heap* do exe. Chamado no carregamento da DLL, antes da CRT do jogo.
 pub unsafe fn instalar() {
     let start = reserve(&BASES, REGION);
     if start == 0 {

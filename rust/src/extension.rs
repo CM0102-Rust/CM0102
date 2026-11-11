@@ -6,21 +6,10 @@
 //! The engine fields (positions, ball, clock, score) are documented in `motor.rs` and in
 //! `docs/ROTINAS.md`; the extension may not write to the engine nor call the game (the career has to
 //! stay identical with or without it).
-//!
-//! [pt] Ponto de extensao: uma DLL externa ao lado do exe (`botao.dll`, o jogo de botao do Lucas) recebe o
-//! motor de partidas a cada instante do laco (0x6b98c0), so para leitura. Sem a DLL, nada acontece
-//! (uma leitura de `OnceLock` por instante). A DLL exporta, em C:
-//!   `extern "C" fn cm_instante(motor: *const u8)`  chamada no inicio de cada instante do laco;
-//!   `extern "C" fn cm_versao() -> u32`             (opcional) a versao do contrato que ela espera.
-//! Os campos do motor (posicoes, bola, relogio, placar) estao documentados em `motor.rs` e em
-//! `docs/ROTINAS.md`; a extensao nao pode escrever no motor nem chamar o jogo (a carreira tem de
-//! continuar identica com ou sem ela).
 
 use std::sync::OnceLock;
 
 /// Version of the contract with the external DLL (bumped when the call or what it receives changes).
-///
-/// [pt] Versao do contrato com a DLL externa (sobe quando mudar a chamada ou o que ela recebe).
 pub const VERSION: u32 = 1;
 
 type InstantFn = unsafe extern "C" fn(motor: *const u8);
@@ -28,8 +17,6 @@ type InstantFn = unsafe extern "C" fn(motor: *const u8);
 static CALLBACK: OnceLock<Option<InstantFn>> = OnceLock::new();
 
 /// At the start of each instant of the engine loop.
-///
-/// [pt] No inicio de cada instante do laco do motor.
 pub fn instant(m: usize) {
     if let Some(f) = CALLBACK.get_or_init(|| unsafe { load() }) {
         unsafe { f(m as *const u8) }

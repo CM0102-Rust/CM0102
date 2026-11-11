@@ -1,11 +1,8 @@
 use super::*;
 
 // The comparers of the routines in ../transfer/finland_rules.rs.
-// [pt] Os comparadores das rotinas de ../transfer/finland_rules.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `construct_finland_rules`.
-///
-/// [pt] A original no objeto de quem chama, a cópia num rascunho (ver `compare_transfer_rules_ctor`).
 pub(crate) unsafe extern "thiscall" fn compare_construct_finland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32, u32, u32) -> usize>(IDX_CONSTRUCT_FINLAND_RULES);
     let mut r = 0usize;

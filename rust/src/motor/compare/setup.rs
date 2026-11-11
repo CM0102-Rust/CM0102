@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../setup.rs.
-// [pt] Os comparadores das rotinas de ../setup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `load_game_data`.
 pub(crate) unsafe extern "C" fn compare_load_game_data(path: *const u8) -> u32 {

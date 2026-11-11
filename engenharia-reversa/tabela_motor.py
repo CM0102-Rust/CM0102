@@ -66,8 +66,6 @@ def converter():
         '/// expected first bytes, checked before hooking), `rust_table()` and `compare_table()` (the Rust copy and the comparer',
         '/// of each routine, as addresses) and NAMES (the label in the log). Read by the tools through',
         '/// engenharia-reversa/tabela_motor.py.',
-        '///',
-        '/// [pt] As tabelas das rotinas desviadas, uma linha por rotina (eram quatro listas alinhadas só pela posição).',
         'macro_rules! routines {',
         '    ($( $p:expr => $r:path, $c:path, $n:literal; )*) => {',
         '        const PROLOGOS: [Prologue; N] = [$($p),*];',

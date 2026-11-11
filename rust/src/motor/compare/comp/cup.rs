@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../comp/cup.rs.
-// [pt] Os comparadores das rotinas de ../comp/cup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `create_tie_fixtures` (comparison mode: see the header of motor.rs): the comparer of `0x51cb90`; only
 /// the original routine runs (the match goes to the calendar via `0x5aa680`, which allocates, and the news goes to the
@@ -10,11 +9,6 @@ use super::*;
 /// The plan, made beforehand: the chosen tie (−1 searches for mark 1 or 2), the return value, the mark (2 when
 /// postponing, 3 when creating) and, when creating with both teams, the home side's matches in the competition go up by
 /// 1 (2 in a two-legged one with the cup still active).
-///
-/// [pt] Comparador da 0x51cb90: só a original (a partida vai ao calendário pela 0x5aa680, que aloca, e as notícias aos
-/// técnicos). O plano, feito antes: o confronto escolhido (o −1 procura a marca 1 ou 2), a devolução, a marca (2 ao
-/// adiar, 3 ao criar) e, criando com os dois times, os jogos do mandante na competição sobem 1 (2 na de duas mãos com a
-/// copa ainda ativa).
 pub(crate) unsafe extern "thiscall" fn compare_create_tie_fixtures(this: usize, round: u32, tie: u32, adiar: u32) -> u32 {
     let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32, u32) -> u32>(IDX_CREATE_TIE_FIXTURES);
@@ -75,16 +69,11 @@ pub(crate) unsafe extern "thiscall" fn compare_create_tie_fixtures(this: usize, 
 }
 
 /// Comparer for `post_draw_news`.
-///
-/// [pt] Comparador da 0x522950: só a original (a notícia vai aos técnicos e não tem outro efeito).
 pub(crate) unsafe extern "thiscall" fn compare_post_draw_news(this: usize, round: u32, tie: u32) {
     original_fn::<unsafe extern "thiscall" fn(usize, u32, u32)>(IDX_POST_DRAW_NEWS)(this, round, tie) // simplification: only the news item
 }
 
 /// Comparer for `sort_round_teams`.
-///
-/// [pt] Comparador: sorteia (0x90cfc0) e só usa vetores temporários: lado a lado pelo estado do sorteador e pelos
-/// confrontos de todas as rodadas (os vínculos vão às rodadas seguintes), a cópia em sem_contar.
 pub(crate) unsafe extern "thiscall" fn compare_sort_round_teams(cup: usize, round: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_SORT_ROUND_TEAMS);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
@@ -99,8 +88,6 @@ pub(crate) unsafe extern "thiscall" fn compare_sort_round_teams(cup: usize, roun
 }
 
 /// Comparer for `check_round_teams_for_nation`.
-///
-/// [pt] Comparador: como o da 0x51d2d0 (sorteia; as contas e o vetor são temporários).
 pub(crate) unsafe extern "thiscall" fn compare_check_round_teams_for_nation(cup: usize, round: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_CHECK_ROUND_TEAMS_FOR_NATION);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
@@ -130,10 +117,6 @@ pub(crate) unsafe extern "thiscall" fn compare_cup_start_new_season(cup: usize) 
 /// finances.
 ///
 /// No club, no finances, or with the division that drops: only the original.
-///
-/// [pt] Comparador da 0x522240, em ensaio: a cópia sem a notícia e a original inteira, a partir do mesmo estado (o fundo e
-/// os registros de finanças dos dois clubes, restaurados depois do ensaio); confere o fundo e as finanças. Sem clube,
-/// sem finanças ou com a divisão que cai: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_pay_round_prize_money(cup: usize, winner: usize, loser: usize, round: u32, fixture: usize) {
     let cup = Cup(cup);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32, usize)>(IDX_PAY_ROUND_PRIZE_MONEY);
@@ -158,8 +141,6 @@ pub(crate) unsafe extern "thiscall" fn compare_pay_round_prize_money(cup: usize,
 }
 
 /// Comparer for `set_home_teams_for_round`.
-///
-/// [pt] Comparador da 0x51e870: lado a lado nos confrontos percorridos (a virtual +0x90 só consulta e roda nos dois lados).
 pub(crate) unsafe extern "thiscall" fn compare_set_home_teams_for_round(cup: usize, round: u32, laco: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32)>(IDX_SET_HOME_TEAMS_FOR_ROUND);
     let (ini, fim) = ties_range(cup, round, laco);
@@ -179,11 +160,6 @@ pub(crate) unsafe extern "thiscall" fn compare_set_home_teams_for_round(cup: usi
 /// nothing changed in it).
 ///
 /// Without statistics, without a club or without a record: only the original.
-///
-/// [pt] Comparador da 0x521b30: lado a lado nos 3 bytes de progresso (+0x73..+0x75) do registro do clube no Comp_Stats da
-/// copa (+8, achado pela 0x4a4850: push clube; ecx = as estatísticas; thiscall, ret 4), que a +0x68 grava; as versões
-/// que repassam a outra competição gravam fora da região (aí a comparação só confere que nada mudou nela). Sem
-/// estatísticas, sem clube ou sem registro: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_record_team_progress(cup: usize, team: u32, round: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32)>(IDX_RECORD_TEAM_PROGRESS);
     let stats = read_usize(cup + 8);
@@ -202,11 +178,6 @@ pub(crate) unsafe extern "thiscall" fn compare_record_team_progress(cup: usize, 
 /// +0x45 or already drawn), nothing changes in the ties or the dates; with a team still open, the predicted dates of
 /// the rounds (this one plus 1 day, the following ones at least that); once drawn, all ties with +0x34 = 1 and +0xac
 /// with the predicted sum (the news item's queries do not change with the draw).
-///
-/// [pt] Comparador da 0x51c410: só a original (os sorteios sorteiam, a notícia aloca). O plano, feito antes: sem sorteio
-/// (sem +0x45 ou já sorteada), nada muda nos confrontos nem nas datas; com time em aberto, as datas previstas das
-/// rodadas (a desta mais 1 dia, as seguintes no mínimo essa); sorteada, todos os confrontos com +0x34 = 1 e +0xac com
-/// a soma prevista (as consultas da notícia não mudam com o sorteio).
 pub(crate) unsafe extern "thiscall" fn compare_draw_round(cup: usize, round: u32) -> u32 {
     let cup = Cup(cup);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_DRAW_ROUND);
@@ -257,8 +228,6 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_round(cup: usize, round: u32
 }
 
 /// Comparer for `club_in_higher_division`.
-///
-/// [pt] Comparador da 0x522360: pelo valor (só lê).
 pub(crate) unsafe extern "thiscall" fn compare_club_in_higher_division(this: usize, a: usize, b: usize) -> usize {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> usize>(IDX_CLUB_IN_HIGHER_DIVISION)(this, a, b);
     let n = club_in_higher_division(this, a, b);
@@ -272,10 +241,6 @@ pub(crate) unsafe extern "thiscall" fn compare_club_in_higher_division(this: usi
 ///
 /// The plan, made beforehand: the club's status (`+0` of the 6-byte record) changes to UEFA Cup when the winner earns
 /// the place; otherwise it does not change. Without a club: only the original routine.
-///
-/// [pt] Comparador da 0x519890: só a original (os registros vão ao histórico das pessoas e mexem nas reputações e no moral,
-/// não podem rodar duas vezes). O plano, feito antes: o estado do clube (+0 do registro de 6 bytes) passa à Copa da
-/// UEFA quando o campeão ganha a vaga; senão não muda. Sem clube: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_cup_update_staff_records_for_status(cup: usize, club: usize, outcome: u32, a3: u32, a4: u32, game: usize, final_: u32) -> u32 {
     let cup = Cup(cup);
     let game = Fixture(game);
@@ -300,10 +265,6 @@ pub(crate) unsafe extern "thiscall" fn compare_cup_update_staff_records_for_stat
 /// year [0xae2c92] and the four of season_honours.
 ///
 /// No free row (the history grows) or no competition: only the original.
-///
-/// [pt] Comparador da 0x519a90: só a original (a 0x4afce0 pode crescer o histórico e a 0x519fc0 tem o seu comparador). O
-/// plano, feito antes: a linha livre do histórico (free_comp_history_row) recebe a competição (+4), o ano [0xae2c92] e os
-/// quatro de season_honours. Sem linha livre (o histórico cresce) ou sem a competição: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_cup_record_season_honours(cup: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CUP_RECORD_SEASON_HONOURS);
     let row = free_comp_history_row();
@@ -319,9 +280,6 @@ pub(crate) unsafe extern "thiscall" fn compare_cup_record_season_honours(cup: us
 }
 
 /// Comparer for `register_semi_final_losers_for_uefa`.
-///
-/// [pt] Comparador da 0x519fc0: lado a lado na tabela da semeadura (+0x440, 50 vagas de 12 bytes, onde a 0x905790 grava; ela
-/// não aloca: acha a vaga da competição ou a primeira livre). Sem a semeadura: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_register_semi_final_losers_for_uefa(cup: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_REGISTER_SEMI_FINAL_LOSERS_FOR_UEFA);
     let s = read_usize(G_UEFA_SEEDING);
@@ -333,9 +291,6 @@ pub(crate) unsafe extern "thiscall" fn compare_register_semi_final_losers_for_ue
 }
 
 /// Comparer for `get_fixture_side_teams`.
-///
-/// [pt] Comparador: o esperado sai do núcleo sobre uma conta própria e uma saída própria antes da original; depois, a
-/// devolução, a conta global e a saída têm de bater.
 pub(crate) unsafe extern "thiscall" fn compare_get_fixture_side_teams(this: usize, round: i32, game: i32, side: u32, out: *mut i16) -> i32 {
     let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32, u32, *mut i16) -> i32>(IDX_GET_FIXTURE_SIDE_TEAMS);
@@ -360,9 +315,6 @@ pub(crate) unsafe extern "thiscall" fn compare_get_fixture_side_teams(this: usiz
 }
 
 /// Comparer for `collect_possible_teams`.
-///
-/// [pt] Comparador: o esperado sai do núcleo sobre uma cópia da conta e uma saída própria antes da original; depois, a
-/// devolução, a conta e os clubes acrescentados têm de bater.
 pub(crate) unsafe extern "thiscall" fn compare_collect_possible_teams(this: usize, round: i32, game: i32, out: *mut i16, count: *mut i32) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, i32, *mut i16, *mut i32) -> i32>(IDX_COLLECT_POSSIBLE_TEAMS);
     if out.is_null() || count.is_null() || round < 0 || game == -1 || !(0..0x100).contains(&*count) {
@@ -391,9 +343,6 @@ pub(crate) unsafe extern "thiscall" fn compare_set_up_round(this: usize, round: 
 }
 
 /// Comparer for `randomize_round_teams`.
-///
-/// [pt] Comparador: sorteia (0x90cfc0) e só usa um vetor temporário: lado a lado pelo estado do sorteador e pelos
-/// confrontos de todas as rodadas (os vínculos vão às rodadas seguintes), a cópia em sem_contar.
 pub(crate) unsafe extern "thiscall" fn compare_randomize_round_teams(cup: usize, round: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_RANDOMIZE_ROUND_TEAMS);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
@@ -408,8 +357,6 @@ pub(crate) unsafe extern "thiscall" fn compare_randomize_round_teams(cup: usize,
 }
 
 /// Comparer for `separate_shared_stadium_ties`.
-///
-/// [pt] Comparador: só grava confrontos (da rodada e das seguintes): lado a lado pelos confrontos de todas as rodadas.
 pub(crate) unsafe extern "thiscall" fn compare_separate_shared_stadium_ties(cup: usize, round: u32) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_SEPARATE_SHARED_STADIUM_TIES);
     let reg = all_ties_regions(Cup(cup));
@@ -422,8 +369,6 @@ pub(crate) unsafe extern "thiscall" fn compare_separate_shared_stadium_ties(cup:
 }
 
 /// Comparer for `cup_compare_entries_by_level_desc`.
-///
-/// [pt] Comparador: pelo valor (só lê).
 pub(crate) unsafe extern "C" fn compare_cup_compare_entries_by_level_desc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_CUP_COMPARE_ENTRIES_BY_LEVEL_DESC)(a, b);
     let n = cup_compare_entries_by_level_desc(a, b);
@@ -432,8 +377,6 @@ pub(crate) unsafe extern "C" fn compare_cup_compare_entries_by_level_desc(a: usi
 }
 
 /// Comparer for `cup_compare_entries_by_level_asc`.
-///
-/// [pt] Comparador: pelo valor (só lê).
 pub(crate) unsafe extern "C" fn compare_cup_compare_entries_by_level_asc(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_CUP_COMPARE_ENTRIES_BY_LEVEL_ASC)(a, b);
     let n = cup_compare_entries_by_level_asc(a, b);
@@ -442,9 +385,6 @@ pub(crate) unsafe extern "C" fn compare_cup_compare_entries_by_level_asc(a: usiz
 }
 
 /// Comparer for `decide_fixture_winner`.
-///
-/// [pt] Comparador: lado a lado pelos códigos (+0x3d/+0x3e) e pelo lado devolvido; jogo nulo ou empate nos pênaltis (a
-/// caixa): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_decide_fixture_winner(this: usize, game: usize) -> u32 {
     let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_DECIDE_FIXTURE_WINNER);
@@ -461,9 +401,6 @@ pub(crate) unsafe extern "thiscall" fn compare_decide_fixture_winner(this: usize
 }
 
 /// Comparer for `decide_tie_winner`.
-///
-/// [pt] Comparador: lado a lado pelos códigos (+0x3d/+0x3e) e pelo lado devolvido; empate nos pênaltis (a caixa): só a
-/// original.
 pub(crate) unsafe extern "thiscall" fn compare_decide_tie_winner(this: usize, tie: usize, game: usize) -> u32 {
     let game = Fixture(game);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize) -> u32>(IDX_DECIDE_TIE_WINNER);
@@ -478,8 +415,6 @@ pub(crate) unsafe extern "thiscall" fn compare_decide_tie_winner(this: usize, ti
 }
 
 /// Comparer for `cup_compare_draw_entries_by_seed`.
-///
-/// [pt] Comparador: pelo valor.
 pub(crate) unsafe extern "C" fn compare_cup_compare_draw_entries_by_seed(a: usize, b: usize) -> i32 {
     let r = original_fn::<unsafe extern "C" fn(usize, usize) -> i32>(IDX_CUP_COMPARE_DRAW_ENTRIES_BY_SEED)(a, b);
     let n = cup_compare_draw_entries_by_seed(a, b);
@@ -541,8 +476,6 @@ pub(crate) unsafe extern "thiscall" fn compare_add_team_result_news(cup: usize, 
 }
 
 /// Comparer for `cup_check_complete`.
-///
-/// [pt] Comparador: pelo valor (o método das fases só lê).
 pub(crate) unsafe extern "thiscall" fn compare_cup_check_complete(this: usize, stages: u32, x: u32) -> u8 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, u32) -> u8>(IDX_CUP_CHECK_COMPLETE)(this, stages, x);
     let n = cup_check_complete(this, stages, x);
@@ -560,12 +493,6 @@ pub(crate) unsafe extern "thiscall" fn compare_cup_check_complete(this: usize, s
 /// of the one on the round's date becomes 0xff; the other slots do not change.
 ///
 /// Without the cup in [0xadadfc] afterwards: nothing to check.
-///
-/// [pt] Comparador da 0x51ebe0: só a original (os jogos saem do calendário e voltam pela 0x5aa680, que aloca, e as notícias
-/// vão aos técnicos). O plano, feito antes: os jogos da copa na data e fatia (0x5abd90 numa lista provisória), na
-/// ordem da lista; cada um do tipo da liga ocupa a vaga seguinte (de 7 em 7 bytes, até 0x38 e até a primeira 0xff), e
-/// a vaga do que está na data da rodada fica 0xff; as outras vagas não mudam. Sem a copa em [0xadadfc] depois: nada a
-/// conferir.
 pub(crate) unsafe extern "thiscall" fn compare_move_round_fixtures_to_set_dates(this: usize, data: usize, round: u32) {
     let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32)>(IDX_MOVE_ROUND_FIXTURES_TO_SET_DATES);
@@ -613,11 +540,6 @@ pub(crate) unsafe extern "thiscall" fn compare_move_round_fixtures_to_set_dates(
 /// It checks what the original guarantees when it returns 1 with clubs: each tie of the mapped rounds points (`+6`
 /// slot, `+8` side, `+0x12` round one or two ahead) to a slot that points back to it (`+0xa`/`+0xe` home,
 /// `+0xc`/`+0x10` away).
-///
-/// [pt] O comparador da árvore dos confrontos: só a original (simplification: aloca os vetores dos confrontos e sorteia; não
-/// roda duas vezes). Confere o que ela garante quando devolve 1 com clubes: cada confronto das rodadas mapeadas aponta
-/// (+6 vaga, +8 lado, +0x12 rodada uma ou duas adiante) uma vaga que aponta de volta para ele (+0xa/+0xe mandante,
-/// +0xc/+0x10 visitante).
 pub(crate) unsafe extern "thiscall" fn compare_map_fixture_tree(this: usize) -> i32 {
     let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(IDX_MAP_FIXTURE_TREE);
@@ -652,10 +574,6 @@ pub(crate) unsafe extern "thiscall" fn compare_map_fixture_tree(this: usize) -> 
 /// It writes and may reallocate the stats (it does not run twice): before the original, the positions are planned on a
 /// sorted copy of the array (the keys in a Vec); afterwards, each planned club's record must have its last position at
 /// +0x72.
-///
-/// [pt] Comparador: grava e pode realocar a estatística (não roda duas vezes): antes da original, as posições são
-/// planejadas sobre uma cópia ordenada do vetor (as chaves num Vec); depois, o registro de cada clube planejado tem
-/// de ter em +0x72 a última posição dele.
 pub(crate) unsafe extern "thiscall" fn compare_cup_rank_teams(this: usize) {
     let this = Cup(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_CUP_RANK_TEAMS);
@@ -697,8 +615,6 @@ pub(crate) unsafe extern "C" fn compare_cup_set_round_match_day(rounds: usize, r
 }
 
 /// Comparer for `has_club`.
-///
-/// [pt] Comparador: pelo valor (só lê).
 pub(crate) unsafe extern "thiscall" fn compare_has_club(this: usize, club: u32) -> u32 {
     let r = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> u32>(IDX_HAS_CLUB)(this, club);
     let n = has_club(this, club);

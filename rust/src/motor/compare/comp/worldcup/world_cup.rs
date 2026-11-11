@@ -1,17 +1,12 @@
 use super::*;
 
 // The comparers of the routines in ../comp/worldcup/world_cup.rs.
-// [pt] Os comparadores das rotinas de ../comp/worldcup/world_cup.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `draw_groups` (comparison mode: see the header of motor.rs): side by side.
 ///
 /// The original routine and the copy (without counting the random draws) start from the same random-draw state, slots
 /// (`+0xee`, 0xa0 bytes), `+0x36`, [`0xb67a34`] and, in the 2002 World Cup, the nations table ([`+0x14`], 32 × 6); the
 /// two allocated lists must be equal byte by read_i8(the copy's is freed + (`0x9452ca`)).
-///
-/// [pt] Lado a lado: a original e a cópia (sem contar os sorteios) a partir do mesmo estado do sorteador, das vagas
-/// (+0xee, 0xa0 bytes), de +0x36, de [0xb67a34] e, na Copa de 2002, da tabela das nações ([+0x14], 32 × 6); as duas
-/// listas alocadas têm de ser iguais byte a read_i8(a da cópia é liberada + 0x9452ca).
 pub(crate) unsafe extern "thiscall" fn compare_draw_groups(this: usize) -> usize {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> usize>(IDX_DRAW_GROUPS);
@@ -34,9 +29,6 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_groups(this: usize) -> usize
 }
 
 /// Comparer for `run_group_draw`.
-///
-/// [pt] Só a original (o sorteio, os jogos, as notícias e as previsões não rodam duas vezes), conferindo o que ela garante:
-/// terminada (+0x45 = 1), as sete fases dos grupos 2..8 existem e a fase atual (+0x30) é a última delas (6).
 pub(crate) unsafe extern "thiscall" fn compare_run_group_draw(this: usize) {
     let this = League(this);
     original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_RUN_GROUP_DRAW)(this.addr());
@@ -48,9 +40,6 @@ pub(crate) unsafe extern "thiscall" fn compare_run_group_draw(this: usize) {
 }
 
 /// Comparer for `world_cup_update_for_date`.
-///
-/// [pt] Só a original (a semeadura, o sorteio e o dia da liga não rodam duas vezes), conferindo o que ela garante: no dia do
-/// sorteio (a condição da cópia), a Copa sai com a tabela do grupo 1 (+0xb1) e +0x45 = 1.
 pub(crate) unsafe extern "thiscall" fn compare_world_cup_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, u32) -> u32>(IDX_WORLD_CUP_UPDATE_FOR_DATE);
@@ -65,9 +54,6 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_update_for_date(this: u
 }
 
 /// Comparer for `world_cup_create_group_table`.
-///
-/// [pt] Só a original (aloca a tabela e manda a notícia dos grupos), conferindo o plano feito antes: devolve 1, +0x3e = 4 e
-/// as linhas da tabela (0x3b bytes, +0 o clube) com os clubes do grupo 1 da lista, na ordem.
 pub(crate) unsafe extern "thiscall" fn compare_world_cup_create_group_table(this: usize, list: usize) -> u32 {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize) -> u32>(IDX_WORLD_CUP_CREATE_GROUP_TABLE);
@@ -87,11 +73,6 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_create_group_table(this
 /// stage in [+0xc][g], +0x30 = g, the stage with the World Cup's team count (+0x3e) and year and, in the stage table
 /// (+0xb1, rows of 0x3b bytes), the clubs of group g+2 of the list (in any order: in the 02/11 comparison the stage
 /// rows did not come out in list order [inference: the stage sorts or draws its own table]).
-///
-/// [pt] Só a original (aloca a fase e manda a notícia), conferindo o plano: devolve 1 com a fase em [+0xc][g], +0x30 = g, a
-/// fase com os times (+0x3e) da Copa, o ano dela e, na tabela da fase (+0xb1, linhas de 0x3b bytes), os clubes do
-/// grupo g+2 da lista (em qualquer ordem: na comparação de 02/11 as linhas da fase não
-/// saíram na ordem da lista [inferência: a fase ordena ou sorteia a tabela dela]).
 pub(crate) unsafe extern "thiscall" fn compare_world_cup_create_group_stage(this: usize, g: i32, list: usize) -> u32 {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize) -> u32>(IDX_WORLD_CUP_CREATE_GROUP_STAGE);
@@ -121,10 +102,6 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_create_group_stage(this
 /// Only the original routine runs (it adds records to the stats and notifies the manager handler), checking the plan
 /// made beforehand: the vector sorted as it sorts (the same qsort, on a copy) and, afterwards, the predicted position
 /// (+0x72 of the record found by `exe::comp_stats_find_club_entry`) of each of the first 32.
-///
-/// [pt] Só a original (acrescenta registros à estatística e avisa o gerenciador dos técnicos), conferindo o plano feito
-/// antes: o vetor ordenado como ela ordena (a mesma qsort, numa cópia) e, depois, a posição prevista (+0x72 do registro
-/// achado por 0x4a4850) de cada um dos 32 primeiros.
 pub(crate) unsafe extern "thiscall" fn compare_world_cup_set_predicted_positions(this: usize) {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_WORLD_CUP_SET_PREDICTED_POSITIONS);
@@ -150,10 +127,6 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_set_predicted_positions
 /// freed).
 ///
 /// The knockout: only the original.
-///
-/// [pt] Lado a lado nas fases de grupos: a original com as saídas de quem chama e a cópia com saídas próprias, a partir do
-/// mesmo [0xb67a34]; as saídas e os bytes gravados das duas tabelas alocadas têm de ser iguais (a da cópia é liberada).
-/// O mata-mata: só a original.
 pub(crate) unsafe extern "thiscall" fn compare_world_cup_create_schedule(this: usize, stage: u32, rounds: *mut i16, id: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(IDX_WORLD_CUP_CREATE_SCHEDULE);
     if stage as u8 as i8 >= 7 {
@@ -176,8 +149,6 @@ pub(crate) unsafe extern "thiscall" fn compare_world_cup_create_schedule(this: u
 }
 
 /// Comparer for `add_qualified_team`.
-///
-/// [pt] Lado a lado (+0x36 e a vaga da tabela); lista cheia (a caixa): só a original.
 pub(crate) unsafe extern "thiscall" fn compare_add_qualified_team(this: usize, club: usize) {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize)>(IDX_ADD_QUALIFIED_TEAM);
@@ -191,9 +162,6 @@ pub(crate) unsafe extern "thiscall" fn compare_add_qualified_team(this: usize, c
 }
 
 /// Comparer for `seed_teams`.
-///
-/// [pt] Na Copa de 2002 (volta sem gravar nada) lado a lado em +0x4b; nas outras, só a original (caixas, e as saídas da
-/// 0x5fa730 que a original pode deixar sem gravar).
 pub(crate) unsafe extern "thiscall" fn compare_seed_teams(this: usize) {
     let this = League(this);
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_SEED_TEAMS);

@@ -1,8 +1,6 @@
 use super::*;
 
 /// Club in row i of the table (+0xb1, 0x3b-byte rows) of league or stage t.
-///
-/// [pt] O clube da linha `i` da tabela (+0xb1, linhas de 0x3b bytes) da liga ou fase `t`.
 pub(crate) unsafe fn aus_nsl_table_row_club(t: League, i: usize) -> usize {
     read_usize(t.table() + i * league_table_row::SIZE)
 }
@@ -11,11 +9,6 @@ pub(crate) unsafe fn aus_nsl_table_row_club(t: League, i: usize) -> usize {
 /// stage moves the current stage on and builds the finals series at the end of the regular season and the grand final
 /// at the end of the finals series; past the last stage it is an error (the box)
 /// Original: `AusNsl::advance_stage` (0x411f70, aus_nsl.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x411f70 } (thiscall, ret 0, aus_nsl.cpp): `AusNsl::advance_stage()`, a fase seguinte da NSL (a temporada regular,
-/// a fase −1; a série final dos seis primeiros, a fase 0; a grande final, a fase 1). Na última fase (+0x30 ≥ +0x2c − 1,
-/// com sinal): a caixa de erro da linha 0x2f0 e nada mais. Senão +0x30 sobe um; ao chegar a 0 monta a série final
-/// (0x412010) e a 1, a grande final (0x4121c0), as duas em call direto com o ecx da liga.
 pub(crate) unsafe extern "thiscall" fn aus_nsl_advance_stage(this: usize) {
     let this = League(this);
     let stage = this.current_stage() as i32;
@@ -50,19 +43,6 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_advance_stage(this: usize) {
 /// [inference] The finals series is a short league of the six; its top two go to the grand final. The real NSL used a
 /// double-chance knockout.
 /// Original: `AusNsl::create_finals_series_stage` (0x412010, aus_nsl.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x412010 } (thiscall, ret 0, aus_nsl.cpp; quadro SEH só para o new): `AusNsl::create_finals_series_stage()`, a
-/// série final da NSL, do fim da temporada regular.
-/// 1) Os seis primeiros da tabela da liga (as linhas 0 a 5, na ordem) num vetor local de 6.
-/// 2) A tabela das rodadas pela virtual +0x3c (create_round_table: thiscall(this, 0, &rodadas, &extra, 0), ret 0x10).
-/// 3) A fase: operator new 0x944cf1(0xee) e o construtor League_Stage 0x68b100 (thiscall, ret 0x58, 22 argumentos, na
-///    ordem da original: a liga, 6, o vetor, 1, +4, a tabela das rodadas, as rodadas (word), os pontos +0xc2 e +0xc3,
-///    a categoria +0xc4, &+0xc5, &{2,0,0,0} (duas vagas de cima: os dois que vão à grande final), o ano +0x40 (word),
-///    0, o extra (word), +0x51, 1, 0, +0xd9 (word), −1, 0, 2; a original empurra os words e bytes com lixo nos bytes
-///    altos, que o construtor não lê: a cópia passa os valores limpos). Sem memória: 0.
-/// 4) [+0xc][0] = a fase e a tabela das rodadas liberada (free 0x9452ca). Sem fase: a caixa da linha 0x328 e 0. Com
-///    ela: a notícia do sorteio (0x684230 na fase, thiscall, ret 0), +0x30 = 0 e 1.
-/// [inferência] A série final é uma liga curta dos seis; os dois primeiros dela vão à grande final.
 pub(crate) unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -> u32 {
     let this = League(this);
     #[allow(clippy::type_complexity)]
@@ -111,16 +91,6 @@ pub(crate) unsafe extern "thiscall" fn create_finals_series_stage(this: usize) -
 ///
 /// [inference] The grand final is a single game, with the finals series winner as the home side.
 /// Original: `AusNsl::create_grand_final_stage` (0x4121c0, aus_nsl.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x4121c0 } (thiscall, ret 0, aus_nsl.cpp; quadro SEH só para o new): `AusNsl::create_grand_final_stage()`, a grande
-/// final da NSL, do fim da série final: os dois primeiros da tabela da série final ([+0xc][0], linhas 0 e 1, nessa
-/// ordem) numa lista de 2 (malloc 0x944e46 de 8; sem memória: a caixa da linha 0x348 e volta); a tabela das rodadas
-/// pela virtual +0x3c (thiscall(this, 1, &rodadas, &extra, 0), ret 0x10); a fase (operator new 0x944cf1(0xb2) e o
-/// construtor Cup_Stage 0x522e00, thiscall, ret 0x3c: a liga, 2, a lista, as rodadas, +4, a tabela, o ano +0x40, 1, 1,
-/// o extra, 0x14, 0, 0, 0 e sementes nulas; a cópia passa as words limpas) em [+0xc][1] e a tabela liberada (free
-/// 0x9452ca). Sem fase: a caixa da linha 0x35c e volta (sem liberar a lista). Com ela: Cup::set_up_round (0x51c800,
-/// thiscall(fase, 0), ret 4) e a lista liberada. A fase atual (+0x30 = 1) já foi gravada pela fase seguinte.
-/// [inferência] A grande final é um jogo só, com o primeiro da série final como mandante.
 pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
     let this = League(this);
     #[allow(clippy::type_complexity)]
@@ -155,8 +125,6 @@ pub(crate) unsafe extern "thiscall" fn create_grand_final_stage(this: usize) {
 }
 
 /// Writes the NSL rule fields (3 rounds, points, tiebreaks, 6 finalists...) before the schedule.
-///
-/// [pt] As regras da NSL (o que a 0x411ce0 grava antes do calendário).
 pub(crate) unsafe fn set_nsl_rules(o: usize) {
     write_u16_at(o, 0xab, 0);
     write_u8_at(o, 0xc8, 0);
@@ -181,8 +149,6 @@ pub(crate) unsafe fn set_nsl_rules(o: usize) {
 }
 
 /// Writes the MLS rule fields (no schedule; 32 games, fixed round order...).
-///
-/// [pt] As regras da MLS (0x908660; sem calendário: os jogos da MLS são montados à mão pela 0x9086e0).
 pub(crate) unsafe fn set_mls_rules(o: usize) {
     write_u8_at(o, 0xc4, 2);
     write_u8_at(o, 0xc6, 2);
@@ -208,10 +174,6 @@ pub(crate) unsafe fn set_mls_rules(o: usize) {
 /// the finals series (rule word 0x28: 0x8 next stage, no champion band, and 0x20, clubs without a chance marked
 /// eliminated); nobody goes up or down; 4 bench substitutes and 3 substitutions; fixed squad numbers. Then the schedule
 /// Original: `AusNsl::set_up_rules` (0x411ce0, aus_nsl.cpp, thiscall).
-///
-/// [pt] { 0x411ce0 } (thiscall, aus_nsl.cpp): `AusNsl::set_up_rules` (slot 36), as regras da NSL e o calendário da fase
-/// principal pelo slot 16 (`create_schedule` 0x4111a0, thiscall, ret 0x10: estágio -1, as saídas +0xa9 e +0x3a, sem
-/// a marca; o ponteiro vai para +0xba); devolve 1.
 pub(crate) unsafe extern "thiscall" fn aus_nsl_set_up_rules(this: usize) -> u32 {
     let this = League(this);
     set_nsl_rules(this.addr());
@@ -224,9 +186,6 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_set_up_rules(this: usize) -> u32 
 }
 
 /// Calls record_season_honours (vtable +0x30) on the first stage [[this+0xc]].
-///
-/// [pt] O histórico do primeiro estágio: o slot 13 (+0x30, `record_season_honours`, thiscall sem argumentos) do estágio
-/// [[this+0xc]].
 pub(crate) unsafe fn record_first_stage_honours(this: League) -> u32 {
     let e = read_usize(this.stages());
     let vt = read_usize(e);
@@ -238,11 +197,6 @@ pub(crate) unsafe fn record_first_stage_honours(this: League) -> u32 {
 /// (stage 0x435, weight 0x28); in the finals, those who go through get the record (round 0x96) and those who fall the
 /// failed-to-qualify one; the champion (grand final) gets the champion record. No fate written to the table
 /// Original: `AusNsl::update_staff_records_for_status` (0x411980, aus_nsl.cpp, thiscall).
-///
-/// [pt] { 0x411980 } (thiscall, ret 0x18, aus_nsl.cpp): `AusNsl::update_staff_records_for_status`: na temporada regular, os
-/// seis classificados (6) ganham o registro de classificação para a fase final (fase 0x435); os de fora (-2) devolvem
-/// -1; na fase final (fase 0), quem avança (6) ganha o registro (rodada 0x96) e quem cai (-2) o de não classificado
-/// (fase 0x435) e -1; depois, o campeão (1) ganha o registro de campeão. Devolve 0 ou -1.
 pub(crate) unsafe extern "thiscall" fn aus_nsl_update_staff_records_for_status(this: usize, club: usize, status: u32, stage: u32, a4: u32, a5: u32, a6: u32) -> u32 {
     let _ = (a4, a5, a6);
     nsl_end_of_stage(this, club, status, stage, true).0
@@ -254,10 +208,6 @@ pub(crate) unsafe extern "thiscall" fn aus_nsl_update_staff_records_for_status(t
 /// Not full: the error box at line 0x252 and 0; full: 1, with no prize fund nor TV money. Source 0x987c20 (the
 /// out-of-memory box at line 0x241).
 /// Original: `AusNsl::create_table` (0x411b70, aus_nsl.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x411b70 } (thiscall, ret 0, aus_nsl.cpp): `AusNsl::create_table()`: a NSL tem 13 clubes (+0x57 = [0x9cf89c]), na
-/// ordem do banco, até encher (o contador num int, comparado no word); sem encher: a caixa da linha 0x252 e 0; cheia: 1,
-/// sem fundo de prêmios nem TV. Fonte 0x987c20 (a caixa de memória na linha 0x241).
 pub(crate) unsafe extern "thiscall" fn aus_nsl_create_table(this: usize) -> u32 {
     let this = League(this);
     if alloc_league_table(this, 0xd, 0x987c20, 0x241) == 0 {

@@ -2,9 +2,6 @@ use super::*;
 
 /// Common start of the Scottish/Irish/Spanish loan rules: None (allowed) without contract or contract club, else the
 /// owning club via a second contract lookup (0 if not found).
-///
-/// [pt] O começo comum das regras escocesa, irlandesa e espanhola: sem contrato do jogador (ou sem clube do contrato),
-/// `None` (pode); senão o clube dono pelo contrato consultado de novo (0 se a segunda consulta não achar).
 pub(crate) unsafe fn loan_owner_club(player: usize) -> Option<usize> {
     let c = game_get_contract_and_store(player);
     if c == 0 || england_rules_club_of_contract(Contract(c)) == 0 {
@@ -15,8 +12,6 @@ pub(crate) unsafe fn loan_owner_club(player: usize) -> Option<usize> {
 }
 
 /// Loan refusal "outside the window" (reason 9) with the rules nation's adjective (+0xa) in the message.
-///
-/// [pt] A recusa "fora da janela" (motivo 9), com o adjetivo da nação das regras (+0xa).
 pub(crate) unsafe fn refuse_outside_window(this: usize, msg: usize, reason: *mut u16) -> u32 {
     if msg != 0 {
         // 0x6181d0: push 2; push 100; push buffer; push nation; add esp, 0x10 -> cdecl
@@ -34,8 +29,6 @@ pub(crate) unsafe fn refuse_outside_window(this: usize, msg: usize, reason: *mut
 }
 
 /// Loan refusal with reason m and text formato built from the record's byte +0x37 and name at +4.
-///
-/// [pt] Uma recusa com o texto `formato` montado com o byte +0x37 (duas vezes) e o nome em +4 do registro `r`.
 pub(crate) unsafe fn refuse_loan(msg: usize, reason: *mut u16, formato: usize, r: usize, m: u16) -> u32 {
     if msg != 0 {
         let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
@@ -50,9 +43,6 @@ pub(crate) unsafe fn refuse_loan(msg: usize, reason: *mut u16, formato: usize, r
 
 /// refuses (0x1d) between two clubs of the same Scottish division
 /// Original: `SCOTLAND_RULES::can_loan_player` (0x7f6650, scotland_rules.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x7f6650 } (thiscall, ret 0x10, scotland_rules.cpp): `SCOTLAND_RULES::can_loan_player(clube, jogador, mensagem,
-/// motivo)`: com contrato, o clube que pede e o dono na mesma divisão escocesa ([0x9cf5dc]) não podem (0x1d).
 pub(crate) unsafe extern "thiscall" fn scotland_rules_can_loan_player(_this: usize, club: usize, player: usize, msg: usize, reason: *mut u16) -> u32 {
     let club = Club(club);
     let owner = Club(match loan_owner_club(player) {
@@ -75,11 +65,6 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_can_loan_player(_this: usi
 /// following month; the end is the season end month of nation a1 (`contract_manager_season_end_month`) for those under 22 (+0x18), this year if
 /// the start comes before it, otherwise the following year; for the others, three months after the start.
 /// Original: `SCOTLAND_RULES::get_loan_period` (0x7f6530, scotland_rules.cpp, thiscall, ret 0x1c).
-///
-/// [pt] { 0x7f6530 } (thiscall, ret 0x1c, scotland_rules.cpp): `SCOTLAND_RULES::get_loan_period(a1, a2, início_mês,
-/// início_ano, fim_mês, fim_ano, jogador)`: começa no mês seguinte; o fim é o mês do fim de temporada da nação a1
-/// (0x4d45f0) para quem tem menos de 22 anos (+0x18), neste ano se o começo vem antes dele, senão no ano seguinte;
-/// para os outros, três meses depois do começo.
 pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usize, a1: usize, _a2: u32, start_month: *mut i8, start_year: *mut i16, end_month: *mut i8, end_year: *mut i16, player: usize) {
     let player = Staff(player);
     // 0x54cfb0: mov ecx, 0xae2c90 -> thiscall, ret 0
@@ -116,9 +101,6 @@ pub(crate) unsafe extern "thiscall" fn scotland_rules_get_loan_period(_this: usi
 /// transfer rules (rule 21): the base (`exe::new_transfer_rules`), the vtable 0x96f838, 1 window from `SCOTLAND_TRANSFER_WINDOWS` and
 /// dword +0x15 = 1. Returns the object.
 /// Original: `SCOTLAND_RULES::SCOTLAND_RULES` (0x7f6390, scotland_rules.cpp, thiscall, ret 0x14).
-///
-/// [pt] { 0x7f6390 } (thiscall, ret 0x14, scotland_rules.cpp, `SCOTLAND_RULES::SCOTLAND_RULES`; quadro SEH só do `new`, sem destrutor no caminho normal): as regras de
-/// transferência da Escócia (regra 21): a base (0x8e84a0), a vtable 0x96f838, 1 janela(s) de `SCOTLAND_TRANSFER_WINDOWS` e o dword +0x15 = 1. Devolve o objeto.
 pub(crate) unsafe extern "thiscall" fn construct_scotland_rules(this: usize, a1: u32, a2: u32, a3: u32, a4: u32, a5: u32) -> usize {
     covered!("cqk_3 scotland");
     construct_nation_rules(this, [a1, a2, a3, a4, a5], 0x96f838, 1, &SCOTLAND_TRANSFER_WINDOWS, 0xa7b058, 0x50);

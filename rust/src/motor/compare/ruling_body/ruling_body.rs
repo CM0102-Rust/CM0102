@@ -1,11 +1,8 @@
 use super::*;
 
 // The comparers of the routines in ../ruling_body/ruling_body.rs.
-// [pt] Os comparadores das rotinas de ../ruling_body/ruling_body.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `make_points_ban`.
-///
-/// [pt] Comparador: lado a lado nos 0x70 bytes do registro (a rotina só grava nele).
 pub(crate) unsafe extern "thiscall" fn compare_make_points_ban(this: usize, r: usize, j: usize, by_games: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, u32) -> u32>(IDX_MAKE_POINTS_BAN);
     let regions = [(r, 0x70)];
@@ -20,9 +17,6 @@ pub(crate) unsafe extern "thiscall" fn compare_ruling_body_start_new_season(this
 }
 
 /// Comparer for `compact_entries`.
-///
-/// [pt] Comparador: a original realoca (não pode rodar duas vezes): as entradas ocupadas copiadas antes; roda só a
-/// original e confere a conta, a capacidade e as entradas na nova ordem.
 pub(crate) unsafe extern "thiscall" fn compare_compact_entries(this: usize) {
     let mut expected: Vec<u8> = Vec::new();
     let base = read_usize(this + ruling_body::ENTRIES);

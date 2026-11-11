@@ -1,7 +1,6 @@
 use super::*;
 
 // The comparers of the routines in ../match_official.rs.
-// [pt] Os comparadores das rotinas de ../match_official.rs (modo comparação: ver o cabeçalho do motor.rs).
 
 /// Comparer for `construct_referee`.
 pub(crate) unsafe extern "thiscall" fn compare_construct_referee(a: usize) -> usize {

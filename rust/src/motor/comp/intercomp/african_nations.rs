@@ -17,19 +17,6 @@ use super::*;
 ///
 /// Then the league day (`league_update_for_date`: push completo; push hoje; mov ecx, this -> thiscall, ret 8), whose return value it
 /// passes on.
-///
-/// [pt] { 0x4025a0 } (thiscall, ret 8, african_nations.cpp; a virtual +0x14; quadro SEH só das datas locais, sem destrutor):
-/// `hoje.update_for_date(completo)`, o dia da Copa Africana. Sem `completo`, só o dia de liga. Com ele:
-/// a data do sorteio é a de 0x549ef0(+0xb6, +0xb8 + +0x40) (lea ecx, local; push ano; push dia -> thiscall, ret 8,
-/// pura); antes dela (o ano de hoje menor, sem sinal; ou o mesmo ano e o dia de hoje menor, com sinal) a rotina volta 0
-/// sem o dia de liga. No dia do sorteio, fora do sorteio feito (+0x45 = 0): o sorteio dos 16 (0x4022c0: mov ecx ->
-/// thiscall, ret 0; a devolução não é lida), as posições previstas (a virtual +0x5c, thiscall, ret 0), a tabela do grupo
-/// A (0x4019c0, thiscall, ret 0; 0: a caixa da linha 0x3c2), os jogos (0x6835c0 League::create_fixtures, thiscall, ret
-/// 0; 0: a caixa da linha 0x3c8), a tabela ordenada (0x6827d0 push 0; mov ecx -> thiscall, ret 4; 0: a caixa da linha
-/// 0x3cf) (um erro volta 0 sem o dia de liga), as fases dos grupos B a D (0x401ea0: push g; mov ecx -> thiscall, ret
-/// 4, g = 0..2), a lista +0xee liberada (0x9452ca: push; add esp, 4 -> cdecl) e zerada, +0xf2 (palavra) = 0 e +0x45 =
-/// 1. Depois o dia de liga (0x6847c0: push completo; push hoje; mov ecx, this -> thiscall, ret 8), cuja devolução ela
-/// repassa.
 pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usize, today: usize, full: u32) -> u32 {
     let this = League(this);
     if full == 0 {
@@ -99,19 +86,6 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_for_date(this: usi
 /// the pot (zeroed).
 ///
 /// The list is freed (`exe::crt_free`) and +0xee = the groups. Returns 1.
-///
-/// [pt] { 0x4022c0 } (thiscall, ret 0, african_nations.cpp): `AfricanNations::draw_finalists()`: +0xf2 (palavra) = 16 e a
-/// lista +0xee de 50 (0x944e46(0xc8): push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x349 e devolve 0). Na
-/// frente as sedes da Copa Africana ([0x9cf7ac]) no ano +0x40 (0x5fa730 HostCountry::find_hosts em [0xb5e134]: push 1;
-/// push &segunda; push &primeira; push ano; push competição -> thiscall, ret 0x14; devolve quantas, byte com sinal; as
-/// saídas só são lidas até a conta), cada uma pela seleção (0x53b3d0 database_get_national_team: push nação; add esp ->
-/// cdecl; as nações em [0xae23a8], 0x122 bytes). Depois, pela ordem das nações ([0xae2350], i como palavra), as do
-/// continente africano ([0x9cfa08]; +0x71 da nação, o +0 dele) enquanto há menos de 50, menos as sedes (+0x53 da seleção).
-/// Menos de 16: devolve 0 (sem caixa; a lista fica em +0xee). As de depois das sedes ordenadas pela reputação (qsort
-/// 0x945333 com 0x4b07d0: 4 pushes; add esp -> cdecl). Os grupos (0x944e46(0x40); sem memória, a caixa da linha 0x380 e
-/// devolve 0): para cada grupo j (0..3) e pote p (0..3), um sorteado (0x90cfc0(4): push 4; add esp -> cdecl; o byte com
-/// sinal; de novo enquanto a vaga do pote já saiu) entre os 4 do pote (a lista nas vagas 4p a 4p + 3) vai para a vaga 4j
-/// + p dos grupos e sai do pote (zerado). A lista liberada (0x9452ca) e +0xee = os grupos. Devolve 1.
 pub(crate) unsafe fn draw_african_nations_finalists(this: League) -> u32 {
     write_u16(this.addr() + african_nations::DRAWN_CLUB_COUNT, 0x10);
     let list = exe::crt_malloc(0xc8);
@@ -196,17 +170,6 @@ pub(crate) unsafe extern "thiscall" fn draw_finalists(this: usize) -> u32 {
 ///
 /// Without the stage: the box of line `0x2f2` and 0. With it: `+0x30` = g, the group news (`0x684230` on the stage) and
 /// 1.
-///
-/// [pt] { 0x401ea0 } (thiscall, ret 4, african_nations.cpp, quadro SEH só para o new da fase: sem destrutor no caminho
-/// normal): `g.create_group_stage()`, a fase do grupo g + 1 (B a D, g = 0..2, do dia do sorteio). Os
-/// times num vetor de 4 ponteiros (0x944e46(0x10): push; add esp, 4 -> cdecl; sem memória, a caixa da linha 0x2dc e 0):
-/// os sorteados 4g + 4 a 4g + 7 (+0xee); a tabela das rodadas pela virtual +0x3c (push 0; push &id; push &rodadas; push
-/// g; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xee) push; add esp, 4 -> cdecl; o construtor League_Stage
-/// 0x68b100, thiscall, ret 0x58, 22 argumentos: a copa, 4, o vetor, 1, +4, a tabela das rodadas, as rodadas (word),
-/// +0xc2, +0xc3, +0xc4, &+0xc5, &+0xbe, o ano +0x40 (word), g, o id (word), +0x51, 4, 0, +0xd9 (word), −1, 0, 2; a
-/// original empurra os words e bytes com lixo nos bytes altos, que o construtor não lê: a cópia passa os valores limpos)
-/// em [+0xc][g]; o vetor e a tabela das rodadas liberados (0x9452ca). Sem fase: a caixa da linha 0x2f2 e 0. Com ela:
-/// +0x30 = g, a notícia do grupo (0x684230 na fase) e 1.
 pub(crate) unsafe extern "thiscall" fn african_nations_create_group_stage(this: usize, g: i32) -> u32 {
     let this = League(this);
     #[allow(clippy::type_complexity)]
@@ -274,10 +237,6 @@ pub(crate) unsafe extern "thiscall" fn african_nations_create_group_stage(this: 
 /// rule: the African Nations Cup has three group stages (stages 0 to 2, one per group round [inference]) and, at stage
 /// 3, the knockout; going past the last stage is an error (the box)
 /// Original: `AfricanNations::advance_stage` (0x401e10, african_nations.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x401e10 } (thiscall, ret 0, african_nations.cpp; a virtual +0x28): `AfricanNations::advance_stage()`: na última
-/// fase (+0x30 ≥ +0x2c − 1), a caixa da linha 0x2ba; senão +0x30 sobe e, chegando a 3 (depois dos grupos), o mata-mata
-/// (0x402090: mov ecx, this -> thiscall, ret 0).
 pub(crate) unsafe extern "thiscall" fn african_nations_advance_stage(this: usize) {
     let this = League(this);
     let f = this.current_stage() as i32;
@@ -304,12 +263,6 @@ pub(crate) unsafe extern "thiscall" fn african_nations_advance_stage(this: usize
 /// national side i of the draw list (+0xee) (`init_table_row`: push 0; push 0; push national side; push i; mov ecx, this ->
 /// thiscall, ret 0x10), the group draw news (`send_group_draw_news`: mov ecx, this -> thiscall, ret 0) and returns 1.
 /// Original: `AfricanNations::init_group_a_table` (0x4019c0, african_nations.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x4019c0 } (thiscall, ret 0, african_nations.cpp): `AfricanNations::init_group_a_table()`: o grupo A com 4 times
-/// (+0x3e), a tabela +0xb1 (0x944e46(0xec): push 0xec; add esp, 4 -> cdecl; 4 linhas de 0x3b bytes; sem memória, a caixa
-/// da linha 0x1f1 e devolve 0), cada linha i com a seleção i da lista dos sorteados (+0xee) (0x687430: push 0; push 0;
-/// push seleção; push i; mov ecx, this -> thiscall, ret 0x10), a notícia do sorteio do grupo (0x684230: mov ecx, this
-/// -> thiscall, ret 0) e devolve 1.
 pub(crate) unsafe extern "thiscall" fn init_group_a_table(this: usize) -> u32 {
     let this = League(this);
     let teams = 4i16; // cqk12: the four of group A
@@ -338,9 +291,6 @@ pub(crate) unsafe extern "thiscall" fn init_group_a_table(this: usize) -> u32 {
 
 /// rule: the season honours (winner, runner-up, third) are the knockout ones
 /// Original: `AfricanNations::record_season_honours` (0x401b90, african_nations.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x401b90 } (thiscall, ret 0, african_nations.cpp; a virtual +0x30): `AfricanNations::record_season_honours()`: o
-/// histórico vem do mata-mata: salta para a virtual +0x30 da fase 3 ([+0xc] + 0xc; jmp, sem quadro).
 pub(crate) unsafe extern "thiscall" fn african_nations_record_season_honours(this: usize) {
     let this = League(this);
     let stage = read_usize(this.stages() + 0xc);
@@ -352,9 +302,6 @@ pub(crate) unsafe extern "thiscall" fn african_nations_record_season_honours(thi
 // the routine writes nothing beyond the jump. Original only.
 
 /// Calls a staff-records final routine f (winner/runner-up/third) on the staff records with club, match and a6.
-///
-/// [pt] Os registros de final (0x86a800 campeão, 0x86b0b0 vice, 0x86b710 terceiro: push a6; push jogo; push clube; mov ecx,
-/// [0xdd7f00] -> thiscall, ret 0xc).
 pub(crate) unsafe fn african_nations_record_final_result(f: usize, club: usize, game: usize, a6: u32) {
     let g: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(f);
     g(eng_second_staff_records(), club, game, a6);
@@ -372,13 +319,6 @@ pub(crate) unsafe fn african_nations_record_final_result(f: usize, club: usize, 
 /// third-place records.
 ///
 /// Returns 0.
-///
-/// [pt] A virtual +0x44 de um torneio de seleções com grupos e mata-mata (a Copa Africana e a Copa América): `fase` (byte com
-/// sinal) abaixo de `grupos` é a fase de grupos: 6, a classificação (0x86bdd0: fase 0, rodada 0x78, peso 0x19); 0xfe,
-/// a não classificação (0x86c1d0: fase 0x41c, peso 0x19), que encerra as convocações. Na fase `grupos` (o mata-mata,
-/// a fase [+0xc][grupos]): 0, a classificação com a fase +0x32 do jogo, o +0x6f da rodada do jogo (+0x34) na tabela de
-/// rodadas da fase (+0xa3, 0x68 bytes) e o peso 0x4bf850(0x28, 0x64, rodada, 3); 0xff, a eliminação (0x86c000) com
-/// +0x32, +0x30 e o mesmo peso; 1, 2 e 3, os registros de campeão, vice e terceiro. Devolve 0.
 pub(crate) unsafe fn national_tournament_staff_records(name: u8, this: League, club: usize, outcome: u32, stage: u32, game: usize, a6: u32, groups: i8) -> u32 {
     let (d, f) = (outcome as u8, stage as u8 as i8);
     let comp = this.competition().addr();
@@ -427,10 +367,6 @@ pub(crate) unsafe fn national_tournament_staff_records(name: u8, this: League, c
 /// 3), a team going through gets the qualification by round (weight 40 to 100), one going out the knocked-out record
 /// (which also ends the call-ups), and the winner, runner-up and third place the final records
 /// Original: `AfricanNations::update_staff_records_for_status` (0x401ba0, african_nations.cpp, thiscall, ret 0x18).
-///
-/// [pt] { 0x401ba0 } (thiscall, ret 0x18, african_nations.cpp; a virtual +0x44): `AfricanNations::
-/// update_staff_records_for_status(seleção, desfecho, fase, _, jogo, a6)`: national_tournament_staff_records com 3 fases de grupos (o
-/// mata-mata na fase 3); o desfecho 4 não faz nada.
 pub(crate) unsafe extern "thiscall" fn african_nations_update_staff_records_for_status(this: usize, club: usize, outcome: u32, stage: u32, _a4: u32, game: usize, a6: u32) -> u32 {
     national_tournament_staff_records(0, League(this), club, outcome, stage, game, a6, 3)
 }
@@ -441,8 +377,6 @@ pub(crate) unsafe extern "thiscall" fn african_nations_update_staff_records_for_
 // simplification: like the African Cup one: original only, return value 0.
 
 /// Ends the national team's current competition (NationalTeams::clear_current_competition for the club's nation).
-///
-/// [pt] A competição atual da seleção acaba (0x775000 em [0xb74318]: push nação; mov ecx -> thiscall, ret 4).
 pub(crate) unsafe fn clear_national_team_competition(club: Club) {
     exe::nationalteams_clear_current_competition(read_usize(G_NATIONAL_TEAMS), club.nation().addr());
 }
@@ -455,9 +389,6 @@ pub(crate) unsafe fn clear_national_team_competition(club: Club) {
 /// fixed pairings, semi-final on 25/2, third place on 27/2 and final on 28/2 (venue 4); category 10; tie-break 0x303 up
 /// to the semi-final and 0x203 in the final; no prizes
 /// Original: `AfricanNations::create_schedule` (0x4012e0, african_nations.cpp, thiscall, ret 0x10).
-///
-/// [pt] { 0x4012e0 } (thiscall, ret 0x10, african_nations.cpp; a virtual +0x3c da Copa Africana): `AfricanNations::
-/// create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase de `african_nations_phase`.
 pub(crate) unsafe extern "thiscall" fn african_nations_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     build_phase_table(League(this), african_nations_phase(stage), rounds, extra, league, 0x9870f8)
 }
@@ -466,11 +397,6 @@ pub(crate) unsafe extern "thiscall" fn african_nations_create_schedule(this: usi
 /// category 10, 7 substitutes and 3 changes; the date of 5 of month 9 of the year before the tournament on weekday 5
 /// [inference: the draw in the previous year] and +0xb8 = −1
 /// Original: `AfricanNations::set_up_rules` (0x401ab0, african_nations.cpp, thiscall, ret 0).
-///
-/// [pt] { 0x401ab0 } (thiscall, ret 0, african_nations.cpp; a virtual +0x8c; quadro SEH só da data local):
-/// `AfricanNations::set_up_rules()`: os grupos da Copa Africana em turno único, 3/1 pontos, a categoria 0xa, os
-/// desempates (1, 2, 3), dois classificados por grupo, seleções, 7 no banco e 3 substituições, a data em 5 do mês 9 do
-/// ano anterior ao da competição num dia da semana 5 [inferência: o sorteio] e +0xb8 = −1.
 pub(crate) unsafe extern "thiscall" fn african_nations_set_up_rules(this: usize) -> u32 {
     covered!("cqk_10 african cup rules");
     let win = 3; // cqk10: the win in the African Cup groups
