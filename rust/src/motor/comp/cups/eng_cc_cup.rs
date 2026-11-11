@@ -48,20 +48,20 @@ pub(crate) unsafe fn eng_cc_cup_write_cup_round(t: usize, i: u32, r: &EngCcCupCu
     let d = |o: usize, v: u32| write_u32(e.addr() + o, v);
     w(7, r.code);
     w(9, i as u16);
-    w(0xb, r.bits.0);
-    w(0xd, r.bits.1);
-    w(0xf, r.bits.2);
+    w(cup_round::DRAW_RULES, r.bits.0);
+    w(cup_round::TIE_RULES, r.bits.1);
+    w(cup_round::TWO_LEG_TIE_RULES, r.bits.2);
     e.set_match_category(r.category);
-    w(0x18, r.teams.0);
-    w(0x1a, r.teams.1);
-    w(0x1c, r.teams.2);
-    w(0x1e, r.teams.3);
+    w(cup_round::TEAMS, r.teams.0);
+    w(cup_round::TIES, r.teams.1);
+    w(cup_round::NEW_TEAMS, r.teams.2);
+    w(cup_round::FIRST_NEW_TEAM, r.teams.3);
     e.set_single_leg_flag(r.tie.0);
     e.set_legs(r.tie.1);
     e.set_leg_gap_days(r.tie.2);
     d(0x5c, r.prizes.0);
-    d(0x60, r.prizes.1);
-    d(0x64, r.prizes.2);
+    d(cup_round::WINNER_PRIZE, r.prizes.1);
+    d(cup_round::LOSER_PRIZE, r.prizes.2);
 }
 
 /// Common body of virtual `+0x3c` (`create_round_table(fase, &rodadas, &extra, &saida)`, thiscall, ret 0x10) for

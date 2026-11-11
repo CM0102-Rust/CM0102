@@ -202,6 +202,8 @@ pub(crate) mod search_result_flags {
 pub(crate) mod shortlist_slot_flags {
     /// existing comment: bit 0 loan slot; loan slots end in loan_listed_value_end. Name: read.
     pub(crate) const LOAN_SLOT: u8 = 0x1;
+    /// with the bit the price is doubled; existing comment bit 5 bid marker. Name: inferred.
+    pub(crate) const BID_MARKER: u8 = 0x20;
 }
 
 /// Bits of `formation_fields::SLOT_CELLS`.

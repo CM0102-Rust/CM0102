@@ -973,18 +973,18 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
             let t = read_i8(nation + nation::ACTUAL_REGION) as i32;
             if (t - 4) as u32 <= 9 {
                 match t {
-                    6 | 8 => minus(0x5c, 10),
+                    6 | 8 => minus(staff::SPORTSMANSHIP, 10),
                     4 | 0xb | 0xc | 0xd => {
                         if t != 0xb && t != 0xd {
-                            minus(0x5c, 0xf);
-                            minus(0x5d, 0xf);
+                            minus(staff::SPORTSMANSHIP, 0xf);
+                            minus(staff::TEMPERAMENT, 0xf);
                         }
                         if t != 0xd {
-                            more(0x5c, 8);
-                            more(0x5d, 8);
+                            more(staff::SPORTSMANSHIP, 8);
+                            more(staff::TEMPERAMENT, 8);
                         }
-                        minus(0x5c, 5);
-                        minus(0x5d, 5);
+                        minus(staff::SPORTSMANSHIP, 5);
+                        minus(staff::TEMPERAMENT, 5);
                     }
                     _ => {}
                 }
@@ -1809,11 +1809,11 @@ pub(crate) unsafe extern "C" fn database_player_initialisation(data: usize) {
                 if nj.judging_potential() < 4 {
                     wb(nj.addr() + non_player::JUDGING_POTENTIAL, (exe::utils_random(5) as u8).wrapping_add(3));
                 }
-                ate(0x10, 8, 8, 1);
-                ate(0x11, 8, 8, 1);
-                ate(0x12, 5, 5, 1);
-                ate(0x13, 5, 5, 1);
-                ate(0x1a, 5, 5, 1);
+                ate(non_player::COACHING, 8, 8, 1);
+                ate(non_player::COACHING_GKS, 8, 8, 1);
+                ate(non_player::COACHING_TECHNIQUE, 5, 5, 1);
+                ate(non_player::DIRECTNESS, 5, 5, 1);
+                ate(non_player::MARKING, 5, 5, 1);
             } else if job == 8 && exe::utils_random(100) != 0 {
                 wb(nj.addr() + non_player::BUSINESS, 1);
                 wb(nj.addr() + non_player::PHYSIOTHERAPY, 1);
@@ -3011,27 +3011,27 @@ pub(crate) unsafe fn computed_player_attribute(person: Staff, attribute: u32) ->
 pub(crate) unsafe fn natural_position_bits(j: usize, bits: [u32; 7], sum: u32) -> u32 {
     let b = |k: usize| signed_byte_at(j, k);
     let mut f = 0;
-    if b(0xf) == 20 {
+    if b(player_sheet::GOALKEEPER) == 20 {
         f |= bits[0];
     }
-    if b(0x11) == 20 {
-        if b(0x19) == 20 {
+    if b(player_sheet::DEFENDER) == 20 {
+        if b(player_sheet::CENTRAL) == 20 {
             f += bits[1];
         }
-        if b(0x17) == 20 || b(0x18) == 20 {
+        if b(player_sheet::RIGHT_SIDE) == 20 || b(player_sheet::LEFT_SIDE) == 20 {
             f += bits[2];
         }
     }
-    if b(0x12) == 20 && b(0x18) < 15 && b(0x17) < 15 {
+    if b(player_sheet::DEFENSIVE_MIDFIELDER) == 20 && b(player_sheet::LEFT_SIDE) < 15 && b(player_sheet::RIGHT_SIDE) < 15 {
         f += bits[3];
     }
-    if b(0x13) == 20 && b(0x18) < 15 && b(0x17) < 15 {
+    if b(player_sheet::MIDFIELDER) == 20 && b(player_sheet::LEFT_SIDE) < 15 && b(player_sheet::RIGHT_SIDE) < 15 {
         f += bits[4];
     }
-    if b(0x14) == 20 {
+    if b(player_sheet::ATTACKING_MIDFIELDER) == 20 {
         f += bits[5];
     }
-    if b(0x15) == 20 {
+    if b(player_sheet::ATTACKER) == 20 {
         f += bits[6];
     }
     if (0x10..=0x19).map(b).sum::<i32>() > 110 {
@@ -3083,7 +3083,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, o
     if !j().is_null() && (0x10..=0x19).map(b).sum::<i32>() > 110 {
         f += 0x80;
     }
-    if b(0x3c) > random(3) + 15 {
+    if b(player_sheet::STAMINA) > random(3) + 15 {
         f += 0x100;
     }
     let mut adjust = 0i32;
@@ -3095,7 +3095,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, o
         let x = (m(2, 5) * read_f32(rdata::F32_50) as f64) as f32; // fstp dword;
         adjust = adjust.wrapping_add(ftol(x as f64 / m(2, 1)));
     }
-    if b(0x37).wrapping_add(adjust) > random(50) {
+    if b(player_sheet::PASSING).wrapping_add(adjust) > random(50) {
         f += 0x200;
     }
     let v14 = m(2, 0xe);
@@ -3103,7 +3103,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, o
     if v14 > read_f64(rdata::F64_8) {
         f += 0x800000;
     }
-    if b(0x39) > random(50) && b(0x3e) > random(50) {
+    if b(player_sheet::POSITIONING) > random(50) && b(player_sheet::TACKLING) > random(50) {
         let mut yes = false;
         if v14f as f64 > read_f64(rdata::F64_0) {
             let r = random(10) + 5;
@@ -3127,7 +3127,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_strength_flags(person: usize, o
             f += bit;
         }
     }
-    if b(0x21) > random(3) + 16 {
+    if b(player_sheet::CONSISTENCY) > random(3) + 16 {
         f += 0x8000;
     }
     if computed_player_attribute(person, 0xb) > random(4) + 14 {
@@ -3188,7 +3188,7 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
     let b = |k: usize| signed_byte_at(j().addr(), k);
     let m = |kind: u32, attribute: u32| player_stat_average(person, kind, attribute);
     let mut f = natural_position_bits(j().addr(), [0, 0x20, 0x10, 0x40, 0x80, 0x100, 0x200], 0x800000);
-    if (person.temperament() as i32) < random(4) + 5 && (b(0x1c) > 15 || b(0x25) < 6) {
+    if (person.temperament() as i32) < random(4) + 5 && (b(player_sheet::AGGRESSION) > 15 || b(player_sheet::DIRTINESS) < 6) {
         let a = (m(2, 0xb) * read_f32(rdata::F32_3) as f64) as f32; // fstp dword;
         let s = (m(2, 0xa) + a as f64) as f32; // fstp dword
         if !(m(2, 1) * read_f32(rdata::F32_0_5) as f64 >= s as f64) {
@@ -3200,10 +3200,10 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
     if w > random(1000) + 500 {
         n = 8;
     }
-    if b(0x34) < random(12) {
+    if b(player_sheet::NATURAL_FITNESS) < random(12) {
         n += 3;
     }
-    if b(0x3c) < random(n) + 8 && b(0xf) < 20 {
+    if b(player_sheet::STAMINA) < random(n) + 8 && b(player_sheet::GOALKEEPER) < 20 {
         f += 2;
     }
     let tactic = read_usize(G_TACTICS);
@@ -3225,10 +3225,10 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
         let x = (m(2, 5) * read_f32(rdata::F32_NEG_50) as f64) as f32; // fstp dword;
         adjust = adjust.wrapping_add(ftol(x as f64 / m(2, 1)));
     }
-    if b(0x37) < random(-50).wrapping_add(adjust) {
+    if b(player_sheet::PASSING) < random(-50).wrapping_add(adjust) {
         f += 0x400;
     }
-    if b(0x39) < random(-50) && b(0x3e) < random(-50) {
+    if b(player_sheet::POSITIONING) < random(-50) && b(player_sheet::TACKLING) < random(-50) {
         let v = m(2, 0xe);
         let vf = v as f32; // fst dword
         if v > read_f64(rdata::F64_0) {
@@ -3245,34 +3245,34 @@ pub(crate) unsafe extern "C" fn staff_get_player_weakness_flags(person: usize, c
             f += 8;
         }
     }
-    if b(0x2e) < random(15) {
+    if b(player_sheet::JUMPING) < random(15) {
         f += 0x1000;
     }
-    if b(0xf) < 20 { // the outfield players
-        if b(0x40) < random(10) {
+    if b(player_sheet::GOALKEEPER) < 20 { // the outfield players
+        if b(player_sheet::TECHNIQUE) < random(10) {
             f += 0x2000;
         }
-        if b(0x44) < random(12) {
+        if b(player_sheet::WORK_RATE) < random(12) {
             f += 0x4000;
         }
     }
-    if b(0x1e) < random(-50) {
+    if b(player_sheet::ANTICIPATION) < random(-50) {
         f += 0x8000;
     }
-    if b(0xf) < 20 && b(0x25) + b(0x1c) > random(20) + 25 {
+    if b(player_sheet::GOALKEEPER) < 20 && b(player_sheet::DIRTINESS) + b(player_sheet::AGGRESSION) > random(20) + 25 {
         f += 0x10000;
     }
-    if b(0x21) < 12 - random(10) {
+    if b(player_sheet::CONSISTENCY) < 12 - random(10) {
         f += 0x20000;
     }
-    if b(0x11) < 15 && computed_player_attribute(person, 0xb) > random(4) + 14 {
+    if b(player_sheet::DEFENDER) < 15 && computed_player_attribute(person, 0xb) > random(4) + 14 {
         let v = m(2, 0xf);
         let vf = v as f32; // fst dword
         if v > read_f64(rdata::F64_0) && computed_player_attribute(person, 0xb) as f64 * read_f64(rdata::F64_0_28) > vf as f64 {
             f += 0x40000;
         }
     }
-    if b(0x28) > random(5) + 13 {
+    if b(player_sheet::FLAIR) > random(5) + 13 {
         f += 0x80000;
     }
     if m(2, 0x16) > read_f32(rdata::F32_180) as f64 {
@@ -3678,13 +3678,13 @@ pub(crate) unsafe extern "C" fn staff_get_opinion_link_staff(person: usize, targ
     let reg = read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(staff_state::SIZE));
     let read = |d: usize| read_u32(reg + d);
     let persons = read_usize(G_STAFF_TABLE);
-    if read(0x27) == u32::MAX {
+    if read(staff_state::OPINION_LINK_STAFF_ID) == u32::MAX {
         return 0;
     }
-    let index = if read(0x37) == target {
-        read(0x27)
-    } else if read(0x4b) == target {
-        read(0x3b) // (dbt)
+    let index = if read(staff_state::OPINION_LINK_FLAG) == target {
+        read(staff_state::OPINION_LINK_STAFF_ID)
+    } else if read(staff_state::OPINION_LINK_FLAG + 0x14) == target {
+        read(staff_state::OPINION_LINK_STAFF_ID + 0x14) // (dbt)
     } else {
         return 0;
     };
@@ -3938,17 +3938,17 @@ pub(crate) unsafe extern "C" fn staff_get_natural_position_mask(person: usize) -
         return 0;
     }
     let b = |k: usize| read_i8(j.addr() + k);
-    if b(0xf) == 20 {
+    if b(player_sheet::GOALKEEPER) == 20 {
         return 1;
     }
     let mut m = 0u32;
-    if b(0x18) == 20 {
-        m = if b(0x19) > 10 { 0x180 } else { 0x80 };
+    if b(player_sheet::LEFT_SIDE) == 20 {
+        m = if b(player_sheet::CENTRAL) > 10 { 0x180 } else { 0x80 };
     }
-    if b(0x17) == 20 {
-        m |= if b(0x19) > 10 { 0xc00 } else { 0x800 };
+    if b(player_sheet::RIGHT_SIDE) == 20 {
+        m |= if b(player_sheet::CENTRAL) > 10 { 0xc00 } else { 0x800 };
     }
-    if b(0x19) == 20 {
+    if b(player_sheet::CENTRAL) == 20 {
         m |= 0x700;
     }
     for (k, bit) in [(0x10, 2), (0x11, 4), (0x12, 0x18), (0x13, 0x38), (0x14, 0x30)] {
@@ -3957,7 +3957,7 @@ pub(crate) unsafe extern "C" fn staff_get_natural_position_mask(person: usize) -
         }
     }
     let algum_20 = (0x10..=0x14).any(|k| b(k) == 20);
-    if b(0x15) == 20 {
+    if b(player_sheet::ATTACKER) == 20 {
         m |= 0x40;
         if !algum_20 {
             m |= 0x700;
@@ -3971,7 +3971,7 @@ pub(crate) unsafe extern "C" fn staff_get_natural_position_mask(person: usize) -
             return r;
         }
     }
-    if b(0x15) >= 15 {
+    if b(player_sheet::ATTACKER) >= 15 {
         return if algum_20 { 0x40 } else { 0x740 };
     }
     0x10
@@ -7693,17 +7693,17 @@ pub(crate) unsafe extern "C" fn database_add_staff_to_club(club: usize, person: 
     };
     let ok = match c as i8 {
         0 => true,
-        1 => unica(0xbf),
+        1 => unica(club::CHAIRMAN),
         2..=4 => ocupar(0xc3, 3),
-        5 => unica(0xcf),
-        6 | 7 => unica(0xd3),
+        5 => unica(club::MANAGER),
+        6 | 7 => unica(club::ASSISTANT_MANAGER),
         8 => ocupar(0x19f, 5),
         9 => ocupar(0x1b3, 7),
         10 => ocupar(0x1cf, 3),
         11 => ocupar(0xd7, 50),
-        12 => unica(0xcf) && ocupar(0xd7, 50),
+        12 => unica(club::MANAGER) && ocupar(0xd7, 50),
         13 => {
-            if !unica(0xd3) {
+            if !unica(club::ASSISTANT_MANAGER) {
                 return 0;
             }
             if !ocupar(0xd7, 50) {
@@ -8153,16 +8153,16 @@ pub(crate) unsafe extern "C" fn staff_compute_non_player_attribute(person: usize
     };
     match a {
         1 => person.adaptability() as u8 ,
-        2 => formula(0x11),
-        3 => formula(0x10),
+        2 => formula(non_player::COACHING_GKS),
+        3 => formula(non_player::COACHING),
         4 => person.determination() as u8 ,
-        5 => formula(0x17),
-        6 => formula(0x18),
+        5 => formula(non_player::JUDGEMENT),
+        6 => formula(non_player::JUDGING_POTENTIAL),
         7 => not_player.discipline(),
-        8 => formula(0x19),
-        9 => formula(0x1b),
-        10 => formula(0x1e),
-        11 => formula(0x21),
+        8 => formula(non_player::MAN_HANDLING),
+        9 => formula(non_player::MOTIVATING),
+        10 => formula(non_player::PHYSIOTHERAPY),
+        11 => formula(non_player::TACTICS),
         _ => not_player.youngsters() as u8 ,
     }
 }
@@ -9247,37 +9247,37 @@ pub(crate) unsafe extern "C" fn staff_compute_player_attribute(person: usize, pl
     let rating_h = |d: usize| attribute_rating(ability as f64 * read_f64(rdata::F64_0_1) + (2 * read_i8(player + d) as i32) as f64);
     let goalkeeper = read_i8(player + player_sheet::GOALKEEPER);
     match a {
-        1 => byte(0x1b),
-        2 => byte(0x1c),
-        3 => byte(0x1d),
-        4 => rating(0x1e),
-        5 => byte(0x1f),
-        6 => byte(0x20),
-        7 => if goalkeeper == 20 { rating_h(0x43) } else { rating(0x43) },
-        8 => if goalkeeper == 20 { rating_h(0x23) } else { rating(0x23) },
-        9 => rating(0x24),
+        1 => byte(player_sheet::ACCELERATION),
+        2 => byte(player_sheet::AGGRESSION),
+        3 => byte(player_sheet::AGILITY),
+        4 => rating(player_sheet::ANTICIPATION),
+        5 => byte(player_sheet::BALANCE),
+        6 => byte(player_sheet::BRAVERY),
+        7 => if goalkeeper == 20 { rating_h(player_sheet::VISION) } else { rating(player_sheet::VISION) },
+        8 => if goalkeeper == 20 { rating_h(player_sheet::CROSSING) } else { rating(player_sheet::CROSSING) },
+        9 => rating(player_sheet::DECISIONS),
         10 => person.determination() as u8 ,
-        11 => if goalkeeper == 20 { rating_h(0x26) } else { rating(0x26) },
-        12 => if goalkeeper == 20 { exe::player_attribute_rating_with_scaled_ability(player, byte(0x27) as u32) } else { exe::player_attribute_rating(player, byte(0x27) as u32) },
-        13 => byte(0x28),
-        14 => if goalkeeper < 15 { rating_h(0x2a) } else { rating(0x2a) },
-        15 => rating(0x2b),
-        16 => byte(0x2f),
-        17 => byte(0x2e),
-        18 => exe::player_attribute_rating(player, byte(0x31) as u32),
-        19 => if goalkeeper == 20 { rating_h(0x32) } else { rating(0x32) },
-        20 => if goalkeeper == 20 { rating_h(0x33) } else { rating(0x33) },
-        21 => byte(0x36),
-        22 => rating(0x37),
-        23 => rating(0x39),
-        24 => if goalkeeper < 15 { rating_h(0x3a) } else { exe::player_attribute_rating(player, byte(0x3a) as u32) },
-        25 => byte(0x29),
-        26 => byte(0x3c),
-        27 => byte(0x3d),
-        28 => exe::player_attribute_rating(player, byte(0x3e) as u32),
-        29 => byte(0x3f),
-        30 => byte(0x40),
-        _ => byte(0x44),
+        11 => if goalkeeper == 20 { rating_h(player_sheet::DRIBBLING) } else { rating(player_sheet::DRIBBLING) },
+        12 => if goalkeeper == 20 { exe::player_attribute_rating_with_scaled_ability(player, byte(player_sheet::FINISHING) as u32) } else { exe::player_attribute_rating(player, byte(player_sheet::FINISHING) as u32) },
+        13 => byte(player_sheet::FLAIR),
+        14 => if goalkeeper < 15 { rating_h(player_sheet::HANDLING) } else { rating(player_sheet::HANDLING) },
+        15 => rating(player_sheet::HEADING),
+        16 => byte(player_sheet::LEADERSHIP),
+        17 => byte(player_sheet::JUMPING),
+        18 => exe::player_attribute_rating(player, byte(player_sheet::LONG_SHOTS) as u32),
+        19 => if goalkeeper == 20 { rating_h(player_sheet::MARKING) } else { rating(player_sheet::MARKING) },
+        20 => if goalkeeper == 20 { rating_h(player_sheet::MOVEMENT) } else { rating(player_sheet::MOVEMENT) },
+        21 => byte(player_sheet::PLAYER_PACE),
+        22 => rating(player_sheet::PASSING),
+        23 => rating(player_sheet::POSITIONING),
+        24 => if goalkeeper < 15 { rating_h(player_sheet::REFLEXES) } else { exe::player_attribute_rating(player, byte(player_sheet::REFLEXES) as u32) },
+        25 => byte(player_sheet::FREE_KICKS),
+        26 => byte(player_sheet::STAMINA),
+        27 => byte(player_sheet::STRENGTH),
+        28 => exe::player_attribute_rating(player, byte(player_sheet::TACKLING) as u32),
+        29 => byte(player_sheet::TEAMWORK),
+        30 => byte(player_sheet::TECHNIQUE),
+        _ => byte(player_sheet::WORK_RATE),
     }
 }
 

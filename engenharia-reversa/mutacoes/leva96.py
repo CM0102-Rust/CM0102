@@ -7,7 +7,7 @@ MUTACOES = [
     ('m_71', "        *w(match_player::ACTION) = 0x71;", "        *w(match_player::ACTION) = 0x72;"),
     ('m_78', "            *w(match_player::ACTION) = 0x78;", "            *w(match_player::ACTION) = 0x79;"),
     ('m_2113', "if near_goal { event::LOOSE_BALL_IN_AREA } else { event::PICK_UP_FREE_BALL }", "if near_goal { 0x1f46 } else { 0x1f46 }"),
-    ('m_104', "        if other != 0 && my == 1 && b(0x10a) != 0 {", "        if other != 0 && my == 2 && b(0x10a) != 0 {"),
+    ('m_104', "        if other != 0 && my == 1 && b(match_player::MOMENT_POSITIONING) != 0 {", "        if other != 0 && my == 2 && b(match_player::MOMENT_POSITIONING) != 0 {"),
     ('m_76', "        *w(match_player::ACTION) = if pressiona { 0x100 } else { 0x76 };", "        *w(match_player::ACTION) = if pressiona { 0x100 } else { 0x77 };"),
     ('m_largar', "            if pm == -5 || (pm > -4 && pm < 0) {", "            if pm == -5 || (pm > -3 && pm < 0) {"),
     # sobreviventes da leva 95, refeitas com a foto de antes da chamada

@@ -2100,7 +2100,7 @@ pub(crate) unsafe fn leave_job_slot(person: Staff, c: Club, job: i8, field: usiz
     };
     match job {
         1 => zero_dword(c.addr() + club::CHAIRMAN),
-        2 => clear(0xc3, 3),
+        2 => clear(club::DIRECTORS, 3),
         5 | 12 => {
             if c.manager() != person {
                 return;
@@ -2120,17 +2120,17 @@ pub(crate) unsafe fn leave_job_slot(person: Staff, c: Club, job: i8, field: usiz
                 exe::training_manager_update_coach_assignments(read_usize(G_TRAINING_MANAGER), c, 0);
             }
             covered!("cpr_9 coach");
-            clear(0x19f, 5); // cpr9: the coach slots
+            clear(club::COACHES, 5); // cpr9: the coach slots
         }
         9 => {
-            clear(0x1b3, 7);
+            clear(club::SCOUTS, 7);
             if human() {
                 zero_dword(person.addr() + field);
                 let lists: unsafe extern "thiscall" fn(usize, usize) = core::mem::transmute(FN_SCOUT_MANAGER_SYNC_SCOUT_LISTS);
                 lists(read_usize(G_SCOUT_MANAGER), c.manager().addr());
             }
         }
-        10 => clear(0x1cf, 3),
+        10 => clear(club::PHYSIOS, 3),
         _ => {}
     }
 }

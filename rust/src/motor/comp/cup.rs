@@ -2540,15 +2540,15 @@ pub(crate) unsafe extern "thiscall" fn decide_fixture_winner(this: usize, game: 
 pub(crate) unsafe fn tie_winner_side(conf: usize, j: Fixture) -> Option<u32> {
     let t = |k: usize| read_i8(conf + k);
     let fl = (j.tie_rules() as i16) as u16;
-    if t(0x33) as u8 != 1 {
+    if t(cup_tie::NEXT_MATCH) as u8 != 1 {
         // first leg (or single match) of the tie: 3
         if fl & 0x10 != 0 {
-            let lado1 = if t(0x14) != t(0x15) {
-                t(0x14) > t(0x15)
-            } else if t(0x18) != t(0x19) {
-                t(0x18) > t(0x19)
+            let lado1 = if t(cup_tie::FIRST_MATCH_HOME_GOALS) != t(cup_tie::FIRST_MATCH_AWAY_GOALS) {
+                t(cup_tie::FIRST_MATCH_HOME_GOALS) > t(cup_tie::FIRST_MATCH_AWAY_GOALS)
+            } else if t(cup_tie::FIRST_MATCH_HOME_EXTRA_TIME_GOALS) != t(cup_tie::FIRST_MATCH_AWAY_EXTRA_TIME_GOALS) {
+                t(cup_tie::FIRST_MATCH_HOME_EXTRA_TIME_GOALS) > t(cup_tie::FIRST_MATCH_AWAY_EXTRA_TIME_GOALS)
             } else {
-                t(0x1a) > t(0x1b)
+                t(cup_tie::FIRST_MATCH_HOME_PENALTIES) > t(cup_tie::FIRST_MATCH_AWAY_PENALTIES)
             };
             write_i8(j.addr() + if lado1 { 0x3d } else { 0x3e }, 1);
         } else if fl & 0x2000 != 0 {
@@ -2567,24 +2567,24 @@ pub(crate) unsafe fn tie_winner_side(conf: usize, j: Fixture) -> Option<u32> {
         return Some(3);
     }
     // the second leg: the aggregate (goals +0x14 and +0x1f against +0x1e and +0x15, in 16 bits)
-    let tot1 = (t(0x14) as i16).wrapping_add(t(0x1f) as i16);
-    let tot2 = (t(0x1e) as i16).wrapping_add(t(0x15) as i16);
-    let volta2 = t(0x15) as i16;
+    let tot1 = (t(cup_tie::FIRST_MATCH_HOME_GOALS) as i16).wrapping_add(t(cup_tie::SECOND_MATCH_AWAY_GOALS) as i16);
+    let tot2 = (t(cup_tie::SECOND_MATCH_HOME_GOALS) as i16).wrapping_add(t(cup_tie::FIRST_MATCH_AWAY_GOALS) as i16);
+    let volta2 = t(cup_tie::FIRST_MATCH_AWAY_GOALS) as i16;
     if fl & 0x10 != 0 {
         // points: who won each match (score, extra time, penalties); one each: 4
-        let side_return = if t(0x14) != t(0x15) {
-            t(0x14) > t(0x15)
-        } else if t(0x18) != t(0x19) {
-            t(0x18) > t(0x19)
+        let side_return = if t(cup_tie::FIRST_MATCH_HOME_GOALS) != t(cup_tie::FIRST_MATCH_AWAY_GOALS) {
+            t(cup_tie::FIRST_MATCH_HOME_GOALS) > t(cup_tie::FIRST_MATCH_AWAY_GOALS)
+        } else if t(cup_tie::FIRST_MATCH_HOME_EXTRA_TIME_GOALS) != t(cup_tie::FIRST_MATCH_AWAY_EXTRA_TIME_GOALS) {
+            t(cup_tie::FIRST_MATCH_HOME_EXTRA_TIME_GOALS) > t(cup_tie::FIRST_MATCH_AWAY_EXTRA_TIME_GOALS)
         } else {
-            t(0x1a) > t(0x1b)
+            t(cup_tie::FIRST_MATCH_HOME_PENALTIES) > t(cup_tie::FIRST_MATCH_AWAY_PENALTIES)
         };
-        let side_first_leg = if t(0x1e) != t(0x1f) {
-            t(0x1e) > t(0x1f)
-        } else if t(0x22) != t(0x23) {
-            t(0x22) > t(0x23)
+        let side_first_leg = if t(cup_tie::SECOND_MATCH_HOME_GOALS) != t(cup_tie::SECOND_MATCH_AWAY_GOALS) {
+            t(cup_tie::SECOND_MATCH_HOME_GOALS) > t(cup_tie::SECOND_MATCH_AWAY_GOALS)
+        } else if t(cup_tie::SECOND_MATCH_HOME_EXTRA_TIME_GOALS) != t(cup_tie::SECOND_MATCH_AWAY_EXTRA_TIME_GOALS) {
+            t(cup_tie::SECOND_MATCH_HOME_EXTRA_TIME_GOALS) > t(cup_tie::SECOND_MATCH_AWAY_EXTRA_TIME_GOALS)
         } else {
-            t(0x24) > t(0x25)
+            t(cup_tie::SECOND_MATCH_HOME_PENALTIES) > t(cup_tie::SECOND_MATCH_AWAY_PENALTIES)
         };
         if side_return == side_first_leg {
             j.set_home_result_mark(result_mark::LEVEL);
@@ -2630,19 +2630,19 @@ pub(crate) unsafe fn tie_winner_side(conf: usize, j: Fixture) -> Option<u32> {
         j.set_away_result_mark(result_mark::WALKOVER);
         return Some(2);
     }
-    if fl & 2 != 0 && t(0x22) as u8 != 0xff {
-        if fl & 0x4000 != 0 && (t(0x22) as i32 + t(0x15) as i32) == (t(0x23) as i32 + t(0x14) as i32) {
-            if t(0x23) > t(0x15) {
+    if fl & 2 != 0 && t(cup_tie::SECOND_MATCH_HOME_EXTRA_TIME_GOALS) as u8 != 0xff {
+        if fl & 0x4000 != 0 && (t(cup_tie::SECOND_MATCH_HOME_EXTRA_TIME_GOALS) as i32 + t(cup_tie::FIRST_MATCH_AWAY_GOALS) as i32) == (t(cup_tie::SECOND_MATCH_AWAY_EXTRA_TIME_GOALS) as i32 + t(cup_tie::FIRST_MATCH_HOME_GOALS) as i32) {
+            if t(cup_tie::SECOND_MATCH_AWAY_EXTRA_TIME_GOALS) > t(cup_tie::FIRST_MATCH_AWAY_GOALS) {
                 j.set_away_result_mark(result_mark::WON_ON_AWAY_GOALS);
                 return Some(2);
             }
-            if t(0x23) < t(0x15) {
+            if t(cup_tie::SECOND_MATCH_AWAY_EXTRA_TIME_GOALS) < t(cup_tie::FIRST_MATCH_AWAY_GOALS) {
                 j.set_home_result_mark(result_mark::WON_ON_AWAY_GOALS);
                 return Some(1);
             }
         }
-        let x = t(0x23) as i32 - t(0x1f) as i32;
-        let y = t(0x22) as i32 - t(0x1e) as i32;
+        let x = t(cup_tie::SECOND_MATCH_AWAY_EXTRA_TIME_GOALS) as i32 - t(cup_tie::SECOND_MATCH_AWAY_GOALS) as i32;
+        let y = t(cup_tie::SECOND_MATCH_HOME_EXTRA_TIME_GOALS) as i32 - t(cup_tie::SECOND_MATCH_HOME_GOALS) as i32;
         if y > x {
             j.set_home_result_mark(result_mark::WON_EXTRA_TIME);
             return Some(1);
@@ -2654,7 +2654,7 @@ pub(crate) unsafe fn tie_winner_side(conf: usize, j: Fixture) -> Option<u32> {
     }
     if fl & 4 == 0 && fl & 0x4000 == 0 {
         // away goals (the second-leg away team, +0x15, against the first-leg one, +0x1f)
-        let away = t(0x1f) as i16;
+        let away = t(cup_tie::SECOND_MATCH_AWAY_GOALS) as i16;
         if volta2 < away {
             j.set_away_result_mark(result_mark::WON_ON_AWAY_GOALS);
             return Some(2);
@@ -2667,7 +2667,7 @@ pub(crate) unsafe fn tie_winner_side(conf: usize, j: Fixture) -> Option<u32> {
     if fl & 0x21 == 0 {
         return Some(4);
     }
-    let (p1, p2) = (t(0x24), t(0x25));
+    let (p1, p2) = (t(cup_tie::SECOND_MATCH_HOME_PENALTIES), t(cup_tie::SECOND_MATCH_AWAY_PENALTIES));
     let code = if fl & 1 != 0 { 4 } else { 5 };
     if p2 < p1 {
         j.set_home_result_mark(code);

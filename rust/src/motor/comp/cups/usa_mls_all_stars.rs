@@ -239,22 +239,22 @@ pub(crate) unsafe extern "thiscall" fn usa_mls_all_stars_create_round_table(this
     exe::cup_set_round_match_date(t.addr(), 0, 2, 7, 0, 6, 1, year, 0); // cqm12: the All-Star Game on 2 August
     let w = |o: usize, v: u16| write_u16(t.addr() + o, v);
     let d = |o: usize, v: u32| write_u32(t.addr() + o, v);
-    w(0x18, 2);
-    w(0x1c, 2);
+    w(cup_round::TEAMS, 2);
+    w(cup_round::NEW_TEAMS, 2);
     w(7, 0);
     w(9, 0);
-    w(0xb, 0);
-    w(0xd, 0x20);
+    w(cup_round::DRAW_RULES, 0);
+    w(cup_round::TIE_RULES, 0x20);
     t.set_match_category(match_category::CONTINENTAL_LATE_ROUND);
-    w(0x1a, 1);
-    w(0xf, 0);
-    w(0x1e, 0);
+    w(cup_round::TIES, 1);
+    w(cup_round::TWO_LEG_TIE_RULES, 0);
+    w(cup_round::FIRST_NEW_TEAM, 0);
     t.set_single_leg_flag(0);
     t.set_legs(1);
     t.set_leg_gap_days(0);
     d(0x5c, 0);
-    d(0x60, 0);
-    d(0x64, 0);
+    d(cup_round::WINNER_PRIZE, 0);
+    d(cup_round::LOSER_PRIZE, 0);
     t.addr()
 }
 

@@ -557,6 +557,7 @@ pub(crate) mod player_sheet {
     pub(crate) const AGGRESSION: usize = 0x1c; // 1 byte(s), sbyte
     pub(crate) const AGILITY: usize = 0x1d; // 1 byte(s), sbyte
     pub(crate) const ANTICIPATION: usize = 0x1e; // 1 byte(s), sbyte
+    pub(crate) const BALANCE: usize = 0x1f; // 1 byte(s): balance attribute (1..20) [verified: docs/FORMATOS.en.md player record (0x1f Balance, 0x28 Flair); copied to match_player BALANCE +0x81 by update_attributes]
     pub(crate) const BRAVERY: usize = 0x20; // 1 byte(s), sbyte
     pub(crate) const CONSISTENCY: usize = 0x21; // 1 byte(s), sbyte
     pub(crate) const CORNERS: usize = 0x22; // 1 byte(s), sbyte
@@ -565,6 +566,7 @@ pub(crate) mod player_sheet {
     pub(crate) const DIRTINESS: usize = 0x25; // 1 byte(s), sbyte
     pub(crate) const DRIBBLING: usize = 0x26; // 1 byte(s), sbyte
     pub(crate) const FINISHING: usize = 0x27; // 1 byte(s), sbyte
+    pub(crate) const FLAIR: usize = 0x28; // 1 byte(s): flair attribute (1..20) [verified: docs/FORMATOS.en.md player record (0x1f Balance, 0x28 Flair); copied to match_player FLAIR +0x9d by update_attributes]
     pub(crate) const FREE_KICKS: usize = 0x29; // 1 byte(s), sbyte
     pub(crate) const HANDLING: usize = 0x2a; // 1 byte(s), sbyte
     pub(crate) const HEADING: usize = 0x2b; // 1 byte(s), sbyte
@@ -670,6 +672,7 @@ pub(crate) mod engine {
     pub(crate) const LAST_SHOT_MINUTE: usize = 0x8d4c; // 2 byte(s): minute of the last shot (0xffff at start)
     pub(crate) const LAST_SHOT_SIDE: usize = 0x8d4e; // 1 byte(s): side that took the last shot
     pub(crate) const SIDE_KIT: usize = 0x8d4f; // 2 byte(s): kit (1..3) each side wears, chosen against the opponent's colours (home +0x8d4f, away +0x8d50)
+    pub(crate) const SIDE0_POSSESSION_WINDOW_HIGH: usize = 0x8d51; // 55 byte(s): ring of side 0 last 55 possession ticks with the ball in rows 8..11; first of six per-side rings up to POSSESSION_WINDOW_INDEX
     pub(crate) const POSSESSION_WINDOW_INDEX: usize = 0x8e9b; // 1 byte(s): current index (0..54) in the 55-tick possession rings
     pub(crate) const OWNS_COMMENTATOR: usize = 0x8e9d; // 1 byte(s): the commentator was created by the engine and must be freed with it
     pub(crate) const SHOOTOUT_KICKING_SIDE: usize = 0x8e9e; // 1 byte(s): side taking the next shootout kick
@@ -712,6 +715,7 @@ pub(crate) mod engine {
     pub(crate) const PASS_POWER: usize = 0x8ed6; // 2 byte(s): power of the pass/shot handed to the receiver
     pub(crate) const BALL_DIRECTION: usize = 0x8ed8; // 2 byte(s): direction of the loose ball in degrees
     pub(crate) const SHOOTOUT_TAKEN: usize = 0x8eda; // 40 byte(s): per-side marks of the shootout takers already chosen, 20 bytes per side
+    pub(crate) const SIDE0_POSSESSION_HIGH: usize = 0x8f02; // 20 byte(s): side 0 possession ticks with the ball in rows 8..11: three per-period i32, then the total and the 55-tick window total; first of six per-side tables up to COMMENTATOR
     pub(crate) const COMMENTATOR: usize = 0x8f7a; // 4 byte(s): pointer to the match commentator
     pub(crate) const ACTIVE_LIST: usize = 0x8f7e; // ? byte(s): list of active players in action order, count at +0x8eb8
     pub(crate) const MATCH_MANAGERS: usize = 0x9032; // 416 byte(s): the two sides' match manager objects, 0xd0 bytes each (+0x9032 + 0xd0 x side)
@@ -942,6 +946,7 @@ pub(crate) mod non_player {
     pub(crate) const BUSINESS: usize = 0xf; // 1 byte(s), sbyte
     pub(crate) const COACHING: usize = 0x10; // 1 byte(s), sbyte
     pub(crate) const COACHING_GKS: usize = 0x11; // 1 byte(s), sbyte
+    pub(crate) const COACHING_TECHNIQUE: usize = 0x12; // 1 byte(s): Coaching technique attribute (1..20) of the non-player sheet [verified: f = staff NON_PLAYER sheet; the closure used here is the local b at line 120 (read_i8(f + k)), not the one at 734; docs/FORMATOS TNonPlayer 0x12 CoachingTechniq]
     pub(crate) const DIRECTNESS: usize = 0x13; // 1 byte(s), sbyte
     pub(crate) const DISCIPLINE: usize = 0x14; // 1 byte(s), sbyte
     pub(crate) const FREE_ROLES: usize = 0x15; // 1 byte(s), sbyte
@@ -1157,6 +1162,7 @@ pub(crate) mod ban_record {
     pub(crate) const RULES: usize = 0xc; // 4 byte(s): The four rules (ruling body indexes, 0xff none) the ban applies under
     pub(crate) const NATION_RULE: usize = 0xf; // 1 byte(s): Fourth rule: when set, the person is also listed in the discipline nation index
     pub(crate) const REASON: usize = 0x10; // 1 byte(s): ban reason (0 points, 1 yellows, 2 red card(s), 3 misconduct, ...) [verified: docs/MAPA_DISCIPLINA BanRecord +0x10 reason, observed at 0x55d0a0; the node starts with a whole BanRecord]
+    pub(crate) const REASON_AMOUNT: usize = 0x11; // 2 byte(s): amount for the ban reason (points, cards) [verified: BanRecord::operator= copies the word +0x11; docs/MAPA_DISCIPLINA BanRecord +0x11 i16 amount for the reason, observed at 0x55d0a0]
     pub(crate) const FLAGS: usize = 0x13; // 1 byte(s): Flags: bit 0 extended (merged with an existing ban); bits 0..2 copied by operator=
 }
 
@@ -1228,6 +1234,8 @@ pub(crate) mod club_record {
     pub(crate) const SEASON_RATING_YEAR: usize = 0x20e; // 2 byte(s): SEASON_RATING + rating_record YEAR (0 in the season record) [inference]
     pub(crate) const LEAGUE_APPEARANCES: usize = 0x247; // 2 byte(s): Most league appearances for the club (-1 none); holder reference at +0x249
     pub(crate) const LEAGUE_GOALS: usize = 0x261; // 2 byte(s): Most league goals for the club (-1 none); holder reference at +0x263
+    pub(crate) const YOUNGEST_PLAYER_FIXTURE_ID: usize = 0x2a3; // 4 byte(s): fixture id of the match of the youngest-player record (club_match_record at +0x29b, its +8); -1 none
+    pub(crate) const OLDEST_PLAYER_FIXTURE_ID: usize = 0x2e2; // 4 byte(s): fixture id of the match of the oldest-player record (club_match_record at +0x2da, its +8); -1 none
     pub(crate) const INTERNATIONAL_CAPS: usize = 0x2f9; // 2 byte(s): most international caps held by a player while at the club (-1 none); holder reference at +0x2fb
     pub(crate) const FEE_PAID: usize = 0x313; // 41 byte(s): Highest transfer fee paid (transfer_fee_record layout; fee -1 none)
     pub(crate) const FEE_PAID_HOLDER: usize = 0x317; // 24 byte(s): FEE_PAID + transfer_fee_record HOLDER
@@ -1381,6 +1389,18 @@ pub(crate) mod cup_tie {
     pub(crate) const HOME_LINK_ROUND: usize = 0xe; // 2 byte(s): round of the tie linked to the home side (-1 none)
     pub(crate) const AWAY_LINK_ROUND: usize = 0x10; // 2 byte(s): round of the tie linked to the away side (-1 none)
     pub(crate) const FEEDER_ROUND: usize = 0x12; // 2 byte(s): round of FEEDER_TIE
+    pub(crate) const FIRST_MATCH_HOME_GOALS: usize = 0x14; // 1 byte(s): goals of side A (home) in the first match, normal time; 0xff not played [verified: MAPA_SAVE 6.1 (tie result blocks, checked on real ties of the save); decide_tie_winner compares the pair]
+    pub(crate) const FIRST_MATCH_AWAY_GOALS: usize = 0x15; // 1 byte(s): goals of side B (away) in the first match, normal time [verified: MAPA_SAVE 6.1 (tie result blocks, checked on real ties of the save); decide_tie_winner compares the pair]
+    pub(crate) const FIRST_MATCH_HOME_EXTRA_TIME_GOALS: usize = 0x18; // 1 byte(s): side A score after extra time in the first match (0xff none) [verified: MAPA_SAVE 6.1 (tie result blocks, checked on real ties of the save); decide_tie_winner compares the pair]
+    pub(crate) const FIRST_MATCH_AWAY_EXTRA_TIME_GOALS: usize = 0x19; // 1 byte(s): side B score after extra time in the first match [verified: MAPA_SAVE 6.1 (tie result blocks, checked on real ties of the save); decide_tie_winner compares the pair]
+    pub(crate) const FIRST_MATCH_HOME_PENALTIES: usize = 0x1a; // 1 byte(s): side A shoot-out goals in the first match [verified: MAPA_SAVE 6.1 (tie result blocks, checked on real ties of the save); decide_tie_winner compares the pair]
+    pub(crate) const FIRST_MATCH_AWAY_PENALTIES: usize = 0x1b; // 1 byte(s): side B shoot-out goals in the first match [verified: MAPA_SAVE 6.1 (tie result blocks, checked on real ties of the save); decide_tie_winner compares the pair]
+    pub(crate) const SECOND_MATCH_HOME_GOALS: usize = 0x1e; // 1 byte(s): goals of the second match's home side (B) in normal time [verified: MAPA_SAVE 6.1 (tie result blocks, checked on real ties of the save); decide_tie_winner compares the pair]
+    pub(crate) const SECOND_MATCH_AWAY_GOALS: usize = 0x1f; // 1 byte(s): goals of the second match's away side (A) in normal time [verified: MAPA_SAVE 6.1 (tie result blocks, checked on real ties of the save); decide_tie_winner compares the pair]
+    pub(crate) const SECOND_MATCH_HOME_EXTRA_TIME_GOALS: usize = 0x22; // 1 byte(s): second match home side (B) score after extra time; 0xff no extra time [verified: MAPA_SAVE 6.1 (tie result blocks, checked on real ties of the save); decide_tie_winner compares the pair]
+    pub(crate) const SECOND_MATCH_AWAY_EXTRA_TIME_GOALS: usize = 0x23; // 1 byte(s): second match away side (A) score after extra time [verified: MAPA_SAVE 6.1 (tie result blocks, checked on real ties of the save); decide_tie_winner compares the pair]
+    pub(crate) const SECOND_MATCH_HOME_PENALTIES: usize = 0x24; // 1 byte(s): second match home side (B) shoot-out goals [verified: MAPA_SAVE 6.1 (tie result blocks, checked on real ties of the save); decide_tie_winner compares the pair]
+    pub(crate) const SECOND_MATCH_AWAY_PENALTIES: usize = 0x25; // 1 byte(s): second match away side (A) shoot-out goals [verified: MAPA_SAVE 6.1 (tie result blocks, checked on real ties of the save); decide_tie_winner compares the pair]
     pub(crate) const REPLAYS_PLAYED: usize = 0x32; // 1 byte(s): replays already played; with NEXT_MATCH picks the result block [verified: cleared at the tie reset of map_fixture_tree; MAPA_SAVE 6.1: process_fixture adds +0x32 and +0x33 to pick the result block (0x51A3CE), +0x33 written at 0x51A57F]
     pub(crate) const NEXT_MATCH: usize = 0x33; // 1 byte(s): which match of the tie comes next (0 first, 1 second) [verified: cleared at the tie reset of map_fixture_tree; MAPA_SAVE 6.1: process_fixture adds +0x32 and +0x33 to pick the result block (0x51A3CE), +0x33 written at 0x51A57F]
     pub(crate) const FIXTURE_STATE: usize = 0x34; // 1 byte(s): fixture creation state: 0 none, 1 postponed, 2 to create, 3 created
@@ -1897,9 +1917,13 @@ pub(crate) mod match_record {
     pub(crate) const ROW_SECOND_NAME_ID: usize = 0x19c; // 4 byte(s): second name id of a player row (same base) [inference]
     pub(crate) const ROW_COMMON_NAME_ID: usize = 0x1a0; // 4 byte(s): common name id of a player row (same base) [inference]
     pub(crate) const ROW_DATE_OF_BIRTH: usize = 0x1a4; // 8 byte(s): date of birth of a player row (TCMDate; same base)
+    pub(crate) const ROW_SHIRT_NUMBER: usize = 0x1ac; // 1 byte(s): shirt number of a player row (0 = none: the list shows the row number) [verified: 0x1ac = 0x190 + match_record_row::SHIRT_NUMBER 0x1c (row base record + 0x625*side + 0x49*i), same scheme as ROW_MINUTE_ON]
     pub(crate) const ROW_POSITION: usize = 0x1ad; // 1 byte(s): position of a player row; 0xfb = empty row (same base)
+    pub(crate) const ROW_YELLOW_CARDS: usize = 0x1bc; // 1 byte(s): yellow cards of a player row (card colour of the cell) [verified: 0x1bc = 0x190 + match_record_row::YELLOW_CARDS 0x2c (row base record + 0x625*side + 0x49*i), same scheme as ROW_MINUTE_ON]
+    pub(crate) const ROW_RED_CARD: usize = 0x1bd; // 1 byte(s): red card of a player row (card colour of the cell) [verified: 0x1bd = 0x190 + match_record_row::RED_CARD 0x2d (row base record + 0x625*side + 0x49*i), same scheme as ROW_MINUTE_ON]
     pub(crate) const ROW_MINUTE_OFF: usize = 0x1c0; // 1 byte(s): minute substituted off of a player row (base record + 0x625 x side + 0x49 x idx)
     pub(crate) const ROW_MINUTE_ON: usize = 0x1c2; // 1 byte(s): minute player row k was brought on (0xff = not); substitutes (k >= 11) count only when they came on [verified: 0x1c2 = 0x190 + 0x32 = match_record_row::MINUTE_ON on the ROW_STAFF_ID base; same scheme as ROW_MINUTE_OFF 0x1c0 = 0x190 + 0x30]
+    pub(crate) const ROW_INJURY_MINUTE: usize = 0x1c3; // 1 byte(s): minute a player row was injured; negative = not [verified: 0x1c3 = 0x190 + match_record_row::INJURY_MINUTE 0x33 (row base record + 0x625*side + 0x49*i), same scheme as ROW_MINUTE_ON]
     pub(crate) const ROW_MINUTE_LEFT_PITCH: usize = 0x1c4; // 1 byte(s): minute a player row left the pitch (same base as ROW_MINUTE_OFF)
     pub(crate) const ROW_MATCH_GRADE: usize = 0x1c5; // 1 byte(s): match grade of a player row (base record + 0x625 x side + 0x49 x k; ROW_STAFF_ID + match_record_row::MATCH_GRADE)
     pub(crate) const SIDE_SIZE: usize = 0x625; // stride between the home and away team blocks of the match record (0x625 bytes; AWAY_TEAM = HOME_TEAM + SIDE_SIZE) [verified: AWAY_TEAM 0x744 - HOME_TEAM 0x11f = 0x625; same constant as match_stats_record::SIDE_SIZE; used as 0x625 * side]
@@ -2224,6 +2248,7 @@ pub(crate) mod person_transfer_record {
 /// Fields of the `physical_record` object, named from how the routines use them. [pt] Campos do objeto `physical_record`.
 #[allow(dead_code)]
 pub(crate) mod physical_record {
+    pub(crate) const FORM: usize = 0x8; // 2 byte(s): fitness form of the person (10000 = full); condition x form / 10000 is the playable fitness
     pub(crate) const CONDITION: usize = 0xa; // 2 byte(s): condition, 10000 = full
     pub(crate) const FATIGUE: usize = 0xc; // 2 byte(s): accumulated wear (0 none)
     pub(crate) const CURRENT_INJURY: usize = 0xe; // 4 byte(s): index of the current injury in INJURY_ENTRIES (-1 none)
@@ -2323,6 +2348,8 @@ pub(crate) mod rating_record {
 /// Fields of the `record_holder` object, named from how the routines use them. [pt] Campos do objeto `record_holder`.
 #[allow(dead_code)]
 pub(crate) mod record_holder {
+    pub(crate) const SECOND_NAME_ID: usize = 0x4; // 4 byte(s): second name id of the holder (staff +8) [verified: fill_staff_name_ref (0x7e4920) writes the three name ids at +0/+4/+8 from staff FIRST/SECOND/COMMON_NAME and the id at +0xc]
+    pub(crate) const COMMON_NAME_ID: usize = 0x8; // 4 byte(s): common name id of the holder (staff +0xc) [verified: fill_staff_name_ref (0x7e4920) writes the three name ids at +0/+4/+8 from staff FIRST/SECOND/COMMON_NAME and the id at +0xc]
     pub(crate) const STAFF_ID: usize = 0xc; // 4 byte(s): id of the person (staff index) in the name reference [verified: fill_staff_name_ref (0x7e4920) writes read_u32(person) at out+0xc; record_holder comment: +0..+0xc name ids and staff index; scout_report PLAYER_NAME_REF+0xc = ]
     pub(crate) const DATE: usize = 0x10; // 8 byte(s): Date of the record; +0..+0xc the holder's name ids and staff index
 }
@@ -2459,6 +2486,7 @@ pub(crate) mod shortlist_pair {
 pub(crate) mod shortlist_slot {
     pub(crate) const POSITION: usize = 0x1; // 2 byte(s): Position mask the slot is for (1 = goalkeeper)
     pub(crate) const VALUATION: usize = 0x3; // 4 byte(s): Club's valuation of the target, compared with PRICE in compensation deals [inference]
+    pub(crate) const MAX_PRICE: usize = 0x7; // 4 byte(s): price ceiling of the slot (at least 1)
     pub(crate) const PRICE: usize = 0xb; // 4 byte(s): Price or budget allotted to the slot (summed when allocating the transfer budget)
     pub(crate) const TARGET_STAFF_ID: usize = 0xf; // 4 byte(s): Id of the slot's target (-1 none)
     pub(crate) const REPLACEMENT_STAFF_ID: usize = 0x13; // 4 byte(s): Id of the person the slot would replace (-1 none)
@@ -2892,17 +2920,37 @@ pub(crate) mod fixed_fixture {
 /// Head-to-head entry of a league table row (league_table_row::H2H_ENTRIES, 14 bytes per opponent): +0 opponent club, then the totals of a table column block
 #[allow(dead_code)]
 pub(crate) mod h2h_entry {
+    pub(crate) const GOALS_FOR: usize = 0x8; // 2 byte(s): goals scored against that opponent
     pub(crate) const GOALS_AGAINST: usize = 0xa; // 2 byte(s): goals conceded against that opponent
 
+    pub(crate) const POINTS: usize = 0xc; // 2 byte(s): points won against that opponent
 }
 
 /// One watched match in a scouted player's 10-match history (0x29 bytes, at slot + 6 + k*0x29; the code's base l = slot + k*0x29 = entry - 6): +0 day, +2 year, +4 opponent club id (negated for a reserve competition), +8 goals for, +9 goals against, +0xa fixture MATCH_STATS_SLOT, +0xe venue side, +0xf minutes played, +0x10 goals, +0x11 assists, +0x12 goals conceded, +0x13 yellow cards, +0x14 red card, +0x15 match grade, +0x16..+0x1f the 10 row counters (PASS_TACKLE_COUNTS + BALLS_CONTESTED), +0x20 dribbles, +0x21 shots, +0x22 shots on target, +0x23 fouls, +0x24 fouls suffered, +0x25 offsides, +0x26 penalties taken, +0x27 penalties scored, +0x28 kind (1 starter, 2 substitute, 5/6 substituted off)
 #[allow(dead_code)]
 pub(crate) mod scouted_match_entry {
     pub(crate) const OPPONENT_CLUB_ID: usize = 0x4; // 4 byte(s): opponent club id; negated when the fixture is of the club reserve competition
+    pub(crate) const GOALS_FOR: usize = 0x8; // 1 byte(s): goals scored by the player's side in that match
+    pub(crate) const GOALS_AGAINST: usize = 0x9; // 1 byte(s): goals conceded by the player's side in that match
     pub(crate) const MATCH_STATS_SLOT: usize = 0xa; // 4 byte(s): the fixture's match statistics slot (to open the stored match) [verified: written from game.match_stats_slot() = fixture::MATCH_STATS_SLOT; l = entry - 6, so entry +0xa]
 
+    pub(crate) const VENUE_SIDE: usize = 0xe; // 1 byte(s): venue side of the scouting club in that fixture (comp_util_get_fixture_venue_side)
+    pub(crate) const MINUTES_PLAYED: usize = 0xf; // 1 byte(s): minutes the player was on the pitch in that match
     pub(crate) const GOALS: usize = 0x10; // 1 byte(s): goals scored by the player in that match
+    pub(crate) const ASSISTS: usize = 0x11; // 1 byte(s): assists of the player in that match
+    pub(crate) const GOALS_CONCEDED: usize = 0x12; // 1 byte(s): goals conceded (goalkeeper) in that match
+    pub(crate) const YELLOW_CARDS: usize = 0x13; // 1 byte(s): yellow cards of the player in that match
+    pub(crate) const RED_CARD: usize = 0x14; // 1 byte(s): red card of the player in that match
+    pub(crate) const MATCH_GRADE: usize = 0x15; // 1 byte(s): match grade (1..10) of the player in that match
+    pub(crate) const DRIBBLES: usize = 0x20; // 1 byte(s): dribbles in that match
+    pub(crate) const SHOTS: usize = 0x21; // 1 byte(s): shots in that match
+    pub(crate) const SHOTS_ON_TARGET: usize = 0x22; // 1 byte(s): shots on target in that match
+    pub(crate) const FOULS: usize = 0x23; // 1 byte(s): fouls committed in that match
+    pub(crate) const FOULS_SUFFERED: usize = 0x24; // 1 byte(s): fouls suffered in that match
+    pub(crate) const OFFSIDES: usize = 0x25; // 1 byte(s): offsides in that match
+    pub(crate) const PENALTIES_TAKEN: usize = 0x26; // 1 byte(s): penalties taken in that match
+    pub(crate) const PENALTIES_SCORED: usize = 0x27; // 1 byte(s): penalties scored in that match
+    pub(crate) const APPEARANCE_KIND: usize = 0x28; // 1 byte(s): how he took part: 1 starter, 2 substitute, 5/6 starter/substitute with MINUTE_OFF set (0 before)
 }
 
 /// Scouted player slot (0x1a2 bytes; 50 of them from +4 of the scouted club record at PLAYER_SEARCH+0x170): +0 staff id (-1 free), +4 u16 matches watched, +6 ring of 10 scouted_match_entry (0x29 bytes), +0x1a0 ring start, +0x1a1 ring count
@@ -3132,6 +3180,10 @@ pub(crate) mod event_variant {
 /// 14-byte commentary queue slot (commentary_queue::SLOTS): +0 event code (bit 0x8000 more parts), +2 variant index, +5.. players, +0xd current text part
 #[allow(dead_code)]
 pub(crate) mod commentary_slot {
+    pub(crate) const PLAYER_ROW: usize = 0x5; // 1 byte(s): row index of the event player in his side block (0xff none)
+    pub(crate) const PLAYER_SIDE: usize = 0x6; // 1 byte(s): side (0 home, 1 away) of the event player; picks the club and kit of the move
+    pub(crate) const OTHER_PLAYER_ROW: usize = 0x7; // 1 byte(s): row index of the second player of the event (0xff none)
+    pub(crate) const OTHER_PLAYER_SIDE: usize = 0x8; // 1 byte(s): side of the second player of the event
     pub(crate) const CURRENT_PART: usize = 0xd; // 1 byte(s): current part of the event text being shown (-1 none yet)
 
 }
@@ -3280,4 +3332,14 @@ pub(crate) mod wc_south_american_league_fields {
 pub(crate) mod wc_oceania_league_fields {
     pub(crate) const EXEMPT_COUNT: usize = 0xee; // 1 byte(s): number of Oceania nations exempt from qualifying (finals hosts and holder) [verified: o = comp object of the Oceania qualifying section; build_entrant_pool 0x91fa80 zeroes +0xee before leaving out hosts and holder; community map: load_extra_data ]
 
+}
+
+/// weather region of weather.cfg (0x6e bytes): +0 id, +4 name, four 0x13-byte periods from +0x1e
+#[allow(dead_code)]
+pub(crate) mod weather_region {
+    pub(crate) const PERIOD_START_DAY: usize = 0x1e; // 2 byte(s): start day of period 0 of the region (four 0x13-byte periods from +0x1e)
+    pub(crate) const WIND_THRESHOLDS: usize = 0x20; // 1 byte(s): the five wind thresholds (W) of period 0 (period p at + 0x13 x p)
+
+    pub(crate) const RAIN_THRESHOLDS: usize = 0x25; // 1 byte(s): the five rain thresholds (P) of period 0 (period p at + 0x13 x p)
+    pub(crate) const TEMPERATURE_THRESHOLDS: usize = 0x2a; // 1 byte(s): the seven temperature-band thresholds (H) of period 0 (period p at + 0x13 x p)
 }

@@ -291,7 +291,7 @@ pub(crate) unsafe extern "thiscall" fn get_match_weather(this: usize, s: *mut u8
         read_i16(G_CURRENT_DATE)
     };
     let limit = |o: usize| read_i16(reg + o);
-    let p: usize = if day < limit(0x1e) {
+    let p: usize = if day < limit(weather_region::PERIOD_START_DAY) {
         3
     } else if day < limit(0x31) {
         0

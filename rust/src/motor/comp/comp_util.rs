@@ -632,33 +632,33 @@ pub(crate) unsafe extern "C" fn comp_util_read_fixture_from_news_slots(news: usi
     let d = |o: usize, x: u32| write_u32(fixture + o, x);
     let w = |o: usize, x: u32| write_u16(fixture + o, x as u16);
     let b = |o: usize, x: u32| write_u8(fixture + o, x as u8);
-    d(0xc, read());
-    d(0x10, read());
-    b(0x3d, read());
-    b(0x3e, read());
+    d(fixture::HOME_CLUB_ID, read());
+    d(fixture::AWAY_CLUB_ID, read());
+    b(fixture::HOME_RESULT_MARK, read());
+    b(fixture::AWAY_RESULT_MARK, read());
     d(4, read());
     d(0, read());
-    b(0x42, read());
-    w(0x32, read());
-    w(0x30, read());
-    b(0x43, read());
-    b(0x44, read());
-    b(0x4b, read());
-    b(0x4c, read());
-    b(0x47, read());
-    b(0x48, read());
-    w(0x2a, read());
-    w(0x28, read());
+    b(fixture::STAGE_INDEX, read());
+    w(fixture::ROUND_PREFIX, read());
+    w(fixture::ROUND_NAME, read());
+    b(fixture::HOME_GOALS, read());
+    b(fixture::AWAY_GOALS, read());
+    b(fixture::HOME_AGGREGATE, read());
+    b(fixture::AWAY_AGGREGATE, read());
+    b(fixture::HOME_GOALS_EXTRA_TIME, read());
+    b(fixture::AWAY_GOALS_EXTRA_TIME, read());
+    w(fixture::DAY, read());
+    w(fixture::YEAR, read());
     d(8, read());
     *cursor = v;
     let pointer = |o: usize, table: usize, size: u32| {
         let i = read_u32(fixture + o);
         if i == 0xffff_ffff { 0 } else { read_u32(table).wrapping_add(i.wrapping_mul(size)) }
     };
-    d(0x1c, pointer(0xc, G_CLUB_TABLE, 0x245)); // home club
-    d(0x20, pointer(0x10, G_CLUB_TABLE, club::SIZE as u32));
-    d(0x18, pointer(4, G_STADIUM_TABLE, 0x4e));
-    d(0x14, pointer(0, G_CLUB_COMP_TABLE, 0x6b));
+    d(fixture::HOME_CLUB, pointer(fixture::HOME_CLUB_ID, G_CLUB_TABLE, 0x245)); // home club
+    d(fixture::AWAY_CLUB, pointer(fixture::AWAY_CLUB_ID, G_CLUB_TABLE, club::SIZE as u32));
+    d(fixture::STADIUM, pointer(4, G_STADIUM_TABLE, 0x4e));
+    d(fixture::COMPETITION, pointer(0, G_CLUB_COMP_TABLE, 0x6b));
 }
 
 /// Classifies the cup tie result for the club, from the final margin, the side and the reputation gap.
@@ -763,8 +763,8 @@ pub(crate) unsafe extern "C" fn comp_util_write_fixture_to_news_slots(game: usiz
     let b = |o: usize| read_i8(game + o) as i32 as u32;
     let s = |o: usize| read_i16(game + o) as i32 as u32;
     let values = [
-        read_u32(game + fixture::HOME_CLUB_ID), read_u32(game + fixture::AWAY_CLUB_ID), b(0x3d), b(0x3e), read_u32(game + 4), read_u32(game + 0), b(0x42), s(0x32), s(0x30),
-        b(0x43), b(0x44), b(0x4b), b(0x4c), b(0x47), b(0x48), (read_u16(game + fixture::DAY) as u32), (read_u16(game + fixture::YEAR) as u32), read_u32(game + 8),
+        read_u32(game + fixture::HOME_CLUB_ID), read_u32(game + fixture::AWAY_CLUB_ID), b(fixture::HOME_RESULT_MARK), b(fixture::AWAY_RESULT_MARK), read_u32(game + 4), read_u32(game + 0), b(fixture::STAGE_INDEX), s(fixture::ROUND_PREFIX), s(fixture::ROUND_NAME),
+        b(fixture::HOME_GOALS), b(fixture::AWAY_GOALS), b(fixture::HOME_AGGREGATE), b(fixture::AWAY_AGGREGATE), b(fixture::HOME_GOALS_EXTRA_TIME), b(fixture::AWAY_GOALS_EXTRA_TIME), (read_u16(game + fixture::DAY) as u32), (read_u16(game + fixture::YEAR) as u32), read_u32(game + 8),
     ];
     let mut k = *cursor;
     let mut r = 0;

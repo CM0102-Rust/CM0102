@@ -87,7 +87,7 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
     // columns: +0x1c start and +0x10c end, by weights +0xbad
     let weights = |desl: usize, n: usize| (0..n).map(|k| *((area + desl + k) as *const u8) as i32).fold(0i32, |a, b| a.wrapping_add(b));
     let n = *((area + area_fields::COLUMN_COUNT) as *const u8) as i32 - 1;
-    let sum = weights(0xbad, (n + 1) as usize);
+    let sum = weights(area_fields::COLUMN_WEIGHTS, (n + 1) as usize);
     let mut accumulated = 0i32;
     let mut c = 0i32;
     while c <= n {
@@ -109,7 +109,7 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
     }
     // rows: +0x94 start and +0x184 end, by weights +0xbcb
     let n = *((area + area_fields::ROW_COUNT) as *const u8) as i32 - 1;
-    let sum = weights(0xbcb, (n + 1) as usize);
+    let sum = weights(area_fields::ROW_WEIGHTS, (n + 1) as usize);
     let mut accumulated = 0i32;
     let mut l = 0i32;
     while l <= n {

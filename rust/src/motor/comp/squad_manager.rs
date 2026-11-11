@@ -224,22 +224,22 @@ pub(crate) unsafe fn is_contracted_staff(p: usize) -> bool {
 /// lista de 4 bytes sem valor na pilha, ver `compare_allocate_squad_number`).
 pub(crate) unsafe fn preferred_squad_numbers(f: usize) -> Option<[u8; 5]> {
     let b = |o: usize| read_i8(f + o) >= 15;
-    if b(0xf) {
+    if b(player_sheet::GOALKEEPER) {
         return Some([0, 0xff, 0xff, 0xff, 0xff]);
     }
-    if b(0x11) || b(0x10) {
-        if b(0x17) {
+    if b(player_sheet::DEFENDER) || b(player_sheet::SWEEPER) {
+        if b(player_sheet::RIGHT_SIDE) {
             return Some([1, 0xff, 0xff, 0xff, 0xff]);
         }
-        if b(0x18) {
+        if b(player_sheet::LEFT_SIDE) {
             return Some([2, 0xff, 0xff, 0xff, 0xff]);
         }
         return Some([3, 4, 5, 0xff, 0xff]);
     }
-    if b(0x13) || b(0x12) || b(0x14) {
+    if b(player_sheet::MIDFIELDER) || b(player_sheet::DEFENSIVE_MIDFIELDER) || b(player_sheet::ATTACKING_MIDFIELDER) {
         return Some([5, 6, 7, 0xff, 0xff]);
     }
-    if b(0x15) {
+    if b(player_sheet::ATTACKER) {
         return Some([7, 8, 9, 10, 0xff]);
     }
     None

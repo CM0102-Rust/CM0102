@@ -223,7 +223,7 @@ pub(crate) unsafe extern "thiscall" fn start_next_match(day: usize) -> u32 {
                 if engine != 0 {
                     let r = exe::match_day_can_quick_simulate(p + day_match::FIXTURE_COPY);
                     exe::cm3_match_engine_init_match(engine, p + day_match::FIXTURE_COPY, r, 0, 0);
-                    por(0x2f, k);
+                    por(match_day_fields::CURRENT_MATCH, k);
                     covered!("day match started");
                     return 1;
                 }
@@ -232,13 +232,13 @@ pub(crate) unsafe extern "thiscall" fn start_next_match(day: usize) -> u32 {
             k += 1;
         }
         if read_i8(day + match_day_fields::PASS) != 1 {
-            por(0x2f, -2);
+            por(match_day_fields::CURRENT_MATCH, -2);
             covered!("day no more matches");
             return 0;
         }
         write_u8(day + match_day_fields::PASS, 2);
         covered!("day second leg");
-        por(0x2f, -1);
+        por(match_day_fields::CURRENT_MATCH, -1);
     }
 }
 

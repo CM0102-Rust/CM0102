@@ -45,22 +45,22 @@ pub(crate) unsafe fn fra_super_write_cup_round(t: usize, i: u32, r: &FraSuperCup
     let e = t + i as usize * 0x68;
     let w = |o: usize, v: u16| write_u16(e + o, v);
     let d = |o: usize, v: u32| write_u32(e + o, v);
-    w(7, r.code);
-    w(9, i as u16);
-    w(0xb, r.bits.0);
-    w(0xd, r.bits.1);
-    w(0xf, r.bits.2);
+    w(cup_round::ROUND_CODE, r.code);
+    w(cup_round::ROUND_NUMBER, i as u16);
+    w(cup_round::DRAW_RULES, r.bits.0);
+    w(cup_round::TIE_RULES, r.bits.1);
+    w(cup_round::TWO_LEG_TIE_RULES, r.bits.2);
     write_u8(e + 0x17, r.category);
-    w(0x18, r.teams.0);
-    w(0x1a, r.teams.1);
-    w(0x1c, r.teams.2);
-    w(0x1e, r.teams.3);
+    w(cup_round::TEAMS, r.teams.0);
+    w(cup_round::TIES, r.teams.1);
+    w(cup_round::NEW_TEAMS, r.teams.2);
+    w(cup_round::FIRST_NEW_TEAM, r.teams.3);
     write_u8(e + 0x20, r.tie.0);
     write_u8(e + 0x21, r.tie.1);
     write_u8(e + 0x22, r.tie.2);
     d(0x5c, r.prizes.0);
-    d(0x60, r.prizes.1);
-    d(0x64, r.prizes.2);
+    d(cup_round::WINNER_PRIZE, r.prizes.1);
+    d(cup_round::LOSER_PRIZE, r.prizes.2);
 }
 
 /// Shared body of virtual +0x3c (`create_round_table(fase, &rodadas, &extra, &saida)`, thiscall, ret 0x10) for

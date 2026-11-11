@@ -999,8 +999,8 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
         }
         // avanco pelas pontas
         if read_u32(t() + formation_fields::FORMATION_MASK) & 0x1c00000 == 0 {
-            let lat = |band: u16, ref_: usize| tb() & band != 0 && fb(0x14) as i32 >= fb(ref_) as i32 - 1 && fb(0x19) == 20;
-            if tb() & 0x10 != 0 && tb() & 0x200 != 0 && fb(0x14) as i32 > fb(0x13) as i32 - 1 && fb(0x19) == 20 && f38 * 16.0 < a(7) as f64 {
+            let lat = |band: u16, ref_: usize| tb() & band != 0 && fb(player_sheet::ATTACKING_MIDFIELDER) as i32 >= fb(ref_) as i32 - 1 && fb(player_sheet::CENTRAL) == 20;
+            if tb() & 0x10 != 0 && tb() & 0x200 != 0 && fb(player_sheet::ATTACKING_MIDFIELDER) as i32 > fb(player_sheet::MIDFIELDER) as i32 - 1 && fb(player_sheet::CENTRAL) == 20 && f38 * 16.0 < a(7) as f64 {
                 exe::formation_set_slot_position(t(), pos_j, 0x220, 0);
                 exe::formation_set_slot_position(t(), read_i8(j + match_player::POSITION) as u8 as u32, 0x220, 1);
             } else if tb() & 0x10 != 0 && (exe::match_player_get_secondary_position(j) as u8) & 0x20 == 0 && lat(0x100, 0x13) && f38 * 16.0 < a(7) as f64 {
@@ -1021,17 +1021,17 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
         let fl = |v: f32| read_f32(j + match_player::STAMINA) as f64 > v as f64;
         if (tb() & 2 != 0 || tb() & 0x20 != 0 || tb() & 0x40 != 0)
             && fl(8250.0)
-            && fb(0x3c) > 12
+            && fb(player_sheet::STAMINA) > 12
             && f38 * 17.0 < a(7) as f64
-            && fb(0x1a) > 15
-            && f38 * 40.0 < (a(0x14) + (tc(0x15) as i32 - 10) * 3) as f64
+            && fb(player_sheet::FREE_ROLE) > 15
+            && f38 * 40.0 < (a(0x14) + (tc(non_player::FREE_ROLES) as i32 - 10) * 3) as f64
         {
             exe::formation_set_player_instruction(t(), pos_j as i8, 0x200000);
-            if (read_f32(j + match_player::STAMINA) as f64) < 8500.0 || fb(0x3c) < 18 || fb(0x44) > 16 {
+            if (read_f32(j + match_player::STAMINA) as f64) < 8500.0 || fb(player_sheet::STAMINA) < 18 || fb(player_sheet::WORK_RATE) > 16 {
                 exe::formation_set_player_instruction(t(), read_i8(j + match_player::POSITION), 0x4000);
             }
         } else {
-            let b = a(0x14) + a(0xd) + a(7) + (tc(0x15) as i32 + fb(0x1a) as i32 - 20) * 3;
+            let b = a(0x14) + a(0xd) + a(7) + (tc(non_player::FREE_ROLES) as i32 + fb(player_sheet::FREE_ROLE) as i32 - 20) * 3;
             if f38 * 40.0 > b as f64 {
                 exe::formation_set_player_instruction(t(), pos_j as i8, 0x100000);
             }
@@ -1065,7 +1065,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
                         && a(0x1c) > 12
                         && a(0x11) > 10
                         && a(0x1f) > 10
-                        && fb(0x12) == 20
+                        && fb(player_sheet::DEFENSIVE_MIDFIELDER) == 20
                         && tb() & 0x10 != 0
                         && (tb() & 0x200 != 0 || tb() & 0x100 != 0 || tb() & 0x400 != 0)
                         && exe::staff_get_non_player_attribute(u(c.addr(), match_manager::MANAGER), 0xb) as i32 > (resto5() as i8).wrapping_add(10) as i32
@@ -1108,7 +1108,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
                             r3 = (m3 as f64 / m1 as f64) as f32;
                         }
                         if st0 > 0.35 || r3 as f64 > 0.4 {
-                            if (tbo() & 0x20 != 0 || (exe::match_player_get_secondary_position(o) as u8) & 0x20 != 0) && (fb(0x12) == 20 || fb(0x13) == 20) && a(0x1a) > 14 {
+                            if (tbo() & 0x20 != 0 || (exe::match_player_get_secondary_position(o) as u8) & 0x20 != 0) && (fb(player_sheet::DEFENSIVE_MIDFIELDER) == 20 || fb(player_sheet::MIDFIELDER) == 20) && a(0x1a) > 14 {
                                 exe::formation_set_slot_position(t(), read_i8(j + match_player::POSITION) as u8 as u32, 0x208, 1);
                             }
                             exe::formation_set_marking_target(blk(), (read_i8(j + match_player::POSITION) as u8 as u32) as u32 as i8, (u(o, match_player::STAFF)) as usize as *const u32);
@@ -1127,35 +1127,35 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
         // long shots
         if (tb() & 8 != 0 || tb() & 0x10 != 0 || tb() & 0x20 != 0) && tb() & 0x80 == 0 && tb() & 0x800 == 0 {
             let a2 = a(2);
-            if (tc(0x1f) as i32 / 5) as f64 + q > a2 as f64 {
+            if (tc(non_player::PRESSING) as i32 / 5) as f64 + q > a2 as f64 {
                 let a3 = a(0x1f);
                 let pj = read_i8(j + match_player::POSITION) as u8 as u32;
-                if (tc(0x1f) as i32 / 5) as f64 + f38 * 5.0 > a3 as f64 {
+                if (tc(non_player::PRESSING) as i32 / 5) as f64 + f38 * 5.0 > a3 as f64 {
                     let v = if exe::formation_get_player_instructions(t(), pj as i8) & 0x200 != 0 && *((t() + formation_fields::FLAGS) as *const u8) & 0x20 != 0 { 0x400 } else { 0x1000 };
                     exe::formation_set_player_instruction(t(), pj as i8, v as u64);
                     exe::formation_set_player_instruction(t(), read_i8(j + match_player::POSITION), 0x8000);
                 } else {
                     let a3 = a(0x1f);
-                    if (tc(0x1f) as i32 / 5) as f64 + q > a3 as f64 {
+                    if (tc(non_player::PRESSING) as i32 / 5) as f64 + q > a3 as f64 {
                         let v = if exe::formation_get_player_instructions(t(), pj as i8) & 0x200 != 0 && *((t() + formation_fields::FLAGS) as *const u8) & 0x20 != 0 { 0x400 } else { 0x1000 };
                         exe::formation_set_player_instruction(t(), read_i8(j + match_player::POSITION), v as u64);
                     }
                 }
             }
         }
-        if read_i8(j + match_player::YELLOW_CARDS) != 0 && a(2) > tc(0x1f) as i32 / 4 + 8 {
+        if read_i8(j + match_player::YELLOW_CARDS) != 0 && a(2) > tc(non_player::PRESSING) as i32 / 4 + 8 {
             exe::formation_set_player_instruction(t(), read_i8(j + match_player::POSITION), 0x800);
         }
         // dribles
-        if tb() & 8 != 0 || tb() & 0x10 != 0 || (tc(0xe) > 16 && tb() & 0x40 != 0) {
+        if tb() & 8 != 0 || tb() & 0x10 != 0 || (tc(non_player::ATTACKING) > 16 && tb() & 0x40 != 0) {
             let f28 = f38 * 14.0;
-            let te4 = tc(0xe) as i32 / 4;
+            let te4 = tc(non_player::ATTACKING) as i32 / 4;
             let pj = || read_i8(j + match_player::POSITION) as u8 as u32;
             let fl8000 = || read_f32(j + match_player::STAMINA) as f64;
-            if f28 - (te4 as f64) < a(0x14) as f64 && f28 - ((tc(0xe) as i32 / 4) as f64) < a(0xc) as f64 && fl8000() > 8000.0 {
+            if f28 - (te4 as f64) < a(0x14) as f64 && f28 - ((tc(non_player::ATTACKING) as i32 / 4) as f64) < a(0xc) as f64 && fl8000() > 8000.0 {
                 exe::formation_set_player_instruction(t(), pj() as i8, 0x800000);
             } else {
-                let te4 = tc(0xe) as i32 / 4;
+                let te4 = tc(non_player::ATTACKING) as i32 / 4;
                 let lim = q - te4 as f64;
                 let high = lim > a(0x14) as f64 && lim < a(0xc) as f64;
                 if high || fl8000() < 8000.0 {
@@ -1167,17 +1167,17 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
         {
             let pj = || read_i8(j + match_player::POSITION) as u8 as u32;
             let enters = tb() & 0x10 != 0 || tb() & 0x20 != 0 || tb() & 0x40 != 0 || f38 * 16.0 < a(0xb) as f64;
-            let strong = enters && (f38 * 14.0 < a(0xb) as f64 || f38 * 34.0 - ((tc(0xe) as i32 / 4) as f64) < (a(0x15) + a(0xb)) as f64);
+            let strong = enters && (f38 * 14.0 < a(0xb) as f64 || f38 * 34.0 - ((tc(non_player::ATTACKING) as i32 / 4) as f64) < (a(0x15) + a(0xb)) as f64);
             if strong {
                 exe::formation_set_player_instruction(t(), pj() as i8, 0x2000000);
-            } else if f38 * 25.0 - (tc(0xe) as i32 / 4) as f64 > (a(0x15) + a(0xb)) as f64 {
+            } else if f38 * 25.0 - (tc(non_player::ATTACKING) as i32 / 4) as f64 > (a(0x15) + a(0xb)) as f64 {
                 exe::formation_set_player_instruction(t(), pj() as i8, 0x1000000);
             }
         }
-        if tb() & 0x10 != 0 && fb(0x1a) > 12 && fb(0x14) >= fb(0x13) {
-            if tb() & 0x80 != 0 && fb(0x19) > fb(0x18) {
+        if tb() & 0x10 != 0 && fb(player_sheet::FREE_ROLE) > 12 && fb(player_sheet::ATTACKING_MIDFIELDER) >= fb(player_sheet::MIDFIELDER) {
+            if tb() & 0x80 != 0 && fb(player_sheet::CENTRAL) > fb(player_sheet::LEFT_SIDE) {
                 exe::formation_set_slot_position(t(), read_i8(j + match_player::POSITION) as u8 as u32, 0x120, 1);
-            } else if tb() & 0x800 != 0 && fb(0x19) > fb(0x17) {
+            } else if tb() & 0x800 != 0 && fb(player_sheet::CENTRAL) > fb(player_sheet::RIGHT_SIDE) {
                 exe::formation_set_slot_position(t(), read_i8(j + match_player::POSITION) as u8 as u32, 0x420, 1);
             }
         }
@@ -2048,7 +2048,7 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
         1 => {
             let d = disposition(side);
             let x = if sheet != 0 && !(d >= read_f64(rdata::F64_2_5)) {
-                if e(0xe) > 6 && special { 0x10000 } else { 0x20000 }
+                if e(non_player::ATTACKING) > 6 && special { 0x10000 } else { 0x20000 }
             } else if special || d > read_f64(rdata::F64_10) {
                 0x10000
             } else {
@@ -2061,18 +2061,18 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
                 g(0x8000);
                 bx(0x1000);
             } else {
-                g(if e(0xe) > 0x10 { 0x20000 } else { 0x8000 });
-                if e(0x13) < lim(10) { bx(0x1000) } else { cx() }
+                g(if e(non_player::ATTACKING) > 0x10 { 0x20000 } else { 0x8000 });
+                if e(non_player::DIRECTNESS) < lim(10) { bx(0x1000) } else { cx() }
             }
         }
         4 => {
             if sheet != 0 {
-                g(if e(0xe) > 0x12 { 0x20000 } else { 0x8000 });
+                g(if e(non_player::ATTACKING) > 0x12 { 0x20000 } else { 0x8000 });
             } else {
                 g(0x8000);
             }
-            if sheet != 0 && e(0xe) > 0xc {
-                if e(0x13) < lim(10) { bx(0x1000) } else { cx() }
+            if sheet != 0 && e(non_player::ATTACKING) > 0xc {
+                if e(non_player::DIRECTNESS) < lim(10) { bx(0x1000) } else { cx() }
             } else {
                 g(0x800);
                 g(0x4000);
@@ -2083,19 +2083,19 @@ pub(crate) unsafe extern "thiscall" fn select_automatically(t: usize, other: usi
                 g(0x20000);
                 bx(0x1000);
             } else {
-                g(if e(0xe) > 0x10 { 0x10000 } else if e(0xe) > 0xc { 0x20000 } else { 0x8000 });
-                if e(0x13) < lim(10) { bx(0x1000) } else { cx() }
+                g(if e(non_player::ATTACKING) > 0x10 { 0x10000 } else if e(non_player::ATTACKING) > 0xc { 0x20000 } else { 0x8000 });
+                if e(non_player::DIRECTNESS) < lim(10) { bx(0x1000) } else { cx() }
             }
         }
         _ => {
             if sheet == 0 {
                 a(0x20000);
-            } else if e(0xe) > lim(0xf) && special {
+            } else if e(non_player::ATTACKING) > lim(0xf) && special {
                 a(0x10000);
-            } else if e(0xe) <= 5 && weight_of_side() != 0 && !(disposition(n_final as isize) > read_f64(rdata::F64_1)) {
+            } else if e(non_player::ATTACKING) <= 5 && weight_of_side() != 0 && !(disposition(n_final as isize) > read_f64(rdata::F64_1)) {
                 // as in the original: reads the formation at the index of the total slots (the loop’s ebx), not the side’s
                 g(0x8000);
-                if e(0x13) < lim(4) { bx(0x1000) } else { cx() }
+                if e(non_player::DIRECTNESS) < lim(4) { bx(0x1000) } else { cx() }
             } else {
                 a(0x20000);
             }
@@ -3030,39 +3030,39 @@ pub(crate) unsafe fn position_rating(f: PlayerSheet, m: u32, masc: u32, table: u
     let m16 = m as u16;
     let without_ala = m & 0x800 == 0 && m & 0x80 == 0;
     if m & 1 != 0 {
-        fb(0xf) * fb(0xf) - 300
+        fb(player_sheet::GOALKEEPER) * fb(player_sheet::GOALKEEPER) - 300
     } else if masc & 1 != 0 {
         -200
     } else if m & 2 != 0 {
-        t(fb(0x10))
+        t(fb(player_sheet::SWEEPER))
     } else if m & 4 != 0 {
-        t(fb(0x11))
+        t(fb(player_sheet::DEFENDER))
     } else if main && m16 == 8 {
-        t(fb(0x16).max(fb(0x11)).max(fb(0x12)).max(fb(0x13)))
+        t(fb(player_sheet::WING_BACK).max(fb(player_sheet::DEFENDER)).max(fb(player_sheet::DEFENSIVE_MIDFIELDER)).max(fb(player_sheet::MIDFIELDER)))
     } else if m & 8 != 0 {
-        t(if without_ala { fb(0x12) } else { fb(0x16) })
+        t(if without_ala { fb(player_sheet::DEFENSIVE_MIDFIELDER) } else { fb(player_sheet::WING_BACK) })
     } else if m & 0x10 != 0 {
         if !main || without_ala {
             if main && m16 == 0x10 {
-                t(fb(0x14).max(fb(0x12)).max(fb(0x13)))
+                t(fb(player_sheet::ATTACKING_MIDFIELDER).max(fb(player_sheet::DEFENSIVE_MIDFIELDER)).max(fb(player_sheet::MIDFIELDER)))
             } else {
-                let (a, c, d) = (fb(0x14) - 5, fb(0x13), fb(0x12) - 5);
+                let (a, c, d) = (fb(player_sheet::ATTACKING_MIDFIELDER) - 5, fb(player_sheet::MIDFIELDER), fb(player_sheet::DEFENSIVE_MIDFIELDER) - 5);
                 let al = if a.max(c) > d { if a > c { a } else { c } } else { d };
                 t(al as i8 as i32)
             }
         } else {
-            t(fb(0x14).max(fb(0x13)))
+            t(fb(player_sheet::ATTACKING_MIDFIELDER).max(fb(player_sheet::MIDFIELDER)))
         }
     } else if m & 0x20 != 0 {
         if without_ala {
-            let a = fb(0x14) as f64;
-            let middle = (fb(0x14) + fb(0x1a)) as f64 * read_f64(rdata::F64_0_5);
+            let a = fb(player_sheet::ATTACKING_MIDFIELDER) as f64;
+            let middle = (fb(player_sheet::ATTACKING_MIDFIELDER) + fb(player_sheet::FREE_ROLE)) as f64 * read_f64(rdata::F64_0_5);
             t(ftol(if a <= middle { middle } else { a }))
         } else {
-            t(fb(0x14))
+            t(fb(player_sheet::ATTACKING_MIDFIELDER))
         }
     } else if m & 0x40 != 0 {
-        t(fb(0x15))
+        t(fb(player_sheet::ATTACKER))
     } else {
         100
     }
@@ -3074,17 +3074,17 @@ pub(crate) unsafe fn position_rating(f: PlayerSheet, m: u32, masc: u32, table: u
 pub(crate) unsafe fn position_attribute_adjust(f: PlayerSheet, m: u32) -> i32 {
     let fb = |k: usize| signed_byte_at(f.addr(), k);
     if m & 0x1000 != 0 {
-        (fb(0x1a) - 10) * 10
+        (fb(player_sheet::FREE_ROLE) - 10) * 10
     } else if m & 0x80 != 0 {
-        (fb(0x18) - 10) * 10
+        (fb(player_sheet::LEFT_SIDE) - 10) * 10
     } else if m & 0x100 != 0 {
-        fb(0x30) + ((fb(0x18) / 2).max(fb(0x19)) * 5 - 0x3c) * 2
+        fb(player_sheet::LEFT_FOOT) + ((fb(player_sheet::LEFT_SIDE) / 2).max(fb(player_sheet::CENTRAL)) * 5 - 0x3c) * 2
     } else if m & 0x200 != 0 {
-        (fb(0x19) - 10) * 10
+        (fb(player_sheet::CENTRAL) - 10) * 10
     } else if m & 0x400 != 0 {
-        fb(0x3b) + ((fb(0x17) / 2).max(fb(0x19)) * 5 - 0x3c) * 2
+        fb(player_sheet::RIGHT_FOOT) + ((fb(player_sheet::RIGHT_SIDE) / 2).max(fb(player_sheet::CENTRAL)) * 5 - 0x3c) * 2
     } else if m & 0x800 != 0 {
-        (fb(0x17) - 10) * 10
+        (fb(player_sheet::RIGHT_SIDE) - 10) * 10
     } else {
         100
     }
@@ -3215,7 +3215,7 @@ pub(crate) unsafe fn age_and_foreigner_adjust(p: Staff, f: PlayerSheet, club: Cl
             l4c += (s - 20) * (s - 20) / 250;
         }
     }
-    l4c += ftol((fb(0x2f) - 10) as f64 * read_f64(rdata::F64_0_6666666667));
+    l4c += ftol((fb(player_sheet::LEADERSHIP) - 10) as f64 * read_f64(rdata::F64_0_6666666667));
     let nation = club.nation();
     let pais = p.nation();
     if nation.is_null() || (nation.first_language() as u8) == (pais.first_language() as u8) {
@@ -3285,7 +3285,7 @@ pub(crate) unsafe fn contract_adjust(p: Staff, f: PlayerSheet, club: Club, contr
                 } else if cl > 0x1b {
                     st *= read_f64(rdata::F64_0_95);
                 }
-                if fb(0xf) == 0x14 {
+                if fb(player_sheet::GOALKEEPER) == 0x14 {
                     st *= read_f64(if cl < 0x12 { 0x969040 } else if cl < 0x14 { 0x969520 } else { 0x9689d0 });
                 }
                 Some(st)
@@ -3303,7 +3303,7 @@ pub(crate) unsafe fn contract_adjust(p: Staff, f: PlayerSheet, club: Club, contr
                     st = read_f32(rdata::F32_0_8500000238) as f64;
                 }
             }
-            if fb(0xf) == 0x14 {
+            if fb(player_sheet::GOALKEEPER) == 0x14 {
                 st *= read_f64(if cl < 0x12 { 0x969040 } else if cl < 0x15 { 0x969520 } else { 0x9689d0 });
             }
             Some(st)
@@ -3409,53 +3409,53 @@ pub(crate) unsafe fn scout_knowledge_bonus(p: Staff, f: PlayerSheet, club: Club,
         let m = (l4c + 20) as f64;
         l4c = ftol(if x > m { x } else { m });
     }
-    let f44 = fb(0x44);
+    let f44 = fb(player_sheet::WORK_RATE);
     let k14 = kb(0x14);
     let mut ecx = (k14 * (f44 - 10) / 3).min(10) + ((signed_byte_at(p.addr(), 0x5b) - 10) * k14 / 3).min(10) + ((signed_byte_at(p.addr(), 0x59) - 10) * signed_byte_at(obs, 0x59) / 3).min(10);
     if pos & 1 == 0 {
         let away = pos & 0x80 == 0 && pos & 0x800 == 0;
         let e = kb(0xe);
-        let k1a = kb(0x1a) * fb(0x32);
+        let k1a = kb(0x1a) * fb(player_sheet::MARKING);
         let k1f = kb(0x1f) * (f44 - 10);
         // the stars: (+0x26 / 3) x +0x1b x +0x36 / 1500, with +0x26 > 30 and +0x36 > 15
-        let craque = |ecx: i32| if fb(0x26) > 0x1e && fb(0x36) > 0xf { ecx + fb(0x26) / 3 * fb(0x1b) * fb(0x36) / 1500 } else { ecx };
+        let craque = |ecx: i32| if fb(player_sheet::DRIBBLING) > 0x1e && fb(player_sheet::PLAYER_PACE) > 0xf { ecx + fb(player_sheet::DRIBBLING) / 3 * fb(player_sheet::ACCELERATION) * fb(player_sheet::PLAYER_PACE) / 1500 } else { ecx };
         if pos & 6 != 0 {
-            ecx += k1a / 40 + (fb(0x28) - 10) * e / 10 + fb(0x26) * e / 500 + fb(0x27) * e / 350 + fb(0x43) * e / 250 + k1f / 8 - 10;
+            ecx += k1a / 40 + (fb(player_sheet::FLAIR) - 10) * e / 10 + fb(player_sheet::DRIBBLING) * e / 500 + fb(player_sheet::FINISHING) * e / 350 + fb(player_sheet::VISION) * e / 250 + k1f / 8 - 10;
             if away {
-                ecx += fb(0x2e) - 15;
+                ecx += fb(player_sheet::JUMPING) - 15;
             }
         } else if pos & 8 != 0 {
-            ecx += k1a / 40 + (fb(0x28) - 10) * e / 8 + fb(0x26) * e / 325 + fb(0x43) * e / 150 + k1f / 6 + fb(0x27) / 15 - 10;
+            ecx += k1a / 40 + (fb(player_sheet::FLAIR) - 10) * e / 8 + fb(player_sheet::DRIBBLING) * e / 325 + fb(player_sheet::VISION) * e / 150 + k1f / 6 + fb(player_sheet::FINISHING) / 15 - 10;
             if away {
-                ecx += fb(0x3e) / 15 + f44 - 15;
+                ecx += fb(player_sheet::TACKLING) / 15 + f44 - 15;
             }
         } else if pos & 0x10 != 0 {
-            ecx += k1a / 60 + (fb(0x28) - 10) * e / 5 + fb(0x26) * e / 150 + fb(0x43) * e / 100 + k1f / 6 + fb(0x27) / 10 - 10;
+            ecx += k1a / 60 + (fb(player_sheet::FLAIR) - 10) * e / 5 + fb(player_sheet::DRIBBLING) * e / 150 + fb(player_sheet::VISION) * e / 100 + k1f / 6 + fb(player_sheet::FINISHING) / 10 - 10;
             if away {
-                ecx += fb(0x3e) / 15 + fb(0x37) / 15 + f44 - 15;
+                ecx += fb(player_sheet::TACKLING) / 15 + fb(player_sheet::PASSING) / 15 + f44 - 15;
             } else {
-                ecx += fb(0x23) / 15;
+                ecx += fb(player_sheet::CROSSING) / 15;
             }
         } else if pos & 0x20 != 0 {
-            ecx += k1a / 150 + (fb(0x28) - 10) * e / 4 + k1f / 8 + fb(0x43) * e / 75 + fb(0x26) * e / 150 + fb(0x27) / 8 - 10;
+            ecx += k1a / 150 + (fb(player_sheet::FLAIR) - 10) * e / 4 + k1f / 8 + fb(player_sheet::VISION) * e / 75 + fb(player_sheet::DRIBBLING) * e / 150 + fb(player_sheet::FINISHING) / 8 - 10;
             if away {
-                ecx += fb(0x43) / 15 + fb(0x1a) - 15;
+                ecx += fb(player_sheet::VISION) / 15 + fb(player_sheet::FREE_ROLE) - 15;
             } else {
-                ecx += fb(0x23) / 15;
+                ecx += fb(player_sheet::CROSSING) / 15;
             }
             if craque_meia {
                 ecx = craque(ecx);
             }
         } else if pos & 0x40 != 0 {
-            ecx += k1a / 400 + (fb(0x28) - 10) * e / 3 + fb(0x43) * e / 200 + k1f / 10 + fb(0x26) * e / 175 + fb(0x27) / 5 - 10;
+            ecx += k1a / 400 + (fb(player_sheet::FLAIR) - 10) * e / 3 + fb(player_sheet::VISION) * e / 200 + k1f / 10 + fb(player_sheet::DRIBBLING) * e / 175 + fb(player_sheet::FINISHING) / 5 - 10;
             if away {
-                ecx += fb(0x33) / 15 + fb(0x36) + fb(0x40) + fb(0x27) / 15 - 0x14;
+                ecx += fb(player_sheet::MOVEMENT) / 15 + fb(player_sheet::PLAYER_PACE) + fb(player_sheet::TECHNIQUE) + fb(player_sheet::FINISHING) / 15 - 0x14;
                 ecx = craque(ecx);
             }
         }
     }
     if masc & 0x40 != 0 && pos & 0x40 != 0 {
-        ecx += (fb(0x36) * fb(0x2e) - 200) * kb(0x13) / 500;
+        ecx += (fb(player_sheet::PLAYER_PACE) * fb(player_sheet::JUMPING) - 200) * kb(0x13) / 500;
     }
     if ecx != 0 {
         l4c += ftol((read_f64(rdata::F64_1) - l4c as f64 * read_f64(rdata::F64_0_00375)) * ecx as f64).clamp(-0x50, 0x50);
@@ -3745,12 +3745,12 @@ pub(crate) unsafe extern "C" fn off_match_score(p: usize, pos: u32, flags: u32, 
         }
     }
     if flags & 8 != 0 && of_the_base {
-        l4c += ftol(fb(0x45) as f64 * read_f64(rdata::F64_1_5) - read_f64(rdata::F64_15));
+        l4c += ftol(fb(player_sheet::PLAYER_MORALE) as f64 * read_f64(rdata::F64_1_5) - read_f64(rdata::F64_15));
     }
     if flags & 0x4000 != 0 {
         let q = (0x1b58 - club.reputation() as i32) / 100;
         let k = (if q < 10 { 10 } else { q }) as i8 as i32;
-        let lim = if fb(0xf) == 0x14 { 0x24 } else if fb(0x15) == 0x14 || fb(0x14) == 0x14 { 0x22 } else { 0x23 };
+        let lim = if fb(player_sheet::GOALKEEPER) == 0x14 { 0x24 } else if fb(player_sheet::ATTACKER) == 0x14 || fb(player_sheet::ATTACKING_MIDFIELDER) == 0x14 { 0x22 } else { 0x23 };
         if age as i32 > lim {
             let y = (read_f64(rdata::F64_1) - (age as i32 - lim) as f64 / k as f64) * l4c as f64;
             let m = (l4c - 5) as f64;
@@ -3956,7 +3956,7 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
     }
     if flags & 1 != 0 && !reg.is_null() && masc & 1 == 0 {
         count += 1;
-        sum += (reg.match_rating() as i32 - match_fatigue_offset(reg, fb(0xf))) / 50;
+        sum += (reg.match_rating() as i32 - match_fatigue_offset(reg, fb(player_sheet::GOALKEEPER))) / 50;
     }
     if flags & 4 != 0 && of_the_base {
         let v = ftol(player_stat(f, 5, 0x12, f32::from_bits(0x40d00000)) * read_f64(rdata::F64_20));
@@ -4011,7 +4011,7 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
         }
     }
     if flags & 8 != 0 && of_the_base {
-        l4c += ftol((fb(0x45) - 10) as f64 * read_f64(rdata::F64_0_8));
+        l4c += ftol((fb(player_sheet::PLAYER_MORALE) - 10) as f64 * read_f64(rdata::F64_0_8));
     }
     let marked = mark & 0x8000 != 0 || (mark & 0x2000 != 0 && tactic & 0x100 != 0);
     if flags & 0x8000 != 0 {
@@ -4089,7 +4089,7 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
     l4c = outside_nation_penalty(p, club, flags, l4c);
     if flags & 0x80000 != 0 && !side.is_null() {
         let em = |o: usize| *((side.addr() + o) as *const usize) == p.addr();
-        l4c += if em(6) { 0x1e } else if em(match_manager::KEY_PLAYER_2) { 0x14 } else if em(match_manager::KEY_PLAYER_3) { 0xa } else { 0 };
+        l4c += if em(match_manager::KEY_PLAYER_1) { 0x1e } else if em(match_manager::KEY_PLAYER_2) { 0x14 } else if em(match_manager::KEY_PLAYER_3) { 0xa } else { 0 };
     }
     // fatigue at the match minute reduces the extra
     let by_minute = |v: i32| {
@@ -4202,55 +4202,55 @@ pub(crate) unsafe fn tactic_instruction_adjust(f: PlayerSheet, lo: u32, b1: u8, 
     let t13 = tactic as u8;
     let um = lo & 1 != 0;
     if lo & 4 != 0 || (um && t13 & 2 != 0) {
-        l4c += fb(0x37) / 7 - x(0x40, 0x96d5e8);
+        l4c += fb(player_sheet::PASSING) / 7 - x(0x40, 0x96d5e8);
     } else if lo & 8 != 0 || (um && t13 & 4 != 0) {
         l4c += x(0x36, 0x968e00) - x(0x3c, 0x968fe8) - x(0x2e, 0x968fe8);
     } else if lo & 0x10 != 0 || (um && t13 & 8 != 0) {
         l4c += x(0x36, 0x96a670) - x(0x3c, 0x96d5e8) - x(0x2e, 0x96d5e8);
     }
     if marked {
-        let c = fb(0x3c) - 15;
-        let d = fb(0x44) - 15;
+        let c = fb(player_sheet::STAMINA) - 15;
+        let d = fb(player_sheet::WORK_RATE) - 15;
         let x1 = ftol((c.abs() * c) as f64 * read_f64(rdata::F64_NEG_0_4));
         let x2 = ftol((d.abs() * d) as f64 * read_f64(rdata::F64_0_4));
-        l4c += fb(0x1e) / 10 + (x2 - x1);
+        l4c += fb(player_sheet::ANTICIPATION) / 10 + (x2 - x1);
     } else if b1 & 1 != 0 {
-        l4c += fb(0x33) / 12 + (fb(0x43) / 12 - x(0x28, 0x96d5e8));
+        l4c += fb(player_sheet::MOVEMENT) / 12 + (fb(player_sheet::VISION) / 12 - x(0x28, 0x96d5e8));
     }
     if b1 & 2 != 0 {
-        l4c += fb(0x39) / 7;
+        l4c += fb(player_sheet::POSITIONING) / 7;
     } else if b1 & 4 != 0 {
-        l4c += fb(0x32) / 7;
+        l4c += fb(player_sheet::MARKING) / 7;
     }
     if lo & 0x40 != 0 {
-        l4c += ftol((fb(0x3b) - 20) as f64 * read_f64(rdata::F64_0_2857142857));
+        l4c += ftol((fb(player_sheet::RIGHT_FOOT) - 20) as f64 * read_f64(rdata::F64_0_2857142857));
     } else if lo & 0x100 != 0 {
-        l4c += ftol((fb(0x30) - 20) as f64 * read_f64(rdata::F64_0_2857142857));
+        l4c += ftol((fb(player_sheet::LEFT_FOOT) - 20) as f64 * read_f64(rdata::F64_0_2857142857));
     }
     if lo & 0x200000 != 0 {
-        l4c += fb(0x1a) + fb(0x43) / 10 + fb(0x33) / 9 - 20;
+        l4c += fb(player_sheet::FREE_ROLE) + fb(player_sheet::VISION) / 10 + fb(player_sheet::MOVEMENT) / 9 - 20;
     }
     if lo & 0x20000 != 0 {
-        l4c += (fb(0x2e) - 10) / 4;
+        l4c += (fb(player_sheet::JUMPING) - 10) / 4;
     } else if lo & 0x40000000 != 0 {
-        l4c += (10 - fb(0x2e)) / 4;
+        l4c += (10 - fb(player_sheet::JUMPING)) / 4;
     }
     if lo & 0x80000000 != 0 {
-        l4c += (10 - fb(0x2e)) / 4;
+        l4c += (10 - fb(player_sheet::JUMPING)) / 4;
     } else if lo & 0x80000 != 0 {
-        l4c += (fb(0x2e) - 10) / 4;
+        l4c += (fb(player_sheet::JUMPING) - 10) / 4;
     }
     if lo & 0x800000 != 0 {
-        l4c += (fb(0x3c) - 10) / 2 + fb(0x43) / 15 + fb(0x27) / 15;
+        l4c += (fb(player_sheet::STAMINA) - 10) / 2 + fb(player_sheet::VISION) / 15 + fb(player_sheet::FINISHING) / 15;
     }
     if lo & 0x2000000 != 0 {
-        l4c += fb(0x26) / 7;
+        l4c += fb(player_sheet::DRIBBLING) / 7;
     }
     if lo & 0x8000000 != 0 {
-        l4c += (fb(0x40) - 10) / 3 + (fb(0x3d) - 10) / 2;
+        l4c += (fb(player_sheet::TECHNIQUE) - 10) / 3 + (fb(player_sheet::STRENGTH) - 10) / 2;
     }
     if lo & 0x20000000 != 0 {
-        l4c += (fb(0x28) - 10) / 2 + fb(0x31) / 14 + fb(0x27) / 14;
+        l4c += (fb(player_sheet::FLAIR) - 10) / 2 + fb(player_sheet::LONG_SHOTS) / 14 + fb(player_sheet::FINISHING) / 14;
     }
     l4c
 }

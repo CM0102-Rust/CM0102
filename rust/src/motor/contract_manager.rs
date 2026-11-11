@@ -1053,11 +1053,11 @@ pub(crate) unsafe extern "thiscall" fn calc_player_value(this: usize, person: us
     let mut f = t * a as f64 * read_f32(rdata::F32_0_3333333433) as f64 * read_f64(rdata::F64_0_08333333333) + read_f64(rdata::F64_1);
     if sheet.goalkeeper() < 0xf {
         let rating = |o: usize, c: usize| (read_i8(sheet.addr() + o) as i32 - 0xf) as f64 * read_f64(c) + read_f64(rdata::F64_1);
-        let fa = rating(0x28, 0x968ef8);
+        let fa = rating(player_sheet::FLAIR, 0x968ef8);
         let fb = sheet.finishing() as f64 * read_f64(rdata::F64_0_005) + read_f64(rdata::F64_1);
         let fc = sheet.vision() as f64 * read_f64(rdata::F64_0_003333333333) + read_f64(rdata::F64_1);
-        let fd = rating(0x36, 0x968ef8);
-        let fe = rating(0x2f, 0x968ef8);
+        let fd = rating(player_sheet::PLAYER_PACE, 0x968ef8);
+        let fe = rating(player_sheet::LEADERSHIP, 0x968ef8);
         f = fa * (fb * f) * fc * fd * fe;
     }
     let q = sheet.injury_proneness() as i32;
@@ -3469,7 +3469,7 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_operator(this: usize, so
     for o in 0x1c..0x21 {
         b(o); // the five bytes
     }
-    d(0x21);
+    d(contract::RELEASE_FEE);
     copy_record_date(this.addr() + contract::DATE_STARTED, source.addr() + contract::DATE_STARTED);
     copy_record_date(this.addr() + contract::CONTRACT_EXPIRES, source.addr() + contract::CONTRACT_EXPIRES);
     let m = (this.addr() + contract::CONTRACT_TYPE) as *mut u8;
@@ -3480,18 +3480,18 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_operator(this: usize, so
     *m = al;
     let s = source.contract_type();
     *m = ((al ^ s) & 0x7f) ^ s; // o 8º bit
-    d(0x36);
-    b(0x3a);
-    w(0x3b);
-    b(0x3d);
-    b(0x3e);
-    b(0x3f);
-    d(0x40);
-    b(0x44);
-    d(0x45);
-    b(0x49);
-    d(0x4a);
-    b(0x4e);
+    d(contract::PREVIOUS_WAGE);
+    b(contract::SQUAD_NUMBER);
+    w(contract::CLUB_APPEARANCES);
+    b(contract::HAPPINESS);
+    b(contract::UNHAPPY_FLAG);
+    b(contract::MATCHES_LEFT_OUT);
+    d(contract::FLAGS);
+    b(contract::MORALE);
+    d(contract::GRIEVANCES);
+    b(contract::LEAVING_ON_BOSMAN);
+    d(contract::TRANSFER_ARRANGED_FOR);
+    b(contract::TRANSFER_STATUS);
     let m = (this.addr() + contract::SQUAD_STATUS) as *mut u8;
     let c = *m;
     let al = ((source.squad_status() ^ c) & 0xf) ^ c; // o nibble baixo
@@ -3885,7 +3885,7 @@ pub(crate) unsafe extern "stdcall" fn contract_category(p: usize, c: usize) -> u
         }
         1 => if v > 0x2d { 1 } else { (v <= 0x19) as u8 + 2 },
         2 => {
-            let rating = ambicao as i32 * 25 - p.loyalty() as i32 * 10 + rep(0xd) as i32;
+            let rating = ambicao as i32 * 25 - p.loyalty() as i32 * 10 + rep(player_sheet::WORLD_REPUTATION) as i32;
             if v > 0x4b && rating > 0x186a && age > 0x17 && age < 0x22 {
                 1
             } else if v > 0x19 {
@@ -3909,7 +3909,7 @@ pub(crate) unsafe extern "stdcall" fn contract_category(p: usize, c: usize) -> u
         5 => {
             if age > 0x18 {
                 if age > 0x22 { 4 } else if v > 0x4b { 2 } else if v > 0 { 3 } else { low(-30) }
-            } else if ambicao > 5 && rep(0xb) > 0x4e2 {
+            } else if ambicao > 5 && rep(player_sheet::CURRENT_REPUTATION) > 0x4e2 {
                 5
             } else {
                 6
@@ -3918,7 +3918,7 @@ pub(crate) unsafe extern "stdcall" fn contract_category(p: usize, c: usize) -> u
         6 => {
             if age > 0x17 {
                 if v > 0x4b { 1 } else if v > 0x1e { 2 } else if v > 0 { 3 } else { low(-50) }
-            } else if rep(0xb) > 0x4e2 && ambicao > 0xf {
+            } else if rep(player_sheet::CURRENT_REPUTATION) > 0x4e2 && ambicao > 0xf {
                 5
             } else {
                 6

@@ -2901,19 +2901,19 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
         if t == 0x30 && ((contract.matches_left_out() as i8) as i32) > 1 {
             return 1;
         }
-        if player.player().current_reputation() < 0x1482 && ch(0x14) > 0xf {
+        if player.player().current_reputation() < 0x1482 && ch(non_player::DISCIPLINE) > 0xf {
             return 2;
         }
-        if contract_squad_status(contract) == 0x70 && ch(0x14) > 0xa {
+        if contract_squad_status(contract) == 0x70 && ch(non_player::DISCIPLINE) > 0xa {
             return 2;
         }
-        return if exe::utils_random(ch(0x19)) != 0 { 1 } else { 3 };
+        return if exe::utils_random(ch(non_player::MAN_HANDLING)) != 0 { 1 } else { 3 };
     }
     if k == 0x82 {
         if exe::staff_is_disliked_by(player, manager) != 0 {
             let a = manager.professionalism() as i32;
             if a < 0xf && exe::utils_random(a) == 0 {
-                let x = exe::utils_random(ch(0x19));
+                let x = exe::utils_random(ch(non_player::MAN_HANDLING));
                 let y = exe::utils_random(0x14);
                 if x < y {
                     return 2;
@@ -2923,7 +2923,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             if a <= 0xe || exe::utils_random(a) <= 10 {
                 return 3;
             }
-            let x = exe::utils_random(ch(0x19));
+            let x = exe::utils_random(ch(non_player::MAN_HANDLING));
             let y = exe::utils_random(0x14);
             return if x <= y { 3 } else { 1 };
         }
@@ -2933,7 +2933,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             if x >= y {
                 return 3;
             }
-            let x = exe::utils_random(ch(0x19));
+            let x = exe::utils_random(ch(non_player::MAN_HANDLING));
             let y = exe::utils_random(0xf);
             return if x <= y { 3 } else { 1 };
         }
@@ -2943,7 +2943,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
                 return 1;
             }
         }
-        let x = exe::utils_random(ch(0x19));
+        let x = exe::utils_random(ch(non_player::MAN_HANDLING));
         let y = exe::utils_random(0x14);
         if x > y {
             return 1;
@@ -2972,7 +2972,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
         if exe::utils_random(manager.professionalism() as i32) != 0 {
             return 3;
         }
-        let x = exe::utils_random(ch(0x19));
+        let x = exe::utils_random(ch(non_player::MAN_HANDLING));
         let y = exe::utils_random(0x14);
         return if x >= y { 3 } else { 2 };
     }
@@ -2982,15 +2982,15 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
         if x >= y {
             return 3;
         }
-        let x = exe::utils_random(ch(0x19));
+        let x = exe::utils_random(ch(non_player::MAN_HANDLING));
         let y = exe::utils_random(0x14);
         return if x >= y { 3 } else { 1 };
     }
     // the sum of the knowledge (+0x19), of +0x1d of the profile and of +0x59 of the manager
-    let sum = || ch(0x19) + ((f().patience() as i8) as i32) + (manager.loyalty() as i32);
+    let sum = || ch(non_player::MAN_HANDLING) + ((f().patience() as i8) as i32) + (manager.loyalty() as i32);
     match k as i32 {
         0x3c | 0x3d => {
-            let x = exe::utils_random(ch(0x1b));
+            let x = exe::utils_random(ch(non_player::MOTIVATING));
             let y = exe::utils_random(0x17);
             if x > y {
                 let x = exe::utils_random((f().patience() as i8) as i32);
@@ -3015,25 +3015,25 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             let x = exe::utils_random(player.professionalism() as i32);
             let y = exe::utils_random(0x14);
             if x > y {
-                let a = exe::utils_random(ch(0x19));
+                let a = exe::utils_random(ch(non_player::MAN_HANDLING));
                 let b = exe::utils_random(0x14 - rating);
                 if a > b {
                     return 1;
                 }
-                if exe::utils_random(ch(0x19)) != 0 {
+                if exe::utils_random(ch(non_player::MAN_HANDLING)) != 0 {
                     return 3;
                 }
                 return if rating >= 0xa { 3 } else { 2 };
             }
-            let a = exe::utils_random(ch(0x19));
+            let a = exe::utils_random(ch(non_player::MAN_HANDLING));
             let b = exe::utils_random(10);
             if a > b {
                 let mut arg = 0;
                 if (player.player().work_rate() as u8) != 0 {
                     // the person’s 0x4f-byte record in [0xae2d0c] (+0xa, +0xb bit 7)
                     let reg = |o: usize| read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add((read_i32(player.addr()) as usize).wrapping_mul(staff_state::SIZE)) + o);
-                    let e = exe::utils_random((2 - (reg(0xb) >> 7) as i32) * 20);
-                    if exe::utils_random(reg(0xa) as i32) > e {
+                    let e = exe::utils_random((2 - (reg(staff_state::STATUS_FLAGS) >> 7) as i32) * 20);
+                    if exe::utils_random(reg(staff_state::INJURY_COUNTER) as i32) > e {
                         arg = 1;
                     }
                 }
@@ -3058,7 +3058,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
                     exe::utils_random(manager.loyalty() as i32); // the original discards the result
                 }
             }
-            let x = exe::utils_random(ch(0x19));
+            let x = exe::utils_random(ch(non_player::MAN_HANDLING));
             let y = exe::utils_random(10);
             if x < y {
                 let x = exe::utils_random(manager.temperament() as i32);
@@ -3092,13 +3092,13 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             if exe::utils_random(((f().patience() as i8) as i32) * 2) == 0 {
                 exe::staff_add_disliked_staff(manager, player, 1);
             }
-            if ch(0x19) < 0xa {
+            if ch(non_player::MAN_HANDLING) < 0xa {
                 let x = exe::utils_random(manager.temperament() as i32);
                 let y = exe::utils_random(10);
                 if x < y {
                     let x = exe::utils_random((f().patience() as i8) as i32);
                     let y = exe::utils_random(10);
-                    if x < y && exe::utils_random(ch(0x19)) == 0 {
+                    if x < y && exe::utils_random(ch(non_player::MAN_HANDLING)) == 0 {
                         return 2;
                     }
                 }
@@ -3108,13 +3108,13 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             if x <= y { 3 } else { 1 }
         }
         1 => {
-            if exe::utils_random(ch(0x19)) == 0 {
+            if exe::utils_random(ch(non_player::MAN_HANDLING)) == 0 {
                 let x = exe::utils_random(manager.temperament() as i32);
                 let y = exe::utils_random(10);
                 if x < y {
                     let x = exe::utils_random((f().patience() as i8) as i32);
                     let y = exe::utils_random(5);
-                    if x < y && exe::utils_random(ch(0x19)) == 0 {
+                    if x < y && exe::utils_random(ch(non_player::MAN_HANDLING)) == 0 {
                         return 2;
                     }
                 }
@@ -3188,7 +3188,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
                 let x = exe::utils_random(manager.loyalty() as i32);
                 let y = exe::utils_random(6);
                 if x > y {
-                    let x = exe::utils_random(ch(0x19));
+                    let x = exe::utils_random(ch(non_player::MAN_HANDLING));
                     let y = exe::utils_random(6);
                     if x > y {
                         let x = exe::utils_random(rating);
@@ -3218,14 +3218,14 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
             if x >= y { 3 } else { 2 }
         }
         5 => {
-            if exe::utils_random(manager.loyalty() as i32) != 0 && exe::utils_random(ch(0x19)) != 0 && exe::utils_random(player.professionalism() as i32) != 0 {
+            if exe::utils_random(manager.loyalty() as i32) != 0 && exe::utils_random(ch(non_player::MAN_HANDLING)) != 0 && exe::utils_random(player.professionalism() as i32) != 0 {
                 let x = exe::utils_random(rating);
                 let y = exe::utils_random(-5);
                 if x > y {
                     return 1;
                 }
             }
-            if exe::utils_random(ch(0x19)) != 0 {
+            if exe::utils_random(ch(non_player::MAN_HANDLING)) != 0 {
                 return 3;
             }
             let x = exe::utils_random(player.pressure() as i32);
@@ -3257,7 +3257,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
                     }
                 }
             }
-            if exe::utils_random(ch(0x19)) != 0 || exe::utils_random(f().pressing() as i32) != 0 {
+            if exe::utils_random(ch(non_player::MAN_HANDLING)) != 0 || exe::utils_random(f().pressing() as i32) != 0 {
                 return 3;
             }
             let x = exe::utils_random(player.player().dirtiness() as i32);

@@ -319,16 +319,16 @@ pub(crate) unsafe extern "thiscall" fn draw_moment(this: usize) {
         if b > a { b } else { a }
     };
     let base = ftol(this.stamina() as f64 * read_f32(rdata::F32_0_002499999944) as f64) as i16 as i32;
-    write(0x104, best_of_two(base + (this.base_pace() as i32) - 0x19));
-    write(0x10a, best_of_two(this.base_positioning() as i32));
-    write(0x107, random(this.base_movement() as i32));
-    write(0x108, random(this.base_marking() as i32));
-    write(0x109, random(this.base_flair() as i32));
-    write(0x10b, best_of_two(this.base_vision() as i32));
-    write(0x106, best_of_two(this.base_decisions() as i32));
-    write(0x105, random(this.base_anticipation() as i32));
-    write(0x10d, random(this.base_work_rate() as i32));
-    write(0x10c, random(this.base_agility() as i32));
+    write(match_player::MOMENT_PACE, best_of_two(base + (this.base_pace() as i32) - 0x19));
+    write(match_player::MOMENT_POSITIONING, best_of_two(this.base_positioning() as i32));
+    write(match_player::MOMENT_MOVEMENT, random(this.base_movement() as i32));
+    write(match_player::MOMENT_MARKING, random(this.base_marking() as i32));
+    write(match_player::MOMENT_FLAIR, random(this.base_flair() as i32));
+    write(match_player::MOMENT_VISION, best_of_two(this.base_vision() as i32));
+    write(match_player::MOMENT_DECISIONS, best_of_two(this.base_decisions() as i32));
+    write(match_player::MOMENT_ANTICIPATION, random(this.base_anticipation() as i32));
+    write(match_player::MOMENT_WORK_RATE, random(this.base_work_rate() as i32));
+    write(match_player::MOMENT_AGILITY, random(this.base_agility() as i32));
 }
 
 /// Reads the u16 position-table entry [engine + 0x8ebc + 4 x side][position] for player p, without range check.
@@ -996,7 +996,7 @@ pub(crate) unsafe extern "thiscall" fn choose_standout(this: usize) {
             let v = ftol(disp as f64 * read_f64(rdata::F64_0_001)) as i16;
             let u = |o: usize| read_i8(p.addr() + o) as u8 as i16;
             let pt = disp
-                .wrapping_add(125i16.wrapping_mul(u(0x10).wrapping_add(2 * u(0x0c))))
+                .wrapping_add(125i16.wrapping_mul(u(match_player::ASSISTS).wrapping_add(2 * u(0x0c))))
                 .wrapping_add(50i16.wrapping_mul(u(0x03)))
                 .wrapping_add(35i16.wrapping_mul(u(0x06)));
             if melhor == 0 || (pt > pontos && v >= valor) {
@@ -3226,11 +3226,11 @@ pub(crate) unsafe fn restart_play_with(m: Engine, call: &mut dyn FnMut(usize, us
     }
     let quinze: [bool; 2] = if *b(engine::RESTART_TYPE) == 8 {
         *d(engine::STANCE_FACTOR) = 0xc47a0000;
-        *d(0x476e) = 0xc47a0000;
+        *d(engine::STANCE_FACTOR + 4) = 0xc47a0000;
         [true, true]
     } else {
         let t = *w(engine::CLOCK) as i32;
-        [t - *w(engine::LAST_STANCE_CALL_TICK) as i32 > 0xa5, t - *w(0x1d4) as i32 > 0xa5]
+        [t - *w(engine::LAST_STANCE_CALL_TICK) as i32 > 0xa5, t - *w(engine::LAST_STANCE_CALL_TICK + 2) as i32 > 0xa5]
     };
     let minute = (*w(engine::CLOCK) as i32 / 11) as i8;
     // the first player out of stamina
@@ -6163,7 +6163,7 @@ pub(crate) unsafe fn prepare_match_with(m: usize, game: usize, fast: u8, comment
     write_usize(m + engine::MATCH, game);
     write_u8(m + engine::SHOOTOUT_STATE, 0);
     write_u8(m + engine::PUNISHMENT_STATE, 0);
-    clear(0x21e, 0x21e + 8000);
+    clear(engine::HIGHLIGHTS_GIVEN, 0x21e + 8000);
     write_u8(m + engine::MATCH_RUNNING, 0);
     write_u8(m + engine::PENDING_INCIDENT_COUNT, 0);
     write_u8(m + 0x1cc, 0);
@@ -6258,10 +6258,10 @@ pub(crate) unsafe fn prepare_match_with(m: usize, game: usize, fast: u8, comment
     write_u32(m + engine::FOULED_PLAYER, 0);
     write_u8(m + 2, 0xff);
     write_u8(m + 3, 0xff);
-    clear(0x8f02, 0x8f7a);
-    clear(0x1f6, 0x21e);
-    clear(0xa, 0xaf);
-    clear(0x8d51, 0x8e9b);
+    clear(engine::SIDE0_POSSESSION_HIGH, 0x8f7a);
+    clear(engine::BALL_TIME_THIRD_1, 0x21e);
+    clear(engine::POSSESSION_WINDOW_LOW, 0xaf);
+    clear(engine::SIDE0_POSSESSION_WINDOW_HIGH, 0x8e9b);
     write_u8(m + engine::POSSESSION_WINDOW_INDEX, 0);
     write_u8(m + engine::LAST_POSSESSION_SIDE, 0xff);
     write_u16(m + engine::BALL_DIRECTION, 0xb4);
@@ -7107,7 +7107,7 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
     // the ”age” of each rating: /1000 + 16, with a minimum
     let age = |o: usize, min: i8| ((read_i16(sheet().addr() + o) as i32 / 1000) as i8).wrapping_add(0x10).max(min);
     let nivel0 = level as i16;
-    let div_b = (age(0xb, 0x16) as i16).wrapping_sub(nivel0);
+    let div_b = (age(player_sheet::CURRENT_REPUTATION, 0x16) as i16).wrapping_sub(nivel0);
     let mut grande = false;
     let ja_national_team = exe::database_is_national_team(club) != 0;
     let div_9 = if ja_national_team
@@ -7131,7 +7131,7 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
     };
     let div_d: i16;
     if exe::database_is_national_team(club) != 0 {
-        div_d = (age(0xd, 0x15) as i16).wrapping_sub(nivel0);
+        div_d = (age(player_sheet::WORLD_REPUTATION, 0x15) as i16).wrapping_sub(nivel0);
         if (comp.category() as i8) == 0xa
             && *(G_NATIONAL_TEAMS as *const usize) != 0
             && exe::national_teams_is_finals_comp(read_usize(G_NATIONAL_TEAMS), of_game) != 0
@@ -7164,7 +7164,7 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
         let c32 = comp.round_prefix();
         let c30 = comp.round_name();
         if (0x43d..=0x448).contains(&c32) {
-            div_d = (age(0xd, 0x15) as i16).wrapping_sub(nivel0).wrapping_add(1);
+            div_d = (age(player_sheet::WORLD_REPUTATION, 0x15) as i16).wrapping_sub(nivel0).wrapping_add(1);
             if !((factor as f64) < read_f64(rdata::F64_8)) && injury_word_0c() > 0x157c {
                 let p = (injury_word_0c() - 0x157c) as f64 * (factor as f64 - read_f64(rdata::F64_8));
                 pa = ftol(p * read_f64(rdata::F64_0_5555555556));
@@ -7173,7 +7173,7 @@ pub(crate) unsafe extern "C" fn develop_player(jm: usize, person: usize, club: u
                 pc = c;
             }
         } else if matches!(c30, 0x78..=0x7c | 0x82..=0x87 | 0x96..=0x9b) {
-            let id = age(0xd, 0x15);
+            let id = age(player_sheet::WORLD_REPUTATION, 0x15);
             level = of_game.reputation() as i8;
             div_d = (id as i16).wrapping_sub(level as i16);
             if !((factor as f64) < read_f64(rdata::F64_7_5)) && injury_word_0c() > 0x157c {
@@ -9752,13 +9752,13 @@ pub(crate) unsafe extern "thiscall" fn who_to_mark(m: usize, j: usize) -> usize 
                         0
                     }
                 };
-                let w = role(0x8ebc);
+                let w = role(engine::POSITION_TABLE);
                 if w & 0x20 != 0 && w & 0x800 == 0 && w & 0x80 == 0 {
                     let sheet = PlayerSheet(read_usize(q + match_player::PLAYER));
                     rating = rating.wrapping_add(10 * sheet.free_role() as i32);
                 } else {
                     let fixed = |v: u16| v == 0x140 || v == 0x240 || v == 0x440;
-                    if (0..=10).contains(&pos) && !fixed(role(0x8ebc)) && fixed(role(0x8ec4)) {
+                    if (0..=10).contains(&pos) && !fixed(role(engine::POSITION_TABLE)) && fixed(role(engine::ARROW_TABLE)) {
                         rating = rating.wrapping_add(0x7d);
                     } else if mark_800000(q) != 0 {
                         rating = rating.wrapping_add(0x28);
@@ -11064,13 +11064,13 @@ pub(crate) unsafe extern "thiscall" fn team_strength(this: usize, side_b: i8) {
                     0
                 };
                 if k != 0 {
-                    *w(0x1de) = ftol((this.team_strength_2() as i16) as f64 * read_f32(k) as f64) as i16;
+                    *w(engine::TEAM_STRENGTH_2) = ftol((this.team_strength_2() as i16) as f64 * read_f32(k) as f64) as i16;
                 }
             }
         }
     }
-    *w(0x1de) = ftol(*w(0x1de) as f64 * read_f32(rdata::F32_1_049999952) as f64) as i16;
-    *w(0x1e2) = ftol(*w(0x1e2) as f64 * read_f32(rdata::F32_1_019999981) as f64) as i16;
+    *w(engine::TEAM_STRENGTH_2) = ftol(*w(engine::TEAM_STRENGTH_2) as f64 * read_f32(rdata::F32_1_049999952) as f64) as i16;
+    *w(engine::TEAM_STRENGTH + 0x8) = ftol(*w(engine::TEAM_STRENGTH + 0x8) as f64 * read_f32(rdata::F32_1_019999981) as f64) as i16;
     let game = fixture.competition();
     let aplica = if game.is_null() {
         true
@@ -11084,12 +11084,12 @@ pub(crate) unsafe extern "thiscall" fn team_strength(this: usize, side_b: i8) {
         }
     };
     if aplica {
-        *w(0x1de) = ftol((this.team_strength_2() as i16) as f64 * read_f32(rdata::F32_1_100000024) as f64) as i16;
+        *w(engine::TEAM_STRENGTH_2) = ftol((this.team_strength_2() as i16) as f64 * read_f32(rdata::F32_1_100000024) as f64) as i16;
     }
     let (casa, fora) = (fixture.home_club(), fixture.away_club());
     if !casa.is_null() && !fora.is_null() && casa.reputation() < 0x9c4 {
-        *w(0x1de) = ftol(*w(0x1de) as f64 * read_f32(rdata::F32_1_039999962) as f64) as i16;
-        *w(0x1e2) = ftol(*w(0x1e2) as f64 * read_f32(rdata::F32_1_149999976) as f64) as i16;
+        *w(engine::TEAM_STRENGTH_2) = ftol(*w(engine::TEAM_STRENGTH_2) as f64 * read_f32(rdata::F32_1_039999962) as f64) as i16;
+        *w(engine::TEAM_STRENGTH + 0x8) = ftol(*w(engine::TEAM_STRENGTH + 0x8) as f64 * read_f32(rdata::F32_1_149999976) as f64) as i16;
     }
     if fixture.is_null() || casa.is_null() || fora.is_null() {
         return;
@@ -11436,7 +11436,7 @@ pub(crate) unsafe extern "thiscall" fn context_commentary(m: usize, side: u32, e
             if !of_club() || aggregate <= random(2) + 1 || minute <= 0x1e {
                 return 0;
             }
-            table(0x19, 0x41)
+            table(comp_stats_club::WINNING_RUN, 0x41)
         }
         0x21ac | 0x21ad => {
             if !of_club() {
@@ -11452,21 +11452,21 @@ pub(crate) unsafe extern "thiscall" fn context_commentary(m: usize, side: u32, e
             if minute < 0x1f {
                 return 0;
             }
-            table(0x2d, 0x55)
+            table(comp_stats_club::LOSING_RUN, 0x55)
         }
         0x21ae => {
             if !of_club() || random(-3) <= aggregate || minute < 0x1f || (minute > 0x4b && aggregate < -1) {
                 return 0;
             }
-            table(0x19, 0x41)
+            table(comp_stats_club::WINNING_RUN, 0x41)
         }
         0x21af => {
             if !of_club() {
                 return 0;
             }
             match aggregate {
-                -1 if minute > 0x50 => table(0x19, 0x41),
-                -2 if minute > random(10) + 0x46 => table(0x19, 0x41),
+                -1 if minute > 0x50 => table(comp_stats_club::WINNING_RUN, 0x41),
+                -2 if minute > random(10) + 0x46 => table(comp_stats_club::WINNING_RUN, 0x41),
                 _ => 0,
             }
         }

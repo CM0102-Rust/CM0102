@@ -1141,7 +1141,7 @@ pub(crate) unsafe extern "thiscall" fn record_holder_assign(this: usize, source:
     d(0); // identification
     d(4);
     d(8);
-    d(0xc);
+    d(record_holder::STAFF_ID);
     copy_record_date(this + record_holder::DATE, source + record_holder::DATE);
     this
 }
@@ -1161,14 +1161,14 @@ pub(crate) unsafe extern "thiscall" fn match_record_assign(this: usize, source: 
     let b = |o: usize| write_u8(this + o, read_u8(source + o));
     copy_record_date(this, source);
     d(8); // opponent
-    w(0xc);
-    w(0xe);
-    b(0x10);
-    d(0x11);
-    d(0x15);
-    b(0x19);
-    b(0x1a);
-    d(0x1b);
+    w(club_match_record::ROUND_PREFIX);
+    w(club_match_record::ROUND_NAME);
+    b(club_match_record::VENUE);
+    d(club_match_record::CLUB_ID);
+    d(club_match_record::OPPONENT_ID);
+    b(club_match_record::GOALS_FOR);
+    b(club_match_record::GOALS_AGAINST);
+    d(club_match_record::MATCH_STATS_SLOT);
     this
 }
 
@@ -1204,8 +1204,8 @@ pub(crate) unsafe extern "C" fn reset_records(r: usize) -> u32 {
     for o in [0x247, 0x261] {
         write_u16(r + o, 0xffff);
     }
-    d(0x2a3);
-    d(0x2e2);
+    d(club_record::YOUNGEST_PLAYER_FIXTURE_ID);
+    d(club_record::OLDEST_PLAYER_FIXTURE_ID);
     write_u16(r + club_record::INTERNATIONAL_CAPS, 0xffff);
     for o in [0x313, 0x33c, 0x365, 0x36b, 0x37d] {
         d(o);

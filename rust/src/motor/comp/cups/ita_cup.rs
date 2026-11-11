@@ -1091,17 +1091,17 @@ pub(crate) const CHAMPIONS_CUP_RULES: GroupStageRules = GroupStageRules { win: 3
 /// +0x3c (push 0; push &+0x3a; push &+0xa9; push −1; mov ecx, this -> thiscall, ret 0x10) em +0xba. Devolve 1.
 pub(crate) unsafe fn set_cup_league_rules(this: League, g: &GroupStageRules, rounds: i16) -> u32 {
     let b = |o: usize, v: u8| write_u8(this.addr() + o, v);
-    b(0xc2, g.win);
-    b(0xc3, g.draw);
-    b(0xc4, g.category);
+    b(league::WIN_POINTS, g.win);
+    b(league::DRAW_POINTS, g.draw);
+    b(league::MATCH_CATEGORY, g.category);
     for (k, &v) in g.tiebreak.iter().enumerate() {
         b(0xc5 + k, v);
     }
-    b(0xbe, g.slots);
-    b(0xbf, 0);
-    b(0xc0, 0);
-    b(0xc1, 0);
-    b(0x42, 1);
+    b(league::PROMOTED_COUNT, g.slots);
+    b(league::PROMOTION_PLAYOFF_COUNT, 0);
+    b(league::RELEGATION_PLAYOFF_COUNT, 0);
+    b(league::RELEGATED_COUNT, 0);
+    b(league::CLUB_SIDES, 1);
     this.set_upper_division_id(-1);
     write_i32(this.addr() + league::LOWER_DIVISION_ID, -1);
     this.set_legs(rounds);

@@ -1,6 +1,6 @@
 # Mutacoes da leva135 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva135.py --carreira 2002-06-01 --confirmar 2001-10-01
 MUTACOES = [
-    ('r_quinze', "[t - *w(engine::LAST_STANCE_CALL_TICK) as i32 > 0xa5, t - *w(0x1d4) as i32 > 0xa5]", "[t - *w(engine::LAST_STANCE_CALL_TICK) as i32 > 0x50, t - *w(0x1d4) as i32 > 0xa5]"),
+    ('r_quinze', "[t - *w(engine::LAST_STANCE_CALL_TICK) as i32 > 0xa5, t - *w(engine::LAST_STANCE_CALL_TICK + 2) as i32 > 0xa5]", "[t - *w(engine::LAST_STANCE_CALL_TICK) as i32 > 0x50, t - *w(engine::LAST_STANCE_CALL_TICK + 2) as i32 > 0xa5]"),
     ('r_sem_folego', "if minute > 0x3c && random(6) == 0 {", "if minute > 0x3c && random(7) == 0 {", "restart out of breath"),
     ('r_folego', "read_f32(j + match_player::STAMINA) < 6750.0", "read_f32(j + match_player::STAMINA) < 6000.0", "restart out of breath"),
     ('r_postura', "if new != velha || *w(engine::CLOCK) <= 1 {", "if new != velha || *w(engine::CLOCK) <= 2 {"),

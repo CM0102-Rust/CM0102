@@ -6,8 +6,8 @@ MUTACOES = [
     ('dbs_nome_da_posicao', '        write(0x9b7c9c, 2, 1); // utility player', '        write(0x9b7c94, 2, 1); // mutacao: "player" no lugar de "utility player"'),
     ('dbs_descricao', '    if q & 1 == 0 && age > person % 3 + 0x21 {', '    if q & 1 == 0 && age > person % 3 + 0x1e { // mutacao: veterano 3 anos antes'),
     ('dbs_candidato', '    n += id.wrapping_add(oid) % 500; // desempate pelos ids (dbs)', '    n += id.wrapping_add(oid) % 50; // mutacao: % 50 no lugar de % 500'),
-    ('dbs_forcas', '    if b(0x39) > random(50) && b(0x3e) > random(50) {', '    if b(0x39) >= random(50) && b(0x3e) > random(50) { // mutacao: >= no primeiro'),
-    ('dbs_fraquezas', '    if b(0xf) < 20 { // the outfield players', '    if b(0xf) <= 20 { // mutacao: os goleiros tambem'),
+    ('dbs_forcas', '    if b(player_sheet::POSITIONING) > random(50) && b(player_sheet::TACKLING) > random(50) {', '    if b(0x39) >= random(50) && b(0x3e) > random(50) { // mutacao: >= no primeiro'),
+    ('dbs_fraquezas', '    if b(player_sheet::GOALKEEPER) < 20 { // the outfield players', '    if b(player_sheet::GOALKEEPER) <= 20 { // mutacao: os goleiros tambem'),
     ('dbt_fisioterapeutas', 'validos(Club(club)) + if b != 0 { validos(Club(b)) } else { 0 } // those of the club and of the B team (dbt)', 'validos(Club(club)) * 2 + if b != 0 { validos(Club(b)) } else { 0 } // mutacao: os do clube contados duas vezes'),
     ('dbt_time_b', '(database_linked_b_team(club, &mut eh_a) != 0 && eh_a == 0) as u32 // is the B (dbt)', '(database_linked_b_team(club, &mut eh_a) != 0 && eh_a != 0) as u32 // mutacao: o A em vez do B'),
     ('dbt_fora_do_elenco', '*out.add(n as usize) = p; // (dbt)', '*out.add(n as usize) = p + 1; // mutacao: o ponteiro errado'),
@@ -19,5 +19,5 @@ MUTACOES = [
     ('dbt_clube_na_cee', 'nation.group_membership() == nation_group::EEC) as u32 // in the EEC (dbt)', '*((nation.addr() + 0x7f) as *const u8) != 2) as u32 // mutacao: fora da CEE'),
     ('dbt_regioes_pelo_nome', 'qsort(G_REGIONS_SORTED_BY_NAME, 14, 1, 0x545e00); // (dbt)', 'qsort(G_REGIONS_SORTED_BY_NAME, 13, 1, 0x545e00); // mutacao: a ultima regiao fora da ordem'),
     ('dbt_ordem_das_regioes', '    compare_text_nocase(na.as_ptr(), nb.as_ptr()) // (dbt)', '    compare_text_nocase(nb.as_ptr(), na.as_ptr()) // mutacao: a ordem invertida'),
-    ('dbt_pessoa_da_opiniao', '        read(0x3b) // (dbt)', '        read(0x27) // mutacao: o indice do outro lado'),
+    ('dbt_pessoa_da_opiniao', '        read(staff_state::OPINION_LINK_STAFF_ID + 0x14) // (dbt)', '        read(0x27) // mutacao: o indice do outro lado'),
 ]

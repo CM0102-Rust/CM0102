@@ -19,7 +19,7 @@ MUTACOES = [
     ('cpr8_um_em_dois', "if random(3) == 0 {\n                break 'm 1; // cpr8: one in three retires", "if random(2) == 0 {\n                break 'm 1; // mutacao: um em dois", 'cpr_8 out of the game'),
     ('cpr8_fim_de_temporada_31', 'let d2 = (random(30) as u16).wrapping_add(read_u16(t + key_nation_record::SEASON_END_DAY)); // the nation’s end of season', 'let d2 = (random(31) as u16).wrapping_add(read_u16(t + key_nation_record::SEASON_END_DAY)); // mutacao: sorteio(31)', 'cpr_8 dates by nation'),
     ('cpr9_sem_desempregado', '} else if exe::player_regen_check_unemployed_retirement(p, e.as_mut_ptr()) != 0 {', '} else if false && exe::player_regen_check_unemployed_retirement(p, e.as_mut_ptr()) != 0 { // mutacao: sem o desempregado', 'cpr_9 unemployed'),
-    ('cpr9_treinador_fica', 'clear(0x19f, 5); // cpr9: the coach slots', '// mutacao: as vagas de treinador ficam', 'cpr_9 coach'),
+    ('cpr9_treinador_fica', 'clear(club::COACHES, 5); // cpr9: the coach slots', '// mutacao: as vagas de treinador ficam', 'cpr_9 coach'),
     ('cpr9_vaga_nao_abre', 'exe::manager_manager_add_job_vacancy(read_usize(G_MANAGER_MANAGER), c, person); // cpr9: the manager slot opens', '// mutacao: a vaga nao abre', 'cpr_9 manager'),
     ('cpr10_lesionado_como_recuperando', 'return 2; // cpr10: lesionado', 'return 1; // mutacao: lesionado como recuperando'),
     ('cpr10_recuperando_como_pronto', '(days < l.days_out() as i32) as u8 // cpr10: recuperando a forma', '0 // mutacao: recuperando como pronto'),

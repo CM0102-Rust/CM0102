@@ -2864,7 +2864,7 @@ pub(crate) unsafe extern "C" fn fill_team_stats_rows(mode: u32, area: usize) {
                     coluna = 1;
                     fonte = 0xc;
                     fundo = if i < 0xb { colour_word_u32(G_GUI_COLOUR_DARK_BLUE) } else { exe::graphics_rgb_to_pixel(0, 0, 0x40, 0) };
-                    let n = bi(0x1ac);
+                    let n = bi(match_record::ROW_SHIRT_NUMBER);
                     marcas = 0x30;
                     estilo = 1;
                     format(BUF, 0x98806c, if n > 0 { n as i32 } else { i + 1 });
@@ -2877,8 +2877,8 @@ pub(crate) unsafe extern "C" fn fill_team_stats_rows(mode: u32, area: usize) {
                     fonte = 0xc;
                     fundo = 0;
                     estilo = 1;
-                    if !(photo != 0 && same(0x1bc) && same(0x1bd)) {
-                        let (a, d) = (b(0x1bc), b(0x1bd));
+                    if !(photo != 0 && same(match_record::ROW_YELLOW_CARDS) && same(match_record::ROW_RED_CARD)) {
+                        let (a, d) = (b(match_record::ROW_YELLOW_CARDS), b(match_record::ROW_RED_CARD));
                         // the card colour goes in the cell background ([esp+0x1c] in the original), not in the text
                         if code == 1 {
                             if a != 0 {
@@ -2923,9 +2923,9 @@ pub(crate) unsafe extern "C" fn fill_team_stats_rows(mode: u32, area: usize) {
                     }
                     if read_u32(reg + match_record::ROW_PLAYER_ID) == read_u32(data + match_record::MAN_OF_THE_MATCH_ID) {
                         cor = if read_u8(G_PLAYER_SETUP_COLOURBLIND_FLAG) != 0 { colour_word_u32(G_GUI_COLOUR_YELLOW) } else { colour_word_u32(0xaebde8) };
-                    } else if bi(0x1c3) > -1 || bi(match_record::ROW_MINUTE_LEFT_PITCH) > -1 || bi(match_record::ROW_MINUTE_OFF) > -1 {
+                    } else if bi(match_record::ROW_INJURY_MINUTE) > -1 || bi(match_record::ROW_MINUTE_LEFT_PITCH) > -1 || bi(match_record::ROW_MINUTE_OFF) > -1 {
                         cor = colour_word_u32(G_GUI_COLOUR_GREY);
-                    } else if i <= 0xa || bi(0x1c2) != -1 {
+                    } else if i <= 0xa || bi(match_record::ROW_MINUTE_ON) != -1 {
                         cor = colour_word_u32(G_GUI_COLOUR_PALE_GREY);
                     } else {
                         cor = colour_word_u32(G_GUI_COLOUR_GREY);
@@ -2938,17 +2938,17 @@ pub(crate) unsafe extern "C" fn fill_team_stats_rows(mode: u32, area: usize) {
                     fonte = 1;
                     fundo = 0;
                     marcas = 1;
-                    if !(i >= 0xb && bi(0x1c2) <= -1)
-                        && !(photo != 0 && same(0x1c3) && same(0x1c4) && same(0x1c0) && same(0x1c2))
+                    if !(i >= 0xb && bi(match_record::ROW_MINUTE_ON) <= -1)
+                        && !(photo != 0 && same(match_record::ROW_INJURY_MINUTE) && same(match_record::ROW_MINUTE_LEFT_PITCH) && same(match_record::ROW_MINUTE_OFF) && same(match_record::ROW_MINUTE_ON))
                     {
-                        if bi(0x1c3) > -1 {
-                            text(BUF, 0xa16a68, bi(0x1c3) as i32 + 1);
+                        if bi(match_record::ROW_INJURY_MINUTE) > -1 {
+                            text(BUF, 0xa16a68, bi(match_record::ROW_INJURY_MINUTE) as i32 + 1);
                         } else if bi(match_record::ROW_MINUTE_LEFT_PITCH) > -1 {
                             text(BUF, 0xa16a54, bi(match_record::ROW_MINUTE_LEFT_PITCH) as i32 + 1);
                         } else if bi(match_record::ROW_MINUTE_OFF) > -1 {
                             text(BUF, 0xa16a40, bi(match_record::ROW_MINUTE_OFF) as i32 + 1);
-                        } else if bi(0x1c2) > -1 {
-                            text(BUF, 0xa16a2c, bi(0x1c2) as i32 + 1);
+                        } else if bi(match_record::ROW_MINUTE_ON) > -1 {
+                            text(BUF, 0xa16a2c, bi(match_record::ROW_MINUTE_ON) as i32 + 1);
                             cor = colour_word_u32(0xaebdd4);
                         }
                     }
@@ -2961,7 +2961,7 @@ pub(crate) unsafe extern "C" fn fill_team_stats_rows(mode: u32, area: usize) {
                     fonte = 0xc;
                     fundo = 0;
                     estilo = 1;
-                    if !(i >= 0xb && bi(0x1c2) <= -1) && !(photo != 0 && same(campo) && same(0x1c2)) {
+                    if !(i >= 0xb && bi(match_record::ROW_MINUTE_ON) <= -1) && !(photo != 0 && same(campo) && same(match_record::ROW_MINUTE_ON)) {
                         match code {
                             22 => {
                                 format(BUF, 0x98806c, bi(campo) as i32);
@@ -4110,17 +4110,17 @@ pub(crate) unsafe extern "C" fn refresh_match_stats_values() {
     read_i8(0x74c + 2);
     read_i8(0x128 + 3);
     read_i8(0x74d + 5);
-    diferenca(0x127, 0x128, 6);
-    diferenca(0x74c, 0x74d, 8);
+    diferenca(match_record::HOME_SHOTS, 0x128, 6);
+    diferenca(match_record::AWAY_SHOTS, 0x74d, 8);
     for (k, d) in [(0x129, 9), (0x74e, 0xb), (0x12a, 0xc), (0x74f, 0xe), (0x12b, 0xf), (0x750, 0x11), (0x12c, 0x12), (0x751, 0x14), (0x12d, 0x15), (0x752, 0x17)] {
         read_i8(k + d);
     }
-    write_percent_pair(0x130, 0x130, 0x132, 0x18, false);
-    write_percent_pair(0x755, 0x755, 0x757, 0x1a, false);
-    write_percent_pair(0x134, 0x134, 0x136, 0x1b, false);
-    write_percent_pair(0x759, 0x759, 0x75b, 0x1d, false);
-    write_percent_pair(0x138, 0x138, 0x13a, 0x1e, false);
-    write_percent_pair(0x75d, 0x138, 0x13a, 0x20, true);
+    write_percent_pair(match_record::HOME_PASSES, 0x130, 0x132, 0x18, false);
+    write_percent_pair(match_record::AWAY_PASSES, 0x755, 0x757, 0x1a, false);
+    write_percent_pair(match_record::HOME_TACKLES, 0x134, 0x136, 0x1b, false);
+    write_percent_pair(match_record::AWAY_TACKLES, 0x759, 0x75b, 0x1d, false);
+    write_percent_pair(match_record::HOME_HEADERS, 0x138, 0x13a, 0x1e, false);
+    write_percent_pair(match_record::AWAY_HEADERS, 0x138, 0x13a, 0x20, true);
     for (k, d) in [(0x12e, 0x21), (0x753, 0x23), (0x12f, 0x24), (0x754, 0x26)] {
         read_i8(k + d);
     }

@@ -15,6 +15,6 @@ MUTACOES = [
     ('o_rodizio', "        while r != 0 && *((f + 0x2e) as *mut u8) != 2 {", "        while r != 0 && *((f + 0x2e) as *mut u8) != 1 {"),
     ('o_capitao', "            if rd(0x14c + 4 * k) as usize == cap {", "            if rd(0x14c + 4 * k) as usize != cap {"),
     ('g_especial', "    let special = name != b\"3-4-3\" && name != b\"3-5-2 Attacking\";", "    let special = name != b\"3-4-3\";"),
-    ('g_postura3', "                g(if e(0xe) > 0x10 { 0x20000 } else { 0x8000 });", "                g(if e(0xe) > 0x12 { 0x20000 } else { 0x8000 });"),
-    ('g_padrao', "            } else if e(0xe) <= 5 && weight_of_side() != 0", "            } else if e(0xe) <= 6 && weight_of_side() != 0"),
+    ('g_postura3', "                g(if e(non_player::ATTACKING) > 0x10 { 0x20000 } else { 0x8000 });", "                g(if e(non_player::ATTACKING) > 0x12 { 0x20000 } else { 0x8000 });"),
+    ('g_padrao', "            } else if e(non_player::ATTACKING) <= 5 && weight_of_side() != 0", "            } else if e(non_player::ATTACKING) <= 6 && weight_of_side() != 0"),
 ]

@@ -3319,11 +3319,11 @@ pub(crate) unsafe extern "stdcall" fn national_team_level(j: usize, rep: *const 
     }
     let sheet = j.player();
     let n = |o: usize| read_i8(sheet.addr() + o) >= 0xf;
-    if n(0xf) {
+    if n(player_sheet::GOALKEEPER) {
         0
-    } else if n(0x10) || n(0x11) {
+    } else if n(player_sheet::SWEEPER) || n(player_sheet::DEFENDER) {
         1
-    } else if n(0x12) || n(0x13) || n(0x14) {
+    } else if n(player_sheet::DEFENSIVE_MIDFIELDER) || n(player_sheet::MIDFIELDER) || n(player_sheet::ATTACKING_MIDFIELDER) {
         2
     } else {
         3

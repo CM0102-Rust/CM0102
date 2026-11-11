@@ -3888,15 +3888,15 @@ pub(crate) unsafe extern "thiscall" fn free_transfer_staff(this: usize, p: usize
     let r = this.past_transfers().wrapping_add(n.wrapping_mul(0x25));
     this.set_past_transfer_count(n.wrapping_add(1));
     let por = |o: usize, v: u32| write_u32(r + o, v);
-    por(0x10, u32::MAX);
-    por(0x14, if club != 0 { read_usize(club) as u32 } else { u32::MAX });
+    por(past_transfer::TO_CLUB_ID, u32::MAX);
+    por(past_transfer::FROM_CLUB_ID, if club != 0 { read_usize(club) as u32 } else { u32::MAX });
     copy_today_to(r + past_transfer::DATE);
     por(0, read_usize(p.addr()) as u32);
-    por(4, read_usize(p.first_name() + names::ID) as u32);
-    por(8, read_usize(p.second_name() + names::ID) as u32);
-    por(0xc, read_usize(p.common_name() + names::ID) as u32);
+    por(past_transfer::FIRST_NAME_ID, read_usize(p.first_name() + names::ID) as u32);
+    por(past_transfer::SECOND_NAME_ID, read_usize(p.second_name() + names::ID) as u32);
+    por(past_transfer::COMMON_NAME_ID, read_usize(p.common_name() + names::ID) as u32);
     write_u8(r + past_transfer::MOVE_TYPE, if so_record != 0 { 5 } else { 3 });
-    por(0x18, 0);
+    por(past_transfer::FEE, 0);
     if so_record != 0 {
         return;
     }

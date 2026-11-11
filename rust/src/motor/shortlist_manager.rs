@@ -147,8 +147,8 @@ pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) 
         if count >= 0x32 && player {
             continue;
         }
-        let id = read_usize(slot(0xf)) as i32;
-        if id <= -1 || read_usize(slot(0x17)) as i32 != -1 {
+        let id = read_usize(slot(shortlist_slot::TARGET_STAFF_ID)) as i32;
+        if id <= -1 || read_usize(slot(shortlist_slot::OFFER_REF)) as i32 != -1 {
             continue;
         }
         let p = Staff((transfer_manager_staff_by_id(id as usize)).addr());
@@ -183,7 +183,7 @@ pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) 
         if !p.national_job().is_null() && p.job_for_nation() == job_kind::MANAGER {
             continue;
         }
-        if read_u8(slot(0x24)) & 1 == 0 {
+        if read_u8(slot(shortlist_slot::FLAGS)) & shortlist_slot_flags::LOAN_SLOT == 0 {
             // the purchase slot
             if read_i16(slot(1)) <= -1 && player {
                 continue;
@@ -194,8 +194,8 @@ pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) 
             if exe::transfer_manager_club_has_offer_for_player(gm, p, club) != 0 || exe::transfer_manager_get_exchange_offers_for_player(gm, p, 0) != 0 {
                 continue;
             }
-            let mut v = read_usize(slot(0xb)) as i32;
-            if read_u8(slot(0x24)) & 0x20 != 0 {
+            let mut v = read_usize(slot(shortlist_slot::PRICE)) as i32;
+            if read_u8(slot(shortlist_slot::FLAGS)) & shortlist_slot_flags::BID_MARKER != 0 {
                 v = v.wrapping_shl(1);
                 if v <= 0x4e20 {
                     v = 0x4e20;
@@ -217,13 +217,13 @@ pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) 
                     }
                 }
             }
-            if read_usize(slot(0x13)) as i32 > -1 && read_u8(slot(0)) == 0xb {
+            if read_usize(slot(shortlist_slot::REPLACEMENT_STAFF_ID)) as i32 > -1 && read_u8(slot(0)) == 0xb {
                 let current = club_of_staff_contract(p);
                 if exe::transfer_manager_can_sign_player(gm, club, pdata, p, current, 1, &mut reason) == 0 && reason != 9 {
-                    let x = read_usize(slot(0xb)) as i32;
+                    let x = read_usize(slot(shortlist_slot::PRICE)) as i32;
                     v = v.wrapping_add(if x > 0x2710 { x } else { 0x2710 });
                 }
-                let sub = Staff((transfer_manager_staff_by_id(read_usize(slot(0x13)))).addr());
+                let sub = Staff((transfer_manager_staff_by_id(read_usize(slot(shortlist_slot::REPLACEMENT_STAFF_ID)))).addr());
                 let les = read_usize(G_INJURY);
                 if exe::injury_get_player_injury(les, sub) != 0 {
                     let a = read_i16(exe::injury_get_player_injury(les, sub) + injury_entry::DAYS_LEFT) as i32;
@@ -236,7 +236,7 @@ pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) 
                     v = v.wrapping_add(ftol((read_f64(rdata::F64_1_5) - x * read_f64(rdata::F64_0_03333333333)) * v as f64));
                 }
                 if exe::transfer_manager_is_player_under_offer(gm, sub, 0) != 0 {
-                    let x = read_usize(slot(0xb)) as i32 as f64 * read_f64(rdata::F64_1_5);
+                    let x = read_usize(slot(shortlist_slot::PRICE)) as i32 as f64 * read_f64(rdata::F64_1_5);
                     v = v.wrapping_add(ftol(if x > read_f64(rdata::F64_10000) { x } else { read_f64(rdata::F64_10000) }));
                 }
             }
@@ -256,7 +256,7 @@ pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) 
                         continue;
                     }
                     // simplification: the role goes with the high bytes of the result and of fnstsw; 0x5968d0 reads only the byte
-                    let t = exe::finance_get_max_wage(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club), p, ((read_u8(slot(0x24)) >> 1) & 0xf) as u32);
+                    let t = exe::finance_get_max_wage(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club), p, ((read_u8(slot(shortlist_slot::FLAGS)) >> 1) & 0xf) as u32);
                     if (t as f64 * read_f64(rdata::F64_1_3)) < (pc.wage() as usize) as i32 as f64 {
                         continue;
                     }
@@ -268,7 +268,7 @@ pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) 
             if r2 <= r1 {
                 continue;
             }
-            write_u8(slot(0x24), read_u8(slot(0x24)) & 0xdf);
+            write_u8(slot(shortlist_slot::FLAGS), read_u8(slot(shortlist_slot::FLAGS)) & !shortlist_slot_flags::BID_MARKER);
             let mut offer = [0u8; 0x44];
             let po = Offer(offer.as_mut_ptr() as usize);
             exe::new_transfer_offer(po);
@@ -312,7 +312,7 @@ pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) 
                     }
                     exe::crt_operator_delete(terms);
                 }
-                write_usize(slot(0x17), po.slot_index());
+                write_usize(slot(shortlist_slot::OFFER_REF), po.slot_index());
                 if player {
                     count = count.wrapping_add(1);
                 }
@@ -339,17 +339,17 @@ pub(crate) unsafe extern "thiscall" fn make_club_bids(this: usize, club: usize) 
             }
             covered!("cqe_3 loan draw");
             let r1 = exe::utils_random(club.reputation() as i32 / 10); // cqe3: the loan random draw
-            let r2 = exe::utils_random(read_usize(slot(0xb)) as i32);
+            let r2 = exe::utils_random(read_usize(slot(shortlist_slot::PRICE)) as i32);
             if r2 <= r1 {
                 let r1 = exe::utils_random((club.reputation() as i32).wrapping_shl(1));
-                let r2 = exe::utils_random(read_usize(slot(0xb)) as i32);
+                let r2 = exe::utils_random(read_usize(slot(shortlist_slot::PRICE)) as i32);
                 if r2 <= r1 {
                     continue;
                 }
             }
             let k = exe::shortlist_manager_try_loan_offer_for_player(this, p, club);
-            write_usize(slot(0x17), k as u32 as usize);
-            if read_usize(slot(0x17)) as i32 > -1 {
+            write_usize(slot(shortlist_slot::OFFER_REF), k as u32 as usize);
+            if read_usize(slot(shortlist_slot::OFFER_REF)) as i32 > -1 {
                 count = count.wrapping_add(1);
             } else {
                 // simplification: the setne goes with the high bytes of the slot pointer (as in the original); 0x843e10 reads the byte

@@ -5,6 +5,6 @@ MUTACOES = [
     ('h_9a01', "&& read_u32(read_usize(humanos) + i as usize * 0xa6ef + human_manager_record::ON_HOLIDAY) != 0", "&& read_u32(read_usize(humanos) + i as usize * 0xa6ef + human_manager_record::ON_HOLIDAY) == 0"),
     ('c_k0', "                if v > 0x4b { 1 } else if v >= 0x28 { 2 } else if v >= 10 { 3 } else { low(-30) }", "                if v > 0x4b { 1 } else if v >= 0x29 { 2 } else if v >= 10 { 3 } else { low(-30) }"),
     ('c_k4', "            } else if v > -30 {\n                4", "            } else if v > -31 {\n                4"),
-    ('c_k5', "            } else if ambicao > 5 && rep(0xb) > 0x4e2 {", "            } else if ambicao > 4 && rep(0xb) > 0x4e2 {"),
+    ('c_k5', "            } else if ambicao > 5 && rep(player_sheet::CURRENT_REPUTATION) > 0x4e2 {", "            } else if ambicao > 4 && rep(player_sheet::CURRENT_REPUTATION) > 0x4e2 {"),
     ('c_tipo5', "    if c.contract_type() & 0x3f == 5 {", "    if c.contract_type() & 0x3f == 6 {"),
 ]

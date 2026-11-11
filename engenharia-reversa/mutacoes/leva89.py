@@ -5,7 +5,7 @@ MUTACOES = [
     ('g_alcance', "if reach >= t.points()", "if reach > t.points()"),
     ('n_titular', "if k <= 10 || (j.minute_on() as u8) != 0xff {", "if k <= 9 || (j.minute_on() as u8) != 0xff {"),
     ('n_7', "if average < read_f64(rdata::F64_7) &&", "if average < read_f64(rdata::F64_7) + 0.5 &&"),
-    ('n_08', "reputation(0x20) * read_f64(rdata::F64_0_8)", "reputation(0x20)"),
+    ('n_08', "reputation(fixture::AWAY_CLUB) * read_f64(rdata::F64_0_8)", "reputation(fixture::AWAY_CLUB)"),
     ('n_2120', "casa == fora && classificado != 0", "casa == fora && classificado == 0"),
     ('n_2001', "say(call, event::FINAL_WHISTLE, 0);", "say(call, event::FINAL_WHISTLE, 1);"),
 ]

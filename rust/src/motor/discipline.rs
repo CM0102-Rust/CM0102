@@ -768,14 +768,14 @@ pub(crate) unsafe extern "thiscall" fn discipline_operator(this: usize, source: 
     let w = |o: usize| write_u16(this + o, read_u16(source + o));
     b(0);
     b(1);
-    w(2);
+    w(ban_record::DAYS);
     let mut local = [0u8; 8];
     exe::date_operator_3d(this + ban_record::START_DATE, (&mut local) as *mut [u8; 8] as usize, source + ban_record::START_DATE);
     for o in 0xc..0x10 {
         b(o);
     }
-    b(0x10);
-    w(0x11);
+    b(ban_record::REASON);
+    w(ban_record::REASON_AMOUNT);
     let m = (this + ban_record::FLAGS) as *mut u8;
     *m = (*m & !7) | (read_u8(source + ban_record::FLAGS) & 7); // the three marks
     this

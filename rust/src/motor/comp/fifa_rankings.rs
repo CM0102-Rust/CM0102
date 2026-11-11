@@ -264,12 +264,12 @@ pub(crate) unsafe extern "thiscall" fn recalculate_scores(this: usize) {
             write_i32(e + fifa_ranking_entry::YEAR_TOTALS, if c != 0 { (v18.wrapping_add(oito) / (c as i32 + 8)).wrapping_shl(3) } else { v18 });
         }
         let t = |o: usize| read_i32(e + o);
-        let sum = (t(0x24).wrapping_mul(2) / 6)
-            .wrapping_add(t(0x20).wrapping_mul(3) / 6)
-            .wrapping_add(t(0x1c).wrapping_mul(4) / 6)
-            .wrapping_add(t(0x18).wrapping_mul(5) / 6)
-            .wrapping_add(t(0x28) / 6)
-            .wrapping_add(t(0x14));
+        let sum = (t(fifa_ranking_entry::YEAR_TOTALS + 0x10).wrapping_mul(2) / 6)
+            .wrapping_add(t(fifa_ranking_entry::YEAR_TOTALS + 0xc).wrapping_mul(3) / 6)
+            .wrapping_add(t(fifa_ranking_entry::YEAR_TOTALS + 0x8).wrapping_mul(4) / 6)
+            .wrapping_add(t(fifa_ranking_entry::YEAR_TOTALS + 0x4).wrapping_mul(5) / 6)
+            .wrapping_add(t(fifa_ranking_entry::YEAR_TOTALS + 0x14) / 6)
+            .wrapping_add(t(fifa_ranking_entry::YEAR_TOTALS));
         write_f32(e + fifa_ranking_entry::SCORE, (sum as f64 * factor) as f32);
         i += 1;
         if i >= read_usize(G_NATION_COUNT) as i32 {

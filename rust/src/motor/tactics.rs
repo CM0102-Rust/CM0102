@@ -284,7 +284,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
         'rodadas: while read_u8(m + engine::GOLDEN_GOAL_SCORED) == 0 {
             side = if c7 != 0 { round as usize } else { (round == 0) as usize };
             let other = (side == 0) as usize;
-            let strong = || random(word(0x1de, side) + word(0x1da, side)) > random(word(0x1da, other) + word(0x1de, other));
+            let strong = || random(word(engine::TEAM_STRENGTH_2, side) + word(engine::TEAM_STRENGTH, side)) > random(word(engine::TEAM_STRENGTH, other) + word(engine::TEAM_STRENGTH_2, other));
             // the three attacks (the third by strength)
             for k in 0..3 {
                 if k >= 2 && !strong() {
@@ -305,7 +305,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 }
                 let p = jog(side, i);
                 let f = (read_f32(p + match_player::PASSING) as f64 + read_f32(rdata::F32_20) as f64) as f32;
-                let r = random((word(0x1da, other) + 200) / 19);
+                let r = random((word(engine::TEAM_STRENGTH, other) + 200) / 19);
                 if !(r as f64 >= f as f64) {
                     mais16((m + engine::PASSES_COMPLETED + side * 0x36) as *mut i16);
                     add(MatchPlayer(p), 0x28);
@@ -322,7 +322,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 }
                 let p = jog(side, c as i8);
                 let f = (read_f32(p + match_player::TACKLING) as f64 + read_f32(rdata::F32_15) as f64) as f32;
-                let r = random(word(0x1de, other) / 5);
+                let r = random(word(engine::TEAM_STRENGTH_2, other) / 5);
                 if !(r as f64 >= f as f64) {
                     add(MatchPlayer(p), 0x28);
                     mais16((m + engine::TACKLES_WON + side * 0x36) as *mut i16);
@@ -346,7 +346,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 };
                 let p = jog(side, i);
                 let f = (read_f32(p + match_player::JUMPING) as f64 + read_f32(rdata::F32_15) as f64) as f32;
-                let r = random((word(0x1f2, other) + 100) / 7);
+                let r = random((word(engine::TEAM_STRENGTH + 0x18, other) + 100) / 7);
                 if !(r as f64 >= f as f64) {
                     mais16((m + engine::HEADERS_WON + side * 0x36) as *mut i16);
                     add(MatchPlayer(p), 0x14);
@@ -366,7 +366,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
             // the other side’s cards, or the type of the move
             local_28 = 0;
             let mut c20 = false;
-            if random(word(0x1ea, other)) > random(0x640) {
+            if random(word(engine::TEAM_STRENGTH + 0x10, other)) > random(0x640) {
                 let mo = m + other * 0x36;
                 more((mo + engine::SIDE_FOUL_TALLY) as *mut u8);
                 let send_off = |c: u8, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32| {
@@ -377,12 +377,12 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                     team_strength(m, other as i8);
                     narrate(call, event::SENT_OFF, c, other);
                 };
-                if random(word(0x1ea, other)) > random(0x61a8) {
+                if random(word(engine::TEAM_STRENGTH + 0x10, other)) > random(0x61a8) {
                     covered!("quick simulation sending off");
                     let c = choose_by_condition(m, other as i8, 4);
                     add(MatchPlayer(jog(other, c as i8)), -0xfa);
                     send_off(c, call);
-                } else if random(word(0x1ea, other)) > random(0x6a4) {
+                } else if random(word(engine::TEAM_STRENGTH + 0x10, other)) > random(0x6a4) {
                     covered!("quick simulation give_yellow_card");
                     let c = choose_by_condition(m, other as i8, 2);
                     let p = jog(other, c as i8);
@@ -403,10 +403,10 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                             *g = 3;
                         }
                         let (x, y) = if side != 0 { (3, 0) } else { (0, 3) };
-                        *pb(0x43) = x;
-                        *pb(0x44) = y;
-                        if *pb(0x4b) != -1 && *pb(0x43) as i32 + *pb(0x4b) as i32 == *pb(0x4c) as i32 + *pb(0x44) as i32 {
-                            *pb(0x43) = (*pb(0x43)).wrapping_add(1);
+                        *pb(fixture::HOME_GOALS) = x;
+                        *pb(fixture::AWAY_GOALS) = y;
+                        if *pb(fixture::HOME_AGGREGATE) != -1 && *pb(fixture::HOME_GOALS) as i32 + *pb(fixture::HOME_AGGREGATE) as i32 == *pb(fixture::AWAY_AGGREGATE) as i32 + *pb(fixture::AWAY_GOALS) as i32 {
+                            *pb(fixture::HOME_GOALS) = (*pb(fixture::HOME_GOALS)).wrapping_add(1);
                             more((m + engine::SCORE) as *mut u8);
                         }
                         break 'rodadas;
@@ -418,13 +418,13 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 } else {
                     local_28 = 1;
                 }
-            } else if random(word(0x1de, side)) > random(3000) {
+            } else if random(word(engine::TEAM_STRENGTH_2, side)) > random(3000) {
                 c20 = true;
                 more((m + engine::CORNER_KICKS + side * 0x36) as *mut u8);
             }
             // the score factor
             let d = goals(side) - goals(other);
-            let goal_difference = if side == 0 { *pb(0x4b) as i32 - *pb(0x4c) as i32 } else { *pb(0x4c) as i32 - *pb(0x4b) as i32 };
+            let goal_difference = if side == 0 { *pb(fixture::HOME_AGGREGATE) as i32 - *pb(fixture::AWAY_AGGREGATE) as i32 } else { *pb(fixture::AWAY_AGGREGATE) as i32 - *pb(fixture::HOME_AGGREGATE) as i32 };
             let x = if goal_difference + d > 3 {
                 d as f64
             } else if goals(side) + goals(other) != 0 {
@@ -435,12 +435,12 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 read_f32(rdata::F32_0_75) as f64
             };
             let (v, repartir_outro): (f64, unsafe extern "thiscall" fn(usize, i8, i16)) = if c20 {
-                (word(0x1f2, other) as f64 * x * read_f64(rdata::F64_6_1), split_c)
+                (word(engine::TEAM_STRENGTH + 0x18, other) as f64 * x * read_f64(rdata::F64_6_1), split_c)
             } else {
-                (word(0x1da, other) as f64 * x * read_f64(rdata::F64_4_8), split_b)
+                (word(engine::TEAM_STRENGTH, other) as f64 * x * read_f64(rdata::F64_4_8), split_b)
             };
             let r1 = random(ftol(v));
-            let l24 = random(word(0x1de, side)).wrapping_sub(r1) as i16;
+            let l24 = random(word(engine::TEAM_STRENGTH_2, side)).wrapping_sub(r1) as i16;
             if l24 > 0 {
                 split_a(m, side as i8, 0x1c);
                 repartir_outro(m, other as i8, -0x14);
@@ -456,7 +456,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                 }
                 more((ml + engine::SHOTS) as *mut u8);
                 let c8 = choose_by_role_e(m, side as u32, c20 as u32) as i8;
-                let a = if c20 { random(word(0x1ee, side)) } else { random(word(0x1e2, side) * (local_28 as i32 + 1)) };
+                let a = if c20 { random(word(engine::TEAM_STRENGTH + 0x14, side)) } else { random(word(engine::TEAM_STRENGTH + 0x8, side) * (local_28 as i32 + 1)) };
                 let us = a as i16 as i32;
                 if us + 0xa5 > random(0x172) + (0x168 - l24 as i32) {
                     more((ml + engine::SHOTS_ON_TARGET) as *mut u8);
@@ -465,7 +465,7 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                     } else {
                         split_e(m, side as i8, a as i16);
                     }
-                    if us + 0x2d > random((7 - local_28 as i32 * 3) * word(0x1e6, other)) {
+                    if us + 0x2d > random((7 - local_28 as i32 * 3) * word(engine::TEAM_STRENGTH + 0xc, other)) {
                         covered!("quick simulation goal");
                         let c9 = choose_by_role_c(m, side as u32, local_28 as u32);
                         let p = jog(side, c9 as i8);
@@ -531,34 +531,34 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
         mais16((m + engine::CLOCK) as *mut i16);
         let t = read_i16(m + engine::CLOCK);
         let w38 = read_u16(pt() + fixture::TIE_RULES);
-        let same_in_aggregate = |a: usize, x: usize| *pb(a) as i32 + *pb(0x4b) as i32 == *pb(0x4c) as i32 + *pb(x) as i32;
+        let same_in_aggregate = |a: usize, x: usize| *pb(a) as i32 + *pb(fixture::HOME_AGGREGATE) as i32 == *pb(fixture::AWAY_AGGREGATE) as i32 + *pb(x) as i32;
         if end {
             let (a, x) = if t <= 0x5a { (0x43, 0x44) } else { (0x47, 0x48) };
             *pb(a) = goals(0) as i8;
             *pb(x) = goals(1) as i8;
-            let desempata = if *pb(0x4b) != -1 { same_in_aggregate(0x43, 0x44) } else { *pb(0x43) == *pb(0x44) && w38 & 0xa3 != 0 };
+            let desempata = if *pb(fixture::HOME_AGGREGATE) != -1 { same_in_aggregate(0x43, 0x44) } else { *pb(fixture::HOME_GOALS) == *pb(fixture::AWAY_GOALS) && w38 & 0xa3 != 0 };
             if desempata {
                 *pb(a) = (*pb(a)).wrapping_add(1);
             }
             break 'periodo false;
         }
         if read_u8(m + engine::GOLDEN_GOAL_SCORED) != 0 {
-            *pb(0x47) = goals(0) as i8;
-            *pb(0x48) = goals(1) as i8;
+            *pb(fixture::HOME_GOALS_EXTRA_TIME) = goals(0) as i8;
+            *pb(fixture::AWAY_GOALS_EXTRA_TIME) = goals(1) as i8;
             break 'periodo false;
         }
         match t {
             0x2d => {
                 write_i16(m + engine::PERIOD_END, 0x3de);
-                *pb(0x45) = goals(0) as i8;
-                *pb(0x46) = goals(1) as i8;
+                *pb(fixture::HOME_GOALS_HALF_TIME) = goals(0) as i8;
+                *pb(fixture::AWAY_GOALS_HALF_TIME) = goals(1) as i8;
             }
             0x5a => {
-                *pb(0x43) = goals(0) as i8;
-                *pb(0x44) = goals(1) as i8;
+                *pb(fixture::HOME_GOALS) = goals(0) as i8;
+                *pb(fixture::AWAY_GOALS) = goals(1) as i8;
                 write_i16(m + engine::PERIOD_END, 0x483);
-                let aggregate = *pb(0x4b) != -1;
-                if (aggregate && !same_in_aggregate(0x43, 0x44)) || (!aggregate && *pb(0x43) != *pb(0x44)) {
+                let aggregate = *pb(fixture::HOME_AGGREGATE) != -1;
+                if (aggregate && !same_in_aggregate(0x43, 0x44)) || (!aggregate && *pb(fixture::HOME_GOALS) != *pb(fixture::AWAY_GOALS)) {
                     break 'periodo false;
                 }
                 if w38 & fixture_tie_rules::GOLDEN_GOAL != 0 {
@@ -570,20 +570,20 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
                     covered!("quick simulation extra time");
                     continue 'periodo;
                 }
-                if aggregate && w38 & 4 == 0 && *pb(0x44) != *pb(0x4b) && w38 & 0x4000 == 0 {
+                if aggregate && w38 & 4 == 0 && *pb(fixture::AWAY_GOALS) != *pb(fixture::HOME_AGGREGATE) && w38 & 0x4000 == 0 {
                     break 'periodo false;
                 }
                 break 'periodo w38 & 0x21 != 0;
             }
             0x69 => *((m + engine::PERIOD_END) as *mut i16) = 0x528,
             0x78 => {
-                *pb(0x47) = goals(0) as i8;
-                *pb(0x48) = goals(1) as i8;
-                if *pb(0x4b) != -1 {
-                    if !same_in_aggregate(0x47, 0x48) || (w38 & 0x4000 != 0 && *pb(0x48) != *pb(0x4b)) {
+                *pb(fixture::HOME_GOALS_EXTRA_TIME) = goals(0) as i8;
+                *pb(fixture::AWAY_GOALS_EXTRA_TIME) = goals(1) as i8;
+                if *pb(fixture::HOME_AGGREGATE) != -1 {
+                    if !same_in_aggregate(0x47, 0x48) || (w38 & 0x4000 != 0 && *pb(fixture::AWAY_GOALS_EXTRA_TIME) != *pb(fixture::HOME_AGGREGATE)) {
                         break 'periodo false;
                     }
-                } else if *pb(0x47) != *pb(0x48) {
+                } else if *pb(fixture::HOME_GOALS_EXTRA_TIME) != *pb(fixture::AWAY_GOALS_EXTRA_TIME) {
                     break 'periodo false;
                 }
                 break 'periodo w38 & 0x21 != 0;
@@ -595,24 +595,24 @@ pub(crate) unsafe fn quick_simulation_with(m: usize, call: &mut dyn FnMut(usize,
         covered!("quick simulation penalties");
         random(5);
         random(5);
-        *pb(0x49) = random(5) as i8;
+        *pb(fixture::HOME_PENALTIES) = random(5) as i8;
         random(5);
         random(5);
-        *pb(0x4a) = random(5) as i8;
-        if *pb(0x49) == *pb(0x4a) {
+        *pb(fixture::AWAY_PENALTIES) = random(5) as i8;
+        if *pb(fixture::HOME_PENALTIES) == *pb(fixture::AWAY_PENALTIES) {
             let o = if random(2) != 0 { 0x49 } else { 0x4a };
             *pb(o) = (*pb(o)).wrapping_add(1);
         }
     }
     // o agregado
-    if *pb(0x4b) != -1 {
-        let (a, x) = if *pb(0x47) != -1 { (0x47, 0x48) } else { (0x43, 0x44) };
-        *pb(0x4b) = (*pb(0x4b)).wrapping_add(*pb(a));
-        *pb(0x4c) = (*pb(0x4c)).wrapping_add(*pb(x));
+    if *pb(fixture::HOME_AGGREGATE) != -1 {
+        let (a, x) = if *pb(fixture::HOME_GOALS_EXTRA_TIME) != -1 { (0x47, 0x48) } else { (0x43, 0x44) };
+        *pb(fixture::HOME_AGGREGATE) = (*pb(fixture::HOME_AGGREGATE)).wrapping_add(*pb(a));
+        *pb(fixture::AWAY_AGGREGATE) = (*pb(fixture::AWAY_AGGREGATE)).wrapping_add(*pb(x));
     }
     // the home goal
     let c1 = Club(read_usize((pt()) + fixture::HOME_CLUB));
-    if !c1.is_null() && read_usize((pt()) + fixture::COMPETITION) == c1.division().addr() && (*pb(0x43) as i32 + *pb(0x44) as i32) < 5 && *pb(0x43) == *pb(0x44) && random(4) == 0 {
+    if !c1.is_null() && read_usize((pt()) + fixture::COMPETITION) == c1.division().addr() && (*pb(fixture::HOME_GOALS) as i32 + *pb(fixture::AWAY_GOALS) as i32) < 5 && *pb(fixture::HOME_GOALS) == *pb(fixture::AWAY_GOALS) && random(4) == 0 {
         let (r0, r1) = (c1.reputation() as i32, read_i16(read_usize((pt()) + fixture::AWAY_CLUB) + club::REPUTATION) as i32);
         let s = if r0 > r1 { Some(0) } else if r0 + 0xfa < r1 { Some(1) } else { None };
         if let Some(s) = s {

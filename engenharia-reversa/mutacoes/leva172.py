@@ -2,7 +2,7 @@
 MUTACOES = [
     ('p_parte', "                *(p as *mut u16) |= 0x8000;", "                *(p as *mut u16) |= 0x4000;"),
     ('p_anel', "    *c = if c.read().wrapping_add(1) > 0xb { 0 } else { c.read().wrapping_add(1) };", "    *c = if c.read().wrapping_add(1) > 0xa { 0 } else { c.read().wrapping_add(1) };"),
-    ('n_longa', "                exe::database_format_name_from_ids(d(0x198), d(0x19c), d(0x1a0), buf, size, longa, d(0x190));", "                exe::database_format_name_from_ids(d(0x198), d(0x19c), d(0x1a0), buf, size, 5, d(0x190));"),
+    ('n_longa', "                exe::database_format_name_from_ids(d(match_record::ROW_FIRST_NAME_ID), d(match_record::ROW_SECOND_NAME_ID), d(match_record::ROW_COMMON_NAME_ID), buf, size, longa, d(match_record::ROW_STAFF_ID));", "                exe::database_format_name_from_ids(d(0x198), d(0x19c), d(0x1a0), buf, size, 5, d(0x190));"),
     ('h_peso', "    let weight = (c32 / 2 + 10) as i8 as i32;", "    let weight = (c32 / 2 + 9) as i8 as i32;"),
     ('h_idade', "            rep = rep.wrapping_sub((age as i16).wrapping_mul(age as i16));", "            rep = rep.wrapping_sub(age as i16);"),
     ('h_certeza', "        certeza = (ftol(x + read_f64(rdata::F64_0_5)) as i8).min(0x14);", "        certeza = (ftol(x + read_f64(rdata::F64_0_5)) as i8).min(0x13);"),

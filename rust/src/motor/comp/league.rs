@@ -120,12 +120,12 @@ pub(crate) unsafe fn comment_standing_with(this: Engine, side: u32, call: AddEve
             let reputation = |o: usize| read_i16(read_usize(t() + o) + club::REPUTATION) as f64;
             let x = average * read_f64(rdata::F64_0_5) - read_f64(rdata::F64_2);
             if bl == 0 {
-                if average < read_f64(rdata::F64_7) && x * reputation(0x20) < reputation(0x1c) {
+                if average < read_f64(rdata::F64_7) && x * reputation(fixture::AWAY_CLUB) < reputation(fixture::HOME_CLUB) {
                     say(call, event::BOO_OFF_PITCH, 0);
                 }
                 return;
             }
-            if average < read_f64(rdata::F64_6_67) && x * reputation(0x1c) < reputation(0x20) * read_f64(rdata::F64_0_8) {
+            if average < read_f64(rdata::F64_6_67) && x * reputation(fixture::HOME_CLUB) < reputation(fixture::AWAY_CLUB) * read_f64(rdata::F64_0_8) {
                 say(call, event::BOO_OFF_PITCH, side);
             }
         }
@@ -3693,15 +3693,15 @@ pub(crate) unsafe extern "thiscall" fn update_head_to_head(league: usize, table:
     write_u8(e + 4, read_u8(e + 4).wrapping_add(1));
     if pro > contra {
         write_u8(e + 5, read_u8(e + 5).wrapping_add(1));
-        add(0xc, (league.win_points() as i8) as i16);
+        add(h2h_entry::POINTS, (league.win_points() as i8) as i16);
     } else if pro == contra {
         write_u8(e + 6, read_u8(e + 6).wrapping_add(1));
-        add(0xc, (league.draw_points() as i8) as i16);
+        add(h2h_entry::POINTS, (league.draw_points() as i8) as i16);
     } else {
         write_u8(e + 7, read_u8(e + 7).wrapping_add(1));
     }
-    add(8, pro as i16);
-    add(0xa, contra as i16);
+    add(h2h_entry::GOALS_FOR, pro as i16);
+    add(h2h_entry::GOALS_AGAINST, contra as i16);
 }
 
 /// does the competition have +0xbe and flag 2 of +0xd9?

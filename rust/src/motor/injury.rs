@@ -243,10 +243,10 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
     let performance = p.match_rating() as i32;
     let b = |o: usize| read_i8(p.addr() + o);
     let minute = m.clock() as i32 / 11;
-    let in_field = minute - b(0x1f) as i32;
+    let in_field = minute - b(match_player::MINUTE_ON) as i32;
     let limit = |t: i32| (t * 33 + 0xfa0).min(0x1964);
     // the common conditions: no goal, no card, +0x17 up to 8, +0x03 up to 2 and the performance up to the limit
-    let common = || b(0xc) == 0 && b(0x10) == 0 && b(0x17) <= 8 && (b(3) as u8) <= 2 && performance <= limit(in_field);
+    let common = || b(match_player::GOALS) == 0 && b(match_player::ASSISTS) == 0 && b(match_player::MATCH_FORM) <= 8 && (b(match_player::KEY_PASSES) as u8) <= 2 && performance <= limit(in_field);
     let search = |cod: u32, data: &[u8; 8]| {
         let f: unsafe extern "thiscall" fn(usize, usize, usize, i32, u32, *const [u8; 8]) -> u32 = core::mem::transmute(FN_MEDIA_HAS_LOGGED_STORY);
         f(*(G_MEDIA as *const usize), sheet.addr(), p.club(), -1, cod, data) != 0
@@ -264,7 +264,7 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
             }
         }
         0x21a1 | 0x21a2 => {
-            let goals = b(0xa) as u8 as i32;
+            let goals = b(match_player::SHOTS) as u8 as i32;
             if p.addr() != m.pass_receiver() || (m.assist_candidate() as u32) == 0 {
                 false
             } else if c == 0x21a1 {
@@ -286,23 +286,23 @@ pub(crate) unsafe extern "thiscall" fn player_highlight(p: usize, code: u32) -> 
         0x21b2 => common() && search(0x33, &d30),
         0x21b3 => performance > random(1000) + 0x1f40 && search(0x33, &d30),
         0x21b4 => performance >= random(0x7d0) + 0x1b58 && algum(0x28, 0x3b, &d7),
-        0x21b5 => performance > random(1000) + 0x1f40 && b(0x30) != 0,
+        0x21b5 => performance > random(1000) + 0x1f40 && b(match_player::DEBUT) != 0,
         0x21b6 => {
-            let yes = performance > random(0x7d0) + 0x1c52 && b(0xc) == 1 && in_field > 0x41 && b(0x30) != 0;
+            let yes = performance > random(0x7d0) + 0x1c52 && b(match_player::GOALS) == 1 && in_field > 0x41 && b(match_player::DEBUT) != 0;
             if yes {
                 covered!("highlight mark 21b5");
                 *((m.addr() + 0xbf2 + side as usize * 4000) as *mut u32) = 1;
             }
             yes
         }
-        0x21b7 => b(0x30) != 0 && b(0xc) == 0 && b(0x10) == 0 && b(0x17) <= 8 && (b(3) as u8) <= 2 && in_field >= 0x37 && performance <= limit(in_field),
+        0x21b7 => b(match_player::DEBUT) != 0 && b(match_player::GOALS) == 0 && b(match_player::ASSISTS) == 0 && b(match_player::MATCH_FORM) <= 8 && (b(match_player::KEY_PASSES) as u8) <= 2 && in_field >= 0x37 && performance <= limit(in_field),
         0x21b8 => {
             performance < 0x1964
-                && (b(0x14) as u8 as i32) > random(3)
+                && (b(match_player::FOULS) as u8 as i32) > random(3)
                 && player_table(p.addr()) & 4 != 0
                 && p.player().defender() as i32 > random(4) + 0xf
-                && b(0xc) == 0
-                && (b(0x17) as i32) < random(6)
+                && b(match_player::GOALS) == 0
+                && (b(match_player::MATCH_FORM) as i32) < random(6)
                 && in_field > random(0x32) + 0x1e
         }
         _ => true,

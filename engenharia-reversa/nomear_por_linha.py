@@ -111,6 +111,11 @@ def main():
                 continue
             troca[k] = '%s::%s' % (e['module'], nome)
             continue
+        if not re.fullmatch(r'[A-Z][A-Z0-9_]*', nome):
+            # a `new` named `BASE + 0x13` would write `const BASE + 0x13: usize`, which rustc's error recovery chews on
+            # for hours (11/11/2026): skipped
+            print('nome novo inválido, pulado:', e['line'], nome)
+            continue
         antes = s
         s, r = inserir(s, e, off, nome)
         if not re.fullmatch(r'[A-Z][A-Z0-9_]*', r):
@@ -130,6 +135,9 @@ def main():
             # an offset written in decimal (`ln() + 6`): the reader gives the exact text
             lit = e['literal'].strip('`')
             novo = re.sub(r'\+\s*%s$' % re.escape(e['offset']), '+ ' + troca[k], lit)
+            if novo == lit:
+                # an offset passed to a closure (`grava(0x104` with `let grava = |o| .. base + o ..`)
+                novo = re.sub(r'^(\w+\(\s*)%s(?![0-9a-fA-Fx])' % re.escape(e['offset']), lambda m: m.group(1) + troca[k], lit)
             cod, sep, com = linhas[int(e['line']) - 1].partition('//')
             if novo != lit and lit in cod:
                 linhas[int(e['line']) - 1] = cod.replace(lit, novo) + sep + com

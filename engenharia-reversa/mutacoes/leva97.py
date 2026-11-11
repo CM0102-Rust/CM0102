@@ -7,5 +7,5 @@ MUTACOES = [
     ('d_situacao', "== 5 && ta() & 1 == 0 {", "== 4 && ta() & 1 == 0 {"),
     ('d_repete', "        if r <= random(5) {\n            return;", "        if r <= random(6) {\n            return;"),
     ('d_faixa', "(exe::is_in_own_penalty_area((dir == 0) as u8, m.ball_x(), m.ball_y()) != 0 && m.ball_height() != -1)", "(exe::is_in_own_penalty_area((dir == 0) as u8, m.ball_x(), m.ball_y()) != 0 || m.ball_height() != -1)"),
-    ('d_2b', "        if b(0x2b) != 0 && !and_owner {", "        if b(0x2b) > 1 && !and_owner {"),
+    ('d_2b', "        if b(match_player::BUSY) != 0 && !and_owner {", "        if b(match_player::BUSY) > 1 && !and_owner {"),
 ]

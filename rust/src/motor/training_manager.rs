@@ -120,13 +120,13 @@ pub(crate) unsafe extern "thiscall" fn update_coach_assignments(this: usize, clu
             }
             let b = |k: usize| read_i8(f + k) as i32;
             let x = match j {
-                0 => (non_player_attribute_rating(f, 0x10) - b(0x12) + 0x15) / 2, // cqf7: the goalkeeping rating
+                0 => (non_player_attribute_rating(f, 0x10) - b(non_player::COACHING_TECHNIQUE) + 0x15) / 2, // cqf7: the goalkeeping rating
                 1 => {
                     let a = non_player_attribute_rating(f, 0x21);
-                    (a + non_player_attribute_rating(f, 0x10) + b(0x12)) / 3 // cqf7: the tactics rating
+                    (a + non_player_attribute_rating(f, 0x10) + b(non_player::COACHING_TECHNIQUE)) / 3 // cqf7: the tactics rating
                 }
-                2 => (non_player_attribute_rating(f, 0x10) + b(0xe) + b(0x12)) / 3,
-                3 => (non_player_attribute_rating(f, 0x10) + b(0x12)) / 2,
+                2 => (non_player_attribute_rating(f, 0x10) + b(non_player::ATTACKING) + b(non_player::COACHING_TECHNIQUE)) / 3,
+                3 => (non_player_attribute_rating(f, 0x10) + b(non_player::COACHING_TECHNIQUE)) / 2,
                 _ => non_player_attribute_rating(f, 0x11),
             };
             // the low byte, signed, as float divided by the float of the quantity (x87 double precision)
@@ -735,29 +735,29 @@ pub(crate) unsafe extern "thiscall" fn get_position_aptitude(this: usize, p: usi
     let adapt = p.adaptability() as i32;
     let r = match m {
         1 => {
-            let x = rating(0x39);
-            let y = rating(0x2a);
-            (b(0x35) + x + y + adapt) / 4
+            let x = rating(player_sheet::POSITIONING);
+            let y = rating(player_sheet::HANDLING);
+            (b(player_sheet::ONE_ON_ONES) + x + y + adapt) / 4
         }
         2 | 4 => {
-            let x = rating(0x3e);
-            let y = rating(0x39);
-            let z = rating(0x32);
+            let x = rating(player_sheet::TACKLING);
+            let y = rating(player_sheet::POSITIONING);
+            let z = rating(player_sheet::MARKING);
             (x + y + z + adapt) / 4
         }
         8 | 0x10 | 0x20 => {
-            let x = rating(0x37);
-            let y = rating(0x32);
-            (x + y + adapt + b(0x40) + b(0x3f)) / 5
+            let x = rating(player_sheet::PASSING);
+            let y = rating(player_sheet::MARKING);
+            (x + y + adapt + b(player_sheet::TECHNIQUE) + b(player_sheet::TEAMWORK)) / 5
         }
         0x40 => {
-            let x = rating(0x33);
-            let y = rating(0x27);
-            (x + y + adapt + b(0x40) + b(0x36)) / 5
+            let x = rating(player_sheet::MOVEMENT);
+            let y = rating(player_sheet::FINISHING);
+            (x + y + adapt + b(player_sheet::TECHNIQUE) + b(player_sheet::PLAYER_PACE)) / 5
         }
-        0x80 => (adapt + b(0x30)) / 2,
+        0x80 => (adapt + b(player_sheet::LEFT_FOOT)) / 2,
         0x200 => return (m as u32 & 0xffff_ff00) | (p.adaptability() as u8) as u32,
-        _ => (adapt + b(0x3b)) / 2,
+        _ => (adapt + b(player_sheet::RIGHT_FOOT)) / 2,
     };
     r as u32
 }

@@ -6,5 +6,5 @@ MUTACOES = [
     ('x_media', "        average().is_some_and(|v| v >= limit) as u32", "        average().is_some_and(|v| v > limit) as u32"),
     ('x_minuto', "            if !of_club() || random(-3) <= aggregate || minute < 0x1f || !in_competition() {", "            if !of_club() || random(-3) <= aggregate || minute < 0x20 || !in_competition() {"),
     ('x_tabela', "        if value <= random(5) + 8 {", "        if value <= random(5) + 9 {"),
-    ('j_forca', "    w(0x35, 0x17d4);", "    w(0x35, 0x17d5);"),
+    ('j_forca', "    w(match_player::MATCH_RATING, 0x17d4);", "    w(match_player::MATCH_RATING, 0x17d5);"),
 ]
