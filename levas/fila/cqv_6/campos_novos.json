@@ -1,0 +1,29 @@
+[
+ {
+  "module": "cup",
+  "offset": "0x4",
+  "name": "COMPETITION",
+  "width": 4,
+  "description": "pointer to the competition database record (its +0 is the competition id); Comp base field",
+  "confidence": "verified",
+  "evidence": "same Comp base offset as league::COMPETITION (verified); the cup constructors write their record argument there and cup routines read [this+4] then [..+0] as the comp id"
+ },
+ {
+  "module": "cup",
+  "offset": "0x8",
+  "name": "COMP_STATS",
+  "width": 4,
+  "description": "pointer to the competition's Comp_Stats object, 0 = none; Comp base field",
+  "confidence": "verified",
+  "evidence": "same Comp base offset as league::COMP_STATS (verified); the cup constructors store Comp_Stats::Comp_Stats (0x49ee70) there and pass [this+8] to Comp_Stats::set_club_final_position"
+ },
+ {
+  "module": "cup",
+  "offset": "0x4b",
+  "name": "ENTRANTS_ARE_QUALIFIERS",
+  "width": 1,
+  "description": "Comp base byte (league::ENTRANTS_ARE_QUALIFIERS); BraCup::select_entrants writes 0xff with its entrant book",
+  "confidence": "inferred",
+  "evidence": "same Comp base offset as league::ENTRANTS_ARE_QUALIFIERS (verified there); written 0xff by BraCup::select_entrants 0x427f00 next to ENTRANT_BOOK/ENTRANT_COUNT"
+ }
+]

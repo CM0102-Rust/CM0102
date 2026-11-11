@@ -1,128 +1,125 @@
 // ---------- %%LEVA%%a leva: a virada da temporada das copas da CONMEBOL: a Libertadores, a Mercosul e a Merconorte (conmebol_liber.cpp, conmebol_merc.cpp, con_merc_cup.cpp) ----------
 
-unsafe fn cqv12_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
-
-unsafe fn cqv12_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32)
-}
-
-/// A primeira metade da virada das três copas (o mesmo corpo): +0x4c = 0 e a tabela liberada (League::free_table
-/// 0x687970(this, 0): push 0; mov ecx -> thiscall, ret 4); o calendário +0xba liberado (0x9452ca: push; add esp, 4 ->
-/// cdecl) e zerado; com estatísticas (+8), Comp_Stats::archive_season_and_reset (0x4a1c50(+8, 1): push 1; mov ecx ->
-/// thiscall, ret 4); a lista dos convidados +0xee liberada (sem zerar); com a fase atual (+0x30) ≥ 0, as fases 0..=+0x30
-/// que existem destruídas (a virtual 0 com 1: push 1; mov ecx -> thiscall).
-unsafe fn cqv12_soltar(this: usize) {
-    let liberar_tabela: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x687970usize);
-    let liberar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let arquivar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4a1c50usize);
-    cqv12_pd(this + 0x4c, 0);
-    liberar_tabela(this, 0);
-    let l = cqv12_d(this + 0xba);
+/// The first half of the three cups' season turnover (the same body): `league::SEASON_CLOSED` = 0 and the table freed
+/// (`exe::league_free_table`(this, 0): push 0; mov ecx -> thiscall, ret 4); the calendar `league::ROUND_DATES` freed
+/// (`exe::crt_free`: push; add esp, 4 -> cdecl) and zeroed; with statistics (`league::COMP_STATS`),
+/// `exe::comp_stats_archive_season_and_reset`(stats, 1) (push 1; mov ecx -> thiscall, ret 4); the invited clubs list
+/// +0xee freed (not zeroed); with the current stage (`league::CURRENT_STAGE`) >= 0, the existing stages 0..=current
+/// destroyed (the virtual `comp_vtable::SCALAR_DELETING_DESTRUCTOR` with 1: push 1; mov ecx -> thiscall).
+unsafe fn conmebol_free_season(this: League) {
+    write_u32(this.addr() + league::SEASON_CLOSED, 0);
+    exe::league_free_table(this, 0);
+    let l = this.round_dates();
     if l != 0 {
-        liberar(l);
-        cqv12_pd(this + 0xba, 0);
+        exe::crt_free(l);
+        write_u32(this.addr() + league::ROUND_DATES, 0);
     }
-    let est = cqv12_d(this + 8);
-    if est != 0 {
-        arquivar(est, 1);
+    let stats = this.comp_stats();
+    if stats != 0 {
+        exe::comp_stats_archive_season_and_reset(stats, 1);
     }
-    let c = cqv12_d(this + 0xee);
+    let c = read_usize(this.addr() + 0xee);
     if c != 0 {
-        liberar(c);
+        exe::crt_free(c);
     }
-    if (cqv12_d(this + 0x30) as i32) >= 0 {
+    if (this.current_stage() as i32) >= 0 {
         let mut i = 0i32;
         loop {
-            let f = cqv12_d(cqv12_d(this + 0xc) + 4 * i as usize);
+            let f = read_usize(this.stages() + 4 * i as usize);
             if f != 0 {
-                let destruir: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(cqv12_d(cqv12_d(f)));
-                destruir(f, 1);
+                let destroy: unsafe extern "thiscall" fn(usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(f) + comp_vtable::SCALAR_DELETING_DESTRUCTOR));
+                destroy(f, 1);
             }
             i += 1;
-            if i > cqv12_d(this + 0x30) as i32 {
+            if i > this.current_stage() as i32 {
                 break;
             }
         }
     }
 }
 
-/// O ano (+0x40, word) sobe um e a fase atual (+0x30) volta a −1.
-unsafe fn cqv12_ano_seguinte(this: usize) {
-    let ano = (this + 0x40) as *mut i16;
-    core::ptr::write_unaligned(ano, core::ptr::read_unaligned(ano).wrapping_add(1));
-    cqv12_pd(this + 0x30, usize::MAX);
+/// The year (`league::YEAR`, word) goes up by one and the current stage (`league::CURRENT_STAGE`) goes back to -1.
+unsafe fn conmebol_next_year(this: League) {
+    this.set_year(this.year().wrapping_add(1));
+    write_u32(this.addr() + league::CURRENT_STAGE, u32::MAX);
 }
 
-/// As regras de novo (a virtual +0x8c, thiscall, ret 0); 0: a caixa da linha `linha` e 0 (a original devolve o eax da
-/// caixa; quem chama não lê). Devolve a devolução das regras.
-unsafe fn cqv12_regras(this: usize, arquivo: usize, linha: u32) -> u32 {
-    let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(cqv12_d(cqv12_d(this) + 0x8c));
-    let r = regras(this);
+/// The rules again (the virtual `comp_vtable::SET_UP_RULES`, thiscall, ret 0); 0: the box for line `row` of `file`
+/// and 0 (the original returns the box's eax; the caller does not read it). Returns what the rules returned.
+unsafe fn conmebol_set_up_rules_again(this: League, file: usize, row: u32) -> u32 {
+    let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::SET_UP_RULES));
+    let r = rules(this.addr());
     if r == 0 {
-        show_error_at(arquivo, linha);
+        show_error_at(file, row);
     }
     r
 }
 
-/// { 0x4c3980 } (thiscall, ret 0, conmebol_liber.cpp; a virtual da virada): `ConmebolLiber::start_new_season()`: a
-/// virada da Libertadores: a primeira metade (`cqv12_soltar`), o ano seguinte, a semeadura da CONMEBOL para a temporada
-/// nova (ConmebolSeeding::update_for_new_season 0x4c61b0([0xae1000], 0): push 0; mov ecx -> thiscall, ret 4: as vagas
-/// das nações), +0x45 = 0 (o sorteio a fazer) e as regras (a caixa da linha 0x1e3).
-unsafe extern "thiscall" fn cqv12_libertadores_virada(this: usize) -> u32 {
-    let semear: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4c61b0usize);
-    cqv12_soltar(this);
-    crate::comparison::branch("cqv_12 virada da libertadores");
-    cqv12_ano_seguinte(this); // cqv12: a Libertadores do ano seguinte
-    semear(cqv12_d(0xae1000), 0); // cqv12: as vagas da Libertadores nova
-    cqv12_pd(this + 0x45, 0); // cqv12: a Libertadores nova ainda sem sorteio
-    cqv12_regras(this, 0x9a7de4, 0x1e3)
+/// The Libertadores season turnover: the first half (`conmebol_free_season`), the next year (`conmebol_next_year`),
+/// the CONMEBOL seeding for the new season (ConmebolSeeding::update_for_new_season 0x4c61b0(`G_CONMEBOL_SEEDING`, 0):
+/// push 0; mov ecx -> thiscall, ret 4: the nations' places), `league::ACTIVE` = 0 (the draw still to be made) and the
+/// rules (`conmebol_set_up_rules_again`, the box for line 0x1e3).
+/// Original: `ConmebolLiber::start_new_season` (0x4c3980, conmebol_liber.cpp, thiscall, ret 0).
+unsafe extern "thiscall" fn conmebol_liber_start_new_season(this: usize) -> u32 {
+    let league = League(this);
+    let seed: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x4c61b0usize);
+    conmebol_free_season(league);
+    covered!("cqv_12 libertadores turnover");
+    conmebol_next_year(league); // cqv12: the Libertadores of the next year
+    seed(read_usize(G_CONMEBOL_SEEDING), 0); // cqv12: the places of the new Libertadores
+    write_u32(this + league::ACTIVE, 0); // cqv12: the new Libertadores not drawn yet
+    conmebol_set_up_rules_again(league, 0x9a7de4, 0x1e3)
 }
 
-// ponytail: a virada libera tabelas e fases e arquiva as estatísticas: não roda duas vezes. Só a original; o plano: +0x4c
-// = 0, o ano + 1 e (Libertadores e Mercosul) +0x45 = 0 (o calendário +0xba as regras novas montam de novo).
-unsafe fn cqv12_comparar(nome: &str, this: usize, zera_45: bool, o: impl FnOnce() -> u32) -> u32 {
-    let ano = core::ptr::read_unaligned((this + 0x40) as *const i16);
+// simplification: the turnover frees tables and stages and archives the statistics: it cannot run twice. Only the
+// original; the plan: `league::SEASON_CLOSED` = 0, the year + 1 and (Libertadores and Mercosur) `league::ACTIVE` = 0
+// (the new rules rebuild the calendar `league::ROUND_DATES`).
+unsafe fn conmebol_compare_new_season(name: &str, this: usize, clears_active: bool, o: impl FnOnce() -> u32) -> u32 {
+    let league = League(this);
+    let year = league.year();
     let r = o();
-    let novo = core::ptr::read_unaligned((this + 0x40) as *const i16);
-    let ok = cqv12_d(this + 0x4c) == 0 && novo == ano.wrapping_add(1) && (!zera_45 || cqv12_d(this + 0x45) == 0);
-    SCOREBOARD.record(ok, || format!("{}({:#x}): ano {} -> {}, +0x4c {}, +0xba {:#x}, +0x45 {}", nome, this, ano, novo, cqv12_d(this + 0x4c), cqv12_d(this + 0xba), cqv12_d(this + 0x45)));
+    let new = league.year();
+    let ok = read_usize(this + league::SEASON_CLOSED) == 0 && new == year.wrapping_add(1) && (!clears_active || league.active() == 0);
+    SCOREBOARD.record(ok, || format!("{}({:#x}): year {} -> {}, +0x4c {}, +0xba {:#x}, +0x45 {}", name, this, year, new, read_usize(this + league::SEASON_CLOSED), league.round_dates(), league.active()));
     r
 }
 
-unsafe extern "thiscall" fn compare_cqv12_libertadores_virada(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_conmebol_liber_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
-    cqv12_comparar("cqv12_libertadores_virada", this, true, || o(this))
+    conmebol_compare_new_season("conmebol_liber_start_new_season", this, true, || o(this))
 }
 
-/// { 0x4c5040 } (thiscall, ret 0, conmebol_merc.cpp): `ConmebolMerc::start_new_season()`: a virada da Mercosul: a
-/// primeira metade, o ano seguinte, +0x45 = 0 e as regras (a caixa da linha 0x1c6).
-unsafe extern "thiscall" fn cqv12_mercosul_virada(this: usize) -> u32 {
-    cqv12_soltar(this);
-    cqv12_ano_seguinte(this);
-    cqv12_pd(this + 0x45, 0);
-    cqv12_regras(this, 0x9a7e5c, 0x1c6)
+/// The Mercosur Cup season turnover: the first half (`conmebol_free_season`), the next year, `league::ACTIVE` = 0 and
+/// the rules (the box for line 0x1c6).
+/// Original: `ConmebolMerc::start_new_season` (0x4c5040, conmebol_merc.cpp, thiscall, ret 0).
+unsafe extern "thiscall" fn conmebol_merc_start_new_season(this: usize) -> u32 {
+    let league = League(this);
+    conmebol_free_season(league);
+    conmebol_next_year(league);
+    write_u32(this + league::ACTIVE, 0);
+    conmebol_set_up_rules_again(league, 0x9a7e5c, 0x1c6)
 }
 
-unsafe extern "thiscall" fn compare_cqv12_mercosul_virada(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_conmebol_merc_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I1%%);
-    cqv12_comparar("cqv12_mercosul_virada", this, true, || o(this))
+    conmebol_compare_new_season("conmebol_merc_start_new_season", this, true, || o(this))
 }
 
-/// { 0x4c1fb0 } (thiscall, ret 0, con_merc_cup.cpp): `ConMercCup::start_new_season()`: a virada da Merconorte: a
-/// primeira metade, o ano seguinte e as regras; só com elas +0x45 = 0 (a caixa da linha 0x1b1 deixa +0x45 como estava).
-unsafe extern "thiscall" fn cqv12_merconorte_virada(this: usize) -> u32 {
-    cqv12_soltar(this);
-    cqv12_ano_seguinte(this);
-    let r = cqv12_regras(this, 0x9a7d6c, 0x1b1);
+/// The Merconorte season turnover: the first half (`conmebol_free_season`), the next year and the rules; only with them
+/// `league::ACTIVE` = 0 (the box for line 0x1b1 leaves it as it was).
+/// Original: `ConMercCup::start_new_season` (0x4c1fb0, con_merc_cup.cpp, thiscall, ret 0).
+unsafe extern "thiscall" fn con_merc_cup_start_new_season(this: usize) -> u32 {
+    let league = League(this);
+    conmebol_free_season(league);
+    conmebol_next_year(league);
+    let r = conmebol_set_up_rules_again(league, 0x9a7d6c, 0x1b1);
     if r != 0 {
-        cqv12_pd(this + 0x45, 0);
+        write_u32(this + league::ACTIVE, 0);
     }
     r
 }
 
-unsafe extern "thiscall" fn compare_cqv12_merconorte_virada(this: usize) -> u32 {
+unsafe extern "thiscall" fn compare_con_merc_cup_start_new_season(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I2%%);
-    cqv12_comparar("cqv12_merconorte_virada", this, false, || o(this))
+    conmebol_compare_new_season("con_merc_cup_start_new_season", this, false, || o(this))
 }

@@ -1,7 +1,7 @@
-// ---------- %%LEVA%%a leva: os calendários Pernambucano, Carioca, Catarinense, Paulista (as datas e os jogos de cada rodada da fase de pontos corridos e do mata-mata) (bra_reg_pern.cpp, bra_reg_rio.cpp, bra_reg_santa.cpp, bra_reg_sp.cpp) ----------
+// ---------- batch %%LEVA%%: the Pernambuco, Rio (Carioca), Santa Catarina and São Paulo (Paulista) schedules (the dates and matches of each round of the round-robin and knockout stages) (bra_reg_pern.cpp, bra_reg_rio.cpp, bra_reg_santa.cpp, bra_reg_sp.cpp) ----------
 
-/// O Pernambucano, a liga: 18 rodadas (da 11/jan à 20/abr), 1170 bytes, 64 operações.
-const CQW3_PERNAMBUCANO_0: [AsiaClubChampScheduleOp; 64] = [
+/// The Pernambuco state league, the round-robin stage (−1): 18 rounds (11 Jan to 20 Apr), 1170 bytes, 64 operations.
+const PERNAMBUCO_SCHEDULE_LEAGUE_OPS: [AsiaClubChampScheduleOp; 64] = [
     Cqp11D(0, 0xb, 1, 0, 6, 1, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
     Cqp11D(1, 0x12, 1, 0, 6, 2, 0), Cqp11L(1, 0, 5, 1, 1, 0), Cqp11L(1, 1, 5, 1, 1, 0), Cqp11L(1, 2, -1, -1, -1, 0),
     Cqp11D(2, 0x15, 1, 0, 2, 2, 0), Cqp11L(2, 0, -1, -1, -1, 0), Cqp11D(3, 0x19, 1, 0, 6, 1, 0),
@@ -23,8 +23,8 @@ const CQW3_PERNAMBUCANO_0: [AsiaClubChampScheduleOp; 64] = [
     Cqp11D(0x11, 0x14, 4, 0, 6, 1, 0), Cqp11L(0x11, 0, -1, -1, -1, 0),
 ];
 
-/// O Pernambucano, a fase 0: 2 rodadas (da 21/abr à 10/mai), 208 bytes, 36 operações.
-const CQW3_PERNAMBUCANO_1: [AsiaClubChampScheduleOp; 36] = [
+/// The Pernambuco state league, stage 0: 2 rounds (21 Apr to 10 May), 208 bytes, 36 operations.
+const PERNAMBUCO_SCHEDULE_STAGE_0_OPS: [AsiaClubChampScheduleOp; 36] = [
     Cqp11S(0, 0x15, 4, 0, 6), Cqp11J(0, 0x1b, 4, 0, 6, 1, 0), Cqp11W(0x7, 0x82), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
     Cqp11W(0xd, 0x200), Cqp11B(0x17, 8), Cqp11W(0x18, 4), Cqp11W(0x1a, 2), Cqp11W(0x1c, 4), Cqp11W(0xf, 0x804),
     Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 2), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0),
@@ -34,31 +34,40 @@ const CQW3_PERNAMBUCANO_1: [AsiaClubChampScheduleOp; 36] = [
     Cqp11X(0xc8, 0x2ab98), Cqp11X(0xcc, 0x186a0),
 ];
 
-/// As fases da tabela de rodadas do Pernambucano: a fase de pontos corridos (−1) (é liga): 18 rodadas, da 11/jan à 20/abr; a fase 0 (mata-mata ou fase final): 2 rodadas, da 21/abr à 10/mai.
-fn cqw3_pernambucano_fase(fase: u32) -> Option<ScheduleStage> {
-    match fase as u8 as i8 {
-        -1 => Some(ScheduleStage { liga: 1, rodadas: 18, extra: 0, extra_checa: false, tamanho: 0x492, linha: 0xa8,
-            ops: &CQW3_PERNAMBUCANO_0, nome: "cqw_3 pernambucano liga" }),
-        0 => Some(ScheduleStage { liga: 0, rodadas: 2, extra: 0, extra_checa: false, tamanho: 0xd0, linha: 0x126,
-            ops: &CQW3_PERNAMBUCANO_1, nome: "cqw_3 pernambucano fase 0" }),
+/// The stages of the round table of the Pernambuco state league (virtual `comp_vtable::CREATE_SCHEDULE`): stage −1, the round-robin league stage: 18 rounds from 11 Jan to 20 Apr; stage 0, the knockout or final stage: 2 rounds from 21 Apr to 10 May; any other stage has no table (None).
+fn pernambuco_schedule_stage(stage: u32) -> Option<ScheduleStage> {
+    match stage as u8 as i8 {
+        -1 => Some(ScheduleStage { league: 1, rounds: 18, extra: 0, extra_check: false, size: 0x492, row: 0xa8,
+            ops: &PERNAMBUCO_SCHEDULE_LEAGUE_OPS, name: "cqw_3 pernambuco league" }),
+        0 => Some(ScheduleStage { league: 0, rounds: 2, extra: 0, extra_check: false, size: 0xd0, row: 0x126,
+            ops: &PERNAMBUCO_SCHEDULE_STAGE_0_OPS, name: "cqw_3 pernambuco stage 0" }),
         _ => None,
     }
 }
 
-/// { 0x438bf0 } (thiscall, ret 0x10, bra_reg_pern.cpp; a virtual +0x3c): `BraRegPern::create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase
-/// de `cqw3_pernambucano_fase` (a máquina da cqp_11: as saídas, a tabela de 0x41 bytes por rodada e as datas e jogos de cada rodada).
-unsafe extern "thiscall" fn cqw3_calendario_pernambucano(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    create_round_table(this, cqw3_pernambucano_fase(fase), rodadas, extra, liga, 0x98afd8)
+/// The schedule of the Pernambuco state league: stage −1, the round-robin league stage: 18 rounds from 11 Jan to 20 Apr; stage 0, the knockout or final stage: 2 rounds from 21 Apr to 10 May; any other stage returns 0.
+///
+/// Virtual `comp_vtable::CREATE_SCHEDULE`, `create_schedule(stage, &rounds, &extra, &is_league)`, called by
+/// League::create_fixtures and the season turns. For a stage with a table (`pernambuco_schedule_stage`) it writes the outputs (is_league
+/// when that pointer is not null, the rounds and the extra), allocates the round table (`exe::crt_malloc`, 0x41 bytes
+/// per round; out of memory, the error box and 0) and writes the date (day, month, years after the season year
+/// `year()`, weekday and code) and the matches of each round, in the original's order (`create_round_table`, the
+/// cqp_11 schedule machine); the rest of the table is left as allocated. Returns the table, or 0 without writing
+/// anything for a stage without one.
+/// Original: `BraRegPern::create_schedule` (0x438bf0, bra_reg_pern.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn bra_reg_pern_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    create_round_table(Cup(this), pernambuco_schedule_stage(stage), rounds, extra, league, 0x98afd8)
 }
 
-unsafe extern "thiscall" fn compare_cqw3_calendario_pernambucano(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+/// Comparer for `bra_reg_pern_create_schedule`.
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_pern_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
-    asia_club_champ_compare_round_table("cqw3_calendario_pernambucano", fase, cqw3_pernambucano_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
-        |r, e, l| cqw3_calendario_pernambucano(this, fase, r, e, l))
+    asia_club_champ_compare_round_table("bra_reg_pern_create_schedule", stage, pernambuco_schedule_stage(stage), rounds, extra, league, || o(this, stage, rounds, extra, league),
+        |r, e, l| bra_reg_pern_create_schedule(this, stage, r, e, l))
 }
 
-/// O Carioca, a liga: 22 rodadas (da 11/jan à 3/mai), 1430 bytes, 78 operações.
-const CQW3_CARIOCA_0: [AsiaClubChampScheduleOp; 78] = [
+/// The Rio de Janeiro state league (Carioca), the round-robin stage (−1): 22 rounds (11 Jan to 3 May), 1430 bytes, 78 operations.
+const RIO_SCHEDULE_LEAGUE_OPS: [AsiaClubChampScheduleOp; 78] = [
     Cqp11D(0, 0xb, 1, 0, 6, 1, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
     Cqp11D(1, 0x12, 1, 0, 6, 2, 0), Cqp11L(1, 0, 5, 1, 1, 0), Cqp11L(1, 1, 5, 1, 1, 0), Cqp11L(1, 2, -1, -1, -1, 0),
     Cqp11D(2, 0x15, 1, 0, 2, 2, 0), Cqp11L(2, 0, -1, -1, -1, 0), Cqp11D(3, 0x19, 1, 0, 6, 1, 0),
@@ -85,39 +94,48 @@ const CQW3_CARIOCA_0: [AsiaClubChampScheduleOp; 78] = [
     Cqp11L(0x15, 0, -1, -1, -1, 0),
 ];
 
-/// O Carioca, a fase 2: 1 rodadas (da 4/mai à 10/mai), 104 bytes, 18 operações.
-const CQW3_CARIOCA_1: [AsiaClubChampScheduleOp; 18] = [
+/// The Rio de Janeiro state league (Carioca), stage 2: 1 round (4 May to 10 May), 104 bytes, 18 operations.
+const RIO_SCHEDULE_STAGE_2_OPS: [AsiaClubChampScheduleOp; 18] = [
     Cqp11S(0, 4, 5, 0, 0), Cqp11J(0, 0xa, 5, 0, 6, 1, 0), Cqp11W(0x18, 2), Cqp11W(0x1c, 2), Cqp11B(0x21, 2),
     Cqp11W(0x7, 0x96), Cqp11W(0x9, 0), Cqp11W(0xb, 0), Cqp11W(0xd, 0x200), Cqp11B(0x17, 8), Cqp11W(0x1a, 1),
     Cqp11W(0xf, 0x804), Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0xa4cb8),
     Cqp11X(0x64, 0x3d090),
 ];
 
-/// As fases da tabela de rodadas do Carioca: a fase de pontos corridos (−1) (é liga): 22 rodadas, da 11/jan à 3/mai; a fase 2 (mata-mata ou fase final): 1 rodadas, da 4/mai à 10/mai.
-fn cqw3_carioca_fase(fase: u32) -> Option<ScheduleStage> {
-    match fase as u8 as i8 {
-        -1 => Some(ScheduleStage { liga: 1, rodadas: 22, extra: 0, extra_checa: false, tamanho: 0x596, linha: 0xa6,
-            ops: &CQW3_CARIOCA_0, nome: "cqw_3 carioca liga" }),
-        2 => Some(ScheduleStage { liga: 0, rodadas: 1, extra: 0, extra_checa: false, tamanho: 0x68, linha: 0x13a,
-            ops: &CQW3_CARIOCA_1, nome: "cqw_3 carioca fase 2" }),
+/// The stages of the round table of the Rio de Janeiro state league (Carioca) (virtual `comp_vtable::CREATE_SCHEDULE`): stage −1, the round-robin league stage: 22 rounds from 11 Jan to 3 May; stage 2, the knockout or final stage: 1 round from 4 May to 10 May; any other stage has no table (None).
+fn rio_schedule_stage(stage: u32) -> Option<ScheduleStage> {
+    match stage as u8 as i8 {
+        -1 => Some(ScheduleStage { league: 1, rounds: 22, extra: 0, extra_check: false, size: 0x596, row: 0xa6,
+            ops: &RIO_SCHEDULE_LEAGUE_OPS, name: "cqw_3 rio league" }),
+        2 => Some(ScheduleStage { league: 0, rounds: 1, extra: 0, extra_check: false, size: 0x68, row: 0x13a,
+            ops: &RIO_SCHEDULE_STAGE_2_OPS, name: "cqw_3 rio stage 2" }),
         _ => None,
     }
 }
 
-/// { 0x439d40 } (thiscall, ret 0x10, bra_reg_rio.cpp; a virtual +0x3c): `BraRegRio::create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase
-/// de `cqw3_carioca_fase` (a máquina da cqp_11: as saídas, a tabela de 0x41 bytes por rodada e as datas e jogos de cada rodada).
-unsafe extern "thiscall" fn cqw3_calendario_carioca(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    create_round_table(this, cqw3_carioca_fase(fase), rodadas, extra, liga, 0x98b014)
+/// The schedule of the Rio de Janeiro state league (Carioca): stage −1, the round-robin league stage: 22 rounds from 11 Jan to 3 May; stage 2, the knockout or final stage: 1 round from 4 May to 10 May; any other stage returns 0.
+///
+/// Virtual `comp_vtable::CREATE_SCHEDULE`, `create_schedule(stage, &rounds, &extra, &is_league)`, called by
+/// League::create_fixtures and the season turns. For a stage with a table (`rio_schedule_stage`) it writes the outputs (is_league
+/// when that pointer is not null, the rounds and the extra), allocates the round table (`exe::crt_malloc`, 0x41 bytes
+/// per round; out of memory, the error box and 0) and writes the date (day, month, years after the season year
+/// `year()`, weekday and code) and the matches of each round, in the original's order (`create_round_table`, the
+/// cqp_11 schedule machine); the rest of the table is left as allocated. Returns the table, or 0 without writing
+/// anything for a stage without one.
+/// Original: `BraRegRio::create_schedule` (0x439d40, bra_reg_rio.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn bra_reg_rio_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    create_round_table(Cup(this), rio_schedule_stage(stage), rounds, extra, league, 0x98b014)
 }
 
-unsafe extern "thiscall" fn compare_cqw3_calendario_carioca(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+/// Comparer for `bra_reg_rio_create_schedule`.
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_rio_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I1%%);
-    asia_club_champ_compare_round_table("cqw3_calendario_carioca", fase, cqw3_carioca_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
-        |r, e, l| cqw3_calendario_carioca(this, fase, r, e, l))
+    asia_club_champ_compare_round_table("bra_reg_rio_create_schedule", stage, rio_schedule_stage(stage), rounds, extra, league, || o(this, stage, rounds, extra, league),
+        |r, e, l| bra_reg_rio_create_schedule(this, stage, r, e, l))
 }
 
-/// O Catarinense, a liga: 18 rodadas (da 11/jan à 20/abr), 1170 bytes, 64 operações.
-const CQW3_CATARINENSE_0: [AsiaClubChampScheduleOp; 64] = [
+/// The Santa Catarina state league, the round-robin stage (−1): 18 rounds (11 Jan to 20 Apr), 1170 bytes, 64 operations.
+const SANTA_CATARINA_SCHEDULE_LEAGUE_OPS: [AsiaClubChampScheduleOp; 64] = [
     Cqp11D(0, 0xb, 1, 0, 6, 1, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
     Cqp11D(1, 0x12, 1, 0, 6, 2, 0), Cqp11L(1, 0, 5, 1, 1, 0), Cqp11L(1, 1, 5, 1, 1, 0), Cqp11L(1, 2, -1, -1, -1, 0),
     Cqp11D(2, 0x15, 1, 0, 2, 2, 0), Cqp11L(2, 0, -1, -1, -1, 0), Cqp11D(3, 0x19, 1, 0, 6, 1, 0),
@@ -139,8 +157,8 @@ const CQW3_CATARINENSE_0: [AsiaClubChampScheduleOp; 64] = [
     Cqp11D(0x11, 0x14, 4, 0, 6, 1, 0), Cqp11L(0x11, 0, -1, -1, -1, 0),
 ];
 
-/// O Catarinense, a fase 0: 2 rodadas (da 21/abr à 10/mai), 208 bytes, 36 operações.
-const CQW3_CATARINENSE_1: [AsiaClubChampScheduleOp; 36] = [
+/// The Santa Catarina state league, stage 0: 2 rounds (21 Apr to 10 May), 208 bytes, 36 operations.
+const SANTA_CATARINA_SCHEDULE_STAGE_0_OPS: [AsiaClubChampScheduleOp; 36] = [
     Cqp11S(0, 0x15, 4, 0, 6), Cqp11J(0, 0x1b, 4, 0, 6, 1, 0), Cqp11W(0x7, 0x82), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
     Cqp11W(0xd, 0x200), Cqp11B(0x17, 8), Cqp11W(0x18, 4), Cqp11W(0x1a, 2), Cqp11W(0x1c, 4), Cqp11W(0xf, 0x804),
     Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 2), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0),
@@ -150,31 +168,40 @@ const CQW3_CATARINENSE_1: [AsiaClubChampScheduleOp; 36] = [
     Cqp11X(0xc8, 0x1e848), Cqp11X(0xcc, 0xc350),
 ];
 
-/// As fases da tabela de rodadas do Catarinense: a fase de pontos corridos (−1) (é liga): 18 rodadas, da 11/jan à 20/abr; a fase 0 (mata-mata ou fase final): 2 rodadas, da 21/abr à 10/mai.
-fn cqw3_catarinense_fase(fase: u32) -> Option<ScheduleStage> {
-    match fase as u8 as i8 {
-        -1 => Some(ScheduleStage { liga: 1, rodadas: 18, extra: 0, extra_checa: false, tamanho: 0x492, linha: 0xa8,
-            ops: &CQW3_CATARINENSE_0, nome: "cqw_3 catarinense liga" }),
-        0 => Some(ScheduleStage { liga: 0, rodadas: 2, extra: 0, extra_checa: false, tamanho: 0xd0, linha: 0x126,
-            ops: &CQW3_CATARINENSE_1, nome: "cqw_3 catarinense fase 0" }),
+/// The stages of the round table of the Santa Catarina state league (virtual `comp_vtable::CREATE_SCHEDULE`): stage −1, the round-robin league stage: 18 rounds from 11 Jan to 20 Apr; stage 0, the knockout or final stage: 2 rounds from 21 Apr to 10 May; any other stage has no table (None).
+fn santa_catarina_schedule_stage(stage: u32) -> Option<ScheduleStage> {
+    match stage as u8 as i8 {
+        -1 => Some(ScheduleStage { league: 1, rounds: 18, extra: 0, extra_check: false, size: 0x492, row: 0xa8,
+            ops: &SANTA_CATARINA_SCHEDULE_LEAGUE_OPS, name: "cqw_3 santa catarina league" }),
+        0 => Some(ScheduleStage { league: 0, rounds: 2, extra: 0, extra_check: false, size: 0xd0, row: 0x126,
+            ops: &SANTA_CATARINA_SCHEDULE_STAGE_0_OPS, name: "cqw_3 santa catarina stage 0" }),
         _ => None,
     }
 }
 
-/// { 0x43b430 } (thiscall, ret 0x10, bra_reg_santa.cpp; a virtual +0x3c): `BraRegSanta::create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase
-/// de `cqw3_catarinense_fase` (a máquina da cqp_11: as saídas, a tabela de 0x41 bytes por rodada e as datas e jogos de cada rodada).
-unsafe extern "thiscall" fn cqw3_calendario_catarinense(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    create_round_table(this, cqw3_catarinense_fase(fase), rodadas, extra, liga, 0x98b050)
+/// The schedule of the Santa Catarina state league: stage −1, the round-robin league stage: 18 rounds from 11 Jan to 20 Apr; stage 0, the knockout or final stage: 2 rounds from 21 Apr to 10 May; any other stage returns 0.
+///
+/// Virtual `comp_vtable::CREATE_SCHEDULE`, `create_schedule(stage, &rounds, &extra, &is_league)`, called by
+/// League::create_fixtures and the season turns. For a stage with a table (`santa_catarina_schedule_stage`) it writes the outputs (is_league
+/// when that pointer is not null, the rounds and the extra), allocates the round table (`exe::crt_malloc`, 0x41 bytes
+/// per round; out of memory, the error box and 0) and writes the date (day, month, years after the season year
+/// `year()`, weekday and code) and the matches of each round, in the original's order (`create_round_table`, the
+/// cqp_11 schedule machine); the rest of the table is left as allocated. Returns the table, or 0 without writing
+/// anything for a stage without one.
+/// Original: `BraRegSanta::create_schedule` (0x43b430, bra_reg_santa.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn bra_reg_santa_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    create_round_table(Cup(this), santa_catarina_schedule_stage(stage), rounds, extra, league, 0x98b050)
 }
 
-unsafe extern "thiscall" fn compare_cqw3_calendario_catarinense(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+/// Comparer for `bra_reg_santa_create_schedule`.
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_santa_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I2%%);
-    asia_club_champ_compare_round_table("cqw3_calendario_catarinense", fase, cqw3_catarinense_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
-        |r, e, l| cqw3_calendario_catarinense(this, fase, r, e, l))
+    asia_club_champ_compare_round_table("bra_reg_santa_create_schedule", stage, santa_catarina_schedule_stage(stage), rounds, extra, league, || o(this, stage, rounds, extra, league),
+        |r, e, l| bra_reg_santa_create_schedule(this, stage, r, e, l))
 }
 
-/// O Paulista, a liga: 15 rodadas (da 18/jan à 20/abr), 975 bytes, 56 operações.
-const CQW3_PAULISTA_0: [AsiaClubChampScheduleOp; 56] = [
+/// The São Paulo state league (Paulista), the round-robin stage (−1): 15 rounds (18 Jan to 20 Apr), 975 bytes, 56 operations.
+const SAO_PAULO_SCHEDULE_LEAGUE_OPS: [AsiaClubChampScheduleOp; 56] = [
     Cqp11D(0, 0x12, 1, 0, 6, 2, 0), Cqp11L(0, 0, 5, 1, 1, 0), Cqp11L(0, 1, 5, 1, 1, 0), Cqp11L(0, 2, -1, -1, -1, 0),
     Cqp11D(1, 0x19, 1, 0, 6, 1, 0), Cqp11L(1, 0, 5, 1, 1, 0), Cqp11L(1, 1, 5, 1, 1, 0), Cqp11L(1, 2, -1, -1, -1, 0),
     Cqp11D(2, 4, 2, 0, 6, 1, 0), Cqp11L(2, 0, 5, 1, 1, 0), Cqp11L(2, 1, 5, 1, 1, 0), Cqp11L(2, 2, -1, -1, -1, 0),
@@ -193,8 +220,8 @@ const CQW3_PAULISTA_0: [AsiaClubChampScheduleOp; 56] = [
     Cqp11L(0xe, 0, -1, -1, -1, 0),
 ];
 
-/// O Paulista, a fase 0: 2 rodadas (da 21/abr à 10/mai), 208 bytes, 36 operações.
-const CQW3_PAULISTA_1: [AsiaClubChampScheduleOp; 36] = [
+/// The São Paulo state league (Paulista), stage 0: 2 rounds (21 Apr to 10 May), 208 bytes, 36 operations.
+const SAO_PAULO_SCHEDULE_STAGE_0_OPS: [AsiaClubChampScheduleOp; 36] = [
     Cqp11S(0, 0x15, 4, 0, 6), Cqp11J(0, 0x1b, 4, 0, 6, 1, 0), Cqp11W(0x7, 0x82), Cqp11W(0x9, 0), Cqp11W(0xb, 0),
     Cqp11W(0xd, 0x200), Cqp11B(0x17, 8), Cqp11W(0x18, 4), Cqp11W(0x1a, 2), Cqp11W(0x1c, 4), Cqp11W(0xf, 0x804),
     Cqp11W(0x1e, 0), Cqp11B(0x20, 0), Cqp11B(0x21, 2), Cqp11B(0x22, 7), Cqp11X(0x5c, 0), Cqp11X(0x60, 0),
@@ -204,25 +231,34 @@ const CQW3_PAULISTA_1: [AsiaClubChampScheduleOp; 36] = [
     Cqp11X(0xc8, 0xa4cb8), Cqp11X(0xcc, 0x2ab98),
 ];
 
-/// As fases da tabela de rodadas do Paulista: a fase de pontos corridos (−1) (é liga): 15 rodadas, da 18/jan à 20/abr; a fase 0 (mata-mata ou fase final): 2 rodadas, da 21/abr à 10/mai.
-fn cqw3_paulista_fase(fase: u32) -> Option<ScheduleStage> {
-    match fase as u8 as i8 {
-        -1 => Some(ScheduleStage { liga: 1, rodadas: 15, extra: 0, extra_checa: false, tamanho: 0x3cf, linha: 0xa8,
-            ops: &CQW3_PAULISTA_0, nome: "cqw_3 paulista liga" }),
-        0 => Some(ScheduleStage { liga: 0, rodadas: 2, extra: 0, extra_checa: false, tamanho: 0xd0, linha: 0x118,
-            ops: &CQW3_PAULISTA_1, nome: "cqw_3 paulista fase 0" }),
+/// The stages of the round table of the São Paulo state league (Paulista) (virtual `comp_vtable::CREATE_SCHEDULE`): stage −1, the round-robin league stage: 15 rounds from 18 Jan to 20 Apr; stage 0, the knockout or final stage: 2 rounds from 21 Apr to 10 May; any other stage has no table (None).
+fn sao_paulo_schedule_stage(stage: u32) -> Option<ScheduleStage> {
+    match stage as u8 as i8 {
+        -1 => Some(ScheduleStage { league: 1, rounds: 15, extra: 0, extra_check: false, size: 0x3cf, row: 0xa8,
+            ops: &SAO_PAULO_SCHEDULE_LEAGUE_OPS, name: "cqw_3 sao paulo league" }),
+        0 => Some(ScheduleStage { league: 0, rounds: 2, extra: 0, extra_check: false, size: 0xd0, row: 0x118,
+            ops: &SAO_PAULO_SCHEDULE_STAGE_0_OPS, name: "cqw_3 sao paulo stage 0" }),
         _ => None,
     }
 }
 
-/// { 0x43c5a0 } (thiscall, ret 0x10, bra_reg_sp.cpp; a virtual +0x3c): `BraRegSp::create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase
-/// de `cqw3_paulista_fase` (a máquina da cqp_11: as saídas, a tabela de 0x41 bytes por rodada e as datas e jogos de cada rodada).
-unsafe extern "thiscall" fn cqw3_calendario_paulista(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    create_round_table(this, cqw3_paulista_fase(fase), rodadas, extra, liga, 0x98b090)
+/// The schedule of the São Paulo state league (Paulista): stage −1, the round-robin league stage: 15 rounds from 18 Jan to 20 Apr; stage 0, the knockout or final stage: 2 rounds from 21 Apr to 10 May; any other stage returns 0.
+///
+/// Virtual `comp_vtable::CREATE_SCHEDULE`, `create_schedule(stage, &rounds, &extra, &is_league)`, called by
+/// League::create_fixtures and the season turns. For a stage with a table (`sao_paulo_schedule_stage`) it writes the outputs (is_league
+/// when that pointer is not null, the rounds and the extra), allocates the round table (`exe::crt_malloc`, 0x41 bytes
+/// per round; out of memory, the error box and 0) and writes the date (day, month, years after the season year
+/// `year()`, weekday and code) and the matches of each round, in the original's order (`create_round_table`, the
+/// cqp_11 schedule machine); the rest of the table is left as allocated. Returns the table, or 0 without writing
+/// anything for a stage without one.
+/// Original: `BraRegSp::create_schedule` (0x43c5a0, bra_reg_sp.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn bra_reg_sp_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    create_round_table(Cup(this), sao_paulo_schedule_stage(stage), rounds, extra, league, 0x98b090)
 }
 
-unsafe extern "thiscall" fn compare_cqw3_calendario_paulista(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+/// Comparer for `bra_reg_sp_create_schedule`.
+pub(crate) unsafe extern "thiscall" fn compare_bra_reg_sp_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I3%%);
-    asia_club_champ_compare_round_table("cqw3_calendario_paulista", fase, cqw3_paulista_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
-        |r, e, l| cqw3_calendario_paulista(this, fase, r, e, l))
+    asia_club_champ_compare_round_table("bra_reg_sp_create_schedule", stage, sao_paulo_schedule_stage(stage), rounds, extra, league, || o(this, stage, rounds, extra, league),
+        |r, e, l| bra_reg_sp_create_schedule(this, stage, r, e, l))
 }

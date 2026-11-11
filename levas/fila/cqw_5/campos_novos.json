@@ -1,0 +1,29 @@
+[
+ {
+  "module": "cup",
+  "offset": "0x4",
+  "name": "COMPETITION",
+  "width": 4,
+  "description": "Pointer to the competition database record (TComp), the Comp base field (as league::COMPETITION)",
+  "confidence": "read",
+  "evidence": "every cup constructor stores its record argument at +4 (AsiaSuperCup/InterAmerCup/UsaMlsAllStars/ConChamp/WorldClubCup/AsiaClubChamp/AsiaCupWinner ctors); league::COMPETITION is the same Comp base offset"
+ },
+ {
+  "module": "cup",
+  "offset": "0x8",
+  "name": "COMP_STATS",
+  "width": 4,
+  "description": "Pointer to the competition's Comp_Stats object, 0 = none; the Comp base field (as league::COMP_STATS)",
+  "confidence": "verified",
+  "evidence": "the cup constructors store Comp_Stats::Comp_Stats(new 0x5ce, this) (0x49ee70) at +8 and show the error box when it is null; start_new_cup_season archives +8 with Comp_Stats::archive_season_and_reset"
+ },
+ {
+  "module": "cup",
+  "offset": "0x52",
+  "name": "SQUAD_FLAGS",
+  "width": 1,
+  "description": "Squad flags of the Comp base (as league::SQUAD_FLAGS); 2 in the Interamerican Cup, 3 in the Intercontinental Cup and the European cups",
+  "confidence": "inferred",
+  "evidence": "InterAmerCup::InterAmerCup (0x632080) writes 2 and WorldClubCup::WorldClubCup (0x92b4b0) writes 3; same Comp base offset as league::SQUAD_FLAGS"
+ }
+]

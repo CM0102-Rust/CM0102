@@ -4,16 +4,16 @@
 # - a MLS com 2 pontos por vitoria no lugar de 3 (outra tabela da MLS de 2001: outros classificados ao mata-mata).
 MUTACOES = [
     ('cqu2_serie_c_um_ano_adiante',
-     'cqu2_construir(this, ano, registro, &CQU2_SERIE_C,',
-     'cqu2_construir(this, ano + 1, registro, &CQU2_SERIE_C, /* mutacao: um ano adiante */',
-     'cqu_2 serie_c nova'),
+     'bra_nat_third_construct_league(League(this), year, record, &BRA_NAT_THIRD_LEAGUE,',
+     'bra_nat_third_construct_league(League(this), year + 1, record, &BRA_NAT_THIRD_LEAGUE, /* mutation: one year ahead */',
+     'cqu_2 bra_nat_third new'),
     ('cqu2_j2_outra_disciplina',
-     '&CQU2_J2, 0x13, "cqu_2 j2 nova")',
-     '&CQU2_J2, 0, "cqu_2 j2 nova") /* mutacao: outra disciplina */',
-     'cqu_2 j2 nova'),
+     '&JAP_J2_LEAGUE, discipline_rule::JAPAN_LEAGUE, "cqu_2 jap_j2 new")',
+     '&JAP_J2_LEAGUE, 0, "cqu_2 jap_j2 new") /* mutation: another discipline rule */',
+     'cqu_2 jap_j2 new'),
     ('cqu2_mls_dois_pontos',
-     '(0xc2, 1, 3), // cqu2: os pontos por vitória na MLS',
-     '(0xc2, 1, 2), // mutacao: dois pontos por vitoria',
-     'cqu_2 mls nova'),
+     '(league::WIN_POINTS, 1, 3), // cqu2: the MLS points for a win',
+     '(league::WIN_POINTS, 1, 2), // mutation: two points for a win',
+     'cqu_2 usa_mls new'),
 ]
 # Prova do agente (07/11, carreira Rust de 8 ligas ate 2002-06-01 com motor de lances; base com os 12 itens cqu/cqv/cqw, impressao f29c85195c2a534f): as tres ACUSADAS (2001-215, 2001-084, 2001-120).

@@ -24,10 +24,10 @@
 # Determinismo: só constantes e os argumentos.
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
-ROTINAS = [('cqu1_construir_serie_a', 0x429850, [0x6a, 0xff, 0x68, 0x29, 0x44, 0x95, 0x00]),
-           ('cqu1_construir_serie_b', 0x42be40, [0x6a, 0xff, 0x68, 0x99, 0x44, 0x95, 0x00]),
-           ('cqu1_construir_j1', 0x662b30, [0x6a, 0xff, 0x68, 0xf9, 0xc0, 0x95, 0x00]),
-           ('cqu1_construir_nsl', 0x410e90, [0x6a, 0xff, 0x68, 0xd9, 0x39, 0x95, 0x00])]
+ROTINAS = [('construct_bra_nat_first', 0x429850, [0x6a, 0xff, 0x68, 0x29, 0x44, 0x95, 0x00]),
+           ('construct_bra_nat_second', 0x42be40, [0x6a, 0xff, 0x68, 0x99, 0x44, 0x95, 0x00]),
+           ('construct_jap_j1', 0x662b30, [0x6a, 0xff, 0x68, 0xf9, 0xc0, 0x95, 0x00]),
+           ('construct_aus_nsl', 0x410e90, [0x6a, 0xff, 0x68, 0xd9, 0x39, 0x95, 0x00])]
 _C = ('{liga} na criação da carreira: o ano e a competição do banco, a regra de disciplina {disc}{antes} e, sem estado salvo,{imp} {formato}, as regras ({regras}), a tabela ({tabela}), os jogos, a ordem, as estatísticas e as posições previstas pela força dos clubes',
       '{liga_en} at career creation: the year and the database competition, disciplinary rule {disc}{antes_en} and, with no saved state,{imp_en} {formato_en}, the rules ({regras_en}), the table ({tabela_en}), the fixtures, the order, the statistics and the predicted positions by club strength')
 
@@ -55,10 +55,10 @@ _N = _c('A NSL australiana', 'The Australian NSL', 0x22, 10, True, 'a série fin
         'os clubes da NSL', 'the NSL clubs')
 DOCS = ('os construtores das ligas nacionais de fora da Europa: as Séries A e B, a J1 e a NSL',
         'the constructors of the national leagues outside Europe: the Brazilian first and second divisions, J1 and the NSL',
-        [('cqu1_construir_serie_a', 'BraNatFirst::BraNatFirst', '0x429850', 'bra_nat_first.cpp', 'thiscall, ret 8', _A[0], _A[1]),
-         ('cqu1_construir_serie_b', 'BraNatSecond::BraNatSecond', '0x42be40', 'bra_nat_second.cpp', 'thiscall, ret 8', _B[0], _B[1]),
-         ('cqu1_construir_j1', 'JapJ1::JapJ1', '0x662b30', 'jap_j1.cpp', 'thiscall, ret 8', _J[0], _J[1]),
-         ('cqu1_construir_nsl', 'AusNsl::AusNsl', '0x410e90', 'aus_nsl.cpp', 'thiscall, ret 8', _N[0], _N[1])])
+        [('construct_bra_nat_first', 'BraNatFirst::BraNatFirst', '0x429850', 'bra_nat_first.cpp', 'thiscall, ret 8', _A[0], _A[1]),
+         ('construct_bra_nat_second', 'BraNatSecond::BraNatSecond', '0x42be40', 'bra_nat_second.cpp', 'thiscall, ret 8', _B[0], _B[1]),
+         ('construct_jap_j1', 'JapJ1::JapJ1', '0x662b30', 'jap_j1.cpp', 'thiscall, ret 8', _J[0], _J[1]),
+         ('construct_aus_nsl', 'AusNsl::AusNsl', '0x410e90', 'aus_nsl.cpp', 'thiscall, ret 8', _N[0], _N[1])])
 CAMPOS = [('liga +0x50: a regra de disciplina (índice na tabela dos órgãos disciplinares); valor; grava 6, 0x13 ou 0x22', 'league +0x50: the disciplinary rule (index into the disciplinary bodies table); value; writes 6, 0x13 or 0x22'),
           ('liga +0x51: [inferência] a importância; valor; grava 0xa ou 0xf', 'league +0x51: [inference] the importance; value; writes 0xa or 0xf'),
           ('liga +0x40: o ano da temporada; valor; grava', 'league +0x40: the season year; value; writes'),

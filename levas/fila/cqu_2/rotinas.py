@@ -30,18 +30,18 @@
 # Determinismo: só constantes e os argumentos.
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
-ROTINAS = [('cqu2_construir_serie_c', 0x42d2c0, [0x6a, 0xff, 0x68, 0x09, 0x45, 0x95, 0x00]),
-           ('cqu2_construir_j2', 0x6644c0, [0x6a, 0xff, 0x68, 0x89, 0xc1, 0x95, 0x00]),
-           ('cqu2_construir_mls', 0x906f80, [0x6a, 0xff, 0x68, 0x79, 0x53, 0x96, 0x00])]
+ROTINAS = [('construct_bra_nat_third', 0x42d2c0, [0x6a, 0xff, 0x68, 0x09, 0x45, 0x95, 0x00]),
+           ('construct_jap_j2', 0x6644c0, [0x6a, 0xff, 0x68, 0x89, 0xc1, 0x95, 0x00]),
+           ('construct_usa_mls', 0x906f80, [0x6a, 0xff, 0x68, 0x79, 0x53, 0x96, 0x00])]
 DOCS = ('os construtores da Série C, da J2 e da MLS',
         'the constructors of the Brazilian third division, J2 and MLS',
-        [('cqu2_construir_serie_c', 'BraNatThird::BraNatThird', '0x42d2c0', 'bra_nat_third.cpp', 'thiscall, ret 8',
+        [('construct_bra_nat_third', 'BraNatThird::BraNatThird', '0x42d2c0', 'bra_nat_third.cpp', 'thiscall, ret 8',
           'A Série C na criação da carreira: o ano e a competição do banco, a regra de disciplina 7 e, sem estado salvo, onze fases além da liga (os sete grupos de sete da primeira fase, a segunda e a terceira fases e a final), as regras, a tabela, os jogos, a ordem, as estatísticas, os sete grupos da primeira fase com os 56 clubes, as posições previstas (pela reputação) e a lista dos 56 liberada',
           'The Brazilian third division at career creation: the year and the database competition, disciplinary rule 7 and, with no saved state, eleven stages besides the league (the seven first-round groups of seven, the second and third rounds and the final), the rules, the table, the fixtures, the order, the statistics, the seven first-round groups with the 56 clubs, the predicted positions (by reputation) and the list of 56 freed'),
-         ('cqu2_construir_j2', 'JapJ2::JapJ2', '0x6644c0', 'jap_j2.cpp', 'thiscall, ret 8',
+         ('construct_jap_j2', 'JapJ2::JapJ2', '0x6644c0', 'jap_j2.cpp', 'thiscall, ret 8',
           'A J2 na criação da carreira: o ano e a competição do banco, a regra de disciplina 0x13 e, sem estado salvo, só pontos corridos (nenhuma fase além da liga), as regras, a tabela, os jogos, a ordem, as estatísticas e as posições previstas pela força dos clubes',
           'J2 at career creation: the year and the database competition, disciplinary rule 0x13 and, with no saved state, a plain round robin (no stage besides the league), the rules, the table, the fixtures, the order, the statistics and the predicted positions by club strength'),
-         ('cqu2_construir_mls', 'UsaMls::UsaMls', '0x906f80', 'usa_mls.cpp', 'thiscall, ret 8',
+         ('construct_usa_mls', 'UsaMls::UsaMls', '0x906f80', 'usa_mls.cpp', 'thiscall, ret 8',
           'A MLS na criação da carreira: o ano e a competição do banco, a regra de disciplina 0x1e e a importância 10 e, sem estado salvo, quatro fases além da liga, as regras (3 pontos por vitória e 1 por empate, os critérios de desempate e a categoria dos jogos), a tabela das três divisões, os jogos da temporada, a ordem, as estatísticas e as posições previstas',
           'MLS at career creation: the year and the database competition, disciplinary rule 0x1e and importance 10 and, with no saved state, four stages besides the league, the rules (3 points for a win and 1 for a draw, the tie-breakers and the match category), the table of the three divisions, the season fixtures, the order, the statistics and the predicted positions')])
 CAMPOS = [('liga +0x50: a regra de disciplina (índice na tabela dos órgãos disciplinares); valor; grava 7, 0x13 ou 0x1e', 'league +0x50: the disciplinary rule (index into the disciplinary bodies table); value; writes 7, 0x13 or 0x1e'),

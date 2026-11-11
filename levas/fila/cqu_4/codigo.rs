@@ -1,7 +1,7 @@
-// ---------- %%LEVA%%a leva: os calendários J2 (as datas e os jogos de cada rodada da fase de pontos corridos e do mata-mata) (jap_j2.cpp) ----------
+// ---------- batch %%LEVA%%: the J2 schedule (the dates and the games of each round of the round-robin stage) (jap_j2.cpp) ----------
 
-/// A J2, a liga: 44 rodadas (da 12/fev à 26/out), 2860 bytes, 88 operações.
-const CQU4_J2_0: [AsiaClubChampScheduleOp; 88] = [
+/// J2, the league: 44 rounds (from 12 February to 26 October), 2860 bytes, 88 operations.
+pub(crate) const J2_LEAGUE_ROUNDS: [AsiaClubChampScheduleOp; 88] = [
     Cqp11D(0, 0xc, 2, 0, 6, 1, 0), Cqp11L(0, 0, -1, -1, -1, 0), Cqp11D(1, 0x13, 2, 0, 6, 1, 0),
     Cqp11L(1, 0, -1, -1, -1, 0), Cqp11D(2, 0x1a, 2, 0, 6, 1, 0), Cqp11L(2, 0, -1, -1, -1, 0),
     Cqp11D(3, 2, 3, 0, 6, 1, 0), Cqp11L(3, 0, -1, -1, -1, 0), Cqp11D(4, 9, 3, 0, 6, 1, 0),
@@ -34,23 +34,30 @@ const CQU4_J2_0: [AsiaClubChampScheduleOp; 88] = [
     Cqp11L(0x2b, 0, -1, -1, -1, 0),
 ];
 
-/// As fases da tabela de rodadas da J2: a fase de pontos corridos (−1) (é liga): 44 rodadas, da 12/fev à 26/out.
-fn cqu4_j2_fase(fase: u32) -> Option<ScheduleStage> {
-    match fase as u8 as i8 {
-        -1 => Some(ScheduleStage { liga: 1, rodadas: 44, extra: 0, extra_checa: false, tamanho: 0xb2c, linha: 0x9d,
-            ops: &CQU4_J2_0, nome: "cqu_4 j2 liga" }),
+/// The stages of the J2 round table: the round-robin stage (−1) (a league): 44 rounds, from 12 February to 26 October;
+/// every other stage has no table (`None`: returns 0 without writing anything).
+pub(crate) fn jap_j2_schedule_stage(stage: u32) -> Option<ScheduleStage> {
+    match stage as u8 as i8 {
+        -1 => Some(ScheduleStage { league: 1, rounds: 44, extra: 0, extra_check: false, size: 0xb2c, row: 0x9d,
+            ops: &J2_LEAGUE_ROUNDS, name: "cqu_4 j2 league" }),
         _ => None,
     }
 }
 
-/// { 0x664780 } (thiscall, ret 0x10, jap_j2.cpp; a virtual +0x3c): `JapJ2::create_schedule(fase, &rodadas, &extra, &é_liga)`: a fase
-/// de `cqu4_j2_fase` (a máquina da cqp_11: as saídas, a tabela de 0x41 bytes por rodada e as datas e jogos de cada rodada).
-unsafe extern "thiscall" fn cqu4_calendario_j2(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
-    create_round_table(this, cqu4_j2_fase(fase), rodadas, extra, liga, 0x9eaedc)
+/// The J2 schedule: the round-robin stage (−1) (a league): 44 rounds, from 12 February to 26 October; each round has
+/// the date (day, month, years after the season one, weekday and code) and the games, and the rest of the table is left
+/// as allocated. Virtual `comp_vtable::CREATE_SCHEDULE` (`create_schedule(stage, &rounds, &extra, &is_league)`): the
+/// stage of `jap_j2_schedule_stage` through the cup schedule machine (`create_round_table`: the outputs, the table of
+/// 0x41 bytes per round from `exe::crt_malloc`, the error box of line 0x9d of jap_j2.cpp without memory, and the dates
+/// and games of each round; the league's year at `league::YEAR` is read as `cup::YEAR`, the same word +0x40).
+/// Original: `JapJ2::create_schedule` (0x664780, jap_j2.cpp, thiscall, ret 0x10).
+pub(crate) unsafe extern "thiscall" fn jap_j2_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
+    create_round_table(Cup(this), jap_j2_schedule_stage(stage), rounds, extra, league, 0x9eaedc)
 }
 
-unsafe extern "thiscall" fn compare_cqu4_calendario_j2(this: usize, fase: u32, rodadas: *mut i16, extra: *mut i16, liga: *mut i32) -> usize {
+/// Comparer for `jap_j2_create_schedule`: side by side (`asia_club_champ_compare_round_table`).
+pub(crate) unsafe extern "thiscall" fn compare_jap_j2_create_schedule(this: usize, stage: u32, rounds: *mut i16, extra: *mut i16, league: *mut i32) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, *mut i32) -> usize>(%%I0%%);
-    asia_club_champ_compare_round_table("cqu4_calendario_j2", fase, cqu4_j2_fase(fase), rodadas, extra, liga, || o(this, fase, rodadas, extra, liga),
-        |r, e, l| cqu4_calendario_j2(this, fase, r, e, l))
+    asia_club_champ_compare_round_table("jap_j2_create_schedule", stage, jap_j2_schedule_stage(stage), rounds, extra, league, || o(this, stage, rounds, extra, league),
+        |r, e, l| jap_j2_create_schedule(this, stage, r, e, l))
 }

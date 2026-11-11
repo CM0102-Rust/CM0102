@@ -1,210 +1,192 @@
-// ---------- %%LEVA%%a leva: as copas entre continentes: os dois clubes da Copa Intercontinental e da Copa Interamericana; as posições previstas da Merconorte (world_club_cup.cpp, inter_amer_cup.cpp, con_merc_cup.cpp) ----------
+// ---------- %%LEVA%%a leva: the inter-continental cups: the two clubs of the Intercontinental Cup and of the Interamerican Cup; the Merconorte predicted positions (world_club_cup.cpp, inter_amer_cup.cpp, con_merc_cup.cpp) ----------
 
-unsafe fn cqu13_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
-
-unsafe fn cqu13_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
-
-unsafe fn cqu13_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32)
-}
-
-/// O continente do clube ([[[clube+0x53]+0x71]], dword) é o da chave `continente` (global)?
-unsafe fn cqu13_do_continente(c: usize, continente: usize) -> bool {
-    let n = cqu13_d(c + 0x53);
+/// Is the club's continent ([[`club::NATION`] + `nation::CONTINENT`]] (dword)) the one of the key `continent`?
+unsafe fn intercontinental_club_in_continent(c: usize, continent: usize) -> bool {
+    let n = read_usize(c + club::NATION);
     if n == 0 {
         return false;
     }
-    let k = cqu13_d(n + 0x71);
-    k != 0 && cqu13_d(k) == cqu13_d(continente)
+    let k = read_usize(n + nation::CONTINENT);
+    k != 0 && read_usize(k) == read_usize(continent)
 }
 
-/// A competição da chave `chave` (global): [0xae23d0] + 0x6b × [chave].
-unsafe fn cqu13_comp(chave: usize) -> usize {
-    cqu13_d(0xae23d0).wrapping_add(cqu13_d(chave).wrapping_mul(0x6b))
-}
-
-/// Uma vaga de copa entre continentes. Se o continente (global `continente`; o registro [0xae23a4] + 0xc6 × chave) tem
-/// liga carregada (0x6699d0(continente): push; add esp, 4 -> cdecl) ou o ano da copa (+0x40) é 2001: o colocado `lugar`
-/// mais recente da competição `comp` (0x4afd80(comp, lugar): push; push; add esp, 8 -> cdecl; o campeão é o lugar 0),
-/// e devolve (clube, true, false). Senão, os clubes (até a primeira seleção, 0x53b900: push; add esp, 4 -> cdecl) do
-/// continente com reputação (+0x80, word) acima de `reputacao`, numa lista local; com algum, a lista ordenada e
-/// embaralhada com 1 escolha (0x4afbd0(lista, n, 1): 3 pushes; add esp, 0xc -> cdecl) e o primeiro (clube, false,
-/// false); sem nenhum, a
-/// caixa da linha `linha` e o campeão da competição, que a original grava SEMPRE na vaga 1 (+6), mesmo na busca da
-/// vaga 0 (um defeito: a vaga 0 fica com o que a memória alocada tinha); devolve (clube, false, true).
-unsafe fn cqu13_vaga(this: usize, continente: usize, injury_word_0c: i16, comp: usize, lugar: u32, arquivo: usize, linha: u32) -> (usize, bool, bool) {
-    let carregado: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x6699d0usize);
-    let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
-    let selecao: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x53b900usize);
-    let embaralhar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(0x4afbd0usize);
-    let registro = cqu13_d(0xae23a4).wrapping_add(cqu13_d(continente).wrapping_mul(0xc6));
-    if carregado(registro) != 0 || cqu13_w(this + 0x40) == 0x7d1 {
-        return (colocado(cqu13_comp(comp), lugar), true, false);
+/// One place of an inter-continental cup. If the continent (key `continent`; the record [`G_CONTINENT_TABLE`] + 0xc6 ×
+/// key) has a loaded league (0x6699d0(continent): push; add esp, 4 -> cdecl) or the cup's year (`cup::YEAR`) is 2001:
+/// the latest club at place `place` of the competition of key `comp` (`exe::comp_util_get_latest_placed_club`(record,
+/// place), cdecl; the winner is place 0), returning (club, true, false). Otherwise, the clubs (up to the first national
+/// team, `exe::database_is_national_team`, cdecl) of the continent with a reputation (`club::REPUTATION`, word) above
+/// `min_reputation`, in a local list; with any, the list sorted and shuffled with 1 pick
+/// (`exe::comp_util_sort_and_shuffle_top_clubs`(list, n, 1), cdecl) and the first one, (club, false, false); with none,
+/// the error box of line `line` and the competition's winner, which the original ALWAYS writes in place 1 (+6), even
+/// when looking for place 0 (a defect: place 0 keeps whatever the allocated memory had); returns (club, false, true).
+#[allow(clippy::too_many_arguments)]
+unsafe fn intercontinental_cup_slot(this: usize, continent: usize, min_reputation: i16, comp: usize, place: u32, file: usize, line: u32) -> (usize, bool, bool) {
+    let league_loaded: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x6699d0usize);
+    let record = read_usize(G_CONTINENT_TABLE).wrapping_add(read_usize(continent).wrapping_mul(0xc6));
+    if league_loaded(record) != 0 || read_i16(this + cup::YEAR) == 0x7d1 {
+        return (exe::comp_util_get_latest_placed_club(comp_record_of_key(comp), place), true, false);
     }
-    let mut lista: Vec<usize> = Vec::new();
-    let mut c = cqu13_d(0xae23b4);
-    for _ in 0..(cqu13_d(0xae235c) as i32).max(0) {
-        if selecao(c) != 0 {
+    let mut list: Vec<usize> = Vec::new();
+    let mut c = read_usize(G_CLUB_TABLE);
+    for _ in 0..(read_usize(G_CLUB_COUNT) as i32).max(0) {
+        if exe::database_is_national_team(c) != 0 {
             break;
         }
-        if cqu13_w(c + 0x80) > injury_word_0c && cqu13_do_continente(c, continente) {
-            lista.push(c);
+        if read_i16(c + club::REPUTATION) > min_reputation && intercontinental_club_in_continent(c, continent) {
+            list.push(c);
         }
-        c += 0x245;
+        c += club::SIZE;
     }
-    if !lista.is_empty() {
-        embaralhar(lista.as_mut_ptr() as usize, lista.len() as u32, 1);
-        return (lista[0], false, false);
+    if !list.is_empty() {
+        exe::comp_util_sort_and_shuffle_top_clubs(list.as_mut_ptr() as usize, list.len() as u32, 1);
+        return (list[0], false, false);
     }
-    show_error_at(arquivo, linha);
-    (colocado(cqu13_comp(comp), 0), false, true)
+    show_error_at(file, line);
+    (exe::comp_util_get_latest_placed_club(comp_record_of_key(comp), 0), false, true)
 }
 
-/// O começo das duas copas: +0x3e = 2 e a tabela +0xa7 de 2 times de 6 bytes (0x944e46(0xc): push; add esp, 4 ->
-/// cdecl; sem memória, a caixa da linha 0xc6 e −1).
-unsafe fn cqu13_tabela(this: usize, arquivo: usize) -> Option<usize> {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 2);
-    let t = alocar(0xc);
-    cqu13_pd(this + 0xa7, t);
+/// The start of both cups: `cup::TEAM_COUNT` = 2 and the team table `cup::TEAM_TABLE` of 2 six-byte teams
+/// (`exe::crt_malloc`(0xc), cdecl; out of memory, the error box of line 0xc6 and −1).
+unsafe fn intercontinental_cup_team_table(this: usize, file: usize) -> Option<usize> {
+    write_i16(this + cup::TEAM_COUNT, 2);
+    let t = exe::crt_malloc(0xc);
+    write_usize(this + cup::TEAM_TABLE, t);
     if t == 0 {
-        show_error_at(arquivo, 0xc6);
+        show_error_at(file, 0xc6);
         return None;
     }
     Some(t)
 }
 
-/// O fim das duas copas: os bytes +4, +5, +0xa e +0xb da tabela zerados; devolve 1.
-unsafe fn cqu13_fim(this: usize) -> i32 {
+/// The end of both cups: bytes +4, +5, +0xa and +0xb of the team table zeroed; returns 1.
+unsafe fn intercontinental_cup_finish(this: usize) -> i32 {
     for k in [4usize, 5, 0xa, 0xb] {
-        *((cqu13_d(this + 0xa7) + k) as *mut u8) = 0;
+        write_u8(read_usize(this + cup::TEAM_TABLE) + k, 0);
     }
     1
 }
 
-/// { 0x92b8b0 } (thiscall, ret 0, world_club_cup.cpp, pilha 0x11a4): `WorldClubCup::pick_qualifiers()`, os dois clubes
-/// da Copa Intercontinental. A vaga 0 é da Europa: o campeão da Liga dos Campeões [0x9cf6e8], ou um clube europeu de
-/// reputação acima de 5.000 sorteado quando a Europa não tem liga carregada fora de 2001 (caixa na linha 0xea sem
-/// nenhum; campeão nulo: a caixa da linha 0xd1 e 0). A vaga 1 é da América do Sul: o campeão da Libertadores
-/// [0x9cf63c] ou o sorteio do mesmo jeito (caixas nas linhas 0x12a e 0xff); quando é o campeão e ele é sul-americano,
-/// o vice da Libertadores entra no lugar dele se também for sul-americano. Devolve 1 (−1 sem memória).
-unsafe extern "thiscall" fn cqu13_intercontinental_clubes(this: usize) -> i32 {
-    let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
-    let Some(t) = cqu13_tabela(this, 0xad5848) else {
+/// The two Intercontinental Cup clubs. Place 0 is Europe's: the Champions League winner
+/// ([`KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE`]), or a European club with reputation above 5,000 drawn when Europe
+/// has no loaded league outside 2001 (the error box of line 0xea with none; a null winner: the error box of line 0xd1
+/// and 0). Place 1 is South America's: the Libertadores winner ([`KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES`]) or
+/// the draw in the same way (boxes at lines 0x12a and 0xff); when it is the winner and the winner is South American,
+/// the Libertadores runner-up takes its place if it is South American too. Returns 1 (−1 out of memory). (Stack frame
+/// 0x11a4.)
+/// Original: `WorldClubCup::pick_qualifiers` (0x92b8b0, world_club_cup.cpp, thiscall, ret 0).
+unsafe extern "thiscall" fn world_club_cup_pick_qualifiers(this: usize) -> i32 {
+    let Some(t) = intercontinental_cup_team_table(this, 0xad5848) else {
         return -1;
     };
-    let (europa, pelo_campeao, reserva) = cqu13_vaga(this, 0x9cfa10, 0x1388, 0x9cf6e8, 0, 0xad5848, 0xea); // cqu13: o campeão europeu
-    cqu13_pd(t + if reserva { 6 } else { 0 }, europa);
-    if pelo_campeao {
-        crate::comparison::branch("cqu_13 clube europeu");
-        if europa == 0 {
+    let (europe, by_winner, fallback) = intercontinental_cup_slot(this, KEY_CONTINENT_EUROPE, 0x1388, KEY_CLUB_COMP_UEFA_EUROPEAN_CHAMPIONS_LEAGUE, 0, 0xad5848, 0xea); // cqu13: the European champion
+    write_usize(t + if fallback { 6 } else { 0 }, europe);
+    if by_winner {
+        covered!("cqu_13 european club");
+        if europe == 0 {
             show_error_at(0xad5848, 0xd1);
             return 0;
         }
     }
-    let (sul, pelo_campeao, _) = cqu13_vaga(this, 0x9cfa1c, 0x1388, 0x9cf63c, 0, 0xad5848, 0x12a);
-    cqu13_pd(cqu13_d(this + 0xa7) + 6, sul);
-    if pelo_campeao {
-        if sul == 0 {
+    let (south, by_winner, _) = intercontinental_cup_slot(this, KEY_CONTINENT_SOUTH_AMERICA, 0x1388, KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES, 0, 0xad5848, 0x12a);
+    write_usize(read_usize(this + cup::TEAM_TABLE) + 6, south);
+    if by_winner {
+        if south == 0 {
             show_error_at(0xad5848, 0xff);
             return 0;
         }
-        if cqu13_do_continente(sul, 0x9cfa1c) {
-            let vice = colocado(cqu13_comp(0x9cf63c), 1);
-            if cqu13_do_continente(vice, 0x9cfa1c) {
-                cqu13_pd(cqu13_d(this + 0xa7) + 6, vice);
+        if intercontinental_club_in_continent(south, KEY_CONTINENT_SOUTH_AMERICA) {
+            let runner_up = exe::comp_util_get_latest_placed_club(comp_record_of_key(KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES), 1);
+            if intercontinental_club_in_continent(runner_up, KEY_CONTINENT_SOUTH_AMERICA) {
+                write_usize(read_usize(this + cup::TEAM_TABLE) + 6, runner_up);
             }
         }
     }
-    cqu13_fim(this)
+    intercontinental_cup_finish(this)
 }
 
-// ponytail: o sorteio (na Europa ou na América do Sul sem liga) e a tabela alocada não rodam duas vezes. Só a original;
-// o plano: devolve 1, +0x3e = 2, os dois clubes nulos não, o primeiro de um continente e o segundo do outro, os bytes
-// de estado zerados.
-unsafe fn cqu13_comparar_clubes(nome: &str, this: usize, continentes: (usize, usize), o: impl FnOnce() -> i32) -> i32 {
+// ponytail: the draw (in Europe or South America without a league) and the allocated table cannot run twice. Only the
+// original; the plan: returns 1, `cup::TEAM_COUNT` = 2, neither club null, the first from one continent and the second
+// from the other, the status bytes zeroed.
+unsafe fn intercontinental_cup_check_clubs(name: &str, this: usize, continents: (usize, usize), o: impl FnOnce() -> i32) -> i32 {
     let r = o();
     if r == 1 {
-        let t = cqu13_d(this + 0xa7);
-        let (a, b) = (cqu13_d(t), cqu13_d(t + 6));
-        let bytes = [4usize, 5, 0xa, 0xb].iter().all(|&k| *((t + k) as *const u8) == 0);
-        let ok = cqu13_w(this + 0x3e) == 2 && a != 0 && b != 0 && cqu13_do_continente(a, continentes.0) && cqu13_do_continente(b, continentes.1) && bytes;
-        SCOREBOARD.record(ok, || format!("{}({:#x}): clubes {:#x} {:#x} estado zerado {}", nome, this, a, b, bytes));
+        let t = read_usize(this + cup::TEAM_TABLE);
+        let (a, b) = (read_usize(t), read_usize(t + 6));
+        let bytes = [4usize, 5, 0xa, 0xb].iter().all(|&k| read_u8(t + k) == 0);
+        let ok = read_i16(this + cup::TEAM_COUNT) == 2 && a != 0 && b != 0 && intercontinental_club_in_continent(a, continents.0) && intercontinental_club_in_continent(b, continents.1) && bytes;
+        SCOREBOARD.record(ok, || format!("{}({:#x}): clubs {:#x} {:#x} status zeroed {}", name, this, a, b, bytes));
     }
     r
 }
 
-unsafe extern "thiscall" fn compare_cqu13_intercontinental_clubes(this: usize) -> i32 {
+unsafe extern "thiscall" fn compare_world_club_cup_pick_qualifiers(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I0%%);
-    cqu13_comparar_clubes("cqu13_intercontinental_clubes", this, (0x9cfa10, 0x9cfa1c), || o(this))
+    intercontinental_cup_check_clubs("world_club_cup_pick_qualifiers", this, (KEY_CONTINENT_EUROPE, KEY_CONTINENT_SOUTH_AMERICA), || o(this))
 }
 
-/// { 0x632480 } (thiscall, ret 0, inter_amer_cup.cpp, pilha 0x11a4): `InterAmerCup::select_teams()`, os dois clubes da
-/// Copa Interamericana. A vaga 0 é da América do Norte: o campeão da Copa dos Campeões da CONCACAF [0x9cf72c], ou um
-/// clube norte-americano de reputação acima de 1.000 sorteado quando ela não tem liga carregada fora de 2001 (caixas
-/// nas linhas 0xea e 0xd1); a vaga 1 é da América do Sul: o campeão da Libertadores [0x9cf63c] ou o sorteio acima de
-/// 5.000 (caixas nas linhas 0x118 e 0xff). Devolve 1 (0 com campeão nulo; −1 sem memória).
-unsafe extern "thiscall" fn cqu13_interamericana_clubes(this: usize) -> i32 {
-    let Some(t) = cqu13_tabela(this, 0x9e9d94) else {
+/// The two Interamerican Cup clubs. Place 0 is North America's: the CONCACAF Champions Cup winner
+/// ([`KEY_CLUB_COMP_CONCACAF_CHAMPIONS_CUP`]), or a North American club with reputation above 1,000 drawn when it has
+/// no loaded league outside 2001 (boxes at lines 0xea and 0xd1); place 1 is South America's: the Libertadores winner
+/// ([`KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES`]) or the draw above 5,000 (boxes at lines 0x118 and 0xff).
+/// Returns 1 (0 with a null winner; −1 out of memory). (Stack frame 0x11a4.)
+/// Original: `InterAmerCup::select_teams` (0x632480, inter_amer_cup.cpp, thiscall, ret 0).
+unsafe extern "thiscall" fn inter_amer_cup_select_teams(this: usize) -> i32 {
+    let Some(t) = intercontinental_cup_team_table(this, 0x9e9d94) else {
         return -1;
     };
-    let (norte, pelo_campeao, reserva) = cqu13_vaga(this, 0x9cfa14, 0x3e8, 0x9cf72c, 0, 0x9e9d94, 0xea); // cqu13: o campeão da CONCACAF
-    cqu13_pd(t + if reserva { 6 } else { 0 }, norte);
-    if pelo_campeao {
-        crate::comparison::branch("cqu_13 clube norte-americano");
-        if norte == 0 {
+    let (north, by_winner, fallback) = intercontinental_cup_slot(this, KEY_CONTINENT_NORTH_AMERICA, 0x3e8, KEY_CLUB_COMP_CONCACAF_CHAMPIONS_CUP, 0, 0x9e9d94, 0xea); // cqu13: the CONCACAF champion
+    write_usize(t + if fallback { 6 } else { 0 }, north);
+    if by_winner {
+        covered!("cqu_13 north american club");
+        if north == 0 {
             show_error_at(0x9e9d94, 0xd1);
             return 0;
         }
     }
-    let (sul, pelo_campeao, _) = cqu13_vaga(this, 0x9cfa1c, 0x1388, 0x9cf63c, 0, 0x9e9d94, 0x118); // cqu13: o campeão da Libertadores na Interamericana
-    cqu13_pd(cqu13_d(this + 0xa7) + 6, sul);
-    if pelo_campeao {
-        crate::comparison::branch("cqu_13 clube sul-americano da interamericana");
-        if sul == 0 {
+    let (south, by_winner, _) = intercontinental_cup_slot(this, KEY_CONTINENT_SOUTH_AMERICA, 0x1388, KEY_CLUB_COMP_SOUTH_AMERICAN_COPA_LIBERTADORES, 0, 0x9e9d94, 0x118); // cqu13: the Libertadores champion in the Interamerican Cup
+    write_usize(read_usize(this + cup::TEAM_TABLE) + 6, south);
+    if by_winner {
+        covered!("cqu_13 interamerican south american club");
+        if south == 0 {
             show_error_at(0x9e9d94, 0xff);
             return 0;
         }
     }
-    cqu13_fim(this)
+    intercontinental_cup_finish(this)
 }
 
-unsafe extern "thiscall" fn compare_cqu13_interamericana_clubes(this: usize) -> i32 {
+unsafe extern "thiscall" fn compare_inter_amer_cup_select_teams(this: usize) -> i32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> i32>(%%I1%%);
-    cqu13_comparar_clubes("cqu13_interamericana_clubes", this, (0x9cfa14, 0x9cfa1c), || o(this))
+    intercontinental_cup_check_clubs("inter_amer_cup_select_teams", this, (KEY_CONTINENT_NORTH_AMERICA, KEY_CONTINENT_SOUTH_AMERICA), || o(this))
 }
 
-/// As chamadas das posições previstas das copas da CONMEBOL (0x4c2a90, 0x4c4210 e 0x4c5a90, o mesmo corpo), na ordem:
-/// a lista dos convidados (+0xee, +0xf2 clubes) já ordenada; as rodadas da tabela `tabela` (linhas de 0x68 bytes; o
-/// word +0x1a de cada uma, os que saem nela), da última para a primeira: a última dá a posição 1 aos que saem nela e,
-/// como todas, a posição corrente (que sobe a cada clube) a mais tantos; os que restam ficam em blocos de `grupo` com a
-/// posição do começo do bloco. Devolve (clube, posição).
-unsafe fn cqu13_plano_previstas(this: usize, tabela: usize, rodadas: i16, grupo: u32) -> Vec<(usize, u8)> {
+/// The calls of the CONMEBOL cups' predicted positions (0x4c2a90, 0x4c4210 and 0x4c5a90, the same body), in order: the
+/// invited list (+0xee, +0xf2 clubs) already sorted; the rounds of the table `table` (`cup_round::SIZE`-byte records;
+/// the word `cup_round::TIES` of each, those leaving in it), from the last to the first: the last gives position 1 to
+/// those leaving in it and, like all of them, the running position (which goes up with each club) to as many again;
+/// those remaining go in blocks of `group` with the position of the block's start. Returns (club, position).
+unsafe fn con_merc_cup_predicted_plan(this: usize, table: usize, rounds: i16, group: u32) -> Vec<(usize, u8)> {
     let mut v = Vec::new();
-    let lista = cqu13_d(this + 0xee);
+    let list = read_usize(this + 0xee);
     let mut i: i16 = 0;
     let mut bl: u8 = 1;
-    let mut atual: u8 = 1;
-    let mut r = rodadas as i32 - 1;
+    let mut current: u8 = 1;
+    let mut r = rounds as i32 - 1;
     while r >= 0 {
-        let p = tabela + r as usize * 0x68 + 0x1a;
-        if r == rodadas as i32 - 1 {
+        let p = table + r as usize * cup_round::SIZE + cup_round::TIES;
+        if r == rounds as i32 - 1 {
             let mut j: i16 = 0;
-            while j < cqu13_w(p) {
-                v.push((cqu13_d(lista + i as isize as usize * 4), atual));
+            while j < read_i16(p) {
+                v.push((read_usize(list + i as isize as usize * 4), current));
                 i = i.wrapping_add(1);
                 bl = bl.wrapping_add(1);
                 j += 1;
             }
         }
-        atual = bl;
+        current = bl;
         let mut j: i16 = 0;
-        while j < cqu13_w(p) {
-            v.push((cqu13_d(lista + i as isize as usize * 4), atual));
+        while j < read_i16(p) {
+            v.push((read_usize(list + i as isize as usize * 4), current));
             i = i.wrapping_add(1);
             bl = bl.wrapping_add(1);
             j += 1;
@@ -212,10 +194,10 @@ unsafe fn cqu13_plano_previstas(this: usize, tabela: usize, rodadas: i16, grupo:
         r -= 1;
     }
     let mut pos = bl;
-    while (i as i32) < cqu13_d(this + 0xf2) as i32 {
-        v.push((cqu13_d(lista + i as isize as usize * 4), pos));
+    while (i as i32) < read_usize(this + 0xf2) as i32 {
+        v.push((read_usize(list + i as isize as usize * 4), pos));
         bl = bl.wrapping_add(1);
-        if bl as u32 == pos as u32 + grupo {
+        if bl as u32 == pos as u32 + group {
             pos = bl;
         }
         i = i.wrapping_add(1);
@@ -223,60 +205,57 @@ unsafe fn cqu13_plano_previstas(this: usize, tabela: usize, rodadas: i16, grupo:
     v
 }
 
-/// O corpo das posições previstas: sem estatísticas (+8), a caixa `linha`; a lista +0xee de +0xf2 convidados ordenada
-/// pela reputação (qsort 0x945333(lista, n, 4, 0x4b07d0): 4 pushes; add esp -> cdecl); a tabela das rodadas da fase
-/// `fase` pela virtual +0x3c (push 0; push &extra; push &rodadas; push fase; mov ecx, this -> thiscall, ret 0x10); cada
-/// clube do plano com a sua posição (Comp_Stats::set_club_final_position 0x4a2540: push posição; push clube; mov ecx,
-/// [+8] -> thiscall, ret 8; a original empurra o byte com sobra nos bytes altos, a 0x4a2540 lê o byte); a tabela
-/// liberada (0x9452ca).
-unsafe fn cqu13_previstas(this: usize, fase: u32, grupo: u32, arquivo: usize, linha: u32) {
-    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    let gravar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4a2540usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    if cqu13_d(this + 8) == 0 {
-        return show_error_at(arquivo, linha);
+/// The predicted positions body: without statistics (+8), the error box `line`; the list +0xee of +0xf2 invited clubs
+/// sorted by reputation (`exe::crt_qsort`(list, n, 4, 0x4b07d0), cdecl); the round table of stage `stage` through
+/// `comp_vtable::CREATE_SCHEDULE` (push 0; push &extra; push &rounds; push stage; mov ecx, this -> thiscall, ret
+/// 0x10); each club of the plan with its position (`exe::comp_stats_set_club_final_position`(stats, club, position),
+/// thiscall, ret 8; the original pushes the byte with garbage in the high bytes, the routine reads the byte); the table
+/// freed (`exe::crt_free`).
+unsafe fn con_merc_cup_predicted_positions(this: usize, stage: u32, group: u32, file: usize, line: u32) {
+    if read_usize(this + 8) == 0 {
+        return show_error_at(file, line);
     }
-    ordenar(cqu13_d(this + 0xee), cqu13_d(this + 0xf2) as u32, 4, 0x4b07d0);
-    let tabela_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqu13_d(cqu13_d(this) + 0x3c));
-    let (mut rodadas, mut extra) = (0i16, 0i16);
-    let tabela = tabela_da_copa(this, fase, &mut rodadas, &mut extra, 0);
-    for (c, p) in cqu13_plano_previstas(this, tabela, rodadas, grupo) {
-        gravar(cqu13_d(this + 8), c, p as u32);
+    exe::crt_qsort(read_usize(this + 0xee), read_usize(this + 0xf2) as u32, 4, 0x4b07d0usize);
+    let create_schedule: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + comp_vtable::CREATE_SCHEDULE));
+    let (mut rounds, mut extra) = (0i16, 0i16);
+    let table = create_schedule(this, stage, &mut rounds, &mut extra, 0);
+    for (c, p) in con_merc_cup_predicted_plan(this, table, rounds, group) {
+        exe::comp_stats_set_club_final_position(read_usize(this + 8), c, p as u32);
     }
-    soltar(tabela);
+    exe::crt_free(table);
 }
 
-/// { 0x4c2a90 } (thiscall, ret 0, con_merc_cup.cpp): `ConMercCup::set_predicted_positions()`: as posições previstas da
-/// Merconorte, pelas rodadas da fase 3 (o mata-mata) e em blocos de 4 para os que ficam nos grupos (caixa na linha
-/// 0x32e).
-unsafe extern "thiscall" fn cqu13_merconorte_previstas(this: usize) {
-    cqu13_previstas(this, 3, 4, 0x9a7d6c, 0x32e)
+/// The Merconorte predicted positions, by the rounds of stage 3 (the knockout) and in blocks of 4 for those staying in
+/// the groups (the error box at line 0x32e).
+/// Original: `ConMercCup::set_predicted_positions` (0x4c2a90, con_merc_cup.cpp, thiscall, ret 0).
+unsafe extern "thiscall" fn con_merc_cup_set_predicted_positions(this: usize) {
+    con_merc_cup_predicted_positions(this, 3, 4, 0x9a7d6c, 0x32e)
 }
 
-// ponytail: Comp_Stats::set_club_final_position acrescenta o registro do clube (realoca): não roda duas vezes. Só a
-// original; o plano, com a lista já ordenada por ela: cada convidado com registro e as posições (+0x72, 0x4a4850)
-// crescentes na ordem da lista, a primeira 1. (Pedir de novo a tabela das rodadas da fase mexe no calendário da copa:
-// a comparação de 07/11 deu a caixa da linha 1278 do Cup.cpp; o plano não chama mais nada além da busca.)
-unsafe fn cqu13_comparar_previstas(nome: &str, this: usize, _fase: u32, _grupo: u32, o: impl FnOnce()) {
+// ponytail: Comp_Stats::set_club_final_position adds the club's entry (it reallocates): it cannot run twice. Only the
+// original; the plan, with the list already sorted by it: each invited club with an entry and the positions
+// (`comp_stats_club::FINAL_POSITION`, `exe::comp_stats_find_club_entry`) rising in list order, the first 1. (Asking
+// for the stage's round table again moves the cup's calendar: the 07/11 comparison showed the Cup.cpp line 1278 box;
+// the plan calls nothing but the lookup.)
+unsafe fn con_merc_cup_check_predicted(name: &str, this: usize, _stage: u32, _group: u32, o: impl FnOnce()) {
     o();
-    let est = cqu13_d(this + 8);
-    let lista = cqu13_d(this + 0xee);
-    let n = cqu13_d(this + 0xf2) as i32;
-    if est == 0 || lista == 0 || !(1..=256).contains(&n) {
+    let stats = read_usize(this + 8);
+    let list = read_usize(this + 0xee);
+    let n = read_usize(this + 0xf2) as i32;
+    if stats == 0 || list == 0 || !(1..=256).contains(&n) {
         return;
     }
-    let buscar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
-    let mut lidas: Vec<i32> = Vec::new();
+    let mut read: Vec<i32> = Vec::new();
     for k in 0..n as usize {
-        let c = cqu13_d(lista + k * 4);
-        let e = if c != 0 { buscar(est, c) } else { 0 };
-        lidas.push(if e != 0 { *((e + 0x72) as *const u8) as i32 } else { -1 });
+        let c = read_usize(list + k * 4);
+        let e = if c != 0 { exe::comp_stats_find_club_entry(stats, c) } else { 0 };
+        read.push(if e != 0 { read_u8(e + comp_stats_club::FINAL_POSITION) as i32 } else { -1 });
     }
-    let ok = lidas[0] == 1 && lidas.iter().all(|&x| x >= 1) && lidas.windows(2).all(|w| w[0] <= w[1]);
-    SCOREBOARD.record(ok, || format!("{}({:#x}): posições {:?}", nome, this, lidas));
+    let ok = read[0] == 1 && read.iter().all(|&x| x >= 1) && read.windows(2).all(|w| w[0] <= w[1]);
+    SCOREBOARD.record(ok, || format!("{}({:#x}): positions {:?}", name, this, read));
 }
 
-unsafe extern "thiscall" fn compare_cqu13_merconorte_previstas(this: usize) {
+unsafe extern "thiscall" fn compare_con_merc_cup_set_predicted_positions(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    cqu13_comparar_previstas("cqu13_merconorte_previstas", this, 3, 4, || o(this))
+    con_merc_cup_check_predicted("con_merc_cup_set_predicted_positions", this, 3, 4, || o(this))
 }

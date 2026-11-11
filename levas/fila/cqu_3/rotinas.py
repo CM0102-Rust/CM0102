@@ -19,21 +19,21 @@
 # Determinismo: só os campos do jogo e da liga.
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
-ROTINAS = [('cqu3_resultado_do_mineiro', 0x435130, [0x53, 0x8b, 0x5c, 0x24, 0x0c]),
-           ('cqu3_resultado_do_paranaense', 0x4386e0, [0x53, 0x8b, 0x5c, 0x24, 0x0c]),
-           ('cqu3_resultado_do_carioca', 0x43af20, [0x53, 0x8b, 0x5c, 0x24, 0x0c]),
-           ('cqu3_resultado_da_j1', 0x663940, [0x53, 0x8b, 0x5c, 0x24, 0x0c])]
+ROTINAS = [('bra_reg_minas_gerais_add_result', 0x435130, [0x53, 0x8b, 0x5c, 0x24, 0x0c]),
+           ('bra_reg_parana_add_result', 0x4386e0, [0x53, 0x8b, 0x5c, 0x24, 0x0c]),
+           ('bra_reg_rio_add_result', 0x43af20, [0x53, 0x8b, 0x5c, 0x24, 0x0c]),
+           ('jap_j1_add_result', 0x663940, [0x53, 0x8b, 0x5c, 0x24, 0x0c])]
 _R = ('O resultado de cada jogo {liga}: o jogo entra na tabela geral e, se ainda não tem fase, ganha a do seu turno (o primeiro até a {r}ª rodada, o segundo a partir da {s}ª); o turno é montado quando o primeiro jogo dele chega, e o jogo entra também na tabela do turno, sem contar de novo nas estatísticas da liga; o campeão de cada turno vai à final',
       'Each game result of {liga_en}: the game goes into the overall table and, if it has no stage yet, gets its half\'s (the first up to round {r}, the second from round {s}); the half is built when its first game arrives, and the game also goes into the half table, without counting again in the league statistics; each half winner goes to the final')
 DOCS = ('o resultado de cada jogo do Mineiro, do Paranaense, do Carioca e da J1: a tabela geral e a do turno',
         'each game result of the Minas Gerais, Paraná and Rio state leagues and J1: the overall and the half table',
-        [('cqu3_resultado_do_mineiro', 'BraRegMinasGerais::add_result', '0x435130', 'bra_reg_minas_gerais.cpp', 'thiscall, ret 8',
+        [('bra_reg_minas_gerais_add_result', 'BraRegMinasGerais::add_result', '0x435130', 'bra_reg_minas_gerais.cpp', 'thiscall, ret 8',
           _R[0].format(liga='do Mineiro', r=10, s=11), _R[1].format(liga_en='the Minas Gerais state league', r=10, s=11)),
-         ('cqu3_resultado_do_paranaense', 'BraRegParana::add_result', '0x4386e0', 'bra_reg_parana.cpp', 'thiscall, ret 8',
+         ('bra_reg_parana_add_result', 'BraRegParana::add_result', '0x4386e0', 'bra_reg_parana.cpp', 'thiscall, ret 8',
           _R[0].format(liga='do Paranaense', r=10, s=11), _R[1].format(liga_en='the Paraná state league', r=10, s=11)),
-         ('cqu3_resultado_do_carioca', 'BraRegRio::add_result', '0x43af20', 'bra_reg_rio.cpp', 'thiscall, ret 8',
+         ('bra_reg_rio_add_result', 'BraRegRio::add_result', '0x43af20', 'bra_reg_rio.cpp', 'thiscall, ret 8',
           _R[0].format(liga='do Carioca', r=10, s=11), _R[1].format(liga_en='the Rio state league', r=10, s=11)),
-         ('cqu3_resultado_da_j1', 'JapJ1::add_result', '0x663940', 'jap_j1.cpp', 'thiscall, ret 8',
+         ('jap_j1_add_result', 'JapJ1::add_result', '0x663940', 'jap_j1.cpp', 'thiscall, ret 8',
           _R[0].format(liga='da J1', r=14, s=15), _R[1].format(liga_en='J1', r=14, s=15))])
 CAMPOS = [('jogo +0x42: a fase do jogo na liga (0xff: nenhuma); valor; grava o turno e devolve 0xff', 'fixture +0x42: the game stage in the league (0xff: none); value; writes the half and restores 0xff'),
           ('jogo +0x34: a rodada do jogo; valor; lê', 'fixture +0x34: the game round; value; reads'),

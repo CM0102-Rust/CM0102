@@ -1,0 +1,20 @@
+[
+ {
+  "module": "cup",
+  "offset": "0x4",
+  "name": "COMPETITION",
+  "width": 4,
+  "description": "pointer to the competition database record (TComp; its +0 is the competition id); Comp base field, as league::COMPETITION",
+  "confidence": "verified",
+  "evidence": "every Cup constructor writes its record argument there right after Cup::Cup (EngFaCup::EngFaCup 0x56f040 and the other cup constructors of cqu_5..8); league::COMPETITION is the same Comp base field, verified on League and Cup routines"
+ },
+ {
+  "module": "cup",
+  "offset": "0x8",
+  "name": "COMP_STATS",
+  "width": 4,
+  "description": "pointer to the cup's Comp_Stats object (per-club season statistics), 0 = none; Comp base field, as league::COMP_STATS",
+  "confidence": "verified",
+  "evidence": "the cup constructors store operator new(0x5ce) + Comp_Stats::Comp_Stats(new, this) there (error box without it); existing cup code passes [this+8] to comp_stats_set_club_final_position (eng_auto_cup.rs)"
+ }
+]

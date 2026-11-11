@@ -23,14 +23,14 @@
 # Determinismo: só os argumentos, as datas do jogo e o sorteio dos jogos (0x6835c0).
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
-ROTINAS = [('cqv4_construir_fase', 0x68b100, [0x6a, 0xff, 0x68, 0xeb, 0xca, 0x95, 0x00]),
-           ('cqv4_destruir_fase', 0x68b6a0, [0x6a, 0xff, 0x68, 0x28, 0xcb, 0x95, 0x00])]
+ROTINAS = [('construct_league_stage', 0x68b100, [0x6a, 0xff, 0x68, 0xeb, 0xca, 0x95, 0x00]),
+           ('destroy_league_stage', 0x68b6a0, [0x6a, 0xff, 0x68, 0x28, 0xcb, 0x95, 0x00])]
 DOCS = ('as fases de liga: o construtor e o destrutor de League_Stage',
         'league stages: the League_Stage constructor and destructor',
-        [('cqv4_construir_fase', 'League_Stage::League_Stage', '0x68b100', 'league_stage.cpp', 'thiscall, ret 0x58',
+        [('construct_league_stage', 'League_Stage::League_Stage', '0x68b100', 'league_stage.cpp', 'thiscall, ret 0x58',
           'Uma fase de pontos corridos dentro de uma competição (um turno de estadual ou da J1, um grupo da Série C, uma conferência da MLS, um grupo de copa ou de eliminatória): os clubes, os turnos, os pontos por vitória e por empate, a categoria dos jogos, os critérios de desempate e as vagas da fase vêm de quem a cria; a tabela recebe os clubes na ordem dada; com a tabela de rodadas, os jogos são sorteados; sem ela, a fase tem uma rodada só, hoje; por fim a tabela é ordenada',
           'A round-robin stage inside a competition (a state league or J1 half, a third division group, an MLS conference, a cup or qualifier group): the clubs, the rounds, the points for a win and a draw, the match category, the tie-breakers and the stage places come from the creator; the table gets the clubs in the given order; with the round table, the fixtures are drawn; without it, the stage has a single round, today; finally the table is sorted'),
-         ('cqv4_destruir_fase', 'League_Stage::~League_Stage', '0x68b6a0', 'league_stage.cpp', 'thiscall, ret 0',
+         ('destroy_league_stage', 'League_Stage::~League_Stage', '0x68b6a0', 'league_stage.cpp', 'thiscall, ret 0',
           'O fim de uma fase de pontos corridos (na virada): a tabela, as rodadas e o vetor +0x18 liberados, e o fim da liga',
           'The end of a round-robin stage (at the turnover): the table, the rounds and the +0x18 array freed, and the league teardown')])
 CAMPOS = [('fase +0xc2 / +0xc3: os pontos por vitória / por empate; valor; grava', 'stage +0xc2 / +0xc3: the points for a win / a draw; value; writes'),

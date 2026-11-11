@@ -16,10 +16,10 @@
 # endereço como valor.
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
-ROTINAS = [('cqv7_inscritos_da_copa_da_inglaterra', 0x56fab0, [0x81, 0xec, 0x34, 0x07, 0x00, 0x00])]
+ROTINAS = [('eng_fa_cup_collect_entrants', 0x56fab0, [0x81, 0xec, 0x34, 0x07, 0x00, 0x00])]
 DOCS = ('a Copa da Inglaterra (FA Cup): os 152 inscritos',
         'the FA Cup: the 152 entrants',
-        [('cqv7_inscritos_da_copa_da_inglaterra', 'EngFaCup::collect_entrants', '0x56fab0', 'eng_fa_cup.cpp', 'thiscall, ret 0',
+        [('eng_fa_cup_collect_entrants', 'EngFaCup::collect_entrants', '0x56fab0', 'eng_fa_cup.cpp', 'thiscall, ret 0',
           'regra: a Copa da Inglaterra tem 152 inscritos, na ordem em que entram: 38 clubes ingleses de fora da liga (os de melhor reputação, com os de cima embaralhados), os 22 da Conference (dois sorteados vão para o fim), o campeão e o vice do FA Trophy da última temporada [inferência: a competição [0x9cf6a0]] (com a regra da nação ou em 2001; eles saem da lista deles e o número de vagas dela cai um para cada), as três divisões da Football League (a terceira, a segunda e a primeira, esta com 60 trocas sorteadas entre as suas 24 vagas), a Premier e, por fim, os ingleses de uma competição [0x9cf7bc] do mesmo ano (o Mundial de Clubes [inferência]); em 1999, com um só clube nela, ele sai da copa (+0xb4) e a copa fica com 151',
           'rule: the FA Cup has 152 entrants, in the order they enter: 38 English non-league clubs (the best by reputation, the top ones shuffled), the 22 Conference clubs (two drawn go to the end), the FA Trophy winner and runner-up of the last season [inference: competition [0x9cf6a0]] (with the nation rule or in 2001; they leave their own list and its number of places drops by one each), the three Football League divisions (the third, the second and the first, this one with 60 drawn swaps among its 24 places), the Premier League and, last, the English clubs of a competition [0x9cf7bc] of the same year (the Club World Championship [inference]); in 1999, with a single club in it, that club leaves the cup (+0xb4) and the cup has 151')])
 CAMPOS = [('copa +0x3e quantos times (152, menos um com +0xb4 = 1), +0xa7 tabela dos inscritos (6 bytes: o clube, +4 e +5 zerados), +0xb3 quantos da competição [0x9cf7bc] entram no fim, +0xb4 a dispensa de 1999, +0xb2 a escolha do humano em 1999 [inferência]; ponteiro/valor; grava e lê',

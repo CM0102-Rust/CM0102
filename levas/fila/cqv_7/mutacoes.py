@@ -4,15 +4,15 @@
 # sem os sorteios do embaralhamento).
 MUTACOES = [
     ('cqv7_sem_as_trocas_da_primeira',
-     'for _ in 0..0x3c { // cqv7: 60 trocas na primeira divisão',
+     'for _ in 0..0x3c { // cqv7: 60 swaps in the first division',
      'for _ in 0..0 { // mutacao: sem as trocas',
-     'cqv_7 primeira divisao embaralhada'),
+     'cqv_7 first division shuffled'),
     ('cqv7_segunda_antes_da_terceira',
-     'cqv7_divisao(this, &mut k, 0x9cf5c8, &[a, b, x1, x2]); cqv7_divisao(this, &mut k, 0x9cf5c4, &[x1, x2]); // cqv7: a terceira e a segunda',
-     'cqv7_divisao(this, &mut k, 0x9cf5c4, &[x1, x2]); cqv7_divisao(this, &mut k, 0x9cf5c8, &[a, b, x1, x2]); // mutacao: a segunda antes',
-     'cqv_7 primeira divisao embaralhada'),
+     'fa_cup_add_division(cup, &mut k, KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION, &[a, b, x1, x2]); fa_cup_add_division(cup, &mut k, KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION, &[x1, x2]); // cqv7: the third and the second',
+     'fa_cup_add_division(cup, &mut k, KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION, &[x1, x2]); fa_cup_add_division(cup, &mut k, KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION, &[a, b, x1, x2]); // mutacao: a segunda antes',
+     'cqv_7 first division shuffled'),
     ('cqv7_fora_da_liga_sem_reputacao',
-     'embaralhar(v.as_mut_ptr() as usize + CQV7_FORA as usize * 4, nout as u32, vagas_fora as i16 as u16 as u32); // cqv7: os de fora da liga pela reputação',
-     'let _ = embaralhar; // mutacao: sem a ordem pela injury_word_0c',
-     'cqv_7 primeira divisao embaralhada'),
+     'exe::comp_util_sort_and_shuffle_top_clubs(v.as_mut_ptr() as usize + FA_CUP_NON_LEAGUE_START as usize * 4, nout as u32, non_league_places as i16 as u16 as u32); // cqv7: the non-league clubs by reputation',
+     'let _ = non_league_places; // mutacao: sem a ordem pela injury_word_0c',
+     'cqv_7 first division shuffled'),
 ]

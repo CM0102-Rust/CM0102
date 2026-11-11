@@ -1,0 +1,20 @@
+[
+ {
+  "module": "wc_oceania_league_fields",
+  "offset": "0xef",
+  "name": "ENTRANT_POOL",
+  "width": 4,
+  "description": "pointer to the Oceania entrant list (national team club pointers, 4 bytes each); the even places form the first group, the odd places the second",
+  "confidence": "read",
+  "evidence": "WcOceaniaLeague::init_group_table 0x91ec00 reads [+0xef] + 8i (places 2i); create_second_group_stage 0x91f1a0 reads [+0xef] + 8i + 4; update_for_date 0x91f3d0 walks +0xf3 entries of 4 bytes"
+ },
+ {
+  "module": "wc_oceania_league_fields",
+  "offset": "0xf3",
+  "name": "ENTRANT_POOL_COUNT",
+  "width": 4,
+  "description": "number of entries in ENTRANT_POOL",
+  "confidence": "read",
+  "evidence": "WcOceaniaLeague::update_for_date 0x91f3d0 loops k < [+0xf3] over [+0xef] + 4k"
+ }
+]

@@ -32,18 +32,18 @@
 # Determinismo: as listas vêm da ordem do banco e do embaralhamento da 0x4afbd0 (o sorteio do jogo).
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
-ROTINAS = [('cqv3_acesso_dos_estaduais', 0x42b130, [0x81, 0xec, 0x70, 0x02, 0x00, 0x00]),
-           ('cqv3_renovar_serie_c', 0x42b520, [0x81, 0xec, 0x08, 0x02, 0x00, 0x00]),
-           ('cqv3_virada_da_j2', 0x6651f0, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00])]
+ROTINAS = [('bra_nat_first_exchange_state_league_clubs', 0x42b130, [0x81, 0xec, 0x70, 0x02, 0x00, 0x00]),
+           ('bra_nat_first_refresh_third_division_clubs', 0x42b520, [0x81, 0xec, 0x08, 0x02, 0x00, 0x00]),
+           ('jap_j2_start_new_season', 0x6651f0, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00])]
 DOCS = ('a virada do futebol brasileiro e da J2: o acesso e o rebaixamento entre os estaduais e as divisões de baixo, os 16 que entram na Série C e a virada da J2',
         'the Brazilian and J2 season turnover: promotion and relegation between the state leagues and their lower divisions, the 16 clubs entering the third division and the J2 turnover',
-        [('cqv3_acesso_dos_estaduais', 'bra_nat_first_exchange_state_league_clubs', '0x42b130', 'bra_nat_first.cpp', 'cdecl',
+        [('bra_nat_first_exchange_state_league_clubs', 'bra_nat_first_exchange_state_league_clubs', '0x42b130', 'bra_nat_first.cpp', 'cdecl',
           'Na virada do futebol brasileiro, o acesso e o rebaixamento entre os doze estaduais e as divisões de baixo de cada um: de cada divisão de baixo sobem tantos clubes quantas são as vagas de rebaixamento do estadual, escolhidos pela reputação com um embaralhamento entre os 75 melhores (até 200 clubes no todo); os que sobem e estão sem técnico abrem a vaga; os das últimas linhas de cada estadual descem para a divisão de baixo, perdem o técnico humano que não pode mais dirigi-los e acionam as cláusulas de rebaixamento dos contratos',
           'At the Brazilian season turnover, promotion and relegation between the twelve state leagues and their lower divisions: from each lower division as many clubs go up as the state league has relegation places, chosen by reputation with a shuffle among the top 75 (up to 200 clubs overall); promoted clubs without a manager open the job; the bottom clubs of each state league go down to the lower division, lose the human manager who can no longer run them and trigger the relegation clauses of the contracts'),
-         ('cqv3_renovar_serie_c', 'bra_nat_first_refresh_third_division_clubs', '0x42b520', 'bra_nat_first.cpp', 'cdecl',
+         ('bra_nat_first_refresh_third_division_clubs', 'bra_nat_first_refresh_third_division_clubs', '0x42b520', 'bra_nat_first.cpp', 'cdecl',
           'Na virada do futebol brasileiro, a renovação da Série C: se há pelo menos 16 clubes brasileiros sem divisão nacional (até 160, na ordem do banco), os 16 primeiros pela reputação, com um embaralhamento entre os 48 melhores, entram na Série C (os sem técnico abrem a vaga); os clubes marcados como eliminados (+0x37 = 3) na tabela da Série C e nas dos sete grupos saem da divisão nacional, perdem o técnico humano que não pode mais dirigi-los e acionam as cláusulas de rebaixamento',
           'At the Brazilian season turnover, the third division renewal: if there are at least 16 Brazilian clubs without a national division (up to 160, in database order), the top 16 by reputation, with a shuffle among the top 48, enter the third division (those without a manager open the job); the clubs marked as eliminated (+0x37 = 3) in the third division table and in the seven group tables leave the national divisions, lose the human manager who can no longer run them and trigger the relegation clauses'),
-         ('cqv3_virada_da_j2', 'JapJ2::start_new_season', '0x6651f0', 'jap_j2.cpp', 'thiscall, ret 0',
+         ('jap_j2_start_new_season', 'JapJ2::start_new_season', '0x6651f0', 'jap_j2.cpp', 'thiscall, ret 0',
           'A virada da J2: a tabela e o calendário da temporada que acabou liberados, as estatísticas arquivadas, o ano seguinte, as regras, a tabela, os jogos e a ordem de novo (uma caixa e para se algum falhar), as posições previstas, as expectativas das diretorias e a renovação dos árbitros; a J2 é só de pontos corridos',
           'The J2 season turnover: the table and schedule of the finished season freed, the statistics archived, the next year, the rules, the table, the fixtures and the order again (a message box and stop if any fails), the predicted positions, the board expectations and the referee renewal; J2 is a plain round robin')])
 CAMPOS = [('clube +0x60: a divisão regional (o registro do estadual ou da divisão de baixo); ponteiro; grava', 'club +0x60: the regional division (the state league or lower division record); pointer; writes'),

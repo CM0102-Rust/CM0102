@@ -3,11 +3,11 @@
 # clubes delas, inclusive os da MLS, nao jogam).
 MUTACOES = [
     ('cqw12_concacaf_um_ano_depois',
-     'ano as i16); // cqw12: a CONCACAF do ano do jogo',
-     '(ano as i16).wrapping_add(1)); // mutacao: um ano depois',
-     'cqw_12 copa da concacaf'),
+     'this.set_year(year as i16); // cqw12: the CONCACAF cup of the game\'s year',
+     'this.set_year((year as i16).wrapping_add(1)); // mutation: one year later',
+     'cqw_12 concacaf champions cup'),
     ('cqw12_intercontinental_um_ano_depois',
-     'let ano = ano; // cqw12: a Intercontinental do ano do jogo',
-     'let ano = ano + 1; // mutacao: um ano depois',
-     'cqw_12 copa intercontinental'),
+     'let year = year; // cqw12: the Intercontinental Cup of the game\'s year',
+     'let year = year + 1; // mutation: one year later',
+     'cqw_12 intercontinental cup'),
 ]

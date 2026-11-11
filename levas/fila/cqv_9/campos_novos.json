@@ -1,0 +1,29 @@
+[
+ {
+  "module": "cup",
+  "offset": "0x1c",
+  "name": "UPPER_DIVISION_ID",
+  "width": 4,
+  "description": "Comp base field, -1 in the cup constructors (league::UPPER_DIVISION_ID at the same offset); meaning for a cup unknown",
+  "confidence": "inferred",
+  "evidence": "EngAutoCup::EngAutoCup 0x56aa30 and EuropeanCup::EuropeanCup 0x5837c0 write -1 at +0x1c right after Cup::Cup; league.rs names the same Comp offset"
+ },
+ {
+  "module": "cup",
+  "offset": "0x20",
+  "name": "LOWER_DIVISION_ID",
+  "width": 4,
+  "description": "Comp base field, -1 in the cup constructors (league::LOWER_DIVISION_ID at the same offset)",
+  "confidence": "inferred",
+  "evidence": "the same constructors write -1 at +0x20; league::LOWER_DIVISION_ID"
+ },
+ {
+  "module": "cup",
+  "offset": "0x52",
+  "name": "SQUAD_FLAGS",
+  "width": 1,
+  "description": "Comp base flags byte (league::SQUAD_FLAGS: bit 2 = squad registration); the Champions League constructor writes 3",
+  "confidence": "inferred",
+  "evidence": "EuropeanCup::EuropeanCup 0x5837c0 writes byte +0x52 = 3; league::SQUAD_FLAGS is the same Comp offset"
+ }
+]

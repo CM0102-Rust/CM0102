@@ -1,348 +1,331 @@
-// ---------- %%LEVA%%a leva: a Recopa asiática: os 32 classificados das duas zonas, a fase da zona oeste e as posições previstas (asia_cup_winner.cpp) ----------
+// ---------- %%LEVA%%a leva: the Asian Cup Winners' Cup: the 32 qualifiers of the two zones, the west zone stage and the predicted positions (asia_cup_winner.cpp) ----------
 
-unsafe fn cqu11_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
-
-unsafe fn cqu11_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
-
-unsafe fn cqu11_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32)
-}
-
-/// A chave da nação do clube ([[clube+0x53]], dword); sem clube ou sem nação, −1.
-unsafe fn cqu11_nacao(c: usize) -> i32 {
-    if c == 0 || cqu11_d(c + 0x53) == 0 {
+/// The nation id of the club ([[`club::NATION`]], dword); without a club or a nation, −1.
+unsafe fn asia_cup_winner_club_nation_id(c: usize) -> i32 {
+    if c == 0 || read_usize(c + club::NATION) == 0 {
         return -1;
     }
-    cqu11_d(cqu11_d(c + 0x53)) as i32
+    read_usize(read_usize(c + club::NATION)) as i32
 }
 
-/// A zona leste da Recopa (23 nações, na ordem da original; o Paquistão vem depois do Laos): Bangladesh, Brunei, China,
-/// Hong Kong, Índia, Indonésia, Japão, Camboja, Laos, Paquistão, Macau, Malásia, Maldivas, Mianmar, Nepal, Coreia do
-/// Norte, Singapura, Coreia do Sul, Sri Lanka, Taiwan, Tailândia, Filipinas e Vietnã.
-const CQU11_LESTE: [usize; 23] = [0x9cf238, 0x9cf264, 0x9cf298, 0x9cf340, 0x9cf34c, 0x9cf350, 0x9cf36c, 0x9cf374, 0x9cf388, 0x9cf410, 0x9cf3ac,
-    0x9cf3b8, 0x9cf3bc, 0x9cf3e0, 0x9cf3ec, 0x9cf404, 0x9cf46c, 0x9cf484, 0x9cf48c, 0x9cf4b8, 0x9cf4c4, 0x9cf42c, 0x9cf508];
+/// The Cup Winners' Cup east zone (23 nations, in the original's order; Pakistan comes after Laos).
+const ASIAN_CUP_WINNERS_EAST_ZONE_KEYS: [usize; 23] = [KEY_NATION_BANGLADESH, KEY_NATION_BRUNEI_DARUSSALAM, KEY_NATION_CHINA, KEY_NATION_HONG_KONG, KEY_NATION_INDIA,
+    KEY_NATION_INDONESIA, KEY_NATION_JAPAN, KEY_NATION_KAMPUCHEA, KEY_NATION_LAOS, KEY_NATION_PAKISTAN, KEY_NATION_MACAU, KEY_NATION_MALAYSIA, KEY_NATION_MALDIVES,
+    KEY_NATION_MYANMAR, KEY_NATION_NEPAL, KEY_NATION_NORTH_KOREA, KEY_NATION_SINGAPORE, KEY_NATION_SOUTH_KOREA, KEY_NATION_SRI_LANKA, KEY_NATION_TAIWAN,
+    KEY_NATION_THAILAND, KEY_NATION_THE_PHILIPPINES, KEY_NATION_VIETNAM];
 
-/// A zona oeste (19 nações, como na Liga dos Campeões asiática).
-const CQU11_OESTE: [usize; 19] = [0x9cf200, 0x9cf234, 0x9cf354, 0x9cf358, 0x9cf370, 0x9cf378, 0x9cf380, 0x9cf384, 0x9cf390, 0x9cf40c, 0x9cf414,
-    0x9cf43c, 0x9cf458, 0x9cf4b0, 0x9cf4bc, 0x9cf4e0, 0x9cf4e4, 0x9cf4fc, 0x9cf518];
+/// The west zone (19 nations, as in the Asian Club Championship).
+const ASIAN_CUP_WINNERS_WEST_ZONE_KEYS: [usize; 19] = [KEY_NATION_AFGHANISTAN, KEY_NATION_BAHRAIN, KEY_NATION_IRAN, KEY_NATION_IRAQ, KEY_NATION_JORDAN,
+    KEY_NATION_KAZAKHSTAN, KEY_NATION_KUWAIT, KEY_NATION_KYRGYZSTAN, KEY_NATION_LEBANON, KEY_NATION_OMAN, KEY_NATION_PALESTINE, KEY_NATION_QATAR,
+    KEY_NATION_SAUDI_ARABIA, KEY_NATION_SYRIA, KEY_NATION_TAJIKISTAN, KEY_NATION_TURKMENISTAN, KEY_NATION_UNITED_ARAB_EMIRATES, KEY_NATION_UZBEKISTAN,
+    KEY_NATION_YEMEN];
 
-/// O índice da nação do clube numa lista de chaves (0x40cba0(clube, lista, n): 3 pushes; add esp, 0xc -> cdecl;
-/// devolve o byte do índice ou −1).
-unsafe fn cqu11_na_zona(clube: usize, lista: &[u32]) -> i8 {
+/// The index of the club's nation in a list of nation ids (0x40cba0(club, list, n): 3 pushes; add esp, 0xc -> cdecl;
+/// returns the index byte or −1).
+unsafe fn asia_cup_winner_zone_index(club: usize, list: &[u32]) -> i8 {
     let f: unsafe extern "C" fn(usize, *const u32, u32) -> u32 = core::mem::transmute(0x40cba0usize);
-    f(clube, lista.as_ptr(), lista.len() as u32) as u8 as i8
+    f(club, list.as_ptr(), list.len() as u32) as u8 as i8
 }
 
-/// O clube já joga a Liga dos Campeões asiática (0x40e7b0(clube): push; add esp, 4 -> cdecl): na tabela da copa ou na
-/// da fase 0 dela.
-unsafe fn cqu11_na_liga_dos_campeoes(clube: usize) -> bool {
+/// Does the club already play the Asian Club Championship (0x40e7b0(club): push; add esp, 4 -> cdecl): in that cup's
+/// team table or in that of its stage 0.
+unsafe fn asia_cup_winner_in_champions_league(club: usize) -> bool {
     let f: unsafe extern "C" fn(usize) -> u32 = core::mem::transmute(0x40e7b0usize);
-    f(clube) != 0
+    f(club) != 0
 }
 
-/// O campeão da copa `chave` da nação `nacao` (byte +0x11c no registro de 0x122 bytes de [0xae23a8]): o campeão, ou o
-/// vice se o campeão já está na vaga 0 ou 16 ou joga a Liga dos Campeões; o vice nessas condições (ou nulo) não entra.
-unsafe fn cqu11_campeao_da_copa(this: usize, nacao: usize, chave: usize) -> Option<usize> {
-    let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
-    let n = cqu11_d(nacao);
-    if *((cqu11_d(0xae23a8)).wrapping_add(n.wrapping_mul(0x122)).wrapping_add(0x11c) as *const u8) == 0 {
+/// The winner of the cup `cup_key` of the nation `nation_key` (when the nation's `nation::LEAGUE_SELECTED` byte is set,
+/// in its [`G_NATION_TABLE`] record): the winner, or the runner-up if the winner is already in place 0 or 16 or plays
+/// the Champions League; the runner-up in those conditions (or null) does not enter.
+unsafe fn asia_cup_winner_national_cup_club(this: usize, nation_key: usize, cup_key: usize) -> Option<usize> {
+    let n = read_usize(nation_key);
+    if read_u8(read_usize(G_NATION_TABLE).wrapping_add(n.wrapping_mul(nation::SIZE)).wrapping_add(nation::LEAGUE_SELECTED)) == 0 {
         return None;
     }
-    let copa = cqu11_d(0xae23d0).wrapping_add(cqu11_d(chave).wrapping_mul(0x6b));
-    let lista = cqu11_d(this + 0xb2);
-    let c = colocado(copa, 0); // cqu11: o campeão da copa
-    if c != cqu11_d(lista) && c != cqu11_d(lista + 0x40) && !cqu11_na_liga_dos_campeoes(c) {
+    let cup_record = comp_record_of_key(cup_key);
+    let list = read_usize(this + 0xb2);
+    let c = exe::comp_util_get_latest_placed_club(cup_record, 0); // cqu11: the cup winner
+    if c != read_usize(list) && c != read_usize(list + 0x40) && !asia_cup_winner_in_champions_league(c) {
         return if c != 0 { Some(c) } else { None };
     }
-    let c = colocado(copa, 1);
-    if c == cqu11_d(lista) || c == cqu11_d(lista + 0x40) || cqu11_na_liga_dos_campeoes(c) || c == 0 {
+    let c = exe::comp_util_get_latest_placed_club(cup_record, 1);
+    if c == read_usize(list) || c == read_usize(list + 0x40) || asia_cup_winner_in_champions_league(c) || c == 0 {
         return None;
     }
     Some(c)
 }
 
-/// { 0x40d830 } (thiscall, ret 0, asia_cup_winner.cpp, pilha 0x1598): `AsiaCupWinner::select_qualified_clubs()`: +0xb6
-/// = 32 e a lista +0xb2 de 32 vagas (calloc 0x945501(0x20, 4): push 4; push 0x20; add esp, 8 -> cdecl; sem memória, a
-/// caixa da linha 0x241 e 0). O campeão mais recente da própria Recopa (0x4afd80([+4], 0): push 0; push comp; add esp,
-/// 8 -> cdecl), se não joga a Liga dos Campeões, vai para a vaga 0 se a nação é da zona leste, senão para a 16. Numa
-/// lista local de até 1.200 clubes: o campeão da Copa do Imperador (a copa [0x9cf660]; o vice se o campeão já está nas
-/// vagas 0/16 ou joga a Liga dos Campeões), se o Japão tem o byte +0x11c, e o da copa coreana [0x9cfa04] do mesmo
-/// jeito; e todos os clubes da Ásia fora das vagas 0 e 16. A lista é ordenada e embaralhada (0x4afbd0(lista, n − 1,
-/// 40): 3 pushes; add esp, 0xc -> cdecl). Na ordem dela, cada clube cuja nação ainda não teve vaga e que não joga a
-/// Liga dos Campeões entra na primeira vaga livre da sua zona (0..15 leste, 16..31 oeste), enquanto a última vaga dela
-/// estiver livre; a nação fica marcada mesmo com a zona cheia. Devolve 1.
-unsafe extern "thiscall" fn cqu11_recopa_classificados(this: usize) -> u32 {
-    let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
-    let colocado: unsafe extern "C" fn(usize, u32) -> usize = core::mem::transmute(0x4afd80usize);
-    let embaralhar: unsafe extern "C" fn(usize, u32, u32) = core::mem::transmute(0x4afbd0usize);
-    cqu11_pd(this + 0xb6, 0x20);
-    let leste: [u32; 23] = core::array::from_fn(|i| cqu11_d(CQU11_LESTE[i]) as u32);
-    let oeste: [u32; 19] = core::array::from_fn(|i| cqu11_d(CQU11_OESTE[i]) as u32);
-    let lista = calloc(0x20, 4);
-    cqu11_pd(this + 0xb2, lista);
-    if lista == 0 {
+/// The 32 Asian Cup Winners' Cup qualifiers: +0xb6 = 32 and the 32-place list +0xb2 (`exe::crt_calloc`(0x20, 4), cdecl;
+/// out of memory, the error box of line 0x241 and 0). The latest winner of the Cup Winners' Cup itself
+/// (`exe::comp_util_get_latest_placed_club`([+4], 0), cdecl), if it does not play the Champions League, goes to place
+/// 0 if its nation is in the east zone, otherwise to 16. In a local list of up to 1,200 clubs: the Emperor's Cup winner
+/// ([`KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP`]; the runner-up if the winner is already in places 0/16 or plays the
+/// Champions League), if Japan has its `nation::LEAGUE_SELECTED` byte, and the Korean cup's
+/// ([`KEY_CLUB_COMP_KOREAN_FA_CUP`]) in the same way; and every Asian club ([`KEY_CONTINENT_ASIA`]) outside places 0
+/// and 16. The list is sorted and shuffled (`exe::comp_util_sort_and_shuffle_top_clubs`(list, n − 1, 40), cdecl). In
+/// its order, each club whose nation has not had a place yet and that does not play the Champions League takes the
+/// first free place of its zone (0..15 east, 16..31 west), while the zone's last place is free; the nation is marked
+/// even when the zone is full. Returns 1. (Stack frame 0x1598.)
+/// Original: `AsiaCupWinner::select_qualified_clubs` (0x40d830, asia_cup_winner.cpp, thiscall, ret 0).
+unsafe extern "thiscall" fn asia_cup_winner_select_qualified_clubs(this: usize) -> u32 {
+    write_u32(this + 0xb6, 0x20);
+    let east: [u32; 23] = core::array::from_fn(|i| read_usize(ASIAN_CUP_WINNERS_EAST_ZONE_KEYS[i]) as u32);
+    let west: [u32; 19] = core::array::from_fn(|i| read_usize(ASIAN_CUP_WINNERS_WEST_ZONE_KEYS[i]) as u32);
+    let list = exe::crt_calloc(0x20, 4);
+    write_usize(this + 0xb2, list);
+    if list == 0 {
         show_error_at(0x987b60, 0x241);
         return 0;
     }
-    let atual = colocado(cqu11_d(this + 4), 0);
-    if !cqu11_na_liga_dos_campeoes(atual) {
-        if cqu11_na_zona(atual, &leste) > -1 {
-            cqu11_pd(lista, atual);
+    let holder = exe::comp_util_get_latest_placed_club(read_usize(this + 4), 0);
+    if !asia_cup_winner_in_champions_league(holder) {
+        if asia_cup_winner_zone_index(holder, &east) > -1 {
+            write_usize(list, holder);
         } else {
-            cqu11_pd(lista + 0x40, atual);
+            write_usize(list + 0x40, holder);
         }
     }
-    let mut clubes = [0usize; 0x4b0];
+    let mut clubs = [0usize; 0x4b0];
     let mut n = 0usize;
-    if let Some(c) = cqu11_campeao_da_copa(this, 0x9cf36c, 0x9cf660) {
-        crate::comparison::branch("cqu_11 clube da copa do imperador");
-        clubes[0] = c;
+    if let Some(c) = asia_cup_winner_national_cup_club(this, KEY_NATION_JAPAN, KEY_CLUB_COMP_JAPANESE_EMPEROR_S_CUP) {
+        covered!("cqu_11 emperors cup club");
+        clubs[0] = c;
         n = 1;
     }
-    if let Some(c) = cqu11_campeao_da_copa(this, 0x9cf484, 0x9cfa04) {
-        clubes[n] = c;
+    if let Some(c) = asia_cup_winner_national_cup_club(this, KEY_NATION_SOUTH_KOREA, KEY_CLUB_COMP_KOREAN_FA_CUP) {
+        clubs[n] = c;
         n += 1;
     }
-    let total = (cqu11_d(0xae235c) as i32).wrapping_sub((cqu11_d(0xae2350) as i32).wrapping_mul(2));
-    let asia = cqu11_d(0x9cfa0c);
-    let mut c = cqu11_d(0xae23b4);
+    let total = (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2));
+    let asia = read_usize(KEY_CONTINENT_ASIA);
+    let mut c = read_usize(G_CLUB_TABLE);
     for _ in 0..total.max(0) {
-        let nacao = cqu11_d(c + 0x53);
-        if nacao != 0 {
-            let continente = cqu11_d(nacao + 0x71);
-            if continente != 0 && cqu11_d(continente) == asia && (n as i16) < 0x4b0 && c != cqu11_d(lista) && c != cqu11_d(lista + 0x40) {
-                clubes[n] = c;
+        let nation = read_usize(c + club::NATION);
+        if nation != 0 {
+            let continent = read_usize(nation + nation::CONTINENT);
+            if continent != 0 && read_usize(continent) == asia && (n as i16) < 0x4b0 && c != read_usize(list) && c != read_usize(list + 0x40) {
+                clubs[n] = c;
                 n += 1;
             }
         }
-        c += 0x245;
+        c += club::SIZE;
     }
-    crate::comparison::branch("cqu_11 sorteio dos clubes");
-    embaralhar(clubes.as_mut_ptr() as usize, (n as u32).wrapping_sub(1), 0x28); // cqu11: 40 escolhas no embaralhamento
-    let (mut marca_leste, mut marca_oeste) = ([0u8; 23], [0u8; 19]);
-    for &clube in clubes.iter().take((n as i16).max(0) as usize) {
-        let i = cqu11_na_zona(clube, &leste);
-        let (marca, inicio) = if i > -1 {
-            (&mut marca_leste[i as usize], 0usize)
+    covered!("cqu_11 club draw");
+    exe::comp_util_sort_and_shuffle_top_clubs(clubs.as_mut_ptr() as usize, (n as u32).wrapping_sub(1), 0x28); // cqu11: 40 picks in the shuffle
+    let (mut east_marks, mut west_marks) = ([0u8; 23], [0u8; 19]);
+    for &club in clubs.iter().take((n as i16).max(0) as usize) {
+        let i = asia_cup_winner_zone_index(club, &east);
+        let (mark, first) = if i > -1 {
+            (&mut east_marks[i as usize], 0usize)
         } else {
-            let j = cqu11_na_zona(clube, &oeste);
+            let j = asia_cup_winner_zone_index(club, &west);
             if j <= -1 {
                 continue;
             }
-            (&mut marca_oeste[j as usize], 16usize)
+            (&mut west_marks[j as usize], 16usize)
         };
-        if *marca != 0 || cqu11_na_liga_dos_campeoes(clube) {
+        if *mark != 0 || asia_cup_winner_in_champions_league(club) {
             continue;
         }
-        *marca = 1;
-        if cqu11_d(lista + (inicio + 15) * 4) != 0 {
+        *mark = 1;
+        if read_usize(list + (first + 15) * 4) != 0 {
             continue;
         }
-        if let Some(k) = (inicio..inicio + 16).find(|&k| cqu11_d(lista + k * 4) == 0) {
-            cqu11_pd(lista + k * 4, clube);
+        if let Some(k) = (first..first + 16).find(|&k| read_usize(list + k * 4) == 0) {
+            write_usize(list + k * 4, club);
         }
     }
     1
 }
 
-// ponytail: a lista é alocada e o embaralhamento sorteia: não roda duas vezes. Só a original; o plano: devolve 1, +0xb6
-// = 32, a lista em +0xb2, nenhum clube dela na Liga dos Campeões asiática e, fora das vagas 0 e 16 (a do campeão da
-// Recopa), cada clube na zona da sua nação e nenhuma nação repetida.
-unsafe extern "thiscall" fn compare_cqu11_recopa_classificados(this: usize) -> u32 {
+// ponytail: the list is allocated and the shuffle draws: it cannot run twice. Only the original; the plan: returns 1,
+// +0xb6 = 32, the list at +0xb2, none of its clubs in the Asian Club Championship and, outside places 0 and 16 (the Cup
+// Winners' Cup holder's), each club in its nation's zone and no nation repeated.
+unsafe extern "thiscall" fn compare_asia_cup_winner_select_qualified_clubs(this: usize) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize) -> u32>(%%I0%%);
     let r = o(this);
     if r == 1 {
-        let lista = cqu11_d(this + 0xb2);
-        let mut nacoes: Vec<i32> = Vec::new();
-        let mut erro = 0usize;
+        let list = read_usize(this + 0xb2);
+        let mut nations: Vec<i32> = Vec::new();
+        let mut error = 0usize;
         for k in 0..32usize {
-            let c = if lista != 0 { cqu11_d(lista + k * 4) } else { 0 };
+            let c = if list != 0 { read_usize(list + k * 4) } else { 0 };
             if c == 0 {
                 continue;
             }
-            if cqu11_na_liga_dos_campeoes(c) {
-                erro = 100 + k;
+            if asia_cup_winner_in_champions_league(c) {
+                error = 100 + k;
             }
             if k == 0 || k == 16 {
                 continue;
             }
-            let nacao = cqu11_nacao(c);
-            let zona = if k < 16 { &CQU11_LESTE[..] } else { &CQU11_OESTE[..] };
-            if !zona.iter().any(|&g| cqu11_d(g) as i32 == nacao) || nacoes.contains(&nacao) {
-                erro = k;
+            let nation = asia_cup_winner_club_nation_id(c);
+            let zone = if k < 16 { &ASIAN_CUP_WINNERS_EAST_ZONE_KEYS[..] } else { &ASIAN_CUP_WINNERS_WEST_ZONE_KEYS[..] };
+            if !zone.iter().any(|&g| read_usize(g) as i32 == nation) || nations.contains(&nation) {
+                error = k;
             }
-            nacoes.push(nacao);
+            nations.push(nation);
         }
-        let ok = lista != 0 && cqu11_d(this + 0xb6) == 0x20 && erro == 0;
-        SCOREBOARD.record(ok, || format!("cqu11_recopa_classificados({:#x}): lista {:#x} +0xb6 {} vaga errada {}", this, lista, cqu11_d(this + 0xb6), erro));
+        let ok = list != 0 && read_usize(this + 0xb6) == 0x20 && error == 0;
+        SCOREBOARD.record(ok, || format!("asia_cup_winner_select_qualified_clubs({:#x}): list {:#x} +0xb6 {} wrong place {}", this, list, read_usize(this + 0xb6), error));
     }
     r
 }
 
-/// A fase de mata-mata de uma zona das copas asiáticas (0x40bec0 e 0x40ddf0, o mesmo corpo; só o arquivo e as linhas
-/// das caixas mudam): os +0x3e times (0x944e46(4 × n): push; add esp, 4 -> cdecl; sem memória, a caixa `linhas.0`)
-/// são os classificados 16.. da lista +0xb2; a tabela das rodadas pela virtual +0x3c (push 0; push &extra; push
-/// &rodadas; push 0; mov ecx, this -> thiscall, ret 0x10); a fase (0x944cf1(0xb2) e o construtor Cup_Stage 0x522e00,
-/// thiscall, ret 0x3c, 15 argumentos: a copa, n, os times, as rodadas, +4, a tabela, o ano +0x40, 0, 2, o extra,
-/// +0x51, 0, 0, 0, 0; a original empurra os words e o byte com sobra nos bytes altos, que o construtor não lê: a cópia
-/// passa os valores limpos) em [+0xc][0]; os times e a tabela liberados (0x9452ca: push; add esp, 4 -> cdecl). Sem
-/// fase, a caixa `linhas.1`; com ela, +0x30 = 0.
-unsafe fn cqu11_fase_da_zona(this: usize, arquivo: usize, linhas: (u32, u32), ramo: &'static str) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
+/// The knockout stage of one zone of the Asian cups (0x40bec0 and 0x40ddf0, the same body; only the source file and
+/// the box lines change): the `cup::TEAM_COUNT` teams (`exe::crt_malloc`(4 × n), cdecl; out of memory, the box
+/// `lines.0`) are qualifiers 16.. of the list +0xb2; the round table through `comp_vtable::CREATE_SCHEDULE` (push 0;
+/// push &extra; push &rounds; push 0; mov ecx, this -> thiscall, ret 0x10); the stage (`exe::crt_operator_new`(0xb2)
+/// and the Cup_Stage constructor `FN_CUP_STAGE_CUP_STAGE`, thiscall, ret 0x3c, 15 arguments: the cup, n, the teams,
+/// the rounds, +4, the table, the year `cup::YEAR`, 0, 2, the extra, `cup::IMPORTANCE_BIAS`, 0, 0, 0, 0; the original
+/// pushes the words and the byte with garbage in the high bytes, which the constructor does not read: the copy passes
+/// clean values) in [`cup::STAGES`][0]; the teams and the table freed (`exe::crt_free`). Without the stage, the box
+/// `lines.1`; with it, `cup::CURRENT_STAGE` = 0.
+unsafe fn asia_cup_winner_zone_knockout_stage(this: usize, file: usize, lines: (u32, u32), label: &'static str) {
     #[allow(clippy::type_complexity)]
-    let construir: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
-        core::mem::transmute(0x522e00usize);
-    let n = cqu11_w(this + 0x3e);
-    let times = alocar((n as i32 as u32).wrapping_mul(4));
-    if times == 0 {
-        return show_error_at(arquivo, linhas.0);
+    let construct_stage: unsafe extern "thiscall" fn(usize, usize, u32, usize, u32, usize, usize, u32, u32, u32, u32, u32, u32, u32, u32, u32) -> usize =
+        core::mem::transmute(FN_CUP_STAGE_CUP_STAGE);
+    let n = read_i16(this + cup::TEAM_COUNT);
+    let teams = exe::crt_malloc((n as i32 as u32).wrapping_mul(4));
+    if teams == 0 {
+        return show_error_at(file, lines.0);
     }
     for i in 0..n.max(0) as usize {
-        crate::comparison::branch(ramo);
-        cqu11_pd(times + i * 4, cqu11_d(cqu11_d(this + 0xb2) + 0x40 + i * 4)); // cqu11: o time i da zona oeste
+        covered!(label);
+        write_usize(teams + i * 4, read_usize(read_usize(this + 0xb2) + 0x40 + i * 4)); // cqu11: team i of the west zone
     }
-    let tabela_da_copa: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(cqu11_d(cqu11_d(this) + 0x3c));
-    let (mut rodadas, mut extra) = (0i16, 0i16);
-    let tabela = tabela_da_copa(this, 0, &mut rodadas, &mut extra, 0);
-    let p = novo(0xb2);
-    let fase = if p != 0 {
-        construir(p, this, n as u16 as u32, times, rodadas as u16 as u32, cqu11_d(this + 4), tabela, cqu11_w(this + 0x40) as u16 as u32, 0, 2,
-                  extra as u16 as u32, *((this + 0x51) as *const u8) as u32, 0, 0, 0, 0)
+    let create_schedule: unsafe extern "thiscall" fn(usize, u32, *mut i16, *mut i16, u32) -> usize = core::mem::transmute(read_usize(read_usize(this) + comp_vtable::CREATE_SCHEDULE));
+    let (mut rounds, mut extra) = (0i16, 0i16);
+    let table = create_schedule(this, 0, &mut rounds, &mut extra, 0);
+    let p = exe::crt_operator_new(0xb2);
+    let stage = if p != 0 {
+        construct_stage(p, this, n as u16 as u32, teams, rounds as u16 as u32, read_usize(this + 4), table, read_i16(this + cup::YEAR) as u16 as u32, 0, 2,
+                        extra as u16 as u32, read_u8(this + cup::IMPORTANCE_BIAS) as u32, 0, 0, 0, 0)
     } else {
         0
     };
-    cqu11_pd(cqu11_d(this + 0xc), fase);
-    soltar(times);
-    soltar(tabela);
-    if cqu11_d(cqu11_d(this + 0xc)) == 0 {
-        return show_error_at(arquivo, linhas.1);
+    write_usize(read_usize(this + cup::STAGES), stage);
+    exe::crt_free(teams);
+    exe::crt_free(table);
+    if read_usize(read_usize(this + cup::STAGES)) == 0 {
+        return show_error_at(file, lines.1);
     }
-    cqu11_pd(this + 0x30, 0);
+    write_u32(this + cup::CURRENT_STAGE, 0);
 }
 
-/// { 0x40ddf0 } (thiscall, ret 0, asia_cup_winner.cpp; quadro SEH só para o new da fase: sem destrutor no caminho
-/// normal): `AsiaCupWinner::create_zone_stage()`: a fase 0, mata-mata dos 16 classificados da zona oeste da Recopa
-/// asiática (caixas nas linhas 0x2fd e 0x314).
-unsafe extern "thiscall" fn cqu11_recopa_fase_oeste(this: usize) {
-    cqu11_fase_da_zona(this, 0x987b60, (0x2fd, 0x314), "cqu_11 time da zona oeste")
+/// Stage 0 of the Asian Cup Winners' Cup, a knockout of the 16 west zone qualifiers (boxes at lines 0x2fd and 0x314).
+/// (The original's SEH frame is only for the stage's new: no destructor on the normal path.)
+/// Original: `AsiaCupWinner::create_zone_stage` (0x40ddf0, asia_cup_winner.cpp, thiscall, ret 0).
+unsafe extern "thiscall" fn asia_cup_winner_create_zone_stage(this: usize) {
+    asia_cup_winner_zone_knockout_stage(this, 0x987b60, (0x2fd, 0x314), "cqu_11 west zone team")
 }
 
-// ponytail: a fase é alocada: não roda duas vezes. Só a original; o plano: a fase em [+0xc][0], +0x30 = 0 e, na tabela
-// de times dela (+0xa7, linhas de 6 bytes), os classificados 16.. da lista (em qualquer ordem).
-unsafe fn cqu11_comparar_fase(nome: &str, this: usize, o: impl FnOnce()) {
-    let lista = cqu11_d(this + 0xb2);
-    let n = cqu11_w(this + 0x3e).max(0) as usize;
-    if lista == 0 || n > 16 {
+// ponytail: the stage is allocated: it cannot run twice. Only the original; the plan: the stage in [`cup::STAGES`][0],
+// `cup::CURRENT_STAGE` = 0 and, in its team table (`cup::TEAM_TABLE`, 6-byte rows), qualifiers 16.. of the list (in
+// any order).
+unsafe fn asia_cup_winner_check_zone_stage(name: &str, this: usize, o: impl FnOnce()) {
+    let list = read_usize(this + 0xb2);
+    let n = read_i16(this + cup::TEAM_COUNT).max(0) as usize;
+    if list == 0 || n > 16 {
         return o();
     }
-    let mut plano: Vec<usize> = (0..n).map(|i| cqu11_d(lista + 0x40 + i * 4)).collect();
+    let mut plan: Vec<usize> = (0..n).map(|i| read_usize(list + 0x40 + i * 4)).collect();
     o();
-    let f = cqu11_d(cqu11_d(this + 0xc));
+    let f = read_usize(read_usize(this + cup::STAGES));
     if f == 0 {
         return;
     }
-    let t = cqu11_d(f + 0xa7);
-    let mut lidos: Vec<usize> = if t != 0 { (0..n).map(|i| cqu11_d(t + i * 6)).collect() } else { Vec::new() };
-    lidos.sort_unstable();
-    plano.sort_unstable();
-    SCOREBOARD.record(cqu11_d(this + 0x30) == 0 && lidos == plano, || format!("{}({:#x}): times {:x?} plano {:x?} +0x30 {}", nome, this, lidos, plano, cqu11_d(this + 0x30) as i32));
+    let t = read_usize(f + cup::TEAM_TABLE);
+    let mut read: Vec<usize> = if t != 0 { (0..n).map(|i| read_usize(t + i * 6)).collect() } else { Vec::new() };
+    read.sort_unstable();
+    plan.sort_unstable();
+    SCOREBOARD.record(read_usize(this + cup::CURRENT_STAGE) == 0 && read == plan, || format!("{}({:#x}): teams {:x?} plan {:x?} +0x30 {}", name, this, read, plan, read_usize(this + cup::CURRENT_STAGE) as i32));
 }
 
-unsafe extern "thiscall" fn compare_cqu11_recopa_fase_oeste(this: usize) {
+unsafe extern "thiscall" fn compare_asia_cup_winner_create_zone_stage(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    cqu11_comparar_fase("cqu11_recopa_fase_oeste", this, || o(this))
+    asia_cup_winner_check_zone_stage("asia_cup_winner_create_zone_stage", this, || o(this))
 }
 
-/// As posições previstas das copas asiáticas (0x40c720 e 0x40e3b0, o mesmo corpo): sem estatísticas (+8), a caixa
-/// `linhas.0`; um vetor de 2n clubes (0x944e46(8 × +0x3e); sem memória, a caixa `linhas.1`): os n da tabela da copa
-/// (+0xa7, linhas de 6 bytes) e os n da tabela da fase 0 ([[+0xc]]+0xa7); cada metade ordenada pela reputação (qsort
-/// 0x945333(v, n, 4, 0x4b07d0): 4 pushes; add esp -> cdecl); as 32 posições pela ordem (Comp_Stats::set_club_final_
-/// position 0x4a2540: push posição; push clube; mov ecx, [+8] -> thiscall, ret 8): em cada metade 1, 3, 5, 7, 9, 9, 9, 9
-/// e oito 17; o vetor liberado.
-unsafe fn cqu11_posicoes(this: usize, arquivo: usize, linhas: (u32, u32)) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    let gravar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4a2540usize);
-    if cqu11_d(this + 8) == 0 {
-        return show_error_at(arquivo, linhas.0);
+/// The predicted positions of the Asian cups (0x40c720 and 0x40e3b0, the same body): without statistics (+8), the box
+/// `lines.0`; an array of 2n clubs (`exe::crt_malloc`(8 × `cup::TEAM_COUNT`); out of memory, the box `lines.1`): the n
+/// of the cup's team table (`cup::TEAM_TABLE`, 6-byte rows) and the n of stage 0's team table; each half sorted by
+/// reputation (`exe::crt_qsort`(v, n, 4, 0x4b07d0), cdecl); the 32 positions in order
+/// (`exe::comp_stats_set_club_final_position`(stats, club, position), thiscall, ret 8): in each half 1, 3, 5, 7, 9, 9,
+/// 9, 9 and eight 17s; the array freed.
+unsafe fn asia_cup_winner_predicted_positions(this: usize, file: usize, lines: (u32, u32)) {
+    if read_usize(this + 8) == 0 {
+        return show_error_at(file, lines.0);
     }
-    let v = alocar((cqu11_w(this + 0x3e) as i32 as u32).wrapping_mul(8));
+    let v = exe::crt_malloc((read_i16(this + cup::TEAM_COUNT) as i32 as u32).wrapping_mul(8));
     if v == 0 {
-        return show_error_at(arquivo, linhas.1);
+        return show_error_at(file, lines.1);
     }
     let mut i = 0i16;
-    while i < cqu11_w(this + 0x3e) {
+    while i < read_i16(this + cup::TEAM_COUNT) {
         let k = i as usize;
-        cqu11_pd(v + k * 4, cqu11_d(cqu11_d(this + 0xa7) + k * 6));
-        let n = cqu11_w(this + 0x3e) as isize as usize;
-        cqu11_pd(v + (n + k) * 4, cqu11_d(cqu11_d(cqu11_d(cqu11_d(this + 0xc)) + 0xa7) + k * 6));
+        write_usize(v + k * 4, read_usize(read_usize(this + cup::TEAM_TABLE) + k * 6));
+        let n = read_i16(this + cup::TEAM_COUNT) as isize as usize;
+        write_usize(v + (n + k) * 4, read_usize(read_usize(read_usize(read_usize(this + cup::STAGES)) + cup::TEAM_TABLE) + k * 6));
         i += 1;
     }
-    let n = cqu11_w(this + 0x3e) as i32;
-    ordenar(v, n as u32, 4, 0x4b07d0);
-    let n = cqu11_w(this + 0x3e) as i32;
-    ordenar(v + (n as usize).wrapping_mul(4), n as u32, 4, 0x4b07d0);
-    for (k, &p) in CQU11_POSICOES.iter().enumerate() {
-        gravar(cqu11_d(this + 8), cqu11_d(v + k * 4), p);
+    let n = read_i16(this + cup::TEAM_COUNT) as i32;
+    exe::crt_qsort(v, n as u32, 4, 0x4b07d0usize);
+    let n = read_i16(this + cup::TEAM_COUNT) as i32;
+    exe::crt_qsort(v + (n as usize).wrapping_mul(4), n as u32, 4, 0x4b07d0usize);
+    for (k, &p) in ASIAN_CUP_WINNERS_PREDICTED_POSITIONS.iter().enumerate() {
+        exe::comp_stats_set_club_final_position(read_usize(this + 8), read_usize(v + k * 4), p);
     }
-    soltar(v);
+    exe::crt_free(v);
 }
 
-/// As 32 posições previstas, na ordem do vetor (as duas metades).
-const CQU11_POSICOES: [u32; 32] = [1, 3, 5, 7, 9, 9, 9, 9, 17, 17, 17, 17, 17, 17, 17, 17, 1, 3, 5, 7, 9, 9, 9, 9, 17, 17, 17, 17, 17, 17, 17, 17];
+/// The 32 predicted positions, in array order (the two halves).
+const ASIAN_CUP_WINNERS_PREDICTED_POSITIONS: [u32; 32] = [1, 3, 5, 7, 9, 9, 9, 9, 17, 17, 17, 17, 17, 17, 17, 17, 1, 3, 5, 7, 9, 9, 9, 9, 17, 17, 17, 17, 17, 17, 17, 17];
 
-/// { 0x40e3b0 } (thiscall, ret 0, asia_cup_winner.cpp): `AsiaCupWinner::rank_teams()`: as posições previstas das duas
-/// zonas da Recopa asiática (caixas nas linhas 0x3db e 0x3e3).
-unsafe extern "thiscall" fn cqu11_recopa_previstas(this: usize) {
-    cqu11_posicoes(this, 0x987b60, (0x3db, 0x3e3))
+/// The predicted positions of the two Asian Cup Winners' Cup zones (boxes at lines 0x3db and 0x3e3).
+/// Original: `AsiaCupWinner::rank_teams` (0x40e3b0, asia_cup_winner.cpp, thiscall, ret 0).
+unsafe extern "thiscall" fn asia_cup_winner_rank_teams(this: usize) {
+    asia_cup_winner_predicted_positions(this, 0x987b60, (0x3db, 0x3e3))
 }
 
-// ponytail: Comp_Stats::set_club_final_position acrescenta o registro do clube (realoca): não roda duas vezes. Só a
-// original; o plano: de cada metade (a tabela da copa e a da fase 0, 16 clubes cada), as posições gravadas (+0x72 do
-// registro, 0x4a4850) pela reputação (+0x80) em ordem decrescente formam 1, 3, 5, 7, 9, 9, 9, 9 e oito 17; empates de
-// reputação podem trocar entre si (o qsort não é estável).
-unsafe fn cqu11_comparar_posicoes(nome: &str, this: usize, o: impl FnOnce()) {
-    let n = cqu11_w(this + 0x3e);
-    let est = cqu11_d(this + 8);
-    let fases = cqu11_d(this + 0xc);
-    if n != 16 || est == 0 || fases == 0 || cqu11_d(fases) == 0 || cqu11_d(this + 0xa7) == 0 || cqu11_d(cqu11_d(fases) + 0xa7) == 0 {
+// ponytail: Comp_Stats::set_club_final_position adds the club's entry (it reallocates): it cannot run twice. Only the
+// original; the plan: in each half (the cup's team table and stage 0's, 16 clubs each), the written positions
+// (`comp_stats_club::FINAL_POSITION`, `exe::comp_stats_find_club_entry`) by reputation (`club::REPUTATION`) in
+// descending order make 1, 3, 5, 7, 9, 9, 9, 9 and eight 17s; reputation ties may swap (qsort is not stable).
+unsafe fn asia_cup_winner_check_positions(name: &str, this: usize, o: impl FnOnce()) {
+    let n = read_i16(this + cup::TEAM_COUNT);
+    let stats = read_usize(this + 8);
+    let stages = read_usize(this + cup::STAGES);
+    if n != 16 || stats == 0 || stages == 0 || read_usize(stages) == 0 || read_usize(this + cup::TEAM_TABLE) == 0 || read_usize(read_usize(stages) + cup::TEAM_TABLE) == 0 {
         return o();
     }
-    let metades: [Vec<usize>; 2] = [
-        (0..16).map(|k| cqu11_d(cqu11_d(this + 0xa7) + k * 6)).collect(),
-        (0..16).map(|k| cqu11_d(cqu11_d(cqu11_d(fases) + 0xa7) + k * 6)).collect(),
+    let halves: [Vec<usize>; 2] = [
+        (0..16).map(|k| read_usize(read_usize(this + cup::TEAM_TABLE) + k * 6)).collect(),
+        (0..16).map(|k| read_usize(read_usize(read_usize(stages) + cup::TEAM_TABLE) + k * 6)).collect(),
     ];
-    if metades.iter().flatten().any(|&c| c == 0) {
+    if halves.iter().flatten().any(|&c| c == 0) {
         return o();
     }
     o();
-    let buscar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
-    let mut erro = None;
-    for (m, metade) in metades.iter().enumerate() {
-        let mut v: Vec<(i16, u8)> = metade
+    let mut error = None;
+    for (m, half) in halves.iter().enumerate() {
+        let mut v: Vec<(i16, u8)> = half
             .iter()
             .map(|&c| {
-                let e = buscar(est, c);
-                (cqu11_w(c + 0x80), if e != 0 { *((e + 0x72) as *const u8) } else { 0 })
+                let e = exe::comp_stats_find_club_entry(stats, c);
+                (read_i16(c + club::REPUTATION), if e != 0 { read_u8(e + comp_stats_club::FINAL_POSITION) } else { 0 })
             })
             .collect();
         v.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
-        let posicoes: Vec<u8> = v.iter().map(|x| x.1).collect();
-        if posicoes.iter().zip(CQU11_POSICOES.iter()).any(|(&a, &b)| a as u32 != b) {
-            erro = Some((m, posicoes));
+        let positions: Vec<u8> = v.iter().map(|x| x.1).collect();
+        if positions.iter().zip(ASIAN_CUP_WINNERS_PREDICTED_POSITIONS.iter()).any(|(&a, &b)| a as u32 != b) {
+            error = Some((m, positions));
         }
     }
-    SCOREBOARD.record(erro.is_none(), || format!("{}({:#x}): posições pela reputação {:?}", nome, this, erro));
+    SCOREBOARD.record(error.is_none(), || format!("{}({:#x}): positions by reputation {:?}", name, this, error));
 }
 
-unsafe extern "thiscall" fn compare_cqu11_recopa_previstas(this: usize) {
+unsafe extern "thiscall" fn compare_asia_cup_winner_rank_teams(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    cqu11_comparar_posicoes("cqu11_recopa_previstas", this, || o(this))
+    asia_cup_winner_check_positions("asia_cup_winner_rank_teams", this, || o(this))
 }

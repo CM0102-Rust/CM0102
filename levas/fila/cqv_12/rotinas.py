@@ -15,14 +15,14 @@
 # Provas: comparação de 8 ligas até 2002-06-01 (os 12 itens do agente E) 0 div; Rust x2 iguais e detector igual (ab5806e63c96b235); mutações 3/3.
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
-ROTINAS = [('cqv12_libertadores_virada', 0x4c3980, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),
-           ('cqv12_mercosul_virada', 0x4c5040, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),
-           ('cqv12_merconorte_virada', 0x4c1fb0, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00])]
+ROTINAS = [('conmebol_liber_start_new_season', 0x4c3980, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),
+           ('conmebol_merc_start_new_season', 0x4c5040, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00]),
+           ('con_merc_cup_start_new_season', 0x4c1fb0, [0x81, 0xec, 0x00, 0x02, 0x00, 0x00])]
 DOCS = ('a virada da temporada das copas da CONMEBOL: a Libertadores, a Mercosul e a Merconorte',
         'the season turnover of the CONMEBOL cups: the Libertadores, the Mercosur and the Merconorte',
-        [('cqv12_libertadores_virada', 'ConmebolLiber::start_new_season', '0x4c3980', 'conmebol_liber.cpp', 'thiscall, ret 0', 'regra: na virada da Libertadores a tabela, o calendário, os convidados e as fases da edição velha são liberados e as estatísticas arquivadas; o ano sobe um; a semeadura da CONMEBOL refaz as vagas das nações; o sorteio volta a fazer e as regras são montadas de novo', "rule: at the Libertadores turnover the old edition's table, schedule, invited list and stages are freed and the statistics archived; the year goes up one; the CONMEBOL seeding redoes the nations' places; the draw is pending again and the rules are rebuilt"),
-         ('cqv12_mercosul_virada', 'ConmebolMerc::start_new_season', '0x4c5040', 'conmebol_merc.cpp', 'thiscall, ret 0', 'regra: na virada da Mercosul o mesmo, sem a semeadura (a Mercosul é por convite)', 'rule: at the Mercosur turnover the same, without the seeding (the Mercosur is by invitation)'),
-         ('cqv12_merconorte_virada', 'ConMercCup::start_new_season', '0x4c1fb0', 'con_merc_cup.cpp', 'thiscall, ret 0', 'regra: na virada da Merconorte o mesmo; o sorteio só volta a fazer se as regras se montarem', 'rule: at the Merconorte turnover the same; the draw is pending again only if the rules are built')])
+        [('conmebol_liber_start_new_season', 'ConmebolLiber::start_new_season', '0x4c3980', 'conmebol_liber.cpp', 'thiscall, ret 0', 'regra: na virada da Libertadores a tabela, o calendário, os convidados e as fases da edição velha são liberados e as estatísticas arquivadas; o ano sobe um; a semeadura da CONMEBOL refaz as vagas das nações; o sorteio volta a fazer e as regras são montadas de novo', "rule: at the Libertadores turnover the old edition's table, schedule, invited list and stages are freed and the statistics archived; the year goes up one; the CONMEBOL seeding redoes the nations' places; the draw is pending again and the rules are rebuilt"),
+         ('conmebol_merc_start_new_season', 'ConmebolMerc::start_new_season', '0x4c5040', 'conmebol_merc.cpp', 'thiscall, ret 0', 'regra: na virada da Mercosul o mesmo, sem a semeadura (a Mercosul é por convite)', 'rule: at the Mercosur turnover the same, without the seeding (the Mercosur is by invitation)'),
+         ('con_merc_cup_start_new_season', 'ConMercCup::start_new_season', '0x4c1fb0', 'con_merc_cup.cpp', 'thiscall, ret 0', 'regra: na virada da Merconorte o mesmo; o sorteio só volta a fazer se as regras se montarem', 'rule: at the Merconorte turnover the same; the draw is pending again only if the rules are built')])
 CAMPOS = [('copa +0x4c zerado, +0xba calendário, +0xee convidados, +0xc/+0x30 fases; ponteiro/valor; libera e zera', 'cup +0x4c cleared, +0xba schedule, +0xee invited, +0xc/+0x30 stages; pointer/value; frees and clears'),
           ('copa +0x40 ano (word), +0x45 sorteio feito; valor; grava', 'cup +0x40 year (word), +0x45 draw done; value; writes'),
           ('[0xae1000] a semeadura da CONMEBOL; ponteiro; lê (Libertadores)', '[0xae1000] the CONMEBOL seeding; pointer; reads (Libertadores)')]

@@ -1,1 +1,2 @@
 comparação de 8 ligas até 2002-02-01 (os 10 itens com a MLS; a J2 na criação e na virada de 2002-024) 0 div, 0 exceções (lado a lado, cqp11_comparar); Rust x2 iguais (b690295afd222f6a) e detector de lixo igual; mutação 1/1 (2001-074); o calendário da MLS saiu (mutações escaparam)
+convertido para o estilo atual em 11/11/2026

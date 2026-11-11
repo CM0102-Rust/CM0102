@@ -1,1 +1,2 @@
 comparação de 8 ligas até 2002-04-30 (12 itens) e até 2002-02-01 (os 10 itens finais; as três rodam em 2002-011 e 2002-024) 0 div, 0 exceções; Rust x2 iguais (b690295afd222f6a) e detector de lixo igual; mutações 3/3 (2002-012, 2002-012, 2002-067)
+convertido para o estilo atual em 11/11/2026

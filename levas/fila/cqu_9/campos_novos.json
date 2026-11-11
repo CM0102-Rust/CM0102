@@ -1,0 +1,29 @@
+[
+ {
+  "module": "cup",
+  "offset": "0x4",
+  "name": "COMPETITION",
+  "width": 4,
+  "description": "pointer to the competition database record (its +0 is the competition id); Comp base field",
+  "confidence": "verified",
+  "evidence": "same Comp base offset as league::COMPETITION (verified); the cup constructors write their record argument there and cup routines read [this+4] then [..+0] as the comp id"
+ },
+ {
+  "module": "cup",
+  "offset": "0x8",
+  "name": "COMP_STATS",
+  "width": 4,
+  "description": "pointer to the competition's Comp_Stats object, 0 = none; Comp base field",
+  "confidence": "verified",
+  "evidence": "same Comp base offset as league::COMP_STATS (verified); the cup constructors store Comp_Stats::Comp_Stats (0x49ee70) there and pass [this+8] to Comp_Stats::set_club_final_position"
+ },
+ {
+  "module": "cup",
+  "offset": "0x52",
+  "name": "SQUAD_FLAGS",
+  "width": 1,
+  "description": "flags byte of the Comp base (league::SQUAD_FLAGS); the European cup constructors write 3",
+  "confidence": "inferred",
+  "evidence": "same Comp base offset as league::SQUAD_FLAGS; written as 3 by UefaCup/EurSuperCup/IntertotoCup constructors (0x9022e0, 0x57a100, 0x632fb0); meaning of the value 3 not traced"
+ }
+]

@@ -1,141 +1,135 @@
 // ---------- %%LEVA%%a leva: as posições previstas e o sorteio dos grupos do Campeonato de Clubes da Oceania; as posições previstas da Copa Africana de Nações e da eliminatória da Oceania (oceania_club_champ.cpp, african_nations.cpp, wc_oceania_league.cpp) ----------
 
-unsafe fn cqv13_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
-}
-
-unsafe fn cqv13_w(a: usize) -> i16 {
-    core::ptr::read_unaligned(a as *const i16)
-}
-
-/// As posições na ordem do vetor ordenado pela reputação (Comp_Stats::set_club_final_position 0x4a2540: push posição;
-/// push clube; mov ecx, [+8] -> thiscall, ret 8).
-unsafe fn cqv13_gravar(this: usize, v: usize, posicoes: &[u32]) {
-    let gravar: unsafe extern "thiscall" fn(usize, usize, u32) -> usize = core::mem::transmute(0x4a2540usize);
-    for (k, &p) in posicoes.iter().enumerate() {
-        gravar(cqv13_d(this + 8), cqv13_d(v + k * 4), p);
+/// The positions in the order of the array sorted by reputation (`exe::comp_stats_set_club_final_position`: push
+/// position; push club; mov ecx, stats (`league::COMP_STATS`) -> thiscall, ret 8).
+unsafe fn predicted_by_reputation_write(this: usize, v: usize, positions: &[u32]) {
+    for (k, &p) in positions.iter().enumerate() {
+        exe::comp_stats_set_club_final_position(read_usize(this + league::COMP_STATS), read_usize(v + k * 4), p);
     }
 }
 
-/// qsort 0x945333(v, n, 4, 0x4b07d0) (4 pushes; add esp -> cdecl): a reputação (+0x80) decrescente, nulos no fim.
-unsafe fn cqv13_ordenar(v: usize, n: u32) {
-    let ordenar: unsafe extern "C" fn(usize, u32, u32, usize) = core::mem::transmute(0x945333usize);
-    ordenar(v, n, 4, 0x4b07d0);
+/// `exe::crt_qsort`(v, n, 4, 0x4b07d0) (4 pushes; add esp -> cdecl): the reputation (`club::REPUTATION`) descending,
+/// nulls at the end.
+unsafe fn predicted_by_reputation_sort(v: usize, n: u32) {
+    exe::crt_qsort(v, n, 4, 0x4b07d0);
 }
 
-const CQV13_OCEANIA_CLUBES: [u32; 8] = [1, 2, 3, 3, 5, 5, 7, 7];
+/// The predicted positions of the 8 Oceania Club Championship entrants, by reputation.
+const OCEANIA_CLUB_CHAMP_POSITIONS: [u32; 8] = [1, 2, 3, 3, 5, 5, 7, 7];
 
-/// { 0x798640 } (thiscall, ret 0, oceania_club_champ.cpp; a virtual +0x5c): `OceaniaClubChamp::set_predicted_
-/// positions()`: sem estatísticas (+8), a caixa da linha 0x3a0; senão os 8 escolhidos (+0xee, +0xf2 clubes) ordenados
-/// pela reputação, as posições 1, 2, 3, 3, 5, 5, 7, 7 e a lista embaralhada (0x4afb40(lista, n): push n (word); push
-/// lista; add esp, 8 -> cdecl: 3n trocas sorteadas). É esse embaralhamento que faz os grupos: os 4 primeiros vão ao
-/// grupo A, os outros ao B.
-unsafe extern "thiscall" fn cqv13_oceania_clubes_previstas(this: usize) {
-    let embaralhar: unsafe extern "C" fn(usize, u32) = core::mem::transmute(0x4afb40usize);
-    if cqv13_d(this + 8) == 0 {
+/// The predicted positions of the Oceania Club Championship and its group draw: without statistics
+/// (`league::COMP_STATS`), the box for line 0x3a0; otherwise the 8 chosen clubs (+0xee, +0xf2 clubs) sorted by
+/// reputation (`predicted_by_reputation_sort`), the positions 1, 2, 3, 3, 5, 5, 7, 7 and the list shuffled
+/// (`exe::comp_util_shuffle_pointer_array`(list, n): push n (word); push list; add esp, 8 -> cdecl: 3n drawn swaps).
+/// That shuffle is what makes the groups: the first 4 go to group A, the others to B.
+/// Original: `OceaniaClubChamp::set_predicted_positions` (0x798640, oceania_club_champ.cpp, thiscall, ret 0).
+unsafe extern "thiscall" fn oceania_club_champ_set_predicted_positions(this: usize) {
+    if read_usize(this + league::COMP_STATS) == 0 {
         return show_error_at(0xa6a068, 0x3a0);
     }
-    let lista = cqv13_d(this + 0xee);
-    cqv13_ordenar(lista, cqv13_d(this + 0xf2) as u32); // cqv13: os 8 pela reputação
-    cqv13_gravar(this, cqv13_d(this + 0xee), &CQV13_OCEANIA_CLUBES);
-    crate::comparison::branch("cqv_13 sorteio dos grupos da oceania");
-    let n = cqv13_w(this + 0xf2) as u16 as u32;
-    embaralhar(cqv13_d(this + 0xee), n); // cqv13: os 8 embaralhados
+    let list = read_usize(this + 0xee);
+    predicted_by_reputation_sort(list, read_usize(this + 0xf2) as u32); // cqv13: the 8 by reputation
+    predicted_by_reputation_write(this, read_usize(this + 0xee), &OCEANIA_CLUB_CHAMP_POSITIONS);
+    covered!("cqv_13 oceania group draw");
+    let n = read_i16(this + 0xf2) as u16 as u32;
+    exe::comp_util_shuffle_pointer_array(read_usize(this + 0xee), n); // cqv13: the 8 shuffled
 }
 
-/// O plano das previstas: os clubes `clubes` (antes da original), cada um com a posição gravada (+0x72 do registro,
-/// 0x4a4850) depois dela; pela reputação (+0x80) decrescente as posições formam `posicoes` (empates de reputação podem
-/// trocar entre si: o qsort não é estável). Só com tantos clubes quantas posições e nenhum nulo.
-unsafe fn cqv13_conferir(nome: &str, this: usize, clubes: &[usize], posicoes: &[u32]) {
-    let est = cqv13_d(this + 8);
-    if est == 0 || clubes.len() != posicoes.len() || clubes.iter().any(|&c| c == 0) {
+/// The plan of the predicted positions: the clubs `clubs` (taken before the original), each with the position written
+/// (`comp_stats_club::FINAL_POSITION` of its entry, `exe::comp_stats_find_club_entry`) after it; by reputation
+/// (`club::REPUTATION`) descending the positions make `positions` (reputation ties may swap with each other: the qsort
+/// is not stable). Only with as many clubs as positions and none null.
+unsafe fn predicted_by_reputation_check(name: &str, this: usize, clubs: &[usize], positions: &[u32]) {
+    let stats = read_usize(this + league::COMP_STATS);
+    if stats == 0 || clubs.len() != positions.len() || clubs.iter().any(|&c| c == 0) {
         return;
     }
-    let buscar: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x4a4850usize);
-    let mut v: Vec<(i16, u8)> = clubes
+    let mut v: Vec<(i16, u8)> = clubs
         .iter()
         .map(|&c| {
-            let e = buscar(est, c);
-            (cqv13_w(c + 0x80), if e != 0 { *((e + 0x72) as *const u8) } else { 0 })
+            let e = exe::comp_stats_find_club_entry(stats, c);
+            (Club(c).reputation(), if e != 0 { read_u8(e + comp_stats_club::FINAL_POSITION) } else { 0 })
         })
         .collect();
     v.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
-    let lidas: Vec<u32> = v.iter().map(|x| x.1 as u32).collect();
-    SCOREBOARD.record(lidas == posicoes, || format!("{}({:#x}): posições pela reputação {:?}", nome, this, lidas));
+    let read: Vec<u32> = v.iter().map(|x| x.1 as u32).collect();
+    SCOREBOARD.record(read == positions, || format!("{}({:#x}): positions by reputation {:?}", name, this, read));
 }
 
-// ponytail: Comp_Stats::set_club_final_position acrescenta registros e o embaralhamento sorteia: não roda duas vezes.
-// Só a original; o plano: as posições pela reputação e a lista depois dela uma permutação da de antes.
-unsafe extern "thiscall" fn compare_cqv13_oceania_clubes_previstas(this: usize) {
+// simplification: Comp_Stats::set_club_final_position adds entries and the shuffle draws: it cannot run twice. Only the
+// original; the plan: the positions by reputation and the list after it a permutation of the one before.
+unsafe extern "thiscall" fn compare_oceania_club_champ_set_predicted_positions(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I0%%);
-    let lista = cqv13_d(this + 0xee);
-    let n = cqv13_w(this + 0xf2);
-    if lista == 0 || !(0..=64).contains(&n) {
+    let list = read_usize(this + 0xee);
+    let n = read_i16(this + 0xf2);
+    if list == 0 || !(0..=64).contains(&n) {
         return o(this);
     }
-    let mut antes: Vec<usize> = (0..n as usize).map(|k| cqv13_d(lista + k * 4)).collect();
+    let mut before: Vec<usize> = (0..n as usize).map(|k| read_usize(list + k * 4)).collect();
     o(this);
-    let mut depois: Vec<usize> = (0..n as usize).map(|k| cqv13_d(cqv13_d(this + 0xee) + k * 4)).collect();
-    cqv13_conferir("cqv13_oceania_clubes_previstas", this, &antes, &CQV13_OCEANIA_CLUBES);
-    antes.sort_unstable();
-    depois.sort_unstable();
-    SCOREBOARD.record(antes == depois, || format!("cqv13_oceania_clubes_previstas({:#x}): a lista embaralhada não é a mesma", this));
+    let mut after: Vec<usize> = (0..n as usize).map(|k| read_usize(read_usize(this + 0xee) + k * 4)).collect();
+    predicted_by_reputation_check("oceania_club_champ_set_predicted_positions", this, &before, &OCEANIA_CLUB_CHAMP_POSITIONS);
+    before.sort_unstable();
+    after.sort_unstable();
+    SCOREBOARD.record(before == after, || format!("oceania_club_champ_set_predicted_positions({:#x}): the shuffled list is not the same", this));
 }
 
-/// O corpo das previstas com cópia (0x4027d0 e 0x91ff30): sem estatísticas (+8), a caixa `linhas.0`; uma cópia dos `n`
-/// ponteiros da lista (0x944e46(4n): push; add esp, 4 -> cdecl; sem memória, a caixa `linhas.1`), ordenada pela
-/// reputação; as posições pela ordem; a cópia liberada (0x9452ca).
-unsafe fn cqv13_previstas_da_copia(this: usize, lista: usize, n: i32, posicoes: &[u32], arquivo: usize, linhas: (u32, u32)) {
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
-    if cqv13_d(this + 8) == 0 {
-        return show_error_at(arquivo, linhas.0);
+/// The body of the predicted positions with a copy (0x4027d0 and 0x91ff30): without statistics (`league::COMP_STATS`),
+/// the box `rows.0`; a copy of the `n` pointers of the list (`exe::crt_malloc`(4n): push; add esp, 4 -> cdecl; out of
+/// memory, the box `rows.1`), sorted by reputation (`predicted_by_reputation_sort`); the positions in that order; the
+/// copy freed (`exe::crt_free`).
+unsafe fn predicted_by_reputation_of_copy(this: usize, list: usize, n: i32, positions: &[u32], file: usize, rows: (u32, u32)) {
+    if read_usize(this + league::COMP_STATS) == 0 {
+        return show_error_at(file, rows.0);
     }
-    let v = alocar((n as u32).wrapping_mul(4));
+    let v = exe::crt_malloc((n as u32).wrapping_mul(4));
     if v == 0 {
-        return show_error_at(arquivo, linhas.1);
+        return show_error_at(file, rows.1);
     }
-    core::ptr::copy_nonoverlapping(lista as *const u8, v as *mut u8, (n as u32).wrapping_mul(4) as usize);
-    cqv13_ordenar(v, n as u32);
-    cqv13_gravar(this, v, posicoes);
-    soltar(v);
+    core::ptr::copy_nonoverlapping(list as *const u8, v as *mut u8, (n as u32).wrapping_mul(4) as usize);
+    predicted_by_reputation_sort(v, n as u32);
+    predicted_by_reputation_write(this, v, positions);
+    exe::crt_free(v);
 }
 
-const CQV13_AFRICANA: [u32; 16] = [1, 2, 3, 4, 5, 5, 5, 5, 9, 9, 9, 9, 13, 13, 13, 13];
+/// The predicted positions of the 16 African Nations Cup finalists, by reputation.
+const AFRICAN_NATIONS_POSITIONS: [u32; 16] = [1, 2, 3, 4, 5, 5, 5, 5, 9, 9, 9, 9, 13, 13, 13, 13];
 
-/// { 0x4027d0 } (thiscall, ret 0, african_nations.cpp; a virtual +0x5c): `AfricanNations::set_predicted_positions()`:
-/// as 16 finalistas da Copa Africana de Nações (+0xee, +0xf2 word) pela reputação: 1, 2, 3, 4, quatro 5, quatro 9 e
-/// quatro 13 (caixas nas linhas 0x3f4 e 0x3fc).
-unsafe extern "thiscall" fn cqv13_africana_previstas(this: usize) {
-    cqv13_previstas_da_copia(this, cqv13_d(this + 0xee), cqv13_w(this + 0xf2) as i32, &CQV13_AFRICANA, 0x9870f8, (0x3f4, 0x3fc))
+/// The predicted positions of the African Nations Cup: the 16 finalists (+0xee, +0xf2 word) by reputation
+/// (`predicted_by_reputation_of_copy`): 1, 2, 3, 4, four 5s, four 9s and four 13s (boxes at lines 0x3f4 and 0x3fc).
+/// Original: `AfricanNations::set_predicted_positions` (0x4027d0, african_nations.cpp, thiscall, ret 0).
+unsafe extern "thiscall" fn african_nations_set_predicted_positions(this: usize) {
+    predicted_by_reputation_of_copy(this, read_usize(this + 0xee), read_i16(this + 0xf2) as i32, &AFRICAN_NATIONS_POSITIONS, 0x9870f8, (0x3f4, 0x3fc))
 }
 
-// ponytail: Comp_Stats::set_club_final_position acrescenta registros: não roda duas vezes. Só a original; o plano: as
-// posições pela reputação.
-unsafe extern "thiscall" fn compare_cqv13_africana_previstas(this: usize) {
+// simplification: Comp_Stats::set_club_final_position adds entries: it cannot run twice. Only the original; the plan:
+// the positions by reputation.
+unsafe extern "thiscall" fn compare_african_nations_set_predicted_positions(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I1%%);
-    let (lista, n) = (cqv13_d(this + 0xee), cqv13_w(this + 0xf2));
-    let clubes: Vec<usize> = if lista != 0 && (0..=64).contains(&n) { (0..n as usize).map(|k| cqv13_d(lista + k * 4)).collect() } else { Vec::new() };
+    let (list, n) = (read_usize(this + 0xee), read_i16(this + 0xf2));
+    let clubs: Vec<usize> = if list != 0 && (0..=64).contains(&n) { (0..n as usize).map(|k| read_usize(list + k * 4)).collect() } else { Vec::new() };
     o(this);
-    cqv13_conferir("cqv13_africana_previstas", this, &clubes, &CQV13_AFRICANA);
+    predicted_by_reputation_check("african_nations_set_predicted_positions", this, &clubs, &AFRICAN_NATIONS_POSITIONS);
 }
 
-const CQV13_ELIMINATORIA: [u32; 10] = [1, 2, 3, 3, 5, 5, 7, 7, 9, 10];
+/// The predicted positions of the Oceania World Cup qualifier, by strength (9 or 10 nations).
+const WC_OCEANIA_LEAGUE_POSITIONS: [u32; 10] = [1, 2, 3, 3, 5, 5, 7, 7, 9, 10];
 
-/// { 0x91ff30 } (thiscall, ret 0, wc_oceania_league.cpp; a virtual +0x5c): `WcOceaniaLeague::set_predicted_positions()`:
-/// as seleções da eliminatória da Oceania (+0xef, +0xf3 dword) pela força (a reputação +0x80 dos clubes das seleções):
-/// 1, 2, 3, 3, 5, 5, 7, 7, 9 e, se forem 10, a décima 10 (caixas nas linhas 0x52a e 0x532).
-unsafe extern "thiscall" fn cqv13_eliminatoria_oceania_previstas(this: usize) {
-    let n = cqv13_d(this + 0xf3) as i32;
+/// The predicted positions of the Oceania World Cup qualifier: its national teams (+0xef, +0xf3 dword) by strength (the
+/// reputation `club::REPUTATION` of the national teams' clubs, `predicted_by_reputation_of_copy`): 1, 2, 3, 3, 5, 5, 7,
+/// 7, 9 and, if there are 10, the tenth 10 (boxes at lines 0x52a and 0x532).
+/// Original: `WcOceaniaLeague::set_predicted_positions` (0x91ff30, wc_oceania_league.cpp, thiscall, ret 0).
+unsafe extern "thiscall" fn wc_oceania_league_set_predicted_positions(this: usize) {
+    let n = read_usize(this + 0xf3) as i32;
     let k = if n == 10 { 10 } else { 9 };
-    cqv13_previstas_da_copia(this, cqv13_d(this + 0xef), n, &CQV13_ELIMINATORIA[..k], 0xad4afc, (0x52a, 0x532))
+    predicted_by_reputation_of_copy(this, read_usize(this + 0xef), n, &WC_OCEANIA_LEAGUE_POSITIONS[..k], 0xad4afc, (0x52a, 0x532))
 }
 
-unsafe extern "thiscall" fn compare_cqv13_eliminatoria_oceania_previstas(this: usize) {
+unsafe extern "thiscall" fn compare_wc_oceania_league_set_predicted_positions(this: usize) {
     let o = original_fn::<unsafe extern "thiscall" fn(usize)>(%%I2%%);
-    let (lista, n) = (cqv13_d(this + 0xef), cqv13_d(this + 0xf3) as i32);
-    let clubes: Vec<usize> = if lista != 0 && (0..=64).contains(&n) { (0..n as usize).map(|k| cqv13_d(lista + k * 4)).collect() } else { Vec::new() };
+    let (list, n) = (read_usize(this + 0xef), read_usize(this + 0xf3) as i32);
+    let clubs: Vec<usize> = if list != 0 && (0..=64).contains(&n) { (0..n as usize).map(|k| read_usize(list + k * 4)).collect() } else { Vec::new() };
     o(this);
     let k = if n == 10 { 10 } else { 9 };
-    cqv13_conferir("cqv13_eliminatoria_oceania_previstas", this, &clubes, &CQV13_ELIMINATORIA[..k]);
+    predicted_by_reputation_check("wc_oceania_league_set_predicted_positions", this, &clubs, &WC_OCEANIA_LEAGUE_POSITIONS[..k]);
 }

@@ -1,0 +1,38 @@
+[
+ {
+  "module": "conmebol_merc",
+  "offset": "0xee",
+  "name": "INVITED_CLUBS",
+  "width": 4,
+  "description": "pointer to the malloc'd list of the cup's entrant clubs (sorted by reputation for the predicted positions); freed by start_new_season",
+  "confidence": "read",
+  "evidence": "ConmebolMerc::set_predicted_positions 0x4c5a90 qsorts [+0xee] with [+0xf2] entries of 4 bytes and gives each a final position"
+ },
+ {
+  "module": "conmebol_merc",
+  "offset": "0xf2",
+  "name": "INVITED_COUNT",
+  "width": 4,
+  "description": "number of clubs in INVITED_CLUBS (read as a dword by set_predicted_positions)",
+  "confidence": "read",
+  "evidence": "ConmebolMerc::set_predicted_positions 0x4c5a90 qsorts [+0xee] with [+0xf2] entries of 4 bytes and gives each a final position"
+ },
+ {
+  "module": "conmebol_liber",
+  "offset": "0xee",
+  "name": "INVITED_CLUBS",
+  "width": 4,
+  "description": "pointer to the malloc'd list of the cup's entrant clubs (sorted by reputation for the predicted positions); freed by start_new_season",
+  "confidence": "read",
+  "evidence": "ConmebolLiber::set_predicted_positions 0x4c4210, the same body"
+ },
+ {
+  "module": "conmebol_liber",
+  "offset": "0xf2",
+  "name": "INVITED_COUNT",
+  "width": 4,
+  "description": "number of clubs in INVITED_CLUBS (read as a dword by set_predicted_positions)",
+  "confidence": "read",
+  "evidence": "ConmebolLiber::set_predicted_positions 0x4c4210, the same body"
+ }
+]

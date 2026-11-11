@@ -1,0 +1,29 @@
+[
+ {
+  "module": "cup",
+  "offset": "0x8",
+  "name": "COMP_STATS",
+  "width": 4,
+  "description": "pointer to the competition's Comp_Stats object, 0 = none; Comp base field",
+  "confidence": "verified",
+  "evidence": "same Comp base offset as league::COMP_STATS (verified); the cup constructors store Comp_Stats::Comp_Stats (0x49ee70) there and pass [this+8] to Comp_Stats::set_club_final_position"
+ },
+ {
+  "module": "con_merc_cup_fields",
+  "offset": "0xee",
+  "name": "INVITED_CLUBS",
+  "width": 4,
+  "description": "pointer to the list of invited clubs (4 bytes each)",
+  "confidence": "read",
+  "evidence": "ConMercCup::set_predicted_positions 0x4c2a90 qsorts [+0xee] by reputation (0x4b07d0) and gives each its predicted position in list order"
+ },
+ {
+  "module": "con_merc_cup_fields",
+  "offset": "0xf2",
+  "name": "INVITED_CLUB_COUNT",
+  "width": 4,
+  "description": "number of clubs in INVITED_CLUBS",
+  "confidence": "read",
+  "evidence": "ConMercCup::set_predicted_positions 0x4c2a90 passes [+0xf2] as the qsort count and loops up to it"
+ }
+]

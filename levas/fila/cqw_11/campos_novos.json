@@ -1,0 +1,29 @@
+[
+ {
+  "module": "wc_oceania_league_fields",
+  "offset": "0xef",
+  "name": "ENTRANT_POOL",
+  "width": 4,
+  "description": "Pointer to the list of qualifying national teams (EXEMPT_COUNT fewer than 10), sorted by reputation",
+  "confidence": "read",
+  "evidence": "WcOceaniaLeague::build_entrant_pool (0x91fa80) allocates 4 x n bytes into +0xef, fills it with database_get_national_team of the Oceania nations and qsorts it with 0x4b07d0"
+ },
+ {
+  "module": "wc_oceania_league_fields",
+  "offset": "0xf3",
+  "name": "ENTRANT_POOL_COUNT",
+  "width": 4,
+  "description": "Number of places in ENTRANT_POOL: 10 minus EXEMPT_COUNT",
+  "confidence": "read",
+  "evidence": "WcOceaniaLeague::build_entrant_pool (0x91fa80) writes 10, then 10 - [+0xee], and returns 0 unless the pool was filled to this count"
+ },
+ {
+  "module": "oceania_nations",
+  "offset": "0xee",
+  "name": "DRAWN_CLUBS",
+  "width": 4,
+  "description": "Pointer to the list of the Oceania Nations Cup teams (6 nations); the second group takes places 3, 4 and 5",
+  "confidence": "read",
+  "evidence": "OceaniaNations::create_group_stage (0x799a60) copies [[+0xee] + 0xc..0x14] into the 3-team vector of the League_Stage; same layout as african_nations::DRAWN_CLUBS / goldcup::DRAWN_CLUBS"
+ }
+]

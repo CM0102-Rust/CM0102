@@ -1,0 +1,56 @@
+[
+ {
+  "module": "oceania_club_champ",
+  "offset": "0xee",
+  "name": "ENTRANT_CLUBS",
+  "width": 4,
+  "description": "pointer to the list of the 8 entrant clubs; sorted by reputation, then shuffled to make the two groups (first 4 group A)",
+  "confidence": "read",
+  "evidence": "OceaniaClubChamp::set_predicted_positions 0x798640 qsorts and shuffles [+0xee]"
+ },
+ {
+  "module": "oceania_club_champ",
+  "offset": "0xf2",
+  "name": "ENTRANT_COUNT",
+  "width": 2,
+  "description": "number of clubs in ENTRANT_CLUBS (read as a dword for the qsort and as a word for the shuffle)",
+  "confidence": "read",
+  "evidence": "0x798640 pushes [+0xf2] to qsort and the word to comp_util_shuffle_pointer_array"
+ },
+ {
+  "module": "african_nations",
+  "offset": "0xee",
+  "name": "FINALISTS",
+  "width": 4,
+  "description": "pointer to the list of the 16 finalists (national team clubs)",
+  "confidence": "read",
+  "evidence": "AfricanNations::set_predicted_positions 0x4027d0 copies [+0xee] and sorts the copy by reputation"
+ },
+ {
+  "module": "african_nations",
+  "offset": "0xf2",
+  "name": "FINALIST_COUNT",
+  "width": 2,
+  "description": "number of entries in FINALISTS (16)",
+  "confidence": "read",
+  "evidence": "0x4027d0 reads the word [+0xf2] as the copy size"
+ },
+ {
+  "module": "wc_oceania_league",
+  "offset": "0xef",
+  "name": "ENTRANT_TEAMS",
+  "width": 4,
+  "description": "pointer to the pool of the Oceania qualifier's national teams (club pointers)",
+  "confidence": "read",
+  "evidence": "WcOceaniaLeague::set_predicted_positions 0x91ff30 copies [+0xef] and sorts the copy by reputation"
+ },
+ {
+  "module": "wc_oceania_league",
+  "offset": "0xf3",
+  "name": "ENTRANT_TEAM_COUNT",
+  "width": 4,
+  "description": "number of teams in ENTRANT_TEAMS (9 or 10)",
+  "confidence": "read",
+  "evidence": "0x91ff30 reads the dword [+0xf3]; 10 gives the tenth position 10"
+ }
+]

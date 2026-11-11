@@ -1,1 +1,2 @@
 comparação de 8 ligas até 2001-10-01 com os 11 itens do agente D (cqu_5..9, cqv_5..9, cqw_5) 0 div, 0 exceções; Rust x2 até 2002-06-01 iguais (b690295afd222f6a, a mesma da base sem os itens) e detector de lixo igual; mutações 4/4 (base f29c85195c2a534f)
+convertido para o estilo atual em 11/11/2026

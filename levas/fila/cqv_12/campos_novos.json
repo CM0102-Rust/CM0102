@@ -1,0 +1,29 @@
+[
+ {
+  "module": "conmebol_liber",
+  "offset": "0xee",
+  "name": "INVITED_CLUBS",
+  "width": 4,
+  "description": "pointer to the list of the cup's entrant clubs; start_new_season frees it without zeroing",
+  "confidence": "read",
+  "evidence": "ConmebolLiber::start_new_season 0x4c3980 frees [+0xee] (free 0x9452ca) when not null"
+ },
+ {
+  "module": "conmebol_merc",
+  "offset": "0xee",
+  "name": "INVITED_CLUBS",
+  "width": 4,
+  "description": "pointer to the list of the cup's entrant clubs; start_new_season frees it without zeroing",
+  "confidence": "read",
+  "evidence": "ConmebolMerc::start_new_season 0x4c5040 frees [+0xee] (free 0x9452ca) when not null"
+ },
+ {
+  "module": "con_merc_cup",
+  "offset": "0xee",
+  "name": "INVITED_CLUBS",
+  "width": 4,
+  "description": "pointer to the list of the cup's entrant clubs; start_new_season frees it without zeroing",
+  "confidence": "read",
+  "evidence": "ConMercCup::start_new_season 0x4c1fb0 frees [+0xee] (free 0x9452ca) when not null"
+ }
+]

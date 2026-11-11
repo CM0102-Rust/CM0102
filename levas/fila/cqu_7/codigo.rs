@@ -1,248 +1,254 @@
-// ---------- %%LEVA%%a leva: os construtores das copas francesas: a Copa da França, a Copa da Liga e a Supercopa (fra_cup.cpp, fra_lge_cup.cpp, fra_super.cpp) ----------
+// ---------- batch %%LEVA%%: the French cup constructors: the Coupe de France, the League Cup and the Super Cup (fra_cup.cpp, fra_lge_cup.cpp, fra_super.cpp) ----------
 
-unsafe fn cqu7_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
+/// Builds the cup's round table through its own virtual `comp_vtable::CREATE_SCHEDULE` (create_round_table(−1,
+/// &`cup::ROUND_COUNT`, &`cup::STAGE_LABEL`, null): push 0; push &+0x3a; push &+0x3c; push −1; mov ecx, this ->
+/// thiscall, ret 0x10) and stores it in `cup::ROUND_TABLE`.
+pub(crate) unsafe fn fra_cup_create_rounds(this: Cup) {
+    let f: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
+    let t = f(this.addr(), 0xffff_ffff, this.addr() + cup::ROUND_COUNT, this.addr() + cup::STAGE_LABEL, 0);
+    this.set_round_table(t);
 }
 
-unsafe fn cqu7_p8(a: usize, v: u8) {
-    *(a as *mut u8) = v;
-}
-
-unsafe fn cqu7_p16(a: usize, v: u16) {
-    core::ptr::write_unaligned(a as *mut u16, v)
-}
-
-unsafe fn cqu7_p32(a: usize, v: u32) {
-    core::ptr::write_unaligned(a as *mut u32, v)
-}
-
-/// As rodadas da copa pelo método +0x3c da vtable (push 0; push &+0x3a; push &+0x3c; push −1; mov ecx, this -> thiscall,
-/// ret 0x10): a tabela das rodadas, gravada em +0xa3.
-unsafe fn cqu7_rodadas(this: usize) {
-    let f: unsafe extern "thiscall" fn(usize, u32, usize, usize, u32) -> usize = core::mem::transmute(cqu7_d(cqu7_d(this) + 0x3c));
-    let t = f(this, 0xffff_ffff, this + 0x3c, this + 0x3a, 0);
-    cqu7_p32(this + 0xa3, t as u32);
-}
-
-/// As estatísticas (operator new 0x944cf1 de 0x5ce: push; add esp, 4 -> cdecl; Comp_Stats::Comp_Stats 0x49ee70: push
-/// this; mov ecx, novo -> thiscall, ret 4) em +8; o quadro SEH da original cobre só esse new. Devolve se criou.
-unsafe fn cqu7_estatisticas(this: usize) -> bool {
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let estatisticas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x49ee70usize);
-    let n = novo(0x5ce);
-    let s = if n != 0 { estatisticas(n, this) } else { 0 };
-    cqu7_p32(this + 8, s as u32);
+/// Creates the cup's statistics at Comp +8 (operator new `exe::crt_operator_new` of 0x5ce, cdecl, and
+/// Comp_Stats::Comp_Stats `exe::new_comp_stats`: push this; mov ecx, new -> thiscall, ret 4; the original's SEH frame
+/// covers only that new; 0 without memory). Returns whether they were created.
+pub(crate) unsafe fn fra_cup_create_comp_stats(this: Cup) -> bool {
+    let n = exe::crt_operator_new(0x5ce);
+    let s = if n != 0 { exe::new_comp_stats(n, this) } else { 0 };
+    write_usize(this.addr() + 8, s); // Comp +8: the Comp_Stats object
     s != 0
 }
 
-/// O plano que o comparador confere depois da original: a devolução (this), a vtable, o registro (+4) e o ano (+0x40);
-/// na copa nova (+0x44 = 0xff), cada campo fixo que o construtor grava e as rodadas e as estatísticas criadas.
-unsafe fn cqu7_plano(this: usize, r: usize, ano: u32, dono: usize, vt: usize, campos: &[(usize, u8, u32)], rodadas: bool) -> Option<String> {
-    if r != this || cqu7_d(this) != vt || cqu7_d(this + 4) != dono || core::ptr::read_unaligned((this + 0x40) as *const u16) != ano as u16 {
-        return Some(format!("devolveu {:#x}, vtable {:#x}, +4 {:#x}, ano {}", r, cqu7_d(this), cqu7_d(this + 4), core::ptr::read_unaligned((this + 0x40) as *const u16)));
+/// The plan the comparer checks after the original constructor: the return value (this), the vtable, the competition
+/// record (Comp +4) and `cup::YEAR`; on a new cup (`cup::STAGE_INDEX` = `stage_index::MAIN`), every fixed field the
+/// constructor writes (offset, width, value) and the round table and statistics created. `None` = as planned.
+pub(crate) unsafe fn fra_cup_check_constructor_plan(this: Cup, r: usize, year: u32, record: usize, vtable: usize, fields: &[(usize, u8, u32)], rounds: bool) -> Option<String> {
+    if r != this.addr() || read_usize(this.addr()) != vtable || read_usize(this.addr() + 4) != record || read_u16(this.addr() + cup::YEAR) != year as u16 {
+        return Some(format!("returned {:#x}, vtable {:#x}, +4 {:#x}, year {}", r, read_usize(this.addr()), read_usize(this.addr() + 4), read_u16(this.addr() + cup::YEAR)));
     }
-    if *((this + 0x44) as *const u8) != 0xff {
+    if this.stage_index() != stage_index::MAIN {
         return None;
     }
-    for &(o, t, v) in campos {
-        let x = match t {
-            1 => *((this + o) as *const u8) as u32,
-            2 => core::ptr::read_unaligned((this + o) as *const u16) as u32,
-            _ => core::ptr::read_unaligned((this + o) as *const u32),
+    for &(o, w, v) in fields {
+        let x = match w {
+            1 => read_u8(this.addr() + o) as u32,
+            2 => read_u16(this.addr() + o) as u32,
+            _ => read_u32(this.addr() + o),
         };
         if x != v {
-            return Some(format!("+{:#x} = {:#x}, o construtor grava {:#x}", o, x, v));
+            return Some(format!("+{:#x} = {:#x}, the constructor writes {:#x}", o, x, v));
         }
     }
-    if (rodadas && cqu7_d(this + 0xa3) == 0) || cqu7_d(this + 8) == 0 {
-        return Some(format!("rodadas {:#x}, estatísticas {:#x}", cqu7_d(this + 0xa3), cqu7_d(this + 8)));
+    if (rounds && this.round_table() == 0) || read_usize(this.addr() + 8) == 0 {
+        return Some(format!("rounds {:#x}, statistics {:#x}", this.round_table(), read_usize(this.addr() + 8)));
     }
     None
 }
 
-/// { 0x5ba130 } (thiscall, ret 8, fra_cup.cpp; da criação da carreira, n = 1): `FraCup::FraCup(ano, registro)`: o construtor de
-/// a Copa da França
-/// sobre a base Cup::Cup (0x518640, thiscall, ret 0); os campos fixos (a vtable 0x96a864, o registro em +4, o ano em +0x40 e
-/// os da tabela CQU7_CAMPOS_COPA_DA_FRANCA); se o estado salvo carrega (Cup::load_from_disk 0x51fc00: push 1; mov ecx, this ->
-/// thiscall, ret 4; devolve ≠ 0), devolve this. Na copa nova, em ordem: os 222 inscritos (FraCup::collect_entrants) (0x5baa50, thiscall, ret 0; a caixa da linha 0x4c se devolver 0); as rodadas (o método +0x3c da vtable, em +0xa3); a árvore dos confrontos (Cup::map_fixture_tree) (0x518790, thiscall, ret 0; a caixa da linha 0x5b se devolver 0); as estatísticas em +8 (a caixa da linha 0x62 sem elas); a classificação final (Cup::rank_teams) (0x5223a0, thiscall, ret 0, sem conferir); as rodadas (+0x3c da vtable, em +0xa3);
-/// as estatísticas em +8; cada passo com a sua caixa (show_error_at) e a devolução de this se falhar. Devolve this.
-/// Regra: tipo 1 (clubes de uma nação); fundo de prêmios de 1.000.000; 3 reservas no banco e 3 substituições; regra de disciplina 12 [+0x49/+0x4a/+0x50/+0x42 pela leitura da referência das competições, §2.1].
-unsafe fn cqu7_copa_da_franca_corpo(this: usize, ano: u32, dono: usize) -> usize {
-    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518640usize);
-    base(this);
-    cqu7_p16(this + 0x40, ano as u16);
-    cqu7_p32(this + 4, dono as u32);
-    cqu7_p32(this, 0x96a864);
-    cqu7_p8(this + 0xab, 0x0);
-    cqu7_p8(this + 0x44, 0xff);
-    cqu7_p32(this + 0x30, 0xffffffff);
-    cqu7_p32(this + 0x2c, 0x0);
-    cqu7_p8(this + 0x42, 0x1);
-    cqu7_p8(this + 0x49, 0x3);
-    cqu7_p8(this + 0x4a, 0x3);
-    cqu7_p8(this + 0x50, 0xc);
-    cqu7_p8(this + 0xb1, 0x0);
-    let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize);
-    if carregar(this, 1) != 0 {
-        return this;
+/// The body of `construct_fra_cup` (its arguments are what the mutation tests change).
+pub(crate) unsafe fn construct_fra_cup_body(this: Cup, year: u32, record: usize) -> usize {
+    exe::new_cup(this);
+    write_u16(this.addr() + cup::YEAR, year as u16);
+    write_usize(this.addr() + 4, record); // the competition record (Comp +4)
+    write_usize(this.addr(), 0x96a864); // the vtable
+    this.set_current_round(0);
+    this.set_stage_index(stage_index::MAIN);
+    write_i32(this.addr() + cup::CURRENT_STAGE, -1);
+    this.set_stage_count(0);
+    this.set_club_sides(1);
+    this.set_substitutes_named(3);
+    this.set_substitutions_allowed(3);
+    this.set_discipline_index(discipline_rule::FRANCE);
+    this.set_run_by_stages(0);
+    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
+    if load(this.addr(), 1) != 0 {
+        return this.addr();
     }
-    crate::comparison::branch("cqu_7 copa_da_franca nova");
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5baa50usize);
-    let r = f(this);
+    covered!("cqu_7 coupe de france new");
+    let collect_entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5baa50usize); // FraCup::collect_entrants
+    let r = collect_entrants(this.addr());
     if r == 0 {
         show_error_at(0x9ccb28, 0x4c);
-        return this;
+        return this.addr();
     }
-    cqu7_p32(this + 0x28, 0xf4240);
-    cqu7_rodadas(this);
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
-    let r = f(this);
+    this.set_prize_fund(0xf4240);
+    fra_cup_create_rounds(this);
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    let r = map_fixture_tree(this.addr());
     if r == 0 {
         show_error_at(0x9ccb28, 0x5b);
-        return this;
+        return this.addr();
     }
-    if !cqu7_estatisticas(this) {
+    if !fra_cup_create_comp_stats(this) {
         show_error_at(0x9ccb28, 0x62);
-        return this;
+        return this.addr();
     }
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize);
-    f(this);
-    this
+    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize); // Cup::rank_teams
+    rank_teams(this.addr());
+    this.addr()
 }
 
-const CQU7_CAMPOS_COPA_DA_FRANCA: [(usize, u8, u32); 10] = [(0x28, 4, 0xf4240), (0x2c, 4, 0x0), (0x30, 4, 0xffffffff), (0x42, 1, 0x1), (0x44, 1, 0xff), (0x49, 1, 0x3), (0x4a, 1, 0x3), (0x50, 1, 0xc), (0xab, 1, 0x0), (0xb1, 1, 0x0)];
+/// The fixed fields `construct_fra_cup` writes on a new cup, for the comparer: (offset, width, value).
+pub(crate) const COUPE_DE_FRANCE_CONSTRUCTOR_FIELDS: [(usize, u8, u32); 10] = [(cup::PRIZE_FUND, 4, 0xf4240), (cup::STAGE_COUNT, 4, 0x0), (cup::CURRENT_STAGE, 4, 0xffffffff), (cup::CLUB_SIDES, 1, 0x1), (cup::STAGE_INDEX, 1, 0xff), (cup::SUBSTITUTES_NAMED, 1, 0x3), (cup::SUBSTITUTIONS_ALLOWED, 1, 0x3), (cup::DISCIPLINE_INDEX, 1, 0xc), (cup::CURRENT_ROUND, 1, 0x0), (cup::RUN_BY_STAGES, 1, 0x0)];
 
-unsafe extern "thiscall" fn cqu7_copa_da_franca(this: usize, ano: u32, dono: usize) -> usize {
-    cqu7_copa_da_franca_corpo(this, ano, dono) // cqu7: copa_da_franca
+/// The constructor of the Coupe de France: with no entrant table of its own; type 1 (clubs of one nation), prize fund
+/// of 1,000,000, 3 substitutes on the bench and 3 substitutions, discipline rule 12; on a new cup, in order: the 222
+/// entrants (FraCup::collect_entrants, `fra_cup_collect_entrants`, 0x5baa50, thiscall, ret 0; the error box of line
+/// 0x4c if it returns 0); the rounds (the cup's own virtual `comp_vtable::CREATE_SCHEDULE`, into `cup::ROUND_TABLE`);
+/// the tie tree (Cup::map_fixture_tree, `map_fixture_tree`, 0x518790, thiscall, ret 0; the error box of line 0x5b if it
+/// returns 0); the statistics at Comp +8 (the error box of line 0x62 without them); the final ranking (Cup::rank_teams,
+/// `cup_rank_teams`, 0x5223a0, thiscall, ret 0, unchecked). Over the base Cup::Cup (`exe::new_cup`, thiscall, ret 0) it
+/// writes the fixed fields in the original's order (the vtable 0x96a864, the competition record at Comp +4, `cup::YEAR`
+/// and those of `COUPE_DE_FRANCE_CONSTRUCTOR_FIELDS`); if the saved state loads (Cup::load_from_disk 0x51fc00: push 1;
+/// mov ecx, this -> thiscall, ret 4; returns ≠ 0) it returns this. Each step that fails shows its own error box
+/// (`show_error_at`) and returns this. Returns this.
+/// Original: `FraCup::FraCup` (0x5ba130, fra_cup.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_fra_cup(this: usize, year: u32, record: usize) -> usize {
+    construct_fra_cup_body(Cup(this), year, record) // cqu7: the Coupe de France
 }
 
-/// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqu7_plano).
-unsafe extern "thiscall" fn compare_cqu7_copa_da_franca(this: usize, ano: u32, dono: usize) -> usize {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, ano, dono);
-    let erro = cqu7_plano(this, r, ano, dono, 0x96a864, &CQU7_CAMPOS_COPA_DA_FRANCA, true);
-    SCOREBOARD.record(erro.is_none(), || format!("cqu7_copa_da_franca({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+/// Comparer for `construct_fra_cup`: only the original runs (it allocates, draws and reads the save file), and the plan
+/// is checked (`fra_cup_check_constructor_plan`).
+pub(crate) unsafe extern "thiscall" fn compare_construct_fra_cup(this: usize, year: u32, record: usize) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%)(this, year, record);
+    let error = fra_cup_check_constructor_plan(Cup(this), r, year, record, 0x96a864, &COUPE_DE_FRANCE_CONSTRUCTOR_FIELDS, true);
+    SCOREBOARD.record(error.is_none(), || format!("construct_fra_cup({:#x}, {}, {:#x}): {}", this, year as u16, record, error.clone().unwrap_or_default()));
     r
 }
 
-/// { 0x5bc980 } (thiscall, ret 8, fra_lge_cup.cpp; da criação da carreira, n = 1): `FraLgeCup::FraLgeCup(ano, registro)`: o construtor de
-/// a Copa da Liga francesa
-/// sobre a base Cup::Cup (0x518640, thiscall, ret 0); os campos fixos (a vtable 0x96aad8, o registro em +4, o ano em +0x40 e
-/// os da tabela CQU7_CAMPOS_COPA_DA_LIGA_FRANCESA); se o estado salvo carrega (Cup::load_from_disk 0x51fc00: push 1; mov ecx, this ->
-/// thiscall, ret 4; devolve ≠ 0), devolve this. Na copa nova, em ordem: os 54 inscritos (FraLgeCup::collect_entrants) (0x5bd160, thiscall, ret 0; a caixa da linha 0x49 se devolver 0); as rodadas (o método +0x3c da vtable, em +0xa3); a árvore dos confrontos (Cup::map_fixture_tree) (0x518790, thiscall, ret 0; a caixa da linha 0x57 se devolver 0); as estatísticas em +8 (a caixa da linha 0x5e sem elas); a classificação final (Cup::rank_teams) (0x5223a0, thiscall, ret 0, sem conferir); as rodadas (+0x3c da vtable, em +0xa3);
-/// as estatísticas em +8; cada passo com a sua caixa (show_error_at) e a devolução de this se falhar. Devolve this.
-/// Regra: tipo 1 (clubes de uma nação); fundo de prêmios de 500.000; 3 reservas no banco e 3 substituições; regra de disciplina 12 [+0x49/+0x4a/+0x50/+0x42 pela leitura da referência das competições, §2.1].
-unsafe fn cqu7_copa_da_liga_francesa_corpo(this: usize, ano: u32, dono: usize) -> usize {
-    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518640usize);
-    base(this);
-    cqu7_p16(this + 0x40, ano as u16);
-    cqu7_p32(this + 4, dono as u32);
-    cqu7_p32(this, 0x96aad8);
-    cqu7_p8(this + 0xab, 0x0);
-    cqu7_p8(this + 0x44, 0xff);
-    cqu7_p32(this + 0x30, 0xffffffff);
-    cqu7_p32(this + 0x2c, 0x0);
-    cqu7_p8(this + 0x42, 0x1);
-    cqu7_p8(this + 0x49, 0x3);
-    cqu7_p8(this + 0x4a, 0x3);
-    cqu7_p8(this + 0x50, 0xc);
-    cqu7_p8(this + 0xb1, 0x0);
-    let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize);
-    if carregar(this, 1) != 0 {
-        return this;
+/// The body of `construct_fra_lge_cup` (its arguments are what the mutation tests change).
+pub(crate) unsafe fn construct_fra_lge_cup_body(this: Cup, year: u32, record: usize) -> usize {
+    exe::new_cup(this);
+    write_u16(this.addr() + cup::YEAR, year as u16);
+    write_usize(this.addr() + 4, record); // the competition record (Comp +4)
+    write_usize(this.addr(), 0x96aad8); // the vtable
+    this.set_current_round(0);
+    this.set_stage_index(stage_index::MAIN);
+    write_i32(this.addr() + cup::CURRENT_STAGE, -1);
+    this.set_stage_count(0);
+    this.set_club_sides(1);
+    this.set_substitutes_named(3);
+    this.set_substitutions_allowed(3);
+    this.set_discipline_index(discipline_rule::FRANCE);
+    this.set_run_by_stages(0);
+    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
+    if load(this.addr(), 1) != 0 {
+        return this.addr();
     }
-    crate::comparison::branch("cqu_7 copa_da_liga_francesa nova");
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5bd160usize);
-    let r = f(this);
+    covered!("cqu_7 french league cup new");
+    let collect_entrants: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5bd160usize); // FraLgeCup::collect_entrants
+    let r = collect_entrants(this.addr());
     if r == 0 {
         show_error_at(0x9ccb98, 0x49);
-        return this;
+        return this.addr();
     }
-    cqu7_p32(this + 0x28, 0x7a120);
-    cqu7_rodadas(this);
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
-    let r = f(this);
+    this.set_prize_fund(0x7a120);
+    fra_cup_create_rounds(this);
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    let r = map_fixture_tree(this.addr());
     if r == 0 {
         show_error_at(0x9ccb98, 0x57);
-        return this;
+        return this.addr();
     }
-    if !cqu7_estatisticas(this) {
+    if !fra_cup_create_comp_stats(this) {
         show_error_at(0x9ccb98, 0x5e);
-        return this;
+        return this.addr();
     }
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize);
-    f(this);
-    this
+    let rank_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5223a0usize); // Cup::rank_teams
+    rank_teams(this.addr());
+    this.addr()
 }
 
-const CQU7_CAMPOS_COPA_DA_LIGA_FRANCESA: [(usize, u8, u32); 10] = [(0x28, 4, 0x7a120), (0x2c, 4, 0x0), (0x30, 4, 0xffffffff), (0x42, 1, 0x1), (0x44, 1, 0xff), (0x49, 1, 0x3), (0x4a, 1, 0x3), (0x50, 1, 0xc), (0xab, 1, 0x0), (0xb1, 1, 0x0)];
+/// The fixed fields `construct_fra_lge_cup` writes on a new cup, for the comparer: (offset, width, value).
+pub(crate) const FRENCH_LEAGUE_CUP_CONSTRUCTOR_FIELDS: [(usize, u8, u32); 10] = [(cup::PRIZE_FUND, 4, 0x7a120), (cup::STAGE_COUNT, 4, 0x0), (cup::CURRENT_STAGE, 4, 0xffffffff), (cup::CLUB_SIDES, 1, 0x1), (cup::STAGE_INDEX, 1, 0xff), (cup::SUBSTITUTES_NAMED, 1, 0x3), (cup::SUBSTITUTIONS_ALLOWED, 1, 0x3), (cup::DISCIPLINE_INDEX, 1, 0xc), (cup::CURRENT_ROUND, 1, 0x0), (cup::RUN_BY_STAGES, 1, 0x0)];
 
-unsafe extern "thiscall" fn cqu7_copa_da_liga_francesa(this: usize, ano: u32, dono: usize) -> usize {
-    cqu7_copa_da_liga_francesa_corpo(this, ano, dono) // cqu7: copa_da_liga_francesa
+/// The constructor of the French League Cup: with no entrant table of its own; type 1 (clubs of one nation), prize fund
+/// of 500,000, 3 substitutes on the bench and 3 substitutions, discipline rule 12; on a new cup, in order: the 54
+/// entrants (FraLgeCup::collect_entrants, `fra_lge_cup_collect_entrants`, 0x5bd160, thiscall, ret 0; the error box of
+/// line 0x49 if it returns 0); the rounds (the cup's own virtual `comp_vtable::CREATE_SCHEDULE`, into
+/// `cup::ROUND_TABLE`); the tie tree (Cup::map_fixture_tree, `map_fixture_tree`, 0x518790, thiscall, ret 0; the error
+/// box of line 0x57 if it returns 0); the statistics at Comp +8 (the error box of line 0x5e without them); the final
+/// ranking (Cup::rank_teams, `cup_rank_teams`, 0x5223a0, thiscall, ret 0, unchecked). Over the base Cup::Cup
+/// (`exe::new_cup`, thiscall, ret 0) it writes the fixed fields in the original's order (the vtable 0x96aad8, the
+/// competition record at Comp +4, `cup::YEAR` and those of `FRENCH_LEAGUE_CUP_CONSTRUCTOR_FIELDS`); if the saved state
+/// loads (Cup::load_from_disk 0x51fc00: push 1; mov ecx, this -> thiscall, ret 4; returns ≠ 0) it returns this. Each
+/// step that fails shows its own error box (`show_error_at`) and returns this. Returns this.
+/// Original: `FraLgeCup::FraLgeCup` (0x5bc980, fra_lge_cup.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_fra_lge_cup(this: usize, year: u32, record: usize) -> usize {
+    construct_fra_lge_cup_body(Cup(this), year, record) // cqu7: the French League Cup
 }
 
-/// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqu7_plano).
-unsafe extern "thiscall" fn compare_cqu7_copa_da_liga_francesa(this: usize, ano: u32, dono: usize) -> usize {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, ano, dono);
-    let erro = cqu7_plano(this, r, ano, dono, 0x96aad8, &CQU7_CAMPOS_COPA_DA_LIGA_FRANCESA, true);
-    SCOREBOARD.record(erro.is_none(), || format!("cqu7_copa_da_liga_francesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+/// Comparer for `construct_fra_lge_cup`: only the original runs (it allocates, draws and reads the save file), and the plan
+/// is checked (`fra_cup_check_constructor_plan`).
+pub(crate) unsafe extern "thiscall" fn compare_construct_fra_lge_cup(this: usize, year: u32, record: usize) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%)(this, year, record);
+    let error = fra_cup_check_constructor_plan(Cup(this), r, year, record, 0x96aad8, &FRENCH_LEAGUE_CUP_CONSTRUCTOR_FIELDS, true);
+    SCOREBOARD.record(error.is_none(), || format!("construct_fra_lge_cup({:#x}, {}, {:#x}): {}", this, year as u16, record, error.clone().unwrap_or_default()));
     r
 }
 
-/// { 0x5bf320 } (thiscall, ret 8, fra_super.cpp; da criação da carreira, n = 1): `FraSuper::FraSuper(ano, registro)`: o construtor de
-/// a Supercopa francesa
-/// sobre a base Cup::Cup (0x518640, thiscall, ret 0); os campos fixos (a vtable 0x96ace0, o registro em +4, o ano em +0x40 e
-/// os da tabela CQU7_CAMPOS_SUPERCOPA_FRANCESA); se o estado salvo carrega (Cup::load_from_disk 0x51fc00: push 1; mov ecx, this ->
-/// thiscall, ret 4; devolve ≠ 0), devolve this. Na copa nova, em ordem: os dois clubes (FraSuper::select_teams) (0x5bf770, thiscall, ret 0; a caixa da linha 0x3f se devolver negativo); as rodadas (o método +0x3c da vtable, em +0xa3); a árvore dos confrontos (Cup::map_fixture_tree) (0x518790, thiscall, ret 0; a caixa da linha 0x4d se devolver negativo); as estatísticas em +8 (a caixa da linha 0x54 sem elas); as rodadas (+0x3c da vtable, em +0xa3);
-/// as estatísticas em +8; cada passo com a sua caixa (show_error_at) e a devolução de this se falhar. Devolve this.
-/// Regra: tipo 1 (clubes de uma nação); sem fundo de prêmios (+0x28 fica como a base deixou); reservas e substituições da base; regra de disciplina 12 [+0x49/+0x4a/+0x50/+0x42 pela leitura da referência das competições, §2.1].
-unsafe fn cqu7_supercopa_francesa_corpo(this: usize, ano: u32, dono: usize) -> usize {
-    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518640usize);
-    base(this);
-    cqu7_p32(this + 4, dono as u32);
-    cqu7_p32(this, 0x96ace0);
-    cqu7_p16(this + 0x40, ano as u16);
-    cqu7_p8(this + 0xab, 0x0);
-    cqu7_p8(this + 0x44, 0xff);
-    cqu7_p32(this + 0x2c, 0x0);
-    cqu7_p32(this + 0x30, 0xffffffff);
-    cqu7_p8(this + 0x42, 0x1);
-    cqu7_p8(this + 0x50, 0xc);
-    cqu7_p8(this + 0xb1, 0x0);
-    let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize);
-    if carregar(this, 1) != 0 {
-        return this;
+/// The body of `construct_fra_super` (its arguments are what the mutation tests change).
+pub(crate) unsafe fn construct_fra_super_body(this: Cup, year: u32, record: usize) -> usize {
+    exe::new_cup(this);
+    write_usize(this.addr() + 4, record); // the competition record (Comp +4)
+    write_usize(this.addr(), 0x96ace0); // the vtable
+    write_u16(this.addr() + cup::YEAR, year as u16);
+    this.set_current_round(0);
+    this.set_stage_index(stage_index::MAIN);
+    this.set_stage_count(0);
+    write_i32(this.addr() + cup::CURRENT_STAGE, -1);
+    this.set_club_sides(1);
+    this.set_discipline_index(discipline_rule::FRANCE);
+    this.set_run_by_stages(0);
+    let load: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
+    if load(this.addr(), 1) != 0 {
+        return this.addr();
     }
-    crate::comparison::branch("cqu_7 supercopa_francesa nova");
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5bf770usize);
-    let r = f(this);
+    covered!("cqu_7 french super cup new");
+    let select_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x5bf770usize); // FraSuper::select_teams
+    let r = select_teams(this.addr());
     if r < 0 {
         show_error_at(0x9ccc48, 0x3f);
-        return this;
+        return this.addr();
     }
-    cqu7_rodadas(this);
-    let f: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
-    let r = f(this);
+    fra_cup_create_rounds(this);
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    let r = map_fixture_tree(this.addr());
     if r < 0 {
         show_error_at(0x9ccc48, 0x4d);
-        return this;
+        return this.addr();
     }
-    if !cqu7_estatisticas(this) {
+    if !fra_cup_create_comp_stats(this) {
         show_error_at(0x9ccc48, 0x54);
-        return this;
+        return this.addr();
     }
-    this
+    this.addr()
 }
 
-const CQU7_CAMPOS_SUPERCOPA_FRANCESA: [(usize, u8, u32); 7] = [(0x2c, 4, 0x0), (0x30, 4, 0xffffffff), (0x42, 1, 0x1), (0x44, 1, 0xff), (0x50, 1, 0xc), (0xab, 1, 0x0), (0xb1, 1, 0x0)];
+/// The fixed fields `construct_fra_super` writes on a new cup, for the comparer: (offset, width, value).
+pub(crate) const FRENCH_SUPER_CUP_CONSTRUCTOR_FIELDS: [(usize, u8, u32); 7] = [(cup::STAGE_COUNT, 4, 0x0), (cup::CURRENT_STAGE, 4, 0xffffffff), (cup::CLUB_SIDES, 1, 0x1), (cup::STAGE_INDEX, 1, 0xff), (cup::DISCIPLINE_INDEX, 1, 0xc), (cup::CURRENT_ROUND, 1, 0x0), (cup::RUN_BY_STAGES, 1, 0x0)];
 
-unsafe extern "thiscall" fn cqu7_supercopa_francesa(this: usize, ano: u32, dono: usize) -> usize {
-    cqu7_supercopa_francesa_corpo(this, ano, dono) // cqu7: supercopa_francesa
+/// The constructor of the French Super Cup: with no entrant table of its own; type 1 (clubs of one nation), no prize
+/// fund (`cup::PRIZE_FUND` stays as the base left it), bench and substitutions from the base, discipline rule 12; on a
+/// new cup, in order: the two clubs (FraSuper::select_teams, `fra_super_select_teams`, 0x5bf770, thiscall, ret 0; the
+/// error box of line 0x3f if it returns a negative value); the rounds (the cup's own virtual
+/// `comp_vtable::CREATE_SCHEDULE`, into `cup::ROUND_TABLE`); the tie tree (Cup::map_fixture_tree, `map_fixture_tree`,
+/// 0x518790, thiscall, ret 0; the error box of line 0x4d if it returns a negative value); the statistics at Comp +8
+/// (the error box of line 0x54 without them). Over the base Cup::Cup (`exe::new_cup`, thiscall, ret 0) it writes the
+/// fixed fields in the original's order (the vtable 0x96ace0, the competition record at Comp +4, `cup::YEAR` and those
+/// of `FRENCH_SUPER_CUP_CONSTRUCTOR_FIELDS`); if the saved state loads (Cup::load_from_disk 0x51fc00: push 1; mov ecx,
+/// this -> thiscall, ret 4; returns ≠ 0) it returns this. Each step that fails shows its own error box
+/// (`show_error_at`) and returns this. Returns this.
+/// Original: `FraSuper::FraSuper` (0x5bf320, fra_super.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_fra_super(this: usize, year: u32, record: usize) -> usize {
+    construct_fra_super_body(Cup(this), year, record) // cqu7: the French Super Cup
 }
 
-/// Só a original (aloca, sorteia e lê o arquivo do save), conferindo o plano (cqu7_plano).
-unsafe extern "thiscall" fn compare_cqu7_supercopa_francesa(this: usize, ano: u32, dono: usize) -> usize {
-    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%)(this, ano, dono);
-    let erro = cqu7_plano(this, r, ano, dono, 0x96ace0, &CQU7_CAMPOS_SUPERCOPA_FRANCESA, true);
-    SCOREBOARD.record(erro.is_none(), || format!("cqu7_supercopa_francesa({:#x}, {}, {:#x}): {}", this, ano as u16, dono, erro.clone().unwrap_or_default()));
+/// Comparer for `construct_fra_super`: only the original runs (it allocates, draws and reads the save file), and the plan
+/// is checked (`fra_cup_check_constructor_plan`).
+pub(crate) unsafe extern "thiscall" fn compare_construct_fra_super(this: usize, year: u32, record: usize) -> usize {
+    let r = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%)(this, year, record);
+    let error = fra_cup_check_constructor_plan(Cup(this), r, year, record, 0x96ace0, &FRENCH_SUPER_CUP_CONSTRUCTOR_FIELDS, true);
+    SCOREBOARD.record(error.is_none(), || format!("construct_fra_super({:#x}, {}, {:#x}): {}", this, year as u16, record, error.clone().unwrap_or_default()));
     r
 }

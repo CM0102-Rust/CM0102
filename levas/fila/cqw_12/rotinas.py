@@ -16,11 +16,11 @@
 # Provas: ver PRONTO.txt; a Interamericana (0x632080) saiu: está no cqw_5 (07/11, sessão principal).
 LIGAS = 'ENG ESP ITA FRA BRA JPN AUS USA'
 SAVE = False
-ROTINAS = [('cqw12_concacaf', 0x4c0c40, [0x6a, 0xff, 0x68, 0x39, 0x69, 0x95, 0x00]),
-           ('cqw12_intercontinental', 0x92b4b0, [0x6a, 0xff, 0x68, 0x39, 0x5f, 0x96, 0x00])]
+ROTINAS = [('construct_con_champ', 0x4c0c40, [0x6a, 0xff, 0x68, 0x39, 0x69, 0x95, 0x00]),
+           ('construct_world_club_cup', 0x92b4b0, [0x6a, 0xff, 0x68, 0x39, 0x5f, 0x96, 0x00])]
 DOCS = ('os construtores das copas entre continentes: a Copa dos Campeões da CONCACAF e a Copa Intercontinental',
         'the constructors of the inter-continental cups: the CONCACAF Champions Cup and the Intercontinental Cup',
-        [('cqw12_concacaf', 'ConChamp::ConChamp', '0x4c0c40', 'con_champ.cpp', 'thiscall, ret 8', 'regra: a Copa dos Campeões da CONCACAF é do ano do jogo, com 8 clubes e prêmio de 2.000.000; os clubes entram depois (a tabela começa zerada)', "rule: the CONCACAF Champions Cup is of the game's year, with 8 clubs and a 2,000,000 prize; the clubs come in later (the table starts empty)"),
-         ('cqw12_intercontinental', 'WorldClubCup::WorldClubCup', '0x92b4b0', 'world_club_cup.cpp', 'thiscall, ret 8', 'regra: a Copa Intercontinental é do ano do jogo, com os dois clubes escolhidos na hora (o campeão europeu e o sul-americano)', "rule: the Intercontinental Cup is of the game's year, with the two clubs picked at once (the European and the South American winners)")])
+        [('construct_con_champ', 'ConChamp::ConChamp', '0x4c0c40', 'con_champ.cpp', 'thiscall, ret 8', 'regra: a Copa dos Campeões da CONCACAF é do ano do jogo, com 8 clubes e prêmio de 2.000.000; os clubes entram depois (a tabela começa zerada)', "rule: the CONCACAF Champions Cup is of the game's year, with 8 clubs and a 2,000,000 prize; the clubs come in later (the table starts empty)"),
+         ('construct_world_club_cup', 'WorldClubCup::WorldClubCup', '0x92b4b0', 'world_club_cup.cpp', 'thiscall, ret 8', 'regra: a Copa Intercontinental é do ano do jogo, com os dois clubes escolhidos na hora (o campeão europeu e o sul-americano)', "rule: the Intercontinental Cup is of the game's year, with the two clubs picked at once (the European and the South American winners)")])
 CAMPOS = [('copa +0x40 ano (word), +4 registro, +0xa3 tabela das rodadas, +0x3c/+0x3a rodadas e extra, +0xa7 times, +0x28 prêmio, +8 estatísticas; valor/ponteiro; grava', 'cup +0x40 year (word), +4 record, +0xa3 round table, +0x3c/+0x3a rounds and extra, +0xa7 teams, +0x28 prize, +8 statistics; value/pointer; writes')]
 INTERESSA = ['CMRTE']

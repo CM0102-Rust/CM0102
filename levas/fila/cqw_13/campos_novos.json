@@ -1,0 +1,38 @@
+[
+ {
+  "module": "cup",
+  "offset": "0x4",
+  "name": "COMPETITION",
+  "width": 4,
+  "description": "Pointer to the competition database record (TComp), the Comp base field (as league::COMPETITION)",
+  "confidence": "read",
+  "evidence": "every cup constructor stores its record argument at +4 (AsiaSuperCup/InterAmerCup/UsaMlsAllStars/ConChamp/WorldClubCup/AsiaClubChamp/AsiaCupWinner ctors); league::COMPETITION is the same Comp base offset"
+ },
+ {
+  "module": "cup",
+  "offset": "0x8",
+  "name": "COMP_STATS",
+  "width": 4,
+  "description": "Pointer to the competition's Comp_Stats object, 0 = none; the Comp base field (as league::COMP_STATS)",
+  "confidence": "verified",
+  "evidence": "the cup constructors store Comp_Stats::Comp_Stats(new 0x5ce, this) (0x49ee70) at +8 and show the error box when it is null; start_new_cup_season archives +8 with Comp_Stats::archive_season_and_reset"
+ },
+ {
+  "module": "cup",
+  "offset": "0x1c",
+  "name": "UPPER_DIVISION_ID",
+  "width": 4,
+  "description": "Competition id of the division above, -1 = none; the Comp base field (as league::UPPER_DIVISION_ID)",
+  "confidence": "inferred",
+  "evidence": "AsiaClubChamp::AsiaClubChamp (0x40aae0) and AsiaCupWinner::AsiaCupWinner (0x40cbe0) write -1 at +0x1c, as the League constructors do at league::UPPER_DIVISION_ID"
+ },
+ {
+  "module": "cup",
+  "offset": "0x20",
+  "name": "LOWER_DIVISION_ID",
+  "width": 4,
+  "description": "Competition id of the division below, -1 = none; the Comp base field (as league::LOWER_DIVISION_ID)",
+  "confidence": "inferred",
+  "evidence": "AsiaClubChamp::AsiaClubChamp (0x40aae0) and AsiaCupWinner::AsiaCupWinner (0x40cbe0) write -1 at +0x20, as the League constructors do at league::LOWER_DIVISION_ID"
+ }
+]

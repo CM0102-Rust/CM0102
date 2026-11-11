@@ -5,12 +5,12 @@
 # - a fase com um ponto a mais por empate;
 MUTACOES = [
     ('cqv4_fase_ponto_a_mais_por_vitoria',
-     'b(0xc2, pv); // cqv4: os pontos por vitória da fase',
-     'b(0xc2, pv + 1); // mutacao: um ponto a mais por vitoria',
-     'cqv_4 fase'),
+     "b(league::WIN_POINTS, win_points); // cqv4: the stage's points for a win",
+     'b(league::WIN_POINTS, win_points + 1); // mutation: one more point for a win',
+     'cqv_4 league stage'),
     ('cqv4_fase_ponto_a_mais_por_empate',
-     'b(0xc3, pe); // cqv4: os pontos por empate da fase',
-     'b(0xc3, pe + 1); // mutacao: um ponto a mais por empate',
-     'cqv_4 fase'),
+     "b(league::DRAW_POINTS, draw_points); // cqv4: the stage's points for a draw",
+     'b(league::DRAW_POINTS, draw_points + 1); // mutation: one more point for a draw',
+     'cqv_4 league stage'),
 ]
 # Prova do agente (07/11, carreira Rust de 8 ligas ate 2002-06-01 com motor de lances; base com os 10 itens finais): as duas ACUSADAS (2001-083, 2001-091). A da minitabela (sem os jogos entre os clubes) escapou e a SubLeague saiu do item.

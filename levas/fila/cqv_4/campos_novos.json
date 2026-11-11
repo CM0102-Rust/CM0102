@@ -1,0 +1,11 @@
+[
+ {
+  "module": "league",
+  "offset": "0x18",
+  "name": "EXTRA_ARRAY",
+  "width": 4,
+  "description": "pointer to an array owned by the league stage, freed and zeroed by League_Stage::~League_Stage",
+  "confidence": "inferred",
+  "evidence": "League_Stage::~League_Stage 0x68b6a0 frees [this+0x18] when non-null and writes 0; contents not traced"
+ }
+]

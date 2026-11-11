@@ -1,253 +1,269 @@
-// ---------- %%LEVA%%a leva: os construtores da Série C, da J2 e da MLS (as regras, a tabela, os jogos, as estatísticas, os grupos e as posições previstas na criação) (bra_nat_third.cpp, jap_j2.cpp, usa_mls.cpp) ----------
+// ---------- batch %%LEVA%%: the constructors of the Brazilian third division, J2 and MLS (the rules, the table, the fixtures, the statistics, the groups and the predicted positions at creation) (bra_nat_third.cpp, jap_j2.cpp, usa_mls.cpp) ----------
 
-unsafe fn cqu2_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const usize)
+/// Describes one league of the constructor template (the state leagues' and the national leagues'), with the
+/// variations of these three.
+///
+/// The importance (`league::IMPORTANCE`; `Some((value, before_load))`: written before loading the saved state, as in
+/// MLS, or only on a new league; `None`: not written), the stages beyond the league (`league::STAGE_COUNT`; 0: no array,
+/// `league::STAGES` = 0, as in J2; otherwise the array = malloc of 4 × stages), the rules written inline (offset, width
+/// 1/2/4, value; MLS), the rules routine (thiscall, ret 0; `None` in MLS), the table and the fixtures (thiscall, ret 0),
+/// the predicted positions (thiscall, ret 0), the third division (`serie_c`: `bra_nat_third::CLUB_LIST` zeroed at the
+/// start and, at the end, the seven groups, the predicted positions and the list of 56 freed), the source file and the
+/// error-box lines (the rules, if any, the table, the fixtures, the order, the statistics).
+pub(crate) struct BraNatThirdLeagueVariant {
+    pub(crate) vtable: usize,
+    pub(crate) importance: Option<(u8, bool)>,
+    pub(crate) stages: u32,
+    pub(crate) writes: &'static [(usize, u8, u32)],
+    pub(crate) rules: Option<usize>,
+    pub(crate) table: usize,
+    pub(crate) fixtures: usize,
+    pub(crate) predicted: usize,
+    pub(crate) serie_c: bool,
+    pub(crate) file: usize,
+    pub(crate) rows: &'static [u32],
 }
 
-/// Uma liga do molde dos construtores (o dos estaduais e das ligas nacionais), com as variações destas três: a
-/// importância (+0x51; `Some((valor, antes))`: gravada antes de carregar o estado salvo, como na MLS, ou só na liga
-/// nova; `None`: não grava), as fases além da liga (+0x2c; 0: nem vetor, +0xc = 0, como na J2; senão o vetor [+0xc] =
-/// malloc de 4 × fases), as regras gravadas em linha (deslocamento, tamanho 1/2/4, valor; a MLS), a rotina das regras
-/// (thiscall, ret 0; `None` na MLS), a tabela e os jogos (thiscall, ret 0), as posições previstas (thiscall, ret 0), a
-/// Série C (`serie_c`: +0xee zerado no começo e, no fim, os sete grupos, as posições previstas e a lista dos 56
-/// liberada), o fonte e as linhas das caixas (as regras, se houver, a tabela, os jogos, a ordem, as estatísticas).
-struct Cqu2Liga {
-    vtabela: usize,
-    importancia: Option<(u8, bool)>,
-    fases: u32,
-    escritas: &'static [(usize, u8, u32)],
-    regras: Option<usize>,
-    tabela: usize,
-    jogos: usize,
-    previstas: usize,
-    serie_c: bool,
-    arquivo: usize,
-    linhas: &'static [u32],
-}
-
-/// O construtor (o molde de 544 bytes dos estaduais, com as variações de `Cqu2Liga`). League::League (0x682200,
-/// thiscall, ret 0); +4 = o registro; a vtable; na Série C, +0xee = 0; o ano (+0x40, word); a disciplina (+0x50); na
-/// MLS, a importância. Se o estado salvo carrega (0x687b10, thiscall(this, 1), ret 4; ≠ 0), devolve this. Senão: a
-/// importância (se só na liga nova), +0x44 = 0xff, +0x30 = −1, +0x2c = as fases e o vetor delas (malloc 0x944e46, sem
-/// conferir; sem fases: +0xc = 0), as regras em linha; então, cada um com a sua caixa (e devolvendo this) se devolver
-/// 0: as regras, a tabela, os jogos e a ordem (League::sort_table 0x6827d0, thiscall(this, 0), ret 4); as estatísticas
-/// (operator new 0x944cf1 de 0x5ce e Comp_Stats::Comp_Stats 0x49ee70, thiscall(novo, this), ret 4) em +8 (sem elas: a
-/// caixa). Na Série C: os sete grupos da primeira fase (0x42ee80(g), thiscall, ret 4, g de 0 a 6; a original empurra o
-/// dword com g no byte de baixo e, em cima, os bytes altos do ponteiro do new; a rotina só usa o g: a cópia passa g
-/// limpo), as posições previstas e a lista dos 56 (+0xee) liberada (free 0x9452ca, se houver) e zerada. Nas outras, as
-/// posições previstas.
-unsafe fn cqu2_construir(this: usize, ano: u32, registro: usize, e: &Cqu2Liga, disciplina: u8, ramo: &'static str) -> usize {
-    let base: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x682200usize);
-    let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x687b10usize);
-    let alocar: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944e46usize);
-    let tabela: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.tabela);
-    let jogos: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.jogos);
-    let ordenar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x6827d0usize);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let estatisticas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x49ee70usize);
-    let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.previstas);
-    base(this);
-    core::ptr::write_unaligned((this + 4) as *mut usize, registro);
-    core::ptr::write_unaligned(this as *mut usize, e.vtabela);
+/// The constructor (the 544-byte template of the state leagues, with the variations of `BraNatThirdLeagueVariant`).
+///
+/// League::League (`exe::new_league`, thiscall, ret 0); `league::COMPETITION` = the record; the vtable; in the third
+/// division, `bra_nat_third::CLUB_LIST` = 0; the year (`league::YEAR`, word); the discipline rule
+/// (`league::DISCIPLINE_RULE`); in MLS, the importance. If the saved state loads (League::load_from_temp_file
+/// `exe::league_load_from_temp_file`, thiscall(this, 1), ret 4; ≠ 0), returns this.
+///
+/// Otherwise: the importance (if only on a new league), `league::STAGE_INDEX` = `stage_index::MAIN` (0xff),
+/// `league::CURRENT_STAGE` = −1, `league::STAGE_COUNT` = the stages and their array `league::STAGES` (malloc
+/// `exe::crt_malloc`, unchecked; no stages: 0), the inline rules; then, each with its own error box (returning this) if
+/// it returns 0: the rules, the table, the fixtures and the order (League::sort_table `exe::league_sort_table`,
+/// thiscall(this, 0), ret 4); the statistics (operator new `exe::crt_operator_new` of 0x5ce and Comp_Stats::Comp_Stats
+/// `exe::new_comp_stats`, thiscall(new, this), ret 4) at `league::COMP_STATS` (without them: the error box). In the
+/// third division: the seven first-round groups (BraNatThird::create_group_stage
+/// `exe::branatthird_create_group_stage`(g), thiscall, ret 4, g from 0 to 6; the original pushes the dword with g in the
+/// low byte and, above it, the high bytes of the new's pointer; the routine only uses g: the copy passes g clean), the
+/// predicted positions and the list of 56 (`bra_nat_third::CLUB_LIST`) freed (free `exe::crt_free`, if there is one)
+/// and zeroed. In the others, the predicted positions.
+pub(crate) unsafe fn bra_nat_third_construct_league(this: League, year: u32, record: usize, e: &BraNatThirdLeagueVariant, discipline: u8, branch: &'static str) -> usize {
+    let table: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.table);
+    let fixtures: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(e.fixtures);
+    let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(e.predicted);
+    exe::new_league(this);
+    write_usize(this.addr() + league::COMPETITION, record);
+    write_usize(this.addr(), e.vtable);
     if e.serie_c {
-        core::ptr::write_unaligned((this + 0xee) as *mut usize, 0);
+        write_usize(this.addr() + bra_nat_third::CLUB_LIST, 0);
     }
-    core::ptr::write_unaligned((this + 0x40) as *mut u16, ano as u16);
-    *((this + 0x50) as *mut u8) = disciplina;
-    if let Some((v, true)) = e.importancia {
-        *((this + 0x51) as *mut u8) = v;
+    write_u16(this.addr() + league::YEAR, year as u16);
+    this.set_discipline_rule(discipline);
+    if let Some((v, true)) = e.importance {
+        this.set_importance(v);
     }
-    if carregar(this, 1) != 0 {
-        return this;
+    if exe::league_load_from_temp_file(this, 1) != 0 {
+        return this.addr();
     }
-    crate::comparison::branch(ramo);
-    if let Some((v, false)) = e.importancia {
-        *((this + 0x51) as *mut u8) = v;
+    covered!(branch);
+    if let Some((v, false)) = e.importance {
+        this.set_importance(v);
     }
-    *((this + 0x44) as *mut u8) = 0xff;
-    core::ptr::write_unaligned((this + 0x30) as *mut i32, -1);
-    core::ptr::write_unaligned((this + 0x2c) as *mut u32, e.fases);
-    let v = if e.fases != 0 { alocar(e.fases * 4) } else { 0 };
-    core::ptr::write_unaligned((this + 0xc) as *mut usize, v);
-    for &(o, n, x) in e.escritas {
+    this.set_stage_index(stage_index::MAIN);
+    write_i32(this.addr() + league::CURRENT_STAGE, -1);
+    write_u32(this.addr() + league::STAGE_COUNT, e.stages);
+    let v = if e.stages != 0 { exe::crt_malloc(e.stages * 4) } else { 0 };
+    this.set_stages(v);
+    for &(o, n, x) in e.writes {
         match n {
-            1 => *((this + o) as *mut u8) = x as u8,
-            2 => core::ptr::write_unaligned((this + o) as *mut u16, x as u16),
-            _ => core::ptr::write_unaligned((this + o) as *mut u32, x),
+            1 => write_u8(this.addr() + o, x as u8),
+            2 => write_u16(this.addr() + o, x as u16),
+            _ => write_u32(this.addr() + o, x),
         }
     }
-    let mut l = e.linhas.iter();
-    if let Some(r) = e.regras {
-        let regras: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(r);
-        let linha = *l.next().unwrap();
-        if regras(this) == 0 {
-            show_error_at(e.arquivo, linha);
-            return this;
+    let mut rows = e.rows.iter();
+    if let Some(r) = e.rules {
+        let rules: unsafe extern "thiscall" fn(usize) -> u32 = core::mem::transmute(r);
+        let row = *rows.next().unwrap();
+        if rules(this.addr()) == 0 {
+            show_error_at(e.file, row);
+            return this.addr();
         }
     }
-    let (lt, lj, lo, ls) = (*l.next().unwrap(), *l.next().unwrap(), *l.next().unwrap(), *l.next().unwrap());
-    if tabela(this) == 0 {
-        show_error_at(e.arquivo, lt);
-        return this;
+    let (row_table, row_fixtures, row_order, row_stats) = (*rows.next().unwrap(), *rows.next().unwrap(), *rows.next().unwrap(), *rows.next().unwrap());
+    if table(this.addr()) == 0 {
+        show_error_at(e.file, row_table);
+        return this.addr();
     }
-    if jogos(this) == 0 {
-        show_error_at(e.arquivo, lj);
-        return this;
+    if fixtures(this.addr()) == 0 {
+        show_error_at(e.file, row_fixtures);
+        return this.addr();
     }
-    if ordenar(this, 0) == 0 {
-        show_error_at(e.arquivo, lo);
-        return this;
+    if exe::league_sort_table(this, 0usize) == 0 {
+        show_error_at(e.file, row_order);
+        return this.addr();
     }
-    let n = novo(0x5ce);
-    let s = if n != 0 { estatisticas(n, this) } else { 0 };
-    core::ptr::write_unaligned((this + 8) as *mut usize, s);
+    let n = exe::crt_operator_new(0x5ce);
+    let s = if n != 0 { exe::new_comp_stats(n, this) } else { 0 };
+    this.set_comp_stats(s);
     if s == 0 {
-        show_error_at(e.arquivo, ls);
-        return this;
+        show_error_at(e.file, row_stats);
+        return this.addr();
     }
     if e.serie_c {
-        let grupo: unsafe extern "thiscall" fn(usize, u32) = core::mem::transmute(0x42ee80usize);
-        let soltar: unsafe extern "C" fn(usize) = core::mem::transmute(0x9452causize);
         for g in 0..7u32 {
-            grupo(this, g); // cqu2: os sete grupos da Série C
+            exe::branatthird_create_group_stage(this, g); // cqu2: the seven groups of the third division
         }
-        previstas(this);
-        let lista = cqu2_d(this + 0xee);
-        if lista != 0 {
-            soltar(lista);
+        predicted(this.addr());
+        let list = read_usize(this.addr() + bra_nat_third::CLUB_LIST);
+        if list != 0 {
+            exe::crt_free(list);
         }
-        core::ptr::write_unaligned((this + 0xee) as *mut usize, 0);
-        return this;
+        write_usize(this.addr() + bra_nat_third::CLUB_LIST, 0);
+        return this.addr();
     }
-    previstas(this);
-    this
+    predicted(this.addr());
+    this.addr()
 }
 
-/// O comparador dos três: alocam e sorteiam os jogos: só a original, conferindo o que ela grava: a devolução, a
-/// vtable, o ano, o registro, a disciplina e a importância gravada sempre (a MLS); na liga nova (+0x44 = 0xff, com as
-/// estatísticas), as fases, o vetor delas (nulo sem fases), a importância, as regras em linha e, na Série C, os sete
-/// grupos nas vagas 0 a 6 e a lista dos 56 zerada.
-unsafe fn cqu2_comparar(nome: &str, this: usize, ano: u32, registro: usize, e: &Cqu2Liga, disciplina: u8, original: impl FnOnce() -> usize) -> usize {
+/// Comparer of the three constructors: they allocate and draw the fixtures, so only the original runs, and what it
+/// writes is checked: the return value, the vtable, the year, the record, the discipline rule and the importance when
+/// it is always written (MLS); on a new league (`stage_index::MAIN`, with the statistics), the stages, their array (null
+/// without stages), the importance, the inline rules and, in the third division, the seven groups in slots 0 to 6 and
+/// the list of 56 zeroed.
+pub(crate) unsafe fn bra_nat_third_compare_league_ctor(name: &str, this: League, year: u32, record: usize, e: &BraNatThirdLeagueVariant, discipline: u8, original: impl FnOnce() -> usize) -> usize {
     let r = original();
-    let b = |o: usize| *((this + o) as *const u8);
-    let mut ok = r == this && cqu2_d(this) == e.vtabela && core::ptr::read_unaligned((this + 0x40) as *const u16) == ano as u16
-        && cqu2_d(this + 4) == registro && b(0x50) == disciplina;
-    if let Some((v, true)) = e.importancia {
-        ok = ok && b(0x51) == v;
+    let mut ok = r == this.addr() && read_usize(this.addr()) == e.vtable && read_u16(this.addr() + league::YEAR) == year as u16
+        && read_usize(this.addr() + league::COMPETITION) == record && this.discipline_rule() == discipline;
+    if let Some((v, true)) = e.importance {
+        ok = ok && this.importance() == v;
     }
-    if b(0x44) == 0xff && cqu2_d(this + 8) != 0 {
-        ok = ok && cqu2_d(this + 0x2c) == e.fases as usize && (cqu2_d(this + 0xc) != 0) == (e.fases != 0);
-        if let Some((v, _)) = e.importancia {
-            ok = ok && b(0x51) == v;
+    if this.stage_index() == stage_index::MAIN && this.comp_stats() != 0 {
+        ok = ok && this.stage_count() == e.stages as usize && (this.stages() != 0) == (e.stages != 0);
+        if let Some((v, _)) = e.importance {
+            ok = ok && this.importance() == v;
         }
-        // ponytail: só as regras dos pontos e dos critérios (+0xbe..+0xc8); a ordem (0x6827d0) reescreve +0xa7 e as
-        // outras podem mudar com os jogos
-        for &(o, n, x) in e.escritas.iter().filter(|w| (0xbe..=0xc8).contains(&w.0)) {
-            let lido = match n {
-                1 => b(o) as u32,
-                2 => core::ptr::read_unaligned((this + o) as *const u16) as u32,
-                _ => cqu2_d(this + o) as u32,
+        // ponytail: only the points and tie-break rules (PROMOTED_COUNT..=TIEBREAKS + 3, +0xbe..+0xc8); the order
+        // (sort_table) rewrites GAMES_PER_CLUB and the others may change with the fixtures
+        for &(o, n, x) in e.writes.iter().filter(|w| (league::PROMOTED_COUNT..=league::TIEBREAKS + 3).contains(&w.0)) {
+            let value = match n {
+                1 => read_u8(this.addr() + o) as u32,
+                2 => read_u16(this.addr() + o) as u32,
+                _ => read_usize(this.addr() + o) as u32,
             };
-            ok = ok && lido == x;
+            ok = ok && value == x;
         }
         if e.serie_c {
-            ok = ok && cqu2_d(this + 0xee) == 0 && (0..7).all(|g| cqu2_d(cqu2_d(this + 0xc) + 4 * g) != 0);
+            ok = ok && read_usize(this.addr() + bra_nat_third::CLUB_LIST) == 0 && (0..7).all(|g| read_usize(this.stages() + 4 * g) != 0);
         }
     }
-    SCOREBOARD.record(ok, || format!("{}({:#x}): devolveu {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}, +0x51 = {}", nome, this, r, cqu2_d(this), cqu2_d(this + 0x2c), cqu2_d(this + 0xc), cqu2_d(this + 8), b(0x51)));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): returned {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}, +0x51 = {}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.stages(), this.comp_stats(), this.importance()));
     r
 }
 
-const CQU2_SERIE_C: Cqu2Liga = Cqu2Liga {
-    vtabela: 0x967f00,
-    importancia: None,
-    fases: 0xb,
-    escritas: &[],
-    regras: Some(0x42de50),
-    tabela: 0x42dc90,
-    jogos: 0x6835c0,
-    previstas: 0x42f0a0,
+pub(crate) const BRA_NAT_THIRD_LEAGUE: BraNatThirdLeagueVariant = BraNatThirdLeagueVariant {
+    vtable: 0x967f00,
+    importance: None,
+    stages: 0xb,
+    writes: &[],
+    rules: Some(0x42de50),
+    table: FN_BRANATTHIRD_CREATE_TABLE,
+    fixtures: FN_LEAGUE_CREATE_FIXTURES,
+    predicted: 0x42f0a0,
     serie_c: true,
-    arquivo: 0x98aba4,
-    linhas: &[0x4a, 0x51, 0x58, 0x61, 0x68],
+    file: 0x98aba4,
+    rows: &[0x4a, 0x51, 0x58, 0x61, 0x68],
 };
 
-const CQU2_J2: Cqu2Liga = Cqu2Liga {
-    vtabela: 0x96caf4,
-    importancia: None,
-    fases: 0,
-    escritas: &[],
-    regras: Some(0x665140),
-    tabela: 0x665030,
-    jogos: 0x6835c0,
-    previstas: 0x68a850,
+pub(crate) const JAP_J2_LEAGUE: BraNatThirdLeagueVariant = BraNatThirdLeagueVariant {
+    vtable: 0x96caf4,
+    importance: None,
+    stages: 0,
+    writes: &[],
+    rules: Some(0x665140),
+    table: 0x665030,
+    fixtures: FN_LEAGUE_CREATE_FIXTURES,
+    predicted: FN_LEAGUE_SET_PREDICTED_POSITIONS,
     serie_c: false,
-    arquivo: 0x9eaedc,
-    linhas: &[0x46, 0x4d, 0x53, 0x5a, 0x61],
+    file: 0x9eaedc,
+    rows: &[0x46, 0x4d, 0x53, 0x5a, 0x61],
 };
 
-/// As regras da MLS, gravadas em linha na ordem da original (deslocamento, tamanho, valor).
-const CQU2_REGRAS_MLS: [(usize, u8, u32); 18] = [
-    (0xc2, 1, 3), // cqu2: os pontos por vitória na MLS
-    (0xc7, 1, 3),
-    (0xc3, 1, 1),
-    (0xab, 2, 0xc2),
-    (0xc4, 1, 2),
-    (0x42, 1, 1),
-    (0xc5, 1, 1),
-    (0xc6, 1, 2),
-    (0xc8, 1, 0),
-    (0xbe, 1, 1),
-    (0xbf, 1, 0),
-    (0xc0, 1, 0),
-    (0xc1, 1, 0),
-    (0x1c, 4, 0xffff_ffff),
-    (0x20, 4, 0xffff_ffff),
-    (0xd9, 2, 0x48),
-    (0x3c, 2, 4),
-    (0xa7, 2, 0x20),
+/// The MLS rules, written inline in the original's order (offset, width, value).
+pub(crate) const MLS_INLINE_RULES: [(usize, u8, u32); 18] = [
+    (league::WIN_POINTS, 1, 3), // cqu2: the MLS points for a win
+    (league::TIEBREAKS + 2, 1, 3),
+    (league::DRAW_POINTS, 1, 1),
+    (league::MATCH_RULES, 2, 0xc2),
+    (league::MATCH_CATEGORY, 1, 2),
+    (league::CLUB_SIDES, 1, 1),
+    (league::TIEBREAKS, 1, 1),
+    (league::TIEBREAKS + 1, 1, 2),
+    (league::TIEBREAKS + 3, 1, 0),
+    (league::PROMOTED_COUNT, 1, 1),
+    (league::PROMOTION_PLAYOFF_COUNT, 1, 0),
+    (league::RELEGATION_PLAYOFF_COUNT, 1, 0),
+    (league::RELEGATED_COUNT, 1, 0),
+    (league::UPPER_DIVISION_ID, 4, 0xffff_ffff),
+    (league::LOWER_DIVISION_ID, 4, 0xffff_ffff),
+    (league::LEAGUE_FLAGS, 2, 0x48),
+    (league::LEGS, 2, 4),
+    (league::GAMES_PER_CLUB, 2, 0x20),
 ];
 
-const CQU2_MLS: Cqu2Liga = Cqu2Liga {
-    vtabela: 0x970844,
-    importancia: Some((0xa, true)),
-    fases: 4,
-    escritas: &CQU2_REGRAS_MLS,
-    regras: None,
-    tabela: 0x908560,
-    jogos: 0x9086e0,
-    previstas: 0x909bb0,
+pub(crate) const USA_MLS_LEAGUE: BraNatThirdLeagueVariant = BraNatThirdLeagueVariant {
+    vtable: 0x970844,
+    importance: Some((0xa, true)),
+    stages: 4,
+    writes: &MLS_INLINE_RULES,
+    rules: None,
+    table: FN_USAMLS_CREATE_TABLE,
+    fixtures: FN_USAMLS_CREATE_SEASON_FIXTURES,
+    predicted: 0x909bb0,
     serie_c: false,
-    arquivo: 0xaa1fb4,
-    linhas: &[0x59, 0x5f, 0x66, 0x6d],
+    file: 0xaa1fb4,
+    rows: &[0x59, 0x5f, 0x66, 0x6d],
 };
 
-/// { 0x42d2c0 } (thiscall, ret 8, bra_nat_third.cpp): `BraNatThird::BraNatThird(ano, registro)`: a Série C (onze fases além da liga: os sete grupos e as fases seguintes).
-unsafe extern "thiscall" fn cqu2_construir_serie_c(this: usize, ano: u32, registro: usize) -> usize {
-    cqu2_construir(this, ano, registro, &CQU2_SERIE_C, 7, "cqu_2 serie_c nova") // cqu2: a Série C
+/// The Brazilian third division at career creation: the year and the database competition, discipline rule 7
+/// (`discipline_rule::BRAZIL_REGIONAL`) and, with no saved state, eleven stages besides the league (the seven
+/// first-round groups of seven, the second and third rounds and the final), the rules, the table, the fixtures, the
+/// order, the statistics, the seven first-round groups with the 56 clubs, the predicted positions (by reputation) and
+/// the list of 56 freed (`bra_nat_third_construct_league` with `BRA_NAT_THIRD_LEAGUE`).
+/// Original: `BraNatThird::BraNatThird` (0x42d2c0, bra_nat_third.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_bra_nat_third(this: usize, year: u32, record: usize) -> usize {
+    bra_nat_third_construct_league(League(this), year, record, &BRA_NAT_THIRD_LEAGUE, discipline_rule::BRAZIL_REGIONAL, "cqu_2 bra_nat_third new") // cqu2: the third division
 }
 
-/// { 0x6644c0 } (thiscall, ret 8, jap_j2.cpp): `JapJ2::JapJ2(ano, registro)`: a J2 (só pontos corridos, sem fases além da liga).
-unsafe extern "thiscall" fn cqu2_construir_j2(this: usize, ano: u32, registro: usize) -> usize {
-    cqu2_construir(this, ano, registro, &CQU2_J2, 0x13, "cqu_2 j2 nova") // cqu2: a disciplina da J2
+/// J2 at career creation: the year and the database competition, discipline rule 0x13 (`discipline_rule::JAPAN_LEAGUE`)
+/// and, with no saved state, a plain round robin (no stage besides the league, no stage array), the rules, the table,
+/// the fixtures, the order, the statistics and the predicted positions by club strength (`bra_nat_third_construct_league`
+/// with `JAP_J2_LEAGUE`).
+/// Original: `JapJ2::JapJ2` (0x6644c0, jap_j2.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_jap_j2(this: usize, year: u32, record: usize) -> usize {
+    bra_nat_third_construct_league(League(this), year, record, &JAP_J2_LEAGUE, discipline_rule::JAPAN_LEAGUE, "cqu_2 jap_j2 new") // cqu2: the discipline of J2
 }
 
-/// { 0x906f80 } (thiscall, ret 8, usa_mls.cpp): `UsaMls::UsaMls(ano, registro)`: a MLS (quatro fases além da liga: as conferências e o mata-mata).
-unsafe extern "thiscall" fn cqu2_construir_mls(this: usize, ano: u32, registro: usize) -> usize {
-    cqu2_construir(this, ano, registro, &CQU2_MLS, 0x1e, "cqu_2 mls nova") // cqu2: a MLS
+/// MLS at career creation: the year and the database competition, discipline rule 0x1e (`discipline_rule::USA`) and
+/// importance 10 (before loading the saved state) and, with no saved state, four stages besides the league (the
+/// conferences and the knockout), the rules written inline (`MLS_INLINE_RULES`: 3 points for a win and 1 for a draw,
+/// the tie-breakers and the match category), the table of the three divisions, the season fixtures
+/// (UsaMls::create_season_fixtures instead of League::create_fixtures), the order, the statistics and the predicted
+/// positions (`bra_nat_third_construct_league` with `USA_MLS_LEAGUE`).
+/// Original: `UsaMls::UsaMls` (0x906f80, usa_mls.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_usa_mls(this: usize, year: u32, record: usize) -> usize {
+    bra_nat_third_construct_league(League(this), year, record, &USA_MLS_LEAGUE, discipline_rule::USA, "cqu_2 usa_mls new") // cqu2: MLS
 }
 
-unsafe extern "thiscall" fn compare_cqu2_construir_serie_c(this: usize, ano: u32, registro: usize) -> usize {
+/// Comparer for `construct_bra_nat_third`.
+pub(crate) unsafe extern "thiscall" fn compare_construct_bra_nat_third(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
-    cqu2_comparar("cqu2_construir_serie_c", this, ano, registro, &CQU2_SERIE_C, 7, || o(this, ano, registro))
+    bra_nat_third_compare_league_ctor("construct_bra_nat_third", League(this), year, record, &BRA_NAT_THIRD_LEAGUE, discipline_rule::BRAZIL_REGIONAL, || o(this, year, record))
 }
 
-unsafe extern "thiscall" fn compare_cqu2_construir_j2(this: usize, ano: u32, registro: usize) -> usize {
+/// Comparer for `construct_jap_j2`.
+pub(crate) unsafe extern "thiscall" fn compare_construct_jap_j2(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
-    cqu2_comparar("cqu2_construir_j2", this, ano, registro, &CQU2_J2, 0x13, || o(this, ano, registro))
+    bra_nat_third_compare_league_ctor("construct_jap_j2", League(this), year, record, &JAP_J2_LEAGUE, discipline_rule::JAPAN_LEAGUE, || o(this, year, record))
 }
 
-unsafe extern "thiscall" fn compare_cqu2_construir_mls(this: usize, ano: u32, registro: usize) -> usize {
+/// Comparer for `construct_usa_mls`.
+pub(crate) unsafe extern "thiscall" fn compare_construct_usa_mls(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I2%%);
-    cqu2_comparar("cqu2_construir_mls", this, ano, registro, &CQU2_MLS, 0x1e, || o(this, ano, registro))
+    bra_nat_third_compare_league_ctor("construct_usa_mls", League(this), year, record, &USA_MLS_LEAGUE, discipline_rule::USA, || o(this, year, record))
 }

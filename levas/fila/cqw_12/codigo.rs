@@ -1,146 +1,149 @@
-// ---------- %%LEVA%%a leva: os construtores das copas entre continentes: a Copa dos Campeões da CONCACAF, a Copa Interamericana e a Copa Intercontinental (con_champ.cpp, inter_amer_cup.cpp, world_club_cup.cpp) ----------
+// ---------- batch %%LEVA%%: the constructors of the inter-continental cups: the CONCACAF Champions Cup and the Intercontinental Cup (con_champ.cpp, world_club_cup.cpp) ----------
 
-unsafe fn cqw12_d(a: usize) -> usize {
-    core::ptr::read_unaligned(a as *const u32) as usize
+/// The fields every inter-continental knockout cup sets: `current_round` 0, `stage_index` 0xff (the main
+/// competition), `stage_count` 0 and `current_stage` −1.
+unsafe fn intercontinental_cup_common_fields(this: Cup) {
+    this.set_current_round(0);
+    this.set_stage_index(stage_index::MAIN);
+    write_u32(this.addr() + cup::STAGE_COUNT, 0);
+    write_u32(this.addr() + cup::CURRENT_STAGE, 0xffff_ffff);
 }
 
-unsafe fn cqw12_pd(a: usize, v: usize) {
-    core::ptr::write_unaligned(a as *mut u32, v as u32)
-}
-
-unsafe fn cqw12_b(this: usize, d: usize, v: u8) {
-    *((this + d) as *mut u8) = v;
-}
-
-/// Os bytes e campos de uma copa de mata-mata entre continentes (as três): +0xab = 0, +0x44 = −1, +0x2c = 0, +0x30 = −1.
-unsafe fn cqw12_padrao(this: usize) {
-    cqw12_b(this, 0xab, 0);
-    cqw12_b(this, 0x44, 0xff);
-    cqw12_pd(this + 0x2c, 0);
-    cqw12_pd(this + 0x30, usize::MAX);
-}
-
-/// O fim comum: a tabela das rodadas da copa (a virtual +0x3c(−1, &+0x3c, &+0x3a, 0): push 0; push; push; push −1; mov
-/// ecx -> thiscall, ret 0x10) em +0xa3; a árvore dos jogos (0x518790, thiscall, ret 0; negativa: a caixa da linha 0x4f
-/// e volta); as estatísticas (0x944cf1(0x5ce) e o construtor Comp_Stats 0x49ee70(novo, this): push this; mov ecx ->
-/// thiscall, ret 4) em +8 (nulas: a caixa da linha 0x56). Devolve se chegou ao fim com as estatísticas.
-unsafe fn cqw12_fim(this: usize, arquivo: usize) -> bool {
-    let arvore: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize);
-    let novo: unsafe extern "C" fn(u32) -> usize = core::mem::transmute(0x944cf1usize);
-    let estatisticas: unsafe extern "thiscall" fn(usize, usize) -> usize = core::mem::transmute(0x49ee70usize);
-    let tabela: unsafe extern "thiscall" fn(usize, i32, usize, usize, u32) -> usize = core::mem::transmute(cqw12_d(cqw12_d(this) + 0x3c));
-    cqw12_pd(this + 0xa3, tabela(this, -1, this + 0x3c, this + 0x3a, 0));
-    if arvore(this) < 0 {
-        show_error_at(arquivo, 0x4f);
+/// The common end of a new inter-continental cup; returns whether it got to the end with the statistics.
+///
+/// The round table (virtual `comp_vtable::CREATE_SCHEDULE`(−1, &`cup::ROUND_COUNT`, &`cup::STAGE_LABEL`, 0): push 0;
+/// push; push; push −1; mov ecx -> thiscall, ret 0x10) in `round_table()`; the tie tree (Cup::map_fixture_tree
+/// 0x518790, thiscall, ret 0; negative: the error box of line 0x4f of source `file` and false); the statistics
+/// (operator new `exe::crt_operator_new` of 0x5ce and Comp_Stats::Comp_Stats `exe::new_comp_stats(new, this)`: push
+/// this; mov ecx -> thiscall, ret 4) at +8 (null: the box of line 0x56 and false).
+unsafe fn finish_intercontinental_cup(this: Cup, file: usize) -> bool {
+    let create_schedule: unsafe extern "thiscall" fn(usize, i32, usize, usize, u32) -> usize = core::mem::transmute(read_usize(read_usize(this.addr()) + comp_vtable::CREATE_SCHEDULE));
+    write_u32(this.addr() + cup::ROUND_TABLE, create_schedule(this.addr(), -1, this.addr() + cup::ROUND_COUNT, this.addr() + cup::STAGE_LABEL, 0) as u32);
+    let map_fixture_tree: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(0x518790usize); // Cup::map_fixture_tree
+    if map_fixture_tree(this.addr()) < 0 {
+        show_error_at(file, 0x4f);
         return false;
     }
-    let p = novo(0x5ce);
-    let e = if p != 0 { estatisticas(p, this) } else { 0 };
-    cqw12_pd(this + 8, e);
+    let p = exe::crt_operator_new(0x5ce);
+    let e = if p != 0 { exe::new_comp_stats(p, this) } else { 0 };
+    write_u32(this.addr() + 8, e as u32);
     if e == 0 {
-        show_error_at(arquivo, 0x56);
+        show_error_at(file, 0x56);
         return false;
     }
     true
 }
 
-/// O começo comum: o construtor da Cup (0x518640: mov ecx -> thiscall, ret 0); o que estiver salvo (Cup::load
-/// 0x51fc00(this, 1): push 1; mov ecx -> thiscall, ret 4) depois dos campos.
-unsafe fn cqw12_copa(this: usize) {
-    let copa: unsafe extern "thiscall" fn(usize) -> usize = core::mem::transmute(0x518640usize);
-    copa(this);
+/// Whether the saved state of the cup loads (Cup::load_from_disk 0x51fc00(this, 1): push 1; mov ecx -> thiscall, ret 4;
+/// nonzero).
+unsafe fn intercontinental_cup_loads(this: Cup) -> bool {
+    let load_from_disk: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize); // Cup::load_from_disk
+    load_from_disk(this.addr(), 1) != 0
 }
 
-unsafe fn cqw12_carregar(this: usize) -> bool {
-    let carregar: unsafe extern "thiscall" fn(usize, u32) -> u32 = core::mem::transmute(0x51fc00usize);
-    carregar(this, 1) != 0
-}
-
-/// { 0x4c0c40 } (thiscall, ret 8, con_champ.cpp; SEH só para exceções): `ConChamp::ConChamp(ano, comp)`: a Copa dos
-/// Campeões da CONCACAF (vtable 0x968aa0) do ano do jogo: +4 o registro, o ano +0x40, +0x42 = 2, +0x50 = −1, +0xb1 = 0;
-/// sem nada salvo, 8 times (+0x3e) numa tabela zerada de 6 bytes cada (calloc 0x945501(8, 6): push 6; push 8; add esp,
-/// 8 -> cdecl; sem memória, a caixa da linha 0x41), o prêmio +0x28 = 2.000.000 e o fim comum.
-unsafe extern "thiscall" fn cqw12_concacaf(this: usize, ano: u32, comp: usize) -> usize {
-    let calloc: unsafe extern "C" fn(u32, u32) -> usize = core::mem::transmute(0x945501usize);
-    cqw12_copa(this);
-    crate::comparison::branch("cqw_12 copa da concacaf");
-    cqw12_pd(this + 4, comp);
-    cqw12_pd(this, 0x968aa0);
-    core::ptr::write_unaligned((this + 0x40) as *mut i16, ano as i16); // cqw12: a CONCACAF do ano do jogo
-    cqw12_padrao(this);
-    cqw12_b(this, 0x42, 2);
-    cqw12_b(this, 0x50, 0xff);
-    cqw12_b(this, 0xb1, 0);
-    if cqw12_carregar(this) {
-        return this;
+/// The CONCACAF Champions Cup of the game's year, at career creation: 8 clubs that come in later (the table starts
+/// empty) and a 2,000,000 prize fund.
+///
+/// Cup::Cup (`exe::new_cup`, mov ecx -> thiscall, ret 0); the competition record at +4, the vtable 0x968aa0, the year
+/// (`set_year`), the common fields (`intercontinental_cup_common_fields`), `club_sides` 2, `discipline_index` 0xff and
+/// `run_by_stages` 0. If the saved state loads (`intercontinental_cup_loads`), returns this. Otherwise 8 teams
+/// (`team_count`) in a zeroed team table of 6 bytes each (calloc `exe::crt_calloc(8, 6)`: push 6; push 8; add esp, 8 ->
+/// cdecl; out of memory, the error box of line 0x41, source 0x9a7d30, and this), the prize fund 2,000,000 and the common
+/// end (`finish_intercontinental_cup`). Returns this. The original's SEH frame only matters for exceptions.
+/// Original: `ConChamp::ConChamp` (0x4c0c40, con_champ.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_con_champ(this: usize, year: u32, record: usize) -> usize {
+    let this = Cup(this);
+    exe::new_cup(this);
+    covered!("cqw_12 concacaf champions cup");
+    write_u32(this.addr() + 4, record as u32);
+    write_u32(this.addr(), 0x968aa0);
+    this.set_year(year as i16); // cqw12: the CONCACAF cup of the game's year
+    intercontinental_cup_common_fields(this);
+    this.set_club_sides(2);
+    this.set_discipline_index(0xff);
+    this.set_run_by_stages(0);
+    if intercontinental_cup_loads(this) {
+        return this.addr();
     }
-    core::ptr::write_unaligned((this + 0x3e) as *mut i16, 8);
-    let t = calloc(8, 6);
-    cqw12_pd(this + 0xa7, t);
+    this.set_team_count(8);
+    let t = exe::crt_calloc(8, 6);
+    write_u32(this.addr() + cup::TEAM_TABLE, t as u32);
     if t == 0 {
         show_error_at(0x9a7d30, 0x41);
-        return this;
+        return this.addr();
     }
-    cqw12_pd(this + 0x28, 0x1e8480);
-    cqw12_fim(this, 0x9a7d30);
-    this
+    this.set_prize_fund(0x1e8480);
+    finish_intercontinental_cup(this, 0x9a7d30);
+    this.addr()
 }
 
-// ponytail: o construtor aloca a tabela, a árvore e as estatísticas: não roda duas vezes. Só a original; o plano: devolve
-// o this, a vtable, o registro +4 e o ano +0x40.
-unsafe fn cqw12_comparar(nome: &str, this: usize, ano: u32, comp: usize, vtable: usize, o: impl FnOnce() -> usize) -> usize {
+/// Shared comparer of the inter-continental cup constructors. They allocate the table, the tree and the statistics,
+/// so they cannot run twice: only the original runs, then the plan is checked: it returns this, the vtable, the record
+/// at +4 and the year (`cup::YEAR`).
+unsafe fn compare_intercontinental_cup_ctor(name: &str, this: usize, year: u32, record: usize, vtable: usize, o: impl FnOnce() -> usize) -> usize {
     let r = o();
-    let lido = core::ptr::read_unaligned((this + 0x40) as *const i16);
-    let ok = r == this && cqw12_d(this) == vtable && cqw12_d(this + 4) == comp && lido == ano as i16;
-    SCOREBOARD.record(ok, || format!("{}({:#x}): ano {} pedido {}, vtable {:#x}", nome, this, lido, ano as i16, cqw12_d(this)));
+    let read = Cup(this).year();
+    let ok = r == this && read_usize(this) == vtable && read_usize(this + 4) == record && read == year as i16;
+    SCOREBOARD.record(ok, || format!("{}({:#x}): year {} requested {}, vtable {:#x}", name, this, read, year as i16, read_usize(this)));
     r
 }
 
-unsafe extern "thiscall" fn compare_cqw12_concacaf(this: usize, ano: u32, comp: usize) -> usize {
+/// Comparer for `construct_con_champ`.
+pub(crate) unsafe extern "thiscall" fn compare_construct_con_champ(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I0%%);
-    cqw12_comparar("cqw12_concacaf", this, ano, comp, 0x968aa0, || o(this, ano, comp))
+    compare_intercontinental_cup_ctor("construct_con_champ", this, year, record, 0x968aa0, || o(this, year, record))
 }
 
-/// O corpo das duas copas de dois clubes (0x632080 e 0x92b4b0): o ano +0x40, +4, a vtable, os campos padrão, +0x42 =
-/// 2, +0x52 = `b52`, +0x49 = 7, +0x4a = `b4a`, +0x50 = −1, +0xb1 = 0; sem nada salvo, os dois clubes (`clubes`,
-/// thiscall, ret 0; negativo: a caixa da linha 0x41 e volta), o fim comum e as posições previstas (0x5223a0, thiscall,
-/// ret 0).
-unsafe fn cqw12_dois_clubes(this: usize, ano: u32, comp: usize, vtable: usize, b52: u8, b4a: u8, clubes: usize, arquivo: usize) -> usize {
-    let escolher: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(clubes);
-    let previstas: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x5223a0usize);
-    cqw12_copa(this);
-    core::ptr::write_unaligned((this + 0x40) as *mut i16, ano as i16);
-    cqw12_pd(this + 4, comp);
-    cqw12_pd(this, vtable);
-    cqw12_padrao(this);
-    cqw12_b(this, 0x42, 2);
-    cqw12_b(this, 0x52, b52);
-    cqw12_b(this, 0x49, 7);
-    cqw12_b(this, 0x4a, b4a);
-    cqw12_b(this, 0x50, 0xff);
-    cqw12_b(this, 0xb1, 0);
-    if cqw12_carregar(this) {
-        return this;
+/// The body of a two-club inter-continental cup (the Intercontinental Cup; the Interamerican Cup, 0x632080, has the same
+/// shape).
+///
+/// Cup::Cup (`exe::new_cup`, thiscall, ret 0); the year (`set_year`), the competition record at +4, the vtable, the
+/// common fields (`intercontinental_cup_common_fields`), `club_sides` 2, +0x52 = `b52`, 7 `substitutes_named`,
+/// `substitutions_allowed` = `substitutions`, `discipline_index` 0xff and `run_by_stages` 0. If the saved state loads,
+/// returns this. Otherwise the two clubs (the routine `select_teams`, WorldClubCup::pick_qualifiers in the Intercontinental Cup, thiscall, ret 0; negative: the error box of line
+/// 0x41 of source `file` and this), the common end (`finish_intercontinental_cup`) and, when it got to the end, the
+/// predicted positions (Cup::rank_teams 0x5223a0, thiscall, ret 0). Returns this.
+#[allow(clippy::too_many_arguments)]
+unsafe fn build_two_club_cup(this: Cup, year: u32, record: usize, vtable: usize, b52: u8, substitutions: u8, select_teams: usize, file: usize) -> usize {
+    let select_teams: unsafe extern "thiscall" fn(usize) -> i32 = core::mem::transmute(select_teams);
+    let rank_teams: unsafe extern "thiscall" fn(usize) = core::mem::transmute(0x5223a0usize); // Cup::rank_teams
+    exe::new_cup(this);
+    this.set_year(year as i16);
+    write_u32(this.addr() + 4, record as u32);
+    write_u32(this.addr(), vtable as u32);
+    intercontinental_cup_common_fields(this);
+    this.set_club_sides(2);
+    write_u8(this.addr() + 0x52, b52);
+    this.set_substitutes_named(7);
+    this.set_substitutions_allowed(substitutions);
+    this.set_discipline_index(0xff);
+    this.set_run_by_stages(0);
+    if intercontinental_cup_loads(this) {
+        return this.addr();
     }
-    if escolher(this) < 0 {
-        show_error_at(arquivo, 0x41);
-        return this;
+    if select_teams(this.addr()) < 0 {
+        show_error_at(file, 0x41);
+        return this.addr();
     }
-    if cqw12_fim(this, arquivo) {
-        previstas(this);
+    if finish_intercontinental_cup(this, file) {
+        rank_teams(this.addr());
     }
-    this
+    this.addr()
 }
 
-/// { 0x92b4b0 } (thiscall, ret 8, world_club_cup.cpp; SEH só para exceções): `WorldClubCup::WorldClubCup(ano, comp)`: a
-/// Copa Intercontinental (vtable 0x971250, +0x52 = 3, +0x4a = 3) do ano do jogo, com os dois clubes de 0x92b8b0.
-unsafe extern "thiscall" fn cqw12_intercontinental(this: usize, ano: u32, comp: usize) -> usize {
-    crate::comparison::branch("cqw_12 copa intercontinental");
-    let ano = ano; // cqw12: a Intercontinental do ano do jogo
-    cqw12_dois_clubes(this, ano, comp, 0x971250, 3, 3, 0x92b8b0, 0xad5848)
+/// The Intercontinental Cup of the game's year, at career creation, with the two clubs (the European and the South
+/// American winners) picked at once by WorldClubCup::pick_qualifiers (0x92b8b0): vtable 0x971250, +0x52 = 3, 3
+/// substitutions, error boxes of source 0xad5848 (`build_two_club_cup`). The original's SEH frame only matters for
+/// exceptions.
+/// Original: `WorldClubCup::WorldClubCup` (0x92b4b0, world_club_cup.cpp, thiscall, ret 8).
+pub(crate) unsafe extern "thiscall" fn construct_world_club_cup(this: usize, year: u32, record: usize) -> usize {
+    covered!("cqw_12 intercontinental cup");
+    let year = year; // cqw12: the Intercontinental Cup of the game's year
+    build_two_club_cup(Cup(this), year, record, 0x971250, 3, 3, 0x92b8b0, 0xad5848)
 }
 
-unsafe extern "thiscall" fn compare_cqw12_intercontinental(this: usize, ano: u32, comp: usize) -> usize {
+/// Comparer for `construct_world_club_cup`.
+pub(crate) unsafe extern "thiscall" fn compare_construct_world_club_cup(this: usize, year: u32, record: usize) -> usize {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, u32, usize) -> usize>(%%I1%%);
-    cqw12_comparar("cqw12_intercontinental", this, ano, comp, 0x971250, || o(this, ano, comp))
+    compare_intercontinental_cup_ctor("construct_world_club_cup", this, year, record, 0x971250, || o(this, year, record))
 }
