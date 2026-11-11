@@ -29,6 +29,19 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batches 42 to 47: field readers on the rest of the engine
+
+Reader verdicts on 107 more files, from the shared helpers to the smallest competition files, with 2 to 4 files per
+reader in the last ones: 42 (`shared`, `human_manager`, `fin_prm`, `officials_manager`), 43 (`scout_manager`, `comp`,
+`friendly`, `awol`), 44 to 46 (8 files each) and 47 (the last 75 files with raw offsets). Dozens of new records (the
+human manager record, the referee, the FIFA ranking, the file container, the awards, the World Cup qualifiers...).
+Reviews: `official::RATING` -> `REPUTATION`, the referee record no longer treated as a player sheet (`renew_officials`,
+`init_strictness`), the routine 0x5fd210 `manager_9a01` -> `is_on_holiday` (community name),
+`comp_stats_club::DANGER_POSITION` -> `FINAL_POSITION` (written by `Comp_Stats::set_club_final_position`; four readers
+found the old name wrong). `nomear_por_linha.py` no longer replaces inside strings. Outside reader
+(`leitor_de_fora_rodada12.txt`): 3.5 -> 5.5. Joint proof: aa7e9c95 ×2, detector equal, comparison 0; the 68 changed
+mutations compile (one replacement still named `official::RATING`, fixed).
+
 ## Readability batch 41: field readers on player stats, regens, stadiums and the World Cup
 
 Reader verdicts on `player_stats.rs`, `player_regen.rs`, `comp/stadium.rs` and `comp/worldcup/world_cup.rs`. New

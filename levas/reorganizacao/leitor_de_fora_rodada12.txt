@@ -1,0 +1,19 @@
+Outside reader, round 12 (11/11/2026): eb52216b -> HEAD (field readers, batches 34-47)
+[pt] Leitor de fora, rodada 12.
+
+Scores (before -> after): player_search_record_scouted_club_match 3 -> 6; add_injury 4 -> 7; post_recovery_news 4 -> 6;
+create_fixtures 4 -> 5; comment_standing_with 3 -> 5; add_transfer_offer / process_due_offer_body 4 -> 6;
+choose_square / draw_moment 3 -> 4. Overall 3.5 -> 5.5: named offsets turn "impossible" into "decipherable with
+fields.rs open".
+Obstacles by impact:
+1. everything is usize with pointer arithmetic: secondary records (offer, league table row, match record row, scout
+   history) are not typed although the types exist;
+2. enum values without constants: offer status 7/8/0xf, round codes 0x82/0x96, TV slot kind 3, contract type 5;
+3. raw strides: 0x3b, 0x41, 0x49, 0x625, 0x4f, 0x25, 6371, 216;
+4. Portuguese locals (vaga, caiu, feliz, folego, grava, por, fala, lado, est) and mixed-language comments;
+5. test scaffolding in the body (comparison::branch, dry runs), rdata constants named by value;
+6. writes that mirror typed reads still raw (draw_moment, the scout history).
+Suspicious names: local `nation` holding club::STADIUM (create_fixtures); closure `strength` reading club::REPUTATION;
+match_record::ROW_STAFF_ID used as the lineup base (fields.rs also has HOME_LINEUP); PASS_TACKLE_COUNTS 9 bytes vs a
+10-byte loop (the 10th is BALLS_CONTESTED); staff::CLASSIFICATION undocumented (decides human-picked substitutions);
+staff_state::INJURY_COUNTER [inference] looks like injury proneness.

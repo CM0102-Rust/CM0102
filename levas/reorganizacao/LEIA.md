@@ -28,6 +28,19 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Levas 42 a 47 da legibilidade: leitores de campo no resto do motor
+
+Vereditos dos leitores em mais 107 arquivos, dos auxiliares compartilhados aos menores arquivos de competição, com 2 a
+4 arquivos por leitor nas últimas: 42 (`shared`, `human_manager`, `fin_prm`, `officials_manager`), 43 (`scout_manager`,
+`comp`, `friendly`, `awol`), 44 a 46 (8 arquivos cada) e 47 (os últimos 75 arquivos com deslocamentos crus). Dezenas
+de registros novos (o registro do técnico humano, do árbitro, da classificação da FIFA, do contêiner de arquivos, dos
+prêmios, as eliminatórias da Copa...). Revisões: `official::RATING` → `REPUTATION`, a ficha do árbitro deixou de ser
+tratada como ficha de jogador (`renew_officials`, `init_strictness`), a rotina 0x5fd210 `manager_9a01` →
+`is_on_holiday` (nome da comunidade), `comp_stats_club::DANGER_POSITION` → `FINAL_POSITION` (gravado por
+`Comp_Stats::set_club_final_position`; quatro leitores acharam o nome antigo errado). `nomear_por_linha.py` não troca mais
+dentro de strings. Leitor de fora (`leitor_de_fora_rodada12.txt`): 3,5 → 5,5. Prova conjunta: aa7e9c95 ×2, detector
+igual, comparação 0; as 68 mutações mudadas compilam (uma troca ainda citava `official::RATING`, corrigida).
+
 ## Leva 41 da legibilidade: leitores de campo em estatísticas, regens, estádios e Copa do Mundo
 
 Vereditos dos leitores no `player_stats.rs`, `player_regen.rs`, `comp/stadium.rs` e `comp/worldcup/world_cup.rs`.
