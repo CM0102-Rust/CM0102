@@ -28,6 +28,16 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 39 da legibilidade: leitores de campo em contratos, observação, táticas e áreas da interface
+
+Vereditos dos leitores no `contract_manager.rs`, `player_search.rs`, `tactics.rs` e `area.rs`. Registros novos:
+`area_fields` (a área da interface do Area.cpp), `guio`, `undo_slot`, `tactics_row`, `scouted_player_slot`,
+`scouted_match_entry`, `search_result`; as estatísticas da partida no `match_record_row` e no bloco de cada lado do motor.
+No motor, `FOULS`/`CARDS` passaram a `YELLOW_CARDS`/`RED_CARDS`: o `fill_match_record` os copia para os amarelos e os
+vermelhos do registro da partida (a nota do árbitro lê "vermelhos > 2" e "amarelos > 5"). O defeito de cópia da perda de
+atributos por lesão (0x62b7b0) foi para o `DEFEITOS_DO_ORIGINAL`. Prova: aa7e9c95 ×2, detector igual, comparação 0; as
+mutações mudadas compilam (uma troca ainda citava `engine::CARDS`, corrigida).
+
 ## Leva 38 da legibilidade: leitores de campo em jogos, ligas, mídia e listas de observação
 
 Vereditos dos leitores no `comp/fix_man.rs`, `comp/league.rs`, `media.rs` e `shortlist_manager.rs`. Registros novos:

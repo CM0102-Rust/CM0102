@@ -29,6 +29,16 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 39: field readers on contracts, scouting, tactics and UI areas
+
+Reader verdicts on `contract_manager.rs`, `player_search.rs`, `tactics.rs` and `area.rs`. New records: `area_fields` (the
+UI area of Area.cpp), `guio`, `undo_slot`, `tactics_row`, `scouted_player_slot`, `scouted_match_entry`, `search_result`;
+match statistics in `match_record_row` and in the engine's per-side block. In the engine, `FOULS`/`CARDS` became
+`YELLOW_CARDS`/`RED_CARDS`: `fill_match_record` copies them into the match record's yellow and red cards (the referee
+rating reads "reds > 2" and "yellows > 5"). The injury attribute loss copy defect (0x62b7b0) went to
+`DEFEITOS_DO_ORIGINAL`. Proof: aa7e9c95 ×2, detector equal, comparison 0; the changed mutations compile (one replacement
+still named `engine::CARDS`, fixed).
+
 ## Readability batch 38: field readers on fixtures, leagues, media and shortlists
 
 Reader verdicts on `comp/fix_man.rs`, `comp/league.rs`, `media.rs` and `shortlist_manager.rs`. New records:
