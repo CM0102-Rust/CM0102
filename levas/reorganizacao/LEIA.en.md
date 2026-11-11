@@ -29,6 +29,18 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 56: the [pt] paragraphs leave the code
+
+Lucas's decision (c) (11/11/2026): the public code is in English. `sem_pt.py` removes the 5,041 `[pt]` paragraphs from
+the headers and comments (21,146 lines); the Portuguese of each routine stays in `docs/ROTINAS.md` and in the history.
+`cabecalhos.py` and `tabela_motor.py` no longer write `[pt]`; CLAUDE.md and COMO_ESCREVER_UM_ITEM updated. Proof:
+aa7e9c95 ×2, detector equal, comparison 0; the mutations changed since batch 55 compile.
+
+In the same round the readers of decision (b) found a real defect (b1f42bf3): since round 24
+`refresh_match_stats_values` read `read_i8(0x127 + 0)` instead of calling the local closure `byte(k, d)` (taken for the
+`byte(p, off)` helper): 14 cells of the match stats screen were never written, and the low-address read crashes the game
+on that screen (which the holiday careers never open). The closure is back, as `stat_cell`.
+
 ## Readability batch 55: offsets passed to closures by name
 
 Four readers named the offsets passed as the first argument of local closures (`grava(0x104, v)` with

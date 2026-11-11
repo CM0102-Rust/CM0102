@@ -28,6 +28,18 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 56 da legibilidade: os parágrafos [pt] saem do código
+
+Decisão (c) do Lucas (11/11/2026): o código público fica em inglês. O `sem_pt.py` tira os 5.041 parágrafos `[pt]` dos
+cabeçalhos e comentários (21.146 linhas); o português de cada rotina fica no `docs/ROTINAS.md` e no histórico. O
+`cabecalhos.py` e o `tabela_motor.py` não escrevem mais `[pt]`; CLAUDE.md e COMO_ESCREVER_UM_ITEM atualizados. Prova:
+aa7e9c95 ×2, detector igual, comparação 0; as mutações mudadas desde a leva 55 compilam.
+
+Na mesma rodada, os leitores da decisão (b) acharam um defeito real (b1f42bf3): desde a rodada 24 a
+`refresh_match_stats_values` lia `read_i8(0x127 + 0)` em vez de chamar a closure local `byte(k, d)` (tomada pelo
+ajudante `byte(p, off)`): 14 células da tela de estatísticas da partida não eram escritas, e a leitura de endereço baixo
+derruba o jogo nessa tela (que as carreiras de férias não abrem). A closure voltou, como `stat_cell`.
+
 ## Leva 55 da legibilidade: os deslocamentos passados às closures com nome
 
 Quatro leitores deram nome aos deslocamentos passados como primeiro argumento de closures locais (`grava(0x104, v)` com
