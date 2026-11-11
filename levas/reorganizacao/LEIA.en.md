@@ -29,6 +29,12 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 52: field readers on the comparers
+
+Reader verdicts on the 67 comparer files with raw offsets (331): the memory regions they compare and the values they
+read get the field names of the routine files of the same path. One new field, `save_summary::PLAY_TIME_TOTAL`; offsets
+inside log strings stay as they are. Proof: aa7e9c95 ×2, detector equal, comparison 0; no mutation changed.
+
 ## Readability batch 51: the body comments left in Portuguese
 
 The outside reader's round 12 obstacle 4 (mixed-language comments): an agent translated the 54 short body comments still

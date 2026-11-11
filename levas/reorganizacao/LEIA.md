@@ -28,6 +28,13 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 52 da legibilidade: leitores de campo nos comparadores
+
+Vereditos dos leitores nos 67 comparadores com deslocamentos crus (331): as regiões de memória que eles comparam e os
+valores que leem ganham os nomes de campo dos arquivos de rotina de mesmo caminho. Um campo novo,
+`save_summary::PLAY_TIME_TOTAL`; os deslocamentos dentro de textos de log ficam como estão. Prova: aa7e9c95 ×2, detector
+igual, comparação 0; nenhuma mutação mudou.
+
 ## Leva 51 da legibilidade: os comentários do corpo que restavam em português
 
 O obstáculo 4 do leitor de fora da rodada 12 (comentários misturando as línguas): um agente traduziu os 54 comentários
