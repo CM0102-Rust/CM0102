@@ -28,6 +28,13 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 51 da legibilidade: os comentários do corpo que restavam em português
+
+O obstáculo 4 do leitor de fora da rodada 12 (comentários misturando as línguas): um agente traduziu os 54 comentários
+curtos do corpo que ainda estavam em português (as marcas de mutação ficaram); os 33 pulados são nomes de clubes e
+nações. O gerador do `nation_adjectives.rs` escreve o cabeçalho em inglês. Prova: aa7e9c95 ×2, detector igual,
+comparação 0; as 24 mutações mudadas compilam.
+
 ## Leva 50 da legibilidade: os passos de vetor com nome
 
 O obstáculo 3 do leitor de fora da rodada 12: `nomear_passos.py` troca o literal de passo numa multiplicação (`k * 0x3b`,

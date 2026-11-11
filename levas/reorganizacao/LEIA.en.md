@@ -29,6 +29,12 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 51: the body comments left in Portuguese
+
+The outside reader's round 12 obstacle 4 (mixed-language comments): an agent translated the 54 short body comments still
+in Portuguese (mutation tags kept); the 33 skipped are club and nation names. The generator of `nation_adjectives.rs`
+writes its header in English. Proof: aa7e9c95 ×2, detector equal, comparison 0; the 24 changed mutations compile.
+
 ## Readability batch 50: raw array strides by name
 
 The outside reader's round 12 obstacle 3: `nomear_passos.py` turns a stride literal in a multiplication (`k * 0x3b`,
