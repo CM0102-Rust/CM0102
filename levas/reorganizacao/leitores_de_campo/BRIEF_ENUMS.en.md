@@ -15,7 +15,7 @@ are quantities, limits, attributes, years or sizes (club_count, goalkeeper 20, y
 - rust/src/motor/fields.rs (the field's comment often lists the values) and records.rs (which record has the getter);
 - pacotes/0x<address>/ (disassembly and pseudocode of the original routine; strings in the exe that the code prints for
   each value are the best evidence), docs/*.en.md, referencias/cm0102-function-map (community names).
-Never cite docs/.md or the NickDLL anywhere in the output.
+Never cite internal-only references in the output.
 
 ## Rules
 - One entry per (record type, getter). The same field reached through two record types (e.g. a base-class field) gets

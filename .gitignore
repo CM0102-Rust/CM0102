@@ -39,7 +39,6 @@ arquivo/
 # de competições escrita
 prototipos/
 /wiki/
-/docs/*.md
 
 # logs crus das cadeias e das provas (o resultado fica em cadeia.txt / prova_*.txt)
 levas/**/*.log

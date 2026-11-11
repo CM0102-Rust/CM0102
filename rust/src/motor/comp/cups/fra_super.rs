@@ -1,6 +1,6 @@
 use super::*;
 
-/// Writes one cup round (a 0x68-byte record, docs/.md §2.4).
+/// Writes one cup round (a 0x68-byte record).
 ///
 /// The draw (day, month with 0 = January, years to add to the cup year +0x40, weekday or −1) goes through `cup_set_round_draw_date`; the
 /// match (the same, plus the leg at +6 and the venue at +0x13) through `cup_set_round_match_date`.

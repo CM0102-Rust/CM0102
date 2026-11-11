@@ -53,10 +53,10 @@
 
 **Campos tocados:**
 - tabela de rodadas de liga (0x41 bytes): +0 dia do ano e +2 ano relativo (palavras), +4 código ([inferência] o turno), +5 as 8 faixas de 7 bytes (valor, dia, turno, jogos; −1 fecha), +0x3d valor; grava e lê (+0 da rodada de referência do Natal)
-- rodada de copa (0x68 bytes, docs/.md §2.4); grava (os play-offs)
+- rodada de copa (0x68 bytes); grava (os play-offs)
 - liga +0x40 ano da temporada; valor; lê
 - tabela de rodadas de liga (0x41 bytes): +0 dia do ano e +2 ano relativo (palavras), +4 código ([inferência] o turno), +5 as 8 faixas de 7 bytes (valor, dia, turno, jogos; −1 fecha), +0x3d valor; grava e lê (+0 da rodada de referência do Natal)
-- rodada de copa (0x68 bytes, docs/.md §2.4); grava (os play-offs)
+- rodada de copa (0x68 bytes); grava (os play-offs)
 - liga +0x40 ano da temporada; valor; lê
 - liga +0x4c: [inferência] marca da temporada; valor; grava 0 (virada)
 - liga +0xba: lista auxiliar; ponteiro; libera e zera (virada)
@@ -86,10 +86,10 @@
 - liga +4: o registro da competição no banco; ponteiro; lê (árbitros)
 - [0xb74340] o gerente dos árbitros; ponteiro; lê
 - tabela de rodadas de liga (0x41 bytes): +0 dia do ano e +2 ano relativo (palavras), +4 código ([inferência] o turno), +5 as 8 faixas de 7 bytes (valor, dia, turno, jogos; −1 fecha), +0x3d valor; grava e lê (+0 da rodada de referência do Natal)
-- rodada de copa (0x68 bytes, docs/.md §2.4); grava (os play-offs)
+- rodada de copa (0x68 bytes); grava (os play-offs)
 - liga +0x40 ano da temporada; valor; lê
 - tabela de rodadas de liga (0x41 bytes): +0 dia do ano e +2 ano relativo (palavras), +4 código ([inferência] o turno), +5 as 8 faixas de 7 bytes (valor, dia, turno, jogos; −1 fecha), +0x3d valor; grava e lê (+0 da rodada de referência do Natal)
-- rodada de copa (0x68 bytes, docs/.md §2.4); grava (os play-offs)
+- rodada de copa (0x68 bytes); grava (os play-offs)
 - liga +0x40 ano da temporada; valor; lê
 - liga +0x40 ano, +4 registro, +0x50 disciplina, +0xee/+0xf2 os marcadores da CFA e da divisão de baixo, +0x44 fase, +0x30 fase atual, +0x2c/+0xc fases, +8 estatísticas; valor e ponteiro; grava
 - clube +0x57 competição, +0x60 competição de reserva; ponteiro; lê e grava

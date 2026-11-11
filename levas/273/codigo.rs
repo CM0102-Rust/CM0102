@@ -2386,7 +2386,7 @@ unsafe extern "thiscall" fn comparar_cqi11_concacaf_rodadas(this: usize) -> u32 
 // ---------- 273a leva: as regras da fase de grupos das copas: a Copa da Itália, a Copa da Itália da Série C e a Copa dos Campeões do Brasil (ita_cup.cpp, ita_c_cup.cpp, bra_champ_cup.cpp) ----------
 
 /// As regras que a virtual +0x8c (set_up_rules) de uma copa com fase de grupos grava na liga do grupo, antes da tabela
-/// das rodadas. Desempates: os quatro códigos de +0xc5..+0xc8 (docs/.md §2.7).
+/// das rodadas. Desempates: os quatro códigos de +0xc5..+0xc8.
 #[derive(Clone, Copy)]
 struct Cqi12Regras {
     vitoria: u8,     // +0xc2: pontos por vitória

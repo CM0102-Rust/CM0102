@@ -63,7 +63,7 @@ CAMPOS = [('tabela de rodadas de liga (0x41 bytes): +0 dia do ano e +2 ano relat
            'o turno), +5 as 8 faixas de 7 bytes (valor, dia, turno, jogos; −1 fecha), +0x3d valor; grava',
            'league round table (0x41 bytes): +0 day of year and +2 relative year (words), +4 code ([inference] the time '
            'of day), +5 the 8 slots of 7 bytes (value, day, part, matches; −1 ends), +0x3d value; writes'),
-          ('rodada de copa (0x68 bytes, docs/.md §2.4): as datas, +7 nome, +9 índice, '
+          ('rodada de copa (0x68 bytes): as datas, +7 nome, +9 índice, '
            '+0xb..+0xf bits e desempates, +0x17 categoria, +0x18..+0x1e times, +0x20..+0x22 confronto, +0x5c..+0x64 '
            'prêmios; grava (as da C1)',
            'cup round (0x68 bytes): dates, +7 name, +9 index, +0xb..+0xf bits and tie-breaks, +0x17 category, '

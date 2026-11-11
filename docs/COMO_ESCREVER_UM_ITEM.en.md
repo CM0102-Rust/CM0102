@@ -9,7 +9,7 @@ An item is a package of up to 3 ported routines, written ahead of time in `levas
 - **Where to look:** `python engenharia-reversa/candidatos.py` (`--simulacao`, `--competicoes`), `docs/cobertura_*.txt`, `docs/MAPA_COMPETICOES.md` and `docs/PLACAR_ARQUIVOS.md`. Prefer routines that only call what is already Rust (0 or 1 missing).
 - **Only what the test career exercises, with an effect up to 2002-06-01.** A routine that doesn't run (counter 0), a passing tournament (nothing read later depends on its matches) or a record nobody reads before June has no mutation that gets caught: the item stays out. One item fewer is better than an item that doesn't run.
 - **No repeats:** nothing from `motor.rs` or `levas/fila/*`. Reserve by creating the folder with a minimal `rotinas.py` as soon as you choose.
-- **Community map** (`referencias/cm0102-function-map`): entries marked "fragment" or "not a function" are pieces of another routine, not routines. Don't read 's NickDLL code (licence); only [.en.md](.en.md).
+- **Community map** (`referencias/cm0102-function-map`): entries marked "fragment" or "not a function" are pieces of another routine, not routines. Don't read third-party code whose licence forbids that use.
 - **Same slot in several leagues:** putting the same slot of 3 leagues in one item is good; a shared helper with each league's parameters is fine, as long as every address has its own `Prologue` and is faithful byte by byte.
 
 ## Porting

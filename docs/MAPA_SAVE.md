@@ -150,7 +150,7 @@ Fonte: CM3SaveEditor\docs\VALIDADOR_ESTUDO.md (commit bd7959e), repassado pela s
 
 ## 6. O `.tmp` de uma competição: copas e ligas (30/10/2026)
 
-Cada competição grava o seu estado num `.tmp` da pasta `CM3_TEMP` (`docs/.md` §2.11), e esses arquivos entram no save como itens. A ordem abaixo é a de `Cup::save_cup_to_disk` (0x5210F0), lida na desmontagem. A carga, `Cup::load_from_disk` (0x51FC00), lê na mesma ordem. Deslocamentos com `+` são do objeto da copa (0xB2 bytes) e "u16"/"u32" são inteiros com sinal, little-endian.
+Cada competição grava o seu estado num `.tmp` da pasta `CM3_TEMP`, e esses arquivos entram no save como itens. A ordem abaixo é a de `Cup::save_cup_to_disk` (0x5210F0), lida na desmontagem. A carga, `Cup::load_from_disk` (0x51FC00), lê na mesma ordem. Deslocamentos com `+` são do objeto da copa (0xB2 bytes) e "u16"/"u32" são inteiros com sinal, little-endian.
 
 **Prova** [observado]: `engenharia-reversa/tmp_competicao.py <save>` segue esta ordem e confere que cada arquivo acaba exatamente onde a leitura acaba.
 - Fecham **os 164 `.tmp` de competição** do `Testes Claude 2.sav`, do `Roteiro` e do `TesteTelas` (58 no `FeriasTesteSave`, um save pequeno). Ficam de fora só as 20 tabelas globais e os `fixtures_<ano>.tmp`.

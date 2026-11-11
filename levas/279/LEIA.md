@@ -60,10 +60,10 @@
 - tabela de rodadas (0x41 bytes): +0 dia do ano e +2 ano relativo (palavras), +4 código 2, +5 as 8 faixas de 7 bytes (valor, dia, turno, jogos; −1 fecha), +0x3d valor; grava (as três)
 - liga +0x40 ano da temporada; valor; lê (as três)
 - tabela de rodadas de liga (0x41 bytes): +0 dia do ano e +2 ano relativo (palavras), +4 código ([inferência] o turno), +5 as 8 faixas de 7 bytes (valor, dia, turno, jogos; −1 fecha), +0x3d valor; grava
-- rodada de copa (0x68 bytes, docs/.md §2.4): as datas, +7 nome, +9 índice, +0xb..+0xf bits e desempates, +0x17 categoria, +0x18..+0x1e times, +0x20..+0x22 confronto, +0x5c..+0x64 prêmios; grava (as da C1)
+- rodada de copa (0x68 bytes): as datas, +7 nome, +9 índice, +0xb..+0xf bits e desempates, +0x17 categoria, +0x18..+0x1e times, +0x20..+0x22 confronto, +0x5c..+0x64 prêmios; grava (as da C1)
 - liga +0x40 ano da temporada; valor; lê
 - tabela de rodadas de liga (0x41 bytes): +0 dia do ano e +2 ano relativo (palavras), +4 código ([inferência] o turno), +5 as 8 faixas de 7 bytes (valor, dia, turno, jogos; −1 fecha), +0x3d valor; grava
-- rodada de copa (0x68 bytes, docs/.md §2.4); grava (o desempate)
+- rodada de copa (0x68 bytes); grava (o desempate)
 - liga +0x40 ano da temporada, +0xee [inferência] os confrontos de desempate (byte com sinal); valor; lê
 - liga +0x2c: o número de fases; valor; lê (fase seguinte) e grava 2 (final, o mesmo campeão)
 - liga +0x30: a fase atual; valor; lê e grava (fase seguinte), grava 1 ou 2 (final), lê (fim da temporada)
@@ -106,7 +106,7 @@
 - copa +0xee lista dos convidados (ponteiros de clube), +0xf2 máximo (dword, 20); ponteiro/valor; grava (convidados)
 - [0xae1000] as regras sul-americanas (ConmebolSeeding); ponteiro; lê (convidados)
 - tabela de rodadas de liga (0x41 bytes): +0 dia do ano e +2 ano relativo (palavras), +4 código ([inferência] o turno), +5 as 8 faixas de 7 bytes (valor, dia, turno, jogos; −1 fecha), +0x3d valor; grava e lê (+0 da rodada de referência do Natal)
-- rodada de copa (0x68 bytes, docs/.md §2.4); grava (os play-offs)
+- rodada de copa (0x68 bytes); grava (os play-offs)
 - liga +0x40 ano da temporada; valor; lê
 
 **Interessa a:** CMRTE, GPF2

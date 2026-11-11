@@ -54,7 +54,7 @@ CAMPOS = [('tabela de rodadas de liga (0x41 bytes): +0 dia do ano e +2 ano relat
            'rodada de referência do Natal)',
            'league round table (0x41 bytes): +0 day of year and +2 relative year (words), +4 code ([inference] the time '
            'of day), +5 the 8 slots of 7 bytes (value, day, part, matches; −1 ends), +0x3d value; writes and reads'),
-          ('rodada de copa (0x68 bytes, docs/.md §2.4); grava (os play-offs)',
+          ('rodada de copa (0x68 bytes); grava (os play-offs)',
            'cup round (0x68 bytes); writes (the play-offs)'),
           ('liga +0x40 ano da temporada; valor; lê', 'league +0x40 season year; value; reads')]
 INTERESSA = ['CMRTE']

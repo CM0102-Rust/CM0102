@@ -150,7 +150,7 @@ Source: CM3SaveEditor\docs\VALIDADOR_ESTUDO.md (commit bd7959e), passed on by th
 
 ## 6. A competition's `.tmp`: cups and leagues (2026-10-30)
 
-Each competition writes its state to a `.tmp` in the `CM3_TEMP` folder (`docs/.en.md` §2.11), and these files go into the save as items. The order below is that of `Cup::save_cup_to_disk` (0x5210F0), read from the disassembly. The load, `Cup::load_from_disk` (0x51FC00), reads in the same order. Offsets with `+` belong to the cup object (0xB2 bytes) and "u16"/"u32" are signed little-endian integers.
+Each competition writes its state to a `.tmp` in the `CM3_TEMP` folder, and these files go into the save as items. The order below is that of `Cup::save_cup_to_disk` (0x5210F0), read from the disassembly. The load, `Cup::load_from_disk` (0x51FC00), reads in the same order. Offsets with `+` belong to the cup object (0xB2 bytes) and "u16"/"u32" are signed little-endian integers.
 
 **Proof** [observed]: `engenharia-reversa/tmp_competicao.py <save>` follows this order and checks that each file ends exactly where the reading ends.
 - **All 164 competition `.tmp` files** of `Testes Claude 2.sav`, `Roteiro` and `TesteTelas` close (58 in `FeriasTesteSave`, a small save). Only the 20 global tables and the `fixtures_<year>.tmp` files are left out.

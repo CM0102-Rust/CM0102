@@ -901,7 +901,7 @@ pub(crate) unsafe fn init_supercoppa_teams(this: usize) -> (i32, i32) {
 /// The rules that virtual `+0x8c` (set_up_rules) of a cup with a group stage writes into the group's league, before the
 /// round table.
 ///
-/// Tie-breakers: the four codes at `+0xc5`..`+0xc8` (`docs/.md` §2.7).
+/// Tie-breakers: the four codes at `+0xc5`..`+0xc8`.
 #[derive(Clone, Copy)]
 pub(crate) struct GroupStageRules {
     pub(crate) win: u8,     // +0xc2: points per win
