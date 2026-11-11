@@ -28,6 +28,15 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 55 da legibilidade: os deslocamentos passados às closures com nome
+
+Quatro leitores deram nome aos deslocamentos passados como primeiro argumento de closures locais (`grava(0x104, v)` com
+`let grava = |o| write_u8(m.addr() + o, ..)`), em 33 arquivos: campos novos no `fields.rs` com a confiança (BALANCE e
+FLAIR da ficha do jogador, os placares do confronto de copa, os ids das partidas dos recordes do clube, o módulo
+`weather_region`...), e o literal vira o nome. O `nomear_por_linha.py` passou a recusar nome novo com termo `+`: ele
+tinha escrito `const PERIOD_START_DAY + 0x13: usize`, e a recuperação de erro do rustc ficou horas presa nisso. Prova:
+aa7e9c95 ×2, detector igual, comparação 0; a âncora mudada (leva89 n_08) seguida à mão.
+
 ## Leva 54 da legibilidade: as marcas de cobertura dos testes como `covered!()`
 
 O obstáculo 5 do leitor de fora (andaime de teste no meio da lógica). As 1.758 chamadas `crate::comparison::branch(..)` do

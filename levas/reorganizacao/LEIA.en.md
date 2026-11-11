@@ -29,6 +29,15 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 55: offsets passed to closures by name
+
+Four readers named the offsets passed as the first argument of local closures (`grava(0x104, v)` with
+`let grava = |o| write_u8(m.addr() + o, ..)`), in 33 files: new fields in `fields.rs` with their confidence (the player
+sheet's BALANCE and FLAIR, the cup tie scores, the fixture ids of the club records, the `weather_region` module...), and
+the literal becomes the name. `nomear_por_linha.py` now refuses a new name with a `+` term: it had written
+`const PERIOD_START_DAY + 0x13: usize`, and rustc's error recovery spun on it for hours. Proof: aa7e9c95 ×2, detector
+equal, comparison 0; the changed anchor (leva89 n_08) followed by hand.
+
 ## Readability batch 54: test coverage markers as `covered!()`
 
 The outside reader's obstacle 5 (test scaffolding in the body). The engine's 1,758 `crate::comparison::branch(..)` calls
