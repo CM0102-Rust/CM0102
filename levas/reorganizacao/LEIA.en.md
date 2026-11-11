@@ -29,6 +29,14 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 53: virtual method slots by name
+
+A reader agent read the vtables of the competition classes (Comp, League, Cup and subclasses), the national transfer
+rules and the ruling bodies in the exe's `.rdata` and named the 43 slots the Rust code calls (40 verified by the
+community function map). `nomear_vtables.py` writes `rust/src/motor/vtables.rs` and turns the slot literal at 170 call
+sites into the name: `read_usize(read_usize(comp) + comp_vtable::CREATE_SCHEDULE)`. Proof: aa7e9c95 ×2, detector equal,
+comparison 0; the changed mutation compiles.
+
 ## Readability batch 52: field readers on the comparers
 
 Reader verdicts on the 67 comparer files with raw offsets (331): the memory regions they compare and the values they

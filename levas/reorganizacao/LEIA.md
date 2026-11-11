@@ -28,6 +28,14 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 53 da legibilidade: os slots dos métodos virtuais com nome
+
+Um agente leitor leu as vtables das classes de competição (Comp, League, Cup e subclasses), das regras nacionais de
+transferência e dos órgãos disciplinares na `.rdata` do exe e deu nome aos 43 slots que o código Rust chama (40
+verificados pelo mapa de funções da comunidade). `nomear_vtables.py` grava o `rust/src/motor/vtables.rs` e troca o literal
+do slot em 170 chamadas: `read_usize(read_usize(comp) + comp_vtable::CREATE_SCHEDULE)`. Prova: aa7e9c95 ×2, detector
+igual, comparação 0; a mutação mudada compila.
+
 ## Leva 52 da legibilidade: leitores de campo nos comparadores
 
 Vereditos dos leitores nos 67 comparadores com deslocamentos crus (331): as regiões de memória que eles comparam e os
