@@ -17,7 +17,7 @@ import time
 
 TRAVA = r'D:\Sistemas\.laboratorio.lock'
 LIMITE_POOL_NAO_PAGINADO_GB = 3.0
-MINIMO_RAM_LIVRE_GB = 4.0
+MINIMO_RAM_LIVRE_GB = 2.0  # 11/11/2026 (Lucas): era 4.0, apertado demais para os testes em paralelo; o pool nao paginado continua a 3 GB
 
 
 class _Info(ctypes.Structure):
