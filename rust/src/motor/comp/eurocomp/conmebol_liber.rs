@@ -419,7 +419,7 @@ pub(crate) unsafe extern "thiscall" fn conmebol_liber_update_staff_records_for_s
                 let weight = scale_by_round(0x32, 0x64, read_i16(game + fixture::ROUND_NUMBER), 4);
                 let knockout = Cup(read_usize(this.stages() + 0x1c));
                 let r = read_i16(game + fixture::ROUND_NUMBER) as isize;
-                let round = (knockout.addr() as u32 & 0xffff_0000) | read_u16(knockout.round_table().wrapping_add((r * 0x68) as usize) + cup_round::ROUND_CODE + 0x68) as u32;
+                let round = (knockout.addr() as u32 & 0xffff_0000) | read_u16(knockout.round_table().wrapping_add((r * (cup_round::SIZE as isize)) as usize) + cup_round::ROUND_CODE + 0x68) as u32;
                 european_cup_add_qualified_record(club, comp, read_u16(game + fixture::ROUND_PREFIX) as u32, round, weight);
             }
             1 => {

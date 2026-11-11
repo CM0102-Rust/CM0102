@@ -59,14 +59,14 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c2a_update_staff_records_for_stat
     let n = this.club_count() as i32;
     let mut i: i32 = 0;
     while i < n {
-        let row = this.table() + (i as usize) * 0x3b;
+        let row = this.table() + (i as usize) * league_table_row::SIZE;
         if read_usize(row) == club {
             if f == 0 {
                 match s {
                     1 => {
                         let promotion: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
                         promotion(eng_second_staff_records(), club, comp, 0x32);
-                        write_u8(this.table() + (i as usize) * 0x3b + league_table_row::STATUS, 0);
+                        write_u8(this.table() + (i as usize) * league_table_row::SIZE + league_table_row::STATUS, 0);
                         return 0;
                     }
                     2 | 0xff => {
@@ -74,7 +74,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c2a_update_staff_records_for_stat
                         // simplification: the original pushes the match’s stage (+0x32) and round (+0x30) as words in
                         // registers with garbage in the high 16 bits; 0x86c000 only reads the words.
                         exe::staff_records_add_knocked_out_record(eng_second_staff_records(), club, comp, read_i16(game + fixture::ROUND_PREFIX) as u16 as u32, read_i16(game + fixture::ROUND_NAME) as u16 as u32, weight);
-                        write_u8(this.table() + (i as usize) * 0x3b + league_table_row::STATUS, 0xfe);
+                        write_u8(this.table() + (i as usize) * league_table_row::SIZE + league_table_row::STATUS, 0xfe);
                         return 0;
                     }
                     _ => {}
@@ -82,13 +82,13 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_c2a_update_staff_records_for_stat
             } else {
                 match s {
                     1 => {
-                        write_u8(this.table() + (i as usize) * 0x3b + league_table_row::STATUS, 0xfe);
+                        write_u8(this.table() + (i as usize) * league_table_row::SIZE + league_table_row::STATUS, 0xfe);
                         return 0;
                     }
                     2 | 0xff => {
                         let cair: unsafe extern "thiscall" fn(usize, usize, usize) = core::mem::transmute(FN_STAFF_RECORDS_ADD_RELEGATION_RECORD);
                         cair(eng_second_staff_records(), club, comp);
-                        write_u8(this.table() + (i as usize) * 0x3b + league_table_row::STATUS, 3);
+                        write_u8(this.table() + (i as usize) * league_table_row::SIZE + league_table_row::STATUS, 3);
                         return 0;
                     }
                     _ => {}

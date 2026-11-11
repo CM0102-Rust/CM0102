@@ -369,7 +369,7 @@ pub(crate) unsafe fn planned_final_positions(this: Cup, knockout: usize, nm: i16
     let mut count = 1u8;
     let mut r = nm.wrapping_sub(1);
     while r >= 0 {
-        let n = read_i16(knockout + r as usize * 0x68 + cup_round::TIES);
+        let n = read_i16(knockout + r as usize * cup_round::SIZE + cup_round::TIES);
         if r == nm.wrapping_sub(1) {
             let mut k = 0i16;
             while k < n {
@@ -382,7 +382,7 @@ pub(crate) unsafe fn planned_final_positions(this: Cup, knockout: usize, nm: i16
         }
         let p = count;
         let mut k = 0i16;
-        while k < read_i16(knockout + r as usize * 0x68 + cup_round::TIES) {
+        while k < read_i16(knockout + r as usize * cup_round::SIZE + cup_round::TIES) {
             v.push((i, p));
             i += 1;
             count = count.wrapping_add(1);
@@ -405,7 +405,7 @@ pub(crate) unsafe fn planned_final_positions(this: Cup, knockout: usize, nm: i16
     while r >= 0 {
         let p = count;
         let mut k = 0i16;
-        while k < read_i16(this.round_table() + r as usize * 0x68 + cup_round::TIES) {
+        while k < read_i16(this.round_table() + r as usize * cup_round::SIZE + cup_round::TIES) {
             crate::comparison::branch("cqg_4 position in the preliminary");
             v.push((i, p)); // cqg4: the position in the preliminary
             i += 1;
@@ -923,7 +923,7 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
                 let rounds = knockout.round_table();
                 let r = read_i16(game + fixture::ROUND_NUMBER) as i32;
                 // the upper bits of the register the original pushes are those of the stages pointer (+0xc)
-                let round = (this.stages() as u32 & 0xffff_0000) | read_i16(rounds.wrapping_add((r as usize).wrapping_mul(0x68)) + cup_round::ROUND_CODE + 0x68) as u16 as u32;
+                let round = (this.stages() as u32 & 0xffff_0000) | read_i16(rounds.wrapping_add((r as usize).wrapping_mul(cup_round::SIZE)) + cup_round::ROUND_CODE + 0x68) as u16 as u32;
                 european_cup_add_qualified_record(club, comp, 0, round, weight);
             }
             0xff => {

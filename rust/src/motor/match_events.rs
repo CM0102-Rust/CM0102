@@ -778,7 +778,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
         // the colours of the move’s club (the side’s kit)
         let side = b(6);
         let mut club_id = if side != 0 { *((ctx.addr() + 4) as *const usize) } else { *(ctx.addr() as *const usize) };
-        let kit = *((ctx.addr() as isize + side as i8 as isize * 1573 + (match_record::HOME_KIT as isize)) as *const u8) as u32;
+        let kit = *((ctx.addr() as isize + side as i8 as isize * (match_record::SIDE_SIZE as isize) + (match_record::HOME_KIT as isize)) as *const u8) as u32;
         exe::database_get_club_kit_colours((*(G_CLUB_TABLE as *const usize)).wrapping_add(club_id.wrapping_mul(club::SIZE)), kit, (cor1.as_mut_ptr()) as *mut u32, (cor2.as_mut_ptr()) as *mut u32);
         let mut s = core::ptr::read_unaligned((sons() as isize + which() * 0x110 + (event_variant::LIVE_TEXT as isize)) as *const usize);
         let v = b(0xd) as i8;
@@ -960,7 +960,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                             let side = b(6);
                             club_id = if side != 0 { *(ctx.addr() as *const usize) } else { *((ctx.addr() + 4) as *const usize) };
                             let a = (side == 0) as isize;
-                            let kit = *((ctx.addr() as isize + a * 1573 + (match_record::HOME_KIT as isize)) as *const u8) as u32;
+                            let kit = *((ctx.addr() as isize + a * (match_record::SIDE_SIZE as isize) + (match_record::HOME_KIT as isize)) as *const u8) as u32;
                             exe::database_get_club_kit_colours((*(G_CLUB_TABLE as *const usize)).wrapping_add(club_id.wrapping_mul(club::SIZE)), kit, (cor1.as_mut_ptr()) as *mut u32, (cor2.as_mut_ptr()) as *mut u32);
                             *(dest(out) as *mut u8) = 0;
                         }

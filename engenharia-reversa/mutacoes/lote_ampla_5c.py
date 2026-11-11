@@ -15,7 +15,7 @@ MUTACOES = [
     ('t_vaga', '    if k < (table.offer_capacity() as i32) {', '    if k <= (table.offer_capacity() as i32) {'),
     ('r_ids', '    for o in [0x86, 0xc2, 0xc6, 0x4a, 0x5e, 0x72] {', '    for o in [0x86, 0xc2, 0xc6, 0x4a, 0x5e] {'),
     ('s_empate', '        if best == 0 || injury_word_0c(c) > injury_word_0c(Staff(best)) {', '        if best == 0 || injury_word_0c(c) >= injury_word_0c(Staff(best)) {'),
-    ('c_clube', '    *club = (read_usize(G_CLUB_TABLE) as isize + (contract.club() as i32) as isize * 581) as usize;', '    *club = (read_usize(G_CLUB_TABLE) as isize + (contract.club() as i32) as isize * 580) as usize;'),
+    ('c_clube', '    *club = (read_usize(G_CLUB_TABLE) as isize + (contract.club() as i32) as isize * (club::SIZE as isize)) as usize;', '    *club = (read_usize(G_CLUB_TABLE) as isize + (contract.club() as i32) as isize * 580) as usize;'),
     ('p_vaga', '        if read_i32(p) == id && *((p + held_ban::SLOT) as *const i8) == slot {', '        if read_i32(p) == id {'),
     ('a_torneio', '        if core::ptr::read_unaligned((p - 0x65) as *const usize) != 0 && object != 0 {', '        if core::ptr::read_unaligned((p - 0x65) as *const usize) != 0 && object != 0 && i > 0 {'),
     ('l_venda', '    remove_from_payment_list(TransferManagerFields(manager), id, 8, 0x880, 0x888, 9);', '    remove_from_payment_list(TransferManagerFields(manager), id, 8, 0x880, 0x888, 5);'),

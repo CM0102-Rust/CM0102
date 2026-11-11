@@ -11,7 +11,7 @@ pub(crate) unsafe fn qualifiers_per_group(this: League) -> i32 {
 ///
 /// [pt] O clube da linha i da tabela do grupo 1 (a da própria copa: +0xb1, linhas de 0x3b bytes).
 pub(crate) unsafe fn group_one_club(this: League, i: usize) -> usize {
-    read_usize(this.table() + i * 0x3b) // cqs10: the group 1 row
+    read_usize(this.table() + i * league_table_row::SIZE) // cqs10: the group 1 row
 }
 
 /// Club at position j of stage f (League::get_table_row).
@@ -107,11 +107,11 @@ pub(crate) unsafe fn build_knockout_stage(this: League, teams: u32, stages: usiz
 /// bytes) iguais aos do plano como conjunto (o sorteio pode reordenar).
 pub(crate) unsafe fn con_merc_cup_compare_knockout_stage(name: &str, this: League, teams: usize, stages: usize, knockout: usize, original: impl FnOnce()) {
     let q = qualifiers_per_group(this).max(0) as usize;
-    let mut plan: Vec<usize> = (0..q).map(|i| read_usize(this.table() + i * 0x3b)).collect();
+    let mut plan: Vec<usize> = (0..q).map(|i| read_usize(this.table() + i * league_table_row::SIZE)).collect();
     for f in 0..stages {
         let stage = read_usize(this.stages() + f * 4);
         for j in 0..q {
-            plan.push(read_usize(read_usize(stage + league::TABLE) + j * 0x3b));
+            plan.push(read_usize(read_usize(stage + league::TABLE) + j * league_table_row::SIZE));
         }
     }
     original();

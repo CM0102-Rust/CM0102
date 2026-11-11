@@ -657,7 +657,7 @@ pub(crate) unsafe extern "thiscall" fn choose_formation(c: usize, sheets: usize,
         exe::tactics_get_club_tactic(tat(), club, (human) as u32)
     };
     let side = c.side() as isize;
-    core::ptr::copy_nonoverlapping(tactic as *const u8, (m.addr() as isize + (engine::TACTICS as isize) + 0x18e3 * side) as *mut u8, 0x18e3);
+    core::ptr::copy_nonoverlapping(tactic as *const u8, (m.addr() as isize + (engine::TACTICS as isize) + (formation_fields::SIZE as isize) * side) as *mut u8, 0x18e3);
     // simplification: without tactics (or without +0x2b) the original stops the game with an error (match_man.cpp 0xc1d); here it just does not copy
     let copy = c.tactics();
     if tactic != 0 && copy != 0 {
@@ -1050,7 +1050,7 @@ pub(crate) unsafe extern "thiscall" fn instructions(c: usize) {
             if r != -1 {
                 let side = (read_i8(j + match_player::POSITION) == 0) as usize;
                 let o = Engine(m).player(side as i8, r as usize).addr();
-                let blk = || (u(c.addr(), match_manager::ENGINE) as isize + (engine::TACTICS as isize) + 0x18e3 * read_i8(j + match_player::SIDE) as isize) as usize;
+                let blk = || (u(c.addr(), match_manager::ENGINE) as isize + (engine::TACTICS as isize) + (formation_fields::SIZE as isize) * read_i8(j + match_player::SIDE) as isize) as usize;
                 let tbo = || exe::match_player_get_position(o);
                 let reps = || {
                     let ra = w(u(c.addr(), match_manager::CLUB), 0x80);
@@ -4024,7 +4024,7 @@ pub(crate) unsafe extern "C" fn lineup_slot_score(
         l4c = injury_history_penalty_2c(p, l4c);
         let id = *(p.addr() as *const i32);
         let mut edi = l4c;
-        if *((*(G_STAFF_STATE_TABLE as *const usize) as isize + id as isize * 79 + (staff_state::STATUS_FLAGS as isize)) as *const u8) & staff_state_status_flags::RETIREMENT_STATE != 0 {
+        if *((*(G_STAFF_STATE_TABLE as *const usize) as isize + id as isize * (staff_state::SIZE as isize) + (staff_state::STATUS_FLAGS as isize)) as *const u8) & staff_state_status_flags::RETIREMENT_STATE != 0 {
             if age > 0x28 {
                 return -1000000;
             }
@@ -4354,7 +4354,7 @@ pub(crate) unsafe extern "thiscall" fn select_side(t: usize, m: usize, tecnico: 
     write_usize(t + match_manager::KEY_PLAYER_3, 0);
     write_usize(t + match_manager::KEY_PLAYER_2, 0);
     write_usize(t + 6, 0);
-    write_usize(t + match_manager::TACTICS, m.addr() + engine::TACTICS + (side as u8 as i8 as isize * 0x18e3) as usize);
+    write_usize(t + match_manager::TACTICS, m.addr() + engine::TACTICS + (side as u8 as i8 as isize * (formation_fields::SIZE as isize)) as usize);
     write_usize(t + match_manager::OPPONENT, other);
     let home = (club == u(game.addr(), fixture::HOME_CLUB) && (game.home_side_mark() as i8) == 0) || (club == u(game.addr(), fixture::AWAY_CLUB) && game.away_side_mark() == 0);
     if home {

@@ -26,7 +26,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_league_position_records(th
     let mut podem_entrar = 0i32;
     for liga in league_stage_chain(liga0) {
         for i in 0..read_i16(liga + league::CLUB_COUNT).max(0) as usize {
-            let row = LeagueTableRow(read_usize(liga + league::TABLE) + 0x3b * i);
+            let row = LeagueTableRow(read_usize(liga + league::TABLE) + league_table_row::SIZE * i);
             let club = read_usize(row.addr());
             if (row.played() as u8) == 0 || club == 0 {
                 continue;

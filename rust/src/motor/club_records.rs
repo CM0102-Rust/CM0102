@@ -89,7 +89,7 @@ pub(crate) unsafe fn match_stats_category(p: Fixture, side: i32, warn: bool, err
 /// pessoa (+0) e jogador (+4) ≠ −1 e a pessoa na tabela ([0xae23bc], 0x6e; id abaixo de [0xae2364]). Devolve
 /// (linha, pessoa, dados do jogador em [0xae23c4], 0x46).
 pub(crate) unsafe fn match_lineup_row(game: usize, side: usize, k: usize) -> Option<(usize, usize, usize)> {
-    let e = game + match_stats_record::SIDE_SIZE * side + match_stats_record::HOME_LINEUP + 0x49 * k;
+    let e = game + match_stats_record::SIDE_SIZE * side + match_stats_record::HOME_LINEUP + match_record_row::SIZE * k;
     if k > 10 && read_u8(e + lineup_row::ENTRY_MINUTE) == 0xff {
         return None;
     }
@@ -212,7 +212,7 @@ pub(crate) unsafe extern "thiscall" fn update_league_position_records(this: usiz
         }
         let mut i = 0i32;
         while i < read_i16(liga + league::CLUB_COUNT) as i32 {
-            let row = LeagueTableRow(read_usize(liga + league::TABLE).wrapping_add(0x3b * i as usize));
+            let row = LeagueTableRow(read_usize(liga + league::TABLE).wrapping_add(league_table_row::SIZE * i as usize));
             let club = read_usize(row.addr());
             i += 1;
             if (row.played() as u8) == 0 || club == 0 {

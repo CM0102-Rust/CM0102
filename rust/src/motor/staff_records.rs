@@ -87,7 +87,7 @@ pub(crate) unsafe fn add_lineup_histories(this: usize, club: Club, lineup: usize
         if id == -1 {
             continue;
         }
-        let p = read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul(0x6e) as usize);
+        let p = read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul((staff::SIZE as u32)) as usize);
         if p != 0 && read_i32(p) >= read_i32(G_STAFF_COUNT) {
             continue;
         }
@@ -313,7 +313,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
     if !t.is_null() {
         if !t.non_player().is_null() {
             let (k1, k2) = manager_rating_gains(t, club, read_usize(game.addr()));
-            let side = fixture.addr() + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (game.away_club() == club) as usize;
+            let side = fixture.addr() + match_record::HOME_MANAGER_CURRENT_REPUTATION + match_record::SIDE_SIZE * (game.away_club() == club) as usize;
             raise_side_rating(side, weight, 400);
             raise_side_rating(side + 2, weight, k1);
             raise_side_rating(side + 4, weight, k2);
@@ -337,7 +337,7 @@ pub(crate) unsafe extern "thiscall" fn add_cup_winners_record(this: usize, club:
     if chairman != 0 {
         append_person_history_by_id(!STAFF_HISTORY_DRY_RUN.load(Relaxed), this, read_usize(chairman), &e);
     }
-    let lineup = fixture.addr() + match_record::ROW_STAFF_ID + 0x625 * (club != game.home_club()) as usize;
+    let lineup = fixture.addr() + match_record::ROW_STAFF_ID + match_record::SIDE_SIZE * (club != game.home_club()) as usize;
     add_lineup_histories(this, club, lineup, &e);
     for j in 0..50usize {
         if (comp.reputation() as i32).wrapping_mul(400) < club.reputation() as i32 {
@@ -809,7 +809,7 @@ pub(crate) unsafe fn update_cup_placed_club(this: usize, club: Club, game: Fixtu
             } else {
                 (if exe::database_is_staff_foreign(t, club.nation().addr(), 1) != 0 { metade } else { k }, metade)
             };
-            let side = fixture.addr() + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (game.away_club() == club) as usize;
+            let side = fixture.addr() + match_record::HOME_MANAGER_CURRENT_REPUTATION + match_record::SIDE_SIZE * (game.away_club() == club) as usize;
             raise_side_rating(side, weight, k);
             raise_side_rating(side + 2, weight, k1);
             raise_side_rating(side + 4, weight, k2);
@@ -820,13 +820,13 @@ pub(crate) unsafe fn update_cup_placed_club(this: usize, club: Club, game: Fixtu
     if chairman != 0 {
         append_person_history_by_id(!CUP_PLACED_CLUB_DRY_RUN.load(Relaxed), this, read_usize(chairman), &e);
     }
-    let lineup = fixture.addr() + match_record::ROW_STAFF_ID + 0x625 * (club != game.home_club()) as usize;
+    let lineup = fixture.addr() + match_record::ROW_STAFF_ID + match_record::SIDE_SIZE * (club != game.home_club()) as usize;
     for j in 0..0x14usize {
         let id = read_i32(lineup + 0x49 * j);
         if id == -1 {
             continue;
         }
-        let p = read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul(0x6e) as usize);
+        let p = read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul((staff::SIZE as u32)) as usize);
         if p != 0 && read_i32(p) >= read_i32(G_STAFF_COUNT) {
             continue;
         }
@@ -890,7 +890,7 @@ pub(crate) unsafe fn compare_cup_placed(name: &str, club: Club, game: Fixture, f
     if club.is_null() || game.is_null() || fixture.is_null() {
         return original();
     }
-    let reg = [(club.addr() + club::REPUTATION, 2), (fixture.addr() + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (game.away_club() == club) as usize, 6)];
+    let reg = [(club.addr() + club::REPUTATION, 2), (fixture.addr() + match_record::HOME_MANAGER_CURRENT_REPUTATION + match_record::SIDE_SIZE * (game.away_club() == club) as usize, 6)];
     let before = crate::comparison::MemorySnapshot::read(&reg);
     CUP_PLACED_CLUB_DRY_RUN.store(true, Relaxed);
     copy();
@@ -1993,7 +1993,7 @@ pub(crate) unsafe extern "thiscall" fn find_manager_of_the_month(this: usize, in
     let mut best = 0usize;
     let mut k = 0i32;
     while k < league.club_count() as i32 {
-        let club = Club(read_usize(league.table().wrapping_add((k as usize).wrapping_mul(0x3b))));
+        let club = Club(read_usize(league.table().wrapping_add((k as usize).wrapping_mul(league_table_row::SIZE))));
         let manager = club.manager();
         if !manager.is_null() && !manager.club_job().is_null() {
             let mut d = [0u32; 2];

@@ -179,7 +179,7 @@ pub(crate) unsafe fn random_or_tape(n: i32) -> i32 {
 pub(crate) unsafe fn match_performance_code(result: MatchRecord, side: usize, player: Staff) -> u32 {
     let id = read_usize(player.addr());
     for k in 0..0x14usize {
-        let e = MatchRecordRow(result.addr() + match_record::ROW_STAFF_ID + side * 0x625 + k * 0x49);
+        let e = MatchRecordRow(result.addr() + match_record::ROW_STAFF_ID + side * match_record::SIDE_SIZE + k * match_record_row::SIZE);
         if read_usize(e.addr()) != id {
             continue;
         }
@@ -792,7 +792,7 @@ pub(crate) unsafe fn is_squad_candidate(this: usize, nation: Nation, t: i8, data
         // from another nation: no team, no +0x22 mark, no bit 2 of +0xc in the 79-byte record, with the second
         // nation (+0x1e) in this one; it gets in if this one has a higher +0x8e, or (club in the same confederation +0x71 or no club)
         // with +0x85 of 5 or more
-        if !tj.is_null() || j.int_apps() != 0 || read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(j.addr()).wrapping_mul(0x4f)) + staff_state::EXTRA_FLAGS) & extra_flags::PLAYED_U21_INTERNATIONAL != 0
+        if !tj.is_null() || j.int_apps() != 0 || read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(j.addr()).wrapping_mul(staff_state::SIZE)) + staff_state::EXTRA_FLAGS) & extra_flags::PLAYED_U21_INTERNATIONAL != 0
             || j.second_nation() != nation || nat.is_null()
         {
             return false;
@@ -1074,7 +1074,7 @@ pub(crate) unsafe extern "thiscall" fn select_squad(this: usize, nacao: usize, k
             write_usize(j + staff::NATIONAL_JOB, elenco); // cqc12: the called-up player gets the team
             let x = read_u8(j + staff::JOB_FOR_NATION);
             write_u8(j + staff::JOB_FOR_NATION, if x == 5 || x == 0xc { 0xc } else { 0xb });
-            let e = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(j).wrapping_mul(0x4f)) + 9;
+            let e = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(j).wrapping_mul(staff_state::SIZE)) + 9;
             write_u8(e, (read_u8(e) as i8).clamp(0, 100) as u8);
         }
         i += 1;
@@ -1315,7 +1315,7 @@ pub(crate) unsafe extern "stdcall" fn national_teams_player_is_eligible(player: 
     if player.int_apps() != 0 && first != Nation(nation) {
         return 0;
     }
-    let p = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(player.addr()).wrapping_mul(79));
+    let p = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(player.addr()).wrapping_mul(staff_state::SIZE));
     if read_u8(p + staff_state::EXTRA_FLAGS) & extra_flags::PLAYED_U21_INTERNATIONAL != 0 && player.nation() != Nation(nation) {
         return 0;
     }
@@ -1620,7 +1620,7 @@ pub(crate) static INTERNATIONAL_RESULT_DRY_RUN: AtomicBool = AtomicBool::new(fal
 /// [pt] A vaga `k` (0..20) da escalação do lado `lado` no resumo do jogo `m`: m + 0x625 × lado + 0x190 + 0x49 × k.
 pub(crate) fn lineup_slot(m: usize, side: usize, k: usize) -> usize {
     let side = MatchRecord(side);
-    m.wrapping_add(0x625 * side.addr() + match_record::ROW_STAFF_ID + 0x49 * k)
+    m.wrapping_add(match_record::SIDE_SIZE * side.addr() + match_record::ROW_STAFF_ID + match_record_row::SIZE * k)
 }
 
 /// Person in a lineup slot if it counts (id != -1 and starter, or sub who came on) and is in range of the staff table.
@@ -1644,7 +1644,7 @@ pub(crate) unsafe fn lineup_slot_person(slot: usize, k: usize) -> Option<usize> 
 ///
 /// [pt] O registro geral da pessoa (79 bytes em [0xae2d0c]).
 pub(crate) unsafe fn national_teams_staff_state_record(p: usize) -> usize {
-    read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p).wrapping_mul(0x4f))
+    read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p).wrapping_mul(staff_state::SIZE))
 }
 
 /// National-teams record of the club's nation: [this+4] + 0x6e x id.
@@ -1778,8 +1778,8 @@ pub(crate) unsafe extern "thiscall" fn record_international_result(this: usize, 
                 q += 1;
             }
         }
-        let highlight_k = read_i8(m + 0x625 * lado + match_record::HOME_CAPTAIN) as isize;
-        let highlight_id = read_usize((m + 0x625 * lado + match_record::ROW_STAFF_ID) .wrapping_add((0x49 * highlight_k) as usize));
+        let highlight_k = read_i8(m + match_record::SIDE_SIZE * lado + match_record::HOME_CAPTAIN) as isize;
+        let highlight_id = read_usize((m + match_record::SIDE_SIZE * lado + match_record::ROW_STAFF_ID) .wrapping_add(match_record_row::SIZE * highlight_k as usize));
         let highlight = read_usize(G_STAFF_TABLE).wrapping_add(highlight_id.wrapping_mul(staff::SIZE));
         if !INTERNATIONAL_RESULT_DRY_RUN.load(Relaxed) {
             // simplification: the original pushes the count in a dword of the local with only the low byte written; 0x7706c0 reads the byte
@@ -2992,7 +2992,7 @@ pub(crate) unsafe extern "thiscall" fn call_up_replacement(this: usize, nation: 
             continue;
         }
         if q.nation() != Nation(nation) {
-            let record = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_i32(q.addr()).wrapping_mul(0x4f) as usize);
+            let record = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_i32(q.addr()).wrapping_mul((staff_state::SIZE as i32)) as usize);
             if !team.is_null() || q.int_apps() != 0 || read_u8(record + staff_state::EXTRA_FLAGS) & extra_flags::PLAYED_U21_INTERNATIONAL != 0 || q.second_nation() != Nation(nation) {
                 continue;
             }

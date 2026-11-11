@@ -3981,7 +3981,7 @@ unsafe fn diag_sample(c: usize, qual: &str) {
     if !DIAG_CALLS.load(Relaxed).is_power_of_two() {
         return;
     }
-    let p = read_usize(G_STAFF_TABLE).wrapping_add(DIAG_PERSON.load(Relaxed).wrapping_mul(110));
+    let p = read_usize(G_STAFF_TABLE).wrapping_add(DIAG_PERSON.load(Relaxed).wrapping_mul(staff::SIZE));
     let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p);
     linha(&format!("diag {} call {}: current contract +0 {} +4 {}; the person's contract {}: {}", qual, DIAG_CALLS.load(Relaxed),
         read_i32(c), read_i32(c + 4), DIAG_PERSON.load(Relaxed),
@@ -4006,7 +4006,7 @@ unsafe extern "thiscall" fn diag_complaint(c: usize, f: u32, z: u32) -> u32 {
     if !FORCED {
         if let Some(q) = std::env::var("CM_DIAG_FORCAR").ok().and_then(|v| u32::from_str_radix(v.trim_start_matches("0x"), 16).ok()) {
             FORCED = true;
-            let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), read_usize(G_STAFF_TABLE).wrapping_add(DIAG_PERSON.load(Relaxed).wrapping_mul(110)));
+            let k = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), read_usize(G_STAFF_TABLE).wrapping_add(DIAG_PERSON.load(Relaxed).wrapping_mul(staff::SIZE)));
             if k != 0 {
                 linha(&format!("diag forced complaint {:#x} person {} before: {}", q, DIAG_PERSON.load(Relaxed), diag_contract(k)));
                 let r2 = core::mem::transmute::<usize, unsafe extern "thiscall" fn(usize, u32, u32) -> u32>(DIAG_COMPLAINT.load(Relaxed))(k, q, 0);
@@ -5549,7 +5549,7 @@ pub unsafe fn autoteste(casos: u64) {
                 *(clube_b63.as_mut_ptr() as *mut i32) = 100;
                 *(clube_b63.as_mut_ptr().add(0xcf) as *mut usize) = tecnicos63[((h63 >> 34) % 3) as usize];
                 let nacao63 = [0i32; 4];
-                *(G_CLUB_TABLE as *mut usize) = (clube_b63.as_ptr() as usize).wrapping_sub(581 * 4600);
+                *(G_CLUB_TABLE as *mut usize) = (clube_b63.as_ptr() as usize).wrapping_sub(club::SIZE * 4600);
                 *(G_NATION_TABLE as *mut u32) = 1;
                 let mut clube_a63 = [0u8; 0x100];
                 *(clube_a63.as_mut_ptr() as *mut i32) = [100i32, 4650, 4850][((h63 >> 36) % 3) as usize];
@@ -6025,7 +6025,7 @@ pub unsafe fn autoteste(casos: u64) {
                             }
                         }
                         // from slot 16: partners with a negative index (-5) still fall inside the vector
-                        *(G_CLUB_TABLE as *mut usize) = CLUBES74.as_ptr() as usize + 581 * 16;
+                        *(G_CLUB_TABLE as *mut usize) = CLUBES74.as_ptr() as usize + club::SIZE * 16;
                         let h74 = s.next_u64();
                         let id_p74: i32 = [5i32, 40, 99999][((h74 >> 1) % 3) as usize];
                         let pessoa74 = [id_p74, 0, 0, 0];
@@ -6037,7 +6037,7 @@ pub unsafe fn autoteste(casos: u64) {
                         let limites74 = (*(G_CLUB_COUNT as *const i32), *(G_NATION_COUNT as *const i32));
                         *(G_CLUB_COUNT as *mut i32) = 2100;
                         *(G_NATION_COUNT as *mut i32) = 400 + ((h74 >> 20) % 700) as i32;
-                        *(G_STAFF_STATE_TABLE as *mut usize) = (entrada74.as_ptr() as usize).wrapping_sub((id_p74.max(0) as usize).wrapping_mul(79));
+                        *(G_STAFF_STATE_TABLE as *mut usize) = (entrada74.as_ptr() as usize).wrapping_sub((id_p74.max(0) as usize).wrapping_mul(staff_state::SIZE));
                         let id_c74 = *(clube73.as_ptr() as *const u32);
                         let mut regs74 = [0u8; 80 * 4];
                         for k in 0..4usize {

@@ -638,7 +638,7 @@ pub(crate) unsafe extern "thiscall" fn post_recovery_news(this: usize, p: usize,
                     res = 0;
                 }
             }
-            let e = read_usize(G_STAFF_STATE_TABLE).wrapping_add((*(p as *const i32) as isize * 0x4f + (staff_state::EXTRA_FLAGS as isize)) as usize);
+            let e = read_usize(G_STAFF_STATE_TABLE).wrapping_add((*(p as *const i32) as isize * (staff_state::SIZE as isize) + (staff_state::EXTRA_FLAGS as isize)) as usize);
             *(e as *mut u8) &= 0xfe; // cqf9: a marca +0xc cai
         }
     }
@@ -938,12 +938,12 @@ pub(crate) unsafe extern "thiscall" fn add_injury(this: usize, kind_arg: u32, re
     let n = days as i32;
     let mut i = 0;
     while i < n {
-        let g = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(0x4f)) + staff_state::INJURY_COUNTER;
+        let g = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(staff_state::SIZE)) + staff_state::INJURY_COUNTER;
         if read_u8(g) >= 100 {
             break;
         }
         if friendly_random((p.player().natural_fitness() as i32) * 5 + 0xc) == 0 {
-            let g = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(0x4f)) + staff_state::INJURY_COUNTER;
+            let g = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(staff_state::SIZE)) + staff_state::INJURY_COUNTER;
             write_u8(g, read_u8(g).wrapping_add(1));
         }
         i += 1;
@@ -1271,7 +1271,7 @@ pub(crate) unsafe fn roll_training_injuries(this: usize) {
     let mut i = 0i32;
     while i < total {
         let idx = friendly_random(read_i32(G_STAFF_COUNT));
-        let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add((idx as u32).wrapping_mul(0x6e) as usize));
+        let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add((idx as u32).wrapping_mul((staff::SIZE as u32)) as usize));
         'proximo: {
             if p.player().is_null() {
                 i -= 1; // not a player: the random roll does not count
@@ -1452,7 +1452,7 @@ pub(crate) unsafe extern "thiscall" fn post_due_recovery_news(this: usize) {
     crate::comparison::branch("cpw_9 news back");
     for k in 0..0x10i32 {
         let n = read_i32(G_STAFF_COUNT);
-        let s = Staff(read_usize(G_STAFF_TABLE).wrapping_add(((n - k - 1) as u32).wrapping_mul(0x6e) as usize));
+        let s = Staff(read_usize(G_STAFF_TABLE).wrapping_add(((n - k - 1) as u32).wrapping_mul((staff::SIZE as u32)) as usize));
         let club = s.club_job();
         if club.is_null() {
             continue;
@@ -1495,7 +1495,7 @@ pub(crate) unsafe extern "thiscall" fn post_due_recovery_news(this: usize) {
     let pd2 = d2.as_ptr() as usize;
     let (d2dia, d2ano) = (read_i16(pd2), read_u16(pd2 + 2));
     let last = || read_usize(this + injury_fields::RECOVERY_NEWS_QUEUE).wrapping_add((read_i32(this + injury_fields::RECOVERY_NEWS_COUNT) as u32).wrapping_mul(0x16) as usize).wrapping_sub(0x16);
-    let person = |e: usize| read_usize(G_STAFF_TABLE).wrapping_add((read_usize(e) as u32).wrapping_mul(0x6e) as usize);
+    let person = |e: usize| read_usize(G_STAFF_TABLE).wrapping_add((read_usize(e) as u32).wrapping_mul((staff::SIZE as u32)) as usize);
     // those with date A today
     let mut e = exe::crt_bsearch((d1.as_ptr()) as usize, read_usize(this + injury_fields::RECOVERY_NEWS_QUEUE), read_i32(this + injury_fields::RECOVERY_NEWS_COUNT) as u32, 0x16, 0x778e90);
     if e != 0 {
@@ -1595,7 +1595,7 @@ pub(crate) unsafe fn staff_of_match_slot(slot: usize) -> Option<(i32, usize)> {
     if id == -1 {
         return None;
     }
-    let person = (read_i32(G_STAFF_TABLE) as u32).wrapping_add((id as u32).wrapping_mul(0x6e)) as usize;
+    let person = (read_i32(G_STAFF_TABLE) as u32).wrapping_add((id as u32).wrapping_mul((staff::SIZE as u32))) as usize;
     if person != 0 && read_i32(person) >= read_i32(G_STAFF_COUNT) {
         return None;
     }
@@ -2544,7 +2544,7 @@ pub(crate) unsafe extern "thiscall" fn injury_reset_player(this: usize, id: u32)
     r.set_history_first(-1);
     r.set_history_last(-1);
     r.set_last_injury_type(0xff);
-    let g = read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(79)) + staff_state::EXTRA_FLAGS;
+    let g = read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(staff_state::SIZE)) + staff_state::EXTRA_FLAGS;
     *(g as *mut u8) &= 0xfe;
     g
 }
@@ -2783,7 +2783,7 @@ pub(crate) unsafe extern "thiscall" fn update_player_fitness(this: usize, person
                     l30 = lim;
                     l3c = t - lim;
                     for _ in 0..lim {
-                        let g = read_usize(G_STAFF_STATE_TABLE).wrapping_add((read_i32(person.addr()) as u32).wrapping_mul(0x4f) as usize) + staff_state::INJURY_COUNTER;
+                        let g = read_usize(G_STAFF_STATE_TABLE).wrapping_add((read_i32(person.addr()) as u32).wrapping_mul((staff_state::SIZE as u32)) as usize) + staff_state::INJURY_COUNTER;
                         if read_u8(g) >= 0x32 {
                             break;
                         }

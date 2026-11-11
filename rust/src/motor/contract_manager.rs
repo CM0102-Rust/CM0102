@@ -16,7 +16,7 @@ pub(crate) unsafe extern "thiscall" fn contract_with_club(this: usize, person: u
     if id >= read_i32(G_STAFF_COUNT) {
         return 0;
     }
-    let e = read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(79));
+    let e = read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(staff_state::SIZE));
     let i0 = read_i32(e);
     if i0 < 0 {
         return 0;
@@ -81,7 +81,7 @@ pub(crate) unsafe extern "C" fn contract_level(person: usize, club: usize) -> u3
 ///
 /// [pt] O registro de 79 bytes da pessoa `id` em [0xae2d0c] (+0 o índice do contrato no vetor).
 pub(crate) unsafe fn contract_manager_staff_state_record(id: usize) -> usize {
-    read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(0x4f))
+    read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(staff_state::SIZE))
 }
 
 /// Copies a 0x50-byte contract record field by field from o to d like the original (dates via the date assign operator,
@@ -400,7 +400,7 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_offer_contract(this: usi
         let k = if person.is_null() {
             0
         } else if (read_usize(person.addr()) as i32) < read_i32(G_STAFF_COUNT) {
-            let idx = read_i32(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person.addr()).wrapping_mul(0x4f)));
+            let idx = read_i32(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person.addr()).wrapping_mul(staff_state::SIZE)));
             if idx < 0 { 0 } else { (idx as usize).wrapping_mul(0x50).wrapping_add(read_usize(read_usize(G_CONTRACT_MANAGER))) }
         } else {
             0
@@ -417,7 +417,7 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_offer_contract(this: usi
     if exe::database_is_national_team(club) != 0 {
         return 0;
     }
-    if read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person.addr()).wrapping_mul(0x4f)) + staff_state::STATUS_FLAGS) & staff_state_status_flags::RETIREMENT_STATE != 0 {
+    if read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person.addr()).wrapping_mul(staff_state::SIZE)) + staff_state::STATUS_FLAGS) & staff_state_status_flags::RETIREMENT_STATE != 0 {
         return 0;
     }
     if exe::database_is_player_job(person.job_for_club() as i8) == 0 && club == person.club_job().addr() {
@@ -770,7 +770,7 @@ pub(crate) unsafe extern "thiscall" fn update_after_match(this: usize, game: usi
         let fin = exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club);
         let base = summary + lado * 0x625;
         for k in 0..20usize {
-            let slot = MatchRecordRow(base + match_stats_record::HOME_LINEUP + k * 0x49);
+            let slot = MatchRecordRow(base + match_stats_record::HOME_LINEUP + k * match_record_row::SIZE);
             let Some(person) = staff_of_summary_slot(slot.addr()) else { continue };
             let contract = if exe::database_is_national_team(club) != 0 {
                 0
@@ -799,7 +799,7 @@ pub(crate) unsafe extern "thiscall" fn update_after_match(this: usize, game: usi
             if k < 11 || slot.minute_on() != -1 {
                 let q = ((minutos as i32 * 10) / 90) as i8;
                 if exe::database_is_national_team(club) != 0 {
-                    let r = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(0x4f)) + 9;
+                    let r = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(staff_state::SIZE)) + 9;
                     write_i8(r, read_i8(r).wrapping_add(q));
                     if read_i8(r) > 100 {
                         write_i8(r, 100);
@@ -885,7 +885,7 @@ pub(crate) unsafe extern "thiscall" fn update_after_match(this: usize, game: usi
                 continue;
             }
             // on loan: the person’s second contract (+4 of the 79-byte record)
-            let idx = read_i32(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(0x4f)) + 4);
+            let idx = read_i32(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(staff_state::SIZE)) + 4);
             if idx >= 0 && (idx as usize).wrapping_mul(0x50).wrapping_add(read_usize(this)) != 0 {
                 continue;
             }
@@ -970,7 +970,7 @@ pub(crate) unsafe fn main_contract_of_staff(person: Staff) -> usize {
     if person.is_null() || read_usize(person.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
         return 0;
     }
-    let i = read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person.addr()).wrapping_mul(0x4f))) as i32;
+    let i = read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person.addr()).wrapping_mul(staff_state::SIZE))) as i32;
     if i < 0 { 0 } else { (i as usize).wrapping_mul(0x50).wrapping_add(read_usize(read_usize(G_CONTRACT_MANAGER))) }
 }
 
@@ -1316,7 +1316,7 @@ pub(crate) unsafe extern "thiscall" fn get_squad_flags_for_club(this: usize, per
     if read_usize(person.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
         return general();
     }
-    let reg = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person.addr()).wrapping_mul(0x4f));
+    let reg = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person.addr()).wrapping_mul(staff_state::SIZE));
     let i = read_usize(reg + 4) as i32;
     if i < 0 {
         return general();
@@ -1570,7 +1570,7 @@ pub(crate) unsafe extern "thiscall" fn post_bosman_departure_news(this: usize, c
 ///
 /// [pt] O contador de ofertas de contrato da pessoa (byte +8 do registro de 79 bytes em [0xae2d0c]).
 pub(crate) unsafe fn contract_offer_counter(person: usize) -> usize {
-    read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(0x4f)).wrapping_add(8)
+    read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(staff_state::SIZE)).wrapping_add(8)
 }
 
 /// Assigns date origem to destino with the game's date operator (`exe::date_operator_3d`).
@@ -2001,7 +2001,7 @@ pub(crate) unsafe fn read_byte_volatile(a: usize) -> u8 {
 ///
 /// [pt] O registro de 79 bytes da pessoa em [0xae2d0c] (+0 o contrato principal, +4 o de empréstimo; −1 sem).
 pub(crate) unsafe fn staff_state_entry(person: Staff) -> usize {
-    (read_u32(G_STAFF_STATE_TABLE) as usize).wrapping_add((read_u32(person.addr()) as usize).wrapping_mul(0x4f))
+    (read_u32(G_STAFF_STATE_TABLE) as usize).wrapping_add((read_u32(person.addr()) as usize).wrapping_mul(staff_state::SIZE))
 }
 
 /// Entry k (0x50 bytes) of the contract array starting at vetor.
@@ -2581,7 +2581,7 @@ pub(crate) unsafe fn club_of_main_contract(person: Staff) -> Club {
     let c = Contract(if read_u32(person.addr()) as i32 >= read_u32(G_STAFF_COUNT) as i32 {
         0
     } else {
-        let k = read_u32((read_u32(G_STAFF_STATE_TABLE) as usize).wrapping_add((read_u32(person.addr()) as usize).wrapping_mul(0x4f))) as i32;
+        let k = read_u32((read_u32(G_STAFF_STATE_TABLE) as usize).wrapping_add((read_u32(person.addr()) as usize).wrapping_mul(staff_state::SIZE))) as i32;
         if k < 0 { 0 } else { (read_u32(read_u32(G_CONTRACT_MANAGER) as usize) as usize).wrapping_add((k as usize).wrapping_mul(0x50)) }
     });
     write_u32(G_CONTRACT_LOOKUP_RESULT, c.addr() as u32);
@@ -2650,7 +2650,7 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_lower_match_morale(this:
         if read_u32(person.addr()) as i32 >= read_u32(G_STAFF_COUNT) as i32 {
             return false;
         }
-        let k = read_u32((read_u32(G_STAFF_STATE_TABLE) as usize).wrapping_add((read_u32(person.addr()) as usize).wrapping_mul(0x4f)) + 4) as i32;
+        let k = read_u32((read_u32(G_STAFF_STATE_TABLE) as usize).wrapping_add((read_u32(person.addr()) as usize).wrapping_mul(staff_state::SIZE)) + 4) as i32;
         k >= 0 && (read_u32(read_u32(G_CONTRACT_MANAGER) as usize) as usize).wrapping_add((k as usize).wrapping_mul(0x50)) != 0
     };
     let age = read_u8_volatile(person.addr() + staff::AGE) as i8;
@@ -2704,7 +2704,7 @@ pub(crate) unsafe extern "thiscall" fn contract_manager_lower_match_morale(this:
 ///
 /// [pt] A vaga do contrato principal da pessoa: o registro de 79 bytes dela em [0xae2d0c] (+0 o índice do contrato, −1 sem).
 pub(crate) unsafe fn main_contract_slot(person: usize) -> usize {
-    read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(0x4f))
+    read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(staff_state::SIZE))
 }
 
 /// `CONTRACT_MANAGER::remove_contract(person)`: frees the person's main contract entry, puts −1 in her slot of the
@@ -2895,7 +2895,7 @@ pub(crate) unsafe extern "thiscall" fn add_staff_contract(this: usize, person: u
         return i as u32;
     }
     crate::comparison::branch("cpl_4 person contract");
-    write_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(0x4f)), i as usize); // the person points to the slot
+    write_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(staff_state::SIZE)), i as usize); // the person points to the slot
     let c = read_usize(this).wrapping_add((i as usize).wrapping_mul(0x50));
     write_usize(c, read_usize(person));
     exe::staff_contract_generate_initial_contract(c, person, value) // the person’s value
@@ -2928,7 +2928,7 @@ pub(crate) unsafe fn decision_reminder_dates(this: usize, person: Staff, data: u
         let c = if person.is_null() || id >= read_usize(G_STAFF_COUNT) as i32 {
             0
         } else {
-            let i = read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(0x4f))) as i32;
+            let i = read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(staff_state::SIZE))) as i32;
             if i < 0 { 0 } else { read_usize(this).wrapping_add((i as usize).wrapping_mul(0x50)) }
         };
         l = read_u8(c + contract::MORALE).wrapping_add(100);
@@ -3011,7 +3011,7 @@ pub(crate) unsafe fn contract_with_relegation_clause(this: usize, club: usize, p
     if p == 0 || read_usize(p) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
         return 0;
     }
-    let i = read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p).wrapping_mul(79))) as i32;
+    let i = read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p).wrapping_mul(staff_state::SIZE))) as i32;
     if i < 0 {
         return 0;
     }
@@ -3107,7 +3107,7 @@ pub(crate) unsafe extern "thiscall" fn remove_contract_offer(this: usize, person
         exe::transfer_manager_clear_agreed_contract_flag(read_usize(G_TRANSFER_MANAGER), person);
     }
     exe::llist_remove(l, e);
-    let n = (read_usize(G_STAFF_STATE_TABLE).wrapping_add((*person as usize).wrapping_mul(79)) + 8) as *mut u8;
+    let n = (read_usize(G_STAFF_STATE_TABLE).wrapping_add((*person as usize).wrapping_mul(staff_state::SIZE)) + 8) as *mut u8;
     *n = (*n).wrapping_sub(1); // one fewer pending
 }
 
@@ -3132,7 +3132,7 @@ pub(crate) unsafe fn stored_suspension_counter(this: usize, id: usize) -> *mut i
 ///
 /// [pt] O byte de ofertas pendentes (+8) do registro de 79 bytes da pessoa em [0xae2d0c].
 pub(crate) unsafe fn pending_offers_byte(id: usize) -> *mut u8 {
-    (read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(79)) + 8) as *mut u8
+    (read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(staff_state::SIZE)) + 8) as *mut u8
 }
 
 /// `CONTRACT_MANAGER::remove_pending_offers_for_staff(person)`: removes all of the person's pending offers.
@@ -3323,7 +3323,7 @@ pub(crate) unsafe fn squad_contract_of_staff(object: usize, person: Staff) -> Co
     if id >= read_u32(G_STAFF_COUNT) as i32 {
         return Contract(0);
     }
-    let i = read_u32((read_u32(G_STAFF_STATE_TABLE) as usize).wrapping_add((id as usize).wrapping_mul(79))) as i32;
+    let i = read_u32((read_u32(G_STAFF_STATE_TABLE) as usize).wrapping_add((id as usize).wrapping_mul(staff_state::SIZE))) as i32;
     if i < 0 {
         return Contract(0);
     }
@@ -3636,7 +3636,7 @@ pub(crate) unsafe extern "thiscall" fn remove_talks_records(this: usize, person:
 ///
 /// [pt] A entrada de 79 bytes da pessoa `*id` na tabela [0xae2d0c] (em +4 a vaga do empréstimo, −1 sem).
 pub(crate) unsafe fn loan_state_entry(id: *const i32) -> usize {
-    (read_usize(G_STAFF_STATE_TABLE) as isize + *id as isize * 79) as usize
+    (read_usize(G_STAFF_STATE_TABLE) as isize + *id as isize * (staff_state::SIZE as isize)) as usize
 }
 
 /// frees the person's loan contract slot, if any
@@ -3716,7 +3716,7 @@ pub(crate) unsafe extern "thiscall" fn contract_value(t: usize, p: *const i32) -
     if p.is_null() || *p >= read_i32(G_STAFF_COUNT) {
         return 0;
     }
-    let k = read_i32(read_usize(G_STAFF_STATE_TABLE).wrapping_add((*p as usize).wrapping_mul(79)));
+    let k = read_i32(read_usize(G_STAFF_STATE_TABLE).wrapping_add((*p as usize).wrapping_mul(staff_state::SIZE)));
     if k < 0 {
         return 0;
     }
@@ -3795,7 +3795,7 @@ pub(crate) unsafe extern "thiscall" fn schedule_offer_decision(this: usize, id: 
         }
         let p = read_usize(G_STAFF_TABLE).wrapping_add((id as usize).wrapping_mul(staff::SIZE));
         if p != 0 && (read_usize(p) as i32) < read_usize(G_STAFF_COUNT) as i32 {
-            let x = read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p).wrapping_mul(79))) as i32;
+            let x = read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p).wrapping_mul(staff_state::SIZE))) as i32;
             let c = Contract(if x >= 0 { read_usize(this).wrapping_add((x as usize).wrapping_mul(0x50)) } else { 0 });
             if !c.is_null() {
                 let mut t = [0u8; 8];
@@ -3831,7 +3831,7 @@ pub(crate) unsafe extern "thiscall" fn contract_record(t: usize, p: *const i32) 
     if id >= read_i32(G_STAFF_COUNT) {
         return 0;
     }
-    let k = read_i32(read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(79)).wrapping_add(4));
+    let k = read_i32(read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(staff_state::SIZE)).wrapping_add(4));
     if k < 0 {
         return 0;
     }
@@ -4183,7 +4183,7 @@ pub(crate) unsafe extern "thiscall" fn post_contract_end_news(this: usize, p: us
         let k = if p.is_null() || read_usize(p.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
             -1
         } else {
-            read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(0x4f))) as i32
+            read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(staff_state::SIZE))) as i32
         };
         let v = if k < 0 { read_usize(4) } else { read_usize(read_usize(this).wrapping_add((k as usize).wrapping_mul(0x50)) + 4) };
         exe::newsitem_set_slot(nt, 7, v as u32);

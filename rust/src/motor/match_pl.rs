@@ -164,7 +164,7 @@ pub(crate) unsafe extern "thiscall" fn position_marks(this: usize, position: i8)
 ///
 /// [pt] Marcas da posicao do jogador no bloco do lado dele (0x91e2 + 6371 x lado), por 0x5b5270.
 pub(crate) unsafe fn player_position_instructions(j: MatchPlayer) -> u64 {
-    let block = (j.engine().addr() as isize + (engine::TACTICS as isize) + 6371 * side_of_player(j) as isize) as usize;
+    let block = (j.engine().addr() as isize + (engine::TACTICS as isize) + (formation_fields::SIZE as isize) * side_of_player(j) as isize) as usize;
     exe::formation_get_player_instructions(block, j.position())
 }
 
@@ -273,7 +273,7 @@ pub(crate) unsafe extern "thiscall" fn position_place_players(this: usize, j: us
     if exe::match_player_get_position(j) == 1 {
         return;
     }
-    let marks = (this.addr() as isize + 6371 * lado1 as isize + (engine::TACTICS_FLAGS as isize)) as *const u32;
+    let marks = (this.addr() as isize + (formation_fields::SIZE as isize) * lado1 as isize + (engine::TACTICS_FLAGS as isize)) as *const u32;
     let stopped = read_i8(this.addr() + (lado1 as usize + 6)) == 0;
     let step_towards = |for_front: bool| {
         let d: i8 = if for_front { 1 } else { -1 };
@@ -4233,7 +4233,7 @@ pub(crate) unsafe fn move_action_commentary_injected(m: Engine, p: MatchPlayer, 
     let tabela1 = |q: MatchPlayer| !q.engine().is_null() && player_table(q.addr()) == 1;
     let (px, py) = (p.cell_x(), p.cell_y());
     let mut carries = carries_in;
-    let defesa_400 = || read_u32(m.addr() + engine::TACTICS_FLAGS + other as usize * 0x18e3) & 0x400 != 0;
+    let defesa_400 = || read_u32(m.addr() + engine::TACTICS_FLAGS + other as usize * formation_fields::SIZE) & 0x400 != 0;
     // the commentary with the challenger (0x2173 by +0x71, 0x1f4a; with the goalkeeper 0x1f55/0x2158)
     let com_desafiante = |call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32| {
         let cod = if !tabela1(e) {
@@ -4762,9 +4762,9 @@ pub(crate) unsafe fn grid_step_injected(m: Engine, p: MatchPlayer, ox: i8, oy: i
             };
             k = ((read_f64(kk) - d5 * read_f64(rdata::F64_0_005)) * k as f64) as f32;
         }
-        let tactic = m.addr() + engine::TACTICS + side as usize * 0x18e3;
+        let tactic = m.addr() + engine::TACTICS + side as usize * formation_fields::SIZE;
         let marks = position_marks(tactic, p.position());
-        if marks & 0x8000 != 0 || (position_marks(tactic, p.position()) & 0x2000 != 0 && *((m.addr() + side as usize * 0x18e3 + engine::TACTICS_FLAGS) as *const u32) & 0x100 != 0) {
+        if marks & 0x8000 != 0 || (position_marks(tactic, p.position()) & 0x2000 != 0 && *((m.addr() + side as usize * formation_fields::SIZE + engine::TACTICS_FLAGS) as *const u32) & 0x100 != 0) {
             k = ((read_f64(rdata::F64_1_55) - d5 * read_f64(rdata::F64_0_025)) * k as f64) as f32;
         }
         tire_fatigue(p.addr(), k, -1);
@@ -5167,7 +5167,7 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
             l30 = (l49 as i32 + l27 as i32 + sum).wrapping_mul(l28) / 5;
         }
         p.set_space_on_ball((p.space_on_ball()).wrapping_add(0x46));
-        let flags = read_u32(m.addr() + engine::TACTICS_FLAGS + (side == 0) as usize * 0x18e3);
+        let flags = read_u32(m.addr() + engine::TACTICS_FLAGS + (side == 0) as usize * formation_fields::SIZE);
         if flags & 0x400 != 0 && p.moment_decisions() as i32 > random(5) && !is_in_attacked_box(side, x0(), y0()) && !is_in_defended_box(side, x0(), y0()) && is_in_attacking_half(side, y0()) {
             crate::comparison::branch("dribble instruction to push forward");
             l14 = 4000 - l30;
@@ -5399,7 +5399,7 @@ pub(crate) unsafe fn dribble_injected(p: MatchPlayer, mode: u8, call: &mut dyn F
         } else if is_in_attacking_half(side, y0()) {
             l10 = l10.wrapping_sub(ftol(ff * read_f32(rdata::F32_300) as f64 - (p.moment_flair() as i32 * 75) as f64));
         }
-        let marks = |q: MatchPlayer| position_marks(m.addr() + engine::TACTICS + q.side() as isize as usize * 0x18e3, q.position());
+        let marks = |q: MatchPlayer| position_marks(m.addr() + engine::TACTICS + q.side() as isize as usize * formation_fields::SIZE, q.position());
         'rating: {
             if random(ftol(fl(match_player::TEAMWORK))) == 0 && !(table_a(m.addr(), p.addr()) & 0x40 == 0 && random(4) != 0) {
                 crate::comparison::branch("dribble stamina");
@@ -5891,7 +5891,7 @@ pub(crate) unsafe fn pass_rating_by_position(p: MatchPlayer, base: i16, l20: i32
     let club = p.club();
     let managed = || club != 0 && exe::human_manager_is_human_club(club, 0, 1, 0, 0) != 0;
     let y = p.cell_y();
-    let marks = || position_marks(m.addr() + engine::TACTICS + p.side() as isize as usize * 0x18e3, p.position());
+    let marks = || position_marks(m.addr() + engine::TACTICS + p.side() as isize as usize * formation_fields::SIZE, p.position());
     let bottom = y == 0 || y == 0xb;
     let w = base.wrapping_sub(l20 as i16);
     if bottom && ta() & 0x880 != 0 && tb() & 0x880 != 0 && ta() & 0x38 != 0 && marks() & 0x4_0000_0000 != 0 {
@@ -7749,7 +7749,7 @@ pub(crate) unsafe extern "thiscall" fn decide_player(j: usize) {
 pub(crate) unsafe fn off_ball_move_injected(j: MatchPlayer, call: &mut dyn FnMut(usize, usize, [u32; 5]) -> u32) {
     let m = j.engine();
     let dir = j.side();
-    let block = (m.addr() as isize + (engine::TACTICS as isize) + 6371 * dir as isize) as usize;
+    let block = (m.addr() as isize + (engine::TACTICS as isize) + (formation_fields::SIZE as isize) * dir as isize) as usize;
     let w = |o: usize| (j.addr() + o) as *mut u16;
     let _u = |a: usize| *(a as *const usize);
     let b = |o: usize| read_i8(j.addr() + o);
@@ -8119,7 +8119,7 @@ pub(crate) unsafe extern "thiscall" fn move_off_ball(j: usize) {
 pub(crate) unsafe fn off_ball_decide_injected(j: MatchPlayer, call: &mut dyn FnMut(usize, [u32; 5]) -> u32) {
     let m = j.engine();
     let dir = j.side();
-    let block = (m.addr() as isize + (engine::TACTICS as isize) + 6371 * dir as isize) as usize;
+    let block = (m.addr() as isize + (engine::TACTICS as isize) + (formation_fields::SIZE as isize) * dir as isize) as usize;
     let w = |o: usize| (j.addr() + o) as *mut u16;
     let ta = || if m.is_null() { 0 } else { table_a(m.addr(), j.addr()) };
     let reposicionar = |c: &mut dyn FnMut(usize, [u32; 5]) -> u32, x: i8, y: i8, a: i32| {
@@ -8445,7 +8445,7 @@ pub(crate) unsafe extern "C" fn match_of_interest(p: usize) -> u32 {
     let id = read_i32(comp().addr());
     let of_group: unsafe extern "stdcall" fn(usize) -> u32 = core::mem::transmute(FN_COMP_IS_RESERVE_OR_MINOR_COMP);
     let object = || read_usize(read_usize(G_COMP_OBJECT_TABLE).wrapping_add((read_i32(comp().addr()) as usize).wrapping_mul(4)));
-    let manager = |s: i32| read_usize(G_STAFF_TABLE).wrapping_add(((g(G_STAFF_COUNT) - s - 1) as usize).wrapping_mul(110));
+    let manager = |s: i32| read_usize(G_STAFF_TABLE).wrapping_add(((g(G_STAFF_COUNT) - s - 1) as usize).wrapping_mul(staff::SIZE));
     let u = |a: usize| read_usize(a);
     if id == g(KEY_CLUB_COMP_FRIENDLY) || id == g(KEY_CLUB_COMP_RESERVE) {
         let sel = |o: usize| exe::database_is_national_team(u(p.addr() + o)) != 0 && *((u(u(p.addr() + o) + club::NATION) + nation::LEAGUE_SELECTED) as *const u8) != 0;
@@ -8582,7 +8582,7 @@ pub(crate) unsafe extern "thiscall" fn match_performance(this: usize, marcar: u8
             Some((20 - fb(0x14)) as f64)
         } else {
             let side = this.side() as isize;
-            let m = exe::formation_get_player_instructions((engine().addr() as isize + (engine::TACTICS as isize) + 0x18e3 * side) as usize, this.position());
+            let m = exe::formation_get_player_instructions((engine().addr() as isize + (engine::TACTICS as isize) + (formation_fields::SIZE as isize) * side) as usize, this.position());
             let v = if m as u32 & 0x200000 != 0 { fb(0x1a) * fb(0x14) } else { fb(0x15) * fb(0x14) };
             Some(read_f64(rdata::F64_20) - v as f64 * read_f64(rdata::F64_0_05) + read_f64(rdata::F64_0_5))
         }
@@ -8893,7 +8893,7 @@ pub(crate) unsafe extern "thiscall" fn update_attributes(this: usize) {
         }
     }
     let l30 = (sheet().consistency() as i32) as f32;
-    let tabela79 = |id: i32| *((*(G_STAFF_STATE_TABLE as *const usize)).wrapping_add((id as usize).wrapping_mul(79)).wrapping_add(0xa) as *const u8) as i32;
+    let tabela79 = |id: i32| *((*(G_STAFF_STATE_TABLE as *const usize)).wrapping_add((id as usize).wrapping_mul(staff_state::SIZE)).wrapping_add(0xa) as *const u8) as i32;
     let teto30 = |v: i32| if v as f64 > read_f64(rdata::F64_30) { v as f64 } else { read_f64(rdata::F64_30) };
     if !p.is_null() && *(p.addr() as *const i32) >= n_persons() {
         let v = (read_i16(sheet().addr() + 5) as i32) as f64 + l18 as f64 * read_f64(rdata::F64_1_75) - l1c as f64;
@@ -9990,7 +9990,7 @@ pub(crate) unsafe extern "thiscall" fn designated_marked(this: usize) -> usize {
     let this = MatchPlayer(this);
     let engine = this.engine();
     let side = this.side();
-    let formation = (engine.addr() as isize + (engine::TACTICS as isize) + 0x18e3 * side as isize) as usize;
+    let formation = (engine.addr() as isize + (engine::TACTICS as isize) + (formation_fields::SIZE as isize) * side as isize) as usize;
     if exe::formation_get_marking_type(formation, this.position()) & 4 == 0 {
         return 0;
     }
@@ -10138,7 +10138,7 @@ pub(crate) unsafe extern "thiscall" fn player_band(this: usize, side: u8) -> u32
 pub(crate) unsafe extern "thiscall" fn field_by_position(this: usize) -> u8 {
     let this = MatchPlayer(this);
     let engine = this.engine();
-    let block = (engine.addr() as isize + (engine::TACTICS as isize) + 6371 * side_of_player(this) as isize) as usize;
+    let block = (engine.addr() as isize + (engine::TACTICS as isize) + (formation_fields::SIZE as isize) * side_of_player(this) as isize) as usize;
     if exe::formation_get_marking_type(block, this.position()) & 2 != 0 { this.moment_positioning() as u8 } else { this.moment_marking() as u8 }
 }
 

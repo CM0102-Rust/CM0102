@@ -42,7 +42,7 @@ pub(crate) unsafe fn club_of_staff_contract(person: Staff) -> usize {
 ///
 /// [pt] A pessoa tem a pessoa no registro de 79 bytes em [0xae2d0c]: o byte +0xb.
 pub(crate) unsafe fn staff_state_byte_0b(person: Staff) -> u8 {
-    read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person.addr()).wrapping_mul(0x4f)) + staff_state::STATUS_FLAGS)
+    read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person.addr()).wrapping_mul(staff_state::SIZE)) + staff_state::STATUS_FLAGS)
 }
 
 /// The AI's bids and loan requests for a computer club with an active shortlist: in each slot with a target and no
@@ -626,7 +626,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
     if exe::transfer_manager_get_future_transfer(read_usize(G_TRANSFER_MANAGER), p1, (0) as u32) != 0 {
         return zero;
     }
-    if read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p1.addr()).wrapping_mul(0x4f)) + staff_state::STATUS_FLAGS) & staff_state_status_flags::RETIREMENT_STATE != 0 {
+    if read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p1.addr()).wrapping_mul(staff_state::SIZE)) + staff_state::STATUS_FLAGS) & staff_state_status_flags::RETIREMENT_STATE != 0 {
         return zero;
     }
     let a57 = p1.ambition() as i32 as f64;
@@ -664,7 +664,7 @@ pub(crate) unsafe extern "thiscall" fn staff_interest_in_joining_club(this: usiz
         if a0 & 0x161a8 == 0 {
             let id = read_usize(p1.addr()) as i32;
             if days < id % 0x23 + 0x14
-                && read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(0x4f)) + staff_state::STATUS_FLAGS) & staff_state_status_flags::AI_SHORTLIST_COUNT == 0
+                && read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(staff_state::SIZE)) + staff_state::STATUS_FLAGS) & staff_state_status_flags::AI_SHORTLIST_COUNT == 0
                 && r1 + p1.ambition() as i32 * 20 < (p1.loyalty() as i32 + 0xaa) * 25 + s
             {
                 return read_f64(rdata::F64_3_5);
@@ -2041,7 +2041,7 @@ pub(crate) unsafe extern "thiscall" fn value_player_for_club(this: usize, club: 
     if r < 0 || r < minimum.wrapping_sub(10000) || slot.flags() & shortlist_slot_flags::LOAN_SLOT != 0 {
         return loan_listed_value_end(p, slot.addr(), out);
     }
-    let nevoa = read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(0x4f)) + staff_state::STATUS_FLAGS) & staff_state_status_flags::AI_SHORTLIST_COUNT;
+    let nevoa = read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(staff_state::SIZE)) + staff_state::STATUS_FLAGS) & staff_state_status_flags::AI_SHORTLIST_COUNT;
     if nevoa != 0 {
         let a = r.wrapping_add(5000) as f64;
         let w = (game_pow(nevoa as f64, read_f64(rdata::F64_2)) * read_f64(rdata::F64_0_01) + read_f64(rdata::F64_1)) * r as f64;
@@ -2476,7 +2476,7 @@ pub(crate) unsafe extern "thiscall" fn update_staff_status(this: usize, person: 
         faltou |= !remove_sorted_pair(this + shortlist_manager_fields::PAIRS_BY_CLUB, &key, 0x844740);
         if human(club, 0, 1, 0, 0) == 0 && !faltou {
             crate::comparison::branch("cpy_2 list count");
-            let r = (read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(0x4f)) + staff_state::STATUS_FLAGS) as *mut u8;
+            let r = (read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(staff_state::SIZE)) + staff_state::STATUS_FLAGS) as *mut u8;
             *r = (*r & 0xf0) | ((*r).wrapping_sub(1) & 0xf); // cpy2: one list fewer in the count of the person
         }
     }
@@ -3065,7 +3065,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_to_club_shortlists(this: usize
     if force == 0 && sheets.current_reputation() < 0x157c {
         return;
     }
-    let record = |j: usize| read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(j).wrapping_mul(0x4f));
+    let record = |j: usize| read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(j).wrapping_mul(staff_state::SIZE));
     if read_u8(record(player.addr()) + staff_state::STATUS_FLAGS) & 0x30 == staff_state_status_flags::RETIREMENT_ANNOUNCED {
         return;
     }
@@ -3280,7 +3280,7 @@ pub(crate) unsafe extern "thiscall" fn build_position_lists(this: usize, _not_us
     let base = read_usize(G_STAFF_TABLE);
     let mut i = 0usize;
     while (i as i32) < read_i32(G_STAFF_COUNT).wrapping_sub(0x10) {
-        let p = Staff(base.wrapping_add(i * 0x6e));
+        let p = Staff(base.wrapping_add(i * staff::SIZE));
         for vaga in 0..16u32 {
             if exe::shortlist_staff_fits_slot_position(p, vaga) == 0 {
                 continue;
@@ -3578,7 +3578,7 @@ pub(crate) unsafe extern "thiscall" fn add_shortlist_entry(this: usize, person: 
     insert_sorted_pair(this, 0, 0x10, person, club, 0x757ea0); // the array by person
     insert_sorted_pair(this, 4, 0x14, person, club, 0x844740); // the vector by club
     if exe::human_manager_is_human_club(club, 0, 1, (0) as u32, 0) == 0 {
-        let r = (read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(0x4f)) + staff_state::STATUS_FLAGS) as *mut u8;
+        let r = (read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(person).wrapping_mul(staff_state::SIZE)) + staff_state::STATUS_FLAGS) as *mut u8;
         let a = *r;
         *r = (a & 0xf0) | (a.wrapping_add(1) & 0xf);
     }

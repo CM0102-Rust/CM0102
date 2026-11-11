@@ -628,7 +628,7 @@ pub(crate) unsafe fn compare_french_table(name: &str, this: League, clubs: usize
     let mut found: Vec<(usize, u8)> = Vec::new();
     let mut same = r == 1 && this.club_count() == n && t != 0;
     if same {
-        found = (0..n as usize).map(|k| (read_usize(t + k * 0x3b), read_u8(t + k * 0x3b + league_table_row::MARK))).collect();
+        found = (0..n as usize).map(|k| (read_usize(t + k * league_table_row::SIZE), read_u8(t + k * league_table_row::SIZE + league_table_row::MARK))).collect();
         same = found == plan;
     }
     SCOREBOARD.record(same, || format!("{}({:#x}) original={} plan={:x?} table={:x?}", name, this.addr(), r, plan, found));

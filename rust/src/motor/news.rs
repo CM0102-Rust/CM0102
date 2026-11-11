@@ -63,7 +63,7 @@ pub(crate) unsafe extern "thiscall" fn mark_item_read(this: usize, manager: usiz
         let of_team = read_usize(G_SCREEN_RECORDS_MANAGER + 0x300 * read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize as usize);
         let m = (exe::screenmanager_find_manager_channel(G_SCREEN_MANAGER, of_team) as u32) as u16;
         for j in 0..0x10i32 {
-            let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add((read_i32(G_STAFF_COUNT) - j - 1).wrapping_mul(0x6e) as usize));
+            let p = Staff(read_usize(G_STAFF_TABLE).wrapping_add((read_i32(G_STAFF_COUNT) - j - 1).wrapping_mul((staff::SIZE as i32)) as usize));
             if p.classification() == 1 && p.addr() != manager && (exe::screenmanager_find_manager_channel(G_SCREEN_MANAGER, p) as u32) as u16 == m {
                 exe::news_mark_item_read(this, p, id, 0);
             }

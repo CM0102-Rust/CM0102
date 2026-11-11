@@ -1181,7 +1181,7 @@ pub(crate) unsafe extern "thiscall" fn player_stats_record_match(this: usize, p:
             cat = match_stats_category(Fixture(p), lado as i32, true, &mut error);
         }
         let gf = game + match_stats_record::SIDE_SIZE * lado + match_stats_record::HOME_GOALS;
-        let gc = game + match_stats_record::AWAY_GOALS - 0x625 * lado;
+        let gc = game + match_stats_record::AWAY_GOALS - match_record::SIDE_SIZE * lado;
         for k in 0..20usize {
             let Some((e, pessoa, dados)) = match_lineup_row(game, lado, k) else { continue };
             let rating = read_u8(e + lineup_row::RATING);

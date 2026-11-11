@@ -977,6 +977,7 @@ pub(crate) mod preferences {
 /// Fields of the scheduled match record (date, competition at +0x14, the two clubs, result), named from how the routines use them. [pt] Campos do registro da partida marcada.
 #[allow(dead_code)]
 pub(crate) mod fixture {
+    pub(crate) const SIZE: usize = 0x4f; // the fixture record size (79 bytes)
     pub(crate) const COMP_ID: usize = 0x0; // 4 byte(s): competition id (-1 none; -2 marks a removed or simulated fixture)
     pub(crate) const STADIUM_ID: usize = 0x4; // 4 byte(s): stadium id (-1 none), set by Stadium::set_fixture_venue
     pub(crate) const MATCH_STATS_SLOT: usize = 0x8; // 4 byte(s): slot of the match statistics record in match_stats_matches.tmp (-1 none, set at creation)
@@ -1341,6 +1342,7 @@ pub(crate) mod count_record {
 /// Fields of the `cup_round` object, named from how the routines use them. [pt] Campos do objeto `cup_round`.
 #[allow(dead_code)]
 pub(crate) mod cup_round {
+    pub(crate) const SIZE: usize = 0x68; // the round record size (104 bytes)
     pub(crate) const DAY: usize = 0x3; // 2 byte(s): day of year of the round date (0x68-byte round records of the cup ROUND_TABLE)
     pub(crate) const YEAR_OFFSET: usize = 0x5; // 1 byte(s): signed year offset of the round date relative to the cup YEAR
     pub(crate) const TIME_SLICE: usize = 0x6; // 1 byte(s): time slice of the round's fixtures (match time byte)
@@ -1621,6 +1623,7 @@ pub(crate) mod league_projection {
 /// Fields of the `league_round_date` object, named from how the routines use them. [pt] Campos do objeto `league_round_date`.
 #[allow(dead_code)]
 pub(crate) mod league_round_date {
+    pub(crate) const SIZE: usize = 0x41; // the record size (65 bytes)
     pub(crate) const DAY: usize = 0x0; // 2 byte(s): day of year of the round (0x41-byte entries of the league ROUND_DATES)
     pub(crate) const YEAR_OFFSET: usize = 0x2; // 2 byte(s): year of the round minus the league YEAR
     pub(crate) const TIME_SLICE: usize = 0x4; // 1 byte(s): time slice of the round's fixtures (copied to fixture TIME_SLICE)
@@ -1634,6 +1637,7 @@ pub(crate) mod league_round_date {
 /// Fields of the `league_table_row` object, named from how the routines use them. [pt] Campos do objeto `league_table_row`.
 #[allow(dead_code)]
 pub(crate) mod league_table_row {
+    pub(crate) const SIZE: usize = 0x3b; // the table row size (59 bytes)
     pub(crate) const CLUB: usize = 0x0; // 4 byte(s): club pointer of the row (row 1 here: 0x3b-byte stride)
     pub(crate) const POSITION: usize = 0x4; // 1 byte(s): table position index of the row (0x3b-byte rows of the league TABLE)
     pub(crate) const H2H_ENTRIES: usize = 0x5; // 4 byte(s): pointer to the head-to-head entries, 14 bytes per opponent (tie-break rule 4)
@@ -1928,6 +1932,7 @@ pub(crate) mod match_record {
 /// Fields of the `match_record_row` object, named from how the routines use them. [pt] Campos do objeto `match_record_row`.
 #[allow(dead_code)]
 pub(crate) mod match_record_row {
+    pub(crate) const SIZE: usize = 0x49; // the row size (73 bytes)
     pub(crate) const STAFF_ID: usize = 0x0; // 4 byte(s): staff id; -1 = empty row
     pub(crate) const PLAYER_ID: usize = 0x4; // 4 byte(s): player id
     pub(crate) const FIRST_NAME_ID: usize = 0x8; // 4 byte(s): first name id (checked against the person) [inference]
@@ -2478,6 +2483,7 @@ pub(crate) mod staff_records_fields {
 /// Fields of the `staff_state` object, named from how the routines use them. [pt] Campos do objeto `staff_state`.
 #[allow(dead_code)]
 pub(crate) mod staff_state {
+    pub(crate) const SIZE: usize = 0x4f; // the record size (79 bytes)
     pub(crate) const INJURY_COUNTER: usize = 0xa; // 1 byte(s): byte of the 79-byte general.dat record raised by injuries up to 100 [inference]
     pub(crate) const STATUS_FLAGS: usize = 0xb; // 1 byte(s): bit 0x40 regen mark, bits 0x30 retirement state (0x10 announced, 0x20 retired)
     pub(crate) const EXTRA_FLAGS: usize = 0xc; // 1 byte(s): flag byte of the 79-byte staff state record after STATUS_FLAGS: bit 0x1 cleared when the physical record is created and after the holiday recovery news; bit 0x2 blocks a foreign player's call-up by his second nation
@@ -2676,6 +2682,7 @@ pub(crate) mod euro_champ_qual {
 /// Fields of the `formation` object, named from how the routines use them. [pt] Campos do objeto `formation`.
 #[allow(dead_code)]
 pub(crate) mod formation_fields {
+    pub(crate) const SIZE: usize = 0x18e3; // the per-side tactics block size (6371 bytes)
     pub(crate) const PASSWORD: usize = 0x33; // 50 byte(s): formation password string, stored inverted in the file (each byte ~b, 0xff kept) [verified: load_from_disk exe error strings 'unable to read in the %s' (0x5b5d10): 'password' read into +0x33, 0x32 bytes]
     pub(crate) const CREATOR: usize = 0x65; // 200 byte(s): formation creator string [verified: load_from_disk exe error strings 'unable to read in the %s' (0x5b5d10): 'creator' read into +0x65, 200 bytes]
     pub(crate) const SLOT_CELLS: usize = 0x12d; // 22 byte(s): Tactical grid cell codes of the 11 formation slots (words; a second set follows at +0x14e)
@@ -2766,6 +2773,7 @@ pub(crate) mod names {
 /// engine per-side match stats block (engine SIDE_STATS + 0x36 x side, 0x36 bytes; +0 shoot-out goals, +1 score)
 #[allow(dead_code)]
 pub(crate) mod side_stats {
+    pub(crate) const SIZE: usize = 0x36; // the per-side block size (54 bytes)
     pub(crate) const CAPTAIN: usize = 0x11; // 1 byte(s): captain's row index of the side
     pub(crate) const POSSESSION: usize = 0x12; // 5 byte(s): possession percentages of the side (5 bytes)
 

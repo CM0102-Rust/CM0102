@@ -59,7 +59,7 @@ pub(crate) unsafe extern "C" fn build_save_game_summary(summary: *mut u8) {
     let table = *(G_STAFF_TABLE as *const usize);
     for i in 0..0x10i32 {
         let club_txt = summary.add(0x820 + 0x78 * i as usize);
-        let p = Staff(table.wrapping_add((how_many - i - 1).wrapping_mul(0x6e) as usize));
+        let p = Staff(table.wrapping_add((how_many - i - 1).wrapping_mul((staff::SIZE as i32)) as usize));
         if p.classification() != 1 {
             *club_txt.sub(0x3c) = 0;
             continue;

@@ -406,7 +406,7 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
     }
     if v < 0x3e018 {
         for i in 0..u(G_STAFF_COUNT) as i32 {
-            *((u(G_STAFF_STATE_TABLE) as usize + 0x4f * i as usize + staff_state::STATUS_FLAGS) as *mut u8) &= 0x7f;
+            *((u(G_STAFF_STATE_TABLE) as usize + staff_state::SIZE * i as usize + staff_state::STATUS_FLAGS) as *mut u8) &= 0x7f;
         }
     }
     *(G_CLUB_STATE_COUNT as *mut u32) = u(G_CLUB_COUNT);
@@ -451,7 +451,7 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
         }
         if i == LOAD_STEPS.len() - 1 && v < 0x3e032 {
             for p in 0..u(G_STAFF_COUNT) as i32 {
-                exe::staff_normalise_player_attributes(u(G_STAFF_TABLE) as usize + 0x6e * p as usize);
+                exe::staff_normalise_player_attributes(u(G_STAFF_TABLE) as usize + staff::SIZE * p as usize);
             }
         }
         if falta_espaco(0x19) {
@@ -564,7 +564,7 @@ pub(crate) unsafe extern "C" fn load_game_data(path: *const u8) -> u32 {
 pub(crate) unsafe fn undo_holiday_managers() {
     let u = |a: usize| read_usize(a);
     for i in 0..0x10usize {
-        let s = Staff(u(G_STAFF_TABLE).wrapping_add(0x6e * (read_i32(G_STAFF_COUNT).wrapping_sub(i as i32).wrapping_sub(1) as usize)));
+        let s = Staff(u(G_STAFF_TABLE).wrapping_add(staff::SIZE * (read_i32(G_STAFF_COUNT).wrapping_sub(i as i32).wrapping_sub(1) as usize)));
         if s.classification() != 5 {
             continue;
         }

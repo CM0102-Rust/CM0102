@@ -188,7 +188,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pay_prize_money(league: usize) {
     let mut regions: Vec<(usize, usize)> = Vec::new();
     if e1 != 2 {
         for i in 0..n.max(0) as usize {
-            let fin = european_cup_club_finance(read_usize(league.table() + 0x3b * i));
+            let fin = european_cup_club_finance(read_usize(league.table() + league_table_row::SIZE * i));
             if fin != 0 && !regions.iter().any(|r| r.0 == fin) {
                 regions.push((fin, 0x167));
             }
@@ -329,7 +329,7 @@ pub(crate) unsafe extern "thiscall" fn compare_league_set_predicted_positions(le
     if league.comp_stats() == 0 || n <= 0 {
         return o(league.addr()); // simplification: the box or nothing to sort, original only
     }
-    let mut v: Vec<u32> = (0..n as usize).map(|i| read_usize(league.table() + 0x3b * i) as u32).collect();
+    let mut v: Vec<u32> = (0..n as usize).map(|i| read_usize(league.table() + league_table_row::SIZE * i) as u32).collect();
     let mut k = vec![0i32; n as usize];
     sort_clubs_by_strength(v.as_mut_ptr(), k.as_mut_ptr(), n);
     o(league.addr());
@@ -541,7 +541,7 @@ pub(crate) unsafe extern "thiscall" fn compare_pay_tv_rights(league: usize, valu
     let o = original_fn::<unsafe extern "thiscall" fn(usize, i32, usize)>(IDX_PAY_TV_RIGHTS);
     let finances = read_usize(G_FINANCE_TABLE);
     let n = league.club_count().max(0) as usize;
-    let clubs: Vec<usize> = (0..n).map(|i| read_usize(league.table() + 0x3b * i)).collect();
+    let clubs: Vec<usize> = (0..n).map(|i| read_usize(league.table() + league_table_row::SIZE * i)).collect();
     if finances == 0 || clubs.contains(&0) {
         return o(league.addr(), value, filter);
     }
@@ -561,7 +561,7 @@ pub(crate) unsafe extern "thiscall" fn compare_league_record_season_honours(leag
     }
     let mut reg = comp_history_regions();
     let how_many = read_i32(G_CLUB_COUNT).wrapping_sub(read_i32(G_NATION_COUNT)).max(0) as usize;
-    reg.push((read_usize(G_CLUB_TABLE), 0x245 * how_many));
+    reg.push((read_usize(G_CLUB_TABLE), club::SIZE * how_many));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side(&reg, || o(league), || league_record_season_honours(league));
     SCOREBOARD.record(igual && r == n, || format!("league_record_season_honours({:x}) {:x}/{:x} {:x?} x {:x?}", league, r, n, mo, mr));
     r

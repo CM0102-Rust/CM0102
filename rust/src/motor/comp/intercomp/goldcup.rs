@@ -533,15 +533,15 @@ pub(crate) unsafe fn phase_table_written_bytes(ops: &[GoldcupScheduleOp], ops2: 
         match *op {
             Cqp12D(r, ..) => {
                 pega(r as usize * 0x41, 5);
-                pega(r as usize * 0x41 + league_round_date::VENUE_VALUE, 4);
+                pega(r as usize * league_round_date::SIZE + league_round_date::VENUE_VALUE, 4);
             }
             Cqp12L(r, j, ..) => pega(r as usize * 0x41 + 5 + j as usize * 7, 7),
             Cqp12S(r, ..) => pega(r as usize * 0x68, 3),
             Cqp12J(r, ..) => {
                 pega(r as usize * 0x68 + 3, 4);
-                pega(r as usize * 0x68 + cup_round::VENUE_VALUE, 4);
+                pega(r as usize * cup_round::SIZE + cup_round::VENUE_VALUE, 4);
             }
-            Cqp12E(r, vaga, ..) => pega(r as usize * 0x68 + cup_round::SLOT_VENUE + vaga as usize * 7, 7),
+            Cqp12E(r, vaga, ..) => pega(r as usize * cup_round::SIZE + cup_round::SLOT_VENUE + vaga as usize * 7, 7),
             Cqp12B(o, _) => pega(o, 1),
             Cqp12W(o, _) => pega(o, 2),
             Cqp12X(o, _) => pega(o, 4),

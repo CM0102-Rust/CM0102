@@ -349,7 +349,7 @@ pub(crate) unsafe extern "thiscall" fn eng_first_create_schedule(this: usize, st
 ///
 /// [pt] O clube da linha `k` da tabela da liga (+0xb1, linhas de 0x3b bytes; o clube no +0).
 pub(crate) unsafe fn eng_first_league_row_club(league: League, k: usize) -> usize {
-    read_usize(league.table() + k * 0x3b)
+    read_usize(league.table() + k * league_table_row::SIZE)
 }
 
 /// Creates the play-off stage of the three divisions from 4 table rows: club list, round table, Cup_Stage in the first

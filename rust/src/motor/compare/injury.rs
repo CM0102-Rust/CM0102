@@ -58,7 +58,7 @@ pub(crate) unsafe extern "thiscall" fn compare_post_recovery_news(this: usize, p
     }
     reg.push((G_CONTRACT_LOOKUP_RESULT, 4));
     reg.push((physical_record_of_player(this, p.addr()), 31));
-    reg.push((read_usize(G_STAFF_STATE_TABLE).wrapping_add((read_i32(p.addr()) as isize * 0x4f) as usize), 0x4f));
+    reg.push((read_usize(G_STAFF_STATE_TABLE).wrapping_add((read_i32(p.addr()) as isize * (staff_state::SIZE as isize)) as usize), 0x4f));
     let club = p.club_job();
     if !club.is_null() && club.manager().addr() != 0 {
         reg.push((club.manager().addr(), 0x6e));
@@ -213,7 +213,7 @@ pub(crate) unsafe extern "thiscall" fn compare_apply_match_effects(this: usize, 
     let mut taken = false;
     for lado in 0..2usize {
         for k in 0..0x14usize {
-            let slot = fixture.addr() + match_record::ROW_MINUTE_OFF + 0x625 * lado + 0x49 * k;
+            let slot = fixture.addr() + match_record::ROW_MINUTE_OFF + match_record::SIDE_SIZE * lado + 0x49 * k;
             let Some((id, pessoa)) = staff_of_match_slot(slot) else { continue };
             if pessoa == 0 {
                 return o(this, game, fixture.addr());
@@ -474,7 +474,7 @@ pub(crate) unsafe extern "thiscall" fn compare_injury_reset_player(this: usize, 
     let l = read_usize(this + injury_fields::MATCH_HIT_LIST);
     let expected: Vec<usize> = if l != 0 { list_items_capped(l).into_iter().filter(|&e| read_usize(e) as u32 != id).collect() } else { Vec::new() };
     let r = PhysicalRecord(injury_history_record(this, id as usize));
-    let g = read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(79)) + 0xc;
+    let g = read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(staff_state::SIZE)) + 0xc;
     let (byte, nivel, b1c) = (read_u8(g) & 0xfe, r.recurrence_grade(), read_u8(r.addr() + 0x1c));
     let ret = original_fn::<unsafe extern "thiscall" fn(usize, u32) -> usize>(IDX_INJURY_RESET_PLAYER)(this, id);
     let items = if l != 0 { list_items_capped(l) } else { Vec::new() };
@@ -540,7 +540,7 @@ pub(crate) unsafe extern "thiscall" fn compare_update_player_fitness(this: usize
     }
     let id = read_i32(person.addr()) as usize;
     let rec = read_usize(this).wrapping_add(id.wrapping_mul(31));
-    let general = read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(0x4f));
+    let general = read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(staff_state::SIZE));
     let e = crate::rng::STATE_REGIONS;
     let reg = [(rec, 31), (general + staff_state::INJURY_COUNTER, 1), (G_FITNESS_UPDATE_CACHE_DATE, 0x2c), e[0], e[1]];
     END_INJURY_REACHED.store(false, Relaxed);

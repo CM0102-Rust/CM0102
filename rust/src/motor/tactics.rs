@@ -759,7 +759,7 @@ pub(crate) unsafe extern "thiscall" fn row_person(this: usize, club: usize, whic
     if i < 0 {
         return 0;
     }
-    read_usize(G_STAFF_TABLE).wrapping_add(110 * i as usize)
+    read_usize(G_STAFF_TABLE).wrapping_add(staff::SIZE * i as usize)
 }
 
 /// Returns the club's row in the tactics table: for a human-managed club with `humano` set, -1 for a second national
@@ -1225,9 +1225,9 @@ pub(crate) unsafe extern "thiscall" fn formation_record(t: usize, f: i16, human:
         return original_fn::<unsafe extern "thiscall" fn(usize, i16, u32) -> usize>(IDX_FORMATION_RECORD)(t, f as i16, human);
     }
     if f < primeiras {
-        read_usize(t + tactics_fields::PRESET_TACTICS).wrapping_add(f as usize * 0x18e3)
+        read_usize(t + tactics_fields::PRESET_TACTICS).wrapping_add(f as usize * formation_fields::SIZE)
     } else {
-        read_usize(t + tactics_fields::CUSTOM_TACTICS).wrapping_add((f - primeiras) as usize * 0x18e3)
+        read_usize(t + tactics_fields::CUSTOM_TACTICS).wrapping_add((f - primeiras) as usize * formation_fields::SIZE)
     }
 }
 
@@ -1306,10 +1306,10 @@ pub(crate) unsafe extern "thiscall" fn get_club_tactic(this: usize, club: usize,
     let prontas = read_i32(this + tactics_fields::PRESET_TACTIC_COUNT);
     if index < prontas { // cpx8: tática pronta ou própria
         crate::comparison::branch("cpx_8 preset tactic");
-        read_usize(this + tactics_fields::PRESET_TACTICS).wrapping_add(index.wrapping_mul(0x18e3) as usize) // cpx8: o bloco pronto
+        read_usize(this + tactics_fields::PRESET_TACTICS).wrapping_add(index.wrapping_mul((formation_fields::SIZE as i32)) as usize) // cpx8: o bloco pronto
     } else {
         crate::comparison::branch("cpx_8 own tactic");
-        read_usize(this + tactics_fields::CUSTOM_TACTICS).wrapping_add(index.wrapping_sub(prontas).wrapping_mul(0x18e3) as usize) // cpx8: o bloco próprio
+        read_usize(this + tactics_fields::CUSTOM_TACTICS).wrapping_add(index.wrapping_sub(prontas).wrapping_mul((formation_fields::SIZE as i32)) as usize) // cpx8: o bloco próprio
     }
 }
 

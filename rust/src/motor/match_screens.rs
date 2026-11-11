@@ -184,7 +184,7 @@ pub(crate) unsafe extern "thiscall" fn fill_match_record(stats: usize, m: usize,
     }
     pd(reg.addr() + match_record::GATE_RECEIPTS, 0);
     let stadium = m.adjusted_player_id() as i32;
-    let p = if stadium > -1 { d((d(G_STAFF_TABLE) as i32 + stadium * 0x6e + (staff::PLAYER as i32)) as usize) as usize } else { 0 };
+    let p = if stadium > -1 { d((d(G_STAFF_TABLE) as i32 + stadium * (staff::SIZE as i32) + (staff::PLAYER as i32)) as usize) as usize } else { 0 };
     pd(reg.addr() + match_record::MAN_OF_THE_MATCH_ID, if p != 0 { d(p) } else { u32::MAX });
     let q = (m.referee_id() as u32) as usize;
     pd(reg.addr() + match_record::REFEREE_ID, if q != 0 && d(q) as i32 > -1 { d(q) } else { u32::MAX });
@@ -242,9 +242,9 @@ pub(crate) unsafe extern "thiscall" fn fill_match_record(stats: usize, m: usize,
     }
     for t in 0..2usize {
         let tm = reg.addr() + match_record::SIDE_SIZE * t + match_record::HOME_TEAM;
-        let s = m.addr() + 0x36 * t + engine::SIDE_STATS;
+        let s = m.addr() + side_stats::SIZE * t + engine::SIDE_STATS;
         let id = d(reg.addr() + match_record::AWAY_CLUB_ID * t) as i32;
-        let club = (d(G_CLUB_TABLE) as i32 + id * 0x245) as usize;
+        let club = (d(G_CLUB_TABLE) as i32 + id * (club::SIZE as i32)) as usize;
         let uses = b(game() + 0x40 + t) != 0 && exe::squad_manager_club_uses_squad_numbers(d(G_SQUAD_MANAGER) as usize, club, 0) != 0;
         for (o, de) in [(0, 1), (1, 0), (3, 4), (4, 5), (2, 6), (5, 7), (6, 8), (7, 9), (8, 2), (9, 3), (0xa, 0xb),
                         (0xb, 0xa), (0xc, 0xc), (0xd, 0xd), (0xe, 0xe), (0xf, 0x10), (0x10, 0xf)] {
@@ -2914,7 +2914,7 @@ pub(crate) unsafe extern "C" fn fill_team_stats_rows(mode: u32, area: usize) {
                         copy_to_work_text(name.as_ptr() as usize);
                     }
                     if id >= 0 && id < read_i32(G_STAFF_COUNT) {
-                        let person = read_usize(G_STAFF_TABLE).wrapping_add(id as usize * 110);
+                        let person = read_usize(G_STAFF_TABLE).wrapping_add(id as usize * staff::SIZE);
                         if exe::database_staff_matches_names(person, n1, n2, n3, reg + match_record::ROW_DATE_OF_BIRTH) != 0 {
                             let v = if side == 0 { read_i32(data) } else { read_i32(data + match_record::AWAY_CLUB_ID) };
                             let limit = read_i32(G_CLUB_COUNT).wrapping_sub(read_i32(G_NATION_COUNT).wrapping_mul(2));
@@ -3334,7 +3334,7 @@ pub(crate) unsafe extern "C" fn refresh_latest_scores_rows() {
                             exe::screenmanager_set_widget_text_colour(sm, it, cor4c);
                             exe::screenmanager_set_widget_text(sm, it, BUF);
                             if id >= 0 && id < read_i32(G_STAFF_COUNT) {
-                                let person = read_usize(G_STAFF_TABLE).wrapping_add(id as usize * 110);
+                                let person = read_usize(G_STAFF_TABLE).wrapping_add(id as usize * staff::SIZE);
                                 if exe::database_staff_matches_names(person, n98, na0, na4, reg + match_record::ROW_DATE_OF_BIRTH) != 0 {
                                     let v = if side == 0 { i32_em(ev) } else { read_i32(ev + match_record::AWAY_CLUB_ID) };
                                     let limit = read_i32(G_CLUB_COUNT).wrapping_sub(read_i32(G_NATION_COUNT).wrapping_mul(2));
@@ -4274,8 +4274,8 @@ pub(crate) unsafe extern "C" fn refresh_player_ratings_rows() {
             }
             let row = j * 0x49;
             let i = item.wrapping_add(1);
-            let r = MatchRecordRow(e.addr() + t * 0x625 + row + match_record::ROW_STAFF_ID);
-            let c = if !copy.is_null() { copy.addr() + t * 0x625 + row + match_record::ROW_STAFF_ID } else { 0 };
+            let r = MatchRecordRow(e.addr() + t * match_record::SIDE_SIZE + row + match_record::ROW_STAFF_ID);
+            let c = if !copy.is_null() { copy.addr() + t * match_record::SIDE_SIZE + row + match_record::ROW_STAFF_ID } else { 0 };
             let er = |k: usize| read_u8(r.addr() + k);
             let cr = |k: usize| read_u8(c + k);
             let difere = |ks: &[usize]| c == 0 || ks.iter().any(|&k| er(k) != cr(k));
@@ -4532,7 +4532,7 @@ pub(crate) unsafe extern "C" fn draw_player_ratings_panel(top: *mut i32, base: *
     for i in 0..2usize {
         let col = 8 * i;
         for j in 0..0x14usize {
-            let reg = MatchRecordRow(dados + 1573 * i + 73 * j + match_record::ROW_STAFF_ID);
+            let reg = MatchRecordRow(dados + match_record::SIDE_SIZE * i + match_record_row::SIZE * j + match_record::ROW_STAFF_ID);
             let camisa = reg.shirt_number();
             format(BUF, 0x98806c, if camisa > 0 { camisa as i32 } else { j as i32 + 1 });
             let starters = (read_u8(partida + fixture::SQUAD_RULES) & 0xf) as usize + 0xb;
@@ -4557,7 +4557,7 @@ pub(crate) unsafe extern "C" fn draw_player_ratings_panel(top: *mut i32, base: *
                 let c = reg.common_name_id();
                 let mut name = [0u8; 0xc8];
                 exe::database_format_name_from_ids(a, b, c, (name.as_mut_ptr() as usize) as *mut u8, 0xc8, 1, (id) as u32);
-                let capitao = read_i8(dados + 1573 * i + match_record::HOME_CAPTAIN) as i32;
+                let capitao = read_i8(dados + match_record::SIDE_SIZE * i + match_record::HOME_CAPTAIN) as i32;
                 if j as i32 == capitao {
                     text(BUF, 0xa16a7c, name.as_ptr() as usize);
                 } else {
@@ -4565,7 +4565,7 @@ pub(crate) unsafe extern "C" fn draw_player_ratings_panel(top: *mut i32, base: *
                 }
                 let mut botao = false;
                 if id >= 0 && id < read_i32(G_STAFF_COUNT) {
-                    let person = (read_usize(G_STAFF_TABLE) as isize + id as isize * 110) as usize;
+                    let person = (read_usize(G_STAFF_TABLE) as isize + id as isize * (staff::SIZE as isize)) as usize;
                     if exe::database_staff_matches_names(person, a, b, c, reg.addr() + match_record_row::DATE_OF_BIRTH) != 0 {
                         botao = true;
                         let goal_difference = if i == 0 { read_i32(dados) } else { read_i32(dados + match_record::AWAY_CLUB_ID) };

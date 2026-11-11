@@ -4,7 +4,7 @@ use super::*;
 ///
 /// [pt] O clube da linha `i` da tabela (+0xb1, linhas de 0x3b bytes) da liga ou fase `t`.
 pub(crate) unsafe fn aus_nsl_table_row_club(t: League, i: usize) -> usize {
-    read_usize(t.table() + i * 0x3b)
+    read_usize(t.table() + i * league_table_row::SIZE)
 }
 
 /// The NSL has the regular season (round robin), the finals series (stage 0) and the grand final (stage 1): the next

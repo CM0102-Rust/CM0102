@@ -202,7 +202,7 @@ pub(crate) unsafe extern "thiscall" fn set_club_season_expectations(this: usize)
     let mut i = 0i16;
     while i < this.club_count() {
         crate::comparison::branch("cqh_4 club expectation");
-        let club = read_usize(this.table() + i as usize * 0x3b);
+        let club = read_usize(this.table() + i as usize * league_table_row::SIZE);
         exe::manager_manager_set_season_expectations(read_usize(G_MANAGER_MANAGER), club, 1); // cqh4: with the news
         i += 1; // cqh4: the next club
     }
@@ -470,7 +470,7 @@ pub(crate) unsafe extern "thiscall" fn send_group_draw_news(this: usize) {
     if n > 8 || n <= 0 {
         return;
     }
-    let team = |i: u8| read_usize(this.table() + (i as i8 as isize * 0x3b) as usize);
+    let team = |i: u8| read_usize(this.table() + (i as i8 as isize * (league_table_row::SIZE as isize)) as usize);
     let mut news = 0usize;
     let mut i: u8 = 0;
     loop {
@@ -571,7 +571,7 @@ pub(crate) unsafe extern "thiscall" fn send_fixture_list_news(this: usize, list:
     exe::new_date(p1, read_i16(table) as u16 as u32, read_i16(table + 2).wrapping_add(this.year()) as u16 as u32);
     let r = exe::date_sub_days(p1, t.as_mut_ptr() as usize, 5);
     exe::date_operator_3d(p1, t2.as_mut_ptr() as usize, r);
-    let team = |i: u32| read_usize(this.table() + (i as i16 as isize * 0x3b) as usize);
+    let team = |i: u32| read_usize(this.table() + (i as i16 as isize * (league_table_row::SIZE as isize)) as usize);
     let mut i: u32 = 0;
     if this.club_count() > 0 {
         loop {
@@ -1136,7 +1136,7 @@ pub(crate) unsafe extern "thiscall" fn league_promote_and_relegate(ecx: usize, a
     if contracts != 0 {
         let mut i = 0i32;
         while i < below.club_count() as i32 {
-            let e = LeagueTableRow(below.table() + i as usize * 0x3b);
+            let e = LeagueTableRow(below.table() + i as usize * league_table_row::SIZE);
             let s = e.status();
             if s != 5 && s != 0 {
                 exe::contract_manager_trigger_non_promotion_clauses(read_usize(G_CONTRACT_MANAGER), read_usize(e.addr()), below.competition().addr());
@@ -1161,19 +1161,19 @@ pub(crate) unsafe extern "thiscall" fn league_promote_and_relegate(ecx: usize, a
     if aos_pairs != 0 {
         let mut i = 0i32;
         while i < above.club_count() as i32 {
-            let ue = above.table() + i as usize * 0x3b;
+            let ue = above.table() + i as usize * league_table_row::SIZE;
             if read_u8(ue + league_table_row::STATUS) == 3 {
                 let n = below.club_count() as i32;
                 let mut j = 0i32;
                 while j < n {
-                    let s = read_u8(below.table() + j as usize * 0x3b + league_table_row::STATUS);
+                    let s = read_u8(below.table() + j as usize * league_table_row::SIZE + league_table_row::STATUS);
                     if s == 0 || s == 5 {
                         break;
                     }
                     j += 1;
                 }
                 if j < n {
-                    let le = below.table() + j as usize * 0x3b;
+                    let le = below.table() + j as usize * league_table_row::SIZE;
                     exe::league_move_club_to_division(ecx, read_usize(le), above.competition().addr(), 0);
                     descer(Club(read_usize(ue)));
                     desceram = desceram.wrapping_add(1);
@@ -1187,7 +1187,7 @@ pub(crate) unsafe extern "thiscall" fn league_promote_and_relegate(ecx: usize, a
     } else {
         let mut i = 0i32;
         while i < above.club_count() as i32 {
-            let ue = above.table() + i as usize * 0x3b;
+            let ue = above.table() + i as usize * league_table_row::SIZE;
             if read_u8(ue + league_table_row::STATUS) == 3 {
                 descer(Club(read_usize(ue)));
                 desceram = desceram.wrapping_add(1);
@@ -1197,7 +1197,7 @@ pub(crate) unsafe extern "thiscall" fn league_promote_and_relegate(ecx: usize, a
         }
         let mut i = 0i32;
         while i < below.club_count() as i32 {
-            let le = below.table() + i as usize * 0x3b;
+            let le = below.table() + i as usize * league_table_row::SIZE;
             let s = read_u8(le + league_table_row::STATUS);
             if s == 0 || s == 5 {
                 exe::league_move_club_to_division(ecx, read_usize(le), above.competition().addr(), 0);
@@ -1242,7 +1242,7 @@ pub(crate) static STATUS_ANNOUNCE_TAPE_POS: AtomicUsize = AtomicUsize::new(0);
 ///
 /// [pt] A linha `i` da tabela (+0xb1, 0x3b bytes).
 pub(crate) unsafe fn league_table_row(league: League, i: i32) -> usize {
-    league.table().wrapping_add((i as usize).wrapping_mul(0x3b))
+    league.table().wrapping_add((i as usize).wrapping_mul(league_table_row::SIZE))
 }
 
 /// Calls the league's virtual +0x40 (League::announce_team_status: thiscall(league, club, situation, stage, 0, 0), ret
@@ -1715,7 +1715,7 @@ pub(crate) unsafe extern "thiscall" fn pay_prize_money(league: usize) {
     let mut i: i16 = 0;
     loop {
         let value = (league.club_count() as i32).wrapping_sub(i as i32).wrapping_mul(part);
-        let club = read_usize(league.table().wrapping_add(0x3b * i as usize));
+        let club = read_usize(league.table().wrapping_add(league_table_row::SIZE * i as usize));
         let fin = european_cup_club_finance(club);
         crate::comparison::branch("cpx_11 bonus paid");
         exe::finance_add_prize_money(fin, value); // cpx11: o prêmio
@@ -2015,7 +2015,7 @@ pub(crate) unsafe extern "thiscall" fn league_set_predicted_positions(league: us
     }
     let mut i = 0i32;
     while i < league.club_count() as i32 {
-        write_u32(v + 4 * i as usize, read_usize(league.table() + 0x3b * i as usize) as u32);
+        write_u32(v + 4 * i as usize, read_usize(league.table() + league_table_row::SIZE * i as usize) as u32);
         i += 1;
     }
     exe::comp_util_sort_clubs_by_strength(v, league.club_count() as i32);
@@ -2106,7 +2106,7 @@ pub(crate) unsafe extern "thiscall" fn update_projected_positions(this: usize, c
     let this = League(this);
     let n = this.club_count();
     let table = this.table();
-    let row = LeagueTableRow(match (0..n as i32).map(|i| table.wrapping_add((i as isize * 0x3b) as usize)).find(|&l| read_usize(l) == club) {
+    let row = LeagueTableRow(match (0..n as i32).map(|i| table.wrapping_add((i as isize * (league_table_row::SIZE as isize)) as usize)).find(|&l| read_usize(l) == club) {
         Some(l) => l,
         None => return 0,
     });
@@ -2116,7 +2116,7 @@ pub(crate) unsafe extern "thiscall" fn update_projected_positions(this: usize, c
     let buf = exe::crt_operator_new((n as i32 * 0xe) as u32);
     let mut i: i16 = 0;
     while i < this.club_count() {
-        let l = this.table().wrapping_add((i as isize * 0x3b) as usize);
+        let l = this.table().wrapping_add((i as isize * (league_table_row::SIZE as isize)) as usize);
         let e = projection_entry(buf, i as i32);
         write_usize(e, read_usize(l));
         write_i16(e + league_projection::POINTS, read_i16(l + league_table_row::POINTS));
@@ -3137,7 +3137,7 @@ pub(crate) unsafe fn is_complete_check_read_only(league: League, stages: u32) ->
     if total == -1 && n > 0 {
         total = (n - 1).wrapping_mul(league.legs());
     }
-    (0..n.max(0) as usize).any(|i| ((read_u8(table + 0x3b * i + league_table_row::PLAYED) as i8) as i16) < total)
+    (0..n.max(0) as usize).any(|i| ((read_u8(table + league_table_row::SIZE * i + league_table_row::PLAYED) as i8) as i16) < total)
 }
 
 /// Pays TV revenue (FN_FINANCE_ADD_TV_REVENUE) to each league table club (optionally filtered by last division), with
@@ -3152,12 +3152,12 @@ pub(crate) unsafe fn pay_tv_money(league: League, value: i32, filter: usize, new
     crate::comparison::branch("league tv rights");
     let mut i: i16 = 0;
     loop {
-        let row = league.table() + 0x3b * i as i32 as usize;
+        let row = league.table() + league_table_row::SIZE * i as i32 as usize;
         let club = Club(read_usize(row));
         if filter == 0 || club.last_division().addr() == filter {
             exe::finance_add_tv_revenue(exe::financetable_get_club_finance(read_usize(G_FINANCE_TABLE), club), value); // the TV money
             if news {
-                exe::comp_send_tv_rights_news(league, read_usize(league.table() + 0x3b * i as i32 as usize), value);
+                exe::comp_send_tv_rights_news(league, read_usize(league.table() + league_table_row::SIZE * i as i32 as usize), value);
             }
         }
         i = i.wrapping_add(1);
@@ -3319,7 +3319,7 @@ pub(crate) unsafe extern "thiscall" fn get_match_importance(league: usize, fixtu
     let mut imp = (((league.importance() as i8) as i32 - 10) / 4) as u8;
     imp = imp.wrapping_add(10); // base importance
     let clubs = league.club_count();
-    let row = |i: i16| (league.table()).wrapping_add((i as isize * 59) as usize);
+    let row = |i: i16| (league.table()).wrapping_add((i as isize * (league_table_row::SIZE as isize)) as usize);
     // simplification: the original tests i == −1 after the search; i starts at 0 and stops before `clubes`, it is never −1
     let mut i = 0i16;
     loop {
@@ -3488,7 +3488,7 @@ pub(crate) unsafe extern "stdcall" fn league_build_round_robin_grid(grid: *const
 ///
 /// [pt] A linha `i` (59 bytes) da tabela [+0xb1] da liga.
 pub(crate) unsafe fn league_row(league: League, i: i32) -> usize {
-    (league.table()).wrapping_add((i as isize * 59) as usize)
+    (league.table()).wrapping_add((i as isize * (league_table_row::SIZE as isize)) as usize)
 }
 
 /// Goal margin (+1, min 1, else 0xff) a row needs to reach the target row by the league criterion (+0xc5): goal
@@ -3719,7 +3719,7 @@ pub(crate) unsafe extern "thiscall" fn competition_flagged(t: usize) -> u32 {
 /// [pt] { 0x6826d0 } (thiscall, ret 4, league.cpp): o registro `i` (59 bytes) da tabela [this+0xb1].
 pub(crate) unsafe extern "thiscall" fn league_record(t: usize, i: i32) -> usize {
     let t = League(t);
-    t.table().wrapping_add((i as usize).wrapping_mul(59))
+    t.table().wrapping_add((i as usize).wrapping_mul(league_table_row::SIZE))
 }
 
 compare_value!(compare_competition_flagged, competition_flagged, IDX_COMPETITION_FLAGGED, () -> u32);
@@ -4119,7 +4119,7 @@ pub(crate) unsafe extern "thiscall" fn limit_club_division_tier(this: usize, val
     let (value, away, inside) = (value as u8 as i8, away as u8, inside as u8);
     let mut i: i16 = 0;
     while i < this.club_count() {
-        let row = || this.table().wrapping_add(i as isize as usize * 0x3b);
+        let row = || this.table().wrapping_add(i as isize as usize * league_table_row::SIZE);
         if away != 0xfd && *((row() + league_table_row::STATUS) as *const u8) != away {
             cap_professional_status(Club(read_usize(row())), value, baixar);
         }

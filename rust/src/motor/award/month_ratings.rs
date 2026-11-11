@@ -24,7 +24,7 @@ pub(crate) unsafe extern "thiscall" fn record_match_ratings(this: usize, game: u
     let mut side = fixture.wrapping_add(0x190);
     for l in 0..2 { // cpw5: os dois lados
         for k in 0..0x14usize {
-            let e = MatchRecordRow(side + k * 0x49);
+            let e = MatchRecordRow(side + k * match_record_row::SIZE);
             if e.position() == row_slot::EMPTY {
                 continue;
             }

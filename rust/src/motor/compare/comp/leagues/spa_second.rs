@@ -45,7 +45,7 @@ pub(crate) unsafe extern "thiscall" fn compare_spa_second_create_table(this: usi
     let mut ok = r == (plan.len() == 0x16) as u32 && this.club_count() == 0x16 && t != 0;
     if ok {
         for (k, &(c, b)) in plan.iter().enumerate() {
-            let l = LeagueTableRow(t + k * 0x3b);
+            let l = LeagueTableRow(t + k * league_table_row::SIZE);
             ok = ok && read_usize(l.addr()) == c && (!b || l.status() == table_status::PROMOTION_INELIGIBLE);
         }
     }

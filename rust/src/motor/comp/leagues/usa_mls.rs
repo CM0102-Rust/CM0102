@@ -4,7 +4,7 @@ use super::*;
 ///
 /// [pt] A linha `i` da tabela (+0xb1, linhas de 0x3b bytes) da liga ou fase `t`: o clube (+0) e os pontos (+0x19, word).
 pub(crate) unsafe fn table_row_club_points(t: League, i: usize) -> (usize, i16) {
-    let l = LeagueTableRow(t.table() + i * 0x3b);
+    let l = LeagueTableRow(t.table() + i * league_table_row::SIZE);
     (read_usize(l.addr()), l.points())
 }
 
@@ -381,7 +381,7 @@ pub(crate) unsafe fn compare_division_stage(name: &str, this: League, code: i16,
     let same = !stage.is_null() && stage.stage_id() == code && this.current_stage() == k && stage.club_count() == this.club_count() && {
         let mut in_it = [0usize; 8];
         for (j, c) in in_it.iter_mut().enumerate().take(n) {
-            *c = read_usize(stage.table() + j * 0x3b);
+            *c = read_usize(stage.table() + j * league_table_row::SIZE);
         }
         let (mut a, mut b) = (plan, in_it);
         a[..n].sort_unstable();

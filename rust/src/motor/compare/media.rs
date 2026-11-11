@@ -117,7 +117,7 @@ pub(crate) unsafe extern "thiscall" fn compare_process_transfer_squad_reactions(
         if c != 0 {
             reg.push((c, 0x50));
         }
-        reg.push((read_usize(G_STAFF_STATE_TABLE).wrapping_add((read_i32(m) as u32).wrapping_mul(0x4f) as usize), 0x4f));
+        reg.push((read_usize(G_STAFF_STATE_TABLE).wrapping_add((read_i32(m) as u32).wrapping_mul((staff_state::SIZE as u32)) as usize), 0x4f));
     };
     for club in [new, old] {
         if club != 0 {

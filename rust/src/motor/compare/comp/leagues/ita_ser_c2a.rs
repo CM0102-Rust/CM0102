@@ -24,7 +24,7 @@ pub(crate) unsafe extern "thiscall" fn compare_ita_ser_c2a_update_staff_records_
     if f <= 1 {
         let n = this.club_count() as i32;
         for i in 0..n.max(0) as usize {
-            let l = this.table() + i * 0x3b;
+            let l = this.table() + i * league_table_row::SIZE;
             if read_usize(l) == club && (s == 1 || s == 2 || s == 0xff) {
                 plan = Some((l, match (f, s) {
                     (0, 1) => 0,

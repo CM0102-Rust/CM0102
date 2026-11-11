@@ -42,7 +42,7 @@ pub(crate) const fn cql11r(sorteio: (u32, u32, u32, u32), jogo: (u32, u32, u32, 
 pub(crate) unsafe fn fra_cup_write_cup_round(t: usize, i: u32, r: &FraCupCupRound, year: u32) {
     exe::cup_set_round_draw_date(t, i, r.draw.0, r.draw.1, r.draw.2, r.draw.3, year);
     exe::cup_set_round_match_date(t, i, r.game.0, r.game.1, r.game.2, r.game.3, r.game.4, year, r.game.5);
-    let e = CupRound(t + i as usize * 0x68);
+    let e = CupRound(t + i as usize * cup_round::SIZE);
     let w = |o: usize, v: u16| write_u16(e.addr() + o, v);
     let d = |o: usize, v: u32| write_u32(e.addr() + o, v);
     w(7, r.code);

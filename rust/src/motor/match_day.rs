@@ -479,8 +479,8 @@ pub(crate) unsafe extern "thiscall" fn play_the_day(day: usize) -> u32 {
     let rede = || *(G_MATCH_ENGINE_ENABLED as *const u8) != 0;
     let manager = || u(G_HUMAN_MANAGER, 0);
     let fixture = |k: i32| u(day, match_day_fields::MATCHES).wrapping_add((k as isize * 0x69) as usize);
-    let humano_a = |i: i32| u(G_STAFF_TABLE, 0).wrapping_add(((*(G_STAFF_COUNT as *const i32) - i - 1) as isize * 0x6e) as usize);
-    let human_b = |i: i32| u(G_STAFF_TABLE, 0).wrapping_add(((*(G_STAFF_COUNT as *const i32) + i - 0x10) as isize * 0x6e) as usize);
+    let humano_a = |i: i32| u(G_STAFF_TABLE, 0).wrapping_add(((*(G_STAFF_COUNT as *const i32) - i - 1) as isize * (staff::SIZE as isize)) as usize);
+    let human_b = |i: i32| u(G_STAFF_TABLE, 0).wrapping_add(((*(G_STAFF_COUNT as *const i32) + i - 0x10) as isize * (staff::SIZE as isize)) as usize);
     let human: unsafe extern "C" fn(usize, u32, u32, usize, u32) -> u32 = core::mem::transmute(FN_HUMAN_MANAGER_IS_HUMAN_CLUB);
     // 0x5fe290 (ret 8): the match and the human (the original pushes the human before the test)
     let text: unsafe extern "C" fn(usize, usize, ...) -> i32 = core::mem::transmute(FN_LANGLIB_SPRINTF);
@@ -1000,11 +1000,11 @@ pub(crate) unsafe extern "thiscall" fn match_day_interest(d: usize) -> u32 {
             pr(comp + day_competition::HAS_MARKED, 0);
             if read(comp) > -1 {
                 let object = g(g(G_COMP_OBJECT_TABLE) + read(comp) as usize * 4);
-                if (0..16).filter(|k| g((g(G_STAFF_TABLE) as isize + (read(G_STAFF_COUNT) + k - 16) as isize * 0x6e) as usize + staff::CLUB_JOB) != 0).count() >= 2 {
+                if (0..16).filter(|k| g((g(G_STAFF_TABLE) as isize + (read(G_STAFF_COUNT) + k - 16) as isize * (staff::SIZE as isize)) as usize + staff::CLUB_JOB) != 0).count() >= 2 {
                     crate::comparison::branch("interest two humans with club");
                 }
                 for k in 0..16 {
-                    let pe = Staff((g(G_STAFF_TABLE) as isize + (read(G_STAFF_COUNT) + k - 16) as isize * 0x6e) as usize);
+                    let pe = Staff((g(G_STAFF_TABLE) as isize + (read(G_STAFF_COUNT) + k - 16) as isize * (staff::SIZE as isize)) as usize);
                     let club = pe.club_job();
                     let other = pe.national_job();
                     if (!club.is_null() && exe::comp_includes_club(object, club) != 0) || (!other.is_null() && exe::comp_includes_club(object, other) != 0) {
@@ -1130,7 +1130,7 @@ pub(crate) unsafe extern "C" fn match_without_human(fixture: usize) -> u32 {
     // the 16 humans at the end of the people table
     let base = g(G_STAFF_TABLE);
     for k in 0..16isize {
-        let pe = Staff((base as isize + (read(G_STAFF_COUNT) as isize - 1 - k) * 0x6e) as usize);
+        let pe = Staff((base as isize + (read(G_STAFF_COUNT) as isize - 1 - k) * (staff::SIZE as isize)) as usize);
         if !pe.is_null() && pe.classification() == 1 && !pe.club_job().is_null() {
             let nation = read(pe.club_job().addr() + club::DIVISION);
             if nation == (c1.division().addr() as i32) || nation == (c2.division().addr() as i32) {
@@ -1254,7 +1254,7 @@ pub(crate) unsafe fn post_match_club_with(club: Club, other: usize, fixture: Fix
         if id == -1 || ub(row) == 0 {
             continue;
         }
-        let p = (g(G_STAFF_TABLE) as isize + id as isize * 0x6e) as usize;
+        let p = (g(G_STAFF_TABLE) as isize + id as isize * (staff::SIZE as isize)) as usize;
         if read_usize(p + staff::PLAYER) == 0 || (p != 0 && read(p) >= read(G_STAFF_COUNT)) || read_i8(p + staff::YEAR_OF_BIRTH) > 0x14 {
             continue;
         }
@@ -1516,7 +1516,7 @@ pub(crate) unsafe extern "C" fn match_day_drop_viewer_and_finish_match() {
     let mut sozinho = true;
     for i in 0..0x10usize {
         let idx = read_usize(G_STAFF_COUNT).wrapping_add(i).wrapping_sub(0x10);
-        let q = Staff(read_usize(G_STAFF_TABLE + 0).wrapping_add(idx.wrapping_mul(110)));
+        let q = Staff(read_usize(G_STAFF_TABLE + 0).wrapping_add(idx.wrapping_mul(staff::SIZE)));
         // like the original, without checking the other human’s null record
         if q.classification() != 0 && q.addr() != p && read_usize((exe::get_human_manager_record(q)) + human_manager_sheet::LIVE_MATCH) == game {
             let minha = read_u16(G_SCREEN_MANAGER_CURRENT_SLOT);

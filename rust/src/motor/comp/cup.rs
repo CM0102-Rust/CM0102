@@ -2921,7 +2921,7 @@ pub(crate) unsafe extern "thiscall" fn add_team_result_news(cup: usize, club: us
     exe::comp_util_write_fixture_to_news_slots(p, n, cursor.as_mut_ptr());
     let k = p.round_number() as i32;
     let proxima = if k < cup.round_count() as i32 - 1 {
-        let v = read_i16(cup.round_table().wrapping_add((k as usize).wrapping_mul(0x68)) + cup_round::ROUND_CODE + 0x68);
+        let v = read_i16(cup.round_table().wrapping_add((k as usize).wrapping_mul(cup_round::SIZE)) + cup_round::ROUND_CODE + 0x68);
         if v != 0x8c { v as i32 } else { -1 }
     } else {
         -1
@@ -3490,7 +3490,7 @@ pub(crate) unsafe extern "C" fn cup_set_round_match_day(rounds: usize, round: i1
     if !(0..8).contains(&slot) || !(-1..=6).contains(&week) || !(-1..3).contains(&hour) || !(-1..=3).contains(&code) {
         return original_fn::<unsafe extern "C" fn(usize, i16, i16, i16, i8, i8, u32) -> u32>(IDX_CUP_SET_ROUND_MATCH_DAY)(rounds, round, slot, week, hour, code, mando);
     }
-    let e = CupRound(rounds.wrapping_add((round as isize * 104 + slot as isize * 7) as usize));
+    let e = CupRound(rounds.wrapping_add((round as isize * (cup_round::SIZE as isize) + slot as isize * 7) as usize));
     e.set_slot_weekday(week as u8); // day of the week
     e.set_slot_time_slice(hour as u8);
     e.set_slot_code(code as u8);

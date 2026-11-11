@@ -1,7 +1,7 @@
 # Mutacoes da leva59 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva59.py
 MUTACOES = [
-    ('d_neg', "    if i > -1 {\n        (*(G_STAFF_TABLE as *const usize)).wrapping_add(110 * i as usize)", "    if i > 0 {\n        (*(G_STAFF_TABLE as *const usize)).wrapping_add(110 * i as usize)"),
-    ('d_110', "(*(G_STAFF_TABLE as *const usize)).wrapping_add(110 * i as usize)", "(*(G_STAFF_TABLE as *const usize)).wrapping_add(100 * i as usize)"),
+    ('d_neg', "    if i > -1 {\n        (*(G_STAFF_TABLE as *const usize)).wrapping_add(staff::SIZE * i as usize)", "    if i > 0 {\n        (*(G_STAFF_TABLE as *const usize)).wrapping_add(staff::SIZE * i as usize)"),
+    ('d_110', "(*(G_STAFF_TABLE as *const usize)).wrapping_add(staff::SIZE * i as usize)", "(*(G_STAFF_TABLE as *const usize)).wrapping_add(100 * i as usize)"),
     ('d_4', "    if exe::formation_get_marking_type(formation, this.position()) & 4 == 0 {\n        return 0;", "    if exe::formation_get_marking_type(formation, this.position()) & 1 == 0 {\n        return 0;"),
     ('d_ativo', ".find(|&q| read_i8(q + match_player::POSITION) >= 0 && *((q + match_player::STAFF) as *const usize) == sheet)", ".find(|&q| read_usize(q + match_player::STAFF) == sheet)"),
     ('d_10', "    if exe::formation_get_marking_type(formation, this.position()) & 0x10 == 0 {\n        return target.addr();", "    if exe::formation_get_marking_type(formation, this.position()) & 0x20 == 0 {\n        return target.addr();"),

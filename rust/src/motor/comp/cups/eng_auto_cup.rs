@@ -428,7 +428,7 @@ pub(crate) unsafe extern "thiscall" fn eng_auto_cup_rank_teams(this: usize) {
         while r >= 0 {
             let p = pos;
             let mut j: i16 = 0;
-            while j < read_i16(this.round_table() + r as usize * 0x68 + cup_round::TIES) {
+            while j < read_i16(this.round_table() + r as usize * cup_round::SIZE + cup_round::TIES) {
                 let c = read_usize(v + k as i32 as usize * 4);
                 k = k.wrapping_add(1);
                 exe::comp_stats_set_club_final_position(read_usize(this.addr() + 8), c, p as u32);

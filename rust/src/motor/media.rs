@@ -802,7 +802,7 @@ pub(crate) unsafe extern "stdcall" fn media_format_response_option_label(kind: u
 ///
 /// [pt] A pessoa do id (0x6e bytes em [0xae23bc]).
 pub(crate) unsafe fn media_staff_by_id(id: i32) -> usize {
-    read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul(0x6e) as usize)
+    read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul((staff::SIZE as u32)) as usize)
 }
 
 /// Staff natural position mask (`staff_get_natural_position_mask`).
@@ -2798,7 +2798,7 @@ pub(crate) unsafe extern "thiscall" fn pick_former_international_pundit(_this: u
             if attempts >= 100 {
                 break 0;
             }
-            let p = read_usize(G_STAFF_TABLE).wrapping_add((r as usize).wrapping_mul(110));
+            let p = read_usize(G_STAFF_TABLE).wrapping_add((r as usize).wrapping_mul(staff::SIZE));
             if read_i8(p + staff::AGE) < 0x25 || read_u8(p + staff::INT_APPS) < 0x32 || read_usize(p + staff::NON_PLAYER) == 0 {
                 continue;
             }
@@ -3031,7 +3031,7 @@ pub(crate) unsafe extern "thiscall" fn pick_ai_manager_response(this: usize, man
                 let mut arg = 0;
                 if (player.player().work_rate() as u8) != 0 {
                     // the person’s 0x4f-byte record in [0xae2d0c] (+0xa, +0xb bit 7)
-                    let reg = |o: usize| read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add((read_i32(player.addr()) as usize).wrapping_mul(0x4f)) + o);
+                    let reg = |o: usize| read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add((read_i32(player.addr()) as usize).wrapping_mul(staff_state::SIZE)) + o);
                     let e = exe::utils_random((2 - (reg(0xb) >> 7) as i32) * 20);
                     if exe::utils_random(reg(0xa) as i32) > e {
                         arg = 1;

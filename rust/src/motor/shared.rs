@@ -382,7 +382,7 @@ pub(crate) unsafe fn post_match_players_with(fixture: usize, t: usize, call: &mu
     let read = |a: usize| read_i32(a);
     let w = |a: usize| read_i16(a);
     let ub = |a: usize| read_u8(a) as i32;
-    let club_of = |id: i32| (g(G_CLUB_TABLE) as isize + id as isize * 0x245) as usize;
+    let club_of = |id: i32| (g(G_CLUB_TABLE) as isize + id as isize * (club::SIZE as isize)) as usize;
     let average = || {
         let b = g(G_PLAYER_STATS);
         let d = read_f64(b + player_stats_fields::RATED_COUNT);
@@ -396,7 +396,7 @@ pub(crate) unsafe fn post_match_players_with(fixture: usize, t: usize, call: &mu
     let mut ja_34 = false;
     for lado in 0..2usize {
         let club = Club(club_of(read(t + 4 * lado)));
-        let ts = MatchRecord(t + lado * 0x625);
+        let ts = MatchRecord(t + lado * match_record::SIDE_SIZE);
         let other = t + (lado == 0) as usize * 0x625;
         let scoreboard = |r: usize| ub(r + match_record::HOME_SHOOTOUT_GOALS) + ub(r + match_record::HOME_TEAM);
         for k in 0..20usize {
@@ -405,7 +405,7 @@ pub(crate) unsafe fn post_match_players_with(fixture: usize, t: usize, call: &mu
             if id == -1 {
                 continue;
             }
-            let p = (g(G_STAFF_TABLE) as isize + id as isize * 0x6e) as usize;
+            let p = (g(G_STAFF_TABLE) as isize + id as isize * (staff::SIZE as isize)) as usize;
             if read_usize(p + staff::PLAYER) == 0 || (p != 0 && read(p) >= read(G_STAFF_COUNT)) {
                 continue;
             }
@@ -478,7 +478,7 @@ pub(crate) unsafe fn post_match_players_with(fixture: usize, t: usize, call: &mu
         let id = read(ts.addr() + match_record::HOME_MANAGER_ID);
         if id > -1 {
             crate::comparison::branch("players manager");
-            let manager = Staff((g(G_STAFF_TABLE) as isize + id as isize * 0x6e) as usize);
+            let manager = Staff((g(G_STAFF_TABLE) as isize + id as isize * (staff::SIZE as isize)) as usize);
             let (mut da, mut db, mut dc) = (0i16, 0i16, 0i16);
             if !manager.is_null() && !manager.non_player().is_null() {
                 let f = manager.non_player();

@@ -1105,7 +1105,7 @@ pub(crate) unsafe fn manager_manager_staff_by_index(k: i32) -> usize {
 ///
 /// [pt] O byte +0xb do estado da pessoa de índice `k` ([0xae2d0c] + k × 0x4f).
 pub(crate) unsafe fn staff_state_byte_b(k: i32) -> u8 {
-    read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add((k as usize).wrapping_mul(0x4f)) + staff_state::STATUS_FLAGS)
+    read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add((k as usize).wrapping_mul(staff_state::SIZE)) + staff_state::STATUS_FLAGS)
 }
 
 /// Calls the original FN_SCORE_STAFF_FOR_JOB (`exe::score_staff_for_job`) with (person, club, 0, 5): the candidate's job score.
@@ -1658,7 +1658,7 @@ pub(crate) unsafe extern "thiscall" fn get_player_match_rating_verdict(_this: us
     if person != 0 && exe::match_stats_read_match_record(read_usize(G_MATCH_STATS), fixture, r) != 0 {
         'busca: for lado in 0..2usize {
             for k in 0..20usize {
-                let s = MatchRecordRow(sides + lado * 0x625 + match_record_team::ROWS + k * 0x49);
+                let s = MatchRecordRow(sides + lado * 0x625 + match_record_team::ROWS + k * match_record_row::SIZE);
                 let id = read_usize(s.addr()) as i32;
                 if id != -1 && person == month_ratings_staff_by_id(id) && k < 11 {
                     let rating = s.match_grade();
@@ -4649,7 +4649,7 @@ pub(crate) unsafe extern "thiscall" fn best_manager_candidate_score(this: usize,
     let mut p = read_usize(G_STAFF_TABLE);
     let mut i = 0i32;
     while i < read_usize(G_STAFF_COUNT) as i32 {
-        let reg79 = read_usize(G_STAFF_STATE_TABLE).wrapping_add((i as usize).wrapping_mul(0x4f));
+        let reg79 = read_usize(G_STAFF_STATE_TABLE).wrapping_add((i as usize).wrapping_mul(staff_state::SIZE));
         let skips = 'f: {
             if read_usize(p + staff::NON_PLAYER) == 0 {
                 break 'f true;

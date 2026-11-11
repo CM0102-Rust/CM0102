@@ -233,7 +233,7 @@ pub(crate) unsafe extern "thiscall" fn comp_collect_club_list(this: usize, list:
         let league = read_u8(f + league::COMP_TYPE) == 2;
         let mut i = 0i16;
         while i < read_i16(f + league::CLUB_COUNT) {
-            let club = if league { read_usize(read_usize(f + league::TABLE) + i as usize * 0x3b) } else { read_usize(read_usize(f + cup::TEAM_TABLE) + i as usize * 6) };
+            let club = if league { read_usize(read_usize(f + league::TABLE) + i as usize * league_table_row::SIZE) } else { read_usize(read_usize(f + cup::TEAM_TABLE) + i as usize * 6) };
             if club != 0 && !(0..n).any(|k| read_usize(v + k as usize * 4) == club) && n < 0xc8 { // cqh6: up to 200 clubs
                 crate::comparison::branch("cqh_6 club in the list");
                 write_u32(v + n as usize * 4, club as u32); // cqh6: the club in the list
@@ -295,7 +295,7 @@ pub(crate) unsafe extern "thiscall" fn find_club_progress(this: usize, club: usi
                 if team != -1 {
                     let mut r = (read_u8(s + cup::CURRENT_ROUND) as i8 as i16).wrapping_sub(1);
                     while r >= 0 {
-                        let n = read_i16(read_usize(s + cup::ROUND_TABLE) + r as usize * 0x68 + cup_round::TIES);
+                        let n = read_i16(read_usize(s + cup::ROUND_TABLE) + r as usize * cup_round::SIZE + cup_round::TIES);
                         let confrontos = read_usize(read_usize(s + cup::TIE_TABLES) + r as usize * 4);
                         let mut j = 0i16;
                         while j < n {

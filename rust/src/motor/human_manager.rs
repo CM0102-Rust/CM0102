@@ -353,7 +353,7 @@ pub(crate) unsafe extern "thiscall" fn is_fixture_watched(this: usize, fixture: 
     }
     for k in 0..16i32 {
         let i = k.wrapping_add(read_i32(G_STAFF_COUNT)).wrapping_sub(0x10);
-        let h = Staff(read_usize(G_STAFF_TABLE).wrapping_add((i as isize * 110) as usize));
+        let h = Staff(read_usize(G_STAFF_TABLE).wrapping_add((i as isize * (staff::SIZE as isize)) as usize));
         if h.classification() != 0 && exe::human_manager_is_watching_fixture(this, fixture, h) != 0 {
             return 1;
         }

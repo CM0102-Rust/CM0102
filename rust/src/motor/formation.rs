@@ -148,7 +148,7 @@ pub(crate) unsafe extern "thiscall" fn formation_mask(this: usize) -> u32 {
 pub(crate) unsafe extern "thiscall" fn designated_for_position(this: usize, position: i8) -> usize {
     let i = *((this as isize + (formation_fields::DESIGNATED_PEOPLE as isize) + 4 * position as isize) as *const i32);
     if i > -1 {
-        (*(G_STAFF_TABLE as *const usize)).wrapping_add(110 * i as usize)
+        (*(G_STAFF_TABLE as *const usize)).wrapping_add(staff::SIZE * i as usize)
     } else {
         0
     }
@@ -226,7 +226,7 @@ pub(crate) unsafe extern "thiscall" fn mark_stars(this: usize, side: i8) {
             v += 2000;
         }
         if v as i16 > 8500 {
-            exe::formation_set_player_instruction((this as isize + (engine::TACTICS as isize) + 0x18e3 * side as isize) as usize, j.position(), player_instructions::STANDOUT_PLAYER as u64);
+            exe::formation_set_player_instruction((this as isize + (engine::TACTICS as isize) + (formation_fields::SIZE as isize) * side as isize) as usize, j.position(), player_instructions::STANDOUT_PLAYER as u64);
         }
     }
 }

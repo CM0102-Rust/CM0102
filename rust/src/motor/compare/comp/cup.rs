@@ -689,7 +689,7 @@ pub(crate) unsafe extern "C" fn compare_cup_set_round_match_day(rounds: usize, r
     if !(0..8).contains(&slot) || !(-1..=6).contains(&week) || !(-1..3).contains(&hour) || !(-1..=3).contains(&code) {
         return o(rounds, round, slot, week, hour, code, mando);
     }
-    let e = CupRound(rounds.wrapping_add((round as isize * 104 + slot as isize * 7) as usize));
+    let e = CupRound(rounds.wrapping_add((round as isize * (cup_round::SIZE as isize) + slot as isize * 7) as usize));
     let (r, n, igual, mo, mr) = crate::comparison::side_by_side_light(&[(e.addr() + cup_round::SLOT_VENUE, 7)], || o(rounds, round, slot, week, hour, code, mando),
         || cup_set_round_match_day(rounds, round, slot, week, hour, code, mando));
     SCOREBOARD.record(igual && r == n, || format!("cup_set_round_match_day({}, {}) {:x?} x {:x?}", round, slot, mo, mr));

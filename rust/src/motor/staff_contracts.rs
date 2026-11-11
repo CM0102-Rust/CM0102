@@ -55,7 +55,7 @@ pub(crate) unsafe extern "thiscall" fn check_fifa_protected_period(c: usize, _x:
     let (d0, d1) = (read_usize(d) as u32, read_usize(d + 4) as u32);
     let mut t = [0u8; 8];
     exe::date_get_difference(G_CURRENT_DATE, t.as_mut_ptr(), d0, d1);
-    let person = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(c.addr()).wrapping_mul(110));
+    let person = read_usize(G_STAFF_TABLE).wrapping_add(read_usize(c.addr()).wrapping_mul(staff::SIZE));
     let limit: u8 = if (exe::database_get_staff_age(person, d as *const u16)) < 0x1c { 3 } else { 2 }; // cpu4: the period by age
     if !years.is_null() {
         *years = limit;
@@ -249,7 +249,7 @@ pub(crate) unsafe fn morale_reset_regions(this: usize, id: usize) -> Vec<(usize,
     let mut r = vec![(this, 0x50), (G_MOUSE_LEFT_BUTTON_DOWN, 4)];
     let id = read_usize(read_usize(G_STAFF_TABLE).wrapping_add(id.wrapping_mul(staff::SIZE))) as i32;
     if id >= 0 && id < read_usize(G_STAFF_COUNT) as i32 {
-        r.push((read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(0x4f)), 0x4f));
+        r.push((read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(staff_state::SIZE)), 0x4f));
     }
     r
 }
@@ -258,7 +258,7 @@ pub(crate) unsafe fn morale_reset_regions(this: usize, id: usize) -> Vec<(usize,
 ///
 /// [pt] A pessoa do contrato: o id em +0 no vetor de pessoas [0xae23bc] (110 bytes cada).
 pub(crate) unsafe fn staff_of_contract(contract: Contract) -> usize {
-    (read_u32(G_STAFF_TABLE) as usize).wrapping_add((read_u32(contract.addr()) as usize).wrapping_mul(110))
+    (read_u32(G_STAFF_TABLE) as usize).wrapping_add((read_u32(contract.addr()) as usize).wrapping_mul(staff::SIZE))
 }
 
 /// Returns the days from the game date to the contract end date (+0x2d), through `exe::date_days_since`.

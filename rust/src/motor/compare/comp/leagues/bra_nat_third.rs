@@ -91,7 +91,7 @@ pub(crate) unsafe extern "thiscall" fn compare_bra_nat_third_create_group_stage(
     let same = !stage.is_null() && stage.club_count() == 7 && this.current_stage() as i32 == k && {
         let mut in_it = [0usize; 7];
         for (j, c) in in_it.iter_mut().enumerate() {
-            *c = read_usize(stage.table() + j * 0x3b);
+            *c = read_usize(stage.table() + j * league_table_row::SIZE);
         }
         let mut a = plan;
         a.sort_unstable();
@@ -171,8 +171,8 @@ pub(crate) unsafe extern "thiscall" fn compare_create_third_round_groups(this: u
     let same = a != 0 && b != 0 && read_i16(a + league::CLUB_COUNT) == 4 && read_i16(b + league::CLUB_COUNT) == 4 && this.current_stage() == 9 && {
         let mut in_it = [0usize; 8];
         for j in 0..4 {
-            in_it[j] = read_usize(read_usize(a + league::TABLE) + j * 0x3b);
-            in_it[4 + j] = read_usize(read_usize(b + league::TABLE) + j * 0x3b);
+            in_it[j] = read_usize(read_usize(a + league::TABLE) + j * league_table_row::SIZE);
+            in_it[4 + j] = read_usize(read_usize(b + league::TABLE) + j * league_table_row::SIZE);
         }
         let mut p = plan;
         p.sort_unstable();

@@ -29,7 +29,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_phase1_groups(this: usize) {
             break;
         }
         for r in 0..4usize {
-            vistos.push(read_usize(f.table() + r * 0x3b));
+            vistos.push(read_usize(f.table() + r * league_table_row::SIZE));
         }
     }
     vistos.sort_unstable();
@@ -106,7 +106,7 @@ pub(crate) unsafe extern "thiscall" fn compare_draw_phase2_groups(this: usize, a
             break;
         }
         for r in 0..4usize {
-            vistos.push(read_usize(f.table() + r * 0x3b));
+            vistos.push(read_usize(f.table() + r * league_table_row::SIZE));
         }
     }
     vistos.sort_unstable();

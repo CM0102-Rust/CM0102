@@ -797,7 +797,7 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
     crate::comparison::branch("cqi_3 english volunteer");
     let club_drawn = || {
         let s = exe::utils_random(league.club_count() as i32) as i16 as i32;
-        read_u32(((league.table() as u32) as usize).wrapping_add((s * 0x3b) as usize)) as usize
+        read_u32(((league.table() as u32) as usize).wrapping_add((s * (league_table_row::SIZE as i32)) as usize)) as usize
     };
     let mut attempts = 0i8;
     while (read_u8(this + uefa_seeding::INTERTOTO_VOLUNTEER_COUNT) as i8) < 6 && attempts < 0x50 {
@@ -911,7 +911,7 @@ pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
             exe::newsitem_set_slot(p, (2) as u32 as i8, read_i16(this + uefa_seeding::SEASON_YEAR) as u16 as u32);
             let mut i = 0i16;
             while i < league.club_count() {
-                let c = read_u32(((league.table() as u32) as usize).wrapping_add(i as i32 as usize * 0x3b)) as usize;
+                let c = read_u32(((league.table() as u32) as usize).wrapping_add(i as i32 as usize * league_table_row::SIZE)) as usize;
                 if exe::news_club_has_human_manager(read_u32(G_NEWS) as usize, c) != 0 {
                     exe::newsitem_set_slot(p, (1) as u32 as i8, read_u32(c));
                     exe::news_send_to_club_manager(read_u32(G_NEWS) as usize, p, c);

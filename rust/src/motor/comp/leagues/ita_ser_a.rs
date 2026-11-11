@@ -279,7 +279,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_create_schedule(this: usize, st
 ///
 /// [pt] A linha `i` da tabela [+0xb1] (0x3b bytes).
 pub(crate) unsafe fn ita_ser_a_table_row(league: League, i: usize) -> usize {
-    league.table() + i * 0x3b
+    league.table() + i * league_table_row::SIZE
 }
 
 /// The Serie A zones by position (0 = first): 1 champion, 2 the other Champions League places, 3 UEFA Cup places, 4 the
@@ -511,9 +511,9 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
                     let mut tmp = [0u8; 0x3b];
                     core::ptr::copy_nonoverlapping(l as *const u8, tmp.as_mut_ptr(), 0x3b);
                     core::ptr::copy_nonoverlapping((l - 0x3b) as *const u8, l as *mut u8, 0x3b);
-                    let l2 = this.table() + i as usize * 0x3b;
+                    let l2 = this.table() + i as usize * league_table_row::SIZE;
                     core::ptr::copy_nonoverlapping(tmp.as_ptr(), (l2 - 0x3b) as *mut u8, 0x3b);
-                    let l3 = LeagueTableRow(this.table() + i as usize * 0x3b);
+                    let l3 = LeagueTableRow(this.table() + i as usize * league_table_row::SIZE);
                     write_u8(l3.addr() + 4, i as u8);
                     write_u8(l3.addr() - 0x3b + 4, (i as u8).wrapping_sub(1));
                     l3.set_status(table_status::UNDECIDED);
@@ -528,8 +528,8 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
                     write_u8(t + i as usize * 0x3b + 4, i as u8);
                     let t2 = this.table();
                     write_u8(t2 + i as usize * 0x3b + 0x3f, (i as u8).wrapping_add(1));
-                    write_u8(this.table() + i as usize * 0x3b + league_table_row::STATUS, 0xff);
-                    write_u8(this.table() + i as usize * 0x3b + 0x72, 0xff);
+                    write_u8(this.table() + i as usize * league_table_row::SIZE + league_table_row::STATUS, 0xff);
+                    write_u8(this.table() + i as usize * league_table_row::SIZE + 0x72, 0xff);
                     break;
                 }
             }

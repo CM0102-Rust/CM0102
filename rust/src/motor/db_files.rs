@@ -739,7 +739,7 @@ pub(crate) unsafe extern "C" fn db_files_read_clubs(stream: usize, use_zip: i32,
         return 0;
     }
     for i in 0..n as usize {
-        let p = (records + i * 581 + club::REPUTATION) as *mut u16;
+        let p = (records + i * club::SIZE + club::REPUTATION) as *mut u16;
         if p.read_unaligned() == 0 {
             p.write_unaligned(1);
         }

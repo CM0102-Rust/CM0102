@@ -12,7 +12,7 @@ pub(crate) unsafe fn call_thiscall_1(routine: usize, this: usize, a: Staff) {
 ///
 /// [pt] O byte `k` do registro de 79 bytes da pessoa ([0xae2d0c] + 0x4f × id).
 pub(crate) unsafe fn staff_state_byte(p: Staff, k: usize) -> *mut u8 {
-    (read_usize(G_STAFF_STATE_TABLE) as isize + read_i32(p.addr()) as isize * 0x4f + k as isize) as *mut u8
+    (read_usize(G_STAFF_STATE_TABLE) as isize + read_i32(p.addr()) as isize * (staff_state::SIZE as isize) + k as isize) as *mut u8
 }
 
 /// Integer times an .rdata double constant, truncated (_ftol) to 16 bits.
@@ -733,7 +733,7 @@ pub(crate) unsafe extern "C" fn player_setup_type_from_name(name: usize) -> u32 
 ///
 /// [pt] O byte das marcas da aposentadoria da pessoa `id` (registros de 79 bytes em [0xae2d0c], +0xb).
 pub(crate) unsafe fn retirement_flags_byte(id: i32) -> *mut u8 {
-    read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as isize * 0x4f + (staff_state::STATUS_FLAGS as isize)) as usize) as *mut u8
+    read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as isize * (staff_state::SIZE as isize) + (staff_state::STATUS_FLAGS as isize)) as usize) as *mut u8
 }
 
 /// The person's contract (`exe::contract_manager_get_contract`) without storing it in [0xae1080].
@@ -1513,7 +1513,7 @@ pub(crate) unsafe extern "thiscall" fn add_player_data_to_pool(this: usize, pers
         }
     }
     crate::comparison::branch("cpu_9 player bench");
-    let record = Staff(read_usize(G_STAFF_TABLE).wrapping_add((person as u32).wrapping_mul(0x6e) as usize));
+    let record = Staff(read_usize(G_STAFF_TABLE).wrapping_add((person as u32).wrapping_mul((staff::SIZE as u32)) as usize));
     let item = read_usize(this + player_regen_fields::PLAYER_DATA_POOL).wrapping_add(read_usize(this + player_regen_fields::PLAYER_DATA_POOL_COUNT) << 4);
     write_usize(item, read_usize(record.player().addr()));
     write_usize(item + regen_pool_item::NATION_ID, nation as usize);
@@ -1971,7 +1971,7 @@ pub(crate) unsafe extern "thiscall" fn build_initial_retirement_list(this: usize
     while i < read_usize(G_STAFF_COUNT) as i32 {
         let id = read_usize(p) as i32;
         if id < (read_usize(G_STAFF_COUNT) as i32).wrapping_sub(0x10)
-            && *((read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(79)) + staff_state::STATUS_FLAGS) as *const u8) & staff_state_status_flags::RETIREMENT_STATE == 0
+            && *((read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(staff_state::SIZE)) + staff_state::STATUS_FLAGS) as *const u8) & staff_state_status_flags::RETIREMENT_STATE == 0
         {
             let c = Contract(exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), p));
             if (c.is_null() || c.leaving_on_bosman() == 0) && exe::player_regen_check_initial_retirement(this, p, e.as_mut_ptr()) != 0 {
@@ -2043,7 +2043,7 @@ pub(crate) unsafe extern "thiscall" fn find_new_retirements(this: usize) {
             if id >= (read_usize(G_STAFF_COUNT) as i32).wrapping_sub(0x10) {
                 break 'x;
             }
-            if read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(79)) + staff_state::STATUS_FLAGS) & staff_state_status_flags::RETIREMENT_STATE != 0 {
+            if read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(staff_state::SIZE)) + staff_state::STATUS_FLAGS) & staff_state_status_flags::RETIREMENT_STATE != 0 {
                 break 'x;
             }
             let k = read_usize(this + player_regen_fields::RETIREMENT_COUNT) as i32;
@@ -2215,7 +2215,7 @@ pub(crate) unsafe extern "stdcall" fn player_regen_score_non_player_candidate(pe
         return -10000;
     }
     let id = read_usize(person.addr());
-    if read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(79)) + staff_state::STATUS_FLAGS) & staff_state_status_flags::RETIREMENT_STATE != 0 {
+    if read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(staff_state::SIZE)) + staff_state::STATUS_FLAGS) & staff_state_status_flags::RETIREMENT_STATE != 0 {
         return -10000;
     }
     let age = (person.age() as i8) as i32;
@@ -3244,7 +3244,7 @@ pub(crate) unsafe extern "thiscall" fn process_regen_queue(this: usize) {
             return;
         }
         crate::comparison::branch("cpw_10 queued regen");
-        exe::player_regen_regenerate_as_youth_player(this, read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul(0x6e) as usize));
+        exe::player_regen_regenerate_as_youth_player(this, read_usize(G_STAFF_TABLE).wrapping_add((id as u32).wrapping_mul((staff::SIZE as u32)) as usize));
         let mut j = 0i32;
         while j < read_i32(this + player_regen_fields::REGEN_QUEUE_COUNT) - 1 {
             let e = read_usize(this + player_regen_fields::REGEN_QUEUE).wrapping_add((j as u32).wrapping_mul(0xc) as usize);
@@ -3368,7 +3368,7 @@ pub(crate) unsafe extern "thiscall" fn take_spare_non_player_record(this: usize,
 /// [pt] { 0x7a7eb0 } (stdcall, ret 4, player_regen.cpp): os bits 4..5 do byte +0xb do registro de 79 bytes
 /// da pessoa `*p` em [0xae2d0c]. Devolve só `al`.
 pub(crate) unsafe extern "stdcall" fn record_bits(p: *const i32) -> u8 {
-    let r = read_usize(G_STAFF_STATE_TABLE).wrapping_add((*p as usize).wrapping_mul(79));
+    let r = read_usize(G_STAFF_STATE_TABLE).wrapping_add((*p as usize).wrapping_mul(staff_state::SIZE));
     (read_u8(r + staff_state::STATUS_FLAGS) >> 4) & 3
 }
 

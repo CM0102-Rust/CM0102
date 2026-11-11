@@ -42,8 +42,8 @@ pub(crate) unsafe extern "C" fn compare_database_player_initialisation(data: usi
     let mut regions = crate::rng::STATE_REGIONS.to_vec();
     regions.extend_from_slice(&[(G_EMPTY_COMMON_NAME_INDEX, 4), (0x9b59b8, 2), (G_PLAYER_INIT_ATTRIBUTE_VECTOR_A, 0xbd), (G_PLAYER_INIT_ATTRIBUTE_VECTOR_B, 0xbd), (G_NON_PLAYER_ATTRIBUTE_VECTOR, 0xbd),
         (0xae2238, 0xbd), (0xde1f64, 0x100), (0xae24aa, 1), (G_SUB_WEEKS_RESULT_DATE, 8)]);
-    regions.push((rd(G_STAFF_TABLE), gi(G_STAFF_COUNT) * 110));
-    regions.push((rd(G_STAFF_STATE_TABLE), gi(G_STAFF_COUNT) * 0x4f));
+    regions.push((rd(G_STAFF_TABLE), gi(G_STAFF_COUNT) * staff::SIZE));
+    regions.push((rd(G_STAFF_STATE_TABLE), gi(G_STAFF_COUNT) * staff_state::SIZE));
     if rd(G_PLAYER_DATA_TABLE) != 0 {
         regions.push((rd(G_PLAYER_DATA_TABLE), gi(G_PLAYER_DATA_COUNT) * 70));
     }
@@ -902,8 +902,8 @@ pub(crate) unsafe extern "C" fn compare_database_generate_extra_non_playing_staf
     let mut regions = crate::rng::STATE_REGIONS.to_vec();
     regions.push((G_EMPTY_COMMON_NAME_INDEX, 4));
     regions.push((0xde1f64, 0x40));
-    regions.push((read_usize(G_CLUB_TABLE), read_i32(G_CLUB_COUNT).max(0) as usize * 581));
-    regions.push((read_usize(G_STAFF_TABLE), read_i32(G_STAFF_COUNT).max(0) as usize * 110));
+    regions.push((read_usize(G_CLUB_TABLE), read_i32(G_CLUB_COUNT).max(0) as usize * club::SIZE));
+    regions.push((read_usize(G_STAFF_TABLE), read_i32(G_STAFF_COUNT).max(0) as usize * staff::SIZE));
     let (r, m, igual, mut mo, mut mr) = crate::comparison::side_by_side(&regions, || o(),
         || crate::rng::without_counting(|| database_generate_extra_non_playing_staff()));
     let onde = first_memory_difference(&mo, &mr);

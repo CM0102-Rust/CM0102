@@ -708,7 +708,7 @@ pub(crate) unsafe extern "thiscall" fn miss_training(this: usize, person: usize)
     let k3 = exe::contract_manager_get_contract(read_usize(G_CONTRACT_MANAGER), person);
     write_u32(G_CONTRACT_LOOKUP_RESULT, k3 as u32);
     exe::awol_post_missed_training_news(person, awol_club_of_contract(Contract(k3)));
-    let row = read_usize(G_STAFF_STATE_TABLE).wrapping_add((read_i32(person.addr()) as usize).wrapping_mul(79)).wrapping_add(0xa) as *mut u8;
+    let row = read_usize(G_STAFF_STATE_TABLE).wrapping_add((read_i32(person.addr()) as usize).wrapping_mul(staff_state::SIZE)).wrapping_add(0xa) as *mut u8;
     let r = friendly_random(10);
     *row = (*row).wrapping_add(r as u8);
     let c = exe::injury_get_condition(read_usize(G_INJURY), person, 0);

@@ -305,7 +305,7 @@ pub(crate) unsafe extern "thiscall" fn spa_second_create_table(this: usize) -> u
             exe::league_init_table_row(this, k as u32, c, 0, 0);
             if is_b_team_of_comp_club(c, KEY_CLUB_COMP_SPANISH_FIRST_DIVISION) {
                 crate::comparison::branch("cqm_6 b team in the second division");
-                write_u8(this.table() + (k as i8 as isize as usize).wrapping_mul(0x3b) + 0x37, 0xfc);
+                write_u8(this.table() + (k as i8 as isize as usize).wrapping_mul(league_table_row::SIZE) + 0x37, 0xfc);
             }
             k = k.wrapping_add(1);
             if k as i8 as i16 == this.club_count() {

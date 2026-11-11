@@ -24,7 +24,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_cup_winners_record(this: usiz
     if club == 0 || game.is_null() || fixture.is_null() {
         return o(this, club, game.addr(), fixture.addr());
     }
-    let notes = (fixture.addr() + match_record::HOME_MANAGER_CURRENT_REPUTATION + 0x625 * (game.away_club() == Club(club)) as usize, 6);
+    let notes = (fixture.addr() + match_record::HOME_MANAGER_CURRENT_REPUTATION + match_record::SIDE_SIZE * (game.away_club() == Club(club)) as usize, 6);
     compare_champion_update("add_cup_winners_record", this, Club(club), notes, false, || o(this, club, game.addr(), fixture.addr()),
         || add_cup_winners_record(this, club, game.addr(), fixture.addr()));
 }

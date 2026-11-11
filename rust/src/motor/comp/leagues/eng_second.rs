@@ -365,14 +365,14 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
     }
     let mut i: i32 = 0;
     while i < this.club_count() as i32 {
-        let row = this.table() + (i as usize) * 0x3b;
+        let row = this.table() + (i as usize) * league_table_row::SIZE;
         if read_usize(row) == club {
             match s {
                 1 => {
                     crate::comparison::branch("cpz_2 won the knockout");
                     let promotion: unsafe extern "thiscall" fn(usize, usize, usize, u32) = core::mem::transmute(FN_STAFF_RECORDS_ADD_PROMOTION_RECORD);
                     promotion(eng_second_staff_records(), club, comp, 0x32);
-                    write_u8(this.table() + (i as usize) * 0x3b + league_table_row::STATUS, 0);
+                    write_u8(this.table() + (i as usize) * league_table_row::SIZE + league_table_row::STATUS, 0);
                     write_u8(left, 1);
                     return 0;
                 }
@@ -381,7 +381,7 @@ pub(crate) unsafe extern "thiscall" fn eng_second_update_staff_records_for_statu
                     slot(eng_second_staff_records(), club, comp, 0xa0, 0x96, 0xf);
                 }
                 0xff | 2 => {
-                    write_u8(this.table() + (i as usize) * 0x3b + league_table_row::STATUS, 0xfe);
+                    write_u8(this.table() + (i as usize) * league_table_row::SIZE + league_table_row::STATUS, 0xfe);
                     return 0;
                 }
                 _ => {}

@@ -65,7 +65,7 @@ pub(crate) unsafe extern "thiscall" fn player_search_record_scouted_club_match(t
     // thiscall; 0x5b09d0: push 0; push player; mov ecx, eax -> thiscall, ret 8; 0x7bd700: push 1; push player; mov ecx,
     // this -> thiscall, ret 8; 0x4afa80: push jogo; push clube; add esp, 8 -> cdecl
     for j in 0..0x14i8 {
-        let e = MatchRecordRow(result.addr() + match_record::ROW_STAFF_ID + lado as usize * 0x625 + j as usize * 0x49);
+        let e = MatchRecordRow(result.addr() + match_record::ROW_STAFF_ID + lado as usize * match_record::SIDE_SIZE + j as usize * match_record_row::SIZE);
         let id = read_i32(e.addr());
         if id == -1 || read_i32(e.addr() + 4) == -1 {
             continue;
@@ -298,7 +298,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
                             i = 0;
                             let mut k = 0usize;
                             while free {
-                                let id = read_i32(result.addr() + match_record::ROW_STAFF_ID + side as usize * 0x625 + k);
+                                let id = read_i32(result.addr() + match_record::ROW_STAFF_ID + side as usize * match_record::SIDE_SIZE + k);
                                 if id != -1 && request(read_usize(G_SCOUT_MANAGER), (staff_records_staff_by_id(id as usize)).addr(), scout.club_job().addr(), 1) != 0 {
                                     free = false;
                                 }
@@ -354,7 +354,7 @@ pub(crate) unsafe fn scout_match_body(this: usize, game: Fixture, result: usize,
     exe::record_holder_construct(reg + scout_report::SCOUT_NAME_REF);
     let club_scout = scout.club_job();
     for side in 0..2usize {
-        let mut e = result.addr() + match_record::ROW_MINUTE_OFF + side * 0x625;
+        let mut e = result.addr() + match_record::ROW_MINUTE_OFF + side * match_record::SIDE_SIZE;
         for j in 0..0x14i32 {
             let current = e;
             e += 0x49;
@@ -717,7 +717,7 @@ pub(crate) unsafe extern "thiscall" fn get_scout(this: usize) -> usize {
     if i <= -1 {
         return 0;
     }
-    let person = (read_u32(G_STAFF_TABLE) as usize).wrapping_add((i as usize).wrapping_mul(110));
+    let person = (read_u32(G_STAFF_TABLE) as usize).wrapping_add((i as usize).wrapping_mul(staff::SIZE));
     if exe::database_staff_matches_names(person, read_u32(this + player_search_fields::SCOUT_NAME_REF), read_u32(this + player_search_fields::SCOUT_NAME_REF + 4), read_u32(this + player_search_fields::SCOUT_NAME_REF + 8), this + player_search_fields::SCOUT_NAME_REF + 0x10) == 0 {
         return 0; // the slot changed person
     }

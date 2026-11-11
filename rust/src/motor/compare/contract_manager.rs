@@ -513,7 +513,7 @@ pub(crate) unsafe extern "thiscall" fn compare_add_staff_contract(this: usize, p
         return r; // out of memory
     }
     let id = read_usize(person);
-    let on = read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(0x4f)));
+    let on = read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add(id.wrapping_mul(staff_state::SIZE)));
     let in_contract = read_usize(read_usize(this).wrapping_add(n.wrapping_mul(0x50)));
     SCOREBOARD.record(on == n && in_contract == id && read_usize(this + contract_manager_fields::CONTRACT_COUNT) == n.wrapping_add(1), || {
         format!("add_staff_contract(person {}, value {}) slot {} (esperava {}), id in the contract {}, count {} -> {}",
@@ -570,7 +570,7 @@ pub(crate) unsafe extern "thiscall" fn compare_remove_contract_offer(this: usize
     if l == 0 {
         return original_fn::<unsafe extern "thiscall" fn(usize, *const u32, *const u32)>(IDX_REMOVE_CONTRACT_OFFER)(this, person, club);
     }
-    let n = (read_usize(G_STAFF_STATE_TABLE).wrapping_add((*person as usize).wrapping_mul(79)) + 8) as *const u8;
+    let n = (read_usize(G_STAFF_STATE_TABLE).wrapping_add((*person as usize).wrapping_mul(staff_state::SIZE)) + 8) as *const u8;
     let target = first_offer_for_staff_club(l, *person as usize, *club as usize);
     let expected: Vec<usize> = list_items_capped(l).into_iter().filter(|&e| Some(e) != target).collect();
     let pendentes = if target.is_some() { (*n).wrapping_sub(1) } else { *n };

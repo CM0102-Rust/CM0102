@@ -72,7 +72,7 @@ pub(crate) unsafe extern "stdcall" fn fog_after_match(fixture: usize, data: usiz
             continue;
         }
         for vaga in 0..20usize {
-            let e = MatchRecordRow(data + lado * 0x625 + match_record::ROW_STAFF_ID + vaga * 0x49);
+            let e = MatchRecordRow(data + lado * match_record::SIDE_SIZE + match_record::ROW_STAFF_ID + vaga * match_record_row::SIZE);
             let i = read_i32(e.addr());
             if i == -1 || read_i32(e.addr() + 4) == -1 || (vaga > 10 && (e.minute_on() as u8) == 0xff) {
                 continue;

@@ -123,7 +123,7 @@ pub(crate) unsafe extern "C" fn compare_post_match_players(fixture: usize, t: us
     let read = |a: usize| read_i32(a);
     let mut reg = crate::rng::STATE_REGIONS.to_vec();
     for lado in 0..2usize {
-        let club = Club((g(G_CLUB_TABLE) as isize + read(t + 4 * lado) as isize * 0x245) as usize);
+        let club = Club((g(G_CLUB_TABLE) as isize + read(t + 4 * lado) as isize * (club::SIZE as isize)) as usize);
         let ts = t + lado * 0x625;
         reg.push((club.addr() + club::REPUTATION, 2));
         for k in 0..20usize {
@@ -131,7 +131,7 @@ pub(crate) unsafe extern "C" fn compare_post_match_players(fixture: usize, t: us
             if id == -1 {
                 continue;
             }
-            let p = Staff((g(G_STAFF_TABLE) as isize + id as isize * 0x6e) as usize);
+            let p = Staff((g(G_STAFF_TABLE) as isize + id as isize * (staff::SIZE as isize)) as usize);
             let f = p.player();
             if !f.is_null() {
                 reg.extend([(f.addr() + 0x45, 1), (f.addr() + 9, 6)]);
@@ -140,7 +140,7 @@ pub(crate) unsafe extern "C" fn compare_post_match_players(fixture: usize, t: us
         }
         let id = read(ts + 0x184);
         if id > -1 {
-            let manager = Staff((g(G_STAFF_TABLE) as isize + id as isize * 0x6e) as usize);
+            let manager = Staff((g(G_STAFF_TABLE) as isize + id as isize * (staff::SIZE as isize)) as usize);
             let mut sheets = vec![manager.non_player()];
             for a in [club.assistant_manager(), read_usize(club.addr() + club::COACHES), g(club.addr() + 0x1a3), g(club.addr() + 0x1a7), g(club.addr() + 0x1ab), g(club.addr() + 0x1af)] {
                 if a != 0 {

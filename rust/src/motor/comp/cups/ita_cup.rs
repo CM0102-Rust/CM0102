@@ -476,10 +476,10 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this
     });
     for i in 0..16usize {
         let of = group_table(this, i) + 0x3b;
-        let para = league.table() + i * 0x3b;
+        let para = league.table() + i * league_table_row::SIZE;
         core::ptr::copy_nonoverlapping(of as *const u8, para as *mut u8, 0x3b); // cqr9: the runner-up of group i
-        write_usize(league.table() + i * 0x3b + 9, 0);
-        write_usize(league.table() + i * 0x3b + 5, 0);
+        write_usize(league.table() + i * league_table_row::SIZE + 9, 0);
+        write_usize(league.table() + i * league_table_row::SIZE + 5, 0);
     }
     exe::league_sort_table(league, 0); // cqr9: the ranking of the runners-up
     let teams = exe::crt_malloc(0x80);
@@ -500,9 +500,9 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this
             let n = group.club_count() as i32;
             let mut r = 0i32;
             while r < n {
-                if read_usize(group.table() + r as usize * 0x3b) == read_usize(league.table() + l) {
+                if read_usize(group.table() + r as usize * league_table_row::SIZE) == read_usize(league.table() + l) {
                     group.set_promoted_count(2);
-                    write_u8(group.table() + r as usize * 0x3b + league_table_row::STATUS, 6);
+                    write_u8(group.table() + r as usize * league_table_row::SIZE + league_table_row::STATUS, 6);
                     g = 0x10;
                     break;
                 }

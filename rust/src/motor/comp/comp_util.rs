@@ -231,7 +231,7 @@ pub(crate) unsafe fn set_final_positions_by_round(this: Cup, v: *const u32, writ
         if *v.offset(s as isize) == 0 {
             break;
         }
-        let count = |r: i32| read_i16(this.round_table() + r as usize * 0x68 + cup_round::TIES) as i32;
+        let count = |r: i32| read_i16(this.round_table() + r as usize * cup_round::SIZE + cup_round::TIES) as i32;
         if r == this.round_count() as i32 - 2 {
             let mut j = 0;
             while j < count(r) {

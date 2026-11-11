@@ -370,7 +370,7 @@ pub(crate) unsafe extern "thiscall" fn bra_reg_bahia_create_table(this: usize) -
 ///
 /// [pt] O clube da linha `l` da tabela (+0xb1, linhas de 0x3b bytes, +0 o clube).
 pub(crate) unsafe fn bra_reg_bahia_table_row_club(league: League, l: usize) -> usize {
-    read_usize(league.table() + l * 0x3b)
+    read_usize(league.table() + l * league_table_row::SIZE)
 }
 
 /// Bahia: after the round robin, the top 4 go to the semi-finals: 1st v 4th, 2nd v 3rd (the better placed is the seed;

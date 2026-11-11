@@ -4,7 +4,7 @@ use super::*;
 ///
 /// [pt] O clube da linha `i` da tabela [+0xb1] (0x3b bytes).
 pub(crate) unsafe fn ita_ser_c1a_league_row_club(league: League, i: usize) -> usize {
-    read_usize(league.table() + i * 0x3b)
+    read_usize(league.table() + i * league_table_row::SIZE)
 }
 
 /// Stage advance of the three (League::advance_stage, slot +0x28; the body of `ita_ser_c1a_advance_stage`, `ita_ser_c1b_advance_stage` and `eng_third_advance_stage`): error

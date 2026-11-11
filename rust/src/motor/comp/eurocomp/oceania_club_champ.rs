@@ -407,8 +407,8 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_advance_stage(this: us
 /// [pt] Os 4 das semifinais, na ordem da lista: o 1º do grupo A (a tabela da copa, +0xb1), o 2º do B (a tabela da fase
 /// [+0xc][0]), o 2º do A e o 1º do B (os cruzamentos: as chaves são os pares da lista).
 pub(crate) unsafe fn semifinalists(this: League) -> [usize; 4] {
-    let a = |l: usize| read_usize(this.table() + l * 0x3b);
-    let b = |l: usize| read_usize(read_usize(read_usize(this.stages()) + league::TABLE) + l * 0x3b);
+    let a = |l: usize| read_usize(this.table() + l * league_table_row::SIZE);
+    let b = |l: usize| read_usize(read_usize(read_usize(this.stages()) + league::TABLE) + l * league_table_row::SIZE);
     [a(0), b(1), a(1), b(0)] // cqt11: 1º A × 2º B, 2º A × 1º B
 }
 
@@ -582,15 +582,15 @@ pub(crate) unsafe fn oceania_club_champ_written_table_bytes(ops: &[OceaniaClubCh
         match *op {
             Cqq12D(r, ..) => {
                 pega(r as usize * 0x41, 5);
-                pega(r as usize * 0x41 + league_round_date::VENUE_VALUE, 4);
+                pega(r as usize * league_round_date::SIZE + league_round_date::VENUE_VALUE, 4);
             }
             Cqq12L(r, j, ..) => pega(r as usize * 0x41 + 5 + j as usize * 7, 7),
             Cqq12S(r, ..) => pega(r as usize * 0x68, 3),
             Cqq12J(r, ..) => {
                 pega(r as usize * 0x68 + 3, 4);
-                pega(r as usize * 0x68 + cup_round::VENUE_VALUE, 4);
+                pega(r as usize * cup_round::SIZE + cup_round::VENUE_VALUE, 4);
             }
-            Cqq12E(r, vaga, ..) => pega(r as usize * 0x68 + cup_round::SLOT_VENUE + vaga as usize * 7, 7),
+            Cqq12E(r, vaga, ..) => pega(r as usize * cup_round::SIZE + cup_round::SLOT_VENUE + vaga as usize * 7, 7),
             Cqq12B(o, _) => pega(o, 1),
             Cqq12W(o, _) => pega(o, 2),
             Cqq12X(o, _) => pega(o, 4),

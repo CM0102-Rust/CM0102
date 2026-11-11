@@ -1060,7 +1060,7 @@ pub(crate) unsafe extern "thiscall" fn make_exchange_option(this: usize, buyer: 
                     if cx.is_null() || read_usize(x + staff::CLUB_JOB) != buyer || sheet(read_usize(G_CONTRACT_MANAGER), x) != 0 {
                         break 'jogador;
                     }
-                    if read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(x).wrapping_mul(0x4f)) + staff_state::STATUS_FLAGS) & 0x30 != 0 || cx.contract_type() & 0x3f == 5 {
+                    if read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(x).wrapping_mul(staff_state::SIZE)) + staff_state::STATUS_FLAGS) & 0x30 != 0 || cx.contract_type() & 0x3f == 5 {
                         break 'jogador;
                     }
                     if exe::contract_manager_calc_asking_price(read_usize(G_CONTRACT_MANAGER), buyer, 0, x, (0) as u32, 1, 1) > ceiling {
@@ -1187,7 +1187,7 @@ pub(crate) unsafe fn staff_contract_by_field(person: Staff, field: usize, array:
     if id >= read_usize(G_STAFF_COUNT) as i32 {
         return 0;
     }
-    let k = read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(0x4f)) + field) as i32;
+    let k = read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add((id as usize).wrapping_mul(staff_state::SIZE)) + field) as i32;
     if k < 0 { 0 } else { (k as usize).wrapping_mul(0x50).wrapping_add(read_usize(array)) }
 }
 
@@ -2733,7 +2733,7 @@ pub(crate) unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o:
     if !FORMER_CLUB_FEE_DRY_RUN.load(Relaxed) {
         transfer_manager_construct_news_item(n, 0xfc3);
     }
-    let r = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(0x4f));
+    let r = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(staff_state::SIZE));
     let mut sum: i16 = 0;
     for k in 0..5 {
         if read_usize(r + staff_state::FORMER_CLUB_ID + 5 * k) as i32 != -1 {
@@ -2761,7 +2761,7 @@ pub(crate) unsafe extern "thiscall" fn pay_former_club_fee_cuts(_this: usize, o:
         set_news_slot(n, 7, v7);
     }
     for k in 0..5 {
-        let r = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(0x4f)) + 5 * k;
+        let r = read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(staff_state::SIZE)) + 5 * k;
         let i = read_usize(r + staff_state::FORMER_CLUB_ID);
         if i as i32 == -1 {
             continue;
@@ -5139,7 +5139,7 @@ pub(crate) unsafe fn contract_inline_lookup(p: Staff) -> usize {
     let c = if p.is_null() || read_usize(p.addr()) as i32 >= read_usize(G_STAFF_COUNT) as i32 {
         0
     } else {
-        let k = read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(0x4f))) as i32;
+        let k = read_usize(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(staff_state::SIZE))) as i32;
         if k < 0 {
             0
         } else {
@@ -8255,7 +8255,7 @@ pub(crate) unsafe extern "thiscall" fn get_offer_response_delay(this: usize, off
         if hab > 0x82
             && hab as i32 > owner.reputation() as i32 / 60
             && ((p.age() as u8) as i8) < 0x1a
-            && read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(0x4f)) + staff_state::STATUS_FLAGS) & 0xf < 3
+            && read_u8(read_usize(G_STAFF_STATE_TABLE).wrapping_add(read_usize(p.addr()).wrapping_mul(staff_state::SIZE)) + staff_state::STATUS_FLAGS) & 0xf < 3
             && status > 0
         {
             if exe::shortlist_manager_staff_interest_in_joining_club(this.shortlist_manager(), p, buyer, 0, 0, 1, 0) > read_f64(rdata::F64_3_15) {
@@ -9078,7 +9078,7 @@ pub(crate) unsafe extern "thiscall" fn can_end_loan(this: usize, club: usize, pl
 
 /// Staff id -> person record (110 bytes each in G_STAFF_TABLE).
 pub(crate) unsafe fn staff_record_by_id(i: u32) -> Staff {
-    Staff((read_u32(G_STAFF_TABLE) as usize).wrapping_add((i as usize).wrapping_mul(110)))
+    Staff((read_u32(G_STAFF_TABLE) as usize).wrapping_add((i as usize).wrapping_mul(staff::SIZE)))
 }
 
 /// Club id -> club record (581 bytes each in G_CLUB_TABLE).
@@ -9373,7 +9373,7 @@ pub(crate) unsafe fn transfer_manager_contract_club(person: usize) -> usize {
     if c.is_null() {
         return 0;
     }
-    read_usize(G_CLUB_TABLE).wrapping_add((c.club()).wrapping_mul(581))
+    read_usize(G_CLUB_TABLE).wrapping_add((c.club()).wrapping_mul(club::SIZE))
 }
 
 /// Closes (state 4) the contract offers linked to the transfer offer: the target player's and the exchange players'.
@@ -9389,7 +9389,7 @@ pub(crate) unsafe fn transfer_manager_contract_club(person: usize) -> usize {
 pub(crate) unsafe extern "stdcall" fn transfer_manager_close_offer_contract_offers(offer: usize) {
     let offer = Offer(offer);
     let id = offer.target_staff_id();
-    let person = read_usize(G_STAFF_TABLE).wrapping_add(id.wrapping_mul(110));
+    let person = read_usize(G_STAFF_TABLE).wrapping_add(id.wrapping_mul(staff::SIZE));
     let club = transfer_manager_contract_club(person);
     let r = exe::contract_manager_find_contract_offer(read_usize(G_CONTRACT_MANAGER), id as u32, offer.buyer_club_id() as u32);
     if r != 0 {
@@ -9464,7 +9464,7 @@ pub(crate) unsafe extern "thiscall" fn get_exchange_negotiations_for_player(mana
     if c.is_null() {
         return 0;
     }
-    let p = read_usize(G_CLUB_TABLE).wrapping_add((c.club()).wrapping_mul(581));
+    let p = read_usize(G_CLUB_TABLE).wrapping_add((c.club()).wrapping_mul(club::SIZE));
     if p == 0 {
         return 0;
     }
@@ -9671,7 +9671,7 @@ pub(crate) unsafe extern "thiscall" fn get_agreed_contract_club(manager: usize, 
         return 0;
     }
     if !club.is_null() {
-        *club = (read_usize(G_CLUB_TABLE) as isize + (contract.club() as i32) as isize * 581) as usize;
+        *club = (read_usize(G_CLUB_TABLE) as isize + (contract.club() as i32) as isize * (club::SIZE as isize)) as usize;
     }
     1
 }

@@ -709,12 +709,12 @@ pub(crate) unsafe fn baiano_staff_records(this: League, club: usize, status: u32
     let n = this.club_count() as i32;
     let mut i = 0i32;
     while i < n {
-        if read_usize(this.table() + 0x3b * i as usize) == club {
+        if read_usize(this.table() + league_table_row::SIZE * i as usize) == club {
             if st == 1 {
                 if fazer {
                     add_champions_record(club, comp);
                 }
-                let l = this.table() + 0x3b * i as usize;
+                let l = this.table() + league_table_row::SIZE * i as usize;
                 if fazer {
                     write_u8(l + league_table_row::STATUS, 5);
                 }
@@ -728,7 +728,7 @@ pub(crate) unsafe fn baiano_staff_records(this: League, club: usize, status: u32
                     let weight = exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + fixture::ROUND_NUMBER) as u16 as u32, 2) as u32;
                     exe::staff_records_add_knocked_out_record(read_usize(G_STAFF_RECORDS), club, comp, read_i16(game + fixture::ROUND_PREFIX) as u16 as u32, read_i16(game + fixture::ROUND_NAME) as u16 as u32, weight);
                 }
-                let l = this.table() + 0x3b * i as usize;
+                let l = this.table() + league_table_row::SIZE * i as usize;
                 if fazer {
                     write_u8(l + league_table_row::STATUS, 0xfe);
                 }
