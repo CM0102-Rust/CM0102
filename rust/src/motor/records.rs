@@ -9680,6 +9680,15 @@ impl BanRecord {
     pub(crate) unsafe fn set_nation_rule(self, v: u8) {
         write_u8(self.0 + ban_record::NATION_RULE, v)
     }
+    /// `ban_record::REASON` (+0x10). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn reason(self) -> u8 {
+        read_u8(self.0 + ban_record::REASON)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_reason(self, v: u8) {
+        write_u8(self.0 + ban_record::REASON, v)
+    }
     /// `ban_record::FLAGS` (+0x13). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn flags(self) -> u8 {
@@ -13303,6 +13312,15 @@ impl LeagueTableRow {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
+    /// `league_table_row::CLUB` (+0x0). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn club(self) -> i32 {
+        read_i32(self.0 + league_table_row::CLUB)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_club(self, v: i32) {
+        write_i32(self.0 + league_table_row::CLUB, v)
+    }
     /// `league_table_row::POSITION` (+0x4). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn position(self) -> i8 {
@@ -15899,6 +15917,24 @@ impl MatchRecordRow {
     #[inline(always)]
     pub(crate) unsafe fn set_red_card(self, v: u8) {
         write_u8(self.0 + match_record_row::RED_CARD, v)
+    }
+    /// `match_record_row::FIRST_CARD_OFFENCE` (+0x2e). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn first_card_offence(self) -> i8 {
+        read_i8(self.0 + match_record_row::FIRST_CARD_OFFENCE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_first_card_offence(self, v: i8) {
+        write_i8(self.0 + match_record_row::FIRST_CARD_OFFENCE, v)
+    }
+    /// `match_record_row::SECOND_CARD_OFFENCE` (+0x2f). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn second_card_offence(self) -> i8 {
+        read_i8(self.0 + match_record_row::SECOND_CARD_OFFENCE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_second_card_offence(self, v: i8) {
+        write_i8(self.0 + match_record_row::SECOND_CARD_OFFENCE, v)
     }
     /// `match_record_row::MINUTE_OFF` (+0x30). Name: read.
     #[inline(always)]
@@ -19023,6 +19059,33 @@ impl RulingBody {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
+    /// `ruling_body::RECORD_SLOT` (+0x4). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn record_slot(self) -> u8 {
+        read_u8(self.0 + ruling_body::RECORD_SLOT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_record_slot(self, v: u8) {
+        write_u8(self.0 + ruling_body::RECORD_SLOT, v)
+    }
+    /// `ruling_body::RULE_SET_INDEX` (+0x5). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn rule_set_index(self) -> u8 {
+        read_u8(self.0 + ruling_body::RULE_SET_INDEX)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_rule_set_index(self, v: u8) {
+        write_u8(self.0 + ruling_body::RULE_SET_INDEX, v)
+    }
+    /// `ruling_body::BAN_SCALE` (+0x6). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn ban_scale(self) -> u8 {
+        read_u8(self.0 + ruling_body::BAN_SCALE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_ban_scale(self, v: u8) {
+        write_u8(self.0 + ruling_body::BAN_SCALE, v)
+    }
     /// `ruling_body::ENTRIES` (+0xb). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn entries(self) -> usize {
@@ -19108,6 +19171,24 @@ impl RulingBodyEntry {
     pub(crate) unsafe fn set_person_id(self, v: i32) {
         write_i32(self.0 + ruling_body_entry::PERSON_ID, v)
     }
+    /// `ruling_body_entry::YELLOW_CARDS` (+0x4). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn yellow_cards(self) -> u8 {
+        read_u8(self.0 + ruling_body_entry::YELLOW_CARDS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_yellow_cards(self, v: u8) {
+        write_u8(self.0 + ruling_body_entry::YELLOW_CARDS, v)
+    }
+    /// `ruling_body_entry::RED_CARDS` (+0x5). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn red_cards(self) -> u8 {
+        read_u8(self.0 + ruling_body_entry::RED_CARDS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_red_cards(self, v: u8) {
+        write_u8(self.0 + ruling_body_entry::RED_CARDS, v)
+    }
     /// `ruling_body_entry::BAN_INDEX` (+0x6). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn ban_index(self) -> i16 {
@@ -19116,6 +19197,24 @@ impl RulingBodyEntry {
     #[inline(always)]
     pub(crate) unsafe fn set_ban_index(self, v: i16) {
         write_i16(self.0 + ruling_body_entry::BAN_INDEX, v)
+    }
+    /// `ruling_body_entry::DISCIPLINE_POINTS` (+0x8). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn discipline_points(self) -> i16 {
+        read_i16(self.0 + ruling_body_entry::DISCIPLINE_POINTS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_discipline_points(self, v: i16) {
+        write_i16(self.0 + ruling_body_entry::DISCIPLINE_POINTS, v)
+    }
+    /// `ruling_body_entry::SEASON_FLAGS` (+0xd). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn season_flags(self) -> u8 {
+        read_u8(self.0 + ruling_body_entry::SEASON_FLAGS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_season_flags(self, v: u8) {
+        write_u8(self.0 + ruling_body_entry::SEASON_FLAGS, v)
     }
 }
 
@@ -20997,8 +21096,12 @@ impl ConMercCup {
     }
     /// `con_merc_cup::DRAWN_CLUB_COUNT` (+0xf2). Name: read.
     #[inline(always)]
-    pub(crate) fn drawn_club_count_addr(self) -> usize {
-        self.0 + con_merc_cup::DRAWN_CLUB_COUNT
+    pub(crate) unsafe fn drawn_club_count(self) -> usize {
+        read_usize(self.0 + con_merc_cup::DRAWN_CLUB_COUNT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_drawn_club_count(self, v: usize) {
+        write_usize(self.0 + con_merc_cup::DRAWN_CLUB_COUNT, v)
     }
 }
 
@@ -21694,8 +21797,12 @@ impl OceaniaClubChamp {
     }
     /// `oceania_club_champ::DRAWN_CLUB_COUNT` (+0xf2). Name: inferred.
     #[inline(always)]
-    pub(crate) fn drawn_club_count_addr(self) -> usize {
-        self.0 + oceania_club_champ::DRAWN_CLUB_COUNT
+    pub(crate) unsafe fn drawn_club_count(self) -> usize {
+        read_usize(self.0 + oceania_club_champ::DRAWN_CLUB_COUNT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_drawn_club_count(self, v: usize) {
+        write_usize(self.0 + oceania_club_champ::DRAWN_CLUB_COUNT, v)
     }
 }
 
@@ -24386,6 +24493,144 @@ impl Addr for HostEntry {
 }
 
 impl core::fmt::LowerHex for HostEntry {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `asia_club_champ_fields` record in the game's memory (fields in `fields::asia_club_champ_fields`). [pt] Um registro `asia_club_champ_fields` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct AsiaClubChampFields(pub(crate) usize);
+
+#[allow(dead_code)]
+impl AsiaClubChampFields {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `asia_club_champ_fields::QUALIFIED_CLUBS` (+0xb2). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn qualified_clubs(self) -> usize {
+        read_usize(self.0 + asia_club_champ_fields::QUALIFIED_CLUBS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_qualified_clubs(self, v: usize) {
+        write_usize(self.0 + asia_club_champ_fields::QUALIFIED_CLUBS, v)
+    }
+}
+
+impl Addr for AsiaClubChampFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for AsiaClubChampFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `cup_team_entry` record in the game's memory (fields in `fields::cup_team_entry`). [pt] Um registro `cup_team_entry` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct CupTeamEntry(pub(crate) usize);
+
+#[allow(dead_code)]
+impl CupTeamEntry {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `cup_team_entry::CLUB` (+0x0). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn club(self) -> i32 {
+        read_i32(self.0 + cup_team_entry::CLUB)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_club(self, v: i32) {
+        write_i32(self.0 + cup_team_entry::CLUB, v)
+    }
+    /// `cup_team_entry::SEED_LEVEL` (+0x4). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn seed_level(self) -> u8 {
+        read_u8(self.0 + cup_team_entry::SEED_LEVEL)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_seed_level(self, v: u8) {
+        write_u8(self.0 + cup_team_entry::SEED_LEVEL, v)
+    }
+    /// `cup_team_entry::STATUS` (+0x5). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn status(self) -> u8 {
+        read_u8(self.0 + cup_team_entry::STATUS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_status(self, v: u8) {
+        write_u8(self.0 + cup_team_entry::STATUS, v)
+    }
+}
+
+impl Addr for CupTeamEntry {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for CupTeamEntry {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `pending_ban` record in the game's memory (fields in `fields::pending_ban`). [pt] Um registro `pending_ban` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct PendingBan(pub(crate) usize);
+
+#[allow(dead_code)]
+impl PendingBan {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `pending_ban::PERSON_ID` (+0x1c). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn person_id(self) -> u32 {
+        read_u32(self.0 + pending_ban::PERSON_ID)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_person_id(self, v: u32) {
+        write_u32(self.0 + pending_ban::PERSON_ID, v)
+    }
+}
+
+impl Addr for PendingBan {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for PendingBan {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         core::fmt::LowerHex::fmt(&self.0, f)
     }

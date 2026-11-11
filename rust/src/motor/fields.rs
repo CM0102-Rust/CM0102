@@ -1153,6 +1153,7 @@ pub(crate) mod ban_record {
     pub(crate) const START_DATE: usize = 0x4; // 8 byte(s): Date the ban starts (day i16 +4, year i16 +6)
     pub(crate) const RULES: usize = 0xc; // 4 byte(s): The four rules (ruling body indexes, 0xff none) the ban applies under
     pub(crate) const NATION_RULE: usize = 0xf; // 1 byte(s): Fourth rule: when set, the person is also listed in the discipline nation index
+    pub(crate) const REASON: usize = 0x10; // 1 byte(s): ban reason (0 points, 1 yellows, 2 red card(s), 3 misconduct, ...) [verified: docs/MAPA_DISCIPLINA BanRecord +0x10 reason, observed at 0x55d0a0; the node starts with a whole BanRecord]
     pub(crate) const FLAGS: usize = 0x13; // 1 byte(s): Flags: bit 0 extended (merged with an existing ban); bits 0..2 copied by operator=
 }
 
@@ -1630,6 +1631,7 @@ pub(crate) mod league_round_date {
 /// Fields of the `league_table_row` object, named from how the routines use them. [pt] Campos do objeto `league_table_row`.
 #[allow(dead_code)]
 pub(crate) mod league_table_row {
+    pub(crate) const CLUB: usize = 0x0; // 4 byte(s): club pointer of the row (row 1 here: 0x3b-byte stride)
     pub(crate) const POSITION: usize = 0x4; // 1 byte(s): table position index of the row (0x3b-byte rows of the league TABLE)
     pub(crate) const H2H_ENTRIES: usize = 0x5; // 4 byte(s): pointer to the head-to-head entries, 14 bytes per opponent (tie-break rule 4)
     pub(crate) const POSITION_HISTORY: usize = 0x9; // 4 byte(s): pointer to the per-round position history (allocated when the league has legs)
@@ -1947,6 +1949,8 @@ pub(crate) mod match_record_row {
     pub(crate) const OFFSIDES: usize = 0x2b; // 1 byte(s): times caught offside (copy of match_player OFFSIDES +0x13) [verified: fill_match_record: row+0x1c+0xf <- match_player 0x69-0x56 = +0x13 OFFSIDES]
     pub(crate) const YELLOW_CARDS: usize = 0x2c; // 1 byte(s): yellow cards
     pub(crate) const RED_CARD: usize = 0x2d; // 1 byte(s): red card (drawn in red on the ratings) [inference]
+    pub(crate) const FIRST_CARD_OFFENCE: usize = 0x2e; // 1 byte(s): offence code (9..12 for a red) of the player's first card in the match
+    pub(crate) const SECOND_CARD_OFFENCE: usize = 0x2f; // 1 byte(s): offence code of the player's second card in the match
     pub(crate) const MINUTE_OFF: usize = 0x30; // 1 byte(s): minute substituted off; negative = not
     pub(crate) const MATCH_FORM: usize = 0x31; // 1 byte(s): in-match form byte of the player; row +0x31
     pub(crate) const MINUTE_ON: usize = 0x32; // 1 byte(s): minute brought on; negative = not
@@ -2354,6 +2358,9 @@ pub(crate) mod retirement_entry {
 /// Fields of the `ruling_body` object, named from how the routines use them. [pt] Campos do objeto `ruling_body`.
 #[allow(dead_code)]
 pub(crate) mod ruling_body {
+    pub(crate) const RECORD_SLOT: usize = 0x4; // 1 byte(s): slot of the person discipline record this ruling body uses (0..3) [verified: passed as slot to find_held_ban/set_slot; docs/MAPA_DISCIPLINA rule set +0x04 observed (FIFA slot 3, confederations 2, FAs 0/1)]
+    pub(crate) const RULE_SET_INDEX: usize = 0x5; // 1 byte(s): index of this ruling body in the discipline table (0..42) [verified: compared with the held slot's rule byte and passed as the rule to set_slot; docs/MAPA_DISCIPLINA rule set +0x05 observed]
+    pub(crate) const BAN_SCALE: usize = 0x6; // 1 byte(s): scale byte that maps the offence code to ban matches/days [verified: community map: make_points_ban maps code 9..12 and the body's scale byte at +6 to matches or days]
     pub(crate) const ENTRIES: usize = 0xb; // 4 byte(s): Pointer to the 14-byte ruling body entries (ruling_body_entry)
     pub(crate) const ENTRY_CAPACITY: usize = 0xf; // 4 byte(s): Allocated entries in ENTRIES (count + 100 after compact_entries)
     pub(crate) const ENTRY_COUNT: usize = 0x13; // 4 byte(s): Number of entries used in ENTRIES
@@ -2365,7 +2372,11 @@ pub(crate) mod ruling_body {
 #[allow(dead_code)]
 pub(crate) mod ruling_body_entry {
     pub(crate) const PERSON_ID: usize = 0x0; // 4 byte(s): Person id of the entry (-1 = free) [inference]
+    pub(crate) const YELLOW_CARDS: usize = 0x4; // 1 byte(s): bookings accumulated this season [verified: zeroed at the new season; docs/MAPA_DISCIPLINA entry +0x4 yellow cards (0x7df910)]
+    pub(crate) const RED_CARDS: usize = 0x5; // 1 byte(s): red cards this season [verified: zeroed at the new season; docs/MAPA_DISCIPLINA entry +0x5 (0x7db6c9, 0x7dd1e7)]
     pub(crate) const BAN_INDEX: usize = 0x6; // 2 byte(s): Index of the person's ban in the discipline BANS array (-1 none)
+    pub(crate) const DISCIPLINE_POINTS: usize = 0x8; // 2 byte(s): disciplinary points this season (points-based rules) [verified: zeroed at the new season; docs/MAPA_DISCIPLINA entry +0x8 (0x7dccd8)]
+    pub(crate) const SEASON_FLAGS: usize = 0xd; // 1 byte(s): flag byte of the entry; the low 6 bits are cleared at the new season, the top 2 kept
 }
 
 /// Fields of the `run_record` object, named from how the routines use them. [pt] Campos do objeto `run_record`.
@@ -3141,4 +3152,27 @@ pub(crate) mod host_entry {
     pub(crate) const CHOSEN_BID: usize = 0x1e; // 1 byte(s): chosen bid 0..2; -1 voting open, -2 voting closed, -3 fixed default host
     pub(crate) const DECISION_DAY: usize = 0x1f; // 2 byte(s): day of year of the host decision (+ random -35..+34)
     pub(crate) const EDITION_INTERVAL: usize = 0x21; // 1 byte(s): years between editions; added to the year on 1 January
+}
+
+/// AsiaClubChamp / AsiaCupWinner objects (Cup subclass; the Cup body ends at +0xb2): the qualified club list
+#[allow(dead_code)]
+pub(crate) mod asia_club_champ_fields {
+    pub(crate) const QUALIFIED_CLUBS: usize = 0xb2; // 4 byte(s): pointer to the array of qualified club pointers (32 slots: first zone 0..15, second zone 16..31) [verified: community map: AsiaClubChamp::build_team_table builds the team table from the first 16 qualified clubs, select_qualified_clubs fills 32 slots, the destructor fr]
+
+}
+
+/// 6-byte entry of the cup team table (cup::TEAM_TABLE +0xa7): +0 club pointer, +4 seed level, +5 status
+#[allow(dead_code)]
+pub(crate) mod cup_team_entry {
+    pub(crate) const CLUB: usize = 0x0; // 4 byte(s): club of the second entrant
+    pub(crate) const SEED_LEVEL: usize = 0x4; // 1 byte(s): seed level of the second entrant
+
+    pub(crate) const STATUS: usize = 0x5; // 1 byte(s): status of the second entrant
+}
+
+/// 0x70-byte pending ban node of a ruling body (list at RulingBody +7, saved in discipline.dat): +0 a whole BanRecord, +0x14 effective date, +0x1c person id
+#[allow(dead_code)]
+pub(crate) mod pending_ban {
+    pub(crate) const PERSON_ID: usize = 0x1c; // 4 byte(s): staff id of the banned person [verified: written from the row's staff id (+0); docs/MAPA_DISCIPLINA: remove_pending_bans 0x7e91d0 drops nodes with [node+0x1c] == staff id]
+
 }

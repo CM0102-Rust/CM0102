@@ -59,9 +59,9 @@ pub(crate) fn ban_days(code: i32, e: i8) -> Option<u16> {
 /// ([0xae2c90], 0x417c10), +0x10 = 3, +0x1c o id do jogador (+0), +0x6f = (+0x48 do jogador == 0). Devolve 1; sem
 /// suspensão, 0 sem gravar nada.
 pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j: usize, by_games: u32) -> u32 {
-    let code = match read_u8(j + 0x2c) {
-        0 => read_i8(j + 0x2e) as i32, // cpu10: the foul of the first type
-        1 => read_i8(j + 0x2f) as i32,
+    let code = match read_u8(j + match_record_row::YELLOW_CARDS) {
+        0 => read_i8(j + match_record_row::FIRST_CARD_OFFENCE) as i32, // cpu10: the foul of the first type
+        1 => read_i8(j + match_record_row::SECOND_CARD_OFFENCE) as i32,
         _ => return 0,
     };
     let escala = read_i8(this + 6);
@@ -82,8 +82,8 @@ pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j:
     write_u16(r + 2, dias);
     let mut today = [0u32; 2];
     exe::date_operator_3d(r + 4, today.as_mut_ptr() as usize, G_CURRENT_DATE);
-    write_u8(r + 0x10, 3);
-    write_u32(r + 0x1c, read_usize(j) as u32);
+    write_u8(r + ban_record::REASON, 3);
+    write_u32(r + pending_ban::PERSON_ID, read_usize(j) as u32);
     write_u8(r + 0x6f, (read_u8(j + 0x48) == 0) as u8);
     1 // cpu10: the punishment carried out
 }
@@ -109,9 +109,9 @@ pub(crate) unsafe extern "thiscall" fn make_points_ban(this: usize, r: usize, j:
 /// da entrada vira −1. No fim compacta as entradas (0x7e9050, nesta leva).
 pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize) {
     crate::comparison::branch("cpu_10 new season");
-    let mut e = read_usize(this + 0xb);
+    let mut e = read_usize(this + ruling_body::ENTRIES);
     let mut i = 0i32;
-    while i < read_i32(this + 0x13) {
+    while i < read_i32(this + ruling_body::ENTRY_COUNT) {
         let id = read_i32(e);
         if id != -1 {
             let s = read_i16(e + 6);
@@ -119,7 +119,7 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
                 true
             } else {
                 let ban = read_usize(read_usize(G_DISCIPLINE) + 4).wrapping_add((s as i32 as usize).wrapping_mul(20));
-                let years = if read_i32(this + 0x17) == -1 && read_i32(this + 0x1b) == -1 { 4 } else { 2 };
+                let years = if read_i32(this + ruling_body::NATION_ID) == -1 && read_i32(this + ruling_body::CONTINENT_ID) == -1 { 4 } else { 2 };
                 let year = read_u16(ban + 6) as i32;
                 if read_u16(G_CURRENT_DATE_YEAR) as i32 - year >= years {
                     crate::comparison::branch("cpu_10 old suspension");
@@ -140,11 +140,11 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
                 }
                 write_u32(e, 0xffff_ffff);
             } else {
-                let f = read_u8(e + 0xd);
+                let f = read_u8(e + ruling_body_entry::SEASON_FLAGS);
                 write_u8(e + 4, 0);
                 write_u8(e + 5, 0);
                 write_u16(e + 8, 0);
-                write_u8(e + 0xd, f & 0xc0);
+                write_u8(e + ruling_body_entry::SEASON_FLAGS, f & 0xc0);
             }
         }
         i += 1;
@@ -172,11 +172,11 @@ pub(crate) unsafe extern "thiscall" fn ruling_body_start_new_season(this: usize)
 /// o índice). Conta +0x13 = n, capacidade +0xf = n + 100 e realoca (0x945667) com (n + 100) × 14 bytes; sem memória, a
 /// caixa (linha 0x594) e segue.
 pub(crate) unsafe extern "thiscall" fn compact_entries(this: usize) {
-    let mut target = read_usize(this + 0xb);
+    let mut target = read_usize(this + ruling_body::ENTRIES);
     let mut source = target;
     let mut n = 0u32;
     let mut i = 0i32;
-    while i < read_i32(this + 0x13) {
+    while i < read_i32(this + ruling_body::ENTRY_COUNT) {
         if read_i32(source) != -1 {
             if source != target {
                 core::ptr::copy(source as *const u8, target as *mut u8, 0xe);
@@ -193,10 +193,10 @@ pub(crate) unsafe extern "thiscall" fn compact_entries(this: usize) {
         i += 1;
         source += 0xe;
     }
-    write_u32(this + 0x13, n);
-    write_u32(this + 0xf, n + 100);
-    let p = exe::crt_realloc(read_usize(this + 0xb), (n + 100) * 14);
-    write_u32(this + 0xb, p as u32);
+    write_u32(this + ruling_body::ENTRY_COUNT, n);
+    write_u32(this + ruling_body::ENTRY_CAPACITY, n + 100);
+    let p = exe::crt_realloc(read_usize(this + ruling_body::ENTRIES), (n + 100) * 14);
+    write_u32(this + ruling_body::ENTRIES, p as u32);
     if p == 0 {
         show_error_at(0xa7a858, 0x594);
     }

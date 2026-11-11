@@ -111,7 +111,7 @@ pub(crate) unsafe fn con_merc_cup_compare_knockout_stage(name: &str, this: Leagu
     for f in 0..stages {
         let stage = read_usize(this.stages() + f * 4);
         for j in 0..q {
-            plan.push(read_usize(read_usize(stage + 0xb1) + j * 0x3b));
+            plan.push(read_usize(read_usize(stage + league::TABLE) + j * 0x3b));
         }
     }
     original();
@@ -120,12 +120,12 @@ pub(crate) unsafe fn con_merc_cup_compare_knockout_stage(name: &str, this: Leagu
         SCOREBOARD.record(false, || format!("{}({:#x}) without stage", name, this.addr()));
         return;
     }
-    let list = read_usize(stage + 0xa7);
+    let list = read_usize(stage + cup::TEAM_TABLE);
     let mut found: Vec<usize> = (0..teams).map(|k| read_usize(list + 6 * k)).collect();
     let (pl, ac) = (plan.clone(), found.clone());
     plan.sort_unstable();
     found.sort_unstable();
-    let same = plan == found && read_i16(stage + 0x3e) as usize == teams && read_usize(stage + 4) == this.competition().addr();
+    let same = plan == found && read_i16(stage + cup::TEAM_COUNT) as usize == teams && read_usize(stage + 4) == this.competition().addr();
     SCOREBOARD.record(same, || format!("{}({:#x}) plan={:x?} stage={:#x} list={:x?} +0x3e={}", name, this.addr(), pl, stage, ac, read_i16(stage + 0x3e)));
 }
 
@@ -228,10 +228,10 @@ impl NationClubList {
 /// A original guarda as listas na pilha sem zerá-las: com menos clubes que as vagas, ela lê sobra; a cópia lê zero
 /// [inferência: nesta carreira as quatro nações e a MLS têm clubes que bastam; o comparador confere a lista].
 pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
-    write_usize(this + 0xf2, 0x10);
+    write_usize(this + con_merc_cup::DRAWN_CLUB_COUNT, 0x10);
     let americana = read_usize(read_usize(G_COMP_OBJECT_TABLE) + read_usize(KEY_CLUB_COMP_US_OPEN_CUP) * 4);
     let list = exe::crt_malloc(0x40);
-    write_usize(this + 0xee, list);
+    write_usize(this + con_merc_cup::DRAWN_CLUBS, list);
     if list == 0 {
         show_error_at(0x9a7d6c, 0x262);
         return 0;
@@ -245,7 +245,7 @@ pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
         if exe::database_is_national_team(c) != 0 {
             break;
         }
-        let nation = read_usize(c + 0x53);
+        let nation = read_usize(c + club::NATION);
         if nation != 0 {
             let id = read_usize(nation);
             if id == read_usize(KEY_NATION_MEXICO) {
@@ -257,7 +257,7 @@ pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
             } else if id == read_usize(KEY_NATION_BOLIVIA) {
                 bolivia.por(c);
             } else {
-                let league = read_usize(c + 0x57);
+                let league = read_usize(c + club::DIVISION);
                 if league != 0 && read_usize(league) == read_usize(KEY_CLUB_COMP_AMERICAN_MAJOR_LEAGUE) && n_mls < 0xc {
                     mls[n_mls as usize] = c;
                     n_mls += 1;
@@ -273,7 +273,7 @@ pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
     exe::comp_util_sort_and_shuffle_top_clubs(peru.clubs.as_mut_ptr() as usize, peru.n as u32, 3);
     exe::comp_util_sort_and_shuffle_top_clubs(bolivia.clubs.as_mut_ptr() as usize, bolivia.n as u32, 2);
     exe::comp_util_sort_and_shuffle_top_clubs(mls.as_mut_ptr() as usize, n_mls as i16 as u16 as u32, 2);
-    let slot = |k: usize, v: usize| write_usize(read_usize(this + 0xee) + k * 4, v);
+    let slot = |k: usize, v: usize| write_usize(read_usize(this + con_merc_cup::DRAWN_CLUBS) + k * 4, v);
     slot(2, mexico.clubs[0]);
     slot(3, mexico.clubs[1]);
     slot(4, mexico.clubs[2]);
@@ -294,12 +294,12 @@ pub(crate) unsafe fn select_invited_clubs(this: usize) -> u32 {
         crate::comparison::branch("cqs_11 american league champion");
         slot(0, exe::comp_util_get_latest_placed_club(record, 0)); // cqs11: the American league champion
         slot(1, exe::comp_util_get_latest_placed_club(read_usize(americana + 4), 0));
-        let l = read_usize(this + 0xee);
+        let l = read_usize(this + con_merc_cup::DRAWN_CLUBS);
         if read_usize(l) == read_usize(l + 4) {
             slot(0, exe::comp_util_get_latest_placed_club(record, 1));
         }
     }
-    exe::comp_util_shuffle_pointer_array(read_usize(this + 0xee), 0x10);
+    exe::comp_util_shuffle_pointer_array(read_usize(this + con_merc_cup::DRAWN_CLUBS), 0x10);
     1
 }
 
@@ -354,7 +354,7 @@ pub(crate) unsafe fn con_merc_cup_compare_advance_stage(name: &str, this: League
 ///
 /// [pt] O clube k da lista dos sorteados (+0xee, ponteiros), a que o primeiro grupo e as fases dos outros leem.
 pub(crate) unsafe fn con_merc_cup_drawn_club(this: League, k: usize) -> usize {
-    read_usize(read_usize(this.addr() + 0xee) + k * 4) // cqr12: o sorteado k
+    read_usize(read_usize(this.addr() + con_merc_cup::DRAWN_CLUBS) + k * 4) // cqr12: o sorteado k
 }
 
 /// rule: the Merconorte has 16 invited clubs (the best of four nations and two clubs of the American league
@@ -402,8 +402,8 @@ pub(crate) unsafe extern "thiscall" fn con_merc_cup_update_for_date(this: usize,
             }
             let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(this.addr()) + 0x5c));
             predicted(this.addr());
-            exe::crt_free(read_usize(this.addr() + 0xee));
-            write_usize(this.addr() + 0xee, 0);
+            exe::crt_free(read_usize(this.addr() + con_merc_cup::DRAWN_CLUBS));
+            write_usize(this.addr() + con_merc_cup::DRAWN_CLUBS, 0);
             this.set_active(1);
         }
     }

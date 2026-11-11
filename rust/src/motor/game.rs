@@ -51,7 +51,7 @@ pub(crate) unsafe fn roll_coefficient_year(na: Nation, h: &mut [f64; 6], mark: &
 pub(crate) unsafe extern "C" fn game_update_nation_coefficients() {
     if read_u8(G_NATION_COEFFICIENT_HISTORY_NEEDS_INIT) != 0 {
         if (read_usize(G_NATION_COUNT) as i32) > 0 {
-            let mut p = read_usize(G_NATION_TABLE) + 0xd0;
+            let mut p = read_usize(G_NATION_TABLE) + nation::FIFACOEFFICIENT95;
             let mut i = 0i16;
             loop {
                 let v = read_f64(p - 0x28);
@@ -250,8 +250,8 @@ pub(crate) unsafe fn dressing_room_friction(p: Staff, club: Club, k: usize) {
 pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
     for _ in 0..10 {
         let club = club_record(friendly_random(read_usize(G_CLUB_COUNT) as i32) as usize);
-        let a = Staff(read_usize(club.wrapping_add(friendly_random(0x32) as usize * 4) + 0xd7));
-        let b = read_usize(club.wrapping_add(friendly_random(0x32) as usize * 4) + 0xd7);
+        let a = Staff(read_usize(club.wrapping_add(friendly_random(0x32) as usize * 4) + club::SQUAD));
+        let b = read_usize(club.wrapping_add(friendly_random(0x32) as usize * 4) + club::SQUAD);
         if a.is_null() || b == 0 || a.addr() == b {
             continue;
         }
@@ -270,7 +270,7 @@ pub(crate) unsafe extern "C" fn game_update_squad_relationships() {
                 continue;
             }
             let k = game_contract_for_club(a.addr(), Club((game_club_of_contract(game_get_contract_and_store(a.addr()))).addr()));
-            if k.is_null() || read_usize(k.addr() + 0x45) & 0x800 == 0 {
+            if k.is_null() || (k.grievances() as usize) & 0x800 == 0 {
                 continue;
             }
             exe::news_post_feud_settled(a, b);
@@ -331,7 +331,7 @@ pub(crate) unsafe fn player_vs_manager_check(p: Staff) {
     if friendly_random(p.pressure() as i32) == 0 {
         e -= 5;
     }
-    if read_usize(k.addr() + 0x45) != 0 || friendly_random(0x64) == 0 {
+    if (k.grievances() as usize) != 0 || friendly_random(0x64) == 0 {
         if friendly_random(p.professionalism() as i32) == 0 {
             e -= 0xf;
         }
@@ -425,8 +425,8 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
                 if c.is_null() {
                     continue;
                 }
-                let l = read_i8_as_i32(read_usize(p + staff::PLAYER) + 0x2f);
-                soma = soma.wrapping_add(read_i8_as_i32(c.addr() + 0x44) * l);
+                let l = read_i8_as_i32(read_usize(p + staff::PLAYER) + player_sheet::LEADERSHIP);
+                soma = soma.wrapping_add((c.morale() as i32) * l);
                 lideranca += l;
                 q += 1;
             }
@@ -442,8 +442,8 @@ pub(crate) unsafe extern "C" fn game_spread_squad_morale_by_leadership() {
                     continue;
                 }
                 let c = game_contract_for_club(p, Club(club));
-                let m = if c.is_null() { 0 } else { read_i8_as_i32(c.addr() + 0x44) };
-                let l = read_i8_as_i32(read_usize(p + staff::PLAYER) + 0x2f);
+                let m = if c.is_null() { 0 } else { (c.morale() as i32) };
+                let l = read_i8_as_i32(read_usize(p + staff::PLAYER) + player_sheet::LEADERSHIP);
                 crate::comparison::branch("cps_5 drawn morale");
                 let r1 = friendly_random(soma.wrapping_mul(2) / (l + lideranca));
                 let r2 = friendly_random(m / 12); // cps5: the morale part
@@ -531,7 +531,7 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
             continue;
         }
         let t = exe::training_manager_get_player_schedule(read_usize(G_TRAINING_MANAGER), p);
-        if t == 0 || read_u8(t + 0x15) == 0 {
+        if t == 0 || read_u8(t + training_schedule::TYPE) == 0 {
             continue;
         }
         if exe::injury_get_player_injury_status(read_usize(G_INJURY), p) == 2 {
@@ -578,13 +578,13 @@ pub(crate) unsafe extern "C" fn game_check_players_missing_training() {
             if v == 0 {
                 continue;
             }
-            if read_usize(v + 0x45) & 0x8000 != 0 && friendly_random(p.professionalism() as i32) == 0 {
+            if read_usize(v + contract::GRIEVANCES) & (grievances::UNHAPPY_WITH_TRAINING as usize) != 0 && friendly_random(p.professionalism() as i32) == 0 {
                 and_foul = true;
-            } else if read_usize(v + 0x45) & 0x30000 != 0 && friendly_random(p.professionalism() as i32) == 0 {
+            } else if read_usize(v + contract::GRIEVANCES) & 0x30000 != 0 && friendly_random(p.professionalism() as i32) == 0 {
                 and_foul = true;
             } else {
                 let a = p.professionalism() as i32;
-                if a >= 5 || read_usize(v + 0x45) & 0x7800 == 0 || friendly_random(a) != 0 {
+                if a >= 5 || read_usize(v + contract::GRIEVANCES) & 0x7800 == 0 || friendly_random(a) != 0 {
                     continue;
                 }
                 and_foul = true;
@@ -677,7 +677,7 @@ pub(crate) unsafe extern "thiscall" fn transfer_manager_get_shortlist_manager(ma
 /// ([treino+0x651d]), pelo id dos dados do jogador ([[jogador+0x61]]).
 pub(crate) unsafe extern "thiscall" fn training_manager_get_player_entry(treino: usize, player: usize) -> usize {
     let player = Staff(player);
-    let table = read_usize(treino + 0x651d);
+    let table = read_usize(treino + training_manager_fields::PLAYER_ENTRIES);
     let id = read_i32(player.player().addr());
     (table as isize + id as isize * 6) as usize
 }
@@ -686,7 +686,7 @@ pub(crate) unsafe extern "thiscall" fn training_manager_get_player_entry(treino:
 ///
 /// [pt] O byte da carga de treino do jogador `*id` no registro de condição (31 bytes por jogador, +0x1e).
 pub(crate) unsafe fn training_load_byte(injuries: usize, id: *const i32) -> *mut u8 {
-    (read_usize(injuries) as isize + *id as isize * 31 + 0x1e) as *mut u8
+    (read_usize(injuries) as isize + *id as isize * 31 + (physical_record::PRONENESS as isize)) as *mut u8
 }
 
 /// the f64 average +0x20/+0x28 or +0x10/+0x18 (zero divisor: 6.8)
@@ -695,7 +695,7 @@ pub(crate) unsafe fn training_load_byte(injuries: usize, id: *const i32) -> *mut
 /// [pt] { 0x5d5a60 } (thiscall, ret 4, game.cpp): a média +0x20/+0x28 (com `segunda`) ou +0x10/+0x18 (f64,
 /// como a original deixa no x87); com divisor zero (ou não comparável), 6.8.
 pub(crate) unsafe extern "thiscall" fn game_average(t: usize, second: u8) -> f64 {
-    let (n, q) = if second != 0 { (read_f64(t + 0x20), read_f64(t + 0x28)) } else { (read_f64(t + 0x10), read_f64(t + 0x18)) };
+    let (n, q) = if second != 0 { (read_f64(t + player_stats_fields::FLAGGED_RATING_SUM), read_f64(t + player_stats_fields::FLAGGED_RATED_COUNT)) } else { (read_f64(t + player_stats_fields::RATING_SUM), read_f64(t + player_stats_fields::RATED_COUNT)) };
     if q == read_f64(rdata::F64_0) || q.is_nan() {
         return read_f64(rdata::F64_6_8);
     }

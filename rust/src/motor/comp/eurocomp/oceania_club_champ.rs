@@ -4,7 +4,7 @@ use super::*;
 ///
 /// [pt] O clube k dos 8 escolhidos (+0xee, ponteiros: o grupo A nas vagas 0..3, o B nas 4..7), a que as duas tabelas leem.
 pub(crate) unsafe fn selected_club(this: League, k: usize) -> usize {
-    read_usize(read_usize(this.addr() + 0xee) + k * 4) // cqt10: o escolhido k
+    read_usize(read_usize(this.addr() + oceania_club_champ::DRAWN_CLUBS) + k * 4) // cqt10: o escolhido k
 }
 
 /// Rule: the Oceania Club Championship is drawn on the start day (+0xb6/+0xb8) and only on the call without `completo`:
@@ -64,9 +64,9 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_update_for_date(this: 
             return 1;
         }
         exe::oceaniaclubchamp_create_group_b_stage(this);
-        exe::crt_free(read_usize(this.addr() + 0xee));
-        write_usize(this.addr() + 0xee, 0);
-        write_usize(this.addr() + 0xf2, 0);
+        exe::crt_free(read_usize(this.addr() + oceania_club_champ::DRAWN_CLUBS));
+        write_usize(this.addr() + oceania_club_champ::DRAWN_CLUBS, 0);
+        write_usize(this.addr() + oceania_club_champ::DRAWN_CLUB_COUNT, 0);
         this.set_active(1);
     }
     exe::league_update_for_date(this, today, full) as u32 
@@ -249,7 +249,7 @@ impl SourceClubList {
         for &c in self.clubs.iter().take(self.n.max(0) as usize) {
             if a == 0 {
                 a = c;
-            } else if b == 0 && read_usize(c + 0x53) != read_usize(a + 0x53) {
+            } else if b == 0 && read_usize(c + club::NATION) != read_usize(a + club::NATION) {
                 b = c;
             }
         }
@@ -262,13 +262,13 @@ impl SourceClubList {
 /// [pt] O par de um pote vai para os grupos A e B: com o sorteio de 2 (0x90cfc0(2): push 2; add esp -> cdecl) diferente de
 /// zero, o primeiro na vaga `k` (grupo A) e o segundo na `k` + 4 (grupo B); com zero, ao contrário.
 pub(crate) unsafe fn place_pot_pair(this: usize, k: usize, first: usize, second: usize, sorteio: i32) {
-    let l = read_usize(this + 0xee);
+    let l = read_usize(this + oceania_club_champ::DRAWN_CLUBS);
     if sorteio != 0 {
         write_usize(l + k * 4, first);
-        write_usize(read_usize(this + 0xee) + (k + 4) * 4, second);
+        write_usize(read_usize(this + oceania_club_champ::DRAWN_CLUBS) + (k + 4) * 4, second);
     } else {
         write_usize(l + (k + 4) * 4, first);
-        write_usize(read_usize(this + 0xee) + k * 4, second);
+        write_usize(read_usize(this + oceania_club_champ::DRAWN_CLUBS) + k * 4, second);
     }
 }
 
@@ -310,9 +310,9 @@ pub(crate) unsafe fn place_pot_pair(this: usize, k: usize, first: usize, second:
 /// A original guarda as listas na pilha sem zerá-las; com menos clubes que o lido ela lê sobra; a cópia lê zero
 /// [inferência: nesta carreira as listas têm clubes que bastam; o comparador confere a lista].
 pub(crate) unsafe fn select_qualified_clubs(this: usize) -> u32 {
-    write_usize(this + 0xf2, 8);
+    write_usize(this + oceania_club_champ::DRAWN_CLUB_COUNT, 8);
     let list = exe::crt_malloc(0x20);
-    write_usize(this + 0xee, list);
+    write_usize(this + oceania_club_champ::DRAWN_CLUBS, list);
     if list == 0 {
         show_error_at(0xa6a068, 0x307);
         return 0;
@@ -323,7 +323,7 @@ pub(crate) unsafe fn select_qualified_clubs(this: usize) -> u32 {
     let mut i = 0i32;
     let mut c = read_usize(G_CLUB_TABLE);
     while i < (read_usize(G_CLUB_COUNT) as i32).wrapping_sub((read_usize(G_NATION_COUNT) as i32).wrapping_mul(2)) {
-        let nation = Nation(read_usize(c + 0x53));
+        let nation = Nation(read_usize(c + club::NATION));
         if !nation.is_null() && nation.continent() != 0 && read_usize(nation.continent()) == read_usize(KEY_CONTINENT_OCEANIA) {
             let id = read_usize(nation.addr());
             if id == read_usize(KEY_NATION_NEW_ZEALAND) && nz.cabe() {
@@ -338,7 +338,7 @@ pub(crate) unsafe fn select_qualified_clubs(this: usize) -> u32 {
                 if mel.cabe() {
                     mel.por(c);
                 }
-            } else if exe::database_is_polynesian_nation(read_usize(c + 0x53)) != 0 && pol.cabe() {
+            } else if exe::database_is_polynesian_nation(read_usize(c + club::NATION)) != 0 && pol.cabe() {
                 pol.por(c);
             }
         }
@@ -408,7 +408,7 @@ pub(crate) unsafe extern "thiscall" fn oceania_club_champ_advance_stage(this: us
 /// [+0xc][0]), o 2º do A e o 1º do B (os cruzamentos: as chaves são os pares da lista).
 pub(crate) unsafe fn semifinalists(this: League) -> [usize; 4] {
     let a = |l: usize| read_usize(this.table() + l * 0x3b);
-    let b = |l: usize| read_usize(read_usize(read_usize(this.stages()) + 0xb1) + l * 0x3b);
+    let b = |l: usize| read_usize(read_usize(read_usize(this.stages()) + league::TABLE) + l * 0x3b);
     [a(0), b(1), a(1), b(0)] // cqt11: 1º A × 2º B, 2º A × 1º B
 }
 
@@ -582,15 +582,15 @@ pub(crate) unsafe fn oceania_club_champ_written_table_bytes(ops: &[OceaniaClubCh
         match *op {
             Cqq12D(r, ..) => {
                 pega(r as usize * 0x41, 5);
-                pega(r as usize * 0x41 + 0x3d, 4);
+                pega(r as usize * 0x41 + league_round_date::VENUE_VALUE, 4);
             }
             Cqq12L(r, j, ..) => pega(r as usize * 0x41 + 5 + j as usize * 7, 7),
             Cqq12S(r, ..) => pega(r as usize * 0x68, 3),
             Cqq12J(r, ..) => {
                 pega(r as usize * 0x68 + 3, 4);
-                pega(r as usize * 0x68 + 0x13, 4);
+                pega(r as usize * 0x68 + cup_round::VENUE_VALUE, 4);
             }
-            Cqq12E(r, vaga, ..) => pega(r as usize * 0x68 + 0x23 + vaga as usize * 7, 7),
+            Cqq12E(r, vaga, ..) => pega(r as usize * 0x68 + cup_round::SLOT_VENUE + vaga as usize * 7, 7),
             Cqq12B(o, _) => pega(o, 1),
             Cqq12W(o, _) => pega(o, 2),
             Cqq12X(o, _) => pega(o, 4),
@@ -717,7 +717,7 @@ pub(crate) unsafe fn build_team_table(this: Cup, file: usize, row: u32, name: &'
     crate::comparison::branch(name);
     let mut i: i16 = 0;
     while i < this.team_count() {
-        let c = read_usize(read_usize(this.addr() + 0xb2) + order(i) as usize * 4);
+        let c = read_usize(read_usize(this.addr() + asia_club_champ_fields::QUALIFIED_CLUBS) + order(i) as usize * 4);
         let e = this.team_table() + i as usize * 6;
         write_u32(e, c as u32);
         write_u8(e + 4, 0);

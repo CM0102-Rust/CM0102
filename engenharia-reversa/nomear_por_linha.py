@@ -93,7 +93,8 @@ def main():
             antes = s
             s, r = inserir(s, e, num(e['field_offset']), nome)
             novos += s != antes
-    usar = [e for e in usar if not e.get('field_offset')]
+    # an existing `NAME + k` (`cup_round::DAY + 0x68`, the next round's record) is a plain replacement all the same
+    usar = [e for e in usar if not e.get('field_offset') or (e['verdict'] == 'existing' and '+' in e['name'])]
     for e in usar:
         off = num(e['offset'])
         k = (e['module'], off)
@@ -143,10 +144,13 @@ def main():
         nome = alvos.pop()
         cod, sep, com = linhas[ln - 1].partition('//')
         pat = r'(\+\s*)' + re.escape(off) + r'(?![0-9a-fA-Fx])(?!\s*\*)'
-        if not re.search(pat, cod):
+        # only outside string literals (a log message that prints "+0x3e" keeps its text)
+        partes = re.split(r'("(?:[^"\\]|\\.)*")', cod)
+        novo = ''.join(p if p.startswith('"') else re.sub(pat, lambda m: m.group(1) + nome, p) for p in partes)
+        if novo == cod:
             print('linha %d: `+ %s` não achado' % (ln, off))
             continue
-        linhas[ln - 1] = re.sub(pat, lambda m: m.group(1) + nome, cod) + sep + com
+        linhas[ln - 1] = novo + sep + com
         feitas += 1
     print('%d campos novos; %d deslocamentos com nome; %d linhas trocadas' % (novos, len(troca), feitas))
     if grava:

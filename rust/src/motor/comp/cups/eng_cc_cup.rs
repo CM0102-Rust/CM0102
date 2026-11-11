@@ -51,14 +51,14 @@ pub(crate) unsafe fn eng_cc_cup_write_cup_round(t: usize, i: u32, r: &EngCcCupCu
     w(0xb, r.bits.0);
     w(0xd, r.bits.1);
     w(0xf, r.bits.2);
-    write_u8(e + 0x17, r.category);
+    write_u8(e + cup_round::MATCH_CATEGORY, r.category);
     w(0x18, r.teams.0);
     w(0x1a, r.teams.1);
     w(0x1c, r.teams.2);
     w(0x1e, r.teams.3);
-    write_u8(e + 0x20, r.tie.0);
-    write_u8(e + 0x21, r.tie.1);
-    write_u8(e + 0x22, r.tie.2);
+    write_u8(e + cup_round::SINGLE_LEG_FLAG, r.tie.0);
+    write_u8(e + cup_round::LEGS, r.tie.1);
+    write_u8(e + cup_round::LEG_GAP_DAYS, r.tie.2);
     d(0x5c, r.prizes.0);
     d(0x60, r.prizes.1);
     d(0x64, r.prizes.2);
@@ -235,7 +235,7 @@ pub(crate) unsafe fn eng_cc_cup_club_by_index(i: i16) -> usize {
 ///
 /// [pt] O id da competição da divisão do clube (+0x57, ponteiro para o registro da competição; +0 o id), ou None sem divisão.
 pub(crate) unsafe fn division_comp_id(c: usize) -> Option<usize> {
-    let d = read_usize(c + 0x57);
+    let d = read_usize(c + club::DIVISION);
     if d == 0 { None } else { Some(read_usize(d)) }
 }
 
@@ -259,7 +259,7 @@ pub(crate) unsafe fn eng_cc_cup_enter_division_clubs(this: Cup, n: &mut i32, id:
     while (i as i32) < read_usize(G_CLUB_COUNT) as i32 {
         let c = eng_cc_cup_club_by_index(i);
         if let Some(d) = division_comp_id(c) {
-            if *n != this.team_count() as i32 && d == read_usize(id) && read_usize(c + 0x1db) as i32 == -1 {
+            if *n != this.team_count() as i32 && d == read_usize(id) && read_usize(c + club::CONTINENTAL_COMP_ID) as i32 == -1 {
                 eng_cc_cup_write_entrant(this, *n, c, class(c));
                 *n += 1;
                 if *n == this.team_count() as i32 {
@@ -276,7 +276,7 @@ pub(crate) unsafe fn eng_cc_cup_enter_division_clubs(this: Cup, n: &mut i32, id:
 /// [pt] A classe de quem veio da divisão `de` (+0x5b, a competição da temporada anterior; +0x5f a posição nela, byte): `base`
 /// menos a posição.
 pub(crate) unsafe fn came_from_division(c: usize, of: usize) -> bool {
-    let p = read_usize(c + 0x5b);
+    let p = read_usize(c + club::LAST_DIVISION);
     p != 0 && read_usize(p) == read_usize(of)
 }
 
@@ -306,7 +306,7 @@ pub(crate) unsafe fn came_from_division(c: usize, of: usize) -> bool {
 /// 1; senão 0. Devolve também quantos entraram (para o comparador).
 pub(crate) unsafe fn collect_league_cup_entrants(this: Cup) -> (i32, i32) {
     this.set_team_count(0x5c);
-    write_u8(this.addr() + 0xb2, 0);
+    write_u8(this.addr() + eng_cc_cup::EUROPEAN_ENTRANT_COUNT, 0);
     let l = exe::crt_malloc(0x228);
     this.set_team_table((l as u32) as usize);
     if l == 0 {
@@ -317,7 +317,7 @@ pub(crate) unsafe fn collect_league_cup_entrants(this: Cup) -> (i32, i32) {
     eng_cc_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION, |_| 0);
     eng_cc_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION, |_| 0);
     eng_cc_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION, |c| {
-        let pos = read_u8(c + 0x5f);
+        let pos = read_u8(c + club::LAST_POSITION);
         if came_from_division(c, KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) {
             crate::comparison::branch("cqm_10 relegated from premier");
             0x46u8.wrapping_sub(pos) // cqm10: quem caiu da Premier
@@ -328,7 +328,7 @@ pub(crate) unsafe fn collect_league_cup_entrants(this: Cup) -> (i32, i32) {
         }
     });
     eng_cc_cup_enter_division_clubs(this, &mut n, KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION, |c| {
-        let pos = read_u8(c + 0x5f);
+        let pos = read_u8(c + club::LAST_POSITION);
         if came_from_division(c, KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) {
             0x78u8.wrapping_sub(pos)
         } else if came_from_division(c, KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION) {
@@ -343,10 +343,10 @@ pub(crate) unsafe fn collect_league_cup_entrants(this: Cup) -> (i32, i32) {
         if let Some(d) = division_comp_id(c) {
             if n != this.team_count() as i32
                 && (d == read_usize(KEY_CLUB_COMP_ENGLISH_PREMIER_DIVISION) || d == read_usize(KEY_CLUB_COMP_ENGLISH_FIRST_DIVISION) || d == read_usize(KEY_CLUB_COMP_ENGLISH_SECOND_DIVISION) || d == read_usize(KEY_CLUB_COMP_ENGLISH_THIRD_DIVISION))
-                && read_usize(c + 0x1db) as i32 != -1
+                && read_usize(c + club::CONTINENTAL_COMP_ID) as i32 != -1
             {
                 crate::comparison::branch("cqm_10 club in european cups");
-                write_u8(this.addr() + 0xb2, read_u8(this.addr() + 0xb2).wrapping_add(1));
+                write_u8(this.addr() + eng_cc_cup::EUROPEAN_ENTRANT_COUNT, read_u8(this.addr() + eng_cc_cup::EUROPEAN_ENTRANT_COUNT).wrapping_add(1));
                 eng_cc_cup_write_entrant(this, n, c, 0x78);
                 n += 1;
                 if n == this.team_count() as i32 {
@@ -373,8 +373,8 @@ pub(crate) unsafe fn collect_league_cup_entrants(this: Cup) -> (i32, i32) {
     if n != this.team_count() as i32 {
         return (0, n);
     }
-    if read_i8(this.addr() + 0xb2) > 0xc {
-        write_u8(this.addr() + 0xb2, 0xc);
+    if read_i8(this.addr() + eng_cc_cup::EUROPEAN_ENTRANT_COUNT) > 0xc {
+        write_u8(this.addr() + eng_cc_cup::EUROPEAN_ENTRANT_COUNT, 0xc);
     }
     (1, n)
 }
@@ -455,7 +455,7 @@ pub(crate) unsafe fn collect_auto_cup_entrants(this: Cup) -> (i32, i32) {
     let mut k: i16 = 0;
     if this.team_count() > 0 {
         loop {
-            let c = read_usize(read_usize(this.addr() + 0xb2) + 0x70 + k as usize * 4); // cqm10: the k-th of the second half
+            let c = read_usize(read_usize(this.addr() + eng_auto_cup::SELECTED_CLUBS) + 0x70 + k as usize * 4); // cqm10: the k-th of the second half
             eng_cc_cup_write_entrant(this, k as i32, c, 0);
             k = k.wrapping_add(1);
             if k >= this.team_count() {
@@ -588,7 +588,7 @@ pub(crate) unsafe fn eng_cc_cup_cup_update_for_date(this: Cup, today: usize, sta
 /// negativa dá a caixa (linhas 0x161, 0x168, 0x16f) e 0. Sempre, no fim, a atualização da copa.
 pub(crate) unsafe extern "thiscall" fn eng_cc_cup_update_for_date(this: usize, today: usize, stage: u32) -> u32 {
     let this = Cup(this);
-    if this.season_set_up() == 0 && read_i16(read_usize(G_UEFA_SEEDING) + 0x439) as u16 as i32 == this.year() as i32 && stage != 0 {
+    if this.season_set_up() == 0 && read_i16(read_usize(G_UEFA_SEEDING) + uefa_seeding::SEASON_YEAR) as u16 as i32 == this.year() as i32 && stage != 0 {
         free_season_tables(this);
         crate::comparison::branch("cqn_10 league cup rollover");
         this.set_season_set_up((1) as usize); // cqn10: the League Cup redone once

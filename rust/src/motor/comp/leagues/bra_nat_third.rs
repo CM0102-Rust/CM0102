@@ -247,7 +247,7 @@ pub(crate) unsafe fn bra_nat_third_create_group_stage_cqs3_group(this: League, g
     }
     let k = g as u8 as i8 as i32;
     for j in 0..7usize {
-        write_usize(v + 4 * j, read_usize(read_usize(this.addr() + 0xee) + 4 * (7 * (k + 1) as usize + j)));
+        write_usize(v + 4 * j, read_usize(read_usize(this.addr() + bra_nat_third::CLUB_LIST) + 4 * (7 * (k + 1) as usize + j)));
     }
     let p = exe::crt_operator_new(0xee);
     let stage = if p != 0 {
@@ -325,8 +325,8 @@ pub(crate) unsafe extern "thiscall" fn create_second_round_stage(this: usize) {
     }
     let mut r = [(0usize, 0i16); 16];
     for (k, g) in (-1i32..7).enumerate() {
-        let t = read_usize(if g == -1 { this.addr() } else { read_usize(this.stages() + 4 * g as usize) } + 0xb1);
-        r[2 * k] = (read_usize(t), read_i16(t + 0x19));
+        let t = read_usize(if g == -1 { this.addr() } else { read_usize(this.stages() + 4 * g as usize) } + league::TABLE);
+        r[2 * k] = (read_usize(t), read_i16(t + league_table_row::POINTS));
         r[2 * k + 1] = (read_usize(t + 0x3b), read_i16(t + 0x54));
     }
     for k in 0..16 {

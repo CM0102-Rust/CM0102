@@ -19,8 +19,8 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | Nível | Campos |
 |---|---|
 | comunidade | 247 |
-| conferido | 131 |
-| lido | 1532 |
+| conferido | 140 |
+| lido | 1539 |
 | inferido | 163 |
 
 ## Por registro
@@ -31,11 +31,12 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `age_record` | 0 | 0 | 2 | 0 |
 | `appearance_clause` | 0 | 0 | 3 | 0 |
 | `area_fields` | 0 | 6 | 14 | 0 |
+| `asia_club_champ_fields` | 0 | 1 | 0 | 0 |
 | `awol_fields` | 0 | 0 | 0 | 1 |
 | `awol_fitness_incident` | 0 | 0 | 0 | 1 |
 | `awol_missed_training` | 0 | 0 | 1 | 0 |
 | `ban_appeal` | 0 | 0 | 8 | 0 |
-| `ban_record` | 0 | 0 | 7 | 0 |
+| `ban_record` | 0 | 1 | 7 | 0 |
 | `ban_slot` | 0 | 0 | 1 | 1 |
 | `board_record` | 0 | 1 | 16 | 5 |
 | `bra_nat_third` | 0 | 0 | 1 | 0 |
@@ -69,6 +70,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `crt_file` | 0 | 1 | 0 | 0 |
 | `cup` | 0 | 0 | 25 | 2 |
 | `cup_round` | 0 | 0 | 23 | 1 |
+| `cup_team_entry` | 0 | 0 | 3 | 0 |
 | `cup_tie` | 0 | 2 | 10 | 0 |
 | `day_competition` | 0 | 0 | 5 | 1 |
 | `day_group` | 0 | 0 | 5 | 0 |
@@ -128,7 +130,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `league` | 0 | 5 | 44 | 6 |
 | `league_projection` | 0 | 0 | 5 | 0 |
 | `league_round_date` | 0 | 0 | 7 | 1 |
-| `league_table_row` | 0 | 0 | 28 | 0 |
+| `league_table_row` | 0 | 0 | 29 | 0 |
 | `lineup_row` | 0 | 4 | 11 | 3 |
 | `live_match` | 0 | 0 | 15 | 2 |
 | `llist` | 0 | 0 | 4 | 0 |
@@ -143,7 +145,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `match_manager` | 0 | 0 | 15 | 7 |
 | `match_player` | 0 | 3 | 111 | 22 |
 | `match_record` | 0 | 6 | 69 | 11 |
-| `match_record_row` | 0 | 7 | 23 | 6 |
+| `match_record_row` | 0 | 7 | 25 | 6 |
 | `match_record_team` | 0 | 0 | 28 | 4 |
 | `match_spectators` | 0 | 0 | 9 | 1 |
 | `match_stats` | 0 | 0 | 5 | 0 |
@@ -169,6 +171,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `officials_manager_fields` | 0 | 0 | 4 | 0 |
 | `officials_nation_block` | 0 | 0 | 6 | 0 |
 | `past_transfer` | 0 | 0 | 5 | 3 |
+| `pending_ban` | 0 | 1 | 0 | 0 |
 | `person_transfer_record` | 0 | 0 | 4 | 0 |
 | `physical_record` | 0 | 0 | 10 | 0 |
 | `planned_friendly` | 0 | 0 | 4 | 0 |
@@ -187,8 +190,8 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `regen_pool_item` | 0 | 0 | 3 | 0 |
 | `regen_queue_entry` | 0 | 0 | 2 | 0 |
 | `retirement_entry` | 0 | 1 | 8 | 0 |
-| `ruling_body` | 0 | 0 | 5 | 0 |
-| `ruling_body_entry` | 0 | 0 | 1 | 1 |
+| `ruling_body` | 0 | 3 | 5 | 0 |
+| `ruling_body_entry` | 0 | 3 | 2 | 1 |
 | `run_record` | 0 | 0 | 2 | 0 |
 | `save_summary` | 0 | 1 | 0 | 0 |
 | `scheduled_friendly_slot` | 0 | 0 | 4 | 0 |

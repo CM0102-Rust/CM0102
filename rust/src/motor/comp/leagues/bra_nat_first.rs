@@ -295,13 +295,13 @@ pub(crate) unsafe extern "thiscall" fn bra_nat_first_process_promotion_relegatio
     bra_nat_first_call_virtual_no_args(comp_by_global(b), 0xa4);
     bra_nat_first_call_virtual_no_args(comp_by_global(c), 0xa4);
     for k in 0..7 {
-        bra_nat_first_call_virtual_no_args(read_usize(read_usize(comp_by_global(c) + 0xc) + 4 * k), 0xa4);
+        bra_nat_first_call_virtual_no_args(read_usize(read_usize(comp_by_global(c) + league::STAGES) + 4 * k), 0xa4);
     }
     crate::comparison::branch("cqq_8 promotion and relegation");
     exe::league_promote_and_relegate(this, comp_by_global(a), comp_by_global(b), 1, 1, -1, -1); // cqq8: A e B
     let mut r = exe::league_promote_and_relegate(this, comp_by_global(b), comp_by_global(c), 1, 1, -1, -1); // cqq8: B e C
     for k in 0..7 {
-        r = exe::league_promote_and_relegate(this, comp_by_global(b), read_usize(read_usize(comp_by_global(c) + 0xc) + 4 * k), 1, 1, -1, -1);
+        r = exe::league_promote_and_relegate(this, comp_by_global(b), read_usize(read_usize(comp_by_global(c) + league::STAGES) + 4 * k), 1, 1, -1, -1);
     }
     r
 }
@@ -600,14 +600,14 @@ pub(crate) unsafe fn serie_a_staff_records(this: usize, club: usize, status: u32
         if fazer {
             crate::comparison::branch("cqj_9 serie a champion");
             add_champions_record(club, comp); // cqj9: the Serie A champion record
-            write_u8(l + 0x37, 5);
+            write_u8(l + league_table_row::STATUS, 5);
         }
         return (0, l, 5);
     }
     if st == 2 || st == 0xff {
         let l = bra_nat_first_find_club_row(this, club);
         if fazer {
-            write_u8(l + 0x37, 0xfe); // eliminado
+            write_u8(l + league_table_row::STATUS, 0xfe); // eliminado
         }
         return (0, l, 0xfe);
     }
@@ -670,7 +670,7 @@ pub(crate) unsafe fn serie_c_staff_records(this: League, club: usize, status: u3
         }
         if found != 0 && fazer {
             crate::comparison::branch("cqj_9 serie c promoted");
-            write_u8(found + 0x37, 0); // cqj9: the destination of those promoted from Serie C
+            write_u8(found + league_table_row::STATUS, 0); // cqj9: the destination of those promoted from Serie C
         }
         return (0, found, 0);
     }
@@ -716,7 +716,7 @@ pub(crate) unsafe fn baiano_staff_records(this: League, club: usize, status: u32
                 }
                 let l = this.table() + 0x3b * i as usize;
                 if fazer {
-                    write_u8(l + 0x37, 5);
+                    write_u8(l + league_table_row::STATUS, 5);
                 }
                 return (0, l, 5);
             }
@@ -725,12 +725,12 @@ pub(crate) unsafe fn baiano_staff_records(this: League, club: usize, status: u32
                     // simplification: the original pushes the whole registers (eax with the caller’s garbage above the
                     // word, ecx with the upper half of the table pointer); 0x4bf850 and 0x86c000 only read the
                     // words (0x4b0870 / `as u16`): the words go.
-                    let weight = exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + 0x34) as u16 as u32, 2) as u32;
-                    exe::staff_records_add_knocked_out_record(read_usize(G_STAFF_RECORDS), club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
+                    let weight = exe::comp_util_scale_by_round(0x1e, 0x32, read_i16(game + fixture::ROUND_NUMBER) as u16 as u32, 2) as u32;
+                    exe::staff_records_add_knocked_out_record(read_usize(G_STAFF_RECORDS), club, comp, read_i16(game + fixture::ROUND_PREFIX) as u16 as u32, read_i16(game + fixture::ROUND_NAME) as u16 as u32, weight);
                 }
                 let l = this.table() + 0x3b * i as usize;
                 if fazer {
-                    write_u8(l + 0x37, 0xfe);
+                    write_u8(l + league_table_row::STATUS, 0xfe);
                 }
                 return (0, l, 0xfe);
             }
