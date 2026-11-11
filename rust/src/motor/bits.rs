@@ -3,6 +3,17 @@
 // the name: verified (concrete evidence), read (one clear reading), inferred (a guess).
 // [pt] Os bits dos campos de flags dos registros, com nome, significado e confiança.
 
+/// Bits of `area_fields::FLAGS`.
+#[allow(dead_code)]
+pub(crate) mod area_fields_flags {
+    /// layout: margins (0, 0) when set. Name: read.
+    pub(crate) const NO_MARGINS: u32 = 0x1;
+    /// layout: top/bottom margin 2 instead of 8 when set. Name: read.
+    pub(crate) const THIN_VERTICAL_MARGINS: u32 = 0x10;
+    /// community Area::draw draws only grid lines when the area is grid-only; layout/init skip the grid split. Name: verified.
+    pub(crate) const GRID_ONLY: u32 = 0x80000;
+}
+
 /// Bits of `board_record::FLAGS`.
 #[allow(dead_code)]
 pub(crate) mod board_record_flags {
@@ -14,6 +25,13 @@ pub(crate) mod board_record_flags {
     pub(crate) const PROJECTED_ABOVE_TARGET: u8 = 0x4;
     /// weekly_board_confidence_update 0x697c40 sets bit 8 once (0x698ad8, confidence -750) when even the better-form projected position (comp_stats_club +0x74) is worse than the target (+0x72); bit 4 is the mirror (0x698aa0, +750, worse-form projection +0x75 better than the target); departure reason 7 ('poor league position', 0xa07924). Name: read.
     pub(crate) const PROJECTED_BELOW_TARGET: u8 = 0x8;
+}
+
+/// Bits of `contract::CONTRACT_TYPE`.
+#[allow(dead_code)]
+pub(crate) mod contract_type {
+    /// copied from the old contract; toggled at 2340/2376 and get_squad_flags_for_club returns 2 when set, 1 when clear. Name: read.
+    pub(crate) const RESERVE_SQUAD: u8 = 0x40;
 }
 
 /// Bits of `board_record::DISCIPLINE_COUNTERS`.
@@ -80,6 +98,8 @@ pub(crate) mod fixture_tie_rules {
     pub(crate) const EXTRA_TIME: u16 = 0x2;
     /// changes the shoot-out result mark from 4 to 5; field comment: 0x20 35-yard shoot-out. Name: inferred.
     pub(crate) const SHOOT_OUT_35_YARD: u16 = 0x20;
+    /// level at 90 with the bit: extra time with `decides`; a goal then sets GOLDEN_GOAL_SCORED and ends the match. Name: read.
+    pub(crate) const GOLDEN_GOAL: u16 = 0x80;
 }
 
 /// Bits of `formation_fields::FLAGS`.
@@ -141,6 +161,13 @@ pub(crate) mod request_state {
     pub(crate) const EXTRA_TIME_GRANTED: u32 = 0x1;
     /// bits 1..4 (signed 4-bit) hold the id of the last board request: handle_board_request 0x6a892c..0x6a8961. Name: read.
     pub(crate) const LAST_REQUEST: u32 = 0x1e;
+}
+
+/// Bits of `search_result::FLAGS`.
+#[allow(dead_code)]
+pub(crate) mod search_result_flags {
+    /// contains_player returns 0 for a found result with bit 0 set (the port calls it removed). Name: inferred.
+    pub(crate) const REMOVED: u32 = 0x1;
 }
 
 /// Bits of `shortlist_slot::FLAGS`.

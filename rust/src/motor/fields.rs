@@ -422,6 +422,7 @@ pub(crate) mod player_regen_fields {
 #[allow(dead_code)]
 pub(crate) mod player_search_fields {
     pub(crate) const LIST_TYPE: usize = 0xa; // 1 byte(s): Search list type (1 to 4; 4 = scout watching matches)
+    pub(crate) const SCOUTED_CLUB_RECORD: usize = 0x170; // 4 byte(s): pointer to the followed club's scouting record (+0 club id, 50 scouted_player_slot from +4)
     pub(crate) const SCOUT_NAME_REF: usize = 0x174; // 0x18 byte(s): Scout reference: first, second and common name ids (+0x174/+0x178/+0x17c), staff index (+0x180) and date (+0x184)
     pub(crate) const SCOUT_ID: usize = 0x180; // 4 byte(s): Staff index of the scout (-1 = none)
     pub(crate) const ASSIGNED_NATION: usize = 0x18c; // 4 byte(s): Scout assignment: nation (-1 = none)
@@ -432,6 +433,8 @@ pub(crate) mod player_search_fields {
     pub(crate) const ASSIGNED_OPPONENT: usize = 0x19d; // 4 byte(s): Scout assignment flag: scout the next opposition [inference]
     pub(crate) const SCOUTING_START_DATE: usize = 0x1a5; // 8 byte(s): Start date of a match-watching scout assignment (TCMDate: day +0x1a5, year +0x1a7); moved to tomorrow by scout_match; end date at +0x1ad
     pub(crate) const SCOUTING_START_YEAR: usize = 0x1a7; // 2 byte(s): Year half of SCOUTING_START_DATE
+    pub(crate) const SCOUTING_END_DATE: usize = 0x1ad; // 8 byte(s): end date of the match-watching assignment
+    pub(crate) const SCOUTING_END_YEAR: usize = 0x1af; // 2 byte(s): year half of SCOUTING_END_DATE
     pub(crate) const RESULTS: usize = 0x1ee; // 4 byte(s): Sorted array of 0x2d-byte search results
     pub(crate) const RESULT_COUNT: usize = 0x1f6; // 4 byte(s): Number of search results
 }
@@ -750,8 +753,11 @@ pub(crate) mod engine {
     pub(crate) const REFEREE_RATING: usize = 0xf5ba; // 2 byte(s): referee base rating used for the post-match grade (/1000); referee object +8 [inference]
     pub(crate) const SIDE_STATS: usize = 0xf5bc; // 108 byte(s): per-side match stats block, 0x36 bytes per side (+0xf5bc + 0x36 x side); +0 shootout goals
     pub(crate) const SCORE: usize = 0xf5bd; // 1 byte(s): side 0 goals (side 1 at +0xf5f3); SIDE_STATS +1
+    pub(crate) const SHOTS: usize = 0xf5be; // 1 byte(s): side's shots (SIDE_STATS +2) [verified: match_screens.rs:249 copies SIDE_STATS +2 to match_record_team SHOTS (+8); bumped per shot before the on-target roll (0xf5bf); line 620 bumps it for the home-ad]
     pub(crate) const SHOTS_ON_TARGET: usize = 0xf5bf; // 1 byte(s): side 0 shots on target (side 1 at +0x36); SIDE_STATS +3
     pub(crate) const SIDE_SUMMARY: usize = 0xf5c0; // ? byte(s): side summary (player ratings) in SIDE_STATS +4
+    pub(crate) const PENALTY_GOALS: usize = 0xf5c1; // 1 byte(s): side's goals from penalties (SIDE_STATS +5)
+    pub(crate) const GOALS_CONCEDED: usize = 0xf5c2; // 1 byte(s): goals conceded by the side (SIDE_STATS +6)
     pub(crate) const CORNER_GOALS: usize = 0xf5c3; // 1 byte(s): side 0 goals from corners (set piece kind 3); side 1 at +0x36
     pub(crate) const FREE_KICK_PLAY_GOALS: usize = 0xf5c4; // 1 byte(s): side 0 goals from free-kick plays (set piece kind 7 or -1); side 1 at +0x36 [inference]
     pub(crate) const DIRECT_FREE_KICK_GOALS: usize = 0xf5c5; // 1 byte(s): side 0 goals from direct free kicks (set piece kind 6); side 1 at +0x36
@@ -760,11 +766,17 @@ pub(crate) mod engine {
     pub(crate) const THROW_INS: usize = 0xf5c8; // 1 byte(s): side 0 throw-ins taken (side 1 at +0x36); SIDE_STATS +0xc
     pub(crate) const SIDE_FOUL_TALLY: usize = 0xf5c9; // 1 byte(s): side 0 foul tally (side 1 at +0xf5ff; SIDE_STATS +0xd): incremented per foul and compared with the referee's +0x27 to raise strictness [inference]
     pub(crate) const OFFSIDES: usize = 0xf5ca; // 1 byte(s): side 0 offsides (side 1 at +0xf600); SIDE_STATS +0xe
-    pub(crate) const CARDS: usize = 0xf5cb; // 1 byte(s): side 0 cards (side 1 at +0xf601); SIDE_STATS +0xf
-    pub(crate) const FOULS: usize = 0xf5cc; // 1 byte(s): side 0 fouls (side 1 at +0xf602); SIDE_STATS +0x10
+    pub(crate) const RED_CARDS: usize = 0xf5cb; // 1 byte(s): side 0 red cards (side 1 at +0xf601); SIDE_STATS +0xf, copied into match_record_team::RED_CARDS by fill_match_record
+    pub(crate) const YELLOW_CARDS: usize = 0xf5cc; // 1 byte(s): side 0 yellow cards (side 1 at +0xf602); SIDE_STATS +0x10, copied into match_record_team::YELLOW_CARDS by fill_match_record
+    pub(crate) const PASSES: usize = 0xf5e2; // 2 byte(s): passes attempted by the side (SIDE_STATS +0x26, i16; side 1 at +0xf618)
+    pub(crate) const PASSES_COMPLETED: usize = 0xf5e4; // 2 byte(s): passes completed (SIDE_STATS +0x28, i16)
+    pub(crate) const TACKLES: usize = 0xf5e6; // 2 byte(s): tackles attempted (SIDE_STATS +0x2a, i16)
+    pub(crate) const TACKLES_WON: usize = 0xf5e8; // 2 byte(s): tackles won (SIDE_STATS +0x2c, i16)
+    pub(crate) const HEADERS: usize = 0xf5ea; // 2 byte(s): headers contested (SIDE_STATS +0x2e, i16)
+    pub(crate) const HEADERS_WON: usize = 0xf5ec; // 2 byte(s): headers won (SIDE_STATS +0x30, i16)
     pub(crate) const SCORE_SIDE1: usize = 0xf5f3; // 1 byte(s): side 1 goals (SIDE_STATS of side 1 +1)
-    pub(crate) const CARDS_SIDE1: usize = 0xf601; // 1 byte(s): side 1 cards (CARDS + 0x36)
-    pub(crate) const FOULS_SIDE1: usize = 0xf602; // 1 byte(s): side 1 fouls (FOULS + 0x36)
+    pub(crate) const RED_CARDS_SIDE1: usize = 0xf601; // 1 byte(s): side 1 red cards (RED_CARDS + 0x36)
+    pub(crate) const YELLOW_CARDS_SIDE1: usize = 0xf602; // 1 byte(s): side 1 yellow cards (YELLOW_CARDS + 0x36)
     pub(crate) const TEMPO_ROLL_A: usize = 0xf628; // 4 byte(s): f32 3..9 rolled by the match summary at kick-off and half time (6.0 at preparation) [inference: match tempo]
     pub(crate) const TEMPO_ROLL_B: usize = 0xf62c; // 4 byte(s): f32 3..9 rolled with TEMPO_ROLL_A (6.0 at preparation) [inference]
     pub(crate) const TEMPO_GOALS_ROLL: usize = 0xf630; // 4 byte(s): f32 from random(5) plus the goals so far, rerolled when not below 10 (5.0 at preparation) [inference]
@@ -1570,6 +1582,8 @@ pub(crate) mod key_nation_record {
     pub(crate) const ACTIVE_INDEX: usize = 0x14; // 1 byte(s): position of the entry among the active league entries (passed as the group to get_fixture_list_for_date) [verified: community data map: g_league_table+0x14 active_index (s8), numbered by key_nation_number_active_entries]
     pub(crate) const SEASON_END_DAY: usize = 0x15; // 2 byte(s): Day of year the nation's season ends (72-byte records at 0xb63d60)
     pub(crate) const SEASON_SPANS_YEAR: usize = 0x1d; // 1 byte(s): Nonzero when the season ends in the following year [inference]
+    pub(crate) const END_DATE: usize = 0x39; // 8 byte(s): second season date of the key nation entry (day half read here) [verified: globals.rs community map: g_league_table+0x2a start_date, +0x39 end_date; t = record+0x2a, so t+0xf = +0x39]
+    pub(crate) const END_DATE_YEAR: usize = 0x3b; // 2 byte(s): year half of END_DATE [verified: t+0x11 = record+0x3b = END_DATE (+0x39) + cm_date::YEAR]
 }
 
 /// Fields of the `language_entry` object, named from how the routines use them. [pt] Campos do objeto `language_entry`.
@@ -1887,10 +1901,19 @@ pub(crate) mod match_record_row {
     pub(crate) const SHIRT_NUMBER: usize = 0x1c; // 1 byte(s): shirt number (0 = none: the list shows the row number)
     pub(crate) const POSITION: usize = 0x1d; // 1 byte(s): position (match_player POSITION); 0xfb = empty row
     pub(crate) const PREVIOUS_POSITION: usize = 0x1e; // 1 byte(s): previous position (match_player PREVIOUS_POSITION)
+    pub(crate) const INJURED_OFF: usize = 0x1f; // 1 byte(s): set when an injury forced the player off (copy of match_player INJURY_FORCES_OFF)
+    pub(crate) const FINAL_STAMINA: usize = 0x20; // 1 byte(s): player's stamina at the end of the match in percent (match_player STAMINA * 0.01, truncated)
     pub(crate) const GOALS: usize = 0x21; // 1 byte(s): goals scored
+    pub(crate) const GOALS_CONCEDED: usize = 0x22; // 1 byte(s): goals conceded (copy of match_player GOALS_CONCEDED)
     pub(crate) const PENALTIES_TAKEN: usize = 0x23; // 1 byte(s): penalties taken in the match (copy of match_player PENALTIES_TAKEN) [verified: match_screens fill_match_record: row+0x1c+7 <- match_player(+0x69 STAFF)-0x5c = match_player +0xd PENALTIES_TAKEN; taken - scored == 1 gives the missed-penalty ]
     pub(crate) const PENALTIES_SCORED: usize = 0x24; // 1 byte(s): penalties scored in the match (copy of match_player PENALTIES_SCORED) [verified: match_screens fill_match_record: row+0x1c+8 <- match_player +0x69-0x5b = +0xe PENALTIES_SCORED; the pair also feeds player_category_stats +4/+5 and player_searc]
+    pub(crate) const SHOTS: usize = 0x25; // 1 byte(s): shots taken (copy of match_player SHOTS +0xa) [verified: fill_match_record: row+0x1c+9 <- match_player 0x69-0x5f = +0xa SHOTS]
+    pub(crate) const SHOTS_ON_TARGET: usize = 0x26; // 1 byte(s): shots on target (copy of match_player SHOTS_ON_TARGET +0xb) [verified: fill_match_record: row+0x1c+0xa <- match_player 0x69-0x5e = +0xb SHOTS_ON_TARGET]
     pub(crate) const ASSISTS: usize = 0x27; // 1 byte(s): assists in the match (multiplied by the contract ASSIST_BONUS)
+    pub(crate) const DRIBBLES: usize = 0x28; // 1 byte(s): times he beat an opponent (copy of match_player DRIBBLES +0x11) [inference]
+    pub(crate) const FOULS: usize = 0x29; // 1 byte(s): fouls committed (copy of match_player FOULS +0x14) [verified: fill_match_record: row+0x1c+0xd <- match_player 0x69-0x55 = +0x14 FOULS]
+    pub(crate) const FOULS_SUFFERED: usize = 0x2a; // 1 byte(s): fouls suffered (copy of match_player FOULS_SUFFERED +0x15) [verified: fill_match_record: row+0x1c+0xe <- match_player 0x69-0x54 = +0x15 FOULS_SUFFERED]
+    pub(crate) const OFFSIDES: usize = 0x2b; // 1 byte(s): times caught offside (copy of match_player OFFSIDES +0x13) [verified: fill_match_record: row+0x1c+0xf <- match_player 0x69-0x56 = +0x13 OFFSIDES]
     pub(crate) const YELLOW_CARDS: usize = 0x2c; // 1 byte(s): yellow cards
     pub(crate) const RED_CARD: usize = 0x2d; // 1 byte(s): red card (drawn in red on the ratings) [inference]
     pub(crate) const MINUTE_OFF: usize = 0x30; // 1 byte(s): minute substituted off; negative = not
@@ -2310,8 +2333,11 @@ pub(crate) mod scout_manager_fields {
 /// Fields of the `scout_report` object, named from how the routines use them. [pt] Campos do objeto `scout_report`.
 #[allow(dead_code)]
 pub(crate) mod scout_report {
+    pub(crate) const PLAYER_NAME_REF: usize = 0x1f; // 24 byte(s): the scouted player's name reference: name ids, staff index at +0xc (= PLAYER_ID 0x2b), date at +0x10 [verified: 0x7b62a0 at 0x7b6f48: fill_staff_name_ref(player, report+0x1f); +0x1f+0xc = existing scout_report::PLAYER_ID]
     pub(crate) const PLAYER_ID: usize = 0x2b; // 4 byte(s): Id of the scouted player
+    pub(crate) const SCOUT_NAME_REF: usize = 0x37; // 24 byte(s): the scout's name reference: name ids, staff index at +0xc, date at +0x10 [verified: 0x7b62a0 at 0x7b6f57: fill_staff_name_ref(ebx, report+0x37), ebx = the search's checked scout (0x7b637d); his club id goes to CLUB_ID +0x50]
     pub(crate) const CLUB_ID: usize = 0x50; // 4 byte(s): Id of the club the report is for
+    pub(crate) const REPORT_MODE: usize = 0x66; // 1 byte(s): report mode (0 assigned target, 1 requested, 2 general); 0xff = no report produced
 }
 
 /// Fields of the `scout_request` object, named from how the routines use them. [pt] Campos do objeto `scout_request`.
@@ -2411,6 +2437,8 @@ pub(crate) mod tactics_row {
     pub(crate) const CAPTAIN: usize = 0x52; // 4 byte(s): Staff id of the captain
     pub(crate) const PLAYMAKER: usize = 0x56; // 4 byte(s): First of the two extra role slots (staff id, -1 none)
     pub(crate) const SECOND_PLAYMAKER: usize = 0x5a; // 4 byte(s): Second extra role slot (staff id, -1 none); moves down when the first is cleared
+    pub(crate) const SET_PIECE_TAKERS: usize = 0x5e; // 40 byte(s): 10 staff ids (-1 none): set piece taker per role 0..4 and choice 0..1 at +0x5e + (choice + role*2)*4 [verified: community name Tactics::get_set_piece_taker (0x897990, high: role 0..4, choice 0..1) reads this cell; ends at +0x86 where SHOOTOUT_ORDER starts]
+    pub(crate) const SHOOTOUT_ORDER: usize = 0x86; // 11 byte(s): selection slot of the taker of each of the 11 shoot-out kicks (+0x86 + order) [verified: community name Tactics::get_shootout_taker_slot (0x898040, high: order 0..10, returns the selection slot); fills the row up to 0x91]
 }
 
 /// Fields of the `tally_record` object, named from how the routines use them. [pt] Campos do objeto `tally_record`.
@@ -2473,8 +2501,10 @@ pub(crate) mod transfer_window {
 /// Fields of the `undo_slot` object, named from how the routines use them. [pt] Campos do objeto `undo_slot`.
 #[allow(dead_code)]
 pub(crate) mod undo_slot {
+    pub(crate) const CLUB: usize = 0x0; // 4 byte(s): club pointer the stored instructions belong to (slot +0)
     pub(crate) const TEAM: usize = 0x4; // 4 byte(s): Team/human argument of the slot; +0 the club
     pub(crate) const IN_USE: usize = 0x8; // 4 byte(s): Nonzero while the slot holds a copy
+    pub(crate) const INSTRUCTIONS: usize = 0xc; // 80 byte(s): copy of the 20 line-up slots (tactics_row SELECTION dwords) saved by store_instructions
 }
 
 /// Fields of the `work_permit` object, named from how the routines use them. [pt] Campos do objeto `work_permit`.
@@ -2682,6 +2712,13 @@ pub(crate) mod recovery_news_entry {
 /// 0x28-byte per-tactic result statistics entry (tactics_fields::TACTIC_STATS): +0 tactic index u16, +2 games count i16, three f64 scores by stance
 #[allow(dead_code)]
 pub(crate) mod tactic_stats {
+    pub(crate) const GAMES: usize = 0x2; // 2 byte(s): games played with the tactic
+    pub(crate) const WINS: usize = 0x4; // 2 byte(s): wins with the tactic
+    pub(crate) const DRAWS: usize = 0x6; // 2 byte(s): draws with the tactic
+    pub(crate) const LOSSES: usize = 0x8; // 2 byte(s): losses with the tactic
+    pub(crate) const GOALS_FOR: usize = 0xa; // 2 byte(s): goals scored with the tactic
+    pub(crate) const GOALS_AGAINST: usize = 0xc; // 2 byte(s): goals conceded with the tactic
+    pub(crate) const POINTS: usize = 0xe; // 2 byte(s): points won with the tactic (3 a win, 1 a draw)
     pub(crate) const ALL_OUT_ATTACK_SCORE: usize = 0x10; // 8 byte(s): f64 score of the tactic used when the stance is 1 (all-out attack) [inference]
 
     pub(crate) const ATTACK_SCORE: usize = 0x18; // 8 byte(s): f64 score of the tactic used for stance 2 (attack) and any other value [inference]
@@ -2739,5 +2776,63 @@ pub(crate) mod fixed_fixture {
 #[allow(dead_code)]
 pub(crate) mod h2h_entry {
     pub(crate) const GOALS_AGAINST: usize = 0xa; // 2 byte(s): goals conceded against that opponent
+
+}
+
+/// One watched match in a scouted player's 10-match history (0x29 bytes, at slot + 6 + k*0x29; the code's base l = slot + k*0x29 = entry - 6): +0 day, +2 year, +4 opponent club id (negated for a reserve competition), +8 goals for, +9 goals against, +0xa fixture MATCH_STATS_SLOT, +0xe venue side, +0xf minutes played, +0x10 goals, +0x11 assists, +0x12 goals conceded, +0x13 yellow cards, +0x14 red card, +0x15 match grade, +0x16..+0x1f the 10 row counters (PASS_TACKLE_COUNTS + BALLS_CONTESTED), +0x20 dribbles, +0x21 shots, +0x22 shots on target, +0x23 fouls, +0x24 fouls suffered, +0x25 offsides, +0x26 penalties taken, +0x27 penalties scored, +0x28 kind (1 starter, 2 substitute, 5/6 substituted off)
+#[allow(dead_code)]
+pub(crate) mod scouted_match_entry {
+    pub(crate) const OPPONENT_CLUB_ID: usize = 0x4; // 4 byte(s): opponent club id; negated when the fixture is of the club reserve competition
+    pub(crate) const MATCH_STATS_SLOT: usize = 0xa; // 4 byte(s): the fixture's match statistics slot (to open the stored match) [verified: written from game.match_stats_slot() = fixture::MATCH_STATS_SLOT; l = entry - 6, so entry +0xa]
+
+    pub(crate) const GOALS: usize = 0x10; // 1 byte(s): goals scored by the player in that match
+}
+
+/// Scouted player slot (0x1a2 bytes; 50 of them from +4 of the scouted club record at PLAYER_SEARCH+0x170): +0 staff id (-1 free), +4 u16 matches watched, +6 ring of 10 scouted_match_entry (0x29 bytes), +0x1a0 ring start, +0x1a1 ring count
+#[allow(dead_code)]
+pub(crate) mod scouted_player_slot {
+    pub(crate) const HISTORY_START: usize = 0x1a0; // 1 byte(s): index (0..9) of the oldest match in the 10-entry history ring
+
+    pub(crate) const HISTORY_COUNT: usize = 0x1a1; // 1 byte(s): number of matches stored in the history ring (0..10)
+}
+
+/// One player search result (0x2d bytes, sorted array at PLAYER_SEARCH+0x1ee, key = staff id at +0xc): +0..+0xc name ref of the person (ids + staff index), +0x10 date, +0x18 date of the last update (today on insert/update), +0x20 flags (bit 0 removed), +0x21/+0x25 dwords, +0x29.. bytes
+#[allow(dead_code)]
+pub(crate) mod search_result {
+    pub(crate) const LAST_UPDATE_DATE: usize = 0x18; // 8 byte(s): date the result was last added/updated (today)
+
+    pub(crate) const FLAGS: usize = 0x20; // 1 byte(s): result flags (bit 0: removed)
+}
+
+/// GUI area (Area.cpp, 0xbf1 bytes, 249 per Display from Display+4): rectangle, flags, column/row grid, item list, scrollbar
+#[allow(dead_code)]
+pub(crate) mod area_fields {
+    pub(crate) const FLAGS: usize = 0x18; // 4 byte(s): area style flags passed to the panel draw (0x80000 grid-only, 1 no margins, 0x10 thin margins) [verified: Area::init flags param (community map); passed to gui_draw_panel and tested in layout/draw]
+    pub(crate) const COLUMN_STARTS: usize = 0x1c; // 120 byte(s): per-column left pixel bound, relative to x1 (30 i32)
+    pub(crate) const ROW_STARTS: usize = 0x94; // 120 byte(s): per-row top pixel bound, relative to y1 (30 i32)
+    pub(crate) const COLUMN_ENDS: usize = 0x10c; // 120 byte(s): per-column right pixel bound, relative to x1 (30 i32)
+    pub(crate) const ROW_ENDS: usize = 0x184; // 120 byte(s): per-row bottom pixel bound, relative to y1 (30 i32)
+    pub(crate) const SAVED_IMAGE: usize = 0x200; // 4 byte(s): saved screen image behind the area (popup background), freed on redraw [verified: draw frees/saves it via 0x5e42b0/0x5e3dd0; community Area::release frees the saved area image]
+    pub(crate) const AREAS: usize = 0x204; // 4 byte(s): pointer to the Display's area table this area belongs to
+    pub(crate) const ITEMS: usize = 0x208; // 4 byte(s): pointer to the Display's item (widget) table, 0x18c bytes per item
+    pub(crate) const COLOUR: usize = 0x20c; // 2 byte(s): panel colour of the area (RGB555/565) [verified: community Area::convert_colour_to_pixel_format decodes the area colour at +0x20c; passed to gui_draw_panel]
+    pub(crate) const OWNER_ITEM: usize = 0x20e; // 2 byte(s): item index the popup area opens on top of (-1 for ordinary areas)
+    pub(crate) const ITEM_LIST: usize = 0x212; // 2400 byte(s): indices of the area's items in ITEMS, sorted by row (up to 1200) [verified: community Area::add_widget: sorted widget index list up to 1200; area_list_item reads i16 at +0x212 + 2i]
+
+    pub(crate) const AREA_INDEX: usize = 0xb72; // 2 byte(s): index of this area in the Display's area table
+    pub(crate) const ITEM_COUNT: usize = 0xb74; // 2 byte(s): number of entries in ITEM_LIST [verified: draw loops i < read_i16(+0xb74); community Area::add_widget appends to the list]
+    pub(crate) const FIRST_VISIBLE_ITEM: usize = 0xb76; // 2 byte(s): ITEM_LIST position of the first visible item (-1 before layout)
+    pub(crate) const SCROLLBAR: usize = 0xb7a; // 49 byte(s): scrollbar state (rectangles, thumb), cleared by init [verified: community g_active_area_scrollbar 0xad9c58 = Area + 0xb7a (Area::setup_scrollbar); init clears 0x31 bytes]
+    pub(crate) const COLUMN_COUNT: usize = 0xbab; // 1 byte(s): number of grid columns (at most 30)
+    pub(crate) const ROW_COUNT: usize = 0xbac; // 1 byte(s): number of visible grid rows (at most 30; extra rows go to the scrollbar)
+    pub(crate) const COLUMN_WEIGHTS: usize = 0xbad; // 30 byte(s): relative width weight of each column
+    pub(crate) const ROW_WEIGHTS: usize = 0xbcb; // 30 byte(s): relative height weight of each row
+    pub(crate) const IS_OPEN: usize = 0xbe9; // 4 byte(s): open flag (1 for ordinary areas; popup areas start closed)
+}
+
+/// GUI item/widget of a Display (Guio.cpp, 0x18c bytes each, table at Display +0xba95e)
+#[allow(dead_code)]
+pub(crate) mod guio {
+    pub(crate) const POPUP_AREA_INDEX: usize = 0x7c; // 2 byte(s): index of the popup area that opens on top of this item (written by Area::layout)
 
 }

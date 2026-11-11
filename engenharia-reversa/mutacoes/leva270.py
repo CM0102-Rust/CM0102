@@ -6,7 +6,7 @@ MUTACOES = [
     ('cqf2_sem_seguir', 'exe::transfer_manager_advance_offer_to_club_approval(this, offer); // cqf2: a oferta segue', '// mutacao: a oferta nao segue', 'cqf_2 follow the offer'),
     ('cqf2_emprestimo_em_9_dias', 'exe::transfer_manager_schedule_offer(this, offer, 5, 0); // cqf2: the loan completed in 5 days', 'exe::transfer_manager_schedule_offer(this, offer, 9, 0); // mutacao: 9 dias', 'cqf_2 immediate loan'),
     ('cqf2_sem_sorteio_do_dado_12', 'let s = exe::utils_random(2); // cqf2: the random draw of die 12', 'let s = 0; // mutacao: sem o sorteio', 'cqf_2 listed player news'),
-    ('cqf3_fim_em_dois_anos', 'write_u16(c + 0x2f, year.wrapping_add(1)); // cqf3: the end next year', 'write_u16(c + 0x2f, year.wrapping_add(2)); // mutacao: 2 anos', 'cqf_3 ends next year'),
+    ('cqf3_fim_em_dois_anos', 'write_u16(c + contract::CONTRACT_EXPIRES_YEAR, year.wrapping_add(1)); // cqf3: the end next year', 'write_u16(c + contract::CONTRACT_EXPIRES_YEAR, year.wrapping_add(2)); // mutacao: 2 anos', 'cqf_3 ends next year'),
     ('cqf3_valor_abaixo_do_teto', 'write_u32(c + contract::WAGE, ftol(ceiling) as u32); // cqf3: the value at the cap', 'write_u32(c + contract::WAGE, ftol(ceiling * 0.9) as u32); // mutacao: 90% do teto', 'cqf_3 above the cap'),
     ('cqf3_teto_pela_metade', 'ceiling = q as f64; // cqf3: the cap by the total', 'ceiling = q as f64 * 0.5; // mutacao: metade', 'cqf_3 cap by total'),
     ('cqf4_limite_do_grupo_mais_um', 'let lim = ((k / 8) as i8).wrapping_add(1); // cqf4: the limit of teams per group', 'let lim = ((k / 8) as i8).wrapping_add(2); // mutacao: um time a mais por grupo', 'cqf_4 place in the group'),

@@ -19,9 +19,9 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | Level | Fields |
 |---|---|
 | community | 247 |
-| verified | 50 |
-| read | 1404 |
-| inferred | 151 |
+| verified | 69 |
+| read | 1449 |
+| inferred | 152 |
 
 ## Per record
 
@@ -30,6 +30,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `african_nations` | 0 | 0 | 2 | 0 |
 | `age_record` | 0 | 0 | 2 | 0 |
 | `appearance_clause` | 0 | 0 | 3 | 0 |
+| `area_fields` | 0 | 6 | 14 | 0 |
 | `awol_fields` | 0 | 0 | 0 | 1 |
 | `ban_appeal` | 0 | 0 | 8 | 0 |
 | `ban_record` | 0 | 0 | 7 | 0 |
@@ -73,7 +74,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `eng_auto_cup` | 0 | 0 | 1 | 1 |
 | `eng_cc_cup` | 0 | 0 | 1 | 0 |
 | `eng_fa_cup` | 0 | 0 | 3 | 0 |
-| `engine` | 0 | 0 | 157 | 22 |
+| `engine` | 0 | 1 | 165 | 22 |
 | `english_name_tables` | 0 | 0 | 7 | 0 |
 | `euro_champ_qual` | 0 | 0 | 1 | 0 |
 | `event_type` | 0 | 0 | 3 | 0 |
@@ -93,6 +94,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `goals_in_match_record` | 0 | 0 | 3 | 0 |
 | `goldcup` | 0 | 0 | 2 | 0 |
 | `grid_cell` | 0 | 0 | 2 | 0 |
+| `guio` | 0 | 0 | 1 | 0 |
 | `h2h_entry` | 0 | 0 | 1 | 0 |
 | `held_ban` | 0 | 0 | 2 | 0 |
 | `human_manager_record` | 0 | 1 | 0 | 0 |
@@ -104,7 +106,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `intertoto_cup` | 0 | 0 | 1 | 0 |
 | `intl_date_entry` | 0 | 0 | 6 | 1 |
 | `job_vacancy` | 0 | 0 | 1 | 0 |
-| `key_nation_record` | 0 | 1 | 1 | 1 |
+| `key_nation_record` | 0 | 3 | 1 | 1 |
 | `language_entry` | 0 | 0 | 2 | 0 |
 | `league` | 0 | 5 | 44 | 6 |
 | `league_projection` | 0 | 0 | 5 | 0 |
@@ -124,7 +126,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `match_manager` | 0 | 0 | 15 | 7 |
 | `match_player` | 0 | 3 | 111 | 22 |
 | `match_record` | 0 | 2 | 68 | 11 |
-| `match_record_row` | 0 | 2 | 20 | 5 |
+| `match_record_row` | 0 | 7 | 23 | 6 |
 | `match_record_team` | 0 | 0 | 28 | 4 |
 | `match_spectators` | 0 | 0 | 3 | 1 |
 | `match_stats` | 0 | 0 | 5 | 0 |
@@ -155,7 +157,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `planned_friendly` | 0 | 0 | 4 | 0 |
 | `player_category_stats` | 0 | 0 | 9 | 0 |
 | `player_regen_fields` | 0 | 0 | 12 | 0 |
-| `player_search_fields` | 0 | 0 | 11 | 2 |
+| `player_search_fields` | 0 | 0 | 14 | 2 |
 | `player_sheet` | 58 | 0 | 0 | 0 |
 | `player_stats_entry` | 0 | 0 | 6 | 0 |
 | `player_stats_fields` | 0 | 0 | 13 | 0 |
@@ -173,9 +175,12 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `run_record` | 0 | 0 | 2 | 0 |
 | `scheduled_friendly_slot` | 0 | 0 | 4 | 0 |
 | `scout_manager_fields` | 0 | 0 | 4 | 0 |
-| `scout_report` | 0 | 0 | 2 | 0 |
+| `scout_report` | 0 | 2 | 3 | 0 |
 | `scout_request` | 0 | 0 | 4 | 0 |
+| `scouted_match_entry` | 0 | 1 | 2 | 0 |
+| `scouted_player_slot` | 0 | 0 | 2 | 0 |
 | `screen_manager` | 0 | 1 | 3 | 1 |
+| `search_result` | 0 | 0 | 2 | 0 |
 | `sell_on_clause` | 0 | 0 | 3 | 0 |
 | `shortlist_manager_fields` | 0 | 0 | 10 | 0 |
 | `shortlist_pair` | 0 | 0 | 1 | 0 |
@@ -188,9 +193,9 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `staff_records_fields` | 0 | 0 | 7 | 0 |
 | `staff_state` | 0 | 0 | 7 | 1 |
 | `story_log_entry` | 0 | 0 | 6 | 0 |
-| `tactic_stats` | 0 | 0 | 0 | 3 |
+| `tactic_stats` | 0 | 0 | 7 | 3 |
 | `tactics_fields` | 0 | 0 | 10 | 2 |
-| `tactics_row` | 0 | 0 | 4 | 0 |
+| `tactics_row` | 0 | 2 | 4 | 0 |
 | `tally_record` | 0 | 0 | 1 | 0 |
 | `tournament_slot` | 0 | 0 | 8 | 1 |
 | `transfer_fee_record` | 0 | 0 | 4 | 1 |
@@ -200,7 +205,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `transfer_window` | 0 | 0 | 2 | 0 |
 | `uefa_cup` | 0 | 0 | 1 | 0 |
 | `uefa_seeding` | 0 | 0 | 2 | 0 |
-| `undo_slot` | 0 | 0 | 2 | 0 |
+| `undo_slot` | 0 | 0 | 4 | 0 |
 | `work_permit` | 0 | 0 | 4 | 0 |
 
 ## The inferred names (to check)
@@ -327,6 +332,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `match_record_row::FIRST_NAME_ID` | +0x8 | 4 byte(s): first name id (checked against the person) [inference] |
 | `match_record_row::SECOND_NAME_ID` | +0xc | 4 byte(s): second name id [inference] |
 | `match_record_row::COMMON_NAME_ID` | +0x10 | 4 byte(s): common name id [inference] |
+| `match_record_row::DRIBBLES` | +0x28 | 1 byte(s): times he beat an opponent (copy of match_player DRIBBLES +0x11) [inference] |
 | `match_record_row::RED_CARD` | +0x2d | 1 byte(s): red card (drawn in red on the ratings) [inference] |
 | `match_record_row::STAMINA_CEILING` | +0x36 | 2 byte(s): stamina ceiling of the player when the record was filled (truncated f32); row +0x36 [inference] |
 | `match_record_team::HEADERS` | +0x19 | 2 byte(s): headers contested [inference] |

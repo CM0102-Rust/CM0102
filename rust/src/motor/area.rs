@@ -21,8 +21,8 @@ pub(crate) fn area_item_at(base: usize, k: i16) -> usize {
 ///
 /// [pt] O item da posição `i` (i16) da lista da área (+0x212).
 pub(crate) unsafe fn area_list_item(area: usize, i: i16) -> usize {
-    let k = core::ptr::read_unaligned((area as isize + i as isize * 2 + 0x212) as *const i16);
-    area_item_at(*((area + 0x208) as *const usize), k)
+    let k = core::ptr::read_unaligned((area as isize + i as isize * 2 + (area_fields::ITEM_LIST as isize)) as *const i16);
+    area_item_at(*((area + area_fields::ITEMS) as *const usize), k)
 }
 
 /// Reads an unaligned i32 at area + offset.
@@ -53,27 +53,27 @@ pub(crate) unsafe fn write_i32_at(area: usize, desl: isize, v: i32) {
 /// quando os itens passam das linhas e reparte a largura e a altura pelos pesos. Mais de 30 colunas
 /// ou linhas: a original (caixa de erro, Area.cpp 497 e 507).
 pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
-    let marks = *((area + 0x18) as *const u32);
-    let columns = *((area + 0xbab) as *const u8);
-    let rows = *((area + 0xbac) as *const u8);
-    if marks & 0x80000 == 0 && columns != 0 && (columns > 30 || (rows != 0 && rows > 30)) {
+    let marks = *((area + area_fields::FLAGS) as *const u32);
+    let columns = *((area + area_fields::COLUMN_COUNT) as *const u8);
+    let rows = *((area + area_fields::ROW_COUNT) as *const u8);
+    if marks & area_fields_flags::GRID_ONLY == 0 && columns != 0 && (columns > 30 || (rows != 0 && rows > 30)) {
         // simplification: the original writes the owner and +0xb76 before the error; repeating is harmless (same values)
         return original_fn::<unsafe extern "thiscall" fn(usize)>(IDX_AREA_LAYOUT)(area);
     }
     crate::comparison::branch("screens arrange the area");
-    let owner = core::ptr::read_unaligned((area + 0x20e) as *const i16);
+    let owner = core::ptr::read_unaligned((area + area_fields::OWNER_ITEM) as *const i16);
     if owner != -1 {
-        *((area + 0xbe9) as *mut u32) = 0;
-        let item = area_item_at(*((area + 0x208) as *const usize), owner);
-        core::ptr::write_unaligned((item + 0x7c) as *mut u16, core::ptr::read_unaligned((area + 0xb72) as *const u16));
+        *((area + area_fields::IS_OPEN) as *mut u32) = 0;
+        let item = area_item_at(*((area + area_fields::ITEMS) as *const usize), owner);
+        core::ptr::write_unaligned((item + guio::POPUP_AREA_INDEX) as *mut u16, core::ptr::read_unaligned((area + area_fields::AREA_INDEX) as *const u16));
     }
-    core::ptr::write_unaligned((area + 0xb76) as *mut i16, 0);
-    if marks & 0x80000 != 0 || columns == 0 || rows == 0 {
+    core::ptr::write_unaligned((area + area_fields::FIRST_VISIBLE_ITEM) as *mut i16, 0);
+    if marks & area_fields_flags::GRID_ONLY != 0 || columns == 0 || rows == 0 {
         return;
     }
-    let (lado, cima): (i32, i32) = if marks & 1 != 0 {
+    let (lado, cima): (i32, i32) = if marks & area_fields_flags::NO_MARGINS != 0 {
         (0, 0)
-    } else if marks & 0x10 != 0 || rows == 1 {
+    } else if marks & area_fields_flags::THIN_VERTICAL_MARGINS != 0 || rows == 1 {
         (2, 2)
     } else {
         (2, 8)
@@ -86,47 +86,47 @@ pub(crate) unsafe extern "thiscall" fn area_layout(area: usize) {
     }
     // columns: +0x1c start and +0x10c end, by weights +0xbad
     let weights = |desl: usize, n: usize| (0..n).map(|k| *((area + desl + k) as *const u8) as i32).fold(0i32, |a, b| a.wrapping_add(b));
-    let n = *((area + 0xbab) as *const u8) as i32 - 1;
+    let n = *((area + area_fields::COLUMN_COUNT) as *const u8) as i32 - 1;
     let sum = weights(0xbad, (n + 1) as usize);
     let mut accumulated = 0i32;
     let mut c = 0i32;
     while c <= n {
-        accumulated = accumulated.wrapping_add(*((area as isize + c as isize + 0xbad) as *const u8) as i32);
+        accumulated = accumulated.wrapping_add(*((area as isize + c as isize + (area_fields::COLUMN_WEIGHTS as isize)) as *const u8) as i32);
         if c == 0 {
             write_i32_at(area, 0x1c, lado);
         } else {
-            write_i32_at(area, c as isize * 4 + 0x1c, read_i32_at(area, c as isize * 4 + 0x108).wrapping_add(2));
+            write_i32_at(area, c as isize * 4 + (area_fields::COLUMN_STARTS as isize), read_i32_at(area, c as isize * 4 + 0x108).wrapping_add(2));
         }
-        if c < *((area + 0xbab) as *const u8) as i32 - 1 {
-            write_i32_at(area, c as isize * 4 + 0x10c, accumulated.wrapping_mul(width).wrapping_div(sum).wrapping_add(lado - 1));
+        if c < *((area + area_fields::COLUMN_COUNT) as *const u8) as i32 - 1 {
+            write_i32_at(area, c as isize * 4 + (area_fields::COLUMN_ENDS as isize), accumulated.wrapping_mul(width).wrapping_div(sum).wrapping_add(lado - 1));
         } else {
-            write_i32_at(area, c as isize * 4 + 0x10c, width.wrapping_add(lado - 1));
+            write_i32_at(area, c as isize * 4 + (area_fields::COLUMN_ENDS as isize), width.wrapping_add(lado - 1));
         }
         c += 1;
-        if c > *((area + 0xbab) as *const u8) as i32 - 1 {
+        if c > *((area + area_fields::COLUMN_COUNT) as *const u8) as i32 - 1 {
             break;
         }
     }
     // rows: +0x94 start and +0x184 end, by weights +0xbcb
-    let n = *((area + 0xbac) as *const u8) as i32 - 1;
+    let n = *((area + area_fields::ROW_COUNT) as *const u8) as i32 - 1;
     let sum = weights(0xbcb, (n + 1) as usize);
     let mut accumulated = 0i32;
     let mut l = 0i32;
     while l <= n {
-        accumulated = accumulated.wrapping_add(*((area as isize + l as isize + 0xbcb) as *const u8) as i32);
+        accumulated = accumulated.wrapping_add(*((area as isize + l as isize + (area_fields::ROW_WEIGHTS as isize)) as *const u8) as i32);
         if l == 0 {
             write_i32_at(area, 0x94, cima);
         } else {
-            write_i32_at(area, l as isize * 4 + 0x94, read_i32_at(area, l as isize * 4 + 0x180).wrapping_add(2));
+            write_i32_at(area, l as isize * 4 + (area_fields::ROW_STARTS as isize), read_i32_at(area, l as isize * 4 + 0x180).wrapping_add(2));
         }
-        let end = if l < *((area + 0xbac) as *const u8) as i32 - 1 {
+        let end = if l < *((area + area_fields::ROW_COUNT) as *const u8) as i32 - 1 {
             accumulated.wrapping_mul(height).wrapping_div(sum).wrapping_add(cima - 1)
         } else {
             height.wrapping_add(cima - 1)
         };
-        write_i32_at(area, l as isize * 4 + 0x184, end);
+        write_i32_at(area, l as isize * 4 + (area_fields::ROW_ENDS as isize), end);
         l += 1;
-        if l > *((area + 0xbac) as *const u8) as i32 - 1 {
+        if l > *((area + area_fields::ROW_COUNT) as *const u8) as i32 - 1 {
             break;
         }
     }
@@ -159,8 +159,8 @@ pub(crate) unsafe extern "thiscall" fn init(
     let (mut x1, mut y1, mut x2, mut y2) = (x1, y1, x2, y2);
     let (mut columns, mut weights_columns, mut rows, mut weights_rows) = (columns as u8, weights_columns, rows as u8, weights_rows);
     if owner as u16 as i16 != -1 {
-        core::ptr::write_bytes((area + 0xbad) as *mut u8, 1, 30);
-        core::ptr::write_bytes((area + 0xbcb) as *mut u8, 1, 30);
+        core::ptr::write_bytes((area + area_fields::COLUMN_WEIGHTS) as *mut u8, 1, 30);
+        core::ptr::write_bytes((area + area_fields::ROW_WEIGHTS) as *mut u8, 1, 30);
         x1 = 0;
         y1 = 0;
         x2 = 0;
@@ -187,25 +187,25 @@ pub(crate) unsafe extern "thiscall" fn init(
     write_i32_at(area, 4, y1);
     write_i32_at(area, 8, x2);
     write_i32_at(area, 0xc, y2);
-    write_u8(area + 0xbac, rows);
-    write_u8(area + 0xbab, columns);
+    write_u8(area + area_fields::ROW_COUNT, rows);
+    write_u8(area + area_fields::COLUMN_COUNT, columns);
     write_i32_at(area, 0x10, 0x7fffffff);
     write_i32_at(area, 0x14, 0);
-    core::ptr::write_bytes((area + 0xb7a) as *mut u8, 0, 0x31);
-    write_u16(area + 0x20e, owner as u16);
-    write_usize(area + 0x204, areas);
-    write_usize(area + 0x208, items);
-    write_u16(area + 0xb72, index as u16);
-    write_u16(area + 0x20c, colour as u16);
+    core::ptr::write_bytes((area + area_fields::SCROLLBAR) as *mut u8, 0, 0x31);
+    write_u16(area + area_fields::OWNER_ITEM, owner as u16);
+    write_usize(area + area_fields::AREAS, areas);
+    write_usize(area + area_fields::ITEMS, items);
+    write_u16(area + area_fields::AREA_INDEX, index as u16);
+    write_u16(area + area_fields::COLOUR, colour as u16);
     write_i32_at(area, 0xbed, 0);
     write_i32_at(area, 0x200, 0);
     write_i32_at(area, 0xba6, 0);
     write_i16(area + 0x210, -1);
     write_i32_at(area, 0xbe9, 1);
-    write_i16(area + 0xb76, -1);
-    write_u32(area + 0x18, marks);
+    write_i16(area + area_fields::FIRST_VISIBLE_ITEM, -1);
+    write_u32(area + area_fields::FLAGS, marks);
     write_i32_at(area, 0x1fc, -1);
-    if marks & 0x80000 != 0 {
+    if marks & area_fields_flags::GRID_ONLY != 0 {
         return;
     }
     for (n, pesos, desl) in [(columns, weights_columns, 0xbad), (rows, weights_rows, 0xbcb)] {
@@ -266,35 +266,35 @@ pub(crate) fn cap_area_rows(rows: u32) -> u32 {
 /// linha; depois a barra (0x403c80). Sem o primeiro item à mostra (+0xb76 = -1): a original (caixa de
 /// erro Area.cpp 245 e a organização 0x403350).
 pub(crate) unsafe extern "thiscall" fn draw(area: usize, redraw: u32) {
-    if read_i16(area + 0xb76) == -1 {
+    if read_i16(area + area_fields::FIRST_VISIBLE_ITEM) == -1 {
         return original_fn::<unsafe extern "thiscall" fn(usize, u32)>(IDX_DRAW)(area, redraw);
     }
     crate::comparison::branch("screens draw the area");
-    let image = (area + 0x200) as *mut usize;
+    let image = (area + area_fields::SAVED_IMAGE) as *mut usize;
     if redraw != 0 && *image != 0 {
         exe::gui_free_image(*image);
         *image = 0;
     }
-    if read_i16(area + 0x20e) != -1 && *image == 0 {
+    if read_i16(area + area_fields::OWNER_ITEM) != -1 && *image == 0 {
         *image = exe::gui_save_screen_image(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), 0);
     }
     // simplification: the original pushes edx with the colour in dx and, on top, leftovers from earlier calls
     // (unpredictable); the color is u16 for the panel, here zero-extended
-    let colour = read_u16(area + 0x20c) as u32;
-    exe::gui_draw_panel(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), read_u32(area + 0x18), colour, 0);
-    if read_u32(area + 0x18) & 0x80000 != 0 {
+    let colour = read_u16(area + area_fields::COLOUR) as u32;
+    exe::gui_draw_panel(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8), read_i32_at(area, 0xc), read_u32(area + area_fields::FLAGS), colour, 0);
+    if read_u32(area + area_fields::FLAGS) & area_fields_flags::GRID_ONLY != 0 {
         let mut k: i16 = 1;
-        while read_u8(area + 0xbac) > 1 && k < read_u8(area + 0xbac) as i16 {
+        while read_u8(area + area_fields::ROW_COUNT) > 1 && k < read_u8(area + area_fields::ROW_COUNT) as i16 {
             let y1 = read_i32_at(area, 4);
-            let y = read_i32_at(area, 0xc).wrapping_sub(y1).wrapping_add(1).wrapping_mul(k as i32) / read_u8(area + 0xbac) as i32;
+            let y = read_i32_at(area, 0xc).wrapping_sub(y1).wrapping_add(1).wrapping_mul(k as i32) / read_u8(area + area_fields::ROW_COUNT) as i32;
             let y = y.wrapping_add(y1);
             exe::graphics_draw_line(read_i32_at(area, 0), y, read_i32_at(area, 8), y, 2, read_u16(G_GUI_COLOUR_GREY) as u32);
             k = k.wrapping_add(1);
         }
         let mut k: i16 = 1;
-        while read_u8(area + 0xbab) > 1 && k < read_u8(area + 0xbab) as i16 {
+        while read_u8(area + area_fields::COLUMN_COUNT) > 1 && k < read_u8(area + area_fields::COLUMN_COUNT) as i16 {
             let x1 = read_i32_at(area, 0);
-            let x = read_i32_at(area, 8).wrapping_sub(x1).wrapping_add(1).wrapping_mul(k as i32) / read_u8(area + 0xbab) as i32;
+            let x = read_i32_at(area, 8).wrapping_sub(x1).wrapping_add(1).wrapping_mul(k as i32) / read_u8(area + area_fields::COLUMN_COUNT) as i32;
             let x = x.wrapping_add(x1);
             exe::graphics_draw_line(x, read_i32_at(area, 4), x, read_i32_at(area, 0xc), 2, read_u16(G_GUI_COLOUR_GREY) as u32);
             k = k.wrapping_add(1);
@@ -304,14 +304,14 @@ pub(crate) unsafe extern "thiscall" fn draw(area: usize, redraw: u32) {
     if read_i32_at(area, 0xbed) != 0 && *image == 0 {
         *image = exe::gui_save_screen_image(read_i32_at(area, 0), read_i32_at(area, 4), read_i32_at(area, 8).wrapping_sub(0x16), read_i32_at(area, 0xc), 0);
     }
-    let total = || read_i16(area + 0xb74);
-    let mut i = read_i16(area + 0xb76);
+    let total = || read_i16(area + area_fields::ITEM_COUNT);
+    let mut i = read_i16(area + area_fields::FIRST_VISIBLE_ITEM);
     let mut parar = false;
     while i < total() && !parar {
         let item = area_list_item(area, i);
-        let first = area_list_item(area, read_i16(area + 0xb76));
+        let first = area_list_item(area, read_i16(area + area_fields::FIRST_VISIBLE_ITEM));
         let d = read_i32_at(item, 0x24).wrapping_sub(read_i32_at(first, 0x24));
-        if d > read_u8(area + 0xbac) as i32 - 1 {
+        if d > read_u8(area + area_fields::ROW_COUNT) as i32 - 1 {
             parar = true;
         } else {
             position_area_item(area, item, d);
@@ -333,13 +333,13 @@ pub(crate) unsafe fn position_area_item(area: usize, item: usize, d: i32) {
     let (mut x1, mut x2, mut y1, mut y2) = (read_i32_at(item, 0x28), read_i32_at(item, 0x2c), read_i32_at(item, 0x30), read_i32_at(item, 0x34));
     if x1 == 0 {
         let c = read_i32_at(item, 0x20) as isize;
-        x1 = read_i32_at(area, c * 4 + 0x1c).wrapping_add(read_i32_at(area, 0));
-        x2 = read_i32_at(area, c * 4 + 0x10c).wrapping_add(read_i32_at(area, 0));
+        x1 = read_i32_at(area, c * 4 + (area_fields::COLUMN_STARTS as isize)).wrapping_add(read_i32_at(area, 0));
+        x2 = read_i32_at(area, c * 4 + (area_fields::COLUMN_ENDS as isize)).wrapping_add(read_i32_at(area, 0));
     }
     if y1 == 0 {
         let l = read_i32_at(area, 0x10).wrapping_add(d) as isize;
-        y1 = read_i32_at(area, l * 4 + 0x94).wrapping_add(read_i32_at(area, 4));
-        y2 = read_i32_at(area, l * 4 + 0x184).wrapping_add(read_i32_at(area, 4));
+        y1 = read_i32_at(area, l * 4 + (area_fields::ROW_STARTS as isize)).wrapping_add(read_i32_at(area, 4));
+        y2 = read_i32_at(area, l * 4 + (area_fields::ROW_ENDS as isize)).wrapping_add(read_i32_at(area, 4));
     }
     write_i32_at(item, 0x10, x1);
     write_i32_at(item, 0x18, x2);

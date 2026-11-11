@@ -11474,8 +11474,8 @@ pub(crate) unsafe extern "thiscall" fn context_commentary(m: usize, side: u32, e
     }
 }
 
-/// the match referee (`engine::REFEREE_ID`, id ≠ −1), except in friendly competitions (`exe::friendly_is_friendly_competition` on [0xae2c74]). Cards (`engine::CARDS` and
-/// `engine::CARDS_SIDE1` on both sides) and fouls (`engine::FOULS` and `engine::FOULS_SIDE1`); the grade starts at `engine::REFEREE_RATING` / 1000, loses 2 with more than 2
+/// the match referee (`engine::REFEREE_ID`, id ≠ −1), except in friendly competitions (`exe::friendly_is_friendly_competition` on [0xae2c74]). Cards (`engine::RED_CARDS` and
+/// `engine::RED_CARDS_SIDE1` on both sides) and fouls (`engine::YELLOW_CARDS` and `engine::YELLOW_CARDS_SIDE1`); the grade starts at `engine::REFEREE_RATING` / 1000, loses 2 with more than 2
 /// cards, 1 with 2, gains 1 with none; loses 1 with more than 5 fouls, gains 1 with fewer than 3; below 4 becomes 4
 /// (except 1 in 500), above 8 becomes 8 (except 1 in 25), and stays within 1 to 10. Records through `record_referee_grade` on
 /// [0xb74340] (8-byte record: id, cards, fouls, grade; the 8th byte is stack garbage and is not read). Compared side by
@@ -11509,19 +11509,19 @@ pub(crate) unsafe extern "thiscall" fn referee_grade(m: usize) {
             return;
         }
     }
-    let cards = (m.cards_side1()).wrapping_add(m.cards()) as i8;
-    let faltas = (m.fouls_side1()).wrapping_add(m.fouls()) as i8;
+    let reds = (m.red_cards_side1()).wrapping_add(m.red_cards()) as i8;
+    let yellows = (m.yellow_cards_side1()).wrapping_add(m.yellow_cards()) as i8;
     let mut rating = (m.referee_rating() as i32 / 1000) as i8;
-    if cards > 2 {
+    if reds > 2 {
         rating = rating.wrapping_sub(2);
-    } else if cards > 1 {
+    } else if reds > 1 {
         rating = rating.wrapping_sub(1);
-    } else if cards == 0 {
+    } else if reds == 0 {
         rating = rating.wrapping_add(1);
     }
-    if faltas > 5 {
+    if yellows > 5 {
         rating = rating.wrapping_sub(1);
-    } else if faltas < 3 {
+    } else if yellows < 3 {
         rating = rating.wrapping_add(1);
     }
     if rating < 4 && random(500) != 0 {
@@ -11537,8 +11537,8 @@ pub(crate) unsafe extern "thiscall" fn referee_grade(m: usize) {
     }
     let mut r = [0u8; 8];
     r[..4].copy_from_slice(&read_i32(referee).to_le_bytes());
-    r[4] = cards as u8;
-    r[5] = faltas as u8;
+    r[4] = reds as u8;
+    r[5] = yellows as u8;
     r[6] = rating as u8;
     exe::officialsmanager_record_match_stats(read_usize(G_OFFICIALS_MANAGER), r.as_ptr());
 }

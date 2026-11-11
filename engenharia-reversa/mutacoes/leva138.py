@@ -1,6 +1,6 @@
 # Mutacoes da leva138 (ver docs/ROTINAS.md). Uso: python mutacoes.py mutacoes\leva138.py --carreira 2002-06-01 --confirmar 2001-10-01
 MUTACOES = [
-    ('b_celula', "0x5e + (l as i32 + t as i32 * 2) as usize * 4) as *mut i32;", "0x5e + (t as i32 + l as i32 * 2) as usize * 4) as *mut i32;", "taker of the club"),
+    ('b_celula', "tactics_row::SET_PIECE_TAKERS + (l as i32 + t as i32 * 2) as usize * 4) as *mut i32;", "tactics_row::SET_PIECE_TAKERS + (t as i32 + l as i32 * 2) as usize * 4) as *mut i32;", "taker of the club"),
     ('b_limite', "if v > read_i32(G_STAFF_COUNT).wrapping_add(0x52d) {", "if v > read_i32(G_STAFF_COUNT).wrapping_add(0x52c) {", "taker beyond the people"),
     ('b_ficha', "    if (person.player().addr() as u32) == 0 {\n        crate::comparison::branch(\"taker without record\");\n        *cell = -1;", "    if (person.player().addr() as u32) == 0 {\n        crate::comparison::branch(\"taker without record\");\n        *cell = -2;", "taker without record"),
     ('b_clube', "    if person.club_job() == Club(club) {\n        crate::comparison::branch(\"taker of the club\");", "    if person.club_job() != Club(club) {\n        crate::comparison::branch(\"taker of the club\");", "taker of the club"),

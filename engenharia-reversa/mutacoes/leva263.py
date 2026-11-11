@@ -17,7 +17,7 @@ MUTACOES = [
     ('cqa5_jogador_da_oferta_nao_conta', 'n = n.wrapping_add(1); // cqa5: the offer player counts', 'n = n.wrapping_add(0); // mutacao: o jogador da oferta nao conta', 'cqa_5 squad full'),
     ('cqa6_busca_vazia_tem_todos', 'return 0; // cqa6: without results, it is not there', 'return 1; // mutacao: sem resultados, esta', 'cqa_6 empty search'),
     ('cqa6_achado_nao_esta', '1 // cqa6: achado', '0 // mutacao: achado nao esta', 'cqa_6 found'),
-    ('cqa6_removido_conta', 'if read_u8(r + 0x20) & 1 != 0 { // cqa6: the removed one does not count', 'if read_u8(r + 0x20) & 1 != 0 && false { // mutacao: a removida conta', 'cqa_6 removed'),
+    ('cqa6_removido_conta', 'if read_u8(r + search_result::FLAGS) & (search_result_flags::REMOVED as u8) != 0 { // cqa6: the removed one does not count', 'if read_u8(r + search_result::FLAGS) & (search_result_flags::REMOVED as u8) != 0 && false { // mutacao: a removida conta', 'cqa_6 removed'),
     ('cqa7_valor_base_030', 'read_f64(rdata::F64_0_32)) as u32 // cqa7: o valor base', '0.30) as u32 // mutacao: o valor base com 0,30', 'cqa_7 base value'),
     ('cqa7_listado_110', '*out = ftol(*out as f64 * read_f64(rdata::F64_1_05)); // cqa7: the listed player of another club × 1.05', '*out = ftol(*out as f64 * 1.10); // mutacao: o listado x 1,10', 'cqa_7 transfer listed'),
     ('cqa7_idade_com_09', '(dd * read_f64(rdata::F64_0_3) + read_f64(rdata::F64_0_8)); // cqa7: the age above the divisor', '(dd * read_f64(rdata::F64_0_3) + 0.9); // mutacao: a idade com 0,9', 'cqa_7 age'),
