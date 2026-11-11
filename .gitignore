@@ -35,8 +35,7 @@ copias/
 # rascunhos antigos e registros fora do git (antes ficavam soltos em D:\Sistemas)
 arquivo/
 
-# trabalho local, fora do repositório público (07/11/2026): protótipos, wiki e diário do projeto, a referência
-# de competições escrita
+# trabalho local, fora do repositório público (07/11/2026): protótipos, wiki e diário do projeto
 prototipos/
 /wiki/
 
