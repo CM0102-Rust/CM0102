@@ -63,7 +63,7 @@ pub(crate) mod desired_contract_rdata {
 /// caps × 0.125), at most 4 (0 → 1; no nation → 1). The reputation used by the clauses and the length is the player's
 /// current reputation (a player job) or the non-player's current reputation, at least 1.
 ///
-/// The signing fee (player job): `exe::contract_manager_calc_player_value` × 2 / 5, × 0.25 (no club job, current
+/// The signing fee (player job): `exe::contract_manager_calc_player_value` × 2 / 10, × 0.25 (no club job, current
 /// reputation < 2750, club < 2000), × 0.5 (< 4250) or × 0.75 (< 4750); a renewal (club = `cur`): 0 under 19 with
 /// < 3750, × 0.1 / 0.5 / 0.25 / 0.5 under 21 with < 4250 (by reputation and pressure), × 0.5 at a club below 3500,
 /// then by the deserved status × 0.9 / 0.75 / 0.75 / 0.5 / 0.25; a new club: × 0.5 when `cur` is below 4250 and × 0.5
@@ -132,7 +132,7 @@ pub(crate) mod desired_contract_rdata {
 /// Bonuses (+0x10 / +0x14 / +0x18) = ftol(value × draw × 0.025 + value × 0.025 + 25) for attacker / midfielder /
 /// goalkeeper 20, else −1; the bit 0x80 of the kind is set below 125 at a club of professional status 2 and cleared
 /// above 1250; `contract::WAGE` = ftol(value). The return: ftol(wage (× 0.5 for kind 1, × 1.05 with 0x80) + min(the
-/// bonuses / 5 and the clause weights × value, value × 0.1)).
+/// bonuses / 10 and the clause weights × value, value × 0.1)).
 ///
 /// Defects of the original kept: with an offer without a slot (`exe::transfer_manager_get_offer_slot` 0) it reads the
 /// address 0 (`&&` where `||` was meant) before the "Error" box; the reputation of the clauses and the length is left
@@ -272,7 +272,7 @@ pub(crate) unsafe extern "thiscall" fn staff_contract_set_to_desired_contract(th
     let scale_fee = |k: f64| write_i32(fee, ftol(read_i32(fee) as f64 * k));
     if sheet != 0 && is_player_job(job) {
         let v = exe::contract_manager_calc_player_value(cm(), person, club, 1, -1, 0);
-        write_i32(fee, v.wrapping_mul(2) / 5);
+        write_i32(fee, v.wrapping_mul(2) / 10); // imul 0x66666667; sar 2: / 10
         let cr = read_i16(sheet + player_sheet::CURRENT_REPUTATION);
         if read_usize(person + staff::CLUB_JOB) == 0 && cr < 2750 && rep_of(club) < 2000 {
             scale_fee(d(rdata::F64_0_25));
@@ -1035,7 +1035,7 @@ pub(crate) unsafe extern "thiscall" fn staff_contract_set_to_desired_contract(th
         for i in 0..3 {
             let b = read_i32(ct + contract::GOAL_BONUS + 4 * i);
             if b > -1 {
-                let x = (b / 5) as f64;
+                let x = (b / 10) as f64; // imul 0x66666667; sar 2: / 10
                 let plus = if i < 2 { outfield } else { keeper };
                 if plus {
                     extras += x;

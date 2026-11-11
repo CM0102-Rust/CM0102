@@ -8,3 +8,5 @@ Riscos para a prova: (1) com o tecnico humano de ferias a rotina devolve o valor
 "mka_2 manager on holiday"); os clubes da IA passam pela conta inteira; (2) a mutacao mka2_jovens so pega se a carreira tiver
 jovem com potencial visto > 110 e o ramo "mka_2 manager youngsters" rodar com efeito ate junho; (3) a rotina e chamada muito
 (listas, lances, telas): o comparador usa side_by_side_light com as regioes do calc_player_value + 2 bytes dos motivos.
+
+prova 11/11/2026 (bancada 2, com mka_1 mka_2 mkd_2 mkd_4): comparacao ate 2002-01-01 0 div; Rust x2 iguais (694677f1; detector nao rodou: RAM); mutacoes: ver levas/reorganizacao/mercado/prova_itens2_mutacoes.txt (mka1_piso_humano: ramo do preco do humano nao roda na carreira de ferias; mkd4_sem_piso_da_renovacao escapou da carreira e da comparacao: a explicar ou trocar)

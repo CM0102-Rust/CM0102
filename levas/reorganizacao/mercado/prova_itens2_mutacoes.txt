@@ -8,3 +8,16 @@ mutacao mka1_teto_suave      70s ACUSADA: divergiu da base em 2001-195 (10 s)
 mutacao mka1_piso_humano      0s ramo "mka_1 human asking price" nao rodou na base: lacuna (pulada)
 mutacao mka2_teto_minimo      5s ACUSADA: divergiu da base em 2001-195 (5 s)
 mutacao mka2_volta_ao_valor   10s ACUSADA: divergiu da base em 2001-195 (10 s)
+  aguardando memoria: so 3.8 GB de RAM livre (minimo 4.0)
+mutacao mka2_moral           65s ACUSADA: divergiu da base em 2001-195 (5 s)
+mutacao mka2_jovens          10s ACUSADA: divergiu da base em 2001-195 (10 s)
+mutacao mkd2_sem_quadrado     5s ACUSADA: divergiu da base em 2001-001 (5 s)
+mutacao mkd2_sem_teto_do_clube    5s ACUSADA: divergiu da base em 2001-195 (5 s)
+mutacao mkd2_declinio_fixo   10s ACUSADA: divergiu da base em 2001-195 (10 s)
+mutacao mkd4_razao_sem_k     10s ACUSADA: divergiu da base em 2001-200 (10 s)
+mutacao mkd4_sem_piso_da_renovacao  221s IGUAL A BASE (escapou): parou em 2002-151, 2353370526 sorteios, impressao dc0b2031ab0422e2, partidas 19324/355c3f3ec5d11b0f, banco a678744f707db95c
+mutacao mkd4_sem_piso_da_renovacao  565s comparando: engine: 1000000000 comparisons, 0 divergences
+  aguardando memoria: so 3.5 GB de RAM livre (minimo 4.0)
+mutacao mkd4_corte_em_0_9    75s ACUSADA: divergiu da base em 2001-198 (15 s)
+restaurado e recompilado
+FIM
