@@ -29,7 +29,7 @@ published; `levas/N/` keeps each batch's test results. Docs: `DESCOMPILACAO` = w
 `GLOSSARIO` = glossary, `CREDITOS` = credits; every document has an `.en.md` English version (the Portuguese one is the
 original; this README is the exception: English first, Portuguese in `README.pt.md`).
 
-**State:** 283 batches, 2065 routines in Rust, each one compared with the original, directly or through the routine that calls it (the match engine without the screens is 100% in Rust; saves go beyond 2 GB, up to 4 GB); how much is left, module by module: [`docs/PLACAR.en.md`](docs/PLACAR.en.md); by file of the whole exe:
+**State:** 284 batches, 2092 routines in Rust, each one compared with the original, directly or through the routine that calls it (the match engine without the screens is 100% in Rust; saves go beyond 2 GB, up to 4 GB); how much is left, module by module: [`docs/PLACAR.en.md`](docs/PLACAR.en.md); by file of the whole exe:
 [`docs/PLACAR_ARQUIVOS.en.md`](docs/PLACAR_ARQUIVOS.en.md) (2,093 of the 6,709 functions, 29.6% of the code). Batch 284
 is integrated and 2,092 routines are hooked; since 07/11/2026 the rewrite is paused for a **reorganization** that makes
 the code readable for publication (named fields and records, English names and headers, each step proved with the same

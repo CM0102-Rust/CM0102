@@ -6,6 +6,8 @@ Made on 11/11/2026 for the Rust Tweaks release 1.5 (rebalancing the market), by 
 
 **Updated 11/11/2026: inferred claims closed** (`levas/reorganizacao/mercado/fechamento_inferidos.en.md`): the [inferred] marks outside the routines still being read (0x4d1600, 0x85fc50, 0x864550, 0x4ce4e0, 0x4c7ac0, 0x862720, 0x844780) were proved in the disassembly or kept with the reason. Main points: the loan stuck in state 8 is a proved defect of the original, without holidays (section C §8); bit 4 of `contract::TRANSFER_STATUS` = automatic asking price, bit 8 = listed at the player's request; the squad statuses (high nibble of +0x4f); the `edi` of the youngsters filter is the person's id + the club's id; the future-transfer +0x10 = 1 when the person leaves; the rules of 0x83cb40 and 0x83f3a0 from items `mkb_2`/`mkb_3`; `get_max_wage` is not inverted.
 
+**Updated 11/11/2026: reader D2 closed** (`levas/reorganizacao/mercado/fechamento_mkd2.en.md`): 0x4ce4e0 (the player picks an offer; now item `mkd_4`) and 0x4c7ac0 (contract end, AI renewals, free agents; not ported) proved in the disassembly (section D §2.2, §2.4, §2.6, §5, §7); the natural end of a loan too (section C §9).
+
 Corrections found after the sections were written: 0x83f3a0 is called by `allocate_transfer_budget` 0x83b6e0 (0x83bab7), `update_staff_status` 0x843e10 (0x844108) and itself, not by 0x83cb40; 0x83cb40 is now item `mkb_2` and 0x83f3a0 item `mkb_3`; in 0x83cb40 the target base (+0x74, from 0x7bca90) sets the slot states and the cut (base/68 − 35), the rating itself (+0x64) prices the slots.
 
 Sections: [A. The money side](#a) · [B. How the AI buys and sells](#b) · [C. Loans, windows and limits](#c) · [D. The player's side and who decides](#d)
@@ -931,8 +933,9 @@ after the resubmission (or write +0x62 = 1); or, in `process_due_offer` (Rust), 
   loan slot (+4 of the 79-byte record), the player joins the borrower's squad (job 0xb), bit 0x40 of the main contract
   = reserves; history `add_loan_records`; `record_loan` of the borrower's nation (England counts the season);
   `add_past_transfer` type 2; offer 0x14, removed in 5 days.
-- **Natural end:** `CONTRACT_MANAGER::daily_update` (0x4c8114) calls `end_loan` (0x4d07e0) on the end date [inferred
-  from the call site].
+- **Natural end:** `CONTRACT_MANAGER::daily_update` 0x4c7ac0 (at slice 2) calls `end_loan` (0x4d07e0, at 0x4c8114) on
+  the end date: the loan contract (index +4 of the 79-byte record) ending today; without a club, only the index becomes
+  −1; otherwise news 6 (0x4da590, outside type 7) and `end_loan` [proved: 0x4c8077..0x4c8114; section D §2.4].
 - **Early end:** the screen (0x8fbcc0) asks `can_end_loan` (0x8d0530: only when the player's owning club is in the same
   nation as the one asking; otherwise 1) → `schedule_loan_end` (0x4ccca0: the loan contract ends tomorrow, type 7,
   news 0xfb8 if a human is involved) → `end_loan` the next day.
@@ -998,7 +1001,7 @@ of 0x85fc50, 0x4c7ac0, 0x864550, 0x862720 and 0x844780 (`descompilar.py`), `refs
 |---|---|---|---|---|---|
 | 0x846920 | `Shortlist_Manager::staff_interest_in_joining_club` (the will) | shortlist_manager.cpp | yes | — | bids (0x84a020, 0x842e10, 0x843800, 0x840084), loans (0x842740), accepting a bid (0x8c0080), response delay (0x8cc5b0), unsettled player (0x8c1290), exchange (0x8c8860), budget (0x83b6e0), contract decision (0x4ce4e0), desired wage (0x85fc50), scouts (0x7b0050, 0x7b62a0), filters and screens |
 | 0x844780 | `staff_interest_in_job_at_club` (the staff's will) | shortlist_manager.cpp | no | — | 0x4ce4e0, 0x85fc50, `is_staff_suitable_for_job` (0x69f810), 0x840084, filters |
-| 0x4ce4e0 | `CONTRACT_MANAGER::resolve_contract_offers` (the player picks an offer) | contract_manager.cpp | no | — | `process_due_decision_dates` (0x4cd9c0), type 3 decision dates |
+| 0x4ce4e0 | `CONTRACT_MANAGER::resolve_contract_offers` (the player picks an offer) | contract_manager.cpp | no | **mkd_4** | `process_due_decision_dates` (0x4cd9c0, single caller at 0x4cda4c), type 3 decision dates |
 | 0x85fc50 | `STAFF_CONTRACT::set_to_desired_contract` (wage demand and length) | staff_contracts.cpp | no | — | `offer_contract` (0x4cda70), `lowest_wage_demand` (0x4ce450), 0x4ce4e0, `make_club_bids` (0x84a020), `accept_transfer_bid` (0x8c0080), `move_player_to_club` (0x8c9720), `get_contract_satisfaction` (0x866620), `calc_contract_value` (0x866830), screens |
 | 0x864550 | `STAFF_CONTRACT::default_staff_contract` (default wage) | staff_contracts.cpp | no | — | 0x846920 (wage gate), 0x85fc50 (×3), 0x844780, 0x842e10, 0x840084, `update_wage_bill` (0x598370), 0x85e960 |
 | 0x862720 | `staff_contract_calc_unset_default_wage` | staff_contracts.cpp | no | — | `set_default_wage` (0x8626e0), `create_initial_shortlists` (0x83a1b0) |
@@ -1007,7 +1010,7 @@ of 0x85fc50, 0x4c7ac0, 0x864550, 0x862720 and 0x844780 (`descompilar.py`), `refs
 | 0x866620 | `get_contract_satisfaction` (1..3) | staff_contracts.cpp | yes | — | the staff's daily pass (0x5ce2d0, random(50) = 0), screen |
 | 0x4cda70 | `contract_manager_offer_contract` (the club's offer) | contract_manager.cpp | yes | — | 0x4c7ac0 (×9: renewals), screens |
 | 0x4ce450 | `contract_manager_lowest_wage_demand` | contract_manager.cpp | yes | — | contract screen |
-| 0x4c7ac0 | `CONTRACT_MANAGER::daily_update` (contract end, renewal, free agents) | contract_manager.cpp | no | — | `game_main_day_loop` (0x5cccd0), daily; `game_run_to_start_date` (0x5cc850) |
+| 0x4c7ac0 | `CONTRACT_MANAGER::daily_update` (contract end, renewal, free agents) | contract_manager.cpp | no | — (too big; see §2.4) | `game_main_day_loop` (0x5cd406) at every slice of the day: slice 0 the fixed dates, slice 2 the people; `game_run_to_start_date` (0x5cc9ef) |
 | 0x4cd9c0 | `process_due_decision_dates` | contract_manager.cpp | yes | — | 0x4c7ac0, daily |
 | 0x4cd230 | `schedule_offer_decision` | contract_manager.cpp | yes | — | contract offers |
 | 0x4cc490 | `add_contract_offer` | contract_manager.cpp | yes | — | 0x4cda70 |
@@ -1073,27 +1076,62 @@ the exe, the match engine included: do not patch `.rdata`); 2.75 = `F64_2_75` (0
 Caller thresholds: 0x4ce4e0 picks above 2.75 and 3.15 (`F64_3_15`, 0x968e58); `try_loan_offer_for_player` requires
 3.5; `make_club_bids` uses 3.15 (`F64_3_15`).
 
-#### 2.2 The player picks among contract offers (0x4ce4e0, original) [inferred]
+#### 2.2 The player picks among contract offers (0x4ce4e0, original; item **mkd_4**) [proved]
 
-Per person, when the type 3 decision date is due (`process_due_decision_dates`, daily):
+`thiscall(contract manager, person)`, `ret 4` (0x4cf493), SEH frame; single caller 0x4cda4c, in
+`process_due_decision_dates` (0x4cd9c0), when a type 3 decision date falls due; the same in cm0102-1080.exe (0xfb6
+bytes). Constants read from the exe: 1/300 (0x968e60), 3.15 (0x968e58), 0.99 (0x968e50), 0.6 (0x968e48), 0.7
+(0x968e40), 3.5 (0x968e38), 0.9 (0x9689d8), 0.8 (0x9689b0), 0.5 (0x968968), 10 (0x9688b0), 40 (0x968e30), 5
+(0x9688a0); 2.75 (0x4ce51b) and 3.15 (0x4ceaab) are immediates, not in `.rdata`. Order [proved, disassembly]:
 
-1. k = (professionalism − ambition − 9 + loyalty) × 1/300 (0x968e60).
-2. With a pending transfer offer (0x8cd150): postpones the decision by 2 days and leaves.
-3. For each of the person's offers in the list (+0x34) ready to decide: an offer without a transfer (+0x59 = −1) from
-   a club that is not the contract's and type ≠ 5: removed. State 0:
-   - type 5: will = 0x846920(…, loan = 1, status 8); type 6: with the status from `get_squad_status_for_club`;
-   - the others: the desired contract at the club (0x85fc50 with −1, the offer's status and job +0x61); ratio =
-     value(offer against desired) / value(desired against desired) − k (`calc_contract_value`, 0x866830); the will by
-     0x846920 (player) or 0x844780 (staff; the average of both when the job is a player's); **renewal** (an offer from
-     the current club): ratio ≥ 0.99 (0x968e50) and will ≤ 3.15 → will = 3.15; ratio < 0.6 (0x968e48) → 0;
-   - refusal: a player job without a player sheet (0x7a6e20 false), or ratio > 0.5 needing a work permit (0x8c7560)
-     with fewer than 90 days;
-   - score = will × ratio, with the cuts 0.9 (0x9689d8), 0.8, 0.7 and 3.5; the highest above 2.75 is kept.
-   State 2 (already accepted): no other one.
+1. k = (professionalism − ambition − 9 + loyalty) × 1/300: the int (+0x5b − +0x57 + +0x59 − 9) goes through `fild`
+   and `fmul` 0x968e60 (0x4ce5a4..0x4ce5ca).
+2. With a pending transfer offer (`player_has_pending_offer` 0x8cd150): today + 2 (0x54c5b0) and a type 3 decision
+   date at the current slice (0x4cd6d0 with [0xae2c88]); nothing else (0x4ce5ce..0x4ce606).
+3. For each of the person's offers with +0x62 ≠ 0 (0x4ce630..0x4ce6fa): an offer without a transfer (+0x59 = −1) from a
+   club that is not the contract's (looked up with the store in [0xae1080]) and type ≠ 5: removed (taken out of the
+   list, counting down byte +8 of the 79-byte record). State +0x50 ≠ 0 is skipped; = 2 sets "agreed" and in the end
+   nothing is chosen (0x4ce701, 0x4cec69..0x4cec6e). State 0:
+   - type 5: will = 0x846920(…, loan 1, status 8); type 6: with the status from `get_squad_status_for_club`. The will
+     is the score, chosen **at once** when above the best and ≥ 3.15, before the refusals (0x4ce70c..0x4ce78c,
+     0x4ce791..0x4ce827);
+   - the others: the status (high nibble of +0x4f) first goes to byte +5 of the person's entry in the transfer offer
+     (0x8c61e0, 0x8e82f0); the desired contract at the club (0x85fc50 with −1, the status and job +0x61) is **one**
+     local contract reused from offer to offer; ratio = value(offer against desired) / value(desired against desired)
+     − k (`calc_contract_value` 0x866830); a desired value ≤ 0 gives score 0 (0x4ce82c..0x4ce8f1);
+   - the will: 0x846920 without a non-player sheet (+0x69 = 0) or with job 11; otherwise 0x844780 and, if
+     `is_player_job` (0x53b620), (0x846920 + 0x844780) × 0.5 (0x4ce8d8..0x4ce9b8);
+   - **renewal** (the contract's club, looked up again in [0xae1080], is the offer's): ratio ≥ 0.99 and will ≤ 3.15 →
+     will = 3.15 (0x4ce9bc..0x4ceaab); the ratio < 0.6 → 0 cut applies to **all** plain offers, not only the renewal
+     (0x4ceac5..0x4cead0);
+   - refusal (0x4ceae2..0x4ceb70), for every type (loans and trials included): (a) a job other than plain player
+     (0x53b610) for someone without a non-player sheet (+0x69 = 0) when no spare non-player record is left
+     (`PLAYER_REGEN::has_spare_non_player_record` 0x7a6e20 = 0); (b) ratio > 0.5, a work permit needed (0x8c7560) and
+     the end of **the offer's** contract under 90 days away (0x54cdb0 of +0x2d to today < 0x5a);
+   - score (0x4ceb9b..0x4cec67): ratio ≥ 0.9 → will = max(will, 3.15); ratio > 0.8 and will > 3.15 → kept; ratio >
+     0.7 and will > 3.5 → max(will, 3.15); otherwise turned down. Score = will × ratio; above the best (starting at
+     2.75) → chosen; a renewal not chosen (or turned down) is remembered. Loans/trials (desired = 0) do not go through
+     here.
+   An agreed offer, or a person with a non-player sheet who is a candidate for a manager vacancy
+   (`manager_manager_is_vacancy_candidate` 0x69fc60), chooses nothing (0x4cec90..0x4cecab).
 4. The chosen one becomes state 2 (news 0x7549b0, `set_agreed_contract_flag` 0x8c5410); the others state 1 (news
-   0x4d49a0, or `handle_player_rejected_terms` 0x8c28c0 when tied to a transfer). None chosen and an offer from his
-   own club: mark 0x80 in byte +0xb of the 79-byte record. For the chosen one (types ≠ 5, 6) with a score above
-   0x9688b0, draws by loyalty (0x90cfc0) [inferred].
+   0x4d49a0, or `handle_player_rejected_terms` 0x8c28c0, which gets the chosen offer as its 3rd argument, when tied to
+   a transfer); news 0x4d49a0 gets 1 only for the turned-down renewal of a player (job 11) when nothing was chosen
+   (0x4cecaf..0x4ced73). With nothing chosen, a **turned-down** renewal sets bit 0x80 of byte +0xb of the 79-byte
+   record; with a choice, the bit is **cleared** at the end, except when the completion fails (0x4cf071..0x4cf094,
+   0x4cf42d..0x4cf447).
+5. **The loyalty draws** (the chosen one of type ≠ 5, 6; 0x4cef64..0x4cf06f): score > 10 → n = max(40 − score, 5);
+   `random(ftol(n))` < loyalty, the offer's club has a manager, and club reputation > 4500 or `random(4)` = 0 →
+   `random(2)` ≠ 0: comes to favour the manager (`staff_add_favoured_staff`); = 0: the club (`staff_add_favoured_club`).
+6. **Third pass** (0x4cf096..0x4cf3a2): with a choice, the same club's offers without a transfer **complete** the
+   contract (`complete_accepted_contract_offer` 0x8c38b0 with the local copy; on success: a staff record for a staff job
+   without a sheet, the coaches and the scouts' lists when the contract's club is human, the player value recomputed);
+   they leave the list and clear the agreed flag; with a transfer they stay. Other clubs' offers leave (into the held
+   list +0x38 when the chosen one has a transfer; the club into the list 0x8c2180 gets). With none chosen, every offer
+   outside state 3 leaves. A failed completion ends there.
+7. **End** (0x4cf3a8..0x4cf42d): chosen with a transfer → `handle_player_accepted_terms` (0x8c2180: person, slot, copy,
+   the job dword +0x61, the clubs list), first a staff record for a staff job without a sheet; without a transfer →
+   news 0x4d49a0 of the copy.
 
 #### 2.3 Wage demand and length [proved where in Rust; inferred elsewhere]
 
@@ -1120,15 +1158,75 @@ Per person, when the type 3 decision date is due (`process_due_decision_dates`, 
 - **0x866620 `get_contract_satisfaction`** (Rust) [proved]: 100 × value(current) / value(desired), with the allowance
   for a recent signing (15 × loyalty + 100 days); < 50 → 1, < 80 → 3, otherwise 2. Daily with random(50) = 0.
 
-#### 2.4 Renewals and contract end (0x4c7ac0, original) [inferred from the call list]
+#### 2.4 Renewals and contract end (0x4c7ac0, original) [proved, disassembly; not ported]
 
-Daily. For each contract: the end band (`get_expiry_band`, 0..14, ×11) against the dates +7..+182 days; retirement
-(0x7a7eb0, ×10); human club (×12); the AI renewal offer (`offer_contract`, ×9); `wants_to_leave` (0x866f60); pending
-transfer offers (0x8c5cf0, 0x8c5e40); Bosman (0x8d0a70, ×5; a nation with free transfers, 0x544670); FIFA protected
-period (0x868210); active clause (0x867b50); contract end news (0x4d6790 ×12, 0x4da590 ×5, 0x4d6d70); the free
-player goes onto the clubs' lists (`add_player_to_club_shortlists` 0x842c00, ×4) and into the free transfer queue
-(0x8c16b0) or is released at once (`free_transfer_staff` 0x8c1af0); the loan end (0x4d07e0); and, at the end, the
-decision dates (0x4cd9c0). Attributes: only `loyalty` (+0x59, ×2).
+`thiscall(contract manager, &date, slice (byte), flag (byte))`, `ret 0xc` (0x4c9e2e). Callers: `game_main_day_loop`
+(0x5cd406: today, the current slice [0xae2c88], 1) at **every slice** of the day, and `game_run_to_start_date`
+(0x5cc9ef). Constant: 0.004 = 0x968d60 (progress bar steps). Order [proved]:
+
+- **The slices:** it runs at every slice; **slice 0** only recomputes the fixed dates (today + 7, 30, 60, 91, 121,
+  152, 182, 365, 550, 1095 in 0xae1048, 0xae1030, 0xae1058, 0xae1010, 0xae1060, 0xae1040, 0xae1090, 0xae1068,
+  0xae1008, 0xae1020); **slice 2** does the people pass (only with flag = 1); every slice ends with the decision dates
+  (0x4cd9c0 with the date and the slice) (0x4c7b2e..0x4c7c74, 0x4c7c79, 0x4c7de0, 0x4c9e0e..0x4c9e15).
+- **Contract talks** (slice 2): each talks record (21 bytes, +0x28/+0x2c) expires (25 − the manager's loyalty) × 2
+  days after the date at +0xc; an expired one leaves (swapped with the last) and the array is re-sorted (qsort
+  0x4dc970). It is the first use of loyalty (0x4c7c81..0x4c7d7b).
+- **"Updating game data" bar**: on 31/12 (0x549f70 day 31, month 11), every 250 people (0x4c7b07..0x4c7b29,
+  0x4c7d7e..0x4c7e2f).
+- **Before the full load** ([0xdd711c] = 0, `G_GAME_DATA_LOADED_FLAG`): a contract ending today only becomes type 1
+  (+0x35 = (x & 0xc1) | 1) (0x4c7e34..0x4c7ec0).
+- **Player value recomputed** (0x4c7f65..0x4c8070): human club and a player job: with bit 4 of +0x4e and a sheet,
+  value recomputed (0x4d0c60 flag 1); AI club and a player job: **on odd days of the year**, bit 4 set and value
+  recomputed (flag 0); staff: every day; in the first two, capped by the active release fee (0x867b50). Without a
+  contract or club: value 0.
+- **Loan end** (0x4c8077..0x4c8114): the loan contract (index +4 of the 79-byte record) ending today: without a club,
+  only the index becomes −1; otherwise news 6 (0x4da590, outside type 7) and `end_loan` 0x4d07e0.
+- **Renewal before the transfer rules change** (0x4c8152..0x4c847a): before [0xae2330]
+  (`G_TRANSFER_RULE_CHANGE_DATE`) and with a sheet, when that date falls on today + 7/30/42/60/70/91 (recomputed **per
+  person**, in 0xae1070..0xae1088), the contract started over 180 days ago and ends before today + 1095: a club that
+  does not dislike him and whose manager does not (0x5477d0, 0x547840), AI, age < 32 → by status: 1 offers (factor
+  1.0); 2 and 3 with current reputation > 6750, or age < 24 and potential > 100; 5 with potential > 100; 4 never.
+- **FIFA protected period** (0x868210; 0x4c847f..0x4c85fe): a type 2 contract, no loan, ending **after** today + 182,
+  outside the protected period (0x868210 = 0 and the output ≠ 0), not retiring (0x7a7eb0), job 11: the AI (age < 32)
+  renews by the same statuses (factor 1.0); human club: news 7 (0x4d6790; Bosman by the age at today + 182 ≥ 24 and
+  0x8d0a70).
+- **Type 1 (expired contract)** (0x4c8603..0x4c883b): no loan, 31 days past the end, wanting to leave (0x866f60) or
+  leaving on a Bosman (+0x49), with no offers, exchanges or queue: news 1 to the human club; jobs 12, 13 (AI) and 15
+  (AI) go back to 5, 6 and 8 and leave the squad; the others go to the **free transfer queue** (0x8c16b0 with 1, −1).
+- **The band** (`get_expiry_band` 0x867d30) against +7..+182 (0x4c8876..0x4c88a5, 0x4c8a79..0x4c8abb): the odd bands
+  (the exact day of 182, 152, 121, 91, 60, 30 and 7 days) put the player on the clubs' lists (0x842c00 with 1); band
+  14 only with `random(20)` = 0; someone already leaving on a Bosman too, on the odd ones.
+- **Leaving on a Bosman** (+0x49 = 1; 0x4c88b5..0x4c8a74): type 2, contract started over 93 days ago, inside the bands
+  window (0x867d30 ≠ 0 and ≠ 14), not retiring, job 11, the current contract not a loan, a club with a nation; current
+  reputation > 3750, world > 1750, **loyalty < 15**, age 19..30, the nation allows it (0x544670), and not (club > 4750
+  and age < 23); and wanting to leave (0x866f60) or bit 8 of +0x4e. Then +0x49 = 1, bit 8 cleared, the clubs' lists
+  (0x842c00) and news 0x4d6d70. It is the second use of loyalty.
+- **The AI renewal offer** (`offer_contract` 0x4cda70, ×9; person, club 0, out 0, slot −1, factor, mode 2), only for
+  an AI club and a player not retiring; the factor (f64) is a pushed immediate: with **550 days** left (0xae1008),
+  status 1..3 and on his own club's list (0x849ce0): 1.0; **365 days** (0xae1068, or on the game's first day with an
+  end before that): news 6 and, status 1..3 or 5 on the list: 1.0; bands **3 and 5** (152/121 days): status 1..3 on
+  the list 1.2, off it 1.0; 4 and 5 → 1.0; band **1** (182): 1.1 on the list / 1.0; band **7** (91): 1.3 on the list
+  / 1.0, 1.1 for 3..5; bands **9, 11** (60/30): 1.4 (1..2) and 1.2 (3..5) on the list, off it 1.0; band **13** (7
+  days): the same, with news to the human club. When 0x4cda70 returns 0 on the 365-day path and on bands 1 and 7, a
+  local type 2 offer becomes the refusal news (0x4d49a0 with 1); on bands 1 and 7 it also sets bit 0x80 of the 79-byte
+  record (0x4c910e, 0x4c91e3, 0x4c93d0, 0x4c94a5). Proof: 0x4c8ac0..0x4c9a8b, 0x4c9b5f..0x4c9b71; factors 1.1 =
+  0x3ff19999_9999999a, 1.2 = 0x3ff33333_33333333, 1.3 = 0x3ff4cccc_cccccccd, 1.4 = 0x3ff66666_66666666.
+- **Listed without offers** (0x4c9a90..0x4c9b10): a player (job 11) transfer-listed (0x5444a0) with no offers,
+  exchanges or queue goes into the free transfer queue.
+- **The contract end on the day** (0x4c9b76..0x4c9d21): a type 5 (loan) ending today: news 5, stats archived
+  (0x7c5fe0), the contract erased (both indexes −1), the wage bill (0x598370), out of the selections (0x896c60 ×2) and
+  of the club (0x53c190). Any other type: becomes type 1; leaving on a Bosman, no loan and no offers: news 2 and
+  **released at once** (`free_transfer_staff` 0x8c1af0).
+- **Decision dates** (0x4c9d40..0x4c9e07): on days 36 and 200 of the year (slice 2), the processed ones leave the
+  array; on every call, if new dates were added (+0x1c), the pending part is re-sorted (qsort with 0x4dc910) and +0x1c
+  is reset.
+
+Attributes: only `loyalty` (+0x59, ×2): talks (0x4c7cc3) and Bosman (0x4c8a01).
+
+**Why it did not become an item:** 9,376 bytes (2,700 instructions, 10 jump tables), ~45 routines called (the progress
+bar included), 9 renewal paths and the contract end; too big to prove with one comparison (it cannot run twice: news,
+draws, queues). Proposal: port it in pieces through callers already in Rust (the player value, the loan end, the Bosman
+rule and the renewals by band as helpers), with the loop last.
 
 #### 2.5 Clauses [proved where in Rust]
 
@@ -1145,7 +1243,10 @@ decision dates (0x4cd9c0). Attributes: only `loyalty` (+0x59, ×2).
 
 #### 2.6 Free agents [proved where in Rust]
 
-Who becomes free: the contract end in 0x4c7ac0 (Bosman by the nation, 0x8d0a70) and those released through the queue
+Who becomes free: the contract end in 0x4c7ac0 [proved, §2.4]: on the end day, only those leaving on a Bosman (+0x49,
+the nation's rule 0x8d0a70) are released at once (`free_transfer_staff` 0x8c1af0); the others become type 1 and, 31
+days later, go to the queue only if they want to leave (0x866f60) or leave on a Bosman; and those released through the
+queue
 (0x8c16b0 → `process_free_transfer_queue`, on the transfers' day: at a human club the board may block it, a draw adds
 the manager to the disliked staff, compensation). Who signs them: the clubs' lists (`add_player_to_club_shortlists`,
 `make_club_bids` 0x84a020; without a club the will gets × 1.75 and the base 2.75 + min(12, days² / 900)). At what
@@ -1205,6 +1306,20 @@ Interference (daily morale; it calls the contract satisfaction).
    still unproved [inferred].
 4. Rust documentation: the header of `young_player_adjustment` (shortlist_manager.rs) says "current ability seen", but
    it calls `perceived_ability` with `kind` 1, which is the potential (reads JudgingPotential +0x18) [proved].
+5. 0x4ce4e0: the spare staff record is accepted up to **the count itself** (`cmp eax, [0xae2368]; jg` is the error, it
+   should be `jge`) [proved: 0x4cf1b5].
+6. 0x4ce4e0: with several offers from **the same club** and the chosen one without a transfer,
+   `complete_accepted_contract_offer` runs **once per offer** (the loop calls it again for each) [proved:
+   0x4cf0c9..0x4cf15c].
+7. 0x4ce4e0: loans and trials are chosen before the refusals: a later refusal (work permit, no spare record) zeroes the
+   stored score but does not undo the choice [proved: 0x4ce75c..0x4ce764 against 0x4ceb68].
+8. 0x4ce4e0: the "renewal" marker and the will are stack variables that carry over between offers: the marker's first
+   value is the numerator of k (0x4ce5bc), and an offer with a negative desired value would use a previous offer's
+   [proved]; no effect in practice (the value is never negative) [inferred].
+9. 0x4c7ac0: the six rule-change dates (0xae1070, 0xae1018, 0xae1038, 0xae1028, 0xae1078, 0xae1088) are recomputed
+   **for every player** in the loop, not once a day (same result, wasted work) [proved: 0x4c81a3..0x4c827c].
+10. 0x4c7ac0: the AI player's value is recomputed only on **odd** days of the year (`movsx eax, word [date]; and
+    0x80000001`), the human one every day [proved: 0x4c7ffe..0x4c8010]; the intent [inferred].
 
 ### 6. Extension points (the smallest hook that changes the policy)
 
@@ -1218,13 +1333,22 @@ Interference (daily morale; it calls the contract satisfaction).
 5. **0x4cda70 (Rust)**: the AI offer (factor, length by age, cap × 1.4).
 6. **0x83bf40 (Rust)**: the target reputation, where the chairman's patience and resources come in.
 7. **0x6e86d0 (Rust)**: how much the manager sees (Judgement/JudgingPotential).
+8. **0x4ce4e0 (mkd_4, Rust once integrated)**: the 2.75 threshold, the 0.9/0.8/0.7 cuts, the renewal floor 3.15 and
+   the personality k sit in one function (`choose_contract_offer`): the place to change the will to renew or to change
+   club by groups (age, reputation), without touching `staff_interest_in_joining_club`.
+9. **0x4cda70 in the AI renewals**: the factor (1.0..1.4) is an immediate pushed at each of the 9 calls in 0x4c7ac0; a
+   detour on `contract_manager_offer_contract` (Rust) adjusting the factor by player changes all of them without
+   porting 0x4c7ac0. The Bosman rule (loyalty < 15, age 19..30, reputations 3750/1750) sits in one stretch
+   (0x4c89ea..0x4c8a4a).
 
 ### 7. Queue items
 
 - **mkd_1** — `STAFF_CONTRACT::calc_contract_value` (0x866830): `levas/fila/mkd_1/`. Compiles with the current engine
   (own copy, no warnings from the item). **Not proved in the game**: the laboratory lock was busy and the memory guard
   refused (2.3 GB free, minimum 4). See `PRONTO.txt`.
+- **mkd_4** — `CONTRACT_MANAGER::resolve_contract_offers` (0x4ce4e0, §2.2): `levas/fila/mkd_4/`. Compiled; the proof
+  is left to the main session.
 
 Not ported because of size (for another round): 0x85fc50 (10,896 bytes), 0x864550 (8,400), 0x862720 (7,728), 0x844780
-(8,608), 0x4c7ac0 (9,376), 0x4ce4e0 (4,032). Screens only (no effect on the automatic career): 0x4d4660, 0x4d4830,
+(8,608), 0x4c7ac0 (9,376; see the end of §2.4). Screens only (no effect on the automatic career): 0x4d4660, 0x4d4830,
 0x4d44e0, 0x867ad0, 0x85f7a0.

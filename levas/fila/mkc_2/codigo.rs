@@ -59,8 +59,10 @@ pub(crate) unsafe extern "thiscall" fn italy_rules_can_end_loan(this: usize, clu
 }
 
 /// Side-by-side comparer of a `can_end_loan`: the return and the message text (the copy starts on an emptied message and
-/// the original's text is put back).
-unsafe fn compare_can_end_loan(o: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32) -> u32, r: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32) -> u32, name: &str, this: usize, club: usize, player: usize, msg: usize, date: usize, flag: u32) -> u32 {
+/// the original's text is put back). Not named `compare_can_end_loan`: that is the 0x8d0530 comparer, glob-imported into
+/// `motor.rs`, and a local function of the same name shadows it in the `PROLOGOS` table (the detour of 0x8d0530 then
+/// lands here with the wrong arguments and calls a garbage `o`).
+unsafe fn rules_compare_can_end_loan(o: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32) -> u32, r: unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32) -> u32, name: &str, this: usize, club: usize, player: usize, msg: usize, date: usize, flag: u32) -> u32 {
     let ro = o(this, club, player, msg, date, flag);
     let to = message_text(msg);
     if msg != 0 {
@@ -77,12 +79,12 @@ unsafe fn compare_can_end_loan(o: unsafe extern "thiscall" fn(usize, usize, usiz
 
 unsafe extern "thiscall" fn compare_france_rules_can_end_loan(this: usize, club: usize, player: usize, msg: usize, date: usize, flag: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32) -> u32>(%%I0%%);
-    compare_can_end_loan(o, france_rules_can_end_loan, "france_rules_can_end_loan", this, club, player, msg, date, flag)
+    rules_compare_can_end_loan(o, france_rules_can_end_loan, "france_rules_can_end_loan", this, club, player, msg, date, flag)
 }
 
 unsafe extern "thiscall" fn compare_italy_rules_can_end_loan(this: usize, club: usize, player: usize, msg: usize, date: usize, flag: u32) -> u32 {
     let o = original_fn::<unsafe extern "thiscall" fn(usize, usize, usize, usize, usize, u32) -> u32>(%%I1%%);
-    compare_can_end_loan(o, italy_rules_can_end_loan, "italy_rules_can_end_loan", this, club, player, msg, date, flag)
+    rules_compare_can_end_loan(o, italy_rules_can_end_loan, "italy_rules_can_end_loan", this, club, player, msg, date, flag)
 }
 
 /// Tells whether an Australian club can take a player on loan: only today inside an Australian transfer window

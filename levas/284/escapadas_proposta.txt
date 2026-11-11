@@ -1,0 +1,24 @@
+ESCAPADAS = {
+    'cqs8_grupo_um_com_rodada_a_mais': (
+        'todo leitor de `games_per_club` (+0xa7) no exe cruza o valor com os jogos disputados da linha (+0x11), que são zero até os jogos do grupo 1 em setembro, e o vetor da forma (malloc de 8 ou 10 bytes) cai no mesmo bloco de 16 do alocador; o comparador roda só a original contra a fórmula fixa (provado pelo código)',
+        'every reader of `games_per_club` (+0xa7) in the exe combines it with the row\'s games played (+0x11), which stay zero until the group 1 matches in September, and the form buffer (malloc of 8 or 10 bytes) lands in the same 16-byte allocator block; the comparer runs only the original against the fixed formula (proved from the code)'),
+    'cqs9_preliminar_de_11': (
+        'o `EURO_SEEDING` de um clube da Copa da UEFA é a fase que o `assign_uefa_cup_places` lhe dá, 1, 2 ou `count_extra` × 10 + 3 com `count_extra` ≥ 2 (23, 33...), nunca 10, então `>= 0xa` e `>= 0xb` contam os mesmos clubes (provado pelo código)',
+        'the `EURO_SEEDING` of a UEFA Cup club is the stage `assign_uefa_cup_places` gives it, 1, 2 or `count_extra` x 10 + 3 with `count_extra` >= 2 (23, 33...), never 10, so `>= 0xa` and `>= 0xb` count the same clubs (proved from the code)'),
+}
+
+# Substitutas propostas (não rodadas), para engenharia-reversa/mutacoes/leva284.py:
+#
+# ('cqs8_grupo_um_sem_o_ultimo',
+#  'this.set_club_count(n);',
+#  'this.set_club_count(n - 1); // mutacao',
+#  'cqs_8 euro group 1'),
+#   o grupo 1 com uma seleção a menos: a tabela e a tabela de jogos montadas no sorteio (2002-068, onde a
+#   cqs8_um_turno, que muda +0x3c, já foi acusada) mudam; inferido pela analogia com a cqs8_um_turno.
+#
+# ('cqs9_preliminar_com_a_fase_2',
+#  'if read_i8(c + club::EURO_SEEDING) >= 0xa { // cqs9: those in the preliminary',
+#  'if read_i8(c + club::EURO_SEEDING) >= 2 { // mutacao',
+#  'cqs_9 uefa entrants'),
+#   conta também os clubes da fase 2 (vários por nação): +0xb2 cresce, o total menos a metade fica abaixo de 118
+#   e o preenchimento entra (ou +0xb2 ímpar devolve 0), já em 2001-000; inferido, como a cqs9_classe_zero.
