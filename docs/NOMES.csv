@@ -130,7 +130,7 @@ unidades,units_digit,,units_digit
 e_amistoso,is_friendly,,is_friendly
 contrato_de,contract_of,,contract_of
 e_selecao,is_national_team,,is_national_team
-tecnico_9a01,manager_9a01,,manager_9a01
+tecnico_9a01,is_on_holiday,,is_on_holiday
 tecnico_9a05,manager_9a05,,manager_9a05
 bit_da_casa,square_bit,,square_bit
 separar_mascara,split_mask,,split_mask

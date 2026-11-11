@@ -4,5 +4,5 @@ MUTACOES = [
     ('v_grava', "    let home = (row + tactics_row::PLAYMAKER + 4 * which as usize) as *mut u32;", "    let home = (row + tactics_row::SECOND_PLAYMAKER - 4 * which as usize) as *mut u32;"),
     ('i_olimpica', "                *minimum = 0x17;\n                *maxima = 0x17;", "                *minimum = 0x17;\n                *maxima = 0x16;"),
     ('i_tipo', "    if kind != 0 && kind != 2 {", "    if kind != 0 && kind != 1 {"),
-    ('h_campo', "    write_u32(read_usize(t) + i as usize * 0xa6ef + 0x9a65, value);", "    write_u32(read_usize(t) + i as usize * 0xa6ef + 0x9a69, value);"),
+    ('h_campo', "    write_u32(read_usize(t) + i as usize * 0xa6ef + human_manager_record::HOLIDAY_STAMP, value);", "    write_u32(read_usize(t) + i as usize * 0xa6ef + 0x9a69, value);"),
 ]

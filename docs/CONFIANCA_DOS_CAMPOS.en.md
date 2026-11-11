@@ -19,9 +19,9 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | Level | Fields |
 |---|---|
 | community | 247 |
-| verified | 78 |
-| read | 1494 |
-| inferred | 158 |
+| verified | 109 |
+| read | 1495 |
+| inferred | 157 |
 
 ## Per record
 
@@ -98,7 +98,8 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `guio` | 0 | 0 | 1 | 0 |
 | `h2h_entry` | 0 | 0 | 1 | 0 |
 | `held_ban` | 0 | 0 | 2 | 0 |
-| `human_manager_record` | 0 | 1 | 0 | 0 |
+| `human_manager_fields` | 0 | 2 | 0 | 0 |
+| `human_manager_record` | 0 | 11 | 0 | 0 |
 | `human_manager_sheet` | 0 | 0 | 2 | 1 |
 | `illness_outbreak` | 0 | 0 | 1 | 0 |
 | `injury_entry` | 0 | 4 | 6 | 0 |
@@ -107,7 +108,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `intertoto_cup` | 0 | 0 | 1 | 0 |
 | `intl_date_entry` | 0 | 0 | 6 | 1 |
 | `job_vacancy` | 0 | 0 | 1 | 0 |
-| `key_nation_record` | 0 | 4 | 1 | 1 |
+| `key_nation_record` | 0 | 7 | 1 | 1 |
 | `language_entry` | 0 | 0 | 2 | 0 |
 | `league` | 0 | 5 | 44 | 6 |
 | `league_projection` | 0 | 0 | 5 | 0 |
@@ -126,7 +127,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `match_incident` | 0 | 0 | 6 | 0 |
 | `match_manager` | 0 | 0 | 15 | 7 |
 | `match_player` | 0 | 3 | 111 | 22 |
-| `match_record` | 0 | 2 | 68 | 11 |
+| `match_record` | 0 | 6 | 69 | 11 |
 | `match_record_row` | 0 | 7 | 23 | 6 |
 | `match_record_team` | 0 | 0 | 28 | 4 |
 | `match_spectators` | 0 | 0 | 9 | 1 |
@@ -147,7 +148,7 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `non_player` | 27 | 0 | 0 | 0 |
 | `oceania_club_champ` | 0 | 0 | 1 | 1 |
 | `offer` | 0 | 0 | 18 | 7 |
-| `official` | 0 | 0 | 5 | 1 |
+| `official` | 0 | 12 | 5 | 0 |
 | `official_stats` | 0 | 0 | 6 | 0 |
 | `officials_comp_slot` | 0 | 0 | 4 | 0 |
 | `officials_manager_fields` | 0 | 0 | 4 | 0 |
@@ -350,7 +351,6 @@ the level here is the **name's** (the meaning), not the width's. Each method in 
 | `match_record_team::FORMATION_Y` | +0x4b | 22 byte(s): 11 u16: second coordinate of each formation slot (axis 1) [inference] |
 | `match_spectators::UPDATE_FLAGS` | +0x0 | 1 byte(s): bits telling the match screens what to redraw (4 data panels, 0x10/0x20 view changes) [inference] |
 | `national_squad_record::RESERVE_GROUPS` | +0xd | 42 byte(s): two 0x15-byte reserve level groups (senior, under-21) [inference] |
-| `official::RATING` | +0x22 | 2 byte(s): quality word used with +0x28 x 50 to sort referees (1..200) [inference] |
 | `past_transfer::TO_CLUB_ID` | +0x10 | 4 byte(s): Club the person moved to (-1 when released) [inference] |
 | `past_transfer::FROM_CLUB_ID` | +0x14 | 4 byte(s): Club the person left (-1 when none) [inference] |
 | `past_transfer::FEE` | +0x18 | 4 byte(s): Fee of the move (0 for loans and releases) [inference] |

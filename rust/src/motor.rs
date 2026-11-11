@@ -313,7 +313,7 @@ routines! {
     Prologue { address: 0x4cf5a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x85, 0xc0] } => contract_of, compare_contract_of;
     Prologue { address: 0x53b900, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => is_national_team, compare_is_national_team;
     // batch 49 (human_manager.cpp and formation.cpp)
-    Prologue { address: 0x5fd210, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => manager_9a01, compare_manager_9a01;
+    Prologue { address: 0x5fd210, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => is_on_holiday, compare_is_on_holiday;
     Prologue { address: 0x5fd480, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => manager_9a05, compare_manager_9a05;
     Prologue { address: 0x5b5a60, bytes: &[0x0f, 0xbf, 0x44, 0x24, 0x04, 0x3d, 0x08, 0x02, 0x00, 0x00] } => square_bit, compare_square_bit;
     Prologue { address: 0x5b73a0, bytes: &[0x8b, 0x44, 0x24, 0x04, 0x81, 0xec, 0x00, 0x02, 0x00, 0x00] } => split_mask, compare_split_mask;
@@ -3802,7 +3802,7 @@ unsafe extern "thiscall" fn compare_shot_value(this: usize, tipo: *mut i8, som: 
 compare_value!(compare_is_friendly, is_friendly, IDX_IS_FRIENDLY, (comp: usize) -> u32);
 compare_value!(compare_contract_of, contract_of, IDX_CONTRACT_OF, (pessoa: usize) -> usize);
 
-compare_value!(compare_manager_9a01, manager_9a01, IDX_MANAGER_9A01, (pessoa: usize) -> u32);
+compare_value!(compare_is_on_holiday, is_on_holiday, IDX_IS_ON_HOLIDAY, (pessoa: usize) -> u32);
 compare_value!(compare_manager_9a05, manager_9a05, IDX_MANAGER_9A05, (pessoa: usize) -> u32);
 
 compare_value!(compare_manager_9ace, manager_9ace, IDX_MANAGER_9ACE, (pessoa: usize) -> u32);
@@ -5489,7 +5489,7 @@ pub unsafe fn autoteste(casos: u64) {
             let id56 = [[npes56 - 16, npes56 - 17, npes56 - 16 + ntec - 1, npes56 - 16 + ntec, npes56 - 1, npes56 - 20 + ((h56 >> 40) % 30) as i32][((h56 >> 44) % 6) as usize]];
             *(tab56 as *mut usize) = id56.as_ptr() as usize;
             let quem56 = if (h56 >> 47) % 4 == 0 { 0 } else { id56.as_ptr() as usize };
-            compare_manager_9a01(obj56.as_ptr() as usize, quem56);
+            compare_is_on_holiday(obj56.as_ptr() as usize, quem56);
             let dentro56 = id56[0] - npes56 + 16;
             if (0..ntec).contains(&dentro56) {
                 // batch 62: 0x9ace and 0x9a06 (person with club and nation of +0x88 at the edges)

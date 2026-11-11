@@ -6,7 +6,7 @@ MUTACOES = [
     ('a_faltas', "    if yellows > 5 {\n        rating = rating.wrapping_sub(1);", "    if yellows > 6 {\n        rating = rating.wrapping_sub(1);"),
     ('a_quatro', "if rating < 4 && random(500) != 0 {", "if rating < 4 && random(499) != 0 {"),
     ('a_oito', "} else if rating > 8 && random(0x19) != 0 {", "} else if rating > 8 && random(0x18) != 0 {"),
-    ('a_cartoes_ficha', "*((f + 0xf) as *mut u8) = (*((f + 0xf) as *mut u8)).wrapping_add(*r.add(4));", "*((f + 0xf) as *mut u8) = (*((f + 0xf) as *mut u8)).wrapping_add(*r.add(5));"),
-    ('a_media', "*((f + 4) as *mut f32) = (*((f + 0xa) as *mut i16) as f64 / *((f + 0xc) as *mut i16) as f64) as f32;", "*((f + 4) as *mut f32) = (*((f + 0xa) as *mut i16) as f64 / *((f + 0xc) as *mut i16) as f64 * 1.0001) as f32;"),
-    ('a_ultima', "*((f + 0x10) as *mut u8) = *r.add(6);", "*((f + 0x10) as *mut u8) = *r.add(5);"),
+    ('a_cartoes_ficha', "*((f + official_stats::CARDS) as *mut u8) = (*((f + official_stats::CARDS) as *mut u8)).wrapping_add(*r.add(4));", "*((f + official_stats::CARDS) as *mut u8) = (*((f + official_stats::CARDS) as *mut u8)).wrapping_add(*r.add(5));"),
+    ('a_media', "*((f + 4) as *mut f32) = (*((f + official_stats::GRADE_SUM) as *mut i16) as f64 / *((f + official_stats::MATCHES) as *mut i16) as f64) as f32;", "*((f + 4) as *mut f32) = (*((f + official_stats::GRADE_SUM) as *mut i16) as f64 / *((f + official_stats::MATCHES) as *mut i16) as f64 * 1.0001) as f32;"),
+    ('a_ultima', "*((f + official_stats::LAST_GRADE) as *mut u8) = *r.add(6);", "*((f + official_stats::LAST_GRADE) as *mut u8) = *r.add(5);"),
 ]

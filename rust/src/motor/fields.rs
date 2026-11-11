@@ -1583,8 +1583,11 @@ pub(crate) mod job_vacancy {
 pub(crate) mod key_nation_record {
     pub(crate) const ACTIVE_INDEX: usize = 0x14; // 1 byte(s): position of the entry among the active league entries (passed as the group to get_fixture_list_for_date) [verified: community data map: g_league_table+0x14 active_index (s8), numbered by key_nation_number_active_entries]
     pub(crate) const SEASON_END_DAY: usize = 0x15; // 2 byte(s): Day of year the nation's season ends (72-byte records at 0xb63d60)
+    pub(crate) const SPLIT_SEASON_FLAG: usize = 0x17; // 4 byte(s): 1 when the nation season spans two calendar years [verified: community data map g_league_table+0x17 split_season_flag (u32, read by 0x59b4c0); here nonzero selects the year 2002 instead of start year + 1]
     pub(crate) const SEASON_SPANS_YEAR: usize = 0x1d; // 1 byte(s): Nonzero when the season ends in the following year [inference]
+    pub(crate) const START_DATE: usize = 0x2a; // 8 byte(s): season start date of the key nation [verified: community data map g_league_table+0x2a start_date (Date); passed as a date to date_days_since; fields.rs START_DATE_YEAR already describes START_DATE at +0x2a]
     pub(crate) const START_DATE_YEAR: usize = 0x2c; // 2 byte(s): year half of the key nation's season start date (START_DATE at +0x2a) [verified: community map: g_league_table+0x2a start_date; t = record+0x2a, t+2 = +0x2c = START_DATE + cm_date::YEAR; same pattern as END_DATE_YEAR]
+    pub(crate) const START_MONTH: usize = 0x34; // 1 byte(s): month the nation season starts [verified: community data map g_league_table+0x34 start_month (u8, 0x59b4c0); compared with date_get_month of today]
     pub(crate) const END_DATE: usize = 0x39; // 8 byte(s): second season date of the key nation entry (day half read here) [verified: globals.rs community map: g_league_table+0x2a start_date, +0x39 end_date; t = record+0x2a, so t+0xf = +0x39]
     pub(crate) const END_DATE_YEAR: usize = 0x3b; // 2 byte(s): year half of END_DATE [verified: t+0x11 = record+0x3b = END_DATE (+0x39) + cm_date::YEAR]
 }
@@ -1868,7 +1871,11 @@ pub(crate) mod match_record {
     pub(crate) const HOME_ZONE_3: usize = 0x14d; // 5 byte(s): home share of the third pitch zone (action zones)
     pub(crate) const HOME_KIT: usize = 0x152; // 1 byte(s): home kit used, for the club colours
     pub(crate) const HOME_CAPTAIN: usize = 0x153; // 1 byte(s): home captain's row index
+    pub(crate) const HOME_MANAGER_ID: usize = 0x184; // 4 byte(s): staff id of the side manager (team block +0x65; away at +0x625); -1 none [verified: 0x184 = 0x11f + match_record_team::MANAGER_ID 0x65; -1 none, indexes the staff table]
     pub(crate) const HOME_MANAGER_CURRENT_REPUTATION: usize = 0x188; // 2 byte(s): home manager's current reputation (team block +0x69; home and world reputations at +2/+4, away side at +0x625)
+    pub(crate) const HOME_MANAGER_HOME_REPUTATION: usize = 0x18a; // 2 byte(s): manager home reputation (team block +0x6b; away at +0x625) [verified: 0x18a = 0x11f + match_record_team::MANAGER_HOME_REPUTATION 0x6b; copied to non_player HOME_REPUTATION +8]
+    pub(crate) const HOME_MANAGER_WORLD_REPUTATION: usize = 0x18c; // 2 byte(s): manager world reputation (team block +0x6d; away at +0x625) [verified: 0x18c = 0x11f + match_record_team::MANAGER_WORLD_REPUTATION 0x6d; copied to non_player WORLD_REPUTATION +0xc]
+    pub(crate) const HOME_SIDE_REPUTATION: usize = 0x18e; // 2 byte(s): side reputation in the match record (team block +0x6f; away at +0x625) [verified: 0x18e = HOME_TEAM 0x11f + match_record_team::SIDE_REPUTATION 0x6f; written back as the club reputation at line 508]
     pub(crate) const ROW_STAFF_ID: usize = 0x190; // 4 byte(s): staff id of a player row (base from match_player_row: record + 0x625 x side + 0x49 x idx); -1 empty
     pub(crate) const ROW_PLAYER_ID: usize = 0x194; // 4 byte(s): player id of a player row (same base as ROW_STAFF_ID)
     pub(crate) const ROW_FIRST_NAME_ID: usize = 0x198; // 4 byte(s): first name id of a player row (same base) [inference]
@@ -1879,6 +1886,7 @@ pub(crate) mod match_record {
     pub(crate) const ROW_MINUTE_OFF: usize = 0x1c0; // 1 byte(s): minute substituted off of a player row (base record + 0x625 x side + 0x49 x idx)
     pub(crate) const ROW_MINUTE_ON: usize = 0x1c2; // 1 byte(s): minute player row k was brought on (0xff = not); substitutes (k >= 11) count only when they came on [verified: 0x1c2 = 0x190 + 0x32 = match_record_row::MINUTE_ON on the ROW_STAFF_ID base; same scheme as ROW_MINUTE_OFF 0x1c0 = 0x190 + 0x30]
     pub(crate) const ROW_MINUTE_LEFT_PITCH: usize = 0x1c4; // 1 byte(s): minute a player row left the pitch (same base as ROW_MINUTE_OFF)
+    pub(crate) const ROW_MATCH_GRADE: usize = 0x1c5; // 1 byte(s): match grade of a player row (base record + 0x625 x side + 0x49 x k; ROW_STAFF_ID + match_record_row::MATCH_GRADE)
     pub(crate) const SIDE_SIZE: usize = 0x625; // stride between the home and away team blocks of the match record (0x625 bytes; AWAY_TEAM = HOME_TEAM + SIDE_SIZE) [verified: AWAY_TEAM 0x744 - HOME_TEAM 0x11f = 0x625; same constant as match_stats_record::SIDE_SIZE; used as 0x625 * side]
     pub(crate) const AWAY_TEAM: usize = 0x744; // 1573 byte(s): away team block (match_record_team); its first byte is the goals, 0xfd before kick-off
     pub(crate) const AWAY_SHOOTOUT_GOALS: usize = 0x745; // 1 byte(s): away penalty shoot-out goals
@@ -2114,12 +2122,23 @@ pub(crate) mod news_item {
 /// Fields of the `official` object, named from how the routines use them. [pt] Campos do objeto `official`.
 #[allow(dead_code)]
 pub(crate) mod official {
+    pub(crate) const FIRST_NAME: usize = 0x4; // 4 byte(s): first name record pointer (names) [verified: community officials.dat layout (john_locke.txt; database_structure.txt cm3_officials)]
+    pub(crate) const SECOND_NAME: usize = 0x8; // 4 byte(s): second name record pointer (names) [verified: community officials.dat layout (john_locke.txt; database_structure.txt cm3_officials)]
     pub(crate) const BIRTH_DAY: usize = 0xc; // 2 byte(s): day of year of the birth date
     pub(crate) const BIRTH_YEAR: usize = 0xe; // 2 byte(s): year of the birth date
+    pub(crate) const YEAR_OF_BIRTH: usize = 0x14; // 2 byte(s): year of birth when the date is unknown [verified: community officials.dat layout (john_locke.txt; database_structure.txt cm3_officials): 20 - 2 bytes - year of birth, used when date of birth is unknown; operato]
     pub(crate) const NATION: usize = 0x16; // 4 byte(s): nation record pointer
+    pub(crate) const CITY: usize = 0x1a; // 4 byte(s): city record pointer (0 none) [verified: community officials.dat layout (john_locke.txt; database_structure.txt cm3_officials): 26 - 4 bytes - city they are from (OfficialCity pointer); generate_offici]
     pub(crate) const CURRENT_ABILITY: usize = 0x1e; // 2 byte(s): current ability (1..200)
     pub(crate) const POTENTIAL_ABILITY: usize = 0x20; // 2 byte(s): potential ability, at least CURRENT_ABILITY
-    pub(crate) const RATING: usize = 0x22; // 2 byte(s): quality word used with +0x28 x 50 to sort referees (1..200) [inference]
+    pub(crate) const REPUTATION: usize = 0x22; // 2 byte(s): the referee's reputation (1..200); with REFEREEING x 50 it sorts referees [verified: community officials.dat layout (john_locke.txt; database_structure.txt cm3_officials)]
+    pub(crate) const ALLOWING_FLOW: usize = 0x24; // 1 byte(s): allowing the flow attribute (1..20) [verified: community officials.dat layout (john_locke.txt; database_structure.txt cm3_officials)]
+    pub(crate) const DISCIPLINE: usize = 0x25; // 1 byte(s): discipline attribute (1..20) [verified: community officials.dat layout (john_locke.txt; database_structure.txt cm3_officials)]
+    pub(crate) const IMPORTANT_MATCHES: usize = 0x26; // 1 byte(s): important matches attribute (1..20) [verified: community officials.dat layout (john_locke.txt; database_structure.txt cm3_officials)]
+    pub(crate) const PRESSURE: usize = 0x27; // 1 byte(s): pressure attribute (1..20) [verified: community officials.dat layout (john_locke.txt; database_structure.txt cm3_officials): 39 - 1 byte - pressure]
+    pub(crate) const REFEREEING: usize = 0x28; // 1 byte(s): refereeing attribute (1..20) [verified: community officials.dat layout (john_locke.txt; database_structure.txt cm3_officials): 40 - 1 byte - refereeing; weighted x50 with +0x22 in the sort quality]
+    pub(crate) const RUNNING_LINE: usize = 0x29; // 1 byte(s): running the line attribute (1..20) [verified: community officials.dat layout (john_locke.txt; database_structure.txt cm3_officials): 41 - 1 byte - running the line]
+    pub(crate) const TIMEKEEPING: usize = 0x2a; // 1 byte(s): time keeping attribute (1..20) [verified: community officials.dat layout (john_locke.txt; database_structure.txt cm3_officials): 42 - 1 byte - time keeping]
 }
 
 /// Fields of the `official_stats` object, named from how the routines use them. [pt] Campos do objeto `official_stats`.
@@ -2775,8 +2794,18 @@ pub(crate) mod call_up_entry {
 /// the 42,735-byte human manager record (one per human manager, found by person_and_human_record in human_manager.rs; +0x9a06, +0x9ace also read there)
 #[allow(dead_code)]
 pub(crate) mod human_manager_record {
+    pub(crate) const ON_HOLIDAY: usize = 0x9a01; // 4 byte(s): holiday flag of the human manager (nonzero: on holiday; the computer runs his team) [verified: community names HUMAN_MANAGER::is_on_holiday (0x5fd210, high) returns it and set_on_holiday (0x5fd2f0, high) writes it, keeping the holiday count at HUMAN_MANAG]
+    pub(crate) const CONTROLS_RESERVE_TEAM: usize = 0x9a05; // 1 byte(s): option byte: Control Reserve Team turned on [verified: community name HUMAN_MANAGER::controls_reserve_team (0x5fd480, high): Control Reserve Team option; returns byte +0x9a05 != 0]
+    pub(crate) const CONTROLS_ALL_NATIONAL_TEAMS: usize = 0x9a06; // 1 byte(s): option byte: the manager controls all teams of his nation [verified: community name HUMAN_MANAGER::controls_all_national_teams (0x5fd6b0, high) returns byte +0x9a06 != 0]
+    pub(crate) const HOLIDAY_STAMP: usize = 0x9a65; // 4 byte(s): millisecond clock stamp stored when the manager's holiday hold restarted [verified: community names HUMAN_MANAGER::get_holiday_stamp (0x5fdc30, high) reads it and set_holiday_stamp (0x5fdd30, high) writes it]
+    pub(crate) const ACTIVE_TACTIC_SLOT: usize = 0x9a69; // 1 byte(s): active tactic slot 0..4 (0 first team, 1 reserve, 2 national, 3 national reserve, 4 second national team); tactic block at record + slot*0x1ecd [verified: community names HUMAN_MANAGER::get_active_tactic (0x5fbd00, high) reads it as a signed byte and select_tactic_slot (0x5fbe20) writes it]
+    pub(crate) const COMPUTER_CONTROLLED: usize = 0x9ace; // 4 byte(s): flag: the human manager handed his team over to computer control [verified: community name HUMAN_MANAGER::is_computer_controlled (0x5fe040, medium) returns this dword; human_club excludes such managers]
+    pub(crate) const WATCHED_FIXTURE: usize = 0x9ad4; // 4 byte(s): fixture::HOME_CLUB_ID of the watched fixture [verified: is_watching_fixture (community 0x5fe290) compares it with fixture::HOME_CLUB_ID (+0xc) of the given fixture]
     pub(crate) const HOLIDAY_OPTIONS: usize = 0x9b23; // 1 byte(s): holiday option bytes of the human manager record, indexed by option [verified: community name HUMAN_MANAGER::get_holiday_option (0x5fea50, high) returns byte +0x9b23 + option]
 
+    pub(crate) const SAVED_LINEUP: usize = 0x9b28; // 128 byte(s): 16 saved (player, position) pairs that keep the team while on holiday [verified: community name HUMAN_MANAGER::get_saved_lineup (0x5fed50, high) returns record + 0x9b28]
+    pub(crate) const NICKNAMES: usize = 0xa6e3; // 4 byte(s): pointer to the sorted array of 30-byte nickname entries (person id at +0) the manager gave [verified: community names HUMAN_MANAGER::has_nickname (0x600740, high) and remove_nickname_from_all (0x5fff30) bsearch/qsort it with compare_int_keys (0x601a10), 0x1e-byt]
+    pub(crate) const NICKNAME_COUNT: usize = 0xa6eb; // 4 byte(s): number of entries in NICKNAMES [verified: passed as count to bsearch/qsort with NICKNAMES; remove_nickname_from_all decrements it]
 }
 
 /// TStaffHistory, 17-byte rows of staff_history.dat (+4 staff, +8 year, +0xa club, +0xe on loan, +0xf apps, +0x10 goals)
@@ -2931,4 +2960,12 @@ pub(crate) mod world_cup_fields {
     pub(crate) const DRAW_SLOT_POT: usize = 0xf2; // 1 byte(s): pot of draw slot 0 (0 seed, 1..3 continent pot; 0xff = already drawn)
     pub(crate) const SEEDING_DAY: usize = 0x18e; // 2 byte(s): day of year of the seeding date (15/12 of the year before the World Cup)
     pub(crate) const SEEDING_YEAR_OFFSET: usize = 0x190; // 2 byte(s): year of the seeding date relative to the World Cup YEAR (+0x40)
+}
+
+/// the HUMAN_MANAGER object ([0xb63c98]): records array at +0, count, humans-on-holiday count
+#[allow(dead_code)]
+pub(crate) mod human_manager_fields {
+    pub(crate) const RECORD_COUNT: usize = 0x4; // 4 byte(s): number of human manager records at [+0] (index valid 0..count-1) [verified: every human manager routine bounds the index (id - staff count + 16) by [this+4] - 1; community thiscall HUMAN_MANAGER* this]
+    pub(crate) const HOLIDAY_COUNT: usize = 0xc; // 4 byte(s): number of human managers on holiday [verified: community HUMAN_MANAGER::set_on_holiday (0x5fd2f0, high): keeps the count of humans on holiday; +1 when ON_HOLIDAY turns on, -1 when off]
+
 }

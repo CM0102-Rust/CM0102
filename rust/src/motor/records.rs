@@ -9022,8 +9022,12 @@ impl Finance {
     }
     /// `finance::LAST_SEASON_TOTALS` (+0xc0). Name: read.
     #[inline(always)]
-    pub(crate) fn last_season_totals_addr(self) -> usize {
-        self.0 + finance::LAST_SEASON_TOTALS
+    pub(crate) unsafe fn last_season_totals(self) -> u8 {
+        read_u8(self.0 + finance::LAST_SEASON_TOTALS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_last_season_totals(self, v: u8) {
+        write_u8(self.0 + finance::LAST_SEASON_TOTALS, v)
     }
     /// `finance::SEASON_PLAYERS_BOUGHT` (+0x110). Name: read.
     #[inline(always)]
@@ -12936,6 +12940,15 @@ impl KeyNationRecord {
     pub(crate) unsafe fn set_season_end_day(self, v: u16) {
         write_u16(self.0 + key_nation_record::SEASON_END_DAY, v)
     }
+    /// `key_nation_record::SPLIT_SEASON_FLAG` (+0x17). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn split_season_flag(self) -> usize {
+        read_usize(self.0 + key_nation_record::SPLIT_SEASON_FLAG)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_split_season_flag(self, v: usize) {
+        write_usize(self.0 + key_nation_record::SPLIT_SEASON_FLAG, v)
+    }
     /// `key_nation_record::SEASON_SPANS_YEAR` (+0x1d). Name: inferred.
     #[inline(always)]
     pub(crate) unsafe fn season_spans_year(self) -> u8 {
@@ -12945,6 +12958,11 @@ impl KeyNationRecord {
     pub(crate) unsafe fn set_season_spans_year(self, v: u8) {
         write_u8(self.0 + key_nation_record::SEASON_SPANS_YEAR, v)
     }
+    /// `key_nation_record::START_DATE` (+0x2a). Name: verified.
+    #[inline(always)]
+    pub(crate) fn start_date_addr(self) -> usize {
+        self.0 + key_nation_record::START_DATE
+    }
     /// `key_nation_record::START_DATE_YEAR` (+0x2c). Name: verified.
     #[inline(always)]
     pub(crate) unsafe fn start_date_year(self) -> i16 {
@@ -12953,6 +12971,15 @@ impl KeyNationRecord {
     #[inline(always)]
     pub(crate) unsafe fn set_start_date_year(self, v: i16) {
         write_i16(self.0 + key_nation_record::START_DATE_YEAR, v)
+    }
+    /// `key_nation_record::START_MONTH` (+0x34). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn start_month(self) -> u8 {
+        read_u8(self.0 + key_nation_record::START_MONTH)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_start_month(self, v: u8) {
+        write_u8(self.0 + key_nation_record::START_MONTH, v)
     }
     /// `key_nation_record::END_DATE` (+0x39). Name: verified.
     #[inline(always)]
@@ -15231,6 +15258,15 @@ impl MatchRecord {
     pub(crate) unsafe fn set_home_captain(self, v: u8) {
         write_u8(self.0 + match_record::HOME_CAPTAIN, v)
     }
+    /// `match_record::HOME_MANAGER_ID` (+0x184). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn home_manager_id(self) -> i32 {
+        read_i32(self.0 + match_record::HOME_MANAGER_ID)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_home_manager_id(self, v: i32) {
+        write_i32(self.0 + match_record::HOME_MANAGER_ID, v)
+    }
     /// `match_record::HOME_MANAGER_CURRENT_REPUTATION` (+0x188). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn home_manager_current_reputation(self) -> i16 {
@@ -15239,6 +15275,33 @@ impl MatchRecord {
     #[inline(always)]
     pub(crate) unsafe fn set_home_manager_current_reputation(self, v: i16) {
         write_i16(self.0 + match_record::HOME_MANAGER_CURRENT_REPUTATION, v)
+    }
+    /// `match_record::HOME_MANAGER_HOME_REPUTATION` (+0x18a). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn home_manager_home_reputation(self) -> i16 {
+        read_i16(self.0 + match_record::HOME_MANAGER_HOME_REPUTATION)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_home_manager_home_reputation(self, v: i16) {
+        write_i16(self.0 + match_record::HOME_MANAGER_HOME_REPUTATION, v)
+    }
+    /// `match_record::HOME_MANAGER_WORLD_REPUTATION` (+0x18c). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn home_manager_world_reputation(self) -> i16 {
+        read_i16(self.0 + match_record::HOME_MANAGER_WORLD_REPUTATION)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_home_manager_world_reputation(self, v: i16) {
+        write_i16(self.0 + match_record::HOME_MANAGER_WORLD_REPUTATION, v)
+    }
+    /// `match_record::HOME_SIDE_REPUTATION` (+0x18e). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn home_side_reputation(self) -> i16 {
+        read_i16(self.0 + match_record::HOME_SIDE_REPUTATION)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_home_side_reputation(self, v: i16) {
+        write_i16(self.0 + match_record::HOME_SIDE_REPUTATION, v)
     }
     /// `match_record::ROW_STAFF_ID` (+0x190). Name: read.
     #[inline(always)]
@@ -15325,6 +15388,15 @@ impl MatchRecord {
     #[inline(always)]
     pub(crate) unsafe fn set_row_minute_left_pitch(self, v: u8) {
         write_u8(self.0 + match_record::ROW_MINUTE_LEFT_PITCH, v)
+    }
+    /// `match_record::ROW_MATCH_GRADE` (+0x1c5). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn row_match_grade(self) -> u8 {
+        read_u8(self.0 + match_record::ROW_MATCH_GRADE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_row_match_grade(self, v: u8) {
+        write_u8(self.0 + match_record::ROW_MATCH_GRADE, v)
     }
     /// `match_record::SIDE_SIZE` (+0x625). Name: verified.
     #[inline(always)]
@@ -17149,6 +17221,24 @@ impl Official {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
+    /// `official::FIRST_NAME` (+0x4). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn first_name(self) -> usize {
+        read_usize(self.0 + official::FIRST_NAME)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_first_name(self, v: usize) {
+        write_usize(self.0 + official::FIRST_NAME, v)
+    }
+    /// `official::SECOND_NAME` (+0x8). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn second_name(self) -> usize {
+        read_usize(self.0 + official::SECOND_NAME)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_second_name(self, v: usize) {
+        write_usize(self.0 + official::SECOND_NAME, v)
+    }
     /// `official::BIRTH_DAY` (+0xc). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn birth_day(self) -> i16 {
@@ -17167,6 +17257,15 @@ impl Official {
     pub(crate) unsafe fn set_birth_year(self, v: i16) {
         write_i16(self.0 + official::BIRTH_YEAR, v)
     }
+    /// `official::YEAR_OF_BIRTH` (+0x14). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn year_of_birth(self) -> i16 {
+        read_i16(self.0 + official::YEAR_OF_BIRTH)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_year_of_birth(self, v: i16) {
+        write_i16(self.0 + official::YEAR_OF_BIRTH, v)
+    }
     /// `official::NATION` (+0x16). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn nation(self) -> usize {
@@ -17175,6 +17274,15 @@ impl Official {
     #[inline(always)]
     pub(crate) unsafe fn set_nation(self, v: usize) {
         write_usize(self.0 + official::NATION, v)
+    }
+    /// `official::CITY` (+0x1a). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn city(self) -> usize {
+        read_usize(self.0 + official::CITY)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_city(self, v: usize) {
+        write_usize(self.0 + official::CITY, v)
     }
     /// `official::CURRENT_ABILITY` (+0x1e). Name: read.
     #[inline(always)]
@@ -17194,14 +17302,77 @@ impl Official {
     pub(crate) unsafe fn set_potential_ability(self, v: i16) {
         write_i16(self.0 + official::POTENTIAL_ABILITY, v)
     }
-    /// `official::RATING` (+0x22). Name: inferred.
+    /// `official::REPUTATION` (+0x22). Name: verified.
     #[inline(always)]
-    pub(crate) unsafe fn rating(self) -> i16 {
-        read_i16(self.0 + official::RATING)
+    pub(crate) unsafe fn reputation(self) -> i16 {
+        read_i16(self.0 + official::REPUTATION)
     }
     #[inline(always)]
-    pub(crate) unsafe fn set_rating(self, v: i16) {
-        write_i16(self.0 + official::RATING, v)
+    pub(crate) unsafe fn set_reputation(self, v: i16) {
+        write_i16(self.0 + official::REPUTATION, v)
+    }
+    /// `official::ALLOWING_FLOW` (+0x24). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn allowing_flow(self) -> u8 {
+        read_u8(self.0 + official::ALLOWING_FLOW)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_allowing_flow(self, v: u8) {
+        write_u8(self.0 + official::ALLOWING_FLOW, v)
+    }
+    /// `official::DISCIPLINE` (+0x25). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn discipline(self) -> u8 {
+        read_u8(self.0 + official::DISCIPLINE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_discipline(self, v: u8) {
+        write_u8(self.0 + official::DISCIPLINE, v)
+    }
+    /// `official::IMPORTANT_MATCHES` (+0x26). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn important_matches(self) -> u8 {
+        read_u8(self.0 + official::IMPORTANT_MATCHES)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_important_matches(self, v: u8) {
+        write_u8(self.0 + official::IMPORTANT_MATCHES, v)
+    }
+    /// `official::PRESSURE` (+0x27). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn pressure(self) -> u8 {
+        read_u8(self.0 + official::PRESSURE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_pressure(self, v: u8) {
+        write_u8(self.0 + official::PRESSURE, v)
+    }
+    /// `official::REFEREEING` (+0x28). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn refereeing(self) -> i8 {
+        read_i8(self.0 + official::REFEREEING)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_refereeing(self, v: i8) {
+        write_i8(self.0 + official::REFEREEING, v)
+    }
+    /// `official::RUNNING_LINE` (+0x29). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn running_line(self) -> u8 {
+        read_u8(self.0 + official::RUNNING_LINE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_running_line(self, v: u8) {
+        write_u8(self.0 + official::RUNNING_LINE, v)
+    }
+    /// `official::TIMEKEEPING` (+0x2a). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn timekeeping(self) -> u8 {
+        read_u8(self.0 + official::TIMEKEEPING)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_timekeeping(self, v: u8) {
+        write_u8(self.0 + official::TIMEKEEPING, v)
     }
 }
 
@@ -21944,6 +22115,69 @@ impl HumanManagerRecord {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
+    /// `human_manager_record::ON_HOLIDAY` (+0x9a01). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn on_holiday(self) -> u32 {
+        read_u32(self.0 + human_manager_record::ON_HOLIDAY)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_on_holiday(self, v: u32) {
+        write_u32(self.0 + human_manager_record::ON_HOLIDAY, v)
+    }
+    /// `human_manager_record::CONTROLS_RESERVE_TEAM` (+0x9a05). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn controls_reserve_team(self) -> u8 {
+        read_u8(self.0 + human_manager_record::CONTROLS_RESERVE_TEAM)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_controls_reserve_team(self, v: u8) {
+        write_u8(self.0 + human_manager_record::CONTROLS_RESERVE_TEAM, v)
+    }
+    /// `human_manager_record::CONTROLS_ALL_NATIONAL_TEAMS` (+0x9a06). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn controls_all_national_teams(self) -> u8 {
+        read_u8(self.0 + human_manager_record::CONTROLS_ALL_NATIONAL_TEAMS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_controls_all_national_teams(self, v: u8) {
+        write_u8(self.0 + human_manager_record::CONTROLS_ALL_NATIONAL_TEAMS, v)
+    }
+    /// `human_manager_record::HOLIDAY_STAMP` (+0x9a65). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn holiday_stamp(self) -> u32 {
+        read_u32(self.0 + human_manager_record::HOLIDAY_STAMP)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_holiday_stamp(self, v: u32) {
+        write_u32(self.0 + human_manager_record::HOLIDAY_STAMP, v)
+    }
+    /// `human_manager_record::ACTIVE_TACTIC_SLOT` (+0x9a69). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn active_tactic_slot(self) -> u8 {
+        read_u8(self.0 + human_manager_record::ACTIVE_TACTIC_SLOT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_active_tactic_slot(self, v: u8) {
+        write_u8(self.0 + human_manager_record::ACTIVE_TACTIC_SLOT, v)
+    }
+    /// `human_manager_record::COMPUTER_CONTROLLED` (+0x9ace). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn computer_controlled(self) -> u32 {
+        read_u32(self.0 + human_manager_record::COMPUTER_CONTROLLED)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_computer_controlled(self, v: u32) {
+        write_u32(self.0 + human_manager_record::COMPUTER_CONTROLLED, v)
+    }
+    /// `human_manager_record::WATCHED_FIXTURE` (+0x9ad4). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn watched_fixture(self) -> u32 {
+        read_u32(self.0 + human_manager_record::WATCHED_FIXTURE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_watched_fixture(self, v: u32) {
+        write_u32(self.0 + human_manager_record::WATCHED_FIXTURE, v)
+    }
     /// `human_manager_record::HOLIDAY_OPTIONS` (+0x9b23). Name: verified.
     #[inline(always)]
     pub(crate) unsafe fn holiday_options(self) -> u8 {
@@ -21952,6 +22186,29 @@ impl HumanManagerRecord {
     #[inline(always)]
     pub(crate) unsafe fn set_holiday_options(self, v: u8) {
         write_u8(self.0 + human_manager_record::HOLIDAY_OPTIONS, v)
+    }
+    /// `human_manager_record::SAVED_LINEUP` (+0x9b28). Name: verified.
+    #[inline(always)]
+    pub(crate) fn saved_lineup_addr(self) -> usize {
+        self.0 + human_manager_record::SAVED_LINEUP
+    }
+    /// `human_manager_record::NICKNAMES` (+0xa6e3). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn nicknames(self) -> u32 {
+        read_u32(self.0 + human_manager_record::NICKNAMES)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_nicknames(self, v: u32) {
+        write_u32(self.0 + human_manager_record::NICKNAMES, v)
+    }
+    /// `human_manager_record::NICKNAME_COUNT` (+0xa6eb). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn nickname_count(self) -> u32 {
+        read_u32(self.0 + human_manager_record::NICKNAME_COUNT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_nickname_count(self, v: u32) {
+        write_u32(self.0 + human_manager_record::NICKNAME_COUNT, v)
     }
 }
 
@@ -22949,6 +23206,55 @@ impl Addr for WorldCupFields {
 }
 
 impl core::fmt::LowerHex for WorldCupFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `human_manager_fields` record in the game's memory (fields in `fields::human_manager_fields`). [pt] Um registro `human_manager_fields` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct HumanManagerFields(pub(crate) usize);
+
+#[allow(dead_code)]
+impl HumanManagerFields {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `human_manager_fields::RECORD_COUNT` (+0x4). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn record_count(self) -> i32 {
+        read_i32(self.0 + human_manager_fields::RECORD_COUNT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_record_count(self, v: i32) {
+        write_i32(self.0 + human_manager_fields::RECORD_COUNT, v)
+    }
+    /// `human_manager_fields::HOLIDAY_COUNT` (+0xc). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn holiday_count(self) -> i32 {
+        read_i32(self.0 + human_manager_fields::HOLIDAY_COUNT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_holiday_count(self, v: i32) {
+        write_i32(self.0 + human_manager_fields::HOLIDAY_COUNT, v)
+    }
+}
+
+impl Addr for HumanManagerFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for HumanManagerFields {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         core::fmt::LowerHex::fmt(&self.0, f)
     }

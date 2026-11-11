@@ -155,7 +155,7 @@ motor_unidades,units_digit
 motor_e_amistoso,is_friendly
 motor_contrato_de,contract_of
 motor_e_selecao,is_national_team
-motor_tecnico_9a01,manager_9a01
+motor_tecnico_9a01,is_on_holiday
 motor_tecnico_9a05,manager_9a05
 motor_bit_da_casa,square_bit
 motor_separar_mascara,split_mask
