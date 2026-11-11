@@ -29,6 +29,15 @@ of ecx, return register) and wrote the true one in `assinaturas_conferidas.json`
   (`let _ = alias;`, which would not compile); `mutacoes_sem_apelidos.py` drops those names, and each changed mutation
   was compiled one by one.
 
+## Readability batch 49: enum values by name
+
+The outside reader's round 12 obstacle 2 (enum values without constants): two reader agents named the values of 35 enum
+fields (396 constants, most verified by the strings the game prints for each value): job kinds, offer status, table
+status, match category, result marks, round names, discipline rules, comp type, professional status, world regions,
+languages, live match state, European registration... `aplicar_enums.py` writes `rust/src/motor/enums.rs` and turns 302
+literals into names. Misleading locals renamed (`stadium`, `reputation`, `professional`, `manager_reputation`); `cargo
+fix` again. Proof: aa7e9c95 ×2, detector equal, comparison 0; the 16 changed mutations compile.
+
 ## Readability batch 48: secondary records typed, review renames
 
 The outside reader's round 12 obstacle 1 (secondary records still `usize`): the variables of `offer`, `league_table_row`,

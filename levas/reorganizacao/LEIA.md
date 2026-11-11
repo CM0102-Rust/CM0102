@@ -28,6 +28,16 @@ evidência); o `involucros_exe.py` usa essa assinatura no invólucro `exe::` e c
   (`let _ = apelido;`, que não compilaria); o `mutacoes_sem_apelidos.py` tira esses nomes, e cada mutação mudada foi
   compilada uma a uma.
 
+## Leva 49 da legibilidade: os valores de enumeração com nome
+
+O obstáculo 2 do leitor de fora da rodada 12 (valores de enumeração sem constante): dois agentes leitores deram nome aos
+valores de 35 campos-enumeração (396 constantes, quase todas verificadas pelas strings que o jogo imprime para cada valor):
+tipos de cargo, situação da oferta, situação na tabela, categoria da partida, marcas de resultado, nomes de rodada,
+regras disciplinares, tipo de competição, situação profissional, regiões do mundo, idiomas, estado da partida ao vivo,
+inscrição europeia... `aplicar_enums.py` gera o `rust/src/motor/enums.rs` e troca 302 literais pelos nomes. Locais
+enganosos renomeados (`stadium`, `reputation`, `professional`, `manager_reputation`); `cargo fix` de novo. Prova:
+aa7e9c95 ×2, detector igual, comparação 0; as 16 mutações mudadas compilam.
+
 ## Leva 48 da legibilidade: registros secundários tipados, renomes da revisão
 
 O obstáculo 1 do leitor de fora da rodada 12 (registros secundários ainda em `usize`): as variáveis de `offer`,
