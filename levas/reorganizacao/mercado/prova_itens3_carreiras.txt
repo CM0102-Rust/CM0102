@@ -1,0 +1,8 @@
+    pool nao paginado 2.91 -> 2.91 GB, paginado 5.78 -> 5.79 GB
+execucao 1: parou em 2002-151, 477248803 sorteios, impressao c0224e5cbee83bcc, partidas 19537/1a4da023e916fff7, banco 1d298f2618755010, 92 s
+    pool nao paginado 2.91 -> 2.88 GB, paginado 5.79 -> 5.78 GB
+execucao 2: parou em 2002-151, 477248803 sorteios, impressao c0224e5cbee83bcc, partidas 19537/1a4da023e916fff7, banco 1d298f2618755010, 92 s
+detector: parou em 2002-151, 477248803 sorteios, impressao c0224e5cbee83bcc, partidas 19537/1a4da023e916fff7, banco 1d298f2618755010, 179 s
+detector de lixo: igual
+game.cfg restaurado; auto_setup.cfg removido
+determinismo: OK, todas as execucoes iguais
