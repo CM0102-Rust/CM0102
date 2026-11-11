@@ -20,7 +20,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 |---|---|
 | comunidade | 247 |
 | conferido | 69 |
-| lido | 1449 |
+| lido | 1471 |
 | inferido | 152 |
 
 ## Por registro
@@ -77,6 +77,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `engine` | 0 | 1 | 165 | 22 |
 | `english_name_tables` | 0 | 0 | 7 | 0 |
 | `euro_champ_qual` | 0 | 0 | 1 | 0 |
+| `european_club_entry` | 0 | 0 | 1 | 0 |
 | `event_type` | 0 | 0 | 3 | 0 |
 | `exchange_player` | 0 | 0 | 2 | 0 |
 | `fans_player_record` | 0 | 0 | 1 | 0 |
@@ -128,7 +129,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `match_record` | 0 | 2 | 68 | 11 |
 | `match_record_row` | 0 | 7 | 23 | 6 |
 | `match_record_team` | 0 | 0 | 28 | 4 |
-| `match_spectators` | 0 | 0 | 3 | 1 |
+| `match_spectators` | 0 | 0 | 9 | 1 |
 | `match_stats` | 0 | 0 | 5 | 0 |
 | `match_stats_entry` | 0 | 0 | 4 | 0 |
 | `match_stats_record` | 0 | 0 | 6 | 0 |
@@ -198,13 +199,16 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `tactics_row` | 0 | 2 | 4 | 0 |
 | `tally_record` | 0 | 0 | 1 | 0 |
 | `tournament_slot` | 0 | 0 | 8 | 1 |
+| `training_manager_fields` | 0 | 0 | 6 | 0 |
+| `training_schedule` | 0 | 0 | 1 | 0 |
 | `transfer_fee_record` | 0 | 0 | 4 | 1 |
 | `transfer_interest` | 0 | 0 | 7 | 0 |
 | `transfer_manager_fields` | 0 | 0 | 34 | 0 |
 | `transfer_rules` | 0 | 0 | 2 | 1 |
 | `transfer_window` | 0 | 0 | 2 | 0 |
 | `uefa_cup` | 0 | 0 | 1 | 0 |
-| `uefa_seeding` | 0 | 0 | 2 | 0 |
+| `uefa_seeding` | 0 | 0 | 5 | 0 |
+| `uefa_seeding_nation` | 0 | 0 | 5 | 0 |
 | `undo_slot` | 0 | 0 | 4 | 0 |
 | `work_permit` | 0 | 0 | 4 | 0 |
 

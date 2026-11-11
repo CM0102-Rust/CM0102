@@ -8,13 +8,13 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 
 | Medida | Quantidade |
 |---|---:|
-| deslocamentos crus | 3346 |
+| deslocamentos crus | 3169 |
 | chaves fixas cruas | 1821 |
 | chamadas por endereço | 0 |
 | cópias de acesso à memória | 0 |
 | rotinas sem cabeçalho | 0 |
 | locais/parâmetros em português | 241 |
-| linhas | 231136 |
+| linhas | 231511 |
 
 ## Por arquivo (os 40 piores, pelos deslocamentos crus)
 
@@ -25,13 +25,9 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/match_man.rs` | 124 | 1 | 0 | 0 | 0 | 1 | 4498 |
 | `motor/match_eng.rs` | 95 | 7 | 0 | 0 | 0 | 13 | 11686 |
 | `motor/national_teams.rs` | 63 | 33 | 0 | 0 | 0 | 2 | 3510 |
-| `motor/training_manager.rs` | 63 | 0 | 0 | 0 | 0 | 1 | 1319 |
-| `motor/comp/uefa_seeding.rs` | 59 | 7 | 0 | 0 | 0 | 0 | 997 |
 | `motor/match_pl.rs` | 58 | 5 | 0 | 0 | 0 | 7 | 10183 |
-| `motor/match_day.rs` | 56 | 9 | 0 | 0 | 0 | 1 | 1899 |
 | `motor/scout_manager.rs` | 55 | 18 | 0 | 0 | 0 | 0 | 1225 |
 | `motor/human_manager.rs` | 54 | 3 | 0 | 0 | 0 | 0 | 772 |
-| `motor/comp/eurocomp/european_cup.rs` | 54 | 9 | 0 | 0 | 0 | 1 | 1524 |
 | `motor/player_regen.rs` | 47 | 6 | 0 | 0 | 0 | 2 | 3365 |
 | `motor/comp/friendly.rs` | 47 | 26 | 0 | 0 | 0 | 1 | 3308 |
 | `motor/comp/leagues/fin_prm.rs` | 45 | 24 | 0 | 0 | 0 | 1 | 3103 |
@@ -42,7 +38,7 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/officials_manager.rs` | 40 | 0 | 0 | 0 | 0 | 2 | 872 |
 | `motor/comp/comp.rs` | 39 | 9 | 0 | 0 | 0 | 0 | 755 |
 | `motor/db_files.rs` | 37 | 0 | 0 | 0 | 0 | 0 | 1282 |
-| `motor/fields.rs` | 35 | 0 | 0 | 0 | 0 | 0 | 2838 |
+| `motor/fields.rs` | 35 | 0 | 0 | 0 | 0 | 0 | 2884 |
 | `motor/comp/cups/eng_cc_cup.rs` | 34 | 12 | 0 | 0 | 0 | 1 | 620 |
 | `motor/comp/cups/ita_cup.rs` | 34 | 19 | 0 | 0 | 0 | 1 | 1155 |
 | `motor/zipdir.rs` | 33 | 0 | 0 | 0 | 0 | 0 | 604 |
@@ -60,3 +56,7 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/setup.rs` | 26 | 0 | 0 | 0 | 0 | 0 | 1613 |
 | `motor/comp/intercomp/goldcup.rs` | 26 | 14 | 0 | 0 | 0 | 2 | 890 |
 | `motor/comp/leagues/ita_ser_a.rs` | 24 | 3 | 0 | 0 | 0 | 6 | 1746 |
+| `motor/injury.rs` | 23 | 0 | 0 | 0 | 0 | 4 | 3041 |
+| `motor/training_manager.rs` | 23 | 0 | 0 | 0 | 0 | 1 | 1319 |
+| `motor/comp/comp_util.rs` | 23 | 3 | 0 | 0 | 0 | 0 | 926 |
+| `motor/comp/eurocomp/european_cup.rs` | 23 | 9 | 0 | 0 | 0 | 1 | 1524 |

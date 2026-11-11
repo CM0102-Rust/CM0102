@@ -301,7 +301,7 @@ pub(crate) unsafe extern "thiscall" fn draw_phase1_groups(this: usize) {
             let n = uefa.entrant_count() as i32;
             write_u8(uefa.entrant_book() + (n * 6) as usize + 4, 5);
             uefa.set_entrant_count(((uefa.entrant_count() as u16).wrapping_add(1)) as i16);
-            write_usize(read_usize(e) + 0x1db, read_usize(KEY_CLUB_COMP_UEFA_CUP));
+            write_usize(read_usize(e) + club::CONTINENTAL_COMP_ID, read_usize(KEY_CLUB_COMP_UEFA_CUP));
         }
         k += 1;
     }
@@ -333,11 +333,11 @@ pub(crate) unsafe fn group_draw_clubs(this: Cup) -> Vec<usize> {
 /// menos a de a.
 pub(crate) unsafe extern "C" fn european_cup_compare_clubs_by_seed(a: *const usize, b: *const usize) -> i32 {
     let (x, y) = (*a, *b);
-    let r = read_u8(x + 0x1df) as i8 as i32 - read_u8(y + 0x1df) as i8 as i32;
+    let r = read_u8(x + club::EURO_SEEDING) as i8 as i32 - read_u8(y + club::EURO_SEEDING) as i8 as i32;
     if r != 0 {
         return r;
     }
-    read_i16(y + 0x80) as i32 - read_i16(x + 0x80) as i32
+    read_i16(y + club::REPUTATION) as i32 - read_i16(x + club::REPUTATION) as i32
 }
 
 /// The positions that `european_cup_rank_teams` records, in the order of its calls to `set_club_final_position`: (index of the club in the sorted vector,
@@ -369,7 +369,7 @@ pub(crate) unsafe fn planned_final_positions(this: Cup, knockout: usize, nm: i16
     let mut count = 1u8;
     let mut r = nm.wrapping_sub(1);
     while r >= 0 {
-        let n = read_i16(knockout + r as usize * 0x68 + 0x1a);
+        let n = read_i16(knockout + r as usize * 0x68 + cup_round::TIES);
         if r == nm.wrapping_sub(1) {
             let mut k = 0i16;
             while k < n {
@@ -382,7 +382,7 @@ pub(crate) unsafe fn planned_final_positions(this: Cup, knockout: usize, nm: i16
         }
         let p = count;
         let mut k = 0i16;
-        while k < read_i16(knockout + r as usize * 0x68 + 0x1a) {
+        while k < read_i16(knockout + r as usize * 0x68 + cup_round::TIES) {
             v.push((i, p));
             i += 1;
             count = count.wrapping_add(1);
@@ -405,7 +405,7 @@ pub(crate) unsafe fn planned_final_positions(this: Cup, knockout: usize, nm: i16
     while r >= 0 {
         let p = count;
         let mut k = 0i16;
-        while k < read_i16(this.round_table() + r as usize * 0x68 + 0x1a) {
+        while k < read_i16(this.round_table() + r as usize * 0x68 + cup_round::TIES) {
             crate::comparison::branch("cqg_4 position in the preliminary");
             v.push((i, p)); // cqg4: the position in the preliminary
             i += 1;
@@ -743,9 +743,9 @@ pub(crate) unsafe extern "thiscall" fn draw_phase2_groups(this: usize, attempt: 
         let n = uefa.entrant_count() as i32;
         write_u8(uefa.entrant_book() + (n * 6) as usize + 4, 5);
         uefa.set_entrant_count(((uefa.entrant_count() as u16).wrapping_add(1)) as i16);
-        write_usize(read_usize(e) + 0x1db, read_usize(KEY_CLUB_COMP_UEFA_CUP));
+        write_usize(read_usize(e) + club::CONTINENTAL_COMP_ID, read_usize(KEY_CLUB_COMP_UEFA_CUP));
         let quarto = read_usize(exe::league_get_table_row(read_usize(this.stages() + b * 4), (3) as i32));
-        write_usize(quarto + 0x1db, usize::MAX);
+        write_usize(quarto + club::CONTINENTAL_COMP_ID, usize::MAX);
     }
     let predicted: unsafe extern "thiscall" fn(usize) = core::mem::transmute(read_usize(read_usize(uefa.addr()) + 0x5c));
     predicted(uefa.addr());
@@ -781,7 +781,7 @@ pub(crate) unsafe extern "C" fn european_cup_compare_phase2_draw_entries(a: usiz
     if r != 0 {
         return r;
     }
-    let r = read_i16(club_nation(Club(read_usize(b))) + 0x8e) as i32 - read_i16(club_nation(Club(read_usize(a))) + 0x8e) as i32;
+    let r = read_i16(club_nation(Club(read_usize(b))) + nation::REPUTATION) as i32 - read_i16(club_nation(Club(read_usize(a))) + nation::REPUTATION) as i32;
     if r != 0 {
         return r;
     }
@@ -871,10 +871,10 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
     if f == 0xff {
         match d {
             0 | 1 => {
-                let r = read_i16(game + 0x34);
+                let r = read_i16(game + fixture::ROUND_NUMBER);
                 if r == 0 {
                     let weight = scale_by_round(1, 0x14, 0, 2);
-                    let round = read_i16(this.round_table() + 0x6f) as u16 as u32;
+                    let round = read_i16(this.round_table() + cup_round::ROUND_CODE + 0x68) as u16 as u32;
                     // simplification: the stage +0x3a goes in a register with garbage in the high 16 bits; 0x86bdd0 only uses the word.
                     european_cup_add_qualified_record(club, comp, this.stage_label() as u16 as u32, round, weight);
                 } else {
@@ -883,9 +883,9 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
                 }
             }
             0xff | 2 => {
-                let weight = scale_by_round(1, 0x14, read_i16(game + 0x34), 2);
+                let weight = scale_by_round(1, 0x14, read_i16(game + fixture::ROUND_NUMBER), 2);
                 // simplification: +0x32 and +0x30 go in registers with garbage in the high 16 bits; 0x86c000 only uses the words.
-                european_cup_add_knocked_out_record(club, comp, read_i16(game + 0x32) as u16 as u32, read_i16(game + 0x30) as u16 as u32, weight);
+                european_cup_add_knocked_out_record(club, comp, read_i16(game + fixture::ROUND_PREFIX) as u16 as u32, read_i16(game + fixture::ROUND_NAME) as u16 as u32, weight);
                 crate::comparison::branch("cpz_4 out in qualifying");
                 leave_euro_competition(Club(club)); // cpz4: whoever is knocked out in qualifying leaves the European competition
             }
@@ -918,17 +918,17 @@ pub(crate) unsafe extern "thiscall" fn european_cup_update_staff_records_for_sta
                 leave_euro_competition(Club(club));
             }
             0 => {
-                let weight = scale_by_round(0x4b, 0x64, read_i16(game + 0x34), 2);
+                let weight = scale_by_round(0x4b, 0x64, read_i16(game + fixture::ROUND_NUMBER), 2);
                 let knockout = Cup(read_usize(this.stages() + 0x30));
                 let rounds = knockout.round_table();
-                let r = read_i16(game + 0x34) as i32;
+                let r = read_i16(game + fixture::ROUND_NUMBER) as i32;
                 // the upper bits of the register the original pushes are those of the stages pointer (+0xc)
-                let round = (this.stages() as u32 & 0xffff_0000) | read_i16(rounds.wrapping_add((r as usize).wrapping_mul(0x68)) + 0x6f) as u16 as u32;
+                let round = (this.stages() as u32 & 0xffff_0000) | read_i16(rounds.wrapping_add((r as usize).wrapping_mul(0x68)) + cup_round::ROUND_CODE + 0x68) as u16 as u32;
                 european_cup_add_qualified_record(club, comp, 0, round, weight);
             }
             0xff => {
-                let weight = scale_by_round(0x4b, 0x64, read_i16(game + 0x34), 2);
-                european_cup_add_knocked_out_record(club, comp, 0, read_i16(game + 0x30) as u16 as u32, weight);
+                let weight = scale_by_round(0x4b, 0x64, read_i16(game + fixture::ROUND_NUMBER), 2);
+                european_cup_add_knocked_out_record(club, comp, 0, read_i16(game + fixture::ROUND_NAME) as u16 as u32, weight);
                 leave_euro_competition(Club(club));
             }
             _ => {}
@@ -1051,7 +1051,7 @@ pub(crate) unsafe fn active_entrants(this: Cup, without_7: bool, v: *mut usize) 
     while i < this.entrant_capacity() {
         let e = this.entrant_book().wrapping_add((i as i32 as usize).wrapping_mul(6));
         let c = read_usize(e);
-        if read_i32(c + 0x1db) == read_i32(read_usize(this.addr() + 4)) && !(without_7 && read_u8(e + 4) == 7) {
+        if read_i32(c + club::CONTINENTAL_COMP_ID) == read_i32(read_usize(this.addr() + 4)) && !(without_7 && read_u8(e + 4) == 7) {
             core::ptr::write_unaligned(v.add(n as i32 as usize), c);
             n = n.wrapping_add(1);
         }
@@ -1135,8 +1135,8 @@ pub(crate) unsafe fn fill_champions_league_entrants(t: usize) -> i32 {
     let mut c = read_usize(G_CLUB_TABLE);
     let mut i: i32 = 0;
     loop {
-        if read_i32(c + 0x1db) == cl {
-            match read_u8(c + 0x1df) {
+        if read_i32(c + club::CONTINENTAL_COMP_ID) == cl {
+            match read_u8(c + club::EURO_SEEDING) {
                 1 => {
                     if o1 < 0x60 {
                         european_cup_write_entrant(t + o1, c, 7);
@@ -1358,13 +1358,13 @@ pub(crate) unsafe extern "thiscall" fn process_fixture(this: usize, game: usize,
     };
     let (a, b) = (game.home_club(), game.away_club());
     let (vencedor, perdedor) = if ga > gb {
-        add_uefa_coefficient(read_usize(a.addr() + 0x53), 2);
+        add_uefa_coefficient(a.nation().addr(), 2);
         (game.home_club(), game.away_club())
     } else if ga < gb {
-        add_uefa_coefficient(read_usize(b.addr() + 0x53), 2);
+        add_uefa_coefficient(b.nation().addr(), 2);
         (game.away_club(), game.home_club())
     } else {
-        add_uefa_coefficient(read_usize(a.addr() + 0x53), 1);
+        add_uefa_coefficient(a.nation().addr(), 1);
         add_uefa_coefficient(game.away_club().nation().addr(), 1);
         (Club(0), Club(0))
     };
@@ -1404,7 +1404,7 @@ pub(crate) unsafe fn nation_coefficient_word(club: Club) -> usize {
     if s == 0 {
         return 0;
     }
-    table.wrapping_add((read_u8(s + 0x1df) as i8 as isize * 18) as usize + 0xf)
+    table.wrapping_add((read_u8(s + club::EURO_SEEDING) as i8 as isize * 18) as usize + uefa_seeding_nation::SEASON_POINTS)
 }
 
 /// Converts the three progress codes by stage (qualifying, phase 1, phase 2) and writes them to +0x73..+0x75 of the
@@ -1454,9 +1454,9 @@ pub(crate) unsafe extern "thiscall" fn european_cup_set_club_progress(this: usiz
     } else {
         (p1, p2, p3)
     };
-    write_u8(e + 0x74, c74);
-    write_u8(e + 0x73, c73);
-    write_u8(e + 0x75, c75);
+    write_u8(e + comp_stats_club::BEST_POSITION, c74);
+    write_u8(e + comp_stats_club::CURRENT_POSITION, c73);
+    write_u8(e + comp_stats_club::WORST_POSITION, c75);
 }
 
 /// Builds the round table: in the group stages, the 6-round schedule (phase 1 dates in September and October and phase

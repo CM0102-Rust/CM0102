@@ -4,7 +4,7 @@ MUTACOES = [
     ('s_humano', "humano(c1, 1, 1, 0, 0) != 0 || humano(c2, 1, 1, 0, 0) != 0 {\n        return 0;", "humano(c1, 1, 0, 0, 0) != 0 || humano(c2, 1, 1, 0, 0) != 0 {\n        return 0;"),
     ('s_ligado', "human(exe::club_get_linked_b_team(c, (0) as *mut u32, 1), 1, 1, 0, 0) != 0", "human(exe::club_get_linked_b_team(c, (0) as *mut u32, 1), 1, 0, 0, 0) != 0", "no human linked club"),
     ('s_comp1', "if comp == read(KEY_CLUB_COMP_FIFA_CLUB_WORLD_CHAMPIONSHIP) ||", "if comp == read(KEY_CLUB_COMP_PORTUGUESE_SECOND_DIVISION_B) ||"),
-    ('s_958', "k as isize * 0x122 + 0x11c", "k as isize * 0x122 + 0x11d"),
+    ('s_958', "k as isize * 0x122 + (nation::LEAGUE_SELECTED as isize)", "k as isize * 0x122 + 0x11d"),
     ('s_684', "if comp == read(KEY_CLUB_COMP_RESERVE) && human(c1", "if comp == read(KEY_CLUB_COMP_ARGENTINE_THIRD_DIVISION) && human(c1", "no human direct competition"),
     ('s_16', "for k in 0..16isize {", "for k in 0..15isize {", "no human nation manager"),
     ('s_5f', "pe.classification() == 1", "pe.classification() == 0", "no human nation manager"),

@@ -112,6 +112,8 @@ pub(crate) mod formation_fields_flags {
 /// Bits of `contract::GRIEVANCES`.
 #[allow(dead_code)]
 pub(crate) mod grievances {
+    /// tested clear before the complaint; set via staff_contract_apply_event_flags(c, 0x8000) right before news_post_player_unhappy_with_training. Name: read.
+    pub(crate) const UNHAPPY_WITH_TRAINING: u32 = 0x8000;
     /// set on old-club teammates when an established player is sold (process_transfer_squad_reactions); cleared when a bigger player arrives at the new club. Name: inferred.
     pub(crate) const STAR_TEAMMATE_SOLD: u32 = 0x20000000;
     /// set via apply_event_flags on same-position teammates when the club signs a player; cleared when the squad is weak or the position has fewer than 2 players. Name: inferred.
@@ -253,4 +255,25 @@ pub(crate) mod transfer_status {
     pub(crate) const LOAN_LISTED: u8 = 0x2;
     /// staff_is_transfer_listed_or_requested tests & 9 and staff_is_transfer_listed & 1, so 8 is the request. Name: inferred.
     pub(crate) const TRANSFER_REQUESTED: u8 = 0x8;
+}
+
+/// Bits of `match_spectators::UPDATE_FLAGS`.
+#[allow(dead_code)]
+pub(crate) mod update_flags {
+    /// set when engine.score() exceeds the home goals in the summary (match_summary::SIDES). Name: read.
+    pub(crate) const HOME_GOAL: u8 = 0x1;
+    /// set when engine.score_side1() exceeds the away goals (match_record AWAY_TEAM). Name: read.
+    pub(crate) const AWAY_GOAL: u8 = 0x2;
+    /// set when engine clock / 11 passes the summary MINUTE. Name: read.
+    pub(crate) const MINUTE_CHANGED: u8 = 0x4;
+    /// set (state = 8) when an event is shown; while set the step waits for the commentary line to finish, then shows the next event. Name: read.
+    pub(crate) const EVENT_PENDING: u8 = 0x8;
+    /// set when +0x115 is set: the shown event had priority 2 (match_events_get_event_priority). Name: read.
+    pub(crate) const HIGHLIGHT: u8 = 0x10;
+    /// set when the engine step state is 4 (half time per the routine header). Name: read.
+    pub(crate) const HALF_TIME: u8 = 0x20;
+    /// set when the day match STATE is 8 (or 2 at line 1741). Name: read.
+    pub(crate) const MATCH_ENDED: u8 = 0x40;
+    /// set when the engine restart type is not OPEN_PLAY. Name: read.
+    pub(crate) const SET_PIECE: u8 = 0x80;
 }

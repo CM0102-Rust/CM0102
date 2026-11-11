@@ -9,7 +9,7 @@ MUTACOES = [
     ('c_jovem', "|| read_i8(p + staff::YEAR_OF_BIRTH) > 0x14 {", "|| read_i8(p + staff::YEAR_OF_BIRTH) > 0x13 {", "club continues"),
     ('c_59', "|| read_i8(p + staff::LOYALTY) <= 0xf {", "|| read_i8(p + staff::LOYALTY) <= 0xe {", "club continues"),
     ('c_57', "if read_i8(p + staff::AMBITION) <= (r as u8).wrapping_add(10) as i8", "if read_i8(p + staff::AMBITION) <= (r as u8).wrapping_add(0) as i8", "club youth"),
-    ('c_ficha', "|| w(read_usize(p + staff::PLAYER) + 0xb) >= 0x109a {", "|| w(read_usize(p + staff::PLAYER) + 0xb) >= 0x2000 {", "club youth"),
+    ('c_ficha', "|| w(read_usize(p + staff::PLAYER) + player_sheet::CURRENT_REPUTATION) >= 0x109a {", "|| w(read_usize(p + staff::PLAYER) + player_sheet::CURRENT_REPUTATION) >= 0x2000 {", "club youth"),
     ('c_lado', "let side = (read(club.addr()) != read(t)) as usize;", "let side = (read(club.addr()) == read(t)) as usize;", "club continues"),
     ('c_n', "                && n > 2\n", "                && n > 0\n", "club squad"),
     ('c_elenco57', "&& read_i8(s + staff::AMBITION) > 0xf", "&& read_i8(s + staff::AMBITION) > 0x5", "club squad"),

@@ -1971,7 +1971,13 @@ pub(crate) mod match_record_team {
 #[allow(dead_code)]
 pub(crate) mod match_spectators {
     pub(crate) const UPDATE_FLAGS: usize = 0x0; // 1 byte(s): bits telling the match screens what to redraw (4 data panels, 0x10/0x20 view changes) [inference]
+    pub(crate) const IN_MATCH: usize = 0x5; // 64 byte(s): one u32 per human slot: 1 when the human takes part in (plays or watches) the network match
+    pub(crate) const CONFIRMED: usize = 0x45; // 64 byte(s): one u32 per human slot: 1 when the human confirmed the network match
+    pub(crate) const SEEN: usize = 0x85; // 64 byte(s): one u32 per human slot: 1 when the human has seen the current state
     pub(crate) const HUMAN_MARKS: usize = 0xc5; // 64 byte(s): one i32 per human slot: 1 watching, -911 left
+    pub(crate) const IN_MATCH_COUNT: usize = 0x105; // 1 byte(s): number of humans taking part in the network match (set slots of IN_MATCH)
+    pub(crate) const CONFIRMED_COUNT: usize = 0x106; // 1 byte(s): number of humans who confirmed the network match
+    pub(crate) const SEEN_COUNT: usize = 0x107; // 1 byte(s): number of humans who have seen the current state
     pub(crate) const COUNT: usize = 0x108; // 1 byte(s): number of humans watching
     pub(crate) const CLOSED: usize = 0x119; // 4 byte(s): nonzero: the viewing is closed (the match screen input returns -9)
 }
@@ -2654,7 +2660,10 @@ pub(crate) mod oceania_club_champ {
 /// Fields of the `uefa_seeding` object, named from how the routines use them. [pt] Campos do objeto `uefa_seeding`.
 #[allow(dead_code)]
 pub(crate) mod uefa_seeding {
+    pub(crate) const NATION_COUNT: usize = 0x438; // 1 byte(s): number of nation entries (0x12 bytes each from +0) in the seeding table
+    pub(crate) const SEASON_YEAR: usize = 0x439; // 2 byte(s): game year of the last seeding rollover (seeding redone when the year changes)
     pub(crate) const INTERTOTO_VOLUNTEERS: usize = 0x43b; // 4 byte(s): Pointer to the list of up to 30 club ids volunteering for the Intertoto (0x78 bytes; count at +0x43f), freed after the places are given
+    pub(crate) const INTERTOTO_VOLUNTEER_COUNT: usize = 0x43f; // 1 byte(s): number of club ids in INTERTOTO_VOLUNTEERS (up to 30)
     pub(crate) const CUP_FINALS: usize = 0x440; // 600 byte(s): 50 records of 12 bytes (cup, winner, runner-up) of national cup finals, written by register_semi_final_losers_for_uefa and read when giving UEFA places
 }
 
@@ -2834,5 +2843,42 @@ pub(crate) mod area_fields {
 #[allow(dead_code)]
 pub(crate) mod guio {
     pub(crate) const POPUP_AREA_INDEX: usize = 0x7c; // 2 byte(s): index of the popup area that opens on top of this item (written by Area::layout)
+
+}
+
+/// UEFA seeding nation entry (0x12 bytes, from the uefa_seeding object +0 x i): +0 nation id, +4 nation, +8 coefficient (float), places and season points
+#[allow(dead_code)]
+pub(crate) mod uefa_seeding_nation {
+    pub(crate) const CHAMPIONS_LEAGUE_PLACES: usize = 0xc; // 1 byte(s): Champions League places of the nation by coefficient position
+    pub(crate) const UEFA_CUP_PLACES: usize = 0xd; // 1 byte(s): UEFA Cup places of the nation (plus fair play extra)
+    pub(crate) const INTERTOTO_PLACES: usize = 0xe; // 1 byte(s): Intertoto places of the nation
+    pub(crate) const SEASON_POINTS: usize = 0xf; // 2 byte(s): points the nation's clubs earned in the European cups this season
+    pub(crate) const CLUBS_IN_CUPS: usize = 0x11; // 1 byte(s): number of the nation's clubs given a European place this season
+
+}
+
+/// European clubs table entry (12 bytes, built by collect_european_clubs, sorted by nation): +0 club, +4 nation id, +8 reputation/500, +9 division reputation, +0xb last position
+#[allow(dead_code)]
+pub(crate) mod european_club_entry {
+    pub(crate) const LAST_POSITION: usize = 0xb; // 1 byte(s): club's last league position (0x7f without a division), sort key within the nation
+
+}
+
+/// TRAINING_MANAGER object (training.dat): 167 schedules of 0x9b bytes at +0 (7 computer + 16 humans x 10), player entries, position training list, coach assignments, week counter
+#[allow(dead_code)]
+pub(crate) mod training_manager_fields {
+    pub(crate) const HUMAN_SCHEDULES: usize = 0x43d; // 24800 byte(s): the ten 0x9b-byte schedules of each of the 16 human managers, after the computer's seven at +0 (7 x 0x9b = 0x43d)
+    pub(crate) const PLAYER_ENTRIES: usize = 0x651d; // 4 byte(s): pointer to the calloc'ed array of 6-byte training entries, one per player sheet (indexed by sheet id)
+
+    pub(crate) const POSITION_TRAINING_ITEMS: usize = 0x6521; // 4 byte(s): pointer to the position training items (8 bytes: +0 person id, +4 mask, +6 rating, +7 rate), sorted by person id
+    pub(crate) const POSITION_TRAINING_COUNT: usize = 0x6525; // 4 byte(s): number of 8-byte position training items in the list at +0x6521
+    pub(crate) const COACH_ASSIGNMENTS: usize = 0x652d; // 864 byte(s): coach assignments of the 16 human managers: 54 bytes each (six 9-byte slots: +0 coach id, +4..+8 category flags/ratings)
+    pub(crate) const WEEK_COUNTER: usize = 0x688d; // 2 byte(s): training week counter, +1 on each 7th day; entry +1 keeps the week of the player's last update
+}
+
+/// TRAINING_SCHEDULE, 0x9b bytes: +0 slot (dword), +4..+8 five category levels, +0x15 type
+#[allow(dead_code)]
+pub(crate) mod training_schedule {
+    pub(crate) const TYPE: usize = 0x15; // 1 byte(s): schedule type: 0/7 none, 1 general, 2-5 one category, 6 goalkeepers
 
 }

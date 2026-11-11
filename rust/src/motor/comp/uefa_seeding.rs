@@ -25,7 +25,7 @@ pub(crate) fn seeding_nation_entry(this: usize, i: i32) -> usize {
 /// float) e os pontos e os clubes zeram. Depois ordena a tabela pelo coeficiente (qsort 0x945333 com 0x905cb0, do
 /// maior para o menor) e grava a posição de cada nação no +0x1df da seleção dela (0x53b3d0).
 pub(crate) unsafe extern "thiscall" fn roll_coefficients(this: usize) {
-    let count = || read_i8(this + 0x438);
+    let count = || read_i8(this + uefa_seeding::NATION_COUNT);
     let year = read_i16(G_CURRENT_DATE_YEAR);
     let mut i = 0i8;
     while i < count() {
@@ -35,9 +35,9 @@ pub(crate) unsafe extern "thiscall" fn roll_coefficients(this: usize) {
             for k in 0..10usize {
                 write_u32(p.addr() + nation::UEFACOEFFICIENT91 + k * 4, read_u32(p.addr() + nation::UEFACOEFFICIENT92 + k * 4));
             }
-            let clubs = read_i8(e + 0x11);
+            let clubs = read_i8(e + uefa_seeding_nation::CLUBS_IN_CUPS);
             if clubs != 0 {
-                let points = read_i16(e + 0xf) as i32;
+                let points = read_i16(e + uefa_seeding_nation::SEASON_POINTS) as i32;
                 p.set_uefacoefficient96(points as f64 / clubs as i32 as f64);
             } else {
                 write_u64(p.addr() + nation::UEFACOEFFICIENT96, 0);
@@ -46,8 +46,8 @@ pub(crate) unsafe extern "thiscall" fn roll_coefficients(this: usize) {
         crate::comparison::branch("cqi_1 coefficient sum");
         let sum = p.uefacoefficient95() + p.uefacoefficient94() + p.uefacoefficient93() + p.uefacoefficient92() + p.uefacoefficient91(); // cqi1: as 5 temporadas
         write_f32(e + 8, sum as f32);
-        write_u8(e + 0x11, 0);
-        write_u16(e + 0xf, 0);
+        write_u8(e + uefa_seeding_nation::CLUBS_IN_CUPS, 0);
+        write_u16(e + uefa_seeding_nation::SEASON_POINTS, 0);
         i += 1;
     }
     exe::crt_qsort(this, count() as i32 as u32, 0x12, 0x905cb0);
@@ -71,12 +71,12 @@ pub(crate) fn memory_diff_addresses(mo: &crate::comparison::MemorySnapshot, mr: 
 ///
 /// [pt] A tabela das nações e, de cada nação, as 5 temporadas (+0xe0..+0x110) e o +0x1df da seleção.
 pub(crate) unsafe fn seeding_regions(this: usize) -> Vec<(usize, usize)> {
-    let n = read_i8(this + 0x438).max(0) as i32;
+    let n = read_i8(this + uefa_seeding::NATION_COUNT).max(0) as i32;
     let mut reg = vec![(this, 0x43b)];
     for i in 0..n {
         let p = Nation(read_u32(seeding_nation_entry(this, i) + 4) as usize);
         reg.push((p.addr() + nation::UEFACOEFFICIENT91, 0x30));
-        reg.push((exe::database_get_national_team(p) + 0x1df, 1));
+        reg.push((exe::database_get_national_team(p) + club::EURO_SEEDING, 1));
     }
     reg
 }
@@ -103,7 +103,7 @@ pub(crate) unsafe fn seeding_regions(this: usize) -> Vec<(usize, usize)> {
 /// nações, de três em três) distintas e fora a Itália.
 pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
     let g = |a: usize| read_u32(a);
-    let count = || read_i8(this + 0x438);
+    let count = || read_i8(this + uefa_seeding::NATION_COUNT);
     let year = read_i16(G_CURRENT_DATE_YEAR);
     let (mut fa, mut fb, mut fc, mut cont) = (-1i8, -1i8, -1i8, 0i8);
     let mut i = 0i8;
@@ -118,9 +118,9 @@ pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
             fc = i;
         }
         if id == g(KEY_NATION_LIECHTENSTEIN) {
-            write_u8(e + 0xc, 0);
+            write_u8(e + uefa_seeding_nation::CHAMPIONS_LEAGUE_PLACES, 0);
         }
-        write_u8(e + 0xc, if i < 3 {
+        write_u8(e + uefa_seeding_nation::CHAMPIONS_LEAGUE_PLACES, if i < 3 {
             4
         } else if i < 6 {
             3
@@ -133,7 +133,7 @@ pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
         });
         let id = read_u32(e);
         if id == g(KEY_NATION_LIECHTENSTEIN) || id == g(KEY_NATION_SAN_MARINO) {
-            write_u8(e + 0xd, 0);
+            write_u8(e + uefa_seeding_nation::UEFA_CUP_PLACES, 0);
         }
         let uefa = if i < 6 {
             Some(3)
@@ -151,7 +151,7 @@ pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
             None
         };
         if let Some(v) = uefa {
-            write_u8(e + 0xd, v);
+            write_u8(e + uefa_seeding_nation::UEFA_CUP_PLACES, v);
         }
         let id = read_u32(e);
         let intertoto = if id == g(KEY_NATION_MOLDOVA) || id == g(KEY_NATION_SAN_MARINO) || id == g(KEY_NATION_ANDORRA) || id == g(KEY_NATION_BOSNIA_HERZEGOVINA) || id == g(KEY_NATION_LIECHTENSTEIN) {
@@ -179,7 +179,7 @@ pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
             cont += 1;
             0
         };
-        write_u8(e + 0xe, intertoto);
+        write_u8(e + uefa_seeding_nation::INTERTOTO_PLACES, intertoto);
         i += 1;
     }
     let italia = |k: i8| read_u32(seeding_nation_entry(this, k as i32)) == g(KEY_NATION_ITALY);
@@ -196,7 +196,7 @@ pub(crate) unsafe extern "thiscall" fn set_place_counts(this: usize) {
         fc = exe::utils_random(count() as i32) as u8 as i8;
     }
     for k in [fa, fb, fc] {
-        let p = seeding_nation_entry(this, k as i32) + 0xd;
+        let p = seeding_nation_entry(this, k as i32) + uefa_seeding_nation::UEFA_CUP_PLACES;
         write_u8(p, read_u8(p).wrapping_add(1));
     }
 }
@@ -288,7 +288,7 @@ pub(crate) unsafe fn assign_comp_place(this: usize, c: Club, comp: u32, stage: u
     }
     c.set_euro_seeding(stage);
     c.set_continental_comp_id(comp);
-    increment_byte(seeding_nation_entry(this, i) + 0x11);
+    increment_byte(seeding_nation_entry(this, i) + uefa_seeding_nation::CLUBS_IN_CUPS);
     true
 }
 
@@ -342,15 +342,15 @@ pub(crate) unsafe extern "thiscall" fn collect_european_clubs(this: usize, out: 
                     if !row.is_null() {
                         crate::comparison::branch("cqi_2 division level");
                         write_u16(r + 9, row.reputation() as u16); // cqi2: the division level
-                        write_u8(r + 0xb, read_u8(c + club::LAST_POSITION));
-                        let comp = Nation(read_u32(read_u32(c + club::LAST_DIVISION) as usize + 0x5d) as usize);
+                        write_u8(r + european_club_entry::LAST_POSITION, read_u8(c + club::LAST_POSITION));
+                        let comp = Nation(read_u32(read_u32(c + club::LAST_DIVISION) as usize + competition::NATION) as usize);
                         if comp.is_null() || comp.league_selected() == 0 {
                             write_u32(c + club::LAST_DIVISION, 0);
                             write_u8(c + club::LAST_POSITION, 0);
                         }
                     } else {
                         write_u16(r + 9, 0xffff);
-                        write_u8(r + 0xb, 0x7f);
+                        write_u8(r + european_club_entry::LAST_POSITION, 0x7f);
                     }
                     k += 1;
                 }
@@ -363,7 +363,7 @@ pub(crate) unsafe extern "thiscall" fn collect_european_clubs(this: usize, out: 
         }
     }
     exe::crt_qsort(t, (k as u16 as i16 as i32) as u32, 0xc, 0x905ce0);
-    if read_i16(this + 0x439) == 0x7d1 {
+    if read_i16(this + uefa_seeding::SEASON_YEAR) == 0x7d1 {
         exe::uefaseeding_apply_euro_cfg_order(this, t, k);
     }
     // simplification: the original returns ax with the leftover high bytes of eax (the caller reads only si); the copy, zero
@@ -404,7 +404,7 @@ pub(crate) unsafe extern "thiscall" fn assign_champions_league_places(this: usiz
         h.set_euro_seeding(1);
         h.set_continental_comp_id(lc);
         let id = read_u32((h.nation().addr() as u32) as usize);
-        let n = read_i8(this + 0x438) as i32;
+        let n = read_i8(this + uefa_seeding::NATION_COUNT) as i32;
         let mut i = -1i32;
         for k in 0..n {
             if read_u32(seeding_nation_entry(this, k)) == id {
@@ -412,13 +412,13 @@ pub(crate) unsafe extern "thiscall" fn assign_champions_league_places(this: usiz
                 break;
             }
         }
-        increment_byte(seeding_nation_entry(this, i) + 0x11);
+        increment_byte(seeding_nation_entry(this, i) + uefa_seeding_nation::CLUBS_IN_CUPS);
         cap[1] = 0xf;
     } else {
         show_error_at(0xaa1a1c, 0x35d);
     }
     let mut r = 0i8;
-    while r < read_i8(this + 0x438) {
+    while r < read_i8(this + uefa_seeding::NATION_COUNT) {
         let (band, ultima): ([u8; 4], u8) = if r < 3 {
             crate::comparison::branch("cqi_2 two in the groups");
             ([0, 2, 2, 0], 0) // cqi2: 1st to 3rd nation
@@ -487,7 +487,7 @@ pub(crate) unsafe extern "thiscall" fn assign_intertoto_places(this: usize, club
     loop {
         let stage: u8 = if (cl as i8) < 8 { 1 } else if (cl as i8) >= 0xc { 3 } else { 2 };
         let mut i = cl;
-        if cl == read_u8(this + 0x438) {
+        if cl == read_u8(this + uefa_seeding::NATION_COUNT) {
             i = 0;
         }
         let e = seeding_nation_entry(this, i as i8 as i32);
@@ -499,7 +499,7 @@ pub(crate) unsafe extern "thiscall" fn assign_intertoto_places(this: usize, club
             if assign_comp_place(this, Club(c), it, stage, i as i8 as i32) {
                 colocados += 1;
             }
-            if read_u8(e + 0xe) == 2 {
+            if read_u8(e + uefa_seeding_nation::INTERTOTO_PLACES) == 2 {
                 let mut c = exe::uefaseeding_pick_english_intertoto_club(this);
                 if c == 0 {
                     c = exe::uefa_find_nth_unplaced_club_of_nation(this, clubs, count, read_u32(e), 1, 1, 1);
@@ -508,13 +508,13 @@ pub(crate) unsafe extern "thiscall" fn assign_intertoto_places(this: usize, club
                     colocados += 1;
                 }
             }
-            let list = read_u32(this + 0x43b) as usize;
+            let list = read_u32(this + uefa_seeding::INTERTOTO_VOLUNTEERS) as usize;
             if list != 0 {
                 exe::crt_free(list);
-                write_u32(this + 0x43b, 0);
-                write_u8(this + 0x43f, 0);
+                write_u32(this + uefa_seeding::INTERTOTO_VOLUNTEERS, 0);
+                write_u8(this + uefa_seeding::INTERTOTO_VOLUNTEER_COUNT, 0);
             }
-        } else if (read_u8(e + 0xe) as i8) > 0 {
+        } else if (read_u8(e + uefa_seeding_nation::INTERTOTO_PLACES) as i8) > 0 {
             let mut j = 0i8;
             loop {
                 if colocados as i16 >= 0x3c {
@@ -526,7 +526,7 @@ pub(crate) unsafe extern "thiscall" fn assign_intertoto_places(this: usize, club
                     colocados += 1; // cqi2: mais um na Intertoto
                 }
                 j += 1;
-                if j >= read_u8(e + 0xe) as i8 {
+                if j >= read_u8(e + uefa_seeding_nation::INTERTOTO_PLACES) as i8 {
                     break;
                 }
             }
@@ -549,7 +549,7 @@ pub(crate) unsafe fn enter_uefa_cup(this: usize, c: Club, stage: u8, r: i32, col
     c.set_continental_comp_id(read_u32(KEY_CLUB_COMP_UEFA_CUP));
     c.set_euro_seeding(stage);
     *colocados += 1;
-    let p = seeding_nation_entry(this, r) + 0x11;
+    let p = seeding_nation_entry(this, r) + uefa_seeding_nation::CLUBS_IN_CUPS;
     write_u8(p, read_u8(p).wrapping_add(1));
     true
 }
@@ -579,7 +579,7 @@ pub(crate) unsafe fn enter_uefa_cup(this: usize, c: Club, stage: u8, r: i32, col
 /// na fase 10 × a conta + 3; os dois com vaga, o primeiro sem vaga da tabela). Para quando os colocados menos a conta
 /// passam de 116.
 pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs: usize, count: u32) {
-    let n8 = || read_i8(this + 0x438);
+    let n8 = || read_i8(this + uefa_seeding::NATION_COUNT);
     let uc = read_u32(KEY_CLUB_COMP_UEFA_CUP);
     let mut count_extra = 1i8;
     let mut colocados = 0i32;
@@ -597,7 +597,7 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                 break;
             }
         }
-        let p = seeding_nation_entry(this, i) + 0x11;
+        let p = seeding_nation_entry(this, i) + uefa_seeding_nation::CLUBS_IN_CUPS;
         write_u8(p, read_u8(p).wrapping_add(1));
         nation_of_champion = (h.nation().addr() as u32) as usize;
     }
@@ -677,14 +677,14 @@ pub(crate) unsafe extern "thiscall" fn assign_uefa_cup_places(this: usize, clubs
                                         let id = read_u32(cup);
                                         let year = read_u16(0xb63d7b + (((exe::key_nation_index_of_nation(nation) as u32) as i8) as i32 * 0x48) as usize) as i32;
                                         let comp = read_u32((read_u32(G_COMP_OBJECT_TABLE) as usize).wrapping_add(id as usize * 4)) as usize;
-                                        if read_i16(comp + 0x40) as i32 == year || read_u32(nation.addr()) == read_u32(KEY_NATION_SPAIN) || read_u32(nation.addr()) == read_u32(KEY_NATION_BELGIUM) {
+                                        if read_i16(comp + cup::YEAR) as i32 == year || read_u32(nation.addr()) == read_u32(KEY_NATION_SPAIN) || read_u32(nation.addr()) == read_u32(KEY_NATION_BELGIUM) {
                                             um()
                                         } else {
                                             let (mut v1, mut v2) = (-1i32, -1i32);
                                             for k in 0..0x32usize {
-                                                if read_u32(this + 0x440 + k * 12) == id {
-                                                    v1 = read_u32(this + 0x444 + k * 12) as i32;
-                                                    v2 = read_u32(this + 0x448 + k * 12) as i32;
+                                                if read_u32(this + uefa_seeding::CUP_FINALS + k * 12) == id {
+                                                    v1 = read_u32(this + uefa_seeding::CUP_FINALS + 4 + k * 12) as i32;
+                                                    v2 = read_u32(this + uefa_seeding::CUP_FINALS + 8 + k * 12) as i32;
                                                     break;
                                                 }
                                             }
@@ -800,31 +800,31 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
         read_u32(((league.table() as u32) as usize).wrapping_add((s * 0x3b) as usize)) as usize
     };
     let mut attempts = 0i8;
-    while (read_u8(this + 0x43f) as i8) < 6 && attempts < 0x50 {
+    while (read_u8(this + uefa_seeding::INTERTOTO_VOLUNTEER_COUNT) as i8) < 6 && attempts < 0x50 {
         attempts += 1;
         let c = club_drawn();
         if exe::human_manager_is_human_club(c, 0, 1, 0, 0) == 0 && read_u32(c + club::CONTINENTAL_COMP_ID) == u32::MAX {
-            if read_u32(this + 0x43b) == 0 {
-                write_u8(this + 0x43f, 0);
+            if read_u32(this + uefa_seeding::INTERTOTO_VOLUNTEERS) == 0 {
+                write_u8(this + uefa_seeding::INTERTOTO_VOLUNTEER_COUNT, 0);
                 let l = exe::crt_malloc(0x78);
-                write_u32(this + 0x43b, l as u32);
+                write_u32(this + uefa_seeding::INTERTOTO_VOLUNTEERS, l as u32);
                 if l == 0 {
                     show_error_at(0xaa1a1c, 0xf9);
                     continue;
                 }
             }
-            let k = read_u8(this + 0x43f) as i8;
+            let k = read_u8(this + uefa_seeding::INTERTOTO_VOLUNTEER_COUNT) as i8;
             if k < 0x1e {
-                write_u32(read_u32(this + 0x43b) as usize + k as usize * 4, read_u32(c));
-                write_u8(this + 0x43f, (k as u8).wrapping_add(1));
+                write_u32(read_u32(this + uefa_seeding::INTERTOTO_VOLUNTEERS) as usize + k as usize * 4, read_u32(c));
+                write_u8(this + uefa_seeding::INTERTOTO_VOLUNTEER_COUNT, (k as u8).wrapping_add(1));
             }
         }
     }
     let mut best = 0usize;
     let mut level = 0x64i8;
-    let k = read_u8(this + 0x43f) as i8 as i32;
+    let k = read_u8(this + uefa_seeding::INTERTOTO_VOLUNTEER_COUNT) as i8 as i32;
     if k > 0 {
-        let list = read_u32(this + 0x43b) as usize;
+        let list = read_u32(this + uefa_seeding::INTERTOTO_VOLUNTEERS) as usize;
         let base = read_u32(G_CLUB_TABLE) as usize;
         for q in 0..k as usize {
             let c = base.wrapping_add((read_u32(list + q * 4) as usize).wrapping_mul(club::SIZE));
@@ -877,11 +877,11 @@ pub(crate) unsafe extern "thiscall" fn pick_english_intertoto_club(this: usize) 
 pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
     if diario == 0 {
         let year = read_i16(G_CURRENT_DATE_YEAR);
-        if year == read_i16(this + 0x439) {
+        if year == read_i16(this + uefa_seeding::SEASON_YEAR) {
             return;
         }
         crate::comparison::branch("cqi_3 qualification rollover");
-        write_i16(this + 0x439, year);
+        write_i16(this + uefa_seeding::SEASON_YEAR, year);
         exe::uefaseeding_roll_coefficients(this);
         exe::uefaseeding_set_place_counts(this);
         let mut t = 0usize;
@@ -908,7 +908,7 @@ pub(crate) unsafe extern "thiscall" fn update_season(this: usize, diario: u32) {
             let p = news.as_mut_ptr() as usize;
             exe::new_newsitem(p, 0x16, 0);
             exe::newsitem_set_slot(p, (0) as u32 as i8, 0);
-            exe::newsitem_set_slot(p, (2) as u32 as i8, read_i16(this + 0x439) as u16 as u32);
+            exe::newsitem_set_slot(p, (2) as u32 as i8, read_i16(this + uefa_seeding::SEASON_YEAR) as u16 as u32);
             let mut i = 0i16;
             while i < league.club_count() {
                 let c = read_u32(((league.table() as u32) as usize).wrapping_add(i as i32 as usize * 0x3b)) as usize;
@@ -968,27 +968,27 @@ pub(crate) unsafe extern "thiscall" fn uefa_seeding_save_to_temp_file(this: usiz
         show_error_at(FONTE, 0x64f);
         return;
     }
-    if crt_fwrite(this + 0x438, 1, 1, f) != 1 {
+    if crt_fwrite(this + uefa_seeding::NATION_COUNT, 1, 1, f) != 1 {
         show_error_at(FONTE, 0x657);
         return;
     }
-    if crt_fwrite(this, 0x12, signed_byte_count(this + 0x438), f) != signed_byte_count(this + 0x438) {
+    if crt_fwrite(this, 0x12, signed_byte_count(this + uefa_seeding::NATION_COUNT), f) != signed_byte_count(this + uefa_seeding::NATION_COUNT) {
         show_error_at(FONTE, 0x660);
         return;
     }
-    if crt_fwrite(this + 0x439, 2, 1, f) != 1 {
+    if crt_fwrite(this + uefa_seeding::SEASON_YEAR, 2, 1, f) != 1 {
         show_error_at(FONTE, 0x668);
         return;
     }
-    if crt_fwrite(this + 0x43f, 1, 1, f) != 1 {
+    if crt_fwrite(this + uefa_seeding::INTERTOTO_VOLUNTEER_COUNT, 1, 1, f) != 1 {
         show_error_at(FONTE, 0x66f);
         return;
     }
-    if read_u8(this + 0x43f) != 0 && crt_fwrite(read_usize(this + 0x43b), 4, signed_byte_count(this + 0x43f), f) != signed_byte_count(this + 0x43f) {
+    if read_u8(this + uefa_seeding::INTERTOTO_VOLUNTEER_COUNT) != 0 && crt_fwrite(read_usize(this + uefa_seeding::INTERTOTO_VOLUNTEERS), 4, signed_byte_count(this + uefa_seeding::INTERTOTO_VOLUNTEER_COUNT), f) != signed_byte_count(this + uefa_seeding::INTERTOTO_VOLUNTEER_COUNT) {
         show_error_at(FONTE, 0x679);
         return;
     }
-    if crt_fwrite(this + 0x440, 0xc, 0x32, f) != 0x32 { // cpx6: os 50 registros fixos
+    if crt_fwrite(this + uefa_seeding::CUP_FINALS, 0xc, 0x32, f) != 0x32 { // cpx6: os 50 registros fixos
         show_error_at(FONTE, 0x682);
         return;
     }

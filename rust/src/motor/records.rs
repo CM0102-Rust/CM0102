@@ -16056,10 +16056,56 @@ impl MatchSpectators {
     pub(crate) unsafe fn set_update_flags(self, v: u8) {
         write_u8(self.0 + match_spectators::UPDATE_FLAGS, v)
     }
+    /// `match_spectators::IN_MATCH` (+0x5). Name: read.
+    #[inline(always)]
+    pub(crate) fn in_match_addr(self) -> usize {
+        self.0 + match_spectators::IN_MATCH
+    }
+    /// `match_spectators::CONFIRMED` (+0x45). Name: read.
+    #[inline(always)]
+    pub(crate) fn confirmed_addr(self) -> usize {
+        self.0 + match_spectators::CONFIRMED
+    }
+    /// `match_spectators::SEEN` (+0x85). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn seen(self) -> u8 {
+        read_u8(self.0 + match_spectators::SEEN)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_seen(self, v: u8) {
+        write_u8(self.0 + match_spectators::SEEN, v)
+    }
     /// `match_spectators::HUMAN_MARKS` (+0xc5). Name: read.
     #[inline(always)]
     pub(crate) fn human_marks_addr(self) -> usize {
         self.0 + match_spectators::HUMAN_MARKS
+    }
+    /// `match_spectators::IN_MATCH_COUNT` (+0x105). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn in_match_count(self) -> u8 {
+        read_u8(self.0 + match_spectators::IN_MATCH_COUNT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_in_match_count(self, v: u8) {
+        write_u8(self.0 + match_spectators::IN_MATCH_COUNT, v)
+    }
+    /// `match_spectators::CONFIRMED_COUNT` (+0x106). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn confirmed_count(self) -> u8 {
+        read_u8(self.0 + match_spectators::CONFIRMED_COUNT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_confirmed_count(self, v: u8) {
+        write_u8(self.0 + match_spectators::CONFIRMED_COUNT, v)
+    }
+    /// `match_spectators::SEEN_COUNT` (+0x107). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn seen_count(self) -> u8 {
+        read_u8(self.0 + match_spectators::SEEN_COUNT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_seen_count(self, v: u8) {
+        write_u8(self.0 + match_spectators::SEEN_COUNT, v)
     }
     /// `match_spectators::COUNT` (+0x108). Name: read.
     #[inline(always)]
@@ -21057,6 +21103,24 @@ impl UefaSeeding {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
+    /// `uefa_seeding::NATION_COUNT` (+0x438). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn nation_count(self) -> i8 {
+        read_i8(self.0 + uefa_seeding::NATION_COUNT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_nation_count(self, v: i8) {
+        write_i8(self.0 + uefa_seeding::NATION_COUNT, v)
+    }
+    /// `uefa_seeding::SEASON_YEAR` (+0x439). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn season_year(self) -> i16 {
+        read_i16(self.0 + uefa_seeding::SEASON_YEAR)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_season_year(self, v: i16) {
+        write_i16(self.0 + uefa_seeding::SEASON_YEAR, v)
+    }
     /// `uefa_seeding::INTERTOTO_VOLUNTEERS` (+0x43b). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn intertoto_volunteers(self) -> u32 {
@@ -21065,6 +21129,15 @@ impl UefaSeeding {
     #[inline(always)]
     pub(crate) unsafe fn set_intertoto_volunteers(self, v: u32) {
         write_u32(self.0 + uefa_seeding::INTERTOTO_VOLUNTEERS, v)
+    }
+    /// `uefa_seeding::INTERTOTO_VOLUNTEER_COUNT` (+0x43f). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn intertoto_volunteer_count(self) -> u8 {
+        read_u8(self.0 + uefa_seeding::INTERTOTO_VOLUNTEER_COUNT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_intertoto_volunteer_count(self, v: u8) {
+        write_u8(self.0 + uefa_seeding::INTERTOTO_VOLUNTEER_COUNT, v)
     }
     /// `uefa_seeding::CUP_FINALS` (+0x440). Name: read.
     #[inline(always)]
@@ -22243,6 +22316,239 @@ impl Addr for Guio {
 }
 
 impl core::fmt::LowerHex for Guio {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `uefa_seeding_nation` record in the game's memory (fields in `fields::uefa_seeding_nation`). [pt] Um registro `uefa_seeding_nation` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct UefaSeedingNation(pub(crate) usize);
+
+#[allow(dead_code)]
+impl UefaSeedingNation {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `uefa_seeding_nation::CHAMPIONS_LEAGUE_PLACES` (+0xc). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn champions_league_places(self) -> u8 {
+        read_u8(self.0 + uefa_seeding_nation::CHAMPIONS_LEAGUE_PLACES)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_champions_league_places(self, v: u8) {
+        write_u8(self.0 + uefa_seeding_nation::CHAMPIONS_LEAGUE_PLACES, v)
+    }
+    /// `uefa_seeding_nation::UEFA_CUP_PLACES` (+0xd). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn uefa_cup_places(self) -> u8 {
+        read_u8(self.0 + uefa_seeding_nation::UEFA_CUP_PLACES)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_uefa_cup_places(self, v: u8) {
+        write_u8(self.0 + uefa_seeding_nation::UEFA_CUP_PLACES, v)
+    }
+    /// `uefa_seeding_nation::INTERTOTO_PLACES` (+0xe). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn intertoto_places(self) -> u8 {
+        read_u8(self.0 + uefa_seeding_nation::INTERTOTO_PLACES)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_intertoto_places(self, v: u8) {
+        write_u8(self.0 + uefa_seeding_nation::INTERTOTO_PLACES, v)
+    }
+    /// `uefa_seeding_nation::SEASON_POINTS` (+0xf). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn season_points(self) -> i16 {
+        read_i16(self.0 + uefa_seeding_nation::SEASON_POINTS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_season_points(self, v: i16) {
+        write_i16(self.0 + uefa_seeding_nation::SEASON_POINTS, v)
+    }
+    /// `uefa_seeding_nation::CLUBS_IN_CUPS` (+0x11). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn clubs_in_cups(self) -> i8 {
+        read_i8(self.0 + uefa_seeding_nation::CLUBS_IN_CUPS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_clubs_in_cups(self, v: i8) {
+        write_i8(self.0 + uefa_seeding_nation::CLUBS_IN_CUPS, v)
+    }
+}
+
+impl Addr for UefaSeedingNation {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for UefaSeedingNation {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `european_club_entry` record in the game's memory (fields in `fields::european_club_entry`). [pt] Um registro `european_club_entry` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct EuropeanClubEntry(pub(crate) usize);
+
+#[allow(dead_code)]
+impl EuropeanClubEntry {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `european_club_entry::LAST_POSITION` (+0xb). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn last_position(self) -> u8 {
+        read_u8(self.0 + european_club_entry::LAST_POSITION)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_last_position(self, v: u8) {
+        write_u8(self.0 + european_club_entry::LAST_POSITION, v)
+    }
+}
+
+impl Addr for EuropeanClubEntry {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for EuropeanClubEntry {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `training_manager_fields` record in the game's memory (fields in `fields::training_manager_fields`). [pt] Um registro `training_manager_fields` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct TrainingManagerFields(pub(crate) usize);
+
+#[allow(dead_code)]
+impl TrainingManagerFields {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `training_manager_fields::HUMAN_SCHEDULES` (+0x43d). Name: read.
+    #[inline(always)]
+    pub(crate) fn human_schedules_addr(self) -> usize {
+        self.0 + training_manager_fields::HUMAN_SCHEDULES
+    }
+    /// `training_manager_fields::PLAYER_ENTRIES` (+0x651d). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn player_entries(self) -> usize {
+        read_usize(self.0 + training_manager_fields::PLAYER_ENTRIES)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_player_entries(self, v: usize) {
+        write_usize(self.0 + training_manager_fields::PLAYER_ENTRIES, v)
+    }
+    /// `training_manager_fields::POSITION_TRAINING_ITEMS` (+0x6521). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn position_training_items(self) -> usize {
+        read_usize(self.0 + training_manager_fields::POSITION_TRAINING_ITEMS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_position_training_items(self, v: usize) {
+        write_usize(self.0 + training_manager_fields::POSITION_TRAINING_ITEMS, v)
+    }
+    /// `training_manager_fields::POSITION_TRAINING_COUNT` (+0x6525). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn position_training_count(self) -> i32 {
+        read_i32(self.0 + training_manager_fields::POSITION_TRAINING_COUNT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_position_training_count(self, v: i32) {
+        write_i32(self.0 + training_manager_fields::POSITION_TRAINING_COUNT, v)
+    }
+    /// `training_manager_fields::COACH_ASSIGNMENTS` (+0x652d). Name: read.
+    #[inline(always)]
+    pub(crate) fn coach_assignments_addr(self) -> usize {
+        self.0 + training_manager_fields::COACH_ASSIGNMENTS
+    }
+    /// `training_manager_fields::WEEK_COUNTER` (+0x688d). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn week_counter(self) -> u16 {
+        read_u16(self.0 + training_manager_fields::WEEK_COUNTER)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_week_counter(self, v: u16) {
+        write_u16(self.0 + training_manager_fields::WEEK_COUNTER, v)
+    }
+}
+
+impl Addr for TrainingManagerFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for TrainingManagerFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `training_schedule` record in the game's memory (fields in `fields::training_schedule`). [pt] Um registro `training_schedule` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct TrainingSchedule(pub(crate) usize);
+
+#[allow(dead_code)]
+impl TrainingSchedule {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `training_schedule::TYPE` (+0x15). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn r#type(self) -> u8 {
+        read_u8(self.0 + training_schedule::TYPE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_type(self, v: u8) {
+        write_u8(self.0 + training_schedule::TYPE, v)
+    }
+}
+
+impl Addr for TrainingSchedule {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for TrainingSchedule {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         core::fmt::LowerHex::fmt(&self.0, f)
     }
