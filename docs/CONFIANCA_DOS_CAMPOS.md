@@ -19,8 +19,8 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | Nível | Campos |
 |---|---|
 | comunidade | 247 |
-| conferido | 112 |
-| lido | 1501 |
+| conferido | 128 |
+| lido | 1523 |
 | inferido | 164 |
 
 ## Por registro
@@ -44,13 +44,15 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `city` | 6 | 0 | 0 | 0 |
 | `club` | 43 | 0 | 2 | 0 |
 | `club_discipline_record` | 0 | 0 | 3 | 0 |
+| `club_match_record` | 0 | 4 | 5 | 0 |
 | `club_record` | 0 | 0 | 24 | 1 |
 | `club_record_entry` | 0 | 0 | 3 | 0 |
 | `club_records_fields` | 0 | 0 | 10 | 0 |
 | `club_shortlist` | 0 | 0 | 0 | 2 |
 | `cm_date` | 2 | 0 | 0 | 0 |
 | `colour` | 0 | 0 | 3 | 0 |
-| `commentary_queue` | 0 | 0 | 10 | 1 |
+| `commentary_queue` | 0 | 0 | 11 | 1 |
+| `commentary_slot` | 0 | 0 | 1 | 0 |
 | `comp_history_row` | 0 | 0 | 3 | 1 |
 | `comp_stats_club` | 0 | 3 | 5 | 1 |
 | `competition` | 9 | 0 | 0 | 0 |
@@ -63,12 +65,14 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `contract_offer` | 0 | 0 | 8 | 3 |
 | `contract_talks` | 0 | 0 | 2 | 0 |
 | `count_record` | 0 | 0 | 2 | 0 |
+| `crt_file` | 0 | 1 | 0 | 0 |
 | `cup` | 0 | 0 | 25 | 2 |
 | `cup_round` | 0 | 0 | 23 | 1 |
 | `cup_tie` | 0 | 2 | 10 | 0 |
 | `day_competition` | 0 | 0 | 5 | 1 |
 | `day_group` | 0 | 0 | 5 | 0 |
 | `day_match` | 0 | 0 | 17 | 1 |
+| `db_index_entry` | 0 | 2 | 0 | 0 |
 | `decision_date` | 0 | 0 | 3 | 0 |
 | `discipline_fields` | 0 | 0 | 11 | 0 |
 | `discipline_record` | 0 | 0 | 3 | 0 |
@@ -81,8 +85,13 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `euro_champ_qual` | 0 | 0 | 1 | 0 |
 | `european_club_entry` | 0 | 0 | 1 | 0 |
 | `event_type` | 0 | 0 | 3 | 0 |
+| `event_variant` | 0 | 2 | 0 | 0 |
 | `exchange_player` | 0 | 0 | 2 | 0 |
 | `fans_player_record` | 0 | 0 | 1 | 0 |
+| `fifa_ranking_entry` | 0 | 0 | 7 | 0 |
+| `fifa_rankings_fields` | 0 | 0 | 2 | 0 |
+| `fifa_result_entry` | 0 | 0 | 2 | 0 |
+| `file_find_state` | 0 | 0 | 1 | 0 |
 | `finance` | 0 | 0 | 40 | 2 |
 | `fixed_fixture` | 0 | 0 | 1 | 0 |
 | `fixture` | 0 | 0 | 35 | 6 |
@@ -109,6 +118,8 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `instalment` | 0 | 0 | 3 | 0 |
 | `intertoto_cup` | 0 | 0 | 1 | 0 |
 | `intl_date_entry` | 0 | 0 | 6 | 1 |
+| `ita_cup_fields` | 0 | 0 | 2 | 0 |
+| `italian_league` | 0 | 0 | 1 | 0 |
 | `job_vacancy` | 0 | 0 | 1 | 0 |
 | `key_nation_record` | 0 | 7 | 2 | 1 |
 | `language_entry` | 0 | 0 | 2 | 0 |
@@ -139,7 +150,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `match_summary` | 0 | 0 | 1 | 0 |
 | `media_fields` | 0 | 0 | 6 | 0 |
 | `names` | 0 | 3 | 0 | 0 |
-| `nation` | 34 | 0 | 1 | 0 |
+| `nation` | 34 | 1 | 1 | 0 |
 | `nation_club_bucket` | 0 | 0 | 2 | 0 |
 | `nation_index_item` | 0 | 0 | 1 | 0 |
 | `nation_name_index` | 0 | 0 | 9 | 0 |
@@ -168,7 +179,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `preferences` | 7 | 0 | 0 | 0 |
 | `preseason_candidate` | 0 | 0 | 7 | 0 |
 | `rating_record` | 0 | 0 | 2 | 1 |
-| `record_holder` | 0 | 0 | 1 | 0 |
+| `record_holder` | 0 | 1 | 1 | 0 |
 | `record_news_item` | 0 | 0 | 2 | 0 |
 | `recovery_news_entry` | 0 | 0 | 5 | 0 |
 | `regen_pool_item` | 0 | 0 | 3 | 0 |
@@ -216,6 +227,8 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `undo_slot` | 0 | 0 | 4 | 0 |
 | `work_permit` | 0 | 0 | 4 | 0 |
 | `world_cup_fields` | 0 | 0 | 4 | 0 |
+| `zfile` | 0 | 4 | 0 | 0 |
+| `zip_header` | 0 | 1 | 0 | 0 |
 
 ## Os nomes inferidos (a conferir)
 

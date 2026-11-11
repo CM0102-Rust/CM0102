@@ -37,30 +37,30 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(game: usize, club
     let d = exe::new_date(p0, game.day() as u32, game.year() as u32);
     exe::date_operator_3d(out, p1, d);
     core::ptr::write_unaligned(((out + 8) as *mut u8) as *mut u32, read_u32(game.addr()));
-    core::ptr::write_unaligned(((out + 0xc) as *mut u8) as *mut u16, game.round_prefix() as u16);
-    core::ptr::write_unaligned(((out + 0xe) as *mut u8) as *mut u16, game.round_name() as u16);
-    *((out + 0x10) as *mut u8) = exe::comp_util_get_fixture_venue_side(club, game);
-    core::ptr::write_unaligned(((out + 0x11) as *mut u8) as *mut u32, read_u32(club));
-    core::ptr::write_unaligned(((out + 0x1b) as *mut u8) as *mut u32, game.match_stats_slot() as u32);
+    core::ptr::write_unaligned(((out + club_match_record::ROUND_PREFIX) as *mut u8) as *mut u16, game.round_prefix() as u16);
+    core::ptr::write_unaligned(((out + club_match_record::ROUND_NAME) as *mut u8) as *mut u16, game.round_name() as u16);
+    *((out + club_match_record::VENUE) as *mut u8) = exe::comp_util_get_fixture_venue_side(club, game);
+    core::ptr::write_unaligned(((out + club_match_record::CLUB_ID) as *mut u8) as *mut u32, read_u32(club));
+    core::ptr::write_unaligned(((out + club_match_record::MATCH_STATS_SLOT) as *mut u8) as *mut u32, game.match_stats_slot() as u32);
     if club as u32 == (game.home_club().addr() as u32) { // cpz7: the club is the home team
-        core::ptr::write_unaligned(((out + 0x15) as *mut u8) as *mut u32, game.away_club_id() as u32);
+        core::ptr::write_unaligned(((out + club_match_record::OPPONENT_ID) as *mut u8) as *mut u32, game.away_club_id() as u32);
         if (game.home_goals_extra_time() as u8) as i8 > -1 {
-            *((out + 0x19) as *mut u8) = game.home_goals_extra_time() as u8;
-            *((out + 0x1a) as *mut u8) = game.away_goals_extra_time() as u8;
+            *((out + club_match_record::GOALS_FOR) as *mut u8) = game.home_goals_extra_time() as u8;
+            *((out + club_match_record::GOALS_AGAINST) as *mut u8) = game.away_goals_extra_time() as u8;
         } else {
             crate::comparison::branch("cpz_7 home side score");
-            *((out + 0x19) as *mut u8) = game.home_goals() as u8; // cpz7: the home team goals
-            *((out + 0x1a) as *mut u8) = game.away_goals() as u8;
+            *((out + club_match_record::GOALS_FOR) as *mut u8) = game.home_goals() as u8; // cpz7: the home team goals
+            *((out + club_match_record::GOALS_AGAINST) as *mut u8) = game.away_goals() as u8;
         }
     } else {
-        core::ptr::write_unaligned(((out + 0x15) as *mut u8) as *mut u32, game.home_club_id() as u32);
+        core::ptr::write_unaligned(((out + club_match_record::OPPONENT_ID) as *mut u8) as *mut u32, game.home_club_id() as u32);
         if (game.away_goals_extra_time() as u8) as i8 > -1 {
-            *((out + 0x19) as *mut u8) = game.away_goals_extra_time() as u8;
-            *((out + 0x1a) as *mut u8) = game.home_goals_extra_time() as u8;
+            *((out + club_match_record::GOALS_FOR) as *mut u8) = game.away_goals_extra_time() as u8;
+            *((out + club_match_record::GOALS_AGAINST) as *mut u8) = game.home_goals_extra_time() as u8;
         } else {
             crate::comparison::branch("cpz_7 away side score");
-            *((out + 0x19) as *mut u8) = game.away_goals() as u8;
-            *((out + 0x1a) as *mut u8) = game.home_goals() as u8; // cpz7: the goals conceded by the away team
+            *((out + club_match_record::GOALS_FOR) as *mut u8) = game.away_goals() as u8;
+            *((out + club_match_record::GOALS_AGAINST) as *mut u8) = game.home_goals() as u8; // cpz7: the goals conceded by the away team
         }
     }
     1
@@ -70,7 +70,7 @@ pub(crate) unsafe extern "C" fn fill_match_record_from_fixture(game: usize, club
 ///
 /// [pt] O id do nome (+0x33 do registro de nome) ou −1 sem nome.
 pub(crate) unsafe fn name_id(p: u32) -> u32 {
-    if p != 0 { read_u32(p as usize + 0x33) } else { u32::MAX }
+    if p != 0 { read_u32(p as usize + names::ID) } else { u32::MAX }
 }
 
 /// Stores the three name ids (−1 when missing), the person's id and birth date in a compact reference.
@@ -97,9 +97,9 @@ pub(crate) unsafe extern "C" fn fill_staff_name_ref(person: usize, out: usize) -
     for k in 0..3 {
         write_u32(out + 4 * k, name_id(read_u32(person.addr() + staff::FIRST_NAME + 4 * k)));
     }
-    write_u32(out + 0xc, read_u32(person.addr()));
+    write_u32(out + record_holder::STAFF_ID, read_u32(person.addr()));
     let mut t = [0u8; 8];
-    exe::date_operator_3d(out + 0x10, t.as_mut_ptr() as usize, person.addr() + staff::DATE_OF_BIRTH);
+    exe::date_operator_3d(out + record_holder::DATE, t.as_mut_ptr() as usize, person.addr() + staff::DATE_OF_BIRTH);
     1
 }
 
@@ -118,7 +118,7 @@ pub(crate) unsafe extern "C" fn match_record_result_code(record: usize) -> u8 {
         show_error_at(0xa7a088, 0x25a);
         return 0;
     }
-    let (p, c) = (read_u8(record + 0x19) as i8, read_u8(record + 0x1a) as i8);
+    let (p, c) = (read_u8(record + club_match_record::GOALS_FOR) as i8, read_u8(record + club_match_record::GOALS_AGAINST) as i8);
     if p > c {
         3
     } else if p == c && p > 0 {
@@ -149,7 +149,7 @@ pub(crate) unsafe fn add_year_award(this: usize, p: Staff, club: usize, prize: u
         let r = staff_records_manager_record(this, p);
         if r != 0 {
             crate::comparison::branch("cpy_10 manager award");
-            let a = (r + 0x9e) as *mut u16;
+            let a = (r + manager_record::MONTH_AWARDS) as *mut u16;
             core::ptr::write_unaligned(a, core::ptr::read_unaligned(a).wrapping_add(1));
         }
         return;
@@ -172,8 +172,8 @@ pub(crate) unsafe fn add_year_award(this: usize, p: Staff, club: usize, prize: u
     if read_usize(G_TRANSFER_MANAGER) != 0 {
         if exe::date_days_since(G_CURRENT_DATE, (k.date_started()) as u32, read_usize(k.addr() + contract::DATE_STARTED + 4) as u32) > 0x12c { // cpy10: mais de 300 dias
             let owner = contract_club_except_type5(p);
-            let x = exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + 0x856), owner, p, 0, 0);
-            if x != 0 && read_usize(x + 0xf) == read_usize(p.addr()) {
+            let x = exe::shortlist_manager_find_club_shortlist_entry(read_usize(read_usize(G_TRANSFER_MANAGER) + transfer_manager_fields::SHORTLIST_MANAGER), owner, p, 0, 0);
+            if x != 0 && read_usize(x + shortlist_slot::TARGET_STAFF_ID) == read_usize(p.addr()) {
                 crate::comparison::branch("cpy_10 renewal");
                 offer_renewal(p.addr());
             }
@@ -215,7 +215,7 @@ pub(crate) unsafe extern "C" fn match_record_is_bigger_win(a: usize, b: usize) -
     if a == 0 || b == 0 {
         return original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_MATCH_RECORD_IS_BIGGER_WIN)(a, b);
     }
-    let (fa, sa, fb, signed_byte_at) = (read_u8(a + 0x19) as i8, read_u8(a + 0x1a) as i8, read_u8(b + 0x19) as i8, read_u8(b + 0x1a) as i8);
+    let (fa, sa, fb, signed_byte_at) = (read_u8(a + club_match_record::GOALS_FOR) as i8, read_u8(a + club_match_record::GOALS_AGAINST) as i8, read_u8(b + club_match_record::GOALS_FOR) as i8, read_u8(b + club_match_record::GOALS_AGAINST) as i8);
     if fa <= sa {
         return 0;
     }
@@ -238,7 +238,7 @@ pub(crate) unsafe extern "C" fn match_record_is_bigger_defeat(a: usize, b: usize
     if a == 0 || b == 0 {
         return original_fn::<unsafe extern "C" fn(usize, usize) -> u32>(IDX_MATCH_RECORD_IS_BIGGER_DEFEAT)(a, b);
     }
-    let (fa, sa, fb, signed_byte_at) = (read_u8(a + 0x19) as i8, read_u8(a + 0x1a) as i8, read_u8(b + 0x19) as i8, read_u8(b + 0x1a) as i8);
+    let (fa, sa, fb, signed_byte_at) = (read_u8(a + club_match_record::GOALS_FOR) as i8, read_u8(a + club_match_record::GOALS_AGAINST) as i8, read_u8(b + club_match_record::GOALS_FOR) as i8, read_u8(b + club_match_record::GOALS_AGAINST) as i8);
     if fa >= sa {
         return 0;
     }

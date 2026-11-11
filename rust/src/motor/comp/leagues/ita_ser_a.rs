@@ -251,7 +251,7 @@ pub(crate) unsafe fn italian_schedule(this: League, stage: u32, rounds: *mut i16
             }
             crate::comparison::branch("cqo_6 italian tiebreak match");
             let ano = this.year() as i32 as u32;
-            eng_cc_cup_write_cup_round(t, 0, &italian_playoff_round(p.draw, p.game, read_i8(this.addr() + 0xee)), ano);
+            eng_cc_cup_write_cup_round(t, 0, &italian_playoff_round(p.draw, p.game, read_i8(this.addr() + italian_league::TIEBREAK_TIE_COUNT)), ano);
             t
         }
         _ => 0,
@@ -360,7 +360,7 @@ pub(crate) unsafe fn tie_on_zone_boundary(league: League, z: &[u8; 64]) -> bool 
     let n = league.club_count() as i32 - 1;
     (0..n.max(0) as usize).any(|i| {
         let l = ita_ser_a_table_row(league, i);
-        read_i16(l + 0x19) == read_i16(l + 0x3b + 0x19) && z[i.min(63)] != z[(i + 1).min(63)]
+        read_i16(l + league_table_row::POINTS) == read_i16(l + 0x3b + league_table_row::POINTS) && z[i.min(63)] != z[(i + 1).min(63)]
     })
 }
 
@@ -411,7 +411,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_for_date(this: usize, to
     if n > 0 {
         loop {
             let l = ita_ser_a_table_row(this, i as usize);
-            let points = read_i16(l + 0x19);
+            let points = read_i16(l + league_table_row::POINTS);
             if points == read_i16(l + 0x54) && z[(i as usize).min(63)] != z[(i as usize + 1).min(63)] { // cql4: the Serie A pair at the boundary
                 exe::ita_league_sort_clubs_level_on_points(this, points as u16 as u32);
                 this.set_stage_count(1);
@@ -451,9 +451,9 @@ pub(crate) unsafe fn compare_league_day(name: &str, this: League, full: u32, fai
     if full != 0 && stages == 0 {
         if this.stage_count() != 0 {
             let z = faixas();
-            SCOREBOARD.record(tie_on_zone_boundary(this, &z) && this.stages() != 0, || format!("{}({:#x}): stage of the tiebreak without draw in the boundary (+0xc = {:#x})", name, this.addr(), this.stages()));
+            SCOREBOARD.record(tie_on_zone_boundary(this, &z) && this.stages() != 0, || format!("{}({:#x}): stage of the tiebreak without draw in the boundary (+league::STAGES = {:#x})", name, this.addr(), this.stages()));
         } else {
-            SCOREBOARD.record(!(this.complete() != 0 && this.tiebreak_matches() != 0), || format!("{}({:#x}): o end of the season ficou pendente (+0xdd e +0xe6 ligados)", name, this.addr()));
+            SCOREBOARD.record(!(this.complete() != 0 && this.tiebreak_matches() != 0), || format!("{}({:#x}): o end of the season ficou pendente (+league::COMPLETE e +league::TIEBREAK_MATCHES ligados)", name, this.addr()));
         }
     }
     r
@@ -499,7 +499,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
     this.set_table_column(0);
     exe::league_sort_table(this, (0) as u32 as usize);
     let t = this.table();
-    let (a, b) = (read_usize(game + 0x1c), read_usize(game + 0x20));
+    let (a, b) = (read_usize(game + fixture::HOME_CLUB), read_usize(game + fixture::AWAY_CLUB));
     let mut i: i16 = 0;
     while i < this.club_count() {
         let l = t + i as usize * 0x3b;
@@ -516,8 +516,8 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
                     let l3 = this.table() + i as usize * 0x3b;
                     write_u8(l3 + 4, i as u8);
                     write_u8(l3 - 0x3b + 4, (i as u8).wrapping_sub(1));
-                    write_u8(l3 + 0x37, 0xff);
-                    write_u8(l3 - 0x3b + 0x37, 0xff);
+                    write_u8(l3 + league_table_row::STATUS, 0xff);
+                    write_u8(l3 - 0x3b + league_table_row::STATUS, 0xff);
                     break;
                 }
             }
@@ -528,7 +528,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
                     write_u8(t + i as usize * 0x3b + 4, i as u8);
                     let t2 = this.table();
                     write_u8(t2 + i as usize * 0x3b + 0x3f, (i as u8).wrapping_add(1));
-                    write_u8(this.table() + i as usize * 0x3b + 0x37, 0xff);
+                    write_u8(this.table() + i as usize * 0x3b + league_table_row::STATUS, 0xff);
                     write_u8(this.table() + i as usize * 0x3b + 0x72, 0xff);
                     break;
                 }
@@ -539,7 +539,7 @@ pub(crate) unsafe extern "thiscall" fn ita_ser_a_update_staff_records_for_status
     let n = this.club_count();
     let mut k: i16 = 0;
     while k < n {
-        if read_u8(ita_ser_a_table_row(this, k as usize) + 0x37) == 1 {
+        if read_u8(ita_ser_a_table_row(this, k as usize) + league_table_row::STATUS) == 1 {
             return 0xffff_ffff;
         }
         k += 1;
@@ -612,7 +612,7 @@ pub(crate) unsafe fn construct_italian_division(this: League, year: u32, registr
     }
     crate::comparison::branch("cqm_4 new italian division");
     if p.series {
-        write_u8(this.addr() + 0xee, 0);
+        write_u8(this.addr() + italian_league::TIEBREAK_TIE_COUNT, 0);
         this.set_season_closed(1); // cqm4: the history mark of A and B
     }
     this.set_stage_index(0xff);
@@ -717,10 +717,10 @@ pub(crate) unsafe fn compare_italian_constructor(name: &str, this: League, year:
     if this.stage_index() == 0xff && this.comp_stats() != 0 {
         ok = ok && this.stage_count() == p.stages as usize && (this.stages() != 0) == (p.stages != 0);
         if p.series {
-            ok = ok && *((this.addr() + 0xee) as *const u8) == 0;
+            ok = ok && *((this.addr() + italian_league::TIEBREAK_TIE_COUNT) as *const u8) == 0;
         }
     }
-    SCOREBOARD.record(ok, || format!("{}({:#x}): returned {:#x}, vtable {:#x}, +0x2c = {}, +0xc = {:#x}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.stages(), this.comp_stats()));
+    SCOREBOARD.record(ok, || format!("{}({:#x}): returned {:#x}, vtable {:#x}, +league::STAGE_COUNT = {}, +league::STAGES = {:#x}, +8 = {:#x}", name, this.addr(), r, read_usize(this.addr()), this.stage_count(), this.stages(), this.comp_stats()));
     r
 }
 
@@ -788,7 +788,7 @@ pub(crate) unsafe fn set_up_fixed_fixtures(this: League, table: &[(u8, u8, u16, 
     let v = this.fixed_fixtures();
     for i in 0..n as usize {
         let f = v + i * 0x10;
-        if read_usize(f + 8) == 0xffff_ffff || read_usize(f + 0xc) == 0xffff_ffff { // cqn5: a club not found drops the list
+        if read_usize(f + 8) == 0xffff_ffff || read_usize(f + fixed_fixture::AWAY_CLUB_ID) == 0xffff_ffff { // cqn5: a club not found drops the list
             if v != 0 {
                 exe::crt_vector_destructor_iterator(v, 0x10, read_usize(v - 4) as u32, 0x5a53c0);
                 exe::crt_operator_delete(v - 4);
@@ -1597,7 +1597,7 @@ pub(crate) unsafe fn serie_c1a_rules(this: usize) -> Vec<(usize, u8, u32)> {
 pub(crate) unsafe fn serie_c1b_rules(this: usize) -> Vec<(usize, u8, u32)> {
     let mut v = italian_common_rules(League(this));
     v.extend_from_slice(&[(0x3c, 2, 2), (0xc2, 1, 3), (0xc7, 1, 0), (0xbe, 1, 1), (0xbf, 1, 4), (0xc0, 1, 4), (0xc1, 1, 1), (0x1c, 4, read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_C1_A) as u32)]);
-    let nation = Nation(read_usize(read_usize(this + 4) + 0x5d));
+    let nation = Nation(read_usize(read_usize(this + 4) + competition::NATION));
     let below = if nation.league_selected() & 4 != 0 { read_usize(KEY_CLUB_COMP_ITALIAN_SERIE_C2_A) as u32 } else { 0xffff_ffff };
     v.push((0x20, 4, below));
     v

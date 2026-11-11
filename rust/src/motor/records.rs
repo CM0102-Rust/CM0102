@@ -1142,6 +1142,15 @@ impl Nation {
     pub(crate) unsafe fn set_background_colour1(self, v: usize) {
         write_usize(self.0 + nation::BACKGROUND_COLOUR1, v)
     }
+    /// `nation::FIFA_COEFFICIENT` (+0xa8). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn fifa_coefficient(self) -> f64 {
+        read_f64(self.0 + nation::FIFA_COEFFICIENT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_fifa_coefficient(self, v: f64) {
+        write_f64(self.0 + nation::FIFA_COEFFICIENT, v)
+    }
     /// `nation::FIFACOEFFICIENT91` (+0xb0). Name: community.
     #[inline(always)]
     pub(crate) unsafe fn fifacoefficient91(self) -> f64 {
@@ -10658,6 +10667,15 @@ impl CommentaryQueue {
     pub(crate) fn slot_records_addr(self) -> usize {
         self.0 + commentary_queue::SLOT_RECORDS
     }
+    /// `commentary_queue::LAST_PERIOD_END` (+0x2d68). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn last_period_end(self) -> u32 {
+        read_u32(self.0 + commentary_queue::LAST_PERIOD_END)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_last_period_end(self, v: u32) {
+        write_u32(self.0 + commentary_queue::LAST_PERIOD_END, v)
+    }
     /// `commentary_queue::SOUND_START_TIMES` (+0x2d6c). Name: read.
     #[inline(always)]
     pub(crate) fn sound_start_times_addr(self) -> usize {
@@ -18678,6 +18696,15 @@ impl RecordHolder {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
+    /// `record_holder::STAFF_ID` (+0xc). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn staff_id(self) -> u32 {
+        read_u32(self.0 + record_holder::STAFF_ID)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_staff_id(self, v: u32) {
+        write_u32(self.0 + record_holder::STAFF_ID, v)
+    }
     /// `record_holder::DATE` (+0x10). Name: read.
     #[inline(always)]
     pub(crate) fn date_addr(self) -> usize {
@@ -23469,6 +23496,708 @@ impl Addr for AwolMissedTraining {
 }
 
 impl core::fmt::LowerHex for AwolMissedTraining {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `db_index_entry` record in the game's memory (fields in `fields::db_index_entry`). [pt] Um registro `db_index_entry` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct DbIndexEntry(pub(crate) usize);
+
+#[allow(dead_code)]
+impl DbIndexEntry {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `db_index_entry::RECORD_COUNT` (+0x37). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn record_count(self) -> u32 {
+        read_u32(self.0 + db_index_entry::RECORD_COUNT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_record_count(self, v: u32) {
+        write_u32(self.0 + db_index_entry::RECORD_COUNT, v)
+    }
+    /// `db_index_entry::VERSION` (+0x3f). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn version(self) -> i32 {
+        read_i32(self.0 + db_index_entry::VERSION)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_version(self, v: i32) {
+        write_i32(self.0 + db_index_entry::VERSION, v)
+    }
+}
+
+impl Addr for DbIndexEntry {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for DbIndexEntry {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `zip_header` record in the game's memory (fields in `fields::zip_header`). [pt] Um registro `zip_header` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct ZipHeader(pub(crate) usize);
+
+#[allow(dead_code)]
+impl ZipHeader {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `zip_header::CENTRAL_DIRECTORY` (+0xc). Name: verified.
+    #[inline(always)]
+    pub(crate) fn central_directory_addr(self) -> usize {
+        self.0 + zip_header::CENTRAL_DIRECTORY
+    }
+}
+
+impl Addr for ZipHeader {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for ZipHeader {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `file_find_state` record in the game's memory (fields in `fields::file_find_state`). [pt] Um registro `file_find_state` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct FileFindState(pub(crate) usize);
+
+#[allow(dead_code)]
+impl FileFindState {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `file_find_state::FILE_NAME` (+0x10). Name: read.
+    #[inline(always)]
+    pub(crate) fn file_name_addr(self) -> usize {
+        self.0 + file_find_state::FILE_NAME
+    }
+}
+
+impl Addr for FileFindState {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for FileFindState {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `zfile` record in the game's memory (fields in `fields::zfile`). [pt] Um registro `zfile` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct Zfile(pub(crate) usize);
+
+#[allow(dead_code)]
+impl Zfile {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `zfile::RLE_REPEAT_BYTE` (+0x18). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn rle_repeat_byte(self) -> u8 {
+        read_u8(self.0 + zfile::RLE_REPEAT_BYTE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_rle_repeat_byte(self, v: u8) {
+        write_u8(self.0 + zfile::RLE_REPEAT_BYTE, v)
+    }
+    /// `zfile::HEADER` (+0x19). Name: verified.
+    #[inline(always)]
+    pub(crate) fn header_addr(self) -> usize {
+        self.0 + zfile::HEADER
+    }
+    /// `zfile::READ_BUFFER` (+0x41705). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn read_buffer(self) -> u8 {
+        read_u8(self.0 + zfile::READ_BUFFER)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_read_buffer(self, v: u8) {
+        write_u8(self.0 + zfile::READ_BUFFER, v)
+    }
+    /// `zfile::WRITE_BUFFER` (+0x72445). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn write_buffer(self) -> u8 {
+        read_u8(self.0 + zfile::WRITE_BUFFER)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_write_buffer(self, v: u8) {
+        write_u8(self.0 + zfile::WRITE_BUFFER, v)
+    }
+}
+
+impl Addr for Zfile {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for Zfile {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `ita_cup_fields` record in the game's memory (fields in `fields::ita_cup_fields`). [pt] Um registro `ita_cup_fields` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct ItaCupFields(pub(crate) usize);
+
+#[allow(dead_code)]
+impl ItaCupFields {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `ita_cup_fields::ENTRANT_CLUBS` (+0xee). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn entrant_clubs(self) -> usize {
+        read_usize(self.0 + ita_cup_fields::ENTRANT_CLUBS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_entrant_clubs(self, v: usize) {
+        write_usize(self.0 + ita_cup_fields::ENTRANT_CLUBS, v)
+    }
+    /// `ita_cup_fields::ENTRANT_CLUB_COUNT` (+0xf2). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn entrant_club_count(self) -> usize {
+        read_usize(self.0 + ita_cup_fields::ENTRANT_CLUB_COUNT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_entrant_club_count(self, v: usize) {
+        write_usize(self.0 + ita_cup_fields::ENTRANT_CLUB_COUNT, v)
+    }
+}
+
+impl Addr for ItaCupFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for ItaCupFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `fifa_ranking_entry` record in the game's memory (fields in `fields::fifa_ranking_entry`). [pt] Um registro `fifa_ranking_entry` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct FifaRankingEntry(pub(crate) usize);
+
+#[allow(dead_code)]
+impl FifaRankingEntry {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `fifa_ranking_entry::HISTORY` (+0x4). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn history(self) -> i32 {
+        read_i32(self.0 + fifa_ranking_entry::HISTORY)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_history(self, v: i32) {
+        write_i32(self.0 + fifa_ranking_entry::HISTORY, v)
+    }
+    /// `fifa_ranking_entry::HISTORY_CAPACITY` (+0x8). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn history_capacity(self) -> i16 {
+        read_i16(self.0 + fifa_ranking_entry::HISTORY_CAPACITY)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_history_capacity(self, v: i16) {
+        write_i16(self.0 + fifa_ranking_entry::HISTORY_CAPACITY, v)
+    }
+    /// `fifa_ranking_entry::HISTORY_COUNT` (+0xa). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn history_count(self) -> i16 {
+        read_i16(self.0 + fifa_ranking_entry::HISTORY_COUNT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_history_count(self, v: i16) {
+        write_i16(self.0 + fifa_ranking_entry::HISTORY_COUNT, v)
+    }
+    /// `fifa_ranking_entry::SCORE` (+0xc). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn score(self) -> f32 {
+        read_f32(self.0 + fifa_ranking_entry::SCORE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_score(self, v: f32) {
+        write_f32(self.0 + fifa_ranking_entry::SCORE, v)
+    }
+    /// `fifa_ranking_entry::POSITION` (+0x10). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn position(self) -> u16 {
+        read_u16(self.0 + fifa_ranking_entry::POSITION)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_position(self, v: u16) {
+        write_u16(self.0 + fifa_ranking_entry::POSITION, v)
+    }
+    /// `fifa_ranking_entry::PREVIOUS_POSITION` (+0x12). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn previous_position(self) -> u16 {
+        read_u16(self.0 + fifa_ranking_entry::PREVIOUS_POSITION)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_previous_position(self, v: u16) {
+        write_u16(self.0 + fifa_ranking_entry::PREVIOUS_POSITION, v)
+    }
+    /// `fifa_ranking_entry::YEAR_TOTALS` (+0x14). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn year_totals(self) -> i32 {
+        read_i32(self.0 + fifa_ranking_entry::YEAR_TOTALS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_year_totals(self, v: i32) {
+        write_i32(self.0 + fifa_ranking_entry::YEAR_TOTALS, v)
+    }
+}
+
+impl Addr for FifaRankingEntry {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for FifaRankingEntry {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `fifa_result_entry` record in the game's memory (fields in `fields::fifa_result_entry`). [pt] Um registro `fifa_result_entry` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct FifaResultEntry(pub(crate) usize);
+
+#[allow(dead_code)]
+impl FifaResultEntry {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `fifa_result_entry::MONTH` (+0x2). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn month(self) -> u8 {
+        read_u8(self.0 + fifa_result_entry::MONTH)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_month(self, v: u8) {
+        write_u8(self.0 + fifa_result_entry::MONTH, v)
+    }
+    /// `fifa_result_entry::YEAR` (+0x3). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn year(self) -> i16 {
+        read_i16(self.0 + fifa_result_entry::YEAR)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_year(self, v: i16) {
+        write_i16(self.0 + fifa_result_entry::YEAR, v)
+    }
+}
+
+impl Addr for FifaResultEntry {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for FifaResultEntry {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `fifa_rankings_fields` record in the game's memory (fields in `fields::fifa_rankings_fields`). [pt] Um registro `fifa_rankings_fields` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct FifaRankingsFields(pub(crate) usize);
+
+#[allow(dead_code)]
+impl FifaRankingsFields {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `fifa_rankings_fields::ROLLOVER_MONTH` (+0x4). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn rollover_month(self) -> u8 {
+        read_u8(self.0 + fifa_rankings_fields::ROLLOVER_MONTH)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_rollover_month(self, v: u8) {
+        write_u8(self.0 + fifa_rankings_fields::ROLLOVER_MONTH, v)
+    }
+    /// `fifa_rankings_fields::LAST_UPDATE_DATE` (+0x5). Name: read.
+    #[inline(always)]
+    pub(crate) fn last_update_date_addr(self) -> usize {
+        self.0 + fifa_rankings_fields::LAST_UPDATE_DATE
+    }
+}
+
+impl Addr for FifaRankingsFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for FifaRankingsFields {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `club_match_record` record in the game's memory (fields in `fields::club_match_record`). [pt] Um registro `club_match_record` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct ClubMatchRecord(pub(crate) usize);
+
+#[allow(dead_code)]
+impl ClubMatchRecord {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `club_match_record::FIXTURE_ID` (+0x8). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn fixture_id(self) -> i32 {
+        read_i32(self.0 + club_match_record::FIXTURE_ID)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_fixture_id(self, v: i32) {
+        write_i32(self.0 + club_match_record::FIXTURE_ID, v)
+    }
+    /// `club_match_record::ROUND_PREFIX` (+0xc). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn round_prefix(self) -> i16 {
+        read_i16(self.0 + club_match_record::ROUND_PREFIX)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_round_prefix(self, v: i16) {
+        write_i16(self.0 + club_match_record::ROUND_PREFIX, v)
+    }
+    /// `club_match_record::ROUND_NAME` (+0xe). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn round_name(self) -> i16 {
+        read_i16(self.0 + club_match_record::ROUND_NAME)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_round_name(self, v: i16) {
+        write_i16(self.0 + club_match_record::ROUND_NAME, v)
+    }
+    /// `club_match_record::VENUE` (+0x10). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn venue(self) -> u8 {
+        read_u8(self.0 + club_match_record::VENUE)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_venue(self, v: u8) {
+        write_u8(self.0 + club_match_record::VENUE, v)
+    }
+    /// `club_match_record::CLUB_ID` (+0x11). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn club_id(self) -> i32 {
+        read_i32(self.0 + club_match_record::CLUB_ID)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_club_id(self, v: i32) {
+        write_i32(self.0 + club_match_record::CLUB_ID, v)
+    }
+    /// `club_match_record::OPPONENT_ID` (+0x15). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn opponent_id(self) -> i32 {
+        read_i32(self.0 + club_match_record::OPPONENT_ID)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_opponent_id(self, v: i32) {
+        write_i32(self.0 + club_match_record::OPPONENT_ID, v)
+    }
+    /// `club_match_record::GOALS_FOR` (+0x19). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn goals_for(self) -> u8 {
+        read_u8(self.0 + club_match_record::GOALS_FOR)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_goals_for(self, v: u8) {
+        write_u8(self.0 + club_match_record::GOALS_FOR, v)
+    }
+    /// `club_match_record::GOALS_AGAINST` (+0x1a). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn goals_against(self) -> u8 {
+        read_u8(self.0 + club_match_record::GOALS_AGAINST)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_goals_against(self, v: u8) {
+        write_u8(self.0 + club_match_record::GOALS_AGAINST, v)
+    }
+    /// `club_match_record::MATCH_STATS_SLOT` (+0x1b). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn match_stats_slot(self) -> i32 {
+        read_i32(self.0 + club_match_record::MATCH_STATS_SLOT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_match_stats_slot(self, v: i32) {
+        write_i32(self.0 + club_match_record::MATCH_STATS_SLOT, v)
+    }
+}
+
+impl Addr for ClubMatchRecord {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for ClubMatchRecord {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `crt_file` record in the game's memory (fields in `fields::crt_file`). [pt] Um registro `crt_file` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct CrtFile(pub(crate) usize);
+
+#[allow(dead_code)]
+impl CrtFile {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `crt_file::FLAGS` (+0xc). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn flags(self) -> i32 {
+        read_i32(self.0 + crt_file::FLAGS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_flags(self, v: i32) {
+        write_i32(self.0 + crt_file::FLAGS, v)
+    }
+}
+
+impl Addr for CrtFile {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for CrtFile {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `event_variant` record in the game's memory (fields in `fields::event_variant`). [pt] Um registro `event_variant` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct EventVariant(pub(crate) usize);
+
+#[allow(dead_code)]
+impl EventVariant {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `event_variant::LIVE_TEXT` (+0x108). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn live_text(self) -> usize {
+        read_usize(self.0 + event_variant::LIVE_TEXT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_live_text(self, v: usize) {
+        write_usize(self.0 + event_variant::LIVE_TEXT, v)
+    }
+    /// `event_variant::REPORT_TEXT` (+0x10c). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn report_text(self) -> usize {
+        read_usize(self.0 + event_variant::REPORT_TEXT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_report_text(self, v: usize) {
+        write_usize(self.0 + event_variant::REPORT_TEXT, v)
+    }
+}
+
+impl Addr for EventVariant {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for EventVariant {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `commentary_slot` record in the game's memory (fields in `fields::commentary_slot`). [pt] Um registro `commentary_slot` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct CommentarySlot(pub(crate) usize);
+
+#[allow(dead_code)]
+impl CommentarySlot {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `commentary_slot::CURRENT_PART` (+0xd). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn current_part(self) -> u8 {
+        read_u8(self.0 + commentary_slot::CURRENT_PART)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_current_part(self, v: u8) {
+        write_u8(self.0 + commentary_slot::CURRENT_PART, v)
+    }
+}
+
+impl Addr for CommentarySlot {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for CommentarySlot {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `italian_league` record in the game's memory (fields in `fields::italian_league`). [pt] Um registro `italian_league` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct ItalianLeague(pub(crate) usize);
+
+#[allow(dead_code)]
+impl ItalianLeague {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `italian_league::TIEBREAK_TIE_COUNT` (+0xee). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn tiebreak_tie_count(self) -> u8 {
+        read_u8(self.0 + italian_league::TIEBREAK_TIE_COUNT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_tiebreak_tie_count(self, v: u8) {
+        write_u8(self.0 + italian_league::TIEBREAK_TIE_COUNT, v)
+    }
+}
+
+impl Addr for ItalianLeague {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for ItalianLeague {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         core::fmt::LowerHex::fmt(&self.0, f)
     }

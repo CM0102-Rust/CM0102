@@ -31,9 +31,9 @@ pub(crate) unsafe fn create_first_group_table(this: League, n: i16, file: usize,
     crate::comparison::branch(ramo);
     let mut i: i8 = 0;
     while (i as i16) < this.club_count() {
-        let slot = read_usize(this.addr() + 0xee) + i as isize as usize * 4;
+        let slot = read_usize(this.addr() + ita_cup_fields::ENTRANT_CLUBS) + i as isize as usize * 4;
         exe::league_init_table_row(this, i as u8 as u32, read_usize(slot), 0, 0);
-        write_u32(read_usize(this.addr() + 0xee) + i as isize as usize * 4, 0); // cqr7: the group 1 slot leaves the list
+        write_u32(read_usize(this.addr() + ita_cup_fields::ENTRANT_CLUBS) + i as isize as usize * 4, 0); // cqr7: the group 1 slot leaves the list
         i = i.wrapping_add(1);
     }
     exe::league_send_group_draw_news(this);
@@ -52,11 +52,11 @@ pub(crate) unsafe fn create_first_group_table(this: League, n: i16, file: usize,
 /// pode rodar duas vezes), conferindo o plano feito antes: devolve 1, +0x3e = n, a tabela em +0xb1 com os n primeiros
 /// inscritos nas linhas (de 0x3b bytes), na ordem, e as n primeiras vagas de +0xee zeradas.
 pub(crate) unsafe fn compare_first_group_table(name: &str, this: League, n: i16, original: impl FnOnce() -> u32) -> u32 {
-    let plan: Vec<usize> = (0..n as usize).map(|k| read_usize(read_usize(this.addr() + 0xee) + k * 4)).collect();
+    let plan: Vec<usize> = (0..n as usize).map(|k| read_usize(read_usize(this.addr() + ita_cup_fields::ENTRANT_CLUBS) + k * 4)).collect();
     let r = original();
     let t = this.table();
     let ok = r == 1 && this.club_count() == n && t != 0
-        && plan.iter().enumerate().all(|(k, &c)| read_usize(t + k * 0x3b) == c && read_usize(read_usize(this.addr() + 0xee) + k * 4) == 0);
+        && plan.iter().enumerate().all(|(k, &c)| read_usize(t + k * 0x3b) == c && read_usize(read_usize(this.addr() + ita_cup_fields::ENTRANT_CLUBS) + k * 4) == 0);
     SCOREBOARD.record(ok, || format!("{}({:#x}) returned {}; plan {:x?}", name, this.addr(), r, plan));
     r
 }
@@ -181,11 +181,11 @@ pub(crate) unsafe fn ita_cup_create_group_stage_cqr8_group_stage(this: League, g
         let mut k = 0i32;
         let mut o = 0usize;
         loop {
-            let c = read_usize(read_usize(this.addr() + 0xee) + o);
+            let c = read_usize(read_usize(this.addr() + ita_cup_fields::ENTRANT_CLUBS) + o);
             if c != 0 {
                 crate::comparison::branch(ramo);
                 write_usize(teams + k as usize * 4, c); // cqr8: the team in slot k of the group
-                write_usize(read_usize(this.addr() + 0xee) + o, 0);
+                write_usize(read_usize(this.addr() + ita_cup_fields::ENTRANT_CLUBS) + o, 0);
                 k += 1;
             }
             o += 4;
@@ -255,7 +255,7 @@ pub(crate) unsafe fn compare_group_stage(name: &str, this: League, g: u32, origi
     let mut slots = Vec::new();
     let mut o = 0usize;
     while plan.len() < n && o < 0x400 {
-        let c = read_usize(read_usize(this.addr() + 0xee) + o);
+        let c = read_usize(read_usize(this.addr() + ita_cup_fields::ENTRANT_CLUBS) + o);
         if c != 0 {
             plan.push(c);
             slots.push(o);
@@ -268,7 +268,7 @@ pub(crate) unsafe fn compare_group_stage(name: &str, this: League, g: u32, origi
         let f = League(read_usize(this.stages() + g as usize * 4));
         let t = f.table();
         ok = !f.is_null() && this.current_stage() == g as usize && f.club_count() == this.club_count() && f.year() == this.year()
-            && slots.iter().all(|&o| read_usize(read_usize(this.addr() + 0xee) + o) == 0)
+            && slots.iter().all(|&o| read_usize(read_usize(this.addr() + ita_cup_fields::ENTRANT_CLUBS) + o) == 0)
             && (t == 0 || {
                 let mut a: Vec<usize> = (0..plan.len()).map(|k| read_usize(t + k * 0x3b)).collect();
                 let mut b = plan.clone();
@@ -308,7 +308,7 @@ pub(crate) unsafe fn group_table(this: League, i: usize) -> usize {
     if i == 0 {
         this.table()
     } else {
-        read_usize(read_usize(this.stages() + (i - 1) * 4) + 0xb1)
+        read_usize(read_usize(this.stages() + (i - 1) * 4) + league::TABLE)
     }
 }
 
@@ -318,21 +318,21 @@ pub(crate) unsafe fn group_table(this: League, i: usize) -> usize {
 /// até +0xf2 vagas: os não nulos, na ordem), cada um zerado ao sair.
 pub(crate) unsafe fn take_direct_entrants(this: usize, teams: usize, mut k: usize, end: usize) {
     let mut j = 0i32;
-    if (read_usize(this + 0xf2) as i32) <= 0 {
+    if (read_usize(this + ita_cup_fields::ENTRANT_CLUB_COUNT) as i32) <= 0 {
         return;
     }
     loop {
         if k >= end {
             break;
         }
-        let c = read_usize(read_usize(this + 0xee) + j as usize * 4);
+        let c = read_usize(read_usize(this + ita_cup_fields::ENTRANT_CLUBS) + j as usize * 4);
         if c != 0 {
             write_usize(teams + k * 4, c);
-            write_usize(read_usize(this + 0xee) + j as usize * 4, 0);
+            write_usize(read_usize(this + ita_cup_fields::ENTRANT_CLUBS) + j as usize * 4, 0);
             k += 1;
         }
         j += 1;
-        if j >= read_usize(this + 0xf2) as i32 {
+        if j >= read_usize(this + ita_cup_fields::ENTRANT_CLUB_COUNT) as i32 {
             break;
         }
     }
@@ -415,15 +415,15 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage(this: usize
 pub(crate) unsafe fn ita_cup_compare_knockout_stage(name: &str, this: League, stage: usize, cabem: usize, original: impl FnOnce()) {
     let mut slots = Vec::new();
     let mut j = 0usize;
-    while slots.len() < cabem && (j as i32) < read_usize(this.addr() + 0xf2) as i32 {
-        if read_usize(read_usize(this.addr() + 0xee) + j * 4) != 0 {
+    while slots.len() < cabem && (j as i32) < read_usize(this.addr() + ita_cup_fields::ENTRANT_CLUB_COUNT) as i32 {
+        if read_usize(read_usize(this.addr() + ita_cup_fields::ENTRANT_CLUBS) + j * 4) != 0 {
             slots.push(j);
         }
         j += 1;
     }
     original();
     let f = read_usize(this.stages() + stage * 4);
-    let ok = f != 0 && slots.iter().all(|&j| read_usize(read_usize(this.addr() + 0xee) + j * 4) == 0);
+    let ok = f != 0 && slots.iter().all(|&j| read_usize(read_usize(this.addr() + ita_cup_fields::ENTRANT_CLUBS) + j * 4) == 0);
     SCOREBOARD.record(ok, || format!("{}({:#x}) stage {:#x}, slots tiradas {:?}", name, this.addr(), f, slots));
 }
 
@@ -502,7 +502,7 @@ pub(crate) unsafe extern "thiscall" fn ita_cup_create_knockout_stage_63dc10(this
             while r < n {
                 if read_usize(group.table() + r as usize * 0x3b) == read_usize(league.table() + l) {
                     group.set_promoted_count(2);
-                    write_u8(group.table() + r as usize * 0x3b + 0x37, 6);
+                    write_u8(group.table() + r as usize * 0x3b + league_table_row::STATUS, 6);
                     g = 0x10;
                     break;
                 }
@@ -603,7 +603,7 @@ pub(crate) unsafe fn written_group_schedule_bytes(t: usize, n: i16) -> Vec<u8> {
     for r in 0..n.max(0) as usize {
         let e = t + r * 0x41;
         v.extend_from_slice(core::slice::from_raw_parts(e as *const u8, 0xc));
-        v.extend_from_slice(core::slice::from_raw_parts((e + 0x3d) as *const u8, 4));
+        v.extend_from_slice(core::slice::from_raw_parts((e + league_round_date::VENUE_VALUE) as *const u8, 4));
     }
     v
 }
@@ -713,7 +713,7 @@ pub(crate) unsafe fn is_italian_club(c: usize) -> bool {
 ///
 /// [pt] A posição na temporada anterior (+0x5f, byte com sinal; 0 o campeão [inferência]).
 pub(crate) unsafe fn last_season_position(c: usize) -> i8 {
-    read_i8(c + 0x5f)
+    read_i8(c + club::LAST_POSITION)
 }
 
 /// Shuffles n pointers from v (CompUtil shuffle_pointer_array, cdecl).
@@ -735,9 +735,9 @@ pub(crate) unsafe fn sort_pointers(v: usize, n: u32, cmp: usize) {
 ///
 /// [pt] A lista de ponteiros (+0xee) com o máximo `max` em +0xf2 (dword): 0x944e46 de 4 × max; sem memória, a caixa `linha`.
 pub(crate) unsafe fn alloc_entrant_list(this: usize, max: u32, file: usize, row: u32) -> Option<usize> {
-    write_u32(this + 0xf2, max);
+    write_u32(this + ita_cup_fields::ENTRANT_CLUB_COUNT, max);
     let l = exe::crt_malloc(max * 4);
-    write_u32(this + 0xee, l as u32);
+    write_u32(this + ita_cup_fields::ENTRANT_CLUBS, l as u32);
     if l == 0 {
         show_error_at(file, row);
         return None;
@@ -750,8 +750,8 @@ pub(crate) unsafe fn alloc_entrant_list(this: usize, max: u32, file: usize, row:
 /// [pt] Põe `c` no fim da lista (+0xee) e devolve verdadeiro quando a conta chega ao máximo +0xf2 (dword).
 pub(crate) unsafe fn push_entrant(this: usize, n: &mut i32, c: usize) -> bool {
     *n += 1;
-    write_u32(read_usize(this + 0xee) + (*n as usize - 1) * 4, c as u32);
-    *n == read_usize(this + 0xf2) as i32
+    write_u32(read_usize(this + ita_cup_fields::ENTRANT_CLUBS) + (*n as usize - 1) * 4, c as u32);
+    *n == read_usize(this + ita_cup_fields::ENTRANT_CLUB_COUNT) as i32
 }
 
 /// `ItaCup::select_entrants()` (`ita_cup_select_entrants`, thiscall, ret 0, ita_cup.cpp): the 48 Coppa Italia entrants (+0xf2 = 0x30;
@@ -924,16 +924,16 @@ pub(crate) unsafe fn compare_select_entrants(name: &str, this: usize, o: impl Fn
     let lr = core::cell::Cell::new(0usize);
     let nr = core::cell::Cell::new(0i32);
     let a_ = crate::rng::STATE_REGIONS;
-    let reg = [(this + 0xf2, 4usize), (G_MOUSE_LEFT_BUTTON_DOWN, 4), a_[0], a_[1]];
+    let reg = [(this + ita_cup_fields::ENTRANT_CLUB_COUNT, 4usize), (G_MOUSE_LEFT_BUTTON_DOWN, 4), a_[0], a_[1]];
     let (a, b, igual, mo, mr) = crate::comparison::side_by_side(&reg, || {
         let r = o();
-        lo.set(read_usize(this + 0xee));
+        lo.set(read_usize(this + ita_cup_fields::ENTRANT_CLUBS));
         r
     }, || {
         let (r, n) = crate::rng::without_counting(c);
-        lr.set(read_usize(this + 0xee));
+        lr.set(read_usize(this + ita_cup_fields::ENTRANT_CLUBS));
         nr.set(n);
-        write_u32(this + 0xee, lo.get() as u32);
+        write_u32(this + ita_cup_fields::ENTRANT_CLUBS, lo.get() as u32);
         r
     });
     let (lo, lr) = (lo.get(), lr.get());
@@ -1009,7 +1009,7 @@ pub(crate) unsafe fn select_serie_c_cup_entrants(this: usize) -> (i32, i32) {
             write_u32(e, c as u32);
             j += 1;
             write_u32(l + idx * 4, t as u32);
-            if j as i16 as i32 >= read_usize(this + 0xf2) as i32 {
+            if j as i16 as i32 >= read_usize(this + ita_cup_fields::ENTRANT_CLUB_COUNT) as i32 {
                 break;
             }
         }

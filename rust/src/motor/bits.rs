@@ -34,6 +34,13 @@ pub(crate) mod contract_type {
     pub(crate) const RESERVE_SQUAD: u8 = 0x40;
 }
 
+/// Bits of `crt_file::FLAGS`.
+#[allow(dead_code)]
+pub(crate) mod crt_file_flags {
+    /// MSVC _IOEOF = 0x10; used as end_of_file while reading the events cfg. Name: verified.
+    pub(crate) const EOF: u32 = 0x10;
+}
+
 /// Bits of `board_record::DISCIPLINE_COUNTERS`.
 #[allow(dead_code)]
 pub(crate) mod discipline_counters {
@@ -52,6 +59,13 @@ pub(crate) mod draw_rules {
     pub(crate) const SEPARATE_NATIONS: i16 = 0x4;
     /// swap when the level (+4) of a is below b's.4 value 8. Name: verified.
     pub(crate) const HIGHER_LEVEL_AT_HOME: i16 = 0x8;
+}
+
+/// Bits of `commentary_slot::EVENT_CODE`.
+#[allow(dead_code)]
+pub(crate) mod event_code {
+    /// advance_commentary_read clears it (&= 0x7fff); next_event: bit 0x8000 marks more '|' parts; commentary_queue::SLOTS comment. Name: read.
+    pub(crate) const MORE_PARTS: u32 = 0x8000;
 }
 
 /// Bits of `board_record::EXPECTATION_FLAGS`.

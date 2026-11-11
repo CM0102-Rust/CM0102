@@ -5,7 +5,7 @@ MUTACOES = [
     ('cpt1_no_maximo_oito', 'n = n.wrapping_add(1); // cpt1: one more match', 'if n < 8 { n += 1; } // mutacao: no maximo oito'),
     ('cpt2_ano_seguinte', 'write_u16(p + 3, ano); // cpt2: the match year', 'write_u16(p + 3, ano.wrapping_add(1)); // mutacao: o ano seguinte', 'cpt_2 result'),
     ('cpt2_mes_seguinte', 'write_u8(p + 2, mes); // cpt2: the match month', 'write_u8(p + 2, mes.wrapping_add(1)); // mutacao: o mes seguinte', 'cpt_2 result'),
-    ('cpt2_sem_somar_a_conta', 'write_i16(e + 0xa, c.wrapping_add(1)); // cpt2: mais um resultado', 'write_i16(e + 0xa, c); // mutacao: a conta nao sobe', 'cpt_2 result'),
+    ('cpt2_sem_somar_a_conta', 'write_i16(e + fifa_ranking_entry::HISTORY_COUNT, c.wrapping_add(1)); // cpt2: mais um resultado', 'write_i16(e + fifa_ranking_entry::HISTORY_COUNT, c); // mutacao: a conta nao sobe', 'cpt_2 result'),
     ('cpt3_liga_na_chave_seguinte', 'Some(k) => read_u8(0xb63d74 + 72 * k), // cpt3: the competition’s key nation', 'Some(k) => (read_u8(0xb63d74 + 72 * k)).wrapping_add(1), // mutacao: a chave seguinte'),
     ('cpt3_amistoso_na_chave_seguinte', 'return read_u8(0xb63d74 + 72 * k); // cpt3: the friendly’s nation', 'return (read_u8(0xb63d74 + 72 * k)).wrapping_add(1); // mutacao: a chave seguinte'),
     ('cpt3_copa_como_internacional', 'return 0; // cpt3: Copa do Mundo e eliminatorias', 'return 1; // mutacao: a Copa do Mundo como torneio internacional'),

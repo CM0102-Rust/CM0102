@@ -137,6 +137,7 @@ pub(crate) mod nation {
     pub(crate) const REPUTATION: usize = 0x8e; // 2 byte(s), Int16
     pub(crate) const FOREGROUND_COLOUR1: usize = 0x90; // 4 byte(s), int
     pub(crate) const BACKGROUND_COLOUR1: usize = 0x94; // 4 byte(s), int
+    pub(crate) const FIFA_COEFFICIENT: usize = 0xa8; // 8 byte(s): FIFA coefficient of the nation (double); x 1/35 gives the initial ranking score [verified: TNation +0xa8 FIFACoefficient double in docs/FORMATOS (save format), right before FIFA_COEFFICIENT91..96 at +0xb0]
     pub(crate) const FIFACOEFFICIENT91: usize = 0xb0; // 8 byte(s), double
     pub(crate) const FIFACOEFFICIENT92: usize = 0xb8; // 8 byte(s), double
     pub(crate) const FIFACOEFFICIENT93: usize = 0xc0; // 8 byte(s), double
@@ -1281,6 +1282,7 @@ pub(crate) mod commentary_queue {
     pub(crate) const LOOP_CHANNELS: usize = 0x20; // 16 byte(s): channels of the crowd loops (-1 none; side's loop at +0x20 + side) [inference]
     pub(crate) const SLOTS: usize = 0x30; // 168 byte(s): 12 slots of 14 bytes: +0 event code (bit 0x8000 more parts), +2 record, +0xd current text part
     pub(crate) const SLOT_RECORDS: usize = 0xd8; // 1608 byte(s): 12 records of 0x86 bytes, one per slot
+    pub(crate) const LAST_PERIOD_END: usize = 0x2d68; // 4 byte(s): engine PERIOD_END seen last; a change resets the queue (-1 forces it)
     pub(crate) const SOUND_START_TIMES: usize = 0x2d6c; // 64 byte(s): start time (ms) of each of the 16 event sounds
     pub(crate) const SOUND_DURATION: usize = 0x2dac; // 4 byte(s): length (ms) of an event sound window: weight x volume / 100
     pub(crate) const VOLUME: usize = 0x2db0; // 1 byte(s): commentary volume (125 at construction)
@@ -2307,6 +2309,7 @@ pub(crate) mod rating_record {
 /// Fields of the `record_holder` object, named from how the routines use them. [pt] Campos do objeto `record_holder`.
 #[allow(dead_code)]
 pub(crate) mod record_holder {
+    pub(crate) const STAFF_ID: usize = 0xc; // 4 byte(s): id of the person (staff index) in the name reference [verified: fill_staff_name_ref (0x7e4920) writes read_u32(person) at out+0xc; record_holder comment: +0..+0xc name ids and staff index; scout_report PLAYER_NAME_REF+0xc = ]
     pub(crate) const DATE: usize = 0x10; // 8 byte(s): Date of the record; +0..+0xc the holder's name ids and staff index
 }
 
@@ -2995,5 +2998,118 @@ pub(crate) mod awol_fitness_incident {
 #[allow(dead_code)]
 pub(crate) mod awol_missed_training {
     pub(crate) const REPEAT_CASE: usize = 0xc; // 1 byte(s): nonzero = repeat case: professionalism/temperament draws and a new miss; miss_training leaves it as stack residue (0x90)
+
+}
+
+/// index.dat entry (67 bytes): name (51, zero-terminated), table type i32 +0x33, record count i32 +0x37, file offset i32 +0x3b, version i32 +0x3f
+#[allow(dead_code)]
+pub(crate) mod db_index_entry {
+    pub(crate) const RECORD_COUNT: usize = 0x37; // 4 byte(s): number of records of the table described by this index.dat entry [verified: docs/FORMATOS index.dat: 67-byte entries name(51), type, count, offset, version -> +0x37 count, +0x3f version; this code reads n records and checks version 1/2]
+
+    pub(crate) const VERSION: usize = 0x3f; // 4 byte(s): format version of the table (1 = old layout through the field-by-field converter, 2 = current) [verified: docs/FORMATOS index.dat: 67-byte entries name(51), type, count, offset, version -> +0x37 count, +0x3f version; this code reads n records and checks version 1/2]
+}
+
+/// SI container (zipdir.cpp, not PKZIP) header + central directory as stored at the start of a .sav/.qst, 0x416ec bytes: archive type +0, archive id +4, entry count +8, 1000 directory entries of 0x10c from +0xc
+#[allow(dead_code)]
+pub(crate) mod zip_header {
+    pub(crate) const CENTRAL_DIRECTORY: usize = 0xc; // 268000 byte(s): central directory: 1000 entries of 0x10c bytes (data offset +0, uncompressed size +4, file name +8, 0x104) [verified: fread of 0x3e8 (0xfa old types) entries of 0x10c right after the 12-byte header; MAPA_SAVE index after header]
+
+}
+
+/// file search state of file_find_first 0x4c0aa0 (0x114 bytes, local): handle +0, found file name +0x10 (0x100), filter +0x110
+#[allow(dead_code)]
+pub(crate) mod file_find_state {
+    pub(crate) const FILE_NAME: usize = 0x10; // 256 byte(s): name of the file found by FindFirstFile/FindNextFile
+
+}
+
+/// ZFILE, the open container item (0xa3191 bytes, zopen 0x9326e0): FILE +0, mode +4, logical position +8, entry +0xc, RLE state +0x10/+0x14/+0x18, header copy +0x19, read buffer +0x41705, write buffer +0x72445, cursors +0xa3185..
+#[allow(dead_code)]
+pub(crate) mod zfile {
+    pub(crate) const RLE_REPEAT_BYTE: usize = 0x18; // 1 byte(s): byte value of the pending RLE run (count at +0x14) [verified: zread copies it n times (n = byte - 0x80 at +0x14); zwrite compares input bytes with it; zclose flushes it; MAPA_SAVE RLE state +0x10/+0x14/+0x18]
+    pub(crate) const HEADER: usize = 0x19; // 268012 byte(s): copy of the container header + central directory (zip_header layout: type +0x19, archive id +0x1d, entry count +0x21, directory +0x25) [verified: zclose fseek 0 then fwrite(z + 0x19, 0x416ec): rewrites header and index at the file start; zread tests +0x19 == 4 as the archive type]
+    pub(crate) const READ_BUFFER: usize = 0x41705; // 200000 byte(s): 0x30d40-byte buffer of raw (compressed) bytes read from the container file (reused as scratch by zadd) [verified: docs/MAPA_SAVE zipdir: ZFILE holds header and index at +0x19/+0x25, read buffer +0x41705, write buffer +0x72445 (0x30d40 each); zipdir.rs ZFILE comment]
+
+    pub(crate) const WRITE_BUFFER: usize = 0x72445; // 200000 byte(s): 0x30d40-byte buffer of compressed bytes to be written to the container file (reused as scratch by zextract) [verified: docs/MAPA_SAVE zipdir: ZFILE holds header and index at +0x19/+0x25, read buffer +0x41705, write buffer +0x72445 (0x30d40 each); zipdir.rs ZFILE comment]
+}
+
+/// Fields of the ItaCup / ItaCCup objects (Coppa Italia and Serie C cup; League subclass, the League body ends at 0xee): the entrant list that feeds the groups and the knockout
+#[allow(dead_code)]
+pub(crate) mod ita_cup_fields {
+    pub(crate) const ENTRANT_CLUBS: usize = 0xee; // 4 byte(s): Pointer to the vector of entrant club pointers (48 Coppa Italia / 90 Serie C cup); each slot is zeroed when its club is placed in a group table or the knockout
+
+    pub(crate) const ENTRANT_CLUB_COUNT: usize = 0xf2; // 4 byte(s): Number of slots in ENTRANT_CLUBS (0x30 Coppa Italia, 0x5a Serie C cup); push_entrant stops when the count reaches it
+}
+
+/// FIFA ranking table entry, 0x2c bytes, one per nation (FIFA_RANKINGS +0 points to the table): +0 nation index, history, score, positions, yearly totals
+#[allow(dead_code)]
+pub(crate) mod fifa_ranking_entry {
+    pub(crate) const HISTORY: usize = 0x4; // 4 byte(s): Pointer to the results history (fifa_result_entry, 5 bytes each)
+    pub(crate) const HISTORY_CAPACITY: usize = 0x8; // 2 byte(s): Capacity of HISTORY in entries (grows by 5)
+    pub(crate) const HISTORY_COUNT: usize = 0xa; // 2 byte(s): Number of results in HISTORY
+    pub(crate) const SCORE: usize = 0xc; // 4 byte(s): Ranking score: weighted sum of the six yearly totals x 0.001; sort key of the ranking
+    pub(crate) const POSITION: usize = 0x10; // 2 byte(s): Ranking position, 1-based
+    pub(crate) const PREVIOUS_POSITION: usize = 0x12; // 2 byte(s): Ranking position before the last update
+    pub(crate) const YEAR_TOTALS: usize = 0x14; // 4 byte(s): Last year total (YEAR_TOTALS[1])
+
+}
+
+/// International result in a FIFA ranking history, 5 bytes: +0 points (i16), +2 month (u8), +3 year (u16)
+#[allow(dead_code)]
+pub(crate) mod fifa_result_entry {
+    pub(crate) const MONTH: usize = 0x2; // 1 byte(s): Month of the match (from match_month_year)
+
+    pub(crate) const YEAR: usize = 0x3; // 2 byte(s): Year of the match
+}
+
+/// FIFA_RANKINGS object: +0 pointer to the fifa_ranking_entry table, +4 rollover month, +5 date of the last update
+#[allow(dead_code)]
+pub(crate) mod fifa_rankings_fields {
+    pub(crate) const ROLLOVER_MONTH: usize = 0x4; // 1 byte(s): Month in which the yearly totals roll one slot (outside the start year)
+    pub(crate) const LAST_UPDATE_DATE: usize = 0x5; // 8 byte(s): Date of the last ranking update (the 18th)
+
+}
+
+/// 31-byte club-side match record filled by fill_match_record_from_fixture (0x7e4750): +0 date, +8 fixture id, +0xc/+0xe round codes, +0x10 venue side, +0x11 club id, +0x15 opponent id, +0x19/+0x1a goals for/against, +0x1b match stats slot; embedded in goals_in_match_record::MATCH and injury_entry +1
+#[allow(dead_code)]
+pub(crate) mod club_match_record {
+    pub(crate) const FIXTURE_ID: usize = 0x8; // 4 byte(s): id of the fixture (its +0)
+
+    pub(crate) const ROUND_PREFIX: usize = 0xc; // 2 byte(s): round name prefix code of the fixture
+    pub(crate) const ROUND_NAME: usize = 0xe; // 2 byte(s): round name code of the fixture
+    pub(crate) const VENUE: usize = 0x10; // 1 byte(s): venue side of the club in the match (comp_util_get_fixture_venue_side)
+    pub(crate) const CLUB_ID: usize = 0x11; // 4 byte(s): id of the club the record is seen from [verified: fill_match_record_from_fixture (0x7e4750) writes read_u32(club); injury_entry::MATCH_CLUB_ID (+1+0x11) verified the same]
+    pub(crate) const OPPONENT_ID: usize = 0x15; // 4 byte(s): id of the opposing club [verified: fill_match_record_from_fixture (0x7e4750): away club id when the club is home, home club id otherwise; injury_entry::MATCH_OPPONENT_ID (+1+0x15) verified the sa]
+    pub(crate) const GOALS_FOR: usize = 0x19; // 1 byte(s): goals scored by the club (extra-time score if any) [verified: fill_match_record_from_fixture (0x7e4750) writes the club's own goals; match_record_result_code / is_bigger_win compare it signed with +0x1a; injury_entry::MATC]
+    pub(crate) const GOALS_AGAINST: usize = 0x1a; // 1 byte(s): goals conceded by the club (extra-time score if any) [verified: fill_match_record_from_fixture (0x7e4750) writes the opponent's goals; result code: for > against = win]
+    pub(crate) const MATCH_STATS_SLOT: usize = 0x1b; // 4 byte(s): slot of the match statistics record in match_stats_matches.tmp (-1 none)
+}
+
+/// MSVC CRT FILE structure (fopen result): +0xc _flag
+#[allow(dead_code)]
+pub(crate) mod crt_file {
+    pub(crate) const FLAGS: usize = 0xc; // 4 byte(s): CRT stream flags (_flag) [verified: f = crt_fopen result; MSVC FILE _flag at +0xc, bit 0x10 (_IOEOF) tested as end of file]
+
+}
+
+/// 0x110-byte text/sound variant of a commentary event (event_type::VARIANTS array; one '>' line of events_<lang>.cfg): +0 weight, +2 line delay, +4 sound file name, +0x108 live text (G line), +0x10c report text (R line)
+#[allow(dead_code)]
+pub(crate) mod event_variant {
+    pub(crate) const LIVE_TEXT: usize = 0x108; // 4 byte(s): text shown live on the commentary panel (events cfg G line, present tense) [verified: read_match_events_config: the G line is stored at variant+0x108, the R line at +0x10c; events_eng.cfg G lines are present tense ('<p1> holds up the ball'), R li]
+
+    pub(crate) const REPORT_TEXT: usize = 0x10c; // 4 byte(s): text for the match report (events cfg R line, past tense) [verified: read_match_events_config: the G line is stored at variant+0x108, the R line at +0x10c; events_eng.cfg G lines are present tense ('<p1> holds up the ball'), R li]
+}
+
+/// 14-byte commentary queue slot (commentary_queue::SLOTS): +0 event code (bit 0x8000 more parts), +2 variant index, +5.. players, +0xd current text part
+#[allow(dead_code)]
+pub(crate) mod commentary_slot {
+    pub(crate) const CURRENT_PART: usize = 0xd; // 1 byte(s): current part of the event text being shown (-1 none yet)
+
+}
+
+/// Italian League subclass (ItaSerA/ItaSerB: League plus own fields from +0xee): the tie-break play-off state
+#[allow(dead_code)]
+pub(crate) mod italian_league {
+    pub(crate) const TIEBREAK_TIE_COUNT: usize = 0xee; // 1 byte(s): number of tie-break matches to play (pairs of clubs level on points across a band boundary); the play-off round gets 2n teams and n ties
 
 }

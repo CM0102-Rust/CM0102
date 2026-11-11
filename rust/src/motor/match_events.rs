@@ -59,7 +59,7 @@ pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, h
         versao = 1;
         crate::comparison::branch("events new file");
         quantos = 0;
-        let r = *(G_MATCH_STATS as *const usize) + 0x18;
+        let r = *(G_MATCH_STATS as *const usize) + match_stats::EVENT_FILE_NUMBER;
         numero = *(r as *const i32) + 1;
         *(r as *mut i32) = numero;
         exe::crt_fwrite(&versao as *const i32 as usize, 4, 1, f);
@@ -73,7 +73,7 @@ pub(crate) unsafe extern "thiscall" fn record_events(e: usize, desc: *mut u32, h
     *desc.add(1) = n as u32;
     *desc.add(2) = numero as u32;
     *(desc.add(3) as *mut u8) = human;
-    let r = exe::crt_fwrite(e + 0x720, 0xe, *((e + 6) as *const i16) as i32 as u32, f);
+    let r = exe::crt_fwrite(e + match_events_fields::ENTRIES, 0xe, *((e + 6) as *const i16) as i32 as u32, f);
     quantos += 1;
     exe::crt_fseek(f, 8, 0);
     exe::crt_fwrite(&quantos as *const i32 as usize, 4, 1, f);
@@ -116,7 +116,7 @@ pub(crate) unsafe extern "thiscall" fn read_events(e: usize, desc: *const u32) -
         if numero as u32 == *desc.add(2) {
             crate::comparison::branch("events read");
             exe::crt_fseek(f, *desc as i32, 0);
-            let r = exe::crt_fread(e + 0x720, 0xe, *desc.add(1), f);
+            let r = exe::crt_fread(e + match_events_fields::ENTRIES, 0xe, *desc.add(1), f);
             *((e + 6) as *mut u16) = *desc.add(1) as u16;
             exe::crt_fclose(f);
             return (r != 0) as u8;
@@ -221,7 +221,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
         }
     }
 
-    let end_of_file = || read_u8(f + 0xc) & 0x10 != 0;
+    let end_of_file = || read_u8(f + crt_file::FLAGS) & (crt_file_flags::EOF as u8) != 0;
     let pula_brancos_e_le = || {
         let mut c = exe::at_9469e0(f);
         while (c == 0x20 || c == 0xd) && c != -1 {
@@ -288,7 +288,7 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                         fatal_error_at(FONTE, 0xcdf);
                     }
                     for j in 0..how_many(e).max(0) as usize {
-                        if read_usize(s + 0x110 * j + 0x108) == 0 {
+                        if read_usize(s + 0x110 * j + event_variant::LIVE_TEXT) == 0 {
                             format(BUF, 0xa15af0, current);
                             fatal_error_at(FONTE, 0xcea);
                         }
@@ -358,8 +358,8 @@ pub(crate) unsafe extern "C" fn read_events_cfg() {
                     format(BUF, 0xa15bac, exe::utils_build_file_path(0x9c382c, s + 4));
                     exe::gui_show_message_box(0x9870e0, BUF, 0);
                 }
-                write_usize(s + 0x108, 0);
-                write_usize(s + 0x10c, 0);
+                write_usize(s + event_variant::LIVE_TEXT, 0);
+                write_usize(s + event_variant::REPORT_TEXT, 0);
                 write_i16(e + event_type::VARIANT_COUNT, how_many(e) + 1);
             }
             0x47 | 0x67 | 0x52 | 0x72 => {
@@ -465,7 +465,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
     if *which as i32 > n as i32 - 1 {
         *which = n.wrapping_sub(1);
     }
-    let mut s = core::ptr::read_unaligned((sons as isize + *which as isize * 0x110 + 0x10c) as *const usize);
+    let mut s = core::ptr::read_unaligned((sons as isize + *which as isize * 0x110 + (event_variant::REPORT_TEXT as isize)) as *const usize);
     if s == 0 {
         return 0;
     }
@@ -635,7 +635,7 @@ pub(crate) unsafe extern "stdcall" fn event_text(ev: usize, ctx: usize, comp: i3
                     b'R' | b'r' => {
                         if t(pos + 2) == b'f' {
                             let fixed = if x as u8 == b'R' { 0xa15a14usize } else { 0xa159e0 };
-                            let referee = core::ptr::read_unaligned((ctx + 0x40) as *const i32);
+                            let referee = core::ptr::read_unaligned((ctx + match_record::REFEREE_ID) as *const i32);
                             if referee <= -1 {
                                 format_text(dest(out), fixed);
                             } else {
@@ -747,7 +747,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
         return 0;
     }
     let eu = || *(G_SCREEN_MANAGER_CURRENT_SLOT as *const i16) as isize;
-    let goal_crowd_reaction = |n: usize| ((n as isize) + eu() + 0x20) as *mut u8;
+    let goal_crowd_reaction = |n: usize| ((n as isize) + eu() + (commentary_queue::LOOP_CHANNELS as isize)) as *mut u8;
     if *goal_crowd_reaction(nar) != 0xff && exe::screenmanager_is_sound_playing(SOM, *goal_crowd_reaction(nar) as u32) == 0 {
         exe::screenmanager_stop_sound(SOM, *goal_crowd_reaction(nar) as u32);
         *goal_crowd_reaction(nar) = 0xff;
@@ -770,15 +770,15 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
         if sons() == 0 {
             return 0;
         }
-        if core::ptr::read_unaligned((sons() as isize + which() * 0x110 + 0x108) as *const usize) == 0 {
+        if core::ptr::read_unaligned((sons() as isize + which() * 0x110 + (event_variant::LIVE_TEXT as isize)) as *const usize) == 0 {
             return 0;
         }
         // the colours of the move’s club (the side’s kit)
         let side = b(6);
         let mut club_id = if side != 0 { *((ctx + 4) as *const usize) } else { *(ctx as *const usize) };
-        let kit = *((ctx as isize + side as i8 as isize * 1573 + 0x152) as *const u8) as u32;
+        let kit = *((ctx as isize + side as i8 as isize * 1573 + (match_record::HOME_KIT as isize)) as *const u8) as u32;
         exe::database_get_club_kit_colours((*(G_CLUB_TABLE as *const usize)).wrapping_add(club_id.wrapping_mul(club::SIZE)), kit, (cor1.as_mut_ptr()) as *mut u32, (cor2.as_mut_ptr()) as *mut u32);
-        let mut s = core::ptr::read_unaligned((sons() as isize + which() * 0x110 + 0x108) as *const usize);
+        let mut s = core::ptr::read_unaligned((sons() as isize + which() * 0x110 + (event_variant::LIVE_TEXT as isize)) as *const usize);
         let v = b(0xd) as i8;
         if v > 0 {
             let mut left = v;
@@ -958,7 +958,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                             let side = b(6);
                             club_id = if side != 0 { *(ctx as *const usize) } else { *((ctx + 4) as *const usize) };
                             let a = (side == 0) as isize;
-                            let kit = *((ctx as isize + a * 1573 + 0x152) as *const u8) as u32;
+                            let kit = *((ctx as isize + a * 1573 + (match_record::HOME_KIT as isize)) as *const u8) as u32;
                             exe::database_get_club_kit_colours((*(G_CLUB_TABLE as *const usize)).wrapping_add(club_id.wrapping_mul(club::SIZE)), kit, (cor1.as_mut_ptr()) as *mut u32, (cor2.as_mut_ptr()) as *mut u32);
                             *(dest(out) as *mut u8) = 0;
                         }
@@ -972,7 +972,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
                                 *(dest(out) as *mut u8) = 0;
                             } else {
                                 let fixed = if x == b'R' { 0xa15a14usize } else { 0xa159e0 };
-                                let referee = core::ptr::read_unaligned((ctx + 0x40) as *const i32);
+                                let referee = core::ptr::read_unaligned((ctx + match_record::REFEREE_ID) as *const i32);
                                 if referee <= -1 {
                                     format_text(dest(out), fixed);
                                 } else {
@@ -1093,11 +1093,11 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
     }
 
     // the event sound
-    *(((nar as isize) + eu() + 0x10) as *mut u8) = 0xff;
+    *(((nar as isize) + eu() + (commentary_queue::SOUND_CHANNELS as isize)) as *mut u8) = 0xff;
     if b(0xd) as i8 <= 0 && *((nar + commentary_queue::VOLUME) as *const u8) >= 0x65 {
         let sound = (sons() as isize + which() * 0x110) as usize;
         if *((sound + 4) as *const u8) != 0 {
-            let canal = if *((e + 6) as *const u8) == 0 { 0xb6b722usize } else { ((nar as isize) + eu() + 0x10) as usize };
+            let canal = if *((e + 6) as *const u8) == 0 { 0xb6b722usize } else { ((nar as isize) + eu() + (commentary_queue::SOUND_CHANNELS as isize)) as usize };
             *(G_MATCH_EVENTS_CURRENT_SLOT_PTR as *mut usize) = canal;
             if canal != 0 {
                 *(canal as *mut u8) = 0xfe;
@@ -1112,7 +1112,7 @@ pub(crate) unsafe extern "thiscall" fn commentate_on_panel(nar: usize, ev: usize
         }
     }
     let now = exe::utils_get_time_ms();
-    core::ptr::write_unaligned(((nar as isize) + eu() * 4 + 0x2d6c) as *mut u32, now);
+    core::ptr::write_unaligned(((nar as isize) + eu() * 4 + (commentary_queue::SOUND_START_TIMES as isize)) as *mut u32, now);
     let weight = *((sons() as isize + which() * 0x110 + 2) as *const i16) as i32;
     let volume = *((nar + commentary_queue::VOLUME) as *const u8) as i32;
     core::ptr::write_unaligned((nar + commentary_queue::SOUND_DURATION) as *mut i32, (weight.wrapping_mul(volume) / 100) as i16 as i32);
@@ -1131,11 +1131,11 @@ pub(crate) unsafe fn advance_commentary_read(t: usize) -> bool {
     let c = (t + commentary_queue::READ_POS) as *mut i16;
     *c = if c.read().wrapping_add(1) > 0xb { 0 } else { c.read().wrapping_add(1) };
     let p = t + commentary_queue::SLOTS + *c as usize * 14;
-    write_u8(p + 0xd, 0xff);
+    write_u8(p + commentary_slot::CURRENT_PART, 0xff);
     *(p as *mut u16) &= 0x7fff;
     let mut desligou = false;
     if *c == read_i16(t + commentary_queue::WRITE_POS) {
-        write_u32(t + 0x2d68, u32::MAX);
+        write_u32(t + commentary_queue::LAST_PERIOD_END, u32::MAX);
         write_u8(t + commentary_queue::ACTIVE, 0);
         desligou = true;
     }
@@ -1165,7 +1165,7 @@ pub(crate) unsafe extern "thiscall" fn next_event(t: usize, out: *mut usize) -> 
     }
     crate::comparison::branch("commentary next event");
     if !out.is_null() {
-        *out = (t as isize + 0xd8 + read_i16(t + commentary_queue::READ_POS) as isize * 0x86) as usize;
+        *out = (t as isize + (commentary_queue::SLOT_RECORDS as isize) + read_i16(t + commentary_queue::READ_POS) as isize * 0x86) as usize;
     }
     let slot = |t: usize| t + commentary_queue::SLOTS + read_i16(t + commentary_queue::READ_POS) as usize * 14;
     let mut p = slot(t);
@@ -1178,7 +1178,7 @@ pub(crate) unsafe extern "thiscall" fn next_event(t: usize, out: *mut usize) -> 
     let event = (read_u16(p) & 0x7fff).wrapping_add(0xe0c0) as i16 as isize;
     let record = *(p as *const i16).add(1) as isize;
     let table = *((0xb68790 + event * 0x12) as *const isize);
-    let text = *((table + record * 0x110 + 0x108) as *const *const u8);
+    let text = *((table + record * 0x110 + (event_variant::LIVE_TEXT as isize)) as *const *const u8);
     let n = {
         let mut k = 0usize;
         while *text.add(k) != 0 {
@@ -1186,7 +1186,7 @@ pub(crate) unsafe extern "thiscall" fn next_event(t: usize, out: *mut usize) -> 
         }
         k as i16
     };
-    let part = (p + 0xd) as *mut i8;
+    let part = (p + commentary_slot::CURRENT_PART) as *mut i8;
     let mut c = *part;
     let mut s = 0i16;
     while s < n {
@@ -1249,7 +1249,7 @@ pub(crate) unsafe extern "C" fn commentary_player_name(pt: usize, player: i8, si
             if q == 0 {
                 continue;
             }
-            let n = |i: usize| read_u32(read_usize(q + 4 * i) + 0x33);
+            let n = |i: usize| read_u32(read_usize(q + 4 * i) + names::ID);
             if read_u32(q) == d(0x190) && n(1) == d(0x198) && n(2) == d(0x19c) && n(3) == d(0x1a0) {
                 continue;
             }
@@ -1307,7 +1307,7 @@ pub(crate) unsafe extern "thiscall" fn combine_with_previous(t: usize, e: usize,
         return 0;
     }
     let k = if w(t + 8) == 0 { 0xb } else { read_i8(t + 8).wrapping_sub(1) };
-    let q = (t as isize + 0x30 + k as isize * 14) as usize;
+    let q = (t as isize + (commentary_queue::SLOTS as isize) + k as isize * 14) as usize;
     let s3 = w(q);
     let same = |o: usize| read_i8(q + o) == read_i8(e + o);
     let copiar = || core::ptr::copy((q as *const u8).add(5), (e as *mut u8).add(5), 8);
@@ -1740,7 +1740,7 @@ pub(crate) unsafe extern "thiscall" fn construct_commentary_queue(t: usize, goal
     let b = |o: usize, v: u8| write_u8(t + o, v);
     let w = |o: usize, v: u16| write_u16(t + o, v);
     w(0xa, 0xffff);
-    write_u32(t + 0x2d68, u32::MAX);
+    write_u32(t + commentary_queue::LAST_PERIOD_END, u32::MAX);
     for o in [6, 8, 0xc, 0xe] {
         w(o, 0);
     }
@@ -1766,7 +1766,7 @@ pub(crate) unsafe extern "thiscall" fn construct_commentary_queue(t: usize, goal
     if goal_crowd_reaction != 0 {
         let side = read_i16(G_SCREEN_MANAGER_CURRENT_SLOT) as isize;
         let name = exe::utils_build_file_path(0x9c382c, 0xa159a0);
-        exe::screenmanager_play_sound(G_SCREEN_MANAGER, (t as isize + 0x20 + side) as usize, 2, name, 1);
+        exe::screenmanager_play_sound(G_SCREEN_MANAGER, (t as isize + (commentary_queue::LOOP_CHANNELS as isize) + side) as usize, 2, name, 1);
     }
     t
 }

@@ -614,8 +614,8 @@ pub(crate) unsafe extern "C" fn db_files_write_staff_extra(stream: usize, use_zi
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
 pub(crate) unsafe extern "C" fn db_files_read_officials(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
-    let n = read_u32(entry + 0x37);
-    let version = read_i32(entry + 0x3f);
+    let n = read_u32(entry + db_index_entry::RECORD_COUNT);
+    let version = read_i32(entry + db_index_entry::VERSION);
     if version != 1 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_OFFICIALS)(stream, use_zip, records, entry);
     }
@@ -647,8 +647,8 @@ pub(crate) unsafe extern "C" fn db_files_read_officials(stream: usize, use_zip: 
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
 pub(crate) unsafe extern "C" fn db_files_read_colours(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
-    let n = read_u32(entry + 0x37);
-    let version = read_i32(entry + 0x3f);
+    let n = read_u32(entry + db_index_entry::RECORD_COUNT);
+    let version = read_i32(entry + db_index_entry::VERSION);
     if version != 1 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_COLOURS)(stream, use_zip, records, entry);
     }
@@ -682,8 +682,8 @@ pub(crate) unsafe extern "C" fn db_files_read_colours(stream: usize, use_zip: i3
 /// (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro de 0x200 da original só serve ao
 /// caminho da caixa (_splitpath): nada da pilha vai para a tabela.
 pub(crate) unsafe extern "C" fn db_files_read_names(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
-    let n = read_u32(entry + 0x37);
-    let version = read_i32(entry + 0x3f);
+    let n = read_u32(entry + db_index_entry::RECORD_COUNT);
+    let version = read_i32(entry + db_index_entry::VERSION);
     if version != 1 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_NAMES)(stream, use_zip, records, entry);
     }
@@ -720,8 +720,8 @@ pub(crate) unsafe extern "C" fn db_files_read_names(stream: usize, use_zip: i32,
 /// dele (sem a troca da reputação: o conversor faz a sua, ×500). Outra versão: a caixa "Error" (Db_files.cpp)
 /// e a saída do jogo; a cópia chama a original. O quadro de 0x200 da original só serve ao caminho da caixa.
 pub(crate) unsafe extern "C" fn db_files_read_clubs(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
-    let n = read_u32(entry + 0x37);
-    let version = read_i32(entry + 0x3f);
+    let n = read_u32(entry + db_index_entry::RECORD_COUNT);
+    let version = read_i32(entry + db_index_entry::VERSION);
     if version == 1 {
         crate::comparison::branch("database read clubs version 1");
         return exe::db_files_read_clubs_v1(stream, use_zip, records, n);
@@ -739,7 +739,7 @@ pub(crate) unsafe extern "C" fn db_files_read_clubs(stream: usize, use_zip: i32,
         return 0;
     }
     for i in 0..n as usize {
-        let p = (records + i * 581 + 0x80) as *mut u16;
+        let p = (records + i * 581 + club::REPUTATION) as *mut u16;
         if p.read_unaligned() == 0 {
             p.write_unaligned(1);
         }
@@ -769,8 +769,8 @@ pub(crate) unsafe extern "C" fn db_files_read_clubs(stream: usize, use_zip: i32,
 /// quantidade), pelo endereço, e a resposta dele. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do
 /// jogo; a cópia chama a original. O quadro de 0x200 da original só serve ao caminho da caixa.
 pub(crate) unsafe extern "C" fn db_files_read_comps(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
-    let n = read_u32(entry + 0x37);
-    let version = read_i32(entry + 0x3f);
+    let n = read_u32(entry + db_index_entry::RECORD_COUNT);
+    let version = read_i32(entry + db_index_entry::VERSION);
     if version == 1 {
         crate::comparison::branch("database read competitions version 1");
         return exe::db_files_read_comps_v1(stream, use_zip, records, n);
@@ -810,8 +810,8 @@ pub(crate) unsafe extern "C" fn db_files_read_comps(stream: usize, use_zip: i32,
 /// caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro de 0x200 da original só
 /// serve ao caminho da caixa.
 pub(crate) unsafe extern "C" fn db_files_read_players(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
-    let n = read_u32(entry + 0x37);
-    let version = read_i32(entry + 0x3f);
+    let n = read_u32(entry + db_index_entry::RECORD_COUNT);
+    let version = read_i32(entry + db_index_entry::VERSION);
     if version == 1 {
         crate::comparison::branch("database read non-players version 1");
         return exe::db_files_read_players_v1(stream, use_zip, records, n);
@@ -851,8 +851,8 @@ pub(crate) unsafe extern "C" fn db_files_read_players(stream: usize, use_zip: i3
 /// caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro de 0x200 da original só
 /// serve ao caminho da caixa.
 pub(crate) unsafe extern "C" fn db_files_read_non_players(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
-    let n = read_u32(entry + 0x37);
-    let version = read_i32(entry + 0x3f);
+    let n = read_u32(entry + db_index_entry::RECORD_COUNT);
+    let version = read_i32(entry + db_index_entry::VERSION);
     if version == 1 {
         crate::comparison::branch("database read players version 1");
         return exe::db_files_read_non_players_v1(stream, use_zip, records, n);
@@ -891,8 +891,8 @@ pub(crate) unsafe extern "C" fn db_files_read_non_players(stream: usize, use_zip
 /// caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro de 0x200 da original só
 /// serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
 pub(crate) unsafe extern "C" fn db_files_read_staff(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
-    let n = read_u32(entry + 0x37);
-    let version = read_i32(entry + 0x3f);
+    let n = read_u32(entry + db_index_entry::RECORD_COUNT);
+    let version = read_i32(entry + db_index_entry::VERSION);
     if version != 2 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF)(stream, use_zip, records, entry);
     }
@@ -926,8 +926,8 @@ pub(crate) unsafe extern "C" fn db_files_read_staff(stream: usize, use_zip: i32,
 /// veio tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O
 /// quadro de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
 pub(crate) unsafe extern "C" fn db_files_read_staff_extra(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
-    let n = read_u32(entry + 0x37);
-    let version = read_i32(entry + 0x3f);
+    let n = read_u32(entry + db_index_entry::RECORD_COUNT);
+    let version = read_i32(entry + db_index_entry::VERSION);
     if version != 1 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF_EXTRA)(stream, use_zip, records, entry);
     }
@@ -959,8 +959,8 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_extra(stream: usize, use_zip
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
 pub(crate) unsafe extern "C" fn db_files_read_continents(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
-    let n = read_u32(entry + 0x37);
-    let version = read_i32(entry + 0x3f);
+    let n = read_u32(entry + db_index_entry::RECORD_COUNT);
+    let version = read_i32(entry + db_index_entry::VERSION);
     if version != 1 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_CONTINENTS)(stream, use_zip, records, entry);
     }
@@ -992,8 +992,8 @@ pub(crate) unsafe extern "C" fn db_files_read_continents(stream: usize, use_zip:
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
 pub(crate) unsafe extern "C" fn db_files_read_nations(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
-    let n = read_u32(entry + 0x37);
-    let version = read_i32(entry + 0x3f);
+    let n = read_u32(entry + db_index_entry::RECORD_COUNT);
+    let version = read_i32(entry + db_index_entry::VERSION);
     if version != 2 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_NATIONS)(stream, use_zip, records, entry);
     }
@@ -1025,8 +1025,8 @@ pub(crate) unsafe extern "C" fn db_files_read_nations(stream: usize, use_zip: i3
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
 pub(crate) unsafe extern "C" fn db_files_read_cities(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
-    let n = read_u32(entry + 0x37);
-    let version = read_i32(entry + 0x3f);
+    let n = read_u32(entry + db_index_entry::RECORD_COUNT);
+    let version = read_i32(entry + db_index_entry::VERSION);
     if version <= 0 || version > 2 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_CITIES)(stream, use_zip, records, entry);
     }
@@ -1058,8 +1058,8 @@ pub(crate) unsafe extern "C" fn db_files_read_cities(stream: usize, use_zip: i32
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
 pub(crate) unsafe extern "C" fn db_files_read_stadiums(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
-    let n = read_u32(entry + 0x37);
-    let version = read_i32(entry + 0x3f);
+    let n = read_u32(entry + db_index_entry::RECORD_COUNT);
+    let version = read_i32(entry + db_index_entry::VERSION);
     if version != 1 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STADIUMS)(stream, use_zip, records, entry);
     }
@@ -1091,8 +1091,8 @@ pub(crate) unsafe extern "C" fn db_files_read_stadiums(stream: usize, use_zip: i
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
 pub(crate) unsafe extern "C" fn db_files_read_staff_v1(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
-    let n = read_u32(entry + 0x37);
-    let version = read_i32(entry + 0x3f);
+    let n = read_u32(entry + db_index_entry::RECORD_COUNT);
+    let version = read_i32(entry + db_index_entry::VERSION);
     if version != 1 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF_V1)(stream, use_zip, records, entry);
     }
@@ -1124,8 +1124,8 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_v1(stream: usize, use_zip: i
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
 pub(crate) unsafe extern "C" fn db_files_read_staff_history(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
-    let n = read_u32(entry + 0x37);
-    let version = read_i32(entry + 0x3f);
+    let n = read_u32(entry + db_index_entry::RECORD_COUNT);
+    let version = read_i32(entry + db_index_entry::VERSION);
     if version != 1 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF_HISTORY)(stream, use_zip, records, entry);
     }
@@ -1157,8 +1157,8 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_history(stream: usize, use_z
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
 pub(crate) unsafe extern "C" fn db_files_read_comp_history(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
-    let n = read_u32(entry + 0x37);
-    let version = read_i32(entry + 0x3f);
+    let n = read_u32(entry + db_index_entry::RECORD_COUNT);
+    let version = read_i32(entry + db_index_entry::VERSION);
     if version != 1 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_COMP_HISTORY)(stream, use_zip, records, entry);
     }
@@ -1190,8 +1190,8 @@ pub(crate) unsafe extern "C" fn db_files_read_comp_history(stream: usize, use_zi
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
 pub(crate) unsafe extern "C" fn db_files_read_staff_comps(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
-    let n = read_u32(entry + 0x37);
-    let version = read_i32(entry + 0x3f);
+    let n = read_u32(entry + db_index_entry::RECORD_COUNT);
+    let version = read_i32(entry + db_index_entry::VERSION);
     if version != 2 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF_COMPS)(stream, use_zip, records, entry);
     }
@@ -1223,8 +1223,8 @@ pub(crate) unsafe extern "C" fn db_files_read_staff_comps(stream: usize, use_zip
 /// tudo. Outra versão: a caixa "Error" (Db_files.cpp) e a saída do jogo; a cópia chama a original. O quadro
 /// de 0x200 da original só serve ao caminho da caixa (_splitpath): nada da pilha vai para a tabela.
 pub(crate) unsafe extern "C" fn db_files_read_staff_comp_history(stream: usize, use_zip: i32, records: usize, entry: usize) -> i32 {
-    let n = read_u32(entry + 0x37);
-    let version = read_i32(entry + 0x3f);
+    let n = read_u32(entry + db_index_entry::RECORD_COUNT);
+    let version = read_i32(entry + db_index_entry::VERSION);
     if version != 1 {
         return original_fn::<unsafe extern "C" fn(usize, i32, usize, usize) -> i32>(IDX_DB_FILES_READ_STAFF_COMP_HISTORY)(stream, use_zip, records, entry);
     }

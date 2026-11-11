@@ -82,7 +82,7 @@ pub(crate) unsafe fn read_header_copy(h: usize, f: usize) {
         *kind = 4;
         old = true;
     }
-    exe::crt_fread(h + 0xc, 0x10c, if old { 0xfa } else { 0x3e8 }, f);
+    exe::crt_fread(h + zip_header::CENTRAL_DIRECTORY, 0x10c, if old { 0xfa } else { 0x3e8 }, f);
 }
 
 /// reads the container header and returns dword +4 (0x16 .sav, 0x17 .qst; 0x14 on failure)
@@ -151,7 +151,7 @@ pub(crate) unsafe extern "C" fn zget_matching_size(path: usize, default: usize) 
     let mut sum = 0i32;
     let mut i = 0i32;
     while i < read_i32(h + 8) {
-        let item = h + 0xc + 0x10c * i as usize;
+        let item = h + zip_header::CENTRAL_DIRECTORY + 0x10c * i as usize;
         if exe::zipdir_match_filename_pattern(default, item + 8) != 0 {
             sum = sum.wrapping_add(read_i32(item + 4));
         }
@@ -205,22 +205,22 @@ pub(crate) unsafe extern "C" fn zadd_matching_files(path: usize, folder: usize, 
         return 0;
     }
     loop {
-        exe::crt_makepath(search.as_mut_ptr(), 0, folder, found_p + 0x10, 0);
+        exe::crt_makepath(search.as_mut_ptr(), 0, folder, found_p + file_find_state::FILE_NAME, 0);
         let f = exe::crt_fopen(search.as_mut_ptr() as usize, 0x98f928);
         if f == 0 {
             show_error_at(0xad6ab0, 0x31d);
             return 0;
         }
-        let mut z = exe::zopen(path, found_p + 0x10, 1, a4, kind);
+        let mut z = exe::zopen(path, found_p + file_find_state::FILE_NAME, 1, a4, kind);
         if z == 0 {
             show_error_at(0xad6ab0, 0x325);
             exe::crt_fclose(f);
             return 0;
         }
-        let mut n = exe::crt_fread(z + 0x41705, 1, 0x30d40, f) as i32;
+        let mut n = exe::crt_fread(z + zfile::READ_BUFFER, 1, 0x30d40, f) as i32;
         while n > 0 {
-            (exe::zwrite(z + 0x41705, (1) as u32, (n) as u32, z) as i32);
-            n = exe::crt_fread(z + 0x41705, 1, 0x30d40, f) as i32;
+            (exe::zwrite(z + zfile::READ_BUFFER, (1) as u32, (n) as u32, z) as i32);
+            n = exe::crt_fread(z + zfile::READ_BUFFER, 1, 0x30d40, f) as i32;
         }
         exe::crt_fclose(f);
         exe::zclose(&mut z);
@@ -298,7 +298,7 @@ pub(crate) unsafe extern "C" fn zextract_matching_files(path: usize, folder: usi
                 *kind = 4;
                 old = true;
             }
-            exe::crt_fread(h + 0xc, 0x10c, if old { 0xfa } else { 0x3e8 }, f);
+            exe::crt_fread(h + zip_header::CENTRAL_DIRECTORY, 0x10c, if old { 0xfa } else { 0x3e8 }, f);
         }
         exe::crt_fclose(f);
         let kind = read_u32(h);
@@ -328,10 +328,10 @@ pub(crate) unsafe extern "C" fn zextract_matching_files(path: usize, folder: usi
         if g == 0 {
             return error(nomes, &mut z);
         }
-        let mut n = exe::zread(z + 0x72445, (1) as u32, (0x30d40) as u32, z) as i32;
+        let mut n = exe::zread(z + zfile::WRITE_BUFFER, (1) as u32, (0x30d40) as u32, z) as i32;
         while n > 0 {
-            exe::crt_fwrite(z + 0x72445, 1, (n) as u32, g);
-            n = exe::zread(z + 0x72445, (1) as u32, (0x30d40) as u32, z) as i32;
+            exe::crt_fwrite(z + zfile::WRITE_BUFFER, 1, (n) as u32, g);
+            n = exe::zread(z + zfile::WRITE_BUFFER, (1) as u32, (0x30d40) as u32, z) as i32;
         }
         exe::crt_fclose(g);
         exe::zclose(&mut z);
@@ -374,14 +374,14 @@ pub(crate) unsafe fn zf_write_i32(z: usize, o: usize, v: i32) {
 pub(crate) unsafe fn zf_next_byte(z: usize) -> u8 {
     let c = zf_read_i32(z, 0xa3185);
     if c < zf_read_i32(z, 0xa318d) {
-        let b = read_u8(z + 0x41705 + c as usize);
+        let b = read_u8(z + zfile::READ_BUFFER + c as usize);
         zf_write_i32(z, 0xa3185, c + 1);
         return b;
     }
     // simplification: the branch marks the block, not each call (zread runs millions of times during loading)
     crate::comparison::branch("save zread block");
-    zf_write_i32(z, 0xa318d, exe::crt_fread(z + 0x41705, 1, 0x30d40, zf_read_i32(z, 0) as usize) as i32);
-    let b = read_u8(z + 0x41705);
+    zf_write_i32(z, 0xa318d, exe::crt_fread(z + zfile::READ_BUFFER, 1, 0x30d40, zf_read_i32(z, 0) as usize) as i32);
+    let b = read_u8(z + zfile::READ_BUFFER);
     zf_write_i32(z, 0xa3185, 1);
     b
 }
@@ -430,7 +430,7 @@ pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, size: i32, how_many: 
                     if k >= request {
                         break 'fora;
                     }
-                    *buf.add(k as usize) = read_u8(z + 0x18);
+                    *buf.add(k as usize) = read_u8(z + zfile::RLE_REPEAT_BYTE);
                     k += 1;
                     let e = zf_read_i32(z, 0x10) + 1;
                     zf_write_i32(z, 0x10, e);
@@ -451,7 +451,7 @@ pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, size: i32, how_many: 
                     k += 1;
                 } else {
                     zf_write_i32(z, 0x14, b as i32 - 0x80);
-                    write_u8(z + 0x18, zf_next_byte(z));
+                    write_u8(z + zfile::RLE_REPEAT_BYTE, zf_next_byte(z));
                 }
                 if zf_read_i32(z, 0x14) == 0 {
                     if k >= request {
@@ -479,15 +479,15 @@ pub(crate) unsafe extern "C" fn zipdir_zread(buf: *mut u8, size: i32, how_many: 
 pub(crate) unsafe fn zf_put_byte(z: usize, b: u8) {
     let p = zf_read_i32(z, 0xa3189);
     if p < 0x30d40 {
-        write_u8(z + 0x72445 + p as usize, b);
+        write_u8(z + zfile::WRITE_BUFFER + p as usize, b);
         zf_write_i32(z, 0xa3189, p + 1);
         return;
     }
     // simplification: the branch flags the block, not each call (zwrite runs millions of times in the save)
     crate::comparison::branch("save zwrite block");
-    exe::crt_fwrite(z + 0x72445, 1, (p) as u32, zf_read_i32(z, 0) as usize);
+    exe::crt_fwrite(z + zfile::WRITE_BUFFER, 1, (p) as u32, zf_read_i32(z, 0) as usize);
     zf_write_i32(z, 0xa3189, 1);
-    write_u8(z + 0x72445, b);
+    write_u8(z + zfile::WRITE_BUFFER, b);
 }
 
 /// Writes to the item like fwrite and adds to the size in the index; on type 4 encodes the RLE (runs of up to 0x7f kept
@@ -517,7 +517,7 @@ pub(crate) unsafe extern "C" fn zipdir_zwrite(buf: *const u8, size: i32, how_man
         crate::comparison::branch("save zwrite type 3");
         return exe::crt_fwrite((buf) as usize, (size) as u32, (how_many) as u32, zf_read_i32(z, 0) as usize) as i32;
     }
-    let repeated = (z + 0x18) as *mut u8;
+    let repeated = (z + zfile::RLE_REPEAT_BYTE) as *mut u8;
     let mut k = 0i32;
     while k < total {
         let n = zf_read_i32(z, 0x14);
@@ -573,7 +573,7 @@ pub(crate) unsafe extern "C" fn zclose(zz: *mut usize) {
     if zf_read_i32(z, 4) == 1 {
         let n = zf_read_i32(z, 0xa3189);
         if n > 0 {
-            exe::crt_fwrite(z + 0x72445, 1, (n) as u32, f());
+            exe::crt_fwrite(z + zfile::WRITE_BUFFER, 1, (n) as u32, f());
             zf_write_i32(z, 0xa3189, 0);
         }
     } else {
@@ -583,16 +583,16 @@ pub(crate) unsafe extern "C" fn zclose(zz: *mut usize) {
     if zf_read_i32(z, 4) == 1 && zf_read_i32(z, 0x29 + 0x10c * zf_read_i32(z, 0xc) as usize) != 0 {
         let n = zf_read_i32(z, 0x14);
         if zf_read_i32(z, 0x19) == 4 && n != 0 {
-            if n <= 1 && *((z + 0x18) as *const u8) <= 0x80 {
-                exe::crt_fwrite(z + 0x18, 1, (1) as u32, f());
+            if n <= 1 && *((z + zfile::RLE_REPEAT_BYTE) as *const u8) <= 0x80 {
+                exe::crt_fwrite(z + zfile::RLE_REPEAT_BYTE, 1, (1) as u32, f());
             } else {
                 let mark = (n as u8).wrapping_add(0x80);
                 exe::crt_fwrite(&mark as *const u8 as usize, 1, (1) as u32, f());
-                exe::crt_fwrite(z + 0x18, 1, (1) as u32, f());
+                exe::crt_fwrite(z + zfile::RLE_REPEAT_BYTE, 1, (1) as u32, f());
             }
         }
         exe::crt_fseek(f(), 0, (0) as u32);
-        exe::crt_fwrite(z + 0x19, 0x416ec, (1) as u32, f());
+        exe::crt_fwrite(z + zfile::HEADER, 0x416ec, (1) as u32, f());
     }
     exe::crt_fclose(f());
     zf_write_i32(z, 0, 0);
