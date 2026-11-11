@@ -80,7 +80,7 @@ pub(crate) unsafe extern "thiscall" fn ratings_average(this: usize, index: *cons
     }
     let reg = (*index).wrapping_mul(0x27).wrapping_add(read_i32(this + player_stats_fields::PLAYER_ENTRIES)) as usize;
     let rating = |n: u8| if n == 0 { 0x1b } else { n as u16 * 4 };
-    let (a, c, e) = (read_u8(reg + player_stats_entry::RECENT_RATINGS), read_u8(reg + 0x25), read_u8(reg + player_stats_entry::LAST_RATING));
+    let (a, c, e) = (read_u8(reg + player_stats_entry::RECENT_RATINGS), read_u8(reg + player_stats_entry::RECENT_RATINGS + 1), read_u8(reg + player_stats_entry::LAST_RATING));
     let sum = rating(a & 0xf)
         .wrapping_add(rating(a >> 4))
         .wrapping_add(rating(c & 0xf))
@@ -461,8 +461,8 @@ pub(crate) unsafe extern "thiscall" fn build_career_history(this: usize, p: usiz
     for i in 0..n {
         let e = buf + i as usize * HISTORY_ENTRY_SIZE;
         if i + 6 < n {
-            write_u32(e + career_entry::TRANSFER_FEE, read_usize(e + career_entry::STATS * HISTORY_ENTRY_SIZE + 0x26) as u32);
-            write_u8(e + career_entry::KIND, (read_u8(e + career_entry::KIND) & 0xf8) | (read_u8(e + career_entry::STATS * HISTORY_ENTRY_SIZE + 0x2a) & 7));
+            write_u32(e + career_entry::TRANSFER_FEE, read_usize(e + 6 * HISTORY_ENTRY_SIZE + 0x26) as u32);
+            write_u8(e + career_entry::KIND, (read_u8(e + career_entry::KIND) & 0xf8) | (read_u8(e + 6 * HISTORY_ENTRY_SIZE + 0x2a) & 7));
         } else {
             write_u32(e + career_entry::TRANSFER_FEE, 0xffff_ffff);
             write_u8(e + career_entry::KIND, read_u8(e + career_entry::KIND) & 0xf8);
@@ -777,7 +777,7 @@ pub(crate) unsafe extern "C" fn player_stats_compare_history_by_club(a: usize, b
     if b == 0 {
         return -1;
     }
-    let (ua, ub) = (read_usize(a + 0xa) as u32, read_usize(b + 0xa) as u32);
+    let (ua, ub) = (read_usize(a + staff_history::CLUB) as u32, read_usize(b + staff_history::CLUB) as u32);
     if ua != ub {
         return if ua > ub { 1 } else { -1 };
     }
@@ -1061,14 +1061,14 @@ pub(crate) unsafe extern "thiscall" fn player_stats_reset_player(this: usize, pe
         if i as u32 == 0xffff_ffff {
             continue;
         }
-        write_u16(read_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add(i << 5) + 0xe, 0xffff);
+        write_u16(read_usize(this + player_stats_fields::CATEGORY_RECORDS).wrapping_add(i << 5) + player_category_stats::RATING_TOTAL, 0xffff);
         write_u32(this + player_stats_fields::FREE_CATEGORY_COUNT, (read_usize(this + player_stats_fields::FREE_CATEGORY_COUNT) as u32).wrapping_add(1));
         write_u32(r + 4 * k, 0xffff_ffff);
     }
     write_u16(r + player_stats_entry::CLUB_LEAGUE_GAMES, 0);
     write_u16(r + player_stats_entry::CLUB_LEAGUE_GOALS, 0);
     write_u8(r + player_stats_entry::LAST_RATING, 0);
-    write_u8(r + 0x25, 0);
+    write_u8(r + player_stats_entry::RECENT_RATINGS + 1, 0);
     write_u8(r + player_stats_entry::RECENT_RATINGS, 0);
     exe::file_llist_reset_last_offset(read_usize(this), r + player_stats_entry::HISTORY_START, r + player_stats_entry::HISTORY_LAST)
 }
@@ -1180,12 +1180,12 @@ pub(crate) unsafe extern "thiscall" fn player_stats_record_match(this: usize, p:
             let mut error = false;
             cat = match_stats_category(Fixture(p), lado as i32, true, &mut error);
         }
-        let gf = game + match_stats_record::SIDE_SIZE * lado + 0x11f;
+        let gf = game + match_stats_record::SIDE_SIZE * lado + match_stats_record::HOME_GOALS;
         let gc = game + match_stats_record::AWAY_GOALS - 0x625 * lado;
         for k in 0..20usize {
             let Some((e, pessoa, dados)) = match_lineup_row(game, lado, k) else { continue };
             let rating = read_u8(e + lineup_row::RATING);
-            if read_u8(game + 0x4c) != 0 {
+            if read_u8(game + match_stats_record::NO_STATISTICS) != 0 {
                 add_f64_at(this + player_stats_fields::FLAGGED_RATING_SUM, rating as i32 as f64);
                 add_f64_at(this + player_stats_fields::FLAGGED_RATED_COUNT, 1.0);
             } else {
@@ -1206,10 +1206,10 @@ pub(crate) unsafe extern "thiscall" fn player_stats_record_match(this: usize, p:
                     add_u8_at(r + player_category_stats::SUB_APPEARANCES, 1);
                 }
                 add_u8_at(r + player_category_stats::GOALS, read_u8(e + lineup_row::GOALS));
-                add_u8_at(r + 3, read_u8(e + 0x22));
-                add_u8_at(r + 4, read_u8(e + 0x23));
-                add_u8_at(r + 5, read_u8(e + 0x24));
-                add_u8_at(r + 6, read_u8(e + 0x27));
+                add_u8_at(r + 3, read_u8(e + lineup_row::GOALS_CONCEDED));
+                add_u8_at(r + 4, read_u8(e + lineup_row::PENALTIES_TAKEN));
+                add_u8_at(r + 5, read_u8(e + lineup_row::PENALTIES_SCORED));
+                add_u8_at(r + 6, read_u8(e + lineup_row::ASSISTS));
                 let (f, a) = (read_u8(gf), read_u8(gc));
                 add_u8_at(r + player_category_stats::TEAM_GOALS_FOR, f);
                 add_u8_at(r + player_category_stats::TEAM_GOALS_AGAINST, a);
@@ -1219,20 +1219,20 @@ pub(crate) unsafe extern "thiscall" fn player_stats_record_match(this: usize, p:
                 if f < a {
                     add_u8_at(r + player_category_stats::DEFEATS, 1);
                 }
-                add_u8_at(r + 0xb, read_u8(e + 0x2c));
-                add_u8_at(r + 0xc, read_u8(e + 0x2d));
+                add_u8_at(r + player_category_stats::YELLOW_CARDS, read_u8(e + lineup_row::YELLOW_CARDS));
+                add_u8_at(r + player_category_stats::RED_CARDS, read_u8(e + lineup_row::RED_CARD));
                 if read_usize(e + lineup_row::PLAYER_ID) == read_usize(game + match_stats_record::MAN_OF_THE_MATCH_ID) {
                     add_u8_at(r + player_category_stats::MAN_OF_THE_MATCH, 1);
                 }
                 add_u16_at(r + player_category_stats::RATING_TOTAL, rating as u16); // cpx12: a nota
-                add_u16_at(r + 0x10, read_u8(e + 0x3e) as u16);
-                add_u16_at(r + 0x12, read_u8(e + 0x3f) as u16);
-                add_u16_at(r + 0x14, read_u8(e + 0x42) as u16);
-                add_u16_at(r + 0x16, read_u8(e + 0x28) as u16);
-                add_u16_at(r + 0x18, read_u8(e + 0x25) as u16);
-                add_u16_at(r + 0x1a, read_u8(e + 0x26) as u16);
+                add_u16_at(r + player_category_stats::PASSES, read_u8(e + lineup_row::PASSES) as u16);
+                add_u16_at(r + player_category_stats::PASSES_COMPLETED, read_u8(e + lineup_row::PASSES_COMPLETED) as u16);
+                add_u16_at(r + player_category_stats::TACKLES_WON, read_u8(e + lineup_row::TACKLES_WON) as u16);
+                add_u16_at(r + player_category_stats::DRIBBLES, read_u8(e + lineup_row::DRIBBLES) as u16);
+                add_u16_at(r + player_category_stats::SHOTS, read_u8(e + lineup_row::SHOTS) as u16);
+                add_u16_at(r + player_category_stats::SHOTS_ON_TARGET, read_u8(e + lineup_row::SHOTS_ON_TARGET) as u16);
                 let left = |e: usize| {
-                    let (s34, s30) = (read_u8(e + 0x34) as i8, read_u8(e + 0x30) as i8);
+                    let (s34, s30) = (read_u8(e + lineup_row::MINUTE_LEFT_PITCH) as i8, read_u8(e + lineup_row::MINUTE_OFF) as i8);
                     if s34 > -1 {
                         s34 as i32
                     } else if s30 > -1 {
@@ -1254,12 +1254,12 @@ pub(crate) unsafe extern "thiscall" fn player_stats_record_match(this: usize, p:
                 add_u16_at(reg + player_stats_entry::CLUB_LEAGUE_GAMES, 1);
                 add_u16_at(reg + player_stats_entry::CLUB_LEAGUE_GOALS, read_u8(e + lineup_row::GOALS) as u16);
                 if exe::contract_manager_get_loan_contract(read_usize(G_CONTRACT_MANAGER), pessoa) == 0 && contract_of_staff(pessoa) != Contract(0) {
-                    add_u16_at((contract_of_staff(pessoa)).addr() + 0x3b, 1);
+                    add_u16_at((contract_of_staff(pessoa)).addr() + contract::CLUB_APPEARANCES, 1);
                 }
             }
-            let (f24, f25, f26) = (read_u8(reg + player_stats_entry::RECENT_RATINGS), read_u8(reg + 0x25), read_u8(reg + player_stats_entry::LAST_RATING));
+            let (f24, f25, f26) = (read_u8(reg + player_stats_entry::RECENT_RATINGS), read_u8(reg + player_stats_entry::RECENT_RATINGS + 1), read_u8(reg + player_stats_entry::LAST_RATING));
             write_u8(reg + player_stats_entry::RECENT_RATINGS, (f25 << 4) | (f24 >> 4));
-            write_u8(reg + 0x25, (f26 << 4) | (f25 >> 4));
+            write_u8(reg + player_stats_entry::RECENT_RATINGS + 1, (f26 << 4) | (f25 >> 4));
             write_u8(reg + player_stats_entry::LAST_RATING, ((rating ^ f26) & 0xf) ^ f26);
         }
     }

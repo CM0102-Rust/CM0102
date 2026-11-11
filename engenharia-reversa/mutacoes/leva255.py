@@ -18,7 +18,7 @@ MUTACOES = [
     ('cps6_primeira_sem_sorteio', '    let r = friendly_random(n - q - 1); // cps6: the first person', '    let r = (n - q - 1) / 2; // mutacao: sem o sorteio', 'cps_6 absences of the day'),
     ('cps6_soma_sem_sorteio', '            if friendly_random(s as i8 as i32) == 0 { // cps6: the random draw of the sum', '            if s == 0 { // mutacao: sem o sorteio', 'cps_6 absence by sum'),
     ('cps6_sem_falta', '            exe::awol_miss_training(read_usize(G_AWOL), p); // cps6: a falta', '            let _ = p.addr(); // mutacao: sem a falta', 'cps_6 missed training'),
-    ('cps7_selecao_com_casa', '            write_u32(nation_national_team(england_nation()) + 0x69, 0); // cps7: the national team without a home', '            let _ = nation_national_team(england_nation()); // mutacao: a seleção fica com o estádio', 'cps_7 closes the national stadium'),
+    ('cps7_selecao_com_casa', '            write_u32(nation_national_team(england_nation()) + club::STADIUM, 0); // cps7: the national team without a home', '            let _ = nation_national_team(england_nation()); // mutacao: a seleção fica com o estádio', 'cps_7 closes the national stadium'),
     ('cps7_sem_o_id', '            write_u32(G_STADIUM_STASHED_VENUE_ID, read_usize(e) as u32); // cps7: stores the id of the closed stadium', '            // mutacao: o id do estádio fechado não é guardado', 'cps_7 closes the national stadium'),
     ('cps7_livre_invertido', '    (r == 0) as u32 // cps7: free without the reservation', '    (r != 0) as u32 // mutacao', 'cps_7 reservation checked'),
     ('cps8_sem_pedidos_observa', 'return 0; // cps8: without scouting requests', 'return 1; // mutacao: sem pedidos, com observado', 'cps_8 no requests'),

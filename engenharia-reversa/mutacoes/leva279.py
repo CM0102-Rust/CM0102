@@ -2,7 +2,7 @@
 MUTACOES = [
     ('cqo1_mandante_neutro', 'fixar(fx.home_club().stadium().addr()); // cqo1: the home team stadium', '*neutro = 1; // mutacao: o jogo comum marcado como neutro\n                fixar(fx.home_club().stadium().addr());', 'cqo_1 home team stadium'),
     ('cqo1_primeiro_neutro', 'best = n; // cqo1: a melhor nota\n                        chosen = e;', 'best = n; // mutacao: o primeiro com nota\n                        if chosen == 0 {\n                            chosen = e;\n                        }', 'cqo_1 neutral by rating'),
-    ('cqo1_rodizio_sem_reserva', 'crate::comparison::branch("cqo_1 rotation");\n                        add_stadium_booking(this, read_usize(e + 0xc), data);', 'crate::comparison::branch("cqo_1 rotation"); // mutacao: sem a reserva', 'cqo_1 rotation'),
+    ('cqo1_rodizio_sem_reserva', 'crate::comparison::branch("cqo_1 rotation");\n                        add_stadium_booking(this, read_usize(e + stadium_venue::STADIUM), data);', 'crate::comparison::branch("cqo_1 rotation"); // mutacao: sem a reserva', 'cqo_1 rotation'),
     ('cqo2_classico_sem_bonus', 'pc = ftol(pc as f64 * read_f64(rdata::F64_1_5)); // cqo2: o clássico', 'pc = ftol(pc as f64 * 1.0); // mutacao: o clássico sem o bônus', 'cqo_2 derby'),
     ('cqo2_primeiros_sem_bonus', 'n * 100 // cqo2: os primeiros', 'n * 10 // mutacao: os primeiros quase sem bônus', 'cqo_2 top position'),
     ('cqo2_sorteio_do_total', 'let r = random_below(0x32); // cqo2: the random draw of the total', 'let r = random_below(0x31); // mutacao: o sorteio do total menor'),

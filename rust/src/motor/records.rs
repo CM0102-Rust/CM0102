@@ -1390,6 +1390,11 @@ impl Stadium {
     pub(crate) unsafe fn set_under_soil_heating(self, v: u8) {
         write_u8(self.0 + stadium::UNDER_SOIL_HEATING, v)
     }
+    /// `stadium::SIZE` (+0x4e). Name: read.
+    #[inline(always)]
+    pub(crate) fn size_addr(self) -> usize {
+        self.0 + stadium::SIZE
+    }
 }
 
 impl Addr for Stadium {
@@ -9968,6 +9973,15 @@ impl CareerEntry {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
+    /// `career_entry::SEASON_YEAR` (+0x0). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn season_year(self) -> i16 {
+        read_i16(self.0 + career_entry::SEASON_YEAR)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_season_year(self, v: i16) {
+        write_i16(self.0 + career_entry::SEASON_YEAR, v)
+    }
     /// `career_entry::CLUB_ID` (+0x2). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn club_id(self) -> usize {
@@ -12931,6 +12945,15 @@ impl KeyNationRecord {
     pub(crate) unsafe fn set_season_spans_year(self, v: u8) {
         write_u8(self.0 + key_nation_record::SEASON_SPANS_YEAR, v)
     }
+    /// `key_nation_record::START_DATE_YEAR` (+0x2c). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn start_date_year(self) -> i16 {
+        read_i16(self.0 + key_nation_record::START_DATE_YEAR)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_start_date_year(self, v: i16) {
+        write_i16(self.0 + key_nation_record::START_DATE_YEAR, v)
+    }
     /// `key_nation_record::END_DATE` (+0x39). Name: verified.
     #[inline(always)]
     pub(crate) fn end_date_addr(self) -> usize {
@@ -13505,6 +13528,96 @@ impl LineupRow {
     pub(crate) unsafe fn set_goals(self, v: u8) {
         write_u8(self.0 + lineup_row::GOALS, v)
     }
+    /// `lineup_row::GOALS_CONCEDED` (+0x22). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn goals_conceded(self) -> u8 {
+        read_u8(self.0 + lineup_row::GOALS_CONCEDED)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_goals_conceded(self, v: u8) {
+        write_u8(self.0 + lineup_row::GOALS_CONCEDED, v)
+    }
+    /// `lineup_row::PENALTIES_TAKEN` (+0x23). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn penalties_taken(self) -> u8 {
+        read_u8(self.0 + lineup_row::PENALTIES_TAKEN)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_penalties_taken(self, v: u8) {
+        write_u8(self.0 + lineup_row::PENALTIES_TAKEN, v)
+    }
+    /// `lineup_row::PENALTIES_SCORED` (+0x24). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn penalties_scored(self) -> u8 {
+        read_u8(self.0 + lineup_row::PENALTIES_SCORED)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_penalties_scored(self, v: u8) {
+        write_u8(self.0 + lineup_row::PENALTIES_SCORED, v)
+    }
+    /// `lineup_row::SHOTS` (+0x25). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn shots(self) -> u8 {
+        read_u8(self.0 + lineup_row::SHOTS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_shots(self, v: u8) {
+        write_u8(self.0 + lineup_row::SHOTS, v)
+    }
+    /// `lineup_row::SHOTS_ON_TARGET` (+0x26). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn shots_on_target(self) -> u8 {
+        read_u8(self.0 + lineup_row::SHOTS_ON_TARGET)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_shots_on_target(self, v: u8) {
+        write_u8(self.0 + lineup_row::SHOTS_ON_TARGET, v)
+    }
+    /// `lineup_row::ASSISTS` (+0x27). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn assists(self) -> u8 {
+        read_u8(self.0 + lineup_row::ASSISTS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_assists(self, v: u8) {
+        write_u8(self.0 + lineup_row::ASSISTS, v)
+    }
+    /// `lineup_row::DRIBBLES` (+0x28). Name: inferred.
+    #[inline(always)]
+    pub(crate) unsafe fn dribbles(self) -> u8 {
+        read_u8(self.0 + lineup_row::DRIBBLES)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_dribbles(self, v: u8) {
+        write_u8(self.0 + lineup_row::DRIBBLES, v)
+    }
+    /// `lineup_row::YELLOW_CARDS` (+0x2c). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn yellow_cards(self) -> u8 {
+        read_u8(self.0 + lineup_row::YELLOW_CARDS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_yellow_cards(self, v: u8) {
+        write_u8(self.0 + lineup_row::YELLOW_CARDS, v)
+    }
+    /// `lineup_row::RED_CARD` (+0x2d). Name: inferred.
+    #[inline(always)]
+    pub(crate) unsafe fn red_card(self) -> u8 {
+        read_u8(self.0 + lineup_row::RED_CARD)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_red_card(self, v: u8) {
+        write_u8(self.0 + lineup_row::RED_CARD, v)
+    }
+    /// `lineup_row::MINUTE_OFF` (+0x30). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn minute_off(self) -> u8 {
+        read_u8(self.0 + lineup_row::MINUTE_OFF)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_minute_off(self, v: u8) {
+        write_u8(self.0 + lineup_row::MINUTE_OFF, v)
+    }
     /// `lineup_row::ENTRY_MINUTE` (+0x32). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn entry_minute(self) -> u8 {
@@ -13514,6 +13627,15 @@ impl LineupRow {
     pub(crate) unsafe fn set_entry_minute(self, v: u8) {
         write_u8(self.0 + lineup_row::ENTRY_MINUTE, v)
     }
+    /// `lineup_row::MINUTE_LEFT_PITCH` (+0x34). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn minute_left_pitch(self) -> u8 {
+        read_u8(self.0 + lineup_row::MINUTE_LEFT_PITCH)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_minute_left_pitch(self, v: u8) {
+        write_u8(self.0 + lineup_row::MINUTE_LEFT_PITCH, v)
+    }
     /// `lineup_row::RATING` (+0x35). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn rating(self) -> u8 {
@@ -13522,6 +13644,33 @@ impl LineupRow {
     #[inline(always)]
     pub(crate) unsafe fn set_rating(self, v: u8) {
         write_u8(self.0 + lineup_row::RATING, v)
+    }
+    /// `lineup_row::PASSES` (+0x3e). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn passes(self) -> u8 {
+        read_u8(self.0 + lineup_row::PASSES)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_passes(self, v: u8) {
+        write_u8(self.0 + lineup_row::PASSES, v)
+    }
+    /// `lineup_row::PASSES_COMPLETED` (+0x3f). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn passes_completed(self) -> u8 {
+        read_u8(self.0 + lineup_row::PASSES_COMPLETED)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_passes_completed(self, v: u8) {
+        write_u8(self.0 + lineup_row::PASSES_COMPLETED, v)
+    }
+    /// `lineup_row::TACKLES_WON` (+0x42). Name: inferred.
+    #[inline(always)]
+    pub(crate) unsafe fn tackles_won(self) -> u8 {
+        read_u8(self.0 + lineup_row::TACKLES_WON)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_tackles_won(self, v: u8) {
+        write_u8(self.0 + lineup_row::TACKLES_WON, v)
     }
 }
 
@@ -16304,6 +16453,15 @@ impl MatchStatsRecord {
     pub(crate) unsafe fn set_man_of_the_match_id(self, v: usize) {
         write_usize(self.0 + match_stats_record::MAN_OF_THE_MATCH_ID, v)
     }
+    /// `match_stats_record::NO_STATISTICS` (+0x4c). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn no_statistics(self) -> u8 {
+        read_u8(self.0 + match_stats_record::NO_STATISTICS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_no_statistics(self, v: u8) {
+        write_u8(self.0 + match_stats_record::NO_STATISTICS, v)
+    }
     /// `match_stats_record::DURATION` (+0x4d). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn duration(self) -> i16 {
@@ -17744,6 +17902,42 @@ impl PlayerCategoryStats {
     pub(crate) unsafe fn set_goals(self, v: u8) {
         write_u8(self.0 + player_category_stats::GOALS, v)
     }
+    /// `player_category_stats::GOALS_CONCEDED` (+0x3). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn goals_conceded(self) -> u8 {
+        read_u8(self.0 + player_category_stats::GOALS_CONCEDED)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_goals_conceded(self, v: u8) {
+        write_u8(self.0 + player_category_stats::GOALS_CONCEDED, v)
+    }
+    /// `player_category_stats::PENALTIES_TAKEN` (+0x4). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn penalties_taken(self) -> u8 {
+        read_u8(self.0 + player_category_stats::PENALTIES_TAKEN)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_penalties_taken(self, v: u8) {
+        write_u8(self.0 + player_category_stats::PENALTIES_TAKEN, v)
+    }
+    /// `player_category_stats::PENALTIES_SCORED` (+0x5). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn penalties_scored(self) -> u8 {
+        read_u8(self.0 + player_category_stats::PENALTIES_SCORED)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_penalties_scored(self, v: u8) {
+        write_u8(self.0 + player_category_stats::PENALTIES_SCORED, v)
+    }
+    /// `player_category_stats::ASSISTS` (+0x6). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn assists(self) -> u8 {
+        read_u8(self.0 + player_category_stats::ASSISTS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_assists(self, v: u8) {
+        write_u8(self.0 + player_category_stats::ASSISTS, v)
+    }
     /// `player_category_stats::TEAM_GOALS_FOR` (+0x7). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn team_goals_for(self) -> u8 {
@@ -17780,6 +17974,24 @@ impl PlayerCategoryStats {
     pub(crate) unsafe fn set_defeats(self, v: u8) {
         write_u8(self.0 + player_category_stats::DEFEATS, v)
     }
+    /// `player_category_stats::YELLOW_CARDS` (+0xb). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn yellow_cards(self) -> u8 {
+        read_u8(self.0 + player_category_stats::YELLOW_CARDS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_yellow_cards(self, v: u8) {
+        write_u8(self.0 + player_category_stats::YELLOW_CARDS, v)
+    }
+    /// `player_category_stats::RED_CARDS` (+0xc). Name: inferred.
+    #[inline(always)]
+    pub(crate) unsafe fn red_cards(self) -> u8 {
+        read_u8(self.0 + player_category_stats::RED_CARDS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_red_cards(self, v: u8) {
+        write_u8(self.0 + player_category_stats::RED_CARDS, v)
+    }
     /// `player_category_stats::MAN_OF_THE_MATCH` (+0xd). Name: read.
     #[inline(always)]
     pub(crate) unsafe fn man_of_the_match(self) -> u8 {
@@ -17797,6 +18009,60 @@ impl PlayerCategoryStats {
     #[inline(always)]
     pub(crate) unsafe fn set_rating_total(self, v: i16) {
         write_i16(self.0 + player_category_stats::RATING_TOTAL, v)
+    }
+    /// `player_category_stats::PASSES` (+0x10). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn passes(self) -> i16 {
+        read_i16(self.0 + player_category_stats::PASSES)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_passes(self, v: i16) {
+        write_i16(self.0 + player_category_stats::PASSES, v)
+    }
+    /// `player_category_stats::PASSES_COMPLETED` (+0x12). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn passes_completed(self) -> i16 {
+        read_i16(self.0 + player_category_stats::PASSES_COMPLETED)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_passes_completed(self, v: i16) {
+        write_i16(self.0 + player_category_stats::PASSES_COMPLETED, v)
+    }
+    /// `player_category_stats::TACKLES_WON` (+0x14). Name: inferred.
+    #[inline(always)]
+    pub(crate) unsafe fn tackles_won(self) -> i16 {
+        read_i16(self.0 + player_category_stats::TACKLES_WON)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_tackles_won(self, v: i16) {
+        write_i16(self.0 + player_category_stats::TACKLES_WON, v)
+    }
+    /// `player_category_stats::DRIBBLES` (+0x16). Name: inferred.
+    #[inline(always)]
+    pub(crate) unsafe fn dribbles(self) -> i16 {
+        read_i16(self.0 + player_category_stats::DRIBBLES)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_dribbles(self, v: i16) {
+        write_i16(self.0 + player_category_stats::DRIBBLES, v)
+    }
+    /// `player_category_stats::SHOTS` (+0x18). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn shots(self) -> i16 {
+        read_i16(self.0 + player_category_stats::SHOTS)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_shots(self, v: i16) {
+        write_i16(self.0 + player_category_stats::SHOTS, v)
+    }
+    /// `player_category_stats::SHOTS_ON_TARGET` (+0x1a). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn shots_on_target(self) -> i16 {
+        read_i16(self.0 + player_category_stats::SHOTS_ON_TARGET)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_shots_on_target(self, v: i16) {
+        write_i16(self.0 + player_category_stats::SHOTS_ON_TARGET, v)
     }
     /// `player_category_stats::MINUTES` (+0x1c). Name: read.
     #[inline(always)]
@@ -18437,6 +18703,15 @@ impl RetirementEntry {
     #[inline(always)]
     pub(crate) unsafe fn set_announce_year(self, v: u16) {
         write_u16(self.0 + retirement_entry::ANNOUNCE_YEAR, v)
+    }
+    /// `retirement_entry::ANNOUNCE_DATE_LEAP_YEAR` (+0xc). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn announce_date_leap_year(self) -> usize {
+        read_usize(self.0 + retirement_entry::ANNOUNCE_DATE_LEAP_YEAR)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_announce_date_leap_year(self, v: usize) {
+        write_usize(self.0 + retirement_entry::ANNOUNCE_DATE_LEAP_YEAR, v)
     }
     /// `retirement_entry::RETIRE_DATE` (+0x10). Name: read.
     #[inline(always)]
@@ -21709,6 +21984,24 @@ impl StaffHistory {
     pub(crate) fn is_null(self) -> bool {
         self.0 == 0
     }
+    /// `staff_history::STAFF_ID` (+0x4). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn staff_id(self) -> i32 {
+        read_i32(self.0 + staff_history::STAFF_ID)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_staff_id(self, v: i32) {
+        write_i32(self.0 + staff_history::STAFF_ID, v)
+    }
+    /// `staff_history::YEAR` (+0x8). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn year(self) -> i16 {
+        read_i16(self.0 + staff_history::YEAR)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_year(self, v: i16) {
+        write_i16(self.0 + staff_history::YEAR, v)
+    }
     /// `staff_history::CLUB` (+0xa). Name: verified.
     #[inline(always)]
     pub(crate) unsafe fn club(self) -> i32 {
@@ -22549,6 +22842,113 @@ impl Addr for TrainingSchedule {
 }
 
 impl core::fmt::LowerHex for TrainingSchedule {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `stadium_venue` record in the game's memory (fields in `fields::stadium_venue`). [pt] Um registro `stadium_venue` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct StadiumVenue(pub(crate) usize);
+
+#[allow(dead_code)]
+impl StadiumVenue {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `stadium_venue::STADIUM` (+0xc). Name: verified.
+    #[inline(always)]
+    pub(crate) unsafe fn stadium(self) -> usize {
+        read_usize(self.0 + stadium_venue::STADIUM)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_stadium(self, v: usize) {
+        write_usize(self.0 + stadium_venue::STADIUM, v)
+    }
+}
+
+impl Addr for StadiumVenue {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for StadiumVenue {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::LowerHex::fmt(&self.0, f)
+    }
+}
+
+/// A `world_cup_fields` record in the game's memory (fields in `fields::world_cup_fields`). [pt] Um registro `world_cup_fields` na memória do jogo.
+#[repr(transparent)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[allow(dead_code)]
+pub(crate) struct WorldCupFields(pub(crate) usize);
+
+#[allow(dead_code)]
+impl WorldCupFields {
+    #[inline(always)]
+    pub(crate) fn addr(self) -> usize {
+        self.0
+    }
+    #[inline(always)]
+    pub(crate) fn is_null(self) -> bool {
+        self.0 == 0
+    }
+    /// `world_cup_fields::DRAW_SLOT_CLUB` (+0xee). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn draw_slot_club(self) -> usize {
+        read_usize(self.0 + world_cup_fields::DRAW_SLOT_CLUB)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_draw_slot_club(self, v: usize) {
+        write_usize(self.0 + world_cup_fields::DRAW_SLOT_CLUB, v)
+    }
+    /// `world_cup_fields::DRAW_SLOT_POT` (+0xf2). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn draw_slot_pot(self) -> u8 {
+        read_u8(self.0 + world_cup_fields::DRAW_SLOT_POT)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_draw_slot_pot(self, v: u8) {
+        write_u8(self.0 + world_cup_fields::DRAW_SLOT_POT, v)
+    }
+    /// `world_cup_fields::SEEDING_DAY` (+0x18e). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn seeding_day(self) -> i16 {
+        read_i16(self.0 + world_cup_fields::SEEDING_DAY)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_seeding_day(self, v: i16) {
+        write_i16(self.0 + world_cup_fields::SEEDING_DAY, v)
+    }
+    /// `world_cup_fields::SEEDING_YEAR_OFFSET` (+0x190). Name: read.
+    #[inline(always)]
+    pub(crate) unsafe fn seeding_year_offset(self) -> i16 {
+        read_i16(self.0 + world_cup_fields::SEEDING_YEAR_OFFSET)
+    }
+    #[inline(always)]
+    pub(crate) unsafe fn set_seeding_year_offset(self, v: i16) {
+        write_i16(self.0 + world_cup_fields::SEEDING_YEAR_OFFSET, v)
+    }
+}
+
+impl Addr for WorldCupFields {
+    #[inline(always)]
+    fn addr(self) -> usize {
+        self.0
+    }
+}
+
+impl core::fmt::LowerHex for WorldCupFields {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         core::fmt::LowerHex::fmt(&self.0, f)
     }

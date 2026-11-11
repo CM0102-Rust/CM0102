@@ -19,9 +19,9 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | Nível | Campos |
 |---|---|
 | comunidade | 247 |
-| conferido | 69 |
-| lido | 1471 |
-| inferido | 152 |
+| conferido | 78 |
+| lido | 1494 |
+| inferido | 158 |
 
 ## Por registro
 
@@ -38,7 +38,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `board_record` | 0 | 1 | 16 | 5 |
 | `bra_nat_third` | 0 | 0 | 1 | 0 |
 | `call_up_entry` | 0 | 0 | 1 | 0 |
-| `career_entry` | 0 | 0 | 7 | 0 |
+| `career_entry` | 0 | 0 | 8 | 0 |
 | `city` | 6 | 0 | 0 | 0 |
 | `club` | 43 | 0 | 2 | 0 |
 | `club_discipline_record` | 0 | 0 | 3 | 0 |
@@ -107,13 +107,13 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `intertoto_cup` | 0 | 0 | 1 | 0 |
 | `intl_date_entry` | 0 | 0 | 6 | 1 |
 | `job_vacancy` | 0 | 0 | 1 | 0 |
-| `key_nation_record` | 0 | 3 | 1 | 1 |
+| `key_nation_record` | 0 | 4 | 1 | 1 |
 | `language_entry` | 0 | 0 | 2 | 0 |
 | `league` | 0 | 5 | 44 | 6 |
 | `league_projection` | 0 | 0 | 5 | 0 |
 | `league_round_date` | 0 | 0 | 7 | 1 |
 | `league_table_row` | 0 | 0 | 28 | 0 |
-| `lineup_row` | 0 | 0 | 4 | 0 |
+| `lineup_row` | 0 | 4 | 11 | 3 |
 | `live_match` | 0 | 0 | 15 | 2 |
 | `llist` | 0 | 0 | 4 | 0 |
 | `llist_node` | 0 | 0 | 4 | 0 |
@@ -132,7 +132,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `match_spectators` | 0 | 0 | 9 | 1 |
 | `match_stats` | 0 | 0 | 5 | 0 |
 | `match_stats_entry` | 0 | 0 | 4 | 0 |
-| `match_stats_record` | 0 | 0 | 6 | 0 |
+| `match_stats_record` | 0 | 0 | 7 | 0 |
 | `match_summary` | 0 | 0 | 1 | 0 |
 | `media_fields` | 0 | 0 | 6 | 0 |
 | `names` | 0 | 3 | 0 | 0 |
@@ -156,7 +156,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `person_transfer_record` | 0 | 0 | 4 | 0 |
 | `physical_record` | 0 | 0 | 10 | 0 |
 | `planned_friendly` | 0 | 0 | 4 | 0 |
-| `player_category_stats` | 0 | 0 | 9 | 0 |
+| `player_category_stats` | 0 | 0 | 18 | 3 |
 | `player_regen_fields` | 0 | 0 | 12 | 0 |
 | `player_search_fields` | 0 | 0 | 14 | 2 |
 | `player_sheet` | 58 | 0 | 0 | 0 |
@@ -170,7 +170,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `recovery_news_entry` | 0 | 0 | 5 | 0 |
 | `regen_pool_item` | 0 | 0 | 3 | 0 |
 | `regen_queue_entry` | 0 | 0 | 2 | 0 |
-| `retirement_entry` | 0 | 0 | 8 | 0 |
+| `retirement_entry` | 0 | 1 | 8 | 0 |
 | `ruling_body` | 0 | 0 | 5 | 0 |
 | `ruling_body_entry` | 0 | 0 | 1 | 1 |
 | `run_record` | 0 | 0 | 2 | 0 |
@@ -187,10 +187,11 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `shortlist_pair` | 0 | 0 | 1 | 0 |
 | `shortlist_slot` | 0 | 0 | 8 | 1 |
 | `side_stats` | 0 | 0 | 5 | 0 |
-| `stadium` | 10 | 0 | 0 | 0 |
+| `stadium` | 10 | 0 | 1 | 0 |
 | `stadium_obj` | 0 | 0 | 7 | 0 |
+| `stadium_venue` | 0 | 1 | 0 | 0 |
 | `staff` | 32 | 4 | 2 | 0 |
-| `staff_history` | 0 | 1 | 0 | 0 |
+| `staff_history` | 0 | 3 | 0 | 0 |
 | `staff_records_fields` | 0 | 0 | 7 | 0 |
 | `staff_state` | 0 | 0 | 7 | 1 |
 | `story_log_entry` | 0 | 0 | 6 | 0 |
@@ -211,6 +212,7 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `uefa_seeding_nation` | 0 | 0 | 5 | 0 |
 | `undo_slot` | 0 | 0 | 4 | 0 |
 | `work_permit` | 0 | 0 | 4 | 0 |
+| `world_cup_fields` | 0 | 0 | 4 | 0 |
 
 ## Os nomes inferidos (a conferir)
 
@@ -320,6 +322,9 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `intl_date_entry::WEEKDAY` | +0x1 | 1 byte(s): day byte of the international date as written by build_international_date_table [inference] |
 | `key_nation_record::SEASON_SPANS_YEAR` | +0x1d | 1 byte(s): Nonzero when the season ends in the following year [inference] |
 | `league_round_date::TV_SLOT_DATA` | +0x5 | 4 byte(s): dword of TV slot 0 (8 slots of 7 bytes from +5) [inference] |
+| `lineup_row::DRIBBLES` | +0x28 | 1 byte(s): times he beat an opponent in the match [inference] |
+| `lineup_row::RED_CARD` | +0x2d | 1 byte(s): red cards in the match [inference] |
+| `lineup_row::TACKLES_WON` | +0x42 | 1 byte(s): tackles won in the match [inference] |
 | `live_match::DAY_ENTRY` | +0x63 | 4 byte(s): match-day competition entry of the match (0x54 bytes; screen param 0xe of the match screen) [inference] |
 | `live_match::STATE` | +0x67 | 1 byte(s): live state: 0xff = not live; 2 = finished (the score is already in the aggregate); set to 1 by the match screen [inference] |
 | `match_record::BALL_TIME_THIRD_1` | +0xc | 10 byte(s): five i16 (indexed by side, 0..4): ball time in the first pitch third, shown as a possession percentage [inference] |
@@ -349,6 +354,9 @@ o nível aqui é o do **nome** (o significado), não o da largura. Cada método 
 | `past_transfer::TO_CLUB_ID` | +0x10 | 4 byte(s): Club the person moved to (-1 when released) [inference] |
 | `past_transfer::FROM_CLUB_ID` | +0x14 | 4 byte(s): Club the person left (-1 when none) [inference] |
 | `past_transfer::FEE` | +0x18 | 4 byte(s): Fee of the move (0 for loans and releases) [inference] |
+| `player_category_stats::RED_CARDS` | +0xc | 1 byte(s): red cards summed over the matches [inference] |
+| `player_category_stats::TACKLES_WON` | +0x14 | 2 byte(s): tackles won summed over the matches [inference] |
+| `player_category_stats::DRIBBLES` | +0x16 | 2 byte(s): times he beat an opponent summed over the matches [inference] |
 | `rating_record::YEAR` | +0x1d | 2 byte(s): Season year of the record [inference] |
 | `ruling_body_entry::PERSON_ID` | +0x0 | 4 byte(s): Person id of the entry (-1 = free) [inference] |
 | `shortlist_slot::VALUATION` | +0x3 | 4 byte(s): Club's valuation of the target, compared with PRICE in compensation deals [inference] |

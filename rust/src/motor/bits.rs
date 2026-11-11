@@ -217,8 +217,12 @@ pub(crate) mod staff_state_status_flags {
     pub(crate) const AI_SHORTLIST_COUNT: u8 = 0xf;
     /// & 0x30 == 0x10 skips the player; existing comment: 0x10 announced. Name: read.
     pub(crate) const RETIREMENT_ANNOUNCED: u8 = 0x10;
+    /// set (0x10 cleared) when the person retires; docs/MARCA_DO_REGEN 0x20 retired. Name: verified.
+    pub(crate) const RETIRED: u8 = 0x20;
     /// docs/MARCA_DO_REGEN: bits 0x30 retirement state (0x10 announced, 0x20 retired); tested as a whole mask. Name: verified.
     pub(crate) const RETIREMENT_STATE: u8 = 0x30;
+    /// docs/MARCA_DO_REGEN: bit 0x40 marks the regen; set when the youth regen is created. Name: verified.
+    pub(crate) const REGEN_MARK: u8 = 0x40;
 }
 
 /// Bits of `tactics_fields::FLAGS`.

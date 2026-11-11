@@ -167,6 +167,7 @@ pub(crate) mod stadium {
     pub(crate) const NEARBY_STADIUM: usize = 0x48; // 4 byte(s), int
     pub(crate) const COVERED: usize = 0x4c; // 1 byte(s), byte
     pub(crate) const UNDER_SOIL_HEATING: usize = 0x4d; // 1 byte(s), byte
+    pub(crate) const SIZE: usize = 0x4e; // the record size (78 bytes)
 }
 
 /// `TStaff` record. [pt] Registro `TStaff`.
@@ -1191,6 +1192,7 @@ pub(crate) mod board_record {
 /// Fields of the `career_entry` object, named from how the routines use them. [pt] Campos do objeto `career_entry`.
 #[allow(dead_code)]
 pub(crate) mod career_entry {
+    pub(crate) const SEASON_YEAR: usize = 0x0; // 2 byte(s): season year of the entry (key_nation_get_club_season_year of the club)
     pub(crate) const CLUB_ID: usize = 0x2; // 4 byte(s): Club id of the season entry (-1 none)
     pub(crate) const STATS: usize = 0x6; // 32 byte(s): The category statistics (player_category_stats layout)
     pub(crate) const STATS_SUB_APPEARANCES: usize = 0x7; // 1 byte(s): STATS + player_category_stats SUB_APPEARANCES
@@ -1582,6 +1584,7 @@ pub(crate) mod key_nation_record {
     pub(crate) const ACTIVE_INDEX: usize = 0x14; // 1 byte(s): position of the entry among the active league entries (passed as the group to get_fixture_list_for_date) [verified: community data map: g_league_table+0x14 active_index (s8), numbered by key_nation_number_active_entries]
     pub(crate) const SEASON_END_DAY: usize = 0x15; // 2 byte(s): Day of year the nation's season ends (72-byte records at 0xb63d60)
     pub(crate) const SEASON_SPANS_YEAR: usize = 0x1d; // 1 byte(s): Nonzero when the season ends in the following year [inference]
+    pub(crate) const START_DATE_YEAR: usize = 0x2c; // 2 byte(s): year half of the key nation's season start date (START_DATE at +0x2a) [verified: community map: g_league_table+0x2a start_date; t = record+0x2a, t+2 = +0x2c = START_DATE + cm_date::YEAR; same pattern as END_DATE_YEAR]
     pub(crate) const END_DATE: usize = 0x39; // 8 byte(s): second season date of the key nation entry (day half read here) [verified: globals.rs community map: g_league_table+0x2a start_date, +0x39 end_date; t = record+0x2a, so t+0xf = +0x39]
     pub(crate) const END_DATE_YEAR: usize = 0x3b; // 2 byte(s): year half of END_DATE [verified: t+0x11 = record+0x3b = END_DATE (+0x39) + cm_date::YEAR]
 }
@@ -1654,8 +1657,22 @@ pub(crate) mod league_table_row {
 pub(crate) mod lineup_row {
     pub(crate) const PLAYER_ID: usize = 0x4; // 4 byte(s): Player data (TPlayer) id (-1 none); +0 the staff id
     pub(crate) const GOALS: usize = 0x21; // 1 byte(s): Goals scored in the match
+    pub(crate) const GOALS_CONCEDED: usize = 0x22; // 1 byte(s): goals conceded (goalkeeper) in the match
+    pub(crate) const PENALTIES_TAKEN: usize = 0x23; // 1 byte(s): penalties taken in the match [verified: same 0x49-byte row as match_record_row (HOME_LINEUP 0x190 = ROW_STAFF_ID); match_record_row::PENALTIES_TAKEN 0x23]
+    pub(crate) const PENALTIES_SCORED: usize = 0x24; // 1 byte(s): penalties scored in the match [verified: same 0x49-byte row as match_record_row (HOME_LINEUP 0x190 = ROW_STAFF_ID); match_record_row::PENALTIES_SCORED 0x24]
+    pub(crate) const SHOTS: usize = 0x25; // 1 byte(s): shots in the match [verified: same 0x49-byte row as match_record_row; match_record_row::SHOTS 0x25 (verified there: fill_match_record copies match_player SHOTS)]
+    pub(crate) const SHOTS_ON_TARGET: usize = 0x26; // 1 byte(s): shots on target in the match [verified: same 0x49-byte row as match_record_row; match_record_row::SHOTS_ON_TARGET 0x26 (verified there: fill_match_record copies match_player SHOTS_ON_TARGET)]
+    pub(crate) const ASSISTS: usize = 0x27; // 1 byte(s): assists in the match
+    pub(crate) const DRIBBLES: usize = 0x28; // 1 byte(s): times he beat an opponent in the match [inference]
+    pub(crate) const YELLOW_CARDS: usize = 0x2c; // 1 byte(s): yellow cards in the match
+    pub(crate) const RED_CARD: usize = 0x2d; // 1 byte(s): red cards in the match [inference]
+    pub(crate) const MINUTE_OFF: usize = 0x30; // 1 byte(s): minute substituted off (negative = not)
     pub(crate) const ENTRY_MINUTE: usize = 0x32; // 1 byte(s): Minute a substitute came on (0xff = did not play)
+    pub(crate) const MINUTE_LEFT_PITCH: usize = 0x34; // 1 byte(s): minute he left the pitch (negative = not)
     pub(crate) const RATING: usize = 0x35; // 1 byte(s): Match rating
+    pub(crate) const PASSES: usize = 0x3e; // 1 byte(s): passes made in the match
+    pub(crate) const PASSES_COMPLETED: usize = 0x3f; // 1 byte(s): passes completed in the match
+    pub(crate) const TACKLES_WON: usize = 0x42; // 1 byte(s): tackles won in the match [inference]
 }
 
 /// Fields of the `live_match` object, named from how the routines use them. [pt] Campos do objeto `live_match`.
@@ -2005,6 +2022,7 @@ pub(crate) mod match_stats_entry {
 #[allow(dead_code)]
 pub(crate) mod match_stats_record {
     pub(crate) const MAN_OF_THE_MATCH_ID: usize = 0x3c; // 4 byte(s): Player data id of the man of the match (compared with lineup_row PLAYER_ID)
+    pub(crate) const NO_STATISTICS: usize = 0x4c; // 1 byte(s): set: the match counts in the flagged rating sums (no-statistics match)
     pub(crate) const DURATION: usize = 0x4d; // 2 byte(s): Match length in minutes, for players who stayed on to the end
     pub(crate) const HOME_GOALS: usize = 0x11f; // 1 byte(s): Home side goals (away at HOME_GOALS + SIDE_SIZE)
     pub(crate) const HOME_LINEUP: usize = 0x190; // 1460 byte(s): Home side lineup: 20 rows of 0x49 bytes (away at HOME_LINEUP + SIDE_SIZE)
@@ -2195,12 +2213,24 @@ pub(crate) mod planned_friendly {
 pub(crate) mod player_category_stats {
     pub(crate) const SUB_APPEARANCES: usize = 0x1; // 1 byte(s): Appearances as a substitute
     pub(crate) const GOALS: usize = 0x2; // 1 byte(s): Goals scored
+    pub(crate) const GOALS_CONCEDED: usize = 0x3; // 1 byte(s): goals conceded (goalkeeper) summed over the matches
+    pub(crate) const PENALTIES_TAKEN: usize = 0x4; // 1 byte(s): penalties taken summed over the matches
+    pub(crate) const PENALTIES_SCORED: usize = 0x5; // 1 byte(s): penalties scored summed over the matches
+    pub(crate) const ASSISTS: usize = 0x6; // 1 byte(s): assists summed over the matches
     pub(crate) const TEAM_GOALS_FOR: usize = 0x7; // 1 byte(s): Goals scored by his side in his matches
     pub(crate) const TEAM_GOALS_AGAINST: usize = 0x8; // 1 byte(s): Goals conceded by his side in his matches
     pub(crate) const WINS: usize = 0x9; // 1 byte(s): Matches won
     pub(crate) const DEFEATS: usize = 0xa; // 1 byte(s): Matches lost
+    pub(crate) const YELLOW_CARDS: usize = 0xb; // 1 byte(s): yellow cards summed over the matches
+    pub(crate) const RED_CARDS: usize = 0xc; // 1 byte(s): red cards summed over the matches [inference]
     pub(crate) const MAN_OF_THE_MATCH: usize = 0xd; // 1 byte(s): Man of the match awards
     pub(crate) const RATING_TOTAL: usize = 0xe; // 2 byte(s): Sum of match ratings (average = RATING_TOTAL / matches); 0xffff marks a loose record
+    pub(crate) const PASSES: usize = 0x10; // 2 byte(s): passes made summed over the matches
+    pub(crate) const PASSES_COMPLETED: usize = 0x12; // 2 byte(s): passes completed summed over the matches
+    pub(crate) const TACKLES_WON: usize = 0x14; // 2 byte(s): tackles won summed over the matches [inference]
+    pub(crate) const DRIBBLES: usize = 0x16; // 2 byte(s): times he beat an opponent summed over the matches [inference]
+    pub(crate) const SHOTS: usize = 0x18; // 2 byte(s): shots summed over the matches
+    pub(crate) const SHOTS_ON_TARGET: usize = 0x1a; // 2 byte(s): shots on target summed over the matches
     pub(crate) const MINUTES: usize = 0x1c; // 4 byte(s): Minutes played
 }
 
@@ -2287,6 +2317,7 @@ pub(crate) mod retirement_entry {
     pub(crate) const CLUB_ID: usize = 0x4; // 4 byte(s): Club id of the person (-1 none); +0 the staff id
     pub(crate) const ANNOUNCE_DATE: usize = 0x8; // 8 byte(s): Date the retirement is announced (day +8, year +0xa)
     pub(crate) const ANNOUNCE_YEAR: usize = 0xa; // 2 byte(s): Year of ANNOUNCE_DATE
+    pub(crate) const ANNOUNCE_DATE_LEAP_YEAR: usize = 0xc; // 4 byte(s): second dword of ANNOUNCE_DATE (TCMDate leap-year field) [verified: ANNOUNCE_DATE at +8 is a TCMDate (cm_date::LEAP_YEAR +4); +8 and +0xc passed as its two dwords to date_days_since]
     pub(crate) const RETIRE_DATE: usize = 0x10; // 8 byte(s): Date the person retires (day +0x10, year +0x12)
     pub(crate) const RETIRE_YEAR: usize = 0x12; // 2 byte(s): Year of RETIRE_DATE
     pub(crate) const REASON: usize = 0x18; // 1 byte(s): Retirement reason (8 injury, 0x10 unemployed, ...)
@@ -2751,6 +2782,8 @@ pub(crate) mod human_manager_record {
 /// TStaffHistory, 17-byte rows of staff_history.dat (+4 staff, +8 year, +0xa club, +0xe on loan, +0xf apps, +0x10 goals)
 #[allow(dead_code)]
 pub(crate) mod staff_history {
+    pub(crate) const STAFF_ID: usize = 0x4; // 4 byte(s): staff (person) id of the history row [verified: docs/FORMATOS TStaffHistory +0x4 StaffID; qsort key by person]
+    pub(crate) const YEAR: usize = 0x8; // 2 byte(s): season year of the history row [verified: docs/FORMATOS TStaffHistory +0x8 Year (Int16); signed word compare]
     pub(crate) const CLUB: usize = 0xa; // 4 byte(s): club of the career history row (id in the file, pointer after load) [verified: docs/FORMATOS TStaffHistory +0xa ClubID; the load converts it with G_CLUB_TABLE/581 (line 6392)]
 
 }
@@ -2881,4 +2914,21 @@ pub(crate) mod training_manager_fields {
 pub(crate) mod training_schedule {
     pub(crate) const TYPE: usize = 0x15; // 1 byte(s): schedule type: 0/7 none, 1 general, 2-5 one category, 6 goalkeepers
 
+}
+
+/// neutral venue entry (16 bytes of stadium_obj::VENUES): +0 nation id, +4 continent id, +8 national-stadium flag, +0xc stadium pointer
+#[allow(dead_code)]
+pub(crate) mod stadium_venue {
+    pub(crate) const STADIUM: usize = 0xc; // 4 byte(s): pointer to the venue's stadium record [verified: stadium_build_venue_list writes r+0xc = stadium record e (line 1337); stadium_obj::VENUES says 16-byte entries: nation id, continent id, national-stadium flag, ]
+
+}
+
+/// WorldCup object (League subclass): extra fields beyond the League layout (draw slots, seeding date)
+#[allow(dead_code)]
+pub(crate) mod world_cup_fields {
+    pub(crate) const DRAW_SLOT_CLUB: usize = 0xee; // 4 byte(s): club id of draw slot 0 (32 slots of 5 bytes from here: +0 club id, +4 pot)
+
+    pub(crate) const DRAW_SLOT_POT: usize = 0xf2; // 1 byte(s): pot of draw slot 0 (0 seed, 1..3 continent pot; 0xff = already drawn)
+    pub(crate) const SEEDING_DAY: usize = 0x18e; // 2 byte(s): day of year of the seeding date (15/12 of the year before the World Cup)
+    pub(crate) const SEEDING_YEAR_OFFSET: usize = 0x190; // 2 byte(s): year of the seeding date relative to the World Cup YEAR (+0x40)
 }

@@ -8,13 +8,13 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 
 | Medida | Quantidade |
 |---|---:|
-| deslocamentos crus | 3169 |
+| deslocamentos crus | 3039 |
 | chaves fixas cruas | 1821 |
 | chamadas por endereço | 0 |
 | cópias de acesso à memória | 0 |
 | rotinas sem cabeçalho | 0 |
 | locais/parâmetros em português | 241 |
-| linhas | 231511 |
+| linhas | 231965 |
 
 ## Por arquivo (os 40 piores, pelos deslocamentos crus)
 
@@ -28,17 +28,13 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/match_pl.rs` | 58 | 5 | 0 | 0 | 0 | 7 | 10183 |
 | `motor/scout_manager.rs` | 55 | 18 | 0 | 0 | 0 | 0 | 1225 |
 | `motor/human_manager.rs` | 54 | 3 | 0 | 0 | 0 | 0 | 772 |
-| `motor/player_regen.rs` | 47 | 6 | 0 | 0 | 0 | 2 | 3365 |
 | `motor/comp/friendly.rs` | 47 | 26 | 0 | 0 | 0 | 1 | 3308 |
 | `motor/comp/leagues/fin_prm.rs` | 45 | 24 | 0 | 0 | 0 | 1 | 3103 |
-| `motor/player_stats.rs` | 44 | 8 | 0 | 0 | 0 | 1 | 1501 |
 | `motor/shared.rs` | 43 | 2 | 0 | 0 | 0 | 1 | 591 |
-| `motor/comp/stadium.rs` | 42 | 19 | 0 | 0 | 0 | 2 | 1362 |
-| `motor/comp/worldcup/world_cup.rs` | 42 | 14 | 0 | 0 | 0 | 0 | 663 |
 | `motor/officials_manager.rs` | 40 | 0 | 0 | 0 | 0 | 2 | 872 |
 | `motor/comp/comp.rs` | 39 | 9 | 0 | 0 | 0 | 0 | 755 |
 | `motor/db_files.rs` | 37 | 0 | 0 | 0 | 0 | 0 | 1282 |
-| `motor/fields.rs` | 35 | 0 | 0 | 0 | 0 | 0 | 2884 |
+| `motor/fields.rs` | 35 | 0 | 0 | 0 | 0 | 0 | 2934 |
 | `motor/comp/cups/eng_cc_cup.rs` | 34 | 12 | 0 | 0 | 0 | 1 | 620 |
 | `motor/comp/cups/ita_cup.rs` | 34 | 19 | 0 | 0 | 0 | 1 | 1155 |
 | `motor/zipdir.rs` | 33 | 0 | 0 | 0 | 0 | 0 | 604 |
@@ -60,3 +56,7 @@ Gerado por `python engenharia-reversa/legibilidade.py`. O que ainda atrapalha qu
 | `motor/training_manager.rs` | 23 | 0 | 0 | 0 | 0 | 1 | 1319 |
 | `motor/comp/comp_util.rs` | 23 | 3 | 0 | 0 | 0 | 0 | 926 |
 | `motor/comp/eurocomp/european_cup.rs` | 23 | 9 | 0 | 0 | 0 | 1 | 1524 |
+| `motor/comp/eurocomp/oceania_club_champ.rs` | 23 | 12 | 0 | 0 | 0 | 4 | 776 |
+| `motor/compare/match_eng.rs` | 23 | 0 | 0 | 0 | 0 | 1 | 1067 |
+| `motor/comp/host_country.rs` | 22 | 27 | 0 | 0 | 0 | 0 | 484 |
+| `motor/comp/eurocomp/conmebol_liber.rs` | 22 | 4 | 0 | 0 | 0 | 1 | 503 |

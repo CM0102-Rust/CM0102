@@ -69,9 +69,9 @@ pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
     while s < 8 {
         count[s as usize] = count[s as usize].wrapping_add(1);
         if s == 0 {
-            write_usize(list, read_usize(this + 0xee));
+            write_usize(list, read_usize(this + world_cup_fields::DRAW_SLOT_CLUB));
             write_u8(list + 4, 1);
-            write_u8(this + 0xf2, 0xff);
+            write_u8(this + world_cup_fields::DRAW_SLOT_POT, 0xff);
         } else if s == 2 {
             write_usize(list + 0xa, read_usize(this + 0xf3));
             write_u8(list + 0xe, 3);
@@ -79,14 +79,14 @@ pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
         } else {
             // the loop of the 27/12/2001 crash (0x92ea55): with no standing slot among 2..7, it never ends
             let mut k = exe::utils_random(6).wrapping_add(2) as i16 as i32;
-            while read_u8(this.wrapping_add((k * 5) as usize) + 0xf2) == 0xff {
+            while read_u8(this.wrapping_add((k * 5) as usize) + world_cup_fields::DRAW_SLOT_POT) == 0xff {
                 k = exe::utils_random(6).wrapping_add(2) as i16 as i32;
             }
             let c = this.wrapping_add((k * 5) as usize);
             let e = list + s as usize * 5;
-            write_usize(e, read_usize(c + 0xee));
+            write_usize(e, read_usize(c + world_cup_fields::DRAW_SLOT_CLUB));
             write_u8(e + 4, (s as u8).wrapping_add(1));
-            write_u8(c + 0xf2, 0xff);
+            write_u8(c + world_cup_fields::DRAW_SLOT_POT, 0xff);
         }
         s += 1;
     }
@@ -119,14 +119,14 @@ pub(crate) unsafe extern "thiscall" fn draw_groups(this: usize) -> usize {
     for i in 0..32usize {
         let e = list + i * 5;
         let club = read_usize(G_CLUB_TABLE).wrapping_add(read_usize(e).wrapping_mul(club::SIZE));
-        write_usize(read_usize(this + 0x14) + i * 6, club);
-        write_u8(read_usize(this + 0x14) + i * 6 + 4, 6);
+        write_usize(read_usize(this + league::ENTRANT_BOOK) + i * 6, club);
+        write_u8(read_usize(this + league::ENTRANT_BOOK) + i * 6 + 4, 6);
         write_u8(e + 4, (i / 4) as u8 + 1);
     }
-    write_u8(read_usize(this + 0x14) + 4, 2);
-    write_u8(read_usize(this + 0x14) + 0x4c, 1);
-    write_u8(read_usize(this + 0x14) + 0xac, 1);
-    write_u16(this + 0x36, 0x20);
+    write_u8(read_usize(this + league::ENTRANT_BOOK) + 4, 2);
+    write_u8(read_usize(this + league::ENTRANT_BOOK) + 0x4c, 1);
+    write_u8(read_usize(this + league::ENTRANT_BOOK) + 0xac, 1);
+    write_u16(this + league::ENTRANT_COUNT, 0x20);
     list
 }
 
@@ -196,7 +196,7 @@ pub(crate) unsafe extern "thiscall" fn world_cup_update_for_date(this: usize, to
     let this = League(this);
     let year = read_u16(today + 2) as i32;
     let day = read_u16(today);
-    if read_i16(this.addr() + 0x18e) as u16 == day && read_i16(this.addr() + 0x190) as i32 + this.year() as i32 == year && full != 0 {
+    if read_i16(this.addr() + world_cup_fields::SEEDING_DAY) as u16 == day && read_i16(this.addr() + world_cup_fields::SEEDING_YEAR_OFFSET) as i32 + this.year() as i32 == year && full != 0 {
         exe::worldcup_seed_teams(this);
     }
     let day_of_draw = this.next_draw_day() as u16; // cqf4: the random draw day
@@ -389,29 +389,29 @@ pub(crate) unsafe extern "thiscall" fn world_cup_set_predicted_positions(this: u
         show_error_at(0xad5888, 0x671);
         return;
     }
-    if read_i16(this + 0x36) < 0x20 {
+    if read_i16(this + league::ENTRANT_COUNT) < 0x20 {
         show_error_at(0xad5888, 0x678);
-        write_u16(this + 0x36, 0x20);
+        write_u16(this + league::ENTRANT_COUNT, 0x20);
     }
-    let v = exe::crt_malloc(((read_i16(this + 0x36) as i32) << 2) as u32);
+    let v = exe::crt_malloc(((read_i16(this + league::ENTRANT_COUNT) as i32) << 2) as u32);
     if v == 0 {
         show_error_at(0xad5888, 0x680);
         return;
     }
     let mut i = 0i16;
-    while i < read_i16(this + 0x36) {
-        write_usize(v + i as usize * 4, read_usize(read_usize(this + 0x14) + i as usize * 6));
+    while i < read_i16(this + league::ENTRANT_COUNT) {
+        write_usize(v + i as usize * 4, read_usize(read_usize(this + league::ENTRANT_BOOK) + i as usize * 6));
         i += 1;
     }
-    exe::crt_qsort(v, read_i16(this + 0x36) as i32 as u32, 4, 0x4b07d0);
+    exe::crt_qsort(v, read_i16(this + league::ENTRANT_COUNT) as i32 as u32, 4, 0x4b07d0);
     const FAIXAS: [u32; 32] = [1, 2, 3, 4, 5, 5, 5, 5, 9, 9, 9, 9, 9, 9, 9, 9, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x11, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19, 0x19];
     for (k, &p) in FAIXAS.iter().enumerate() {
         exe::comp_stats_set_club_final_position(read_usize(this + 8), read_usize(v + k * 4), p);
     }
     let mut i = 0i16;
-    while i < read_i16(this + 0x36) {
+    while i < read_i16(this + league::ENTRANT_COUNT) {
         crate::comparison::branch("cqf_5 nation competition");
-        exe::nationalteams_set_current_competition(read_usize(G_NATIONAL_TEAMS), read_usize(read_usize(v + i as usize * 4) + 0x53), read_usize(this + 4));
+        exe::nationalteams_set_current_competition(read_usize(G_NATIONAL_TEAMS), read_usize(read_usize(v + i as usize * 4) + club::NATION), read_usize(this + 4));
         i += 1; // cqf5: the next nation
     }
     exe::crt_free(v);
@@ -497,7 +497,7 @@ pub(crate) unsafe fn written_group_round_bytes(t: usize) -> Vec<u8> {
     for r in 0..3usize {
         let e = t + r * 0x41;
         v.extend_from_slice(core::slice::from_raw_parts(e as *const u8, 5));
-        v.extend_from_slice(core::slice::from_raw_parts((e + 0x3d) as *const u8, 4));
+        v.extend_from_slice(core::slice::from_raw_parts((e + league_round_date::VENUE_VALUE) as *const u8, 4));
         for j in 0..3usize {
             v.extend_from_slice(core::slice::from_raw_parts((e + j * 7 + 5) as *const u8, 7));
         }
@@ -517,16 +517,16 @@ pub(crate) unsafe fn written_group_round_bytes(t: usize) -> Vec<u8> {
 /// (+0x38), a vaga +0x36 da tabela [+0x14] (6 bytes) recebe a situação 6 e o clube, e +0x36 sobe; cheia, a caixa da
 /// linha 0x456.
 pub(crate) unsafe extern "thiscall" fn add_qualified_team(this: usize, club: usize) {
-    let n = read_i16(this + 0x36);
-    if n >= read_i16(this + 0x38) {
+    let n = read_i16(this + league::ENTRANT_COUNT);
+    if n >= read_i16(this + league::ENTRANT_CAPACITY) {
         show_error_at(0xad5888, 0x456);
         return;
     }
     crate::comparison::branch("cqf_6 qualified nation");
-    let e = read_usize(this + 0x14).wrapping_add((n as i32 * 6) as usize);
+    let e = read_usize(this + league::ENTRANT_BOOK).wrapping_add((n as i32 * 6) as usize);
     write_u8(e + 4, 6);
-    write_usize(read_usize(this + 0x14).wrapping_add((read_i16(this + 0x36) as i32 * 6) as usize), club);
-    write_u16(this + 0x36, (read_i16(this + 0x36) as u16).wrapping_add(1));
+    write_usize(read_usize(this + league::ENTRANT_BOOK).wrapping_add((read_i16(this + league::ENTRANT_COUNT) as i32 * 6) as usize), club);
+    write_u16(this + league::ENTRANT_COUNT, (read_i16(this + league::ENTRANT_COUNT) as u16).wrapping_add(1));
 }
 
 /// Sets the World Cup seeds (holder, hosts, reputation) and the pots by continent; does nothing for the 2002 World Cup.
@@ -631,7 +631,7 @@ pub(crate) unsafe extern "thiscall" fn seed_teams(this: usize) {
     exe::crt_qsort(this.entrant_book() + n as i32 as usize * 6, (0x20 - n as i32) as u32, 6, 0x4b07b0);
     for i in 0..0x20usize {
         let club = Club(read_usize(this.entrant_book() + i * 6));
-        let pot = this.addr() + 0xf2 + i * 5;
+        let pot = this.addr() + world_cup_fields::DRAW_SLOT_POT + i * 5;
         write_usize(pot - 4, read_usize(club.addr()));
         if i < 8 {
             write_u8(pot, 0);
